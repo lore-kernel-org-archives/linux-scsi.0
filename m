@@ -1,7 +1,7 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH 05/14] tpm-chip: utilize new device_add_cdev helper function
-Date: Mon, 20 Feb 2017 22:00:44 -0700
-Message-ID: <1487653253-11497-6-git-send-email-logang@deltatee.com>
+Subject: [PATCH 13/14] scsi: utilize new device_add_cdev helper function
+Date: Mon, 20 Feb 2017 22:00:52 -0700
+Message-ID: <1487653253-11497-14-git-send-email-logang@deltatee.com>
 References: <1487653253-11497-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,31 +21,51 @@ To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org
 Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-gpio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tpmdd-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, osd-dev-yNzVSZO3znNg9hUCZPvPmw@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
+Note: the chardev instance in osd_uld.c originally did not
+set the kobject parent. Thus, I'm reasonably confident that because
+of this, this code  would have suffered from a minor use after free
+bug if the cdev was open when the backing device was released.
+
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
 ---
- drivers/char/tpm/tpm-chip.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/osd/osd_uld.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/char/tpm/tpm-chip.c b/drivers/char/tpm/tpm-chip.c
-index a77262d..dc90b45 100644
---- a/drivers/char/tpm/tpm-chip.c
-+++ b/drivers/char/tpm/tpm-chip.c
-@@ -187,7 +187,6 @@ struct tpm_chip *tpm_chip_alloc(struct device *dev,
+diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
+index 243eab3..519be56 100644
+--- a/drivers/scsi/osd/osd_uld.c
++++ b/drivers/scsi/osd/osd_uld.c
+@@ -473,18 +473,19 @@ static int osd_probe(struct device *dev)
+ 		goto err_put_disk;
+ 	}
  
- 	cdev_init(&chip->cdev, &tpm_fops);
- 	chip->cdev.owner = THIS_MODULE;
--	chip->cdev.kobj.parent = &chip->dev.kobj;
++	device_initialize(&oud->class_dev);
++	oud->class_dev.devt = MKDEV(SCSI_OSD_MAJOR, oud->minor);
++
+ 	/* init the char-device for communication with user-mode */
+ 	cdev_init(&oud->cdev, &osd_fops);
+ 	oud->cdev.owner = THIS_MODULE;
+-	error = cdev_add(&oud->cdev,
+-			 MKDEV(SCSI_OSD_MAJOR, oud->minor), 1);
++	error = device_add_cdev(&oud->class_dev, &oud->cdev);
+ 	if (error) {
+ 		OSD_ERR("cdev_add failed\n");
+ 		goto err_put_disk;
+ 	}
  
- 	return chip;
+ 	/* class device member */
+-	oud->class_dev.devt = oud->cdev.dev;
+ 	oud->class_dev.class = &osd_uld_class;
+ 	oud->class_dev.parent = dev;
+ 	oud->class_dev.release = __remove;
+@@ -494,7 +495,7 @@ static int osd_probe(struct device *dev)
+ 		goto err_put_cdev;
+ 	}
  
-@@ -230,7 +229,7 @@ static int tpm_add_char_device(struct tpm_chip *chip)
- {
- 	int rc;
- 
--	rc = cdev_add(&chip->cdev, chip->dev.devt, 1);
-+	rc = device_add_cdev(&chip->dev, &chip->cdev);
- 	if (rc) {
- 		dev_err(&chip->dev,
- 			"unable to cdev_add() %s, major %d, minor %d, err=%d\n",
+-	error = device_register(&oud->class_dev);
++	error = device_add(&oud->class_dev);
+ 	if (error) {
+ 		OSD_ERR("device_register failed => %d\n", error);
+ 		goto err_put_cdev;
 -- 
 2.1.4
