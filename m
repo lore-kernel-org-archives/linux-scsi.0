@@ -1,40 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/3] qla2xxx: Bug fixes and cleanup for the driver.
-Date: Mon, 20 Feb 2017 22:16:04 -0500
-Message-ID: <yq1d1ec44jv.fsf@oracle.com>
-References: <1487201841-28846-1-git-send-email-himanshu.madhani@cavium.com>
+Subject: Re: [PATCHv3] scsi: use 'scsi_device_from_queue()' for scsi_dh
+Date: Mon, 20 Feb 2017 22:22:06 -0500
+Message-ID: <yq18tp0449t.fsf@oracle.com>
+References: <1487318565-96759-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:46855 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:48089 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750844AbdBUDQO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Feb 2017 22:16:14 -0500
-In-Reply-To: <1487201841-28846-1-git-send-email-himanshu.madhani@cavium.com>
-        (Himanshu Madhani's message of "Wed, 15 Feb 2017 15:37:18 -0800")
+        with ESMTP id S1750844AbdBUDWY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Feb 2017 22:22:24 -0500
+In-Reply-To: <1487318565-96759-1-git-send-email-hare@suse.de> (Hannes
+        Reinecke's message of "Fri, 17 Feb 2017 09:02:45 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@cavium.com>
-Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Keith Busch <keith.busch@intel.com>, linux-scsi@vger.kernel.org, Bart van Assche <bart.vanassche@sandisk.com>, Hannes Reinecke <hare@suse.com>
 
->>>>> "Himanshu" == Himanshu Madhani <himanshu.madhani@cavium.com> writes:
+>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
 
-Hi Himanshu,
+Hannes> The device handler needs to check if a given queue belongs to a
+Hannes> scsi device; only then does it make sense to attach a device
+Hannes> handler.
 
-Himanshu> This series contains small cleanup + fix for regression that
-Himanshu> was introduced by pci_alloc_irq_vectors_affinity() call in
-Himanshu> driver.
-
-Himanshu> Please apply this series to 4.10/scsi-fixes at your earliest
-Himanshu> convenience.
-
-4.10 is out and this series does not apply to 4.11/scsi-queue. Please
-rebase.
-
-Also, please make sure your "Fixes: d745952 ("scsi: qla2xxx:..." have a
-12-char hash. And add a stable tag if you want these in 4.10.x.
-
-Thanks!
+Fixed kbuild warning and applied to 4.11/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
