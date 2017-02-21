@@ -1,7 +1,8 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH 10/14] mtd: utilize new device_add_cdev helper function
-Date: Mon, 20 Feb 2017 22:00:49 -0700
-Message-ID: <1487653253-11497-11-git-send-email-logang@deltatee.com>
+Subject: [PATCH 01/14] chardev: add helper function to register char devs with
+ a struct device
+Date: Mon, 20 Feb 2017 22:00:40 -0700
+Message-ID: <1487653253-11497-2-git-send-email-logang@deltatee.com>
 References: <1487653253-11497-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,92 +22,122 @@ To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org
 Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-gpio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tpmdd-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, osd-dev-yNzVSZO3znNg9hUCZPvPmw@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Note: neither of the cdev instances in the mtd tree originally
-set the kobject parent. Thus, I'm reasonably confident that
-both these instances would have suffered from a minor use after
-free bug if the cdevs were open when the backing device was released.
+Credit for this patch goes entirely to Dan Williams [1]. I've just
+fleshed out the comments and created the patch, but the premise
+remains exactly the same.
+
+There's a common pattern in the kernel whereby a struct cdev is placed
+in a structure along side a struct device which manages the life-cycle
+of both. In the naive approach, the reference counting is broken and
+the struct device can free everything before the chardev code
+is entirely released.
+
+Many developers have solved this problem by linking the internal kobjs
+in this fashion:
+
+cdev.kobj.parent = &parent_dev.kobj;
+
+The cdev code explicitly gets and puts a reference to it's kobj parent.
+So this seems like it was intended to be used this way. Dmitrty Torokhov
+first put this in place in 2012 with this commit:
+
+2f0157f char_dev: pin parent kobject
+
+and the first instance of the fix was then done in the input subsystem
+in the following commit:
+
+4a215aa Input: fix use-after-free introduced with dynamic minor changes
+
+Subsequently over the years, however, this issue seems to have tripped
+up multiple developers independently. For example, see these commits:
+
+0d5b7da iio: Prevent race between IIO chardev opening and IIO device
+(by Lars-Peter Clausen in 2013)
+
+ba0ef85 tpm: Fix initialization of the cdev
+(by Jason Gunthorpe in 2015)
+
+5b28dde [media] media: fix use-after-free in cdev_put() when app exits
+after driver unbind
+(by Shauh Khan in 2016)
+
+This technique is similarly done in at least 15 places within the kernel
+and probably should have been done so in another, at least, 5 places.
+The kobj line also looks very suspect in that one would not expect
+drivers to have to mess with kobject internals in this way.
+Even highly experienced kernel developers can be surprised by this
+code, as seen in [2].
+
+To help alleviate this situation, and hopefully prevent future
+wasted effort on this problem, this patch introduces a helper function
+to register a char device with its parent struct device. This creates
+a more regular API for tying a char device to its parent without the
+developer having to set members in the underlying kobject.
+
+In [1], Dan notes he took inspiration for the form of the API
+device_add_disk.
+
+[1] https://lkml.org/lkml/2017/2/13/700
+[2] https://lkml.org/lkml/2017/2/10/370
 
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
 ---
- drivers/mtd/ubi/build.c |  8 +++++---
- drivers/mtd/ubi/vmt.c   | 10 +++++-----
- 2 files changed, 10 insertions(+), 8 deletions(-)
+ fs/char_dev.c        | 24 ++++++++++++++++++++++++
+ include/linux/cdev.h |  1 +
+ 2 files changed, 25 insertions(+)
 
-diff --git a/drivers/mtd/ubi/build.c b/drivers/mtd/ubi/build.c
-index 85d54f3..a509f15 100644
---- a/drivers/mtd/ubi/build.c
-+++ b/drivers/mtd/ubi/build.c
-@@ -434,11 +434,10 @@ static int ubi_sysfs_init(struct ubi_device *ubi, int *ref)
- 	int err;
+diff --git a/fs/char_dev.c b/fs/char_dev.c
+index 44a240c..1f9246c 100644
+--- a/fs/char_dev.c
++++ b/fs/char_dev.c
+@@ -471,6 +471,29 @@ int cdev_add(struct cdev *p, dev_t dev, unsigned count)
+ 	return 0;
+ }
  
- 	ubi->dev.release = dev_release;
--	ubi->dev.devt = ubi->cdev.dev;
- 	ubi->dev.class = &ubi_class;
- 	ubi->dev.groups = ubi_dev_groups;
- 	dev_set_name(&ubi->dev, UBI_NAME_STR"%d", ubi->ubi_num);
--	err = device_register(&ubi->dev);
-+	err = device_add(&ubi->dev);
- 	if (err)
- 		return err;
- 
-@@ -508,12 +507,15 @@ static int uif_init(struct ubi_device *ubi, int *ref)
- 		return err;
- 	}
- 
-+	device_initialize(&ubi->dev);
-+	ubi->dev.devt = dev;
++/**
++ * device_add_cdev() - add a char device to the system with a parent
++ *	struct device
++ * @parent: the device structure of the parent
++ * @cdev: the cdev structure for the device
++ * @count: the number of consecutive minor numbers corresponding to this
++ *
++ * device_add_cdev() adds the char device represented by @p to the system,
++ * just as cdev_add does. The dev_t for the char device will be taken from
++ * the struct device which needs to be initialized first. This helper
++ * function correctly takes a reference to the parent device so the parent
++ * will not get released until all references to the cdev are released.
++ * (Thus, cdev_del should be called before device_unregister.) This
++ * function should be used whenever the struct cdev and the struct device
++ * are members of the same structure whose lifetime is managed by the
++ * struct device.
++ */
++int device_add_cdev(struct device *parent, struct cdev *cdev)
++{
++	cdev->kobj.parent = &parent->kobj;
++	return cdev_add(cdev, parent->devt, 1);
++}
 +
- 	ubi_assert(MINOR(dev) == 0);
- 	cdev_init(&ubi->cdev, &ubi_cdev_operations);
- 	dbg_gen("%s major is %u", ubi->ubi_name, MAJOR(dev));
- 	ubi->cdev.owner = THIS_MODULE;
+ static void cdev_unmap(dev_t dev, unsigned count)
+ {
+ 	kobj_unmap(cdev_map, dev, count);
+@@ -570,5 +593,6 @@ EXPORT_SYMBOL(cdev_init);
+ EXPORT_SYMBOL(cdev_alloc);
+ EXPORT_SYMBOL(cdev_del);
+ EXPORT_SYMBOL(cdev_add);
++EXPORT_SYMBOL(device_add_cdev);
+ EXPORT_SYMBOL(__register_chrdev);
+ EXPORT_SYMBOL(__unregister_chrdev);
+diff --git a/include/linux/cdev.h b/include/linux/cdev.h
+index f876361..9edbc37 100644
+--- a/include/linux/cdev.h
++++ b/include/linux/cdev.h
+@@ -25,6 +25,7 @@ struct cdev *cdev_alloc(void);
+ void cdev_put(struct cdev *p);
  
--	err = cdev_add(&ubi->cdev, dev, 1);
-+	err = device_add_cdev(&ubi->dev, &ubi->cdev);
- 	if (err) {
- 		ubi_err(ubi, "cannot add character device");
- 		goto out_unreg;
-diff --git a/drivers/mtd/ubi/vmt.c b/drivers/mtd/ubi/vmt.c
-index 7ac78c1..df84ba7 100644
---- a/drivers/mtd/ubi/vmt.c
-+++ b/drivers/mtd/ubi/vmt.c
-@@ -159,7 +159,6 @@ int ubi_create_volume(struct ubi_device *ubi, struct ubi_mkvol_req *req)
- 	struct ubi_volume *vol;
- 	struct ubi_vtbl_record vtbl_rec;
- 	struct ubi_eba_table *eba_tbl = NULL;
--	dev_t dev;
+ int cdev_add(struct cdev *, dev_t, unsigned);
++int device_add_cdev(struct device *parent, struct cdev *cdev);
  
- 	if (ubi->ro_mode)
- 		return -EROFS;
-@@ -265,11 +264,13 @@ int ubi_create_volume(struct ubi_device *ubi, struct ubi_mkvol_req *req)
- 			vol->last_eb_bytes = vol->usable_leb_size;
- 	}
+ void cdev_del(struct cdev *);
  
-+	device_initialize(&vol->dev);
-+	vol->dev.devt = MKDEV(MAJOR(ubi->cdev.dev), vol_id + 1);
-+
- 	/* Register character device for the volume */
- 	cdev_init(&vol->cdev, &ubi_vol_cdev_operations);
- 	vol->cdev.owner = THIS_MODULE;
--	dev = MKDEV(MAJOR(ubi->cdev.dev), vol_id + 1);
--	err = cdev_add(&vol->cdev, dev, 1);
-+	err = device_add_cdev(&vol->dev, &vol->cdev);
- 	if (err) {
- 		ubi_err(ubi, "cannot add character device");
- 		goto out_mapping;
-@@ -277,12 +278,11 @@ int ubi_create_volume(struct ubi_device *ubi, struct ubi_mkvol_req *req)
- 
- 	vol->dev.release = vol_release;
- 	vol->dev.parent = &ubi->dev;
--	vol->dev.devt = dev;
- 	vol->dev.class = &ubi_class;
- 	vol->dev.groups = volume_dev_groups;
- 
- 	dev_set_name(&vol->dev, "%s_%d", ubi->ubi_name, vol->vol_id);
--	err = device_register(&vol->dev);
-+	err = device_add(&vol->dev);
- 	if (err) {
- 		ubi_err(ubi, "cannot register device");
- 		goto out_cdev;
 -- 
 2.1.4
