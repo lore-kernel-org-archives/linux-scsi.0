@@ -1,65 +1,67 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv4 00/12] mpt3sas: lockless command submission
-Date: Wed, 22 Feb 2017 11:31:40 +0100
-Message-ID: <1487759512-3873-1-git-send-email-hare@suse.de>
+Subject: [PATCHv4 04/12] mpt3sas: separate out _base_recovery_check()
+Date: Wed, 22 Feb 2017 11:31:44 +0100
+Message-ID: <1487759512-3873-5-git-send-email-hare@suse.de>
+References: <1487759512-3873-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49654 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:49644 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754103AbdBVKb7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1754010AbdBVKb7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Wed, 22 Feb 2017 05:31:59 -0500
+In-Reply-To: <1487759512-3873-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Hi all,
+No functional change.
 
-this is the first part of my patchset to enable scsi multiqueue for the
-mpt3sas driver.
-While the HBA only has a single mailbox register for submitting commands,
-it does have individual receive queues per MSI-X interrupt and as such
-does benefit from converting it to full multiqueue support.
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 23 ++++++++++++++---------
+ 1 file changed, 14 insertions(+), 9 deletions(-)
 
-On request from Broadcom the patchset has been split in two parts, one
-to enable lockless command submission and a secondary one for exposing
-all hardware queues to the OS.
-
-As usual, comments and reviews are welcome.
-
-Changes to v1:
-- Include reviews from Christoph
-- Use reserved commands for ioctl passthrough commands
-- Include reviews from Sreekanth
-
-Changes to v2:
-- Rework ioctl code to not use blk_mq_busy_iter
-- Open-code mpt3sas_scsi_direct_io_(get,set)
-
-Changes to v3:
-- Simplify task management code
-- Simplify _wait_for_commands_to_complete
-- Use first reserved smid for ioctl passthrough
-
-Hannes Reinecke (12):
-  mpt3sas: switch to pci_alloc_irq_vectors
-  mpt3sas: set default value for cb_idx
-  mpt3sas: use 'list_splice_init()'
-  mpt3sas: separate out _base_recovery_check()
-  mpt3sas: open-code _scsih_scsi_lookup_get()
-  mpt3sas: Introduce mpt3sas_get_st_from_smid()
-  mpt3sas: check command status before attempting abort
-  mpt3sas: always use first reserved smid for ioctl passthrough
-  mpt3sas: simplify task management functions
-  mpt3sas: simplify mpt3sas_scsi_issue_tm()
-  mpt3sas: simplify _wait_for_commands_to_complete()
-  mpt3sas: lockless command submission
-
- drivers/scsi/mpt3sas/mpt3sas_base.c      | 277 ++++++++++++++---------------
- drivers/scsi/mpt3sas/mpt3sas_base.h      |  29 ++--
- drivers/scsi/mpt3sas/mpt3sas_ctl.c       |  31 ++--
- drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 289 +++++++------------------------
- drivers/scsi/mpt3sas/mpt3sas_warpdrive.c |  33 +---
- 5 files changed, 220 insertions(+), 439 deletions(-)
-
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 6229eda..0133e7c 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -2383,6 +2383,19 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+ 	return smid;
+ }
+ 
++static void
++_base_recovery_check(struct MPT3SAS_ADAPTER *ioc)
++{
++	/*
++	 * See _wait_for_commands_to_complete() call with regards to this code.
++	 */
++	if (ioc->shost_recovery && ioc->pending_io_count) {
++		if (ioc->pending_io_count == 1)
++			wake_up(&ioc->reset_wq);
++		ioc->pending_io_count--;
++	}
++}
++
+ /**
+  * mpt3sas_base_free_smid - put smid back on free_list
+  * @ioc: per adapter object
+@@ -2408,15 +2421,7 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+ 		list_add(&ioc->scsi_lookup[i].tracker_list, &ioc->free_list);
+ 		spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
+ 
+-		/*
+-		 * See _wait_for_commands_to_complete() call with regards
+-		 * to this code.
+-		 */
+-		if (ioc->shost_recovery && ioc->pending_io_count) {
+-			if (ioc->pending_io_count == 1)
+-				wake_up(&ioc->reset_wq);
+-			ioc->pending_io_count--;
+-		}
++		_base_recovery_check(ioc);
+ 		return;
+ 	} else if (smid < ioc->internal_smid) {
+ 		/* hi-priority */
 -- 
 1.8.5.6
