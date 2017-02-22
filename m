@@ -1,40 +1,54 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv3 01/10] mpt3sas: switch to pci_alloc_irq_vectors
-Date: Wed, 22 Feb 2017 10:06:36 +0100
-Message-ID: <6003dda1-bc9c-5004-d901-c4af5cb075e7@suse.de>
-References: <1487680029-3701-1-git-send-email-hare@suse.de>
- <1487680029-3701-2-git-send-email-hare@suse.de>
- <20170222082841.GA22843@lst.de>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: Manual driver binding and unbinding broken for SCSI
+Date: Wed, 22 Feb 2017 18:21:42 +0800
+Message-ID: <CACVXFVOzpiXF=0vi5-y4hB+XZK2asDYyeQj9k0btRguiJVKeOw@mail.gmail.com>
+References: <20170218003015.GA19776@vader.DHCP.thefacebook.com>
+ <1487378636.4351.45.camel@HansenPartnership.com> <20170220021958.GA26238@vader>
+ <20170221171441.GA15875@quack2.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44718 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754464AbdBVJGl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 22 Feb 2017 04:06:41 -0500
-In-Reply-To: <20170222082841.GA22843@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170221171441.GA15875@quack2.suse.cz>
+Sender: linux-block-owner@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Omar Sandoval <osandov@osandov.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Dan Williams <dan.j.williams@intel.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@fb.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Hannes Reinecke <hare@suse.com>
 
-On 02/22/2017 09:28 AM, Christoph Hellwig wrote:
-> Martin,
-> 
-> can we get at least this patch still in for 4.11?  I'd really like
-> to see as many intance of the old MSI-X allocation and IRQ affinity
-> mess dead as soon as possible.
-> 
-I'm currently reworking the patchset with the suggestions from
-Christoph, will be posting the next iteration later today.
+On Wed, Feb 22, 2017 at 1:14 AM, Jan Kara <jack@suse.cz> wrote:
+> On Sun 19-02-17 18:19:58, Omar Sandoval wrote:
+>> On Fri, Feb 17, 2017 at 04:43:56PM -0800, James Bottomley wrote:
+>> > This seems to be related to a 0day test we got on the block tree,
+>> > details here:
+>> >
+>> > http://marc.info/?t=148624068800001
+>> >
+>> > I root caused the above to something not being released when it should
+>> > be, so it looks like you have the same problem.  It seems to be a
+>> > recent commit in the block tree, so could you bisect it since you have
+>> > a nice reproducer?
+>>
+>> These appear to actually be two separate issues.
+>>
+>> The unbind followed by bind crash only happens with scsi-mq. It reproes
+>> since at least 4.0.
+>>
+>> The unbind followed by a new device coming up crash happens both with
+>> and without scsi-mq. The earliest version I was able to check for that
+>> was 4.6, which did reproduce.
+>>
+>> I'll see if I can get some more info on these two issues separately.
+>
+> Actually, the second issue is only a warning right? And if I understand the
+> issue correctly, it should be fixed by either Dan's patches in linux-block
+> or my patch 4 in the series which matches your test results. So that is
+> dealt with. I have no idea about the first issue though.
 
-Cheers,
+Looks the 1st one is one old issue in blk-mq, and I have sent one patchset
+to address it:
 
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+http://marc.info/?l=linux-kernel&m=148775847517071&w=2
+
+Omar, feel free to give a test.
+
+thanks,
+Ming Lei
