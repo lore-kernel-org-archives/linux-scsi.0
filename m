@@ -1,60 +1,119 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 3/5] scsi_error: do not escalate failed EH command
-Date: Wed, 22 Feb 2017 17:07:28 +0100
-Message-ID: <1487779650-1338-4-git-send-email-hare@suse.de>
+Subject: [PATCHv2 2/5] scsi: make eh_eflags persistent
+Date: Wed, 22 Feb 2017 17:07:27 +0100
+Message-ID: <1487779650-1338-3-git-send-email-hare@suse.de>
 References: <1487779650-1338-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58744 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:58765 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754683AbdBVQHe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 22 Feb 2017 11:07:34 -0500
+        id S1754820AbdBVQHf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 22 Feb 2017 11:07:35 -0500
 In-Reply-To: <1487779650-1338-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Johannes Thumshirn <jth@kernel.org>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-When a command is sent as part of the error handling there
-is not point whatsoever to start EH escalation when that
-command fails; we are _already_ in the error handler,
-and the escalation is about to commence anyway.
-So just call 'scsi_try_to_abort_cmd()' to abort outstanding
-commands and let the main EH routine handle the rest.
+To detect if a failed command has been retried we must not
+clear scmd->eh_eflags when EH finishes.
+The flag should be persistent throughout the lifetime
+of the command.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi_error.c | 11 +----------
- 1 file changed, 1 insertion(+), 10 deletions(-)
+ Documentation/scsi/scsi_eh.txt | 14 +++++++-------
+ drivers/scsi/scsi_error.c      |  4 ++--
+ include/scsi/scsi_eh.h         |  1 +
+ 3 files changed, 10 insertions(+), 9 deletions(-)
 
+diff --git a/Documentation/scsi/scsi_eh.txt b/Documentation/scsi/scsi_eh.txt
+index 37eca00..4edb9c1c 100644
+--- a/Documentation/scsi/scsi_eh.txt
++++ b/Documentation/scsi/scsi_eh.txt
+@@ -105,11 +105,14 @@ function
+ 
+  2. If the host supports asynchronous completion (as indicated by the
+     no_async_abort setting in the host template) scsi_abort_command()
+-    is invoked to schedule an asynchrous abort. If that fails
+-    Step #3 is taken.
++    is invoked to schedule an asynchrous abort.
++    Asynchronous abort are not invoked for commands which the
++    SCSI_EH_ABORT_SCHEDULED flag is set (this indicates that the command
++    already had been aborted once, and this is a retry which failed),
++    or when the EH deadline is expired. In these case Step #3 is taken.
+ 
+- 2. scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD) is invoked for the
+-    command.  See [1-3] for more information.
++ 3. scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD) is invoked for the
++    command.  See [1-4] for more information.
+ 
+ [1-3] Asynchronous command aborts
+ 
+@@ -263,7 +266,6 @@ scmd->allowed.
+ 
+  3. scmd recovered
+     ACTION: scsi_eh_finish_cmd() is invoked to EH-finish scmd
+-	- clear scmd->eh_eflags
+ 	- scsi_setup_cmd_retry()
+ 	- move from local eh_work_q to local eh_done_q
+     LOCKING: none
+@@ -456,8 +458,6 @@ except for #1 must be implemented by eh_strategy_handler().
+ 
+  - shost->host_failed is zero.
+ 
+- - Each scmd's eh_eflags field is cleared.
+-
+  - Each scmd is in such a state that scsi_setup_cmd_retry() on the
+    scmd doesn't make any difference.
+ 
 diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 023f882..d0ecdef 100644
+index 9d7bfbb..023f882 100644
 --- a/drivers/scsi/scsi_error.c
 +++ b/drivers/scsi/scsi_error.c
-@@ -887,15 +887,6 @@ static int scsi_try_to_abort_cmd(struct scsi_host_template *hostt,
- 	return hostt->eh_abort_handler(scmd);
+@@ -188,7 +188,6 @@ static int scsi_host_eh_past_deadline(struct Scsi_Host *shost)
+ 		/*
+ 		 * Retry after abort failed, escalate to next level.
+ 		 */
+-		scmd->eh_eflags &= ~SCSI_EH_ABORT_SCHEDULED;
+ 		SCSI_LOG_ERROR_RECOVERY(3,
+ 			scmd_printk(KERN_INFO, scmd,
+ 				    "previous abort failed\n"));
+@@ -931,6 +930,7 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd, struct scsi_eh_save *ses,
+ 	ses->result = scmd->result;
+ 	ses->underflow = scmd->underflow;
+ 	ses->prot_op = scmd->prot_op;
++	ses->eh_eflags = scmd->eh_eflags;
+ 
+ 	scmd->prot_op = SCSI_PROT_NORMAL;
+ 	scmd->eh_eflags = 0;
+@@ -994,6 +994,7 @@ void scsi_eh_restore_cmnd(struct scsi_cmnd* scmd, struct scsi_eh_save *ses)
+ 	scmd->result = ses->result;
+ 	scmd->underflow = ses->underflow;
+ 	scmd->prot_op = ses->prot_op;
++	scmd->eh_eflags = ses->eh_eflags;
  }
+ EXPORT_SYMBOL(scsi_eh_restore_cmnd);
  
--static void scsi_abort_eh_cmnd(struct scsi_cmnd *scmd)
--{
--	if (scsi_try_to_abort_cmd(scmd->device->host->hostt, scmd) != SUCCESS)
--		if (scsi_try_bus_device_reset(scmd) != SUCCESS)
--			if (scsi_try_target_reset(scmd) != SUCCESS)
--				if (scsi_try_bus_reset(scmd) != SUCCESS)
--					scsi_try_host_reset(scmd);
--}
--
- /**
-  * scsi_eh_prep_cmnd  - Save a scsi command info as part of error recovery
-  * @scmd:       SCSI command structure to hijack
-@@ -1080,7 +1071,7 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
- 			break;
- 		}
- 	} else if (rtn != FAILED) {
--		scsi_abort_eh_cmnd(scmd);
-+		scsi_try_to_abort_cmd(shost->hostt, scmd);
- 		rtn = FAILED;
- 	}
- 
+@@ -1126,7 +1127,6 @@ static int scsi_eh_action(struct scsi_cmnd *scmd, int rtn)
+  */
+ void scsi_eh_finish_cmd(struct scsi_cmnd *scmd, struct list_head *done_q)
+ {
+-	scmd->eh_eflags = 0;
+ 	list_move_tail(&scmd->eh_entry, done_q);
+ }
+ EXPORT_SYMBOL(scsi_eh_finish_cmd);
+diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
+index 98d366b..a25b328 100644
+--- a/include/scsi/scsi_eh.h
++++ b/include/scsi/scsi_eh.h
+@@ -31,6 +31,7 @@ extern int scsi_get_sense_info_fld(const u8 * sense_buffer, int sb_len,
+ struct scsi_eh_save {
+ 	/* saved state */
+ 	int result;
++	int eh_eflags;
+ 	enum dma_data_direction data_direction;
+ 	unsigned underflow;
+ 	unsigned char cmd_len;
 -- 
 1.8.5.6
