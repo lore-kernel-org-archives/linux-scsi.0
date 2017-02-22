@@ -1,144 +1,59 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv4 06/12] mpt3sas: Introduce mpt3sas_get_st_from_smid()
-Date: Wed, 22 Feb 2017 11:31:46 +0100
-Message-ID: <1487759512-3873-7-git-send-email-hare@suse.de>
-References: <1487759512-3873-1-git-send-email-hare@suse.de>
+Subject: [PATCHv4 0/3] mpt3sas: exposing all reply queues
+Date: Wed, 22 Feb 2017 11:33:32 +0100
+Message-ID: <1487759615-3989-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49704 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:49817 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932206AbdBVKcH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 22 Feb 2017 05:32:07 -0500
-In-Reply-To: <1487759512-3873-1-git-send-email-hare@suse.de>
+        id S932093AbdBVKdj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 22 Feb 2017 05:33:39 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Hannes Reinecke <hare@suse.de>
 
-Abstract accesses to the scsi_lookup array by introducing
-mpt3sas_get_st_from_smid().
+Hi all,
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c      | 22 ++++++++++++++++++----
- drivers/scsi/mpt3sas/mpt3sas_base.h      |  2 ++
- drivers/scsi/mpt3sas/mpt3sas_scsih.c     |  7 ++++---
- drivers/scsi/mpt3sas/mpt3sas_warpdrive.c |  4 +++-
- 4 files changed, 27 insertions(+), 8 deletions(-)
+this is the second part of my patchset to enable scsi multiqueue for the
+mpt3sas driver.
+While the HBA only has a single mailbox register for submitting commands,
+it does have individual receive queues per MSI-X interrupt and as such
+does benefit from converting it to full multiqueue support.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 0133e7c..3f9148c 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -862,6 +862,15 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
- 	return 1;
- }
- 
-+struct scsiio_tracker *
-+mpt3sas_get_st_from_smid(struct MPT3SAS_ADAPTER *ioc, u16 smid)
-+{
-+	if (WARN_ON(!smid) ||
-+	    WARN_ON(smid >= ioc->hi_priority_smid))
-+		return NULL;
-+	return &ioc->scsi_lookup[smid - 1];
-+}
-+
- /**
-  * _base_get_cb_idx - obtain the callback index
-  * @ioc: per adapter object
-@@ -876,8 +885,11 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
- 	u8 cb_idx = 0xFF;
- 
- 	if (smid < ioc->hi_priority_smid) {
--		i = smid - 1;
--		cb_idx = ioc->scsi_lookup[i].cb_idx;
-+		struct scsiio_tracker *st;
-+
-+		st = mpt3sas_get_st_from_smid(ioc, smid);
-+		if (st)
-+			cb_idx = st->cb_idx;
- 	} else if (smid < ioc->internal_smid) {
- 		i = smid - ioc->hi_priority_smid;
- 		cb_idx = ioc->hpr_lookup[i].cb_idx;
-@@ -1268,6 +1280,7 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
- _base_get_chain_buffer_tracker(struct MPT3SAS_ADAPTER *ioc, u16 smid)
- {
- 	struct chain_tracker *chain_req;
-+	struct scsiio_tracker *st;
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
-@@ -1280,8 +1293,9 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
- 	chain_req = list_entry(ioc->free_chain_list.next,
- 	    struct chain_tracker, tracker_list);
- 	list_del_init(&chain_req->tracker_list);
--	list_add_tail(&chain_req->tracker_list,
--	    &ioc->scsi_lookup[smid - 1].chain_list);
-+	st = mpt3sas_get_st_from_smid(ioc, smid);
-+	if (st)
-+		list_add_tail(&chain_req->tracker_list, &st->chain_list);
- 	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
- 	return chain_req;
- }
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 1f460f2..74186e3 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -1247,6 +1247,8 @@ __le32 mpt3sas_base_get_sense_buffer_dma(struct MPT3SAS_ADAPTER *ioc,
- u16 mpt3sas_base_get_smid_hpr(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx);
- u16 mpt3sas_base_get_smid_scsiio(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx,
- 	struct scsi_cmnd *scmd);
-+struct scsiio_tracker * mpt3sas_get_st_from_smid(struct MPT3SAS_ADAPTER *ioc,
-+	u16 smid);
- 
- u16 mpt3sas_base_get_smid(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx);
- void mpt3sas_base_free_smid(struct MPT3SAS_ADAPTER *ioc, u16 smid);
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 52de355..6bc9291 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -2269,7 +2269,7 @@ struct _sas_node *
- 	}
- 
- 	if (type == MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK)
--		scsi_lookup = &ioc->scsi_lookup[smid_task - 1];
-+		scsi_lookup = mpt3sas_get_st_from_smid(ioc, smid_task);
- 
- 	dtmprintk(ioc, pr_info(MPT3SAS_FMT
- 		"sending tm: handle(0x%04x), task_type(0x%02x), smid(%d)\n",
-@@ -2287,7 +2287,8 @@ struct _sas_node *
- 	mpt3sas_scsih_set_tm_flag(ioc, handle);
- 	init_completion(&ioc->tm_cmds.done);
- 	if ((type == MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK) &&
--			(scsi_lookup->msix_io < ioc->reply_queue_count))
-+	    scsi_lookup &&
-+	    (scsi_lookup->msix_io < ioc->reply_queue_count))
- 		msix_task = scsi_lookup->msix_io;
- 	else
- 		msix_task = 0;
-@@ -2328,7 +2329,7 @@ struct _sas_node *
- 	switch (type) {
- 	case MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK:
- 		rc = SUCCESS;
--		if (scsi_lookup->scmd == NULL)
-+		if (scsi_lookup && scsi_lookup->scmd == NULL)
- 			break;
- 		rc = FAILED;
- 		break;
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_warpdrive.c b/drivers/scsi/mpt3sas/mpt3sas_warpdrive.c
-index 540bd50..06e3f7d 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_warpdrive.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_warpdrive.c
-@@ -270,7 +270,9 @@
- inline u8
- mpt3sas_scsi_direct_io_get(struct MPT3SAS_ADAPTER *ioc, u16 smid)
- {
--	return ioc->scsi_lookup[smid - 1].direct_io;
-+	struct scsiio_tracker *st = mpt3sas_get_st_from_smid(ioc, smid);
-+
-+	return st ? st->direct_io : 0;
- }
- 
- /**
+On request from Broadcom the patchset has been split in two parts, one
+to enable lockless command submission and a secondary one for exposing
+all hardware queues to the OS.
+
+As usual, comments and reviews are welcome.
+
+Changes to v1:
+- Include reviews from Christoph
+- Use reserved commands for ioctl passthrough commands
+- Include reviews from Sreekanth
+
+Changes to v2:
+- Rework ioctl code to not use blk_mq_busy_iter
+- Open-code mpt3sas_scsi_direct_io_(get,set)
+
+Changes to v3:
+- Simplify task management code
+- Simplify _wait_for_commands_to_complete
+- Use first reserved smid for ioctl passthrough
+
+Hannes Reinecke (3):
+  mpt3sas: Use 'msix_index' as argument for put_smid functions
+  block: Add blk_mq_make_unique_tag()
+  mpt3sas: scsi-mq interrupt steering
+
+ block/blk-mq-tag.c                       |  3 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.c      | 80 +++++++++++++++++++-------------
+ drivers/scsi/mpt3sas/mpt3sas_base.h      | 20 ++++++--
+ drivers/scsi/mpt3sas/mpt3sas_config.c    |  2 +-
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c       | 21 +++++----
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 59 ++++++++++++++++++-----
+ drivers/scsi/mpt3sas/mpt3sas_transport.c |  8 ++--
+ include/linux/blk-mq.h                   |  5 ++
+ 8 files changed, 135 insertions(+), 63 deletions(-)
+
 -- 
 1.8.5.6
