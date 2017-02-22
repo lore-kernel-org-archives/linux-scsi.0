@@ -1,43 +1,56 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCHv2 0/5] SCSI EH cleanup
-Date: Wed, 22 Feb 2017 21:21:49 +0000
-Message-ID: <1487798485.10204.1.camel@sandisk.com>
-References: <1487779650-1338-1-git-send-email-hare@suse.de>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH] aacraid: Fixed expander hotplug for SMART family
+Date: Wed, 22 Feb 2017 07:23:13 -0800
+Message-ID: <20170222152313.11518-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:21105 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933829AbdBVV0c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Feb 2017 16:26:32 -0500
-In-Reply-To: <1487779650-1338-1-git-send-email-hare@suse.de>
-Content-Language: en-US
-Content-ID: <ECB0AF2FBC3D5749A902EE86C8473816@sandisk.com>
+Received: from mail-co1nam03on0088.outbound.protection.outlook.com ([104.47.40.88]:41376
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754503AbdBVWBn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 22 Feb 2017 17:01:43 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jth@kernel.org" <jth@kernel.org>
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com
 
-On Wed, 2017-02-22 at 17:07 +0100, Hannes Reinecke wrote:
-> this is a resend of a small patchset for cleaning up SCSI EH.
-> Primary goal is to make asynchronous aborts mandatory; there hasn't
-> been a single report so far where asynchronous abort won't work, so
-> the 'no_async_abort' flag has never been used and will be removed
-> with this patchset.
-> Additionally there's a cleanup for handle failed EH commands, and
-> to detect retries of failed commands.
+Current driver Hotplug processing code skips over Enclosure channel,
+therefore any addition/removal of expander enclosure is not processed.
+Additionally  device addition code relies on older device type, which
+prevents the hotplug of adapter expanders.
 
-An additional comment: I don't think it is safe to execute a host
-reset while any asynchronous aborts are ongoing. I think the SCSI EH
-will get really confused if after a host reset has been performed a
-response is received from an asynchronous abort that was issued
-before the host reset started. Although a SCSI target must not send
-a LU RESET response before all previously submitted SCSI commands
-and TMFs have finished, what prevents in e.g. a multipath topology
-that an abort response and a LU RESET response are received out of
-order?
+Fixed by removing code that skips over Enclosure channels and using the
+latest device type for addition or removal or enclosure expanders.
 
-Thanks,
+Fixes: 6223a39fe6fbbeef (scsi: aacraid: Added support for hotplug)
+Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+---
+ drivers/scsi/aacraid/commsup.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-Bart.=
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index a2ea70d..1994c74 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -1908,9 +1908,6 @@ static void aac_resolve_luns(struct aac_dev *dev)
+ 	for (bus = 0; bus < AAC_MAX_BUSES; bus++) {
+ 		for (target = 0; target < AAC_MAX_TARGETS; target++) {
+ 
+-			if (aac_phys_to_logical(bus) == ENCLOSURE_CHANNEL)
+-				continue;
+-
+ 			if (bus == CONTAINER_CHANNEL)
+ 				channel = CONTAINER_CHANNEL;
+ 			else
+@@ -1922,7 +1919,7 @@ static void aac_resolve_luns(struct aac_dev *dev)
+ 			sdev = scsi_device_lookup(dev->scsi_host_ptr, channel,
+ 					target, 0);
+ 
+-			if (!sdev && devtype)
++			if (!sdev && new_devtype)
+ 				scsi_add_device(dev->scsi_host_ptr, channel,
+ 						target, 0);
+ 			else if (sdev && new_devtype != devtype)
+-- 
+2.7.4
