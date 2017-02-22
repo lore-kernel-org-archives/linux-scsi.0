@@ -1,40 +1,40 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 120371] UBSAN splat in drivers/scsi/scsi_devinfo.c:458:21
-Date: Wed, 22 Feb 2017 20:06:03 +0000
-Message-ID: <bug-120371-11613-9PsirmkWx2@https.bugzilla.kernel.org/>
-References: <bug-120371-11613@https.bugzilla.kernel.org/>
+From: James Smart <jsmart2021@gmail.com>
+Subject: [PATCH v2] lpfc: add missing Kconfig NVME dependencies
+Date: Wed, 22 Feb 2017 12:16:50 -0800
+Message-ID: <58adf1b2.pGf0m6CGsoX83xvw%jsmart2021@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:59488 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932214AbdBVUGG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 22 Feb 2017 15:06:06 -0500
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 0569B284DC
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Feb 2017 20:06:06 +0000 (UTC)
-Received: from pdx-korg-bugzilla-1.web.codeaurora.org (unknown [172.30.200.120])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id C18F628683
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Feb 2017 20:06:03 +0000 (UTC)
-In-Reply-To: <bug-120371-11613@https.bugzilla.kernel.org/>
+Received: from mail-qk0-f195.google.com ([209.85.220.195]:34821 "EHLO
+        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933786AbdBVU2p (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Feb 2017 15:28:45 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@kernel.org
+To: hare@suse.com, martin.petersen@oracle.com, dick.kennedy@broadcom.com, linux-next@vger.kernel.org, sfr@canb.auug.org.au, linux-nvme@lists.infradead.org, sagi@grimberg.me, linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=120371
 
-Wilfried Klaebe (linux-kernel@lebenslange-mailadresse.de) changed:
+add missing Kconfig NVME dependencies
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-         Resolution|---                         |CODE_FIX
+-- james
 
---- Comment #2 from Wilfried Klaebe (linux-kernel@lebenslange-mailadresse.de) ---
-does not appear anymore in (at least) 4.10
+Signed-off-by: James Smart <james.smart@broadcom.com>
+---
+ drivers/scsi/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index d4023bf..2558434 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -1240,6 +1240,7 @@ config SCSI_LPFC
+ 	tristate "Emulex LightPulse Fibre Channel Support"
+ 	depends on PCI && SCSI
+ 	depends on SCSI_FC_ATTRS
++	depends on NVME_FC && NVME_TARGET_FC
+ 	select CRC_T10DIF
+ 	help
+           This lpfc driver supports the Emulex LightPulse
 -- 
-You are receiving this mail because:
-You are the assignee for the bug.
+2.5.0
