@@ -1,33 +1,44 @@
 From: "Tobin C. Harding" <me@tobin.cc>
-Subject: [PATCH 0/3] cciss: Fix coccinelle/checkpatch warnings.
-Date: Wed, 22 Feb 2017 17:12:35 +1100
-Message-ID: <1487743958-4208-1-git-send-email-me@tobin.cc>
+Subject: [PATCH 3/3] cciss: Remove kmalloc cast
+Date: Wed, 22 Feb 2017 17:12:38 +1100
+Message-ID: <1487743958-4208-4-git-send-email-me@tobin.cc>
+References: <1487743958-4208-1-git-send-email-me@tobin.cc>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:50746 "EHLO
+Received: from out4-smtp.messagingengine.com ([66.111.4.28]:48708 "EHLO
         out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751349AbdBVGMp (ORCPT
+        by vger.kernel.org with ESMTP id S1754161AbdBVGMv (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 22 Feb 2017 01:12:45 -0500
+        Wed, 22 Feb 2017 01:12:51 -0500
+In-Reply-To: <1487743958-4208-1-git-send-email-me@tobin.cc>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Don Brace <don.brace@microsemi.com>
 Cc: linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, "Tobin C. Harding" <me@tobin.cc>
 
-Re-send after spell checking. :(
+Coccinelle emits a warning about casting the return value of
+kmalloc(). Coccinelle suggests removing the cast as do
+kerneljanitors.
 
-Coccinelle warns about unnecessary cast on call to kmalloc(). Checkpatch
-emits various warnings when parsing file.
+Remove cast from kmalloc() call.
 
-Clean up two checkpatch warnings. Remove trailing whitespace and
-clean up opening brace position. Remove unnecessary cast on kmalloc().
+Signed-off-by: Tobin C. Harding <me@tobin.cc>
+---
+ drivers/block/cciss_scsi.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Tobin C. Harding (3):
-  cciss: Fix checkpatch TRAILING_WHITESPACE
-  cciss: Fix checkpatch OPEN_BRACE
-  cciss: Remove kmalloc cast
-
- drivers/block/cciss_scsi.c | 182 ++++++++++++++++++++++-----------------------
- 1 file changed, 88 insertions(+), 94 deletions(-)
-
+diff --git a/drivers/block/cciss_scsi.c b/drivers/block/cciss_scsi.c
+index f5c21f3..01a1f7e 100644
+--- a/drivers/block/cciss_scsi.c
++++ b/drivers/block/cciss_scsi.c
+@@ -647,8 +647,7 @@ cciss_scsi_setup(ctlr_info_t *h)
+ 	struct cciss_scsi_adapter_data_t * shba;
+ 
+ 	ccissscsi[h->ctlr].ndevices = 0;
+-	shba = (struct cciss_scsi_adapter_data_t *)
+-		kmalloc(sizeof(*shba), GFP_KERNEL);
++	shba = kmalloc(sizeof(*shba), GFP_KERNEL);
+ 	if (shba == NULL)
+ 		return;
+ 	shba->scsi_host = NULL;
 -- 
 2.7.4
