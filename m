@@ -1,96 +1,126 @@
-From: Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 03/14] input: utilize new device_add_cdev
- helper function
-Date: Thu, 23 Feb 2017 00:37:03 -0800
-Message-ID: <20170223083703.GF18639@dtor-ws>
-References: <1487653253-11497-1-git-send-email-logang@deltatee.com>
- <1487653253-11497-4-git-send-email-logang@deltatee.com>
-Reply-To: rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
+Subject: Re: Advanced Format SAT devices show incorrect physical block size
+Date: Thu, 23 Feb 2017 10:03:36 +0100
+Message-ID: <20170223090336.GA24201@pali>
+References: <Pine.LNX.4.44L0.1701301055100.2025-100000@iolanthe.rowland.org>
+ <201701301843.12242@pali>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <rtc-linux+bncBDP6N55ZUYDRBM56XLCQKGQEX7KWXQY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:33225 "EHLO
+        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751034AbdBWJEh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Feb 2017 04:04:37 -0500
 Content-Disposition: inline
-In-Reply-To: <1487653253-11497-4-git-send-email-logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-List-Post: <https://groups.google.com/group/rtc-linux/post>, <mailto:rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:rtc-linux+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/rtc-linux
-List-Subscribe: <https://groups.google.com/group/rtc-linux/subscribe>, <mailto:rtc-linux+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+712029733259+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/rtc-linux/subscribe>
-To: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Sajjan Vikas C <vikas.cha.sajjan-ZPxbGqLxI0U@public.gmane.org>, Linus Walleij <linus.walleij-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Alexandre Courbot <gnurou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Peter Huewe <peterhuewe-Mmb7MZpHnFY@public.gmane.org>, Marcel Selhorst <tpmdd-yWjUBOtONefk1uMJSBkQmQ@public.gmane.org>, Jarkko Sakkinen <jarkko.sakkinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Olof Johansson <olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sean Hefty <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hal Rosenstock <hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jonathan Cameron <jic23-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hartmut Knaack <knaac>
+In-Reply-To: <201701301843.12242@pali>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>, Dainius =?utf-8?Q?Masili=C5=ABnas?= <pastas4@gmail.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, Tom Yan <tom.ty89@gmail.com>
 
-On Mon, Feb 20, 2017 at 10:00:42PM -0700, Logan Gunthorpe wrote:
-> Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-> ---
-
-Please add some more verbage, otherwise
-
-Acked-by: Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-
-
->  drivers/input/evdev.c    | 3 +--
->  drivers/input/joydev.c   | 3 +--
->  drivers/input/mousedev.c | 3 +--
->  3 files changed, 3 insertions(+), 6 deletions(-)
+On Monday 30 January 2017 18:43:12 Pali Rohár wrote:
+> On Monday 30 January 2017 17:17:03 Alan Stern wrote:
+> > On Sun, 29 Jan 2017, Pali Rohár wrote:
+> > > On Wednesday 11 January 2017 16:23:29 Alan Stern wrote:
+> > > > On Tue, 10 Jan 2017, James Bottomley wrote:
+> > > > > On Tue, 2017-01-10 at 16:00 -0500, Alan Stern wrote:
+> > > > > > In theory, I suppose we could change the kernel so that it
+> > > > > > would default to READ CAPACITY(16) for devices that report a
+> > > > > > SCSI level
+> > > > > > 
+> > > > > > >= 3, or something along those lines.  In general we hesitate
+> > > > > > >to
+> > > > > > 
+> > > > > > make changes of this sort, because they almost always end up
+> > > > > > breaking _some_ devices -- and if that happens then the
+> > > > > > change is reverted, with no exceptions.  Linus has a very
+> > > > > > strict rule about not breaking working systems.
+> > > > > 
+> > > > > You shouldn't have to change anything: it already does
+> > > > > (otherwise how else would we detect physical exponent for
+> > > > > proper SCSI devices) see sd.c:sd_try_rc16_first().  It always
+> > > > > returns false for USB because you set sdev->try_rc_10_first
+> > > > 
+> > > > In fact, this approach probably won't work.  See Bugzilla entries
+> > > > #43265 and #43391.  The devices in those reports claimed to be
+> > > > ANSI level 4, but they failed anyway.
+> > > 
+> > > Seems those devices return capacity 0x7F000000000001 or
+> > > 0xFF000000000001 Maybe there is some error pattern?
+> > 
+> > As far as I can tell, they both reported 0xFF000000000001.  That's a
+> > pattern -- unless somebody really does have a storage device that
+> > large (18 exabytes).  For the time being, perhaps we can ignore this
+> > possibility.
+> > 
+> > > > If you guys want to try the quirk flag, you can apply the patch
+> > > > below. Then set the usb-storage module parameter
+> > > > quirks=vvvv:pppp:k where vvvv and pppp are the Vendor and
+> > > > Product ID codes for your device (as 4 hex digits).
+> > > > 
+> > > > In the long run, however, this is not a viable approach.  We'd be
+> > > > better off with an explicit blacklist.
+> > > 
+> > > Ok, so what are next steps? I think that explicit blacklist would
+> > > be needed if "bad" devices is less.
+> > > 
+> > > How many bug reports were there?
+> > 
+> > I don't know.
+> > 
+> > Anyway, please try out the patch below.  I don't know if it will be
+> > acceptable to the SCSI maintainers, but we should at least make sure
+> > it fixes your problem before submitting it.
 > 
-> diff --git a/drivers/input/evdev.c b/drivers/input/evdev.c
-> index e9ae3d5..a3407ea 100644
-> --- a/drivers/input/evdev.c
-> +++ b/drivers/input/evdev.c
-> @@ -1416,8 +1416,7 @@ static int evdev_connect(struct input_handler *handler, struct input_dev *dev,
->  		goto err_free_evdev;
->  
->  	cdev_init(&evdev->cdev, &evdev_fops);
-> -	evdev->cdev.kobj.parent = &evdev->dev.kobj;
-> -	error = cdev_add(&evdev->cdev, evdev->dev.devt, 1);
-> +	error = device_add_cdev(&evdev->dev, &evdev->cdev);
->  	if (error)
->  		goto err_unregister_handle;
->  
-> diff --git a/drivers/input/joydev.c b/drivers/input/joydev.c
-> index abd18f3..012e06f 100644
-> --- a/drivers/input/joydev.c
-> +++ b/drivers/input/joydev.c
-> @@ -905,8 +905,7 @@ static int joydev_connect(struct input_handler *handler, struct input_dev *dev,
->  		goto err_free_joydev;
->  
->  	cdev_init(&joydev->cdev, &joydev_fops);
-> -	joydev->cdev.kobj.parent = &joydev->dev.kobj;
-> -	error = cdev_add(&joydev->cdev, joydev->dev.devt, 1);
-> +	error = device_add_cdev(&joydev->dev, &joydev->cdev);
->  	if (error)
->  		goto err_unregister_handle;
->  
-> diff --git a/drivers/input/mousedev.c b/drivers/input/mousedev.c
-> index b604564..efd8666 100644
-> --- a/drivers/input/mousedev.c
-> +++ b/drivers/input/mousedev.c
-> @@ -901,8 +901,7 @@ static struct mousedev *mousedev_create(struct input_dev *dev,
->  	}
->  
->  	cdev_init(&mousedev->cdev, &mousedev_fops);
-> -	mousedev->cdev.kobj.parent = &mousedev->dev.kobj;
-> -	error = cdev_add(&mousedev->cdev, mousedev->dev.devt, 1);
-> +	error = device_add_cdev(&mousedev->dev, &mousedev->cdev);
->  	if (error)
->  		goto err_unregister_handle;
->  
-> -- 
-> 2.1.4
+> I'm not original reporter of this problem.
+> 
+> Dainius, can you test it?
+
+Just want to remind this patch so it will not be forgotten...
+
+> > Alan Stern
+> > 
+> > 
+> > 
+> > 
+> > Index: usb-4.x/drivers/scsi/sd.c
+> > ===================================================================
+> > --- usb-4.x.orig/drivers/scsi/sd.c
+> > +++ usb-4.x/drivers/scsi/sd.c
+> > @@ -2157,6 +2157,13 @@ static int read_capacity_16(struct scsi_
+> >  		return -ENODEV;
+> >  	}
+> > 
+> > +	/* Some buggy devices report an impossibly large size */
+> > +	if (lba >= (1ULL << 54)) {
+> > +		sd_printk(KERN_WARNING, sdkp, "Read Capacity(16) returned excessively large value: %llu", lba);
+> > +		sdkp->capacity = 0;
+> > +		return -EINVAL;
+> > +	}
+> > +
+> >  	if ((sizeof(sdkp->capacity) == 4) && (lba >= 0xffffffffULL)) {
+> >  		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
+> >  			"kernel compiled with support for large block "
+> > Index: usb-4.x/drivers/usb/storage/scsiglue.c
+> > ===================================================================
+> > --- usb-4.x.orig/drivers/usb/storage/scsiglue.c
+> > +++ usb-4.x/drivers/usb/storage/scsiglue.c
+> > @@ -247,8 +247,11 @@ static int slave_configure(struct scsi_d
+> >  		 * Tell the SCSI layer to try READ_CAPACITY_10 first.
+> >  		 * However some USB 3.0 drive enclosures return capacity
+> >  		 * modulo 2TB. Those must use READ_CAPACITY_16
+> > +		 *
+> > +		 * Assume SPC3 or later devices can handle READ_CAPACITY_16.
+> >  		 */
+> > -		if (!(us->fflags & US_FL_NEEDS_CAP16))
+> > +		if (sdev->scsi_level <= SCSI_SPC_2 &&
+> > +				!(us->fflags & US_FL_NEEDS_CAP16))
+> >  			sdev->try_rc_10_first = 1;
+> > 
+> >  		/* assume SPC3 or latter devices support sense size > 18 */
 > 
 
 -- 
-Dmitry
-
--- 
-You received this message because you are subscribed to "rtc-linux".
-Membership options at http://groups.google.com/group/rtc-linux .
-Please read http://groups.google.com/group/rtc-linux/web/checklist
-before submitting a driver.
---- 
-You received this message because you are subscribed to the Google Groups "rtc-linux" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to rtc-linux+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-For more options, visit https://groups.google.com/d/optout.
+Pali Rohár
+pali.rohar@gmail.com
