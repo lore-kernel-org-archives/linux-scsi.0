@@ -1,42 +1,68 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2] hpsa: expose enclosures
-Date: Thu, 23 Feb 2017 11:55:03 +0100
-Message-ID: <1487847303-82580-1-git-send-email-hare@suse.de>
+Subject: [PATCH] qedf: fixup compilation warning about atomic_t usage
+Date: Thu, 23 Feb 2017 12:44:51 +0100
+Message-ID: <1487850291-114238-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37165 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:41048 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751017AbdBWLNz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 23 Feb 2017 06:13:55 -0500
+        id S1751034AbdBWMEm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 23 Feb 2017 07:04:42 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Don Brace <don.brace@microsemi.com>, Hannes Reinecke <hare@suse.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Chad Dupuis <chad.dupuis@cavium.com>, Nilesh Javali <nilesh.javali@cavium.com>, Hannes Reinecke <hare@suse.com>
 
-Some servers have a built-in enclosure which will show up on the
-same bus as the internal physical devices. This patch fixes the
-driver to expose them.
+The driver didn't follow the atomic_t vs refcount_t change, and
+anyway one should be using kref_read() instead of accessing the
+counter inside an kref.
 
-Cc: Don Brace <don.brace@microsemi.com>
+Fixes: 61d8658b4a435e ("scsi: qedf: Add QLogic FastLinQ offload FCoE driver framework.)
+Cc: Chad Dupuis <chad.dupuis@cavium.com>
+Cc: Nilesh Javali <nilesh.javali@cavium.com>
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/hpsa.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/scsi/qedf/qedf_io.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 524a0c7..a77ed5a 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -4407,7 +4407,10 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
- 		 * Expose all devices except for physical devices that
- 		 * are masked.
- 		 */
--		if (MASKED_DEVICE(lunaddrbytes) && this_device->physical_device)
-+		if (this_device->devtype == TYPE_ENCLOSURE)
-+			this_device->expose_device = 1;
-+		else if (MASKED_DEVICE(lunaddrbytes) &&
-+			 this_device->physical_device)
- 			this_device->expose_device = 0;
- 		else
- 			this_device->expose_device = 1;
+diff --git a/drivers/scsi/qedf/qedf_io.c b/drivers/scsi/qedf/qedf_io.c
+index 486c045..ee0dcf9 100644
+--- a/drivers/scsi/qedf/qedf_io.c
++++ b/drivers/scsi/qedf/qedf_io.c
+@@ -998,7 +998,7 @@ static void qedf_trace_io(struct qedf_rport *fcport, struct qedf_ioreq *io_req,
+ 	io_log->sg_count = scsi_sg_count(sc_cmd);
+ 	io_log->result = sc_cmd->result;
+ 	io_log->jiffies = jiffies;
+-	io_log->refcount = atomic_read(&io_req->refcount.refcount);
++	io_log->refcount = kref_read(&io_req->refcount);
+ 
+ 	if (direction == QEDF_IO_TRACE_REQ) {
+ 		/* For requests we only care abot the submission CPU */
+@@ -1340,7 +1340,7 @@ void qedf_scsi_completion(struct qedf_ctx *qedf, struct fcoe_cqe *cqe,
+ 			/* Good I/O completion */
+ 			sc_cmd->result = DID_OK << 16;
+ 		} else {
+-			refcount = atomic_read(&io_req->refcount.refcount);
++			refcount = kref_read(&io_req->refcount);
+ 			QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_IO,
+ 			    "%d:0:%d:%d xid=0x%0x op=0x%02x "
+ 			    "lba=%02x%02x%02x%02x cdb_status=%d "
+@@ -1425,7 +1425,7 @@ void qedf_scsi_done(struct qedf_ctx *qedf, struct qedf_ioreq *io_req,
+ 	qedf_unmap_sg_list(qedf, io_req);
+ 
+ 	sc_cmd->result = result << 16;
+-	refcount = atomic_read(&io_req->refcount.refcount);
++	refcount = kref_read(&io_req->refcount);
+ 	QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_IO, "%d:0:%d:%d: Completing "
+ 	    "sc_cmd=%p result=0x%08x op=0x%02x lba=0x%02x%02x%02x%02x, "
+ 	    "allowed=%d retries=%d refcount=%d.\n",
+@@ -1556,7 +1556,7 @@ static void qedf_flush_els_req(struct qedf_ctx *qedf,
+ {
+ 	QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_IO,
+ 	    "Flushing ELS request xid=0x%x refcount=%d.\n", els_req->xid,
+-	    atomic_read(&els_req->refcount.refcount));
++	    kref_read(&els_req->refcount));
+ 
+ 	/*
+ 	 * Need to distinguish this from a timeout when calling the
 -- 
 1.8.5.6
