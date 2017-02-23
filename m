@@ -1,20 +1,28 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: sense handling improvements
-Date: Thu, 23 Feb 2017 10:49:48 +0100
-Message-ID: <20170223094948.GA29551@lst.de>
-References: <20170214191600.17480-1-hch@lst.de> <yq18tp6by2n.fsf@oracle.com> <20170222071915.GA18084@lst.de> <yq1shn57mqn.fsf@oracle.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] lpfc: add missing Kconfig NVME dependencies
+Date: Thu, 23 Feb 2017 02:09:38 -0800
+Message-ID: <20170223100938.GA20495@infradead.org>
+References: <58adba5f.BoP49Cv2S5zD9ZuD%jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:53923 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750952AbdBWKJn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Feb 2017 05:09:43 -0500
 Content-Disposition: inline
-In-Reply-To: <yq1shn57mqn.fsf@oracle.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, axboe@kernek.dk, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <58adba5f.BoP49Cv2S5zD9ZuD%jsmart2021@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <jsmart2021@gmail.com>
+Cc: hare@suse.com, martin.petersen@oracle.com, dick.kennedy@broadcom.com, linux-next@vger.kernel.org, sfr@canb.auug.org.au, linux-nvme@lists.infradead.org, sagi@grimberg.me, linux-scsi@vger.kernel.org
 
-On Wed, Feb 22, 2017 at 07:51:44PM -0500, Martin K. Petersen wrote:
-> I applied 1-4 to 4.11/scsi-fixes. Both 5 and 6 had problems so please
-> fix those up.
+On Wed, Feb 22, 2017 at 08:20:47AM -0800, James Smart wrote:
+> 
+> add missing Kconfig NVME dependencies
+> 
+> Can't believe I missed posting this
 
-What kind of problem?  I didn't see anything on the list.
+Oh.  I'm not sure everyone is happy having to drag in the whole
+nvme and nvme target stack when building lpfc.  Is there a way
+to make nvme optional?  And in the future scsi as well?
