@@ -1,199 +1,99 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] target: Fix NULL dereference during LUN lookup + active I/O shutdown
-Date: Thu, 23 Feb 2017 06:56:39 +0000
-Message-ID: <1487832999-3390-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Rob Millner <rlm@daterainc.com>, Vaibhav Tandon <vst@datera.io>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCHv2 0/5] SCSI EH cleanup
+Date: Thu, 23 Feb 2017 08:27:26 +0100
+Message-ID: <99107fe7-c21a-6416-3748-f9497d6ceb60@suse.de>
+References: <1487779650-1338-1-git-send-email-hare@suse.de>
+ <1D08B61A9CF0974AA09887BE32D889DA0ADA73@ULS-OP-MBXIP03.sdcorp.global.sandisk.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:47208 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750952AbdBWH2p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 23 Feb 2017 02:28:45 -0500
+In-Reply-To: <1D08B61A9CF0974AA09887BE32D889DA0ADA73@ULS-OP-MBXIP03.sdcorp.global.sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Johannes Thumshirn <jth@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On 02/22/2017 08:44 PM, Bart Van Assche wrote:
+> On 02/22/2017 08:07 AM, Hannes Reinecke wrote:
+>> this is a resend of a small patchset for cleaning up SCSI EH.
+>> Primary goal is to make asynchronous aborts mandatory; there hasn't
+>> been a single report so far where asynchronous abort won't work, so
+>> the 'no_async_abort' flag has never been used and will be removed
+>> with this patchset.
+>> Additionally there's a cleanup for handle failed EH commands, and
+>> to detect retries of failed commands.
+>>
+>> As usual, comments and reviews are welcome.
+> 
+> Hello Hannes,
+> 
+> Supporting asynchronous aborts means that if no response is received for
+> an abort after a certain time that the abort has to be considered as
+> failed. A SCSI LLD may have to allocate resources before a TMF can be
+> sent (e.g. ib_srp has to do that). These resources have to be cleaned up
+> if a TMF times out. We don't want to see a TMF timeout handler in every
+> LLD that supports asynchronous aborts. So we need a TMF timeout handler
+> in the SCSI core. Have you considered to allocate a new SCSI request for
+> submitting a TMF instead of overwriting fields in an existing scsi_cmnd
+> structure? In that case we will be able to reuse the block layer timeout
+> handler.
+> 
+TMF timeout is a completely different issue, and isn't touched at all by
+this patchset.
 
-When transport_clear_lun_ref() is shutting down a se_lun via
-configfs with new I/O in-flight, it's possible to trigger a
-NULL pointer dereference in transport_lookup_cmd_lun() due
-to the fact percpu_ref_get() doesn't do any __PERCPU_REF_DEAD
-checking before incrementing lun->lun_ref.count after
-lun->lun_ref has switched to atomic_t mode.
+ATM the SCSI core expects any of the eh_XXX callback functions to be
+synchronous, ie any TMF timeout handling is delegated to the driver.
 
-This results in a NULL pointer dereference as LUN shutdown
-code in core_tpg_remove_lun() continues running after the
-existing ->release() -> core_tpg_lun_ref_release() callback
-completes, and clears the RCU protected se_lun->lun_se_dev
-pointer.
+I plan to change that for the eh_abort() call, as most HBAs will be
+receiving a completion for both commands, the TMF and the associated
+command. So for these drivers there is not point in assuming a
+synchronous call; we can easily make this call asynchronous and wait for
+the completion to deliver the final status.
+And indeed have a generic TMF timeout handling in the SCSI core.
 
-During the OOPs, the state of lun->lun_ref in the process
-which triggered the NULL pointer dereference looks like
-the following on v4.1.y stable code:
+And yes, I have considered allocating a separate command for TMFs.
+In fact, I'll be looking at implementing a RQF_RESET meta request (much
+like the RQF_FLUSH request we already have).
+That would neatly solve the problem sg_reset has nowadays (namely that
+it doesn't have a SCSI command attached to it), and it would also
+decouple the failed command from the error handling itself.
+With that we could return the command to the block layer even when EH is
+still running, giving us better failover response times.
 
-struct se_lun {
-  lun_link_magic = 4294932337,
-  lun_status = TRANSPORT_LUN_STATUS_FREE,
+> Something else I noticed is that the access of .eh_action in
+> scsi_eh_done() races with the shost->eh_action = NULL assigment in
+> scsi_send_eh_cmnd(). Shouldn't these accesses be protected by locking?
+> 
+No, I don't think so.
+The only place where this can race is once wait_for_completion_timeout()
+has timed out.
+There indeed is a chance that scsi_eh_done() is called just before
+shost->eh_action = NULL.
+But then this is not really critical as the 'done' structure itself is
+still valid until scsi_send_eh_cmnd() itself is finished.
+And calling 'complete' at any time before that will just be a no-op as
+the waiting is already terminated.
 
-  .....
+One _might_ consider a really fucked-up architecture where the assignment
+	eh_action = scmd->device->host->eh_action;
+is executed before 'shost->eh_action = NULL', but the final
+	complete(eh_action)
+is executed after the entire scsi_send_eh_cmnd() function has completed.
+So from that point we should be issuing a 'wmb' or somesuch after
+shost->eh_action = NULL.
+However, I do consider this highly unlikely.
 
-  lun_se_dev = 0x0,
-  lun_sep = 0x0,
+Cheers,
 
-  .....
-
-  lun_ref = {
-    count = {
-      counter = 1
-    },
-    percpu_count_ptr = 3,
-    release = 0xffffffffa02fa1e0 <core_tpg_lun_ref_release>,
-    confirm_switch = 0x0,
-    force_atomic = false,
-    rcu = {
-      next = 0xffff88154fa1a5d0,
-      func = 0xffffffff8137c4c0 <percpu_ref_switch_to_atomic_rcu>
-    }
-  }
-}
-
-To address this bug, use percpu_ref_tryget_live() to ensure
-once __PERCPU_REF_DEAD is visable on all CPUs and ->lun_ref
-has switched to atomic_t, all new I/Os will fail to obtain
-a new lun->lun_ref reference.
-
-Also use an explicit percpu_ref_kill_and_confirm() callback
-to block on ->lun_ref_comp to allow the first stage and
-associated RCU grace period to complete, and then block on
-->lun_ref_shutdown waiting for the final percpu_ref_put()
-to drop the last reference via transport_lun_remove_cmd()
-before continuing with core_tpg_remove_lun() shutdown.
-
-Reported-by: Rob Millner <rlm@daterainc.com>
-Tested-by: Rob Millner <rlm@daterainc.com>
-Cc: Rob Millner <rlm@daterainc.com>
-Tested-by: Vaibhav Tandon <vst@datera.io>
-Cc: Vaibhav Tandon <vst@datera.io>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_device.c    | 10 ++++++++--
- drivers/target/target_core_tpg.c       |  3 ++-
- drivers/target/target_core_transport.c | 31 ++++++++++++++++++++++++++++++-
- include/target/target_core_base.h      |  1 +
- 4 files changed, 41 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index cb7047d..c754ae3 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -78,12 +78,16 @@
- 					&deve->read_bytes);
- 
- 		se_lun = rcu_dereference(deve->se_lun);
-+
-+		if (!percpu_ref_tryget_live(&se_lun->lun_ref)) {
-+			se_lun = NULL;
-+			goto out_unlock;
-+		}
-+
- 		se_cmd->se_lun = rcu_dereference(deve->se_lun);
- 		se_cmd->pr_res_key = deve->pr_res_key;
- 		se_cmd->orig_fe_lun = unpacked_lun;
- 		se_cmd->se_cmd_flags |= SCF_SE_LUN_CMD;
--
--		percpu_ref_get(&se_lun->lun_ref);
- 		se_cmd->lun_ref_active = true;
- 
- 		if ((se_cmd->data_direction == DMA_TO_DEVICE) &&
-@@ -97,6 +101,7 @@
- 			goto ref_dev;
- 		}
- 	}
-+out_unlock:
- 	rcu_read_unlock();
- 
- 	if (!se_lun) {
-@@ -815,6 +820,7 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
- 	xcopy_lun = &dev->xcopy_lun;
- 	rcu_assign_pointer(xcopy_lun->lun_se_dev, dev);
- 	init_completion(&xcopy_lun->lun_ref_comp);
-+	init_completion(&xcopy_lun->lun_shutdown_comp);
- 	INIT_LIST_HEAD(&xcopy_lun->lun_deve_list);
- 	INIT_LIST_HEAD(&xcopy_lun->lun_dev_link);
- 	mutex_init(&xcopy_lun->lun_tg_pt_md_mutex);
-diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
-index d99752c..2744251 100644
---- a/drivers/target/target_core_tpg.c
-+++ b/drivers/target/target_core_tpg.c
-@@ -445,7 +445,7 @@ static void core_tpg_lun_ref_release(struct percpu_ref *ref)
- {
- 	struct se_lun *lun = container_of(ref, struct se_lun, lun_ref);
- 
--	complete(&lun->lun_ref_comp);
-+	complete(&lun->lun_shutdown_comp);
- }
- 
- int core_tpg_register(
-@@ -571,6 +571,7 @@ struct se_lun *core_tpg_alloc_lun(
- 	lun->lun_link_magic = SE_LUN_LINK_MAGIC;
- 	atomic_set(&lun->lun_acl_count, 0);
- 	init_completion(&lun->lun_ref_comp);
-+	init_completion(&lun->lun_shutdown_comp);
- 	INIT_LIST_HEAD(&lun->lun_deve_list);
- 	INIT_LIST_HEAD(&lun->lun_dev_link);
- 	atomic_set(&lun->lun_tg_pt_secondary_offline, 0);
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index efb9e6f..434d9d6 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -2700,10 +2700,39 @@ void target_wait_for_sess_cmds(struct se_session *se_sess)
- }
- EXPORT_SYMBOL(target_wait_for_sess_cmds);
- 
-+static void target_lun_confirm(struct percpu_ref *ref)
-+{
-+	struct se_lun *lun = container_of(ref, struct se_lun, lun_ref);
-+
-+	complete(&lun->lun_ref_comp);
-+}
-+
- void transport_clear_lun_ref(struct se_lun *lun)
- {
--	percpu_ref_kill(&lun->lun_ref);
-+	/*
-+	 * Mark the percpu-ref as DEAD, switch to atomic_t mode, drop
-+	 * the initial reference and schedule confirm kill to be
-+	 * executed after one full RCU grace period has completed.
-+	 */
-+	percpu_ref_kill_and_confirm(&lun->lun_ref, target_lun_confirm);
-+	/*
-+	 * The first completion waits for percpu_ref_switch_to_atomic_rcu()
-+	 * to call target_lun_confirm after lun->lun_ref has been marked
-+	 * as __PERCPU_REF_DEAD on all CPUs, and switches to atomic_t
-+	 * mode so that percpu_ref_tryget_live() lookup of lun->lun_ref
-+	 * fails for all new incoming I/O.
-+	 */
- 	wait_for_completion(&lun->lun_ref_comp);
-+	/*
-+	 * The second completion waits for percpu_ref_put_many() to
-+	 * invoke ->release() after lun->lun_ref has switched to
-+	 * atomic_t mode, and lun->lun_ref.count has reached zero.
-+	 *
-+	 * At this point all target-core lun->lun_ref references have
-+	 * been dropped via transport_lun_remove_cmd(), and it's safe
-+	 * to proceed with the remaining LUN shutdown.
-+	 */
-+	wait_for_completion(&lun->lun_shutdown_comp);
- }
- 
- static bool
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index d7336f3..16d3be8 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -730,6 +730,7 @@ struct se_lun {
- 	struct config_group	lun_group;
- 	struct se_port_stat_grps port_stat_grps;
- 	struct completion	lun_ref_comp;
-+	struct completion	lun_shutdown_comp;
- 	struct percpu_ref	lun_ref;
- 	struct list_head	lun_dev_link;
- 	struct hlist_node	link;
+Hannes
 -- 
-1.9.1
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
