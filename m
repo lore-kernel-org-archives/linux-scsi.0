@@ -1,126 +1,473 @@
-From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
-Subject: Re: Advanced Format SAT devices show incorrect physical block size
-Date: Thu, 23 Feb 2017 10:03:36 +0100
-Message-ID: <20170223090336.GA24201@pali>
-References: <Pine.LNX.4.44L0.1701301055100.2025-100000@iolanthe.rowland.org>
- <201701301843.12242@pali>
+From: "Potomski, MichalX" <michalx.potomski@intel.com>
+Subject: [PATCH v2] scsi: ufs: Factor out ufshcd_read_desc_param
+Date: Thu, 23 Feb 2017 09:05:30 +0000
+Message-ID: <C8BF859FC3044844854B2CBA1ED115C11B067E@HASMSX106.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:33225 "EHLO
-        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751034AbdBWJEh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Feb 2017 04:04:37 -0500
-Content-Disposition: inline
-In-Reply-To: <201701301843.12242@pali>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "'vinholikatti@gmail.com'" <vinholikatti@gmail.com>, "'subhashj@codeaurora.org'" <subhashj@codeaurora.org>, "'jejb@linux.vnet.ibm.com'" <jejb@linux.vnet.ibm.com>, "'martin.petersen@oracle.com'" <martin.petersen@oracle.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
+Cc: "Janca, Grzegorz" <grzegorz.janca@intel.com>, "Mielczarek, SzymonX" <szymonx.mielczarek@intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, Dainius =?utf-8?Q?Masili=C5=ABnas?= <pastas4@gmail.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, Tom Yan <tom.ty89@gmail.com>
 
-On Monday 30 January 2017 18:43:12 Pali Rohár wrote:
-> On Monday 30 January 2017 17:17:03 Alan Stern wrote:
-> > On Sun, 29 Jan 2017, Pali Rohár wrote:
-> > > On Wednesday 11 January 2017 16:23:29 Alan Stern wrote:
-> > > > On Tue, 10 Jan 2017, James Bottomley wrote:
-> > > > > On Tue, 2017-01-10 at 16:00 -0500, Alan Stern wrote:
-> > > > > > In theory, I suppose we could change the kernel so that it
-> > > > > > would default to READ CAPACITY(16) for devices that report a
-> > > > > > SCSI level
-> > > > > > 
-> > > > > > >= 3, or something along those lines.  In general we hesitate
-> > > > > > >to
-> > > > > > 
-> > > > > > make changes of this sort, because they almost always end up
-> > > > > > breaking _some_ devices -- and if that happens then the
-> > > > > > change is reverted, with no exceptions.  Linus has a very
-> > > > > > strict rule about not breaking working systems.
-> > > > > 
-> > > > > You shouldn't have to change anything: it already does
-> > > > > (otherwise how else would we detect physical exponent for
-> > > > > proper SCSI devices) see sd.c:sd_try_rc16_first().  It always
-> > > > > returns false for USB because you set sdev->try_rc_10_first
-> > > > 
-> > > > In fact, this approach probably won't work.  See Bugzilla entries
-> > > > #43265 and #43391.  The devices in those reports claimed to be
-> > > > ANSI level 4, but they failed anyway.
-> > > 
-> > > Seems those devices return capacity 0x7F000000000001 or
-> > > 0xFF000000000001 Maybe there is some error pattern?
-> > 
-> > As far as I can tell, they both reported 0xFF000000000001.  That's a
-> > pattern -- unless somebody really does have a storage device that
-> > large (18 exabytes).  For the time being, perhaps we can ignore this
-> > possibility.
-> > 
-> > > > If you guys want to try the quirk flag, you can apply the patch
-> > > > below. Then set the usb-storage module parameter
-> > > > quirks=vvvv:pppp:k where vvvv and pppp are the Vendor and
-> > > > Product ID codes for your device (as 4 hex digits).
-> > > > 
-> > > > In the long run, however, this is not a viable approach.  We'd be
-> > > > better off with an explicit blacklist.
-> > > 
-> > > Ok, so what are next steps? I think that explicit blacklist would
-> > > be needed if "bad" devices is less.
-> > > 
-> > > How many bug reports were there?
-> > 
-> > I don't know.
-> > 
-> > Anyway, please try out the patch below.  I don't know if it will be
-> > acceptable to the SCSI maintainers, but we should at least make sure
-> > it fixes your problem before submitting it.
-> 
-> I'm not original reporter of this problem.
-> 
-> Dainius, can you test it?
+Since in UFS 2.1 specification some of the descriptor
+lengths differs from 2.0 specification and some devices,
+which are reporting spec version 2.0 have different
+descriptor lengths we can not rely on hardcoded values
+taken from 2.0 specification. This patch introduces
+reading these lengths per each device from descriptor
+headers at probe time to ensure their correctness.
 
-Just want to remind this patch so it will not be forgotten...
+Signed-off-by: Michal' Potomski <michalx.potomski@intel.com>
+---
+ drivers/scsi/ufs/ufs.h    |  22 ++---
+ drivers/scsi/ufs/ufshcd.c | 231 ++++++++++++++++++++++++++++++++++------------
+ drivers/scsi/ufs/ufshcd.h |  15 +++
+ 3 files changed, 196 insertions(+), 72 deletions(-)
 
-> > Alan Stern
-> > 
-> > 
-> > 
-> > 
-> > Index: usb-4.x/drivers/scsi/sd.c
-> > ===================================================================
-> > --- usb-4.x.orig/drivers/scsi/sd.c
-> > +++ usb-4.x/drivers/scsi/sd.c
-> > @@ -2157,6 +2157,13 @@ static int read_capacity_16(struct scsi_
-> >  		return -ENODEV;
-> >  	}
-> > 
-> > +	/* Some buggy devices report an impossibly large size */
-> > +	if (lba >= (1ULL << 54)) {
-> > +		sd_printk(KERN_WARNING, sdkp, "Read Capacity(16) returned excessively large value: %llu", lba);
-> > +		sdkp->capacity = 0;
-> > +		return -EINVAL;
-> > +	}
-> > +
-> >  	if ((sizeof(sdkp->capacity) == 4) && (lba >= 0xffffffffULL)) {
-> >  		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
-> >  			"kernel compiled with support for large block "
-> > Index: usb-4.x/drivers/usb/storage/scsiglue.c
-> > ===================================================================
-> > --- usb-4.x.orig/drivers/usb/storage/scsiglue.c
-> > +++ usb-4.x/drivers/usb/storage/scsiglue.c
-> > @@ -247,8 +247,11 @@ static int slave_configure(struct scsi_d
-> >  		 * Tell the SCSI layer to try READ_CAPACITY_10 first.
-> >  		 * However some USB 3.0 drive enclosures return capacity
-> >  		 * modulo 2TB. Those must use READ_CAPACITY_16
-> > +		 *
-> > +		 * Assume SPC3 or later devices can handle READ_CAPACITY_16.
-> >  		 */
-> > -		if (!(us->fflags & US_FL_NEEDS_CAP16))
-> > +		if (sdev->scsi_level <= SCSI_SPC_2 &&
-> > +				!(us->fflags & US_FL_NEEDS_CAP16))
-> >  			sdev->try_rc_10_first = 1;
-> > 
-> >  		/* assume SPC3 or latter devices support sense size > 18 */
-> 
-
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 318e4a1..54deeb7 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -146,7 +146,7 @@ enum attr_idn {
+ /* Descriptor idn for Query requests */
+ enum desc_idn {
+ 	QUERY_DESC_IDN_DEVICE		= 0x0,
+-	QUERY_DESC_IDN_CONFIGURAION	= 0x1,
++	QUERY_DESC_IDN_CONFIGURATION	= 0x1,
+ 	QUERY_DESC_IDN_UNIT		= 0x2,
+ 	QUERY_DESC_IDN_RFU_0		= 0x3,
+ 	QUERY_DESC_IDN_INTERCONNECT	= 0x4,
+@@ -162,19 +162,13 @@ enum desc_header_offset {
+ 	QUERY_DESC_DESC_TYPE_OFFSET	= 0x01,
+ };
+ 
+-enum ufs_desc_max_size {
+-	QUERY_DESC_DEVICE_MAX_SIZE		= 0x40,
+-	QUERY_DESC_CONFIGURAION_MAX_SIZE	= 0x90,
+-	QUERY_DESC_UNIT_MAX_SIZE		= 0x23,
+-	QUERY_DESC_INTERCONNECT_MAX_SIZE	= 0x06,
+-	/*
+-	 * Max. 126 UNICODE characters (2 bytes per character) plus 2 bytes
+-	 * of descriptor header.
+-	 */
+-	QUERY_DESC_STRING_MAX_SIZE		= 0xFE,
+-	QUERY_DESC_GEOMETRY_MAX_SIZE		= 0x44,
+-	QUERY_DESC_POWER_MAX_SIZE		= 0x62,
+-	QUERY_DESC_RFU_MAX_SIZE			= 0x00,
++enum ufs_desc_def_size {
++	QUERY_DESC_DEVICE_DEF_SIZE		= 0x40,
++	QUERY_DESC_CONFIGURATION_DEF_SIZE	= 0x90,
++	QUERY_DESC_UNIT_DEF_SIZE		= 0x23,
++	QUERY_DESC_INTERCONNECT_DEF_SIZE	= 0x06,
++	QUERY_DESC_GEOMETRY_DEF_SIZE		= 0x44,
++	QUERY_DESC_POWER_DEF_SIZE		= 0x62,
+ };
+ 
+ /* Unit descriptor parameters offsets in bytes*/
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 8b721f4..b839a17 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -100,19 +100,6 @@
+ #define ufshcd_hex_dump(prefix_str, buf, len) \
+ print_hex_dump(KERN_ERR, prefix_str, DUMP_PREFIX_OFFSET, 16, 4, buf, len, false)
+ 
+-static u32 ufs_query_desc_max_size[] = {
+-	QUERY_DESC_DEVICE_MAX_SIZE,
+-	QUERY_DESC_CONFIGURAION_MAX_SIZE,
+-	QUERY_DESC_UNIT_MAX_SIZE,
+-	QUERY_DESC_RFU_MAX_SIZE,
+-	QUERY_DESC_INTERCONNECT_MAX_SIZE,
+-	QUERY_DESC_STRING_MAX_SIZE,
+-	QUERY_DESC_RFU_MAX_SIZE,
+-	QUERY_DESC_GEOMETRY_MAX_SIZE,
+-	QUERY_DESC_POWER_MAX_SIZE,
+-	QUERY_DESC_RFU_MAX_SIZE,
+-};
+-
+ enum {
+ 	UFSHCD_MAX_CHANNEL	= 0,
+ 	UFSHCD_MAX_ID		= 1,
+@@ -2857,7 +2844,7 @@ static int __ufshcd_query_descriptor(struct ufs_hba *hba,
+ 		goto out;
+ 	}
+ 
+-	if (*buf_len <= QUERY_DESC_MIN_SIZE || *buf_len > QUERY_DESC_MAX_SIZE) {
++	if (*buf_len < QUERY_DESC_MIN_SIZE || *buf_len > QUERY_DESC_MAX_SIZE) {
+ 		dev_err(hba->dev, "%s: descriptor buffer size (%d) is out of range\n",
+ 				__func__, *buf_len);
+ 		err = -EINVAL;
+@@ -2938,6 +2925,92 @@ static int ufshcd_query_descriptor_retry(struct ufs_hba *hba,
+ }
+ 
+ /**
++ * ufshcd_read_desc_length - read the specified descriptor length from header
++ * @hba: Pointer to adapter instance
++ * @desc_id: descriptor idn value
++ * @desc_index: descriptor index
++ * @desc_length: pointer to variable to read the length of descriptor
++ *
++ * Return 0 in case of success, non-zero otherwise
++ */
++static int ufshcd_read_desc_length(struct ufs_hba *hba,
++	enum desc_idn desc_id,
++	int desc_index,
++	int *desc_length)
++{
++	int ret;
++	u8 header[QUERY_DESC_HDR_SIZE];
++	int header_len = QUERY_DESC_HDR_SIZE;
++
++	if (desc_id >= QUERY_DESC_IDN_MAX)
++		return -EINVAL;
++
++	ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_READ_DESC,
++					desc_id, desc_index, 0, header,
++					&header_len);
++
++	if (ret) {
++		dev_err(hba->dev, "%s: Failed to get descriptor header id %d",
++			__func__, desc_id);
++		return ret;
++	} else if (desc_id != header[QUERY_DESC_DESC_TYPE_OFFSET]) {
++		dev_warn(hba->dev, "%s: descriptor header id %d and desc_id %d mismatch",
++			__func__, header[QUERY_DESC_DESC_TYPE_OFFSET],
++			desc_id);
++		ret = -EINVAL;
++	}
++
++	*desc_length = header[QUERY_DESC_LENGTH_OFFSET];
++	return ret;
++
++}
++
++/**
++ * ufshcd_map_desc_id_to_length - map descriptor IDN to its length
++ * @hba: Pointer to adapter instance
++ * @desc_id: descriptor idn value
++ * @desc_len: mapped desc length (out)
++ *
++ * Return 0 in case of success, non-zero otherwise
++ */
++int ufshcd_map_desc_id_to_length(struct ufs_hba *hba,
++	enum desc_idn desc_id, int *desc_len)
++{
++	switch (desc_id) {
++	case QUERY_DESC_IDN_DEVICE:
++		*desc_len = hba->desc_size.dev_desc;
++		break;
++	case QUERY_DESC_IDN_POWER:
++		*desc_len = hba->desc_size.pwr_desc;
++		break;
++	case QUERY_DESC_IDN_GEOMETRY:
++		*desc_len = hba->desc_size.geom_desc;
++		break;
++	case QUERY_DESC_IDN_CONFIGURATION:
++		*desc_len = hba->desc_size.conf_desc;
++		break;
++	case QUERY_DESC_IDN_UNIT:
++		*desc_len = hba->desc_size.unit_desc;
++		break;
++	case QUERY_DESC_IDN_INTERCONNECT:
++		*desc_len = hba->desc_size.interc_desc;
++		break;
++	case QUERY_DESC_IDN_STRING:
++		*desc_len = QUERY_DESC_MAX_SIZE;
++		break;
++	case QUERY_DESC_IDN_RFU_0:
++	case QUERY_DESC_IDN_RFU_1:
++		*desc_len = 0;
++		break;
++	default:
++		*desc_len = 0;
++		return -EINVAL;
++	}
++	return 0;
++}
++EXPORT_SYMBOL(ufshcd_map_desc_id_to_length);
++
++/**
+  * ufshcd_read_desc_param - read the specified descriptor parameter
+  * @hba: Pointer to adapter instance
+  * @desc_id: descriptor idn value
+@@ -2951,42 +3024,49 @@ static int ufshcd_query_descriptor_retry(struct ufs_hba *hba,
+ static int ufshcd_read_desc_param(struct ufs_hba *hba,
+ 				  enum desc_idn desc_id,
+ 				  int desc_index,
+-				  u32 param_offset,
++				  u8 param_offset,
+ 				  u8 *param_read_buf,
+-				  u32 param_size)
++				  u8 param_size)
+ {
+ 	int ret;
+ 	u8 *desc_buf;
+-	u32 buff_len;
++	int buff_len;
+ 	bool is_kmalloc = true;
+ 
+-	/* safety checks */
+-	if (desc_id >= QUERY_DESC_IDN_MAX)
++	/* Safety check */
++	if (desc_id >= QUERY_DESC_IDN_MAX || !param_size)
+ 		return -EINVAL;
+ 
+-	buff_len = ufs_query_desc_max_size[desc_id];
+-	if ((param_offset + param_size) > buff_len)
+-		return -EINVAL;
++	/* Get the max length of descriptor from structure filled up at probe
++	 * time.
++	 */
++	ret = ufshcd_map_desc_id_to_length(hba, desc_id, &buff_len);
+ 
+-	if (!param_offset && (param_size == buff_len)) {
+-		/* memory space already available to hold full descriptor */
+-		desc_buf = param_read_buf;
+-		is_kmalloc = false;
+-	} else {
+-		/* allocate memory to hold full descriptor */
++	/* Sanity checks */
++	if (ret || !buff_len) {
++		dev_err(hba->dev, "%s: Failed to get full descriptor length",
++			__func__);
++		return ret;
++	}
++
++	/* Check whether we need temp memory */
++	if (param_offset != 0 || param_size < buff_len) {
+ 		desc_buf = kmalloc(buff_len, GFP_KERNEL);
+ 		if (!desc_buf)
+ 			return -ENOMEM;
++	} else {
++		desc_buf = param_read_buf;
++		is_kmalloc = false;
+ 	}
+ 
++	/* Request for full descriptor */
+ 	ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_READ_DESC,
+-					desc_id, desc_index, 0, desc_buf,
+-					&buff_len);
++					desc_id, desc_index, 0,
++					desc_buf, &buff_len);
+ 
+ 	if (ret) {
+ 		dev_err(hba->dev, "%s: Failed reading descriptor. desc_id %d, desc_index %d, param_offset %d, ret %d",
+ 			__func__, desc_id, desc_index, param_offset, ret);
+-
+ 		goto out;
+ 	}
+ 
+@@ -2998,25 +3078,9 @@ static int ufshcd_read_desc_param(struct ufs_hba *hba,
+ 		goto out;
+ 	}
+ 
+-	/*
+-	 * While reading variable size descriptors (like string descriptor),
+-	 * some UFS devices may report the "LENGTH" (field in "Transaction
+-	 * Specific fields" of Query Response UPIU) same as what was requested
+-	 * in Query Request UPIU instead of reporting the actual size of the
+-	 * variable size descriptor.
+-	 * Although it's safe to ignore the "LENGTH" field for variable size
+-	 * descriptors as we can always derive the length of the descriptor from
+-	 * the descriptor header fields. Hence this change impose the length
+-	 * match check only for fixed size descriptors (for which we always
+-	 * request the correct size as part of Query Request UPIU).
+-	 */
+-	if ((desc_id != QUERY_DESC_IDN_STRING) &&
+-	    (buff_len != desc_buf[QUERY_DESC_LENGTH_OFFSET])) {
+-		dev_err(hba->dev, "%s: desc_buf length mismatch: buff_len %d, buff_len(desc_header) %d",
+-			__func__, buff_len, desc_buf[QUERY_DESC_LENGTH_OFFSET]);
+-		ret = -EINVAL;
+-		goto out;
+-	}
++	/* Check wherher we will not copy more data, than available */
++	if (is_kmalloc && param_size > buff_len)
++		param_size = buff_len;
+ 
+ 	if (is_kmalloc)
+ 		memcpy(param_read_buf, &desc_buf[param_offset], param_size);
+@@ -5919,8 +5983,8 @@ static int ufshcd_set_icc_levels_attr(struct ufs_hba *hba, u32 icc_level)
+ static void ufshcd_init_icc_levels(struct ufs_hba *hba)
+ {
+ 	int ret;
+-	int buff_len = QUERY_DESC_POWER_MAX_SIZE;
+-	u8 desc_buf[QUERY_DESC_POWER_MAX_SIZE];
++	int buff_len = hba->desc_size.pwr_desc;
++	u8 desc_buf[hba->desc_size.pwr_desc];
+ 
+ 	ret = ufshcd_read_power_desc(hba, desc_buf, buff_len);
+ 	if (ret) {
+@@ -6017,11 +6081,10 @@ static int ufs_get_device_desc(struct ufs_hba *hba,
+ {
+ 	int err;
+ 	u8 model_index;
+-	u8 str_desc_buf[QUERY_DESC_STRING_MAX_SIZE + 1] = {0};
+-	u8 desc_buf[QUERY_DESC_DEVICE_MAX_SIZE];
++	u8 str_desc_buf[QUERY_DESC_MAX_SIZE + 1] = {0};
++	u8 desc_buf[hba->desc_size.dev_desc];
+ 
+-	err = ufshcd_read_device_desc(hba, desc_buf,
+-					QUERY_DESC_DEVICE_MAX_SIZE);
++	err = ufshcd_read_device_desc(hba, desc_buf, hba->desc_size.dev_desc);
+ 	if (err) {
+ 		dev_err(hba->dev, "%s: Failed reading Device Desc. err = %d\n",
+ 			__func__, err);
+@@ -6038,14 +6101,14 @@ static int ufs_get_device_desc(struct ufs_hba *hba,
+ 	model_index = desc_buf[DEVICE_DESC_PARAM_PRDCT_NAME];
+ 
+ 	err = ufshcd_read_string_desc(hba, model_index, str_desc_buf,
+-					QUERY_DESC_STRING_MAX_SIZE, ASCII_STD);
++				QUERY_DESC_MAX_SIZE, ASCII_STD);
+ 	if (err) {
+ 		dev_err(hba->dev, "%s: Failed reading Product Name. err = %d\n",
+ 			__func__, err);
+ 		goto out;
+ 	}
+ 
+-	str_desc_buf[QUERY_DESC_STRING_MAX_SIZE] = '\0';
++	str_desc_buf[QUERY_DESC_MAX_SIZE] = '\0';
+ 	strlcpy(dev_desc->model, (str_desc_buf + QUERY_DESC_HDR_SIZE),
+ 		min_t(u8, str_desc_buf[QUERY_DESC_LENGTH_OFFSET],
+ 		      MAX_MODEL_LEN));
+@@ -6251,6 +6314,51 @@ static void ufshcd_clear_dbg_ufs_stats(struct ufs_hba *hba)
+ 	hba->req_abort_count = 0;
+ }
+ 
++static void ufshcd_init_desc_sizes(struct ufs_hba *hba)
++{
++	int err;
++
++	err = ufshcd_read_desc_length(hba, QUERY_DESC_IDN_DEVICE, 0,
++		&hba->desc_size.dev_desc);
++	if (err)
++		hba->desc_size.dev_desc = QUERY_DESC_DEVICE_DEF_SIZE;
++
++	err = ufshcd_read_desc_length(hba, QUERY_DESC_IDN_POWER, 0,
++		&hba->desc_size.pwr_desc);
++	if (err)
++		hba->desc_size.pwr_desc = QUERY_DESC_POWER_DEF_SIZE;
++
++	err = ufshcd_read_desc_length(hba, QUERY_DESC_IDN_INTERCONNECT, 0,
++		&hba->desc_size.interc_desc);
++	if (err)
++		hba->desc_size.interc_desc = QUERY_DESC_INTERCONNECT_DEF_SIZE;
++
++	err = ufshcd_read_desc_length(hba, QUERY_DESC_IDN_CONFIGURATION, 0,
++		&hba->desc_size.conf_desc);
++	if (err)
++		hba->desc_size.conf_desc = QUERY_DESC_CONFIGURATION_DEF_SIZE;
++
++	err = ufshcd_read_desc_length(hba, QUERY_DESC_IDN_UNIT, 0,
++		&hba->desc_size.unit_desc);
++	if (err)
++		hba->desc_size.unit_desc = QUERY_DESC_UNIT_DEF_SIZE;
++
++	err = ufshcd_read_desc_length(hba, QUERY_DESC_IDN_GEOMETRY, 0,
++		&hba->desc_size.geom_desc);
++	if (err)
++		hba->desc_size.geom_desc = QUERY_DESC_GEOMETRY_DEF_SIZE;
++}
++
++static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
++{
++	hba->desc_size.dev_desc = QUERY_DESC_DEVICE_DEF_SIZE;
++	hba->desc_size.pwr_desc = QUERY_DESC_POWER_DEF_SIZE;
++	hba->desc_size.interc_desc = QUERY_DESC_INTERCONNECT_DEF_SIZE;
++	hba->desc_size.conf_desc = QUERY_DESC_CONFIGURATION_DEF_SIZE;
++	hba->desc_size.unit_desc = QUERY_DESC_UNIT_DEF_SIZE;
++	hba->desc_size.geom_desc = QUERY_DESC_GEOMETRY_DEF_SIZE;
++}
++
+ /**
+  * ufshcd_probe_hba - probe hba to detect device and initialize
+  * @hba: per-adapter instance
+@@ -6285,6 +6393,9 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 	if (ret)
+ 		goto out;
+ 
++	/* Init check for device descriptor sizes */
++	ufshcd_init_desc_sizes(hba);
++
+ 	ret = ufs_get_device_desc(hba, &card);
+ 	if (ret) {
+ 		dev_err(hba->dev, "%s: Failed getting device info. err = %d\n",
+@@ -6320,6 +6431,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 
+ 	/* set the state as operational after switching to desired gear */
+ 	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
++
+ 	/*
+ 	 * If we are in error handling context or in power management callbacks
+ 	 * context, no need to scan the host
+@@ -7774,6 +7886,9 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	hba->mmio_base = mmio_base;
+ 	hba->irq = irq;
+ 
++	/* Set descriptor lengths to specification defaults */
++	ufshcd_def_desc_sizes(hba);
++
+ 	err = ufshcd_hba_init(hba);
+ 	if (err)
+ 		goto out_error;
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 7630600..cdc8bd0 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -220,6 +220,15 @@ struct ufs_dev_cmd {
+ 	struct ufs_query query;
+ };
+ 
++struct ufs_desc_size {
++	int dev_desc;
++	int pwr_desc;
++	int geom_desc;
++	int interc_desc;
++	int unit_desc;
++	int conf_desc;
++};
++
+ /**
+  * struct ufs_clk_info - UFS clock related info
+  * @list: list headed by hba->clk_list_head
+@@ -483,6 +492,7 @@ struct ufs_stats {
+  * @clk_list_head: UFS host controller clocks list node head
+  * @pwr_info: holds current power mode
+  * @max_pwr_info: keeps the device max valid pwm
++ * @desc_size: descriptor sizes reported by device
+  * @urgent_bkops_lvl: keeps track of urgent bkops level for device
+  * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level for
+  *  device is known or not.
+@@ -666,6 +676,7 @@ struct ufs_hba {
+ 	bool is_urgent_bkops_lvl_checked;
+ 
+ 	struct rw_semaphore clk_scaling_lock;
++	struct ufs_desc_size desc_size;
+ };
+ 
+ /* Returns true if clocks can be gated. Otherwise false */
+@@ -832,6 +843,10 @@ int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+ 	enum flag_idn idn, bool *flag_res);
+ int ufshcd_hold(struct ufs_hba *hba, bool async);
+ void ufshcd_release(struct ufs_hba *hba);
++
++int ufshcd_map_desc_id_to_length(struct ufs_hba *hba, enum desc_idn desc_id,
++	int *desc_length);
++
+ u32 ufshcd_get_local_unipro_ver(struct ufs_hba *hba);
+ 
+ /* Wrapper functions for safely calling variant operations */
 -- 
-Pali Rohár
-pali.rohar@gmail.com
+1.9.1
+
+--------------------------------------------------------------------
+
+Intel Technology Poland sp. z o.o.
+ul. Slowackiego 173 | 80-298 Gdansk | Sad Rejonowy Gdansk Polnoc | VII Wydzial Gospodarczy Krajowego Rejestru Sadowego - KRS 101882 | NIP 957-07-52-316 | Kapital zakladowy 200.000 PLN.
+
+Ta wiadomosc wraz z zalacznikami jest przeznaczona dla okreslonego adresata i moze zawierac informacje poufne. W razie przypadkowego otrzymania tej wiadomosci, prosimy o powiadomienie nadawcy oraz trwale jej usuniecie; jakiekolwiek
+przegladanie lub rozpowszechnianie jest zabronione.
+This e-mail and any attachments may contain confidential material for the sole use of the intended recipient(s). If you are not the intended recipient, please contact the sender and delete all copies; any review or distribution by
+others is strictly prohibited.
