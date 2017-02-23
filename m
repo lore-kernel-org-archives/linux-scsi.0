@@ -1,46 +1,28 @@
-From: Dave Carroll <david.carroll@microsemi.com>
-Subject: RE: [PATCH] aacraid: Fixed expander hotplug for SMART family
-Date: Thu, 23 Feb 2017 21:34:46 +0000
-Message-ID: <423FD6710FB8FB4F8728F93591889F9A4EF42BF3@avsrvexchmbx1.microsemi.net>
-References: <20170222152313.11518-1-RaghavaAditya.Renukunta@microsemi.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: sense handling improvements, part 2
+Date: Thu, 23 Feb 2017 16:58:00 -0500
+Message-ID: <yq160k07eon.fsf@oracle.com>
+References: <20170223150237.21710-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0085.outbound.protection.outlook.com ([104.47.34.85]:51456
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751327AbdBWVet (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 23 Feb 2017 16:34:49 -0500
-In-Reply-To: <20170222152313.11518-1-RaghavaAditya.Renukunta@microsemi.com>
-Content-Language: en-US
+Received: from userp1040.oracle.com ([156.151.31.81]:38081 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751207AbdBWV6G (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Feb 2017 16:58:06 -0500
+In-Reply-To: <20170223150237.21710-1-hch@lst.de> (Christoph Hellwig's message
+        of "Thu, 23 Feb 2017 16:02:35 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Gana Sridaran <gana.sridaran@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
-> -----Original Message-----
-> From: Raghava Aditya Renukunta
-> [mailto:RaghavaAditya.Renukunta@microsemi.com]
-> Sent: Wednesday, February 22, 2017 8:23 AM
-> To: jejb@linux.vnet.ibm.com; martin.petersen@oracle.com; linux-
-> scsi@vger.kernel.org
-> Cc: Dave Carroll; Gana Sridaran; Scott Benesh
-> Subject: [PATCH] aacraid: Fixed expander hotplug for SMART family
->=20
-> Current driver Hotplug processing code skips over Enclosure channel,
-> therefore any addition/removal of expander enclosure is not processed.
-> Additionally  device addition code relies on older device type, which
-> prevents the hotplug of adapter expanders.
->=20
-> Fixed by removing code that skips over Enclosure channels and using the
-> latest device type for addition or removal or enclosure expanders.
->=20
-> Fixes: 6223a39fe6fbbeef (scsi: aacraid: Added support for hotplug)
-> Signed-off-by: Raghava Aditya Renukunta
-> <RaghavaAditya.Renukunta@microsemi.com>
-> ---
->  drivers/scsi/aacraid/commsup.c | 5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
+>>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
 
-Reviewed-by: Dave Carroll <david.carroll@microsemi.com>
+Christoph> No real changes, but I did an explicit rebase against the
+Christoph> 4.11/scsi-fixes branch.
+
+Applied to 4.11/scsi-fixes.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
