@@ -1,65 +1,44 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv2 0/5] SCSI EH cleanup
-Date: Thu, 23 Feb 2017 08:35:57 +0100
-Message-ID: <b30cbe02-2d4b-ec20-906e-c1161ccd4bbd@suse.de>
-References: <1487779650-1338-1-git-send-email-hare@suse.de>
- <1487798485.10204.1.camel@sandisk.com>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: Re: [PATCHv3 01/10] mpt3sas: switch to pci_alloc_irq_vectors
+Date: Thu, 23 Feb 2017 13:49:07 +0530
+Message-ID: <CAK=zhgqNd2F8xE_G-YbsOS5mi6POdHtsF1t8rbjNee23nCEEKA@mail.gmail.com>
+References: <1487680029-3701-1-git-send-email-hare@suse.de>
+ <1487680029-3701-2-git-send-email-hare@suse.de> <20170222082841.GA22843@lst.de>
+ <yq1o9xt7moo.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47738 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751144AbdBWHgE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 23 Feb 2017 02:36:04 -0500
-In-Reply-To: <1487798485.10204.1.camel@sandisk.com>
+Received: from mail-qk0-f172.google.com ([209.85.220.172]:32992 "EHLO
+        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751099AbdBWI0L (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Feb 2017 03:26:11 -0500
+Received: by mail-qk0-f172.google.com with SMTP id n127so25423140qkf.0
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Feb 2017 00:26:11 -0800 (PST)
+In-Reply-To: <yq1o9xt7moo.fsf@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jth@kernel.org" <jth@kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, James Bottomley <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Kashyap Desai <kashyap.desai@broadcom.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Hannes Reinecke <hare@suse.com>
 
-On 02/22/2017 10:21 PM, Bart Van Assche wrote:
-> On Wed, 2017-02-22 at 17:07 +0100, Hannes Reinecke wrote:
->> this is a resend of a small patchset for cleaning up SCSI EH.
->> Primary goal is to make asynchronous aborts mandatory; there hasn't
->> been a single report so far where asynchronous abort won't work, so
->> the 'no_async_abort' flag has never been used and will be removed
->> with this patchset.
->> Additionally there's a cleanup for handle failed EH commands, and
->> to detect retries of failed commands.
-> 
-> An additional comment: I don't think it is safe to execute a host
-> reset while any asynchronous aborts are ongoing. I think the SCSI EH
-> will get really confused if after a host reset has been performed a
-> response is received from an asynchronous abort that was issued
-> before the host reset started. Although a SCSI target must not send
-> a LU RESET response before all previously submitted SCSI commands
-> and TMFs have finished, what prevents in e.g. a multipath topology
-> that an abort response and a LU RESET response are received out of
-> order?
-> 
-Hmm.
-Not sure this can happen nowadays.
-eh_abort() is synchronous, and the command is considered in-flight until
-eh_abort() returns.
-And as SCSI EH only starts until all commands are completed or timed out
-we will not have any stuck TMFs before sending a host reset.
-Things are different when calling 'sg_reset' manually, but I'll be
-revisiting that anyway in the near future as it has it's own set of
-problems.
+On Thu, Feb 23, 2017 at 6:22 AM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>>>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
+>
+> Christoph> Martin, can we get at least this patch still in for 4.11?
+> Christoph> I'd really like to see as many intance of the old MSI-X
+> Christoph> allocation and IRQ affinity mess dead as soon as possible.
+>
+> Me too. I'll queue it up for 4.11 unless Broadcom objects. And then
+> we'll do the rest for 4.12.
 
-Cheers,
+This patch looks good. Please consider this patch for 4.11.
 
-Hannes
-> Thanks,
-> 
-> Bart.
-> 
+We need some time to review remaining patches as it has lot code
+refinement and we need to cover some basic test cases.
 
+Thanks,
+Sreekanth
 
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+>
+> --
+> Martin K. Petersen      Oracle Linux Engineering
