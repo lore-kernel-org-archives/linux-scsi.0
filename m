@@ -1,38 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] aacraid: Fixed expander hotplug for SMART family
-Date: Thu, 23 Feb 2017 17:03:58 -0500
-Message-ID: <yq1wpcg5zu9.fsf@oracle.com>
-References: <20170222152313.11518-1-RaghavaAditya.Renukunta@microsemi.com>
+Subject: Re: [PATCHv4 01/12] mpt3sas: switch to pci_alloc_irq_vectors
+Date: Thu, 23 Feb 2017 17:04:31 -0500
+Message-ID: <yq1shn45ztc.fsf@oracle.com>
+References: <1487759512-3873-1-git-send-email-hare@suse.de>
+        <1487759512-3873-2-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1050.oracle.com ([156.151.31.82]:44701 "EHLO
-        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751265AbdBWWFU (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:41358 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751207AbdBWWFU (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Feb 2017 17:05:20 -0500
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
-        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v1NM5EEE015244
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Feb 2017 22:05:14 GMT
-In-Reply-To: <20170222152313.11518-1-RaghavaAditya.Renukunta@microsemi.com>
-        (Raghava Aditya Renukunta's message of "Wed, 22 Feb 2017 07:23:13
-        -0800")
+In-Reply-To: <1487759512-3873-2-git-send-email-hare@suse.de> (Hannes
+        Reinecke's message of "Wed, 22 Feb 2017 11:31:41 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Hannes Reinecke <hare@suse.com>
 
->>>>> "Raghava" == Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com> writes:
+>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
 
-Raghava> Current driver Hotplug processing code skips over Enclosure
-Raghava> channel, therefore any addition/removal of expander enclosure
-Raghava> is not processed.  Additionally device addition code relies on
-Raghava> older device type, which prevents the hotplug of adapter
-Raghava> expanders.
-
-Raghava> Fixed by removing code that skips over Enclosure channels and
-Raghava> using the latest device type for addition or removal or
-Raghava> enclosure expanders.
+Hannes> Cleanup the MSI-X handling allowing us to use the PCI-layer
+Hannes> provided vector allocation.
 
 Applied to 4.11/scsi-fixes.
 
