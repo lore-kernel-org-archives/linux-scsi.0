@@ -1,86 +1,169 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v3 07/14] qla2xxx: Export DIF stats via debugfs
-Date: Fri, 24 Feb 2017 13:37:36 -0800
-Message-ID: <1487972263-3795-8-git-send-email-himanshu.madhani@cavium.com>
+Subject: [PATCH v3 05/14] qla2xxx: Add DebugFS node to display Port Database
+Date: Fri, 24 Feb 2017 13:37:34 -0800
+Message-ID: <1487972263-3795-6-git-send-email-himanshu.madhani@cavium.com>
 References: <1487972263-3795-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0045.outbound.protection.outlook.com ([104.47.42.45]:35337
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751292AbdBXViR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 24 Feb 2017 16:38:17 -0500
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1487972263-3795-1-git-send-email-himanshu.madhani@cavium.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel@vger.kernel.org, Bart.VanAssche@sandisk.com, nab@linux-iscsi.org
 Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
+List-Id: linux-scsi@vger.kernel.org
 
-From: Anil Gurumurthy <anil.gurumurthy@cavium.com>
-
-Signed-off-by: Anil Gurumurthy <anil.gurumurthy@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h | 12 ++++++++++++
- drivers/scsi/qla2xxx/qla_dfs.c | 15 +++++++++++++++
- 2 files changed, 27 insertions(+)
+ drivers/scsi/qla2xxx/qla_def.h |  2 +
+ drivers/scsi/qla2xxx/qla_dfs.c | 92 ++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 90 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 1fcd829..5e2f149 100644
+index 111861c..1fcd829 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -3112,6 +3112,16 @@ struct qla_chip_state_84xx {
- 	uint32_t gold_fw_version;
- };
+@@ -3278,6 +3278,8 @@ struct qlt_hw_data {
+ 	uint8_t tgt_node_name[WWN_SIZE];
  
-+struct qla_dif_statistics {
-+	uint64_t dif_input_bytes;
-+	uint64_t dif_output_bytes;
-+	uint64_t dif_input_requests;
-+	uint64_t dif_output_requests;
-+	uint32_t dif_guard_err;
-+	uint32_t dif_ref_tag_err;
-+	uint32_t dif_app_tag_err;
-+};
+ 	struct dentry *dfs_tgt_sess;
++	struct dentry *dfs_tgt_port_database;
 +
- struct qla_statistics {
- 	uint32_t total_isp_aborts;
- 	uint64_t input_bytes;
-@@ -3124,6 +3134,8 @@ struct qla_statistics {
- 	uint32_t stat_max_pend_cmds;
- 	uint32_t stat_max_qfull_cmds_alloc;
- 	uint32_t stat_max_qfull_cmds_dropped;
-+
-+	struct qla_dif_statistics qla_dif_stats;
- };
- 
- struct bidi_statistics {
+ 	struct list_head q_full_list;
+ 	uint32_t num_pend_cmds;
+ 	uint32_t num_qfull_cmds_alloc;
 diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
-index dabeb8b..0252c2f 100644
+index b48cce6..0fb33e6 100644
 --- a/drivers/scsi/qla2xxx/qla_dfs.c
 +++ b/drivers/scsi/qla2xxx/qla_dfs.c
-@@ -185,6 +185,21 @@
- 	seq_printf(s, "num Q full sent = %lld\n",
- 		vha->tgt_counters.num_q_full_sent);
+@@ -19,11 +19,11 @@
+ 	struct qla_hw_data *ha = vha->hw;
+ 	unsigned long flags;
+ 	struct fc_port *sess = NULL;
+-	struct qla_tgt *tgt= vha->vha_tgt.qla_tgt;
++	struct qla_tgt *tgt = vha->vha_tgt.qla_tgt;
  
-+	/* DIF stats */
-+	seq_printf(s, "DIF Inp Bytes = %lld\n",
-+		vha->qla_stats.qla_dif_stats.dif_input_bytes);
-+	seq_printf(s, "DIF Outp Bytes = %lld\n",
-+		vha->qla_stats.qla_dif_stats.dif_output_bytes);
-+	seq_printf(s, "DIF Inp Req = %lld\n",
-+		vha->qla_stats.qla_dif_stats.dif_input_requests);
-+	seq_printf(s, "DIF Outp Req = %lld\n",
-+		vha->qla_stats.qla_dif_stats.dif_output_requests);
-+	seq_printf(s, "DIF Guard err = %d\n",
-+		vha->qla_stats.qla_dif_stats.dif_guard_err);
-+	seq_printf(s, "DIF Ref tag err = %d\n",
-+		vha->qla_stats.qla_dif_stats.dif_ref_tag_err);
-+	seq_printf(s, "DIF App tag err = %d\n",
-+		vha->qla_stats.qla_dif_stats.dif_app_tag_err);
- 	return 0;
+-	seq_printf(s, "%s\n",vha->host_str);
++	seq_printf(s, "%s\n", vha->host_str);
+ 	if (tgt) {
+-		seq_printf(s, "Port ID   Port Name                Handle\n");
++		seq_puts(s, "Port ID   Port Name                Handle\n");
+ 
+ 		spin_lock_irqsave(&ha->tgt.sess_lock, flags);
+ 		list_for_each_entry(sess, &vha->vp_fcports, list)
+@@ -44,7 +44,6 @@
+ 	return single_open(file, qla2x00_dfs_tgt_sess_show, vha);
  }
  
+-
+ static const struct file_operations dfs_tgt_sess_ops = {
+ 	.open		= qla2x00_dfs_tgt_sess_open,
+ 	.read		= seq_read,
+@@ -53,6 +52,78 @@
+ };
+ 
+ static int
++qla2x00_dfs_tgt_port_database_show(struct seq_file *s, void *unused)
++{
++	scsi_qla_host_t *vha = s->private;
++	struct qla_hw_data *ha = vha->hw;
++	struct gid_list_info *gid_list;
++	dma_addr_t gid_list_dma;
++	fc_port_t fc_port;
++	char *id_iter;
++	int rc, i;
++	uint16_t entries, loop_id;
++	struct qla_tgt *tgt = vha->vha_tgt.qla_tgt;
++
++	seq_printf(s, "%s\n", vha->host_str);
++	if (tgt) {
++		gid_list = dma_alloc_coherent(&ha->pdev->dev,
++		    qla2x00_gid_list_size(ha),
++		    &gid_list_dma, GFP_KERNEL);
++		if (!gid_list) {
++			ql_dbg(ql_dbg_user, vha, 0x705c,
++			    "DMA allocation failed for %u\n",
++			     qla2x00_gid_list_size(ha));
++			return 0;
++		}
++
++		rc = qla24xx_gidlist_wait(vha, gid_list, gid_list_dma,
++		    &entries);
++		if (rc != QLA_SUCCESS)
++			goto out_free_id_list;
++
++		id_iter = (char *)gid_list;
++
++		seq_puts(s, "Port Name	Port ID 	Loop ID\n");
++
++		for (i = 0; i < entries; i++) {
++			struct gid_list_info *gid =
++			    (struct gid_list_info *)id_iter;
++			loop_id = le16_to_cpu(gid->loop_id);
++			memset(&fc_port, 0, sizeof(fc_port_t));
++
++			fc_port.loop_id = loop_id;
++
++			rc = qla24xx_gpdb_wait(vha, &fc_port, 0);
++			seq_printf(s, "%8phC  %02x%02x%02x  %d\n",
++				fc_port.port_name, fc_port.d_id.b.domain,
++				fc_port.d_id.b.area, fc_port.d_id.b.al_pa,
++				fc_port.loop_id);
++			id_iter += ha->gid_list_info_size;
++		}
++out_free_id_list:
++		dma_free_coherent(&ha->pdev->dev, qla2x00_gid_list_size(ha),
++		    gid_list, gid_list_dma);
++	}
++
++	return 0;
++}
++
++static int
++qla2x00_dfs_tgt_port_database_open(struct inode *inode, struct file *file)
++{
++	scsi_qla_host_t *vha = inode->i_private;
++
++	return single_open(file, qla2x00_dfs_tgt_port_database_show, vha);
++}
++
++static const struct file_operations dfs_tgt_port_database_ops = {
++	.open		= qla2x00_dfs_tgt_port_database_open,
++	.read		= seq_read,
++	.llseek		= seq_lseek,
++	.release	= single_release,
++};
++
++static int
+ qla_dfs_fw_resource_cnt_show(struct seq_file *s, void *unused)
+ {
+ 	struct scsi_qla_host *vha = s->private;
+@@ -281,6 +352,14 @@
+ 		goto out;
+ 	}
+ 
++	ha->tgt.dfs_tgt_port_database = debugfs_create_file("tgt_port_database",
++	    S_IRUSR,  ha->dfs_dir, vha, &dfs_tgt_port_database_ops);
++	if (!ha->tgt.dfs_tgt_port_database) {
++		ql_log(ql_log_warn, vha, 0xffff,
++		    "Unable to create debugFS tgt_port_database node.\n");
++		goto out;
++	}
++
+ 	ha->dfs_fce = debugfs_create_file("fce", S_IRUSR, ha->dfs_dir, vha,
+ 	    &dfs_fce_ops);
+ 	if (!ha->dfs_fce) {
+@@ -311,6 +390,11 @@
+ 		ha->tgt.dfs_tgt_sess = NULL;
+ 	}
+ 
++	if (ha->tgt.dfs_tgt_port_database) {
++		debugfs_remove(ha->tgt.dfs_tgt_port_database);
++		ha->tgt.dfs_tgt_port_database = NULL;
++	}
++
+ 	if (ha->dfs_fw_resource_cnt) {
+ 		debugfs_remove(ha->dfs_fw_resource_cnt);
+ 		ha->dfs_fw_resource_cnt = NULL;
 -- 
 1.8.3.1
