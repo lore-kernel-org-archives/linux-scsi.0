@@ -1,44 +1,63 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+From: Hannes Reinecke <hare@suse.de>
 Subject: Re: [PATCHv2 0/5] SCSI EH cleanup
-Date: Fri, 24 Feb 2017 04:01:25 +0000
-Message-ID: <1487908867.2907.3.camel@sandisk.com>
+Date: Fri, 24 Feb 2017 08:15:22 +0100
+Message-ID: <ef796d74-4425-92ab-d602-c0b66a8cf19d@suse.de>
 References: <1487779650-1338-1-git-send-email-hare@suse.de>
+ <1487908867.2907.3.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:59288 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751049AbdBXECm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Feb 2017 23:02:42 -0500
-In-Reply-To: <1487779650-1338-1-git-send-email-hare@suse.de>
-Content-Language: en-US
-Content-ID: <649EC787C95E664A87D2B4C341417460@sandisk.com>
+Received: from mx2.suse.de ([195.135.220.15]:36873 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751005AbdBXHPZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 24 Feb 2017 02:15:25 -0500
+In-Reply-To: <1487908867.2907.3.camel@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jth@kernel.org" <jth@kernel.org>
 
-T24gV2VkLCAyMDE3LTAyLTIyIGF0IDE3OjA3ICswMTAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6
-DQo+IFByaW1hcnkgZ29hbCBpcyB0byBtYWtlIGFzeW5jaHJvbm91cyBhYm9ydHMgbWFuZGF0b3J5
-OyB0aGVyZSBoYXNuJ3QNCj4gYmVlbiBhIHNpbmdsZSByZXBvcnQgc28gZmFyIHdoZXJlIGFzeW5j
-aHJvbm91cyBhYm9ydCB3b24ndCB3b3JrLCBzbw0KPiB0aGUgJ25vX2FzeW5jX2Fib3J0JyBmbGFn
-IGhhcyBuZXZlciBiZWVuIHVzZWQgYW5kIHdpbGwgYmUgcmVtb3ZlZA0KPiB3aXRoIHRoaXMgcGF0
-Y2hzZXQuDQoNCkhlbGxvIEhhbm5lcywNCg0KVGhlcmUgaXMgYSBwcm9ibGVtIHdpdGggYXN5bmNo
-cm9ub3VzIGFib3J0cy4gU29tZSBTQ1NJIGRyaXZlcnMsIGUuZy4gaWJfc3JwLA0Kc3VwcG9ydCBm
-YXN0IGVycm9yIHJlY292ZXJ5IGJ5IHBlcmZvcm1pbmcgYSB0cmFuc3BvcnQgbGF5ZXIgcmVjb25u
-ZWN0IHdpdGhvdXQNCnJlcG9ydGluZyB0aGlzIGV2ZW50IGFzIGEgZmFpbHVyZSB0byB0aGUgU0NT
-SSBjb3JlLiBXaGlsZSBzdWNoIGEgcmVjb25uZWN0IGlzDQpvbmdvaW5nIGl0IGlzIGltcG9ydGFu
-dCB0aGF0IG5vIGF0dGVtcHQgaXMgbWFkZSB0byB1c2UgdGhlIGRhdGEgc3RydWN0dXJlcw0KdGhh
-dCByZXByZXNlbnQgdGhlIGNvbm5lY3Rpb24uIEhlbmNlIHRoZcKgc2NzaV90YXJnZXRfYmxvY2so
-KSBjYWxsIGluDQpzcnBfcmVjb25uZWN0X3Jwb3J0KCkuIFRoaXMgYmxvY2tzIG1vc3QgLnF1ZXVl
-Y29tbWFuZCgpIGNhbGxzIGV4Y2VwdCB0aG9zZQ0KdGhhdCBvcmlnaW5hdGUgZnJvbSB0aGUgU0NT
-SSBFSC4gSGVuY2UgdGhlIGlmIChjdXJyZW50ID09IHNob3N0LT5laGFuZGxlcikNCm11dGV4X2xv
-Y2soJnJwb3J0LT5tdXRleCkgY29kZSBpbiBzcnBfcXVldWVjb21tYW5kKCkuIEFzeW5jaHJvbm91
-cyBhYm9ydHMNCmJyZWFrIHRoaXMgY29kZSBiZWNhdXNlIHRoZSBhc3luY2hyb25vdXMgYWJvcnQg
-Y29kZSBzdWJtaXRzIGFuIGFib3J0IGZyb20NCmFub3RoZXIgY29udGV4dCB0aGFuIHRoZSBTQ1NJ
-IEVIIHRocmVhZC4gSSBrbm93IHRoYXQgdGhpcyB3YXkgb2YgZGV0ZWN0aW5nDQp0aGUgU0NTSSBF
-SCBjb250ZXh0IGlzIG5vdCBhbiBvcHRpbWFsIHNvbHV0aW9uLiBBIGZldyB5ZWFycyBhZ28gSSBo
-YXZlIHRyaWVkDQp0byBtb2RpZnkgdGhlIFNDU0kgRUggc3VjaCB0aGF0IHJlY29ubmVjdHMgYW5k
-IC5xdWV1ZWNvbW1hbmQoKSBjYWxscyBjb3VsZA0KYmUgc2VyaWFsaXplZCBidXQgSmFtZXMgd2Fz
-IG5vdCBpbnRlcmVzdGVkIGluIHN1Y2ggcGF0Y2hlcyBhdCB0aGF0IHRpbWUuDQoNCkJhcnQu
+On 02/24/2017 05:01 AM, Bart Van Assche wrote:
+> On Wed, 2017-02-22 at 17:07 +0100, Hannes Reinecke wrote:
+>> Primary goal is to make asynchronous aborts mandatory; there hasn't
+>> been a single report so far where asynchronous abort won't work, so
+>> the 'no_async_abort' flag has never been used and will be removed
+>> with this patchset.
+> 
+> Hello Hannes,
+> 
+> There is a problem with asynchronous aborts. Some SCSI drivers, e.g. ib_srp,
+> support fast error recovery by performing a transport layer reconnect without
+> reporting this event as a failure to the SCSI core. While such a reconnect is
+> ongoing it is important that no attempt is made to use the data structures
+> that represent the connection. Hence the scsi_target_block() call in
+> srp_reconnect_rport(). This blocks most .queuecommand() calls except those
+> that originate from the SCSI EH. Hence the if (current == shost->ehandler)
+> mutex_lock(&rport->mutex) code in srp_queuecommand(). Asynchronous aborts
+> break this code because the asynchronous abort code submits an abort from
+> another context than the SCSI EH thread. I know that this way of detecting
+> the SCSI EH context is not an optimal solution. A few years ago I have tried
+> to modify the SCSI EH such that reconnects and .queuecommand() calls could
+> be serialized but James was not interested in such patches at that time.
+> 
+Don't think that's much of an issue.
+scsi_abort_command() (ie the call which triggers async aborts) is only
+called if the .eh_timed_out() callback returns BLK_EH_NOT_HANDLED.
+So during reconnects we will not schedule any calls to async aborts.
+We _might_ have scheduled an async abort prior to a call to
+srp_reconnect_rport(), but that would be equivalent with calling
+srp_reconnect_rport() with commands still in flight.
+Is that even possible?
+If so, how do you handle these commands after reconnect returns?
+Any I_T_L nexus will be gone from the target, right?
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
