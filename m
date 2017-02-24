@@ -1,20 +1,39 @@
-From: Charles Chiou <ch1102chiou@gmail.com>
-Subject: Re: [PATCH 2/2] Add S6 support
-Date: Fri, 24 Feb 2017 19:13:04 +0800
-Message-ID: <1487934784-3730-1-git-send-email-ch1102chiou@gmail.com>
-References: <1487299030-4360-1-git-send-email-ch1102chiou@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:36668 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751084AbdBXLNM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Feb 2017 06:13:12 -0500
-In-Reply-To: <1487299030-4360-1-git-send-email-ch1102chiou@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: lpfc: remove redundant assignment of sgel
+Date: Fri, 24 Feb 2017 13:45:23 +0000
+Message-ID: <20170224134523.5385-1-colin.king@canonical.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linus.chen@tw.promise.com, grace.chang@tw.promise.com, eva.cheng@tw.promise.com, charles.chiou@tw.promise.com, paul.lyu@tw.promise.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Charles <charles.chiou@tw.promise.com>
+From: Colin Ian King <colin.king@canonical.com>
 
-Hi all, Ping?
-Does this patch has any issue need to fix? Thank you.
+In the NVMET_FCOP_RSP case, sgel is assigned but never used and
+hence is redundant and can be removed.
+
+Detected by CoverityScan, CID#1411658 ("Unused value")
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/lpfc/lpfc_nvmet.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index c421e17..e59a0a8 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -1445,7 +1445,6 @@ lpfc_nvmet_prep_fcp_wqe(struct lpfc_hba *phba,
+ 
+ 	case NVMET_FCOP_RSP:
+ 		/* Words 0 - 2 */
+-		sgel = &rsp->sg[0];
+ 		physaddr = rsp->rspdma;
+ 		wqe->fcp_trsp.bde.tus.f.bdeFlags = BUFF_TYPE_BDE_64;
+ 		wqe->fcp_trsp.bde.tus.f.bdeSize = rsp->rsplen;
+-- 
+2.10.2
