@@ -1,43 +1,87 @@
-From: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v2 03/16] device-dax: utilize new
- cdev_device_add helper function
-Date: Sun, 26 Feb 2017 14:31:40 -0800
-Message-ID: <CAPcyv4i6yucmRr9HaqLiA+QCH7AbB=RS28_Jcix292wq1OV4YA@mail.gmail.com>
-References: <1488091097-12328-1-git-send-email-logang@deltatee.com> <1488091097-12328-4-git-send-email-logang@deltatee.com>
-Reply-To: rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Jeff Layton <jlayton@redhat.com>
+Subject: Re: [LSF/MM TOPIC] do we really need PG_error at all?
+Date: Sun, 26 Feb 2017 17:43:53 -0500
+Message-ID: <1488149033.2855.2.camel@redhat.com>
+References: <1488120164.2948.4.camel@redhat.com>
+         <1488129033.4157.8.camel@HansenPartnership.com>
+         <877f4cr7ew.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <rtc-linux+bncBDZYPUPHYEJBBTNOZXCQKGQEPMLBXIQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <1488091097-12328-4-git-send-email-logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-List-Post: <https://groups.google.com/group/rtc-linux/post>, <mailto:rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:rtc-linux+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/rtc-linux
-List-Subscribe: <https://groups.google.com/group/rtc-linux/subscribe>, <mailto:rtc-linux+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+712029733259+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/rtc-linux/subscribe>
-To: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Sajjan Vikas C <vikas.cha.sajjan-ZPxbGqLxI0U@public.gmane.org>, Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linus Walleij <linus.walleij-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Alexandre Courbot <gnurou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Peter Huewe <peterhuewe-Mmb7MZpHnFY@public.gmane.org>, Marcel Selhorst <tpmdd-yWjUBOtONefk1uMJSBkQmQ@public.gmane.org>, Jarkko Sakkinen <jarkko.sakkinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Olof Johansson <olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sean Hefty <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hal Rosenstock <hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hartmut Knaack <knaack.h-Mmb7MZpHnFY@public.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <877f4cr7ew.fsf@notabene.neil.brown.name>
+Sender: linux-block-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-mm <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Cc: lsf-pc <lsf-pc@lists.linuxfoundation.org>, Neil Brown <neilb@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, linux-block@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Feb 25, 2017 at 10:38 PM, Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org> wrote:
-> Replace the open coded registration of the cdev and dev with the
-> new device_add_cdev() helper. The helper replaces a common pattern by
-> taking the proper reference against the parent device and adding both
-> the cdev and the device.
->
-> Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+On Mon, 2017-02-27 at 08:03 +1100, NeilBrown wrote:
+> On Sun, Feb 26 2017, James Bottomley wrote:
+> 
+> > [added linux-scsi and linux-block because this is part of our error
+> > handling as well]
+> > On Sun, 2017-02-26 at 09:42 -0500, Jeff Layton wrote:
+> > > Proposing this as a LSF/MM TOPIC, but it may turn out to be me just 
+> > > not understanding the semantics here.
+> > > 
+> > > As I was looking into -ENOSPC handling in cephfs, I noticed that
+> > > PG_error is only ever tested in one place [1] 
+> > > __filemap_fdatawait_range, which does this:
+> > > 
+> > > 	if (TestClearPageError(page))
+> > > 		ret = -EIO;
+> > > 
+> > > This error code will override any AS_* error that was set in the
+> > > mapping. Which makes me wonder...why don't we just set this error in 
+> > > the mapping and not bother with a per-page flag? Could we potentially
+> > > free up a page flag by eliminating this?
+> > 
+> > Note that currently the AS_* codes are only set for write errors not
+> > for reads and we have no mapping error handling at all for swap pages,
+> > but I'm sure this is fixable.
+> 
+> How is a read error different from a failure to set PG_uptodate?
+> Does PG_error suppress retries?
+> 
 
-Thanks,
+The thing is that we only ever TestClearError in write and fsync type
+codepaths. Does it make sense to report read errors _at_all_ in fsync?
 
-Reviewed-by: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> > 
+> > From the I/O layer point of view we take great pains to try to pinpoint
+> > the error exactly to the sector.  We reflect this up by setting the
+> > PG_error flag on the page where the error occurred.  If we only set the
+> > error on the mapping, we lose that granularity, because the mapping is
+> > mostly at the file level (or VMA level for anon pages).
+> 
+> Are you saying that the IO layer finds the page in the bi_io_vec and
+> explicitly sets PG_error, rather than just passing an error indication
+> to bi_end_io ??  That would seem to be wrong as the page may not be in
+> the page cache. So I guess I misunderstand you.
+> 
+> > 
+> > So I think the question for filesystem people from us would be do you
+> > care about this accuracy?  If it's OK just to know an error occurred
+> > somewhere in this file, then perhaps we don't need it.
+> 
+> I had always assumed that a bio would either succeed or fail, and that
+> no finer granularity could be available.
+> 
+> I think the question here is: Do filesystems need the pagecache to
+> record which pages have seen an IO error?
+> I think that for write errors, there is no value in recording
+> block-oriented error status - only file-oriented status.
+> For read errors, it might if help to avoid indefinite read retries, but
+> I don't know the code well enough to be sure if this is an issue.
+> 
+
+Yeah, it might be useful for preventing failing read retries, but I
+don't see that it's being used in that way today, unless I'm missing
+something.
+
+If PG_error is ultimately needed, I'd like to have some more clearly
+defined semantics for it. It's sprinkled all over the place today, and
+it's not clear to me that it's being used correctly everywhere.
 
 -- 
-You received this message because you are subscribed to "rtc-linux".
-Membership options at http://groups.google.com/group/rtc-linux .
-Please read http://groups.google.com/group/rtc-linux/web/checklist
-before submitting a driver.
---- 
-You received this message because you are subscribed to the Google Groups "rtc-linux" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to rtc-linux+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-For more options, visit https://groups.google.com/d/optout.
+Jeff Layton <jlayton@redhat.com>
