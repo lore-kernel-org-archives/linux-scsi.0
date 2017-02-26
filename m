@@ -1,7 +1,7 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v2 10/16] iio:core: utilize new cdev_device_add helper function
-Date: Sat, 25 Feb 2017 23:38:11 -0700
-Message-ID: <1488091097-12328-11-git-send-email-logang@deltatee.com>
+Subject: [PATCH v2 04/16] input: utilize new cdev_device_add helper function
+Date: Sat, 25 Feb 2017 23:38:05 -0700
+Message-ID: <1488091097-12328-5-git-send-email-logang@deltatee.com>
 References: <1488091097-12328-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,55 +22,148 @@ Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH
 List-Id: linux-scsi@vger.kernel.org
 
 Replace the open coded registration of the cdev and dev with the
-new device_add_cdev() helper. The helper replaces a common pattern by
-taking the proper reference against the parent device and adding both
-the cdev and the device.
-
-In doing so we have to remove a guard statement from cdev_del,
-but this doesn't appear to be required in any way.
+new device_add_cdev() helper in evdev, joydev and mousedev. The helper
+replaces a common pattern by taking the proper reference against the
+parent device and adding both the cdev and the device.
 
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
 ---
- drivers/iio/industrialio-core.c | 15 ++++-----------
- 1 file changed, 4 insertions(+), 11 deletions(-)
+ drivers/input/evdev.c    | 11 ++---------
+ drivers/input/joydev.c   | 11 ++---------
+ drivers/input/mousedev.c | 11 ++---------
+ 3 files changed, 6 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/iio/industrialio-core.c b/drivers/iio/industrialio-core.c
-index aaca428..f9ac301 100644
---- a/drivers/iio/industrialio-core.c
-+++ b/drivers/iio/industrialio-core.c
-@@ -1718,18 +1718,13 @@ int iio_device_register(struct iio_dev *indio_dev)
+diff --git a/drivers/input/evdev.c b/drivers/input/evdev.c
+index e9ae3d5..9255714 100644
+--- a/drivers/input/evdev.c
++++ b/drivers/input/evdev.c
+@@ -1354,8 +1354,6 @@ static void evdev_cleanup(struct evdev *evdev)
+ 	evdev_mark_dead(evdev);
+ 	evdev_hangup(evdev);
  
- 	cdev_init(&indio_dev->chrdev, &iio_buffer_fileops);
- 	indio_dev->chrdev.owner = indio_dev->info->driver_module;
--	indio_dev->chrdev.kobj.parent = &indio_dev->dev.kobj;
--	ret = cdev_add(&indio_dev->chrdev, indio_dev->dev.devt, 1);
--	if (ret < 0)
--		goto error_unreg_eventset;
+-	cdev_del(&evdev->cdev);
+-
+ 	/* evdev is marked dead so no one else accesses evdev->open */
+ 	if (evdev->open) {
+ 		input_flush_device(handle, NULL);
+@@ -1416,12 +1414,8 @@ static int evdev_connect(struct input_handler *handler, struct input_dev *dev,
+ 		goto err_free_evdev;
  
--	ret = device_add(&indio_dev->dev);
-+	ret = cdev_device_add(&indio_dev->chrdev, &indio_dev->dev);
- 	if (ret < 0)
--		goto error_cdev_del;
-+		goto error_unreg_eventset;
+ 	cdev_init(&evdev->cdev, &evdev_fops);
+-	evdev->cdev.kobj.parent = &evdev->dev.kobj;
+-	error = cdev_add(&evdev->cdev, evdev->dev.devt, 1);
+-	if (error)
+-		goto err_unregister_handle;
  
- 	return 0;
--error_cdev_del:
--	cdev_del(&indio_dev->chrdev);
-+
- error_unreg_eventset:
- 	iio_device_unregister_eventset(indio_dev);
- error_free_sysfs:
-@@ -1750,10 +1745,8 @@ void iio_device_unregister(struct iio_dev *indio_dev)
+-	error = device_add(&evdev->dev);
++	error = cdev_device_add(&evdev->cdev, &evdev->dev);
+ 	if (error)
+ 		goto err_cleanup_evdev;
+ 
+@@ -1429,7 +1423,6 @@ static int evdev_connect(struct input_handler *handler, struct input_dev *dev,
+ 
+  err_cleanup_evdev:
+ 	evdev_cleanup(evdev);
+- err_unregister_handle:
+ 	input_unregister_handle(&evdev->handle);
+  err_free_evdev:
+ 	put_device(&evdev->dev);
+@@ -1442,7 +1435,7 @@ static void evdev_disconnect(struct input_handle *handle)
  {
- 	mutex_lock(&indio_dev->info_exist_lock);
+ 	struct evdev *evdev = handle->private;
  
--	device_del(&indio_dev->dev);
-+	cdev_device_del(&indio_dev->chrdev, &indio_dev->dev);
+-	device_del(&evdev->dev);
++	cdev_device_del(&evdev->cdev, &evdev->dev);
+ 	evdev_cleanup(evdev);
+ 	input_free_minor(MINOR(evdev->dev.devt));
+ 	input_unregister_handle(handle);
+diff --git a/drivers/input/joydev.c b/drivers/input/joydev.c
+index abd18f3..e38b84f 100644
+--- a/drivers/input/joydev.c
++++ b/drivers/input/joydev.c
+@@ -729,8 +729,6 @@ static void joydev_cleanup(struct joydev *joydev)
+ 	joydev_mark_dead(joydev);
+ 	joydev_hangup(joydev);
  
--	if (indio_dev->chrdev.dev)
--		cdev_del(&indio_dev->chrdev);
- 	iio_device_unregister_debugfs(indio_dev);
+-	cdev_del(&joydev->cdev);
+-
+ 	/* joydev is marked dead so no one else accesses joydev->open */
+ 	if (joydev->open)
+ 		input_close_device(handle);
+@@ -905,12 +903,8 @@ static int joydev_connect(struct input_handler *handler, struct input_dev *dev,
+ 		goto err_free_joydev;
  
- 	iio_disable_all_buffers(indio_dev);
+ 	cdev_init(&joydev->cdev, &joydev_fops);
+-	joydev->cdev.kobj.parent = &joydev->dev.kobj;
+-	error = cdev_add(&joydev->cdev, joydev->dev.devt, 1);
+-	if (error)
+-		goto err_unregister_handle;
+ 
+-	error = device_add(&joydev->dev);
++	error = cdev_device_add(&joydev->cdev, &joydev->dev);
+ 	if (error)
+ 		goto err_cleanup_joydev;
+ 
+@@ -918,7 +912,6 @@ static int joydev_connect(struct input_handler *handler, struct input_dev *dev,
+ 
+  err_cleanup_joydev:
+ 	joydev_cleanup(joydev);
+- err_unregister_handle:
+ 	input_unregister_handle(&joydev->handle);
+  err_free_joydev:
+ 	put_device(&joydev->dev);
+@@ -931,7 +924,7 @@ static void joydev_disconnect(struct input_handle *handle)
+ {
+ 	struct joydev *joydev = handle->private;
+ 
+-	device_del(&joydev->dev);
++	cdev_device_del(&joydev->cdev, &joydev->dev);
+ 	joydev_cleanup(joydev);
+ 	input_free_minor(MINOR(joydev->dev.devt));
+ 	input_unregister_handle(handle);
+diff --git a/drivers/input/mousedev.c b/drivers/input/mousedev.c
+index b604564..0e0ff84 100644
+--- a/drivers/input/mousedev.c
++++ b/drivers/input/mousedev.c
+@@ -812,8 +812,6 @@ static void mousedev_cleanup(struct mousedev *mousedev)
+ 	mousedev_mark_dead(mousedev);
+ 	mousedev_hangup(mousedev);
+ 
+-	cdev_del(&mousedev->cdev);
+-
+ 	/* mousedev is marked dead so no one else accesses mousedev->open */
+ 	if (mousedev->open)
+ 		input_close_device(handle);
+@@ -901,12 +899,8 @@ static struct mousedev *mousedev_create(struct input_dev *dev,
+ 	}
+ 
+ 	cdev_init(&mousedev->cdev, &mousedev_fops);
+-	mousedev->cdev.kobj.parent = &mousedev->dev.kobj;
+-	error = cdev_add(&mousedev->cdev, mousedev->dev.devt, 1);
+-	if (error)
+-		goto err_unregister_handle;
+ 
+-	error = device_add(&mousedev->dev);
++	error = cdev_device_add(&mousedev->cdev, &mousedev->dev);
+ 	if (error)
+ 		goto err_cleanup_mousedev;
+ 
+@@ -914,7 +908,6 @@ static struct mousedev *mousedev_create(struct input_dev *dev,
+ 
+  err_cleanup_mousedev:
+ 	mousedev_cleanup(mousedev);
+- err_unregister_handle:
+ 	if (!mixdev)
+ 		input_unregister_handle(&mousedev->handle);
+  err_free_mousedev:
+@@ -927,7 +920,7 @@ static struct mousedev *mousedev_create(struct input_dev *dev,
+ 
+ static void mousedev_destroy(struct mousedev *mousedev)
+ {
+-	device_del(&mousedev->dev);
++	cdev_device_del(&mousedev->cdev, &mousedev->dev);
+ 	mousedev_cleanup(mousedev);
+ 	input_free_minor(MINOR(mousedev->dev.devt));
+ 	if (mousedev != mousedev_mix)
 -- 
 2.1.4
