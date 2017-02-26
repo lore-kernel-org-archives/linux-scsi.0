@@ -1,14 +1,11 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v2 01/16] chardev: add helper function to register char devs
- with a struct device
-Date: Sat, 25 Feb 2017 23:38:02 -0700
-Message-ID: <1488091097-12328-2-git-send-email-logang@deltatee.com>
-References: <1488091097-12328-1-git-send-email-logang@deltatee.com>
+Subject: [PATCH v2 00/16] Cleanup chardev instances with helper function
+Date: Sat, 25 Feb 2017 23:38:01 -0700
+Message-ID: <1488091097-12328-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <1488091097-12328-1-git-send-email-logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
 List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
  <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
 List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
@@ -22,171 +19,136 @@ To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org
 Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-gpio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Credit for this patch goes is shared with Dan Williams [1]. I've
-taken things one step further to make the helper function more
-useful and clean up calling code.
+Hi Everyone,
 
-There's a common pattern in the kernel whereby a struct cdev is placed
-in a structure along side a struct device which manages the life-cycle
-of both. In the naive approach, the reference counting is broken and
-the struct device can free everything before the chardev code
-is entirely released.
+Here's v2 of my chardev cleanup patch-set. I've incorporated some
+feedback and decided to extend the concept a little further. The new
+helper function now includes both cdev_add and device_add which
+significantly simplifies every instance that called it.
 
-Many developers have solved this problem by linking the internal kobjs
-in this fashion:
+Jason's also expressed an interest in creating a general solution to
+the problem that occurs if a user tries to utilize a newly created
+cdev right before device_add fails. This series doesn't address that
+specifically but will make it much easier to do so in future work.
 
-cdev.kobj.parent = &parent_dev.kobj;
+I've also added cdev_set_parent for the cases in IB that set
+the kobject parent without using device_add. This is just to ensure
+the parent setting code is private within char_dev.c and removes the
+lines that appear suspect but are in fact correct. Dan's suggested
+WARN_ON is included in this function.
 
-The cdev code explicitly gets and puts a reference to it's kobj parent.
-So this seems like it was intended to be used this way. Dmitrty Torokhov
-first put this in place in 2012 with this commit:
+Seeing the new helper function takes in a bit more than before,
+the instance patches are a bit heavier. Thus, I've refrained from
+collecting the acks and reviews I've already received. In a couple
+of cases (mtd and scsi) the cleanup required was a bit more involved
+than I would have liked and thus these patches probably need more
+attention, review and testing. (Unfortunately, I don't have hardware
+to actually test them.) Hopefully that process doesn't throw too big
+a wrench in the overall series moving forward.
 
-2f0157f char_dev: pin parent kobject
+I've included Dan's cdev_leak patch in this series to avoid a merge
+conflict between the two of us.
 
-and the first instance of the fix was then done in the input subsystem
-in the following commit:
+While the diff stats for the series are much heavier than in v1, we now
+have a net loss of more than 100 lines! So this feels much more like a
+successful cleanup.
 
-4a215aa Input: fix use-after-free introduced with dynamic minor changes
+Thanks,
 
-Subsequently over the years, however, this issue seems to have tripped
-up multiple developers independently. For example, see these commits:
+Logan
 
-0d5b7da iio: Prevent race between IIO chardev opening and IIO device
-(by Lars-Peter Clausen in 2013)
+--
 
-ba0ef85 tpm: Fix initialization of the cdev
-(by Jason Gunthorpe in 2015)
+v1 story:
 
-5b28dde [media] media: fix use-after-free in cdev_put() when app exits
-after driver unbind
-(by Shauh Khan in 2016)
+Our story for this patch-set begins with a new driver I wrote and am in
+the process of submitting upstream. That driver creates a fairly
+standard char device and the code for it was copied from a similar
+instance in device-dax. However, upon review, Greg Kroah-Hartman
+noticed [1] a suspicious line that assigned to the parent field of
+the underlying kobject for the char device.
 
-This technique is similarly done in at least 15 places within the kernel
-and probably should have been done so in another, at least, 5 places.
-The kobj line also looks very suspect in that one would not expect
-drivers to have to mess with kobject internals in this way.
-Even highly experienced kernel developers can be surprised by this
-code, as seen in [2].
+I removed that from my code and endeavoured to remove it from the
+code I copied as well. However, Dan Williams pointed out [2] that this
+code is necessary for correct reference counting of the underlying
+structures. This prompted me to do a fair bit more research and
+investigation into whats going on and I found it to be a common pattern.
+(Although misleading and though required to be correct, frequently
+forgotten.) This pattern is used in at least 15 places in the kernel
+and probably should have been used in at least 5 more.
 
-To help alleviate this situation, and hopefully prevent future
-wasted effort on this problem, this patch introduces a helper function
-to register a char device along with its parent struct device.
-This creates a more regular API for tying a char device to its parent
-without the developer having to set members in the underlying kobject.
+This patch-set aims to correct this and hopefully prevent future
+developers from wasting their time on it. The first patch introduces
+a new helper API as originally proposed by Dan Williams [3]. Please
+see the commit message for that patch for a longer description of the
+problem and history.
 
-This patch introduce cdev_device_add and cdev_device_del which
-replaces a common pattern including setting the kobj parent, calling
-cdev_add and then calling device_add. It also introduces cdev_set_parent
-for the few cases that set the kobject parent without using device_add.
+The subsequent patches either update correct instances to use the
+new API or fix incorrect usages to ensure the cdev correctly takes
+a reference count using the new API (this is noted in those patches).
 
-[1] https://lkml.org/lkml/2017/2/13/700
-[2] https://lkml.org/lkml/2017/2/10/370
+This moves all except four of the cdev.kobj.parent usages into the one
+cdev function, the remaining four are in the infiniband subsystem and
+I've left alone because that subsystem seems to make use of kobjects
+directly (instead of struct devices). These are noted in patch 7 of
+this series.
 
-Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Signed-off-by: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
----
- fs/char_dev.c        | 67 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/cdev.h |  4 ++++
- 2 files changed, 71 insertions(+)
+This series is based on v4.10 with the exception of the last patch
+which is for my new driver which, as yet, has not been accepted
+upstream.
 
-diff --git a/fs/char_dev.c b/fs/char_dev.c
-index 44a240c..471d480 100644
---- a/fs/char_dev.c
-+++ b/fs/char_dev.c
-@@ -471,6 +471,70 @@ int cdev_add(struct cdev *p, dev_t dev, unsigned count)
- 	return 0;
- }
- 
-+/**
-+ * cdev_set_parent() - set the parent kobject for a char device
-+ * @p: the cdev structure
-+ * @kobj: the kobject to take a reference to
-+ *
-+ * cdev_set_parent() sets a parent kobject which will be referenced
-+ * appropriately so the parent is not freed before the cdev. This
-+ * should be called before cdev_add.
-+ */
-+void cdev_set_parent(struct cdev *p, struct kobject *kobj)
-+{
-+	WARN_ON(!kobj->state_initialized);
-+	p->kobj.parent = kobj;
-+}
-+
-+/**
-+ * cdev_device_add() - add a char device and it's corresponding
-+ *	struct device, linkink
-+ * @dev: the device structure
-+ * @cdev: the cdev structure
-+ *
-+ * cdev_device_add() adds the char device represented by @cdev to the system,
-+ * just as cdev_add does. It then adds @dev to the system using device_add
-+ * The dev_t for the char device will be taken from the struct device which
-+ * needs to be initialized first. This helper function correctly takes a
-+ * reference to the parent device so the parent will not get released until
-+ * all references to the cdev are released.
-+ *
-+ * This function should be used whenever the struct cdev and the
-+ * struct device are members of the same structure whose lifetime is
-+ * managed by the struct device.
-+ */
-+int cdev_device_add(struct cdev *cdev, struct device *dev)
-+{
-+	int rc = 0;
-+
-+	cdev_set_parent(cdev, &dev->kobj);
-+
-+	rc = cdev_add(cdev, dev->devt, 1);
-+	if (rc)
-+		return rc;
-+
-+	rc = device_add(dev);
-+	if (rc)
-+		cdev_del(cdev);
-+
-+	return rc;
-+}
-+
-+/**
-+ * cdev_device_del() - inverse of cdev_device_add
-+ * @dev: the device structure
-+ * @cdev: the cdev structure
-+ *
-+ * cdev_device_del() is a helper function to call cdev_del
-+ * and device_del. It should be used whenever cdev_device_add
-+ * is used.
-+ */
-+void cdev_device_del(struct cdev *cdev, struct device *dev)
-+{
-+	device_del(dev);
-+	cdev_del(cdev);
-+}
-+
- static void cdev_unmap(dev_t dev, unsigned count)
- {
- 	kobj_unmap(cdev_map, dev, count);
-@@ -570,5 +634,8 @@ EXPORT_SYMBOL(cdev_init);
- EXPORT_SYMBOL(cdev_alloc);
- EXPORT_SYMBOL(cdev_del);
- EXPORT_SYMBOL(cdev_add);
-+EXPORT_SYMBOL(cdev_set_parent);
-+EXPORT_SYMBOL(cdev_device_add);
-+EXPORT_SYMBOL(cdev_device_del);
- EXPORT_SYMBOL(__register_chrdev);
- EXPORT_SYMBOL(__unregister_chrdev);
-diff --git a/include/linux/cdev.h b/include/linux/cdev.h
-index f876361..4c99579 100644
---- a/include/linux/cdev.h
-+++ b/include/linux/cdev.h
-@@ -26,6 +26,10 @@ void cdev_put(struct cdev *p);
- 
- int cdev_add(struct cdev *, dev_t, unsigned);
- 
-+void cdev_set_parent(struct cdev *p, struct kobject *kobj);
-+int cdev_device_add(struct cdev *cdev, struct device *dev);
-+void cdev_device_del(struct cdev *cdev, struct device *dev);
-+
- void cdev_del(struct cdev *);
- 
- void cd_forget(struct inode *);
--- 
+[1] https://lkml.org/lkml/2017/2/10/370
+[2] https://lkml.org/lkml/2017/2/10/607
+[3] https://lkml.org/lkml/2017/2/13/700
+
+Dan Williams (1):
+  device-dax: fix cdev leak
+
+Jason Gunthorpe (1):
+  IB/ucm: utilize new cdev_device_add helper function
+
+Logan Gunthorpe (14):
+  chardev: add helper function to register char devs with a struct
+    device
+  device-dax: utilize new cdev_device_add helper function
+  input: utilize new cdev_device_add helper function
+  gpiolib: utilize new cdev_device_add helper function
+  tpm-chip: utilize new cdev_device_add helper function
+  platform/chrome: cros_ec_dev - utilize new cdev_device_add helper
+    function
+  infiniband: utilize the new cdev_set_parent function
+  iio:core: utilize new cdev_device_add helper function
+  media: utilize new cdev_device_add helper function
+  mtd: utilize new cdev_device_add helper function
+  rapidio: utilize new cdev_device_add helper function
+  rtc: utilize new cdev_device_add helper function
+  scsi: utilize new cdev_device_add helper function
+  switchtec: utilize new device_add_cdev helper function
+
+ drivers/char/tpm/tpm-chip.c              | 19 ++-----
+ drivers/dax/dax.c                        | 33 ++++++------
+ drivers/gpio/gpiolib.c                   | 23 +++-----
+ drivers/iio/industrialio-core.c          | 15 ++----
+ drivers/infiniband/core/ucm.c            | 36 +++++++------
+ drivers/infiniband/core/user_mad.c       |  4 +-
+ drivers/infiniband/core/uverbs_main.c    |  2 +-
+ drivers/infiniband/hw/hfi1/device.c      |  2 +-
+ drivers/input/evdev.c                    | 11 +---
+ drivers/input/joydev.c                   | 11 +---
+ drivers/input/mousedev.c                 | 11 +---
+ drivers/media/cec/cec-core.c             | 16 ++----
+ drivers/media/media-devnode.c            | 20 ++-----
+ drivers/mtd/ubi/build.c                  | 91 ++++++--------------------------
+ drivers/mtd/ubi/vmt.c                    | 49 ++++++-----------
+ drivers/pci/switch/switchtec.c           | 15 ++----
+ drivers/platform/chrome/cros_ec_dev.c    | 31 +++--------
+ drivers/rapidio/devices/rio_mport_cdev.c | 24 +++------
+ drivers/rtc/class.c                      | 14 +++--
+ drivers/rtc/rtc-dev.c                    | 17 ------
+ drivers/scsi/osd/osd_uld.c               | 56 +++++++-------------
+ fs/char_dev.c                            | 67 +++++++++++++++++++++++
+ include/linux/cdev.h                     |  4 ++
+ 23 files changed, 222 insertions(+), 349 deletions(-)
+
+--
 2.1.4
