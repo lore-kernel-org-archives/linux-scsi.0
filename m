@@ -1,7 +1,7 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v2 09/16] infiniband: utilize the new cdev_set_parent function
-Date: Sat, 25 Feb 2017 23:38:10 -0700
-Message-ID: <1488091097-12328-10-git-send-email-logang@deltatee.com>
+Subject: [PATCH v2 14/16] rtc: utilize new cdev_device_add helper function
+Date: Sat, 25 Feb 2017 23:38:15 -0700
+Message-ID: <1488091097-12328-15-git-send-email-logang@deltatee.com>
 References: <1488091097-12328-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,65 +21,94 @@ To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org
 Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-gpio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-This replaces the suspect looking cdev.kobj.parent lines with the
-equivalent cdev_set_parent function. This is a straightforward change
-that's largely cosmetic but it does push the kobj.parent ownership
-into char_dev.c where it belongs.
+Mostly straightforward, but we had to remove the rtc_dev_add/del_device
+functions as they split up the cdev_add and the device_add.
+
+Doing this also revealed that there was likely another subtle bug:
+seeing cdev_add was done after device_register, the cdev probably
+was not ready before device_add when the uevent occurs. This would
+race with userspace, if it tried to use the device directly after
+the uevent. This is fixed just by using the new helper function.
 
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
 ---
- drivers/infiniband/core/user_mad.c    | 4 ++--
- drivers/infiniband/core/uverbs_main.c | 2 +-
- drivers/infiniband/hw/hfi1/device.c   | 2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/rtc/class.c   | 14 ++++++++++----
+ drivers/rtc/rtc-dev.c | 17 -----------------
+ 2 files changed, 10 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/infiniband/core/user_mad.c b/drivers/infiniband/core/user_mad.c
-index 249b403..f720de0 100644
---- a/drivers/infiniband/core/user_mad.c
-+++ b/drivers/infiniband/core/user_mad.c
-@@ -1183,7 +1183,7 @@ static int ib_umad_init_port(struct ib_device *device, int port_num,
+diff --git a/drivers/rtc/class.c b/drivers/rtc/class.c
+index 74fd974..5fb4398 100644
+--- a/drivers/rtc/class.c
++++ b/drivers/rtc/class.c
+@@ -195,6 +195,8 @@ struct rtc_device *rtc_device_register(const char *name, struct device *dev,
+ 		goto exit_ida;
+ 	}
  
- 	cdev_init(&port->cdev, &umad_fops);
- 	port->cdev.owner = THIS_MODULE;
--	port->cdev.kobj.parent = &umad_dev->kobj;
-+	cdev_set_parent(&port->cdev, &umad_dev->kobj);
- 	kobject_set_name(&port->cdev.kobj, "umad%d", port->dev_num);
- 	if (cdev_add(&port->cdev, base, 1))
- 		goto err_cdev;
-@@ -1202,7 +1202,7 @@ static int ib_umad_init_port(struct ib_device *device, int port_num,
- 	base += IB_UMAD_MAX_PORTS;
- 	cdev_init(&port->sm_cdev, &umad_sm_fops);
- 	port->sm_cdev.owner = THIS_MODULE;
--	port->sm_cdev.kobj.parent = &umad_dev->kobj;
-+	cdev_set_parent(&port->sm_cdev, &umad_dev->kobj);
- 	kobject_set_name(&port->sm_cdev.kobj, "issm%d", port->dev_num);
- 	if (cdev_add(&port->sm_cdev, base, 1))
- 		goto err_sm_cdev;
-diff --git a/drivers/infiniband/core/uverbs_main.c b/drivers/infiniband/core/uverbs_main.c
-index b3f95d4..3495c83 100644
---- a/drivers/infiniband/core/uverbs_main.c
-+++ b/drivers/infiniband/core/uverbs_main.c
-@@ -1169,7 +1169,7 @@ static void ib_uverbs_add_one(struct ib_device *device)
- 	cdev_init(&uverbs_dev->cdev, NULL);
- 	uverbs_dev->cdev.owner = THIS_MODULE;
- 	uverbs_dev->cdev.ops = device->mmap ? &uverbs_mmap_fops : &uverbs_fops;
--	uverbs_dev->cdev.kobj.parent = &uverbs_dev->kobj;
-+	cdev_set_parent(&uverbs_dev->cdev, &uverbs_dev->kobj);
- 	kobject_set_name(&uverbs_dev->cdev.kobj, "uverbs%d", uverbs_dev->devnum);
- 	if (cdev_add(&uverbs_dev->cdev, base, 1))
- 		goto err_cdev;
-diff --git a/drivers/infiniband/hw/hfi1/device.c b/drivers/infiniband/hw/hfi1/device.c
-index bf64b5a..bbb6069 100644
---- a/drivers/infiniband/hw/hfi1/device.c
-+++ b/drivers/infiniband/hw/hfi1/device.c
-@@ -69,7 +69,7 @@ int hfi1_cdev_init(int minor, const char *name,
++	device_initialize(&rtc->dev);
++
+ 	rtc->id = id;
+ 	rtc->ops = ops;
+ 	rtc->owner = owner;
+@@ -233,14 +235,19 @@ struct rtc_device *rtc_device_register(const char *name, struct device *dev,
  
- 	cdev_init(cdev, fops);
- 	cdev->owner = THIS_MODULE;
--	cdev->kobj.parent = parent;
-+	cdev_set_parent(cdev, parent);
- 	kobject_set_name(&cdev->kobj, name);
+ 	rtc_dev_prepare(rtc);
  
- 	ret = cdev_add(cdev, dev, 1);
+-	err = device_register(&rtc->dev);
++	err = cdev_device_add(&rtc->char_dev, &rtc->dev);
+ 	if (err) {
++		dev_warn(&rtc->dev, "%s: failed to add char device %d:%d\n",
++			 rtc->name, MAJOR(rtc->dev.devt), rtc->id);
++
+ 		/* This will free both memory and the ID */
+ 		put_device(&rtc->dev);
+ 		goto exit;
++	} else {
++		dev_dbg(&rtc->dev, "%s: dev (%d:%d)\n", rtc->name,
++			MAJOR(rtc->dev.devt), rtc->id);
+ 	}
+ 
+-	rtc_dev_add_device(rtc);
+ 	rtc_proc_add_device(rtc);
+ 
+ 	dev_info(dev, "rtc core: registered %s as %s\n",
+@@ -271,9 +278,8 @@ void rtc_device_unregister(struct rtc_device *rtc)
+ 	 * Remove innards of this RTC, then disable it, before
+ 	 * letting any rtc_class_open() users access it again
+ 	 */
+-	rtc_dev_del_device(rtc);
+ 	rtc_proc_del_device(rtc);
+-	device_del(&rtc->dev);
++	cdev_device_del(&rtc->char_dev, &rtc->dev);
+ 	rtc->ops = NULL;
+ 	mutex_unlock(&rtc->ops_lock);
+ 	put_device(&rtc->dev);
+diff --git a/drivers/rtc/rtc-dev.c b/drivers/rtc/rtc-dev.c
+index a6d9434..fdd071f 100644
+--- a/drivers/rtc/rtc-dev.c
++++ b/drivers/rtc/rtc-dev.c
+@@ -477,23 +477,6 @@ void rtc_dev_prepare(struct rtc_device *rtc)
+ 
+ 	cdev_init(&rtc->char_dev, &rtc_dev_fops);
+ 	rtc->char_dev.owner = rtc->owner;
+-	rtc->char_dev.kobj.parent = &rtc->dev.kobj;
+-}
+-
+-void rtc_dev_add_device(struct rtc_device *rtc)
+-{
+-	if (cdev_add(&rtc->char_dev, rtc->dev.devt, 1))
+-		dev_warn(&rtc->dev, "%s: failed to add char device %d:%d\n",
+-			rtc->name, MAJOR(rtc_devt), rtc->id);
+-	else
+-		dev_dbg(&rtc->dev, "%s: dev (%d:%d)\n", rtc->name,
+-			MAJOR(rtc_devt), rtc->id);
+-}
+-
+-void rtc_dev_del_device(struct rtc_device *rtc)
+-{
+-	if (rtc->dev.devt)
+-		cdev_del(&rtc->char_dev);
+ }
+ 
+ void __init rtc_dev_init(void)
 -- 
 2.1.4
