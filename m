@@ -1,121 +1,43 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [LSF/MM TOPIC] do we really need PG_error at all?
-Date: Mon, 27 Feb 2017 08:03:51 +1100
-Message-ID: <877f4cr7ew.fsf@notabene.neil.brown.name>
-References: <1488120164.2948.4.camel@redhat.com> <1488129033.4157.8.camel@HansenPartnership.com>
+From: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v2 03/16] device-dax: utilize new
+ cdev_device_add helper function
+Date: Sun, 26 Feb 2017 14:31:40 -0800
+Message-ID: <CAPcyv4i6yucmRr9HaqLiA+QCH7AbB=RS28_Jcix292wq1OV4YA@mail.gmail.com>
+References: <1488091097-12328-1-git-send-email-logang@deltatee.com> <1488091097-12328-4-git-send-email-logang@deltatee.com>
+Reply-To: rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1488129033.4157.8.camel@HansenPartnership.com>
-Sender: owner-linux-mm@kvack.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Layton <jlayton@redhat.com>, linux-mm <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
-Cc: lsf-pc <lsf-pc@lists.linuxfoundation.org>, Neil Brown <neilb@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, linux-block@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <rtc-linux+bncBDZYPUPHYEJBBTNOZXCQKGQEPMLBXIQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <1488091097-12328-4-git-send-email-logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+List-Post: <https://groups.google.com/group/rtc-linux/post>, <mailto:rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:rtc-linux+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/rtc-linux
+List-Subscribe: <https://groups.google.com/group/rtc-linux/subscribe>, <mailto:rtc-linux+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+712029733259+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/rtc-linux/subscribe>
+To: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Sajjan Vikas C <vikas.cha.sajjan-ZPxbGqLxI0U@public.gmane.org>, Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linus Walleij <linus.walleij-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Alexandre Courbot <gnurou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Peter Huewe <peterhuewe-Mmb7MZpHnFY@public.gmane.org>, Marcel Selhorst <tpmdd-yWjUBOtONefk1uMJSBkQmQ@public.gmane.org>, Jarkko Sakkinen <jarkko.sakkinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Olof Johansson <olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sean Hefty <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hal Rosenstock <hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hartmut Knaack <knaack.h-Mmb7MZpHnFY@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Sun, Feb 26 2017, James Bottomley wrote:
-
-> [added linux-scsi and linux-block because this is part of our error
-> handling as well]
-> On Sun, 2017-02-26 at 09:42 -0500, Jeff Layton wrote:
->> Proposing this as a LSF/MM TOPIC, but it may turn out to be me just=20
->> not understanding the semantics here.
->>=20
->> As I was looking into -ENOSPC handling in cephfs, I noticed that
->> PG_error is only ever tested in one place [1]=20
->> __filemap_fdatawait_range, which does this:
->>=20
->> 	if (TestClearPageError(page))
->> 		ret =3D -EIO;
->>=20
->> This error code will override any AS_* error that was set in the
->> mapping. Which makes me wonder...why don't we just set this error in=20
->> the mapping and not bother with a per-page flag? Could we potentially
->> free up a page flag by eliminating this?
+On Sat, Feb 25, 2017 at 10:38 PM, Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org> wrote:
+> Replace the open coded registration of the cdev and dev with the
+> new device_add_cdev() helper. The helper replaces a common pattern by
+> taking the proper reference against the parent device and adding both
+> the cdev and the device.
 >
-> Note that currently the AS_* codes are only set for write errors not
-> for reads and we have no mapping error handling at all for swap pages,
-> but I'm sure this is fixable.
+> Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
 
-How is a read error different from a failure to set PG_uptodate?
-Does PG_error suppress retries?
+Thanks,
 
->
-> From the I/O layer point of view we take great pains to try to pinpoint
-> the error exactly to the sector.  We reflect this up by setting the
-> PG_error flag on the page where the error occurred.  If we only set the
-> error on the mapping, we lose that granularity, because the mapping is
-> mostly at the file level (or VMA level for anon pages).
+Reviewed-by: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-Are you saying that the IO layer finds the page in the bi_io_vec and
-explicitly sets PG_error, rather than just passing an error indication
-to bi_end_io ??  That would seem to be wrong as the page may not be in
-the page cache. So I guess I misunderstand you.
-
->
-> So I think the question for filesystem people from us would be do you
-> care about this accuracy?  If it's OK just to know an error occurred
-> somewhere in this file, then perhaps we don't need it.
-
-I had always assumed that a bio would either succeed or fail, and that
-no finer granularity could be available.
-
-I think the question here is: Do filesystems need the pagecache to
-record which pages have seen an IO error?
-I think that for write errors, there is no value in recording
-block-oriented error status - only file-oriented status.
-For read errors, it might if help to avoid indefinite read retries, but
-I don't know the code well enough to be sure if this is an issue.
-
-NeilBrown
-
-
->
-> James
->
->> The main argument I could see for keeping it is that removing it=20
->> might subtly change the behavior of sync_file_range if you have tasks
->> syncing different ranges in a file concurrently. I'm not sure if that=20
->> would break any guarantees though.
->>=20
->> Even if we do need it, I think we might need some cleanup here=20
->> anyway. A lot of readpage operations end up setting that flag when=20
->> they hit an error. Isn't it wrong to return an error on fsync, just=20
->> because we had a read error somewhere in the file in a range that was
->> never dirtied?
->>=20
->> --
->> [1]: there is another place in f2fs, but it's more or less equivalent=20
->> to the call site in __filemap_fdatawait_range.
->>=20
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlizQrcACgkQOeye3VZi
-gbnJBQ//X+H1BAE9cC1V24BQ+Xn4aLAmkspAnwRuKvOqbFIkUp+PIodvRlO/2oVi
-YI+MqlDclDn9IVMiySSHbMZ+f5Zg+iSpcX0eQkQ6JMQKJWFAj+bWvXdSEslfAbon
-BvYJEiHBRFiGxBgihpBczb/GMU+2g9HrIHg9fWh3cL7eFtQ8h2THfclWVEmQcSYf
-loesYK/q7Q0NJ7MfTAxv6I2fOxP/Fdea5Mp8l3ttoyzwIsHkxHYudPQ2xRPB762N
-ShPr4cAefsOTfh1Tyzk0VffVM/kW9icgliE4sxjIa2pCORZidFzEV0jTDMpvCJGB
-9YqBtNZiwc4OD0n3ItR4VvsvBl+F3V7BM/mzKkq7POlZhEsE66mTNEhF6l27Y2Rg
-/5pA0cgepQoqgPP3BlbclHlT75PIQIbIAMsGM+MMtC1yglsPgPuqRxAm+fYH0cko
-pVtRkL0u4JDSABINRxhMuI3qwHqWP9JfQaZFoHXo11iIgI9wPr9Ym5+QTHjU/sDi
-cjz8PnZ+oL//1GT3hdu/iBLao3cX4LCcOdTaII6stZub6r0CLRKtd5T27t68qwTp
-7GaRvdeLuVDo/2bSYW0nudHSyTJicbO8YUVFXp69KgYppSfmdWxEUL5ibaSRfLfc
-EwnTM24697cseThxlZA/ItAwo9/kc31A79VGO/gDTgTJ+g+L8Uw=
-=Ajz+
------END PGP SIGNATURE-----
---=-=-=--
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+You received this message because you are subscribed to "rtc-linux".
+Membership options at http://groups.google.com/group/rtc-linux .
+Please read http://groups.google.com/group/rtc-linux/web/checklist
+before submitting a driver.
+--- 
+You received this message because you are subscribed to the Google Groups "rtc-linux" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to rtc-linux+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+For more options, visit https://groups.google.com/d/optout.
