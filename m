@@ -1,7 +1,8 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v2 05/16] gpiolib: utilize new cdev_device_add helper function
-Date: Sat, 25 Feb 2017 23:38:06 -0700
-Message-ID: <1488091097-12328-6-git-send-email-logang@deltatee.com>
+Subject: [PATCH v2 07/16] platform/chrome: cros_ec_dev - utilize new
+ cdev_device_add helper function
+Date: Sat, 25 Feb 2017 23:38:08 -0700
+Message-ID: <1488091097-12328-8-git-send-email-logang@deltatee.com>
 References: <1488091097-12328-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -26,60 +27,84 @@ new device_add_cdev() helper. The helper replaces a common pattern by
 taking the proper reference against the parent device and adding both
 the cdev and the device.
 
+At the same time we cleanup the error path through device_probe
+function: we use put_device instead of kfree directly as recommended
+by the device_initialize documentation.
+
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
 ---
- drivers/gpio/gpiolib.c | 23 ++++++++---------------
- 1 file changed, 8 insertions(+), 15 deletions(-)
+ drivers/platform/chrome/cros_ec_dev.c | 31 +++++++------------------------
+ 1 file changed, 7 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
-index a07ae9e..208d032 100644
---- a/drivers/gpio/gpiolib.c
-+++ b/drivers/gpio/gpiolib.c
-@@ -1036,18 +1036,14 @@ static int gpiochip_setup_dev(struct gpio_device *gdev)
+diff --git a/drivers/platform/chrome/cros_ec_dev.c b/drivers/platform/chrome/cros_ec_dev.c
+index 47268ec..58f67d6 100644
+--- a/drivers/platform/chrome/cros_ec_dev.c
++++ b/drivers/platform/chrome/cros_ec_dev.c
+@@ -388,7 +388,6 @@ static int ec_device_probe(struct platform_device *pdev)
+ 	int retval = -ENOMEM;
+ 	struct device *dev = &pdev->dev;
+ 	struct cros_ec_platform *ec_platform = dev_get_platdata(dev);
+-	dev_t devno = MKDEV(ec_major, pdev->id);
+ 	struct cros_ec_dev *ec = kzalloc(sizeof(*ec), GFP_KERNEL);
  
- 	cdev_init(&gdev->chrdev, &gpio_fileops);
- 	gdev->chrdev.owner = THIS_MODULE;
--	gdev->chrdev.kobj.parent = &gdev->dev.kobj;
- 	gdev->dev.devt = MKDEV(MAJOR(gpio_devt), gdev->id);
--	status = cdev_add(&gdev->chrdev, gdev->dev.devt, 1);
--	if (status < 0)
--		chip_warn(gdev->chip, "failed to add char device %d:%d\n",
--			  MAJOR(gpio_devt), gdev->id);
--	else
--		chip_dbg(gdev->chip, "added GPIO chardev (%d:%d)\n",
--			 MAJOR(gpio_devt), gdev->id);
--	status = device_add(&gdev->dev);
-+
-+	status = cdev_device_add(&gdev->chrdev, &gdev->dev);
- 	if (status)
--		goto err_remove_chardev;
-+		return status;
-+
-+	chip_dbg(gdev->chip, "added GPIO chardev (%d:%d)\n",
-+		 MAJOR(gpio_devt), gdev->id);
+ 	if (!ec)
+@@ -404,23 +403,11 @@ static int ec_device_probe(struct platform_device *pdev)
+ 	cdev_init(&ec->cdev, &fops);
  
- 	status = gpiochip_sysfs_register(gdev);
- 	if (status)
-@@ -1062,9 +1058,7 @@ static int gpiochip_setup_dev(struct gpio_device *gdev)
+ 	/*
+-	 * Add the character device
+-	 * Link cdev to the class device to be sure device is not used
+-	 * before unbinding it.
+-	 */
+-	ec->cdev.kobj.parent = &ec->class_dev.kobj;
+-	retval = cdev_add(&ec->cdev, devno, 1);
+-	if (retval) {
+-		dev_err(dev, ": failed to add character device\n");
+-		goto cdev_add_failed;
+-	}
+-
+-	/*
+ 	 * Add the class device
+ 	 * Link to the character device for creating the /dev entry
+ 	 * in devtmpfs.
+ 	 */
+-	ec->class_dev.devt = ec->cdev.dev;
++	ec->class_dev.devt = MKDEV(ec_major, pdev->id);
+ 	ec->class_dev.class = &cros_class;
+ 	ec->class_dev.parent = dev;
+ 	ec->class_dev.release = __remove;
+@@ -428,13 +415,13 @@ static int ec_device_probe(struct platform_device *pdev)
+ 	retval = dev_set_name(&ec->class_dev, "%s", ec_platform->ec_name);
+ 	if (retval) {
+ 		dev_err(dev, "dev_set_name failed => %d\n", retval);
+-		goto set_named_failed;
++		goto failed;
+ 	}
+ 
+-	retval = device_add(&ec->class_dev);
++	retval = cdev_device_add(&ec->cdev, &ec->class_dev);
+ 	if (retval) {
+-		dev_err(dev, "device_register failed => %d\n", retval);
+-		goto dev_reg_failed;
++		dev_err(dev, "cdev_device_add failed => %d\n", retval);
++		goto failed;
+ 	}
+ 
+ 	/* check whether this EC is a sensor hub. */
+@@ -443,12 +430,8 @@ static int ec_device_probe(struct platform_device *pdev)
+ 
  	return 0;
  
- err_remove_device:
--	device_del(&gdev->dev);
--err_remove_chardev:
--	cdev_del(&gdev->chrdev);
-+	cdev_device_del(&gdev->chrdev, &gdev->dev);
- 	return status;
+-dev_reg_failed:
+-set_named_failed:
+-	dev_set_drvdata(dev, NULL);
+-	cdev_del(&ec->cdev);
+-cdev_add_failed:
+-	kfree(ec);
++failed:
++	put_device(&ec->class_dev);
+ 	return retval;
  }
  
-@@ -1348,8 +1342,7 @@ void gpiochip_remove(struct gpio_chip *chip)
- 	 * be removed, else it will be dangling until the last user is
- 	 * gone.
- 	 */
--	cdev_del(&gdev->chrdev);
--	device_del(&gdev->dev);
-+	cdev_device_del(&gdev->chrdev, &gdev->dev);
- 	put_device(&gdev->dev);
- }
- EXPORT_SYMBOL_GPL(gpiochip_remove);
 -- 
 2.1.4
