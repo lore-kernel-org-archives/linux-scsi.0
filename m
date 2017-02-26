@@ -1,8 +1,7 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v2 07/16] platform/chrome: cros_ec_dev - utilize new
- cdev_device_add helper function
-Date: Sat, 25 Feb 2017 23:38:08 -0700
-Message-ID: <1488091097-12328-8-git-send-email-logang@deltatee.com>
+Subject: [PATCH v2 09/16] infiniband: utilize the new cdev_set_parent function
+Date: Sat, 25 Feb 2017 23:38:10 -0700
+Message-ID: <1488091097-12328-10-git-send-email-logang@deltatee.com>
 References: <1488091097-12328-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,89 +21,65 @@ To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org
 Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-gpio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Replace the open coded registration of the cdev and dev with the
-new device_add_cdev() helper. The helper replaces a common pattern by
-taking the proper reference against the parent device and adding both
-the cdev and the device.
-
-At the same time we cleanup the error path through device_probe
-function: we use put_device instead of kfree directly as recommended
-by the device_initialize documentation.
+This replaces the suspect looking cdev.kobj.parent lines with the
+equivalent cdev_set_parent function. This is a straightforward change
+that's largely cosmetic but it does push the kobj.parent ownership
+into char_dev.c where it belongs.
 
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
 ---
- drivers/platform/chrome/cros_ec_dev.c | 31 +++++++------------------------
- 1 file changed, 7 insertions(+), 24 deletions(-)
+ drivers/infiniband/core/user_mad.c    | 4 ++--
+ drivers/infiniband/core/uverbs_main.c | 2 +-
+ drivers/infiniband/hw/hfi1/device.c   | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/platform/chrome/cros_ec_dev.c b/drivers/platform/chrome/cros_ec_dev.c
-index 47268ec..58f67d6 100644
---- a/drivers/platform/chrome/cros_ec_dev.c
-+++ b/drivers/platform/chrome/cros_ec_dev.c
-@@ -388,7 +388,6 @@ static int ec_device_probe(struct platform_device *pdev)
- 	int retval = -ENOMEM;
- 	struct device *dev = &pdev->dev;
- 	struct cros_ec_platform *ec_platform = dev_get_platdata(dev);
--	dev_t devno = MKDEV(ec_major, pdev->id);
- 	struct cros_ec_dev *ec = kzalloc(sizeof(*ec), GFP_KERNEL);
+diff --git a/drivers/infiniband/core/user_mad.c b/drivers/infiniband/core/user_mad.c
+index 249b403..f720de0 100644
+--- a/drivers/infiniband/core/user_mad.c
++++ b/drivers/infiniband/core/user_mad.c
+@@ -1183,7 +1183,7 @@ static int ib_umad_init_port(struct ib_device *device, int port_num,
  
- 	if (!ec)
-@@ -404,23 +403,11 @@ static int ec_device_probe(struct platform_device *pdev)
- 	cdev_init(&ec->cdev, &fops);
+ 	cdev_init(&port->cdev, &umad_fops);
+ 	port->cdev.owner = THIS_MODULE;
+-	port->cdev.kobj.parent = &umad_dev->kobj;
++	cdev_set_parent(&port->cdev, &umad_dev->kobj);
+ 	kobject_set_name(&port->cdev.kobj, "umad%d", port->dev_num);
+ 	if (cdev_add(&port->cdev, base, 1))
+ 		goto err_cdev;
+@@ -1202,7 +1202,7 @@ static int ib_umad_init_port(struct ib_device *device, int port_num,
+ 	base += IB_UMAD_MAX_PORTS;
+ 	cdev_init(&port->sm_cdev, &umad_sm_fops);
+ 	port->sm_cdev.owner = THIS_MODULE;
+-	port->sm_cdev.kobj.parent = &umad_dev->kobj;
++	cdev_set_parent(&port->sm_cdev, &umad_dev->kobj);
+ 	kobject_set_name(&port->sm_cdev.kobj, "issm%d", port->dev_num);
+ 	if (cdev_add(&port->sm_cdev, base, 1))
+ 		goto err_sm_cdev;
+diff --git a/drivers/infiniband/core/uverbs_main.c b/drivers/infiniband/core/uverbs_main.c
+index b3f95d4..3495c83 100644
+--- a/drivers/infiniband/core/uverbs_main.c
++++ b/drivers/infiniband/core/uverbs_main.c
+@@ -1169,7 +1169,7 @@ static void ib_uverbs_add_one(struct ib_device *device)
+ 	cdev_init(&uverbs_dev->cdev, NULL);
+ 	uverbs_dev->cdev.owner = THIS_MODULE;
+ 	uverbs_dev->cdev.ops = device->mmap ? &uverbs_mmap_fops : &uverbs_fops;
+-	uverbs_dev->cdev.kobj.parent = &uverbs_dev->kobj;
++	cdev_set_parent(&uverbs_dev->cdev, &uverbs_dev->kobj);
+ 	kobject_set_name(&uverbs_dev->cdev.kobj, "uverbs%d", uverbs_dev->devnum);
+ 	if (cdev_add(&uverbs_dev->cdev, base, 1))
+ 		goto err_cdev;
+diff --git a/drivers/infiniband/hw/hfi1/device.c b/drivers/infiniband/hw/hfi1/device.c
+index bf64b5a..bbb6069 100644
+--- a/drivers/infiniband/hw/hfi1/device.c
++++ b/drivers/infiniband/hw/hfi1/device.c
+@@ -69,7 +69,7 @@ int hfi1_cdev_init(int minor, const char *name,
  
- 	/*
--	 * Add the character device
--	 * Link cdev to the class device to be sure device is not used
--	 * before unbinding it.
--	 */
--	ec->cdev.kobj.parent = &ec->class_dev.kobj;
--	retval = cdev_add(&ec->cdev, devno, 1);
--	if (retval) {
--		dev_err(dev, ": failed to add character device\n");
--		goto cdev_add_failed;
--	}
--
--	/*
- 	 * Add the class device
- 	 * Link to the character device for creating the /dev entry
- 	 * in devtmpfs.
- 	 */
--	ec->class_dev.devt = ec->cdev.dev;
-+	ec->class_dev.devt = MKDEV(ec_major, pdev->id);
- 	ec->class_dev.class = &cros_class;
- 	ec->class_dev.parent = dev;
- 	ec->class_dev.release = __remove;
-@@ -428,13 +415,13 @@ static int ec_device_probe(struct platform_device *pdev)
- 	retval = dev_set_name(&ec->class_dev, "%s", ec_platform->ec_name);
- 	if (retval) {
- 		dev_err(dev, "dev_set_name failed => %d\n", retval);
--		goto set_named_failed;
-+		goto failed;
- 	}
+ 	cdev_init(cdev, fops);
+ 	cdev->owner = THIS_MODULE;
+-	cdev->kobj.parent = parent;
++	cdev_set_parent(cdev, parent);
+ 	kobject_set_name(&cdev->kobj, name);
  
--	retval = device_add(&ec->class_dev);
-+	retval = cdev_device_add(&ec->cdev, &ec->class_dev);
- 	if (retval) {
--		dev_err(dev, "device_register failed => %d\n", retval);
--		goto dev_reg_failed;
-+		dev_err(dev, "cdev_device_add failed => %d\n", retval);
-+		goto failed;
- 	}
- 
- 	/* check whether this EC is a sensor hub. */
-@@ -443,12 +430,8 @@ static int ec_device_probe(struct platform_device *pdev)
- 
- 	return 0;
- 
--dev_reg_failed:
--set_named_failed:
--	dev_set_drvdata(dev, NULL);
--	cdev_del(&ec->cdev);
--cdev_add_failed:
--	kfree(ec);
-+failed:
-+	put_device(&ec->class_dev);
- 	return retval;
- }
- 
+ 	ret = cdev_add(cdev, dev, 1);
 -- 
 2.1.4
