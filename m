@@ -1,280 +1,194 @@
-From: Alim Akhtar <alim.akhtar@samsung.com>
-Subject: Re: [PATCH v5 02/11] phy: exynos-ufs: add UFS PHY driver for EXYNOS SoC
-Date: Mon, 27 Feb 2017 19:40:47 +0530
-Message-ID: <bcab9fcc-1308-7adb-ad2a-88eeea5565c7@samsung.com>
-References: <1447046787-480-1-git-send-email-alim.akhtar@samsung.com>
- <1447046787-480-3-git-send-email-alim.akhtar@samsung.com>
- <564AC63F.1000508@ti.com> <564AE11F.50908@samsung.com>
- <CGME20170203092123epcas4p20b1d56d7a6fdec46903c41fc65718795@epcas4p2.samsung.com>
- <564DD11D.2060101@ti.com> <aae976f6-18cf-7241-4f76-f842317229d4@samsung.com>
- <CAGOxZ50gh_SErTiDbkjqNTCds-8ghgxXofSgzSwp6hicAcw23Q@mail.gmail.com>
- <58B3B87B.7010302@ti.com>
+From: Jeff Layton <jlayton@redhat.com>
+Subject: Re: [LSF/MM TOPIC] do we really need PG_error at all?
+Date: Mon, 27 Feb 2017 10:07:27 -0500
+Message-ID: <1488208047.2876.6.camel@redhat.com>
+References: <1488120164.2948.4.camel@redhat.com>
+	 <1488129033.4157.8.camel@HansenPartnership.com>
+	 <877f4cr7ew.fsf@notabene.neil.brown.name>
+	 <1488151856.4157.50.camel@HansenPartnership.com>
+	 <874lzgqy06.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:54692 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751414AbdB0OPK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Feb 2017 09:15:10 -0500
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
- by mailout4.samsung.com
- (Oracle Communications Messaging Server 7.0.5.31.0 64bit (built May  5 2014))
- with ESMTP id <0OM102OTRE7FBO00@mailout4.samsung.com> for
- linux-scsi@vger.kernel.org; Mon, 27 Feb 2017 23:14:03 +0900 (KST)
-In-reply-to: <58B3B87B.7010302@ti.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <874lzgqy06.fsf@notabene.neil.brown.name>
+Sender: owner-linux-mm@kvack.org
+To: NeilBrown <neilb@suse.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-mm <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Cc: lsf-pc <lsf-pc@lists.linuxfoundation.org>, Neil Brown <neilb@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, linux-block@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kishon Vijay Abraham I <kishon@ti.com>, Alim Akhtar <alim.akhtar@gmail.com>
-Cc: linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@odin.com>, vinayak holikatti <vinholikatti@gmail.com>, Jaehoon Chung <jh80.chung@samsung.com>, Seungwon Jeon <essuuj@gmail.com>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Pankaj Dubey <pankaj.dubey@samsung.com>, vivek.gautam@codeaurora.org
 
-Hi Kishon,
+On Mon, 2017-02-27 at 11:27 +1100, NeilBrown wrote:
+> On Sun, Feb 26 2017, James Bottomley wrote:
+> 
+> > On Mon, 2017-02-27 at 08:03 +1100, NeilBrown wrote:
+> > > On Sun, Feb 26 2017, James Bottomley wrote:
+> > > 
+> > > > [added linux-scsi and linux-block because this is part of our error
+> > > > handling as well]
+> > > > On Sun, 2017-02-26 at 09:42 -0500, Jeff Layton wrote:
+> > > > > Proposing this as a LSF/MM TOPIC, but it may turn out to be me 
+> > > > > just not understanding the semantics here.
+> > > > > 
+> > > > > As I was looking into -ENOSPC handling in cephfs, I noticed that
+> > > > > PG_error is only ever tested in one place [1] 
+> > > > > __filemap_fdatawait_range, which does this:
+> > > > > 
+> > > > > 	if (TestClearPageError(page))
+> > > > > 		ret = -EIO;
+> > > > > 
+> > > > > This error code will override any AS_* error that was set in the
+> > > > > mapping. Which makes me wonder...why don't we just set this error 
+> > > > > in the mapping and not bother with a per-page flag? Could we
+> > > > > potentially free up a page flag by eliminating this?
+> > > > 
+> > > > Note that currently the AS_* codes are only set for write errors 
+> > > > not for reads and we have no mapping error handling at all for swap
+> > > > pages, but I'm sure this is fixable.
+> > > 
+> > > How is a read error different from a failure to set PG_uptodate?
+> > > Does PG_error suppress retries?
+> > 
+> > We don't do any retries in the code above the block layer (or at least
+> > we shouldn't).
+> 
+> I was wondering about what would/should happen if a read request was
+> re-issued for some reason.  Should the error flag on the page cause an
+> immediate failure, or should it try again.
+> If read-ahead sees a read-error on some future page, is it necessary to
+> record the error so subsequent read-aheads don't notice the page is
+> missing and repeatedly try to re-load it?
+> When the application eventually gets to the faulty page, should a read
+> be tried then, or is the read-ahead failure permanent?
+> 
+> 
+> 
+> > 
+> > > > 
+> > > > From the I/O layer point of view we take great pains to try to 
+> > > > pinpoint the error exactly to the sector.  We reflect this up by 
+> > > > setting the PG_error flag on the page where the error occurred.  If 
+> > > > we only set the error on the mapping, we lose that granularity, 
+> > > > because the mapping is mostly at the file level (or VMA level for
+> > > > anon pages).
+> > > 
+> > > Are you saying that the IO layer finds the page in the bi_io_vec and
+> > > explicitly sets PG_error,
+> > 
+> > I didn't say anything about the mechanism.  I think the function you're
+> > looking for is fs/mpage.c:mpage_end_io().  layers below block indicate
+> > the position in the request.  Block maps the position to bio and the
+> > bio completion maps to page.  So the actual granularity seen in the
+> > upper layer depends on how the page to bio mapping is done.
+> 
+> If the block layer is just returning the status at a per-bio level (which
+> makes perfect sense), then this has nothing directly to do with the
+> PG_error flag.
+> 
+> The page cache needs to do something with bi_error, but it isn't
+> immediately clear that it needs to set PG_error.
+> 
+> > :q
+> > >  rather than just passing an error indication to bi_end_io ??  That
+> > > would seem to be wrong as the page may not be in the page cache.
+> > 
+> > Usually pages in the mpage_end_io path are pinned, I think.
+> > 
+> > >  So I guess I misunderstand you.
+> > > 
+> > > > 
+> > > > So I think the question for filesystem people from us would be do 
+> > > > you care about this accuracy?  If it's OK just to know an error
+> > > > occurred somewhere in this file, then perhaps we don't need it.
+> > > 
+> > > I had always assumed that a bio would either succeed or fail, and 
+> > > that no finer granularity could be available.
+> > 
+> > It does ... but a bio can be as small as a single page.
+> > 
+> > > I think the question here is: Do filesystems need the pagecache to
+> > > record which pages have seen an IO error?
+> > 
+> > It's not just filesystems.  The partition code uses PageError() ... the
+> > metadata code might as well (those are things with no mapping).  I'm
+> > not saying we can't remove PG_error; I am saying it's not going to be
+> > quite as simple as using the AS_ flags.
+> 
+> The partition code could use PageUptodate().
+> mpage_end_io() calls page_endio() on each page, and on read error that
+> calls:
+> 
+> 			ClearPageUptodate(page);
+> 			SetPageError(page);
+> 
+> are both of these necessary?
+> 
 
-On 02/27/2017 10:56 AM, Kishon Vijay Abraham I wrote:
-> Hi,
->
-> On Thursday 23 February 2017 12:20 AM, Alim Akhtar wrote:
->> On Fri, Feb 3, 2017 at 2:49 PM, Alim Akhtar <alim.akhtar@samsung.com> wrote:
->>> Hi Kishon,
->>>
->>>
->>> On 11/19/2015 07:09 PM, Kishon Vijay Abraham I wrote:
->>>>
->>>> Hi,
->>>>
->>>> On Tuesday 17 November 2015 01:41 PM, Alim Akhtar wrote:
->>>>>
->>>>> Hi
->>>>> Thanks again for looking into this.
->>>>>
->>>>> On 11/17/2015 11:46 AM, Kishon Vijay Abraham I wrote:
->>>>>>
->>>>>> Hi,
->>>>>>
->>>>>> On Monday 09 November 2015 10:56 AM, Alim Akhtar wrote:
->>>>>>>
->>>>>>> From: Seungwon Jeon <essuuj@gmail.com>
->>>>>>>
->>>>>>> This patch introduces Exynos UFS PHY driver. This driver
->>>>>>> supports to deal with phy calibration and power control
->>>>>>> according to UFS host driver's behavior.
->>>>>>>
->>>>>>> Signed-off-by: Seungwon Jeon <essuuj@gmail.com>
->>>>>>> Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
->>>>>>> Cc: Kishon Vijay Abraham I <kishon@ti.com>
->>>>>>> ---
->>>>>>>   drivers/phy/Kconfig                |    7 ++
->>>>>>>   drivers/phy/Makefile               |    1 +
->>>>>>>   drivers/phy/phy-exynos-ufs.c       |  241
->>>>>>> ++++++++++++++++++++++++++++++++++++
->>>>>>>   drivers/phy/phy-exynos-ufs.h       |   85 +++++++++++++
->>>>>>>   drivers/phy/phy-exynos7-ufs.h      |   89 +++++++++++++
->>>>>>>   include/linux/phy/phy-exynos-ufs.h |   85 +++++++++++++
->>>>>>>   6 files changed, 508 insertions(+)
->>>>>>>   create mode 100644 drivers/phy/phy-exynos-ufs.c
->>>>>>>   create mode 100644 drivers/phy/phy-exynos-ufs.h
->>>>>>>   create mode 100644 drivers/phy/phy-exynos7-ufs.h
->>>>>>>   create mode 100644 include/linux/phy/phy-exynos-ufs.h
->>>>>>>
->>>>>>> diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
->>>>>>> index 7eb5859dd035..7d38a92e0297 100644
->>>>>>> --- a/drivers/phy/Kconfig
->>>>>>> +++ b/drivers/phy/Kconfig
->>>>>>> @@ -389,4 +389,11 @@ config PHY_CYGNUS_PCIE
->>>>>>>         Enable this to support the Broadcom Cygnus PCIe PHY.
->>>>>>>         If unsure, say N.
->>>>>>>
->>>>>>> +config PHY_EXYNOS_UFS
->>>>>>> +    tristate "EXYNOS SoC series UFS PHY driver"
->>>>>>> +    depends on OF && ARCH_EXYNOS || COMPILE_TEST
->>>>>>> +    select GENERIC_PHY
->>>>>>> +    help
->>>>>>> +      Support for UFS PHY on Samsung EXYNOS chipsets.
->>>>>>> +
->>>>>>>   endmenu
->>>>>>> diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
->>>>>>> index 075db1a81aa5..9bec4d1a89e1 100644
->>>>>>> --- a/drivers/phy/Makefile
->>>>>>> +++ b/drivers/phy/Makefile
->>>>>>> @@ -10,6 +10,7 @@ obj-$(CONFIG_ARMADA375_USBCLUSTER_PHY)    +=
->>>>>>> phy-armada375-usb2.o
->>>>>>>   obj-$(CONFIG_BCM_KONA_USB2_PHY)        += phy-bcm-kona-usb2.o
->>>>>>>   obj-$(CONFIG_PHY_EXYNOS_DP_VIDEO)    += phy-exynos-dp-video.o
->>>>>>>   obj-$(CONFIG_PHY_EXYNOS_MIPI_VIDEO)    += phy-exynos-mipi-video.o
->>>>>>> +obj-$(CONFIG_PHY_EXYNOS_UFS)    += phy-exynos-ufs.o
->>>>>>>   obj-$(CONFIG_PHY_LPC18XX_USB_OTG)    += phy-lpc18xx-usb-otg.o
->>>>>>>   obj-$(CONFIG_PHY_PXA_28NM_USB2)        += phy-pxa-28nm-usb2.o
->>>>>>>   obj-$(CONFIG_PHY_PXA_28NM_HSIC)        += phy-pxa-28nm-hsic.o
->>>>>>> diff --git a/drivers/phy/phy-exynos-ufs.c
->>>>>>> b/drivers/phy/phy-exynos-ufs.c
->>>>>>> new file mode 100644
->>>>>>> index 000000000000..cb1aeaa3d4eb
->>>>>>> --- /dev/null
->>>>>>> +++ b/drivers/phy/phy-exynos-ufs.c
->>>>>>> @@ -0,0 +1,241 @@
->>>>>>> +/*
->>>>>>> + * UFS PHY driver for Samsung EXYNOS SoC
->>>>>>> + *
->>>>>>> + * Copyright (C) 2015 Samsung Electronics Co., Ltd.
->>>>>>> + * Author: Seungwon Jeon <essuuj@gmail.com>
->>>>>>> + *
->>>>>>> + * This program is free software; you can redistribute it and/or
->>>>>>> modify
->>>>>>> + * it under the terms of the GNU General Public License as published
->>>>>>> by
->>>>>>> + * the Free Software Foundation; either version 2 of the License, or
->>>>>>> + * (at your option) any later version.
->>>>>>> + */
->>>>>>> +#include <linux/clk.h>
->>>>>>> +#include <linux/delay.h>
->>>>>>> +#include <linux/err.h>
->>>>>>> +#include <linux/io.h>
->>>>>>> +#include <linux/iopoll.h>
->>>>>>> +#include <linux/mfd/syscon.h>
->>>>>>> +#include <linux/module.h>
->>>>>>> +#include <linux/of.h>
->>>>>>> +#include <linux/phy/phy.h>
->>>>>>> +#include <linux/phy/phy-exynos-ufs.h>
->>>>>>> +#include <linux/platform_device.h>
->>>>>>> +#include <linux/regmap.h>
->>>>>>> +
->>>>>>> +#include "phy-exynos-ufs.h"
->>>>>>> +
->>>>>>> +#define for_each_phy_lane(phy, i) \
->>>>>>> +    for (i = 0; i < (phy)->lane_cnt; i++)
->>>>>>> +#define for_each_phy_cfg(cfg) \
->>>>>>> +    for (; (cfg)->id; (cfg)++)
->>>>>>> +
->>>>>>> +#define PHY_DEF_LANE_CNT    1
->>>>>>> +
->>>>>>> +static void exynos_ufs_phy_config(struct exynos_ufs_phy *phy,
->>>>>>> +            const struct exynos_ufs_phy_cfg *cfg, u8 lane)
->>>>>>> +{
->>>>>>> +    enum {LANE_0, LANE_1}; /* lane index */
->>>>>>> +
->>>>>>> +    switch (lane) {
->>>>>>> +    case LANE_0:
->>>>>>> +        writel(cfg->val, (phy)->reg_pma + cfg->off_0);
->>>>>>> +        break;
->>>>>>> +    case LANE_1:
->>>>>>> +        if (cfg->id == PHY_TRSV_BLK)
->>>>>>> +            writel(cfg->val, (phy)->reg_pma + cfg->off_1);
->>>>>>> +        break;
->>>>>>> +    }
->>>>>>> +}
->>>>>>> +
->>>>>>> +static bool match_cfg_to_pwr_mode(u8 desc, u8 required_pwr)
->>>>>>> +{
->>>>>>> +    if (IS_PWR_MODE_ANY(desc))
->>>>>>> +        return true;
->>>>>>> +
->>>>>>> +    if (IS_PWR_MODE_HS(required_pwr) && IS_PWR_MODE_HS_ANY(desc))
->>>>>>> +        return true;
->>>>>>> +
->>>>>>> +    if (COMP_PWR_MODE(required_pwr, desc))
->>>>>>> +        return true;
->>>>>>> +
->>>>>>> +    if (COMP_PWR_MODE_MD(required_pwr, desc) &&
->>>>>>> +        COMP_PWR_MODE_GEAR(required_pwr, desc) &&
->>>>>>> +        COMP_PWR_MODE_SER(required_pwr, desc))
->>>>>>> +        return true;
->>>>>>> +
->>>>>>> +    return false;
->>>>>>> +}
->>>>>>> +
->>>>>>> +int exynos_ufs_phy_calibrate(struct phy *phy,
->>>>>>> +                    enum phy_cfg_tag tag, u8 pwr)
->>>>>>
->>>>>>
->>>>>> This is similar to the first version of your patch without
->>>>>> EXPORT_SYMBOL.
->>>>>>
->>>>>> I think you have to create a new generic PHY_OPS for calibrate PHY while
->>>>>> making
->>>>>> sure that it is as generic as possible (which means calibrate_phy
->>>>>> shouldn't
->>>>>> have tag and pwr arguments or a strong justification as to why those
->>>>>> arguments
->>>>>> are required in a generic API).
->>>>>
->>>>> I don't see the advantage to making this a generic phy_ops, this is
->>>>> exynos
->>>>> specific ufs-phy, please have a look at other implementations
->>>>
->>>>
->>>> only the implementation is specific to exynos. I've seen lot of other
->>>> vendors
->>>> want to do something like calibrate phy.
->>>>
->>>> So if we add something like (*calibrate)(struct phy *phy), then it can be
->>>> used
->>>> by others as well. Russell King also want to minimize the code to program
->>>> calibration settings. So it would be good to come up with a set of
->>>> standard
->>>> bindings like 'phy,tx-swing', 'phy,emphasis', 'phy,amplitude' etc.. to
->>>> program
->>>> these settings.
->>>>>
->>>>> drivers/phy/phy-qcom-ufs.c (which I belive mereged recently)
->>>>
->>>>
->>>> Thats why I hate when someone else merge PHY drivers :-( That driver can
->>>> as
->>>> well be in drivers/misc as it doesn't use PHY framework as it is supposed
->>>> to be
->>>> used. It just exports a dozen of API's to be used by controller drivers.
->>>> ick..
->>>>
->>>>> may be other vendors might come with there own implementation of phy.
->>>>
->>>>
->>>> right, it's all about providing the correct callback functions.
->>>>>
->>>>> I am using what is currently provided by the generic phy framework.
->>>>
->>>>
->>>> I think for your use case, what is currently provided in the PHY framework
->>>> is
->>>> not sufficient.
->>>>
->>> Its little over a year since last time we discuss about adding a generic
->>> calibration API. I can see in the past people tried adding *calibration* API
->>> [1] but not sure why [1] was not landed in mainline.
->>> Anyway now we have many users of phy_calibration API, like UFS, USB and may
->>> be PCIe, there is a real need to add this functionality. So, here is my
->>> approach:
->
-> Agree, there are quite a few users that require calibration of phy parameters.
-> I think previously it was accommodated in phy_init, hence it was not merged.
-Ok, thanks for this information.
+> fs/buffer.c can use several bios to read a single page.
+> If any one returns an error, PG_error is set.  When all of them have
+> completed, if PG_error is clear, PG_uptodate is then set.
+> This is an opportunistic use of PG_error, rather than an essential use.
+> It could be "fixed", and would need to be fixed if we were to deprecate
+> use of PG_error for read errors.
+> There are probably other usages like this.
+> 
 
->>>  * Along with [1], we can add a void *priv for handling device specific phy
->>> private data, and before calling phy_calibration() from phy consumer,
->>> phy->priv is populated with private data.
->
-> Not sure how you plan to use priv here?
->
- From ufs driver I am populating PHY _priv_ data and calling phy_calibrate()
+Ok, I think I get it (somewhat):
 
-e.g
------------------------ from ufs-exynos.c
-Instead of using below code earlier
-- exynos_ufs_phy_calibrate(generic_phy,CFG_PRE_INIT,PWR_MODE_ANY);
+The tricky part there is how to handle the PageError check in
+read_dev_sector if you don't use SetPageError in the result handler.
 
-Now I am using below from ufs-exynos driver
+If we can count on read_pagecache_sector and read_dax_sector reliably
+returning an error when the page is considered to be in the cache
+(PageUpToDate) but had a read error, then that would work. I'm not sure
+how you'd indicate that without something like PG_error though if you
+don't want to retry on every attempt.
 
-+ generic_phy->priv =(void*)CFG_PRE_INIT;
-+ phy_calibrate(generic_phy);
+OTOH, if we want to always retry to read in pages that have had read
+errors when someone requests them, then we can simply not set
+PageUpToDate when readahead fails.
 
-and in drivers/phy/phy-exynos-ufs.c
-using phy->priv in calibration function.
+To chip away at the edges of this, what may make sense is to get this
+flag out of the writeback code as much as we can. When a write fails and
+SetPageError is called, we should also mark the mapping with an error.
+Then, we should be able to stop overriding the mapping error with -EIO
+in that codepath. Maybe call ClearPageError, or maybe leave it alone
+there?
 
-Let me know if you need more details here.
+> > 
+> > James
+> > 
+> > > I think that for write errors, there is no value in recording
+> > > block-oriented error status - only file-oriented status.
+> > > For read errors, it might if help to avoid indefinite read retries, 
+> > > but I don't know the code well enough to be sure if this is an issue.
+> > > 
+> > > NeilBrown
+> > > 
+> > > 
+> > > > 
+> > > > James
+> > > > 
+> > > > > The main argument I could see for keeping it is that removing it 
+> > > > > might subtly change the behavior of sync_file_range if you have 
+> > > > > tasks syncing different ranges in a file concurrently. I'm not 
+> > > > > sure if that would break any guarantees though.
+> > > > > 
+> > > > > Even if we do need it, I think we might need some cleanup here 
+> > > > > anyway. A lot of readpage operations end up setting that flag 
+> > > > > when they hit an error. Isn't it wrong to return an error on 
+> > > > > fsync, just because we had a read error somewhere in the file in 
+> > > > > a range that was never dirtied?
+> > > > > 
+> > > > > --
+> > > > > [1]: there is another place in f2fs, but it's more or less 
+> > > > > equivalent to the call site in __filemap_fdatawait_range.
+> > > > > 
 
-I think this will work well for other drivers like PCIe or USB etc.
+-- 
+Jeff Layton <jlayton@redhat.com>
 
-> Thanks
-> Kishon
->
->
->
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
