@@ -1,72 +1,108 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH] sd: close hole in > 2T device rejection when
- !CONFIG_LBDAF
-Date: Mon, 27 Feb 2017 16:13:43 +0000
-Message-ID: <1488211985.2656.1.camel@sandisk.com>
-References: <1488208949-3811-1-git-send-email-steve@digidescorp.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [bug report] scsi: lpfc: NVME Initiator: Merge into FC discovery
+Date: Mon, 27 Feb 2017 19:34:29 +0300
+Message-ID: <20170227163429.GA30640@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1488208949-3811-1-git-send-email-steve@digidescorp.com>
-Content-Language: en-US
-Content-ID: <1CFD8157B51C814AB287333C6AB2713A@sandisk.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "steve.magnani@digidescorp.com" <steve.magnani@digidescorp.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "steve@digidescorp.com" <steve@digidescorp.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1050.oracle.com ([156.151.31.82]:22721 "EHLO
+        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751251AbdB0Qh3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Feb 2017 11:37:29 -0500
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
+        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v1RGarAm011746
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Feb 2017 16:36:54 GMT
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jsmart2021@gmail.com
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, 2017-02-27 at 09:22 -0600, Steven J. Magnani wrote:
-> @@ -2122,7 +2122,10 @@ static int read_capacity_16(struct scsi_
->  		return -ENODEV;
->  	}
-> =20
-> -	if ((sizeof(sdkp->capacity) =3D=3D 4) && (lba >=3D 0xffffffffULL)) {
-> +	/* Make sure logical_to_sectors() won't overflow */
-> +	lba_in_sectors =3D lba << (ilog2(sector_size) - 9);
-> +	if ((sizeof(sdkp->capacity) =3D=3D 4) &&
-> +	    ((lba >=3D 0xffffffffULL) || (lba_in_sectors >=3D 0xffffffffULL))) =
-{
->  		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
->  			"kernel compiled with support for large block "
->  			"devices.\n");
-> @@ -2162,6 +2165,7 @@ static int read_capacity_10(struct scsi_
->  	int the_result;
->  	int retries =3D 3, reset_retries =3D READ_CAPACITY_RETRIES_ON_RESET;
->  	sector_t lba;
-> +	unsigned long long lba_in_sectors;
->  	unsigned sector_size;
-> =20
->  	do {
-> @@ -2208,7 +2212,10 @@ static int read_capacity_10(struct scsi_
->  		return sector_size;
->  	}
-> =20
-> -	if ((sizeof(sdkp->capacity) =3D=3D 4) && (lba =3D=3D 0xffffffff)) {
-> +	/* Make sure logical_to_sectors() won't overflow */
-> +	lba_in_sectors =3D ((unsigned long long) lba) << (ilog2(sector_size) - =
-9);
-> +	if ((sizeof(sdkp->capacity) =3D=3D 4) &&
-> +	    (lba_in_sectors >=3D 0xffffffffULL)) {
->  		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
->  			"kernel compiled with support for large block "
->  			"devices.\n");
+Hello James Smart,
 
-Why are the two checks slightly different? Could the same code be used for
-both checks? BTW, using the macro below would make the above checks less
-verbose and easier to read:
+This is a semi-automatic email about new static checker warnings.
 
-/*
-=A0* Test whether the result of a shift-left operation would be larger than
-=A0* what fits in a variable with the type of @a.
-=A0*/
-#define shift_left_overflows(a, b)					\
-	({								\
-		typeof(a) _minus_one =3D -1LL;				\
-		typeof(a) _plus_one =3D 1;				\
-		bool _a_is_signed =3D _minus_one < 0;			\
-		int _shift =3D sizeof(a) * 8 - ((b) + _a_is_signed);	\
-		_shift < 0 || ((a) & ~((_plus_one << _shift) - 1)) !=3D 0;\
-	})
+The patch a0f2d3ef374f: "scsi: lpfc: NVME Initiator: Merge into FC 
+discovery" from Feb 12, 2017, leads to the following Smatch complaint:
 
-Bart.=
+drivers/scsi/lpfc/lpfc_ct.c:943 lpfc_cmpl_ct_cmd_gft_id()
+	 error: we previously assumed 'ndlp' could be null (see line 928)
+
+drivers/scsi/lpfc/lpfc_ct.c
+   927			ndlp = lpfc_findnode_did(vport, did);
+   928			if (ndlp) {
+                            ^^^^
+Check.
+
+   929				/* The bitmask value for FCP and NVME FCP types is
+   930				 * the same because they are 32 bits distant from
+   931				 * each other in word0 and word0.
+   932				 */
+   933				if (fc4_data_0 & LPFC_FC4_TYPE_BITMASK)
+   934					ndlp->nlp_fc4_type |= NLP_FC4_FCP;
+   935				if (fc4_data_1 &  LPFC_FC4_TYPE_BITMASK)
+   936					ndlp->nlp_fc4_type |= NLP_FC4_NVME;
+   937				lpfc_printf_vlog(vport, KERN_ERR, LOG_DISCOVERY,
+   938						 "3064 Setting ndlp %p, DID x%06x with "
+   939						 "FC4 x%08x, Data: x%08x x%08x\n",
+   940						 ndlp, did, ndlp->nlp_fc4_type,
+   941						 FC_TYPE_FCP, FC_TYPE_NVME);
+   942			}
+   943			ndlp->nlp_prev_state = NLP_STE_REG_LOGIN_ISSUE;
+                        ^^^^^^^^^^^^^^^^^^^^
+Not checked.
+
+   944			lpfc_nlp_set_state(vport, ndlp, NLP_STE_PRLI_ISSUE);
+   945			lpfc_issue_els_prli(vport, ndlp, 0);
+
+	drivers/scsi/lpfc/lpfc_nvmet.c:1694 lpfc_nvmet_unsol_issue_abort()
+	error: we previously assumed 'ndlp' could be null (see line 1690)
+
+drivers/scsi/lpfc/lpfc_nvmet.c
+  1688  
+  1689          ndlp = lpfc_findnode_did(phba->pport, sid);
+  1690          if (!ndlp || !NLP_CHK_NODE_ACT(ndlp) ||
+                    ^^^^^
+Check.
+
+  1691              ((ndlp->nlp_state != NLP_STE_UNMAPPED_NODE) &&
+  1692              (ndlp->nlp_state != NLP_STE_MAPPED_NODE))) {
+  1693                  atomic_inc(&tgtp->xmt_abort_rsp_error);
+  1694                  lpfc_printf_log(phba, KERN_WARNING, LOG_NVME_ABTS,
+  1695                                  "6134 Drop ABTS - wrong NDLP state x%x.\n",
+  1696                                  ndlp->nlp_state);
+                                        ^^^^^^^^^^^^^^^
+Potential Oops.
+
+  1697  
+  1698                  /* No failure to an ABTS request. */
+  1699                  return 0;
+  1700          }
+
+	drivers/scsi/lpfc/lpfc_nvmet.c:1792 lpfc_nvmet_sol_fcp_issue_abort()
+	error: we previously assumed 'ndlp' could be null (see line 1788)
+
+drivers/scsi/lpfc/lpfc_nvmet.c
+  1786  
+  1787          ndlp = lpfc_findnode_did(phba->pport, sid);
+  1788          if (!ndlp || !NLP_CHK_NODE_ACT(ndlp) ||
+                    ^^^^^
+Check.
+
+  1789              ((ndlp->nlp_state != NLP_STE_UNMAPPED_NODE) &&
+  1790              (ndlp->nlp_state != NLP_STE_MAPPED_NODE))) {
+  1791                  atomic_inc(&tgtp->xmt_abort_rsp_error);
+  1792                  lpfc_printf_log(phba, KERN_WARNING, LOG_NVME_ABTS,
+  1793                                  "6160 Drop ABTS - wrong NDLP state x%x.\n",
+  1794                                  ndlp->nlp_state);
+                                        ^^^^^^^^^^^^^^^
+Potential Oops.
+
+  1795  
+  1796                  /* No failure to an ABTS request. */
+  1797                  return 0;
+  1798          }
+
+regards,
+dan carpenter
