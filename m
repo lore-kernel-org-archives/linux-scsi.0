@@ -1,142 +1,127 @@
-From: Hans Verkuil <hansverk-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v2 11/16] media: utilize new cdev_device_add
+From: Alexandre Belloni <alexandre.belloni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
+Subject: Re: [PATCH v2 14/16] rtc: utilize new cdev_device_add
  helper function
-Date: Mon, 27 Feb 2017 10:02:11 +0100
-Message-ID: <8eff8408-1681-a59d-3b61-8fd5dab73af1@cisco.com>
+Date: Mon, 27 Feb 2017 10:46:43 +0100
+Message-ID: <20170227094643.pag5preyj2dueabd@piout.net>
 References: <1488091097-12328-1-git-send-email-logang@deltatee.com>
- <1488091097-12328-12-git-send-email-logang@deltatee.com>
+ <1488091097-12328-15-git-send-email-logang@deltatee.com>
 Reply-To: rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Return-path: <rtc-linux+bncBCWO3DMOTQHBBGGWZ7CQKGQENSCWRHY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <rtc-linux+bncBCKYNX7Y3IMBBA7LZ7CQKGQEDQ3VPWQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 Sender: rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <1488091097-12328-12-git-send-email-logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1488091097-12328-15-git-send-email-logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
 List-Post: <https://groups.google.com/group/rtc-linux/post>, <mailto:rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <https://groups.google.com/support/>, <mailto:rtc-linux+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Archive: <https://groups.google.com/group/rtc-linux
 List-Subscribe: <https://groups.google.com/group/rtc-linux/subscribe>, <mailto:rtc-linux+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Unsubscribe: <mailto:googlegroups-manage+712029733259+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
  <https://groups.google.com/group/rtc-linux/subscribe>
-To: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Sajjan Vikas C <vikas.cha.sajjan-ZPxbGqLxI0U@public.gmane.org>, Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linus Walleij <linus.walleij-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Alexandre Courbot <gnurou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Peter Huewe <peterhuewe-Mmb7MZpHnFY@public.gmane.org>, Marcel Selhorst <tpmdd-yWjUBOtONefk1uMJSBkQmQ@public.gmane.org>, Jarkko Sakkinen <jarkko.sakkinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Olof Johansson <olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sean Hefty <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hal Rosenstock <hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>Dmitry
-Cc: linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-gpio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hans Verkuil <hverkuil-qWit8jRvyhVmR6Xm/wNWPw@public.gmane.org>
+To: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Sajjan Vikas C <vikas.cha.sajjan-ZPxbGqLxI0U@public.gmane.org>, Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linus Walleij <linus.walleij-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Alexandre Courbot <gnurou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Peter Huewe <peterhuewe-Mmb7MZpHnFY@public.gmane.org>, Marcel Selhorst <tpmdd-yWjUBOtONefk1uMJSBkQmQ@public.gmane.org>, Jarkko Sakkinen <jarkko.sakkinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Olof Johansson <olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sean Hefty <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hal Rosenstock <hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hartmut
 List-Id: linux-scsi@vger.kernel.org
 
-On 02/26/2017 07:38 AM, Logan Gunthorpe wrote:
-> Replace the open coded registration of the cdev and dev with the
-> new device_add_cdev() helper. The helper replaces a common pattern by
-> taking the proper reference against the parent device and adding both
-> the cdev and the device.
->
+On 25/02/2017 at 23:38:15 -0700, Logan Gunthorpe wrote:
+> Mostly straightforward, but we had to remove the rtc_dev_add/del_device
+> functions as they split up the cdev_add and the device_add.
+> 
+> Doing this also revealed that there was likely another subtle bug:
+> seeing cdev_add was done after device_register, the cdev probably
+> was not ready before device_add when the uevent occurs. This would
+> race with userspace, if it tried to use the device directly after
+> the uevent. This is fixed just by using the new helper function.
+> 
 > Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-
-Acked-by: Hans Verkuil <hans.verkuil-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
-
-FYI: this patch series didn't turn up at the linux-media mailinglist for some
-reason.
-
-Regards,
-
-	Hans
+Acked-by: Alexandre Belloni <alexandre.belloni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
 
 > ---
->  drivers/media/cec/cec-core.c  | 16 ++++------------
->  drivers/media/media-devnode.c | 20 +++++---------------
->  2 files changed, 9 insertions(+), 27 deletions(-)
->
-> diff --git a/drivers/media/cec/cec-core.c b/drivers/media/cec/cec-core.c
-> index aca3ab8..3e93c1a 100644
-> --- a/drivers/media/cec/cec-core.c
-> +++ b/drivers/media/cec/cec-core.c
-> @@ -137,24 +137,17 @@ static int __must_check cec_devnode_register(struct cec_devnode *devnode,
->
->  	/* Part 2: Initialize and register the character device */
->  	cdev_init(&devnode->cdev, &cec_devnode_fops);
-> -	devnode->cdev.kobj.parent = &devnode->dev.kobj;
->  	devnode->cdev.owner = owner;
->
-> -	ret = cdev_add(&devnode->cdev, devnode->dev.devt, 1);
-> -	if (ret < 0) {
-> -		pr_err("%s: cdev_add failed\n", __func__);
-> +	ret = cdev_device_add(&devnode->cdev, &devnode->dev);
-> +	if (ret) {
-> +		pr_err("%s: cdev_device_add failed\n", __func__);
->  		goto clr_bit;
+>  drivers/rtc/class.c   | 14 ++++++++++----
+>  drivers/rtc/rtc-dev.c | 17 -----------------
+>  2 files changed, 10 insertions(+), 21 deletions(-)
+> 
+> diff --git a/drivers/rtc/class.c b/drivers/rtc/class.c
+> index 74fd974..5fb4398 100644
+> --- a/drivers/rtc/class.c
+> +++ b/drivers/rtc/class.c
+> @@ -195,6 +195,8 @@ struct rtc_device *rtc_device_register(const char *name, struct device *dev,
+>  		goto exit_ida;
 >  	}
->
-> -	ret = device_add(&devnode->dev);
-> -	if (ret)
-> -		goto cdev_del;
-> -
->  	devnode->registered = true;
->  	return 0;
->
-> -cdev_del:
-> -	cdev_del(&devnode->cdev);
->  clr_bit:
->  	mutex_lock(&cec_devnode_lock);
->  	clear_bit(devnode->minor, cec_devnode_nums);
-> @@ -190,8 +183,7 @@ static void cec_devnode_unregister(struct cec_devnode *devnode)
->  	devnode->unregistered = true;
->  	mutex_unlock(&devnode->lock);
->
-> -	device_del(&devnode->dev);
-> -	cdev_del(&devnode->cdev);
-> +	cdev_device_del(&devnode->cdev, &devnode->dev);
->  	put_device(&devnode->dev);
->  }
->
-> diff --git a/drivers/media/media-devnode.c b/drivers/media/media-devnode.c
-> index f2772ba..fafe520 100644
-> --- a/drivers/media/media-devnode.c
-> +++ b/drivers/media/media-devnode.c
-> @@ -252,31 +252,22 @@ int __must_check media_devnode_register(struct media_device *mdev,
->  	dev_set_name(&devnode->dev, "media%d", devnode->minor);
->  	device_initialize(&devnode->dev);
->
-> -	/* Part 2: Initialize and register the character device */
-> +	/* Part 2: Initialize the character device */
->  	cdev_init(&devnode->cdev, &media_devnode_fops);
->  	devnode->cdev.owner = owner;
-> -	devnode->cdev.kobj.parent = &devnode->dev.kobj;
->
-> -	ret = cdev_add(&devnode->cdev, MKDEV(MAJOR(media_dev_t), devnode->minor), 1);
-> +	/* Part 3: Add the media and char device */
-> +	ret = cdev_device_add(&devnode->cdev, &devnode->dev);
->  	if (ret < 0) {
-> -		pr_err("%s: cdev_add failed\n", __func__);
-> +		pr_err("%s: cdev_device_add failed\n", __func__);
->  		goto cdev_add_error;
+>  
+> +	device_initialize(&rtc->dev);
+> +
+>  	rtc->id = id;
+>  	rtc->ops = ops;
+>  	rtc->owner = owner;
+> @@ -233,14 +235,19 @@ struct rtc_device *rtc_device_register(const char *name, struct device *dev,
+>  
+>  	rtc_dev_prepare(rtc);
+>  
+> -	err = device_register(&rtc->dev);
+> +	err = cdev_device_add(&rtc->char_dev, &rtc->dev);
+>  	if (err) {
+> +		dev_warn(&rtc->dev, "%s: failed to add char device %d:%d\n",
+> +			 rtc->name, MAJOR(rtc->dev.devt), rtc->id);
+> +
+>  		/* This will free both memory and the ID */
+>  		put_device(&rtc->dev);
+>  		goto exit;
+> +	} else {
+> +		dev_dbg(&rtc->dev, "%s: dev (%d:%d)\n", rtc->name,
+> +			MAJOR(rtc->dev.devt), rtc->id);
 >  	}
->
-> -	/* Part 3: Add the media device */
-> -	ret = device_add(&devnode->dev);
-> -	if (ret < 0) {
-> -		pr_err("%s: device_add failed\n", __func__);
-> -		goto device_add_error;
-> -	}
+>  
+> -	rtc_dev_add_device(rtc);
+>  	rtc_proc_add_device(rtc);
+>  
+>  	dev_info(dev, "rtc core: registered %s as %s\n",
+> @@ -271,9 +278,8 @@ void rtc_device_unregister(struct rtc_device *rtc)
+>  	 * Remove innards of this RTC, then disable it, before
+>  	 * letting any rtc_class_open() users access it again
+>  	 */
+> -	rtc_dev_del_device(rtc);
+>  	rtc_proc_del_device(rtc);
+> -	device_del(&rtc->dev);
+> +	cdev_device_del(&rtc->char_dev, &rtc->dev);
+>  	rtc->ops = NULL;
+>  	mutex_unlock(&rtc->ops_lock);
+>  	put_device(&rtc->dev);
+> diff --git a/drivers/rtc/rtc-dev.c b/drivers/rtc/rtc-dev.c
+> index a6d9434..fdd071f 100644
+> --- a/drivers/rtc/rtc-dev.c
+> +++ b/drivers/rtc/rtc-dev.c
+> @@ -477,23 +477,6 @@ void rtc_dev_prepare(struct rtc_device *rtc)
+>  
+>  	cdev_init(&rtc->char_dev, &rtc_dev_fops);
+>  	rtc->char_dev.owner = rtc->owner;
+> -	rtc->char_dev.kobj.parent = &rtc->dev.kobj;
+> -}
 > -
->  	/* Part 4: Activate this minor. The char device can now be used. */
->  	set_bit(MEDIA_FLAG_REGISTERED, &devnode->flags);
->
->  	return 0;
->
-> -device_add_error:
-> -	cdev_del(&devnode->cdev);
->  cdev_add_error:
->  	mutex_lock(&media_devnode_lock);
->  	clear_bit(devnode->minor, media_devnode_nums);
-> @@ -302,9 +293,8 @@ void media_devnode_unregister(struct media_devnode *devnode)
->  {
->  	mutex_lock(&media_devnode_lock);
->  	/* Delete the cdev on this minor as well */
-> -	cdev_del(&devnode->cdev);
-> +	cdev_device_del(&devnode->cdev, &devnode->dev);
->  	mutex_unlock(&media_devnode_lock);
-> -	device_del(&devnode->dev);
->  	devnode->media_dev = NULL;
->  	put_device(&devnode->dev);
+> -void rtc_dev_add_device(struct rtc_device *rtc)
+> -{
+> -	if (cdev_add(&rtc->char_dev, rtc->dev.devt, 1))
+> -		dev_warn(&rtc->dev, "%s: failed to add char device %d:%d\n",
+> -			rtc->name, MAJOR(rtc_devt), rtc->id);
+> -	else
+> -		dev_dbg(&rtc->dev, "%s: dev (%d:%d)\n", rtc->name,
+> -			MAJOR(rtc_devt), rtc->id);
+> -}
+> -
+> -void rtc_dev_del_device(struct rtc_device *rtc)
+> -{
+> -	if (rtc->dev.devt)
+> -		cdev_del(&rtc->char_dev);
 >  }
->
+>  
+>  void __init rtc_dev_init(void)
+> -- 
+> 2.1.4
+> 
+
+-- 
+Alexandre Belloni, Free Electrons
+Embedded Linux and Kernel engineering
+http://free-electrons.com
 
 -- 
 You received this message because you are subscribed to "rtc-linux".
