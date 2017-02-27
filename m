@@ -1,194 +1,78 @@
-From: Jeff Layton <jlayton@redhat.com>
-Subject: Re: [LSF/MM TOPIC] do we really need PG_error at all?
-Date: Mon, 27 Feb 2017 10:07:27 -0500
-Message-ID: <1488208047.2876.6.camel@redhat.com>
-References: <1488120164.2948.4.camel@redhat.com>
-	 <1488129033.4157.8.camel@HansenPartnership.com>
-	 <877f4cr7ew.fsf@notabene.neil.brown.name>
-	 <1488151856.4157.50.camel@HansenPartnership.com>
-	 <874lzgqy06.fsf@notabene.neil.brown.name>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <874lzgqy06.fsf@notabene.neil.brown.name>
-Sender: owner-linux-mm@kvack.org
-To: NeilBrown <neilb@suse.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-mm <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
-Cc: lsf-pc <lsf-pc@lists.linuxfoundation.org>, Neil Brown <neilb@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, linux-block@vger.kernel.org
+From: "Steven J. Magnani" <steve.magnani@digidescorp.com>
+Subject: [PATCH] sd: close hole in > 2T device rejection when !CONFIG_LBDAF
+Date: Mon, 27 Feb 2017 09:22:29 -0600
+Message-ID: <1488208949-3811-1-git-send-email-steve@digidescorp.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-it0-f41.google.com ([209.85.214.41]:35239 "EHLO
+        mail-it0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751364AbdB0PbP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Feb 2017 10:31:15 -0500
+Received: by mail-it0-f41.google.com with SMTP id 203so61597226ith.0
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Feb 2017 07:29:26 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "'James E . J . Bottomley'" <jejb@linux.vnet.ibm.com>, "'Martin K . Petersen'" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Steven J . Magnani" <steve@digidescorp.com>
 
-On Mon, 2017-02-27 at 11:27 +1100, NeilBrown wrote:
-> On Sun, Feb 26 2017, James Bottomley wrote:
-> 
-> > On Mon, 2017-02-27 at 08:03 +1100, NeilBrown wrote:
-> > > On Sun, Feb 26 2017, James Bottomley wrote:
-> > > 
-> > > > [added linux-scsi and linux-block because this is part of our error
-> > > > handling as well]
-> > > > On Sun, 2017-02-26 at 09:42 -0500, Jeff Layton wrote:
-> > > > > Proposing this as a LSF/MM TOPIC, but it may turn out to be me 
-> > > > > just not understanding the semantics here.
-> > > > > 
-> > > > > As I was looking into -ENOSPC handling in cephfs, I noticed that
-> > > > > PG_error is only ever tested in one place [1] 
-> > > > > __filemap_fdatawait_range, which does this:
-> > > > > 
-> > > > > 	if (TestClearPageError(page))
-> > > > > 		ret = -EIO;
-> > > > > 
-> > > > > This error code will override any AS_* error that was set in the
-> > > > > mapping. Which makes me wonder...why don't we just set this error 
-> > > > > in the mapping and not bother with a per-page flag? Could we
-> > > > > potentially free up a page flag by eliminating this?
-> > > > 
-> > > > Note that currently the AS_* codes are only set for write errors 
-> > > > not for reads and we have no mapping error handling at all for swap
-> > > > pages, but I'm sure this is fixable.
-> > > 
-> > > How is a read error different from a failure to set PG_uptodate?
-> > > Does PG_error suppress retries?
-> > 
-> > We don't do any retries in the code above the block layer (or at least
-> > we shouldn't).
-> 
-> I was wondering about what would/should happen if a read request was
-> re-issued for some reason.  Should the error flag on the page cause an
-> immediate failure, or should it try again.
-> If read-ahead sees a read-error on some future page, is it necessary to
-> record the error so subsequent read-aheads don't notice the page is
-> missing and repeatedly try to re-load it?
-> When the application eventually gets to the faulty page, should a read
-> be tried then, or is the read-ahead failure permanent?
-> 
-> 
-> 
-> > 
-> > > > 
-> > > > From the I/O layer point of view we take great pains to try to 
-> > > > pinpoint the error exactly to the sector.  We reflect this up by 
-> > > > setting the PG_error flag on the page where the error occurred.  If 
-> > > > we only set the error on the mapping, we lose that granularity, 
-> > > > because the mapping is mostly at the file level (or VMA level for
-> > > > anon pages).
-> > > 
-> > > Are you saying that the IO layer finds the page in the bi_io_vec and
-> > > explicitly sets PG_error,
-> > 
-> > I didn't say anything about the mechanism.  I think the function you're
-> > looking for is fs/mpage.c:mpage_end_io().  layers below block indicate
-> > the position in the request.  Block maps the position to bio and the
-> > bio completion maps to page.  So the actual granularity seen in the
-> > upper layer depends on how the page to bio mapping is done.
-> 
-> If the block layer is just returning the status at a per-bio level (which
-> makes perfect sense), then this has nothing directly to do with the
-> PG_error flag.
-> 
-> The page cache needs to do something with bi_error, but it isn't
-> immediately clear that it needs to set PG_error.
-> 
-> > :q
-> > >  rather than just passing an error indication to bi_end_io ??  That
-> > > would seem to be wrong as the page may not be in the page cache.
-> > 
-> > Usually pages in the mpage_end_io path are pinned, I think.
-> > 
-> > >  So I guess I misunderstand you.
-> > > 
-> > > > 
-> > > > So I think the question for filesystem people from us would be do 
-> > > > you care about this accuracy?  If it's OK just to know an error
-> > > > occurred somewhere in this file, then perhaps we don't need it.
-> > > 
-> > > I had always assumed that a bio would either succeed or fail, and 
-> > > that no finer granularity could be available.
-> > 
-> > It does ... but a bio can be as small as a single page.
-> > 
-> > > I think the question here is: Do filesystems need the pagecache to
-> > > record which pages have seen an IO error?
-> > 
-> > It's not just filesystems.  The partition code uses PageError() ... the
-> > metadata code might as well (those are things with no mapping).  I'm
-> > not saying we can't remove PG_error; I am saying it's not going to be
-> > quite as simple as using the AS_ flags.
-> 
-> The partition code could use PageUptodate().
-> mpage_end_io() calls page_endio() on each page, and on read error that
-> calls:
-> 
-> 			ClearPageUptodate(page);
-> 			SetPageError(page);
-> 
-> are both of these necessary?
-> 
+When the kernel is compiled _without_ support for large (>= 2TiB) block
+devices, code in the sd driver's read_capacity() routines rejects devices
+whose count of native-sized blocks does not fit in the 32 bit sector_t
+type. A device reporting 4294967296 512-byte blocks will be rejected, but
+a device of equal capacity reporting 2147483648 1024-byte blocks will not.
 
-> fs/buffer.c can use several bios to read a single page.
-> If any one returns an error, PG_error is set.  When all of them have
-> completed, if PG_error is clear, PG_uptodate is then set.
-> This is an opportunistic use of PG_error, rather than an essential use.
-> It could be "fixed", and would need to be fixed if we were to deprecate
-> use of PG_error for read errors.
-> There are probably other usages like this.
-> 
+The latter case causes problems, for example misreporting of device
+capacity by BLKGETSIZE64. This is because the kernel converts a device's
+capacity in native-sized blocks to an equivalent number of 512-byte units
+and stores the result in a sector_t - which is too small for devices such
+as those noted above.
 
-Ok, I think I get it (somewhat):
+To prevent this, when the kernel is compiled without support for large
+block devices, the read_capacity() routines must reject any device whose
+capacity is 2 TiB or greater regardless of its count of native-sized
+blocks.
 
-The tricky part there is how to handle the PageError check in
-read_dev_sector if you don't use SetPageError in the result handler.
-
-If we can count on read_pagecache_sector and read_dax_sector reliably
-returning an error when the page is considered to be in the cache
-(PageUpToDate) but had a read error, then that would work. I'm not sure
-how you'd indicate that without something like PG_error though if you
-don't want to retry on every attempt.
-
-OTOH, if we want to always retry to read in pages that have had read
-errors when someone requests them, then we can simply not set
-PageUpToDate when readahead fails.
-
-To chip away at the edges of this, what may make sense is to get this
-flag out of the writeback code as much as we can. When a write fails and
-SetPageError is called, we should also mark the mapping with an error.
-Then, we should be able to stop overriding the mapping error with -EIO
-in that codepath. Maybe call ClearPageError, or maybe leave it alone
-there?
-
-> > 
-> > James
-> > 
-> > > I think that for write errors, there is no value in recording
-> > > block-oriented error status - only file-oriented status.
-> > > For read errors, it might if help to avoid indefinite read retries, 
-> > > but I don't know the code well enough to be sure if this is an issue.
-> > > 
-> > > NeilBrown
-> > > 
-> > > 
-> > > > 
-> > > > James
-> > > > 
-> > > > > The main argument I could see for keeping it is that removing it 
-> > > > > might subtly change the behavior of sync_file_range if you have 
-> > > > > tasks syncing different ranges in a file concurrently. I'm not 
-> > > > > sure if that would break any guarantees though.
-> > > > > 
-> > > > > Even if we do need it, I think we might need some cleanup here 
-> > > > > anyway. A lot of readpage operations end up setting that flag 
-> > > > > when they hit an error. Isn't it wrong to return an error on 
-> > > > > fsync, just because we had a read error somewhere in the file in 
-> > > > > a range that was never dirtied?
-> > > > > 
-> > > > > --
-> > > > > [1]: there is another place in f2fs, but it's more or less 
-> > > > > equivalent to the call site in __filemap_fdatawait_range.
-> > > > > 
-
--- 
-Jeff Layton <jlayton@redhat.com>
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Signed-off-by: Steven J. Magnani <steve@digidescorp.com>
+---
+--- a/drivers/scsi/sd.c	2017-02-24 20:29:44.510036363 -0600
++++ b/drivers/scsi/sd.c	2017-02-27 08:19:37.864786958 -0600
+@@ -2066,7 +2066,7 @@ static int read_capacity_16(struct scsi_
+ 	int the_result;
+ 	int retries = 3, reset_retries = READ_CAPACITY_RETRIES_ON_RESET;
+ 	unsigned int alignment;
+-	unsigned long long lba;
++	unsigned long long lba, lba_in_sectors;
+ 	unsigned sector_size;
+ 
+ 	if (sdp->no_read_capacity_16)
+@@ -2122,7 +2122,10 @@ static int read_capacity_16(struct scsi_
+ 		return -ENODEV;
+ 	}
+ 
+-	if ((sizeof(sdkp->capacity) == 4) && (lba >= 0xffffffffULL)) {
++	/* Make sure logical_to_sectors() won't overflow */
++	lba_in_sectors = lba << (ilog2(sector_size) - 9);
++	if ((sizeof(sdkp->capacity) == 4) &&
++	    ((lba >= 0xffffffffULL) || (lba_in_sectors >= 0xffffffffULL))) {
+ 		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
+ 			"kernel compiled with support for large block "
+ 			"devices.\n");
+@@ -2162,6 +2165,7 @@ static int read_capacity_10(struct scsi_
+ 	int the_result;
+ 	int retries = 3, reset_retries = READ_CAPACITY_RETRIES_ON_RESET;
+ 	sector_t lba;
++	unsigned long long lba_in_sectors;
+ 	unsigned sector_size;
+ 
+ 	do {
+@@ -2208,7 +2212,10 @@ static int read_capacity_10(struct scsi_
+ 		return sector_size;
+ 	}
+ 
+-	if ((sizeof(sdkp->capacity) == 4) && (lba == 0xffffffff)) {
++	/* Make sure logical_to_sectors() won't overflow */
++	lba_in_sectors = ((unsigned long long) lba) << (ilog2(sector_size) - 9);
++	if ((sizeof(sdkp->capacity) == 4) &&
++	    (lba_in_sectors >= 0xffffffffULL)) {
+ 		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
+ 			"kernel compiled with support for large block "
+ 			"devices.\n");
