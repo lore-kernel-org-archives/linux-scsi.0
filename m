@@ -1,209 +1,65 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] scsi: lpfc: use div_u64 for 64-bit division
-Date: Mon, 27 Feb 2017 21:31:43 +0100
-Message-ID: <20170227203159.3272843-1-arnd@arndb.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.133]:58252 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751364AbdB0UnE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Feb 2017 15:43:04 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH] scsi: lpfc: use proper format string for dma_addr_t
+Date: Mon, 27 Feb 2017 21:37:12 +0100
+Message-ID: <20170227203726.3420612-1-arnd@arndb.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-The new debugfs output causes a link error on 32-bit architectures:
+dma_addr_t may be either u32 or u64, depending on the kernel configuration,
+and we get a warning for the 32-bit case:
 
-ERROR: "__aeabi_uldivmod" [drivers/scsi/lpfc/lpfc.ko] undefined!
+drivers/scsi/lpfc/lpfc_nvme.c: In function 'lpfc_nvme_ls_req':
+drivers/scsi/lpfc/lpfc_logmsg.h:52:52: error: format '%llu' expects argument of type 'long long unsigned int', but argument 11 has type 'dma_addr_t {aka unsigned int}' [-Werror=format=]
+drivers/scsi/lpfc/lpfc_logmsg.h:52:52: error: format '%llu' expects argument of type 'long long unsigned int', but argument 12 has type 'dma_addr_t {aka unsigned int}' [-Werror=format=]
+drivers/scsi/lpfc/lpfc_nvme.c: In function 'lpfc_nvme_ls_abort':
+drivers/scsi/lpfc/lpfc_logmsg.h:52:52: error: format '%llu' expects argument of type 'long long unsigned int', but argument 11 has type 'dma_addr_t {aka unsigned int}' [-Werror=format=]
+drivers/scsi/lpfc/lpfc_logmsg.h:52:52: error: format '%llu' expects argument of type 'long long unsigned int', but argument 12 has type 'dma_addr_t {aka unsigned int}' [-Werror=format=]
 
-This code is not performance critical, so we can simply use div_u64().
+printk has a special "%pad" format string that passes the dma address by
+reference to solve this problem.
 
-Fixes: bd2cdd5e400f ("scsi: lpfc: NVME Initiator: Add debugfs support")
-Fixes: 2b65e18202fd ("scsi: lpfc: NVME Target: Add debugfs support")
+Fixes: 01649561a8b4 ("scsi: lpfc: NVME Initiator: bind to nvme_fc api")
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/scsi/lpfc/lpfc_debugfs.c | 64 ++++++++++++++++++++--------------------
- 1 file changed, 32 insertions(+), 32 deletions(-)
+ drivers/scsi/lpfc/lpfc_nvme.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index 599fde4ea8b1..47c67bf0514e 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.c
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -873,8 +873,8 @@ lpfc_debugfs_nvmektime_data(struct lpfc_vport *vport, char *buf, int size)
- 		len += snprintf(
- 			buf + len, PAGE_SIZE - len,
- 			"avg:%08lld min:%08lld max %08lld\n",
--			phba->ktime_seg1_total /
--			phba->ktime_data_samples,
-+			div_u64(phba->ktime_seg1_total,
-+			        phba->ktime_data_samples),
- 			phba->ktime_seg1_min,
- 			phba->ktime_seg1_max);
- 		len += snprintf(
-@@ -884,8 +884,8 @@ lpfc_debugfs_nvmektime_data(struct lpfc_vport *vport, char *buf, int size)
- 		len += snprintf(
- 			buf + len, PAGE_SIZE - len,
- 			"avg:%08lld min:%08lld max %08lld\n",
--			phba->ktime_seg2_total /
--			phba->ktime_data_samples,
-+			div_u64(phba->ktime_seg2_total,
-+				phba->ktime_data_samples),
- 			phba->ktime_seg2_min,
- 			phba->ktime_seg2_max);
- 		len += snprintf(
-@@ -895,8 +895,8 @@ lpfc_debugfs_nvmektime_data(struct lpfc_vport *vport, char *buf, int size)
- 		len += snprintf(
- 			buf + len, PAGE_SIZE - len,
- 			"avg:%08lld min:%08lld max %08lld\n",
--			phba->ktime_seg3_total /
--			phba->ktime_data_samples,
-+			div_u64(phba->ktime_seg3_total,
-+				phba->ktime_data_samples),
- 			phba->ktime_seg3_min,
- 			phba->ktime_seg3_max);
- 		len += snprintf(
-@@ -906,17 +906,17 @@ lpfc_debugfs_nvmektime_data(struct lpfc_vport *vport, char *buf, int size)
- 		len += snprintf(
- 			buf + len, PAGE_SIZE - len,
- 			"avg:%08lld min:%08lld max %08lld\n",
--			phba->ktime_seg4_total /
--			phba->ktime_data_samples,
-+			div_u64(phba->ktime_seg4_total,
-+				phba->ktime_data_samples),
- 			phba->ktime_seg4_min,
- 			phba->ktime_seg4_max);
- 		len += snprintf(
- 			buf + len, PAGE_SIZE - len,
- 			"Total IO avg time: %08lld\n",
--			((phba->ktime_seg1_total +
-+			div_u64(phba->ktime_seg1_total +
- 			phba->ktime_seg2_total  +
- 			phba->ktime_seg3_total +
--			phba->ktime_seg4_total) /
-+			phba->ktime_seg4_total,
- 			phba->ktime_data_samples));
- 		return len;
- 	}
-@@ -935,8 +935,8 @@ lpfc_debugfs_nvmektime_data(struct lpfc_vport *vport, char *buf, int size)
- 			"cmd pass to NVME Layer\n");
- 	len += snprintf(buf + len, PAGE_SIZE-len,
- 			"avg:%08lld min:%08lld max %08lld\n",
--			phba->ktime_seg1_total /
--			phba->ktime_data_samples,
-+			div_u64(phba->ktime_seg1_total,
-+				phba->ktime_data_samples),
- 			phba->ktime_seg1_min,
- 			phba->ktime_seg1_max);
- 	len += snprintf(buf + len, PAGE_SIZE-len,
-@@ -944,8 +944,8 @@ lpfc_debugfs_nvmektime_data(struct lpfc_vport *vport, char *buf, int size)
- 			"-to- Driver rcv cmd OP (action)\n");
- 	len += snprintf(buf + len, PAGE_SIZE-len,
- 			"avg:%08lld min:%08lld max %08lld\n",
--			phba->ktime_seg2_total /
--			phba->ktime_data_samples,
-+			div_u64(phba->ktime_seg2_total,
-+				phba->ktime_data_samples),
- 			phba->ktime_seg2_min,
- 			phba->ktime_seg2_max);
- 	len += snprintf(buf + len, PAGE_SIZE-len,
-@@ -953,8 +953,8 @@ lpfc_debugfs_nvmektime_data(struct lpfc_vport *vport, char *buf, int size)
- 			"Firmware WQ doorbell: cmd\n");
- 	len += snprintf(buf + len, PAGE_SIZE-len,
- 			"avg:%08lld min:%08lld max %08lld\n",
--			phba->ktime_seg3_total /
--			phba->ktime_data_samples,
-+			div_u64(phba->ktime_seg3_total,
-+				phba->ktime_data_samples),
- 			phba->ktime_seg3_min,
- 			phba->ktime_seg3_max);
- 	len += snprintf(buf + len, PAGE_SIZE-len,
-@@ -962,8 +962,8 @@ lpfc_debugfs_nvmektime_data(struct lpfc_vport *vport, char *buf, int size)
- 			"-to- MSI-X ISR for cmd cmpl\n");
- 	len += snprintf(buf + len, PAGE_SIZE-len,
- 			"avg:%08lld min:%08lld max %08lld\n",
--			phba->ktime_seg4_total /
--			phba->ktime_data_samples,
-+			div_u64(phba->ktime_seg4_total,
-+				phba->ktime_data_samples),
- 			phba->ktime_seg4_min,
- 			phba->ktime_seg4_max);
- 	len += snprintf(buf + len, PAGE_SIZE-len,
-@@ -971,8 +971,8 @@ lpfc_debugfs_nvmektime_data(struct lpfc_vport *vport, char *buf, int size)
- 			"-to- NVME layer passed cmd done\n");
- 	len += snprintf(buf + len, PAGE_SIZE-len,
- 			"avg:%08lld min:%08lld max %08lld\n",
--			phba->ktime_seg5_total /
--			phba->ktime_data_samples,
-+			div_u64(phba->ktime_seg5_total,
-+				phba->ktime_data_samples),
- 			phba->ktime_seg5_min,
- 			phba->ktime_seg5_max);
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index 625b6589a34d..609a908ea9db 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -457,11 +457,11 @@ lpfc_nvme_ls_req(struct nvme_fc_local_port *pnvme_lport,
+ 	/* Expand print to include key fields. */
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
+ 			 "6051 ENTER.  lport %p, rport %p lsreq%p rqstlen:%d "
+-			 "rsplen:%d %llux %llux\n",
++			 "rsplen:%d %pad %pad\n",
+ 			 pnvme_lport, pnvme_rport,
+ 			 pnvme_lsreq, pnvme_lsreq->rqstlen,
+-			 pnvme_lsreq->rsplen, pnvme_lsreq->rqstdma,
+-			 pnvme_lsreq->rspdma);
++			 pnvme_lsreq->rsplen, &pnvme_lsreq->rqstdma,
++			 &pnvme_lsreq->rspdma);
  
-@@ -983,8 +983,8 @@ lpfc_debugfs_nvmektime_data(struct lpfc_vport *vport, char *buf, int size)
- 		len += snprintf(buf + len, PAGE_SIZE-len,
- 				"avg:%08lld min:%08lld "
- 				"max %08lld\n",
--				phba->ktime_seg10_total /
--				phba->ktime_data_samples,
-+				div_u64(phba->ktime_seg10_total,
-+					phba->ktime_data_samples),
- 				phba->ktime_seg10_min,
- 				phba->ktime_seg10_max);
- 		return len;
-@@ -995,8 +995,8 @@ lpfc_debugfs_nvmektime_data(struct lpfc_vport *vport, char *buf, int size)
- 			"-to- Driver rcv rsp status OP\n");
- 	len += snprintf(buf + len, PAGE_SIZE-len,
- 			"avg:%08lld min:%08lld max %08lld\n",
--			phba->ktime_seg6_total /
--			phba->ktime_status_samples,
-+			div_u64(phba->ktime_seg6_total,
-+				phba->ktime_status_samples),
- 			phba->ktime_seg6_min,
- 			phba->ktime_seg6_max);
- 	len += snprintf(buf + len, PAGE_SIZE-len,
-@@ -1004,8 +1004,8 @@ lpfc_debugfs_nvmektime_data(struct lpfc_vport *vport, char *buf, int size)
- 			"-to- Firmware WQ doorbell: status\n");
- 	len += snprintf(buf + len, PAGE_SIZE-len,
- 			"avg:%08lld min:%08lld max %08lld\n",
--			phba->ktime_seg7_total /
--			phba->ktime_status_samples,
-+			div_u64(phba->ktime_seg7_total,
-+				phba->ktime_status_samples),
- 			phba->ktime_seg7_min,
- 			phba->ktime_seg7_max);
- 	len += snprintf(buf + len, PAGE_SIZE-len,
-@@ -1013,8 +1013,8 @@ lpfc_debugfs_nvmektime_data(struct lpfc_vport *vport, char *buf, int size)
- 			" -to- MSI-X ISR for status cmpl\n");
- 	len += snprintf(buf + len, PAGE_SIZE-len,
- 			"avg:%08lld min:%08lld max %08lld\n",
--			phba->ktime_seg8_total /
--			phba->ktime_status_samples,
-+			div_u64(phba->ktime_seg8_total,
-+				phba->ktime_status_samples),
- 			phba->ktime_seg8_min,
- 			phba->ktime_seg8_max);
- 	len += snprintf(buf + len, PAGE_SIZE-len,
-@@ -1022,8 +1022,8 @@ lpfc_debugfs_nvmektime_data(struct lpfc_vport *vport, char *buf, int size)
- 			"-to- NVME layer passed status done\n");
- 	len += snprintf(buf + len, PAGE_SIZE-len,
- 			"avg:%08lld min:%08lld max %08lld\n",
--			phba->ktime_seg9_total /
--			phba->ktime_status_samples,
-+			div_u64(phba->ktime_seg9_total,
-+				phba->ktime_status_samples),
- 			phba->ktime_seg9_min,
- 			phba->ktime_seg9_max);
- 	len += snprintf(buf + len, PAGE_SIZE-len,
-@@ -1031,8 +1031,8 @@ lpfc_debugfs_nvmektime_data(struct lpfc_vport *vport, char *buf, int size)
- 			"cmd completed on wire\n");
- 	len += snprintf(buf + len, PAGE_SIZE-len,
- 			"avg:%08lld min:%08lld max %08lld\n",
--			phba->ktime_seg10_total /
--			phba->ktime_status_samples,
-+			div_u64(phba->ktime_seg10_total,
-+				phba->ktime_status_samples),
- 			phba->ktime_seg10_min,
- 			phba->ktime_seg10_max);
- 	return len;
+ 	vport->phba->fc4NvmeLsRequests++;
+ 
+@@ -527,11 +527,11 @@ lpfc_nvme_ls_abort(struct nvme_fc_local_port *pnvme_lport,
+ 	/* Expand print to include key fields. */
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_ABTS,
+ 			 "6040 ENTER.  lport %p, rport %p lsreq %p rqstlen:%d "
+-			 "rsplen:%d %llux %llux\n",
++			 "rsplen:%d %pad %pad\n",
+ 			 pnvme_lport, pnvme_rport,
+ 			 pnvme_lsreq, pnvme_lsreq->rqstlen,
+-			 pnvme_lsreq->rsplen, pnvme_lsreq->rqstdma,
+-			 pnvme_lsreq->rspdma);
++			 pnvme_lsreq->rsplen, &pnvme_lsreq->rqstdma,
++			 &pnvme_lsreq->rspdma);
+ 
+ 	/*
+ 	 * Lock the ELS ring txcmplq and build a local list of all ELS IOs
 -- 
 2.9.0
