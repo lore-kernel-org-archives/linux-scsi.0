@@ -1,68 +1,68 @@
-From: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Subject: Re: [PATCH v2 01/16] chardev: add helper function to
- register char devs with a struct device
-Date: Tue, 28 Feb 2017 06:31:02 +0100
-Message-ID: <20170228053102.GA14688@kroah.com>
-References: <1488091097-12328-1-git-send-email-logang@deltatee.com>
- <1488091097-12328-2-git-send-email-logang@deltatee.com>
- <CAPcyv4i91_esBtBxbnDH3ZDd8Mnz4HoJEW2yeEvQ4QikFBjapA@mail.gmail.com>
- <20170227165618.GE5891@obsidianresearch.com>
- <7df6e57b-531c-1b23-05bf-c368df2d20f3@deltatee.com>
- <CAPcyv4jiPE1jK9ubbsAm_ZNMt=S106NCpXD4KPUWpcK9_GEDJA@mail.gmail.com>
-Reply-To: rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <rtc-linux+bncBCUJ7YGL3QFBBIUW2TCQKGQEA7FKOHA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4jiPE1jK9ubbsAm_ZNMt=S106NCpXD4KPUWpcK9_GEDJA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Post: <https://groups.google.com/group/rtc-linux/post>, <mailto:rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:rtc-linux+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/rtc-linux
-List-Subscribe: <https://groups.google.com/group/rtc-linux/subscribe>, <mailto:rtc-linux+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+712029733259+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/rtc-linux/subscribe>
-To: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Sajjan Vikas C <vikas.cha.sajjan-ZPxbGqLxI0U@public.gmane.org>, Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linus Walleij <linus.walleij-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Alexandre Courbot <gnurou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Peter Huewe <peterhuewe-Mmb7MZpHnFY@public.gmane.org>, Marcel Selhorst <tpmdd-yWjUBOtONefk1uMJSBkQmQ@public.gmane.org>, Jarkko Sakkinen <jarkko.sakkinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Olof Johansson <olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sean Hefty <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hal Rosenstock <hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hartmut Knaack <knaack.h-Mmb7MZpHnFY@public.gmane.org>, Lars-Peter Clausen <lars@metafo>
+From: lixiubo@cmss.chinamobile.com
+Subject: [PATCH] target/user: Fix possible overwrite of t_data_sg's last iov[]
+Date: Tue, 28 Feb 2017 13:47:08 +0800
+Message-ID: <1488260828-28167-1-git-send-email-lixiubo@cmss.chinamobile.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: agrover@redhat.com, nab@linux-iscsi.org
+Cc: shli@kernel.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com, mchristi@redhat.com, Xiubo Li <lixiubo@cmss.chinamobile.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Feb 27, 2017 at 07:36:09PM -0800, Dan Williams wrote:
-> On Mon, Feb 27, 2017 at 7:27 PM, Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org> wrote:
-> >
-> >
-> > On 27/02/17 09:56 AM, Jason Gunthorpe wrote:
-> >> Yes please, that is way too subtle. Suggest:
-> >>
-> >> NOTE: Callers must assume that userspace was able to open the cdev and
-> >> can call cdev fops callbacks at any time, even if this function fails.
-> >>
-> >> I would also add a note to cdev_device_del:
-> >>
-> >> NOTE: This guarantees that associated sysfs callbacks are not running
-> >> or runnable, however any open cdevs will remain and their fops remain
-> >> callable even after this returns.
-> >>
-> >> Since I have seen a lot of confusion on that point as well..
-> >
-> > Sure, I'll add that verbiage to a v3 sometime after rc1.
-> 
-> It would also be great to patch1 into a stable non-rebasing git tree
-> so it can be used as a baseline for other 4.12 targeted development.
-> The device-dax patches in particular collide with some pending
-> development.
+From: Xiubo Li <lixiubo@cmss.chinamobile.com>
 
-I'll do that once -rc1 is out, I can't take any new patches right now :)
+If there has BIDI data, its first iov[] will overwrite the last
+iov[] for se_cmd->t_data_sg.
 
-thanks,
+To fix this, we can just increase the iov pointer, but this may
+introuduce a new memory leakage bug: If the se_cmd->data_length
+and se_cmd->t_bidi_data_sg->length are all not aligned up to the
+DATA_BLOCK_SIZE, the actual length needed maybe larger than just
+sum of them.
 
-greg k-h
+So, this could be avoided by rounding all the data lengthes up
+to DATA_BLOCK_SIZE.
 
+Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
+---
+ drivers/target/target_core_user.c | 17 +++++++++++------
+ 1 file changed, 11 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index 2e33100..59a18fd 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -429,10 +429,11 @@ static bool is_ring_space_avail(struct tcmu_dev *udev, size_t cmd_size, size_t d
+ 
+ 	mb = udev->mb_addr;
+ 	cmd_head = mb->cmd_head % udev->cmdr_size; /* UAM */
+-	data_length = se_cmd->data_length;
++	data_length = round_up(se_cmd->data_length, DATA_BLOCK_SIZE);
+ 	if (se_cmd->se_cmd_flags & SCF_BIDI) {
+ 		BUG_ON(!(se_cmd->t_bidi_data_sg && se_cmd->t_bidi_data_nents));
+-		data_length += se_cmd->t_bidi_data_sg->length;
++		data_length += round_up(se_cmd->t_bidi_data_sg->length,
++				DATA_BLOCK_SIZE);
+ 	}
+ 	if ((command_size > (udev->cmdr_size / 2)) ||
+ 	    data_length > udev->data_size) {
+@@ -503,10 +504,14 @@ static bool is_ring_space_avail(struct tcmu_dev *udev, size_t cmd_size, size_t d
+ 	entry->req.iov_dif_cnt = 0;
+ 
+ 	/* Handle BIDI commands */
+-	iov_cnt = 0;
+-	alloc_and_scatter_data_area(udev, se_cmd->t_bidi_data_sg,
+-		se_cmd->t_bidi_data_nents, &iov, &iov_cnt, false);
+-	entry->req.iov_bidi_cnt = iov_cnt;
++	if (se_cmd->se_cmd_flags & SCF_BIDI) {
++		iov_cnt = 0;
++		iov++;
++		alloc_and_scatter_data_area(udev, se_cmd->t_bidi_data_sg,
++				se_cmd->t_bidi_data_nents, &iov, &iov_cnt,
++				false);
++		entry->req.iov_bidi_cnt = iov_cnt;
++	}
+ 
+ 	/* cmd's data_bitmap is what changed in process */
+ 	bitmap_xor(tcmu_cmd->data_bitmap, old_bitmap, udev->data_bitmap,
 -- 
-You received this message because you are subscribed to "rtc-linux".
-Membership options at http://groups.google.com/group/rtc-linux .
-Please read http://groups.google.com/group/rtc-linux/web/checklist
-before submitting a driver.
---- 
-You received this message because you are subscribed to the Google Groups "rtc-linux" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to rtc-linux+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-For more options, visit https://groups.google.com/d/optout.
+1.8.3.1
