@@ -1,28 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: aacraid: remove redundant zero check on ret
-Date: Mon, 27 Feb 2017 22:20:32 -0500
-Message-ID: <yq1shmzvw5b.fsf@oracle.com>
-References: <20170224144330.6707-1-colin.king@canonical.com>
+Subject: Re: [PATCH v2] scsi: ufs: Factor out ufshcd_read_desc_param
+Date: Mon, 27 Feb 2017 22:24:25 -0500
+Message-ID: <yq1k28bvvyu.fsf@oracle.com>
+References: <C8BF859FC3044844854B2CBA1ED115C11B067E@HASMSX106.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170224144330.6707-1-colin.king@canonical.com> (Colin King's
-        message of "Fri, 24 Feb 2017 14:43:30 +0000")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:32688 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751505AbdB1D0W (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Feb 2017 22:26:22 -0500
+In-Reply-To: <C8BF859FC3044844854B2CBA1ED115C11B067E@HASMSX106.ger.corp.intel.com>
+        (MichalX Potomski's message of "Thu, 23 Feb 2017 09:05:30 +0000")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Potomski, MichalX" <michalx.potomski@intel.com>
+Cc: "'vinholikatti@gmail.com'" <vinholikatti@gmail.com>, "'subhashj@codeaurora.org'" <subhashj@codeaurora.org>, "'jejb@linux.vnet.ibm.com'" <jejb@linux.vnet.ibm.com>, "'martin.petersen@oracle.com'" <martin.petersen@oracle.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "Janca, Grzegorz" <grzegorz.janca@intel.com>, "Mielczarek, SzymonX" <szymonx.mielczarek@intel.com>
 
->>>>> "Colin" == Colin King <colin.king@canonical.com> writes:
+>>>>> "Michal" == Potomski, MichalX <michalx.potomski@intel.com> writes:
 
-Colin,
+Michal> Since in UFS 2.1 specification some of the descriptor lengths
+Michal> differs from 2.0 specification and some devices, which are
+Michal> reporting spec version 2.0 have different descriptor lengths we
+Michal> can not rely on hardcoded values taken from 2.0
+Michal> specification. This patch introduces reading these lengths per
+Michal> each device from descriptor headers at probe time to ensure
+Michal> their correctness.
 
-Colin> The check for ret being zero is redundant as a few statements
-Colin> earlier we break out of the while loop if ret is non-zero.  Thus
-Colin> we can remove the zero check and also the dead-code non-zero case
-Colin> too.
-
-Applied to 4.11/scsi-fixes.
+Subhash: I assume v2 still carries your Reviewed-by:?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
