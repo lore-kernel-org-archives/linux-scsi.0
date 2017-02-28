@@ -1,59 +1,55 @@
-From: Xiubo Li <lixiubo@cmss.chinamobile.com>
-Subject: Re: [PATCH] target/user: Add daynmic growing data area featuresupport
-Date: Tue, 28 Feb 2017 17:13:37 +0800
-Message-ID: <6e0a06b0-3777-e560-1943-3e0c1e022039@cmss.chinamobile.com>
-References: <1487323472-20481-1-git-send-email-lixiubo@cmss.chinamobile.com>
- <09891673-0d95-8b66-ddce-0ace7aea43d1@redhat.com>
- <58B4BCA5.2060002@redhat.com>
+From: Boaz Harrosh <openosd@gmail.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] do we really need PG_error at all?
+Date: Tue, 28 Feb 2017 12:12:14 +0200
+Message-ID: <0bea2b1c-ddb1-f2bf-8ef7-b83d6a6404fc@gmail.com>
+References: <1488120164.2948.4.camel@redhat.com>
+ <1488129033.4157.8.camel@HansenPartnership.com>
+ <877f4cr7ew.fsf@notabene.neil.brown.name>
+ <1488151856.4157.50.camel@HansenPartnership.com>
+ <874lzgqy06.fsf@notabene.neil.brown.name>
+ <1488208047.2876.6.camel@redhat.com>
+ <DC27F5BA-BCCA-41FF-8D41-7BB99AA4DB26@dilger.ca>
+ <87varvp5v1.fsf@notabene.neil.brown.name>
+ <1488244308.7627.5.camel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <58B4BCA5.2060002@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mike Christie <mchristi@redhat.com>, Andy Grover <agrover@redhat.com>, nab@linux-iscsi.org, shli@kernel.org
-Cc: hch@lst.de, sheng@yasker.org, namei.unix@gmail.com, bart.vanassche@sandisk.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, Jianfei Hu <hujianfei@cmss.chinamobile.com>, Venky Shankar <vshankar@redhat.com>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1488244308.7627.5.camel@redhat.com>
+Sender: owner-linux-mm@kvack.org
+To: Jeff Layton <jlayton@redhat.com>, NeilBrown <neilb@suse.com>, Andreas Dilger <adilger@dilger.ca>
+Cc: linux-block@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, lsf-pc <lsf-pc@lists.linuxfoundation.org>, Neil Brown <neilb@suse.de>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-mm <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
->> On 02/17/2017 01:24 AM, lixiubo@cmss.chinamobile.com wrote:
->>>> From: Xiubo Li <lixiubo@cmss.chinamobile.com>
->>>>
->>>> Currently for the TCMU, the ring buffer size is fixed to 64K cmd
->>>> area + 1M data area, and this will be bottlenecks for high iops.
->> Hi Xiubo, thanks for your work.
->>
->> daynmic -> dynamic
->>
->> Have you benchmarked this patch and determined what kind of iops
->> improvement it allows? Do you see the data area reaching its
->> fully-allocated size?
->>
-> I tested this patch with Venky's tcmu-runner rbd aio patches, with one
-> 10 gig iscsi session, and for pretty basic fio direct io (64 -256K
-> read/writes with a queue depth of 64 numjobs between 1 and 4) tests read
-> throughput goes from about 80 to 500 MB/s. Write throughput is pretty
-> low at around 150 MB/s.
->
-> I did not hit the fully allocated size. I did not drive a lot of IO though.
+On 02/28/2017 03:11 AM, Jeff Layton wrote:
+<>
+> 
+> I'll probably have questions about the read side as well, but for now it
+> looks like it's mostly used in an ad-hoc way to communicate errors
+> across subsystems (block to fs layer, for instance).
 
-How about dealing with memories shrinking in patch series followed?
+If memory does not fail me it used to be checked long time ago in the
+read-ahead case. On the buffered read case, the first page is read synchronous
+and any error is returned to the caller, but then a read-ahead chunk is
+read async all the while the original thread returned to the application.
+So any errors are only recorded on the page-bit, since otherwise the uptodate
+is off and the IO will be retransmitted. Then the move to read_iter changed
+all that I think.
+But again this is like 5-6 years ago, and maybe I didn't even understand
+very well.
 
-As the initial patch, we could set the cmd area size to 8MB and the
-data area size to 512MB. And this could work fine for most cases
-without using too much memories.
+> --
+> Jeff Layton <jlayton@redhat.com>
+> 
 
-On my similar test case by using VMs(low iops case) using fio, -bs=[64K,
-128K, 512K, 1M] -size=20G, -iodepth 1 -numjobs=10,  the bw of read
-increases from about 5200KB/s to about 6100KB/s, and the bw of write
-increases from about 3000KB/s to about 3300KB/s.
+I would like a Documentation of all this as well please. Where are the
+tests for this?
 
-While bs < 64K(from the log, the maximum of the data length is 64K),
-the smaller of it the two bws will be closer.
+Thanks
+Boaz
 
-But for all my test cases, the allocated size is far away from the full size
-too.
-
-Thanks,
-
-BRs
-Xiubo
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
