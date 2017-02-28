@@ -1,84 +1,89 @@
-From: James Smart <james.smart@broadcom.com>
-Subject: Re: [PATCH] scsi: lpfc: use proper format string for dma_addr_t
-Date: Tue, 28 Feb 2017 10:05:41 -0800
-Message-ID: <7b969a50-aced-002d-c7be-7adcc4b317cd@broadcom.com>
-References: <20170227203726.3420612-1-arnd@arndb.de>
+From: Cathy Avery <cavery@redhat.com>
+Subject: [PATCH] scsi: storvsc: Add support for FC rport.
+Date: Tue, 28 Feb 2017 13:45:43 -0500
+Message-ID: <1488307543-24926-1-git-send-email-cavery@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:36660 "EHLO
-        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751508AbdB1ScO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Feb 2017 13:32:14 -0500
-Received: by mail-wm0-f50.google.com with SMTP id v77so92047139wmv.1
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2017 10:30:34 -0800 (PST)
-In-Reply-To: <20170227203726.3420612-1-arnd@arndb.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: kys@microsoft.com, hch@infradead.org, haiyangz@microsoft.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: devel@linuxdriverproject.org, linux-kernel@vger.kernel.org, dan.carpenter@oracle.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Arnd,
+Included in the current storvsc driver for Hyper-V is the ability
+to access luns on an FC fabric via a virtualized fiber channel
+adapter exposed by the Hyper-V host. The driver also attaches to the FC
+transport to allow host and port names to be published under
+/sys/class/fc_host/hostX. Current customer tools running on the VM
+require that these names be available in the well known standard
+location under fc_host/hostX.
 
-Thank you. Looks good.
+A problem arose when attaching to the FC transport. The scsi_scan
+code attempts to call fc_user_scan which has basically become a no-op
+due to the fact that the virtualized FC device does not expose rports.
+At this point you cannot refresh the scsi bus after mapping or unmapping
+luns on the SAN without a reboot of the VM.
 
--- james
+This patch stubs in an rport per fc_host in storvsc so that the
+requirement of a defined rport is now met within the fc_transport and
+echo "- - -" > /sys/class/scsi_host/hostX/scan now works.
 
-Signed-off-by: James Smart <james.smart@broadcom.com>
+Signed-off-by: Cathy Avery <cavery@redhat.com>
+---
+ drivers/scsi/storvsc_drv.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
-
-On 2/27/2017 12:37 PM, Arnd Bergmann wrote:
-> dma_addr_t may be either u32 or u64, depending on the kernel configuration,
-> and we get a warning for the 32-bit case:
->
-> drivers/scsi/lpfc/lpfc_nvme.c: In function 'lpfc_nvme_ls_req':
-> drivers/scsi/lpfc/lpfc_logmsg.h:52:52: error: format '%llu' expects argument of type 'long long unsigned int', but argument 11 has type 'dma_addr_t {aka unsigned int}' [-Werror=format=]
-> drivers/scsi/lpfc/lpfc_logmsg.h:52:52: error: format '%llu' expects argument of type 'long long unsigned int', but argument 12 has type 'dma_addr_t {aka unsigned int}' [-Werror=format=]
-> drivers/scsi/lpfc/lpfc_nvme.c: In function 'lpfc_nvme_ls_abort':
-> drivers/scsi/lpfc/lpfc_logmsg.h:52:52: error: format '%llu' expects argument of type 'long long unsigned int', but argument 11 has type 'dma_addr_t {aka unsigned int}' [-Werror=format=]
-> drivers/scsi/lpfc/lpfc_logmsg.h:52:52: error: format '%llu' expects argument of type 'long long unsigned int', but argument 12 has type 'dma_addr_t {aka unsigned int}' [-Werror=format=]
->
-> printk has a special "%pad" format string that passes the dma address by
-> reference to solve this problem.
->
-> Fixes: 01649561a8b4 ("scsi: lpfc: NVME Initiator: bind to nvme_fc api")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->   drivers/scsi/lpfc/lpfc_nvme.c | 12 ++++++------
->   1 file changed, 6 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-> index 625b6589a34d..609a908ea9db 100644
-> --- a/drivers/scsi/lpfc/lpfc_nvme.c
-> +++ b/drivers/scsi/lpfc/lpfc_nvme.c
-> @@ -457,11 +457,11 @@ lpfc_nvme_ls_req(struct nvme_fc_local_port *pnvme_lport,
->   	/* Expand print to include key fields. */
->   	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
->   			 "6051 ENTER.  lport %p, rport %p lsreq%p rqstlen:%d "
-> -			 "rsplen:%d %llux %llux\n",
-> +			 "rsplen:%d %pad %pad\n",
->   			 pnvme_lport, pnvme_rport,
->   			 pnvme_lsreq, pnvme_lsreq->rqstlen,
-> -			 pnvme_lsreq->rsplen, pnvme_lsreq->rqstdma,
-> -			 pnvme_lsreq->rspdma);
-> +			 pnvme_lsreq->rsplen, &pnvme_lsreq->rqstdma,
-> +			 &pnvme_lsreq->rspdma);
->   
->   	vport->phba->fc4NvmeLsRequests++;
->   
-> @@ -527,11 +527,11 @@ lpfc_nvme_ls_abort(struct nvme_fc_local_port *pnvme_lport,
->   	/* Expand print to include key fields. */
->   	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_ABTS,
->   			 "6040 ENTER.  lport %p, rport %p lsreq %p rqstlen:%d "
-> -			 "rsplen:%d %llux %llux\n",
-> +			 "rsplen:%d %pad %pad\n",
->   			 pnvme_lport, pnvme_rport,
->   			 pnvme_lsreq, pnvme_lsreq->rqstlen,
-> -			 pnvme_lsreq->rsplen, pnvme_lsreq->rqstdma,
-> -			 pnvme_lsreq->rspdma);
-> +			 pnvme_lsreq->rsplen, &pnvme_lsreq->rqstdma,
-> +			 &pnvme_lsreq->rspdma);
->   
->   	/*
->   	 * Lock the ELS ring txcmplq and build a local list of all ELS IOs
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 585e54f..6d7b932 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -478,6 +478,9 @@ struct storvsc_device {
+ 	 */
+ 	u64 node_name;
+ 	u64 port_name;
++#if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
++	struct fc_rport *rport;
++#endif
+ };
+ 
+ struct hv_host_device {
+@@ -1823,8 +1826,16 @@ static int storvsc_probe(struct hv_device *device,
+ 	}
+ #if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
+ 	if (host->transportt == fc_transport_template) {
++		struct fc_rport_identifiers ids;
++
++		ids.node_name = 0;
++		ids.port_name = 0;
++		ids.port_id = 0;
++		ids.roles |= FC_PORT_ROLE_FCP_TARGET;
++
+ 		fc_host_node_name(host) = stor_device->node_name;
+ 		fc_host_port_name(host) = stor_device->port_name;
++		stor_device->rport = fc_remote_port_add(host, 0, &ids);
+ 	}
+ #endif
+ 	return 0;
+@@ -1854,8 +1865,10 @@ static int storvsc_remove(struct hv_device *dev)
+ 	struct Scsi_Host *host = stor_device->host;
+ 
+ #if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
+-	if (host->transportt == fc_transport_template)
++	if (host->transportt == fc_transport_template) {
++		fc_remote_port_delete(stor_device->rport);
+ 		fc_remove_host(host);
++	}
+ #endif
+ 	scsi_remove_host(host);
+ 	storvsc_dev_remove(dev);
+-- 
+2.5.0
