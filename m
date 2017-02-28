@@ -1,78 +1,61 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH 2/3] block: Separate zone requests from medium access
- requests
-Date: Tue, 28 Feb 2017 16:57:22 +0000
-Message-ID: <1488301028.2370.7.camel@sandisk.com>
-References: <20170228102535.15966-1-damien.lemoal@wdc.com>
-         <20170228102535.15966-3-damien.lemoal@wdc.com>
+From: James Bottomley <jejb@linux.vnet.ibm.com>
+Subject: Re: SCSI regression in 4.11
+Date: Tue, 28 Feb 2017 09:06:13 -0800
+Message-ID: <1488301573.3046.9.camel@linux.vnet.ibm.com>
+References: <20170227152955.1362aabb@xeon-e3>
+         <20170227171931.30b9f619@xeon-e3> <20170228140812.GC20197@lst.de>
+         <c1949de0-8b95-e254-1bec-bcdae762890f@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:8433 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751030AbdB1REF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Feb 2017 12:04:05 -0500
-In-Reply-To: <20170228102535.15966-3-damien.lemoal@wdc.com>
-Content-Language: en-US
-Content-ID: <403EEA777FF4C34CA8039C4DD69E918E@sandisk.com>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:35467 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751135AbdB1RHR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 28 Feb 2017 12:07:17 -0500
+Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1SH4ALD008138
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2017 12:06:22 -0500
+Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 28wc4rkj24-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2017 12:06:22 -0500
+Received: from localhost
+        by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
+        Tue, 28 Feb 2017 10:06:21 -0700
+In-Reply-To: <c1949de0-8b95-e254-1bec-bcdae762890f@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "hch@lst.de" <hch@lst.de>, "hare@suse.de" <hare@suse.de>, "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>
+To: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Stephen Hemminger <stephen@networkplumber.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "K. Y. Srinivasan" <kys@microsoft.com>, Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>, Josh Poulson <jopoulso@microsoft.com>, v-adsuho@microsoft.com, linux-scsi@vger.kernel.org
 
-On Tue, 2017-02-28 at 19:25 +0900, Damien Le Moal wrote:
-> From: Bart Van Assche <bart.vanassche@sandisk.com>
->=20
-> Use blk_rq_accesses_medium() instead of !blk_rq_is_passthrough() to
-> ensure that code that is intended for normal medium access requests,
-> e.g. DISCARD, READ and WRITE requests, is not applied to
-> REQ_OP_ZONE_REPORT requests nor to REQ_OP_ZONE_RESET requests.
-> This allows excluding these zone requests from request accounting
-> and from request scheduling.
->=20
-> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+On Tue, 2017-02-28 at 08:32 -0700, Jens Axboe wrote:
+> On 02/28/2017 07:08 AM, Christoph Hellwig wrote:
+> > On Mon, Feb 27, 2017 at 05:19:31PM -0800, Stephen Hemminger wrote:
+> > > Fixes: ee5242360424 ("scsi: zero per-cmd driver data before each
+> > > I/O")
+> > > 
+> > > but that is already in linux-next.
+> > > 
+> > > Noticed another place where memset(of the data was being done not
+> > > the extra bits.
+> > > Tried this, but didn't fix it either...
+> > 
+> > Are you using blk-mq or the legacy request code?
+> 
+> Stephen doesn't have MQ set in the config he posted, I'm assuming he 
+> didn't boot with scsi_mod.use_blk_mq=true. In a previous email, I 
+> asked if turning on MQ makes a difference.
 
-Hello Damien,
+OK, since we're not making much progress, Stephen, could you insert
+some debugging into the storvsc driver?  The trace clearly shows we're
+getting zeros back in the buffer when we should have data from the
+initial scan.  Firstly, does the vmbus think it's transferring any data
+for the INQUIRY and READ_CAPACITY commands (looks like
+storvsc_command_completion() data_transfer_length)?  If it does,
+there's probably an issue initialising the sg list.  If it doesn't,
+we're probably sending bogus commands.
 
-Since you posted this patch you should have added your Signed-off-by. And
-since you have edited this patch, you should have documented what you have
-changed.
-
->  static inline void req_set_nomerge(struct request_queue *q, struct reque=
-st *req)
-> diff --git a/block/elevator.c b/block/elevator.c
-> index 699d10f..cbf81c6 100644
-> --- a/block/elevator.c
-> +++ b/block/elevator.c
-> @@ -635,16 +635,20 @@ void __elv_add_request(struct request_queue *q, str=
-uct request *rq, int where)
-> =20
->  	rq->q =3D q;
-> =20
-> -	if (rq->rq_flags & RQF_SOFTBARRIER) {
-> +	if (!blk_rq_accesses_medium(rq)) {
-> +		/* Do not schedule zone requests */
-> +		where =3D ELEVATOR_INSERT_FRONT;
-> +	} if (rq->rq_flags & RQF_SOFTBARRIER) {
-
-This change was not in the patch I sent to you. Additionally, this change
-doesn't look properly formatted. Please make sure that the second "if" star=
-ts
-on a new line.
-
->  		}
->  	} else if (!(rq->rq_flags & RQF_ELVPRIV) &&
->  		    (where =3D=3D ELEVATOR_INSERT_SORT ||
-> -		     where =3D=3D ELEVATOR_INSERT_SORT_MERGE))
-> +		     where =3D=3D ELEVATOR_INSERT_SORT_MERGE)) {
->  		where =3D ELEVATOR_INSERT_BACK;
-> +	}
-
-This change wasn't in my patch either. Since this change only adds a pair o=
-f
-braces, can it be left out?
-
-Thanks,
-
-Bart.=
+James
