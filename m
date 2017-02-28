@@ -1,103 +1,91 @@
-From: Jeff Layton <jlayton@redhat.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] do we really need PG_error at all?
-Date: Mon, 27 Feb 2017 20:11:48 -0500
-Message-ID: <1488244308.7627.5.camel@redhat.com>
-References: <1488120164.2948.4.camel@redhat.com>
-	 <1488129033.4157.8.camel@HansenPartnership.com>
-	 <877f4cr7ew.fsf@notabene.neil.brown.name>
-	 <1488151856.4157.50.camel@HansenPartnership.com>
-	 <874lzgqy06.fsf@notabene.neil.brown.name>
-	 <1488208047.2876.6.camel@redhat.com>
-	 <DC27F5BA-BCCA-41FF-8D41-7BB99AA4DB26@dilger.ca>
-	 <87varvp5v1.fsf@notabene.neil.brown.name>
+From: Stephen Hemminger <stephen@networkplumber.org>
+Subject: Re: SCSI regression in 4.11
+Date: Mon, 27 Feb 2017 17:19:31 -0800
+Message-ID: <20170227171931.30b9f619@xeon-e3>
+References: <20170227152955.1362aabb@xeon-e3>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <87varvp5v1.fsf@notabene.neil.brown.name>
-Sender: owner-linux-mm@kvack.org
-To: NeilBrown <neilb@suse.com>, Andreas Dilger <adilger@dilger.ca>
-Cc: linux-block@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, lsf-pc <lsf-pc@lists.linuxfoundation.org>, Neil Brown <neilb@suse.de>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-mm <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pg0-f54.google.com ([74.125.83.54]:33208 "EHLO
+        mail-pg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751419AbdB1BUS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Feb 2017 20:20:18 -0500
+Received: by mail-pg0-f54.google.com with SMTP id 25so21521354pgy.0
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Feb 2017 17:19:39 -0800 (PST)
+In-Reply-To: <20170227152955.1362aabb@xeon-e3>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "K. Y. Srinivasan" <kys@microsoft.com>, Dexuan Cui <decui@microsoft.com>, Jens Axboe <axboe@kernel.dk>, Long Li <longli@microsoft.com>, Josh Poulson <jopoulso@microsoft.com>, v-adsuho@microsoft.com
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, 2017-02-28 at 10:32 +1100, NeilBrown wrote:
-> On Mon, Feb 27 2017, Andreas Dilger wrote:
-> 
-> > 
-> > My thought is that PG_error is definitely useful for applications to get
-> > correct errors back when doing write()/sync_file_range() so that they know
-> > there is an error in the data that _they_ wrote, rather than receiving an
-> > error for data that may have been written by another thread, and in turn
-> > clearing the error from another thread so it *doesn't* know it had a write
-> > error.
-> 
-> It might be useful in that way, but it is not currently used that way.
-> Such usage would be a change in visible behaviour.
-> 
-> sync_file_range() calls filemap_fdatawait_range(), which calls
-> filemap_check_errors().
-> If there have been any errors in the file recently, inside or outside
-> the range, the latter will return an error which will propagate up.
-> 
-> > 
-> > As for stray sync() clearing PG_error from underneath an application, that
-> > shouldn't happen since filemap_fdatawait_keep_errors() doesn't clear errors
-> > and is used by device flushing code (fdatawait_one_bdev(), wait_sb_inodes()).
-> 
-> filemap_fdatawait_keep_errors() calls __filemap_fdatawait_range() which
-> clears PG_error on every page.
-> What it doesn't do is call filemap_check_errors(), and so doesn't clear
-> AS_ENOSPC or AS_EIO.
-> 
-> 
+On Mon, 27 Feb 2017 15:30:30 -0800
+Stephen Hemminger <stephen@networkplumber.org> wrote:
 
-I think it's helpful to get a clear idea of what happens now in the face
-of errors and what we expect to happen, and I don't quite have that yet:
+> Something in SCSI in 4.11 broke booting on Hyper-V Generation 2 VM with 8=
+ VCPU and 4G of memory.
+> Both Linus's current tree (4.11 pre-rc1) and linux-next fail in a similar=
+ manner. It looks like some error
+> in SCSI device detection because there is only a single device.
+>=20
+> The offending commit causing the regression is:
+>=20
+> $ git bisect bad
+> e9c787e65c0c36529745be47d490d998b4b6e589 is the first bad commit
+> commit e9c787e65c0c36529745be47d490d998b4b6e589
+> Author: Christoph Hellwig <hch@lst.de>
+> Date:   Mon Jan 2 21:55:26 2017 +0300
+>=20
+>     scsi: allocate scsi_cmnd structures as part of struct request
+>    =20
+>     Rely on the new block layer functionality to allocate additional driv=
+er
+>     specific data behind struct request instead of implementing it in SCSI
+>     it=D1=95elf.
+>    =20
+>     Signed-off-by: Christoph Hellwig <hch@lst.de>
+>     Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+>     Reviewed-by: Hannes Reinecke <hare@suse.com>
+>     Signed-off-by: Jens Axboe <axboe@fb.com>
+>=20
+> :040000 040000 6ff016fcdae227efeb19c1c301b17ccd7ea35da6 70d79f99d9b79ecf4=
+dccbe067fc697219f5c78da M	drivers
+> :040000 040000 a672ff52df8b2c211b3f98cae4a88d8a96ccde0b 1aaaed7de0994f597=
+c7f8290c722a0b4a7789429 M	include
+>=20
+> I checked and tree is current and up to date and includes=20
+> commit ee5242360424b9b967454e9183767323d10cf985
+> Author: Christoph Hellwig <hch@lst.de>
+> Date:   Tue Feb 21 10:04:55 2017 +0100
+>=20
+>     scsi: zero per-cmd driver data before each I/O
+>=20
+> Kernel config is attached. It started with Ubuntu config, but then did lo=
+calmodconfig and pruned
+> out unnecessary stuff.
+>=20
 
---------------------------8<-----------------------------
-void page_endio(struct page *page, bool is_write, int err)
-{
-        if (!is_write) {
-                if (!err) {
-                        SetPageUptodate(page);
-                } else {
-                        ClearPageUptodate(page);
-                        SetPageError(page);
-                }
-                unlock_page(page);
-        } else {
-                if (err) {
-                        SetPageError(page);
-                        if (page->mapping)
-                                mapping_set_error(page->mapping, err);
-                }
-                end_page_writeback(page);
-        }
-}
---------------------------8<-----------------------------
+This problem I am seeing looks like the one addressed by:
 
-...not everything uses page_endio, but it's a good place to look since
-we have both flavors of error handling in one place.
+Fixes: ee5242360424 ("scsi: zero per-cmd driver data before each I/O")
 
-On a write error, we SetPageError and set the error in the mapping.
+but that is already in linux-next.
 
-What I'm not clear on is:
+Noticed another place where memset(of the data was being done not the extra=
+ bits.
+Tried this, but didn't fix it either...
 
-1) what happens to the page at that point when we get a writeback error?
-Does it just remain in-core and is allowed to service reads (assuming
-that it was uptodate before)?
 
-Can I redirty it and have it retry the write? Is there standard behavior
-for this or is it just up to the whim of the filesystem?
-
-I'll probably have questions about the read side as well, but for now it
-looks like it's mostly used in an ad-hoc way to communicate errors
-across subsystems (block to fs layer, for instance).
---
-Jeff Layton <jlayton@redhat.com>
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index ba2286652ff6..7e0463e78ff4 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1850,7 +1850,7 @@ static int scsi_mq_prep_fn(struct request *req)
+=20
+ 	/* zero out the cmd, except for the embedded scsi_request */
+ 	memset((char *)cmd + sizeof(cmd->req), 0,
+-		sizeof(*cmd) - sizeof(cmd->req));
++		sizeof(*cmd) - sizeof(cmd->req) + sdev->host->hostt->cmd_size);
+=20
+ 	req->special =3D cmd;
+=20
