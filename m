@@ -1,52 +1,84 @@
-From: Mike Christie <mchristi@redhat.com>
-Subject: Re: [PATCH] target/user: Add daynmic growing data area featuresupport
-Date: Tue, 28 Feb 2017 12:13:22 -0600
-Message-ID: <58B5BDC2.3040300@redhat.com>
-References: <1487323472-20481-1-git-send-email-lixiubo@cmss.chinamobile.com>
- <09891673-0d95-8b66-ddce-0ace7aea43d1@redhat.com>
- <58B4BCA5.2060002@redhat.com>
- <983dc030-0352-05d8-9fc7-a6cdf2c59f8d@cmss.chinamobile.com>
+From: James Smart <james.smart@broadcom.com>
+Subject: Re: [PATCH] scsi: lpfc: use proper format string for dma_addr_t
+Date: Tue, 28 Feb 2017 10:05:41 -0800
+Message-ID: <7b969a50-aced-002d-c7be-7adcc4b317cd@broadcom.com>
+References: <20170227203726.3420612-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37920 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751666AbdB1SZa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 28 Feb 2017 13:25:30 -0500
-In-Reply-To: <983dc030-0352-05d8-9fc7-a6cdf2c59f8d@cmss.chinamobile.com>
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:36660 "EHLO
+        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751508AbdB1ScO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Feb 2017 13:32:14 -0500
+Received: by mail-wm0-f50.google.com with SMTP id v77so92047139wmv.1
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2017 10:30:34 -0800 (PST)
+In-Reply-To: <20170227203726.3420612-1-arnd@arndb.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Xiubo Li <lixiubo@cmss.chinamobile.com>, Andy Grover <agrover@redhat.com>, nab@linux-iscsi.org, shli@kernel.org
-Cc: hch@lst.de, sheng@yasker.org, namei.unix@gmail.com, bart.vanassche@sandisk.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, Jianfei Hu <hujianfei@cmss.chinamobile.com>, Venky Shankar <vshankar@redhat.com>
+To: Arnd Bergmann <arnd@arndb.de>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 02/27/2017 07:22 PM, Xiubo Li wrote:
-> Hi Mike
-> 
-> Thanks verrry much for your work and test cases.
-> 
-> 
->>>>> From: Xiubo Li <lixiubo@cmss.chinamobile.com>
->>>>>
->>>>> Currently for the TCMU, the ring buffer size is fixed to 64K cmd
->>>>> area + 1M data area, and this will be bottlenecks for high iops.
->>> Hi Xiubo, thanks for your work.
->>>
->>> daynmic -> dynamic
->>>
->>> Have you benchmarked this patch and determined what kind of iops
->>> improvement it allows? Do you see the data area reaching its
->>> fully-allocated size?
->>>
->> I tested this patch with Venky's tcmu-runner rbd aio patches, with one
->> 10 gig iscsi session, and for pretty basic fio direct io (64 -256K
->> read/writes with a queue depth of 64 numjobs between 1 and 4) tests read
->> throughput goes from about 80 to 500 MB/s.
-> Looks nice.
-> 
->> Write throughput is pretty
->> low at around 150 MB/s.
-> What's the original write throughput without this patch? Is it also
-> around 80 MB/s ?
+Arnd,
 
-It is around 20-30 MB/s. Same fio args except using --rw=write.
+Thank you. Looks good.
+
+-- james
+
+Signed-off-by: James Smart <james.smart@broadcom.com>
+
+
+On 2/27/2017 12:37 PM, Arnd Bergmann wrote:
+> dma_addr_t may be either u32 or u64, depending on the kernel configuration,
+> and we get a warning for the 32-bit case:
+>
+> drivers/scsi/lpfc/lpfc_nvme.c: In function 'lpfc_nvme_ls_req':
+> drivers/scsi/lpfc/lpfc_logmsg.h:52:52: error: format '%llu' expects argument of type 'long long unsigned int', but argument 11 has type 'dma_addr_t {aka unsigned int}' [-Werror=format=]
+> drivers/scsi/lpfc/lpfc_logmsg.h:52:52: error: format '%llu' expects argument of type 'long long unsigned int', but argument 12 has type 'dma_addr_t {aka unsigned int}' [-Werror=format=]
+> drivers/scsi/lpfc/lpfc_nvme.c: In function 'lpfc_nvme_ls_abort':
+> drivers/scsi/lpfc/lpfc_logmsg.h:52:52: error: format '%llu' expects argument of type 'long long unsigned int', but argument 11 has type 'dma_addr_t {aka unsigned int}' [-Werror=format=]
+> drivers/scsi/lpfc/lpfc_logmsg.h:52:52: error: format '%llu' expects argument of type 'long long unsigned int', but argument 12 has type 'dma_addr_t {aka unsigned int}' [-Werror=format=]
+>
+> printk has a special "%pad" format string that passes the dma address by
+> reference to solve this problem.
+>
+> Fixes: 01649561a8b4 ("scsi: lpfc: NVME Initiator: bind to nvme_fc api")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>   drivers/scsi/lpfc/lpfc_nvme.c | 12 ++++++------
+>   1 file changed, 6 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+> index 625b6589a34d..609a908ea9db 100644
+> --- a/drivers/scsi/lpfc/lpfc_nvme.c
+> +++ b/drivers/scsi/lpfc/lpfc_nvme.c
+> @@ -457,11 +457,11 @@ lpfc_nvme_ls_req(struct nvme_fc_local_port *pnvme_lport,
+>   	/* Expand print to include key fields. */
+>   	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
+>   			 "6051 ENTER.  lport %p, rport %p lsreq%p rqstlen:%d "
+> -			 "rsplen:%d %llux %llux\n",
+> +			 "rsplen:%d %pad %pad\n",
+>   			 pnvme_lport, pnvme_rport,
+>   			 pnvme_lsreq, pnvme_lsreq->rqstlen,
+> -			 pnvme_lsreq->rsplen, pnvme_lsreq->rqstdma,
+> -			 pnvme_lsreq->rspdma);
+> +			 pnvme_lsreq->rsplen, &pnvme_lsreq->rqstdma,
+> +			 &pnvme_lsreq->rspdma);
+>   
+>   	vport->phba->fc4NvmeLsRequests++;
+>   
+> @@ -527,11 +527,11 @@ lpfc_nvme_ls_abort(struct nvme_fc_local_port *pnvme_lport,
+>   	/* Expand print to include key fields. */
+>   	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_ABTS,
+>   			 "6040 ENTER.  lport %p, rport %p lsreq %p rqstlen:%d "
+> -			 "rsplen:%d %llux %llux\n",
+> +			 "rsplen:%d %pad %pad\n",
+>   			 pnvme_lport, pnvme_rport,
+>   			 pnvme_lsreq, pnvme_lsreq->rqstlen,
+> -			 pnvme_lsreq->rsplen, pnvme_lsreq->rqstdma,
+> -			 pnvme_lsreq->rspdma);
+> +			 pnvme_lsreq->rsplen, &pnvme_lsreq->rqstdma,
+> +			 &pnvme_lsreq->rspdma);
+>   
+>   	/*
+>   	 * Lock the ELS ring txcmplq and build a local list of all ELS IOs
