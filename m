@@ -1,57 +1,80 @@
-From: Xiubo Li <lixiubo@cmss.chinamobile.com>
-Subject: Re: [PATCH] target/user: Add daynmic growing data area featuresupport
-Date: Tue, 28 Feb 2017 09:22:05 +0800
-Message-ID: <983dc030-0352-05d8-9fc7-a6cdf2c59f8d@cmss.chinamobile.com>
-References: <1487323472-20481-1-git-send-email-lixiubo@cmss.chinamobile.com>
- <09891673-0d95-8b66-ddce-0ace7aea43d1@redhat.com>
- <58B4BCA5.2060002@redhat.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: SCSI regression in 4.11
+Date: Mon, 27 Feb 2017 19:16:49 -0700
+Message-ID: <a7e5d98b-474a-04bc-e09d-2c2f29f77382@kernel.dk>
+References: <20170227152955.1362aabb@xeon-e3>
+ <20170227171931.30b9f619@xeon-e3>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <58B4BCA5.2060002@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Mike Christie <mchristi@redhat.com>, Andy Grover <agrover@redhat.com>, nab@linux-iscsi.org, shli@kernel.org
-Cc: hch@lst.de, sheng@yasker.org, namei.unix@gmail.com, bart.vanassche@sandisk.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, Jianfei Hu <hujianfei@cmss.chinamobile.com>, Venky Shankar <vshankar@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pf0-f182.google.com ([209.85.192.182]:36514 "EHLO
+        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751547AbdB1CRJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Feb 2017 21:17:09 -0500
+Received: by mail-pf0-f182.google.com with SMTP id x66so842824pfb.3
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Feb 2017 18:16:56 -0800 (PST)
+In-Reply-To: <20170227171931.30b9f619@xeon-e3>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Stephen Hemminger <stephen@networkplumber.org>, Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "K. Y. Srinivasan" <kys@microsoft.com>, Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>, Josh Poulson <jopoulso@microsoft.com>, v-adsuho@microsoft.com
+Cc: linux-scsi@vger.kernel.org
 
-Hi Mike
-
-Thanks verrry much for your work and test cases.
-
-
->>>> From: Xiubo Li <lixiubo@cmss.chinamobile.com>
->>>>
->>>> Currently for the TCMU, the ring buffer size is fixed to 64K cmd
->>>> area + 1M data area, and this will be bottlenecks for high iops.
->> Hi Xiubo, thanks for your work.
+On 02/27/2017 06:19 PM, Stephen Hemminger wrote:
+> On Mon, 27 Feb 2017 15:30:30 -0800
+> Stephen Hemminger <stephen@networkplumber.org> wrote:
+> 
+>> Something in SCSI in 4.11 broke booting on Hyper-V Generation 2 VM with 8 VCPU and 4G of memory.
+>> Both Linus's current tree (4.11 pre-rc1) and linux-next fail in a similar manner. It looks like some error
+>> in SCSI device detection because there is only a single device.
 >>
->> daynmic -> dynamic
+>> The offending commit causing the regression is:
 >>
->> Have you benchmarked this patch and determined what kind of iops
->> improvement it allows? Do you see the data area reaching its
->> fully-allocated size?
+>> $ git bisect bad
+>> e9c787e65c0c36529745be47d490d998b4b6e589 is the first bad commit
+>> commit e9c787e65c0c36529745be47d490d998b4b6e589
+>> Author: Christoph Hellwig <hch@lst.de>
+>> Date:   Mon Jan 2 21:55:26 2017 +0300
 >>
-> I tested this patch with Venky's tcmu-runner rbd aio patches, with one
-> 10 gig iscsi session, and for pretty basic fio direct io (64 -256K
-> read/writes with a queue depth of 64 numjobs between 1 and 4) tests read
-> throughput goes from about 80 to 500 MB/s.
-Looks nice.
+>>     scsi: allocate scsi_cmnd structures as part of struct request
+>>     
+>>     Rely on the new block layer functionality to allocate additional driver
+>>     specific data behind struct request instead of implementing it in SCSI
+>>     itѕelf.
+>>     
+>>     Signed-off-by: Christoph Hellwig <hch@lst.de>
+>>     Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+>>     Reviewed-by: Hannes Reinecke <hare@suse.com>
+>>     Signed-off-by: Jens Axboe <axboe@fb.com>
+>>
+>> :040000 040000 6ff016fcdae227efeb19c1c301b17ccd7ea35da6 70d79f99d9b79ecf4dccbe067fc697219f5c78da M	drivers
+>> :040000 040000 a672ff52df8b2c211b3f98cae4a88d8a96ccde0b 1aaaed7de0994f597c7f8290c722a0b4a7789429 M	include
+>>
+>> I checked and tree is current and up to date and includes 
+>> commit ee5242360424b9b967454e9183767323d10cf985
+>> Author: Christoph Hellwig <hch@lst.de>
+>> Date:   Tue Feb 21 10:04:55 2017 +0100
+>>
+>>     scsi: zero per-cmd driver data before each I/O
+>>
+>> Kernel config is attached. It started with Ubuntu config, but then did localmodconfig and pruned
+>> out unnecessary stuff.
+>>
+> 
+> This problem I am seeing looks like the one addressed by:
+> 
+> Fixes: ee5242360424 ("scsi: zero per-cmd driver data before each I/O")
+> 
+> but that is already in linux-next.
+> 
+> Noticed another place where memset(of the data was being done not the extra bits.
+> Tried this, but didn't fix it either...
 
-> Write throughput is pretty
-> low at around 150 MB/s.
-What's the original write throughput without this patch? Is it also
-around 80 MB/s ?
+Yeah, that fix is already in Linus's tree. But it does look like a replica of
+what Dexuan reported. Out of curiosity, does it boot if you enable
+CONFIG_SCSI_MQ_DEFAULT?
 
-> I did not hit the fully allocated size. I did not drive a lot of IO though.
-Yes, if the cmd area won't hit the fully allocated size, the data area is
-also very hard to hit the fully allocated size.
+Christoph, looks like the previous fix wasn't complete...
 
-And for the 64MB cmd area size is a little larger for 1GB data area.
-
-Next, I will down it to smaller as needed.
-
-Thanks,
-
-BRs
-Xiubo
+-- 
+Jens Axboe
