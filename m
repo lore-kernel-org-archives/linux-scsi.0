@@ -1,163 +1,104 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] do we really need PG_error at all?
-Date: Wed, 01 Mar 2017 07:45:47 +1100
-Message-ID: <87h93eoxhg.fsf@notabene.neil.brown.name>
-References: <1488120164.2948.4.camel@redhat.com> <1488129033.4157.8.camel@HansenPartnership.com> <877f4cr7ew.fsf@notabene.neil.brown.name> <1488151856.4157.50.camel@HansenPartnership.com> <874lzgqy06.fsf@notabene.neil.brown.name> <1488208047.2876.6.camel@redhat.com> <DC27F5BA-BCCA-41FF-8D41-7BB99AA4DB26@dilger.ca> <87varvp5v1.fsf@notabene.neil.brown.name> <1488244308.7627.5.camel@redhat.com>
+From: Stephen Hemminger <stephen@networkplumber.org>
+Subject: Re: SCSI regression in 4.11
+Date: Tue, 28 Feb 2017 10:57:41 -0800
+Message-ID: <20170228105741.6253bb8a@xeon-e3>
+References: <20170227152955.1362aabb@xeon-e3>
+        <20170227171931.30b9f619@xeon-e3>
+        <20170228140812.GC20197@lst.de>
+        <c1949de0-8b95-e254-1bec-bcdae762890f@kernel.dk>
+        <1488301573.3046.9.camel@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1488244308.7627.5.camel@redhat.com>
-Sender: owner-linux-mm@kvack.org
-To: Jeff Layton <jlayton@redhat.com>, Andreas Dilger <adilger@dilger.ca>
-Cc: linux-block@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, lsf-pc <lsf-pc@lists.linuxfoundation.org>, Neil Brown <neilb@suse.de>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-mm <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pg0-f52.google.com ([74.125.83.52]:34344 "EHLO
+        mail-pg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752087AbdB1Uz1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Feb 2017 15:55:27 -0500
+Received: by mail-pg0-f52.google.com with SMTP id p5so10243668pga.1
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2017 12:54:20 -0800 (PST)
+In-Reply-To: <1488301573.3046.9.camel@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "K. Y. Srinivasan" <kys@microsoft.com>, Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>, Josh Poulson <jopoulso@microsoft.com>, v-adsuho@microsoft.com, linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>
 
---=-=-=
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+On Tue, 28 Feb 2017 09:06:13 -0800
+James Bottomley <jejb@linux.vnet.ibm.com> wrote:
 
-On Mon, Feb 27 2017, Jeff Layton wrote:
+> On Tue, 2017-02-28 at 08:32 -0700, Jens Axboe wrote:
+> > On 02/28/2017 07:08 AM, Christoph Hellwig wrote:  
+> > > On Mon, Feb 27, 2017 at 05:19:31PM -0800, Stephen Hemminger wrote:  
+> > > > Fixes: ee5242360424 ("scsi: zero per-cmd driver data before each
+> > > > I/O")
+> > > > 
+> > > > but that is already in linux-next.
+> > > > 
+> > > > Noticed another place where memset(of the data was being done not
+> > > > the extra bits.
+> > > > Tried this, but didn't fix it either...  
+> > > 
+> > > Are you using blk-mq or the legacy request code?  
+> > 
+> > Stephen doesn't have MQ set in the config he posted, I'm assuming he 
+> > didn't boot with scsi_mod.use_blk_mq=true. In a previous email, I 
+> > asked if turning on MQ makes a difference.  
+> 
+> OK, since we're not making much progress, Stephen, could you insert
+> some debugging into the storvsc driver?  The trace clearly shows we're
+> getting zeros back in the buffer when we should have data from the
+> initial scan.  Firstly, does the vmbus think it's transferring any data
+> for the INQUIRY and READ_CAPACITY commands (looks like
+> storvsc_command_completion() data_transfer_length)?  If it does,
+> there's probably an issue initialising the sg list.  If it doesn't,
+> we're probably sending bogus commands.
+> 
+> James
+> 
 
-> On Tue, 2017-02-28 at 10:32 +1100, NeilBrown wrote:
->> On Mon, Feb 27 2017, Andreas Dilger wrote:
->>=20
->> >=20
->> > My thought is that PG_error is definitely useful for applications to g=
-et
->> > correct errors back when doing write()/sync_file_range() so that they =
-know
->> > there is an error in the data that _they_ wrote, rather than receiving=
- an
->> > error for data that may have been written by another thread, and in tu=
-rn
->> > clearing the error from another thread so it *doesn't* know it had a w=
-rite
->> > error.
->>=20
->> It might be useful in that way, but it is not currently used that way.
->> Such usage would be a change in visible behaviour.
->>=20
->> sync_file_range() calls filemap_fdatawait_range(), which calls
->> filemap_check_errors().
->> If there have been any errors in the file recently, inside or outside
->> the range, the latter will return an error which will propagate up.
->>=20
->> >=20
->> > As for stray sync() clearing PG_error from underneath an application, =
-that
->> > shouldn't happen since filemap_fdatawait_keep_errors() doesn't clear e=
-rrors
->> > and is used by device flushing code (fdatawait_one_bdev(), wait_sb_ino=
-des()).
->>=20
->> filemap_fdatawait_keep_errors() calls __filemap_fdatawait_range() which
->> clears PG_error on every page.
->> What it doesn't do is call filemap_check_errors(), and so doesn't clear
->> AS_ENOSPC or AS_EIO.
->>=20
->>=20
->
-> I think it's helpful to get a clear idea of what happens now in the face
-> of errors and what we expect to happen, and I don't quite have that yet:
->
-> --------------------------8<-----------------------------
-> void page_endio(struct page *page, bool is_write, int err)
-> {
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (!is_write) {
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0if (!err) {
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0Set=
-PageUptodate(page);
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0} else {
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0Cle=
-arPageUptodate(page);
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0Set=
-PageError(page);
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0}
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0unlock_page(page);
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0} else {
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0if (err) {
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0Set=
-PageError(page);
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if =
-(page->mapping)
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0mapping_set_error(page->mappin=
-g, err);
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0}
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0end_page_writeback(page);
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0}
-> }
-> --------------------------8<-----------------------------
->
-> ...not everything uses page_endio, but it's a good place to look since
-> we have both flavors of error handling in one place.
->
-> On a write error, we SetPageError and set the error in the mapping.
->
-> What I'm not clear on is:
->
-> 1) what happens to the page at that point when we get a writeback error?
-> Does it just remain in-core and is allowed to service reads (assuming
-> that it was uptodate before)?
+The following code in storvsc looks suspicious
 
-Yes, it remains in core and can service reads.  It is no different from
-a page on which a write recent succeeded, except that the write didn't
-succeed so the contents of backing store might be different from the
-contents of the page.
+static void storvsc_on_io_completion(struct storvsc_device *stor_device,
+				  struct vstor_packet *vstor_packet,
+				  struct storvsc_cmd_request *request)
+{
+	struct vstor_packet *stor_pkt;
+	struct hv_device *device = stor_device->device;
 
->
-> Can I redirty it and have it retry the write? Is there standard behavior
-> for this or is it just up to the whim of the filesystem?
+	stor_pkt = &request->vstor_packet;
 
-Everything is at the whim of the filesystem, but I doubt if many differ
-from the above.
+	/*
+	 * The current SCSI handling on the host side does
+	 * not correctly handle:
+	 * INQUIRY command with page code parameter set to 0x80
+	 * MODE_SENSE command with cmd[2] == 0x1c
+	 *
+	 * Setup srb and scsi status so this won't be fatal.
+	 * We do this so we can distinguish truly fatal failues
+	 * (srb status == 0x4) and off-line the device in that case.
+	 */
 
-NeilBrown
+	if ((stor_pkt->vm_srb.cdb[0] == INQUIRY) ||
+	   (stor_pkt->vm_srb.cdb[0] == MODE_SENSE)) {
+		vstor_packet->vm_srb.scsi_status = 0;
+		vstor_packet->vm_srb.srb_status = SRB_STATUS_SUCCESS;
+	}
 
->
-> I'll probably have questions about the read side as well, but for now it
-> looks like it's mostly used in an ad-hoc way to communicate errors
-> across subsystems (block to fs layer, for instance).
-> --
-> Jeff Layton <jlayton@redhat.com>
+If SCSI layer is sending inquiry about devices to do scanning then wouldn't this
+workaround break things?  Maybe a better to fully test for the broken command.
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+Original commit was:
 
------BEGIN PGP SIGNATURE-----
+commit 4ed51a21c0f69e1379cf858fc21a9d9022bfe0e7
+Author: K. Y. Srinivasan <kys@microsoft.com>
+Date:   Sat Aug 27 11:31:26 2011 -0700
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAli14XsACgkQOeye3VZi
-gbkAxw/+KrG891w3m+XtN0xeZWu2kOV5dk3TBi4HFmfFjnuZZNRsNJM3XaHip8Xu
-7VjFrARSFgRGcXBlDIosIWDjvN033afHV5Nn7CFPBT3WyJB5IOTDK4290NwH83pg
-6l0y8LJWRdPUu3rsvb82XwzRVldnM0GxqEqJNhN8qAWjFjKJq+MhLdlHvTQ8IpRg
-ZuSIsUB6WbBrOFJTKuTSQiYEUs8sQ0vrMfk4x954Rm7hxLVRz+ohIPnzn/PF4dt8
-gOkeH7wISOaZa7DuWb6b92WvhvRalj9GH6F5D9QAWr0JPq5hAtpxblkppNTmWYmz
-lGYln6XZ8fvxZuZdo4J7Z5f3TwraOWf/BafLag46ni6qSVIQcXtMrvp+AIciYR24
-75W+ai6o5yvwQqzJjg03JPuX2wMK6gxZ5gDmLwRLXMnswHGYdSRLvYPmeVgRN1pZ
-NCsNqQWudPhwSl+glJLQmqjvIFMytrIQYEBxHN2zisZfjML4+wylLMj5K45h5/8H
-2hFIEa71pUl0HeouZkVTOWpKKbTjsjp2xIkyViez1fas/2wDsjr/7PqYT53/87Ms
-4hagW9McbsWGmPhfrWpKSEOPdbI0oNEQ9sOmal+6lSkp+Yt3wGRai+dLm1c3pzfd
-YdH3Y13mM0+m+N/8TULPmES7rGO1qnnPu6M8yOUG1YUi8FnwutI=
-=SfiP
------END PGP SIGNATURE-----
---=-=-=--
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+    Staging: hv: storvsc: Fixup srb and scsi status for INQUIRY and MODE_SENSE
+    
+    The current VHD handler on the Windows Host does not correctly handle
+    INQUIRY and MODE_SENSE commands with some options. Fixup srb_status
+    in these cases since the failure is not fatal.
+    
+    Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+    Signed-off-by: Haiyang Zhang <haiyangz@microsoft.com>
+    Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
