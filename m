@@ -1,237 +1,73 @@
-From: "Dmitry V. Levin" <ldv@altlinux.org>
-Subject: [PATCH 3/3] uapi: fix scsi/scsi_bsg_fc.h userspace compilation errors
-Date: Wed, 1 Mar 2017 03:12:38 +0300
-Message-ID: <20170301001238.GD11188@altlinux.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Satish Kharat <satishkh@cisco.com>
+Subject: [PATCH 1/1] fnic: Adding Check Condition counter to misc fnicstats
+Date: Tue, 28 Feb 2017 16:15:44 -0800
+Message-ID: <1488327344-8817-1-git-send-email-satishkh@cisco.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from alln-iport-5.cisco.com ([173.37.142.92]:24425 "EHLO
+        alln-iport-5.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751646AbdCAAaC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Feb 2017 19:30:02 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: satishkh@cisco.com, sebaddel@cisco.com
 
-Include <linux/types.h> and consistently use types it provides
-to fix the following scsi/scsi_bsg_fc.h userspace compilation errors:
+Just a simple counter of number of check conditions encountered on
+that host.
 
-/usr/include/scsi/scsi_bsg_fc.h:83:2: error: unknown type name 'uint8_t'
-  uint8_t  reserved;
-/usr/include/scsi/scsi_bsg_fc.h:86:2: error: unknown type name 'uint8_t'
-  uint8_t  port_id[3];
-/usr/include/scsi/scsi_bsg_fc.h:104:2: error: unknown type name 'uint8_t'
-  uint8_t  reserved;
-/usr/include/scsi/scsi_bsg_fc.h:107:2: error: unknown type name 'uint8_t'
-  uint8_t  port_id[3];
-/usr/include/scsi/scsi_bsg_fc.h:128:2: error: unknown type name 'uint8_t'
-  uint8_t  command_code;
-/usr/include/scsi/scsi_bsg_fc.h:131:2: error: unknown type name 'uint8_t'
-  uint8_t  port_id[3];
-/usr/include/scsi/scsi_bsg_fc.h:168:2: error: unknown type name 'uint32_t'
-  uint32_t status;  /* See FC_CTELS_STATUS_xxx */
-/usr/include/scsi/scsi_bsg_fc.h:172:3: error: unknown type name 'uint8_t'
-   uint8_t action;  /* fragment_id for CT REJECT */
-/usr/include/scsi/scsi_bsg_fc.h:173:3: error: unknown type name 'uint8_t'
-   uint8_t reason_code;
-/usr/include/scsi/scsi_bsg_fc.h:174:3: error: unknown type name 'uint8_t'
-   uint8_t reason_explanation;
-/usr/include/scsi/scsi_bsg_fc.h:175:3: error: unknown type name 'uint8_t'
-   uint8_t vendor_unique;
-/usr/include/scsi/scsi_bsg_fc.h:191:2: error: unknown type name 'uint8_t'
-  uint8_t  reserved;
-/usr/include/scsi/scsi_bsg_fc.h:194:2: error: unknown type name 'uint8_t'
-  uint8_t  port_id[3];
-/usr/include/scsi/scsi_bsg_fc.h:199:2: error: unknown type name 'uint32_t'
-  uint32_t preamble_word0; /* revision & IN_ID */
-/usr/include/scsi/scsi_bsg_fc.h:200:2: error: unknown type name 'uint32_t'
-  uint32_t preamble_word1; /* GS_Type, GS_SubType, Options, Rsvd */
-/usr/include/scsi/scsi_bsg_fc.h:201:2: error: unknown type name 'uint32_t'
-  uint32_t preamble_word2; /* Cmd Code, Max Size */
-/usr/include/scsi/scsi_bsg_fc.h:221:2: error: unknown type name 'uint64_t'
-  uint64_t vendor_id;
-/usr/include/scsi/scsi_bsg_fc.h:224:2: error: unknown type name 'uint32_t'
-  uint32_t vendor_cmd[0];
-/usr/include/scsi/scsi_bsg_fc.h:231:2: error: unknown type name 'uint32_t'
-  uint32_t vendor_rsp[0];
-/usr/include/scsi/scsi_bsg_fc.h:250:2: error: unknown type name 'uint8_t'
-  uint8_t els_code;
-/usr/include/scsi/scsi_bsg_fc.h:268:2: error: unknown type name 'uint32_t'
-  uint32_t preamble_word0; /* revision & IN_ID */
-/usr/include/scsi/scsi_bsg_fc.h:269:2: error: unknown type name 'uint32_t'
-  uint32_t preamble_word1; /* GS_Type, GS_SubType, Options, Rsvd */
-/usr/include/scsi/scsi_bsg_fc.h:270:2: error: unknown type name 'uint32_t'
-  uint32_t preamble_word2; /* Cmd Code, Max Size */
-/usr/include/scsi/scsi_bsg_fc.h:282:2: error: unknown type name 'uint32_t'
-  uint32_t msgcode;
-/usr/include/scsi/scsi_bsg_fc.h:306:2: error: unknown type name 'uint32_t'
-  uint32_t result;
-/usr/include/scsi/scsi_bsg_fc.h:309:2: error: unknown type name 'uint32_t'
-  uint32_t reply_payload_rcv_len;
-
-Signed-off-by: Dmitry V. Levin <ldv@altlinux.org>
+Signed-off-by: Satish Kharat <satishkh@cisco.com>
+Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
 ---
- include/uapi/scsi/scsi_bsg_fc.h | 54 +++++++++++++++++++++--------------------
- 1 file changed, 28 insertions(+), 26 deletions(-)
+ drivers/scsi/fnic/fnic_scsi.c  | 3 +++
+ drivers/scsi/fnic/fnic_stats.h | 1 +
+ drivers/scsi/fnic/fnic_trace.c | 2 ++
+ 3 files changed, 6 insertions(+)
 
-diff --git a/include/uapi/scsi/scsi_bsg_fc.h b/include/uapi/scsi/scsi_bsg_fc.h
-index 3031b90..2b0b851 100644
---- a/include/uapi/scsi/scsi_bsg_fc.h
-+++ b/include/uapi/scsi/scsi_bsg_fc.h
-@@ -22,6 +22,8 @@
- #ifndef SCSI_BSG_FC_H
- #define SCSI_BSG_FC_H
+diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+index 2544a37..d3b32da 100644
+--- a/drivers/scsi/fnic/fnic_scsi.c
++++ b/drivers/scsi/fnic/fnic_scsi.c
+@@ -919,6 +919,9 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
+ 		if (icmnd_cmpl->flags & FCPIO_ICMND_CMPL_RESID_UNDER)
+ 			xfer_len -= icmnd_cmpl->residual;
  
-+#include <linux/types.h>
++		if (icmnd_cmpl->scsi_status == SAM_STAT_CHECK_CONDITION)
++			atomic64_inc(&fnic_stats->misc_stats.check_condition);
 +
- /*
-  * This file intended to be included by both kernel and user space
-  */
-@@ -80,10 +82,10 @@
-  * with the transport upon completion of the login.
-  */
- struct fc_bsg_host_add_rport {
--	uint8_t		reserved;
-+	__u8	reserved;
- 
- 	/* FC Address Identier of the remote port to login to */
--	uint8_t		port_id[3];
-+	__u8	port_id[3];
- };
- 
- /* Response:
-@@ -101,10 +103,10 @@ struct fc_bsg_host_add_rport {
-  * remain logged in with the remote port.
-  */
- struct fc_bsg_host_del_rport {
--	uint8_t		reserved;
-+	__u8	reserved;
- 
- 	/* FC Address Identier of the remote port to logout of */
--	uint8_t		port_id[3];
-+	__u8	port_id[3];
- };
- 
- /* Response:
-@@ -125,10 +127,10 @@ struct fc_bsg_host_els {
- 	 * ELS Command Code being sent (must be the same as byte 0
- 	 * of the payload)
- 	 */
--	uint8_t 	command_code;
-+	__u8	command_code;
- 
- 	/* FC Address Identier of the remote port to send the ELS to */
--	uint8_t		port_id[3];
-+	__u8	port_id[3];
- };
- 
- /* Response:
-@@ -165,14 +167,14 @@ struct fc_bsg_ctels_reply {
- 	 * Note: x_RJT/BSY status will indicae that the rjt_data field
- 	 *   is valid and contains the reason/explanation values.
- 	 */
--	uint32_t	status;		/* See FC_CTELS_STATUS_xxx */
-+	__u32	status;			/* See FC_CTELS_STATUS_xxx */
- 
- 	/* valid if status is not FC_CTELS_STATUS_OK */
- 	struct	{
--		uint8_t	action;		/* fragment_id for CT REJECT */
--		uint8_t	reason_code;
--		uint8_t	reason_explanation;
--		uint8_t	vendor_unique;
-+		__u8	action;		/* fragment_id for CT REJECT */
-+		__u8	reason_code;
-+		__u8	reason_explanation;
-+		__u8	vendor_unique;
- 	} rjt_data;
- };
- 
-@@ -188,17 +190,17 @@ struct fc_bsg_ctels_reply {
-  * and whether to tear it down after the request.
-  */
- struct fc_bsg_host_ct {
--	uint8_t		reserved;
-+	__u8	reserved;
- 
- 	/* FC Address Identier of the remote port to send the ELS to */
--	uint8_t		port_id[3];
-+	__u8	port_id[3];
- 
- 	/*
- 	 * We need words 0-2 of the generic preamble for the LLD's
- 	 */
--	uint32_t	preamble_word0;	/* revision & IN_ID */
--	uint32_t	preamble_word1;	/* GS_Type, GS_SubType, Options, Rsvd */
--	uint32_t	preamble_word2;	/* Cmd Code, Max Size */
-+	__u32	preamble_word0;	/* revision & IN_ID */
-+	__u32	preamble_word1;	/* GS_Type, GS_SubType, Options, Rsvd */
-+	__u32	preamble_word2;	/* Cmd Code, Max Size */
- 
- };
- /* Response:
-@@ -218,17 +220,17 @@ struct fc_bsg_host_vendor {
- 	 * Identifies the vendor that the message is formatted for. This
- 	 * should be the recipient of the message.
- 	 */
--	uint64_t vendor_id;
-+	__u64	vendor_id;
- 
- 	/* start of vendor command area */
--	uint32_t vendor_cmd[0];
-+	__u32	vendor_cmd[0];
- };
- 
- /* Response:
-  */
- struct fc_bsg_host_vendor_reply {
- 	/* start of vendor response area */
--	uint32_t vendor_rsp[0];
-+	__u32	vendor_rsp[0];
- };
- 
- 
-@@ -247,7 +249,7 @@ struct fc_bsg_rport_els {
- 	 * ELS Command Code being sent (must be the same as
- 	 * byte 0 of the payload)
- 	 */
--	uint8_t els_code;
-+	__u8	els_code;
- };
- 
- /* Response:
-@@ -265,9 +267,9 @@ struct fc_bsg_rport_ct {
- 	/*
- 	 * We need words 0-2 of the generic preamble for the LLD's
- 	 */
--	uint32_t	preamble_word0;	/* revision & IN_ID */
--	uint32_t	preamble_word1;	/* GS_Type, GS_SubType, Options, Rsvd */
--	uint32_t	preamble_word2;	/* Cmd Code, Max Size */
-+	__u32	preamble_word0;	/* revision & IN_ID */
-+	__u32	preamble_word1;	/* GS_Type, GS_SubType, Options, Rsvd */
-+	__u32	preamble_word2;	/* Cmd Code, Max Size */
- };
- /* Response:
-  *
-@@ -279,7 +281,7 @@ struct fc_bsg_rport_ct {
- 
- /* request (CDB) structure of the sg_io_v4 */
- struct fc_bsg_request {
--	uint32_t msgcode;
-+	__u32	msgcode;
- 	union {
- 		struct fc_bsg_host_add_rport	h_addrport;
- 		struct fc_bsg_host_del_rport	h_delrport;
-@@ -303,10 +305,10 @@ struct fc_bsg_reply {
- 	 *    msg and status fields. The per-msgcode reply structure
- 	 *    will contain valid data.
- 	 */
--	uint32_t result;
-+	__u32	result;
- 
- 	/* If there was reply_payload, how much was recevied ? */
--	uint32_t reply_payload_rcv_len;
-+	__u32	reply_payload_rcv_len;
- 
- 	union {
- 		struct fc_bsg_host_vendor_reply		vendor_reply;
+ 		if (icmnd_cmpl->scsi_status == SAM_STAT_TASK_SET_FULL)
+ 			atomic64_inc(&fnic_stats->misc_stats.queue_fulls);
+ 		break;
+diff --git a/drivers/scsi/fnic/fnic_stats.h b/drivers/scsi/fnic/fnic_stats.h
+index 540cceb8..69acdac 100644
+--- a/drivers/scsi/fnic/fnic_stats.h
++++ b/drivers/scsi/fnic/fnic_stats.h
+@@ -88,6 +88,7 @@ struct misc_stats {
+ 	atomic64_t devrst_cpwq_alloc_failures;
+ 	atomic64_t io_cpwq_alloc_failures;
+ 	atomic64_t no_icmnd_itmf_cmpls;
++	atomic64_t check_condition;
+ 	atomic64_t queue_fulls;
+ 	atomic64_t rport_not_ready;
+ 	atomic64_t frame_errors;
+diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
+index 5a5fa01..ec20b3e 100644
+--- a/drivers/scsi/fnic/fnic_trace.c
++++ b/drivers/scsi/fnic/fnic_trace.c
+@@ -357,6 +357,7 @@ int fnic_get_stats_data(struct stats_debug_info *debug,
+ 		  "Number of Copy WQ Alloc Failures for Device Reset: %lld\n"
+ 		  "Number of Copy WQ Alloc Failures for IOs: %lld\n"
+ 		  "Number of no icmnd itmf Completions: %lld\n"
++		  "Number of Check Conditions encountered: %lld\n"
+ 		  "Number of QUEUE Fulls: %lld\n"
+ 		  "Number of rport not ready: %lld\n"
+ 		  "Number of receive frame errors: %lld\n",
+@@ -377,6 +378,7 @@ int fnic_get_stats_data(struct stats_debug_info *debug,
+ 			  &stats->misc_stats.devrst_cpwq_alloc_failures),
+ 		  (u64)atomic64_read(&stats->misc_stats.io_cpwq_alloc_failures),
+ 		  (u64)atomic64_read(&stats->misc_stats.no_icmnd_itmf_cmpls),
++		  (u64)atomic64_read(&stats->misc_stats.check_condition),
+ 		  (u64)atomic64_read(&stats->misc_stats.queue_fulls),
+ 		  (u64)atomic64_read(&stats->misc_stats.rport_not_ready),
+ 		  (u64)atomic64_read(&stats->misc_stats.frame_errors));
 -- 
-ldv
+2.5.5
