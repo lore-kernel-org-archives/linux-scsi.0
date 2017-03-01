@@ -1,49 +1,35 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: SCSI regression in 4.11
-Date: Tue, 28 Feb 2017 11:10:31 -0800
-Message-ID: <1488309031.3046.29.camel@linux.vnet.ibm.com>
-References: <20170227152955.1362aabb@xeon-e3>
-         <20170227171931.30b9f619@xeon-e3> <20170228140812.GC20197@lst.de>
-         <c1949de0-8b95-e254-1bec-bcdae762890f@kernel.dk>
-         <1488301573.3046.9.camel@linux.vnet.ibm.com>
-         <20170228104135.50f62736@xeon-e3>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 0/3] Separate zone requests from medium access requests
+Date: Tue, 28 Feb 2017 21:52:31 -0500
+Message-ID: <yq160jtu2s0.fsf@oracle.com>
+References: <20170228102535.15966-1-damien.lemoal@wdc.com>
+        <20170228160259.GA22755@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:44425 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751186AbdCACar (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 28 Feb 2017 21:30:47 -0500
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1SIwoCx043179
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2017 14:10:42 -0500
-Received: from e33.co.us.ibm.com (e33.co.us.ibm.com [32.97.110.151])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 28wdxxkpp1-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2017 14:10:42 -0500
-Received: from localhost
-        by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
-        Tue, 28 Feb 2017 12:10:41 -0700
-In-Reply-To: <20170228104135.50f62736@xeon-e3>
+Received: from userp1040.oracle.com ([156.151.31.81]:23772 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750957AbdCACxq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Feb 2017 21:53:46 -0500
+In-Reply-To: <20170228160259.GA22755@lst.de> (Christoph Hellwig's message of
+        "Tue, 28 Feb 2017 17:02:59 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stephen Hemminger <stephen@networkplumber.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "K. Y. Srinivasan" <kys@microsoft.com>, Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>, Josh Poulson <jopoulso@microsoft.com>, v-adsuho@microsoft.com, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Damien Le Moal <damien.lemoal@wdc.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>
 
-On Tue, 2017-02-28 at 10:41 -0800, Stephen Hemminger wrote:
-> [    1.652279] hv_storvsc:  IO cmd 0x12 0x0 0x0 scsi status 0x0 srb
-> status 0x20 length 36
-> [    1.652297] scsi host1: scsi scan: INQUIRY result too short (5),
-> using 36
+>>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
 
-This is definitive.  We sent the Inquiry command, we got 36 bytes of
-payload from hyperv (correct size), but when we tried to get the length
-from the data buffer of the command, we found zeros where it should
-have been (the length is the byte at offset 4 plus 5).  Wherever the
-inquiry data went it wasn't into the command buffer ... it's like we
-have some type of sg list setup error, but I can't find it.
+Christoph> I don't really like this too much - this is too many SCSI
+Christoph> specifics for the block layer to care.  Maybe using bios for
+Christoph> the zone ops was a mistake after all, and we should just have
+Christoph> operations in struct block_device instead..
 
-James
+Yeah, I'm afraid I don't like this either.
+
+Short term I still think we should adjust in sd. And then maybe longer
+term revisit whether these hybrid commands should be something other
+than bios.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
