@@ -1,49 +1,67 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: RE: [PATCH v3 00/14] qla2xxx: Bug Fixes and updates for target.
-Date: Tue, 28 Feb 2017 22:13:26 +0000
-Message-ID: <SN1PR0701MB18370E53A23289C5B3EE9D19F5560@SN1PR0701MB1837.namprd07.prod.outlook.com>
-References: <1487972263-3795-1-git-send-email-himanshu.madhani@cavium.com>
-         <SN1PR0701MB1837C94045F28B45F4171BDDF5560@SN1PR0701MB1837.namprd07.prod.outlook.com>
- <1488319763.2370.21.camel@sandisk.com>
+From: "Dmitry V. Levin" <ldv@altlinux.org>
+Subject: [PATCH 2/3] uapi: fix scsi/scsi_netlink_fc.h userspace compilation errors
+Date: Wed, 1 Mar 2017 03:12:22 +0300
+Message-ID: <20170301001222.GC11188@altlinux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1488319763.2370.21.camel@sandisk.com>
-Content-Language: en-US
-Sender: target-devel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+Consistently use types from linux/types.h to fix the following
+scsi/scsi_netlink_fc.h userspace compilation errors:
 
+/usr/include/scsi/scsi_netlink_fc.h:60:2: error: unknown type name 'uint64_t'
+  uint64_t seconds;
+/usr/include/scsi/scsi_netlink_fc.h:61:2: error: unknown type name 'uint64_t'
+  uint64_t vendor_id;
+/usr/include/scsi/scsi_netlink_fc.h:62:2: error: unknown type name 'uint16_t'
+  uint16_t host_no;
+/usr/include/scsi/scsi_netlink_fc.h:63:2: error: unknown type name 'uint16_t'
+  uint16_t event_datalen;
+/usr/include/scsi/scsi_netlink_fc.h:64:2: error: unknown type name 'uint32_t'
+  uint32_t event_num;
+/usr/include/scsi/scsi_netlink_fc.h:65:2: error: unknown type name 'uint32_t'
+  uint32_t event_code;
+/usr/include/scsi/scsi_netlink_fc.h:66:2: error: unknown type name 'uint32_t'
+  uint32_t event_data;
+/usr/include/scsi/scsi_netlink_fc.h:67:33: error: 'uint64_t' undeclared here (not in a function)
+ } __attribute__((aligned(sizeof(uint64_t))));
 
-> -----Original Message-----
-> From: Bart Van Assche [mailto:Bart.VanAssche@sandisk.com]
-> Sent: Tuesday, February 28, 2017 2:10 PM
-> To: Madhani, Himanshu <Himanshu.Madhani@cavium.com>; target-
-> devel@vger.kernel.org; nab@linux-iscsi.org
-> Cc: linux-scsi@vger.kernel.org; Malavali, Giridhar
-> <Giridhar.Malavali@cavium.com>
-> Subject: Re: [PATCH v3 00/14] qla2xxx: Bug Fixes and updates for target.
->=20
-> On Tue, 2017-02-28 at 22:00 +0000, Madhani, Himanshu wrote:
-> > Can we get some review comments for this series.
->=20
-> Hello Himanshu,
->=20
-> The merge window opened one week ago and is still open. Anyone who
-> contributes to the Linux kernel should know that patches should not be
-> posted during the merge window because it's a busy time for most kernel
-> contributors. Additionally, no feedback should be expected during the mer=
-ge
-> window for patches that are not bug fixes for changes that went in during
-> the merge window. Anyway, I'll have a look at these patches as soon as I
-> have the time.
->=20
-> Bart.
+Signed-off-by: Dmitry V. Levin <ldv@altlinux.org>
+---
+ include/uapi/scsi/scsi_netlink_fc.h | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-Sorry for the ignorance. I did not realize merge window was open.=20
-
-Thanks
-Himanshu
+diff --git a/include/uapi/scsi/scsi_netlink_fc.h b/include/uapi/scsi/scsi_netlink_fc.h
+index cbf76e4..2493a0f 100644
+--- a/include/uapi/scsi/scsi_netlink_fc.h
++++ b/include/uapi/scsi/scsi_netlink_fc.h
+@@ -57,14 +57,14 @@
+  */
+ struct fc_nl_event {
+ 	struct scsi_nl_hdr snlh;		/* must be 1st element ! */
+-	uint64_t seconds;
+-	uint64_t vendor_id;
+-	uint16_t host_no;
+-	uint16_t event_datalen;
+-	uint32_t event_num;
+-	uint32_t event_code;
+-	uint32_t event_data;
+-} __attribute__((aligned(sizeof(uint64_t))));
++	__u64 seconds;
++	__u64 vendor_id;
++	__u16 host_no;
++	__u16 event_datalen;
++	__u32 event_num;
++	__u32 event_code;
++	__u32 event_data;
++} __attribute__((aligned(sizeof(__u64))));
+ 
+ 
+ #endif /* SCSI_NETLINK_FC_H */
+-- 
+ldv
