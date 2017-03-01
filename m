@@ -1,58 +1,36 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [ANNOUNCE]: Broadcom (Emulex) FC Target driver - efct
-Date: Wed, 1 Mar 2017 10:40:57 +0100
-Message-ID: <482f9e21-4e3a-ba8d-3bf6-97f85fa29fcf@suse.de>
-References: <ced2ff0a-05ee-b85e-b41a-f912cab9e267@gmail.com>
- <fc019750-b054-d9f7-0d5e-e6c7128073d8@suse.de>
- <7ed64006-84cd-06a0-3894-6d635fdc435a@broadcom.com>
+From: Stephen Hemminger <stephen@networkplumber.org>
+Subject: Re: SCSI regression in 4.11
+Date: Wed, 1 Mar 2017 08:13:58 -0800
+Message-ID: <20170301081358.3440c134@xeon-e3>
+References: <20170227152955.1362aabb@xeon-e3>
+        <20170227171931.30b9f619@xeon-e3>
+        <20170228140812.GC20197@lst.de>
+        <c1949de0-8b95-e254-1bec-bcdae762890f@kernel.dk>
+        <1488301573.3046.9.camel@linux.vnet.ibm.com>
+        <20170228105741.6253bb8a@xeon-e3>
+        <1488325732.11610.9.camel@linux.vnet.ibm.com>
+        <20170228172532.280811ed@xeon-e3>
+        <1488349258.20321.11.camel@linux.vnet.ibm.com>
+        <20170228224845.1da358ee@xeon-e3>
+        <20170301155057.GA13167@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:57807 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751485AbdCAQnm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 1 Mar 2017 11:43:42 -0500
-In-Reply-To: <7ed64006-84cd-06a0-3894-6d635fdc435a@broadcom.com>
+Received: from mail-pf0-f181.google.com ([209.85.192.181]:35801 "EHLO
+        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751035AbdCAQrX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2017 11:47:23 -0500
+Received: by mail-pf0-f181.google.com with SMTP id j5so12650111pfb.2
+        for <linux-scsi@vger.kernel.org>; Wed, 01 Mar 2017 08:46:53 -0800 (PST)
+In-Reply-To: <20170301155057.GA13167@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@broadcom.com>, jsmart2021@gmail.com, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: James Bottomley <jejb@linux.vnet.ibm.com>, Jens Axboe <axboe@kernel.dk>, Linus Torvalds <torvalds@linux-foundation.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "K. Y. Srinivasan" <kys@microsoft.com>, Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>, Josh Poulson <jopoulso@microsoft.com>, v-adsuho@microsoft.com, linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>
 
-On 02/28/2017 07:14 PM, James Smart wrote:
-> 
-> On 2/28/2017 8:34 AM, Hannes Reinecke wrote:
->> Can you clarify these?
->> Are these 'just' resource allocation problems or something else, too?
-> 
-> Most are resource allocation - buffer pools, dma pools, pages for
-> resources, and hw resource allocation splits. However, async receive RQ
-> policies are a case where initiator and target have to share the policy
-> and perhaps a buffer pool, so they have to be careful. Another area is
-> in ABTS handling. Initiators typically leave things up to the hardware,
-> and do little if any ABTS handling. Most targets though, as CMD IU may
-> be received without an assign exchange context and be buffered until the
-> target is ready to do something, require that they handle ABTS's.  Some
-> of the target features, when enabled, dictate host ownership of ABTS
-> policy. So, if running I+T, it gets rather tricky.
-> 
-Ah, okay.
-However, I still would favour having both integrated into the same
-driver; otherwise we run into the tricky issue of having to manually
-unbind drivers from a given PCI device (or declare some PCI devices as
-target capable on a rather arbitrary manner).
-Can't it be modelled like the NVME-FC target, with having the same
-driver supporting all modes, but the admin having to decide which PCI
-function is doing what?
-(NB: What about SR-IOV? Are the resources shared across functions or
-does each function have its own set? If so than I'd be perfectly happy
-if we could set each _function_ to a given role, much like
-VirtualConnect does nowadays).
+Dexuan has reproduced the same problem and discovered that is related to whether virtual DVD is
+attached to the VM.  My VM had empty virtual DVD (offline) from the installation of the ISO.
+If the DVD device is removed then the VM boots.
 
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+This makes the problem less of a catastrophic but we still need to get to root cause.
