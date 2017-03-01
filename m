@@ -1,99 +1,27 @@
-From: Romain Perier <romain.perier@collabora.com>
-Subject: [PATCH v4 09/19] scsi: csiostor: Replace PCI pool old API
-Date: Wed,  1 Mar 2017 16:55:11 +0100
-Message-ID: <20170301155521.30281-10-romain.perier@collabora.com>
-References: <20170301155521.30281-1-romain.perier@collabora.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170301155521.30281-1-romain.perier@collabora.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>, Doug Ledford <dledford@redhat.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, jeffrey.t.kirsher@intel.com, "David S. Miller" <davem@davemloft.net>, stas.yakovlev@gmail.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Felipe Balbi <balbi@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Romain Perier <romain.perier@collabora.com>, Peter Senna Tschudin <peter.senna@collabora.co.uk>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: SCSI regression in 4.11
+Date: Wed, 1 Mar 2017 16:50:57 +0100
+Message-ID: <20170301155057.GA13167@lst.de>
+References: <20170227152955.1362aabb@xeon-e3> <20170227171931.30b9f619@xeon-e3> <20170228140812.GC20197@lst.de> <c1949de0-8b95-e254-1bec-bcdae762890f@kernel.dk> <1488301573.3046.9.camel@linux.vnet.ibm.com> <20170228105741.6253bb8a@xeon-e3> <1488325732.11610.9.camel@linux.vnet.ibm.com> <20170228172532.280811ed@xeon-e3> <1488349258.20321.11.camel@linux.vnet.ibm.com> <20170228224845.1da358ee@xeon-e3>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:52160 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751740AbdCAQI3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 1 Mar 2017 11:08:29 -0500
+Content-Disposition: inline
+In-Reply-To: <20170228224845.1da358ee@xeon-e3>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Stephen Hemminger <stephen@networkplumber.org>
+Cc: James Bottomley <jejb@linux.vnet.ibm.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "K. Y. Srinivasan" <kys@microsoft.com>, Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>, Josh Poulson <jopoulso@microsoft.com>, v-adsuho@microsoft.com, linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>
 
-The PCI pool API is deprecated. This commits replaces the PCI pool old
-API by the appropriated function with the DMA pool API. It also updates
-the name of some variables and the content of comments, accordingly.
+On Tue, Feb 28, 2017 at 10:48:45PM -0800, Stephen Hemminger wrote:
+> Let me know, I can run another test and dump more data.
 
-Signed-off-by: Romain Perier <romain.perier@collabora.com>
-Reviewed-by: Peter Senna Tschudin <peter.senna@collabora.com>
----
- drivers/scsi/csiostor/csio_hw.h   |  2 +-
- drivers/scsi/csiostor/csio_init.c | 11 ++++++-----
- drivers/scsi/csiostor/csio_scsi.c |  6 +++---
- 3 files changed, 10 insertions(+), 9 deletions(-)
+Could it be that we keep the old sense buffer values around because
+my commit change the way how sense buffers are handled.  A while ago
+I suggested this patch to fix it, so maybe you can try it:
 
-diff --git a/drivers/scsi/csiostor/csio_hw.h b/drivers/scsi/csiostor/csio_hw.h
-index 029bef8..55b04fc 100644
---- a/drivers/scsi/csiostor/csio_hw.h
-+++ b/drivers/scsi/csiostor/csio_hw.h
-@@ -465,7 +465,7 @@ struct csio_hw {
- 	struct csio_pport	pport[CSIO_MAX_PPORTS];	/* Ports (XGMACs) */
- 	struct csio_hw_params	params;			/* Hw parameters */
- 
--	struct pci_pool		*scsi_pci_pool;		/* PCI pool for SCSI */
-+	struct dma_pool		*scsi_dma_pool;		/* DMA pool for SCSI */
- 	mempool_t		*mb_mempool;		/* Mailbox memory pool*/
- 	mempool_t		*rnode_mempool;		/* rnode memory pool */
- 
-diff --git a/drivers/scsi/csiostor/csio_init.c b/drivers/scsi/csiostor/csio_init.c
-index dbe416f..292964c 100644
---- a/drivers/scsi/csiostor/csio_init.c
-+++ b/drivers/scsi/csiostor/csio_init.c
-@@ -485,9 +485,10 @@ csio_resource_alloc(struct csio_hw *hw)
- 	if (!hw->rnode_mempool)
- 		goto err_free_mb_mempool;
- 
--	hw->scsi_pci_pool = pci_pool_create("csio_scsi_pci_pool", hw->pdev,
--					    CSIO_SCSI_RSP_LEN, 8, 0);
--	if (!hw->scsi_pci_pool)
-+	hw->scsi_dma_pool = dma_pool_create("csio_scsi_dma_pool",
-+					    &hw->pdev->dev, CSIO_SCSI_RSP_LEN,
-+					    8, 0);
-+	if (!hw->scsi_dma_pool)
- 		goto err_free_rn_pool;
- 
- 	return 0;
-@@ -505,8 +506,8 @@ csio_resource_alloc(struct csio_hw *hw)
- static void
- csio_resource_free(struct csio_hw *hw)
- {
--	pci_pool_destroy(hw->scsi_pci_pool);
--	hw->scsi_pci_pool = NULL;
-+	dma_pool_destroy(hw->scsi_dma_pool);
-+	hw->scsi_dma_pool = NULL;
- 	mempool_destroy(hw->rnode_mempool);
- 	hw->rnode_mempool = NULL;
- 	mempool_destroy(hw->mb_mempool);
-diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
-index a1ff75f..dab0d3f 100644
---- a/drivers/scsi/csiostor/csio_scsi.c
-+++ b/drivers/scsi/csiostor/csio_scsi.c
-@@ -2445,7 +2445,7 @@ csio_scsim_init(struct csio_scsim *scm, struct csio_hw *hw)
- 
- 		/* Allocate Dma buffers for Response Payload */
- 		dma_buf = &ioreq->dma_buf;
--		dma_buf->vaddr = pci_pool_alloc(hw->scsi_pci_pool, GFP_KERNEL,
-+		dma_buf->vaddr = dma_pool_alloc(hw->scsi_dma_pool, GFP_KERNEL,
- 						&dma_buf->paddr);
- 		if (!dma_buf->vaddr) {
- 			csio_err(hw,
-@@ -2485,7 +2485,7 @@ csio_scsim_init(struct csio_scsim *scm, struct csio_hw *hw)
- 		ioreq = (struct csio_ioreq *)tmp;
- 
- 		dma_buf = &ioreq->dma_buf;
--		pci_pool_free(hw->scsi_pci_pool, dma_buf->vaddr,
-+		dma_pool_free(hw->scsi_dma_pool, dma_buf->vaddr,
- 			      dma_buf->paddr);
- 
- 		kfree(ioreq);
-@@ -2516,7 +2516,7 @@ csio_scsim_exit(struct csio_scsim *scm)
- 		ioreq = (struct csio_ioreq *)tmp;
- 
- 		dma_buf = &ioreq->dma_buf;
--		pci_pool_free(scm->hw->scsi_pci_pool, dma_buf->vaddr,
-+		dma_pool_free(scm->hw->scsi_dma_pool, dma_buf->vaddr,
- 			      dma_buf->paddr);
- 
- 		kfree(ioreq);
--- 
-2.9.3
+	http://git.infradead.org/users/hch/block.git/commitdiff/148cff67b401e2229c076c0ea418712654be77e4
