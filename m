@@ -1,33 +1,39 @@
-From: Omar Sandoval <osandov@osandov.com>
-Subject: Re: [PATCH] mpt3sas: Avoid sleeping in interrupt context
-Date: Wed, 1 Mar 2017 09:28:40 -0800
-Message-ID: <20170301172840.GB3486@vader.DHCP.thefacebook.com>
-References: <20170301170036.11540-1-bart.vanassche@sandisk.com>
- <20170301170458.GA3486@vader.DHCP.thefacebook.com>
- <1488388175.2699.7.camel@sandisk.com>
+From: Subhash Jadavani <subhashj@codeaurora.org>
+Subject: Re: [PATCH v2] scsi: ufs: Factor out ufshcd_read_desc_param
+Date: Wed, 01 Mar 2017 10:29:13 -0800
+Message-ID: <b3b74939fba413113eef30865bc6f2ba@codeaurora.org>
+References: <C8BF859FC3044844854B2CBA1ED115C11B067E@HASMSX106.ger.corp.intel.com>
+ <yq1k28bvvyu.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1488388175.2699.7.camel@sandisk.com>
-Sender: stable-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc: "sagi@grimberg.me" <sagi@grimberg.me>, "hch@lst.de" <hch@lst.de>, "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "Sreekanth.Reddy@broadcom.com" <Sreekanth.Reddy@broadcom.com>, "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:34080 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752111AbdCASkB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2017 13:40:01 -0500
+In-Reply-To: <yq1k28bvvyu.fsf@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "Potomski, MichalX" <michalx.potomski@intel.com>, "'vinholikatti@gmail.com'" <vinholikatti@gmail.com>, "'jejb@linux.vnet.ibm.com'" <jejb@linux.vnet.ibm.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "Janca, Grzegorz" <grzegorz.janca@intel.com>, "Mielczarek, SzymonX" <szymonx.mielczarek@intel.com>, linux-scsi-owner@vger.kernel.org
 
-On Wed, Mar 01, 2017 at 05:09:48PM +0000, Bart Van Assche wrote:
-> On Wed, 2017-03-01 at 09:04 -0800, Omar Sandoval wrote:
-> > Thanks, Bart, you can add
-> > 
-> > Tested-by: Omar Sandoval <osandov@fb.com>
+On 2017-02-27 19:24, Martin K. Petersen wrote:
+>>>>>> "Michal" == Potomski, MichalX <michalx.potomski@intel.com> writes:
 > 
-> Hello Omar,
+> Michal> Since in UFS 2.1 specification some of the descriptor lengths
+> Michal> differs from 2.0 specification and some devices, which are
+> Michal> reporting spec version 2.0 have different descriptor lengths we
+> Michal> can not rely on hardcoded values taken from 2.0
+> Michal> specification. This patch introduces reading these lengths per
+> Michal> each device from descriptor headers at probe time to ensure
+> Michal> their correctness.
 > 
-> Have you been able to test both code paths - scsi-mq enabled and scsi-mq
-> disabled?
-> 
-> Thanks,
-> 
-> Bart.
+> Subhash: I assume v2 still carries your Reviewed-by:?
 
-Just tried on blk-mq and I didn't get the splat, seems to be fine.
+Yes, v2 also looks good to me.
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
