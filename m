@@ -1,39 +1,59 @@
-From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2] libiscsi: add lock around task lists to fix list corruption regression
-Date: Tue, 28 Feb 2017 22:06:46 -0500
-Message-ID: <yq1wpc9snjt.fsf@oracle.com>
-References: <20170221173536.32024-1-cleech@redhat.com>
-	<20170228005836.12444-1-cleech@redhat.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: Re: [PATCH 0/3] Separate zone requests from medium access requests
+Date: Wed, 1 Mar 2017 12:02:14 +0900
+Message-ID: <6f1c8be1-9366-b32e-621e-8b05f22a1753@wdc.com>
+References: <20170228102535.15966-1-damien.lemoal@wdc.com>
+ <20170228160259.GA22755@lst.de> <yq160jtu2s0.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <open-iscsi+bncBDVIJONZ3YDRBTPV3DCQKGQE6TTFFLI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <20170228005836.12444-1-cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> (Chris Leech's message
-	of "Mon, 27 Feb 2017 16:58:36 -0800")
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, lduncan-IBi9RG/b67k@public.gmane.org, ilkka-/1wQRMveznE@public.gmane.org, gpiccoli-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, "# v3 . 15+" <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <yq160jtu2s0.fsf@oracle.com>
+Sender: linux-block-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Chris" == Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
+Martin,
 
-Chris> There's a rather long standing regression from the commit
-Chris> "libiscsi: Reduce locking contention in fast path"
+On 3/1/17 11:52, Martin K. Petersen wrote:
+>>>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
+> 
+> Christoph> I don't really like this too much - this is too many SCSI
+> Christoph> specifics for the block layer to care.  Maybe using bios for
+> Christoph> the zone ops was a mistake after all, and we should just have
+> Christoph> operations in struct block_device instead..
+> 
+> Yeah, I'm afraid I don't like this either.
+> 
+> Short term I still think we should adjust in sd. And then maybe longer
+> term revisit whether these hybrid commands should be something other
+> than bios.
 
-Applied to 4.11/scsi-fixes.
+OK. I will think about it.
+
+The problem remains that the mpt3sas driver needs fixing. As you
+suggest, we can do that in sd, or directly in mpt3sas.
+I tried to do a clean fix in sd, but always end up consuming a lot of
+aspirin because of all the potential corner cases to deal with. So I
+would prefer really just a fix in mpt3sas for now and think of the sd
+changes (if any) together with a redesign of the zone commands execution
+(not as BIOs).
+
+The file sd.h has the inline function scsi_medium_access_command()
+defined. We could move that to include/scsi/scsi.h (or scsi_proto.h) and
+use it in place of blk_rq_accesses_medium() in the mpt3sas driver to not
+force unaligned resid corrections for zone commands. Would that be
+acceptable ?
+
+Best regards.
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+Damien Le Moal, Ph.D.
+Sr. Manager, System Software Research Group,
+Western Digital Corporation
+Damien.LeMoal@wdc.com
+(+81) 0466-98-3593 (ext. 513593)
+1 kirihara-cho, Fujisawa,
+Kanagawa, 252-0888 Japan
+www.wdc.com, www.hgst.com
