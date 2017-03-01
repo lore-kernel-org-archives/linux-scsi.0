@@ -1,113 +1,32 @@
 From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCHv3 1/6] scsi_error: count medium access timeout only once
- per EH run
-Date: Wed, 1 Mar 2017 23:24:28 +0000
-Message-ID: <1488410641.2699.14.camel@sandisk.com>
+Subject: Re: [PATCHv3 3/6] scsi: make eh_eflags persistent
+Date: Wed, 1 Mar 2017 23:29:55 +0000
+Message-ID: <1488410983.2699.15.camel@sandisk.com>
 References: <1488359720-130871-1-git-send-email-hare@suse.de>
-         <1488359720-130871-2-git-send-email-hare@suse.de>
+         <1488359720-130871-4-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:61707 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751944AbdCAX2m (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2017 18:28:42 -0500
-In-Reply-To: <1488359720-130871-2-git-send-email-hare@suse.de>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:30844 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753739AbdCAXaZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2017 18:30:25 -0500
+In-Reply-To: <1488359720-130871-4-git-send-email-hare@suse.de>
 Content-Language: en-US
-Content-ID: <DBDA9565F10BFE41988867A629E90A4D@sandisk.com>
+Content-ID: <AA33FF82E67DD84CB0A5FF77DEF585A0@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "bblock@linux.vnet.ibm.com" <bblock@linux.vnet.ibm.com>, "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "emilne@redhat.com" <emilne@redhat.com>, "loberman@redhat.com" <loberman@redhat.com>, "maier@de.ibm.com" <maier@de.ibm.com>
+Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
 On Wed, 2017-03-01 at 10:15 +0100, Hannes Reinecke wrote:
-> The current medium access timeout counter will be increased for
-> each command, so if there are enough failed commands we'll hit
-> the medium access timeout for even a single failure.
+> To detect if a failed command has been retried we must not
+> clear scmd->eh_eflags when EH finishes.
+> The flag should be persistent throughout the lifetime
+> of the command.
+>=20
+> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
 
-This sentence describes multiple failed commands as a single failure.
-That's confusing to me. Did you perhaps intend "for a single device
-failure"?
-
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index f2cafae..cec439c 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -58,6 +58,7 @@
->  static int scsi_eh_try_stu(struct scsi_cmnd *scmd);
->  static int scsi_try_to_abort_cmd(struct scsi_host_template *,
->  				 struct scsi_cmnd *);
-> +static int scsi_eh_reset(struct scsi_cmnd *scmd);
-> =20
->  /* called with shost->host_lock held */
->  void scsi_eh_wakeup(struct Scsi_Host *shost)
-> @@ -249,6 +250,7 @@ int scsi_eh_scmd_add(struct scsi_cmnd *scmd, int eh_f=
-lag)
->  	if (scmd->eh_eflags & SCSI_EH_ABORT_SCHEDULED)
->  		eh_flag &=3D ~SCSI_EH_CANCEL_CMD;
->  	scmd->eh_eflags |=3D eh_flag;
-> +	scsi_eh_reset(scmd);
->  	list_add_tail(&scmd->eh_entry, &shost->eh_cmd_q);
->  	shost->host_failed++;
->  	scsi_eh_wakeup(shost);
-> @@ -1107,7 +1109,19 @@ static int scsi_eh_action(struct scsi_cmnd *scmd, =
-int rtn)
->  	if (!blk_rq_is_passthrough(scmd->request)) {
->  		struct scsi_driver *sdrv =3D scsi_cmd_to_driver(scmd);
->  		if (sdrv->eh_action)
-> -			rtn =3D sdrv->eh_action(scmd, rtn);
-> +			rtn =3D sdrv->eh_action(scmd, rtn, false);
-> +	}
-> +	return rtn;
-> +}
-> +
-> +static int scsi_eh_reset(struct scsi_cmnd *scmd)
-> +{
-> +	int rtn =3D SUCCESS;
-> +
-> +	if (!blk_rq_is_passthrough(scmd->request)) {
-> +		struct scsi_driver *sdrv =3D scsi_cmd_to_driver(scmd);
-> +		if (sdrv->eh_action)
-> +			rtn =3D sdrv->eh_action(scmd, rtn, true);
->  	}
->  	return rtn;
->  }
-
-Can this function be moved up such that we don't need a new forward declara=
-tion?
-
-> @@ -1689,18 +1689,28 @@ static int sd_pr_clear(struct block_device *bdev,=
- u64 key)
->   *	sd_eh_action - error handling callback
->   *	@scmd:		sd-issued command that has failed
->   *	@eh_disp:	The recovery disposition suggested by the midlayer
-> + *	@reset:		Reset medium access counter
-
-It seems to me that @reset does not trigger a reset of the medium access co=
-unter
-but rather of the variable that prevents the medium access error counter to=
- be
-incremented?
-
-> + *	recovery).
-> + *	We have to be careful to count a medium access failure only once
-> + *	per SCSI EH run; there might be several timed out commands which
-
-Did you perhaps intend "once per device per SCSI EH run"?
-
-> --- a/drivers/scsi/sd.h
-> +++ b/drivers/scsi/sd.h
-> @@ -106,6 +106,7 @@ struct scsi_disk {
->  	unsigned	rc_basis: 2;
->  	unsigned	zoned: 2;
->  	unsigned	urswrz : 1;
-> +	unsigned	medium_access_reset : 1;
-
-The name of this new member is confusing to me. How about using the name
-"ignore_medium_access_errors" instead? And since this is a boolean, how
-about using true and false in assignments to this variable?
-
-Thanks,
-
-Bart.=
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>=
