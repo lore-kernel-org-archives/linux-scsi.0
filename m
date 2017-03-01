@@ -1,75 +1,29 @@
-From: Satish Kharat <satishkh@cisco.com>
-Subject: [PATCH 1/1] fnic: Ratelimit printks to avoid flooding when vlan is not set by the switch.i
-Date: Tue, 28 Feb 2017 16:11:57 -0800
-Message-ID: <1488327117-8574-1-git-send-email-satishkh@cisco.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: qedi: fix missing return error code check on call to qedi_setup_int
+Date: Tue, 28 Feb 2017 21:56:13 -0500
+Message-ID: <yq11suhu2lu.fsf@oracle.com>
+References: <20170228110248.19290-1-colin.king@canonical.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from alln-iport-7.cisco.com ([173.37.142.94]:48188 "EHLO
-        alln-iport-7.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751473AbdCAD1O (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Feb 2017 22:27:14 -0500
+Received: from aserp1050.oracle.com ([141.146.126.70]:40042 "EHLO
+        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751497AbdCAD1Z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Feb 2017 22:27:25 -0500
+In-Reply-To: <20170228110248.19290-1-colin.king@canonical.com> (Colin King's
+        message of "Tue, 28 Feb 2017 11:02:48 +0000")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: satishkh@cisco.com, sebaddel@cisco.com, Satish Kharat <satishkh@satishkh.cisco.com>
+To: Colin King <colin.king@canonical.com>
+Cc: QLogic-Storage-Upstream@cavium.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Satish Kharat <satishkh@satishkh.cisco.com>
+>>>>> "Colin" == Colin King <colin.king@canonical.com> writes:
 
-This is to avoid the log from being filled with vlan discovery
-messages when there is no vlan configured on the switch.
+Colin> The call to qedi_setup_int is not updating the return code rc yet
+Colin> rc is being checked for an error. Fix this by assigning rc to the
+Colin> return code from the call to qedi_setup_int.
 
-Signed-off-by: Satish Kharat <satishkh@cisco.com>
-Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
----
- drivers/scsi/fnic/fnic_fcs.c | 21 +++++++++++++--------
- 1 file changed, 13 insertions(+), 8 deletions(-)
+Applied to 4.11/scsi-fixes.
 
-diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
-index 3b7da66..8d2d86e 100644
---- a/drivers/scsi/fnic/fnic_fcs.c
-+++ b/drivers/scsi/fnic/fnic_fcs.c
-@@ -342,8 +342,11 @@ static void fnic_fcoe_send_vlan_req(struct fnic *fnic)
- 
- 	fnic_fcoe_reset_vlans(fnic);
- 	fnic->set_vlan(fnic, 0);
--	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host,
--		  "Sending VLAN request...\n");
-+
-+	if (printk_ratelimit())
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host,
-+			  "Sending VLAN request...\n");
-+
- 	skb = dev_alloc_skb(sizeof(struct fip_vlan));
- 	if (!skb)
- 		return;
-@@ -1313,10 +1316,11 @@ void fnic_handle_fip_timer(struct fnic *fnic)
- 
- 	spin_lock_irqsave(&fnic->vlans_lock, flags);
- 	if (list_empty(&fnic->vlans)) {
--		/* no vlans available, try again */
--		FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host,
--			  "Start VLAN Discovery\n");
- 		spin_unlock_irqrestore(&fnic->vlans_lock, flags);
-+		/* no vlans available, try again */
-+		if (printk_ratelimit())
-+			FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host,
-+				  "Start VLAN Discovery\n");
- 		fnic_event_enq(fnic, FNIC_EVT_START_VLAN_DISC);
- 		return;
- 	}
-@@ -1332,10 +1336,11 @@ void fnic_handle_fip_timer(struct fnic *fnic)
- 		spin_unlock_irqrestore(&fnic->vlans_lock, flags);
- 		break;
- 	case FIP_VLAN_FAILED:
--		/* if all vlans are in failed state, restart vlan disc */
--		FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host,
--			  "Start VLAN Discovery\n");
- 		spin_unlock_irqrestore(&fnic->vlans_lock, flags);
-+		/* if all vlans are in failed state, restart vlan disc */
-+		if (printk_ratelimit())
-+			FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host,
-+				  "Start VLAN Discovery\n");
- 		fnic_event_enq(fnic, FNIC_EVT_START_VLAN_DISC);
- 		break;
- 	case FIP_VLAN_SENT:
 -- 
-2.5.5
+Martin K. Petersen	Oracle Linux Engineering
