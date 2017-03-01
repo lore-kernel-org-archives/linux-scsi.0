@@ -1,31 +1,60 @@
-From: Xiubo Li <lixiubo@cmss.chinamobile.com>
-Subject: Re: [PATCH] target/user: Add daynmic growing data area featuresupport
-Date: Wed, 1 Mar 2017 09:22:32 +0800
-Message-ID: <6a938be6-1ca6-ccb2-2fbe-c5fd323ce8bb@cmss.chinamobile.com>
-References: <1487323472-20481-1-git-send-email-lixiubo@cmss.chinamobile.com>
- <09891673-0d95-8b66-ddce-0ace7aea43d1@redhat.com>
- <58B4BCA5.2060002@redhat.com>
- <983dc030-0352-05d8-9fc7-a6cdf2c59f8d@cmss.chinamobile.com>
- <58B5BDC2.3040300@redhat.com>
+From: Jason Yan <yanaijie@huawei.com>
+Subject: [PATCH] libsas: add sas_unregister_devs_sas_addr in flutter case
+Date: Wed, 1 Mar 2017 09:23:29 +0800
+Message-ID: <1488331409-11336-1-git-send-email-yanaijie@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <58B5BDC2.3040300@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mike Christie <mchristi@redhat.com>, Andy Grover <agrover@redhat.com>, nab@linux-iscsi.org, shli@kernel.org
-Cc: hch@lst.de, sheng@yasker.org, namei.unix@gmail.com, bart.vanassche@sandisk.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, Jianfei Hu <hujianfei@cmss.chinamobile.com>, Venky Shankar <vshankar@redhat.com>
+Content-Type: text/plain
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, martin.petersen@oracle.com
+Cc: axboe@kernel.dk, linux-block@vger.kernel.org, miaoxie@huawei.com, fangwei1@huawei.com, wangyijing@huawei.com, zhaohongjiang@huawei.com, Jason Yan <yanaijie@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
+In sas_rediscover_dev when we call sas_get_phy_attached_dev to find the
+device is ok and when in the flutter case when we call
+sas_ex_phy_discover the device is gone, the sas_addr was changed to
+zero.
+[300247.584696] sas: ex 500e004aaaaaaa1f phy0 originated
+BROADCAST(CHANGE)
+[300247.663516] sas: ex 500e004aaaaaaa1f phy00:U:0 attached:
+0000000000000000 (no device)
+[300247.663518] sas: ex 500e004aaaaaaa1f phy 0x0 broadcast flutter
 
->>> Write throughput is pretty
->>> low at around 150 MB/s.
->> What's the original write throughput without this patch? Is it also
->> around 80 MB/s ?
-> It is around 20-30 MB/s. Same fio args except using --rw=write.
-Got it.
+When the device is up again, the libsas checked that the old sas_addr
+zero so just add a new device.
+[300247.846326] sas: Expander phy change count has changed
+[300247.846418] sas: ex 500e004aaaaaaa1f phy0 originated
+BROADCAST(CHANGE)
+[300247.846420] sas: ex 500e004aaaaaaa1f phy0 new device attached
+[300247.846519] sas: ex 500e004aaaaaaa1f phy00:U:A attached:
+500e004aaaaaaa00 (stp)
+[300247.875873] sas: done REVALIDATING DOMAIN on port 0, pid:12565, res
+0x0
 
-Thanks.
+This will cause a panic when these two device were destroyed. Fix this
+by call sas_unregister_devs_sas_addr in the flutter case if the sas_addr
+is zero.
 
-BRs
-Xiubo
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
+---
+ drivers/scsi/libsas/sas_expander.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 570b2cb..1a784d7 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -2032,6 +2032,11 @@ static int sas_rediscover_dev(struct domain_device *dev, int phy_id, bool last)
+ 
+ 		sas_ex_phy_discover(dev, phy_id);
+ 
++		if (!SAS_ADDR(phy->attached_sas_addr)) {
++			sas_unregister_devs_sas_addr(dev, phy_id, last);
++			return res;
++		}
++
+ 		if (ata_dev && phy->attached_dev_type == SAS_SATA_PENDING)
+ 			action = ", needs recovery";
+ 		SAS_DPRINTK("ex %016llx phy 0x%x broadcast flutter%s\n",
+-- 
+2.5.0
