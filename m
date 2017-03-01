@@ -1,73 +1,82 @@
 From: Satish Kharat <satishkh@cisco.com>
-Subject: [PATCH 1/1] fnic: Adding Check Condition counter to misc fnicstats
-Date: Tue, 28 Feb 2017 16:15:44 -0800
-Message-ID: <1488327344-8817-1-git-send-email-satishkh@cisco.com>
+Subject: [PATCH 1/1] fnic: Avoid false out-of-order detection for aborted command
+Date: Tue, 28 Feb 2017 16:15:12 -0800
+Message-ID: <1488327312-8750-1-git-send-email-satishkh@cisco.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from alln-iport-5.cisco.com ([173.37.142.92]:24425 "EHLO
-        alln-iport-5.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751646AbdCAAaC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Feb 2017 19:30:02 -0500
+Received: from rcdn-iport-1.cisco.com ([173.37.86.72]:28832 "EHLO
+        rcdn-iport-1.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751547AbdCAAtC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Feb 2017 19:49:02 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: satishkh@cisco.com, sebaddel@cisco.com
 
-Just a simple counter of number of check conditions encountered on
-that host.
+If SCSI-ML has already issued abort on a command i.e
+FNIC_IOREQ_ABTS_PENDING is set and we get a IO completion avoid
+this being flagged as out-of-order completion by setting the
+FNIC_IO_DONE flag in fnic_fcpio_icmnd_cmpl_handler
 
 Signed-off-by: Satish Kharat <satishkh@cisco.com>
 Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
 ---
- drivers/scsi/fnic/fnic_scsi.c  | 3 +++
- drivers/scsi/fnic/fnic_stats.h | 1 +
- drivers/scsi/fnic/fnic_trace.c | 2 ++
- 3 files changed, 6 insertions(+)
+ drivers/scsi/fnic/fnic_scsi.c | 40 ++++++++++++++++++----------------------
+ 1 file changed, 18 insertions(+), 22 deletions(-)
 
 diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-index 2544a37..d3b32da 100644
+index 2544a37..d851d89 100644
 --- a/drivers/scsi/fnic/fnic_scsi.c
 +++ b/drivers/scsi/fnic/fnic_scsi.c
-@@ -919,6 +919,9 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
- 		if (icmnd_cmpl->flags & FCPIO_ICMND_CMPL_RESID_UNDER)
- 			xfer_len -= icmnd_cmpl->residual;
+@@ -876,32 +876,28 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
  
-+		if (icmnd_cmpl->scsi_status == SAM_STAT_CHECK_CONDITION)
-+			atomic64_inc(&fnic_stats->misc_stats.check_condition);
+ 	/*
+ 	 *  if SCSI-ML has already issued abort on this command,
+-	 * ignore completion of the IO. The abts path will clean it up
++	 *  set completion of the IO. The abts path will clean it up
+ 	 */
+ 	if (CMD_STATE(sc) == FNIC_IOREQ_ABTS_PENDING) {
+-		spin_unlock_irqrestore(io_lock, flags);
 +
- 		if (icmnd_cmpl->scsi_status == SAM_STAT_TASK_SET_FULL)
- 			atomic64_inc(&fnic_stats->misc_stats.queue_fulls);
- 		break;
-diff --git a/drivers/scsi/fnic/fnic_stats.h b/drivers/scsi/fnic/fnic_stats.h
-index 540cceb8..69acdac 100644
---- a/drivers/scsi/fnic/fnic_stats.h
-+++ b/drivers/scsi/fnic/fnic_stats.h
-@@ -88,6 +88,7 @@ struct misc_stats {
- 	atomic64_t devrst_cpwq_alloc_failures;
- 	atomic64_t io_cpwq_alloc_failures;
- 	atomic64_t no_icmnd_itmf_cmpls;
-+	atomic64_t check_condition;
- 	atomic64_t queue_fulls;
- 	atomic64_t rport_not_ready;
- 	atomic64_t frame_errors;
-diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
-index 5a5fa01..ec20b3e 100644
---- a/drivers/scsi/fnic/fnic_trace.c
-+++ b/drivers/scsi/fnic/fnic_trace.c
-@@ -357,6 +357,7 @@ int fnic_get_stats_data(struct stats_debug_info *debug,
- 		  "Number of Copy WQ Alloc Failures for Device Reset: %lld\n"
- 		  "Number of Copy WQ Alloc Failures for IOs: %lld\n"
- 		  "Number of no icmnd itmf Completions: %lld\n"
-+		  "Number of Check Conditions encountered: %lld\n"
- 		  "Number of QUEUE Fulls: %lld\n"
- 		  "Number of rport not ready: %lld\n"
- 		  "Number of receive frame errors: %lld\n",
-@@ -377,6 +378,7 @@ int fnic_get_stats_data(struct stats_debug_info *debug,
- 			  &stats->misc_stats.devrst_cpwq_alloc_failures),
- 		  (u64)atomic64_read(&stats->misc_stats.io_cpwq_alloc_failures),
- 		  (u64)atomic64_read(&stats->misc_stats.no_icmnd_itmf_cmpls),
-+		  (u64)atomic64_read(&stats->misc_stats.check_condition),
- 		  (u64)atomic64_read(&stats->misc_stats.queue_fulls),
- 		  (u64)atomic64_read(&stats->misc_stats.rport_not_ready),
- 		  (u64)atomic64_read(&stats->misc_stats.frame_errors));
++		/*
++		 * set the FNIC_IO_DONE so that this doesn't get
++		 * flagged as 'out of order' if it was not aborted
++		 */
++		CMD_FLAGS(sc) |= FNIC_IO_DONE;
+ 		CMD_FLAGS(sc) |= FNIC_IO_ABTS_PENDING;
+-		switch (hdr_status) {
+-		case FCPIO_SUCCESS:
+-			CMD_FLAGS(sc) |= FNIC_IO_DONE;
+-			FNIC_SCSI_DBG(KERN_INFO, fnic->lport->host,
+-				  "icmnd_cmpl ABTS pending hdr status = %s "
+-				  "sc  0x%p scsi_status %x  residual %d\n",
+-				  fnic_fcpio_status_to_str(hdr_status), sc,
+-				  icmnd_cmpl->scsi_status,
+-				  icmnd_cmpl->residual);
+-			break;
+-		case FCPIO_ABORTED:
++		spin_unlock_irqrestore(io_lock, flags);
++		if(FCPIO_ABORTED == hdr_status)
+ 			CMD_FLAGS(sc) |= FNIC_IO_ABORTED;
+-			break;
+-		default:
+-			FNIC_SCSI_DBG(KERN_INFO, fnic->lport->host,
+-					  "icmnd_cmpl abts pending "
+-					  "hdr status = %s tag = 0x%x sc = 0x%p\n",
+-					  fnic_fcpio_status_to_str(hdr_status),
+-					  id, sc);
+-			break;
+-		}
++
++		FNIC_SCSI_DBG(KERN_INFO, fnic->lport->host,
++			"icmnd_cmpl abts pending "
++			  "hdr status = %s tag = 0x%x sc = 0x%p"
++			  "scsi_status = %x residual = %d\n",
++			  fnic_fcpio_status_to_str(hdr_status),
++			  id, sc,
++			  icmnd_cmpl->scsi_status,
++			  icmnd_cmpl->residual);
+ 		return;
+ 	}
+ 
 -- 
 2.5.5
