@@ -1,66 +1,75 @@
 From: Satish Kharat <satishkh@cisco.com>
-Subject: [PATCH 1/1] fnic: Fix for "Number of Active IOs" in fnicstats becoming negative
-Date: Tue, 28 Feb 2017 16:14:56 -0800
-Message-ID: <1488327296-8695-1-git-send-email-satishkh@cisco.com>
+Subject: [PATCH 1/1] fnic: Ratelimit printks to avoid flooding when vlan is not set by the switch.i
+Date: Tue, 28 Feb 2017 16:11:57 -0800
+Message-ID: <1488327117-8574-1-git-send-email-satishkh@cisco.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from alln-iport-4.cisco.com ([173.37.142.91]:56683 "EHLO
-        alln-iport-4.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751373AbdCADZB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Feb 2017 22:25:01 -0500
+Received: from alln-iport-7.cisco.com ([173.37.142.94]:48188 "EHLO
+        alln-iport-7.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751473AbdCAD1O (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Feb 2017 22:27:14 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: satishkh@cisco.com, sebaddel@cisco.com
+Cc: satishkh@cisco.com, sebaddel@cisco.com, Satish Kharat <satishkh@satishkh.cisco.com>
 
-Fixing the IO stats updation (Active IOs and IO completion) to
-fix "Number of Active IOs" becoming negative in the fnistats
-output.
+From: Satish Kharat <satishkh@satishkh.cisco.com>
+
+This is to avoid the log from being filled with vlan discovery
+messages when there is no vlan configured on the switch.
 
 Signed-off-by: Satish Kharat <satishkh@cisco.com>
 Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
 ---
- drivers/scsi/fnic/fnic_scsi.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+ drivers/scsi/fnic/fnic_fcs.c | 21 +++++++++++++--------
+ 1 file changed, 13 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-index 2544a37..ec820cb 100644
---- a/drivers/scsi/fnic/fnic_scsi.c
-+++ b/drivers/scsi/fnic/fnic_scsi.c
-@@ -1135,11 +1135,6 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
- 		else
- 			CMD_ABTS_STATUS(sc) = hdr_status;
+diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
+index 3b7da66..8d2d86e 100644
+--- a/drivers/scsi/fnic/fnic_fcs.c
++++ b/drivers/scsi/fnic/fnic_fcs.c
+@@ -342,8 +342,11 @@ static void fnic_fcoe_send_vlan_req(struct fnic *fnic)
  
--		atomic64_dec(&fnic_stats->io_stats.active_ios);
--		if (atomic64_read(&fnic->io_cmpl_skip))
--			atomic64_dec(&fnic->io_cmpl_skip);
--		else
--			atomic64_inc(&fnic_stats->io_stats.io_completions);
+ 	fnic_fcoe_reset_vlans(fnic);
+ 	fnic->set_vlan(fnic, 0);
+-	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host,
+-		  "Sending VLAN request...\n");
++
++	if (printk_ratelimit())
++		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host,
++			  "Sending VLAN request...\n");
++
+ 	skb = dev_alloc_skb(sizeof(struct fip_vlan));
+ 	if (!skb)
+ 		return;
+@@ -1313,10 +1316,11 @@ void fnic_handle_fip_timer(struct fnic *fnic)
  
- 		if (!(CMD_FLAGS(sc) & (FNIC_IO_ABORTED | FNIC_IO_DONE)))
- 			atomic64_inc(&misc_stats->no_icmnd_itmf_cmpls);
-@@ -1181,6 +1176,11 @@ static void fnic_fcpio_itmf_cmpl_handler(struct fnic *fnic,
- 					(((u64)CMD_FLAGS(sc) << 32) |
- 					CMD_STATE(sc)));
- 				sc->scsi_done(sc);
-+				atomic64_dec(&fnic_stats->io_stats.active_ios);
-+				if (atomic64_read(&fnic->io_cmpl_skip))
-+					atomic64_dec(&fnic->io_cmpl_skip);
-+				else
-+					atomic64_inc(&fnic_stats->io_stats.io_completions);
- 			}
- 		}
- 
-@@ -1970,6 +1970,11 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
- 	/* Call SCSI completion function to complete the IO */
- 		sc->result = (DID_ABORT << 16);
- 		sc->scsi_done(sc);
-+		atomic64_dec(&fnic_stats->io_stats.active_ios);
-+		if (atomic64_read(&fnic->io_cmpl_skip))
-+			atomic64_dec(&fnic->io_cmpl_skip);
-+		else
-+			atomic64_inc(&fnic_stats->io_stats.io_completions);
+ 	spin_lock_irqsave(&fnic->vlans_lock, flags);
+ 	if (list_empty(&fnic->vlans)) {
+-		/* no vlans available, try again */
+-		FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host,
+-			  "Start VLAN Discovery\n");
+ 		spin_unlock_irqrestore(&fnic->vlans_lock, flags);
++		/* no vlans available, try again */
++		if (printk_ratelimit())
++			FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host,
++				  "Start VLAN Discovery\n");
+ 		fnic_event_enq(fnic, FNIC_EVT_START_VLAN_DISC);
+ 		return;
  	}
- 
- fnic_abort_cmd_end:
+@@ -1332,10 +1336,11 @@ void fnic_handle_fip_timer(struct fnic *fnic)
+ 		spin_unlock_irqrestore(&fnic->vlans_lock, flags);
+ 		break;
+ 	case FIP_VLAN_FAILED:
+-		/* if all vlans are in failed state, restart vlan disc */
+-		FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host,
+-			  "Start VLAN Discovery\n");
+ 		spin_unlock_irqrestore(&fnic->vlans_lock, flags);
++		/* if all vlans are in failed state, restart vlan disc */
++		if (printk_ratelimit())
++			FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host,
++				  "Start VLAN Discovery\n");
+ 		fnic_event_enq(fnic, FNIC_EVT_START_VLAN_DISC);
+ 		break;
+ 	case FIP_VLAN_SENT:
 -- 
 2.5.5
