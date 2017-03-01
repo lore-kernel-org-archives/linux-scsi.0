@@ -1,224 +1,46 @@
-From: Romain Perier <romain.perier@collabora.com>
-Subject: [PATCH v4 12/19] scsi: mpt3sas: Replace PCI pool old API
-Date: Wed,  1 Mar 2017 16:55:14 +0100
-Message-ID: <20170301155521.30281-13-romain.perier@collabora.com>
-References: <20170301155521.30281-1-romain.perier@collabora.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170301155521.30281-1-romain.perier@collabora.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>, Doug Ledford <dledford@redhat.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, jeffrey.t.kirsher@intel.com, "David S. Miller" <davem@davemloft.net>, stas.yakovlev@gmail.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Felipe Balbi <balbi@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Romain Perier <romain.perier@collabora.com>, Peter Senna Tschudin <peter.senna@collabora.co.uk>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH v6] sd: Check for unaligned partial completion
+Date: Wed, 1 Mar 2017 16:16:43 +0000
+Message-ID: <1488384978.2699.1.camel@sandisk.com>
+References: <20170301082700.20413-1-damien.lemoal@wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:31189 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751963AbdCAQ0R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2017 11:26:17 -0500
+In-Reply-To: <20170301082700.20413-1-damien.lemoal@wdc.com>
+Content-Language: en-US
+Content-ID: <1FFD70736B1902479BACBC0A7C75ECEB@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "hare@suse.de" <hare@suse.de>, "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>, "hch@lst.de" <hch@lst.de>
 
-The PCI pool API is deprecated. This commits replaces the PCI pool old
-API by the appropriated function with the DMA pool API.
+On Wed, 2017-03-01 at 17:27 +0900, Damien Le Moal wrote:
+> Commit <f2e767bb5d6e> ("mpt3sas: Force request partial completion
+> alignment") was not considering the case of commands not operating on
+> logical block size units (e.g. REQ_OP_ZONE_REPORT and its 64B aligned
+> partial replies). In this case, forcing alignment of resid to the
+> device logical block size can break the command result, e.g. in the
+> case of REQ_OP_ZONE_REPORT, the exact number of zone reported by the
+> device.
+>=20
+> Move the partial completion alignement check of mpt3sas to a generic
+> implementation in sd_done(). The check is added within the default
+> section of the initial req_op() switch case so that the report and
+> reset zone commands are ignored. In addition, as sd_done() is not
+> called for passthrough requests, resid corrections are not done as
+> intended by the initial mpt3sas patch.
+>=20
+> Fixes: f2e767bb5d6e ("mpt3sas: Force request partial completion alignment=
+")
+> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 
-Signed-off-by: Romain Perier <romain.perier@collabora.com>
-Reviewed-by: Peter Senna Tschudin <peter.senna@collabora.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c | 73 +++++++++++++++++--------------------
- 1 file changed, 34 insertions(+), 39 deletions(-)
+We want this patch to be included in the v4.10.x stable kernels so I think
+that a "Cc: <stable@vger.kernel.org>" tag is needed. Otherwise this patch
+looks fine to me. Hence:
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 5b7aec5..5ae1c23 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -3200,9 +3200,8 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 	}
- 
- 	if (ioc->sense) {
--		pci_pool_free(ioc->sense_dma_pool, ioc->sense, ioc->sense_dma);
--		if (ioc->sense_dma_pool)
--			pci_pool_destroy(ioc->sense_dma_pool);
-+		dma_pool_free(ioc->sense_dma_pool, ioc->sense, ioc->sense_dma);
-+		dma_pool_destroy(ioc->sense_dma_pool);
- 		dexitprintk(ioc, pr_info(MPT3SAS_FMT
- 			"sense_pool(0x%p): free\n",
- 			ioc->name, ioc->sense));
-@@ -3210,9 +3209,8 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 	}
- 
- 	if (ioc->reply) {
--		pci_pool_free(ioc->reply_dma_pool, ioc->reply, ioc->reply_dma);
--		if (ioc->reply_dma_pool)
--			pci_pool_destroy(ioc->reply_dma_pool);
-+		dma_pool_free(ioc->reply_dma_pool, ioc->reply, ioc->reply_dma);
-+		dma_pool_destroy(ioc->reply_dma_pool);
- 		dexitprintk(ioc, pr_info(MPT3SAS_FMT
- 			"reply_pool(0x%p): free\n",
- 			ioc->name, ioc->reply));
-@@ -3220,10 +3218,9 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 	}
- 
- 	if (ioc->reply_free) {
--		pci_pool_free(ioc->reply_free_dma_pool, ioc->reply_free,
-+		dma_pool_free(ioc->reply_free_dma_pool, ioc->reply_free,
- 		    ioc->reply_free_dma);
--		if (ioc->reply_free_dma_pool)
--			pci_pool_destroy(ioc->reply_free_dma_pool);
-+		dma_pool_destroy(ioc->reply_free_dma_pool);
- 		dexitprintk(ioc, pr_info(MPT3SAS_FMT
- 			"reply_free_pool(0x%p): free\n",
- 			ioc->name, ioc->reply_free));
-@@ -3234,7 +3231,7 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 		do {
- 			rps = &ioc->reply_post[i];
- 			if (rps->reply_post_free) {
--				pci_pool_free(
-+				dma_pool_free(
- 				    ioc->reply_post_free_dma_pool,
- 				    rps->reply_post_free,
- 				    rps->reply_post_free_dma);
-@@ -3246,8 +3243,7 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 		} while (ioc->rdpq_array_enable &&
- 			   (++i < ioc->reply_queue_count));
- 
--		if (ioc->reply_post_free_dma_pool)
--			pci_pool_destroy(ioc->reply_post_free_dma_pool);
-+		dma_pool_destroy(ioc->reply_post_free_dma_pool);
- 		kfree(ioc->reply_post);
- 	}
- 
-@@ -3268,12 +3264,11 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 	if (ioc->chain_lookup) {
- 		for (i = 0; i < ioc->chain_depth; i++) {
- 			if (ioc->chain_lookup[i].chain_buffer)
--				pci_pool_free(ioc->chain_dma_pool,
-+				dma_pool_free(ioc->chain_dma_pool,
- 				    ioc->chain_lookup[i].chain_buffer,
- 				    ioc->chain_lookup[i].chain_buffer_dma);
- 		}
--		if (ioc->chain_dma_pool)
--			pci_pool_destroy(ioc->chain_dma_pool);
-+		dma_pool_destroy(ioc->chain_dma_pool);
- 		free_pages((ulong)ioc->chain_lookup, ioc->chain_pages);
- 		ioc->chain_lookup = NULL;
- 	}
-@@ -3448,23 +3443,23 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 			ioc->name);
- 		goto out;
- 	}
--	ioc->reply_post_free_dma_pool = pci_pool_create("reply_post_free pool",
--	    ioc->pdev, sz, 16, 0);
-+	ioc->reply_post_free_dma_pool = dma_pool_create("reply_post_free pool",
-+	    &ioc->pdev->dev, sz, 16, 0);
- 	if (!ioc->reply_post_free_dma_pool) {
- 		pr_err(MPT3SAS_FMT
--		 "reply_post_free pool: pci_pool_create failed\n",
-+		 "reply_post_free pool: dma_pool_create failed\n",
- 		 ioc->name);
- 		goto out;
- 	}
- 	i = 0;
- 	do {
- 		ioc->reply_post[i].reply_post_free =
--		    pci_pool_alloc(ioc->reply_post_free_dma_pool,
-+		    dma_pool_alloc(ioc->reply_post_free_dma_pool,
- 		    GFP_KERNEL,
- 		    &ioc->reply_post[i].reply_post_free_dma);
- 		if (!ioc->reply_post[i].reply_post_free) {
- 			pr_err(MPT3SAS_FMT
--			"reply_post_free pool: pci_pool_alloc failed\n",
-+			"reply_post_free pool: dma_pool_alloc failed\n",
- 			ioc->name);
- 			goto out;
- 		}
-@@ -3579,15 +3574,15 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 			ioc->name);
- 		goto out;
- 	}
--	ioc->chain_dma_pool = pci_pool_create("chain pool", ioc->pdev,
-+	ioc->chain_dma_pool = dma_pool_create("chain pool", &ioc->pdev->dev,
- 	    ioc->chain_segment_sz, 16, 0);
- 	if (!ioc->chain_dma_pool) {
--		pr_err(MPT3SAS_FMT "chain_dma_pool: pci_pool_create failed\n",
-+		pr_err(MPT3SAS_FMT "chain_dma_pool: dma_pool_create failed\n",
- 			ioc->name);
- 		goto out;
- 	}
- 	for (i = 0; i < ioc->chain_depth; i++) {
--		ioc->chain_lookup[i].chain_buffer = pci_pool_alloc(
-+		ioc->chain_lookup[i].chain_buffer = dma_pool_alloc(
- 		    ioc->chain_dma_pool , GFP_KERNEL,
- 		    &ioc->chain_lookup[i].chain_buffer_dma);
- 		if (!ioc->chain_lookup[i].chain_buffer) {
-@@ -3632,17 +3627,17 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 
- 	/* sense buffers, 4 byte align */
- 	sz = ioc->scsiio_depth * SCSI_SENSE_BUFFERSIZE;
--	ioc->sense_dma_pool = pci_pool_create("sense pool", ioc->pdev, sz, 4,
--	    0);
-+	ioc->sense_dma_pool = dma_pool_create("sense pool", &ioc->pdev->dev, sz,
-+					      4, 0);
- 	if (!ioc->sense_dma_pool) {
--		pr_err(MPT3SAS_FMT "sense pool: pci_pool_create failed\n",
-+		pr_err(MPT3SAS_FMT "sense pool: dma_pool_create failed\n",
- 		    ioc->name);
- 		goto out;
- 	}
--	ioc->sense = pci_pool_alloc(ioc->sense_dma_pool , GFP_KERNEL,
-+	ioc->sense = dma_pool_alloc(ioc->sense_dma_pool, GFP_KERNEL,
- 	    &ioc->sense_dma);
- 	if (!ioc->sense) {
--		pr_err(MPT3SAS_FMT "sense pool: pci_pool_alloc failed\n",
-+		pr_err(MPT3SAS_FMT "sense pool: dma_pool_alloc failed\n",
- 		    ioc->name);
- 		goto out;
- 	}
-@@ -3656,17 +3651,17 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 
- 	/* reply pool, 4 byte align */
- 	sz = ioc->reply_free_queue_depth * ioc->reply_sz;
--	ioc->reply_dma_pool = pci_pool_create("reply pool", ioc->pdev, sz, 4,
--	    0);
-+	ioc->reply_dma_pool = dma_pool_create("reply pool", &ioc->pdev->dev, sz,
-+					      4, 0);
- 	if (!ioc->reply_dma_pool) {
--		pr_err(MPT3SAS_FMT "reply pool: pci_pool_create failed\n",
-+		pr_err(MPT3SAS_FMT "reply pool: dma_pool_create failed\n",
- 		    ioc->name);
- 		goto out;
- 	}
--	ioc->reply = pci_pool_alloc(ioc->reply_dma_pool , GFP_KERNEL,
-+	ioc->reply = dma_pool_alloc(ioc->reply_dma_pool, GFP_KERNEL,
- 	    &ioc->reply_dma);
- 	if (!ioc->reply) {
--		pr_err(MPT3SAS_FMT "reply pool: pci_pool_alloc failed\n",
-+		pr_err(MPT3SAS_FMT "reply pool: dma_pool_alloc failed\n",
- 		    ioc->name);
- 		goto out;
- 	}
-@@ -3682,17 +3677,17 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 
- 	/* reply free queue, 16 byte align */
- 	sz = ioc->reply_free_queue_depth * 4;
--	ioc->reply_free_dma_pool = pci_pool_create("reply_free pool",
--	    ioc->pdev, sz, 16, 0);
-+	ioc->reply_free_dma_pool = dma_pool_create("reply_free pool",
-+	    &ioc->pdev->dev, sz, 16, 0);
- 	if (!ioc->reply_free_dma_pool) {
--		pr_err(MPT3SAS_FMT "reply_free pool: pci_pool_create failed\n",
-+		pr_err(MPT3SAS_FMT "reply_free pool: dma_pool_create failed\n",
- 			ioc->name);
- 		goto out;
- 	}
--	ioc->reply_free = pci_pool_alloc(ioc->reply_free_dma_pool , GFP_KERNEL,
-+	ioc->reply_free = dma_pool_alloc(ioc->reply_free_dma_pool, GFP_KERNEL,
- 	    &ioc->reply_free_dma);
- 	if (!ioc->reply_free) {
--		pr_err(MPT3SAS_FMT "reply_free pool: pci_pool_alloc failed\n",
-+		pr_err(MPT3SAS_FMT "reply_free pool: dma_pool_alloc failed\n",
- 			ioc->name);
- 		goto out;
- 	}
-@@ -3710,7 +3705,7 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 	    ioc->config_page_sz, &ioc->config_page_dma);
- 	if (!ioc->config_page) {
- 		pr_err(MPT3SAS_FMT
--			"config page: pci_pool_alloc failed\n",
-+			"config page: dma_pool_alloc failed\n",
- 			ioc->name);
- 		goto out;
- 	}
--- 
-2.9.3
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>=
