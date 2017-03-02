@@ -1,35 +1,39 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] scsi: ufs: Factor out ufshcd_read_desc_param
-Date: Wed, 01 Mar 2017 21:44:29 -0500
-Message-ID: <yq1tw7cqtwy.fsf@oracle.com>
-References: <C8BF859FC3044844854B2CBA1ED115C11B067E@HASMSX106.ger.corp.intel.com>
+Subject: Re: [PATCH v6] sd: Check for unaligned partial completion
+Date: Wed, 01 Mar 2017 21:48:01 -0500
+Message-ID: <yq1poi0qtr2.fsf@oracle.com>
+References: <20170301082700.20413-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1050.oracle.com ([141.146.126.70]:17659 "EHLO
+Received: from aserp1050.oracle.com ([141.146.126.70]:17845 "EHLO
         aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751055AbdCBCro (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2017 21:47:44 -0500
-In-Reply-To: <C8BF859FC3044844854B2CBA1ED115C11B067E@HASMSX106.ger.corp.intel.com>
-        (MichalX Potomski's message of "Thu, 23 Feb 2017 09:05:30 +0000")
+        with ESMTP id S1751499AbdCBCtU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2017 21:49:20 -0500
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69])
+        by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v222nEAV031776
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-scsi@vger.kernel.org>; Thu, 2 Mar 2017 02:49:14 GMT
+In-Reply-To: <20170301082700.20413-1-damien.lemoal@wdc.com> (Damien Le Moal's
+        message of "Wed, 1 Mar 2017 17:27:00 +0900")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Potomski, MichalX" <michalx.potomski@intel.com>
-Cc: "'vinholikatti@gmail.com'" <vinholikatti@gmail.com>, "'subhashj@codeaurora.org'" <subhashj@codeaurora.org>, "'jejb@linux.vnet.ibm.com'" <jejb@linux.vnet.ibm.com>, "'martin.petersen@oracle.com'" <martin.petersen@oracle.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "Janca, Grzegorz" <grzegorz.janca@intel.com>, "Mielczarek, SzymonX" <szymonx.mielczarek@intel.com>
+To: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, Bart Van Assche <bart.vanassche@sandisk.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
 
->>>>> "Michal'" == Potomski, MichalX <michalx.potomski@intel.com> writes:
+>>>>> "Damien" == Damien Le Moal <damien.lemoal@wdc.com> writes:
 
-Michal'> Since in UFS 2.1 specification some of the descriptor lengths
-Michal'> differs from 2.0 specification and some devices, which are
-Michal'> reporting spec version 2.0 have different descriptor lengths we
-Michal'> can not rely on hardcoded values taken from 2.0
-Michal'> specification. This patch introduces reading these lengths per
-Michal'> each device from descriptor headers at probe time to ensure
-Michal'> their correctness.
+Damien,
 
-Applied to 4.11/scsi-fixes.
+Damien> Move the partial completion alignement check of mpt3sas to a
+Damien> generic implementation in sd_done(). The check is added within
+Damien> the default section of the initial req_op() switch case so that
+Damien> the report and reset zone commands are ignored. In addition, as
+Damien> sd_done() is not called for passthrough requests, resid
+Damien> corrections are not done as intended by the initial mpt3sas
+Damien> patch.
 
-Thanks!
+Thanks! Applied to 4.11/scsi-fixes with a Cc: to stable.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
