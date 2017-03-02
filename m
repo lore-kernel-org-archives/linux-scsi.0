@@ -1,92 +1,30 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH v3 00/14] qla2xxx: Bug Fixes and updates for target.
-Date: Wed, 01 Mar 2017 23:24:43 -0800
-Message-ID: <1488439483.21712.84.camel@haakon3.risingtidesystems.com>
-References: <1487972263-3795-1-git-send-email-himanshu.madhani@cavium.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] mpt3sas: Avoid sleeping in interrupt context
+Date: Wed, 01 Mar 2017 21:53:42 -0500
+Message-ID: <yq1lgsoqthl.fsf@oracle.com>
+References: <20170301170036.11540-1-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:42325 "EHLO
-        linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754354AbdCBIqX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2017 03:46:23 -0500
-In-Reply-To: <1487972263-3795-1-git-send-email-himanshu.madhani@cavium.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20170301170036.11540-1-bart.vanassche@sandisk.com> (Bart Van
+        Assche's message of "Wed, 1 Mar 2017 09:00:36 -0800")
+Sender: stable-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Omar Sandoval <osandov@osandov.com>, Hannes Reinecke <hare@suse.com>, Sagi Grimberg <sagi@grimberg.me>, Christoph Hellwig <hch@lst.de>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>, "# v4 . 10+" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@cavium.com>
-Cc: target-devel@vger.kernel.org, Bart.VanAssche@sandisk.com, giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org
 
-Hi Himanshu & Co,
+>>>>> "Bart" == Bart Van Assche <bart.vanassche@sandisk.com> writes:
 
-On Fri, 2017-02-24 at 13:37 -0800, Himanshu Madhani wrote:
-> Hi Nic,
-> 
-> Please consider this series for inclusion in target-pending.
-> 
+Bart> Commit 669f044170d8 ("scsi: srp_transport: Move queuecommand()
+Bart> wait code to SCSI core") can make scsi_internal_device_block()
+Bart> sleep.  However, the mpt3sas driver can call this function from an
+Bart> interrupt handler. Hence add a second argument to
+Bart> scsi_internal_device_block() that restores the old behavior of
+Bart> this function for the mpt3sas handler.
 
-This is a little late to include for v4.11-rc1, but considering the
-number of bug-fixes I'm OK to merge it post -rc1.
+Applied to 4.11/scsi-fixes.
 
-> This series contains following changes.
-> 
-> o Fix for the deadlock because of inconsistent lock usage reported by you.
-> o Added patch to submit non-critical MBX command via IOCB path.
-> o Improved T10-DIF/PI handling with target stack.
-> o Changed scsi host lookup method.
-> o Some minor bug fixes.
-> 
-> Changes from v2 --> v3
-> 
-> o Updated patch to use waitq instead of while loop for waiting.
-> o Removed duplication of Target stack definitations for T10-DIF/PI.
-> o In addition, addressed review comments from Bart & Christoph.
-> 
-> Changes from v1 -> v2
-> 
-> o Rebased series based on scsi-target-for-v4.11 branch.
-> 
-> Please apply to target-pending.
-> 
-> Thanks,
-> Himanshu 
-> 
-> Anil Gurumurthy (1):
->   qla2xxx: Export DIF stats via debugfs
-> 
-> Himanshu Madhani (2):
->   qla2xxx: Add DebugFS node to display Port Database
->   qla2xxx: Update driver version to 9.00.00.00-k
-> 
-> Joe Carnuccio (1):
->   qla2xxx: Allow vref count to timeout on vport delete.
-> 
-> Quinn Tran (10):
->   qla2xxx: Fix delayed response to command for loop mode/direct connect.
->   qla2xxx: Allow relogin to proceed if remote login did not finish
->   qla2xxx: Use IOCB interface to submit non-critical MBX.
->   qla2xxx: Improve T10-DIF/PI handling in driver.
->   qla2xxx: Change scsi host lookup method.
->   qla2xxx: Fix memory leak for abts processing
->   qla2xxx: Fix request queue corruption.
->   qla2xxx: Fix inadequate lock protection for ABTS.
->   qla2xxx: Add async new target notification
->   qla2xxx: Fix sess_lock & hardware_lock lock order problem.
-> 
->  drivers/scsi/qla2xxx/Kconfig       |   1 +
->  drivers/scsi/qla2xxx/qla_attr.c    |   4 +-
->  drivers/scsi/qla2xxx/qla_dbg.h     |   1 +
->  drivers/scsi/qla2xxx/qla_def.h     |  46 ++-
->  drivers/scsi/qla2xxx/qla_dfs.c     | 115 +++++-
->  drivers/scsi/qla2xxx/qla_gbl.h     |  12 +-
->  drivers/scsi/qla2xxx/qla_init.c    |  85 ++---
->  drivers/scsi/qla2xxx/qla_isr.c     |  41 ++-
->  drivers/scsi/qla2xxx/qla_mbx.c     | 304 ++++++++++++++--
->  drivers/scsi/qla2xxx/qla_mid.c     |  14 +-
->  drivers/scsi/qla2xxx/qla_os.c      |  24 +-
->  drivers/scsi/qla2xxx/qla_target.c  | 729 +++++++++++++++++++++++--------------
->  drivers/scsi/qla2xxx/qla_target.h  |  36 +-
->  drivers/scsi/qla2xxx/qla_version.h |   6 +-
->  drivers/scsi/qla2xxx/tcm_qla2xxx.c |  49 ++-
->  15 files changed, 1049 insertions(+), 418 deletions(-)
-> 
+Thanks, Bart!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
