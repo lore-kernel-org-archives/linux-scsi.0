@@ -1,103 +1,267 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [ANNOUNCE]: Broadcom (Emulex) FC Target driver - efct
-Date: Thu, 02 Mar 2017 12:08:45 -0800
-Message-ID: <1488485325.5580.9.camel@haakon3.risingtidesystems.com>
-References: <ced2ff0a-05ee-b85e-b41a-f912cab9e267@gmail.com>
+From: Benjamin Block <bblock@linux.vnet.ibm.com>
+Subject: Re: [PATCHv3 1/6] scsi_error: count medium access timeout only once
+ per EH run
+Date: Thu, 2 Mar 2017 21:16:29 +0100
+Message-ID: <20170302201629.GB7420@bblock-ThinkPad-W530>
+References: <1488359720-130871-1-git-send-email-hare@suse.de>
+ <1488359720-130871-2-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:48188 "EHLO
-        linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750736AbdCBUJo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2017 15:09:44 -0500
-In-Reply-To: <ced2ff0a-05ee-b85e-b41a-f912cab9e267@gmail.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:39102 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750779AbdCBURa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2017 15:17:30 -0500
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v22K8gw3070194
+        for <linux-scsi@vger.kernel.org>; Thu, 2 Mar 2017 15:16:35 -0500
+Received: from e06smtp11.uk.ibm.com (e06smtp11.uk.ibm.com [195.75.94.107])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 28xs8damk0-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Thu, 02 Mar 2017 15:16:34 -0500
+Received: from localhost
+        by e06smtp11.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <bblock@linux.vnet.ibm.com>;
+        Thu, 2 Mar 2017 20:16:32 -0000
+Received: from b06cxnps4074.portsmouth.uk.ibm.com (d06relay11.portsmouth.uk.ibm.com [9.149.109.196])
+        by d06dlp02.portsmouth.uk.ibm.com (Postfix) with ESMTP id F2A902190061
+        for <linux-scsi@vger.kernel.org>; Thu,  2 Mar 2017 20:15:31 +0000 (GMT)
+Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
+        by b06cxnps4074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v22KGVuL64552998
+        for <linux-scsi@vger.kernel.org>; Thu, 2 Mar 2017 20:16:31 GMT
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 14A05A4053
+        for <linux-scsi@vger.kernel.org>; Thu,  2 Mar 2017 20:16:32 +0000 (GMT)
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id E86E3A405B
+        for <linux-scsi@vger.kernel.org>; Thu,  2 Mar 2017 20:16:31 +0000 (GMT)
+Received: from bblock-ThinkPad-W530 (unknown [9.152.212.227])
+        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP
+        for <linux-scsi@vger.kernel.org>; Thu,  2 Mar 2017 20:16:31 +0000 (GMT)
+Content-Disposition: inline
+In-Reply-To: <1488359720-130871-2-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jsmart2021@gmail.com
-Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Sebastian Herbszt <herbszt@gmx.de>
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Lawrence Obermann <loberman@redhat.com>, Steffen Maier <maier@de.ibm.com>, Hannes Reinecke <hare@suse.com>
 
-Hi James & Co,
+Hej Hannes,
 
-Adding target-devel and Sebastian CC'
+On Wed, Mar 01, 2017 at 10:15:15AM +0100, Hannes Reinecke wrote:
+> The current medium access timeout counter will be increased for
+> each command, so if there are enough failed commands we'll hit
+> the medium access timeout for even a single failure.
+> Fix this by making the timeout per EH run, ie the counter will
+> only be increased once per device and EH run.
+>
+> Cc: Ewan Milne <emilne@redhat.com>
+> Cc: Lawrence Obermann <loberman@redhat.com>
+> Cc: Benjamin Block <bblock@linux.vnet.ibm.com>
+> Cc: Steffen Maier <maier@de.ibm.com>
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
 
-On Mon, 2017-02-27 at 15:28 -0800, James Smart wrote:
-> I'd like to announce the availability of the Broadcom (Emulex) FC Target 
-> driver - efct.
-> This driver has been part of the Emulex OneCore Storage SDK tool kit for 
-> Emulex
-> SLI-4 adapters. The SLI-4 adapters support 16Gb/s and higher adapters. 
-> Although this
-> kit has supported FCoE in the past, it is currently limited to FC support.
-> 
-> This driver provides the following:
-> - Target mode operation:
->    - Functional with LIO-based interfaces
+Steffen already suggested it, It would be nice to have a stable-tag
+here. This already caused multiple real-world false-positive outages, I
+think that qualifies for stable :)
 
-Glad to see the upstream push for this after all these years.  :)
+> ---
+>  drivers/scsi/scsi_error.c  | 16 +++++++++++++++-
+>  drivers/scsi/sd.c          | 21 +++++++++++++++++----
+>  drivers/scsi/sd.h          |  1 +
+>  include/scsi/scsi_driver.h |  2 +-
+>  4 files changed, 34 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index f2cafae..cec439c 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -58,6 +58,7 @@
+>  static int scsi_eh_try_stu(struct scsi_cmnd *scmd);
+>  static int scsi_try_to_abort_cmd(struct scsi_host_template *,
+>  				 struct scsi_cmnd *);
+> +static int scsi_eh_reset(struct scsi_cmnd *scmd);
+>
+>  /* called with shost->host_lock held */
+>  void scsi_eh_wakeup(struct Scsi_Host *shost)
+> @@ -249,6 +250,7 @@ int scsi_eh_scmd_add(struct scsi_cmnd *scmd, int eh_flag)
+>  	if (scmd->eh_eflags & SCSI_EH_ABORT_SCHEDULED)
+>  		eh_flag &= ~SCSI_EH_CANCEL_CMD;
+>  	scmd->eh_eflags |= eh_flag;
+> +	scsi_eh_reset(scmd);
+>  	list_add_tail(&scmd->eh_entry, &shost->eh_cmd_q);
+>  	shost->host_failed++;
+>  	scsi_eh_wakeup(shost);
+> @@ -1107,7 +1109,19 @@ static int scsi_eh_action(struct scsi_cmnd *scmd, int rtn)
+>  	if (!blk_rq_is_passthrough(scmd->request)) {
+>  		struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
+>  		if (sdrv->eh_action)
+> -			rtn = sdrv->eh_action(scmd, rtn);
+> +			rtn = sdrv->eh_action(scmd, rtn, false);
+> +	}
+> +	return rtn;
+> +}
+> +
+> +static int scsi_eh_reset(struct scsi_cmnd *scmd)
+> +{
+> +	int rtn = SUCCESS;
+> +
+> +	if (!blk_rq_is_passthrough(scmd->request)) {
+> +		struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
+> +		if (sdrv->eh_action)
+> +			rtn = sdrv->eh_action(scmd, rtn, true);
+>  	}
+>  	return rtn;
+>  }
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index c7839f6..c794686 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -115,7 +115,7 @@
+>  static int sd_init_command(struct scsi_cmnd *SCpnt);
+>  static void sd_uninit_command(struct scsi_cmnd *SCpnt);
+>  static int sd_done(struct scsi_cmnd *);
+> -static int sd_eh_action(struct scsi_cmnd *, int);
+> +static int sd_eh_action(struct scsi_cmnd *, int, bool);
+>  static void sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer);
+>  static void scsi_disk_release(struct device *cdev);
+>  static void sd_print_sense_hdr(struct scsi_disk *, struct scsi_sense_hdr *);
+> @@ -1689,18 +1689,28 @@ static int sd_pr_clear(struct block_device *bdev, u64 key)
+>   *	sd_eh_action - error handling callback
+>   *	@scmd:		sd-issued command that has failed
+>   *	@eh_disp:	The recovery disposition suggested by the midlayer
+> + *	@reset:		Reset medium access counter
+>   *
+>   *	This function is called by the SCSI midlayer upon completion of an
+>   *	error test command (currently TEST UNIT READY). The result of sending
+>   *	the eh command is passed in eh_disp.  We're looking for devices that
+>   *	fail medium access commands but are OK with non access commands like
+>   *	test unit ready (so wrongly see the device as having a successful
+> - *	recovery)
+> + *	recovery).
+> + *	We have to be careful to count a medium access failure only once
+> + *	per SCSI EH run; there might be several timed out commands which
+> + *	will cause the 'max_medium_access_timeouts' counter to trigger
+> + *	after the first SCSI EH run already and set the device to offline.
+>   **/
+> -static int sd_eh_action(struct scsi_cmnd *scmd, int eh_disp)
+> +static int sd_eh_action(struct scsi_cmnd *scmd, int eh_disp, bool reset)
+>  {
+>  	struct scsi_disk *sdkp = scsi_disk(scmd->request->rq_disk);
+>
+> +	if (reset) {
+> +		/* New SCSI EH run, reset gate variable */
+> +		sdkp->medium_access_reset = 0;
+> +		return eh_disp;
+> +	}
+>  	if (!scsi_device_online(scmd->device) ||
+>  	    !scsi_medium_access_command(scmd) ||
+>  	    host_byte(scmd->result) != DID_TIME_OUT ||
+> @@ -1714,7 +1724,10 @@ static int sd_eh_action(struct scsi_cmnd *scmd, int eh_disp)
+>  	 * process of recovering or has it suffered an internal failure
+>  	 * that prevents access to the storage medium.
+>  	 */
+> -	sdkp->medium_access_timed_out++;
+> +	if (!sdkp->medium_access_reset) {
+> +		sdkp->medium_access_timed_out++;
+> +		sdkp->medium_access_reset = 1;
+> +	}
+>
+>  	/*
+>  	 * If the device keeps failing read/write commands but TEST UNIT
+> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+> index 4dac35e..6a4f75a 100644
+> --- a/drivers/scsi/sd.h
+> +++ b/drivers/scsi/sd.h
+> @@ -106,6 +106,7 @@ struct scsi_disk {
+>  	unsigned	rc_basis: 2;
+>  	unsigned	zoned: 2;
+>  	unsigned	urswrz : 1;
+> +	unsigned	medium_access_reset : 1;
+>  };
+>  #define to_scsi_disk(obj) container_of(obj,struct scsi_disk,dev)
+>
+> diff --git a/include/scsi/scsi_driver.h b/include/scsi/scsi_driver.h
+> index 891a658..d5e0012 100644
+> --- a/include/scsi/scsi_driver.h
+> +++ b/include/scsi/scsi_driver.h
+> @@ -15,7 +15,7 @@ struct scsi_driver {
+>  	int (*init_command)(struct scsi_cmnd *);
+>  	void (*uninit_command)(struct scsi_cmnd *);
+>  	int (*done)(struct scsi_cmnd *);
+> -	int (*eh_action)(struct scsi_cmnd *, int);
+> +	int (*eh_action)(struct scsi_cmnd *, int, bool);
+>  };
+>  #define to_scsi_driver(drv) \
+>  	container_of((drv), struct scsi_driver, gendrv)
+> --
+> 1.8.5.6
+>
 
->    - Extensive use of hw offloads such as auto-xfer_rdy, auto-rsp, cmd 
-> cpu spreading
->    - High login mode - thousands of logins
->    - T-10 DIF/PI support  (inline and separate)
->    - NPIV support
-> - Concurrent Initiator support if needed
-> - Discovery engine has F_Port and fabric services emulation.
-> - Extended mgmt interfaces:
->    - firmware dump api, including dump to host memory for faster dumps
->    - Healthcheck operations and watchdogs
-> - Extended driver behaviors such as:
->    - polled mode operation
->    - multi-queue: cpu, roundrobin, or priority  (but not tied  to scsi-mq)
->    - long chained sgl's
->    - extensive internal logging and statistics
->    - Tuning parameters on modes and resource allocation to different 
-> features
-> 
-> Broadcom is looking to upstream this driver and would like review and 
-> feedback.
-> The driver may be found at the following git repository:
->      git@gitlab.com:jsmart/efct-Emulex_FC_Target.git
-> 
+Bart already made some suggestions that I think are good, otherwise I
+have nothing big to add. Should work just fine.
 
-Can we get the patch series posted to linux-scsi and target-devel to
-start giving some initial feedback..?
+The only thing that still bugs me about this is the corner-case we
+talked about the last time we talked about this. No show-stopper for me,
+but I though I might as well mention it.
 
-> 
-> Some of the key questions we have are with lpfc :
-> 1) Coexistence vs integration
-> Currently, the efct driver maps to a different set of PCI ids than lpfc.
-> It's very clear there's an overlap with lpfc, both on SLI-4 hw as well 
-> as initiator support.
-> Although target mode support can be simplistically added to lpfc, what 
-> we've found is
-> that doing so means a lot of tradeoffs. Some of the target mode 
-> features, when enabled,
-> impact the initiator support and how it would operate.
-> 
+When we do the different escalation-stages in scsi_unjam_host(), we
+always have the same basic pattern:
 
-I don't really have much preference either way.  
+  for_all_in(work_q)) {
+      cmd = get_next(eh_work_q);
 
-> 2) SLI-3 support
-> lpfc provides SLI-3 support so that all FC adapters are supported, 
-> including the older ones.
-> The form of the driver, based on its history, is SLI-3 with SLI-3 
-> adapted to SLI-4 at the point
-> it hits the hardware. efct does not support SLI-3.
+      do_action(cmd); /* might be abort, lun_reset, target_reset, ... */
 
-AFAIK I think Sebastian was using SLI-3, so he might have some comments
-here.
+      if (was_ok()) {
+          move_to(check_list, cmd);
+	  move_same_scope_to(check_list, work_q);
+      }
+  }
 
-Since he's been the main person using the original tcm_lpfc code from
-way back when, maybe it would be a good idea to send him a couple of
-SLI-4 HBAs to help with the upstreaming of efct..?
+  for_all_in(check_list) {
+      cmd  = get_next(eh_work_q);
+      sdev = get_sdev(cmd);
 
-> 
-> 3) complexity of configuration knobs caused by the kitchen-sink of 
-> features in lpfc ?
-> we are pushing the limit on needing per-instance attributes rather than 
-> global module
-> parameters.
+      test_device(sdev); /* TUR and maybe STU */
 
-This is exactly what
-/sys/kernel/config/target/efct/$WWPN/tpgt_1/attribute/ is intended for.
+      for_all_in_same_scope_in(check_list) {
+          if (test_was_ok() && scsi_eh_action(scmd, SUCCESS) == SUCCESS)
+              move_to(done_q, cmd)
+          else
+              move_to(work_q, cmd)
+      }
+  }
+
+  return list_empty(eh_work_q)
+
+(I hope I have this right, irritatingly this 'looks' different for no
+reason I can see for the different stages).
+
+The corner-case being, if we have a cmd that failes in scsi_eh_action(),
+it will be put back into the work_q. But all other command for the same
+scope will be put into the done_q because for them, sd_eh_action()
+will early-return with SUCCESS (sdev is not online anymore).
+
+Then, because the work_q is not empty, we will escalate to the next
+step. Worst case being, we escalate to host_reset, although EH is
+actually already done - we already decided that this sdev is offline in
+SD and even when we go through host-reset it will not become running
+anymore..  which makes the whole host-reset a big waste of time.
+
+AFAIK the escalate to Host-Reset can only happen if the LLD has no
+pointer for STU, LUN-, Target- and Bus-Reset, so its actually not as
+bad, but I still think its something we should correct.
+
+If you don't wanna change this here, I can probably send a part of the
+patch I made for this some time ago.
+
+
+
+                                                    Beste Grüße / Best regards,
+                                                      - Benjamin Block
+--
+Linux on z Systems Development         /         IBM Systems & Technology Group
+		  IBM Deutschland Research & Development GmbH
+Vorsitz. AufsR.: Martina Koederitz     /        Geschäftsführung: Dirk Wittkopp
+Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
