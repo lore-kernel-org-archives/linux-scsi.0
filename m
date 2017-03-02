@@ -1,7 +1,7 @@
 From: Stephen Hemminger <stephen@networkplumber.org>
 Subject: Re: SCSI regression in 4.11
-Date: Thu, 2 Mar 2017 09:48:10 -0800
-Message-ID: <20170302094810.7487c235@xeon-e3>
+Date: Thu, 2 Mar 2017 10:23:24 -0800
+Message-ID: <20170302102324.47dbe3ad@xeon-e3>
 References: <c1949de0-8b95-e254-1bec-bcdae762890f@kernel.dk>
         <1488301573.3046.9.camel@linux.vnet.ibm.com>
         <20170228105741.6253bb8a@xeon-e3>
@@ -19,12 +19,12 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f47.google.com ([74.125.83.47]:34868 "EHLO
-        mail-pg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753878AbdCBRz1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2017 12:55:27 -0500
-Received: by mail-pg0-f47.google.com with SMTP id b129so34553720pgc.2
-        for <linux-scsi@vger.kernel.org>; Thu, 02 Mar 2017 09:55:15 -0800 (PST)
+Received: from mail-pg0-f52.google.com ([74.125.83.52]:32832 "EHLO
+        mail-pg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753954AbdCBSXg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2017 13:23:36 -0500
+Received: by mail-pg0-f52.google.com with SMTP id 25so34821450pgy.0
+        for <linux-scsi@vger.kernel.org>; Thu, 02 Mar 2017 10:23:32 -0800 (PST)
 In-Reply-To: <c8ff2b64-2421-ca45-1f89-afec0490c8b3@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -107,4 +107,12 @@ Hannes Reinecke <hare@suse.de> wrote:
 > 
 > Hannes
 
-Makes no difference, that was one of the first things I tried (and just tried again).
+There are several oddities about the host SCSI interface that I see:
+  1. The host bus seems to report up to 6 devices even though only 2 are
+     present (Disk and CDROM).
+  2. The CDROM emulation doesn't report the same status as a real device.
+  3. The host emulation of SCSI doesn't support all the page codes which
+     is why there is the hack.
+
+But as James said, these don't appear to be related to the failure because
+the code worked before and only in post 4.11 merege is there a problem.
