@@ -1,104 +1,66 @@
-From: Maurizio Lombardi <mlombard@redhat.com>
-Subject: [PATCH] enclosure: fix sysfs symlinks creation when using multipath
-Date: Thu,  2 Mar 2017 12:30:04 +0100
-Message-ID: <1488454204-21251-1-git-send-email-mlombard@redhat.com>
+From: Kashyap Desai <kashyap.desai@broadcom.com>
+Subject: [PATCH] megaraid_sas: enable intx only if msix request fails
+Date: Thu,  2 Mar 2017 02:54:16 -0800
+Message-ID: <1488452056-16083-1-git-send-email-kashyap.desai@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51240 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751617AbdCBMSw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 2 Mar 2017 07:18:52 -0500
+Received: from mail-pf0-f171.google.com ([209.85.192.171]:35798 "EHLO
+        mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751888AbdCBMkb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2017 07:40:31 -0500
+Received: by mail-pf0-f171.google.com with SMTP id j5so22101535pfb.2
+        for <linux-scsi@vger.kernel.org>; Thu, 02 Mar 2017 04:39:02 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@linux.vnet.ibm.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, hare@suse.de, Kashyap Desai <kashyap.desai@broadcom.com>
 
-With multipath, it may happen that the same device is passed
-to enclosure_add_device() multiple times and that the enclosure_add_links()
-function fails to create the symlinks because the device's sysfs
-directory entry is still NULL.
-In this case, the links will never be created because all the subsequent
-calls to enclosure_add_device() will immediately fail with EEXIST.
+Without this fix, driver will enable INTx Interrupt pin even
+ though MSI-x vectors are enabled. See below lspci output. DisINTx is unset
+ for MSIx setup.
 
-This is an example of what happens:
+lspci -s 85:00.0 -vvv |grep INT |grep Control
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
 
-[   19.251902] scsi 0:0:27:0: Direct-Access     SEAGATE  ST8000NM0075     E002 PQ: 0 ANSI: 6
-[   19.261874] scsi 0:0:27:0: SSP: handle(0x0027), sas_addr(0x5000c50085826dd6), phy(34), device_name(0x5000c50085826dd4)
-[   19.274656] scsi 0:0:27:0: SSP: enclosure_logical_id(0x500093d001be4000), slot(57)
-[   19.283944] scsi 0:0:27:0: SSP: enclosure level(0x0000), connector name(     )
-[   19.292933] scsi 0:0:27:0: qdepth(254), tagged(1), simple(0), ordered(0), scsi_l
-[...]
-[   60.066524] enclosure_add_device(0:0:27:0) called, enclosure_add_links() failed with error -2
-[...]
-[   75.119146] sd 0:0:27:0: Attached scsi generic sg27 type 0
-[   75.126722] sd 0:0:27:0: [sdaa] 15628053168 512-byte logical blocks: (8.00 TB/7.27 TiB)
-[   75.126723] sd 0:0:27:0: [sdaa] 4096-byte physical blocks
-[   75.129059] sd 0:0:27:0: [sdaa] Write Protect is off
-[   75.129061] sd 0:0:27:0: [sdaa] Mode Sense: db 00 10 08
-[   75.130417] sd 0:0:27:0: [sdaa] Write cache: enabled, read cache: enabled, supports DPO and FUA
-[   75.158088] sd 0:0:27:0: [sdaa] Attached SCSI disk
-[...]
-[   75.192722] enclosure_add_device(0:0:27:0) called, device already exists
+After applying this fix, driver will enable INTx Interrupt pin only if Legacy interrupt method is required.
+See below lspci output. DisINTx is unset for MSIx setup.
+lspci -s 85:00.0 -vvv |grep INT |grep Control
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx+
 
-This patch modifies the code so the driver will detect this condition
-and will retry to create the symlinks when enclosure_add_device() is called.
-
-Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 ---
- drivers/misc/enclosure.c  | 16 ++++++++++++++--
- include/linux/enclosure.h |  1 +
- 2 files changed, 15 insertions(+), 2 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
-index 65fed71..a856c98 100644
---- a/drivers/misc/enclosure.c
-+++ b/drivers/misc/enclosure.c
-@@ -375,21 +375,33 @@ int enclosure_add_device(struct enclosure_device *edev, int component,
- 			 struct device *dev)
- {
- 	struct enclosure_component *cdev;
-+	int error;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 7ac9a9e..82a8ec8 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -4990,6 +4990,7 @@ int megasas_set_crash_dump_params(struct megasas_instance *instance,
+ 	struct pci_dev *pdev;
  
- 	if (!edev || component >= edev->components)
- 		return -EINVAL;
+ 	pdev = instance->pdev;
++	pci_intx(pdev, 1);
+ 	instance->irq_context[0].instance = instance;
+ 	instance->irq_context[0].MSIxIndex = 0;
+ 	if (request_irq(pci_irq_vector(pdev, 0),
+@@ -5277,10 +5278,6 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 			MPI2_REPLY_POST_HOST_INDEX_OFFSET);
+ 	}
  
- 	cdev = &edev->component[component];
- 
--	if (cdev->dev == dev)
-+	if (cdev->dev == dev) {
-+		if (!cdev->links_created) {
-+			error = enclosure_add_links(cdev);
-+			if (!error)
-+				cdev->links_created = 1;
-+		}
- 		return -EEXIST;
-+	}
- 
- 	if (cdev->dev)
- 		enclosure_remove_links(cdev);
- 
- 	put_device(cdev->dev);
- 	cdev->dev = get_device(dev);
--	return enclosure_add_links(cdev);
-+	error = enclosure_add_links(cdev);
-+	if (!error)
-+		cdev->links_created = 1;
-+	else
-+		cdev->links_created = 0;
-+	return error;
- }
- EXPORT_SYMBOL_GPL(enclosure_add_device);
- 
-diff --git a/include/linux/enclosure.h b/include/linux/enclosure.h
-index a4cf57c..c3bdc4c 100644
---- a/include/linux/enclosure.h
-+++ b/include/linux/enclosure.h
-@@ -97,6 +97,7 @@ struct enclosure_component {
- 	struct device cdev;
- 	struct device *dev;
- 	enum enclosure_component_type type;
-+	int links_created;
- 	int number;
- 	int fault;
- 	int active;
+-	i = pci_alloc_irq_vectors(instance->pdev, 1, 1, PCI_IRQ_LEGACY);
+-	if (i < 0)
+-		goto fail_setup_irqs;
+-
+ 	dev_info(&instance->pdev->dev,
+ 		"firmware supports msix\t: (%d)", fw_msix_count);
+ 	dev_info(&instance->pdev->dev,
+@@ -5494,7 +5491,6 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 	instance->instancet->disable_intr(instance);
+ fail_init_adapter:
+ 	megasas_destroy_irqs(instance);
+-fail_setup_irqs:
+ 	if (instance->msix_vectors)
+ 		pci_free_irq_vectors(instance->pdev);
+ 	instance->msix_vectors = 0;
 -- 
-Maurizio Lombardi
+1.8.3.1
