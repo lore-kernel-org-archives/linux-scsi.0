@@ -1,39 +1,38 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v6] sd: Check for unaligned partial completion
-Date: Wed, 01 Mar 2017 21:48:01 -0500
-Message-ID: <yq1poi0qtr2.fsf@oracle.com>
-References: <20170301082700.20413-1-damien.lemoal@wdc.com>
+Subject: Re: [PATCH 1/1] fnic: Adding Check Condition counter to misc fnicstats
+Date: Wed, 01 Mar 2017 22:03:51 -0500
+Message-ID: <yq14lzcqt0o.fsf@oracle.com>
+References: <1488327344-8817-1-git-send-email-satishkh@cisco.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1050.oracle.com ([141.146.126.70]:17845 "EHLO
-        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751499AbdCBCtU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2017 21:49:20 -0500
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69])
-        by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v222nEAV031776
+Received: from userp1050.oracle.com ([156.151.31.82]:23688 "EHLO
+        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753152AbdCBD0e (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2017 22:26:34 -0500
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
+        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v2234uc4015215
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-scsi@vger.kernel.org>; Thu, 2 Mar 2017 02:49:14 GMT
-In-Reply-To: <20170301082700.20413-1-damien.lemoal@wdc.com> (Damien Le Moal's
-        message of "Wed, 1 Mar 2017 17:27:00 +0900")
+        for <linux-scsi@vger.kernel.org>; Thu, 2 Mar 2017 03:04:56 GMT
+In-Reply-To: <1488327344-8817-1-git-send-email-satishkh@cisco.com> (Satish
+        Kharat's message of "Tue, 28 Feb 2017 16:15:44 -0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Damien Le Moal <damien.lemoal@wdc.com>
-Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, Bart Van Assche <bart.vanassche@sandisk.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
+To: Satish Kharat <satishkh@cisco.com>
+Cc: linux-scsi@vger.kernel.org, sebaddel@cisco.com
 
->>>>> "Damien" == Damien Le Moal <damien.lemoal@wdc.com> writes:
+>>>>> "Satish" == Satish Kharat <satishkh@cisco.com> writes:
 
-Damien,
+Satish,
 
-Damien> Move the partial completion alignement check of mpt3sas to a
-Damien> generic implementation in sd_done(). The check is added within
-Damien> the default section of the initial req_op() switch case so that
-Damien> the report and reset zone commands are ignored. In addition, as
-Damien> sd_done() is not called for passthrough requests, resid
-Damien> corrections are not done as intended by the initial mpt3sas
-Damien> patch.
+Satish> Just a simple counter of number of check conditions encountered
+Satish> on that host.
 
-Thanks! Applied to 4.11/scsi-fixes with a Cc: to stable.
+Please test and review the following:
+
+	https://patchwork.kernel.org/patch/9549777/
+
+Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
