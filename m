@@ -1,146 +1,57 @@
-From: Jiri Slaby <jslaby@suse.cz>
-Subject: [PATCH] scsi: lpfc: replace init_timer by setup_timer
-Date: Fri,  3 Mar 2017 13:45:48 +0100
-Message-ID: <20170303124548.30176-1-jslaby@suse.cz>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: james.smart@broadcom.com
-Cc: linux-kernel@vger.kernel.org, Tomas Jasek <tomsik68@gmail.com>, Jiri Slaby <jslaby@suse.cz>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCHv4 11/12] mpt3sas: simplify
+ _wait_for_commands_to_complete()
+Date: Fri, 3 Mar 2017 14:53:37 +0100
+Message-ID: <1b240787-bc0d-4d97-fcda-238b6d93106c@suse.de>
+References: <1487759512-3873-1-git-send-email-hare@suse.de>
+ <1487759512-3873-12-git-send-email-hare@suse.de>
+ <CAK=zhgrMzWYNznHr+5aVTC_D+mrSRX-raBK=OpU0x+3O0B9otg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:52352 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752237AbdCCOM6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 3 Mar 2017 09:12:58 -0500
+In-Reply-To: <CAK=zhgrMzWYNznHr+5aVTC_D+mrSRX-raBK=OpU0x+3O0B9otg@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Kashyap Desai <kashyap.desai@broadcom.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Hannes Reinecke <hare@suse.com>
 
-From: Tomas Jasek <tomsik68@gmail.com>
+On 03/03/2017 12:57 PM, Sreekanth Reddy wrote:
+> On Wed, Feb 22, 2017 at 4:01 PM, Hannes Reinecke <hare@suse.de> wrote:
+>> Use 'host_busy' instead of counting outstanding commands by hand.
+>>
+>> Suggested-by: Christoph Hellwig <hch@lst.de>
+>> Signed-off-by: Hannes Reinecke <hare@suse.com>
+>> ---
+>>  drivers/scsi/mpt3sas/mpt3sas_base.c | 14 ++++----------
+>>  1 file changed, 4 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+>> index e6aafa5..169d185 100644
+>> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+>> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+>> @@ -2408,9 +2408,9 @@ struct scsiio_tracker *
+>>          * See _wait_for_commands_to_complete() call with regards to this code.
+>>          */
+>>         if (ioc->shost_recovery && ioc->pending_io_count) {
+>> -               if (ioc->pending_io_count == 1)
+>> +               ioc->pending_io_count = atomic_read(&ioc->shost->host_busy);
+>
+> This won't consider the scsi IO issued from ioctl path. If that scsi
+> io is still outstanding then here we will return without waiting for
+> it to complete.
+>
+True. Will be fixing it up.
 
-This patch shortens every init_timer in lpfc module
-followed by function and data assignment using setup_timer.
-This is purely cleanup patch, it does not add new functionality
-nor remove any existing functionality.
+Cheers,
 
-An init_timer call in this form:
-
-    init_timer(&vport->fc_disctmo);
-    vport->fc_disctmo.function = lpfc_disc_timeout;
-    vport->fc_disctmo.data = vport;
-
-is shortened to:
-
-    setup_timer(&vport->fc_disctmo, lpfc_disc_timeout, vport);
-
-It increases readability and reduces chances of mistakes done by
-developers.
-
-Signed-off-by: Tomas Jasek <tomsik68@gmail.com>
-Signed-off-by: Jiri Slaby <jslaby@suse.cz>
-Cc: James Smart <james.smart@broadcom.com>
-Cc: Dick Kennedy <dick.kennedy@broadcom.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: <linux-scsi@vger.kernel.org>
----
- drivers/scsi/lpfc/lpfc_hbadisc.c |  5 ++---
- drivers/scsi/lpfc/lpfc_init.c    | 47 +++++++++++++++-------------------------
- 2 files changed, 19 insertions(+), 33 deletions(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 194a14d5f8a9..2612dac75186 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -4344,9 +4344,8 @@ lpfc_initialize_node(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- {
- 	INIT_LIST_HEAD(&ndlp->els_retry_evt.evt_listp);
- 	INIT_LIST_HEAD(&ndlp->dev_loss_evt.evt_listp);
--	init_timer(&ndlp->nlp_delayfunc);
--	ndlp->nlp_delayfunc.function = lpfc_els_retry_delay;
--	ndlp->nlp_delayfunc.data = (unsigned long)ndlp;
-+	setup_timer(&ndlp->nlp_delayfunc, lpfc_els_retry_delay,
-+			(unsigned long)ndlp);
- 	ndlp->nlp_DID = did;
- 	ndlp->vport = vport;
- 	ndlp->phba = vport->phba;
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 0ee429d773f3..f395f2e4aa97 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -3734,17 +3734,14 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
- 	INIT_LIST_HEAD(&vport->rcv_buffer_list);
- 	spin_lock_init(&vport->work_port_lock);
- 
--	init_timer(&vport->fc_disctmo);
--	vport->fc_disctmo.function = lpfc_disc_timeout;
--	vport->fc_disctmo.data = (unsigned long)vport;
-+	setup_timer(&vport->fc_disctmo, lpfc_disc_timeout,
-+			(unsigned long)vport);
- 
--	init_timer(&vport->els_tmofunc);
--	vport->els_tmofunc.function = lpfc_els_timeout;
--	vport->els_tmofunc.data = (unsigned long)vport;
-+	setup_timer(&vport->els_tmofunc, lpfc_els_timeout,
-+			(unsigned long)vport);
- 
--	init_timer(&vport->delayed_disc_tmo);
--	vport->delayed_disc_tmo.function = lpfc_delayed_disc_tmo;
--	vport->delayed_disc_tmo.data = (unsigned long)vport;
-+	setup_timer(&vport->delayed_disc_tmo, lpfc_delayed_disc_tmo,
-+			(unsigned long)vport);
- 
- 	error = scsi_add_host_with_dma(shost, dev, &phba->pcidev->dev);
- 	if (error)
-@@ -5406,21 +5403,15 @@ lpfc_setup_driver_resource_phase1(struct lpfc_hba *phba)
- 	INIT_LIST_HEAD(&phba->luns);
- 
- 	/* MBOX heartbeat timer */
--	init_timer(&psli->mbox_tmo);
--	psli->mbox_tmo.function = lpfc_mbox_timeout;
--	psli->mbox_tmo.data = (unsigned long) phba;
-+	setup_timer(&psli->mbox_tmo, lpfc_mbox_timeout, (unsigned long)phba);
- 	/* Fabric block timer */
--	init_timer(&phba->fabric_block_timer);
--	phba->fabric_block_timer.function = lpfc_fabric_block_timeout;
--	phba->fabric_block_timer.data = (unsigned long) phba;
-+	setup_timer(&phba->fabric_block_timer, lpfc_fabric_block_timeout,
-+			(unsigned long)phba);
- 	/* EA polling mode timer */
--	init_timer(&phba->eratt_poll);
--	phba->eratt_poll.function = lpfc_poll_eratt;
--	phba->eratt_poll.data = (unsigned long) phba;
-+	setup_timer(&phba->eratt_poll, lpfc_poll_eratt,
-+			(unsigned long)phba);
- 	/* Heartbeat timer */
--	init_timer(&phba->hb_tmofunc);
--	phba->hb_tmofunc.function = lpfc_hb_timeout;
--	phba->hb_tmofunc.data = (unsigned long)phba;
-+	setup_timer(&phba->hb_tmofunc, lpfc_hb_timeout, (unsigned long)phba);
- 
- 	return 0;
- }
-@@ -5446,9 +5437,8 @@ lpfc_sli_driver_resource_setup(struct lpfc_hba *phba)
- 	 */
- 
- 	/* FCP polling mode timer */
--	init_timer(&phba->fcp_poll_timer);
--	phba->fcp_poll_timer.function = lpfc_poll_timeout;
--	phba->fcp_poll_timer.data = (unsigned long) phba;
-+	setup_timer(&phba->fcp_poll_timer, lpfc_poll_timeout,
-+			(unsigned long)phba);
- 
- 	/* Host attention work mask setup */
- 	phba->work_ha_mask = (HA_ERATT | HA_MBATT | HA_LATT);
-@@ -5617,14 +5607,11 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
- 	 * Initialize timers used by driver
- 	 */
- 
--	init_timer(&phba->rrq_tmr);
--	phba->rrq_tmr.function = lpfc_rrq_timeout;
--	phba->rrq_tmr.data = (unsigned long)phba;
-+	setup_timer(&phba->rrq_tmr, lpfc_rrq_timeout, (unsigned long)phba);
- 
- 	/* FCF rediscover timer */
--	init_timer(&phba->fcf.redisc_wait);
--	phba->fcf.redisc_wait.function = lpfc_sli4_fcf_redisc_wait_tmo;
--	phba->fcf.redisc_wait.data = (unsigned long)phba;
-+	setup_timer(&phba->fcf.redisc_wait, lpfc_sli4_fcf_redisc_wait_tmo,
-+			(unsigned long)phba);
- 
- 	/*
- 	 * Control structure for handling external multi-buffer mailbox
+Hannes
 -- 
-2.12.0
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
