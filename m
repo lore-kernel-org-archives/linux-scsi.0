@@ -1,32 +1,39 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH v4 08/19] scsi: be2iscsi: Replace PCI pool old API
-Date: Fri, 3 Mar 2017 12:30:03 +0300
-Message-ID: <d73deb0f-fd69-a357-ee6d-6edd62197666@cogentembedded.com>
-References: <20170301155521.30281-1-romain.perier@collabora.com>
- <20170301155521.30281-9-romain.perier@collabora.com>
+From: Kefeng Wang <wangkefeng.wang@huawei.com>
+Subject: [PATCH] scsi: sr: fix oob access in get_capabilities
+Date: Fri, 3 Mar 2017 18:17:52 +0800
+Message-ID: <1488536272-10509-1-git-send-email-wangkefeng.wang@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20170301155521.30281-9-romain.perier@collabora.com>
-Sender: netdev-owner@vger.kernel.org
-To: Romain Perier <romain.perier@collabora.com>, Dan Williams <dan.j.williams@intel.com>, Doug Ledford <dledford@redhat.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, jeffrey.t.kirsher@intel.com, "David S. Miller" <davem@davemloft.net>, stas.yakovlev@gmail.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Felipe Balbi <balbi@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Peter Senna Tschudin <peter.senna@collabora.co.uk>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Kefeng Wang <wangkefeng.wang@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 3/1/2017 6:55 PM, Romain Perier wrote:
+'n = header_length + block_descriptor_length' could be greater than 512,
+and will lead to oob access, so enlarge transfer buffer to fix it.
 
-> The PCI pool API is deprecated. This commits replaces the PCI pool old
+===
+BUG: KASAN: slab-out-of-bounds in sr_probe+0x570/0xcc0 at addr ffff88000009020e
+Read of size 1 by task kworker/u48:2/188
 
-    Commit.
+Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
+---
+ drivers/scsi/sr.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> API by the appropriated function with the DMA pool API.
-
-    Appropriate perhaps?
-
-> Signed-off-by: Romain Perier <romain.perier@collabora.com>
-> Acked-by: Peter Senna Tschudin <peter.senna@collabora.com>
-> Tested-by: Peter Senna Tschudin <peter.senna@collabora.com>
-[...]
-
-MBR, Sergei
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 0b29b93..5a80aa6 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -852,7 +852,7 @@ static void get_capabilities(struct scsi_cd *cd)
+ 
+ 
+ 	/* allocate transfer buffer */
+-	buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
++	buffer = kmalloc(1024, GFP_KERNEL | GFP_DMA);
+ 	if (!buffer) {
+ 		sr_printk(KERN_ERR, cd, "out of memory.\n");
+ 		return;
+-- 
+1.7.12.4
