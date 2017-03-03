@@ -1,51 +1,35 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 188061] On quad port QLE2564 can't add in target only 2 ports
-Date: Fri, 03 Mar 2017 17:42:34 +0000
-Message-ID: <bug-188061-11613-QjgvwMecCk@https.bugzilla.kernel.org/>
-References: <bug-188061-11613@https.bugzilla.kernel.org/>
+From: Dave Carroll <david.carroll@microsemi.com>
+Subject: RE: [PATCH] aacraid: Fix typo in blink status
+Date: Fri, 3 Mar 2017 18:34:31 +0000
+Message-ID: <423FD6710FB8FB4F8728F93591889F9A4EF53305@avsrvexchmbx1.microsemi.net>
+References: <20170302172133.3503-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:54156 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751641AbdCCRwE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Mar 2017 12:52:04 -0500
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id E275C285D8
-        for <linux-scsi@vger.kernel.org>; Fri,  3 Mar 2017 17:42:40 +0000 (UTC)
-Received: from pdx-korg-bugzilla-1.web.codeaurora.org (unknown [172.30.200.120])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id ADBF9285D4
-        for <linux-scsi@vger.kernel.org>; Fri,  3 Mar 2017 17:42:40 +0000 (UTC)
-In-Reply-To: <bug-188061-11613@https.bugzilla.kernel.org/>
+Received: from mail-bn3nam01on0057.outbound.protection.outlook.com ([104.47.33.57]:48480
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751882AbdCCSfT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 3 Mar 2017 13:35:19 -0500
+In-Reply-To: <20170302172133.3503-1-RaghavaAditya.Renukunta@microsemi.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@kernel.org
+To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Gana Sridaran <gana.sridaran@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=188061
+> Subject: [PATCH] aacraid: Fix typo in blink status
+>=20
+> The return status of the adapter check on KERNEL_PANIC is supposed to be
+> the upper 16 bits of the OMR status register.
+>=20
+> Fixes: c421530bf848604e (scsi: aacraid: Reorder Adpater status check)
+> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+> Signed-off-by: Raghava Aditya Renukunta
+> <RaghavaAditya.Renukunta@microsemi.com>
+> ---
+>  drivers/scsi/aacraid/src.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
---- Comment #6 from himanshu.madhani@cavium.com (himanshu.madhani@qlogic.com) ---
-(In reply to Anthony from comment #5)
-> I've installed another 4-port card and got same issue - port names have
-> variable part at highest bits. On 2-port card port names have variable part
-> at lower bits:
->     port_name           = "0x21000024ff3bcb3e"
->     port_name           = "0x21000024ff3bcb3f"
-> I'm trying to change a port name in NVRAM with FLASUTIL.EXE with no luck.
-
-Hi Anthony, 
-
-Can you please attach output of following command from your 4-port card.
-
-# lspci -vvv -s <pci_bus_for_each_port>
-
-So for example 
-
-# lspci -vvv -s 09.00.0 and so on for each of the 4 ports of 4-port card. 
-
-Thanks,
-Himanshu
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Reviewed-by: Dave Carroll <david.carroll@microsemi.com>
