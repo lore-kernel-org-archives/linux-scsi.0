@@ -1,140 +1,156 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv4 12/12] mpt3sas: lockless command submission
-Date: Fri, 3 Mar 2017 14:59:29 +0100
-Message-ID: <fb50be90-81c4-06dd-d7af-ab4726065580@suse.de>
-References: <1487759512-3873-1-git-send-email-hare@suse.de>
- <1487759512-3873-13-git-send-email-hare@suse.de>
- <CAK=zhgr6w4-cq1FTb5LcEEf7aGnGxbsEXGOxqUmnFTTW2dJO6A@mail.gmail.com>
+From: James Smart <james.smart@broadcom.com>
+Subject: Re: [PATCH] scsi: lpfc: replace init_timer by setup_timer
+Date: Fri, 3 Mar 2017 07:20:16 -0800
+Message-ID: <c496efea-46cc-b35a-58dc-d75677582281@broadcom.com>
+References: <20170303124548.30176-1-jslaby@suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52351 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752198AbdCCOMo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 3 Mar 2017 09:12:44 -0500
-In-Reply-To: <CAK=zhgr6w4-cq1FTb5LcEEf7aGnGxbsEXGOxqUmnFTTW2dJO6A@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170303124548.30176-1-jslaby@suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jiri Slaby <jslaby@suse.cz>
+Cc: linux-kernel@vger.kernel.org, Tomas Jasek <tomsik68@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Kashyap Desai <kashyap.desai@broadcom.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Hannes Reinecke <hare@suse.com>
 
-On 03/03/2017 01:32 PM, Sreekanth Reddy wrote:
-> On Wed, Feb 22, 2017 at 4:01 PM, Hannes Reinecke <hare@suse.de> wrote:
->> Instead of holding 'struct scsiio_tracker' in its own pool we
->> can embed it into the payload of the scsi command. This allows
->> us to get rid of the lock when submitting and receiving commands
->> and streamline operations.
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.com>
->> ---
->>  drivers/scsi/mpt3sas/mpt3sas_base.c      | 120 +++++++++++++------------------
->>  drivers/scsi/mpt3sas/mpt3sas_base.h      |  23 +++---
->>  drivers/scsi/mpt3sas/mpt3sas_ctl.c       |  17 +++--
->>  drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 118 +++++++++---------------------
->>  drivers/scsi/mpt3sas/mpt3sas_warpdrive.c |  35 +--------
->>  5 files changed, 105 insertions(+), 208 deletions(-)
->>
->> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
->> index 169d185..966a775 100644
->> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
->> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
->> @@ -863,12 +863,19 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
->>  }
->>
->>  struct scsiio_tracker *
->> -mpt3sas_get_st_from_smid(struct MPT3SAS_ADAPTER *ioc, u16 smid)
->> +_get_st_from_smid(struct MPT3SAS_ADAPTER *ioc, u16 smid)
->
-> Can we rename the name of this function as  _base_get_st_from_smid(),
-> Since we always try to follow below notations,
->  * prefix with "_<filenamePart(i.e. base)>" if the function is used
-> within this file other wise prefix with "mpt3sas_<filename>" if this
-> function is shared between more than one file.
->
-Sure, will do.
+looks good
 
->>  {
->> +       struct scsi_cmnd *cmd;
->> +
->>         if (WARN_ON(!smid) ||
->>             WARN_ON(smid >= ioc->hi_priority_smid))
->>                 return NULL;
->> -       return &ioc->scsi_lookup[smid - 1];
->> +
->> +       cmd = mpt3sas_scsih_scsi_lookup_get(ioc, smid);
->> +       if (cmd)
->> +               return scsi_cmd_priv(cmd);
->> +
->> +       return NULL;
->>  }
->>
->>  /**
->> @@ -889,7 +896,7 @@ struct scsiio_tracker *
->>                 struct scsiio_tracker *st;
->>
->>                 if (smid < ctl_smid) {
->> -                       st = mpt3sas_get_st_from_smid(ioc, smid);
->> +                       st = _get_st_from_smid(ioc, smid);
->>                         if (st)
->>                                 cb_idx = st->cb_idx;
->
-> I think, here we can safely assign "cb_idx"  as "ioc->scsi_io_cb_idx",
-> no need to get it from scsiio_tracker. since all the smid's below
-> ctl_smid will we used for SCSI IO's recieved from scsih_qcmd.
->
-In theory, yes.
-However, 'cb_idx' get reset to 0xFF once we're done with the command,
-so this serves the dual purpose of getting us the callback index _and_ 
-telling us if the command is in flight.
+-- james
 
-[ .. ]
->> @@ -1297,9 +1305,7 @@ struct scsiio_tracker *
->>         chain_req = list_entry(ioc->free_chain_list.next,
->>             struct chain_tracker, tracker_list);
->>         list_del_init(&chain_req->tracker_list);
->> -       st = mpt3sas_get_st_from_smid(ioc, smid);
->> -       if (st)
->> -               list_add_tail(&chain_req->tracker_list, &st->chain_list);
->> +       list_add_tail(&chain_req->tracker_list, &st->chain_list);
->>         spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
->
-> Still we have this lock in the IO path. May be we can remove this lock
-> too by allocating "ioc->ioc->chains_needed_per_io * shost->can_queue"
-> number of chain buffers and we can acces the required chain buffer
-> using scmd's tag pluse chain_offset_per_io coressponding to that
-> repective tag.
->
-> May be we will post a separate patch for this after some time.
->
-Actually, I tried this (and I have a patch to move that to use sbitmap), 
-but didn't notice any significant improvement.
-(But then as I only ran against a middle-range SSD setup this wasn't 
-really surprising).
-But sure, I can dig it up and include in this patchset.
+Signed-off-by:  James Smart <james.smart@broadcom.com>
 
-[ .. ]
->> @@ -2359,9 +2316,8 @@ int mpt3sas_scsih_issue_locked_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle,
->>                 goto out;
->>         }
->>
->> -       /* search for the command */
->> -       st = _scsih_scsi_lookup_find_by_scmd(ioc, scmd);
->> -       if (!st) {
->> +       /* check for completed command */
->> +       if (st->cb_idx == 0xFF); {
+On 3/3/2017 4:45 AM, Jiri Slaby wrote:
+> From: Tomas Jasek <tomsik68@gmail.com>
 >
-> ";" should be removed from above line, otherwise always we return task
-> abort TM with "SUCCESS" status without issueing the TM to Firmware.
+> This patch shortens every init_timer in lpfc module
+> followed by function and data assignment using setup_timer.
+> This is purely cleanup patch, it does not add new functionality
+> nor remove any existing functionality.
 >
+> An init_timer call in this form:
 >
-Ouch. Of course. Thanks for catching this.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+>      init_timer(&vport->fc_disctmo);
+>      vport->fc_disctmo.function = lpfc_disc_timeout;
+>      vport->fc_disctmo.data = vport;
+>
+> is shortened to:
+>
+>      setup_timer(&vport->fc_disctmo, lpfc_disc_timeout, vport);
+>
+> It increases readability and reduces chances of mistakes done by
+> developers.
+>
+> Signed-off-by: Tomas Jasek <tomsik68@gmail.com>
+> Signed-off-by: Jiri Slaby <jslaby@suse.cz>
+> Cc: James Smart <james.smart@broadcom.com>
+> Cc: Dick Kennedy <dick.kennedy@broadcom.com>
+> Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Cc: <linux-scsi@vger.kernel.org>
+> ---
+>   drivers/scsi/lpfc/lpfc_hbadisc.c |  5 ++---
+>   drivers/scsi/lpfc/lpfc_init.c    | 47 +++++++++++++++-------------------------
+>   2 files changed, 19 insertions(+), 33 deletions(-)
+>
+> diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+> index 194a14d5f8a9..2612dac75186 100644
+> --- a/drivers/scsi/lpfc/lpfc_hbadisc.c
+> +++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+> @@ -4344,9 +4344,8 @@ lpfc_initialize_node(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+>   {
+>   	INIT_LIST_HEAD(&ndlp->els_retry_evt.evt_listp);
+>   	INIT_LIST_HEAD(&ndlp->dev_loss_evt.evt_listp);
+> -	init_timer(&ndlp->nlp_delayfunc);
+> -	ndlp->nlp_delayfunc.function = lpfc_els_retry_delay;
+> -	ndlp->nlp_delayfunc.data = (unsigned long)ndlp;
+> +	setup_timer(&ndlp->nlp_delayfunc, lpfc_els_retry_delay,
+> +			(unsigned long)ndlp);
+>   	ndlp->nlp_DID = did;
+>   	ndlp->vport = vport;
+>   	ndlp->phba = vport->phba;
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index 0ee429d773f3..f395f2e4aa97 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -3734,17 +3734,14 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
+>   	INIT_LIST_HEAD(&vport->rcv_buffer_list);
+>   	spin_lock_init(&vport->work_port_lock);
+>   
+> -	init_timer(&vport->fc_disctmo);
+> -	vport->fc_disctmo.function = lpfc_disc_timeout;
+> -	vport->fc_disctmo.data = (unsigned long)vport;
+> +	setup_timer(&vport->fc_disctmo, lpfc_disc_timeout,
+> +			(unsigned long)vport);
+>   
+> -	init_timer(&vport->els_tmofunc);
+> -	vport->els_tmofunc.function = lpfc_els_timeout;
+> -	vport->els_tmofunc.data = (unsigned long)vport;
+> +	setup_timer(&vport->els_tmofunc, lpfc_els_timeout,
+> +			(unsigned long)vport);
+>   
+> -	init_timer(&vport->delayed_disc_tmo);
+> -	vport->delayed_disc_tmo.function = lpfc_delayed_disc_tmo;
+> -	vport->delayed_disc_tmo.data = (unsigned long)vport;
+> +	setup_timer(&vport->delayed_disc_tmo, lpfc_delayed_disc_tmo,
+> +			(unsigned long)vport);
+>   
+>   	error = scsi_add_host_with_dma(shost, dev, &phba->pcidev->dev);
+>   	if (error)
+> @@ -5406,21 +5403,15 @@ lpfc_setup_driver_resource_phase1(struct lpfc_hba *phba)
+>   	INIT_LIST_HEAD(&phba->luns);
+>   
+>   	/* MBOX heartbeat timer */
+> -	init_timer(&psli->mbox_tmo);
+> -	psli->mbox_tmo.function = lpfc_mbox_timeout;
+> -	psli->mbox_tmo.data = (unsigned long) phba;
+> +	setup_timer(&psli->mbox_tmo, lpfc_mbox_timeout, (unsigned long)phba);
+>   	/* Fabric block timer */
+> -	init_timer(&phba->fabric_block_timer);
+> -	phba->fabric_block_timer.function = lpfc_fabric_block_timeout;
+> -	phba->fabric_block_timer.data = (unsigned long) phba;
+> +	setup_timer(&phba->fabric_block_timer, lpfc_fabric_block_timeout,
+> +			(unsigned long)phba);
+>   	/* EA polling mode timer */
+> -	init_timer(&phba->eratt_poll);
+> -	phba->eratt_poll.function = lpfc_poll_eratt;
+> -	phba->eratt_poll.data = (unsigned long) phba;
+> +	setup_timer(&phba->eratt_poll, lpfc_poll_eratt,
+> +			(unsigned long)phba);
+>   	/* Heartbeat timer */
+> -	init_timer(&phba->hb_tmofunc);
+> -	phba->hb_tmofunc.function = lpfc_hb_timeout;
+> -	phba->hb_tmofunc.data = (unsigned long)phba;
+> +	setup_timer(&phba->hb_tmofunc, lpfc_hb_timeout, (unsigned long)phba);
+>   
+>   	return 0;
+>   }
+> @@ -5446,9 +5437,8 @@ lpfc_sli_driver_resource_setup(struct lpfc_hba *phba)
+>   	 */
+>   
+>   	/* FCP polling mode timer */
+> -	init_timer(&phba->fcp_poll_timer);
+> -	phba->fcp_poll_timer.function = lpfc_poll_timeout;
+> -	phba->fcp_poll_timer.data = (unsigned long) phba;
+> +	setup_timer(&phba->fcp_poll_timer, lpfc_poll_timeout,
+> +			(unsigned long)phba);
+>   
+>   	/* Host attention work mask setup */
+>   	phba->work_ha_mask = (HA_ERATT | HA_MBATT | HA_LATT);
+> @@ -5617,14 +5607,11 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
+>   	 * Initialize timers used by driver
+>   	 */
+>   
+> -	init_timer(&phba->rrq_tmr);
+> -	phba->rrq_tmr.function = lpfc_rrq_timeout;
+> -	phba->rrq_tmr.data = (unsigned long)phba;
+> +	setup_timer(&phba->rrq_tmr, lpfc_rrq_timeout, (unsigned long)phba);
+>   
+>   	/* FCF rediscover timer */
+> -	init_timer(&phba->fcf.redisc_wait);
+> -	phba->fcf.redisc_wait.function = lpfc_sli4_fcf_redisc_wait_tmo;
+> -	phba->fcf.redisc_wait.data = (unsigned long)phba;
+> +	setup_timer(&phba->fcf.redisc_wait, lpfc_sli4_fcf_redisc_wait_tmo,
+> +			(unsigned long)phba);
+>   
+>   	/*
+>   	 * Control structure for handling external multi-buffer mailbox
