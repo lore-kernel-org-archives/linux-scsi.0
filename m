@@ -1,51 +1,51 @@
-From: Peter Chang <dpf@google.com>
-Subject: [patch] check length passed to SG_NEXT_CMD_LEN
-Date: Thu, 2 Mar 2017 10:29:39 -0800
-Message-ID: <CAF2xp_GW8KwyD9AuZjHFoPtiNdRyPQ27+1jDLEJjuKxci3mU6w@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 188061] On quad port QLE2564 can't add in target only 2 ports
+Date: Fri, 03 Mar 2017 17:42:34 +0000
+Message-ID: <bug-188061-11613-QjgvwMecCk@https.bugzilla.kernel.org/>
+References: <bug-188061-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=001a11408cd2ecbb410549c39dfa
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:35266 "EHLO
-        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751560AbdCCQVN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Mar 2017 11:21:13 -0500
-Received: by mail-oi0-f51.google.com with SMTP id 62so58133556oih.2
-        for <linux-scsi@vger.kernel.org>; Fri, 03 Mar 2017 08:20:28 -0800 (PST)
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:54156 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751641AbdCCRwE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Mar 2017 12:52:04 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id E275C285D8
+        for <linux-scsi@vger.kernel.org>; Fri,  3 Mar 2017 17:42:40 +0000 (UTC)
+Received: from pdx-korg-bugzilla-1.web.codeaurora.org (unknown [172.30.200.120])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id ADBF9285D4
+        for <linux-scsi@vger.kernel.org>; Fri,  3 Mar 2017 17:42:40 +0000 (UTC)
+In-Reply-To: <bug-188061-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Dmitry Vyukov <dvyukov@google.com>
+To: linux-scsi@kernel.org
 
---001a11408cd2ecbb410549c39dfa
-Content-Type: text/plain; charset=UTF-8
+https://bugzilla.kernel.org/show_bug.cgi?id=188061
 
-now that i think i've got gmail not marking everything as spam...
+--- Comment #6 from himanshu.madhani@cavium.com (himanshu.madhani@qlogic.com) ---
+(In reply to Anthony from comment #5)
+> I've installed another 4-port card and got same issue - port names have
+> variable part at highest bits. On 2-port card port names have variable part
+> at lower bits:
+>     port_name           = "0x21000024ff3bcb3e"
+>     port_name           = "0x21000024ff3bcb3f"
+> I'm trying to change a port name in NVRAM with FLASUTIL.EXE with no luck.
 
-\p
+Hi Anthony, 
 
---001a11408cd2ecbb410549c39dfa
-Content-Type: text/x-patch; charset=US-ASCII;
-	name="0001-sg-check-length-passed-to-SG_NEXT_CMD_LEN.patch"
-Content-Disposition: attachment;
-	filename="0001-sg-check-length-passed-to-SG_NEXT_CMD_LEN.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_izsq6rbp0
+Can you please attach output of following command from your 4-port card.
 
-RnJvbSA5MzQwOWM2MmRiNDlkMTUxMDUzOTAzMTVhNjg1ZTU0MDgzMDI5YmVlIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBwZXRlciBjaGFuZyA8ZHBmQGdvb2dsZS5jb20+CkRhdGU6IFdl
-ZCwgMTUgRmViIDIwMTcgMTQ6MTE6NTQgLTA4MDAKU3ViamVjdDogW1BBVENIXSBbc2ddIGNoZWNr
-IGxlbmd0aCBwYXNzZWQgdG8gU0dfTkVYVF9DTURfTEVOCgp0aGUgdXNlciBjYW4gY29udHJvbCB0
-aGUgc2l6ZSBvZiB0aGUgbmV4dCBjb21tYW5kIHBhc3NlZCBhbG9uZywgYnV0CnRoZSB2YWx1ZSBw
-YXNzZWQgdG8gdGhlIGlvY3RsIGlzbid0IGNoZWNrZWQgYWdhaW5zdCB0aGUgdXNhYmxlCm1heCBj
-b21tYW5kIHNpemUuCgpDaGFuZ2UtSWQ6IEk5YWMyYWUwN2MzNWNmNWZkYTYyZDdhZmFkMzJjOGQ5
-YWI2YTllYTFkClRlc3RlZDogc2FuaXR5IGNoZWNrZWQgdy8gY2FsbGluZyB0aGUgaW9jdGwgdy8g
-YSBib2d1cyBzaXplCi0tLQogZHJpdmVycy9zY3NpL3NnLmMgfCAyICsrCiAxIGZpbGUgY2hhbmdl
-ZCwgMiBpbnNlcnRpb25zKCspCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3NnLmMgYi9kcml2
-ZXJzL3Njc2kvc2cuYwppbmRleCA5YzVjNWYyYjM5NjIuLmI0N2EzNjljYjcxYyAxMDA2NDQKLS0t
-IGEvZHJpdmVycy9zY3NpL3NnLmMKKysrIGIvZHJpdmVycy9zY3NpL3NnLmMKQEAgLTk3Niw2ICs5
-NzYsOCBAQCBzZ19pb2N0bChzdHJ1Y3QgZmlsZSAqZmlscCwgdW5zaWduZWQgaW50IGNtZF9pbiwg
-dW5zaWduZWQgbG9uZyBhcmcpCiAJCXJlc3VsdCA9IGdldF91c2VyKHZhbCwgaXApOwogCQlpZiAo
-cmVzdWx0KQogCQkJcmV0dXJuIHJlc3VsdDsKKwkJaWYgKHZhbCA+IFNHX01BWF9DREJfU0laRSkK
-KwkJCXJldHVybiAtRU5PTUVNOwogCQlzZnAtPm5leHRfY21kX2xlbiA9ICh2YWwgPiAwKSA/IHZh
-bCA6IDA7CiAJCXJldHVybiAwOwogCWNhc2UgU0dfR0VUX1ZFUlNJT05fTlVNOgotLSAKMi4xMi4w
-LnJjMS40NDAuZzViNzY1NjVmNzQtZ29vZwoK
---001a11408cd2ecbb410549c39dfa--
+# lspci -vvv -s <pci_bus_for_each_port>
+
+So for example 
+
+# lspci -vvv -s 09.00.0 and so on for each of the 4 ports of 4-port card. 
+
+Thanks,
+Himanshu
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
