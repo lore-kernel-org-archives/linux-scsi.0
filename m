@@ -1,75 +1,186 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: RE: [PATCH] qla2xxx: Fix ql_dump_buffer
-Date: Fri, 3 Mar 2017 19:23:42 +0000
-Message-ID: <SN1PR0701MB183741685AF2616384EB5A42F52B0@SN1PR0701MB1837.namprd07.prod.outlook.com>
-References: <404b1c3a4bfd1f83211482b77b4a9680e755e32a.1488503664.git.joe@perches.com>
+From: Stephen Hemminger <stephen@networkplumber.org>
+Subject: Re: SCSI regression in 4.11
+Date: Fri, 3 Mar 2017 14:29:51 -0800
+Message-ID: <20170303142951.4d86a420@xeon-e3>
+References: <c1949de0-8b95-e254-1bec-bcdae762890f@kernel.dk>
+        <1488301573.3046.9.camel@linux.vnet.ibm.com>
+        <20170228105741.6253bb8a@xeon-e3>
+        <1488325732.11610.9.camel@linux.vnet.ibm.com>
+        <20170228172532.280811ed@xeon-e3>
+        <1488349258.20321.11.camel@linux.vnet.ibm.com>
+        <20170228224845.1da358ee@xeon-e3>
+        <20170301155057.GA13167@lst.de>
+        <20170301075412.2e5f1e98@xeon-e3>
+        <20170302000135.GA22886@lst.de>
+        <20170302005615.GA23687@lst.de>
+        <20170301174058.383da142@xeon-e3>
+        <c8ff2b64-2421-ca45-1f89-afec0490c8b3@suse.de>
+        <20170302102324.47dbe3ad@xeon-e3>
+        <895c4f2e-7faa-41e1-b5de-eedb4ae0f882@email.android.com>
+        <20170302110505.6ad2eb61@xeon-e3>
+        <1b325703-b823-4304-9d9d-86071811e000@email.android.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <404b1c3a4bfd1f83211482b77b4a9680e755e32a.1488503664.git.joe@perches.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>, "qla2xxx-upstream@qlogic.com" <qla2xxx-upstream@qlogic.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:35748 "EHLO
+        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752184AbdCCWiP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Mar 2017 17:38:15 -0500
+Received: by mail-pf0-f174.google.com with SMTP id j5so37409197pfb.2
+        for <linux-scsi@vger.kernel.org>; Fri, 03 Mar 2017 14:38:10 -0800 (PST)
+In-Reply-To: <1b325703-b823-4304-9d9d-86071811e000@email.android.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@Hansenpartnership.com>
+Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, Jens Axboe <axboe@kernel.dk>, Linus Torvalds <torvalds@linux-foundation.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "K. Y. Srinivasan" <kys@microsoft.com>, Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>, Josh Poulson <jopoulso@microsoft.com>, v-adsuho@microsoft.com, linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>
 
+On Thu, 02 Mar 2017 11:18:23 -0800
+James Bottomley <James.Bottomley@Hansenpartnership.com> wrote:
 
+> On March 2, 2017 11:05:05 AM PST, Stephen Hemminger <stephen@networkplumber.org> wrote:
+> >On Thu, 02 Mar 2017 10:36:17 -0800
+> >James Bottomley <James.Bottomley@Hansenpartnership.com> wrote:
+> >  
+> >> On March 2, 2017 10:23:24 AM PST, Stephen Hemminger  
+> ><stephen@networkplumber.org> wrote:  
+> >> >On Thu, 2 Mar 2017 14:25:14 +0100
+> >> >Hannes Reinecke <hare@suse.de> wrote:
+> >> >    
+> >> >> On 03/02/2017 02:40 AM, Stephen Hemminger wrote:    
+> >> >> > On Thu, 2 Mar 2017 01:56:15 +0100
+> >> >> > Christoph Hellwig <hch@lst.de> wrote:
+> >> >> >      
+> >> >> >> On Thu, Mar 02, 2017 at 01:01:35AM +0100, Christoph Hellwig  
+> >wrote:    
+> >> >     
+> >> >> >>> On Wed, Mar 01, 2017 at 07:54:12AM -0800, Stephen Hemminger    
+> >> >wrote:      
+> >> >> >>>>>    
+> >>
+> >>	http://git.infradead.org/users/hch/block.git/commitdiff/148cff67b401e2229c076c0ea418712654be77e4  
+> >> >     
+> >> >> >>>>
+> >> >> >>>> It appears that is already in the code I am testing in    
+> >> >linux-next...      
+> >> >> >>>
+> >> >> >>> It's in -next now, but it wasn't at the time you reported the   
+> >  
+> >> >bug.    
+> >> >> >>>
+> >> >> >>> And it would sortof explain the bug if the INQUIRY data is    
+> >> >correct    
+> >> >> >>> in the scatterlist, but we ignore it, given that  
+> >scsi_probe_lun  
+> >> >> >>> ignores the result based on sense data.
+> >> >> >>>
+> >> >> >>> Can you check what happens with the horrible hack below:      
+> >> >> >>
+> >> >> >> Strike that - we're checking result later, so this can't be the  
+> >   
+> >> >case.    
+> >> >> >>
+> >> >> >> Now the other interesting thing is the memset in  
+> >__scsi_exectute,  
+> >> >> >> which looks very suspicious.  Try the following please:
+> >> >> >>
+> >> >> >> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> >> >> >> index 3e32dc954c3c..22f4fb550561 100644
+> >> >> >> --- a/drivers/scsi/scsi_lib.c
+> >> >> >> +++ b/drivers/scsi/scsi_lib.c
+> >> >> >> @@ -253,7 +253,8 @@ static int __scsi_execute(struct  
+> >scsi_device    
+> >> >*sdev, const unsigned char *cmd,    
+> >> >> >>  	 * and prevent security leaks by zeroing out the excess data.
+> >> >> >>  	 */
+> >> >> >>  	if (unlikely(rq->resid_len > 0 && rq->resid_len <= bufflen))
+> >> >> >> -		memset(buffer + (bufflen - rq->resid_len), 0,  
+> >rq->resid_len);  
+> >> >> >> +//		memset(buffer + (bufflen - rq->resid_len), 0,  
+> >rq->resid_len);  
+> >> >> >> +		printk_ratelimited("%s: got resid %d\n", __func__,    
+> >> >rq->resid_len);    
+> >> >> >>
+> >> >> >>  	if (resid)
+> >> >> >>  		*resid = rq->resid_len;      
+> >> >> >
+> >> >> >
+> >> >> > Still fails but does print resid on some of the later INQUIRY    
+> >> >commands (not the initial one).    
+> >> >> >      
+> >> >> Can you test what happens if you blank out the storvsc_drv    
+> >> >workaround:    
+> >> >> 
+> >> >> diff --git a/drivers/scsi/storvsc_drv.c  
+> >b/drivers/scsi/storvsc_drv.c  
+> >> >> index 585e54f..c36f42d 100644
+> >> >> --- a/drivers/scsi/storvsc_drv.c
+> >> >> +++ b/drivers/scsi/storvsc_drv.c
+> >> >> @@ -1060,13 +1060,13 @@ static void  
+> >storvsc_on_io_completion(struct   
+> >> >> storvsc_device *stor_device,
+> >> >>           * We do this so we can distinguish truly fatal failues
+> >> >>           * (srb status == 0x4) and off-line the device in that  
+> >case.  
+> >> >>           */
+> >> >> -
+> >> >> +#if 0
+> >> >>          if ((stor_pkt->vm_srb.cdb[0] == INQUIRY) ||
+> >> >>             (stor_pkt->vm_srb.cdb[0] == MODE_SENSE)) {
+> >> >>                  vstor_packet->vm_srb.scsi_status = 0;
+> >> >>                  vstor_packet->vm_srb.srb_status =    
+> >> >SRB_STATUS_SUCCESS;    
+> >> >>          }
+> >> >> -
+> >> >> +#endif
+> >> >> 
+> >> >>          /* Copy over the status...etc */
+> >> >>          stor_pkt->vm_srb.scsi_status =    
+> >> >vstor_packet->vm_srb.scsi_status;    
+> >> >> 
+> >> >> It might thappen that we're fail to interpret the 'Device not    
+> >> >present'     
+> >> >> status correctly (which will happen for non-connected DVDs)  
+> >causing    
+> >> >the     
+> >> >> SCSI stack to make incorrect decisions later on.
+> >> >> 
+> >> >> Cheers,
+> >> >> 
+> >> >> Hannes    
+> >> >
+> >> >There are several oddities about the host SCSI interface that I see:
+> >> > 1. The host bus seems to report up to 6 devices even though only 2  
+> >are  
+> >> >     present (Disk and CDROM).
+> >> >2. The CDROM emulation doesn't report the same status as a real  
+> >device.  
+> >> > 3. The host emulation of SCSI doesn't support all the page codes  
+> >which  
+> >> >     is why there is the hack.
+> >> >
+> >> >But as James said, these don't appear to be related to the failure
+> >> >because
+> >> >the code worked before and only in post 4.11 merege is there a  
+> >problem.    
+> >> 
+> >> Your wait for the hang trace is the most suggestive.   It says we're  
+> >waiting for a partition read to the spurious device.  Previously this
+> >would have failed or timed out, so this seems to be the root cause.  
+> >> 
+> >> James
+> >> 
+> >>   
+> >
+> >Where is the number of valid LUN's determined during the scan process?  
+> 
+> Depends.  If you can do a report lun scan then that's definitive.  You seem to be probing (SCSI_probe_and_add_lun)  and you make us think there's something there by responding wrongly to the initial inquiry.
 
-> -----Original Message-----
-> From: Joe Perches [mailto:joe@perches.com]
-> Sent: Thursday, March 2, 2017 5:15 PM
-> To: qla2xxx-upstream@qlogic.com
-> Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>; Martin K. Petersen
-> <martin.petersen@oracle.com>; linux-scsi@vger.kernel.org; linux-
-> kernel@vger.kernel.org
-> Subject: [PATCH] qla2xxx: Fix ql_dump_buffer
->=20
-> Recent printk changes for KERN_CONT cause this logging to be defectively
-> emitted on multiple lines.  Fix it.
->=20
-> Also reduces object size a trivial amount.
->=20
-> $ size drivers/scsi/qla2xxx/qla_dbg.o*
->    text	   data	    bss	    dec	    hex	filename
->   39125	      0	      0	  39125	   98d5	drivers/scsi/qla2xxx/qla_dbg.o.ne=
-w
->   39164	      0	      0	  39164	   98fc	drivers/scsi/qla2xxx/qla_dbg.o.ol=
-d
->=20
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
->  drivers/scsi/qla2xxx/qla_dbg.c | 12 ++++--------
->  1 file changed, 4 insertions(+), 8 deletions(-)
->=20
-> diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_db=
-g.c
-> index 21d9fb7fc887..51b4179469d1 100644
-> --- a/drivers/scsi/qla2xxx/qla_dbg.c
-> +++ b/drivers/scsi/qla2xxx/qla_dbg.c
-> @@ -2707,13 +2707,9 @@ ql_dump_buffer(uint32_t level, scsi_qla_host_t
-> *vha, int32_t id,
->  	    "%-+5d  0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F\n", size);
->  	ql_dbg(level, vha, id,
->  	    "----- -----------------------------------------------\n");
-> -	for (cnt =3D 0; cnt < size; cnt++, buf++) {
-> -		if (cnt % 16 =3D=3D 0)
-> -			ql_dbg(level, vha, id, "%04x:", cnt & ~0xFU);
-> -		printk(" %02x", *buf);
-> -		if (cnt % 16 =3D=3D 15)
-> -			printk("\n");
-> +	for (cnt =3D 0; cnt < size; cnt +=3D 16) {
-> +		ql_dbg(level, vha, id, "%04x: ", cnt);
-> +		print_hex_dump(KERN_CONT, "", DUMP_PREFIX_NONE, 16,
-> 1,
-> +			       buf + cnt, min(16U, size - cnt), false);
->  	}
-> -	if (cnt % 16 !=3D 0)
-> -		printk("\n");
->  }
-> --
-> 2.10.0.rc2.1.g053435c
+Testing a fix now. There looks like 3 problems here:
+1. storvsc_io_completion masks all error responses from INQUIRY
+2. Error handling in storvsc does not report invalid LUN correctly.
+3. Block layer has new problems when device is in bad state (not present and timing out).
 
-Looks Good.=20
-
-Acked-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+The first two have been there for 4 years but did not cause problems.
+Something happened that made kernel chew lots of resources and eventually die when
+it hits a disconnected device that is not detected properly.
