@@ -1,15 +1,15 @@
 From: jsmart2021@gmail.com
-Subject: [PATCH 13/20] lpfc: Rework lpfc Kconfig for NVME options
-Date: Sat,  4 Mar 2017 09:30:33 -0800
-Message-ID: <1488648640-5170-14-git-send-email-jsmart2021@gmail.com>
+Subject: [PATCH 11/20] lpfc: Fix eh_deadline setting for sli3 adapters.
+Date: Sat,  4 Mar 2017 09:30:31 -0800
+Message-ID: <1488648640-5170-12-git-send-email-jsmart2021@gmail.com>
 References: <1488648640-5170-1-git-send-email-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:33246 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752383AbdCDRbF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Mar 2017 12:31:05 -0500
-Received: by mail-qk0-f195.google.com with SMTP id j127so16586744qke.0
-        for <linux-scsi@vger.kernel.org>; Sat, 04 Mar 2017 09:31:05 -0800 (PST)
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:36534 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752186AbdCDRbD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Mar 2017 12:31:03 -0500
+Received: by mail-qk0-f196.google.com with SMTP id n141so10940638qke.3
+        for <linux-scsi@vger.kernel.org>; Sat, 04 Mar 2017 09:31:02 -0800 (PST)
 In-Reply-To: <1488648640-5170-1-git-send-email-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,228 +18,209 @@ Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>
 
 From: James Smart <jsmart2021@gmail.com>
 
-Reworked Kconfig so that lfpc only requires the scsi stack.
-NVME Initiator and NVME Target support can be enabled if
-the other NVMe subsystems have been enabled.
+A previous change unilaterally removed the hba reset entry point
+from the sli3 host template. This was done to allow tape devices
+being used for back up from being removed. Why was this done ?
+When there was non-responding device on the fabric, the error
+escalation policy would escalate to the reset handler. When the
+reset handler was called, it would reset the adapter, dropping
+link, thus logging out and terminating all i/o's - on any target.
+If there was a tape device on the same adapter that wasn't in
+error, it would kill the tape i/o's, effectively killing the
+tape device state.  With the reset point removed, the adapter
+reset avoided the fabric logout, allowing the other devices to
+continue to operate unaffected. A hack - yes. Hint: we really
+need a transport I_T nexus reset callback added to the eh process
+(in between the SCSI target reset and hba reset points), so a
+fc logout could occur to the one bad target only and stop the error
+escalation process.
+
+This patch commonizes the approach so it can be used for sli3 and sli4
+adapters, but mandates the admin, via module parameter, specifically
+identify which adapters the resets are to be removed for. Additionally,
+bus_reset, which sends Target Reset TMFs to all targets, is also removed
+from the template as it too has the same effect as the adapter reset.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/Kconfig           | 19 ++++++++++++++++---
- drivers/scsi/lpfc/lpfc_nvme.c  | 18 +++++++++++++++---
- drivers/scsi/lpfc/lpfc_nvmet.c | 10 ++++++++++
- 3 files changed, 41 insertions(+), 6 deletions(-)
+ drivers/scsi/lpfc/lpfc.h      |  1 +
+ drivers/scsi/lpfc/lpfc_attr.c |  6 +++++
+ drivers/scsi/lpfc/lpfc_crtn.h |  4 ++-
+ drivers/scsi/lpfc/lpfc_init.c | 61 ++++++++++++++++++++++++++++++++++++++++---
+ drivers/scsi/lpfc/lpfc_scsi.c |  3 +--
+ 5 files changed, 69 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 230043c..4bf55b5 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -1241,19 +1241,32 @@ config SCSI_LPFC
- 	tristate "Emulex LightPulse Fibre Channel Support"
- 	depends on PCI && SCSI
- 	depends on SCSI_FC_ATTRS
--	depends on NVME_FC && NVME_TARGET_FC
- 	select CRC_T10DIF
--	help
-+	---help---
-           This lpfc driver supports the Emulex LightPulse
-           Family of Fibre Channel PCI host adapters.
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index de6cd57..763f32d 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -99,6 +99,7 @@ struct lpfc_sli2_slim;
+ #define FC_MAX_ADPTMSG		64
  
- config SCSI_LPFC_DEBUG_FS
- 	bool "Emulex LightPulse Fibre Channel debugfs Support"
- 	depends on SCSI_LPFC && DEBUG_FS
--	help
-+	---help---
- 	  This makes debugging information from the lpfc driver
- 	  available via the debugfs filesystem.
+ #define MAX_HBAEVT	32
++#define MAX_HBAS_NO_RESET 16
  
-+config LPFC_NVME_INITIATOR
-+	bool "Emulex LightPulse Fibre Channel NVME Initiator Support"
-+	depends on SCSI_LPFC && NVME_FC
-+	---help---
-+	  This enables NVME Initiator support in the Emulex lpfc driver.
+ /* Number of MSI-X vectors the driver uses */
+ #define LPFC_MSIX_VECTORS	2
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index 4114cf4..b741dcb 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -3010,6 +3010,12 @@ MODULE_PARM_DESC(lpfc_poll, "FCP ring polling mode control:"
+ static DEVICE_ATTR(lpfc_poll, S_IRUGO | S_IWUSR,
+ 		   lpfc_poll_show, lpfc_poll_store);
+ 
++int lpfc_no_hba_reset_cnt;
++unsigned long lpfc_no_hba_reset[MAX_HBAS_NO_RESET] = {
++	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
++module_param_array(lpfc_no_hba_reset, ulong, &lpfc_no_hba_reset_cnt, 0444);
++MODULE_PARM_DESC(lpfc_no_hba_reset, "WWPN of HBAs that should not be reset");
 +
-+config LPFC_NVME_TARGET
-+	bool "Emulex LightPulse Fibre Channel NVME Initiator Support"
-+	depends on SCSI_LPFC && NVME_TARGET_FC
-+	---help---
-+	  This enables NVME Target support in the Emulex lpfc driver.
-+	  Target enablement must still be enabled on a per adapter
-+	  basis by module parameters.
+ LPFC_ATTR(sli_mode, 0, 0, 3,
+ 	"SLI mode selector:"
+ 	" 0 - auto (SLI-3 if supported),"
+diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+index 843dd73..54e6ac4 100644
+--- a/drivers/scsi/lpfc/lpfc_crtn.h
++++ b/drivers/scsi/lpfc/lpfc_crtn.h
+@@ -384,7 +384,7 @@ void lpfc_free_sysfs_attr(struct lpfc_vport *);
+ extern struct device_attribute *lpfc_hba_attrs[];
+ extern struct device_attribute *lpfc_vport_attrs[];
+ extern struct scsi_host_template lpfc_template;
+-extern struct scsi_host_template lpfc_template_s3;
++extern struct scsi_host_template lpfc_template_no_hr;
+ extern struct scsi_host_template lpfc_template_nvme;
+ extern struct scsi_host_template lpfc_vport_template;
+ extern struct fc_function_template lpfc_transport_functions;
+@@ -554,3 +554,5 @@ void lpfc_nvme_abort_fcreq_cmpl(struct lpfc_hba *phba,
+ 				struct lpfc_wcqe_complete *abts_cmpl);
+ extern int lpfc_enable_nvmet_cnt;
+ extern unsigned long long lpfc_enable_nvmet[];
++extern int lpfc_no_hba_reset_cnt;
++extern unsigned long lpfc_no_hba_reset[];
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index b754887..ecb8e1c 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -3555,6 +3555,44 @@ lpfc_sli4_scsi_sgl_update(struct lpfc_hba *phba)
+ 	return rc;
+ }
+ 
++static uint64_t
++lpfc_get_wwpn(struct lpfc_hba *phba)
++{
++	uint64_t wwn;
++	int rc;
++	LPFC_MBOXQ_t *mboxq;
++	MAILBOX_t *mb;
 +
- config SCSI_SIM710
- 	tristate "Simple 53c710 SCSI support (Compaq, NCR machines)"
- 	depends on (EISA || MCA) && SCSI
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index b9012fe..0a4c190 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -2127,11 +2127,12 @@ lpfc_release_nvme_buf(struct lpfc_hba *phba, struct lpfc_nvme_buf *lpfc_ncmd)
- int
- lpfc_nvme_create_localport(struct lpfc_vport *vport)
- {
-+	int ret = 0;
- 	struct lpfc_hba  *phba = vport->phba;
- 	struct nvme_fc_port_info nfcp_info;
- 	struct nvme_fc_local_port *localport;
- 	struct lpfc_nvme_lport *lport;
--	int len, ret = 0;
-+	int len;
- 
- 	/* Initialize this localport instance.  The vport wwn usage ensures
- 	 * that NPIV is accounted for.
-@@ -2148,8 +2149,12 @@ lpfc_nvme_create_localport(struct lpfc_vport *vport)
- 	/* localport is allocated from the stack, but the registration
- 	 * call allocates heap memory as well as the private area.
- 	 */
-+#ifdef CONFIG_LPFC_NVME_INITIATOR
- 	ret = nvme_fc_register_localport(&nfcp_info, &lpfc_nvme_template,
- 					 &vport->phba->pcidev->dev, &localport);
-+#else
-+	ret = -ENOMEM;
-+#endif
- 	if (!ret) {
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME | LOG_NVME_DISC,
- 				 "6005 Successfully registered local "
-@@ -2185,6 +2190,7 @@ lpfc_nvme_create_localport(struct lpfc_vport *vport)
- void
- lpfc_nvme_destroy_localport(struct lpfc_vport *vport)
- {
-+#ifdef CONFIG_LPFC_NVME_INITIATOR
- 	struct nvme_fc_local_port *localport;
- 	struct lpfc_nvme_lport *lport;
- 	struct lpfc_nvme_rport *rport = NULL, *rport_next = NULL;
-@@ -2200,7 +2206,6 @@ lpfc_nvme_destroy_localport(struct lpfc_vport *vport)
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME,
- 			 "6011 Destroying NVME localport %p\n",
- 			 localport);
--
- 	list_for_each_entry_safe(rport, rport_next, &lport->rport_list, list) {
- 		/* The last node ref has to get released now before the rport
- 		 * private memory area is released by the transport.
-@@ -2214,6 +2219,7 @@ lpfc_nvme_destroy_localport(struct lpfc_vport *vport)
- 					 "6008 rport fail destroy %x\n", ret);
- 		wait_for_completion_timeout(&rport->rport_unreg_done, 5);
- 	}
 +
- 	/* lport's rport list is clear.  Unregister
- 	 * lport and release resources.
- 	 */
-@@ -2237,6 +2243,7 @@ lpfc_nvme_destroy_localport(struct lpfc_vport *vport)
- 				 "Failed, status x%x\n",
- 				 ret);
- 	}
-+#endif
- }
- 
- void
-@@ -2267,6 +2274,7 @@ lpfc_nvme_update_localport(struct lpfc_vport *vport)
- int
- lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- {
-+#ifdef CONFIG_LPFC_NVME_INITIATOR
- 	int ret = 0;
- 	struct nvme_fc_local_port *localport;
- 	struct lpfc_nvme_lport *lport;
-@@ -2340,7 +2348,6 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 			rpinfo.port_role |= FC_PORT_ROLE_NVME_INITIATOR;
- 		rpinfo.port_name = wwn_to_u64(ndlp->nlp_portname.u.wwn);
- 		rpinfo.node_name = wwn_to_u64(ndlp->nlp_nodename.u.wwn);
--
- 		ret = nvme_fc_register_remoteport(localport, &rpinfo,
- 						  &remote_port);
- 		if (!ret) {
-@@ -2376,6 +2383,9 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 				 ndlp->nlp_type, ndlp->nlp_DID, ndlp);
- 	}
- 	return ret;
-+#else
-+	return 0;
-+#endif
- }
- 
- /* lpfc_nvme_unregister_port - unbind the DID and port_role from this rport.
-@@ -2393,6 +2403,7 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- void
- lpfc_nvme_unregister_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- {
-+#ifdef CONFIG_LPFC_NVME_INITIATOR
- 	int ret;
- 	struct nvme_fc_local_port *localport;
- 	struct lpfc_nvme_lport *lport;
-@@ -2450,6 +2461,7 @@ lpfc_nvme_unregister_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 	return;
- 
-  input_err:
-+#endif
- 	lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_DISC,
- 			 "6168: State error: lport %p, rport%p FCID x%06x\n",
- 			 vport->localport, ndlp->rport, ndlp->nlp_DID);
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index 48ce985..a69ca6e 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -671,9 +671,13 @@ lpfc_nvmet_create_targetport(struct lpfc_hba *phba)
- 	lpfc_tgttemplate.target_features = NVMET_FCTGTFEAT_READDATA_RSP |
- 					   NVMET_FCTGTFEAT_NEEDS_CMD_CPUSCHED;
- 
-+#ifdef CONFIG_LPFC_NVME_TARGET
- 	error = nvmet_fc_register_targetport(&pinfo, &lpfc_tgttemplate,
- 					     &phba->pcidev->dev,
- 					     &phba->targetport);
-+#else
-+	error = -ENOMEM;
-+#endif
- 	if (error) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_NVME_DISC,
- 				"6025 Cannot register NVME targetport "
-@@ -752,6 +756,7 @@ lpfc_sli4_nvmet_xri_aborted(struct lpfc_hba *phba,
- void
- lpfc_nvmet_destroy_targetport(struct lpfc_hba *phba)
- {
-+#ifdef CONFIG_LPFC_NVME_TARGET
- 	struct lpfc_nvmet_tgtport *tgtp;
- 
- 	if (phba->nvmet_support == 0)
-@@ -763,6 +768,7 @@ lpfc_nvmet_destroy_targetport(struct lpfc_hba *phba)
- 		wait_for_completion_timeout(&tgtp->tport_unreg_done, 5);
- 	}
- 	phba->targetport = NULL;
-+#endif
- }
- 
++	mboxq = (LPFC_MBOXQ_t *) mempool_alloc(phba->mbox_mem_pool,
++						GFP_KERNEL);
++	if (!mboxq)
++		return (uint64_t)-1;
++
++	/* First get WWN of HBA instance */
++	lpfc_read_nv(phba, mboxq);
++	rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_POLL);
++	if (rc != MBX_SUCCESS) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
++				"6019 Mailbox failed , mbxCmd x%x "
++				"READ_NV, mbxStatus x%x\n",
++				bf_get(lpfc_mqe_command, &mboxq->u.mqe),
++				bf_get(lpfc_mqe_status, &mboxq->u.mqe));
++		mempool_free(mboxq, phba->mbox_mem_pool);
++		return (uint64_t) -1;
++	}
++	mb = &mboxq->u.mb;
++	memcpy(&wwn, (char *)mb->un.varRDnvp.portname, sizeof(uint64_t));
++	/* wwn is WWPN of HBA instance */
++	mempool_free(mboxq, phba->mbox_mem_pool);
++	if (phba->sli_rev == LPFC_SLI_REV4)
++		return be64_to_cpu(wwn);
++	else
++		return (((wwn & 0xffffffff00000000) >> 32) |
++			((wwn & 0x00000000ffffffff) << 32));
++
++}
++
  /**
-@@ -782,6 +788,7 @@ static void
- lpfc_nvmet_unsol_ls_buffer(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 			   struct hbq_dmabuf *nvmebuf)
- {
-+#ifdef CONFIG_LPFC_NVME_TARGET
- 	struct lpfc_nvmet_tgtport *tgtp;
- 	struct fc_frame_header *fc_hdr;
- 	struct lpfc_nvmet_rcv_ctx *ctxp;
-@@ -862,6 +869,7 @@ lpfc_nvmet_unsol_ls_buffer(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+  * lpfc_sli4_nvme_sgl_update - update xri-sgl sizing and mapping
+  * @phba: pointer to lpfc hba data structure.
+@@ -3676,17 +3714,32 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
+ 	struct lpfc_vport *vport;
+ 	struct Scsi_Host  *shost = NULL;
+ 	int error = 0;
++	int i;
++	uint64_t wwn;
++	bool use_no_reset_hba = false;
++
++	wwn = lpfc_get_wwpn(phba);
++
++	for (i = 0; i < lpfc_no_hba_reset_cnt; i++) {
++		if (wwn == lpfc_no_hba_reset[i]) {
++			lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
++					"6020 Setting use_no_reset port=%llx\n",
++					wwn);
++			use_no_reset_hba = true;
++			break;
++		}
++	}
  
- 	atomic_inc(&tgtp->xmt_ls_abort);
- 	lpfc_nvmet_unsol_ls_issue_abort(phba, ctxp, sid, oxid);
-+#endif
- }
+ 	if (phba->cfg_enable_fc4_type & LPFC_ENABLE_FCP) {
+ 		if (dev != &phba->pcidev->dev) {
+ 			shost = scsi_host_alloc(&lpfc_vport_template,
+ 						sizeof(struct lpfc_vport));
+ 		} else {
+-			if (phba->sli_rev == LPFC_SLI_REV4)
++			if (!use_no_reset_hba)
+ 				shost = scsi_host_alloc(&lpfc_template,
+ 						sizeof(struct lpfc_vport));
+ 			else
+-				shost = scsi_host_alloc(&lpfc_template_s3,
++				shost = scsi_host_alloc(&lpfc_template_no_hr,
+ 						sizeof(struct lpfc_vport));
+ 		}
+ 	} else if (phba->cfg_enable_fc4_type & LPFC_ENABLE_NVME) {
+@@ -5482,7 +5535,8 @@ lpfc_sli_driver_resource_setup(struct lpfc_hba *phba)
  
- /**
-@@ -883,6 +891,7 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
- 			    struct rqb_dmabuf *nvmebuf,
- 			    uint64_t isr_timestamp)
- {
-+#ifdef CONFIG_LPFC_NVME_TARGET
- 	struct lpfc_nvmet_rcv_ctx *ctxp;
- 	struct lpfc_nvmet_tgtport *tgtp;
- 	struct fc_frame_header *fc_hdr;
-@@ -988,6 +997,7 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
- 		/* We assume a rcv'ed cmd ALWAYs fits into 1 buffer */
- 		lpfc_nvmet_rq_post(phba, NULL, &nvmebuf->hbuf);
- 	}
-+#endif
- }
+ 	/* Initialize the host templates the configured values. */
+ 	lpfc_vport_template.sg_tablesize = phba->cfg_sg_seg_cnt;
+-	lpfc_template_s3.sg_tablesize = phba->cfg_sg_seg_cnt;
++	lpfc_template_no_hr.sg_tablesize = phba->cfg_sg_seg_cnt;
++	lpfc_template.sg_tablesize = phba->cfg_sg_seg_cnt;
  
- /**
+ 	/* There are going to be 2 reserved BDEs: 1 FCP cmnd + 1 FCP rsp */
+ 	if (phba->cfg_enable_bg) {
+@@ -5706,6 +5760,7 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
+ 	/* Initialize the host templates with the updated values. */
+ 	lpfc_vport_template.sg_tablesize = phba->cfg_sg_seg_cnt;
+ 	lpfc_template.sg_tablesize = phba->cfg_sg_seg_cnt;
++	lpfc_template_no_hr.sg_tablesize = phba->cfg_sg_seg_cnt;
+ 
+ 	if (phba->cfg_sg_dma_buf_size  <= LPFC_MIN_SG_SLI4_BUF_SZ)
+ 		phba->cfg_sg_dma_buf_size = LPFC_MIN_SG_SLI4_BUF_SZ;
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 9d6384a..bcfd6d6 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -5953,7 +5953,7 @@ struct scsi_host_template lpfc_template_nvme = {
+ 	.track_queue_depth	= 0,
+ };
+ 
+-struct scsi_host_template lpfc_template_s3 = {
++struct scsi_host_template lpfc_template_no_hr = {
+ 	.module			= THIS_MODULE,
+ 	.name			= LPFC_DRIVER_NAME,
+ 	.proc_name		= LPFC_DRIVER_NAME,
+@@ -6015,7 +6015,6 @@ struct scsi_host_template lpfc_vport_template = {
+ 	.eh_abort_handler	= lpfc_abort_handler,
+ 	.eh_device_reset_handler = lpfc_device_reset_handler,
+ 	.eh_target_reset_handler = lpfc_target_reset_handler,
+-	.eh_bus_reset_handler	= lpfc_bus_reset_handler,
+ 	.slave_alloc		= lpfc_slave_alloc,
+ 	.slave_configure	= lpfc_slave_configure,
+ 	.slave_destroy		= lpfc_slave_destroy,
 -- 
 2.5.0
