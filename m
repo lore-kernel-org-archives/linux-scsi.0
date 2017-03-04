@@ -1,148 +1,66 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [RFC] hv_storvsc: error handling.
-Date: Sat, 4 Mar 2017 12:55:39 +0100
-Message-ID: <4573c647-7a94-ff59-bfcd-6f4edaad0977@suse.de>
-References: <c1949de0-8b95-e254-1bec-bcdae762890f@kernel.dk>
- <1488301573.3046.9.camel@linux.vnet.ibm.com>
- <20170228105741.6253bb8a@xeon-e3>
- <1488325732.11610.9.camel@linux.vnet.ibm.com>
- <20170228172532.280811ed@xeon-e3>
- <1488349258.20321.11.camel@linux.vnet.ibm.com>
- <20170228224845.1da358ee@xeon-e3> <20170301155057.GA13167@lst.de>
- <20170301075412.2e5f1e98@xeon-e3> <20170302000135.GA22886@lst.de>
- <20170302005615.GA23687@lst.de> <20170301174058.383da142@xeon-e3>
- <c8ff2b64-2421-ca45-1f89-afec0490c8b3@suse.de>
- <20170302102324.47dbe3ad@xeon-e3>
- <895c4f2e-7faa-41e1-b5de-eedb4ae0f882@email.android.com>
- <20170302110505.6ad2eb61@xeon-e3>
- <1b325703-b823-4304-9d9d-86071811e000@email.android.com>
- <20170303165011.53a38794@xeon-e3>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 8bit
+From: jsmart2021@gmail.com
+Subject: [PATCH 00/20] lpfc: Update lpfc to revision 11.2.0.10
+Date: Sat,  4 Mar 2017 09:30:20 -0800
+Message-ID: <1488648640-5170-1-git-send-email-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53139 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751580AbdCDLzo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 4 Mar 2017 06:55:44 -0500
-In-Reply-To: <20170303165011.53a38794@xeon-e3>
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:35269 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752057AbdCDRa7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Mar 2017 12:30:59 -0500
+Received: by mail-qk0-f196.google.com with SMTP id n127so34672153qkf.2
+        for <linux-scsi@vger.kernel.org>; Sat, 04 Mar 2017 09:30:47 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stephen Hemminger <stephen@networkplumber.org>, James Bottomley <James.Bottomley@Hansenpartnership.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, Jens Axboe <axboe@kernel.dk>, Linus Torvalds <torvalds@linux-foundation.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "K. Y. Srinivasan" <kys@microsoft.com>, Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>, Josh Poulson <jopoulso@microsoft.com>, v-adsuho@microsoft.com, linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>
+To: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
+Cc: James Smart <jsmart2021@gmail.com>
 
-On 03/04/2017 01:50 AM, Stephen Hemminger wrote:
-> Needs more testing but this does fix the observed problem.
->
-> From: Stephen Hemminger <sthemmin@microsoft.com>
->
-> Subject: [PATCH] hv_storvsc: fix error handling
->
-> The Hyper-V storvsc SCSI driver was hiding all errors in INQUIRY and
-> MODE_SENSE commands. This caused the scan process to incorrectly think
-> devices were present and online.  Also invalid LUN errors were not
-> being handled correctly.
->
-> This fixes problems booting a GEN2 VM on Hyper-V. It effectively
-> reverts commit 4ed51a21c0f69 ("Staging: hv: storvsc: Fixup
-> srb and scsi status for INQUIRY and MODE_SENSE")
->
-> Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
-> ---
->  drivers/scsi/storvsc_drv.c | 48 ++++------------------------------------------
->  1 file changed, 4 insertions(+), 44 deletions(-)
->
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 638e5f427c90..8cc241fc54b8 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -543,28 +543,6 @@ static void storvsc_host_scan(struct work_struct *work)
->  	kfree(wrk);
->  }
->
-> -static void storvsc_remove_lun(struct work_struct *work)
-> -{
-> -	struct storvsc_scan_work *wrk;
-> -	struct scsi_device *sdev;
-> -
-> -	wrk = container_of(work, struct storvsc_scan_work, work);
-> -	if (!scsi_host_get(wrk->host))
-> -		goto done;
-> -
-> -	sdev = scsi_device_lookup(wrk->host, 0, wrk->tgt_id, wrk->lun);
-> -
-> -	if (sdev) {
-> -		scsi_remove_device(sdev);
-> -		scsi_device_put(sdev);
-> -	}
-> -	scsi_host_put(wrk->host);
-> -
-> -done:
-> -	kfree(wrk);
-> -}
-> -
-> -
->  /*
->   * We can get incoming messages from the host that are not in response to
->   * messages that we have sent out. An example of this would be messages
-> @@ -955,8 +933,7 @@ static void storvsc_handle_error(struct vmscsi_request *vm_srb,
->  		}
->  		break;
->  	case SRB_STATUS_INVALID_LUN:
-> -		do_work = true;
-> -		process_err_fn = storvsc_remove_lun;
-> +		set_host_byte(scmnd, DID_NO_CONNECT);
->  		break;
->  	case SRB_STATUS_ABORTED:
->  		if (vm_srb->srb_status & SRB_STATUS_AUTOSENSE_VALID &&
-> @@ -1050,32 +1027,15 @@ static void storvsc_on_io_completion(struct storvsc_device *stor_device,
->
->  	stor_pkt = &request->vstor_packet;
->
-> -	/*
-> -	 * The current SCSI handling on the host side does
-> -	 * not correctly handle:
-> -	 * INQUIRY command with page code parameter set to 0x80
-> -	 * MODE_SENSE command with cmd[2] == 0x1c
-> -	 *
-> -	 * Setup srb and scsi status so this won't be fatal.
-> -	 * We do this so we can distinguish truly fatal failues
-> -	 * (srb status == 0x4) and off-line the device in that case.
-> -	 */
-> -
-> -	if ((stor_pkt->vm_srb.cdb[0] == INQUIRY) ||
-> -	   (stor_pkt->vm_srb.cdb[0] == MODE_SENSE)) {
-> -		vstor_packet->vm_srb.scsi_status = 0;
-> -		vstor_packet->vm_srb.srb_status = SRB_STATUS_SUCCESS;
-> -	}
-> -
-> -
->  	/* Copy over the status...etc */
->  	stor_pkt->vm_srb.scsi_status = vstor_packet->vm_srb.scsi_status;
->  	stor_pkt->vm_srb.srb_status = vstor_packet->vm_srb.srb_status;
->  	stor_pkt->vm_srb.sense_info_length =
->  	vstor_packet->vm_srb.sense_info_length;
->
-> -	if (vstor_packet->vm_srb.scsi_status != 0 ||
-> -	    vstor_packet->vm_srb.srb_status != SRB_STATUS_SUCCESS)
-> +	if (stor_pkt->vm_srb.cdb[0] != INQUIRY &&
-> +	    (vstor_packet->vm_srb.scsi_status != 0 ||
-> +	     vstor_packet->vm_srb.srb_status != SRB_STATUS_SUCCESS))
->  		storvsc_log(device, STORVSC_LOGGING_WARN,
->  			"cmd 0x%x scsi status 0x%x srb status 0x%x\n",
->  			stor_pkt->vm_srb.cdb[0],
->
-I really do wonder; according to the comments above the wrong error 
-handling really only affects inquiry VPD page 0x80 and MODE_SENSE page 
-0x1c. So why do we need to blank out _every_ inquiry?
-Wouldn't it far better to check _what_ goes wrong when asking for page 
-0x80, and fix up things correctly?
+From: James Smart <jsmart2021@gmail.com>
 
-Cheers,
+This set of patches are mainly cleanups and fixes to the large
+nvme post that was recently integrated. It includes a patch to
+break the mandate for both NVME and SCSI subystems.
 
-Hannes
+James Smart (20):
+  scsi: lpfc: remove redundant assignment of sgel
+  scsi: lpfc: sanity check hrq is null before dereferencing it
+  scsi: lpfc: don't dereference dma_buf->iocbq before null check
+  scsi: lpfc: fix missing spin_unlock on sql_list_lock
+  lpfc: Fix crash during Hardware error recovery on SLI3 adapters
+  lpfc: Fix RCTL value on NVME LS request and response
+  lpfc: Fix NVME CMD IU byte swapped word 1 problem
+  lpfc: Fix IO submission if WQ is full
+  lpfc: Fix nvme allocation bug on failed nvme_fc_register_localport
+  lpfc: add NVME exchange aborts
+  lpfc: Fix eh_deadline setting for sli3 adapters.
+  lpfc: add transport eh_timed_out reference
+  lpfc: Rework lpfc Kconfig for NVME options
+  lpfc: Rename LPFC_MAX_EQ_DELAY to LPFC_MAX_EQ_DELAY_EQID_CNT
+  lpfc: correct double print
+  lpfc: remove dead sli3 nvme code
+  lpfc: correct rdp diag portnames
+  lpfc: code cleanups in NVME initiator base
+  lpfc: code cleanups in NVME initiator discovery
+  lpfc: revise version number to 11.2.0.10
+
+ drivers/scsi/Kconfig             |  19 +++++--
+ drivers/scsi/lpfc/lpfc.h         |   4 +-
+ drivers/scsi/lpfc/lpfc_attr.c    |   9 +++-
+ drivers/scsi/lpfc/lpfc_crtn.h    |   4 +-
+ drivers/scsi/lpfc/lpfc_ct.c      |   2 +-
+ drivers/scsi/lpfc/lpfc_debugfs.c |  22 --------
+ drivers/scsi/lpfc/lpfc_els.c     |  22 +++++---
+ drivers/scsi/lpfc/lpfc_hbadisc.c |  19 ++++---
+ drivers/scsi/lpfc/lpfc_hw4.h     |   4 +-
+ drivers/scsi/lpfc/lpfc_init.c    |  80 ++++++++++++++++++++++++-----
+ drivers/scsi/lpfc/lpfc_mem.c     |   2 +-
+ drivers/scsi/lpfc/lpfc_nvme.c    | 107 ++++++++++++++++++++++++++++++---------
+ drivers/scsi/lpfc/lpfc_nvme.h    |   1 +
+ drivers/scsi/lpfc/lpfc_nvmet.c   |  43 +++++++++++++---
+ drivers/scsi/lpfc/lpfc_scsi.c    |   4 +-
+ drivers/scsi/lpfc/lpfc_sli.c     |  68 +++++++++++++++++++++----
+ drivers/scsi/lpfc/lpfc_sli4.h    |   6 +++
+ drivers/scsi/lpfc/lpfc_version.h |   2 +-
+ 18 files changed, 312 insertions(+), 106 deletions(-)
+
 -- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+2.5.0
