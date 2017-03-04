@@ -1,138 +1,222 @@
-From: Stephen Hemminger <stephen@networkplumber.org>
-Subject: [RFC] hv_storvsc: error handling.
-Date: Fri, 3 Mar 2017 16:50:11 -0800
-Message-ID: <20170303165011.53a38794@xeon-e3>
-References: <c1949de0-8b95-e254-1bec-bcdae762890f@kernel.dk>
-        <1488301573.3046.9.camel@linux.vnet.ibm.com>
-        <20170228105741.6253bb8a@xeon-e3>
-        <1488325732.11610.9.camel@linux.vnet.ibm.com>
-        <20170228172532.280811ed@xeon-e3>
-        <1488349258.20321.11.camel@linux.vnet.ibm.com>
-        <20170228224845.1da358ee@xeon-e3>
-        <20170301155057.GA13167@lst.de>
-        <20170301075412.2e5f1e98@xeon-e3>
-        <20170302000135.GA22886@lst.de>
-        <20170302005615.GA23687@lst.de>
-        <20170301174058.383da142@xeon-e3>
-        <c8ff2b64-2421-ca45-1f89-afec0490c8b3@suse.de>
-        <20170302102324.47dbe3ad@xeon-e3>
-        <895c4f2e-7faa-41e1-b5de-eedb4ae0f882@email.android.com>
-        <20170302110505.6ad2eb61@xeon-e3>
-        <1b325703-b823-4304-9d9d-86071811e000@email.android.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] final round of SCSI updates for the 4.10+ merge window
+Date: Fri, 03 Mar 2017 16:53:53 -0800
+Message-ID: <1488588833.2345.5.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f51.google.com ([74.125.83.51]:33493 "EHLO
-        mail-pg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751584AbdCDAvN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Mar 2017 19:51:13 -0500
-Received: by mail-pg0-f51.google.com with SMTP id 25so49056898pgy.0
-        for <linux-scsi@vger.kernel.org>; Fri, 03 Mar 2017 16:50:19 -0800 (PST)
-In-Reply-To: <1b325703-b823-4304-9d9d-86071811e000@email.android.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@Hansenpartnership.com>
-Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, Jens Axboe <axboe@kernel.dk>, Linus Torvalds <torvalds@linux-foundation.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "K. Y. Srinivasan" <kys@microsoft.com>, Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>, Josh Poulson <jopoulso@microsoft.com>, v-adsuho@microsoft.com, linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>
 
-Needs more testing but this does fix the observed problem.
+This is the set of stuff that didn't quite make the initial pull and a
+set of fixes for stuff which did.  The new stuff is basically lpfc
+(nvme), qedi and aacraid.  The fixes cover a lot of previously
+submitted stuff, the most important of which probably covers some of
+the failing irq vectors allocation and other fallout from having the
+SCSI command allocated as part of the block allocation functions.
 
-From: Stephen Hemminger <sthemmin@microsoft.com>
+The patch is available here:
 
-Subject: [PATCH] hv_storvsc: fix error handling
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
 
-The Hyper-V storvsc SCSI driver was hiding all errors in INQUIRY and
-MODE_SENSE commands. This caused the scan process to incorrectly think
-devices were present and online.  Also invalid LUN errors were not
-being handled correctly.
+The short changelog is:
 
-This fixes problems booting a GEN2 VM on Hyper-V. It effectively
-reverts commit 4ed51a21c0f69 ("Staging: hv: storvsc: Fixup
-srb and scsi status for INQUIRY and MODE_SENSE")
+Arnd Bergmann (3):
+      scsi: lpfc: use proper format string for dma_addr_t
+      scsi: lpfc: use div_u64 for 64-bit division
+      scsi: smartpqi: fix time handling
 
-Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
----
- drivers/scsi/storvsc_drv.c | 48 ++++------------------------------------------
- 1 file changed, 4 insertions(+), 44 deletions(-)
+Christoph Hellwig (7):
+      scsi: remove scsi_execute_req_flags
+      scsi: merge __scsi_execute into scsi_execute
+      scsi: simplify scsi_execute_req_flags
+      scsi: make the sense header argument to scsi_test_unit_ready mandatory
+      scsi: sd: improve TUR handling in sd_check_events
+      scsi: always zero sshdr in scsi_normalize_sense
+      scsi: lpfc: use pci_irq_alloc_vectors and pci_irq_free_vectors
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 638e5f427c90..8cc241fc54b8 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -543,28 +543,6 @@ static void storvsc_host_scan(struct work_struct *work)
- 	kfree(wrk);
- }
- 
--static void storvsc_remove_lun(struct work_struct *work)
--{
--	struct storvsc_scan_work *wrk;
--	struct scsi_device *sdev;
--
--	wrk = container_of(work, struct storvsc_scan_work, work);
--	if (!scsi_host_get(wrk->host))
--		goto done;
--
--	sdev = scsi_device_lookup(wrk->host, 0, wrk->tgt_id, wrk->lun);
--
--	if (sdev) {
--		scsi_remove_device(sdev);
--		scsi_device_put(sdev);
--	}
--	scsi_host_put(wrk->host);
--
--done:
--	kfree(wrk);
--}
--
--
- /*
-  * We can get incoming messages from the host that are not in response to
-  * messages that we have sent out. An example of this would be messages
-@@ -955,8 +933,7 @@ static void storvsc_handle_error(struct vmscsi_request *vm_srb,
- 		}
- 		break;
- 	case SRB_STATUS_INVALID_LUN:
--		do_work = true;
--		process_err_fn = storvsc_remove_lun;
-+		set_host_byte(scmnd, DID_NO_CONNECT);
- 		break;
- 	case SRB_STATUS_ABORTED:
- 		if (vm_srb->srb_status & SRB_STATUS_AUTOSENSE_VALID &&
-@@ -1050,32 +1027,15 @@ static void storvsc_on_io_completion(struct storvsc_device *stor_device,
- 
- 	stor_pkt = &request->vstor_packet;
- 
--	/*
--	 * The current SCSI handling on the host side does
--	 * not correctly handle:
--	 * INQUIRY command with page code parameter set to 0x80
--	 * MODE_SENSE command with cmd[2] == 0x1c
--	 *
--	 * Setup srb and scsi status so this won't be fatal.
--	 * We do this so we can distinguish truly fatal failues
--	 * (srb status == 0x4) and off-line the device in that case.
--	 */
--
--	if ((stor_pkt->vm_srb.cdb[0] == INQUIRY) ||
--	   (stor_pkt->vm_srb.cdb[0] == MODE_SENSE)) {
--		vstor_packet->vm_srb.scsi_status = 0;
--		vstor_packet->vm_srb.srb_status = SRB_STATUS_SUCCESS;
--	}
--
--
- 	/* Copy over the status...etc */
- 	stor_pkt->vm_srb.scsi_status = vstor_packet->vm_srb.scsi_status;
- 	stor_pkt->vm_srb.srb_status = vstor_packet->vm_srb.srb_status;
- 	stor_pkt->vm_srb.sense_info_length =
- 	vstor_packet->vm_srb.sense_info_length;
- 
--	if (vstor_packet->vm_srb.scsi_status != 0 ||
--	    vstor_packet->vm_srb.srb_status != SRB_STATUS_SUCCESS)
-+	if (stor_pkt->vm_srb.cdb[0] != INQUIRY &&
-+	    (vstor_packet->vm_srb.scsi_status != 0 ||
-+	     vstor_packet->vm_srb.srb_status != SRB_STATUS_SUCCESS))
- 		storvsc_log(device, STORVSC_LOGGING_WARN,
- 			"cmd 0x%x scsi status 0x%x srb status 0x%x\n",
- 			stor_pkt->vm_srb.cdb[0],
--- 
-2.11.0
+Colin Ian King (3):
+      scsi: aacraid: remove redundant zero check on ret
+      scsi: qla2xxx: fix spelling mistake: "seperator" -> "separator"
+      scsi: fix memory leak of sdpk on when gd fails to allocate
+
+Dan Carpenter (1):
+      scsi: scsi_dh_emc: return success in clariion_std_inquiry()
+
+Don Brace (1):
+      scsi: cciss: correct check map error.
+
+Dupuis, Chad (3):
+      scsi: qedi: Fix memory leak in tmf response processing.
+      scsi: qedf: fixup compilation warning about atomic_t usage
+      scsi: qedf: Add QLogic FastLinQ offload FCoE driver framework.
+
+Finn Thain (1):
+      scsi: mac_scsi: Fix MAC_SCSI=m option when SCSI=m
+
+Hannes Reinecke (2):
+      scsi: mpt3sas: switch to pci_alloc_irq_vectors
+      scsi: use 'scsi_device_from_queue()' for scsi_dh
+
+James Smart (16):
+      scsi: lpfc: add missing Kconfig NVME dependencies
+      scsi: lpfc: Update lpfc version to 11.2.0.7
+      scsi: lpfc: Update copyrights
+      scsi: lpfc: NVME Target: Add debugfs support
+      scsi: lpfc: NVME Target: bind to nvmet_fc api
+      scsi: lpfc: NVME Target: Merge into FC discovery
+      scsi: lpfc: NVME Target: Receive buffer updates
+      scsi: lpfc: NVME Target: Base modifications
+      scsi: lpfc: NVME Initiator: Add debugfs support
+      scsi: lpfc: NVME Initiator: bind to nvme_fc api
+      scsi: lpfc: NVME Initiator: Merge into FC discovery
+      scsi: lpfc: NVME Initiator: Base modifications
+      scsi: lpfc: refactor debugfs queue dump routines
+      scsi: lpfc: refactor debugfs queue prints
+      scsi: lpfc: minor code cleanups
+      scsi: lpfc: Correct WQ creation for pagesize
+
+Matthew R. Ochs (1):
+      scsi: cxlflash: Enable PCI device ID for future IBM CXL Flash AFU
+
+Michael Hernandez (3):
+      scsi: qla2xxx: Fix Regression introduced by pci_alloc_irq_vectors_affinity call.
+      scsi: qla2xxx: Fix response queue count for Target mode.
+      scsi: qla2xxx: Cleaned up queue configuration code.
+
+Raghava Aditya Renukunta (16):
+      scsi: aacraid: Fixed expander hotplug for SMART family
+      scsi: aacraid: Update driver version
+      scsi: aacraid: Fix a potential spinlock double unlock bug
+      scsi: aacraid: Save adapter fib log before an IOP reset
+      scsi: aacraid: Reorder Adapter status check
+      scsi: aacraid: Skip IOP reset on controller panic(SMART Family)
+      scsi: aacraid: Decrease adapter health check interval
+      scsi: aacraid: Reload offlined drives after controller reset
+      scsi: aacraid: Skip wellness sync on controller failure
+      scsi: aacraid: Fix sync fibs time out on controller reset
+      scsi: aacraid: Added sysfs for driver version
+      scsi: aacraid: Fix memory leak in fib init path
+      scsi: aacraid: Prevent E3 lockup when deleting units
+      scsi: aacraid: Fix for excessive prints on EEH
+      scsi: aacraid: Use correct channel number for raw srb
+      scsi: aacraid: Fix camel case
+
+Subhash Jadavani (1):
+      scsi: ufs-qcom: remove redundant condition check
+
+Wei Yongjun (1):
+      scsi: sd: make sd_devt_release() static
+
+And the diffstat
+
+ MAINTAINERS                                 |    6 +
+ drivers/ata/libata-scsi.c                   |   12 +-
+ drivers/block/cciss.c                       |   32 +-
+ drivers/scsi/Kconfig                        |    4 +-
+ drivers/scsi/Makefile                       |    1 +
+ drivers/scsi/aacraid/aachba.c               |   59 +-
+ drivers/scsi/aacraid/aacraid.h              |  107 +-
+ drivers/scsi/aacraid/commctrl.c             |    2 +-
+ drivers/scsi/aacraid/comminit.c             |    2 +-
+ drivers/scsi/aacraid/commsup.c              |  118 +-
+ drivers/scsi/aacraid/linit.c                |   47 +-
+ drivers/scsi/aacraid/rx.c                   |    2 +-
+ drivers/scsi/aacraid/src.c                  |   48 +-
+ drivers/scsi/cxlflash/main.c                |    4 +
+ drivers/scsi/cxlflash/main.h                |    1 +
+ drivers/scsi/cxlflash/superpipe.c           |    8 +-
+ drivers/scsi/cxlflash/vlun.c                |    4 +-
+ drivers/scsi/device_handler/scsi_dh_alua.c  |   16 +-
+ drivers/scsi/device_handler/scsi_dh_emc.c   |    9 +-
+ drivers/scsi/device_handler/scsi_dh_hp_sw.c |   10 +-
+ drivers/scsi/device_handler/scsi_dh_rdac.c  |    7 +-
+ drivers/scsi/lpfc/Makefile                  |   11 +-
+ drivers/scsi/lpfc/lpfc.h                    |  162 +-
+ drivers/scsi/lpfc/lpfc_attr.c               |  570 ++++-
+ drivers/scsi/lpfc/lpfc_attr.h               |    4 +-
+ drivers/scsi/lpfc/lpfc_bsg.c                |   33 +-
+ drivers/scsi/lpfc/lpfc_bsg.h                |    6 +-
+ drivers/scsi/lpfc/lpfc_compat.h             |    4 +-
+ drivers/scsi/lpfc/lpfc_crtn.h               |   68 +-
+ drivers/scsi/lpfc/lpfc_ct.c                 |  388 +++-
+ drivers/scsi/lpfc/lpfc_debugfs.c            | 2300 +++++++++++++-----
+ drivers/scsi/lpfc/lpfc_debugfs.h            |  291 +--
+ drivers/scsi/lpfc/lpfc_disc.h               |   24 +-
+ drivers/scsi/lpfc/lpfc_els.c                |  366 ++-
+ drivers/scsi/lpfc/lpfc_hbadisc.c            |  363 ++-
+ drivers/scsi/lpfc/lpfc_hw.h                 |   86 +-
+ drivers/scsi/lpfc/lpfc_hw4.h                |  506 +++-
+ drivers/scsi/lpfc/lpfc_ids.h                |    4 +-
+ drivers/scsi/lpfc/lpfc_init.c               | 2889 +++++++++++++----------
+ drivers/scsi/lpfc/lpfc_logmsg.h             |    8 +-
+ drivers/scsi/lpfc/lpfc_mbox.c               |  114 +-
+ drivers/scsi/lpfc/lpfc_mem.c                |  278 ++-
+ drivers/scsi/lpfc/lpfc_nl.h                 |    4 +-
+ drivers/scsi/lpfc/lpfc_nportdisc.c          |  257 ++-
+ drivers/scsi/lpfc/lpfc_nvme.c               | 2464 ++++++++++++++++++++
+ drivers/scsi/lpfc/lpfc_nvme.h               |  103 +
+ drivers/scsi/lpfc/lpfc_nvmet.c              | 1986 ++++++++++++++++
+ drivers/scsi/lpfc/lpfc_nvmet.h              |  116 +
+ drivers/scsi/lpfc/lpfc_scsi.c               |  111 +-
+ drivers/scsi/lpfc/lpfc_scsi.h               |   22 +-
+ drivers/scsi/lpfc/lpfc_sli.c                | 2195 ++++++++++++++----
+ drivers/scsi/lpfc/lpfc_sli.h                |   42 +-
+ drivers/scsi/lpfc/lpfc_sli4.h               |   98 +-
+ drivers/scsi/lpfc/lpfc_version.h            |   10 +-
+ drivers/scsi/lpfc/lpfc_vport.c              |   21 +-
+ drivers/scsi/lpfc/lpfc_vport.h              |    4 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.c         |  105 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.h         |    2 -
+ drivers/scsi/osd/osd_uld.c                  |    3 +-
+ drivers/scsi/qedf/Kconfig                   |   11 +
+ drivers/scsi/qedf/Makefile                  |    5 +
+ drivers/scsi/qedf/qedf.h                    |  545 +++++
+ drivers/scsi/qedf/qedf_attr.c               |  165 ++
+ drivers/scsi/qedf/qedf_dbg.c                |  195 ++
+ drivers/scsi/qedf/qedf_dbg.h                |  154 ++
+ drivers/scsi/qedf/qedf_debugfs.c            |  460 ++++
+ drivers/scsi/qedf/qedf_els.c                |  949 ++++++++
+ drivers/scsi/qedf/qedf_fip.c                |  269 +++
+ drivers/scsi/qedf/qedf_hsi.h                |  422 ++++
+ drivers/scsi/qedf/qedf_io.c                 | 2282 ++++++++++++++++++
+ drivers/scsi/qedf/qedf_main.c               | 3336 +++++++++++++++++++++++++++
+ drivers/scsi/qedf/qedf_version.h            |   15 +
+ drivers/scsi/qedi/qedi_fw.c                 |    5 +-
+ drivers/scsi/qla2xxx/qla_isr.c              |    7 +-
+ drivers/scsi/qla2xxx/qla_os.c               |   16 +-
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c          |    2 +-
+ drivers/scsi/scsi_common.c                  |    4 +-
+ drivers/scsi/scsi_dh.c                      |   22 +-
+ drivers/scsi/scsi_ioctl.c                   |    3 +-
+ drivers/scsi/scsi_lib.c                     |  113 +-
+ drivers/scsi/scsi_transport_spi.c           |   24 +-
+ drivers/scsi/sd.c                           |   40 +-
+ drivers/scsi/smartpqi/smartpqi_init.c       |    8 +-
+ drivers/scsi/sr_ioctl.c                     |   19 +-
+ drivers/scsi/ufs/ufs-qcom.c                 |   12 -
+ drivers/scsi/ufs/ufshcd.c                   |   10 +-
+ include/scsi/scsi_device.h                  |   14 +-
+ 87 files changed, 22404 insertions(+), 3220 deletions(-)
+ create mode 100644 drivers/scsi/lpfc/lpfc_nvme.c
+ create mode 100644 drivers/scsi/lpfc/lpfc_nvme.h
+ create mode 100644 drivers/scsi/lpfc/lpfc_nvmet.c
+ create mode 100644 drivers/scsi/lpfc/lpfc_nvmet.h
+ create mode 100644 drivers/scsi/qedf/Kconfig
+ create mode 100644 drivers/scsi/qedf/Makefile
+ create mode 100644 drivers/scsi/qedf/qedf.h
+ create mode 100644 drivers/scsi/qedf/qedf_attr.c
+ create mode 100644 drivers/scsi/qedf/qedf_dbg.c
+ create mode 100644 drivers/scsi/qedf/qedf_dbg.h
+ create mode 100644 drivers/scsi/qedf/qedf_debugfs.c
+ create mode 100644 drivers/scsi/qedf/qedf_els.c
+ create mode 100644 drivers/scsi/qedf/qedf_fip.c
+ create mode 100644 drivers/scsi/qedf/qedf_hsi.h
+ create mode 100644 drivers/scsi/qedf/qedf_io.c
+ create mode 100644 drivers/scsi/qedf/qedf_main.c
+ create mode 100644 drivers/scsi/qedf/qedf_version.h
+
+James
