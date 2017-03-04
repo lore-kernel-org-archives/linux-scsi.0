@@ -1,84 +1,148 @@
-From: Joe Perches <joe@perches.com>
-Subject: [PATCH] scsi: qedf: Fix defective logging format and argument mismatches
-Date: Sat,  4 Mar 2017 00:07:04 -0800
-Message-ID: <b75448afd5e48f342ad9f1785c6546eee7948af9.1488614805.git.joe@perches.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: QLogic-Storage-Upstream@cavium.com
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [RFC] hv_storvsc: error handling.
+Date: Sat, 4 Mar 2017 12:55:39 +0100
+Message-ID: <4573c647-7a94-ff59-bfcd-6f4edaad0977@suse.de>
+References: <c1949de0-8b95-e254-1bec-bcdae762890f@kernel.dk>
+ <1488301573.3046.9.camel@linux.vnet.ibm.com>
+ <20170228105741.6253bb8a@xeon-e3>
+ <1488325732.11610.9.camel@linux.vnet.ibm.com>
+ <20170228172532.280811ed@xeon-e3>
+ <1488349258.20321.11.camel@linux.vnet.ibm.com>
+ <20170228224845.1da358ee@xeon-e3> <20170301155057.GA13167@lst.de>
+ <20170301075412.2e5f1e98@xeon-e3> <20170302000135.GA22886@lst.de>
+ <20170302005615.GA23687@lst.de> <20170301174058.383da142@xeon-e3>
+ <c8ff2b64-2421-ca45-1f89-afec0490c8b3@suse.de>
+ <20170302102324.47dbe3ad@xeon-e3>
+ <895c4f2e-7faa-41e1-b5de-eedb4ae0f882@email.android.com>
+ <20170302110505.6ad2eb61@xeon-e3>
+ <1b325703-b823-4304-9d9d-86071811e000@email.android.com>
+ <20170303165011.53a38794@xeon-e3>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:53139 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751580AbdCDLzo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 4 Mar 2017 06:55:44 -0500
+In-Reply-To: <20170303165011.53a38794@xeon-e3>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Stephen Hemminger <stephen@networkplumber.org>, James Bottomley <James.Bottomley@Hansenpartnership.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, Jens Axboe <axboe@kernel.dk>, Linus Torvalds <torvalds@linux-foundation.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "K. Y. Srinivasan" <kys@microsoft.com>, Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>, Josh Poulson <jopoulso@microsoft.com>, v-adsuho@microsoft.com, linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>
 
-Add __printf compiler verification of format and arguments.
-Fix fallout.
+On 03/04/2017 01:50 AM, Stephen Hemminger wrote:
+> Needs more testing but this does fix the observed problem.
+>
+> From: Stephen Hemminger <sthemmin@microsoft.com>
+>
+> Subject: [PATCH] hv_storvsc: fix error handling
+>
+> The Hyper-V storvsc SCSI driver was hiding all errors in INQUIRY and
+> MODE_SENSE commands. This caused the scan process to incorrectly think
+> devices were present and online.  Also invalid LUN errors were not
+> being handled correctly.
+>
+> This fixes problems booting a GEN2 VM on Hyper-V. It effectively
+> reverts commit 4ed51a21c0f69 ("Staging: hv: storvsc: Fixup
+> srb and scsi status for INQUIRY and MODE_SENSE")
+>
+> Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
+> ---
+>  drivers/scsi/storvsc_drv.c | 48 ++++------------------------------------------
+>  1 file changed, 4 insertions(+), 44 deletions(-)
+>
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index 638e5f427c90..8cc241fc54b8 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -543,28 +543,6 @@ static void storvsc_host_scan(struct work_struct *work)
+>  	kfree(wrk);
+>  }
+>
+> -static void storvsc_remove_lun(struct work_struct *work)
+> -{
+> -	struct storvsc_scan_work *wrk;
+> -	struct scsi_device *sdev;
+> -
+> -	wrk = container_of(work, struct storvsc_scan_work, work);
+> -	if (!scsi_host_get(wrk->host))
+> -		goto done;
+> -
+> -	sdev = scsi_device_lookup(wrk->host, 0, wrk->tgt_id, wrk->lun);
+> -
+> -	if (sdev) {
+> -		scsi_remove_device(sdev);
+> -		scsi_device_put(sdev);
+> -	}
+> -	scsi_host_put(wrk->host);
+> -
+> -done:
+> -	kfree(wrk);
+> -}
+> -
+> -
+>  /*
+>   * We can get incoming messages from the host that are not in response to
+>   * messages that we have sent out. An example of this would be messages
+> @@ -955,8 +933,7 @@ static void storvsc_handle_error(struct vmscsi_request *vm_srb,
+>  		}
+>  		break;
+>  	case SRB_STATUS_INVALID_LUN:
+> -		do_work = true;
+> -		process_err_fn = storvsc_remove_lun;
+> +		set_host_byte(scmnd, DID_NO_CONNECT);
+>  		break;
+>  	case SRB_STATUS_ABORTED:
+>  		if (vm_srb->srb_status & SRB_STATUS_AUTOSENSE_VALID &&
+> @@ -1050,32 +1027,15 @@ static void storvsc_on_io_completion(struct storvsc_device *stor_device,
+>
+>  	stor_pkt = &request->vstor_packet;
+>
+> -	/*
+> -	 * The current SCSI handling on the host side does
+> -	 * not correctly handle:
+> -	 * INQUIRY command with page code parameter set to 0x80
+> -	 * MODE_SENSE command with cmd[2] == 0x1c
+> -	 *
+> -	 * Setup srb and scsi status so this won't be fatal.
+> -	 * We do this so we can distinguish truly fatal failues
+> -	 * (srb status == 0x4) and off-line the device in that case.
+> -	 */
+> -
+> -	if ((stor_pkt->vm_srb.cdb[0] == INQUIRY) ||
+> -	   (stor_pkt->vm_srb.cdb[0] == MODE_SENSE)) {
+> -		vstor_packet->vm_srb.scsi_status = 0;
+> -		vstor_packet->vm_srb.srb_status = SRB_STATUS_SUCCESS;
+> -	}
+> -
+> -
+>  	/* Copy over the status...etc */
+>  	stor_pkt->vm_srb.scsi_status = vstor_packet->vm_srb.scsi_status;
+>  	stor_pkt->vm_srb.srb_status = vstor_packet->vm_srb.srb_status;
+>  	stor_pkt->vm_srb.sense_info_length =
+>  	vstor_packet->vm_srb.sense_info_length;
+>
+> -	if (vstor_packet->vm_srb.scsi_status != 0 ||
+> -	    vstor_packet->vm_srb.srb_status != SRB_STATUS_SUCCESS)
+> +	if (stor_pkt->vm_srb.cdb[0] != INQUIRY &&
+> +	    (vstor_packet->vm_srb.scsi_status != 0 ||
+> +	     vstor_packet->vm_srb.srb_status != SRB_STATUS_SUCCESS))
+>  		storvsc_log(device, STORVSC_LOGGING_WARN,
+>  			"cmd 0x%x scsi status 0x%x srb status 0x%x\n",
+>  			stor_pkt->vm_srb.cdb[0],
+>
+I really do wonder; according to the comments above the wrong error 
+handling really only affects inquiry VPD page 0x80 and MODE_SENSE page 
+0x1c. So why do we need to blank out _every_ inquiry?
+Wouldn't it far better to check _what_ goes wrong when asking for page 
+0x80, and fix up things correctly?
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/scsi/qedf/qedf_dbg.h | 13 ++++++++-----
- drivers/scsi/qedf/qedf_fip.c |  2 +-
- drivers/scsi/qedf/qedf_io.c  |  4 ++--
- 3 files changed, 11 insertions(+), 8 deletions(-)
+Cheers,
 
-diff --git a/drivers/scsi/qedf/qedf_dbg.h b/drivers/scsi/qedf/qedf_dbg.h
-index 23bd70628a2f..7d173f48a81e 100644
---- a/drivers/scsi/qedf/qedf_dbg.h
-+++ b/drivers/scsi/qedf/qedf_dbg.h
-@@ -81,14 +81,17 @@ struct qedf_dbg_ctx {
- #define QEDF_INFO(pdev, level, fmt, ...)	\
- 		qedf_dbg_info(pdev, __func__, __LINE__, level, fmt,	\
- 			      ## __VA_ARGS__)
--
--extern void qedf_dbg_err(struct qedf_dbg_ctx *qedf, const char *func, u32 line,
-+__printf(4, 5)
-+void qedf_dbg_err(struct qedf_dbg_ctx *qedf, const char *func, u32 line,
- 			  const char *fmt, ...);
--extern void qedf_dbg_warn(struct qedf_dbg_ctx *qedf, const char *func, u32 line,
-+__printf(4, 5)
-+void qedf_dbg_warn(struct qedf_dbg_ctx *qedf, const char *func, u32 line,
- 			   const char *, ...);
--extern void qedf_dbg_notice(struct qedf_dbg_ctx *qedf, const char *func,
-+__printf(4, 5)
-+void qedf_dbg_notice(struct qedf_dbg_ctx *qedf, const char *func,
- 			    u32 line, const char *, ...);
--extern void qedf_dbg_info(struct qedf_dbg_ctx *qedf, const char *func, u32 line,
-+__printf(5, 6)
-+void qedf_dbg_info(struct qedf_dbg_ctx *qedf, const char *func, u32 line,
- 			  u32 info, const char *fmt, ...);
- 
- /* GRC Dump related defines */
-diff --git a/drivers/scsi/qedf/qedf_fip.c b/drivers/scsi/qedf/qedf_fip.c
-index 868d423380d1..ed58b9104f58 100644
---- a/drivers/scsi/qedf/qedf_fip.c
-+++ b/drivers/scsi/qedf/qedf_fip.c
-@@ -203,7 +203,7 @@ void qedf_fip_recv(struct qedf_ctx *qedf, struct sk_buff *skb)
- 			case FIP_DT_MAC:
- 				mp = (struct fip_mac_desc *)desc;
- 				QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_LL2,
--				    "fd_mac=%pM.\n", __func__, mp->fd_mac);
-+				    "fd_mac=%pM\n", mp->fd_mac);
- 				ether_addr_copy(cvl_mac, mp->fd_mac);
- 				break;
- 			case FIP_DT_NAME:
-diff --git a/drivers/scsi/qedf/qedf_io.c b/drivers/scsi/qedf/qedf_io.c
-index ee0dcf9d3aba..46debe5034af 100644
---- a/drivers/scsi/qedf/qedf_io.c
-+++ b/drivers/scsi/qedf/qedf_io.c
-@@ -1342,7 +1342,7 @@ void qedf_scsi_completion(struct qedf_ctx *qedf, struct fcoe_cqe *cqe,
- 		} else {
- 			refcount = kref_read(&io_req->refcount);
- 			QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_IO,
--			    "%d:0:%d:%d xid=0x%0x op=0x%02x "
-+			    "%d:0:%d:%lld xid=0x%0x op=0x%02x "
- 			    "lba=%02x%02x%02x%02x cdb_status=%d "
- 			    "fcp_resid=0x%x refcount=%d.\n",
- 			    qedf->lport->host->host_no, sc_cmd->device->id,
-@@ -1426,7 +1426,7 @@ void qedf_scsi_done(struct qedf_ctx *qedf, struct qedf_ioreq *io_req,
- 
- 	sc_cmd->result = result << 16;
- 	refcount = kref_read(&io_req->refcount);
--	QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_IO, "%d:0:%d:%d: Completing "
-+	QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_IO, "%d:0:%d:%lld: Completing "
- 	    "sc_cmd=%p result=0x%08x op=0x%02x lba=0x%02x%02x%02x%02x, "
- 	    "allowed=%d retries=%d refcount=%d.\n",
- 	    qedf->lport->host->host_no, sc_cmd->device->id,
+Hannes
 -- 
-2.10.0.rc2.1.g053435c
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
