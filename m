@@ -1,15 +1,15 @@
 From: jsmart2021@gmail.com
-Subject: [PATCH 17/20] lpfc: correct rdp diag portnames
-Date: Sat,  4 Mar 2017 09:30:37 -0800
-Message-ID: <1488648640-5170-18-git-send-email-jsmart2021@gmail.com>
+Subject: [PATCH 14/20] lpfc: Rename LPFC_MAX_EQ_DELAY to LPFC_MAX_EQ_DELAY_EQID_CNT
+Date: Sat,  4 Mar 2017 09:30:34 -0800
+Message-ID: <1488648640-5170-15-git-send-email-jsmart2021@gmail.com>
 References: <1488648640-5170-1-git-send-email-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:36600 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752215AbdCDRbL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Mar 2017 12:31:11 -0500
-Received: by mail-qk0-f195.google.com with SMTP id n141so10941224qke.3
-        for <linux-scsi@vger.kernel.org>; Sat, 04 Mar 2017 09:31:10 -0800 (PST)
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:35402 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752402AbdCDRbH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Mar 2017 12:31:07 -0500
+Received: by mail-qk0-f196.google.com with SMTP id n127so34673191qkf.2
+        for <linux-scsi@vger.kernel.org>; Sat, 04 Mar 2017 09:31:06 -0800 (PST)
 In-Reply-To: <1488648640-5170-1-git-send-email-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,46 +18,102 @@ Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>
 
 From: James Smart <jsmart2021@gmail.com>
 
-NVME merge reverted diag port names to the physical port.
-They should be the vport.
+Without apriori understanding of what the define is, the name gives
+a very different impression of what it is (a max delay value
+for an EQ).  Rename the define so it reflects what it is: the number
+of EQ IDs that can be set in one instance of the MODIFY_EQ_DELAY
+mbx command.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/lpfc/lpfc_attr.c | 3 ++-
+ drivers/scsi/lpfc/lpfc_hw4.h  | 4 ++--
+ drivers/scsi/lpfc/lpfc_init.c | 7 ++-----
+ drivers/scsi/lpfc/lpfc_sli.c  | 5 ++++-
+ 4 files changed, 10 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index d260a13..d9c61d0 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -5177,15 +5177,15 @@ lpfc_rdp_res_speed(struct fc_rdp_port_speed_desc *desc, struct lpfc_hba *phba)
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index b741dcb..fbd3a56 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -4457,7 +4457,8 @@ lpfc_fcp_imax_store(struct device *dev, struct device_attribute *attr,
+ 		return -EINVAL;
  
- static uint32_t
- lpfc_rdp_res_diag_port_names(struct fc_rdp_port_name_desc *desc,
--		struct lpfc_hba *phba)
-+		struct lpfc_vport *vport)
- {
+ 	phba->cfg_fcp_imax = (uint32_t)val;
+-	for (i = 0; i < phba->io_channel_irqs; i++)
++
++	for (i = 0; i < phba->io_channel_irqs; i += LPFC_MAX_EQ_DELAY_EQID_CNT)
+ 		lpfc_modify_hba_eq_delay(phba, i);
  
- 	desc->tag = cpu_to_be32(RDP_PORT_NAMES_DESC_TAG);
+ 	return strlen(buf);
+diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+index cfdb068..1527770 100644
+--- a/drivers/scsi/lpfc/lpfc_hw4.h
++++ b/drivers/scsi/lpfc/lpfc_hw4.h
+@@ -1001,7 +1001,7 @@ struct eq_delay_info {
+ 	uint32_t phase;
+ 	uint32_t delay_multi;
+ };
+-#define	LPFC_MAX_EQ_DELAY	8
++#define	LPFC_MAX_EQ_DELAY_EQID_CNT	8
  
--	memcpy(desc->port_names.wwnn, phba->wwnn,
-+	memcpy(desc->port_names.wwnn, &vport->fc_nodename,
- 			sizeof(desc->port_names.wwnn));
+ struct sgl_page_pairs {
+ 	uint32_t sgl_pg0_addr_lo;
+@@ -1070,7 +1070,7 @@ struct lpfc_mbx_modify_eq_delay {
+ 	union {
+ 		struct {
+ 			uint32_t num_eq;
+-			struct eq_delay_info eq[LPFC_MAX_EQ_DELAY];
++			struct eq_delay_info eq[LPFC_MAX_EQ_DELAY_EQID_CNT];
+ 		} request;
+ 		struct {
+ 			uint32_t word0;
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index ecb8e1c..10c89e8 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -8769,12 +8769,9 @@ lpfc_sli4_queue_setup(struct lpfc_hba *phba)
+ 		}
+ 	}
  
--	memcpy(desc->port_names.wwpn, phba->wwpn,
-+	memcpy(desc->port_names.wwpn, &vport->fc_portname,
- 			sizeof(desc->port_names.wwpn));
+-	/*
+-	 * Configure EQ delay multipier for interrupt coalescing using
+-	 * MODIFY_EQ_DELAY for all EQs created, LPFC_MAX_EQ_DELAY at a time.
+-	 */
+-	for (qidx = 0; qidx < io_channel; qidx += LPFC_MAX_EQ_DELAY)
++	for (qidx = 0; qidx < io_channel; qidx += LPFC_MAX_EQ_DELAY_EQID_CNT)
+ 		lpfc_modify_hba_eq_delay(phba, qidx);
++
+ 	return 0;
  
- 	desc->length = cpu_to_be32(sizeof(desc->port_names));
-@@ -5279,7 +5279,7 @@ lpfc_els_rdp_cmpl(struct lpfc_hba *phba, struct lpfc_rdp_context *rdp_context,
- 	len += lpfc_rdp_res_link_error((struct fc_rdp_link_error_status_desc *)
- 				       (len + pcmd), &rdp_context->link_stat);
- 	len += lpfc_rdp_res_diag_port_names((struct fc_rdp_port_name_desc *)
--					     (len + pcmd), phba);
-+					     (len + pcmd), vport);
- 	len += lpfc_rdp_res_attach_port_names((struct fc_rdp_port_name_desc *)
- 					(len + pcmd), vport, ndlp);
- 	len += lpfc_rdp_res_fec_desc((struct fc_fec_rdp_desc *)(len + pcmd),
+ out_destroy:
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 8a606d0..618cdac 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -1,3 +1,4 @@
++
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+@@ -13874,6 +13875,8 @@ lpfc_dual_chute_pci_bar_map(struct lpfc_hba *phba, uint16_t pci_barset)
+  * @startq: The starting FCP EQ to modify
+  *
+  * This function sends an MODIFY_EQ_DELAY mailbox command to the HBA.
++ * The command allows up to LPFC_MAX_EQ_DELAY_EQID_CNT EQ ID's to be
++ * updated in one mailbox command.
+  *
+  * The @phba struct is used to send mailbox command to HBA. The @startq
+  * is used to get the starting FCP EQ to change.
+@@ -13926,7 +13929,7 @@ lpfc_modify_hba_eq_delay(struct lpfc_hba *phba, uint32_t startq)
+ 		eq_delay->u.request.eq[cnt].phase = 0;
+ 		eq_delay->u.request.eq[cnt].delay_multi = dmult;
+ 		cnt++;
+-		if (cnt >= LPFC_MAX_EQ_DELAY)
++		if (cnt >= LPFC_MAX_EQ_DELAY_EQID_CNT)
+ 			break;
+ 	}
+ 	eq_delay->u.request.num_eq = cnt;
 -- 
 2.5.0
