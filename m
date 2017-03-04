@@ -1,15 +1,15 @@
 From: jsmart2021@gmail.com
-Subject: [PATCH 19/20] lpfc: code cleanups in NVME initiator discovery
-Date: Sat,  4 Mar 2017 09:30:39 -0800
-Message-ID: <1488648640-5170-20-git-send-email-jsmart2021@gmail.com>
+Subject: [PATCH 15/20] lpfc: correct double print
+Date: Sat,  4 Mar 2017 09:30:35 -0800
+Message-ID: <1488648640-5170-16-git-send-email-jsmart2021@gmail.com>
 References: <1488648640-5170-1-git-send-email-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:36621 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752450AbdCDRbN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Mar 2017 12:31:13 -0500
-Received: by mail-qk0-f195.google.com with SMTP id n141so10941426qke.3
-        for <linux-scsi@vger.kernel.org>; Sat, 04 Mar 2017 09:31:13 -0800 (PST)
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:36576 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752230AbdCDRbI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Mar 2017 12:31:08 -0500
+Received: by mail-qk0-f193.google.com with SMTP id n141so10941029qke.3
+        for <linux-scsi@vger.kernel.org>; Sat, 04 Mar 2017 09:31:07 -0800 (PST)
 In-Reply-To: <1488648640-5170-1-git-send-email-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,68 +18,54 @@ Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>
 
 From: James Smart <jsmart2021@gmail.com>
 
-This patch addresses the smatch issues identified by Dan Carpenter
-in http://www.spinics.net/lists/linux-scsi/msg105665.html
-
-The issues are:
-
-drivers/scsi/lpfc/lpfc_ct.c:943 lpfc_cmpl_ct_cmd_gft_id()
-error: we previously assumed 'ndlp' could be null (see line 928)
-
-Action: moved under if check
-
-drivers/scsi/lpfc/lpfc_nvmet.c:1694 lpfc_nvmet_unsol_issue_abort()
-error: we previously assumed 'ndlp' could be null (see line 1690)
-
-Action: conditionalized arg in printf stmt
-
-drivers/scsi/lpfc/lpfc_nvmet.c:1792 lpfc_nvmet_sol_fcp_issue_abort()
-error: we previously assumed 'ndlp' could be null (see line 1788)
-
-Action: conditionalized arg in printf stmt
+Correct a merge error that had debug data printed twice for the
+same element
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_ct.c    | 2 +-
- drivers/scsi/lpfc/lpfc_nvmet.c | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/lpfc/lpfc_debugfs.c | 22 ----------------------
+ 1 file changed, 22 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index c22bb3f..d3e9af9 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -939,8 +939,8 @@ lpfc_cmpl_ct_cmd_gft_id(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 					 "FC4 x%08x, Data: x%08x x%08x\n",
- 					 ndlp, did, ndlp->nlp_fc4_type,
- 					 FC_TYPE_FCP, FC_TYPE_NVME);
-+			ndlp->nlp_prev_state = NLP_STE_REG_LOGIN_ISSUE;
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index 9f4798e..913eed82 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -3653,17 +3653,6 @@ lpfc_idiag_queacc_write(struct file *file, const char __user *buf,
+ 			idiag.ptr_private = phba->sli4_hba.nvmels_cq;
+ 			goto pass_check;
  		}
--		ndlp->nlp_prev_state = NLP_STE_REG_LOGIN_ISSUE;
- 		lpfc_nlp_set_state(vport, ndlp, NLP_STE_PRLI_ISSUE);
- 		lpfc_issue_els_prli(vport, ndlp, 0);
- 	} else
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index a69ca6e..b7739a5 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -1720,7 +1720,7 @@ lpfc_nvmet_unsol_issue_abort(struct lpfc_hba *phba,
- 		atomic_inc(&tgtp->xmt_abort_rsp_error);
- 		lpfc_printf_log(phba, KERN_WARNING, LOG_NVME_ABTS,
- 				"6134 Drop ABTS - wrong NDLP state x%x.\n",
--				ndlp->nlp_state);
-+				(ndlp) ? ndlp->nlp_state : NLP_STE_MAX_STATE);
- 
- 		/* No failure to an ABTS request. */
- 		return 0;
-@@ -1818,7 +1818,7 @@ lpfc_nvmet_sol_fcp_issue_abort(struct lpfc_hba *phba,
- 		atomic_inc(&tgtp->xmt_abort_rsp_error);
- 		lpfc_printf_log(phba, KERN_WARNING, LOG_NVME_ABTS,
- 				"6160 Drop ABTS - wrong NDLP state x%x.\n",
--				ndlp->nlp_state);
-+				(ndlp) ? ndlp->nlp_state : NLP_STE_MAX_STATE);
- 
- 		/* No failure to an ABTS request. */
- 		return 0;
+-		/* NVME LS complete queue */
+-		if (phba->sli4_hba.nvmels_cq &&
+-		    phba->sli4_hba.nvmels_cq->queue_id == queid) {
+-			/* Sanity check */
+-			rc = lpfc_idiag_que_param_check(
+-					phba->sli4_hba.nvmels_cq, index, count);
+-			if (rc)
+-				goto error_out;
+-			idiag.ptr_private = phba->sli4_hba.nvmels_cq;
+-			goto pass_check;
+-		}
+ 		/* FCP complete queue */
+ 		if (phba->sli4_hba.fcp_cq) {
+ 			for (qidx = 0; qidx < phba->cfg_fcp_io_channel;
+@@ -3738,17 +3727,6 @@ lpfc_idiag_queacc_write(struct file *file, const char __user *buf,
+ 			idiag.ptr_private = phba->sli4_hba.nvmels_wq;
+ 			goto pass_check;
+ 		}
+-		/* NVME LS work queue */
+-		if (phba->sli4_hba.nvmels_wq &&
+-		    phba->sli4_hba.nvmels_wq->queue_id == queid) {
+-			/* Sanity check */
+-			rc = lpfc_idiag_que_param_check(
+-					phba->sli4_hba.nvmels_wq, index, count);
+-			if (rc)
+-				goto error_out;
+-			idiag.ptr_private = phba->sli4_hba.nvmels_wq;
+-			goto pass_check;
+-		}
+ 		/* FCP work queue */
+ 		if (phba->sli4_hba.fcp_wq) {
+ 			for (qidx = 0; qidx < phba->cfg_fcp_io_channel;
 -- 
 2.5.0
