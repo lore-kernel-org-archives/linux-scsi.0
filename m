@@ -1,248 +1,260 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: [PATCH 11/20] lpfc: Fix eh_deadline setting for sli3 adapters.
-Date: Sat, 4 Mar 2017 18:51:58 -0500 (EST)
-Message-ID: <1212844355.42089348.1488671518567.JavaMail.zimbra@redhat.com>
-References: <1488648640-5170-1-git-send-email-jsmart2021@gmail.com> <1488648640-5170-12-git-send-email-jsmart2021@gmail.com>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [RFC] hv_storvsc: error handling.
+Date: Sat, 4 Mar 2017 23:55:50 +0000
+Message-ID: <DM5PR03MB24903E60DFFC3660DD23C564A02A0@DM5PR03MB2490.namprd03.prod.outlook.com>
+References: <c1949de0-8b95-e254-1bec-bcdae762890f@kernel.dk>
+         <1488301573.3046.9.camel@linux.vnet.ibm.com>
+         <20170228105741.6253bb8a@xeon-e3>
+         <1488325732.11610.9.camel@linux.vnet.ibm.com>
+         <20170228172532.280811ed@xeon-e3>
+         <1488349258.20321.11.camel@linux.vnet.ibm.com>
+         <20170228224845.1da358ee@xeon-e3>       <20170301155057.GA13167@lst.de>
+         <20170301075412.2e5f1e98@xeon-e3>       <20170302000135.GA22886@lst.de>
+         <20170302005615.GA23687@lst.de> <20170301174058.383da142@xeon-e3>
+         <c8ff2b64-2421-ca45-1f89-afec0490c8b3@suse.de>
+         <20170302102324.47dbe3ad@xeon-e3>
+         <895c4f2e-7faa-41e1-b5de-eedb4ae0f882@email.android.com>
+         <20170302110505.6ad2eb61@xeon-e3>
+         <1b325703-b823-4304-9d9d-86071811e000@email.android.com>
+         <20170303165011.53a38794@xeon-e3>
+         <DM5PR03MB24906E9B50B16B8C567EE25BA02A0@DM5PR03MB2490.namprd03.prod.outlook.com>
+ <1488663419.2985.4.camel@linux.vnet.ibm.com>
+ <DM5PR03MB24905D32BA15195A2BDF4E94A02A0@DM5PR03MB2490.namprd03.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx3-phx2.redhat.com ([209.132.183.24]:47937 "EHLO
-        mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752391AbdCDXwt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Mar 2017 18:52:49 -0500
-In-Reply-To: <1488648640-5170-12-git-send-email-jsmart2021@gmail.com>
+Received: from mail-by2nam03on0122.outbound.protection.outlook.com ([104.47.42.122]:44973
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752522AbdCDX4P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 4 Mar 2017 18:56:15 -0500
+In-Reply-To: <DM5PR03MB24905D32BA15195A2BDF4E94A02A0@DM5PR03MB2490.namprd03.prod.outlook.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jsmart2021@gmail.com
-Cc: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
+To: James Bottomley <jejb@linux.vnet.ibm.com>, Stephen Hemminger <stephen@networkplumber.org>
+Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Linus Torvalds <torvalds@linux-foundation.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>, Josh Poulson <jopoulso@microsoft.com>, "Adrian Suhov (Cloudbase Solutions SRL)" <v-adsuho@microsoft.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Haiyang Zhang <haiyangz@microsoft.com>
 
-
-
------ Original Message -----
-> From: jsmart2021@gmail.com
-> To: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
-> Cc: "James Smart" <jsmart2021@gmail.com>, "Dick Kennedy" <dick.kennedy@broadcom.com>, "James Smart"
-> <james.smart@broadcom.com>
-> Sent: Saturday, March 4, 2017 12:30:31 PM
-> Subject: [PATCH 11/20] lpfc: Fix eh_deadline setting for sli3 adapters.
-> 
-> From: James Smart <jsmart2021@gmail.com>
-> 
-> A previous change unilaterally removed the hba reset entry point
-> from the sli3 host template. This was done to allow tape devices
-> being used for back up from being removed. Why was this done ?
-> When there was non-responding device on the fabric, the error
-> escalation policy would escalate to the reset handler. When the
-> reset handler was called, it would reset the adapter, dropping
-> link, thus logging out and terminating all i/o's - on any target.
-> If there was a tape device on the same adapter that wasn't in
-> error, it would kill the tape i/o's, effectively killing the
-> tape device state.  With the reset point removed, the adapter
-> reset avoided the fabric logout, allowing the other devices to
-> continue to operate unaffected. A hack - yes. Hint: we really
-> need a transport I_T nexus reset callback added to the eh process
-> (in between the SCSI target reset and hba reset points), so a
-> fc logout could occur to the one bad target only and stop the error
-> escalation process.
-> 
-> This patch commonizes the approach so it can be used for sli3 and sli4
-> adapters, but mandates the admin, via module parameter, specifically
-> identify which adapters the resets are to be removed for. Additionally,
-> bus_reset, which sends Target Reset TMFs to all targets, is also removed
-> from the template as it too has the same effect as the adapter reset.
-> 
-> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-> Signed-off-by: James Smart <james.smart@broadcom.com>
-> ---
->  drivers/scsi/lpfc/lpfc.h      |  1 +
->  drivers/scsi/lpfc/lpfc_attr.c |  6 +++++
->  drivers/scsi/lpfc/lpfc_crtn.h |  4 ++-
->  drivers/scsi/lpfc/lpfc_init.c | 61
->  ++++++++++++++++++++++++++++++++++++++++---
->  drivers/scsi/lpfc/lpfc_scsi.c |  3 +--
->  5 files changed, 69 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-> index de6cd57..763f32d 100644
-> --- a/drivers/scsi/lpfc/lpfc.h
-> +++ b/drivers/scsi/lpfc/lpfc.h
-> @@ -99,6 +99,7 @@ struct lpfc_sli2_slim;
->  #define FC_MAX_ADPTMSG		64
->  
->  #define MAX_HBAEVT	32
-> +#define MAX_HBAS_NO_RESET 16
->  
->  /* Number of MSI-X vectors the driver uses */
->  #define LPFC_MSIX_VECTORS	2
-> diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-> index 4114cf4..b741dcb 100644
-> --- a/drivers/scsi/lpfc/lpfc_attr.c
-> +++ b/drivers/scsi/lpfc/lpfc_attr.c
-> @@ -3010,6 +3010,12 @@ MODULE_PARM_DESC(lpfc_poll, "FCP ring polling mode
-> control:"
->  static DEVICE_ATTR(lpfc_poll, S_IRUGO | S_IWUSR,
->  		   lpfc_poll_show, lpfc_poll_store);
->  
-> +int lpfc_no_hba_reset_cnt;
-> +unsigned long lpfc_no_hba_reset[MAX_HBAS_NO_RESET] = {
-> +	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-> +module_param_array(lpfc_no_hba_reset, ulong, &lpfc_no_hba_reset_cnt, 0444);
-> +MODULE_PARM_DESC(lpfc_no_hba_reset, "WWPN of HBAs that should not be
-> reset");
-> +
->  LPFC_ATTR(sli_mode, 0, 0, 3,
->  	"SLI mode selector:"
->  	" 0 - auto (SLI-3 if supported),"
-> diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
-> index 843dd73..54e6ac4 100644
-> --- a/drivers/scsi/lpfc/lpfc_crtn.h
-> +++ b/drivers/scsi/lpfc/lpfc_crtn.h
-> @@ -384,7 +384,7 @@ void lpfc_free_sysfs_attr(struct lpfc_vport *);
->  extern struct device_attribute *lpfc_hba_attrs[];
->  extern struct device_attribute *lpfc_vport_attrs[];
->  extern struct scsi_host_template lpfc_template;
-> -extern struct scsi_host_template lpfc_template_s3;
-> +extern struct scsi_host_template lpfc_template_no_hr;
->  extern struct scsi_host_template lpfc_template_nvme;
->  extern struct scsi_host_template lpfc_vport_template;
->  extern struct fc_function_template lpfc_transport_functions;
-> @@ -554,3 +554,5 @@ void lpfc_nvme_abort_fcreq_cmpl(struct lpfc_hba *phba,
->  				struct lpfc_wcqe_complete *abts_cmpl);
->  extern int lpfc_enable_nvmet_cnt;
->  extern unsigned long long lpfc_enable_nvmet[];
-> +extern int lpfc_no_hba_reset_cnt;
-> +extern unsigned long lpfc_no_hba_reset[];
-> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-> index b754887..ecb8e1c 100644
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -3555,6 +3555,44 @@ lpfc_sli4_scsi_sgl_update(struct lpfc_hba *phba)
->  	return rc;
->  }
->  
-> +static uint64_t
-> +lpfc_get_wwpn(struct lpfc_hba *phba)
-> +{
-> +	uint64_t wwn;
-> +	int rc;
-> +	LPFC_MBOXQ_t *mboxq;
-> +	MAILBOX_t *mb;
-> +
-> +
-> +	mboxq = (LPFC_MBOXQ_t *) mempool_alloc(phba->mbox_mem_pool,
-> +						GFP_KERNEL);
-> +	if (!mboxq)
-> +		return (uint64_t)-1;
-> +
-> +	/* First get WWN of HBA instance */
-> +	lpfc_read_nv(phba, mboxq);
-> +	rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_POLL);
-> +	if (rc != MBX_SUCCESS) {
-> +		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
-> +				"6019 Mailbox failed , mbxCmd x%x "
-> +				"READ_NV, mbxStatus x%x\n",
-> +				bf_get(lpfc_mqe_command, &mboxq->u.mqe),
-> +				bf_get(lpfc_mqe_status, &mboxq->u.mqe));
-> +		mempool_free(mboxq, phba->mbox_mem_pool);
-> +		return (uint64_t) -1;
-> +	}
-> +	mb = &mboxq->u.mb;
-> +	memcpy(&wwn, (char *)mb->un.varRDnvp.portname, sizeof(uint64_t));
-> +	/* wwn is WWPN of HBA instance */
-> +	mempool_free(mboxq, phba->mbox_mem_pool);
-> +	if (phba->sli_rev == LPFC_SLI_REV4)
-> +		return be64_to_cpu(wwn);
-> +	else
-> +		return (((wwn & 0xffffffff00000000) >> 32) |
-> +			((wwn & 0x00000000ffffffff) << 32));
-> +
-> +}
-> +
->  /**
->   * lpfc_sli4_nvme_sgl_update - update xri-sgl sizing and mapping
->   * @phba: pointer to lpfc hba data structure.
-> @@ -3676,17 +3714,32 @@ lpfc_create_port(struct lpfc_hba *phba, int instance,
-> struct device *dev)
->  	struct lpfc_vport *vport;
->  	struct Scsi_Host  *shost = NULL;
->  	int error = 0;
-> +	int i;
-> +	uint64_t wwn;
-> +	bool use_no_reset_hba = false;
-> +
-> +	wwn = lpfc_get_wwpn(phba);
-> +
-> +	for (i = 0; i < lpfc_no_hba_reset_cnt; i++) {
-> +		if (wwn == lpfc_no_hba_reset[i]) {
-> +			lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
-> +					"6020 Setting use_no_reset port=%llx\n",
-> +					wwn);
-> +			use_no_reset_hba = true;
-> +			break;
-> +		}
-> +	}
->  
->  	if (phba->cfg_enable_fc4_type & LPFC_ENABLE_FCP) {
->  		if (dev != &phba->pcidev->dev) {
->  			shost = scsi_host_alloc(&lpfc_vport_template,
->  						sizeof(struct lpfc_vport));
->  		} else {
-> -			if (phba->sli_rev == LPFC_SLI_REV4)
-> +			if (!use_no_reset_hba)
->  				shost = scsi_host_alloc(&lpfc_template,
->  						sizeof(struct lpfc_vport));
->  			else
-> -				shost = scsi_host_alloc(&lpfc_template_s3,
-> +				shost = scsi_host_alloc(&lpfc_template_no_hr,
->  						sizeof(struct lpfc_vport));
->  		}
->  	} else if (phba->cfg_enable_fc4_type & LPFC_ENABLE_NVME) {
-> @@ -5482,7 +5535,8 @@ lpfc_sli_driver_resource_setup(struct lpfc_hba *phba)
->  
->  	/* Initialize the host templates the configured values. */
->  	lpfc_vport_template.sg_tablesize = phba->cfg_sg_seg_cnt;
-> -	lpfc_template_s3.sg_tablesize = phba->cfg_sg_seg_cnt;
-> +	lpfc_template_no_hr.sg_tablesize = phba->cfg_sg_seg_cnt;
-> +	lpfc_template.sg_tablesize = phba->cfg_sg_seg_cnt;
->  
->  	/* There are going to be 2 reserved BDEs: 1 FCP cmnd + 1 FCP rsp */
->  	if (phba->cfg_enable_bg) {
-> @@ -5706,6 +5760,7 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
->  	/* Initialize the host templates with the updated values. */
->  	lpfc_vport_template.sg_tablesize = phba->cfg_sg_seg_cnt;
->  	lpfc_template.sg_tablesize = phba->cfg_sg_seg_cnt;
-> +	lpfc_template_no_hr.sg_tablesize = phba->cfg_sg_seg_cnt;
->  
->  	if (phba->cfg_sg_dma_buf_size  <= LPFC_MIN_SG_SLI4_BUF_SZ)
->  		phba->cfg_sg_dma_buf_size = LPFC_MIN_SG_SLI4_BUF_SZ;
-> diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-> index 9d6384a..bcfd6d6 100644
-> --- a/drivers/scsi/lpfc/lpfc_scsi.c
-> +++ b/drivers/scsi/lpfc/lpfc_scsi.c
-> @@ -5953,7 +5953,7 @@ struct scsi_host_template lpfc_template_nvme = {
->  	.track_queue_depth	= 0,
->  };
->  
-> -struct scsi_host_template lpfc_template_s3 = {
-> +struct scsi_host_template lpfc_template_no_hr = {
->  	.module			= THIS_MODULE,
->  	.name			= LPFC_DRIVER_NAME,
->  	.proc_name		= LPFC_DRIVER_NAME,
-> @@ -6015,7 +6015,6 @@ struct scsi_host_template lpfc_vport_template = {
->  	.eh_abort_handler	= lpfc_abort_handler,
->  	.eh_device_reset_handler = lpfc_device_reset_handler,
->  	.eh_target_reset_handler = lpfc_target_reset_handler,
-> -	.eh_bus_reset_handler	= lpfc_bus_reset_handler,
->  	.slave_alloc		= lpfc_slave_alloc,
->  	.slave_configure	= lpfc_slave_configure,
->  	.slave_destroy		= lpfc_slave_destroy,
-> --
-> 2.5.0
-> 
-> 
-
-This patch was implemented and tested in the Red Hat lab and validated for a customer requiring eh_deadline.
-
-Reviewed-by: Laurence Oberman <loberman@redhat.com>
-Tested-by:   Laurence Oberman <loberman@redhat.com>
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogS1kgU3Jpbml2YXNhbg0K
+PiBTZW50OiBTYXR1cmRheSwgTWFyY2ggNCwgMjAxNyAxOjQwIFBNDQo+IFRvOiAnSmFtZXMgQm90
+dG9tbGV5JyA8amVqYkBsaW51eC52bmV0LmlibS5jb20+OyBTdGVwaGVuIEhlbW1pbmdlcg0KPiA8
+c3RlcGhlbkBuZXR3b3JrcGx1bWJlci5vcmc+DQo+IENjOiBIYW5uZXMgUmVpbmVja2UgPGhhcmVA
+c3VzZS5kZT47IENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPjsgSmVucw0KPiBBeGJvZSA8
+YXhib2VAa2VybmVsLmRrPjsgTGludXMgVG9ydmFsZHMgPHRvcnZhbGRzQGxpbnV4LQ0KPiBmb3Vu
+ZGF0aW9uLm9yZz47IE1hcnRpbiBLLiBQZXRlcnNlbiA8bWFydGluLnBldGVyc2VuQG9yYWNsZS5j
+b20+Ow0KPiBEZXh1YW4gQ3VpIDxkZWN1aUBtaWNyb3NvZnQuY29tPjsgTG9uZyBMaSA8bG9uZ2xp
+QG1pY3Jvc29mdC5jb20+OyBKb3NoDQo+IFBvdWxzb24gPGpvcG91bHNvQG1pY3Jvc29mdC5jb20+
+OyBBZHJpYW4gU3Vob3YgKENsb3VkYmFzZSBTb2x1dGlvbnMgU1JMKQ0KPiA8di1hZHN1aG9AbWlj
+cm9zb2Z0LmNvbT47IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBIYWl5YW5nIFpoYW5nDQo+
+IDxoYWl5YW5nekBtaWNyb3NvZnQuY29tPg0KPiBTdWJqZWN0OiBSRTogW1JGQ10gaHZfc3RvcnZz
+YzogZXJyb3IgaGFuZGxpbmcuDQo+IA0KPiANCj4gDQo+ID4gLS0tLS1PcmlnaW5hbCBNZXNzYWdl
+LS0tLS0NCj4gPiBGcm9tOiBKYW1lcyBCb3R0b21sZXkgW21haWx0bzpqZWpiQGxpbnV4LnZuZXQu
+aWJtLmNvbV0NCj4gPiBTZW50OiBTYXR1cmRheSwgTWFyY2ggNCwgMjAxNyAxOjM3IFBNDQo+ID4g
+VG86IEtZIFNyaW5pdmFzYW4gPGt5c0BtaWNyb3NvZnQuY29tPjsgU3RlcGhlbiBIZW1taW5nZXIN
+Cj4gPiA8c3RlcGhlbkBuZXR3b3JrcGx1bWJlci5vcmc+DQo+ID4gQ2M6IEhhbm5lcyBSZWluZWNr
+ZSA8aGFyZUBzdXNlLmRlPjsgQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+Ow0KPiBKZW5z
+DQo+ID4gQXhib2UgPGF4Ym9lQGtlcm5lbC5kaz47IExpbnVzIFRvcnZhbGRzIDx0b3J2YWxkc0Bs
+aW51eC0NCj4gPiBmb3VuZGF0aW9uLm9yZz47IE1hcnRpbiBLLiBQZXRlcnNlbiA8bWFydGluLnBl
+dGVyc2VuQG9yYWNsZS5jb20+Ow0KPiA+IERleHVhbiBDdWkgPGRlY3VpQG1pY3Jvc29mdC5jb20+
+OyBMb25nIExpIDxsb25nbGlAbWljcm9zb2Z0LmNvbT47IEpvc2gNCj4gPiBQb3Vsc29uIDxqb3Bv
+dWxzb0BtaWNyb3NvZnQuY29tPjsgQWRyaWFuIFN1aG92IChDbG91ZGJhc2UgU29sdXRpb25zDQo+
+IFNSTCkNCj4gPiA8di1hZHN1aG9AbWljcm9zb2Z0LmNvbT47IGxpbnV4LXNjc2lAdmdlci5rZXJu
+ZWwub3JnOyBIYWl5YW5nIFpoYW5nDQo+ID4gPGhhaXlhbmd6QG1pY3Jvc29mdC5jb20+DQo+ID4g
+U3ViamVjdDogUmU6IFtSRkNdIGh2X3N0b3J2c2M6IGVycm9yIGhhbmRsaW5nLg0KPiA+DQo+ID4g
+T24gU2F0LCAyMDE3LTAzLTA0IGF0IDIxOjAzICswMDAwLCBLWSBTcmluaXZhc2FuIHdyb3RlOg0K
+PiA+ID4NCj4gPiA+ID4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gPiA+ID4gRnJvbTog
+U3RlcGhlbiBIZW1taW5nZXIgW21haWx0bzpzdGVwaGVuQG5ldHdvcmtwbHVtYmVyLm9yZ10NCj4g
+PiA+ID4gU2VudDogRnJpZGF5LCBNYXJjaCAzLCAyMDE3IDQ6NTAgUE0NCj4gPiA+ID4gVG86IEph
+bWVzIEJvdHRvbWxleSA8SmFtZXMuQm90dG9tbGV5QEhhbnNlbnBhcnRuZXJzaGlwLmNvbT4NCj4g
+PiA+ID4gQ2M6IEhhbm5lcyBSZWluZWNrZSA8aGFyZUBzdXNlLmRlPjsgQ2hyaXN0b3BoIEhlbGx3
+aWcNCj4gPGhjaEBsc3QuZGU+Ow0KPiA+ID4gPiBKYW1lcyBCb3R0b21sZXkgPGplamJAbGludXgu
+dm5ldC5pYm0uY29tPjsgSmVucyBBeGJvZQ0KPiA+ID4gPiA8YXhib2VAa2VybmVsLmRrPjsgTGlu
+dXMgVG9ydmFsZHMgPHRvcnZhbGRzQGxpbnV4LWZvdW5kYXRpb24ub3JnPjsNCj4gPiA+ID4gTWFy
+dGluIEsuIFBldGVyc2VuIDxtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbT47IEtZIFNyaW5pdmFz
+YW4NCj4gPiA+ID4gPGt5c0BtaWNyb3NvZnQuY29tPjsgRGV4dWFuIEN1aSA8ZGVjdWlAbWljcm9z
+b2Z0LmNvbT47IExvbmcgTGkNCj4gPiA+ID4gPGxvbmdsaUBtaWNyb3NvZnQuY29tPjsgSm9zaCBQ
+b3Vsc29uIDxqb3BvdWxzb0BtaWNyb3NvZnQuY29tPjsNCj4gPiA+ID4gQWRyaWFuDQo+ID4gPiA+
+IFN1aG92IChDbG91ZGJhc2UgU29sdXRpb25zIFNSTCkgPHYtYWRzdWhvQG1pY3Jvc29mdC5jb20+
+OyBsaW51eC0NCj4gPiA+ID4gc2NzaUB2Z2VyLmtlcm5lbC5vcmc7IEhhaXlhbmcgWmhhbmcgPGhh
+aXlhbmd6QG1pY3Jvc29mdC5jb20+DQo+ID4gPiA+IFN1YmplY3Q6IFtSRkNdIGh2X3N0b3J2c2M6
+IGVycm9yIGhhbmRsaW5nLg0KPiA+ID4gPg0KPiA+ID4gPiBOZWVkcyBtb3JlIHRlc3RpbmcgYnV0
+IHRoaXMgZG9lcyBmaXggdGhlIG9ic2VydmVkIHByb2JsZW0uDQo+ID4gPiA+DQo+ID4gPiA+IEZy
+b206IFN0ZXBoZW4gSGVtbWluZ2VyIDxzdGhlbW1pbkBtaWNyb3NvZnQuY29tPg0KPiA+ID4gPg0K
+PiA+ID4gPiBTdWJqZWN0OiBbUEFUQ0hdIGh2X3N0b3J2c2M6IGZpeCBlcnJvciBoYW5kbGluZw0K
+PiA+ID4gPg0KPiA+ID4gPiBUaGUgSHlwZXItViBzdG9ydnNjIFNDU0kgZHJpdmVyIHdhcyBoaWRp
+bmcgYWxsIGVycm9ycyBpbiBJTlFVSVJZDQo+ID4gPiA+IGFuZA0KPiA+ID4gPiBNT0RFX1NFTlNF
+IGNvbW1hbmRzLiBUaGlzIGNhdXNlZCB0aGUgc2NhbiBwcm9jZXNzIHRvIGluY29ycmVjdGx5DQo+
+ID4gPiA+IHRoaW5rDQo+ID4gPiA+IGRldmljZXMgd2VyZSBwcmVzZW50IGFuZCBvbmxpbmUuICBB
+bHNvIGludmFsaWQgTFVOIGVycm9ycyB3ZXJlIG5vdA0KPiA+ID4gPiBiZWluZyBoYW5kbGVkIGNv
+cnJlY3RseS4NCj4gPiA+ID4NCj4gPiA+ID4gVGhpcyBmaXhlcyBwcm9ibGVtcyBib290aW5nIGEg
+R0VOMiBWTSBvbiBIeXBlci1WLiBJdCBlZmZlY3RpdmVseQ0KPiA+ID4gPiByZXZlcnRzIGNvbW1p
+dCA0ZWQ1MWEyMWMwZjY5ICgiU3RhZ2luZzogaHY6IHN0b3J2c2M6IEZpeHVwDQo+ID4gPiA+IHNy
+YiBhbmQgc2NzaSBzdGF0dXMgZm9yIElOUVVJUlkgYW5kIE1PREVfU0VOU0UiKQ0KPiA+ID4gPg0K
+PiA+ID4gPiBTaWduZWQtb2ZmLWJ5OiBTdGVwaGVuIEhlbW1pbmdlciA8c3RoZW1taW5AbWljcm9z
+b2Z0LmNvbT4NCj4gPiA+ID4gLS0tDQo+ID4gPiA+ICBkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYu
+YyB8IDQ4ICsrKystLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4gPiA+ID4gLS0tLS0t
+LS0tLS0tDQo+ID4gPiA+ICAxIGZpbGUgY2hhbmdlZCwgNCBpbnNlcnRpb25zKCspLCA0NCBkZWxl
+dGlvbnMoLSkNCj4gPiA+ID4NCj4gPiA+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9zdG9y
+dnNjX2Rydi5jDQo+ID4gPiA+IGIvZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMNCj4gPiA+ID4g
+aW5kZXggNjM4ZTVmNDI3YzkwLi44Y2MyNDFmYzU0YjggMTAwNjQ0DQo+ID4gPiA+IC0tLSBhL2Ry
+aXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jDQo+ID4gPiA+ICsrKyBiL2RyaXZlcnMvc2NzaS9zdG9y
+dnNjX2Rydi5jDQo+ID4gPiA+IEBAIC01NDMsMjggKzU0Myw2IEBAIHN0YXRpYyB2b2lkIHN0b3J2
+c2NfaG9zdF9zY2FuKHN0cnVjdA0KPiA+ID4gPiB3b3JrX3N0cnVjdA0KPiA+ID4gPiAqd29yaykN
+Cj4gPiA+ID4gIAlrZnJlZSh3cmspOw0KPiA+ID4gPiAgfQ0KPiA+ID4gPg0KPiA+ID4gPiAtc3Rh
+dGljIHZvaWQgc3RvcnZzY19yZW1vdmVfbHVuKHN0cnVjdCB3b3JrX3N0cnVjdCAqd29yaykNCj4g
+PiA+ID4gLXsNCj4gPiA+ID4gLQlzdHJ1Y3Qgc3RvcnZzY19zY2FuX3dvcmsgKndyazsNCj4gPiA+
+ID4gLQlzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXY7DQo+ID4gPiA+IC0NCj4gPiA+ID4gLQl3cmsg
+PSBjb250YWluZXJfb2Yod29yaywgc3RydWN0IHN0b3J2c2Nfc2Nhbl93b3JrLCB3b3JrKTsNCj4g
+PiA+ID4gLQlpZiAoIXNjc2lfaG9zdF9nZXQod3JrLT5ob3N0KSkNCj4gPiA+ID4gLQkJZ290byBk
+b25lOw0KPiA+ID4gPiAtDQo+ID4gPiA+IC0Jc2RldiA9IHNjc2lfZGV2aWNlX2xvb2t1cCh3cmst
+Pmhvc3QsIDAsIHdyay0+dGd0X2lkLCB3cmsNCj4gPiA+ID4gLT5sdW4pOw0KPiA+ID4gPiAtDQo+
+ID4gPiA+IC0JaWYgKHNkZXYpIHsNCj4gPiA+ID4gLQkJc2NzaV9yZW1vdmVfZGV2aWNlKHNkZXYp
+Ow0KPiA+ID4gPiAtCQlzY3NpX2RldmljZV9wdXQoc2Rldik7DQo+ID4gPiA+IC0JfQ0KPiA+ID4g
+PiAtCXNjc2lfaG9zdF9wdXQod3JrLT5ob3N0KTsNCj4gPiA+ID4gLQ0KPiA+ID4gPiAtZG9uZToN
+Cj4gPiA+ID4gLQlrZnJlZSh3cmspOw0KPiA+ID4gPiAtfQ0KPiA+ID4gPiAtDQo+ID4gPiA+IC0N
+Cj4gPiA+ID4gIC8qDQo+ID4gPiA+ICAgKiBXZSBjYW4gZ2V0IGluY29taW5nIG1lc3NhZ2VzIGZy
+b20gdGhlIGhvc3QgdGhhdCBhcmUgbm90IGluDQo+ID4gPiA+IHJlc3BvbnNlIHRvDQo+ID4gPiA+
+ICAgKiBtZXNzYWdlcyB0aGF0IHdlIGhhdmUgc2VudCBvdXQuIEFuIGV4YW1wbGUgb2YgdGhpcyB3
+b3VsZCBiZQ0KPiA+ID4gPiBtZXNzYWdlcw0KPiA+ID4gPiBAQCAtOTU1LDggKzkzMyw3IEBAIHN0
+YXRpYyB2b2lkIHN0b3J2c2NfaGFuZGxlX2Vycm9yKHN0cnVjdA0KPiA+ID4gPiB2bXNjc2lfcmVx
+dWVzdCAqdm1fc3JiLA0KPiA+ID4gPiAgCQl9DQo+ID4gPiA+ICAJCWJyZWFrOw0KPiA+ID4gPiAg
+CWNhc2UgU1JCX1NUQVRVU19JTlZBTElEX0xVTjoNCj4gPiA+ID4gLQkJZG9fd29yayA9IHRydWU7
+DQo+ID4gPiA+IC0JCXByb2Nlc3NfZXJyX2ZuID0gc3RvcnZzY19yZW1vdmVfbHVuOw0KPiA+ID4g
+PiArCQlzZXRfaG9zdF9ieXRlKHNjbW5kLCBESURfTk9fQ09OTkVDVCk7DQo+ID4gPiA+ICAJCWJy
+ZWFrOw0KPiA+ID4gPiAgCWNhc2UgU1JCX1NUQVRVU19BQk9SVEVEOg0KPiA+ID4gPiAgCQlpZiAo
+dm1fc3JiLT5zcmJfc3RhdHVzICYNCj4gPiA+ID4gU1JCX1NUQVRVU19BVVRPU0VOU0VfVkFMSUQN
+Cj4gPiA+ID4gJiYNCj4gPiA+ID4gQEAgLTEwNTAsMzIgKzEwMjcsMTUgQEAgc3RhdGljIHZvaWQg
+c3RvcnZzY19vbl9pb19jb21wbGV0aW9uKHN0cnVjdA0KPiA+ID4gPiBzdG9ydnNjX2RldmljZSAq
+c3Rvcl9kZXZpY2UsDQo+ID4gPiA+DQo+ID4gPiA+ICAJc3Rvcl9wa3QgPSAmcmVxdWVzdC0+dnN0
+b3JfcGFja2V0Ow0KPiA+ID4gPg0KPiA+ID4gPiAtCS8qDQo+ID4gPiA+IC0JICogVGhlIGN1cnJl
+bnQgU0NTSSBoYW5kbGluZyBvbiB0aGUgaG9zdCBzaWRlIGRvZXMNCj4gPiA+ID4gLQkgKiBub3Qg
+Y29ycmVjdGx5IGhhbmRsZToNCj4gPiA+ID4gLQkgKiBJTlFVSVJZIGNvbW1hbmQgd2l0aCBwYWdl
+IGNvZGUgcGFyYW1ldGVyIHNldCB0byAweDgwDQo+ID4gPiA+IC0JICogTU9ERV9TRU5TRSBjb21t
+YW5kIHdpdGggY21kWzJdID09IDB4MWMNCj4gPiA+ID4gLQkgKg0KPiA+ID4gPiAtCSAqIFNldHVw
+IHNyYiBhbmQgc2NzaSBzdGF0dXMgc28gdGhpcyB3b24ndCBiZSBmYXRhbC4NCj4gPiA+ID4gLQkg
+KiBXZSBkbyB0aGlzIHNvIHdlIGNhbiBkaXN0aW5ndWlzaCB0cnVseSBmYXRhbCBmYWlsdWVzDQo+
+ID4gPiA+IC0JICogKHNyYiBzdGF0dXMgPT0gMHg0KSBhbmQgb2ZmLWxpbmUgdGhlIGRldmljZSBp
+biB0aGF0DQo+ID4gPiA+IGNhc2UuDQo+ID4gPiA+IC0JICovDQo+ID4gPiA+IC0NCj4gPiA+ID4g
+LQlpZiAoKHN0b3JfcGt0LT52bV9zcmIuY2RiWzBdID09IElOUVVJUlkpIHx8DQo+ID4gPiA+IC0J
+ICAgKHN0b3JfcGt0LT52bV9zcmIuY2RiWzBdID09IE1PREVfU0VOU0UpKSB7DQo+ID4gPiA+IC0J
+CXZzdG9yX3BhY2tldC0+dm1fc3JiLnNjc2lfc3RhdHVzID0gMDsNCj4gPiA+ID4gLQkJdnN0b3Jf
+cGFja2V0LT52bV9zcmIuc3JiX3N0YXR1cyA9DQo+ID4gPiA+IFNSQl9TVEFUVVNfU1VDQ0VTUzsN
+Cj4gPiA+ID4gLQl9DQo+ID4gPiA+IC0NCj4gPiA+ID4gLQ0KPiA+ID4gPiAgCS8qIENvcHkgb3Zl
+ciB0aGUgc3RhdHVzLi4uZXRjICovDQo+ID4gPiA+ICAJc3Rvcl9wa3QtPnZtX3NyYi5zY3NpX3N0
+YXR1cyA9IHZzdG9yX3BhY2tldA0KPiA+ID4gPiAtPnZtX3NyYi5zY3NpX3N0YXR1czsNCj4gPiA+
+ID4gIAlzdG9yX3BrdC0+dm1fc3JiLnNyYl9zdGF0dXMgPSB2c3Rvcl9wYWNrZXQNCj4gPiA+ID4g
+LT52bV9zcmIuc3JiX3N0YXR1czsNCj4gPiA+ID4gIAlzdG9yX3BrdC0+dm1fc3JiLnNlbnNlX2lu
+Zm9fbGVuZ3RoID0NCj4gPiA+ID4gIAl2c3Rvcl9wYWNrZXQtPnZtX3NyYi5zZW5zZV9pbmZvX2xl
+bmd0aDsNCj4gPiA+ID4NCj4gPiA+ID4gLQlpZiAodnN0b3JfcGFja2V0LT52bV9zcmIuc2NzaV9z
+dGF0dXMgIT0gMCB8fA0KPiA+ID4gPiAtCSAgICB2c3Rvcl9wYWNrZXQtPnZtX3NyYi5zcmJfc3Rh
+dHVzICE9IFNSQl9TVEFUVVNfU1VDQ0VTUykNCj4gPiA+ID4gKwlpZiAoc3Rvcl9wa3QtPnZtX3Ny
+Yi5jZGJbMF0gIT0gSU5RVUlSWSAmJg0KPiA+ID4gPiArCSAgICAodnN0b3JfcGFja2V0LT52bV9z
+cmIuc2NzaV9zdGF0dXMgIT0gMCB8fA0KPiA+ID4gPiArCSAgICAgdnN0b3JfcGFja2V0LT52bV9z
+cmIuc3JiX3N0YXR1cyAhPQ0KPiA+ID4gPiBTUkJfU1RBVFVTX1NVQ0NFU1MpKQ0KPiA+ID4gPiAg
+CQlzdG9ydnNjX2xvZyhkZXZpY2UsIFNUT1JWU0NfTE9HR0lOR19XQVJOLA0KPiA+ID4gPiAgCQkJ
+ImNtZCAweCV4IHNjc2kgc3RhdHVzIDB4JXggc3JiIHN0YXR1cw0KPiA+ID4gPiAweCV4XG4iLA0K
+PiA+ID4gPiAgCQkJc3Rvcl9wa3QtPnZtX3NyYi5jZGJbMF0sDQo+ID4gPiA+IC0tDQo+ID4gPg0K
+PiA+ID4gVGhpcyBwYXRjaCBnZXRzIHJpZCBvZiB0aGUgYWJpbGl0eSB0byAiaG90IHJlbW92ZSIg
+TFVOcy4gSSBkb24ndA0KPiA+ID4gdGhpbmsgdGhhdCBjYW4gYmUgcGFydCBvZiBhbnkNCj4gPiA+
+IHNvbHV0aW9uLiBUaGUgSU5RVUlSWSBoYWNrIEkgcHV0IGluIGEgbG9uZyB0aW1lIGFnbyB3YXMg
+dG8gZGVhbCB3aXRoDQo+ID4gPiBob3N0IGJ1Z3Mgb24gcHJpb3IgdmVyc2lvbnMgb2YNCj4gPiA+
+IFdpbmRvd3Mgc2VydmVyLiBXUzIwMTYgc2hvdWxkIG5vdCBiZSB0cmlnZXJyaW5nIHRoaXMgY29k
+ZS4gU3RlcGhlbiwNCj4gPiA+IGNvdWxkIHlvdSBwbGVhc2UgdGVzdCB0aGlzIHBhdGNoIC0NCj4g
+PiA+IGEgcXVpY2sgaGFjazoNCj4gPiA+DQo+ID4gPiBGcm9tIGI5N2YyNGYyMjRhNzFhNmU3NDVj
+NDJlNTY0MDA0NWE1NTNlYjQwN2MgTW9uIFNlcCAxNyAwMDowMDowMA0KPiA+ID4gMjAwMQ0KPiA+
+ID4gRnJvbTogSy4gWS4gU3Jpbml2YXNhbiA8a3lzQG1pY3Jvc29mdC5jb20+DQo+ID4gPiBEYXRl
+OiBTYXQsIDQgTWFyIDIwMTcgMTQ6MDA6NDYgLTA3MDANCj4gPiA+IFN1YmplY3Q6IFtQQVRDSCAx
+LzFdIHNjc2k6IHN0b3J2c2M6IEZpeCBhIGJ1ZyBpbiBMVU4gcmVtb3ZhbCBjb2RlDQo+ID4gPiBS
+ZXBseS1Ubzoga3lzQG1pY3Jvc29mdC5jb20NCj4gPiA+DQo+ID4gPiBTaWduZWQtb2ZmLWJ5OiBL
+LiBZLiBTcmluaXZhc2FuIDxreXNAbWljcm9zb2Z0LmNvbT4NCj4gPiA+IC0tLQ0KPiA+ID4gIGRy
+aXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jIHwgICAxMyArKysrKysrKysrKysrDQo+ID4gPiAgMSBm
+aWxlcyBjaGFuZ2VkLCAxMyBpbnNlcnRpb25zKCspLCAwIGRlbGV0aW9ucygtKQ0KPiA+ID4NCj4g
+PiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyBiL2RyaXZlcnMvc2Nz
+aS9zdG9ydnNjX2Rydi5jDQo+ID4gPiBpbmRleCAwNTUyNmI3Li4yN2ViNjgyIDEwMDY0NA0KPiA+
+ID4gLS0tIGEvZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMNCj4gPiA+ICsrKyBiL2RyaXZlcnMv
+c2NzaS9zdG9ydnNjX2Rydi5jDQo+ID4gPiBAQCAtODg1LDYgKzg4NSw3IEBAIHN0YXRpYyB2b2lk
+IHN0b3J2c2NfaGFuZGxlX2Vycm9yKHN0cnVjdA0KPiA+ID4gdm1zY3NpX3JlcXVlc3QgKnZtX3Ny
+YiwNCj4gPiA+ICAgICAgICAgc3RydWN0IHN0b3J2c2Nfc2Nhbl93b3JrICp3cms7DQo+ID4gPiAg
+ICAgICAgIHZvaWQgKCpwcm9jZXNzX2Vycl9mbikoc3RydWN0IHdvcmtfc3RydWN0ICp3b3JrKTsN
+Cj4gPiA+ICAgICAgICAgYm9vbCBkb193b3JrID0gZmFsc2U7DQo+ID4gPiArICAgICAgIHN0cnVj
+dCBzY3NpX2RldmljZSAqc2RldjsNCj4gPiA+DQo+ID4gPiAgICAgICAgIHN3aXRjaCAoU1JCX1NU
+QVRVUyh2bV9zcmItPnNyYl9zdGF0dXMpKSB7DQo+ID4gPiAgICAgICAgIGNhc2UgU1JCX1NUQVRV
+U19FUlJPUjoNCj4gPiA+IEBAIC05MTEsNiArOTEyLDE4IEBAIHN0YXRpYyB2b2lkIHN0b3J2c2Nf
+aGFuZGxlX2Vycm9yKHN0cnVjdA0KPiA+ID4gdm1zY3NpX3JlcXVlc3QgKnZtX3NyYiwNCj4gPiA+
+ICAgICAgICAgICAgICAgICB9DQo+ID4gPiAgICAgICAgICAgICAgICAgYnJlYWs7DQo+ID4gPiAg
+ICAgICAgIGNhc2UgU1JCX1NUQVRVU19JTlZBTElEX0xVTjoNCj4gPiA+ICsgICAgICAgICAgICAg
+ICBpZiAoIXNjc2lfaG9zdF9nZXQoaG9zdCkpIHsNCj4gPiA+ICsgICAgICAgICAgICAgICAgICAg
+ICAgIHNldF9ob3N0X2J5dGUoc2NtbmQsIERJRF9OT19DT05ORUNUKTsNCj4gPiA+ICsgICAgICAg
+ICAgICAgICAgICAgICAgIGJyZWFrOw0KPiA+ID4gKyAgICAgICAgICAgICAgIH0NCj4gPiA+ICsN
+Cj4gPiA+ICsgICAgICAgICAgICAgICBzZGV2ID0gc2NzaV9kZXZpY2VfbG9va3VwKHdyay0+aG9z
+dCwgMCwgd3JrLT50Z3RfaWQsDQo+ID4gPiB3cmstPmx1bik7DQo+ID4gPiArDQo+ID4gPiArICAg
+ICAgICAgICAgICAgaWYgKCFzZGV2KSB7DQo+ID4gPiArICAgICAgICAgICAgICAgICAgICAgICBz
+ZXRfaG9zdF9ieXRlKHNjbW5kLCBESURfTk9fQ09OTkVDVCk7DQo+ID4gPiArICAgICAgICAgICAg
+ICAgICAgICAgICBicmVhazsNCj4gPiA+ICsgICAgICAgICAgICAgICB9DQo+ID4gPiArDQo+ID4N
+Cj4gPiBZb3UncmUgbm93IGdldHRpbmcgdHdvIHJlZmVyZW5jZXMgKG9uZSB0byB0aGUgaG9zdCBh
+bmQgb25lIHRvIHRoZQ0KPiA+IGRldmljZSkgdGhhdCB5b3UgZG9uJ3QgcHV0IGVpdGhlciBpbiBl
+cnJvciBoYW5kbGluZyBvciBpbg0KPiA+IHN0b3J2c2NfcmVtb3ZlX2x1bigpLg0KPiA+DQo+ID4g
+UHJvYmFibHkgeW91IHNob3VsZCBlbGltaW5hdGUgdGhlIHNjc2lfaG9zdF9nZXQgYW5kIHNjc2lf
+ZGV2aWNlX2xvb2t1cA0KPiA+IGluIHN0b3J2c2NfcmVtb3ZlX2x1bigpIChtYWtpbmcgaXQgYmFz
+aWNhbGx5IHJlbW92ZSBkZXZpY2UgcHV0IGRldmljZQ0KPiA+IHB1dCBob3N0KSBhbmQgYWRkIGEg
+aG9zdCBwdXQgaW4gdGhlICFzZGV2IGlmIGFib3ZlLg0KPiANCj4gWWVzOyB0aGlzIHdhcyBhIHF1
+aWNrIGhhY2sgdG8gcHJvdmUgYSB0aGVvcnkuIFRoaXMgc2hvdWxkIHdvcmsgKEkgaG9wZSk7IEkg
+d2lsbA0KPiBjbGVhbnVwIGFuZCByZXNlbmQgb25jZQ0KPiBTdGVwaGVuIHZlcmlmaWVzLg0KDQpT
+dGVwaGVuLA0KDQpQbGVhc2UgdGVzdCB0aGlzIHBhdGNoLiBIYXZlIGFkZHJlc3NlZCB0aGUgcmVm
+IGNvdW50IGlzc3VlIHRoYXQgSmFtZXMgcG9pbnRlZCBvdXQuDQoNCkZyb20gNmQ1N2ZiNjhjNDAx
+NjVlNjFkODRiNjc2NmIyMjYzNzQ3ZDVlMjQxZCBNb24gU2VwIDE3IDAwOjAwOjAwIDIwMDENCkZy
+b206IEsuIFkuIFNyaW5pdmFzYW4gPGt5c0BtaWNyb3NvZnQuY29tPg0KRGF0ZTogU2F0LCA0IE1h
+ciAyMDE3IDE1OjU3OjI2IC0wNzAwDQpTdWJqZWN0OiBbUEFUQ0ggMS8xXSBzY3NpOiBzdG9ydnNj
+OiBGaXggYSBidWcgaW4gTFVOIHJlbW92YWwgY29kZQ0KUmVwbHktVG86IGt5c0BtaWNyb3NvZnQu
+Y29tDQoNClNpZ25lZC1vZmYtYnk6IEsuIFkuIFNyaW5pdmFzYW4gPGt5c0BtaWNyb3NvZnQuY29t
+Pg0KLS0tDQogZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgfCAgIDMzICsrKysrKysrKysrKysr
+KysrKysrKysrLS0tLS0tLS0tLQ0KIDEgZmlsZXMgY2hhbmdlZCwgMjMgaW5zZXJ0aW9ucygrKSwg
+MTAgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYu
+YyBiL2RyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jDQppbmRleCAwNTUyNmI3Li4yYmQxMzJkIDEw
+MDY0NA0KLS0tIGEvZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMNCisrKyBiL2RyaXZlcnMvc2Nz
+aS9zdG9ydnNjX2Rydi5jDQpAQCAtNDc4LDYgKzQ3OCw3IEBAIHN0cnVjdCBodl9ob3N0X2Rldmlj
+ZSB7DQogc3RydWN0IHN0b3J2c2Nfc2Nhbl93b3JrIHsNCiAgICAgICAgc3RydWN0IHdvcmtfc3Ry
+dWN0IHdvcms7DQogICAgICAgIHN0cnVjdCBTY3NpX0hvc3QgKmhvc3Q7DQorICAgICAgIHN0cnVj
+dCBzY3NpX2RldmljZSAqc2RldjsNCiAgICAgICAgdTggbHVuOw0KICAgICAgICB1OCB0Z3RfaWQ7
+DQogfTsNCkBAIC01MzEsMjQgKzUzMiwyMCBAQCBzdGF0aWMgdm9pZCBzdG9ydnNjX2hvc3Rfc2Nh
+bihzdHJ1Y3Qgd29ya19zdHJ1Y3QgKndvcmspDQogICAgICAgIGtmcmVlKHdyayk7DQogfQ0KDQor
+LyoNCisgKiBPbiBFbnRyeSB3ZSBoYXZlIGEgcmVmZXJlbmNlIG9uIGJvdGggdGhlIGhvc3QgYW5k
+IHRoZSBkZXZpY2UuDQorICogRHJvcCB0aGVtIGhlcmUuDQorICovDQogc3RhdGljIHZvaWQgc3Rv
+cnZzY19yZW1vdmVfbHVuKHN0cnVjdCB3b3JrX3N0cnVjdCAqd29yaykNCiB7DQogICAgICAgIHN0
+cnVjdCBzdG9ydnNjX3NjYW5fd29yayAqd3JrOw0KLSAgICAgICBzdHJ1Y3Qgc2NzaV9kZXZpY2Ug
+KnNkZXY7DQoNCiAgICAgICAgd3JrID0gY29udGFpbmVyX29mKHdvcmssIHN0cnVjdCBzdG9ydnNj
+X3NjYW5fd29yaywgd29yayk7DQotICAgICAgIGlmICghc2NzaV9ob3N0X2dldCh3cmstPmhvc3Qp
+KQ0KLSAgICAgICAgICAgICAgIGdvdG8gZG9uZTsNCi0NCi0gICAgICAgc2RldiA9IHNjc2lfZGV2
+aWNlX2xvb2t1cCh3cmstPmhvc3QsIDAsIHdyay0+dGd0X2lkLCB3cmstPmx1bik7DQoNCi0gICAg
+ICAgaWYgKHNkZXYpIHsNCi0gICAgICAgICAgICAgICBzY3NpX3JlbW92ZV9kZXZpY2Uoc2Rldik7
+DQotICAgICAgICAgICAgICAgc2NzaV9kZXZpY2VfcHV0KHNkZXYpOw0KLSAgICAgICB9DQorICAg
+ICAgIHNjc2lfcmVtb3ZlX2RldmljZSh3cmstPnNkZXYpOw0KKyAgICAgICBzY3NpX2RldmljZV9w
+dXQod3JrLT5zZGV2KTsNCiAgICAgICAgc2NzaV9ob3N0X3B1dCh3cmstPmhvc3QpOw0KDQotZG9u
+ZToNCiAgICAgICAga2ZyZWUod3JrKTsNCiB9DQoNCkBAIC04ODUsNiArODgyLDcgQEAgc3RhdGlj
+IHZvaWQgc3RvcnZzY19oYW5kbGVfZXJyb3Ioc3RydWN0IHZtc2NzaV9yZXF1ZXN0ICp2bV9zcmIs
+DQogICAgICAgIHN0cnVjdCBzdG9ydnNjX3NjYW5fd29yayAqd3JrOw0KICAgICAgICB2b2lkICgq
+cHJvY2Vzc19lcnJfZm4pKHN0cnVjdCB3b3JrX3N0cnVjdCAqd29yayk7DQogICAgICAgIGJvb2wg
+ZG9fd29yayA9IGZhbHNlOw0KKyAgICAgICBzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXY7DQoNCiAg
+ICAgICAgc3dpdGNoIChTUkJfU1RBVFVTKHZtX3NyYi0+c3JiX3N0YXR1cykpIHsNCiAgICAgICAg
+Y2FzZSBTUkJfU1RBVFVTX0VSUk9SOg0KQEAgLTkxMSw5ICs5MDksMjMgQEAgc3RhdGljIHZvaWQg
+c3RvcnZzY19oYW5kbGVfZXJyb3Ioc3RydWN0IHZtc2NzaV9yZXF1ZXN0ICp2bV9zcmIsDQogICAg
+ICAgICAgICAgICAgfQ0KICAgICAgICAgICAgICAgIGJyZWFrOw0KICAgICAgICBjYXNlIFNSQl9T
+VEFUVVNfSU5WQUxJRF9MVU46DQorICAgICAgICAgICAgICAgaWYgKCFzY3NpX2hvc3RfZ2V0KGhv
+c3QpKQ0KKyAgICAgICAgICAgICAgICAgICAgICAgZ290byBob3N0X25vdF9rbm93bjsNCisNCisg
+ICAgICAgICAgICAgICBzZGV2ID0gc2NzaV9kZXZpY2VfbG9va3VwKHdyay0+aG9zdCwgMCwgd3Jr
+LT50Z3RfaWQsIHdyay0+bHVuKTsNCisNCisgICAgICAgICAgICAgICBpZiAoIXNkZXYpDQorICAg
+ICAgICAgICAgICAgICAgICAgICBnb3RvIGx1bl9ub3Rfa25vd247DQorDQogICAgICAgICAgICAg
+ICAgZG9fd29yayA9IHRydWU7DQogICAgICAgICAgICAgICAgcHJvY2Vzc19lcnJfZm4gPSBzdG9y
+dnNjX3JlbW92ZV9sdW47DQogICAgICAgICAgICAgICAgYnJlYWs7DQorDQorbHVuX25vdF9rbm93
+bjoNCisgICAgICAgICAgICAgICBzY3NpX2hvc3RfcHV0KGhvc3QpOw0KK2hvc3Rfbm90X2tub3du
+Og0KKyAgICAgICAgICAgICAgIHNldF9ob3N0X2J5dGUoc2NtbmQsIERJRF9OT19DT05ORUNUKTsN
+CisgICAgICAgICAgICAgICBicmVhazsNCiAgICAgICAgY2FzZSBTUkJfU1RBVFVTX0FCT1JURUQ6
+DQogICAgICAgICAgICAgICAgaWYgKHZtX3NyYi0+c3JiX3N0YXR1cyAmIFNSQl9TVEFUVVNfQVVU
+T1NFTlNFX1ZBTElEICYmDQogICAgICAgICAgICAgICAgICAgIChhc2MgPT0gMHgyYSkgJiYgKGFz
+Y3EgPT0gMHg5KSkgew0KQEAgLTkzOSw2ICs5NTEsNyBAQCBzdGF0aWMgdm9pZCBzdG9ydnNjX2hh
+bmRsZV9lcnJvcihzdHJ1Y3Qgdm1zY3NpX3JlcXVlc3QgKnZtX3NyYiwNCiAgICAgICAgICAgICAg
+ICByZXR1cm47DQogICAgICAgIH0NCg0KKyAgICAgICB3cmstPnNkZXYgPSBzZGV2Ow0KICAgICAg
+ICB3cmstPmhvc3QgPSBob3N0Ow0KICAgICAgICB3cmstPmx1biA9IHZtX3NyYi0+bHVuOw0KICAg
+ICAgICB3cmstPnRndF9pZCA9IHZtX3NyYi0+dGFyZ2V0X2lkOw0KLS0NCjEuNy4xDQoNCj4gDQo+
+IEsuIFkNCj4gPg0KPiA+IEphbWVzDQoNCg==
