@@ -1,7 +1,7 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [RFC] hv_storvsc: error handling.
-Date: Sat, 04 Mar 2017 13:36:59 -0800
-Message-ID: <1488663419.2985.4.camel@linux.vnet.ibm.com>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [RFC] hv_storvsc: error handling.
+Date: Sat, 4 Mar 2017 21:39:54 +0000
+Message-ID: <DM5PR03MB24905D32BA15195A2BDF4E94A02A0@DM5PR03MB2490.namprd03.prod.outlook.com>
 References: <c1949de0-8b95-e254-1bec-bcdae762890f@kernel.dk>
          <1488301573.3046.9.camel@linux.vnet.ibm.com>
          <20170228105741.6253bb8a@xeon-e3>
@@ -18,226 +18,166 @@ References: <c1949de0-8b95-e254-1bec-bcdae762890f@kernel.dk>
          <1b325703-b823-4304-9d9d-86071811e000@email.android.com>
          <20170303165011.53a38794@xeon-e3>
          <DM5PR03MB24906E9B50B16B8C567EE25BA02A0@DM5PR03MB2490.namprd03.prod.outlook.com>
+ <1488663419.2985.4.camel@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:34425 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752224AbdCDVhp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Mar 2017 16:37:45 -0500
-Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v24LSUeu082610
-        for <linux-scsi@vger.kernel.org>; Sat, 4 Mar 2017 16:37:10 -0500
-Received: from e18.ny.us.ibm.com (e18.ny.us.ibm.com [129.33.205.208])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 28yu2guvhp-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Sat, 04 Mar 2017 16:37:10 -0500
-Received: from localhost
-        by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
-        Sat, 4 Mar 2017 16:37:09 -0500
-In-Reply-To: <DM5PR03MB24906E9B50B16B8C567EE25BA02A0@DM5PR03MB2490.namprd03.prod.outlook.com>
+Received: from mail-cys01nam02on0100.outbound.protection.outlook.com ([104.47.37.100]:48612
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752170AbdCDVj7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 4 Mar 2017 16:39:59 -0500
+In-Reply-To: <1488663419.2985.4.camel@linux.vnet.ibm.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: KY Srinivasan <kys@microsoft.com>, Stephen Hemminger <stephen@networkplumber.org>
+To: James Bottomley <jejb@linux.vnet.ibm.com>, Stephen Hemminger <stephen@networkplumber.org>
 Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Linus Torvalds <torvalds@linux-foundation.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>, Josh Poulson <jopoulso@microsoft.com>, "Adrian Suhov (Cloudbase Solutions SRL)" <v-adsuho@microsoft.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Haiyang Zhang <haiyangz@microsoft.com>
 
-On Sat, 2017-03-04 at 21:03 +0000, KY Srinivasan wrote:
-> 
-> > -----Original Message-----
-> > From: Stephen Hemminger [mailto:stephen@networkplumber.org]
-> > Sent: Friday, March 3, 2017 4:50 PM
-> > To: James Bottomley <James.Bottomley@Hansenpartnership.com>
-> > Cc: Hannes Reinecke <hare@suse.de>; Christoph Hellwig <hch@lst.de>;
-> > James Bottomley <jejb@linux.vnet.ibm.com>; Jens Axboe
-> > <axboe@kernel.dk>; Linus Torvalds <torvalds@linux-foundation.org>;
-> > Martin K. Petersen <martin.petersen@oracle.com>; KY Srinivasan
-> > <kys@microsoft.com>; Dexuan Cui <decui@microsoft.com>; Long Li
-> > <longli@microsoft.com>; Josh Poulson <jopoulso@microsoft.com>;
-> > Adrian
-> > Suhov (Cloudbase Solutions SRL) <v-adsuho@microsoft.com>; linux-
-> > scsi@vger.kernel.org; Haiyang Zhang <haiyangz@microsoft.com>
-> > Subject: [RFC] hv_storvsc: error handling.
-> > 
-> > Needs more testing but this does fix the observed problem.
-> > 
-> > From: Stephen Hemminger <sthemmin@microsoft.com>
-> > 
-> > Subject: [PATCH] hv_storvsc: fix error handling
-> > 
-> > The Hyper-V storvsc SCSI driver was hiding all errors in INQUIRY
-> > and
-> > MODE_SENSE commands. This caused the scan process to incorrectly
-> > think
-> > devices were present and online.  Also invalid LUN errors were not
-> > being handled correctly.
-> > 
-> > This fixes problems booting a GEN2 VM on Hyper-V. It effectively
-> > reverts commit 4ed51a21c0f69 ("Staging: hv: storvsc: Fixup
-> > srb and scsi status for INQUIRY and MODE_SENSE")
-> > 
-> > Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
-> > ---
-> >  drivers/scsi/storvsc_drv.c | 48 ++++------------------------------
-> > ------------
-> >  1 file changed, 4 insertions(+), 44 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/storvsc_drv.c
-> > b/drivers/scsi/storvsc_drv.c
-> > index 638e5f427c90..8cc241fc54b8 100644
-> > --- a/drivers/scsi/storvsc_drv.c
-> > +++ b/drivers/scsi/storvsc_drv.c
-> > @@ -543,28 +543,6 @@ static void storvsc_host_scan(struct
-> > work_struct
-> > *work)
-> >  	kfree(wrk);
-> >  }
-> > 
-> > -static void storvsc_remove_lun(struct work_struct *work)
-> > -{
-> > -	struct storvsc_scan_work *wrk;
-> > -	struct scsi_device *sdev;
-> > -
-> > -	wrk = container_of(work, struct storvsc_scan_work, work);
-> > -	if (!scsi_host_get(wrk->host))
-> > -		goto done;
-> > -
-> > -	sdev = scsi_device_lookup(wrk->host, 0, wrk->tgt_id, wrk
-> > ->lun);
-> > -
-> > -	if (sdev) {
-> > -		scsi_remove_device(sdev);
-> > -		scsi_device_put(sdev);
-> > -	}
-> > -	scsi_host_put(wrk->host);
-> > -
-> > -done:
-> > -	kfree(wrk);
-> > -}
-> > -
-> > -
-> >  /*
-> >   * We can get incoming messages from the host that are not in
-> > response to
-> >   * messages that we have sent out. An example of this would be
-> > messages
-> > @@ -955,8 +933,7 @@ static void storvsc_handle_error(struct
-> > vmscsi_request *vm_srb,
-> >  		}
-> >  		break;
-> >  	case SRB_STATUS_INVALID_LUN:
-> > -		do_work = true;
-> > -		process_err_fn = storvsc_remove_lun;
-> > +		set_host_byte(scmnd, DID_NO_CONNECT);
-> >  		break;
-> >  	case SRB_STATUS_ABORTED:
-> >  		if (vm_srb->srb_status &
-> > SRB_STATUS_AUTOSENSE_VALID
-> > &&
-> > @@ -1050,32 +1027,15 @@ static void storvsc_on_io_completion(struct
-> > storvsc_device *stor_device,
-> > 
-> >  	stor_pkt = &request->vstor_packet;
-> > 
-> > -	/*
-> > -	 * The current SCSI handling on the host side does
-> > -	 * not correctly handle:
-> > -	 * INQUIRY command with page code parameter set to 0x80
-> > -	 * MODE_SENSE command with cmd[2] == 0x1c
-> > -	 *
-> > -	 * Setup srb and scsi status so this won't be fatal.
-> > -	 * We do this so we can distinguish truly fatal failues
-> > -	 * (srb status == 0x4) and off-line the device in that
-> > case.
-> > -	 */
-> > -
-> > -	if ((stor_pkt->vm_srb.cdb[0] == INQUIRY) ||
-> > -	   (stor_pkt->vm_srb.cdb[0] == MODE_SENSE)) {
-> > -		vstor_packet->vm_srb.scsi_status = 0;
-> > -		vstor_packet->vm_srb.srb_status =
-> > SRB_STATUS_SUCCESS;
-> > -	}
-> > -
-> > -
-> >  	/* Copy over the status...etc */
-> >  	stor_pkt->vm_srb.scsi_status = vstor_packet
-> > ->vm_srb.scsi_status;
-> >  	stor_pkt->vm_srb.srb_status = vstor_packet
-> > ->vm_srb.srb_status;
-> >  	stor_pkt->vm_srb.sense_info_length =
-> >  	vstor_packet->vm_srb.sense_info_length;
-> > 
-> > -	if (vstor_packet->vm_srb.scsi_status != 0 ||
-> > -	    vstor_packet->vm_srb.srb_status != SRB_STATUS_SUCCESS)
-> > +	if (stor_pkt->vm_srb.cdb[0] != INQUIRY &&
-> > +	    (vstor_packet->vm_srb.scsi_status != 0 ||
-> > +	     vstor_packet->vm_srb.srb_status !=
-> > SRB_STATUS_SUCCESS))
-> >  		storvsc_log(device, STORVSC_LOGGING_WARN,
-> >  			"cmd 0x%x scsi status 0x%x srb status
-> > 0x%x\n",
-> >  			stor_pkt->vm_srb.cdb[0],
-> > --
-> 
-> This patch gets rid of the ability to "hot remove" LUNs. I don't
-> think that can be part of any
-> solution. The INQUIRY hack I put in a long time ago was to deal with
-> host bugs on prior versions of
-> Windows server. WS2016 should not be trigerring this code. Stephen,
-> could you please test this patch -
-> a quick hack:
-> 
-> From b97f24f224a71a6e745c42e5640045a553eb407c Mon Sep 17 00:00:00
-> 2001
-> From: K. Y. Srinivasan <kys@microsoft.com>
-> Date: Sat, 4 Mar 2017 14:00:46 -0700
-> Subject: [PATCH 1/1] scsi: storvsc: Fix a bug in LUN removal code
-> Reply-To: kys@microsoft.com
-> 
-> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-> ---
->  drivers/scsi/storvsc_drv.c |   13 +++++++++++++
->  1 files changed, 13 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 05526b7..27eb682 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -885,6 +885,7 @@ static void storvsc_handle_error(struct
-> vmscsi_request *vm_srb,
->         struct storvsc_scan_work *wrk;
->         void (*process_err_fn)(struct work_struct *work);
->         bool do_work = false;
-> +       struct scsi_device *sdev;
-> 
->         switch (SRB_STATUS(vm_srb->srb_status)) {
->         case SRB_STATUS_ERROR:
-> @@ -911,6 +912,18 @@ static void storvsc_handle_error(struct
-> vmscsi_request *vm_srb,
->                 }
->                 break;
->         case SRB_STATUS_INVALID_LUN:
-> +               if (!scsi_host_get(host)) {
-> +                       set_host_byte(scmnd, DID_NO_CONNECT);
-> +                       break;
-> +               }
-> +
-> +               sdev = scsi_device_lookup(wrk->host, 0, wrk->tgt_id,
-> wrk->lun);
-> +
-> +               if (!sdev) {
-> +                       set_host_byte(scmnd, DID_NO_CONNECT);
-> +                       break;
-> +               }
-> +
-
-You're now getting two references (one to the host and one to the
-device) that you don't put either in error handling or in
-storvsc_remove_lun().
-
-Probably you should eliminate the scsi_host_get and scsi_device_lookup
-in storvsc_remove_lun() (making it basically remove device put device
-put host) and add a host put in the !sdev if above.
-
-James
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
+IFttYWlsdG86amVqYkBsaW51eC52bmV0LmlibS5jb21dDQo+IFNlbnQ6IFNhdHVyZGF5LCBNYXJj
+aCA0LCAyMDE3IDE6MzcgUE0NCj4gVG86IEtZIFNyaW5pdmFzYW4gPGt5c0BtaWNyb3NvZnQuY29t
+PjsgU3RlcGhlbiBIZW1taW5nZXINCj4gPHN0ZXBoZW5AbmV0d29ya3BsdW1iZXIub3JnPg0KPiBD
+YzogSGFubmVzIFJlaW5lY2tlIDxoYXJlQHN1c2UuZGU+OyBDaHJpc3RvcGggSGVsbHdpZyA8aGNo
+QGxzdC5kZT47IEplbnMNCj4gQXhib2UgPGF4Ym9lQGtlcm5lbC5kaz47IExpbnVzIFRvcnZhbGRz
+IDx0b3J2YWxkc0BsaW51eC0NCj4gZm91bmRhdGlvbi5vcmc+OyBNYXJ0aW4gSy4gUGV0ZXJzZW4g
+PG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tPjsNCj4gRGV4dWFuIEN1aSA8ZGVjdWlAbWljcm9z
+b2Z0LmNvbT47IExvbmcgTGkgPGxvbmdsaUBtaWNyb3NvZnQuY29tPjsgSm9zaA0KPiBQb3Vsc29u
+IDxqb3BvdWxzb0BtaWNyb3NvZnQuY29tPjsgQWRyaWFuIFN1aG92IChDbG91ZGJhc2UgU29sdXRp
+b25zIFNSTCkNCj4gPHYtYWRzdWhvQG1pY3Jvc29mdC5jb20+OyBsaW51eC1zY3NpQHZnZXIua2Vy
+bmVsLm9yZzsgSGFpeWFuZyBaaGFuZw0KPiA8aGFpeWFuZ3pAbWljcm9zb2Z0LmNvbT4NCj4gU3Vi
+amVjdDogUmU6IFtSRkNdIGh2X3N0b3J2c2M6IGVycm9yIGhhbmRsaW5nLg0KPiANCj4gT24gU2F0
+LCAyMDE3LTAzLTA0IGF0IDIxOjAzICswMDAwLCBLWSBTcmluaXZhc2FuIHdyb3RlOg0KPiA+DQo+
+ID4gPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+ID4gRnJvbTogU3RlcGhlbiBIZW1t
+aW5nZXIgW21haWx0bzpzdGVwaGVuQG5ldHdvcmtwbHVtYmVyLm9yZ10NCj4gPiA+IFNlbnQ6IEZy
+aWRheSwgTWFyY2ggMywgMjAxNyA0OjUwIFBNDQo+ID4gPiBUbzogSmFtZXMgQm90dG9tbGV5IDxK
+YW1lcy5Cb3R0b21sZXlASGFuc2VucGFydG5lcnNoaXAuY29tPg0KPiA+ID4gQ2M6IEhhbm5lcyBS
+ZWluZWNrZSA8aGFyZUBzdXNlLmRlPjsgQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+Ow0K
+PiA+ID4gSmFtZXMgQm90dG9tbGV5IDxqZWpiQGxpbnV4LnZuZXQuaWJtLmNvbT47IEplbnMgQXhi
+b2UNCj4gPiA+IDxheGJvZUBrZXJuZWwuZGs+OyBMaW51cyBUb3J2YWxkcyA8dG9ydmFsZHNAbGlu
+dXgtZm91bmRhdGlvbi5vcmc+Ow0KPiA+ID4gTWFydGluIEsuIFBldGVyc2VuIDxtYXJ0aW4ucGV0
+ZXJzZW5Ab3JhY2xlLmNvbT47IEtZIFNyaW5pdmFzYW4NCj4gPiA+IDxreXNAbWljcm9zb2Z0LmNv
+bT47IERleHVhbiBDdWkgPGRlY3VpQG1pY3Jvc29mdC5jb20+OyBMb25nIExpDQo+ID4gPiA8bG9u
+Z2xpQG1pY3Jvc29mdC5jb20+OyBKb3NoIFBvdWxzb24gPGpvcG91bHNvQG1pY3Jvc29mdC5jb20+
+Ow0KPiA+ID4gQWRyaWFuDQo+ID4gPiBTdWhvdiAoQ2xvdWRiYXNlIFNvbHV0aW9ucyBTUkwpIDx2
+LWFkc3Vob0BtaWNyb3NvZnQuY29tPjsgbGludXgtDQo+ID4gPiBzY3NpQHZnZXIua2VybmVsLm9y
+ZzsgSGFpeWFuZyBaaGFuZyA8aGFpeWFuZ3pAbWljcm9zb2Z0LmNvbT4NCj4gPiA+IFN1YmplY3Q6
+IFtSRkNdIGh2X3N0b3J2c2M6IGVycm9yIGhhbmRsaW5nLg0KPiA+ID4NCj4gPiA+IE5lZWRzIG1v
+cmUgdGVzdGluZyBidXQgdGhpcyBkb2VzIGZpeCB0aGUgb2JzZXJ2ZWQgcHJvYmxlbS4NCj4gPiA+
+DQo+ID4gPiBGcm9tOiBTdGVwaGVuIEhlbW1pbmdlciA8c3RoZW1taW5AbWljcm9zb2Z0LmNvbT4N
+Cj4gPiA+DQo+ID4gPiBTdWJqZWN0OiBbUEFUQ0hdIGh2X3N0b3J2c2M6IGZpeCBlcnJvciBoYW5k
+bGluZw0KPiA+ID4NCj4gPiA+IFRoZSBIeXBlci1WIHN0b3J2c2MgU0NTSSBkcml2ZXIgd2FzIGhp
+ZGluZyBhbGwgZXJyb3JzIGluIElOUVVJUlkNCj4gPiA+IGFuZA0KPiA+ID4gTU9ERV9TRU5TRSBj
+b21tYW5kcy4gVGhpcyBjYXVzZWQgdGhlIHNjYW4gcHJvY2VzcyB0byBpbmNvcnJlY3RseQ0KPiA+
+ID4gdGhpbmsNCj4gPiA+IGRldmljZXMgd2VyZSBwcmVzZW50IGFuZCBvbmxpbmUuICBBbHNvIGlu
+dmFsaWQgTFVOIGVycm9ycyB3ZXJlIG5vdA0KPiA+ID4gYmVpbmcgaGFuZGxlZCBjb3JyZWN0bHku
+DQo+ID4gPg0KPiA+ID4gVGhpcyBmaXhlcyBwcm9ibGVtcyBib290aW5nIGEgR0VOMiBWTSBvbiBI
+eXBlci1WLiBJdCBlZmZlY3RpdmVseQ0KPiA+ID4gcmV2ZXJ0cyBjb21taXQgNGVkNTFhMjFjMGY2
+OSAoIlN0YWdpbmc6IGh2OiBzdG9ydnNjOiBGaXh1cA0KPiA+ID4gc3JiIGFuZCBzY3NpIHN0YXR1
+cyBmb3IgSU5RVUlSWSBhbmQgTU9ERV9TRU5TRSIpDQo+ID4gPg0KPiA+ID4gU2lnbmVkLW9mZi1i
+eTogU3RlcGhlbiBIZW1taW5nZXIgPHN0aGVtbWluQG1pY3Jvc29mdC5jb20+DQo+ID4gPiAtLS0N
+Cj4gPiA+ICBkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyB8IDQ4ICsrKystLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0NCj4gPiA+IC0tLS0tLS0tLS0tLQ0KPiA+ID4gIDEgZmlsZSBjaGFu
+Z2VkLCA0IGluc2VydGlvbnMoKyksIDQ0IGRlbGV0aW9ucygtKQ0KPiA+ID4NCj4gPiA+IGRpZmYg
+LS1naXQgYS9kcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYw0KPiA+ID4gYi9kcml2ZXJzL3Njc2kv
+c3RvcnZzY19kcnYuYw0KPiA+ID4gaW5kZXggNjM4ZTVmNDI3YzkwLi44Y2MyNDFmYzU0YjggMTAw
+NjQ0DQo+ID4gPiAtLS0gYS9kcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYw0KPiA+ID4gKysrIGIv
+ZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMNCj4gPiA+IEBAIC01NDMsMjggKzU0Myw2IEBAIHN0
+YXRpYyB2b2lkIHN0b3J2c2NfaG9zdF9zY2FuKHN0cnVjdA0KPiA+ID4gd29ya19zdHJ1Y3QNCj4g
+PiA+ICp3b3JrKQ0KPiA+ID4gIAlrZnJlZSh3cmspOw0KPiA+ID4gIH0NCj4gPiA+DQo+ID4gPiAt
+c3RhdGljIHZvaWQgc3RvcnZzY19yZW1vdmVfbHVuKHN0cnVjdCB3b3JrX3N0cnVjdCAqd29yaykN
+Cj4gPiA+IC17DQo+ID4gPiAtCXN0cnVjdCBzdG9ydnNjX3NjYW5fd29yayAqd3JrOw0KPiA+ID4g
+LQlzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXY7DQo+ID4gPiAtDQo+ID4gPiAtCXdyayA9IGNvbnRh
+aW5lcl9vZih3b3JrLCBzdHJ1Y3Qgc3RvcnZzY19zY2FuX3dvcmssIHdvcmspOw0KPiA+ID4gLQlp
+ZiAoIXNjc2lfaG9zdF9nZXQod3JrLT5ob3N0KSkNCj4gPiA+IC0JCWdvdG8gZG9uZTsNCj4gPiA+
+IC0NCj4gPiA+IC0Jc2RldiA9IHNjc2lfZGV2aWNlX2xvb2t1cCh3cmstPmhvc3QsIDAsIHdyay0+
+dGd0X2lkLCB3cmsNCj4gPiA+IC0+bHVuKTsNCj4gPiA+IC0NCj4gPiA+IC0JaWYgKHNkZXYpIHsN
+Cj4gPiA+IC0JCXNjc2lfcmVtb3ZlX2RldmljZShzZGV2KTsNCj4gPiA+IC0JCXNjc2lfZGV2aWNl
+X3B1dChzZGV2KTsNCj4gPiA+IC0JfQ0KPiA+ID4gLQlzY3NpX2hvc3RfcHV0KHdyay0+aG9zdCk7
+DQo+ID4gPiAtDQo+ID4gPiAtZG9uZToNCj4gPiA+IC0Ja2ZyZWUod3JrKTsNCj4gPiA+IC19DQo+
+ID4gPiAtDQo+ID4gPiAtDQo+ID4gPiAgLyoNCj4gPiA+ICAgKiBXZSBjYW4gZ2V0IGluY29taW5n
+IG1lc3NhZ2VzIGZyb20gdGhlIGhvc3QgdGhhdCBhcmUgbm90IGluDQo+ID4gPiByZXNwb25zZSB0
+bw0KPiA+ID4gICAqIG1lc3NhZ2VzIHRoYXQgd2UgaGF2ZSBzZW50IG91dC4gQW4gZXhhbXBsZSBv
+ZiB0aGlzIHdvdWxkIGJlDQo+ID4gPiBtZXNzYWdlcw0KPiA+ID4gQEAgLTk1NSw4ICs5MzMsNyBA
+QCBzdGF0aWMgdm9pZCBzdG9ydnNjX2hhbmRsZV9lcnJvcihzdHJ1Y3QNCj4gPiA+IHZtc2NzaV9y
+ZXF1ZXN0ICp2bV9zcmIsDQo+ID4gPiAgCQl9DQo+ID4gPiAgCQlicmVhazsNCj4gPiA+ICAJY2Fz
+ZSBTUkJfU1RBVFVTX0lOVkFMSURfTFVOOg0KPiA+ID4gLQkJZG9fd29yayA9IHRydWU7DQo+ID4g
+PiAtCQlwcm9jZXNzX2Vycl9mbiA9IHN0b3J2c2NfcmVtb3ZlX2x1bjsNCj4gPiA+ICsJCXNldF9o
+b3N0X2J5dGUoc2NtbmQsIERJRF9OT19DT05ORUNUKTsNCj4gPiA+ICAJCWJyZWFrOw0KPiA+ID4g
+IAljYXNlIFNSQl9TVEFUVVNfQUJPUlRFRDoNCj4gPiA+ICAJCWlmICh2bV9zcmItPnNyYl9zdGF0
+dXMgJg0KPiA+ID4gU1JCX1NUQVRVU19BVVRPU0VOU0VfVkFMSUQNCj4gPiA+ICYmDQo+ID4gPiBA
+QCAtMTA1MCwzMiArMTAyNywxNSBAQCBzdGF0aWMgdm9pZCBzdG9ydnNjX29uX2lvX2NvbXBsZXRp
+b24oc3RydWN0DQo+ID4gPiBzdG9ydnNjX2RldmljZSAqc3Rvcl9kZXZpY2UsDQo+ID4gPg0KPiA+
+ID4gIAlzdG9yX3BrdCA9ICZyZXF1ZXN0LT52c3Rvcl9wYWNrZXQ7DQo+ID4gPg0KPiA+ID4gLQkv
+Kg0KPiA+ID4gLQkgKiBUaGUgY3VycmVudCBTQ1NJIGhhbmRsaW5nIG9uIHRoZSBob3N0IHNpZGUg
+ZG9lcw0KPiA+ID4gLQkgKiBub3QgY29ycmVjdGx5IGhhbmRsZToNCj4gPiA+IC0JICogSU5RVUlS
+WSBjb21tYW5kIHdpdGggcGFnZSBjb2RlIHBhcmFtZXRlciBzZXQgdG8gMHg4MA0KPiA+ID4gLQkg
+KiBNT0RFX1NFTlNFIGNvbW1hbmQgd2l0aCBjbWRbMl0gPT0gMHgxYw0KPiA+ID4gLQkgKg0KPiA+
+ID4gLQkgKiBTZXR1cCBzcmIgYW5kIHNjc2kgc3RhdHVzIHNvIHRoaXMgd29uJ3QgYmUgZmF0YWwu
+DQo+ID4gPiAtCSAqIFdlIGRvIHRoaXMgc28gd2UgY2FuIGRpc3Rpbmd1aXNoIHRydWx5IGZhdGFs
+IGZhaWx1ZXMNCj4gPiA+IC0JICogKHNyYiBzdGF0dXMgPT0gMHg0KSBhbmQgb2ZmLWxpbmUgdGhl
+IGRldmljZSBpbiB0aGF0DQo+ID4gPiBjYXNlLg0KPiA+ID4gLQkgKi8NCj4gPiA+IC0NCj4gPiA+
+IC0JaWYgKChzdG9yX3BrdC0+dm1fc3JiLmNkYlswXSA9PSBJTlFVSVJZKSB8fA0KPiA+ID4gLQkg
+ICAoc3Rvcl9wa3QtPnZtX3NyYi5jZGJbMF0gPT0gTU9ERV9TRU5TRSkpIHsNCj4gPiA+IC0JCXZz
+dG9yX3BhY2tldC0+dm1fc3JiLnNjc2lfc3RhdHVzID0gMDsNCj4gPiA+IC0JCXZzdG9yX3BhY2tl
+dC0+dm1fc3JiLnNyYl9zdGF0dXMgPQ0KPiA+ID4gU1JCX1NUQVRVU19TVUNDRVNTOw0KPiA+ID4g
+LQl9DQo+ID4gPiAtDQo+ID4gPiAtDQo+ID4gPiAgCS8qIENvcHkgb3ZlciB0aGUgc3RhdHVzLi4u
+ZXRjICovDQo+ID4gPiAgCXN0b3JfcGt0LT52bV9zcmIuc2NzaV9zdGF0dXMgPSB2c3Rvcl9wYWNr
+ZXQNCj4gPiA+IC0+dm1fc3JiLnNjc2lfc3RhdHVzOw0KPiA+ID4gIAlzdG9yX3BrdC0+dm1fc3Ji
+LnNyYl9zdGF0dXMgPSB2c3Rvcl9wYWNrZXQNCj4gPiA+IC0+dm1fc3JiLnNyYl9zdGF0dXM7DQo+
+ID4gPiAgCXN0b3JfcGt0LT52bV9zcmIuc2Vuc2VfaW5mb19sZW5ndGggPQ0KPiA+ID4gIAl2c3Rv
+cl9wYWNrZXQtPnZtX3NyYi5zZW5zZV9pbmZvX2xlbmd0aDsNCj4gPiA+DQo+ID4gPiAtCWlmICh2
+c3Rvcl9wYWNrZXQtPnZtX3NyYi5zY3NpX3N0YXR1cyAhPSAwIHx8DQo+ID4gPiAtCSAgICB2c3Rv
+cl9wYWNrZXQtPnZtX3NyYi5zcmJfc3RhdHVzICE9IFNSQl9TVEFUVVNfU1VDQ0VTUykNCj4gPiA+
+ICsJaWYgKHN0b3JfcGt0LT52bV9zcmIuY2RiWzBdICE9IElOUVVJUlkgJiYNCj4gPiA+ICsJICAg
+ICh2c3Rvcl9wYWNrZXQtPnZtX3NyYi5zY3NpX3N0YXR1cyAhPSAwIHx8DQo+ID4gPiArCSAgICAg
+dnN0b3JfcGFja2V0LT52bV9zcmIuc3JiX3N0YXR1cyAhPQ0KPiA+ID4gU1JCX1NUQVRVU19TVUND
+RVNTKSkNCj4gPiA+ICAJCXN0b3J2c2NfbG9nKGRldmljZSwgU1RPUlZTQ19MT0dHSU5HX1dBUk4s
+DQo+ID4gPiAgCQkJImNtZCAweCV4IHNjc2kgc3RhdHVzIDB4JXggc3JiIHN0YXR1cw0KPiA+ID4g
+MHgleFxuIiwNCj4gPiA+ICAJCQlzdG9yX3BrdC0+dm1fc3JiLmNkYlswXSwNCj4gPiA+IC0tDQo+
+ID4NCj4gPiBUaGlzIHBhdGNoIGdldHMgcmlkIG9mIHRoZSBhYmlsaXR5IHRvICJob3QgcmVtb3Zl
+IiBMVU5zLiBJIGRvbid0DQo+ID4gdGhpbmsgdGhhdCBjYW4gYmUgcGFydCBvZiBhbnkNCj4gPiBz
+b2x1dGlvbi4gVGhlIElOUVVJUlkgaGFjayBJIHB1dCBpbiBhIGxvbmcgdGltZSBhZ28gd2FzIHRv
+IGRlYWwgd2l0aA0KPiA+IGhvc3QgYnVncyBvbiBwcmlvciB2ZXJzaW9ucyBvZg0KPiA+IFdpbmRv
+d3Mgc2VydmVyLiBXUzIwMTYgc2hvdWxkIG5vdCBiZSB0cmlnZXJyaW5nIHRoaXMgY29kZS4gU3Rl
+cGhlbiwNCj4gPiBjb3VsZCB5b3UgcGxlYXNlIHRlc3QgdGhpcyBwYXRjaCAtDQo+ID4gYSBxdWlj
+ayBoYWNrOg0KPiA+DQo+ID4gRnJvbSBiOTdmMjRmMjI0YTcxYTZlNzQ1YzQyZTU2NDAwNDVhNTUz
+ZWI0MDdjIE1vbiBTZXAgMTcgMDA6MDA6MDANCj4gPiAyMDAxDQo+ID4gRnJvbTogSy4gWS4gU3Jp
+bml2YXNhbiA8a3lzQG1pY3Jvc29mdC5jb20+DQo+ID4gRGF0ZTogU2F0LCA0IE1hciAyMDE3IDE0
+OjAwOjQ2IC0wNzAwDQo+ID4gU3ViamVjdDogW1BBVENIIDEvMV0gc2NzaTogc3RvcnZzYzogRml4
+IGEgYnVnIGluIExVTiByZW1vdmFsIGNvZGUNCj4gPiBSZXBseS1Ubzoga3lzQG1pY3Jvc29mdC5j
+b20NCj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6IEsuIFkuIFNyaW5pdmFzYW4gPGt5c0BtaWNyb3Nv
+ZnQuY29tPg0KPiA+IC0tLQ0KPiA+ICBkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyB8ICAgMTMg
+KysrKysrKysrKysrKw0KPiA+ICAxIGZpbGVzIGNoYW5nZWQsIDEzIGluc2VydGlvbnMoKyksIDAg
+ZGVsZXRpb25zKC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3N0b3J2c2Nf
+ZHJ2LmMgYi9kcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYw0KPiA+IGluZGV4IDA1NTI2YjcuLjI3
+ZWI2ODIgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMNCj4gPiAr
+KysgYi9kcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYw0KPiA+IEBAIC04ODUsNiArODg1LDcgQEAg
+c3RhdGljIHZvaWQgc3RvcnZzY19oYW5kbGVfZXJyb3Ioc3RydWN0DQo+ID4gdm1zY3NpX3JlcXVl
+c3QgKnZtX3NyYiwNCj4gPiAgICAgICAgIHN0cnVjdCBzdG9ydnNjX3NjYW5fd29yayAqd3JrOw0K
+PiA+ICAgICAgICAgdm9pZCAoKnByb2Nlc3NfZXJyX2ZuKShzdHJ1Y3Qgd29ya19zdHJ1Y3QgKndv
+cmspOw0KPiA+ICAgICAgICAgYm9vbCBkb193b3JrID0gZmFsc2U7DQo+ID4gKyAgICAgICBzdHJ1
+Y3Qgc2NzaV9kZXZpY2UgKnNkZXY7DQo+ID4NCj4gPiAgICAgICAgIHN3aXRjaCAoU1JCX1NUQVRV
+Uyh2bV9zcmItPnNyYl9zdGF0dXMpKSB7DQo+ID4gICAgICAgICBjYXNlIFNSQl9TVEFUVVNfRVJS
+T1I6DQo+ID4gQEAgLTkxMSw2ICs5MTIsMTggQEAgc3RhdGljIHZvaWQgc3RvcnZzY19oYW5kbGVf
+ZXJyb3Ioc3RydWN0DQo+ID4gdm1zY3NpX3JlcXVlc3QgKnZtX3NyYiwNCj4gPiAgICAgICAgICAg
+ICAgICAgfQ0KPiA+ICAgICAgICAgICAgICAgICBicmVhazsNCj4gPiAgICAgICAgIGNhc2UgU1JC
+X1NUQVRVU19JTlZBTElEX0xVTjoNCj4gPiArICAgICAgICAgICAgICAgaWYgKCFzY3NpX2hvc3Rf
+Z2V0KGhvc3QpKSB7DQo+ID4gKyAgICAgICAgICAgICAgICAgICAgICAgc2V0X2hvc3RfYnl0ZShz
+Y21uZCwgRElEX05PX0NPTk5FQ1QpOw0KPiA+ICsgICAgICAgICAgICAgICAgICAgICAgIGJyZWFr
+Ow0KPiA+ICsgICAgICAgICAgICAgICB9DQo+ID4gKw0KPiA+ICsgICAgICAgICAgICAgICBzZGV2
+ID0gc2NzaV9kZXZpY2VfbG9va3VwKHdyay0+aG9zdCwgMCwgd3JrLT50Z3RfaWQsDQo+ID4gd3Jr
+LT5sdW4pOw0KPiA+ICsNCj4gPiArICAgICAgICAgICAgICAgaWYgKCFzZGV2KSB7DQo+ID4gKyAg
+ICAgICAgICAgICAgICAgICAgICAgc2V0X2hvc3RfYnl0ZShzY21uZCwgRElEX05PX0NPTk5FQ1Qp
+Ow0KPiA+ICsgICAgICAgICAgICAgICAgICAgICAgIGJyZWFrOw0KPiA+ICsgICAgICAgICAgICAg
+ICB9DQo+ID4gKw0KPiANCj4gWW91J3JlIG5vdyBnZXR0aW5nIHR3byByZWZlcmVuY2VzIChvbmUg
+dG8gdGhlIGhvc3QgYW5kIG9uZSB0byB0aGUNCj4gZGV2aWNlKSB0aGF0IHlvdSBkb24ndCBwdXQg
+ZWl0aGVyIGluIGVycm9yIGhhbmRsaW5nIG9yIGluDQo+IHN0b3J2c2NfcmVtb3ZlX2x1bigpLg0K
+PiANCj4gUHJvYmFibHkgeW91IHNob3VsZCBlbGltaW5hdGUgdGhlIHNjc2lfaG9zdF9nZXQgYW5k
+IHNjc2lfZGV2aWNlX2xvb2t1cA0KPiBpbiBzdG9ydnNjX3JlbW92ZV9sdW4oKSAobWFraW5nIGl0
+IGJhc2ljYWxseSByZW1vdmUgZGV2aWNlIHB1dCBkZXZpY2UNCj4gcHV0IGhvc3QpIGFuZCBhZGQg
+YSBob3N0IHB1dCBpbiB0aGUgIXNkZXYgaWYgYWJvdmUuDQoNClllczsgdGhpcyB3YXMgYSBxdWlj
+ayBoYWNrIHRvIHByb3ZlIGEgdGhlb3J5LiBUaGlzIHNob3VsZCB3b3JrIChJIGhvcGUpOyBJIHdp
+bGwgY2xlYW51cCBhbmQgcmVzZW5kIG9uY2UNClN0ZXBoZW4gdmVyaWZpZXMuDQoNCksuIFkgDQo+
+IA0KPiBKYW1lcw0KDQo=
