@@ -1,15 +1,15 @@
 From: jsmart2021@gmail.com
-Subject: [PATCH 06/20] lpfc: Fix RCTL value on NVME LS request and response
-Date: Sat,  4 Mar 2017 09:30:26 -0800
-Message-ID: <1488648640-5170-7-git-send-email-jsmart2021@gmail.com>
+Subject: [PATCH 05/20] lpfc: Fix crash during Hardware error recovery on SLI3 adapters
+Date: Sat,  4 Mar 2017 09:30:25 -0800
+Message-ID: <1488648640-5170-6-git-send-email-jsmart2021@gmail.com>
 References: <1488648640-5170-1-git-send-email-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:33181 "EHLO
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:36482 "EHLO
         mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752224AbdCDRa7 (ORCPT
+        with ESMTP id S1752215AbdCDRa7 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Mar 2017 12:30:59 -0500
-Received: by mail-qk0-f193.google.com with SMTP id j127so16586169qke.0
-        for <linux-scsi@vger.kernel.org>; Sat, 04 Mar 2017 09:30:55 -0800 (PST)
+Received: by mail-qk0-f193.google.com with SMTP id n141so10940199qke.3
+        for <linux-scsi@vger.kernel.org>; Sat, 04 Mar 2017 09:30:54 -0800 (PST)
 In-Reply-To: <1488648640-5170-1-git-send-email-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,42 +18,40 @@ Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>
 
 From: James Smart <jsmart2021@gmail.com>
 
-NVME LS requests and responses had wrong R_CTL values.
-Use the FC4 ELS Request and Response defines (defines badly
-named, they are FC4 LS's) instead of the base ELS values.
+if REG_VPI fails, the driver was incorrectly issuing INIT_VFI
+(a SLI4 command) on a SLI3 adapter.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_nvme.c  | 2 +-
- drivers/scsi/lpfc/lpfc_nvmet.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 609a908..6346d4d 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -316,7 +316,7 @@ lpfc_nvme_gen_req(struct lpfc_vport *vport, struct lpfc_dmabuf *bmp,
- 	bf_set(wqe_dfctl, &wqe->gen_req.wge_ctl, 0);
- 	bf_set(wqe_si, &wqe->gen_req.wge_ctl, 1);
- 	bf_set(wqe_la, &wqe->gen_req.wge_ctl, 1);
--	bf_set(wqe_rctl, &wqe->gen_req.wge_ctl, FC_RCTL_DD_UNSOL_CTL);
-+	bf_set(wqe_rctl, &wqe->gen_req.wge_ctl, FC_RCTL_ELS4_REQ);
- 	bf_set(wqe_type, &wqe->gen_req.wge_ctl, FC_TYPE_NVME);
- 
- 	/* Word 6 */
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index e59a0a8..6c2221a 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -1114,7 +1114,7 @@ lpfc_nvmet_prep_ls_wqe(struct lpfc_hba *phba,
- 	bf_set(wqe_dfctl, &wqe->xmit_sequence.wge_ctl, 0);
- 	bf_set(wqe_ls, &wqe->xmit_sequence.wge_ctl, 1);
- 	bf_set(wqe_la, &wqe->xmit_sequence.wge_ctl, 0);
--	bf_set(wqe_rctl, &wqe->xmit_sequence.wge_ctl, FC_RCTL_DD_SOL_CTL);
-+	bf_set(wqe_rctl, &wqe->xmit_sequence.wge_ctl, FC_RCTL_ELS4_REP);
- 	bf_set(wqe_type, &wqe->xmit_sequence.wge_ctl, FC_TYPE_NVME);
- 
- 	/* Word 6 */
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 2d26440..d260a13 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -8371,11 +8371,17 @@ lpfc_cmpl_reg_new_vport(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ 			spin_lock_irq(shost->host_lock);
+ 			vport->fc_flag |= FC_VPORT_NEEDS_REG_VPI;
+ 			spin_unlock_irq(shost->host_lock);
+-			if (vport->port_type == LPFC_PHYSICAL_PORT
+-				&& !(vport->fc_flag & FC_LOGO_RCVD_DID_CHNG))
+-				lpfc_issue_init_vfi(vport);
+-			else
++			if (mb->mbxStatus == MBX_NOT_FINISHED)
++				break;
++			if ((vport->port_type == LPFC_PHYSICAL_PORT) &&
++			    !(vport->fc_flag & FC_LOGO_RCVD_DID_CHNG)) {
++				if (phba->sli_rev == LPFC_SLI_REV4)
++					lpfc_issue_init_vfi(vport);
++				else
++					lpfc_initial_flogi(vport);
++			} else {
+ 				lpfc_initial_fdisc(vport);
++			}
+ 			break;
+ 		}
+ 	} else {
 -- 
 2.5.0
