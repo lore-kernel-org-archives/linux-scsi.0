@@ -1,7 +1,7 @@
 From: Stephen Hemminger <stephen@networkplumber.org>
-Subject: Re: SCSI regression in 4.11
-Date: Fri, 3 Mar 2017 14:29:51 -0800
-Message-ID: <20170303142951.4d86a420@xeon-e3>
+Subject: [RFC] hv_storvsc: error handling.
+Date: Fri, 3 Mar 2017 16:50:11 -0800
+Message-ID: <20170303165011.53a38794@xeon-e3>
 References: <c1949de0-8b95-e254-1bec-bcdae762890f@kernel.dk>
         <1488301573.3046.9.camel@linux.vnet.ibm.com>
         <20170228105741.6253bb8a@xeon-e3>
@@ -23,164 +23,116 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:35748 "EHLO
-        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752184AbdCCWiP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Mar 2017 17:38:15 -0500
-Received: by mail-pf0-f174.google.com with SMTP id j5so37409197pfb.2
-        for <linux-scsi@vger.kernel.org>; Fri, 03 Mar 2017 14:38:10 -0800 (PST)
+Received: from mail-pg0-f51.google.com ([74.125.83.51]:33493 "EHLO
+        mail-pg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751584AbdCDAvN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Mar 2017 19:51:13 -0500
+Received: by mail-pg0-f51.google.com with SMTP id 25so49056898pgy.0
+        for <linux-scsi@vger.kernel.org>; Fri, 03 Mar 2017 16:50:19 -0800 (PST)
 In-Reply-To: <1b325703-b823-4304-9d9d-86071811e000@email.android.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@Hansenpartnership.com>
 Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, Jens Axboe <axboe@kernel.dk>, Linus Torvalds <torvalds@linux-foundation.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "K. Y. Srinivasan" <kys@microsoft.com>, Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>, Josh Poulson <jopoulso@microsoft.com>, v-adsuho@microsoft.com, linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>
 
-On Thu, 02 Mar 2017 11:18:23 -0800
-James Bottomley <James.Bottomley@Hansenpartnership.com> wrote:
+Needs more testing but this does fix the observed problem.
 
-> On March 2, 2017 11:05:05 AM PST, Stephen Hemminger <stephen@networkplumber.org> wrote:
-> >On Thu, 02 Mar 2017 10:36:17 -0800
-> >James Bottomley <James.Bottomley@Hansenpartnership.com> wrote:
-> >  
-> >> On March 2, 2017 10:23:24 AM PST, Stephen Hemminger  
-> ><stephen@networkplumber.org> wrote:  
-> >> >On Thu, 2 Mar 2017 14:25:14 +0100
-> >> >Hannes Reinecke <hare@suse.de> wrote:
-> >> >    
-> >> >> On 03/02/2017 02:40 AM, Stephen Hemminger wrote:    
-> >> >> > On Thu, 2 Mar 2017 01:56:15 +0100
-> >> >> > Christoph Hellwig <hch@lst.de> wrote:
-> >> >> >      
-> >> >> >> On Thu, Mar 02, 2017 at 01:01:35AM +0100, Christoph Hellwig  
-> >wrote:    
-> >> >     
-> >> >> >>> On Wed, Mar 01, 2017 at 07:54:12AM -0800, Stephen Hemminger    
-> >> >wrote:      
-> >> >> >>>>>    
-> >>
-> >>	http://git.infradead.org/users/hch/block.git/commitdiff/148cff67b401e2229c076c0ea418712654be77e4  
-> >> >     
-> >> >> >>>>
-> >> >> >>>> It appears that is already in the code I am testing in    
-> >> >linux-next...      
-> >> >> >>>
-> >> >> >>> It's in -next now, but it wasn't at the time you reported the   
-> >  
-> >> >bug.    
-> >> >> >>>
-> >> >> >>> And it would sortof explain the bug if the INQUIRY data is    
-> >> >correct    
-> >> >> >>> in the scatterlist, but we ignore it, given that  
-> >scsi_probe_lun  
-> >> >> >>> ignores the result based on sense data.
-> >> >> >>>
-> >> >> >>> Can you check what happens with the horrible hack below:      
-> >> >> >>
-> >> >> >> Strike that - we're checking result later, so this can't be the  
-> >   
-> >> >case.    
-> >> >> >>
-> >> >> >> Now the other interesting thing is the memset in  
-> >__scsi_exectute,  
-> >> >> >> which looks very suspicious.  Try the following please:
-> >> >> >>
-> >> >> >> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> >> >> >> index 3e32dc954c3c..22f4fb550561 100644
-> >> >> >> --- a/drivers/scsi/scsi_lib.c
-> >> >> >> +++ b/drivers/scsi/scsi_lib.c
-> >> >> >> @@ -253,7 +253,8 @@ static int __scsi_execute(struct  
-> >scsi_device    
-> >> >*sdev, const unsigned char *cmd,    
-> >> >> >>  	 * and prevent security leaks by zeroing out the excess data.
-> >> >> >>  	 */
-> >> >> >>  	if (unlikely(rq->resid_len > 0 && rq->resid_len <= bufflen))
-> >> >> >> -		memset(buffer + (bufflen - rq->resid_len), 0,  
-> >rq->resid_len);  
-> >> >> >> +//		memset(buffer + (bufflen - rq->resid_len), 0,  
-> >rq->resid_len);  
-> >> >> >> +		printk_ratelimited("%s: got resid %d\n", __func__,    
-> >> >rq->resid_len);    
-> >> >> >>
-> >> >> >>  	if (resid)
-> >> >> >>  		*resid = rq->resid_len;      
-> >> >> >
-> >> >> >
-> >> >> > Still fails but does print resid on some of the later INQUIRY    
-> >> >commands (not the initial one).    
-> >> >> >      
-> >> >> Can you test what happens if you blank out the storvsc_drv    
-> >> >workaround:    
-> >> >> 
-> >> >> diff --git a/drivers/scsi/storvsc_drv.c  
-> >b/drivers/scsi/storvsc_drv.c  
-> >> >> index 585e54f..c36f42d 100644
-> >> >> --- a/drivers/scsi/storvsc_drv.c
-> >> >> +++ b/drivers/scsi/storvsc_drv.c
-> >> >> @@ -1060,13 +1060,13 @@ static void  
-> >storvsc_on_io_completion(struct   
-> >> >> storvsc_device *stor_device,
-> >> >>           * We do this so we can distinguish truly fatal failues
-> >> >>           * (srb status == 0x4) and off-line the device in that  
-> >case.  
-> >> >>           */
-> >> >> -
-> >> >> +#if 0
-> >> >>          if ((stor_pkt->vm_srb.cdb[0] == INQUIRY) ||
-> >> >>             (stor_pkt->vm_srb.cdb[0] == MODE_SENSE)) {
-> >> >>                  vstor_packet->vm_srb.scsi_status = 0;
-> >> >>                  vstor_packet->vm_srb.srb_status =    
-> >> >SRB_STATUS_SUCCESS;    
-> >> >>          }
-> >> >> -
-> >> >> +#endif
-> >> >> 
-> >> >>          /* Copy over the status...etc */
-> >> >>          stor_pkt->vm_srb.scsi_status =    
-> >> >vstor_packet->vm_srb.scsi_status;    
-> >> >> 
-> >> >> It might thappen that we're fail to interpret the 'Device not    
-> >> >present'     
-> >> >> status correctly (which will happen for non-connected DVDs)  
-> >causing    
-> >> >the     
-> >> >> SCSI stack to make incorrect decisions later on.
-> >> >> 
-> >> >> Cheers,
-> >> >> 
-> >> >> Hannes    
-> >> >
-> >> >There are several oddities about the host SCSI interface that I see:
-> >> > 1. The host bus seems to report up to 6 devices even though only 2  
-> >are  
-> >> >     present (Disk and CDROM).
-> >> >2. The CDROM emulation doesn't report the same status as a real  
-> >device.  
-> >> > 3. The host emulation of SCSI doesn't support all the page codes  
-> >which  
-> >> >     is why there is the hack.
-> >> >
-> >> >But as James said, these don't appear to be related to the failure
-> >> >because
-> >> >the code worked before and only in post 4.11 merege is there a  
-> >problem.    
-> >> 
-> >> Your wait for the hang trace is the most suggestive.   It says we're  
-> >waiting for a partition read to the spurious device.  Previously this
-> >would have failed or timed out, so this seems to be the root cause.  
-> >> 
-> >> James
-> >> 
-> >>   
-> >
-> >Where is the number of valid LUN's determined during the scan process?  
-> 
-> Depends.  If you can do a report lun scan then that's definitive.  You seem to be probing (SCSI_probe_and_add_lun)  and you make us think there's something there by responding wrongly to the initial inquiry.
+From: Stephen Hemminger <sthemmin@microsoft.com>
 
-Testing a fix now. There looks like 3 problems here:
-1. storvsc_io_completion masks all error responses from INQUIRY
-2. Error handling in storvsc does not report invalid LUN correctly.
-3. Block layer has new problems when device is in bad state (not present and timing out).
+Subject: [PATCH] hv_storvsc: fix error handling
 
-The first two have been there for 4 years but did not cause problems.
-Something happened that made kernel chew lots of resources and eventually die when
-it hits a disconnected device that is not detected properly.
+The Hyper-V storvsc SCSI driver was hiding all errors in INQUIRY and
+MODE_SENSE commands. This caused the scan process to incorrectly think
+devices were present and online.  Also invalid LUN errors were not
+being handled correctly.
+
+This fixes problems booting a GEN2 VM on Hyper-V. It effectively
+reverts commit 4ed51a21c0f69 ("Staging: hv: storvsc: Fixup
+srb and scsi status for INQUIRY and MODE_SENSE")
+
+Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
+---
+ drivers/scsi/storvsc_drv.c | 48 ++++------------------------------------------
+ 1 file changed, 4 insertions(+), 44 deletions(-)
+
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 638e5f427c90..8cc241fc54b8 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -543,28 +543,6 @@ static void storvsc_host_scan(struct work_struct *work)
+ 	kfree(wrk);
+ }
+ 
+-static void storvsc_remove_lun(struct work_struct *work)
+-{
+-	struct storvsc_scan_work *wrk;
+-	struct scsi_device *sdev;
+-
+-	wrk = container_of(work, struct storvsc_scan_work, work);
+-	if (!scsi_host_get(wrk->host))
+-		goto done;
+-
+-	sdev = scsi_device_lookup(wrk->host, 0, wrk->tgt_id, wrk->lun);
+-
+-	if (sdev) {
+-		scsi_remove_device(sdev);
+-		scsi_device_put(sdev);
+-	}
+-	scsi_host_put(wrk->host);
+-
+-done:
+-	kfree(wrk);
+-}
+-
+-
+ /*
+  * We can get incoming messages from the host that are not in response to
+  * messages that we have sent out. An example of this would be messages
+@@ -955,8 +933,7 @@ static void storvsc_handle_error(struct vmscsi_request *vm_srb,
+ 		}
+ 		break;
+ 	case SRB_STATUS_INVALID_LUN:
+-		do_work = true;
+-		process_err_fn = storvsc_remove_lun;
++		set_host_byte(scmnd, DID_NO_CONNECT);
+ 		break;
+ 	case SRB_STATUS_ABORTED:
+ 		if (vm_srb->srb_status & SRB_STATUS_AUTOSENSE_VALID &&
+@@ -1050,32 +1027,15 @@ static void storvsc_on_io_completion(struct storvsc_device *stor_device,
+ 
+ 	stor_pkt = &request->vstor_packet;
+ 
+-	/*
+-	 * The current SCSI handling on the host side does
+-	 * not correctly handle:
+-	 * INQUIRY command with page code parameter set to 0x80
+-	 * MODE_SENSE command with cmd[2] == 0x1c
+-	 *
+-	 * Setup srb and scsi status so this won't be fatal.
+-	 * We do this so we can distinguish truly fatal failues
+-	 * (srb status == 0x4) and off-line the device in that case.
+-	 */
+-
+-	if ((stor_pkt->vm_srb.cdb[0] == INQUIRY) ||
+-	   (stor_pkt->vm_srb.cdb[0] == MODE_SENSE)) {
+-		vstor_packet->vm_srb.scsi_status = 0;
+-		vstor_packet->vm_srb.srb_status = SRB_STATUS_SUCCESS;
+-	}
+-
+-
+ 	/* Copy over the status...etc */
+ 	stor_pkt->vm_srb.scsi_status = vstor_packet->vm_srb.scsi_status;
+ 	stor_pkt->vm_srb.srb_status = vstor_packet->vm_srb.srb_status;
+ 	stor_pkt->vm_srb.sense_info_length =
+ 	vstor_packet->vm_srb.sense_info_length;
+ 
+-	if (vstor_packet->vm_srb.scsi_status != 0 ||
+-	    vstor_packet->vm_srb.srb_status != SRB_STATUS_SUCCESS)
++	if (stor_pkt->vm_srb.cdb[0] != INQUIRY &&
++	    (vstor_packet->vm_srb.scsi_status != 0 ||
++	     vstor_packet->vm_srb.srb_status != SRB_STATUS_SUCCESS))
+ 		storvsc_log(device, STORVSC_LOGGING_WARN,
+ 			"cmd 0x%x scsi status 0x%x srb status 0x%x\n",
+ 			stor_pkt->vm_srb.cdb[0],
+-- 
+2.11.0
