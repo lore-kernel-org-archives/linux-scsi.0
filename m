@@ -1,7 +1,7 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v3 15/16] scsi: utilize new cdev_device_add helper function
-Date: Mon,  6 Mar 2017 00:04:31 -0700
-Message-ID: <1488783873-2614-16-git-send-email-logang@deltatee.com>
+Subject: [PATCH v3 02/16] device-dax: fix cdev leak
+Date: Mon,  6 Mar 2017 00:04:18 -0700
+Message-ID: <1488783873-2614-3-git-send-email-logang@deltatee.com>
 References: <1488783873-2614-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -18,151 +18,70 @@ List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
 Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
 Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
 To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Sajjan Vikas C <vikas.cha.sajjan-ZPxbGqLxI0U@public.gmane.org>, Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linus Walleij <linus.walleij-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Alexandre Courbot <gnurou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Peter Huewe <peterhuewe-Mmb7MZpHnFY@public.gmane.org>, Marcel Selhorst <tpmdd-yWjUBOtONefk1uMJSBkQmQ@public.gmane.org>, Jarkko Sakkinen <jarkko.sakkinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Olof Johansson <olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sean Hefty <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hal Rosenstock <hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-gpio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-gpio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-This driver did not set kobj.parent so it likely suffered from
-a potential use after free race if the user unregistered the
-device while it was in use.
+From: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-This was not so straightforward a conversion but I think this patch
-cleans up its probe's error path significantly.
+If device_add() fails, cleanup the cdev. Otherwise, we leak a kobj_map()
+with a stale device number.
 
-This patch adds device_initialize, which is required for
-cdev_device_add. Then it switches to put_device instead of kfree as
-recommended by device_initialize's documentation. This removes a lot
-from the error path which was already in __remove.
-A couple things needed to be re-ordered to be entirely correct, though.
-ida_remove is also moved out of __remove and into unregister to
-simplify things and follow the pattern other devices are using.
+As Jason points out, there is a small possibility that userspace has
+opened and mapped the device in the time between cdev_add() and the
+device_add() failure. We need a new kill_dax_dev() helper to invalidate
+any established mappings.
 
-This also drop an extra unnecessary get_device/put_device in the code.
-
+Fixes: ba09c01d2fa8 ("dax: convert to the cdev api")
+Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Reported-by: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
+Signed-off-by: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
 ---
- drivers/scsi/osd/osd_uld.c | 56 +++++++++++++++++-----------------------------
- 1 file changed, 20 insertions(+), 36 deletions(-)
+ drivers/dax/dax.c | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
-index e0ce5d2..4101c31 100644
---- a/drivers/scsi/osd/osd_uld.c
-+++ b/drivers/scsi/osd/osd_uld.c
-@@ -400,9 +400,6 @@ static void __remove(struct device *dev)
- 
- 	kfree(oud->odi.osdname);
- 
--	if (oud->cdev.owner)
--		cdev_del(&oud->cdev);
--
- 	osd_dev_fini(&oud->od);
- 	scsi_device_put(scsi_device);
- 
-@@ -411,7 +408,6 @@ static void __remove(struct device *dev)
- 
- 	if (oud->disk)
- 		put_disk(oud->disk);
--	ida_remove(&osd_minor_ida, oud->minor);
- 
- 	kfree(oud);
- }
-@@ -446,8 +442,20 @@ static int osd_probe(struct device *dev)
- 	if (NULL == oud)
- 		goto err_retract_minor;
- 
-+	/* class device member */
-+	device_initialize(&oud->class_dev);
- 	dev_set_drvdata(dev, oud);
- 	oud->minor = minor;
-+	oud->class_dev.devt = MKDEV(SCSI_OSD_MAJOR, oud->minor);
-+	oud->class_dev.class = &osd_uld_class;
-+	oud->class_dev.parent = dev;
-+	oud->class_dev.release = __remove;
-+
-+	/* hold one more reference to the scsi_device that will get released
-+	 * in __release, in case a logout is happening while fs is mounted
-+	 */
-+	scsi_device_get(scsi_device);
-+	osd_dev_init(&oud->od, scsi_device);
- 
- 	/* allocate a disk and set it up */
- 	/* FIXME: do we need this since sg has already done that */
-@@ -461,59 +469,34 @@ static int osd_probe(struct device *dev)
- 	sprintf(disk->disk_name, "osd%d", oud->minor);
- 	oud->disk = disk;
- 
--	/* hold one more reference to the scsi_device that will get released
--	 * in __release, in case a logout is happening while fs is mounted
--	 */
--	scsi_device_get(scsi_device);
--	osd_dev_init(&oud->od, scsi_device);
--
- 	/* Detect the OSD Version */
- 	error = __detect_osd(oud);
- 	if (error) {
- 		OSD_ERR("osd detection failed, non-compatible OSD device\n");
--		goto err_put_disk;
-+		goto err_free_osd;
- 	}
- 
- 	/* init the char-device for communication with user-mode */
- 	cdev_init(&oud->cdev, &osd_fops);
- 	oud->cdev.owner = THIS_MODULE;
--	error = cdev_add(&oud->cdev,
--			 MKDEV(SCSI_OSD_MAJOR, oud->minor), 1);
--	if (error) {
--		OSD_ERR("cdev_add failed\n");
--		goto err_put_disk;
--	}
- 
--	/* class device member */
--	oud->class_dev.devt = oud->cdev.dev;
--	oud->class_dev.class = &osd_uld_class;
--	oud->class_dev.parent = dev;
--	oud->class_dev.release = __remove;
- 	error = dev_set_name(&oud->class_dev, "%s", disk->disk_name);
- 	if (error) {
- 		OSD_ERR("dev_set_name failed => %d\n", error);
--		goto err_put_cdev;
-+		goto err_free_osd;
- 	}
- 
--	error = device_register(&oud->class_dev);
-+	error = cdev_device_add(&oud->cdev, &oud->class_dev);
- 	if (error) {
- 		OSD_ERR("device_register failed => %d\n", error);
--		goto err_put_cdev;
-+		goto err_free_osd;
- 	}
- 
--	get_device(&oud->class_dev);
--
- 	OSD_INFO("osd_probe %s\n", disk->disk_name);
- 	return 0;
- 
--err_put_cdev:
--	cdev_del(&oud->cdev);
--err_put_disk:
--	scsi_device_put(scsi_device);
--	put_disk(disk);
- err_free_osd:
--	dev_set_drvdata(dev, NULL);
--	kfree(oud);
-+	put_device(&oud->class_dev);
- err_retract_minor:
- 	ida_remove(&osd_minor_ida, minor);
- 	return error;
-@@ -530,9 +513,10 @@ static int osd_remove(struct device *dev)
- 			scsi_device);
- 	}
- 
--	device_unregister(&oud->class_dev);
--
-+	cdev_device_del(&oud->cdev, &oud->class_dev);
-+	ida_remove(&osd_minor_ida, oud->minor);
- 	put_device(&oud->class_dev);
-+
- 	return 0;
+diff --git a/drivers/dax/dax.c b/drivers/dax/dax.c
+index 8d9829f..a5ed59a 100644
+--- a/drivers/dax/dax.c
++++ b/drivers/dax/dax.c
+@@ -675,13 +675,10 @@ static void dax_dev_release(struct device *dev)
+ 	kfree(dax_dev);
  }
  
+-static void unregister_dax_dev(void *dev)
++static void kill_dax_dev(struct dax_dev *dax_dev)
+ {
+-	struct dax_dev *dax_dev = to_dax_dev(dev);
+ 	struct cdev *cdev = &dax_dev->cdev;
+ 
+-	dev_dbg(dev, "%s\n", __func__);
+-
+ 	/*
+ 	 * Note, rcu is not protecting the liveness of dax_dev, rcu is
+ 	 * ensuring that any fault handlers that might have seen
+@@ -693,6 +690,15 @@ static void unregister_dax_dev(void *dev)
+ 	synchronize_rcu();
+ 	unmap_mapping_range(dax_dev->inode->i_mapping, 0, 0, 1);
+ 	cdev_del(cdev);
++}
++
++static void unregister_dax_dev(void *dev)
++{
++	struct dax_dev *dax_dev = to_dax_dev(dev);
++
++	dev_dbg(dev, "%s\n", __func__);
++
++	kill_dax_dev(dax_dev);
+ 	device_unregister(dev);
+ }
+ 
+@@ -769,6 +775,7 @@ struct dax_dev *devm_create_dax_dev(struct dax_region *dax_region,
+ 	dev_set_name(dev, "dax%d.%d", dax_region->id, dax_dev->id);
+ 	rc = device_add(dev);
+ 	if (rc) {
++		kill_dax_dev(dax_dev);
+ 		put_device(dev);
+ 		return ERR_PTR(rc);
+ 	}
 -- 
 2.1.4
