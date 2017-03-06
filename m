@@ -1,8 +1,8 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v3 07/16] platform/chrome: cros_ec_dev - utilize new
- cdev_device_add helper function
-Date: Mon,  6 Mar 2017 00:04:23 -0700
-Message-ID: <1488783873-2614-8-git-send-email-logang@deltatee.com>
+Subject: [PATCH v3 01/16] chardev: add helper function to register char devs
+ with a struct device
+Date: Mon,  6 Mar 2017 00:04:17 -0700
+Message-ID: <1488783873-2614-2-git-send-email-logang@deltatee.com>
 References: <1488783873-2614-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,89 +22,190 @@ To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org
 Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-gpio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Replace the open coded registration of the cdev and dev with the
-new device_add_cdev() helper. The helper replaces a common pattern by
-taking the proper reference against the parent device and adding both
-the cdev and the device.
+Credit for this patch goes is shared with Dan Williams [1]. I've
+taken things one step further to make the helper function more
+useful and clean up calling code.
 
-At the same time we cleanup the error path through device_probe
-function: we use put_device instead of kfree directly as recommended
-by the device_initialize documentation.
+There's a common pattern in the kernel whereby a struct cdev is placed
+in a structure along side a struct device which manages the life-cycle
+of both. In the naive approach, the reference counting is broken and
+the struct device can free everything before the chardev code
+is entirely released.
+
+Many developers have solved this problem by linking the internal kobjs
+in this fashion:
+
+cdev.kobj.parent = &parent_dev.kobj;
+
+The cdev code explicitly gets and puts a reference to it's kobj parent.
+So this seems like it was intended to be used this way. Dmitrty Torokhov
+first put this in place in 2012 with this commit:
+
+2f0157f char_dev: pin parent kobject
+
+and the first instance of the fix was then done in the input subsystem
+in the following commit:
+
+4a215aa Input: fix use-after-free introduced with dynamic minor changes
+
+Subsequently over the years, however, this issue seems to have tripped
+up multiple developers independently. For example, see these commits:
+
+0d5b7da iio: Prevent race between IIO chardev opening and IIO device
+(by Lars-Peter Clausen in 2013)
+
+ba0ef85 tpm: Fix initialization of the cdev
+(by Jason Gunthorpe in 2015)
+
+5b28dde [media] media: fix use-after-free in cdev_put() when app exits
+after driver unbind
+(by Shauh Khan in 2016)
+
+This technique is similarly done in at least 15 places within the kernel
+and probably should have been done so in another, at least, 5 places.
+The kobj line also looks very suspect in that one would not expect
+drivers to have to mess with kobject internals in this way.
+Even highly experienced kernel developers can be surprised by this
+code, as seen in [2].
+
+To help alleviate this situation, and hopefully prevent future
+wasted effort on this problem, this patch introduces a helper function
+to register a char device along with its parent struct device.
+This creates a more regular API for tying a char device to its parent
+without the developer having to set members in the underlying kobject.
+
+This patch introduce cdev_device_add and cdev_device_del which
+replaces a common pattern including setting the kobj parent, calling
+cdev_add and then calling device_add. It also introduces cdev_set_parent
+for the few cases that set the kobject parent without using device_add.
+
+[1] https://lkml.org/lkml/2017/2/13/700
+[2] https://lkml.org/lkml/2017/2/10/370
 
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+Signed-off-by: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Reviewed-by: Hans Verkuil <hans.verkuil-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
+Reviewed-by: Alexandre Belloni <alexandre.belloni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
 ---
- drivers/platform/chrome/cros_ec_dev.c | 31 +++++++------------------------
- 1 file changed, 7 insertions(+), 24 deletions(-)
+ fs/char_dev.c        | 77 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/cdev.h |  4 +++
+ 2 files changed, 81 insertions(+)
 
-diff --git a/drivers/platform/chrome/cros_ec_dev.c b/drivers/platform/chrome/cros_ec_dev.c
-index 6f09da4..6aa120c 100644
---- a/drivers/platform/chrome/cros_ec_dev.c
-+++ b/drivers/platform/chrome/cros_ec_dev.c
-@@ -391,7 +391,6 @@ static int ec_device_probe(struct platform_device *pdev)
- 	int retval = -ENOMEM;
- 	struct device *dev = &pdev->dev;
- 	struct cros_ec_platform *ec_platform = dev_get_platdata(dev);
--	dev_t devno = MKDEV(ec_major, pdev->id);
- 	struct cros_ec_dev *ec = kzalloc(sizeof(*ec), GFP_KERNEL);
- 
- 	if (!ec)
-@@ -407,23 +406,11 @@ static int ec_device_probe(struct platform_device *pdev)
- 	cdev_init(&ec->cdev, &fops);
- 
- 	/*
--	 * Add the character device
--	 * Link cdev to the class device to be sure device is not used
--	 * before unbinding it.
--	 */
--	ec->cdev.kobj.parent = &ec->class_dev.kobj;
--	retval = cdev_add(&ec->cdev, devno, 1);
--	if (retval) {
--		dev_err(dev, ": failed to add character device\n");
--		goto cdev_add_failed;
--	}
--
--	/*
- 	 * Add the class device
- 	 * Link to the character device for creating the /dev entry
- 	 * in devtmpfs.
- 	 */
--	ec->class_dev.devt = ec->cdev.dev;
-+	ec->class_dev.devt = MKDEV(ec_major, pdev->id);
- 	ec->class_dev.class = &cros_class;
- 	ec->class_dev.parent = dev;
- 	ec->class_dev.release = __remove;
-@@ -431,13 +418,13 @@ static int ec_device_probe(struct platform_device *pdev)
- 	retval = dev_set_name(&ec->class_dev, "%s", ec_platform->ec_name);
- 	if (retval) {
- 		dev_err(dev, "dev_set_name failed => %d\n", retval);
--		goto set_named_failed;
-+		goto failed;
- 	}
- 
--	retval = device_add(&ec->class_dev);
-+	retval = cdev_device_add(&ec->cdev, &ec->class_dev);
- 	if (retval) {
--		dev_err(dev, "device_register failed => %d\n", retval);
--		goto dev_reg_failed;
-+		dev_err(dev, "cdev_device_add failed => %d\n", retval);
-+		goto failed;
- 	}
- 
- 	/* check whether this EC is a sensor hub. */
-@@ -446,12 +433,8 @@ static int ec_device_probe(struct platform_device *pdev)
- 
+diff --git a/fs/char_dev.c b/fs/char_dev.c
+index 44a240c..09b93fb 100644
+--- a/fs/char_dev.c
++++ b/fs/char_dev.c
+@@ -471,6 +471,76 @@ int cdev_add(struct cdev *p, dev_t dev, unsigned count)
  	return 0;
- 
--dev_reg_failed:
--set_named_failed:
--	dev_set_drvdata(dev, NULL);
--	cdev_del(&ec->cdev);
--cdev_add_failed:
--	kfree(ec);
-+failed:
-+	put_device(&ec->class_dev);
- 	return retval;
  }
  
++/**
++ * cdev_set_parent() - set the parent kobject for a char device
++ * @p: the cdev structure
++ * @kobj: the kobject to take a reference to
++ *
++ * cdev_set_parent() sets a parent kobject which will be referenced
++ * appropriately so the parent is not freed before the cdev. This
++ * should be called before cdev_add.
++ */
++void cdev_set_parent(struct cdev *p, struct kobject *kobj)
++{
++	WARN_ON(!kobj->state_initialized);
++	p->kobj.parent = kobj;
++}
++
++/**
++ * cdev_device_add() - add a char device and it's corresponding
++ *	struct device, linkink
++ * @dev: the device structure
++ * @cdev: the cdev structure
++ *
++ * cdev_device_add() adds the char device represented by @cdev to the system,
++ * just as cdev_add does. It then adds @dev to the system using device_add
++ * The dev_t for the char device will be taken from the struct device which
++ * needs to be initialized first. This helper function correctly takes a
++ * reference to the parent device so the parent will not get released until
++ * all references to the cdev are released.
++ *
++ * This function should be used whenever the struct cdev and the
++ * struct device are members of the same structure whose lifetime is
++ * managed by the struct device.
++ *
++ * NOTE: Callers must assume that userspace was able to open the cdev and
++ * can call cdev fops callbacks at any time, even if this function fails.
++ */
++int cdev_device_add(struct cdev *cdev, struct device *dev)
++{
++	int rc = 0;
++
++	cdev_set_parent(cdev, &dev->kobj);
++
++	rc = cdev_add(cdev, dev->devt, 1);
++	if (rc)
++		return rc;
++
++	rc = device_add(dev);
++	if (rc)
++		cdev_del(cdev);
++
++	return rc;
++}
++
++/**
++ * cdev_device_del() - inverse of cdev_device_add
++ * @dev: the device structure
++ * @cdev: the cdev structure
++ *
++ * cdev_device_del() is a helper function to call cdev_del and device_del.
++ * It should be used whenever cdev_device_add is used.
++ *
++ * NOTE: This guarantees that associated sysfs callbacks are not running
++ * or runnable, however any cdevs already open will remain and their fops
++ * will still be callable even after this function returns.
++ */
++void cdev_device_del(struct cdev *cdev, struct device *dev)
++{
++	device_del(dev);
++	cdev_del(cdev);
++}
++
+ static void cdev_unmap(dev_t dev, unsigned count)
+ {
+ 	kobj_unmap(cdev_map, dev, count);
+@@ -482,6 +552,10 @@ static void cdev_unmap(dev_t dev, unsigned count)
+  *
+  * cdev_del() removes @p from the system, possibly freeing the structure
+  * itself.
++ *
++ * NOTE: This guarantees that cdev device will no longer be able to be
++ * opened, however any cdevs already open will remain and their fops will
++ * still be callable even after cdev_del returns.
+  */
+ void cdev_del(struct cdev *p)
+ {
+@@ -570,5 +644,8 @@ EXPORT_SYMBOL(cdev_init);
+ EXPORT_SYMBOL(cdev_alloc);
+ EXPORT_SYMBOL(cdev_del);
+ EXPORT_SYMBOL(cdev_add);
++EXPORT_SYMBOL(cdev_set_parent);
++EXPORT_SYMBOL(cdev_device_add);
++EXPORT_SYMBOL(cdev_device_del);
+ EXPORT_SYMBOL(__register_chrdev);
+ EXPORT_SYMBOL(__unregister_chrdev);
+diff --git a/include/linux/cdev.h b/include/linux/cdev.h
+index f876361..4c99579 100644
+--- a/include/linux/cdev.h
++++ b/include/linux/cdev.h
+@@ -26,6 +26,10 @@ void cdev_put(struct cdev *p);
+ 
+ int cdev_add(struct cdev *, dev_t, unsigned);
+ 
++void cdev_set_parent(struct cdev *p, struct kobject *kobj);
++int cdev_device_add(struct cdev *cdev, struct device *dev);
++void cdev_device_del(struct cdev *cdev, struct device *dev);
++
+ void cdev_del(struct cdev *);
+ 
+ void cd_forget(struct inode *);
 -- 
 2.1.4
