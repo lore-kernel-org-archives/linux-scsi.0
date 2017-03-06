@@ -1,109 +1,40 @@
-From: Jarkko Sakkinen <jarkko.sakkinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [PATCH v3 06/16] tpm-chip: utilize new
- cdev_device_add helper function
-Date: Mon, 6 Mar 2017 23:04:26 +0200
-Message-ID: <20170306210426.qeftgujergryutie@intel.com>
-References: <1488783873-2614-1-git-send-email-logang@deltatee.com>
- <1488783873-2614-7-git-send-email-logang@deltatee.com>
-Reply-To: rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Don Brace <don.brace@microsemi.com>
+Subject: [PATCH 0/3] hpsa updates
+Date: Mon, 6 Mar 2017 15:24:33 -0600
+Message-ID: <148883542370.14177.274248778005931414.stgit@brunhilda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <rtc-linux+bncBAABB3E567CQKGQECYSPRTY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Content-Disposition: inline
-In-Reply-To: <1488783873-2614-7-git-send-email-logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-List-Post: <https://groups.google.com/group/rtc-linux/post>, <mailto:rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:rtc-linux+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/rtc-linux
-List-Subscribe: <https://groups.google.com/group/rtc-linux/subscribe>, <mailto:rtc-linux+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+712029733259+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/rtc-linux/subscribe>
-To: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Sajjan Vikas C <vikas.cha.sajjan-ZPxbGqLxI0U@public.gmane.org>, Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linus Walleij <linus.walleij-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Alexandre Courbot <gnurou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Peter Huewe <peterhuewe-Mmb7MZpHnFY@public.gmane.org>, Marcel Selhorst <tpmdd-yWjUBOtONefk1uMJSBkQmQ@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Olof Johansson <olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sean Hefty <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hal Rosenstock <hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hartmut Knaack <knaack.h-Mmb7MZpHnFY@public.gmane.org>, Lars-Peter Clausen <lars@metafo>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bl2nam02on0080.outbound.protection.outlook.com ([104.47.38.80]:35804
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753776AbdCFVYi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 6 Mar 2017 16:24:38 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, Mar 06, 2017 at 12:04:22AM -0700, Logan Gunthorpe wrote:
-> Replace the open coded registration of the cdev and dev with the
-> new device_add_cdev() helper. The helper replaces a common pattern by
-> taking the proper reference against the parent device and adding both
-> the cdev and the device.
-> 
-> Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-> Reviewed-by: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
-> ---
->  drivers/char/tpm/tpm-chip.c | 19 +++----------------
->  1 file changed, 3 insertions(+), 16 deletions(-)
-> 
-> diff --git a/drivers/char/tpm/tpm-chip.c b/drivers/char/tpm/tpm-chip.c
-> index c406343..935f0e9 100644
-> --- a/drivers/char/tpm/tpm-chip.c
-> +++ b/drivers/char/tpm/tpm-chip.c
-> @@ -187,7 +187,6 @@ struct tpm_chip *tpm_chip_alloc(struct device *pdev,
->  
->  	cdev_init(&chip->cdev, &tpm_fops);
->  	chip->cdev.owner = THIS_MODULE;
-> -	chip->cdev.kobj.parent = &chip->dev.kobj;
->  
->  	return chip;
->  
-> @@ -230,27 +229,16 @@ static int tpm_add_char_device(struct tpm_chip *chip)
->  {
->  	int rc;
->  
-> -	rc = cdev_add(&chip->cdev, chip->dev.devt, 1);
-> +	rc = cdev_device_add(&chip->cdev, &chip->dev);
->  	if (rc) {
->  		dev_err(&chip->dev,
-> -			"unable to cdev_add() %s, major %d, minor %d, err=%d\n",
-> +			"unable to cdev_device_add() %s, major %d, minor %d, err=%d\n",
->  			dev_name(&chip->dev), MAJOR(chip->dev.devt),
->  			MINOR(chip->dev.devt), rc);
->  
->  		return rc;
->  	}
->  
-> -	rc = device_add(&chip->dev);
-> -	if (rc) {
-> -		dev_err(&chip->dev,
-> -			"unable to device_register() %s, major %d, minor %d, err=%d\n",
-> -			dev_name(&chip->dev), MAJOR(chip->dev.devt),
-> -			MINOR(chip->dev.devt), rc);
-> -
-> -		cdev_del(&chip->cdev);
-> -		return rc;
-> -	}
-> -
->  	/* Make the chip available. */
->  	mutex_lock(&idr_lock);
->  	idr_replace(&dev_nums_idr, chip, chip->dev_num);
-> @@ -261,8 +249,7 @@ static int tpm_add_char_device(struct tpm_chip *chip)
->  
->  static void tpm_del_char_device(struct tpm_chip *chip)
->  {
-> -	cdev_del(&chip->cdev);
-> -	device_del(&chip->dev);
-> +	cdev_device_del(&chip->cdev, &chip->dev);
->  
->  	/* Make the chip unavailable. */
->  	mutex_lock(&idr_lock);
-> -- 
-> 2.1.4
-> 
+These patches are based on Linus's tree
 
-Reviewed-by: Jarkko Sakkinen <jarkko.sakkinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+The changes are:
+ - add in a new offline volume status
+ - limit the number of outstanding rescan operations
+ - do not timeout reset operations
 
-I cannot test this at this point as security tree does not include
-the commit that is dependent on this. I'm also wondering if this
-commit is even going through my tree to upstream?
+---
 
-/Jarkko
+Don Brace (3):
+      hpsa: update check for logical volume status
+      hpsa: limit outstanding rescans
+      hpsa: do not timeout reset operations
 
--- 
-You received this message because you are subscribed to "rtc-linux".
-Membership options at http://groups.google.com/group/rtc-linux .
-Please read http://groups.google.com/group/rtc-linux/web/checklist
-before submitting a driver.
---- 
-You received this message because you are subscribed to the Google Groups "rtc-linux" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to rtc-linux+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-For more options, visit https://groups.google.com/d/optout.
+
+ drivers/scsi/hpsa.c     |   44 +++++++++++++++++++++++++++++---------------
+ drivers/scsi/hpsa.h     |    1 +
+ drivers/scsi/hpsa_cmd.h |    2 ++
+ 3 files changed, 32 insertions(+), 15 deletions(-)
+
+--
+Signature
