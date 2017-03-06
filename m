@@ -1,7 +1,8 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v3 06/16] tpm-chip: utilize new cdev_device_add helper function
-Date: Mon,  6 Mar 2017 00:04:22 -0700
-Message-ID: <1488783873-2614-7-git-send-email-logang@deltatee.com>
+Subject: [PATCH v3 16/16] switchtec: utilize new device_add_cdev helper
+ function
+Date: Mon,  6 Mar 2017 00:04:32 -0700
+Message-ID: <1488783873-2614-17-git-send-email-logang@deltatee.com>
 References: <1488783873-2614-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,68 +22,56 @@ To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org
 Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-gpio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Replace the open coded registration of the cdev and dev with the
-new device_add_cdev() helper. The helper replaces a common pattern by
-taking the proper reference against the parent device and adding both
-the cdev and the device.
+Very straightforward conversion to device_add_cdev. Drop cdev_add and
+device_add and use cdev_device_add.
 
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Reviewed-by: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
 ---
- drivers/char/tpm/tpm-chip.c | 19 +++----------------
- 1 file changed, 3 insertions(+), 16 deletions(-)
+ drivers/pci/switch/switchtec.c | 11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/char/tpm/tpm-chip.c b/drivers/char/tpm/tpm-chip.c
-index c406343..935f0e9 100644
---- a/drivers/char/tpm/tpm-chip.c
-+++ b/drivers/char/tpm/tpm-chip.c
-@@ -187,7 +187,6 @@ struct tpm_chip *tpm_chip_alloc(struct device *pdev,
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index 1f045c9..e27fd29 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -1291,7 +1291,6 @@ static struct switchtec_dev *stdev_create(struct pci_dev *pdev)
+ 	cdev = &stdev->cdev;
+ 	cdev_init(cdev, &switchtec_fops);
+ 	cdev->owner = THIS_MODULE;
+-	cdev->kobj.parent = &dev->kobj;
  
- 	cdev_init(&chip->cdev, &tpm_fops);
- 	chip->cdev.owner = THIS_MODULE;
--	chip->cdev.kobj.parent = &chip->dev.kobj;
+ 	return stdev;
  
- 	return chip;
+@@ -1479,11 +1478,7 @@ static int switchtec_pci_probe(struct pci_dev *pdev,
+ 		  SWITCHTEC_EVENT_EN_IRQ,
+ 		  &stdev->mmio_part_cfg->mrpc_comp_hdr);
  
-@@ -230,27 +229,16 @@ static int tpm_add_char_device(struct tpm_chip *chip)
- {
- 	int rc;
- 
--	rc = cdev_add(&chip->cdev, chip->dev.devt, 1);
-+	rc = cdev_device_add(&chip->cdev, &chip->dev);
- 	if (rc) {
- 		dev_err(&chip->dev,
--			"unable to cdev_add() %s, major %d, minor %d, err=%d\n",
-+			"unable to cdev_device_add() %s, major %d, minor %d, err=%d\n",
- 			dev_name(&chip->dev), MAJOR(chip->dev.devt),
- 			MINOR(chip->dev.devt), rc);
- 
- 		return rc;
- 	}
- 
--	rc = device_add(&chip->dev);
--	if (rc) {
--		dev_err(&chip->dev,
--			"unable to device_register() %s, major %d, minor %d, err=%d\n",
--			dev_name(&chip->dev), MAJOR(chip->dev.devt),
--			MINOR(chip->dev.devt), rc);
+-	rc = cdev_add(&stdev->cdev, stdev->dev.devt, 1);
+-	if (rc)
+-		goto err_put;
 -
--		cdev_del(&chip->cdev);
--		return rc;
--	}
--
- 	/* Make the chip available. */
- 	mutex_lock(&idr_lock);
- 	idr_replace(&dev_nums_idr, chip, chip->dev_num);
-@@ -261,8 +249,7 @@ static int tpm_add_char_device(struct tpm_chip *chip)
+-	rc = device_add(&stdev->dev);
++	rc = cdev_device_add(&stdev->cdev, &stdev->dev);
+ 	if (rc)
+ 		goto err_devadd;
  
- static void tpm_del_char_device(struct tpm_chip *chip)
- {
--	cdev_del(&chip->cdev);
--	device_del(&chip->dev);
-+	cdev_device_del(&chip->cdev, &chip->dev);
+@@ -1492,7 +1487,6 @@ static int switchtec_pci_probe(struct pci_dev *pdev,
+ 	return 0;
  
- 	/* Make the chip unavailable. */
- 	mutex_lock(&idr_lock);
+ err_devadd:
+-	cdev_del(&stdev->cdev);
+ 	stdev_kill(stdev);
+ err_put:
+ 	ida_simple_remove(&switchtec_minor_ida, MINOR(stdev->dev.devt));
+@@ -1506,8 +1500,7 @@ static void switchtec_pci_remove(struct pci_dev *pdev)
+ 
+ 	pci_set_drvdata(pdev, NULL);
+ 
+-	device_del(&stdev->dev);
+-	cdev_del(&stdev->cdev);
++	cdev_device_del(&stdev->cdev, &stdev->dev);
+ 	ida_simple_remove(&switchtec_minor_ida, MINOR(stdev->dev.devt));
+ 	dev_info(&stdev->dev, "unregistered.\n");
+ 
 -- 
 2.1.4
