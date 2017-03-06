@@ -1,53 +1,66 @@
-From: Felipe Balbi <balbi@kernel.org>
-Subject: Re: [PATCH v3 17/20] usb: gadget: pch_udc: Replace PCI pool old API
-Date: Mon, 06 Mar 2017 16:46:32 +0200
-Message-ID: <877f4231kn.fsf@linux.intel.com>
-References: <20170226192425.13098-1-romain.perier@collabora.com> <20170226192425.13098-18-romain.perier@collabora.com> <20170227111916.GH26544@collabora.com>
+From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Subject: Re: [PATCH] scsi: lpfc: Add shutdown method for kexec
+Date: Mon, 6 Mar 2017 11:52:36 -0300
+Message-ID: <e13aeaf9-3b2c-a9e8-5867-cf9ab20a040c@linux.vnet.ibm.com>
+References: <20170212214920.28866-1-anton@ozlabs.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20170227111916.GH26544@collabora.com>
-Sender: netdev-owner@vger.kernel.org
-To: Peter Senna Tschudin <peter.senna@collabora.com>, Romain Perier <romain.perier@collabora.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, Doug Ledford <dledford@redhat.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, jeffrey.t.kirsher@intel.com, "David S. Miller" <davem@davemloft.net>, stas.yakovlev@gmail.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Peter Senna Tschudin <peter.senna@collabora.co.uk>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:60523 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752779AbdCFOwv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2017 09:52:51 -0500
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v26EhZxk033362
+        for <linux-scsi@vger.kernel.org>; Mon, 6 Mar 2017 09:52:50 -0500
+Received: from e24smtp05.br.ibm.com (e24smtp05.br.ibm.com [32.104.18.26])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2917mtxxhj-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Mon, 06 Mar 2017 09:52:50 -0500
+Received: from localhost
+        by e24smtp05.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <mauricfo@linux.vnet.ibm.com>;
+        Mon, 6 Mar 2017 11:52:48 -0300
+Received: from d24relay03.br.ibm.com (d24relay03.br.ibm.com [9.18.232.225])
+        by d24dlp01.br.ibm.com (Postfix) with ESMTP id E45483520072
+        for <linux-scsi@vger.kernel.org>; Mon,  6 Mar 2017 09:52:12 -0500 (EST)
+Received: from d24av04.br.ibm.com (d24av04.br.ibm.com [9.8.31.97])
+        by d24relay03.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v26Eqkhn33161396
+        for <linux-scsi@vger.kernel.org>; Mon, 6 Mar 2017 11:52:46 -0300
+Received: from d24av04.br.ibm.com (localhost [127.0.0.1])
+        by d24av04.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v26EqjV7006680
+        for <linux-scsi@vger.kernel.org>; Mon, 6 Mar 2017 11:52:46 -0300
+In-Reply-To: <20170212214920.28866-1-anton@ozlabs.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Anton Blanchard <anton@ozlabs.org>, james.smart@broadcom.com, dick.kennedy@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, benh@kernel.crashing.org, jk@ozlabs.org
+Cc: linux-scsi@vger.kernel.org
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On 02/12/2017 07:49 PM, Anton Blanchard wrote:
+> We see lpfc devices regularly fail during kexec. Fix this by adding
+> a shutdown method which mirrors the remove method.
 
-Peter Senna Tschudin <peter.senna@collabora.com> writes:
-> On Sun, Feb 26, 2017 at 08:24:22PM +0100, Romain Perier wrote:
->> The PCI pool API is deprecated. This commits replaces the PCI pool old
->> API by the appropriated function with the DMA pool API.
->>=20
-> Reviewed-by: Peter Senna Tschudin <peter.senna@collabora.com>
+Reviewed-by: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Tested-by: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
 
-Fine by me:
+@mkp, @jejb: may you please flag this patch for stable?  Thank you.
 
-Acked-by: Felipe Balbi <felipe.balbi@linux.intel.com>
+This patch fixes a problem of some adapter ports going offline after
+reboot on the following adapter, at least:
 
-=2D-=20
-balbi
+     [10df:f100] Saturn-X: LightPulse Fibre Channel Host Adapter
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+     # dmesg | grep lpfc
+     ...
+     [   61.676728] lpfc 0003:12:00.0: 6:0442 Adapter failed to init,
+     mbxCmd x88 CONFIG_PORT, mbxStatus x0 Data: x0
+     [   92.766717] lpfc 0003:12:00.0: 6:0442 Adapter failed to init,
+     mbxCmd x88 CONFIG_PORT, mbxStatus x0 Data: x0
+     [  123.856717] lpfc 0003:12:00.0: 6:0442 Adapter failed to init,
+     mbxCmd x88 CONFIG_PORT, mbxStatus x0 Data: x0
+     ...
 
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEElLzh7wn96CXwjh2IzL64meEamQYFAli9dkgACgkQzL64meEa
-mQaVLA/+IjA1+ooZeFlRFue4K18JSOEfgED6F5lc5rGYp4MSCvuqECFs6Xm1dfpR
-Ifbq7IfJF+ATQ/zIP0xASPM+qjWc3Nx+61gsHhfNbefZWYwWrgkj+5eCIcVhCXQo
-Tx2Y97j5QwNcLd5+TDfdtpm2NkgeiM8M+/HcoV4a8oLHxItlTrfsvVyxGMGVe/Hj
-AZ1WLJRoZVTwrfAnzr6JHdB8g+2AUeeSMSH8i0r0ZMU0BlcE5s7kste7tsPZyhRe
-hkVdGJPWdh+p42GxPoHCEZ8DI06cunrPq1iRX4qtPCrytGUfp5Rvz0T4svXGyL1X
-MYaAxTRPvkbgsw7cvQ6M0MWW+8j3IJkTF6wRKTVU0hRsPR/KjePXwIxYS81gbxwj
-m4BlfmfN7N9ahfEjcwCqqOKv8CwwtNBh7EsTErIcBuvFM1V2FQm7C6avU+u9bX3e
-nL2G5V55sbKDV99U+MLxe7d2j/sFo2p1uhMFH1GxkB37IF7IWZ4IIKz/NhSOfiqf
-YOKmyE9nB9DeuloF3KgOwAV5pSIzF2RGaixCpgZ/WKH4yPm+zz3cKciQLKtIE0BT
-hLX8G7oeyV8E7FNEugDzDooAX4YX8WWHaNeWwqIhW3spnQNnPavYvkq0n0MDT5lQ
-cUjg7idn7kP0l3YG86Sb6vfwDQGyEUxd3iFZ0HkSMlOUUA90izg=
-=BoeH
------END PGP SIGNATURE-----
---=-=-=--
+-- 
+Mauricio Faria de Oliveira
+IBM Linux Technology Center
