@@ -1,45 +1,38 @@
-From: Chad Dupuis <chad.dupuis@cavium.com>
-Subject: Re: [PATCH] scsi: qedf: Use vsprintf extension %pad
-Date: Mon, 6 Mar 2017 14:34:03 -0500 (EST)
-Message-ID: <alpine.OSX.2.00.1703061433370.1895@administrators-macbook-pro.local>
-References: <f6a0331e574df0ab1c9dad61571b92c17971ae99.1488825093.git.joe@perches.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 108621] kernel BUG in drivers/scsi/scsi_lib.c
+Date: Mon, 06 Mar 2017 20:15:00 +0000
+Message-ID: <bug-108621-11613-bMjGMVDeS3@https.bugzilla.kernel.org/>
+References: <bug-108621-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <f6a0331e574df0ab1c9dad61571b92c17971ae99.1488825093.git.joe@perches.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: QLogic-Storage-Upstream@cavium.com, kbuild test robot <lkp@intel.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:40790 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753171AbdCFUdR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2017 15:33:17 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id B05DA283BA
+        for <linux-scsi@vger.kernel.org>; Mon,  6 Mar 2017 20:15:00 +0000 (UTC)
+Received: from pdx-korg-bugzilla-1.web.codeaurora.org (unknown [172.30.200.120])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 45E6828306
+        for <linux-scsi@vger.kernel.org>; Mon,  6 Mar 2017 20:15:00 +0000 (UTC)
+In-Reply-To: <bug-108621-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=108621
 
-On Mon, 6 Mar 2017, 6:32pm -0000, Joe Perches wrote:
+Szőgyényi Gábor (szg0000@freemail.hu) changed:
 
-> Using %llx for a dma_addr_t can lead to format/argument mismatches.
-> Use %pad and the address of the dma_addr_t instead.
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
->  drivers/scsi/qedf/qedf_main.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-> index d9d7a86b5f8b..8e2a160490e6 100644
-> --- a/drivers/scsi/qedf/qedf_main.c
-> +++ b/drivers/scsi/qedf/qedf_main.c
-> @@ -2456,8 +2456,8 @@ static int qedf_alloc_bdq(struct qedf_ctx *qedf)
->  	}
->  
->  	QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_DISC,
-> -	    "BDQ PBL addr=0x%p dma=0x%llx.\n", qedf->bdq_pbl,
-> -	    qedf->bdq_pbl_dma);
-> +		  "BDQ PBL addr=0x%p dma=%pad\n",
-> +		  qedf->bdq_pbl, &qedf->bdq_pbl_dma);
->  
->  	/*
->  	 * Populate BDQ PBL with physical and virtual address of individual
-> 
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |szg0000@freemail.hu
 
-Looks good.
+--- Comment #3 from Szőgyényi Gábor (szg0000@freemail.hu) ---
+Please try to reproduce this bug with latest kernel image.
 
-Acked-by: Chad Dupuis <chad.dupuis@cavium.com>
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
