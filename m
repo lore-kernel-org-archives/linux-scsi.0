@@ -1,7 +1,7 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v3 13/16] rapidio: utilize new cdev_device_add helper function
-Date: Mon,  6 Mar 2017 00:04:29 -0700
-Message-ID: <1488783873-2614-14-git-send-email-logang@deltatee.com>
+Subject: [PATCH v3 09/16] infiniband: utilize the new cdev_set_parent function
+Date: Mon,  6 Mar 2017 00:04:25 -0700
+Message-ID: <1488783873-2614-10-git-send-email-logang@deltatee.com>
 References: <1488783873-2614-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,87 +21,65 @@ To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org
 Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-gpio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-This driver did not originally set kobj.parent so it likely had
-potential a use after free bug which this patch fixes.
-
-We convert from device_register to device_initialize/cdev_device_add.
-While we are at it we use put_device instead of kfree (as recommended
-by the device_initialize documentation). We also remove an unnecessary
-extra get_device from the code.
+This replaces the suspect looking cdev.kobj.parent lines with the
+equivalent cdev_set_parent function. This is a straightforward change
+that's largely cosmetic but it does push the kobj.parent ownership
+into char_dev.c where it belongs.
 
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
 ---
- drivers/rapidio/devices/rio_mport_cdev.c | 24 ++++++++----------------
- 1 file changed, 8 insertions(+), 16 deletions(-)
+ drivers/infiniband/core/user_mad.c    | 4 ++--
+ drivers/infiniband/core/uverbs_main.c | 2 +-
+ drivers/infiniband/hw/hfi1/device.c   | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/rapidio/devices/rio_mport_cdev.c b/drivers/rapidio/devices/rio_mport_cdev.c
-index 50b617a..5beb0c3 100644
---- a/drivers/rapidio/devices/rio_mport_cdev.c
-+++ b/drivers/rapidio/devices/rio_mport_cdev.c
-@@ -2444,31 +2444,25 @@ static struct mport_dev *mport_cdev_add(struct rio_mport *mport)
- 	mutex_init(&md->buf_mutex);
- 	mutex_init(&md->file_mutex);
- 	INIT_LIST_HEAD(&md->file_list);
--	cdev_init(&md->cdev, &mport_fops);
--	md->cdev.owner = THIS_MODULE;
--	ret = cdev_add(&md->cdev, MKDEV(MAJOR(dev_number), mport->id), 1);
--	if (ret < 0) {
--		kfree(md);
--		rmcd_error("Unable to register a device, err=%d", ret);
--		return NULL;
--	}
+diff --git a/drivers/infiniband/core/user_mad.c b/drivers/infiniband/core/user_mad.c
+index aca7ff7..25071b8 100644
+--- a/drivers/infiniband/core/user_mad.c
++++ b/drivers/infiniband/core/user_mad.c
+@@ -1183,7 +1183,7 @@ static int ib_umad_init_port(struct ib_device *device, int port_num,
  
--	md->dev.devt = md->cdev.dev;
-+	device_initialize(&md->dev);
-+	md->dev.devt = MKDEV(MAJOR(dev_number), mport->id);
- 	md->dev.class = dev_class;
- 	md->dev.parent = &mport->dev;
- 	md->dev.release = mport_device_release;
- 	dev_set_name(&md->dev, DEV_NAME "%d", mport->id);
- 	atomic_set(&md->active, 1);
- 
--	ret = device_register(&md->dev);
-+	cdev_init(&md->cdev, &mport_fops);
-+	md->cdev.owner = THIS_MODULE;
-+
-+	ret = cdev_device_add(&md->cdev, &md->dev);
- 	if (ret) {
- 		rmcd_error("Failed to register mport %d (err=%d)",
- 		       mport->id, ret);
+ 	cdev_init(&port->cdev, &umad_fops);
+ 	port->cdev.owner = THIS_MODULE;
+-	port->cdev.kobj.parent = &umad_dev->kobj;
++	cdev_set_parent(&port->cdev, &umad_dev->kobj);
+ 	kobject_set_name(&port->cdev.kobj, "umad%d", port->dev_num);
+ 	if (cdev_add(&port->cdev, base, 1))
  		goto err_cdev;
- 	}
+@@ -1202,7 +1202,7 @@ static int ib_umad_init_port(struct ib_device *device, int port_num,
+ 	base += IB_UMAD_MAX_PORTS;
+ 	cdev_init(&port->sm_cdev, &umad_sm_fops);
+ 	port->sm_cdev.owner = THIS_MODULE;
+-	port->sm_cdev.kobj.parent = &umad_dev->kobj;
++	cdev_set_parent(&port->sm_cdev, &umad_dev->kobj);
+ 	kobject_set_name(&port->sm_cdev.kobj, "issm%d", port->dev_num);
+ 	if (cdev_add(&port->sm_cdev, base, 1))
+ 		goto err_sm_cdev;
+diff --git a/drivers/infiniband/core/uverbs_main.c b/drivers/infiniband/core/uverbs_main.c
+index 35c788a..f02d7b9 100644
+--- a/drivers/infiniband/core/uverbs_main.c
++++ b/drivers/infiniband/core/uverbs_main.c
+@@ -1189,7 +1189,7 @@ static void ib_uverbs_add_one(struct ib_device *device)
+ 	cdev_init(&uverbs_dev->cdev, NULL);
+ 	uverbs_dev->cdev.owner = THIS_MODULE;
+ 	uverbs_dev->cdev.ops = device->mmap ? &uverbs_mmap_fops : &uverbs_fops;
+-	uverbs_dev->cdev.kobj.parent = &uverbs_dev->kobj;
++	cdev_set_parent(&uverbs_dev->cdev, &uverbs_dev->kobj);
+ 	kobject_set_name(&uverbs_dev->cdev.kobj, "uverbs%d", uverbs_dev->devnum);
+ 	if (cdev_add(&uverbs_dev->cdev, base, 1))
+ 		goto err_cdev;
+diff --git a/drivers/infiniband/hw/hfi1/device.c b/drivers/infiniband/hw/hfi1/device.c
+index bf64b5a..bbb6069 100644
+--- a/drivers/infiniband/hw/hfi1/device.c
++++ b/drivers/infiniband/hw/hfi1/device.c
+@@ -69,7 +69,7 @@ int hfi1_cdev_init(int minor, const char *name,
  
--	get_device(&md->dev);
--
- 	INIT_LIST_HEAD(&md->doorbells);
- 	spin_lock_init(&md->db_lock);
- 	INIT_LIST_HEAD(&md->portwrites);
-@@ -2513,8 +2507,7 @@ static struct mport_dev *mport_cdev_add(struct rio_mport *mport)
- 	return md;
+ 	cdev_init(cdev, fops);
+ 	cdev->owner = THIS_MODULE;
+-	cdev->kobj.parent = parent;
++	cdev_set_parent(cdev, parent);
+ 	kobject_set_name(&cdev->kobj, name);
  
- err_cdev:
--	cdev_del(&md->cdev);
--	kfree(md);
-+	put_device(&md->dev);
- 	return NULL;
- }
- 
-@@ -2578,7 +2571,7 @@ static void mport_cdev_remove(struct mport_dev *md)
- 	atomic_set(&md->active, 0);
- 	mport_cdev_terminate_dma(md);
- 	rio_del_mport_pw_handler(md->mport, md, rio_mport_pw_handler);
--	cdev_del(&(md->cdev));
-+	cdev_device_del(&md->cdev, &md->dev);
- 	mport_cdev_kill_fasync(md);
- 
- 	flush_workqueue(dma_wq);
-@@ -2603,7 +2596,6 @@ static void mport_cdev_remove(struct mport_dev *md)
- 
- 	rio_release_inb_dbell(md->mport, 0, 0x0fff);
- 
--	device_unregister(&md->dev);
- 	put_device(&md->dev);
- }
- 
+ 	ret = cdev_add(cdev, dev, 1);
 -- 
 2.1.4
