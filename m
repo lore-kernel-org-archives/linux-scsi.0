@@ -1,341 +1,82 @@
-From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v3 12/16] mtd: utilize new cdev_device_add helper function
-Date: Mon,  6 Mar 2017 00:04:28 -0700
-Message-ID: <1488783873-2614-13-git-send-email-logang@deltatee.com>
+From: Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v3 08/16] IB/ucm: utilize new cdev_device_add
+ helper function
+Date: Mon, 6 Mar 2017 09:24:54 +0200
+Message-ID: <20170306072454.GO14379@mtr-leonro.local>
 References: <1488783873-2614-1-git-send-email-logang@deltatee.com>
+ <1488783873-2614-9-git-send-email-logang@deltatee.com>
+Reply-To: rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <1488783873-2614-1-git-send-email-logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Sajjan Vikas C <vikas.cha.sajjan-ZPxbGqLxI0U@public.gmane.org>, Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linus Walleij <linus.walleij-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Alexandre Courbot <gnurou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Peter Huewe <peterhuewe-Mmb7MZpHnFY@public.gmane.org>, Marcel Selhorst <tpmdd-yWjUBOtONefk1uMJSBkQmQ@public.gmane.org>, Jarkko Sakkinen <jarkko.sakkinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Olof Johansson <olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sean Hefty <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hal Rosenstock <hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-gpio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="Zl+NncWK+U5aSfTo"
+Return-path: <rtc-linux+bncBAABBOE56TCQKGQEPPB42OY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Content-Disposition: inline
+In-Reply-To: <1488783873-2614-9-git-send-email-logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+List-Post: <https://groups.google.com/group/rtc-linux/post>, <mailto:rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:rtc-linux+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/rtc-linux
+List-Subscribe: <https://groups.google.com/group/rtc-linux/subscribe>, <mailto:rtc-linux+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+712029733259+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/rtc-linux/subscribe>
+To: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Sajjan Vikas C <vikas.cha.sajjan-ZPxbGqLxI0U@public.gmane.org>, Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linus Walleij <linus.walleij-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Alexandre Courbot <gnurou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Peter Huewe <peterhuewe-Mmb7MZpHnFY@public.gmane.org>, Marcel Selhorst <tpmdd-yWjUBOtONefk1uMJSBkQmQ@public.gmane.org>, Jarkko Sakkinen <jarkko.sakkinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Olof Johansson <olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sean Hefty <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hal Rosenstock <hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Hartmut Knaack <knaack.h-Mmb7MZpHnFY@public.gmane.org>, Lars-Peter
 List-Id: linux-scsi@vger.kernel.org
 
-This is not as straightforward a conversion as the others
-in this series. These drivers did not originally make use of
-kobj.parent so they likely suffered from a use after free bug if
-someone unregistered the devices while they are being used.
 
-In order to make the conversions, switch from device_register
-to device_initialize / cdev_device_add.
+--Zl+NncWK+U5aSfTo
+Content-Type: text/plain; charset=UTF-8
+Content-Disposition: inline
 
-In build.c, this patch unwinds a complicated mess of extra
-get_device/put_devices and reference tracking by moving device_initialize
-early in the attach process. Then it always uses put_device and instead of
-using device_unregister and extra get_devices everywhere we just use
-cdev_device_del and one put_device once everything is completely done.
-This simplifies things dramatically and makes it easier to reason about.
+On Mon, Mar 06, 2017 at 12:04:24AM -0700, Logan Gunthorpe wrote:
+> From: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
+>
+> The use after free is not triggerable here because the cdev holds
+> the module lock and the only device_unregister is only triggered by
+> module unload, however make the change for consistency.
+>
+> To make this work the cdev_del needs to move out of the struct device
+> release function.
+>
+> This cleans up the error path significantly and thus also fixes a minor
+> bug where the devnum would not be released if cdev_add failed.
+>
+> Signed-off-by: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
+> Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+> Reviewed-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+> ---
 
-In vmt.c, the patch pushes device initialization up to the beginning of the
-device creation and then that function only needs to use put_device
-in the error path which simplifies things a good deal.
+Thanks,
+Reviewed-by: Leon Romanovsky <leonro-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 
-Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
----
- drivers/mtd/ubi/build.c | 91 +++++++++----------------------------------------
- drivers/mtd/ubi/vmt.c   | 49 +++++++++-----------------
- 2 files changed, 33 insertions(+), 107 deletions(-)
-
-diff --git a/drivers/mtd/ubi/build.c b/drivers/mtd/ubi/build.c
-index 7751319..8bae373 100644
---- a/drivers/mtd/ubi/build.c
-+++ b/drivers/mtd/ubi/build.c
-@@ -421,41 +421,6 @@ static void dev_release(struct device *dev)
- }
- 
- /**
-- * ubi_sysfs_init - initialize sysfs for an UBI device.
-- * @ubi: UBI device description object
-- * @ref: set to %1 on exit in case of failure if a reference to @ubi->dev was
-- *       taken
-- *
-- * This function returns zero in case of success and a negative error code in
-- * case of failure.
-- */
--static int ubi_sysfs_init(struct ubi_device *ubi, int *ref)
--{
--	int err;
--
--	ubi->dev.release = dev_release;
--	ubi->dev.devt = ubi->cdev.dev;
--	ubi->dev.class = &ubi_class;
--	ubi->dev.groups = ubi_dev_groups;
--	dev_set_name(&ubi->dev, UBI_NAME_STR"%d", ubi->ubi_num);
--	err = device_register(&ubi->dev);
--	if (err)
--		return err;
--
--	*ref = 1;
--	return 0;
--}
--
--/**
-- * ubi_sysfs_close - close sysfs for an UBI device.
-- * @ubi: UBI device description object
-- */
--static void ubi_sysfs_close(struct ubi_device *ubi)
--{
--	device_unregister(&ubi->dev);
--}
--
--/**
-  * kill_volumes - destroy all user volumes.
-  * @ubi: UBI device description object
-  */
-@@ -471,27 +436,19 @@ static void kill_volumes(struct ubi_device *ubi)
- /**
-  * uif_init - initialize user interfaces for an UBI device.
-  * @ubi: UBI device description object
-- * @ref: set to %1 on exit in case of failure if a reference to @ubi->dev was
-- *       taken, otherwise set to %0
-  *
-  * This function initializes various user interfaces for an UBI device. If the
-  * initialization fails at an early stage, this function frees all the
-- * resources it allocated, returns an error, and @ref is set to %0. However,
-- * if the initialization fails after the UBI device was registered in the
-- * driver core subsystem, this function takes a reference to @ubi->dev, because
-- * otherwise the release function ('dev_release()') would free whole @ubi
-- * object. The @ref argument is set to %1 in this case. The caller has to put
-- * this reference.
-+ * resources it allocated, returns an error.
-  *
-  * This function returns zero in case of success and a negative error code in
-  * case of failure.
-  */
--static int uif_init(struct ubi_device *ubi, int *ref)
-+static int uif_init(struct ubi_device *ubi)
- {
- 	int i, err;
- 	dev_t dev;
- 
--	*ref = 0;
- 	sprintf(ubi->ubi_name, UBI_NAME_STR "%d", ubi->ubi_num);
- 
- 	/*
-@@ -508,20 +465,17 @@ static int uif_init(struct ubi_device *ubi, int *ref)
- 		return err;
- 	}
- 
-+	ubi->dev.devt = dev;
-+
- 	ubi_assert(MINOR(dev) == 0);
- 	cdev_init(&ubi->cdev, &ubi_cdev_operations);
- 	dbg_gen("%s major is %u", ubi->ubi_name, MAJOR(dev));
- 	ubi->cdev.owner = THIS_MODULE;
- 
--	err = cdev_add(&ubi->cdev, dev, 1);
--	if (err) {
--		ubi_err(ubi, "cannot add character device");
--		goto out_unreg;
--	}
--
--	err = ubi_sysfs_init(ubi, ref);
-+	dev_set_name(&ubi->dev, UBI_NAME_STR "%d", ubi->ubi_num);
-+	err = cdev_device_add(&ubi->cdev, &ubi->dev);
- 	if (err)
--		goto out_sysfs;
-+		goto out_unreg;
- 
- 	for (i = 0; i < ubi->vtbl_slots; i++)
- 		if (ubi->volumes[i]) {
-@@ -536,11 +490,7 @@ static int uif_init(struct ubi_device *ubi, int *ref)
- 
- out_volumes:
- 	kill_volumes(ubi);
--out_sysfs:
--	if (*ref)
--		get_device(&ubi->dev);
--	ubi_sysfs_close(ubi);
--	cdev_del(&ubi->cdev);
-+	cdev_device_del(&ubi->cdev, &ubi->dev);
- out_unreg:
- 	unregister_chrdev_region(ubi->cdev.dev, ubi->vtbl_slots + 1);
- 	ubi_err(ubi, "cannot initialize UBI %s, error %d",
-@@ -559,8 +509,7 @@ static int uif_init(struct ubi_device *ubi, int *ref)
- static void uif_close(struct ubi_device *ubi)
- {
- 	kill_volumes(ubi);
--	ubi_sysfs_close(ubi);
--	cdev_del(&ubi->cdev);
-+	cdev_device_del(&ubi->cdev, &ubi->dev);
- 	unregister_chrdev_region(ubi->cdev.dev, ubi->vtbl_slots + 1);
- }
- 
-@@ -857,7 +806,7 @@ int ubi_attach_mtd_dev(struct mtd_info *mtd, int ubi_num,
- 		       int vid_hdr_offset, int max_beb_per1024)
- {
- 	struct ubi_device *ubi;
--	int i, err, ref = 0;
-+	int i, err;
- 
- 	if (max_beb_per1024 < 0 || max_beb_per1024 > MAX_MTD_UBI_BEB_LIMIT)
- 		return -EINVAL;
-@@ -919,6 +868,11 @@ int ubi_attach_mtd_dev(struct mtd_info *mtd, int ubi_num,
- 	if (!ubi)
- 		return -ENOMEM;
- 
-+	device_initialize(&ubi->dev);
-+	ubi->dev.release = dev_release;
-+	ubi->dev.class = &ubi_class;
-+	ubi->dev.groups = ubi_dev_groups;
-+
- 	ubi->mtd = mtd;
- 	ubi->ubi_num = ubi_num;
- 	ubi->vid_hdr_offset = vid_hdr_offset;
-@@ -995,7 +949,7 @@ int ubi_attach_mtd_dev(struct mtd_info *mtd, int ubi_num,
- 	/* Make device "available" before it becomes accessible via sysfs */
- 	ubi_devices[ubi_num] = ubi;
- 
--	err = uif_init(ubi, &ref);
-+	err = uif_init(ubi);
- 	if (err)
- 		goto out_detach;
- 
-@@ -1045,8 +999,6 @@ int ubi_attach_mtd_dev(struct mtd_info *mtd, int ubi_num,
- out_debugfs:
- 	ubi_debugfs_exit_dev(ubi);
- out_uif:
--	get_device(&ubi->dev);
--	ubi_assert(ref);
- 	uif_close(ubi);
- out_detach:
- 	ubi_devices[ubi_num] = NULL;
-@@ -1056,10 +1008,7 @@ int ubi_attach_mtd_dev(struct mtd_info *mtd, int ubi_num,
- out_free:
- 	vfree(ubi->peb_buf);
- 	vfree(ubi->fm_buf);
--	if (ref)
--		put_device(&ubi->dev);
--	else
--		kfree(ubi);
-+	put_device(&ubi->dev);
- 	return err;
- }
- 
-@@ -1120,12 +1069,6 @@ int ubi_detach_mtd_dev(int ubi_num, int anyway)
- 	if (ubi->bgt_thread)
- 		kthread_stop(ubi->bgt_thread);
- 
--	/*
--	 * Get a reference to the device in order to prevent 'dev_release()'
--	 * from freeing the @ubi object.
--	 */
--	get_device(&ubi->dev);
--
- 	ubi_debugfs_exit_dev(ubi);
- 	uif_close(ubi);
- 
-diff --git a/drivers/mtd/ubi/vmt.c b/drivers/mtd/ubi/vmt.c
-index 7ac78c1..85237cf 100644
---- a/drivers/mtd/ubi/vmt.c
-+++ b/drivers/mtd/ubi/vmt.c
-@@ -155,11 +155,10 @@ static void vol_release(struct device *dev)
-  */
- int ubi_create_volume(struct ubi_device *ubi, struct ubi_mkvol_req *req)
- {
--	int i, err, vol_id = req->vol_id, do_free = 1;
-+	int i, err, vol_id = req->vol_id;
- 	struct ubi_volume *vol;
- 	struct ubi_vtbl_record vtbl_rec;
- 	struct ubi_eba_table *eba_tbl = NULL;
--	dev_t dev;
- 
- 	if (ubi->ro_mode)
- 		return -EROFS;
-@@ -168,6 +167,12 @@ int ubi_create_volume(struct ubi_device *ubi, struct ubi_mkvol_req *req)
- 	if (!vol)
- 		return -ENOMEM;
- 
-+	device_initialize(&vol->dev);
-+	vol->dev.release = vol_release;
-+	vol->dev.parent = &ubi->dev;
-+	vol->dev.class = &ubi_class;
-+	vol->dev.groups = volume_dev_groups;
-+
- 	spin_lock(&ubi->volumes_lock);
- 	if (vol_id == UBI_VOL_NUM_AUTO) {
- 		/* Find unused volume ID */
-@@ -268,24 +273,13 @@ int ubi_create_volume(struct ubi_device *ubi, struct ubi_mkvol_req *req)
- 	/* Register character device for the volume */
- 	cdev_init(&vol->cdev, &ubi_vol_cdev_operations);
- 	vol->cdev.owner = THIS_MODULE;
--	dev = MKDEV(MAJOR(ubi->cdev.dev), vol_id + 1);
--	err = cdev_add(&vol->cdev, dev, 1);
--	if (err) {
--		ubi_err(ubi, "cannot add character device");
--		goto out_mapping;
--	}
--
--	vol->dev.release = vol_release;
--	vol->dev.parent = &ubi->dev;
--	vol->dev.devt = dev;
--	vol->dev.class = &ubi_class;
--	vol->dev.groups = volume_dev_groups;
- 
-+	vol->dev.devt = MKDEV(MAJOR(ubi->cdev.dev), vol_id + 1);
- 	dev_set_name(&vol->dev, "%s_%d", ubi->ubi_name, vol->vol_id);
--	err = device_register(&vol->dev);
-+	err = cdev_device_add(&vol->cdev, &vol->dev);
- 	if (err) {
--		ubi_err(ubi, "cannot register device");
--		goto out_cdev;
-+		ubi_err(ubi, "cannot add device");
-+		goto out_mapping;
- 	}
- 
- 	/* Fill volume table record */
-@@ -318,28 +312,17 @@ int ubi_create_volume(struct ubi_device *ubi, struct ubi_mkvol_req *req)
- 	 * We have registered our device, we should not free the volume
- 	 * description object in this function in case of an error - it is
- 	 * freed by the release function.
--	 *
--	 * Get device reference to prevent the release function from being
--	 * called just after sysfs has been closed.
- 	 */
--	do_free = 0;
--	get_device(&vol->dev);
--	device_unregister(&vol->dev);
--out_cdev:
--	cdev_del(&vol->cdev);
-+	cdev_device_del(&vol->cdev, &vol->dev);
- out_mapping:
--	if (do_free)
--		ubi_eba_destroy_table(eba_tbl);
-+	ubi_eba_destroy_table(eba_tbl);
- out_acc:
- 	spin_lock(&ubi->volumes_lock);
- 	ubi->rsvd_pebs -= vol->reserved_pebs;
- 	ubi->avail_pebs += vol->reserved_pebs;
- out_unlock:
- 	spin_unlock(&ubi->volumes_lock);
--	if (do_free)
--		kfree(vol);
--	else
--		put_device(&vol->dev);
-+	put_device(&vol->dev);
- 	ubi_err(ubi, "cannot create volume %d, error %d", vol_id, err);
- 	return err;
- }
-@@ -391,8 +374,8 @@ int ubi_remove_volume(struct ubi_volume_desc *desc, int no_vtbl)
- 			goto out_err;
- 	}
- 
--	cdev_del(&vol->cdev);
--	device_unregister(&vol->dev);
-+	cdev_device_del(&vol->cdev, &vol->dev);
-+	put_device(&vol->dev);
- 
- 	spin_lock(&ubi->volumes_lock);
- 	ubi->rsvd_pebs -= reserved_pebs;
 -- 
-2.1.4
+You received this message because you are subscribed to "rtc-linux".
+Membership options at http://groups.google.com/group/rtc-linux .
+Please read http://groups.google.com/group/rtc-linux/web/checklist
+before submitting a driver.
+--- 
+You received this message because you are subscribed to the Google Groups "rtc-linux" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to rtc-linux+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+For more options, visit https://groups.google.com/d/optout.
+
+--Zl+NncWK+U5aSfTo
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEkhr/r4Op1/04yqaB5GN7iDZyWKcFAli9DsUACgkQ5GN7iDZy
+WKfeDA/+LWy91DyEkMjdR+KX3aTKX/G4GD0Db7Md9hfiApMfYgs799aMb8HDklRv
+63PSzGFLFG8xxUDl10DgzDj9xK2+6e7m4X9E6G6fISQlQuRhuKmKk4YO0Dtl0H+Z
+Mh7jEAWxQkwwyl1DM2R9BA5ObKDC0LENpGYfFnWZRYCQaQt5GE+bulio8YLprVTM
+qb30tmhpUVRTcAvLfJsvGo7V6qO7GZGi2WlaXiCjBuZFcv5yXUND1z2LeTSZAkrn
+hmqZslp/akY0zbqoo98/W3tBa3qtKC2TrYQtqWZOyD7VlrcZ/5HL4kGg+hF1tKEJ
+6i8UXtRGL7/IiXDN+C1GEq1IApRSG/2lxbrNWNlCJrYPGfH3jgMSSkGbqesLtazR
+d3cjUTVRAHtyMcCn2jhlBx7d36Lz86X3+7U8j8k/pQ7txOPFb4U/f1PK2WStf/Kt
+2MtsHSQwUddwPlngEAfiUMz1TyUUnYdunoN7kEMx78QOTh7lJs80GRpWkuyadS+p
+U275++T5UELgev2l6GLEqNbaAsaS94ES2BRMS5zxZEV+XOTQraqkv/Xir1Cp+LB9
+Q6nqcjVFyH2xyywBm5mOfQZzbWStqiOLWvT6SrDKkYtYAJD0yXgHsaNrLo2e67sL
+5BFyBpa5YoCqAelTgeVLFx+xFLyH3wYC+qChrDNbrwOE+8Fm7vY=
+=O0p7
+-----END PGP SIGNATURE-----
+
+--Zl+NncWK+U5aSfTo--
