@@ -1,35 +1,31 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [ANNOUNCE]: Broadcom (Emulex) FC Target driver - efct
-Date: Mon, 6 Mar 2017 17:53:04 +0000
-Message-ID: <1488822771.3125.1.camel@sandisk.com>
-References: <ced2ff0a-05ee-b85e-b41a-f912cab9e267@gmail.com>
-         <1488485325.5580.9.camel@haakon3.risingtidesystems.com>
-         <20170305173528.00006b41@gmx.de>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH] scsi: qedf: Fix defective logging format and argument
+ mismatches
+Date: Mon, 06 Mar 2017 10:17:28 -0800
+Message-ID: <1488824248.2210.11.camel@perches.com>
+References: <201703070115.9hJI5MMk%fengguang.wu@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20170305173528.00006b41@gmx.de>
-Content-Language: en-US
-Content-ID: <F62559FF467B4D43A37F9E407704C77C@sandisk.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "jsmart2021@gmail.com" <jsmart2021@gmail.com>, "herbszt@gmx.de" <herbszt@gmx.de>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <201703070115.9hJI5MMk%fengguang.wu@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: kbuild test robot <lkp@intel.com>
+Cc: kbuild-all@01.org, QLogic-Storage-Upstream@cavium.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, 2017-03-05 at 17:35 +0100, Sebastian Herbszt wrote:
-> Just like Hannes I do favour integration. I guess it could be
-> comparable to qla2xxx + tcm_qla2xxx, lpfc + lpfc_scst and
-> lpfc + tcm_lpfc. That approach might even help Bart with his
-> target driver unification if he didn't give up on that topic.
+On Tue, 2017-03-07 at 02:03 +0800, kbuild test robot wrote:
+> Hi Joe,
 
-Hello Sebastian,
+Hi again Fengguang's robot.
 
-That project is still on my to-do list :-) However, while I was
-working on that project I hit bugs related to abort handling in
-the QLogic FC and also in the iSCSI target drivers. I want to fix
-these bugs first because otherwise if my tests fail it is not
-possible to figure out whether I hit a regression or an existing
-bug.
+> [auto build test WARNING on scsi/for-next]
+> [also build test WARNING on v4.11-rc1 next-20170306]
+> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+> 
+> url:    https://github.com/0day-ci/linux/commits/Joe-Perches/scsi-qedf-Fix-defective-logging-format-and-argument-mismatches/20170307-005400
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+> config: parisc-allmodconfig (attached as .config)
+> compiler: hppa-linux-gnu-gcc (Debian 6.1.1-9) 6.1.1 20160705
 
-Bart.=
+Not new messages.
