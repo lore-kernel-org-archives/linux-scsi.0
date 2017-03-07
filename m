@@ -1,27 +1,22 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] aacraid: Fix typo in blink status
-Date: Mon, 06 Mar 2017 22:24:05 -0500
-Message-ID: <yq17f41lqga.fsf@oracle.com>
-References: <20170302172133.3503-1-RaghavaAditya.Renukunta@microsemi.com>
+Subject: Re: [PATCH] scsi: qedf: Use vsprintf extension %pad
+Date: Mon, 06 Mar 2017 22:39:49 -0500
+Message-ID: <yq1pohtkb5m.fsf@oracle.com>
+References: <f6a0331e574df0ab1c9dad61571b92c17971ae99.1488825093.git.joe@perches.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:41587 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754842AbdCGD1R (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2017 22:27:17 -0500
-In-Reply-To: <20170302172133.3503-1-RaghavaAditya.Renukunta@microsemi.com>
-        (Raghava Aditya Renukunta's message of "Thu, 2 Mar 2017 09:21:33
-        -0800")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <f6a0331e574df0ab1c9dad61571b92c17971ae99.1488825093.git.joe@perches.com>
+        (Joe Perches's message of "Mon, 6 Mar 2017 10:32:27 -0800")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: QLogic-Storage-Upstream@cavium.com, kbuild test robot <lkp@intel.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com
 
->>>>> "Raghava" == Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com> writes:
+>>>>> "Joe" == Joe Perches <joe@perches.com> writes:
 
-Raghava> The return status of the adapter check on KERNEL_PANIC is
-Raghava> supposed to be the upper 16 bits of the OMR status register.
+Joe> Using %llx for a dma_addr_t can lead to format/argument mismatches.
+Joe> Use %pad and the address of the dma_addr_t instead.
 
 Applied to 4.11/scsi-fixes.
 
