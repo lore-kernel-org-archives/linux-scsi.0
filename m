@@ -1,40 +1,43 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v3 01/16] lpfc: Correct WQ creation for pagesize
-Date: Mon, 06 Mar 2017 22:35:00 -0500
-Message-ID: <yq1tw75kbdn.fsf@oracle.com>
-References: <58a0d919.08BhoypOnvRSLIqV%jsmart2021@gmail.com>
-        <6a197069-2f10-6df1-4cf1-1a62808c8903@linux.vnet.ibm.com>
+From: Sakari Ailus <sakari.ailus@iki.fi>
+Subject: Re: [PATCH 11/29] drivers, media: convert cx88_core.refcount from
+ atomic_t to refcount_t
+Date: Tue, 7 Mar 2017 10:22:50 +0200
+Message-ID: <20170307082250.GF3220@valkosipuli.retiisi.org.uk>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+ <1488810076-3754-12-git-send-email-elena.reshetova@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1050.oracle.com ([141.146.126.70]:28599 "EHLO
-        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754044AbdCGIQW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2017 03:16:22 -0500
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69])
-        by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v273ac1v001059
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-scsi@vger.kernel.org>; Tue, 7 Mar 2017 03:36:39 GMT
-In-Reply-To: <6a197069-2f10-6df1-4cf1-1a62808c8903@linux.vnet.ibm.com>
-        (Mauricio Faria de Oliveira's message of "Fri, 3 Mar 2017 22:43:16
-        -0300")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Content-Disposition: inline
+In-Reply-To: <1488810076-3754-12-git-send-email-elena.reshetova@intel.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Elena Reshetova <elena.reshetova@intel.com>
+Cc: peterz@infradead.org, linux-pci@vger.kernel.org, target-devel@vger.kernel.org, linux1394-devel@lists.sourceforge.net, devel@driverdev.osuosl.org, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, fcoe-devel@open-fcoe.org, xen-devel@lists.xenproject.org, open-iscsi@googlegroups.com, linux-media@vger.kernel.org, Kees Cook <keescook@chromium.org>, linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org, Hans Liljestrand <ishkamiel@gmail.com>, David Windsor <dwindsor@gmail.com>, gregkh@linuxfoundation.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, devel@linuxdriverproject.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
-Cc: James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-nvme@lists.infradead.org, sagi@grimberg.me
 
->>>>> "Mauricio" == Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com> writes:
+On Mon, Mar 06, 2017 at 04:20:58PM +0200, Elena Reshetova wrote:
+> refcount_t type and corresponding API should be
+> used instead of atomic_t when the variable is used as
+> a reference counter. This allows to avoid accidental
+> refcounter overflows that might lead to use-after-free
+> situations.
+> 
+> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Signed-off-by: David Windsor <dwindsor@gmail.com>
 
-Mauricio,
-
-Mauricio> Please flag this patch for stable.
-
-Mauricio> This patch resolves a serious problem on IBM Power systems at
-Mauricio> least.
-
-Both patches are already upstream so I can't tag them for stable. Either
-you or James should mail stable@vger.kernel.org and request for the
-patches to be queued up.
+Acked-by: Sakari Ailus <sakari.ailus@linux.intel.com>
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Sakari Ailus
+e-mail: sakari.ailus@iki.fi	XMPP: sailus@retiisi.org.uk
