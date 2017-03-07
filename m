@@ -1,34 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: lpfc: Add shutdown method for kexec
-Date: Mon, 06 Mar 2017 22:46:47 -0500
-Message-ID: <yq1lgshkau0.fsf@oracle.com>
-References: <20170212214920.28866-1-anton@ozlabs.org>
-        <e13aeaf9-3b2c-a9e8-5867-cf9ab20a040c@linux.vnet.ibm.com>
+Subject: Re: [PATCH] vmw_pvscsi: handle the return value from pci_alloc_irq_vectors correctly
+Date: Mon, 06 Mar 2017 22:27:57 -0500
+Message-ID: <yq1y3whkbpe.fsf@oracle.com>
+References: <20170303145716.19655-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47039 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751974AbdCGDrC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2017 22:47:02 -0500
-In-Reply-To: <e13aeaf9-3b2c-a9e8-5867-cf9ab20a040c@linux.vnet.ibm.com>
-        (Mauricio Faria de Oliveira's message of "Mon, 6 Mar 2017 11:52:36
-        -0300")
+Received: from aserp1050.oracle.com ([141.146.126.70]:46500 "EHLO
+        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752642AbdCGDtb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2017 22:49:31 -0500
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69])
+        by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v273Tr5c030385
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-scsi@vger.kernel.org>; Tue, 7 Mar 2017 03:29:53 GMT
+In-Reply-To: <20170303145716.19655-1-hch@lst.de> (Christoph Hellwig's message
+        of "Fri, 3 Mar 2017 07:57:16 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
-Cc: Anton Blanchard <anton@ozlabs.org>, james.smart@broadcom.com, dick.kennedy@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, benh@kernel.crashing.org, jk@ozlabs.org, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, loic.yhuel@gmail.com
 
->>>>> "Mauricio" == Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com> writes:
+>>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
 
-Mauricio> On 02/12/2017 07:49 PM, Anton Blanchard wrote:
->> We see lpfc devices regularly fail during kexec. Fix this by adding a
->> shutdown method which mirrors the remove method.
+Christoph> It returns the number of vectors allocated when successful,
+Christoph> so check for a negative error only.
 
-Mauricio> @mkp, @jejb: may you please flag this patch for stable?  Thank
-Mauricio> you.
-
-I don't recall a consensus being reached on this patch.
+Applied to 4.11/scsi-fixes.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
