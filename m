@@ -1,72 +1,104 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH 10/29] drivers, md: convert stripe_head.count from
- atomic_t to refcount_t
-Date: Tue, 7 Mar 2017 11:07:59 -0800
-Message-ID: <20170307190759.jnrq66kfpkr4m7zl@kernel.org>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
- <1488810076-3754-11-git-send-email-elena.reshetova@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-Content-Disposition: inline
-In-Reply-To: <1488810076-3754-11-git-send-email-elena.reshetova@intel.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Elena Reshetova <elena.reshetova@intel.com>
-Cc: peterz@infradead.org, linux-pci@vger.kernel.org, target-devel@vger.kernel.org, linux1394-devel@lists.sourceforge.net, devel@driverdev.osuosl.org, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, fcoe-devel@open-fcoe.org, xen-devel@lists.xenproject.org, open-iscsi@googlegroups.com, linux-media@vger.kernel.org, Kees Cook <keescook@chromium.org>, linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org, Hans Liljestrand <ishkamiel@gmail.com>, David Windsor <dwindsor@gmail.com>, gregkh@linuxfoundation.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, devel@linuxdriverproject.org
+From: jsmart2021@gmail.com
+Subject: [PATCH] lpfc: Finalize Kconfig options for nvme
+Date: Tue,  7 Mar 2017 11:17:08 -0800
+Message-ID: <1488914228-7289-1-git-send-email-jsmart2021@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qk0-f195.google.com ([209.85.220.195]:35738 "EHLO
+        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755781AbdCGTSH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2017 14:18:07 -0500
+Received: by mail-qk0-f195.google.com with SMTP id o135so3754977qke.2
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Mar 2017 11:18:06 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
+Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-On Mon, Mar 06, 2017 at 04:20:57PM +0200, Elena Reshetova wrote:
-> refcount_t type and corresponding API should be
-> used instead of atomic_t when the variable is used as
-> a reference counter. This allows to avoid accidental
-> refcounter overflows that might lead to use-after-free
-> situations.
-> 
-> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> Signed-off-by: David Windsor <dwindsor@gmail.com>
-> ---
->  drivers/md/raid5-cache.c |  8 +++---
->  drivers/md/raid5.c       | 66 ++++++++++++++++++++++++------------------------
->  drivers/md/raid5.h       |  3 ++-
->  3 files changed, 39 insertions(+), 38 deletions(-)
-> 
-> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> index 3f307be..6c05e12 100644
-> --- a/drivers/md/raid5-cache.c
-> +++ b/drivers/md/raid5-cache.c
+From: James Smart <jsmart2021@gmail.com>
 
-snip
->  	       sh->check_state, sh->reconstruct_state);
->  
->  	analyse_stripe(sh, &s);
-> @@ -4924,7 +4924,7 @@ static void activate_bit_delay(struct r5conf *conf,
->  		struct stripe_head *sh = list_entry(head.next, struct stripe_head, lru);
->  		int hash;
->  		list_del_init(&sh->lru);
-> -		atomic_inc(&sh->count);
-> +		refcount_inc(&sh->count);
->  		hash = sh->hash_lock_index;
->  		__release_stripe(conf, sh, &temp_inactive_list[hash]);
->  	}
-> @@ -5240,7 +5240,7 @@ static struct stripe_head *__get_priority_stripe(struct r5conf *conf, int group)
->  		sh->group = NULL;
->  	}
->  	list_del_init(&sh->lru);
-> -	BUG_ON(atomic_inc_return(&sh->count) != 1);
-> +	BUG_ON(refcount_inc_not_zero(&sh->count));
+Reviewing the result of what was just added for Kconfig, we made
+a poor choice. It worked well for full kernel builds, but not so
+much for how it would be deployed on a distro.
 
-This changes the behavior. refcount_inc_not_zero doesn't inc if original value is 0
+Here's the final result:
+- lpfc will compile in NVME initiator and/or NVME target support
+  based on whether the kernel has the corresponding subsystem support.
+  Kconfig is not used to drive this specifically for lpfc.
+- There is a module parameter, lpfc_enable_fc4_type, that indicates
+  whether the ports will do FCP-only or FCP & NVME (NVME-only not yet
+  possible due to dependency on fc transport). As FCP & NVME divvys
+  up exchange resources, and given NVME will not be often initially,
+  the default is changed to FCP only.
 
-Thanks,
-Shaohua
+-- james
+
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <james.smart@broadcom.com>
+---
+ drivers/scsi/Kconfig          | 14 --------------
+ drivers/scsi/lpfc/lpfc.h      |  8 ++++++++
+ drivers/scsi/lpfc/lpfc_attr.c |  4 ++--
+ 3 files changed, 10 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 4bf55b5..3c52867 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -1253,20 +1253,6 @@ config SCSI_LPFC_DEBUG_FS
+ 	  This makes debugging information from the lpfc driver
+ 	  available via the debugfs filesystem.
+ 
+-config LPFC_NVME_INITIATOR
+-	bool "Emulex LightPulse Fibre Channel NVME Initiator Support"
+-	depends on SCSI_LPFC && NVME_FC
+-	---help---
+-	  This enables NVME Initiator support in the Emulex lpfc driver.
+-
+-config LPFC_NVME_TARGET
+-	bool "Emulex LightPulse Fibre Channel NVME Initiator Support"
+-	depends on SCSI_LPFC && NVME_TARGET_FC
+-	---help---
+-	  This enables NVME Target support in the Emulex lpfc driver.
+-	  Target enablement must still be enabled on a per adapter
+-	  basis by module parameters.
+-
+ config SCSI_SIM710
+ 	tristate "Simple 53c710 SCSI support (Compaq, NCR machines)"
+ 	depends on (EISA || MCA) && SCSI
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index 257bbdd..ce571ca 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -28,6 +28,14 @@
+ #define CONFIG_SCSI_LPFC_DEBUG_FS
+ #endif
+ 
++#if defined(CONFIG_NVME_FC)
++#define CONFIG_LPFC_NVME_INITIATOR
++#endif
++
++#if defined(CONFIG_NVME_TARGET_FC)
++#define CONFIG_LPFC_NVME_TARGET
++#endif
++
+ struct lpfc_sli2_slim;
+ 
+ #define ELX_MODEL_NAME_SIZE	80
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index fbd3a56..84aa62f 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -3315,9 +3315,9 @@ LPFC_ATTR_R(nvmet_mrq_post, LPFC_DEF_MRQ_POST,
+  * lpfc_enable_fc4_type: Defines what FC4 types are supported.
+  * Supported Values:  1 - register just FCP
+  *                    3 - register both FCP and NVME
+- * Supported values are [1,3]. Default value is 3
++ * Supported values are [1,3]. Default value is 1
+  */
+-LPFC_ATTR_R(enable_fc4_type, LPFC_ENABLE_BOTH,
++LPFC_ATTR_R(enable_fc4_type, LPFC_ENABLE_FCP,
+ 	    LPFC_ENABLE_FCP, LPFC_ENABLE_BOTH,
+ 	    "Define fc4 type to register with fabric.");
+ 
+-- 
+2.5.0
