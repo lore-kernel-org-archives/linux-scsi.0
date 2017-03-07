@@ -1,42 +1,39 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH v3 01/16] lpfc: Correct WQ creation for pagesize
-Date: Tue, 7 Mar 2017 20:57:04 +0100
-Message-ID: <20170307195704.GB25619@kroah.com>
-References: <58a0d919.08BhoypOnvRSLIqV%jsmart2021@gmail.com>
- <6a197069-2f10-6df1-4cf1-1a62808c8903@linux.vnet.ibm.com>
- <yq1tw75kbdn.fsf@oracle.com>
- <7c6d6f3b-330c-ea6f-ad3f-65479354c94d@linux.vnet.ibm.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] lpfc: Finalize Kconfig options for nvme
+Date: Tue, 7 Mar 2017 13:23:51 -0800
+Message-ID: <20170307212351.GA5697@infradead.org>
+References: <1488914228-7289-1-git-send-email-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:59445 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756217AbdCGVYI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2017 16:24:08 -0500
 Content-Disposition: inline
-In-Reply-To: <7c6d6f3b-330c-ea6f-ad3f-65479354c94d@linux.vnet.ibm.com>
-Sender: stable-owner@vger.kernel.org
-To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, stable@vger.kernel.org, James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, sagi@grimberg.me
+In-Reply-To: <1488914228-7289-1-git-send-email-jsmart2021@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jsmart2021@gmail.com
+Cc: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-On Tue, Mar 07, 2017 at 10:44:51AM -0300, Mauricio Faria de Oliveira wrote:
-> Hello stable kernel maintainers,
-> 
-> On 03/07/2017 12:35 AM, Martin K. Petersen wrote:
-> > Mauricio> Please flag this patch for stable.
-> > 
-> > Mauricio> This patch resolves a serious problem on IBM Power systems at
-> > Mauricio> least.
-> > 
-> > Both patches are already upstream so I can't tag them for stable. Either
-> > you or James should mail stable@vger.kernel.org and request for the
-> > patches to be queued up.
-> 
-> Can this commit be included on stable v4.4+ , please? (in Linus tree)
-> 
->     8ea73db486cda442f0671f4bc9c03a76be398a28 "scsi: lpfc: Correct WQ
-> creation for pagesize"
+> +#if defined(CONFIG_NVME_FC)
+> +#define CONFIG_LPFC_NVME_INITIATOR
+> +#endif
+> +
+> +#if defined(CONFIG_NVME_TARGET_FC)
+> +#define CONFIG_LPFC_NVME_TARGET
+> +#endif
 
-I need an ack from a scsi maintainer that this is an ok thing to do
-before I can do so.
+The CONFIG_* namespace is reserved for Kconfig defined symbols.
 
-thanks,
+Also I think the above is wrong if the nvme fc core code is built
+modular.  I think you want to replace all occurances of
 
-greg k-h
+#ifdef CONFIG_LPFC_NVME_INITIATOR
+
+with
+
+if (IS_ENABLED(CONFIG_NVME_FC))
+
+and vice versa for the taget.
