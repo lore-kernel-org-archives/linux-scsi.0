@@ -1,130 +1,144 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH] storvsc: workaround for virtual DVD SCSI version
-Date: Tue, 7 Mar 2017 17:19:03 +0000
-Message-ID: <DM5PR03MB2490CCD901C57881F40730EDA02F0@DM5PR03MB2490.namprd03.prod.outlook.com>
-References: <20170307171553.13247-1-sthemmin@microsoft.com>
+From: James Bottomley <jejb@linux.vnet.ibm.com>
+Subject: Re: [bdi_unregister] 165a5e22fa INFO: task swapper:1 blocked for
+ more than 120 seconds.
+Date: Tue, 07 Mar 2017 08:10:29 -0800
+Message-ID: <1488903029.2363.16.camel@linux.vnet.ibm.com>
+References: <20170305022111.yqtwyd6ognmco4gx@wfg-t540p.sh.intel.com>
+         <20170306102733.GC14932@quack2.suse.cz>
+         <20170306120123.GD14932@quack2.suse.cz>
+         <1488810921.16832.6.camel@linux.vnet.ibm.com>
+         <20170306151415.GA32207@quack2.suse.cz>
+         <1488815095.25848.7.camel@linux.vnet.ibm.com>
+         <20170306161345.GB32207@quack2.suse.cz>
+         <1488821142.25848.27.camel@linux.vnet.ibm.com>
+         <20170307144109.GI2578@quack2.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20170307171553.13247-1-sthemmin@microsoft.com>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Stephen Hemminger <stephen@networkplumber.org>, Haiyang Zhang <haiyangz@microsoft.com>, Long Li <longli@microsoft.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hch@lst.de" <hch@lst.de>, "hare@suse.de" <hare@suse.de>
-Cc: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, Stephen Hemminger <sthemmin@microsoft.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170307144109.GI2578@quack2.suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Fengguang Wu <fengguang.wu@intel.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, LKP <lkp@01.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+On Tue, 2017-03-07 at 15:41 +0100, Jan Kara wrote:
+> On Mon 06-03-17 09:25:42, James Bottomley wrote:
+> > On Mon, 2017-03-06 at 17:13 +0100, Jan Kara wrote:
+> > > On Mon 06-03-17 07:44:55, James Bottomley wrote:
+> ...
+> > > > > Sure. The call trace is:
+> > > > > 
+> > > > > [   41.919244] ------------[ cut here ]------------
+> > > > > [   41.919263] WARNING: CPU: 4 PID: 2335 at
+> > > > > drivers/scsi/sd.c:3332
+> > > > > sd_shutdown+0x2f/0x100
+> > > > > [   41.919268] Modules linked in: scsi_debug(+) netconsole 
+> > > > > loop btrfs raid6_pq zlib_deflate lzo_compress xor
+> > > > > [   41.919319] CPU: 4 PID: 2335 Comm: modprobe Not tainted 
+> > > > > 4.11.0-rc1-xen+ #49
+> > > > > [   41.919325] Hardware name: Bochs Bochs, BIOS Bochs
+> > > > > 01/01/2011
+> > > > > [   41.919331] Call Trace:
+> > > > > [   41.919343]  dump_stack+0x8e/0xf0
+> > > > > [   41.919354]  __warn+0x116/0x120
+> > > > > [   41.919361]  warn_slowpath_null+0x1d/0x20
+> > > > > [   41.919368]  sd_shutdown+0x2f/0x100
+> > > > > [   41.919374]  sd_remove+0x70/0xd0
+> > > > > 
+> > > > > *** Here is the unexpected step I guess...
+> > > > > 
+> > > > > [   41.919383]  driver_probe_device+0xe0/0x4c0
+> > > > 
+> > > > Exactly.  It's this, I think
+> > > > 
+> > > > 	bool test_remove =
+> > > > IS_ENABLED(CONFIG_DEBUG_TEST_DRIVER_REMOVE)
+> > > > &&
+> > > > 			   !drv->suppress_bind_attrs;
+> > > > 
+> > > > You have that config option set.
+> > > 
+> > > Yes - or better said 0-day testing has it set. Maybe that is not 
+> > > a sane default for 0-day tests? The option is explicitely marked 
+> > > as "unstable"... Fengguang?
+> > > 
+> > > > So the drivers base layer is calling ->remove after probe and
+> > > > triggering the destruction of the queue.
+> > > > 
+> > > > What to do about this (apart from nuke such a stupid option) is
+> > > > somewhat more problematic.
+> > > 
+> > > I guess this is between you and Greg :).
+> > 
+> > Nice try, sport ... you qualify just behind Dan in the "not my 
+> > problem" olympic hurdles event.  I'm annoyed because there's no 
+> > indication in the log that the driver add behaviour is radically 
+> > altered, so I've been staring at the wrong code for weeks. 
+> >  However, the unbind/rebind should work, so the real issue is that 
+> > your bdi changes (or perhaps something else in block) have induced 
+> > a regression in the unbinding of upper layer drivers.  If you're 
+> > going to release the bdi in del_gendisk, you have to have some 
+> > mechanism for re-acquiring it on re-probe (likely with the same 
+> > name) otherwise rebind is broken for every block driver.
+> 
+> So my patch does not release bdi in del_gendisk(). Bdi has two
+> initialization / destruction phases (similarly to request queue). You
+> allocate and initialize bdi through bdi_init(), then you call
+> bdi_register() to register it (which happens in device_add_disk()). 
+> On shutdown you have to first call bdi_unregister() (used to be 
+> called from blk_cleanup_queue(), my patch moved it to del_gendisk()). 
+> After that the last reference to bdi may be dropped which does final 
+> bdi destruction.
+> 
+> So do I understand correctly that SCSI may call device_add_disk(),
+> del_gendisk() repeatedly for the same request queue?
 
+Yes.  The upper drivers (sd, sr, st and sg) follow a device model. 
+ They can thus be bound and unbound many times during the lifetime of a
+SCSI device.
 
-> -----Original Message-----
-> From: Stephen Hemminger [mailto:stephen@networkplumber.org]
-> Sent: Tuesday, March 7, 2017 9:16 AM
-> To: KY Srinivasan <kys@microsoft.com>; Haiyang Zhang
-> <haiyangz@microsoft.com>; Long Li <longli@microsoft.com>;
-> martin.petersen@oracle.com; hch@lst.de; hare@suse.de
-> Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org; Stephen Hemminger
-> <sthemmin@microsoft.com>
-> Subject: [PATCH] storvsc: workaround for virtual DVD SCSI version
-> 
-> Hyper-V host emulation of SCSI for virtual DVD device reports SCSI
-> version 0 (UNKNOWN) but is still capable of supporting REPORTLUN.
-> 
-> Without this patch, a GEN2 Linux guest on Hyper-V will not boot 4.11
-> successfully with virtual DVD ROM device. What happens is that the
-> SCSI scan process falls back to doing sequential probing by INQUIRY.
-> But the storvsc driver has a previous workaround that masks/blocks all
-> errors reports from INQUIRY (or MODE_SENSE) commands.  This workaround
-> causes the scan to then populate a full set of bogus LUN's on the
-> target and then sends kernel spinning off into a death spiral doing
-> block reads on the non-existent LUNs.
-> 
-> By setting the correct blacklist flags, the target with the
-> DVD device is scanned with REPORTLUN and that works correctly.
-> 
-> Patch needs to go in current 4.11, it is safe but not necessary
-> in older kernels.
-> 
-> Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
+>  If yes, then indeed I have a bug to fix... But gendisk seems to get 
+> allocated from scratch on each probe so we don't call 
+> device_add_disk(), del_gendisk() more times on the same disk, right?
 
-Reviewed-by: K. Y. Srinivasan <kys@microsoft.com>
-> ---
->  drivers/scsi/storvsc_drv.c | 27 +++++++++++++++++----------
->  1 file changed, 17 insertions(+), 10 deletions(-)
+Right, gendisk, being a generic representation of a disk is a property
+of the upper layer drivers.  We actually cheat and use it in all of
+them (including the apparent character ones, they use alloc_disk,
+put_disk but not add_disk).  So it has to be freed when the driver is
+unbound and reallocated when it is bound.  It's the fundamental entity
+which embeds the SCSI upper layer driver lifetime.
+
+> > The fact that the second rebind tried with a different name 
+> > indicates that sd_devt_release wasn't called, so some vestige of 
+> > the devt remains on the subsequent rebind.
 > 
-> PS: The error handling does need to be fixed (have patches pending)
-> but that is interrelated with hotplug and can wait.
+> Yep, I guess that's caused by Dan's patch (commit 0dba1314d4f8 now) 
+> which calls put_disk_devt() only in blk_cleanup_queue() which, if I
+> understood you correctly, does not get called during unbind-bind 
+> cycle? In fact Dan's patch would end up leaking devt's because of 
+> repeated device_add_disk() calls for the same request queue...
+
+That's a bit unfortunate.
+
+> > Here's the problem: the queue belongs to SCSI (the lower layer), so 
+> > it's not going to change because it doesn't see the release.  The
+> > gendisk and its allied stuff belongs to sd so it gets freed and re
+> > -created for the same queue.  Something in block is very confused
+> > when this happens.
 > 
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 638e5f427c90..19973e874830 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -400,8 +400,6 @@
-> MODULE_PARM_DESC(storvsc_vcpus_per_sub_channel, "Ratio of VCPUs to
-> subchannels")
->   */
->  static int storvsc_timeout = 180;
-> 
-> -static int msft_blist_flags = BLIST_TRY_VPD_PAGES;
-> -
->  #if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
->  static struct scsi_transport_template *fc_transport_template;
->  #endif
-> @@ -1383,6 +1381,22 @@ static int storvsc_do_io(struct hv_device *device,
->  	return ret;
->  }
-> 
-> +static int storvsc_device_alloc(struct scsi_device *sdevice)
-> +{
-> +	/*
-> +	 * Set blist flag to permit the reading of the VPD pages even when
-> +	 * the target may claim SPC-2 compliance. MSFT targets currently
-> +	 * claim SPC-2 compliance while they implement post SPC-2 features.
-> +	 * With this flag we can correctly handle WRITE_SAME_16 issues.
-> +	 *
-> +	 * Hypervisor reports SCSI_UNKNOWN type for DVD ROM device but
-> +	 * still supports REPORT LUN.
-> +	 */
-> +	sdevice->sdev_bflags = BLIST_REPORTLUN2 |
-> BLIST_TRY_VPD_PAGES;
-> +
-> +	return 0;
-> +}
-> +
->  static int storvsc_device_configure(struct scsi_device *sdevice)
->  {
-> 
-> @@ -1396,14 +1410,6 @@ static int storvsc_device_configure(struct
-> scsi_device *sdevice)
->  	sdevice->no_write_same = 1;
-> 
->  	/*
-> -	 * Add blist flags to permit the reading of the VPD pages even when
-> -	 * the target may claim SPC-2 compliance. MSFT targets currently
-> -	 * claim SPC-2 compliance while they implement post SPC-2 features.
-> -	 * With this patch we can correctly handle WRITE_SAME_16 issues.
-> -	 */
-> -	sdevice->sdev_bflags |= msft_blist_flags;
-> -
-> -	/*
->  	 * If the host is WIN8 or WIN8 R2, claim conformance to SPC-3
->  	 * if the device is a MSFT virtual device.  If the host is
->  	 * WIN10 or newer, allow write_same.
-> @@ -1661,6 +1667,7 @@ static struct scsi_host_template scsi_driver = {
->  	.eh_host_reset_handler =	storvsc_host_reset_handler,
->  	.proc_name =		"storvsc_host",
->  	.eh_timed_out =		storvsc_eh_timed_out,
-> +	.slave_alloc =		storvsc_device_alloc,
->  	.slave_configure =	storvsc_device_configure,
->  	.cmd_per_lun =		255,
->  	.this_id =		-1,
-> --
-> 2.11.0
+> Yep, I think the binding of request queue to different gendisks is
+> something I or Dan did not expect.
+
+OK, so I think we now understand why this is happening ... the question
+is what we do about it?  Is it fixable or do we need to go back to
+basics?  The fundamental property which got broken by these patches is
+the idea of the separation of the lifecycles of the queue and the
+gendisk.  The only requirement is that the queue must exist before the
+gendisk is created and must be destroyed after it.  This doesn't forbid
+there being many gendisk lifetimes over one queue lifetime and this is
+what we rely on for the SCSI driver model.  We rarely get called on it
+because unbind/rebind of a ULD is rarely done in production (it's
+mostly a devtest thing).
+
+James
