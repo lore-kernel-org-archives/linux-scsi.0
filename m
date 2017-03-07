@@ -1,119 +1,73 @@
-From: "Reshetova, Elena" <elena.reshetova@intel.com>
-Subject: RE: [PATCH 13/29] drivers, media: convert
- vb2_vmarea_handler.refcount from atomic_t to refcount_t
-Date: Tue, 7 Mar 2017 14:48:43 +0000
-Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C558E6@IRSMSX102.ger.corp.intel.com>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
- <1488810076-3754-14-git-send-email-elena.reshetova@intel.com>
- <20170307085005.GH3220@valkosipuli.retiisi.org.uk>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCHv2] hpsa: expose enclosures
+Date: Tue, 7 Mar 2017 15:05:41 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D194F331B4F@avsrvexchmbx1.microsemi.net>
+References: <1487847303-82580-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20170307085005.GH3220@valkosipuli.retiisi.org.uk>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam01on0089.outbound.protection.outlook.com ([104.47.32.89]:17328
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932767AbdCGPGO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 7 Mar 2017 10:06:14 -0500
+In-Reply-To: <1487847303-82580-1-git-send-email-hare@suse.de>
 Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Sakari Ailus <sakari.ailus@iki.fi>
-Cc: "peterz@infradead.org" <peterz@infradead.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux1394-devel@lists.sourceforge.net" <linux1394-devel@lists.sourceforge.net>, "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>, "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>, "fcoe-devel@open-fcoe.org" <fcoe-devel@open-fcoe.org>, "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>, "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>, Kees Cook <keescook@chromium.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-bcache@vger.kernel.org" <linux-bcache@vger.kerne>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.com>
 
-> Hi Elena,
-> 
-> On Mon, Mar 06, 2017 at 04:21:00PM +0200, Elena Reshetova wrote:
-> > refcount_t type and corresponding API should be
-> > used instead of atomic_t when the variable is used as
-> > a reference counter. This allows to avoid accidental
-> > refcounter overflows that might lead to use-after-free
-> > situations.
-> >
-> > Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> > Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-> > Signed-off-by: Kees Cook <keescook@chromium.org>
-> > Signed-off-by: David Windsor <dwindsor@gmail.com>
-> > ---
-> >  drivers/media/v4l2-core/videobuf2-memops.c | 6 +++---
-> >  include/media/videobuf2-memops.h           | 3 ++-
-> >  2 files changed, 5 insertions(+), 4 deletions(-)
-> >
-> > diff --git a/drivers/media/v4l2-core/videobuf2-memops.c b/drivers/media/v4l2-
-> core/videobuf2-memops.c
-> > index 1cd322e..4bb8424 100644
-> > --- a/drivers/media/v4l2-core/videobuf2-memops.c
-> > +++ b/drivers/media/v4l2-core/videobuf2-memops.c
-> > @@ -96,10 +96,10 @@ static void vb2_common_vm_open(struct
-> vm_area_struct *vma)
-> >  	struct vb2_vmarea_handler *h = vma->vm_private_data;
-> >
-> >  	pr_debug("%s: %p, refcount: %d, vma: %08lx-%08lx\n",
-> > -	       __func__, h, atomic_read(h->refcount), vma->vm_start,
-> > +	       __func__, h, refcount_read(h->refcount), vma->vm_start,
-> >  	       vma->vm_end);
-> >
-> > -	atomic_inc(h->refcount);
-> > +	refcount_inc(h->refcount);
-> >  }
-> >
-> >  /**
-> > @@ -114,7 +114,7 @@ static void vb2_common_vm_close(struct
-> vm_area_struct *vma)
-> >  	struct vb2_vmarea_handler *h = vma->vm_private_data;
-> >
-> >  	pr_debug("%s: %p, refcount: %d, vma: %08lx-%08lx\n",
-> > -	       __func__, h, atomic_read(h->refcount), vma->vm_start,
-> > +	       __func__, h, refcount_read(h->refcount), vma->vm_start,
-> >  	       vma->vm_end);
-> >
-> >  	h->put(h->arg);
-> > diff --git a/include/media/videobuf2-memops.h b/include/media/videobuf2-
-> memops.h
-> > index 36565c7a..a6ed091 100644
-> > --- a/include/media/videobuf2-memops.h
-> > +++ b/include/media/videobuf2-memops.h
-> > @@ -16,6 +16,7 @@
-> >
-> >  #include <media/videobuf2-v4l2.h>
-> >  #include <linux/mm.h>
-> > +#include <linux/refcount.h>
-> >
-> >  /**
-> >   * struct vb2_vmarea_handler - common vma refcount tracking handler
-> > @@ -25,7 +26,7 @@
-> >   * @arg:	argument for @put callback
-> >   */
-> >  struct vb2_vmarea_handler {
-> > -	atomic_t		*refcount;
-> > +	refcount_t		*refcount;
-> 
-> This is a pointer to refcount, not refcount itself. The refcount is part of
-> a memory type specific struct, the types that you change in the following
-> three patches. I guess it would still compile and work as separate patches
-> but you'd sure get warnings at least.
+> -----Original Message-----
+> From: Hannes Reinecke [mailto:hare@suse.de]
+> Sent: Thursday, February 23, 2017 4:55 AM
+> To: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: Christoph Hellwig <hch@lst.de>; James Bottomley
+> <james.bottomley@hansenpartnership.com>; linux-scsi@vger.kernel.org;
+> Hannes Reinecke <hare@suse.de>; Don Brace
+> <don.brace@microsemi.com>; Hannes Reinecke <hare@suse.com>
+> Subject: [PATCHv2] hpsa: expose enclosures
+>=20
+> EXTERNAL EMAIL
+>=20
+>=20
+> Some servers have a built-in enclosure which will show up on the
+> same bus as the internal physical devices. This patch fixes the
+> driver to expose them.
+>=20
+> Cc: Don Brace <don.brace@microsemi.com>
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
 
-Actually it doesn't compile without this patch if I remember it correctly back in past when I was initially splitting the patches per variable. 
+Masking various SES targets is a conscious choice, not a design oversight.
+So, I have to decline this patch.,
 
-> 
-> How about merging this and the three following patches that change the memop
-> refcount types?
+Thanks,
+Don Brace
+ESC - Smart Storage
+Microsemi Corporation
 
-Sounds good!
-
-Best Regards,
-Elena.
-> 
-> >  	void			(*put)(void *arg);
-> >  	void			*arg;
-> >  };
-> 
+> ---
+>  drivers/scsi/hpsa.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 524a0c7..a77ed5a 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -4407,7 +4407,10 @@ static void hpsa_update_scsi_devices(struct
+> ctlr_info *h)
+>                  * Expose all devices except for physical devices that
+>                  * are masked.
+>                  */
+> -               if (MASKED_DEVICE(lunaddrbytes) && this_device-
+> >physical_device)
+> +               if (this_device->devtype =3D=3D TYPE_ENCLOSURE)
+> +                       this_device->expose_device =3D 1;
+> +               else if (MASKED_DEVICE(lunaddrbytes) &&
+> +                        this_device->physical_device)
+>                         this_device->expose_device =3D 0;
+>                 else
+>                         this_device->expose_device =3D 1;
 > --
-> Kind regards,
-> 
-> Sakari Ailus
-> e-mail: sakari.ailus@iki.fi	XMPP: sailus@retiisi.org.uk
+> 1.8.5.6
