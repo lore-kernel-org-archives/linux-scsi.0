@@ -1,26 +1,67 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [RFC] hv_storvsc: error handling.
-Date: Tue, 7 Mar 2017 06:06:24 +0100
-Message-ID: <20170307050624.GA14133@lst.de>
-References: <20170301174058.383da142@xeon-e3> <c8ff2b64-2421-ca45-1f89-afec0490c8b3@suse.de> <20170302102324.47dbe3ad@xeon-e3> <895c4f2e-7faa-41e1-b5de-eedb4ae0f882@email.android.com> <20170302110505.6ad2eb61@xeon-e3> <1b325703-b823-4304-9d9d-86071811e000@email.android.com> <20170303165011.53a38794@xeon-e3> <DM5PR03MB24906E9B50B16B8C567EE25BA02A0@DM5PR03MB2490.namprd03.prod.outlook.com> <20170306083619.6789f9ba@xeon-e3> <DM5PR03MB2490F80E2F703D6FD3F1AC4BA02C0@DM5PR03MB2490.namprd03.prod.outlook.com>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH 11/29] drivers, media: convert cx88_core.refcount from
+ atomic_t to refcount_t
+Date: Tue, 7 Mar 2017 13:40:07 +0300
+Message-ID: <71ea983c-c2e4-9145-634b-78aef993d982@cogentembedded.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+ <1488810076-3754-12-git-send-email-elena.reshetova@intel.com>
+ <c6987419-f708-9923-0f9f-87b715600045@cogentembedded.com>
+ <2236FBA76BA1254E88B949DDB74E612B41C556E2@IRSMSX102.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:48521 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752532AbdCGJXQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 7 Mar 2017 04:23:16 -0500
-Content-Disposition: inline
-In-Reply-To: <DM5PR03MB2490F80E2F703D6FD3F1AC4BA02C0@DM5PR03MB2490.namprd03.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <2236FBA76BA1254E88B949DDB74E612B41C556E2@IRSMSX102.ger.corp.intel.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: "Reshetova, Elena" <elena.reshetova@intel.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+Cc: "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>, "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>, "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, Kees Cook <keescook@chromium.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, David Windsor <dwindsor@gmail.com>, "peterz@infradead.org" <peterz@infradead.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriver>
 List-Id: linux-scsi@vger.kernel.org
-To: KY Srinivasan <kys@microsoft.com>
-Cc: Stephen Hemminger <stephen@networkplumber.org>, James Bottomley <James.Bottomley@Hansenpartnership.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, Jens Axboe <axboe@kernel.dk>, Linus Torvalds <torvalds@linux-foundation.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>, Josh Poulson <jopoulso@microsoft.com>, "Adrian Suhov (Cloudbase Solutions SRL)" <v-adsuho@microsoft.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Haiyang Zhang <haiyangz@microsoft.com>
 
-> Was the invalid LUN in the LUN0 position. Inquiry of LUN0 support (when LUN0 is not populated)
-> was added only recently to address host side issue.
+On 3/7/2017 10:52 AM, Reshetova, Elena wrote:
 
-How does HyperV expect device scanning to happen for a not populated LUN?
+>>> refcount_t type and corresponding API should be
+>>> used instead of atomic_t when the variable is used as
+>>> a reference counter. This allows to avoid accidental
+>>> refcounter overflows that might lead to use-after-free
+>>> situations.
+>>>
+>>> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+>>> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+>>> Signed-off-by: Kees Cook <keescook@chromium.org>
+>>> Signed-off-by: David Windsor <dwindsor@gmail.com>
+>> [...]
+>>> diff --git a/drivers/media/pci/cx88/cx88.h b/drivers/media/pci/cx88/cx88.h
+>>> index 115414c..16c1313 100644
+>>> --- a/drivers/media/pci/cx88/cx88.h
+>>> +++ b/drivers/media/pci/cx88/cx88.h
+[...]
+>>> @@ -339,7 +340,7 @@ struct cx8802_dev;
+>>>
+>>>  struct cx88_core {
+>>>  	struct list_head           devlist;
+>>> -	atomic_t                   refcount;
+>>> +	refcount_t                   refcount;
+>>
+>>     Could you please keep the name aligned with above and below?
+>
+> You mean "not aligned" to devlist, but with a shift like it was before?
 
-REPORT SUPPORTED LUNS but nothing else on LUN 0?  Maybe a TEST UNIT READY
-thrown?  Or does it actually support the REPORT LUNS well known LU?
+    I mean aligned, like it was before. :-)
+
+> Sure, will fix. Is the patch ok otherwise?
+
+    I haven't noticed anything else...
+
+> Best Regards,
+> Elena.
+[...]
+
+MBR, Sergei
