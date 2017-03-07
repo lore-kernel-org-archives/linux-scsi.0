@@ -1,59 +1,20 @@
-From: Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCHv2] hpsa: expose enclosures
-Date: Tue, 7 Mar 2017 16:24:45 +0100
-Message-ID: <af59c314-358c-0dba-722f-c582eabf1092@suse.com>
-References: <1487847303-82580-1-git-send-email-hare@suse.de>
- <4993A297653ECB4581FA5C3C31323D194F331B4F@avsrvexchmbx1.microsemi.net>
+From: U B A <alicharles20@gmail.com>
+Subject: With due respect
+Date: Tue, 7 Mar 2017 16:47:37 +0100
+Message-ID: <CAFqWXgWpKZaOthqhcCoud2=mSvpnyLDdCTM7eeSgRENBW3rFaA__26019.9946621016$1488901676$gmane$org@mail.gmail.com>
+Reply-To: uba.togo@email.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.nue.novell.com ([195.135.221.5]:51114 "EHLO
-        smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755349AbdCGPqf (ORCPT
-        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-        Tue, 7 Mar 2017 10:46:35 -0500
-In-Reply-To: <4993A297653ECB4581FA5C3C31323D194F331B4F@avsrvexchmbx1.microsemi.net>
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:32908 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754750AbdCGPro (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2017 10:47:44 -0500
+Received: by mail-ot0-f193.google.com with SMTP id 19so764782oti.0
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Mar 2017 07:47:38 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 03/07/2017 04:05 PM, Don Brace wrote:
->> -----Original Message-----
->> From: Hannes Reinecke [mailto:hare@suse.de]
->> Sent: Thursday, February 23, 2017 4:55 AM
->> To: Martin K. Petersen <martin.petersen@oracle.com>
->> Cc: Christoph Hellwig <hch@lst.de>; James Bottomley
->> <james.bottomley@hansenpartnership.com>; linux-scsi@vger.kernel.org;
->> Hannes Reinecke <hare@suse.de>; Don Brace
->> <don.brace@microsemi.com>; Hannes Reinecke <hare@suse.com>
->> Subject: [PATCHv2] hpsa: expose enclosures
->>
->> EXTERNAL EMAIL
->>
->>
->> Some servers have a built-in enclosure which will show up on the
->> same bus as the internal physical devices. This patch fixes the
->> driver to expose them.
->>
->> Cc: Don Brace <don.brace@microsemi.com>
->> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> 
-> Masking various SES targets is a conscious choice, not a design oversight.
-> So, I have to decline this patch.,
-> 
-Would you be okay with a module parameter for this?
-It really feels stupid to present the user with an enclosure device
-during boot (as hpsa presents all physical LUNs during booting), but not
-exporting it to the user.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.com			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+Base on the last email i sent to you, I wish to bring to your notice
+that i am still waiting patiently for your response. Mrs. Anna
+Johnson.
