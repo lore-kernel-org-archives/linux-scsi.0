@@ -1,121 +1,106 @@
-From: Jarkko Sakkinen <jarkko.sakkinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [PATCH v3 06/16] tpm-chip: utilize new
- cdev_device_add helper function
-Date: Tue, 7 Mar 2017 10:31:39 +0200
-Message-ID: <20170307083139.ccaoascf7yjoixg5@intel.com>
-References: <1488783873-2614-1-git-send-email-logang@deltatee.com>
- <1488783873-2614-7-git-send-email-logang@deltatee.com>
- <20170306210426.qeftgujergryutie@intel.com>
- <20170307053138.GA7665@kroah.com>
-Reply-To: rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Sakari Ailus <sakari.ailus@iki.fi>
+Subject: Re: [PATCH 13/29] drivers, media: convert
+ vb2_vmarea_handler.refcount from atomic_t to refcount_t
+Date: Tue, 7 Mar 2017 10:50:05 +0200
+Message-ID: <20170307085005.GH3220@valkosipuli.retiisi.org.uk>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+ <1488810076-3754-14-git-send-email-elena.reshetova@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <rtc-linux+bncBAABBAPA7HCQKGQEYFNAJ3I-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
 Content-Disposition: inline
-In-Reply-To: <20170307053138.GA7665-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
-List-Post: <https://groups.google.com/group/rtc-linux/post>, <mailto:rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:rtc-linux+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/rtc-linux
-List-Subscribe: <https://groups.google.com/group/rtc-linux/subscribe>, <mailto:rtc-linux+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+712029733259+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/rtc-linux/subscribe>
-To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Cc: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Sajjan Vikas C <vikas.cha.sajjan-ZPxbGqLxI0U@public.gmane.org>, Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linus Walleij <linus.walleij-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Alexandre Courbot <gnurou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Peter Huewe <peterhuewe-Mmb7MZpHnFY@public.gmane.org>, Marcel Selhorst <tpmdd-yWjUBOtONefk1uMJSBkQmQ@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Olof Johansson <olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sean Hefty <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hal Rosenstock <hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hartmut Knaack <knaack.h-Mmb7MZpHnFY@public.gmane.org>, Lars-Peter Clausen <lars-Qo5EllUWu/uELgA04lAiVw@public.gmane.org>Pe
+In-Reply-To: <1488810076-3754-14-git-send-email-elena.reshetova@intel.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Elena Reshetova <elena.reshetova@intel.com>
+Cc: peterz@infradead.org, linux-pci@vger.kernel.org, target-devel@vger.kernel.org, linux1394-devel@lists.sourceforge.net, devel@driverdev.osuosl.org, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, fcoe-devel@open-fcoe.org, xen-devel@lists.xenproject.org, open-iscsi@googlegroups.com, linux-media@vger.kernel.org, Kees Cook <keescook@chromium.org>, linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org, Hans Liljestrand <ishkamiel@gmail.com>, David Windsor <dwindsor@gmail.com>, gregkh@linuxfoundation.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, devel@linuxdriverproject.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Mar 07, 2017 at 06:31:38AM +0100, Greg Kroah-Hartman wrote:
-> On Mon, Mar 06, 2017 at 11:04:26PM +0200, Jarkko Sakkinen wrote:
-> > On Mon, Mar 06, 2017 at 12:04:22AM -0700, Logan Gunthorpe wrote:
-> > > Replace the open coded registration of the cdev and dev with the
-> > > new device_add_cdev() helper. The helper replaces a common pattern by
-> > > taking the proper reference against the parent device and adding both
-> > > the cdev and the device.
-> > > 
-> > > Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-> > > Reviewed-by: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
-> > > ---
-> > >  drivers/char/tpm/tpm-chip.c | 19 +++----------------
-> > >  1 file changed, 3 insertions(+), 16 deletions(-)
-> > > 
-> > > diff --git a/drivers/char/tpm/tpm-chip.c b/drivers/char/tpm/tpm-chip.c
-> > > index c406343..935f0e9 100644
-> > > --- a/drivers/char/tpm/tpm-chip.c
-> > > +++ b/drivers/char/tpm/tpm-chip.c
-> > > @@ -187,7 +187,6 @@ struct tpm_chip *tpm_chip_alloc(struct device *pdev,
-> > >  
-> > >  	cdev_init(&chip->cdev, &tpm_fops);
-> > >  	chip->cdev.owner = THIS_MODULE;
-> > > -	chip->cdev.kobj.parent = &chip->dev.kobj;
-> > >  
-> > >  	return chip;
-> > >  
-> > > @@ -230,27 +229,16 @@ static int tpm_add_char_device(struct tpm_chip *chip)
-> > >  {
-> > >  	int rc;
-> > >  
-> > > -	rc = cdev_add(&chip->cdev, chip->dev.devt, 1);
-> > > +	rc = cdev_device_add(&chip->cdev, &chip->dev);
-> > >  	if (rc) {
-> > >  		dev_err(&chip->dev,
-> > > -			"unable to cdev_add() %s, major %d, minor %d, err=%d\n",
-> > > +			"unable to cdev_device_add() %s, major %d, minor %d, err=%d\n",
-> > >  			dev_name(&chip->dev), MAJOR(chip->dev.devt),
-> > >  			MINOR(chip->dev.devt), rc);
-> > >  
-> > >  		return rc;
-> > >  	}
-> > >  
-> > > -	rc = device_add(&chip->dev);
-> > > -	if (rc) {
-> > > -		dev_err(&chip->dev,
-> > > -			"unable to device_register() %s, major %d, minor %d, err=%d\n",
-> > > -			dev_name(&chip->dev), MAJOR(chip->dev.devt),
-> > > -			MINOR(chip->dev.devt), rc);
-> > > -
-> > > -		cdev_del(&chip->cdev);
-> > > -		return rc;
-> > > -	}
-> > > -
-> > >  	/* Make the chip available. */
-> > >  	mutex_lock(&idr_lock);
-> > >  	idr_replace(&dev_nums_idr, chip, chip->dev_num);
-> > > @@ -261,8 +249,7 @@ static int tpm_add_char_device(struct tpm_chip *chip)
-> > >  
-> > >  static void tpm_del_char_device(struct tpm_chip *chip)
-> > >  {
-> > > -	cdev_del(&chip->cdev);
-> > > -	device_del(&chip->dev);
-> > > +	cdev_device_del(&chip->cdev, &chip->dev);
-> > >  
-> > >  	/* Make the chip unavailable. */
-> > >  	mutex_lock(&idr_lock);
-> > > -- 
-> > > 2.1.4
-> > > 
-> > 
-> > Reviewed-by: Jarkko Sakkinen <jarkko.sakkinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-> > 
-> > I cannot test this at this point as security tree does not include
-> > the commit that is dependent on this. I'm also wondering if this
-> > commit is even going through my tree to upstream?
-> 
-> I can take it all at once through my tree.
-> 
-> thanks,
-> 
-> greg k-h
+Hi Elena,
 
-Alright, thank you!
+On Mon, Mar 06, 2017 at 04:21:00PM +0200, Elena Reshetova wrote:
+> refcount_t type and corresponding API should be
+> used instead of atomic_t when the variable is used as
+> a reference counter. This allows to avoid accidental
+> refcounter overflows that might lead to use-after-free
+> situations.
+> 
+> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Signed-off-by: David Windsor <dwindsor@gmail.com>
+> ---
+>  drivers/media/v4l2-core/videobuf2-memops.c | 6 +++---
+>  include/media/videobuf2-memops.h           | 3 ++-
+>  2 files changed, 5 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/media/v4l2-core/videobuf2-memops.c b/drivers/media/v4l2-core/videobuf2-memops.c
+> index 1cd322e..4bb8424 100644
+> --- a/drivers/media/v4l2-core/videobuf2-memops.c
+> +++ b/drivers/media/v4l2-core/videobuf2-memops.c
+> @@ -96,10 +96,10 @@ static void vb2_common_vm_open(struct vm_area_struct *vma)
+>  	struct vb2_vmarea_handler *h = vma->vm_private_data;
+>  
+>  	pr_debug("%s: %p, refcount: %d, vma: %08lx-%08lx\n",
+> -	       __func__, h, atomic_read(h->refcount), vma->vm_start,
+> +	       __func__, h, refcount_read(h->refcount), vma->vm_start,
+>  	       vma->vm_end);
+>  
+> -	atomic_inc(h->refcount);
+> +	refcount_inc(h->refcount);
+>  }
+>  
+>  /**
+> @@ -114,7 +114,7 @@ static void vb2_common_vm_close(struct vm_area_struct *vma)
+>  	struct vb2_vmarea_handler *h = vma->vm_private_data;
+>  
+>  	pr_debug("%s: %p, refcount: %d, vma: %08lx-%08lx\n",
+> -	       __func__, h, atomic_read(h->refcount), vma->vm_start,
+> +	       __func__, h, refcount_read(h->refcount), vma->vm_start,
+>  	       vma->vm_end);
+>  
+>  	h->put(h->arg);
+> diff --git a/include/media/videobuf2-memops.h b/include/media/videobuf2-memops.h
+> index 36565c7a..a6ed091 100644
+> --- a/include/media/videobuf2-memops.h
+> +++ b/include/media/videobuf2-memops.h
+> @@ -16,6 +16,7 @@
+>  
+>  #include <media/videobuf2-v4l2.h>
+>  #include <linux/mm.h>
+> +#include <linux/refcount.h>
+>  
+>  /**
+>   * struct vb2_vmarea_handler - common vma refcount tracking handler
+> @@ -25,7 +26,7 @@
+>   * @arg:	argument for @put callback
+>   */
+>  struct vb2_vmarea_handler {
+> -	atomic_t		*refcount;
+> +	refcount_t		*refcount;
 
-/Jarkko
+This is a pointer to refcount, not refcount itself. The refcount is part of
+a memory type specific struct, the types that you change in the following
+three patches. I guess it would still compile and work as separate patches
+but you'd sure get warnings at least.
+
+How about merging this and the three following patches that change the memop
+refcount types?
+
+>  	void			(*put)(void *arg);
+>  	void			*arg;
+>  };
 
 -- 
-You received this message because you are subscribed to "rtc-linux".
-Membership options at http://groups.google.com/group/rtc-linux .
-Please read http://groups.google.com/group/rtc-linux/web/checklist
-before submitting a driver.
---- 
-You received this message because you are subscribed to the Google Groups "rtc-linux" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to rtc-linux+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-For more options, visit https://groups.google.com/d/optout.
+Kind regards,
+
+Sakari Ailus
+e-mail: sakari.ailus@iki.fi	XMPP: sailus@retiisi.org.uk
