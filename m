@@ -1,175 +1,93 @@
-From: V <viswesh.vichu@gmail.com>
-Subject: Re: Help needed for a SCSI hang (SATA drives)
-Date: Tue, 7 Mar 2017 14:28:23 -0800
-Message-ID: <CAF9xHmTeYQjOHNVAy6MAPHPCm5g=H=Eb8n-qkxzvLcrz4gmSEQ@mail.gmail.com>
-References: <CAF9xHmThNk7m5hK-R_JGD2KMhJkm-yaDgrW6CeMdfUtjjRzF3g@mail.gmail.com>
- <CAD+HZHXv87Brm=QSgh77PpX9G-yfMWAn1RmonuH45dumc04=Mg@mail.gmail.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCHv2] hpsa: expose enclosures
+Date: Tue, 7 Mar 2017 16:33:28 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D194F331BC9@avsrvexchmbx1.microsemi.net>
+References: <1487847303-82580-1-git-send-email-hare@suse.de>
+ <4993A297653ECB4581FA5C3C31323D194F331B4F@avsrvexchmbx1.microsemi.net>
+ <af59c314-358c-0dba-722f-c582eabf1092@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-io0-f173.google.com ([209.85.223.173]:33081 "EHLO
-        mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751093AbdCGXDd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2017 18:03:33 -0500
-Received: by mail-io0-f173.google.com with SMTP id f84so15314900ioj.0
-        for <linux-scsi@vger.kernel.org>; Tue, 07 Mar 2017 15:02:36 -0800 (PST)
-In-Reply-To: <CAD+HZHXv87Brm=QSgh77PpX9G-yfMWAn1RmonuH45dumc04=Mg@mail.gmail.com>
+Received: from mail-co1nam03on0084.outbound.protection.outlook.com ([104.47.40.84]:11088
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1756368AbdCGXTc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 7 Mar 2017 18:19:32 -0500
+In-Reply-To: <af59c314-358c-0dba-722f-c582eabf1092@suse.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jack Wang <xjtuwjp@gmail.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, Mar 7, 2017 at 3:58 AM, Jack Wang <xjtuwjp@gmail.com> wrote:
-> 2017-03-07 1:54 GMT+01:00 V <viswesh.vichu@gmail.com>:
->> Hi,
->>
->> I am reaching out regarding a SCSI error handler issue, which we see
->> in our lab systems.
->>
->> Environment: Ubuntu 4.4.0-31-generic
->>
->> Issue: Write IOs are getting stuck in our system randomly. All drives
->> seen with the issue are all SATA drives.
->> Root cause: SCSI error handler is not woken up (or) it is up, but not
->> able to flush commands and hence the IOs get stuck. (as the requests
->> are not flushed out and host is not restarted)
->>
->> We have 6 instances seen till now.
->>
->> This is what we see.
->> 1) As part of testing our drives, we start lot of read/writes, along
->> with some user space utilities running to check the drive health.
->> 1) In our recent testing, we see lot of commands going through the
->> "abort scheduled" path. And we see that in between, for one of the
->> commands, the error handler is not woken up, and majority of
->> processes, which were writing, gets stalled.
->> 2) We are still trying to figure out what is causing this much number
->> of abort? Is it usual? Are there some other debugs, which I could
->> enable to get more information? We know these are user space commands
->> which are being aborted, but not sure which exact command it is for
->> now.
->> 3) I see the "abort scheduled" messages in almost all drives in all
->> systems, hence i dont believe it is a drive issue.
->> 4) I checked the host_failed and host_busy variables, both are set to
->> 1 in system 1. 2nd one is still alive, havent taken a crash dump yet.
->> 5) All drives seen with the issue are SATA drives.
->> 6) I have attached udevadm info of a drive which failed in system 2.
->>
->> Thanks in advance,
->> Viswesh
->>
->>
->> Logs
->> -------
->> System 1
->>
->> [371546.605736] sd 9:0:0:0: scsi_block_when_processing_errors: rtn: 1
->> [371546.606727] sd 9:0:0:0: scsi_block_when_processing_errors: rtn: 1
->> [371546.607721] sd 9:0:0:0: scsi_block_when_processing_errors: rtn: 1
->> [371546.618113] sd 9:0:0:0: [sg19] tag#20 abort scheduled
->> [371546.624039] sd 9:0:0:0: [sg19] tag#20 aborting command
->> [371546.624045] sd 9:0:0:0: [sg19] tag#20 cmd abort failed
->> [371546.624051] scsi host9: Waking error handler thread
->> [371546.624060] scsi host9: scsi_eh_9: waking up 0/1/1
->> [371546.624081] sd 9:0:0:0: [sg19] tag#20 scsi_eh_9: flush finish cmd
->> [371546.624095] scsi host9: waking up host to restart
->> [371546.624098] scsi host9: scsi_eh_9: sleeping
->>
->>
->> [371546.635314] sd 8:0:0:0: [sg17] tag#13 abort scheduled
->> [371546.640031] sd 8:0:0:0: [sg17] tag#13 aborting command
->> [371546.640037] sd 8:0:0:0: [sg17] tag#13 cmd abort failed
->> [371546.640043] scsi host8: Waking error handler thread
->> [371546.640078] scsi host8: scsi_eh_8: waking up 0/1/1
->> [371546.640098] sd 8:0:0:0: [sg17] tag#13 scsi_eh_8: flush finish cmd
->> [371546.640113] scsi host8: waking up host to restart
->> [371546.640117] scsi host8: scsi_eh_8: sleeping
->>
->> [371546.657269] sd 6:0:0:0: [sg12] tag#1 abort scheduled
->> [371546.664034] sd 6:0:0:0: [sg12] tag#1 aborting command
->> [371546.664040] sd 6:0:0:0: [sg12] tag#1 cmd abort failed
->>
->> Here we can see that, error handler is not woken up.  And the entire
->> IO subsystem goes for a toss.
->>
->> [371777.594510] INFO: task md2_raid1:508 blocked for more than 120 seconds.
->> [371777.594571]      Not tainted 4.4.0-31-generic #50~14.04.1-Ubuntu
->> [371777.594613] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
->> disables this message.
->> [371777.594665] md2_raid1      D ffff883fed2afc78    0  508      2 0x00000000
->> [371777.594673]  ffff883fed2afc78 ffff881fef0e8000 ffff883fed21c4c0
->> ffff883fed2b0000
->> [371777.594678]  ffff883ff236e298 ffff883ff236e000 ffff883ff236e018
->> ffff883ff236e018
->>
->> By enabling more scsi logs(in a different system), including LL, we
->> get some more info ( I have enabled the full scsi levels for all
->> categories and it is still running)
->>
->>
->> System 2
->>
->> [405197.171574] sd 5:0:0:0: [sg3] sg_write: count=3D88
->> [405197.171577] sd 5:0:0:0: scsi_block_when_processing_errors: rtn: 1
->> [405197.171581] sd 5:0:0:0: [sg3] sg_common_write:  scsi
->> opcode=3D0x85, cmd_size=3D16
->> [405197.171583] sd 5:0:0:0: [sg3] sg_start_req: dxfer_len=3D512
->> [405197.171605] sd 5:0:0:0: [sg3] sg_link_reserve: size=3D512
->> [405197.171623] sd 5:0:0:0: [sg3] sg_poll: res=3D0x104
->> [405197.172648] sd 5:0:0:0: [sg3] sg_cmd_done: pack_id=3D0, res=3D0x0
->> [405197.172701] sd 5:0:0:0: [sg3] sg_poll: res=3D0x145
->> [405197.172710] sd 5:0:0:0: [sg3] sg_read: count=3D88
->> [405197.172716] sd 5:0:0:0: [sg3] sg_finish_rem_req: res_used=3D1
->> [405197.172721] sd 5:0:0:0: [sg3] sg_unlink_reserve: req->k_use_sg=3D1
->> [405197.172756] sd 5:0:0:0: [sg3] sg_write: count=3D88
->> [405197.172760] sd 5:0:0:0: scsi_block_when_processing_errors: rtn: 1
->> [405197.172764] sd 5:0:0:0: [sg3] sg_common_write:  scsi
->> opcode=3D0x85, cmd_size=3D16
->> [405197.172767] sd 5:0:0:0: [sg3] sg_start_req: dxfer_len=3D512
->> [405197.172774] sd 5:0:0:0: [sg3] sg_link_reserve: size=3D512
->> [405197.172793] sd 5:0:0:0: [sg3] sg_poll: res=3D0x104
->> [405197.173806] sd 5:0:0:0: [sg3] sg_cmd_done: pack_id=3D0, res=3D0x0
->> [405197.173829] sd 5:0:0:0: [sg3] sg_poll: res=3D0x145
->> [405197.173836] sd 5:0:0:0: [sg3] sg_read: count=3D88
->> [405197.173839] sd 5:0:0:0: [sg3] sg_finish_rem_req: res_used=3D1
->> [405197.173843] sd 5:0:0:0: [sg3] sg_unlink_reserve: req->k_use_sg=3D1
->> [405197.173893] sd 5:0:0:0: [sg3] sg_write: count=3D88
->> [405197.173896] sd 5:0:0:0: scsi_block_when_processing_errors: rtn: 1
->> [405197.173900] sd 5:0:0:0: [sg3] sg_common_write:  scsi
->> opcode=3D0x85, cmd_size=3D16
->> [405197.173903] sd 5:0:0:0: [sg3] sg_start_req: dxfer_len=3D0
->> [405197.173921] sd 5:0:0:0: [sg3] sg_poll: res=3D0x104
->>
->> [405197.174082] sd 5:0:0:0: [sg3] tag#5 abort scheduled
->> [405197.179372] sd 5:0:0:0: [sg3] tag#5 aborting command
->> [405197.179378] sd 5:0:0:0: [sg3] tag#5 cmd abort failed
->>
->> [405257.225584] sd 5:0:0:0: [sg3] sg_poll: res=3D0x104
->> [405257.225599] sd 5:0:0:0: [sg3] sg_release
->> [405257.225617] sd 5:0:0:0: [sg3] sg_open: flags=3D0x8002
->>
->> Error handler thread is not waken up here (or) i dont see flush
->> command trace (even if it is already woken up)
->>
->> [405349.082863] INFO: task md2_raid1:484 blocked for more than 120 seconds
->> [405349.082922]      Not tainted 4.4.0-31-generic #50~14.04.1-Ubuntu
->> [405349.082964] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
->> disables this message.
->> [405349.083016] md2_raid1      D ffff881feca2bc78    0  484      2 0x00000000
->
-> Can you reproduce without md raid1? I suppose it shouldn't related.
 
-I believe so. It is not related.
+> -----Original Message-----
+> From: Hannes Reinecke [mailto:hare@suse.com]
+> Sent: Tuesday, March 07, 2017 9:25 AM
+> To: Don Brace <don.brace@microsemi.com>; Hannes Reinecke
+> <hare@suse.de>; Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: Christoph Hellwig <hch@lst.de>; James Bottomley
+> <james.bottomley@hansenpartnership.com>; linux-scsi@vger.kernel.org
+> Subject: Re: [PATCHv2] hpsa: expose enclosures
+>=20
+> EXTERNAL EMAIL
+>=20
+>=20
+> On 03/07/2017 04:05 PM, Don Brace wrote:
+> >> -----Original Message-----
+> >> From: Hannes Reinecke [mailto:hare@suse.de]
+> >> Sent: Thursday, February 23, 2017 4:55 AM
+> >> To: Martin K. Petersen <martin.petersen@oracle.com>
+> >> Cc: Christoph Hellwig <hch@lst.de>; James Bottomley
+> >> <james.bottomley@hansenpartnership.com>; linux-scsi@vger.kernel.org;
+> >> Hannes Reinecke <hare@suse.de>; Don Brace
+> >> <don.brace@microsemi.com>; Hannes Reinecke <hare@suse.com>
+> >> Subject: [PATCHv2] hpsa: expose enclosures
+> >>
+> >> EXTERNAL EMAIL
+> >>
+> >>
+> >> Some servers have a built-in enclosure which will show up on the
+> >> same bus as the internal physical devices. This patch fixes the
+> >> driver to expose them.
+> >>
+> >> Cc: Don Brace <don.brace@microsemi.com>
+> >> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> >
+> > Masking various SES targets is a conscious choice, not a design oversig=
+ht.
+> > So, I have to decline this patch.,
+> >
+> Would you be okay with a module parameter for this?
+> It really feels stupid to present the user with an enclosure device
+> during boot (as hpsa presents all physical LUNs during booting), but not
+> exporting it to the user.
+>=20
+> Cheers,
+>=20
+> Hannes
 
-> You mentioned it's only with SATA, are they all the same HDDs or from
-> different vendors?
->
+We would not be able to support this as it can cause issues with=20
+LED management. A customer could pull the wrong drive and lose data because=
+ the LED state was incorrect.
+That results in support issues.
 
-It is 2 different vendors (Sandisk and HGST), but now under the same
-umbrella though.
+We like to show the enclosures even if masked as it helps with diagnosing p=
+roblems.
 
-Are there anything quite evident from the logs. i could collect some
-proc entries, if you would need.
+Thanks,
+Don Brace
+ESC - Smart Storage
+Microsemi Corporation
 
-> Regards,
-> Jack
+
+
+
+
+> --
+> Dr. Hannes Reinecke                            zSeries & Storage
+> hare@suse.com                                  +49 911 74053 688
+> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+> GF: F. Imend=F6rffer, J. Smithard, D. Upmanyu, G. Norton
+> HRB 21284 (AG N=FCrnberg)
