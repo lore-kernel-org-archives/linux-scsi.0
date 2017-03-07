@@ -1,106 +1,26 @@
-From: Sakari Ailus <sakari.ailus@iki.fi>
-Subject: Re: [PATCH 13/29] drivers, media: convert
- vb2_vmarea_handler.refcount from atomic_t to refcount_t
-Date: Tue, 7 Mar 2017 10:50:05 +0200
-Message-ID: <20170307085005.GH3220@valkosipuli.retiisi.org.uk>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
- <1488810076-3754-14-git-send-email-elena.reshetova@intel.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [RFC] hv_storvsc: error handling.
+Date: Tue, 7 Mar 2017 06:06:24 +0100
+Message-ID: <20170307050624.GA14133@lst.de>
+References: <20170301174058.383da142@xeon-e3> <c8ff2b64-2421-ca45-1f89-afec0490c8b3@suse.de> <20170302102324.47dbe3ad@xeon-e3> <895c4f2e-7faa-41e1-b5de-eedb4ae0f882@email.android.com> <20170302110505.6ad2eb61@xeon-e3> <1b325703-b823-4304-9d9d-86071811e000@email.android.com> <20170303165011.53a38794@xeon-e3> <DM5PR03MB24906E9B50B16B8C567EE25BA02A0@DM5PR03MB2490.namprd03.prod.outlook.com> <20170306083619.6789f9ba@xeon-e3> <DM5PR03MB2490F80E2F703D6FD3F1AC4BA02C0@DM5PR03MB2490.namprd03.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:48521 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752532AbdCGJXQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 7 Mar 2017 04:23:16 -0500
 Content-Disposition: inline
-In-Reply-To: <1488810076-3754-14-git-send-email-elena.reshetova@intel.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Elena Reshetova <elena.reshetova@intel.com>
-Cc: peterz@infradead.org, linux-pci@vger.kernel.org, target-devel@vger.kernel.org, linux1394-devel@lists.sourceforge.net, devel@driverdev.osuosl.org, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, fcoe-devel@open-fcoe.org, xen-devel@lists.xenproject.org, open-iscsi@googlegroups.com, linux-media@vger.kernel.org, Kees Cook <keescook@chromium.org>, linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org, Hans Liljestrand <ishkamiel@gmail.com>, David Windsor <dwindsor@gmail.com>, gregkh@linuxfoundation.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, devel@linuxdriverproject.org
+In-Reply-To: <DM5PR03MB2490F80E2F703D6FD3F1AC4BA02C0@DM5PR03MB2490.namprd03.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: KY Srinivasan <kys@microsoft.com>
+Cc: Stephen Hemminger <stephen@networkplumber.org>, James Bottomley <James.Bottomley@Hansenpartnership.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, Jens Axboe <axboe@kernel.dk>, Linus Torvalds <torvalds@linux-foundation.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>, Josh Poulson <jopoulso@microsoft.com>, "Adrian Suhov (Cloudbase Solutions SRL)" <v-adsuho@microsoft.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Haiyang Zhang <haiyangz@microsoft.com>
 
-Hi Elena,
+> Was the invalid LUN in the LUN0 position. Inquiry of LUN0 support (when LUN0 is not populated)
+> was added only recently to address host side issue.
 
-On Mon, Mar 06, 2017 at 04:21:00PM +0200, Elena Reshetova wrote:
-> refcount_t type and corresponding API should be
-> used instead of atomic_t when the variable is used as
-> a reference counter. This allows to avoid accidental
-> refcounter overflows that might lead to use-after-free
-> situations.
-> 
-> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> Signed-off-by: David Windsor <dwindsor@gmail.com>
-> ---
->  drivers/media/v4l2-core/videobuf2-memops.c | 6 +++---
->  include/media/videobuf2-memops.h           | 3 ++-
->  2 files changed, 5 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/media/v4l2-core/videobuf2-memops.c b/drivers/media/v4l2-core/videobuf2-memops.c
-> index 1cd322e..4bb8424 100644
-> --- a/drivers/media/v4l2-core/videobuf2-memops.c
-> +++ b/drivers/media/v4l2-core/videobuf2-memops.c
-> @@ -96,10 +96,10 @@ static void vb2_common_vm_open(struct vm_area_struct *vma)
->  	struct vb2_vmarea_handler *h = vma->vm_private_data;
->  
->  	pr_debug("%s: %p, refcount: %d, vma: %08lx-%08lx\n",
-> -	       __func__, h, atomic_read(h->refcount), vma->vm_start,
-> +	       __func__, h, refcount_read(h->refcount), vma->vm_start,
->  	       vma->vm_end);
->  
-> -	atomic_inc(h->refcount);
-> +	refcount_inc(h->refcount);
->  }
->  
->  /**
-> @@ -114,7 +114,7 @@ static void vb2_common_vm_close(struct vm_area_struct *vma)
->  	struct vb2_vmarea_handler *h = vma->vm_private_data;
->  
->  	pr_debug("%s: %p, refcount: %d, vma: %08lx-%08lx\n",
-> -	       __func__, h, atomic_read(h->refcount), vma->vm_start,
-> +	       __func__, h, refcount_read(h->refcount), vma->vm_start,
->  	       vma->vm_end);
->  
->  	h->put(h->arg);
-> diff --git a/include/media/videobuf2-memops.h b/include/media/videobuf2-memops.h
-> index 36565c7a..a6ed091 100644
-> --- a/include/media/videobuf2-memops.h
-> +++ b/include/media/videobuf2-memops.h
-> @@ -16,6 +16,7 @@
->  
->  #include <media/videobuf2-v4l2.h>
->  #include <linux/mm.h>
-> +#include <linux/refcount.h>
->  
->  /**
->   * struct vb2_vmarea_handler - common vma refcount tracking handler
-> @@ -25,7 +26,7 @@
->   * @arg:	argument for @put callback
->   */
->  struct vb2_vmarea_handler {
-> -	atomic_t		*refcount;
-> +	refcount_t		*refcount;
+How does HyperV expect device scanning to happen for a not populated LUN?
 
-This is a pointer to refcount, not refcount itself. The refcount is part of
-a memory type specific struct, the types that you change in the following
-three patches. I guess it would still compile and work as separate patches
-but you'd sure get warnings at least.
-
-How about merging this and the three following patches that change the memop
-refcount types?
-
->  	void			(*put)(void *arg);
->  	void			*arg;
->  };
-
--- 
-Kind regards,
-
-Sakari Ailus
-e-mail: sakari.ailus@iki.fi	XMPP: sailus@retiisi.org.uk
+REPORT SUPPORTED LUNS but nothing else on LUN 0?  Maybe a TEST UNIT READY
+thrown?  Or does it actually support the REPORT LUNS well known LU?
