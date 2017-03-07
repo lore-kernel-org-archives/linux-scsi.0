@@ -1,21 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] [v2] scsi: qedi: fix build error without DEBUG_FS
-Date: Mon, 06 Mar 2017 22:23:12 -0500
-Message-ID: <yq1bmtdlqhr.fsf@oracle.com>
-References: <20170302145845.1096307-1-arnd@arndb.de>
+Subject: Re: [PATCH] aacraid: Fix typo in blink status
+Date: Mon, 06 Mar 2017 22:24:05 -0500
+Message-ID: <yq17f41lqga.fsf@oracle.com>
+References: <20170302172133.3503-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170302145845.1096307-1-arnd@arndb.de> (Arnd Bergmann's message
-        of "Thu, 2 Mar 2017 15:58:03 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: QLogic-Storage-Upstream@cavium.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>, Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>, Manish Rangankar <manish.rangankar@cavium.com>, Chad Dupuis <chad.dupuis@cavium.com>, Arun Easi <arun.easi@cavium.com>, Saurav Kashyap <saurav.kashyap@cavium.com>, Hannes Reinecke <hare@suse.de>, Wei Yongjun <weiyongjun1@huawei.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:41587 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754842AbdCGD1R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2017 22:27:17 -0500
+In-Reply-To: <20170302172133.3503-1-RaghavaAditya.Renukunta@microsemi.com>
+        (Raghava Aditya Renukunta's message of "Thu, 2 Mar 2017 09:21:33
+        -0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com
 
->>>>> "Arnd" == Arnd Bergmann <arnd@arndb.de> writes:
+>>>>> "Raghava" == Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com> writes:
 
-Arnd> Without CONFIG_DEBUG_FS, we run into a link error:
+Raghava> The return status of the adapter check on KERNEL_PANIC is
+Raghava> supposed to be the upper 16 bits of the OMR status register.
 
 Applied to 4.11/scsi-fixes.
 
