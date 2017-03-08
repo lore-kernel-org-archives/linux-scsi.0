@@ -1,49 +1,46 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] megaraid_sas: enable intx only if msix request fails
-Date: Wed, 8 Mar 2017 07:09:27 -0800
-Message-ID: <20170308150927.GA27450@infradead.org>
-References: <1488452056-16083-1-git-send-email-kashyap.desai@broadcom.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH v3 00/14] qla2xxx: Bug Fixes and updates for target.
+Date: Wed, 8 Mar 2017 15:20:52 +0000
+Message-ID: <1488986438.2599.1.camel@sandisk.com>
+References: <1487972263-3795-1-git-send-email-himanshu.madhani@cavium.com>
+         <1488760974.2808.1.camel@sandisk.com>
+         <1488958492.10589.9.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:57388 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751635AbdCHPJp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2017 10:09:45 -0500
-Content-Disposition: inline
-In-Reply-To: <1488452056-16083-1-git-send-email-kashyap.desai@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1488958492.10589.9.camel@haakon3.risingtidesystems.com>
+Content-Language: en-US
+Content-ID: <570060DA9FE2C04BAD2D8A06A38D7784@sandisk.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "giridhar.malavali@cavium.com" <giridhar.malavali@cavium.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, hare@suse.de
 
-On Thu, Mar 02, 2017 at 02:54:16AM -0800, Kashyap Desai wrote:
-> Without this fix, driver will enable INTx Interrupt pin even
->  though MSI-x vectors are enabled. See below lspci output. DisINTx is unset
->  for MSIx setup.
-> 
-> lspci -s 85:00.0 -vvv |grep INT |grep Control
-> 	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
-> 
-> After applying this fix, driver will enable INTx Interrupt pin only if Legacy interrupt method is required.
-> See below lspci output. DisINTx is unset for MSIx setup.
-> lspci -s 85:00.0 -vvv |grep INT |grep Control
-> 	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx+
-> 
-> Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
-> ---
->  drivers/scsi/megaraid/megaraid_sas_base.c | 6 +-----
->  1 file changed, 1 insertion(+), 5 deletions(-)
-> 
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-> index 7ac9a9e..82a8ec8 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -4990,6 +4990,7 @@ int megasas_set_crash_dump_params(struct megasas_instance *instance,
->  	struct pci_dev *pdev;
->  
->  	pdev = instance->pdev;
-> +	pci_intx(pdev, 1);
-
-Please use pci_alloc_irq_vectors with the PCI_IRQ_LEGACY flag here,
-I'd like to phase out the pci_intx API.
+T24gVHVlLCAyMDE3LTAzLTA3IGF0IDIzOjM0IC0wODAwLCBOaWNob2xhcyBBLiBCZWxsaW5nZXIg
+d3JvdGU6DQo+IEJ0dywgdGhlIHJlZ3Jlc3Npb24gcmVwb3J0ZWQgaGVyZSBpbiB2MjoNCj4gDQo+
+IGh0dHA6Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMvdGFyZ2V0LWRldmVsL21zZzE0MzQ4Lmh0bWwN
+Cj4gDQo+IGlzIGNvbXBsZXRlbHkgZGlmZmVyZW50IGZyb20gd2hhdCB5b3UndmUgcmVwb3J0ZWQg
+aGVyZS4NCg0KVGhlIGNhbGwgdHJhY2VzIGRpZmZlciBidXQgdGhlIHJvb3QgY2F1c2UgaXMgcHJv
+YmFibHkgdGhlIHNhbWUuDQoNCj4gSXQgd291bGQgYmUgdXNlZnVsIHRvIGV4cGxhaW4gaG93IHlv
+dSByZXByb2R1Y2VkIHRoaXMsIGluc3RlYWQgb2YganVzdA0KPiBwb3N0aW5nIGJhY2t0cmFjZSB3
+aXRoIHplcm8gY29udGV4dC4uPw0KPiANCj4gQ2FuIHdlIGF0IGxlYXN0IGlkZW50aWZ5IHdoaWNo
+IHBhdGNoIGluIHRoaXMgc2VyaWVzIGlzIGNhdXNpbmcgdGhpcy4uPw0KPiANCj4gQWxzbywgSSBh
+c3N1bWUgeW91IGFyZSBydW5uaW5nIHRoaXMgb24gc3RvY2sgdjQuMTEtcmMxIHdpdGggb25seSB0
+aGlzDQo+IHFsYTJ4eHggc2VyaWVzIGFwcGxpZWQsIGFuZCBub3QgYWxsIG9mIHlvdXIgb3RoZXIg
+c3R1ZmYsIHJpZ2h0Li4/DQoNClRoZSB0ZXN0IEkgcmFuIGFnYWluc3QgdjQuMTEtcmMxICsgdGhp
+cyBwYXRjaCBzZXJpZXMgaXMgdG8gc3RhcnQgTElPIG9uIGENCnN5c3RlbSBlcXVpcHBlZCB3aXRo
+IHR3byBiYWNrLXRvLWJhY2sgY29ubmVjdGVkIFFMb2dpYyBGQyBIQkFzIChubyBzd2l0Y2gNCmlu
+YmV0d2VlbiksIHRvIGxvYWQgdGhlIHRjbV9xbGEyeHh4IGRyaXZlciwgdG8gY29uZmlndXJlIExV
+TnMgYW5kIHRvIHdhaXQNCnVudGlsIHRoZSBTQ1NJIHN0YWNrIHJlcG9ydHMgdGhhdCB0aGVzZSBM
+VU5zIGhhdmUgYXBwZWFyZWQuIFdoYXQgSSBzZWUgaW4NCnRoZSBsc3Njc2kgb3V0cHV0IHdpdGgg
+Ym90aCB2MiBhbmQgdjMgb2YgdGhpcyBwYXRjaCBzZXJpZXMgaXMgdGhhdCB0aGVzZQ0KTFVOcyBh
+cHBlYXIgYnJpZWZseSBhbmQgdGhlbiBkaXNhcHBlYXIgYW5kIHRoYXQgYSBsaXR0bGUgYml0IGxh
+dGVyIHRoZQ0Ka2VybmVsIHJlcG9ydHMgdGhhdCBhIGhhbmcgb2NjdXJyZWQuIFdpdGhvdXQgdGhp
+cyBwYXRjaCBzZXJpZXMgdGhlIExVTnMgYXJlDQpkZXRlY3RlZCBhbmQgZG8gbm90IGRpc2FwcGVh
+ciBhdXRvbWF0aWNhbGx5IGFuZCBubyBoYW5nIGlzIHJlcG9ydGVkLiBJDQp0aGluayB0aGUgbmV4
+dCBzdGVwIGlzIHRoYXQgQ2F2aXVtIHZlcmlmaWVzIHdoZXRoZXIgdGhleSBjYW4gcmVwcm9kdWNl
+IHRoaXMNCmJlaGF2aW9yIGFuZCBpZiB0aGV5IGNhbiByZXByb2R1Y2UgaXQgdG8gcnVuIGEgYmlz
+ZWN0LiBCVFcsIHNpbmNlIHRoZXJlIGFyZQ0KbG9naW4tcmVsYXRlZCBwYXRjaGVzIGluIHRoaXMg
+c2VyaWVzIEkgd291bGRuJ3QgYmUgc3VycHJpc2VkIGlmIG9uZSBvZiB0aGVzZQ0KcGF0Y2hlcyBp
+bnRyb2R1Y2VkIHRoZSByZWdyZXNzaW9uLg0KDQpCYXJ0Lg0K
