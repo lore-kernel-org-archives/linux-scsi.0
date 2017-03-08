@@ -1,62 +1,66 @@
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 1/4] block: Allow bdi re-registration
-Date: Wed,  8 Mar 2017 17:48:31 +0100
-Message-ID: <20170308164834.14302-2-jack@suse.cz>
-References: <20170308164834.14302-1-jack@suse.cz>
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170308164834.14302-1-jack@suse.cz>
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Tejun Heo <tj@kernel.org>, linux-block@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Omar Sandoval <osandov@osandov.com>, Arthur Marsh <arthur.marsh@internode.on.net>, linux-scsi@vger.kernel.org, Jan Kara <jack@suse.cz>
+From: Kashyap Desai <kashyap.desai@broadcom.com>
+Subject: RE: out of range LBA using sg_raw
+Date: Wed, 8 Mar 2017 22:19:58 +0530
+Message-ID: <07493b3c3da0b19a9fa96899cad640f3@mail.gmail.com>
+References: <cf343e80707394b8945cd7643f7beecd@mail.gmail.com>
+ <20170308151113.GB27450@infradead.org> <eb88925faa247b2ae6e510fc7fd0cff9@mail.gmail.com>
+ <yq1y3wfhgpn.fsf@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq1y3wfhgpn.fsf@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-SCSI can call device_add_disk() several times for one request queue when
-a device in unbound and bound, creating new gendisk each time. This will
-lead to bdi being repeatedly registered and unregistered. This was not a
-big problem until commit 165a5e22fafb "block: Move bdi_unregister() to
-del_gendisk()" since bdi was only registered repeatedly (bdi_register()
-handles repeated calls fine, only we ended up leaking reference to
-gendisk due to overwriting bdi->owner) but unregistered only in
-blk_cleanup_queue() which didn't get called repeatedly. After
-165a5e22fafb we were doing correct bdi_register() - bdi_unregister()
-cycles however bdi_unregister() is not prepared for it. So make sure
-bdi_unregister() cleans up bdi in such a way that it is prepared for
-a possible following bdi_register() call.
+> -----Original Message-----
+> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
+> Sent: Wednesday, March 08, 2017 10:03 PM
+> To: Kashyap Desai
+> Cc: Christoph Hellwig; linux-kernel@vger.kernel.org; linux-
+> scsi@vger.kernel.org
+> Subject: Re: out of range LBA using sg_raw
+>
+> >>>>> "Kashyap" == Kashyap Desai <kashyap.desai@broadcom.com> writes:
+>
+> Kashyap,
+>
+> Kashyap> I am just curious to know how badly we have to scrutinize each
+> Kashyap> packet before sending to Fast Path as we are in IO path and
+> Kashyap> recommend only important checks to be added.
+>
+> As Christoph pointed out, when the fast path is in use you assume the
+role of
+> the SCSI device. And therefore it is your responsibility to ensure that
+the VD's
+> capacity and other relevant constraints are being honored. Just like the
+MR
+> firmware and any attached disks would.
 
-An easy way to provoke this behavior is to enable
-CONFIG_DEBUG_TEST_DRIVER_REMOVE and use scsi_debug driver to create a
-scsi disk which immediately hangs without this fix.
+Martin -
 
-Fixes: 165a5e22fafb127ecb5914e12e8c32a1f0d3f820
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- mm/backing-dev.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+Agree on this point. I am planning to study all possible such sanity in
+driver for VD and not trying to fix one specific scenario as described
+here.
+Do you think fix  in this area is good  for kernel-stable as well  OR just
+keep in linux-next as it is not so severe considering real time exposure ?
+Trying to understand priority and severity of this issue.
 
-diff --git a/mm/backing-dev.c b/mm/backing-dev.c
-index 6d861d090e9f..6ac932210f56 100644
---- a/mm/backing-dev.c
-+++ b/mm/backing-dev.c
-@@ -710,6 +710,11 @@ static void cgwb_bdi_destroy(struct backing_dev_info *bdi)
- 	 */
- 	atomic_dec(&bdi->usage_cnt);
- 	wait_event(cgwb_release_wait, !atomic_read(&bdi->usage_cnt));
-+	/*
-+	 * Grab back our reference so that we hold it when @bdi gets
-+	 * re-registered.
-+	 */
-+	atomic_inc(&bdi->usage_cnt);
- }
- 
- /**
-@@ -857,6 +862,8 @@ int bdi_register_owner(struct backing_dev_info *bdi, struct device *owner)
- 			MINOR(owner->devt));
- 	if (rc)
- 		return rc;
-+	/* Leaking owner reference... */
-+	WARN_ON(bdi->owner);
- 	bdi->owner = owner;
- 	get_device(owner);
- 	return 0;
--- 
-2.10.2
+>
+> It is a feature that there is no sanity checking in the sg interface.
+> The intent is to be able to pass through commands directly to a device
+and
+> have the device act upon them. Including fail them if they don't make
+any
+> sense.
+
+Understood as sg_raw is not design to sanity check.
+
+>
+> PS. I'm really no fan of the fast path. It's super messy to have the VD
+layout
+> handled in two different places.
+>
+> --
+> Martin K. Petersen	Oracle Linux Engineering
