@@ -1,25 +1,19 @@
-From: Omar Sandoval <osandov@osandov.com>
+From: Jens Axboe <axboe@kernel.dk>
 Subject: Re: [PATCH 0/4] block: Fixes for bdi handling
-Date: Wed, 8 Mar 2017 08:50:51 -0800
-Message-ID: <20170308165051.GA8598@vader>
+Date: Wed, 8 Mar 2017 09:55:04 -0700
+Message-ID: <3637d996-6e69-def6-ee56-60a14a560428@kernel.dk>
 References: <20170308164834.14302-1-jack@suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f50.google.com ([74.125.83.50]:33673 "EHLO
-        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753932AbdCHQvm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2017 11:51:42 -0500
-Received: by mail-pg0-f50.google.com with SMTP id 25so15214305pgy.0
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Mar 2017 08:51:41 -0800 (PST)
-Content-Disposition: inline
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170308164834.14302-1-jack@suse.cz>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
 To: Jan Kara <jack@suse.cz>
-Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, linux-block@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Arthur Marsh <arthur.marsh@internode.on.net>, linux-scsi@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, linux-block@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Omar Sandoval <osandov@osandov.com>, Arthur Marsh <arthur.marsh@internode.on.net>, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Mar 08, 2017 at 05:48:30PM +0100, Jan Kara wrote:
+On 03/08/2017 09:48 AM, Jan Kara wrote:
 > Hi!
 > 
 > patches in this series fix the most urgent bugs that were introduced by commit
@@ -36,8 +30,10 @@ On Wed, Mar 08, 2017 at 05:48:30PM +0100, Jan Kara wrote:
 > Other BDI handling fixes I have in my queue can wait a bit more since they are
 > either theoretical or long-standing issues. So I'll repost them once these four
 > are sorted out.
-> 
-> 								Honza
 
-Applying patches 1 and 2 indeed fixed my virtio-scsi problem. I'll apply
-the whole series and test that my sd/sr test cases still work.
+Agree, we'll need to get this sorted for -rc2, thanks a lot for looking
+into it. I'll queue these up for testing as well, and hopefully ship
+them off tomorrow (or Friday, at the latest).
+
+-- 
+Jens Axboe
