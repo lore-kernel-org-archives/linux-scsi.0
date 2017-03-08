@@ -1,51 +1,59 @@
-From: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
-Subject: Re: [PATCH 24/29] drivers: convert iblock_req.pending from atomic_t
- to refcount_t
-Date: Tue, 07 Mar 2017 23:37:04 -0800
-Message-ID: <1488958624.10589.10.camel@haakon3.risingtidesystems.com>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
-	 <1488810076-3754-25-git-send-email-elena.reshetova@intel.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH v3 00/14] qla2xxx: Bug Fixes and updates for target.
+Date: Tue, 07 Mar 2017 23:34:52 -0800
+Message-ID: <1488958492.10589.9.camel@haakon3.risingtidesystems.com>
+References: <1487972263-3795-1-git-send-email-himanshu.madhani@cavium.com>
+         <1488760974.2808.1.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <open-iscsi+bncBDAIFWGVYMJRBI7J73CQKGQE7C5YECQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <1488810076-3754-25-git-send-email-elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: Elena Reshetova <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xen-devel-GuqFBffKawtpuQazS67q72D2FQJk+8+b@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux1394-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-tBiZLqfeLfOHmIFyCCdPziST3g8Odh+X@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-serial-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, Hans Liljestrand <ishkamiel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, David Windsor <dwindsor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1488760974.2808.1.camel@sandisk.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Cc: "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "giridhar.malavali@cavium.com" <giridhar.malavali@cavium.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Elena,
-
-On Mon, 2017-03-06 at 16:21 +0200, Elena Reshetova wrote:
-> refcount_t type and corresponding API should be
-> used instead of atomic_t when the variable is used as
-> a reference counter. This allows to avoid accidental
-> refcounter overflows that might lead to use-after-free
-> situations.
+On Mon, 2017-03-06 at 00:43 +0000, Bart Van Assche wrote:
+> On Fri, 2017-02-24 at 13:37 -0800, Himanshu Madhani wrote:
+> > Please consider this series for inclusion in target-pending.
 > 
-> Signed-off-by: Elena Reshetova <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> Signed-off-by: Hans Liljestrand <ishkamiel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Signed-off-by: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-> Signed-off-by: David Windsor <dwindsor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> ---
->  drivers/target/target_core_iblock.c | 12 ++++++------
->  drivers/target/target_core_iblock.h |  3 ++-
->  2 files changed, 8 insertions(+), 7 deletions(-)
+> Hello Himanshu,
+> 
+> I applied this patch series on top of kernel v4.11-rc1 and installed it on
+> a test system. Unfortunately the regression I reported one month ago against
+> v2 of this patch series still occurs with v3 of this patch series:
 
-For the target_core_iblock part:
+Btw, the regression reported here in v2:
 
-Acked-by: Nicholas Bellinger <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+http://www.spinics.net/lists/target-devel/msg14348.html
 
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+is completely different from what you've reported here.
+
+> 
+> INFO: task kworker/2:1:71 blocked for more than 120 seconds.
+>       Not tainted 4.11.0-rc1-dbg+ #1
+> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> kworker/2:1     D    0    71      2 0x00000000
+> Workqueue: events qlt_free_session_done [qla2xxx]
+> Call Trace:
+>  __schedule+0x1ef/0xa70
+>  schedule+0x40/0x90
+>  schedule_timeout+0x258/0x4a0
+>  wait_for_completion+0x108/0x170
+>  target_wait_for_sess_cmds+0x56/0x1b0 [target_core_mod]
+>  tcm_qla2xxx_free_session+0x45/0x90 [tcm_qla2xxx]
+>  qlt_free_session_done+0x44a/0x550 [qla2xxx]
+>  process_one_work+0x20d/0x6c0
+>  worker_thread+0x4e/0x4a0
+>  kthread+0x10c/0x140
+>  ret_from_fork+0x31/0x40
+> 
+
+It would be useful to explain how you reproduced this, instead of just
+posting backtrace with zero context..?
+
+Can we at least identify which patch in this series is causing this..?
+
+Also, I assume you are running this on stock v4.11-rc1 with only this
+qla2xxx series applied, and not all of your other stuff, right..?
