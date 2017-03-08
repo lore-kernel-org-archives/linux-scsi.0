@@ -1,40 +1,32 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: out of range LBA using sg_raw
-Date: Wed, 08 Mar 2017 11:32:36 -0500
-Message-ID: <yq1y3wfhgpn.fsf@oracle.com>
-References: <cf343e80707394b8945cd7643f7beecd@mail.gmail.com>
-        <20170308151113.GB27450@infradead.org>
-        <eb88925faa247b2ae6e510fc7fd0cff9@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <eb88925faa247b2ae6e510fc7fd0cff9@mail.gmail.com> (Kashyap
-        Desai's message of "Wed, 8 Mar 2017 21:29:28 +0530")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 0/4] block: Fixes for bdi handling
+Date: Wed,  8 Mar 2017 17:48:30 +0100
+Message-ID: <20170308164834.14302-1-jack@suse.cz>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:34820 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752720AbdCHQtJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 8 Mar 2017 11:49:09 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Tejun Heo <tj@kernel.org>, linux-block@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Omar Sandoval <osandov@osandov.com>, Arthur Marsh <arthur.marsh@internode.on.net>, linux-scsi@vger.kernel.org, Jan Kara <jack@suse.cz>
 
->>>>> "Kashyap" == Kashyap Desai <kashyap.desai@broadcom.com> writes:
+Hi!
 
-Kashyap,
+patches in this series fix the most urgent bugs that were introduced by commit
+165a5e22fafb "block: Move bdi_unregister() to del_gendisk()" and by
+0dba1314d4f8 "scsi, block: fix duplicate bdi name registration crashes".
+In fact before these commits we had a different set of problems in the
+code but they were less visible :).
 
-Kashyap> I am just curious to know how badly we have to scrutinize each
-Kashyap> packet before sending to Fast Path as we are in IO path and
-Kashyap> recommend only important checks to be added.
+I'm still waiting for test confirmation from Omar and Arthur Marsh who reported
+issues but I'm not able to hit any problem anymore in my testing.  I think it
+would be nice to get the patches to rc2 so to speed up things I'm posting the
+patches now so that review can happen in parallel with the testing.
 
-As Christoph pointed out, when the fast path is in use you assume the
-role of the SCSI device. And therefore it is your responsibility to
-ensure that the VD's capacity and other relevant constraints are being
-honored. Just like the MR firmware and any attached disks would.
+Other BDI handling fixes I have in my queue can wait a bit more since they are
+either theoretical or long-standing issues. So I'll repost them once these four
+are sorted out.
 
-It is a feature that there is no sanity checking in the sg interface.
-The intent is to be able to pass through commands directly to a device
-and have the device act upon them. Including fail them if they don't
-make any sense.
-
-PS. I'm really no fan of the fast path. It's super messy to have the VD
-layout handled in two different places.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+								Honza
