@@ -1,61 +1,46 @@
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Subject: Re: [PATCH v5 04/19] net: e100: Replace PCI pool old API
-Date: Wed, 08 Mar 2017 14:40:25 -0800
-Message-ID: <1489012825.3477.51.camel@intel.com>
-References: <20170308161957.28941-1-romain.perier@collabora.com>
-         <20170308161957.28941-5-romain.perier@collabora.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 2/4] bdi: Fix use-after-free in wb_congested_put()
+Date: Wed, 8 Mar 2017 17:56:51 -0500
+Message-ID: <20170308225651.GC21117@htj.duckdns.org>
+References: <20170308164834.14302-1-jack@suse.cz>
+ <20170308164834.14302-3-jack@suse.cz>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha256";
-        protocol="application/pgp-signature"; boundary="=-p87cXMN0K7D4rRhQU6Ip"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170308161957.28941-5-romain.perier@collabora.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Romain Perier <romain.perier@collabora.com>, Dan Williams <dan.j.williams@intel.com>, Doug Ledford <dledford@redhat.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, "David S. Miller" <davem@davemloft.net>, stas.yakovlev@gmail.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Felipe Balbi <balbi@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Peter Senna Tschudin <peter.senna@collabora.co.uk>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170308164834.14302-3-jack@suse.cz>
+Sender: linux-block-owner@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Omar Sandoval <osandov@osandov.com>, Arthur Marsh <arthur.marsh@internode.on.net>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+On Wed, Mar 08, 2017 at 05:48:32PM +0100, Jan Kara wrote:
+> bdi_writeback_congested structures get created for each blkcg and bdi
+> regardless whether bdi is registered or not. When they are created in
+> unregistered bdi and the request queue (and thus bdi) is then destroyed
+> while blkg still holds reference to bdi_writeback_congested structure,
+> this structure will be referencing freed bdi and last wb_congested_put()
+> will try to remove the structure from already freed bdi.
+> 
+> With commit 165a5e22fafb "block: Move bdi_unregister() to
+> del_gendisk()", SCSI started to destroy bdis without calling
+> bdi_unregister() first (previously it was calling bdi_unregister() even
+> for unregistered bdis) and thus the code detaching
+> bdi_writeback_congested in cgwb_bdi_destroy() was not triggered and we
+> started hitting this use-after-free bug. It is enough to boot a KVM
+> instance with virtio-scsi device to trigger this behavior.
+> 
+> Fix the problem by detaching bdi_writeback_congested structures in
+> bdi_exit() instead of bdi_unregister(). This is also more logical as
+> they can get attached to bdi regardless whether it ever got registered
+> or not.
+> 
+> Fixes: 165a5e22fafb127ecb5914e12e8c32a1f0d3f820
+> Signed-off-by: Jan Kara <jack@suse.cz>
 
---=-p87cXMN0K7D4rRhQU6Ip
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Acked-by: Tejun Heo <tj@kernel.org>
 
-On Wed, 2017-03-08 at 17:19 +0100, Romain Perier wrote:
-> The PCI pool API is deprecated. This commit replaces the PCI pool old
-> API by the appropriate function with the DMA pool API.
->=20
-> Signed-off-by: Romain Perier <romain.perier@collabora.com>
-> Acked-by: Peter Senna Tschudin <peter.senna@collabora.com>
-> Tested-by: Peter Senna Tschudin <peter.senna@collabora.com>
-> ---
-> =C2=A0drivers/net/ethernet/intel/e100.c | 12 ++++++------
-> =C2=A01 file changed, 6 insertions(+), 6 deletions(-)
+Thanks.
 
-Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-
-My only concern is:
-- what hardware did this get tested with?  Since this affects all e100
-parts, it would be hard to believe that all the affected hardware was
-used in testing.
---=-p87cXMN0K7D4rRhQU6Ip
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiTyZWz+nnTrOJ1LZ5W/vlVpL7c4FAljAiFkACgkQ5W/vlVpL
-7c5KqA//dfxwhSSaEHsZcSVBClb6RNEyuAtgW6MYWhTdnRHDEDd253nmWumlU6he
-UYpJMs8FMKTYU1VFJ1fN3hzxN3t+jls9I39DMgtEcWv0LFGfQScJt2W8qh8IeheK
-dIlXtzM2JWM3XKWjASPTjY0S3o/cZrxuJo5Yv/2t6/Y/18nghdmXs9qtZo5ewBih
-A67A73qd7AvEpa4VPoCF6QI0yez+sIIi8Lmo9th34P61UyZU1HyUwijO/j3uGA0+
-cXjLs3weVzH0CJQlRO0KSOTigl7I7QjOawpM8e8QW3x0eGO5pBOZjhGMwux70+Zd
-K6lZHIZoyua9qRCEiKpQw/MXaquzoTL8l7ctNqOFloWe63rxgwsnDO8QmfXURBSs
-DiY9uJEYoXvyuQloxpiA/lZm/drH5vAGMQG2equMcqT9IAN3yTWs3/NG4MQMcPoz
-9Nym9qOPXOKc7W9YLhK5JbQjyt7HvosEF2WN+quWPR0WY5e2YGqcXiPGqwUH0YkS
-KRuxTmKcNMkqICUYXKZpk2ACdkoVCH02yqRunBYUtsFgD9BFx4JXBhJ4HLWRzZTW
-kw8dlUG+eyVo+0UCJoB9S2L63yIgTsHnnQQIy99hDslRiUygSZUkO15UgjLko2dc
-+APGhTqnm5BzG52lOIYaUzfyGElUzJByzWP2O4H6RuzfAin68B4=
-=+lcU
------END PGP SIGNATURE-----
-
---=-p87cXMN0K7D4rRhQU6Ip--
+-- 
+tejun
