@@ -1,69 +1,51 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] storvsc: workaround for virtual DVD SCSI version
-Date: Wed, 8 Mar 2017 08:00:32 +0100
-Message-ID: <7b3fcc1f-e446-032c-d02b-b9ab1ee6512e@suse.de>
-References: <20170307171553.13247-1-sthemmin@microsoft.com>
+From: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+Subject: Re: [PATCH 24/29] drivers: convert iblock_req.pending from atomic_t
+ to refcount_t
+Date: Tue, 07 Mar 2017 23:37:04 -0800
+Message-ID: <1488958624.10589.10.camel@haakon3.risingtidesystems.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+	 <1488810076-3754-25-git-send-email-elena.reshetova@intel.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20170307171553.13247-1-sthemmin@microsoft.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Stephen Hemminger <stephen@networkplumber.org>, kys@microsoft.com, haiyangz@microsoft.com, longli@microsoft.com, martin.petersen@oracle.com, hch@lst.de
-Cc: devel@linuxdriverproject.org, Stephen Hemminger <sthemmin@microsoft.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <open-iscsi+bncBDAIFWGVYMJRBI7J73CQKGQE7C5YECQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <1488810076-3754-25-git-send-email-elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: Elena Reshetova <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xen-devel-GuqFBffKawtpuQazS67q72D2FQJk+8+b@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux1394-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-tBiZLqfeLfOHmIFyCCdPziST3g8Odh+X@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-serial-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, Hans Liljestrand <ishkamiel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, David Windsor <dwindsor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 03/07/2017 06:15 PM, Stephen Hemminger wrote:
-> Hyper-V host emulation of SCSI for virtual DVD device reports SCSI
-> version 0 (UNKNOWN) but is still capable of supporting REPORTLUN. =
+Hi Elena,
 
-> =
-
-> Without this patch, a GEN2 Linux guest on Hyper-V will not boot 4.11
-> successfully with virtual DVD ROM device. What happens is that the
-> SCSI scan process falls back to doing sequential probing by INQUIRY.
-> But the storvsc driver has a previous workaround that masks/blocks all
-> errors reports from INQUIRY (or MODE_SENSE) commands.  This workaround
-> causes the scan to then populate a full set of bogus LUN's on the
-> target and then sends kernel spinning off into a death spiral doing
-> block reads on the non-existent LUNs.
-> =
-
-> By setting the correct blacklist flags, the target with the
-> DVD device is scanned with REPORTLUN and that works correctly.
-> =
-
-> Patch needs to go in current 4.11, it is safe but not necessary
-> in older kernels.
-> =
-
-> Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
+On Mon, 2017-03-06 at 16:21 +0200, Elena Reshetova wrote:
+> refcount_t type and corresponding API should be
+> used instead of atomic_t when the variable is used as
+> a reference counter. This allows to avoid accidental
+> refcounter overflows that might lead to use-after-free
+> situations.
+> 
+> Signed-off-by: Elena Reshetova <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> Signed-off-by: Hans Liljestrand <ishkamiel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Signed-off-by: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+> Signed-off-by: David Windsor <dwindsor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 > ---
->  drivers/scsi/storvsc_drv.c | 27 +++++++++++++++++----------
->  1 file changed, 17 insertions(+), 10 deletions(-)
-> =
+>  drivers/target/target_core_iblock.c | 12 ++++++------
+>  drivers/target/target_core_iblock.h |  3 ++-
+>  2 files changed, 8 insertions(+), 7 deletions(-)
 
-> PS: The error handling does need to be fixed (have patches pending)
-> but that is interrelated with hotplug and can wait.
-> =
+For the target_core_iblock part:
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Acked-by: Nicholas Bellinger <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
 
-Cheers,
-
-Hannes
--- =
-
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
