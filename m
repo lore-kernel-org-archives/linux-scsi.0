@@ -1,7 +1,7 @@
 From: Romain Perier <romain.perier@collabora.com>
-Subject: [PATCH v5 06/19] mlx5: Replace PCI pool old API
-Date: Wed,  8 Mar 2017 17:19:44 +0100
-Message-ID: <20170308161957.28941-7-romain.perier@collabora.com>
+Subject: [PATCH v5 05/19] mlx4: Replace PCI pool old API
+Date: Wed,  8 Mar 2017 17:19:43 +0100
+Message-ID: <20170308161957.28941-6-romain.perier@collabora.com>
 References: <20170308161957.28941-1-romain.perier@collabora.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20170308161957.28941-1-romain.perier@collabora.com>
@@ -14,73 +14,67 @@ The PCI pool API is deprecated. This commit replaces the PCI pool old
 API by the appropriate function with the DMA pool API.
 
 Signed-off-by: Romain Perier <romain.perier@collabora.com>
-Reviewed-by: Peter Senna Tschudin <peter.senna@collabora.com>
+Acked-by: Peter Senna Tschudin <peter.senna@collabora.com>
+Tested-by: Peter Senna Tschudin <peter.senna@collabora.com>
 ---
- drivers/net/ethernet/mellanox/mlx5/core/cmd.c | 11 ++++++-----
- include/linux/mlx5/driver.h                   |  2 +-
- 2 files changed, 7 insertions(+), 6 deletions(-)
+ drivers/net/ethernet/mellanox/mlx4/cmd.c  | 10 +++++-----
+ drivers/net/ethernet/mellanox/mlx4/mlx4.h |  2 +-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/ethernet/mellanox/mlx5/core/cmd.c b/drivers/net/ethernet/mellanox/mlx5/core/cmd.c
-index caa837e..6eef344 100644
---- a/drivers/net/ethernet/mellanox/mlx5/core/cmd.c
-+++ b/drivers/net/ethernet/mellanox/mlx5/core/cmd.c
-@@ -1061,7 +1061,7 @@ static struct mlx5_cmd_mailbox *alloc_cmd_box(struct mlx5_core_dev *dev,
+diff --git a/drivers/net/ethernet/mellanox/mlx4/cmd.c b/drivers/net/ethernet/mellanox/mlx4/cmd.c
+index e8c1051..fb69604 100644
+--- a/drivers/net/ethernet/mellanox/mlx4/cmd.c
++++ b/drivers/net/ethernet/mellanox/mlx4/cmd.c
+@@ -2516,8 +2516,8 @@ int mlx4_cmd_init(struct mlx4_dev *dev)
+ 	}
+ 
+ 	if (!priv->cmd.pool) {
+-		priv->cmd.pool = pci_pool_create("mlx4_cmd",
+-						 dev->persist->pdev,
++		priv->cmd.pool = dma_pool_create("mlx4_cmd",
++						 &dev->persist->pdev->dev,
+ 						 MLX4_MAILBOX_SIZE,
+ 						 MLX4_MAILBOX_SIZE, 0);
+ 		if (!priv->cmd.pool)
+@@ -2588,7 +2588,7 @@ void mlx4_cmd_cleanup(struct mlx4_dev *dev, int cleanup_mask)
+ 	struct mlx4_priv *priv = mlx4_priv(dev);
+ 
+ 	if (priv->cmd.pool && (cleanup_mask & MLX4_CMD_CLEANUP_POOL)) {
+-		pci_pool_destroy(priv->cmd.pool);
++		dma_pool_destroy(priv->cmd.pool);
+ 		priv->cmd.pool = NULL;
+ 	}
+ 
+@@ -2680,7 +2680,7 @@ struct mlx4_cmd_mailbox *mlx4_alloc_cmd_mailbox(struct mlx4_dev *dev)
  	if (!mailbox)
  		return ERR_PTR(-ENOMEM);
  
--	mailbox->buf = pci_pool_zalloc(dev->cmd.pool, flags,
-+	mailbox->buf = dma_pool_zalloc(dev->cmd.pool, flags,
+-	mailbox->buf = pci_pool_zalloc(mlx4_priv(dev)->cmd.pool, GFP_KERNEL,
++	mailbox->buf = dma_pool_zalloc(mlx4_priv(dev)->cmd.pool, GFP_KERNEL,
  				       &mailbox->dma);
  	if (!mailbox->buf) {
- 		mlx5_core_dbg(dev, "failed allocation\n");
-@@ -1076,7 +1076,7 @@ static struct mlx5_cmd_mailbox *alloc_cmd_box(struct mlx5_core_dev *dev,
- static void free_cmd_box(struct mlx5_core_dev *dev,
- 			 struct mlx5_cmd_mailbox *mailbox)
- {
--	pci_pool_free(dev->cmd.pool, mailbox->buf, mailbox->dma);
-+	dma_pool_free(dev->cmd.pool, mailbox->buf, mailbox->dma);
+ 		kfree(mailbox);
+@@ -2697,7 +2697,7 @@ void mlx4_free_cmd_mailbox(struct mlx4_dev *dev,
+ 	if (!mailbox)
+ 		return;
+ 
+-	pci_pool_free(mlx4_priv(dev)->cmd.pool, mailbox->buf, mailbox->dma);
++	dma_pool_free(mlx4_priv(dev)->cmd.pool, mailbox->buf, mailbox->dma);
  	kfree(mailbox);
  }
+ EXPORT_SYMBOL_GPL(mlx4_free_cmd_mailbox);
+diff --git a/drivers/net/ethernet/mellanox/mlx4/mlx4.h b/drivers/net/ethernet/mellanox/mlx4/mlx4.h
+index b4f1bc5..69c8764 100644
+--- a/drivers/net/ethernet/mellanox/mlx4/mlx4.h
++++ b/drivers/net/ethernet/mellanox/mlx4/mlx4.h
+@@ -628,7 +628,7 @@ struct mlx4_mgm {
+ };
  
-@@ -1696,7 +1696,8 @@ int mlx5_cmd_init(struct mlx5_core_dev *dev)
- 		return -EINVAL;
- 	}
- 
--	cmd->pool = pci_pool_create("mlx5_cmd", dev->pdev, size, align, 0);
-+	cmd->pool = dma_pool_create("mlx5_cmd", &dev->pdev->dev, size, align,
-+				    0);
- 	if (!cmd->pool)
- 		return -ENOMEM;
- 
-@@ -1786,7 +1787,7 @@ int mlx5_cmd_init(struct mlx5_core_dev *dev)
- 	free_cmd_page(dev, cmd);
- 
- err_free_pool:
--	pci_pool_destroy(cmd->pool);
-+	dma_pool_destroy(cmd->pool);
- 
- 	return err;
- }
-@@ -1800,6 +1801,6 @@ void mlx5_cmd_cleanup(struct mlx5_core_dev *dev)
- 	destroy_workqueue(cmd->wq);
- 	destroy_msg_cache(dev);
- 	free_cmd_page(dev, cmd);
--	pci_pool_destroy(cmd->pool);
-+	dma_pool_destroy(cmd->pool);
- }
- EXPORT_SYMBOL(mlx5_cmd_cleanup);
-diff --git a/include/linux/mlx5/driver.h b/include/linux/mlx5/driver.h
-index 48d8b66..0e33e65 100644
---- a/include/linux/mlx5/driver.h
-+++ b/include/linux/mlx5/driver.h
-@@ -284,7 +284,7 @@ struct mlx5_cmd {
- 	struct semaphore pages_sem;
- 	int	mode;
- 	struct mlx5_cmd_work_ent *ent_arr[MLX5_MAX_COMMANDS];
--	struct pci_pool *pool;
-+	struct dma_pool *pool;
- 	struct mlx5_cmd_debug dbg;
- 	struct cmd_msg_cache cache[MLX5_NUM_COMMAND_CACHES];
- 	int checksum_disabled;
+ struct mlx4_cmd {
+-	struct pci_pool	       *pool;
++	struct dma_pool	       *pool;
+ 	void __iomem	       *hcr;
+ 	struct mutex		slave_cmd_mutex;
+ 	struct semaphore	poll_sem;
 -- 
 2.9.3
