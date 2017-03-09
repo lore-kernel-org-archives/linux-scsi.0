@@ -1,109 +1,48 @@
-From: Israel Rukshin <israelr@mellanox.com>
-Subject: [PATCH v2] scsi_sysfs: fix hang when removing scsi device
-Date: Thu,  9 Mar 2017 18:37:22 +0200
-Message-ID: <1489077442-20610-1-git-send-email-israelr@mellanox.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/4] block: Allow bdi re-registration
+Date: Thu, 9 Mar 2017 11:39:39 -0500
+Message-ID: <20170309163939.GA28982@htj.duckdns.org>
+References: <20170309101624.25901-1-jack@suse.cz>
+ <20170309101624.25901-2-jack@suse.cz>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:36269 "EHLO
-        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754704AbdCIQhf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2017 11:37:35 -0500
+Received: from mail-yb0-f195.google.com ([209.85.213.195]:35108 "EHLO
+        mail-yb0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754730AbdCIQly (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2017 11:41:54 -0500
+Content-Disposition: inline
+In-Reply-To: <20170309101624.25901-2-jack@suse.cz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Max Gurtovoy <maxg@mellanox.com>, Israel Rukshin <israelr@mellanox.com>
+To: Jan Kara <jack@suse.cz>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Omar Sandoval <osandov@osandov.com>, Arthur Marsh <arthur.marsh@internode.on.net>, linux-scsi@vger.kernel.org
 
-The bug reproduce when unloading srp module with one port down.
-sd_shutdown() hangs when __scsi_remove_device() get scsi_device with
-state SDEV_OFFLINE or SDEV_TRANSPORT_OFFLINE.
-It hangs because sd_shutdown() is trying to send sync cache command
-when the device is offline but with SDEV_CANCEL status.
-The status was changed to SDEV_CANCEL by __scsi_remove_device()
-before it calls to device_del().
+On Thu, Mar 09, 2017 at 11:16:21AM +0100, Jan Kara wrote:
+> SCSI can call device_add_disk() several times for one request queue when
+> a device in unbound and bound, creating new gendisk each time. This will
+> lead to bdi being repeatedly registered and unregistered. This was not a
+> big problem until commit 165a5e22fafb "block: Move bdi_unregister() to
+> del_gendisk()" since bdi was only registered repeatedly (bdi_register()
+> handles repeated calls fine, only we ended up leaking reference to
+> gendisk due to overwriting bdi->owner) but unregistered only in
+> blk_cleanup_queue() which didn't get called repeatedly. After
+> 165a5e22fafb we were doing correct bdi_register() - bdi_unregister()
+> cycles however bdi_unregister() is not prepared for it. So make sure
+> bdi_unregister() cleans up bdi in such a way that it is prepared for
+> a possible following bdi_register() call.
+> 
+> An easy way to provoke this behavior is to enable
+> CONFIG_DEBUG_TEST_DRIVER_REMOVE and use scsi_debug driver to create a
+> scsi disk which immediately hangs without this fix.
+> 
+> Fixes: 165a5e22fafb127ecb5914e12e8c32a1f0d3f820
+> Tested-by: Omar Sandoval <osandov@fb.com>
+> Signed-off-by: Jan Kara <jack@suse.cz>
 
-The block layer timeout mechanism doesn't cause the SYNCHRONIZE CACHE
-command to fail after the timeout expired because the request timer
-wasn't started.
-blk_peek_request() that is called from scsi_request_fn() didn't return
-this request and therefore the request timer didn't start.
+Acked-by: Tejun Heo <tj@kernel.org>
 
-This commit doesn't accept new commands if the original state was offline.
+Thanks!
 
-The bug was revealed after commit cff549 ("scsi: proper state checking
-and module refcount handling in scsi_device_get").
-After this commit scsi_device_get() returns error if the device state
-is SDEV_CANCEL.
-This eventually leads SRP fast I/O failure timeout handler not to clean
-the sync cache command because scsi_target_unblock() skip the canceled device.
-If this timeout handler is set to infinity then the hang remains forever
-also before commit cff549.
-
-sysrq: SysRq : sysrq: Show Blocked State
-task PC stack pid father
-kworker/2:0 D ffff88046fa95c00 0 21178 2 0x00000000
-Workqueue: srp_remove srp_remove_work [ib_srp]
-Call Trace:
-[<ffffffff815dd985>] schedule+0x35/0x80
-[<ffffffff815e02c7>] schedule_timeout+0x237/0x2d0
-[<ffffffff815dcf46>] io_schedule_timeout+0xa6/0x110
-[<ffffffff815de2f3>] wait_for_completion_io+0xa3/0x110
-[<ffffffff812e66ff>] blk_execute_rq+0xdf/0x120
-[<ffffffffa00135de>] scsi_execute+0xce/0x150 [scsi_mod]
-[<ffffffffa001548f>] scsi_execute_req_flags+0x8f/0xf0 [scsi_mod]
-[<ffffffffa0154849>] sd_sync_cache+0xa9/0x190 [sd_mod]
-[<ffffffffa0154c3a>] sd_shutdown+0x6a/0x100 [sd_mod]
-[<ffffffffa0154d34>] sd_remove+0x64/0xc0 [sd_mod]
-[<ffffffff8144d3fd>] __device_release_driver+0x8d/0x120
-[<ffffffff8144d4ae>] device_release_driver+0x1e/0x30
-[<ffffffff8144c239>] bus_remove_device+0xf9/0x170
-[<ffffffff81448bc7>] device_del+0x127/0x240
-[<ffffffffa001c0f1>] __scsi_remove_device+0xc1/0xd0 [scsi_mod]
-[<ffffffffa001a5d7>] scsi_forget_host+0x57/0x60 [scsi_mod]
-[<ffffffffa000e3d2>] scsi_remove_host+0x72/0x110 [scsi_mod]
-[<ffffffffa06f95ab>] srp_remove_work+0x8b/0x200 [ib_srp]
-...
-
-Signed-off-by: Israel Rukshin <israelr@mellanox.com>
-Reviewed-by: Max Gurtovoy <maxg@mellanox.com>
----
-
-Changes from v1:
- - add extra description to commit message and to the comment.
- - refer to the commit that originally introduced this hang.
-
----
- drivers/scsi/scsi_sysfs.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
-
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 82dfe07..8a977f5 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1282,6 +1282,8 @@ void __scsi_remove_device(struct scsi_device *sdev)
- 		return;
- 
- 	if (sdev->is_visible) {
-+		enum scsi_device_state oldstate = sdev->sdev_state;
-+
- 		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
- 			return;
- 
-@@ -1289,6 +1291,17 @@ void __scsi_remove_device(struct scsi_device *sdev)
- 		device_unregister(&sdev->sdev_dev);
- 		transport_remove_device(dev);
- 		scsi_dh_remove_device(sdev);
-+
-+		/*
-+		 * Fail new requests if the old state was offline.
-+		 * This avoids from sd_shutdown() to hang.
-+		 * The SYNCHRONIZE CACHE request timer will never start
-+		 * in that case.
-+		 */
-+		if (oldstate == SDEV_TRANSPORT_OFFLINE ||
-+		    oldstate == SDEV_OFFLINE)
-+			blk_set_queue_dying(sdev->request_queue);
-+
- 		device_del(dev);
- 	} else
- 		put_device(&sdev->sdev_dev);
 -- 
-2.4.3
+tejun
