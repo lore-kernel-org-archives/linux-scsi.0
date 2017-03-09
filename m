@@ -1,58 +1,139 @@
-From: Peter Senna Tschudin <peter.senna-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
-Subject: Re: [PATCH v5 04/19] net: e100: Replace PCI pool old API
-Date: Thu, 9 Mar 2017 08:01:29 +0100
-Message-ID: <20170309070129.GA13741@collabora.com>
-References: <20170308161957.28941-1-romain.perier@collabora.com>
- <20170308161957.28941-5-romain.perier@collabora.com>
- <1489012825.3477.51.camel@intel.com>
+From: "Reshetova, Elena" <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: RE: [PATCH 22/29] drivers, scsi: convert iscsi_task.refcount from
+ atomic_t to refcount_t
+Date: Thu, 9 Mar 2017 07:18:29 +0000
+Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C569DC@IRSMSX102.ger.corp.intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+ <1488810076-3754-23-git-send-email-elena.reshetova@intel.com>
+ <20170308184740.4gueok5csdkt7u62@straylight.hirudinean.org>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1489012825.3477.51.camel-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Jeff Kirsher <jeffrey.t.kirsher-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Romain Perier <romain.perier-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sean Hefty <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hal Rosenstock <hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, stas.yakovlev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Felipe Balbi <balbi-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Peter Senna Tschudin <peter.senna-ZGY8ohtN/8pPYcu2f3hruQ@public.gmane.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <open-iscsi+bncBCWONPVE7ANRBVUDQTDAKGQEB4ZLETQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <20170308184740.4gueok5csdkt7u62-r8IHplWLGbA5tHQWs+pTeqPFFGjUI2lm2LY78lusg7I@public.gmane.org>
+Content-Language: en-US
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: "gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org" <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "xen-devel-GuqFBffKawtpuQazS67q72D2FQJk+8+b@public.gmane.org" <xen-devel-GuqFBffKawtpuQazS67q72D2FQJk+8+b@public.gmane.org>, "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux1394-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org" <linux1394-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>, "linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "devel-tBiZLqfeLfOHmIFyCCdPziST3g8Odh+X@public.gmane.org" <devel-tBiZLqfeLfOHmIFyCCdPziST3g8Odh+X@public.gmane.org>, "linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org" <fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org" <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>, devel-gWbeCf7V1WCQmaza687I9uG/Ez6ZCGd0@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Mar 08, 2017 at 02:40:25PM -0800, Jeff Kirsher wrote:
-> On Wed, 2017-03-08 at 17:19 +0100, Romain Perier wrote:
-> > The PCI pool API is deprecated. This commit replaces the PCI pool old
-> > API by the appropriate function with the DMA pool API.
-> > 
-> > Signed-off-by: Romain Perier <romain.perier-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
-> > Acked-by: Peter Senna Tschudin <peter.senna-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
-> > Tested-by: Peter Senna Tschudin <peter.senna-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
+> On Mon, Mar 06, 2017 at 04:21:09PM +0200, Elena Reshetova wrote:
+> > refcount_t type and corresponding API should be
+> > used instead of atomic_t when the variable is used as
+> > a reference counter. This allows to avoid accidental
+> > refcounter overflows that might lead to use-after-free
+> > situations.
+> >
+> > Signed-off-by: Elena Reshetova <elena.reshetova-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> > Signed-off-by: Hans Liljestrand <ishkamiel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> > Signed-off-by: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+> > Signed-off-by: David Windsor <dwindsor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> 
+> This looks OK to me.
+> 
+> Acked-by: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+
+Thank you for review! Do you have a tree that can take this change? 
+
+Best Regards,
+Elena.
+
+> 
 > > ---
-> >  drivers/net/ethernet/intel/e100.c | 12 ++++++------
-> >  1 file changed, 6 insertions(+), 6 deletions(-)
-> 
-> Acked-by: Jeff Kirsher <jeffrey.t.kirsher-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> 
-> My only concern is:
-> - what hardware did this get tested with?  Since this affects all e100
-> parts, it would be hard to believe that all the affected hardware was
-> used in testing.
+> >  drivers/scsi/libiscsi.c        | 8 ++++----
+> >  drivers/scsi/qedi/qedi_iscsi.c | 2 +-
+> >  include/scsi/libiscsi.h        | 3 ++-
+> >  3 files changed, 7 insertions(+), 6 deletions(-)
+> >
+> > diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> > index 834d121..7eb1d2c 100644
+> > --- a/drivers/scsi/libiscsi.c
+> > +++ b/drivers/scsi/libiscsi.c
+> > @@ -516,13 +516,13 @@ static void iscsi_free_task(struct iscsi_task *task)
+> >
+> >  void __iscsi_get_task(struct iscsi_task *task)
+> >  {
+> > -	atomic_inc(&task->refcount);
+> > +	refcount_inc(&task->refcount);
+> >  }
+> >  EXPORT_SYMBOL_GPL(__iscsi_get_task);
+> >
+> >  void __iscsi_put_task(struct iscsi_task *task)
+> >  {
+> > -	if (atomic_dec_and_test(&task->refcount))
+> > +	if (refcount_dec_and_test(&task->refcount))
+> >  		iscsi_free_task(task);
+> >  }
+> >  EXPORT_SYMBOL_GPL(__iscsi_put_task);
+> > @@ -744,7 +744,7 @@ __iscsi_conn_send_pdu(struct iscsi_conn *conn, struct
+> iscsi_hdr *hdr,
+> >  	 * released by the lld when it has transmitted the task for
+> >  	 * pdus we do not expect a response for.
+> >  	 */
+> > -	atomic_set(&task->refcount, 1);
+> > +	refcount_set(&task->refcount, 1);
+> >  	task->conn = conn;
+> >  	task->sc = NULL;
+> >  	INIT_LIST_HEAD(&task->running);
+> > @@ -1616,7 +1616,7 @@ static inline struct iscsi_task *iscsi_alloc_task(struct
+> iscsi_conn *conn,
+> >  	sc->SCp.phase = conn->session->age;
+> >  	sc->SCp.ptr = (char *) task;
+> >
+> > -	atomic_set(&task->refcount, 1);
+> > +	refcount_set(&task->refcount, 1);
+> >  	task->state = ISCSI_TASK_PENDING;
+> >  	task->conn = conn;
+> >  	task->sc = sc;
+> > diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
+> > index b9f79d3..3895bd5 100644
+> > --- a/drivers/scsi/qedi/qedi_iscsi.c
+> > +++ b/drivers/scsi/qedi/qedi_iscsi.c
+> > @@ -1372,7 +1372,7 @@ static void qedi_cleanup_task(struct iscsi_task *task)
+> >  {
+> >  	if (!task->sc || task->state == ISCSI_TASK_PENDING) {
+> >  		QEDI_INFO(NULL, QEDI_LOG_IO, "Returning
+> ref_cnt=%d\n",
+> > -			  atomic_read(&task->refcount));
+> > +			  refcount_read(&task->refcount));
+> >  		return;
+> >  	}
+> >
+> > diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
+> > index b0e275d..24d74b5 100644
+> > --- a/include/scsi/libiscsi.h
+> > +++ b/include/scsi/libiscsi.h
+> > @@ -29,6 +29,7 @@
+> >  #include <linux/timer.h>
+> >  #include <linux/workqueue.h>
+> >  #include <linux/kfifo.h>
+> > +#include <linux/refcount.h>
+> >  #include <scsi/iscsi_proto.h>
+> >  #include <scsi/iscsi_if.h>
+> >  #include <scsi/scsi_transport_iscsi.h>
+> > @@ -139,7 +140,7 @@ struct iscsi_task {
+> >
+> >  	/* state set/tested under session->lock */
+> >  	int			state;
+> > -	atomic_t		refcount;
+> > +	refcount_t		refcount;
+> >  	struct list_head	running;	/* running cmd list */
+> >  	void			*dd_data;	/*
+> driver/transport data */
+> >  };
+> > --
+> > 2.7.4
+> >
 
-This was tested by compilation only(See
-https://lkml.org/lkml/2017/2/8/661). However this series removes macro
-definitions of the old pci_pool interface and replace call sites by what
-the macra was calling.
-
-Here are the macros that this series removes from include/pci.h:
-
-#define pci_pool dma_pool
-#define pci_pool_create(name, pdev, size, align, allocation) \
-	dma_pool_create(name, &pdev->dev, size, align, allocation)
-#define pci_pool_destroy(pool) dma_pool_destroy(pool)
-#define pci_pool_alloc(pool, flags, handle) dma_pool_alloc(pool, flags, handle)
-#define pci_pool_zalloc(pool, flags, handle) \
-	dma_pool_zalloc(pool, flags, handle)
-#define pci_pool_free(pool, vaddr, addr) dma_pool_free(pool, vaddr, add
-
-So this should not affect run time.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
