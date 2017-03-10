@@ -1,27 +1,34 @@
 From: "Mintz, Yuval" <Yuval.Mintz@cavium.com>
 Subject: RE: [PATCH net-next] qed*: Utilize Firmware 8.15.3.0
-Date: Fri, 10 Mar 2017 05:44:05 +0000
-Message-ID: <BL2PR07MB23065C5592BE9E8FF987717E8D200@BL2PR07MB2306.namprd07.prod.outlook.com>
+Date: Fri, 10 Mar 2017 05:49:57 +0000
+Message-ID: <BL2PR07MB2306300BB972DC9466F08ABA8D200@BL2PR07MB2306.namprd07.prod.outlook.com>
 References: <1489091851-1282-1-git-send-email-Yuval.Mintz@cavium.com>
  <20170309214557.GA16860@infradead.org>
+ <BL2PR07MB23065C5592BE9E8FF987717E8D200@BL2PR07MB2306.namprd07.prod.outlook.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20170309214557.GA16860@infradead.org>
+In-Reply-To: <BL2PR07MB23065C5592BE9E8FF987717E8D200@BL2PR07MB2306.namprd07.prod.outlook.com>
 Content-Language: en-US
 Sender: netdev-owner@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
 Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "davem@davemloft.net" <davem@davemloft.net>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Tayar, Tomer" <Tomer.Tayar@cavium.com>, "Amrani, Ram" <Ram.Amrani@cavium.com>, "Rangankar, Manish" <Manish.Rangankar@cavium.com>, "Dupuis, Chad" <Chad.Dupuis@cavium.com>
 List-Id: linux-scsi@vger.kernel.org
 
-> We can't just require a new firmware version in the driver, as users most
-> likely won't have it by the time they install the new kernel.  So you'll =
-have to
-> support the old firmware version as well.
+> > We can't just require a new firmware version in the driver, as users
+> > most likely won't have it by the time they install the new kernel.  So
+> > you'll have to support the old firmware version as well.
+>=20
+> Why not? That has been the paradigm forever.
+>=20
+> The new firmware version is already available in linux-firmware.
+> In any reasonable distro that would update the driver, you'd expect they'=
+d
+> also update the firmware version on their filesystem.
 
-Why not? That has been the paradigm forever.
-
-The new firmware version is already available in linux-firmware.
-In any reasonable distro that would update the driver, you'd expect
-they'd also update the firmware version on their filesystem.
+Just in case it wasn't clear from the original message -=20
+The firmware discussed here is the binary firmware, not the
+management firmware.
+For the management firmware [on persistent storage] there is
+a backward/forward compatibility scheme in place.
