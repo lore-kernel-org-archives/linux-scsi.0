@@ -1,43 +1,52 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH V2 3/3] hpsa: do not timeout reset operations
-Date: Fri, 10 Mar 2017 13:58:35 -0600
-Message-ID: <148917591582.14403.1729348890099345113.stgit@brunhilda>
-References: <148917585522.14403.4296147490747258879.stgit@brunhilda>
+Subject: [PATCH V3 0/3] hpsa updates
+Date: Fri, 10 Mar 2017 14:35:05 -0600
+Message-ID: <148917802486.17050.17178463722401202189.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0066.outbound.protection.outlook.com ([104.47.36.66]:47264
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam01on0088.outbound.protection.outlook.com ([104.47.34.88]:28222
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933981AbdCJT6k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 10 Mar 2017 14:58:40 -0500
-In-Reply-To: <148917585522.14403.4296147490747258879.stgit@brunhilda>
+        id S1754943AbdCJUfQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 10 Mar 2017 15:35:16 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
 Cc: linux-scsi@vger.kernel.org
 
-resets can take longer than DEFAULT_TIMEOUT
+These patches are based on Linus's tree
 
-Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
-Reviewed-by: Scott Teel <scott.teel@microsemi.com>
-Reviewed-by: Tomas Henzl <thenzl@redhat.com> review
-Signed-off-by: Don Brace <don.brace@microsemi.com>
+The changes are:
+ - add in a new offline volume status
+ - limit the number of outstanding rescan operation
+ - do not timeout reset operations
+
+Changes since V1:
+ - hpsa-update-check-for-volume-status
+   - changed return type of hpsa_volume_offline from
+     int to unsigned char
+   - return more specific values.
+   - removed unnecessary code
+   Based on review from: Tomas Henzl <thenzl@redhat.com>
+
+Changes since V2:
+ - hpsa-limit-outstanding-rescans
+   corrected a comment typo (alreay - already)
+
 ---
- drivers/scsi/hpsa.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index e4f57b8..ba725be 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -2956,7 +2956,7 @@ static int hpsa_send_reset(struct ctlr_info *h, unsigned char *scsi3addr,
- 	/* fill_cmd can't fail here, no data buffer to map. */
- 	(void) fill_cmd(c, reset_type, h, NULL, 0, 0,
- 			scsi3addr, TYPE_MSG);
--	rc = hpsa_scsi_do_simple_cmd(h, c, reply_queue, DEFAULT_TIMEOUT);
-+	rc = hpsa_scsi_do_simple_cmd(h, c, reply_queue, NO_TIMEOUT);
- 	if (rc) {
- 		dev_warn(&h->pdev->dev, "Failed to send reset command\n");
- 		goto out;
+Don Brace (3):
+      hpsa: update check for logical volume status
+      hpsa: limit outstanding rescans
+      hpsa: do not timeout reset operations
+
+
+ drivers/scsi/hpsa.c     |   53 ++++++++++++++++++++++++++++-------------------
+ drivers/scsi/hpsa.h     |    1 +
+ drivers/scsi/hpsa_cmd.h |    2 ++
+ 3 files changed, 35 insertions(+), 21 deletions(-)
+
+--
+Signature
