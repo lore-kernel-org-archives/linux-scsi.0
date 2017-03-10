@@ -1,65 +1,48 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [LFS/MM TOPIC][LFS/MM ATTEND]: - Storage Stack and Driver
- Testing methodology.
-Date: Fri, 10 Mar 2017 19:37:58 +0000
-Message-ID: <1489174661.2548.5.camel@sandisk.com>
-References: <CO2PR04MB218427BF42159B20FB26F74186670@CO2PR04MB2184.namprd04.prod.outlook.com>
-         <CO2PR04MB2184DB653C04FB620B41435486670@CO2PR04MB2184.namprd04.prod.outlook.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: [PATCH V2 0/3] hpsa updates
+Date: Fri, 10 Mar 2017 13:58:17 -0600
+Message-ID: <148917585522.14403.4296147490747258879.stgit@brunhilda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <CO2PR04MB2184DB653C04FB620B41435486670@CO2PR04MB2184.namprd04.prod.outlook.com>
-Content-Language: en-US
-Content-ID: <2DADA320DF156E4BB34336358E8539A8@sandisk.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0072.outbound.protection.outlook.com ([104.47.36.72]:32352
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932994AbdCJT6Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 10 Mar 2017 14:58:25 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, 2017-01-10 at 22:40 +0000, Chaitanya Kulkarni wrote:
-> Participants:-
-> ------------------
-> I'd like to invite developers from different subsystems to discuss an app=
-roach towards=A0
-> a unified testing methodology for storage stack and device drivers belong=
-s to=A0
-> different subsystems.
->=20
-> Topics for Discussion:-
-> ------------------------------
-> As a part of discussion following are some of the key points which we can=
- focus on:-
-> 1. What are the common components of the kernel used by the various subsy=
-stems?
-> 2. What are the potential target drivers which can benefit from this appr=
-oach?=A0
-> =A0 (e.g. NVMe, NVMe Over Fabric, Open Channel Solid State Drives etc.)
-> 3. What are the desired features that can be implemented in this Framewor=
-k?
-> =A0 (code coverage, unit tests, stress testings, regression, generating C=
-occinelle reports etc.)=A0
-> 4. Desirable Report generation mechanism?
-> 5. Basic performance validation?
-> 6. Whether QEMU can be used to emulate some of the H/W functionality to c=
-reate a test=A0
-> =A0 platform? (Optional subsystem specific)
+These patches are based on Linus's tree
 
-Regarding existing test software: the SRP test software is a thorough test =
-of
-the Linux block layer, SCSI core, dm-mpath driver, dm core, SRP initiator a=
-nd
-target drivers and also of the asynchronous I/O subsystem. This test suite
-includes experimental support for the NVMeOF drivers. This test suite suppo=
-rts
-the rdma_rxe driver which means that an Ethernet adapter is sufficient to r=
-un
-these tests.
+The changes are:
+ - add in a new offline volume status
+ - limit the number of outstanding rescan operation
+ - do not timeout reset operations
 
-Note: the focus of this test suite is the regular I/O path and device remov=
-al.
-This test suite neither replaces the libiscsi tests nor xfstests.
+Changes since V1:
+ - hpsa-update-check-for-volume-status
+   - changed return type of hpsa_volume_offline from
+     int to unsigned char
+   - return more specific values.
+   - removed unnecessary code
+   Based on review from: Tomas Henzl <thenzl@redhat.com>
 
-See also https://github.com/bvanassche/srp-test.
+---
 
-Bart.=
+Don Brace (3):
+      hpsa: update check for logical volume status
+      hpsa: limit outstanding rescans
+      hpsa: do not timeout reset operations
+
+
+ drivers/scsi/hpsa.c     |   53 ++++++++++++++++++++++++++++-------------------
+ drivers/scsi/hpsa.h     |    1 +
+ drivers/scsi/hpsa_cmd.h |    2 ++
+ 3 files changed, 35 insertions(+), 21 deletions(-)
+
+--
+Signature
