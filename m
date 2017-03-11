@@ -1,89 +1,40 @@
-From: <molino.petrone@libero.it>
-Subject: 56784 linux-scsi
-Date: Sat, 11 Mar 2017 21:33:08 -0000
-Message-ID: <148926798825.3115.2011450015137675054@hinet.net>
-Reply-To: <molino.petrone@libero.it>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH 0/4 v2] block: Fixes for bdi handling
+Date: Sat, 11 Mar 2017 15:27:35 -0700
+Message-ID: <88312b29-2a25-a4b9-f747-4c90eb6004a4@kernel.dk>
+References: <20170309101624.25901-1-jack@suse.cz>
+ <7177cebf-8a9b-10d4-e991-5e43f4303ffc@kernel.dk>
+ <20170310102205.GA12421@quack2.suse.cz>
 Mime-Version: 1.0
-Content-Type: application/zip; name="298763147607035.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 114-43-177-52.dynamic.hinet.net ([114.43.177.52]:33162 "HELO
-        hinet.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-        id S1755340AbdCKVdO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 11 Mar 2017 16:33:14 -0500
-Content-Disposition: attachment
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170310102205.GA12421@quack2.suse.cz>
+Sender: linux-block-owner@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Tejun Heo <tj@kernel.org>, linux-block@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Omar Sandoval <osandov@osandov.com>, Arthur Marsh <arthur.marsh@internode.on.net>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
 
-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
+On 03/10/2017 03:22 AM, Jan Kara wrote:
+> On Thu 09-03-17 09:41:01, Jens Axboe wrote:
+>> On 03/09/2017 03:16 AM, Jan Kara wrote:
+>>> Hi!
+>>>
+>>> this is a second revision of the series fixing the most urgent bugs that were
+>>> introduced by commit 165a5e22fafb "block: Move bdi_unregister() to
+>>> del_gendisk()" and by 0dba1314d4f8 "scsi, block: fix duplicate bdi name
+>>> registration crashes".  In fact before these commits we had a different set of
+>>> problems in the code but they were less visible :).
+>>
+>> It was rather urgent to get those fixes in, so I already sent them off.
+>> Not a huge deal, but it would be nice to add the atomic init fix as a
+>> separate patch later on.
+> 
+> OK, actually my followup fixes remove the counter completely so I guess we
+> can just leave it as is.
+
+Yes, if that's the case, then there's little point in an incremental
+cleanup.
+
+-- 
+Jens Axboe
