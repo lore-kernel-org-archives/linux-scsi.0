@@ -1,27 +1,34 @@
-From: Aleena Aasim Abdulaziz <kunpeng.wang@kip.uni-heidelberg.de>
-Subject: RE
-Date: Fri, 10 Mar 2017 23:20:16 +0100
-Message-ID: <20170310232016.Horde.kz_d5tiP3D2zwU_hjd8mf31@mail.kip.uni-heidelberg.de>
-Reply-To: aleen.abd@hotmail.com
+From: kbuild test robot <lkp@intel.com>
+Subject: Re: [PATCH v5 01/19] block: DAC960: Replace PCI pool old API
+Date: Sat, 11 Mar 2017 15:15:21 +0800
+Message-ID: <201703111417.0LzAlMy8%fengguang.wu@intel.com>
+References: <20170308161957.28941-2-romain.perier@collabora.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed; DelSp=Yes
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay2.uni-heidelberg.de ([129.206.119.212]:39761 "EHLO
-        relay2.uni-heidelberg.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755129AbdCKAK1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Mar 2017 19:10:27 -0500
-Received: from mail.kip.uni-heidelberg.de (mail.kip.uni-heidelberg.de [129.206.127.243])
-        by relay2.uni-heidelberg.de (8.15.2/8.15.2) with ESMTPS id v2AMYW3Y009400
-        (version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO)
-        for <linux-scsi@vger.kernel.org>; Fri, 10 Mar 2017 23:34:32 +0100
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20170308161957.28941-2-romain.perier@collabora.com>
+Sender: netdev-owner@vger.kernel.org
+Cc: kbuild-all@01.org, Dan Williams <dan.j.williams@intel.com>, Doug Ledford <dledford@redhat.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, jeffrey.t.kirsher@intel.com, "David S. Miller" <davem@davemloft.net>, stas.yakovlev@gmail.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Felipe Balbi <balbi@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Romain Perier <romain.perier@collabora.com>, Peter Senna Tschudin <peter.senna@collabora.co.uk>
 List-Id: linux-scsi@vger.kernel.org
 
+Hi Romain,
+
+[auto build test WARNING on scsi/for-next]
+[also build test WARNING on v4.11-rc1 next-20170310]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+
+url:    https://github.com/0day-ci/linux/commits/Romain-Perier/Replace-PCI-pool-by-DMA-pool-API/20170311-133849
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
 
 
+coccinelle warnings: (new ones prefixed by >>)
 
-Assalam Alaikum, how are you doing my friend? my name is Madam Aleena  
-Aasim Abdulaziz from Turkey and i have something very important to  
-discuss with you please contact me now on my private email:  
-aleen.abd@hotmail.com
+>> drivers/block/DAC960.c:441:3-19: WARNING: NULL check before freeing functions like kfree, debugfs_remove, debugfs_remove_recursive or usb_free_urb is not needed. Maybe consider reorganizing relevant code to avoid passing NULL values.
+   drivers/block/DAC960.c:446:1-17: WARNING: NULL check before freeing functions like kfree, debugfs_remove, debugfs_remove_recursive or usb_free_urb is not needed. Maybe consider reorganizing relevant code to avoid passing NULL values.
+
+Please review and possibly fold the followup patch.
+
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
