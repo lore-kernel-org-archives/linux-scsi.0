@@ -1,70 +1,70 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: cxgb3i: remove redundant null check and kfree on skb
-Date: Mon, 13 Mar 2017 19:14:08 +0000
-Message-ID: <20170313191408.20080-1-colin.king@canonical.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v2] scsi_sysfs: fix hang when removing scsi device
+Date: Mon, 13 Mar 2017 12:23:06 -0700
+Message-ID: <1489432986.23810.12.camel@HansenPartnership.com>
+References: <1489077442-20610-1-git-send-email-israelr@mellanox.com>
+         <1489088191.2597.9.camel@sandisk.com>
+         <22efc8bd-ae71-14c7-247b-7399bfd28c6d@mellanox.com>
+         <1489430936.2658.9.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Karen Xie <kxie@chelsio.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:58450 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932079AbdCMTXO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 13 Mar 2017 15:23:14 -0400
+In-Reply-To: <1489430936.2658.9.camel@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "israelr@mellanox.com" <israelr@mellanox.com>
+Cc: "maxg@mellanox.com" <maxg@mellanox.com>
 
-From: Colin Ian King <colin.king@canonical.com>
+On Mon, 2017-03-13 at 18:49 +0000, Bart Van Assche wrote:
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index 7bfbcfa7af40..b3bb49d06943 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -602,7 +602,7 @@ EXPORT_SYMBOL(scsi_device_get);
+>   */
+>  void scsi_device_put(struct scsi_device *sdev)
+>  {
+> -       module_put(sdev->host->hostt->module);
+> +       module_put(sdev->hostt->module);
+>         put_device(&sdev->sdev_gendev);
+>  }
+>  EXPORT_SYMBOL(scsi_device_put);
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index 6f7128f49c30..7134487abbb1 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -227,6 +227,7 @@ static struct scsi_device *scsi_alloc_sdev(struct
+> scsi_target *starget,
+>         sdev->model = scsi_null_device_strs;
+>         sdev->rev = scsi_null_device_strs;
+>         sdev->host = shost;
+> +       sdev->hostt = shost->hostt;
+>         sdev->queue_ramp_up_period = SCSI_DEFAULT_RAMP_UP_PERIOD;
+>         sdev->id = starget->id;
+>         sdev->lun = lun;
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index 6f22b39f1b0c..cda620ed5922 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -82,6 +82,7 @@ struct scsi_event {
+>  
+>  struct scsi_device {
+>         struct Scsi_Host *host;
+> +       struct scsi_host_template *hostt;
+>         struct request_queue *request_queue;
+>  
 
-On the error exit path, skb is always null, so the non-null check
-and __kfree_skb call are redundant.  Remove the redundant code,
-rename the rel_release label to err and make error paths jump to
-the err exit path.
+The apparent assumption behind this patch is that sdev->host can be
+freed but the sdev will still exist?  That shouldn't be correct: the
+rule for struct devices is that the child always holds the parent and
+the host is parented (albeit not necessarily directly) to the sdev, so
+it looks like something has gone wrong if the host had been freed
+before the sdev.
 
-Detected by CoverityScan, CID#114328 ("Logically Dead Code")
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/cxgbi/cxgb3i/cxgb3i.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-index 1880eb6..f453a78 100644
---- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-+++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-@@ -972,21 +972,21 @@ static int init_act_open(struct cxgbi_sock *csk)
- 			      &csk->daddr.sin_addr.s_addr);
- 	if (!csk->l2t) {
- 		pr_err("NO l2t available.\n");
--		return -EINVAL;
-+		goto err;
- 	}
- 	cxgbi_sock_get(csk);
- 
- 	csk->atid = cxgb3_alloc_atid(t3dev, &t3_client, csk);
- 	if (csk->atid < 0) {
- 		pr_err("NO atid available.\n");
--		goto rel_resource;
-+		goto err;
- 	}
- 	cxgbi_sock_set_flag(csk, CTPF_HAS_ATID);
- 	cxgbi_sock_get(csk);
- 
- 	skb = alloc_wr(sizeof(struct cpl_act_open_req), 0, GFP_KERNEL);
- 	if (!skb)
--		goto rel_resource;
-+		goto err;
- 	skb->sk = (struct sock *)csk;
- 	set_arp_failure_handler(skb, act_open_arp_failure);
- 	csk->snd_win = cxgb3i_snd_win;
-@@ -1008,9 +1008,7 @@ static int init_act_open(struct cxgbi_sock *csk)
- 	send_act_open_req(csk, skb, csk->l2t);
- 	return 0;
- 
--rel_resource:
--	if (skb)
--		__kfree_skb(skb);
-+err:
- 	return -EINVAL;
- }
- 
--- 
-2.10.2
-
+James
