@@ -1,131 +1,203 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: RE: 4.10+ qla2xxx  driver wont load for qla2xxx (ISP2532-based 8Gb)
+From: Laurence Oberman <loberman@redhat.com>
+Subject: Re: 4.10+ qla2xxx  driver wont load for qla2xxx (ISP2532-based 8Gb)
  with BAR 3 error, work fine on 4.9
-Date: Mon, 13 Mar 2017 16:39:03 +0000
-Message-ID: <SN1PR0701MB18375C6A1D4D9255A9EFC60FF5250@SN1PR0701MB1837.namprd07.prod.outlook.com>
-References: <718134298.971770.1489318763327.JavaMail.zimbra@redhat.com>
- <1431912146.999887.1489343453156.JavaMail.zimbra@redhat.com>
+Date: Mon, 13 Mar 2017 12:54:12 -0400 (EDT)
+Message-ID: <789950924.1470264.1489424052263.JavaMail.zimbra@redhat.com>
+References: <718134298.971770.1489318763327.JavaMail.zimbra@redhat.com> <1431912146.999887.1489343453156.JavaMail.zimbra@redhat.com> <SN1PR0701MB18375C6A1D4D9255A9EFC60FF5250@SN1PR0701MB1837.namprd07.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0088.outbound.protection.outlook.com ([104.47.42.88]:51952
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754007AbdCMQjN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 13 Mar 2017 12:39:13 -0400
-In-Reply-To: <1431912146.999887.1489343453156.JavaMail.zimbra@redhat.com>
-Content-Language: en-US
+Received: from mx6-phx2.redhat.com ([209.132.183.39]:54211 "EHLO
+        mx6-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751050AbdCMQyQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2017 12:54:16 -0400
+In-Reply-To: <SN1PR0701MB18375C6A1D4D9255A9EFC60FF5250@SN1PR0701MB1837.namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Laurence Oberman <loberman@redhat.com>, "Dupuis, Chad" <Chad.Dupuis@cavium.com>
-Cc: Linux SCSI List <linux-scsi@vger.kernel.org>
+To: Himanshu Madhani <Himanshu.Madhani@cavium.com>
+Cc: Chad Dupuis <Chad.Dupuis@cavium.com>, Linux SCSI List <linux-scsi@vger.kernel.org>
 
-SGkgTGF1cmVuY2UsDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogTGF1
-cmVuY2UgT2Jlcm1hbiBbbWFpbHRvOmxvYmVybWFuQHJlZGhhdC5jb21dDQo+IFNlbnQ6IFN1bmRh
-eSwgTWFyY2ggMTIsIDIwMTcgMTE6MzEgQU0NCj4gVG86IER1cHVpcywgQ2hhZCA8Q2hhZC5EdXB1
-aXNAY2F2aXVtLmNvbT47IE1hZGhhbmksIEhpbWFuc2h1DQo+IDxIaW1hbnNodS5NYWRoYW5pQGNh
-dml1bS5jb20+DQo+IENjOiBMaW51eCBTQ1NJIExpc3QgPGxpbnV4LXNjc2lAdmdlci5rZXJuZWwu
-b3JnPg0KPiBTdWJqZWN0OiBSZTogNC4xMCsgcWxhMnh4eCBkcml2ZXIgd29udCBsb2FkIGZvciBx
-bGEyeHh4IChJU1AyNTMyLWJhc2VkIDhHYikNCj4gd2l0aCBCQVIgMyBlcnJvciwgd29yayBmaW5l
-IG9uIDQuOQ0KPiANCj4gDQo+IA0KPiAtLS0tLSBPcmlnaW5hbCBNZXNzYWdlIC0tLS0tDQo+ID4g
-RnJvbTogIkxhdXJlbmNlIE9iZXJtYW4iIDxsb2Jlcm1hbkByZWRoYXQuY29tPg0KPiA+IFRvOiAi
-Q2hhZCBEdXB1aXMiIDxjaGFkLmR1cHVpc0BjYXZpdW0uY29tPiwgIkhpbWFuc2h1IE1hZGhhbmki
-DQo+ID4gPEhpbWFuc2h1Lk1hZGhhbmlAY2F2aXVtLmNvbT4NCj4gPiBDYzogIkxpbnV4IFNDU0kg
-TGlzdCIgPGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnPg0KPiA+IFNlbnQ6IFN1bmRheSwgTWFy
-Y2ggMTIsIDIwMTcgNzozOToyMyBBTQ0KPiA+IFN1YmplY3Q6IDQuMTArIHFsYTJ4eHggIGRyaXZl
-ciB3b250IGxvYWQgZm9yIHFsYTJ4eHggKElTUDI1MzItYmFzZWQNCj4gPiA4R2IpIHdpdGggQkFS
-IDMgZXJyb3IsIHdvcmsgZmluZSBvbiA0LjkNCj4gPg0KPiA+IENoYWQsIEhpbWFuc2h1DQo+ID4N
-Cj4gPiBCZWZvcmUgSSBiaXNlY3Qgb3IgZ28gY2hhc2UgY2hhbmdlcywgd2FudGVkIHRvIHJlYWNo
-IG91dCBiZWNhdXNlIHRoZQ0KPiA+IGRyaXZlciBzZWVtcyB0byBiZSB0aGUgc2FtZSB2ZXJzaW9u
-Lg0KPiA+IFBlcmhhcHMgdGhpcyBpcyBhIFBDSUUgY2hhbmdlIGluIHRoZSBrZXJuZWwgZm9yIDQu
-MTAgYWZmZWN0aW5nIHRoZSBsb2FkLg0KPiA+IEl0cyB0aGUgc2FtZSB0YXJnZXRMSU8gc2VydmVy
-IEkgaGF2ZSBiZWVuIHVzaW5nIGZvciBhIGxvbmcgdGltZSB3aXRoDQo+ID4gNC45DQo+ID4NCj4g
-PiAyNzowMC4wIEZpYnJlIENoYW5uZWw6IFFMb2dpYyBDb3JwLiBJU1AyNTMyLWJhc2VkIDhHYiBG
-aWJyZSBDaGFubmVsIHRvDQo+ID4gUENJIEV4cHJlc3MgSEJBIChyZXYgMDIpDQo+ID4NCj4gPiBX
-aXRoIDQuOSBJIGhhdmUgbm8gaXNzdWVzIGxvYWRpbmcgdGhlIGRyaXZlciBmb3IgbXkgdGFyZ2V0
-TElPIHNlcnZlci4NCj4gPiAoREwzODBHOCkNCj4gPg0KPiA+ICMgbW9kaW5mbyBxbGEyeHh4IHwg
-bW9yZQ0KPiA+IGZpbGVuYW1lOg0KPiA+IC9saWIvbW9kdWxlcy80LjkuMC5sb2JldGNtKy9rZXJu
-ZWwvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhMnh4eC5rbw0KPiA+IGZpcm13YXJlOiAgICAgICBx
-bDI1MDBfZncuYmluDQo+ID4gdmVyc2lvbjogICAgICAgIDguMDcuMDAuMzgtaw0KPiA+IGxpY2Vu
-c2U6ICAgICAgICBHUEwNCj4gPiBkZXNjcmlwdGlvbjogICAgUUxvZ2ljIEZpYnJlIENoYW5uZWwg
-SEJBIERyaXZlcg0KPiA+IGF1dGhvcjogICAgICAgICBRTG9naWMgQ29ycG9yYXRpb24NCj4gPiBz
-cmN2ZXJzaW9uOiAgICAgOTRBODQzMUE4NUJGRjg1NEI5N0IwMkQNCj4gPg0KPiA+IFsgICAgOC45
-MDYzNTFdIHFsYTJ4eHggWzAwMDA6MDA6MDAuMF0tMDAwNTogOiBRTG9naWMgRmlicmUgQ2hhbm5l
-bCBIQkENCj4gPiBEcml2ZXI6IDguMDcuMDAuMzgtay4NCj4gPiBbICAgMTAuMDE0MDUyXSBxbGEy
-eHh4IFswMDAwOjI3OjAwLjBdLTAwMWQ6IDogRm91bmQgYW4gSVNQMjUzMiBpcnEgMTA2IGlvYmFz
-ZQ0KPiA+IDB4ZmZmZmFkY2U5ODlhMTAwMC4NCj4gPiBbICAgMTAuNDU1MTA4XSBzY3NpIGhvc3Q0
-OiBxbGEyeHh4DQo+ID4gWyAgIDEwLjQ2MDIwNl0gcWxhMnh4eCBbMDAwMDoyNzowMC4wXS0wMGZi
-OjQ6IFFMb2dpYyBRTEUyNTYyIC0gUENJLUV4cHJlc3MNCj4gPiBEdWFsIENoYW5uZWwgOEdiIEZp
-YnJlIENoYW5uZWwgSEJBLg0KPiA+IFsgICAxMC40NjAyMTVdIHFsYTJ4eHggWzAwMDA6Mjc6MDAu
-MF0tMDBmYzo0OiBJU1AyNTMyOiBQQ0llICg1LjBHVC9zIHg4KSBADQo+ID4gMDAwMDoyNzowMC4w
-IGhkbWErIGhvc3QjPTQgZnc9OC4wMy4wMCAoOTBkNSkuDQo+ID4gWyAgIDEwLjQ2MDU0NV0gcWxh
-Mnh4eCBbMDAwMDoyNzowMC4xXS0wMDFkOiA6IEZvdW5kIGFuIElTUDI1MzIgaXJxIDExMCBpb2Jh
-c2UNCj4gPiAweGZmZmZhZGNlOTg5YTkwMDAuDQo+ID4gWyAgIDEwLjY2MjEyMF0gc2NzaSBob3N0
-NTogcWxhMnh4eA0KPiA+IFsgICAxMS4wMDc4NDFdIHFsYTJ4eHggWzAwMDA6Mjc6MDAuMV0tMDBm
-Yjo1OiBRTG9naWMgUUxFMjU2MiAtIFBDSS1FeHByZXNzDQo+ID4gRHVhbCBDaGFubmVsIDhHYiBG
-aWJyZSBDaGFubmVsIEhCQS4NCj4gPiBbICAgMTEuMDA3ODQ5XSBxbGEyeHh4IFswMDAwOjI3OjAw
-LjFdLTAwZmM6NTogSVNQMjUzMjogUENJZSAoNS4wR1QvcyB4OCkgQA0KPiA+IDAwMDA6Mjc6MDAu
-MSBoZG1hKyBob3N0Iz01IGZ3PTguMDMuMDAgKDkwZDUpLg0KPiA+DQo+ID4gUmVib290aW5nIG9u
-IHRoZSBzYW1lIHNlcnZlciB3aXRoIDQuMTAgZmFpbHMgdG8gbG9hZA0KPiA+DQo+ID4gTGludXgg
-IDQuMTAuMCsNCj4gPiAjIG1vZGluZm8gcWxhMnh4eCB8IG1vcmUNCj4gPiBmaWxlbmFtZTogICAg
-ICAgL2xpYi9tb2R1bGVzLzQuMTAuMCsva2VybmVsL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYTJ4
-eHgua28NCj4gPiBmaXJtd2FyZTogICAgICAgcWwyNTAwX2Z3LmJpbg0KPiA+IHZlcnNpb246ICAg
-ICAgICA4LjA3LjAwLjM4LWsNCj4gPiBsaWNlbnNlOiAgICAgICAgR1BMDQo+ID4gZGVzY3JpcHRp
-b246ICAgIFFMb2dpYyBGaWJyZSBDaGFubmVsIEhCQSBEcml2ZXINCj4gPiBhdXRob3I6ICAgICAg
-ICAgUUxvZ2ljIENvcnBvcmF0aW9uDQo+ID4gc3JjdmVyc2lvbjogICAgIDkzOUUwNTk1RThBM0My
-RTFCRTk0MzkyDQo+ID4NCj4gPiBbICAgIDguNzU0MDQwXSBxbGEyeHh4IFswMDAwOjAwOjAwLjBd
-LTAwMDU6IDogUUxvZ2ljIEZpYnJlIENoYW5uZWwgSEJBDQo+ID4gRHJpdmVyOiA4LjA3LjAwLjM4
-LWsuDQo+ID4gWyAgICA5Ljk3OTUyM10gcWxhMnh4eCBbMDAwMDoyNzowMC4wXS0wMDFiOiA6IEJB
-UiAzIG5vdCBlbmFibGVkLg0KPiA+IFsgICAxMC4yMDEyNjhdIHFsYTJ4eHggWzAwMDA6Mjc6MDAu
-MF0tMDAxZDogOiBGb3VuZCBhbiBJU1AyNTMyIGlycSAxMTAgaW9iYXNlDQo+ID4gMHhmZmZmYWNi
-ZjE4OWIxMDAwLg0KPiA+IFsgICAxMC40MDc4NjVdIHNjc2kgaG9zdDU6IHFsYTJ4eHgNCj4gPiBb
-ICAgMTAuNDQ0MjgxXSBxbGEyeHh4OiBwcm9iZSBvZiAwMDAwOjI3OjAwLjAgZmFpbGVkIHdpdGgg
-ZXJyb3IgLTIyDQo+ID4gWyAgIDEwLjQ0NDUxOV0gcWxhMnh4eCBbMDAwMDoyNzowMC4xXS0wMDFi
-OiA6IEJBUiAzIG5vdCBlbmFibGVkLg0KPiA+IFsgICAxMC40NDQ1MjJdIHFsYTJ4eHggWzAwMDA6
-Mjc6MDAuMV0tMDAxZDogOiBGb3VuZCBhbiBJU1AyNTMyIGlycSAxMTAgaW9iYXNlDQo+ID4gMHhm
-ZmZmYWNiZjE4OWI5MDAwLg0KPiA+IFsgICAxMC42NDU5MzJdIHNjc2kgaG9zdDU6IHFsYTJ4eHgN
-Cj4gPiBbICAgMTAuNjgyMjMzXSBxbGEyeHh4OiBwcm9iZSBvZiAwMDAwOjI3OjAwLjEgZmFpbGVk
-IHdpdGggZXJyb3IgLTIyDQo+ID4NCj4gPiBUaGFua3MNCj4gPiBMYXVyZW5jZQ0KPiA+DQo+IA0K
-PiBJIHN0YXJ0ZWQgYmlzZWN0aW5nIHRoaXMsIGNhbm5vdCBiZWxpZXZlIG90aGVycyBoYXZlIG5v
-dCBidW1wZWQgaW50byB0aGlzIG9uDQo+IDQuMTAuDQo+IFRoaXMgaXMgYSBnZW5lcmljIFFMRTI1
-NjIgYW5kIGZpcm13YXJlIGlzIGxvYWRlZCBieSB0aGUgZHJpdmVyIHNvIHdvbmRlcmluZw0KPiB3
-aHkgSSBhbSBzZWVpbmcgdGhpcyBhbmQgb3RoZXIgYXJlIG5vdC4NCj4gVGhlcmUgaXMgbm90aGlu
-ZyBzcGVjaWFsIHdpdGggdGhlIFBDSUUgYnVzIG9uIHRoaXMgREwzODBHOC4NCj4gDQo+IEFueXdh
-eSBkdXJpbmcgdGhlIGJpc2VjdCBJIGdvdCB0byBhIHBvaW50IHdoZXJlIGluIHRoZSA0LjEwIGNv
-bW1pdHMgSSBzdGlsbCBzYXcNCj4gdGhlICJCQVIgMyIgbWVzc2FnZSBidXQgdGhlIHByb2JlIHdv
-cmtlZC4NCj4gDQo+IFsgICAgNy4yMDgyMzddIHFsYTJ4eHggWzAwMDA6MDA6MDAuMF0tMDAwNTog
-OiBRTG9naWMgRmlicmUgQ2hhbm5lbCBIQkEgRHJpdmVyOg0KPiA4LjA3LjAwLjM4LWsuDQo+IFsg
-ICAgNy4yMDg0OTJdIHFsYTJ4eHggWzAwMDA6Mjc6MDAuMF0tMDAxYjogOiBCQVIgMyBub3QgZW5h
-YmxlZC4NCj4gDQo+ICAgICAgICBzZWUgdGhpcyBhYm92ZSBidXQgcHJvYmUgZGlkIG5vdCBmYWls
-DQo+IA0KPiBbICAgIDcuMjA4NDk0XSBxbGEyeHh4IFswMDAwOjI3OjAwLjBdLTAwMWQ6IDogRm91
-bmQgYW4gSVNQMjUzMiBpcnEgOTcgaW9iYXNlDQo+IDB4ZmZmZmMwMmY5ODk4OTAwMC4NCj4gWyAg
-ICA3LjQxNDczOF0gc2NzaSBob3N0NDogcWxhMnh4eA0KPiANCj4gWyAgICA3LjQxOTI2N10gcWxh
-Mnh4eCBbMDAwMDoyNzowMC4wXS0wMGZiOjQ6IFFMb2dpYyBRTEUyNTYyIC0gUENJLUV4cHJlc3Mg
-RHVhbA0KPiBDaGFubmVsIDhHYiBGaWJyZSBDaGFubmVsIEhCQS4NCj4gWyAgICA3LjQxOTI3OF0g
-cWxhMnh4eCBbMDAwMDoyNzowMC4wXS0wMGZjOjQ6IElTUDI1MzI6IFBDSWUgKDUuMEdUL3MgeDgp
-IEANCj4gMDAwMDoyNzowMC4wIGhkbWErIGhvc3QjPTQgZnc9OC4wMy4wMCAoOTBkNSkuDQo+IFsg
-ICAgNy40MTk2OThdIHFsYTJ4eHggWzAwMDA6Mjc6MDAuMV0tMDAxYjogOiBCQVIgMyBub3QgZW5h
-YmxlZC4NCj4gWyAgICA3LjQxOTcwMV0gcWxhMnh4eCBbMDAwMDoyNzowMC4xXS0wMDFkOiA6IEZv
-dW5kIGFuIElTUDI1MzIgaXJxIDEwMCBpb2Jhc2UNCj4gMHhmZmZmYzAyZjk4OWIxMDAwLg0KPiBb
-ICAgIDcuNjI1NjkxXSBzY3NpIGhvc3Q2OiBxbGEyeHh4DQo+IFsgICAgNy42MjkyMThdIHFsYTJ4
-eHggWzAwMDA6Mjc6MDAuMV0tMDBmYjo2OiBRTG9naWMgUUxFMjU2MiAtIFBDSS1FeHByZXNzIER1
-YWwNCj4gQ2hhbm5lbCA4R2IgRmlicmUgQ2hhbm5lbCBIQkEuDQo+IFsgICAgNy42MjkyMjJdIHFs
-YTJ4eHggWzAwMDA6Mjc6MDAuMV0tMDBmYzo2OiBJU1AyNTMyOiBQQ0llICg1LjBHVC9zIHg4KSBA
-DQo+IDAwMDA6Mjc6MDAuMSBoZG1hKyBob3N0Iz02DQo+IA0KPiBJIG1hcmtlZCB0aGF0IHN0aWxs
-IGFzIGJhZCBhbmQgYW0gY29udGludWluZywgSSBoYXZlIDkgYnVpbGRzIHRvIGdvLg0KPiANCj4g
-VGhhbmtzDQo+IExhdXJlbmNlDQoNCiBXZSBoYWQgc2VuZCBwYXRjaGVzIHRvIGFkZHJlc3MgaXNz
-dWVzIGRpc2NvdmVyZWQgd2hlbiB0aGUgUENJIEFmZmluaXR5IHdlcmUgbWVyZ2VkIGludG8gNC4x
-MCBrZXJuZWwuDQoNCkNhbiB5b3UgcGxlYXNlIGNoZWNrIGlmIHlvdXIgdHJlZSBoYXMgZm9sbG93
-aW5nIHBhdGNoZXMgKEN1cnJlbnRseSB0aGV5IGFyZSBpbmNsdWRlZCBpbiA0LjEwLjIgc3RhYmxl
-KQ0KDQpodHRwczovL2dpdC5rZXJuZWwub3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9zdGFi
-bGUvbGludXgtc3RhYmxlLmdpdC9jb21taXQvP2lkPTE1NGY3YTE1MjNiNzE3Y2FkNjdlMGIzZDJl
-ZDRjNjYwZmQxYjJlN2MNCg0KaHR0cHM6Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tl
-cm5lbC9naXQvc3RhYmxlL2xpbnV4LXN0YWJsZS5naXQvY29tbWl0Lz9pZD02OTlhYmUyNDliMGUy
-Y2E1OTAyODQ0MjRkOTU0OTBlOTJjY2Q2YWViDQoNCmh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvcHVi
-L3NjbS9saW51eC9rZXJuZWwvZ2l0L3N0YWJsZS9saW51eC1zdGFibGUuZ2l0L2NvbW1pdC8/aWQ9
-Y2Y5ZDkxMTA4MDY0OTNlMmVhMmRiN2QwMGExYTk5MTQwMWRmYjlkNQ0KDQpBbHNvIGNhbiB5b3Ug
-YXBwbHkgZm9sbG93aW5nIHBhdGNoIHdoaWNoIGFkZHJlc3NlcyBpc3N1ZSBpbiBQQ0kgbGF5ZXIg
-KFRoaXMgc2hvdWxkIGJlIGluY2x1ZGVkIGluIDQuMTAgc3RhYmxlIGJyYW5jaCBzb29uICkNCg0K
-aHR0cHM6Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMvbGludXgtcGNpL21zZzU4NzQyLmh0bWwNCg0K
-VGhhbmtzLA0KSGltYW5zaHUNCg==
+
+
+----- Original Message -----
+> From: "Himanshu Madhani" <Himanshu.Madhani@cavium.com>
+> To: "Laurence Oberman" <loberman@redhat.com>, "Chad Dupuis" <Chad.Dupuis@cavium.com>
+> Cc: "Linux SCSI List" <linux-scsi@vger.kernel.org>
+> Sent: Monday, March 13, 2017 12:39:03 PM
+> Subject: RE: 4.10+ qla2xxx  driver wont load for qla2xxx (ISP2532-based 8Gb) with BAR 3 error, work fine on 4.9
+> 
+> Hi Laurence,
+> 
+> > -----Original Message-----
+> > From: Laurence Oberman [mailto:loberman@redhat.com]
+> > Sent: Sunday, March 12, 2017 11:31 AM
+> > To: Dupuis, Chad <Chad.Dupuis@cavium.com>; Madhani, Himanshu
+> > <Himanshu.Madhani@cavium.com>
+> > Cc: Linux SCSI List <linux-scsi@vger.kernel.org>
+> > Subject: Re: 4.10+ qla2xxx driver wont load for qla2xxx (ISP2532-based 8Gb)
+> > with BAR 3 error, work fine on 4.9
+> > 
+> > 
+> > 
+> > ----- Original Message -----
+> > > From: "Laurence Oberman" <loberman@redhat.com>
+> > > To: "Chad Dupuis" <chad.dupuis@cavium.com>, "Himanshu Madhani"
+> > > <Himanshu.Madhani@cavium.com>
+> > > Cc: "Linux SCSI List" <linux-scsi@vger.kernel.org>
+> > > Sent: Sunday, March 12, 2017 7:39:23 AM
+> > > Subject: 4.10+ qla2xxx  driver wont load for qla2xxx (ISP2532-based
+> > > 8Gb) with BAR 3 error, work fine on 4.9
+> > >
+> > > Chad, Himanshu
+> > >
+> > > Before I bisect or go chase changes, wanted to reach out because the
+> > > driver seems to be the same version.
+> > > Perhaps this is a PCIE change in the kernel for 4.10 affecting the load.
+> > > Its the same targetLIO server I have been using for a long time with
+> > > 4.9
+> > >
+> > > 27:00.0 Fibre Channel: QLogic Corp. ISP2532-based 8Gb Fibre Channel to
+> > > PCI Express HBA (rev 02)
+> > >
+> > > With 4.9 I have no issues loading the driver for my targetLIO server.
+> > > (DL380G8)
+> > >
+> > > # modinfo qla2xxx | more
+> > > filename:
+> > > /lib/modules/4.9.0.lobetcm+/kernel/drivers/scsi/qla2xxx/qla2xxx.ko
+> > > firmware:       ql2500_fw.bin
+> > > version:        8.07.00.38-k
+> > > license:        GPL
+> > > description:    QLogic Fibre Channel HBA Driver
+> > > author:         QLogic Corporation
+> > > srcversion:     94A8431A85BFF854B97B02D
+> > >
+> > > [    8.906351] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA
+> > > Driver: 8.07.00.38-k.
+> > > [   10.014052] qla2xxx [0000:27:00.0]-001d: : Found an ISP2532 irq 106
+> > > iobase
+> > > 0xffffadce989a1000.
+> > > [   10.455108] scsi host4: qla2xxx
+> > > [   10.460206] qla2xxx [0000:27:00.0]-00fb:4: QLogic QLE2562 -
+> > > PCI-Express
+> > > Dual Channel 8Gb Fibre Channel HBA.
+> > > [   10.460215] qla2xxx [0000:27:00.0]-00fc:4: ISP2532: PCIe (5.0GT/s x8)
+> > > @
+> > > 0000:27:00.0 hdma+ host#=4 fw=8.03.00 (90d5).
+> > > [   10.460545] qla2xxx [0000:27:00.1]-001d: : Found an ISP2532 irq 110
+> > > iobase
+> > > 0xffffadce989a9000.
+> > > [   10.662120] scsi host5: qla2xxx
+> > > [   11.007841] qla2xxx [0000:27:00.1]-00fb:5: QLogic QLE2562 -
+> > > PCI-Express
+> > > Dual Channel 8Gb Fibre Channel HBA.
+> > > [   11.007849] qla2xxx [0000:27:00.1]-00fc:5: ISP2532: PCIe (5.0GT/s x8)
+> > > @
+> > > 0000:27:00.1 hdma+ host#=5 fw=8.03.00 (90d5).
+> > >
+> > > Rebooting on the same server with 4.10 fails to load
+> > >
+> > > Linux  4.10.0+
+> > > # modinfo qla2xxx | more
+> > > filename:
+> > > /lib/modules/4.10.0+/kernel/drivers/scsi/qla2xxx/qla2xxx.ko
+> > > firmware:       ql2500_fw.bin
+> > > version:        8.07.00.38-k
+> > > license:        GPL
+> > > description:    QLogic Fibre Channel HBA Driver
+> > > author:         QLogic Corporation
+> > > srcversion:     939E0595E8A3C2E1BE94392
+> > >
+> > > [    8.754040] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA
+> > > Driver: 8.07.00.38-k.
+> > > [    9.979523] qla2xxx [0000:27:00.0]-001b: : BAR 3 not enabled.
+> > > [   10.201268] qla2xxx [0000:27:00.0]-001d: : Found an ISP2532 irq 110
+> > > iobase
+> > > 0xffffacbf189b1000.
+> > > [   10.407865] scsi host5: qla2xxx
+> > > [   10.444281] qla2xxx: probe of 0000:27:00.0 failed with error -22
+> > > [   10.444519] qla2xxx [0000:27:00.1]-001b: : BAR 3 not enabled.
+> > > [   10.444522] qla2xxx [0000:27:00.1]-001d: : Found an ISP2532 irq 110
+> > > iobase
+> > > 0xffffacbf189b9000.
+> > > [   10.645932] scsi host5: qla2xxx
+> > > [   10.682233] qla2xxx: probe of 0000:27:00.1 failed with error -22
+> > >
+> > > Thanks
+> > > Laurence
+> > >
+> > 
+> > I started bisecting this, cannot believe others have not bumped into this
+> > on
+> > 4.10.
+> > This is a generic QLE2562 and firmware is loaded by the driver so wondering
+> > why I am seeing this and other are not.
+> > There is nothing special with the PCIE bus on this DL380G8.
+> > 
+> > Anyway during the bisect I got to a point where in the 4.10 commits I still
+> > saw
+> > the "BAR 3" message but the probe worked.
+> > 
+> > [    7.208237] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA
+> > Driver:
+> > 8.07.00.38-k.
+> > [    7.208492] qla2xxx [0000:27:00.0]-001b: : BAR 3 not enabled.
+> > 
+> >        see this above but probe did not fail
+> > 
+> > [    7.208494] qla2xxx [0000:27:00.0]-001d: : Found an ISP2532 irq 97
+> > iobase
+> > 0xffffc02f98989000.
+> > [    7.414738] scsi host4: qla2xxx
+> > 
+> > [    7.419267] qla2xxx [0000:27:00.0]-00fb:4: QLogic QLE2562 - PCI-Express
+> > Dual
+> > Channel 8Gb Fibre Channel HBA.
+> > [    7.419278] qla2xxx [0000:27:00.0]-00fc:4: ISP2532: PCIe (5.0GT/s x8) @
+> > 0000:27:00.0 hdma+ host#=4 fw=8.03.00 (90d5).
+> > [    7.419698] qla2xxx [0000:27:00.1]-001b: : BAR 3 not enabled.
+> > [    7.419701] qla2xxx [0000:27:00.1]-001d: : Found an ISP2532 irq 100
+> > iobase
+> > 0xffffc02f989b1000.
+> > [    7.625691] scsi host6: qla2xxx
+> > [    7.629218] qla2xxx [0000:27:00.1]-00fb:6: QLogic QLE2562 - PCI-Express
+> > Dual
+> > Channel 8Gb Fibre Channel HBA.
+> > [    7.629222] qla2xxx [0000:27:00.1]-00fc:6: ISP2532: PCIe (5.0GT/s x8) @
+> > 0000:27:00.1 hdma+ host#=6
+> > 
+> > I marked that still as bad and am continuing, I have 9 builds to go.
+> > 
+> > Thanks
+> > Laurence
+> 
+>  We had send patches to address issues discovered when the PCI Affinity were
+>  merged into 4.10 kernel.
+> 
+> Can you please check if your tree has following patches (Currently they are
+> included in 4.10.2 stable)
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git/commit/?id=154f7a1523b717cad67e0b3d2ed4c660fd1b2e7c
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git/commit/?id=699abe249b0e2ca590284424d95490e92ccd6aeb
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git/commit/?id=cf9d9110806493e2ea2db7d00a1a991401dfb9d5
+> 
+> Also can you apply following patch which addresses issue in PCI layer (This
+> should be included in 4.10 stable branch soon )
+> 
+> https://www.spinics.net/lists/linux-pci/msg58742.html
+> 
+> Thanks,
+> Himanshu
+> 
+
+Hello Himanshu
+
+Many thanks for coming back to me.
+OK, I will test all of this and let you know.
+I dont think I have these and this would explain all this.
+
+Regards
+Laurence
