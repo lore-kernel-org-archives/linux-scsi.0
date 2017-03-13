@@ -1,45 +1,21 @@
-From: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH v2 net-next] qed*: Utilize Firmware 8.15.3.0
-Date: Mon, 13 Mar 2017 15:33:47 -0700 (PDT)
-Message-ID: <20170313.153347.308062967844295379.davem@davemloft.net>
+Date: Mon, 13 Mar 2017 16:19:47 -0700
+Message-ID: <20170313231947.GA31265@infradead.org>
 References: <1489250358-28955-1-git-send-email-Yuval.Mintz@cavium.com>
+ <20170313.153347.308062967844295379.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1489250358-28955-1-git-send-email-Yuval.Mintz-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Yuval.Mintz-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org
-Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tomer.Tayar-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org, Ram.Amrani-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org, Manish.Rangankar-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org, Chad.Dupuis-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170313.153347.308062967844295379.davem@davemloft.net>
+Sender: netdev-owner@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: Yuval.Mintz@cavium.com, netdev@vger.kernel.org, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, Tomer.Tayar@cavium.com, Ram.Amrani@cavium.com, Manish.Rangankar@cavium.com, Chad.Dupuis@cavium.com
 List-Id: linux-scsi@vger.kernel.org
 
-From: Yuval Mintz <Yuval.Mintz-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
-Date: Sat, 11 Mar 2017 18:39:18 +0200
+On Mon, Mar 13, 2017 at 03:33:47PM -0700, David Miller wrote:
+> Applied, thanks.
 
-> This patch advances the qed* drivers into using the newer firmware -
-> This solves several firmware bugs, mostly related [but not limited to]
-> various init/deinit issues in various offloaded protocols.
-> 
-> It also introduces a major 4-Cached SGE change in firmware, which can be
-> seen in the storage drivers' changes.
-> 
-> In addition, this firmware is required for supporting the new QL41xxx
-> series of adapters; While this patch doesn't add the actual support,
-> the firmware contains the necessary initialization & firmware logic to
-> operate such adapters [actual support would be added later on].
-> 
-> Changes from Previous versions:
-> -------------------------------
->  - V2 - fix kbuild-test robot warnings
-> 
-> Signed-off-by: Tomer Tayar <Tomer.Tayar-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Ram Amrani <Ram.Amrani-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Manish Rangankar <Manish.Rangankar-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Chad Dupuis <Chad.Dupuis-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Yuval Mintz <Yuval.Mintz-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
-
-Applied, thanks.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So everyone who doesn't have the very latests linux-firmware will now
+have a non-working card after upgrading the kernel?
