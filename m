@@ -1,94 +1,45 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v2] scsi_sysfs: fix hang when removing scsi device
-Date: Mon, 13 Mar 2017 14:55:33 -0700
-Message-ID: <1489442133.23810.24.camel@HansenPartnership.com>
-References: <1489077442-20610-1-git-send-email-israelr@mellanox.com>
-         <1489088191.2597.9.camel@sandisk.com>
-         <22efc8bd-ae71-14c7-247b-7399bfd28c6d@mellanox.com>
-         <1489430936.2658.9.camel@sandisk.com>
-         <1489432986.23810.12.camel@HansenPartnership.com>
-         <1489437175.2658.17.camel@sandisk.com>
+From: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Subject: Re: [PATCH v2 net-next] qed*: Utilize Firmware 8.15.3.0
+Date: Mon, 13 Mar 2017 15:33:47 -0700 (PDT)
+Message-ID: <20170313.153347.308062967844295379.davem@davemloft.net>
+References: <1489250358-28955-1-git-send-email-Yuval.Mintz@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:59572 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750812AbdCMVzg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 13 Mar 2017 17:55:36 -0400
-In-Reply-To: <1489437175.2658.17.camel@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1489250358-28955-1-git-send-email-Yuval.Mintz-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Yuval.Mintz-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tomer.Tayar-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org, Ram.Amrani-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org, Manish.Rangankar-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org, Chad.Dupuis-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "israelr@mellanox.com" <israelr@mellanox.com>
-Cc: "maxg@mellanox.com" <maxg@mellanox.com>
 
-On Mon, 2017-03-13 at 20:33 +0000, Bart Van Assche wrote:
-> On Mon, 2017-03-13 at 12:23 -0700, James Bottomley wrote:
-> > On Mon, 2017-03-13 at 18:49 +0000, Bart Van Assche wrote:
-> > > diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> > > index 7bfbcfa7af40..b3bb49d06943 100644
-> > > --- a/drivers/scsi/scsi.c
-> > > +++ b/drivers/scsi/scsi.c
-> > > @@ -602,7 +602,7 @@ EXPORT_SYMBOL(scsi_device_get);
-> > >   */
-> > >  void scsi_device_put(struct scsi_device *sdev)
-> > >  {
-> > > -       module_put(sdev->host->hostt->module);
-> > > +       module_put(sdev->hostt->module);
-> > >         put_device(&sdev->sdev_gendev);
-> > >  }
-> > >  EXPORT_SYMBOL(scsi_device_put);
-> > > diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> > > index 6f7128f49c30..7134487abbb1 100644
-> > > --- a/drivers/scsi/scsi_scan.c
-> > > +++ b/drivers/scsi/scsi_scan.c
-> > > @@ -227,6 +227,7 @@ static struct scsi_device
-> > > *scsi_alloc_sdev(struct
-> > > scsi_target *starget,
-> > >         sdev->model = scsi_null_device_strs;
-> > >         sdev->rev = scsi_null_device_strs;
-> > >         sdev->host = shost;
-> > > +       sdev->hostt = shost->hostt;
-> > >         sdev->queue_ramp_up_period = SCSI_DEFAULT_RAMP_UP_PERIOD;
-> > >         sdev->id = starget->id;
-> > >         sdev->lun = lun;
-> > > diff --git a/include/scsi/scsi_device.h
-> > > b/include/scsi/scsi_device.h
-> > > index 6f22b39f1b0c..cda620ed5922 100644
-> > > --- a/include/scsi/scsi_device.h
-> > > +++ b/include/scsi/scsi_device.h
-> > > @@ -82,6 +82,7 @@ struct scsi_event {
-> > >  
-> > >  struct scsi_device {
-> > >         struct Scsi_Host *host;
-> > > +       struct scsi_host_template *hostt;
-> > >         struct request_queue *request_queue;
-> > >  
-> > 
-> > The apparent assumption behind this patch is that sdev->host can be
-> > freed but the sdev will still exist?  That shouldn't be correct:
-> > the
-> > rule for struct devices is that the child always holds the parent
-> > and
-> > the host is parented (albeit not necessarily directly) to the sdev,
-> > so
-> > it looks like something has gone wrong if the host had been freed
-> > before the sdev.
+From: Yuval Mintz <Yuval.Mintz-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
+Date: Sat, 11 Mar 2017 18:39:18 +0200
+
+> This patch advances the qed* drivers into using the newer firmware -
+> This solves several firmware bugs, mostly related [but not limited to]
+> various init/deinit issues in various offloaded protocols.
 > 
-> Hello James,
+> It also introduces a major 4-Cached SGE change in firmware, which can be
+> seen in the storage drivers' changes.
 > 
-> scsi_remove_host() decreases the sdev reference count but does not 
-> wait until the sdev release work has finished. This is why the SCSI
-> host can already have disappeared before the last scsi_device_put()
-> call occurs.
+> In addition, this firmware is required for supporting the new QL41xxx
+> series of adapters; While this patch doesn't add the actual support,
+> the firmware contains the necessary initialization & firmware logic to
+> operate such adapters [actual support would be added later on].
+> 
+> Changes from Previous versions:
+> -------------------------------
+>  - V2 - fix kbuild-test robot warnings
+> 
+> Signed-off-by: Tomer Tayar <Tomer.Tayar-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Ram Amrani <Ram.Amrani-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Manish Rangankar <Manish.Rangankar-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Chad Dupuis <Chad.Dupuis-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Yuval Mintz <Yuval.Mintz-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
 
-This is true, but I don't see how it can cause the host to be freed
-before the sdev.  The memory for struct Scsi_Host is freed in the
-shost_gendev release routine, which should be pinned by the parent
-traversal from sdev.  So it should not be possible for
- scsi_host_dev_release() to be called before
- scsi_device_dev_release_usercontext() becase the latter has the final
-put of the parent device.
-
-James
+Applied, thanks.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
