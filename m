@@ -1,130 +1,96 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv3 1/6] scsi_error: count medium access timeout only once
- per EH run
-Date: Mon, 13 Mar 2017 15:48:25 +0100
-Message-ID: <7d908388-cfff-3c02-c185-9a0ccbcd3d45@suse.de>
-References: <1488359720-130871-1-git-send-email-hare@suse.de>
- <1488359720-130871-2-git-send-email-hare@suse.de>
- <10894b48-b215-f2ef-6df0-d48a94ec7158@linux.vnet.ibm.com>
+From: Cathy Avery <cavery@redhat.com>
+Subject: Re: [PATCH] scsi: storvsc: Add support for FC rport.
+Date: Mon, 13 Mar 2017 10:51:38 -0400
+Message-ID: <58C6B1FA.9060000@redhat.com>
+References: <1488307543-24926-1-git-send-email-cavery@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41993 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:41932 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751061AbdCMOs2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 13 Mar 2017 10:48:28 -0400
-In-Reply-To: <10894b48-b215-f2ef-6df0-d48a94ec7158@linux.vnet.ibm.com>
+        id S1751867AbdCMOvk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 13 Mar 2017 10:51:40 -0400
+In-Reply-To: <1488307543-24926-1-git-send-email-cavery@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>, Lawrence Obermann <loberman@redhat.com>, Benjamin Block <bblock@linux.vnet.ibm.com>, Steffen Maier <maier@de.ibm.com>, Hannes Reinecke <hare@suse.com>
+To: kys@microsoft.com, hch@infradead.org, haiyangz@microsoft.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: dan.carpenter@oracle.com, devel@linuxdriverproject.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 03/13/2017 02:37 PM, Mauricio Faria de Oliveira wrote:
-> Hannes,
-> 
-> On 03/01/2017 06:15 AM, Hannes Reinecke wrote:
->> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
->> index f2cafae..cec439c 100644
->> --- a/drivers/scsi/scsi_error.c
->> +++ b/drivers/scsi/scsi_error.c
->> @@ -58,6 +58,7 @@
->>  static int scsi_eh_try_stu(struct scsi_cmnd *scmd);
->>  static int scsi_try_to_abort_cmd(struct scsi_host_template *,
->>                   struct scsi_cmnd *);
->> +static int scsi_eh_reset(struct scsi_cmnd *scmd);
->>
->>  /* called with shost->host_lock held */
->>  void scsi_eh_wakeup(struct Scsi_Host *shost)
->> @@ -249,6 +250,7 @@ int scsi_eh_scmd_add(struct scsi_cmnd *scmd, int
->> eh_flag)
->>      if (scmd->eh_eflags & SCSI_EH_ABORT_SCHEDULED)
->>          eh_flag &= ~SCSI_EH_CANCEL_CMD;
->>      scmd->eh_eflags |= eh_flag;
->> +    scsi_eh_reset(scmd);
->>      list_add_tail(&scmd->eh_entry, &shost->eh_cmd_q);
->>      shost->host_failed++;
->>      scsi_eh_wakeup(shost);
->> @@ -1107,7 +1109,19 @@ static int scsi_eh_action(struct scsi_cmnd
->> *scmd, int rtn)
->>      if (!blk_rq_is_passthrough(scmd->request)) {
->>          struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
->>          if (sdrv->eh_action)
->> -            rtn = sdrv->eh_action(scmd, rtn);
->> +            rtn = sdrv->eh_action(scmd, rtn, false);
->> +    }
->> +    return rtn;
->> +}
->> +
->> +static int scsi_eh_reset(struct scsi_cmnd *scmd)
->> +{
->> +    int rtn = SUCCESS;
->> +
->> +    if (!blk_rq_is_passthrough(scmd->request)) {
->> +        struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
->> +        if (sdrv->eh_action)
->> +            rtn = sdrv->eh_action(scmd, rtn, true);
->>      }
->>      return rtn;
->>  }
-> 
-> Apparently we can de-duplicate code in scsi_eh_reset()/scsi_eh_action(),
-> and change less of sd_eh_action() (i.e., no new parameter).
-> 
-> Something like this.  Thoughts?
-> 
-> 
-> - Deduplicate code in scsi_eh_reset() and scsi_eh_action()
->   - A call to scsi_eh_reset() with reset == false calls into eh_action()
-> 
->   - A call to scsi_eh_reset() with reset == true returns early,
->     (as happens with/if sd_eh_action() is called in your patch)
-> 
->   - A call to scsi_eh_reset() in scsi_eh_scmd_add() uses SUCCESS just
->     for consistency with scsi_eh_reset() in your patch, as the return
->     value is ignored in it.
-> 
-> - Less changes to sd_eh_action()
->   - Removed one chunk in sd_eh_action() ('reset gate variable')
->   - No more parameter changes in sd_eh_action() (no 'reset' parameter)
-> 
-> - Removed forward declaration of scsi_eh_reset(), as already suggested
-> 
-> 
-> 
-> static int scsi_eh_reset(struct scsi_cmnd *scmd, int eh_disp, bool reset)
-> {
->     int rtn = eh_disp;
-> 
->     if (!blk_rq_is_passthrough(scmd->request)) {
->         struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
->         if (sdrv->eh_action) {
->             if (reset) {
->                  struct scsi_disk *sdkp =
-> scsi_disk(scmd->request->rq_disk);
-> 
->                 /* New SCSI EH run, reset gate variable */
->                 sdkp->medium_access_reset = 0;
->                 return rtn;
->             }
->             rtn = sdrv->eh_action(scmd, rtn);
->         }
->      }
->      return rtn;
-> }
-> 
-Nope.
+Hi,
 
-This is assuming that we're always running on a scsi_disk, and that
-scsi_disk is the only one implementing 'eh_action'.
-Neither of which is necessarily true.
+I haven't received any feedback yet.
 
-Cheers,
+Should I resend?
 
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+Thanks,
+
+Cathy
+
+On 02/28/2017 01:45 PM, Cathy Avery wrote:
+> Included in the current storvsc driver for Hyper-V is the ability
+> to access luns on an FC fabric via a virtualized fiber channel
+> adapter exposed by the Hyper-V host. The driver also attaches to the FC
+> transport to allow host and port names to be published under
+> /sys/class/fc_host/hostX. Current customer tools running on the VM
+> require that these names be available in the well known standard
+> location under fc_host/hostX.
+>
+> A problem arose when attaching to the FC transport. The scsi_scan
+> code attempts to call fc_user_scan which has basically become a no-op
+> due to the fact that the virtualized FC device does not expose rports.
+> At this point you cannot refresh the scsi bus after mapping or unmapping
+> luns on the SAN without a reboot of the VM.
+>
+> This patch stubs in an rport per fc_host in storvsc so that the
+> requirement of a defined rport is now met within the fc_transport and
+> echo "- - -" > /sys/class/scsi_host/hostX/scan now works.
+>
+> Signed-off-by: Cathy Avery <cavery@redhat.com>
+> ---
+>   drivers/scsi/storvsc_drv.c | 15 ++++++++++++++-
+>   1 file changed, 14 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index 585e54f..6d7b932 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -478,6 +478,9 @@ struct storvsc_device {
+>   	 */
+>   	u64 node_name;
+>   	u64 port_name;
+> +#if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
+> +	struct fc_rport *rport;
+> +#endif
+>   };
+>   
+>   struct hv_host_device {
+> @@ -1823,8 +1826,16 @@ static int storvsc_probe(struct hv_device *device,
+>   	}
+>   #if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
+>   	if (host->transportt == fc_transport_template) {
+> +		struct fc_rport_identifiers ids;
+> +
+> +		ids.node_name = 0;
+> +		ids.port_name = 0;
+> +		ids.port_id = 0;
+> +		ids.roles |= FC_PORT_ROLE_FCP_TARGET;
+> +
+>   		fc_host_node_name(host) = stor_device->node_name;
+>   		fc_host_port_name(host) = stor_device->port_name;
+> +		stor_device->rport = fc_remote_port_add(host, 0, &ids);
+>   	}
+>   #endif
+>   	return 0;
+> @@ -1854,8 +1865,10 @@ static int storvsc_remove(struct hv_device *dev)
+>   	struct Scsi_Host *host = stor_device->host;
+>   
+>   #if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
+> -	if (host->transportt == fc_transport_template)
+> +	if (host->transportt == fc_transport_template) {
+> +		fc_remote_port_delete(stor_device->rport);
+>   		fc_remove_host(host);
+> +	}
+>   #endif
+>   	scsi_remove_host(host);
+>   	storvsc_dev_remove(dev);
