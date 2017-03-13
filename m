@@ -1,125 +1,90 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: 4.10+ qla2xxx  driver wont load for qla2xxx (ISP2532-based 8Gb)
- with BAR 3 error, work fine on 4.9
-Date: Sun, 12 Mar 2017 14:30:53 -0400 (EDT)
-Message-ID: <1431912146.999887.1489343453156.JavaMail.zimbra@redhat.com>
-References: <718134298.971770.1489318763327.JavaMail.zimbra@redhat.com>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: Getting "Wrong diagnostic page; asked for 7 got 0" error message on
+ HBA's virtual SES device
+Date: Mon, 13 Mar 2017 12:13:23 +0530
+Message-ID: <CAK=zhgq-yhHigXp4gT26KSCtUu7_HhWgzkSR3PEKM7g4g_4KLw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx4-phx2.redhat.com ([209.132.183.25]:38424 "EHLO
-        mx4-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934809AbdCLSa4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Mar 2017 14:30:56 -0400
-In-Reply-To: <718134298.971770.1489318763327.JavaMail.zimbra@redhat.com>
+Received: from mail-pf0-f176.google.com ([209.85.192.176]:34957 "EHLO
+        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750757AbdCMGnZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2017 02:43:25 -0400
+Received: by mail-pf0-f176.google.com with SMTP id j5so65688149pfb.2
+        for <linux-scsi@vger.kernel.org>; Sun, 12 Mar 2017 23:43:24 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chad Dupuis <chad.dupuis@cavium.com>, Himanshu Madhani <Himanshu.Madhani@cavium.com>
-Cc: Linux SCSI List <linux-scsi@vger.kernel.org>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: Caleb Randall <caleb.randall@broadcom.com>, wasim.qureshi@broadcom.com, Sayantan Bhattacharya <sayantan.bhattacharya@broadcom.com>
 
+Hi,
 
+Our LSI(Broadcom) SAS3.5 HBA device's support virtual SES device.
 
------ Original Message -----
-> From: "Laurence Oberman" <loberman@redhat.com>
-> To: "Chad Dupuis" <chad.dupuis@cavium.com>, "Himanshu Madhani" <Himanshu.Madhani@cavium.com>
-> Cc: "Linux SCSI List" <linux-scsi@vger.kernel.org>
-> Sent: Sunday, March 12, 2017 7:39:23 AM
-> Subject: 4.10+ qla2xxx  driver wont load for qla2xxx (ISP2532-based 8Gb) with BAR 3 error, work fine on 4.9
-> 
-> Chad, Himanshu
-> 
-> Before I bisect or go chase changes, wanted to reach out because the driver
-> seems to be the same version.
-> Perhaps this is a PCIE change in the kernel for 4.10 affecting the load.
-> Its the same targetLIO server I have been using for a long time with 4.9
-> 
-> 27:00.0 Fibre Channel: QLogic Corp. ISP2532-based 8Gb Fibre Channel to PCI
-> Express HBA (rev 02)
-> 
-> With 4.9 I have no issues loading the driver for my targetLIO server.
-> (DL380G8)
-> 
-> # modinfo qla2xxx | more
-> filename:
-> /lib/modules/4.9.0.lobetcm+/kernel/drivers/scsi/qla2xxx/qla2xxx.ko
-> firmware:       ql2500_fw.bin
-> version:        8.07.00.38-k
-> license:        GPL
-> description:    QLogic Fibre Channel HBA Driver
-> author:         QLogic Corporation
-> srcversion:     94A8431A85BFF854B97B02D
-> 
-> [    8.906351] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA
-> Driver: 8.07.00.38-k.
-> [   10.014052] qla2xxx [0000:27:00.0]-001d: : Found an ISP2532 irq 106 iobase
-> 0xffffadce989a1000.
-> [   10.455108] scsi host4: qla2xxx
-> [   10.460206] qla2xxx [0000:27:00.0]-00fb:4: QLogic QLE2562 - PCI-Express
-> Dual Channel 8Gb Fibre Channel HBA.
-> [   10.460215] qla2xxx [0000:27:00.0]-00fc:4: ISP2532: PCIe (5.0GT/s x8) @
-> 0000:27:00.0 hdma+ host#=4 fw=8.03.00 (90d5).
-> [   10.460545] qla2xxx [0000:27:00.1]-001d: : Found an ISP2532 irq 110 iobase
-> 0xffffadce989a9000.
-> [   10.662120] scsi host5: qla2xxx
-> [   11.007841] qla2xxx [0000:27:00.1]-00fb:5: QLogic QLE2562 - PCI-Express
-> Dual Channel 8Gb Fibre Channel HBA.
-> [   11.007849] qla2xxx [0000:27:00.1]-00fc:5: ISP2532: PCIe (5.0GT/s x8) @
-> 0000:27:00.1 hdma+ host#=5 fw=8.03.00 (90d5).
-> 
-> Rebooting on the same server with 4.10 fails to load
-> 
-> Linux  4.10.0+
-> # modinfo qla2xxx | more
-> filename:       /lib/modules/4.10.0+/kernel/drivers/scsi/qla2xxx/qla2xxx.ko
-> firmware:       ql2500_fw.bin
-> version:        8.07.00.38-k
-> license:        GPL
-> description:    QLogic Fibre Channel HBA Driver
-> author:         QLogic Corporation
-> srcversion:     939E0595E8A3C2E1BE94392
-> 
-> [    8.754040] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA
-> Driver: 8.07.00.38-k.
-> [    9.979523] qla2xxx [0000:27:00.0]-001b: : BAR 3 not enabled.
-> [   10.201268] qla2xxx [0000:27:00.0]-001d: : Found an ISP2532 irq 110 iobase
-> 0xffffacbf189b1000.
-> [   10.407865] scsi host5: qla2xxx
-> [   10.444281] qla2xxx: probe of 0000:27:00.0 failed with error -22
-> [   10.444519] qla2xxx [0000:27:00.1]-001b: : BAR 3 not enabled.
-> [   10.444522] qla2xxx [0000:27:00.1]-001d: : Found an ISP2532 irq 110 iobase
-> 0xffffacbf189b9000.
-> [   10.645932] scsi host5: qla2xxx
-> [   10.682233] qla2xxx: probe of 0000:27:00.1 failed with error -22
-> 
-> Thanks
-> Laurence
-> 
+Whenever we load the mpt3sas driver then we are observing below error messa=
+ge,
 
-I started bisecting this, cannot believe others have not bumped into this on 4.10.
-This is a generic QLE2562 and firmware is loaded by the driver so wondering why I am seeing this and other are not.
-There is nothing special with the PCIE bus on this DL380G8.
+"Wrong diagnostic page; asked for 7 got 0"
 
-Anyway during the bisect I got to a point where in the 4.10 commits I still saw the "BAR 3" message
-but the probe worked.
+Our virtual SES device doesn't support Diagnostic page 7, it supports
+only below diagnostic pages,
 
-[    7.208237] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver: 8.07.00.38-k.
-[    7.208492] qla2xxx [0000:27:00.0]-001b: : BAR 3 not enabled.
+=E2=80=A2 00h List of Supported Diagnostic Pages
+=E2=80=A2 01h SES Configuration Diagnostic Page
+=E2=80=A2 02h SES Enclosure Control/Enclosure Status Diagnostic Page
+=E2=80=A2 0Ah SES Additional Element Status Diagnostic Page
 
-       see this above but probe did not fail
+Page Code 07 is Element Descriptor Diagnostic Page
+Per SES3 spec (see table 10) this page is optional and not supported
+by our internal VSES.
 
-[    7.208494] qla2xxx [0000:27:00.0]-001d: : Found an ISP2532 irq 97 iobase 0xffffc02f98989000.
-[    7.414738] scsi host4: qla2xxx
+But 'ses' kernel module is issuing a RECEIVE_DIAGNOSTIC command for
+diagnostic page 7 without checking whether target device supports this
+page or not (i.e. without looking into 00h page) as shown below,
 
-[    7.419267] qla2xxx [0000:27:00.0]-00fb:4: QLogic QLE2562 - PCI-Express Dual Channel 8Gb Fibre Channel HBA.
-[    7.419278] qla2xxx [0000:27:00.0]-00fc:4: ISP2532: PCIe (5.0GT/s x8) @ 0000:27:00.0 hdma+ host#=4 fw=8.03.00 (90d5).
-[    7.419698] qla2xxx [0000:27:00.1]-001b: : BAR 3 not enabled.
-[    7.419701] qla2xxx [0000:27:00.1]-001d: : Found an ISP2532 irq 100 iobase 0xffffc02f989b1000.
-[    7.625691] scsi host6: qla2xxx
-[    7.629218] qla2xxx [0000:27:00.1]-00fb:6: QLogic QLE2562 - PCI-Express Dual Channel 8Gb Fibre Channel HBA.
-[    7.629222] qla2xxx [0000:27:00.1]-00fc:6: ISP2532: PCIe (5.0GT/s x8) @ 0000:27:00.1 hdma+ host#=6 
+result =3D ses_recv_diag(sdev, 7, hdr_buf, INIT_ALLOC_SIZE);
+        if (result)
+                goto simple_populate;
 
-I marked that still as bad and am continuing, I have 9 builds to go.
+As the virtual SES devices doesn't support this page 7, so it has
+failed this RECEIVE_DIAGNOSTIC command with illegal request sense key
+as shown below,
 
-Thanks
-Laurence
+ses 11:0:0:0: tag#0 Send: scmd 0xffff883fee898000
+ses 11:0:0:0: tag#0 CDB: Receive Diagnostic 1c 01 07 00 20 00
+ses 11:0:0:0: tag#0 CDB: Receive Diagnostic 1c 01 07 00 20 00
+mpt3sas_cm1:    sas_address(0x510600b012345600), phy(16)
+mpt3sas_cm1:    enclosure_logical_id(0x500605b012345600),slot(16)
+mpt3sas_cm1:    enclosure level(0x0000), connector name(     )
+mpt3sas_cm1:    handle(0x0011), ioc_status(success)(0x0000), smid(1)
+mpt3sas_cm1:    request_len(32), underflow(0), resid(32)
+mpt3sas_cm1:    tag(0), transfer_count(0), sc->result(0x00000002)
+mpt3sas_cm1:    scsi_status(check condition)(0x02),
+scsi_state(autosense valid )(0x01)
+mpt3sas_cm1:    [sense_key,asc,ascq]: [0x05,0x26,0x00], count(18)
+mpt3sas_cm1: log_info(0x31200205): originator(PL), code(0x20), sub_code(0x0=
+205)
+ses 11:0:0:0: tag#0 Done: SUCCESS Result: hostbyte=3DDID_TARGET_FAILURE
+driverbyte=3DDRIVER_OK
+ses 11:0:0:0: tag#0 CDB: Receive Diagnostic 1c 01 07 00 20 00
+ses 11:0:0:0: tag#0 Sense Key : Illegal Request [current]
+ses 11:0:0:0: tag#0 Add. Sense: Invalid field in parameter list
+ses 11:0:0:0: tag#0 scsi host busy 1 failed 0
+ses 11:0:0:0: Notifying upper driver of completion (result 8100002)
+ses 11:0:0:0: tag#0 0 sectors total, 32 bytes done.
+ses 11:0:0:0: Wrong diagnostic page; asked for 7 got 0
+
+As the command is failed with illegal request sense key, so the buffer
+used In function 'ses_recv_diag' will be not updated and so it will
+have all zero's. so the page_code will be zero and we observe below
+wrong error message even though vSES device has failed the command
+with illegal request error message and it has not returned any wrong
+diagnostic page.
+
+sdev_printk(KERN_ERR, sdev,
+                    "Wrong diagnostic page; asked for %d got %u\n",
+                    page_code, recv_page_code);
+
+Thanks,
+Sreekanth
