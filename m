@@ -1,32 +1,49 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH v2 net-next] qed*: Utilize Firmware 8.15.3.0
-Date: Mon, 13 Mar 2017 17:08:33 -0700 (PDT)
-Message-ID: <20170313.170833.1331052473953704744.davem@davemloft.net>
-References: <1489250358-28955-1-git-send-email-Yuval.Mintz@cavium.com>
-        <20170313.153347.308062967844295379.davem@davemloft.net>
-        <20170313231947.GA31265@infradead.org>
+From: Subhash Jadavani <subhashj@codeaurora.org>
+Subject: Re: [scsi] scsi: ufs: don't check unsigned type for a negative value
+Date: Mon, 13 Mar 2017 17:19:01 -0700
+Message-ID: <cf0e9b50910b10166d23cb37e9f5b4b0@codeaurora.org>
+References: <20170312102202.9889-1-tomas.winkler@intel.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:60152 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751330AbdCNAIh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2017 20:08:37 -0400
-In-Reply-To: <20170313231947.GA31265@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170312102202.9889-1-tomas.winkler@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: hch@infradead.org
-Cc: Yuval.Mintz@cavium.com, netdev@vger.kernel.org, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, Tomer.Tayar@cavium.com, Ram.Amrani@cavium.com, Manish.Rangankar@cavium.com, Chad.Dupuis@cavium.com
 
-From: Christoph Hellwig <hch@infradead.org>
-Date: Mon, 13 Mar 2017 16:19:47 -0700
-
-> On Mon, Mar 13, 2017 at 03:33:47PM -0700, David Miller wrote:
->> Applied, thanks.
+On 2017-03-12 03:22, Tomas Winkler wrote:
+> Fix compilation warning
 > 
-> So everyone who doesn't have the very latests linux-firmware will now
-> have a non-working card after upgrading the kernel?
+> drivers/scsi/ufs/ufshcd.c:7645:13: warning: comparison of unsigned
+> expression < 0 is always false [-Wtype-limits]
+> if ((value < UFS_PM_LVL_0) || (value >= UFS_PM_LVL_MAX))
+> 
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 1359913bf840..e8c26e6e6237 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -7642,7 +7642,7 @@ static inline ssize_t ufshcd_pm_lvl_store(struct
+> device *dev,
+>  	if (kstrtoul(buf, 0, &value))
+>  		return -EINVAL;
+> 
+> -	if ((value < UFS_PM_LVL_0) || (value >= UFS_PM_LVL_MAX))
+> +	if (value >= UFS_PM_LVL_MAX)
+>  		return -EINVAL;
+> 
+>  	spin_lock_irqsave(hba->host->host_lock, flags);
 
-I deeply regret that you've missed more than a decade of precedence on
-this matter.
+LGTM.
+Reviewed-by: Subhash Jadavani <subhashj@codaurora.org>
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
