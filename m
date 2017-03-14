@@ -1,52 +1,149 @@
 From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: [PATCH 4/9] scsi_transport_iscsi: Use flush_work in iscsi_remove_session
-Date: Tue, 14 Mar 2017 13:31:29 +0530
-Message-ID: <1489478494-5432-5-git-send-email-jitendra.bhivare@broadcom.com>
+Subject: [PATCH 5/9] be2iscsi: Increase HDQ default queue size
+Date: Tue, 14 Mar 2017 13:31:30 +0530
+Message-ID: <1489478494-5432-6-git-send-email-jitendra.bhivare@broadcom.com>
 References: <1489478494-5432-1-git-send-email-jitendra.bhivare@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:37847 "EHLO
-        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750904AbdCNICI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Mar 2017 04:02:08 -0400
-Received: by mail-wm0-f48.google.com with SMTP id n11so57108208wma.0
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2017 01:02:07 -0700 (PDT)
+Received: from mail-wr0-f174.google.com ([209.85.128.174]:34348 "EHLO
+        mail-wr0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750842AbdCNICM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Mar 2017 04:02:12 -0400
+Received: by mail-wr0-f174.google.com with SMTP id l37so118400919wrc.1
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2017 01:02:10 -0700 (PDT)
 In-Reply-To: <1489478494-5432-1-git-send-email-jitendra.bhivare@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: cleech@redhat.com, lduncan@suse.com
 Cc: linux-scsi@vger.kernel.org, Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 
-scsi_flush_work flushes workqueue for the Scsi_Host.
-In iSCSI offload enabled host, this would wait for all other
-sessions under the host.
+Currently, ASYNC PDU default queue size is set to max connections.
+This leaves only one buffer per connection for any ASYNC PDUs from
+targets.
 
-Use flush_work for the session being removed instead.
+Double the size of the default queue.
 
 Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 ---
- drivers/scsi/scsi_transport_iscsi.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c | 29 ++++++++++++++---------------
+ drivers/scsi/be2iscsi/be_main.h |  4 +++-
+ 2 files changed, 17 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 568c9f2..a424eae 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -2158,7 +2158,6 @@ static int iscsi_iter_destroy_conn_fn(struct device *dev, void *data)
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index ff48573..b76fd26 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -636,7 +636,6 @@ static void beiscsi_get_params(struct beiscsi_hba *phba)
+ 				    (total_cid_count +
+ 				     BE2_TMFS + BE2_NOPOUT_REQ));
+ 	phba->params.cxns_per_ctrl = total_cid_count;
+-	phba->params.asyncpdus_per_ctrl = total_cid_count;
+ 	phba->params.icds_per_ctrl = total_icd_count;
+ 	phba->params.num_sge_per_io = BE2_SGE;
+ 	phba->params.defpdu_hdr_sz = BE2_DEFPDU_HDR_SZ;
+@@ -2407,22 +2406,22 @@ static void beiscsi_find_mem_req(struct beiscsi_hba *phba)
+ 		if (test_bit(ulp_num, &phba->fw_config.ulp_supported)) {
  
- void iscsi_remove_session(struct iscsi_cls_session *session)
- {
--	struct Scsi_Host *shost = iscsi_session_to_shost(session);
- 	unsigned long flags;
- 	int err;
+ 			num_async_pdu_buf_sgl_pages =
+-				PAGES_REQUIRED(BEISCSI_GET_CID_COUNT(
++				PAGES_REQUIRED(BEISCSI_ASYNC_HDQ_SIZE(
+ 					       phba, ulp_num) *
+ 					       sizeof(struct phys_addr));
  
-@@ -2185,7 +2184,7 @@ void iscsi_remove_session(struct iscsi_cls_session *session)
+ 			num_async_pdu_buf_pages =
+-				PAGES_REQUIRED(BEISCSI_GET_CID_COUNT(
++				PAGES_REQUIRED(BEISCSI_ASYNC_HDQ_SIZE(
+ 					       phba, ulp_num) *
+ 					       phba->params.defpdu_hdr_sz);
  
- 	scsi_target_unblock(&session->dev, SDEV_TRANSPORT_OFFLINE);
- 	/* flush running scans then delete devices */
--	scsi_flush_work(shost);
-+	flush_work(&session->scan_work);
- 	__iscsi_unbind_session(&session->unbind_work);
+ 			num_async_pdu_data_pages =
+-				PAGES_REQUIRED(BEISCSI_GET_CID_COUNT(
++				PAGES_REQUIRED(BEISCSI_ASYNC_HDQ_SIZE(
+ 					       phba, ulp_num) *
+ 					       phba->params.defpdu_data_sz);
  
- 	/* hw iscsi may not have removed all connections from session */
+ 			num_async_pdu_data_sgl_pages =
+-				PAGES_REQUIRED(BEISCSI_GET_CID_COUNT(
++				PAGES_REQUIRED(BEISCSI_ASYNC_HDQ_SIZE(
+ 					       phba, ulp_num) *
+ 					       sizeof(struct phys_addr));
+ 
+@@ -2459,21 +2458,21 @@ static void beiscsi_find_mem_req(struct beiscsi_hba *phba)
+ 			mem_descr_index = (HWI_MEM_ASYNC_HEADER_HANDLE_ULP0 +
+ 					  (ulp_num * MEM_DESCR_OFFSET));
+ 			phba->mem_req[mem_descr_index] =
+-					  BEISCSI_GET_CID_COUNT(phba, ulp_num) *
+-					  sizeof(struct hd_async_handle);
++				BEISCSI_ASYNC_HDQ_SIZE(phba, ulp_num) *
++				sizeof(struct hd_async_handle);
+ 
+ 			mem_descr_index = (HWI_MEM_ASYNC_DATA_HANDLE_ULP0 +
+ 					  (ulp_num * MEM_DESCR_OFFSET));
+ 			phba->mem_req[mem_descr_index] =
+-					  BEISCSI_GET_CID_COUNT(phba, ulp_num) *
+-					  sizeof(struct hd_async_handle);
++				BEISCSI_ASYNC_HDQ_SIZE(phba, ulp_num) *
++				sizeof(struct hd_async_handle);
+ 
+ 			mem_descr_index = (HWI_MEM_ASYNC_PDU_CONTEXT_ULP0 +
+ 					  (ulp_num * MEM_DESCR_OFFSET));
+ 			phba->mem_req[mem_descr_index] =
+-					  sizeof(struct hd_async_context) +
+-					 (BEISCSI_GET_CID_COUNT(phba, ulp_num) *
+-					  sizeof(struct hd_async_entry));
++				sizeof(struct hd_async_context) +
++				(BEISCSI_ASYNC_HDQ_SIZE(phba, ulp_num) *
++				 sizeof(struct hd_async_entry));
+ 		}
+ 	}
+ }
+@@ -2757,7 +2756,7 @@ static int hwi_init_async_pdu_ctx(struct beiscsi_hba *phba)
+ 					((long unsigned int)pasync_ctx +
+ 					sizeof(struct hd_async_context));
+ 
+-			pasync_ctx->num_entries = BEISCSI_GET_CID_COUNT(phba,
++			pasync_ctx->num_entries = BEISCSI_ASYNC_HDQ_SIZE(phba,
+ 						  ulp_num);
+ 			/* setup header buffers */
+ 			mem_descr = (struct be_mem_descriptor *)phba->init_mem;
+@@ -2895,7 +2894,7 @@ static int hwi_init_async_pdu_ctx(struct beiscsi_hba *phba)
+ 					phba->params.defpdu_data_sz);
+ 			num_per_mem = 0;
+ 
+-			for (index = 0;	index < BEISCSI_GET_CID_COUNT
++			for (index = 0;	index < BEISCSI_ASYNC_HDQ_SIZE
+ 					(phba, ulp_num); index++) {
+ 				pasync_header_h->cri = -1;
+ 				pasync_header_h->is_header = 1;
+@@ -3772,7 +3771,7 @@ static int hwi_init_port(struct beiscsi_hba *phba)
+ 	for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++) {
+ 		if (test_bit(ulp_num, &phba->fw_config.ulp_supported)) {
+ 			def_pdu_ring_sz =
+-				BEISCSI_GET_CID_COUNT(phba, ulp_num) *
++				BEISCSI_ASYNC_HDQ_SIZE(phba, ulp_num) *
+ 				sizeof(struct phys_addr);
+ 
+ 			status = beiscsi_create_def_hdr(phba, phwi_context,
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 2188579..216f9b4 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -235,7 +235,6 @@ struct sgl_handle {
+ struct hba_parameters {
+ 	unsigned int ios_per_ctrl;
+ 	unsigned int cxns_per_ctrl;
+-	unsigned int asyncpdus_per_ctrl;
+ 	unsigned int icds_per_ctrl;
+ 	unsigned int num_sge_per_io;
+ 	unsigned int defpdu_hdr_sz;
+@@ -599,6 +598,9 @@ struct hd_async_handle {
+ 	u8 is_final;
+ };
+ 
++#define BEISCSI_ASYNC_HDQ_SIZE(phba, ulp) \
++	(BEISCSI_GET_CID_COUNT((phba), (ulp)) * 2)
++
+ /**
+  * This has list of async PDUs that are waiting to be processed.
+  * Buffers live in this list for a brief duration before they get
 -- 
 2.7.4
