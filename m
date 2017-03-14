@@ -1,38 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] qla2xxx: Fix crash in qla2xxx_eh_abort on bad ptr
-Date: Mon, 13 Mar 2017 22:55:17 -0400
-Message-ID: <yq1k27sr2i2.fsf@oracle.com>
-References: <1489078043-388-1-git-send-email-William.Kuzeja@stratus.com>
+Subject: Re: [PATCH V3 0/3] hpsa updates
+Date: Mon, 13 Mar 2017 23:00:57 -0400
+Message-ID: <yq1bmt4r28m.fsf@oracle.com>
+References: <148917802486.17050.17178463722401202189.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:41572 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752012AbdCNCzc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2017 22:55:32 -0400
-In-Reply-To: <1489078043-388-1-git-send-email-William.Kuzeja@stratus.com>
-        (Bill Kuzeja's message of "Thu, 9 Mar 2017 11:47:23 -0500")
+Received: from userp1040.oracle.com ([156.151.31.81]:35596 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752508AbdCNDBh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2017 23:01:37 -0400
+In-Reply-To: <148917802486.17050.17178463722401202189.stgit@brunhilda> (Don
+        Brace's message of "Fri, 10 Mar 2017 14:35:05 -0600")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bill Kuzeja <William.Kuzeja@stratus.com>
-Cc: linux-scsi@vger.kernel.org, qla2xxx-upstream@qlogic.com
+To: Don Brace <don.brace@microsemi.com>
+Cc: joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com, linux-scsi@vger.kernel.org
 
->>>>> "Bill" == Bill Kuzeja <William.Kuzeja@stratus.com> writes:
+>>>>> "Don" == Don Brace <don.brace@microsemi.com> writes:
 
-Hi Bill,
+Don> These patches are based on Linus's tree The changes are:
+Don>  - add in a new offline volume status
+Don>  - limit the number of outstanding rescan operation
+Don>  - do not timeout reset operations
 
-Bill> I've seen this issue only after a Qlogic card breaks upon
-Bill> initialization (one of my test cases). After the break,
-Bill> qla2x00_abort_all_cmds gets invoked. This routine has a relatively
-Bill> new section introduced by these commits:
+Applied to 4.11/scsi-fixes.
 
-[...]
-
-Please resubmit a v2 of this fix with a concise (~ one paragraph) patch
-description. The extensive debugging write-up is fine but it should be
-placed after a --- separator so it doesn't end up in the git log.
-
-Thanks!
+Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
