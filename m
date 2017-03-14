@@ -1,40 +1,50 @@
-From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: [PATCH 9/9] be2iscsi: Update driver version
-Date: Tue, 14 Mar 2017 13:31:34 +0530
-Message-ID: <1489478494-5432-10-git-send-email-jitendra.bhivare@broadcom.com>
-References: <1489478494-5432-1-git-send-email-jitendra.bhivare@broadcom.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:38279 "EHLO
-        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750995AbdCNIC1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Mar 2017 04:02:27 -0400
-Received: by mail-wm0-f47.google.com with SMTP id t189so57140834wmt.1
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2017 01:02:26 -0700 (PDT)
-In-Reply-To: <1489478494-5432-1-git-send-email-jitendra.bhivare@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH] scsi: cxgb3i: remove redundant null check and kfree on
+ skb
+Date: Tue, 14 Mar 2017 12:08:16 +0300
+Message-ID: <20170314090816.GH4136@mwanda>
+References: <20170313191408.20080-1-colin.king@canonical.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170313191408.20080-1-colin.king@canonical.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: Karen Xie <kxie@chelsio.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: cleech@redhat.com, lduncan@suse.com
-Cc: linux-scsi@vger.kernel.org, Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 
-Version 11.4.0.0
+On Mon, Mar 13, 2017 at 07:14:08PM +0000, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> On the error exit path, skb is always null, so the non-null check
+> and __kfree_skb call are redundant.  Remove the redundant code,
+> rename the rel_release label to err and make error paths jump to
+> the err exit path.
+> 
+> Detected by CoverityScan, CID#114328 ("Logically Dead Code")
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/scsi/cxgbi/cxgb3i/cxgb3i.c | 10 ++++------
+>  1 file changed, 4 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+> index 1880eb6..f453a78 100644
+> --- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+> +++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+> @@ -972,21 +972,21 @@ static int init_act_open(struct cxgbi_sock *csk)
+>  			      &csk->daddr.sin_addr.s_addr);
+>  	if (!csk->l2t) {
+>  		pr_err("NO l2t available.\n");
+> -		return -EINVAL;
+> +		goto err;
 
-Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
----
- drivers/scsi/be2iscsi/be_main.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+err is a bad name because it doesn't say what the goto does.  Imagine
+if function names were so opaque.  The most readable thing is a direct
+return.
 
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 9883a85..0f826fe 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -36,7 +36,7 @@
- #include <scsi/scsi_transport_iscsi.h>
- 
- #define DRV_NAME		"be2iscsi"
--#define BUILD_STR		"11.2.1.0"
-+#define BUILD_STR		"11.4.0.0"
- #define BE_NAME			"Emulex OneConnect" \
- 				"Open-iSCSI Driver version" BUILD_STR
- #define DRV_DESC		BE_NAME " " "Driver"
--- 
-2.7.4
+Also that's the least bug prone thing.
+
+regards,
+dan carpenter
