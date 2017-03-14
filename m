@@ -1,40 +1,38 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: storvsc: Add support for FC rport.
-Date: Mon, 13 Mar 2017 22:36:32 -0400
-Message-ID: <yq1o9x4r3db.fsf@oracle.com>
-References: <1488307543-24926-1-git-send-email-cavery@redhat.com>
- <58C6B1FA.9060000@redhat.com>
+Subject: Re: [PATCH] qla2xxx: Fix crash in qla2xxx_eh_abort on bad ptr
+Date: Mon, 13 Mar 2017 22:55:17 -0400
+Message-ID: <yq1k27sr2i2.fsf@oracle.com>
+References: <1489078043-388-1-git-send-email-William.Kuzeja@stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <58C6B1FA.9060000@redhat.com> (Cathy Avery's message of "Mon, 13
- Mar 2017 10:51:38 -0400")
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Cathy Avery <cavery@redhat.com>
-Cc: jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, haiyangz@microsoft.com, linux-kernel@vger.kernel.org, hch@infradead.org, devel@linuxdriverproject.org, dan.carpenter@oracle.com
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:41572 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752012AbdCNCzc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2017 22:55:32 -0400
+In-Reply-To: <1489078043-388-1-git-send-email-William.Kuzeja@stratus.com>
+        (Bill Kuzeja's message of "Thu, 9 Mar 2017 11:47:23 -0500")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bill Kuzeja <William.Kuzeja@stratus.com>
+Cc: linux-scsi@vger.kernel.org, qla2xxx-upstream@qlogic.com
 
->>>>> "Cathy" == Cathy Avery <cavery@redhat.com> writes:
+>>>>> "Bill" == Bill Kuzeja <William.Kuzeja@stratus.com> writes:
 
-Hi Cathy,
+Hi Bill,
 
-Cathy> I haven't received any feedback yet.
+Bill> I've seen this issue only after a Qlogic card breaks upon
+Bill> initialization (one of my test cases). After the break,
+Bill> qla2x00_abort_all_cmds gets invoked. This routine has a relatively
+Bill> new section introduced by these commits:
 
-Cathy> Should I resend?
+[...]
 
-You sent this right at the beginning of the merge window. That almost
-guarantees that nobody will have time to look at it.
+Please resubmit a v2 of this fix with a concise (~ one paragraph) patch
+description. The extensive debugging write-up is fine but it should be
+placed after a --- separator so it doesn't end up in the git log.
 
-Whereas now is a good time to send submissions for 4.12...
+Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
