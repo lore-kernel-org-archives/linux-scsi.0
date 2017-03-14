@@ -1,142 +1,83 @@
-From: Israel Rukshin <israelr@mellanox.com>
-Subject: Re: [PATCH v2] scsi_sysfs: fix hang when removing scsi device
-Date: Tue, 14 Mar 2017 16:23:43 +0200
-Message-ID: <96b2016e-c9a0-07e8-0af3-be04802162a9@mellanox.com>
-References: <1489077442-20610-1-git-send-email-israelr@mellanox.com>
- <1489088191.2597.9.camel@sandisk.com>
- <22efc8bd-ae71-14c7-247b-7399bfd28c6d@mellanox.com>
- <1489430936.2658.9.camel@sandisk.com>
- <1489432986.23810.12.camel@HansenPartnership.com>
- <1489437175.2658.17.camel@sandisk.com>
- <1489442133.23810.24.camel@HansenPartnership.com>
- <1489458944.2987.1.camel@sandisk.com>
- <c9afc172-105a-cabf-b286-150c6dc11a68@mellanox.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 08/29] drivers, md: convert mddev.active from atomic_t
+ to refcount_t
+Date: Tue, 14 Mar 2017 07:58:59 -0700
+Message-ID: <1489503539.3214.17.camel@HansenPartnership.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+ <1488810076-3754-9-git-send-email-elena.reshetova@intel.com>
+ <87lgs8ukfq.fsf@concordia.ellerman.id.au>
+ <2236FBA76BA1254E88B949DDB74E612B41C588E8@IRSMSX102.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-he1eur01on0059.outbound.protection.outlook.com ([104.47.0.59]:43448
-        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751944AbdCNOXw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 14 Mar 2017 10:23:52 -0400
-In-Reply-To: <c9afc172-105a-cabf-b286-150c6dc11a68@mellanox.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <2236FBA76BA1254E88B949DDB74E612B41C588E8@IRSMSX102.ger.corp.intel.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: "Reshetova, Elena" <elena.reshetova@intel.com>, Michael Ellerman <mpe@ellerman.id.au>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+Cc: "peterz@infradead.org" <peterz@infradead.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux1394-devel@lists.sourceforge.net" <linux1394-devel@lists.sourceforge.net>, "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>, "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>, "fcoe-devel@open-fcoe.org" <fcoe-devel@open-fcoe.org>, "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>, "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>, Kees Cook <keescook@chromium.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-bcache@vger.kernel.org" <linux-bcache@vger.kerne>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
-Cc: "maxg@mellanox.com" <maxg@mellanox.com>
 
-Hello Bart,
+On Tue, 2017-03-14 at 12:29 +0000, Reshetova, Elena wrote:
+> > Elena Reshetova <elena.reshetova@intel.com> writes:
+> > 
+> > > refcount_t type and corresponding API should be
+> > > used instead of atomic_t when the variable is used as
+> > > a reference counter. This allows to avoid accidental
+> > > refcounter overflows that might lead to use-after-free
+> > > situations.
+> > > 
+> > > Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+> > > Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+> > > Signed-off-by: Kees Cook <keescook@chromium.org>
+> > > Signed-off-by: David Windsor <dwindsor@gmail.com>
+> > > ---
+> > >  drivers/md/md.c | 6 +++---
+> > >  drivers/md/md.h | 3 ++-
+> > >  2 files changed, 5 insertions(+), 4 deletions(-)
+> > 
+> > When booting linux-next (specifically 5be4921c9958ec) I'm seeing
+> > the
+> > backtrace below. I suspect this patch is just exposing an existing
+> > issue?
+> 
+> Yes, we have actually been following this issue in the another
+> thread. 
+> It looks like the object is re-used somehow, but I can't quite
+> understand how just by reading the code. 
+> This was what I put into the previous thread:
+> 
+> "The log below indicates that you are using your refcounter in a bit
+> weird way in mddev_find(). 
+> However, I can't find the place (just by reading the code) where you
+> would increment refcounter from zero (vs. setting it to one).
+> It looks like you either iterate over existing nodes (and increment
+> their counters, which should be >= 1 at the time of increment) or
+> create a new node, but then mddev_init() sets the counter to 1. "
+> 
+> If you can help to understand what is going on with the object
+> creation/destruction, would be appreciated!
+> 
+> Also Shaohua Li stopped this patch coming from his tree since the 
+> issue was caught at that time, so we are not going to merge this 
+> until we figure it out. 
 
-Patch number 5 doesn't handle the case when device_for_each_child() is 
-called.
-device_for_each_child() calls to target_unblock() that uses also 
-starget_for_each_device().
-After applying also the following change the hang disappeared but it 
-didn't fix the warning.
-Those fixes are not enough because if fast_io_fail_tmo is set to 
-infinity then the hang will remain,
-because only __rport_fail_io_fast() calls to scsi_target_unblock() and 
-terminate_rport_io()
-that free the sync cache command.
+Asking on the correct list (dm-devel) would have got you the easy
+answer:  The refcount behind mddev->active is a genuine atomic.  It has
+refcount properties but only if the array fails to initialise (in that
+case, final put kills it).  Once it's added to the system as a gendisk,
+it cannot be freed until md_free().  Thus its ->active count can go to
+zero (when it becomes inactive; usually because of an unmount). On a
+simple allocation regardless of outcome, the last executed statement in
+md_alloc is mddev_put(): that destroys the device if we didn't manage
+to create it or returns 0 and adds an inactive device to the system
+which the user can get with mddev_find().
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index e5d4b50..09f9566 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -3068,9 +3068,15 @@ void scsi_device_resume(struct scsi_device *sdev)
-  static int
-  target_unblock(struct device *dev, void *data)
-  {
--       if (scsi_is_target_device(dev))
--               starget_for_each_device(to_scsi_target(dev), data,
--                                       device_unblock);
-+       if (scsi_is_target_device(dev)) {
-+               struct scsi_target *starget = to_scsi_target(dev);
-+               struct Scsi_Host *shost = dev_to_shost(dev->parent);
-+               unsigned long flags;
-+
-+               spin_lock_irqsave(shost->host_lock, flags);
-+               __starget_for_each_device(starget, data, device_unblock);
-+               spin_unlock_irqrestore(shost->host_lock, flags);
-+       }
-         return 0;
-  }
-
---
-1.8.4.3
-
-
-Israel
-
-
-On 3/14/2017 11:44 AM, Israel Rukshin wrote:
-> Hello Bart,
->
-> I applied and tested patches 3, 4 and 5.
-> I am sorry to tell you that it didn't work.
-> I saw the warning you added and the hang at device_del().
->
-> [  333.696462] ------------[ cut here ]------------
-> [  333.696471] WARNING: CPU: 11 PID: 321 at 
-> drivers/scsi/scsi_sysfs.c:1280 __scsi_remove_device+0x106/0x110
-> [  333.696472] Modules linked in: nfsv3 ib_srp(-) dm_service_time 
-> scsi_transport_srp ib_uverbs ib_umad ib_ipoib ib_cm mlx4_ib ib_core 
-> rpcsec_gss_krb5 nfsv4 dns_resolver nfs netconsole fscache dm_mirror 
-> dm_region_hash dm_log sb_edac edac_core x86_pkg_temp_thermal 
-> intel_powerclamp coretemp kvm_intel kvm irqbypass crct10dif_pclmul 
-> crc32_pclmul ghash_clmulni_intel iTCO_wdt pcbc iTCO_vendor_support 
-> aesni_intel mei_me crypto_simd joydev input_leds ipmi_si ioatdma mei 
-> glue_helper lpc_ich pcspkr cryptd ipmi_devintf shpchp ipmi_msghandler 
-> sg i2c_i801 mfd_core dm_multipath dm_mod nfsd binfmt_misc auth_rpcgss 
-> nfs_acl lockd grace sunrpc ip_tables ext4 jbd2 mbcache sd_mod mgag200 
-> drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops isci igb 
-> ttm ahci libsas ptp libahci scsi_transport_sas pps_core dca crc32c_intel
-> [  333.696511]  drm i2c_algo_bit libata mlx4_core fjes [last unloaded: 
-> ib_srp]
-> [  333.696516] CPU: 11 PID: 321 Comm: kworker/11:1 Not tainted 
-> 4.11.0-rc2+ #99
-> [  333.696517] Hardware name: Supermicro X9DRFR/X9DRFR, BIOS 1.0a 
-> 09/11/2012
-> [  333.696522] Workqueue: srp_remove srp_remove_work [ib_srp]
-> [  333.696523] Call Trace:
-> [  333.696530]  dump_stack+0x63/0x90
-> [  333.696534]  __warn+0xcb/0xf0
-> [  333.696536]  warn_slowpath_null+0x1d/0x20
-> [  333.696538]  __scsi_remove_device+0x106/0x110
-> [  333.696540]  scsi_forget_host+0x60/0x70
-> [  333.696545]  scsi_remove_host+0x77/0x110
-> [  333.696547]  srp_remove_work+0x90/0x230 [ib_srp]
-> [  333.696551]  process_one_work+0x177/0x430
-> [  333.696553]  worker_thread+0x4e/0x4b0
-> [  333.696555]  kthread+0x101/0x140
-> [  333.696556]  ? process_one_work+0x430/0x430
-> [  333.696558]  ? kthread_create_on_node+0x60/0x60
-> [  333.696563]  ret_from_fork+0x2c/0x40
-> [  333.696565] ---[ end trace b1edd584bf21aaba ]---
->
-> Israel.
->
->
-> On 3/14/2017 4:35 AM, Bart Van Assche wrote:
->> On Mon, 2017-03-13 at 14:55 -0700, James Bottomley wrote:
->>> This is true, but I don't see how it can cause the host to be freed
->>> before the sdev.  The memory for struct Scsi_Host is freed in the
->>> shost_gendev release routine, which should be pinned by the parent
->>> traversal from sdev.  So it should not be possible for
->>>   scsi_host_dev_release() to be called before
->>>   scsi_device_dev_release_usercontext() becase the latter has the final
->>> put of the parent device.
->> Hello James,
->>
->> I will run a bisect to see whether that provides more information about
->> what caused the change in the reference counting behavior.
->>
->> Israel, since you did not hit the reference counting issue in your 
->> tests,
->> can you repeat your test with patches 3, 4 and 5 applied?
->>
->> Thanks,
->>
->> Bart.
->
+James
