@@ -1,149 +1,238 @@
 From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: [PATCH 5/9] be2iscsi: Increase HDQ default queue size
-Date: Tue, 14 Mar 2017 13:31:30 +0530
-Message-ID: <1489478494-5432-6-git-send-email-jitendra.bhivare@broadcom.com>
+Subject: [PATCH 7/9] be2iscsi: Remove free_list for ASYNC handles
+Date: Tue, 14 Mar 2017 13:31:32 +0530
+Message-ID: <1489478494-5432-8-git-send-email-jitendra.bhivare@broadcom.com>
 References: <1489478494-5432-1-git-send-email-jitendra.bhivare@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wr0-f174.google.com ([209.85.128.174]:34348 "EHLO
-        mail-wr0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750842AbdCNICM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Mar 2017 04:02:12 -0400
-Received: by mail-wr0-f174.google.com with SMTP id l37so118400919wrc.1
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2017 01:02:10 -0700 (PDT)
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:35488 "EHLO
+        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750959AbdCNICT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Mar 2017 04:02:19 -0400
+Received: by mail-wm0-f44.google.com with SMTP id v186so57339085wmd.0
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2017 01:02:18 -0700 (PDT)
 In-Reply-To: <1489478494-5432-1-git-send-email-jitendra.bhivare@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: cleech@redhat.com, lduncan@suse.com
 Cc: linux-scsi@vger.kernel.org, Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 
-Currently, ASYNC PDU default queue size is set to max connections.
-This leaves only one buffer per connection for any ASYNC PDUs from
-targets.
+With previous patch adding ASYNC Rx buffers to free_list is not required.
+Remove all free_list related operations.
 
-Double the size of the default queue.
+Add in_use to track if buffer posted is being processed by driver and
+purge all buffers received for connection if found so.
 
 Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 ---
- drivers/scsi/be2iscsi/be_main.c | 29 ++++++++++++++---------------
- drivers/scsi/be2iscsi/be_main.h |  4 +++-
- 2 files changed, 17 insertions(+), 16 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c | 99 +++++++++++++++++------------------------
+ drivers/scsi/be2iscsi/be_main.h |  8 +---
+ 2 files changed, 43 insertions(+), 64 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index ff48573..b76fd26 100644
+index 1cd9c2d..ee1f1c4 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -636,7 +636,6 @@ static void beiscsi_get_params(struct beiscsi_hba *phba)
- 				    (total_cid_count +
- 				     BE2_TMFS + BE2_NOPOUT_REQ));
- 	phba->params.cxns_per_ctrl = total_cid_count;
--	phba->params.asyncpdus_per_ctrl = total_cid_count;
- 	phba->params.icds_per_ctrl = total_icd_count;
- 	phba->params.num_sge_per_io = BE2_SGE;
- 	phba->params.defpdu_hdr_sz = BE2_DEFPDU_HDR_SZ;
-@@ -2407,22 +2406,22 @@ static void beiscsi_find_mem_req(struct beiscsi_hba *phba)
- 		if (test_bit(ulp_num, &phba->fw_config.ulp_supported)) {
+@@ -1453,15 +1453,28 @@ static inline void
+ beiscsi_hdl_put_handle(struct hd_async_context *pasync_ctx,
+ 			 struct hd_async_handle *pasync_handle)
+ {
+-	if (pasync_handle->is_header) {
+-		list_add_tail(&pasync_handle->link,
+-				&pasync_ctx->async_header.free_list);
+-		pasync_ctx->async_header.free_entries++;
+-	} else {
+-		list_add_tail(&pasync_handle->link,
+-				&pasync_ctx->async_data.free_list);
+-		pasync_ctx->async_data.free_entries++;
+-	}
++	pasync_handle->is_final = 0;
++	pasync_handle->buffer_len = 0;
++	pasync_handle->in_use = 0;
++	list_del_init(&pasync_handle->link);
++}
++
++static void
++beiscsi_hdl_purge_handles(struct beiscsi_hba *phba,
++			  struct hd_async_context *pasync_ctx,
++			  u16 cri)
++{
++	struct hd_async_handle *pasync_handle, *tmp_handle;
++	struct list_head *plist;
++
++	plist  = &pasync_ctx->async_entry[cri].wq.list;
++	list_for_each_entry_safe(pasync_handle, tmp_handle, plist, link)
++		beiscsi_hdl_put_handle(pasync_ctx, pasync_handle);
++
++	INIT_LIST_HEAD(&pasync_ctx->async_entry[cri].wq.list);
++	pasync_ctx->async_entry[cri].wq.hdr_len = 0;
++	pasync_ctx->async_entry[cri].wq.bytes_received = 0;
++	pasync_ctx->async_entry[cri].wq.bytes_needed = 0;
+ }
  
- 			num_async_pdu_buf_sgl_pages =
--				PAGES_REQUIRED(BEISCSI_GET_CID_COUNT(
-+				PAGES_REQUIRED(BEISCSI_ASYNC_HDQ_SIZE(
- 					       phba, ulp_num) *
- 					       sizeof(struct phys_addr));
+ static struct hd_async_handle *
+@@ -1473,11 +1486,12 @@ beiscsi_hdl_get_handle(struct beiscsi_conn *beiscsi_conn,
+ 	struct beiscsi_hba *phba = beiscsi_conn->phba;
+ 	struct hd_async_handle *pasync_handle;
+ 	struct be_bus_address phys_addr;
++	u16 cid, code, ci, cri;
+ 	u8 final, error = 0;
+-	u16 cid, code, ci;
+ 	u32 dpl;
  
- 			num_async_pdu_buf_pages =
--				PAGES_REQUIRED(BEISCSI_GET_CID_COUNT(
-+				PAGES_REQUIRED(BEISCSI_ASYNC_HDQ_SIZE(
- 					       phba, ulp_num) *
- 					       phba->params.defpdu_hdr_sz);
+ 	cid = beiscsi_conn->beiscsi_conn_cid;
++	cri = BE_GET_ASYNC_CRI_FROM_CID(cid);
+ 	/**
+ 	 * This function is invoked to get the right async_handle structure
+ 	 * from a given DEF PDU CQ entry.
+@@ -1525,15 +1539,7 @@ beiscsi_hdl_get_handle(struct beiscsi_conn *beiscsi_conn,
+ 		break;
+ 	/* called only for above codes */
+ 	default:
+-		pasync_handle = NULL;
+-		break;
+-	}
+-
+-	if (!pasync_handle) {
+-		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_ISCSI,
+-			    "BM_%d : cid %d async PDU handle not found - code %d ci %d addr %llx\n",
+-			    cid, code, ci, phys_addr.u.a64.address);
+-		return pasync_handle;
++		return NULL;
+ 	}
  
- 			num_async_pdu_data_pages =
--				PAGES_REQUIRED(BEISCSI_GET_CID_COUNT(
-+				PAGES_REQUIRED(BEISCSI_ASYNC_HDQ_SIZE(
- 					       phba, ulp_num) *
- 					       phba->params.defpdu_data_sz);
+ 	if (pasync_handle->pa.u.a64.address != phys_addr.u.a64.address ||
+@@ -1549,44 +1555,33 @@ beiscsi_hdl_get_handle(struct beiscsi_conn *beiscsi_conn,
+ 		/* FW has stale address - attempt continuing by dropping */
+ 	}
  
- 			num_async_pdu_data_sgl_pages =
--				PAGES_REQUIRED(BEISCSI_GET_CID_COUNT(
-+				PAGES_REQUIRED(BEISCSI_ASYNC_HDQ_SIZE(
- 					       phba, ulp_num) *
- 					       sizeof(struct phys_addr));
+-	list_del_init(&pasync_handle->link);
+-	/**
+-	 * Each CID is associated with unique CRI.
+-	 * ASYNC_CRI_FROM_CID mapping and CRI_FROM_CID are totaly different.
+-	 **/
+-	pasync_handle->cri = BE_GET_ASYNC_CRI_FROM_CID(cid);
+-	pasync_handle->is_final = final;
+-	pasync_handle->buffer_len = dpl;
+-
+ 	/**
+ 	 * DEF PDU header and data buffers with errors should be simply
+ 	 * dropped as there are no consumers for it.
+ 	 */
+ 	if (error) {
+ 		beiscsi_hdl_put_handle(pasync_ctx, pasync_handle);
+-		pasync_handle = NULL;
++		return NULL;
+ 	}
+-	return pasync_handle;
+-}
+-
+-static void
+-beiscsi_hdl_purge_handles(struct beiscsi_hba *phba,
+-			  struct hd_async_context *pasync_ctx,
+-			  u16 cri)
+-{
+-	struct hd_async_handle *pasync_handle, *tmp_handle;
+-	struct list_head *plist;
  
-@@ -2459,21 +2458,21 @@ static void beiscsi_find_mem_req(struct beiscsi_hba *phba)
- 			mem_descr_index = (HWI_MEM_ASYNC_HEADER_HANDLE_ULP0 +
- 					  (ulp_num * MEM_DESCR_OFFSET));
- 			phba->mem_req[mem_descr_index] =
--					  BEISCSI_GET_CID_COUNT(phba, ulp_num) *
--					  sizeof(struct hd_async_handle);
-+				BEISCSI_ASYNC_HDQ_SIZE(phba, ulp_num) *
-+				sizeof(struct hd_async_handle);
+-	plist  = &pasync_ctx->async_entry[cri].wq.list;
+-	list_for_each_entry_safe(pasync_handle, tmp_handle, plist, link) {
+-		list_del(&pasync_handle->link);
+-		beiscsi_hdl_put_handle(pasync_ctx, pasync_handle);
++	if (pasync_handle->in_use || !list_empty(&pasync_handle->link)) {
++		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_ISCSI,
++			    "BM_%d : cid %d async PDU handle in use - code %d ci %d addr %llx\n",
++			    cid, code, ci, phys_addr.u.a64.address);
++		beiscsi_hdl_purge_handles(phba, pasync_ctx, cri);
+ 	}
  
- 			mem_descr_index = (HWI_MEM_ASYNC_DATA_HANDLE_ULP0 +
- 					  (ulp_num * MEM_DESCR_OFFSET));
- 			phba->mem_req[mem_descr_index] =
--					  BEISCSI_GET_CID_COUNT(phba, ulp_num) *
--					  sizeof(struct hd_async_handle);
-+				BEISCSI_ASYNC_HDQ_SIZE(phba, ulp_num) *
-+				sizeof(struct hd_async_handle);
+-	INIT_LIST_HEAD(&pasync_ctx->async_entry[cri].wq.list);
+-	pasync_ctx->async_entry[cri].wq.hdr_len = 0;
+-	pasync_ctx->async_entry[cri].wq.bytes_received = 0;
+-	pasync_ctx->async_entry[cri].wq.bytes_needed = 0;
++	list_del_init(&pasync_handle->link);
++	/**
++	 * Each CID is associated with unique CRI.
++	 * ASYNC_CRI_FROM_CID mapping and CRI_FROM_CID are totaly different.
++	 **/
++	pasync_handle->cri = cri;
++	pasync_handle->is_final = final;
++	pasync_handle->buffer_len = dpl;
++	pasync_handle->in_use = 1;
++
++	return pasync_handle;
+ }
  
- 			mem_descr_index = (HWI_MEM_ASYNC_PDU_CONTEXT_ULP0 +
- 					  (ulp_num * MEM_DESCR_OFFSET));
- 			phba->mem_req[mem_descr_index] =
--					  sizeof(struct hd_async_context) +
--					 (BEISCSI_GET_CID_COUNT(phba, ulp_num) *
--					  sizeof(struct hd_async_entry));
-+				sizeof(struct hd_async_context) +
-+				(BEISCSI_ASYNC_HDQ_SIZE(phba, ulp_num) *
-+				 sizeof(struct hd_async_entry));
+ static unsigned int
+@@ -2795,7 +2790,6 @@ static int hwi_init_async_pdu_ctx(struct beiscsi_hba *phba)
+ 
+ 			pasync_ctx->async_header.handle_base =
+ 				mem_descr->mem_array[0].virtual_address;
+-			INIT_LIST_HEAD(&pasync_ctx->async_header.free_list);
+ 
+ 			/* setup data buffer sgls */
+ 			mem_descr = (struct be_mem_descriptor *)phba->init_mem;
+@@ -2829,7 +2823,6 @@ static int hwi_init_async_pdu_ctx(struct beiscsi_hba *phba)
+ 
+ 			pasync_ctx->async_data.handle_base =
+ 				mem_descr->mem_array[0].virtual_address;
+-			INIT_LIST_HEAD(&pasync_ctx->async_data.free_list);
+ 
+ 			pasync_header_h =
+ 				(struct hd_async_handle *)
+@@ -2884,13 +2877,9 @@ static int hwi_init_async_pdu_ctx(struct beiscsi_hba *phba)
+ 					pasync_ctx->async_header.pa_base.u.a64.
+ 					address + (p->defpdu_hdr_sz * index);
+ 
+-				list_add_tail(&pasync_header_h->link,
+-					      &pasync_ctx->async_header.
+-					      free_list);
+ 				pasync_ctx->async_entry[index].header =
+ 					pasync_header_h;
+ 				pasync_header_h++;
+-				pasync_ctx->async_header.free_entries++;
+ 				INIT_LIST_HEAD(&pasync_ctx->async_entry[index].
+ 						wq.list);
+ 
+@@ -2926,13 +2915,9 @@ static int hwi_init_async_pdu_ctx(struct beiscsi_hba *phba)
+ 				num_per_mem++;
+ 				num_async_data--;
+ 
+-				list_add_tail(&pasync_data_h->link,
+-					      &pasync_ctx->async_data.
+-					      free_list);
+ 				pasync_ctx->async_entry[index].data =
+ 					pasync_data_h;
+ 				pasync_data_h++;
+-				pasync_ctx->async_data.free_entries++;
+ 			}
  		}
  	}
- }
-@@ -2757,7 +2756,7 @@ static int hwi_init_async_pdu_ctx(struct beiscsi_hba *phba)
- 					((long unsigned int)pasync_ctx +
- 					sizeof(struct hd_async_context));
- 
--			pasync_ctx->num_entries = BEISCSI_GET_CID_COUNT(phba,
-+			pasync_ctx->num_entries = BEISCSI_ASYNC_HDQ_SIZE(phba,
- 						  ulp_num);
- 			/* setup header buffers */
- 			mem_descr = (struct be_mem_descriptor *)phba->init_mem;
-@@ -2895,7 +2894,7 @@ static int hwi_init_async_pdu_ctx(struct beiscsi_hba *phba)
- 					phba->params.defpdu_data_sz);
- 			num_per_mem = 0;
- 
--			for (index = 0;	index < BEISCSI_GET_CID_COUNT
-+			for (index = 0;	index < BEISCSI_ASYNC_HDQ_SIZE
- 					(phba, ulp_num); index++) {
- 				pasync_header_h->cri = -1;
- 				pasync_header_h->is_header = 1;
-@@ -3772,7 +3771,7 @@ static int hwi_init_port(struct beiscsi_hba *phba)
- 	for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++) {
- 		if (test_bit(ulp_num, &phba->fw_config.ulp_supported)) {
- 			def_pdu_ring_sz =
--				BEISCSI_GET_CID_COUNT(phba, ulp_num) *
-+				BEISCSI_ASYNC_HDQ_SIZE(phba, ulp_num) *
- 				sizeof(struct phys_addr);
- 
- 			status = beiscsi_create_def_hdr(phba, phwi_context,
 diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 2188579..216f9b4 100644
+index cebacac..9883a85 100644
 --- a/drivers/scsi/be2iscsi/be_main.h
 +++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -235,7 +235,6 @@ struct sgl_handle {
- struct hba_parameters {
- 	unsigned int ios_per_ctrl;
- 	unsigned int cxns_per_ctrl;
--	unsigned int asyncpdus_per_ctrl;
- 	unsigned int icds_per_ctrl;
- 	unsigned int num_sge_per_io;
- 	unsigned int defpdu_hdr_sz;
-@@ -599,6 +598,9 @@ struct hd_async_handle {
+@@ -596,6 +596,7 @@ struct hd_async_handle {
+ 	u16 cri;
+ 	u8 is_header;
  	u8 is_final;
++	u8 in_use;
  };
  
-+#define BEISCSI_ASYNC_HDQ_SIZE(phba, ulp) \
-+	(BEISCSI_GET_CID_COUNT((phba), (ulp)) * 2)
-+
- /**
-  * This has list of async PDUs that are waiting to be processed.
-  * Buffers live in this list for a brief duration before they get
+ #define BEISCSI_ASYNC_HDQ_SIZE(phba, ulp) \
+@@ -626,14 +627,7 @@ struct hd_async_buf_context {
+ 	void *va_base;
+ 	void *ring_base;
+ 	struct hd_async_handle *handle_base;
+-	u16 free_entries;
+ 	u32 buffer_size;
+-	/**
+-	 * Once iSCSI layer finishes processing an async PDU, the
+-	 * handles used for the PDU are added to this list.
+-	 * They are posted back to FW in groups of 8.
+-	 */
+-	struct list_head free_list;
+ 	u16 pi;
+ };
+ 
 -- 
 2.7.4
