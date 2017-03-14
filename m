@@ -1,170 +1,346 @@
-From: Bill Kuzeja <William.Kuzeja@stratus.com>
-Subject: [PATCH V2] qla2xxx: Fix crash in qla2xxx_eh_abort on bad ptr
-Date: Tue, 14 Mar 2017 13:28:44 -0400
-Message-ID: <1489512524-11178-1-git-send-email-William.Kuzeja@stratus.com>
+From: Benjamin Block <bblock@linux.vnet.ibm.com>
+Subject: Re: [PATCHv3 6/6] scsi: make asynchronous aborts mandatory
+Date: Tue, 14 Mar 2017 18:33:22 +0100
+Message-ID: <20170314173322.GA19037@bblock-ThinkPad-W530>
+References: <1488359720-130871-1-git-send-email-hare@suse.de>
+ <1488359720-130871-7-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from us-smtp-delivery-131.mimecast.com ([216.205.24.131]:34933 "EHLO
-        us-smtp-delivery-131.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752105AbdCNR2t (ORCPT
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:36207 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751405AbdCNRd3 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 14 Mar 2017 13:28:49 -0400
+        Tue, 14 Mar 2017 13:33:29 -0400
+Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v2EHT1ZF028657
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2017 13:33:28 -0400
+Received: from e06smtp14.uk.ibm.com (e06smtp14.uk.ibm.com [195.75.94.110])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 296jf5rbjs-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2017 13:33:28 -0400
+Received: from localhost
+        by e06smtp14.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <bblock@linux.vnet.ibm.com>;
+        Tue, 14 Mar 2017 17:33:25 -0000
+Received: from d06av26.portsmouth.uk.ibm.com (d06av26.portsmouth.uk.ibm.com [9.149.105.62])
+        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v2EHXNAh10027394
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2017 17:33:23 GMT
+Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 2F2C2AE055
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2017 17:33:07 +0000 (GMT)
+Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 0F927AE05D
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2017 17:33:07 +0000 (GMT)
+Received: from bblock-ThinkPad-W530 (unknown [9.152.212.152])
+        by d06av26.portsmouth.uk.ibm.com (Postfix) with ESMTP
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2017 17:33:07 +0000 (GMT)
+Content-Disposition: inline
+In-Reply-To: <1488359720-130871-7-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: qla2xxx-upstream@qlogic.com, Bill Kuzeja <William.Kuzeja@stratus.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org
 
-After a Qlogic card breaks when initializing (test case), the system can
-crash in qla2xxx_eh_abort if processing anything but a scsi command type 
-srb.
----
+Hello Hannes,
 
-Changes from previous version:
------------------------
- - V2 - add concise desciption for git log
+On Wed, Mar 01, 2017 at 10:15:20AM +0100, Hannes Reinecke wrote:
+> There hasn't been any reports for HBAs where asynchronous abort
+> would not work, so we should make it mandatory and remove
+> the fallback.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+> Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> ---
+>  Documentation/scsi/scsi_eh.txt | 18 ++++------
+>  drivers/scsi/scsi_error.c      | 81 ++++--------------------------------------
+>  drivers/scsi/scsi_lib.c        |  2 +-
+>  drivers/scsi/scsi_priv.h       |  3 +-
+>  include/scsi/scsi_host.h       |  5 ---
+>  5 files changed, 15 insertions(+), 94 deletions(-)
+> 
+> diff --git a/Documentation/scsi/scsi_eh.txt b/Documentation/scsi/scsi_eh.txt
+> index 4edb9c1c..11e447b 100644
+> --- a/Documentation/scsi/scsi_eh.txt
+> +++ b/Documentation/scsi/scsi_eh.txt
+> @@ -70,7 +70,7 @@ with the command.
+>  	scmd is requeued to blk queue.
+> 
+>   - otherwise
+> -	scsi_eh_scmd_add(scmd, 0) is invoked for the command.  See
+> +	scsi_eh_scmd_add(scmd) is invoked for the command.  See
+>  	[1-3] for details of this function.
+> 
+> 
+> @@ -103,9 +103,7 @@ function
+>          eh_timed_out() callback did not handle the command.
+>  	Step #2 is taken.
+> 
+> - 2. If the host supports asynchronous completion (as indicated by the
+> -    no_async_abort setting in the host template) scsi_abort_command()
+> -    is invoked to schedule an asynchrous abort.
+> + 2. scsi_abort_command() is invoked to schedule an asynchrous abort.
+>      Asynchronous abort are not invoked for commands which the
+>      SCSI_EH_ABORT_SCHEDULED flag is set (this indicates that the command
+>      already had been aborted once, and this is a retry which failed),
+> @@ -127,16 +125,13 @@ function
+> 
+>   scmds enter EH via scsi_eh_scmd_add(), which does the following.
+> 
+> - 1. Turns on scmd->eh_eflags as requested.  It's 0 for error
+> -    completions and SCSI_EH_CANCEL_CMD for timeouts.
+> + 1. Links scmd->eh_entry to shost->eh_cmd_q
+> 
+> - 2. Links scmd->eh_entry to shost->eh_cmd_q
+> + 2. Sets SHOST_RECOVERY bit in shost->shost_state
+> 
+> - 3. Sets SHOST_RECOVERY bit in shost->shost_state
+> + 3. Increments shost->host_failed
+> 
+> - 4. Increments shost->host_failed
+> -
+> - 5. Wakes up SCSI EH thread if shost->host_busy == shost->host_failed
+> + 4. Wakes up SCSI EH thread if shost->host_busy == shost->host_failed
+> 
+>   As can be seen above, once any scmd is added to shost->eh_cmd_q,
+>  SHOST_RECOVERY shost_state bit is turned on.  This prevents any new
+> @@ -252,7 +247,6 @@ scmd->allowed.
+> 
+>   1. Error completion / time out
+>      ACTION: scsi_eh_scmd_add() is invoked for scmd
+> -	- set scmd->eh_eflags
+>  	- add scmd to shost->eh_cmd_q
+>  	- set SHOST_RECOVERY
+>  	- shost->host_failed++
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 802a081..7b70ee9 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -163,7 +163,7 @@ static int scsi_host_eh_past_deadline(struct Scsi_Host *shost)
+>  		}
+>  	}
+> 
+> -	scsi_eh_scmd_add(scmd, 0);
+> +	scsi_eh_scmd_add(scmd);
+>  }
+> 
+>  /**
+> @@ -217,9 +217,8 @@ static int scsi_host_eh_past_deadline(struct Scsi_Host *shost)
+>  /**
+>   * scsi_eh_scmd_add - add scsi cmd to error handling.
+>   * @scmd:	scmd to run eh on.
+> - * @eh_flag:	optional SCSI_EH flag.
+>   */
+> -void scsi_eh_scmd_add(struct scsi_cmnd *scmd, int eh_flag)
+> +void scsi_eh_scmd_add(struct scsi_cmnd *scmd)
+>  {
+>  	struct Scsi_Host *shost = scmd->device->host;
+>  	unsigned long flags;
+> @@ -235,9 +234,6 @@ void scsi_eh_scmd_add(struct scsi_cmnd *scmd, int eh_flag)
+>  	if (shost->eh_deadline != -1 && !shost->last_reset)
+>  		shost->last_reset = jiffies;
+> 
+> -	if (scmd->eh_eflags & SCSI_EH_ABORT_SCHEDULED)
+> -		eh_flag &= ~SCSI_EH_CANCEL_CMD;
+> -	scmd->eh_eflags |= eh_flag;
+>  	scsi_eh_reset(scmd);
+>  	list_add_tail(&scmd->eh_entry, &shost->eh_cmd_q);
+>  	shost->host_failed++;
+> @@ -271,10 +267,9 @@ enum blk_eh_timer_return scsi_times_out(struct request *req)
+>  		rtn = host->hostt->eh_timed_out(scmd);
+> 
+>  	if (rtn == BLK_EH_NOT_HANDLED) {
+> -		if (host->hostt->no_async_abort ||
+> -		    scsi_abort_command(scmd) != SUCCESS) {
+> +		if (scsi_abort_command(scmd) != SUCCESS) {
+>  			set_host_byte(scmd, DID_TIME_OUT);
+> -			scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD);
+> +			scsi_eh_scmd_add(scmd);
+>  		}
+>  	}
+> 
+> @@ -327,7 +322,7 @@ static inline void scsi_eh_prt_fail_stats(struct Scsi_Host *shost,
+>  		list_for_each_entry(scmd, work_q, eh_entry) {
+>  			if (scmd->device == sdev) {
+>  				++total_failures;
+> -				if (scmd->eh_eflags & SCSI_EH_CANCEL_CMD)
+> +				if (scmd->eh_eflags & SCSI_EH_ABORT_SCHEDULED)
+>  					++cmd_cancel;
+>  				else
+>  					++cmd_failed;
+> @@ -1153,8 +1148,7 @@ int scsi_eh_get_sense(struct list_head *work_q,
+>  	 * should not get sense.
+>  	 */
+>  	list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
+> -		if ((scmd->eh_eflags & SCSI_EH_CANCEL_CMD) ||
+> -		    (scmd->eh_eflags & SCSI_EH_ABORT_SCHEDULED) ||
+> +		if ((scmd->eh_eflags & SCSI_EH_ABORT_SCHEDULED) ||
+>  		    SCSI_SENSE_VALID(scmd))
+>  			continue;
+> 
+> @@ -1294,61 +1288,6 @@ static int scsi_eh_test_devices(struct list_head *cmd_list,
+>  	return list_empty(work_q);
+>  }
+> 
+> -
+> -/**
+> - * scsi_eh_abort_cmds - abort pending commands.
+> - * @work_q:	&list_head for pending commands.
+> - * @done_q:	&list_head for processed commands.
+> - *
+> - * Decription:
+> - *    Try and see whether or not it makes sense to try and abort the
+> - *    running command.  This only works out to be the case if we have one
+> - *    command that has timed out.  If the command simply failed, it makes
+> - *    no sense to try and abort the command, since as far as the shost
+> - *    adapter is concerned, it isn't running.
+> - */
+> -static int scsi_eh_abort_cmds(struct list_head *work_q,
+> -			      struct list_head *done_q)
+> -{
+> -	struct scsi_cmnd *scmd, *next;
+> -	LIST_HEAD(check_list);
+> -	int rtn;
+> -	struct Scsi_Host *shost;
+> -
+> -	list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
+> -		if (!(scmd->eh_eflags & SCSI_EH_CANCEL_CMD))
+> -			continue;
+> -		shost = scmd->device->host;
+> -		if (scsi_host_eh_past_deadline(shost)) {
+> -			list_splice_init(&check_list, work_q);
+> -			SCSI_LOG_ERROR_RECOVERY(3,
+> -				scmd_printk(KERN_INFO, scmd,
+> -					    "%s: skip aborting cmd, past eh deadline\n",
+> -					    current->comm));
+> -			return list_empty(work_q);
+> -		}
+> -		SCSI_LOG_ERROR_RECOVERY(3,
+> -			scmd_printk(KERN_INFO, scmd,
+> -				     "%s: aborting cmd\n", current->comm));
+> -		rtn = scsi_try_to_abort_cmd(shost->hostt, scmd);
+> -		if (rtn == FAILED) {
+> -			SCSI_LOG_ERROR_RECOVERY(3,
+> -				scmd_printk(KERN_INFO, scmd,
+> -					    "%s: aborting cmd failed\n",
+> -					     current->comm));
+> -			list_splice_init(&check_list, work_q);
+> -			return list_empty(work_q);
+> -		}
+> -		scmd->eh_eflags &= ~SCSI_EH_CANCEL_CMD;
+> -		if (rtn == FAST_IO_FAIL)
+> -			scsi_eh_finish_cmd(scmd, done_q);
+> -		else
+> -			list_move_tail(&scmd->eh_entry, &check_list);
+> -	}
+> -
+> -	return scsi_eh_test_devices(&check_list, work_q, done_q, 0);
+> -}
+> -
+>  /**
+>   * scsi_eh_try_stu - Send START_UNIT to device.
+>   * @scmd:	&scsi_cmnd to send START_UNIT
+> @@ -1691,11 +1630,6 @@ static void scsi_eh_offline_sdevs(struct list_head *work_q,
+>  		sdev_printk(KERN_INFO, scmd->device, "Device offlined - "
+>  			    "not ready after error recovery\n");
+>  		scsi_device_set_state(scmd->device, SDEV_OFFLINE);
+> -		if (scmd->eh_eflags & SCSI_EH_CANCEL_CMD) {
+> -			/*
+> -			 * FIXME: Handle lost cmds.
+> -			 */
+> -		}
+>  		scsi_eh_finish_cmd(scmd, done_q);
+>  	}
+>  	return;
+> @@ -2139,8 +2073,7 @@ static void scsi_unjam_host(struct Scsi_Host *shost)
+>  	SCSI_LOG_ERROR_RECOVERY(1, scsi_eh_prt_fail_stats(shost, &eh_work_q));
+> 
+>  	if (!scsi_eh_get_sense(&eh_work_q, &eh_done_q))
+> -		if (!scsi_eh_abort_cmds(&eh_work_q, &eh_done_q))
+> -			scsi_eh_ready_devs(shost, &eh_work_q, &eh_done_q);
+> +		scsi_eh_ready_devs(shost, &eh_work_q, &eh_done_q);
+> 
+>  	spin_lock_irqsave(shost->host_lock, flags);
+>  	if (shost->eh_deadline != -1)
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 0735a46..98b2df8 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1593,7 +1593,7 @@ static void scsi_softirq_done(struct request *rq)
+>  			scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY);
+>  			break;
+>  		default:
+> -			scsi_eh_scmd_add(cmd, 0);
+> +			scsi_eh_scmd_add(cmd);
+>  			break;
+>  	}
+>  }
+> diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+> index 5be6cbf6..e20ab10 100644
+> --- a/drivers/scsi/scsi_priv.h
+> +++ b/drivers/scsi/scsi_priv.h
+> @@ -18,7 +18,6 @@
+>  /*
+>   * Scsi Error Handler Flags
+>   */
+> -#define SCSI_EH_CANCEL_CMD	0x0001	/* Cancel this cmd */
+>  #define SCSI_EH_ABORT_SCHEDULED	0x0002	/* Abort has been scheduled */
+> 
+>  #define SCSI_SENSE_VALID(scmd) \
+> @@ -72,7 +71,7 @@ extern int scsi_dev_info_list_add_keyed(int compatible, char *vendor,
+>  extern int scsi_error_handler(void *host);
+>  extern int scsi_decide_disposition(struct scsi_cmnd *cmd);
+>  extern void scsi_eh_wakeup(struct Scsi_Host *shost);
+> -extern void scsi_eh_scmd_add(struct scsi_cmnd *, int);
+> +extern void scsi_eh_scmd_add(struct scsi_cmnd *);
+>  void scsi_eh_ready_devs(struct Scsi_Host *shost,
+>  			struct list_head *work_q,
+>  			struct list_head *done_q);
+> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+> index 3cd8c3b..afb0481 100644
+> --- a/include/scsi/scsi_host.h
+> +++ b/include/scsi/scsi_host.h
+> @@ -452,11 +452,6 @@ struct scsi_host_template {
+>  	unsigned no_write_same:1;
+> 
+>  	/*
+> -	 * True if asynchronous aborts are not supported
+> -	 */
+> -	unsigned no_async_abort:1;
+> -
+> -	/*
+>  	 * Countdown for host blocking with no commands outstanding.
+>  	 */
+>  	unsigned int max_host_blocked;
+> -- 
+> 1.8.5.6
+> 
 
-After the break, qla2x00_abort_all_cmds gets invoked. This routine has a
-relatively new section introduced by these commits:
+Hmm so, I guess we compromise in terms of how granular we want to
+recover? 
 
-commit 1535aa75a3d8 ("scsi: qla2xxx: fix invalid DMA access after command aborts in PCI device remove")
-commit c733ab351243 ("scsi: qla2xxx: do not abort all commands in the adapter during EEH recovery")
-commit 2780f3c8f0233 ("scsi: qla2xxx: Avoid that issuing a LIP triggers a kernel crash") 
+When say an abort for command A on LUN 1 behind Port α fails for some
+reason, then we also skip all possible aborts for command B on LUN 2
+behind Port α and command C on LUN 1 behind Port β? (The host might
+already be in recovery by the time command B and C fail)
 
-The section is problematic in certain cases. Here's the if statement in 
-question:
+I mean, in the end, all traffic holds on that host anyway, as long as we
+get into EH - which is true as soon as one abort fails. Might as well
+skip the wait time till we get there.
 
-    if (GET_CMD_SP(sp) && !ha->flags.eeh_busy) {
-       /* Get a reference to the sp and drop the lock.
-        * The reference ensures this sp->done() call
-        * - and not the call in qla2xxx_eh_abort() -
-        * ends the SCSI command (with result 'res').
-        */
-        sp_get(sp);
-        spin_unlock_irqrestore(&ha->hardware_lock,flags);
-        qla2xxx_eh_abort(GET_CMD_SP(sp));
-        spin_lock_irqsave(&ha->hardware_lock, flags);
-    }
+I would like it, if we could document that fact a bit more direct.
+Otherwise I think that's good. The code also looks good.
 
-Now here's the panic my test provokes:
 
-[  927.823858] Call Trace:
-[  927.581661]  qla2xxx_eh_abort+0x19/0x2b0 [qla2xxx]
-[  927.829269]  [<ffffffffa046c146>] qla2x00_abort_all_cmds+0xf6/0x14 [qla2xxx]
-[  927.845014]  [<ffffffffa046c4bf>] qla2x00_disable_board_on_pci_error+0x8f/0x160 [qla2xxx]
-[  927.863054]  [<ffffffff810a805b>] process_one_work+0x17b/0x470
-[  927.875916]  [<ffffffff810a8e96>] worker_thread+0x126/0x410
-[  927.888203]  [<ffffffff810a8d70>] ? rescuer_thread+0x460/0x460
-[  927.901067]  [<ffffffff810b064f>] kthread+0xcf/0xe0
-[  927.911823]  [<ffffffff810b0580>] ?kthread_create_on_node+0x140/0x140
-[  927.926224]  [<ffffffff81696718>] ret_from_fork+0x58/0x90
-[  927.938132]  [<ffffffff810b0580>] ?kthread_create_on_node+0x140/0x140
+Reviewed-by: Benjamin Block <bblock@linux.vnet.ibm.com>
 
-We crash in qla2xxx_eh_abort trying to get the vha:
 
-	scsi_qla_host_t *vha = shost_priv(cmd->device->host);
-
-Closer examination of the crash shows that the value of "cmd" is 2,
-certainly not a valid pointer.
-
-What's happening here?
-
-The check at the top of the if-block GET_CMD_SP(sp) implicitly != NULL 
-would have prevented this sort of thing. However, since sp->u.scmd.cmd 
-is not *quite* null (in my crashes it's usually 2), we fall into the 
-if-block and call qla2xxx_eh_abort - and crash trying to get cmd.
-
-Note that the GET_CMD_SP(sp) is doing this:
-
-#define GET_CMD_SP(sp) (sp->u.scmd.cmd)
-
-and is acting upon a union:
-
-        union {
-                struct srb_iocb iocb_cmd;
-                struct fc_bsg_job *bsg_job;
-                struct srb_cmd scmd;
-	}
-
-The address it's getting is the first element in this structure:
-
-struct srb_cmd {
-	struct scsi_cmnd *cmd;		/* Linux SCSI command pkt */
-....
-}
-
-However, since this is a union, the same memory can be used this way 
-instead:
-
-struct srb_iocb {
-	union {
-		struct {
-			uint16_t flags;
-			uint16_t data[2];
-			u32 iop[2];
-		} logio;
-	....
-
-Turns out, in the kernel panics I have gotten, the iocb type is logio
-(verified by srb->type = SRB_LOGIN_CMD). 
-
-To further check, I looked at the logio iocb in the crash:
-
-        logio = {
-          flags = 0x2,
-          data = {0x0, 0x0}
-        ....
-
-which follows since:
-
-       lio->u.logio.flags |= SRB_LOGIN_COND_PLOGI;
-
-and
-
-#define SRB_LOGIN_COND_PLOGI	BIT_1
-
-In order to eliminate this crash, this patch adds an extra check to the
-top of the if statement to check whether or not sp->type == SRB_SCSI_CMD. 
-If not, then don't bother doing the rest of the if-block. It doesn't look
-like we should be invoking qla2xxx_eh_abort for anything other than
-srb_cmds anyways.
-
-I thought about changing the definition of GET_CMD_SP to include this
-type check and return NULL if sp is not type SRB_SCSI_CMD - like this:
-
-#define GET_CMD_SP(sp) ((sp->type == SRB_SCSI_CMD) ? sp->u.scmd.cmd : NULL)
-
-I decided against it as there are multiple places in the code that do not
-check for NULL. If you're calling GET_CMD_SP you should be dealing with 
-an SRB_SCSI_CMD....but we aren't in this case. So, for this patch I went 
-with the more contained and safer change.
-
-This problem is hard to hit, but I have run into it doing negative
-testing many times now (with a test specifically designed to bring it
-out), so I can verify that this fix works. My testing has been against
-a RHEL7 driver variant, but the bug and patch are equally relevant to
-to the upstream driver.
-
-Fixes: 1535aa75a3d8 ("scsi: qla2xxx: fix invalid DMA access after command aborts in PCI device remove")
-Signed-off-by: Bill Kuzeja <william.kuzeja@stratus.com>
----
- drivers/scsi/qla2xxx/qla_os.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index d01c90c..4eec095 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1617,7 +1617,8 @@ uint32_t qla2x00_isp_reg_stat(struct qla_hw_data *ha)
- 				/* Don't abort commands in adapter during EEH
- 				 * recovery as it's not accessible/responding.
- 				 */
--				if (GET_CMD_SP(sp) && !ha->flags.eeh_busy) {
-+				if (GET_CMD_SP(sp) && !ha->flags.eeh_busy &&
-+				    (sp->type == SRB_SCSI_CMD)) {
- 					/* Get a reference to the sp and drop the lock.
- 					 * The reference ensures this sp->done() call
- 					 * - and not the call in qla2xxx_eh_abort() -
+                                                    Beste Grüße / Best regards,
+                                                      - Benjamin Block
 -- 
-1.8.3.1
+Linux on z Systems Development         /         IBM Systems & Technology Group
+		  IBM Deutschland Research & Development GmbH 
+Vorsitz. AufsR.: Martina Koederitz     /        Geschäftsführung: Dirk Wittkopp
+Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
