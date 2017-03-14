@@ -1,31 +1,42 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] lpfc: Finalize Kconfig options for nvme
-Date: Mon, 13 Mar 2017 23:08:09 -0400
-Message-ID: <yq137egr1wm.fsf@oracle.com>
-References: <1489012561-27977-1-git-send-email-jsmart2021@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
+Subject: [PATCH 0/9] be2iscsi: driver update 11.4.0.0
+Date: Tue, 14 Mar 2017 13:31:25 +0530
+Message-ID: <1489478494-5432-1-git-send-email-jitendra.bhivare@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45277 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754258AbdCNDIt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2017 23:08:49 -0400
-In-Reply-To: <1489012561-27977-1-git-send-email-jsmart2021@gmail.com>
-        (jsmart's message of "Wed, 8 Mar 2017 14:36:01 -0800")
+Received: from mail-wr0-f171.google.com ([209.85.128.171]:36283 "EHLO
+        mail-wr0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750847AbdCNIBy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Mar 2017 04:01:54 -0400
+Received: by mail-wr0-f171.google.com with SMTP id u108so118192881wrb.3
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2017 01:01:53 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jsmart2021@gmail.com
-Cc: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
+To: cleech@redhat.com, lduncan@suse.com
+Cc: linux-scsi@vger.kernel.org, Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 
->>>>> "James" == jsmart2021  <jsmart2021@gmail.com> writes:
+This patch is generated against for-next branch.
 
-James> Reviewing the result of what was just added for Kconfig, we made
-James> a poor choice. It worked well for full kernel builds, but not so
-James> much for how it would be deployed on a distro.
+Jitendra Bhivare (9):
+  be2iscsi: Check tag in beiscsi_mccq_compl_wait
+  be2iscsi: Fix closing of connection
+  be2iscsi: Replace spin_unlock_bh with spin_lock
+  scsi_transport_iscsi: Use flush_work in iscsi_remove_session
+  be2iscsi: Increase HDQ default queue size
+  be2iscsi: Use num_cons field in Rx CQE
+  be2iscsi: Remove free_list for ASYNC handles
+  be2iscsi: Check size before copying ASYNC handle
+  be2iscsi: Update driver version
 
-Applied to 4.11/scsi-fixes.
-
-Thanks!
+ drivers/scsi/be2iscsi/be.h          |   1 -
+ drivers/scsi/be2iscsi/be_cmds.c     |   6 +
+ drivers/scsi/be2iscsi/be_cmds.h     |  63 ++++-----
+ drivers/scsi/be2iscsi/be_iscsi.c    |  98 ++++++++------
+ drivers/scsi/be2iscsi/be_main.c     | 257 ++++++++++++++++--------------------
+ drivers/scsi/be2iscsi/be_main.h     |  15 +--
+ drivers/scsi/be2iscsi/be_mgmt.c     | 127 +++++++++---------
+ drivers/scsi/be2iscsi/be_mgmt.h     |  30 +----
+ drivers/scsi/scsi_transport_iscsi.c |   3 +-
+ 9 files changed, 283 insertions(+), 317 deletions(-)
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.7.4
