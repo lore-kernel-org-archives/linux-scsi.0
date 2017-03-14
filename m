@@ -1,30 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/4] megaraid_sas: Bug fixes and improvements for 4.11-rc
-Date: Mon, 13 Mar 2017 23:00:40 -0400
-Message-ID: <yq1fuigr293.fsf@oracle.com>
-References: <1489144935-26567-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: Re: [scsi] scsi: ufs: don't check unsigned type for a negative value
+Date: Mon, 13 Mar 2017 23:02:08 -0400
+Message-ID: <yq17f3sr26n.fsf@oracle.com>
+References: <20170312102202.9889-1-tomas.winkler@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:43245 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751541AbdCNDBk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Mar 2017 23:01:40 -0400
-In-Reply-To: <1489144935-26567-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
-        (Shivasharan S.'s message of "Fri, 10 Mar 2017 03:22:11 -0800")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170312102202.9889-1-tomas.winkler@intel.com> (Tomas Winkler's
+        message of "Sun, 12 Mar 2017 12:22:02 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com
 
->>>>> "Shivasharan" == Shivasharan S <shivasharan.srikanteshwara@broadcom.com> writes:
+>>>>> "Tomas" == Tomas Winkler <tomas.winkler@intel.com> writes:
 
-Shivasharan> This patchset fixes few issues introduced during previous
-Shivasharan> set of patch submissions for 4.11
+Tomas> Fix compilation warning drivers/scsi/ufs/ufshcd.c:7645:13:
+Tomas> warning: comparison of unsigned expression < 0 is always false
+Tomas> [-Wtype-limits] if ((value < UFS_PM_LVL_0) || (value >=
+Tomas> UFS_PM_LVL_MAX))
 
-Applied to 4.11/scsi-fixes.
-
-Thank you!
+Applied to 4.11/scsi-fixes, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
