@@ -1,34 +1,24 @@
-From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+From: Jack Wang <xjtuwjp@gmail.com>
 Subject: Re: Getting "Wrong diagnostic page; asked for 7 got 0" error message
  on HBA's virtual SES device
-Date: Wed, 15 Mar 2017 16:00:20 +0530
-Message-ID: <CAK=zhgoip+qTwpxVJD2tLC75Ai+DJqX-dMRH3Ej1ZOVxxGROkA@mail.gmail.com>
+Date: Wed, 15 Mar 2017 13:38:36 +0100
+Message-ID: <CAD+HZHUAvn9sgr+0n2fDYADQaaHn-iVdPBSYLymA_8Y3C1AZXA@mail.gmail.com>
 References: <CAK=zhgq-yhHigXp4gT26KSCtUu7_HhWgzkSR3PEKM7g4g_4KLw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f181.google.com ([209.85.192.181]:33041 "EHLO
-        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751694AbdCOKaW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Mar 2017 06:30:22 -0400
-Received: by mail-pf0-f181.google.com with SMTP id w189so7230422pfb.0
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Mar 2017 03:30:21 -0700 (PDT)
+Received: from mail-lf0-f50.google.com ([209.85.215.50]:35519 "EHLO
+        mail-lf0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751198AbdCOMij (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Mar 2017 08:38:39 -0400
 In-Reply-To: <CAK=zhgq-yhHigXp4gT26KSCtUu7_HhWgzkSR3PEKM7g4g_4KLw@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: Caleb Randall <caleb.randall@broadcom.com>, Wasim Qureshi <wasim.qureshi@broadcom.com>, Sayantan Bhattacharya <sayantan.bhattacharya@broadcom.com>
+To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Caleb Randall <caleb.randall@broadcom.com>, wasim.qureshi@broadcom.com, Sayantan Bhattacharya <sayantan.bhattacharya@broadcom.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
 
-Hi,
-
-Any Update?
-
-Thanks,
-Sreekanth
-
-On Mon, Mar 13, 2017 at 12:13 PM, Sreekanth Reddy
-<sreekanth.reddy@broadcom.com> wrote:
+2017-03-13 7:43 GMT+01:00 Sreekanth Reddy <sreekanth.reddy@broadcom.com>:
 > Hi,
 >
 > Our LSI(Broadcom) SAS3.5 HBA device's support virtual SES device.
@@ -99,3 +89,12 @@ x0205)
 >
 > Thanks,
 > Sreekanth
+
+Hi Sreekanth,
+
+To me, we should fix ses module to check  00h List of Supported
+Diagnostic Pages first before ask for 07h.
+Add James in CC.
+
+Cheers,
+Jack Wang
