@@ -1,38 +1,37 @@
-From: Sebastian Herbszt <herbszt@gmx.de>
-Subject: [PATCH] efct: add missing include file
-Date: Wed, 15 Mar 2017 21:26:48 +0100
-Message-ID: <20170315212648.00006c3f@gmx.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 108621] kernel BUG in drivers/scsi/scsi_lib.c
+Date: Wed, 15 Mar 2017 21:14:16 +0000
+Message-ID: <bug-108621-11613-vVNJQSGBiL@https.bugzilla.kernel.org/>
+References: <bug-108621-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:55592 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751236AbdCOU3G (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Mar 2017 16:29:06 -0400
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:42430 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751416AbdCOVOU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 15 Mar 2017 17:14:20 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 2583428528
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Mar 2017 21:14:17 +0000 (UTC)
+Received: from pdx-korg-bugzilla-1.web.codeaurora.org (unknown [172.30.200.120])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id B63D02861A
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Mar 2017 21:14:16 +0000 (UTC)
+In-Reply-To: <bug-108621-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@broadcom.com>
-Cc: linux-scsi@vger.kernel.org, Sebastian Herbszt <herbszt@gmx.de>
+To: linux-scsi@kernel.org
 
-After the split of linux/sched.h, linux/sched/signal.h is required.
+https://bugzilla.kernel.org/show_bug.cgi?id=108621
 
-Signed-off-by: Sebastian Herbszt <herbszt@gmx.de>
----
- efct/efct_os.h | 1 +
- 1 file changed, 1 insertion(+)
+Martin Ziegler (ziegler@uni-freiburg.de) changed:
 
-diff --git a/efct/efct_os.h b/efct/efct_os.h
-index 16f7dc3..5ae269e 100644
---- a/efct/efct_os.h
-+++ b/efct/efct_os.h
-@@ -56,6 +56,7 @@
- #include <linux/seq_file.h>
- #include <linux/random.h>
- #include <linux/sched.h>
-+#include <linux/sched/signal.h>
- #include <linux/jiffies.h>
- #include <linux/ctype.h>
- #include <linux/debugfs.h>
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+         Resolution|---                         |UNREPRODUCIBLE
+
 -- 
-2.7.3
+You are receiving this mail because:
+You are watching the assignee of the bug.
