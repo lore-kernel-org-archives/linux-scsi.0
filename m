@@ -1,253 +1,61 @@
 From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 4/6] ipr: Error path locking fixes
-Date: Wed, 15 Mar 2017 16:58:39 -0500
-Message-ID: <20170315215840.51F71BE03B@b03ledav005.gho.boulder.ibm.com>
+Subject: [PATCH 2/6] ipr: Remove redundant initialization
+Date: Wed, 15 Mar 2017 16:58:37 -0500
+Message-ID: <20170315215838.237B86A03B@b03ledav003.gho.boulder.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:57453 "EHLO
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:34194 "EHLO
         mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753895AbdCOV6p (ORCPT
+        by vger.kernel.org with ESMTP id S1753360AbdCOV6n (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Mar 2017 17:58:45 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v2FLsT0T124193
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Mar 2017 17:58:44 -0400
-Received: from e12.ny.us.ibm.com (e12.ny.us.ibm.com [129.33.205.202])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 297bu6nanp-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Mar 2017 17:58:44 -0400
-Received: from localhost
-        by e12.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
         Wed, 15 Mar 2017 17:58:43 -0400
+Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v2FLsRpa072167
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Mar 2017 17:58:42 -0400
+Received: from e17.ny.us.ibm.com (e17.ny.us.ibm.com [129.33.205.207])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 296nfxux4e-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Mar 2017 17:58:42 -0400
+Received: from localhost
+        by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+        Wed, 15 Mar 2017 17:58:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, wenxiong@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
 
 
-This patch closes up some potential race conditions observed in
-the error handling paths in ipr while debugging an issue resulting
-in a hang with SATA error handling. These patches ensure we are
-holding the correct lock when adding and removing commands from
-the free and pending queues in some error scenarios.
+Removes some code in __ipr_eh_dev_reset which was modifying the
+ipr_cmd done function. This should have already been setup at
+command allocation time and if its since been changed, it means
+we are in the ipr_erp* functions and need to wait for them to
+complete and don't want to override that here.
 
 Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
 ---
 
- drivers/scsi/ipr.c |  106 ++++++++++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 93 insertions(+), 13 deletions(-)
+ drivers/scsi/ipr.c |   11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-diff -puN drivers/scsi/ipr.c~ipr_eh_locking_fixes drivers/scsi/ipr.c
---- linux-2.6.git/drivers/scsi/ipr.c~ipr_eh_locking_fixes	2017-03-13 14:56:49.994452448 -0500
-+++ linux-2.6.git-bjking1/drivers/scsi/ipr.c	2017-03-13 14:56:50.000452424 -0500
-@@ -820,7 +820,7 @@ static int ipr_set_pcix_cmd_reg(struct i
- }
- 
- /**
-- * ipr_sata_eh_done - done function for aborted SATA commands
-+ * __ipr_sata_eh_done - done function for aborted SATA commands
-  * @ipr_cmd:	ipr command struct
-  *
-  * This function is invoked for ops generated to SATA
-@@ -829,7 +829,7 @@ static int ipr_set_pcix_cmd_reg(struct i
-  * Return value:
-  * 	none
-  **/
--static void ipr_sata_eh_done(struct ipr_cmnd *ipr_cmd)
-+static void __ipr_sata_eh_done(struct ipr_cmnd *ipr_cmd)
- {
- 	struct ata_queued_cmd *qc = ipr_cmd->qc;
- 	struct ipr_sata_port *sata_port = qc->ap->private_data;
-@@ -843,7 +843,27 @@ static void ipr_sata_eh_done(struct ipr_
- }
- 
- /**
-- * ipr_scsi_eh_done - mid-layer done function for aborted ops
-+ * ipr_sata_eh_done - done function for aborted SATA commands
-+ * @ipr_cmd:	ipr command struct
-+ *
-+ * This function is invoked for ops generated to SATA
-+ * devices which are being aborted.
-+ *
-+ * Return value:
-+ * 	none
-+ **/
-+static void ipr_sata_eh_done(struct ipr_cmnd *ipr_cmd)
-+{
-+	struct ipr_hrr_queue *hrrq = ipr_cmd->hrrq;
-+	unsigned long hrrq_flags;
+diff -puN drivers/scsi/ipr.c~ipr_eh_dev_reset_unnecessary_reinit drivers/scsi/ipr.c
+--- linux-2.6.git/drivers/scsi/ipr.c~ipr_eh_dev_reset_unnecessary_reinit	2017-03-13 15:53:29.636591281 -0500
++++ linux-2.6.git-bjking1/drivers/scsi/ipr.c	2017-03-13 15:53:29.642591257 -0500
+@@ -5243,12 +5243,11 @@ static int __ipr_eh_dev_reset(struct scs
+ 		spin_lock(&hrrq->_lock);
+ 		list_for_each_entry(ipr_cmd, &hrrq->hrrq_pending_q, queue) {
+ 			if (ipr_cmd->ioarcb.res_handle == res->res_handle) {
+-				if (ipr_cmd->scsi_cmd)
+-					ipr_cmd->done = ipr_scsi_eh_done;
+-				if (ipr_cmd->qc)
+-					ipr_cmd->done = ipr_sata_eh_done;
+-				if (ipr_cmd->qc &&
+-				    !(ipr_cmd->qc->flags & ATA_QCFLAG_FAILED)) {
++				if (!ipr_cmd->qc)
++					continue;
 +
-+	spin_lock_irqsave(&hrrq->_lock, hrrq_flags);
-+	__ipr_sata_eh_done(ipr_cmd);
-+	spin_unlock_irqrestore(&hrrq->_lock, hrrq_flags);
-+}
-+
-+/**
-+ * __ipr_scsi_eh_done - mid-layer done function for aborted ops
-  * @ipr_cmd:	ipr command struct
-  *
-  * This function is invoked by the interrupt handler for
-@@ -852,7 +872,7 @@ static void ipr_sata_eh_done(struct ipr_
-  * Return value:
-  * 	none
-  **/
--static void ipr_scsi_eh_done(struct ipr_cmnd *ipr_cmd)
-+static void __ipr_scsi_eh_done(struct ipr_cmnd *ipr_cmd)
- {
- 	struct scsi_cmnd *scsi_cmd = ipr_cmd->scsi_cmd;
- 
-@@ -866,6 +886,26 @@ static void ipr_scsi_eh_done(struct ipr_
- }
- 
- /**
-+ * ipr_scsi_eh_done - mid-layer done function for aborted ops
-+ * @ipr_cmd:	ipr command struct
-+ *
-+ * This function is invoked by the interrupt handler for
-+ * ops generated by the SCSI mid-layer which are being aborted.
-+ *
-+ * Return value:
-+ * 	none
-+ **/
-+static void ipr_scsi_eh_done(struct ipr_cmnd *ipr_cmd)
-+{
-+	unsigned long hrrq_flags;
-+	struct ipr_hrr_queue *hrrq = ipr_cmd->hrrq;
-+
-+	spin_lock_irqsave(&hrrq->_lock, hrrq_flags);
-+	__ipr_scsi_eh_done(ipr_cmd);
-+	spin_unlock_irqrestore(&hrrq->_lock, hrrq_flags);
-+}
-+
-+/**
-  * ipr_fail_all_ops - Fails all outstanding ops.
-  * @ioa_cfg:	ioa config struct
-  *
-@@ -892,9 +932,9 @@ static void ipr_fail_all_ops(struct ipr_
- 				cpu_to_be32(IPR_DRIVER_ILID);
- 
- 			if (ipr_cmd->scsi_cmd)
--				ipr_cmd->done = ipr_scsi_eh_done;
-+				ipr_cmd->done = __ipr_scsi_eh_done;
- 			else if (ipr_cmd->qc)
--				ipr_cmd->done = ipr_sata_eh_done;
-+				ipr_cmd->done = __ipr_sata_eh_done;
- 
- 			ipr_trc_hook(ipr_cmd, IPR_TRACE_FINISH,
- 				     IPR_IOASC_IOA_WAS_RESET);
-@@ -5948,7 +5988,7 @@ static int ipr_build_ioadl(struct ipr_io
- }
- 
- /**
-- * ipr_erp_done - Process completion of ERP for a device
-+ * __ipr_erp_done - Process completion of ERP for a device
-  * @ipr_cmd:		ipr command struct
-  *
-  * This function copies the sense buffer into the scsi_cmd
-@@ -5957,7 +5997,7 @@ static int ipr_build_ioadl(struct ipr_io
-  * Return value:
-  * 	nothing
-  **/
--static void ipr_erp_done(struct ipr_cmnd *ipr_cmd)
-+static void __ipr_erp_done(struct ipr_cmnd *ipr_cmd)
- {
- 	struct scsi_cmnd *scsi_cmd = ipr_cmd->scsi_cmd;
- 	struct ipr_resource_entry *res = scsi_cmd->device->hostdata;
-@@ -5985,6 +6025,26 @@ static void ipr_erp_done(struct ipr_cmnd
- }
- 
- /**
-+ * ipr_erp_done - Process completion of ERP for a device
-+ * @ipr_cmd:		ipr command struct
-+ *
-+ * This function copies the sense buffer into the scsi_cmd
-+ * struct and pushes the scsi_done function.
-+ *
-+ * Return value:
-+ * 	nothing
-+ **/
-+static void ipr_erp_done(struct ipr_cmnd *ipr_cmd)
-+{
-+	struct ipr_hrr_queue *hrrq = ipr_cmd->hrrq;
-+	unsigned long hrrq_flags;
-+
-+	spin_lock_irqsave(&hrrq->_lock, hrrq_flags);
-+	__ipr_erp_done(ipr_cmd);
-+	spin_unlock_irqrestore(&hrrq->_lock, hrrq_flags);
-+}
-+
-+/**
-  * ipr_reinit_ipr_cmnd_for_erp - Re-initialize a cmnd block to be used for ERP
-  * @ipr_cmd:	ipr command struct
-  *
-@@ -6016,7 +6076,7 @@ static void ipr_reinit_ipr_cmnd_for_erp(
- }
- 
- /**
-- * ipr_erp_request_sense - Send request sense to a device
-+ * __ipr_erp_request_sense - Send request sense to a device
-  * @ipr_cmd:	ipr command struct
-  *
-  * This function sends a request sense to a device as a result
-@@ -6025,13 +6085,13 @@ static void ipr_reinit_ipr_cmnd_for_erp(
-  * Return value:
-  * 	nothing
-  **/
--static void ipr_erp_request_sense(struct ipr_cmnd *ipr_cmd)
-+static void __ipr_erp_request_sense(struct ipr_cmnd *ipr_cmd)
- {
- 	struct ipr_cmd_pkt *cmd_pkt = &ipr_cmd->ioarcb.cmd_pkt;
- 	u32 ioasc = be32_to_cpu(ipr_cmd->s.ioasa.hdr.ioasc);
- 
- 	if (IPR_IOASC_SENSE_KEY(ioasc) > 0) {
--		ipr_erp_done(ipr_cmd);
-+		__ipr_erp_done(ipr_cmd);
- 		return;
- 	}
- 
-@@ -6052,6 +6112,26 @@ static void ipr_erp_request_sense(struct
- }
- 
- /**
-+ * ipr_erp_request_sense - Send request sense to a device
-+ * @ipr_cmd:	ipr command struct
-+ *
-+ * This function sends a request sense to a device as a result
-+ * of a check condition.
-+ *
-+ * Return value:
-+ * 	nothing
-+ **/
-+static void ipr_erp_request_sense(struct ipr_cmnd *ipr_cmd)
-+{
-+	struct ipr_hrr_queue *hrrq = ipr_cmd->hrrq;
-+	unsigned long hrrq_flags;
-+
-+	spin_lock_irqsave(&hrrq->_lock, hrrq_flags);
-+	__ipr_erp_request_sense(ipr_cmd);
-+	spin_unlock_irqrestore(&hrrq->_lock, hrrq_flags);
-+}
-+
-+/**
-  * ipr_erp_cancel_all - Send cancel all to a device
-  * @ipr_cmd:	ipr command struct
-  *
-@@ -6074,7 +6154,7 @@ static void ipr_erp_cancel_all(struct ip
- 	ipr_reinit_ipr_cmnd_for_erp(ipr_cmd);
- 
- 	if (!scsi_cmd->device->simple_tags) {
--		ipr_erp_request_sense(ipr_cmd);
-+		__ipr_erp_request_sense(ipr_cmd);
- 		return;
- 	}
- 
-@@ -6294,7 +6374,7 @@ static void ipr_erp_start(struct ipr_ioa
- 	u32 masked_ioasc = ioasc & IPR_IOASC_IOASC_MASK;
- 
- 	if (!res) {
--		ipr_scsi_eh_done(ipr_cmd);
-+		__ipr_scsi_eh_done(ipr_cmd);
- 		return;
- 	}
- 
++				ipr_cmd->done = ipr_sata_eh_done;
++				if (!(ipr_cmd->qc->flags & ATA_QCFLAG_FAILED)) {
+ 					ipr_cmd->qc->err_mask |= AC_ERR_TIMEOUT;
+ 					ipr_cmd->qc->flags |= ATA_QCFLAG_FAILED;
+ 				}
 _
