@@ -1,103 +1,332 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv3 4/6] scsi_error: do not escalate failed EH command
-Date: Wed, 15 Mar 2017 14:54:16 +0100
-Message-ID: <aa4c4285-782f-bd41-2fe8-98f54c2c2d9d@suse.de>
+Subject: Re: [PATCHv3 6/6] scsi: make asynchronous aborts mandatory
+Date: Wed, 15 Mar 2017 14:54:09 +0100
+Message-ID: <a179bca8-9df2-30bf-466c-4b9bd8eef2ba@suse.de>
 References: <1488359720-130871-1-git-send-email-hare@suse.de>
- <1488359720-130871-5-git-send-email-hare@suse.de>
- <20170314175611.GC19037@bblock-ThinkPad-W530>
+ <1488359720-130871-7-git-send-email-hare@suse.de>
+ <20170314173322.GA19037@bblock-ThinkPad-W530>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50987 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:50975 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753711AbdCONyU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Mar 2017 09:54:20 -0400
-In-Reply-To: <20170314175611.GC19037@bblock-ThinkPad-W530>
+        id S1752315AbdCONyP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 15 Mar 2017 09:54:15 -0400
+In-Reply-To: <20170314173322.GA19037@bblock-ThinkPad-W530>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Benjamin Block <bblock@linux.vnet.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org
 
-On 03/14/2017 06:56 PM, Benjamin Block wrote:
+On 03/14/2017 06:33 PM, Benjamin Block wrote:
 > Hello Hannes,
 > 
-> On Wed, Mar 01, 2017 at 10:15:18AM +0100, Hannes Reinecke wrote:
->> When a command is sent as part of the error handling there
->> is not point whatsoever to start EH escalation when that
->> command fails; we are _already_ in the error handler,
->> and the escalation is about to commence anyway.
->> So just call 'scsi_try_to_abort_cmd()' to abort outstanding
->> commands and let the main EH routine handle the rest.
+> On Wed, Mar 01, 2017 at 10:15:20AM +0100, Hannes Reinecke wrote:
+>> There hasn't been any reports for HBAs where asynchronous abort
+>> would not work, so we should make it mandatory and remove
+>> the fallback.
 >>
 >> Signed-off-by: Hannes Reinecke <hare@suse.de>
 >> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 >> Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
 >> ---
->>  drivers/scsi/scsi_error.c | 11 +----------
->>  1 file changed, 1 insertion(+), 10 deletions(-)
+>>  Documentation/scsi/scsi_eh.txt | 18 ++++------
+>>  drivers/scsi/scsi_error.c      | 81 ++++--------------------------------------
+>>  drivers/scsi/scsi_lib.c        |  2 +-
+>>  drivers/scsi/scsi_priv.h       |  3 +-
+>>  include/scsi/scsi_host.h       |  5 ---
+>>  5 files changed, 15 insertions(+), 94 deletions(-)
 >>
+>> diff --git a/Documentation/scsi/scsi_eh.txt b/Documentation/scsi/scsi_eh.txt
+>> index 4edb9c1c..11e447b 100644
+>> --- a/Documentation/scsi/scsi_eh.txt
+>> +++ b/Documentation/scsi/scsi_eh.txt
+>> @@ -70,7 +70,7 @@ with the command.
+>>  	scmd is requeued to blk queue.
+>>
+>>   - otherwise
+>> -	scsi_eh_scmd_add(scmd, 0) is invoked for the command.  See
+>> +	scsi_eh_scmd_add(scmd) is invoked for the command.  See
+>>  	[1-3] for details of this function.
+>>
+>>
+>> @@ -103,9 +103,7 @@ function
+>>          eh_timed_out() callback did not handle the command.
+>>  	Step #2 is taken.
+>>
+>> - 2. If the host supports asynchronous completion (as indicated by the
+>> -    no_async_abort setting in the host template) scsi_abort_command()
+>> -    is invoked to schedule an asynchrous abort.
+>> + 2. scsi_abort_command() is invoked to schedule an asynchrous abort.
+>>      Asynchronous abort are not invoked for commands which the
+>>      SCSI_EH_ABORT_SCHEDULED flag is set (this indicates that the command
+>>      already had been aborted once, and this is a retry which failed),
+>> @@ -127,16 +125,13 @@ function
+>>
+>>   scmds enter EH via scsi_eh_scmd_add(), which does the following.
+>>
+>> - 1. Turns on scmd->eh_eflags as requested.  It's 0 for error
+>> -    completions and SCSI_EH_CANCEL_CMD for timeouts.
+>> + 1. Links scmd->eh_entry to shost->eh_cmd_q
+>>
+>> - 2. Links scmd->eh_entry to shost->eh_cmd_q
+>> + 2. Sets SHOST_RECOVERY bit in shost->shost_state
+>>
+>> - 3. Sets SHOST_RECOVERY bit in shost->shost_state
+>> + 3. Increments shost->host_failed
+>>
+>> - 4. Increments shost->host_failed
+>> -
+>> - 5. Wakes up SCSI EH thread if shost->host_busy == shost->host_failed
+>> + 4. Wakes up SCSI EH thread if shost->host_busy == shost->host_failed
+>>
+>>   As can be seen above, once any scmd is added to shost->eh_cmd_q,
+>>  SHOST_RECOVERY shost_state bit is turned on.  This prevents any new
+>> @@ -252,7 +247,6 @@ scmd->allowed.
+>>
+>>   1. Error completion / time out
+>>      ACTION: scsi_eh_scmd_add() is invoked for scmd
+>> -	- set scmd->eh_eflags
+>>  	- add scmd to shost->eh_cmd_q
+>>  	- set SHOST_RECOVERY
+>>  	- shost->host_failed++
 >> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
->> index e1ca3b8..4613aa1 100644
+>> index 802a081..7b70ee9 100644
 >> --- a/drivers/scsi/scsi_error.c
 >> +++ b/drivers/scsi/scsi_error.c
->> @@ -889,15 +889,6 @@ static int scsi_try_to_abort_cmd(struct scsi_host_template *hostt,
->>  	return hostt->eh_abort_handler(scmd);
+>> @@ -163,7 +163,7 @@ static int scsi_host_eh_past_deadline(struct Scsi_Host *shost)
+>>  		}
+>>  	}
+>>
+>> -	scsi_eh_scmd_add(scmd, 0);
+>> +	scsi_eh_scmd_add(scmd);
 >>  }
 >>
->> -static void scsi_abort_eh_cmnd(struct scsi_cmnd *scmd)
+>>  /**
+>> @@ -217,9 +217,8 @@ static int scsi_host_eh_past_deadline(struct Scsi_Host *shost)
+>>  /**
+>>   * scsi_eh_scmd_add - add scsi cmd to error handling.
+>>   * @scmd:	scmd to run eh on.
+>> - * @eh_flag:	optional SCSI_EH flag.
+>>   */
+>> -void scsi_eh_scmd_add(struct scsi_cmnd *scmd, int eh_flag)
+>> +void scsi_eh_scmd_add(struct scsi_cmnd *scmd)
+>>  {
+>>  	struct Scsi_Host *shost = scmd->device->host;
+>>  	unsigned long flags;
+>> @@ -235,9 +234,6 @@ void scsi_eh_scmd_add(struct scsi_cmnd *scmd, int eh_flag)
+>>  	if (shost->eh_deadline != -1 && !shost->last_reset)
+>>  		shost->last_reset = jiffies;
+>>
+>> -	if (scmd->eh_eflags & SCSI_EH_ABORT_SCHEDULED)
+>> -		eh_flag &= ~SCSI_EH_CANCEL_CMD;
+>> -	scmd->eh_eflags |= eh_flag;
+>>  	scsi_eh_reset(scmd);
+>>  	list_add_tail(&scmd->eh_entry, &shost->eh_cmd_q);
+>>  	shost->host_failed++;
+>> @@ -271,10 +267,9 @@ enum blk_eh_timer_return scsi_times_out(struct request *req)
+>>  		rtn = host->hostt->eh_timed_out(scmd);
+>>
+>>  	if (rtn == BLK_EH_NOT_HANDLED) {
+>> -		if (host->hostt->no_async_abort ||
+>> -		    scsi_abort_command(scmd) != SUCCESS) {
+>> +		if (scsi_abort_command(scmd) != SUCCESS) {
+>>  			set_host_byte(scmd, DID_TIME_OUT);
+>> -			scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD);
+>> +			scsi_eh_scmd_add(scmd);
+>>  		}
+>>  	}
+>>
+>> @@ -327,7 +322,7 @@ static inline void scsi_eh_prt_fail_stats(struct Scsi_Host *shost,
+>>  		list_for_each_entry(scmd, work_q, eh_entry) {
+>>  			if (scmd->device == sdev) {
+>>  				++total_failures;
+>> -				if (scmd->eh_eflags & SCSI_EH_CANCEL_CMD)
+>> +				if (scmd->eh_eflags & SCSI_EH_ABORT_SCHEDULED)
+>>  					++cmd_cancel;
+>>  				else
+>>  					++cmd_failed;
+>> @@ -1153,8 +1148,7 @@ int scsi_eh_get_sense(struct list_head *work_q,
+>>  	 * should not get sense.
+>>  	 */
+>>  	list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
+>> -		if ((scmd->eh_eflags & SCSI_EH_CANCEL_CMD) ||
+>> -		    (scmd->eh_eflags & SCSI_EH_ABORT_SCHEDULED) ||
+>> +		if ((scmd->eh_eflags & SCSI_EH_ABORT_SCHEDULED) ||
+>>  		    SCSI_SENSE_VALID(scmd))
+>>  			continue;
+>>
+>> @@ -1294,61 +1288,6 @@ static int scsi_eh_test_devices(struct list_head *cmd_list,
+>>  	return list_empty(work_q);
+>>  }
+>>
+>> -
+>> -/**
+>> - * scsi_eh_abort_cmds - abort pending commands.
+>> - * @work_q:	&list_head for pending commands.
+>> - * @done_q:	&list_head for processed commands.
+>> - *
+>> - * Decription:
+>> - *    Try and see whether or not it makes sense to try and abort the
+>> - *    running command.  This only works out to be the case if we have one
+>> - *    command that has timed out.  If the command simply failed, it makes
+>> - *    no sense to try and abort the command, since as far as the shost
+>> - *    adapter is concerned, it isn't running.
+>> - */
+>> -static int scsi_eh_abort_cmds(struct list_head *work_q,
+>> -			      struct list_head *done_q)
 >> -{
->> -	if (scsi_try_to_abort_cmd(scmd->device->host->hostt, scmd) != SUCCESS)
->> -		if (scsi_try_bus_device_reset(scmd) != SUCCESS)
->> -			if (scsi_try_target_reset(scmd) != SUCCESS)
->> -				if (scsi_try_bus_reset(scmd) != SUCCESS)
->> -					scsi_try_host_reset(scmd);
+>> -	struct scsi_cmnd *scmd, *next;
+>> -	LIST_HEAD(check_list);
+>> -	int rtn;
+>> -	struct Scsi_Host *shost;
+>> -
+>> -	list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
+>> -		if (!(scmd->eh_eflags & SCSI_EH_CANCEL_CMD))
+>> -			continue;
+>> -		shost = scmd->device->host;
+>> -		if (scsi_host_eh_past_deadline(shost)) {
+>> -			list_splice_init(&check_list, work_q);
+>> -			SCSI_LOG_ERROR_RECOVERY(3,
+>> -				scmd_printk(KERN_INFO, scmd,
+>> -					    "%s: skip aborting cmd, past eh deadline\n",
+>> -					    current->comm));
+>> -			return list_empty(work_q);
+>> -		}
+>> -		SCSI_LOG_ERROR_RECOVERY(3,
+>> -			scmd_printk(KERN_INFO, scmd,
+>> -				     "%s: aborting cmd\n", current->comm));
+>> -		rtn = scsi_try_to_abort_cmd(shost->hostt, scmd);
+>> -		if (rtn == FAILED) {
+>> -			SCSI_LOG_ERROR_RECOVERY(3,
+>> -				scmd_printk(KERN_INFO, scmd,
+>> -					    "%s: aborting cmd failed\n",
+>> -					     current->comm));
+>> -			list_splice_init(&check_list, work_q);
+>> -			return list_empty(work_q);
+>> -		}
+>> -		scmd->eh_eflags &= ~SCSI_EH_CANCEL_CMD;
+>> -		if (rtn == FAST_IO_FAIL)
+>> -			scsi_eh_finish_cmd(scmd, done_q);
+>> -		else
+>> -			list_move_tail(&scmd->eh_entry, &check_list);
+>> -	}
+>> -
+>> -	return scsi_eh_test_devices(&check_list, work_q, done_q, 0);
 >> -}
 >> -
 >>  /**
->>   * scsi_eh_prep_cmnd  - Save a scsi command info as part of error recovery
->>   * @scmd:       SCSI command structure to hijack
->> @@ -1082,7 +1073,7 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
->>  			break;
->>  		}
->>  	} else if (rtn != FAILED) {
->> -		scsi_abort_eh_cmnd(scmd);
->> +		scsi_try_to_abort_cmd(shost->hostt, scmd);
->>  		rtn = FAILED;
+>>   * scsi_eh_try_stu - Send START_UNIT to device.
+>>   * @scmd:	&scsi_cmnd to send START_UNIT
+>> @@ -1691,11 +1630,6 @@ static void scsi_eh_offline_sdevs(struct list_head *work_q,
+>>  		sdev_printk(KERN_INFO, scmd->device, "Device offlined - "
+>>  			    "not ready after error recovery\n");
+>>  		scsi_device_set_state(scmd->device, SDEV_OFFLINE);
+>> -		if (scmd->eh_eflags & SCSI_EH_CANCEL_CMD) {
+>> -			/*
+>> -			 * FIXME: Handle lost cmds.
+>> -			 */
+>> -		}
+>>  		scsi_eh_finish_cmd(scmd, done_q);
 >>  	}
+>>  	return;
+>> @@ -2139,8 +2073,7 @@ static void scsi_unjam_host(struct Scsi_Host *shost)
+>>  	SCSI_LOG_ERROR_RECOVERY(1, scsi_eh_prt_fail_stats(shost, &eh_work_q));
+>>
+>>  	if (!scsi_eh_get_sense(&eh_work_q, &eh_done_q))
+>> -		if (!scsi_eh_abort_cmds(&eh_work_q, &eh_done_q))
+>> -			scsi_eh_ready_devs(shost, &eh_work_q, &eh_done_q);
+>> +		scsi_eh_ready_devs(shost, &eh_work_q, &eh_done_q);
+>>
+>>  	spin_lock_irqsave(shost->host_lock, flags);
+>>  	if (shost->eh_deadline != -1)
+>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+>> index 0735a46..98b2df8 100644
+>> --- a/drivers/scsi/scsi_lib.c
+>> +++ b/drivers/scsi/scsi_lib.c
+>> @@ -1593,7 +1593,7 @@ static void scsi_softirq_done(struct request *rq)
+>>  			scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY);
+>>  			break;
+>>  		default:
+>> -			scsi_eh_scmd_add(cmd, 0);
+>> +			scsi_eh_scmd_add(cmd);
+>>  			break;
+>>  	}
+>>  }
+>> diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+>> index 5be6cbf6..e20ab10 100644
+>> --- a/drivers/scsi/scsi_priv.h
+>> +++ b/drivers/scsi/scsi_priv.h
+>> @@ -18,7 +18,6 @@
+>>  /*
+>>   * Scsi Error Handler Flags
+>>   */
+>> -#define SCSI_EH_CANCEL_CMD	0x0001	/* Cancel this cmd */
+>>  #define SCSI_EH_ABORT_SCHEDULED	0x0002	/* Abort has been scheduled */
+>>
+>>  #define SCSI_SENSE_VALID(scmd) \
+>> @@ -72,7 +71,7 @@ extern int scsi_dev_info_list_add_keyed(int compatible, char *vendor,
+>>  extern int scsi_error_handler(void *host);
+>>  extern int scsi_decide_disposition(struct scsi_cmnd *cmd);
+>>  extern void scsi_eh_wakeup(struct Scsi_Host *shost);
+>> -extern void scsi_eh_scmd_add(struct scsi_cmnd *, int);
+>> +extern void scsi_eh_scmd_add(struct scsi_cmnd *);
+>>  void scsi_eh_ready_devs(struct Scsi_Host *shost,
+>>  			struct list_head *work_q,
+>>  			struct list_head *done_q);
+>> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+>> index 3cd8c3b..afb0481 100644
+>> --- a/include/scsi/scsi_host.h
+>> +++ b/include/scsi/scsi_host.h
+>> @@ -452,11 +452,6 @@ struct scsi_host_template {
+>>  	unsigned no_write_same:1;
+>>
+>>  	/*
+>> -	 * True if asynchronous aborts are not supported
+>> -	 */
+>> -	unsigned no_async_abort:1;
+>> -
+>> -	/*
+>>  	 * Countdown for host blocking with no commands outstanding.
+>>  	 */
+>>  	unsigned int max_host_blocked;
+>> -- 
+>> 1.8.5.6
+>>
 > 
-> The idea is sound, but this implementation would cause "use-after-free"s.
+> Hmm so, I guess we compromise in terms of how granular we want to
+> recover? 
 > 
-> I only know our own LLD well enough to judge, but with zFCP there will
-> always be a chance that an abort fails - be it memory pressure,
-> hardware/firmware behavior or internal EH in zFCP.
+> When say an abort for command A on LUN 1 behind Port α fails for some
+> reason, then we also skip all possible aborts for command B on LUN 2
+> behind Port α and command C on LUN 1 behind Port β? (The host might
+> already be in recovery by the time command B and C fail)
 > 
-> Calling queuecommand() will mean for us in the LLD, that we allocate a
-> unique internal request struct for the scsi_cmnd (struct
-> zfcp_fsf_request) and add that to our internal hash-table with
-> outstanding commands. We assume this scsi_cmnd-pointer is ours till we
-> complete it via scsi_done are yield it via successful EH-actions.
-> 
-> In case the abort fails, you fail to take back the ownership over the
-> scsi command. Which in turn means possible "use-after-free"s when we
-> still thinks the scsi command is ours, but EH has already overwritten
-> the scsi-command with the original one. When we still get an answer or
-> otherwise use the scsi_cmnd-pointer we would access an invalid one.
-> 
-That is actually not try.
-As soon as we're calling 'scsi_try_to_abort_command()' ownership is
-assumed to reside in the SCSI midlayer; also, the command used for
-recovery here is actually using the same structure than the failed
-command, so if the command abort failed the command is already in the
-list of failed commands, and will be recovered after SCSI EH returned.
+No.
+Recovery will only be started once all commands have been completed or
+aborted.
+Hence will be be aborting all commands before entering SCSI EH.
 
-So no use-after-free here.
+> I mean, in the end, all traffic holds on that host anyway, as long as we
+> get into EH - which is true as soon as one abort fails. Might as well
+> skip the wait time till we get there.
+> 
+There still is a benefit to be had from sending individual aborts; after
+all, the commands are supposed to be independently, and sending an abort
+serves as a pointer to the LLDD to remove any reference to it.
 
+> I would like it, if we could document that fact a bit more direct.
+> Otherwise I think that's good. The code also looks good.
+> 
+> 
+> Reviewed-by: Benjamin Block <bblock@linux.vnet.ibm.com>
+> 
 Cheers,
 
 Hannes
 -- 
 Dr. Hannes Reinecke		      zSeries & Storage
 hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N�rnberg
-GF: J. Hawn, J. Guild, F. Imend�rffer, HRB 16746 (AG N�rnberg)
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
