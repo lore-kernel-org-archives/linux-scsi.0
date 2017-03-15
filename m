@@ -1,30 +1,47 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] aacraid: Fix potential null access
-Date: Wed, 15 Mar 2017 19:02:41 -0400
-Message-ID: <yq1h92ugn3i.fsf@oracle.com>
-References: <20170314162019.716-1-RaghavaAditya.Renukunta@microsemi.com>
+From: Brian De Wolf <bldewolf@cpp.edu>
+Subject: mptsas doesn't detect hot-added disk drives in ESX guest
+Date: Wed, 15 Mar 2017 16:21:24 -0700
+Message-ID: <20170315162124.737d6919@cpp.edu>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:18355 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752119AbdCOXCw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Mar 2017 19:02:52 -0400
-In-Reply-To: <20170314162019.716-1-RaghavaAditya.Renukunta@microsemi.com>
-        (Raghava Aditya Renukunta's message of "Tue, 14 Mar 2017 09:20:19
-        -0700")
+Received: from mail-bn3nam01on0097.outbound.protection.outlook.com ([104.47.33.97]:61511
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753797AbdCOXVe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 15 Mar 2017 19:21:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, Tomas Henzl <thezl@redhat.com>
+To: linux-scsi@vger.kernel.org
 
-Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com> writes:
+Hello, I'm looking for some help tracking down why I can no longer
+hot-add disks to my virtual machines.  They are guests on ESXi 6.0
+using the LSI Logic SAS controller emulation, using the mptsas kernel
+module.  At some point between 3.18.27 and 4.4.50, we lost the ability
+to hot-add disks to the guest machines.  Even echoing "- - -"
+into /sys/.../scan doesn't cause the new disks to show up.
 
-> Reported-by: Tomas Henzl <thezl@redhat.com>
+I performed a bisect between 3.18 and 4.4.50 where I built the kernel,
+rebooted, and attached a disk, marking it as bad if mptsas did not see
+the new disk.  It ended at the commit:
 
-...and another mangled email address.
+    1bd04bf timer: Remove FIFO "guarantee"
 
-Fixed it up.
+This commit mentions
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+    It's a seperate patch so any (unlikely to happen) regression caused by
+    this can be identified clearly.
+
+so I'm not sure if I've run into an unlikely regression or if my
+testing procedure was buggy.
+
+I also reproduced the issue using an Arch linux live CD running
+4.9.11.  I suspect this issue hasn't been noticed in the more stable
+distros yet because they're still mostly pre-4.0.
+
+The issue doesn't show up if I use pvscsi, which will probably be our
+long-term solution.
+
+Anyone know if this is a known issue?  Is there anything else I should
+try or anyone I should notify?
