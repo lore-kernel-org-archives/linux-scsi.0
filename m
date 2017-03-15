@@ -1,45 +1,36 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 194837] VM with virtio-scsi drive often crashes during boot
- with kernel 4.11rc1
-Date: Wed, 15 Mar 2017 07:47:05 +0000
-Message-ID: <bug-194837-11613-02wKKRrmw3@https.bugzilla.kernel.org/>
-References: <bug-194837-11613@https.bugzilla.kernel.org/>
+From: Manish Rangankar <manish.rangankar@cavium.com>
+Subject: [PATCH] qedi: Add PCI device-ID for QL41xxx adapters.
+Date: Wed, 15 Mar 2017 01:32:53 -0700
+Message-ID: <20170315083253.6721-1-manish.rangankar@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:49630 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751068AbdCOHrM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Mar 2017 03:47:12 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id EF17428600
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Mar 2017 07:47:10 +0000 (UTC)
-Received: from pdx-korg-bugzilla-1.web.codeaurora.org (unknown [172.30.200.120])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 36046285FB
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Mar 2017 07:47:10 +0000 (UTC)
-In-Reply-To: <bug-194837-11613@https.bugzilla.kernel.org/>
+Received: from mail-by2nam03on0041.outbound.protection.outlook.com ([104.47.42.41]:18304
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751416AbdCOIdN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 15 Mar 2017 04:33:13 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@kernel.org
+To: martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com
+Cc: linux-scsi@vger.kernel.org, QLogic-Storage-Upstream@cavium.com
 
-https://bugzilla.kernel.org/show_bug.cgi?id=194837
+Signed-off-by: Manish Rangankar <manish.rangankar@cavium.com>
+---
+ drivers/scsi/qedi/qedi_main.c | 1 +
+ 1 file changed, 1 insertion(+)
 
---- Comment #12 from Thorsten Leemhuis (linux@leemhuis.info) ---
-(In reply to Omar Sandoval from comment #11)
-
-> The fix was [...]
-
-Thx for providing details!
-
-> If you are still seeing crashes on -rc2,
-
-Yes, but different ones every few boot attempts. But I just noticed those
-crashes happen without virtio-scsi as well. So definitely something else now.
-4.10 otoh works well; just retested to be sure. Sigh, I guess I need to take a
-closer look to find out what's wrong; that might take a day or two.
-
+diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
+index 8e3d928..92775a8 100644
+--- a/drivers/scsi/qedi/qedi_main.c
++++ b/drivers/scsi/qedi/qedi_main.c
+@@ -2007,6 +2007,7 @@ static void qedi_remove(struct pci_dev *pdev)
+ 
+ static struct pci_device_id qedi_pci_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, 0x165E) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, 0x8084) },
+ 	{ 0 },
+ };
+ MODULE_DEVICE_TABLE(pci, qedi_pci_tbl);
 -- 
-You are receiving this mail because:
-You are the assignee for the bug.
+1.8.3.1
