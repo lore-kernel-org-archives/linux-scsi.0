@@ -1,32 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] enclosure: fix sysfs symlinks creation when using multipath
-Date: Wed, 15 Mar 2017 19:39:31 -0400
-Message-ID: <yq1varaf6to.fsf@oracle.com>
-References: <1488454204-21251-1-git-send-email-mlombard@redhat.com>
+Subject: Re: [PATCH] scsi: sr: fix oob access in get_capabilities
+Date: Wed, 15 Mar 2017 20:07:53 -0400
+Message-ID: <yq1r31yf5ie.fsf@oracle.com>
+References: <1488536272-10509-1-git-send-email-wangkefeng.wang@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21805 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750912AbdCOXjj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Mar 2017 19:39:39 -0400
-In-Reply-To: <1488454204-21251-1-git-send-email-mlombard@redhat.com> (Maurizio
-        Lombardi's message of "Thu, 2 Mar 2017 12:30:04 +0100")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1488536272-10509-1-git-send-email-wangkefeng.wang@huawei.com>
+        (Kefeng Wang's message of "Fri, 3 Mar 2017 18:17:52 +0800")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kefeng Wang <wangkefeng.wang@huawei.com>
+Cc: Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Maurizio Lombardi <mlombard@redhat.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
-Maurizio Lombardi <mlombard@redhat.com> writes:
+Kefeng Wang <wangkefeng.wang@huawei.com> writes:
 
-> With multipath, it may happen that the same device is passed to
-> enclosure_add_device() multiple times and that the
-> enclosure_add_links() function fails to create the symlinks because
-> the device's sysfs directory entry is still NULL.  In this case, the
-> links will never be created because all the subsequent calls to
-> enclosure_add_device() will immediately fail with EEXIST.
+Kefeng,
 
-James?
+> 'n = header_length + block_descriptor_length' could be greater than 512,
+> and will lead to oob access, so enlarge transfer buffer to fix it.
+
+Can you share the output of sg_modes -p 0x2a /dev/srN for the offending
+drive?
+
+This mode page is usually much smaller than 512 bytes (typically between
+32 and 128 bytes).
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
