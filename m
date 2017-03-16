@@ -1,57 +1,38 @@
-From: Bradley Grove <bgrove@attotech.com>
-Subject: Re: [PATCH] [SCSI] esas2r: remove redundant NULL check on buffer
-Date: Thu, 16 Mar 2017 17:09:35 -0400
-Message-ID: <c304f4f4-8e4a-f716-ecd0-7f3ff7980dbc@attotech.com>
-References: <20170315164624.17264-1-colin.king@canonical.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/3] Unblock SCSI devices even if the LLD is being
+ unloaded
+Date: Thu, 16 Mar 2017 15:53:17 -0700
+Message-ID: <1489704797.4650.8.camel@HansenPartnership.com>
+References: <20170316205650.3322-1-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sw.attotech.com ([208.69.85.34]:48901 "EHLO
-        NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752380AbdCPWnp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Mar 2017 18:43:45 -0400
-In-Reply-To: <20170315164624.17264-1-colin.king@canonical.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:36400 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752563AbdCPWxk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Mar 2017 18:53:40 -0400
+In-Reply-To: <20170316205650.3322-1-bart.vanassche@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Colin King <colin.king@canonical.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Israel Rukshin <israelr@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>
 
-On 03/15/2017 12:46 PM, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
->
-> buffer is a pointer to the static char array event_buffer and
-> therefore can never be null, so the check is redundant. Remove it.
->
-> Detected by CoverityScan, CID#1077556 ("Logically Dead Code")
->
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/scsi/esas2r/esas2r_log.c | 5 -----
->  1 file changed, 5 deletions(-)
->
-> diff --git a/drivers/scsi/esas2r/esas2r_log.c b/drivers/scsi/esas2r/esas2r_log.c
-> index a82030a..65fdf22 100644
-> --- a/drivers/scsi/esas2r/esas2r_log.c
-> +++ b/drivers/scsi/esas2r/esas2r_log.c
-> @@ -130,11 +130,6 @@ static int esas2r_log_master(const long level,
->
->  		spin_lock_irqsave(&event_buffer_lock, flags);
->
-> -		if (buffer == NULL) {
-> -			spin_unlock_irqrestore(&event_buffer_lock, flags);
-> -			return -1;
-> -		}
-> -
->  		memset(buffer, 0, buflen);
->
->  		/*
->
+On Thu, 2017-03-16 at 13:56 -0700, Bart Van Assche wrote:
+> scsi_target_unblock() must unblock SCSI devices even if this function
+> is called after unloading of the LLD that created these devices has
+> started. This is necessary to prevent that __scsi_remove_device() 
+> hangs on the SYNCHRONIZE CACHE command issued by the sd driver during
+> shutdown.
 
-Thanks,
+Your special get function misses the try_module_get().  But this is all
+really a bit ugly. Since the only problem is the SYNC CACHE triggered
+by device_del, isn't a better solution a new state: SDEV_CANCEL_BLOCK. 
+ This will make the device visible to scsi_get_device() and we can take
+it back from CANCEL_BLOCKED->CANCEL when the queue is unblocked.  I
+suspect we could also simply throw away the sync cache command when the
+device is blocked (the cache should destage naturally in the time it
+takes for the device to be unblocked).
 
-Acked-by: Bradley Grove <bgrove@attotech.com>
-
-
-
-This electronic transmission and any attachments hereto are intended only for the use of the individual or entity to which it is addressed and may contain confidential information belonging to ATTO Technology, Inc. If you have reason to believe that you are not the intended recipient, you are hereby notified that any disclosure, copying, distribution or the taking of any action in reliance on the contents of this electronic transmission is strictly prohibited. If you have reason to believe that you have received this transmission in error, please notify ATTO immediately by return e-mail and delete and destroy this communication.   
+James
