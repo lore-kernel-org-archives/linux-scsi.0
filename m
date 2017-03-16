@@ -1,96 +1,133 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
 Subject: Re: [RFC 1/2] scsi: Provide mechanism for SCSI layer to poll for
  LLDD.
-Date: Thu, 16 Mar 2017 22:38:49 +0000
-Message-ID: <8578E37F-D885-46E6-A939-A619EAD4C7BF@cavium.com>
+Date: Thu, 16 Mar 2017 22:27:24 +0000
+Message-ID: <1489703231.2574.20.camel@sandisk.com>
 References: <20170316214048.20481-1-himanshu.madhani@cavium.com>
- <20170316214048.20481-2-himanshu.madhani@cavium.com>
- <1489703231.2574.20.camel@sandisk.com>
+         <20170316214048.20481-2-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0047.outbound.protection.outlook.com ([104.47.33.47]:5843
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754487AbdCPWiy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Mar 2017 18:38:54 -0400
-In-Reply-To: <1489703231.2574.20.camel@sandisk.com>
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:27585 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754537AbdCPWj6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Mar 2017 18:39:58 -0400
+In-Reply-To: <20170316214048.20481-2-himanshu.madhani@cavium.com>
 Content-Language: en-US
-Content-ID: <2E3E36B7CCABF24E800767F6FB672EA5@namprd07.prod.outlook.com>
+Content-ID: <BF7CEF2EA030174C86508000B48B1898@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Trapp, Darren" <Darren.Trapp@cavium.com>
+To: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "darren.trapp@cavium.com" <darren.trapp@cavium.com>
 
-DQo+IE9uIE1hciAxNiwgMjAxNywgYXQgMzoyNyBQTSwgQmFydCBWYW4gQXNzY2hlIDxiYXJ0LnZh
-bmFzc2NoZUBzYW5kaXNrLmNvbT4gd3JvdGU6DQo+IA0KPiBPbiBUaHUsIDIwMTctMDMtMTYgYXQg
-MTQ6NDAgLTA3MDAsIEhpbWFuc2h1IE1hZGhhbmkgd3JvdGU6DQo+PiArc3RhdGljIGludA0KPj4g
-K3Njc2lfcG9sbChzdHJ1Y3QgYmxrX21xX2h3X2N0eCAqaGN0eCwgdW5zaWduZWQgaW50IHRhZykN
-Cj4+ICsNCj4+ICt7DQo+PiArICAgICAgICBzdHJ1Y3QgU2NzaV9Ib3N0ICpzaG9zdCA9IGhjdHgt
-PmRyaXZlcl9kYXRhOw0KPj4gKyAgICAgICAgc3RydWN0IHJlcXVlc3QgKnJlcTsNCj4+ICsgICAg
-ICAgIHN0cnVjdCBzY3NpX2NtbmQgKmNtZDsNCj4+ICsNCj4+ICsgICAgICAgIHJlcSA9IGJsa19t
-cV90YWdfdG9fcnEoc2hvc3QtPnRhZ19zZXQudGFnc1toY3R4LT5xdWV1ZV9udW1dLCB0YWcpOw0K
-Pj4gKyAgICAgICAgaWYgKCFyZXEpDQo+PiArICAgICAgICAgICAgICAgIHJldHVybiAwOw0KPj4g
-Kw0KPj4gKyAgICAgICAgY21kID0gYmxrX21xX3JxX3RvX3BkdShyZXEpOw0KPj4gKwlpZiAoIWNt
-ZCkNCj4+ICsJCXJldHVybiAwOw0KPj4gKw0KPj4gKwlpZiAoc2hvc3QtPmhvc3R0LT5wb2xsX3F1
-ZXVlKQ0KPj4gKwkJcmV0dXJuKHNob3N0LT5ob3N0dC0+cG9sbF9xdWV1ZShzaG9zdCwgY21kKSk7
-DQo+PiArCWVsc2UgcmV0dXJuIDA7DQo+PiArfQ0KPiANCj4gV2hhdCB3aWxsIGhhcHBlbiBpZiB0
-aGUgcmVxdWVzdCB3aXRoIHRhZyAndGFnJyBpcyBjb21wbGV0ZWQgYWZ0ZXIgdGhlIGJsb2NrDQo+
-IGxheWVyIGRlY2lkZWQgdG8gY2FsbCB0aGlzIGZ1bmN0aW9uIGFuZCBiZWZvcmUgdGhpcyBmdW5j
-dGlvbiBoYWQgdGhlIGNoYW5jZQ0KPiB0byBjYWxsIGJsa19tcV90YWdfdG9fcnEoKT8gV2lsbCB0
-aGlzIHRyaWdnZXIgYSBrZXJuZWwgY3Jhc2g/IEFsc28sIHBsZWFzZQ0KPiBmb3JtYXQgcGF0Y2hl
-cyBwcm9wZXJseS4gVGhpcyBpcyB3aGF0IGNoZWNrcGF0Y2ggcmVwb3J0cyBmb3IgdGhpcyBwYXRj
-aDoNCj4gDQo+IEVSUk9SOiBjb2RlIGluZGVudCBzaG91bGQgdXNlIHRhYnMgd2hlcmUgcG9zc2li
-bGUNCj4gIzI0NDogRklMRTogZHJpdmVycy9zY3NpL3Njc2lfbGliLmM6MjE2MToNCj4gKyAgICAg
-ICAgc3RydWN0IFNjc2lfSG9zdCAqc2hvc3QgPSBoY3R4LT5kcml2ZXJfZGF0YTskDQo+IA0KPiBX
-QVJOSU5HOiBwbGVhc2UsIG5vIHNwYWNlcyBhdCB0aGUgc3RhcnQgb2YgYSBsaW5lDQo+ICMyNDQ6
-IEZJTEU6IGRyaXZlcnMvc2NzaS9zY3NpX2xpYi5jOjIxNjE6DQo+ICsgICAgICAgIHN0cnVjdCBT
-Y3NpX0hvc3QgKnNob3N0ID0gaGN0eC0+ZHJpdmVyX2RhdGE7JA0KPiANCj4gRVJST1I6IGNvZGUg
-aW5kZW50IHNob3VsZCB1c2UgdGFicyB3aGVyZSBwb3NzaWJsZQ0KPiAjMjQ1OiBGSUxFOiBkcml2
-ZXJzL3Njc2kvc2NzaV9saWIuYzoyMTYyOg0KPiArICAgICAgICBzdHJ1Y3QgcmVxdWVzdCAqcmVx
-OyQNCj4gDQo+IFdBUk5JTkc6IHBsZWFzZSwgbm8gc3BhY2VzIGF0IHRoZSBzdGFydCBvZiBhIGxp
-bmUNCj4gIzI0NTogRklMRTogZHJpdmVycy9zY3NpL3Njc2lfbGliLmM6MjE2MjoNCj4gKyAgICAg
-ICAgc3RydWN0IHJlcXVlc3QgKnJlcTskDQo+IA0KPiBFUlJPUjogY29kZSBpbmRlbnQgc2hvdWxk
-IHVzZSB0YWJzIHdoZXJlIHBvc3NpYmxlDQo+ICMyNDY6IEZJTEU6IGRyaXZlcnMvc2NzaS9zY3Np
-X2xpYi5jOjIxNjM6DQo+ICsgICAgICAgIHN0cnVjdCBzY3NpX2NtbmQgKmNtZDskDQo+IA0KPiBX
-QVJOSU5HOiBwbGVhc2UsIG5vIHNwYWNlcyBhdCB0aGUgc3RhcnQgb2YgYSBsaW5lDQo+ICMyNDY6
-IEZJTEU6IGRyaXZlcnMvc2NzaS9zY3NpX2xpYi5jOjIxNjM6DQo+ICsgICAgICAgIHN0cnVjdCBz
-Y3NpX2NtbmQgKmNtZDskDQo+IA0KPiBFUlJPUjogY29kZSBpbmRlbnQgc2hvdWxkIHVzZSB0YWJz
-IHdoZXJlIHBvc3NpYmxlDQo+ICMyNDg6IEZJTEU6IGRyaXZlcnMvc2NzaS9zY3NpX2xpYi5jOjIx
-NjU6DQo+ICsgICAgICAgIHJlcSA9IGJsa19tcV90YWdfdG9fcnEoc2hvc3QtPnRhZ19zZXQudGFn
-c1toY3R4LT5xdWV1ZV9udW1dLCB0YWcpOyQNCj4gDQo+IFdBUk5JTkc6IHBsZWFzZSwgbm8gc3Bh
-Y2VzIGF0IHRoZSBzdGFydCBvZiBhIGxpbmUNCj4gIzI0ODogRklMRTogZHJpdmVycy9zY3NpL3Nj
-c2lfbGliLmM6MjE2NToNCj4gKyAgICAgICAgcmVxID0gYmxrX21xX3RhZ190b19ycShzaG9zdC0+
-dGFnX3NldC50YWdzW2hjdHgtPnF1ZXVlX251bV0sIHRhZyk7JA0KPiANCj4gRVJST1I6IGNvZGUg
-aW5kZW50IHNob3VsZCB1c2UgdGFicyB3aGVyZSBwb3NzaWJsZQ0KPiAjMjQ5OiBGSUxFOiBkcml2
-ZXJzL3Njc2kvc2NzaV9saWIuYzoyMTY2Og0KPiArICAgICAgICBpZiAoIXJlcSkkDQo+IA0KPiBX
-QVJOSU5HOiBwbGVhc2UsIG5vIHNwYWNlcyBhdCB0aGUgc3RhcnQgb2YgYSBsaW5lDQo+ICMyNDk6
-IEZJTEU6IGRyaXZlcnMvc2NzaS9zY3NpX2xpYi5jOjIxNjY6DQo+ICsgICAgICAgIGlmICghcmVx
-KSQNCj4gDQo+IEVSUk9SOiBjb2RlIGluZGVudCBzaG91bGQgdXNlIHRhYnMgd2hlcmUgcG9zc2li
-bGUNCj4gIzI1MDogRklMRTogZHJpdmVycy9zY3NpL3Njc2lfbGliLmM6MjE2NzoNCj4gKyAgICAg
-ICAgICAgICAgICByZXR1cm4gMDskDQo+IA0KPiBXQVJOSU5HOiBwbGVhc2UsIG5vIHNwYWNlcyBh
-dCB0aGUgc3RhcnQgb2YgYSBsaW5lDQo+ICMyNTA6IEZJTEU6IGRyaXZlcnMvc2NzaS9zY3NpX2xp
-Yi5jOjIxNjc6DQo+ICsgICAgICAgICAgICAgICAgcmV0dXJuIDA7JA0KPiANCj4gRVJST1I6IGNv
-ZGUgaW5kZW50IHNob3VsZCB1c2UgdGFicyB3aGVyZSBwb3NzaWJsZQ0KPiAjMjUyOiBGSUxFOiBk
-cml2ZXJzL3Njc2kvc2NzaV9saWIuYzoyMTY5Og0KPiArICAgICAgICBjbWQgPSBibGtfbXFfcnFf
-dG9fcGR1KHJlcSk7JA0KPiANCj4gV0FSTklORzogcGxlYXNlLCBubyBzcGFjZXMgYXQgdGhlIHN0
-YXJ0IG9mIGEgbGluZQ0KPiAjMjUyOiBGSUxFOiBkcml2ZXJzL3Njc2kvc2NzaV9saWIuYzoyMTY5
-Og0KPiArICAgICAgICBjbWQgPSBibGtfbXFfcnFfdG9fcGR1KHJlcSk7JA0KPiANCj4gRVJST1I6
-IHJldHVybiBpcyBub3QgYSBmdW5jdGlvbiwgcGFyZW50aGVzZXMgYXJlIG5vdCByZXF1aXJlZA0K
-PiAjMjU3OiBGSUxFOiBkcml2ZXJzL3Njc2kvc2NzaV9saWIuYzoyMTc0Og0KPiArCQlyZXR1cm4o
-c2hvc3QtPmhvc3R0LT5wb2xsX3F1ZXVlKHNob3N0LCBjbWQpKTsNCj4gDQo+IEVSUk9SOiB0cmFp
-bGluZyBzdGF0ZW1lbnRzIHNob3VsZCBiZSBvbiBuZXh0IGxpbmUNCj4gIzI1ODogRklMRTogZHJp
-dmVycy9zY3NpL3Njc2lfbGliLmM6MjE3NToNCj4gKwllbHNlIHJldHVybiAwOw0KPiANCj4gV0FS
-TklORzogbGluZSBvdmVyIDgwIGNoYXJhY3RlcnMNCj4gIzI2MjogRklMRTogZHJpdmVycy9zY3Np
-L3Njc2lfbGliLmM6MjE3OToNCj4gK19fc2NzaV9pbml0X2hjdHgoc3RydWN0IGJsa19tcV9od19j
-dHggKmhjdHgsIHN0cnVjdCBTY3NpX0hvc3QgKnNob3N0LCB1bnNpZ25lZCBpbnQgaGN0eF9pZHgp
-DQo+IA0KPiBXQVJOSU5HOiBVbm5lY2Vzc2FyeSBzcGFjZSBiZWZvcmUgZnVuY3Rpb24gcG9pbnRl
-ciBuYW1lDQo+ICMzMDY6IEZJTEU6IGluY2x1ZGUvc2NzaS9zY3NpX2hvc3QuaDoxMzk6DQo+ICsJ
-aW50ICgqIHBvbGxfcXVldWUpKHN0cnVjdCBTY3NpX0hvc3QgKiwgc3RydWN0IHNjc2lfY21uZCAq
-KTsNCj4gDQo+IEVSUk9SOiBzcGFjZSBwcm9oaWJpdGVkIGFmdGVyIHRoYXQgJyonIChjdHg6QnhX
-KQ0KPiAjMzA2OiBGSUxFOiBpbmNsdWRlL3Njc2kvc2NzaV9ob3N0Lmg6MTM5Og0KPiArCWludCAo
-KiBwb2xsX3F1ZXVlKShzdHJ1Y3QgU2NzaV9Ib3N0ICosIHN0cnVjdCBzY3NpX2NtbmQgKik7DQo+
-ICAJICAgICBeDQo+IFRoYW5rcywNCj4gDQo+IEJhcnQuDQoNCldl4oCZbGwgdGFrZSBjYXJlIG9m
-IENoZWNrIHBhdGNoIGlzc3VlIGluIHVwZGF0ZWQgUkZDLiANCg0KVGhhbmtzLA0KLSBIaW1hbnNo
-dQ0KDQo=
+On Thu, 2017-03-16 at 14:40 -0700, Himanshu Madhani wrote:
+> +static int
+> +scsi_poll(struct blk_mq_hw_ctx *hctx, unsigned int tag)
+> +
+> +{
+> +        struct Scsi_Host *shost =3D hctx->driver_data;
+> +        struct request *req;
+> +        struct scsi_cmnd *cmd;
+> +
+> +        req =3D blk_mq_tag_to_rq(shost->tag_set.tags[hctx->queue_num], t=
+ag);
+> +        if (!req)
+> +                return 0;
+> +
+> +        cmd =3D blk_mq_rq_to_pdu(req);
+> +	if (!cmd)
+> +		return 0;
+> +
+> +	if (shost->hostt->poll_queue)
+> +		return(shost->hostt->poll_queue(shost, cmd));
+> +	else return 0;
+> +}
+
+What will happen if the request with tag 'tag' is completed after the block
+layer decided to call this function and before this function had the chance
+to call blk_mq_tag_to_rq()? Will this trigger a kernel crash? Also, please
+format patches properly. This is what checkpatch reports for this patch:
+
+ERROR: code indent should use tabs where possible
+#244: FILE: drivers/scsi/scsi_lib.c:2161:
++=A0=A0=A0=A0=A0=A0=A0=A0struct Scsi_Host *shost =3D hctx->driver_data;$
+
+WARNING: please, no spaces at the start of a line
+#244: FILE: drivers/scsi/scsi_lib.c:2161:
++=A0=A0=A0=A0=A0=A0=A0=A0struct Scsi_Host *shost =3D hctx->driver_data;$
+
+ERROR: code indent should use tabs where possible
+#245: FILE: drivers/scsi/scsi_lib.c:2162:
++=A0=A0=A0=A0=A0=A0=A0=A0struct request *req;$
+
+WARNING: please, no spaces at the start of a line
+#245: FILE: drivers/scsi/scsi_lib.c:2162:
++=A0=A0=A0=A0=A0=A0=A0=A0struct request *req;$
+
+ERROR: code indent should use tabs where possible
+#246: FILE: drivers/scsi/scsi_lib.c:2163:
++=A0=A0=A0=A0=A0=A0=A0=A0struct scsi_cmnd *cmd;$
+
+WARNING: please, no spaces at the start of a line
+#246: FILE: drivers/scsi/scsi_lib.c:2163:
++=A0=A0=A0=A0=A0=A0=A0=A0struct scsi_cmnd *cmd;$
+
+ERROR: code indent should use tabs where possible
+#248: FILE: drivers/scsi/scsi_lib.c:2165:
++=A0=A0=A0=A0=A0=A0=A0=A0req =3D blk_mq_tag_to_rq(shost->tag_set.tags[hctx-=
+>queue_num], tag);$
+
+WARNING: please, no spaces at the start of a line
+#248: FILE: drivers/scsi/scsi_lib.c:2165:
++=A0=A0=A0=A0=A0=A0=A0=A0req =3D blk_mq_tag_to_rq(shost->tag_set.tags[hctx-=
+>queue_num], tag);$
+
+ERROR: code indent should use tabs where possible
+#249: FILE: drivers/scsi/scsi_lib.c:2166:
++=A0=A0=A0=A0=A0=A0=A0=A0if (!req)$
+
+WARNING: please, no spaces at the start of a line
+#249: FILE: drivers/scsi/scsi_lib.c:2166:
++=A0=A0=A0=A0=A0=A0=A0=A0if (!req)$
+
+ERROR: code indent should use tabs where possible
+#250: FILE: drivers/scsi/scsi_lib.c:2167:
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0return 0;$
+
+WARNING: please, no spaces at the start of a line
+#250: FILE: drivers/scsi/scsi_lib.c:2167:
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0return 0;$
+
+ERROR: code indent should use tabs where possible
+#252: FILE: drivers/scsi/scsi_lib.c:2169:
++=A0=A0=A0=A0=A0=A0=A0=A0cmd =3D blk_mq_rq_to_pdu(req);$
+
+WARNING: please, no spaces at the start of a line
+#252: FILE: drivers/scsi/scsi_lib.c:2169:
++=A0=A0=A0=A0=A0=A0=A0=A0cmd =3D blk_mq_rq_to_pdu(req);$
+
+ERROR: return is not a function, parentheses are not required
+#257: FILE: drivers/scsi/scsi_lib.c:2174:
++		return(shost->hostt->poll_queue(shost, cmd));
+
+ERROR: trailing statements should be on next line
+#258: FILE: drivers/scsi/scsi_lib.c:2175:
++	else return 0;
+
+WARNING: line over 80 characters
+#262: FILE: drivers/scsi/scsi_lib.c:2179:
++__scsi_init_hctx(struct blk_mq_hw_ctx *hctx, struct Scsi_Host *shost, unsi=
+gned int hctx_idx)
+
+WARNING: Unnecessary space before function pointer name
+#306: FILE: include/scsi/scsi_host.h:139:
++	int (* poll_queue)(struct Scsi_Host *, struct scsi_cmnd *);
+
+ERROR: space prohibited after that '*' (ctx:BxW)
+#306: FILE: include/scsi/scsi_host.h:139:
++	int (* poll_queue)(struct Scsi_Host *, struct scsi_cmnd *);
+=A0	=A0=A0=A0=A0=A0^
+Thanks,
+
+Bart.=
