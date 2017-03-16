@@ -1,104 +1,42 @@
-From: Thierry Escande <thierry.escande@collabora.com>
-Subject: [PATCH] sd: Ignore sync cache failures when not supported
-Date: Thu, 16 Mar 2017 17:48:52 +0100
-Message-ID: <1489682932-18543-1-git-send-email-thierry.escande@collabora.com>
+From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+Subject: Re: [PATCH v3 01/16] chardev: add helper function to register char
+ devs with a struct device
+Date: Thu, 16 Mar 2017 11:38:40 -0600
+Message-ID: <98d81155-5290-b251-4728-43781d45c23b@deltatee.com>
+References: <1488783873-2614-1-git-send-email-logang@deltatee.com>
+ <1488783873-2614-2-git-send-email-logang@deltatee.com>
+ <20170316132222.GA9923@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset = "utf-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bhuna.collabora.co.uk ([46.235.227.227]:53783 "EHLO
-        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752490AbdCPQtH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Mar 2017 12:49:07 -0400
-Content-Transfert-Encoding: 8bit
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <20170316132222.GA9923-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Cc: Alessandro Zummo <a.zummo-BfzFCNDTiLLj+vYz1yj4TQ@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linus Walleij <linus.walleij-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Jarkko Sakkinen <jarkko.sakkinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Alexandre Bounine <alexandre.bounine-49Rm3DX9dRQ@public.gmane.org>, Alexandre Belloni <alexandre.belloni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Peter Meerwald-Stadler <pmeerw-jW+XmwGofnusTnJN9+BGXg@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sean Hefty <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Peter Huewe <peterhuewe-Mmb7MZpHnFY@public.gmane.org>, Alexandre Courbot <gnurou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Lars-Peter Clausen <lars-Qo5EllUWu/uELgA04lAiVw@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Marek Vasut <marek.vasut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>Doug Ledford <dl>
 List-Id: linux-scsi@vger.kernel.org
-To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Derek Basehore <dbasehore@chromium.org>
+> I don't know why kbuild didn't catch these before, but it looks like we
+> really need to include device.h in cdev.h now to fix up these build
+> warnings, right?
 
-Some external hard drives don't support the sync command even though the
-hard drive has write cache enabled. In this case, upon suspend request,
-sync cache failures are ignored if the error code in the sense header is
-ILLEGAL_REQUEST. There's not much we can do for these drives, so we
-shouldn't fail to suspend for this error case. The drive may stay
-powered if that's the setup for the port it's plugged into.
+> I'll try that out and rebase the char-misc-testing tree in the morning
+> to see if that fixes the build problems...
 
-Signed-off-by: Derek Basehore <dbasehore@chromium.org>
-Signed-off-by: Thierry Escande <thierry.escande@collabora.com>
----
- drivers/scsi/sd.c | 22 ++++++++++++++++++----
- 1 file changed, 18 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index b193304..c0388ff 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1492,7 +1492,7 @@ static unsigned int sd_check_events(struct gendisk *disk, unsigned int clearing)
- 	return retval;
- }
- 
--static int sd_sync_cache(struct scsi_disk *sdkp)
-+static int sd_sync_cache(struct scsi_disk *sdkp, int *sense_key)
- {
- 	int retries, res;
- 	struct scsi_device *sdp = sdkp->device;
-@@ -1521,8 +1521,11 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
- 	if (res) {
- 		sd_print_result(sdkp, "Synchronize Cache(10) failed", res);
- 
--		if (driver_byte(res) & DRIVER_SENSE)
-+		if (driver_byte(res) & DRIVER_SENSE) {
- 			sd_print_sense_hdr(sdkp, &sshdr);
-+			if (sense_key)
-+				*sense_key = sshdr.sense_key;
-+		}
- 		/* we need to evaluate the error return  */
- 		if (scsi_sense_valid(&sshdr) &&
- 			(sshdr.asc == 0x3a ||	/* medium not present */
-@@ -3304,7 +3307,7 @@ static void sd_shutdown(struct device *dev)
- 
- 	if (sdkp->WCE && sdkp->media_present) {
- 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
--		sd_sync_cache(sdkp);
-+		sd_sync_cache(sdkp, NULL);
- 	}
- 
- 	if (system_state != SYSTEM_RESTART && sdkp->device->manage_start_stop) {
-@@ -3316,6 +3319,7 @@ static void sd_shutdown(struct device *dev)
- static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
- {
- 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
-+	int sense_key = NO_SENSE;
- 	int ret = 0;
- 
- 	if (!sdkp)	/* E.g.: runtime suspend following sd_remove() */
-@@ -3323,8 +3327,17 @@ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
- 
- 	if (sdkp->WCE && sdkp->media_present) {
- 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
--		ret = sd_sync_cache(sdkp);
-+		ret = sd_sync_cache(sdkp, &sense_key);
- 		if (ret) {
-+			/*
-+			 * If this drive doesn't support sync, there's not much
-+			 * to do and suspend shouldn't fail.
-+			 */
-+			if (sense_key == ILLEGAL_REQUEST) {
-+				ret = 0;
-+				goto start_stop;
-+			}
-+
- 			/* ignore OFFLINE device */
- 			if (ret == -ENODEV)
- 				ret = 0;
-@@ -3332,6 +3345,7 @@ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
- 		}
- 	}
- 
-+start_stop:
- 	if (sdkp->device->manage_start_stop) {
- 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
- 		/* an error is not worth aborting a system sleep */
--- 
-2.7.4
+Yeah, I think the kbuild robot missed the series because the vger
+mailing lists were dropping this series :(
+
+I also don't know why my kernel config didn't catch this warning but
+I reproduced and fixed it with the kbuild's config. I'll send an updated
+patch which adds a include device.h line to cdev.h momentarily.
+
+Logan
