@@ -1,95 +1,117 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH 0/3] Unblock SCSI devices even if the LLD is being
- unloaded
-Date: Thu, 16 Mar 2017 23:19:52 +0000
-Message-ID: <1489706379.2574.24.camel@sandisk.com>
-References: <20170316205650.3322-1-bart.vanassche@sandisk.com>
-         <1489704797.4650.8.camel@HansenPartnership.com>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: Re: [PATCHv2 5/5] target/user: Clean up tcmu_queue_cmd_ring
+Date: Thu, 16 Mar 2017 15:50:03 -0500
+Message-ID: <7d9016c5-e067-bb35-756f-8a7fd143e6af@linux.vnet.ibm.com>
+References: <1488962743-17028-1-git-send-email-lixiubo@cmss.chinamobile.com>
+ <1488962743-17028-6-git-send-email-lixiubo@cmss.chinamobile.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:52650 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753465AbdCPXZb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Mar 2017 19:25:31 -0400
-In-Reply-To: <1489704797.4650.8.camel@HansenPartnership.com>
-Content-Language: en-US
-Content-ID: <8AB17B94D67ACB4C9F047893321BE62A@sandisk.com>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:55778 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751185AbdCPXcL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Mar 2017 19:32:11 -0400
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v2GKiDwJ011657
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Mar 2017 16:50:09 -0400
+Received: from e16.ny.us.ibm.com (e16.ny.us.ibm.com [129.33.205.206])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 297ym4payg-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Mar 2017 16:50:09 -0400
+Received: from localhost
+        by e16.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <bryantly@linux.vnet.ibm.com>;
+        Thu, 16 Mar 2017 16:50:08 -0400
+In-Reply-To: <1488962743-17028-6-git-send-email-lixiubo@cmss.chinamobile.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "maxg@mellanox.com" <maxg@mellanox.com>, "israelr@mellanox.com" <israelr@mellanox.com>, "hare@suse.de" <hare@suse.de>
+To: lixiubo@cmss.chinamobile.com, agrover@redhat.com, nab@linux-iscsi.org, mchristi@redhat.com
+Cc: shli@kernel.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com
 
-On Thu, 2017-03-16 at 15:53 -0700, James Bottomley wrote:
-> On Thu, 2017-03-16 at 13:56 -0700, Bart Van Assche wrote:
-> > scsi_target_unblock() must unblock SCSI devices even if this function
-> > is called after unloading of the LLD that created these devices has
-> > started. This is necessary to prevent that __scsi_remove_device()=20
-> > hangs on the SYNCHRONIZE CACHE command issued by the sd driver during
-> > shutdown.
->=20
-> Your special get function misses the try_module_get().  But this is all
-> really a bit ugly. Since the only problem is the SYNC CACHE triggered
-> by device_del, isn't a better solution a new state: SDEV_CANCEL_BLOCK.=20
->  This will make the device visible to scsi_get_device() and we can take
-> it back from CANCEL_BLOCKED->CANCEL when the queue is unblocked.  I
-> suspect we could also simply throw away the sync cache command when the
-> device is blocked (the cache should destage naturally in the time it
-> takes for the device to be unblocked).
 
-Hello James,
+> From: Xiubo Li <lixiubo@cmss.chinamobile.com>
+>
+> Add two helpers to simplify the code, and move some code out of
+> the cmdr spin lock to reduce the size of critical region.
+>
+> Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
+> ---
+>   drivers/target/target_core_user.c | 54 ++++++++++++++++++++++-----------------
+>   1 file changed, 30 insertions(+), 24 deletions(-)
+>
+> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+> index 117be07..5205d2f 100644
+> --- a/drivers/target/target_core_user.c
+> +++ b/drivers/target/target_core_user.c
 
-The purpose of this patch series is to make sure that unblock also occurs
-after module unloading has started. My understanding of try_module_get() is
-that it fails once module unloading has started.=A0In other words, it is on
-purpose that try_module_get() is not called. From the kernel module code:
+<SNIP>
 
-bool try_module_get(struct module *module)
-{
-	bool ret =3D true;
+>
+> +static inline void tcmu_cmd_get_cmd_size(struct se_cmd *se_cmd,
+> +			size_t *base_size, size_t *cmd_size)
 
-	if (module) {
-		preempt_disable();
-		/* Note: here, we can fail to get a reference */
-		if (likely(module_is_live(module) &&
-			   atomic_inc_not_zero(&module->refcnt) !=3D 0))
-			trace_module_get(module, _RET_IP_);
-		else
-			ret =3D false;
-		preempt_enable();
-	}
-	return ret;
-}
+Should this be tcmu_cmd_get_cmd_size(struct tcmu_cmd *tcmu_cmd instead? Look at bottom.
 
-static inline int module_is_live(struct module *mod)
-{
-	return mod->state !=3D MODULE_STATE_GOING;
-}
+> +{
+> +	struct se_cmd *se_cmd = tcmu_cmd->se_cmd;
+> +
+> +	*base_size = max(offsetof(struct tcmu_cmd_entry,
+> +				 req.iov[tcmu_cmd->dbi_len]),
+> +				 sizeof(struct tcmu_cmd_entry));
+> +
+> +	*cmd_size = round_up(scsi_command_size(se_cmd->t_task_cdb),
+> +			TCMU_OP_ALIGN_SIZE) + *base_size;
+> +	WARN_ON(*cmd_size & (TCMU_OP_ALIGN_SIZE-1));
+> +}
+> +
+>   static sense_reason_t
+>   tcmu_queue_cmd_ring(struct tcmu_cmd *tcmu_cmd)
+>   {
+>   	struct tcmu_dev *udev = tcmu_cmd->tcmu_dev;
+>   	struct se_cmd *se_cmd = tcmu_cmd->se_cmd;
+>   	size_t base_command_size, command_size;
+> -	struct tcmu_mailbox *mb;
+> +	struct tcmu_mailbox *mb = udev->mb_addr;
+>   	struct tcmu_cmd_entry *entry;
+>   	struct iovec *iov;
+>   	int iov_cnt, ret;
+> @@ -642,6 +660,8 @@ static bool is_ring_space_avail(struct tcmu_dev *udev, struct tcmu_cmd *cmd,
+>   	if (test_bit(TCMU_DEV_BIT_BROKEN, &udev->flags))
+>   		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+>
+> +	if (se_cmd->se_cmd_flags & SCF_BIDI)
+> +		BUG_ON(!(se_cmd->t_bidi_data_sg && se_cmd->t_bidi_data_nents));
+>   	/*
+>   	 * Must be a certain minimum size for response sense info, but
+>   	 * also may be larger if the iov array is large.
+> @@ -649,33 +669,19 @@ static bool is_ring_space_avail(struct tcmu_dev *udev, struct tcmu_cmd *cmd,
+>   	 * We prepare way too many iovs for potential uses here, because it's
+>   	 * expensive to tell how many regions are freed in the bitmap
+>   	*/
+> -	base_command_size = max(offsetof(struct tcmu_cmd_entry,
+> -				req.iov[tcmu_cmd->dbi_len]),
+> -				sizeof(struct tcmu_cmd_entry));
+> -	command_size = base_command_size
+> -		+ round_up(scsi_command_size(se_cmd->t_task_cdb), TCMU_OP_ALIGN_SIZE);
+> -
+> -	WARN_ON(command_size & (TCMU_OP_ALIGN_SIZE-1));
+> -
+> -	spin_lock_irq(&udev->cmdr_lock);
+> -
+> -	mb = udev->mb_addr;
+> -	cmd_head = mb->cmd_head % udev->cmdr_size; /* UAM */
+> -	data_length = round_up(se_cmd->data_length, DATA_BLOCK_SIZE);
+> -	if (se_cmd->se_cmd_flags & SCF_BIDI) {
+> -		BUG_ON(!(se_cmd->t_bidi_data_sg && se_cmd->t_bidi_data_nents));
+> -		data_length += round_up(se_cmd->t_bidi_data_sg->length,
+> -				DATA_BLOCK_SIZE);
+> -	}
+> +	tcmu_cmd_get_cmd_size(tcmu_cmd, &base_command_size, &command_size);
 
-Regarding introducing a new device state: this is something I would like to
-avoid. Any code that manipulates the SCSI device state is unnecessarily har=
-d
-to modify because multiple types of state information have been mixed up in
-a single state variable (blocked / not blocked; created / running / cancel =
-/
-offline). Additionally, the SCSI device state is visible to user space.
-Adding a new SCSI device state could break existing user space applications=
-.
+<SNIP>
 
-There is another problem with the introduction of the SDEV_CANCEL_BLOCKED
-state: we do not want open() calls to succeed for devices that are in the
-SDEV_DEL, SDEV_CANCEL nor for devices that are in the SDEV_CANCEL_BLOCKED
-state. scsi_disk_get() in the sd driver relies on scsi_device_get() to chec=
-k
-the SCSI device state. If scsi_device_get() would succeed for devices in th=
-e
-SDEV_CANCEL_BLOCKED state then an explicit check for that state would have
-to be added in several users of scsi_device_get(). In other words, I think
-adding the SDEV_CANCEL_BLOCKED state would result in a much more complex an=
-d
-also harder to test patch.
+So Based upon your definition of tcmu_cmd_get_cmd_size, why did you pass in tcmu_cmd here? It wont compile in its current state.
 
-Thanks,
-
-Bart.=
+-Bryant
