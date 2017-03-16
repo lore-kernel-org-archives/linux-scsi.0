@@ -1,54 +1,62 @@
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: Re: [PATCHv2 3/5] target/user: Fix possible overwrite of t_data_sg's
- last iov[]
-Date: Thu, 16 Mar 2017 13:23:19 -0500
-Message-ID: <15fede93-943a-e344-5257-2f1400decfe5@linux.vnet.ibm.com>
-References: <1488962743-17028-1-git-send-email-lixiubo@cmss.chinamobile.com>
- <1488962743-17028-4-git-send-email-lixiubo@cmss.chinamobile.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [patch] check length passed to SG_NEXT_CMD_LEN
+Date: Thu, 16 Mar 2017 14:24:37 -0400
+Message-ID: <9bea89fc-9c52-338b-08cb-6ff35ee02d02@interlog.com>
+References: <CAF2xp_GW8KwyD9AuZjHFoPtiNdRyPQ27+1jDLEJjuKxci3mU6w@mail.gmail.com>
+ <yq1zigmf6vq.fsf@oracle.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1488962743-17028-4-git-send-email-lixiubo@cmss.chinamobile.com>
-Sender: target-devel-owner@vger.kernel.org
-To: lixiubo@cmss.chinamobile.com, agrover@redhat.com, nab@linux-iscsi.org, mchristi@redhat.com
-Cc: shli@kernel.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:53405 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753929AbdCPScx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Mar 2017 14:32:53 -0400
+In-Reply-To: <yq1zigmf6vq.fsf@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Peter Chang <dpf@google.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Dmitry Vyukov <dvyukov@google.com>
 
+On 2017-03-15 07:38 PM, Martin K. Petersen wrote:
+> Peter Chang <dpf@google.com> writes:
+>
+>> now that i think i've got gmail not marking everything as spam...
+>
+> Doug?
 
+The extra sanity check can't hurt.
 
-On 3/8/17 2:45 AM, lixiubo@cmss.chinamobile.com wrote:
-> From: Xiubo Li <lixiubo@cmss.chinamobile.com>
+Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+
 >
-> If there has BIDI data, its first iov[] will overwrite the last
-> iov[] for se_cmd->t_data_sg.
+>>From 93409c62db49d15105390315a685e54083029bee Mon Sep 17 00:00:00 2001
+> From: peter chang <dpf@google.com>
+> Date: Wed, 15 Feb 2017 14:11:54 -0800
+> Subject: [PATCH] [sg] check length passed to SG_NEXT_CMD_LEN
 >
-> To fix this, we can just increase the iov pointer, but this may
-> introuduce a new memory leakage bug: If the se_cmd->data_length
-> and se_cmd->t_bidi_data_sg->length are all not aligned up to the
-> DATA_BLOCK_SIZE, the actual length needed maybe larger than just
-> sum of them.
+> the user can control the size of the next command passed along, but
+> the value passed to the ioctl isn't checked against the usable
+> max command size.
 >
-> So, this could be avoided by rounding all the data lengthes up
-> to DATA_BLOCK_SIZE.
->
-> Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
+> Change-Id: I9ac2ae07c35cf5fda62d7afad32c8d9ab6a9ea1d
+> Tested: sanity checked w/ calling the ioctl w/ a bogus size
 > ---
->   drivers/target/target_core_user.c | 32 +++++++++++++++++++-------------
->   1 file changed, 19 insertions(+), 13 deletions(-)
-
-I have seen this in my environment:
-(gdb) print *((tcmulib_cmd->iovec)+0)
-$7 = {iov_base = 0x3fff7c3d0000, iov_len = 8192}
-(gdb) print *((tcmulib_cmd->iovec)+1)
-$3 = {iov_base = 0x3fff7c3da000, iov_len = 4096}
-(gdb) print *((tcmulib_cmd->iovec)+2)
-$4 = {iov_base = 0x3fff7c3dc000, iov_len = 16384}
-(gdb) print *((tcmulib_cmd->iovec)+3)
-$5 = {iov_base = 0x3fff7c3f7000, iov_len = 12288}
-(gdb) print *((tcmulib_cmd->iovec)+4)
-$6 = {iov_base = 0x1306e853c0028, iov_len = 128}  <--- bad pointer and length
-
-So this fix would be great!
-
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+>  drivers/scsi/sg.c | 2 ++
+>  1 file changed, 2 insertions(+)
+>
+> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+> index 9c5c5f2b3962..b47a369cb71c 100644
+> --- a/drivers/scsi/sg.c
+> +++ b/drivers/scsi/sg.c
+> @@ -976,6 +976,8 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+>  		result = get_user(val, ip);
+>  		if (result)
+>  			return result;
+> +		if (val > SG_MAX_CDB_SIZE)
+> +			return -ENOMEM;
+>  		sfp->next_cmd_len = (val > 0) ? val : 0;
+>  		return 0;
+>  	case SG_GET_VERSION_NUM:
+>
