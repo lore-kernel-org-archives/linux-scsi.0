@@ -1,95 +1,145 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [PATCH] enclosure: fix sysfs symlinks creation when using
- multipath
-Date: Thu, 16 Mar 2017 11:49:15 -0700
-Message-ID: <1489690155.11068.10.camel@linux.vnet.ibm.com>
-References: <1488454204-21251-1-git-send-email-mlombard@redhat.com>
-         <yq1varaf6to.fsf@oracle.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: [PATCH 2/3] Introduce starget_for_all_devices() and shost_for_all_devices()
+Date: Thu, 16 Mar 2017 13:56:49 -0700
+Message-ID: <20170316205650.3322-3-bart.vanassche@sandisk.com>
+References: <20170316205650.3322-1-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:52609 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753096AbdCPSt2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Mar 2017 14:49:28 -0400
-Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v2GIheF9006925
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Mar 2017 14:49:26 -0400
-Received: from e14.ny.us.ibm.com (e14.ny.us.ibm.com [129.33.205.204])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 297ym4hvtb-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Mar 2017 14:49:26 -0400
-Received: from localhost
-        by e14.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
-        Thu, 16 Mar 2017 14:49:25 -0400
-In-Reply-To: <yq1varaf6to.fsf@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20170316205650.3322-1-bart.vanassche@sandisk.com>
+Sender: stable-owner@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Israel Rukshin <israelr@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>, Bart Van Assche <bart.vanassche@sandisk.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Maurizio Lombardi <mlombard@redhat.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2017-03-15 at 19:39 -0400, Martin K. Petersen wrote:
-> Maurizio Lombardi <mlombard@redhat.com> writes:
-> 
-> > With multipath, it may happen that the same device is passed to
-> > enclosure_add_device() multiple times and that the
-> > enclosure_add_links() function fails to create the symlinks because
-> > the device's sysfs directory entry is still NULL.  In this case,
-> > the
-> > links will never be created because all the subsequent calls to
-> > enclosure_add_device() will immediately fail with EEXIST.
-> 
-> James?
+This patch does not change any functionality.
 
-Well I don't think the patch is the correct way to do this.  The
-problem is that if we encounter an error creating the links, we
-shouldn't add the device to the enclosure.  There's no need of a
-links_created variable (see below).
-
-However, more interesting is why the link creation failed in the first
-place.  The device clearly seems to exist because it was added to sysfs
-at time index 19.2 and the enclosure didn't try to use it until 60.0. 
- Can you debug this a bit more, please?  I can't see anything specific
-to multipath in the trace, so whatever this is looks like it could
-happen in the single path case as well.
-
-James
-
+Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Tested-by: Israel Rukshin <israelr@mellanox.com>
+Cc: Max Gurtovoy <maxg@mellanox.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: <stable@vger.kernel.org>
 ---
+ drivers/scsi/scsi.c        | 52 +++++++++++++++++++++++++++++++++++++++++++---
+ include/scsi/scsi_device.h | 22 ++++++++++++++++++--
+ 2 files changed, 69 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
-index 65fed71..ae89082 100644
---- a/drivers/misc/enclosure.c
-+++ b/drivers/misc/enclosure.c
-@@ -375,6 +375,7 @@ int enclosure_add_device(struct enclosure_device *edev, int component,
- 			 struct device *dev)
- {
- 	struct enclosure_component *cdev;
-+	int err;
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 5ac16fecbdab..ea408da8de29 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -640,9 +640,11 @@ EXPORT_SYMBOL(__scsi_iterate_devices);
+  * @data:	Opaque passed to each function call.
+  * @fn:		Function to call on each device
+  *
+- * This traverses over each device of @starget.  The devices have
+- * a reference that must be released by scsi_host_put when breaking
+- * out of the loop.
++ * This traverses over each device of @starget except the devices that are in
++ * state SDEV_DEL or SDEV_CANCEL. The devices have a reference that must be
++ * released by scsi_device_put() when breaking out of the loop. If the LLD
++ * associated with the devices is being unloaded, @fn is not called for any
++ * device.
+  */
+ void starget_for_each_device(struct scsi_target *starget, void *data,
+ 		     void (*fn)(struct scsi_device *, void *))
+@@ -659,6 +661,50 @@ void starget_for_each_device(struct scsi_target *starget, void *data,
+ EXPORT_SYMBOL(starget_for_each_device);
  
- 	if (!edev || component >= edev->components)
- 		return -EINVAL;
-@@ -384,12 +385,15 @@ int enclosure_add_device(struct enclosure_device *edev, int component,
- 	if (cdev->dev == dev)
- 		return -EEXIST;
+ /**
++ * scsi_device_get_any() - get a reference to @sdev even if it is being deleted
++ *
++ * See also scsi_device_get().
++ */
++static int scsi_device_get_any(struct scsi_device *sdev)
++{
++	return get_device(&sdev->sdev_gendev) ? 0 : -ENXIO;
++}
++
++/**
++ * scsi_device_put_any() - drop a reference obtained by scsi_device_get_any()
++ *
++ * See also scsi_device_put().
++ */
++static void scsi_device_put_any(struct scsi_device *sdev)
++{
++	put_device(&sdev->sdev_gendev);
++}
++
++/**
++ * starget_for_all_devices - helper to walk all devices of a target
++ * @starget:	target whose devices we want to iterate over.
++ * @data:	Pointer passed to each function call.
++ * @fn:		Function to call on each device
++ *
++ * This traverses over each device of @starget, including the devices in state
++ * SDEV_DEL or SDEV_ANY. The devices have a reference that must be released by
++ * scsi_device_put_any() when breaking out of the loop.
++ */
++void starget_for_all_devices(struct scsi_target *starget, void *data,
++			     void (*fn)(struct scsi_device *, void *))
++{
++	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
++	struct scsi_device *sdev;
++
++	shost_for_all_devices(sdev, shost, scsi_device_get_any,
++			      scsi_device_put_any)
++		if (sdev->channel == starget->channel &&
++		    sdev->id == starget->id)
++			fn(sdev, data);
++}
++EXPORT_SYMBOL(starget_for_all_devices);
++
++/**
+  * __starget_for_each_device - helper to walk all devices of a target (UNLOCKED)
+  * @starget:	target whose devices we want to iterate over.
+  * @data:	parameter for callback @fn()
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 434b617c9f76..cd6a5383e9b7 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -328,6 +328,8 @@ extern struct scsi_device *__scsi_device_lookup_by_target(struct scsi_target *,
+ 							  u64);
+ extern void starget_for_each_device(struct scsi_target *, void *,
+ 		     void (*fn)(struct scsi_device *, void *));
++extern void starget_for_all_devices(struct scsi_target *, void *,
++				    void (*fn)(struct scsi_device *, void *));
+ extern void __starget_for_each_device(struct scsi_target *, void *,
+ 				      void (*fn)(struct scsi_device *,
+ 						 void *));
+@@ -339,6 +341,22 @@ extern struct scsi_device *__scsi_iterate_devices(struct Scsi_Host *,
+ 					void (*put)(struct scsi_device *));
  
--	if (cdev->dev)
-+	if (cdev->dev) {
- 		enclosure_remove_links(cdev);
--
--	put_device(cdev->dev);
--	cdev->dev = get_device(dev);
--	return enclosure_add_links(cdev);
-+		put_device(cdev->dev);
-+		cdev->dev = NULL;
-+	}
-+	err = enclosure_add_links(cdev);
-+	if (!err)
-+		cdev->dev = get_device(dev);
-+	return err;
- }
- EXPORT_SYMBOL_GPL(enclosure_add_device);
+ /**
++ * shost_for_all_devices - iterate over all devices of a host
++ * @sdev: the &struct scsi_device to use as a cursor
++ * @shost: the &struct scsi_host to iterate over
++ * @get: function that obtains a reference to a device and returns 0 upon
++ *       success
++ * @put: function that drops a device reference.
++ *
++ * Iterator that returns each device attached to @shost.  This loop
++ * takes a reference on each device and releases it at the end.  If
++ * you break out of the loop, you must call @put(sdev).
++ */
++#define shost_for_all_devices(sdev, shost, get, put)			\
++	for ((sdev) = NULL; ((sdev) = __scsi_iterate_devices((shost), (sdev), \
++	     (get), (put))) != NULL; )
++
++/**
+  * shost_for_each_device - iterate over all devices of a host
+  * @sdev: the &struct scsi_device to use as a cursor
+  * @shost: the &struct scsi_host to iterate over
+@@ -348,8 +366,8 @@ extern struct scsi_device *__scsi_iterate_devices(struct Scsi_Host *,
+  * you break out of the loop, you must call scsi_device_put(sdev).
+  */
+ #define shost_for_each_device(sdev, shost)			\
+-	for ((sdev) = NULL; ((sdev) = __scsi_iterate_devices((shost), (sdev), \
+-	     scsi_device_get, scsi_device_put)) != NULL; )
++	shost_for_all_devices((sdev), (shost), scsi_device_get,	\
++			      scsi_device_put)
  
+ /**
+  * __shost_for_each_device - iterate over all devices of a host (UNLOCKED)
+-- 
+2.12.0
