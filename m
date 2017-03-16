@@ -1,15 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [RFC 1/2] scsi: Provide mechanism for SCSI layer to poll for LLDD.
-Date: Thu, 16 Mar 2017 14:40:47 -0700
-Message-ID: <20170316214048.20481-2-himanshu.madhani@cavium.com>
+Subject: [RFC 2/2] qla2xxx: Driver changes to use new poll_queue() callback
+Date: Thu, 16 Mar 2017 14:40:48 -0700
+Message-ID: <20170316214048.20481-3-himanshu.madhani@cavium.com>
 References: <20170316214048.20481-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0061.outbound.protection.outlook.com ([104.47.41.61]:27694
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam02on0076.outbound.protection.outlook.com ([104.47.36.76]:13856
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752562AbdCPWRk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1752487AbdCPWRk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Thu, 16 Mar 2017 18:17:40 -0400
 In-Reply-To: <20170316214048.20481-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -19,92 +20,97 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org, darren.trapp@cavium
 
 From: Darren Trapp <darren.trapp@cavium.com>
 
+The blk_mq layer allows polling a transport for a specific
+completion if the HIPRI request flag is set. This can be
+accomplished by using "libengine=pvsync2 –hipri" option
+in FIO tool. This flag then allows polling into LLDD to
+service specific compeletion queue for IOs. It also removes
+the interrupt latency and significantly improved performance
+in NVMeF that utilizes it. There is expense of higher CPU
+utlization due to active polling.
+
+Here's sample results for comparision
+
+FIO command line with synchronous IO’s results in latency avg=32.73us
+reported by FIO
+
+./fio/fio  --time_based --ioengine=sync --direct=1 --runtime=30 --readwrite=read \
+  --iodepth=1 --blocksize=4k --name=job0 --group_reporting --filename=/dev/sdd
+
+FIO command line with active polling IO’s results in latency avg=26.04 reported by FIO
+
+./fio/fio  --time_based --ioengine=pvsync2 --hipri --direct=1 --runtime=30 \
+  --readwrite=read --iodepth=1 --blocksize=4k --name=job0 --group_reporting \
+  --filename=/dev/sdd
+
+FIO version 2.17
+
 Signed-off-by: Darren Trapp <darren.trapp@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/scsi_lib.c  | 39 +++++++++++++++++++++++++++++++++++++++
- include/scsi/scsi_host.h | 12 ++++++++++++
- 2 files changed, 51 insertions(+)
+ drivers/scsi/qla2xxx/qla_os.c | 36 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 19125d72f322..eb01be039677 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2154,6 +2154,43 @@ struct request_queue *scsi_alloc_queue(struct scsi_device *sdev)
- 	return q;
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 41d5b09f7326..1f3a113954fd 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -253,6 +253,7 @@ static int qla2xxx_scan_finished(struct Scsi_Host *, unsigned long time);
+ static void qla2xxx_scan_start(struct Scsi_Host *);
+ static void qla2xxx_slave_destroy(struct scsi_device *);
+ static int qla2xxx_queuecommand(struct Scsi_Host *h, struct scsi_cmnd *cmd);
++static int qla2xxx_poll_queue(struct Scsi_Host *, struct scsi_cmnd *);
+ static int qla2xxx_eh_abort(struct scsi_cmnd *);
+ static int qla2xxx_eh_device_reset(struct scsi_cmnd *);
+ static int qla2xxx_eh_target_reset(struct scsi_cmnd *);
+@@ -268,6 +269,7 @@ struct scsi_host_template qla2xxx_driver_template = {
+ 	.module			= THIS_MODULE,
+ 	.name			= QLA2XXX_DRIVER_NAME,
+ 	.queuecommand		= qla2xxx_queuecommand,
++	.poll_queue		= qla2xxx_poll_queue,
+ 
+ 	.eh_timed_out		= fc_eh_timed_out,
+ 	.eh_abort_handler	= qla2xxx_eh_abort,
+@@ -973,6 +975,40 @@ qla2xxx_mqueuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd,
  }
  
+ /*
++ * Poll for command to be completed. Initiated by SCSI layer.
++ */
 +static int
-+scsi_poll(struct blk_mq_hw_ctx *hctx, unsigned int tag)
-+
++qla2xxx_poll_queue(struct Scsi_Host *host, struct scsi_cmnd *cmd)
 +{
-+        struct Scsi_Host *shost = hctx->driver_data;
-+        struct request *req;
-+        struct scsi_cmnd *cmd;
++	uint32_t tag;
++	uint16_t hwq;
++	struct qla_qpair *qpair;
++	unsigned long flags;
++	scsi_qla_host_t *vha = shost_priv(host);
++	struct qla_hw_data *ha = vha->hw;
++	int ret = 0;
 +
-+        req = blk_mq_tag_to_rq(shost->tag_set.tags[hctx->queue_num], tag);
-+        if (!req)
-+                return 0;
++	tag = blk_mq_unique_tag(cmd->request);
++	hwq = blk_mq_unique_tag_to_hwq(tag);
++	qpair = ha->queue_pair_map[hwq];
 +
-+        cmd = blk_mq_rq_to_pdu(req);
-+	if (!cmd)
-+		return 0;
++	/* Acquire  ring specific lock */
++	spin_lock_irqsave(&qpair->qp_lock, flags);
++	if (!CMD_SP(cmd)) {
++		spin_unlock_irqrestore(&qpair->qp_lock, flags);
++		return 1;
++	}
 +
-+	if (shost->hostt->poll_queue)
-+		return(shost->hostt->poll_queue(shost, cmd));
-+	else return 0;
++	qla24xx_process_response_queue(vha, qpair->rsp);
++
++	if (!CMD_SP(cmd))
++		ret = 1;
++
++	spin_unlock_irqrestore(&qpair->qp_lock, flags);
++	return ret;
 +}
 +
-+static inline void
-+__scsi_init_hctx(struct blk_mq_hw_ctx *hctx, struct Scsi_Host *shost, unsigned int hctx_idx)
-+{
-+	hctx->driver_data = shost;
-+}
-+
-+static int
-+scsi_init_hctx(struct blk_mq_hw_ctx *hctx, void *data, unsigned int hctx_idx)
-+{
-+	struct Scsi_Host *shost = data;
-+
-+	__scsi_init_hctx(hctx, shost, hctx_idx);
-+
-+	return 0;
-+}
-+
- static struct blk_mq_ops scsi_mq_ops = {
- 	.queue_rq	= scsi_queue_rq,
- 	.complete	= scsi_softirq_done,
-@@ -2161,6 +2198,8 @@ static struct blk_mq_ops scsi_mq_ops = {
- 	.init_request	= scsi_init_request,
- 	.exit_request	= scsi_exit_request,
- 	.map_queues	= scsi_map_queues,
-+	.poll		= scsi_poll,
-+	.init_hctx	= scsi_init_hctx,
- };
- 
- struct request_queue *scsi_mq_alloc_queue(struct scsi_device *sdev)
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 3cd8c3bec638..e87e8a69a0df 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -127,6 +127,18 @@ struct scsi_host_template {
- 	int (* queuecommand)(struct Scsi_Host *, struct scsi_cmnd *);
- 
- 	/*
-+	 * The poll_queue function allows the scsi layer to poll a
-+	 * LLDD for the completion of a specific scsi_cmnd (upon request
-+	 * from blk_mq).
-+	 *
-+	 * The LLDD returns 1 to indicate it completed the request or 0
-+	 * otherwise.
-+	 *
-+	 * STATUS: OPTIONAL
-+	 */
-+	int (* poll_queue)(struct Scsi_Host *, struct scsi_cmnd *);
-+
-+	/*
- 	 * This is an error handling strategy routine.  You don't need to
- 	 * define one of these if you don't want to - there is a default
- 	 * routine that is present that should work in most cases.  For those
++/*
+  * qla2x00_eh_wait_on_command
+  *    Waits for the command to be returned by the Firmware for some
+  *    max time.
 -- 
 2.12.0
