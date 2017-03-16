@@ -1,58 +1,96 @@
-From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [RFC 0/2] scsi: Add poll_queue mechanism
-Date: Thu, 16 Mar 2017 14:40:46 -0700
-Message-ID: <20170316214048.20481-1-himanshu.madhani@cavium.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [RFC 1/2] scsi: Provide mechanism for SCSI layer to poll for
+ LLDD.
+Date: Thu, 16 Mar 2017 22:38:49 +0000
+Message-ID: <8578E37F-D885-46E6-A939-A619EAD4C7BF@cavium.com>
+References: <20170316214048.20481-1-himanshu.madhani@cavium.com>
+ <20170316214048.20481-2-himanshu.madhani@cavium.com>
+ <1489703231.2574.20.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0044.outbound.protection.outlook.com ([104.47.36.44]:27566
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-bn3nam01on0047.outbound.protection.outlook.com ([104.47.33.47]:5843
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752562AbdCPWRs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Mar 2017 18:17:48 -0400
+        id S1754487AbdCPWiy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Mar 2017 18:38:54 -0400
+In-Reply-To: <1489703231.2574.20.camel@sandisk.com>
+Content-Language: en-US
+Content-ID: <2E3E36B7CCABF24E800767F6FB672EA5@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org, darren.trapp@cavium.com
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Trapp, Darren" <Darren.Trapp@cavium.com>
 
-Hi James/Martin,
-
-This is RFC to get comment about propose poll_queue interface in scsi layer.
-
-The blk_mq layer allows polling a transport for a specific completion if
-the HIPRI request flag is set. This can be accomplished by using
-"libengine=pvsync2 –hipri" option in FIO tool. This flag then allows
-polling into LLDD to service specific compeletion queue for IOs. It also
-removes the interrupt latency and significantly improved performance in NVMeF 
-that utilizes it. There is expense of higher CPU utlization due to active polling.
-    
-Here's sample results for comparision
-    
-FiO command line with synchronous IO’s results in latency avg=32.73us reported by FIO
-
-./fio/fio  --time_based --ioengine=sync --direct=1 --runtime=30 --readwrite=read \
-    --iodepth=1 --blocksize=4k --name=job0 --group_reporting --filename=/dev/sdd
-    
-FIO command line with active polling IO’s results in latency avg=26.04 reported by FIO
-
-./fio/fio  --time_based --ioengine=pvsync2 --hipri --direct=1 --runtime=30 \
-    --readwrite=read --iodepth=1 --blocksize=4k --name=job0 --group_reporting \
-    --filename=/dev/sdd
-    
-FIO version 2.17
-
-Thanks,
-Himanshu
-
-Darren Trapp (2):
-  scsi: Provide mechanism for SCSI layer to poll for LLDD.
-  qla2xxx: Driver changes to use new poll_queue() callback
-
- drivers/scsi/qla2xxx/qla_os.c | 36 ++++++++++++++++++++++++++++++++++++
- drivers/scsi/scsi_lib.c       | 39 +++++++++++++++++++++++++++++++++++++++
- include/scsi/scsi_host.h      | 12 ++++++++++++
- 3 files changed, 87 insertions(+)
-
--- 
-2.12.0
+DQo+IE9uIE1hciAxNiwgMjAxNywgYXQgMzoyNyBQTSwgQmFydCBWYW4gQXNzY2hlIDxiYXJ0LnZh
+bmFzc2NoZUBzYW5kaXNrLmNvbT4gd3JvdGU6DQo+IA0KPiBPbiBUaHUsIDIwMTctMDMtMTYgYXQg
+MTQ6NDAgLTA3MDAsIEhpbWFuc2h1IE1hZGhhbmkgd3JvdGU6DQo+PiArc3RhdGljIGludA0KPj4g
+K3Njc2lfcG9sbChzdHJ1Y3QgYmxrX21xX2h3X2N0eCAqaGN0eCwgdW5zaWduZWQgaW50IHRhZykN
+Cj4+ICsNCj4+ICt7DQo+PiArICAgICAgICBzdHJ1Y3QgU2NzaV9Ib3N0ICpzaG9zdCA9IGhjdHgt
+PmRyaXZlcl9kYXRhOw0KPj4gKyAgICAgICAgc3RydWN0IHJlcXVlc3QgKnJlcTsNCj4+ICsgICAg
+ICAgIHN0cnVjdCBzY3NpX2NtbmQgKmNtZDsNCj4+ICsNCj4+ICsgICAgICAgIHJlcSA9IGJsa19t
+cV90YWdfdG9fcnEoc2hvc3QtPnRhZ19zZXQudGFnc1toY3R4LT5xdWV1ZV9udW1dLCB0YWcpOw0K
+Pj4gKyAgICAgICAgaWYgKCFyZXEpDQo+PiArICAgICAgICAgICAgICAgIHJldHVybiAwOw0KPj4g
+Kw0KPj4gKyAgICAgICAgY21kID0gYmxrX21xX3JxX3RvX3BkdShyZXEpOw0KPj4gKwlpZiAoIWNt
+ZCkNCj4+ICsJCXJldHVybiAwOw0KPj4gKw0KPj4gKwlpZiAoc2hvc3QtPmhvc3R0LT5wb2xsX3F1
+ZXVlKQ0KPj4gKwkJcmV0dXJuKHNob3N0LT5ob3N0dC0+cG9sbF9xdWV1ZShzaG9zdCwgY21kKSk7
+DQo+PiArCWVsc2UgcmV0dXJuIDA7DQo+PiArfQ0KPiANCj4gV2hhdCB3aWxsIGhhcHBlbiBpZiB0
+aGUgcmVxdWVzdCB3aXRoIHRhZyAndGFnJyBpcyBjb21wbGV0ZWQgYWZ0ZXIgdGhlIGJsb2NrDQo+
+IGxheWVyIGRlY2lkZWQgdG8gY2FsbCB0aGlzIGZ1bmN0aW9uIGFuZCBiZWZvcmUgdGhpcyBmdW5j
+dGlvbiBoYWQgdGhlIGNoYW5jZQ0KPiB0byBjYWxsIGJsa19tcV90YWdfdG9fcnEoKT8gV2lsbCB0
+aGlzIHRyaWdnZXIgYSBrZXJuZWwgY3Jhc2g/IEFsc28sIHBsZWFzZQ0KPiBmb3JtYXQgcGF0Y2hl
+cyBwcm9wZXJseS4gVGhpcyBpcyB3aGF0IGNoZWNrcGF0Y2ggcmVwb3J0cyBmb3IgdGhpcyBwYXRj
+aDoNCj4gDQo+IEVSUk9SOiBjb2RlIGluZGVudCBzaG91bGQgdXNlIHRhYnMgd2hlcmUgcG9zc2li
+bGUNCj4gIzI0NDogRklMRTogZHJpdmVycy9zY3NpL3Njc2lfbGliLmM6MjE2MToNCj4gKyAgICAg
+ICAgc3RydWN0IFNjc2lfSG9zdCAqc2hvc3QgPSBoY3R4LT5kcml2ZXJfZGF0YTskDQo+IA0KPiBX
+QVJOSU5HOiBwbGVhc2UsIG5vIHNwYWNlcyBhdCB0aGUgc3RhcnQgb2YgYSBsaW5lDQo+ICMyNDQ6
+IEZJTEU6IGRyaXZlcnMvc2NzaS9zY3NpX2xpYi5jOjIxNjE6DQo+ICsgICAgICAgIHN0cnVjdCBT
+Y3NpX0hvc3QgKnNob3N0ID0gaGN0eC0+ZHJpdmVyX2RhdGE7JA0KPiANCj4gRVJST1I6IGNvZGUg
+aW5kZW50IHNob3VsZCB1c2UgdGFicyB3aGVyZSBwb3NzaWJsZQ0KPiAjMjQ1OiBGSUxFOiBkcml2
+ZXJzL3Njc2kvc2NzaV9saWIuYzoyMTYyOg0KPiArICAgICAgICBzdHJ1Y3QgcmVxdWVzdCAqcmVx
+OyQNCj4gDQo+IFdBUk5JTkc6IHBsZWFzZSwgbm8gc3BhY2VzIGF0IHRoZSBzdGFydCBvZiBhIGxp
+bmUNCj4gIzI0NTogRklMRTogZHJpdmVycy9zY3NpL3Njc2lfbGliLmM6MjE2MjoNCj4gKyAgICAg
+ICAgc3RydWN0IHJlcXVlc3QgKnJlcTskDQo+IA0KPiBFUlJPUjogY29kZSBpbmRlbnQgc2hvdWxk
+IHVzZSB0YWJzIHdoZXJlIHBvc3NpYmxlDQo+ICMyNDY6IEZJTEU6IGRyaXZlcnMvc2NzaS9zY3Np
+X2xpYi5jOjIxNjM6DQo+ICsgICAgICAgIHN0cnVjdCBzY3NpX2NtbmQgKmNtZDskDQo+IA0KPiBX
+QVJOSU5HOiBwbGVhc2UsIG5vIHNwYWNlcyBhdCB0aGUgc3RhcnQgb2YgYSBsaW5lDQo+ICMyNDY6
+IEZJTEU6IGRyaXZlcnMvc2NzaS9zY3NpX2xpYi5jOjIxNjM6DQo+ICsgICAgICAgIHN0cnVjdCBz
+Y3NpX2NtbmQgKmNtZDskDQo+IA0KPiBFUlJPUjogY29kZSBpbmRlbnQgc2hvdWxkIHVzZSB0YWJz
+IHdoZXJlIHBvc3NpYmxlDQo+ICMyNDg6IEZJTEU6IGRyaXZlcnMvc2NzaS9zY3NpX2xpYi5jOjIx
+NjU6DQo+ICsgICAgICAgIHJlcSA9IGJsa19tcV90YWdfdG9fcnEoc2hvc3QtPnRhZ19zZXQudGFn
+c1toY3R4LT5xdWV1ZV9udW1dLCB0YWcpOyQNCj4gDQo+IFdBUk5JTkc6IHBsZWFzZSwgbm8gc3Bh
+Y2VzIGF0IHRoZSBzdGFydCBvZiBhIGxpbmUNCj4gIzI0ODogRklMRTogZHJpdmVycy9zY3NpL3Nj
+c2lfbGliLmM6MjE2NToNCj4gKyAgICAgICAgcmVxID0gYmxrX21xX3RhZ190b19ycShzaG9zdC0+
+dGFnX3NldC50YWdzW2hjdHgtPnF1ZXVlX251bV0sIHRhZyk7JA0KPiANCj4gRVJST1I6IGNvZGUg
+aW5kZW50IHNob3VsZCB1c2UgdGFicyB3aGVyZSBwb3NzaWJsZQ0KPiAjMjQ5OiBGSUxFOiBkcml2
+ZXJzL3Njc2kvc2NzaV9saWIuYzoyMTY2Og0KPiArICAgICAgICBpZiAoIXJlcSkkDQo+IA0KPiBX
+QVJOSU5HOiBwbGVhc2UsIG5vIHNwYWNlcyBhdCB0aGUgc3RhcnQgb2YgYSBsaW5lDQo+ICMyNDk6
+IEZJTEU6IGRyaXZlcnMvc2NzaS9zY3NpX2xpYi5jOjIxNjY6DQo+ICsgICAgICAgIGlmICghcmVx
+KSQNCj4gDQo+IEVSUk9SOiBjb2RlIGluZGVudCBzaG91bGQgdXNlIHRhYnMgd2hlcmUgcG9zc2li
+bGUNCj4gIzI1MDogRklMRTogZHJpdmVycy9zY3NpL3Njc2lfbGliLmM6MjE2NzoNCj4gKyAgICAg
+ICAgICAgICAgICByZXR1cm4gMDskDQo+IA0KPiBXQVJOSU5HOiBwbGVhc2UsIG5vIHNwYWNlcyBh
+dCB0aGUgc3RhcnQgb2YgYSBsaW5lDQo+ICMyNTA6IEZJTEU6IGRyaXZlcnMvc2NzaS9zY3NpX2xp
+Yi5jOjIxNjc6DQo+ICsgICAgICAgICAgICAgICAgcmV0dXJuIDA7JA0KPiANCj4gRVJST1I6IGNv
+ZGUgaW5kZW50IHNob3VsZCB1c2UgdGFicyB3aGVyZSBwb3NzaWJsZQ0KPiAjMjUyOiBGSUxFOiBk
+cml2ZXJzL3Njc2kvc2NzaV9saWIuYzoyMTY5Og0KPiArICAgICAgICBjbWQgPSBibGtfbXFfcnFf
+dG9fcGR1KHJlcSk7JA0KPiANCj4gV0FSTklORzogcGxlYXNlLCBubyBzcGFjZXMgYXQgdGhlIHN0
+YXJ0IG9mIGEgbGluZQ0KPiAjMjUyOiBGSUxFOiBkcml2ZXJzL3Njc2kvc2NzaV9saWIuYzoyMTY5
+Og0KPiArICAgICAgICBjbWQgPSBibGtfbXFfcnFfdG9fcGR1KHJlcSk7JA0KPiANCj4gRVJST1I6
+IHJldHVybiBpcyBub3QgYSBmdW5jdGlvbiwgcGFyZW50aGVzZXMgYXJlIG5vdCByZXF1aXJlZA0K
+PiAjMjU3OiBGSUxFOiBkcml2ZXJzL3Njc2kvc2NzaV9saWIuYzoyMTc0Og0KPiArCQlyZXR1cm4o
+c2hvc3QtPmhvc3R0LT5wb2xsX3F1ZXVlKHNob3N0LCBjbWQpKTsNCj4gDQo+IEVSUk9SOiB0cmFp
+bGluZyBzdGF0ZW1lbnRzIHNob3VsZCBiZSBvbiBuZXh0IGxpbmUNCj4gIzI1ODogRklMRTogZHJp
+dmVycy9zY3NpL3Njc2lfbGliLmM6MjE3NToNCj4gKwllbHNlIHJldHVybiAwOw0KPiANCj4gV0FS
+TklORzogbGluZSBvdmVyIDgwIGNoYXJhY3RlcnMNCj4gIzI2MjogRklMRTogZHJpdmVycy9zY3Np
+L3Njc2lfbGliLmM6MjE3OToNCj4gK19fc2NzaV9pbml0X2hjdHgoc3RydWN0IGJsa19tcV9od19j
+dHggKmhjdHgsIHN0cnVjdCBTY3NpX0hvc3QgKnNob3N0LCB1bnNpZ25lZCBpbnQgaGN0eF9pZHgp
+DQo+IA0KPiBXQVJOSU5HOiBVbm5lY2Vzc2FyeSBzcGFjZSBiZWZvcmUgZnVuY3Rpb24gcG9pbnRl
+ciBuYW1lDQo+ICMzMDY6IEZJTEU6IGluY2x1ZGUvc2NzaS9zY3NpX2hvc3QuaDoxMzk6DQo+ICsJ
+aW50ICgqIHBvbGxfcXVldWUpKHN0cnVjdCBTY3NpX0hvc3QgKiwgc3RydWN0IHNjc2lfY21uZCAq
+KTsNCj4gDQo+IEVSUk9SOiBzcGFjZSBwcm9oaWJpdGVkIGFmdGVyIHRoYXQgJyonIChjdHg6QnhX
+KQ0KPiAjMzA2OiBGSUxFOiBpbmNsdWRlL3Njc2kvc2NzaV9ob3N0Lmg6MTM5Og0KPiArCWludCAo
+KiBwb2xsX3F1ZXVlKShzdHJ1Y3QgU2NzaV9Ib3N0ICosIHN0cnVjdCBzY3NpX2NtbmQgKik7DQo+
+ICAJICAgICBeDQo+IFRoYW5rcywNCj4gDQo+IEJhcnQuDQoNCldl4oCZbGwgdGFrZSBjYXJlIG9m
+IENoZWNrIHBhdGNoIGlzc3VlIGluIHVwZGF0ZWQgUkZDLiANCg0KVGhhbmtzLA0KLSBIaW1hbnNo
+dQ0KDQo=
