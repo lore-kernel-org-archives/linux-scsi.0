@@ -1,49 +1,46 @@
-From: Kefeng Wang <wangkefeng.wang@huawei.com>
-Subject: Re: [PATCH] scsi: sr: fix oob access in get_capabilities
-Date: Thu, 16 Mar 2017 13:21:01 +0800
-Message-ID: <3f08ece0-531e-6853-d47d-a860e81e55d6@huawei.com>
-References: <1488536272-10509-1-git-send-email-wangkefeng.wang@huawei.com>
- <yq1r31yf5ie.fsf@oracle.com>
+From: Miguel Bernal Marin <miguel.bernal.marin@linux.intel.com>
+Subject: [PATCH] scsi: storvsc: Prefer kcalloc over kzalloc with multiply
+Date: Thu, 16 Mar 2017 00:58:23 -0600
+Message-ID: <20170316065823.13319-1-miguel.bernal.marin@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1r31yf5ie.fsf@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: "K. Y. Srinivasan" <kys@microsoft.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Stephen Hemminger <sthemmin@microsoft.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Haiyang Zhang <haiyangz@microsoft.com>, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org
 List-Id: linux-scsi@vger.kernel.org
 
+Use kcalloc for allocating an array instead of kzalloc with multiply,
+kcalloc is the preferred API.
 
+Found with checkpatch.
 
-On 2017/3/16 8:07, Martin K. Petersen wrote:
-> Kefeng Wang <wangkefeng.wang@huawei.com> writes:
-> 
-> Kefeng,
-> 
->> 'n = header_length + block_descriptor_length' could be greater than 512,
->> and will lead to oob access, so enlarge transfer buffer to fix it.
-> 
-> Can you share the output of sg_modes -p 0x2a /dev/srN for the offending
-> drive?
+Signed-off-by: Miguel Bernal Marin <miguel.bernal.marin@linux.intel.com>
+---
+ drivers/scsi/storvsc_drv.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
-root@localhost ~]# sg_modes -p 0x2a /dev/sr0
-    QEMU      QEMU DVD-ROM      0.15   peripheral_type: cd/dvd [0x5]
-Mode parameter header from MODE SENSE(10):
-Invalid block descriptor length=512, ignore
-  Mode data length=36, medium type=0x70, specific param=0x00, longlba=0
-  Block descriptor length=0
->> MM capabilities and mechanical status (obsolete), page_control: current
- 00     2a 12 00 00 71 60 29 00  02 c2 00 02 02 00 02 c2
- 10     00 00 00 00
-Unexpectedly received extra mode page responses, ignore
-
-note: the issue was found in guestos?  maybe some bugs exist in qemu?
-
-Kefeng
-
-> 
-> This mode page is usually much smaller than 512 bytes (typically between
-> 32 and 128 bytes).
-> 
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 638e5f427c90..3d70d1cf49a3 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -866,7 +866,7 @@ static int storvsc_channel_init(struct hv_device *device, bool is_fc)
+ 	 * We will however populate all the slots to evenly distribute
+ 	 * the load.
+ 	 */
+-	stor_device->stor_chns = kzalloc(sizeof(void *) * num_possible_cpus(),
++	stor_device->stor_chns = kcalloc(num_possible_cpus(), sizeof(void *),
+ 					 GFP_KERNEL);
+ 	if (stor_device->stor_chns == NULL)
+ 		return -ENOMEM;
+-- 
+2.12.0
