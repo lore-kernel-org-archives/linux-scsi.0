@@ -1,7 +1,7 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v5 11/16] media: utilize new cdev_device_add helper function
-Date: Fri, 17 Mar 2017 12:48:18 -0600
-Message-ID: <1489776503-3151-12-git-send-email-logang@deltatee.com>
+Subject: [PATCH v5 06/16] tpm-chip: utilize new cdev_device_add helper function
+Date: Fri, 17 Mar 2017 12:48:13 -0600
+Message-ID: <1489776503-3151-7-git-send-email-logang@deltatee.com>
 References: <1489776503-3151-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -27,104 +27,63 @@ taking the proper reference against the parent device and adding both
 the cdev and the device.
 
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Acked-by: Hans Verkuil <hans.verkuil-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
+Reviewed-by: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
+Reviewed-by: Jarkko Sakkinen <jarkko.sakkinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 ---
- drivers/media/cec/cec-core.c  | 16 ++++------------
- drivers/media/media-devnode.c | 20 +++++---------------
- 2 files changed, 9 insertions(+), 27 deletions(-)
+ drivers/char/tpm/tpm-chip.c | 19 +++----------------
+ 1 file changed, 3 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/media/cec/cec-core.c b/drivers/media/cec/cec-core.c
-index 37217e2..3163e03 100644
---- a/drivers/media/cec/cec-core.c
-+++ b/drivers/media/cec/cec-core.c
-@@ -137,24 +137,17 @@ static int __must_check cec_devnode_register(struct cec_devnode *devnode,
+diff --git a/drivers/char/tpm/tpm-chip.c b/drivers/char/tpm/tpm-chip.c
+index c406343..935f0e9 100644
+--- a/drivers/char/tpm/tpm-chip.c
++++ b/drivers/char/tpm/tpm-chip.c
+@@ -187,7 +187,6 @@ struct tpm_chip *tpm_chip_alloc(struct device *pdev,
  
- 	/* Part 2: Initialize and register the character device */
- 	cdev_init(&devnode->cdev, &cec_devnode_fops);
--	devnode->cdev.kobj.parent = &devnode->dev.kobj;
- 	devnode->cdev.owner = owner;
+ 	cdev_init(&chip->cdev, &tpm_fops);
+ 	chip->cdev.owner = THIS_MODULE;
+-	chip->cdev.kobj.parent = &chip->dev.kobj;
  
--	ret = cdev_add(&devnode->cdev, devnode->dev.devt, 1);
--	if (ret < 0) {
--		pr_err("%s: cdev_add failed\n", __func__);
-+	ret = cdev_device_add(&devnode->cdev, &devnode->dev);
-+	if (ret) {
-+		pr_err("%s: cdev_device_add failed\n", __func__);
- 		goto clr_bit;
+ 	return chip;
+ 
+@@ -230,27 +229,16 @@ static int tpm_add_char_device(struct tpm_chip *chip)
+ {
+ 	int rc;
+ 
+-	rc = cdev_add(&chip->cdev, chip->dev.devt, 1);
++	rc = cdev_device_add(&chip->cdev, &chip->dev);
+ 	if (rc) {
+ 		dev_err(&chip->dev,
+-			"unable to cdev_add() %s, major %d, minor %d, err=%d\n",
++			"unable to cdev_device_add() %s, major %d, minor %d, err=%d\n",
+ 			dev_name(&chip->dev), MAJOR(chip->dev.devt),
+ 			MINOR(chip->dev.devt), rc);
+ 
+ 		return rc;
  	}
  
--	ret = device_add(&devnode->dev);
--	if (ret)
--		goto cdev_del;
+-	rc = device_add(&chip->dev);
+-	if (rc) {
+-		dev_err(&chip->dev,
+-			"unable to device_register() %s, major %d, minor %d, err=%d\n",
+-			dev_name(&chip->dev), MAJOR(chip->dev.devt),
+-			MINOR(chip->dev.devt), rc);
 -
- 	devnode->registered = true;
- 	return 0;
- 
--cdev_del:
--	cdev_del(&devnode->cdev);
- clr_bit:
- 	mutex_lock(&cec_devnode_lock);
- 	clear_bit(devnode->minor, cec_devnode_nums);
-@@ -190,8 +183,7 @@ static void cec_devnode_unregister(struct cec_devnode *devnode)
- 	devnode->unregistered = true;
- 	mutex_unlock(&devnode->lock);
- 
--	device_del(&devnode->dev);
--	cdev_del(&devnode->cdev);
-+	cdev_device_del(&devnode->cdev, &devnode->dev);
- 	put_device(&devnode->dev);
- }
- 
-diff --git a/drivers/media/media-devnode.c b/drivers/media/media-devnode.c
-index ae46753..423248f 100644
---- a/drivers/media/media-devnode.c
-+++ b/drivers/media/media-devnode.c
-@@ -248,31 +248,22 @@ int __must_check media_devnode_register(struct media_device *mdev,
- 	dev_set_name(&devnode->dev, "media%d", devnode->minor);
- 	device_initialize(&devnode->dev);
- 
--	/* Part 2: Initialize and register the character device */
-+	/* Part 2: Initialize the character device */
- 	cdev_init(&devnode->cdev, &media_devnode_fops);
- 	devnode->cdev.owner = owner;
--	devnode->cdev.kobj.parent = &devnode->dev.kobj;
- 
--	ret = cdev_add(&devnode->cdev, MKDEV(MAJOR(media_dev_t), devnode->minor), 1);
-+	/* Part 3: Add the media and char device */
-+	ret = cdev_device_add(&devnode->cdev, &devnode->dev);
- 	if (ret < 0) {
--		pr_err("%s: cdev_add failed\n", __func__);
-+		pr_err("%s: cdev_device_add failed\n", __func__);
- 		goto cdev_add_error;
- 	}
- 
--	/* Part 3: Add the media device */
--	ret = device_add(&devnode->dev);
--	if (ret < 0) {
--		pr_err("%s: device_add failed\n", __func__);
--		goto device_add_error;
+-		cdev_del(&chip->cdev);
+-		return rc;
 -	}
 -
- 	/* Part 4: Activate this minor. The char device can now be used. */
- 	set_bit(MEDIA_FLAG_REGISTERED, &devnode->flags);
+ 	/* Make the chip available. */
+ 	mutex_lock(&idr_lock);
+ 	idr_replace(&dev_nums_idr, chip, chip->dev_num);
+@@ -261,8 +249,7 @@ static int tpm_add_char_device(struct tpm_chip *chip)
  
- 	return 0;
- 
--device_add_error:
--	cdev_del(&devnode->cdev);
- cdev_add_error:
- 	mutex_lock(&media_devnode_lock);
- 	clear_bit(devnode->minor, media_devnode_nums);
-@@ -298,9 +289,8 @@ void media_devnode_unregister(struct media_devnode *devnode)
+ static void tpm_del_char_device(struct tpm_chip *chip)
  {
- 	mutex_lock(&media_devnode_lock);
- 	/* Delete the cdev on this minor as well */
--	cdev_del(&devnode->cdev);
-+	cdev_device_del(&devnode->cdev, &devnode->dev);
- 	mutex_unlock(&media_devnode_lock);
--	device_del(&devnode->dev);
- 	devnode->media_dev = NULL;
- 	put_device(&devnode->dev);
- }
+-	cdev_del(&chip->cdev);
+-	device_del(&chip->dev);
++	cdev_device_del(&chip->cdev, &chip->dev);
+ 
+ 	/* Make the chip unavailable. */
+ 	mutex_lock(&idr_lock);
 -- 
 2.1.4
