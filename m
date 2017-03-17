@@ -1,51 +1,85 @@
-From: Andy Grover <agrover@redhat.com>
-Subject: Re: [PATCHv2 2/5] target/user: Add global data block pool support
-Date: Fri, 17 Mar 2017 10:11:43 -0700
-Message-ID: <2dd405f8-9f5b-405d-e744-9ee8bac77686@redhat.com>
-References: <1488962743-17028-1-git-send-email-lixiubo@cmss.chinamobile.com>
- <1488962743-17028-3-git-send-email-lixiubo@cmss.chinamobile.com>
- <3b1ce412-6072-fda1-3002-220cf8fbf34f@redhat.com>
- <ddd797ea-43f0-b863-64e4-1e758f41dafe@cmss.chinamobile.com>
- <f4c4e83a-d6b1-ed57-7a54-4277722e5a46@cmss.chinamobile.com>
+From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+Subject: [PATCH v5 09/16] infiniband: utilize the new cdev_set_parent function
+Date: Fri, 17 Mar 2017 12:48:16 -0600
+Message-ID: <1489776503-3151-10-git-send-email-logang@deltatee.com>
+References: <1489776503-3151-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <f4c4e83a-d6b1-ed57-7a54-4277722e5a46@cmss.chinamobile.com>
-Sender: owner-linux-mm@kvack.org
-To: Xiubo Li <lixiubo@cmss.chinamobile.com>, nab@linux-iscsi.org, mchristi@redhat.com
-Cc: shli@kernel.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com, linux-mm@kvack.org
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <1489776503-3151-1-git-send-email-logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hans Verkuil <hans.verkuil-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Alexandre Belloni <alexandre.belloni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>, Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linus Walleij <linus.walleij-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Jarkko Sakkinen <jarkko.sakkinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Brian Norris <computersforpeace-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Boris Brezillon <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Marek Vasut <marek.vasut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cyrille Pitchen <cyrille.pitchen-AIFe0yeh4nAAvxtiuMwx3w@public.gmane.org>
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-gpio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 03/17/2017 01:04 AM, Xiubo Li wrote:
-> [...]
->> These days what I have gotten is that the unmap_mapping_range() could
->> be used.
->> At the same time I have deep into the mm code and fixed the double
->> usage of
->> the data blocks and possible page fault call trace bugs mentioned above.
->>
->> Following is the V3 patch. I have test this using 4 targets & fio for
->> about 2 days, so
->> far so good.
->>
->> I'm still testing this using more complex test case.
->>
-> I have test it the whole day today:
-> - using 4 targets
-> - setting TCMU_GLOBAL_MAX_BLOCKS = [512 1K 1M 1G 2G]
-> - each target here needs more than 450 blocks when running
-> - fio: -iodepth [1 2 4 8 16] -thread -rw=[read write] -bs=[1K 2K 3K 5K
-> 7K 16K 64K 1M] -size=20G -numjobs=10 -runtime=1000  ...
+This replaces the suspect looking cdev.kobj.parent lines with the
+equivalent cdev_set_parent function. This is a straightforward change
+that's largely cosmetic but it does push the kobj.parent ownership
+into char_dev.c where it belongs.
 
-Hi Xiubo,
+Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+---
+ drivers/infiniband/core/user_mad.c    | 4 ++--
+ drivers/infiniband/core/uverbs_main.c | 2 +-
+ drivers/infiniband/hw/hfi1/device.c   | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-V3 is sounding very good. I look forward to reviewing it after it is posted.
-
-Thanks -- Regards -- Andy
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+diff --git a/drivers/infiniband/core/user_mad.c b/drivers/infiniband/core/user_mad.c
+index aca7ff7..25071b8 100644
+--- a/drivers/infiniband/core/user_mad.c
++++ b/drivers/infiniband/core/user_mad.c
+@@ -1183,7 +1183,7 @@ static int ib_umad_init_port(struct ib_device *device, int port_num,
+ 
+ 	cdev_init(&port->cdev, &umad_fops);
+ 	port->cdev.owner = THIS_MODULE;
+-	port->cdev.kobj.parent = &umad_dev->kobj;
++	cdev_set_parent(&port->cdev, &umad_dev->kobj);
+ 	kobject_set_name(&port->cdev.kobj, "umad%d", port->dev_num);
+ 	if (cdev_add(&port->cdev, base, 1))
+ 		goto err_cdev;
+@@ -1202,7 +1202,7 @@ static int ib_umad_init_port(struct ib_device *device, int port_num,
+ 	base += IB_UMAD_MAX_PORTS;
+ 	cdev_init(&port->sm_cdev, &umad_sm_fops);
+ 	port->sm_cdev.owner = THIS_MODULE;
+-	port->sm_cdev.kobj.parent = &umad_dev->kobj;
++	cdev_set_parent(&port->sm_cdev, &umad_dev->kobj);
+ 	kobject_set_name(&port->sm_cdev.kobj, "issm%d", port->dev_num);
+ 	if (cdev_add(&port->sm_cdev, base, 1))
+ 		goto err_sm_cdev;
+diff --git a/drivers/infiniband/core/uverbs_main.c b/drivers/infiniband/core/uverbs_main.c
+index 35c788a..f02d7b9 100644
+--- a/drivers/infiniband/core/uverbs_main.c
++++ b/drivers/infiniband/core/uverbs_main.c
+@@ -1189,7 +1189,7 @@ static void ib_uverbs_add_one(struct ib_device *device)
+ 	cdev_init(&uverbs_dev->cdev, NULL);
+ 	uverbs_dev->cdev.owner = THIS_MODULE;
+ 	uverbs_dev->cdev.ops = device->mmap ? &uverbs_mmap_fops : &uverbs_fops;
+-	uverbs_dev->cdev.kobj.parent = &uverbs_dev->kobj;
++	cdev_set_parent(&uverbs_dev->cdev, &uverbs_dev->kobj);
+ 	kobject_set_name(&uverbs_dev->cdev.kobj, "uverbs%d", uverbs_dev->devnum);
+ 	if (cdev_add(&uverbs_dev->cdev, base, 1))
+ 		goto err_cdev;
+diff --git a/drivers/infiniband/hw/hfi1/device.c b/drivers/infiniband/hw/hfi1/device.c
+index bf64b5a..bbb6069 100644
+--- a/drivers/infiniband/hw/hfi1/device.c
++++ b/drivers/infiniband/hw/hfi1/device.c
+@@ -69,7 +69,7 @@ int hfi1_cdev_init(int minor, const char *name,
+ 
+ 	cdev_init(cdev, fops);
+ 	cdev->owner = THIS_MODULE;
+-	cdev->kobj.parent = parent;
++	cdev_set_parent(cdev, parent);
+ 	kobject_set_name(&cdev->kobj, name);
+ 
+ 	ret = cdev_add(cdev, dev, 1);
+-- 
+2.1.4
