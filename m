@@ -1,228 +1,105 @@
-From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v5 01/16] chardev: add helper function to register char devs
- with a struct device
-Date: Fri, 17 Mar 2017 12:48:08 -0600
-Message-ID: <1489776503-3151-2-git-send-email-logang@deltatee.com>
-References: <1489776503-3151-1-git-send-email-logang@deltatee.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [RFC 1/2] scsi: Provide mechanism for SCSI layer to poll for
+ LLDD.
+Date: Fri, 17 Mar 2017 18:55:11 +0000
+Message-ID: <2F3A1DE8-C900-4E15-9380-1B39AED87D89@cavium.com>
+References: <20170316214048.20481-1-himanshu.madhani@cavium.com>
+ <20170316214048.20481-2-himanshu.madhani@cavium.com>
+ <1489703231.2574.20.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <1489776503-3151-1-git-send-email-logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hans Verkuil <hans.verkuil-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Alexandre Belloni <alexandre.belloni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>, Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linus Walleij <linus.walleij-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Jarkko Sakkinen <jarkko.sakkinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Brian Norris <computersforpeace-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Boris Brezillon <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Marek Vasut <marek.vasut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cyrille Pitchen <cyrille.pitchen-AIFe0yeh4nAAvxtiuMwx3w@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-gpio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn3nam01on0048.outbound.protection.outlook.com ([104.47.33.48]:24086
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751677AbdCQSzV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 17 Mar 2017 14:55:21 -0400
+In-Reply-To: <1489703231.2574.20.camel@sandisk.com>
+Content-Language: en-US
+Content-ID: <89EF4D1B780CEA4096EDAC77D19400FD@namprd07.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Trapp, Darren" <Darren.Trapp@cavium.com>
 
-Credit for this patch goes is shared with Dan Williams [1]. I've
-taken things one step further to make the helper function more
-useful and clean up calling code.
-
-There's a common pattern in the kernel whereby a struct cdev is placed
-in a structure along side a struct device which manages the life-cycle
-of both. In the naive approach, the reference counting is broken and
-the struct device can free everything before the chardev code
-is entirely released.
-
-Many developers have solved this problem by linking the internal kobjs
-in this fashion:
-
-cdev.kobj.parent = &parent_dev.kobj;
-
-The cdev code explicitly gets and puts a reference to it's kobj parent.
-So this seems like it was intended to be used this way. Dmitrty Torokhov
-first put this in place in 2012 with this commit:
-
-2f0157f char_dev: pin parent kobject
-
-and the first instance of the fix was then done in the input subsystem
-in the following commit:
-
-4a215aa Input: fix use-after-free introduced with dynamic minor changes
-
-Subsequently over the years, however, this issue seems to have tripped
-up multiple developers independently. For example, see these commits:
-
-0d5b7da iio: Prevent race between IIO chardev opening and IIO device
-(by Lars-Peter Clausen in 2013)
-
-ba0ef85 tpm: Fix initialization of the cdev
-(by Jason Gunthorpe in 2015)
-
-5b28dde [media] media: fix use-after-free in cdev_put() when app exits
-after driver unbind
-(by Shauh Khan in 2016)
-
-This technique is similarly done in at least 15 places within the kernel
-and probably should have been done so in another, at least, 5 places.
-The kobj line also looks very suspect in that one would not expect
-drivers to have to mess with kobject internals in this way.
-Even highly experienced kernel developers can be surprised by this
-code, as seen in [2].
-
-To help alleviate this situation, and hopefully prevent future
-wasted effort on this problem, this patch introduces a helper function
-to register a char device along with its parent struct device.
-This creates a more regular API for tying a char device to its parent
-without the developer having to set members in the underlying kobject.
-
-This patch introduce cdev_device_add and cdev_device_del which
-replaces a common pattern including setting the kobj parent, calling
-cdev_add and then calling device_add. It also introduces cdev_set_parent
-for the few cases that set the kobject parent without using device_add.
-
-[1] https://lkml.org/lkml/2017/2/13/700
-[2] https://lkml.org/lkml/2017/2/10/370
-
-Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Signed-off-by: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Reviewed-by: Hans Verkuil <hans.verkuil-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
-Reviewed-by: Alexandre Belloni <alexandre.belloni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
----
- fs/char_dev.c        | 86 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/cdev.h |  5 +++
- 2 files changed, 91 insertions(+)
-
-diff --git a/fs/char_dev.c b/fs/char_dev.c
-index 44a240c..fb8507f 100644
---- a/fs/char_dev.c
-+++ b/fs/char_dev.c
-@@ -471,6 +471,85 @@ int cdev_add(struct cdev *p, dev_t dev, unsigned count)
- 	return 0;
- }
- 
-+/**
-+ * cdev_set_parent() - set the parent kobject for a char device
-+ * @p: the cdev structure
-+ * @kobj: the kobject to take a reference to
-+ *
-+ * cdev_set_parent() sets a parent kobject which will be referenced
-+ * appropriately so the parent is not freed before the cdev. This
-+ * should be called before cdev_add.
-+ */
-+void cdev_set_parent(struct cdev *p, struct kobject *kobj)
-+{
-+	WARN_ON(!kobj->state_initialized);
-+	p->kobj.parent = kobj;
-+}
-+
-+/**
-+ * cdev_device_add() - add a char device and it's corresponding
-+ *	struct device, linkink
-+ * @dev: the device structure
-+ * @cdev: the cdev structure
-+ *
-+ * cdev_device_add() adds the char device represented by @cdev to the system,
-+ * just as cdev_add does. It then adds @dev to the system using device_add
-+ * The dev_t for the char device will be taken from the struct device which
-+ * needs to be initialized first. This helper function correctly takes a
-+ * reference to the parent device so the parent will not get released until
-+ * all references to the cdev are released.
-+ *
-+ * This helper uses dev->devt for the device number. If it is not set
-+ * it will not add the cdev and it will be equivalent to device_add.
-+ *
-+ * This function should be used whenever the struct cdev and the
-+ * struct device are members of the same structure whose lifetime is
-+ * managed by the struct device.
-+ *
-+ * NOTE: Callers must assume that userspace was able to open the cdev and
-+ * can call cdev fops callbacks at any time, even if this function fails.
-+ */
-+int cdev_device_add(struct cdev *cdev, struct device *dev)
-+{
-+	int rc = 0;
-+
-+	if (dev->devt) {
-+		cdev_set_parent(cdev, &dev->kobj);
-+
-+		rc = cdev_add(cdev, dev->devt, 1);
-+		if (rc)
-+			return rc;
-+	}
-+
-+	rc = device_add(dev);
-+	if (rc)
-+		cdev_del(cdev);
-+
-+	return rc;
-+}
-+
-+/**
-+ * cdev_device_del() - inverse of cdev_device_add
-+ * @dev: the device structure
-+ * @cdev: the cdev structure
-+ *
-+ * cdev_device_del() is a helper function to call cdev_del and device_del.
-+ * It should be used whenever cdev_device_add is used.
-+ *
-+ * If dev->devt is not set it will not remove the cdev and will be equivalent
-+ * to device_del.
-+ *
-+ * NOTE: This guarantees that associated sysfs callbacks are not running
-+ * or runnable, however any cdevs already open will remain and their fops
-+ * will still be callable even after this function returns.
-+ */
-+void cdev_device_del(struct cdev *cdev, struct device *dev)
-+{
-+	device_del(dev);
-+	if (dev->devt)
-+		cdev_del(cdev);
-+}
-+
- static void cdev_unmap(dev_t dev, unsigned count)
- {
- 	kobj_unmap(cdev_map, dev, count);
-@@ -482,6 +561,10 @@ static void cdev_unmap(dev_t dev, unsigned count)
-  *
-  * cdev_del() removes @p from the system, possibly freeing the structure
-  * itself.
-+ *
-+ * NOTE: This guarantees that cdev device will no longer be able to be
-+ * opened, however any cdevs already open will remain and their fops will
-+ * still be callable even after cdev_del returns.
-  */
- void cdev_del(struct cdev *p)
- {
-@@ -570,5 +653,8 @@ EXPORT_SYMBOL(cdev_init);
- EXPORT_SYMBOL(cdev_alloc);
- EXPORT_SYMBOL(cdev_del);
- EXPORT_SYMBOL(cdev_add);
-+EXPORT_SYMBOL(cdev_set_parent);
-+EXPORT_SYMBOL(cdev_device_add);
-+EXPORT_SYMBOL(cdev_device_del);
- EXPORT_SYMBOL(__register_chrdev);
- EXPORT_SYMBOL(__unregister_chrdev);
-diff --git a/include/linux/cdev.h b/include/linux/cdev.h
-index f876361..408bc09 100644
---- a/include/linux/cdev.h
-+++ b/include/linux/cdev.h
-@@ -4,6 +4,7 @@
- #include <linux/kobject.h>
- #include <linux/kdev_t.h>
- #include <linux/list.h>
-+#include <linux/device.h>
- 
- struct file_operations;
- struct inode;
-@@ -26,6 +27,10 @@ void cdev_put(struct cdev *p);
- 
- int cdev_add(struct cdev *, dev_t, unsigned);
- 
-+void cdev_set_parent(struct cdev *p, struct kobject *kobj);
-+int cdev_device_add(struct cdev *cdev, struct device *dev);
-+void cdev_device_del(struct cdev *cdev, struct device *dev);
-+
- void cdev_del(struct cdev *);
- 
- void cd_forget(struct inode *);
--- 
-2.1.4
+SGkgQmFydCwgDQoNCj4gT24gTWFyIDE2LCAyMDE3LCBhdCAzOjI3IFBNLCBCYXJ0IFZhbiBBc3Nj
+aGUgPGJhcnQudmFuYXNzY2hlQHNhbmRpc2suY29tPiB3cm90ZToNCj4gDQo+IE9uIFRodSwgMjAx
+Ny0wMy0xNiBhdCAxNDo0MCAtMDcwMCwgSGltYW5zaHUgTWFkaGFuaSB3cm90ZToNCj4+ICtzdGF0
+aWMgaW50DQo+PiArc2NzaV9wb2xsKHN0cnVjdCBibGtfbXFfaHdfY3R4ICpoY3R4LCB1bnNpZ25l
+ZCBpbnQgdGFnKQ0KPj4gKw0KPj4gK3sNCj4+ICsgICAgICAgIHN0cnVjdCBTY3NpX0hvc3QgKnNo
+b3N0ID0gaGN0eC0+ZHJpdmVyX2RhdGE7DQo+PiArICAgICAgICBzdHJ1Y3QgcmVxdWVzdCAqcmVx
+Ow0KPj4gKyAgICAgICAgc3RydWN0IHNjc2lfY21uZCAqY21kOw0KPj4gKw0KPj4gKyAgICAgICAg
+cmVxID0gYmxrX21xX3RhZ190b19ycShzaG9zdC0+dGFnX3NldC50YWdzW2hjdHgtPnF1ZXVlX251
+bV0sIHRhZyk7DQo+PiArICAgICAgICBpZiAoIXJlcSkNCj4+ICsgICAgICAgICAgICAgICAgcmV0
+dXJuIDA7DQo+PiArDQo+PiArICAgICAgICBjbWQgPSBibGtfbXFfcnFfdG9fcGR1KHJlcSk7DQo+
+PiArCWlmICghY21kKQ0KPj4gKwkJcmV0dXJuIDA7DQo+PiArDQo+PiArCWlmIChzaG9zdC0+aG9z
+dHQtPnBvbGxfcXVldWUpDQo+PiArCQlyZXR1cm4oc2hvc3QtPmhvc3R0LT5wb2xsX3F1ZXVlKHNo
+b3N0LCBjbWQpKTsNCj4+ICsJZWxzZSByZXR1cm4gMDsNCj4+ICt9DQo+IA0KPiBXaGF0IHdpbGwg
+aGFwcGVuIGlmIHRoZSByZXF1ZXN0IHdpdGggdGFnICd0YWcnIGlzIGNvbXBsZXRlZCBhZnRlciB0
+aGUgYmxvY2sNCj4gbGF5ZXIgZGVjaWRlZCB0byBjYWxsIHRoaXMgZnVuY3Rpb24gYW5kIGJlZm9y
+ZSB0aGlzIGZ1bmN0aW9uIGhhZCB0aGUgY2hhbmNlDQo+IHRvIGNhbGwgYmxrX21xX3RhZ190b19y
+cSgpPyBXaWxsIHRoaXMgdHJpZ2dlciBhIGtlcm5lbCBjcmFzaD8gQWxzbywgcGxlYXNlDQo+IGZv
+cm1hdCBwYXRjaGVzIHByb3Blcmx5LiBUaGlzIGlzIHdoYXQgY2hlY2twYXRjaCByZXBvcnRzIGZv
+ciB0aGlzIHBhdGNoOg0KPiANCg0KVGFnIGlzIHBhc3NlZCBpbnRvIGhlcmUgYnkgcnEtPnRhZw0K
+DQpXaGVuIHRhZyBnb2VzIHRvIGJsa19tcV90YWdfdG9fcnEgIGl0IGp1c3QgaW5kZXhlcyB0byB0
+aGUgcnFzIGFycmF5IHVzaW5nIHRhZzoNCg0Kc3RydWN0IHJlcXVlc3QgKmJsa19tcV90YWdfdG9f
+cnEoc3RydWN0IGJsa19tcV90YWdzICp0YWdzLCB1bnNpZ25lZCBpbnQgdGFnKQ0Kew0KICAgICAg
+IGlmICh0YWcgPCB0YWdzLT5ucl90YWdzKSB7DQogICAgICAgICAgICAgICBwcmVmZXRjaCh0YWdz
+LT5ycXNbdGFnXSk7DQogICAgICAgICAgICAgICByZXR1cm4gdGFncy0+cnFzW3RhZ107DQogICAg
+ICAgfQ0KDQogICAgICAgcmV0dXJuIE5VTEw7DQoNClNvIGlmIHRhZyBpcyBpbnZhbGlkKHRvbyBs
+YXJnZSksIGl0IHJldHVybnMgTlVMTC4gIEV2ZXJ5IHN0ZXAgaXQgdmFsaWRhdGVzIGl0IGhhcyBh
+IHZhbGlkICogYmVmb3JlIGNvbnRpbnVpbmcuICANCg0KV29yc2UgY2FzZSB3ZSBwb2xsIGZvciBh
+IGNvbXBsZXRpb24gdGhhdCBoYXMgYWxyZWFkeSBjb21wbGV0ZWQuIA0KDQpXZSBkb27igJl0IHRo
+aW5rIHRoaXMgd2lsbCByZXN1bHQgaW50byBOVUxMIHBvaW50ZXIgY3Jhc2guDQoNCj4gRVJST1I6
+IGNvZGUgaW5kZW50IHNob3VsZCB1c2UgdGFicyB3aGVyZSBwb3NzaWJsZQ0KPiAjMjQ0OiBGSUxF
+OiBkcml2ZXJzL3Njc2kvc2NzaV9saWIuYzoyMTYxOg0KPiArICAgICAgICBzdHJ1Y3QgU2NzaV9I
+b3N0ICpzaG9zdCA9IGhjdHgtPmRyaXZlcl9kYXRhOyQNCj4gDQo+IFdBUk5JTkc6IHBsZWFzZSwg
+bm8gc3BhY2VzIGF0IHRoZSBzdGFydCBvZiBhIGxpbmUNCj4gIzI0NDogRklMRTogZHJpdmVycy9z
+Y3NpL3Njc2lfbGliLmM6MjE2MToNCj4gKyAgICAgICAgc3RydWN0IFNjc2lfSG9zdCAqc2hvc3Qg
+PSBoY3R4LT5kcml2ZXJfZGF0YTskDQo+IA0KPiBFUlJPUjogY29kZSBpbmRlbnQgc2hvdWxkIHVz
+ZSB0YWJzIHdoZXJlIHBvc3NpYmxlDQo+ICMyNDU6IEZJTEU6IGRyaXZlcnMvc2NzaS9zY3NpX2xp
+Yi5jOjIxNjI6DQo+ICsgICAgICAgIHN0cnVjdCByZXF1ZXN0ICpyZXE7JA0KPiANCj4gV0FSTklO
+RzogcGxlYXNlLCBubyBzcGFjZXMgYXQgdGhlIHN0YXJ0IG9mIGEgbGluZQ0KPiAjMjQ1OiBGSUxF
+OiBkcml2ZXJzL3Njc2kvc2NzaV9saWIuYzoyMTYyOg0KPiArICAgICAgICBzdHJ1Y3QgcmVxdWVz
+dCAqcmVxOyQNCj4gDQo+IEVSUk9SOiBjb2RlIGluZGVudCBzaG91bGQgdXNlIHRhYnMgd2hlcmUg
+cG9zc2libGUNCj4gIzI0NjogRklMRTogZHJpdmVycy9zY3NpL3Njc2lfbGliLmM6MjE2MzoNCj4g
+KyAgICAgICAgc3RydWN0IHNjc2lfY21uZCAqY21kOyQNCj4gDQo+IFdBUk5JTkc6IHBsZWFzZSwg
+bm8gc3BhY2VzIGF0IHRoZSBzdGFydCBvZiBhIGxpbmUNCj4gIzI0NjogRklMRTogZHJpdmVycy9z
+Y3NpL3Njc2lfbGliLmM6MjE2MzoNCj4gKyAgICAgICAgc3RydWN0IHNjc2lfY21uZCAqY21kOyQN
+Cj4gDQo+IEVSUk9SOiBjb2RlIGluZGVudCBzaG91bGQgdXNlIHRhYnMgd2hlcmUgcG9zc2libGUN
+Cj4gIzI0ODogRklMRTogZHJpdmVycy9zY3NpL3Njc2lfbGliLmM6MjE2NToNCj4gKyAgICAgICAg
+cmVxID0gYmxrX21xX3RhZ190b19ycShzaG9zdC0+dGFnX3NldC50YWdzW2hjdHgtPnF1ZXVlX251
+bV0sIHRhZyk7JA0KPiANCj4gV0FSTklORzogcGxlYXNlLCBubyBzcGFjZXMgYXQgdGhlIHN0YXJ0
+IG9mIGEgbGluZQ0KPiAjMjQ4OiBGSUxFOiBkcml2ZXJzL3Njc2kvc2NzaV9saWIuYzoyMTY1Og0K
+PiArICAgICAgICByZXEgPSBibGtfbXFfdGFnX3RvX3JxKHNob3N0LT50YWdfc2V0LnRhZ3NbaGN0
+eC0+cXVldWVfbnVtXSwgdGFnKTskDQo+IA0KPiBFUlJPUjogY29kZSBpbmRlbnQgc2hvdWxkIHVz
+ZSB0YWJzIHdoZXJlIHBvc3NpYmxlDQo+ICMyNDk6IEZJTEU6IGRyaXZlcnMvc2NzaS9zY3NpX2xp
+Yi5jOjIxNjY6DQo+ICsgICAgICAgIGlmICghcmVxKSQNCj4gDQo+IFdBUk5JTkc6IHBsZWFzZSwg
+bm8gc3BhY2VzIGF0IHRoZSBzdGFydCBvZiBhIGxpbmUNCj4gIzI0OTogRklMRTogZHJpdmVycy9z
+Y3NpL3Njc2lfbGliLmM6MjE2NjoNCj4gKyAgICAgICAgaWYgKCFyZXEpJA0KPiANCj4gRVJST1I6
+IGNvZGUgaW5kZW50IHNob3VsZCB1c2UgdGFicyB3aGVyZSBwb3NzaWJsZQ0KPiAjMjUwOiBGSUxF
+OiBkcml2ZXJzL3Njc2kvc2NzaV9saWIuYzoyMTY3Og0KPiArICAgICAgICAgICAgICAgIHJldHVy
+biAwOyQNCj4gDQo+IFdBUk5JTkc6IHBsZWFzZSwgbm8gc3BhY2VzIGF0IHRoZSBzdGFydCBvZiBh
+IGxpbmUNCj4gIzI1MDogRklMRTogZHJpdmVycy9zY3NpL3Njc2lfbGliLmM6MjE2NzoNCj4gKyAg
+ICAgICAgICAgICAgICByZXR1cm4gMDskDQo+IA0KPiBFUlJPUjogY29kZSBpbmRlbnQgc2hvdWxk
+IHVzZSB0YWJzIHdoZXJlIHBvc3NpYmxlDQo+ICMyNTI6IEZJTEU6IGRyaXZlcnMvc2NzaS9zY3Np
+X2xpYi5jOjIxNjk6DQo+ICsgICAgICAgIGNtZCA9IGJsa19tcV9ycV90b19wZHUocmVxKTskDQo+
+IA0KPiBXQVJOSU5HOiBwbGVhc2UsIG5vIHNwYWNlcyBhdCB0aGUgc3RhcnQgb2YgYSBsaW5lDQo+
+ICMyNTI6IEZJTEU6IGRyaXZlcnMvc2NzaS9zY3NpX2xpYi5jOjIxNjk6DQo+ICsgICAgICAgIGNt
+ZCA9IGJsa19tcV9ycV90b19wZHUocmVxKTskDQo+IA0KPiBFUlJPUjogcmV0dXJuIGlzIG5vdCBh
+IGZ1bmN0aW9uLCBwYXJlbnRoZXNlcyBhcmUgbm90IHJlcXVpcmVkDQo+ICMyNTc6IEZJTEU6IGRy
+aXZlcnMvc2NzaS9zY3NpX2xpYi5jOjIxNzQ6DQo+ICsJCXJldHVybihzaG9zdC0+aG9zdHQtPnBv
+bGxfcXVldWUoc2hvc3QsIGNtZCkpOw0KPiANCj4gRVJST1I6IHRyYWlsaW5nIHN0YXRlbWVudHMg
+c2hvdWxkIGJlIG9uIG5leHQgbGluZQ0KPiAjMjU4OiBGSUxFOiBkcml2ZXJzL3Njc2kvc2NzaV9s
+aWIuYzoyMTc1Og0KPiArCWVsc2UgcmV0dXJuIDA7DQo+IA0KPiBXQVJOSU5HOiBsaW5lIG92ZXIg
+ODAgY2hhcmFjdGVycw0KPiAjMjYyOiBGSUxFOiBkcml2ZXJzL3Njc2kvc2NzaV9saWIuYzoyMTc5
+Og0KPiArX19zY3NpX2luaXRfaGN0eChzdHJ1Y3QgYmxrX21xX2h3X2N0eCAqaGN0eCwgc3RydWN0
+IFNjc2lfSG9zdCAqc2hvc3QsIHVuc2lnbmVkIGludCBoY3R4X2lkeCkNCj4gDQo+IFdBUk5JTkc6
+IFVubmVjZXNzYXJ5IHNwYWNlIGJlZm9yZSBmdW5jdGlvbiBwb2ludGVyIG5hbWUNCj4gIzMwNjog
+RklMRTogaW5jbHVkZS9zY3NpL3Njc2lfaG9zdC5oOjEzOToNCj4gKwlpbnQgKCogcG9sbF9xdWV1
+ZSkoc3RydWN0IFNjc2lfSG9zdCAqLCBzdHJ1Y3Qgc2NzaV9jbW5kICopOw0KPiANCj4gRVJST1I6
+IHNwYWNlIHByb2hpYml0ZWQgYWZ0ZXIgdGhhdCAnKicgKGN0eDpCeFcpDQo+ICMzMDY6IEZJTEU6
+IGluY2x1ZGUvc2NzaS9zY3NpX2hvc3QuaDoxMzk6DQo+ICsJaW50ICgqIHBvbGxfcXVldWUpKHN0
+cnVjdCBTY3NpX0hvc3QgKiwgc3RydWN0IHNjc2lfY21uZCAqKTsNCj4gIAkgICAgIF4NCj4gVGhh
+bmtzLA0KPiANCj4gQmFydC4NCg0KVGhhbmtzLA0KLSBIaW1hbnNodQ==
