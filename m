@@ -1,108 +1,60 @@
-From: =?UTF-8?B?5p2O56eA5rOi?= <lixiubo@cmss.chinamobile.com>
-Subject: Re:  [PATCHv2 2/5] target/user: Add global data block pool support
-Date: Sat, 18 Mar 2017 06:06:11 +0800
-Message-ID: <13903058-78b8-4737-9eef-849ee7bca307@email.android.com>
-References: <1488962743-17028-1-git-send-email-lixiubo@cmss.chinamobile.com><1488962743-17028-3-git-send-email-lixiubo@cmss.chinamobile.com><3b1ce412-6072-fda1-3002-220cf8fbf34f@redhat.com><ddd797ea-43f0-b863-64e4-1e758f41dafe@cmss.chinamobile.com><f4c4e83a-d6b1-ed57-7a54-4277722e5a46@cmss.chinamobile.com> <2dd405f8-9f5b-405d-e744-9ee8bac77686@redhat.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: sr: fix oob access in get_capabilities
+Date: Fri, 17 Mar 2017 19:29:46 -0400
+Message-ID: <yq160j7lbx1.fsf@oracle.com>
+References: <1488536272-10509-1-git-send-email-wangkefeng.wang@huawei.com>
+        <yq1r31yf5ie.fsf@oracle.com>
+        <3f08ece0-531e-6853-d47d-a860e81e55d6@huawei.com>
 Mime-Version: 1.0
-Content-Type: multipart/alternative; boundary="----DTKAJ5MA9N3GK5FOKD5BA28PNDC3L3"
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <2dd405f8-9f5b-405d-e744-9ee8bac77686@redhat.com>
-Sender: owner-linux-mm@kvack.org
-To: AndyGrover <agrover@redhat.com>, nab@linux-iscsi.org, mchristi@redhat.com
-Cc: shli@kernel.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com, linux-mm@kvack.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:48053 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751098AbdCQXbq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Mar 2017 19:31:46 -0400
+In-Reply-To: <3f08ece0-531e-6853-d47d-a860e81e55d6@huawei.com> (Kefeng Wang's
+        message of "Thu, 16 Mar 2017 13:21:01 +0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kefeng Wang <wangkefeng.wang@huawei.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>
 
-------DTKAJ5MA9N3GK5FOKD5BA28PNDC3L3
-Content-Type: text/plain;
- charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Kefeng Wang <wangkefeng.wang@huawei.com> writes:
 
+Kefeng,
 
+> root@localhost ~]# sg_modes -p 0x2a /dev/sr0
+>     QEMU      QEMU DVD-ROM      0.15   peripheral_type: cd/dvd [0x5]
+> Mode parameter header from MODE SENSE(10):
+> Invalid block descriptor length=512, ignore
+>   Mode data length=36, medium type=0x70, specific param=0x00, longlba=0
+>   Block descriptor length=0
+>>> MM capabilities and mechanical status (obsolete), page_control: current
+>  00     2a 12 00 00 71 60 29 00  02 c2 00 02 02 00 02 c2
+>  10     00 00 00 00
+> Unexpectedly received extra mode page responses, ignore
 
-AndyGrover <agrover@redhat=2Ecom>=E5=86=99=E5=88=B0=EF=BC=9A
->On 03/17/20=
-17 01:04 AM, Xiubo Li wrote:
->> [=2E=2E=2E]
->>> These days what I have gott=
-en is that the unmap_mapping_range()
->could
->>> be used=2E
->>> At the same =
-time I have deep into the mm code and fixed the double
->>> usage of
->>> the=
- data blocks and possible page fault call trace bugs mentioned
->above=2E
->>=
->
->>> Following is the V3 patch=2E I have test this using 4 targets & fio
->=
-for
->>> about 2 days, so
->>> far so good=2E
->>>
->>> I'm still testing this =
-using more complex test case=2E
->>>
->> I have test it the whole day today:
-=
->> - using 4 targets
->> - setting TCMU_GLOBAL_MAX_BLOCKS =3D [512 1K 1M 1G =
-2G]
->> - each target here needs more than 450 blocks when running
->> - fio:=
- -iodepth [1 2 4 8 16] -thread -rw=3D[read write] -bs=3D[1K 2K 3K
->5K
->> 7K=
- 16K 64K 1M] -size=3D20G -numjobs=3D10 -runtime=3D1000  =2E=2E=2E
->
->Hi Xiu=
-bo,
->
->V3 is sounding very good=2E I look forward to reviewing it after it =
-is
->posted=2E
->
+That looks pretty broken.
 
-Yes, I will post it later after more test and checking=2E
-=
+Could you try the following patch?
 
-Thanks,
+Thanks!
 
-BRs
-Xiubo
+-- 
+Martin K. Petersen	Oracle Linux Engineering
 
-
->Thanks -- Regards -- Andy
-
-------DTKAJ5MA9N3GK5FOKD5BA28PNDC3L3
-Content-Type: text/html;
- charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-
-<br><br>AndyGrover <agrover@redhat=2Ecom>=E5=86=99=E5=88=B0=EF=BC=9A<BR>>On=
- 03/17/2017 01:04 AM, Xiubo Li wrote:<BR>>> [=2E=2E=2E]<BR>>>> These days w=
-hat I have gotten is that the unmap_mapping_range()<BR>>could<BR>>>> be use=
-d=2E<BR>>>> At the same time I have deep into the mm code and fixed the dou=
-ble<BR>>>> usage of<BR>>>> the data blocks and possible page fault call tra=
-ce bugs mentioned<BR>>above=2E<BR>>>><BR>>>> Following is the V3 patch=2E I=
- have test this using 4 targets & fio<BR>>for<BR>>>> about 2 days, so<BR>>>=
-> far so good=2E<BR>>>><BR>>>> I'm still testing this using more complex te=
-st case=2E<BR>>>><BR>>> I have test it the whole day today:<BR>>> - using 4=
- targets<BR>>> - setting TCMU_GLOBAL_MAX_BLOCKS =3D [512 1K 1M 1G 2G]<BR>>>=
- - each target here needs more than 450 blocks when running<BR>>> - fio: -i=
-odepth [1 2 4 8 16] -thread -rw=3D[read write] -bs=3D[1K 2K 3K<BR>>5K<BR>>>=
- 7K 16K 64K 1M] -size=3D20G -numjobs=3D10 -runtime=3D1000  =2E=2E=2E<BR>><B=
-R>>Hi Xiubo,<BR>><BR>>V3 is sounding very good=2E I look forward to reviewi=
-ng it after it is<BR>>posted=2E<BR>><BR><BR>Yes, I will post it later after=
- more test and checking=2E<BR><BR>Thanks,<BR><BR>BRs<BR>Xiubo<BR><BR><BR>>T=
-hanks -- Regards -- Andy<BR>
-------DTKAJ5MA9N3GK5FOKD5BA28PNDC3L3--
-
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index f41e6b84a1bd..51a4ce094450 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2485,6 +2485,10 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
+ 		goto retry;
+ 	}
+ 
++	if (data->length > len ||
++	    data->header_length + data->block_descriptor_length > data->length)
++		return 0;
++
+ 	return result;
+ }
+ EXPORT_SYMBOL(scsi_mode_sense);
