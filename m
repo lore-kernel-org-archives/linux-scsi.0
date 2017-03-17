@@ -1,78 +1,51 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH 0/3] Unblock SCSI devices even if the LLD is being
- unloaded
-Date: Fri, 17 Mar 2017 16:40:24 +0000
-Message-ID: <1489768812.2826.2.camel@sandisk.com>
-References: <20170316205650.3322-1-bart.vanassche@sandisk.com>
-         <1489704797.4650.8.camel@HansenPartnership.com>
-         <1489706379.2574.24.camel@sandisk.com>
-         <1489755268.2373.11.camel@HansenPartnership.com>
+From: Andy Grover <agrover@redhat.com>
+Subject: Re: [PATCHv2 2/5] target/user: Add global data block pool support
+Date: Fri, 17 Mar 2017 10:11:43 -0700
+Message-ID: <2dd405f8-9f5b-405d-e744-9ee8bac77686@redhat.com>
+References: <1488962743-17028-1-git-send-email-lixiubo@cmss.chinamobile.com>
+ <1488962743-17028-3-git-send-email-lixiubo@cmss.chinamobile.com>
+ <3b1ce412-6072-fda1-3002-220cf8fbf34f@redhat.com>
+ <ddd797ea-43f0-b863-64e4-1e758f41dafe@cmss.chinamobile.com>
+ <f4c4e83a-d6b1-ed57-7a54-4277722e5a46@cmss.chinamobile.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:27866 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751037AbdCQQkd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Mar 2017 12:40:33 -0400
-In-Reply-To: <1489755268.2373.11.camel@HansenPartnership.com>
-Content-Language: en-US
-Content-ID: <5A56A5B4125E2B408198D336D30DD0C9@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <f4c4e83a-d6b1-ed57-7a54-4277722e5a46@cmss.chinamobile.com>
+Sender: owner-linux-mm@kvack.org
+To: Xiubo Li <lixiubo@cmss.chinamobile.com>, nab@linux-iscsi.org, mchristi@redhat.com
+Cc: shli@kernel.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com, linux-mm@kvack.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "maxg@mellanox.com" <maxg@mellanox.com>, "israelr@mellanox.com" <israelr@mellanox.com>, "hare@suse.de" <hare@suse.de>
 
-On Fri, 2017-03-17 at 05:54 -0700, James Bottomley wrote:
-> So it's better to use the module without a reference in place and take
-> the risk that it may exit and release its code area while we're calling
-> it?
+On 03/17/2017 01:04 AM, Xiubo Li wrote:
+> [...]
+>> These days what I have gotten is that the unmap_mapping_range() could
+>> be used.
+>> At the same time I have deep into the mm code and fixed the double
+>> usage of
+>> the data blocks and possible page fault call trace bugs mentioned above.
+>>
+>> Following is the V3 patch. I have test this using 4 targets & fio for
+>> about 2 days, so
+>> far so good.
+>>
+>> I'm still testing this using more complex test case.
+>>
+> I have test it the whole day today:
+> - using 4 targets
+> - setting TCMU_GLOBAL_MAX_BLOCKS = [512 1K 1M 1G 2G]
+> - each target here needs more than 450 blocks when running
+> - fio: -iodepth [1 2 4 8 16] -thread -rw=[read write] -bs=[1K 2K 3K 5K
+> 7K 16K 64K 1M] -size=20G -numjobs=10 -runtime=1000  ...
 
-Hello James,
+Hi Xiubo,
 
-My understanding of scsi_device_get() / scsi_device_put() is that the reaso=
-n
-why these manipulate the module reference count is to avoid that a SCSI LLD
-module can be unloaded while a SCSI device is being used from a context tha=
-t
-is not notified about SCSI LLD unloading (e.g. a file handle controlled by
-the sd driver or a SCSI ALUA device handler worker thread).
+V3 is sounding very good. I look forward to reviewing it after it is posted.
 
-Does your comment mean that you think there is a scenario in which
-scsi_target_block() or scsi_target_unblock() can be called while the text
-area of a SCSI LLD is being released? I have reviewed all the callers of
-these functions but I have not found such a scenario. scsi_target_block()
-and scsi_target_unblock() are either called from a SCSI transport layer
-implementation (FC, iSCSI, SRP) or from a SCSI LLD kernel module (snic_disc=
-).
-All these kernel modules only call scsi_target_*block() for resources (rpor=
-t
-or SCSI target respectively) that are removed before the code area of these
-modules is released. This is why I think that calling scsi_target_*block()
-without increasing the SCSI LLD module reference count is safe.
+Thanks -- Regards -- Andy
 
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index 82dfe07..fd1ba1d 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -39,6 +39,7 @@ static const struct {
->  	{ SDEV_TRANSPORT_OFFLINE, "transport-offline" },
->  	{ SDEV_BLOCK,	"blocked" },
->  	{ SDEV_CREATED_BLOCK, "created-blocked" },
-> +	{ SDEV_CANCEL_BLOCK, "blocked" },
->  };
-
-The multipathd function path_offline() translates "blocked" into PATH_PENDI=
-NG.
-Shouldn't SDEV_CANCEL_BLOCK be translated by multipathd into PATH_DOWN? The=
-re
-might be other user space applications that interpret the SCSI device state
-and that I am not aware of.
-
-Additionally, your patch does not modify scsi_device_get() and hence will
-cause scsi_device_get() to succeed for devices that are in state
-SDEV_CANCEL_BLOCK. I think that's a subtle behavior change.
-
-Thanks,
-
-Bart.=
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
