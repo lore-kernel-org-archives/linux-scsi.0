@@ -1,7 +1,8 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v5 06/16] tpm-chip: utilize new cdev_device_add helper function
-Date: Fri, 17 Mar 2017 12:48:13 -0600
-Message-ID: <1489776503-3151-7-git-send-email-logang@deltatee.com>
+Subject: [PATCH v5 03/16] device-dax: utilize new cdev_device_add helper
+ function
+Date: Fri, 17 Mar 2017 12:48:10 -0600
+Message-ID: <1489776503-3151-4-git-send-email-logang@deltatee.com>
 References: <1489776503-3151-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -27,63 +28,81 @@ taking the proper reference against the parent device and adding both
 the cdev and the device.
 
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Reviewed-by: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
-Reviewed-by: Jarkko Sakkinen <jarkko.sakkinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Reviewed-by: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Reviewed-by: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
 ---
- drivers/char/tpm/tpm-chip.c | 19 +++----------------
- 1 file changed, 3 insertions(+), 16 deletions(-)
+ drivers/dax/dax.c | 18 +++++-------------
+ 1 file changed, 5 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/char/tpm/tpm-chip.c b/drivers/char/tpm/tpm-chip.c
-index c406343..935f0e9 100644
---- a/drivers/char/tpm/tpm-chip.c
-+++ b/drivers/char/tpm/tpm-chip.c
-@@ -187,7 +187,6 @@ struct tpm_chip *tpm_chip_alloc(struct device *pdev,
+diff --git a/drivers/dax/dax.c b/drivers/dax/dax.c
+index a5ed59a..e5f8555 100644
+--- a/drivers/dax/dax.c
++++ b/drivers/dax/dax.c
+@@ -677,8 +677,6 @@ static void dax_dev_release(struct device *dev)
  
- 	cdev_init(&chip->cdev, &tpm_fops);
- 	chip->cdev.owner = THIS_MODULE;
--	chip->cdev.kobj.parent = &chip->dev.kobj;
- 
- 	return chip;
- 
-@@ -230,27 +229,16 @@ static int tpm_add_char_device(struct tpm_chip *chip)
+ static void kill_dax_dev(struct dax_dev *dax_dev)
  {
- 	int rc;
+-	struct cdev *cdev = &dax_dev->cdev;
+-
+ 	/*
+ 	 * Note, rcu is not protecting the liveness of dax_dev, rcu is
+ 	 * ensuring that any fault handlers that might have seen
+@@ -689,7 +687,6 @@ static void kill_dax_dev(struct dax_dev *dax_dev)
+ 	dax_dev->alive = false;
+ 	synchronize_rcu();
+ 	unmap_mapping_range(dax_dev->inode->i_mapping, 0, 0, 1);
+-	cdev_del(cdev);
+ }
  
--	rc = cdev_add(&chip->cdev, chip->dev.devt, 1);
-+	rc = cdev_device_add(&chip->cdev, &chip->dev);
- 	if (rc) {
- 		dev_err(&chip->dev,
--			"unable to cdev_add() %s, major %d, minor %d, err=%d\n",
-+			"unable to cdev_device_add() %s, major %d, minor %d, err=%d\n",
- 			dev_name(&chip->dev), MAJOR(chip->dev.devt),
- 			MINOR(chip->dev.devt), rc);
+ static void unregister_dax_dev(void *dev)
+@@ -699,7 +696,8 @@ static void unregister_dax_dev(void *dev)
+ 	dev_dbg(dev, "%s\n", __func__);
  
- 		return rc;
+ 	kill_dax_dev(dax_dev);
+-	device_unregister(dev);
++	cdev_device_del(&dax_dev->cdev, dev);
++	put_device(dev);
+ }
+ 
+ struct dax_dev *devm_create_dax_dev(struct dax_region *dax_region,
+@@ -750,18 +748,13 @@ struct dax_dev *devm_create_dax_dev(struct dax_region *dax_region,
+ 		goto err_inode;
  	}
  
--	rc = device_add(&chip->dev);
--	if (rc) {
--		dev_err(&chip->dev,
--			"unable to device_register() %s, major %d, minor %d, err=%d\n",
--			dev_name(&chip->dev), MAJOR(chip->dev.devt),
--			MINOR(chip->dev.devt), rc);
--
--		cdev_del(&chip->cdev);
--		return rc;
--	}
--
- 	/* Make the chip available. */
- 	mutex_lock(&idr_lock);
- 	idr_replace(&dev_nums_idr, chip, chip->dev_num);
-@@ -261,8 +249,7 @@ static int tpm_add_char_device(struct tpm_chip *chip)
+-	/* device_initialize() so cdev can reference kobj parent */
++	/* from here on we're committed to teardown via dax_dev_release() */
+ 	device_initialize(dev);
  
- static void tpm_del_char_device(struct tpm_chip *chip)
- {
--	cdev_del(&chip->cdev);
--	device_del(&chip->dev);
-+	cdev_device_del(&chip->cdev, &chip->dev);
+ 	cdev = &dax_dev->cdev;
+ 	cdev_init(cdev, &dax_fops);
+ 	cdev->owner = parent->driver->owner;
+-	cdev->kobj.parent = &dev->kobj;
+-	rc = cdev_add(&dax_dev->cdev, dev_t, 1);
+-	if (rc)
+-		goto err_cdev;
  
- 	/* Make the chip unavailable. */
- 	mutex_lock(&idr_lock);
+-	/* from here on we're committed to teardown via dax_dev_release() */
+ 	dax_dev->num_resources = count;
+ 	dax_dev->alive = true;
+ 	dax_dev->region = dax_region;
+@@ -773,7 +766,8 @@ struct dax_dev *devm_create_dax_dev(struct dax_region *dax_region,
+ 	dev->groups = dax_attribute_groups;
+ 	dev->release = dax_dev_release;
+ 	dev_set_name(dev, "dax%d.%d", dax_region->id, dax_dev->id);
+-	rc = device_add(dev);
++
++	rc = cdev_device_add(cdev, dev);
+ 	if (rc) {
+ 		kill_dax_dev(dax_dev);
+ 		put_device(dev);
+@@ -786,8 +780,6 @@ struct dax_dev *devm_create_dax_dev(struct dax_region *dax_region,
+ 
+ 	return dax_dev;
+ 
+- err_cdev:
+-	iput(dax_dev->inode);
+  err_inode:
+ 	ida_simple_remove(&dax_minor_ida, minor);
+  err_minor:
 -- 
 2.1.4
