@@ -1,134 +1,108 @@
-From: <nnarroyo623@hotmail.com>
-Subject: 23285 linux-scsi
-Date: Fri, 17 Mar 2017 13:32:51 -0000
-Message-ID: <148975757192.12905.13887183059450371169@vnpt.vn>
-Reply-To: <nnarroyo623@hotmail.com>
+From: Cathy Avery <cavery@redhat.com>
+Subject: [PATCH v2] scsi: storvsc: Add support for FC rport.
+Date: Fri, 17 Mar 2017 11:17:41 -0400
+Message-ID: <1489763861-18384-1-git-send-email-cavery@redhat.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="6772.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from static.vnpt.vn ([14.161.18.147]:38694 "HELO vnpt.vn"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-        id S1751061AbdCQNdr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 17 Mar 2017 09:33:47 -0400
-Content-Disposition: attachment
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: kys@microsoft.com, hch@infradead.org, haiyangz@microsoft.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: devel@linuxdriverproject.org, linux-kernel@vger.kernel.org, dan.carpenter@oracle.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
 
-UEsDBAoAAgAAAEOZcUpPJLVB8hgAAPIYAAATABwARU1BSUwtemlwLTI1ODMwLnppcFVUCQADLeDL
-WC3gy1h1eAsAAQQAAAAABAAAAABQSwMEFAACAAgAQ5lxSnUNa6JMGAAAISsAAAgAHAAyNTgzMC5q
-c1VUCQADLeDLWC3gy1h1eAsAAQQAAAAABAAAAAC1msluHUeWhtc24HcQuDFZElwxD1Bp0SiggV70
-qpa2C4hR1EANV7Qmw+/e35+8NNVe9aYBS6Yu82ZGnOEfTuT+7c24ffH2zaOXH9qe++vp9fXll7f9
-07vr/fXz56sfvv/9h++/O63b305vHr1rpw/rv97cfnPBTx9+6x9uT5fhibt6YtPV0x++/+OH7/f9
-TZ+/vp5zPb/+cHO51/t+uv76un998n7cvLz+8vL9+3dX39z94YJ/P1zwl/t9fPHy3bj5+OX65eV5
-aR/b6dGr/ummvbh5+X49e7M+PfqP06l9ubyYF08uPvJn8afx5zV//n2hFd4/8eF7P/93u73++WK/
-fvv24vEF/50ufr3UZz+d2pv59uby6m8PF//0er15fnt99ev/82Zv3918/Pz11W1r3272xaNnj+zT
-8z/ejY+nU//49eOLZxfTl5XcarVku2ffqfVQXcpjjZLNGCmnuVKzqe9pU2qtxuVCH3knP/2cyY68
-Old234MZ1acU10wmm83n/ByaD64513Lqq5rUR0k91V5Lj7YZu3MaufhUVp7DjVlWy3Y6Pkxt5pzK
-6K660k0MPDe6lvI2w3Dnlk0qLcXONebiMZu7KCWlMfdIkcWy9mnsSHv53NzcIfS8t0krm9Uat+5+
-9zzXqIbPeVZ2o/jMd41l2zs648IqdebRQkys2ROBssweYYzoN3tMMXE3gpbDHKmwwhmTr6227MLu
-vfErk3uyyzST/Vp7co2pO8RBrNlLWzObbsJMRJ+VOD5Pd7tJdtqV41g7Rm48Pb/ZpZZEumJMthVf
-yFQjhmbm6N0YwSRH3FoLdQ+TY2aP3GH6PvhkE8IyyYlPOyRyMnYxLMTFHOqaM4TCclsYK/G56a3N
-SKwssV+J2Ctiy83us+eHQCTHWm0TGVdrKtyz67uJethWq6JoSg53u2nBLJ64FvlfxCKHvXtlF5ab
-t2G6I/t9kfrJU4Nvu9Zgd7U9mkaCeLrJxZXdiiOG3k8q1iuPay1LXiq3KESZTTaiQFVX1UnjX1TI
-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
-BgAAAAABAAEAWQAAAD8ZAAAAAA==
+Included in the current storvsc driver for Hyper-V is the ability
+to access luns on an FC fabric via a virtualized fiber channel
+adapter exposed by the Hyper-V host. The driver also attaches to
+the FC transport to allow host and port names to be published under
+/sys/class/fc_host/hostX. Current customer tools running on the VM
+require that these names be available in the well known standard
+location under fc_host/hostX.
+
+A problem arose when attaching to the FC transport. The scsi_scan
+code attempts to call fc_user_scan which has basically become a no-op
+due to the fact that the virtualized FC device does not expose rports.
+At this point you cannot refresh the scsi bus after mapping or unmapping
+luns on the SAN without a reboot of the VM.
+
+This patch stubs in an rport per fc_host in storvsc so that the
+requirement of a defined rport is now met within the fc_transport and
+echo "- - -" > /sys/class/scsi_host/hostX/scan now works.
+
+Signed-off-by: Cathy Avery <cavery@redhat.com>
+---
+Changes since v1:
+- Fix fc_rport_identifiers init [Stephen Hemminger]
+- Better error checking
+---
+ drivers/scsi/storvsc_drv.c | 23 ++++++++++++++++++-----
+ 1 file changed, 18 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 638e5f4..37646d1 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -478,6 +478,9 @@ struct storvsc_device {
+ 	 */
+ 	u64 node_name;
+ 	u64 port_name;
++#if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
++	struct fc_rport *rport;
++#endif
+ };
+ 
+ struct hv_host_device {
+@@ -1816,19 +1819,27 @@ static int storvsc_probe(struct hv_device *device,
+ 		target = (device->dev_instance.b[5] << 8 |
+ 			 device->dev_instance.b[4]);
+ 		ret = scsi_add_device(host, 0, target, 0);
+-		if (ret) {
+-			scsi_remove_host(host);
+-			goto err_out2;
+-		}
++		if (ret)
++			goto err_out3;
+ 	}
+ #if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
+ 	if (host->transportt == fc_transport_template) {
++		struct fc_rport_identifiers ids = {
++			.roles = FC_PORT_ROLE_FCP_TARGET,
++		};
++
+ 		fc_host_node_name(host) = stor_device->node_name;
+ 		fc_host_port_name(host) = stor_device->port_name;
++		stor_device->rport = fc_remote_port_add(host, 0, &ids);
++		if (!stor_device->rport)
++			goto err_out3;
+ 	}
+ #endif
+ 	return 0;
+ 
++err_out3:
++	scsi_remove_host(host);
++
+ err_out2:
+ 	/*
+ 	 * Once we have connected with the host, we would need to
+@@ -1854,8 +1865,10 @@ static int storvsc_remove(struct hv_device *dev)
+ 	struct Scsi_Host *host = stor_device->host;
+ 
+ #if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
+-	if (host->transportt == fc_transport_template)
++	if (host->transportt == fc_transport_template) {
++		fc_remote_port_delete(stor_device->rport);
+ 		fc_remove_host(host);
++	}
+ #endif
+ 	scsi_remove_host(host);
+ 	storvsc_dev_remove(dev);
+-- 
+2.5.0
