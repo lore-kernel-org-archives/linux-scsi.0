@@ -1,105 +1,40 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [RFC 1/2] scsi: Provide mechanism for SCSI layer to poll for
- LLDD.
-Date: Fri, 17 Mar 2017 18:55:11 +0000
-Message-ID: <2F3A1DE8-C900-4E15-9380-1B39AED87D89@cavium.com>
-References: <20170316214048.20481-1-himanshu.madhani@cavium.com>
- <20170316214048.20481-2-himanshu.madhani@cavium.com>
- <1489703231.2574.20.camel@sandisk.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 194837] VM with virtio-scsi drive often crashes during boot
+ with kernel 4.11rc1
+Date: Fri, 17 Mar 2017 19:02:59 +0000
+Message-ID: <bug-194837-11613-3vP3WkSW3v@https.bugzilla.kernel.org/>
+References: <bug-194837-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0048.outbound.protection.outlook.com ([104.47.33.48]:24086
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751677AbdCQSzV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 17 Mar 2017 14:55:21 -0400
-In-Reply-To: <1489703231.2574.20.camel@sandisk.com>
-Content-Language: en-US
-Content-ID: <89EF4D1B780CEA4096EDAC77D19400FD@namprd07.prod.outlook.com>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:59666 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751131AbdCQTDh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 17 Mar 2017 15:03:37 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id F3EE228506
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Mar 2017 19:03:00 +0000 (UTC)
+Received: from pdx-korg-bugzilla-1.web.codeaurora.org (unknown [172.30.200.120])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 9138C28593
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Mar 2017 19:02:59 +0000 (UTC)
+In-Reply-To: <bug-194837-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Trapp, Darren" <Darren.Trapp@cavium.com>
+To: linux-scsi@kernel.org
 
-SGkgQmFydCwgDQoNCj4gT24gTWFyIDE2LCAyMDE3LCBhdCAzOjI3IFBNLCBCYXJ0IFZhbiBBc3Nj
-aGUgPGJhcnQudmFuYXNzY2hlQHNhbmRpc2suY29tPiB3cm90ZToNCj4gDQo+IE9uIFRodSwgMjAx
-Ny0wMy0xNiBhdCAxNDo0MCAtMDcwMCwgSGltYW5zaHUgTWFkaGFuaSB3cm90ZToNCj4+ICtzdGF0
-aWMgaW50DQo+PiArc2NzaV9wb2xsKHN0cnVjdCBibGtfbXFfaHdfY3R4ICpoY3R4LCB1bnNpZ25l
-ZCBpbnQgdGFnKQ0KPj4gKw0KPj4gK3sNCj4+ICsgICAgICAgIHN0cnVjdCBTY3NpX0hvc3QgKnNo
-b3N0ID0gaGN0eC0+ZHJpdmVyX2RhdGE7DQo+PiArICAgICAgICBzdHJ1Y3QgcmVxdWVzdCAqcmVx
-Ow0KPj4gKyAgICAgICAgc3RydWN0IHNjc2lfY21uZCAqY21kOw0KPj4gKw0KPj4gKyAgICAgICAg
-cmVxID0gYmxrX21xX3RhZ190b19ycShzaG9zdC0+dGFnX3NldC50YWdzW2hjdHgtPnF1ZXVlX251
-bV0sIHRhZyk7DQo+PiArICAgICAgICBpZiAoIXJlcSkNCj4+ICsgICAgICAgICAgICAgICAgcmV0
-dXJuIDA7DQo+PiArDQo+PiArICAgICAgICBjbWQgPSBibGtfbXFfcnFfdG9fcGR1KHJlcSk7DQo+
-PiArCWlmICghY21kKQ0KPj4gKwkJcmV0dXJuIDA7DQo+PiArDQo+PiArCWlmIChzaG9zdC0+aG9z
-dHQtPnBvbGxfcXVldWUpDQo+PiArCQlyZXR1cm4oc2hvc3QtPmhvc3R0LT5wb2xsX3F1ZXVlKHNo
-b3N0LCBjbWQpKTsNCj4+ICsJZWxzZSByZXR1cm4gMDsNCj4+ICt9DQo+IA0KPiBXaGF0IHdpbGwg
-aGFwcGVuIGlmIHRoZSByZXF1ZXN0IHdpdGggdGFnICd0YWcnIGlzIGNvbXBsZXRlZCBhZnRlciB0
-aGUgYmxvY2sNCj4gbGF5ZXIgZGVjaWRlZCB0byBjYWxsIHRoaXMgZnVuY3Rpb24gYW5kIGJlZm9y
-ZSB0aGlzIGZ1bmN0aW9uIGhhZCB0aGUgY2hhbmNlDQo+IHRvIGNhbGwgYmxrX21xX3RhZ190b19y
-cSgpPyBXaWxsIHRoaXMgdHJpZ2dlciBhIGtlcm5lbCBjcmFzaD8gQWxzbywgcGxlYXNlDQo+IGZv
-cm1hdCBwYXRjaGVzIHByb3Blcmx5LiBUaGlzIGlzIHdoYXQgY2hlY2twYXRjaCByZXBvcnRzIGZv
-ciB0aGlzIHBhdGNoOg0KPiANCg0KVGFnIGlzIHBhc3NlZCBpbnRvIGhlcmUgYnkgcnEtPnRhZw0K
-DQpXaGVuIHRhZyBnb2VzIHRvIGJsa19tcV90YWdfdG9fcnEgIGl0IGp1c3QgaW5kZXhlcyB0byB0
-aGUgcnFzIGFycmF5IHVzaW5nIHRhZzoNCg0Kc3RydWN0IHJlcXVlc3QgKmJsa19tcV90YWdfdG9f
-cnEoc3RydWN0IGJsa19tcV90YWdzICp0YWdzLCB1bnNpZ25lZCBpbnQgdGFnKQ0Kew0KICAgICAg
-IGlmICh0YWcgPCB0YWdzLT5ucl90YWdzKSB7DQogICAgICAgICAgICAgICBwcmVmZXRjaCh0YWdz
-LT5ycXNbdGFnXSk7DQogICAgICAgICAgICAgICByZXR1cm4gdGFncy0+cnFzW3RhZ107DQogICAg
-ICAgfQ0KDQogICAgICAgcmV0dXJuIE5VTEw7DQoNClNvIGlmIHRhZyBpcyBpbnZhbGlkKHRvbyBs
-YXJnZSksIGl0IHJldHVybnMgTlVMTC4gIEV2ZXJ5IHN0ZXAgaXQgdmFsaWRhdGVzIGl0IGhhcyBh
-IHZhbGlkICogYmVmb3JlIGNvbnRpbnVpbmcuICANCg0KV29yc2UgY2FzZSB3ZSBwb2xsIGZvciBh
-IGNvbXBsZXRpb24gdGhhdCBoYXMgYWxyZWFkeSBjb21wbGV0ZWQuIA0KDQpXZSBkb27igJl0IHRo
-aW5rIHRoaXMgd2lsbCByZXN1bHQgaW50byBOVUxMIHBvaW50ZXIgY3Jhc2guDQoNCj4gRVJST1I6
-IGNvZGUgaW5kZW50IHNob3VsZCB1c2UgdGFicyB3aGVyZSBwb3NzaWJsZQ0KPiAjMjQ0OiBGSUxF
-OiBkcml2ZXJzL3Njc2kvc2NzaV9saWIuYzoyMTYxOg0KPiArICAgICAgICBzdHJ1Y3QgU2NzaV9I
-b3N0ICpzaG9zdCA9IGhjdHgtPmRyaXZlcl9kYXRhOyQNCj4gDQo+IFdBUk5JTkc6IHBsZWFzZSwg
-bm8gc3BhY2VzIGF0IHRoZSBzdGFydCBvZiBhIGxpbmUNCj4gIzI0NDogRklMRTogZHJpdmVycy9z
-Y3NpL3Njc2lfbGliLmM6MjE2MToNCj4gKyAgICAgICAgc3RydWN0IFNjc2lfSG9zdCAqc2hvc3Qg
-PSBoY3R4LT5kcml2ZXJfZGF0YTskDQo+IA0KPiBFUlJPUjogY29kZSBpbmRlbnQgc2hvdWxkIHVz
-ZSB0YWJzIHdoZXJlIHBvc3NpYmxlDQo+ICMyNDU6IEZJTEU6IGRyaXZlcnMvc2NzaS9zY3NpX2xp
-Yi5jOjIxNjI6DQo+ICsgICAgICAgIHN0cnVjdCByZXF1ZXN0ICpyZXE7JA0KPiANCj4gV0FSTklO
-RzogcGxlYXNlLCBubyBzcGFjZXMgYXQgdGhlIHN0YXJ0IG9mIGEgbGluZQ0KPiAjMjQ1OiBGSUxF
-OiBkcml2ZXJzL3Njc2kvc2NzaV9saWIuYzoyMTYyOg0KPiArICAgICAgICBzdHJ1Y3QgcmVxdWVz
-dCAqcmVxOyQNCj4gDQo+IEVSUk9SOiBjb2RlIGluZGVudCBzaG91bGQgdXNlIHRhYnMgd2hlcmUg
-cG9zc2libGUNCj4gIzI0NjogRklMRTogZHJpdmVycy9zY3NpL3Njc2lfbGliLmM6MjE2MzoNCj4g
-KyAgICAgICAgc3RydWN0IHNjc2lfY21uZCAqY21kOyQNCj4gDQo+IFdBUk5JTkc6IHBsZWFzZSwg
-bm8gc3BhY2VzIGF0IHRoZSBzdGFydCBvZiBhIGxpbmUNCj4gIzI0NjogRklMRTogZHJpdmVycy9z
-Y3NpL3Njc2lfbGliLmM6MjE2MzoNCj4gKyAgICAgICAgc3RydWN0IHNjc2lfY21uZCAqY21kOyQN
-Cj4gDQo+IEVSUk9SOiBjb2RlIGluZGVudCBzaG91bGQgdXNlIHRhYnMgd2hlcmUgcG9zc2libGUN
-Cj4gIzI0ODogRklMRTogZHJpdmVycy9zY3NpL3Njc2lfbGliLmM6MjE2NToNCj4gKyAgICAgICAg
-cmVxID0gYmxrX21xX3RhZ190b19ycShzaG9zdC0+dGFnX3NldC50YWdzW2hjdHgtPnF1ZXVlX251
-bV0sIHRhZyk7JA0KPiANCj4gV0FSTklORzogcGxlYXNlLCBubyBzcGFjZXMgYXQgdGhlIHN0YXJ0
-IG9mIGEgbGluZQ0KPiAjMjQ4OiBGSUxFOiBkcml2ZXJzL3Njc2kvc2NzaV9saWIuYzoyMTY1Og0K
-PiArICAgICAgICByZXEgPSBibGtfbXFfdGFnX3RvX3JxKHNob3N0LT50YWdfc2V0LnRhZ3NbaGN0
-eC0+cXVldWVfbnVtXSwgdGFnKTskDQo+IA0KPiBFUlJPUjogY29kZSBpbmRlbnQgc2hvdWxkIHVz
-ZSB0YWJzIHdoZXJlIHBvc3NpYmxlDQo+ICMyNDk6IEZJTEU6IGRyaXZlcnMvc2NzaS9zY3NpX2xp
-Yi5jOjIxNjY6DQo+ICsgICAgICAgIGlmICghcmVxKSQNCj4gDQo+IFdBUk5JTkc6IHBsZWFzZSwg
-bm8gc3BhY2VzIGF0IHRoZSBzdGFydCBvZiBhIGxpbmUNCj4gIzI0OTogRklMRTogZHJpdmVycy9z
-Y3NpL3Njc2lfbGliLmM6MjE2NjoNCj4gKyAgICAgICAgaWYgKCFyZXEpJA0KPiANCj4gRVJST1I6
-IGNvZGUgaW5kZW50IHNob3VsZCB1c2UgdGFicyB3aGVyZSBwb3NzaWJsZQ0KPiAjMjUwOiBGSUxF
-OiBkcml2ZXJzL3Njc2kvc2NzaV9saWIuYzoyMTY3Og0KPiArICAgICAgICAgICAgICAgIHJldHVy
-biAwOyQNCj4gDQo+IFdBUk5JTkc6IHBsZWFzZSwgbm8gc3BhY2VzIGF0IHRoZSBzdGFydCBvZiBh
-IGxpbmUNCj4gIzI1MDogRklMRTogZHJpdmVycy9zY3NpL3Njc2lfbGliLmM6MjE2NzoNCj4gKyAg
-ICAgICAgICAgICAgICByZXR1cm4gMDskDQo+IA0KPiBFUlJPUjogY29kZSBpbmRlbnQgc2hvdWxk
-IHVzZSB0YWJzIHdoZXJlIHBvc3NpYmxlDQo+ICMyNTI6IEZJTEU6IGRyaXZlcnMvc2NzaS9zY3Np
-X2xpYi5jOjIxNjk6DQo+ICsgICAgICAgIGNtZCA9IGJsa19tcV9ycV90b19wZHUocmVxKTskDQo+
-IA0KPiBXQVJOSU5HOiBwbGVhc2UsIG5vIHNwYWNlcyBhdCB0aGUgc3RhcnQgb2YgYSBsaW5lDQo+
-ICMyNTI6IEZJTEU6IGRyaXZlcnMvc2NzaS9zY3NpX2xpYi5jOjIxNjk6DQo+ICsgICAgICAgIGNt
-ZCA9IGJsa19tcV9ycV90b19wZHUocmVxKTskDQo+IA0KPiBFUlJPUjogcmV0dXJuIGlzIG5vdCBh
-IGZ1bmN0aW9uLCBwYXJlbnRoZXNlcyBhcmUgbm90IHJlcXVpcmVkDQo+ICMyNTc6IEZJTEU6IGRy
-aXZlcnMvc2NzaS9zY3NpX2xpYi5jOjIxNzQ6DQo+ICsJCXJldHVybihzaG9zdC0+aG9zdHQtPnBv
-bGxfcXVldWUoc2hvc3QsIGNtZCkpOw0KPiANCj4gRVJST1I6IHRyYWlsaW5nIHN0YXRlbWVudHMg
-c2hvdWxkIGJlIG9uIG5leHQgbGluZQ0KPiAjMjU4OiBGSUxFOiBkcml2ZXJzL3Njc2kvc2NzaV9s
-aWIuYzoyMTc1Og0KPiArCWVsc2UgcmV0dXJuIDA7DQo+IA0KPiBXQVJOSU5HOiBsaW5lIG92ZXIg
-ODAgY2hhcmFjdGVycw0KPiAjMjYyOiBGSUxFOiBkcml2ZXJzL3Njc2kvc2NzaV9saWIuYzoyMTc5
-Og0KPiArX19zY3NpX2luaXRfaGN0eChzdHJ1Y3QgYmxrX21xX2h3X2N0eCAqaGN0eCwgc3RydWN0
-IFNjc2lfSG9zdCAqc2hvc3QsIHVuc2lnbmVkIGludCBoY3R4X2lkeCkNCj4gDQo+IFdBUk5JTkc6
-IFVubmVjZXNzYXJ5IHNwYWNlIGJlZm9yZSBmdW5jdGlvbiBwb2ludGVyIG5hbWUNCj4gIzMwNjog
-RklMRTogaW5jbHVkZS9zY3NpL3Njc2lfaG9zdC5oOjEzOToNCj4gKwlpbnQgKCogcG9sbF9xdWV1
-ZSkoc3RydWN0IFNjc2lfSG9zdCAqLCBzdHJ1Y3Qgc2NzaV9jbW5kICopOw0KPiANCj4gRVJST1I6
-IHNwYWNlIHByb2hpYml0ZWQgYWZ0ZXIgdGhhdCAnKicgKGN0eDpCeFcpDQo+ICMzMDY6IEZJTEU6
-IGluY2x1ZGUvc2NzaS9zY3NpX2hvc3QuaDoxMzk6DQo+ICsJaW50ICgqIHBvbGxfcXVldWUpKHN0
-cnVjdCBTY3NpX0hvc3QgKiwgc3RydWN0IHNjc2lfY21uZCAqKTsNCj4gIAkgICAgIF4NCj4gVGhh
-bmtzLA0KPiANCj4gQmFydC4NCg0KVGhhbmtzLA0KLSBIaW1hbnNodQ==
+https://bugzilla.kernel.org/show_bug.cgi?id=194837
+
+--- Comment #15 from Thorsten Leemhuis (regressions@leemhuis.info) ---
+Adam or somebody else: Can you please close this Bug to avoid confusion? There
+clearly were some bugs in virtio_scsi, but those were already fixed. 
+
+But there are more bugs (at least for me): I bisectected the problem I'm still
+seeing with todays mainline and found that "virtio_pci: use shared interrupts
+for virtqueues" (5c34d002dcc7; from hch and mst) was the first bad commit for
+me. Filed Bug 194911 to track that.
+
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
