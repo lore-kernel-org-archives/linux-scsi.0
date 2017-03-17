@@ -1,7 +1,8 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v5 08/16] IB/ucm: utilize new cdev_device_add helper function
-Date: Fri, 17 Mar 2017 12:48:15 -0600
-Message-ID: <1489776503-3151-9-git-send-email-logang@deltatee.com>
+Subject: [PATCH v5 07/16] platform/chrome: cros_ec_dev - utilize new
+ cdev_device_add helper function
+Date: Fri, 17 Mar 2017 12:48:14 -0600
+Message-ID: <1489776503-3151-8-git-send-email-logang@deltatee.com>
 References: <1489776503-3151-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,109 +22,89 @@ To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org
 Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-gpio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
+Replace the open coded registration of the cdev and dev with the
+new device_add_cdev() helper. The helper replaces a common pattern by
+taking the proper reference against the parent device and adding both
+the cdev and the device.
 
-The use after free is not triggerable here because the cdev holds
-the module lock and the only device_unregister is only triggered by
-module unload, however make the change for consistency.
+At the same time we cleanup the error path through device_probe
+function: we use put_device instead of kfree directly as recommended
+by the device_initialize documentation.
 
-To make this work the cdev_del needs to move out of the struct device
-release function.
-
-This cleans up the error path significantly and thus also fixes a minor
-bug where the devnum would not be released if cdev_add failed.
-
-Signed-off-by: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Reviewed-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Reviewed-by: Leon Romanovsky <leonro-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 ---
- drivers/infiniband/core/ucm.c | 35 ++++++++++++++++++-----------------
- 1 file changed, 18 insertions(+), 17 deletions(-)
+ drivers/platform/chrome/cros_ec_dev.c | 31 +++++++------------------------
+ 1 file changed, 7 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/infiniband/core/ucm.c b/drivers/infiniband/core/ucm.c
-index cc0d51f..d15efa4 100644
---- a/drivers/infiniband/core/ucm.c
-+++ b/drivers/infiniband/core/ucm.c
-@@ -1205,12 +1205,15 @@ static void ib_ucm_release_dev(struct device *dev)
- 	struct ib_ucm_device *ucm_dev;
+diff --git a/drivers/platform/chrome/cros_ec_dev.c b/drivers/platform/chrome/cros_ec_dev.c
+index 6f09da4..6aa120c 100644
+--- a/drivers/platform/chrome/cros_ec_dev.c
++++ b/drivers/platform/chrome/cros_ec_dev.c
+@@ -391,7 +391,6 @@ static int ec_device_probe(struct platform_device *pdev)
+ 	int retval = -ENOMEM;
+ 	struct device *dev = &pdev->dev;
+ 	struct cros_ec_platform *ec_platform = dev_get_platdata(dev);
+-	dev_t devno = MKDEV(ec_major, pdev->id);
+ 	struct cros_ec_dev *ec = kzalloc(sizeof(*ec), GFP_KERNEL);
  
- 	ucm_dev = container_of(dev, struct ib_ucm_device, dev);
--	cdev_del(&ucm_dev->cdev);
-+	kfree(ucm_dev);
-+}
-+
-+static void ib_ucm_free_dev(struct ib_ucm_device *ucm_dev)
-+{
- 	if (ucm_dev->devnum < IB_UCM_MAX_DEVICES)
- 		clear_bit(ucm_dev->devnum, dev_map);
- 	else
- 		clear_bit(ucm_dev->devnum - IB_UCM_MAX_DEVICES, overflow_map);
--	kfree(ucm_dev);
+ 	if (!ec)
+@@ -407,23 +406,11 @@ static int ec_device_probe(struct platform_device *pdev)
+ 	cdev_init(&ec->cdev, &fops);
+ 
+ 	/*
+-	 * Add the character device
+-	 * Link cdev to the class device to be sure device is not used
+-	 * before unbinding it.
+-	 */
+-	ec->cdev.kobj.parent = &ec->class_dev.kobj;
+-	retval = cdev_add(&ec->cdev, devno, 1);
+-	if (retval) {
+-		dev_err(dev, ": failed to add character device\n");
+-		goto cdev_add_failed;
+-	}
+-
+-	/*
+ 	 * Add the class device
+ 	 * Link to the character device for creating the /dev entry
+ 	 * in devtmpfs.
+ 	 */
+-	ec->class_dev.devt = ec->cdev.dev;
++	ec->class_dev.devt = MKDEV(ec_major, pdev->id);
+ 	ec->class_dev.class = &cros_class;
+ 	ec->class_dev.parent = dev;
+ 	ec->class_dev.release = __remove;
+@@ -431,13 +418,13 @@ static int ec_device_probe(struct platform_device *pdev)
+ 	retval = dev_set_name(&ec->class_dev, "%s", ec_platform->ec_name);
+ 	if (retval) {
+ 		dev_err(dev, "dev_set_name failed => %d\n", retval);
+-		goto set_named_failed;
++		goto failed;
+ 	}
+ 
+-	retval = device_add(&ec->class_dev);
++	retval = cdev_device_add(&ec->cdev, &ec->class_dev);
+ 	if (retval) {
+-		dev_err(dev, "device_register failed => %d\n", retval);
+-		goto dev_reg_failed;
++		dev_err(dev, "cdev_device_add failed => %d\n", retval);
++		goto failed;
+ 	}
+ 
+ 	/* check whether this EC is a sensor hub. */
+@@ -446,12 +433,8 @@ static int ec_device_probe(struct platform_device *pdev)
+ 
+ 	return 0;
+ 
+-dev_reg_failed:
+-set_named_failed:
+-	dev_set_drvdata(dev, NULL);
+-	cdev_del(&ec->cdev);
+-cdev_add_failed:
+-	kfree(ec);
++failed:
++	put_device(&ec->class_dev);
+ 	return retval;
  }
  
- static const struct file_operations ucm_fops = {
-@@ -1266,7 +1269,9 @@ static void ib_ucm_add_one(struct ib_device *device)
- 	if (!ucm_dev)
- 		return;
- 
-+	device_initialize(&ucm_dev->dev);
- 	ucm_dev->ib_dev = device;
-+	ucm_dev->dev.release = ib_ucm_release_dev;
- 
- 	devnum = find_first_zero_bit(dev_map, IB_UCM_MAX_DEVICES);
- 	if (devnum >= IB_UCM_MAX_DEVICES) {
-@@ -1286,16 +1291,14 @@ static void ib_ucm_add_one(struct ib_device *device)
- 	cdev_init(&ucm_dev->cdev, &ucm_fops);
- 	ucm_dev->cdev.owner = THIS_MODULE;
- 	kobject_set_name(&ucm_dev->cdev.kobj, "ucm%d", ucm_dev->devnum);
--	if (cdev_add(&ucm_dev->cdev, base, 1))
--		goto err;
- 
- 	ucm_dev->dev.class = &cm_class;
- 	ucm_dev->dev.parent = device->dev.parent;
--	ucm_dev->dev.devt = ucm_dev->cdev.dev;
--	ucm_dev->dev.release = ib_ucm_release_dev;
-+	ucm_dev->dev.devt = base;
-+
- 	dev_set_name(&ucm_dev->dev, "ucm%d", ucm_dev->devnum);
--	if (device_register(&ucm_dev->dev))
--		goto err_cdev;
-+	if (cdev_device_add(&ucm_dev->cdev, &ucm_dev->dev))
-+		goto err_devnum;
- 
- 	if (device_create_file(&ucm_dev->dev, &dev_attr_ibdev))
- 		goto err_dev;
-@@ -1304,15 +1307,11 @@ static void ib_ucm_add_one(struct ib_device *device)
- 	return;
- 
- err_dev:
--	device_unregister(&ucm_dev->dev);
--err_cdev:
--	cdev_del(&ucm_dev->cdev);
--	if (ucm_dev->devnum < IB_UCM_MAX_DEVICES)
--		clear_bit(devnum, dev_map);
--	else
--		clear_bit(devnum, overflow_map);
-+	cdev_device_del(&ucm_dev->cdev, &ucm_dev->dev);
-+err_devnum:
-+	ib_ucm_free_dev(ucm_dev);
- err:
--	kfree(ucm_dev);
-+	put_device(&ucm_dev->dev);
- 	return;
- }
- 
-@@ -1323,7 +1322,9 @@ static void ib_ucm_remove_one(struct ib_device *device, void *client_data)
- 	if (!ucm_dev)
- 		return;
- 
--	device_unregister(&ucm_dev->dev);
-+	cdev_device_del(&ucm_dev->cdev, &ucm_dev->dev);
-+	ib_ucm_free_dev(ucm_dev);
-+	put_device(&ucm_dev->dev);
- }
- 
- static CLASS_ATTR_STRING(abi_version, S_IRUGO,
 -- 
 2.1.4
