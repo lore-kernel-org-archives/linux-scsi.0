@@ -1,7 +1,7 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v5 10/16] iio:core: utilize new cdev_device_add helper function
-Date: Fri, 17 Mar 2017 12:48:17 -0600
-Message-ID: <1489776503-3151-11-git-send-email-logang@deltatee.com>
+Subject: [PATCH v5 11/16] media: utilize new cdev_device_add helper function
+Date: Fri, 17 Mar 2017 12:48:18 -0600
+Message-ID: <1489776503-3151-12-git-send-email-logang@deltatee.com>
 References: <1489776503-3151-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -26,51 +26,105 @@ new device_add_cdev() helper. The helper replaces a common pattern by
 taking the proper reference against the parent device and adding both
 the cdev and the device.
 
-In doing so we have to remove a guard statement from cdev_del,
-but this doesn't appear to be required in any way.
-
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+Acked-by: Hans Verkuil <hans.verkuil-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
 ---
- drivers/iio/industrialio-core.c | 15 ++++-----------
- 1 file changed, 4 insertions(+), 11 deletions(-)
+ drivers/media/cec/cec-core.c  | 16 ++++------------
+ drivers/media/media-devnode.c | 20 +++++---------------
+ 2 files changed, 9 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/iio/industrialio-core.c b/drivers/iio/industrialio-core.c
-index d18ded4..26a03c6 100644
---- a/drivers/iio/industrialio-core.c
-+++ b/drivers/iio/industrialio-core.c
-@@ -1720,18 +1720,13 @@ int iio_device_register(struct iio_dev *indio_dev)
+diff --git a/drivers/media/cec/cec-core.c b/drivers/media/cec/cec-core.c
+index 37217e2..3163e03 100644
+--- a/drivers/media/cec/cec-core.c
++++ b/drivers/media/cec/cec-core.c
+@@ -137,24 +137,17 @@ static int __must_check cec_devnode_register(struct cec_devnode *devnode,
  
- 	cdev_init(&indio_dev->chrdev, &iio_buffer_fileops);
- 	indio_dev->chrdev.owner = indio_dev->info->driver_module;
--	indio_dev->chrdev.kobj.parent = &indio_dev->dev.kobj;
--	ret = cdev_add(&indio_dev->chrdev, indio_dev->dev.devt, 1);
--	if (ret < 0)
--		goto error_unreg_eventset;
+ 	/* Part 2: Initialize and register the character device */
+ 	cdev_init(&devnode->cdev, &cec_devnode_fops);
+-	devnode->cdev.kobj.parent = &devnode->dev.kobj;
+ 	devnode->cdev.owner = owner;
  
--	ret = device_add(&indio_dev->dev);
-+	ret = cdev_device_add(&indio_dev->chrdev, &indio_dev->dev);
- 	if (ret < 0)
--		goto error_cdev_del;
-+		goto error_unreg_eventset;
+-	ret = cdev_add(&devnode->cdev, devnode->dev.devt, 1);
+-	if (ret < 0) {
+-		pr_err("%s: cdev_add failed\n", __func__);
++	ret = cdev_device_add(&devnode->cdev, &devnode->dev);
++	if (ret) {
++		pr_err("%s: cdev_device_add failed\n", __func__);
+ 		goto clr_bit;
+ 	}
+ 
+-	ret = device_add(&devnode->dev);
+-	if (ret)
+-		goto cdev_del;
+-
+ 	devnode->registered = true;
+ 	return 0;
+ 
+-cdev_del:
+-	cdev_del(&devnode->cdev);
+ clr_bit:
+ 	mutex_lock(&cec_devnode_lock);
+ 	clear_bit(devnode->minor, cec_devnode_nums);
+@@ -190,8 +183,7 @@ static void cec_devnode_unregister(struct cec_devnode *devnode)
+ 	devnode->unregistered = true;
+ 	mutex_unlock(&devnode->lock);
+ 
+-	device_del(&devnode->dev);
+-	cdev_del(&devnode->cdev);
++	cdev_device_del(&devnode->cdev, &devnode->dev);
+ 	put_device(&devnode->dev);
+ }
+ 
+diff --git a/drivers/media/media-devnode.c b/drivers/media/media-devnode.c
+index ae46753..423248f 100644
+--- a/drivers/media/media-devnode.c
++++ b/drivers/media/media-devnode.c
+@@ -248,31 +248,22 @@ int __must_check media_devnode_register(struct media_device *mdev,
+ 	dev_set_name(&devnode->dev, "media%d", devnode->minor);
+ 	device_initialize(&devnode->dev);
+ 
+-	/* Part 2: Initialize and register the character device */
++	/* Part 2: Initialize the character device */
+ 	cdev_init(&devnode->cdev, &media_devnode_fops);
+ 	devnode->cdev.owner = owner;
+-	devnode->cdev.kobj.parent = &devnode->dev.kobj;
+ 
+-	ret = cdev_add(&devnode->cdev, MKDEV(MAJOR(media_dev_t), devnode->minor), 1);
++	/* Part 3: Add the media and char device */
++	ret = cdev_device_add(&devnode->cdev, &devnode->dev);
+ 	if (ret < 0) {
+-		pr_err("%s: cdev_add failed\n", __func__);
++		pr_err("%s: cdev_device_add failed\n", __func__);
+ 		goto cdev_add_error;
+ 	}
+ 
+-	/* Part 3: Add the media device */
+-	ret = device_add(&devnode->dev);
+-	if (ret < 0) {
+-		pr_err("%s: device_add failed\n", __func__);
+-		goto device_add_error;
+-	}
+-
+ 	/* Part 4: Activate this minor. The char device can now be used. */
+ 	set_bit(MEDIA_FLAG_REGISTERED, &devnode->flags);
  
  	return 0;
--error_cdev_del:
--	cdev_del(&indio_dev->chrdev);
-+
- error_unreg_eventset:
- 	iio_device_unregister_eventset(indio_dev);
- error_free_sysfs:
-@@ -1752,10 +1747,8 @@ void iio_device_unregister(struct iio_dev *indio_dev)
+ 
+-device_add_error:
+-	cdev_del(&devnode->cdev);
+ cdev_add_error:
+ 	mutex_lock(&media_devnode_lock);
+ 	clear_bit(devnode->minor, media_devnode_nums);
+@@ -298,9 +289,8 @@ void media_devnode_unregister(struct media_devnode *devnode)
  {
- 	mutex_lock(&indio_dev->info_exist_lock);
- 
--	device_del(&indio_dev->dev);
-+	cdev_device_del(&indio_dev->chrdev, &indio_dev->dev);
- 
--	if (indio_dev->chrdev.dev)
--		cdev_del(&indio_dev->chrdev);
- 	iio_device_unregister_debugfs(indio_dev);
- 
- 	iio_disable_all_buffers(indio_dev);
+ 	mutex_lock(&media_devnode_lock);
+ 	/* Delete the cdev on this minor as well */
+-	cdev_del(&devnode->cdev);
++	cdev_device_del(&devnode->cdev, &devnode->dev);
+ 	mutex_unlock(&media_devnode_lock);
+-	device_del(&devnode->dev);
+ 	devnode->media_dev = NULL;
+ 	put_device(&devnode->dev);
+ }
 -- 
 2.1.4
