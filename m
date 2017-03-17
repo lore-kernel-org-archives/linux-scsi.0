@@ -1,7 +1,7 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v5 09/16] infiniband: utilize the new cdev_set_parent function
-Date: Fri, 17 Mar 2017 12:48:16 -0600
-Message-ID: <1489776503-3151-10-git-send-email-logang@deltatee.com>
+Subject: [PATCH v5 15/16] scsi: utilize new cdev_device_add helper function
+Date: Fri, 17 Mar 2017 12:48:22 -0600
+Message-ID: <1489776503-3151-16-git-send-email-logang@deltatee.com>
 References: <1489776503-3151-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,65 +21,148 @@ To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org
 Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-gpio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-This replaces the suspect looking cdev.kobj.parent lines with the
-equivalent cdev_set_parent function. This is a straightforward change
-that's largely cosmetic but it does push the kobj.parent ownership
-into char_dev.c where it belongs.
+This driver did not set kobj.parent so it likely suffered from
+a potential use after free race if the user unregistered the
+device while it was in use.
+
+This was not so straightforward a conversion but I think this patch
+cleans up its probe's error path significantly.
+
+This patch adds device_initialize, which is required for
+cdev_device_add. Then it switches to put_device instead of kfree as
+recommended by device_initialize's documentation. This removes a lot
+from the error path which was already in __remove.
+A couple things needed to be re-ordered to be entirely correct, though.
+ida_remove is also moved out of __remove and into unregister to
+simplify things and follow the pattern other devices are using.
+
+This also drop an extra unnecessary get_device/put_device in the code.
 
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
 ---
- drivers/infiniband/core/user_mad.c    | 4 ++--
- drivers/infiniband/core/uverbs_main.c | 2 +-
- drivers/infiniband/hw/hfi1/device.c   | 2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/osd/osd_uld.c | 56 +++++++++++++++++-----------------------------
+ 1 file changed, 20 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/infiniband/core/user_mad.c b/drivers/infiniband/core/user_mad.c
-index aca7ff7..25071b8 100644
---- a/drivers/infiniband/core/user_mad.c
-+++ b/drivers/infiniband/core/user_mad.c
-@@ -1183,7 +1183,7 @@ static int ib_umad_init_port(struct ib_device *device, int port_num,
+diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
+index e0ce5d2..4101c31 100644
+--- a/drivers/scsi/osd/osd_uld.c
++++ b/drivers/scsi/osd/osd_uld.c
+@@ -400,9 +400,6 @@ static void __remove(struct device *dev)
  
- 	cdev_init(&port->cdev, &umad_fops);
- 	port->cdev.owner = THIS_MODULE;
--	port->cdev.kobj.parent = &umad_dev->kobj;
-+	cdev_set_parent(&port->cdev, &umad_dev->kobj);
- 	kobject_set_name(&port->cdev.kobj, "umad%d", port->dev_num);
- 	if (cdev_add(&port->cdev, base, 1))
- 		goto err_cdev;
-@@ -1202,7 +1202,7 @@ static int ib_umad_init_port(struct ib_device *device, int port_num,
- 	base += IB_UMAD_MAX_PORTS;
- 	cdev_init(&port->sm_cdev, &umad_sm_fops);
- 	port->sm_cdev.owner = THIS_MODULE;
--	port->sm_cdev.kobj.parent = &umad_dev->kobj;
-+	cdev_set_parent(&port->sm_cdev, &umad_dev->kobj);
- 	kobject_set_name(&port->sm_cdev.kobj, "issm%d", port->dev_num);
- 	if (cdev_add(&port->sm_cdev, base, 1))
- 		goto err_sm_cdev;
-diff --git a/drivers/infiniband/core/uverbs_main.c b/drivers/infiniband/core/uverbs_main.c
-index 35c788a..f02d7b9 100644
---- a/drivers/infiniband/core/uverbs_main.c
-+++ b/drivers/infiniband/core/uverbs_main.c
-@@ -1189,7 +1189,7 @@ static void ib_uverbs_add_one(struct ib_device *device)
- 	cdev_init(&uverbs_dev->cdev, NULL);
- 	uverbs_dev->cdev.owner = THIS_MODULE;
- 	uverbs_dev->cdev.ops = device->mmap ? &uverbs_mmap_fops : &uverbs_fops;
--	uverbs_dev->cdev.kobj.parent = &uverbs_dev->kobj;
-+	cdev_set_parent(&uverbs_dev->cdev, &uverbs_dev->kobj);
- 	kobject_set_name(&uverbs_dev->cdev.kobj, "uverbs%d", uverbs_dev->devnum);
- 	if (cdev_add(&uverbs_dev->cdev, base, 1))
- 		goto err_cdev;
-diff --git a/drivers/infiniband/hw/hfi1/device.c b/drivers/infiniband/hw/hfi1/device.c
-index bf64b5a..bbb6069 100644
---- a/drivers/infiniband/hw/hfi1/device.c
-+++ b/drivers/infiniband/hw/hfi1/device.c
-@@ -69,7 +69,7 @@ int hfi1_cdev_init(int minor, const char *name,
+ 	kfree(oud->odi.osdname);
  
- 	cdev_init(cdev, fops);
- 	cdev->owner = THIS_MODULE;
--	cdev->kobj.parent = parent;
-+	cdev_set_parent(cdev, parent);
- 	kobject_set_name(&cdev->kobj, name);
+-	if (oud->cdev.owner)
+-		cdev_del(&oud->cdev);
+-
+ 	osd_dev_fini(&oud->od);
+ 	scsi_device_put(scsi_device);
  
- 	ret = cdev_add(cdev, dev, 1);
+@@ -411,7 +408,6 @@ static void __remove(struct device *dev)
+ 
+ 	if (oud->disk)
+ 		put_disk(oud->disk);
+-	ida_remove(&osd_minor_ida, oud->minor);
+ 
+ 	kfree(oud);
+ }
+@@ -446,8 +442,20 @@ static int osd_probe(struct device *dev)
+ 	if (NULL == oud)
+ 		goto err_retract_minor;
+ 
++	/* class device member */
++	device_initialize(&oud->class_dev);
+ 	dev_set_drvdata(dev, oud);
+ 	oud->minor = minor;
++	oud->class_dev.devt = MKDEV(SCSI_OSD_MAJOR, oud->minor);
++	oud->class_dev.class = &osd_uld_class;
++	oud->class_dev.parent = dev;
++	oud->class_dev.release = __remove;
++
++	/* hold one more reference to the scsi_device that will get released
++	 * in __release, in case a logout is happening while fs is mounted
++	 */
++	scsi_device_get(scsi_device);
++	osd_dev_init(&oud->od, scsi_device);
+ 
+ 	/* allocate a disk and set it up */
+ 	/* FIXME: do we need this since sg has already done that */
+@@ -461,59 +469,34 @@ static int osd_probe(struct device *dev)
+ 	sprintf(disk->disk_name, "osd%d", oud->minor);
+ 	oud->disk = disk;
+ 
+-	/* hold one more reference to the scsi_device that will get released
+-	 * in __release, in case a logout is happening while fs is mounted
+-	 */
+-	scsi_device_get(scsi_device);
+-	osd_dev_init(&oud->od, scsi_device);
+-
+ 	/* Detect the OSD Version */
+ 	error = __detect_osd(oud);
+ 	if (error) {
+ 		OSD_ERR("osd detection failed, non-compatible OSD device\n");
+-		goto err_put_disk;
++		goto err_free_osd;
+ 	}
+ 
+ 	/* init the char-device for communication with user-mode */
+ 	cdev_init(&oud->cdev, &osd_fops);
+ 	oud->cdev.owner = THIS_MODULE;
+-	error = cdev_add(&oud->cdev,
+-			 MKDEV(SCSI_OSD_MAJOR, oud->minor), 1);
+-	if (error) {
+-		OSD_ERR("cdev_add failed\n");
+-		goto err_put_disk;
+-	}
+ 
+-	/* class device member */
+-	oud->class_dev.devt = oud->cdev.dev;
+-	oud->class_dev.class = &osd_uld_class;
+-	oud->class_dev.parent = dev;
+-	oud->class_dev.release = __remove;
+ 	error = dev_set_name(&oud->class_dev, "%s", disk->disk_name);
+ 	if (error) {
+ 		OSD_ERR("dev_set_name failed => %d\n", error);
+-		goto err_put_cdev;
++		goto err_free_osd;
+ 	}
+ 
+-	error = device_register(&oud->class_dev);
++	error = cdev_device_add(&oud->cdev, &oud->class_dev);
+ 	if (error) {
+ 		OSD_ERR("device_register failed => %d\n", error);
+-		goto err_put_cdev;
++		goto err_free_osd;
+ 	}
+ 
+-	get_device(&oud->class_dev);
+-
+ 	OSD_INFO("osd_probe %s\n", disk->disk_name);
+ 	return 0;
+ 
+-err_put_cdev:
+-	cdev_del(&oud->cdev);
+-err_put_disk:
+-	scsi_device_put(scsi_device);
+-	put_disk(disk);
+ err_free_osd:
+-	dev_set_drvdata(dev, NULL);
+-	kfree(oud);
++	put_device(&oud->class_dev);
+ err_retract_minor:
+ 	ida_remove(&osd_minor_ida, minor);
+ 	return error;
+@@ -530,9 +513,10 @@ static int osd_remove(struct device *dev)
+ 			scsi_device);
+ 	}
+ 
+-	device_unregister(&oud->class_dev);
+-
++	cdev_device_del(&oud->cdev, &oud->class_dev);
++	ida_remove(&osd_minor_ida, oud->minor);
+ 	put_device(&oud->class_dev);
++
+ 	return 0;
+ }
+ 
 -- 
 2.1.4
