@@ -1,7 +1,7 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v5 05/16] gpiolib: utilize new cdev_device_add helper function
-Date: Fri, 17 Mar 2017 12:48:12 -0600
-Message-ID: <1489776503-3151-6-git-send-email-logang@deltatee.com>
+Subject: [PATCH v5 08/16] IB/ucm: utilize new cdev_device_add helper function
+Date: Fri, 17 Mar 2017 12:48:15 -0600
+Message-ID: <1489776503-3151-9-git-send-email-logang@deltatee.com>
 References: <1489776503-3151-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,66 +21,109 @@ To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org
 Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-gpio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Replace the open coded registration of the cdev and dev with the
-new device_add_cdev() helper. The helper replaces a common pattern by
-taking the proper reference against the parent device and adding both
-the cdev and the device.
+From: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
 
+The use after free is not triggerable here because the cdev holds
+the module lock and the only device_unregister is only triggered by
+module unload, however make the change for consistency.
+
+To make this work the cdev_del needs to move out of the struct device
+release function.
+
+This cleans up the error path significantly and thus also fixes a minor
+bug where the devnum would not be released if cdev_add failed.
+
+Signed-off-by: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Reviewed-by: Linus Walleij <linus.walleij-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Reviewed-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+Reviewed-by: Leon Romanovsky <leonro-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 ---
- drivers/gpio/gpiolib.c | 23 ++++++++---------------
- 1 file changed, 8 insertions(+), 15 deletions(-)
+ drivers/infiniband/core/ucm.c | 35 ++++++++++++++++++-----------------
+ 1 file changed, 18 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
-index 8b4d721..3ce2a27 100644
---- a/drivers/gpio/gpiolib.c
-+++ b/drivers/gpio/gpiolib.c
-@@ -1035,18 +1035,14 @@ static int gpiochip_setup_dev(struct gpio_device *gdev)
+diff --git a/drivers/infiniband/core/ucm.c b/drivers/infiniband/core/ucm.c
+index cc0d51f..d15efa4 100644
+--- a/drivers/infiniband/core/ucm.c
++++ b/drivers/infiniband/core/ucm.c
+@@ -1205,12 +1205,15 @@ static void ib_ucm_release_dev(struct device *dev)
+ 	struct ib_ucm_device *ucm_dev;
  
- 	cdev_init(&gdev->chrdev, &gpio_fileops);
- 	gdev->chrdev.owner = THIS_MODULE;
--	gdev->chrdev.kobj.parent = &gdev->dev.kobj;
- 	gdev->dev.devt = MKDEV(MAJOR(gpio_devt), gdev->id);
--	status = cdev_add(&gdev->chrdev, gdev->dev.devt, 1);
--	if (status < 0)
--		chip_warn(gdev->chip, "failed to add char device %d:%d\n",
--			  MAJOR(gpio_devt), gdev->id);
+ 	ucm_dev = container_of(dev, struct ib_ucm_device, dev);
+-	cdev_del(&ucm_dev->cdev);
++	kfree(ucm_dev);
++}
++
++static void ib_ucm_free_dev(struct ib_ucm_device *ucm_dev)
++{
+ 	if (ucm_dev->devnum < IB_UCM_MAX_DEVICES)
+ 		clear_bit(ucm_dev->devnum, dev_map);
+ 	else
+ 		clear_bit(ucm_dev->devnum - IB_UCM_MAX_DEVICES, overflow_map);
+-	kfree(ucm_dev);
+ }
+ 
+ static const struct file_operations ucm_fops = {
+@@ -1266,7 +1269,9 @@ static void ib_ucm_add_one(struct ib_device *device)
+ 	if (!ucm_dev)
+ 		return;
+ 
++	device_initialize(&ucm_dev->dev);
+ 	ucm_dev->ib_dev = device;
++	ucm_dev->dev.release = ib_ucm_release_dev;
+ 
+ 	devnum = find_first_zero_bit(dev_map, IB_UCM_MAX_DEVICES);
+ 	if (devnum >= IB_UCM_MAX_DEVICES) {
+@@ -1286,16 +1291,14 @@ static void ib_ucm_add_one(struct ib_device *device)
+ 	cdev_init(&ucm_dev->cdev, &ucm_fops);
+ 	ucm_dev->cdev.owner = THIS_MODULE;
+ 	kobject_set_name(&ucm_dev->cdev.kobj, "ucm%d", ucm_dev->devnum);
+-	if (cdev_add(&ucm_dev->cdev, base, 1))
+-		goto err;
+ 
+ 	ucm_dev->dev.class = &cm_class;
+ 	ucm_dev->dev.parent = device->dev.parent;
+-	ucm_dev->dev.devt = ucm_dev->cdev.dev;
+-	ucm_dev->dev.release = ib_ucm_release_dev;
++	ucm_dev->dev.devt = base;
++
+ 	dev_set_name(&ucm_dev->dev, "ucm%d", ucm_dev->devnum);
+-	if (device_register(&ucm_dev->dev))
+-		goto err_cdev;
++	if (cdev_device_add(&ucm_dev->cdev, &ucm_dev->dev))
++		goto err_devnum;
+ 
+ 	if (device_create_file(&ucm_dev->dev, &dev_attr_ibdev))
+ 		goto err_dev;
+@@ -1304,15 +1307,11 @@ static void ib_ucm_add_one(struct ib_device *device)
+ 	return;
+ 
+ err_dev:
+-	device_unregister(&ucm_dev->dev);
+-err_cdev:
+-	cdev_del(&ucm_dev->cdev);
+-	if (ucm_dev->devnum < IB_UCM_MAX_DEVICES)
+-		clear_bit(devnum, dev_map);
 -	else
--		chip_dbg(gdev->chip, "added GPIO chardev (%d:%d)\n",
--			 MAJOR(gpio_devt), gdev->id);
--	status = device_add(&gdev->dev);
-+
-+	status = cdev_device_add(&gdev->chrdev, &gdev->dev);
- 	if (status)
--		goto err_remove_chardev;
-+		return status;
-+
-+	chip_dbg(gdev->chip, "added GPIO chardev (%d:%d)\n",
-+		 MAJOR(gpio_devt), gdev->id);
- 
- 	status = gpiochip_sysfs_register(gdev);
- 	if (status)
-@@ -1061,9 +1057,7 @@ static int gpiochip_setup_dev(struct gpio_device *gdev)
- 	return 0;
- 
- err_remove_device:
--	device_del(&gdev->dev);
--err_remove_chardev:
--	cdev_del(&gdev->chrdev);
-+	cdev_device_del(&gdev->chrdev, &gdev->dev);
- 	return status;
+-		clear_bit(devnum, overflow_map);
++	cdev_device_del(&ucm_dev->cdev, &ucm_dev->dev);
++err_devnum:
++	ib_ucm_free_dev(ucm_dev);
+ err:
+-	kfree(ucm_dev);
++	put_device(&ucm_dev->dev);
+ 	return;
  }
  
-@@ -1347,8 +1341,7 @@ void gpiochip_remove(struct gpio_chip *chip)
- 	 * be removed, else it will be dangling until the last user is
- 	 * gone.
- 	 */
--	cdev_del(&gdev->chrdev);
--	device_del(&gdev->dev);
-+	cdev_device_del(&gdev->chrdev, &gdev->dev);
- 	put_device(&gdev->dev);
+@@ -1323,7 +1322,9 @@ static void ib_ucm_remove_one(struct ib_device *device, void *client_data)
+ 	if (!ucm_dev)
+ 		return;
+ 
+-	device_unregister(&ucm_dev->dev);
++	cdev_device_del(&ucm_dev->cdev, &ucm_dev->dev);
++	ib_ucm_free_dev(ucm_dev);
++	put_device(&ucm_dev->dev);
  }
- EXPORT_SYMBOL_GPL(gpiochip_remove);
+ 
+ static CLASS_ATTR_STRING(abi_version, S_IRUGO,
 -- 
 2.1.4
