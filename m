@@ -1,73 +1,108 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [RFC 1/2] scsi: Provide mechanism for SCSI layer to poll for
- LLDD.
-Date: Fri, 17 Mar 2017 20:30:48 +0000
-Message-ID: <1489782634.2826.11.camel@sandisk.com>
-References: <20170316214048.20481-1-himanshu.madhani@cavium.com>
-         <20170316214048.20481-2-himanshu.madhani@cavium.com>
-         <1489703231.2574.20.camel@sandisk.com>
-         <2F3A1DE8-C900-4E15-9380-1B39AED87D89@cavium.com>
+From: =?UTF-8?B?5p2O56eA5rOi?= <lixiubo@cmss.chinamobile.com>
+Subject: Re:  [PATCHv2 2/5] target/user: Add global data block pool support
+Date: Sat, 18 Mar 2017 06:06:11 +0800
+Message-ID: <13903058-78b8-4737-9eef-849ee7bca307@email.android.com>
+References: <1488962743-17028-1-git-send-email-lixiubo@cmss.chinamobile.com><1488962743-17028-3-git-send-email-lixiubo@cmss.chinamobile.com><3b1ce412-6072-fda1-3002-220cf8fbf34f@redhat.com><ddd797ea-43f0-b863-64e4-1e758f41dafe@cmss.chinamobile.com><f4c4e83a-d6b1-ed57-7a54-4277722e5a46@cmss.chinamobile.com> <2dd405f8-9f5b-405d-e744-9ee8bac77686@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:46565 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751174AbdCQUbK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Mar 2017 16:31:10 -0400
-In-Reply-To: <2F3A1DE8-C900-4E15-9380-1B39AED87D89@cavium.com>
-Content-Language: en-US
-Content-ID: <62ABDBADA9E31246A476A761E2721788@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/alternative; boundary="----DTKAJ5MA9N3GK5FOKD5BA28PNDC3L3"
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <2dd405f8-9f5b-405d-e744-9ee8bac77686@redhat.com>
+Sender: owner-linux-mm@kvack.org
+To: AndyGrover <agrover@redhat.com>, nab@linux-iscsi.org, mchristi@redhat.com
+Cc: shli@kernel.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com, linux-mm@kvack.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Himanshu.Madhani@cavium.com" <Himanshu.Madhani@cavium.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "Darren.Trapp@cavium.com" <Darren.Trapp@cavium.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-T24gRnJpLCAyMDE3LTAzLTE3IGF0IDE4OjU1ICswMDAwLCBNYWRoYW5pLCBIaW1hbnNodSB3cm90
-ZToNCj4gT24gTWFyIDE2LCAyMDE3LCBhdCAzOjI3IFBNLCBCYXJ0IFZhbiBBc3NjaGUgPGJhcnQu
-dmFuYXNzY2hlQHNhbmRpc2suY29tPiB3cm90ZToNCj4gPiBPbiBUaHUsIDIwMTctMDMtMTYgYXQg
-MTQ6NDAgLTA3MDAsIEhpbWFuc2h1IE1hZGhhbmkgd3JvdGU6DQo+ID4gPiArc3RhdGljIGludA0K
-PiA+ID4gK3Njc2lfcG9sbChzdHJ1Y3QgYmxrX21xX2h3X2N0eCAqaGN0eCwgdW5zaWduZWQgaW50
-IHRhZykNCj4gPiA+ICsNCj4gPiA+ICt7DQo+ID4gPiArICAgICAgICBzdHJ1Y3QgU2NzaV9Ib3N0
-ICpzaG9zdCA9IGhjdHgtPmRyaXZlcl9kYXRhOw0KPiA+ID4gKyAgICAgICAgc3RydWN0IHJlcXVl
-c3QgKnJlcTsNCj4gPiA+ICsgICAgICAgIHN0cnVjdCBzY3NpX2NtbmQgKmNtZDsNCj4gPiA+ICsN
-Cj4gPiA+ICsgICAgICAgIHJlcSA9IGJsa19tcV90YWdfdG9fcnEoc2hvc3QtPnRhZ19zZXQudGFn
-c1toY3R4LT5xdWV1ZV9udW1dLCB0YWcpOw0KPiA+ID4gKyAgICAgICAgaWYgKCFyZXEpDQo+ID4g
-PiArICAgICAgICAgICAgICAgIHJldHVybiAwOw0KPiA+ID4gKw0KPiA+ID4gKyAgICAgICAgY21k
-ID0gYmxrX21xX3JxX3RvX3BkdShyZXEpOw0KPiA+ID4gKwlpZiAoIWNtZCkNCj4gPiA+ICsJCXJl
-dHVybiAwOw0KPiA+ID4gKw0KPiA+ID4gKwlpZiAoc2hvc3QtPmhvc3R0LT5wb2xsX3F1ZXVlKQ0K
-PiA+ID4gKwkJcmV0dXJuKHNob3N0LT5ob3N0dC0+cG9sbF9xdWV1ZShzaG9zdCwgY21kKSk7DQo+
-ID4gPiArCWVsc2UgcmV0dXJuIDA7DQo+ID4gPiArfQ0KPiA+IA0KPiA+IFdoYXQgd2lsbCBoYXBw
-ZW4gaWYgdGhlIHJlcXVlc3Qgd2l0aCB0YWcgJ3RhZycgaXMgY29tcGxldGVkIGFmdGVyIHRoZSBi
-bG9jaw0KPiA+IGxheWVyIGRlY2lkZWQgdG8gY2FsbCB0aGlzIGZ1bmN0aW9uIGFuZCBiZWZvcmUg
-dGhpcyBmdW5jdGlvbiBoYWQgdGhlIGNoYW5jZQ0KPiA+IHRvIGNhbGwgYmxrX21xX3RhZ190b19y
-cSgpPyBXaWxsIHRoaXMgdHJpZ2dlciBhIGtlcm5lbCBjcmFzaD8gQWxzbywgcGxlYXNlDQo+ID4g
-Zm9ybWF0IHBhdGNoZXMgcHJvcGVybHkuIFRoaXMgaXMgd2hhdCBjaGVja3BhdGNoIHJlcG9ydHMg
-Zm9yIHRoaXMgcGF0Y2g6DQo+ID4gDQo+IA0KPiBUYWcgaXMgcGFzc2VkIGludG8gaGVyZSBieSBy
-cS0+dGFnDQo+IA0KPiBXaGVuIHRhZyBnb2VzIHRvIGJsa19tcV90YWdfdG9fcnEgIGl0IGp1c3Qg
-aW5kZXhlcyB0byB0aGUgcnFzIGFycmF5IHVzaW5nIHRhZzoNCj4gDQo+IHN0cnVjdCByZXF1ZXN0
-ICpibGtfbXFfdGFnX3RvX3JxKHN0cnVjdCBibGtfbXFfdGFncyAqdGFncywgdW5zaWduZWQgaW50
-IHRhZykNCj4gew0KPiAgICAgICAgaWYgKHRhZyA8IHRhZ3MtPm5yX3RhZ3MpIHsNCj4gICAgICAg
-ICAgICAgICAgcHJlZmV0Y2godGFncy0+cnFzW3RhZ10pOw0KPiAgICAgICAgICAgICAgICByZXR1
-cm4gdGFncy0+cnFzW3RhZ107DQo+ICAgICAgICB9DQo+IA0KPiAgICAgICAgcmV0dXJuIE5VTEw7
-DQo+IA0KPiBTbyBpZiB0YWcgaXMgaW52YWxpZCh0b28gbGFyZ2UpLCBpdCByZXR1cm5zIE5VTEwu
-ICBFdmVyeSBzdGVwIGl0IHZhbGlkYXRlcyBpdCBoYXMgYSB2YWxpZCAqIGJlZm9yZSBjb250aW51
-aW5nLiAgDQo+IA0KPiBXb3JzZSBjYXNlIHdlIHBvbGwgZm9yIGEgY29tcGxldGlvbiB0aGF0IGhh
-cyBhbHJlYWR5IGNvbXBsZXRlZC4gDQo+IA0KPiBXZSBkb27igJl0IHRoaW5rIHRoaXMgd2lsbCBy
-ZXN1bHQgaW50byBOVUxMIHBvaW50ZXIgY3Jhc2guDQoNCkhlbGxvIEhpbWFuc2h1LA0KDQpIYXZl
-IHlvdSBub3RpY2VkIHRoYXQgdGhlIGNhbGxlciBvZiBzY3NpX3BvbGwoKSwgbmFtZWx5IGJsa19t
-cV9wb2xsKCksIGRvZXMNCm5vdCB1c2UgYW55IGtpbmQgb2YgbWVjaGFuaXNtIHRvIHByZXZlbnQg
-dGhhdCB0aGUgJ3RhZycgYXJndW1lbnQgaXMgZnJlZWQgYW5kDQpyZXVzZWQgd2hpbGUgYmxrX21x
-X3BvbGwoKSBpcyBpbiBwcm9ncmVzcz8gSSB0aGluayB0aGF0IGEgU0NTSSBjb21wbGV0aW9uDQpj
-YW4gb2NjdXIgd2hpbGUgYmxrX21xX3BvbGwoKSBpcyBpbiBwcm9ncmVzcy4gV2hhdCB3aWxsIGhh
-cHBlbiBpZiBhIFNDU0kNCmNvbXBsZXRpb24gb2NjdXJzIGNvbmN1cnJlbnRseSB3aXRoIHNjc2lf
-cG9sbCgpPyBXaWxsIHRoYXQgdHJpZ2dlciBhDQp1c2UtYWZ0ZXItZnJlZSBvZiB0aGUgc2NzaV9j
-bW5kIHN0cnVjdHVyZSAnY21kJyBwb2ludHMgYXQ/IElmIHNvLCB3aGF0IHdpbGwNCmJlIHRoZSBj
-b25zZXF1ZW5jZXM/DQoNCkJlY2F1c2Ugb2YgdGhpcyBJJ20gbm90IHN1cmUgd2Ugc2hvdWxkIHBy
-b2NlZWQgd2l0aCBhZGRpbmcgYmxrX21xX3BvbGwoKQ0Kc3VwcG9ydCB0byB0aGUgU0NTSSBjb3Jl
-LiBCdXQgaWYgc3VjaCBzdXBwb3J0IGlzIGFkZGVkIGl0J3MgcHJvYmFibHkgYSBtdWNoDQpiZXR0
-ZXIgY2hvaWNlIHRvIGNoYW5nZSB0aGUgdHlwZSBvZiB0aGUgc2Vjb25kIGFyZ3VtZW50IG9mIC5w
-b2xsX3F1ZXVlKCkNCmZyb20gc3RydWN0IHNjc2lfY21uZCAqIGludG8gaW50ICh0aGUgdGFnIG51
-bWJlcikuIEl0IGlzIHRoZW4gdGhlDQpyZXNwb25zaWJpbGl0eSBvZiBTQ1NJIExMRCdzIHRvIGF2
-b2lkIHRoYXQgdGhlaXIgLnBvbGxfcXVldWUoKSBpbXBsZW1lbnRhdGlvbg0KdHJpZ2dlcnMgYSB1
-c2UtYWZ0ZXItZnJlZS4NCg0KQmFydC4=
+------DTKAJ5MA9N3GK5FOKD5BA28PNDC3L3
+Content-Type: text/plain;
+ charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+
+
+AndyGrover <agrover@redhat=2Ecom>=E5=86=99=E5=88=B0=EF=BC=9A
+>On 03/17/20=
+17 01:04 AM, Xiubo Li wrote:
+>> [=2E=2E=2E]
+>>> These days what I have gott=
+en is that the unmap_mapping_range()
+>could
+>>> be used=2E
+>>> At the same =
+time I have deep into the mm code and fixed the double
+>>> usage of
+>>> the=
+ data blocks and possible page fault call trace bugs mentioned
+>above=2E
+>>=
+>
+>>> Following is the V3 patch=2E I have test this using 4 targets & fio
+>=
+for
+>>> about 2 days, so
+>>> far so good=2E
+>>>
+>>> I'm still testing this =
+using more complex test case=2E
+>>>
+>> I have test it the whole day today:
+=
+>> - using 4 targets
+>> - setting TCMU_GLOBAL_MAX_BLOCKS =3D [512 1K 1M 1G =
+2G]
+>> - each target here needs more than 450 blocks when running
+>> - fio:=
+ -iodepth [1 2 4 8 16] -thread -rw=3D[read write] -bs=3D[1K 2K 3K
+>5K
+>> 7K=
+ 16K 64K 1M] -size=3D20G -numjobs=3D10 -runtime=3D1000  =2E=2E=2E
+>
+>Hi Xiu=
+bo,
+>
+>V3 is sounding very good=2E I look forward to reviewing it after it =
+is
+>posted=2E
+>
+
+Yes, I will post it later after more test and checking=2E
+=
+
+Thanks,
+
+BRs
+Xiubo
+
+
+>Thanks -- Regards -- Andy
+
+------DTKAJ5MA9N3GK5FOKD5BA28PNDC3L3
+Content-Type: text/html;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<br><br>AndyGrover <agrover@redhat=2Ecom>=E5=86=99=E5=88=B0=EF=BC=9A<BR>>On=
+ 03/17/2017 01:04 AM, Xiubo Li wrote:<BR>>> [=2E=2E=2E]<BR>>>> These days w=
+hat I have gotten is that the unmap_mapping_range()<BR>>could<BR>>>> be use=
+d=2E<BR>>>> At the same time I have deep into the mm code and fixed the dou=
+ble<BR>>>> usage of<BR>>>> the data blocks and possible page fault call tra=
+ce bugs mentioned<BR>>above=2E<BR>>>><BR>>>> Following is the V3 patch=2E I=
+ have test this using 4 targets & fio<BR>>for<BR>>>> about 2 days, so<BR>>>=
+> far so good=2E<BR>>>><BR>>>> I'm still testing this using more complex te=
+st case=2E<BR>>>><BR>>> I have test it the whole day today:<BR>>> - using 4=
+ targets<BR>>> - setting TCMU_GLOBAL_MAX_BLOCKS =3D [512 1K 1M 1G 2G]<BR>>>=
+ - each target here needs more than 450 blocks when running<BR>>> - fio: -i=
+odepth [1 2 4 8 16] -thread -rw=3D[read write] -bs=3D[1K 2K 3K<BR>>5K<BR>>>=
+ 7K 16K 64K 1M] -size=3D20G -numjobs=3D10 -runtime=3D1000  =2E=2E=2E<BR>><B=
+R>>Hi Xiubo,<BR>><BR>>V3 is sounding very good=2E I look forward to reviewi=
+ng it after it is<BR>>posted=2E<BR>><BR><BR>Yes, I will post it later after=
+ more test and checking=2E<BR><BR>Thanks,<BR><BR>BRs<BR>Xiubo<BR><BR><BR>>T=
+hanks -- Regards -- Andy<BR>
+------DTKAJ5MA9N3GK5FOKD5BA28PNDC3L3--
+
+
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
