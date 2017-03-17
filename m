@@ -1,7 +1,8 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v5 02/16] device-dax: fix cdev leak
-Date: Fri, 17 Mar 2017 12:48:09 -0600
-Message-ID: <1489776503-3151-3-git-send-email-logang@deltatee.com>
+Subject: [PATCH v5 16/16] switchtec: utilize new device_add_cdev helper
+ function
+Date: Fri, 17 Mar 2017 12:48:23 -0600
+Message-ID: <1489776503-3151-17-git-send-email-logang@deltatee.com>
 References: <1489776503-3151-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -18,71 +19,59 @@ List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
 Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
 Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
 To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hans Verkuil <hans.verkuil-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Alexandre Belloni <alexandre.belloni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>, Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linus Walleij <linus.walleij-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Jarkko Sakkinen <jarkko.sakkinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Brian Norris <computersforpeace-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Boris Brezillon <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Marek Vasut <marek.vasut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cyrille Pitchen <cyrille.pitchen-AIFe0yeh4nAAvxtiuMwx3w@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-gpio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-gpio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Very straightforward conversion to device_add_cdev. Drop cdev_add and
+device_add and use cdev_device_add.
 
-If device_add() fails, cleanup the cdev. Otherwise, we leak a kobj_map()
-with a stale device number.
-
-As Jason points out, there is a small possibility that userspace has
-opened and mapped the device in the time between cdev_add() and the
-device_add() failure. We need a new kill_dax_dev() helper to invalidate
-any established mappings.
-
-Fixes: ba09c01d2fa8 ("dax: convert to the cdev api")
-Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Reported-by: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
-Signed-off-by: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Reviewed-by: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
 ---
- drivers/dax/dax.c | 15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
+ drivers/pci/switch/switchtec.c | 11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/dax/dax.c b/drivers/dax/dax.c
-index 8d9829f..a5ed59a 100644
---- a/drivers/dax/dax.c
-+++ b/drivers/dax/dax.c
-@@ -675,13 +675,10 @@ static void dax_dev_release(struct device *dev)
- 	kfree(dax_dev);
- }
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index 1f045c9..e27fd29 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -1291,7 +1291,6 @@ static struct switchtec_dev *stdev_create(struct pci_dev *pdev)
+ 	cdev = &stdev->cdev;
+ 	cdev_init(cdev, &switchtec_fops);
+ 	cdev->owner = THIS_MODULE;
+-	cdev->kobj.parent = &dev->kobj;
  
--static void unregister_dax_dev(void *dev)
-+static void kill_dax_dev(struct dax_dev *dax_dev)
- {
--	struct dax_dev *dax_dev = to_dax_dev(dev);
- 	struct cdev *cdev = &dax_dev->cdev;
+ 	return stdev;
  
--	dev_dbg(dev, "%s\n", __func__);
+@@ -1479,11 +1478,7 @@ static int switchtec_pci_probe(struct pci_dev *pdev,
+ 		  SWITCHTEC_EVENT_EN_IRQ,
+ 		  &stdev->mmio_part_cfg->mrpc_comp_hdr);
+ 
+-	rc = cdev_add(&stdev->cdev, stdev->dev.devt, 1);
+-	if (rc)
+-		goto err_put;
 -
- 	/*
- 	 * Note, rcu is not protecting the liveness of dax_dev, rcu is
- 	 * ensuring that any fault handlers that might have seen
-@@ -693,6 +690,15 @@ static void unregister_dax_dev(void *dev)
- 	synchronize_rcu();
- 	unmap_mapping_range(dax_dev->inode->i_mapping, 0, 0, 1);
- 	cdev_del(cdev);
-+}
-+
-+static void unregister_dax_dev(void *dev)
-+{
-+	struct dax_dev *dax_dev = to_dax_dev(dev);
-+
-+	dev_dbg(dev, "%s\n", __func__);
-+
-+	kill_dax_dev(dax_dev);
- 	device_unregister(dev);
- }
+-	rc = device_add(&stdev->dev);
++	rc = cdev_device_add(&stdev->cdev, &stdev->dev);
+ 	if (rc)
+ 		goto err_devadd;
  
-@@ -769,6 +775,7 @@ struct dax_dev *devm_create_dax_dev(struct dax_region *dax_region,
- 	dev_set_name(dev, "dax%d.%d", dax_region->id, dax_dev->id);
- 	rc = device_add(dev);
- 	if (rc) {
-+		kill_dax_dev(dax_dev);
- 		put_device(dev);
- 		return ERR_PTR(rc);
- 	}
+@@ -1492,7 +1487,6 @@ static int switchtec_pci_probe(struct pci_dev *pdev,
+ 	return 0;
+ 
+ err_devadd:
+-	cdev_del(&stdev->cdev);
+ 	stdev_kill(stdev);
+ err_put:
+ 	ida_simple_remove(&switchtec_minor_ida, MINOR(stdev->dev.devt));
+@@ -1506,8 +1500,7 @@ static void switchtec_pci_remove(struct pci_dev *pdev)
+ 
+ 	pci_set_drvdata(pdev, NULL);
+ 
+-	device_del(&stdev->dev);
+-	cdev_del(&stdev->cdev);
++	cdev_device_del(&stdev->cdev, &stdev->dev);
+ 	ida_simple_remove(&switchtec_minor_ida, MINOR(stdev->dev.devt));
+ 	dev_info(&stdev->dev, "unregistered.\n");
+ 
 -- 
 2.1.4
