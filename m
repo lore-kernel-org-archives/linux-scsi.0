@@ -1,8 +1,7 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v5 16/16] switchtec: utilize new device_add_cdev helper
- function
-Date: Fri, 17 Mar 2017 12:48:23 -0600
-Message-ID: <1489776503-3151-17-git-send-email-logang@deltatee.com>
+Subject: [PATCH v5 13/16] rapidio: utilize new cdev_device_add helper function
+Date: Fri, 17 Mar 2017 12:48:20 -0600
+Message-ID: <1489776503-3151-14-git-send-email-logang@deltatee.com>
 References: <1489776503-3151-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,56 +21,87 @@ To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org
 Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-gpio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Very straightforward conversion to device_add_cdev. Drop cdev_add and
-device_add and use cdev_device_add.
+This driver did not originally set kobj.parent so it likely had
+potential a use after free bug which this patch fixes.
+
+We convert from device_register to device_initialize/cdev_device_add.
+While we are at it we use put_device instead of kfree (as recommended
+by the device_initialize documentation). We also remove an unnecessary
+extra get_device from the code.
 
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
 ---
- drivers/pci/switch/switchtec.c | 11 ++---------
- 1 file changed, 2 insertions(+), 9 deletions(-)
+ drivers/rapidio/devices/rio_mport_cdev.c | 24 ++++++++----------------
+ 1 file changed, 8 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-index 1f045c9..e27fd29 100644
---- a/drivers/pci/switch/switchtec.c
-+++ b/drivers/pci/switch/switchtec.c
-@@ -1291,7 +1291,6 @@ static struct switchtec_dev *stdev_create(struct pci_dev *pdev)
- 	cdev = &stdev->cdev;
- 	cdev_init(cdev, &switchtec_fops);
- 	cdev->owner = THIS_MODULE;
--	cdev->kobj.parent = &dev->kobj;
+diff --git a/drivers/rapidio/devices/rio_mport_cdev.c b/drivers/rapidio/devices/rio_mport_cdev.c
+index 50b617a..5beb0c3 100644
+--- a/drivers/rapidio/devices/rio_mport_cdev.c
++++ b/drivers/rapidio/devices/rio_mport_cdev.c
+@@ -2444,31 +2444,25 @@ static struct mport_dev *mport_cdev_add(struct rio_mport *mport)
+ 	mutex_init(&md->buf_mutex);
+ 	mutex_init(&md->file_mutex);
+ 	INIT_LIST_HEAD(&md->file_list);
+-	cdev_init(&md->cdev, &mport_fops);
+-	md->cdev.owner = THIS_MODULE;
+-	ret = cdev_add(&md->cdev, MKDEV(MAJOR(dev_number), mport->id), 1);
+-	if (ret < 0) {
+-		kfree(md);
+-		rmcd_error("Unable to register a device, err=%d", ret);
+-		return NULL;
+-	}
  
- 	return stdev;
+-	md->dev.devt = md->cdev.dev;
++	device_initialize(&md->dev);
++	md->dev.devt = MKDEV(MAJOR(dev_number), mport->id);
+ 	md->dev.class = dev_class;
+ 	md->dev.parent = &mport->dev;
+ 	md->dev.release = mport_device_release;
+ 	dev_set_name(&md->dev, DEV_NAME "%d", mport->id);
+ 	atomic_set(&md->active, 1);
  
-@@ -1479,11 +1478,7 @@ static int switchtec_pci_probe(struct pci_dev *pdev,
- 		  SWITCHTEC_EVENT_EN_IRQ,
- 		  &stdev->mmio_part_cfg->mrpc_comp_hdr);
+-	ret = device_register(&md->dev);
++	cdev_init(&md->cdev, &mport_fops);
++	md->cdev.owner = THIS_MODULE;
++
++	ret = cdev_device_add(&md->cdev, &md->dev);
+ 	if (ret) {
+ 		rmcd_error("Failed to register mport %d (err=%d)",
+ 		       mport->id, ret);
+ 		goto err_cdev;
+ 	}
  
--	rc = cdev_add(&stdev->cdev, stdev->dev.devt, 1);
--	if (rc)
--		goto err_put;
+-	get_device(&md->dev);
 -
--	rc = device_add(&stdev->dev);
-+	rc = cdev_device_add(&stdev->cdev, &stdev->dev);
- 	if (rc)
- 		goto err_devadd;
+ 	INIT_LIST_HEAD(&md->doorbells);
+ 	spin_lock_init(&md->db_lock);
+ 	INIT_LIST_HEAD(&md->portwrites);
+@@ -2513,8 +2507,7 @@ static struct mport_dev *mport_cdev_add(struct rio_mport *mport)
+ 	return md;
  
-@@ -1492,7 +1487,6 @@ static int switchtec_pci_probe(struct pci_dev *pdev,
- 	return 0;
+ err_cdev:
+-	cdev_del(&md->cdev);
+-	kfree(md);
++	put_device(&md->dev);
+ 	return NULL;
+ }
  
- err_devadd:
--	cdev_del(&stdev->cdev);
- 	stdev_kill(stdev);
- err_put:
- 	ida_simple_remove(&switchtec_minor_ida, MINOR(stdev->dev.devt));
-@@ -1506,8 +1500,7 @@ static void switchtec_pci_remove(struct pci_dev *pdev)
+@@ -2578,7 +2571,7 @@ static void mport_cdev_remove(struct mport_dev *md)
+ 	atomic_set(&md->active, 0);
+ 	mport_cdev_terminate_dma(md);
+ 	rio_del_mport_pw_handler(md->mport, md, rio_mport_pw_handler);
+-	cdev_del(&(md->cdev));
++	cdev_device_del(&md->cdev, &md->dev);
+ 	mport_cdev_kill_fasync(md);
  
- 	pci_set_drvdata(pdev, NULL);
+ 	flush_workqueue(dma_wq);
+@@ -2603,7 +2596,6 @@ static void mport_cdev_remove(struct mport_dev *md)
  
--	device_del(&stdev->dev);
--	cdev_del(&stdev->cdev);
-+	cdev_device_del(&stdev->cdev, &stdev->dev);
- 	ida_simple_remove(&switchtec_minor_ida, MINOR(stdev->dev.devt));
- 	dev_info(&stdev->dev, "unregistered.\n");
+ 	rio_release_inb_dbell(md->mport, 0, 0x0fff);
+ 
+-	device_unregister(&md->dev);
+ 	put_device(&md->dev);
+ }
  
 -- 
 2.1.4
