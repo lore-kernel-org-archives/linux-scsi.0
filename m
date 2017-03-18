@@ -1,63 +1,59 @@
-From: Xieyingtai <xieyingtai@huawei.com>
-Subject: How to solve the delayed grant mapping problem with
- blkback?
-Date: Sat, 18 Mar 2017 11:57:20 +0800
-Message-ID: <60b116a4-0b9f-6f95-11ef-2111e8d53054@huawei.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/3] scsi_dh_alua: Check scsi_device_get() return value
+Date: Sat, 18 Mar 2017 12:17:31 +0100
+Message-ID: <74b0f4ca-7be1-9d76-b4ce-6945d7593a3b@suse.de>
+References: <20170318000203.7469-1-bart.vanassche@sandisk.com>
+ <20170318000203.7469-2-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="gbk"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([45.249.212.187]:4328 "EHLO
-        dggrg01-dlp.huawei.com" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750712AbdCREBU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 18 Mar 2017 00:01:20 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20170318000203.7469-2-bart.vanassche@sandisk.com>
+Sender: stable-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Tang Junhui <tang.junhui@zte.com.cn>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, majordomo@vger.kernel.orglinux-scsi@vger.kernel.org
 
-Hello,
-Recently I got a problem when I use virtual machines in Xen 
-virtualization, description just as follws.
-Grant table and grant mapping were used for data communication with in 
-Xen front end driver and
-back end driver. A delay work will be set up to release grant mapping 
-pages in end_block_io_op as
-bio callbacks, the code as below:
-static void __gnttab_unmap_refs_async(struct gntab_unmap_queue_data* item)
-{
-        int ret;
-        int pc;
+On 03/18/2017 01:02 AM, Bart Van Assche wrote:
+> Do not queue ALUA work nor call scsi_device_put() if the scsi_device_get()
+> call fails. This patch fixes the following crash:
+> 
+> general protection fault: 0000 [#1] SMP
+> RIP: 0010:scsi_device_put+0xb/0x30
+> Call Trace:
+>  scsi_disk_put+0x2d/0x40
+>  sd_release+0x3d/0xb0
+>  __blkdev_put+0x29e/0x360
+>  blkdev_put+0x49/0x170
+>  dm_put_table_device+0x58/0xc0 [dm_mod]
+>  dm_put_device+0x70/0xc0 [dm_mod]
+>  free_priority_group+0x92/0xc0 [dm_multipath]
+>  free_multipath+0x70/0xc0 [dm_multipath]
+>  multipath_dtr+0x19/0x20 [dm_multipath]
+>  dm_table_destroy+0x67/0x120 [dm_mod]
+>  dev_suspend+0xde/0x240 [dm_mod]
+>  ctl_ioctl+0x1f5/0x520 [dm_mod]
+>  dm_ctl_ioctl+0xe/0x20 [dm_mod]
+>  do_vfs_ioctl+0x8f/0x700
+>  SyS_ioctl+0x3c/0x70
+>  entry_SYSCALL_64_fastpath+0x18/0xad
+> 
+> Fixes: commit 03197b61c5ec ("scsi_dh_alua: Use workqueue for RTPG")
+> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Tang Junhui <tang.junhui@zte.com.cn>
+> Cc: <stable@vger.kernel.org>
+> ---
+>  drivers/scsi/device_handler/scsi_dh_alua.c | 18 +++++++++---------
+>  1 file changed, 9 insertions(+), 9 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-        for (pc = 0; pc < item->count; pc++) {
-               if (page_count(item->pages[pc]) > 1) {
-                      unsigned long delay = GNTTAB_UNMAP_REFS_DELAY * 
-(item->age + 1);
-                      schedule_delayed_work(&item->gnttab_work,
-                                          msecs_to_jiffies(delay));
-                      return;
-               }
-        }
+Cheers,
 
-        ret = gnttab_unmap_refs(item->unmap_ops, item->kunmap_ops,
-                             item->pages, item->count);
-        item->done(ret, item);
-}
-
-Only if the page count of grant mapping page was decrease to one, a 
-response would be made to
-notify the vm front end. But in the scenario which a network cable was 
-extracted, the TCP transport
-layer will retransmit the socket data. As a result, the grant mapping 
-pages were occupied by
-the TCP retransmition which may continued for a long time. And then in 
-blkback driver, the grant unmap
-delay work will continue until the TCP releases all the pages. As an 
-application of TCP protocol, Is there any
-method to solve this problem in iscsi driver layer? I have already 
-attempted to modified some parameters
-provide by iscsi, but it was a futile effort. The socket connection 
-seems not be closed in the network cable
-extracted scenario.
-
-Thanks
+Hannes
+-- 
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
