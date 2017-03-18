@@ -1,20 +1,20 @@
 From: kbuild test robot <lkp@intel.com>
-Subject: Re: [PATCH 2/3] Introduce starget_for_all_devices() and
- shost_for_all_devices()
-Date: Sun, 19 Mar 2017 01:14:38 +0800
-Message-ID: <201703190153.LeDtJC8v%fengguang.wu@intel.com>
-References: <20170316205650.3322-3-bart.vanassche@sandisk.com>
+Subject: Re: [PATCH 3/3] Ensure that scsi_target_unblock() examines all
+ devices
+Date: Sun, 19 Mar 2017 04:22:53 +0800
+Message-ID: <201703190427.YhKUDRL7%fengguang.wu@intel.com>
+References: <20170316205650.3322-4-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="BXVAT5kNtrzKuDFl"
+Content-Type: multipart/mixed; boundary="azLHFNyN32YCQGCU"
 Return-path: <stable-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170316205650.3322-3-bart.vanassche@sandisk.com>
+In-Reply-To: <20170316205650.3322-4-bart.vanassche@sandisk.com>
 Sender: stable-owner@vger.kernel.org
 Cc: kbuild-all@01.org, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Israel Rukshin <israelr@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>, Bart Van Assche <bart.vanassche@sandisk.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
---BXVAT5kNtrzKuDFl
+--azLHFNyN32YCQGCU
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
@@ -30,48 +30,56 @@ reproduce: make htmldocs
 
 All warnings (new ones prefixed by >>):
 
->> drivers/scsi/scsi.c:669: warning: No description found for parameter 'sdev'
+   drivers/scsi/scsi.c:669: warning: No description found for parameter 'sdev'
    drivers/scsi/scsi.c:679: warning: No description found for parameter 'sdev'
+>> drivers/scsi/scsi_lib.c:3087: warning: No description found for parameter 'dev'
+>> drivers/scsi/scsi_lib.c:3087: warning: No description found for parameter 'data'
    drivers/scsi/constants.c:1: warning: no structured comments found
 
-vim +/sdev +669 drivers/scsi/scsi.c
+vim +/dev +3087 drivers/scsi/scsi_lib.c
 
-   653		struct scsi_device *sdev;
-   654	
-   655		shost_for_each_device(sdev, shost) {
-   656			if ((sdev->channel == starget->channel) &&
-   657			    (sdev->id == starget->id))
-   658				fn(sdev, data);
-   659		}
-   660	}
-   661	EXPORT_SYMBOL(starget_for_each_device);
-   662	
-   663	/**
-   664	 * scsi_device_get_any() - get a reference to @sdev even if it is being deleted
-   665	 *
-   666	 * See also scsi_device_get().
-   667	 */
-   668	static int scsi_device_get_any(struct scsi_device *sdev)
- > 669	{
-   670		return get_device(&sdev->sdev_gendev) ? 0 : -ENXIO;
-   671	}
-   672	
-   673	/**
-   674	 * scsi_device_put_any() - drop a reference obtained by scsi_device_get_any()
-   675	 *
-   676	 * See also scsi_device_put().
-   677	 */
+5d9fb5cc1 Mike Christie   2012-05-17  3071  	scsi_internal_device_unblock(sdev, *(enum scsi_device_state *)data);
+^1da177e4 Linus Torvalds  2005-04-16  3072  }
+^1da177e4 Linus Torvalds  2005-04-16  3073  
+ae188a841 Bart Van Assche 2017-03-16  3074  /**
+ae188a841 Bart Van Assche 2017-03-16  3075   * target_unblock() - unblock all devices associated with a SCSI target
+ae188a841 Bart Van Assche 2017-03-16  3076   *
+ae188a841 Bart Van Assche 2017-03-16  3077   * Notes:
+ae188a841 Bart Van Assche 2017-03-16  3078   * - Do not use scsi_device_get() nor any of the macros that use this
+ae188a841 Bart Van Assche 2017-03-16  3079   *   function from inside scsi_target_block() because otherwise this function
+ae188a841 Bart Van Assche 2017-03-16  3080   *   won't have any effect when called while the SCSI LLD is being unloaded.
+ae188a841 Bart Van Assche 2017-03-16  3081   * - Do not hold the host lock around the device_unblock() calls because at
+ae188a841 Bart Van Assche 2017-03-16  3082   *   least for blk-sq the block layer queue lock is the outer lock and the
+ae188a841 Bart Van Assche 2017-03-16  3083   *   SCSI host lock is the inner lock.
+ae188a841 Bart Van Assche 2017-03-16  3084   */
+^1da177e4 Linus Torvalds  2005-04-16  3085  static int
+^1da177e4 Linus Torvalds  2005-04-16  3086  target_unblock(struct device *dev, void *data)
+^1da177e4 Linus Torvalds  2005-04-16 @3087  {
+^1da177e4 Linus Torvalds  2005-04-16  3088  	if (scsi_is_target_device(dev))
+ae188a841 Bart Van Assche 2017-03-16  3089  		starget_for_all_devices(to_scsi_target(dev), data,
+^1da177e4 Linus Torvalds  2005-04-16  3090  					device_unblock);
+^1da177e4 Linus Torvalds  2005-04-16  3091  	return 0;
+^1da177e4 Linus Torvalds  2005-04-16  3092  }
+^1da177e4 Linus Torvalds  2005-04-16  3093  
+ae188a841 Bart Van Assche 2017-03-16  3094  /**
+ae188a841 Bart Van Assche 2017-03-16  3095   * scsi_target_unblock() - unblock all devices associated with a SCSI target
+
+:::::: The code at line 3087 was first introduced by commit
+:::::: 1da177e4c3f41524e886b7f1b8a0c1fc7321cac2 Linux-2.6.12-rc2
+
+:::::: TO: Linus Torvalds <torvalds@ppc970.osdl.org>
+:::::: CC: Linus Torvalds <torvalds@ppc970.osdl.org>
 
 ---
 0-DAY kernel test infrastructure                Open Source Technology Center
 https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
---BXVAT5kNtrzKuDFl
+--azLHFNyN32YCQGCU
 Content-Type: application/gzip
 Content-Disposition: attachment; filename=".config.gz"
 Content-Transfer-Encoding: base64
 
-H4sICFRgzVgAAy5jb25maWcAjFxZc+M4kn6fX8Ho2YfuiO2q8lEeT2z4AQJBCWOSYBOgJPuF
+H4sICAaLzVgAAy5jb25maWcAjFxZc+M4kn6fX8Ho2YfuiO2q8lEeT2z4AQJBCWOSYBOgJPuF
 oZZZVYqyJa+Omap/v5kAKV4J9U7EzJSRiTuPLxNJ/f1vfw/Y6bh7Wx0369Xr68/ga7Wt9qtj
 9RJ82bxW/xOEKkiVCUQozQdgjjfb04+Pm5v7u+D2w9XVh0+/79dXwWO131avAd9tv2y+nqD7
 Zrf929+Bnas0ktPy7nYiTbA5BNvdMThUx7/V7cv7u/Lm+uFn5+/2D5lqkxfcSJWWoeAqFHlL
@@ -194,4 +202,4 @@ Unrg1xmgdzxhFK8b7naV5kM5wnqAtFhC93w9CxC+q+ikS7pKYvsonl9PqqZeK9R19zOk8JBQ
 UcvN/ms+YTo/o4J4BppK9cAu0h5nbU1kdD+h149JhxREST83Sk5M23ZiPQUNqHlBMsDEV3jw
 quJ3UKTwKsr9eUqjBKYkvnRV9tipUGjDLFgMihPFVQD/AS4ExfFXXgAA
 
---BXVAT5kNtrzKuDFl--
+--azLHFNyN32YCQGCU--
