@@ -1,7 +1,7 @@
 From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH 1/3] scsi_dh_alua: Check scsi_device_get() return value
-Date: Fri, 17 Mar 2017 17:02:01 -0700
-Message-ID: <20170318000203.7469-2-bart.vanassche@sandisk.com>
+Subject: [PATCH 2/3] scsi_dh_alua: Ensure that alua_activate() calls the completion function
+Date: Fri, 17 Mar 2017 17:02:02 -0700
+Message-ID: <20170318000203.7469-3-bart.vanassche@sandisk.com>
 References: <20170318000203.7469-1-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,87 +12,80 @@ To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>, Tang Junhui <tang.junhui@zte.com.cn>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Do not queue ALUA work nor call scsi_device_put() if the scsi_device_get()
-call fails. This patch fixes the following crash:
+Callers of scsi_dh_activate(), e.g. dm-mpath, assume that this
+function either returns an error code or calls the completion
+function. Make alua_activate() call the completion function even
+if scsi_device_get() fails.
 
-general protection fault: 0000 [#1] SMP
-RIP: 0010:scsi_device_put+0xb/0x30
-Call Trace:
- scsi_disk_put+0x2d/0x40
- sd_release+0x3d/0xb0
- __blkdev_put+0x29e/0x360
- blkdev_put+0x49/0x170
- dm_put_table_device+0x58/0xc0 [dm_mod]
- dm_put_device+0x70/0xc0 [dm_mod]
- free_priority_group+0x92/0xc0 [dm_multipath]
- free_multipath+0x70/0xc0 [dm_multipath]
- multipath_dtr+0x19/0x20 [dm_multipath]
- dm_table_destroy+0x67/0x120 [dm_mod]
- dev_suspend+0xde/0x240 [dm_mod]
- ctl_ioctl+0x1f5/0x520 [dm_mod]
- dm_ctl_ioctl+0xe/0x20 [dm_mod]
- do_vfs_ioctl+0x8f/0x700
- SyS_ioctl+0x3c/0x70
- entry_SYSCALL_64_fastpath+0x18/0xad
-
-Fixes: commit 03197b61c5ec ("scsi_dh_alua: Use workqueue for RTPG")
 Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
 Cc: Hannes Reinecke <hare@suse.de>
 Cc: Tang Junhui <tang.junhui@zte.com.cn>
 Cc: <stable@vger.kernel.org>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 20 +++++++++++++++-----
+ 1 file changed, 15 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 48e200102221..e0b15f3dd303 100644
+index e0b15f3dd303..b6849d3ecefe 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -870,7 +870,7 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
- 	unsigned long flags;
+@@ -113,7 +113,7 @@ struct alua_queue_data {
+ #define ALUA_POLICY_SWITCH_ALL		1
+ 
+ static void alua_rtpg_work(struct work_struct *work);
+-static void alua_rtpg_queue(struct alua_port_group *pg,
++static bool alua_rtpg_queue(struct alua_port_group *pg,
+ 			    struct scsi_device *sdev,
+ 			    struct alua_queue_data *qdata, bool force);
+ static void alua_check(struct scsi_device *sdev, bool force);
+@@ -862,7 +862,13 @@ static void alua_rtpg_work(struct work_struct *work)
+ 	kref_put(&pg->kref, release_port_group);
+ }
+ 
+-static void alua_rtpg_queue(struct alua_port_group *pg,
++/**
++ * alua_rtpg_queue() - cause RTPG to be submitted asynchronously
++ *
++ * Returns true if and only if alua_rtpg_work() will be called asynchronously.
++ * That function is responsible for calling @qdata->fn().
++ */
++static bool alua_rtpg_queue(struct alua_port_group *pg,
+ 			    struct scsi_device *sdev,
+ 			    struct alua_queue_data *qdata, bool force)
+ {
+@@ -871,7 +877,7 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
  	struct workqueue_struct *alua_wq = kaluad_wq;
  
--	if (!pg)
-+	if (!pg || scsi_device_get(sdev))
- 		return;
+ 	if (!pg || scsi_device_get(sdev))
+-		return;
++		return false;
  
  	spin_lock_irqsave(&pg->lock, flags);
-@@ -884,14 +884,12 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
- 		pg->flags |= ALUA_PG_RUN_RTPG;
- 		kref_get(&pg->kref);
- 		pg->rtpg_sdev = sdev;
--		scsi_device_get(sdev);
- 		start_queue = 1;
- 	} else if (!(pg->flags & ALUA_PG_RUN_RTPG) && force) {
- 		pg->flags |= ALUA_PG_RUN_RTPG;
- 		/* Do not queue if the worker is already running */
- 		if (!(pg->flags & ALUA_PG_RUNNING)) {
- 			kref_get(&pg->kref);
--			sdev = NULL;
- 			start_queue = 1;
- 		}
+ 	if (qdata) {
+@@ -907,6 +913,8 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
  	}
-@@ -900,13 +898,15 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
- 		alua_wq = kaluad_sync_wq;
- 	spin_unlock_irqrestore(&pg->lock, flags);
- 
--	if (start_queue &&
--	    !queue_delayed_work(alua_wq, &pg->rtpg_work,
--				msecs_to_jiffies(ALUA_RTPG_DELAY_MSECS))) {
--		if (sdev)
--			scsi_device_put(sdev);
--		kref_put(&pg->kref, release_port_group);
-+	if (start_queue) {
-+		if (queue_delayed_work(alua_wq, &pg->rtpg_work,
-+				msecs_to_jiffies(ALUA_RTPG_DELAY_MSECS)))
-+			sdev = NULL;
-+		else
-+			kref_put(&pg->kref, release_port_group);
- 	}
-+	if (sdev)
-+		scsi_device_put(sdev);
+ 	if (sdev)
+ 		scsi_device_put(sdev);
++
++	return true;
  }
  
  /*
+@@ -1007,11 +1015,13 @@ static int alua_activate(struct scsi_device *sdev,
+ 		mutex_unlock(&h->init_mutex);
+ 		goto out;
+ 	}
+-	fn = NULL;
+ 	rcu_read_unlock();
+ 	mutex_unlock(&h->init_mutex);
+ 
+-	alua_rtpg_queue(pg, sdev, qdata, true);
++	if (alua_rtpg_queue(pg, sdev, qdata, true))
++		fn = NULL;
++	else
++		err = SCSI_DH_DEV_OFFLINED;
+ 	kref_put(&pg->kref, release_port_group);
+ out:
+ 	if (fn)
 -- 
 2.12.0
