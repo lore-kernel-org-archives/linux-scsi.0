@@ -1,43 +1,35 @@
-From: Romain Perier <romain.perier@collabora.com>
-Subject: [PATCH v6 15/15] PCI: Remove PCI pool macro functions
-Date: Sun, 19 Mar 2017 18:04:04 +0100
-Message-ID: <20170319170404.17362-16-romain.perier@collabora.com>
-References: <20170319170404.17362-1-romain.perier@collabora.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170319170404.17362-1-romain.perier@collabora.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>, Doug Ledford <dledford@redhat.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, jeffrey.t.kirsher@intel.com, "David S. Miller" <davem@davemloft.net>, stas.yakovlev@gmail.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Felipe Balbi <balbi@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Romain Perier <romain.perier@collabora.com>, Peter Senna Tschudin <peter.senna@collabora.co.uk>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 0/3] SCSI ALUA device handler bug fixes
+Date: Sun, 19 Mar 2017 13:17:21 -0400
+Message-ID: <yq1efxtjie6.fsf@oracle.com>
+References: <20170318000203.7469-1-bart.vanassche@sandisk.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1050.oracle.com ([156.151.31.82]:17810 "EHLO
+        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752323AbdCSRSg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Mar 2017 13:18:36 -0400
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
+        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v2JHIXHV004918
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-scsi@vger.kernel.org>; Sun, 19 Mar 2017 17:18:33 GMT
+In-Reply-To: <20170318000203.7469-1-bart.vanassche@sandisk.com> (Bart Van
+        Assche's message of "Fri, 17 Mar 2017 17:02:00 -0700")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Now that all the drivers use dma pool API, we can remove the macro
-functions for PCI pool.
+Bart Van Assche <bart.vanassche@sandisk.com> writes:
 
-Signed-off-by: Romain Perier <romain.perier@collabora.com>
-Reviewed-by: Peter Senna Tschudin <peter.senna@collabora.com>
----
- include/linux/pci.h | 9 ---------
- 1 file changed, 9 deletions(-)
+Bart,
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index eb3da1a..04a0703 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1281,15 +1281,6 @@ int pci_set_vga_state(struct pci_dev *pdev, bool decode,
- #include <linux/pci-dma.h>
- #include <linux/dmapool.h>
- 
--#define	pci_pool dma_pool
--#define pci_pool_create(name, pdev, size, align, allocation) \
--		dma_pool_create(name, &pdev->dev, size, align, allocation)
--#define	pci_pool_destroy(pool) dma_pool_destroy(pool)
--#define	pci_pool_alloc(pool, flags, handle) dma_pool_alloc(pool, flags, handle)
--#define	pci_pool_zalloc(pool, flags, handle) \
--		dma_pool_zalloc(pool, flags, handle)
--#define	pci_pool_free(pool, vaddr, addr) dma_pool_free(pool, vaddr, addr)
--
- struct msix_entry {
- 	u32	vector;	/* kernel uses to write allocated vector */
- 	u16	entry;	/* driver uses to specify entry, OS writes */
+> These three patches are what I came up with while I was chasing a
+> scsi_device_put() crash. Please consider these for inclusion in the
+> upstream kernel.
+
+Applied to 4.11/scsi-fixes.
+
 -- 
-2.9.3
+Martin K. Petersen	Oracle Linux Engineering
