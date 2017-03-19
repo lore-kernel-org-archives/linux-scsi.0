@@ -1,65 +1,46 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH 0/3] Unblock SCSI devices even if the LLD is being
- unloaded
-Date: Sat, 18 Mar 2017 20:49:57 +0000
-Message-ID: <1489870182.2339.17.camel@sandisk.com>
-References: <20170316205650.3322-1-bart.vanassche@sandisk.com>
-         <1489704797.4650.8.camel@HansenPartnership.com>
-         <1489706379.2574.24.camel@sandisk.com>
-         <1489755268.2373.11.camel@HansenPartnership.com>
-         <1489768812.2826.2.camel@sandisk.com>
-         <1489841099.2917.3.camel@HansenPartnership.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH v4 00/14] qla2xxx: Bug Fixes and updates for target.
+Date: Sat, 18 Mar 2017 17:32:46 -0700
+Message-ID: <1489883566.27336.30.camel@haakon3.risingtidesystems.com>
+References: <20170315164856.17255-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:14158 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751023AbdCRUuI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Mar 2017 16:50:08 -0400
-In-Reply-To: <1489841099.2917.3.camel@HansenPartnership.com>
-Content-Language: en-US
-Content-ID: <1952CCAD6989BC40B43DA989556C7549@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20170315164856.17255-1-himanshu.madhani@cavium.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Himanshu Madhani <himanshu.madhani@cavium.com>
+Cc: target-devel@vger.kernel.org, Bart.VanAssche@sandisk.com, giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "maxg@mellanox.com" <maxg@mellanox.com>, "israelr@mellanox.com" <israelr@mellanox.com>, "hare@suse.de" <hare@suse.de>
 
-T24gU2F0LCAyMDE3LTAzLTE4IGF0IDA3OjQ0IC0wNTAwLCBKYW1lcyBCb3R0b21sZXkgd3JvdGU6
-DQo+IE9uIEZyaSwgMjAxNy0wMy0xNyBhdCAxNjo0MCArMDAwMCwgQmFydCBWYW4gQXNzY2hlIHdy
-b3RlOg0KPiA+IERvZXMgeW91ciBjb21tZW50IG1lYW4gdGhhdCB5b3UgdGhpbmsgdGhlcmUgaXMg
-YSBzY2VuYXJpbyBpbiB3aGljaA0KPiA+IHNjc2lfdGFyZ2V0X2Jsb2NrKCkgb3Igc2NzaV90YXJn
-ZXRfdW5ibG9jaygpIGNhbiBiZSBjYWxsZWQgd2hpbGUgdGhlIA0KPiA+IHRleHQgYXJlYSBvZiBh
-IFNDU0kgTExEIGlzIGJlaW5nIHJlbGVhc2VkPyBJIGhhdmUgcmV2aWV3ZWQgYWxsIHRoZSANCj4g
-PiBjYWxsZXJzIG9mIHRoZXNlIGZ1bmN0aW9ucyBidXQgSSBoYXZlIG5vdCBmb3VuZCBzdWNoIGEg
-c2NlbmFyaW8uDQo+ID4gc2NzaV90YXJnZXRfYmxvY2soKSBhbmQgc2NzaV90YXJnZXRfdW5ibG9j
-aygpIGFyZSBlaXRoZXIgY2FsbGVkIGZyb20gDQo+ID4gYSBTQ1NJIHRyYW5zcG9ydCBsYXllciBp
-bXBsZW1lbnRhdGlvbiAoRkMsIGlTQ1NJLCBTUlApIG9yIGZyb20gYSBTQ1NJIA0KPiA+IExMRCBr
-ZXJuZWwgbW9kdWxlIChzbmljX2Rpc2MpLiBBbGwgdGhlc2Uga2VybmVsIG1vZHVsZXMgb25seSBj
-YWxsIA0KPiA+IHNjc2lfdGFyZ2V0XypibG9jaygpIGZvciByZXNvdXJjZXMgKHJwb3J0IG9yIFND
-U0kgdGFyZ2V0DQo+ID4gcmVzcGVjdGl2ZWx5KSB0aGF0IGFyZSByZW1vdmVkIGJlZm9yZSB0aGUg
-Y29kZSBhcmVhIG9mDQo+ID4gdGhlc2UgbW9kdWxlcyBpcyByZWxlYXNlZC4gVGhpcyBpcyB3aHkg
-SSB0aGluayB0aGF0IGNhbGxpbmcNCj4gPiBzY3NpX3RhcmdldF8qYmxvY2soKSB3aXRob3V0IGlu
-Y3JlYXNpbmcgdGhlIFNDU0kgTExEIG1vZHVsZSByZWZlcmVuY2UNCj4gPiBjb3VudCBpcyBzYWZl
-Lg0KPiANCj4gVGhlIHRyYW5zcG9ydCBjb2RlIGlzIGFib3ZlIHRoZSBIQkEgbW9kdWxlIGNvZGUg
-YW5kIGluIHRoYXQgY29kZQ0KPiB1bmJsb2NrIGNvdWxkIGJlIHJhY2luZyB3aXRoIG1vZHVsZSBy
-ZW1vdmFsLiAgVGhlIG9yaWdpbmFsIHByZW1pc2Ugd2FzDQo+IHRoYXQgb25jZSB0aGUgZGV2L3Rh
-cmdldC9ob3N0IGdvZXMgaW50byBERUwsIG5vdGhpbmcgY2FuIGNhbGwgaW50bw0KPiBxdWV1ZWNv
-bW1hbmQgb3IgZ2V0IGEgcmVmZXJlbmNlIHRvIHRoZSBkZXZpY2UsIHNvIG5vdGhpbmcgaGFsdHMg
-cmVtb3ZhbA0KPiBhZnRlciB0aGF0LCBidXQgeW91IGNoYW5nZWQgdGhhdCB3aXRoIHlvdXIgY29k
-ZSwgd2hpY2ggaXMgd2h5IGl0J3Mgbm93DQo+IHVuc2FmZS4NCg0KSGVsbG8gSmFtZXMsDQoNClRo
-YW5rIHlvdSBmb3IgaGF2aW5nIHByb3ZpZGVkIG1vcmUgYmFja2dyb3VuZCBpbmZvcm1hdGlvbiBh
-Ym91dCB0aGUgZGVzaWduDQpnb2FscyBvZiB0aGUgU0NTSSBjb2RlLiBIb3dldmVyLCByZWdhcmRp
-bmcgc2NzaV90YXJnZXRfKmJsb2NrKCksIEkgdGhpbmsgaXQNCmlzIHNhZmUgZXZlbiBmb3IgdHJh
-bnNwb3J0IG1vZHVsZXMgdG8gY2FsbCB0aGVzZSBmdW5jdGlvbnMgd2l0aG91dCBvYnRhaW5pbmcN
-CmFuIGFkZGl0aW9uYWwgcmVmZXJlbmNlIG9uIHRoZSBTQ1NJIExMRCBrZXJuZWwgbW9kdWxlLiBU
-aGUgdHJhbnNwb3J0DQppbXBsZW1lbnRhdGlvbiB3b24ndCBhdHRlbXB0IHRvIGJsb2NrIG9yIHVu
-YmxvY2sgYSBTQ1NJIHRhcmdldCBhbnltb3JlIG9uY2UNCnVubG9hZGluZyBvZiB0aGUgTExEIHRl
-eHQgaGFzIHN0YXJ0ZWQuIFNDU0kgTExEcyByZWxlYXNlIHRoZSBhdHRhY2hlZA0KdHJhbnNwb3J0
-IGJlZm9yZSB1bmxvYWRpbmcgb2YgdGhlIFNDU0kgTExEIGtlcm5lbCBtb2R1bGUgdGV4dCBzdGFy
-dHMgYW5kDQpTQ1NJIHRyYW5zcG9ydCBtb2R1bGVzIGd1YXJhbnRlZSB0aGF0IHNjc2lfdGFyZ2V0
-XypibG9jaygpIHdvbid0IGJlIGNhbGxlZA0KYW55bW9yZSBhZnRlciB0aGUgdHJhbnNwb3J0IG1v
-ZHVsZSBoYXMgYmVlbiByZWxlYXNlZC4NCiAgDQpJZiB5b3UgZG8gbm90IGFncmVlIHdpdGggdGhl
-IGFib3ZlIHBsZWFzZSBwcm92aWRlIGEgY2FsbCBzZXF1ZW5jZSBmb3IgYW4NCmV4aXN0aW5nIFND
-U0kgTExEIG9yIHRyYW5zcG9ydCBtb2R1bGUgdGhhdCBpbGx1c3RyYXRlcyB0aGUgcmFjZSB5b3UN
-CmRlc2NyaWJlZC4NCg0KVGhhbmtzLA0KDQpCYXJ0Lg==
+On Wed, 2017-03-15 at 09:48 -0700, Himanshu Madhani wrote:
+> Hi Nic,
+> 
+> Please consider this series for inclusion in target-pending.
+> 
+> This series contains following changes.
+> 
+> o Fix for the deadlock because of inconsistent lock usage reported by Bart.
+> o Added patch to submit non-critical MBX command via IOCB path.
+> o Improved T10-DIF/PI handling with target stack.
+> o Changed scsi host lookup method.
+> o Some minor bug fixes.
+> 
+> Changes from v3 --> v4
+> 
+> o Fixed regression repored by Bart in following patch.
+> "qla2xxx: Fix delayed response to command for loop mode/direct connect."
+> 
+> Note: Patch order has been changed as well from last series. This is to
+> isolate bug-fixes in front of improvements to narrow down offending patch.
+> Let me know if you would prefer me to submit series with same patch order
+> as v3.
+
+Thanks for breaking these up to put bug-fixes with stable CC's at the
+head of series, followed by the other bug-fixes + improvements.
+
+As-is, I think it's OK to merge the full series for v4.11-rc.
+
+That said, merged to target-pending/master.
+
+Thanks Himanshu & Co.
