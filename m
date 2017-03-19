@@ -1,35 +1,35 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/3] SCSI ALUA device handler bug fixes
-Date: Sun, 19 Mar 2017 13:17:21 -0400
-Message-ID: <yq1efxtjie6.fsf@oracle.com>
-References: <20170318000203.7469-1-bart.vanassche@sandisk.com>
+Subject: Re: [patch] check length passed to SG_NEXT_CMD_LEN
+Date: Sun, 19 Mar 2017 13:20:27 -0400
+Message-ID: <yq1a88hji90.fsf@oracle.com>
+References: <CAF2xp_GW8KwyD9AuZjHFoPtiNdRyPQ27+1jDLEJjuKxci3mU6w@mail.gmail.com>
+        <yq1mvckn5pi.fsf@oracle.com>
+        <CACT4Y+a6qoo6t45RfFPKOizLDbBE2dB8Lxh6BWAn=-VjYxbfOg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1050.oracle.com ([156.151.31.82]:17810 "EHLO
-        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752323AbdCSRSg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Mar 2017 13:18:36 -0400
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
-        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v2JHIXHV004918
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-scsi@vger.kernel.org>; Sun, 19 Mar 2017 17:18:33 GMT
-In-Reply-To: <20170318000203.7469-1-bart.vanassche@sandisk.com> (Bart Van
-        Assche's message of "Fri, 17 Mar 2017 17:02:00 -0700")
+Received: from aserp1040.oracle.com ([141.146.126.69]:51808 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752051AbdCSRUd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Mar 2017 13:20:33 -0400
+In-Reply-To: <CACT4Y+a6qoo6t45RfFPKOizLDbBE2dB8Lxh6BWAn=-VjYxbfOg@mail.gmail.com>
+        (Dmitry Vyukov's message of "Fri, 17 Mar 2017 09:16:17 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+To: Dmitry Vyukov <dvyukov@google.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Peter Chang <dpf@google.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Bart Van Assche <bart.vanassche@sandisk.com> writes:
+Dmitry Vyukov <dvyukov@google.com> writes:
 
-Bart,
+Dmitry,
 
-> These three patches are what I came up with while I was chasing a
-> scsi_device_put() crash. Please consider these for inclusion in the
-> upstream kernel.
+> Can you point to the commit/tree? I don't see it here:
+> https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/log/?h=4.11/scsi-fixes
 
-Applied to 4.11/scsi-fixes.
+Sorry, got entangled in cobwebs in the mode sense code and forgot to
+push.
+
+It should be there shortly.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
