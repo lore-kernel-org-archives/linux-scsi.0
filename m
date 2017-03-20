@@ -1,44 +1,58 @@
-From: Kefeng Wang <wangkefeng.wang@huawei.com>
-Subject: Re: [PATCH] scsi: sr: fix oob access in get_capabilities
-Date: Mon, 20 Mar 2017 14:00:17 +0800
-Message-ID: <0d4c496b-c435-b622-58f8-25bd4490186a@huawei.com>
-References: <1488536272-10509-1-git-send-email-wangkefeng.wang@huawei.com>
- <yq1r31yf5ie.fsf@oracle.com>
- <3f08ece0-531e-6853-d47d-a860e81e55d6@huawei.com>
- <yq160j7lbx1.fsf@oracle.com>
+From: Leon Romanovsky <leon@kernel.org>
+Subject: Re: [PATCH v6 06/15] mlx5: Replace PCI pool old API
+Date: Mon, 20 Mar 2017 08:31:09 +0200
+Message-ID: <20170320063109.GT2079@mtr-leonro.local>
+References: <20170319170404.17362-1-romain.perier@collabora.com>
+ <20170319170404.17362-7-romain.perier@collabora.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="peRj85VDUce1fu/0"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq160j7lbx1.fsf@oracle.com>
+Content-Disposition: inline
+In-Reply-To: <20170319170404.17362-7-romain.perier@collabora.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>
+To: Romain Perier <romain.perier@collabora.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, Doug Ledford <dledford@redhat.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, jeffrey.t.kirsher@intel.com, "David S. Miller" <davem@davemloft.net>, stas.yakovlev@gmail.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Felipe Balbi <balbi@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Peter Senna Tschudin <peter.senna@collabora.co.uk>
 List-Id: linux-scsi@vger.kernel.org
 
 
+--peRj85VDUce1fu/0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On 2017/3/18 7:29, Martin K. Petersen wrote:
-> Kefeng Wang <wangkefeng.wang@huawei.com> writes:
-> 
-> Kefeng,
-> 
->> root@localhost ~]# sg_modes -p 0x2a /dev/sr0
->>     QEMU      QEMU DVD-ROM      0.15   peripheral_type: cd/dvd [0x5]
->> Mode parameter header from MODE SENSE(10):
->> Invalid block descriptor length=512, ignore
->>   Mode data length=36, medium type=0x70, specific param=0x00, longlba=0
->>   Block descriptor length=0
->>>> MM capabilities and mechanical status (obsolete), page_control: current
->>  00     2a 12 00 00 71 60 29 00  02 c2 00 02 02 00 02 c2
->>  10     00 00 00 00
->> Unexpectedly received extra mode page responses, ignore
-> 
-> That looks pretty broken.
-> 
-> Could you try the following patch?
-
-The issue still exists, the patch return zero in scsi_mode_sense(), but zero means
-SAM_STAT_GOOD in scsi_status_is_good(), so n will be still bigger than 512;
+On Sun, Mar 19, 2017 at 06:03:55PM +0100, Romain Perier wrote:
+> The PCI pool API is deprecated. This commit replaces the PCI pool old
+> API by the appropriate function with the DMA pool API.
+>
+> Signed-off-by: Romain Perier <romain.perier@collabora.com>
+> Reviewed-by: Peter Senna Tschudin <peter.senna@collabora.com>
+> ---
+>  drivers/net/ethernet/mellanox/mlx5/core/cmd.c | 11 ++++++-----
+>  include/linux/mlx5/driver.h                   |  2 +-
+>  2 files changed, 7 insertions(+), 6 deletions(-)
+>
 
 Thanks,
+Acked-by: Leon Romanovsky <leonro@mellanox.com>
+
+--peRj85VDUce1fu/0
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEkhr/r4Op1/04yqaB5GN7iDZyWKcFAljPdy0ACgkQ5GN7iDZy
+WKc7PxAAxvvR6hINJAkQu/B9aGA/bGBFZ4DzxFApyaGMSz7HBcqwl4SWdhXLFTX6
+QztH4XHNdTD9N9TtLoU2hcFASucanTw1fyS5Pesn6FdfdCEYRtCNgpRlTfkdBfGD
+Ko2E3IQFFG0tolBW0na0daDTqruRWtQt5GY582HWocAywrpyEzsiIpMxKggZ4u8c
+U6X7fyki7VqqOH11maxjPBnXIafAZg09HPpgPhhrXbBmLwlDxTR6DZjEjkm8ej6X
+KXONdZjCWq9dAESB2VeKEwD9eNcHEp7rEo0WoymVTLtjoe7nyD7/vA9183BUgT8n
+QSu/YqcgJEYCv/eOMZf4uJOqab9fCuLEbmbXbYRdKxgkqvaqZe2Upo6Q9PEUgr+w
+GL0Jm97UZAYn0xJ8DWeK6NTFhgsbIZ4nL6t8VUwZii5LFz5Htz0tzqPpplTjNTtz
+aQGhZikTB7b5O4G/sYRzD+/Msym2jQbHqTa/9rFtXYVcZb8h9yhcmoH9egewsxZN
+kXl2f7AVR132LG9Gvrq4eEi2nJzNBbIt0uNaq+CcP2C+UyzRVwb0Z0zr+1H/Simp
+OZWxy4G8uAjW4fKi6tKGgf5mwZGWc725McxB6MCLKYLK3bq26Y2JMIwZJ3UvJ6Dk
+mwTRwJvAWUbq3tAqwsQmzbF+oTea2dQexR5FBHd5SMDSElgHjKM=
+=b1Gs
+-----END PGP SIGNATURE-----
+
+--peRj85VDUce1fu/0--
