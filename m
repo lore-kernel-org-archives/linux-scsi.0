@@ -1,39 +1,37 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: libsas: fix ata xfer length
-Date: Sun, 19 Mar 2017 13:21:52 -0400
-Message-ID: <yq160j5ji6n.fsf@oracle.com>
-References: <1489676848-103256-1-git-send-email-john.garry@huawei.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [GIT PULL] target fixes for v4.11-rc3
+Date: Sun, 19 Mar 2017 18:58:33 -0700
+Message-ID: <CA+55aFxy7tAHqU4ihuRCyv9rzugcbS9c-RgL3_28UsGpuh92SQ@mail.gmail.com>
+References: <1489889280.27336.80.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:46633 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751618AbdCSRWh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Mar 2017 13:22:37 -0400
-In-Reply-To: <1489676848-103256-1-git-send-email-john.garry@huawei.com> (John
-        Garry's message of "Thu, 16 Mar 2017 23:07:28 +0800")
+Received: from mail-it0-f42.google.com ([209.85.214.42]:38257 "EHLO
+        mail-it0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752506AbdCTB6g (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Mar 2017 21:58:36 -0400
+In-Reply-To: <1489889280.27336.80.camel@haakon3.risingtidesystems.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linuxarm@huawei.com
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-John Garry <john.garry@huawei.com> writes:
-
-John,
-
-> The total ata xfer length may not be calculated properly,
-> in that we do not use the proper method to get an sg element
-> dma length.
+On Sat, Mar 18, 2017 at 7:08 PM, Nicholas A. Bellinger
+<nab@linux-iscsi.org> wrote:
 >
-> According to the code comment, sg_dma_len() should be used
-> after dma_map_sg() is called.
->
-> This issue was found by turning on the SMMUv3 in front of
-> the hisi_sas controller in hip07. Multiple sg elements
-> were being combined into a single element, but the original
-> first element length was being use as the total xfer length.
+> Here are the target-pending fixes for v4.11-rc3 code.
 
-Applied to 4.11/scsi-fixes.
+So I'm very unhappy with how these patches were rebased or applied
+just before the pull request.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+I did my usual build test, but didn't notice how recent it all was
+until after I had already pulled other things, so now I'm going to
+just live with it, but you are now on  my shit-list.
+
+All but two of the commits you sent me were committed just a few hours
+before the pull request, and the qla series was done about 90m minutes
+before. And some of the commits were new feature support.
+
+Don't do this.
+
+                 Linus
