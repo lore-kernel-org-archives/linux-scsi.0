@@ -1,37 +1,44 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [GIT PULL] target fixes for v4.11-rc3
-Date: Sun, 19 Mar 2017 18:58:33 -0700
-Message-ID: <CA+55aFxy7tAHqU4ihuRCyv9rzugcbS9c-RgL3_28UsGpuh92SQ@mail.gmail.com>
-References: <1489889280.27336.80.camel@haakon3.risingtidesystems.com>
+From: Kefeng Wang <wangkefeng.wang@huawei.com>
+Subject: Re: [PATCH] scsi: sr: fix oob access in get_capabilities
+Date: Mon, 20 Mar 2017 14:00:17 +0800
+Message-ID: <0d4c496b-c435-b622-58f8-25bd4490186a@huawei.com>
+References: <1488536272-10509-1-git-send-email-wangkefeng.wang@huawei.com>
+ <yq1r31yf5ie.fsf@oracle.com>
+ <3f08ece0-531e-6853-d47d-a860e81e55d6@huawei.com>
+ <yq160j7lbx1.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-it0-f42.google.com ([209.85.214.42]:38257 "EHLO
-        mail-it0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752506AbdCTB6g (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Mar 2017 21:58:36 -0400
-In-Reply-To: <1489889280.27336.80.camel@haakon3.risingtidesystems.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq160j7lbx1.fsf@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-On Sat, Mar 18, 2017 at 7:08 PM, Nicholas A. Bellinger
-<nab@linux-iscsi.org> wrote:
->
-> Here are the target-pending fixes for v4.11-rc3 code.
 
-So I'm very unhappy with how these patches were rebased or applied
-just before the pull request.
 
-I did my usual build test, but didn't notice how recent it all was
-until after I had already pulled other things, so now I'm going to
-just live with it, but you are now on  my shit-list.
+On 2017/3/18 7:29, Martin K. Petersen wrote:
+> Kefeng Wang <wangkefeng.wang@huawei.com> writes:
+> 
+> Kefeng,
+> 
+>> root@localhost ~]# sg_modes -p 0x2a /dev/sr0
+>>     QEMU      QEMU DVD-ROM      0.15   peripheral_type: cd/dvd [0x5]
+>> Mode parameter header from MODE SENSE(10):
+>> Invalid block descriptor length=512, ignore
+>>   Mode data length=36, medium type=0x70, specific param=0x00, longlba=0
+>>   Block descriptor length=0
+>>>> MM capabilities and mechanical status (obsolete), page_control: current
+>>  00     2a 12 00 00 71 60 29 00  02 c2 00 02 02 00 02 c2
+>>  10     00 00 00 00
+>> Unexpectedly received extra mode page responses, ignore
+> 
+> That looks pretty broken.
+> 
+> Could you try the following patch?
 
-All but two of the commits you sent me were committed just a few hours
-before the pull request, and the qla series was done about 90m minutes
-before. And some of the commits were new feature support.
+The issue still exists, the patch return zero in scsi_mode_sense(), but zero means
+SAM_STAT_GOOD in scsi_status_is_good(), so n will be still bigger than 512;
 
-Don't do this.
-
-                 Linus
+Thanks,
