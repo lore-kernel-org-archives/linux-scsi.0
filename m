@@ -1,59 +1,59 @@
-From: Leon Romanovsky <leon@kernel.org>
-Subject: Re: [PATCH v6 05/15] mlx4: Replace PCI pool old API
-Date: Mon, 20 Mar 2017 08:32:25 +0200
-Message-ID: <20170320063225.GU2079@mtr-leonro.local>
-References: <20170319170404.17362-1-romain.perier@collabora.com>
- <20170319170404.17362-6-romain.perier@collabora.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="wXC5D88JtmMokAwr"
-Return-path: <netdev-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170319170404.17362-6-romain.perier@collabora.com>
-Sender: netdev-owner@vger.kernel.org
-To: Romain Perier <romain.perier@collabora.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, Doug Ledford <dledford@redhat.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, jeffrey.t.kirsher@intel.com, "David S. Miller" <davem@davemloft.net>, stas.yakovlev@gmail.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Felipe Balbi <balbi@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Peter Senna Tschudin <peter.senna@collabora.co.uk>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] qedf: fix wrong le16 conversion
+Date: Mon, 20 Mar 2017 09:49:27 +0100
+Message-ID: <20170320084947.1031363-1-arnd@arndb.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: QLogic-Storage-Upstream@cavium.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, "David S. Miller" <davem@davemloft.net>, Ram Amrani <Ram.Amrani@cavium.com>, Chad Dupuis <Chad.Dupuis@cavium.com>, Tomer Tayar <Tomer.Tayar@cavium.com>, "Mintz, Yuval" <Yuval.Mintz@cavium.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+gcc points out that we are converting a 16-bit integer into a 32-bit
+little-endian type and assigning that to 16-bit little-endian
+will end up with a zero:
 
---wXC5D88JtmMokAwr
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+drivers/scsi/qedf/drv_fcoe_fw_funcs.c: In function 'init_initiator_rw_fcoe_task':
+include/uapi/linux/byteorder/big_endian.h:32:26: error: large integer implicitly truncated to unsigned type [-Werror=overflow]
+  t_st_ctx->read_write.rx_id = cpu_to_le32(FCOE_RX_ID);
 
-On Sun, Mar 19, 2017 at 06:03:54PM +0100, Romain Perier wrote:
-> The PCI pool API is deprecated. This commit replaces the PCI pool old
-> API by the appropriate function with the DMA pool API.
->
-> Signed-off-by: Romain Perier <romain.perier@collabora.com>
-> Acked-by: Peter Senna Tschudin <peter.senna@collabora.com>
-> Tested-by: Peter Senna Tschudin <peter.senna@collabora.com>
-> ---
->  drivers/net/ethernet/mellanox/mlx4/cmd.c  | 10 +++++-----
->  drivers/net/ethernet/mellanox/mlx4/mlx4.h |  2 +-
->  2 files changed, 6 insertions(+), 6 deletions(-)
->
+The correct solution appears to be to just use a 16-bit byte swap instead.
 
-Thanks,
-Reviewed-by: Leon Romanovsky <leonro@mellanox.com>
+Fixes: be086e7c53f1 ("qed*: Utilize Firmware 8.15.3.0")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/qedf/drv_fcoe_fw_funcs.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
---wXC5D88JtmMokAwr
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEkhr/r4Op1/04yqaB5GN7iDZyWKcFAljPd3kACgkQ5GN7iDZy
-WKfZZg/+K+epYpX1CvaCLm/lxsWyO8WW7eqjUmJNCTRJf1kFxDMoMW/EA1sPddCo
-P3flV+e/0Pu18xmTwnWQ77FeRc2vd/PhqgISWadPJQRMXl8CiEOuUxR+b6frYgxC
-h6IFB3oT2AJsqpsAOkV53GOPCPfoK4dfHiiv4gu5JSttUwzIz24qxIceFhEfu/I8
-t1gX04fWAGRwD01qK8zSkA4l4vZ6P5QGJqYzvXXkOJd8RTyxvV+hnVeFeHTriWVM
-PAUveAzvgJp+faCf1pzqRIx+4dVezYlBlYKo8bvwo50YaA4JoEWWSMxdiaS7IyGN
-7ltW34hF8eLCHVjSoQCvud5kB0XRf07oqocntBzcIloYKjgW+MItc8rf8bqQzcTb
-xl+uBn3oY1hBQ2GfyhEjmlWUUA80tJy6tdl9nXN1L/LMU0J9mrgu9cJdizURvT+a
-QYcdG5rXBZghA0x5V/FBFbniskL/iL6bNZ6ENtrMLzt9Iobd3nRpRZbjxfthUjHk
-Nn57b6rHf4wmEVWGAfOQkNCDX3LiK6DhHQhVx3tT0jhWr0b6wcjCzuR6g8wZN8V0
-c+Z0DBynAO3eJXGg7K35KHPmB48s+FHBTABc86gJrkZaOaWxOGlqwCTrDKa4v/Hu
-6ODT8nnUrLeoI7S+J0J+3+HiUHdpTkOS4T8Wn7gdEF3c2gT9jk8=
-=zawc
------END PGP SIGNATURE-----
-
---wXC5D88JtmMokAwr--
+diff --git a/drivers/scsi/qedf/drv_fcoe_fw_funcs.c b/drivers/scsi/qedf/drv_fcoe_fw_funcs.c
+index bb812db48da6..8c65e3b034dc 100644
+--- a/drivers/scsi/qedf/drv_fcoe_fw_funcs.c
++++ b/drivers/scsi/qedf/drv_fcoe_fw_funcs.c
+@@ -8,7 +8,7 @@
+ #include "drv_fcoe_fw_funcs.h"
+ #include "drv_scsi_fw_funcs.h"
+ 
+-#define FCOE_RX_ID ((u32)0x0000FFFF)
++#define FCOE_RX_ID (0xFFFFu)
+ 
+ static inline void init_common_sqe(struct fcoe_task_params *task_params,
+ 				   enum fcoe_sqe_request_type request_type)
+@@ -59,7 +59,7 @@ int init_initiator_rw_fcoe_task(struct fcoe_task_params *task_params,
+ 	t_st_ctx->read_only.task_type = task_params->task_type;
+ 	SET_FIELD(t_st_ctx->read_write.flags,
+ 		  FCOE_TSTORM_FCOE_TASK_ST_CTX_READ_WRITE_EXP_FIRST_FRAME, 1);
+-	t_st_ctx->read_write.rx_id = cpu_to_le32(FCOE_RX_ID);
++	t_st_ctx->read_write.rx_id = cpu_to_le16(FCOE_RX_ID);
+ 
+ 	/* Ustorm ctx */
+ 	u_ag_ctx = &ctx->ustorm_ag_context;
+@@ -151,7 +151,7 @@ int init_initiator_midpath_unsolicited_fcoe_task(
+ 	t_st_ctx->read_only.task_type = task_params->task_type;
+ 	SET_FIELD(t_st_ctx->read_write.flags,
+ 		  FCOE_TSTORM_FCOE_TASK_ST_CTX_READ_WRITE_EXP_FIRST_FRAME, 1);
+-	t_st_ctx->read_write.rx_id = cpu_to_le32(FCOE_RX_ID);
++	t_st_ctx->read_write.rx_id = cpu_to_le16(FCOE_RX_ID);
+ 
+ 	/* Init Ustorm */
+ 	u_ag_ctx = &ctx->ustorm_ag_context;
+-- 
+2.9.0
