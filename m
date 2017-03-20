@@ -1,59 +1,45 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] qedf: fix wrong le16 conversion
-Date: Mon, 20 Mar 2017 09:49:27 +0100
-Message-ID: <20170320084947.1031363-1-arnd@arndb.de>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH] scsi: libsas: fix ata xfer length
+Date: Mon, 20 Mar 2017 08:59:40 +0000
+Message-ID: <f5d6b941-f981-b05f-6266-9364878e135f@huawei.com>
+References: <1489676848-103256-1-git-send-email-john.garry@huawei.com>
+ <yq160j5ji6n.fsf@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq160j5ji6n.fsf@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: QLogic-Storage-Upstream@cavium.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, "David S. Miller" <davem@davemloft.net>, Ram Amrani <Ram.Amrani@cavium.com>, Chad Dupuis <Chad.Dupuis@cavium.com>, Tomer Tayar <Tomer.Tayar@cavium.com>, "Mintz, Yuval" <Yuval.Mintz@cavium.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linuxarm@huawei.com, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-gcc points out that we are converting a 16-bit integer into a 32-bit
-little-endian type and assigning that to 16-bit little-endian
-will end up with a zero:
+On 19/03/2017 17:21, Martin K. Petersen wrote:
+> John Garry <john.garry@huawei.com> writes:
+>
+> John,
+>
+>> The total ata xfer length may not be calculated properly,
+>> in that we do not use the proper method to get an sg element
+>> dma length.
+>>
+>> According to the code comment, sg_dma_len() should be used
+>> after dma_map_sg() is called.
+>>
+>> This issue was found by turning on the SMMUv3 in front of
+>> the hisi_sas controller in hip07. Multiple sg elements
+>> were being combined into a single element, but the original
+>> first element length was being use as the total xfer length.
+>
 
-drivers/scsi/qedf/drv_fcoe_fw_funcs.c: In function 'init_initiator_rw_fcoe_task':
-include/uapi/linux/byteorder/big_endian.h:32:26: error: large integer implicitly truncated to unsigned type [-Werror=overflow]
-  t_st_ctx->read_write.rx_id = cpu_to_le32(FCOE_RX_ID);
+I should have added this originally to the changelog:
+Fixes: ff2aeb1eb64c8a4770a6 ("libata: convert to chained sg")
 
-The correct solution appears to be to just use a 16-bit byte swap instead.
+BTW, I am surprised this issue has not been seen in almost 10 years, but 
+we cannot attach a SATA disk when SMMU enabled without it.
 
-Fixes: be086e7c53f1 ("qed*: Utilize Firmware 8.15.3.0")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/scsi/qedf/drv_fcoe_fw_funcs.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Cheers,
+John
 
-diff --git a/drivers/scsi/qedf/drv_fcoe_fw_funcs.c b/drivers/scsi/qedf/drv_fcoe_fw_funcs.c
-index bb812db48da6..8c65e3b034dc 100644
---- a/drivers/scsi/qedf/drv_fcoe_fw_funcs.c
-+++ b/drivers/scsi/qedf/drv_fcoe_fw_funcs.c
-@@ -8,7 +8,7 @@
- #include "drv_fcoe_fw_funcs.h"
- #include "drv_scsi_fw_funcs.h"
- 
--#define FCOE_RX_ID ((u32)0x0000FFFF)
-+#define FCOE_RX_ID (0xFFFFu)
- 
- static inline void init_common_sqe(struct fcoe_task_params *task_params,
- 				   enum fcoe_sqe_request_type request_type)
-@@ -59,7 +59,7 @@ int init_initiator_rw_fcoe_task(struct fcoe_task_params *task_params,
- 	t_st_ctx->read_only.task_type = task_params->task_type;
- 	SET_FIELD(t_st_ctx->read_write.flags,
- 		  FCOE_TSTORM_FCOE_TASK_ST_CTX_READ_WRITE_EXP_FIRST_FRAME, 1);
--	t_st_ctx->read_write.rx_id = cpu_to_le32(FCOE_RX_ID);
-+	t_st_ctx->read_write.rx_id = cpu_to_le16(FCOE_RX_ID);
- 
- 	/* Ustorm ctx */
- 	u_ag_ctx = &ctx->ustorm_ag_context;
-@@ -151,7 +151,7 @@ int init_initiator_midpath_unsolicited_fcoe_task(
- 	t_st_ctx->read_only.task_type = task_params->task_type;
- 	SET_FIELD(t_st_ctx->read_write.flags,
- 		  FCOE_TSTORM_FCOE_TASK_ST_CTX_READ_WRITE_EXP_FIRST_FRAME, 1);
--	t_st_ctx->read_write.rx_id = cpu_to_le32(FCOE_RX_ID);
-+	t_st_ctx->read_write.rx_id = cpu_to_le16(FCOE_RX_ID);
- 
- 	/* Init Ustorm */
- 	u_ag_ctx = &ctx->ustorm_ag_context;
--- 
-2.9.0
+> Applied to 4.11/scsi-fixes.
+>
