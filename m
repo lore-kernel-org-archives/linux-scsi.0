@@ -1,45 +1,41 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH] scsi: libsas: fix ata xfer length
-Date: Mon, 20 Mar 2017 08:59:40 +0000
-Message-ID: <f5d6b941-f981-b05f-6266-9364878e135f@huawei.com>
-References: <1489676848-103256-1-git-send-email-john.garry@huawei.com>
- <yq160j5ji6n.fsf@oracle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq160j5ji6n.fsf@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linuxarm@huawei.com, Tejun Heo <tj@kernel.org>
+From: lixiubo@cmss.chinamobile.com
+Subject: [PATCHv3 0/5] Dynamic growing data area support
+Date: Mon, 20 Mar 2017 17:09:19 +0800
+Message-ID: <1490000964-15732-1-git-send-email-lixiubo@cmss.chinamobile.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: agrover@redhat.com, nab@linux-iscsi.org, mchristi@redhat.com
+Cc: shli@kernel.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com, bryantly@linux.vnet.ibm.com, Xiubo Li <lixiubo@cmss.chinamobile.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 19/03/2017 17:21, Martin K. Petersen wrote:
-> John Garry <john.garry@huawei.com> writes:
->
-> John,
->
->> The total ata xfer length may not be calculated properly,
->> in that we do not use the proper method to get an sg element
->> dma length.
->>
->> According to the code comment, sg_dma_len() should be used
->> after dma_map_sg() is called.
->>
->> This issue was found by turning on the SMMUv3 in front of
->> the hisi_sas controller in hip07. Multiple sg elements
->> were being combined into a single element, but the original
->> first element length was being use as the total xfer length.
->
+From: Xiubo Li <lixiubo@cmss.chinamobile.com>
 
-I should have added this originally to the changelog:
-Fixes: ff2aeb1eb64c8a4770a6 ("libata: convert to chained sg")
+Changed for V3:
+- [PATCHv2 2/5] fix double usage of blocks and possible page fault
+  call trace.
+- [PATCHv2 5/5] fix a mistake.
 
-BTW, I am surprised this issue has not been seen in almost 10 years, but 
-we cannot attach a SATA disk when SMMU enabled without it.
+Changed for V2:
+- [PATCHv2 1/5] just fixes some small spelling and other mistakes.
+  And as the initial patch, here sets cmd area to 8M and data area to
+  1G(1M fixed and 1023M growing)
+- [PATCHv2 2/5] is a new one, adding global data block pool support.
+  The max total size of the pool is 2G and all the targets will get
+  growing blocks from here.
+  Test this using multi-targets at the same time.
+- [PATCHv2 3/5] changed nothing, respin it to avoid the conflict.
+- [PATCHv2 4/5] and [PATCHv2 5/5] are new ones.
 
-Cheers,
-John
 
-> Applied to 4.11/scsi-fixes.
->
+Xiubo Li (5):
+  tcmu: Add dynamic growing data area feature support
+  tcmu: Add global data block pool support
+  target/user: Fix possible overwrite of t_data_sg's last iov[]
+  target/user: Fix wrongly calculating of the base_command_size
+  target/user: Clean up tcmu_queue_cmd_ring
+
+ drivers/target/target_core_user.c | 621 +++++++++++++++++++++++++++++++-------
+ 1 file changed, 514 insertions(+), 107 deletions(-)
+
+-- 
+1.8.3.1
