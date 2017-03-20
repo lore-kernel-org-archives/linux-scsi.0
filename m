@@ -1,68 +1,38 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: sr: fix oob access in get_capabilities
-Date: Mon, 20 Mar 2017 10:29:16 -0400
-Message-ID: <yq18to0hvib.fsf@oracle.com>
-References: <1488536272-10509-1-git-send-email-wangkefeng.wang@huawei.com>
-        <yq1r31yf5ie.fsf@oracle.com>
-        <3f08ece0-531e-6853-d47d-a860e81e55d6@huawei.com>
-        <yq160j7lbx1.fsf@oracle.com>
-        <0d4c496b-c435-b622-58f8-25bd4490186a@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <0d4c496b-c435-b622-58f8-25bd4490186a@huawei.com> (Kefeng Wang's
-        message of "Mon, 20 Mar 2017 14:00:17 +0800")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kefeng Wang <wangkefeng.wang@huawei.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: [PATCH] hpsa: fix volume offline state
+Date: Mon, 20 Mar 2017 16:42:48 +0100
+Message-ID: <1490024568-4301-1-git-send-email-thenzl@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:47426 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753610AbdCTPns (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 20 Mar 2017 11:43:48 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: don.brace@microsemi.com, joseph.szczypek@hpe.com
 
-Kefeng Wang <wangkefeng.wang@huawei.com> writes:
+In a previous patch a hpsa_scsi_dev_t.volume_offline update line
+has been removed, so let us put it back..
 
-Kefeng,
+Fixes: 85b29008d8 (hpsa: update check for logical volume status)
 
-> The issue still exists, the patch return zero in scsi_mode_sense(), but zero means
-> SAM_STAT_GOOD in scsi_status_is_good(), so n will be still bigger than 512;
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+---
+ drivers/scsi/hpsa.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-OK, I checked the other users of scsi_mode_sense(). So let's keep this
-fix local to sr.c for now.
-
-How about the following?
-
-
-scsi: sr: Sanity check returned mode data
-    
-Kefeng Wang discovered that old versions of the QEMU CD driver would
-return mangled mode data causing us to walk off the end of the buffer in
-an attempt to parse it. Sanity check the returned mode sense data.
-    
-Cc: <stable@vger.kernel.org>
-Reported-by: Kefeng Wang <wangkefeng.wang@huawei.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 0b29b9329b1c..a8f630213a1a 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -836,6 +836,7 @@ static void get_capabilities(struct scsi_cd *cd)
- 	unsigned char *buffer;
- 	struct scsi_mode_data data;
- 	struct scsi_sense_hdr sshdr;
-+	unsigned int ms_len = 128;
- 	int rc, n;
- 
- 	static const char *loadmech[] =
-@@ -862,10 +863,11 @@ static void get_capabilities(struct scsi_cd *cd)
- 	scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr);
- 
- 	/* ask for mode page 0x2a */
--	rc = scsi_mode_sense(cd->device, 0, 0x2a, buffer, 128,
-+	rc = scsi_mode_sense(cd->device, 0, 0x2a, buffer, ms_len,
- 			     SR_TIMEOUT, 3, &data, NULL);
- 
--	if (!scsi_status_is_good(rc)) {
-+	if (!scsi_status_is_good(rc) || data.length > ms_len ||
-+	    data.header_length + data.block_descriptor_length > data.length) {
- 		/* failed, drive doesn't have capabilities mode page */
- 		cd->cdi.speed = 1;
- 		cd->cdi.mask |= (CDC_CD_R | CDC_CD_RW | CDC_DVD_R |
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 0d0be7754a..9d659aaace 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -3885,6 +3885,7 @@ static int hpsa_update_device_info(struct ctlr_info *h,
+ 		if (h->fw_support & MISC_FW_RAID_OFFLOAD_BASIC)
+ 			hpsa_get_ioaccel_status(h, scsi3addr, this_device);
+ 		volume_offline = hpsa_volume_offline(h, scsi3addr);
++		this_device->volume_offline = volume_offline;
+ 		if (volume_offline == HPSA_LV_FAILED) {
+ 			rc = HPSA_LV_FAILED;
+ 			dev_err(&h->pdev->dev,
+-- 
+2.7.4
