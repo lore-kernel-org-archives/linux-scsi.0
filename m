@@ -1,87 +1,37 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] sd: use async_probe cookie to avoid deadlocks
-Date: Tue, 21 Mar 2017 13:14:35 +0100
-Message-ID: <1490098475-21884-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47507 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756597AbdCUMPF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 21 Mar 2017 08:15:05 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Jaehoon Chung <jh80.chung@samsung.com>
+Subject: [PATCH] scsi: ufs: remove the duplicated checking for supporting
+ clkscaling
+Date: Tue, 21 Mar 2017 21:19:57 +0900
+Message-ID: <20170321121957.18655-1-jh80.chung@samsung.com>
+References: <CGME20170321121957epcas1p3ccd834d3ac572a1858684e8ab4bb24e1@epcas1p3.samsung.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: vinholikatti@gmail.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, Jaehoon Chung <jh80.chung@samsung.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: hck@suse.de, James Bottomley <james.bottomley@hansenpartnership.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-With the current design we're waiting for all async probes to
-finish when removing any sd device.
-This might lead to a livelock where the 'remove' call is blocking
-for any probe calls to finish, and the probe calls are waiting for
-a response, which will never be processes as the thread handling
-the responses is waiting for the remove call to finish.
-Which is completely pointless as we only _really_ care for the
-probe on _this_ device to be completed; any other probing can
-happily continue for all we care.
-So save the async probing cookie in the structure and only wait
-if this specific probe is still active.
+There are same conditions for checking whether supporting clkscaling or
+not.
+When ufshcd is supporting clkscaling, active_reqs should be decreased by
+two.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
 ---
- drivers/scsi/sd.c | 7 ++++---
- drivers/scsi/sd.h | 3 +++
- 2 files changed, 7 insertions(+), 3 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index fb9b4d2..9f932e4 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -48,7 +48,6 @@
- #include <linux/delay.h>
- #include <linux/mutex.h>
- #include <linux/string_helpers.h>
--#include <linux/async.h>
- #include <linux/slab.h>
- #include <linux/pm_runtime.h>
- #include <linux/pr.h>
-@@ -3217,7 +3216,8 @@ static int sd_probe(struct device *dev)
- 	dev_set_drvdata(dev, sdkp);
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index dc6efbd..f2cbc71 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -4598,8 +4598,6 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
+ 		}
+ 		if (ufshcd_is_clkscaling_supported(hba))
+ 			hba->clk_scaling.active_reqs--;
+-		if (ufshcd_is_clkscaling_supported(hba))
+-			hba->clk_scaling.active_reqs--;
+ 	}
  
- 	get_device(&sdkp->dev);	/* prevent release before async_schedule */
--	async_schedule_domain(sd_probe_async, sdkp, &scsi_sd_probe_domain);
-+	sdkp->async_probe = async_schedule_domain(sd_probe_async, sdkp,
-+						  &scsi_sd_probe_domain);
- 
- 	return 0;
- 
-@@ -3256,7 +3256,8 @@ static int sd_remove(struct device *dev)
- 	scsi_autopm_get_device(sdkp->device);
- 
- 	async_synchronize_full_domain(&scsi_sd_pm_domain);
--	async_synchronize_full_domain(&scsi_sd_probe_domain);
-+	async_synchronize_cookie_domain(sdkp->async_probe,
-+					&scsi_sd_probe_domain);
- 	device_del(&sdkp->dev);
- 	del_gendisk(sdkp->disk);
- 	sd_shutdown(dev);
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 4dac35e..d4b5826 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -1,6 +1,8 @@
- #ifndef _SCSI_DISK_H
- #define _SCSI_DISK_H
- 
-+#include <linux/async.h>
-+
- /*
-  * More than enough for everybody ;)  The huge number of majors
-  * is a leftover from 16bit dev_t days, we don't really need that
-@@ -73,6 +75,7 @@ struct scsi_disk {
- 	unsigned int	zones_optimal_nonseq;
- 	unsigned int	zones_max_open;
- #endif
-+	async_cookie_t	async_probe;
- 	atomic_t	openers;
- 	sector_t	capacity;	/* size in logical blocks */
- 	u32		max_xfer_blocks;
+ 	/* clear corresponding bits of completed commands */
 -- 
-1.8.5.6
+2.10.2
