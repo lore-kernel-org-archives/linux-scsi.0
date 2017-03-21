@@ -1,42 +1,36 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] scsi: lpfc: fix linking against modular NVMe support
-Date: Tue, 21 Mar 2017 14:09:05 +0100
-Message-ID: <20170321131017.2207105-1-arnd@arndb.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.de>, Finn Thain <fthain@telegraphics.com.au>, Johannes Thumshirn <jthumshirn@suse.de>, James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH] sd: use async_probe cookie to avoid deadlocks
+Date: Tue, 21 Mar 2017 13:30:45 +0000
+Message-ID: <1490103027.2602.5.camel@sandisk.com>
+References: <1490098475-21884-1-git-send-email-hare@suse.de>
+         <1490101519.2412.13.camel@HansenPartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:55607 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756870AbdCUNax (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Mar 2017 09:30:53 -0400
+In-Reply-To: <1490101519.2412.13.camel@HansenPartnership.com>
+Content-Language: en-US
+Content-ID: <8EF6C21875B16648AAECE416D2C98C61@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hck@suse.de" <hck@suse.de>, "hare@suse.com" <hare@suse.com>
 
-When LPFC is built-in but NVMe is a loadable module, we fail to
-link the kernel:
+On Tue, 2017-03-21 at 09:05 -0400, James Bottomley wrote:
+> How does this preserve ordering?  It looks like you have one cookie per
+> sdkp ... is there some sort of ordering guarantee I'm not seeing?
 
-drivers/scsi/built-in.o: In function `lpfc_nvme_create_localport':
-(.text+0x156a82): undefined reference to `nvme_fc_register_localport'
-drivers/scsi/built-in.o: In function `lpfc_nvme_destroy_localport':
-(.text+0x156eaa): undefined reference to `nvme_fc_unregister_remoteport'
+Hello James,
 
-We can avoid this either by forcing lpfc to be a module, or by disabling
-NVMe support in this case. This implements the former.
+Since the probe order depends on the order in which __async_probe() adds
+entries to the "pending" list, and since the order of the __async_probe()
+calls is not changed by this patch, shouldn't the probe order be preserved
+by this patch?
 
-Fixes: 7d7080335f8d ("scsi: lpfc: Finalize Kconfig options for nvme")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/scsi/Kconfig | 2 ++
- 1 file changed, 2 insertions(+)
+Thanks,
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 3c52867dfe28..d145e0d90227 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -1241,6 +1241,8 @@ config SCSI_LPFC
- 	tristate "Emulex LightPulse Fibre Channel Support"
- 	depends on PCI && SCSI
- 	depends on SCSI_FC_ATTRS
-+	depends on NVME_TARGET_FC || NVME_TARGET_FC=n
-+	depends on NVME_FC || NVME_FC=n
- 	select CRC_T10DIF
- 	---help---
-           This lpfc driver supports the Emulex LightPulse
--- 
-2.9.0
+Bart.=
