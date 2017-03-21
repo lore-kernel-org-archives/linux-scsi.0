@@ -1,56 +1,53 @@
-From: Hannes Reinecke <hare@suse.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [PATCH] sd: use async_probe cookie to avoid deadlocks
-Date: Tue, 21 Mar 2017 16:32:23 +0100
-Message-ID: <1d91c7fa-5b63-f92f-e285-06aae73d93f0@suse.de>
+Date: Tue, 21 Mar 2017 11:33:40 -0400
+Message-ID: <1490110420.11580.12.camel@HansenPartnership.com>
 References: <1490098475-21884-1-git-send-email-hare@suse.de>
- <1490101519.2412.13.camel@HansenPartnership.com>
- <1490103027.2602.5.camel@sandisk.com>
- <1490103238.2412.17.camel@HansenPartnership.com>
+         <1490101519.2412.13.camel@HansenPartnership.com>
+         <27545016-e3a6-e425-cdfb-42c3ac7128df@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54236 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757281AbdCUPcl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 21 Mar 2017 11:32:41 -0400
-In-Reply-To: <1490103238.2412.17.camel@HansenPartnership.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:38218 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755420AbdCUPdn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 21 Mar 2017 11:33:43 -0400
+In-Reply-To: <27545016-e3a6-e425-cdfb-42c3ac7128df@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Bart Van Assche <Bart.VanAssche@sandisk.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hck@suse.de" <hck@suse.de>, "hare@suse.com" <hare@suse.com>
+To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: hck@suse.de, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On 03/21/2017 02:33 PM, James Bottomley wrote:
-> On Tue, 2017-03-21 at 13:30 +0000, Bart Van Assche wrote:
->> On Tue, 2017-03-21 at 09:05 -0400, James Bottomley wrote:
->>> How does this preserve ordering?  It looks like you have one cookie 
->>> per sdkp ... is there some sort of ordering guarantee I'm not
->>> seeing?
->>
->> Hello James,
->>
->> Since the probe order depends on the order in which __async_probe() 
->> adds entries to the "pending" list, and since the order of the
->> __async_probe() calls is not changed by this patch, shouldn't the 
->> probe order be preserved by this patch?
-> 
-> I don't know: that's what I'm asking.  I believe they complete in order
-> for a single domain.  I thought ordering isn't preserved between
-> domains?  So moving to multiple domains loses us ordering of disk
-> appearance.
-> 
-Ah.
-But we don't move to multiple domains, now do we?
-We're just terminating the wait until _our_ probe is completed.
-It's not that we're having a individual probe domain per device...
+On Tue, 2017-03-21 at 16:25 +0100, Hannes Reinecke wrote:
+> On 03/21/2017 02:05 PM, James Bottomley wrote:
+> > On Tue, 2017-03-21 at 13:14 +0100, Hannes Reinecke wrote:
+> > > With the current design we're waiting for all async probes to
+> > > finish when removing any sd device.
+> > > This might lead to a livelock where the 'remove' call is blocking
+> > > for any probe calls to finish, and the probe calls are waiting
+> > > for
+> > > a response, which will never be processes as the thread handling
+> > > the responses is waiting for the remove call to finish.
+> > > Which is completely pointless as we only _really_ care for the
+> > > probe on _this_ device to be completed; any other probing can
+> > > happily continue for all we care.
+> > > So save the async probing cookie in the structure and only wait
+> > > if this specific probe is still active.
+> > 
+> > How does this preserve ordering?  It looks like you have one cookie 
+> > per sdkp ... is there some sort of ordering guarantee I'm not
+> > seeing?
+> > 
+> Do we need one?
+> The only thing we care here is that probing for _this_ device has 
+> finished.
 
-Unless I'm misunderstanding something...
+OK, so currently we guarantee the linear ordering luns for individual
+hbas.  We also guarantee no interleaving of sdX letters for individual
+hbas.  We don't guarantee the scan order of the hbas themselves. 
+ Preserve those guarantees and I'm happy with the patch.  If you can't
+preserve them I think we need further discussion.
 
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+James
