@@ -1,23 +1,22 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [PATCH] sd: use async_probe cookie to avoid deadlocks
-Date: Tue, 21 Mar 2017 13:02:45 +0000
-Message-ID: <1490101348.2602.3.camel@sandisk.com>
+Date: Tue, 21 Mar 2017 09:05:19 -0400
+Message-ID: <1490101519.2412.13.camel@HansenPartnership.com>
 References: <1490098475-21884-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:32795 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756607AbdCUNDo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Mar 2017 09:03:44 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:36894 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1756897AbdCUNFZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 21 Mar 2017 09:05:25 -0400
 In-Reply-To: <1490098475-21884-1-git-send-email-hare@suse.de>
-Content-Language: en-US
-Content-ID: <E6EAEEA90B60164E8B7CD47BB59096EF@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "hck@suse.de" <hck@suse.de>, "hare@suse.com" <hare@suse.com>
+To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: hck@suse.de, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
 On Tue, 2017-03-21 at 13:14 +0100, Hannes Reinecke wrote:
 > With the current design we're waiting for all async probes to
@@ -32,6 +31,7 @@ On Tue, 2017-03-21 at 13:14 +0100, Hannes Reinecke wrote:
 > So save the async probing cookie in the structure and only wait
 > if this specific probe is still active.
 
-Nice work! This may even help to reduce system boot time.
+How does this preserve ordering?  It looks like you have one cookie per
+sdkp ... is there some sort of ordering guarantee I'm not seeing?
 
-Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>=
+James
