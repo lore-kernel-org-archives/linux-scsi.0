@@ -1,75 +1,87 @@
-From: Alexander Eichner <Alexander.Eichner@oracle.com>
-Subject: [PATCH] BusLogic: Prevent write reordering when writing outgoing mailboxes
-Date: Tue, 21 Mar 2017 11:44:28 +0100
-Message-ID: <20170321104428.27582-1-Alexander.Eichner@oracle.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] sd: use async_probe cookie to avoid deadlocks
+Date: Tue, 21 Mar 2017 13:14:35 +0100
+Message-ID: <1490098475-21884-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51607 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755005AbdCUKqQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Mar 2017 06:46:16 -0400
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v2LAia70004087
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Mar 2017 10:44:36 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v2LAiZfv031178
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Mar 2017 10:44:36 GMT
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v2LAiZGH010184
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Mar 2017 10:44:35 GMT
+Received: from mx2.suse.de ([195.135.220.15]:47507 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756597AbdCUMPF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 21 Mar 2017 08:15:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Alexander Eichner <Alexander.Eichner@oracle.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: hck@suse.de, James Bottomley <james.bottomley@hansenpartnership.com>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-From: Alexander Eichner <Alexander.Eichner@oracle.com>
+With the current design we're waiting for all async probes to
+finish when removing any sd device.
+This might lead to a livelock where the 'remove' call is blocking
+for any probe calls to finish, and the probe calls are waiting for
+a response, which will never be processes as the thread handling
+the responses is waiting for the remove call to finish.
+Which is completely pointless as we only _really_ care for the
+probe on _this_ device to be completed; any other probing can
+happily continue for all we care.
+So save the async probing cookie in the structure and only wait
+if this specific probe is still active.
 
-Make sure the compiler doesn't reorder the writes to the outgoing
-mailbox because the correct order does matter. Otherwise the
-controller might see a stale CCB handle under rare circumstances
-if the action code is written first and the controller happens to
-read the mailbox between the action code and CCB handle write.
-This causes trouble later on as the completion handler will get
-confused because the request was not active.
-
-This is very difficult to trigger but happened in some virtualized
-environments with a high I/O load.
-
-Signed-off-by: Alexander Eichner <Alexander.Eichner@oracle.com>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/BusLogic.c | 1 +
- drivers/scsi/BusLogic.h | 6 +++---
- 2 files changed, 4 insertions(+), 3 deletions(-)
+ drivers/scsi/sd.c | 7 ++++---
+ drivers/scsi/sd.h | 3 +++
+ 2 files changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
-index c7be7bb37209..20cc34fa5754 100644
---- a/drivers/scsi/BusLogic.c
-+++ b/drivers/scsi/BusLogic.c
-@@ -2981,6 +2981,7 @@ static bool blogic_write_outbox(struct blogic_adapter *adapter,
- 		   by the Host Adapter.
- 		 */
- 		next_outbox->ccb = ccb->dma_handle;
-+		wmb();
- 		next_outbox->action = action;
- 		blogic_execmbox(adapter);
- 		if (++next_outbox > adapter->last_outbox)
-diff --git a/drivers/scsi/BusLogic.h b/drivers/scsi/BusLogic.h
-index b53ec2f1e8cd..16f372f3e9c2 100644
---- a/drivers/scsi/BusLogic.h
-+++ b/drivers/scsi/BusLogic.h
-@@ -869,9 +869,9 @@ struct blogic_ccb {
- */
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index fb9b4d2..9f932e4 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -48,7 +48,6 @@
+ #include <linux/delay.h>
+ #include <linux/mutex.h>
+ #include <linux/string_helpers.h>
+-#include <linux/async.h>
+ #include <linux/slab.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/pr.h>
+@@ -3217,7 +3216,8 @@ static int sd_probe(struct device *dev)
+ 	dev_set_drvdata(dev, sdkp);
  
- struct blogic_outbox {
--	u32 ccb;			/* Bytes 0-3 */
--	u32:24;				/* Bytes 4-6 */
--	enum blogic_action action;	/* Byte 7 */
-+	volatile u32 ccb;					/* Bytes 0-3 */
-+	u32:24;								/* Bytes 4-6 */
-+	volatile enum blogic_action action;	/* Byte 7 */
- };
+ 	get_device(&sdkp->dev);	/* prevent release before async_schedule */
+-	async_schedule_domain(sd_probe_async, sdkp, &scsi_sd_probe_domain);
++	sdkp->async_probe = async_schedule_domain(sd_probe_async, sdkp,
++						  &scsi_sd_probe_domain);
  
+ 	return 0;
+ 
+@@ -3256,7 +3256,8 @@ static int sd_remove(struct device *dev)
+ 	scsi_autopm_get_device(sdkp->device);
+ 
+ 	async_synchronize_full_domain(&scsi_sd_pm_domain);
+-	async_synchronize_full_domain(&scsi_sd_probe_domain);
++	async_synchronize_cookie_domain(sdkp->async_probe,
++					&scsi_sd_probe_domain);
+ 	device_del(&sdkp->dev);
+ 	del_gendisk(sdkp->disk);
+ 	sd_shutdown(dev);
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 4dac35e..d4b5826 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -1,6 +1,8 @@
+ #ifndef _SCSI_DISK_H
+ #define _SCSI_DISK_H
+ 
++#include <linux/async.h>
++
  /*
+  * More than enough for everybody ;)  The huge number of majors
+  * is a leftover from 16bit dev_t days, we don't really need that
+@@ -73,6 +75,7 @@ struct scsi_disk {
+ 	unsigned int	zones_optimal_nonseq;
+ 	unsigned int	zones_max_open;
+ #endif
++	async_cookie_t	async_probe;
+ 	atomic_t	openers;
+ 	sector_t	capacity;	/* size in logical blocks */
+ 	u32		max_xfer_blocks;
 -- 
-2.12.0
+1.8.5.6
