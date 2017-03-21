@@ -1,100 +1,75 @@
-From: Maurizio Lombardi <mlombard@redhat.com>
-Subject: Re: [PATCH] enclosure: fix sysfs symlinks creation when using
- multipath
-Date: Tue, 21 Mar 2017 10:58:07 +0100
-Message-ID: <91d089dc-4809-d9e4-47b5-56eae40a25c8@redhat.com>
-References: <1488454204-21251-1-git-send-email-mlombard@redhat.com>
- <yq1varaf6to.fsf@oracle.com> <1489690155.11068.10.camel@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+From: Alexander Eichner <Alexander.Eichner@oracle.com>
+Subject: [PATCH] BusLogic: Prevent write reordering when writing outgoing mailboxes
+Date: Tue, 21 Mar 2017 11:44:28 +0100
+Message-ID: <20170321104428.27582-1-Alexander.Eichner@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43118 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756428AbdCUJ7a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 21 Mar 2017 05:59:30 -0400
-In-Reply-To: <1489690155.11068.10.camel@linux.vnet.ibm.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:51607 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755005AbdCUKqQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Mar 2017 06:46:16 -0400
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v2LAia70004087
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Mar 2017 10:44:36 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v2LAiZfv031178
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Mar 2017 10:44:36 GMT
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v2LAiZGH010184
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Mar 2017 10:44:35 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Alexander Eichner <Alexander.Eichner@oracle.com>
 
+From: Alexander Eichner <Alexander.Eichner@oracle.com>
 
+Make sure the compiler doesn't reorder the writes to the outgoing
+mailbox because the correct order does matter. Otherwise the
+controller might see a stale CCB handle under rare circumstances
+if the action code is written first and the controller happens to
+read the mailbox between the action code and CCB handle write.
+This causes trouble later on as the completion handler will get
+confused because the request was not active.
 
-Dne 16.3.2017 v 19:49 James Bottomley napsal(a): 
-> diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
-> index 65fed71..ae89082 100644
-> --- a/drivers/misc/enclosure.c
-> +++ b/drivers/misc/enclosure.c
-> @@ -375,6 +375,7 @@ int enclosure_add_device(struct enclosure_device *edev, int component,
->  			 struct device *dev)
->  {
->  	struct enclosure_component *cdev;
-> +	int err;
->  
->  	if (!edev || component >= edev->components)
->  		return -EINVAL;
-> @@ -384,12 +385,15 @@ int enclosure_add_device(struct enclosure_device *edev, int component,
->  	if (cdev->dev == dev)
->  		return -EEXIST;
->  
-> -	if (cdev->dev)
-> +	if (cdev->dev) {
->  		enclosure_remove_links(cdev);
-> -
-> -	put_device(cdev->dev);
-> -	cdev->dev = get_device(dev);
-> -	return enclosure_add_links(cdev);
-> +		put_device(cdev->dev);
-> +		cdev->dev = NULL;
-> +	}
-> +	err = enclosure_add_links(cdev);
-> +	if (!err)
-> +		cdev->dev = get_device(dev);
-> +	return err;
->  }
->  EXPORT_SYMBOL_GPL(enclosure_add_device);
->  
->
+This is very difficult to trigger but happened in some virtualized
+environments with a high I/O load.
 
+Signed-off-by: Alexander Eichner <Alexander.Eichner@oracle.com>
+---
+ drivers/scsi/BusLogic.c | 1 +
+ drivers/scsi/BusLogic.h | 6 +++---
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-I will ask our customer to test your patch,
-there is only a small problem: you can't set cdev->dev = NULL
-and then call enclosure_add_links(cdev) because you will end up dereferencing
-a NULL pointer.
-I suggest a slightly different patch:
-
-@@ -375,6 +379,7 @@ int enclosure_add_device(struct enclosure_device *edev, int component,
- 			 struct device *dev)
- {
- 	struct enclosure_component *cdev;
-+	int err;
+diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+index c7be7bb37209..20cc34fa5754 100644
+--- a/drivers/scsi/BusLogic.c
++++ b/drivers/scsi/BusLogic.c
+@@ -2981,6 +2981,7 @@ static bool blogic_write_outbox(struct blogic_adapter *adapter,
+ 		   by the Host Adapter.
+ 		 */
+ 		next_outbox->ccb = ccb->dma_handle;
++		wmb();
+ 		next_outbox->action = action;
+ 		blogic_execmbox(adapter);
+ 		if (++next_outbox > adapter->last_outbox)
+diff --git a/drivers/scsi/BusLogic.h b/drivers/scsi/BusLogic.h
+index b53ec2f1e8cd..16f372f3e9c2 100644
+--- a/drivers/scsi/BusLogic.h
++++ b/drivers/scsi/BusLogic.h
+@@ -869,9 +869,9 @@ struct blogic_ccb {
+ */
  
- 	if (!edev || component >= edev->components)
- 		return -EINVAL;
-@@ -384,12 +389,18 @@ int enclosure_add_device(struct enclosure_device *edev, int component,
- 	if (cdev->dev == dev)
- 		return -EEXIST;
+ struct blogic_outbox {
+-	u32 ccb;			/* Bytes 0-3 */
+-	u32:24;				/* Bytes 4-6 */
+-	enum blogic_action action;	/* Byte 7 */
++	volatile u32 ccb;					/* Bytes 0-3 */
++	u32:24;								/* Bytes 4-6 */
++	volatile enum blogic_action action;	/* Byte 7 */
+ };
  
--	if (cdev->dev)
-+	if (cdev->dev) {
- 		enclosure_remove_links(cdev);
--
--	put_device(cdev->dev);
-+		put_device(cdev->dev);
-+	}
- 	cdev->dev = get_device(dev);
--	return enclosure_add_links(cdev);
-+
-+	err = enclosure_add_links(cdev);
-+	if (err) {
-+		put_device(cdev->dev);
-+		cdev->dev = NULL;
-+	}
-+	return err;
- }
- EXPORT_SYMBOL_GPL(enclosure_add_device);
- 
-Thanks,
-Maurizio.
- 
+ /*
+-- 
+2.12.0
