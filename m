@@ -1,263 +1,111 @@
-From: Benjamin Block <bblock@linux.vnet.ibm.com>
-Subject: Re: [PATCHv3 4/6] scsi_error: do not escalate failed EH command
-Date: Tue, 21 Mar 2017 20:05:45 +0100
-Message-ID: <20170321190545.GB16847@bblock-ThinkPad-W530>
-References: <1488359720-130871-1-git-send-email-hare@suse.de>
- <1488359720-130871-5-git-send-email-hare@suse.de>
- <20170314175611.GC19037@bblock-ThinkPad-W530>
- <aa4c4285-782f-bd41-2fe8-98f54c2c2d9d@suse.de>
- <20170316110142.GB11833@bblock-ThinkPad-W530>
- <6c23c34a-a59b-3c4b-7c43-92b87eabcf61@suse.de>
+From: Mike Christie <mchristi@redhat.com>
+Subject: Re: [PATCHv3 3/5] target/user: Fix possible overwrite of t_data_sg's
+ last iov[]
+Date: Tue, 21 Mar 2017 15:10:00 -0400
+Message-ID: <77af2a99-d51c-7212-acf1-cf61b50cfdc5@redhat.com>
+References: <1490000964-15732-1-git-send-email-lixiubo@cmss.chinamobile.com>
+ <1490000964-15732-4-git-send-email-lixiubo@cmss.chinamobile.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:58368 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1756845AbdCUTHY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 21 Mar 2017 15:07:24 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v2LJ1VFk073296
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Mar 2017 15:05:51 -0400
-Received: from e06smtp14.uk.ibm.com (e06smtp14.uk.ibm.com [195.75.94.110])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 29b9vkrey6-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Mar 2017 15:05:51 -0400
-Received: from localhost
-        by e06smtp14.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <bblock@linux.vnet.ibm.com>;
-        Tue, 21 Mar 2017 19:05:49 -0000
-Received: from d06av21.portsmouth.uk.ibm.com (d06av21.portsmouth.uk.ibm.com [9.149.105.232])
-        by b06cxnps4074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v2LJ5k9420709408
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Mar 2017 19:05:46 GMT
-Received: from d06av21.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id A0EC552043
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Mar 2017 18:04:10 +0000 (GMT)
-Received: from bblock-ThinkPad-W530 (unknown [9.152.212.102])
-        by d06av21.portsmouth.uk.ibm.com (Postfix) with ESMTP id 86DB65203F
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Mar 2017 18:04:10 +0000 (GMT)
-Content-Disposition: inline
-In-Reply-To: <6c23c34a-a59b-3c4b-7c43-92b87eabcf61@suse.de>
+Received: from mx1.redhat.com ([209.132.183.28]:47726 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1758175AbdCUTKL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 21 Mar 2017 15:10:11 -0400
+In-Reply-To: <1490000964-15732-4-git-send-email-lixiubo@cmss.chinamobile.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org
+To: lixiubo@cmss.chinamobile.com, agrover@redhat.com, nab@linux-iscsi.org
+Cc: shli@kernel.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com, bryantly@linux.vnet.ibm.com
 
-On Thu, Mar 16, 2017 at 12:53:45PM +0100, Hannes Reinecke wrote:
->On 03/16/2017 12:01 PM, Benjamin Block wrote:
->> On Wed, Mar 15, 2017 at 02:54:16PM +0100, Hannes Reinecke wrote:
->>> On 03/14/2017 06:56 PM, Benjamin Block wrote:
->>>> Hello Hannes,
->>>>
->>>> On Wed, Mar 01, 2017 at 10:15:18AM +0100, Hannes Reinecke wrote:
->>>>> When a command is sent as part of the error handling there
->>>>> is not point whatsoever to start EH escalation when that
->>>>> command fails; we are _already_ in the error handler,
->>>>> and the escalation is about to commence anyway.
->>>>> So just call 'scsi_try_to_abort_cmd()' to abort outstanding
->>>>> commands and let the main EH routine handle the rest.
->>>>>
->>>>> Signed-off-by: Hannes Reinecke <hare@suse.de>
->>>>> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
->>>>> Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
->>>>> ---
->>>>>  drivers/scsi/scsi_error.c | 11 +----------
->>>>>  1 file changed, 1 insertion(+), 10 deletions(-)
->>>>>
->>>>> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
->>>>> index e1ca3b8..4613aa1 100644
->>>>> --- a/drivers/scsi/scsi_error.c
->>>>> +++ b/drivers/scsi/scsi_error.c
->>>>> @@ -889,15 +889,6 @@ static int scsi_try_to_abort_cmd(struct scsi_host_template *hostt,
->>>>>  	return hostt->eh_abort_handler(scmd);
->>>>>  }
->>>>>
->>>>> -static void scsi_abort_eh_cmnd(struct scsi_cmnd *scmd)
->>>>> -{
->>>>> -	if (scsi_try_to_abort_cmd(scmd->device->host->hostt, scmd) != SUCCESS)
->>>>> -		if (scsi_try_bus_device_reset(scmd) != SUCCESS)
->>>>> -			if (scsi_try_target_reset(scmd) != SUCCESS)
->>>>> -				if (scsi_try_bus_reset(scmd) != SUCCESS)
->>>>> -					scsi_try_host_reset(scmd);
->>>>> -}
->>>>> -
->>>>>  /**
->>>>>   * scsi_eh_prep_cmnd  - Save a scsi command info as part of error recovery
->>>>>   * @scmd:       SCSI command structure to hijack
->>>>> @@ -1082,7 +1073,7 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
->>>>>  			break;
->>>>>  		}
->>>>>  	} else if (rtn != FAILED) {
->>>>> -		scsi_abort_eh_cmnd(scmd);
->>>>> +		scsi_try_to_abort_cmd(shost->hostt, scmd);
->>>>>  		rtn = FAILED;
->>>>>  	}
->>>>
->>>> The idea is sound, but this implementation would cause "use-after-free"s.
->>>>
->>>> I only know our own LLD well enough to judge, but with zFCP there will
->>>> always be a chance that an abort fails - be it memory pressure,
->>>> hardware/firmware behavior or internal EH in zFCP.
->>>>
->>>> Calling queuecommand() will mean for us in the LLD, that we allocate a
->>>> unique internal request struct for the scsi_cmnd (struct
->>>> zfcp_fsf_request) and add that to our internal hash-table with
->>>> outstanding commands. We assume this scsi_cmnd-pointer is ours till we
->>>> complete it via scsi_done are yield it via successful EH-actions.
->>>>
->>>> In case the abort fails, you fail to take back the ownership over the
->>>> scsi command. Which in turn means possible "use-after-free"s when we
->>>> still thinks the scsi command is ours, but EH has already overwritten
->>>> the scsi-command with the original one. When we still get an answer or
->>>> otherwise use the scsi_cmnd-pointer we would access an invalid one.
->>>>
->>> That is actually not try.
->>> As soon as we're calling 'scsi_try_to_abort_command()' ownership is
->>> assumed to reside in the SCSI midlayer;
->>
->> That can not be true. First of all, look at the function itself (v4.10):
->>
->> 	static int scsi_try_to_abort_cmd...
->> 	{
->> 		if (!hostt->eh_abort_handler)
->> 			return FAILED;
->>
->> 		return hostt->eh_abort_handler(scmd);
->> 	}
->>
->> If what you say is true, then this whole API of LLDs providing or
->> choosing not to provide implementations for these function would be
->> fundamentally broken.
->> The function itself returns FAILED when there is no such function.. how
->> is a LLD that does not implement it ever to know that you took ownership
->> by calling scsi_try_to_abort_cmd()?
->>
-> Well. Ok.
->
-> _Actually_, the whole concept of 'ownership' in SCSI EH is a bit flaky.
->
-> There are two ways of entering the error handler:
-> - SCSI command timeout
-> - Failing to evaluate the SCSI command status
->
-> For the latter case ownership already _is_ with the SCSI midlayer, as
-> the LLDD called 'scsi_done' and with that moved ownership to the midlayer.
->
-> The interesting part is command timeout.
-> Once a command timeout triggers the block layer is calling
-> 'blk_mark_rq_complete' to avoid any concurrent completions.
-> IE any calls to scsi_done() will be short-circuited with that,
-> effectively transferring ownership to SCSI midlayer.
->
-> Now the SCSI midlayer has to inform the LLDD that it has taken
-> ownership; for that it calls the various eh_XXX callbacks into the LLDD.
-> While it's quite clear that SUCCESS signals a transfer of ownership to
-> SCSI ML, it's less clear what happens in the case of FAILED.
-> Problem here is that the eh_XXX callbacks actually serve a dual purpose;
-> one it to signal the transfer of ownership to SCSI ML and the other is
-> to actually _do_ some action on that command.
->
-> But as FAILED is just _one_ value we have no idea in the midlayer if the
-> change of ownership actually took place.
->
-> Which leads to the curious effect that _ultimatively_ control still
-> resides with the LLDD when host_reset fails, so we actually should
-> _never_ release the scsi command once host reset fails.
->
-> With scsi_try_to_abort() things are slightly different in the way that
-> it's called _without_ SCSI EH being engaged.
-> However, as scsi_try_to_abort() is called from the timeout handler
-> (which assumes that ownership does now reside with the midlayer) I don't
-> see a problem with that.
->
+On 03/20/2017 05:09 AM, lixiubo@cmss.chinamobile.com wrote:
+> From: Xiubo Li <lixiubo@cmss.chinamobile.com>
+> 
+> If there has BIDI data, its first iov[] will overwrite the last
+> iov[] for se_cmd->t_data_sg.
+> 
+> To fix this, we can just increase the iov pointer, but this may
+> introuduce a new memory leakage bug: If the se_cmd->data_length
+> and se_cmd->t_bidi_data_sg->length are all not aligned up to the
+> DATA_BLOCK_SIZE, the actual length needed maybe larger than just
+> sum of them.
+> 
+> So, this could be avoided by rounding all the data lengthes up
+> to DATA_BLOCK_SIZE.
+> 
+> Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
+> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+> ---
+>  drivers/target/target_core_user.c | 32 +++++++++++++++++++-------------
+>  1 file changed, 19 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+> index 8cbe196..780c30f 100644
+> --- a/drivers/target/target_core_user.c
+> +++ b/drivers/target/target_core_user.c
+> @@ -288,13 +288,14 @@ static inline void tcmu_free_cmd(struct tcmu_cmd *tcmu_cmd)
+>  
+>  static inline uint32_t tcmu_cmd_get_dbi_len(struct se_cmd *se_cmd)
+>  {
+> -	size_t data_length = se_cmd->data_length;
+> +	size_t data_length = round_up(se_cmd->data_length, DATA_BLOCK_SIZE);
+>  	uint32_t dbi_len;
+>  
+>  	if (se_cmd->se_cmd_flags & SCF_BIDI)
+> -		data_length += se_cmd->t_bidi_data_sg->length;
+> +		data_length += round_up(se_cmd->t_bidi_data_sg->length,
+> +					DATA_BLOCK_SIZE);
+>  
+> -	dbi_len = (data_length + DATA_BLOCK_SIZE - 1) / DATA_BLOCK_SIZE;
+> +	dbi_len = data_length / DATA_BLOCK_SIZE;
+>  
+>  	return dbi_len;
+>  }
+> @@ -609,10 +610,11 @@ static bool is_ring_space_avail(struct tcmu_dev *udev, struct tcmu_cmd *cmd,
+>  
+>  	mb = udev->mb_addr;
+>  	cmd_head = mb->cmd_head % udev->cmdr_size; /* UAM */
+> -	data_length = se_cmd->data_length;
+> +	data_length = round_up(se_cmd->data_length, DATA_BLOCK_SIZE);
+>  	if (se_cmd->se_cmd_flags & SCF_BIDI) {
+>  		BUG_ON(!(se_cmd->t_bidi_data_sg && se_cmd->t_bidi_data_nents));
+> -		data_length += se_cmd->t_bidi_data_sg->length;
+> +		data_length += round_up(se_cmd->t_bidi_data_sg->length,
+> +				DATA_BLOCK_SIZE);
+>  	}
+>  	if ((command_size > (udev->cmdr_size / 2)) ||
+>  	    data_length > udev->data_size) {
+> @@ -690,15 +692,19 @@ static bool is_ring_space_avail(struct tcmu_dev *udev, struct tcmu_cmd *cmd,
+>  	entry->req.iov_dif_cnt = 0;
+>  
+>  	/* Handle BIDI commands */
+> -	iov_cnt = 0;
+> -	ret = alloc_and_scatter_data_area(udev, tcmu_cmd,
+> -		se_cmd->t_bidi_data_sg, se_cmd->t_bidi_data_nents,
+> -		&iov, &iov_cnt, false);
+> -	if (ret) {
+> -		pr_err("tcmu: alloc and scatter bidi data failed\n");
+> -		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+> +	if (se_cmd->se_cmd_flags & SCF_BIDI) {
+> +		iov_cnt = 0;
+> +		iov++;
+> +		ret = alloc_and_scatter_data_area(udev, tcmu_cmd,
+> +					se_cmd->t_bidi_data_sg,
+> +					se_cmd->t_bidi_data_nents,
+> +					&iov, &iov_cnt, false);
+> +		if (ret) {
+> +			pr_err("tcmu: alloc and scatter bidi data failed\n");
+> +			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+> +		}
+> +		entry->req.iov_bidi_cnt = iov_cnt;
+>  	}
+> -	entry->req.iov_bidi_cnt = iov_cnt;
+>  
+>  	/* All offsets relative to mb_addr, not start of entry! */
+>  	cdb_off = CMDR_OFF + cmd_head + base_command_size;
+> 
 
-Yeah, I was aware of these things, but I think we are talking about 2
-different things/implications when we talk about 'ownership' in this
-context here. Which makes things seem to be worse than they are.
+Looks ok to me. Thanks.
 
-But we seem to agree on this: if eh_XXX returns FAILED, ownership
-ultimatively stays with the LLD. In which case the midlayer has to
-accommodate for the possibility that for example scsi_done is called.
-
-Anyway, see below.
-
->
-> Where you are right, in fact, is that we should not return FAILED when
-> calling scsi_try_to_abort() when cleaning up EH commands; if the driver
-> does not implement this function then no cleanup can be done, so calling
-> scsi_try_to_abort() is just us being nice.
->
-> And I actually can see a problem with cleaning up EH commands if
-> scsi_try_to_abort() returns FAILED; then the LLDD has potential _two_
-> stale references, one for the original command and one for the command
-> send from SCSI EH.
-> The only way I would imagine this ever worked was by _reusing_ the
-> references to the original command, effectively sending the TMF with the
-> same credentials the original SCSI command had.
-> If a driver (for whatever reason) does _not_ do this things will fall
-> apart indeed.
->
-> However, this was always a problem with SCSI EH; even with the original
-> codepath we would have this problem, so I don't think it's a problem
-> with this patchset.
->
-> Nevertheless, I'll be adding a fix for eh_try_to_abort() in the context
-> of cleaning up EH commands.
->
-
-I slept over this a night or two and then I remembered that to get to
-this point in the first place, at least one eh_XXX callback must have
-returned SUCCESS for the command that is reused to send the EH command.
-So the original reference to it should be forgotten already, if not,
-then that is indeed a LLD bug.
-
-That makes it much less troubling. But then again, sorry to say, but
-that still leaves me with one objection:
-
-When you ignore the FAIL return for the abort, it opens up the
-possibility to have an unrelated EH-Command completion being triggered
-from a previous EH-Command reference.
-
-Lets say we have a command A for LUN 1 behind Port α, command B for LUN
-2 behind Port β; and lets assume both FAIL the abort, so they get to the
-stage where EH-Commands might be send. Both will be successfully 'freed'
-after a LUN-Reset is issued for both 1 and 2.
-
-After each LUN-Reset we send a TUR, which is the EH-Command. If A_{TUR}
-times out and the abort fails (again), then the LLD might still have a
-reference to A_{TUR} and with that also to its overwritten scsi_done
-function-pointer.
-
-When we later send B_{TUR}, A_{TUR} might concurrently complete, call
-the scsi_done function-pointer to scsi_eh_done and complete the
-host-wide EH-completion that was setup for B_{TUR} (shost->eh_action).
-This is possible because shost->eh_action has a value different from
-NULL for B_{TUR}.
-
-And apart from this clear problem, I also find it still troubling that
-we call scsi_eh_restore_cmnd() before being sure that the reference to
-the EH-Command was forgotten. Because of that, we all of a sudden
-'restore' a reference to a command that the LLD already has forgotten
-before, just via a different 'LLD-Object'. And fields like
-scsi_cmnd->result from A become writeable again, although the
-'LLD-Object' should only point to A_{TUR}. And at the same time we
-'forget' references to parts of A_{TUR} that we queued that command
-with.. such as cmnd, cmnd_len, data_direction, ... . That is kinda the
-original point I complained about.
-
-All that was handled by the original code that escalated throughout the
-whole process, as ugly as it might be, before restoring the command and
-continuing with further possible EH-Commands. And yes, you are right,
-host-reset might also fail in the old code, leaving us essentially in
-the same mess. But then again, if host-reset fails, SCSI EH is pretty
-much lost anyway...
-
-
-                                                    Beste Grüße / Best regards,
-                                                      - Benjamin Block
---
-Linux on z Systems Development         /         IBM Systems & Technology Group
-		  IBM Deutschland Research & Development GmbH
-Vorsitz. AufsR.: Martina Koederitz     /        Geschäftsführung: Dirk Wittkopp
-Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
+Reviewed-by: Mike Christie <mchristi@redhat.com>
