@@ -1,55 +1,109 @@
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: Re: [PATCHv4 0/4] tcmu: bug fix and dynamic growing data area support
-Date: Tue, 21 Mar 2017 14:12:56 -0500
-Message-ID: <37ed1429-2876-8ea3-69c0-db93830170bd@linux.vnet.ibm.com>
+From: Mike Christie <mchristi@redhat.com>
+Subject: Re: [PATCHv4 1/4] tcmu: Fix possible overwrite of t_data_sg's last
+ iov[]
+Date: Tue, 21 Mar 2017 15:39:41 -0400
+Message-ID: <3c280e94-d626-2978-737d-eb4ae79bd64f@redhat.com>
 References: <1490085382-28658-1-git-send-email-lixiubo@cmss.chinamobile.com>
+ <1490085382-28658-2-git-send-email-lixiubo@cmss.chinamobile.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1490085382-28658-1-git-send-email-lixiubo@cmss.chinamobile.com>
+In-Reply-To: <1490085382-28658-2-git-send-email-lixiubo@cmss.chinamobile.com>
 Sender: target-devel-owner@vger.kernel.org
-To: lixiubo@cmss.chinamobile.com, agrover@redhat.com, nab@linux-iscsi.org, mchristi@redhat.com
-Cc: shli@kernel.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com
+To: lixiubo@cmss.chinamobile.com, agrover@redhat.com, nab@linux-iscsi.org
+Cc: shli@kernel.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com, bryantly@linux.vnet.ibm.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 3/21/17 3:36 AM, lixiubo@cmss.chinamobile.com wrote:
+On 03/21/2017 04:36 AM, lixiubo@cmss.chinamobile.com wrote:
 > From: Xiubo Li <lixiubo@cmss.chinamobile.com>
->
-> Changed for V4:
-> - re-order the #3, #4 at the head.
-> - merge most of the #5 to others.
->
->
-> Changed for V3:
-> - [PATCHv2 2/5] fix double usage of blocks and possible page fault
->    call trace.
-> - [PATCHv2 5/5] fix a mistake.
->
-> Changed for V2:
-> - [PATCHv2 1/5] just fixes some small spelling and other mistakes.
->    And as the initial patch, here sets cmd area to 8M and data area to
->    1G(1M fixed and 1023M growing)
-> - [PATCHv2 2/5] is a new one, adding global data block pool support.
->    The max total size of the pool is 2G and all the targets will get
->    growing blocks from here.
->    Test this using multi-targets at the same time.
-> - [PATCHv2 3/5] changed nothing, respin it to avoid the conflict.
-> - [PATCHv2 4/5] and [PATCHv2 5/5] are new ones.
->
->
->
-> Xiubo Li (4):
->    tcmu: Fix possible overwrite of t_data_sg's last iov[]
->    tcmu: Fix wrongly calculating of the base_command_size
->    tcmu: Add dynamic growing data area feature support
->    tcmu: Add global data block pool support
->
->   drivers/target/target_core_user.c | 605 +++++++++++++++++++++++++++++++-------
->   1 file changed, 504 insertions(+), 101 deletions(-)
+> 
+> If there has BIDI data, its first iov[] will overwrite the last
+> iov[] for se_cmd->t_data_sg.
+> 
+> To fix this, we can just increase the iov pointer, but this may
+> introuduce a new memory leakage bug: If the se_cmd->data_length
+> and se_cmd->t_bidi_data_sg->length are all not aligned up to the
+> DATA_BLOCK_SIZE, the actual length needed maybe larger than just
+> sum of them.
+> 
+> So, this could be avoided by rounding all the data lengthes up
+> to DATA_BLOCK_SIZE.
+> 
+> Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
+> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+> ---
+>  drivers/target/target_core_user.c | 34 +++++++++++++++++++++++-----------
+>  1 file changed, 23 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+> index 57defc3..65d475f 100644
+> --- a/drivers/target/target_core_user.c
+> +++ b/drivers/target/target_core_user.c
+> @@ -394,6 +394,20 @@ static bool is_ring_space_avail(struct tcmu_dev *udev, size_t cmd_size, size_t d
+>  	return true;
+>  }
+>  
+> +static inline size_t tcmu_cmd_get_data_length(struct tcmu_cmd *tcmu_cmd)
+> +{
+> +	struct se_cmd *se_cmd = tcmu_cmd->se_cmd;
+> +	size_t data_length = round_up(se_cmd->data_length, DATA_BLOCK_SIZE);
+> +
+> +	if (se_cmd->se_cmd_flags & SCF_BIDI) {
+> +		BUG_ON(!(se_cmd->t_bidi_data_sg && se_cmd->t_bidi_data_nents));
+> +		data_length += round_up(se_cmd->t_bidi_data_sg->length,
+> +				DATA_BLOCK_SIZE);
+> +	}
+> +
+> +	return data_length;
+> +}
+> +
+>  static sense_reason_t
+>  tcmu_queue_cmd_ring(struct tcmu_cmd *tcmu_cmd)
+>  {
+> @@ -407,7 +421,7 @@ static bool is_ring_space_avail(struct tcmu_dev *udev, size_t cmd_size, size_t d
+>  	uint32_t cmd_head;
+>  	uint64_t cdb_off;
+>  	bool copy_to_data_area;
+> -	size_t data_length;
+> +	size_t data_length = tcmu_cmd_get_data_length(tcmu_cmd);
+>  	DECLARE_BITMAP(old_bitmap, DATA_BLOCK_BITS);
+>  
+>  	if (test_bit(TCMU_DEV_BIT_BROKEN, &udev->flags))
+> @@ -433,11 +447,6 @@ static bool is_ring_space_avail(struct tcmu_dev *udev, size_t cmd_size, size_t d
+>  
+>  	mb = udev->mb_addr;
+>  	cmd_head = mb->cmd_head % udev->cmdr_size; /* UAM */
+> -	data_length = se_cmd->data_length;
+> -	if (se_cmd->se_cmd_flags & SCF_BIDI) {
+> -		BUG_ON(!(se_cmd->t_bidi_data_sg && se_cmd->t_bidi_data_nents));
+> -		data_length += se_cmd->t_bidi_data_sg->length;
+> -	}
+>  	if ((command_size > (udev->cmdr_size / 2)) ||
+>  	    data_length > udev->data_size) {
+>  		pr_warn("TCMU: Request of size %zu/%zu is too big for %u/%zu "
+> @@ -511,11 +520,14 @@ static bool is_ring_space_avail(struct tcmu_dev *udev, size_t cmd_size, size_t d
+>  	entry->req.iov_dif_cnt = 0;
+>  
+>  	/* Handle BIDI commands */
+> -	iov_cnt = 0;
+> -	alloc_and_scatter_data_area(udev, se_cmd->t_bidi_data_sg,
+> -		se_cmd->t_bidi_data_nents, &iov, &iov_cnt, false);
+> -	entry->req.iov_bidi_cnt = iov_cnt;
+> -
+> +	if (se_cmd->se_cmd_flags & SCF_BIDI) {
+> +		iov_cnt = 0;
+> +		iov++;
+> +		alloc_and_scatter_data_area(udev, se_cmd->t_bidi_data_sg,
+> +				se_cmd->t_bidi_data_nents, &iov, &iov_cnt,
+> +				false);
+> +		entry->req.iov_bidi_cnt = iov_cnt;
+> +	}
+>  	/* cmd's data_bitmap is what changed in process */
+>  	bitmap_xor(tcmu_cmd->data_bitmap, old_bitmap, udev->data_bitmap,
+>  			DATA_BLOCK_BITS);
+> 
 
-I have built this patch into our kernel and will get back to you.
+Patch looks ok to me.
 
-We will be doing larger scale testing to make sure everything still works.
-
--Bryant
+Reviewed-by: Mike Christie <mchristi@redhat.com>
