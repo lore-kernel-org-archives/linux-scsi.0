@@ -1,74 +1,119 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] sd: use async_probe cookie to avoid deadlocks
-Date: Tue, 21 Mar 2017 17:21:49 +0100
-Message-ID: <ef1d9658-9645-d9fc-a209-3c59846115f6@suse.de>
-References: <1490098475-21884-1-git-send-email-hare@suse.de>
- <1490101519.2412.13.camel@HansenPartnership.com>
- <27545016-e3a6-e425-cdfb-42c3ac7128df@suse.de>
- <1490110420.11580.12.camel@HansenPartnership.com>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH v2] scsi: storvsc: Add support for FC rport.
+Date: Tue, 21 Mar 2017 18:10:21 +0000
+Message-ID: <DM5PR03MB249001B5147401DE4829EC21A03D0@DM5PR03MB2490.namprd03.prod.outlook.com>
+References: <1489763861-18384-1-git-send-email-cavery@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35983 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757872AbdCUQWa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 21 Mar 2017 12:22:30 -0400
-In-Reply-To: <1490110420.11580.12.camel@HansenPartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1489763861-18384-1-git-send-email-cavery@redhat.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Cathy Avery <cavery@redhat.com>, "hch@infradead.org" <hch@infradead.org>, Haiyang Zhang <haiyangz@microsoft.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "stephen@networkplumber.org" <stephen@networkplumber.org>, "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: hck@suse.de, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On 03/21/2017 04:33 PM, James Bottomley wrote:
-> On Tue, 2017-03-21 at 16:25 +0100, Hannes Reinecke wrote:
->> On 03/21/2017 02:05 PM, James Bottomley wrote:
->>> On Tue, 2017-03-21 at 13:14 +0100, Hannes Reinecke wrote:
->>>> With the current design we're waiting for all async probes to
->>>> finish when removing any sd device.
->>>> This might lead to a livelock where the 'remove' call is blocking
->>>> for any probe calls to finish, and the probe calls are waiting
->>>> for
->>>> a response, which will never be processes as the thread handling
->>>> the responses is waiting for the remove call to finish.
->>>> Which is completely pointless as we only _really_ care for the
->>>> probe on _this_ device to be completed; any other probing can
->>>> happily continue for all we care.
->>>> So save the async probing cookie in the structure and only wait
->>>> if this specific probe is still active.
->>>
->>> How does this preserve ordering?  It looks like you have one cookie 
->>> per sdkp ... is there some sort of ordering guarantee I'm not
->>> seeing?
->>>
->> Do we need one?
->> The only thing we care here is that probing for _this_ device has 
->> finished.
-> 
-> OK, so currently we guarantee the linear ordering luns for individual
-> hbas.  We also guarantee no interleaving of sdX letters for individual
-> hbas.  We don't guarantee the scan order of the hbas themselves. 
->  Preserve those guarantees and I'm happy with the patch.  If you can't
-> preserve them I think we need further discussion.
-> 
-Which is actually not true.
-If just some devices are removed from the hba (eg if they belong to the
-same remote port) and we're rescanning devices once the port comes back
-there is no guarantee that the devices will be getting the same device
-letters. Nor that the device letters will be consecutive; just starting
-'scsi_debug' with just one device before rescanning will mess up the
-ordering. Even now.
 
-So I don't see how we can be worse off than we are today.
 
-Plus we (what with me now speaking for SUSE) never promised our
-customers anything regardind sdX stability :-)
+> -----Original Message-----
+> From: Cathy Avery [mailto:cavery@redhat.com]
+> Sent: Friday, March 17, 2017 8:18 AM
+> To: KY Srinivasan <kys@microsoft.com>; hch@infradead.org; Haiyang Zhang
+> <haiyangz@microsoft.com>; jejb@linux.vnet.ibm.com;
+> martin.petersen@oracle.com
+> Cc: stephen@networkplumber.org; dan.carpenter@oracle.com;
+> devel@linuxdriverproject.org; linux-kernel@vger.kernel.org; linux-
+> scsi@vger.kernel.org
+> Subject: [PATCH v2] scsi: storvsc: Add support for FC rport.
+>=20
+> Included in the current storvsc driver for Hyper-V is the ability
+> to access luns on an FC fabric via a virtualized fiber channel
+> adapter exposed by the Hyper-V host. The driver also attaches to
+> the FC transport to allow host and port names to be published under
+> /sys/class/fc_host/hostX. Current customer tools running on the VM
+> require that these names be available in the well known standard
+> location under fc_host/hostX.
+>=20
+> A problem arose when attaching to the FC transport. The scsi_scan
+> code attempts to call fc_user_scan which has basically become a no-op
+> due to the fact that the virtualized FC device does not expose rports.
+> At this point you cannot refresh the scsi bus after mapping or unmapping
+> luns on the SAN without a reboot of the VM.
+>=20
+> This patch stubs in an rport per fc_host in storvsc so that the
+> requirement of a defined rport is now met within the fc_transport and
+> echo "- - -" > /sys/class/scsi_host/hostX/scan now works.
+>=20
+> Signed-off-by: Cathy Avery <cavery@redhat.com>
 
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+Acked-by: K. Y. Srinivasan <kys@microsoft.com>
+> ---
+> Changes since v1:
+> - Fix fc_rport_identifiers init [Stephen Hemminger]
+> - Better error checking
+> ---
+>  drivers/scsi/storvsc_drv.c | 23 ++++++++++++++++++-----
+>  1 file changed, 18 insertions(+), 5 deletions(-)
+>=20
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index 638e5f4..37646d1 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -478,6 +478,9 @@ struct storvsc_device {
+>  	 */
+>  	u64 node_name;
+>  	u64 port_name;
+> +#if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
+> +	struct fc_rport *rport;
+> +#endif
+>  };
+>=20
+>  struct hv_host_device {
+> @@ -1816,19 +1819,27 @@ static int storvsc_probe(struct hv_device
+> *device,
+>  		target =3D (device->dev_instance.b[5] << 8 |
+>  			 device->dev_instance.b[4]);
+>  		ret =3D scsi_add_device(host, 0, target, 0);
+> -		if (ret) {
+> -			scsi_remove_host(host);
+> -			goto err_out2;
+> -		}
+> +		if (ret)
+> +			goto err_out3;
+>  	}
+>  #if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
+>  	if (host->transportt =3D=3D fc_transport_template) {
+> +		struct fc_rport_identifiers ids =3D {
+> +			.roles =3D FC_PORT_ROLE_FCP_TARGET,
+> +		};
+> +
+>  		fc_host_node_name(host) =3D stor_device->node_name;
+>  		fc_host_port_name(host) =3D stor_device->port_name;
+> +		stor_device->rport =3D fc_remote_port_add(host, 0, &ids);
+> +		if (!stor_device->rport)
+> +			goto err_out3;
+>  	}
+>  #endif
+>  	return 0;
+>=20
+> +err_out3:
+> +	scsi_remove_host(host);
+> +
+>  err_out2:
+>  	/*
+>  	 * Once we have connected with the host, we would need to
+> @@ -1854,8 +1865,10 @@ static int storvsc_remove(struct hv_device *dev)
+>  	struct Scsi_Host *host =3D stor_device->host;
+>=20
+>  #if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
+> -	if (host->transportt =3D=3D fc_transport_template)
+> +	if (host->transportt =3D=3D fc_transport_template) {
+> +		fc_remote_port_delete(stor_device->rport);
+>  		fc_remove_host(host);
+> +	}
+>  #endif
+>  	scsi_remove_host(host);
+>  	storvsc_dev_remove(dev);
+> --
+> 2.5.0
