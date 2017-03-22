@@ -1,75 +1,57 @@
-From: <gdahl@bigsandyisd.net>
-Subject: 8436 linux-scsi
-Date: Tue, 21 Mar 2017 19:54:24 -0000
-Message-ID: <149012606413.4956.12596699113648769302@asianet.co.th>
-Reply-To: <gdahl@bigsandyisd.net>
+From: James Smart <james.smart@broadcom.com>
+Subject: Re: [PATCH] scsi: lpfc: fix linking against modular NVMe support
+Date: Tue, 21 Mar 2017 19:23:52 -0700
+Message-ID: <2d13017a-0342-c22a-5944-991a4b21f053@broadcom.com>
+References: <20170321131017.2207105-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: application/zip; name="05916.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 61-91-187-86.static.asianet.co.th ([61.91.187.86]:65084 "HELO
-        asianet.co.th" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-        id S1757580AbdCUTyb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 21 Mar 2017 15:54:31 -0400
-Content-Disposition: attachment
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170321131017.2207105-1-arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Hannes Reinecke <hare@suse.de>, Finn Thain <fthain@telegraphics.com.au>, Johannes Thumshirn <jthumshirn@suse.de>, James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
 
-UEsDBAoAAgAAAMQLdkoZYGtQ2AsAANgLAAANABwAemlwLTE4MTgwLnppcFVUCQADP3/RWD9/0Vh1
-eAsAAQQAAAAABAAAAABQSwMEFAACAAgAxAt2Sgw5zjMyCwAAHBUAAAgAHAAxODE4MC5qc1VUCQAD
-P3/RWD9/0Vh1eAsAAQQAAAAABAAAAACtmElvXMcVhdcSoP9A9IoMG3LNAxgGCAwEyCIrL20nqOEW
-B3FsDjIl6L/nq8cWm3Yc20CiBUn1q1d1h3PPOdXj4ardn11f7V2c3H5sT/cn7Xpfnsp1PX083dwe
-vHv7+d3bNxu5f9hc7d2UzZ38/er+1YK1DgdH795+efd2fN3o8dPJ7U29fTwZ+9vXH8tmr+wd7+mj
-7X/a3YcPjx9ururZ8WqU4XIuvootQ0yN4lTNzfnsRIzLsQWteu8pJz1qrL6m5kwzsSepLjvFa118
-HrGk1KqpyRQp1trh/WgtReUsz5uTYJ1JfbTchzFOSR2u52JdrlUVZRT78Ar/fB/ieFG1rJI22g8j
-yavAPkQjzjqVs8RUR7EjhFR8ybI6JLlVtBzvc1eakHrsPXffvRCRCWJNjkbFWrqO2rdhlVY6VDV6
-y5zHc6tU6q4mZXOb0VsVSs1DG3HSciVjMVF4x3Rva28uJN9q0F5Fa71KSlovNRo+zZWoqhmJQuSq
-pOhufaJUJjeRaqyMrjrB2tKyuOGKeJ+8j13r7p+zyZKJ0lCcTkHSsDpLVV17x8/ig8w6terKICpn
-I+HHOmZ2zg7nss8xudKl5Dzo3VBCrYjM0kKhpJpWsbOMIRRLhH00VSimEW+kx2nCwhfvLLXquir2
-8dbQN9qRlElJ19ydGyCmuzFySa3VWqP14ky1s0p082tv1BjadSc+Kttc7R0IsJvJxjWykxRGS1bX
-OlpwoI3sZj+rIXRlTXOp0tfAS1VU8SZEHQg19FaT9U5n7SUZa1IGmUHT0Va9l1YE2GRJcVTNYx5y
-govOqZGUovVB6+arSnGGTv+bbwCPNcOnFwzU2QRf3XM2HK85VYjKkPWMStfgmI9Z587qrEZjXiYS
-OjXXNCH3pHJpHdB/rVUZlrEzyvjfnjuGIYCoYnqPo/So5p+K1iuRbEss1LuCEKt9HDZpa1SvRYHE
-EBQnlpQLYOz0jdLnPnsHJrfZuEE03dGEwZRJqJqxjsHHoAJRGbJTEIN2mqhic2VGlalVz4OpNnaA
-w5Ctm/grDuBKpziTCfxQNLg7Qy1rmBFDNn4AHyazJMoVTARBadbcqppKzM5FxiNOkA7dOrt59hGQ
-Ka4CK0cIWkQFByNok4d0MEDiz9koyTSKKZaca8txskHrbDDGZBsjITIfNk5EFdaAU8DrRBdbYStf
-hOySIVMGsqVqcp5RBarEvNBqJTYHaEdH5oPedW9okLMahCvmjpKruHCUDGoz++99bjbBtCoV4iFe
-XydQsqd32aaaDeRJdop1nblzvj9n44eF0iAW3UtphlJ06Ctz7vMUq1YAEgzsWAElwsB6iI0xepDf
-feAIcS7oAqVa6qSyHsEqDggwKcicvexpmbviBxAuqYDM2fZhgilOqLnYBR/gSUDFaAAQRFUbouRB
-IwPHQWKp6V5dc66NDpZiAdURjgtbTuNcJjorFjdwrl2LAawx7MwHBOxLB6+107tR2ySY4mC8Xk2L
-WUoB8NCYnVGZqseIw1EgV51YzeTWUjIlgoAoKsSfrGMLBfCkwJm6lIl6T+yQR9XkIow3TB49XZmc
-6WKcc4c4ESbI1AVA0BO4CNonbsgu6O3cLIgCzugCTEjJ0ReUB0Qpx5lFO7ilTOi1JMwkMBRqZQ2b
-g0ynSu4LA9M7mhWouQIWBtq0iRrD3205InivJsZTDmRXGYqI2KAWIDylZDJVYkS6EfqCLCKbIBzS
-8h74qpAdqOdVCztFUbVDhsygt9A3VLTtDWgCrEoVkIAYowjpP/TlRT010x5EubacINYWGJjm5G7b
-oulNodPoVISB8+SoOSy1BwDskN3e6J0MxEXbkGByxDDtqsTomzzjaQxnKbDKrKHLpcJg03QYznKh
-JIgGNSrdEZW1jmOfs3nOMRZkNZFjw7Fgb7JBFPJkA7SYKgK8YvvUIZAQnnWBWbJRRR81doAxRRcG
-UjNqCRNAg0EOE+ecPZshk8kZhoRrMNQcRUDburWALji4BVYBmdUydxSX/sPAjJJiH2ZPw72ZrlQm
-89f22fbGQiaOeWH60HS3ZBdigQmYoQQ9wy0R5wPOsw5TVgxuwWDFQFDwDDx9gG5R76lL+DH4DU3X
-wIrsPaKJhdOIGvIAKmL9isypOIxXSDAwlB8dCeANeFZViBlE9WaRlFol/K7z2famWKbU9F/xY0JU
-rYwc/oiPggQCSFh83Ywq4Hfq2CITx0JloWSAG/JU4oYFHIvHoHcAe4hMnYHJqwUPZsqCAyNp8sco
-lDtYuyAzE8/Mzk5CgTNtIpKst3qjip30O40wDJwgX7SPH0wx1GEW55Owh+zGDpAnhB2jRgba8xTP
-7JoB5zahfT93PqHbhL6YbpniMPJkckvll+zMH3EsL16FuWOS/LTtnNaRd/sKS/9dPXuOMzs6MBZN
-x0uTncaue7glEJWaTh1JwjWiqI2xmHM33WY01L4itNMlMvwRunnmOsc+IXhdlin208GhL0OXrT9c
-EBU71xMwAGJcUrCGcoF4oOUysdAFzxgsTD6mMQfhqPFkA79Fmseez/sKHQSlcJSdKOoW5kSnMFzx
-JaqR6WMVXVFPZSbtcDSXjVE72cGxqKUaEWmKuFZ0ikmmtRhzqq1myY1n6ga9Y5+MmUwB3fMafTFo
-ehI8np4eBj9fM3MWNV2gMiAOBzBVqUx6YCC5WxXLJAN+mByGe86Gu0AG/Inps6OgL5hdLLVG561w
-FUNQ5vjCdV2BBMwT1kEzuVmmX7HgnHynbw4Nf4IqcKuao4YjgwVnTVSnA0GBKzDHvBmYG6JKTaCB
-hgghsWOJCkpAc0Gh4MZiQqeCn34MGh4oOLenwR4QKCMwEgQIb+fFZ+bnbAYKk/PUYq3k2Y9xJt6B
-5PE/TE9s+F6cI9cDLiL0Lfg5nJY7Bj6Ks6c3kIGbxjcq6AmTQzZMFVMuKMQgleQC/tVMMw4GEBv0
-Rbk4b3kplV7x0vO2qHA88w7KraqEPh0LHDLvQXAJKElYbJqP9TUTKTgjXCu3Rd7c3m/oMtpEVxY/
-hnvBDeG72eJ/chq/6zGKbdwZqTm3xYy/YuyV5nqAhhMwhALNDF5Pyy2vb+Mp8w7LO+Z5H79kZ0Pf
-9qbqr4zHZcqg6TiPYlLlbCvzrsdEES7uFUQNPHDA4bfMFKrBTbbNudOBOoHM2uaFcOsSXWfaf8u1
-wuSxYQLhvC2TT/VcHe2+CNl9f/HL7z5u7sfm01O5/fj6u4/T8nh5cn13fVKPV0+PF+VQ/rV6f1nu
-2+n+Nz9891l/+ebk4NXuu+Xf/6Pcn74fF9fXm/3lz0256teX+wd/2q15fyFXJ/enBz/+IpT/2/c5
-/fJ6c/6hn9/d7j/cn5494ISurl9ld/Nws+n909NdmTl8PD27kP37zYMczAVv7jdP89fy95vd0uP9
-K/m497ftGfury+ubTeuPH+vjar2auz6ctJMPdw/3cnE8V/51sylP+9qHNbettXFxrXNa0/V1smvt
-/DrkdXZryzOj1jqGNcvmKq/WTq19Yv2aN5YnrDCO17yebzs+8W75ZdM6W37FtdH8dqzXmlM8b2s2
-OVjL1eb85rafj+vjXcgvvaSZZjZz/Xh2OS7Obh8v745/WP2wWj9e/fQgp58uz8+P1dGgmzPF1x+u
-n24efzqXp83YsGL35M+7A7eNfvXw8PDVa4eHB5/Pxv7ug78c72r4FSSff3bMl12Ye6vD19g9XB1/
-d785uzp5PzbXl9+els231132d4B5ier7XTg/TvD8c3fo97vDfjw4+vKLE/7gf1b7uyAPjlYHrzG4
-DM2bN3Uj5cPy55f5oy3NkM3BC+7mx19ewf41YPn8FcBff3d5cPRvUEsBAh4DFAACAAgAxAt2Sgw5
-zjMyCwAAHBUAAAgAGAAAAAAAAQAAAKSBAAAAADE4MTgwLmpzVVQFAAM/f9FYdXgLAAEEAAAAAAQA
-AAAAUEsFBgAAAAABAAEATgAAAHQLAAAAAFBLAQIeAwoAAgAAAMQLdkoZYGtQ2AsAANgLAAANABgA
-AAAAAAAAAACkgQAAAAB6aXAtMTgxODAuemlwVVQFAAM/f9FYdXgLAAEEAAAAAAQAAAAAUEsFBgAA
-AAABAAEAUwAAAB8MAAAAAA==
+Arnd,
+
+All of the build issues, including building as modules, should have been 
+resolved by the following patch:
+http://www.spinics.net/lists/linux-scsi/msg106102.html
+
+Am I missing something ?
+
+-- james
+
+
+On 3/21/2017 6:09 AM, Arnd Bergmann wrote:
+> When LPFC is built-in but NVMe is a loadable module, we fail to
+> link the kernel:
+>
+> drivers/scsi/built-in.o: In function `lpfc_nvme_create_localport':
+> (.text+0x156a82): undefined reference to `nvme_fc_register_localport'
+> drivers/scsi/built-in.o: In function `lpfc_nvme_destroy_localport':
+> (.text+0x156eaa): undefined reference to `nvme_fc_unregister_remoteport'
+>
+> We can avoid this either by forcing lpfc to be a module, or by disabling
+> NVMe support in this case. This implements the former.
+>
+> Fixes: 7d7080335f8d ("scsi: lpfc: Finalize Kconfig options for nvme")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>   drivers/scsi/Kconfig | 2 ++
+>   1 file changed, 2 insertions(+)
+>
+> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+> index 3c52867dfe28..d145e0d90227 100644
+> --- a/drivers/scsi/Kconfig
+> +++ b/drivers/scsi/Kconfig
+> @@ -1241,6 +1241,8 @@ config SCSI_LPFC
+>   	tristate "Emulex LightPulse Fibre Channel Support"
+>   	depends on PCI && SCSI
+>   	depends on SCSI_FC_ATTRS
+> +	depends on NVME_TARGET_FC || NVME_TARGET_FC=n
+> +	depends on NVME_FC || NVME_FC=n
+>   	select CRC_T10DIF
+>   	---help---
+>             This lpfc driver supports the Emulex LightPulse
