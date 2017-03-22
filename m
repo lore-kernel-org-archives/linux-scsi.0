@@ -1,69 +1,108 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 23/23] scsi: hisi_sas: add is_sata_phy_v2_hw()
-Date: Thu, 23 Mar 2017 01:25:39 +0800
-Message-ID: <1490203539-228029-24-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 09/23] scsi: hisi_sas: modify hisi_sas_abort_task() for SSP
+Date: Thu, 23 Mar 2017 01:25:25 +0800
+Message-ID: <1490203539-228029-10-git-send-email-john.garry@huawei.com>
 References: <1490203539-228029-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([45.249.212.188]:4384 "EHLO
+        dggrg02-dlp.huawei.com" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S935525AbdCVQ7Z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 22 Mar 2017 12:59:25 -0400
 In-Reply-To: <1490203539-228029-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhangfei.gao@linaro.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhangfei.gao@linaro.org, John Garry <john.garry@huawei.com>, Xiang Chen <chenxiang66@hisilicon.com>
 
-From: Xiaofei Tan <tanxiaofei@huawei.com>
+Currently an internal abort is executed regardless
+of the result of the TMF. We should also check the
+result of the internal abort to see if we should
+free the slot.
 
-Add helper function is_sata_phy_v2_hw() to judge whether
-the attached device is SATA disk for a root PHY.
+So change the status code STAT_IO_COMPLETE to
+TMF_RESP_FUNC_SUCC, meaning the slot has been
+successfully aborted.
 
-Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 17 +++++++++++++----
- 1 file changed, 13 insertions(+), 4 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 28 ++++++++++++++++++----------
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  2 +-
+ 2 files changed, 19 insertions(+), 11 deletions(-)
 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 00068d2..36d4e5a 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -935,6 +935,7 @@ static int hisi_sas_abort_task(struct sas_task *task)
+ 		struct scsi_cmnd *cmnd = task->uldd_task;
+ 		struct hisi_sas_slot *slot = task->lldd_task;
+ 		u32 tag = slot->idx;
++		int rc2;
+ 
+ 		int_to_scsilun(cmnd->device->lun, &lun);
+ 		tmf_task.tmf = TMF_ABORT_TASK;
+@@ -943,21 +944,22 @@ static int hisi_sas_abort_task(struct sas_task *task)
+ 		rc = hisi_sas_debug_issue_ssp_tmf(task->dev, lun.scsi_lun,
+ 						  &tmf_task);
+ 
+-		/* if successful, clear the task and callback forwards.*/
+-		if (rc == TMF_RESP_FUNC_COMPLETE) {
++		rc2 = hisi_sas_internal_task_abort(hisi_hba, device,
++						   HISI_SAS_INT_ABT_CMD, tag);
++		/*
++		 * If the TMF finds that the IO is not in the device and also
++		 * the internal abort does not succeed, then it is safe to
++		 * free the slot.
++		 * Note: if the internal abort succeeds then the slot
++		 * will have already been completed
++		 */
++		if (rc == TMF_RESP_FUNC_COMPLETE && rc2 != TMF_RESP_FUNC_SUCC) {
+ 			if (task->lldd_task) {
+-				struct hisi_sas_slot *slot;
+-
+-				slot = &hisi_hba->slot_info
+-					[tmf_task.tag_of_task_to_be_managed];
+ 				spin_lock_irqsave(&hisi_hba->lock, flags);
+-				hisi_hba->hw->slot_complete(hisi_hba, slot);
++				hisi_sas_do_release_task(hisi_hba, task, slot);
+ 				spin_unlock_irqrestore(&hisi_hba->lock, flags);
+ 			}
+ 		}
+-
+-		hisi_sas_internal_task_abort(hisi_hba, device,
+-					     HISI_SAS_INT_ABT_CMD, tag);
+ 	} else if (task->task_proto & SAS_PROTOCOL_SATA ||
+ 		task->task_proto & SAS_PROTOCOL_STP) {
+ 		if (task->dev->dev_type == SAS_SATA_DEV) {
+@@ -1220,6 +1222,12 @@ static int hisi_sas_query_task(struct sas_task *task)
+ 		goto exit;
+ 	}
+ 
++	if (task->task_status.resp == SAS_TASK_COMPLETE &&
++		task->task_status.stat == TMF_RESP_FUNC_SUCC) {
++		res = TMF_RESP_FUNC_SUCC;
++		goto exit;
++	}
++
+ 	/* TMF timed out, return direct. */
+ 	if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
+ 		if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index e9c7188..a3af380 100644
+index a35f881..ad5a7e6 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -1075,6 +1075,17 @@ static void enable_phy_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
- 	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
- }
- 
-+static bool is_sata_phy_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
-+{
-+	u32 context;
-+
-+	context = hisi_sas_read32(hisi_hba, PHY_CONTEXT);
-+	if (context & (1 << phy_no))
-+		return true;
-+
-+	return false;
-+}
-+
- static void disable_phy_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
- {
- 	u32 cfg = hisi_sas_phy_read32(hisi_hba, phy_no, PHY_CFG);
-@@ -2286,7 +2297,7 @@ static int prep_abort_v2_hw(struct hisi_hba *hisi_hba,
- static int phy_up_v2_hw(int phy_no, struct hisi_hba *hisi_hba)
- {
- 	int i, res = IRQ_HANDLED;
--	u32 context, port_id, link_rate, hard_phy_linkrate;
-+	u32 port_id, link_rate, hard_phy_linkrate;
- 	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
- 	struct asd_sas_phy *sas_phy = &phy->sas_phy;
- 	struct device *dev = &hisi_hba->pdev->dev;
-@@ -2295,9 +2306,7 @@ static int phy_up_v2_hw(int phy_no, struct hisi_hba *hisi_hba)
- 
- 	hisi_sas_phy_write32(hisi_hba, phy_no, PHYCTRL_PHY_ENA_MSK, 1);
- 
--	/* Check for SATA dev */
--	context = hisi_sas_read32(hisi_hba, PHY_CONTEXT);
--	if (context & (1 << phy_no))
-+	if (is_sata_phy_v2_hw(hisi_hba, phy_no))
- 		goto end;
- 
- 	if (phy_no == 8) {
+@@ -1766,7 +1766,7 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
+ 		goto out;
+ 	case STAT_IO_COMPLETE:
+ 		/* internal abort command complete */
+-		ts->stat = TMF_RESP_FUNC_COMPLETE;
++		ts->stat = TMF_RESP_FUNC_SUCC;
+ 		goto out;
+ 	case STAT_IO_NO_DEVICE:
+ 		ts->stat = TMF_RESP_FUNC_COMPLETE;
 -- 
 1.9.1
