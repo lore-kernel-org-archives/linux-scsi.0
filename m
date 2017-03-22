@@ -1,142 +1,49 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: pm8001: build in relevant functions and code on PM8001_USE_MSIX
-Date: Wed, 22 Mar 2017 18:50:04 +0000
-Message-ID: <20170322185004.1012-1-colin.king@canonical.com>
+From: "Winkler, Tomas" <tomas.winkler@intel.com>
+Subject: RE: [PATCH v7 09/11] scsi: ufs: connect to RPMB subsystem
+Date: Wed, 22 Mar 2017 21:25:36 +0000
+Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B543C0457@hasmsx108.ger.corp.intel.com>
+References: <1478548394-8184-1-git-send-email-tomas.winkler@intel.com>
+ <1478548394-8184-10-git-send-email-tomas.winkler@intel.com>
+ <20161107190109.GA5110@lst.de>
+ <5B8DA87D05A7694D9FA63FD143655C1B5431750E@hasmsx108.ger.corp.intel.com>
+ <20161107213754.GA10433@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:48319 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935233AbdCVTYi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Mar 2017 15:24:38 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-doc-owner@vger.kernel.org>
+In-Reply-To: <20161107213754.GA10433@lst.de>
+Content-Language: en-US
+Sender: linux-doc-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ulf Hansson <ulf.hansson@linaro.org>, "Hunter, Adrian" <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, Arve Hj?nnev?g <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Yaniv Gardi <ygardi@codeaurora.org>, Avri Altman <avri.altman@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, "Usyskin, Alexander" <alexan>
 List-Id: linux-scsi@vger.kernel.org
-To: Jack Wang <jinpu.wang@profitbricks.com>, lindar_liu@usish.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, pmchba@pmcs.com, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+>=20
+> On Mon, Nov 07, 2016 at 07:27:38PM +0000, Winkler, Tomas wrote:
+> > I  value your opinion but I'm not responsible for inventing RPMB
+> > and/or its  implementation storage devices (eMMC, UFC, NVMe), it's pret=
+ty
+> much done deal out there in the wild.
+> > I'm just trying to provide common API above it.
 
-Currently the misx and intx variables of the interrupt enable/disable
-helper functions are built in no matter what the setting of the
-macro PM8001_USE_MSIX.  Clean this up by just building in the
-necessary helper functions and calls to these functions depending on
-the setting of PM8001_USE_MSIX.  This addresses several dead code
-paths found by static analysis with CoverityScan.
+Somehow I've missed that answer, now I got back when search for comments be=
+fore I'll post a new series.
+=20
+> And the common API must go through the SCSI midlayer. =20
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/pm8001/pm8001_hwi.c | 63 +++++++++++++++++++++-------------------
- 1 file changed, 33 insertions(+), 30 deletions(-)
+I've actually tried to do  a midlayer, but I found it's too UFS specific, s=
+o there is no point to this abstraction. =20
+As not all needed data are accessible via scsi calls.  The solution I propo=
+se fits with what is done in eMMC (emmc specific  IOCTL).
+There is already some code that breaks that layering in  ufshcd_set_dev_pwr=
+_mode when talking to the special sdev_ufs.
+Maybe I need more hint for the correct directions.
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index 10546faac58c..d1be10fd1350 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -1204,26 +1204,7 @@ void pm8001_chip_iounmap(struct pm8001_hba_info *pm8001_ha)
- 	}
- }
- 
--/**
-- * pm8001_chip_interrupt_enable - enable PM8001 chip interrupt
-- * @pm8001_ha: our hba card information
-- */
--static void
--pm8001_chip_intx_interrupt_enable(struct pm8001_hba_info *pm8001_ha)
--{
--	pm8001_cw32(pm8001_ha, 0, MSGU_ODMR, ODMR_CLEAR_ALL);
--	pm8001_cw32(pm8001_ha, 0, MSGU_ODCR, ODCR_CLEAR_ALL);
--}
--
-- /**
--  * pm8001_chip_intx_interrupt_disable- disable PM8001 chip interrupt
--  * @pm8001_ha: our hba card information
--  */
--static void
--pm8001_chip_intx_interrupt_disable(struct pm8001_hba_info *pm8001_ha)
--{
--	pm8001_cw32(pm8001_ha, 0, MSGU_ODMR, ODMR_MASK_ALL);
--}
-+#ifdef PM8001_USE_MSIX
- 
- /**
-  * pm8001_chip_msix_interrupt_enable - enable PM8001 chip interrupt
-@@ -1257,6 +1238,30 @@ pm8001_chip_msix_interrupt_disable(struct pm8001_hba_info *pm8001_ha,
- 	pm8001_cw32(pm8001_ha, 0,  msi_index, MSIX_INTERRUPT_DISABLE);
- }
- 
-+#else
-+
-+/**
-+ * pm8001_chip_interrupt_enable - enable PM8001 chip interrupt
-+ * @pm8001_ha: our hba card information
-+ */
-+static void
-+pm8001_chip_intx_interrupt_enable(struct pm8001_hba_info *pm8001_ha)
-+{
-+	pm8001_cw32(pm8001_ha, 0, MSGU_ODMR, ODMR_CLEAR_ALL);
-+	pm8001_cw32(pm8001_ha, 0, MSGU_ODCR, ODCR_CLEAR_ALL);
-+}
-+
-+ /**
-+  * pm8001_chip_intx_interrupt_disable- disable PM8001 chip interrupt
-+  * @pm8001_ha: our hba card information
-+  */
-+static void
-+pm8001_chip_intx_interrupt_disable(struct pm8001_hba_info *pm8001_ha)
-+{
-+	pm8001_cw32(pm8001_ha, 0, MSGU_ODMR, ODMR_MASK_ALL);
-+}
-+#endif
-+
- /**
-  * pm8001_chip_interrupt_enable - enable PM8001 chip interrupt
-  * @pm8001_ha: our hba card information
-@@ -1266,10 +1271,9 @@ pm8001_chip_interrupt_enable(struct pm8001_hba_info *pm8001_ha, u8 vec)
- {
- #ifdef PM8001_USE_MSIX
- 	pm8001_chip_msix_interrupt_enable(pm8001_ha, 0);
--	return;
--#endif
-+#else
- 	pm8001_chip_intx_interrupt_enable(pm8001_ha);
--
-+#endif
- }
- 
- /**
-@@ -1281,10 +1285,9 @@ pm8001_chip_interrupt_disable(struct pm8001_hba_info *pm8001_ha, u8 vec)
- {
- #ifdef PM8001_USE_MSIX
- 	pm8001_chip_msix_interrupt_disable(pm8001_ha, 0);
--	return;
--#endif
-+#else
- 	pm8001_chip_intx_interrupt_disable(pm8001_ha);
--
-+#endif
- }
- 
- /**
-@@ -4613,15 +4616,15 @@ static int pm8001_chip_phy_ctl_req(struct pm8001_hba_info *pm8001_ha,
- 
- static u32 pm8001_chip_is_our_interupt(struct pm8001_hba_info *pm8001_ha)
- {
--	u32 value;
- #ifdef PM8001_USE_MSIX
- 	return 1;
--#endif
--	value = pm8001_cr32(pm8001_ha, 0, MSGU_ODR);
-+#else
-+	u32 value = pm8001_cr32(pm8001_ha, 0, MSGU_ODR);
-+
- 	if (value)
- 		return 1;
- 	return 0;
--
-+#endif
- }
- 
- /**
--- 
-2.11.0
+If it can't we won't
+> support it, so please drop the UFS patches from the series.
+
+If you have more constructive comments, I'll be glad to hear and address.=20
+
+Thanks
+Tomas
+
