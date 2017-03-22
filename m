@@ -1,64 +1,56 @@
-From: Nicholas Mc Guire <der.herr@hofr.at>
-Subject: [PATCH] qla4xxx: drop redundant init_completion
-Date: Wed, 22 Mar 2017 11:44:22 +0100
-Message-ID: <1490179462-16559-1-git-send-email-der.herr@hofr.at>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: [PATCH] scsi: ufs: remove the duplicated checking for supporting
+ clkscaling
+Date: Wed, 22 Mar 2017 14:35:45 +0100
+Message-ID: <10077418.cjgahspKMt@amdc3058>
+References: <CGME20170321121957epcas1p3ccd834d3ac572a1858684e8ab4bb24e1@epcas1p3.samsung.com>
+ <20170321121957.18655-1-jh80.chung@samsung.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:50209 "EHLO www.osadl.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1759175AbdCVKoW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 22 Mar 2017 06:44:22 -0400
+Received: from mailout3.samsung.com ([203.254.224.33]:36393 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933002AbdCVNqw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Mar 2017 09:46:52 -0400
+In-reply-to: <20170321121957.18655-1-jh80.chung@samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>, QLogic-Storage-Upstream@qlogic.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nicholas Mc Guire <der.herr@hofr.at>
-
-The redundant init_completion() here seems to be a cut&past error as
-struct scsi_qla_host only has 4 completion elements to initialize, thus
-the duplicate init_completion(disable_acb_comp) is simply removed.
-
-Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
----
-
-Found by experimental coccinelle script: 
-./drivers/scsi/qla4xxx/ql4_os.c:8667:1-16: WARNING: possible duplicate 
-init_completion
+To: Jaehoon Chung <jh80.chung@samsung.com>
+Cc: linux-scsi@vger.kernel.org, vinholikatti@gmail.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org
 
 
-checking struct scsi_qla_host in
-drivers/scsi/qla4xxx/ql4_def.h:457 "Linux Host Adapter structure"
-it contain only the following 4 completion objects:
+Hi,
 
-struct completion disable_acb_comp;
-struct completion idc_comp;
-struct completion link_up_comp;
-struct completion mbx_intr_comp;
+On Tuesday, March 21, 2017 09:19:57 PM Jaehoon Chung wrote:
+> There are same conditions for checking whether supporting clkscaling or
+> not.
+> When ufshcd is supporting clkscaling, active_reqs should be decreased by
+> two.
 
-so it seems the double initialization of disable_acb_comp was just a
-cut&past but and no omission of some other completion object - thus
-the second initialization is simply removed.
+I guess you meant "one" here, not "two"?
 
-Patch was only compile tested with: x86_64_defconfig + SCSI_LOWLEVEL=y,
- CONFIG_SCSI_QLA_ISCSI=m
-(...quite a few sparse and coccinelle errors/warnings during build-tests)
+> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 2 --
+>  1 file changed, 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index dc6efbd..f2cbc71 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -4598,8 +4598,6 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
+>  		}
+>  		if (ufshcd_is_clkscaling_supported(hba))
+>  			hba->clk_scaling.active_reqs--;
+> -		if (ufshcd_is_clkscaling_supported(hba))
+> -			hba->clk_scaling.active_reqs--;
+>  	}
+>  
+>  	/* clear corresponding bits of completed commands */
 
-Patch is against 4.11-rc3 (localversion-next is next-20170322)
-
- drivers/scsi/qla4xxx/ql4_os.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index ac52150..64c6fa5 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -8663,9 +8663,8 @@ static int qla4xxx_probe_adapter(struct pci_dev *pdev,
- 	init_completion(&ha->mbx_intr_comp);
- 	init_completion(&ha->disable_acb_comp);
- 	init_completion(&ha->idc_comp);
- 	init_completion(&ha->link_up_comp);
--	init_completion(&ha->disable_acb_comp);
- 
- 	spin_lock_init(&ha->hardware_lock);
- 	spin_lock_init(&ha->work_lock);
- 
--- 
-2.1.4
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
