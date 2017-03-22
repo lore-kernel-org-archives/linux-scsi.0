@@ -1,49 +1,40 @@
-From: "Winkler, Tomas" <tomas.winkler@intel.com>
-Subject: RE: [PATCH v7 09/11] scsi: ufs: connect to RPMB subsystem
-Date: Wed, 22 Mar 2017 21:25:36 +0000
-Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B543C0457@hasmsx108.ger.corp.intel.com>
-References: <1478548394-8184-1-git-send-email-tomas.winkler@intel.com>
- <1478548394-8184-10-git-send-email-tomas.winkler@intel.com>
- <20161107190109.GA5110@lst.de>
- <5B8DA87D05A7694D9FA63FD143655C1B5431750E@hasmsx108.ger.corp.intel.com>
- <20161107213754.GA10433@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-doc-owner@vger.kernel.org>
-In-Reply-To: <20161107213754.GA10433@lst.de>
-Content-Language: en-US
-Sender: linux-doc-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ulf Hansson <ulf.hansson@linaro.org>, "Hunter, Adrian" <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, Arve Hj?nnev?g <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Yaniv Gardi <ygardi@codeaurora.org>, Avri Altman <avri.altman@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, "Usyskin, Alexander" <alexan>
+From: Satish Kharat <satishkh@cisco.com>
+Subject: [PATCH 1/1] fnic: bug fix for fip.fip_subcode in fnic_fcoe_send_vlan_req
+Date: Wed, 22 Mar 2017 16:55:01 -0700
+Message-ID: <1490226901-24504-1-git-send-email-satishkh@cisco.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rcdn-iport-7.cisco.com ([173.37.86.78]:30983 "EHLO
+        rcdn-iport-7.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754796AbdCVXzS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Mar 2017 19:55:18 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: satishkh@cisco.com, sebaddel@cisco.com
 
->=20
-> On Mon, Nov 07, 2016 at 07:27:38PM +0000, Winkler, Tomas wrote:
-> > I  value your opinion but I'm not responsible for inventing RPMB
-> > and/or its  implementation storage devices (eMMC, UFC, NVMe), it's pret=
-ty
-> much done deal out there in the wild.
-> > I'm just trying to provide common API above it.
+This is a bug introduced when they moved the fip subcodes
+to central place. Was sending FIP_SC_VL_NOTE in fip.fip_subcode
+for VLAN request in fnic_fcoe_send_vlan_req. Change is to use
+FIP_SC_VL_REQ instead.
 
-Somehow I've missed that answer, now I got back when search for comments be=
-fore I'll post a new series.
-=20
-> And the common API must go through the SCSI midlayer. =20
+Signed-off-by: Satish Kharat <satishkh@cisco.com>
+Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
+---
+ drivers/scsi/fnic/fnic_fcs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I've actually tried to do  a midlayer, but I found it's too UFS specific, s=
-o there is no point to this abstraction. =20
-As not all needed data are accessible via scsi calls.  The solution I propo=
-se fits with what is done in eMMC (emmc specific  IOCTL).
-There is already some code that breaks that layering in  ufshcd_set_dev_pwr=
-_mode when talking to the special sdev_ufs.
-Maybe I need more hint for the correct directions.
-
-If it can't we won't
-> support it, so please drop the UFS patches from the series.
-
-If you have more constructive comments, I'll be glad to hear and address.=20
-
-Thanks
-Tomas
-
+diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
+index 3b7da66..f5e632f 100644
+--- a/drivers/scsi/fnic/fnic_fcs.c
++++ b/drivers/scsi/fnic/fnic_fcs.c
+@@ -359,7 +359,7 @@ static void fnic_fcoe_send_vlan_req(struct fnic *fnic)
+ 
+ 	vlan->fip.fip_ver = FIP_VER_ENCAPS(FIP_VER);
+ 	vlan->fip.fip_op = htons(FIP_OP_VLAN);
+-	vlan->fip.fip_subcode = FIP_SC_VL_NOTE;
++	vlan->fip.fip_subcode = FIP_SC_VL_REQ;
+ 	vlan->fip.fip_dl_len = htons(sizeof(vlan->desc) / FIP_BPW);
+ 
+ 	vlan->desc.mac.fd_desc.fip_dtype = FIP_DT_MAC;
+-- 
+2.7.4
