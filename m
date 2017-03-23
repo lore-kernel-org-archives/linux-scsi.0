@@ -1,53 +1,36 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 06/23] dm-kcopyd: switch to use REQ_OP_WRITE_ZEROES
-Date: Thu, 23 Mar 2017 11:10:38 -0400
-Message-ID: <20170323151037.GC17127@redhat.com>
-References: <20170323143341.31549-1-hch@lst.de>
- <20170323143341.31549-7-hch@lst.de>
- <20170323145522.GB17127@redhat.com>
- <20170323145651.GA31771@lst.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 00/23] hisi_sas: error handling and other misc fixes and improvements
+Date: Thu, 23 Mar 2017 11:12:40 -0400
+Message-ID: <yq1mvccdo2f.fsf@oracle.com>
+References: <1490203539-228029-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170323145651.GA31771@lst.de>
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:33424 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933210AbdCWPMy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2017 11:12:54 -0400
+In-Reply-To: <1490203539-228029-1-git-send-email-john.garry@huawei.com> (John
+        Garry's message of "Thu, 23 Mar 2017 01:25:16 +0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: John Garry <john.garry@huawei.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linuxarm@huawei.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhangfei.gao@linaro.org
 
-On Thu, Mar 23 2017 at 10:56am -0400,
-Christoph Hellwig <hch@lst.de> wrote:
+John Garry <john.garry@huawei.com> writes:
 
-> On Thu, Mar 23, 2017 at 10:55:22AM -0400, Mike Snitzer wrote:
-> > See commit 70d6c400a ("dm kcopyd: add WRITE SAME support to dm_kcopyd_zero")
-> > drivers/md/dm-io.c:do_region() adjusts the WRITE SAME payload to be a
-> > single page.
-> > 
-> > So you'd want to tweak dm-io.c accordingly for WRITE ZEROES (presummably
-> > no payload?)
-> 
-> Yeah, I'll look into it.
+John,
 
-Ah, your previous 05/23 patch re-uses the discard branch in
-dm-io.c:do_region.  Looks correct.  So you should be good.
+> This patchset introduces a range of error handling
+> and other misc improvements for the HiSilicon SAS
+> controller, including:
+> - controller reset function
+> - softreset for SATA error handling
+> - fixes for slot free'ing
+> - v2 hw error handling improvements
+> - and other misc, more minor stuff
 
-Not sure why you've split out the dm-kcopyd patch, likely best to just
-fold it into the previous dm support patch.
+Applied to 4.12/scsi-queue. Thanks!
 
-I'll try your code out on my testbed, probably tomorrow, but in general
-the DM code looks solid (thanks for doing it!).  But I'll take a closer
-look and will report back with my Reviewed-by if all looks (and tests
-out) good.
-
-> Any good test case for verifying this code while I've got your
-> attention?
-
-DM thinp is the only consumer of dm_kcopyd_zero().  DM thinp
-conservatively defaults to zeroing (but we recommend
-'skip_block_zeroing' for most setups).  So anyway, just using a DM thin
-device with partial thin blocksize IO (without 'skip_block_zeroing')
-should get you coverage.
-
-The device-mapper-test-suite thin tests have thinp w/ zeroing coverage
-so I'll be sure to run those.
+-- 
+Martin K. Petersen	Oracle Linux Engineering
