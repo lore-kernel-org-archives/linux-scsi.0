@@ -1,12 +1,12 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 03/23] sd: implement REQ_OP_WRITE_ZEROES
-Date: Thu, 23 Mar 2017 10:33:21 -0400
-Message-ID: <20170323143341.31549-4-hch@lst.de>
+Subject: [PATCH 04/23] md: support REQ_OP_WRITE_ZEROES
+Date: Thu, 23 Mar 2017 10:33:22 -0400
+Message-ID: <20170323143341.31549-5-hch@lst.de>
 References: <20170323143341.31549-1-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:53314 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:53256 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755310AbdCWOed (ORCPT
+        with ESMTP id S1755628AbdCWOed (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2017 10:34:33 -0400
 In-Reply-To: <20170323143341.31549-1-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,138 +14,118 @@ List-Id: linux-scsi@vger.kernel.org
 To: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, lars.ellenberg@linbit.com
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
 
+Copy & paste from the REQ_OP_WRITE_SAME code.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/sd.c     | 45 ++++++++++++++++++++++++++++++++++++++++-----
- drivers/scsi/sd_zbc.c |  1 +
- 2 files changed, 41 insertions(+), 5 deletions(-)
+ drivers/md/linear.c    | 1 +
+ drivers/md/md.h        | 7 +++++++
+ drivers/md/multipath.c | 1 +
+ drivers/md/raid0.c     | 2 ++
+ drivers/md/raid1.c     | 4 +++-
+ drivers/md/raid10.c    | 1 +
+ drivers/md/raid5.c     | 1 +
+ 7 files changed, 16 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index af632e350ab4..b6f70a09a301 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -748,7 +748,7 @@ static int sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
- 	return scsi_init_io(cmd);
- }
- 
--static int sd_setup_write_same16_cmnd(struct scsi_cmnd *cmd)
-+static int sd_setup_write_same16_cmnd(struct scsi_cmnd *cmd, bool unmap)
- {
- 	struct scsi_device *sdp = cmd->device;
- 	struct request *rq = cmd->request;
-@@ -765,13 +765,14 @@ static int sd_setup_write_same16_cmnd(struct scsi_cmnd *cmd)
- 
- 	cmd->cmd_len = 16;
- 	cmd->cmnd[0] = WRITE_SAME_16;
--	cmd->cmnd[1] = 0x8; /* UNMAP */
-+	if (unmap)
-+		cmd->cmnd[1] = 0x8; /* UNMAP */
- 	put_unaligned_be64(sector, &cmd->cmnd[2]);
- 	put_unaligned_be32(nr_sectors, &cmd->cmnd[10]);
- 
- 	cmd->allowed = SD_MAX_RETRIES;
- 	cmd->transfersize = data_len;
--	rq->timeout = SD_TIMEOUT;
-+	rq->timeout = unmap ? SD_TIMEOUT : SD_WRITE_SAME_TIMEOUT;
- 	scsi_req(rq)->resid_len = data_len;
- 
- 	return scsi_init_io(cmd);
-@@ -801,7 +802,7 @@ static int sd_setup_write_same10_cmnd(struct scsi_cmnd *cmd, bool unmap)
- 
- 	cmd->allowed = SD_MAX_RETRIES;
- 	cmd->transfersize = data_len;
--	rq->timeout = SD_TIMEOUT;
-+	rq->timeout = unmap ? SD_TIMEOUT : SD_WRITE_SAME_TIMEOUT;
- 	scsi_req(rq)->resid_len = data_len;
- 
- 	return scsi_init_io(cmd);
-@@ -857,11 +858,39 @@ static int sd_setup_ata_trim_cmnd(struct scsi_cmnd *cmd)
- 	return scsi_init_io(cmd);
- }
- 
-+static int sd_setup_write_zeroes_cmnd(struct scsi_cmnd *cmd)
-+{
-+	struct request *rq = cmd->request;
-+	struct scsi_device *sdp = cmd->device;
-+	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
-+	u64 sector = blk_rq_pos(rq) >> (ilog2(sdp->sector_size) - 9);
-+	u32 nr_sectors = blk_rq_sectors(rq) >> (ilog2(sdp->sector_size) - 9);
-+
-+	if (sdp->ata_trim) {
-+		if (!sdp->ata_trim_zeroes_data)
-+			return BLKPREP_INVALID;
-+		return sd_setup_ata_trim_cmnd(cmd);
-+	}
-+	if (sdp->no_write_same)
-+		return BLKPREP_INVALID;
-+	if (sdkp->ws16 || sector > 0xffffffff || nr_sectors > 0xffff)
-+		return sd_setup_write_same16_cmnd(cmd, false);
-+	return sd_setup_write_same10_cmnd(cmd, false);
-+}
-+
- static void sd_config_write_same(struct scsi_disk *sdkp)
- {
- 	struct request_queue *q = sdkp->disk->queue;
- 	unsigned int logical_block_size = sdkp->device->sector_size;
- 
-+	if (sdkp->device->ata_trim) {
-+		if (sdkp->device->ata_trim_zeroes_data)
-+			sdkp->max_ws_blocks = 65535 * (512 / sizeof(__le64));
-+		else
-+			sdkp->max_ws_blocks = 0;
-+		goto config_write_zeroes;
-+	}
-+
- 	if (sdkp->device->no_write_same) {
- 		sdkp->max_ws_blocks = 0;
- 		goto out;
-@@ -886,6 +915,9 @@ static void sd_config_write_same(struct scsi_disk *sdkp)
- out:
- 	blk_queue_max_write_same_sectors(q, sdkp->max_ws_blocks *
- 					 (logical_block_size >> 9));
-+config_write_zeroes:
-+	blk_queue_max_write_zeroes_sectors(q, sdkp->max_ws_blocks *
-+					 (logical_block_size >> 9));
- }
- 
- /**
-@@ -1226,7 +1258,7 @@ static int sd_init_command(struct scsi_cmnd *cmd)
- 		case SD_LBP_UNMAP:
- 			return sd_setup_unmap_cmnd(cmd);
- 		case SD_LBP_WS16:
--			return sd_setup_write_same16_cmnd(cmd);
-+			return sd_setup_write_same16_cmnd(cmd, true);
- 		case SD_LBP_WS10:
- 			return sd_setup_write_same10_cmnd(cmd, true);
- 		case SD_LBP_ZERO:
-@@ -1236,6 +1268,8 @@ static int sd_init_command(struct scsi_cmnd *cmd)
- 		default:
- 			return BLKPREP_INVALID;
+diff --git a/drivers/md/linear.c b/drivers/md/linear.c
+index 3e38e0207a3e..377a8a3672e3 100644
+--- a/drivers/md/linear.c
++++ b/drivers/md/linear.c
+@@ -293,6 +293,7 @@ static void linear_make_request(struct mddev *mddev, struct bio *bio)
+ 						      split, disk_devt(mddev->gendisk),
+ 						      bio_sector);
+ 			mddev_check_writesame(mddev, split);
++			mddev_check_write_zeroes(mddev, split);
+ 			generic_make_request(split);
  		}
-+	case REQ_OP_WRITE_ZEROES:
-+		return sd_setup_write_zeroes_cmnd(cmd);
- 	case REQ_OP_WRITE_SAME:
- 		return sd_setup_write_same_cmnd(cmd);
- 	case REQ_OP_FLUSH:
-@@ -1876,6 +1910,7 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ 	} while (split != bio);
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index dde8ecb760c8..1e76d64ce180 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -709,4 +709,11 @@ static inline void mddev_check_writesame(struct mddev *mddev, struct bio *bio)
+ 	    !bdev_get_queue(bio->bi_bdev)->limits.max_write_same_sectors)
+ 		mddev->queue->limits.max_write_same_sectors = 0;
+ }
++
++static inline void mddev_check_write_zeroes(struct mddev *mddev, struct bio *bio)
++{
++	if (bio_op(bio) == REQ_OP_WRITE_ZEROES &&
++	    !bdev_get_queue(bio->bi_bdev)->limits.max_write_zeroes_sectors)
++		mddev->queue->limits.max_write_zeroes_sectors = 0;
++}
+ #endif /* _MD_MD_H */
+diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
+index 79a12b59250b..e95d521d93e9 100644
+--- a/drivers/md/multipath.c
++++ b/drivers/md/multipath.c
+@@ -139,6 +139,7 @@ static void multipath_make_request(struct mddev *mddev, struct bio * bio)
+ 	mp_bh->bio.bi_end_io = multipath_end_request;
+ 	mp_bh->bio.bi_private = mp_bh;
+ 	mddev_check_writesame(mddev, &mp_bh->bio);
++	mddev_check_write_zeroes(mddev, &mp_bh->bio);
+ 	generic_make_request(&mp_bh->bio);
+ 	return;
+ }
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index 93347ca7c7a6..ce7a6a56cf73 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -383,6 +383,7 @@ static int raid0_run(struct mddev *mddev)
  
- 	switch (req_op(req)) {
- 	case REQ_OP_DISCARD:
-+	case REQ_OP_WRITE_ZEROES:
- 	case REQ_OP_WRITE_SAME:
- 	case REQ_OP_ZONE_RESET:
- 		if (!result) {
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 92620c8ea8ad..1994f7799fce 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -329,6 +329,7 @@ void sd_zbc_complete(struct scsi_cmnd *cmd,
+ 		blk_queue_max_hw_sectors(mddev->queue, mddev->chunk_sectors);
+ 		blk_queue_max_write_same_sectors(mddev->queue, mddev->chunk_sectors);
++		blk_queue_max_write_zeroes_sectors(mddev->queue, mddev->chunk_sectors);
+ 		blk_queue_max_discard_sectors(mddev->queue, mddev->chunk_sectors);
  
- 	switch (req_op(rq)) {
- 	case REQ_OP_WRITE:
-+	case REQ_OP_WRITE_ZEROES:
- 	case REQ_OP_WRITE_SAME:
- 	case REQ_OP_ZONE_RESET:
+ 		blk_queue_io_min(mddev->queue, mddev->chunk_sectors << 9);
+@@ -504,6 +505,7 @@ static void raid0_make_request(struct mddev *mddev, struct bio *bio)
+ 						      split, disk_devt(mddev->gendisk),
+ 						      bio_sector);
+ 			mddev_check_writesame(mddev, split);
++			mddev_check_write_zeroes(mddev, split);
+ 			generic_make_request(split);
+ 		}
+ 	} while (split != bio);
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index a34f58772022..b59cc100320a 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -3177,8 +3177,10 @@ static int raid1_run(struct mddev *mddev)
+ 	if (IS_ERR(conf))
+ 		return PTR_ERR(conf);
  
+-	if (mddev->queue)
++	if (mddev->queue) {
+ 		blk_queue_max_write_same_sectors(mddev->queue, 0);
++		blk_queue_max_write_zeroes_sectors(mddev->queue, 0);
++	}
+ 
+ 	rdev_for_each(rdev, mddev) {
+ 		if (!mddev->gendisk)
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index e89a8d78a9ed..28ec3a93acee 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -3749,6 +3749,7 @@ static int raid10_run(struct mddev *mddev)
+ 		blk_queue_max_discard_sectors(mddev->queue,
+ 					      mddev->chunk_sectors);
+ 		blk_queue_max_write_same_sectors(mddev->queue, 0);
++		blk_queue_max_write_zeroes_sectors(mddev->queue, 0);
+ 		blk_queue_io_min(mddev->queue, chunk_size);
+ 		if (conf->geo.raid_disks % conf->geo.near_copies)
+ 			blk_queue_io_opt(mddev->queue, chunk_size * conf->geo.raid_disks);
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index ed5cd705b985..8cf1f86dcd05 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -7272,6 +7272,7 @@ static int raid5_run(struct mddev *mddev)
+ 		mddev->queue->limits.discard_zeroes_data = 0;
+ 
+ 		blk_queue_max_write_same_sectors(mddev->queue, 0);
++		blk_queue_max_write_zeroes_sectors(mddev->queue, 0);
+ 
+ 		rdev_for_each(rdev, mddev) {
+ 			disk_stack_limits(mddev->gendisk, rdev->bdev,
 -- 
 2.11.0
