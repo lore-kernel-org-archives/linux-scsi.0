@@ -1,37 +1,48 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCH] scsi: osd_uld: remove an unneeded NULL check
-Date: Thu, 23 Mar 2017 13:41:42 +0300
-Message-ID: <20170323104142.GD20154@mwanda>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Boaz Harrosh <ooo@electrozaur.com>
-Cc: Benny Halevy <bhalevy@primarydata.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+From: kusumi.tomohiro@gmail.com
+Subject: [PATCH] scsi: ufs: fix wrong/ambiguous fall through comments
+Date: Thu, 23 Mar 2017 12:49:04 +0200
+Message-ID: <20170323104904.47040-1-tkusumi@tuxera.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:35225 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932085AbdCWKtU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2017 06:49:20 -0400
+Received: by mail-lf0-f68.google.com with SMTP id v2so16386570lfi.2
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Mar 2017 03:49:19 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: vinholikatti@gmail.com, linux-scsi@vger.kernel.org
+Cc: Tomohiro Kusumi <tkusumi@tuxera.com>
 
-We don't call the remove() function unless probe() succeeds so "oud"
-can't be NULL here.  Plus, if it were NULL, we dereference it on the
-next line so it would crash anyway.
+From: Tomohiro Kusumi <tkusumi@tuxera.com>
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+These aren't really falling through to anywhere meaningful.
 
-diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
-index 4101c3178411..8b9941a5687a 100644
---- a/drivers/scsi/osd/osd_uld.c
-+++ b/drivers/scsi/osd/osd_uld.c
-@@ -507,10 +507,9 @@ static int osd_remove(struct device *dev)
- 	struct scsi_device *scsi_device = to_scsi_device(dev);
- 	struct osd_uld_device *oud = dev_get_drvdata(dev);
- 
--	if (!oud || (oud->od.scsi_device != scsi_device)) {
--		OSD_ERR("Half cooked osd-device %p,%p || %p!=%p",
--			dev, oud, oud ? oud->od.scsi_device : NULL,
--			scsi_device);
-+	if (oud->od.scsi_device != scsi_device) {
-+		OSD_ERR("Half cooked osd-device %p, || %p!=%p",
-+			dev, oud->od.scsi_device, scsi_device);
+Signed-off-by: Tomohiro Kusumi <tkusumi@tuxera.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index dc6efbd..b7e5128 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -553,15 +553,14 @@ static inline u32 ufshcd_get_intr_mask(struct ufs_hba *hba)
+ 	case UFSHCI_VERSION_10:
+ 		intr_mask = INTERRUPT_MASK_ALL_VER_10;
+ 		break;
+-	/* allow fall through */
+ 	case UFSHCI_VERSION_11:
+ 	case UFSHCI_VERSION_20:
+ 		intr_mask = INTERRUPT_MASK_ALL_VER_11;
+ 		break;
+-	/* allow fall through */
+ 	case UFSHCI_VERSION_21:
+ 	default:
+ 		intr_mask = INTERRUPT_MASK_ALL_VER_21;
++		break;
  	}
  
- 	cdev_device_del(&oud->cdev, &oud->class_dev);
+ 	return intr_mask;
+-- 
+2.9.3
