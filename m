@@ -1,48 +1,103 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: support ranges TRIM for libata
-Date: Thu, 23 Mar 2017 14:55:21 +0100
-Message-ID: <20170323135521.GA30361@lst.de>
-References: <20170320204319.12628-1-hch@lst.de> <20170321185901.GB3706@htj.duckdns.org> <20170322181947.GA4733@lst.de> <1490276861.2202.8.camel@HansenPartnership.com>
+From: "Dupuis, Chad" <chad.dupuis@cavium.com>
+Subject: [PATCH] qedf: Fix crash due to unsolicited FIP VLAN response.
+Date: Thu, 23 Mar 2017 06:58:47 -0700
+Message-ID: <20170323135847.21074-1-chad.dupuis@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1490276861.2202.8.camel@HansenPartnership.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, martin.petersen@oracle.com, axboe@kernel.dk, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-co1nam03on0080.outbound.protection.outlook.com ([104.47.40.80]:50688
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933432AbdCWN6z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 23 Mar 2017 09:58:55 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, QLogic-Storage-Upstream@cavium.com
 
-On Thu, Mar 23, 2017 at 09:47:41AM -0400, James Bottomley wrote:
-> > The current implementation already has the issue of that it does
-> > corrupt user data reliably if the using SG_IO for WRITE SAME
-> > commands.
-> 
-> That does need fixing.
+From: Chad Dupuis <chad.dupuis@cavium.com>
 
-I don't think it's fixable as long as we translate the data payload.
+We need to initialize qedf->fipvlan_compl in __qedf_probe so that if we receive
+an unsolicited FIP VLAN response, the system doesn't crash due to trying to
+complete an uninitialized completion.
 
-> Why can't we do what the t10 sat document recommends: if the ATA device
-> doesn't support the XL version (32 bit ranges) then translate unmap to
-> multiple non-XL commands?
+Also add a check to see if there are any waiters on the completion so we don't
+inadvertantly kick start the discovery process due to the unsolicited frame.
 
-Because libata sits underneath the tag allocator we'd getting into
-a giant set of problems.  Where do you expect the new commands to
-magically come from?  And adhere to the queueing limits and not actually
-deadlock in one way or another?
+Fixed the crash:
 
-> I don't necessarily object to the vendor specific 1<->1 approach, it's
-> just it won't fix the problem you cited above (SG_IO WRITE SAME), its
-> just that now we error the command, which may cause some surprise.
+<1>BUG: unable to handle kernel NULL pointer dereference at (null)
+<1>IP: [<ffffffff8105ed71>] __wake_up_common+0x31/0x90
+<4>PGD 0
+<4>Oops: 0000 [#1] SMP
+<4>last sysfs file: /sys/devices/system/cpu/online
+<4>CPU 7
+<4>Modules linked in: autofs4 nfs lockd fscache auth_rpcgss nfs_acl sunrpc target_core_iblock target_core_file target_core_pscsi target_core_mod configfs bnx2fc cnic fcoe 8021q garp stp llc ipt_REJECT nf_conntrack_ipv4 nf_defrag_ipv4 iptable_filter ip_tables ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 xt_state nf_conntrack ip6table_filter ip6_tables ipv6 vfat fat uinput ipmi_devintf microcode power_meter acpi_ipmi ipmi_si ipmi_msghandler iTCO_wdt iTCO_vendor_support dcdbas sg joydev sb_edac edac_core lpc_ich mfd_core shpchp tg3 ptp pps_core ext4 jbd2 mbcache sr_mod cdrom sd_mod crc_t10dif qedi(U) iscsi_boot_sysfs libiscsi scsi_transport_iscsi uio qedf(U) libfcoe libfc scsi_transport_fc scsi_tgt qede(U) qed(U) ahci megaraid_sas wmi dm_mirror dm_region_hash dm_log dm_mod [last unloaded: spe
+ edstep_lib]
+<4>
+<4>Pid: 1485, comm: qedf_11_ll2 Not tainted 2.6.32-642.el6.x86_64 #1 Dell Inc. PowerEdge R730/0599V5
+<4>RIP: 0010:[<ffffffff8105ed71>]  [<ffffffff8105ed71>] __wake_up_common+0x31/0x90
+<4>RSP: 0018:ffff881068a83d50  EFLAGS: 00010086
+<4>RAX: ffffffffffffffe8 RBX: ffff88106bf42de0 RCX: 0000000000000000
+<4>RDX: 0000000000000000 RSI: 0000000000000003 RDI: ffff88106bf42de0
+<4>RBP: ffff881068a83d90 R08: 0000000000000000 R09: 00000000fffffffe
+<4>R10: 0000000000000000 R11: 000000000000000b R12: 0000000000000286
+<4>R13: ffff88106bf42de8 R14: 0000000000000000 R15: 0000000000000000
+<4>FS:  0000000000000000(0000) GS:ffff88089c460000(0000) knlGS:0000000000000000
+<4>CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+<4>CR2: 0000000000000000 CR3: 0000000001a8d000 CR4: 00000000001407e0
+<4>DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+<4>DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+<4>Process qedf_11_ll2 (pid: 1485, threadinfo ffff881068a80000, task ffff881068a70040)
+<4>Stack:
+<4> ffff88106ef00090 0000000300000001 ffff881068a83d90 ffff88106bf42de0
+<4><d> 0000000000000286 ffff88106bf42dd8 ffff88106bf40a50 0000000000000002
+<4><d> ffff881068a83dc0 ffffffff810634c7 ffff881000000003 000000000000000b
+<4>Call Trace:
+<4> [<ffffffff810634c7>] complete+0x47/0x60
+<4> [<ffffffffa01d37e7>] qedf_fip_recv+0x1c7/0x450 [qedf]
+<4> [<ffffffffa01cb3cb>] qedf_ll2_recv_thread+0x33b/0x510 [qedf]
+<4> [<ffffffffa01cb090>] ? qedf_ll2_recv_thread+0x0/0x510 [qedf]
+<4> [<ffffffff810a662e>] kthread+0x9e/0xc0
+<4> [<ffffffff8100c28a>] child_rip+0xa/0x20
+<4> [<ffffffff810a6590>] ? kthread+0x0/0xc0
+<4> [<ffffffff8100c280>] ? child_rip+0x0/0x20
+<4>Code: 41 56 41 55 41 54 53 48 83 ec 18 0f 1f 44 00 00 89 75 cc 89 55 c8 4c 8d 6f 08 48 8b 57 08 41 89 cf 4d 89 c6 48 8d 42 e8 49 39 d5 <48> 8b 58 18 74 3f 48 83 eb 18 eb 0a 0f 1f 00 48 89 d8 48 8d 5a
+<1>RIP  [<ffffffff8105ed71>] __wake_up_common+0x31/0x90
+<4> RSP <ffff881068a83d50>
+<4>CR2: 0000000000000000
 
-We now error WRITE SAME for passthrough consistently.  Before we only
-accepted it only with the unmap bit set, and even did so incorrectly
-(not checking that the payload was all zeros).
+Signed-off-by: Chad Dupuis <chad.dupuis@cavium.com>
+---
+ drivers/scsi/qedf/qedf_fip.c  | 3 ++-
+ drivers/scsi/qedf/qedf_main.c | 1 +
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-> I
-> also wonder if we couldn't simply do an ATA_16 TRIM if we're already
-> going to all the trouble of recognising ATA devices in the sd discard
-> path?
-
-We probably could do that as well.  But that would drag a lot more
-ATA-specific code into sd.c than just formatting the ranges.
+diff --git a/drivers/scsi/qedf/qedf_fip.c b/drivers/scsi/qedf/qedf_fip.c
+index ed58b91..e10b91c 100644
+--- a/drivers/scsi/qedf/qedf_fip.c
++++ b/drivers/scsi/qedf/qedf_fip.c
+@@ -99,7 +99,8 @@ static void qedf_fcoe_process_vlan_resp(struct qedf_ctx *qedf,
+ 		qedf_set_vlan_id(qedf, vid);
+ 
+ 		/* Inform waiter that it's ok to call fcoe_ctlr_link up() */
+-		complete(&qedf->fipvlan_compl);
++		if (!completion_done(&qedf->fipvlan_compl))
++			complete(&qedf->fipvlan_compl);
+ 	}
+ }
+ 
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index 8e2a160..cceddd9 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -2803,6 +2803,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
+ 		atomic_set(&qedf->num_offloads, 0);
+ 		qedf->stop_io_on_error = false;
+ 		pci_set_drvdata(pdev, qedf);
++		init_completion(&qedf->fipvlan_compl);
+ 
+ 		QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_INFO,
+ 		   "QLogic FastLinQ FCoE Module qedf %s, "
+-- 
+1.8.5.6
