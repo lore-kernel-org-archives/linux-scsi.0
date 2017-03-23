@@ -1,65 +1,41 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] scsi: advansys: fix uninitialized data access
-Date: Thu, 23 Mar 2017 16:02:18 +0100
-Message-ID: <20170323150226.249217-1-arnd@arndb.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Wilcox <mawilcox@microsoft.com>, Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: support ranges TRIM for libata
+Date: Thu, 23 Mar 2017 11:04:58 -0400
+Message-ID: <20170323150458.GA3241@htj.duckdns.org>
+References: <20170320204319.12628-1-hch@lst.de>
+ <20170321185901.GB3706@htj.duckdns.org>
+ <20170322181947.GA4733@lst.de>
+ <1490276861.2202.8.camel@HansenPartnership.com>
+ <20170323135521.GA30361@lst.de>
+ <1490279706.2202.17.camel@HansenPartnership.com>
+ <20170323144330.GA31447@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170323144330.GA31447@lst.de>
+Sender: linux-block-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, martin.petersen@oracle.com, axboe@kernel.dk, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-gcc-7.0.1 now warns about a previously unnoticed access of
-uninitialized struct members:
+Hello, Christoph.
 
-drivers/scsi/advansys.c: In function 'AscMsgOutSDTR':
-drivers/scsi/advansys.c:3860:26: error: '*((void *)&sdtr_buf+5)' may be used uninitialized in this function [-Werror=maybe-uninitialized]
-         ((ushort)s_buffer[i + 1] << 8) | s_buffer[i]);
-                          ^
-drivers/scsi/advansys.c:3860:26: error: '*((void *)&sdtr_buf+7)' may be used uninitialized in this function [-Werror=maybe-uninitialized]
-drivers/scsi/advansys.c:3860:26: error: '*((void *)&sdtr_buf+5)' may be used uninitialized in this function [-Werror=maybe-uninitialized]
-drivers/scsi/advansys.c:3860:26: error: '*((void *)&sdtr_buf+7)' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+On Thu, Mar 23, 2017 at 03:43:30PM +0100, Christoph Hellwig wrote:
+> > That's up to you ... from the point of view of code documenting itself,
+> > forming the ATA_16 TRIM in sd and not doing any satl transformation is
+> > easier for others to follow, but if it's going to cause more code, I'm
+> > only marginal on the advantages of easier to follow code.
+> 
+> I tried this earlier before giving up on it because it looked to ugly.
+> But I can complete that version of it and post it for people to compare.
 
-The code has existed in this exact form at least since v2.6.12, and the
-warning seems correct. This uses named initializers to ensure we initialize
-all members of the structure.
+I kinda like the idea of sticking with satl as that's how libata has
+been doing most things even if the implementation is uglier.  It'd be
+great to find out whether the ugliness would be acceptable or too
+much.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/scsi/advansys.c | 21 ++++++++++-----------
- 1 file changed, 10 insertions(+), 11 deletions(-)
+Thanks.
 
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 81dd0927246b..24e57e770432 100644
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -6291,18 +6291,17 @@ static uchar AscGetSynPeriodIndex(ASC_DVC_VAR *asc_dvc, uchar syn_time)
- static uchar
- AscMsgOutSDTR(ASC_DVC_VAR *asc_dvc, uchar sdtr_period, uchar sdtr_offset)
- {
--	EXT_MSG sdtr_buf;
--	uchar sdtr_period_index;
--	PortAddr iop_base;
--
--	iop_base = asc_dvc->iop_base;
--	sdtr_buf.msg_type = EXTENDED_MESSAGE;
--	sdtr_buf.msg_len = MS_SDTR_LEN;
--	sdtr_buf.msg_req = EXTENDED_SDTR;
--	sdtr_buf.xfer_period = sdtr_period;
-+	PortAddr iop_base = asc_dvc->iop_base;
-+	uchar sdtr_period_index = AscGetSynPeriodIndex(asc_dvc, sdtr_period);
-+	EXT_MSG sdtr_buf = {
-+		.msg_type = EXTENDED_MESSAGE,
-+		.msg_len = MS_SDTR_LEN,
-+		.msg_req = EXTENDED_SDTR,
-+		.xfer_period = sdtr_period,
-+		.req_ack_offset = sdtr_offset,
-+	};
- 	sdtr_offset &= ASC_SYN_MAX_OFFSET;
--	sdtr_buf.req_ack_offset = sdtr_offset;
--	sdtr_period_index = AscGetSynPeriodIndex(asc_dvc, sdtr_period);
-+
- 	if (sdtr_period_index <= asc_dvc->max_sdtr_index) {
- 		AscMemWordCopyPtrToLram(iop_base, ASCV_MSGOUT_BEG,
- 					(uchar *)&sdtr_buf,
 -- 
-2.9.0
+tejun
