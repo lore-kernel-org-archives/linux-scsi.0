@@ -1,57 +1,47 @@
 From: Jinpu Wang <jinpu.wang@profitbricks.com>
 Subject: Re: [PATCH] scsi: pm8001: build in relevant functions and code on PM8001_USE_MSIX
-Date: Thu, 23 Mar 2017 10:17:46 +0100
-Message-ID: <CAMGffEm6cvJ121K9ME6Tgk_uYSRJQgMq=bvKyYzKuQZP=sNwow@mail.gmail.com>
-References: <20170322185004.1012-1-colin.king@canonical.com> <58D3889B.7030400@bfs.de>
+Date: Thu, 23 Mar 2017 10:16:02 +0100
+Message-ID: <CAMGffEkffcSd961qC7OGubVQ2nYpv1ViGr4e6+ZxXg9diqfO3A@mail.gmail.com>
+References: <20170322185004.1012-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <58D3889B.7030400@bfs.de>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: wharms@bfs.de
-Cc: Colin King <colin.king@canonical.com>, lindar_liu <lindar_liu@usish.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, pmchba@pmcs.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qk0-f181.google.com ([209.85.220.181]:36450 "EHLO
+        mail-qk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752582AbdCWJXN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2017 05:23:13 -0400
+Received: by mail-qk0-f181.google.com with SMTP id p22so34954592qka.3
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Mar 2017 02:23:08 -0700 (PDT)
+In-Reply-To: <20170322185004.1012-1-colin.king@canonical.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: lindar_liu <lindar_liu@usish.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, pmchba@pmcs.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On Thu, Mar 23, 2017 at 9:34 AM, walter harms <wharms@bfs.de> wrote:
-
->> @@ -4613,15 +4616,15 @@ static int pm8001_chip_phy_ctl_req(struct pm8001=
-_hba_info *pm8001_ha,
->>
->>  static u32 pm8001_chip_is_our_interupt(struct pm8001_hba_info *pm8001_h=
-a)
->>  {
->> -     u32 value;
->>  #ifdef PM8001_USE_MSIX
->>       return 1;
->> -#endif
->> -     value =3D pm8001_cr32(pm8001_ha, 0, MSGU_ODR);
->> +#else
->> +     u32 value =3D pm8001_cr32(pm8001_ha, 0, MSGU_ODR);
->> +
->>       if (value)
->>               return 1;
->>       return 0;
->> -
->> +#endif
->>  }
->>
+On Wed, Mar 22, 2017 at 7:50 PM, Colin King <colin.king@canonical.com> wrot=
+e:
+> From: Colin Ian King <colin.king@canonical.com>
 >
-> This is a bit strange, why do this function return u32 ?
+> Currently the misx and intx variables of the interrupt enable/disable
+> helper functions are built in no matter what the setting of the
+> macro PM8001_USE_MSIX.  Clean this up by just building in the
+> necessary helper functions and calls to these functions depending on
+> the setting of PM8001_USE_MSIX.  This addresses several dead code
+> paths found by static analysis with CoverityScan.
 >
-> re,
->  wh
->
->>  /**
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/scsi/pm8001/pm8001_hwi.c | 63 +++++++++++++++++++++-------------=
+------
+>  1 file changed, 33 insertions(+), 30 deletions(-)
 
-Hi Walter,
+Thanks Colin,
 
-Feel free to submit a patch to change it to bool.
-
-Thanks
+Mind to also change pm80xx_hw.c?
 
 --=20
-Jinpu Wang
+Jack Wang
 Linux Kernel Developer
 
 ProfitBricks GmbH
