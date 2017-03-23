@@ -1,25 +1,65 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 06/23] dm-kcopyd: switch to use REQ_OP_WRITE_ZEROES
-Date: Thu, 23 Mar 2017 15:56:51 +0100
-Message-ID: <20170323145651.GA31771@lst.de>
-References: <20170323143341.31549-1-hch@lst.de> <20170323143341.31549-7-hch@lst.de> <20170323145522.GB17127@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170323145522.GB17127@redhat.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] scsi: advansys: fix uninitialized data access
+Date: Thu, 23 Mar 2017 16:02:18 +0100
+Message-ID: <20170323150226.249217-1-arnd@arndb.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Wilcox <mawilcox@microsoft.com>, Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Mar 23, 2017 at 10:55:22AM -0400, Mike Snitzer wrote:
-> See commit 70d6c400a ("dm kcopyd: add WRITE SAME support to dm_kcopyd_zero")
-> drivers/md/dm-io.c:do_region() adjusts the WRITE SAME payload to be a
-> single page.
-> 
-> So you'd want to tweak dm-io.c accordingly for WRITE ZEROES (presummably
-> no payload?)
+gcc-7.0.1 now warns about a previously unnoticed access of
+uninitialized struct members:
 
-Yeah, I'll look into it.  Any good test case for verifying this code
-while I've got your attention?
+drivers/scsi/advansys.c: In function 'AscMsgOutSDTR':
+drivers/scsi/advansys.c:3860:26: error: '*((void *)&sdtr_buf+5)' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+         ((ushort)s_buffer[i + 1] << 8) | s_buffer[i]);
+                          ^
+drivers/scsi/advansys.c:3860:26: error: '*((void *)&sdtr_buf+7)' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+drivers/scsi/advansys.c:3860:26: error: '*((void *)&sdtr_buf+5)' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+drivers/scsi/advansys.c:3860:26: error: '*((void *)&sdtr_buf+7)' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+
+The code has existed in this exact form at least since v2.6.12, and the
+warning seems correct. This uses named initializers to ensure we initialize
+all members of the structure.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/advansys.c | 21 ++++++++++-----------
+ 1 file changed, 10 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index 81dd0927246b..24e57e770432 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -6291,18 +6291,17 @@ static uchar AscGetSynPeriodIndex(ASC_DVC_VAR *asc_dvc, uchar syn_time)
+ static uchar
+ AscMsgOutSDTR(ASC_DVC_VAR *asc_dvc, uchar sdtr_period, uchar sdtr_offset)
+ {
+-	EXT_MSG sdtr_buf;
+-	uchar sdtr_period_index;
+-	PortAddr iop_base;
+-
+-	iop_base = asc_dvc->iop_base;
+-	sdtr_buf.msg_type = EXTENDED_MESSAGE;
+-	sdtr_buf.msg_len = MS_SDTR_LEN;
+-	sdtr_buf.msg_req = EXTENDED_SDTR;
+-	sdtr_buf.xfer_period = sdtr_period;
++	PortAddr iop_base = asc_dvc->iop_base;
++	uchar sdtr_period_index = AscGetSynPeriodIndex(asc_dvc, sdtr_period);
++	EXT_MSG sdtr_buf = {
++		.msg_type = EXTENDED_MESSAGE,
++		.msg_len = MS_SDTR_LEN,
++		.msg_req = EXTENDED_SDTR,
++		.xfer_period = sdtr_period,
++		.req_ack_offset = sdtr_offset,
++	};
+ 	sdtr_offset &= ASC_SYN_MAX_OFFSET;
+-	sdtr_buf.req_ack_offset = sdtr_offset;
+-	sdtr_period_index = AscGetSynPeriodIndex(asc_dvc, sdtr_period);
++
+ 	if (sdtr_period_index <= asc_dvc->max_sdtr_index) {
+ 		AscMemWordCopyPtrToLram(iop_base, ASCV_MSGOUT_BEG,
+ 					(uchar *)&sdtr_buf,
+-- 
+2.9.0
