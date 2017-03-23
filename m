@@ -1,108 +1,89 @@
-From: wenxiong <wenxiong@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/6] ipr: Fix missed EH wakeup
-Date: Thu, 23 Mar 2017 10:54:40 -0500
-Message-ID: <f027450da9b3ba5214b1c60420a26384@linux.vnet.ibm.com>
-References: <20170315215837.5146A13603C@b03ledav002.gho.boulder.ibm.com>
+From: Lars Ellenberg <lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>
+Subject: Re: RFC: always use REQ_OP_WRITE_ZEROES for zeroing
+	offload
+Date: Thu, 23 Mar 2017 16:54:10 +0100
+Message-ID: <20170323155410.GD1138@soda.linbit>
+References: <20170323143341.31549-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:32939 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S934419AbdCWPvN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 23 Mar 2017 11:51:13 -0400
-Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v2NFmfHo127138
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Mar 2017 11:51:12 -0400
-Received: from e16.ny.us.ibm.com (e16.ny.us.ibm.com [129.33.205.206])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 29cgnr2gsm-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Mar 2017 11:51:12 -0400
-Received: from localhost
-        by e16.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <wenxiong@linux.vnet.ibm.com>;
-        Thu, 23 Mar 2017 11:51:11 -0400
-In-Reply-To: <20170315215837.5146A13603C@b03ledav002.gho.boulder.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20170323143341.31549-1-hch-jcswGhMUV9g@public.gmane.org>
+List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
+List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
+Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
-On 2017-03-15 16:58, Brian King wrote:
+On Thu, Mar 23, 2017 at 10:33:18AM -0400, Christoph Hellwig wrote:
+> This series makes REQ_OP_WRITE_ZEROES the only zeroing offload
+> supported by the block layer, and switches existing implementations
+> of REQ_OP_DISCARD that correctly set discard_zeroes_data to it,
+> removes incorrect discard_zeroes_data, and also switches WRITE SAME
+> based zeroing in SCSI to this new method.
+> 
+> I've done testing with ATA, SCSI and NVMe setups, but there are
+> a few things that will need more attention:
+> 
 
-I have reviewed this serial of patches and tested them on IBM systems 
-successfully
+>  - The DRBD code in this area was very odd,
 
-Thanks for your help!
-Wendy
-> Following a command abort or device reset, ipr's EH handlers wait
-> for the commands getting aborted to get sent back from the adapter
-> prior to returning from the EH handler. This fixes up some cases
-> where the completion handler was not getting called, which would
-> have resulted in the EH thread waiting until it timed out, greatly
-> extending EH time.
-> 
-> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
-> ---
-> 
->  drivers/scsi/ipr.c |   16 ++++++++++++----
->  1 file changed, 12 insertions(+), 4 deletions(-)
-> 
-> diff -puN drivers/scsi/ipr.c~ipr_fix_missed_eh_wakeup 
-> drivers/scsi/ipr.c
-> ---
-> linux-2.6.git/drivers/scsi/ipr.c~ipr_fix_missed_eh_wakeup	2017-03-13
-> 14:52:17.974545318 -0500
-> +++ linux-2.6.git-bjking1/drivers/scsi/ipr.c	2017-03-13 
-> 17:03:13.635568644 -0500
-> @@ -836,8 +836,10 @@ static void ipr_sata_eh_done(struct ipr_
-> 
->  	qc->err_mask |= AC_ERR_OTHER;
->  	sata_port->ioasa.status |= ATA_BUSY;
-> -	list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_free_q);
->  	ata_qc_complete(qc);
-> +	if (ipr_cmd->eh_comp)
-> +		complete(ipr_cmd->eh_comp);
-> +	list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_free_q);
->  }
-> 
->  /**
-> @@ -5947,8 +5949,10 @@ static void ipr_erp_done(struct ipr_cmnd
->  		res->in_erp = 0;
->  	}
->  	scsi_dma_unmap(ipr_cmd->scsi_cmd);
-> -	list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_free_q);
->  	scsi_cmd->scsi_done(scsi_cmd);
-> +	if (ipr_cmd->eh_comp)
-> +		complete(ipr_cmd->eh_comp);
-> +	list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_free_q);
->  }
-> 
->  /**
-> @@ -6338,8 +6342,10 @@ static void ipr_erp_start(struct ipr_ioa
->  	}
-> 
->  	scsi_dma_unmap(ipr_cmd->scsi_cmd);
-> -	list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_free_q);
->  	scsi_cmd->scsi_done(scsi_cmd);
-> +	if (ipr_cmd->eh_comp)
-> +		complete(ipr_cmd->eh_comp);
-> +	list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_free_q);
->  }
-> 
->  /**
-> @@ -6365,8 +6371,10 @@ static void ipr_scsi_done(struct ipr_cmn
->  		scsi_dma_unmap(scsi_cmd);
-> 
->  		spin_lock_irqsave(ipr_cmd->hrrq->lock, lock_flags);
-> -		list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_free_q);
->  		scsi_cmd->scsi_done(scsi_cmd);
-> +		if (ipr_cmd->eh_comp)
-> +			complete(ipr_cmd->eh_comp);
-> +		list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_free_q);
->  		spin_unlock_irqrestore(ipr_cmd->hrrq->lock, lock_flags);
->  	} else {
->  		spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
-> _
+DRBD wants all replicas to give back identical data.
+If what comes back after a discard is "undefined",
+we cannot really use that.
+
+We used to "stack" discard only if our local backend claimed
+"discard_zeroes_data". We replicate that IO request to the peer
+as discard, and if the peer cannot do discards itself, or has
+discard_zeroes_data == 0, the peer will use zeroout instead.
+
+One use-case for this is the device mapper "thin provisioning".
+At the time I wrote those "odd" hacks, dm thin targets
+would set discard_zeroes_data=0, NOT change discard granularity,
+but only actually discard (drop from the tree) whole "chunks",
+leaving partial start/end chunks in the mapping tree unchanged.
+
+The logic of "only stack discard, if backend discard_zeroes_data"
+would mean that we would not be able to accept and pass down discards
+to dm-thin targets. But with data on dm-thin, you would really like
+to do the occasional fstrim.
+
+Also, IO backends on the peers do not have to have the same
+characteristics.  You could have the DRBD Primary on some SSD,
+and the Secondary on some thin-pool LV,
+scheduling thin snapthots in intervals or on demand.
+
+With the logic of "use zero-out instead", fstrim would cause it to
+fully allocate what was supposed to be thinly provisioned :-(
+
+So what I did there was optionally tell DRBD that
+"discard_zeroes_data == 0" on that peer would actually mean
+"discard_zeroes_data == 1,
+ IF you zero-out the partial chunks of this granularity yourself".
+
+And implemented this "discard aligned chunks of that granularity,
+and zero-out partial start/end chunks, if any".
+
+And then claim to upper layers that, yes, discard_zeroes_data=1,
+in that case, if so configured, even if our backend (dm-thin)
+would say discard_zeroes_data=0.
+
+Does that make sense?  Can we still do that?  Has something like that
+been done in block core or device mapper meanwhile?
+
+
+> and will need an audit from the maintainers.
+
+Will need to make some time for review and testing.
+
+Thanks,
+
+    Lars
