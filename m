@@ -1,89 +1,71 @@
-From: Lars Ellenberg <lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>
-Subject: Re: RFC: always use REQ_OP_WRITE_ZEROES for zeroing
-	offload
-Date: Thu, 23 Mar 2017 16:54:10 +0100
-Message-ID: <20170323155410.GD1138@soda.linbit>
-References: <20170323143341.31549-1-hch@lst.de>
+From: Ilias Tsitsimpis <iliastsi@arrikto.com>
+Subject: Re: [PATCHv4 0/4] tcmu: bug fix and dynamic growing data area support
+Date: Thu, 23 Mar 2017 18:02:37 +0200
+Message-ID: <20170323160237.qqofpc7v7aoazfqd@iliastsi-m.arr>
+References: <1490085382-28658-1-git-send-email-lixiubo@cmss.chinamobile.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170323143341.31549-1-hch-jcswGhMUV9g@public.gmane.org>
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+In-Reply-To: <1490085382-28658-1-git-send-email-lixiubo@cmss.chinamobile.com>
+Sender: target-devel-owner@vger.kernel.org
+To: lixiubo@cmss.chinamobile.com
+Cc: agrover@redhat.com, nab@linux-iscsi.org, mchristi@redhat.com, shli@kernel.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com, bryantly@linux.vnet.ibm.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Mar 23, 2017 at 10:33:18AM -0400, Christoph Hellwig wrote:
-> This series makes REQ_OP_WRITE_ZEROES the only zeroing offload
-> supported by the block layer, and switches existing implementations
-> of REQ_OP_DISCARD that correctly set discard_zeroes_data to it,
-> removes incorrect discard_zeroes_data, and also switches WRITE SAME
-> based zeroing in SCSI to this new method.
-> 
-> I've done testing with ATA, SCSI and NVMe setups, but there are
-> a few things that will need more attention:
-> 
+Hi Xiubo,
 
->  - The DRBD code in this area was very odd,
+On Tue, Mar 21, 2017 at 04:36PM, lixiubo@cmss.chinamobile.com wrote:
+> [...]
+>   tcmu: Fix possible overwrite of t_data_sg's last iov[]
+>   tcmu: Fix wrongly calculating of the base_command_size
 
-DRBD wants all replicas to give back identical data.
-If what comes back after a discard is "undefined",
-we cannot really use that.
+I tested these two patches, which try to fix the broken support for
+BIDI commands in target/user.
 
-We used to "stack" discard only if our local backend claimed
-"discard_zeroes_data". We replicate that IO request to the peer
-as discard, and if the peer cannot do discards itself, or has
-discard_zeroes_data == 0, the peer will use zeroout instead.
+Both look good to me, but unfortunately, there is also another
+regression which got introduced with the use of the data_bitmap. More
+specifically, in case of BIDI commands, the data bitmap records both the
+Data-Out and the Data-In buffer, and so when gathering the data in the
+tcmu_handle_completion() function, care should be taken in order to
+discard the Data-Out buffer before gathering the Data-In buffer.
+Something like this should do the trick:
 
-One use-case for this is the device mapper "thin provisioning".
-At the time I wrote those "odd" hacks, dm thin targets
-would set discard_zeroes_data=0, NOT change discard granularity,
-but only actually discard (drop from the tree) whole "chunks",
-leaving partial start/end chunks in the mapping tree unchanged.
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index 1108bf5..7075161 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -610,10 +610,22 @@ static void tcmu_handle_completion(struct tcmu_cmd *cmd, struct tcmu_cmd_entry *
+                               se_cmd->scsi_sense_length);
+                free_data_area(udev, cmd);
+        } else if (se_cmd->se_cmd_flags & SCF_BIDI) {
++               struct scatterlist *sg;
++               int n, block, sg_remaining = 0;
+                DECLARE_BITMAP(bitmap, DATA_BLOCK_BITS);
 
-The logic of "only stack discard, if backend discard_zeroes_data"
-would mean that we would not be able to accept and pass down discards
-to dm-thin targets. But with data on dm-thin, you would really like
-to do the occasional fstrim.
+-               /* Get Data-In buffer before clean up */
+                bitmap_copy(bitmap, cmd->data_bitmap, DATA_BLOCK_BITS);
++
++               /* Discard Data-Out buffer */
++               for_each_sg(se_cmd->t_data_sg, sg, se_cmd->t_data_nents, n) {
++                       sg_remaining += sg->length;
++                       while (sg_remaining > 0) {
++                               block = find_first_bit(bitmap, DATA_BLOCK_BITS);
++                               clear_bit(block, bitmap);
++                               sg_remaining -= DATA_BLOCK_SIZE;
++                       }
++               }
++
++               /* Get Data-In buffer before clean up */
+                gather_data_area(udev, bitmap,
+                        se_cmd->t_bidi_data_sg, se_cmd->t_bidi_data_nents);
+                free_data_area(udev, cmd);
 
-Also, IO backends on the peers do not have to have the same
-characteristics.  You could have the DRBD Primary on some SSD,
-and the Secondary on some thin-pool LV,
-scheduling thin snapthots in intervals or on demand.
+With your patches, and the above diff, support for BIDI commands in the
+target/user seems to be working again.
 
-With the logic of "use zero-out instead", fstrim would cause it to
-fully allocate what was supposed to be thinly provisioned :-(
+Could you please validate the above snippet, and update your patches to
+include it?
 
-So what I did there was optionally tell DRBD that
-"discard_zeroes_data == 0" on that peer would actually mean
-"discard_zeroes_data == 1,
- IF you zero-out the partial chunks of this granularity yourself".
-
-And implemented this "discard aligned chunks of that granularity,
-and zero-out partial start/end chunks, if any".
-
-And then claim to upper layers that, yes, discard_zeroes_data=1,
-in that case, if so configured, even if our backend (dm-thin)
-would say discard_zeroes_data=0.
-
-Does that make sense?  Can we still do that?  Has something like that
-been done in block core or device mapper meanwhile?
-
-
-> and will need an audit from the maintainers.
-
-Will need to make some time for review and testing.
-
-Thanks,
-
-    Lars
+-- 
+Ilias
