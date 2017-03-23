@@ -1,53 +1,98 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 20/23] block: stop using discards for zeroing
-Date: Thu, 23 Mar 2017 10:33:38 -0400
-Message-ID: <20170323143341.31549-21-hch@lst.de>
+Subject: [PATCH 13/23] nvme: implement REQ_OP_WRITE_ZEROES
+Date: Thu, 23 Mar 2017 10:33:31 -0400
+Message-ID: <20170323143341.31549-14-hch@lst.de>
 References: <20170323143341.31549-1-hch@lst.de>
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20170323143341.31549-1-hch@lst.de>
-Sender: linux-block-owner@vger.kernel.org
+Sender: linux-raid-owner@vger.kernel.org
 To: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, lars.ellenberg@linbit.com
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Now that we have REQ_OP_WRITE_ZEROES implemented for all devices that
-support efficient zeroing of devices we can remove the call to
-blkdev_issue_discard.  This means we only have two ways of zeroing left
-and can simply the code.
+But now for the real NVMe Write Zeroes yet, just to get rid of the
+discard abuse for zeroing.  Also rename the quirk flag to be a bit
+more self-explanatory.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-lib.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+ drivers/nvme/host/core.c | 10 +++++-----
+ drivers/nvme/host/nvme.h |  6 +++---
+ drivers/nvme/host/pci.c  |  6 +++---
+ 3 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/block/blk-lib.c b/block/blk-lib.c
-index 33c5bf373b7f..153ca59393a7 100644
---- a/block/blk-lib.c
-+++ b/block/blk-lib.c
-@@ -279,6 +279,11 @@ static int __blkdev_issue_write_zeroes(struct block_device *bdev,
-  *  Zero-fill a block range, either using hardware offload or by explicitly
-  *  writing zeroes to the device.
-  *
-+ *  Note that this function may fail with -EOPNOTSUPP if the driver supports
-+ *  efficient zeroing operation, but the device capabilities can only be
-+ *  discovered by trial and error.  In this case the caller should call the
-+ *  function again, and it will use the fallback path.
-+ *
-  *  If a device is using logical block provisioning, the underlying space will
-  *  only be release if %flags contains BLKDEV_ZERO_UNMAP.
-  *
-@@ -349,12 +354,6 @@ int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
- 	struct bio *bio = NULL;
- 	struct blk_plug plug;
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index 9b3b57fef446..bfa0595dc767 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -335,6 +335,8 @@ int nvme_setup_cmd(struct nvme_ns *ns, struct request *req,
+ 	case REQ_OP_FLUSH:
+ 		nvme_setup_flush(ns, cmd);
+ 		break;
++	case REQ_OP_WRITE_ZEROES:
++		/* currently only aliased to deallocate for a few ctrls: */
+ 	case REQ_OP_DISCARD:
+ 		ret = nvme_setup_discard(ns, req, cmd);
+ 		break;
+@@ -900,16 +902,14 @@ static void nvme_config_discard(struct nvme_ns *ns)
+ 	BUILD_BUG_ON(PAGE_SIZE / sizeof(struct nvme_dsm_range) <
+ 			NVME_DSM_MAX_RANGES);
  
--	if (flags & BLKDEV_ZERO_UNMAP) {
--		if (!blkdev_issue_discard(bdev, sector, nr_sects, gfp_mask,
--				BLKDEV_DISCARD_ZERO))
--			return 0;
--	}
+-	if (ctrl->quirks & NVME_QUIRK_DISCARD_ZEROES)
+-		ns->queue->limits.discard_zeroes_data = 1;
+-	else
+-		ns->queue->limits.discard_zeroes_data = 0;
 -
- 	blk_start_plug(&plug);
- 	ret = __blkdev_issue_zeroout(bdev, sector, nr_sects, gfp_mask,
- 			&bio, flags);
+ 	ns->queue->limits.discard_alignment = logical_block_size;
+ 	ns->queue->limits.discard_granularity = logical_block_size;
+ 	blk_queue_max_discard_sectors(ns->queue, UINT_MAX);
+ 	blk_queue_max_discard_segments(ns->queue, NVME_DSM_MAX_RANGES);
+ 	queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, ns->queue);
++
++	if (ctrl->quirks & NVME_QUIRK_DEALLOCATE_ZEROES)
++		blk_queue_max_write_zeroes_sectors(ns->queue, UINT_MAX);
+ }
+ 
+ static int nvme_revalidate_ns(struct nvme_ns *ns, struct nvme_id_ns **id)
+diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
+index 2aa20e3e5675..07ebc4a1c8fc 100644
+--- a/drivers/nvme/host/nvme.h
++++ b/drivers/nvme/host/nvme.h
+@@ -68,10 +68,10 @@ enum nvme_quirks {
+ 	NVME_QUIRK_IDENTIFY_CNS			= (1 << 1),
+ 
+ 	/*
+-	 * The controller deterministically returns O's on reads to discarded
+-	 * logical blocks.
++	 * The controller deterministically returns O's on reads to
++	 * logical blocks that deallocate was called on.
+ 	 */
+-	NVME_QUIRK_DISCARD_ZEROES		= (1 << 2),
++	NVME_QUIRK_DEALLOCATE_ZEROES		= (1 << 2),
+ 
+ 	/*
+ 	 * The controller needs a delay before starts checking the device
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index 26a5fd05fe88..0a28787267f0 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -2135,13 +2135,13 @@ static const struct pci_error_handlers nvme_err_handler = {
+ static const struct pci_device_id nvme_id_table[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x0953),
+ 		.driver_data = NVME_QUIRK_STRIPE_SIZE |
+-				NVME_QUIRK_DISCARD_ZEROES, },
++				NVME_QUIRK_DEALLOCATE_ZEROES, },
+ 	{ PCI_VDEVICE(INTEL, 0x0a53),
+ 		.driver_data = NVME_QUIRK_STRIPE_SIZE |
+-				NVME_QUIRK_DISCARD_ZEROES, },
++				NVME_QUIRK_DEALLOCATE_ZEROES, },
+ 	{ PCI_VDEVICE(INTEL, 0x0a54),
+ 		.driver_data = NVME_QUIRK_STRIPE_SIZE |
+-				NVME_QUIRK_DISCARD_ZEROES, },
++				NVME_QUIRK_DEALLOCATE_ZEROES, },
+ 	{ PCI_VDEVICE(INTEL, 0x5845),	/* Qemu emulated controller */
+ 		.driver_data = NVME_QUIRK_IDENTIFY_CNS, },
+ 	{ PCI_DEVICE(0x1c58, 0x0003),	/* HGST adapter */
 -- 
 2.11.0
+
