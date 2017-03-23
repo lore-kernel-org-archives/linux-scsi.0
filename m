@@ -1,32 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/6] ipr: Fix missed EH wakeup
-Date: Thu, 23 Mar 2017 10:05:12 -0400
-Message-ID: <yq14lykf5rb.fsf@oracle.com>
-References: <20170315215837.5146A13603C@b03ledav002.gho.boulder.ibm.com>
+Subject: Re: [PATCH v2 00/10] be2iscsi: driver update 11.4.0.0
+Date: Thu, 23 Mar 2017 10:06:07 -0400
+Message-ID: <yq1zigcdr5c.fsf@oracle.com>
+References: <1489634685-4975-1-git-send-email-jitendra.bhivare@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:45925 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:47094 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932471AbdCWOFV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2017 10:05:21 -0400
-In-Reply-To: <20170315215837.5146A13603C@b03ledav002.gho.boulder.ibm.com>
-        (Brian King's message of "Wed, 15 Mar 2017 16:58:36 -0500")
+        with ESMTP id S934277AbdCWOHI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2017 10:07:08 -0400
+In-Reply-To: <1489634685-4975-1-git-send-email-jitendra.bhivare@broadcom.com>
+        (Jitendra Bhivare's message of "Thu, 16 Mar 2017 08:54:35 +0530")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, wenxiong@linux.vnet.ibm.com
+To: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
+Cc: cleech@redhat.com, lduncan@suse.com, linux-scsi@vger.kernel.org
 
-Brian King <brking@linux.vnet.ibm.com> writes:
+Jitendra Bhivare <jitendra.bhivare@broadcom.com> writes:
 
-> Following a command abort or device reset, ipr's EH handlers wait
-> for the commands getting aborted to get sent back from the adapter
-> prior to returning from the EH handler. This fixes up some cases
-> where the completion handler was not getting called, which would
-> have resulted in the EH thread waiting until it timed out, greatly
-> extending EH time.
-
-Somebody please review this series so I can get it queued up.
+Somebody please review!
 
 Thanks!
 
