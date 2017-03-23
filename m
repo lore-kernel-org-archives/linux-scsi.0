@@ -1,56 +1,45 @@
-From: Harald Dunkel <harald.dunkel@aixigo.de>
-Subject: iscsi (?): Unknown VPD Code: 0xc7
-Date: Thu, 23 Mar 2017 20:27:03 +0100
-Message-ID: <5cab3767-c2c8-7934-a3e8-c31d7abdf2ea@aixigo.de>
+From: Boaz Harrosh <ooo@electrozaur.com>
+Subject: Re: [PATCH] scsi: osd_uld: remove an unneeded NULL check
+Date: Thu, 23 Mar 2017 21:38:31 +0200
+Message-ID: <30405285-8713-5209-5ba6-13f7b4648d89@electrozaur.com>
+References: <20170323104142.GD20154@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.aixigo.de ([5.145.142.10]:16036 "EHLO mail.aixigo.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751991AbdCWTdq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 23 Mar 2017 15:33:46 -0400
-Received: from srvvm01.ac.aixigo.de (mail.ac.aixigo.de [172.19.96.11])
-        by gate5a.ac.aixigo.de (OpenSMTPD) with ESMTPS id 8910d02b (TLSv1.2:ECDHE-RSA-AES256-GCM-SHA384:256:NO)
-        for <linux-scsi@vger.kernel.org>;
-        Thu, 23 Mar 2017 20:27:04 +0100 (CET)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170323104142.GD20154@mwanda>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Benny Halevy <bhalevy@primarydata.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hi folks,
+On 03/23/2017 12:41 PM, Dan Carpenter wrote:
+> We don't call the remove() function unless probe() succeeds so "oud"
+> can't be NULL here.  Plus, if it were NULL, we dereference it on the
+> next line so it would crash anyway.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
 
-I am trying to use LIO on amd64 to provide block devices to some
-AIX 6.1 and 7.1 hosts. It works pretty well, except that I cannot
-create rootvg wpars on AIX 7.1. (rootvg wpars are containers
-running on their own volume group.)
+Thanks sure!
+ACK-by Boaz Harrosh <ooo@electrozaur.com>
 
-The error message on AIX is
-
-bash-4.3# mkwpar -O -D rootvg=yes devname=hdisk3 -n sample
-**********************************************************************
-ERROR
-mkwpar: 0960-587 hdisk3 has un-supported subclass type.
-
-**********************************************************************
-
-
-Kernel is 4.9.13 (Debian backports). It shows several (maybe unrelated)
-lines in kernel.log
-
-:
-Mar 23 08:46:05 nasl003b kernel: [ 1172.226643] Unknown VPD Code: 0xc7
-Mar 23 08:46:05 nasl003b kernel: [ 1172.279368] Unknown VPD Code: 0xc7
-Mar 23 08:46:06 nasl003b kernel: [ 1172.331243] Unknown VPD Code: 0xc7
-Mar 23 08:46:06 nasl003b kernel: [ 1172.380074] Unknown VPD Code: 0xc7
-Mar 23 08:47:02 nasl003b kernel: [ 1229.106384] Unknown VPD Code: 0xc7
-Mar 23 19:06:30 nasl003b kernel: [38396.514881] Unknown VPD Code: 0xc7
-Mar 23 19:06:30 nasl003b kernel: [38396.576499] Unknown VPD Code: 0xc7
-Mar 23 19:06:30 nasl003b kernel: [38396.624678] Unknown VPD Code: 0xc7
-:
-
-What is it trying to tell me?
-
-
-Every helpful hint is highly appreciated
-Harri
+> diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
+> index 4101c3178411..8b9941a5687a 100644
+> --- a/drivers/scsi/osd/osd_uld.c
+> +++ b/drivers/scsi/osd/osd_uld.c
+> @@ -507,10 +507,9 @@ static int osd_remove(struct device *dev)
+>  	struct scsi_device *scsi_device = to_scsi_device(dev);
+>  	struct osd_uld_device *oud = dev_get_drvdata(dev);
+>  
+> -	if (!oud || (oud->od.scsi_device != scsi_device)) {
+> -		OSD_ERR("Half cooked osd-device %p,%p || %p!=%p",
+> -			dev, oud, oud ? oud->od.scsi_device : NULL,
+> -			scsi_device);
+> +	if (oud->od.scsi_device != scsi_device) {
+> +		OSD_ERR("Half cooked osd-device %p, || %p!=%p",
+> +			dev, oud->od.scsi_device, scsi_device);
+>  	}
+>  
+>  	cdev_device_del(&oud->cdev, &oud->class_dev);
+> 
