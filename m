@@ -1,35 +1,46 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 01/23] block: renumber REQ_OP_WRITE_ZEROES
-Date: Thu, 23 Mar 2017 10:33:19 -0400
-Message-ID: <20170323143341.31549-2-hch@lst.de>
+Subject: [PATCH 06/23] dm-kcopyd: switch to use REQ_OP_WRITE_ZEROES
+Date: Thu, 23 Mar 2017 10:33:24 -0400
+Message-ID: <20170323143341.31549-7-hch@lst.de>
 References: <20170323143341.31549-1-hch@lst.de>
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20170323143341.31549-1-hch@lst.de>
-Sender: linux-block-owner@vger.kernel.org
+Sender: linux-raid-owner@vger.kernel.org
 To: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, lars.ellenberg@linbit.com
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Make life easy for implementations that needs to send a data buffer
-to the device (e.g. SCSI) by numbering it as a data out command.
+It seems like the code currently passes whatever it was using for writes
+to WRITE SAME.  Just switch it to WRITE ZEROES, although that doesn't
+need any payload.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Untested, and confused by the code, maybe someone who understands it
+better than me can help..
+
+Not-yet-signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- include/linux/blk_types.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/md/dm-kcopyd.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index d703acb55d0f..6393c13a6498 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -160,7 +160,7 @@ enum req_opf {
- 	/* write the same sector many times */
- 	REQ_OP_WRITE_SAME	= 7,
- 	/* write the zero filled sector many times */
--	REQ_OP_WRITE_ZEROES	= 8,
-+	REQ_OP_WRITE_ZEROES	= 9,
+diff --git a/drivers/md/dm-kcopyd.c b/drivers/md/dm-kcopyd.c
+index 9e9d04cb7d51..f85846741d50 100644
+--- a/drivers/md/dm-kcopyd.c
++++ b/drivers/md/dm-kcopyd.c
+@@ -733,11 +733,11 @@ int dm_kcopyd_copy(struct dm_kcopyd_client *kc, struct dm_io_region *from,
+ 		job->pages = &zero_page_list;
  
- 	/* SCSI passthrough using struct scsi_request */
- 	REQ_OP_SCSI_IN		= 32,
+ 		/*
+-		 * Use WRITE SAME to optimize zeroing if all dests support it.
++		 * Use WRITE ZEROES to optimize zeroing if all dests support it.
+ 		 */
+-		job->rw = REQ_OP_WRITE_SAME;
++		job->rw = REQ_OP_WRITE_ZEROES;
+ 		for (i = 0; i < job->num_dests; i++)
+-			if (!bdev_write_same(job->dests[i].bdev)) {
++			if (!bdev_write_zeroes_sectors(job->dests[i].bdev)) {
+ 				job->rw = WRITE;
+ 				break;
+ 			}
 -- 
 2.11.0
+
