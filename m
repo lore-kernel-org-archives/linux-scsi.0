@@ -1,46 +1,42 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 06/23] dm-kcopyd: switch to use REQ_OP_WRITE_ZEROES
-Date: Thu, 23 Mar 2017 10:33:24 -0400
-Message-ID: <20170323143341.31549-7-hch@lst.de>
-References: <20170323143341.31549-1-hch@lst.de>
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170323143341.31549-1-hch@lst.de>
-Sender: linux-raid-owner@vger.kernel.org
+Subject: RFC: always use REQ_OP_WRITE_ZEROES for zeroing offload
+Date: Thu, 23 Mar 2017 10:33:18 -0400
+Message-ID: <20170323143341.31549-1-hch@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:35732 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754916AbdCWOed (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2017 10:34:33 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, lars.ellenberg@linbit.com
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
-It seems like the code currently passes whatever it was using for writes
-to WRITE SAME.  Just switch it to WRITE ZEROES, although that doesn't
-need any payload.
+This series makes REQ_OP_WRITE_ZEROES the only zeroing offload
+supported by the block layer, and switches existing implementations
+of REQ_OP_DISCARD that correctly set discard_zeroes_data to it,
+removes incorrect discard_zeroes_data, and also switches WRITE SAME
+based zeroing in SCSI to this new method.
 
-Untested, and confused by the code, maybe someone who understands it
-better than me can help..
+I've done testing with ATA, SCSI and NVMe setups, but there are
+a few things that will need more attention:
 
-Not-yet-signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/md/dm-kcopyd.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ - what is dm-kcopyd doing with the current WRITE SAME usage
+   that gets multiple biovecs?  Can we fix it up in any way.
+ - what are we going to do with discards through parity raid?
+   I suspect we should either just disable it for now entirely
+   or modify raid5.c to issue REQ_OP_WRITE_ZEROES to the underlying
+   devices.  But I need someone with such a setup to test it.
+ - The DRBD code in this area was very odd, and will need an
+   audit from the maintainers.
 
-diff --git a/drivers/md/dm-kcopyd.c b/drivers/md/dm-kcopyd.c
-index 9e9d04cb7d51..f85846741d50 100644
---- a/drivers/md/dm-kcopyd.c
-+++ b/drivers/md/dm-kcopyd.c
-@@ -733,11 +733,11 @@ int dm_kcopyd_copy(struct dm_kcopyd_client *kc, struct dm_io_region *from,
- 		job->pages = &zero_page_list;
- 
- 		/*
--		 * Use WRITE SAME to optimize zeroing if all dests support it.
-+		 * Use WRITE ZEROES to optimize zeroing if all dests support it.
- 		 */
--		job->rw = REQ_OP_WRITE_SAME;
-+		job->rw = REQ_OP_WRITE_ZEROES;
- 		for (i = 0; i < job->num_dests; i++)
--			if (!bdev_write_same(job->dests[i].bdev)) {
-+			if (!bdev_write_zeroes_sectors(job->dests[i].bdev)) {
- 				job->rw = WRITE;
- 				break;
- 			}
--- 
-2.11.0
+Note that this series needs to be applied on top of the
+"support ranges TRIM for libata" series.
 
+A git tree is also avaiable at:
+
+    git://git.infradead.org/users/hch/block.git discard-rework
+
+Gitweb:
+
+    http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/discard-rework
