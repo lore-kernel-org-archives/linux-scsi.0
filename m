@@ -1,32 +1,74 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/6] ipr: Fix missed EH wakeup
-Date: Thu, 23 Mar 2017 12:04:29 -0400
-Message-ID: <yq160j0dlo2.fsf@oracle.com>
-References: <20170315215837.5146A13603C@b03ledav002.gho.boulder.ibm.com>
+From: <junplzen@cmkos.cz>
+Subject: 57730 linux-scsi
+Date: Thu, 23 Mar 2017 16:26:55 -0000
+Message-ID: <149028641560.25302.2298498598064468100@speedy.com.ar>
+Reply-To: <junplzen@cmkos.cz>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: application/zip; name="17914.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:40026 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751404AbdCWQEi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2017 12:04:38 -0400
-In-Reply-To: <20170315215837.5146A13603C@b03ledav002.gho.boulder.ibm.com>
-        (Brian King's message of "Wed, 15 Mar 2017 16:58:36 -0500")
+Received: from 190-174-52-96.speedy.com.ar ([190.174.52.96]:44357 "HELO
+        speedy.com.ar" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with SMTP id S932198AbdCWQ1K (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2017 12:27:10 -0400
+Content-Disposition: attachment
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, wenxiong@linux.vnet.ibm.com
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-Brian King <brking@linux.vnet.ibm.com> writes:
-
-> Following a command abort or device reset, ipr's EH handlers wait
-> for the commands getting aborted to get sent back from the adapter
-> prior to returning from the EH handler. This fixes up some cases
-> where the completion handler was not getting called, which would
-> have resulted in the EH thread waiting until it timed out, greatly
-> extending EH time.
-
-Applied to 4.12/scsi-queue.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+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
