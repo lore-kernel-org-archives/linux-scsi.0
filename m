@@ -1,38 +1,63 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: support ranges TRIM for libata
-Date: Thu, 23 Mar 2017 15:43:30 +0100
-Message-ID: <20170323144330.GA31447@lst.de>
-References: <20170320204319.12628-1-hch@lst.de> <20170321185901.GB3706@htj.duckdns.org> <20170322181947.GA4733@lst.de> <1490276861.2202.8.camel@HansenPartnership.com> <20170323135521.GA30361@lst.de> <1490279706.2202.17.camel@HansenPartnership.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 06/23] dm-kcopyd: switch to use REQ_OP_WRITE_ZEROES
+Date: Thu, 23 Mar 2017 10:55:22 -0400
+Message-ID: <20170323145522.GB17127@redhat.com>
+References: <20170323143341.31549-1-hch@lst.de>
+ <20170323143341.31549-7-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:49981 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752310AbdCWOoU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 23 Mar 2017 10:44:20 -0400
+Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1490279706.2202.17.camel@HansenPartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20170323143341.31549-7-hch@lst.de>
+Sender: linux-block-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, martin.petersen@oracle.com, axboe@kernel.dk, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 
-On Thu, Mar 23, 2017 at 10:35:06AM -0400, James Bottomley wrote:
-> I'm certainly not saying we blindly follow t10, but I believe their
-> intent is to issue the next command from the completion of the first
-> (we can do this using qc->complete_fn, like atapi_request_sense).  That
-> way we don't get any tag problems because there's only one command
-> outstanding at once; reusing the qc means no allocation issues either.
+On Thu, Mar 23 2017 at 10:33am -0400,
+Christoph Hellwig <hch@lst.de> wrote:
+
+> It seems like the code currently passes whatever it was using for writes
+> to WRITE SAME.  Just switch it to WRITE ZEROES, although that doesn't
+> need any payload.
 > 
-> The t10 approach does mean the SG_IO problem is actually fixable rather
-> than simply erroring out.
+> Untested, and confused by the code, maybe someone who understands it
+> better than me can help..
+> 
+> Not-yet-signed-off-by: Christoph Hellwig <hch@lst.de>
 
-It would be sort of fixable, but with a lot of hackery.
+See commit 70d6c400a ("dm kcopyd: add WRITE SAME support to dm_kcopyd_zero")
+drivers/md/dm-io.c:do_region() adjusts the WRITE SAME payload to be a
+single page.
 
-> That's up to you ... from the point of view of code documenting itself,
-> forming the ATA_16 TRIM in sd and not doing any satl transformation is
-> easier for others to follow, but if it's going to cause more code, I'm
-> only marginal on the advantages of easier to follow code.
+So you'd want to tweak dm-io.c accordingly for WRITE ZEROES (presummably
+no payload?)
 
-I tried this earlier before giving up on it because it looked to ugly.
-But I can complete that version of it and post it for people to compare.
+Mike
+
+> ---
+>  drivers/md/dm-kcopyd.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/md/dm-kcopyd.c b/drivers/md/dm-kcopyd.c
+> index 9e9d04cb7d51..f85846741d50 100644
+> --- a/drivers/md/dm-kcopyd.c
+> +++ b/drivers/md/dm-kcopyd.c
+> @@ -733,11 +733,11 @@ int dm_kcopyd_copy(struct dm_kcopyd_client *kc, struct dm_io_region *from,
+>  		job->pages = &zero_page_list;
+>  
+>  		/*
+> -		 * Use WRITE SAME to optimize zeroing if all dests support it.
+> +		 * Use WRITE ZEROES to optimize zeroing if all dests support it.
+>  		 */
+> -		job->rw = REQ_OP_WRITE_SAME;
+> +		job->rw = REQ_OP_WRITE_ZEROES;
+>  		for (i = 0; i < job->num_dests; i++)
+> -			if (!bdev_write_same(job->dests[i].bdev)) {
+> +			if (!bdev_write_zeroes_sectors(job->dests[i].bdev)) {
+>  				job->rw = WRITE;
+>  				break;
+>  			}
+> -- 
+> 2.11.0
+> 
