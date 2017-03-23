@@ -1,39 +1,34 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/1] fnic: Adding Check Condition counter to misc fnicstats
-Date: Thu, 23 Mar 2017 09:59:54 -0400
-Message-ID: <yq18tnwf605.fsf@oracle.com>
-References: <1488327344-8817-1-git-send-email-satishkh@cisco.com>
-        <yq14lzcqt0o.fsf@oracle.com>
-        <29e530689cd247b9a6ab377fc5f71dfd@XCH-RCD-012.cisco.com>
+Subject: Re: [PATCH 1/6] ipr: Fix missed EH wakeup
+Date: Thu, 23 Mar 2017 10:05:12 -0400
+Message-ID: <yq14lykf5rb.fsf@oracle.com>
+References: <20170315215837.5146A13603C@b03ledav002.gho.boulder.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:42126 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:45925 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933119AbdCWOAk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2017 10:00:40 -0400
-In-Reply-To: <29e530689cd247b9a6ab377fc5f71dfd@XCH-RCD-012.cisco.com> (Satish
-        Kharat's message of "Thu, 23 Mar 2017 00:03:28 +0000")
+        with ESMTP id S932471AbdCWOFV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Mar 2017 10:05:21 -0400
+In-Reply-To: <20170315215837.5146A13603C@b03ledav002.gho.boulder.ibm.com>
+        (Brian King's message of "Wed, 15 Mar 2017 16:58:36 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Satish Kharat (satishkh)" <satishkh@cisco.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>, Christoph Hellwig <hch@infradead.org>
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, wenxiong@linux.vnet.ibm.com
 
-"Satish Kharat (satishkh)" <satishkh@cisco.com> writes:
+Brian King <brking@linux.vnet.ibm.com> writes:
 
-Satish,
+> Following a command abort or device reset, ipr's EH handlers wait
+> for the commands getting aborted to get sent back from the adapter
+> prior to returning from the EH handler. This fixes up some cases
+> where the completion handler was not getting called, which would
+> have resulted in the EH thread waiting until it timed out, greatly
+> extending EH time.
 
-> Apologies for the delay. I was not able to verify this because of
-> another fnic issue blocking this test. Just now submitted a fix for
-> that 'fnic issue' (in the patch => [PATCH 1/1] fnic: bug fix for
-> fip.fip_subcode in fnic_fcoe_send_vlan_req)
->
-> Did some quick verification and basic IO test, this patch looks good.
+Somebody please review this series so I can get it queued up.
 
-OK, I have applied your patches as well as Christoph's
-pci_alloc_irq_vectors() change to 4.12/scsi-queue.
-
-Thank you!
+Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
