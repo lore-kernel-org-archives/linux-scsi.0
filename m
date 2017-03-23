@@ -1,40 +1,57 @@
-From: Satish Kharat <satishkh@cisco.com>
-Subject: [PATCH 1/1] fnic: bug fix for fip.fip_subcode in fnic_fcoe_send_vlan_req
-Date: Wed, 22 Mar 2017 16:55:01 -0700
-Message-ID: <1490226901-24504-1-git-send-email-satishkh@cisco.com>
+From: "Satish Kharat (satishkh)" <satishkh@cisco.com>
+Subject: RE: [PATCH 1/1] fnic: Adding Check Condition counter to misc
+ fnicstats
+Date: Thu, 23 Mar 2017 00:03:28 +0000
+Message-ID: <29e530689cd247b9a6ab377fc5f71dfd@XCH-RCD-012.cisco.com>
+References: <1488327344-8817-1-git-send-email-satishkh@cisco.com>
+ <yq14lzcqt0o.fsf@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcdn-iport-7.cisco.com ([173.37.86.78]:30983 "EHLO
-        rcdn-iport-7.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754796AbdCVXzS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Mar 2017 19:55:18 -0400
+Received: from rcdn-iport-4.cisco.com ([173.37.86.75]:9304 "EHLO
+        rcdn-iport-4.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932530AbdCWADb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Mar 2017 20:03:31 -0400
+In-Reply-To: <yq14lzcqt0o.fsf@oracle.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: satishkh@cisco.com, sebaddel@cisco.com
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>
 
-This is a bug introduced when they moved the fip subcodes
-to central place. Was sending FIP_SC_VL_NOTE in fip.fip_subcode
-for VLAN request in fnic_fcoe_send_vlan_req. Change is to use
-FIP_SC_VL_REQ instead.
+Hi Martin,
+ Apologies for the delay. I was not able to verify this because of another =
+fnic issue blocking this test. Just now submitted a fix for that 'fnic issu=
+e' (in the patch =3D> [PATCH 1/1] fnic: bug fix for fip.fip_subcode in fnic=
+_fcoe_send_vlan_req)
 
-Signed-off-by: Satish Kharat <satishkh@cisco.com>
-Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
----
- drivers/scsi/fnic/fnic_fcs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Did some quick verification and basic IO test, this patch looks good.
 
-diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
-index 3b7da66..f5e632f 100644
---- a/drivers/scsi/fnic/fnic_fcs.c
-+++ b/drivers/scsi/fnic/fnic_fcs.c
-@@ -359,7 +359,7 @@ static void fnic_fcoe_send_vlan_req(struct fnic *fnic)
- 
- 	vlan->fip.fip_ver = FIP_VER_ENCAPS(FIP_VER);
- 	vlan->fip.fip_op = htons(FIP_OP_VLAN);
--	vlan->fip.fip_subcode = FIP_SC_VL_NOTE;
-+	vlan->fip.fip_subcode = FIP_SC_VL_REQ;
- 	vlan->fip.fip_dl_len = htons(sizeof(vlan->desc) / FIP_BPW);
- 
- 	vlan->desc.mac.fd_desc.fip_dtype = FIP_DT_MAC;
--- 
-2.7.4
+Thanks,
+Satish Kharat
+
+-----Original Message-----
+From: Martin K. Petersen [mailto:martin.petersen@oracle.com]=20
+Sent: Wednesday, March 01, 2017 7:04 PM
+To: Satish Kharat (satishkh) <satishkh@cisco.com>
+Cc: linux-scsi@vger.kernel.org; Sesidhar Baddela (sebaddel) <sebaddel@cisco=
+.com>
+Subject: Re: [PATCH 1/1] fnic: Adding Check Condition counter to misc fnics=
+tats
+
+>>>>> "Satish" =3D=3D Satish Kharat <satishkh@cisco.com> writes:
+
+Satish,
+
+Satish> Just a simple counter of number of check conditions encountered=20
+Satish> on that host.
+
+Please test and review the following:
+
+	https://patchwork.kernel.org/patch/9549777/
+
+Thank you!
+
+--=20
+Martin K. Petersen	Oracle Linux Engineering
