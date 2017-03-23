@@ -1,57 +1,149 @@
-From: "Satish Kharat (satishkh)" <satishkh@cisco.com>
-Subject: RE: [PATCH 1/1] fnic: Adding Check Condition counter to misc
- fnicstats
-Date: Thu, 23 Mar 2017 00:03:28 +0000
-Message-ID: <29e530689cd247b9a6ab377fc5f71dfd@XCH-RCD-012.cisco.com>
-References: <1488327344-8817-1-git-send-email-satishkh@cisco.com>
- <yq14lzcqt0o.fsf@oracle.com>
+From: walter harms <wharms@bfs.de>
+Subject: Re: [PATCH] scsi: pm8001: build in relevant functions and code on
+ PM8001_USE_MSIX
+Date: Thu, 23 Mar 2017 09:34:35 +0100
+Message-ID: <58D3889B.7030400@bfs.de>
+References: <20170322185004.1012-1-colin.king@canonical.com>
+Reply-To: wharms@bfs.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcdn-iport-4.cisco.com ([173.37.86.75]:9304 "EHLO
-        rcdn-iport-4.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932530AbdCWADb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Mar 2017 20:03:31 -0400
-In-Reply-To: <yq14lzcqt0o.fsf@oracle.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <20170322185004.1012-1-colin.king@canonical.com>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: Jack Wang <jinpu.wang@profitbricks.com>, lindar_liu@usish.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, pmchba@pmcs.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>
 
-Hi Martin,
- Apologies for the delay. I was not able to verify this because of another =
-fnic issue blocking this test. Just now submitted a fix for that 'fnic issu=
-e' (in the patch =3D> [PATCH 1/1] fnic: bug fix for fip.fip_subcode in fnic=
-_fcoe_send_vlan_req)
 
-Did some quick verification and basic IO test, this patch looks good.
 
-Thanks,
-Satish Kharat
+Am 22.03.2017 19:50, schrieb Colin King:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> Currently the misx and intx variables of the interrupt enable/disable
+> helper functions are built in no matter what the setting of the
+> macro PM8001_USE_MSIX.  Clean this up by just building in the
+> necessary helper functions and calls to these functions depending on
+> the setting of PM8001_USE_MSIX.  This addresses several dead code
+> paths found by static analysis with CoverityScan.
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/scsi/pm8001/pm8001_hwi.c | 63 +++++++++++++++++++++-------------------
+>  1 file changed, 33 insertions(+), 30 deletions(-)
+> 
+> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+> index 10546faac58c..d1be10fd1350 100644
+> --- a/drivers/scsi/pm8001/pm8001_hwi.c
+> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
+> @@ -1204,26 +1204,7 @@ void pm8001_chip_iounmap(struct pm8001_hba_info *pm8001_ha)
+>  	}
+>  }
+>  
+> -/**
+> - * pm8001_chip_interrupt_enable - enable PM8001 chip interrupt
+> - * @pm8001_ha: our hba card information
+> - */
+> -static void
+> -pm8001_chip_intx_interrupt_enable(struct pm8001_hba_info *pm8001_ha)
+> -{
+> -	pm8001_cw32(pm8001_ha, 0, MSGU_ODMR, ODMR_CLEAR_ALL);
+> -	pm8001_cw32(pm8001_ha, 0, MSGU_ODCR, ODCR_CLEAR_ALL);
+> -}
+> -
+> - /**
+> -  * pm8001_chip_intx_interrupt_disable- disable PM8001 chip interrupt
+> -  * @pm8001_ha: our hba card information
+> -  */
+> -static void
+> -pm8001_chip_intx_interrupt_disable(struct pm8001_hba_info *pm8001_ha)
+> -{
+> -	pm8001_cw32(pm8001_ha, 0, MSGU_ODMR, ODMR_MASK_ALL);
+> -}
+> +#ifdef PM8001_USE_MSIX
+>  
+>  /**
+>   * pm8001_chip_msix_interrupt_enable - enable PM8001 chip interrupt
+> @@ -1257,6 +1238,30 @@ pm8001_chip_msix_interrupt_disable(struct pm8001_hba_info *pm8001_ha,
+>  	pm8001_cw32(pm8001_ha, 0,  msi_index, MSIX_INTERRUPT_DISABLE);
+>  }
+>  
+> +#else
+> +
+> +/**
+> + * pm8001_chip_interrupt_enable - enable PM8001 chip interrupt
+> + * @pm8001_ha: our hba card information
+> + */
+> +static void
+> +pm8001_chip_intx_interrupt_enable(struct pm8001_hba_info *pm8001_ha)
+> +{
+> +	pm8001_cw32(pm8001_ha, 0, MSGU_ODMR, ODMR_CLEAR_ALL);
+> +	pm8001_cw32(pm8001_ha, 0, MSGU_ODCR, ODCR_CLEAR_ALL);
+> +}
+> +
+> + /**
+> +  * pm8001_chip_intx_interrupt_disable- disable PM8001 chip interrupt
+> +  * @pm8001_ha: our hba card information
+> +  */
+> +static void
+> +pm8001_chip_intx_interrupt_disable(struct pm8001_hba_info *pm8001_ha)
+> +{
+> +	pm8001_cw32(pm8001_ha, 0, MSGU_ODMR, ODMR_MASK_ALL);
+> +}
+> +#endif
+> +
+>  /**
+>   * pm8001_chip_interrupt_enable - enable PM8001 chip interrupt
+>   * @pm8001_ha: our hba card information
+> @@ -1266,10 +1271,9 @@ pm8001_chip_interrupt_enable(struct pm8001_hba_info *pm8001_ha, u8 vec)
+>  {
+>  #ifdef PM8001_USE_MSIX
+>  	pm8001_chip_msix_interrupt_enable(pm8001_ha, 0);
+> -	return;
+> -#endif
+> +#else
+>  	pm8001_chip_intx_interrupt_enable(pm8001_ha);
+> -
+> +#endif
+>  }
+>  
+>  /**
+> @@ -1281,10 +1285,9 @@ pm8001_chip_interrupt_disable(struct pm8001_hba_info *pm8001_ha, u8 vec)
+>  {
+>  #ifdef PM8001_USE_MSIX
+>  	pm8001_chip_msix_interrupt_disable(pm8001_ha, 0);
+> -	return;
+> -#endif
+> +#else
+>  	pm8001_chip_intx_interrupt_disable(pm8001_ha);
+> -
+> +#endif
+>  }
+>  
+>  /**
+> @@ -4613,15 +4616,15 @@ static int pm8001_chip_phy_ctl_req(struct pm8001_hba_info *pm8001_ha,
+>  
+>  static u32 pm8001_chip_is_our_interupt(struct pm8001_hba_info *pm8001_ha)
+>  {
+> -	u32 value;
+>  #ifdef PM8001_USE_MSIX
+>  	return 1;
+> -#endif
+> -	value = pm8001_cr32(pm8001_ha, 0, MSGU_ODR);
+> +#else
+> +	u32 value = pm8001_cr32(pm8001_ha, 0, MSGU_ODR);
+> +
+>  	if (value)
+>  		return 1;
+>  	return 0;
+> -
+> +#endif
+>  }
+>  
 
------Original Message-----
-From: Martin K. Petersen [mailto:martin.petersen@oracle.com]=20
-Sent: Wednesday, March 01, 2017 7:04 PM
-To: Satish Kharat (satishkh) <satishkh@cisco.com>
-Cc: linux-scsi@vger.kernel.org; Sesidhar Baddela (sebaddel) <sebaddel@cisco=
-.com>
-Subject: Re: [PATCH 1/1] fnic: Adding Check Condition counter to misc fnics=
-tats
+This is a bit strange, why do this function return u32 ?
 
->>>>> "Satish" =3D=3D Satish Kharat <satishkh@cisco.com> writes:
+re,
+ wh
 
-Satish,
-
-Satish> Just a simple counter of number of check conditions encountered=20
-Satish> on that host.
-
-Please test and review the following:
-
-	https://patchwork.kernel.org/patch/9549777/
-
-Thank you!
-
---=20
-Martin K. Petersen	Oracle Linux Engineering
+>  /**
