@@ -1,103 +1,105 @@
-From: Lars Ellenberg <lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>
-Subject: Re: RFC: always use REQ_OP_WRITE_ZEROES for zeroing
-	offload
-Date: Thu, 23 Mar 2017 23:53:09 +0100
-Message-ID: <20170323225256.GK1138@soda.linbit>
-References: <20170323143341.31549-1-hch@lst.de>
-	<20170323155410.GD1138@soda.linbit>
-	<20170323170221.GA20854@redhat.com>
+From: Vaibhav Jain <vaibhav@linux.vnet.ibm.com>
+Subject: Re: [PATCH] lsscsi: Fix truncation of 128-bit wwn
+Date: Fri, 24 Mar 2017 09:48:36 +0530
+Message-ID: <877f3fgvdv.fsf@vajain21.in.ibm.com>
+References: <20170317043840.26560-1-vaibhav@linux.vnet.ibm.com> <20170317102849.GA2719@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20170323170221.GA20854-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:37000 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751255AbdCXETu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 24 Mar 2017 00:19:50 -0400
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v2O4Dfm9024631
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Mar 2017 00:19:49 -0400
+Received: from e23smtp09.au.ibm.com (e23smtp09.au.ibm.com [202.81.31.142])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 29c0uje0p8-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Mar 2017 00:19:49 -0400
+Received: from localhost
+        by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <vaibhav@linux.vnet.ibm.com>;
+        Fri, 24 Mar 2017 14:19:46 +1000
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+        by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v2O4JXa233030206
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Mar 2017 15:19:41 +1100
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+        by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v2O4J6iV016654
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Mar 2017 15:19:06 +1100
+In-Reply-To: <20170317102849.GA2719@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Gris Ge <fge@redhat.com>
+Cc: Doug Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, Jon Grimm <jon.grimm@canonical.com>, Vipin K Parashar <vipin@linux.vnet.ibm.com>, Ping Tian Han <pthan@cn.ibm.com>
 
-On Thu, Mar 23, 2017 at 01:02:22PM -0400, Mike Snitzer wrote:
-> On Thu, Mar 23 2017 at 11:54am -0400,
-> Lars Ellenberg <lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org> wrote:
-> 
-> > On Thu, Mar 23, 2017 at 10:33:18AM -0400, Christoph Hellwig wrote:
-> > > This series makes REQ_OP_WRITE_ZEROES the only zeroing offload
-> > > supported by the block layer, and switches existing implementations
-> > > of REQ_OP_DISCARD that correctly set discard_zeroes_data to it,
-> > > removes incorrect discard_zeroes_data, and also switches WRITE SAME
-> > > based zeroing in SCSI to this new method.
-> > > 
-> > > I've done testing with ATA, SCSI and NVMe setups, but there are
-> > > a few things that will need more attention:
-> > > 
-> > 
-> > >  - The DRBD code in this area was very odd,
-> > 
-> > DRBD wants all replicas to give back identical data.
-> > If what comes back after a discard is "undefined",
-> > we cannot really use that.
-> > 
-> > We used to "stack" discard only if our local backend claimed
-> > "discard_zeroes_data". We replicate that IO request to the peer
-> > as discard, and if the peer cannot do discards itself, or has
-> > discard_zeroes_data == 0, the peer will use zeroout instead.
-> > 
-> > One use-case for this is the device mapper "thin provisioning".
-> > At the time I wrote those "odd" hacks, dm thin targets
-> > would set discard_zeroes_data=0, NOT change discard granularity,
-> > but only actually discard (drop from the tree) whole "chunks",
-> > leaving partial start/end chunks in the mapping tree unchanged.
-> > 
-> > The logic of "only stack discard, if backend discard_zeroes_data"
+Hi Gris,
 
-That is DRBDs logic I just explained above.
-And the "backend" (to DRBD) in that sentence would be thin, and not
-the "real" hardware below thin, which may not even support discard.
+Thanks for reviewing the patch. I have posted a v2 patch addressing your
+review comments. Can you please take a look.
 
-> > would mean that we would not be able to accept and pass down discards
-> > to dm-thin targets. But with data on dm-thin, you would really like
-> > to do the occasional fstrim.
-> 
-> Are you sure you aren't thinking of MD raid?
+Patch-Link:
+https://www.mail-archive.com/linux-scsi@vger.kernel.org/msg59720.html
 
-Yes.
+Gris Ge <fge@redhat.com> writes:
 
-> To this day, dm-thin.c has: ti->discard_zeroes_data_unsupported = true
+> On Fri, Mar 17, 2017 at 10:08:40AM +0530, Vaibhav Jain wrote:
+>> ---
+>>  src/lsscsi.c | 8 ++++----
+>>  1 file changed, 4 insertions(+), 4 deletions(-)
+>> 
+>> diff --git a/src/lsscsi.c b/src/lsscsi.c
+>> index 974b3f1..f20adcf 100644
+>> --- a/src/lsscsi.c
+>> +++ b/src/lsscsi.c
+>> @@ -210,8 +210,8 @@ struct dev_node_list {
+>>  static struct dev_node_list* dev_node_listhead = NULL;
+>>  
+>>  struct disk_wwn_node_entry {
+>> -       char wwn[32];
+>> -       char disk_bname[12];
+>> +	char wwn[35]; /* '0x' + wwn<128-bit> + <null-terminator> */
+> Please consider to define a constant instead of using a magic number
+> everywhere. Like:
+> #define _DISK_WWN_MAX_LEN           35
+> /* ^ WWN here is extracted from /dev/disk/by-id/wwn-<WWN> which is
+>  *   created by udev 60-persistent-storage.rules using ID_WWN_WITH_EXTENSION.
+>  *   The udev ID_WWN_WITH_EXTENSION is the combination of char wwn[17] and
+>  *   char wwn_vendor_extension[17] from struct scsi_id_device.
+>  */
+>> +	char disk_bname[12];
+> Please use space instead of \t for indention.
+>>  };
+>>  
+>>  #define DISK_WWN_NODE_LIST_ENTRIES 16
+>> @@ -2939,14 +2939,14 @@ one_sdev_entry(const char * dir_name, const char * devname,
+>>                  }
+>>                  if (wd[0]) {
+>>                          char dev_node[LMAX_NAME] = "";
+>> -                        char wwn_str[34];
+>> +			char wwn_str[35];
+> Please use space instead of \t for indention.
+>>                          enum dev_type typ;
+>>  
+>>                          typ = (FT_BLOCK == non_sg.ft) ? BLK_DEV : CHR_DEV;
+>>                          if (get_wwn) {
+>>                                  if ((BLK_DEV == typ) &&
+>>                                      get_disk_wwn(wd, wwn_str, sizeof(wwn_str)))
+>> -                                        printf("%-30s  ", wwn_str);
+>> +					printf("%-34s  ", wwn_str);
+> Please use constant instead of magic number:
+>     printf("%-*s  ", _DISK_WWN_MAX_LEN - 1, wwn_str);
+>>                                  else
+>>                                          printf("                          "
+>>                                                 "      ");
+>> -- 
+>> 2.9.3
+>> 
+>
+> -- 
+> Gris Ge
 
-That is exactly what I was saying.
-
-Thin does not claim to zero data on discard.  which is ok, and correct,
-because it only punches holes on full chunks (or whatever you call
-them), and leaves the rest in the mapping tree as is.
-
-And that behaviour would prevent DRBD from exposing discards if
-configured on top of thin. (see above)
-
-But thin *could* easily guarantee zeroing, by simply punching holes
-where it can, and zeroing out the not fully-aligned partial start and
-end of the range.
-
-Which is what I added as an option between DRBD and whatever is below,
-with the use-case of dm-thin in mind.
-
-And that made it possible for DRBD to
- a) expose "discard" to upper layers, even if we would usually only do
-    if the DRBD Primary sits on top of a device that guarantees discard
-    zeros data,
- b) still use discards on a secondary, without falling back to zero-out,
-    which would unexpectedly fully allocate, instead of trim, a thinly
-    provisioned device-mapper target.
-
-
-Thanks,
-
-    Lars
+-- 
+Vaibhav Jain <vaibhav@linux.vnet.ibm.com>
+Linux Technology Center, IBM India Pvt. Ltd.
