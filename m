@@ -1,59 +1,50 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH] scsi: ufs: fix wrong/ambiguous fall through comments
-Date: Fri, 24 Mar 2017 16:21:13 -0700
-Message-ID: <59298e05e511ed5860e07e48fc55f173@codeaurora.org>
-References: <20170323104904.47040-1-tkusumi@tuxera.com>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: [PATCH v6 06/15] mlx5: Replace PCI pool old API
+Date: Fri, 24 Mar 2017 23:47:24 -0400
+Message-ID: <1490413644.2404.46.camel@redhat.com>
+References: <20170319170404.17362-1-romain.perier@collabora.com>
+         <20170319170404.17362-7-romain.perier@collabora.com>
+         <20170320063109.GT2079@mtr-leonro.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39856 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934479AbdCXXVP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Mar 2017 19:21:15 -0400
-In-Reply-To: <20170323104904.47040-1-tkusumi@tuxera.com>
+Received: from mx1.redhat.com ([209.132.183.28]:34038 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965826AbdCYDr3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 24 Mar 2017 23:47:29 -0400
+In-Reply-To: <20170320063109.GT2079@mtr-leonro.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kusumi.tomohiro@gmail.com
-Cc: vinholikatti@gmail.com, linux-scsi@vger.kernel.org, Tomohiro Kusumi <tkusumi@tuxera.com>, linux-scsi-owner@vger.kernel.org
+To: Leon Romanovsky <leon@kernel.org>, Romain Perier <romain.perier@collabora.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, jeffrey.t.kirsher@intel.com, "David S. Miller" <davem@davemloft.net>, stas.yakovlev@gmail.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Felipe Balbi <balbi@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Peter Senna Tschudin <peter.senna@collabora.co.uk>
 
-On 2017-03-23 03:49, kusumi.tomohiro@gmail.com wrote:
-> From: Tomohiro Kusumi <tkusumi@tuxera.com>
+On Mon, 2017-03-20 at 08:31 +0200, Leon Romanovsky wrote:
+> On Sun, Mar 19, 2017 at 06:03:55PM +0100, Romain Perier wrote:
+> > 
+> > The PCI pool API is deprecated. This commit replaces the PCI pool
+> > old
+> > API by the appropriate function with the DMA pool API.
+> > 
+> > Signed-off-by: Romain Perier <romain.perier@collabora.com>
+> > Reviewed-by: Peter Senna Tschudin <peter.senna@collabora.com>
+> > ---
+> >  drivers/net/ethernet/mellanox/mlx5/core/cmd.c | 11 ++++++-----
+> >  include/linux/mlx5/driver.h                   |  2 +-
+> >  2 files changed, 7 insertions(+), 6 deletions(-)
+> > 
 > 
-> These aren't really falling through to anywhere meaningful.
-> 
-> Signed-off-by: Tomohiro Kusumi <tkusumi@tuxera.com>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index dc6efbd..b7e5128 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -553,15 +553,14 @@ static inline u32 ufshcd_get_intr_mask(struct
-> ufs_hba *hba)
->  	case UFSHCI_VERSION_10:
->  		intr_mask = INTERRUPT_MASK_ALL_VER_10;
->  		break;
-> -	/* allow fall through */
->  	case UFSHCI_VERSION_11:
->  	case UFSHCI_VERSION_20:
->  		intr_mask = INTERRUPT_MASK_ALL_VER_11;
->  		break;
-> -	/* allow fall through */
->  	case UFSHCI_VERSION_21:
->  	default:
->  		intr_mask = INTERRUPT_MASK_ALL_VER_21;
-> +		break;
->  	}
-> 
->  	return intr_mask;
+> Thanks,
+> Acked-by: Leon Romanovsky <leonro@mellanox.com>
 
-Looks good to me.
-Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+Changes look fine to me, and in addition I've compiled and tested them
+on mlx5 hardware and verified that RDMA communications still work.
+
+Acked-by: Doug Ledford <dledford@redhat.com>
+Tested-by: Doug Ledford <dledford@redhat.com>
 
 -- 
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+Doug Ledford <dledford@redhat.com>
+    GPG KeyID: B826A3330E572FDD
+   
+Key fingerprint = AE6B 1BDA 122B 23B4 265B  1274 B826 A333 0E57 2FDD
