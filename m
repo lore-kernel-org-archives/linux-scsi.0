@@ -1,50 +1,40 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [PATCH v6 06/15] mlx5: Replace PCI pool old API
-Date: Fri, 24 Mar 2017 23:47:24 -0400
-Message-ID: <1490413644.2404.46.camel@redhat.com>
+From: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v6 03/15] IB/mthca: Replace PCI pool old API
+Date: Sat, 25 Mar 2017 01:24:16 -0400
+Message-ID: <1490419456.2404.47.camel@redhat.com>
 References: <20170319170404.17362-1-romain.perier@collabora.com>
-         <20170319170404.17362-7-romain.perier@collabora.com>
-         <20170320063109.GT2079@mtr-leonro.local>
+         <20170319170404.17362-4-romain.perier@collabora.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34038 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965826AbdCYDr3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 24 Mar 2017 23:47:29 -0400
-In-Reply-To: <20170320063109.GT2079@mtr-leonro.local>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20170319170404.17362-4-romain.perier-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Romain Perier <romain.perier-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Sean Hefty <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hal Rosenstock <hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, jeffrey.t.kirsher-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, stas.yakovlev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Felipe Balbi <balbi-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Peter Senna Tschudin <peter.senna-ZGY8ohtN/8pPYcu2f3hruQ@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Leon Romanovsky <leon@kernel.org>, Romain Perier <romain.perier@collabora.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, jeffrey.t.kirsher@intel.com, "David S. Miller" <davem@davemloft.net>, stas.yakovlev@gmail.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Felipe Balbi <balbi@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Peter Senna Tschudin <peter.senna@collabora.co.uk>
 
-On Mon, 2017-03-20 at 08:31 +0200, Leon Romanovsky wrote:
-> On Sun, Mar 19, 2017 at 06:03:55PM +0100, Romain Perier wrote:
-> > 
-> > The PCI pool API is deprecated. This commit replaces the PCI pool
-> > old
-> > API by the appropriate function with the DMA pool API.
-> > 
-> > Signed-off-by: Romain Perier <romain.perier@collabora.com>
-> > Reviewed-by: Peter Senna Tschudin <peter.senna@collabora.com>
-> > ---
-> >  drivers/net/ethernet/mellanox/mlx5/core/cmd.c | 11 ++++++-----
-> >  include/linux/mlx5/driver.h                   |  2 +-
-> >  2 files changed, 7 insertions(+), 6 deletions(-)
-> > 
+On Sun, 2017-03-19 at 18:03 +0100, Romain Perier wrote:
+> The PCI pool API is deprecated. This commit replaces the PCI pool old
+> API by the appropriate function with the DMA pool API.
 > 
-> Thanks,
-> Acked-by: Leon Romanovsky <leonro@mellanox.com>
+> Signed-off-by: Romain Perier <romain.perier-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
+> Acked-by: Peter Senna Tschudin <peter.senna-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
+> Tested-by: Peter Senna Tschudin <peter.senna-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
+> 
 
-Changes look fine to me, and in addition I've compiled and tested them
-on mlx5 hardware and verified that RDMA communications still work.
+Changes look ok, and I've tested them here as well.
 
-Acked-by: Doug Ledford <dledford@redhat.com>
-Tested-by: Doug Ledford <dledford@redhat.com>
+Acked-by: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Tested-by: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
 -- 
-Doug Ledford <dledford@redhat.com>
+Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
     GPG KeyID: B826A3330E572FDD
    
 Key fingerprint = AE6B 1BDA 122B 23B4 265B  1274 B826 A333 0E57 2FDD
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
