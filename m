@@ -1,32 +1,47 @@
-From: Ilias Tsitsimpis <iliastsi@arrikto.com>
-Subject: Re: [PATCHv4 0/4] tcmu: bug fix and dynamic growing data area support
-Date: Sat, 25 Mar 2017 10:57:14 +0200
-Message-ID: <20170325085714.e7azltvtr7b3xeio@iliastsi-m.arr>
-References: <1490085382-28658-1-git-send-email-lixiubo@cmss.chinamobile.com>
- <20170323160237.qqofpc7v7aoazfqd@iliastsi-m.arr>
- <c28c75c3-0ab8-4320-9716-b36fc027ff50@email.android.com>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: [PATCH v6 05/15] mlx4: Replace PCI pool old API
+Date: Sat, 25 Mar 2017 13:03:25 -0400
+Message-ID: <1490461405.2404.52.camel@redhat.com>
+References: <20170319170404.17362-1-romain.perier@collabora.com>
+         <20170319170404.17362-6-romain.perier@collabora.com>
+         <20170320063225.GU2079@mtr-leonro.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <c28c75c3-0ab8-4320-9716-b36fc027ff50@email.android.com>
-Sender: target-devel-owner@vger.kernel.org
-To: =?utf-8?B?5p2O56eA5rOi?= <lixiubo@cmss.chinamobile.com>
-Cc: agrover@redhat.com, nab@linux-iscsi.org, mchristi@redhat.com, shli@kernel.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com, bryantly@linux.vnet.ibm.com
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170320063225.GU2079@mtr-leonro.local>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Leon Romanovsky <leon@kernel.org>, Romain Perier <romain.perier@collabora.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, jeffrey.t.kirsher@intel.com, "David S. Miller" <davem@davemloft.net>, stas.yakovlev@gmail.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Felipe Balbi <balbi@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Peter Senna Tschudin <peter.senna@collabora.co.uk>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Mar 24, 2017 at 02:45AM, 李秀波 wrote:
-> IliasTsitsimpis <iliastsi@arrikto.com>写到：
-> >Could you please validate the above snippet, and update your patches to
-> >include it?
+On Mon, 2017-03-20 at 08:32 +0200, Leon Romanovsky wrote:
+> On Sun, Mar 19, 2017 at 06:03:54PM +0100, Romain Perier wrote:
+> > 
+> > The PCI pool API is deprecated. This commit replaces the PCI pool
+> > old
+> > API by the appropriate function with the DMA pool API.
+> > 
+> > Signed-off-by: Romain Perier <romain.perier@collabora.com>
+> > Acked-by: Peter Senna Tschudin <peter.senna@collabora.com>
+> > Tested-by: Peter Senna Tschudin <peter.senna@collabora.com>
+> > ---
+> >  drivers/net/ethernet/mellanox/mlx4/cmd.c  | 10 +++++-----
+> >  drivers/net/ethernet/mellanox/mlx4/mlx4.h |  2 +-
+> >  2 files changed, 6 insertions(+), 6 deletions(-)
+> > 
 > 
-> They are actually two separate issues, but all for BIDI case.
-> 
-> I'll merged into my patch.
+> Thanks,
+> Reviewed-by: Leon Romanovsky <leonro@mellanox.com>
 
-Since these are two separate issues, I would create a new patch.
-Also, feel free to add 'Tested-by' me to the first two patches.
+Changes look fine to me, and it has been tested on this specific
+hardware and confirmed RDMA communications still work.
+
+Acked-by: Doug Ledford <dledford@redhat.com>
+Tested-by: Doug Ledford <dledford@redhat.com>
 
 -- 
-Ilias
+Doug Ledford <dledford@redhat.com>
+    GPG KeyID: B826A3330E572FDD
+   
+Key fingerprint = AE6B 1BDA 122B 23B4 265B  1274 B826 A333 0E57 2FDD
