@@ -1,12 +1,14 @@
 From: lixiubo@cmss.chinamobile.com
-Subject: [PATCHv5 0/2] tcmu: For bugs fix only
-Date: Mon, 27 Mar 2017 17:07:39 +0800
-Message-ID: <1490605661-16127-1-git-send-email-lixiubo@cmss.chinamobile.com>
+Subject: [PATCHv5 1/2] tcmu: Fix possible overwrite of t_data_sg's last iov[]
+Date: Mon, 27 Mar 2017 17:07:40 +0800
+Message-ID: <1490605661-16127-2-git-send-email-lixiubo@cmss.chinamobile.com>
+References: <1490605661-16127-1-git-send-email-lixiubo@cmss.chinamobile.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmccmta2.chinamobile.com ([221.176.66.80]:2541 "EHLO
+Received: from cmccmta2.chinamobile.com ([221.176.66.80]:34545 "EHLO
         cmccmta2.chinamobile.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751801AbdC0JHw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Mar 2017 05:07:52 -0400
+        with ESMTP id S1751902AbdC0JHs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Mar 2017 05:07:48 -0400
+In-Reply-To: <1490605661-16127-1-git-send-email-lixiubo@cmss.chinamobile.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: nab@linux-iscsi.org
@@ -14,23 +16,91 @@ Cc: agrover@redhat.com, mchristi@redhat.com, shli@kernel.org, sheng@yasker.org, 
 
 From: Xiubo Li <lixiubo@cmss.chinamobile.com>
 
-Changed for V5:
-- This only includes #1 and #2. And for old #3, #4 are still reviewing.
-- #1, since the issue reported by Ilias is a separate new one, and will
-  create a new patch later.
-- #2, address the issue pointed out by Mike, thanks.
-- #1 and #2 have been tested by Ilias in BIDI case, thanks.
+If there has BIDI data, its first iov[] will overwrite the last
+iov[] for se_cmd->t_data_sg.
 
-Changed for V4:
-- re-order the #3, #4 at the head.
-- merge most of the #5 to others.
+To fix this, we can just increase the iov pointer, but this may
+introuduce a new memory leakage bug: If the se_cmd->data_length
+and se_cmd->t_bidi_data_sg->length are all not aligned up to the
+DATA_BLOCK_SIZE, the actual length needed maybe larger than just
+sum of them.
 
-Xiubo Li (2):
-  tcmu: Fix possible overwrite of t_data_sg's last iov[]
-  tcmu: Fix wrongly calculating of the base_command_size
+So, this could be avoided by rounding all the data lengthes up
+to DATA_BLOCK_SIZE.
 
- drivers/target/target_core_user.c | 44 +++++++++++++++++++++++++++------------
- 1 file changed, 31 insertions(+), 13 deletions(-)
+Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
+Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Reviewed-by: Mike Christie <mchristi@redhat.com>
+Tested-by: Ilias Tsitsimpis <iliastsi@arrikto.com>
+---
+ drivers/target/target_core_user.c | 34 +++++++++++++++++++++++-----------
+ 1 file changed, 23 insertions(+), 11 deletions(-)
 
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index 57defc3..65d475f 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -394,6 +394,20 @@ static bool is_ring_space_avail(struct tcmu_dev *udev, size_t cmd_size, size_t d
+ 	return true;
+ }
+ 
++static inline size_t tcmu_cmd_get_data_length(struct tcmu_cmd *tcmu_cmd)
++{
++	struct se_cmd *se_cmd = tcmu_cmd->se_cmd;
++	size_t data_length = round_up(se_cmd->data_length, DATA_BLOCK_SIZE);
++
++	if (se_cmd->se_cmd_flags & SCF_BIDI) {
++		BUG_ON(!(se_cmd->t_bidi_data_sg && se_cmd->t_bidi_data_nents));
++		data_length += round_up(se_cmd->t_bidi_data_sg->length,
++				DATA_BLOCK_SIZE);
++	}
++
++	return data_length;
++}
++
+ static sense_reason_t
+ tcmu_queue_cmd_ring(struct tcmu_cmd *tcmu_cmd)
+ {
+@@ -407,7 +421,7 @@ static bool is_ring_space_avail(struct tcmu_dev *udev, size_t cmd_size, size_t d
+ 	uint32_t cmd_head;
+ 	uint64_t cdb_off;
+ 	bool copy_to_data_area;
+-	size_t data_length;
++	size_t data_length = tcmu_cmd_get_data_length(tcmu_cmd);
+ 	DECLARE_BITMAP(old_bitmap, DATA_BLOCK_BITS);
+ 
+ 	if (test_bit(TCMU_DEV_BIT_BROKEN, &udev->flags))
+@@ -433,11 +447,6 @@ static bool is_ring_space_avail(struct tcmu_dev *udev, size_t cmd_size, size_t d
+ 
+ 	mb = udev->mb_addr;
+ 	cmd_head = mb->cmd_head % udev->cmdr_size; /* UAM */
+-	data_length = se_cmd->data_length;
+-	if (se_cmd->se_cmd_flags & SCF_BIDI) {
+-		BUG_ON(!(se_cmd->t_bidi_data_sg && se_cmd->t_bidi_data_nents));
+-		data_length += se_cmd->t_bidi_data_sg->length;
+-	}
+ 	if ((command_size > (udev->cmdr_size / 2)) ||
+ 	    data_length > udev->data_size) {
+ 		pr_warn("TCMU: Request of size %zu/%zu is too big for %u/%zu "
+@@ -511,11 +520,14 @@ static bool is_ring_space_avail(struct tcmu_dev *udev, size_t cmd_size, size_t d
+ 	entry->req.iov_dif_cnt = 0;
+ 
+ 	/* Handle BIDI commands */
+-	iov_cnt = 0;
+-	alloc_and_scatter_data_area(udev, se_cmd->t_bidi_data_sg,
+-		se_cmd->t_bidi_data_nents, &iov, &iov_cnt, false);
+-	entry->req.iov_bidi_cnt = iov_cnt;
+-
++	if (se_cmd->se_cmd_flags & SCF_BIDI) {
++		iov_cnt = 0;
++		iov++;
++		alloc_and_scatter_data_area(udev, se_cmd->t_bidi_data_sg,
++				se_cmd->t_bidi_data_nents, &iov, &iov_cnt,
++				false);
++		entry->req.iov_bidi_cnt = iov_cnt;
++	}
+ 	/* cmd's data_bitmap is what changed in process */
+ 	bitmap_xor(tcmu_cmd->data_bitmap, old_bitmap, udev->data_bitmap,
+ 			DATA_BLOCK_BITS);
 -- 
 1.8.3.1
