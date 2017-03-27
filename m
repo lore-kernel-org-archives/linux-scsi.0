@@ -1,60 +1,51 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: [PATCH] sd: Consider max_xfer_blocks if opt_xfer_blocks is
- unusable
-Date: Mon, 27 Mar 2017 12:06:51 -0400 (EDT)
-Message-ID: <1570359368.7021305.1490630811310.JavaMail.zimbra@redhat.com>
-References: <20170327141831.20936-1-famz@redhat.com>
+From: Joseph Salisbury <joseph.salisbury@canonical.com>
+Subject: [REGRESSION][Stable][v3.12.y][v4.4.y][v4.9.y][v4.10.y][v4.11-rc1]
+ scsi: storvsc: properly set residual data length on errors
+Date: Mon, 27 Mar 2017 16:22:09 -0400
+Message-ID: <5df6cd65-92d5-e4c5-56e3-771643f86861@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58994 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751124AbdC0QH0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 27 Mar 2017 12:07:26 -0400
-In-Reply-To: <20170327141831.20936-1-famz@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: longli@microsoft.com
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg KH <gregkh@linuxfoundation.org>, Haiyang Zhang <haiyangz@microsoft.com>, LKML <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, devel@linuxdriverproject.org, sthemmin@microsoft.com
 List-Id: linux-scsi@vger.kernel.org
-To: Fam Zheng <famz@redhat.com>
-Cc: linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+
+Hi Long Li,
+
+A kernel bug report was opened against Ubuntu [0].  After a kernel
+bisect, it was found that reverting the following commit resolved this bug:
+
+commit 40630f462824ee24bc00d692865c86c3828094e0
+Author: Long Li <longli@microsoft.com>
+Date:   Wed Dec 14 18:46:03 2016 -0800
+
+    scsi: storvsc: properly set residual data length on errors
 
 
+The regression was introduced in mainline as of v4.11-rc1.  It was also
+cc'd to stable and has landed in v3.12.y, v4.4.y, v4.9.y and v4.10.y.
 
------ Original Message -----
-> From: "Fam Zheng" <famz@redhat.com>
-> To: linux-kernel@vger.kernel.org
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, famz@redhat.com, linux-scsi@vger.kernel.org, "James E.J.
-> Bottomley" <jejb@linux.vnet.ibm.com>
-> Sent: Monday, March 27, 2017 10:18:31 AM
-> Subject: [PATCH] sd: Consider max_xfer_blocks if opt_xfer_blocks is unusable
-> 
-> If device reports a small max_xfer_blocks and a zero opt_xfer_blocks, we
-> end up using BLK_DEF_MAX_SECTORS, which is wrong and r/w of that size
-> may get error.
-> 
-> Fixes: ca369d51b3e ("block/sd: Fix device-imposed transfer length limits")
-> Signed-off-by: Fam Zheng <famz@redhat.com>
-> ---
->  drivers/scsi/sd.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index fcfeddc..e2e21ab 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -2957,6 +2957,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
->  		rw_max = logical_to_sectors(sdp, sdkp->opt_xfer_blocks);
->  	} else
->  		rw_max = BLK_DEF_MAX_SECTORS;
-> +	rw_max = min_not_zero(rw_max, dev_max);
->  
->  	/* Combine with controller limits */
->  	q->limits.max_sectors = min(rw_max, queue_max_hw_sectors(q));
-> --
-> 2.9.3
-> 
-> 
-Looks good to me and addresses the issue we faced.
-FInal confirmation this change is OK to come from Martin or James.
 
-Reviewed-by: Laurence Oberman <loberman@redhat.com>
+This regression seems pretty severe since it's preventing virtual
+machines from booting.  It's affecting a couple of users so far.  I was
+hoping to get your feedback, since you are the patch author.  Do you
+think gathering any additional data will help diagnose this issue, or
+would it be best to submit a revert request?
+
+
+Thanks,
+
+Joe
+
+
+[0] http://pad.lv/1674635
