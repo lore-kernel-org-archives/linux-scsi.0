@@ -1,51 +1,71 @@
-From: Joseph Salisbury <joseph.salisbury@canonical.com>
-Subject: [REGRESSION][Stable][v3.12.y][v4.4.y][v4.9.y][v4.10.y][v4.11-rc1]
+From: Stephen Hemminger <sthemmin@microsoft.com>
+Subject: RE: [REGRESSION][v3.12.y][v4.4.y][v4.9.y][v4.10.y][v4.11-rc1]
  scsi: storvsc: properly set residual data length on errors
-Date: Mon, 27 Mar 2017 16:22:09 -0400
-Message-ID: <5df6cd65-92d5-e4c5-56e3-771643f86861@canonical.com>
+Date: Mon, 27 Mar 2017 22:14:37 +0000
+Message-ID: <BLUPR0301MB2098AF08A8AFFC22F2B5D67ACC330@BLUPR0301MB2098.namprd03.prod.outlook.com>
+References: <5df6cd65-92d5-e4c5-56e3-771643f86861@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: longli@microsoft.com
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg KH <gregkh@linuxfoundation.org>, Haiyang Zhang <haiyangz@microsoft.com>, LKML <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, devel@linuxdriverproject.org, sthemmin@microsoft.com
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <5df6cd65-92d5-e4c5-56e3-771643f86861@canonical.com>
+Content-Language: en-US
+Sender: stable-owner@vger.kernel.org
+To: Joseph Salisbury <joseph.salisbury@canonical.com>, Long Li <longli@microsoft.com>
+Cc: KY Srinivasan <kys@microsoft.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Haiyang Zhang <haiyangz@microsoft.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, Greg KH <gregkh@linuxfoundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Long Li,
-
-A kernel bug report was opened against Ubuntu [0].  After a kernel
-bisect, it was found that reverting the following commit resolved this bug:
-
-commit 40630f462824ee24bc00d692865c86c3828094e0
-Author: Long Li <longli@microsoft.com>
-Date:   Wed Dec 14 18:46:03 2016 -0800
-
-    scsi: storvsc: properly set residual data length on errors
-
-
-The regression was introduced in mainline as of v4.11-rc1.  It was also
-cc'd to stable and has landed in v3.12.y, v4.4.y, v4.9.y and v4.10.y.
-
-
-This regression seems pretty severe since it's preventing virtual
-machines from booting.  It's affecting a couple of users so far.  I was
-hoping to get your feedback, since you are the patch author.  Do you
-think gathering any additional data will help diagnose this issue, or
-would it be best to submit a revert request?
-
-
-Thanks,
-
-Joe
-
-
-[0] http://pad.lv/1674635
+QXJlIHlvdSBzdXJlIHRoZSByZWFsIHByb2JsZW0gaXMgbm90IHRoZSBvbmUgZml4ZWQgYnkgdGhp
+cyBjb21taXQ/DQoNCmNvbW1pdCBmMWM2MzViNDM5YTVjMDE3NzZmZTNhMjViMWUyZGM1NDZlYTgy
+ZTZmDQpBdXRob3I6IFN0ZXBoZW4gSGVtbWluZ2VyIDxzdGVwaGVuQG5ldHdvcmtwbHVtYmVyLm9y
+Zz4NCkRhdGU6ICAgVHVlIE1hciA3IDA5OjE1OjUzIDIwMTcgLTA4MDANCg0KICAgIHNjc2k6IHN0
+b3J2c2M6IFdvcmthcm91bmQgZm9yIHZpcnR1YWwgRFZEIFNDU0kgdmVyc2lvbg0KICAgIA0KICAg
+IEh5cGVyLVYgaG9zdCBlbXVsYXRpb24gb2YgU0NTSSBmb3IgdmlydHVhbCBEVkQgZGV2aWNlIHJl
+cG9ydHMgU0NTSQ0KICAgIHZlcnNpb24gMCAoVU5LTk9XTikgYnV0IGlzIHN0aWxsIGNhcGFibGUg
+b2Ygc3VwcG9ydGluZyBSRVBPUlRMVU4uDQogICAgDQogICAgV2l0aG91dCB0aGlzIHBhdGNoLCBh
+IEdFTjIgTGludXggZ3Vlc3Qgb24gSHlwZXItViB3aWxsIG5vdCBib290IDQuMTENCiAgICBzdWNj
+ZXNzZnVsbHkgd2l0aCB2aXJ0dWFsIERWRCBST00gZGV2aWNlLiBXaGF0IGhhcHBlbnMgaXMgdGhh
+dCB0aGUgU0NTSQ0KICAgIHNjYW4gcHJvY2VzcyBmYWxscyBiYWNrIHRvIGRvaW5nIHNlcXVlbnRp
+YWwgcHJvYmluZyBieSBJTlFVSVJZLiAgQnV0IHRoZQ0KICAgIHN0b3J2c2MgZHJpdmVyIGhhcyBh
+IHByZXZpb3VzIHdvcmthcm91bmQgdGhhdCBtYXNrcy9ibG9ja3MgYWxsIGVycm9ycw0KICAgIHJl
+cG9ydHMgZnJvbSBJTlFVSVJZIChvciBNT0RFX1NFTlNFKSBjb21tYW5kcy4gIFRoaXMgd29ya2Fy
+b3VuZCBjYXVzZXMNCiAgICB0aGUgc2NhbiB0byB0aGVuIHBvcHVsYXRlIGEgZnVsbCBzZXQgb2Yg
+Ym9ndXMgTFVOJ3Mgb24gdGhlIHRhcmdldCBhbmQNCiAgICB0aGVuIHNlbmRzIGtlcm5lbCBzcGlu
+bmluZyBvZmYgaW50byBhIGRlYXRoIHNwaXJhbCBkb2luZyBibG9jayByZWFkcyBvbg0KICAgIHRo
+ZSBub24tZXhpc3RlbnQgTFVOcy4NCiAgICANCiAgICBCeSBzZXR0aW5nIHRoZSBjb3JyZWN0IGJs
+YWNrbGlzdCBmbGFncywgdGhlIHRhcmdldCB3aXRoIHRoZSBEVkQgZGV2aWNlDQogICAgaXMgc2Nh
+bm5lZCB3aXRoIFJFUE9SVExVTiBhbmQgdGhhdCB3b3JrcyBjb3JyZWN0bHkuDQogICAgDQogICAg
+UGF0Y2ggbmVlZHMgdG8gZ28gaW4gY3VycmVudCA0LjExLCBpdCBpcyBzYWZlIGJ1dCBub3QgbmVj
+ZXNzYXJ5IGluIG9sZGVyDQogICAga2VybmVscy4NCiAgICANCiAgICBTaWduZWQtb2ZmLWJ5OiBT
+dGVwaGVuIEhlbW1pbmdlciA8c3RoZW1taW5AbWljcm9zb2Z0LmNvbT4NCiAgICBSZXZpZXdlZC1i
+eTogSy4gWS4gU3Jpbml2YXNhbiA8a3lzQG1pY3Jvc29mdC5jb20+DQogICAgUmV2aWV3ZWQtYnk6
+IENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPg0KICAgIFNpZ25lZC1vZmYtYnk6IE1hcnRp
+biBLLiBQZXRlcnNlbiA8bWFydGluLnBldGVyc2VuQG9yYWNsZS5jb20+DQoNCi0tLS0tT3JpZ2lu
+YWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKb3NlcGggU2FsaXNidXJ5IFttYWlsdG86am9zZXBoLnNh
+bGlzYnVyeUBjYW5vbmljYWwuY29tXSANClNlbnQ6IE1vbmRheSwgTWFyY2ggMjcsIDIwMTcgMToy
+MiBQTQ0KVG86IExvbmcgTGkgPGxvbmdsaUBtaWNyb3NvZnQuY29tPg0KQ2M6IEtZIFNyaW5pdmFz
+YW4gPGt5c0BtaWNyb3NvZnQuY29tPjsgTWFydGluIEsuIFBldGVyc2VuIDxtYXJ0aW4ucGV0ZXJz
+ZW5Ab3JhY2xlLmNvbT47IEhhaXlhbmcgWmhhbmcgPGhhaXlhbmd6QG1pY3Jvc29mdC5jb20+OyBT
+dGVwaGVuIEhlbW1pbmdlciA8c3RoZW1taW5AbWljcm9zb2Z0LmNvbT47IGplamJAbGludXgudm5l
+dC5pYm0uY29tOyBkZXZlbEBsaW51eGRyaXZlcnByb2plY3Qub3JnOyBsaW51eC1zY3NpIDxsaW51
+eC1zY3NpQHZnZXIua2VybmVsLm9yZz47IExLTUwgPGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5v
+cmc+OyBzdGFibGVAdmdlci5rZXJuZWwub3JnOyBHcmVnIEtIIDxncmVna2hAbGludXhmb3VuZGF0
+aW9uLm9yZz4NClN1YmplY3Q6IFtSRUdSRVNTSU9OXVtTdGFibGVdW3YzLjEyLnldW3Y0LjQueV1b
+djQuOS55XVt2NC4xMC55XVt2NC4xMS1yYzFdIHNjc2k6IHN0b3J2c2M6IHByb3Blcmx5IHNldCBy
+ZXNpZHVhbCBkYXRhIGxlbmd0aCBvbiBlcnJvcnMNCg0KSGkgTG9uZyBMaSwNCg0KQSBrZXJuZWwg
+YnVnIHJlcG9ydCB3YXMgb3BlbmVkIGFnYWluc3QgVWJ1bnR1IFswXS4gIEFmdGVyIGEga2VybmVs
+DQpiaXNlY3QsIGl0IHdhcyBmb3VuZCB0aGF0IHJldmVydGluZyB0aGUgZm9sbG93aW5nIGNvbW1p
+dCByZXNvbHZlZCB0aGlzIGJ1ZzoNCg0KY29tbWl0IDQwNjMwZjQ2MjgyNGVlMjRiYzAwZDY5Mjg2
+NWM4NmMzODI4MDk0ZTANCkF1dGhvcjogTG9uZyBMaSA8bG9uZ2xpQG1pY3Jvc29mdC5jb20+DQpE
+YXRlOiAgIFdlZCBEZWMgMTQgMTg6NDY6MDMgMjAxNiAtMDgwMA0KDQogICAgc2NzaTogc3RvcnZz
+YzogcHJvcGVybHkgc2V0IHJlc2lkdWFsIGRhdGEgbGVuZ3RoIG9uIGVycm9ycw0KDQoNClRoZSBy
+ZWdyZXNzaW9uIHdhcyBpbnRyb2R1Y2VkIGluIG1haW5saW5lIGFzIG9mIHY0LjExLXJjMS4gIEl0
+IHdhcyBhbHNvDQpjYydkIHRvIHN0YWJsZSBhbmQgaGFzIGxhbmRlZCBpbiB2My4xMi55LCB2NC40
+LnksIHY0LjkueSBhbmQgdjQuMTAueS4NCg0KDQpUaGlzIHJlZ3Jlc3Npb24gc2VlbXMgcHJldHR5
+IHNldmVyZSBzaW5jZSBpdCdzIHByZXZlbnRpbmcgdmlydHVhbA0KbWFjaGluZXMgZnJvbSBib290
+aW5nLiAgSXQncyBhZmZlY3RpbmcgYSBjb3VwbGUgb2YgdXNlcnMgc28gZmFyLiAgSSB3YXMNCmhv
+cGluZyB0byBnZXQgeW91ciBmZWVkYmFjaywgc2luY2UgeW91IGFyZSB0aGUgcGF0Y2ggYXV0aG9y
+LiAgRG8geW91DQp0aGluayBnYXRoZXJpbmcgYW55IGFkZGl0aW9uYWwgZGF0YSB3aWxsIGhlbHAg
+ZGlhZ25vc2UgdGhpcyBpc3N1ZSwgb3INCndvdWxkIGl0IGJlIGJlc3QgdG8gc3VibWl0IGEgcmV2
+ZXJ0IHJlcXVlc3Q/DQoNCg0KVGhhbmtzLA0KDQpKb2UNCg0KDQpbMF0gaHR0cDovL3BhZC5sdi8x
+Njc0NjM1DQoNCg0K
