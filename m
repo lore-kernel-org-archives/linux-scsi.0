@@ -1,106 +1,32 @@
-From: lixiubo@cmss.chinamobile.com
-Subject: [PATCHv5 1/2] tcmu: Fix possible overwrite of t_data_sg's last iov[]
-Date: Mon, 27 Mar 2017 17:07:40 +0800
-Message-ID: <1490605661-16127-2-git-send-email-lixiubo@cmss.chinamobile.com>
-References: <1490605661-16127-1-git-send-email-lixiubo@cmss.chinamobile.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmccmta2.chinamobile.com ([221.176.66.80]:34545 "EHLO
-        cmccmta2.chinamobile.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751902AbdC0JHs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Mar 2017 05:07:48 -0400
-In-Reply-To: <1490605661-16127-1-git-send-email-lixiubo@cmss.chinamobile.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: RFC: always use REQ_OP_WRITE_ZEROES for zeroing
+	offload
+Date: Mon, 27 Mar 2017 02:10:56 -0700
+Message-ID: <20170327091056.GB6879@infradead.org>
+References: <20170323143341.31549-1-hch@lst.de>
+	<20170323155410.GD1138@soda.linbit>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20170323155410.GD1138-w1SgEEioFePxa46PmUWvFg@public.gmane.org>
+List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
+List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
+Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: nab@linux-iscsi.org
-Cc: agrover@redhat.com, mchristi@redhat.com, shli@kernel.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com, bryantly@linux.vnet.ibm.com, iliastsi@arrikto.com, Xiubo Li <lixiubo@cmss.chinamobile.com>
 
-From: Xiubo Li <lixiubo@cmss.chinamobile.com>
-
-If there has BIDI data, its first iov[] will overwrite the last
-iov[] for se_cmd->t_data_sg.
-
-To fix this, we can just increase the iov pointer, but this may
-introuduce a new memory leakage bug: If the se_cmd->data_length
-and se_cmd->t_bidi_data_sg->length are all not aligned up to the
-DATA_BLOCK_SIZE, the actual length needed maybe larger than just
-sum of them.
-
-So, this could be avoided by rounding all the data lengthes up
-to DATA_BLOCK_SIZE.
-
-Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-Reviewed-by: Mike Christie <mchristi@redhat.com>
-Tested-by: Ilias Tsitsimpis <iliastsi@arrikto.com>
----
- drivers/target/target_core_user.c | 34 +++++++++++++++++++++++-----------
- 1 file changed, 23 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 57defc3..65d475f 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -394,6 +394,20 @@ static bool is_ring_space_avail(struct tcmu_dev *udev, size_t cmd_size, size_t d
- 	return true;
- }
- 
-+static inline size_t tcmu_cmd_get_data_length(struct tcmu_cmd *tcmu_cmd)
-+{
-+	struct se_cmd *se_cmd = tcmu_cmd->se_cmd;
-+	size_t data_length = round_up(se_cmd->data_length, DATA_BLOCK_SIZE);
-+
-+	if (se_cmd->se_cmd_flags & SCF_BIDI) {
-+		BUG_ON(!(se_cmd->t_bidi_data_sg && se_cmd->t_bidi_data_nents));
-+		data_length += round_up(se_cmd->t_bidi_data_sg->length,
-+				DATA_BLOCK_SIZE);
-+	}
-+
-+	return data_length;
-+}
-+
- static sense_reason_t
- tcmu_queue_cmd_ring(struct tcmu_cmd *tcmu_cmd)
- {
-@@ -407,7 +421,7 @@ static bool is_ring_space_avail(struct tcmu_dev *udev, size_t cmd_size, size_t d
- 	uint32_t cmd_head;
- 	uint64_t cdb_off;
- 	bool copy_to_data_area;
--	size_t data_length;
-+	size_t data_length = tcmu_cmd_get_data_length(tcmu_cmd);
- 	DECLARE_BITMAP(old_bitmap, DATA_BLOCK_BITS);
- 
- 	if (test_bit(TCMU_DEV_BIT_BROKEN, &udev->flags))
-@@ -433,11 +447,6 @@ static bool is_ring_space_avail(struct tcmu_dev *udev, size_t cmd_size, size_t d
- 
- 	mb = udev->mb_addr;
- 	cmd_head = mb->cmd_head % udev->cmdr_size; /* UAM */
--	data_length = se_cmd->data_length;
--	if (se_cmd->se_cmd_flags & SCF_BIDI) {
--		BUG_ON(!(se_cmd->t_bidi_data_sg && se_cmd->t_bidi_data_nents));
--		data_length += se_cmd->t_bidi_data_sg->length;
--	}
- 	if ((command_size > (udev->cmdr_size / 2)) ||
- 	    data_length > udev->data_size) {
- 		pr_warn("TCMU: Request of size %zu/%zu is too big for %u/%zu "
-@@ -511,11 +520,14 @@ static bool is_ring_space_avail(struct tcmu_dev *udev, size_t cmd_size, size_t d
- 	entry->req.iov_dif_cnt = 0;
- 
- 	/* Handle BIDI commands */
--	iov_cnt = 0;
--	alloc_and_scatter_data_area(udev, se_cmd->t_bidi_data_sg,
--		se_cmd->t_bidi_data_nents, &iov, &iov_cnt, false);
--	entry->req.iov_bidi_cnt = iov_cnt;
--
-+	if (se_cmd->se_cmd_flags & SCF_BIDI) {
-+		iov_cnt = 0;
-+		iov++;
-+		alloc_and_scatter_data_area(udev, se_cmd->t_bidi_data_sg,
-+				se_cmd->t_bidi_data_nents, &iov, &iov_cnt,
-+				false);
-+		entry->req.iov_bidi_cnt = iov_cnt;
-+	}
- 	/* cmd's data_bitmap is what changed in process */
- 	bitmap_xor(tcmu_cmd->data_bitmap, old_bitmap, udev->data_bitmap,
- 			DATA_BLOCK_BITS);
--- 
-1.8.3.1
+It sounds like you don't want to support traditional discard at all,
+but only WRITE ZEROES.  So in many ways this series is the right way
+forward.  It would be nice if we could do a full blown
+REQ_OP_WRITE_ZEROES for dm_think that zeroes out partial blocks,
+similar to what hardware that implements WRITE SAME of zeroes
+or WRITE ZEROES would do.  I'll see if I could include that in my
+series.
