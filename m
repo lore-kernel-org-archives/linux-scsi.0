@@ -1,38 +1,52 @@
-From: Fam Zheng <famz@redhat.com>
-Subject: [PATCH] sd: Consider max_xfer_blocks if opt_xfer_blocks is unusable
-Date: Mon, 27 Mar 2017 22:18:31 +0800
-Message-ID: <20170327141831.20936-1-famz@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53236 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752059AbdC0OTD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 27 Mar 2017 10:19:03 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: Re: RFC: always use REQ_OP_WRITE_ZEROES for zeroing
+	offload
+Date: Mon, 27 Mar 2017 16:57:40 +0200
+Message-ID: <20170327145740.GB24952@lst.de>
+References: <20170323143341.31549-1-hch@lst.de>
+	<20170323155410.GD1138@soda.linbit>
+	<20170327091056.GB6879@infradead.org>
+	<20170327140307.GA13020@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20170327140307.GA13020-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
+List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
+Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+To: Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, famz@redhat.com, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 
-If device reports a small max_xfer_blocks and a zero opt_xfer_blocks, we
-end up using BLK_DEF_MAX_SECTORS, which is wrong and r/w of that size
-may get error.
+On Mon, Mar 27, 2017 at 10:03:07AM -0400, Mike Snitzer wrote:
+> By "you" I assume you're referring to Lars?
 
-Fixes: ca369d51b3e ("block/sd: Fix device-imposed transfer length limits")
-Signed-off-by: Fam Zheng <famz@redhat.com>
----
- drivers/scsi/sd.c | 1 +
- 1 file changed, 1 insertion(+)
+Yes.
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index fcfeddc..e2e21ab 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2957,6 +2957,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 		rw_max = logical_to_sectors(sdp, sdkp->opt_xfer_blocks);
- 	} else
- 		rw_max = BLK_DEF_MAX_SECTORS;
-+	rw_max = min_not_zero(rw_max, dev_max);
- 
- 	/* Combine with controller limits */
- 	q->limits.max_sectors = min(rw_max, queue_max_hw_sectors(q));
--- 
-2.9.3
+> Lars' approach for discard,
+> when drbd is layered on dm-thinp, feels over-engineered.  Not his fault,
+> the way discard and zeroing got conflated certainly lends itself to
+> these ugly hacks.  SO I do appreciate that for anything to leverage
+> discard_zeroes_data it needs to be reliable.  Which runs counter to how
+> discard was implemented (discard may get silently dropped!)  But that is
+> why dm-thinp doesn't advertise dzd.  Anyway...
+
+That's exactly what this series does - remove discard_zeroes_data and
+use the new REQ_OP_WRITE_ZEROES for anything that wants zeroing offload.
+
+> As for the blkdev_issue_zeroout() resorting to manually zeroing the
+> range, if the discard fails or dzd not supported, that certainly
+> requires DM thinp to implement manual zeroing of the head and tail of
+> the range if partial blocks are being zeroed.  So I welcome any advances
+> there.  It is probably something that is best left to Joe or myself to
+> tackle.  But I'll gladly accept patches ;)
+
+Ok, I'll happily leave this to the two of you..
