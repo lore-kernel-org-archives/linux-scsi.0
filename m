@@ -1,25 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: osd_uld: remove an unneeded NULL check
-Date: Mon, 27 Mar 2017 21:54:48 -0400
-Message-ID: <yq14lye6u8n.fsf@oracle.com>
-References: <20170323104142.GD20154@mwanda>
+Subject: Re: [PATCH] scsi: ufs: fix wrong/ambiguous fall through comments
+Date: Mon, 27 Mar 2017 21:56:33 -0400
+Message-ID: <yq1zig65fla.fsf@oracle.com>
+References: <20170323104904.47040-1-tkusumi@tuxera.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170323104142.GD20154@mwanda> (Dan Carpenter's message of "Thu,
-        23 Mar 2017 13:41:42 +0300")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Boaz Harrosh <ooo@electrozaur.com>, Benny Halevy <bhalevy@primarydata.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:41120 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753605AbdC1B4p (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Mar 2017 21:56:45 -0400
+In-Reply-To: <20170323104904.47040-1-tkusumi@tuxera.com> (kusumi tomohiro's
+        message of "Thu, 23 Mar 2017 12:49:04 +0200")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: kusumi.tomohiro@gmail.com
+Cc: vinholikatti@gmail.com, linux-scsi@vger.kernel.org, Tomohiro Kusumi <tkusumi@tuxera.com>
 
-Dan Carpenter <dan.carpenter@oracle.com> writes:
+kusumi.tomohiro@gmail.com writes:
 
-> We don't call the remove() function unless probe() succeeds so "oud"
-> can't be NULL here.  Plus, if it were NULL, we dereference it on the
-> next line so it would crash anyway.
+> From: Tomohiro Kusumi <tkusumi@tuxera.com>
+>
+> These aren't really falling through to anywhere meaningful.
+>
+> Signed-off-by: Tomohiro Kusumi <tkusumi@tuxera.com>
 
-Applied to 4.12/scsi-queue (by hand).
+Applied to 4.12/scsi-queue.
+
+Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
