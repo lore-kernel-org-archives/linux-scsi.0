@@ -1,52 +1,108 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] scsi: hisi_sas: fix SATA dependency
-Date: Tue, 28 Mar 2017 16:22:03 +0200
-Message-ID: <20170328142212.1816773-1-arnd@arndb.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Xiang Chen <chenxiang66@hisilicon.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Joseph Salisbury <joseph.salisbury@canonical.com>
+Subject: Re: [REGRESSION][Stable][v3.12.y][v4.4.y][v4.9.y][v4.10.y][v4.11-rc1]
+ scsi: storvsc: properly set residual data length on errors
+Date: Tue, 28 Mar 2017 10:28:45 -0400
+Message-ID: <f8e619e0-d8b6-bd2f-1a92-c52fbc4b5550@canonical.com>
+References: <5df6cd65-92d5-e4c5-56e3-771643f86861@canonical.com>
+ <BLUPR0301MB2098AF08A8AFFC22F2B5D67ACC330@BLUPR0301MB2098.namprd03.prod.outlook.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <BLUPR0301MB2098AF08A8AFFC22F2B5D67ACC330@BLUPR0301MB2098.namprd03.prod.outlook.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Stephen Hemminger <sthemmin@microsoft.com>, Long Li <longli@microsoft.com>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, Greg KH <gregkh@linuxfoundation.org>, Haiyang Zhang <haiyangz@microsoft.com>, LKML <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Removing the 'select SCSI_SAS_LIBSAS' statement in Kconfig resulted
-in a link failure in configurations that have hisi_sas built-in
-but libsas as a loadable module:
+On 03/27/2017 06:14 PM, Stephen Hemminger wrote:
+> Are you sure the real problem is not the one fixed by this commit?
+>
+> commit f1c635b439a5c01776fe3a25b1e2dc546ea82e6f
+> Author: Stephen Hemminger <stephen@networkplumber.org>
+> Date:   Tue Mar 7 09:15:53 2017 -0800
+>
+>     scsi: storvsc: Workaround for virtual DVD SCSI version
+>     
+>     Hyper-V host emulation of SCSI for virtual DVD device reports SCSI
+>     version 0 (UNKNOWN) but is still capable of supporting REPORTLUN.
+>     
+>     Without this patch, a GEN2 Linux guest on Hyper-V will not boot 4.11
+>     successfully with virtual DVD ROM device. What happens is that the SCSI
+>     scan process falls back to doing sequential probing by INQUIRY.  But the
+>     storvsc driver has a previous workaround that masks/blocks all errors
+>     reports from INQUIRY (or MODE_SENSE) commands.  This workaround causes
+>     the scan to then populate a full set of bogus LUN's on the target and
+>     then sends kernel spinning off into a death spiral doing block reads on
+>     the non-existent LUNs.
+>     
+>     By setting the correct blacklist flags, the target with the DVD device
+>     is scanned with REPORTLUN and that works correctly.
+>     
+>     Patch needs to go in current 4.11, it is safe but not necessary in older
+>     kernels.
+>     
+>     Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
+>     Reviewed-by: K. Y. Srinivasan <kys@microsoft.com>
+>     Reviewed-by: Christoph Hellwig <hch@lst.de>
+>     Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+>
+> -----Original Message-----
+> From: Joseph Salisbury [mailto:joseph.salisbury@canonical.com] 
+> Sent: Monday, March 27, 2017 1:22 PM
+> To: Long Li <longli@microsoft.com>
+> Cc: KY Srinivasan <kys@microsoft.com>; Martin K. Petersen <martin.petersen@oracle.com>; Haiyang Zhang <haiyangz@microsoft.com>; Stephen Hemminger <sthemmin@microsoft.com>; jejb@linux.vnet.ibm.com; devel@linuxdriverproject.org; linux-scsi <linux-scsi@vger.kernel.org>; LKML <linux-kernel@vger.kernel.org>; stable@vger.kernel.org; Greg KH <gregkh@linuxfoundation.org>
+> Subject: [REGRESSION][Stable][v3.12.y][v4.4.y][v4.9.y][v4.10.y][v4.11-rc1] scsi: storvsc: properly set residual data length on errors
+>
+> Hi Long Li,
+>
+> A kernel bug report was opened against Ubuntu [0].  After a kernel
+> bisect, it was found that reverting the following commit resolved this bug:
+>
+> commit 40630f462824ee24bc00d692865c86c3828094e0
+> Author: Long Li <longli@microsoft.com>
+> Date:   Wed Dec 14 18:46:03 2016 -0800
+>
+>     scsi: storvsc: properly set residual data length on errors
+>
+>
+> The regression was introduced in mainline as of v4.11-rc1.  It was also
+> cc'd to stable and has landed in v3.12.y, v4.4.y, v4.9.y and v4.10.y.
+>
+>
+> This regression seems pretty severe since it's preventing virtual
+> machines from booting.  It's affecting a couple of users so far.  I was
+> hoping to get your feedback, since you are the patch author.  Do you
+> think gathering any additional data will help diagnose this issue, or
+> would it be best to submit a revert request?
+>
+>
+> Thanks,
+>
+> Joe
+>
+>
+> [0] http://pad.lv/1674635
+>
+>
+Hi Stephen,
 
-drivers/scsi/built-in.o: In function `hisi_sas_scan_finished':
-hisi_sas_main.c:(.text+0x37ce9): undefined reference to `sas_drain_work'
-drivers/scsi/built-in.o: In function `hisi_sas_slave_configure':
-hisi_sas_main.c:(.text+0x37d17): undefined reference to `sas_slave_configure'
-hisi_sas_main.c:(.text+0x37d40): undefined reference to `sas_change_queue_depth'
-drivers/scsi/built-in.o: In function `hisi_sas_remove':
 
-All other libsas users have the 'select' statement, so we should do the
-same here for consistency. For all I can tell, the patch that added
-the sata softreset does not actually introduce a dependency on SCSI_SAS_ATA
-but instead adds calls into libata itself, so we can express that with
-a more specific dependency.
+Thanks again for pointing out commit
+f1c635b439a5c01776fe3a25b1e2dc546ea82e6f.  It does indeed fix the bug. 
+I noticed the commit was not cc'd to stable.  Would it be possible to do
+that?
 
-We cannot have 'select SCSI_SAS_LIBSAS; depends on SCSI_SAS_ATA' as that
-would cause a dependency loop.
 
-Fixes: 7c594f0407de ("scsi: hisi_sas: add softreset function for SATA disk")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/scsi/hisi_sas/Kconfig | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Thanks,
 
-diff --git a/drivers/scsi/hisi_sas/Kconfig b/drivers/scsi/hisi_sas/Kconfig
-index ded2c201071d..374a329b91fc 100644
---- a/drivers/scsi/hisi_sas/Kconfig
-+++ b/drivers/scsi/hisi_sas/Kconfig
-@@ -2,7 +2,8 @@ config SCSI_HISI_SAS
- 	tristate "HiSilicon SAS"
- 	depends on HAS_DMA && HAS_IOMEM
- 	depends on ARM64 || COMPILE_TEST
--	depends on SCSI_SAS_ATA
-+	select SCSI_SAS_LIBSAS
- 	select BLK_DEV_INTEGRITY
-+	depends on ATA
- 	help
- 		This driver supports HiSilicon's SAS HBA
--- 
-2.9.0
+
+Joe
