@@ -1,34 +1,63 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH] scsi: hisi_sas: add missing break in switch statement
-Date: Tue, 28 Mar 2017 12:42:12 +0100
-Message-ID: <739ab862-b583-efb5-2ab4-afe40c73c35f@huawei.com>
-References: <20170328111222.17303-1-colin.king@canonical.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <20170328111222.17303-1-colin.king@canonical.com>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org, "chenxiang (M)" <chenxiang66@hisilicon.com>, tanxiaofei <tanxiaofei@huawei.com>
+From: kusumi.tomohiro@gmail.com
+Subject: [PATCH 1/6] scsi: ufs: make ufshcd_is_{device_present,hba_active}() return bool
+Date: Tue, 28 Mar 2017 16:49:24 +0300
+Message-ID: <20170328134929.25599-1-tkusumi@tuxera.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:33411 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932103AbdC1NuE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Mar 2017 09:50:04 -0400
+Received: by mail-lf0-f65.google.com with SMTP id r36so10601333lfi.0
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Mar 2017 06:49:53 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: martin.petersen@oracle.com, vinholikatti@gmail.com, linux-scsi@vger.kernel.org
+Cc: Tomohiro Kusumi <tkusumi@tuxera.com>
 
-On 28/03/2017 12:12, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
->
-> It appears that a break in the TRANS_TX_OPEN_CNX_ERR_NO_DESTINATION
-> case got accidentally removed in an earlier commit, as it stands,
-> the ts->stat and ts->open_rej_reason are being updated twice for this
-> case which looks incorrect.  Fix this by adding in the missing break
-> statement.
->
-> Detected by CoverityScan, CID#1422110 ("Missing break in switch")
->
-> Fixes: 634a9585f49c7 ("scsi: hisi_sas: process error codes according to their priority")
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+From: Tomohiro Kusumi <tkusumi@tuxera.com>
 
-Thanks, checkpatch.pl would normally catch this but it was hidden in the 
-formatted patch
+ufshcd driver generally uses bool for is_xxx type things instead of int,
+so conform to its style.
 
-Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Tomohiro Kusumi <tkusumi@tuxera.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index b7e5128..b006f1e 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -585,12 +585,12 @@ static inline u32 ufshcd_get_ufs_version(struct ufs_hba *hba)
+  *			      the host controller
+  * @hba: pointer to adapter instance
+  *
+- * Returns 1 if device present, 0 if no device detected
++ * Returns true if device present, false if no device detected
+  */
+-static inline int ufshcd_is_device_present(struct ufs_hba *hba)
++static inline bool ufshcd_is_device_present(struct ufs_hba *hba)
+ {
+ 	return (ufshcd_readl(hba, REG_CONTROLLER_STATUS) &
+-						DEVICE_PRESENT) ? 1 : 0;
++						DEVICE_PRESENT) ? true : false;
+ }
+ 
+ /**
+@@ -832,11 +832,11 @@ static inline void ufshcd_hba_start(struct ufs_hba *hba)
+  * ufshcd_is_hba_active - Get controller state
+  * @hba: per adapter instance
+  *
+- * Returns zero if controller is active, 1 otherwise
++ * Returns false if controller is active, true otherwise
+  */
+-static inline int ufshcd_is_hba_active(struct ufs_hba *hba)
++static inline bool ufshcd_is_hba_active(struct ufs_hba *hba)
+ {
+-	return (ufshcd_readl(hba, REG_CONTROLLER_ENABLE) & 0x1) ? 0 : 1;
++	return (ufshcd_readl(hba, REG_CONTROLLER_ENABLE) & 0x1) ? false : true;
+ }
+ 
+ static const char *ufschd_uic_link_state_to_string(
+-- 
+2.9.3
