@@ -1,108 +1,53 @@
-From: Joseph Salisbury <joseph.salisbury@canonical.com>
-Subject: Re: [REGRESSION][Stable][v3.12.y][v4.4.y][v4.9.y][v4.10.y][v4.11-rc1]
- scsi: storvsc: properly set residual data length on errors
-Date: Tue, 28 Mar 2017 10:28:45 -0400
-Message-ID: <f8e619e0-d8b6-bd2f-1a92-c52fbc4b5550@canonical.com>
-References: <5df6cd65-92d5-e4c5-56e3-771643f86861@canonical.com>
- <BLUPR0301MB2098AF08A8AFFC22F2B5D67ACC330@BLUPR0301MB2098.namprd03.prod.outlook.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH 01/23] block: renumber REQ_OP_WRITE_ZEROES
+Date: Tue, 28 Mar 2017 16:12:46 +0000
+Message-ID: <1490717553.2573.4.camel@sandisk.com>
+References: <20170323143341.31549-1-hch@lst.de>
+         <20170323143341.31549-2-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <BLUPR0301MB2098AF08A8AFFC22F2B5D67ACC330@BLUPR0301MB2098.namprd03.prod.outlook.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Stephen Hemminger <sthemmin@microsoft.com>, Long Li <longli@microsoft.com>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, Greg KH <gregkh@linuxfoundation.org>, Haiyang Zhang <haiyangz@microsoft.com>, LKML <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:1441 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753862AbdC1QN1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Mar 2017 12:13:27 -0400
+In-Reply-To: <20170323143341.31549-2-hch@lst.de>
+Content-Language: en-US
+Content-ID: <B160B454ABBE5B4E8E2058151862CA8C@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "agk@redhat.com" <agk@redhat.com>, "lars.ellenberg@linbit.com" <lars.ellenberg@linbit.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "philipp.reisner@linbit.com" <philipp.reisner@linbit.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "shli@kernel.org" <shli@kernel.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 
-On 03/27/2017 06:14 PM, Stephen Hemminger wrote:
-> Are you sure the real problem is not the one fixed by this commit?
->
-> commit f1c635b439a5c01776fe3a25b1e2dc546ea82e6f
-> Author: Stephen Hemminger <stephen@networkplumber.org>
-> Date:   Tue Mar 7 09:15:53 2017 -0800
->
->     scsi: storvsc: Workaround for virtual DVD SCSI version
->     
->     Hyper-V host emulation of SCSI for virtual DVD device reports SCSI
->     version 0 (UNKNOWN) but is still capable of supporting REPORTLUN.
->     
->     Without this patch, a GEN2 Linux guest on Hyper-V will not boot 4.11
->     successfully with virtual DVD ROM device. What happens is that the SCSI
->     scan process falls back to doing sequential probing by INQUIRY.  But the
->     storvsc driver has a previous workaround that masks/blocks all errors
->     reports from INQUIRY (or MODE_SENSE) commands.  This workaround causes
->     the scan to then populate a full set of bogus LUN's on the target and
->     then sends kernel spinning off into a death spiral doing block reads on
->     the non-existent LUNs.
->     
->     By setting the correct blacklist flags, the target with the DVD device
->     is scanned with REPORTLUN and that works correctly.
->     
->     Patch needs to go in current 4.11, it is safe but not necessary in older
->     kernels.
->     
->     Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
->     Reviewed-by: K. Y. Srinivasan <kys@microsoft.com>
->     Reviewed-by: Christoph Hellwig <hch@lst.de>
->     Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
->
-> -----Original Message-----
-> From: Joseph Salisbury [mailto:joseph.salisbury@canonical.com] 
-> Sent: Monday, March 27, 2017 1:22 PM
-> To: Long Li <longli@microsoft.com>
-> Cc: KY Srinivasan <kys@microsoft.com>; Martin K. Petersen <martin.petersen@oracle.com>; Haiyang Zhang <haiyangz@microsoft.com>; Stephen Hemminger <sthemmin@microsoft.com>; jejb@linux.vnet.ibm.com; devel@linuxdriverproject.org; linux-scsi <linux-scsi@vger.kernel.org>; LKML <linux-kernel@vger.kernel.org>; stable@vger.kernel.org; Greg KH <gregkh@linuxfoundation.org>
-> Subject: [REGRESSION][Stable][v3.12.y][v4.4.y][v4.9.y][v4.10.y][v4.11-rc1] scsi: storvsc: properly set residual data length on errors
->
-> Hi Long Li,
->
-> A kernel bug report was opened against Ubuntu [0].  After a kernel
-> bisect, it was found that reverting the following commit resolved this bug:
->
-> commit 40630f462824ee24bc00d692865c86c3828094e0
-> Author: Long Li <longli@microsoft.com>
-> Date:   Wed Dec 14 18:46:03 2016 -0800
->
->     scsi: storvsc: properly set residual data length on errors
->
->
-> The regression was introduced in mainline as of v4.11-rc1.  It was also
-> cc'd to stable and has landed in v3.12.y, v4.4.y, v4.9.y and v4.10.y.
->
->
-> This regression seems pretty severe since it's preventing virtual
-> machines from booting.  It's affecting a couple of users so far.  I was
-> hoping to get your feedback, since you are the patch author.  Do you
-> think gathering any additional data will help diagnose this issue, or
-> would it be best to submit a revert request?
->
->
-> Thanks,
->
-> Joe
->
->
-> [0] http://pad.lv/1674635
->
->
-Hi Stephen,
+On Thu, 2017-03-23 at 10:33 -0400, Christoph Hellwig wrote:
+> Make life easy for implementations that needs to send a data buffer
+> to the device (e.g. SCSI) by numbering it as a data out command.
+>=20
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  include/linux/blk_types.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+> index d703acb55d0f..6393c13a6498 100644
+> --- a/include/linux/blk_types.h
+> +++ b/include/linux/blk_types.h
+> @@ -160,7 +160,7 @@ enum req_opf {
+>  	/* write the same sector many times */
+>  	REQ_OP_WRITE_SAME	=3D 7,
+>  	/* write the zero filled sector many times */
+> -	REQ_OP_WRITE_ZEROES	=3D 8,
+> +	REQ_OP_WRITE_ZEROES	=3D 9,
+> =20
+>  	/* SCSI passthrough using struct scsi_request */
+>  	REQ_OP_SCSI_IN		=3D 32,
 
+Hello Christoph,
 
-Thanks again for pointing out commit
-f1c635b439a5c01776fe3a25b1e2dc546ea82e6f.  It does indeed fix the bug. 
-I noticed the commit was not cc'd to stable.  Would it be possible to do
-that?
-
+Since REQ_OP_WRITE_ZEROES was introduced in kernel v4.10, do we need
+"Cc: stable" and "Fixes: a6f0788ec2881" tags for this patch?
 
 Thanks,
 
-
-Joe
+Bart.=
