@@ -1,81 +1,71 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH 23/23] block: remove the discard_zeroes_data flag
-Date: Tue, 28 Mar 2017 17:00:48 +0000
-Message-ID: <1490720411.2573.11.camel@sandisk.com>
-References: <20170323143341.31549-1-hch@lst.de>
-         <20170323143341.31549-24-hch@lst.de>
+From: Mike Christie <mchristi@redhat.com>
+Subject: Re: [PATCHv5 2/2] tcmu: Fix wrongly calculating of the
+ base_command_size
+Date: Tue, 28 Mar 2017 13:34:26 -0500
+Message-ID: <58DAACB2.1030509@redhat.com>
+References: <1490605661-16127-1-git-send-email-lixiubo@cmss.chinamobile.com>
+ <1490605661-16127-3-git-send-email-lixiubo@cmss.chinamobile.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170323143341.31549-24-hch@lst.de>
-Content-Language: en-US
-Content-ID: <16CA47C31156C54BB5465A15C406D9BF@sandisk.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "agk@redhat.com" <agk@redhat.com>, "lars.ellenberg@linbit.com" <lars.ellenberg@linbit.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "philipp.reisner@linbit.com" <philipp.reisner@linbit.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "shli@kernel.org" <shli@kernel.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:20757 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755155AbdC1Sek (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 28 Mar 2017 14:34:40 -0400
+In-Reply-To: <1490605661-16127-3-git-send-email-lixiubo@cmss.chinamobile.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: lixiubo@cmss.chinamobile.com, nab@linux-iscsi.org
+Cc: agrover@redhat.com, shli@kernel.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com, bryantly@linux.vnet.ibm.com, iliastsi@arrikto.com
 
-On Thu, 2017-03-23 at 10:33 -0400, Christoph Hellwig wrote:
-> Now that we use the proper REQ_OP_WRITE_ZEROES operation everywhere we ca=
-n
-> kill this hack.
->=20
-> [ ... ]
->
-> diff --git a/Documentation/ABI/testing/sysfs-block b/Documentation/ABI/te=
-sting/sysfs-block
-> index 2da04ce6aeef..dea212db9df3 100644
-> --- a/Documentation/ABI/testing/sysfs-block
-> +++ b/Documentation/ABI/testing/sysfs-block
-> @@ -213,14 +213,8 @@ What:		/sys/block/<disk>/queue/discard_zeroes_data
->  Date:		May 2011
->  Contact:	Martin K. Petersen <martin.petersen@oracle.com>
->  Description:
-> -		Devices that support discard functionality may return
-> -		stale or random data when a previously discarded block
-> -		is read back. This can cause problems if the filesystem
-> -		expects discarded blocks to be explicitly cleared. If a
-> -		device reports that it deterministically returns zeroes
-> -		when a discarded area is read the discard_zeroes_data
-> -		parameter will be set to one. Otherwise it will be 0 and
-> -		the result of reading a discarded area is undefined.
-> +		Will always return 0.  Don't rely on any specific behavior
-> +		for discards, and don't read this file.
-> =20
->  What:		/sys/block/<disk>/queue/write_same_max_bytes
->  Date:		January 2012
->
-> [ ... ]
->
-> --- a/block/blk-sysfs.c
-> +++ b/block/blk-sysfs.c
-> @@ -208,7 +208,7 @@ static ssize_t queue_discard_max_store(struct request=
-_queue *q,
-> =20
->  static ssize_t queue_discard_zeroes_data_show(struct request_queue *q, c=
-har *page)
->  {
-> -	return queue_var_show(queue_discard_zeroes_data(q), page);
-> +	return 0;
+On 03/27/2017 04:07 AM, lixiubo@cmss.chinamobile.com wrote:
+> From: Xiubo Li <lixiubo@cmss.chinamobile.com>
+> 
+> The t_data_nents and t_bidi_data_nents are the numbers of the
+> segments, but it couldn't be sure the block size equals to size
+> of the segment.
+> 
+> For the worst case, all the blocks are discontiguous and there
+> will need the same number of iovecs, that's to say: blocks == iovs.
+> So here just set the number of iovs to block count needed by tcmu
+> cmd.
+> 
+> Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
+> Tested-by: Ilias Tsitsimpis <iliastsi@arrikto.com>
+> ---
+>  drivers/target/target_core_user.c | 10 ++++++++--
+>  1 file changed, 8 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+> index 65d475f..ede815c 100644
+> --- a/drivers/target/target_core_user.c
+> +++ b/drivers/target/target_core_user.c
+> @@ -408,6 +408,13 @@ static inline size_t tcmu_cmd_get_data_length(struct tcmu_cmd *tcmu_cmd)
+>  	return data_length;
 >  }
+>  
+> +static inline uint32_t tcmu_cmd_get_block_cnt(struct tcmu_cmd *tcmu_cmd)
+> +{
+> +	size_t data_length = tcmu_cmd_get_data_length(tcmu_cmd);
+> +
+> +	return data_length / DATA_BLOCK_SIZE;
+> +}
+> +
+>  static sense_reason_t
+>  tcmu_queue_cmd_ring(struct tcmu_cmd *tcmu_cmd)
+>  {
+> @@ -435,8 +442,7 @@ static inline size_t tcmu_cmd_get_data_length(struct tcmu_cmd *tcmu_cmd)
+>  	 * expensive to tell how many regions are freed in the bitmap
+>  	*/
+>  	base_command_size = max(offsetof(struct tcmu_cmd_entry,
+> -				req.iov[se_cmd->t_bidi_data_nents +
+> -					se_cmd->t_data_nents]),
+> +				req.iov[tcmu_cmd_get_block_cnt(tcmu_cmd)]),
+>  				sizeof(struct tcmu_cmd_entry));
+>  	command_size = base_command_size
+>  		+ round_up(scsi_command_size(se_cmd->t_task_cdb), TCMU_OP_ALIGN_SIZE);
+> 
 
-Hello Christoph,
-
-It seems to me like the documentation in Documentation/ABI/testing/sysfs-bl=
-ock
-and the above code are not in sync. I think the above code will cause readi=
-ng
-from the discard_zeroes_data attribute to return an empty string ("") inste=
-ad
-of "0\n".
-
-BTW, my personal preference is to remove this attribute entirely because ke=
-eping
-it will cause confusion, no matter how well we document the behavior of thi=
-s
-attribute.
-
-Thanks,
-
-Bart.=
+Looks ok to me. Thanks.
+Reviewed-by: Mike Christie <mchristi@redhat.com>
