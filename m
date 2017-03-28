@@ -1,66 +1,72 @@
-From: Bart Van Assche <Bart.VanAssche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [PATCH 12/23] sd: handle REQ_UNMAP
-Date: Tue, 28 Mar 2017 16:48:55 +0000
-Message-ID: <1490719722.2573.8.camel@sandisk.com>
-References: <20170323143341.31549-1-hch@lst.de>
-	<20170323143341.31549-13-hch@lst.de>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH] scsi: hisi_sas: fix SATA dependency
+Date: Tue, 28 Mar 2017 17:48:23 +0100
+Message-ID: <071c038f-d3f2-4850-c06e-db1d0d54efc9@huawei.com>
+References: <20170328142212.1816773-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-In-Reply-To: <20170323143341.31549-13-hch-jcswGhMUV9g@public.gmane.org>
-Content-Language: en-US
-Content-ID: <67C38495A74E4545A8ECDA6712B7DBC1-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: "agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org" <lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, "snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "hch-jcswGhMUV9g@public.gmane.org" <hch-jcswGhMUV9g@public.gmane.org>, "martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org" <philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, "axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org" <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org" <drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([45.249.212.189]:4902 "EHLO
+        dggrg03-dlp.huawei.com" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751969AbdC1QtG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 28 Mar 2017 12:49:06 -0400
+In-Reply-To: <20170328142212.1816773-1-arnd@arndb.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Xiang Chen <chenxiang66@hisilicon.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, 2017-03-23 at 10:33 -0400, Christoph Hellwig wrote:
-> Try to use a write same with unmap bit variant if the device supports it
-> and the caller asks for it.
-> =
+On 28/03/2017 15:22, Arnd Bergmann wrote:
+> Removing the 'select SCSI_SAS_LIBSAS' statement in Kconfig resulted
+> in a link failure in configurations that have hisi_sas built-in
+> but libsas as a loadable module:
+>
+> drivers/scsi/built-in.o: In function `hisi_sas_scan_finished':
+> hisi_sas_main.c:(.text+0x37ce9): undefined reference to `sas_drain_work'
+> drivers/scsi/built-in.o: In function `hisi_sas_slave_configure':
+> hisi_sas_main.c:(.text+0x37d17): undefined reference to `sas_slave_configure'
+> hisi_sas_main.c:(.text+0x37d40): undefined reference to `sas_change_queue_depth'
+> drivers/scsi/built-in.o: In function `hisi_sas_remove':
+>
+> All other libsas users have the 'select' statement, so we should do the
+> same here for consistency. For all I can tell, the patch that added
+> the sata softreset does not actually introduce a dependency on SCSI_SAS_ATA
+> but instead adds calls into libata itself, so we can express that with
+> a more specific dependency.
+>
+> We cannot have 'select SCSI_SAS_LIBSAS; depends on SCSI_SAS_ATA' as that
+> would cause a dependency loop.
+>
 
-> Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Hi Arnd,
+
+Thanks for the fix. So we missed that SCSI_SAS_ATA is a bool and not a 
+tristate, like SCSI_SAS_LIBSAS. Just adding the dependency on ATA is better.
+
+
+> Fixes: 7c594f0407de ("scsi: hisi_sas: add softreset function for SATA disk")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+
+Signed-off-by: John Garry <john.garry@huawei.com>
+
 > ---
->  drivers/scsi/sd.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
-> =
-
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index b6f70a09a301..ca96bb33471b 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -871,6 +871,16 @@ static int sd_setup_write_zeroes_cmnd(struct scsi_cm=
-nd *cmd)
->  			return BLKPREP_INVALID;
->  		return sd_setup_ata_trim_cmnd(cmd);
->  	}
-> +
-> +	if (rq->cmd_flags & REQ_UNMAP) {
-> +		switch (sdkp->provisioning_mode) {
-> +		case SD_LBP_WS16:
-> +			return sd_setup_write_same16_cmnd(cmd, true);
-> +		case SD_LBP_WS10:
-> +			return sd_setup_write_same10_cmnd(cmd, true);
-> +		}
-> +	}
-> +
->  	if (sdp->no_write_same)
->  		return BLKPREP_INVALID;
->  	if (sdkp->ws16 || sector > 0xffffffff || nr_sectors > 0xffff)
-
-Users can change the provisioning mode from user space from=A0SD_LBP_WS16 i=
-nto
-SD_LBP_WS10 so I'm not sure it's safe to skip the (sdkp->ws16 || sector >
-0xffffffff || nr_sectors > 0xffff) check if REQ_UNMAP is set.
-
-Bart.
+>  drivers/scsi/hisi_sas/Kconfig | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/hisi_sas/Kconfig b/drivers/scsi/hisi_sas/Kconfig
+> index ded2c201071d..374a329b91fc 100644
+> --- a/drivers/scsi/hisi_sas/Kconfig
+> +++ b/drivers/scsi/hisi_sas/Kconfig
+> @@ -2,7 +2,8 @@ config SCSI_HISI_SAS
+>  	tristate "HiSilicon SAS"
+>  	depends on HAS_DMA && HAS_IOMEM
+>  	depends on ARM64 || COMPILE_TEST
+> -	depends on SCSI_SAS_ATA
+> +	select SCSI_SAS_LIBSAS
+>  	select BLK_DEV_INTEGRITY
+> +	depends on ATA
+>  	help
+>  		This driver supports HiSilicon's SAS HBA
+>
