@@ -1,72 +1,31 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH] scsi: hisi_sas: fix SATA dependency
-Date: Tue, 28 Mar 2017 17:48:23 +0100
-Message-ID: <071c038f-d3f2-4850-c06e-db1d0d54efc9@huawei.com>
-References: <20170328142212.1816773-1-arnd@arndb.de>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH 11/23] block_dev: use blkdev_issue_zerout for hole
+ punches
+Date: Tue, 28 Mar 2017 16:50:47 +0000
+Message-ID: <1490719834.2573.9.camel@sandisk.com>
+References: <20170323143341.31549-1-hch@lst.de>
+         <20170323143341.31549-12-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([45.249.212.189]:4902 "EHLO
-        dggrg03-dlp.huawei.com" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751969AbdC1QtG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 28 Mar 2017 12:49:06 -0400
-In-Reply-To: <20170328142212.1816773-1-arnd@arndb.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170323143341.31549-12-hch@lst.de>
+Content-Language: en-US
+Content-ID: <870212604B83404C82828EFFF2BD9132@sandisk.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "agk@redhat.com" <agk@redhat.com>, "lars.ellenberg@linbit.com" <lars.ellenberg@linbit.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "philipp.reisner@linbit.com" <philipp.reisner@linbit.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "shli@kernel.org" <shli@kernel.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Xiang Chen <chenxiang66@hisilicon.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 28/03/2017 15:22, Arnd Bergmann wrote:
-> Removing the 'select SCSI_SAS_LIBSAS' statement in Kconfig resulted
-> in a link failure in configurations that have hisi_sas built-in
-> but libsas as a loadable module:
->
-> drivers/scsi/built-in.o: In function `hisi_sas_scan_finished':
-> hisi_sas_main.c:(.text+0x37ce9): undefined reference to `sas_drain_work'
-> drivers/scsi/built-in.o: In function `hisi_sas_slave_configure':
-> hisi_sas_main.c:(.text+0x37d17): undefined reference to `sas_slave_configure'
-> hisi_sas_main.c:(.text+0x37d40): undefined reference to `sas_change_queue_depth'
-> drivers/scsi/built-in.o: In function `hisi_sas_remove':
->
-> All other libsas users have the 'select' statement, so we should do the
-> same here for consistency. For all I can tell, the patch that added
-> the sata softreset does not actually introduce a dependency on SCSI_SAS_ATA
-> but instead adds calls into libata itself, so we can express that with
-> a more specific dependency.
->
-> We cannot have 'select SCSI_SAS_LIBSAS; depends on SCSI_SAS_ATA' as that
-> would cause a dependency loop.
->
+On Thu, 2017-03-23 at 10:33 -0400, Christoph Hellwig wrote:
+> This gets us support for non-discard efficient write of zeroes (e.g. NVMe=
+)
+> and preparse for removing the discard_zeroes_data flag.
 
-Hi Arnd,
+Hello Christoph,
 
-Thanks for the fix. So we missed that SCSI_SAS_ATA is a bool and not a 
-tristate, like SCSI_SAS_LIBSAS. Just adding the dependency on ATA is better.
+"preparse" probably should have been "prepare"?
 
+Thanks,
 
-> Fixes: 7c594f0407de ("scsi: hisi_sas: add softreset function for SATA disk")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-
-Signed-off-by: John Garry <john.garry@huawei.com>
-
-> ---
->  drivers/scsi/hisi_sas/Kconfig | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/hisi_sas/Kconfig b/drivers/scsi/hisi_sas/Kconfig
-> index ded2c201071d..374a329b91fc 100644
-> --- a/drivers/scsi/hisi_sas/Kconfig
-> +++ b/drivers/scsi/hisi_sas/Kconfig
-> @@ -2,7 +2,8 @@ config SCSI_HISI_SAS
->  	tristate "HiSilicon SAS"
->  	depends on HAS_DMA && HAS_IOMEM
->  	depends on ARM64 || COMPILE_TEST
-> -	depends on SCSI_SAS_ATA
-> +	select SCSI_SAS_LIBSAS
->  	select BLK_DEV_INTEGRITY
-> +	depends on ATA
->  	help
->  		This driver supports HiSilicon's SAS HBA
->
+Bart.=
