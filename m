@@ -1,16 +1,15 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: RFC: always use REQ_OP_WRITE_ZEROES for zeroing
-	offload
-Date: Wed, 29 Mar 2017 16:57:31 +0200
-Message-ID: <0d2950ea-a1ab-7939-3c8e-d14038839761@redhat.com>
+Subject: Re: [PATCH 12/23] sd: handle REQ_UNMAP
+Date: Wed, 29 Mar 2017 16:57:39 +0200
+Message-ID: <dab09af5-521a-99da-9852-2d18cc28ca4f@redhat.com>
 References: <20170323143341.31549-1-hch@lst.de>
-	<20170323155410.GD1138@soda.linbit> <20170323170221.GA20854@redhat.com>
-	<20170323225256.GK1138@soda.linbit>
+	<20170323143341.31549-13-hch@lst.de>
+	<1490719722.2573.8.camel@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20170323225256.GK1138@soda.linbit>
+In-Reply-To: <1490719722.2573.8.camel@sandisk.com>
 List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
 List-Archive: <https://www.redhat.com/archives/dm-devel>
@@ -20,31 +19,48 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=subscribe>
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
-To: Mike Snitzer <snitzer@redhat.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@fb.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Alasdair G Kergon <agk@redhat.com>, "shli@kernel.org" <shli@kernel.org>, "philipp.reisner@linbit.com" <philipp.reisner@linbit.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>, dm <dm-devel@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Bart Van Assche <bart.vanassche@sandisk.com>, Alasdair G Kergon <agk@redhat.com>, "lars.ellenberg@linbit.com" <lars.ellenberg@linbit.com>, Mike Snitzer <snitzer@redhat.com>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, "philipp.reisner@linbit.com" <philipp.reisner@linbit.com>, Jens Axboe <axboe@fb.com>, "shli@kernel.org" <shli@kernel.org>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, dm <dm-devel@redhat.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>
 List-Id: linux-scsi@vger.kernel.org
 
 
 
-On 23/03/2017 23:53, Lars Ellenberg wrote:
-> Thin does not claim to zero data on discard.  which is ok, and correct,
-> because it only punches holes on full chunks (or whatever you call
-> them), and leaves the rest in the mapping tree as is.
-> 
-> And that behaviour would prevent DRBD from exposing discards if
-> configured on top of thin. (see above)
-> 
-> But thin *could* easily guarantee zeroing, by simply punching holes
-> where it can, and zeroing out the not fully-aligned partial start and
-> end of the range.
+On 28/03/2017 18:48, Bart Van Assche wrote:
+>> +	if (rq->cmd_flags & REQ_UNMAP) {
+>> +		switch (sdkp->provisioning_mode) {
+>> +		case SD_LBP_WS16:
+>> +			return sd_setup_write_same16_cmnd(cmd, true);
+>> +		case SD_LBP_WS10:
+>> +			return sd_setup_write_same10_cmnd(cmd, true);
+>> +		}
+>> +	}
+>> +
+>>  	if (sdp->no_write_same)
+>>  		return BLKPREP_INVALID;
+>>  	if (sdkp->ws16 || sector > 0xffffffff || nr_sectors > 0xffff)
+> Users can change the provisioning mode from user space from SD_LBP_WS16 into
+> SD_LBP_WS10 so I'm not sure it's safe to skip the (sdkp->ws16 || sector >
+> 0xffffffff || nr_sectors > 0xffff) check if REQ_UNMAP is set.
 
-That's the difference between REQ_OP_DISCARD (only punches holes on full
-chunks) and REQ_OP_WRITE_ZEROES with the REQ_UNMAP flag (punches holes +
-zeroes incomplete chunks).
+Yeah, if REQ_UNMAP is set you should probably check sdkp->provisioning_mode
+instead of sdkp->ws16, but apart from this it should still go through the
+checks below.
 
-dm-thinp's REQ_OP_DISCARD should not do anything for unaligned parts.
-Instead, layers above should use REQ_OP_WRITE_ZEROES (with or without
-REQ_UNMAP, as required) if they need zeroes.  dm-thinp would have to
-split off the partial chunks, and zero them in the lower-level device
-with REQ_OP_WRITE_ZEROES.
+Plus, if the provisioning mode is not ws10 or ws16, should
+sd_setup_write_zeroes_cmnd:
+
+1) do a WRITE SAME without UNMAP (what Christoph's code does)
+
+2) return BLKPREP_INVALID
+
+3) ignore provisioning mode and do a WRITE SAME with UNMAP
+
+4) do a WRITE SAME without UNMAP for SD_LBP_{ZERO,FULL,DISABLE},
+do a WRITE SAME with UNMAP for SD_LBP_{WS10,WS16,UNMAP}.
+
+I'm in favor of (4).  The distinction between SD_LBP_UNMAP, SD_LBP_WS10
+and SD_LBP_WS16 is as problematic as discard_zeroes_data in my opinion.
+
+Thanks,
 
 Paolo
