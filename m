@@ -1,7 +1,7 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH 5/6] mvsas: remove the SAS host after the SCSI host
-Date: Wed, 29 Mar 2017 11:41:12 +0200
-Message-ID: <20170329094122.9997-3-jthumshirn@suse.de>
+Subject: [PATCH 6/6] scsi: pm8001: remove the SAS host after the SCSI host
+Date: Wed, 29 Mar 2017 11:41:13 +0200
+Message-ID: <20170329094122.9997-4-jthumshirn@suse.de>
 References: <cover.1490775958.git.jthumshirn@suse.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1490775958.git.jthumshirn@suse.de>
@@ -19,41 +19,36 @@ kobjects.
 
 Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/mvsas/mv_init.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+ drivers/scsi/pm8001/pm8001_init.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index 8280046..32b86c8 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -634,17 +634,26 @@ static void mvs_pci_remove(struct pci_dev *pdev)
- 	unsigned short core_nr, i = 0;
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index 417368c..9116e9c 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -1086,11 +1086,21 @@ static void pm8001_pci_remove(struct pci_dev *pdev)
+ {
  	struct sas_ha_struct *sha = pci_get_drvdata(pdev);
- 	struct mvs_info *mvi = NULL;
-+	struct Scsi_Host *shost;
+ 	struct pm8001_hba_info *pm8001_ha;
 +	unsigned long flags;
- 
- 	core_nr = ((struct mvs_prv_info *)sha->lldd_ha)->n_host;
- 	mvi = ((struct mvs_prv_info *)sha->lldd_ha)->mvi[0];
-+	shost = mvi->shost;
- 
- #ifdef CONFIG_SCSI_MVSAS_TASKLET
- 	tasklet_kill(&((struct mvs_prv_info *)sha->lldd_ha)->mv_tasklet);
- #endif
- 
--	scsi_remove_host(mvi->shost);
++	struct Scsi_Host *shost;
+ 	int i, j;
+ 	pm8001_ha = sha->lldd_ha;
+-	scsi_remove_host(pm8001_ha->shost);
++	shost = pm8001_ha->shost;
++
 +	spin_lock_irqsave(shost->host_lock, flags);
 +	if (scsi_host_set_state(shost, SHOST_CANCEL))
 +		WARN_ON(scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY));
 +	spin_unlock_irqrestore(shost->host_lock, flags);
 +
-+
  	sas_unregister_ha(sha);
--	sas_remove_host(mvi->shost);
+-	sas_remove_host(pm8001_ha->shost);
 +	sas_remove_host(shost);
 +	scsi_remove_host(shost);
- 
- 	MVS_CHIP_DISP->interrupt_disable(mvi);
- 	free_irq(mvi->pdev->irq, sha);
++
+ 	list_del(&pm8001_ha->list);
+ 	PM8001_CHIP_DISP->interrupt_disable(pm8001_ha, 0xFF);
+ 	PM8001_CHIP_DISP->chip_soft_rst(pm8001_ha);
 -- 
 1.8.5.6
