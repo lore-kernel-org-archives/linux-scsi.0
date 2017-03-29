@@ -1,103 +1,89 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH 1/2] scsi: sas: flush destruct workqueue on device
- unregister
-Date: Wed, 29 Mar 2017 12:15:44 +0100
-Message-ID: <02778435-6c67-0ac9-2faa-03ebb7934477@huawei.com>
-References: <cover.1490775958.git.jthumshirn@suse.de>
- <9580eaf323f5da17dcace9e32b22a1df4099961d.1490775958.git.jthumshirn@suse.de>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [REGRESSION] v4.11-rc3: lpfc: panic during module removal /
+ shutdown
+Date: Wed, 29 Mar 2017 13:17:54 +0200
+Message-ID: <20170329111754.GA9183@linux-x5ow.site>
+References: <99ad422f-8233-ddac-2e69-deda4a43b3d7@ce.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <9580eaf323f5da17dcace9e32b22a1df4099961d.1490775958.git.jthumshirn@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Tejun Heo <tj@kernel.org>, James Bottomley <jejb@linux.vnet.ibm.com>, Dan Williams <dan.j.williams@intel.com>, Jack Wang <jinpu.wang@profitbricks.com>, Hannes Reinecke <hare@suse.de>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:36143 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932302AbdC2LR6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 29 Mar 2017 07:17:58 -0400
+Content-Disposition: inline
+In-Reply-To: <99ad422f-8233-ddac-2e69-deda4a43b3d7@ce.jp.nec.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Junichi Nomura <j-nomura@ce.jp.nec.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "dick.kennedy@broadcom.com" <dick.kennedy@broadcom.com>, "james.smart@broadcom.com" <james.smart@broadcom.com>, "anton@samba.org" <anton@samba.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-On 29/03/2017 10:41, Johannes Thumshirn wrote:
-> In the advent of an SAS device unregister we have to wait for all destruct
-> works to be done to not accidently delay deletion of a SAS rphy or it's
-> children to the point when we're removing the SCSI or SAS hosts.
->
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> ---
->  drivers/scsi/libsas/sas_discover.c | 4 ++++
->  1 file changed, 4 insertions(+)
->
-> diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-> index 60de662..75b18f1 100644
-> --- a/drivers/scsi/libsas/sas_discover.c
-> +++ b/drivers/scsi/libsas/sas_discover.c
-> @@ -382,9 +382,13 @@ void sas_unregister_dev(struct asd_sas_port *port, struct domain_device *dev)
->  	}
->
->  	if (!test_and_set_bit(SAS_DEV_DESTROY, &dev->state)) {
-> +		struct sas_discovery *disc = &dev->port->disc;
-> +		struct sas_work *sw = &disc->disc_work[DISCE_DESTRUCT].work;
-> +
->  		sas_rphy_unlink(dev->rphy);
->  		list_move_tail(&dev->disco_list_node, &port->destroy_list);
->  		sas_discover_event(dev->port, DISCE_DESTRUCT);
-> +		flush_work(&sw->work);
+On Wed, Mar 29, 2017 at 02:29:45AM +0000, Junichi Nomura wrote:
+> Since commit 895427bd012c ("scsi: lpfc: NVME Initiator: Base modifications"),
+> "rmmod lpfc" starting to cause panic or corruption due to double free.
+> 
+> The double-free occurs as followings:
+>   - During initialization, lpfc_create_wq_cq() binds cq and wq to
+>     the same ring in the way that both cq->pring and wq->pring point
+>     to the same object.
+>   - Upon removal, lpfc_sli4_queue_destroy() ends up calling
+>     lpfc_sli4_queue_free() for both wqs and cqs
+>     and kfree(queue->pring) is done twice.
+> 
+> The problem became more visible in v4.11-rc3 because commit 85e8a23936ab
+> ("scsi: lpfc: Add shutdown method for kexec") made lpfc_pci_remove_one()
+> called during driver shutdown.
 
-I quickly tested plugging out the expander and we never get past this 
-call to flush - a hang results:
+Well the obvious band-aid would be setting the pointers to NULL after freeing
+them. lpfc_sli4_queue_free() checks for queue's precense and doesn't use
+queue->pring prior to freeing it, so the following _should_ to the trick:
 
-root@(none)$ [  243.357088] INFO: task kworker/u32:1:106 blocked for 
-more than 120 seconds.
-[  243.364030]       Not tainted 4.11.0-rc1-13687-g2562e6a-dirty #1388
-[  243.370282] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" 
-disables this message.
-[  243.378086] kworker/u32:1   D    0   106      2 0x00000000
-[  243.383566] Workqueue: scsi_wq_0 sas_phye_loss_of_signal
-[  243.388863] Call trace:
-[  243.391314] [<ffff000008085d70>] __switch_to+0xa4/0xb0
-[  243.396442] [<ffff0000088f1134>] __schedule+0x1b4/0x5d0
-[  243.401654] [<ffff0000088f1588>] schedule+0x38/0x9c
-[  243.406520] [<ffff0000088f4540>] schedule_timeout+0x194/0x294
-[  243.412249] [<ffff0000088f202c>] wait_for_common+0xb0/0x144
-[  243.417805] [<ffff0000088f20d4>] wait_for_completion+0x14/0x1c
-[  243.423623] [<ffff0000080d5bd4>] flush_work+0xe0/0x1a8
-[  243.428747] [<ffff000008598158>] sas_unregister_dev+0xf8/0x110
-[  243.434563] [<ffff000008598304>] sas_unregister_domain_devices+0x4c/0xc8
-[  243.441242] [<ffff000008596884>] sas_deform_port+0x14c/0x15c
-[  243.446886] [<ffff000008596508>] sas_phye_loss_of_signal+0x48/0x54
-[  243.453048] [<ffff0000080d6164>] process_one_work+0x138/0x2d8
-[  243.458776] [<ffff0000080d635c>] worker_thread+0x58/0x424
-[  243.464161] [<ffff0000080dc16c>] kthread+0xf4/0x120
-[  243.469024] [<ffff0000080836c0>] ret_from_fork+0x10/0x50
-[  364.189094] INFO: task kworker/u32:1:106 blocked for more than 120 
-seconds.
-[  364.196035]       Not tainted 4.11.0-rc1-13687-g2562e6a-dirty #1388
-[  364.202281] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" 
-disables this message.
-[  364.210085] kworker/u32:1   D    0   106      2 0x00000000
-[  364.215558] Workqueue: scsi_wq_0 sas_phye_loss_of_signal
-[  364.220855] Call trace:
-[  364.223303] [<ffff000008085d70>] __switch_to+0xa4/0xb0
-[  364.228428] [<ffff0000088f1134>] __schedule+0x1b4/0x5d0
-[  364.233640] [<ffff0000088f1588>] schedule+0x38/0x9c
-[  364.238506] [<ffff0000088f4540>] schedule_timeout+0x194/0x294
-[  364.244237] [<ffff0000088f202c>] wait_for_common+0xb0/0x144
-[  364.249793] [<ffff0000088f20d4>] wait_for_completion+0x14/0x1c
-[  364.255610] [<ffff0000080d5bd4>] flush_work+0xe0/0x1a8
-[  364.260736] [<ffff000008598158>] sas_unregister_dev+0xf8/0x110
-[  364.266551] [<ffff000008598304>] sas_unregister_domain_devices+0x4c/0xc8
-[  364.273230] [<ffff000008596884>] sas_deform_port+0x14c/0x15c
-[  364.278872] [<ffff000008596508>] sas_phye_loss_of_signal+0x48/0x54
-[  364.285034] [<ffff0000080d6164>] process_one_work+0x138/0x2d8
-[  364.290763] [<ffff0000080d635c>] worker_thread+0x58/0x424
-[  364.296147] [<ffff0000080dc16c>] kthread+0xf4/0x120
-[  364.301013] [<ffff0000080836c0>] ret_from_fork+0x10/0x50
+>From befa936d8935a1bed01df65b376f515fa42c99da Mon Sep 17 00:00:00 2001
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Date: Wed, 29 Mar 2017 13:08:55 +0200
+Subject: [PATCH] lpfc: prevent double free of lpfc queue ring pointer
 
-Is the issue that we are trying to flush the queue when we are working 
-in the same queue context?
+Since commit 895427bd012c ("scsi: lpfc: NVME Initiator: Base modifications")
+rmoving the lpfc module causes a double free in lpfc_sli4_queue_free().
 
-Thanks,
-John
+This can be prevented by setting the queue->pring and queue pointers to NULL,
+so kfree() will simply ignore the pointers on a second call.
 
->  	}
->  }
->
->
+Reported-by: Junichi Nomura <j-nomura@ce.jp.nec.com>
+Fixes: 895427bd012c ("scsi: lpfc: NVME Initiator: Base modifications")
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/scsi/lpfc/lpfc_sli.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 1c9fa45..86e1529 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -13759,7 +13759,9 @@ lpfc_sli4_queue_free(struct lpfc_queue *queue)
+ 		kfree(queue->rqbp);
+ 	}
+ 	kfree(queue->pring);
++	queue->pring = NULL;
+ 	kfree(queue);
++	queue = NULL;
+ 	return;
+ }
+ 
+-- 
+2.10.2
+
+I'll have a look if we at the callers of lpfc_sli4_queue_free() as well
+and check if there's a better (a.k.a more correct) way to fix this.
+
+Byte,
+	Johannes
+
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
