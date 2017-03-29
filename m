@@ -1,75 +1,224 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 03/23] sd: implement REQ_OP_WRITE_ZEROES
-Date: Wed, 29 Mar 2017 18:53:17 +0200
-Message-ID: <fcb3c0d2-f043-ac84-30b7-d1d7afb3d63e@redhat.com>
-References: <20170323143341.31549-1-hch@lst.de>
- <20170323143341.31549-4-hch@lst.de> <1490726988.2573.16.camel@sandisk.com>
- <e19ca1bf-0908-1eb0-cb04-cd306692f216@redhat.com>
- <1490804856.3551.3.camel@sandisk.com>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: [PATCH 1/6] virtio: wrap find_vqs
+Date: Wed, 29 Mar 2017 23:48:44 +0300
+Message-ID: <1490820507-8005-2-git-send-email-mst@redhat.com>
+References: <1490820507-8005-1-git-send-email-mst@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1490804856.3551.3.camel@sandisk.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "agk@redhat.com" <agk@redhat.com>, "lars.ellenberg@linbit.com" <lars.ellenberg@linbit.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "philipp.reisner@linbit.com" <philipp.reisner@linbit.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "shli@kernel.org" <shli@kernel.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <1490820507-8005-1-git-send-email-mst@redhat.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: linux-kernel@vger.kernel.org
+Cc: Dmitry Tarnyagin <dmitry.tarnyagin@lockless.no>, kvm@vger.kernel.org, David Airlie <airlied@linux.ie>, linux-remoteproc@vger.kernel.org, dri-devel@lists.freedesktop.org, Bjorn Andersson <bjorn.andersson@linaro.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Herbert Xu <herbert@gondor.apana.org.au>, linux-scsi@vger.kernel.org, John Fastabend <john.fastabend@gmail.com>, Arnd Bergmann <arnd@arndb.de>, Amit Shah <amit@kernel.org>, Stefan Hajnoczi <stefanha@redhat.com>, virtualization@lists.linux-foundation.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-crypto@vger.kernel.org, netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
 List-Id: linux-scsi@vger.kernel.org
 
+We are going to add more parameters to find_vqs, let's wrap the call so
+we don't need to tweak all drivers every time.
 
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+---
+ drivers/block/virtio_blk.c                 | 3 +--
+ drivers/char/virtio_console.c              | 6 +++---
+ drivers/crypto/virtio/virtio_crypto_core.c | 3 +--
+ drivers/gpu/drm/virtio/virtgpu_kms.c       | 3 +--
+ drivers/net/caif/caif_virtio.c             | 3 +--
+ drivers/net/virtio_net.c                   | 3 +--
+ drivers/rpmsg/virtio_rpmsg_bus.c           | 2 +-
+ drivers/scsi/virtio_scsi.c                 | 3 +--
+ drivers/virtio/virtio_balloon.c            | 3 +--
+ drivers/virtio/virtio_input.c              | 3 +--
+ include/linux/virtio_config.h              | 9 +++++++++
+ net/vmw_vsock/virtio_transport.c           | 6 +++---
+ 12 files changed, 24 insertions(+), 23 deletions(-)
 
-On 29/03/2017 18:28, Bart Van Assche wrote:
-> On Wed, 2017-03-29 at 16:51 +0200, Paolo Bonzini wrote:
->> On 28/03/2017 20:50, Bart Van Assche wrote:
->>> This means that just like the start and end of a discard must be aligned on a
->>> discard_granularity boundary, WRITE SAME commands with the UNMAP bit set must
->>> also respect that granularity. I think this means that either
->>> __blkdev_issue_zeroout() has to be modified such that it rejects unaligned
->>> REQ_OP_WRITE_ZEROES operations or that blk_bio_write_same_split() has to be
->>> modified such that it generates REQ_OP_WRITEs for the unaligned start and tail.
->>
->> I don't think this is the case.
-> 
-> Hello Paolo,
-> 
-> Can you cite the section(s) from the SCSI specs that support your view? I
-> reread the "5.49 WRITE SAME (10) command" and "4.7.3.4.4 WRITE SAME command
-> and unmap operations" sections but I have not found any explicit statement
-> that specifies the behavior for unaligned WRITE SAME commands with the UNMAP
-> bit set. It seems to me like the OPTIMAL UNMAP GRANULARITY parameter was
-> overlooked when both sections were written. Should we ask the T10 committee
-> for a clarification?
-
->From 4.7.3.4.4:
-
-------
-If unmap operations are requested in a WRITE SAME command,
-then for each specified LBA:
-
-if the Data-Out Buffer of the WRITE SAME command is the same as the
-logical block data returned by a read operation from that LBA while in
-the unmapped state (see 4.7.4.5), then:
-
-1) the device server performs the actions described in table 6; and
-
-2) if an unmap operation is not performed in step 1), then the device
-server shall perform the specified write operation to that LBA;
-------
-
-and from the description of WRITE SAME (10): "subsequent read operations
-behave as if the device server wrote the single block of user data
-received from the Data-Out Buffer to each logical block without
-modification" (I have a slightly older copy though, it's 5.45 here).
-
-It's pretty unambiguous that if the device cannot unmap (including the
-case where the request is misaligned with respect to the granularity) it
-does a write.
-
-> Another question is, if the specification of WRITE SAME + UNMAP would be
-> made unambiguous in the SBC document, whether or not we should take the risk
-> to trigger behavior that is not what we expect by sending unaligned WRITE
-> SAME + UNMAP commands to SCSI devices?
-
-Yes, I think we should.
-
-Paolo
+diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
+index 1d4c9f8..c08c30c 100644
+--- a/drivers/block/virtio_blk.c
++++ b/drivers/block/virtio_blk.c
+@@ -455,8 +455,7 @@ static int init_vq(struct virtio_blk *vblk)
+ 	}
+ 
+ 	/* Discover virtqueues and write information to configuration.  */
+-	err = vdev->config->find_vqs(vdev, num_vqs, vqs, callbacks, names,
+-			&desc);
++	err = virtio_find_vqs(vdev, num_vqs, vqs, callbacks, names, &desc);
+ 	if (err)
+ 		goto out;
+ 
+diff --git a/drivers/char/virtio_console.c b/drivers/char/virtio_console.c
+index e9b7e0b..5da4c8e 100644
+--- a/drivers/char/virtio_console.c
++++ b/drivers/char/virtio_console.c
+@@ -1945,9 +1945,9 @@ static int init_vqs(struct ports_device *portdev)
+ 		}
+ 	}
+ 	/* Find the queues. */
+-	err = portdev->vdev->config->find_vqs(portdev->vdev, nr_queues, vqs,
+-					      io_callbacks,
+-					      (const char **)io_names, NULL);
++	err = virtio_find_vqs(portdev->vdev, nr_queues, vqs,
++			      io_callbacks,
++			      (const char **)io_names, NULL);
+ 	if (err)
+ 		goto free;
+ 
+diff --git a/drivers/crypto/virtio/virtio_crypto_core.c b/drivers/crypto/virtio/virtio_crypto_core.c
+index 21472e4..a111cd72 100644
+--- a/drivers/crypto/virtio/virtio_crypto_core.c
++++ b/drivers/crypto/virtio/virtio_crypto_core.c
+@@ -119,8 +119,7 @@ static int virtcrypto_find_vqs(struct virtio_crypto *vi)
+ 		names[i] = vi->data_vq[i].name;
+ 	}
+ 
+-	ret = vi->vdev->config->find_vqs(vi->vdev, total_vqs, vqs, callbacks,
+-					 names, NULL);
++	ret = virtio_find_vqs(vi->vdev, total_vqs, vqs, callbacks, names, NULL);
+ 	if (ret)
+ 		goto err_find;
+ 
+diff --git a/drivers/gpu/drm/virtio/virtgpu_kms.c b/drivers/gpu/drm/virtio/virtgpu_kms.c
+index 4918668..1e1c90b 100644
+--- a/drivers/gpu/drm/virtio/virtgpu_kms.c
++++ b/drivers/gpu/drm/virtio/virtgpu_kms.c
+@@ -175,8 +175,7 @@ int virtio_gpu_driver_load(struct drm_device *dev, unsigned long flags)
+ 	DRM_INFO("virgl 3d acceleration not supported by guest\n");
+ #endif
+ 
+-	ret = vgdev->vdev->config->find_vqs(vgdev->vdev, 2, vqs,
+-					    callbacks, names, NULL);
++	ret = virtio_find_vqs(vgdev->vdev, 2, vqs, callbacks, names, NULL);
+ 	if (ret) {
+ 		DRM_ERROR("failed to find virt queues\n");
+ 		goto err_vqs;
+diff --git a/drivers/net/caif/caif_virtio.c b/drivers/net/caif/caif_virtio.c
+index bc0eb47..6122768 100644
+--- a/drivers/net/caif/caif_virtio.c
++++ b/drivers/net/caif/caif_virtio.c
+@@ -679,8 +679,7 @@ static int cfv_probe(struct virtio_device *vdev)
+ 		goto err;
+ 
+ 	/* Get the TX virtio ring. This is a "guest side vring". */
+-	err = vdev->config->find_vqs(vdev, 1, &cfv->vq_tx, &vq_cbs, &names,
+-			NULL);
++	err = virtio_find_vqs(vdev, 1, &cfv->vq_tx, &vq_cbs, &names, NULL);
+ 	if (err)
+ 		goto err;
+ 
+diff --git a/drivers/net/virtio_net.c b/drivers/net/virtio_net.c
+index ea9890d..6802169 100644
+--- a/drivers/net/virtio_net.c
++++ b/drivers/net/virtio_net.c
+@@ -2079,8 +2079,7 @@ static int virtnet_find_vqs(struct virtnet_info *vi)
+ 		names[txq2vq(i)] = vi->sq[i].name;
+ 	}
+ 
+-	ret = vi->vdev->config->find_vqs(vi->vdev, total_vqs, vqs, callbacks,
+-					 names, NULL);
++	ret = virtio_find_vqs(vi->vdev, total_vqs, vqs, callbacks, names, NULL);
+ 	if (ret)
+ 		goto err_find;
+ 
+diff --git a/drivers/rpmsg/virtio_rpmsg_bus.c b/drivers/rpmsg/virtio_rpmsg_bus.c
+index 5e66e08..f7cade0 100644
+--- a/drivers/rpmsg/virtio_rpmsg_bus.c
++++ b/drivers/rpmsg/virtio_rpmsg_bus.c
+@@ -869,7 +869,7 @@ static int rpmsg_probe(struct virtio_device *vdev)
+ 	init_waitqueue_head(&vrp->sendq);
+ 
+ 	/* We expect two virtqueues, rx and tx (and in this order) */
+-	err = vdev->config->find_vqs(vdev, 2, vqs, vq_cbs, names, NULL);
++	err = virtio_find_vqs(vdev, 2, vqs, vq_cbs, names, NULL);
+ 	if (err)
+ 		goto free_vrp;
+ 
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 939c47d..e9222dc 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -870,8 +870,7 @@ static int virtscsi_init(struct virtio_device *vdev,
+ 	}
+ 
+ 	/* Discover virtqueues and write information to configuration.  */
+-	err = vdev->config->find_vqs(vdev, num_vqs, vqs, callbacks, names,
+-			&desc);
++	err = virtio_find_vqs(vdev, num_vqs, vqs, callbacks, names, &desc);
+ 	if (err)
+ 		goto out;
+ 
+diff --git a/drivers/virtio/virtio_balloon.c b/drivers/virtio/virtio_balloon.c
+index 34adf9b..408c174 100644
+--- a/drivers/virtio/virtio_balloon.c
++++ b/drivers/virtio/virtio_balloon.c
+@@ -418,8 +418,7 @@ static int init_vqs(struct virtio_balloon *vb)
+ 	 * optionally stat.
+ 	 */
+ 	nvqs = virtio_has_feature(vb->vdev, VIRTIO_BALLOON_F_STATS_VQ) ? 3 : 2;
+-	err = vb->vdev->config->find_vqs(vb->vdev, nvqs, vqs, callbacks, names,
+-			NULL);
++	err = virtio_find_vqs(vb->vdev, nvqs, vqs, callbacks, names, NULL);
+ 	if (err)
+ 		return err;
+ 
+diff --git a/drivers/virtio/virtio_input.c b/drivers/virtio/virtio_input.c
+index 79f1293..3a0468f 100644
+--- a/drivers/virtio/virtio_input.c
++++ b/drivers/virtio/virtio_input.c
+@@ -173,8 +173,7 @@ static int virtinput_init_vqs(struct virtio_input *vi)
+ 	static const char * const names[] = { "events", "status" };
+ 	int err;
+ 
+-	err = vi->vdev->config->find_vqs(vi->vdev, 2, vqs, cbs, names,
+-			NULL);
++	err = virtio_find_vqs(vi->vdev, 2, vqs, cbs, names, NULL);
+ 	if (err)
+ 		return err;
+ 	vi->evt = vqs[0];
+diff --git a/include/linux/virtio_config.h b/include/linux/virtio_config.h
+index 8355bab..47f3d80 100644
+--- a/include/linux/virtio_config.h
++++ b/include/linux/virtio_config.h
+@@ -179,6 +179,15 @@ struct virtqueue *virtio_find_single_vq(struct virtio_device *vdev,
+ 	return vq;
+ }
+ 
++static inline
++int virtio_find_vqs(struct virtio_device *vdev, unsigned nvqs,
++			struct virtqueue *vqs[], vq_callback_t *callbacks[],
++			const char * const names[],
++			struct irq_affinity *desc)
++{
++	return vdev->config->find_vqs(vdev, nvqs, vqs, callbacks, names, desc);
++}
++
+ /**
+  * virtio_device_ready - enable vq use in probe function
+  * @vdev: the device
+diff --git a/net/vmw_vsock/virtio_transport.c b/net/vmw_vsock/virtio_transport.c
+index 68675a1..97e26e2 100644
+--- a/net/vmw_vsock/virtio_transport.c
++++ b/net/vmw_vsock/virtio_transport.c
+@@ -573,9 +573,9 @@ static int virtio_vsock_probe(struct virtio_device *vdev)
+ 
+ 	vsock->vdev = vdev;
+ 
+-	ret = vsock->vdev->config->find_vqs(vsock->vdev, VSOCK_VQ_MAX,
+-					    vsock->vqs, callbacks, names,
+-					    NULL);
++	ret = virtio_find_vqs(vsock->vdev, VSOCK_VQ_MAX,
++			      vsock->vqs, callbacks, names,
++			      NULL);
+ 	if (ret < 0)
+ 		goto out;
+ 
+-- 
+MST
