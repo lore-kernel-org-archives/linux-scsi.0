@@ -1,7 +1,7 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH 3/6] aic94xx: remove the SAS host after the SCSI host
-Date: Wed, 29 Mar 2017 11:41:10 +0200
-Message-ID: <20170329094122.9997-1-jthumshirn@suse.de>
+Subject: [PATCH 5/6] mvsas: remove the SAS host after the SCSI host
+Date: Wed, 29 Mar 2017 11:41:12 +0200
+Message-ID: <20170329094122.9997-3-jthumshirn@suse.de>
 References: <cover.1490775958.git.jthumshirn@suse.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1490775958.git.jthumshirn@suse.de>
@@ -19,36 +19,41 @@ kobjects.
 
 Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/aic94xx/aic94xx_init.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+ drivers/scsi/mvsas/mv_init.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
-index 662b232..362d65a 100644
---- a/drivers/scsi/aic94xx/aic94xx_init.c
-+++ b/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -701,13 +701,20 @@ static int asd_register_sas_ha(struct asd_ha_struct *asd_ha)
- 
- static int asd_unregister_sas_ha(struct asd_ha_struct *asd_ha)
- {
-+	struct Scsi_Host *shost = asd_ha->sas_ha.core.shost;
+diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+index 8280046..32b86c8 100644
+--- a/drivers/scsi/mvsas/mv_init.c
++++ b/drivers/scsi/mvsas/mv_init.c
+@@ -634,17 +634,26 @@ static void mvs_pci_remove(struct pci_dev *pdev)
+ 	unsigned short core_nr, i = 0;
+ 	struct sas_ha_struct *sha = pci_get_drvdata(pdev);
+ 	struct mvs_info *mvi = NULL;
++	struct Scsi_Host *shost;
 +	unsigned long flags;
- 	int err;
  
--	scsi_remove_host(asd_ha->sas_ha.core.shost);
+ 	core_nr = ((struct mvs_prv_info *)sha->lldd_ha)->n_host;
+ 	mvi = ((struct mvs_prv_info *)sha->lldd_ha)->mvi[0];
++	shost = mvi->shost;
+ 
+ #ifdef CONFIG_SCSI_MVSAS_TASKLET
+ 	tasklet_kill(&((struct mvs_prv_info *)sha->lldd_ha)->mv_tasklet);
+ #endif
+ 
+-	scsi_remove_host(mvi->shost);
 +	spin_lock_irqsave(shost->host_lock, flags);
 +	if (scsi_host_set_state(shost, SHOST_CANCEL))
 +		WARN_ON(scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY));
 +	spin_unlock_irqrestore(shost->host_lock, flags);
 +
- 	err = sas_unregister_ha(&asd_ha->sas_ha);
- 
--	sas_remove_host(asd_ha->sas_ha.core.shost);
--	scsi_host_put(asd_ha->sas_ha.core.shost);
++
+ 	sas_unregister_ha(sha);
+-	sas_remove_host(mvi->shost);
 +	sas_remove_host(shost);
 +	scsi_remove_host(shost);
-+	scsi_host_put(shost);
  
- 	kfree(asd_ha->sas_ha.sas_phy);
- 	kfree(asd_ha->sas_ha.sas_port);
+ 	MVS_CHIP_DISP->interrupt_disable(mvi);
+ 	free_irq(mvi->pdev->irq, sha);
 -- 
 1.8.5.6
