@@ -1,130 +1,58 @@
-From: Szymon Mielczarek <szymonx.mielczarek@intel.com>
-Subject: [PATCH] Revert "scsi: ufs: add queries retry mechanism"
-Date: Wed, 29 Mar 2017 08:19:21 +0200
-Message-ID: <1490768361-4492-1-git-send-email-szymonx.mielczarek@intel.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH v2] libsas: fix "sysfs group not found" warnings at port
+ teardown time
+Date: Wed, 29 Mar 2017 10:11:42 +0200
+Message-ID: <20170329081142.GA3794@linux-x5ow.site>
+References: <20150520230012.15322.1013.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20170319124437.GA15094@linux-x5ow.site>
+ <b98e90a0-4914-0277-4aca-03a897b59ac0@huawei.com>
+ <20170321135154.GF30013@linux-x5ow.site>
+ <5f350965-017b-fd5b-8fad-eba01682d72e@huawei.com>
+ <20170324112347.GE3571@linux-x5ow.site>
+ <8415e37f-4d96-4b92-a967-cf41a4291e8f@huawei.com>
+ <20170324165354.GJ3571@linux-x5ow.site>
+ <20170328214149.GE28157@htj.duckdns.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:11242 "EHLO mga07.intel.com"
+Received: from mx2.suse.de ([195.135.220.15]:44393 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753386AbdC2GTy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 29 Mar 2017 02:19:54 -0400
+        id S1754849AbdC2IMG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 29 Mar 2017 04:12:06 -0400
+Content-Disposition: inline
+In-Reply-To: <20170328214149.GE28157@htj.duckdns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: subhashj@codeaurora.org, Szymon Mielczarek <szymonx.mielczarek@intel.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: John Garry <john.garry@huawei.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
 
-This reverts commit 61e073590b82a539654626ecae91b8fab11db3f3.
+On Tue, Mar 28, 2017 at 05:41:49PM -0400, Tejun Heo wrote:
+> > But as I said, I don't belive this is a problem in the SAS transport or the
+> > SAS drivers, but a device core or transport class.
+> 
+> So, what's most likely happening is that the parent device or kobject
+> which contains the attribute group has already been removed earlier
+> and because the removal is recursive, the later explicit removal is
+> trying to remove already removed files.  It can be fixed either by
+> reordering so that the parent node is removed after the children or
+> simply dropping the explicit removal of children.
 
-The patch introduced redundant query retries as we already had such
-mechanism provided with _retry functions.
-Both ufshcd_read_desc and ufshcd_read_unit_desc_param functions
-call ufshcd_query_descriptor_retry wrapper.
+Hi Tejun,
 
-Signed-off-by: Szymon Mielczarek <szymonx.mielczarek@intel.com>
----
-Resending the patch due to smtp server issue.
- drivers/scsi/ufs/ufshcd.c | 54 ++++++++---------------------------------------
- 1 file changed, 9 insertions(+), 45 deletions(-)
+Thanks for haivng a look at this. I already did this earlier and it didn't have
+an effect at all. But I forgot to flush the SAS desctruct workqueue so it didn't
+have an effect.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 096e95b..3dddd13 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -3103,18 +3103,7 @@ static inline int ufshcd_read_power_desc(struct ufs_hba *hba,
- 					 u8 *buf,
- 					 u32 size)
- {
--	int err = 0;
--	int retries;
--
--	for (retries = QUERY_REQ_RETRIES; retries > 0; retries--) {
--		/* Read descriptor*/
--		err = ufshcd_read_desc(hba, QUERY_DESC_IDN_POWER, 0, buf, size);
--		if (!err)
--			break;
--		dev_dbg(hba->dev, "%s: error %d retrying\n", __func__, err);
--	}
--
--	return err;
-+	return ufshcd_read_desc(hba, QUERY_DESC_IDN_POWER, 0, buf, size);
- }
- 
- static int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size)
-@@ -4272,24 +4261,16 @@ static void ufshcd_set_queue_depth(struct scsi_device *sdev)
- {
- 	int ret = 0;
- 	u8 lun_qdepth;
--	int retries;
- 	struct ufs_hba *hba;
- 
- 	hba = shost_priv(sdev->host);
- 
- 	lun_qdepth = hba->nutrs;
--	for (retries = QUERY_REQ_RETRIES; retries > 0; retries--) {
--		/* Read descriptor*/
--		ret = ufshcd_read_unit_desc_param(hba,
--				  ufshcd_scsi_to_upiu_lun(sdev->lun),
--				  UNIT_DESC_PARAM_LU_Q_DEPTH,
--				  &lun_qdepth,
--				  sizeof(lun_qdepth));
--		if (!ret || ret == -ENOTSUPP)
--			break;
--
--		dev_dbg(hba->dev, "%s: error %d retrying\n", __func__, ret);
--	}
-+	ret = ufshcd_read_unit_desc_param(hba,
-+					  ufshcd_scsi_to_upiu_lun(sdev->lun),
-+					  UNIT_DESC_PARAM_LU_Q_DEPTH,
-+					  &lun_qdepth,
-+					  sizeof(lun_qdepth));
- 
- 	/* Some WLUN doesn't support unit descriptor */
- 	if (ret == -EOPNOTSUPP)
-@@ -5960,24 +5941,6 @@ static u32 ufshcd_find_max_sup_active_icc_level(struct ufs_hba *hba,
- 	return icc_level;
- }
- 
--static int ufshcd_set_icc_levels_attr(struct ufs_hba *hba, u32 icc_level)
--{
--	int ret = 0;
--	int retries;
--
--	for (retries = QUERY_REQ_RETRIES; retries > 0; retries--) {
--		/* write attribute */
--		ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
--			QUERY_ATTR_IDN_ACTIVE_ICC_LVL, 0, 0, &icc_level);
--		if (!ret)
--			break;
--
--		dev_dbg(hba->dev, "%s: failed with error %d\n", __func__, ret);
--	}
--
--	return ret;
--}
--
- static void ufshcd_init_icc_levels(struct ufs_hba *hba)
- {
- 	int ret;
-@@ -5998,8 +5961,9 @@ static void ufshcd_init_icc_levels(struct ufs_hba *hba)
- 	dev_dbg(hba->dev, "%s: setting icc_level 0x%x",
- 			__func__, hba->init_prefetch_data.icc_level);
- 
--	ret = ufshcd_set_icc_levels_attr(hba,
--				 hba->init_prefetch_data.icc_level);
-+	ret = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
-+		QUERY_ATTR_IDN_ACTIVE_ICC_LVL, 0, 0,
-+		&hba->init_prefetch_data.icc_level);
- 
- 	if (ret)
- 		dev_err(hba->dev,
+Thanks for re-pointing me to it. Patches fixing the issue are coming finally :-).
+
+Byte,
+	Johannes
+
 -- 
-1.9.1
-
---------------------------------------------------------------------
-
-Intel Technology Poland sp. z o.o.
-ul. Slowackiego 173 | 80-298 Gdansk | Sad Rejonowy Gdansk Polnoc | VII Wydzial Gospodarczy Krajowego Rejestru Sadowego - KRS 101882 | NIP 957-07-52-316 | Kapital zakladowy 200.000 PLN.
-
-Ta wiadomosc wraz z zalacznikami jest przeznaczona dla okreslonego adresata i moze zawierac informacje poufne. W razie przypadkowego otrzymania tej wiadomosci, prosimy o powiadomienie nadawcy oraz trwale jej usuniecie; jakiekolwiek
-przegladanie lub rozpowszechnianie jest zabronione.
-This e-mail and any attachments may contain confidential material for the sole use of the intended recipient(s). If you are not the intended recipient, please contact the sender and delete all copies; any review or distribution by
-others is strictly prohibited.
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
