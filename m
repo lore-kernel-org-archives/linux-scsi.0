@@ -1,58 +1,54 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2] libsas: fix "sysfs group not found" warnings at port
- teardown time
-Date: Wed, 29 Mar 2017 10:11:42 +0200
-Message-ID: <20170329081142.GA3794@linux-x5ow.site>
-References: <20150520230012.15322.1013.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20170319124437.GA15094@linux-x5ow.site>
- <b98e90a0-4914-0277-4aca-03a897b59ac0@huawei.com>
- <20170321135154.GF30013@linux-x5ow.site>
- <5f350965-017b-fd5b-8fad-eba01682d72e@huawei.com>
- <20170324112347.GE3571@linux-x5ow.site>
- <8415e37f-4d96-4b92-a967-cf41a4291e8f@huawei.com>
- <20170324165354.GJ3571@linux-x5ow.site>
- <20170328214149.GE28157@htj.duckdns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44393 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754849AbdC2IMG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 29 Mar 2017 04:12:06 -0400
-Content-Disposition: inline
-In-Reply-To: <20170328214149.GE28157@htj.duckdns.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Subject: [PATCH 3/6] aic94xx: remove the SAS host after the SCSI host
+Date: Wed, 29 Mar 2017 11:41:10 +0200
+Message-ID: <20170329094122.9997-1-jthumshirn@suse.de>
+References: <cover.1490775958.git.jthumshirn@suse.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1490775958.git.jthumshirn@suse.de>
+In-Reply-To: <cover.1490775958.git.jthumshirn@suse.de>
+References: <cover.1490775958.git.jthumshirn@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Tejun Heo <tj@kernel.org>, James Bottomley <jejb@linux.vnet.ibm.com>, Dan Williams <dan.j.williams@intel.com>, John Garry <john.garry@huawei.com>, Jack Wang <jinpu.wang@profitbricks.com>, Hannes Reinecke <hare@suse.de>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: John Garry <john.garry@huawei.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
 
-On Tue, Mar 28, 2017 at 05:41:49PM -0400, Tejun Heo wrote:
-> > But as I said, I don't belive this is a problem in the SAS transport or the
-> > SAS drivers, but a device core or transport class.
-> 
-> So, what's most likely happening is that the parent device or kobject
-> which contains the attribute group has already been removed earlier
-> and because the removal is recursive, the later explicit removal is
-> trying to remove already removed files.  It can be fixed either by
-> reordering so that the parent node is removed after the children or
-> simply dropping the explicit removal of children.
+After commit bcdde7e ("sysfs: make __sysfs_remove_dir() recursive") changed the
+removal path of kernfs to make it recursive we have to remove the SAS host
+before the SCSI host or we will see sysfs warnings on not found sysfs groups for
+kobjects.
 
-Hi Tejun,
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/scsi/aic94xx/aic94xx_init.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
-Thanks for haivng a look at this. I already did this earlier and it didn't have
-an effect at all. But I forgot to flush the SAS desctruct workqueue so it didn't
-have an effect.
-
-Thanks for re-pointing me to it. Patches fixing the issue are coming finally :-).
-
-Byte,
-	Johannes
-
+diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
+index 662b232..362d65a 100644
+--- a/drivers/scsi/aic94xx/aic94xx_init.c
++++ b/drivers/scsi/aic94xx/aic94xx_init.c
+@@ -701,13 +701,20 @@ static int asd_register_sas_ha(struct asd_ha_struct *asd_ha)
+ 
+ static int asd_unregister_sas_ha(struct asd_ha_struct *asd_ha)
+ {
++	struct Scsi_Host *shost = asd_ha->sas_ha.core.shost;
++	unsigned long flags;
+ 	int err;
+ 
+-	scsi_remove_host(asd_ha->sas_ha.core.shost);
++	spin_lock_irqsave(shost->host_lock, flags);
++	if (scsi_host_set_state(shost, SHOST_CANCEL))
++		WARN_ON(scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY));
++	spin_unlock_irqrestore(shost->host_lock, flags);
++
+ 	err = sas_unregister_ha(&asd_ha->sas_ha);
+ 
+-	sas_remove_host(asd_ha->sas_ha.core.shost);
+-	scsi_host_put(asd_ha->sas_ha.core.shost);
++	sas_remove_host(shost);
++	scsi_remove_host(shost);
++	scsi_host_put(shost);
+ 
+ 	kfree(asd_ha->sas_ha.sas_phy);
+ 	kfree(asd_ha->sas_ha.sas_port);
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+1.8.5.6
