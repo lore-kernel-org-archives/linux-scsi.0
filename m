@@ -1,19 +1,20 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH 3/6] scsi: ufs: non functional macro fix
-Date: Tue, 28 Mar 2017 22:03:38 -0700
-Message-ID: <0b75f41bc06b3403de05829d0a5e1405@codeaurora.org>
+Subject: Re: [PATCH 4/6] scsi: ufs: add missing macros for register bits from
+ UFSHCI spec
+Date: Tue, 28 Mar 2017 22:04:55 -0700
+Message-ID: <fb3587074c40013e0e1eae04575df4d5@codeaurora.org>
 References: <20170328134929.25599-1-tkusumi@tuxera.com>
- <20170328134929.25599-3-tkusumi@tuxera.com>
+ <20170328134929.25599-4-tkusumi@tuxera.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47848 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:48202 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752473AbdC2FEJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Mar 2017 01:04:09 -0400
-In-Reply-To: <20170328134929.25599-3-tkusumi@tuxera.com>
+        with ESMTP id S1752630AbdC2FFN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Mar 2017 01:05:13 -0400
+In-Reply-To: <20170328134929.25599-4-tkusumi@tuxera.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: kusumi.tomohiro@gmail.com
@@ -22,42 +23,37 @@ Cc: martin.petersen@oracle.com, vinholikatti@gmail.com, linux-scsi@vger.kernel.o
 On 2017-03-28 06:49, kusumi.tomohiro@gmail.com wrote:
 > From: Tomohiro Kusumi <tkusumi@tuxera.com>
 > 
-> Not having () isn't likely to do any harm in this case, but all the
-> other macros below do have it. Also add "are" in a comment.
+> Add macros for register bits that can be found in JESD223C (v2.1).
+> 
+> Not all registers are defined in ufshci.h (i.e. some are unused
+> whether macros are defined or undefined), but all the bits for
+> those registers that are already defined should appear here.
 > 
 > Signed-off-by: Tomohiro Kusumi <tkusumi@tuxera.com>
 > ---
->  drivers/scsi/ufs/ufshcd.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
+>  drivers/scsi/ufs/ufshci.h | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index dd46259..089b76f 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -151,11 +151,11 @@ enum {
->  };
+> diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+> index d14e9b9..88acfd3 100644
+> --- a/drivers/scsi/ufs/ufshci.h
+> +++ b/drivers/scsi/ufs/ufshci.h
+> @@ -48,6 +48,7 @@ enum {
+>  	REG_UFS_VERSION				= 0x08,
+>  	REG_CONTROLLER_DEV_ID			= 0x10,
+>  	REG_CONTROLLER_PROD_ID			= 0x14,
+> +	REG_AUTO_HIBERNATE_IDLE_TIMER		= 0x18,
+>  	REG_INTERRUPT_STATUS			= 0x20,
+>  	REG_INTERRUPT_ENABLE			= 0x24,
+>  	REG_CONTROLLER_STATUS			= 0x30,
+> @@ -171,6 +172,7 @@ enum {
+>  /* HCE - Host Controller Enable 34h */
+>  #define CONTROLLER_ENABLE	UFS_BIT(0)
+>  #define CONTROLLER_DISABLE	0x0
+> +#define CRYPTO_GENERAL_ENABLE	UFS_BIT(1)
 > 
->  #define ufshcd_set_eh_in_progress(h) \
-> -	(h->eh_flags |= UFSHCD_EH_IN_PROGRESS)
-> +	((h)->eh_flags |= UFSHCD_EH_IN_PROGRESS)
->  #define ufshcd_eh_in_progress(h) \
-> -	(h->eh_flags & UFSHCD_EH_IN_PROGRESS)
-> +	((h)->eh_flags & UFSHCD_EH_IN_PROGRESS)
->  #define ufshcd_clear_eh_in_progress(h) \
-> -	(h->eh_flags &= ~UFSHCD_EH_IN_PROGRESS)
-> +	((h)->eh_flags &= ~UFSHCD_EH_IN_PROGRESS)
-> 
->  #define ufshcd_set_ufs_dev_active(h) \
->  	((h)->curr_dev_pwr_mode = UFS_ACTIVE_PWR_MODE)
-> @@ -1491,7 +1491,7 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
->  			break;
->  		}
->  		/*
-> -		 * If we here, it means gating work is either done or
-> +		 * If we are here, it means gating work is either done or
->  		 * currently running. Hence, fall through to cancel gating
->  		 * work and to enable clocks.
->  		 */
+>  /* UECPA - Host UIC Error Code PHY Adapter Layer 38h */
+>  #define UIC_PHY_ADAPTER_LAYER_ERROR			UFS_BIT(31)
 
 Looks good to me.
 Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
