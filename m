@@ -1,102 +1,148 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2] libsas: fix "sysfs group not found" warnings at port
- teardown time
-Date: Tue, 28 Mar 2017 17:41:49 -0400
-Message-ID: <20170328214149.GE28157@htj.duckdns.org>
-References: <20150520230012.15322.1013.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20170319124437.GA15094@linux-x5ow.site>
- <b98e90a0-4914-0277-4aca-03a897b59ac0@huawei.com>
- <20170321135154.GF30013@linux-x5ow.site>
- <5f350965-017b-fd5b-8fad-eba01682d72e@huawei.com>
- <20170324112347.GE3571@linux-x5ow.site>
- <8415e37f-4d96-4b92-a967-cf41a4291e8f@huawei.com>
- <20170324165354.GJ3571@linux-x5ow.site>
+From: Junichi Nomura <j-nomura@ce.jp.nec.com>
+Subject: [REGRESSION] v4.11-rc3: lpfc: panic during module removal / shutdown
+Date: Wed, 29 Mar 2017 02:29:45 +0000
+Message-ID: <99ad422f-8233-ddac-2e69-deda4a43b3d7@ce.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-2022-jp"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yw0-f195.google.com ([209.85.161.195]:32867 "EHLO
-        mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932157AbdC1VmL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Mar 2017 17:42:11 -0400
-Received: by mail-yw0-f195.google.com with SMTP id p77so10730722ywg.0
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Mar 2017 14:42:10 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20170324165354.GJ3571@linux-x5ow.site>
+Received: from tyo162.gate.nec.co.jp ([114.179.232.162]:43740 "EHLO
+        tyo162.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752019AbdC2Csr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Mar 2017 22:48:47 -0400
+Content-Language: ja-JP
+Content-ID: <AF23B76456DCE34E89E88B4A9D69EE58@gisp.nec.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: John Garry <john.garry@huawei.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>, "dick.kennedy@broadcom.com" <dick.kennedy@broadcom.com>, "james.smart@broadcom.com" <james.smart@broadcom.com>
+Cc: "anton@samba.org" <anton@samba.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-Hello,
+Since commit 895427bd012c ("scsi: lpfc: NVME Initiator: Base modifications"),
+"rmmod lpfc" starting to cause panic or corruption due to double free.
 
-On Fri, Mar 24, 2017 at 05:53:54PM +0100, Johannes Thumshirn wrote:
-> [ +Cc Tejun ]
-> 
-> On Fri, Mar 24, 2017 at 11:44:55AM +0000, John Garry wrote:
-> > To be clear, was this the same test with isci which you initially reported?
-> 
-> Yes, just echo into the PCI device's sysfs remove file and it'll trigger the
-> problem.
-> 
-> I did some archeology and it seems as if commit bcdde7e ("sysfs: make
-> __sysfs_remove_dir() recursive") introduced/uncovered this behavior.
+The double-free occurs as followings:
+  - During initialization, lpfc_create_wq_cq() binds cq and wq to
+    the same ring in the way that both cq->pring and wq->pring point
+    to the same object.
+  - Upon removal, lpfc_sli4_queue_destroy() ends up calling
+    lpfc_sli4_queue_free() for both wqs and cqs
+    and kfree(queue->pring) is done twice.
 
-I couldn't reproduce it with other devices (don't have a sas controller).
+The problem became more visible in v4.11-rc3 because commit 85e8a23936ab
+("scsi: lpfc: Add shutdown method for kexec") made lpfc_pci_remove_one()
+called during driver shutdown.
 
-> For reference, here's one of my calltraces (the first of 40!):
-> ------------[ cut here ]------------
-> WARNING: CPU: 2 PID: 5 at fs/sysfs/group.c:241 sysfs_remove_group+0xc3/0xd0
-> sysfs group 'power' not found for kobject 'end_device-6:0'
-> CPU: 16 PID: 5884 Comm: repro.sh Not tainted 4.11.0-rc3-libsas+ #504
-> Call Trace:
->  dump_stack+0x85/0xc2
->  __warn+0xc6/0xe0
->  warn_slowpath_fmt+0x4a/0x50
->  sysfs_remove_group+0xc3/0xd0
->  dpm_sysfs_remove+0x52/0x60
->  device_del+0x13c/0x360
->  ? device_remove_file+0x14/0x20
->  attribute_container_class_device_del+0x15/0x20
->  transport_remove_classdev+0x4c/0x60
->  ? transport_add_class_device+0x40/0x40
->  attribute_container_device_trigger+0xb3/0xc0
->  transport_remove_device+0x10/0x20
->  sas_port_delete+0x12d/0x160 [scsi_transport_sas]
->  sas_deform_port+0x1bf/0x1d0 [libsas]
->  sas_unregister_ports+0x36/0x50 [libsas]
->  sas_unregister_ha+0x1b/0x40 [libsas]
->  isci_unregister+0x2a/0x40 [isci]
->  isci_pci_remove+0x52/0xb0 [isci]
->  ? __pm_runtime_resume+0x56/0x80
->  pci_device_remove+0x34/0xb0
->  device_release_driver_internal+0x158/0x210
->  device_release_driver+0xd/0x10
->  pci_stop_bus_device+0x85/0x90
->  pci_stop_and_remove_bus_device_locked+0x15/0x30
->  remove_store+0x59/0x70
->  dev_attr_store+0x13/0x20
->  sysfs_kf_write+0x40/0x50
->  kernfs_fop_write+0x130/0x1b0
->  __vfs_write+0x23/0x130
->  ? rcu_read_lock_sched_held+0x6d/0x80
->  ? rcu_sync_lockdep_assert+0x2a/0x50
->  ? __sb_start_write+0xd7/0x1e0
->  ? vfs_write+0x1a4/0x1f0
->  vfs_write+0xc6/0x1f0
->  SyS_write+0x44/0xa0
->  entry_SYSCALL_64_fastpath+0x23/0xc6
-> 
-> But as I said, I don't belive this is a problem in the SAS transport or the
-> SAS drivers, but a device core or transport class.
+A sample of slub_debug output is attached below.
 
-So, what's most likely happening is that the parent device or kobject
-which contains the attribute group has already been removed earlier
-and because the removal is recursive, the later explicit removal is
-trying to remove already removed files.  It can be fixed either by
-reordering so that the parent node is removed after the children or
-simply dropping the explicit removal of children.
+=============================================================================
+BUG kmalloc-512 (Not tainted): Object already free
+-----------------------------------------------------------------------------
 
-Thanks.
+Disabling lock debugging due to kernel taint
+INFO: Allocated in lpfc_wq_create+0x31c/0x4f0 [lpfc] age=259902 cpu=0 pid=314
+	___slab_alloc+0x47f/0x4b0
+	__slab_alloc+0x40/0x5c
+	kmem_cache_alloc_trace+0x16c/0x1b0
+	lpfc_wq_create+0x31c/0x4f0 [lpfc]
+	lpfc_create_wq_cq+0xb6/0x370 [lpfc]
+	lpfc_sli4_queue_setup+0x331/0xd70 [lpfc]
+	lpfc_sli4_hba_setup+0x12ce/0x1e90 [lpfc]
+	lpfc_pci_probe_one_s4.isra.43+0x7c2/0x8f0 [lpfc]
+	lpfc_pci_probe_one+0xbd/0xc30 [lpfc]
+	local_pci_probe+0x45/0xa0
+	work_for_cpu_fn+0x14/0x20
+	process_one_work+0x165/0x410
+	worker_thread+0x27f/0x4c0
+	kthread+0x101/0x140
+	ret_from_fork+0x2c/0x40
+INFO: Freed in lpfc_sli4_queue_free+0x11b/0x160 [lpfc] age=100 cpu=3 pid=11802
+	__slab_free+0x1ba/0x2c0
+	kfree+0x122/0x170
+	lpfc_sli4_queue_free+0x11b/0x160 [lpfc]
+	lpfc_sli4_queue_destroy+0xba/0x470 [lpfc]
+	lpfc_pci_remove_one+0x6b4/0x880 [lpfc]
+	pci_device_remove+0x39/0xc0
+	device_release_driver_internal+0x141/0x1f0
+	driver_detach+0x3f/0x80
+	bus_remove_driver+0x55/0xd0
+	driver_unregister+0x2c/0x50
+	pci_unregister_driver+0x2a/0xa0
+	lpfc_exit+0x1c/0xe84 [lpfc]
+	SyS_delete_module+0x1ba/0x220
+	do_syscall_64+0x67/0x180
+	return_from_SYSCALL_64+0x0/0x6a
+INFO: Slab 0xffffea0040c9ce00 objects=38 used=34 fp=0xffff881032739a88 flags=0x17ffffc0008101
+INFO: Object 0xffff881032739098 @offset=4248 fp=0x          (null)
+
+Redzone ffff881032739090: bb bb bb bb bb bb bb bb                          ........
+Object ffff881032739098: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff8810327390a8: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff8810327390b8: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff8810327390c8: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff8810327390d8: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff8810327390e8: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff8810327390f8: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff881032739108: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff881032739118: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff881032739128: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff881032739138: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff881032739148: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff881032739158: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff881032739168: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff881032739178: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff881032739188: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff881032739198: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff8810327391a8: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff8810327391b8: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff8810327391c8: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff8810327391d8: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff8810327391e8: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff8810327391f8: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff881032739208: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff881032739218: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff881032739228: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff881032739238: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff881032739248: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff881032739258: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff881032739268: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff881032739278: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Object ffff881032739288: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b a5  kkkkkkkkkkkkkkk.
+Redzone ffff881032739298: bb bb bb bb bb bb bb bb                          ........
+Padding ffff8810327393d8: 5a 5a 5a 5a 5a 5a 5a 5a                          ZZZZZZZZ
+CPU: 3 PID: 11802 Comm: rmmod Tainted: G    B           4.11.0-rc3 #1
+Call Trace:
+ dump_stack+0x63/0x87
+ print_trailer+0x165/0x260
+ free_debug_processing+0x20c/0x278
+ ? lpfc_sli4_queue_free+0x11b/0x160 [lpfc]
+ __slab_free+0x1ba/0x2c0
+ ? lpfc_sli4_queue_destroy+0xda/0x470 [lpfc]
+ ? free_hot_cold_page+0x21f/0x280
+ ? __free_pages+0x25/0x30
+ ? free_pages.part.88+0x40/0x50
+ ? lpfc_sli4_queue_free+0x11b/0x160 [lpfc]
+ kfree+0x122/0x170
+ lpfc_sli4_queue_free+0x11b/0x160 [lpfc]
+ lpfc_sli4_queue_destroy+0x11b/0x470 [lpfc]
+ lpfc_pci_remove_one+0x6b4/0x880 [lpfc]
+ pci_device_remove+0x39/0xc0
+ device_release_driver_internal+0x141/0x1f0
+ driver_detach+0x3f/0x80
+ bus_remove_driver+0x55/0xd0
+ driver_unregister+0x2c/0x50
+ pci_unregister_driver+0x2a/0xa0
+ lpfc_exit+0x1c/0xe84 [lpfc]
+ SyS_delete_module+0x1ba/0x220
+ do_syscall_64+0x67/0x180
+ entry_SYSCALL64_slow_path+0x25/0x25
+RIP: 0033:0x7fa3e194ac27
+RSP: 002b:00007ffdcd1607b8 EFLAGS: 00000206 ORIG_RAX: 00000000000000b0
+RAX: ffffffffffffffda RBX: 0000000000789210 RCX: 00007fa3e194ac27
+RDX: 00007fa3e19bb000 RSI: 0000000000000800 RDI: 0000000000789278
+RBP: 0000000000000000 R08: 00007fa3e1c0e060 R09: 00007fa3e19bb000
+R10: 00007ffdcd160540 R11: 0000000000000206 R12: 00007ffdcd1625ca
+R13: 0000000000000000 R14: 0000000000789210 R15: 0000000000789010
+FIX kmalloc-512: Object at 0xffff881032739098 not freed
 
 -- 
-tejun
+Jun'ichi Nomura, NEC Corporation / NEC Solution Innovators, Ltd.
