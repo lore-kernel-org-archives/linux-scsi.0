@@ -1,68 +1,83 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 1/2] hpsa: update pci ids
-Date: Wed, 29 Mar 2017 17:43:46 +0200
-Message-ID: <f997a22e-7b62-0850-03d3-352e055d4b65@redhat.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH 1/2] hpsa: update pci ids
+Date: Wed, 29 Mar 2017 16:00:11 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D194F34BEC1@avsrvexchmbx2.microsemi.net>
 References: <149073716991.23669.3063211911971326983.stgit@brunhilda>
  <149073721384.23669.10598426212290266393.stgit@brunhilda>
+ <f997a22e-7b62-0850-03d3-352e055d4b65@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60356 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752642AbdC2Pnw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 29 Mar 2017 11:43:52 -0400
-In-Reply-To: <149073721384.23669.10598426212290266393.stgit@brunhilda>
+Received: from mail-by2nam01on0063.outbound.protection.outlook.com ([104.47.34.63]:3808
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752890AbdC2QAR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 29 Mar 2017 12:00:17 -0400
+In-Reply-To: <f997a22e-7b62-0850-03d3-352e055d4b65@redhat.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>, joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
-Cc: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>, "joseph.szczypek@hpe.com" <joseph.szczypek@hpe.com>, Gerry Morong <gerry.morong@microsemi.com>, John Hall <John.Hall@microsemi.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, Bader Ali - Saleh <bader.alisaleh@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Viswas G <viswas.g@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "POSWALD@suse.com" <POSWALD@suse.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 28.3.2017 23:40, Don Brace wrote:
-> Reviewed-by: Gerry Morong <gerry.morong@microsemi.com>
-> Reviewed-by: Scott Teel <scott.teel@microsemi.com>
-> Signed-off-by: Don Brace <don.brace@microsemi.com>
-
-Hi Don
-
-has a gen9 device with id=0x334D ever been released?
-https://lkml.org/lkml/2013/9/4/499
-seems to be still missing in the current table.
-
-tomash
-
-> ---
->  drivers/scsi/hpsa.c |    4 ++++
->  1 file changed, 4 insertions(+)
->
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 0d0be77..668cf47 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -108,10 +108,12 @@ static const struct pci_device_id hpsa_pci_device_id[] = {
->  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3354},
->  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3355},
->  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3356},
-> +	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103c, 0x1920},
->  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1921},
->  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1922},
->  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1923},
->  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1924},
-> +	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103c, 0x1925},
->  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1926},
->  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1928},
->  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1929},
-> @@ -171,10 +173,12 @@ static struct board_type products[] = {
->  	{0x3354103C, "Smart Array P420i", &SA5_access},
->  	{0x3355103C, "Smart Array P220i", &SA5_access},
->  	{0x3356103C, "Smart Array P721m", &SA5_access},
-> +	{0x1920103C, "Smart Array P430i", &SA5_access},
->  	{0x1921103C, "Smart Array P830i", &SA5_access},
->  	{0x1922103C, "Smart Array P430", &SA5_access},
->  	{0x1923103C, "Smart Array P431", &SA5_access},
->  	{0x1924103C, "Smart Array P830", &SA5_access},
-> +	{0x1925103C, "Smart Array P831", &SA5_access},
->  	{0x1926103C, "Smart Array P731m", &SA5_access},
->  	{0x1928103C, "Smart Array P230i", &SA5_access},
->  	{0x1929103C, "Smart Array P530", &SA5_access},
->
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBUb21hcyBIZW56bCBbbWFpbHRv
+OnRoZW56bEByZWRoYXQuY29tXQ0KPiBTZW50OiBXZWRuZXNkYXksIE1hcmNoIDI5LCAyMDE3IDEw
+OjQ0IEFNDQo+IFRvOiBEb24gQnJhY2UgPGRvbi5icmFjZUBtaWNyb3NlbWkuY29tPjsgam9zZXBo
+LnN6Y3p5cGVrQGhwZS5jb207DQo+IEdlcnJ5IE1vcm9uZyA8Z2VycnkubW9yb25nQG1pY3Jvc2Vt
+aS5jb20+OyBKb2huIEhhbGwNCj4gPEpvaG4uSGFsbEBtaWNyb3NlbWkuY29tPjsgamVqYkBsaW51
+eC52bmV0LmlibS5jb207IEtldmluIEJhcm5ldHQNCj4gPGtldmluLmJhcm5ldHRAbWljcm9zZW1p
+LmNvbT47IE1haGVzaCBSYWphc2hla2hhcmENCj4gPG1haGVzaC5yYWphc2hla2hhcmFAbWljcm9z
+ZW1pLmNvbT47IEJhZGVyIEFsaSAtIFNhbGVoDQo+IDxiYWRlci5hbGlzYWxlaEBtaWNyb3NlbWku
+Y29tPjsgaGNoQGluZnJhZGVhZC5vcmc7IFNjb3R0IFRlZWwNCj4gPHNjb3R0LnRlZWxAbWljcm9z
+ZW1pLmNvbT47IFZpc3dhcyBHIDx2aXN3YXMuZ0BtaWNyb3NlbWkuY29tPjsgSnVzdGluDQo+IExp
+bmRsZXkgPGp1c3Rpbi5saW5kbGV5QG1pY3Jvc2VtaS5jb20+OyBTY290dCBCZW5lc2gNCj4gPHNj
+b3R0LmJlbmVzaEBtaWNyb3NlbWkuY29tPjsgUE9TV0FMREBzdXNlLmNvbQ0KPiBDYzogbGludXgt
+c2NzaUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUmU6IFtQQVRDSCAxLzJdIGhwc2E6IHVw
+ZGF0ZSBwY2kgaWRzDQo+IA0KPiBFWFRFUk5BTCBFTUFJTA0KPiANCj4gDQo+IE9uIDI4LjMuMjAx
+NyAyMzo0MCwgRG9uIEJyYWNlIHdyb3RlOg0KPiA+IFJldmlld2VkLWJ5OiBHZXJyeSBNb3Jvbmcg
+PGdlcnJ5Lm1vcm9uZ0BtaWNyb3NlbWkuY29tPg0KPiA+IFJldmlld2VkLWJ5OiBTY290dCBUZWVs
+IDxzY290dC50ZWVsQG1pY3Jvc2VtaS5jb20+DQo+ID4gU2lnbmVkLW9mZi1ieTogRG9uIEJyYWNl
+IDxkb24uYnJhY2VAbWljcm9zZW1pLmNvbT4NCj4gDQo+IEhpIERvbg0KPiANCj4gaGFzIGEgZ2Vu
+OSBkZXZpY2Ugd2l0aCBpZD0weDMzNEQgZXZlciBiZWVuIHJlbGVhc2VkPw0KPiBodHRwczovL2xr
+bWwub3JnL2xrbWwvMjAxMy85LzQvNDk5DQo+IHNlZW1zIHRvIGJlIHN0aWxsIG1pc3NpbmcgaW4g
+dGhlIGN1cnJlbnQgdGFibGUuDQo+IA0KPiB0b21hc2gNCg0KTm8sIHRoaXMgZGV2aWNlIHdhcyBu
+ZXZlciBzb2xkLiBTbyBJIGRpZCBub3QgYWRkIHRoaXMgdG8gbXkgcGF0Y2guDQpUaGFua3MsDQpE
+b24gQnJhY2UNCkVTQyAtIFNtYXJ0IFN0b3JhZ2UNCk1pY3Jvc2VtaSBDb3Jwb3JhdGlvbg0KDQoN
+Cj4gDQo+ID4gLS0tDQo+ID4gIGRyaXZlcnMvc2NzaS9ocHNhLmMgfCAgICA0ICsrKysNCj4gPiAg
+MSBmaWxlIGNoYW5nZWQsIDQgaW5zZXJ0aW9ucygrKQ0KPiA+DQo+ID4gZGlmZiAtLWdpdCBhL2Ry
+aXZlcnMvc2NzaS9ocHNhLmMgYi9kcml2ZXJzL3Njc2kvaHBzYS5jDQo+ID4gaW5kZXggMGQwYmU3
+Ny4uNjY4Y2Y0NyAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3Njc2kvaHBzYS5jDQo+ID4gKysr
+IGIvZHJpdmVycy9zY3NpL2hwc2EuYw0KPiA+IEBAIC0xMDgsMTAgKzEwOCwxMiBAQCBzdGF0aWMg
+Y29uc3Qgc3RydWN0IHBjaV9kZXZpY2VfaWQNCj4gaHBzYV9wY2lfZGV2aWNlX2lkW10gPSB7DQo+
+ID4gICAgICAge1BDSV9WRU5ET1JfSURfSFAsICAgICBQQ0lfREVWSUNFX0lEX0hQX0NJU1NGLCAg
+ICAgMHgxMDNDLCAweDMzNTR9LA0KPiA+ICAgICAgIHtQQ0lfVkVORE9SX0lEX0hQLCAgICAgUENJ
+X0RFVklDRV9JRF9IUF9DSVNTRiwgICAgIDB4MTAzQywgMHgzMzU1fSwNCj4gPiAgICAgICB7UENJ
+X1ZFTkRPUl9JRF9IUCwgICAgIFBDSV9ERVZJQ0VfSURfSFBfQ0lTU0YsICAgICAweDEwM0MsIDB4
+MzM1Nn0sDQo+ID4gKyAgICAge1BDSV9WRU5ET1JfSURfSFAsICAgICBQQ0lfREVWSUNFX0lEX0hQ
+X0NJU1NILCAgICAgMHgxMDNjLCAweDE5MjB9LA0KPiA+ICAgICAgIHtQQ0lfVkVORE9SX0lEX0hQ
+LCAgICAgUENJX0RFVklDRV9JRF9IUF9DSVNTSCwgICAgIDB4MTAzQywgMHgxOTIxfSwNCj4gPiAg
+ICAgICB7UENJX1ZFTkRPUl9JRF9IUCwgICAgIFBDSV9ERVZJQ0VfSURfSFBfQ0lTU0gsICAgICAw
+eDEwM0MsIDB4MTkyMn0sDQo+ID4gICAgICAge1BDSV9WRU5ET1JfSURfSFAsICAgICBQQ0lfREVW
+SUNFX0lEX0hQX0NJU1NILCAgICAgMHgxMDNDLCAweDE5MjN9LA0KPiA+ICAgICAgIHtQQ0lfVkVO
+RE9SX0lEX0hQLCAgICAgUENJX0RFVklDRV9JRF9IUF9DSVNTSCwgICAgIDB4MTAzQywgMHgxOTI0
+fSwNCj4gPiArICAgICB7UENJX1ZFTkRPUl9JRF9IUCwgICAgIFBDSV9ERVZJQ0VfSURfSFBfQ0lT
+U0gsICAgICAweDEwM2MsIDB4MTkyNX0sDQo+ID4gICAgICAge1BDSV9WRU5ET1JfSURfSFAsICAg
+ICBQQ0lfREVWSUNFX0lEX0hQX0NJU1NILCAgICAgMHgxMDNDLCAweDE5MjZ9LA0KPiA+ICAgICAg
+IHtQQ0lfVkVORE9SX0lEX0hQLCAgICAgUENJX0RFVklDRV9JRF9IUF9DSVNTSCwgICAgIDB4MTAz
+QywgMHgxOTI4fSwNCj4gPiAgICAgICB7UENJX1ZFTkRPUl9JRF9IUCwgICAgIFBDSV9ERVZJQ0Vf
+SURfSFBfQ0lTU0gsICAgICAweDEwM0MsIDB4MTkyOX0sDQo+ID4gQEAgLTE3MSwxMCArMTczLDEy
+IEBAIHN0YXRpYyBzdHJ1Y3QgYm9hcmRfdHlwZSBwcm9kdWN0c1tdID0gew0KPiA+ICAgICAgIHsw
+eDMzNTQxMDNDLCAiU21hcnQgQXJyYXkgUDQyMGkiLCAmU0E1X2FjY2Vzc30sDQo+ID4gICAgICAg
+ezB4MzM1NTEwM0MsICJTbWFydCBBcnJheSBQMjIwaSIsICZTQTVfYWNjZXNzfSwNCj4gPiAgICAg
+ICB7MHgzMzU2MTAzQywgIlNtYXJ0IEFycmF5IFA3MjFtIiwgJlNBNV9hY2Nlc3N9LA0KPiA+ICsg
+ICAgIHsweDE5MjAxMDNDLCAiU21hcnQgQXJyYXkgUDQzMGkiLCAmU0E1X2FjY2Vzc30sDQo+ID4g
+ICAgICAgezB4MTkyMTEwM0MsICJTbWFydCBBcnJheSBQODMwaSIsICZTQTVfYWNjZXNzfSwNCj4g
+PiAgICAgICB7MHgxOTIyMTAzQywgIlNtYXJ0IEFycmF5IFA0MzAiLCAmU0E1X2FjY2Vzc30sDQo+
+ID4gICAgICAgezB4MTkyMzEwM0MsICJTbWFydCBBcnJheSBQNDMxIiwgJlNBNV9hY2Nlc3N9LA0K
+PiA+ICAgICAgIHsweDE5MjQxMDNDLCAiU21hcnQgQXJyYXkgUDgzMCIsICZTQTVfYWNjZXNzfSwN
+Cj4gPiArICAgICB7MHgxOTI1MTAzQywgIlNtYXJ0IEFycmF5IFA4MzEiLCAmU0E1X2FjY2Vzc30s
+DQo+ID4gICAgICAgezB4MTkyNjEwM0MsICJTbWFydCBBcnJheSBQNzMxbSIsICZTQTVfYWNjZXNz
+fSwNCj4gPiAgICAgICB7MHgxOTI4MTAzQywgIlNtYXJ0IEFycmF5IFAyMzBpIiwgJlNBNV9hY2Nl
+c3N9LA0KPiA+ICAgICAgIHsweDE5MjkxMDNDLCAiU21hcnQgQXJyYXkgUDUzMCIsICZTQTVfYWNj
+ZXNzfSwNCj4gPg0KDQo=
