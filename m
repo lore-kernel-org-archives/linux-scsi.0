@@ -1,14 +1,14 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 6/6] scsi: pm8001: remove the SAS host after the SCSI host
-Date: Wed, 29 Mar 2017 12:18:45 +0200
-Message-ID: <19a5a84b-300d-5866-639e-eb70a8d6c1b5@suse.de>
+Subject: Re: [PATCH 5/6] mvsas: remove the SAS host after the SCSI host
+Date: Wed, 29 Mar 2017 12:18:26 +0200
+Message-ID: <2f920f25-866a-7ffd-4bae-4806fb4eec75@suse.de>
 References: <cover.1490775958.git.jthumshirn@suse.de>
- <20170329094122.9997-4-jthumshirn@suse.de>
+ <20170329094122.9997-3-jthumshirn@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170329094122.9997-4-jthumshirn@suse.de>
+In-Reply-To: <20170329094122.9997-3-jthumshirn@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: Tejun Heo <tj@kernel.org>, James Bottomley <jejb@linux.vnet.ibm.com>, Dan Williams <dan.j.williams@intel.com>, John Garry <john.garry@huawei.com>, Jack Wang <jinpu.wang@profitbricks.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>
@@ -22,9 +22,9 @@ On 03/29/2017 11:41 AM, Johannes Thumshirn wrote:
 > 
 > Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 > ---
->  drivers/scsi/pm8001/pm8001_init.c | 14 ++++++++++++--
->  1 file changed, 12 insertions(+), 2 deletions(-)
-> 
+>  drivers/scsi/mvsas/mv_init.c | 13 +++++++++++--
+>  1 file changed, 11 insertions(+), 2 deletions(-)
+
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
