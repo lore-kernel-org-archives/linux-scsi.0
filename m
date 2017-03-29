@@ -1,66 +1,42 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 12/23] sd: handle REQ_UNMAP
-Date: Wed, 29 Mar 2017 16:57:39 +0200
-Message-ID: <dab09af5-521a-99da-9852-2d18cc28ca4f@redhat.com>
-References: <20170323143341.31549-1-hch@lst.de>
-	<20170323143341.31549-13-hch@lst.de>
-	<1490719722.2573.8.camel@sandisk.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 0/2] Fix sysfs recursive removal splats in isci
+Date: Wed, 29 Mar 2017 11:23:08 -0400
+Message-ID: <20170329152308.GA30385@htj.duckdns.org>
+References: <cover.1490775958.git.jthumshirn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1490719722.2573.8.camel@sandisk.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Bart Van Assche <bart.vanassche@sandisk.com>, Alasdair G Kergon <agk@redhat.com>, "lars.ellenberg@linbit.com" <lars.ellenberg@linbit.com>, Mike Snitzer <snitzer@redhat.com>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, "philipp.reisner@linbit.com" <philipp.reisner@linbit.com>, Jens Axboe <axboe@fb.com>, "shli@kernel.org" <shli@kernel.org>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, dm <dm-devel@redhat.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yw0-f193.google.com ([209.85.161.193]:33151 "EHLO
+        mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752170AbdC2PXL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Mar 2017 11:23:11 -0400
+Content-Disposition: inline
+In-Reply-To: <cover.1490775958.git.jthumshirn@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, Dan Williams <dan.j.williams@intel.com>, John Garry <john.garry@huawei.com>, Jack Wang <jinpu.wang@profitbricks.com>, Hannes Reinecke <hare@suse.de>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>
 
+Hello,
 
+On Wed, Mar 29, 2017 at 11:41:07AM +0200, Johannes Thumshirn wrote:
+> This series fixes a sysfs warning caused by isci not being able to cope with
+> recursive sysfs path removals which are in place since commit bcdde7e
+> ("sysfs: make __sysfs_remove_dir() recursive").
 
-On 28/03/2017 18:48, Bart Van Assche wrote:
->> +	if (rq->cmd_flags & REQ_UNMAP) {
->> +		switch (sdkp->provisioning_mode) {
->> +		case SD_LBP_WS16:
->> +			return sd_setup_write_same16_cmnd(cmd, true);
->> +		case SD_LBP_WS10:
->> +			return sd_setup_write_same10_cmnd(cmd, true);
->> +		}
->> +	}
->> +
->>  	if (sdp->no_write_same)
->>  		return BLKPREP_INVALID;
->>  	if (sdkp->ws16 || sector > 0xffffffff || nr_sectors > 0xffff)
-> Users can change the provisioning mode from user space from SD_LBP_WS16 into
-> SD_LBP_WS10 so I'm not sure it's safe to skip the (sdkp->ws16 || sector >
-> 0xffffffff || nr_sectors > 0xffff) check if REQ_UNMAP is set.
+Thanks for fixing these.
 
-Yeah, if REQ_UNMAP is set you should probably check sdkp->provisioning_mode
-instead of sdkp->ws16, but apart from this it should still go through the
-checks below.
+> The mvsas, aic94xx and pm8001 and hisi_sas patches have been compile tested
+> only hence they have no callstack of the affected path in their changelogs.
+> 
+> I'm not sure whether to mark this patches as stable or not. I tend to say no
+> here, although we've seen complaints/bug reports on lkml and the scsi list.
 
-Plus, if the provisioning mode is not ws10 or ws16, should
-sd_setup_write_zeroes_cmnd:
+Given that the failures aren't critical or all that common (only
+happens on controller removal), I agree that not cc'ing stable is the
+right call here.
 
-1) do a WRITE SAME without UNMAP (what Christoph's code does)
+Thanks.
 
-2) return BLKPREP_INVALID
-
-3) ignore provisioning mode and do a WRITE SAME with UNMAP
-
-4) do a WRITE SAME without UNMAP for SD_LBP_{ZERO,FULL,DISABLE},
-do a WRITE SAME with UNMAP for SD_LBP_{WS10,WS16,UNMAP}.
-
-I'm in favor of (4).  The distinction between SD_LBP_UNMAP, SD_LBP_WS10
-and SD_LBP_WS16 is as problematic as discard_zeroes_data in my opinion.
-
-Thanks,
-
-Paolo
+-- 
+tejun
