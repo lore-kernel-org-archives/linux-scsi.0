@@ -1,83 +1,59 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: RE: [PATCH 1/2] hpsa: update pci ids
-Date: Wed, 29 Mar 2017 16:15:01 +0000
-Message-ID: <4993A297653ECB4581FA5C3C31323D194F34BEE2@avsrvexchmbx2.microsemi.net>
-References: <149073716991.23669.3063211911971326983.stgit@brunhilda>
- <149073721384.23669.10598426212290266393.stgit@brunhilda>
- <f997a22e-7b62-0850-03d3-352e055d4b65@redhat.com>
- <4993A297653ECB4581FA5C3C31323D194F34BEC1@avsrvexchmbx2.microsemi.net>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH 03/23] sd: implement REQ_OP_WRITE_ZEROES
+Date: Wed, 29 Mar 2017 16:28:01 +0000
+Message-ID: <1490804856.3551.3.camel@sandisk.com>
+References: <20170323143341.31549-1-hch@lst.de>
+         <20170323143341.31549-4-hch@lst.de> <1490726988.2573.16.camel@sandisk.com>
+         <e19ca1bf-0908-1eb0-cb04-cd306692f216@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0047.outbound.protection.outlook.com ([104.47.42.47]:50176
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752646AbdC2QPg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 29 Mar 2017 12:15:36 -0400
-In-Reply-To: <4993A297653ECB4581FA5C3C31323D194F34BEC1@avsrvexchmbx2.microsemi.net>
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:61511 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752264AbdC2Q2N (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Mar 2017 12:28:13 -0400
+In-Reply-To: <e19ca1bf-0908-1eb0-cb04-cd306692f216@redhat.com>
 Content-Language: en-US
+Content-ID: <7F521760D57C1746ACD169C42D3C2D16@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>, Tomas Henzl <thenzl@redhat.com>, "joseph.szczypek@hpe.com" <joseph.szczypek@hpe.com>, Gerry Morong <gerry.morong@microsemi.com>, John Hall <John.Hall@microsemi.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, Bader Ali - Saleh <bader.alisaleh@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Viswas G <viswas.g@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "POSWALD@suse.com" <POSWALD@suse.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "agk@redhat.com" <agk@redhat.com>, "lars.ellenberg@linbit.com" <lars.ellenberg@linbit.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "philipp.reisner@linbit.com" <philipp.reisner@linbit.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "pbonzini@redhat.com" <pbonzini@redhat.com>, "shli@kernel.org" <shli@kernel.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 
-PiA+DQo+ID4NCj4gPiBPbiAyOC4zLjIwMTcgMjM6NDAsIERvbiBCcmFjZSB3cm90ZToNCj4gPiA+
-IFJldmlld2VkLWJ5OiBHZXJyeSBNb3JvbmcgPGdlcnJ5Lm1vcm9uZ0BtaWNyb3NlbWkuY29tPg0K
-PiA+ID4gUmV2aWV3ZWQtYnk6IFNjb3R0IFRlZWwgPHNjb3R0LnRlZWxAbWljcm9zZW1pLmNvbT4N
-Cj4gPiA+IFNpZ25lZC1vZmYtYnk6IERvbiBCcmFjZSA8ZG9uLmJyYWNlQG1pY3Jvc2VtaS5jb20+
-DQo+ID4NCj4gPiBIaSBEb24NCj4gPg0KPiA+IGhhcyBhIGdlbjkgZGV2aWNlIHdpdGggaWQ9MHgz
-MzREIGV2ZXIgYmVlbiByZWxlYXNlZD8NCj4gPiBodHRwczovL2xrbWwub3JnL2xrbWwvMjAxMy85
-LzQvNDk5DQo+ID4gc2VlbXMgdG8gYmUgc3RpbGwgbWlzc2luZyBpbiB0aGUgY3VycmVudCB0YWJs
-ZS4NCj4gPg0KPiA+IHRvbWFzaA0KPiANCj4gTm8sIHRoaXMgZGV2aWNlIHdhcyBuZXZlciBzb2xk
-LiBTbyBJIGRpZCBub3QgYWRkIHRoaXMgdG8gbXkgcGF0Y2guDQoNClRvIGJlIG1vcmUgc3BlY2lm
-aWMsIHRoaXMgcGF0Y2ggYWRkZWQgdGhlIGRldmljZToNCjE2M2RiY2Q4OWM1YWNjNTUwMjYzNjk2
-MzAyM2I5YjQyY2EwOGMwMGYNClN1YmplY3Q6IFtQQVRDSCAxODUvNDc4XSBbU0NTSV0gaHBzYTog
-aG91c2VrZWVwaW5nIHBhdGNoIGZvciBkZXZpY2VfaWQgYW5kDQogcHJvZHVjdCBhcnJheXMNCg0K
-VGhpcyBwYXRjaCBkb2VzIGEgYml0IG9mIGhvdXNla2VlcGluZyBmb3IgaHBzYS4gQ2hhbmdlIGxv
-d2VyY2FzZSBhbHBoYSBoZXgNCmRpZ2l0cyB0byB1cHBlcmNhc2UgZm9yIGNvbnNpc3RlbmN5IHdp
-dGhpbiB0aGUgZHJpdmVyLiBBbHNvIG1vdmVzIHRoZSBQODIyc2UNCmluIHRoZSB0YWJsZXMgdG8g
-a2VlcCBjb250cm9sbGVycyBvZiBlYWNoIGZhbWlseSBncm91cGVkIHRvZ2V0aGVyLg0KDQphbmQg
-dGhpcyBwYXRjaCByZW1vdmVkIHRoZSBkZXZpY2U6DQpkNTc0N2UwYWEwZTUyZmMwN2FjNGI0Y2Fl
-NDBjNzBhYzk2OTdmMmZjDQpTdWJqZWN0OiBbUEFUQ0ggMTk5LzQ3OF0gW1NDU0ldIGhwc2E6IHJl
-bW92ZSBQODIyc2UgUENJIElEDQoNClJlbW92ZSBQQ0kgSUQgZm9yIHRoZSBuZXZlciBzaGlwcGVk
-IFA4MjJzZS4NCg0KVGhhbmtzLA0KRG9uIEJyYWNlDQpFU0MgLSBTbWFydCBTdG9yYWdlDQpNaWNy
-b3NlbWkgQ29ycG9yYXRpb24NCj4gDQo+IA0KPiA+DQo+ID4gPiAtLS0NCj4gPiA+ICBkcml2ZXJz
-L3Njc2kvaHBzYS5jIHwgICAgNCArKysrDQo+ID4gPiAgMSBmaWxlIGNoYW5nZWQsIDQgaW5zZXJ0
-aW9ucygrKQ0KPiA+ID4NCj4gPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvaHBzYS5jIGIv
-ZHJpdmVycy9zY3NpL2hwc2EuYw0KPiA+ID4gaW5kZXggMGQwYmU3Ny4uNjY4Y2Y0NyAxMDA2NDQN
-Cj4gPiA+IC0tLSBhL2RyaXZlcnMvc2NzaS9ocHNhLmMNCj4gPiA+ICsrKyBiL2RyaXZlcnMvc2Nz
-aS9ocHNhLmMNCj4gPiA+IEBAIC0xMDgsMTAgKzEwOCwxMiBAQCBzdGF0aWMgY29uc3Qgc3RydWN0
-IHBjaV9kZXZpY2VfaWQNCj4gPiBocHNhX3BjaV9kZXZpY2VfaWRbXSA9IHsNCj4gPiA+ICAgICAg
-IHtQQ0lfVkVORE9SX0lEX0hQLCAgICAgUENJX0RFVklDRV9JRF9IUF9DSVNTRiwgICAgIDB4MTAz
-QywgMHgzMzU0fSwNCj4gPiA+ICAgICAgIHtQQ0lfVkVORE9SX0lEX0hQLCAgICAgUENJX0RFVklD
-RV9JRF9IUF9DSVNTRiwgICAgIDB4MTAzQywgMHgzMzU1fSwNCj4gPiA+ICAgICAgIHtQQ0lfVkVO
-RE9SX0lEX0hQLCAgICAgUENJX0RFVklDRV9JRF9IUF9DSVNTRiwgICAgIDB4MTAzQywgMHgzMzU2
-fSwNCj4gPiA+ICsgICAgIHtQQ0lfVkVORE9SX0lEX0hQLCAgICAgUENJX0RFVklDRV9JRF9IUF9D
-SVNTSCwgICAgIDB4MTAzYywNCj4gMHgxOTIwfSwNCj4gPiA+ICAgICAgIHtQQ0lfVkVORE9SX0lE
-X0hQLCAgICAgUENJX0RFVklDRV9JRF9IUF9DSVNTSCwgICAgIDB4MTAzQywNCj4gMHgxOTIxfSwN
-Cj4gPiA+ICAgICAgIHtQQ0lfVkVORE9SX0lEX0hQLCAgICAgUENJX0RFVklDRV9JRF9IUF9DSVNT
-SCwgICAgIDB4MTAzQywNCj4gMHgxOTIyfSwNCj4gPiA+ICAgICAgIHtQQ0lfVkVORE9SX0lEX0hQ
-LCAgICAgUENJX0RFVklDRV9JRF9IUF9DSVNTSCwgICAgIDB4MTAzQywNCj4gMHgxOTIzfSwNCj4g
-PiA+ICAgICAgIHtQQ0lfVkVORE9SX0lEX0hQLCAgICAgUENJX0RFVklDRV9JRF9IUF9DSVNTSCwg
-ICAgIDB4MTAzQywNCj4gMHgxOTI0fSwNCj4gPiA+ICsgICAgIHtQQ0lfVkVORE9SX0lEX0hQLCAg
-ICAgUENJX0RFVklDRV9JRF9IUF9DSVNTSCwgICAgIDB4MTAzYywNCj4gMHgxOTI1fSwNCj4gPiA+
-ICAgICAgIHtQQ0lfVkVORE9SX0lEX0hQLCAgICAgUENJX0RFVklDRV9JRF9IUF9DSVNTSCwgICAg
-IDB4MTAzQywNCj4gMHgxOTI2fSwNCj4gPiA+ICAgICAgIHtQQ0lfVkVORE9SX0lEX0hQLCAgICAg
-UENJX0RFVklDRV9JRF9IUF9DSVNTSCwgICAgIDB4MTAzQywNCj4gMHgxOTI4fSwNCj4gPiA+ICAg
-ICAgIHtQQ0lfVkVORE9SX0lEX0hQLCAgICAgUENJX0RFVklDRV9JRF9IUF9DSVNTSCwgICAgIDB4
-MTAzQywNCj4gMHgxOTI5fSwNCj4gPiA+IEBAIC0xNzEsMTAgKzE3MywxMiBAQCBzdGF0aWMgc3Ry
-dWN0IGJvYXJkX3R5cGUgcHJvZHVjdHNbXSA9IHsNCj4gPiA+ICAgICAgIHsweDMzNTQxMDNDLCAi
-U21hcnQgQXJyYXkgUDQyMGkiLCAmU0E1X2FjY2Vzc30sDQo+ID4gPiAgICAgICB7MHgzMzU1MTAz
-QywgIlNtYXJ0IEFycmF5IFAyMjBpIiwgJlNBNV9hY2Nlc3N9LA0KPiA+ID4gICAgICAgezB4MzM1
-NjEwM0MsICJTbWFydCBBcnJheSBQNzIxbSIsICZTQTVfYWNjZXNzfSwNCj4gPiA+ICsgICAgIHsw
-eDE5MjAxMDNDLCAiU21hcnQgQXJyYXkgUDQzMGkiLCAmU0E1X2FjY2Vzc30sDQo+ID4gPiAgICAg
-ICB7MHgxOTIxMTAzQywgIlNtYXJ0IEFycmF5IFA4MzBpIiwgJlNBNV9hY2Nlc3N9LA0KPiA+ID4g
-ICAgICAgezB4MTkyMjEwM0MsICJTbWFydCBBcnJheSBQNDMwIiwgJlNBNV9hY2Nlc3N9LA0KPiA+
-ID4gICAgICAgezB4MTkyMzEwM0MsICJTbWFydCBBcnJheSBQNDMxIiwgJlNBNV9hY2Nlc3N9LA0K
-PiA+ID4gICAgICAgezB4MTkyNDEwM0MsICJTbWFydCBBcnJheSBQODMwIiwgJlNBNV9hY2Nlc3N9
-LA0KPiA+ID4gKyAgICAgezB4MTkyNTEwM0MsICJTbWFydCBBcnJheSBQODMxIiwgJlNBNV9hY2Nl
-c3N9LA0KPiA+ID4gICAgICAgezB4MTkyNjEwM0MsICJTbWFydCBBcnJheSBQNzMxbSIsICZTQTVf
-YWNjZXNzfSwNCj4gPiA+ICAgICAgIHsweDE5MjgxMDNDLCAiU21hcnQgQXJyYXkgUDIzMGkiLCAm
-U0E1X2FjY2Vzc30sDQo+ID4gPiAgICAgICB7MHgxOTI5MTAzQywgIlNtYXJ0IEFycmF5IFA1MzAi
-LCAmU0E1X2FjY2Vzc30sDQo+ID4gPg0KDQo=
+On Wed, 2017-03-29 at 16:51 +0200, Paolo Bonzini wrote:
+> On 28/03/2017 20:50, Bart Van Assche wrote:
+> > This means that just like the start and end of a discard must be aligne=
+d on a
+> > discard_granularity boundary, WRITE SAME commands with the UNMAP bit se=
+t must
+> > also respect that granularity. I think this means that either
+> > __blkdev_issue_zeroout() has to be modified such that it rejects unalig=
+ned
+> > REQ_OP_WRITE_ZEROES operations or that blk_bio_write_same_split() has t=
+o be
+> > modified such that it generates REQ_OP_WRITEs for the unaligned start a=
+nd tail.
+>=20
+> I don't think this is the case.
+
+Hello Paolo,
+
+Can you cite the section(s) from the SCSI specs that support your view? I
+reread the "5.49 WRITE SAME (10) command" and "4.7.3.4.4 WRITE SAME command
+and unmap operations" sections but I have not found any explicit statement
+that specifies the behavior for unaligned WRITE SAME commands with the UNMA=
+P
+bit set. It seems to me like=A0the OPTIMAL UNMAP GRANULARITY parameter was
+overlooked when both sections were written. Should we ask the T10 committee
+for a clarification?
+
+Another question is, if the specification of WRITE SAME + UNMAP would be
+made unambiguous in the SBC document, whether or not we should take the ris=
+k
+to trigger behavior that is not what we expect by sending unaligned WRITE
+SAME + UNMAP commands to SCSI devices?
+
+Thanks,
+
+Bart.=
