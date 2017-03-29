@@ -1,41 +1,37 @@
-From: sonofagun@openmailbox.org
-Subject: Re: Delock 89384 Sata Controller Causes Lockups Under Heavy Load
-Date: Wed, 29 Mar 2017 16:43:02 +0300
-Message-ID: <158d56db94baac238e35093d0223066b@openmailbox.org>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH 03/23] sd: implement REQ_OP_WRITE_ZEROES
+Date: Wed, 29 Mar 2017 16:51:50 +0200
+Message-ID: <e19ca1bf-0908-1eb0-cb04-cd306692f216@redhat.com>
+References: <20170323143341.31549-1-hch@lst.de>
+ <20170323143341.31549-4-hch@lst.de> <1490726988.2573.16.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lb1.openmailbox.org ([5.79.108.160]:43558 "EHLO
-        mail.openmailbox.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753680AbdC2NnG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Mar 2017 09:43:06 -0400
-Received: from www.openmailbox.org (unknown [10.0.0.4])
-        by mail.openmailbox.org (Postfix) with ESMTP id 9D41A512148
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2017 15:43:02 +0200 (CEST)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <1490726988.2573.16.camel@sandisk.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "agk@redhat.com" <agk@redhat.com>, "lars.ellenberg@linbit.com" <lars.ellenberg@linbit.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "philipp.reisner@linbit.com" <philipp.reisner@linbit.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "shli@kernel.org" <shli@kernel.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
 
-Hello there, I am new to this list too! Despite that, I think I can help 
-you.
 
-It is more likely that the issue is caused by the ASMedia controller or 
-the disks. I have such a controller but it might not be the same 
-revision.
+On 28/03/2017 20:50, Bart Van Assche wrote:
+> 
+> This means that just like the start and end of a discard must be aligned on a
+> discard_granularity boundary, WRITE SAME commands with the UNMAP bit set must
+> also respect that granularity. I think this means that either
+> __blkdev_issue_zeroout() has to be modified such that it rejects unaligned
+> REQ_OP_WRITE_ZEROES operations or that blk_bio_write_same_split() has to be
+> modified such that it generates REQ_OP_WRITEs for the unaligned start and tail.
 
-If the controller is causing the lockup, I can try something but I will 
-need more information to verify my thought. First of all send here the 
-output of:
-lspci -nn
-and I will tell you later what else is needed.
+I don't think this is the case.
 
-If the disks are causing the lockup, I can tell you which one is the 
-faulty disk(s). For each attached disk send the output of:
-sudo smartctl -a /dev/sd*
+Rather, Linux should try to align the WRITE SAME commands to the optimal
+unmap granularity if the zeroed area requires performing more than one
+WRITE SAME command (i.e. > maximum write same length or too large to fit
+in the CDB).  However, even in that case it can use WRITE SAME with
+UNMAP for the unaligned start and tail.  Unlike the UNMAP command, the
+SCSI standard does guarantee that zeroes are written in the unaligned parts.
 
-I hope that your disks are fine as you will have a lot of job to do 
-prior RMA if anyone is dying. It might be a good idea to find their 
-receipts...
+Paolo
