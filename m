@@ -1,38 +1,75 @@
-From: Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: RFC: always use REQ_OP_WRITE_ZEROES for zeroing
-	offload
-Date: Thu, 30 Mar 2017 11:38:51 -0400
-Message-ID: <20170330153850.GA1031@redhat.com>
-References: <20170323143341.31549-1-hch@lst.de>
-	<20170330151257.GA910@redhat.com> <yq1lgrm3i36.fsf@oracle.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH 1/2] iscsi-target: Fix TMR reference leak during session
+ shutdown
+Date: Thu, 30 Mar 2017 17:08:10 +0000
+Message-ID: <1490893673.2753.8.camel@sandisk.com>
+References: <1490862594-2712-1-git-send-email-nab@linux-iscsi.org>
+         <1490862594-2712-2-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <yq1lgrm3i36.fsf-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1490862594-2712-2-git-send-email-nab@linux-iscsi.org>
+Content-Language: en-US
+Content-ID: <AB1B9C4A9F262640875441870FD55222@sandisk.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "cyl@datera.io" <cyl@datera.io>, "jcs@datera.io" <jcs@datera.io>, "rlm@daterainc.com" <rlm@daterainc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Mar 30 2017 at 11:22am -0400,
-Martin K. Petersen <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org> wrote:
+On Thu, 2017-03-30 at 08:29 +0000, Nicholas A. Bellinger wrote:
+> diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/is=
+csi/iscsi_target_util.c
+> index 5041a9c..b464033 100644
+> --- a/drivers/target/iscsi/iscsi_target_util.c
+> +++ b/drivers/target/iscsi/iscsi_target_util.c
+> @@ -737,21 +737,23 @@ void iscsit_free_cmd(struct iscsi_cmd *cmd, bool sh=
+utdown)
+>  {
+>  	struct se_cmd *se_cmd =3D NULL;
+>  	int rc;
+> +	bool op_scsi =3D false;
+>  	/*
+>  	 * Determine if a struct se_cmd is associated with
+>  	 * this struct iscsi_cmd.
+>  	 */
+>  	switch (cmd->iscsi_opcode) {
+>  	case ISCSI_OP_SCSI_CMD:
+> -		se_cmd =3D &cmd->se_cmd;
+> -		__iscsit_free_cmd(cmd, true, shutdown);
+> +		op_scsi =3D true;
+>  		/*
+>  		 * Fallthrough
+>  		 */
+>  	case ISCSI_OP_SCSI_TMFUNC:
+> -		rc =3D transport_generic_free_cmd(&cmd->se_cmd, shutdown);
+> -		if (!rc && shutdown && se_cmd && se_cmd->se_sess) {
+> -			__iscsit_free_cmd(cmd, true, shutdown);
+> +		se_cmd =3D &cmd->se_cmd;
+> +		__iscsit_free_cmd(cmd, op_scsi, shutdown);
+> +		rc =3D transport_generic_free_cmd(se_cmd, shutdown);
+> +		if (!rc && shutdown && se_cmd->se_sess) {
+> +			__iscsit_free_cmd(cmd, op_scsi, shutdown);
+>  			target_put_sess_cmd(se_cmd);
+>  		}
+>  		break;
 
-> Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
-> 
-> > Would be very useful, particularly for testing, if
-> > drivers/scsi/scsi_debug.c were updated to support WRITE ZEROES.
-> 
-> There is no WRITE ZEROES in SCSI. You should be able to get the right
-> behavior with lbpws=1 lbprz=1.
+Hello Nic,
 
-OK, thanks.
+I agree that this patch fixes a leak. However, an existing bug in
+iscsit_free_cmd() is not addressed by this patch. Before the TMF code start=
+ed
+using kref_get() / kref_put() it was possible for transport_generic_free_cm=
+d()
+to determine whether or not iscsit_free_cmd() should call __iscsit_free_cmd=
+()
+by checking the command reference count. I think that since the TMF code
+manipulates the command reference count it is no longer possible for
+transport_generic_free_cmd() to determine this. If iscsit_free_cmd() is cal=
+led
+while a LUN RESET is in progress then the return value of
+transport_generic_free_cmd() will be wrong. I will post a few patches that =
+not
+only address what I just described but also the leak fixed by this patch.
+
+Bart.=
