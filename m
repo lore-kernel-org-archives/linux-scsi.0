@@ -1,293 +1,139 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [RFC 3/8] nvmet: Use p2pmem in nvme target
-Date: Thu, 30 Mar 2017 16:12:34 -0600
-Message-ID: <1490911959-5146-4-git-send-email-logang@deltatee.com>
+Subject: [RFC 4/8] p2pmem: Add debugfs "stats" file
+Date: Thu, 30 Mar 2017 16:12:35 -0600
+Message-ID: <1490911959-5146-5-git-send-email-logang@deltatee.com>
 References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1490911959-5146-1-git-send-email-logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, Stephen Bates <sbates-pv7U853sEMVWk0Htik3J/w@public.gmane.org>, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+Cc: linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-We create a configfs attribute in each nvme-fabrics target port to
-enable p2p memory use. When enabled, the port will only then use the
-p2p memory if a p2p memory device can be found which is behind the
-same switch as the RDMA port and all the block devices in use. If
-the user enabled it an no devices are found, then the system will
-silently fall back on using regular memory.
+From: Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>
 
-If appropriate, that port will allocate memory for the RDMA buffers
-for queues from the p2pmem device falling back to system memory should
-anything fail.
+For each p2pmem instance, add a "stats" file to show
+the gen_pool statistics.
 
-Ideally, we'd want to use an NVME CMB buffer as p2p memory. This would
-save an extra PCI transfer as the NVME card could just take the data
-out of it's own memory. However, at this time, cards with CMB buffers
-don't seem to be available.
-
+Signed-off-by: Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
 Signed-off-by: Stephen Bates <sbates-pv7U853sEMVWk0Htik3J/w@public.gmane.org>
-Signed-off-by: Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>
 ---
- drivers/nvme/target/configfs.c | 31 +++++++++++++++
- drivers/nvme/target/nvmet.h    |  1 +
- drivers/nvme/target/rdma.c     | 90 ++++++++++++++++++++++++++++++++++++++----
- 3 files changed, 114 insertions(+), 8 deletions(-)
+ drivers/memory/p2pmem.c | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/p2pmem.h  |  2 ++
+ 2 files changed, 51 insertions(+)
 
-diff --git a/drivers/nvme/target/configfs.c b/drivers/nvme/target/configfs.c
-index be8c800..e61a7f4 100644
---- a/drivers/nvme/target/configfs.c
-+++ b/drivers/nvme/target/configfs.c
-@@ -777,12 +777,43 @@ static void nvmet_port_release(struct config_item *item)
- 	kfree(port);
- }
+diff --git a/drivers/memory/p2pmem.c b/drivers/memory/p2pmem.c
+index c4ea311..71741c2 100644
+--- a/drivers/memory/p2pmem.c
++++ b/drivers/memory/p2pmem.c
+@@ -18,6 +18,7 @@
+ #include <linux/slab.h>
+ #include <linux/genalloc.h>
+ #include <linux/memremap.h>
++#include <linux/debugfs.h>
  
-+#ifdef CONFIG_P2PMEM
-+static ssize_t nvmet_allow_p2pmem_show(struct config_item *item, char *page)
+ MODULE_DESCRIPTION("Peer 2 Peer Memory Device");
+ MODULE_VERSION("0.1");
+@@ -27,6 +28,40 @@ MODULE_AUTHOR("Microsemi Corporation");
+ static struct class *p2pmem_class;
+ static DEFINE_IDA(p2pmem_ida);
+ 
++static struct dentry *p2pmem_debugfs_root;
++
++static int stats_show(struct seq_file *seq, void *v)
 +{
-+	return sprintf(page, "%d\n", to_nvmet_port(item)->allow_p2pmem);
++	struct p2pmem_dev *p = seq->private;
++
++	if (p->pool) {
++		seq_printf(seq, "total size: %lu\n", gen_pool_size(p->pool));
++		seq_printf(seq, "available:  %lu\n", gen_pool_avail(p->pool));
++	}
++	return 0;
 +}
 +
-+static ssize_t nvmet_allow_p2pmem_store(struct config_item *item,
-+					const char *page, size_t count)
++static int stats_open(struct inode *inode, struct file *file)
 +{
-+	struct nvmet_port *port = to_nvmet_port(item);
-+	bool allow;
-+	int ret;
-+
-+	ret = strtobool(page, &allow);
-+	if (ret)
-+		return ret;
-+
-+	down_write(&nvmet_config_sem);
-+	port->allow_p2pmem = allow;
-+	up_write(&nvmet_config_sem);
-+
-+	return count;
-+}
-+CONFIGFS_ATTR(nvmet_, allow_p2pmem);
-+#endif
-+
- static struct configfs_attribute *nvmet_port_attrs[] = {
- 	&nvmet_attr_addr_adrfam,
- 	&nvmet_attr_addr_treq,
- 	&nvmet_attr_addr_traddr,
- 	&nvmet_attr_addr_trsvcid,
- 	&nvmet_attr_addr_trtype,
-+
-+	#ifdef CONFIG_P2PMEM
-+	&nvmet_attr_allow_p2pmem,
-+	#endif
-+
- 	NULL,
- };
- 
-diff --git a/drivers/nvme/target/nvmet.h b/drivers/nvme/target/nvmet.h
-index f7ff15f..ab67175 100644
---- a/drivers/nvme/target/nvmet.h
-+++ b/drivers/nvme/target/nvmet.h
-@@ -95,6 +95,7 @@ struct nvmet_port {
- 	struct list_head		referrals;
- 	void				*priv;
- 	bool				enabled;
-+	bool				allow_p2pmem;
- };
- 
- static inline struct nvmet_port *to_nvmet_port(struct config_item *item)
-diff --git a/drivers/nvme/target/rdma.c b/drivers/nvme/target/rdma.c
-index ecc4fe8..7fd4840 100644
---- a/drivers/nvme/target/rdma.c
-+++ b/drivers/nvme/target/rdma.c
-@@ -23,6 +23,7 @@
- #include <linux/string.h>
- #include <linux/wait.h>
- #include <linux/inet.h>
-+#include <linux/p2pmem.h>
- #include <asm/unaligned.h>
- 
- #include <rdma/ib_verbs.h>
-@@ -64,6 +65,7 @@ struct nvmet_rdma_rsp {
- 	struct rdma_rw_ctx	rw;
- 
- 	struct nvmet_req	req;
-+	struct p2pmem_dev       *p2pmem;
- 
- 	u8			n_rdma;
- 	u32			flags;
-@@ -107,6 +109,8 @@ struct nvmet_rdma_queue {
- 	int			send_queue_size;
- 
- 	struct list_head	queue_list;
-+
-+	struct p2pmem_dev	*p2pmem;
- };
- 
- struct nvmet_rdma_device {
-@@ -185,7 +189,8 @@ nvmet_rdma_put_rsp(struct nvmet_rdma_rsp *rsp)
- 	spin_unlock_irqrestore(&rsp->queue->rsps_lock, flags);
- }
- 
--static void nvmet_rdma_free_sgl(struct scatterlist *sgl, unsigned int nents)
-+static void nvmet_rdma_free_sgl(struct scatterlist *sgl, unsigned int nents,
-+				struct p2pmem_dev *p2pmem)
- {
- 	struct scatterlist *sg;
- 	int count;
-@@ -193,13 +198,17 @@ static void nvmet_rdma_free_sgl(struct scatterlist *sgl, unsigned int nents)
- 	if (!sgl || !nents)
- 		return;
- 
--	for_each_sg(sgl, sg, nents, count)
--		__free_page(sg_page(sg));
-+	for_each_sg(sgl, sg, nents, count) {
-+		if (p2pmem)
-+			p2pmem_free_page(p2pmem, sg_page(sg));
-+		else
-+			__free_page(sg_page(sg));
-+	}
- 	kfree(sgl);
- }
- 
- static int nvmet_rdma_alloc_sgl(struct scatterlist **sgl, unsigned int *nents,
--		u32 length)
-+		u32 length, struct p2pmem_dev *p2pmem)
- {
- 	struct scatterlist *sg;
- 	struct page *page;
-@@ -216,7 +225,11 @@ static int nvmet_rdma_alloc_sgl(struct scatterlist **sgl, unsigned int *nents,
- 	while (length) {
- 		u32 page_len = min_t(u32, length, PAGE_SIZE);
- 
--		page = alloc_page(GFP_KERNEL);
-+		if (p2pmem)
-+			page = p2pmem_alloc_page(p2pmem);
-+		else
-+			page = alloc_page(GFP_KERNEL);
-+
- 		if (!page)
- 			goto out_free_pages;
- 
-@@ -231,7 +244,10 @@ static int nvmet_rdma_alloc_sgl(struct scatterlist **sgl, unsigned int *nents,
- out_free_pages:
- 	while (i > 0) {
- 		i--;
--		__free_page(sg_page(&sg[i]));
-+		if (p2pmem)
-+			p2pmem_free_page(p2pmem, sg_page(&sg[i]));
-+		else
-+			__free_page(sg_page(&sg[i]));
- 	}
- 	kfree(sg);
- out:
-@@ -484,7 +500,8 @@ static void nvmet_rdma_release_rsp(struct nvmet_rdma_rsp *rsp)
- 	}
- 
- 	if (rsp->req.sg != &rsp->cmd->inline_sg)
--		nvmet_rdma_free_sgl(rsp->req.sg, rsp->req.sg_cnt);
-+		nvmet_rdma_free_sgl(rsp->req.sg, rsp->req.sg_cnt,
-+				    rsp->p2pmem);
- 
- 	if (unlikely(!list_empty_careful(&queue->rsp_wr_wait_list)))
- 		nvmet_rdma_process_wr_wait_list(queue);
-@@ -625,8 +642,16 @@ static u16 nvmet_rdma_map_sgl_keyed(struct nvmet_rdma_rsp *rsp,
- 	if (!len)
- 		return 0;
- 
-+	rsp->p2pmem = rsp->queue->p2pmem;
- 	status = nvmet_rdma_alloc_sgl(&rsp->req.sg, &rsp->req.sg_cnt,
--			len);
-+			len, rsp->p2pmem);
-+
-+	if (status && rsp->p2pmem) {
-+		rsp->p2pmem = NULL;
-+		status = nvmet_rdma_alloc_sgl(&rsp->req.sg, &rsp->req.sg_cnt,
-+					      len, rsp->p2pmem);
-+	}
-+
- 	if (status)
- 		return status;
- 
-@@ -984,6 +1009,7 @@ static void nvmet_rdma_free_queue(struct nvmet_rdma_queue *queue)
- 				!queue->host_qid);
- 	}
- 	nvmet_rdma_free_rsps(queue);
-+	p2pmem_put(queue->p2pmem);
- 	ida_simple_remove(&nvmet_rdma_queue_ida, queue->idx);
- 	kfree(queue);
- }
-@@ -1179,6 +1205,52 @@ static int nvmet_rdma_cm_accept(struct rdma_cm_id *cm_id,
- 	return ret;
- }
- 
-+/*
-+ * If allow_p2pmem is set, we will try to use P2P memory for our
-+ * sgl lists. This requires the p2pmem device to be compatible with
-+ * the backing device for every namespace this device will support.
-+ * If not, we fall back on using system memory.
-+ */
-+static void nvmet_rdma_queue_setup_p2pmem(struct nvmet_rdma_queue *queue)
-+{
-+	struct device **dma_devs;
-+	struct nvmet_ns *ns;
-+	int ndevs = 1;
-+	int i = 0;
-+	struct nvmet_subsys_link *s;
-+
-+	if (!queue->port->allow_p2pmem)
-+		return;
-+
-+	list_for_each_entry(s, &queue->port->subsystems, entry) {
-+		list_for_each_entry_rcu(ns, &s->subsys->namespaces, dev_link) {
-+			ndevs++;
-+		}
-+	}
-+
-+	dma_devs = kmalloc((ndevs + 1) * sizeof(*dma_devs), GFP_KERNEL);
-+	if (!dma_devs)
-+		return;
-+
-+	dma_devs[i++] = &queue->dev->device->dev;
-+
-+	list_for_each_entry(s, &queue->port->subsystems, entry) {
-+		list_for_each_entry_rcu(ns, &s->subsys->namespaces, dev_link) {
-+			dma_devs[i++] = disk_to_dev(ns->bdev->bd_disk);
-+		}
-+	}
-+
-+	dma_devs[i++] = NULL;
-+
-+	queue->p2pmem = p2pmem_find_compat(dma_devs);
-+
-+	if (queue->p2pmem)
-+		pr_debug("using %s for rdma nvme target queue",
-+			 dev_name(&queue->p2pmem->dev));
-+
-+	kfree(dma_devs);
++	return single_open(file, stats_show, inode->i_private);
 +}
 +
- static int nvmet_rdma_queue_connect(struct rdma_cm_id *cm_id,
- 		struct rdma_cm_event *event)
- {
-@@ -1199,6 +1271,8 @@ static int nvmet_rdma_queue_connect(struct rdma_cm_id *cm_id,
- 	}
- 	queue->port = cm_id->context;
- 
-+	nvmet_rdma_queue_setup_p2pmem(queue);
++static const struct file_operations stats_debugfs_fops = {
++	.owner   = THIS_MODULE,
++	.open    = stats_open,
++	.release = single_release,
++	.read	 = seq_read,
++	.llseek  = seq_lseek,
++};
 +
- 	ret = nvmet_rdma_cm_accept(cm_id, queue, &event->param.conn);
- 	if (ret)
- 		goto release_queue;
++static void setup_debugfs(struct p2pmem_dev *p)
++{
++	struct dentry *de;
++
++	de = debugfs_create_file("stats", 0400, p->debugfs_root,
++				 (void *)p, &stats_debugfs_fops);
++}
++
+ static struct p2pmem_dev *to_p2pmem(struct device *dev)
+ {
+ 	return container_of(dev, struct p2pmem_dev, dev);
+@@ -62,6 +97,8 @@ static void p2pmem_release(struct device *dev)
+ {
+ 	struct p2pmem_dev *p = to_p2pmem(dev);
+ 
++	debugfs_remove_recursive(p->debugfs_root);
++
+ 	if (p->pool)
+ 		gen_pool_destroy(p->pool);
+ 
+@@ -114,6 +151,13 @@ struct p2pmem_dev *p2pmem_create(struct device *parent)
+ 	if (rc)
+ 		goto err_id;
+ 
++	if (p2pmem_debugfs_root) {
++		p->debugfs_root = debugfs_create_dir(dev_name(&p->dev),
++						     p2pmem_debugfs_root);
++		if (p->debugfs_root)
++			setup_debugfs(p);
++	}
++
+ 	rc = device_add(&p->dev);
+ 	if (rc)
+ 		goto err_id;
+@@ -390,12 +434,17 @@ static int __init p2pmem_init(void)
+ 	if (IS_ERR(p2pmem_class))
+ 		return PTR_ERR(p2pmem_class);
+ 
++	p2pmem_debugfs_root = debugfs_create_dir("p2pmem", NULL);
++	if (!p2pmem_debugfs_root)
++		pr_info("could not create debugfs entry, continuing\n");
++
+ 	return 0;
+ }
+ module_init(p2pmem_init);
+ 
+ static void __exit p2pmem_exit(void)
+ {
++	debugfs_remove_recursive(p2pmem_debugfs_root);
+ 	class_destroy(p2pmem_class);
+ 
+ 	pr_info(KBUILD_MODNAME ": unloaded.\n");
+diff --git a/include/linux/p2pmem.h b/include/linux/p2pmem.h
+index 71dc1e1..4cd6f35 100644
+--- a/include/linux/p2pmem.h
++++ b/include/linux/p2pmem.h
+@@ -26,6 +26,8 @@ struct p2pmem_dev {
+ 	struct percpu_ref ref;
+ 	struct completion cmp;
+ 	struct gen_pool *pool;
++
++	struct dentry *debugfs_root;
+ };
+ 
+ #ifdef CONFIG_P2PMEM
 -- 
 2.1.4
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
