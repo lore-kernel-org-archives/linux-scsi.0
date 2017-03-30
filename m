@@ -1,29 +1,24 @@
-From: "hch@lst.de" <hch@lst.de>
-Subject: Re: [PATCH 1/7] =?utf-8?B?0ZVk?=
-        =?utf-8?Q?=3A?= split sd_setup_discard_cmnd
-Date: Thu, 30 Mar 2017 10:49:43 +0200
-Message-ID: <20170330084943.GA12015@lst.de>
-References: <20170320204319.12628-1-hch@lst.de> <20170320204319.12628-2-hch@lst.de> <1490653474.7897.13.camel@sandisk.com> <20170328140509.GA27578@kernel.dk>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] be2iscsi: switch to pci_alloc_irq_vectors
+Date: Thu, 30 Mar 2017 10:47:33 +0200
+Message-ID: <20170330084733.GA11989@lst.de>
+References: <1484324988-30962-1-git-send-email-hch@lst.de> <yq1lgu5gswf.fsf@oracle.com> <29f55cdbd89162f2885494cd7d0472db@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:56582 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753985AbdC3Irg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 30 Mar 2017 04:47:36 -0400
 Content-Disposition: inline
-In-Reply-To: <20170328140509.GA27578@kernel.dk>
-Sender: linux-block-owner@vger.kernel.org
-To: "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: Bart Van Assche <Bart.VanAssche@sandisk.com>, "hch@lst.de" <hch@lst.de>, "tj@kernel.org" <tj@kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+In-Reply-To: <29f55cdbd89162f2885494cd7d0472db@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Subramanian Seetharaman <subbu.seetharaman@broadcom.com>, Ketan Mukadam <ketan.mukadam@broadcom.com>, linux-scsi@vger.kernel.org
 
-On Tue, Mar 28, 2017 at 08:05:09AM -0600, axboe@kernel.dk wrote:
-> > Although I know this is an issue in the existing code and not something
-> > introduced by you: please consider using logical_to_sectors() instead of
-> > open-coding this function. Otherwise this patch looks fine to me.
-> 
-> The downside of doing that is that we still call ilog2() twice, which
-> sucks. Would be faster to cache ilog2(sector_size) and use that in the
-> shift calculation.
+On Mon, Jan 23, 2017 at 09:41:45AM +0530, Jitendra Bhivare wrote:
+> We will be taking this up along with some other changes in the same area.
 
-I suspect that gcc is smart enough to optimize it away.  That beeing said
-while this looks like a nice cleanup this patch is just supposed to move
-code, so I'd rather not add the change here and leave it for a separate
-submission.
+Any progress on that? I'd like to get be2iscsi off the old MSI-X API
+for 4.12.
