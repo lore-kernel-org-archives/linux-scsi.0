@@ -1,7 +1,8 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [RFC 5/8] scatterlist: Modify SG copy functions to support io memory.
-Date: Thu, 30 Mar 2017 16:12:36 -0600
-Message-ID: <1490911959-5146-6-git-send-email-logang@deltatee.com>
+Subject: [RFC 6/8] nvmet: Be careful about using iomem accesses when dealing
+ with p2pmem
+Date: Thu, 30 Mar 2017 16:12:37 -0600
+Message-ID: <1490911959-5146-7-git-send-email-logang@deltatee.com>
 References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,184 +22,193 @@ To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Sagi Grimberg <sagi-NQ
 Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Now that we are using p2pmem SG buffers we occasionally have to copy
-to and from this memory. For this, we add an iomem flag to
-sg_copy_buffer for copying with iomemcpy. We also add the sg_iocopy_
-variants to use this more easily.
+p2pmem will always be iomem so if we ever access it, we should be using
+the correct methods to read and write to it.
 
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
 Signed-off-by: Stephen Bates <sbates-pv7U853sEMVWk0Htik3J/w@public.gmane.org>
 Signed-off-by: Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>
 ---
- drivers/scsi/scsi_debug.c   |  7 ++---
- include/linux/scatterlist.h |  7 ++++-
- lib/scatterlist.c           | 64 ++++++++++++++++++++++++++++++++++++++-------
- 3 files changed, 65 insertions(+), 13 deletions(-)
+ drivers/nvme/target/core.c        | 18 ++++++++++++++++--
+ drivers/nvme/target/fabrics-cmd.c | 28 +++++++++++++++-------------
+ drivers/nvme/target/nvmet.h       |  1 +
+ drivers/nvme/target/rdma.c        | 13 ++++++-------
+ 4 files changed, 38 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 17249c3..70c0d9f 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -1309,7 +1309,7 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 		int lu_id_num, port_group_id, target_dev_id, len;
- 		char lu_id_str[6];
- 		int host_no = devip->sdbg_host->shost->host_no;
--		
+diff --git a/drivers/nvme/target/core.c b/drivers/nvme/target/core.c
+index 798653b..a1524d5 100644
+--- a/drivers/nvme/target/core.c
++++ b/drivers/nvme/target/core.c
+@@ -45,15 +45,29 @@ static struct nvmet_subsys *nvmet_find_get_subsys(struct nvmet_port *port,
+ u16 nvmet_copy_to_sgl(struct nvmet_req *req, off_t off, const void *buf,
+ 		size_t len)
+ {
+-	if (sg_pcopy_from_buffer(req->sg, req->sg_cnt, buf, len, off) != len)
++	bool iomem = req->p2pmem;
++	size_t ret;
 +
- 		port_group_id = (((host_no + 1) & 0x7f) << 8) +
- 		    (devip->channel & 0x7f);
- 		if (sdebug_vpd_use_hostno == 0)
-@@ -2381,14 +2381,15 @@ static int do_device_access(struct scsi_cmnd *scmd, u64 lba, u32 num,
++	ret = sg_copy_buffer(req->sg, req->sg_cnt, (void *)buf, len, off,
++			     false, iomem);
++
++	if (ret != len)
+ 		return NVME_SC_SGL_INVALID_DATA | NVME_SC_DNR;
++
+ 	return 0;
+ }
  
- 	ret = sg_copy_buffer(sdb->table.sgl, sdb->table.nents,
- 		   fake_storep + (block * sdebug_sector_size),
--		   (num - rest) * sdebug_sector_size, 0, do_write);
-+		   (num - rest) * sdebug_sector_size, 0, do_write, false);
- 	if (ret != (num - rest) * sdebug_sector_size)
- 		return ret;
+ u16 nvmet_copy_from_sgl(struct nvmet_req *req, off_t off, void *buf, size_t len)
+ {
+-	if (sg_pcopy_to_buffer(req->sg, req->sg_cnt, buf, len, off) != len)
++	bool iomem = req->p2pmem;
++	size_t ret;
++
++	ret = sg_copy_buffer(req->sg, req->sg_cnt, buf, len, off, true,
++			     iomem);
++
++	if (ret != len)
+ 		return NVME_SC_SGL_INVALID_DATA | NVME_SC_DNR;
++
+ 	return 0;
+ }
  
- 	if (rest) {
- 		ret += sg_copy_buffer(sdb->table.sgl, sdb->table.nents,
- 			    fake_storep, rest * sdebug_sector_size,
--			    (num - rest) * sdebug_sector_size, do_write);
-+			    (num - rest) * sdebug_sector_size, do_write,
-+				      false);
+diff --git a/drivers/nvme/target/fabrics-cmd.c b/drivers/nvme/target/fabrics-cmd.c
+index 8bd022af..9d966f0 100644
+--- a/drivers/nvme/target/fabrics-cmd.c
++++ b/drivers/nvme/target/fabrics-cmd.c
+@@ -118,11 +118,13 @@ static u16 nvmet_install_queue(struct nvmet_ctrl *ctrl, struct nvmet_req *req)
+ static void nvmet_execute_admin_connect(struct nvmet_req *req)
+ {
+ 	struct nvmf_connect_command *c = &req->cmd->connect;
+-	struct nvmf_connect_data *d;
++	struct nvmf_connect_data d;
+ 	struct nvmet_ctrl *ctrl = NULL;
+ 	u16 status = 0;
+ 
+-	d = kmap(sg_page(req->sg)) + req->sg->offset;
++	status = nvmet_copy_from_sgl(req, 0, &d, sizeof(d));
++	if (status)
++		goto out;
+ 
+ 	/* zero out initial completion result, assign values as needed */
+ 	req->rsp->result.u32 = 0;
+@@ -134,16 +136,16 @@ static void nvmet_execute_admin_connect(struct nvmet_req *req)
+ 		goto out;
  	}
  
- 	return ret;
-diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
-index cb3c8fe..030b92b 100644
---- a/include/linux/scatterlist.h
-+++ b/include/linux/scatterlist.h
-@@ -267,7 +267,7 @@ int sg_alloc_table_from_pages(struct sg_table *sgt,
- 	gfp_t gfp_mask);
- 
- size_t sg_copy_buffer(struct scatterlist *sgl, unsigned int nents, void *buf,
--		      size_t buflen, off_t skip, bool to_buffer);
-+		      size_t buflen, off_t skip, bool to_buffer, bool iomem);
- 
- size_t sg_copy_from_buffer(struct scatterlist *sgl, unsigned int nents,
- 			   const void *buf, size_t buflen);
-@@ -279,6 +279,11 @@ size_t sg_pcopy_from_buffer(struct scatterlist *sgl, unsigned int nents,
- size_t sg_pcopy_to_buffer(struct scatterlist *sgl, unsigned int nents,
- 			  void *buf, size_t buflen, off_t skip);
- 
-+size_t sg_iocopy_from_buffer(struct scatterlist *sgl, unsigned int nents,
-+			     const void *buf, size_t buflen);
-+size_t sg_iocopy_to_buffer(struct scatterlist *sgl, unsigned int nents,
-+			   void *buf, size_t buflen);
-+
- /*
-  * Maximum number of entries that will be allocated in one piece, if
-  * a list larger than this is required then chaining will be utilized.
-diff --git a/lib/scatterlist.c b/lib/scatterlist.c
-index c6cf822..22abd94 100644
---- a/lib/scatterlist.c
-+++ b/lib/scatterlist.c
-@@ -647,7 +647,7 @@ EXPORT_SYMBOL(sg_miter_stop);
-  *
-  **/
- size_t sg_copy_buffer(struct scatterlist *sgl, unsigned int nents, void *buf,
--		      size_t buflen, off_t skip, bool to_buffer)
-+		      size_t buflen, off_t skip, bool to_buffer, bool iomem)
- {
- 	unsigned int offset = 0;
- 	struct sg_mapping_iter miter;
-@@ -668,10 +668,17 @@ size_t sg_copy_buffer(struct scatterlist *sgl, unsigned int nents, void *buf,
- 
- 		len = min(miter.length, buflen - offset);
- 
--		if (to_buffer)
--			memcpy(buf + offset, miter.addr, len);
--		else
--			memcpy(miter.addr, buf + offset, len);
-+		if (iomem) {
-+			if (to_buffer)
-+				memcpy_fromio(buf + offset,  miter.addr, len);
-+			else
-+				memcpy_toio(miter.addr, buf + offset, len);
-+		} else {
-+			if (to_buffer)
-+				memcpy(buf + offset, miter.addr, len);
-+			else
-+				memcpy(miter.addr, buf + offset, len);
-+		}
- 
- 		offset += len;
+-	if (unlikely(d->cntlid != cpu_to_le16(0xffff))) {
++	if (unlikely(d.cntlid != cpu_to_le16(0xffff))) {
+ 		pr_warn("connect attempt for invalid controller ID %#x\n",
+-			d->cntlid);
++			d.cntlid);
+ 		status = NVME_SC_CONNECT_INVALID_PARAM | NVME_SC_DNR;
+ 		req->rsp->result.u32 = IPO_IATTR_CONNECT_DATA(cntlid);
+ 		goto out;
  	}
-@@ -695,7 +702,8 @@ EXPORT_SYMBOL(sg_copy_buffer);
- size_t sg_copy_from_buffer(struct scatterlist *sgl, unsigned int nents,
- 			   const void *buf, size_t buflen)
- {
--	return sg_copy_buffer(sgl, nents, (void *)buf, buflen, 0, false);
-+	return sg_copy_buffer(sgl, nents, (void *)buf, buflen, 0, false,
-+			      false);
- }
- EXPORT_SYMBOL(sg_copy_from_buffer);
  
-@@ -712,7 +720,7 @@ EXPORT_SYMBOL(sg_copy_from_buffer);
- size_t sg_copy_to_buffer(struct scatterlist *sgl, unsigned int nents,
- 			 void *buf, size_t buflen)
- {
--	return sg_copy_buffer(sgl, nents, buf, buflen, 0, true);
-+	return sg_copy_buffer(sgl, nents, buf, buflen, 0, true, false);
- }
- EXPORT_SYMBOL(sg_copy_to_buffer);
+-	status = nvmet_alloc_ctrl(d->subsysnqn, d->hostnqn, req,
+-			le32_to_cpu(c->kato), &ctrl);
++	status = nvmet_alloc_ctrl(d.subsysnqn, d.hostnqn, req,
++				  le32_to_cpu(c->kato), &ctrl);
+ 	if (status)
+ 		goto out;
  
-@@ -730,7 +738,8 @@ EXPORT_SYMBOL(sg_copy_to_buffer);
- size_t sg_pcopy_from_buffer(struct scatterlist *sgl, unsigned int nents,
- 			    const void *buf, size_t buflen, off_t skip)
- {
--	return sg_copy_buffer(sgl, nents, (void *)buf, buflen, skip, false);
-+	return sg_copy_buffer(sgl, nents, (void *)buf, buflen, skip, false,
-+			      false);
- }
- EXPORT_SYMBOL(sg_pcopy_from_buffer);
+@@ -158,19 +160,20 @@ static void nvmet_execute_admin_connect(struct nvmet_req *req)
+ 	req->rsp->result.u16 = cpu_to_le16(ctrl->cntlid);
  
-@@ -748,6 +757,43 @@ EXPORT_SYMBOL(sg_pcopy_from_buffer);
- size_t sg_pcopy_to_buffer(struct scatterlist *sgl, unsigned int nents,
- 			  void *buf, size_t buflen, off_t skip)
- {
--	return sg_copy_buffer(sgl, nents, buf, buflen, skip, true);
-+	return sg_copy_buffer(sgl, nents, buf, buflen, skip, true, false);
+ out:
+-	kunmap(sg_page(req->sg));
+ 	nvmet_req_complete(req, status);
  }
- EXPORT_SYMBOL(sg_pcopy_to_buffer);
-+
-+/**
-+ * sg_iocopy_from_buffer - Copy from a linear buffer to an SG list containing
-+ *	IO memory.
-+ * @sgl:		 The SG list
-+ * @nents:		 Number of SG entries
-+ * @buf:		 Where to copy from
-+ * @buflen:		 The number of bytes to copy
-+ *
-+ * Returns the number of copied bytes.
-+ *
-+ **/
-+size_t sg_iocopy_from_buffer(struct scatterlist *sgl, unsigned int nents,
-+			     const void *buf, size_t buflen)
-+{
-+	return sg_copy_buffer(sgl, nents, (void *)buf, buflen, 0, false,
-+			      true);
-+}
-+EXPORT_SYMBOL(sg_iocopy_from_buffer);
-+
-+/**
-+ * sg_iocopy_to_buffer - Copy from an SG list containing IO memory
-+ *	to a linear buffer
-+ * @sgl:		 The SG list
-+ * @nents:		 Number of SG entries
-+ * @buf:		 Where to copy to
-+ * @buflen:		 The number of bytes to copy
-+ *
-+ * Returns the number of copied bytes.
-+ *
-+ **/
-+size_t sg_iocopy_to_buffer(struct scatterlist *sgl, unsigned int nents,
-+			   void *buf, size_t buflen)
-+{
-+	return sg_copy_buffer(sgl, nents, buf, buflen, 0, true, true);
-+}
-+EXPORT_SYMBOL(sg_iocopy_to_buffer);
+ 
+ static void nvmet_execute_io_connect(struct nvmet_req *req)
+ {
+ 	struct nvmf_connect_command *c = &req->cmd->connect;
+-	struct nvmf_connect_data *d;
++	struct nvmf_connect_data d;
+ 	struct nvmet_ctrl *ctrl = NULL;
+ 	u16 qid = le16_to_cpu(c->qid);
+ 	u16 status = 0;
+ 
+-	d = kmap(sg_page(req->sg)) + req->sg->offset;
++	status = nvmet_copy_from_sgl(req, 0, &d, sizeof(d));
++	if (status)
++		goto out;
+ 
+ 	/* zero out initial completion result, assign values as needed */
+ 	req->rsp->result.u32 = 0;
+@@ -182,9 +185,9 @@ static void nvmet_execute_io_connect(struct nvmet_req *req)
+ 		goto out;
+ 	}
+ 
+-	status = nvmet_ctrl_find_get(d->subsysnqn, d->hostnqn,
+-			le16_to_cpu(d->cntlid),
+-			req, &ctrl);
++	status = nvmet_ctrl_find_get(d.subsysnqn, d.hostnqn,
++				     le16_to_cpu(d.cntlid),
++				     req, &ctrl);
+ 	if (status)
+ 		goto out;
+ 
+@@ -205,7 +208,6 @@ static void nvmet_execute_io_connect(struct nvmet_req *req)
+ 	pr_info("adding queue %d to ctrl %d.\n", qid, ctrl->cntlid);
+ 
+ out:
+-	kunmap(sg_page(req->sg));
+ 	nvmet_req_complete(req, status);
+ 	return;
+ 
+diff --git a/drivers/nvme/target/nvmet.h b/drivers/nvme/target/nvmet.h
+index ab67175..ccd79ed 100644
+--- a/drivers/nvme/target/nvmet.h
++++ b/drivers/nvme/target/nvmet.h
+@@ -226,6 +226,7 @@ struct nvmet_req {
+ 
+ 	void (*execute)(struct nvmet_req *req);
+ 	struct nvmet_fabrics_ops *ops;
++	struct p2pmem_dev       *p2pmem;
+ };
+ 
+ static inline void nvmet_set_status(struct nvmet_req *req, u16 status)
+diff --git a/drivers/nvme/target/rdma.c b/drivers/nvme/target/rdma.c
+index 7fd4840..abab544 100644
+--- a/drivers/nvme/target/rdma.c
++++ b/drivers/nvme/target/rdma.c
+@@ -65,7 +65,6 @@ struct nvmet_rdma_rsp {
+ 	struct rdma_rw_ctx	rw;
+ 
+ 	struct nvmet_req	req;
+-	struct p2pmem_dev       *p2pmem;
+ 
+ 	u8			n_rdma;
+ 	u32			flags;
+@@ -501,7 +500,7 @@ static void nvmet_rdma_release_rsp(struct nvmet_rdma_rsp *rsp)
+ 
+ 	if (rsp->req.sg != &rsp->cmd->inline_sg)
+ 		nvmet_rdma_free_sgl(rsp->req.sg, rsp->req.sg_cnt,
+-				    rsp->p2pmem);
++				    rsp->req.p2pmem);
+ 
+ 	if (unlikely(!list_empty_careful(&queue->rsp_wr_wait_list)))
+ 		nvmet_rdma_process_wr_wait_list(queue);
+@@ -642,14 +641,14 @@ static u16 nvmet_rdma_map_sgl_keyed(struct nvmet_rdma_rsp *rsp,
+ 	if (!len)
+ 		return 0;
+ 
+-	rsp->p2pmem = rsp->queue->p2pmem;
++	rsp->req.p2pmem = rsp->queue->p2pmem;
+ 	status = nvmet_rdma_alloc_sgl(&rsp->req.sg, &rsp->req.sg_cnt,
+-			len, rsp->p2pmem);
++				      len, rsp->req.p2pmem);
+ 
+-	if (status && rsp->p2pmem) {
+-		rsp->p2pmem = NULL;
++	if (status && rsp->req.p2pmem) {
++		rsp->req.p2pmem = NULL;
+ 		status = nvmet_rdma_alloc_sgl(&rsp->req.sg, &rsp->req.sg_cnt,
+-					      len, rsp->p2pmem);
++					      len, rsp->req.p2pmem);
+ 	}
+ 
+ 	if (status)
 -- 
 2.1.4
