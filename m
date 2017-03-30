@@ -1,60 +1,235 @@
-From: Junichi Nomura <j-nomura@ce.jp.nec.com>
-Subject: Re: [REGRESSION] v4.11-rc3: lpfc: panic during module removal /
- shutdown
-Date: Wed, 29 Mar 2017 23:26:57 +0000
-Message-ID: <64fad7b0-134a-c82b-87c9-c37a860f30b9@ce.jp.nec.com>
-References: <99ad422f-8233-ddac-2e69-deda4a43b3d7@ce.jp.nec.com>
- <20170329111754.GA9183@linux-x5ow.site>
+From: "Gonglei (Arei)" <arei.gonglei@huawei.com>
+Subject: RE: [PATCH 1/6] virtio: wrap find_vqs
+Date: Thu, 30 Mar 2017 00:50:50 +0000
+Message-ID: <33183CC9F5247A488A2544077AF19020DA216907@DGGEMA505-MBS.china.huawei.com>
+References: <1490820507-8005-1-git-send-email-mst@redhat.com>
+ <1490820507-8005-2-git-send-email-mst@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-2022-jp"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tyo161.gate.nec.co.jp ([114.179.232.161]:56292 "EHLO
-        tyo161.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932735AbdC2X2h (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Mar 2017 19:28:37 -0400
-In-Reply-To: <20170329111754.GA9183@linux-x5ow.site>
-Content-Language: ja-JP
-Content-ID: <A3E9A32B1D8A1E4A8AE108F95BF8E18B@gisp.nec.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1490820507-8005-2-git-send-email-mst@redhat.com>
+Content-Language: zh-CN
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Michael S. Tsirkin" <mst@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: John Fastabend <john.fastabend@gmail.com>, Jason Wang <jasowang@redhat.com>, Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Amit Shah <amit@kernel.org>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, David Airlie <airlied@linux.ie>, Gerd Hoffmann <kraxel@redhat.com>, Dmitry Tarnyagin <dmitry.tarnyagin@lockless.no>, Ohad Ben-Cohen <ohad@wizery.com>, Bjorn Andersson <bjorn.andersson@linaro.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Stefan Hajnoczi <stefanha@redhat.com>, "virtualization@lists.linux-foundation.org" <virtualization@lists.linux-foundation.org>, "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "dick.kennedy@broadcom.com" <dick.kennedy@broadcom.com>, "james.smart@broadcom.com" <james.smart@broadcom.com>, "anton@samba.org" <anton@samba.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-On 03/29/17 20:17, Johannes Thumshirn wrote:
-> On Wed, Mar 29, 2017 at 02:29:45AM +0000, Junichi Nomura wrote:
->> The double-free occurs as followings:
->>   - During initialization, lpfc_create_wq_cq() binds cq and wq to
->>     the same ring in the way that both cq->pring and wq->pring point
->>     to the same object.
->>   - Upon removal, lpfc_sli4_queue_destroy() ends up calling
->>     lpfc_sli4_queue_free() for both wqs and cqs
->>     and kfree(queue->pring) is done twice.
->>
->> The problem became more visible in v4.11-rc3 because commit 85e8a23936ab
->> ("scsi: lpfc: Add shutdown method for kexec") made lpfc_pci_remove_one()
->> called during driver shutdown.
-> 
-> Well the obvious band-aid would be setting the pointers to NULL after freeing
-> them. lpfc_sli4_queue_free() checks for queue's precense and doesn't use
-> queue->pring prior to freeing it, so the following _should_ to the trick:
-> 
-> From befa936d8935a1bed01df65b376f515fa42c99da Mon Sep 17 00:00:00 2001
-> From: Johannes Thumshirn <jthumshirn@suse.de>
-> Date: Wed, 29 Mar 2017 13:08:55 +0200
-> Subject: [PATCH] lpfc: prevent double free of lpfc queue ring pointer
-> 
-> Since commit 895427bd012c ("scsi: lpfc: NVME Initiator: Base modifications")
-> rmoving the lpfc module causes a double free in lpfc_sli4_queue_free().
-> 
-> This can be prevented by setting the queue->pring and queue pointers to NULL,
-> so kfree() will simply ignore the pointers on a second call.
 
-No, it doesn't work.
+> -----Original Message-----
+> From: Michael S. Tsirkin [mailto:mst@redhat.com]
+> Sent: Thursday, March 30, 2017 4:49 AM
+> Subject: [PATCH 1/6] virtio: wrap find_vqs
+> 
+> We are going to add more parameters to find_vqs, let's wrap the call so
+> we don't need to tweak all drivers every time.
+> 
+> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> ---
+>  drivers/block/virtio_blk.c                 | 3 +--
+>  drivers/char/virtio_console.c              | 6 +++---
+>  drivers/crypto/virtio/virtio_crypto_core.c | 3 +--
+>  drivers/gpu/drm/virtio/virtgpu_kms.c       | 3 +--
+>  drivers/net/caif/caif_virtio.c             | 3 +--
+>  drivers/net/virtio_net.c                   | 3 +--
+>  drivers/rpmsg/virtio_rpmsg_bus.c           | 2 +-
+>  drivers/scsi/virtio_scsi.c                 | 3 +--
+>  drivers/virtio/virtio_balloon.c            | 3 +--
+>  drivers/virtio/virtio_input.c              | 3 +--
+>  include/linux/virtio_config.h              | 9 +++++++++
+>  net/vmw_vsock/virtio_transport.c           | 6 +++---
+>  12 files changed, 24 insertions(+), 23 deletions(-)
+> 
 
-Even if lpfc_sli4_queue_free(wq) sets wq->pring to NULL, cq->pring still
-holds bogus pointer and lpfc_sli4_queue_free(cq) will call kfree(cq->pring)
-and cause double-free.
+Acked-by: Gonglei <arei.gonglei@huawei.com>
 
--- 
-Jun'ichi Nomura, NEC Corporation / NEC Solution Innovators, Ltd.
+
+> diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
+> index 1d4c9f8..c08c30c 100644
+> --- a/drivers/block/virtio_blk.c
+> +++ b/drivers/block/virtio_blk.c
+> @@ -455,8 +455,7 @@ static int init_vq(struct virtio_blk *vblk)
+>  	}
+> 
+>  	/* Discover virtqueues and write information to configuration.  */
+> -	err = vdev->config->find_vqs(vdev, num_vqs, vqs, callbacks, names,
+> -			&desc);
+> +	err = virtio_find_vqs(vdev, num_vqs, vqs, callbacks, names, &desc);
+>  	if (err)
+>  		goto out;
+> 
+> diff --git a/drivers/char/virtio_console.c b/drivers/char/virtio_console.c
+> index e9b7e0b..5da4c8e 100644
+> --- a/drivers/char/virtio_console.c
+> +++ b/drivers/char/virtio_console.c
+> @@ -1945,9 +1945,9 @@ static int init_vqs(struct ports_device *portdev)
+>  		}
+>  	}
+>  	/* Find the queues. */
+> -	err = portdev->vdev->config->find_vqs(portdev->vdev, nr_queues, vqs,
+> -					      io_callbacks,
+> -					      (const char **)io_names, NULL);
+> +	err = virtio_find_vqs(portdev->vdev, nr_queues, vqs,
+> +			      io_callbacks,
+> +			      (const char **)io_names, NULL);
+>  	if (err)
+>  		goto free;
+> 
+> diff --git a/drivers/crypto/virtio/virtio_crypto_core.c
+> b/drivers/crypto/virtio/virtio_crypto_core.c
+> index 21472e4..a111cd72 100644
+> --- a/drivers/crypto/virtio/virtio_crypto_core.c
+> +++ b/drivers/crypto/virtio/virtio_crypto_core.c
+> @@ -119,8 +119,7 @@ static int virtcrypto_find_vqs(struct virtio_crypto *vi)
+>  		names[i] = vi->data_vq[i].name;
+>  	}
+> 
+> -	ret = vi->vdev->config->find_vqs(vi->vdev, total_vqs, vqs, callbacks,
+> -					 names, NULL);
+> +	ret = virtio_find_vqs(vi->vdev, total_vqs, vqs, callbacks, names, NULL);
+>  	if (ret)
+>  		goto err_find;
+> 
+> diff --git a/drivers/gpu/drm/virtio/virtgpu_kms.c
+> b/drivers/gpu/drm/virtio/virtgpu_kms.c
+> index 4918668..1e1c90b 100644
+> --- a/drivers/gpu/drm/virtio/virtgpu_kms.c
+> +++ b/drivers/gpu/drm/virtio/virtgpu_kms.c
+> @@ -175,8 +175,7 @@ int virtio_gpu_driver_load(struct drm_device *dev,
+> unsigned long flags)
+>  	DRM_INFO("virgl 3d acceleration not supported by guest\n");
+>  #endif
+> 
+> -	ret = vgdev->vdev->config->find_vqs(vgdev->vdev, 2, vqs,
+> -					    callbacks, names, NULL);
+> +	ret = virtio_find_vqs(vgdev->vdev, 2, vqs, callbacks, names, NULL);
+>  	if (ret) {
+>  		DRM_ERROR("failed to find virt queues\n");
+>  		goto err_vqs;
+> diff --git a/drivers/net/caif/caif_virtio.c b/drivers/net/caif/caif_virtio.c
+> index bc0eb47..6122768 100644
+> --- a/drivers/net/caif/caif_virtio.c
+> +++ b/drivers/net/caif/caif_virtio.c
+> @@ -679,8 +679,7 @@ static int cfv_probe(struct virtio_device *vdev)
+>  		goto err;
+> 
+>  	/* Get the TX virtio ring. This is a "guest side vring". */
+> -	err = vdev->config->find_vqs(vdev, 1, &cfv->vq_tx, &vq_cbs, &names,
+> -			NULL);
+> +	err = virtio_find_vqs(vdev, 1, &cfv->vq_tx, &vq_cbs, &names, NULL);
+>  	if (err)
+>  		goto err;
+> 
+> diff --git a/drivers/net/virtio_net.c b/drivers/net/virtio_net.c
+> index ea9890d..6802169 100644
+> --- a/drivers/net/virtio_net.c
+> +++ b/drivers/net/virtio_net.c
+> @@ -2079,8 +2079,7 @@ static int virtnet_find_vqs(struct virtnet_info *vi)
+>  		names[txq2vq(i)] = vi->sq[i].name;
+>  	}
+> 
+> -	ret = vi->vdev->config->find_vqs(vi->vdev, total_vqs, vqs, callbacks,
+> -					 names, NULL);
+> +	ret = virtio_find_vqs(vi->vdev, total_vqs, vqs, callbacks, names, NULL);
+>  	if (ret)
+>  		goto err_find;
+> 
+> diff --git a/drivers/rpmsg/virtio_rpmsg_bus.c
+> b/drivers/rpmsg/virtio_rpmsg_bus.c
+> index 5e66e08..f7cade0 100644
+> --- a/drivers/rpmsg/virtio_rpmsg_bus.c
+> +++ b/drivers/rpmsg/virtio_rpmsg_bus.c
+> @@ -869,7 +869,7 @@ static int rpmsg_probe(struct virtio_device *vdev)
+>  	init_waitqueue_head(&vrp->sendq);
+> 
+>  	/* We expect two virtqueues, rx and tx (and in this order) */
+> -	err = vdev->config->find_vqs(vdev, 2, vqs, vq_cbs, names, NULL);
+> +	err = virtio_find_vqs(vdev, 2, vqs, vq_cbs, names, NULL);
+>  	if (err)
+>  		goto free_vrp;
+> 
+> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+> index 939c47d..e9222dc 100644
+> --- a/drivers/scsi/virtio_scsi.c
+> +++ b/drivers/scsi/virtio_scsi.c
+> @@ -870,8 +870,7 @@ static int virtscsi_init(struct virtio_device *vdev,
+>  	}
+> 
+>  	/* Discover virtqueues and write information to configuration.  */
+> -	err = vdev->config->find_vqs(vdev, num_vqs, vqs, callbacks, names,
+> -			&desc);
+> +	err = virtio_find_vqs(vdev, num_vqs, vqs, callbacks, names, &desc);
+>  	if (err)
+>  		goto out;
+> 
+> diff --git a/drivers/virtio/virtio_balloon.c b/drivers/virtio/virtio_balloon.c
+> index 34adf9b..408c174 100644
+> --- a/drivers/virtio/virtio_balloon.c
+> +++ b/drivers/virtio/virtio_balloon.c
+> @@ -418,8 +418,7 @@ static int init_vqs(struct virtio_balloon *vb)
+>  	 * optionally stat.
+>  	 */
+>  	nvqs = virtio_has_feature(vb->vdev, VIRTIO_BALLOON_F_STATS_VQ) ? 3 :
+> 2;
+> -	err = vb->vdev->config->find_vqs(vb->vdev, nvqs, vqs, callbacks, names,
+> -			NULL);
+> +	err = virtio_find_vqs(vb->vdev, nvqs, vqs, callbacks, names, NULL);
+>  	if (err)
+>  		return err;
+> 
+> diff --git a/drivers/virtio/virtio_input.c b/drivers/virtio/virtio_input.c
+> index 79f1293..3a0468f 100644
+> --- a/drivers/virtio/virtio_input.c
+> +++ b/drivers/virtio/virtio_input.c
+> @@ -173,8 +173,7 @@ static int virtinput_init_vqs(struct virtio_input *vi)
+>  	static const char * const names[] = { "events", "status" };
+>  	int err;
+> 
+> -	err = vi->vdev->config->find_vqs(vi->vdev, 2, vqs, cbs, names,
+> -			NULL);
+> +	err = virtio_find_vqs(vi->vdev, 2, vqs, cbs, names, NULL);
+>  	if (err)
+>  		return err;
+>  	vi->evt = vqs[0];
+> diff --git a/include/linux/virtio_config.h b/include/linux/virtio_config.h
+> index 8355bab..47f3d80 100644
+> --- a/include/linux/virtio_config.h
+> +++ b/include/linux/virtio_config.h
+> @@ -179,6 +179,15 @@ struct virtqueue *virtio_find_single_vq(struct
+> virtio_device *vdev,
+>  	return vq;
+>  }
+> 
+> +static inline
+> +int virtio_find_vqs(struct virtio_device *vdev, unsigned nvqs,
+> +			struct virtqueue *vqs[], vq_callback_t *callbacks[],
+> +			const char * const names[],
+> +			struct irq_affinity *desc)
+> +{
+> +	return vdev->config->find_vqs(vdev, nvqs, vqs, callbacks, names, desc);
+> +}
+> +
+>  /**
+>   * virtio_device_ready - enable vq use in probe function
+>   * @vdev: the device
+> diff --git a/net/vmw_vsock/virtio_transport.c
+> b/net/vmw_vsock/virtio_transport.c
+> index 68675a1..97e26e2 100644
+> --- a/net/vmw_vsock/virtio_transport.c
+> +++ b/net/vmw_vsock/virtio_transport.c
+> @@ -573,9 +573,9 @@ static int virtio_vsock_probe(struct virtio_device
+> *vdev)
+> 
+>  	vsock->vdev = vdev;
+> 
+> -	ret = vsock->vdev->config->find_vqs(vsock->vdev, VSOCK_VQ_MAX,
+> -					    vsock->vqs, callbacks, names,
+> -					    NULL);
+> +	ret = virtio_find_vqs(vsock->vdev, VSOCK_VQ_MAX,
+> +			      vsock->vqs, callbacks, names,
+> +			      NULL);
+>  	if (ret < 0)
+>  		goto out;
+> 
+> --
+> MST
