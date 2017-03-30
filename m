@@ -1,70 +1,33 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCHv5 0/2] tcmu: For bugs fix only
-Date: Thu, 30 Mar 2017 01:48:22 -0700
-Message-ID: <1490863702.6977.7.camel@haakon3.risingtidesystems.com>
-References: <1490605661-16127-1-git-send-email-lixiubo@cmss.chinamobile.com>
+From: "hch-jcswGhMUV9g@public.gmane.org" <hch-jcswGhMUV9g@public.gmane.org>
+Subject: Re: [PATCH 01/23] block: renumber REQ_OP_WRITE_ZEROES
+Date: Thu, 30 Mar 2017 10:53:43 +0200
+Message-ID: <20170330085343.GB12015@lst.de>
+References: <20170323143341.31549-1-hch@lst.de>
+	<20170323143341.31549-2-hch@lst.de>
+	<1490717553.2573.4.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:34560 "EHLO
-        linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751138AbdC3IsZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Mar 2017 04:48:25 -0400
-In-Reply-To: <1490605661-16127-1-git-send-email-lixiubo@cmss.chinamobile.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1490717553.2573.4.camel-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
+List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
+Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+To: Bart Van Assche <Bart.VanAssche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Cc: "axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org" <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org" <philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org" <lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, "shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "hch-jcswGhMUV9g@public.gmane.org" <hch-jcswGhMUV9g@public.gmane.org>, "agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org" <drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: lixiubo@cmss.chinamobile.com
-Cc: agrover@redhat.com, mchristi@redhat.com, shli@kernel.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com, bryantly@linux.vnet.ibm.com, iliastsi@arrikto.com
 
-Hi Xiubo & Co,
+On Tue, Mar 28, 2017 at 04:12:46PM +0000, Bart Van Assche wrote:
+> Since REQ_OP_WRITE_ZEROES was introduced in kernel v4.10, do we need
+> "Cc: stable" and "Fixes: a6f0788ec2881" tags for this patch?
 
-On Mon, 2017-03-27 at 17:07 +0800, lixiubo@cmss.chinamobile.com wrote:
-> From: Xiubo Li <lixiubo@cmss.chinamobile.com>
-> 
-> Changed for V5:
-> - This only includes #1 and #2. And for old #3, #4 are still reviewing.
-> - #1, since the issue reported by Ilias is a separate new one, and will
->   create a new patch later.
-> - #2, address the issue pointed out by Mike, thanks.
-> - #1 and #2 have been tested by Ilias in BIDI case, thanks.
-> 
-> Changed for V4:
-> - re-order the #3, #4 at the head.
-> - merge most of the #5 to others.
-> 
-> Xiubo Li (2):
->   tcmu: Fix possible overwrite of t_data_sg's last iov[]
->   tcmu: Fix wrongly calculating of the base_command_size
-> 
->  drivers/target/target_core_user.c | 44 +++++++++++++++++++++++++++------------
->  1 file changed, 31 insertions(+), 13 deletions(-)
-> 
-
-Applied to target-pending/master, along with CC's for 3.19.y stable.
-
-Thanks Xiubo !
-
-Btw, I fixed-up the ordering of the Reviewed-by + Tested-by +
-Signed-off-by tags on the patches here:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git/commit/?id=ab22d2604c86ceb01bb2725c9860b88a7dd383bb
-https://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git/commit/?id=abe342a5b4b5aa579f6bf40ba73447c699e6b579
-
-Just for future reference, the flow of these tags should reflect the
-history of the patch.  Eg:
-
-Reviewed-by: First reviewer <foo@bar.com>
-Tested-by: First tester <foo2@bar2.com>
-Reviewed-by: Second reviewer <foo3@bar3.com>
-Signed-off-by: Patch Author <you@yourdomain.com>
-
-and then once the subsystem maintainer merges it into his tree, they add
-their own:
-
-Signed-off-by: Subsystem Maintainer <superturboarray@linux-domain.org>
-
-Beyond that, what is the status of the other two feature improvement
-patches..?
-
-Do you intend to post those (again) as v4.12-rc1 material..?
+No.  This just works around the way scsi_setup_cmnd sets up the data
+direction.  Before this series it's not an issue because no one used
+the req_op data direction for setting up the dma direction.
