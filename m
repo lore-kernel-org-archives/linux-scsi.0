@@ -1,31 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: hisi_sas: add missing break in switch statement
-Date: Wed, 29 Mar 2017 22:39:52 -0400
-Message-ID: <yq1fuhv4hdz.fsf@oracle.com>
-References: <20170328111222.17303-1-colin.king@canonical.com>
+Subject: Re: [PATCH 1/6] scsi: ufs: make ufshcd_is_{device_present,hba_active}() return bool
+Date: Wed, 29 Mar 2017 22:44:10 -0400
+Message-ID: <yq1bmsj4h6t.fsf@oracle.com>
+References: <20170328134929.25599-1-tkusumi@tuxera.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170328111222.17303-1-colin.king@canonical.com> (Colin King's
-        message of "Tue, 28 Mar 2017 12:12:22 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: John Garry <john.garry@huawei.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:38559 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752733AbdC3CoU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Mar 2017 22:44:20 -0400
+In-Reply-To: <20170328134929.25599-1-tkusumi@tuxera.com> (kusumi tomohiro's
+        message of "Tue, 28 Mar 2017 16:49:24 +0300")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: kusumi.tomohiro@gmail.com
+Cc: martin.petersen@oracle.com, vinholikatti@gmail.com, linux-scsi@vger.kernel.org, Tomohiro Kusumi <tkusumi@tuxera.com>
 
-Colin King <colin.king@canonical.com> writes:
+kusumi.tomohiro@gmail.com writes:
 
-Colin,
+> ufshcd driver generally uses bool for is_xxx type things instead of int,
+> so conform to its style.
 
-> It appears that a break in the TRANS_TX_OPEN_CNX_ERR_NO_DESTINATION
-> case got accidentally removed in an earlier commit, as it stands, the
-> ts->stat and ts->open_rej_reason are being updated twice for this case
-> which looks incorrect.  Fix this by adding in the missing break
-> statement.
+Applied patches 1-6 to 4.12/scsi-queue.
 
-Applied to 4.12/scsi-queue.
-
-Thank you!
+Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
