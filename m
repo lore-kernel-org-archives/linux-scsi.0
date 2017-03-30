@@ -1,235 +1,166 @@
-From: "Gonglei (Arei)" <arei.gonglei@huawei.com>
-Subject: RE: [PATCH 1/6] virtio: wrap find_vqs
-Date: Thu, 30 Mar 2017 00:50:50 +0000
-Message-ID: <33183CC9F5247A488A2544077AF19020DA216907@DGGEMA505-MBS.china.huawei.com>
-References: <1490820507-8005-1-git-send-email-mst@redhat.com>
- <1490820507-8005-2-git-send-email-mst@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1490820507-8005-2-git-send-email-mst@redhat.com>
-Content-Language: zh-CN
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Michael S. Tsirkin" <mst@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: John Fastabend <john.fastabend@gmail.com>, Jason Wang <jasowang@redhat.com>, Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Amit Shah <amit@kernel.org>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, David Airlie <airlied@linux.ie>, Gerd Hoffmann <kraxel@redhat.com>, Dmitry Tarnyagin <dmitry.tarnyagin@lockless.no>, Ohad Ben-Cohen <ohad@wizery.com>, Bjorn Andersson <bjorn.andersson@linaro.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Stefan Hajnoczi <stefanha@redhat.com>, "virtualization@lists.linux-foundation.org" <virtualization@lists.linux-foundation.org>, "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>
+From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Subject: [PATCH] scsi: ses: don't get power status of SES device slot on probe
+Date: Wed, 29 Mar 2017 22:02:10 -0300
+Message-ID: <1490835730-13181-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:54554 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S933094AbdC3BCW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 29 Mar 2017 21:02:22 -0400
+Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v2U0xB8n062092
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2017 21:02:21 -0400
+Received: from e24smtp02.br.ibm.com (e24smtp02.br.ibm.com [32.104.18.86])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 29gfqgbycm-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2017 21:02:21 -0400
+Received: from localhost
+        by e24smtp02.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <mauricfo@linux.vnet.ibm.com>;
+        Wed, 29 Mar 2017 22:02:19 -0300
+Received: from d24av03.br.ibm.com (d24av03.br.ibm.com [9.8.31.95])
+        by d24relay02.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v2U12HYI17629300
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2017 22:02:17 -0300
+Received: from d24av03.br.ibm.com (localhost [127.0.0.1])
+        by d24av03.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v2U12HBx009861
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2017 22:02:17 -0300
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, songliubraving@fb.com
+Cc: dan.j.williams@intel.com, axboe@fb.com, hare@suse.de, hch@lst.de, gpiccoli@linux.vnet.ibm.com
 
+The commit 08024885a2a3 ("ses: Add power_status to SES device slot")
+introduced the 'power_status' attribute to enclosure components and
+the associated callbacks.
 
-> -----Original Message-----
-> From: Michael S. Tsirkin [mailto:mst@redhat.com]
-> Sent: Thursday, March 30, 2017 4:49 AM
-> Subject: [PATCH 1/6] virtio: wrap find_vqs
-> 
-> We are going to add more parameters to find_vqs, let's wrap the call so
-> we don't need to tweak all drivers every time.
-> 
-> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> ---
->  drivers/block/virtio_blk.c                 | 3 +--
->  drivers/char/virtio_console.c              | 6 +++---
->  drivers/crypto/virtio/virtio_crypto_core.c | 3 +--
->  drivers/gpu/drm/virtio/virtgpu_kms.c       | 3 +--
->  drivers/net/caif/caif_virtio.c             | 3 +--
->  drivers/net/virtio_net.c                   | 3 +--
->  drivers/rpmsg/virtio_rpmsg_bus.c           | 2 +-
->  drivers/scsi/virtio_scsi.c                 | 3 +--
->  drivers/virtio/virtio_balloon.c            | 3 +--
->  drivers/virtio/virtio_input.c              | 3 +--
->  include/linux/virtio_config.h              | 9 +++++++++
->  net/vmw_vsock/virtio_transport.c           | 6 +++---
->  12 files changed, 24 insertions(+), 23 deletions(-)
-> 
+There are 2 callbacks available to get the power status of a device:
+1) ses_get_power_status() for 'struct enclosure_component_callbacks'
+2) get_component_power_status() for the sysfs device attribute
+(these are available for kernel-space and user-space, respectively.)
 
-Acked-by: Gonglei <arei.gonglei@huawei.com>
+However, despite both methods being available to get power status
+on demand, that commit also introduced a call to get power status
+in ses_enclosure_data_process().
 
+This dramatically increased the total probe time for SCSI devices
+on larger configurations, because ses_enclosure_data_process() is
+called several times during the SCSI devices probe and loops over
+the component devices (but that is another problem, another patch).
 
-> diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
-> index 1d4c9f8..c08c30c 100644
-> --- a/drivers/block/virtio_blk.c
-> +++ b/drivers/block/virtio_blk.c
-> @@ -455,8 +455,7 @@ static int init_vq(struct virtio_blk *vblk)
->  	}
-> 
->  	/* Discover virtqueues and write information to configuration.  */
-> -	err = vdev->config->find_vqs(vdev, num_vqs, vqs, callbacks, names,
-> -			&desc);
-> +	err = virtio_find_vqs(vdev, num_vqs, vqs, callbacks, names, &desc);
->  	if (err)
->  		goto out;
-> 
-> diff --git a/drivers/char/virtio_console.c b/drivers/char/virtio_console.c
-> index e9b7e0b..5da4c8e 100644
-> --- a/drivers/char/virtio_console.c
-> +++ b/drivers/char/virtio_console.c
-> @@ -1945,9 +1945,9 @@ static int init_vqs(struct ports_device *portdev)
->  		}
->  	}
->  	/* Find the queues. */
-> -	err = portdev->vdev->config->find_vqs(portdev->vdev, nr_queues, vqs,
-> -					      io_callbacks,
-> -					      (const char **)io_names, NULL);
-> +	err = virtio_find_vqs(portdev->vdev, nr_queues, vqs,
-> +			      io_callbacks,
-> +			      (const char **)io_names, NULL);
->  	if (err)
->  		goto free;
-> 
-> diff --git a/drivers/crypto/virtio/virtio_crypto_core.c
-> b/drivers/crypto/virtio/virtio_crypto_core.c
-> index 21472e4..a111cd72 100644
-> --- a/drivers/crypto/virtio/virtio_crypto_core.c
-> +++ b/drivers/crypto/virtio/virtio_crypto_core.c
-> @@ -119,8 +119,7 @@ static int virtcrypto_find_vqs(struct virtio_crypto *vi)
->  		names[i] = vi->data_vq[i].name;
->  	}
-> 
-> -	ret = vi->vdev->config->find_vqs(vi->vdev, total_vqs, vqs, callbacks,
-> -					 names, NULL);
-> +	ret = virtio_find_vqs(vi->vdev, total_vqs, vqs, callbacks, names, NULL);
->  	if (ret)
->  		goto err_find;
-> 
-> diff --git a/drivers/gpu/drm/virtio/virtgpu_kms.c
-> b/drivers/gpu/drm/virtio/virtgpu_kms.c
-> index 4918668..1e1c90b 100644
-> --- a/drivers/gpu/drm/virtio/virtgpu_kms.c
-> +++ b/drivers/gpu/drm/virtio/virtgpu_kms.c
-> @@ -175,8 +175,7 @@ int virtio_gpu_driver_load(struct drm_device *dev,
-> unsigned long flags)
->  	DRM_INFO("virgl 3d acceleration not supported by guest\n");
->  #endif
-> 
-> -	ret = vgdev->vdev->config->find_vqs(vgdev->vdev, 2, vqs,
-> -					    callbacks, names, NULL);
-> +	ret = virtio_find_vqs(vgdev->vdev, 2, vqs, callbacks, names, NULL);
->  	if (ret) {
->  		DRM_ERROR("failed to find virt queues\n");
->  		goto err_vqs;
-> diff --git a/drivers/net/caif/caif_virtio.c b/drivers/net/caif/caif_virtio.c
-> index bc0eb47..6122768 100644
-> --- a/drivers/net/caif/caif_virtio.c
-> +++ b/drivers/net/caif/caif_virtio.c
-> @@ -679,8 +679,7 @@ static int cfv_probe(struct virtio_device *vdev)
->  		goto err;
-> 
->  	/* Get the TX virtio ring. This is a "guest side vring". */
-> -	err = vdev->config->find_vqs(vdev, 1, &cfv->vq_tx, &vq_cbs, &names,
-> -			NULL);
-> +	err = virtio_find_vqs(vdev, 1, &cfv->vq_tx, &vq_cbs, &names, NULL);
->  	if (err)
->  		goto err;
-> 
-> diff --git a/drivers/net/virtio_net.c b/drivers/net/virtio_net.c
-> index ea9890d..6802169 100644
-> --- a/drivers/net/virtio_net.c
-> +++ b/drivers/net/virtio_net.c
-> @@ -2079,8 +2079,7 @@ static int virtnet_find_vqs(struct virtnet_info *vi)
->  		names[txq2vq(i)] = vi->sq[i].name;
->  	}
-> 
-> -	ret = vi->vdev->config->find_vqs(vi->vdev, total_vqs, vqs, callbacks,
-> -					 names, NULL);
-> +	ret = virtio_find_vqs(vi->vdev, total_vqs, vqs, callbacks, names, NULL);
->  	if (ret)
->  		goto err_find;
-> 
-> diff --git a/drivers/rpmsg/virtio_rpmsg_bus.c
-> b/drivers/rpmsg/virtio_rpmsg_bus.c
-> index 5e66e08..f7cade0 100644
-> --- a/drivers/rpmsg/virtio_rpmsg_bus.c
-> +++ b/drivers/rpmsg/virtio_rpmsg_bus.c
-> @@ -869,7 +869,7 @@ static int rpmsg_probe(struct virtio_device *vdev)
->  	init_waitqueue_head(&vrp->sendq);
-> 
->  	/* We expect two virtqueues, rx and tx (and in this order) */
-> -	err = vdev->config->find_vqs(vdev, 2, vqs, vq_cbs, names, NULL);
-> +	err = virtio_find_vqs(vdev, 2, vqs, vq_cbs, names, NULL);
->  	if (err)
->  		goto free_vrp;
-> 
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index 939c47d..e9222dc 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -870,8 +870,7 @@ static int virtscsi_init(struct virtio_device *vdev,
->  	}
-> 
->  	/* Discover virtqueues and write information to configuration.  */
-> -	err = vdev->config->find_vqs(vdev, num_vqs, vqs, callbacks, names,
-> -			&desc);
-> +	err = virtio_find_vqs(vdev, num_vqs, vqs, callbacks, names, &desc);
->  	if (err)
->  		goto out;
-> 
-> diff --git a/drivers/virtio/virtio_balloon.c b/drivers/virtio/virtio_balloon.c
-> index 34adf9b..408c174 100644
-> --- a/drivers/virtio/virtio_balloon.c
-> +++ b/drivers/virtio/virtio_balloon.c
-> @@ -418,8 +418,7 @@ static int init_vqs(struct virtio_balloon *vb)
->  	 * optionally stat.
->  	 */
->  	nvqs = virtio_has_feature(vb->vdev, VIRTIO_BALLOON_F_STATS_VQ) ? 3 :
-> 2;
-> -	err = vb->vdev->config->find_vqs(vb->vdev, nvqs, vqs, callbacks, names,
-> -			NULL);
-> +	err = virtio_find_vqs(vb->vdev, nvqs, vqs, callbacks, names, NULL);
->  	if (err)
->  		return err;
-> 
-> diff --git a/drivers/virtio/virtio_input.c b/drivers/virtio/virtio_input.c
-> index 79f1293..3a0468f 100644
-> --- a/drivers/virtio/virtio_input.c
-> +++ b/drivers/virtio/virtio_input.c
-> @@ -173,8 +173,7 @@ static int virtinput_init_vqs(struct virtio_input *vi)
->  	static const char * const names[] = { "events", "status" };
->  	int err;
-> 
-> -	err = vi->vdev->config->find_vqs(vi->vdev, 2, vqs, cbs, names,
-> -			NULL);
-> +	err = virtio_find_vqs(vi->vdev, 2, vqs, cbs, names, NULL);
->  	if (err)
->  		return err;
->  	vi->evt = vqs[0];
-> diff --git a/include/linux/virtio_config.h b/include/linux/virtio_config.h
-> index 8355bab..47f3d80 100644
-> --- a/include/linux/virtio_config.h
-> +++ b/include/linux/virtio_config.h
-> @@ -179,6 +179,15 @@ struct virtqueue *virtio_find_single_vq(struct
-> virtio_device *vdev,
->  	return vq;
->  }
-> 
-> +static inline
-> +int virtio_find_vqs(struct virtio_device *vdev, unsigned nvqs,
-> +			struct virtqueue *vqs[], vq_callback_t *callbacks[],
-> +			const char * const names[],
-> +			struct irq_affinity *desc)
-> +{
-> +	return vdev->config->find_vqs(vdev, nvqs, vqs, callbacks, names, desc);
-> +}
-> +
->  /**
->   * virtio_device_ready - enable vq use in probe function
->   * @vdev: the device
-> diff --git a/net/vmw_vsock/virtio_transport.c
-> b/net/vmw_vsock/virtio_transport.c
-> index 68675a1..97e26e2 100644
-> --- a/net/vmw_vsock/virtio_transport.c
-> +++ b/net/vmw_vsock/virtio_transport.c
-> @@ -573,9 +573,9 @@ static int virtio_vsock_probe(struct virtio_device
-> *vdev)
-> 
->  	vsock->vdev = vdev;
-> 
-> -	ret = vsock->vdev->config->find_vqs(vsock->vdev, VSOCK_VQ_MAX,
-> -					    vsock->vqs, callbacks, names,
-> -					    NULL);
-> +	ret = virtio_find_vqs(vsock->vdev, VSOCK_VQ_MAX,
-> +			      vsock->vqs, callbacks, names,
-> +			      NULL);
->  	if (ret < 0)
->  		goto out;
-> 
-> --
-> MST
+That results in a tremendous continuous hammering of SCSI Receive
+Diagnostics commands to the enclosure-services device, which does
+delay the total probe time for the SCSI devices __significantly__:
+
+  Originally, ~34 minutes on a system attached to ~170 disks:
+
+    [ 9214.490703] mpt3sas version 13.100.00.00 loaded
+    ...
+    [11256.580231] scsi 17:0:177:0: qdepth(16), tagged(1), simple(0),
+                   ordered(0), scsi_level(6), cmd_que(1)
+
+  With this patch, it decreased to ~2.5 minutes -- a 13.6x faster
+
+    [ 1002.992533] mpt3sas version 13.100.00.00 loaded
+    ...
+    [ 1151.978831] scsi 11:0:177:0: qdepth(16), tagged(1), simple(0),
+                   ordered(0), scsi_level(6), cmd_que(1)
+
+Another downside is that the SCSI device class lock is held during
+the executions of ses_enclosure_data_process() since it's a callee
+of ses_intf_add(), which is executed under that lock in device_add().
+This ends up blocking the parallel SCSI scan functionality because
+device_add() depends on that lock, and also the removal of devices
+via device_del() (e.g., during an enclosure reboot).
+
+Back to the commit discussion.. on the ses_get_power_status() call
+introduced in ses_enclosure_data_process(): impact of removing it.
+
+That may possibly be in place to initialize the power status value
+on device probe.  However, those 2 functions available to retrieve
+that value _do_ automatically refresh/update it.  So the potential
+benefit would be a direct access of the 'power_status' field which
+does not use the callbacks...
+
+But the only reader of 'struct enclosure_component::power_status'
+is the get_component_power_status() callback for sysfs attribute,
+and it _does_ check for and call the .get_power_status callback,
+(which indeed is defined and implemented by that commit), so the
+power status value is, again, automatically updated.
+
+So, the remaining potential for a direct/non-callback access to
+the power_status attribute would be out-of-tree modules -- well,
+for those, if they are for whatever reason interested in values
+that are set during device probe and not up-to-date by the time
+they need it.. well, that would be curious.
+
+So, for out-of-tree modules and people still interested in this
+behavior (in case I might have missed something about it, other
+than the total probe time impact): let's add a module parameter
+to keep that check turned on (disabled by default).
+
+Also, to handle that more properly, set the initial power state
+value to '-1' (i.e., uninitialized) instead of '1' (power 'on'),
+and check for it in that callback which may do an direct access
+to the field value _if_ a callback function is not defined.
+
+Signed-off-by: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Fixes: 08024885a2a3 ("ses: Add power_status to SES device slot")
+---
+ drivers/misc/enclosure.c | 6 +++++-
+ drivers/scsi/ses.c       | 9 ++++++++-
+ 2 files changed, 13 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
+index 65fed7146e9b..d3a8a13c4247 100644
+--- a/drivers/misc/enclosure.c
++++ b/drivers/misc/enclosure.c
+@@ -148,7 +148,7 @@ struct enclosure_device *
+ 	for (i = 0; i < components; i++) {
+ 		edev->component[i].number = -1;
+ 		edev->component[i].slot = -1;
+-		edev->component[i].power_status = 1;
++		edev->component[i].power_status = -1;
+ 	}
+ 
+ 	mutex_lock(&container_list_lock);
+@@ -594,6 +594,10 @@ static ssize_t get_component_power_status(struct device *cdev,
+ 
+ 	if (edev->cb->get_power_status)
+ 		edev->cb->get_power_status(edev, ecomp);
++
++	if (ecomp->power_status == -1)
++		return -EINVAL;
++
+ 	return snprintf(buf, 40, "%s\n", ecomp->power_status ? "on" : "off");
+ }
+ 
+diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+index 50adabbb5808..2fafefd419c1 100644
+--- a/drivers/scsi/ses.c
++++ b/drivers/scsi/ses.c
+@@ -36,6 +36,12 @@
+ 
+ #include <scsi/scsi_transport_sas.h>
+ 
++static bool power_status_on_probe;	/* default: false, 0. */
++module_param(power_status_on_probe, bool, 0644);
++MODULE_PARM_DESC(power_status_on_probe, "get power status of SES device slots "
++					"(enclosure components) at probe time "
++					"(warning: may delay total probe time)");
++
+ struct ses_device {
+ 	unsigned char *page1;
+ 	unsigned char *page1_types;
+@@ -548,7 +554,8 @@ static void ses_enclosure_data_process(struct enclosure_device *edev,
+ 					ecomp = &edev->component[components++];
+ 
+ 				if (!IS_ERR(ecomp)) {
+-					ses_get_power_status(edev, ecomp);
++					if (power_status_on_probe)
++						ses_get_power_status(edev, ecomp);
+ 					if (addl_desc_ptr)
+ 						ses_process_descriptor(
+ 							ecomp,
+-- 
+1.8.3.1
