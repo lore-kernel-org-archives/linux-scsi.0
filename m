@@ -1,44 +1,29 @@
-From: Fam Zheng <famz@redhat.com>
-Subject: Re: [PATCH v2] sd: Consider max_xfer_blocks if opt_xfer_blocks is
- unusable
-Date: Thu, 30 Mar 2017 12:13:11 +0800
-Message-ID: <20170330041311.GA32392@lemon.lan>
-References: <20170328044126.10006-1-famz@redhat.com>
- <yq1k2774hht.fsf@oracle.com>
+From: Jason Wang <jasowang@redhat.com>
+Subject: Re: [PATCH 1/6] virtio: wrap find_vqs
+Date: Thu, 30 Mar 2017 14:00:08 +0800
+Message-ID: <72f533a2-482d-1956-b0fe-254e273e1818@redhat.com>
+References: <1490820507-8005-1-git-send-email-mst@redhat.com>
+ <1490820507-8005-2-git-send-email-mst@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <yq1k2774hht.fsf@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Laurence Oberman <loberman@redhat.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <1490820507-8005-2-git-send-email-mst@redhat.com>
+Sender: netdev-owner@vger.kernel.org
+To: "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org
+Cc: John Fastabend <john.fastabend@gmail.com>, Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Amit Shah <amit@kernel.org>, Gonglei <arei.gonglei@huawei.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, David Airlie <airlied@linux.ie>, Gerd Hoffmann <kraxel@redhat.com>, Dmitry Tarnyagin <dmitry.tarnyagin@lockless.no>, Ohad Ben-Cohen <ohad@wizery.com>, Bjorn Andersson <bjorn.andersson@linaro.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Stefan Hajnoczi <stefanha@redhat.com>, virtualization@lists.linux-foundation.org, linux-crypto@vger.kernel.org, dri-devel@lists.freedesktop.org, netdev@vger.kernel.org, linux-remoteproc@vger.kernel.or
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 03/29 22:37, Martin K. Petersen wrote:
-> Fam Zheng <famz@redhat.com> writes:
-> 
-> Fam,
-> 
-> > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> > index fcfeddc..a5c7e67 100644
-> > --- a/drivers/scsi/sd.c
-> > +++ b/drivers/scsi/sd.c
-> > @@ -2957,6 +2957,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
-> >  		rw_max = logical_to_sectors(sdp, sdkp->opt_xfer_blocks);
-> >  	} else
-> >  		rw_max = BLK_DEF_MAX_SECTORS;
-> > +	rw_max = min_not_zero(rw_max, logical_to_sectors(sdp, dev_max));
-> >  
-> >  	/* Combine with controller limits */
-> >  	q->limits.max_sectors = min(rw_max, queue_max_hw_sectors(q));
-> 
-> Instead of updating rw_max twice, how about:
-> 
-> } else
-> 	rw_max = min_not_zero(logical_to_sectors(sdp, dev_max),
->                               BLK_DEF_MAX_SECTORS);
 
-Yes, it is better. Is it okay to make the change when you apply?
 
-Fam
+On 2017年03月30日 04:48, Michael S. Tsirkin wrote:
+> We are going to add more parameters to find_vqs, let's wrap the call so
+> we don't need to tweak all drivers every time.
+>
+> Signed-off-by: Michael S. Tsirkin<mst@redhat.com>
+> ---
+
+A quick glance and it looks ok, but what the benefit of this series, is 
+it required by other changes?
+
+Thanks
