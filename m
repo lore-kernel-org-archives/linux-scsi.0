@@ -1,226 +1,60 @@
-From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [RFC 2/8] cxgb4: setup pcie memory window 4 and create p2pmem region
-Date: Thu, 30 Mar 2017 16:12:33 -0600
-Message-ID: <1490911959-5146-3-git-send-email-logang@deltatee.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 22/23] drbd: implement REQ_OP_WRITE_ZEROES
+Date: Thu, 30 Mar 2017 19:15:50 -0400
+Message-ID: <20170330231550.GA3102@redhat.com>
+References: <20170323143341.31549-1-hch@lst.de>
+ <20170323143341.31549-23-hch@lst.de>
+ <20170330100641.GI5939@soda.linbit>
+ <20170330114408.GA15777@lst.de>
+ <20170330134957.GA508@redhat.com>
+ <yq1pogy3i6u.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <1490911959-5146-1-git-send-email-logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, Stephen Bates <sbates-pv7U853sEMVWk0Htik3J/w@public.gmane.org>, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <yq1pogy3i6u.fsf@oracle.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, agk@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>
+On Thu, Mar 30 2017 at 11:20am -0400,
+Martin K. Petersen <martin.petersen@oracle.com> wrote:
 
-Some cxgb4 cards expose memory as part of BAR4. This patch registers
-this memory as a p2pmem device.
+> Mike Snitzer <snitzer@redhat.com> writes:
+> 
+> > I can work on this now.  Only question I have is: should DM thinp take
+> > care to zero any misaligned head and tail?  (I assume so but with all
+> > the back and forth between Bart, Paolo and Martin I figured I'd ask
+> > explicitly).
+> 
+> Yep, let's make sure our semantics match the hardware ditto.
+> 
+>  - So write zeroes should behave deterministically and explicitly handle
+>    any blocks that can't be cleared via deprovisioning.
+> 
+>  - And discard can work at the discard granularity in a
+>    non-deterministic fashion.
 
-Signed-off-by: Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>
-Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Signed-off-by: Stephen Bates <sbates-pv7U853sEMVWk0Htik3J/w@public.gmane.org>
----
- drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  3 +
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 97 ++++++++++++++++++++++++-
- drivers/net/ethernet/chelsio/cxgb4/t4_regs.h    |  5 ++
- 3 files changed, 102 insertions(+), 3 deletions(-)
+I got pretty far along with implementing the DM thinp support for
+WRITE_ZEROES in terms of thinp's DISCARD support (more of an
+implementation detail.. or so I thought).
 
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-index 163543b..e92443b 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-@@ -48,6 +48,7 @@
- #include <linux/vmalloc.h>
- #include <linux/etherdevice.h>
- #include <linux/net_tstamp.h>
-+#include <linux/p2pmem.h>
- #include <asm/io.h>
- #include "t4_chip_type.h"
- #include "cxgb4_uld.h"
-@@ -859,6 +860,8 @@ struct adapter {
- 
- 	/* TC u32 offload */
- 	struct cxgb4_tc_u32_table *tc_u32;
-+
-+	struct p2pmem_dev *p2pmem;
- };
- 
- /* Support for "sched-class" command to allow a TX Scheduling Class to be
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-index afb0967..a33bcd1 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-@@ -172,6 +172,11 @@ module_param(select_queue, int, 0644);
- MODULE_PARM_DESC(select_queue,
- 		 "Select between kernel provided method of selecting or driver method of selecting TX queue. Default is kernel method.");
- 
-+static bool use_p2pmem;
-+module_param(use_p2pmem, bool, 0644);
-+MODULE_PARM_DESC(use_p2pmem,
-+		 "Enable registering a p2pmem device with bar space (if available)");
-+
- static struct dentry *cxgb4_debugfs_root;
- 
- LIST_HEAD(adapter_list);
-@@ -2835,6 +2840,54 @@ static void setup_memwin_rdma(struct adapter *adap)
- 	}
- }
- 
-+static void setup_memwin_p2pmem(struct adapter *adap)
-+{
-+	unsigned int mem_base = t4_read_reg(adap, CIM_EXTMEM2_BASE_ADDR_A);
-+	unsigned int mem_size = t4_read_reg(adap, CIM_EXTMEM2_ADDR_SIZE_A);
-+
-+	if (!use_p2pmem)
-+		return;
-+
-+	if (mem_base != 0 && mem_size != 0) {
-+		unsigned int sz_kb, pcieofst;
-+
-+		sz_kb = roundup_pow_of_two(mem_size) >> 10;
-+
-+		/*
-+		 * The start offset must be aligned to the window size.
-+		 * Also, BAR4 has MSIX vectors using the first 8KB.
-+		 * Further, the min allowed p2pmem region size is 1MB,
-+		 * so set the start offset to the memory size and we're aligned
-+		 * as well as past the 8KB vector table.
-+		 */
-+		pcieofst = sz_kb << 10;
-+
-+		dev_info(adap->pdev_dev,
-+			 "p2pmem base 0x%x, size %uB, ilog2(sk_kb) 0x%x, "
-+			 "pcieofst 0x%X\n", mem_base, mem_size, ilog2(sz_kb),
-+			 pcieofst);
-+
-+		/* Write the window offset and size */
-+		t4_write_reg(adap,
-+			PCIE_MEM_ACCESS_REG(PCIE_MEM_ACCESS_BASE_WIN_A,
-+					    MEMWIN_RSVD4),
-+			pcieofst | BIR_V(2) | WINDOW_V(ilog2(sz_kb)));
-+
-+		/* Write the adapter memory base/start */
-+		t4_write_reg(adap,
-+			PCIE_MEM_ACCESS_REG(PCIE_MEM_ACCESS_OFFSET_A,
-+					    MEMWIN_RSVD4),
-+			MEMOFST_V((mem_base >> MEMOFST_S)) | PFNUM_V(adap->pf));
-+
-+		/* Read it back to flush it */
-+		t4_read_reg(adap,
-+			PCIE_MEM_ACCESS_REG(PCIE_MEM_ACCESS_OFFSET_A,
-+					    MEMWIN_RSVD4));
-+	} else
-+		dev_info(adap->pdev_dev, "p2pmem memory not reserved, "
-+			 "base 0x%x size %uB\n", mem_base, mem_size);
-+}
-+
- static int adap_init1(struct adapter *adap, struct fw_caps_config_cmd *c)
- {
- 	u32 v;
-@@ -4622,6 +4675,42 @@ static int cxgb4_iov_configure(struct pci_dev *pdev, int num_vfs)
- }
- #endif
- 
-+static int init_p2pmem(struct adapter *adapter)
-+{
-+	unsigned int mem_size = t4_read_reg(adapter, CIM_EXTMEM2_ADDR_SIZE_A);
-+	struct p2pmem_dev *p;
-+	int rc;
-+	struct resource res;
-+
-+	if (!mem_size || !use_p2pmem)
-+		return 0;
-+
-+	mem_size = roundup_pow_of_two(mem_size);
-+
-+	/*
-+	 * Create a subset of BAR4 for the p2pmem region based on the
-+	 * exported memory size.
-+	 */
-+	memcpy(&res, &adapter->pdev->resource[4], sizeof(res));
-+	res.start += mem_size;
-+	res.end = res.start + mem_size - 1;
-+	dev_info(adapter->pdev_dev, "p2pmem resource start 0x%llx end 0x%llx size %lluB\n",
-+		 res.start, res.end, resource_size(&res));
-+
-+	p = p2pmem_create(&adapter->pdev->dev);
-+	if (IS_ERR(p))
-+		return PTR_ERR(p);
-+
-+	rc = p2pmem_add_resource(p, &res);
-+	if (rc) {
-+		p2pmem_unregister(p);
-+		return rc;
-+	}
-+	adapter->p2pmem = p;
-+
-+	return 0;
-+}
-+
- static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- {
- 	int func, i, err, s_qpp, qpp, num_seg;
-@@ -4784,8 +4873,8 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	bitmap_zero(adapter->sge.blocked_fl, adapter->sge.egr_sz);
- #endif
- 	setup_memwin_rdma(adapter);
--	if (err)
--		goto out_unmap_bar;
-+
-+	setup_memwin_p2pmem(adapter);
- 
- 	/* configure SGE_STAT_CFG_A to read WC stats */
- 	if (!is_t4(adapter->params.chip))
-@@ -4989,6 +5078,7 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	print_adapter_info(adapter);
- 	setup_fw_sge_queues(adapter);
-+	init_p2pmem(adapter);
- 	return 0;
- 
- sriov:
-@@ -5047,7 +5137,6 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		free_msix_info(adapter);
- 	if (adapter->num_uld || adapter->num_ofld_uld)
- 		t4_uld_mem_free(adapter);
-- out_unmap_bar:
- 	if (!is_t4(adapter->params.chip))
- 		iounmap(adapter->bar2);
-  out_free_adapter:
-@@ -5075,6 +5164,8 @@ static void remove_one(struct pci_dev *pdev)
- 		return;
- 	}
- 
-+	p2pmem_unregister(adapter->p2pmem);
-+
- 	if (adapter->pf == 4) {
- 		int i;
- 
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4_regs.h b/drivers/net/ethernet/chelsio/cxgb4/t4_regs.h
-index 3348d33..199ddfb 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/t4_regs.h
-+++ b/drivers/net/ethernet/chelsio/cxgb4/t4_regs.h
-@@ -735,6 +735,11 @@
- 
- #define PCIE_MEM_ACCESS_OFFSET_A 0x306c
- 
-+#define MEMOFST_S    7
-+#define MEMOFST_M    0x1ffffffU
-+#define MEMOFST_V(x) ((x) << MEMOFST_S)
-+#define MEMOFST_G(x) (((x) >> MEMOFST_S) & MEMOFST_M)
-+
- #define ENABLE_S    30
- #define ENABLE_V(x) ((x) << ENABLE_S)
- #define ENABLE_F    ENABLE_V(1U)
--- 
-2.1.4
+But while discussing this effort with Jeff Moyer he asked: shouldn't the
+zeroed blocks be provisioned?  This is a fairly embarassing question not
+to be able to answer in the moment.  So I clearly need to learn what the
+overall intent of WRITE_ZEROES actually is.
+
+If it is meant as a replacement for WRITE_SAME (as hch switched dm-io
+over from WRITE_SAME with a payload of 0 to WRITE_ZEROES) and for the
+backing mechanism for blkdev_issue_zeroout() then I guess I have my
+answer.  Unless DM thinp can guarantee that the discarded blocks will
+always return zeroes (by zeroing before all partial block writes) my
+discard based dm-thinp implementation of WRITE_ZEROES is a complete
+throw-away (unless block zeroing is enabled.. which it never is because
+performance sucks with it).  So if an upper-level of the IO stack
+(e.g. ext4) were to assume that a block will _definitely_ have zeroes
+then DM thinp would fall short.
+
+This is all to say: I don't see a quick way forward on implementing
+performant WRITE_ZEROES support for DM thinp.
