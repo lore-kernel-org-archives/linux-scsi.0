@@ -1,29 +1,32 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: Re: RFC: always use REQ_OP_WRITE_ZEROES for zeroing
-	offload
-Date: Thu, 30 Mar 2017 11:04:59 +0200
-Message-ID: <20170330090459.GE12015@lst.de>
-References: <20170323143341.31549-1-hch@lst.de>
-	<20170323155410.GD1138@soda.linbit>
+From: "hch@lst.de" <hch@lst.de>
+Subject: Re: [PATCH 23/23] block: remove the discard_zeroes_data flag
+Date: Thu, 30 Mar 2017 11:06:55 +0200
+Message-ID: <20170330090655.GF12015@lst.de>
+References: <20170323143341.31549-1-hch@lst.de> <20170323143341.31549-24-hch@lst.de> <1490720411.2573.11.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170323155410.GD1138-w1SgEEioFePxa46PmUWvFg@public.gmane.org>
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1490720411.2573.11.camel@sandisk.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Cc: "agk@redhat.com" <agk@redhat.com>, "lars.ellenberg@linbit.com" <lars.ellenberg@linbit.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "philipp.reisner@linbit.com" <philipp.reisner@linbit.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "shli@kernel.org" <shli@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Lars, can you please take a look a patch 22 and check if it's safe?
+On Tue, Mar 28, 2017 at 05:00:48PM +0000, Bart Van Assche wrote:
+> 
+> It seems to me like the documentation in Documentation/ABI/testing/sysfs-block
+> and the above code are not in sync. I think the above code will cause reading
+> from the discard_zeroes_data attribute to return an empty string ("") instead
+> of "0\n".
 
-That's the big thing I want to know before posting the next version
-of the series.  If it's not safe I'd like to drop that patch.
+Thanks, fine with me.
+
+> 
+> BTW, my personal preference is to remove this attribute entirely because keeping
+> it will cause confusion, no matter how well we document the behavior of this
+> attribute.
+
+Jens, any opinion?  I'd like to remove it too, but I fear it might
+break things.  We could deprecate it first with a warning when read
+and then remove it a few releases down the road.
