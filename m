@@ -1,11 +1,13 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-Date: Thu, 30 Mar 2017 16:12:31 -0600
-Message-ID: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+Subject: [RFC 2/8] cxgb4: setup pcie memory window 4 and create p2pmem region
+Date: Thu, 30 Mar 2017 16:12:33 -0600
+Message-ID: <1490911959-5146-3-git-send-email-logang@deltatee.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <1490911959-5146-1-git-send-email-logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
 List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
  <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
 List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
@@ -19,89 +21,206 @@ To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Sagi Grimberg <sagi-NQ
 Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+From: Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>
 
-As discussed at LSF/MM we'd like to present our work to enable
-copy offload support in NVMe fabrics RDMA targets. We'd appreciate
-some review and feedback from the community on our direction.
-This series is not intended to go upstream at this point.
+Some cxgb4 cards expose memory as part of BAR4. This patch registers
+this memory as a p2pmem device.
 
-The concept here is to use memory that's exposed on a PCI BAR as
-data buffers in the NVME target code such that data can be transferred
-from an RDMA NIC to the special memory and then directly to an NVMe
-device avoiding system memory entirely. The upside of this is better
-QoS for applications running on the CPU utilizing memory and lower
-PCI bandwidth required to the CPU (such that systems could be designed
-with fewer lanes connected to the CPU). However, presently, the trade-off
-is currently a reduction in overall throughput. (Largely due to hardware
-issues that would certainly improve in the future).
+Signed-off-by: Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>
+Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+Signed-off-by: Stephen Bates <sbates-pv7U853sEMVWk0Htik3J/w@public.gmane.org>
+---
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  3 +
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 97 ++++++++++++++++++++++++-
+ drivers/net/ethernet/chelsio/cxgb4/t4_regs.h    |  5 ++
+ 3 files changed, 102 insertions(+), 3 deletions(-)
 
-Due to these trade-offs we've designed the system to only enable using
-the PCI memory in cases where the NIC, NVMe devices and memory are all
-behind the same PCI switch. This will mean many setups that could likely
-work well will not be supported so that we can be more confident it
-will work and not place any responsibility on the user to understand
-their topology. (We've chosen to go this route based on feedback we
-received at LSF).
-
-In order to enable this functionality we introduce a new p2pmem device
-which can be instantiated by PCI drivers. The device will register some
-PCI memory as ZONE_DEVICE and provide an genalloc based allocator for
-users of these devices to get buffers. We give an example of enabling
-p2p memory with the cxgb4 driver, however currently these devices have
-some hardware issues that prevent their use so we will likely be
-dropping this patch in the future. Ideally, we'd want to enable this
-functionality with NVME CMB buffers, however we don't have any hardware
-with this feature at this time.
-
-In nvmet-rdma, we attempt to get an appropriate p2pmem device at
-queue creation time and if a suitable one is found we will use it for
-all the (non-inlined) memory in the queue. An 'allow_p2pmem' configfs
-attribute is also created which is required to be set before any p2pmem
-is attempted.
-
-This patchset also includes a more controversial patch which provides an
-interface for userspace to obtain p2pmem buffers through an mmap call on
-a cdev. This enables userspace to fairly easily use p2pmem with RDMA and
-O_DIRECT interfaces. However, the user would be entirely responsible for
-knowing what their doing and inspecting sysfs to understand the pci
-topology and only using it in sane situations.
-
-Thanks,
-
-Logan
-
-
-Logan Gunthorpe (6):
-  Introduce Peer-to-Peer memory (p2pmem) device
-  nvmet: Use p2pmem in nvme target
-  scatterlist: Modify SG copy functions to support io memory.
-  nvmet: Be careful about using iomem accesses when dealing with p2pmem
-  p2pmem: Support device removal
-  p2pmem: Added char device user interface
-
-Steve Wise (2):
-  cxgb4: setup pcie memory window 4 and create p2pmem region
-  p2pmem: Add debugfs "stats" file
-
- drivers/memory/Kconfig                          |   5 +
- drivers/memory/Makefile                         |   2 +
- drivers/memory/p2pmem.c                         | 697 ++++++++++++++++++++++++
- drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |   3 +
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c |  97 +++-
- drivers/net/ethernet/chelsio/cxgb4/t4_regs.h    |   5 +
- drivers/nvme/target/configfs.c                  |  31 ++
- drivers/nvme/target/core.c                      |  18 +-
- drivers/nvme/target/fabrics-cmd.c               |  28 +-
- drivers/nvme/target/nvmet.h                     |   2 +
- drivers/nvme/target/rdma.c                      | 183 +++++--
- drivers/scsi/scsi_debug.c                       |   7 +-
- include/linux/p2pmem.h                          | 120 ++++
- include/linux/scatterlist.h                     |   7 +-
- lib/scatterlist.c                               |  64 ++-
- 15 files changed, 1189 insertions(+), 80 deletions(-)
- create mode 100644 drivers/memory/p2pmem.c
- create mode 100644 include/linux/p2pmem.h
-
---
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+index 163543b..e92443b 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
++++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+@@ -48,6 +48,7 @@
+ #include <linux/vmalloc.h>
+ #include <linux/etherdevice.h>
+ #include <linux/net_tstamp.h>
++#include <linux/p2pmem.h>
+ #include <asm/io.h>
+ #include "t4_chip_type.h"
+ #include "cxgb4_uld.h"
+@@ -859,6 +860,8 @@ struct adapter {
+ 
+ 	/* TC u32 offload */
+ 	struct cxgb4_tc_u32_table *tc_u32;
++
++	struct p2pmem_dev *p2pmem;
+ };
+ 
+ /* Support for "sched-class" command to allow a TX Scheduling Class to be
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+index afb0967..a33bcd1 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+@@ -172,6 +172,11 @@ module_param(select_queue, int, 0644);
+ MODULE_PARM_DESC(select_queue,
+ 		 "Select between kernel provided method of selecting or driver method of selecting TX queue. Default is kernel method.");
+ 
++static bool use_p2pmem;
++module_param(use_p2pmem, bool, 0644);
++MODULE_PARM_DESC(use_p2pmem,
++		 "Enable registering a p2pmem device with bar space (if available)");
++
+ static struct dentry *cxgb4_debugfs_root;
+ 
+ LIST_HEAD(adapter_list);
+@@ -2835,6 +2840,54 @@ static void setup_memwin_rdma(struct adapter *adap)
+ 	}
+ }
+ 
++static void setup_memwin_p2pmem(struct adapter *adap)
++{
++	unsigned int mem_base = t4_read_reg(adap, CIM_EXTMEM2_BASE_ADDR_A);
++	unsigned int mem_size = t4_read_reg(adap, CIM_EXTMEM2_ADDR_SIZE_A);
++
++	if (!use_p2pmem)
++		return;
++
++	if (mem_base != 0 && mem_size != 0) {
++		unsigned int sz_kb, pcieofst;
++
++		sz_kb = roundup_pow_of_two(mem_size) >> 10;
++
++		/*
++		 * The start offset must be aligned to the window size.
++		 * Also, BAR4 has MSIX vectors using the first 8KB.
++		 * Further, the min allowed p2pmem region size is 1MB,
++		 * so set the start offset to the memory size and we're aligned
++		 * as well as past the 8KB vector table.
++		 */
++		pcieofst = sz_kb << 10;
++
++		dev_info(adap->pdev_dev,
++			 "p2pmem base 0x%x, size %uB, ilog2(sk_kb) 0x%x, "
++			 "pcieofst 0x%X\n", mem_base, mem_size, ilog2(sz_kb),
++			 pcieofst);
++
++		/* Write the window offset and size */
++		t4_write_reg(adap,
++			PCIE_MEM_ACCESS_REG(PCIE_MEM_ACCESS_BASE_WIN_A,
++					    MEMWIN_RSVD4),
++			pcieofst | BIR_V(2) | WINDOW_V(ilog2(sz_kb)));
++
++		/* Write the adapter memory base/start */
++		t4_write_reg(adap,
++			PCIE_MEM_ACCESS_REG(PCIE_MEM_ACCESS_OFFSET_A,
++					    MEMWIN_RSVD4),
++			MEMOFST_V((mem_base >> MEMOFST_S)) | PFNUM_V(adap->pf));
++
++		/* Read it back to flush it */
++		t4_read_reg(adap,
++			PCIE_MEM_ACCESS_REG(PCIE_MEM_ACCESS_OFFSET_A,
++					    MEMWIN_RSVD4));
++	} else
++		dev_info(adap->pdev_dev, "p2pmem memory not reserved, "
++			 "base 0x%x size %uB\n", mem_base, mem_size);
++}
++
+ static int adap_init1(struct adapter *adap, struct fw_caps_config_cmd *c)
+ {
+ 	u32 v;
+@@ -4622,6 +4675,42 @@ static int cxgb4_iov_configure(struct pci_dev *pdev, int num_vfs)
+ }
+ #endif
+ 
++static int init_p2pmem(struct adapter *adapter)
++{
++	unsigned int mem_size = t4_read_reg(adapter, CIM_EXTMEM2_ADDR_SIZE_A);
++	struct p2pmem_dev *p;
++	int rc;
++	struct resource res;
++
++	if (!mem_size || !use_p2pmem)
++		return 0;
++
++	mem_size = roundup_pow_of_two(mem_size);
++
++	/*
++	 * Create a subset of BAR4 for the p2pmem region based on the
++	 * exported memory size.
++	 */
++	memcpy(&res, &adapter->pdev->resource[4], sizeof(res));
++	res.start += mem_size;
++	res.end = res.start + mem_size - 1;
++	dev_info(adapter->pdev_dev, "p2pmem resource start 0x%llx end 0x%llx size %lluB\n",
++		 res.start, res.end, resource_size(&res));
++
++	p = p2pmem_create(&adapter->pdev->dev);
++	if (IS_ERR(p))
++		return PTR_ERR(p);
++
++	rc = p2pmem_add_resource(p, &res);
++	if (rc) {
++		p2pmem_unregister(p);
++		return rc;
++	}
++	adapter->p2pmem = p;
++
++	return 0;
++}
++
+ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+ 	int func, i, err, s_qpp, qpp, num_seg;
+@@ -4784,8 +4873,8 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	bitmap_zero(adapter->sge.blocked_fl, adapter->sge.egr_sz);
+ #endif
+ 	setup_memwin_rdma(adapter);
+-	if (err)
+-		goto out_unmap_bar;
++
++	setup_memwin_p2pmem(adapter);
+ 
+ 	/* configure SGE_STAT_CFG_A to read WC stats */
+ 	if (!is_t4(adapter->params.chip))
+@@ -4989,6 +5078,7 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	print_adapter_info(adapter);
+ 	setup_fw_sge_queues(adapter);
++	init_p2pmem(adapter);
+ 	return 0;
+ 
+ sriov:
+@@ -5047,7 +5137,6 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		free_msix_info(adapter);
+ 	if (adapter->num_uld || adapter->num_ofld_uld)
+ 		t4_uld_mem_free(adapter);
+- out_unmap_bar:
+ 	if (!is_t4(adapter->params.chip))
+ 		iounmap(adapter->bar2);
+  out_free_adapter:
+@@ -5075,6 +5164,8 @@ static void remove_one(struct pci_dev *pdev)
+ 		return;
+ 	}
+ 
++	p2pmem_unregister(adapter->p2pmem);
++
+ 	if (adapter->pf == 4) {
+ 		int i;
+ 
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4_regs.h b/drivers/net/ethernet/chelsio/cxgb4/t4_regs.h
+index 3348d33..199ddfb 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/t4_regs.h
++++ b/drivers/net/ethernet/chelsio/cxgb4/t4_regs.h
+@@ -735,6 +735,11 @@
+ 
+ #define PCIE_MEM_ACCESS_OFFSET_A 0x306c
+ 
++#define MEMOFST_S    7
++#define MEMOFST_M    0x1ffffffU
++#define MEMOFST_V(x) ((x) << MEMOFST_S)
++#define MEMOFST_G(x) (((x) >> MEMOFST_S) & MEMOFST_M)
++
+ #define ENABLE_S    30
+ #define ENABLE_V(x) ((x) << ENABLE_S)
+ #define ENABLE_F    ENABLE_V(1U)
+-- 
 2.1.4
