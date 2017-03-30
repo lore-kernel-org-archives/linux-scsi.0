@@ -1,42 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] sd: Consider max_xfer_blocks if opt_xfer_blocks is unusable
-Date: Wed, 29 Mar 2017 22:37:34 -0400
-Message-ID: <yq1k2774hht.fsf@oracle.com>
-References: <20170328044126.10006-1-famz@redhat.com>
+Subject: Re: [PATCH] scsi: hisi_sas: add missing break in switch statement
+Date: Wed, 29 Mar 2017 22:39:52 -0400
+Message-ID: <yq1fuhv4hdz.fsf@oracle.com>
+References: <20170328111222.17303-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170328044126.10006-1-famz@redhat.com> (Fam Zheng's message of
-        "Tue, 28 Mar 2017 12:41:26 +0800")
+In-Reply-To: <20170328111222.17303-1-colin.king@canonical.com> (Colin King's
+        message of "Tue, 28 Mar 2017 12:12:22 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Fam Zheng <famz@redhat.com>
-Cc: linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Laurence Oberman <loberman@redhat.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+To: Colin King <colin.king@canonical.com>
+Cc: John Garry <john.garry@huawei.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Fam Zheng <famz@redhat.com> writes:
+Colin King <colin.king@canonical.com> writes:
 
-Fam,
+Colin,
 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index fcfeddc..a5c7e67 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -2957,6 +2957,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
->  		rw_max = logical_to_sectors(sdp, sdkp->opt_xfer_blocks);
->  	} else
->  		rw_max = BLK_DEF_MAX_SECTORS;
-> +	rw_max = min_not_zero(rw_max, logical_to_sectors(sdp, dev_max));
->  
->  	/* Combine with controller limits */
->  	q->limits.max_sectors = min(rw_max, queue_max_hw_sectors(q));
+> It appears that a break in the TRANS_TX_OPEN_CNX_ERR_NO_DESTINATION
+> case got accidentally removed in an earlier commit, as it stands, the
+> ts->stat and ts->open_rej_reason are being updated twice for this case
+> which looks incorrect.  Fix this by adding in the missing break
+> statement.
 
-Instead of updating rw_max twice, how about:
+Applied to 4.12/scsi-queue.
 
-} else
-	rw_max = min_not_zero(logical_to_sectors(sdp, dev_max),
-                              BLK_DEF_MAX_SECTORS);
-
-?
+Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
