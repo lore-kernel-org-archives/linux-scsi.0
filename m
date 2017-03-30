@@ -1,51 +1,44 @@
 From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: [PATCH 1/3] add lio-target helpers
-Date: Thu, 30 Mar 2017 17:19:02 +0400
-Message-ID: <1490879944-26240-2-git-send-email-dmonakhov@openvz.org>
+Subject: [PATCH 2/3] add test: generic/420 check information lead for lio-fileio
+Date: Thu, 30 Mar 2017 17:19:03 +0400
+Message-ID: <1490879944-26240-3-git-send-email-dmonakhov@openvz.org>
 References: <1490879944-26240-1-git-send-email-dmonakhov@openvz.org>
-Return-path: <fstests-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:36719 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933576AbdC3NTV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Mar 2017 09:19:21 -0400
 In-Reply-To: <1490879944-26240-1-git-send-email-dmonakhov@openvz.org>
-Sender: fstests-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: fstests@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org, Dmitry Monakhov <dmonakhov@openvz.org>
-List-Id: linux-scsi@vger.kernel.org
 
-Linux-IO Target is very good framework for testing block backend.
-It is more flexible than scsi_debug.
-
-http://linux-iscsi.org/wiki/LIO
 Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
 ---
- common/config    |   2 +
- common/liotarget | 111 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 113 insertions(+)
- create mode 100644 common/liotarget
+ tests/generic/420     | 77 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/420.out |  2 ++
+ tests/generic/group   |  1 +
+ 3 files changed, 80 insertions(+)
+ create mode 100755 tests/generic/420
+ create mode 100644 tests/generic/420.out
 
-diff --git a/common/config b/common/config
-index 59041a3..cfe7913 100644
---- a/common/config
-+++ b/common/config
-@@ -212,6 +212,8 @@ export XZ_PROG="`set_prog_path xz`"
- export FLOCK_PROG="`set_prog_path flock`"
- export LDD_PROG="`set_prog_path ldd`"
- export TIMEOUT_PROG="`set_prog_path timeout`"
-+export TARGETCLI_PROG="`set_prog_path targetcli`"
-+export TARGETCTL_PROG="`set_prog_path targetctl`"
- 
- # use 'udevadm settle' or 'udevsettle' to wait for lv to be settled.
- # newer systems have udevadm command but older systems like RHEL5 don't.
-diff --git a/common/liotarget b/common/liotarget
-new file mode 100644
-index 0000000..f821692
+diff --git a/tests/generic/420 b/tests/generic/420
+new file mode 100755
+index 0000000..592703d
 --- /dev/null
-+++ b/common/liotarget
-@@ -0,0 +1,111 @@
-+#!/bin/bash
++++ b/tests/generic/420
+@@ -0,0 +1,77 @@
++#! /bin/bash
++# FS QA Test 420
 +#
-+# Copyright (c) 2017 Virtuozzo Inc
++# Regression test for  information leak for lio-fileio target
++# BUG: If image  file is less than virtual blockdev then read() may return
++#      unitilized data.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017 Dmitry Monakhov <dmonakhov@openvz.org>
 +# All Rights Reserved.
-+#
-+# Written by Dmitry Monakhov <dmonakhov@openvz.org>
 +#
 +# This program is free software; you can redistribute it and/or
 +# modify it under the terms of the GNU General Public License as
@@ -59,97 +52,76 @@ index 0000000..f821692
 +# You should have received a copy of the GNU General Public License
 +# along with this program; if not, write the Free Software Foundation,
 +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#
-+# Functions for Linux-IO Target manipulation
++#-----------------------------------------------------------------------
 +#
 +
-+_require_liotarget()
-+{
-+	which $TARGETCLI_PROG >>$seqres.full 2>&1  || \
-+	    _notrun "this test requires 'targetcli' tool"
-+	which $TARGETCLI_PROG >>$seqres.full 2>&1  || \
-+	    _notrun "this test requires 'targetcli' tool"
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
 +
-+	$TARGETCLI_PROG ls /backstores/ramdisk >>$seqres.full 2>&1 ||\
-+	    _notrun "kernel compiled w/o CONFIG_TARGET_CORE"
-+	$TARGETCLI_PROG ls /backstores/fileio >>$seqres.full 2>&1 ||\
-+	    _notrun "kernel compiled w/o CONFIG_TCM_FILEIO"
-+	$TARGETCLI_PROG ls /loopback >>$seqres.full 2>&1 ||\
-+	    _notrun "kernel compiled w/o CONFIG_LOOPBACK_TARGET"
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++	_liotgt_cleanup
++	rm -rf $TEST_DIR/$$
 +}
 +
-+_liotgt_create_fileio()
-+{
-+	local name=$1
-+	local img=$2
-+	local sz=$3
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/liotarget
 +
-+	$TARGETCLI_PROG /backstores/fileio create \
-+			name=$name file_or_dev=$img  size=$sz >>$seqres.full ||\
-+	    _fail "Can not create /backstores/fileio/$name"
++# remove previous $seqres.full before test
++rm -f $seqres.full
 +
-+	local cfg_path=`ls -d /sys/kernel/config/target/core/fileio_*/$name`
-+	[ -d "$cfg_path" ] || _fail "Bad config path"
-+	echo $cfg_path
-+}
++# real QA test starts here
 +
-+_liotgt_set_attribute()
-+{
-+	local path=$1
-+	local attr_name=$2
-+	local attr_val=$3
++# Modify as appropriate.
++_supported_fs generic
++_supported_os Linux
++_require_test
++_require_liotarget
 +
-+	[ -f $path/attrib/$attr_name ] || _fail "Bad attribute $attr_name"
-+	echo "echo $attr_val >  $path/attrib/$attr_name " >>$seqres.full
-+	echo $attr_val >  $path/attrib/$attr_name
-+}
++mkdir -p $TEST_DIR/$$ || _fail "Can not make test dir"
 +
-+_liotgt_create_loopback()
-+{
-+	local out=`$TARGETCLI_PROG /loopback/ create 2>&1`
-+	[ $? -eq 0 ] || _fail "Can not create loopback target"
-+	echo $out >>$seqres.full
++cfg_path=$(_liotgt_create_fileio  420-test.img $TEST_DIR/$$/420-test.img 128M)
++dev=$(_liotgt_attach_target /backstores/fileio/420-test.img)
 +
-+	local naa=`echo $out | gawk '{ print $3 }'`
-+	echo ${naa:0:20} >>$seqres.full
++$XFS_IO_PROG -f -c "truncate 1M" $TEST_DIR/$$/420-test.img >> $seqres.full
 +
-+	echo ${naa:0:20}
-+}
++$XFS_IO_PROG -c "pwrite -S 0xa0 -b 512 512 1k" -d $dev >>$seqres.full 2>&1 || \
++    _fail "pwrite failed"
 +
-+_liotgt_find_dev()
-+{
-+	local found=""
-+	local name=$1
-+	local drives=`find /sys/devices -type f -name model`
-+	for d in $drives;do
-+		local dir=`dirname $d`
-+		local vendor=`cat $dir/vendor`
-+		local model=`cat $dir/model`
-+		if [ "${vendor//[[:space:]]/}" == "LIO-ORG" ] && \
-+		       [ "${model//[[:space:]]/}" == "$name" ]; then
-+			found=/dev/$(ls $dir/block)
-+			break
-+		fi
-+	done
-+	[ -z "$found" ] && _fail "Can not find device with backend $name"
-+	echo "$found"
-+}
++$XFS_IO_PROG -c "pwrite -S 0xab -b 512 2M 1k" -d $dev >>$seqres.full 2>&1 || \
++    _fail "pwrite failed"
 +
-+_liotgt_attach_target()
-+{
-+	local path=$1
-+	local name=`basename $path`
-+	local naa=$(_liotgt_create_loopback)
-+
-+	$TARGETCLI_PROG /loopback/$naa/luns create $path >>$seqres.full 2>&1 ||\
-+	    _fail "Can not attach $path to tcm_loop"
-+	_liotgt_find_dev $name
-+}
-+
-+_liotgt_cleanup()
-+{
-+	$TARGETCTL_PROG clear
-+}
++md5sum $dev | sed -e "s,$dev,loopdev,g"
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/420.out b/tests/generic/420.out
+new file mode 100644
+index 0000000..deed5da
+--- /dev/null
++++ b/tests/generic/420.out
+@@ -0,0 +1,2 @@
++QA output created by 420
++f5cfb0d8d7bfadbc2127f4f6ca4a0eba  loopdev
+diff --git a/tests/generic/group b/tests/generic/group
+index 0781f35..1261547 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -422,3 +422,4 @@
+ 417 auto quick shutdown log
+ 418 auto rw
+ 419 auto quick encrypt
++420 auto blockdev liotarget
 -- 
 2.9.3
