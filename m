@@ -1,75 +1,62 @@
 From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH 1/2] iscsi-target: Fix TMR reference leak during session
- shutdown
-Date: Thu, 30 Mar 2017 17:08:10 +0000
-Message-ID: <1490893673.2753.8.camel@sandisk.com>
-References: <1490862594-2712-1-git-send-email-nab@linux-iscsi.org>
-         <1490862594-2712-2-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH] osd_uld: Check scsi_device_get() return value
+Date: Thu, 30 Mar 2017 17:17:17 +0000
+Message-ID: <1D08B61A9CF0974AA09887BE32D889DA12E934@ULS-OP-MBXIP03.sdcorp.global.sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1490862594-2712-2-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:41231 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932582AbdC3RR1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Mar 2017 13:17:27 -0400
 Content-Language: en-US
-Content-ID: <AB1B9C4A9F262640875441870FD55222@sandisk.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "cyl@datera.io" <cyl@datera.io>, "jcs@datera.io" <jcs@datera.io>, "rlm@daterainc.com" <rlm@daterainc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, 2017-03-30 at 08:29 +0000, Nicholas A. Bellinger wrote:
-> diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/is=
-csi/iscsi_target_util.c
-> index 5041a9c..b464033 100644
-> --- a/drivers/target/iscsi/iscsi_target_util.c
-> +++ b/drivers/target/iscsi/iscsi_target_util.c
-> @@ -737,21 +737,23 @@ void iscsit_free_cmd(struct iscsi_cmd *cmd, bool sh=
-utdown)
->  {
->  	struct se_cmd *se_cmd =3D NULL;
->  	int rc;
-> +	bool op_scsi =3D false;
->  	/*
->  	 * Determine if a struct se_cmd is associated with
->  	 * this struct iscsi_cmd.
->  	 */
->  	switch (cmd->iscsi_opcode) {
->  	case ISCSI_OP_SCSI_CMD:
-> -		se_cmd =3D &cmd->se_cmd;
-> -		__iscsit_free_cmd(cmd, true, shutdown);
-> +		op_scsi =3D true;
->  		/*
->  		 * Fallthrough
->  		 */
->  	case ISCSI_OP_SCSI_TMFUNC:
-> -		rc =3D transport_generic_free_cmd(&cmd->se_cmd, shutdown);
-> -		if (!rc && shutdown && se_cmd && se_cmd->se_sess) {
-> -			__iscsit_free_cmd(cmd, true, shutdown);
-> +		se_cmd =3D &cmd->se_cmd;
-> +		__iscsit_free_cmd(cmd, op_scsi, shutdown);
-> +		rc =3D transport_generic_free_cmd(se_cmd, shutdown);
-> +		if (!rc && shutdown && se_cmd->se_sess) {
-> +			__iscsit_free_cmd(cmd, op_scsi, shutdown);
->  			target_put_sess_cmd(se_cmd);
->  		}
->  		break;
-
-Hello Nic,
-
-I agree that this patch fixes a leak. However, an existing bug in
-iscsit_free_cmd() is not addressed by this patch. Before the TMF code start=
-ed
-using kref_get() / kref_put() it was possible for transport_generic_free_cm=
-d()
-to determine whether or not iscsit_free_cmd() should call __iscsit_free_cmd=
-()
-by checking the command reference count. I think that since the TMF code
-manipulates the command reference count it is no longer possible for
-transport_generic_free_cmd() to determine this. If iscsit_free_cmd() is cal=
-led
-while a LUN RESET is in progress then the return value of
-transport_generic_free_cmd() will be wrong. I will post a few patches that =
-not
-only address what I just described but also the leak fixed by this patch.
-
-Bart.=
+scsi_device_get() can fail. Hence check its return value.=0A=
+=0A=
+Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>=0A=
+Cc: Boaz Harrosh <bharrosh@panasas.com>=0A=
+---=0A=
+ drivers/scsi/osd/osd_uld.c | 8 +++++---=0A=
+ 1 file changed, 5 insertions(+), 3 deletions(-)=0A=
+=0A=
+diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c=0A=
+index e0ce5d2fd14d..1dea4244dd0c 100644=0A=
+--- a/drivers/scsi/osd/osd_uld.c=0A=
++++ b/drivers/scsi/osd/osd_uld.c=0A=
+@@ -464,14 +464,15 @@ static int osd_probe(struct device *dev)=0A=
+ 	/* hold one more reference to the scsi_device that will get released=0A=
+ 	 * in __release, in case a logout is happening while fs is mounted=0A=
+ 	 */=0A=
+-	scsi_device_get(scsi_device);=0A=
++	if (scsi_device_get(scsi_device))=0A=
++		goto err_put_disk;=0A=
+ 	osd_dev_init(&oud->od, scsi_device);=0A=
+ =0A=
+ 	/* Detect the OSD Version */=0A=
+ 	error =3D __detect_osd(oud);=0A=
+ 	if (error) {=0A=
+ 		OSD_ERR("osd detection failed, non-compatible OSD device\n");=0A=
+-		goto err_put_disk;=0A=
++		goto err_put_sdev;=0A=
+ 	}=0A=
+ =0A=
+ 	/* init the char-device for communication with user-mode */=0A=
+@@ -508,8 +509,9 @@ static int osd_probe(struct device *dev)=0A=
+ =0A=
+ err_put_cdev:=0A=
+ 	cdev_del(&oud->cdev);=0A=
+-err_put_disk:=0A=
++err_put_sdev:=0A=
+ 	scsi_device_put(scsi_device);=0A=
++err_put_disk:=0A=
+ 	put_disk(disk);=0A=
+ err_free_osd:=0A=
+ 	dev_set_drvdata(dev, NULL);=0A=
+-- =0A=
+2.12.0=0A=
+=0A=
