@@ -1,44 +1,21 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCHv5 0/2] tcmu: For bugs fix only
-Date: Thu, 30 Mar 2017 15:03:40 +0000
-Message-ID: <1490886207.2753.1.camel@sandisk.com>
-References: <1490605661-16127-1-git-send-email-lixiubo@cmss.chinamobile.com>
-         <1490863702.6977.7.camel@haakon3.risingtidesystems.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: RFC: always use REQ_OP_WRITE_ZEROES for zeroing offload
+Date: Thu, 30 Mar 2017 11:12:58 -0400
+Message-ID: <20170330151257.GA910@redhat.com>
+References: <20170323143341.31549-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:31743 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932971AbdC3PEX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Mar 2017 11:04:23 -0400
-In-Reply-To: <1490863702.6977.7.camel@haakon3.risingtidesystems.com>
-Content-Language: en-US
-Content-ID: <294CA701478CF14090B443C19DFCF3CD@sandisk.com>
+Received: from mx1.redhat.com ([209.132.183.28]:35214 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933187AbdC3PNG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 30 Mar 2017 11:13:06 -0400
+Content-Disposition: inline
+In-Reply-To: <20170323143341.31549-1-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "lixiubo@cmss.chinamobile.com" <lixiubo@cmss.chinamobile.com>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
-Cc: "bryantly@linux.vnet.ibm.com" <bryantly@linux.vnet.ibm.com>, "agrover@redhat.com" <agrover@redhat.com>, "iliastsi@arrikto.com" <iliastsi@arrikto.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "shli@kernel.org" <shli@kernel.org>, "sheng@yasker.org" <sheng@yasker.org>, "namei.unix@gmail.com" <namei.unix@gmail.com>, "mchristi@redhat.com" <mchristi@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com
 
-On Thu, 2017-03-30 at 01:48 -0700, Nicholas A. Bellinger wrote:
-> Just for future reference, the flow of these tags should reflect the
-> history of the patch.  Eg:
->=20
-> Reviewed-by: First reviewer <foo@bar.com>
-> Tested-by: First tester <foo2@bar2.com>
-> Reviewed-by: Second reviewer <foo3@bar3.com>
-> Signed-off-by: Patch Author <you@yourdomain.com>
->=20
-> and then once the subsystem maintainer merges it into his tree, they add
-> their own:
->=20
-> Signed-off-by: Subsystem Maintainer <superturboarray@linux-domain.org>
-
-Hi Nic,
-
-I agree that these tags should reflect the history of the patch. I think
-that means that the patch author should be mentioned first, Reviewed-by /
-Tested-by tags next and the subsystem maintainer sign-off last. At least,
-that's how most other maintainers do it.
-
-Bart.=
+Would be very useful, particularly for testing, if
+drivers/scsi/scsi_debug.c were updated to support WRITE ZEROES.
