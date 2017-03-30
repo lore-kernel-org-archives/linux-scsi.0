@@ -1,32 +1,44 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] Revert "scsi: ufs: add queries retry mechanism"
-Date: Wed, 29 Mar 2017 22:53:53 -0400
-Message-ID: <yq1y3vn3266.fsf@oracle.com>
-References: <1490768361-4492-1-git-send-email-szymonx.mielczarek@intel.com>
+From: Fam Zheng <famz@redhat.com>
+Subject: Re: [PATCH v2] sd: Consider max_xfer_blocks if opt_xfer_blocks is
+ unusable
+Date: Thu, 30 Mar 2017 12:13:11 +0800
+Message-ID: <20170330041311.GA32392@lemon.lan>
+References: <20170328044126.10006-1-famz@redhat.com>
+ <yq1k2774hht.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:30919 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752733AbdC3CyK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Mar 2017 22:54:10 -0400
-In-Reply-To: <1490768361-4492-1-git-send-email-szymonx.mielczarek@intel.com>
-        (Szymon Mielczarek's message of "Wed, 29 Mar 2017 08:19:21 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <yq1k2774hht.fsf@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Laurence Oberman <loberman@redhat.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Szymon Mielczarek <szymonx.mielczarek@intel.com>
-Cc: linux-scsi@vger.kernel.org, subhashj@codeaurora.org
 
-Szymon Mielczarek <szymonx.mielczarek@intel.com> writes:
+On Wed, 03/29 22:37, Martin K. Petersen wrote:
+> Fam Zheng <famz@redhat.com> writes:
+> 
+> Fam,
+> 
+> > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> > index fcfeddc..a5c7e67 100644
+> > --- a/drivers/scsi/sd.c
+> > +++ b/drivers/scsi/sd.c
+> > @@ -2957,6 +2957,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
+> >  		rw_max = logical_to_sectors(sdp, sdkp->opt_xfer_blocks);
+> >  	} else
+> >  		rw_max = BLK_DEF_MAX_SECTORS;
+> > +	rw_max = min_not_zero(rw_max, logical_to_sectors(sdp, dev_max));
+> >  
+> >  	/* Combine with controller limits */
+> >  	q->limits.max_sectors = min(rw_max, queue_max_hw_sectors(q));
+> 
+> Instead of updating rw_max twice, how about:
+> 
+> } else
+> 	rw_max = min_not_zero(logical_to_sectors(sdp, dev_max),
+>                               BLK_DEF_MAX_SECTORS);
 
-> This reverts commit 61e073590b82a539654626ecae91b8fab11db3f3.
->
-> The patch introduced redundant query retries as we already had such
-> mechanism provided with _retry functions.
-> Both ufshcd_read_desc and ufshcd_read_unit_desc_param functions
-> call ufshcd_query_descriptor_retry wrapper.
+Yes, it is better. Is it okay to make the change when you apply?
 
-Applied to 4.12/scsi-queue. Thank you.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Fam
