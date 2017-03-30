@@ -1,174 +1,44 @@
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH] target/user: PGR Support
-Date: Thu, 30 Mar 2017 09:47:49 -0500
-Message-ID: <1490885269-47274-1-git-send-email-bryantly@linux.vnet.ibm.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCHv5 0/2] tcmu: For bugs fix only
+Date: Thu, 30 Mar 2017 15:03:40 +0000
+Message-ID: <1490886207.2753.1.camel@sandisk.com>
+References: <1490605661-16127-1-git-send-email-lixiubo@cmss.chinamobile.com>
+         <1490863702.6977.7.camel@haakon3.risingtidesystems.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:50304 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753939AbdC3Or5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 30 Mar 2017 10:47:57 -0400
-Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v2UEihRg043835
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Mar 2017 10:47:56 -0400
-Received: from e12.ny.us.ibm.com (e12.ny.us.ibm.com [129.33.205.202])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 29gfqhdkdj-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Mar 2017 10:47:56 -0400
-Received: from localhost
-        by e12.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <bryantly@linux.vnet.ibm.com>;
-        Thu, 30 Mar 2017 10:47:55 -0400
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:31743 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932971AbdC3PEX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Mar 2017 11:04:23 -0400
+In-Reply-To: <1490863702.6977.7.camel@haakon3.risingtidesystems.com>
+Content-Language: en-US
+Content-ID: <294CA701478CF14090B443C19DFCF3CD@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: nab@linux-iscsi.org, mchristi@redhat.com
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+To: "lixiubo@cmss.chinamobile.com" <lixiubo@cmss.chinamobile.com>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: "bryantly@linux.vnet.ibm.com" <bryantly@linux.vnet.ibm.com>, "agrover@redhat.com" <agrover@redhat.com>, "iliastsi@arrikto.com" <iliastsi@arrikto.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "shli@kernel.org" <shli@kernel.org>, "sheng@yasker.org" <sheng@yasker.org>, "namei.unix@gmail.com" <namei.unix@gmail.com>, "mchristi@redhat.com" <mchristi@redhat.com>
 
-This adds PGR support for just TCMU, since tcmu doesn't
-have the necessary IT_NEXUS info to process PGR in userspace,
-so have those commands be processed in kernel.
+On Thu, 2017-03-30 at 01:48 -0700, Nicholas A. Bellinger wrote:
+> Just for future reference, the flow of these tags should reflect the
+> history of the patch.  Eg:
+>=20
+> Reviewed-by: First reviewer <foo@bar.com>
+> Tested-by: First tester <foo2@bar2.com>
+> Reviewed-by: Second reviewer <foo3@bar3.com>
+> Signed-off-by: Patch Author <you@yourdomain.com>
+>=20
+> and then once the subsystem maintainer merges it into his tree, they add
+> their own:
+>=20
+> Signed-off-by: Subsystem Maintainer <superturboarray@linux-domain.org>
 
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
----
- drivers/target/target_core_configfs.c | 10 +++++-----
- drivers/target/target_core_device.c   | 27 +++++++++++++++++++++++++++
- drivers/target/target_core_pr.c       |  2 +-
- drivers/target/target_core_pscsi.c    |  3 ++-
- include/target/target_core_backend.h  |  1 +
- 5 files changed, 36 insertions(+), 7 deletions(-)
+Hi Nic,
 
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index 38b5025..edfb098 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -1366,7 +1366,7 @@ static ssize_t target_pr_res_holder_show(struct config_item *item, char *page)
- 	struct se_device *dev = pr_to_dev(item);
- 	int ret;
- 
--	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH)
-+	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH_PGR)
- 		return sprintf(page, "Passthrough\n");
- 
- 	spin_lock(&dev->dev_reservation_lock);
-@@ -1506,7 +1506,7 @@ static ssize_t target_pr_res_type_show(struct config_item *item, char *page)
- {
- 	struct se_device *dev = pr_to_dev(item);
- 
--	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH)
-+	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH_PGR)
- 		return sprintf(page, "SPC_PASSTHROUGH\n");
- 	else if (dev->dev_reservation_flags & DRF_SPC2_RESERVATIONS)
- 		return sprintf(page, "SPC2_RESERVATIONS\n");
-@@ -1519,7 +1519,7 @@ static ssize_t target_pr_res_aptpl_active_show(struct config_item *item,
- {
- 	struct se_device *dev = pr_to_dev(item);
- 
--	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH)
-+	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH_PGR)
- 		return 0;
- 
- 	return sprintf(page, "APTPL Bit Status: %s\n",
-@@ -1531,7 +1531,7 @@ static ssize_t target_pr_res_aptpl_metadata_show(struct config_item *item,
- {
- 	struct se_device *dev = pr_to_dev(item);
- 
--	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH)
-+	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH_PGR)
- 		return 0;
- 
- 	return sprintf(page, "Ready to process PR APTPL metadata..\n");
-@@ -1577,7 +1577,7 @@ static ssize_t target_pr_res_aptpl_metadata_store(struct config_item *item,
- 	u16 tpgt = 0;
- 	u8 type = 0;
- 
--	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH)
-+	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH_PGR)
- 		return count;
- 	if (dev->dev_reservation_flags & DRF_SPC2_RESERVATIONS)
- 		return count;
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index c754ae3..83c0d77 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -1045,6 +1045,7 @@ passthrough_parse_cdb(struct se_cmd *cmd,
- 	sense_reason_t (*exec_cmd)(struct se_cmd *cmd))
- {
- 	unsigned char *cdb = cmd->t_task_cdb;
-+	struct se_device *dev = cmd->se_dev;
- 
- 	/*
- 	 * Clear a lun set in the cdb if the initiator talking to use spoke
-@@ -1076,6 +1077,32 @@ passthrough_parse_cdb(struct se_cmd *cmd,
- 		return TCM_NO_SENSE;
- 	}
- 
-+	/*
-+	 * For PERSISTENT RESERVE IN/OUT, RELEASE, and RESERVE we need to
-+	 * emulate the response, since tcmu does not have the information
-+	 * required to process these commands.
-+	 */
-+	if (!(dev->transport->transport_flags &
-+	      TRANSPORT_FLAG_PASSTHROUGH_PGR)) {
-+		if (cdb[0] == PERSISTENT_RESERVE_IN) {
-+			cmd->execute_cmd = target_scsi3_emulate_pr_in;
-+			return TCM_NO_SENSE;
-+		}
-+		if (cdb[0] == PERSISTENT_RESERVE_OUT) {
-+			cmd->execute_cmd = target_scsi3_emulate_pr_out;
-+			return TCM_NO_SENSE;
-+		}
-+
-+		if (cdb[0] == RELEASE || cdb[0] == RELEASE_10) {
-+			cmd->execute_cmd = target_scsi2_reservation_release;
-+			return TCM_NO_SENSE;
-+		}
-+		if (cdb[0] == RESERVE || cdb[0] == RESERVE_10) {
-+			cmd->execute_cmd = target_scsi2_reservation_reserve;
-+			return TCM_NO_SENSE;
-+		}
-+	}
-+
- 	/* Set DATA_CDB flag for ops that should have it */
- 	switch (cdb[0]) {
- 	case READ_6:
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index e180511..129ca57 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -4147,7 +4147,7 @@ target_check_reservation(struct se_cmd *cmd)
- 		return 0;
- 	if (dev->se_hba->hba_flags & HBA_FLAGS_INTERNAL_USE)
- 		return 0;
--	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH)
-+	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH_PGR)
- 		return 0;
- 
- 	spin_lock(&dev->dev_reservation_lock);
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index 94cda79..8943a62 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -1081,7 +1081,8 @@ static const struct target_backend_ops pscsi_ops = {
- 	.name			= "pscsi",
- 	.owner			= THIS_MODULE,
- 	.transport_flags	= TRANSPORT_FLAG_PASSTHROUGH |
--				  TRANSPORT_FLAG_PASSTHROUGH_ALUA,
-+				  TRANSPORT_FLAG_PASSTHROUGH_ALUA |
-+				  TRANSPORT_FLAG_PASSTHROUGH_PGR,
- 	.attach_hba		= pscsi_attach_hba,
- 	.detach_hba		= pscsi_detach_hba,
- 	.pmode_enable_hba	= pscsi_pmode_enable_hba,
-diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
-index 1b0f447..e475531 100644
---- a/include/target/target_core_backend.h
-+++ b/include/target/target_core_backend.h
-@@ -10,6 +10,7 @@
-  * backend module.
-  */
- #define TRANSPORT_FLAG_PASSTHROUGH_ALUA		0x2
-+#define TRANSPORT_FLAG_PASSTHROUGH_PGR          0x4
- 
- struct request_queue;
- struct scatterlist;
--- 
-2.5.4 (Apple Git-61)
+I agree that these tags should reflect the history of the patch. I think
+that means that the patch author should be mentioned first, Reviewed-by /
+Tested-by tags next and the subsystem maintainer sign-off last. At least,
+that's how most other maintainers do it.
+
+Bart.=
