@@ -1,40 +1,39 @@
-From: Cornelia Huck <cornelia.huck@de.ibm.com>
-Subject: Re: [PATCH 1/6] virtio: wrap find_vqs
-Date: Thu, 30 Mar 2017 09:18:41 +0200
-Message-ID: <20170330091841.2797eca4.cornelia.huck@de.ibm.com>
-References: <1490820507-8005-1-git-send-email-mst@redhat.com>
-        <1490820507-8005-2-git-send-email-mst@redhat.com>
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re:
+ [REGRESSION][Stable][v3.12.y][v4.4.y][v4.9.y][v4.10.y][v4.11-rc1] scsi:
+ storvsc: properly set residual data length on errors
+Date: Thu, 30 Mar 2017 10:03:06 +0200
+Message-ID: <20170330080306.GA15809@kroah.com>
+References: <5df6cd65-92d5-e4c5-56e3-771643f86861@canonical.com>
+ <BLUPR0301MB2098AF08A8AFFC22F2B5D67ACC330@BLUPR0301MB2098.namprd03.prod.outlook.com>
+ <f8e619e0-d8b6-bd2f-1a92-c52fbc4b5550@canonical.com>
+ <BLUPR0301MB2098105B51A887EEBA6EFD90CC320@BLUPR0301MB2098.namprd03.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-crypto-owner@vger.kernel.org>
-In-Reply-To: <1490820507-8005-2-git-send-email-mst@redhat.com>
-Sender: linux-crypto-owner@vger.kernel.org
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Dmitry Tarnyagin <dmitry.tarnyagin@lockless.no>, kvm@vger.kernel.org, David Airlie <airlied@linux.ie>, linux-remoteproc@vger.kernel.org, dri-devel@lists.freedesktop.org, Bjorn Andersson <bjorn.andersson@linaro.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Herbert Xu <herbert@gondor.apana.org.au>, linux-scsi@vger.kernel.org, John Fastabend <john.fastabend@gmail.com>, Arnd Bergmann <arnd@arndb.de>, Amit Shah <amit@kernel.org>, Stefan Hajnoczi <stefanha@redhat.com>, virtualization@lists.linux-foundation.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-crypto@vger.kernel.org, netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Content-Disposition: inline
+In-Reply-To: <BLUPR0301MB2098105B51A887EEBA6EFD90CC320@BLUPR0301MB2098.namprd03.prod.outlook.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Stephen Hemminger <sthemmin@microsoft.com>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, LKML <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, Haiyang Zhang <haiyangz@microsoft.com>, Joseph Salisbury <joseph.salisbury@canonical.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 29 Mar 2017 23:48:44 +0300
-"Michael S. Tsirkin" <mst@redhat.com> wrote:
+On Tue, Mar 28, 2017 at 04:14:09PM +0000, Stephen Hemminger wrote:
+> I decided not to send it to stable since problem was only observed on
+> 4.11 but it is probably endemic to all GEN2 VM's
 
-> We are going to add more parameters to find_vqs, let's wrap the call so
-> we don't need to tweak all drivers every time.
-> 
-> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> ---
->  drivers/block/virtio_blk.c                 | 3 +--
->  drivers/char/virtio_console.c              | 6 +++---
->  drivers/crypto/virtio/virtio_crypto_core.c | 3 +--
->  drivers/gpu/drm/virtio/virtgpu_kms.c       | 3 +--
->  drivers/net/caif/caif_virtio.c             | 3 +--
->  drivers/net/virtio_net.c                   | 3 +--
->  drivers/rpmsg/virtio_rpmsg_bus.c           | 2 +-
->  drivers/scsi/virtio_scsi.c                 | 3 +--
->  drivers/virtio/virtio_balloon.c            | 3 +--
->  drivers/virtio/virtio_input.c              | 3 +--
->  include/linux/virtio_config.h              | 9 +++++++++
->  net/vmw_vsock/virtio_transport.c           | 6 +++---
->  12 files changed, 24 insertions(+), 23 deletions(-)
+So, what does this mean?  What should stable@ do?  Nothing?  Ok, now
+dropped this from my patch queue :)
 
-Regardless whether that context thing is the right thing to do, this
-looks like a sensible cleanup.
+thanks,
+
+greg k-h
