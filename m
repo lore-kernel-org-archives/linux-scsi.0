@@ -1,127 +1,53 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 04/25] sd: implement REQ_OP_WRITE_ZEROES
-Date: Fri, 31 Mar 2017 18:32:52 +0200
-Message-ID: <20170331163313.31821-5-hch@lst.de>
+Subject: [PATCH 06/25] dm io: discards don't take a payload
+Date: Fri, 31 Mar 2017 18:32:54 +0200
+Message-ID: <20170331163313.31821-7-hch@lst.de>
 References: <20170331163313.31821-1-hch@lst.de>
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:57253 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933272AbdCaQdh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Mar 2017 12:33:37 -0400
 In-Reply-To: <20170331163313.31821-1-hch@lst.de>
-Sender: linux-raid-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, lars.ellenberg@linbit.com
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+
+Fix up do_region to not allocate a bio_vec for discards.  We've
+got rid of the discard payload allocated by the caller years ago.
+
+Obviously this wasn't actually harmful given how long it's been
+there, but it's still good to avoid the pointless allocation.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/sd.c     | 31 ++++++++++++++++++++++++++-----
- drivers/scsi/sd_zbc.c |  1 +
- 2 files changed, 27 insertions(+), 5 deletions(-)
+ drivers/md/dm-io.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index b853f91fb3da..d8d9c0bdd93c 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -735,7 +735,7 @@ static int sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
- 	return scsi_init_io(cmd);
- }
+diff --git a/drivers/md/dm-io.c b/drivers/md/dm-io.c
+index 03940bf36f6c..b808cbe22678 100644
+--- a/drivers/md/dm-io.c
++++ b/drivers/md/dm-io.c
+@@ -328,11 +328,17 @@ static void do_region(int op, int op_flags, unsigned region,
+ 		/*
+ 		 * Allocate a suitably sized-bio.
+ 		 */
+-		if ((op == REQ_OP_DISCARD) || (op == REQ_OP_WRITE_SAME))
++		switch (op) {
++		case REQ_OP_DISCARD:
++			num_bvecs = 0;
++			break;
++		case REQ_OP_WRITE_SAME:
+ 			num_bvecs = 1;
+-		else
++			break;
++		default:
+ 			num_bvecs = min_t(int, BIO_MAX_PAGES,
+ 					  dm_sector_div_up(remaining, (PAGE_SIZE >> SECTOR_SHIFT)));
++		}
  
--static int sd_setup_write_same16_cmnd(struct scsi_cmnd *cmd)
-+static int sd_setup_write_same16_cmnd(struct scsi_cmnd *cmd, bool unmap)
- {
- 	struct scsi_device *sdp = cmd->device;
- 	struct request *rq = cmd->request;
-@@ -752,13 +752,14 @@ static int sd_setup_write_same16_cmnd(struct scsi_cmnd *cmd)
- 
- 	cmd->cmd_len = 16;
- 	cmd->cmnd[0] = WRITE_SAME_16;
--	cmd->cmnd[1] = 0x8; /* UNMAP */
-+	if (unmap)
-+		cmd->cmnd[1] = 0x8; /* UNMAP */
- 	put_unaligned_be64(sector, &cmd->cmnd[2]);
- 	put_unaligned_be32(nr_sectors, &cmd->cmnd[10]);
- 
- 	cmd->allowed = SD_MAX_RETRIES;
- 	cmd->transfersize = data_len;
--	rq->timeout = SD_TIMEOUT;
-+	rq->timeout = unmap ? SD_TIMEOUT : SD_WRITE_SAME_TIMEOUT;
- 	scsi_req(rq)->resid_len = data_len;
- 
- 	return scsi_init_io(cmd);
-@@ -788,12 +789,27 @@ static int sd_setup_write_same10_cmnd(struct scsi_cmnd *cmd, bool unmap)
- 
- 	cmd->allowed = SD_MAX_RETRIES;
- 	cmd->transfersize = data_len;
--	rq->timeout = SD_TIMEOUT;
-+	rq->timeout = unmap ? SD_TIMEOUT : SD_WRITE_SAME_TIMEOUT;
- 	scsi_req(rq)->resid_len = data_len;
- 
- 	return scsi_init_io(cmd);
- }
- 
-+static int sd_setup_write_zeroes_cmnd(struct scsi_cmnd *cmd)
-+{
-+	struct request *rq = cmd->request;
-+	struct scsi_device *sdp = cmd->device;
-+	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
-+	u64 sector = blk_rq_pos(rq) >> (ilog2(sdp->sector_size) - 9);
-+	u32 nr_sectors = blk_rq_sectors(rq) >> (ilog2(sdp->sector_size) - 9);
-+
-+	if (sdp->no_write_same)
-+		return BLKPREP_INVALID;
-+	if (sdkp->ws16 || sector > 0xffffffff || nr_sectors > 0xffff)
-+		return sd_setup_write_same16_cmnd(cmd, false);
-+	return sd_setup_write_same10_cmnd(cmd, false);
-+}
-+
- static void sd_config_write_same(struct scsi_disk *sdkp)
- {
- 	struct request_queue *q = sdkp->disk->queue;
-@@ -823,6 +839,8 @@ static void sd_config_write_same(struct scsi_disk *sdkp)
- out:
- 	blk_queue_max_write_same_sectors(q, sdkp->max_ws_blocks *
- 					 (logical_block_size >> 9));
-+	blk_queue_max_write_zeroes_sectors(q, sdkp->max_ws_blocks *
-+					 (logical_block_size >> 9));
- }
- 
- /**
-@@ -1163,7 +1181,7 @@ static int sd_init_command(struct scsi_cmnd *cmd)
- 		case SD_LBP_UNMAP:
- 			return sd_setup_unmap_cmnd(cmd);
- 		case SD_LBP_WS16:
--			return sd_setup_write_same16_cmnd(cmd);
-+			return sd_setup_write_same16_cmnd(cmd, true);
- 		case SD_LBP_WS10:
- 			return sd_setup_write_same10_cmnd(cmd, true);
- 		case SD_LBP_ZERO:
-@@ -1171,6 +1189,8 @@ static int sd_init_command(struct scsi_cmnd *cmd)
- 		default:
- 			return BLKPREP_INVALID;
- 		}
-+	case REQ_OP_WRITE_ZEROES:
-+		return sd_setup_write_zeroes_cmnd(cmd);
- 	case REQ_OP_WRITE_SAME:
- 		return sd_setup_write_same_cmnd(cmd);
- 	case REQ_OP_FLUSH:
-@@ -1810,6 +1830,7 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 
- 	switch (req_op(req)) {
- 	case REQ_OP_DISCARD:
-+	case REQ_OP_WRITE_ZEROES:
- 	case REQ_OP_WRITE_SAME:
- 	case REQ_OP_ZONE_RESET:
- 		if (!result) {
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 92620c8ea8ad..1994f7799fce 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -329,6 +329,7 @@ void sd_zbc_complete(struct scsi_cmnd *cmd,
- 
- 	switch (req_op(rq)) {
- 	case REQ_OP_WRITE:
-+	case REQ_OP_WRITE_ZEROES:
- 	case REQ_OP_WRITE_SAME:
- 	case REQ_OP_ZONE_RESET:
- 
+ 		bio = bio_alloc_bioset(GFP_NOIO, num_bvecs, io->client->bios);
+ 		bio->bi_iter.bi_sector = where->sector + (where->count - remaining);
 -- 
 2.11.0
-
