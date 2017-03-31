@@ -1,54 +1,29 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH 1/6] virtio: wrap find_vqs
-Date: Fri, 31 Mar 2017 19:21:12 +0300
-Message-ID: <20170331191905-mutt-send-email-mst@kernel.org>
-References: <1490820507-8005-1-git-send-email-mst@redhat.com>
- <1490820507-8005-2-git-send-email-mst@redhat.com>
- <72f533a2-482d-1956-b0fe-254e273e1818@redhat.com>
- <20170330173146-mutt-send-email-mst@kernel.org>
- <c388e4fd-2956-8894-31ec-31fe8b01e49f@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-crypto-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <c388e4fd-2956-8894-31ec-31fe8b01e49f@redhat.com>
-Sender: linux-crypto-owner@vger.kernel.org
-To: Jason Wang <jasowang@redhat.com>
-Cc: linux-kernel@vger.kernel.org, John Fastabend <john.fastabend@gmail.com>, Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Amit Shah <amit@kernel.org>, Gonglei <arei.gonglei@huawei.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, David Airlie <airlied@linux.ie>, Gerd Hoffmann <kraxel@redhat.com>, Dmitry Tarnyagin <dmitry.tarnyagin@lockless.no>, Ohad Ben-Cohen <ohad@wizery.com>, Bjorn Andersson <bjorn.andersson@linaro.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Stefan Hajnoczi <stefanha@redhat.com>, virtualization@lists.linux-foundation.org, linux-crypto@vger.kernel.org, dri-devel@lists.freedesktop.org, netdev@vger.kerne
+From: Christoph Hellwig <hch@lst.de>
+Subject: always use REQ_OP_WRITE_ZEROES for zeroing offload
+Date: Fri, 31 Mar 2017 18:32:48 +0200
+Message-ID: <20170331163313.31821-1-hch@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:56267 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933106AbdCaQdX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Mar 2017 12:33:23 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, lars.ellenberg@linbit.com
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
 
-On Fri, Mar 31, 2017 at 12:04:55PM +0800, Jason Wang wrote:
-> 
-> 
-> On 2017年03月30日 22:32, Michael S. Tsirkin wrote:
-> > On Thu, Mar 30, 2017 at 02:00:08PM +0800, Jason Wang wrote:
-> > > 
-> > > On 2017年03月30日 04:48, Michael S. Tsirkin wrote:
-> > > > We are going to add more parameters to find_vqs, let's wrap the call so
-> > > > we don't need to tweak all drivers every time.
-> > > > 
-> > > > Signed-off-by: Michael S. Tsirkin<mst@redhat.com>
-> > > > ---
-> > > A quick glance and it looks ok, but what the benefit of this series, is it
-> > > required by other changes?
-> > > 
-> > > Thanks
-> > Yes - to avoid touching all devices when doing the rest of
-> > the patchset.
-> 
-> Maybe I'm not clear. I mean the benefit of this series not this single
-> patch. I guess it may be used by you proposal that avoid reset when set XDP?
+This series makes REQ_OP_WRITE_ZEROES the only zeroing offload
+supported by the block layer, and switches existing implementations
+of REQ_OP_DISCARD that correctly set discard_zeroes_data to it,
+removes incorrect discard_zeroes_data, and also switches WRITE SAME
+based zeroing in SCSI to this new method.
 
-In particular, yes. It generally simplifies things significantly if
-we can get the true buffer size back.
+The series is against the block for-next tree.
 
-> If yes, do we really want to drop some packets after XDP is set?
-> 
-> Thanks
+A git tree is also avaiable at:
 
-We would rather not drop packets. We could detect and copy them to make
-XDP work.
+    git://git.infradead.org/users/hch/block.git discard-rework
 
--- 
-MST
+Gitweb:
+
+    http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/discard-rework
