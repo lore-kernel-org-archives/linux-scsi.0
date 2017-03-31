@@ -1,68 +1,54 @@
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 0/3] Improve block device testing coverage
-Date: Fri, 31 Mar 2017 09:08:35 -0700
-Message-ID: <20170331160835.GA10881@birch.djwong.org>
-References: <1490879944-26240-1-git-send-email-dmonakhov@openvz.org>
- <20170331065702.GA17435@infradead.org>
- <8760ip28o8.fsf@dmlp.sw.ru>
- <20170331093801.GK22845@eguan.usersys.redhat.com>
- <8737dt228x.fsf@dmlp.sw.ru>
- <1490973067.2587.1.camel@sandisk.com>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [PATCH 1/6] virtio: wrap find_vqs
+Date: Fri, 31 Mar 2017 19:21:12 +0300
+Message-ID: <20170331191905-mutt-send-email-mst@kernel.org>
+References: <1490820507-8005-1-git-send-email-mst@redhat.com>
+ <1490820507-8005-2-git-send-email-mst@redhat.com>
+ <72f533a2-482d-1956-b0fe-254e273e1818@redhat.com>
+ <20170330173146-mutt-send-email-mst@kernel.org>
+ <c388e4fd-2956-8894-31ec-31fe8b01e49f@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <fstests-owner@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-crypto-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1490973067.2587.1.camel@sandisk.com>
-Sender: fstests-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc: "eguan@redhat.com" <eguan@redhat.com>, "dmonakhov@openvz.org" <dmonakhov@openvz.org>, "fstests@vger.kernel.org" <fstests@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+In-Reply-To: <c388e4fd-2956-8894-31ec-31fe8b01e49f@redhat.com>
+Sender: linux-crypto-owner@vger.kernel.org
+To: Jason Wang <jasowang@redhat.com>
+Cc: linux-kernel@vger.kernel.org, John Fastabend <john.fastabend@gmail.com>, Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Amit Shah <amit@kernel.org>, Gonglei <arei.gonglei@huawei.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, David Airlie <airlied@linux.ie>, Gerd Hoffmann <kraxel@redhat.com>, Dmitry Tarnyagin <dmitry.tarnyagin@lockless.no>, Ohad Ben-Cohen <ohad@wizery.com>, Bjorn Andersson <bjorn.andersson@linaro.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Stefan Hajnoczi <stefanha@redhat.com>, virtualization@lists.linux-foundation.org, linux-crypto@vger.kernel.org, dri-devel@lists.freedesktop.org, netdev@vger.kerne
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Mar 31, 2017 at 03:11:28PM +0000, Bart Van Assche wrote:
-> On Fri, 2017-03-31 at 13:02 +0300, Dmitry Monakhov wrote:
-> > Another good example may be a bug with dirty page cache after blkdiscard
-> > https://lkml.org/lkml/2017/3/22/789 . This simple bug  result in crappy
-> > fsimage if mkfs relay on discard_zeroes_data behaviour.
-> > So IMHO basic blkdev test coverage is important filesystem testing. i.e.
-> > important for xfstests.
+On Fri, Mar 31, 2017 at 12:04:55PM +0800, Jason Wang wrote:
 > 
-> Mixing up filesystem tests and block layer / block driver tests in the same
-> directory is completely wrong. Block driver developers will be primarily
-> interested in the block tests and may want to skip the filesystem tests.
-> Filesystem developers will probably run the block tests only once and will
-> likely run the filesystem tests repeatedly. Mixing up different kinds of
-> tests in the same directory makes it unnecessarily hard to run block and
-> filesystem tests separately.
-
-During LSF I had started to wonder if we should just create a new
-FSTYP=blockdev fs type with a no-op mkfs & mount.  "_require_fs generic"
-could be taught to ignore FSTYP=blockdev; blockdev tests that should
-work on all block devices can stay in tests/generic, and blockdev tests
-that require specific features or complicated setup can go in
-tests/blockdev.
-
-The benefit (for the fs developers, anyway) of having complex block
-device setup code helper functions in common/ is that then we can also
-start writing tests to see how the fs reacts with more complex storage
-setups.  We already have some of that for dm_{thin,flakey,delay,error}.
-
-That way we keep the tests together and make it easy to run them (when
-applicable) as part of regular fs testing, and avoid the situation where
-bdevtests and xfstests slowly drift apart in terms of behaviors and
-command line switches.
-
-The downside ofc is the potential for bloat. :)
-
-(The blockdev fallocate tests fit the fs/block split awkwardly --
-they call what is nominally a fs feature on something that isn't itself
-a filesystem...)
-
-<shrug> Just my 5c.
-
---D
-
 > 
-> Bart.--
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> On 2017年03月30日 22:32, Michael S. Tsirkin wrote:
+> > On Thu, Mar 30, 2017 at 02:00:08PM +0800, Jason Wang wrote:
+> > > 
+> > > On 2017年03月30日 04:48, Michael S. Tsirkin wrote:
+> > > > We are going to add more parameters to find_vqs, let's wrap the call so
+> > > > we don't need to tweak all drivers every time.
+> > > > 
+> > > > Signed-off-by: Michael S. Tsirkin<mst@redhat.com>
+> > > > ---
+> > > A quick glance and it looks ok, but what the benefit of this series, is it
+> > > required by other changes?
+> > > 
+> > > Thanks
+> > Yes - to avoid touching all devices when doing the rest of
+> > the patchset.
+> 
+> Maybe I'm not clear. I mean the benefit of this series not this single
+> patch. I guess it may be used by you proposal that avoid reset when set XDP?
+
+In particular, yes. It generally simplifies things significantly if
+we can get the true buffer size back.
+
+> If yes, do we really want to drop some packets after XDP is set?
+> 
+> Thanks
+
+We would rather not drop packets. We could detect and copy them to make
+XDP work.
+
+-- 
+MST
