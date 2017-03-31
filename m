@@ -1,65 +1,84 @@
-From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: Re: [PATCH 0/3] Improve block device testing coverage
-Date: Fri, 31 Mar 2017 13:02:06 +0300
-Message-ID: <8737dt228x.fsf@dmlp.sw.ru>
-References: <1490879944-26240-1-git-send-email-dmonakhov@openvz.org> <20170331065702.GA17435@infradead.org> <8760ip28o8.fsf@dmlp.sw.ru> <20170331093801.GK22845@eguan.usersys.redhat.com>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] scsi: mpt3sas: fix hang on ata passthrough commands
+Date: Fri, 31 Mar 2017 16:12:29 +0200
+Message-ID: <20170331141229.GB8141@kroah.com>
+References: <20170331135030.GA24063@zipoli.ccur.kvm>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <fstests-owner@vger.kernel.org>
-In-Reply-To: <20170331093801.GK22845@eguan.usersys.redhat.com>
-Sender: fstests-owner@vger.kernel.org
-To: Eryu Guan <eguan@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, fstests@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170331135030.GA24063@zipoli.ccur.kvm>
+Sender: stable-owner@vger.kernel.org
+To: Joe Korty <joe.korty@ccur.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrey Grodzovsky <andrey2805@gmail.com>, Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Ingo Molnar <mingo@kernel.org>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux Stable Mailing List <stable@vger.kernel.org>, Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Eryu Guan <eguan@redhat.com> writes:
+On Fri, Mar 31, 2017 at 09:50:30AM -0400, Joe Korty wrote:
+> [PATCH] scsi: mpt3sas: fix hang on ata passthrough commands
+> 
+> commit 16236802bfecb1082144a48b7d6fa60997824662 upstream
+> commit ffb58456589443ca572221fabbdef3db8483a779 upstream
+> 
+> Lockdep complains that the base level-only hctx->lock
+> is being grabbed from interrupt level, at the time the
+> mpt3sas driver initializes.  This is a result of two
+> of three tightly interconnected mpt3sas bugfix patches
+> having been backported into 4.4.  The previously two ported
+> patches are:
+> 
+> > From: Andrey Grodzovsky <andrey2805@gmail.com>
+> > Date: Thu, 10 Nov 2016 09:35:27 -0500
+> > Subject: [PATCH] scsi: mpt3sas: Fix secure erase premature termination
+> > Git-Commit: ffffc1ed47e76d13cafbc645792ca184331b3123
+>   
+> > From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+> > Date: Thu, 17 Nov 2016 16:15:58 +0530
+> > Subject: [PATCH] scsi: mpt3sas: Unblock device after controller reset
+> > Git-Commit: 6eddf5c993dd9bf4efcf2509e4ca633b9441a66a
+> 
+> The missing third patch is attached below.
+> 
+> Signed-off-by: Joe Korty <joe.korty@ccur.com>
+> 
+> 
+> > From: James Bottomley <James.Bottomley@HansenPartnership.com>
+> > Date: Sun, 1 Jan 2017 09:39:24 -0800
+> > Subject: [PATCH] scsi: mpt3sas: fix hang on ata passthrough commands
+> > Git-Commit: 16236802bfecb1082144a48b7d6fa60997824662
+> 
+> commit ffb58456589443ca572221fabbdef3db8483a779 upstream.
+> 
+> mpt3sas has a firmware failure where it can only handle one pass through
+> ATA command at a time.  If another comes in, contrary to the SAT
+> standard, it will hang until the first one completes (causing long
+> commands like secure erase to timeout).  The original fix was to block
+> the device when an ATA command came in, but this caused a regression
+> with
+> 
+> commit 669f044170d8933c3d66d231b69ea97cb8447338
+> Author: Bart Van Assche <bart.vanassche@sandisk.com>
+> Date:   Tue Nov 22 16:17:13 2016 -0800
+> 
+>     scsi: srp_transport: Move queuecommand() wait code to SCSI core
+> 
+> So fix the original fix of the secure erase timeout by properly
+> returning SAM_STAT_BUSY like the SAT recommends.  The original patch
+> also had a concurrency problem since scsih_qcmd is lockless at that
+> point (this is fixed by using atomic bitops to set and test the flag).
+> 
+> [mkp: addressed feedback wrt. test_bit and fixed whitespace]
+> 
+> Fixes: 18f6084a989ba1b (mpt3sas: Fix secure erase premature termination)
+> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Acked-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reported-by: Ingo Molnar <mingo@kernel.org>
+> Tested-by: Ingo Molnar <mingo@kernel.org>
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-> On Fri, Mar 31, 2017 at 10:43:19AM +0300, Dmitry Monakhov wrote:
->> Christoph Hellwig <hch@infradead.org> writes:
->> 
->> > On Thu, Mar 30, 2017 at 05:19:01PM +0400, Dmitry Monakhov wrote:
->> >> During LSFMM we have discussed how to test lower-backend of linux IO-stack.
->> >> Common opinion was that xfstests is the most obvious solution which cover
->> >> most of use cases filesystem care about.
->> >> 
->> >> I'm working on integration T10-DIF/DIF data integrity features to ext4,
->> >> for that reason we need to be shure that linux integrity framework is
->> >> in working state, which is currently broken in several places.
->> >> 
->> >> In fact, it is relatively simple to add basic coverage tests for basic
->> >> IO operations over virtual device with integrity support. All we need
->> >> is to add lio target support.
->> >
->> > First:  Thanks for adding block layer testing!
->> >
->> > Second: even more so than Darrick's blockdev fallocate test this is
->> > the wrong place.  If I run xfstests I want to test my file system,
->> > not random block device features.  Please start a proper block device
->> > testsuite instead, possibly by copy and pasting code from xfstests.
->> Fair enough. I also not happy to place blkdev feature  to tests/generic
->> namespace. But altearnative to fork xfstests infrastructure to dedicated
->> test-framework only for blkdevice seems not very good. Because fork is
->> always pain. I already maintain one internal fork of xfstests which
->> tests our Vituozzo's speciffic features.
->> 
->> May be it would be reasonable idea to add didicated namespace
->> 'tests/blockdev' in xfstests, and move all blkdev related tests here?
->> IMHO this is good idea. Because filesystem relay on some basic
->> features from blkdev which should be tested explicitly, because
->> implicit testing is too hard to debug/investigation.
->
-> I'm not sure if xfstests is the right place for blockdev tests,
-> especially for the pure blockdev level features (at least Darrick's
-> blockdev tests are testing fallocate(2) interface).
-Another good example may be a bug with dirty page cache after blkdiscard
-https://lkml.org/lkml/2017/3/22/789 . This simple bug  result in crappy
-fsimage if mkfs relay on discard_zeroes_data behaviour.
-So IMHO basic blkdev test coverage is important filesystem testing. i.e.
-important for xfstests.
->
-> But yeah, a new tests/blockdev dir would be good if we eventually decide
-> adding blockdev tests to xfstests, so they're not run by default when
-> people want to test filesystems.
->
-> Thanks,
-> Eryu
+I signed off on this patch?  When?  Where?
+
+totall confused here,
+
+greg k-h
