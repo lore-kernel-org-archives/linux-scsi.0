@@ -1,60 +1,51 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 22/23] drbd: implement REQ_OP_WRITE_ZEROES
-Date: Thu, 30 Mar 2017 19:15:50 -0400
-Message-ID: <20170330231550.GA3102@redhat.com>
-References: <20170323143341.31549-1-hch@lst.de>
- <20170323143341.31549-23-hch@lst.de>
- <20170330100641.GI5939@soda.linbit>
- <20170330114408.GA15777@lst.de>
- <20170330134957.GA508@redhat.com>
- <yq1pogy3i6u.fsf@oracle.com>
+From: Joe Jin <joe.jin@oracle.com>
+Subject: commit 1b6ac5e3f "fnic: Using rport->dd_data to check rport online
+ instead of rport_lookup."
+Date: Fri, 31 Mar 2017 08:36:43 +0800
+Message-ID: <58DDA49B.6000300@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <yq1pogy3i6u.fsf@oracle.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, agk@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:41039 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933345AbdCaAgn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Mar 2017 20:36:43 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: satishkh@cisco.com
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Mar 30 2017 at 11:20am -0400,
-Martin K. Petersen <martin.petersen@oracle.com> wrote:
+Hi Satish,
 
-> Mike Snitzer <snitzer@redhat.com> writes:
-> 
-> > I can work on this now.  Only question I have is: should DM thinp take
-> > care to zero any misaligned head and tail?  (I assume so but with all
-> > the back and forth between Bart, Paolo and Martin I figured I'd ask
-> > explicitly).
-> 
-> Yep, let's make sure our semantics match the hardware ditto.
-> 
->  - So write zeroes should behave deterministically and explicitly handle
->    any blocks that can't be cleared via deprovisioning.
-> 
->  - And discard can work at the discard granularity in a
->    non-deterministic fashion.
+My customer hit below error when issue LIP to fnic controller:
 
-I got pretty far along with implementing the DM thinp support for
-WRITE_ZEROES in terms of thinp's DISCARD support (more of an
-implementation detail.. or so I thought).
+[94702.898408] sd 2:0:4:1: [sdx] tag#1 FAILED Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+[94702.898416] sd 2:0:4:1: [sdx] tag#1 CDB: Write(10) 2a 00 04 56 c0 08 00 00 08 00
+[94702.898420] blk_update_request: I/O error, dev sdx, sector 72794120
+[94702.898455] sd 2:0:4:10: [sdy] tag#2 FAILED Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+[94702.898459] sd 2:0:4:10: [sdy] tag#2 CDB: Read(10) 28 00 00 00 08 a8 00 00 02 00
+[94702.898462] blk_update_request: I/O error, dev sdy, sector 2216
 
-But while discussing this effort with Jeff Moyer he asked: shouldn't the
-zeroed blocks be provisioned?  This is a fairly embarassing question not
-to be able to answer in the moment.  So I clearly need to learn what the
-overall intent of WRITE_ZEROES actually is.
+Looked at all changes of fnic I found it caused by commit 1b6ac5e3f "fnic: 
+Using rport->dd_data to check rport online instead of rport_lookup.", a 
+question is why changed state check from RPORT_ST_DELETE to RPORT_ST_READY
+here?
 
-If it is meant as a replacement for WRITE_SAME (as hch switched dm-io
-over from WRITE_SAME with a payload of 0 to WRITE_ZEROES) and for the
-backing mechanism for blkdev_issue_zeroout() then I guess I have my
-answer.  Unless DM thinp can guarantee that the discarded blocks will
-always return zeroes (by zeroing before all partial block writes) my
-discard based dm-thinp implementation of WRITE_ZEROES is a complete
-throw-away (unless block zeroing is enabled.. which it never is because
-performance sucks with it).  So if an upper-level of the IO stack
-(e.g. ext4) were to assume that a block will _definitely_ have zeroes
-then DM thinp would fall short.
+-       if (!rdata || (rdata->rp_state == RPORT_ST_DELETE)) { 
+-               FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
+-                       "returning IO as rport is removed\n");
+-               atomic64_inc(&fnic_stats->misc_stats.rport_not_ready);
+-               sc->result = DID_NO_CONNECT;
+-               done(sc);
+-               return 0;
++       if (rport) {
++               struct fc_rport_libfc_priv *rp = rport->dd_data;
++
++               if (!rp || rp->rp_state != RPORT_ST_READY) {
++                       FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
++                               "returning DID_NO_CONNECT for IO as rport is removed\n");
 
-This is all to say: I don't see a quick way forward on implementing
-performant WRITE_ZEROES support for DM thinp.
+
+Thanks,
+Joe
