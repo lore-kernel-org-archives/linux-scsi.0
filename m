@@ -1,35 +1,40 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 02/25] block: renumber REQ_OP_WRITE_ZEROES
-Date: Fri, 31 Mar 2017 18:32:50 +0200
-Message-ID: <20170331163313.31821-3-hch@lst.de>
+Subject: [PATCH 09/25] block: stop using blkdev_issue_write_same for zeroing
+Date: Fri, 31 Mar 2017 18:32:57 +0200
+Message-ID: <20170331163313.31821-10-hch@lst.de>
 References: <20170331163313.31821-1-hch@lst.de>
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:41698 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933368AbdCaQdq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Mar 2017 12:33:46 -0400
 In-Reply-To: <20170331163313.31821-1-hch@lst.de>
-Sender: linux-block-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, lars.ellenberg@linbit.com
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
-Make life easy for implementations that needs to send a data buffer
-to the device (e.g. SCSI) by numbering it as a data out command.
+We'll always use the WRITE ZEROES code for zeroing now.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- include/linux/blk_types.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ block/blk-lib.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 67bcf8a5326e..4eae30bfbfca 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -168,7 +168,7 @@ enum req_opf {
- 	/* write the same sector many times */
- 	REQ_OP_WRITE_SAME	= 7,
- 	/* write the zero filled sector many times */
--	REQ_OP_WRITE_ZEROES	= 8,
-+	REQ_OP_WRITE_ZEROES	= 9,
+diff --git a/block/blk-lib.c b/block/blk-lib.c
+index e5b853f2b8a2..2a8d638544a7 100644
+--- a/block/blk-lib.c
++++ b/block/blk-lib.c
+@@ -364,10 +364,6 @@ int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
+ 			return 0;
+ 	}
  
- 	/* SCSI passthrough using struct scsi_request */
- 	REQ_OP_SCSI_IN		= 32,
+-	if (!blkdev_issue_write_same(bdev, sector, nr_sects, gfp_mask,
+-			ZERO_PAGE(0)))
+-		return 0;
+-
+ 	blk_start_plug(&plug);
+ 	ret = __blkdev_issue_zeroout(bdev, sector, nr_sects, gfp_mask,
+ 			&bio, discard);
 -- 
 2.11.0
