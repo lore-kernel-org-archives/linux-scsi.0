@@ -1,32 +1,41 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 22/23] drbd: implement REQ_OP_WRITE_ZEROES
-Date: Fri, 31 Mar 2017 09:17:53 +0200
-Message-ID: <20170331071753.GA3308@lst.de>
-References: <20170323143341.31549-1-hch@lst.de> <20170323143341.31549-23-hch@lst.de> <20170330100641.GI5939@soda.linbit> <20170330114408.GA15777@lst.de> <20170330134957.GA508@redhat.com> <yq1pogy3i6u.fsf@oracle.com> <20170330231550.GA3102@redhat.com>
+From: "hch-jcswGhMUV9g@public.gmane.org" <hch-jcswGhMUV9g@public.gmane.org>
+Subject: Re: [PATCH 12/23] sd: handle REQ_UNMAP
+Date: Fri, 31 Mar 2017 09:18:44 +0200
+Message-ID: <20170331071844.GB3308@lst.de>
+References: <20170323143341.31549-1-hch@lst.de>
+	<20170323143341.31549-13-hch@lst.de>
+	<1490719722.2573.8.camel@sandisk.com>
+	<20170330090201.GD12015@lst.de> <yq1h92a3hsv.fsf@oracle.com>
+	<20170330173020.GB24229@lst.de> <yq17f36yypg.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20170330231550.GA3102@redhat.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, agk@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
+In-Reply-To: <yq17f36yypg.fsf-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
+List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
+Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+To: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: "axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org" <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org" <philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Bart Van Assche <Bart.VanAssche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>, "lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org" <lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, "shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "hch-jcswGhMUV9g@public.gmane.org" <hch-jcswGhMUV9g@public.gmane.org>, "agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org" <drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Mar 30, 2017 at 07:15:50PM -0400, Mike Snitzer wrote:
-> I got pretty far along with implementing the DM thinp support for
-> WRITE_ZEROES in terms of thinp's DISCARD support (more of an
-> implementation detail.. or so I thought).
+On Thu, Mar 30, 2017 at 10:19:55PM -0400, Martin K. Petersen wrote:
+> > If you manually change the provisioning mode to WS10 on a device that
+> > must use WRITE SAME (16) to be able to address all blocks you're already
+> > screwed right now, and with this patch you can screw yourself through
+> > the WRITE_ZEROES path in addition to the DISCARD path.
 > 
-> But while discussing this effort with Jeff Moyer he asked: shouldn't the
-> zeroed blocks be provisioned?  This is a fairly embarassing question not
-> to be able to answer in the moment.  So I clearly need to learn what the
-> overall intent of WRITE_ZEROES actually is.
+> Oh, I see. We only had the LBA sanity check in place for write same, not
+> for discard.
 
-It is to ensure the that the block range it's called on returns zeroes
-on future reads.  Currently if REQ_UNMAP is set you may free the space
-allocation, else not.
-
-After looking at the callers I think this is the wrong way around, so
-I'm going to invert the flag, so that the two callers that care that
-blocks are allocated will set it instead.
+And btw, I'd be happy to add such a check, I'd just rather keep it out
+of this patch.  It might be a good idea if you give it a turn after
+this series given that you have all the devices that have weird
+provisioning modes while I don't..
