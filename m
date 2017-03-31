@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 11/25] block: add a REQ_UNMAP flag for REQ_OP_WRITE_ZEROES
-Date: Fri, 31 Mar 2017 18:32:59 +0200
-Message-ID: <20170331163313.31821-12-hch@lst.de>
+Subject: [PATCH 04/25] sd: implement REQ_OP_WRITE_ZEROES
+Date: Fri, 31 Mar 2017 18:32:52 +0200
+Message-ID: <20170331163313.31821-5-hch@lst.de>
 References: <20170331163313.31821-1-hch@lst.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20170331163313.31821-1-hch@lst.de>
@@ -10,88 +10,117 @@ To: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-If this flag is set logical provisioning capable device should
-release space for the zeroed blocks if possible, if it is not set
-devices should keep the blocks anchored.
-
-Also remove an out of sync kerneldoc comment for a static function
-that would have become even more out of data with this change.
-
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-lib.c           | 19 +++++--------------
- include/linux/blk_types.h |  6 ++++++
- 2 files changed, 11 insertions(+), 14 deletions(-)
+ drivers/scsi/sd.c     | 31 ++++++++++++++++++++++++++-----
+ drivers/scsi/sd_zbc.c |  1 +
+ 2 files changed, 27 insertions(+), 5 deletions(-)
 
-diff --git a/block/blk-lib.c b/block/blk-lib.c
-index f9f24ec69c27..2f6d2cb2e1a2 100644
---- a/block/blk-lib.c
-+++ b/block/blk-lib.c
-@@ -226,20 +226,9 @@ int blkdev_issue_write_same(struct block_device *bdev, sector_t sector,
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index b853f91fb3da..d8d9c0bdd93c 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -735,7 +735,7 @@ static int sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
+ 	return scsi_init_io(cmd);
  }
- EXPORT_SYMBOL(blkdev_issue_write_same);
  
--/**
-- * __blkdev_issue_write_zeroes - generate number of bios with WRITE ZEROES
-- * @bdev:	blockdev to issue
-- * @sector:	start sector
-- * @nr_sects:	number of sectors to write
-- * @gfp_mask:	memory allocation flags (for bio_alloc)
-- * @biop:	pointer to anchor bio
-- *
-- * Description:
-- *  Generate and issue number of bios(REQ_OP_WRITE_ZEROES) with zerofiled pages.
-- */
- static int __blkdev_issue_write_zeroes(struct block_device *bdev,
- 		sector_t sector, sector_t nr_sects, gfp_t gfp_mask,
--		struct bio **biop)
-+		struct bio **biop, unsigned flags)
+-static int sd_setup_write_same16_cmnd(struct scsi_cmnd *cmd)
++static int sd_setup_write_same16_cmnd(struct scsi_cmnd *cmd, bool unmap)
  {
- 	struct bio *bio = *biop;
- 	unsigned int max_write_zeroes_sectors;
-@@ -258,7 +247,9 @@ static int __blkdev_issue_write_zeroes(struct block_device *bdev,
- 		bio = next_bio(bio, 0, gfp_mask);
- 		bio->bi_iter.bi_sector = sector;
- 		bio->bi_bdev = bdev;
--		bio_set_op_attrs(bio, REQ_OP_WRITE_ZEROES, 0);
-+		bio->bi_opf = REQ_OP_WRITE_ZEROES;
-+		if (flags & BLKDEV_ZERO_NOUNMAP)
-+			bio->bi_opf |= REQ_NOUNMAP;
+ 	struct scsi_device *sdp = cmd->device;
+ 	struct request *rq = cmd->request;
+@@ -752,13 +752,14 @@ static int sd_setup_write_same16_cmnd(struct scsi_cmnd *cmd)
  
- 		if (nr_sects > max_write_zeroes_sectors) {
- 			bio->bi_iter.bi_size = max_write_zeroes_sectors << 9;
-@@ -306,7 +297,7 @@ int __blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
- 		return -EINVAL;
+ 	cmd->cmd_len = 16;
+ 	cmd->cmnd[0] = WRITE_SAME_16;
+-	cmd->cmnd[1] = 0x8; /* UNMAP */
++	if (unmap)
++		cmd->cmnd[1] = 0x8; /* UNMAP */
+ 	put_unaligned_be64(sector, &cmd->cmnd[2]);
+ 	put_unaligned_be32(nr_sectors, &cmd->cmnd[10]);
  
- 	ret = __blkdev_issue_write_zeroes(bdev, sector, nr_sects, gfp_mask,
--			biop);
-+			biop, flags);
- 	if (ret == 0 || (ret && ret != -EOPNOTSUPP))
- 		goto out;
+ 	cmd->allowed = SD_MAX_RETRIES;
+ 	cmd->transfersize = data_len;
+-	rq->timeout = SD_TIMEOUT;
++	rq->timeout = unmap ? SD_TIMEOUT : SD_WRITE_SAME_TIMEOUT;
+ 	scsi_req(rq)->resid_len = data_len;
  
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 4eae30bfbfca..8eaa7dca7057 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -195,6 +195,10 @@ enum req_flag_bits {
- 	__REQ_PREFLUSH,		/* request for cache flush */
- 	__REQ_RAHEAD,		/* read ahead, can fail anytime */
- 	__REQ_BACKGROUND,	/* background IO */
+ 	return scsi_init_io(cmd);
+@@ -788,12 +789,27 @@ static int sd_setup_write_same10_cmnd(struct scsi_cmnd *cmd, bool unmap)
+ 
+ 	cmd->allowed = SD_MAX_RETRIES;
+ 	cmd->transfersize = data_len;
+-	rq->timeout = SD_TIMEOUT;
++	rq->timeout = unmap ? SD_TIMEOUT : SD_WRITE_SAME_TIMEOUT;
+ 	scsi_req(rq)->resid_len = data_len;
+ 
+ 	return scsi_init_io(cmd);
+ }
+ 
++static int sd_setup_write_zeroes_cmnd(struct scsi_cmnd *cmd)
++{
++	struct request *rq = cmd->request;
++	struct scsi_device *sdp = cmd->device;
++	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
++	u64 sector = blk_rq_pos(rq) >> (ilog2(sdp->sector_size) - 9);
++	u32 nr_sectors = blk_rq_sectors(rq) >> (ilog2(sdp->sector_size) - 9);
 +
-+	/* command specific flags for REQ_OP_WRITE_ZEROES: */
-+	__REQ_NOUNMAP,		/* do not free blocks when zeroing */
++	if (sdp->no_write_same)
++		return BLKPREP_INVALID;
++	if (sdkp->ws16 || sector > 0xffffffff || nr_sectors > 0xffff)
++		return sd_setup_write_same16_cmnd(cmd, false);
++	return sd_setup_write_same10_cmnd(cmd, false);
++}
 +
- 	__REQ_NR_BITS,		/* stops here */
- };
+ static void sd_config_write_same(struct scsi_disk *sdkp)
+ {
+ 	struct request_queue *q = sdkp->disk->queue;
+@@ -823,6 +839,8 @@ static void sd_config_write_same(struct scsi_disk *sdkp)
+ out:
+ 	blk_queue_max_write_same_sectors(q, sdkp->max_ws_blocks *
+ 					 (logical_block_size >> 9));
++	blk_queue_max_write_zeroes_sectors(q, sdkp->max_ws_blocks *
++					 (logical_block_size >> 9));
+ }
  
-@@ -212,6 +216,8 @@ enum req_flag_bits {
- #define REQ_RAHEAD		(1ULL << __REQ_RAHEAD)
- #define REQ_BACKGROUND		(1ULL << __REQ_BACKGROUND)
+ /**
+@@ -1163,7 +1181,7 @@ static int sd_init_command(struct scsi_cmnd *cmd)
+ 		case SD_LBP_UNMAP:
+ 			return sd_setup_unmap_cmnd(cmd);
+ 		case SD_LBP_WS16:
+-			return sd_setup_write_same16_cmnd(cmd);
++			return sd_setup_write_same16_cmnd(cmd, true);
+ 		case SD_LBP_WS10:
+ 			return sd_setup_write_same10_cmnd(cmd, true);
+ 		case SD_LBP_ZERO:
+@@ -1171,6 +1189,8 @@ static int sd_init_command(struct scsi_cmnd *cmd)
+ 		default:
+ 			return BLKPREP_INVALID;
+ 		}
++	case REQ_OP_WRITE_ZEROES:
++		return sd_setup_write_zeroes_cmnd(cmd);
+ 	case REQ_OP_WRITE_SAME:
+ 		return sd_setup_write_same_cmnd(cmd);
+ 	case REQ_OP_FLUSH:
+@@ -1810,6 +1830,7 @@ static int sd_done(struct scsi_cmnd *SCpnt)
  
-+#define REQ_NOUNMAP		(1ULL << __REQ_NOUNMAP)
-+
- #define REQ_FAILFAST_MASK \
- 	(REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER)
+ 	switch (req_op(req)) {
+ 	case REQ_OP_DISCARD:
++	case REQ_OP_WRITE_ZEROES:
+ 	case REQ_OP_WRITE_SAME:
+ 	case REQ_OP_ZONE_RESET:
+ 		if (!result) {
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index 92620c8ea8ad..1994f7799fce 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -329,6 +329,7 @@ void sd_zbc_complete(struct scsi_cmnd *cmd,
+ 
+ 	switch (req_op(rq)) {
+ 	case REQ_OP_WRITE:
++	case REQ_OP_WRITE_ZEROES:
+ 	case REQ_OP_WRITE_SAME:
+ 	case REQ_OP_ZONE_RESET:
  
 -- 
 2.11.0
