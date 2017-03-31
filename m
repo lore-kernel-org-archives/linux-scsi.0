@@ -1,11 +1,8 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 10/25] block: add a flags argument to (__)blkdev_issue_zeroout
-Date: Fri, 31 Mar 2017 18:32:58 +0200
-Message-ID: <20170331163313.31821-11-hch@lst.de>
+Subject: [PATCH 07/25] dm: support REQ_OP_WRITE_ZEROES
+Date: Fri, 31 Mar 2017 18:32:55 +0200
+Message-ID: <20170331163313.31821-8-hch@lst.de>
 References: <20170331163313.31821-1-hch@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20170331163313.31821-1-hch@lst.de>
 Sender: linux-raid-owner@vger.kernel.org
@@ -13,232 +10,269 @@ To: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Turn the existin discard flag into a new BLKDEV_ZERO_UNMAP flag with
-similar semantics, but without referring to diѕcard.
+Copy & paste from the REQ_OP_WRITE_SAME code.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-lib.c                    | 31 ++++++++++++++-----------------
- block/ioctl.c                      |  2 +-
- drivers/block/drbd/drbd_receiver.c |  9 ++++++---
- drivers/nvme/target/io-cmd.c       |  2 +-
- fs/block_dev.c                     |  2 +-
- fs/dax.c                           |  2 +-
- fs/xfs/xfs_bmap_util.c             |  2 +-
- include/linux/blkdev.h             | 16 ++++++++++------
- 8 files changed, 35 insertions(+), 31 deletions(-)
+ drivers/md/dm-core.h          |  1 +
+ drivers/md/dm-io.c            |  8 ++++++--
+ drivers/md/dm-linear.c        |  1 +
+ drivers/md/dm-mpath.c         |  1 +
+ drivers/md/dm-rq.c            | 11 ++++++++---
+ drivers/md/dm-stripe.c        |  2 ++
+ drivers/md/dm-table.c         | 30 ++++++++++++++++++++++++++++++
+ drivers/md/dm.c               | 31 ++++++++++++++++++++++++++++---
+ include/linux/device-mapper.h |  6 ++++++
+ 9 files changed, 83 insertions(+), 8 deletions(-)
 
-diff --git a/block/blk-lib.c b/block/blk-lib.c
-index 2a8d638544a7..f9f24ec69c27 100644
---- a/block/blk-lib.c
-+++ b/block/blk-lib.c
-@@ -282,14 +282,18 @@ static int __blkdev_issue_write_zeroes(struct block_device *bdev,
-  * @nr_sects:	number of sectors to write
-  * @gfp_mask:	memory allocation flags (for bio_alloc)
-  * @biop:	pointer to anchor bio
-- * @discard:	discard flag
-+ * @flags:	controls detailed behavior
-  *
-  * Description:
-- *  Generate and issue number of bios with zerofiled pages.
-+ *  Zero-fill a block range, either using hardware offload or by explicitly
-+ *  writing zeroes to the device.
-+ *
-+ *  If a device is using logical block provisioning, the underlying space will
-+ *  not be released if %flags contains BLKDEV_ZERO_NOUNMAP.
+diff --git a/drivers/md/dm-core.h b/drivers/md/dm-core.h
+index 136fda3ff9e5..fea5bd52ada8 100644
+--- a/drivers/md/dm-core.h
++++ b/drivers/md/dm-core.h
+@@ -132,6 +132,7 @@ void dm_init_md_queue(struct mapped_device *md);
+ void dm_init_normal_md_queue(struct mapped_device *md);
+ int md_in_flight(struct mapped_device *md);
+ void disable_write_same(struct mapped_device *md);
++void disable_write_zeroes(struct mapped_device *md);
+ 
+ static inline struct completion *dm_get_completion_from_kobject(struct kobject *kobj)
+ {
+diff --git a/drivers/md/dm-io.c b/drivers/md/dm-io.c
+index b808cbe22678..3702e502466d 100644
+--- a/drivers/md/dm-io.c
++++ b/drivers/md/dm-io.c
+@@ -312,9 +312,12 @@ static void do_region(int op, int op_flags, unsigned region,
+ 	 */
+ 	if (op == REQ_OP_DISCARD)
+ 		special_cmd_max_sectors = q->limits.max_discard_sectors;
++	else if (op == REQ_OP_WRITE_ZEROES)
++		special_cmd_max_sectors = q->limits.max_write_zeroes_sectors;
+ 	else if (op == REQ_OP_WRITE_SAME)
+ 		special_cmd_max_sectors = q->limits.max_write_same_sectors;
+-	if ((op == REQ_OP_DISCARD || op == REQ_OP_WRITE_SAME) &&
++	if ((op == REQ_OP_DISCARD || op == REQ_OP_WRITE_ZEROES ||
++	     op == REQ_OP_WRITE_SAME)  &&
+ 	    special_cmd_max_sectors == 0) {
+ 		dec_count(io, region, -EOPNOTSUPP);
+ 		return;
+@@ -330,6 +333,7 @@ static void do_region(int op, int op_flags, unsigned region,
+ 		 */
+ 		switch (op) {
+ 		case REQ_OP_DISCARD:
++		case REQ_OP_WRITE_ZEROES:
+ 			num_bvecs = 0;
+ 			break;
+ 		case REQ_OP_WRITE_SAME:
+@@ -347,7 +351,7 @@ static void do_region(int op, int op_flags, unsigned region,
+ 		bio_set_op_attrs(bio, op, op_flags);
+ 		store_io_and_region_in_bio(bio, io, region);
+ 
+-		if (op == REQ_OP_DISCARD) {
++		if (op == REQ_OP_DISCARD || op == REQ_OP_WRITE_ZEROES) {
+ 			num_sectors = min_t(sector_t, special_cmd_max_sectors, remaining);
+ 			bio->bi_iter.bi_size = num_sectors << SECTOR_SHIFT;
+ 			remaining -= num_sectors;
+diff --git a/drivers/md/dm-linear.c b/drivers/md/dm-linear.c
+index 4788b0b989a9..e17fd44ceef5 100644
+--- a/drivers/md/dm-linear.c
++++ b/drivers/md/dm-linear.c
+@@ -59,6 +59,7 @@ static int linear_ctr(struct dm_target *ti, unsigned int argc, char **argv)
+ 	ti->num_flush_bios = 1;
+ 	ti->num_discard_bios = 1;
+ 	ti->num_write_same_bios = 1;
++	ti->num_write_zeroes_bios = 1;
+ 	ti->private = lc;
+ 	return 0;
+ 
+diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+index 7f223dbed49f..ab55955ed704 100644
+--- a/drivers/md/dm-mpath.c
++++ b/drivers/md/dm-mpath.c
+@@ -1103,6 +1103,7 @@ static int multipath_ctr(struct dm_target *ti, unsigned argc, char **argv)
+ 	ti->num_flush_bios = 1;
+ 	ti->num_discard_bios = 1;
+ 	ti->num_write_same_bios = 1;
++	ti->num_write_zeroes_bios = 1;
+ 	if (m->queue_mode == DM_TYPE_BIO_BASED)
+ 		ti->per_io_data_size = multipath_per_bio_data_size();
+ 	else
+diff --git a/drivers/md/dm-rq.c b/drivers/md/dm-rq.c
+index 28955b94d2b2..6006d5d4b06e 100644
+--- a/drivers/md/dm-rq.c
++++ b/drivers/md/dm-rq.c
+@@ -298,9 +298,14 @@ static void dm_done(struct request *clone, int error, bool mapped)
+ 			r = rq_end_io(tio->ti, clone, error, &tio->info);
+ 	}
+ 
+-	if (unlikely(r == -EREMOTEIO && (req_op(clone) == REQ_OP_WRITE_SAME) &&
+-		     !clone->q->limits.max_write_same_sectors))
+-		disable_write_same(tio->md);
++	if (unlikely(r == -EREMOTEIO)) {
++		if (req_op(clone) == REQ_OP_WRITE_SAME &&
++		    !clone->q->limits.max_write_same_sectors)
++			disable_write_same(tio->md);
++		if (req_op(clone) == REQ_OP_WRITE_ZEROES &&
++		    !clone->q->limits.max_write_zeroes_sectors)
++			disable_write_zeroes(tio->md);
++	}
+ 
+ 	if (r <= 0)
+ 		/* The target wants to complete the I/O */
+diff --git a/drivers/md/dm-stripe.c b/drivers/md/dm-stripe.c
+index 28193a57bf47..5ef49c121d99 100644
+--- a/drivers/md/dm-stripe.c
++++ b/drivers/md/dm-stripe.c
+@@ -169,6 +169,7 @@ static int stripe_ctr(struct dm_target *ti, unsigned int argc, char **argv)
+ 	ti->num_flush_bios = stripes;
+ 	ti->num_discard_bios = stripes;
+ 	ti->num_write_same_bios = stripes;
++	ti->num_write_zeroes_bios = stripes;
+ 
+ 	sc->chunk_size = chunk_size;
+ 	if (chunk_size & (chunk_size - 1))
+@@ -293,6 +294,7 @@ static int stripe_map(struct dm_target *ti, struct bio *bio)
+ 		return DM_MAPIO_REMAPPED;
+ 	}
+ 	if (unlikely(bio_op(bio) == REQ_OP_DISCARD) ||
++	    unlikely(bio_op(bio) == REQ_OP_WRITE_ZEROES) ||
+ 	    unlikely(bio_op(bio) == REQ_OP_WRITE_SAME)) {
+ 		target_bio_nr = dm_bio_get_target_bio_nr(bio);
+ 		BUG_ON(target_bio_nr >= sc->stripes);
+diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
+index 3ad16d9c9d5a..5cd665c91ead 100644
+--- a/drivers/md/dm-table.c
++++ b/drivers/md/dm-table.c
+@@ -1533,6 +1533,34 @@ static bool dm_table_supports_write_same(struct dm_table *t)
+ 	return true;
+ }
+ 
++static int device_not_write_zeroes_capable(struct dm_target *ti, struct dm_dev *dev,
++					   sector_t start, sector_t len, void *data)
++{
++	struct request_queue *q = bdev_get_queue(dev->bdev);
++
++	return q && !q->limits.max_write_zeroes_sectors;
++}
++
++static bool dm_table_supports_write_zeroes(struct dm_table *t)
++{
++	struct dm_target *ti;
++	unsigned i = 0;
++
++	while (i < dm_table_get_num_targets(t)) {
++		ti = dm_table_get_target(t, i++);
++
++		if (!ti->num_write_zeroes_bios)
++			return false;
++
++		if (!ti->type->iterate_devices ||
++		    ti->type->iterate_devices(ti, device_not_write_zeroes_capable, NULL))
++			return false;
++	}
++
++	return true;
++}
++
++
+ static int device_discard_capable(struct dm_target *ti, struct dm_dev *dev,
+ 				  sector_t start, sector_t len, void *data)
+ {
+@@ -1603,6 +1631,8 @@ void dm_table_set_restrictions(struct dm_table *t, struct request_queue *q,
+ 
+ 	if (!dm_table_supports_write_same(t))
+ 		q->limits.max_write_same_sectors = 0;
++	if (!dm_table_supports_write_zeroes(t))
++		q->limits.max_write_zeroes_sectors = 0;
+ 
+ 	if (dm_table_all_devices_attribute(t, queue_supports_sg_merge))
+ 		queue_flag_clear_unlocked(QUEUE_FLAG_NO_SG_MERGE, q);
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index dfb75979e455..e8226359c8f7 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -825,6 +825,14 @@ void disable_write_same(struct mapped_device *md)
+ 	limits->max_write_same_sectors = 0;
+ }
+ 
++void disable_write_zeroes(struct mapped_device *md)
++{
++	struct queue_limits *limits = dm_get_queue_limits(md);
++
++	/* device doesn't really support WRITE ZEROES, disable it */
++	limits->max_write_zeroes_sectors = 0;
++}
++
+ static void clone_endio(struct bio *bio)
+ {
+ 	int error = bio->bi_error;
+@@ -851,9 +859,14 @@ static void clone_endio(struct bio *bio)
+ 		}
+ 	}
+ 
+-	if (unlikely(r == -EREMOTEIO && (bio_op(bio) == REQ_OP_WRITE_SAME) &&
+-		     !bdev_get_queue(bio->bi_bdev)->limits.max_write_same_sectors))
+-		disable_write_same(md);
++	if (unlikely(r == -EREMOTEIO)) {
++		if (bio_op(bio) == REQ_OP_WRITE_SAME &&
++		    !bdev_get_queue(bio->bi_bdev)->limits.max_write_same_sectors)
++			disable_write_same(md);
++		if (bio_op(bio) == REQ_OP_WRITE_ZEROES &&
++		    !bdev_get_queue(bio->bi_bdev)->limits.max_write_zeroes_sectors)
++			disable_write_zeroes(md);
++	}
+ 
+ 	free_tio(tio);
+ 	dec_pending(io, error);
+@@ -1202,6 +1215,11 @@ static unsigned get_num_write_same_bios(struct dm_target *ti)
+ 	return ti->num_write_same_bios;
+ }
+ 
++static unsigned get_num_write_zeroes_bios(struct dm_target *ti)
++{
++	return ti->num_write_zeroes_bios;
++}
++
+ typedef bool (*is_split_required_fn)(struct dm_target *ti);
+ 
+ static bool is_split_required_for_discard(struct dm_target *ti)
+@@ -1256,6 +1274,11 @@ static int __send_write_same(struct clone_info *ci)
+ 	return __send_changing_extent_only(ci, get_num_write_same_bios, NULL);
+ }
+ 
++static int __send_write_zeroes(struct clone_info *ci)
++{
++	return __send_changing_extent_only(ci, get_num_write_zeroes_bios, NULL);
++}
++
+ /*
+  * Select the correct strategy for processing a non-flush bio.
   */
- int __blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
- 		sector_t nr_sects, gfp_t gfp_mask, struct bio **biop,
--		bool discard)
-+		unsigned flags)
- {
- 	int ret;
- 	int bi_size = 0;
-@@ -337,28 +341,21 @@ EXPORT_SYMBOL(__blkdev_issue_zeroout);
-  * @sector:	start sector
-  * @nr_sects:	number of sectors to write
-  * @gfp_mask:	memory allocation flags (for bio_alloc)
-- * @discard:	whether to discard the block range
-+ * @flags:	controls detailed behavior
-  *
-  * Description:
-- *  Zero-fill a block range.  If the discard flag is set and the block
-- *  device guarantees that subsequent READ operations to the block range
-- *  in question will return zeroes, the blocks will be discarded. Should
-- *  the discard request fail, if the discard flag is not set, or if
-- *  discard_zeroes_data is not supported, this function will resort to
-- *  zeroing the blocks manually, thus provisioning (allocating,
-- *  anchoring) them. If the block device supports WRITE ZEROES or WRITE SAME
-- *  command(s), blkdev_issue_zeroout() will use it to optimize the process of
-- *  clearing the block range. Otherwise the zeroing will be performed
-- *  using regular WRITE calls.
-+ *  Zero-fill a block range, either using hardware offload or by explicitly
-+ *  writing zeroes to the device.  See __blkdev_issue_zeroout() for the
-+ *  valid values for %flags.
-  */
- int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
--			 sector_t nr_sects, gfp_t gfp_mask, bool discard)
-+		sector_t nr_sects, gfp_t gfp_mask, unsigned flags)
- {
- 	int ret;
- 	struct bio *bio = NULL;
- 	struct blk_plug plug;
+@@ -1270,6 +1293,8 @@ static int __split_and_process_non_flush(struct clone_info *ci)
+ 		return __send_discard(ci);
+ 	else if (unlikely(bio_op(bio) == REQ_OP_WRITE_SAME))
+ 		return __send_write_same(ci);
++	else if (unlikely(bio_op(bio) == REQ_OP_WRITE_ZEROES))
++		return __send_write_zeroes(ci);
  
--	if (discard) {
-+	if (!(flags & BLKDEV_ZERO_NOUNMAP)) {
- 		if (!blkdev_issue_discard(bdev, sector, nr_sects, gfp_mask,
- 				BLKDEV_DISCARD_ZERO))
- 			return 0;
-@@ -366,7 +363,7 @@ int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
+ 	ti = dm_table_find_target(ci->map, ci->sector);
+ 	if (!dm_target_is_valid(ti))
+diff --git a/include/linux/device-mapper.h b/include/linux/device-mapper.h
+index a7e6903866fd..3829bee2302a 100644
+--- a/include/linux/device-mapper.h
++++ b/include/linux/device-mapper.h
+@@ -255,6 +255,12 @@ struct dm_target {
+ 	unsigned num_write_same_bios;
  
- 	blk_start_plug(&plug);
- 	ret = __blkdev_issue_zeroout(bdev, sector, nr_sects, gfp_mask,
--			&bio, discard);
-+			&bio, flags);
- 	if (ret == 0 && bio) {
- 		ret = submit_bio_wait(bio);
- 		bio_put(bio);
-diff --git a/block/ioctl.c b/block/ioctl.c
-index 7b88820b93d9..8ea00a41be01 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -255,7 +255,7 @@ static int blk_ioctl_zeroout(struct block_device *bdev, fmode_t mode,
- 	truncate_inode_pages_range(mapping, start, end);
- 
- 	return blkdev_issue_zeroout(bdev, start >> 9, len >> 9, GFP_KERNEL,
--				    false);
-+			BLKDEV_ZERO_NOUNMAP);
- }
- 
- static int put_ushort(unsigned long arg, unsigned short val)
-diff --git a/drivers/block/drbd/drbd_receiver.c b/drivers/block/drbd/drbd_receiver.c
-index aa6bf9692eff..dc9a6dcd431c 100644
---- a/drivers/block/drbd/drbd_receiver.c
-+++ b/drivers/block/drbd/drbd_receiver.c
-@@ -1499,19 +1499,22 @@ int drbd_issue_discard_or_zero_out(struct drbd_device *device, sector_t start, u
- 		tmp = start + granularity - sector_div(tmp, granularity);
- 
- 		nr = tmp - start;
--		err |= blkdev_issue_zeroout(bdev, start, nr, GFP_NOIO, 0);
-+		err |= blkdev_issue_zeroout(bdev, start, nr, GFP_NOIO,
-+				BLKDEV_ZERO_NOUNMAP);
- 		nr_sectors -= nr;
- 		start = tmp;
- 	}
- 	while (nr_sectors >= granularity) {
- 		nr = min_t(sector_t, nr_sectors, max_discard_sectors);
--		err |= blkdev_issue_discard(bdev, start, nr, GFP_NOIO, 0);
-+		err |= blkdev_issue_discard(bdev, start, nr, GFP_NOIO,
-+				BLKDEV_ZERO_NOUNMAP);
- 		nr_sectors -= nr;
- 		start += nr;
- 	}
-  zero_out:
- 	if (nr_sectors) {
--		err |= blkdev_issue_zeroout(bdev, start, nr_sectors, GFP_NOIO, 0);
-+		err |= blkdev_issue_zeroout(bdev, start, nr_sectors, GFP_NOIO,
-+				BLKDEV_ZERO_NOUNMAP);
- 	}
- 	return err != 0;
- }
-diff --git a/drivers/nvme/target/io-cmd.c b/drivers/nvme/target/io-cmd.c
-index 4195115c7e54..7206f9cda575 100644
---- a/drivers/nvme/target/io-cmd.c
-+++ b/drivers/nvme/target/io-cmd.c
-@@ -184,7 +184,7 @@ static void nvmet_execute_write_zeroes(struct nvmet_req *req)
- 		(req->ns->blksize_shift - 9)) + 1;
- 
- 	if (__blkdev_issue_zeroout(req->ns->bdev, sector, nr_sector,
--				GFP_KERNEL, &bio, true))
-+				GFP_KERNEL, &bio, 0))
- 		status = NVME_SC_INTERNAL | NVME_SC_DNR;
- 
- 	if (bio) {
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index f2d59f143ef4..2f704c3a816f 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -2105,7 +2105,7 @@ static long blkdev_fallocate(struct file *file, int mode, loff_t start,
- 	case FALLOC_FL_ZERO_RANGE:
- 	case FALLOC_FL_ZERO_RANGE | FALLOC_FL_KEEP_SIZE:
- 		error = blkdev_issue_zeroout(bdev, start >> 9, len >> 9,
--					    GFP_KERNEL, false);
-+					    GFP_KERNEL, BLKDEV_ZERO_NOUNMAP);
- 		break;
- 	case FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE:
- 		/* Only punch if the device can do zeroing discard. */
-diff --git a/fs/dax.c b/fs/dax.c
-index de622d4282a6..2bfbcd726047 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -982,7 +982,7 @@ int __dax_zero_page_range(struct block_device *bdev, sector_t sector,
- 		sector_t start_sector = dax.sector + (offset >> 9);
- 
- 		return blkdev_issue_zeroout(bdev, start_sector,
--				length >> 9, GFP_NOFS, true);
-+				length >> 9, GFP_NOFS, 0);
- 	} else {
- 		if (dax_map_atomic(bdev, &dax) < 0)
- 			return PTR_ERR(dax.addr);
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 8b75dcea5966..142bbbe06114 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -81,7 +81,7 @@ xfs_zero_extent(
- 	return blkdev_issue_zeroout(xfs_find_bdev_for_inode(VFS_I(ip)),
- 		block << (mp->m_super->s_blocksize_bits - 9),
- 		count_fsb << (mp->m_super->s_blocksize_bits - 9),
--		GFP_NOFS, true);
-+		GFP_NOFS, 0);
- }
- 
- int
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index a2dc6b390d48..e7513ce3dbde 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1337,23 +1337,27 @@ static inline struct request *blk_map_queue_find_tag(struct blk_queue_tag *bqt,
- 	return bqt->tag_index[tag];
- }
- 
-+extern int blkdev_issue_flush(struct block_device *, gfp_t, sector_t *);
-+extern int blkdev_issue_write_same(struct block_device *bdev, sector_t sector,
-+		sector_t nr_sects, gfp_t gfp_mask, struct page *page);
- 
- #define BLKDEV_DISCARD_SECURE	(1 << 0)	/* issue a secure erase */
- #define BLKDEV_DISCARD_ZERO	(1 << 1)	/* must reliably zero data */
- 
--extern int blkdev_issue_flush(struct block_device *, gfp_t, sector_t *);
- extern int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
- 		sector_t nr_sects, gfp_t gfp_mask, unsigned long flags);
- extern int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
- 		sector_t nr_sects, gfp_t gfp_mask, int flags,
- 		struct bio **biop);
--extern int blkdev_issue_write_same(struct block_device *bdev, sector_t sector,
--		sector_t nr_sects, gfp_t gfp_mask, struct page *page);
+ 	/*
++	 * The number of WRITE ZEROES bios that will be submitted to the target.
++	 * The bio number can be accessed with dm_bio_get_target_bio_nr.
++	 */
++	unsigned num_write_zeroes_bios;
 +
-+#define BLKDEV_ZERO_NOUNMAP	(1 << 0)  /* do not free blocks */
-+
- extern int __blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
- 		sector_t nr_sects, gfp_t gfp_mask, struct bio **biop,
--		bool discard);
-+		unsigned flags);
- extern int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
--		sector_t nr_sects, gfp_t gfp_mask, bool discard);
-+		sector_t nr_sects, gfp_t gfp_mask, unsigned flags);
-+
- static inline int sb_issue_discard(struct super_block *sb, sector_t block,
- 		sector_t nr_blocks, gfp_t gfp_mask, unsigned long flags)
- {
-@@ -1367,7 +1371,7 @@ static inline int sb_issue_zeroout(struct super_block *sb, sector_t block,
- 	return blkdev_issue_zeroout(sb->s_bdev,
- 				    block << (sb->s_blocksize_bits - 9),
- 				    nr_blocks << (sb->s_blocksize_bits - 9),
--				    gfp_mask, true);
-+				    gfp_mask, 0);
- }
- 
- extern int blk_verify_command(unsigned char *cmd, fmode_t has_write_perm);
++	/*
+ 	 * The minimum number of extra bytes allocated in each io for the
+ 	 * target to use.
+ 	 */
 -- 
 2.11.0
 
