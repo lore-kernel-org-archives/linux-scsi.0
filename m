@@ -1,41 +1,54 @@
-From: "hch-jcswGhMUV9g@public.gmane.org" <hch-jcswGhMUV9g@public.gmane.org>
-Subject: Re: [PATCH 12/23] sd: handle REQ_UNMAP
-Date: Fri, 31 Mar 2017 09:18:44 +0200
-Message-ID: <20170331071844.GB3308@lst.de>
-References: <20170323143341.31549-1-hch@lst.de>
-	<20170323143341.31549-13-hch@lst.de>
-	<1490719722.2573.8.camel@sandisk.com>
-	<20170330090201.GD12015@lst.de> <yq1h92a3hsv.fsf@oracle.com>
-	<20170330173020.GB24229@lst.de> <yq17f36yypg.fsf@oracle.com>
+From: Dmitry Monakhov <dmonakhov@openvz.org>
+Subject: Re: [PATCH 0/3] Improve block device testing coverage
+Date: Fri, 31 Mar 2017 10:43:19 +0300
+Message-ID: <8760ip28o8.fsf@dmlp.sw.ru>
+References: <1490879944-26240-1-git-send-email-dmonakhov@openvz.org> <20170331065702.GA17435@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <yq17f36yypg.fsf-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: "axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org" <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org" <philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Bart Van Assche <Bart.VanAssche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>, "lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org" <lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, "shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "hch-jcswGhMUV9g@public.gmane.org" <hch-jcswGhMUV9g@public.gmane.org>, "agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org" <drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:34524 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932238AbdCaHnX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Mar 2017 03:43:23 -0400
+In-Reply-To: <20170331065702.GA17435@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: fstests@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, Mar 30, 2017 at 10:19:55PM -0400, Martin K. Petersen wrote:
-> > If you manually change the provisioning mode to WS10 on a device that
-> > must use WRITE SAME (16) to be able to address all blocks you're already
-> > screwed right now, and with this patch you can screw yourself through
-> > the WRITE_ZEROES path in addition to the DISCARD path.
-> 
-> Oh, I see. We only had the LBA sanity check in place for write same, not
-> for discard.
+Christoph Hellwig <hch@infradead.org> writes:
 
-And btw, I'd be happy to add such a check, I'd just rather keep it out
-of this patch.  It might be a good idea if you give it a turn after
-this series given that you have all the devices that have weird
-provisioning modes while I don't..
+> On Thu, Mar 30, 2017 at 05:19:01PM +0400, Dmitry Monakhov wrote:
+>> During LSFMM we have discussed how to test lower-backend of linux IO-stack.
+>> Common opinion was that xfstests is the most obvious solution which cover
+>> most of use cases filesystem care about.
+>> 
+>> I'm working on integration T10-DIF/DIF data integrity features to ext4,
+>> for that reason we need to be shure that linux integrity framework is
+>> in working state, which is currently broken in several places.
+>> 
+>> In fact, it is relatively simple to add basic coverage tests for basic
+>> IO operations over virtual device with integrity support. All we need
+>> is to add lio target support.
+>
+> First:  Thanks for adding block layer testing!
+>
+> Second: even more so than Darrick's blockdev fallocate test this is
+> the wrong place.  If I run xfstests I want to test my file system,
+> not random block device features.  Please start a proper block device
+> testsuite instead, possibly by copy and pasting code from xfstests.
+Fair enough. I also not happy to place blkdev feature  to tests/generic
+namespace. But altearnative to fork xfstests infrastructure to dedicated
+test-framework only for blkdevice seems not very good. Because fork is
+always pain. I already maintain one internal fork of xfstests which
+tests our Vituozzo's speciffic features.
+
+May be it would be reasonable idea to add didicated namespace
+'tests/blockdev' in xfstests, and move all blkdev related tests here?
+IMHO this is good idea. Because filesystem relay on some basic
+features from blkdev which should be tested explicitly, because
+implicit testing is too hard to debug/investigation.
+
+>
+> That's how I started the test suite for qemu's block layer for example.
+Do you mean qemu/tests/qemu-iotests ?
