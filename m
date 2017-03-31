@@ -1,41 +1,32 @@
-From: Jason Wang <jasowang@redhat.com>
-Subject: Re: [PATCH 1/6] virtio: wrap find_vqs
-Date: Fri, 31 Mar 2017 12:04:55 +0800
-Message-ID: <c388e4fd-2956-8894-31ec-31fe8b01e49f@redhat.com>
-References: <1490820507-8005-1-git-send-email-mst@redhat.com>
- <1490820507-8005-2-git-send-email-mst@redhat.com>
- <72f533a2-482d-1956-b0fe-254e273e1818@redhat.com>
- <20170330173146-mutt-send-email-mst@kernel.org>
+From: Fam Zheng <famz@redhat.com>
+Subject: Re: [PATCH v2] sd: Consider max_xfer_blocks if opt_xfer_blocks is
+ unusable
+Date: Fri, 31 Mar 2017 12:05:25 +0800
+Message-ID: <20170331040525.GA11195@lemon.lan>
+References: <20170328044126.10006-1-famz@redhat.com>
+ <yq1k2774hht.fsf@oracle.com>
+ <20170330041311.GA32392@lemon.lan>
+ <yq18tnm3hou.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20170330173146-mutt-send-email-mst@kernel.org>
-Sender: netdev-owner@vger.kernel.org
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-kernel@vger.kernel.org, John Fastabend <john.fastabend@gmail.com>, Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Amit Shah <amit@kernel.org>, Gonglei <arei.gonglei@huawei.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, David Airlie <airlied@linux.ie>, Gerd Hoffmann <kraxel@redhat.com>, Dmitry Tarnyagin <dmitry.tarnyagin@lockless.no>, Ohad Ben-Cohen <ohad@wizery.com>, Bjorn Andersson <bjorn.andersson@linaro.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Stefan Hajnoczi <stefanha@redhat.com>, virtualization@lists.linux-foundation.org, linux-crypto@vger.kernel.org, dri-devel@lists.freedesktop.org, netdev@vger.kerne
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <yq18tnm3hou.fsf@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Laurence Oberman <loberman@redhat.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
+On Thu, 03/30 11:30, Martin K. Petersen wrote:
+> Fam Zheng <famz@redhat.com> writes:
+> 
+> >> 	rw_max = min_not_zero(logical_to_sectors(sdp, dev_max),
+> >>                               BLK_DEF_MAX_SECTORS);
+> >
+> > Yes, it is better. Is it okay to make the change when you apply?
+> 
+> Sure. Applied to 4.11/scsi-fixes.
 
+Cool. Thanks!
 
-On 2017年03月30日 22:32, Michael S. Tsirkin wrote:
-> On Thu, Mar 30, 2017 at 02:00:08PM +0800, Jason Wang wrote:
->>
->> On 2017年03月30日 04:48, Michael S. Tsirkin wrote:
->>> We are going to add more parameters to find_vqs, let's wrap the call so
->>> we don't need to tweak all drivers every time.
->>>
->>> Signed-off-by: Michael S. Tsirkin<mst@redhat.com>
->>> ---
->> A quick glance and it looks ok, but what the benefit of this series, is it
->> required by other changes?
->>
->> Thanks
-> Yes - to avoid touching all devices when doing the rest of
-> the patchset.
-
-Maybe I'm not clear. I mean the benefit of this series not this single 
-patch. I guess it may be used by you proposal that avoid reset when set 
-XDP? If yes, do we really want to drop some packets after XDP is set?
-
-Thanks
+Fam
