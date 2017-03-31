@@ -1,71 +1,109 @@
-From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 22/23] drbd: implement REQ_OP_WRITE_ZEROES
-Date: Thu, 30 Mar 2017 22:34:05 -0400
-Message-ID: <yq137duyy1u.fsf@oracle.com>
-References: <20170323143341.31549-1-hch@lst.de>
-	<20170323143341.31549-23-hch@lst.de>
-	<20170330100641.GI5939@soda.linbit> <20170330114408.GA15777@lst.de>
-	<20170330134957.GA508@redhat.com> <yq1pogy3i6u.fsf@oracle.com>
-	<20170330231550.GA3102@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-In-Reply-To: <20170330231550.GA3102-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> (Mike Snitzer's message of
-	"Thu, 30 Mar 2017 19:15:50 -0400")
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+From: lixiubo@cmss.chinamobile.com
+Subject: [PATCH] tcmu: Skip Data-Out blocks before gathering Data-In buffer for BIDI case
+Date: Fri, 31 Mar 2017 10:35:25 +0800
+Message-ID: <1490927725-25131-1-git-send-email-lixiubo@cmss.chinamobile.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: nab@linux-iscsi.org
+Cc: mchristi@redhat.com, agrover@redhat.com, iliastsi@arrikto.com, namei.unix@gmail.com, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, Xiubo Li <lixiubo@cmss.chinamobile.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
+From: Xiubo Li <lixiubo@cmss.chinamobile.com>
 
-Mike,
+For the bidirectional case, the Data-Out buffer blocks will always at
+the head of the tcmu_cmd's bitmap, and before gathering the Data-In
+buffer, first of all it should skip the Data-Out ones, or the device
+supporting BIDI commands won't work.
 
-> But while discussing this effort with Jeff Moyer he asked: shouldn't the
-> zeroed blocks be provisioned?  This is a fairly embarassing question not
-> to be able to answer in the moment.  So I clearly need to learn what the
-> overall intent of WRITE_ZEROES actually is.
+Fixed: 26418649eead ("target/user: Introduce data_bitmap, replace
+		data_length/data_head/data_tail")
+Reported-by: Ilias Tsitsimpis <iliastsi@arrikto.com>
+Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
+---
+ drivers/target/target_core_user.c | 48 +++++++++++++++++++++++++++------------
+ 1 file changed, 33 insertions(+), 15 deletions(-)
 
-The intent is to guarantee all future reads to these blocks will return
-zeroes. Whether to allocate or deallocate or do a combination to achieve
-that goal is up to the device.
-
-> If it is meant as a replacement for WRITE_SAME (as hch switched dm-io
-> over from WRITE_SAME with a payload of 0 to WRITE_ZEROES) and for the
-> backing mechanism for blkdev_issue_zeroout() then I guess I have my
-> answer.
-
-Yes. I was hoping MD would use WRITE SAME to initialize data and parity
-drives. That's why I went with SAME nomenclature rather than ZEROES
-(which had just appeared in NVMe at that time).
-
-Christoph's renaming is mostly to emphasize the purpose and the
-semantics. People keep getting confused because both REQ_DISCARD and
-REQ_WRITE_SAME use the WRITE SAME SCSI command. But the two uses are
-completely orthogonal and governed by different heuristics in sd.c.
-
-> Unless DM thinp can guarantee that the discarded blocks will
-> always return zeroes (by zeroing before all partial block writes) my
-> discard based dm-thinp implementation of WRITE_ZEROES is a complete
-> throw-away (unless block zeroing is enabled.. which it never is because
-> performance sucks with it).  So if an upper-level of the IO stack
-> (e.g. ext4) were to assume that a block will _definitely_ have zeroes
-> then DM thinp would fall short.
-
-You don't have a way to mark those blocks as being full of zeroes
-without actually writing them?
-
-Note that the fallback to a zeroout command is to do a regular write. So
-if DM doesn't zero the blocks, the block layer is going to it.
-
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index ede815c..63e3a1b 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -311,24 +311,50 @@ static void free_data_area(struct tcmu_dev *udev, struct tcmu_cmd *cmd)
+ 		   DATA_BLOCK_BITS);
+ }
+ 
+-static void gather_data_area(struct tcmu_dev *udev, unsigned long *cmd_bitmap,
+-		struct scatterlist *data_sg, unsigned int data_nents)
++static void gather_data_area(struct tcmu_dev *udev, struct tcmu_cmd *cmd,
++			     bool bidi)
+ {
++	struct se_cmd *se_cmd = cmd->se_cmd;
+ 	int i, block;
+ 	int block_remaining = 0;
+ 	void *from, *to;
+ 	size_t copy_bytes, from_offset;
+-	struct scatterlist *sg;
++	struct scatterlist *sg, *data_sg;
++	unsigned int data_nents;
++	DECLARE_BITMAP(bitmap, DATA_BLOCK_BITS);
++
++	bitmap_copy(bitmap, cmd->data_bitmap, DATA_BLOCK_BITS);
++
++	if (!bidi) {
++		data_sg = se_cmd->t_data_sg;
++		data_nents = se_cmd->t_data_nents;
++	} else {
++		uint32_t count;
++
++		/*
++		 * For bidi case, the first count blocks are for Data-Out
++		 * buffer blocks, and before gathering the Data-In buffer
++		 * the Data-Out buffer blocks should be discarded.
++		 */
++		count = DIV_ROUND_UP(se_cmd->data_length, DATA_BLOCK_SIZE);
++		while (count--) {
++			block = find_first_bit(bitmap, DATA_BLOCK_BITS);
++			clear_bit(block, bitmap);
++		}
++
++		data_sg = se_cmd->t_bidi_data_sg;
++		data_nents = se_cmd->t_bidi_data_nents;
++	}
+ 
+ 	for_each_sg(data_sg, sg, data_nents, i) {
+ 		int sg_remaining = sg->length;
+ 		to = kmap_atomic(sg_page(sg)) + sg->offset;
+ 		while (sg_remaining > 0) {
+ 			if (block_remaining == 0) {
+-				block = find_first_bit(cmd_bitmap,
++				block = find_first_bit(bitmap,
+ 						DATA_BLOCK_BITS);
+ 				block_remaining = DATA_BLOCK_SIZE;
+-				clear_bit(block, cmd_bitmap);
++				clear_bit(block, bitmap);
+ 			}
+ 			copy_bytes = min_t(size_t, sg_remaining,
+ 					block_remaining);
+@@ -610,19 +636,11 @@ static void tcmu_handle_completion(struct tcmu_cmd *cmd, struct tcmu_cmd_entry *
+ 			       se_cmd->scsi_sense_length);
+ 		free_data_area(udev, cmd);
+ 	} else if (se_cmd->se_cmd_flags & SCF_BIDI) {
+-		DECLARE_BITMAP(bitmap, DATA_BLOCK_BITS);
+-
+ 		/* Get Data-In buffer before clean up */
+-		bitmap_copy(bitmap, cmd->data_bitmap, DATA_BLOCK_BITS);
+-		gather_data_area(udev, bitmap,
+-			se_cmd->t_bidi_data_sg, se_cmd->t_bidi_data_nents);
++		gather_data_area(udev, cmd, true);
+ 		free_data_area(udev, cmd);
+ 	} else if (se_cmd->data_direction == DMA_FROM_DEVICE) {
+-		DECLARE_BITMAP(bitmap, DATA_BLOCK_BITS);
+-
+-		bitmap_copy(bitmap, cmd->data_bitmap, DATA_BLOCK_BITS);
+-		gather_data_area(udev, bitmap,
+-			se_cmd->t_data_sg, se_cmd->t_data_nents);
++		gather_data_area(udev, cmd, false);
+ 		free_data_area(udev, cmd);
+ 	} else if (se_cmd->data_direction == DMA_TO_DEVICE) {
+ 		free_data_area(udev, cmd);
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+1.8.3.1
