@@ -1,27 +1,36 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] csiostor: switch to pci_alloc_irq_vectors
-Date: Fri, 31 Mar 2017 08:55:27 +0200
-Message-ID: <20170331065527.GA3024@lst.de>
-References: <1484325046-31032-1-git-send-email-hch@lst.de> <yq1h94tgsvd.fsf@oracle.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/3] Improve block device testing coverage
+Date: Thu, 30 Mar 2017 23:57:02 -0700
+Message-ID: <20170331065702.GA17435@infradead.org>
+References: <1490879944-26240-1-git-send-email-dmonakhov@openvz.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:33358 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752942AbdCaGz3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 31 Mar 2017 02:55:29 -0400
+Return-path: <fstests-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <yq1h94tgsvd.fsf@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1490879944-26240-1-git-send-email-dmonakhov@openvz.org>
+Sender: fstests-owner@vger.kernel.org
+To: Dmitry Monakhov <dmonakhov@openvz.org>
+Cc: fstests@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, hariprasad@chelsio.com, praveenm@chelsio.com
 
-On Fri, Jan 20, 2017 at 07:27:02PM -0500, Martin K. Petersen wrote:
-> >>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
+On Thu, Mar 30, 2017 at 05:19:01PM +0400, Dmitry Monakhov wrote:
+> During LSFMM we have discussed how to test lower-backend of linux IO-stack.
+> Common opinion was that xfstests is the most obvious solution which cover
+> most of use cases filesystem care about.
 > 
-> Christoph> And get automatic MSI-X affinity for free.
+> I'm working on integration T10-DIF/DIF data integrity features to ext4,
+> for that reason we need to be shure that linux integrity framework is
+> in working state, which is currently broken in several places.
 > 
-> Chelsio folks: Please review and test!
+> In fact, it is relatively simple to add basic coverage tests for basic
+> IO operations over virtual device with integrity support. All we need
+> is to add lio target support.
 
-ping!
+First:  Thanks for adding block layer testing!
+
+Second: even more so than Darrick's blockdev fallocate test this is
+the wrong place.  If I run xfstests I want to test my file system,
+not random block device features.  Please start a proper block device
+testsuite instead, possibly by copy and pasting code from xfstests.
+
+That's how I started the test suite for qemu's block layer for example.
