@@ -1,59 +1,71 @@
-From: Sinan Kaya <okaya-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Subject: Re: [RFC 1/8] Introduce Peer-to-Peer memory (p2pmem) device
-Date: Fri, 31 Mar 2017 14:49:01 -0400
-Message-ID: <cb102386-0314-a3a3-ed44-b42debdf1512@codeaurora.org>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1490911959-5146-2-git-send-email-logang@deltatee.com>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] scsi: mpt3sas: fix hang on ata passthrough commands
+Date: Fri, 31 Mar 2017 21:27:59 +0200
+Message-ID: <20170331192759.GA9744@kroah.com>
+References: <20170331135030.GA24063@zipoli.ccur.kvm>
+ <20170331141229.GB8141@kroah.com>
+ <20170331141647.GA26310@zipoli.ccur.kvm>
+ <20170331145052.GA15647@kroah.com>
+ <20170331181029.GA13098@zipoli.ccur.kvm>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <1490911959-5146-2-git-send-email-logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, Stephen Bates <sbates-pv7U853sEMVWk0Htik3J/w@public.gmane.org>, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170331181029.GA13098@zipoli.ccur.kvm>
+Sender: stable-owner@vger.kernel.org
+To: Joe Korty <joe.korty@ccur.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrey Grodzovsky <andrey2805@gmail.com>, Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Ingo Molnar <mingo@kernel.org>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux Stable Mailing List <stable@vger.kernel.org>, Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Logan,
+On Fri, Mar 31, 2017 at 02:10:29PM -0400, Joe Korty wrote:
+> On Fri, Mar 31, 2017 at 04:50:52PM +0200, Greg Kroah-Hartman wrote:
+> > A: Because it messes up the order in which people normally read text.
+> > Q: Why is top-posting such a bad thing?
+> > A: Top-posting.
+> > Q: What is the most annoying thing in e-mail?
+> > 
+> > A: No.
+> > Q: Should I include quotations after my reply?
+> > 
+> > 
+> > http://daringfireball.net/2007/07/on_top
+> > 
+> > On Fri, Mar 31, 2017 at 10:16:47AM -0400, Joe Korty wrote:
+> > > Hi Greg,
+> > > This patch is not yet in 4.4.
+> > 
+> > What patch is that?  I can't find a git commit id here at all :(
+> > 
+> > > It is in 4.9 and upstream.  No one has submitted it to you before this
+> > > email.  I only discovered the need for it because lockdep complains
+> > > when it is missing.  I do not know how it was missed; perhaps there is
+> > > a reason rather than it being missed by accident. Others in the know
+> > > can comment if they like.
+> > 
+> > You need to say what you want to have happen for a stable patch, you did
+> > read Documenation/stable_kernel_rules.txt, right?
+> > 
+> > still confused,
+> > 
+> > greg k-h
+> 
+> 
+> Hi Greg,
+> The patch is one that has already been backported into 4.9,
+> and as such I assumed it was already in a format acceptable
+> for submission.
+> 
+> 4.4 is the only additional branch that needs this patch,
+> and there it is needed only because in 4.4.28 two other
+> mpt3sas patches had been backported.  Those two patches
+> introduced the lock dependency problem that this, the
+> third patch, fixes.
+> 
+> In summary, either all three patches should be backported,
+> or none should be backported.  Porting just two is wrong.
 
-> +/**
-> + * p2pmem_unregister() - unregister a p2pmem device
-> + * @p: the device to unregister
-> + *
-> + * The device will remain until all users are done with it
-> + */
-> +void p2pmem_unregister(struct p2pmem_dev *p)
-> +{
-> +	if (!p)
-> +		return;
-> +
-> +	dev_info(&p->dev, "unregistered");
-> +	device_del(&p->dev);
-> +	ida_simple_remove(&p2pmem_ida, p->id);
+What patches?  Please start over, resend the email in a format that can
+be understand as to what commits you want added to what stable kernel
+tree. As it is, I still have no clue...
 
-Don't you need to clean up the p->pool here.
-
-> +	put_device(&p->dev);
-> +}
-> +EXPORT_SYMBOL(p2pmem_unregister);
-> +
-
-I don't like the ugliness around the switch port to be honest. 
-
-Going to whitelist/blacklist looks simpler in my opinion.
-
-Sinan
-
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+greg k-h
