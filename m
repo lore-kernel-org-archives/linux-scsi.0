@@ -1,32 +1,27 @@
-From: Fam Zheng <famz@redhat.com>
-Subject: Re: [PATCH v2] sd: Consider max_xfer_blocks if opt_xfer_blocks is
- unusable
-Date: Fri, 31 Mar 2017 12:05:25 +0800
-Message-ID: <20170331040525.GA11195@lemon.lan>
-References: <20170328044126.10006-1-famz@redhat.com>
- <yq1k2774hht.fsf@oracle.com>
- <20170330041311.GA32392@lemon.lan>
- <yq18tnm3hou.fsf@oracle.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] csiostor: switch to pci_alloc_irq_vectors
+Date: Fri, 31 Mar 2017 08:55:27 +0200
+Message-ID: <20170331065527.GA3024@lst.de>
+References: <1484325046-31032-1-git-send-email-hch@lst.de> <yq1h94tgsvd.fsf@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:33358 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752942AbdCaGz3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 31 Mar 2017 02:55:29 -0400
 Content-Disposition: inline
-In-Reply-To: <yq18tnm3hou.fsf@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Laurence Oberman <loberman@redhat.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+In-Reply-To: <yq1h94tgsvd.fsf@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, hariprasad@chelsio.com, praveenm@chelsio.com
 
-On Thu, 03/30 11:30, Martin K. Petersen wrote:
-> Fam Zheng <famz@redhat.com> writes:
+On Fri, Jan 20, 2017 at 07:27:02PM -0500, Martin K. Petersen wrote:
+> >>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
 > 
-> >> 	rw_max = min_not_zero(logical_to_sectors(sdp, dev_max),
-> >>                               BLK_DEF_MAX_SECTORS);
-> >
-> > Yes, it is better. Is it okay to make the change when you apply?
+> Christoph> And get automatic MSI-X affinity for free.
 > 
-> Sure. Applied to 4.11/scsi-fixes.
+> Chelsio folks: Please review and test!
 
-Cool. Thanks!
-
-Fam
+ping!
