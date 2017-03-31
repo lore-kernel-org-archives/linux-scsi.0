@@ -1,109 +1,41 @@
-From: lixiubo@cmss.chinamobile.com
-Subject: [PATCH] tcmu: Skip Data-Out blocks before gathering Data-In buffer for BIDI case
-Date: Fri, 31 Mar 2017 10:35:25 +0800
-Message-ID: <1490927725-25131-1-git-send-email-lixiubo@cmss.chinamobile.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: nab@linux-iscsi.org
-Cc: mchristi@redhat.com, agrover@redhat.com, iliastsi@arrikto.com, namei.unix@gmail.com, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, Xiubo Li <lixiubo@cmss.chinamobile.com>
+From: Jason Wang <jasowang@redhat.com>
+Subject: Re: [PATCH 1/6] virtio: wrap find_vqs
+Date: Fri, 31 Mar 2017 12:04:55 +0800
+Message-ID: <c388e4fd-2956-8894-31ec-31fe8b01e49f@redhat.com>
+References: <1490820507-8005-1-git-send-email-mst@redhat.com>
+ <1490820507-8005-2-git-send-email-mst@redhat.com>
+ <72f533a2-482d-1956-b0fe-254e273e1818@redhat.com>
+ <20170330173146-mutt-send-email-mst@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20170330173146-mutt-send-email-mst@kernel.org>
+Sender: netdev-owner@vger.kernel.org
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: linux-kernel@vger.kernel.org, John Fastabend <john.fastabend@gmail.com>, Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Amit Shah <amit@kernel.org>, Gonglei <arei.gonglei@huawei.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, David Airlie <airlied@linux.ie>, Gerd Hoffmann <kraxel@redhat.com>, Dmitry Tarnyagin <dmitry.tarnyagin@lockless.no>, Ohad Ben-Cohen <ohad@wizery.com>, Bjorn Andersson <bjorn.andersson@linaro.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Stefan Hajnoczi <stefanha@redhat.com>, virtualization@lists.linux-foundation.org, linux-crypto@vger.kernel.org, dri-devel@lists.freedesktop.org, netdev@vger.kerne
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiubo Li <lixiubo@cmss.chinamobile.com>
 
-For the bidirectional case, the Data-Out buffer blocks will always at
-the head of the tcmu_cmd's bitmap, and before gathering the Data-In
-buffer, first of all it should skip the Data-Out ones, or the device
-supporting BIDI commands won't work.
 
-Fixed: 26418649eead ("target/user: Introduce data_bitmap, replace
-		data_length/data_head/data_tail")
-Reported-by: Ilias Tsitsimpis <iliastsi@arrikto.com>
-Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
----
- drivers/target/target_core_user.c | 48 +++++++++++++++++++++++++++------------
- 1 file changed, 33 insertions(+), 15 deletions(-)
+On 2017年03月30日 22:32, Michael S. Tsirkin wrote:
+> On Thu, Mar 30, 2017 at 02:00:08PM +0800, Jason Wang wrote:
+>>
+>> On 2017年03月30日 04:48, Michael S. Tsirkin wrote:
+>>> We are going to add more parameters to find_vqs, let's wrap the call so
+>>> we don't need to tweak all drivers every time.
+>>>
+>>> Signed-off-by: Michael S. Tsirkin<mst@redhat.com>
+>>> ---
+>> A quick glance and it looks ok, but what the benefit of this series, is it
+>> required by other changes?
+>>
+>> Thanks
+> Yes - to avoid touching all devices when doing the rest of
+> the patchset.
 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index ede815c..63e3a1b 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -311,24 +311,50 @@ static void free_data_area(struct tcmu_dev *udev, struct tcmu_cmd *cmd)
- 		   DATA_BLOCK_BITS);
- }
- 
--static void gather_data_area(struct tcmu_dev *udev, unsigned long *cmd_bitmap,
--		struct scatterlist *data_sg, unsigned int data_nents)
-+static void gather_data_area(struct tcmu_dev *udev, struct tcmu_cmd *cmd,
-+			     bool bidi)
- {
-+	struct se_cmd *se_cmd = cmd->se_cmd;
- 	int i, block;
- 	int block_remaining = 0;
- 	void *from, *to;
- 	size_t copy_bytes, from_offset;
--	struct scatterlist *sg;
-+	struct scatterlist *sg, *data_sg;
-+	unsigned int data_nents;
-+	DECLARE_BITMAP(bitmap, DATA_BLOCK_BITS);
-+
-+	bitmap_copy(bitmap, cmd->data_bitmap, DATA_BLOCK_BITS);
-+
-+	if (!bidi) {
-+		data_sg = se_cmd->t_data_sg;
-+		data_nents = se_cmd->t_data_nents;
-+	} else {
-+		uint32_t count;
-+
-+		/*
-+		 * For bidi case, the first count blocks are for Data-Out
-+		 * buffer blocks, and before gathering the Data-In buffer
-+		 * the Data-Out buffer blocks should be discarded.
-+		 */
-+		count = DIV_ROUND_UP(se_cmd->data_length, DATA_BLOCK_SIZE);
-+		while (count--) {
-+			block = find_first_bit(bitmap, DATA_BLOCK_BITS);
-+			clear_bit(block, bitmap);
-+		}
-+
-+		data_sg = se_cmd->t_bidi_data_sg;
-+		data_nents = se_cmd->t_bidi_data_nents;
-+	}
- 
- 	for_each_sg(data_sg, sg, data_nents, i) {
- 		int sg_remaining = sg->length;
- 		to = kmap_atomic(sg_page(sg)) + sg->offset;
- 		while (sg_remaining > 0) {
- 			if (block_remaining == 0) {
--				block = find_first_bit(cmd_bitmap,
-+				block = find_first_bit(bitmap,
- 						DATA_BLOCK_BITS);
- 				block_remaining = DATA_BLOCK_SIZE;
--				clear_bit(block, cmd_bitmap);
-+				clear_bit(block, bitmap);
- 			}
- 			copy_bytes = min_t(size_t, sg_remaining,
- 					block_remaining);
-@@ -610,19 +636,11 @@ static void tcmu_handle_completion(struct tcmu_cmd *cmd, struct tcmu_cmd_entry *
- 			       se_cmd->scsi_sense_length);
- 		free_data_area(udev, cmd);
- 	} else if (se_cmd->se_cmd_flags & SCF_BIDI) {
--		DECLARE_BITMAP(bitmap, DATA_BLOCK_BITS);
--
- 		/* Get Data-In buffer before clean up */
--		bitmap_copy(bitmap, cmd->data_bitmap, DATA_BLOCK_BITS);
--		gather_data_area(udev, bitmap,
--			se_cmd->t_bidi_data_sg, se_cmd->t_bidi_data_nents);
-+		gather_data_area(udev, cmd, true);
- 		free_data_area(udev, cmd);
- 	} else if (se_cmd->data_direction == DMA_FROM_DEVICE) {
--		DECLARE_BITMAP(bitmap, DATA_BLOCK_BITS);
--
--		bitmap_copy(bitmap, cmd->data_bitmap, DATA_BLOCK_BITS);
--		gather_data_area(udev, bitmap,
--			se_cmd->t_data_sg, se_cmd->t_data_nents);
-+		gather_data_area(udev, cmd, false);
- 		free_data_area(udev, cmd);
- 	} else if (se_cmd->data_direction == DMA_TO_DEVICE) {
- 		free_data_area(udev, cmd);
--- 
-1.8.3.1
+Maybe I'm not clear. I mean the benefit of this series not this single 
+patch. I guess it may be used by you proposal that avoid reset when set 
+XDP? If yes, do we really want to drop some packets after XDP is set?
+
+Thanks
