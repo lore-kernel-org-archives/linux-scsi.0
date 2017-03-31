@@ -1,39 +1,68 @@
-From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: Re: [RFC 5/8] scatterlist: Modify SG copy functions to support io
- memory.
-Date: Fri, 31 Mar 2017 09:41:56 -0600
-Message-ID: <435d4471-436b-87e6-8827-c9fc6cbdde2c@deltatee.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1490911959-5146-6-git-send-email-logang@deltatee.com>
- <20170331070950.GA9059@infradead.org>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 0/3] Improve block device testing coverage
+Date: Fri, 31 Mar 2017 09:08:35 -0700
+Message-ID: <20170331160835.GA10881@birch.djwong.org>
+References: <1490879944-26240-1-git-send-email-dmonakhov@openvz.org>
+ <20170331065702.GA17435@infradead.org>
+ <8760ip28o8.fsf@dmlp.sw.ru>
+ <20170331093801.GK22845@eguan.usersys.redhat.com>
+ <8737dt228x.fsf@dmlp.sw.ru>
+ <1490973067.2587.1.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20170331070950.GA9059-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, Stephen Bates <sbates-pv7U853sEMVWk0Htik3J/w@public.gmane.org>, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <fstests-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1490973067.2587.1.camel@sandisk.com>
+Sender: fstests-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Cc: "eguan@redhat.com" <eguan@redhat.com>, "dmonakhov@openvz.org" <dmonakhov@openvz.org>, "fstests@vger.kernel.org" <fstests@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On Fri, Mar 31, 2017 at 03:11:28PM +0000, Bart Van Assche wrote:
+> On Fri, 2017-03-31 at 13:02 +0300, Dmitry Monakhov wrote:
+> > Another good example may be a bug with dirty page cache after blkdiscard
+> > https://lkml.org/lkml/2017/3/22/789 . This simple bug  result in crappy
+> > fsimage if mkfs relay on discard_zeroes_data behaviour.
+> > So IMHO basic blkdev test coverage is important filesystem testing. i.e.
+> > important for xfstests.
+> 
+> Mixing up filesystem tests and block layer / block driver tests in the same
+> directory is completely wrong. Block driver developers will be primarily
+> interested in the block tests and may want to skip the filesystem tests.
+> Filesystem developers will probably run the block tests only once and will
+> likely run the filesystem tests repeatedly. Mixing up different kinds of
+> tests in the same directory makes it unnecessarily hard to run block and
+> filesystem tests separately.
 
+During LSF I had started to wonder if we should just create a new
+FSTYP=blockdev fs type with a no-op mkfs & mount.  "_require_fs generic"
+could be taught to ignore FSTYP=blockdev; blockdev tests that should
+work on all block devices can stay in tests/generic, and blockdev tests
+that require specific features or complicated setup can go in
+tests/blockdev.
 
-On 31/03/17 01:09 AM, Christoph Hellwig wrote:
-> You're calling memcpy_{to,from}_iomem on non-__iomem pointers.  This
-> is a fundamental no-go as we keep I/O memory separate from kernel
-> pointers.
+The benefit (for the fs developers, anyway) of having complex block
+device setup code helper functions in common/ is that then we can also
+start writing tests to see how the fs reacts with more complex storage
+setups.  We already have some of that for dm_{thin,flakey,delay,error}.
 
-Yes, that's true, however I don't know how we could get around that when
-the iomem is referenced by struct pages inside a scatter gather list. Do
-we need to now have special __iomem sgls? And even still, I'm not sure
-how that could work when the nvme target code is using the same sgls to
-sometimes point to iomem and sometimes point to regular memory.
+That way we keep the tests together and make it easy to run them (when
+applicable) as part of regular fs testing, and avoid the situation where
+bdevtests and xfstests slowly drift apart in terms of behaviors and
+command line switches.
 
-I'm certainly open to suggestions, though.
+The downside ofc is the potential for bloat. :)
 
-Logan
+(The blockdev fallocate tests fit the fs/block split awkwardly --
+they call what is nominally a fs feature on something that isn't itself
+a filesystem...)
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+<shrug> Just my 5c.
+
+--D
+
+> 
+> Bart.--
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
