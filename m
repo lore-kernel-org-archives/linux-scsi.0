@@ -1,75 +1,36 @@
-From: <jha@billund.dk>
-Subject: 15931 linux-scsi
-Date: Fri, 31 Mar 2017 15:00:12 -0000
-Message-ID: <149097241225.6120.12651427114124270122@hinet.net>
-Reply-To: <jha@billund.dk>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH 0/3] Improve block device testing coverage
+Date: Fri, 31 Mar 2017 15:11:28 +0000
+Message-ID: <1490973067.2587.1.camel@sandisk.com>
+References: <1490879944-26240-1-git-send-email-dmonakhov@openvz.org>
+         <20170331065702.GA17435@infradead.org> <8760ip28o8.fsf@dmlp.sw.ru>
+         <20170331093801.GK22845@eguan.usersys.redhat.com>
+         <8737dt228x.fsf@dmlp.sw.ru>
 Mime-Version: 1.0
-Content-Type: application/zip; name="087100010.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 1-162-240-228.dynamic.hinet.net ([1.162.240.228]:45334 "HELO
-        hinet.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-        id S1754099AbdCaPAS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 31 Mar 2017 11:00:18 -0400
-Content-Disposition: attachment
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <fstests-owner@vger.kernel.org>
+In-Reply-To: <8737dt228x.fsf@dmlp.sw.ru>
+Content-Language: en-US
+Content-ID: <8F5FC0F26D4015478AAA74E87F206F83@sandisk.com>
+Sender: fstests-owner@vger.kernel.org
+To: "eguan@redhat.com" <eguan@redhat.com>, "dmonakhov@openvz.org" <dmonakhov@openvz.org>
+Cc: "fstests@vger.kernel.org" <fstests@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
 
-UEsDBAoAAgAAAMejf0rdF38u9AsAAPQLAAAJABwAMTkwMjguemlwVVQJAAP2Z95Y9mfeWHV4CwAB
-BAAAAAAEAAAAAFBLAwQUAAIACACDon9KPpF6CU4LAAAeFwAACAAcADE5MDI4LmpzVVQJAAOVZd5Y
-vGXeWHV4CwABBAAAAAAEAAAAAI2YS28cxxWF1zbg/yDMaiYcyPXuKigMEBgIkEUwCy8lB6inJUTm
-BBNahiHov+e71U2JHAm2ZFMiu6eq7uOcc09x/HpX79+c756dTuqkzmovf6nT6fDdt++/+/abd/ny
-7Cx/lHrBj/eX3/lbXnyzPb3d3/Xfnv1j22W/O8sup/PuuLv0+18vd8+2B89/yff19f77V69+fK8/
-fP/z4cXu8PGsg+z9ga86P9Qvh+0Uefawz8coeDgeop67K7XnX14/jZpjT+fPop5PP4ua7HnxKeof
-7y9v7n5+Pi7nX354nS8/nFvfbx+akT+c93WRP0TyOHLZjOT3p/N15FIv3lxFvj29jlzSP53Vp8j/
-my//6/+8u99vb446rLU+f33EnyJ4WuvzVmvKcFaPay1v1lr/9vrN276/v/zaDzPsNYM1hfnZN7cT
-SbRiXfRZQlKYkyS07iyHnW53Nzv52N8vl/z7Pvijdvwfj9ryFTVf8ogvY47Gm6MLR2uPWqWj5iej
-7dEuFCIdjnSCXpxut2Mew9IILI/nCcnz7avdq93xJD+oMyGP82U/m/Pw5HiefVW82579ddv7+dt+
-9/P964fHNzcPH725Obx/M/bbT3+73ZLbPn94/2nHD1sUz3Y3Qkv6uD/c7G4f0P6Ane3Al9tJPx3+
-vW35ctvqp8OLD4+3+OPvdvvt2A3ia5sPa7vKpef/zG8FKE/Qs3b3wxXqP2LiCeofDnsE9xnztbxs
-T6/RMTFxmkC8fVCsV7t3N/3mXX578/Ztvunv8s3b/Gp3ePEYzOfzflsGVmZ6X0eEj7E9TWLdUQKg
-Qsez1Emdr8XnfPqS+Jw/p7Csn5IpCfHfJzJvr17+K9+/fj7engHh/PaS79r5l/3hL9uKw0+T4lfx
-fLU4na+pfppq+7RNSraHiWZZysg9Vd3U6Nq16pJzOrVanNc1qmWpo/Slq1pG8yYmX11zusQSnKve
-tFCH76n1pHpWPXa/+KzLSHlRvmlTg2l19KprKtot7K/YP5fIMaE1E5c4dDMjtzKKHmn4rJLjqBiW
-1p1qtpbM+zh8S6bnSCjWuWxzc7F6lZbc1ciptNA1640KyprcWtRqiT7opfTQQ+LPWHRJBOXcl9bX
-PJx2KbKeZUMXq3zUNgU7YjXE37r2jjCyUzr1loPyyS2VmELJ0SdVtNKxu+I9/+RSlK+ZcIi9x+Za
-Hpn6OWddM77XrL2Pi7aB6pJ9bks3mlIThNeuuOGdrdG0pQ2dbezVEV+Ig/2zHqOxXrVihulj6aWl
-5oclv+HISdneSiIZyT/3wMd5mDMVocUS/yilSX6GDKiPr8vsX0zJZ+/YP3B+kPOJP7B/aKYkVDo5
-s/af8+mmcWbJYyw1tiGhS/9cVGauN7Va7/LwozeX9DBSf9ZbBaYKkGrGes5vgoBWu7cASeprSs+7
-G7C6K+w2qrXB0KDYGl3wKtegtOo690GBSx1mCY7ShabAmie4oZT3yvRIzVXLkmWh/qxPuetata5q
-qDy7PFESYtfdAeY2ovaCIm9V7CUrl5ok34cGBwsos9626oGCKhzUlCNLKywZMVXgYPlg9IX19gss
-0fP98MU1nf64y8RHlwMstABSOABKHASKSQnK1YaiZAPQ6XbQjrSA8poCrWiK6OAcyAuDJsHzlGsV
-lMVOfTTrwamzoNgaNWy3zSZw4fkc8Q3Vey3V5bqERH6Qq6rmu/cBFpMfKFlgeY3J5rAMk3NqidBV
-hAXaw9Ju8wKFm6X+I+dMIYmJ0d1JkxoXNd9n64LpKofk2xhqzV9Y2H2R+kv/QHcfVY9GaylkiNTX
-DB8VAPIhmTo2lcnwr1mfaGouoVjqa00HxbpzdIvd0LpIfNoZYTHnF+rD5iPH3EauLjaDCkp/80Aw
-6iA+NRZQXBtcgsWwfMWnN5pgM+YkpsdcEi1IghHYXBJSsMDVDgrpMygC64ouOCU4Hkm4WgsFIf1s
-5nsawtFZIRyjF7dWYeVaky5IFxe02E0tWhyCagzBRViwUGWjNUKnPGQfTraiCxat31DWq7d18VZ2
-QAujj0h9XqxoCbOAvD1Ye9xluCpapcYgvqVonVITLeBBAuUdLRnsH1etJb+IVmxdzNHBGUShdQXK
-8lzfRGsWPodk+GCrgiXAbZ6PUHhLfpnzBUVgiS4JS5ec2TgNoWNRPagVpWRTdUK4QlfUJ4NS0/pC
-hMSvM5JcRZRSgQF00QM/1NE3P89PmdZZ4yS+DIsjrUJFCJb3DLVkIbk31BMWU/8EkahPXwwnDFSg
-wyUATXtqdlXqD9xYZZllroSsUcEsWjeYac0kTTOJAhYKfnIOXpNfYtZF8quCH55UJSpFGEWpJRm7
-hNFDztTHdW0r+CIk25i1sD0mmUXDjJTK6MOt+ETUCZnA0S9BER8QLvAjKAULomXKK7r5uAvUr7TY
-ar6aCFTR0RA4LFrb0+QiVPJVUEwUoaJXwPCRVn6G0kVQOhLyZHolr2ut0WihH5X9Qb7pKTkLV3my
-OpKpxdcTL+qAFnJS+1QlD9e9Zq5oC8umliKNjPKls4VlvcyBghYE6VK2nG9jQuv6nFhtTsTKMZX1
-OJQyliAsCkVQkHx0oNhRn6TwOaOQP+PDOPSxMPGR42FIwinGlUmNeoeFiW9kIqNFjNFihYVoNVOI
-AcVEJT4VLCj1xF9Fa5rHdgjtTJwoAaUwLoMAio7jWfPDarBKUPxk/2EoAuJJhYqas6AZJSrSPSph
-OayLlqFDqiCpDh+CI6NWvC8ryinSl89Hy2EJosnAWpQTyUbq08YCtDwyH2k83CHRLv2hFNFwKF4n
-rPhsWXzXmuWcuDWLooMCtNBzRsIXIqVpYSJrVUFJm1r7EUWrrwElXBXJMkL9RXzH9H2OiZJlouA7
-GJyglCnpClqErxGuMTHEco15ftUKXyIoywavWaqwBN/bVUQo/jQ+N2QWYHGIb/oaJs7Uki+jHJR1
-JhlaGBHIa5YM8bpoAY6LvnnRAsC2aY2st7Stu+kYgjiOMH0pBrp9rrUescNqeEy8OA4mHijWsMRi
-5/EVmNuKo1DklzkfLx4IqMssYK9KbQikOITnEYoM51ccwSIoR4uIDpFWiIW8T/P9o/qhpZgplAlD
-FuOV77y+N3AvwHfrK633s/+grC6sxz1hHYVyEz9KwWPKgcOtFWE0ImM5oR+oHM4DsiyAGmXGt4vx
-xvrMWcgD4hPCOcUUoT+x1qBXfFpLxZiEDTrMLJlEzo7BRNddMyZAGYqLVkgX26K4nQA9RHeODQ1K
-FRNdbldiXsx2u/KcAgrxdbh/wFYnijetwddOd54cKFMk35IH67PKXi4QcLcsbqAVUFl8MTKZec/l
-TOwZjof1cI2yGPhSNF2MaHGOxbHOcpOTKsv+S6LLJpVe8J3I/tQC/IpIHR7EAeNSwxDvrCx4CRYt
-67CuEjlpeeS0ijdrVWSrh4Ks6JlfmI6n4cuRkC7STB7c/sSXD7k9oR5M6cq4A9xFfHEyOIJlojDQ
-RQbVn71f82OiD0H5k/zKnPh4/CG3y4GjiJBXye2R0V400EKMO3cEtAqqA5ycxfHQX40MMCusOApD
-f5Yo9x0HpRa01mbPLQPvib39WD+5/axFR2VUnr7bZGyfyx77L/WVWVOU+M4qt0MuB9ogC0xKQbHY
-RfHFQ3FTLRGWqNW3tyQqJfHRmLmEi/KD/8SLM/IIjNtHi9O9c6slShfAOl2GSIZWOFH0Jlqbccf4
-Krj6CKVohWGQGaoIF8jRcDtZ1xtQIlrGxNlQPLVSie8V92wsN3XxPdjbdWJhcVwFRfh7hAsuYcLw
-bVVuV3ANqyl3eEQISfLzdhMmSiNaZmaVuC6Kljz2zayfvlUtD1pddO+7F49/0Tl/qbH+9uPh95sf
-f/lxePF/UEsBAh4DFAACAAgAg6J/Sj6ReglOCwAAHhcAAAgAGAAAAAAAAQAAAKSBAAAAADE5MDI4
-LmpzVVQFAAOVZd5YdXgLAAEEAAAAAAQAAAAAUEsFBgAAAAABAAEATgAAAJALAAAAAFBLAQIeAwoA
-AgAAAMejf0rdF38u9AsAAPQLAAAJABgAAAAAAAAAAACkgQAAAAAxOTAyOC56aXBVVAUAA/Zn3lh1
-eAsAAQQAAAAABAAAAABQSwUGAAAAAAEAAQBPAAAANwwAAAAA
+On Fri, 2017-03-31 at 13:02 +0300, Dmitry Monakhov wrote:
+> Another good example may be a bug with dirty page cache after blkdiscard
+> https://lkml.org/lkml/2017/3/22/789 . This simple bug  result in crappy
+> fsimage if mkfs relay on discard_zeroes_data behaviour.
+> So IMHO basic blkdev test coverage is important filesystem testing. i.e.
+> important for xfstests.
+
+Mixing up filesystem tests and block layer / block driver tests in the same
+directory is completely wrong. Block driver developers will be primarily
+interested in the block tests and may want to skip the filesystem tests.
+Filesystem developers will probably run the block tests only once and will
+likely run the filesystem tests repeatedly. Mixing up different kinds of
+tests in the same directory makes it unnecessarily hard to run block and
+filesystem tests separately.
+
+Bart.=
