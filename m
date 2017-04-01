@@ -1,46 +1,75 @@
-From: okaya-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org
-Subject: Re: [RFC 1/8] Introduce Peer-to-Peer memory (p2pmem) device
-Date: Fri, 31 Mar 2017 22:17:07 -0400
-Message-ID: <e2165253dc355d5cb223e754d78047b1@codeaurora.org>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1490911959-5146-2-git-send-email-logang@deltatee.com>
- <cb102386-0314-a3a3-ed44-b42debdf1512@codeaurora.org>
- <7158f2e8-2016-f398-e77f-0fcbe6cb41dd@deltatee.com>
- <e6a74aeb-9f54-51c5-8ad9-3b6fb92c03b3@codeaurora.org>
- <0280fbb4-ba9e-ac64-6bb3-b72590a54e57@deltatee.com>
- <0ae27bca-21be-b89c-aba4-6cc9766ebd7b@codeaurora.org>
- <c8edc480-a2ac-a763-8438-18f3396db483@deltatee.com>
+From: <john.dahlberg@landshypotek.se>
+Subject: 12470 linux-scsi
+Date: Sat, 01 Apr 2017 04:34:39 -0000
+Message-ID: <149102127912.17552.2877434345282098223@city10.com.br>
+Reply-To: <john.dahlberg@landshypotek.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <c8edc480-a2ac-a763-8438-18f3396db483-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, "James
- E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Content-Type: application/zip; name="901422.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 190-108-97-89.city10.com.br ([190.108.97.89]:1730 "HELO
+        city10.com.br" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+        id S1750726AbdDAEer (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 1 Apr 2017 00:34:47 -0400
+Content-Disposition: attachment
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On 2017-03-31 21:57, Logan Gunthorpe wrote:
-> On 31/03/17 05:51 PM, Sinan Kaya wrote:
->> You can put a restriction with DMI/SMBIOS such that all devices from 
->> 2016
->> work else they belong to blacklist.
-> 
-> How do you get a manufacturing date for a given device within the
-> kernel? Is this actually something generically available?
-> 
-> Logan
-
-Smbios calls are used all over the place in kernel for introducing new 
-functionality while maintaining backwards compatibility.
-
-See drivers/pci and drivers/acpi directory.
+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
+AFBLBQYAAAAAAQABAE8AAAAqDAAAAAA=
