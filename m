@@ -1,93 +1,86 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] iscsi-target: Drop work-around for legacy GlobalSAN initiator
-Date: Sun,  2 Apr 2017 21:21:23 +0000
-Message-ID: <1491168083-31878-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:58826 "EHLO
-        linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751718AbdDBVVR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Apr 2017 17:21:17 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Subject: Re: [PATCH] target/user: PGR Support
+Date: Sun, 02 Apr 2017 15:09:10 -0700
+Message-ID: <1491170950.8846.26.camel@haakon3.risingtidesystems.com>
+References: <1490885269-47274-1-git-send-email-bryantly@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1490885269-47274-1-git-send-email-bryantly@linux.vnet.ibm.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Cc: mchristi@redhat.com, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Martin Svec <martin.svec@zoner.cz>, Himanshu Madhani <Himanshu.Madhani@cavium.com>, Arun Easi <arun.easi@cavium.com>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+Hi Bryant,
 
-Once upon a time back in 2009, a work-around was added to support
-the GlobalSAN iSCSI initiator v3.3 for MacOSX, which during login
-did not propose nor respond to MaxBurstLength, FirstBurstLength,
-DefaultTime2Wait and DefaultTime2Retain keys.
+On Thu, 2017-03-30 at 09:47 -0500, Bryant G. Ly wrote:
+> This adds PGR support for just TCMU, since tcmu doesn't
+> have the necessary IT_NEXUS info to process PGR in userspace,
+> so have those commands be processed in kernel.
 
-The work-around in iscsi_check_proposer_for_optional_reply()
-allowed the missing keys to be proposed, but did not require
-waiting for a response before moving to full feature phase
-operation.  This allowed GlobalSAN v3.3 to work out-of-the
-box, and for many years we didn't run into login interopt
-issues with any other initiators..
+I don't have a objection to adding PASSTHROUGH_PGR so TCMU can use
+target_core_pr.c logic, following what MNC has already done with
+PASSTHROUGH_ALUA.
 
-Until recently, when Martin tried a QLogic 57840S iSCSI Offload
-HBA on Windows 2016 which completed login, but subsequently
-failed with:
+Just one comment on the patch below.
 
-    Got unknown iSCSI OpCode: 0x43
+> 
+> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+> ---
+>  drivers/target/target_core_configfs.c | 10 +++++-----
+>  drivers/target/target_core_device.c   | 27 +++++++++++++++++++++++++++
+>  drivers/target/target_core_pr.c       |  2 +-
+>  drivers/target/target_core_pscsi.c    |  3 ++-
+>  include/target/target_core_backend.h  |  1 +
+>  5 files changed, 36 insertions(+), 7 deletions(-)
+> 
 
-The issue was QLogic MSFT side did not propose DefaultTime2Wait +
-DefaultTime2Retain, so LIO proposes them itself, and immediately
-transitions to full feature phase because of the GlobalSAN hack.
-However, the QLogic MSFT side still attempts to respond to
-DefaultTime2Retain + DefaultTime2Wait, even though LIO has set
-ISCSI_FLAG_LOGIN_NEXT_STAGE3 + ISCSI_FLAG_LOGIN_TRANSIT
-in last login response.
+<SNIP>
 
-So while the QLogic MSFT side should have been proposing these
-two keys to start, it was doing the correct thing per RFC-3720
-attempting to respond to proposed keys before transitioning to
-full feature phase.
+> diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+> index c754ae3..83c0d77 100644
+> --- a/drivers/target/target_core_device.c
+> +++ b/drivers/target/target_core_device.c
+> @@ -1076,6 +1077,32 @@ passthrough_parse_cdb(struct se_cmd *cmd,
+>  		return TCM_NO_SENSE;
+>  	}
+>  
+> +	/*
+> +	 * For PERSISTENT RESERVE IN/OUT, RELEASE, and RESERVE we need to
+> +	 * emulate the response, since tcmu does not have the information
+> +	 * required to process these commands.
+> +	 */
+> +	if (!(dev->transport->transport_flags &
+> +	      TRANSPORT_FLAG_PASSTHROUGH_PGR)) {
+> +		if (cdb[0] == PERSISTENT_RESERVE_IN) {
+> +			cmd->execute_cmd = target_scsi3_emulate_pr_in;
+> +			return TCM_NO_SENSE;
+> +		}
+> +		if (cdb[0] == PERSISTENT_RESERVE_OUT) {
+> +			cmd->execute_cmd = target_scsi3_emulate_pr_out;
+> +			return TCM_NO_SENSE;
+> +		}
+> +
+> +		if (cdb[0] == RELEASE || cdb[0] == RELEASE_10) {
+> +			cmd->execute_cmd = target_scsi2_reservation_release;
+> +			return TCM_NO_SENSE;
+> +		}
+> +		if (cdb[0] == RESERVE || cdb[0] == RESERVE_10) {
+> +			cmd->execute_cmd = target_scsi2_reservation_reserve;
+> +			return TCM_NO_SENSE;
+> +		}
+> +	}
+> +
 
-All that said, recent versions of GlobalSAN iSCSI (v5.3.0.541)
-does correctly propose the four keys during login, making the
-original work-around moot.
+Following what spc_parse_cdb() does wrt extracting the allocation length
+out of the CDB, calling target_cmd_size_check() to check for overflow +
+underflow + residual_count vs. fabric provided se_cmd->data_length, I'm
+wonder if we're getting to the point in passthrough_parse_cdb() where
+target_cmd_size_check() should be happening too.
 
-So in order to allow QLogic MSFT to run unmodified as-is, go
-ahead and drop this long standing work-around.
-
-Reported-by: Martin Svec <martin.svec@zoner.cz>
-Cc: Martin Svec <martin.svec@zoner.cz>
-Cc: Himanshu Madhani <Himanshu.Madhani@cavium.com>
-Cc: Arun Easi <arun.easi@cavium.com>
-Cc: stable@vger.kernel.org # 3.1+
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/iscsi/iscsi_target_parameters.c | 16 ----------------
- 1 file changed, 16 deletions(-)
-
-diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
-index e65bf78..fce6276 100644
---- a/drivers/target/iscsi/iscsi_target_parameters.c
-+++ b/drivers/target/iscsi/iscsi_target_parameters.c
-@@ -782,22 +782,6 @@ static void iscsi_check_proposer_for_optional_reply(struct iscsi_param *param)
- 		if (!strcmp(param->name, MAXRECVDATASEGMENTLENGTH))
- 			SET_PSTATE_REPLY_OPTIONAL(param);
- 		/*
--		 * The GlobalSAN iSCSI Initiator for MacOSX does
--		 * not respond to MaxBurstLength, FirstBurstLength,
--		 * DefaultTime2Wait or DefaultTime2Retain parameter keys.
--		 * So, we set them to 'reply optional' here, and assume the
--		 * the defaults from iscsi_parameters.h if the initiator
--		 * is not RFC compliant and the keys are not negotiated.
--		 */
--		if (!strcmp(param->name, MAXBURSTLENGTH))
--			SET_PSTATE_REPLY_OPTIONAL(param);
--		if (!strcmp(param->name, FIRSTBURSTLENGTH))
--			SET_PSTATE_REPLY_OPTIONAL(param);
--		if (!strcmp(param->name, DEFAULTTIME2WAIT))
--			SET_PSTATE_REPLY_OPTIONAL(param);
--		if (!strcmp(param->name, DEFAULTTIME2RETAIN))
--			SET_PSTATE_REPLY_OPTIONAL(param);
--		/*
- 		 * Required for gPXE iSCSI boot client
- 		 */
- 		if (!strcmp(param->name, MAXCONNECTIONS))
--- 
-1.9.1
+Historically, we've never done these checks for PSCSI, but given TCMU
+will be using this path for setting up full in-kernel PR, it's probably
+a good idea to do target_cmd_size_check() for the PASSTHROUGH_PGR
+special cases here.
