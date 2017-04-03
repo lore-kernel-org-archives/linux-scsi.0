@@ -1,83 +1,39 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 195233] New: sd: discard_granularity set smaller than
- minimum_io_size when LBPRZ=1
-Date: Mon, 03 Apr 2017 17:45:17 +0000
-Message-ID: <bug-195233-11613@https.bugzilla.kernel.org/>
+From: Chet L <chetanloke@gmail.com>
+Subject: Re: [PATCH] libiscsi: use vzalloc for large allocations in iscsi_pool_init
+Date: Mon, 3 Apr 2017 12:46:43 -0700
+Message-ID: <CAHnHxtyP=OGgCePeb9bde1GR_-nk1QdG7Ou9ndMSpatxH=oomQ@mail.gmail.com>
+References: <1491226221-24621-1-git-send-email-kyle.fortin@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:57628 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751210AbdDCRp3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Apr 2017 13:45:29 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id C24E328173
-        for <linux-scsi@vger.kernel.org>; Mon,  3 Apr 2017 17:45:28 +0000 (UTC)
-Received: from pdx-korg-bugzilla-1.web.codeaurora.org (unknown [172.30.200.120])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 826B728173
-        for <linux-scsi@vger.kernel.org>; Mon,  3 Apr 2017 17:45:28 +0000 (UTC)
+Received: from mail-it0-f44.google.com ([209.85.214.44]:36203 "EHLO
+        mail-it0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752402AbdDCTqo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Apr 2017 15:46:44 -0400
+Received: by mail-it0-f44.google.com with SMTP id e75so52984795itd.1
+        for <linux-scsi@vger.kernel.org>; Mon, 03 Apr 2017 12:46:44 -0700 (PDT)
+In-Reply-To: <1491226221-24621-1-git-send-email-kyle.fortin@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@kernel.org
+To: open-iscsi@googlegroups.com
+Cc: lduncan@suse.com, cleech@redhat.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Kyle Fortin <kyle.fortin@oracle.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=195233
+On Mon, Apr 3, 2017 at 6:30 AM, Kyle Fortin <kyle.fortin@oracle.com> wrote:
 
-            Bug ID: 195233
-           Summary: sd: discard_granularity set smaller than
-                    minimum_io_size when LBPRZ=1
-           Product: IO/Storage
-           Version: 2.5
-    Kernel Version: 4.4.0
-          Hardware: All
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: SCSI
-          Assignee: linux-scsi@vger.kernel.org
-          Reporter: dbuckley@oreilly.com
-        Regression: No
+>
+>         for (i = 0; i < q->max; i++)
+>                 kfree(q->pool[i]);
+> -       kfree(q->pool);
+> +       if (q->is_pool_vmalloc)
 
-Between 3.10 and 4.4 kernels this patch:
-https://patchwork.kernel.org/patch/6995131/ was merged to ensure
-discard_granularity is set to logical_block_size when a disk reports LBPRZ=1. 
-In a case where a disk reports LBPRZ=1 with a 512 logical_block_size and 4096
-physical_block_size and minimum_io_size, this results in discard_granularity
-incorrectly being set to 512 which at least in my case results in discard
-requests being ignored.
+you could do something like:
 
-I believe the easiest fix would be changing:
+if (is_vmalloc_addr(q->pool))
+    vfree(...);
+else
+    kfree(..);
 
-        if (sdkp->lbprz) {
-                q->limits.discard_alignment = 0;
-                q->limits.discard_granularity = logical_block_size;
-        } else {
+And then remove the bool.
 
-to:
 
-        if (sdkp->lbprz) {
-                q->limits.discard_alignment = 0;
-                q->limits.discard_granularity = max(logical_block_size,
-minimum_io_size);
-        } else {
-
-but any change which results in discard_granularity being set properly would
-solve this.
-
-I have verified that with a 3.10 kernel discard_granularity is set to 4096 and
-works as expected, but with 4.4 it is set to 512 and does not work. 
-
-This is a fairly severe bug for my use case, as I rely on discard to free
-unused blocks from the storage backing LUNs mounted by Linux clients and this
-effectively makes critical functions like thin-provisioning and snapshots
-infeasible for 4.x clients. 
-
-I have only tested this with the Ubuntu-packaged kernels, but the problematic
-code still is present in the current source.  I'm happy to provide any
-additional information that might be helpful.
-
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+Chetan
