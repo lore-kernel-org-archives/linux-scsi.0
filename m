@@ -1,60 +1,184 @@
-From: Logan Gunthorpe <logang@deltatee.com>
-Subject: Re: [RFC 1/8] Introduce Peer-to-Peer memory (p2pmem) device
-Date: Sun, 2 Apr 2017 22:26:08 -0600
-Message-ID: <ef507444-d3e5-0454-86a0-b5c4ae4b4dd9@deltatee.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1490911959-5146-2-git-send-email-logang@deltatee.com>
- <cb102386-0314-a3a3-ed44-b42debdf1512@codeaurora.org>
- <7158f2e8-2016-f398-e77f-0fcbe6cb41dd@deltatee.com>
- <e6a74aeb-9f54-51c5-8ad9-3b6fb92c03b3@codeaurora.org>
- <0280fbb4-ba9e-ac64-6bb3-b72590a54e57@deltatee.com>
- <0ae27bca-21be-b89c-aba4-6cc9766ebd7b@codeaurora.org>
- <c8edc480-a2ac-a763-8438-18f3396db483@deltatee.com>
- <e2165253dc355d5cb223e754d78047b1@codeaurora.org>
- <c5d7da85-41fd-2769-fcf8-b3c2a1fab95f@deltatee.com>
- <f0448277-9381-5c3d-d194-1efa1d1b44a6@codeaurora.org>
- <63d73995-4dfa-6270-ca13-972e0628011b@deltatee.com>
- <bed80d4e-7709-5991-498e-0ac361ca96a6@codeaurora.org>
+From: Shie-rei Huang <shierei@gmail.com>
+Subject: Re: [PATCH] target/user: PGR Support
+Date: Sun, 2 Apr 2017 22:20:22 -0700
+Message-ID: <CAABzzYiogV-OfcKUurAqHf7FGB=zwTSNFymxOWdw+75hPYdNdg@mail.gmail.com>
+References: <1490885269-47274-1-git-send-email-bryantly@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:54427 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751802AbdDCE0Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 3 Apr 2017 00:26:24 -0400
-In-Reply-To: <bed80d4e-7709-5991-498e-0ac361ca96a6@codeaurora.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1490885269-47274-1-git-send-email-bryantly@linux.vnet.ibm.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Cc: nab@linux-iscsi.org, mchristi@redhat.com, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, Steve Wise <swise@opengridcomputing.com>, Stephen Bates <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>, Keith Busch <keith.busch@intel.com>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, Alex Williamson <alex.williamson@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>
 
+After a PGR command is processed in the kernel, is it possible for the
+user mode to be notified with the command so that the user mode has a
+chance to do its part of PGR processing. Below is one use case of it.
+Suppose two TCMU servers are set up as an active/passive cluster for
+high availability. An initiator's PGR command is sent to the active
+server only. But the active server's user mode would like the passive
+server to know about the PGR command also and sync up its configfs
+state with the active server. This is to make sure that when the
+active server dies, the passive server can take over with the correct
+PGR state.
 
+Thanks,
 
-On 02/04/17 03:03 PM, Sinan Kaya wrote:
-> Push the decision all the way to the user. Let them decide whether they
-> want this feature to work on a root port connected port or under the
-> switch.
+-Shie-rei
 
-Yes, I prefer this too. If other folks agree with that I'd be very happy
-to go back to user chooses. I think Sagi was the most vocal proponent
-for kernel chooses at LSF so hopefully he will read this thread and
-offer some opinion.
-
-> I thought the issue was feature didn't work at all with some root ports
-> or there was some kind of memory corruption issue that you were trying to
-> avoid with the existing systems.
-
-I *think* there are some much older root ports where P2P TLPs don't even
-get through. But it doesn't really change the situation: in the nvmet
-case, the user would enable p2pmem and then be unable to connect and
-thus choose to disable it going forward. Not a big difference from the
-user seeing bad performance and not choosing to enable it.
-
-> I think you should get rid of all pci searching business in your code.
-
-Yes, my original proposal was when you configure the nvme target you
-chose the specific p2pmem device to use. That code had no tie ins to PCI
-code and could, in theory, work generically with any device and bus.
-
-Logan
+On Thu, Mar 30, 2017 at 7:47 AM, Bryant G. Ly
+<bryantly@linux.vnet.ibm.com> wrote:
+> This adds PGR support for just TCMU, since tcmu doesn't
+> have the necessary IT_NEXUS info to process PGR in userspace,
+> so have those commands be processed in kernel.
+>
+> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+> ---
+>  drivers/target/target_core_configfs.c | 10 +++++-----
+>  drivers/target/target_core_device.c   | 27 +++++++++++++++++++++++++++
+>  drivers/target/target_core_pr.c       |  2 +-
+>  drivers/target/target_core_pscsi.c    |  3 ++-
+>  include/target/target_core_backend.h  |  1 +
+>  5 files changed, 36 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+> index 38b5025..edfb098 100644
+> --- a/drivers/target/target_core_configfs.c
+> +++ b/drivers/target/target_core_configfs.c
+> @@ -1366,7 +1366,7 @@ static ssize_t target_pr_res_holder_show(struct config_item *item, char *page)
+>         struct se_device *dev = pr_to_dev(item);
+>         int ret;
+>
+> -       if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH)
+> +       if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH_PGR)
+>                 return sprintf(page, "Passthrough\n");
+>
+>         spin_lock(&dev->dev_reservation_lock);
+> @@ -1506,7 +1506,7 @@ static ssize_t target_pr_res_type_show(struct config_item *item, char *page)
+>  {
+>         struct se_device *dev = pr_to_dev(item);
+>
+> -       if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH)
+> +       if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH_PGR)
+>                 return sprintf(page, "SPC_PASSTHROUGH\n");
+>         else if (dev->dev_reservation_flags & DRF_SPC2_RESERVATIONS)
+>                 return sprintf(page, "SPC2_RESERVATIONS\n");
+> @@ -1519,7 +1519,7 @@ static ssize_t target_pr_res_aptpl_active_show(struct config_item *item,
+>  {
+>         struct se_device *dev = pr_to_dev(item);
+>
+> -       if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH)
+> +       if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH_PGR)
+>                 return 0;
+>
+>         return sprintf(page, "APTPL Bit Status: %s\n",
+> @@ -1531,7 +1531,7 @@ static ssize_t target_pr_res_aptpl_metadata_show(struct config_item *item,
+>  {
+>         struct se_device *dev = pr_to_dev(item);
+>
+> -       if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH)
+> +       if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH_PGR)
+>                 return 0;
+>
+>         return sprintf(page, "Ready to process PR APTPL metadata..\n");
+> @@ -1577,7 +1577,7 @@ static ssize_t target_pr_res_aptpl_metadata_store(struct config_item *item,
+>         u16 tpgt = 0;
+>         u8 type = 0;
+>
+> -       if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH)
+> +       if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH_PGR)
+>                 return count;
+>         if (dev->dev_reservation_flags & DRF_SPC2_RESERVATIONS)
+>                 return count;
+> diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+> index c754ae3..83c0d77 100644
+> --- a/drivers/target/target_core_device.c
+> +++ b/drivers/target/target_core_device.c
+> @@ -1045,6 +1045,7 @@ passthrough_parse_cdb(struct se_cmd *cmd,
+>         sense_reason_t (*exec_cmd)(struct se_cmd *cmd))
+>  {
+>         unsigned char *cdb = cmd->t_task_cdb;
+> +       struct se_device *dev = cmd->se_dev;
+>
+>         /*
+>          * Clear a lun set in the cdb if the initiator talking to use spoke
+> @@ -1076,6 +1077,32 @@ passthrough_parse_cdb(struct se_cmd *cmd,
+>                 return TCM_NO_SENSE;
+>         }
+>
+> +       /*
+> +        * For PERSISTENT RESERVE IN/OUT, RELEASE, and RESERVE we need to
+> +        * emulate the response, since tcmu does not have the information
+> +        * required to process these commands.
+> +        */
+> +       if (!(dev->transport->transport_flags &
+> +             TRANSPORT_FLAG_PASSTHROUGH_PGR)) {
+> +               if (cdb[0] == PERSISTENT_RESERVE_IN) {
+> +                       cmd->execute_cmd = target_scsi3_emulate_pr_in;
+> +                       return TCM_NO_SENSE;
+> +               }
+> +               if (cdb[0] == PERSISTENT_RESERVE_OUT) {
+> +                       cmd->execute_cmd = target_scsi3_emulate_pr_out;
+> +                       return TCM_NO_SENSE;
+> +               }
+> +
+> +               if (cdb[0] == RELEASE || cdb[0] == RELEASE_10) {
+> +                       cmd->execute_cmd = target_scsi2_reservation_release;
+> +                       return TCM_NO_SENSE;
+> +               }
+> +               if (cdb[0] == RESERVE || cdb[0] == RESERVE_10) {
+> +                       cmd->execute_cmd = target_scsi2_reservation_reserve;
+> +                       return TCM_NO_SENSE;
+> +               }
+> +       }
+> +
+>         /* Set DATA_CDB flag for ops that should have it */
+>         switch (cdb[0]) {
+>         case READ_6:
+> diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+> index e180511..129ca57 100644
+> --- a/drivers/target/target_core_pr.c
+> +++ b/drivers/target/target_core_pr.c
+> @@ -4147,7 +4147,7 @@ target_check_reservation(struct se_cmd *cmd)
+>                 return 0;
+>         if (dev->se_hba->hba_flags & HBA_FLAGS_INTERNAL_USE)
+>                 return 0;
+> -       if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH)
+> +       if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH_PGR)
+>                 return 0;
+>
+>         spin_lock(&dev->dev_reservation_lock);
+> diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+> index 94cda79..8943a62 100644
+> --- a/drivers/target/target_core_pscsi.c
+> +++ b/drivers/target/target_core_pscsi.c
+> @@ -1081,7 +1081,8 @@ static const struct target_backend_ops pscsi_ops = {
+>         .name                   = "pscsi",
+>         .owner                  = THIS_MODULE,
+>         .transport_flags        = TRANSPORT_FLAG_PASSTHROUGH |
+> -                                 TRANSPORT_FLAG_PASSTHROUGH_ALUA,
+> +                                 TRANSPORT_FLAG_PASSTHROUGH_ALUA |
+> +                                 TRANSPORT_FLAG_PASSTHROUGH_PGR,
+>         .attach_hba             = pscsi_attach_hba,
+>         .detach_hba             = pscsi_detach_hba,
+>         .pmode_enable_hba       = pscsi_pmode_enable_hba,
+> diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
+> index 1b0f447..e475531 100644
+> --- a/include/target/target_core_backend.h
+> +++ b/include/target/target_core_backend.h
+> @@ -10,6 +10,7 @@
+>   * backend module.
+>   */
+>  #define TRANSPORT_FLAG_PASSTHROUGH_ALUA                0x2
+> +#define TRANSPORT_FLAG_PASSTHROUGH_PGR          0x4
+>
+>  struct request_queue;
+>  struct scatterlist;
+> --
+> 2.5.4 (Apple Git-61)
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe target-devel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
