@@ -1,53 +1,63 @@
-From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
-Subject: Re: [REGRESSION] v4.11-rc3: lpfc: panic during module removal /
- shutdown
-Date: Mon, 3 Apr 2017 18:53:37 -0300
-Message-ID: <9110d410-8522-9806-8444-44276de9af51@linux.vnet.ibm.com>
-References: <99ad422f-8233-ddac-2e69-deda4a43b3d7@ce.jp.nec.com>
+From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+Subject: Re: [RFC 5/8] scatterlist: Modify SG copy functions to support io
+ memory.
+Date: Mon, 3 Apr 2017 16:10:27 -0600
+Message-ID: <ff0dd5ec-2562-9f1d-1335-d0a8813f2f50@deltatee.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1490911959-5146-6-git-send-email-logang@deltatee.com>
+ <20170331070950.GA9059@infradead.org>
+ <435d4471-436b-87e6-8827-c9fc6cbdde2c@deltatee.com>
+ <445bc352-75d7-438f-96ef-c2411215628d@deltatee.com>
+ <CAPcyv4g=MHbjbY0GFPoLq3wAGwhcC7813O7iLUWGEChWh0M7Dw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-2022-jp; format=flowed; delsp=yes
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:51188 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751384AbdDCVx4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Apr 2017 17:53:56 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v33LrrZm098786
-        for <linux-scsi@vger.kernel.org>; Mon, 3 Apr 2017 17:53:56 -0400
-Received: from e24smtp02.br.ibm.com (e24smtp02.br.ibm.com [32.104.18.86])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 29kubng5n3-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Mon, 03 Apr 2017 17:53:55 -0400
-Received: from localhost
-        by e24smtp02.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <mauricfo@linux.vnet.ibm.com>;
-        Mon, 3 Apr 2017 18:53:46 -0300
-Received: from d24av04.br.ibm.com (d24av04.br.ibm.com [9.8.31.97])
-        by d24relay03.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v33Lri9O34406562
-        for <linux-scsi@vger.kernel.org>; Mon, 3 Apr 2017 18:53:44 -0300
-Received: from d24av04.br.ibm.com (localhost [127.0.0.1])
-        by d24av04.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v33Lrhbs002741
-        for <linux-scsi@vger.kernel.org>; Mon, 3 Apr 2017 18:53:43 -0300
-In-Reply-To: <99ad422f-8233-ddac-2e69-deda4a43b3d7@ce.jp.nec.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <CAPcyv4g=MHbjbY0GFPoLq3wAGwhcC7813O7iLUWGEChWh0M7Dw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org" <linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Junichi Nomura <j-nomura@ce.jp.nec.com>, linux-scsi <linux-scsi@vger.kernel.org>, "dick.kennedy@broadcom.com" <dick.kennedy@broadcom.com>, "james.smart@broadcom.com" <james.smart@broadcom.com>
-Cc: "anton@samba.org" <anton@samba.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-Hi Junichi,
 
-On 03/28/2017 11:29 PM, Junichi Nomura wrote:
-> Since commit 895427bd012c ("scsi: lpfc: NVME Initiator: Base modifications"),
-> "rmmod lpfc" starting to cause panic or corruption due to double free.
 
-Thanks for the report. Can you please check whether the patch just sent
-([PATCH] lpfc: fix double free of bound CQ/WQ ring pointer) resolves it?
+On 03/04/17 03:44 PM, Dan Williams wrote:
+> On Mon, Apr 3, 2017 at 2:20 PM, Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org> wrote:
+>> Hi Christoph,
+>>
+>> What are your thoughts on an approach like the following untested
+>> draft patch.
+>>
+>> The patch (if fleshed out) makes it so iomem can be used in an sgl
+>> and WARN_ONs will occur in places where drivers attempt to access
+>> iomem directly through the sgl.
+>>
+>> I'd also probably create a p2pmem_alloc_sgl helper function so driver
+>> writers wouldn't have to mess with sg_set_iomem_page.
+>>
+>> With all that in place, it should be relatively safe for drivers to
+>> implement p2pmem even though we'd still technically be violating the
+>> __iomem boundary in some places.
+> 
+> Just reacting to this mail, I still haven't had a chance to take a
+> look at the rest of the series.
+> 
+> The pfn_t type was invented to carry extra type and page lookup
+> information about the memory behind a given pfn. At first glance that
+> seems a more natural place to carry an indication that this is an
+> "I/O" pfn.
 
-I don't have a setup to test it handy right now.
+I agree... But what are the plans for pfn_t? Is anyone working on using
+it in the scatterlist code? Currently it's not there yet and given the
+assertion that we will continue to be using struct page for DMA is that
+a direction we'd want to go?
 
-cheers,
-
--- 
-Mauricio Faria de Oliveira
-IBM Linux Technology Center
+Logan
