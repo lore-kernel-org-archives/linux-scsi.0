@@ -1,51 +1,83 @@
-From: Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: linux-next: Tree for Apr 3 (scsi/lpfc)
-Date: Mon, 3 Apr 2017 10:20:58 -0700
-Message-ID: <79805f28-6d5c-fa04-4335-60a51b274250@infradead.org>
-References: <20170403181304.13b3160f@canb.auug.org.au>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 195233] New: sd: discard_granularity set smaller than
+ minimum_io_size when LBPRZ=1
+Date: Mon, 03 Apr 2017 17:45:17 +0000
+Message-ID: <bug-195233-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20170403181304.13b3160f@canb.auug.org.au>
-Sender: linux-next-owner@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>, Linux-Next Mailing List <linux-next@vger.kernel.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, james smart <james.smart@broadcom.com>, dick kennedy <dick.kennedy@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:57628 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751210AbdDCRp3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Apr 2017 13:45:29 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id C24E328173
+        for <linux-scsi@vger.kernel.org>; Mon,  3 Apr 2017 17:45:28 +0000 (UTC)
+Received: from pdx-korg-bugzilla-1.web.codeaurora.org (unknown [172.30.200.120])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 826B728173
+        for <linux-scsi@vger.kernel.org>; Mon,  3 Apr 2017 17:45:28 +0000 (UTC)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@kernel.org
 
-On 04/03/17 01:13, Stephen Rothwell wrote:
-> Hi all,
-> 
-> Changes since 20170331:
-> 
+https://bugzilla.kernel.org/show_bug.cgi?id=195233
 
-on i386:
+            Bug ID: 195233
+           Summary: sd: discard_granularity set smaller than
+                    minimum_io_size when LBPRZ=1
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 4.4.0
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: SCSI
+          Assignee: linux-scsi@vger.kernel.org
+          Reporter: dbuckley@oreilly.com
+        Regression: No
 
-when SCSI_LPFC=y and
-CONFIG_NVME_CORE=m
-CONFIG_BLK_DEV_NVME=m
-CONFIG_BLK_DEV_NVME_SCSI=y
-CONFIG_NVME_FABRICS=m
-CONFIG_NVME_FC=m
-CONFIG_NVME_TARGET=m
+Between 3.10 and 4.4 kernels this patch:
+https://patchwork.kernel.org/patch/6995131/ was merged to ensure
+discard_granularity is set to logical_block_size when a disk reports LBPRZ=1. 
+In a case where a disk reports LBPRZ=1 with a 512 logical_block_size and 4096
+physical_block_size and minimum_io_size, this results in discard_granularity
+incorrectly being set to 512 which at least in my case results in discard
+requests being ignored.
 
-drivers/built-in.o: In function `lpfc_nvme_create_localport':
-(.text+0x28ce6b): undefined reference to `nvme_fc_register_localport'
-drivers/built-in.o: In function `lpfc_nvme_destroy_localport':
-(.text+0x28d263): undefined reference to `nvme_fc_unregister_remoteport'
-drivers/built-in.o: In function `lpfc_nvme_destroy_localport':
-(.text+0x28d2d3): undefined reference to `nvme_fc_unregister_localport'
-drivers/built-in.o: In function `lpfc_nvme_register_port':
-(.text+0x28d576): undefined reference to `nvme_fc_register_remoteport'
-drivers/built-in.o: In function `lpfc_nvme_unregister_port':
-(.text+0x28d93c): undefined reference to `nvme_fc_unregister_remoteport'
+I believe the easiest fix would be changing:
 
+        if (sdkp->lbprz) {
+                q->limits.discard_alignment = 0;
+                q->limits.discard_granularity = logical_block_size;
+        } else {
 
-so SCSI_LPFC depends on NVME_FC...
+to:
 
+        if (sdkp->lbprz) {
+                q->limits.discard_alignment = 0;
+                q->limits.discard_granularity = max(logical_block_size,
+minimum_io_size);
+        } else {
 
+but any change which results in discard_granularity being set properly would
+solve this.
 
-Reported-by: Randy Dunlap <rdunlap@infradead.org>
+I have verified that with a 3.10 kernel discard_granularity is set to 4096 and
+works as expected, but with 4.4 it is set to 512 and does not work. 
+
+This is a fairly severe bug for my use case, as I rely on discard to free
+unused blocks from the storage backing LUNs mounted by Linux clients and this
+effectively makes critical functions like thin-provisioning and snapshots
+infeasible for 4.x clients. 
+
+I have only tested this with the Ubuntu-packaged kernels, but the problematic
+code still is present in the current source.  I'm happy to provide any
+additional information that might be helpful.
 
 -- 
-~Randy
+You are receiving this mail because:
+You are the assignee for the bug.
