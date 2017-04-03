@@ -1,97 +1,70 @@
-From: Cathy Avery <cavery@redhat.com>
-Subject: [PATCH v2] scsi: storvsc: Add support for FC rport.
-Date: Mon,  3 Apr 2017 07:33:15 -0400
-Message-ID: <1491219195-3692-1-git-send-email-cavery@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: kys@microsoft.com, hch@infradead.org, haiyangz@microsoft.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: stephen@networkplumber.org, dan.carpenter@oracle.com, devel@linuxdriverproject.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Dmitry Monakhov <dmonakhov@openvz.org>
+Subject: [PATCH 1/2] scsi: convert unrecovered read error to -EILSEQ
+Date: Mon,  3 Apr 2017 16:03:48 +0400
+Message-ID: <1491221029-1609-1-git-send-email-dmonakhov@openvz.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: linux-block@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, Dmitry Monakhov <dmonakhov@openvz.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Included in the current storvsc driver for Hyper-V is the ability
-to access luns on an FC fabric via a virtualized fiber channel
-adapter exposed by the Hyper-V host. The driver also attaches to
-the FC transport to allow host and port names to be published under
-/sys/class/fc_host/hostX. Current customer tools running on the VM
-require that these names be available in the well known standard
-location under fc_host/hostX.
+It is quite easily to get URE after power failure and get scary message.
+URE is happens due to internal drive crc mismatch due to partial sector
+update. Most people interpret such message as "My drive is dying", which
+isreasonable assumption if your dmesg is full of complain from disks and
+read(2) return EIO. In fact this error is not fatal. One can fix it easily
+by rewriting affected sector.
 
-A problem arose when attaching to the FC transport. The scsi_scan
-code attempts to call fc_user_scan which has basically become a no-op
-due to the fact that the virtualized FC device does not expose rports.
-At this point you cannot refresh the scsi bus after mapping or unmapping
-luns on the SAN without a reboot of the VM.
+So we have to handle URE like follows:
+- Return EILSEQ to signall caller that this is bad data related problem
+- Do not retry command, because this is useless.
 
-This patch stubs in an rport per fc_host in storvsc so that the
-requirement of a defined rport is now met within the fc_transport and
-echo "- - -" > /sys/class/scsi_host/hostX/scan now works.
 
-Signed-off-by: Cathy Avery <cavery@redhat.com>
+
+### Test case
+#Test uses two HDD: disks sdb sdc
+#Write_phase
+# let fio work ~100sec and then cut the power
+fio --ioengine=libaio --direct=1 --rw=write --bs=1M --iodepth=16 \
+--time_based=1 --runtime=600 --filesize=1G --size=1T \
+--name /dev/sdb --name /dev/sdc
+
+# Check_phase after system goes back
+fio --ioengine=libaio --direct=1 --group_reporting --rw=read --bs=1M \
+--iodepth=16 --size=1G --filesize=1G
+--name=/dev/sdb --name /dev/sdc
+
+More info about URE probability here:
+https://plus.google.com/101761226576930717211/posts/Pctq7kk1dLL
+
+Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
 ---
-Changes since v1:
-- Fix fc_rport_identifiers init [Stephen Hemminger]
-- Better error checking
----
- drivers/scsi/storvsc_drv.c | 23 ++++++++++++++++++-----
- 1 file changed, 18 insertions(+), 5 deletions(-)
+ drivers/scsi/scsi_lib.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 638e5f4..37646d1 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -478,6 +478,9 @@ struct storvsc_device {
- 	 */
- 	u64 node_name;
- 	u64 port_name;
-+#if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
-+	struct fc_rport *rport;
-+#endif
- };
- 
- struct hv_host_device {
-@@ -1816,19 +1819,27 @@ static int storvsc_probe(struct hv_device *device,
- 		target = (device->dev_instance.b[5] << 8 |
- 			 device->dev_instance.b[4]);
- 		ret = scsi_add_device(host, 0, target, 0);
--		if (ret) {
--			scsi_remove_host(host);
--			goto err_out2;
--		}
-+		if (ret)
-+			goto err_out3;
- 	}
- #if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
- 	if (host->transportt == fc_transport_template) {
-+		struct fc_rport_identifiers ids = {
-+			.roles = FC_PORT_ROLE_FCP_TARGET,
-+		};
-+
- 		fc_host_node_name(host) = stor_device->node_name;
- 		fc_host_port_name(host) = stor_device->port_name;
-+		stor_device->rport = fc_remote_port_add(host, 0, &ids);
-+		if (!stor_device->rport)
-+			goto err_out3;
- 	}
- #endif
- 	return 0;
- 
-+err_out3:
-+	scsi_remove_host(host);
-+
- err_out2:
- 	/*
- 	 * Once we have connected with the host, we would need to
-@@ -1854,8 +1865,10 @@ static int storvsc_remove(struct hv_device *dev)
- 	struct Scsi_Host *host = stor_device->host;
- 
- #if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
--	if (host->transportt == fc_transport_template)
-+	if (host->transportt == fc_transport_template) {
-+		fc_remote_port_delete(stor_device->rport);
- 		fc_remove_host(host);
-+	}
- #endif
- 	scsi_remove_host(host);
- 	storvsc_dev_remove(dev);
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 19125d7..59d64ad 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -961,6 +961,19 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 			/* See SSC3rXX or current. */
+ 			action = ACTION_FAIL;
+ 			break;
++		case MEDIUM_ERROR:
++			if (sshdr.asc == 0x11) {
++				/* Handle unrecovered read error */
++				switch (sshdr.ascq) {
++				case 0x00: /* URE */
++				case 0x04: /* URE auto reallocate failed */
++				case 0x0B: /* URE recommend reassignment*/
++				case 0x0C: /* URE recommend rewrite the data */
++					action = ACTION_FAIL;
++					error = -EILSEQ;
++					break;
++				}
++			}
+ 		default:
+ 			action = ACTION_FAIL;
+ 			break;
 -- 
-2.5.0
+2.9.3
