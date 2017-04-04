@@ -1,52 +1,54 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [RFC PATCH 0/2] block,scsi: support host-wide tagset
-Date: Tue, 4 Apr 2017 19:10:00 +0200
-Message-ID: <ba1253cd-c437-0fb5-c450-91847390fa2d@suse.de>
-References: <1491307665-47656-1-git-send-email-hare@suse.de>
- <CACVXFVPyWL8XyFKC9uT7r4q+QT1+_RvnvJnOskCO3aSnUEVY1w@mail.gmail.com>
+From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+Subject: Re: [RFC 6/8] nvmet: Be careful about using iomem accesses when
+ dealing with p2pmem
+Date: Tue, 4 Apr 2017 11:21:58 -0600
+Message-ID: <c5638d51-d43f-f30e-f32c-531b3091bd49@deltatee.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1490911959-5146-7-git-send-email-logang@deltatee.com>
+ <080b68b4-eba3-861c-4f29-5d829425b5e7@grimberg.me>
+ <20170404154629.GA13552@obsidianresearch.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <CACVXFVPyWL8XyFKC9uT7r4q+QT1+_RvnvJnOskCO3aSnUEVY1w@mail.gmail.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Ming Lei <tom.leiming@gmail.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Omar Sandoval <osandov@fb.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, linux-block <linux-block@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <20170404154629.GA13552-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 04/04/2017 05:59 PM, Ming Lei wrote:
-> On Tue, Apr 4, 2017 at 8:07 PM, Hannes Reinecke <hare@suse.de> wrote:
->> Hi all,
->>
->> as discussed recently most existing HBAs have a host-wide tagset which
->> does not map easily onto the per-queue tagset model of block mq.
->> This patchset implements a flag BLK_MQ_F_GLOBAL_TAGS for block-mq, which
->> enables the use of a shared tagset for all hardware queues.
->> The second patch adds a flag 'host_tagset' to the SCSI host template,
->> which allows drivers to enable the use of the global tagset.
->>
->> This patchset probably has some performance implications as
->> there is a quite high probability of cache-bouncing when allocating
->> tags. Also I'm not quite sure if the implemented tagset sharing
->> is the correct way to handle things.
->> So this can be considered an RFC.
->>
->> As usual, comments and reviews are welcome.
->
-> Just be curious, why is multi hard queue used for this case? Are there
-> some real cases in SCSI?
->
-Yes.
-This is required by basically every driver in drivers/scsi which would 
-in theory be able to support scsi-mq (ie lpfc, qla2xxx, mpt3sas, and 
-possibly fnic). Each of them support several submission/completion 
-queues, but every one of them has a host-wide tag map, too.
 
-Cheers,
 
-Hannes
--- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+On 04/04/17 04:59 AM, Sagi Grimberg wrote:
+> We can never ever get here from an IO command, and that is a good thing
+> because it would have been broken if we did, regardless of what copy
+> method we use...
+
+Yes, I changed this mostly for admin commands. I did notice connect
+commands do end up reading from the p2mem and this patchset correctly
+switches it to iomemcpy. However, based on Cristoph's comment, I hope to
+make it more general such that iomem is hidden within sgls and any
+access will either be correct or create a warning.
+
+
+On 04/04/17 09:46 AM, Jason Gunthorpe wrote:
+> Transactions might not complete at the NVMe device before the CPU
+> processes the RDMA completion, however due to the PCI-E ordering rules
+> new TLPs directed to the NVMe will complete after the RMDA TLPs and
+> thus observe the new data. (eg order preserving)
+> 
+> It would be very hard to use P2P if fabric ordering is not preserved..
+
+Yes, my understanding is the same, the PCI-E ordering rules save us here.
+
+Thanks,
+
+Logan
