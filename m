@@ -1,79 +1,41 @@
-From: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [RFC 5/8] scatterlist: Modify SG copy functions to support io
- memory.
-Date: Mon, 3 Apr 2017 17:07:55 -0700
-Message-ID: <CAPcyv4gL=Z42x52So1iL-MNhPY67Pktz3c0J_h0tj_60TowNuQ@mail.gmail.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1490911959-5146-6-git-send-email-logang@deltatee.com>
- <20170331070950.GA9059@infradead.org>
- <435d4471-436b-87e6-8827-c9fc6cbdde2c@deltatee.com>
- <445bc352-75d7-438f-96ef-c2411215628d@deltatee.com>
- <CAPcyv4g=MHbjbY0GFPoLq3wAGwhcC7813O7iLUWGEChWh0M7Dw@mail.gmail.com>
- <ff0dd5ec-2562-9f1d-1335-d0a8813f2f50@deltatee.com>
- <CAPcyv4gx4g3Ry_A99yTodqwm2vH72oMSLKAKF7iEsmG5G4TcbQ@mail.gmail.com>
- <22930db3-a194-8b60-5aab-4a8add1ddc55@deltatee.com>
+From: Junichi Nomura <j-nomura@ce.jp.nec.com>
+Subject: Re: [REGRESSION] v4.11-rc3: lpfc: panic during module removal /
+ shutdown
+Date: Tue, 4 Apr 2017 02:10:47 +0000
+Message-ID: <95631fe6-9f0a-fa88-2900-6fc54c4115bb@ce.jp.nec.com>
+References: <99ad422f-8233-ddac-2e69-deda4a43b3d7@ce.jp.nec.com>
+ <9110d410-8522-9806-8444-44276de9af51@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <22930db3-a194-8b60-5aab-4a8add1ddc55-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org" <linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
+Content-Type: text/plain; charset="iso-2022-jp"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from tyo161.gate.nec.co.jp ([114.179.232.161]:55656 "EHLO
+        tyo161.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752597AbdDDCLe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Apr 2017 22:11:34 -0400
+In-Reply-To: <9110d410-8522-9806-8444-44276de9af51@linux.vnet.ibm.com>
+Content-Language: ja-JP
+Content-ID: <62C9D988BA78734B8F616D5699B9C6DD@gisp.nec.co.jp>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, "dick.kennedy@broadcom.com" <dick.kennedy@broadcom.com>, "james.smart@broadcom.com" <james.smart@broadcom.com>
+Cc: "anton@samba.org" <anton@samba.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-On Mon, Apr 3, 2017 at 4:12 PM, Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org> wrote:
->
->
-> On 03/04/17 04:47 PM, Dan Williams wrote:
->> I wouldn't necessarily conflate supporting pfn_t in the scatterlist
->> with the stalled stuct-page-less DMA effor. A pfn_t_to_page()
->> conversion will still work and be required. However you're right, the
->> minute we use pfn_t for this we're into the realm of special case
->> drivers that understand scatterlists with special "I/O-pfn_t" entries.
->
-> Well yes, it would certainly be possible to convert the scatterlist code
-> from page_link to pfn_t. (The only slightly tricky thing is that
-> scatterlist uses extra chaining bits and pfn_t uses extra flag bits so
-> they'd have to be harmonized somehow). But if we aren't moving toward
-> struct-page-less DMA, I fail to see the point of the conversion.
->
-> I'll definitely need IO scatterlists of some form or another and I like
-> pfn_t but right now it just seems like extra work with unclear benefit.
-> (Though, if someone told me that I can't use a third bit in the
-> page_link field then maybe that would be a good reason to move to pfn_t.)
->
->> However, maybe that's what we want? I think peer-to-peer DMA is not a
->> general purpose feature unless/until we get it standardized in PCI. So
->> maybe drivers with special case scatterlist support is exactly what we
->> want for now.
->
-> Well, I think this should be completely independent from PCI code. I see
-> no reason why we can't have infrastructure for DMA on iomem from any
-> bus. Largely all the work I've done in this area is completely agnostic
-> to the bus in use. (Except for any kind of white/black list when it is
-> used.)
+On 04/04/17 06:53, Mauricio Faria de Oliveira wrote:
+> Hi Junichi,
+> 
+> On 03/28/2017 11:29 PM, Junichi Nomura wrote:
+>> Since commit 895427bd012c ("scsi: lpfc: NVME Initiator: Base modifications"),
+>> "rmmod lpfc" starting to cause panic or corruption due to double free.
+> 
+> Thanks for the report. Can you please check whether the patch just sent
+> ([PATCH] lpfc: fix double free of bound CQ/WQ ring pointer) resolves it?
 
-The completely agnostic part is where I get worried, but I shouldn't
-say anymore until I actually read the patch.The worry is cases where
-this agnostic enabling allows unsuspecting code paths to do the wrong
-thing. Like bypass iomem safety.
+It works for me. Thank you!
 
-> The "special case scatterlist" is essentially what I'm proposing in the
-> patch I sent upthread, it just stores the flag in the page_link instead
-> of in a pfn_t.
+Considering future maintenance, it might be a bit fragile to just depend
+on the code comment about representing the relation between cq/wq and
+shared pring but it's maintainers' choice.
 
-Makes sense. The suggestion of pfn_t was to try to get more type
-safety throughout the stack. So that, again, unsuspecting code paths
-that get an I/O pfn aren't able to do things like page_address() or
-kmap() without failing.
-
-I'll stop commenting now and set aside some time to go read the patches.
+-- 
+Jun'ichi Nomura, NEC Corporation / NEC Solution Innovators, Ltd.
