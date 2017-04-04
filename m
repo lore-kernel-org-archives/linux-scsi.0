@@ -1,216 +1,148 @@
-From: Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [lpfc 05/19] Fix driver unload/reload operation.
-Date: Tue,  4 Apr 2017 10:16:58 -0700
-Message-ID: <1491326232-11255-6-git-send-email-rkennedy@broadcom.com>
-References: <1491326232-11255-1-git-send-email-rkennedy@broadcom.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH] scsi: ses: don't get power status of SES device slot on probe
+Date: Tue, 4 Apr 2017 14:07:55 -0700
+Message-ID: <CAPcyv4jqgh97JVnWMFC5kLJDeu6zaY2zZtaYAHTM0w2a0hBmSw@mail.gmail.com>
+References: <1490835730-13181-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:38158 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755042AbdDDRZi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2017 13:25:38 -0400
-Received: from pallmd1.broadcom.com (pallmd1.ash.broadcom.net [10.85.232.165])
-        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id A7D6C30C0A3
-        for <linux-scsi@vger.kernel.org>; Tue,  4 Apr 2017 10:17:27 -0700 (PDT)
-In-Reply-To: <1491326232-11255-1-git-send-email-rkennedy@broadcom.com>
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:36622 "EHLO
+        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753722AbdDDVH4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2017 17:07:56 -0400
+Received: by mail-oi0-f53.google.com with SMTP id r203so178392056oib.3
+        for <linux-scsi@vger.kernel.org>; Tue, 04 Apr 2017 14:07:56 -0700 (PDT)
+In-Reply-To: <1490835730-13181-1-git-send-email-mauricfo@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Dick Kennedy <dick.kennedy@broadcom.com>Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
+To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Song Liu <songliubraving@fb.com>, Jens Axboe <axboe@fb.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, gpiccoli@linux.vnet.ibm.com
 
-From: Dick Kennedy <rkennedy@lvnvda1400.lvn.broadcom.net>
+On Wed, Mar 29, 2017 at 6:02 PM, Mauricio Faria de Oliveira
+<mauricfo@linux.vnet.ibm.com> wrote:
+> The commit 08024885a2a3 ("ses: Add power_status to SES device slot")
+> introduced the 'power_status' attribute to enclosure components and
+> the associated callbacks.
+>
+> There are 2 callbacks available to get the power status of a device:
+> 1) ses_get_power_status() for 'struct enclosure_component_callbacks'
+> 2) get_component_power_status() for the sysfs device attribute
+> (these are available for kernel-space and user-space, respectively.)
+>
+> However, despite both methods being available to get power status
+> on demand, that commit also introduced a call to get power status
+> in ses_enclosure_data_process().
+>
+> This dramatically increased the total probe time for SCSI devices
+> on larger configurations, because ses_enclosure_data_process() is
+> called several times during the SCSI devices probe and loops over
+> the component devices (but that is another problem, another patch).
+>
+> That results in a tremendous continuous hammering of SCSI Receive
+> Diagnostics commands to the enclosure-services device, which does
+> delay the total probe time for the SCSI devices __significantly__:
+>
+>   Originally, ~34 minutes on a system attached to ~170 disks:
+>
+>     [ 9214.490703] mpt3sas version 13.100.00.00 loaded
+>     ...
+>     [11256.580231] scsi 17:0:177:0: qdepth(16), tagged(1), simple(0),
+>                    ordered(0), scsi_level(6), cmd_que(1)
+>
+>   With this patch, it decreased to ~2.5 minutes -- a 13.6x faster
+>
+>     [ 1002.992533] mpt3sas version 13.100.00.00 loaded
+>     ...
+>     [ 1151.978831] scsi 11:0:177:0: qdepth(16), tagged(1), simple(0),
+>                    ordered(0), scsi_level(6), cmd_que(1)
+>
+> Another downside is that the SCSI device class lock is held during
+> the executions of ses_enclosure_data_process() since it's a callee
+> of ses_intf_add(), which is executed under that lock in device_add().
+> This ends up blocking the parallel SCSI scan functionality because
+> device_add() depends on that lock, and also the removal of devices
+> via device_del() (e.g., during an enclosure reboot).
+>
+> Back to the commit discussion.. on the ses_get_power_status() call
+> introduced in ses_enclosure_data_process(): impact of removing it.
+>
+> That may possibly be in place to initialize the power status value
+> on device probe.  However, those 2 functions available to retrieve
+> that value _do_ automatically refresh/update it.  So the potential
+> benefit would be a direct access of the 'power_status' field which
+> does not use the callbacks...
+>
+> But the only reader of 'struct enclosure_component::power_status'
+> is the get_component_power_status() callback for sysfs attribute,
+> and it _does_ check for and call the .get_power_status callback,
+> (which indeed is defined and implemented by that commit), so the
+> power status value is, again, automatically updated.
+>
+> So, the remaining potential for a direct/non-callback access to
+> the power_status attribute would be out-of-tree modules -- well,
+> for those, if they are for whatever reason interested in values
+> that are set during device probe and not up-to-date by the time
+> they need it.. well, that would be curious.
+>
+> So, for out-of-tree modules and people still interested in this
+> behavior (in case I might have missed something about it, other
+> than the total probe time impact): let's add a module parameter
+> to keep that check turned on (disabled by default).
+>
+> Also, to handle that more properly, set the initial power state
+> value to '-1' (i.e., uninitialized) instead of '1' (power 'on'),
+> and check for it in that callback which may do an direct access
+> to the field value _if_ a callback function is not defined.
+>
+> Signed-off-by: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+> Fixes: 08024885a2a3 ("ses: Add power_status to SES device slot")
+> ---
+>  drivers/misc/enclosure.c | 6 +++++-
+>  drivers/scsi/ses.c       | 9 ++++++++-
+>  2 files changed, 13 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
+> index 65fed7146e9b..d3a8a13c4247 100644
+> --- a/drivers/misc/enclosure.c
+> +++ b/drivers/misc/enclosure.c
+> @@ -148,7 +148,7 @@ struct enclosure_device *
+>         for (i = 0; i < components; i++) {
+>                 edev->component[i].number = -1;
+>                 edev->component[i].slot = -1;
+> -               edev->component[i].power_status = 1;
+> +               edev->component[i].power_status = -1;
+>         }
+>
+>         mutex_lock(&container_list_lock);
+> @@ -594,6 +594,10 @@ static ssize_t get_component_power_status(struct device *cdev,
+>
+>         if (edev->cb->get_power_status)
+>                 edev->cb->get_power_status(edev, ecomp);
+> +
+> +       if (ecomp->power_status == -1)
+> +               return -EINVAL;
+> +
 
-Two issues: (1) driver could not be unloaded and
-reloaded without some Oops or Panic occurring. (2) The
-driver was panicking because of a corruption in the Memory
-Manager when the iocb list was getting allocated.
+Can we ever hit this if get_power_status is non-null?
 
-Root cause for the memory corruption was a double
-free of the Work Queue ring pointer memory - Freed once
-in the lpfc_sli4_queue_free when the CQ was destroyed
-and again in lpfc_sli4_queue_free when the WQ was
-destroyed.  While the linux memory manager protects
-against NULL pointers, it can't protect against stale
-pointer kfree calls.
+>         return snprintf(buf, 40, "%s\n", ecomp->power_status ? "on" : "off");
+>  }
+>
+> diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+> index 50adabbb5808..2fafefd419c1 100644
+> --- a/drivers/scsi/ses.c
+> +++ b/drivers/scsi/ses.c
+> @@ -36,6 +36,12 @@
+>
+>  #include <scsi/scsi_transport_sas.h>
+>
+> +static bool power_status_on_probe;     /* default: false, 0. */
+> +module_param(power_status_on_probe, bool, 0644);
+> +MODULE_PARM_DESC(power_status_on_probe, "get power status of SES device slots "
+> +                                       "(enclosure components) at probe time "
+> +                                       "(warning: may delay total probe time)");
+> +
 
-There are other fixes in this patch found during testing.
-While they are not a direct corruption cause, they should
-be fixed to ensure consistent unload/reload.
-
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <james.smart@broadcom.com>
----
- drivers/scsi/lpfc/lpfc_init.c | 46 +++++++++++++++++++++++--------------------
- drivers/scsi/lpfc/lpfc_sli.c  |  7 ++++++-
- 2 files changed, 31 insertions(+), 22 deletions(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index b56da01..cca7f81 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -5815,6 +5815,12 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
- 	INIT_LIST_HEAD(&phba->sli4_hba.lpfc_vfi_blk_list);
- 	INIT_LIST_HEAD(&phba->lpfc_vpi_blk_list);
- 
-+	/* Initialize mboxq lists. If the early init routines fail
-+	 * these lists need to be correctly initialized.
-+	 */
-+	INIT_LIST_HEAD(&phba->sli.mboxq);
-+	INIT_LIST_HEAD(&phba->sli.mboxq_cmpl);
-+
- 	/* initialize optic_state to 0xFF */
- 	phba->sli4_hba.lnk_info.optic_state = 0xff;
- 
-@@ -5880,6 +5886,7 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
- 					"READ_NV, mbxStatus x%x\n",
- 					bf_get(lpfc_mqe_command, &mboxq->u.mqe),
- 					bf_get(lpfc_mqe_status, &mboxq->u.mqe));
-+			mempool_free(mboxq, phba->mbox_mem_pool);
- 			rc = -EIO;
- 			goto out_free_bsmbx;
- 		}
-@@ -7805,7 +7812,7 @@ lpfc_alloc_fcp_wq_cq(struct lpfc_hba *phba, int wqidx)
- 
- 	/* Create Fast Path FCP WQs */
- 	wqesize = (phba->fcp_embed_io) ?
--				LPFC_WQE128_SIZE : phba->sli4_hba.wq_esize;
-+		LPFC_WQE128_SIZE : phba->sli4_hba.wq_esize;
- 	qdesc = lpfc_sli4_queue_alloc(phba, wqesize, phba->sli4_hba.wq_ecount);
- 	if (!qdesc) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-@@ -7836,7 +7843,7 @@ int
- lpfc_sli4_queue_create(struct lpfc_hba *phba)
- {
- 	struct lpfc_queue *qdesc;
--	int idx, io_channel, max;
-+	int idx, io_channel;
- 
- 	/*
- 	 * Create HBA Record arrays.
-@@ -7997,15 +8004,6 @@ lpfc_sli4_queue_create(struct lpfc_hba *phba)
- 		if (lpfc_alloc_nvme_wq_cq(phba, idx))
- 			goto out_error;
- 
--	/* allocate MRQ CQs */
--	max = phba->cfg_nvme_io_channel;
--	if (max < phba->cfg_nvmet_mrq)
--		max = phba->cfg_nvmet_mrq;
--
--	for (idx = 0; idx < max; idx++)
--		if (lpfc_alloc_nvme_wq_cq(phba, idx))
--			goto out_error;
--
- 	if (phba->nvmet_support) {
- 		for (idx = 0; idx < phba->cfg_nvmet_mrq; idx++) {
- 			qdesc = lpfc_sli4_queue_alloc(phba,
-@@ -8227,11 +8225,11 @@ lpfc_sli4_queue_destroy(struct lpfc_hba *phba)
- 
- 	/* Release FCP cqs */
- 	lpfc_sli4_release_queues(&phba->sli4_hba.fcp_cq,
--					phba->cfg_fcp_io_channel);
-+				 phba->cfg_fcp_io_channel);
- 
- 	/* Release FCP wqs */
- 	lpfc_sli4_release_queues(&phba->sli4_hba.fcp_wq,
--					phba->cfg_fcp_io_channel);
-+				 phba->cfg_fcp_io_channel);
- 
- 	/* Release FCP CQ mapping array */
- 	lpfc_sli4_release_queue_map(&phba->sli4_hba.fcp_cq_map);
-@@ -8577,15 +8575,15 @@ lpfc_sli4_queue_setup(struct lpfc_hba *phba)
- 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
- 				"0528 %s not allocated\n",
- 				phba->sli4_hba.mbx_cq ?
--						"Mailbox WQ" : "Mailbox CQ");
-+				"Mailbox WQ" : "Mailbox CQ");
- 		rc = -ENOMEM;
- 		goto out_destroy;
- 	}
- 
- 	rc = lpfc_create_wq_cq(phba, phba->sli4_hba.hba_eq[0],
--					phba->sli4_hba.mbx_cq,
--					phba->sli4_hba.mbx_wq,
--					NULL, 0, LPFC_MBOX);
-+			       phba->sli4_hba.mbx_cq,
-+			       phba->sli4_hba.mbx_wq,
-+			       NULL, 0, LPFC_MBOX);
- 	if (rc) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
- 			"0529 Failed setup of mailbox WQ/CQ: rc = 0x%x\n",
-@@ -10054,9 +10052,14 @@ lpfc_sli4_hba_unset(struct lpfc_hba *phba)
- 	/* Stop kthread signal shall trigger work_done one more time */
- 	kthread_stop(phba->worker_thread);
- 
-+	/* Unset the queues shared with the hardware then release all
-+	 * allocated resources.
-+	 */
-+	lpfc_sli4_queue_unset(phba);
-+	lpfc_sli4_queue_destroy(phba);
-+
- 	/* Reset SLI4 HBA FCoE function */
- 	lpfc_pci_function_reset(phba);
--	lpfc_sli4_queue_destroy(phba);
- 
- 	/* Stop the SLI4 device port */
- 	phba->pport->work_port_events = 0;
-@@ -10312,6 +10315,7 @@ lpfc_pci_probe_one_s3(struct pci_dev *pdev, const struct pci_device_id *pid)
- 	}
- 
- 	/* Initialize and populate the iocb list per host */
-+
- 	error = lpfc_init_iocb_list(phba, LPFC_IOCB_LIST_CNT);
- 	if (error) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-@@ -11092,7 +11096,6 @@ lpfc_pci_probe_one_s4(struct pci_dev *pdev, const struct pci_device_id *pid)
- 	}
- 
- 	/* Initialize and populate the iocb list per host */
--
- 	lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 			"2821 initialize iocb list %d.\n",
- 			phba->cfg_iocb_cnt*1024);
-@@ -11183,7 +11186,9 @@ lpfc_pci_probe_one_s4(struct pci_dev *pdev, const struct pci_device_id *pid)
- 	if ((phba->nvmet_support == 0) &&
- 	    (phba->cfg_enable_fc4_type & LPFC_ENABLE_NVME)) {
- 		/* Create NVME binding with nvme_fc_transport. This
--		 * ensures the vport is initialized.
-+		 * ensures the vport is initialized.  If the localport
-+		 * create fails, it should not unload the driver to
-+		 * support field issues.
- 		 */
- 		error = lpfc_nvme_create_localport(vport);
- 		if (error) {
-@@ -11191,7 +11196,6 @@ lpfc_pci_probe_one_s4(struct pci_dev *pdev, const struct pci_device_id *pid)
- 					"6004 NVME registration failed, "
- 					"error x%x\n",
- 					error);
--			goto out_disable_intr;
- 		}
- 	}
- 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 7087c55..d606944 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -13758,7 +13758,10 @@ lpfc_sli4_queue_free(struct lpfc_queue *queue)
- 		lpfc_free_rq_buffer(queue->phba, queue);
- 		kfree(queue->rqbp);
- 	}
--	kfree(queue->pring);
-+
-+	if (!list_empty(&queue->wq_list))
-+		list_del(&queue->wq_list);
-+
- 	kfree(queue);
- 	return;
- }
-@@ -15561,6 +15564,8 @@ lpfc_wq_destroy(struct lpfc_hba *phba, struct lpfc_queue *wq)
- 	}
- 	/* Remove wq from any list */
- 	list_del_init(&wq->list);
-+	kfree(wq->pring);
-+	wq->pring = NULL;
- 	mempool_free(mbox, wq->phba->mbox_mem_pool);
- 	return status;
- }
--- 
-2.1.0
+I don't think we need this module parameter as long as the only way to
+read the power status is through sysfs. We can always just leave it to
+be read on-demand when needed.
