@@ -1,67 +1,54 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv4 0/8]
-Date: Tue,  4 Apr 2017 16:02:53 +0200
-Message-ID: <1491314581-73795-1-git-send-email-hare@suse.de>
+Subject: [PATCHv4 3/8] scsi: always send command aborts
+Date: Tue,  4 Apr 2017 16:02:56 +0200
+Message-ID: <1491314581-73795-4-git-send-email-hare@suse.de>
+References: <1491314581-73795-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34611 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:34668 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753875AbdDDODJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 4 Apr 2017 10:03:09 -0400
+        id S1754197AbdDDODL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 4 Apr 2017 10:03:11 -0400
+In-Reply-To: <1491314581-73795-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>, Hannes Reinecke <hare@suse.com>
 
-Hi all,
+When a command has timed out we always should be sending an
+abort; with the previous code a failed abort might signal
+SCSI EH to start, and all other timed out commands will
+never be aborted, even though they might belong to a
+different ITL nexus.
 
-this is a resend of a small patchset for cleaning up SCSI EH.
-Primary goal is to make asynchronous aborts mandatory; there hasn't
-been a single report so far where asynchronous abort won't work, so
-the 'no_async_abort' flag has never been used and will be removed
-with this patchset.
-Additionally there's a cleanup to detect retries of failed commands and
-to inline commands aborts.
-I've also included the patch to correctly reset the media access
-timeout counter to avoid it being triggered inadvertedly by several
-commands timing out for the same device.
+Cc: Benjamin Block <bblock@linux.vnet.ibm.com>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/scsi_error.c | 12 ------------
+ 1 file changed, 12 deletions(-)
 
-As usual, comments and reviews are welcome.
-
-Changes to v1:
-- Include reviews from Christoph
-
-Changes to v2:
-- Include reviews from Bart
-- Add medium access timeout patch
-
-Changes to v3:
-- Add patch to inline command abort as per suggestion from Christoph
-- Drop patch to not escalate failed EH commands
-
-Christoph Hellwig (1):
-  libsas: allow async aborts
-
-Hannes Reinecke (7):
-  scsi_error: count medium access timeout only once per EH run
-  sd: Return SUCCESS in sd_eh_action() after device offline
-  scsi: always send command aborts
-  scsi: make eh_eflags persistent
-  scsi: make scsi_eh_scmd_add() always succeed
-  scsi: make asynchronous aborts mandatory
-  scsi: inline command aborts
-
- Documentation/scsi/scsi_eh.txt      |  30 ++---
- drivers/scsi/libsas/sas_scsi_host.c |   5 -
- drivers/scsi/scsi.c                 |   2 -
- drivers/scsi/scsi_error.c           | 223 ++++++++++++------------------------
- drivers/scsi/scsi_lib.c             |   6 +-
- drivers/scsi/scsi_priv.h            |   4 +-
- drivers/scsi/sd.c                   |  24 +++-
- drivers/scsi/sd.h                   |   1 +
- include/scsi/scsi_driver.h          |   2 +-
- include/scsi/scsi_eh.h              |   1 +
- include/scsi/scsi_host.h            |   5 -
- 11 files changed, 111 insertions(+), 192 deletions(-)
-
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 390a6bc..615e6c0 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -196,19 +196,7 @@ static int scsi_host_eh_past_deadline(struct Scsi_Host *shost)
+ 		return FAILED;
+ 	}
+ 
+-	/*
+-	 * Do not try a command abort if
+-	 * SCSI EH has already started.
+-	 */
+ 	spin_lock_irqsave(shost->host_lock, flags);
+-	if (scsi_host_in_recovery(shost)) {
+-		spin_unlock_irqrestore(shost->host_lock, flags);
+-		SCSI_LOG_ERROR_RECOVERY(3,
+-			scmd_printk(KERN_INFO, scmd,
+-				    "not aborting, host in recovery\n"));
+-		return FAILED;
+-	}
+-
+ 	if (shost->eh_deadline != -1 && !shost->last_reset)
+ 		shost->last_reset = jiffies;
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
 -- 
 1.8.5.6
