@@ -1,36 +1,56 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: advansys: fix uninitialized data access
-Date: Tue, 04 Apr 2017 19:40:27 -0400
-Message-ID: <yq1h923vj10.fsf@oracle.com>
-References: <20170323150226.249217-1-arnd@arndb.de>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH] sd: close hole in > 2T device rejection when
+ !CONFIG_LBDAF
+Date: Tue, 4 Apr 2017 23:54:55 +0000
+Message-ID: <1491350095.12081.3.camel@sandisk.com>
+References: <1488208949-3811-1-git-send-email-steve@digidescorp.com>
+         <1488211985.2656.1.camel@sandisk.com>
+         <3a6783ec-200d-5df5-2e1e-756c7e8b7c22@digidescorp.com>
+         <1488221849.2656.8.camel@sandisk.com> <yq1pogrvj9y.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170323150226.249217-1-arnd@arndb.de> (Arnd Bergmann's message
-        of "Thu, 23 Mar 2017 16:02:18 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Matthew Wilcox <mawilcox@microsoft.com>, Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:55777 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751856AbdDDXzA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2017 19:55:00 -0400
+In-Reply-To: <yq1pogrvj9y.fsf@oracle.com>
+Content-Language: en-US
+Content-ID: <B3170D8718D33F4CA1D2CA72FD770EA8@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "steve@digidescorp.com" <steve@digidescorp.com>, "steve.magnani@digidescorp.com" <steve.magnani@digidescorp.com>
 
-Arnd Bergmann <arnd@arndb.de> writes:
+On Tue, 2017-04-04 at 19:35 -0400, Martin K. Petersen wrote:
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index fb9b4d29af0b..6084c415c070 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -2102,6 +2102,16 @@ static void read_capacity_error(struct scsi_disk *=
+sdkp, struct scsi_device *sdp,
+> =20
+>  #define READ_CAPACITY_RETRIES_ON_RESET	10
+> =20
+> +static bool sd_addressable_capacity(u64 lba, unsigned int sector_size)
+> +{
+> +	u64 last_sector =3D lba + 1ULL << ilog2(sector_size) - 9;
+> +
+> +	if (sizeof(sector_t) =3D=3D 4 && last_sector > 0xffffffffULL)
+> +		return false;
+> +
+> +	return true;
+> +}
 
-Arnd,
+Hello Martin,
 
-> drivers/scsi/advansys.c: In function 'AscMsgOutSDTR':
-> drivers/scsi/advansys.c:3860:26: error: '*((void *)&sdtr_buf+5)' may be used uninitialized in this function [-Werror=maybe-uninitialized]
->          ((ushort)s_buffer[i + 1] << 8) | s_buffer[i]);
->                           ^
-> drivers/scsi/advansys.c:3860:26: error: '*((void *)&sdtr_buf+7)' may be used uninitialized in this function [-Werror=maybe-uninitialized]
-> drivers/scsi/advansys.c:3860:26: error: '*((void *)&sdtr_buf+5)' may be used uninitialized in this function [-Werror=maybe-uninitialized]
-> drivers/scsi/advansys.c:3860:26: error: '*((void *)&sdtr_buf+7)' may be used uninitialized in this function [-Werror=maybe-uninitialized]
->
-> The code has existed in this exact form at least since v2.6.12, and the
-> warning seems correct. This uses named initializers to ensure we initialize
-> all members of the structure.
->  					(uchar *)&sdtr_buf,
+How about replacing 0xffffffffULL with U32_MAX, adding parentheses in the
+last_sector computation to make clear that + and - have precedence over <<
+and adding a comment above=A0sd_addressable_capacity() that explains its
+purpose and also that the shift operation must not be replaced with a call
+to logical_to_sectors()? Otherwise this patch looks fine to me.
 
-Applied to 4.12/scsi-queue, thanks!
+Thanks,
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Bart.
