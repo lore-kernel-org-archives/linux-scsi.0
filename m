@@ -1,137 +1,171 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv4 5/8] scsi: make eh_eflags persistent
-Date: Tue,  4 Apr 2017 16:02:58 +0200
-Message-ID: <1491314581-73795-6-git-send-email-hare@suse.de>
+Subject: [PATCHv4 1/8] scsi_error: count medium access timeout only once per EH run
+Date: Tue,  4 Apr 2017 16:02:54 +0200
+Message-ID: <1491314581-73795-2-git-send-email-hare@suse.de>
 References: <1491314581-73795-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34621 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:34665 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754041AbdDDODK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 4 Apr 2017 10:03:10 -0400
+        id S1753455AbdDDODL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 4 Apr 2017 10:03:11 -0400
 In-Reply-To: <1491314581-73795-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Ewan Milne <emilne@redhat.com>, Lawrence Obermann <loberman@redhat.com>, Benjamin Block <bblock@linux.vnet.ibm.com>, Steffen Maier <maier@linux.vnet.ibm.com>, Hannes Reinecke <hare@suse.com>
 
-If a failed command is retried and fails again we need
-to enter SCSI EH, otherwise we will never be able to
-recover the command.
-To detect this situation we must not clear scmd->eh_eflags
-when EH finishes but rather make it persistent throughout
-the lifetime of the command.
+The current medium access timeout counter will be increased for
+each command, so if there are enough failed commands we'll hit
+the medium access timeout for even a single device failure and
+the following kernel message is displayed:
 
-Reviewed-by: Benjamin Block <bblock@linux.vnet.ibm.com>
-Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+sd H:C:T:L: [sdXY] Medium access timeout failure. Offlining disk!
+
+Fix this by making the timeout per EH run, ie the counter will
+only be increased once per device and EH run.
+
+Fixes: 18a4d0a ("[SCSI] Handle disk devices which can not process medium access commands")
+Cc: Ewan Milne <emilne@redhat.com>
+Cc: Lawrence Obermann <loberman@redhat.com>
+Cc: Benjamin Block <bblock@linux.vnet.ibm.com>
+Cc: Steffen Maier <maier@linux.vnet.ibm.com>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- Documentation/scsi/scsi_eh.txt      | 14 +++++++-------
- drivers/scsi/libsas/sas_scsi_host.c |  2 --
- drivers/scsi/scsi_error.c           |  4 ++--
- include/scsi/scsi_eh.h              |  1 +
- 4 files changed, 10 insertions(+), 11 deletions(-)
+ drivers/scsi/scsi_error.c  | 23 ++++++++++++++++++++++-
+ drivers/scsi/sd.c          | 22 ++++++++++++++++++----
+ drivers/scsi/sd.h          |  1 +
+ include/scsi/scsi_driver.h |  2 +-
+ 4 files changed, 42 insertions(+), 6 deletions(-)
 
-diff --git a/Documentation/scsi/scsi_eh.txt b/Documentation/scsi/scsi_eh.txt
-index 37eca00..4edb9c1c 100644
---- a/Documentation/scsi/scsi_eh.txt
-+++ b/Documentation/scsi/scsi_eh.txt
-@@ -105,11 +105,14 @@ function
- 
-  2. If the host supports asynchronous completion (as indicated by the
-     no_async_abort setting in the host template) scsi_abort_command()
--    is invoked to schedule an asynchrous abort. If that fails
--    Step #3 is taken.
-+    is invoked to schedule an asynchrous abort.
-+    Asynchronous abort are not invoked for commands which the
-+    SCSI_EH_ABORT_SCHEDULED flag is set (this indicates that the command
-+    already had been aborted once, and this is a retry which failed),
-+    or when the EH deadline is expired. In these case Step #3 is taken.
- 
-- 2. scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD) is invoked for the
--    command.  See [1-3] for more information.
-+ 3. scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD) is invoked for the
-+    command.  See [1-4] for more information.
- 
- [1-3] Asynchronous command aborts
- 
-@@ -263,7 +266,6 @@ scmd->allowed.
- 
-  3. scmd recovered
-     ACTION: scsi_eh_finish_cmd() is invoked to EH-finish scmd
--	- clear scmd->eh_eflags
- 	- scsi_setup_cmd_retry()
- 	- move from local eh_work_q to local eh_done_q
-     LOCKING: none
-@@ -456,8 +458,6 @@ except for #1 must be implemented by eh_strategy_handler().
- 
-  - shost->host_failed is zero.
- 
-- - Each scmd's eh_eflags field is cleared.
--
-  - Each scmd is in such a state that scsi_setup_cmd_retry() on the
-    scmd doesn't make any difference.
- 
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index ee6b39a..87e5079 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -613,8 +613,6 @@ static void sas_eh_handle_sas_errors(struct Scsi_Host *shost, struct list_head *
- 		SAS_DPRINTK("trying to find task 0x%p\n", task);
- 		res = sas_scsi_find_task(task);
- 
--		cmd->eh_eflags = 0;
--
- 		switch (res) {
- 		case TASK_IS_DONE:
- 			SAS_DPRINTK("%s: task 0x%p is done\n", __func__,
 diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 615e6c0..caacf69 100644
+index f2cafae..390a6bc 100644
 --- a/drivers/scsi/scsi_error.c
 +++ b/drivers/scsi/scsi_error.c
-@@ -188,7 +188,6 @@ static int scsi_host_eh_past_deadline(struct Scsi_Host *shost)
- 		/*
- 		 * Retry after abort failed, escalate to next level.
- 		 */
--		scmd->eh_eflags &= ~SCSI_EH_ABORT_SCHEDULED;
- 		SCSI_LOG_ERROR_RECOVERY(3,
- 			scmd_printk(KERN_INFO, scmd,
- 				    "previous abort failed\n"));
-@@ -940,6 +939,7 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd, struct scsi_eh_save *ses,
- 	ses->result = scmd->result;
- 	ses->underflow = scmd->underflow;
- 	ses->prot_op = scmd->prot_op;
-+	ses->eh_eflags = scmd->eh_eflags;
- 
- 	scmd->prot_op = SCSI_PROT_NORMAL;
- 	scmd->eh_eflags = 0;
-@@ -1003,6 +1003,7 @@ void scsi_eh_restore_cmnd(struct scsi_cmnd* scmd, struct scsi_eh_save *ses)
- 	scmd->result = ses->result;
- 	scmd->underflow = ses->underflow;
- 	scmd->prot_op = ses->prot_op;
-+	scmd->eh_eflags = ses->eh_eflags;
+@@ -221,6 +221,26 @@ static int scsi_host_eh_past_deadline(struct Scsi_Host *shost)
  }
- EXPORT_SYMBOL(scsi_eh_restore_cmnd);
  
-@@ -1135,7 +1136,6 @@ static int scsi_eh_action(struct scsi_cmnd *scmd, int rtn)
-  */
- void scsi_eh_finish_cmd(struct scsi_cmnd *scmd, struct list_head *done_q)
+ /**
++ * scsi_eh_reset - call into ->eh_action to reset internal counters
++ * @scmd:	scmd to run eh on.
++ *
++ * The scsi driver might be carrying internal state about the
++ * devices, so we need to call into the driver to reset the
++ * internal state once the error handler is started.
++ */
++static int scsi_eh_reset(struct scsi_cmnd *scmd)
++{
++	int rtn = SUCCESS;
++
++	if (!blk_rq_is_passthrough(scmd->request)) {
++		struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
++		if (sdrv->eh_action)
++			rtn = sdrv->eh_action(scmd, rtn, true);
++	}
++	return rtn;
++}
++
++/**
+  * scsi_eh_scmd_add - add scsi cmd to error handling.
+  * @scmd:	scmd to run eh on.
+  * @eh_flag:	optional SCSI_EH flag.
+@@ -249,6 +269,7 @@ int scsi_eh_scmd_add(struct scsi_cmnd *scmd, int eh_flag)
+ 	if (scmd->eh_eflags & SCSI_EH_ABORT_SCHEDULED)
+ 		eh_flag &= ~SCSI_EH_CANCEL_CMD;
+ 	scmd->eh_eflags |= eh_flag;
++	scsi_eh_reset(scmd);
+ 	list_add_tail(&scmd->eh_entry, &shost->eh_cmd_q);
+ 	shost->host_failed++;
+ 	scsi_eh_wakeup(shost);
+@@ -1107,7 +1128,7 @@ static int scsi_eh_action(struct scsi_cmnd *scmd, int rtn)
+ 	if (!blk_rq_is_passthrough(scmd->request)) {
+ 		struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
+ 		if (sdrv->eh_action)
+-			rtn = sdrv->eh_action(scmd, rtn);
++			rtn = sdrv->eh_action(scmd, rtn, false);
+ 	}
+ 	return rtn;
+ }
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index d277e86..656a32d 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -115,7 +115,7 @@
+ static int sd_init_command(struct scsi_cmnd *SCpnt);
+ static void sd_uninit_command(struct scsi_cmnd *SCpnt);
+ static int sd_done(struct scsi_cmnd *);
+-static int sd_eh_action(struct scsi_cmnd *, int);
++static int sd_eh_action(struct scsi_cmnd *, int, bool);
+ static void sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer);
+ static void scsi_disk_release(struct device *cdev);
+ static void sd_print_sense_hdr(struct scsi_disk *, struct scsi_sense_hdr *);
+@@ -1689,18 +1689,29 @@ static int sd_pr_clear(struct block_device *bdev, u64 key)
+  *	sd_eh_action - error handling callback
+  *	@scmd:		sd-issued command that has failed
+  *	@eh_disp:	The recovery disposition suggested by the midlayer
++ *	@restart:	SCSI EH has been restarted
+  *
+  *	This function is called by the SCSI midlayer upon completion of an
+  *	error test command (currently TEST UNIT READY). The result of sending
+  *	the eh command is passed in eh_disp.  We're looking for devices that
+  *	fail medium access commands but are OK with non access commands like
+  *	test unit ready (so wrongly see the device as having a successful
+- *	recovery)
++ *	recovery).
++ *	We have to be careful to count a medium access failure only once
++ *	per device and SCSI EH run; there might be several timed out
++ *	commands which will cause the 'max_medium_access_timeouts' counter
++ *	to trigger after the first SCSI EH run already and set the device
++ *	to offline.
+  **/
+-static int sd_eh_action(struct scsi_cmnd *scmd, int eh_disp)
++static int sd_eh_action(struct scsi_cmnd *scmd, int eh_disp, bool restart)
  {
--	scmd->eh_eflags = 0;
- 	list_move_tail(&scmd->eh_entry, done_q);
- }
- EXPORT_SYMBOL(scsi_eh_finish_cmd);
-diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
-index 98d366b..a25b328 100644
---- a/include/scsi/scsi_eh.h
-+++ b/include/scsi/scsi_eh.h
-@@ -31,6 +31,7 @@ extern int scsi_get_sense_info_fld(const u8 * sense_buffer, int sb_len,
- struct scsi_eh_save {
- 	/* saved state */
- 	int result;
-+	int eh_eflags;
- 	enum dma_data_direction data_direction;
- 	unsigned underflow;
- 	unsigned char cmd_len;
+ 	struct scsi_disk *sdkp = scsi_disk(scmd->request->rq_disk);
+ 
++	if (restart) {
++		/* New SCSI EH run, reset gate variable */
++		sdkp->ignore_medium_access_errors = false;
++		return eh_disp;
++	}
+ 	if (!scsi_device_online(scmd->device) ||
+ 	    !scsi_medium_access_command(scmd) ||
+ 	    host_byte(scmd->result) != DID_TIME_OUT ||
+@@ -1714,7 +1725,10 @@ static int sd_eh_action(struct scsi_cmnd *scmd, int eh_disp)
+ 	 * process of recovering or has it suffered an internal failure
+ 	 * that prevents access to the storage medium.
+ 	 */
+-	sdkp->medium_access_timed_out++;
++	if (!sdkp->ignore_medium_access_errors) {
++		sdkp->medium_access_timed_out++;
++		sdkp->ignore_medium_access_errors = true;
++	}
+ 
+ 	/*
+ 	 * If the device keeps failing read/write commands but TEST UNIT
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 4dac35e..0cf9680 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -106,6 +106,7 @@ struct scsi_disk {
+ 	unsigned	rc_basis: 2;
+ 	unsigned	zoned: 2;
+ 	unsigned	urswrz : 1;
++	unsigned	ignore_medium_access_errors : 1;
+ };
+ #define to_scsi_disk(obj) container_of(obj,struct scsi_disk,dev)
+ 
+diff --git a/include/scsi/scsi_driver.h b/include/scsi/scsi_driver.h
+index 891a658..d5e0012 100644
+--- a/include/scsi/scsi_driver.h
++++ b/include/scsi/scsi_driver.h
+@@ -15,7 +15,7 @@ struct scsi_driver {
+ 	int (*init_command)(struct scsi_cmnd *);
+ 	void (*uninit_command)(struct scsi_cmnd *);
+ 	int (*done)(struct scsi_cmnd *);
+-	int (*eh_action)(struct scsi_cmnd *, int);
++	int (*eh_action)(struct scsi_cmnd *, int, bool);
+ };
+ #define to_scsi_driver(drv) \
+ 	container_of((drv), struct scsi_driver, gendrv)
 -- 
 1.8.5.6
