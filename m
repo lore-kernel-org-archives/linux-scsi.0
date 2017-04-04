@@ -1,31 +1,42 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2] scsi: storvsc: Add support for FC rport.
-Date: Mon, 3 Apr 2017 23:53:31 -0700
-Message-ID: <20170404065331.GA2626@infradead.org>
-References: <1491219195-3692-1-git-send-email-cavery@redhat.com>
- <20170403121718.GA13130@infradead.org>
- <58E24A9A.30200@redhat.com>
+Subject: Re: [PATCH 1/1] aacraid: pci_alloc_consistent() failures on ARM64
+Date: Mon, 3 Apr 2017 23:56:27 -0700
+Message-ID: <20170404065627.GA4614@infradead.org>
+References: <1491288799-18659-1-git-send-email-mahesh.rajashekhara@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:56063 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750926AbdDDG42 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2017 02:56:28 -0400
 Content-Disposition: inline
-In-Reply-To: <58E24A9A.30200@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Cathy Avery <cavery@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, kys@microsoft.com, haiyangz@microsoft.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, stephen@networkplumber.org, dan.carpenter@oracle.com, devel@linuxdriverproject.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <1491288799-18659-1-git-send-email-mahesh.rajashekhara@microsemi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>
+Cc: linux-scsi@vger.kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>
 
-On Mon, Apr 03, 2017 at 09:14:02AM -0400, Cathy Avery wrote:
-> On 04/03/2017 08:17 AM, Christoph Hellwig wrote:
-> > >   	if (host->transportt == fc_transport_template) {
-> > > +		struct fc_rport_identifiers ids = {
-> > > +			.roles = FC_PORT_ROLE_FCP_TARGET,
-> > > +		};
-> > I don't think storvsc ever acts as FCP target.
-> 
-> In order to implement the work around so that the scsi scan works indicating
-> FC_PORT_ROLE_FCP_TARGET as a role was necessary due to its test in
-> fc_scsi_scan_rport. The idea here is to avoid making any changes to the
-> fc_transport driver which was of some concern.
+On Tue, Apr 04, 2017 at 12:23:19PM +0530, Mahesh Rajashekhara wrote:
+> +#if defined(CONFIG_ARM64)
+> +static inline void *
+> +aac_pci_alloc_consistent(struct pci_dev *hwdev, size_t size,
+> +		     dma_addr_t *dma_handle) {
+> +	return dma_alloc_coherent(hwdev == NULL ? NULL : &hwdev->dev,
+> +				  size,
+> +				  dma_handle,
+> +				  GFP_KERNEL);
+> +}
+> +#else
+> +static inline void *
+> +aac_pci_alloc_consistent(struct pci_dev *hwdev, size_t size,
+> +		     dma_addr_t *dma_handle) {
+> +	return pci_alloc_consistent(hwdev, size, dma_handle);
+> +}
+> +#endif
 
-Please add a FC_PORT_ROLE_FCP_DUMMY_INITIATOR role instead.
+Please just call the dma_*_coherent routines directly all the time.
+hwdev should never be NULL, so that workaround can be dropped as well.
+
+And while you're at it please remove all the casts to and from
+void * in the arguments and return values.
