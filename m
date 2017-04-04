@@ -1,35 +1,36 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] qedf: Fix crash due to unsolicited FIP VLAN response.
-Date: Tue, 04 Apr 2017 19:39:14 -0400
-Message-ID: <yq1lgrfvj31.fsf@oracle.com>
-References: <20170323135847.21074-1-chad.dupuis@cavium.com>
+Subject: Re: [PATCH] scsi: advansys: fix uninitialized data access
+Date: Tue, 04 Apr 2017 19:40:27 -0400
+Message-ID: <yq1h923vj10.fsf@oracle.com>
+References: <20170323150226.249217-1-arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:24178 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752327AbdDDXj0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2017 19:39:26 -0400
-In-Reply-To: <20170323135847.21074-1-chad.dupuis@cavium.com> (Chad Dupuis's
-        message of "Thu, 23 Mar 2017 06:58:47 -0700")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170323150226.249217-1-arnd@arndb.de> (Arnd Bergmann's message
+        of "Thu, 23 Mar 2017 16:02:18 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Matthew Wilcox <mawilcox@microsoft.com>, Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Dupuis, Chad" <chad.dupuis@cavium.com>
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, QLogic-Storage-Upstream@cavium.com
 
-"Dupuis, Chad" <chad.dupuis@cavium.com> writes:
+Arnd Bergmann <arnd@arndb.de> writes:
 
-Chad,
+Arnd,
 
-> We need to initialize qedf->fipvlan_compl in __qedf_probe so that if
-> we receive an unsolicited FIP VLAN response, the system doesn't crash
-> due to trying to complete an uninitialized completion.
+> drivers/scsi/advansys.c: In function 'AscMsgOutSDTR':
+> drivers/scsi/advansys.c:3860:26: error: '*((void *)&sdtr_buf+5)' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+>          ((ushort)s_buffer[i + 1] << 8) | s_buffer[i]);
+>                           ^
+> drivers/scsi/advansys.c:3860:26: error: '*((void *)&sdtr_buf+7)' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+> drivers/scsi/advansys.c:3860:26: error: '*((void *)&sdtr_buf+5)' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+> drivers/scsi/advansys.c:3860:26: error: '*((void *)&sdtr_buf+7)' may be used uninitialized in this function [-Werror=maybe-uninitialized]
 >
-> Also add a check to see if there are any waiters on the completion so
-> we don't inadvertantly kick start the discovery process due to the
-> unsolicited frame.
+> The code has existed in this exact form at least since v2.6.12, and the
+> warning seems correct. This uses named initializers to ensure we initialize
+> all members of the structure.
+>  					(uchar *)&sdtr_buf,
 
-Applied to 4.11/scsi-fixes.
+Applied to 4.12/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
