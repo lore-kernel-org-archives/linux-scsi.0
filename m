@@ -1,39 +1,38 @@
-From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: Re: [RFC 2/8] cxgb4: setup pcie memory window 4 and create p2pmem
- region
-Date: Tue, 4 Apr 2017 09:56:48 -0600
-Message-ID: <962a8dd8-4d09-0802-9569-00dbf29382d3@deltatee.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1490911959-5146-3-git-send-email-logang@deltatee.com>
- <f269d9e1-8dcf-7970-382e-cb0d9a020efc@grimberg.me>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: [RFC PATCH 0/2] block,scsi: support host-wide tagset
+Date: Tue, 4 Apr 2017 23:59:58 +0800
+Message-ID: <CACVXFVPyWL8XyFKC9uT7r4q+QT1+_RvnvJnOskCO3aSnUEVY1w@mail.gmail.com>
+References: <1491307665-47656-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <f269d9e1-8dcf-7970-382e-cb0d9a020efc-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, Stephen Bates <sbates-pv7U853sEMVWk0Htik3J/w@public.gmane.org>, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <1491307665-47656-1-git-send-email-hare@suse.de>
+Sender: linux-block-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Omar Sandoval <osandov@fb.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, linux-block <linux-block@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On Tue, Apr 4, 2017 at 8:07 PM, Hannes Reinecke <hare@suse.de> wrote:
+> Hi all,
+>
+> as discussed recently most existing HBAs have a host-wide tagset which
+> does not map easily onto the per-queue tagset model of block mq.
+> This patchset implements a flag BLK_MQ_F_GLOBAL_TAGS for block-mq, which
+> enables the use of a shared tagset for all hardware queues.
+> The second patch adds a flag 'host_tagset' to the SCSI host template,
+> which allows drivers to enable the use of the global tagset.
+>
+> This patchset probably has some performance implications as
+> there is a quite high probability of cache-bouncing when allocating
+> tags. Also I'm not quite sure if the implemented tagset sharing
+> is the correct way to handle things.
+> So this can be considered an RFC.
+>
+> As usual, comments and reviews are welcome.
+
+Just be curious, why is multi hard queue used for this case? Are there
+some real cases in SCSI?
 
 
-On 04/04/17 04:42 AM, Sagi Grimberg wrote:
-> This is weird, why even call this if !use_p2pmem?
-
-I personally find it cleaner than:
-
-if (use_p2pmem)
-	setup_memwin_p2pmem(...)
-
-I'm not sure why that's so weird.
-
-Logan
+Thanks,
+Ming Lei
