@@ -1,77 +1,101 @@
-From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
-Subject: Re: [REGRESSION] v4.11-rc3: lpfc: panic during module removal /
- shutdown
-Date: Tue, 4 Apr 2017 09:07:04 -0300
-Message-ID: <63afb4bb-fc5f-7e3d-45ab-0cf609e44558@linux.vnet.ibm.com>
-References: <99ad422f-8233-ddac-2e69-deda4a43b3d7@ce.jp.nec.com>
- <9110d410-8522-9806-8444-44276de9af51@linux.vnet.ibm.com>
- <95631fe6-9f0a-fa88-2900-6fc54c4115bb@ce.jp.nec.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-2022-jp; format=flowed; delsp=yes
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:47382 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752545AbdDDMHp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2017 08:07:45 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v34C4AmA125407
-        for <linux-scsi@vger.kernel.org>; Tue, 4 Apr 2017 08:07:44 -0400
-Received: from e24smtp02.br.ibm.com (e24smtp02.br.ibm.com [32.104.18.86])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 29m1njtugq-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Tue, 04 Apr 2017 08:07:44 -0400
-Received: from localhost
-        by e24smtp02.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <mauricfo@linux.vnet.ibm.com>;
-        Tue, 4 Apr 2017 09:07:42 -0300
-Received: from d24av02.br.ibm.com (d24av02.br.ibm.com [9.8.31.93])
-        by d24relay02.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v34C7Z3x13107226
-        for <linux-scsi@vger.kernel.org>; Tue, 4 Apr 2017 09:07:40 -0300
-Received: from d24av02.br.ibm.com (localhost [127.0.0.1])
-        by d24av02.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v34C7K9X021196
-        for <linux-scsi@vger.kernel.org>; Tue, 4 Apr 2017 09:07:20 -0300
-In-Reply-To: <95631fe6-9f0a-fa88-2900-6fc54c4115bb@ce.jp.nec.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 1/2] block: Implement global tagset
+Date: Tue,  4 Apr 2017 14:07:44 +0200
+Message-ID: <1491307665-47656-2-git-send-email-hare@suse.de>
+References: <1491307665-47656-1-git-send-email-hare@suse.de>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <1491307665-47656-1-git-send-email-hare@suse.de>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Omar Sandoval <osandov@fb.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Junichi Nomura <j-nomura@ce.jp.nec.com>, "james.smart@broadcom.com" <james.smart@broadcom.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "dick.kennedy@broadcom.com" <dick.kennedy@broadcom.com>, "anton@samba.org" <anton@samba.org>
 
-Hi Martin and Junichi,
+Most legacy HBAs have a tagset per HBA, not per queue. To map
+these devices onto block-mq this patch implements a new tagset
+flag BLK_MQ_F_GLOBAL_TAGS, which will cause the tag allocator
+to use just one tagset for all hardware queues.
 
-On 04/03/2017 11:10 PM, Junichi Nomura wrote:
-> On 04/04/17 06:53, Mauricio Faria de Oliveira wrote:
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ block/blk-mq-tag.c     | 12 ++++++++----
+ block/blk-mq.c         | 10 ++++++++--
+ include/linux/blk-mq.h |  1 +
+ 3 files changed, 17 insertions(+), 6 deletions(-)
 
->> On 03/28/2017 11:29 PM, Junichi Nomura wrote:
->>> Since commit 895427bd012c ("scsi: lpfc: NVME Initiator: Base modifications"),
->>> "rmmod lpfc" starting to cause panic or corruption due to double free.
-
->> Thanks for the report. Can you please check whether the patch just sent
->> ([PATCH] lpfc: fix double free of bound CQ/WQ ring pointer) resolves it?
-
-> It works for me. Thank you!
-
-Excellent, thanks!
-
-Martin, can you review/consider it for 4.11-rc6, please?
-
-> Considering future maintenance, it might be a bit fragile to just depend
-> on the code comment about representing the relation between cq/wq and
-> shared pring but it's maintainers' choice.
-
-I agree -- there should be a better way of identifying a bound WQ/CQ.
-Perhaps there is, but I couldn't find it currently.
-
-For now, as far as I could grep and examine the code (detailed in commit
-message), a WQ is always bound to a CQ, so to check for WQ and not free
-its ring pointer seems to be sufficient (as the CQ ring pointer is freed
-first).
-
-If that changes, probably some form of flagging and/or queue type
-determination would be better/necessary.
-
-cheers,
-
+diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+index e48bc2c..a14e76c 100644
+--- a/block/blk-mq-tag.c
++++ b/block/blk-mq-tag.c
+@@ -276,9 +276,11 @@ static void blk_mq_all_tag_busy_iter(struct blk_mq_tags *tags,
+ void blk_mq_tagset_busy_iter(struct blk_mq_tag_set *tagset,
+ 		busy_tag_iter_fn *fn, void *priv)
+ {
+-	int i;
++	int i, lim = tagset->nr_hw_queues;
+ 
+-	for (i = 0; i < tagset->nr_hw_queues; i++) {
++	if (tagset->flags & BLK_MQ_F_GLOBAL_TAGS)
++		lim = 1;
++	for (i = 0; i < lim; i++) {
+ 		if (tagset->tags && tagset->tags[i])
+ 			blk_mq_all_tag_busy_iter(tagset->tags[i], fn, priv);
+ 	}
+@@ -287,12 +289,14 @@ void blk_mq_tagset_busy_iter(struct blk_mq_tag_set *tagset,
+ 
+ int blk_mq_reinit_tagset(struct blk_mq_tag_set *set)
+ {
+-	int i, j, ret = 0;
++	int i, j, ret = 0, lim = set->nr_hw_queues;
+ 
+ 	if (!set->ops->reinit_request)
+ 		goto out;
+ 
+-	for (i = 0; i < set->nr_hw_queues; i++) {
++	if (set->flags & BLK_MQ_F_GLOBAL_TAGS)
++		lim = 1;
++	for (i = 0; i < lim; i++) {
+ 		struct blk_mq_tags *tags = set->tags[i];
+ 
+ 		for (j = 0; j < tags->nr_tags; j++) {
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 159187a..db96ed0 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -2061,6 +2061,10 @@ static bool __blk_mq_alloc_rq_map(struct blk_mq_tag_set *set, int hctx_idx)
+ {
+ 	int ret = 0;
+ 
++	if ((set->flags & BLK_MQ_F_GLOBAL_TAGS) && hctx_idx != 0) {
++		set->tags[hctx_idx] = set->tags[0];
++		return true;
++	}
+ 	set->tags[hctx_idx] = blk_mq_alloc_rq_map(set, hctx_idx,
+ 					set->queue_depth, set->reserved_tags);
+ 	if (!set->tags[hctx_idx])
+@@ -2080,8 +2084,10 @@ static void blk_mq_free_map_and_requests(struct blk_mq_tag_set *set,
+ 					 unsigned int hctx_idx)
+ {
+ 	if (set->tags[hctx_idx]) {
+-		blk_mq_free_rqs(set, set->tags[hctx_idx], hctx_idx);
+-		blk_mq_free_rq_map(set->tags[hctx_idx]);
++		if (!(set->flags & BLK_MQ_F_GLOBAL_TAGS) || hctx_idx == 0) {
++			blk_mq_free_rqs(set, set->tags[hctx_idx], hctx_idx);
++			blk_mq_free_rq_map(set->tags[hctx_idx]);
++		}
+ 		set->tags[hctx_idx] = NULL;
+ 	}
+ }
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index b296a90..eee27b016 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -155,6 +155,7 @@ enum {
+ 	BLK_MQ_F_DEFER_ISSUE	= 1 << 4,
+ 	BLK_MQ_F_BLOCKING	= 1 << 5,
+ 	BLK_MQ_F_NO_SCHED	= 1 << 6,
++	BLK_MQ_F_GLOBAL_TAGS	= 1 << 7,
+ 	BLK_MQ_F_ALLOC_POLICY_START_BIT = 8,
+ 	BLK_MQ_F_ALLOC_POLICY_BITS = 1,
+ 
 -- 
-Mauricio Faria de Oliveira
-IBM Linux Technology Center
+1.8.5.6
