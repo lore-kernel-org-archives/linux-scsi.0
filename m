@@ -1,39 +1,43 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [RFC PATCH 0/2] block,scsi: support host-wide tagset
-Date: Tue, 4 Apr 2017 15:46:27 +0000
-Message-ID: <1491320786.2513.7.camel@sandisk.com>
-References: <1491307665-47656-1-git-send-email-hare@suse.de>
-         <20170404153234.GA3234@vader>
+From: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
+Subject: Re: [RFC 6/8] nvmet: Be careful about using iomem accesses when
+ dealing with p2pmem
+Date: Tue, 4 Apr 2017 09:46:29 -0600
+Message-ID: <20170404154629.GA13552@obsidianresearch.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1490911959-5146-7-git-send-email-logang@deltatee.com>
+ <080b68b4-eba3-861c-4f29-5d829425b5e7@grimberg.me>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:19158 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754863AbdDDPqa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2017 11:46:30 -0400
-In-Reply-To: <20170404153234.GA3234@vader>
-Content-Language: en-US
-Content-ID: <38B818EFA0C34644A6A3DC0BA94F1E84@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <080b68b4-eba3-861c-4f29-5d829425b5e7-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "osandov@osandov.com" <osandov@osandov.com>, "hare@suse.de" <hare@suse.de>
-Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "osandov@fb.com" <osandov@fb.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
 
-On Tue, 2017-04-04 at 08:32 -0700, Omar Sandoval wrote:
-> blk-mq already supports a shared tagset, and scsi-mq already uses that.
-> When we initialize a request queue, we add it to a tagset with
-> blk_mq_add_queue_set(), where we automatically mark the tagset as shared
-> if there is more than one queue using it. What does this do that
-> BLK_MQ_F_TAG_SHARED doesn't cover?
+On Tue, Apr 04, 2017 at 01:59:26PM +0300, Sagi Grimberg wrote:
+> Note that the nvme completion queues are still on the host memory, so
+> this means we have lost the ordering between data and completions as
+> they go to different pcie targets.
 
-Hello Omar,
+Hmm, in this simple up/down case with a switch, I think it might
+actually be OK.
 
-Today blk-mq creates one tag set per hardware queue. The sharing by
-scsi-mq is between request queues for hardware queues that have the same
-index but not between hardware queues of a single request queue. My
-understanding is that the goal of this patch series is to make it possible
-to use a single tag set for all hardware queues and all request queues that
-share the same SCSI host.
+Transactions might not complete at the NVMe device before the CPU
+processes the RDMA completion, however due to the PCI-E ordering rules
+new TLPs directed to the NVMe will complete after the RMDA TLPs and
+thus observe the new data. (eg order preserving)
 
-Bart.=
+It would be very hard to use P2P if fabric ordering is not preserved..
+
+Jason
