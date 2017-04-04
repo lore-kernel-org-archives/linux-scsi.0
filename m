@@ -1,41 +1,325 @@
-From: Junichi Nomura <j-nomura@ce.jp.nec.com>
-Subject: Re: [REGRESSION] v4.11-rc3: lpfc: panic during module removal /
- shutdown
-Date: Tue, 4 Apr 2017 02:10:47 +0000
-Message-ID: <95631fe6-9f0a-fa88-2900-6fc54c4115bb@ce.jp.nec.com>
-References: <99ad422f-8233-ddac-2e69-deda4a43b3d7@ce.jp.nec.com>
- <9110d410-8522-9806-8444-44276de9af51@linux.vnet.ibm.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] csiostor: switch to pci_alloc_irq_vectors
+Date: Tue, 4 Apr 2017 08:46:14 +0200
+Message-ID: <20170404064614.GA9275@lst.de>
+References: <1484325046-31032-1-git-send-email-hch@lst.de> <yq1h94tgsvd.fsf@oracle.com> <20170331065527.GA3024@lst.de> <20170403145124.GA1743@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-2022-jp"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tyo161.gate.nec.co.jp ([114.179.232.161]:55656 "EHLO
-        tyo161.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752597AbdDDCLe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Apr 2017 22:11:34 -0400
-In-Reply-To: <9110d410-8522-9806-8444-44276de9af51@linux.vnet.ibm.com>
-Content-Language: ja-JP
-Content-ID: <62C9D988BA78734B8F616D5699B9C6DD@gisp.nec.co.jp>
+Received: from verein.lst.de ([213.95.11.211]:50464 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750877AbdDDGqP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 4 Apr 2017 02:46:15 -0400
+Content-Disposition: inline
+In-Reply-To: <20170403145124.GA1743@chelsio.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, "dick.kennedy@broadcom.com" <dick.kennedy@broadcom.com>, "james.smart@broadcom.com" <james.smart@broadcom.com>
-Cc: "anton@samba.org" <anton@samba.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+To: Varun Prakash <varun@chelsio.com>
+Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 04/04/17 06:53, Mauricio Faria de Oliveira wrote:
-> Hi Junichi,
-> 
-> On 03/28/2017 11:29 PM, Junichi Nomura wrote:
->> Since commit 895427bd012c ("scsi: lpfc: NVME Initiator: Base modifications"),
->> "rmmod lpfc" starting to cause panic or corruption due to double free.
-> 
-> Thanks for the report. Can you please check whether the patch just sent
-> ([PATCH] lpfc: fix double free of bound CQ/WQ ring pointer) resolves it?
+Does this one work better?
 
-It works for me. Thank you!
+---
+>From e5a4178cb810be581b6d9b8f48f13b12e88eae74 Mon Sep 17 00:00:00 2001
+From: Christoph Hellwig <hch@lst.de>
+Date: Thu, 12 Jan 2017 11:17:29 +0100
+Subject: csiostor: switch to pci_alloc_irq_vectors
 
-Considering future maintenance, it might be a bit fragile to just depend
-on the code comment about representing the relation between cq/wq and
-shared pring but it's maintainers' choice.
+And get automatic MSI-X affinity for free.
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/csiostor/csio_hw.h   |   4 +-
+ drivers/scsi/csiostor/csio_init.c |   9 +--
+ drivers/scsi/csiostor/csio_isr.c  | 127 +++++++++++++-------------------------
+ 3 files changed, 51 insertions(+), 89 deletions(-)
+
+diff --git a/drivers/scsi/csiostor/csio_hw.h b/drivers/scsi/csiostor/csio_hw.h
+index 029bef82c057..a084d83ce70f 100644
+--- a/drivers/scsi/csiostor/csio_hw.h
++++ b/drivers/scsi/csiostor/csio_hw.h
+@@ -95,7 +95,6 @@ enum {
+ };
+ 
+ struct csio_msix_entries {
+-	unsigned short	vector;		/* Assigned MSI-X vector */
+ 	void		*dev_id;	/* Priv object associated w/ this msix*/
+ 	char		desc[24];	/* Description of this vector */
+ };
+@@ -591,8 +590,9 @@ int csio_enqueue_evt(struct csio_hw *, enum csio_evt, void *, uint16_t);
+ void csio_evtq_flush(struct csio_hw *hw);
+ 
+ int csio_request_irqs(struct csio_hw *);
++void csio_free_irqs(struct csio_hw *);
+ void csio_intr_enable(struct csio_hw *);
+-void csio_intr_disable(struct csio_hw *, bool);
++void csio_intr_disable(struct csio_hw *);
+ void csio_hw_fatal_err(struct csio_hw *);
+ 
+ struct csio_lnode *csio_lnode_alloc(struct csio_hw *);
+diff --git a/drivers/scsi/csiostor/csio_init.c b/drivers/scsi/csiostor/csio_init.c
+index dbe416ff46c2..7e60699c8b55 100644
+--- a/drivers/scsi/csiostor/csio_init.c
++++ b/drivers/scsi/csiostor/csio_init.c
+@@ -461,8 +461,7 @@ csio_config_queues(struct csio_hw *hw)
+ 	return 0;
+ 
+ intr_disable:
+-	csio_intr_disable(hw, false);
+-
++	csio_intr_disable(hw);
+ 	return -EINVAL;
+ }
+ 
+@@ -575,7 +574,8 @@ static struct csio_hw *csio_hw_alloc(struct pci_dev *pdev)
+ static void
+ csio_hw_free(struct csio_hw *hw)
+ {
+-	csio_intr_disable(hw, true);
++	csio_free_irqs(hw);
++	csio_intr_disable(hw);
+ 	csio_hw_exit_workers(hw);
+ 	csio_hw_exit(hw);
+ 	iounmap(hw->regstart);
+@@ -1068,7 +1068,8 @@ csio_pci_error_detected(struct pci_dev *pdev, pci_channel_state_t state)
+ 	spin_unlock_irq(&hw->lock);
+ 	csio_lnodes_unblock_request(hw);
+ 	csio_lnodes_exit(hw, 0);
+-	csio_intr_disable(hw, true);
++	csio_free_irqs(hw);
++	csio_intr_disable(hw);
+ 	pci_disable_device(pdev);
+ 	return state == pci_channel_io_perm_failure ?
+ 		PCI_ERS_RESULT_DISCONNECT : PCI_ERS_RESULT_NEED_RESET;
+diff --git a/drivers/scsi/csiostor/csio_isr.c b/drivers/scsi/csiostor/csio_isr.c
+index 2fb71c6c3b37..a4ad847e9c53 100644
+--- a/drivers/scsi/csiostor/csio_isr.c
++++ b/drivers/scsi/csiostor/csio_isr.c
+@@ -383,17 +383,15 @@ csio_request_irqs(struct csio_hw *hw)
+ 	int rv, i, j, k = 0;
+ 	struct csio_msix_entries *entryp = &hw->msix_entries[0];
+ 	struct csio_scsi_cpu_info *info;
++	struct pci_dev *pdev = hw->pdev;
+ 
+ 	if (hw->intr_mode != CSIO_IM_MSIX) {
+-		rv = request_irq(hw->pdev->irq, csio_fcoe_isr,
+-					(hw->intr_mode == CSIO_IM_MSI) ?
+-							0 : IRQF_SHARED,
+-					KBUILD_MODNAME, hw);
++		rv = request_irq(pci_irq_vector(pdev, 0), csio_fcoe_isr,
++				hw->intr_mode == CSIO_IM_MSI ? 0 : IRQF_SHARED,
++				KBUILD_MODNAME, hw);
+ 		if (rv) {
+-			if (hw->intr_mode == CSIO_IM_MSI)
+-				pci_disable_msi(hw->pdev);
+ 			csio_err(hw, "Failed to allocate interrupt line.\n");
+-			return -EINVAL;
++			goto out_free_irqs;
+ 		}
+ 
+ 		goto out;
+@@ -402,22 +400,22 @@ csio_request_irqs(struct csio_hw *hw)
+ 	/* Add the MSIX vector descriptions */
+ 	csio_add_msix_desc(hw);
+ 
+-	rv = request_irq(entryp[k].vector, csio_nondata_isr, 0,
++	rv = request_irq(pci_irq_vector(pdev, k), csio_nondata_isr, 0,
+ 			 entryp[k].desc, hw);
+ 	if (rv) {
+ 		csio_err(hw, "IRQ request failed for vec %d err:%d\n",
+-			 entryp[k].vector, rv);
+-		goto err;
++			 pci_irq_vector(pdev, k), rv);
++		goto out_free_irqs;
+ 	}
+ 
+-	entryp[k++].dev_id = (void *)hw;
++	entryp[k++].dev_id = hw;
+ 
+-	rv = request_irq(entryp[k].vector, csio_fwevt_isr, 0,
++	rv = request_irq(pci_irq_vector(pdev, k), csio_fwevt_isr, 0,
+ 			 entryp[k].desc, hw);
+ 	if (rv) {
+ 		csio_err(hw, "IRQ request failed for vec %d err:%d\n",
+-			 entryp[k].vector, rv);
+-		goto err;
++			 pci_irq_vector(pdev, k), rv);
++		goto out_free_irqs;
+ 	}
+ 
+ 	entryp[k++].dev_id = (void *)hw;
+@@ -429,51 +427,31 @@ csio_request_irqs(struct csio_hw *hw)
+ 			struct csio_scsi_qset *sqset = &hw->sqset[i][j];
+ 			struct csio_q *q = hw->wrm.q_arr[sqset->iq_idx];
+ 
+-			rv = request_irq(entryp[k].vector, csio_scsi_isr, 0,
++			rv = request_irq(pci_irq_vector(pdev, k), csio_scsi_isr, 0,
+ 					 entryp[k].desc, q);
+ 			if (rv) {
+ 				csio_err(hw,
+ 				       "IRQ request failed for vec %d err:%d\n",
+-				       entryp[k].vector, rv);
+-				goto err;
++				       pci_irq_vector(pdev, k), rv);
++				goto out_free_irqs;
+ 			}
+ 
+-			entryp[k].dev_id = (void *)q;
++			entryp[k].dev_id = q;
+ 
+ 		} /* for all scsi cpus */
+ 	} /* for all ports */
+ 
+ out:
+ 	hw->flags |= CSIO_HWF_HOST_INTR_ENABLED;
+-
+ 	return 0;
+ 
+-err:
+-	for (i = 0; i < k; i++) {
+-		entryp = &hw->msix_entries[i];
+-		free_irq(entryp->vector, entryp->dev_id);
+-	}
+-	pci_disable_msix(hw->pdev);
+-
++out_free_irqs:
++	for (i = 0; i < k; i++)
++		free_irq(pci_irq_vector(pdev, i), hw->msix_entries[i].dev_id);
++	pci_free_irq_vectors(hw->pdev);
+ 	return -EINVAL;
+ }
+ 
+-static void
+-csio_disable_msix(struct csio_hw *hw, bool free)
+-{
+-	int i;
+-	struct csio_msix_entries *entryp;
+-	int cnt = hw->num_sqsets + CSIO_EXTRA_VECS;
+-
+-	if (free) {
+-		for (i = 0; i < cnt; i++) {
+-			entryp = &hw->msix_entries[i];
+-			free_irq(entryp->vector, entryp->dev_id);
+-		}
+-	}
+-	pci_disable_msix(hw->pdev);
+-}
+-
+ /* Reduce per-port max possible CPUs */
+ static void
+ csio_reduce_sqsets(struct csio_hw *hw, int cnt)
+@@ -500,10 +478,9 @@ static int
+ csio_enable_msix(struct csio_hw *hw)
+ {
+ 	int i, j, k, n, min, cnt;
+-	struct csio_msix_entries *entryp;
+-	struct msix_entry *entries;
+ 	int extra = CSIO_EXTRA_VECS;
+ 	struct csio_scsi_cpu_info *info;
++	struct irq_affinity desc = { .pre_vectors = 2 };
+ 
+ 	min = hw->num_pports + extra;
+ 	cnt = hw->num_sqsets + extra;
+@@ -512,50 +489,35 @@ csio_enable_msix(struct csio_hw *hw)
+ 	if (hw->flags & CSIO_HWF_USING_SOFT_PARAMS || !csio_is_hw_master(hw))
+ 		cnt = min_t(uint8_t, hw->cfg_niq, cnt);
+ 
+-	entries = kzalloc(sizeof(struct msix_entry) * cnt, GFP_KERNEL);
+-	if (!entries)
+-		return -ENOMEM;
+-
+-	for (i = 0; i < cnt; i++)
+-		entries[i].entry = (uint16_t)i;
+-
+ 	csio_dbg(hw, "FW supp #niq:%d, trying %d msix's\n", hw->cfg_niq, cnt);
+ 
+-	cnt = pci_enable_msix_range(hw->pdev, entries, min, cnt);
+-	if (cnt < 0) {
+-		kfree(entries);
++	cnt = pci_alloc_irq_vectors_affinity(hw->pdev, min, cnt,
++			PCI_IRQ_MSIX | PCI_IRQ_AFFINITY, &desc);
++	if (cnt < 0)
+ 		return cnt;
+-	}
+ 
+ 	if (cnt < (hw->num_sqsets + extra)) {
+ 		csio_dbg(hw, "Reducing sqsets to %d\n", cnt - extra);
+ 		csio_reduce_sqsets(hw, cnt - extra);
+ 	}
+ 
+-	/* Save off vectors */
+-	for (i = 0; i < cnt; i++) {
+-		entryp = &hw->msix_entries[i];
+-		entryp->vector = entries[i].vector;
+-	}
+-
+ 	/* Distribute vectors */
+ 	k = 0;
+-	csio_set_nondata_intr_idx(hw, entries[k].entry);
+-	csio_set_mb_intr_idx(csio_hw_to_mbm(hw), entries[k++].entry);
+-	csio_set_fwevt_intr_idx(hw, entries[k++].entry);
++	csio_set_nondata_intr_idx(hw, k);
++	csio_set_mb_intr_idx(csio_hw_to_mbm(hw), k++);
++	csio_set_fwevt_intr_idx(hw, k++);
+ 
+ 	for (i = 0; i < hw->num_pports; i++) {
+ 		info = &hw->scsi_cpu_info[i];
+ 
+ 		for (j = 0; j < hw->num_scsi_msix_cpus; j++) {
+ 			n = (j % info->max_cpus) +  k;
+-			hw->sqset[i][j].intr_idx = entries[n].entry;
++			hw->sqset[i][j].intr_idx = n;
+ 		}
+ 
+ 		k += info->max_cpus;
+ 	}
+ 
+-	kfree(entries);
+ 	return 0;
+ }
+ 
+@@ -593,26 +555,25 @@ csio_intr_enable(struct csio_hw *hw)
+ }
+ 
+ void
+-csio_intr_disable(struct csio_hw *hw, bool free)
++csio_free_irqs(struct csio_hw *hw)
+ {
+-	csio_hw_intr_disable(hw);
++	if (hw->intr_mode == CSIO_IM_MSIX) {
++		int i;
+ 
+-	switch (hw->intr_mode) {
+-	case CSIO_IM_MSIX:
+-		csio_disable_msix(hw, free);
+-		break;
+-	case CSIO_IM_MSI:
+-		if (free)
+-			free_irq(hw->pdev->irq, hw);
+-		pci_disable_msi(hw->pdev);
+-		break;
+-	case CSIO_IM_INTX:
+-		if (free)
+-			free_irq(hw->pdev->irq, hw);
+-		break;
+-	default:
+-		break;
++		for (i = 0; i < hw->num_sqsets + CSIO_EXTRA_VECS; i++) {
++			free_irq(pci_irq_vector(hw->pdev, i),
++					hw->msix_entries[i].dev_id);
++		}
++	} else {
++		free_irq(pci_irq_vector(hw->pdev, 0), hw);
+ 	}
++}
++
++void
++csio_intr_disable(struct csio_hw *hw)
++{
++	csio_hw_intr_disable(hw);
++	pci_free_irq_vectors(hw->pdev);
+ 	hw->intr_mode = CSIO_IM_NONE;
+ 	hw->flags &= ~CSIO_HWF_HOST_INTR_ENABLED;
+ }
 -- 
-Jun'ichi Nomura, NEC Corporation / NEC Solution Innovators, Ltd.
+2.11.0
