@@ -1,15 +1,16 @@
 From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 04/25] sd: implement REQ_OP_WRITE_ZEROES
-Date: Wed, 05 Apr 2017 07:44:43 -0400
-Message-ID: <yq1efx7t6xg.fsf@oracle.com>
+Subject: Re: [PATCH 09/25] block: stop using
+	blkdev_issue_write_same for zeroing
+Date: Wed, 05 Apr 2017 07:45:10 -0400
+Message-ID: <yq1a87vt6wp.fsf@oracle.com>
 References: <20170331163313.31821-1-hch@lst.de>
-	<20170331163313.31821-5-hch@lst.de>
+	<20170331163313.31821-10-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-In-Reply-To: <20170331163313.31821-5-hch-jcswGhMUV9g@public.gmane.org> (Christoph Hellwig's message
-	of "Fri, 31 Mar 2017 18:32:52 +0200")
+In-Reply-To: <20170331163313.31821-10-hch-jcswGhMUV9g@public.gmane.org> (Christoph Hellwig's message
+	of "Fri, 31 Mar 2017 18:32:57 +0200")
 List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
 	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
 List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
@@ -24,6 +25,8 @@ Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5
 List-Id: linux-scsi@vger.kernel.org
 
 Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org> writes:
+
+> We'll always use the WRITE ZEROES code for zeroing now.
 
 Reviewed-by: Martin K. Petersen <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 
