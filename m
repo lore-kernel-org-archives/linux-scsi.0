@@ -1,137 +1,145 @@
-From: David Buckley <dbuckley@oreilly.com>
-Subject: Re: problem with discard granularity in sd
-Date: Wed, 5 Apr 2017 09:14:45 -0700
-Message-ID: <CA+Xd3XGwXZRat_zF=3vraT81jm7WgU1RSjdNeNDBfioYD9-B9Q@mail.gmail.com>
-References: <CA+Xd3XHp381w87Fr5_HGU5gBpWMSRSwD+pRacGkHu7Rp7CYUfg@mail.gmail.com>
- <yq1d1crvhjv.fsf@oracle.com>
+From: Song Liu <songliubraving@fb.com>
+Subject: Re: [PATCH v2] scsi: ses: don't get power status of SES device slot
+ on probe
+Date: Wed, 5 Apr 2017 16:23:46 +0000
+Message-ID: <D1CDB51B-F034-4476-A709-E13B4C9682F7@fb.com>
+References: <1491405499-5429-1-git-send-email-mauricfo@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lf0-f54.google.com ([209.85.215.54]:34409 "EHLO
-        mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752675AbdDEQP2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Apr 2017 12:15:28 -0400
-Received: by mail-lf0-f54.google.com with SMTP id z15so12543820lfd.1
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Apr 2017 09:15:27 -0700 (PDT)
-In-Reply-To: <yq1d1crvhjv.fsf@oracle.com>
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:47831 "EHLO
+        mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755449AbdDEQYI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Apr 2017 12:24:08 -0400
+In-Reply-To: <1491405499-5429-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+Content-Language: en-US
+Content-ID: <6AFBED30E2C4B2479E7D9BD46AB486A1@namprd15.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-
-Hi Martin,
-
-I really appreciate the response. Here is the VPD page data you asked for:
-
-Logical block provisioning VPD page (SBC):
-  Unmap command supported (LBPU): 1
-  Write same (16) with unmap bit supported (LBWS): 1
-  Write same (10) with unmap bit supported (LBWS10): 1
-  Logical block provisioning read zeros (LBPRZ): 1
-  Anchored LBAs supported (ANC_SUP): 0
-  Threshold exponent: 0
-  Descriptor present (DP): 0
-  Provisioning type: 2
-
-Block limits VPD page (SBC):
-  Write same no zero (WSNZ): 1
-  Maximum compare and write length: 1 blocks
-  Optimal transfer length granularity: 8 blocks
-  Maximum transfer length: 8388607 blocks
-  Optimal transfer length: 128 blocks
-  Maximum prefetch length: 0 blocks
-  Maximum unmap LBA count: 8192
-  Maximum unmap block descriptor count: 64
-  Optimal unmap granularity: 8
-  Unmap granularity alignment valid: 1
-  Unmap granularity alignment: 0
-  Maximum write same length: 0x4000 blocks
+To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Jens Axboe <axboe@fb.com>, "hare@suse.de" <hare@suse.de>, "hch@lst.de" <hch@lst.de>, "gpiccoli@linux.vnet.ibm.com" <gpiccoli@linux.vnet.ibm.com>
 
 
-As I mentioned previously, I'm fairly certain that the issue I'm
-seeing is due to the fact that while NetApp LUNs are presented as 512B
-logical/4K physical disks for compatibility, they actually don't
-support requests smaller than 4K (which makes sense as NetApp LUNs are
-actually just files allocated on the 4K-block WAFL filesystem).
+> On Apr 5, 2017, at 8:18 AM, Mauricio Faria de Oliveira <mauricfo@linux.vn=
+et.ibm.com> wrote:
+>=20
+> The commit 08024885a2a3 ("ses: Add power_status to SES device slot")
+> introduced the 'power_status' attribute to enclosure components and
+> the associated callbacks.
+>=20
+> There are 2 callbacks available to get the power status of a device:
+> 1) ses_get_power_status() for 'struct enclosure_component_callbacks'
+> 2) get_component_power_status() for the sysfs device attribute
+> (these are available for kernel-space and user-space, respectively.)
+>=20
+> However, despite both methods being available to get power status
+> on demand, that commit also introduced a call to get power status
+> in ses_enclosure_data_process().
+>=20
+> This dramatically increased the total probe time for SCSI devices
+> on larger configurations, because ses_enclosure_data_process() is
+> called several times during the SCSI devices probe and loops over
+> the component devices (but that is another problem, another patch).
+>=20
+> That results in a tremendous continuous hammering of SCSI Receive
+> Diagnostics commands to the enclosure-services device, which does
+> delay the total probe time for the SCSI devices __significantly__:
+>=20
+>  Originally, ~34 minutes on a system attached to ~170 disks:
+>=20
+>    [ 9214.490703] mpt3sas version 13.100.00.00 loaded
+>    ...
+>    [11256.580231] scsi 17:0:177:0: qdepth(16), tagged(1), simple(0),
+>                   ordered(0), scsi_level(6), cmd_que(1)
+>=20
+>  With this patch, it decreased to ~2.5 minutes -- a 13.6x faster
+>=20
+>    [ 1002.992533] mpt3sas version 13.100.00.00 loaded
+>    ...
+>    [ 1151.978831] scsi 11:0:177:0: qdepth(16), tagged(1), simple(0),
+>                   ordered(0), scsi_level(6), cmd_que(1)
+>=20
+> Back to the commit discussion.. on the ses_get_power_status() call
+> introduced in ses_enclosure_data_process(): impact of removing it.
+>=20
+> That may possibly be in place to initialize the power status value
+> on device probe.  However, those 2 functions available to retrieve
+> that value _do_ automatically refresh/update it.  So the potential
+> benefit would be a direct access of the 'power_status' field which
+> does not use the callbacks...
+>=20
+> But the only reader of 'struct enclosure_component::power_status'
+> is the get_component_power_status() callback for sysfs attribute,
+> and it _does_ check for and call the .get_power_status callback,
+> (which indeed is defined and implemented by that commit), so the
+> power status value is, again, automatically updated.
+>=20
+> So, the remaining potential for a direct/non-callback access to
+> the power_status attribute would be out-of-tree modules -- well,
+> for those, if they are for whatever reason interested in values
+> that are set during device probe and not up-to-date by the time
+> they need it.. well, that would be curious.
+>=20
+> Well, to handle that more properly, set the initial power state
+> value to '-1' (i.e., uninitialized) instead of '1' (power 'on'),
+> and check for it in that callback which may do an direct access
+> to the field value _if_ a callback function is not defined.
+>=20
+> Signed-off-by: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+> Fixes: 08024885a2a3 ("ses: Add power_status to SES device slot")
+> ---
+>=20
+> v2:
+> - remove module parameter.
+> - better return values for -1/uninitalized power_status.
+>   (thanks: Dan Williams <dan.j.williams@intel.com>)
+>=20
+> drivers/misc/enclosure.c | 7 ++++++-
+> drivers/scsi/ses.c       | 1 -
+> 2 files changed, 6 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
+> index 65fed7146e9b..d3fe3ea902d4 100644
+> --- a/drivers/misc/enclosure.c
+> +++ b/drivers/misc/enclosure.c
+> @@ -148,7 +148,7 @@ struct enclosure_device *
+> 	for (i =3D 0; i < components; i++) {
+> 		edev->component[i].number =3D -1;
+> 		edev->component[i].slot =3D -1;
+> -		edev->component[i].power_status =3D 1;
+> +		edev->component[i].power_status =3D -1;
+> 	}
+>=20
+> 	mutex_lock(&container_list_lock);
+> @@ -594,6 +594,11 @@ static ssize_t get_component_power_status(struct dev=
+ice *cdev,
+>=20
+> 	if (edev->cb->get_power_status)
+> 		edev->cb->get_power_status(edev, ecomp);
+> +
+> +	/* If still uninitialized, the callback failed or does not exist. */
+> +	if (ecomp->power_status =3D=3D -1)
+> +		return (edev->cb->get_power_status) ? -EIO : -ENOTTY;
+> +
+> 	return snprintf(buf, 40, "%s\n", ecomp->power_status ? "on" : "off");
+> }
+>=20
+> diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+> index 50adabbb5808..f1cdf32d7514 100644
+> --- a/drivers/scsi/ses.c
+> +++ b/drivers/scsi/ses.c
+> @@ -548,7 +548,6 @@ static void ses_enclosure_data_process(struct enclosu=
+re_device *edev,
+> 					ecomp =3D &edev->component[components++];
+>=20
+> 				if (!IS_ERR(ecomp)) {
+> -					ses_get_power_status(edev, ecomp);
+> 					if (addl_desc_ptr)
+> 						ses_process_descriptor(
+> 							ecomp,
+> --=20
+> 1.8.3.1
+>=20
 
-If the optimal granularity values from VPD are respected (as is the
-case with 3.10 kernels), the result is:
-
-minimum_io_size = 512 *8 = 4096  (logical_block_size * VPD optimal
-transfer length granularity)
-discard_granularity = 512 * 8 = 4096  (logical_block_size * VPD
-optimal unmap granularity)
-
-
-With recent kernels the value of minimum_io_size is unchanged, but
-discard_granularity is explicitly set to logical_block_size which
-results in unmap requests either being dropped or ignored.
-
-I understand that the VPD values from LUNs may be atypical compared to
-physical disks, and I expect there are some major differences in how
-unmap (and zeroing) is handled between physical disks and LUNs.  But
-it is unfortunate that a solution for misaligned I/O would break
-fully-aligned requests which worked flawlessly in previous kernels.
-
-Let me know if there's any additional information I can provide. This
-has resulted in a 2-3x increase in raw disk requirements for some
-workloads (unfortunately on SSD too), and I'd love to find a solution
-that doesn't require rolling back to a 3.10 kernel.
-
-Thanks again!
--David
-
-
-
-On Tue, Apr 4, 2017 at 5:12 PM, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
-> David Buckley <dbuckley@oreilly.com> writes:
->
-> David,
->
->> They result in discard granularity being forced to logical block size
->> if the disk reports LBPRZ is enabled (which the netapp luns do).
->
-> Block zeroing and unmapping are currently sharing some plumbing and that
-> has lead to some compromises. In this case a bias towards ensuring data
-> integrity for zeroing at the expense of not aligning unmap requests.
->
-> Christoph has worked on separating those two functions. His code is
-> currently under review.
->
->> I'm not sure of the implications of either the netapp changes, though
->> reporting 4k logical blocks seems potential as this is supported in
->> newer OS at least.
->
-> Yes, but it may break legacy applications that assume a 512-byte logical
-> block size.
->
->> The sd change potentially would at least partially undo the patches
->> referenced above.  But it would seem that (assuming an aligned
->> filesystem with 4k blocks and minimum_io_size=4096) there is no
->> possibility of a partial block discard or advantage to sending the
->> discard requests in 512 blocks?
->
-> The unmap granularity inside a device is often much, much bigger than
-> 4K. So aligning to that probably won't make a difference. And it's
-> imperative to filesystems that zeroing works at logical block size
-> granularity.
->
-> The expected behavior for a device is that it unmaps whichever full
-> unmap granularity chunks are described by a received request. And then
-> explicitly zeroes any partial chunks at the head and tail. So I am
-> surprised you see no reclamation whatsoever.
->
-> With the impending zero/unmap separation things might fare better. But
-> I'd still like to understand the behavior you observe. Please provide
-> the output of:
->
-> sg_vpd -p lbpv /dev/sdN
-> sg_vpd -p bl /dev/sdN
->
-> for one of the LUNs and I'll take a look.
->
-> Thanks!
->
-> --
-> Martin K. Petersen      Oracle Linux Engineering
+Reviewed-by: Song Liu <songliubraving@fb.com>
