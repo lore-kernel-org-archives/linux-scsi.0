@@ -1,89 +1,59 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v2] scsi: ses: don't get power status of SES device slot
- on probe
-Date: Wed, 5 Apr 2017 08:32:17 -0700
-Message-ID: <CAPcyv4iaXfgB1PBv5v+dyRrUvQbzAyyFf1Ozsaao0t8K0w9zwg@mail.gmail.com>
-References: <1491405499-5429-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+From: "Steve Wise" <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>
+Subject: RE: [RFC 2/8] cxgb4: setup pcie memory window 4 and create p2pmem
+ region
+Date: Wed, 5 Apr 2017 10:41:45 -0500
+Message-ID: <003001d2ae23$21e8f7d0$65bae770$@opengridcomputing.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1490911959-5146-3-git-send-email-logang@deltatee.com>
+ <f269d9e1-8dcf-7970-382e-cb0d9a020efc@grimberg.me>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:35140 "EHLO
-        mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932642AbdDEPcS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Apr 2017 11:32:18 -0400
-Received: by mail-oi0-f45.google.com with SMTP id f193so19498039oib.2
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Apr 2017 08:32:18 -0700 (PDT)
-In-Reply-To: <1491405499-5429-1-git-send-email-mauricfo@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <f269d9e1-8dcf-7970-382e-cb0d9a020efc-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>
+Content-Language: en-us
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: 'Sagi Grimberg' <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>, 'Logan Gunthorpe' <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>, 'Christoph Hellwig' <hch-jcswGhMUV9g@public.gmane.org>, "'James E.J. Bottomley'" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "'Martin K. Petersen'" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, 'Jens Axboe' <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, 'Stephen Bates' <sbates-pv7U853sEMVWk0Htik3J/w@public.gmane.org>, 'Max Gurtovoy' <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, 'Dan Williams' <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, 'Keith Busch' <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, 'Jason Gunthorpe' <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Song Liu <songliubraving@fb.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Jens Axboe <axboe@fb.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, gpiccoli@linux.vnet.ibm.com
 
-On Wed, Apr 5, 2017 at 8:18 AM, Mauricio Faria de Oliveira
-<mauricfo@linux.vnet.ibm.com> wrote:
-> The commit 08024885a2a3 ("ses: Add power_status to SES device slot")
-> introduced the 'power_status' attribute to enclosure components and
-> the associated callbacks.
->
-> There are 2 callbacks available to get the power status of a device:
-> 1) ses_get_power_status() for 'struct enclosure_component_callbacks'
-> 2) get_component_power_status() for the sysfs device attribute
-> (these are available for kernel-space and user-space, respectively.)
->
-> However, despite both methods being available to get power status
-> on demand, that commit also introduced a call to get power status
-> in ses_enclosure_data_process().
->
-> This dramatically increased the total probe time for SCSI devices
-> on larger configurations, because ses_enclosure_data_process() is
-> called several times during the SCSI devices probe and loops over
-> the component devices (but that is another problem, another patch).
->
-> That results in a tremendous continuous hammering of SCSI Receive
-> Diagnostics commands to the enclosure-services device, which does
-> delay the total probe time for the SCSI devices __significantly__:
->
->   Originally, ~34 minutes on a system attached to ~170 disks:
->
->     [ 9214.490703] mpt3sas version 13.100.00.00 loaded
->     ...
->     [11256.580231] scsi 17:0:177:0: qdepth(16), tagged(1), simple(0),
->                    ordered(0), scsi_level(6), cmd_que(1)
->
->   With this patch, it decreased to ~2.5 minutes -- a 13.6x faster
->
->     [ 1002.992533] mpt3sas version 13.100.00.00 loaded
->     ...
->     [ 1151.978831] scsi 11:0:177:0: qdepth(16), tagged(1), simple(0),
->                    ordered(0), scsi_level(6), cmd_que(1)
->
-> Back to the commit discussion.. on the ses_get_power_status() call
-> introduced in ses_enclosure_data_process(): impact of removing it.
->
-> That may possibly be in place to initialize the power status value
-> on device probe.  However, those 2 functions available to retrieve
-> that value _do_ automatically refresh/update it.  So the potential
-> benefit would be a direct access of the 'power_status' field which
-> does not use the callbacks...
->
-> But the only reader of 'struct enclosure_component::power_status'
-> is the get_component_power_status() callback for sysfs attribute,
-> and it _does_ check for and call the .get_power_status callback,
-> (which indeed is defined and implemented by that commit), so the
-> power status value is, again, automatically updated.
->
-> So, the remaining potential for a direct/non-callback access to
-> the power_status attribute would be out-of-tree modules -- well,
-> for those, if they are for whatever reason interested in values
-> that are set during device probe and not up-to-date by the time
-> they need it.. well, that would be curious.
->
-> Well, to handle that more properly, set the initial power state
-> value to '-1' (i.e., uninitialized) instead of '1' (power 'on'),
-> and check for it in that callback which may do an direct access
-> to the field value _if_ a callback function is not defined.
->
-> Signed-off-by: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
-> Fixes: 08024885a2a3 ("ses: Add power_status to SES device slot")
+> 
+> 
+> > +static void setup_memwin_p2pmem(struct adapter *adap)
+> > +{
+> > +	unsigned int mem_base = t4_read_reg(adap,
+> CIM_EXTMEM2_BASE_ADDR_A);
+> > +	unsigned int mem_size = t4_read_reg(adap,
+> CIM_EXTMEM2_ADDR_SIZE_A);
+> > +
+> > +	if (!use_p2pmem)
+> > +		return;
+> 
+> This is weird, why even call this if !use_p2pmem?
+> 
 
-Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+The use_p2pmem was added after the original change.  I'll update as you
+suggest.
+
+> > +static int init_p2pmem(struct adapter *adapter)
+> > +{
+> > +	unsigned int mem_size = t4_read_reg(adapter,
+> CIM_EXTMEM2_ADDR_SIZE_A);
+> > +	struct p2pmem_dev *p;
+> > +	int rc;
+> > +	struct resource res;
+> > +
+> > +	if (!mem_size || !use_p2pmem)
+> > +		return 0;
+> 
+> Again, weird...
+
+Yup.
