@@ -1,38 +1,36 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [lpfc 02/19] Fixes after reviewing last set of patches. Minor
- fixes to previous patches
-Date: Wed, 5 Apr 2017 09:10:42 +0200
-Message-ID: <20170405071041.GB3941@linux-x5ow.site>
+Subject: Re: [lpfc 03/19] Fix spelling in comments.
+Date: Wed, 5 Apr 2017 09:12:39 +0200
+Message-ID: <20170405071239.GC3941@linux-x5ow.site>
 References: <1491326232-11255-1-git-send-email-rkennedy@broadcom.com>
- <1491326232-11255-3-git-send-email-rkennedy@broadcom.com>
+ <1491326232-11255-4-git-send-email-rkennedy@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46869 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:47025 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752916AbdDEHKo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 5 Apr 2017 03:10:44 -0400
+        id S1751220AbdDEHMm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 5 Apr 2017 03:12:42 -0400
 Content-Disposition: inline
-In-Reply-To: <1491326232-11255-3-git-send-email-rkennedy@broadcom.com>
+In-Reply-To: <1491326232-11255-4-git-send-email-rkennedy@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Dick Kennedy <dick.kennedy@broadcom.com>
 Cc: linux-scsi@vger.kernel.org, James Smart <james.smart@broadcom.com>
 
-On Tue, Apr 04, 2017 at 10:16:55AM -0700, Dick Kennedy wrote:
+On Tue, Apr 04, 2017 at 10:16:56AM -0700, Dick Kennedy wrote:
 > From: Dick Kennedy <rkennedy@lvnvda1400.lvn.broadcom.net>
 > 
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
 > ---
 
-NAK.
+So 3rd patch in the series and still no changelog. The subject line is no
+changelog.
 
-This patch contains _five_ different changes without any changelog. C'mon you
-should know better.
-
-	Johannes
+Apart from that,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
 -- 
 Johannes Thumshirn                                          Storage
