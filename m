@@ -1,58 +1,26 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 13/27] block_dev: use blkdev_issue_zerout for hole punches
-Date: Wed,  5 Apr 2017 16:21:51 +0200
-Message-ID: <20170405142205.6477-14-hch@lst.de>
-References: <20170405142205.6477-1-hch@lst.de>
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170405142205.6477-1-hch@lst.de>
-Sender: linux-block-owner@vger.kernel.org
-To: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, lars.ellenberg@linbit.com
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
+From: David Howells <dhowells@redhat.com>
+Subject: Re: [PATCH 27/39] Annotate hardware config module parameters in drivers/scsi/
+Date: Wed, 05 Apr 2017 15:33:00 +0100
+Message-ID: <24495.1491402780@warthog.procyon.org.uk>
+References: <alpine.LNX.2.00.1612020903450.24840@nippy.intranet> <148059537897.31612.9461043954611464597.stgit@warthog.procyon.org.uk> <148059559339.31612.16180464424786438715.stgit@warthog.procyon.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-security-module-owner@vger.kernel.org>
+In-Reply-To: <alpine.LNX.2.00.1612020903450.24840@nippy.intranet>
+Content-ID: <24494.1491402780.1@warthog.procyon.org.uk>
+Sender: owner-linux-security-module@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: dhowells@redhat.com, linux-kernel@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>, Achim Leubner <achim_leubner@adaptec.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, gnomes@lxorguk.ukuu.org.uk, linux-security-module@vger.kernel.org, keyrings@vger.kernel.org, minyard@acm.org, "Juergen E. Fischer" <fischer@norbit.de>, Dario Ballabio <ballabio_dario@emc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This gets us support for non-discard efficient write of zeroes (e.g. NVMe)
-and prepares for removing the discard_zeroes_data flag.
+Finn Thain <fthain@telegraphics.com.au> wrote:
 
-Also remove a pointless discard support check, which is done in
-blkdev_issue_discard already.
+> I can see how base addresses and IO ports are relevant, but the irq 
+> parameter changes below don't protect the kernel image AFAICT. What's the 
+> rationale for those changes? I think it should be stated here.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Easier grepping for one.  But I'm also currently preventing the changing of
+any hardware parameters.  If a driver refuses to share an irq, you could use
+it to deprive another driver of the ability to get an irq at all.
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
----
- fs/block_dev.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
-
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 2f704c3a816f..e405d8e58e31 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -2069,7 +2069,6 @@ static long blkdev_fallocate(struct file *file, int mode, loff_t start,
- 			     loff_t len)
- {
- 	struct block_device *bdev = I_BDEV(bdev_file_inode(file));
--	struct request_queue *q = bdev_get_queue(bdev);
- 	struct address_space *mapping;
- 	loff_t end = start + len - 1;
- 	loff_t isize;
-@@ -2108,15 +2107,10 @@ static long blkdev_fallocate(struct file *file, int mode, loff_t start,
- 					    GFP_KERNEL, BLKDEV_ZERO_NOUNMAP);
- 		break;
- 	case FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE:
--		/* Only punch if the device can do zeroing discard. */
--		if (!blk_queue_discard(q) || !q->limits.discard_zeroes_data)
--			return -EOPNOTSUPP;
--		error = blkdev_issue_discard(bdev, start >> 9, len >> 9,
--					     GFP_KERNEL, 0);
-+		error = blkdev_issue_zeroout(bdev, start >> 9, len >> 9,
-+					     GFP_KERNEL, BLKDEV_ZERO_NOFALLBACK);
- 		break;
- 	case FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE | FALLOC_FL_NO_HIDE_STALE:
--		if (!blk_queue_discard(q))
--			return -EOPNOTSUPP;
- 		error = blkdev_issue_discard(bdev, start >> 9, len >> 9,
- 					     GFP_KERNEL, 0);
- 		break;
--- 
-2.11.0
+David
