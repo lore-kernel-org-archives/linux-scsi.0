@@ -1,86 +1,77 @@
-From: <alters@usg.edu>
-Subject: 9613 linux-scsi
-Date: Wed, 05 Apr 2017 09:05:07 -0000
-Message-ID: <149138310742.2150.601018595207080764@bbox.fr>
-Reply-To: <alters@usg.edu>
-Mime-Version: 1.0
-Content-Type: application/zip; name="890151074473.zip"
-Content-Transfer-Encoding: base64
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH v2] scsi: sd: Fix capacity calculation with 32-bit sector_t
+Date: Wed,  5 Apr 2017 06:15:29 -0400
+Message-ID: <20170405101529.30787-1-martin.petersen@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 1be88-h01-176-128-142-200.dsl.sta.abo.bbox.fr ([176.128.142.200]:36727
-        "HELO bbox.fr" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-        id S932733AbdDEJFS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 5 Apr 2017 05:05:18 -0400
-Content-Disposition: attachment
+Received: from aserp1040.oracle.com ([141.146.126.69]:48200 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932586AbdDEKP4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Apr 2017 06:15:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, stable@vger.kernel.org, Bart Van Assche <Bart.VanAssche@sandisk.com>
 
-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
-AAABAAEATwAAAJYOAAAAAA==
+We previously made sure that the reported disk capacity was less than
+0xffffffff blocks when the kernel was not compiled with large sector_t
+support (CONFIG_LBDAF). However, this check assumed that the capacity
+was reported in units of 512 bytes.
+
+Add a sanity check function to ensure that we only enable disks if the
+entire reported capacity can be expressed in terms of sector_t.
+
+Cc: <stable@vger.kernel.org>
+Reported-by: Steve Magnani <steve.magnani@digidescorp.com>
+Cc: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+---
+ drivers/scsi/sd.c | 20 ++++++++++++++++++--
+ 1 file changed, 18 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index fb9b4d29af0b..08117e8cfe0b 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2102,6 +2102,22 @@ static void read_capacity_error(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ 
+ #define READ_CAPACITY_RETRIES_ON_RESET	10
+ 
++/*
++ * Ensure that we don't overflow sector_t when CONFIG_LBDAF is not set
++ * and the reported logical block size is bigger than 512 bytes. Note
++ * that last_sector is a u64 and therefore logical_to_sectors() is not
++ * applicable.
++ */
++static bool sd_addressable_capacity(u64 lba, unsigned int sector_size)
++{
++	u64 last_sector = (lba + 1ULL) << (ilog2(sector_size) - 9);
++
++	if (sizeof(sector_t) == 4 && last_sector > U32_MAX)
++		return false;
++
++	return true;
++}
++
+ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ 						unsigned char *buffer)
+ {
+@@ -2167,7 +2183,7 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ 		return -ENODEV;
+ 	}
+ 
+-	if ((sizeof(sdkp->capacity) == 4) && (lba >= 0xffffffffULL)) {
++	if (!sd_addressable_capacity(lba, sector_size)) {
+ 		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
+ 			"kernel compiled with support for large block "
+ 			"devices.\n");
+@@ -2256,7 +2272,7 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ 		return sector_size;
+ 	}
+ 
+-	if ((sizeof(sdkp->capacity) == 4) && (lba == 0xffffffff)) {
++	if (!sd_addressable_capacity(lba, sector_size)) {
+ 		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
+ 			"kernel compiled with support for large block "
+ 			"devices.\n");
+-- 
+2.12.0
