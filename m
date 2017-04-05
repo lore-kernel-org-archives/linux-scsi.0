@@ -1,228 +1,59 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 01/27] sd: split sd_setup_discard_cmnd
-Date: Wed,  5 Apr 2017 16:21:39 +0200
-Message-ID: <20170405142205.6477-2-hch@lst.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 17/27] loop: implement REQ_OP_WRITE_ZEROES
+Date: Wed,  5 Apr 2017 16:21:55 +0200
+Message-ID: <20170405142205.6477-18-hch@lst.de>
 References: <20170405142205.6477-1-hch@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-In-Reply-To: <20170405142205.6477-1-hch-jcswGhMUV9g@public.gmane.org>
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170405142205.6477-1-hch@lst.de>
+Sender: linux-block-owner@vger.kernel.org
+To: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, lars.ellenberg@linbit.com
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Split sd_setup_discard_cmnd into one function per provisioning type.  While
-this creates some very slight duplication of boilerplate code it keeps the
-code modular for additions of new provisioning types, and for reusing the
-write same functions for the upcoming scsi implementation of the Write Zeroes
-operation.
+It's identical to discard as hole punches will always leave us with
+zeroes on reads.
 
-Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Reviewed-by: Martin K. Petersen <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Reviewed-by: Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/sd.c | 153 ++++++++++++++++++++++++++++++------------------------
- 1 file changed, 84 insertions(+), 69 deletions(-)
+ drivers/block/loop.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index fcfeddc79331..b853f91fb3da 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -701,93 +701,97 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index cc981f34e017..3bb04c1a4ba1 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -528,6 +528,7 @@ static int do_req_filebacked(struct loop_device *lo, struct request *rq)
+ 	case REQ_OP_FLUSH:
+ 		return lo_req_flush(lo, rq);
+ 	case REQ_OP_DISCARD:
++	case REQ_OP_WRITE_ZEROES:
+ 		return lo_discard(lo, rq, pos);
+ 	case REQ_OP_WRITE:
+ 		if (lo->transfer)
+@@ -826,6 +827,7 @@ static void loop_config_discard(struct loop_device *lo)
+ 		q->limits.discard_granularity = 0;
+ 		q->limits.discard_alignment = 0;
+ 		blk_queue_max_discard_sectors(q, 0);
++		blk_queue_max_write_zeroes_sectors(q, 0);
+ 		q->limits.discard_zeroes_data = 0;
+ 		queue_flag_clear_unlocked(QUEUE_FLAG_DISCARD, q);
+ 		return;
+@@ -834,6 +836,7 @@ static void loop_config_discard(struct loop_device *lo)
+ 	q->limits.discard_granularity = inode->i_sb->s_blocksize;
+ 	q->limits.discard_alignment = 0;
+ 	blk_queue_max_discard_sectors(q, UINT_MAX >> 9);
++	blk_queue_max_write_zeroes_sectors(q, UINT_MAX >> 9);
+ 	q->limits.discard_zeroes_data = 1;
  	queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, q);
  }
- 
--/**
-- * sd_setup_discard_cmnd - unmap blocks on thinly provisioned device
-- * @sdp: scsi device to operate on
-- * @rq: Request to prepare
-- *
-- * Will issue either UNMAP or WRITE SAME(16) depending on preference
-- * indicated by target device.
-- **/
--static int sd_setup_discard_cmnd(struct scsi_cmnd *cmd)
-+static int sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
- {
--	struct request *rq = cmd->request;
- 	struct scsi_device *sdp = cmd->device;
--	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
--	sector_t sector = blk_rq_pos(rq);
--	unsigned int nr_sectors = blk_rq_sectors(rq);
--	unsigned int len;
--	int ret;
-+	struct request *rq = cmd->request;
-+	u64 sector = blk_rq_pos(rq) >> (ilog2(sdp->sector_size) - 9);
-+	u32 nr_sectors = blk_rq_sectors(rq) >> (ilog2(sdp->sector_size) - 9);
-+	unsigned int data_len = 24;
- 	char *buf;
--	struct page *page;
- 
--	sector >>= ilog2(sdp->sector_size) - 9;
--	nr_sectors >>= ilog2(sdp->sector_size) - 9;
--
--	page = alloc_page(GFP_ATOMIC | __GFP_ZERO);
--	if (!page)
-+	rq->special_vec.bv_page = alloc_page(GFP_ATOMIC | __GFP_ZERO);
-+	if (!rq->special_vec.bv_page)
- 		return BLKPREP_DEFER;
-+	rq->special_vec.bv_offset = 0;
-+	rq->special_vec.bv_len = data_len;
-+	rq->rq_flags |= RQF_SPECIAL_PAYLOAD;
- 
--	switch (sdkp->provisioning_mode) {
--	case SD_LBP_UNMAP:
--		buf = page_address(page);
--
--		cmd->cmd_len = 10;
--		cmd->cmnd[0] = UNMAP;
--		cmd->cmnd[8] = 24;
--
--		put_unaligned_be16(6 + 16, &buf[0]);
--		put_unaligned_be16(16, &buf[2]);
--		put_unaligned_be64(sector, &buf[8]);
--		put_unaligned_be32(nr_sectors, &buf[16]);
-+	cmd->cmd_len = 10;
-+	cmd->cmnd[0] = UNMAP;
-+	cmd->cmnd[8] = 24;
- 
--		len = 24;
--		break;
-+	buf = page_address(rq->special_vec.bv_page);
-+	put_unaligned_be16(6 + 16, &buf[0]);
-+	put_unaligned_be16(16, &buf[2]);
-+	put_unaligned_be64(sector, &buf[8]);
-+	put_unaligned_be32(nr_sectors, &buf[16]);
- 
--	case SD_LBP_WS16:
--		cmd->cmd_len = 16;
--		cmd->cmnd[0] = WRITE_SAME_16;
--		cmd->cmnd[1] = 0x8; /* UNMAP */
--		put_unaligned_be64(sector, &cmd->cmnd[2]);
--		put_unaligned_be32(nr_sectors, &cmd->cmnd[10]);
-+	cmd->allowed = SD_MAX_RETRIES;
-+	cmd->transfersize = data_len;
-+	rq->timeout = SD_TIMEOUT;
-+	scsi_req(rq)->resid_len = data_len;
- 
--		len = sdkp->device->sector_size;
--		break;
-+	return scsi_init_io(cmd);
-+}
- 
--	case SD_LBP_WS10:
--	case SD_LBP_ZERO:
--		cmd->cmd_len = 10;
--		cmd->cmnd[0] = WRITE_SAME;
--		if (sdkp->provisioning_mode == SD_LBP_WS10)
--			cmd->cmnd[1] = 0x8; /* UNMAP */
--		put_unaligned_be32(sector, &cmd->cmnd[2]);
--		put_unaligned_be16(nr_sectors, &cmd->cmnd[7]);
-+static int sd_setup_write_same16_cmnd(struct scsi_cmnd *cmd)
-+{
-+	struct scsi_device *sdp = cmd->device;
-+	struct request *rq = cmd->request;
-+	u64 sector = blk_rq_pos(rq) >> (ilog2(sdp->sector_size) - 9);
-+	u32 nr_sectors = blk_rq_sectors(rq) >> (ilog2(sdp->sector_size) - 9);
-+	u32 data_len = sdp->sector_size;
- 
--		len = sdkp->device->sector_size;
--		break;
-+	rq->special_vec.bv_page = alloc_page(GFP_ATOMIC | __GFP_ZERO);
-+	if (!rq->special_vec.bv_page)
-+		return BLKPREP_DEFER;
-+	rq->special_vec.bv_offset = 0;
-+	rq->special_vec.bv_len = data_len;
-+	rq->rq_flags |= RQF_SPECIAL_PAYLOAD;
- 
--	default:
--		ret = BLKPREP_INVALID;
--		goto out;
--	}
-+	cmd->cmd_len = 16;
-+	cmd->cmnd[0] = WRITE_SAME_16;
-+	cmd->cmnd[1] = 0x8; /* UNMAP */
-+	put_unaligned_be64(sector, &cmd->cmnd[2]);
-+	put_unaligned_be32(nr_sectors, &cmd->cmnd[10]);
- 
-+	cmd->allowed = SD_MAX_RETRIES;
-+	cmd->transfersize = data_len;
- 	rq->timeout = SD_TIMEOUT;
-+	scsi_req(rq)->resid_len = data_len;
- 
--	cmd->transfersize = len;
--	cmd->allowed = SD_MAX_RETRIES;
-+	return scsi_init_io(cmd);
-+}
- 
--	rq->special_vec.bv_page = page;
--	rq->special_vec.bv_offset = 0;
--	rq->special_vec.bv_len = len;
-+static int sd_setup_write_same10_cmnd(struct scsi_cmnd *cmd, bool unmap)
-+{
-+	struct scsi_device *sdp = cmd->device;
-+	struct request *rq = cmd->request;
-+	u64 sector = blk_rq_pos(rq) >> (ilog2(sdp->sector_size) - 9);
-+	u32 nr_sectors = blk_rq_sectors(rq) >> (ilog2(sdp->sector_size) - 9);
-+	u32 data_len = sdp->sector_size;
- 
-+	rq->special_vec.bv_page = alloc_page(GFP_ATOMIC | __GFP_ZERO);
-+	if (!rq->special_vec.bv_page)
-+		return BLKPREP_DEFER;
-+	rq->special_vec.bv_offset = 0;
-+	rq->special_vec.bv_len = data_len;
- 	rq->rq_flags |= RQF_SPECIAL_PAYLOAD;
--	scsi_req(rq)->resid_len = len;
- 
--	ret = scsi_init_io(cmd);
--out:
--	if (ret != BLKPREP_OK)
--		__free_page(page);
--	return ret;
-+	cmd->cmd_len = 10;
-+	cmd->cmnd[0] = WRITE_SAME;
-+	if (unmap)
-+		cmd->cmnd[1] = 0x8; /* UNMAP */
-+	put_unaligned_be32(sector, &cmd->cmnd[2]);
-+	put_unaligned_be16(nr_sectors, &cmd->cmnd[7]);
-+
-+	cmd->allowed = SD_MAX_RETRIES;
-+	cmd->transfersize = data_len;
-+	rq->timeout = SD_TIMEOUT;
-+	scsi_req(rq)->resid_len = data_len;
-+
-+	return scsi_init_io(cmd);
- }
- 
- static void sd_config_write_same(struct scsi_disk *sdkp)
-@@ -1155,7 +1159,18 @@ static int sd_init_command(struct scsi_cmnd *cmd)
- 
- 	switch (req_op(rq)) {
- 	case REQ_OP_DISCARD:
--		return sd_setup_discard_cmnd(cmd);
-+		switch (scsi_disk(rq->rq_disk)->provisioning_mode) {
-+		case SD_LBP_UNMAP:
-+			return sd_setup_unmap_cmnd(cmd);
-+		case SD_LBP_WS16:
-+			return sd_setup_write_same16_cmnd(cmd);
-+		case SD_LBP_WS10:
-+			return sd_setup_write_same10_cmnd(cmd, true);
-+		case SD_LBP_ZERO:
-+			return sd_setup_write_same10_cmnd(cmd, false);
-+		default:
-+			return BLKPREP_INVALID;
-+		}
- 	case REQ_OP_WRITE_SAME:
- 		return sd_setup_write_same_cmnd(cmd);
+@@ -1660,6 +1663,7 @@ static int loop_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 	switch (req_op(cmd->rq)) {
  	case REQ_OP_FLUSH:
+ 	case REQ_OP_DISCARD:
++	case REQ_OP_WRITE_ZEROES:
+ 		cmd->use_aio = false;
+ 		break;
+ 	default:
 -- 
 2.11.0
