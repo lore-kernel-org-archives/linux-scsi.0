@@ -1,47 +1,38 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 08/27] dm kcopyd: switch to use REQ_OP_WRITE_ZEROES
-Date: Wed,  5 Apr 2017 16:21:46 +0200
-Message-ID: <20170405142205.6477-9-hch@lst.de>
+Subject: [PATCH 09/27] block: stop using blkdev_issue_write_same for zeroing
+Date: Wed,  5 Apr 2017 16:21:47 +0200
+Message-ID: <20170405142205.6477-10-hch@lst.de>
 References: <20170405142205.6477-1-hch@lst.de>
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170405142205.6477-1-hch@lst.de>
-Sender: linux-raid-owner@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
 To: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, lars.ellenberg@linbit.com
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-It seems like the code currently passes whatever it was using for writes
-to WRITE SAME.  Just switch it to WRITE ZEROES, although that doesn't
-need any payload.
-
-Untested, and confused by the code, maybe someone who understands it
-better than me can help..
+We'll always use the WRITE ZEROES code for zeroing now.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/md/dm-kcopyd.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ block/blk-lib.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/md/dm-kcopyd.c b/drivers/md/dm-kcopyd.c
-index 9e9d04cb7d51..f85846741d50 100644
---- a/drivers/md/dm-kcopyd.c
-+++ b/drivers/md/dm-kcopyd.c
-@@ -733,11 +733,11 @@ int dm_kcopyd_copy(struct dm_kcopyd_client *kc, struct dm_io_region *from,
- 		job->pages = &zero_page_list;
+diff --git a/block/blk-lib.c b/block/blk-lib.c
+index e5b853f2b8a2..2a8d638544a7 100644
+--- a/block/blk-lib.c
++++ b/block/blk-lib.c
+@@ -364,10 +364,6 @@ int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
+ 			return 0;
+ 	}
  
- 		/*
--		 * Use WRITE SAME to optimize zeroing if all dests support it.
-+		 * Use WRITE ZEROES to optimize zeroing if all dests support it.
- 		 */
--		job->rw = REQ_OP_WRITE_SAME;
-+		job->rw = REQ_OP_WRITE_ZEROES;
- 		for (i = 0; i < job->num_dests; i++)
--			if (!bdev_write_same(job->dests[i].bdev)) {
-+			if (!bdev_write_zeroes_sectors(job->dests[i].bdev)) {
- 				job->rw = WRITE;
- 				break;
- 			}
+-	if (!blkdev_issue_write_same(bdev, sector, nr_sects, gfp_mask,
+-			ZERO_PAGE(0)))
+-		return 0;
+-
+ 	blk_start_plug(&plug);
+ 	ret = __blkdev_issue_zeroout(bdev, sector, nr_sects, gfp_mask,
+ 			&bio, discard);
 -- 
 2.11.0
-
