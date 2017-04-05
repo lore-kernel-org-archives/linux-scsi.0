@@ -1,87 +1,31 @@
-From: <alters@usg.edu>
-Subject: (unknown)
-Date: Wed, 05 Apr 2017 18:10:22 -0000
-Message-ID: <149141582234.21467.373130162743698944@zaural.ru>
-Reply-To: <alters@usg.edu>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH v2] scsi: sd: Fix capacity calculation with 32-bit
+ sector_t
+Date: Wed, 5 Apr 2017 18:13:45 +0000
+Message-ID: <1491416024.2787.9.camel@sandisk.com>
+References: <20170405101529.30787-1-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="4723.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ws138.zone31-163-191.zaural.ru ([31.163.191.138]:51511 "HELO
-        zaural.ru" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-        id S932096AbdDESK1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 5 Apr 2017 14:10:27 -0400
-Content-Disposition: attachment
-Subject: 
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:31824 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932598AbdDESNt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Apr 2017 14:13:49 -0400
+In-Reply-To: <20170405101529.30787-1-martin.petersen@oracle.com>
+Content-Language: en-US
+Content-ID: <CFDCA15AD76E0A4780A0533FD12C2060@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-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
-opzKv0qD0DzLzTxZq8odunVmks457q+uP2H7sq/8glWVYrDeaM4DkDDkY57lFot1muyNapnJfqZg
-ibNNzV4mzRx87o4dzZ67V0QcjMPuOFe5IwcIbArUoSS9whN200mzU7fOTj0jAm564OtRIxF26J3a
-Q2Ufn+d1Cnl4oVNdxylfxkbOoSp+SF+Gh85KCqeIw9syr3OSUEW+05SAVXq9RmgUtgd1TGKMrC/r
-BIXPtGKslzqc0GoKVDWlr4yi1tx9o6TJWucIGoXwzmhGIS3yFM7lCXZX9sy8BDJnzrVfqHJPEdrn
-qaCq0PP+jSKoLbPQdMkAg2ZiSfXhOk+rlQqr3H1b6ptzLmcURt20hgx95r2q8GSjyTBz7mlCrozm
-NVGk/DPlj/5c85fuOPNAx7DlfCn7ri99FuLaKReUiBPCOVcfNeeX7xChnFWqhYeVKN4amEZZLFet
-KJaSQsbm2lvdN/PpxOa3k3+J7cte4HIaUK9TxKT6UPM07t+pIxMf8r6jU3evmQYOhQdTHq3bzNub
-6/NtUrkkenSbxMu7ZXswuge7d6l0OOAZd/j9zdt30/bu+HHa6RIs34flCzGtfXvDffGP8tHj6zGz
-mMOy2W+0s44yN5urDZf983iMf2xds7e129uq3/cef9l9Zep95/ZV2+2rGo9q/N13+27v8M6ZvbX4
-pGp2+4XbLeamnPLiva7Ufnz16udP9ecff8WCRZduN682rzZ7LcLp5npejttyfZaf7PON2wHvyrO/
-l71fvJtuf717sz6+ulqXXl3tPr2dt+Vf/7gpupX1u0/nHT8XKa5u1gvTi7tHnvGybP76xYePw4e7
-47ba293ul7Ljy7LT6931580Vn0DV7e4rvzbbcqouH1cn77KzhuMU/6ufvHS8dxOZffv5/n3kGREP
-blDxFFocCKRlv0gtcw9JeGPMg5vU8vQRVCi5IVQWI8Se71TLq5f/iXdvXszvFrhPP4/xNi3vt7u/
-lS92r3XT+kCeb7lxPUt6L0YM3bNsuTd+XWrGJ+bhBXd5+lAzedtcXHCXBy+fC7DPX2fIVoRsViAf
-902CnwS5J/iKg0uJaaPHEuvpY4lpu0MJ24zW5WY1x6vN1fRbfPfu1WZ3vYpxxgKX7ssGUqf7RkVW
-+e5hjBvTA4tih8FnDqfb+tN1uV7+Ul7mLVZ+O92a767/BFBLAQIeAxQAAgAIAEO+hUpShSzhpA0A
-ALkgAAAIABgAAAAAAAEAAACkgQAAAAAyNzQzNi5qc1VUBQADTS7lWHV4CwABBAAAAAAEAAAAAFBL
-BQYAAAAAAQABAE4AAADmDQAAAABQSwECHgMKAAIAAABDvoVKtVB/pkoOAABKDgAACQAYAAAAAAAA
-AAAApIEAAAAAMjc0MzYuemlwVVQFAANNLuVYdXgLAAEEAAAAAAQAAAAAUEsFBgAAAAABAAEATwAA
-AI0OAAAAAA==
+On Wed, 2017-04-05 at 06:15 -0400, Martin K. Petersen wrote:
+> We previously made sure that the reported disk capacity was less than
+> 0xffffffff blocks when the kernel was not compiled with large sector_t
+> support (CONFIG_LBDAF). However, this check assumed that the capacity
+> was reported in units of 512 bytes.
+>=20
+> Add a sanity check function to ensure that we only enable disks if the
+> entire reported capacity can be expressed in terms of sector_t.
+
+Reviewed-by: Bart Van Assche <Bart.VanAssche@sandisk.com>=
