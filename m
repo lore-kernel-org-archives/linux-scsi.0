@@ -1,68 +1,42 @@
-From: Boaz Harrosh <ooo@electrozaur.com>
-Subject: Re: [PATCH] osd_uld: Check scsi_device_get() return value
-Date: Wed, 5 Apr 2017 19:48:53 +0300
-Message-ID: <f1f5d734-5ad9-4d85-1e61-e8ba56994ac0@electrozaur.com>
-References: <1D08B61A9CF0974AA09887BE32D889DA12E934@ULS-OP-MBXIP03.sdcorp.global.sandisk.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: [PATCH] Make checking the scsi_device_get() return value mandatory
+Date: Wed, 5 Apr 2017 09:52:50 -0700
+Message-ID: <4b49f610-4ae7-ac4c-5c93-920c034e964d@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:36630 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753608AbdDEQs5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Apr 2017 12:48:57 -0400
-Received: by mail-wr0-f196.google.com with SMTP id k6so4272874wre.3
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Apr 2017 09:48:56 -0700 (PDT)
-In-Reply-To: <1D08B61A9CF0974AA09887BE32D889DA12E934@ULS-OP-MBXIP03.sdcorp.global.sandisk.com>
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:1086 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754162AbdDEQxB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Apr 2017 12:53:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 03/30/2017 08:17 PM, Bart Van Assche wrote:
-> scsi_device_get() can fail. Hence check its return value.
-> 
-> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-> Cc: Boaz Harrosh <bharrosh@panasas.com>
+Now that all scsi_device_get() callers check the return value of this
+function, make checking that return value mandatory.
 
-Cool thanks
-ACK-by: Boaz Harrosh <ooo@electrozaur.com>
+Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ include/scsi/scsi_device.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> ---
->  drivers/scsi/osd/osd_uld.c | 8 +++++---
->  1 file changed, 5 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
-> index e0ce5d2fd14d..1dea4244dd0c 100644
-> --- a/drivers/scsi/osd/osd_uld.c
-> +++ b/drivers/scsi/osd/osd_uld.c
-> @@ -464,14 +464,15 @@ static int osd_probe(struct device *dev)
->  	/* hold one more reference to the scsi_device that will get released
->  	 * in __release, in case a logout is happening while fs is mounted
->  	 */
-> -	scsi_device_get(scsi_device);
-> +	if (scsi_device_get(scsi_device))
-> +		goto err_put_disk;
->  	osd_dev_init(&oud->od, scsi_device);
->  
->  	/* Detect the OSD Version */
->  	error = __detect_osd(oud);
->  	if (error) {
->  		OSD_ERR("osd detection failed, non-compatible OSD device\n");
-> -		goto err_put_disk;
-> +		goto err_put_sdev;
->  	}
->  
->  	/* init the char-device for communication with user-mode */
-> @@ -508,8 +509,9 @@ static int osd_probe(struct device *dev)
->  
->  err_put_cdev:
->  	cdev_del(&oud->cdev);
-> -err_put_disk:
-> +err_put_sdev:
->  	scsi_device_put(scsi_device);
-> +err_put_disk:
->  	put_disk(disk);
->  err_free_osd:
->  	dev_set_drvdata(dev, NULL);
-> 
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index cdff28519393..7a154a944c6c 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -316,7 +316,7 @@ extern int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh);
+ void scsi_attach_vpd(struct scsi_device *sdev);
+ 
+ extern struct scsi_device *scsi_device_from_queue(struct request_queue *q);
+-extern int scsi_device_get(struct scsi_device *);
++extern int __must_check scsi_device_get(struct scsi_device *);
+ extern void scsi_device_put(struct scsi_device *);
+ extern struct scsi_device *scsi_device_lookup(struct Scsi_Host *,
+ 					      uint, uint, u64);
+-- 
+2.12.0
