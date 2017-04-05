@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 19/27] rbd: remove the discard_zeroes_data flag
-Date: Wed,  5 Apr 2017 19:21:17 +0200
-Message-ID: <20170405172125.22600-20-hch@lst.de>
+Subject: [PATCH 15/27] nvme: implement REQ_OP_WRITE_ZEROES
+Date: Wed,  5 Apr 2017 19:21:13 +0200
+Message-ID: <20170405172125.22600-16-hch@lst.de>
 References: <20170405172125.22600-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,26 +21,90 @@ To: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.
 Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-rbd only supports discarding on large alignments, so the zeroing code
-would always fall back to explicit writings of zeroes.
+But now for the real NVMe Write Zeroes yet, just to get rid of the
+discard abuse for zeroing.  Also rename the quirk flag to be a bit
+more self-explanatory.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/block/rbd.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/nvme/host/core.c | 10 +++++-----
+ drivers/nvme/host/nvme.h |  6 +++---
+ drivers/nvme/host/pci.c  |  6 +++---
+ 3 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/block/rbd.c b/drivers/block/rbd.c
-index f24ade333e0c..089ac4179919 100644
---- a/drivers/block/rbd.c
-+++ b/drivers/block/rbd.c
-@@ -4380,7 +4380,6 @@ static int rbd_init_disk(struct rbd_device *rbd_dev)
- 	q->limits.discard_granularity = segment_size;
- 	q->limits.discard_alignment = segment_size;
- 	blk_queue_max_discard_sectors(q, segment_size / SECTOR_SIZE);
--	q->limits.discard_zeroes_data = 1;
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index 3c908e1bc903..26d5129a640a 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -358,6 +358,8 @@ int nvme_setup_cmd(struct nvme_ns *ns, struct request *req,
+ 	case REQ_OP_FLUSH:
+ 		nvme_setup_flush(ns, cmd);
+ 		break;
++	case REQ_OP_WRITE_ZEROES:
++		/* currently only aliased to deallocate for a few ctrls: */
+ 	case REQ_OP_DISCARD:
+ 		ret = nvme_setup_discard(ns, req, cmd);
+ 		break;
+@@ -923,16 +925,14 @@ static void nvme_config_discard(struct nvme_ns *ns)
+ 	BUILD_BUG_ON(PAGE_SIZE / sizeof(struct nvme_dsm_range) <
+ 			NVME_DSM_MAX_RANGES);
  
- 	if (!ceph_test_opt(rbd_dev->rbd_client->client, NOCRC))
- 		q->backing_dev_info->capabilities |= BDI_CAP_STABLE_WRITES;
+-	if (ctrl->quirks & NVME_QUIRK_DISCARD_ZEROES)
+-		ns->queue->limits.discard_zeroes_data = 1;
+-	else
+-		ns->queue->limits.discard_zeroes_data = 0;
+-
+ 	ns->queue->limits.discard_alignment = logical_block_size;
+ 	ns->queue->limits.discard_granularity = logical_block_size;
+ 	blk_queue_max_discard_sectors(ns->queue, UINT_MAX);
+ 	blk_queue_max_discard_segments(ns->queue, NVME_DSM_MAX_RANGES);
+ 	queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, ns->queue);
++
++	if (ctrl->quirks & NVME_QUIRK_DEALLOCATE_ZEROES)
++		blk_queue_max_write_zeroes_sectors(ns->queue, UINT_MAX);
+ }
+ 
+ static int nvme_revalidate_ns(struct nvme_ns *ns, struct nvme_id_ns **id)
+diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
+index 227f281482db..f903726eeb68 100644
+--- a/drivers/nvme/host/nvme.h
++++ b/drivers/nvme/host/nvme.h
+@@ -68,10 +68,10 @@ enum nvme_quirks {
+ 	NVME_QUIRK_IDENTIFY_CNS			= (1 << 1),
+ 
+ 	/*
+-	 * The controller deterministically returns O's on reads to discarded
+-	 * logical blocks.
++	 * The controller deterministically returns O's on reads to
++	 * logical blocks that deallocate was called on.
+ 	 */
+-	NVME_QUIRK_DISCARD_ZEROES		= (1 << 2),
++	NVME_QUIRK_DEALLOCATE_ZEROES		= (1 << 2),
+ 
+ 	/*
+ 	 * The controller needs a delay before starts checking the device
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index 9e686a67d93b..cb530a6bef3f 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -2113,13 +2113,13 @@ static const struct pci_error_handlers nvme_err_handler = {
+ static const struct pci_device_id nvme_id_table[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x0953),
+ 		.driver_data = NVME_QUIRK_STRIPE_SIZE |
+-				NVME_QUIRK_DISCARD_ZEROES, },
++				NVME_QUIRK_DEALLOCATE_ZEROES, },
+ 	{ PCI_VDEVICE(INTEL, 0x0a53),
+ 		.driver_data = NVME_QUIRK_STRIPE_SIZE |
+-				NVME_QUIRK_DISCARD_ZEROES, },
++				NVME_QUIRK_DEALLOCATE_ZEROES, },
+ 	{ PCI_VDEVICE(INTEL, 0x0a54),
+ 		.driver_data = NVME_QUIRK_STRIPE_SIZE |
+-				NVME_QUIRK_DISCARD_ZEROES, },
++				NVME_QUIRK_DEALLOCATE_ZEROES, },
+ 	{ PCI_VDEVICE(INTEL, 0x5845),	/* Qemu emulated controller */
+ 		.driver_data = NVME_QUIRK_IDENTIFY_CNS, },
+ 	{ PCI_DEVICE(0x1c58, 0x0003),	/* HGST adapter */
 -- 
 2.11.0
