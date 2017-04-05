@@ -1,42 +1,31 @@
-From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: always use REQ_OP_WRITE_ZEROES for zeroing offload
-Date: Wed, 05 Apr 2017 07:40:36 -0400
-Message-ID: <yq1vaqjt74b.fsf@oracle.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 01/25] =?utf-8?Q?=D1=95d=3A?= split
+ sd_setup_discard_cmnd
+Date: Wed, 05 Apr 2017 07:42:46 -0400
+Message-ID: <yq1r317t70p.fsf@oracle.com>
 References: <20170331163313.31821-1-hch@lst.de>
+        <20170331163313.31821-2-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-In-Reply-To: <20170331163313.31821-1-hch-jcswGhMUV9g@public.gmane.org> (Christoph Hellwig's message
-	of "Fri, 31 Mar 2017 18:32:48 +0200")
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Content-Type: text/plain
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170331163313.31821-2-hch@lst.de> (Christoph Hellwig's message
+        of "Fri, 31 Mar 2017 18:32:49 +0200")
+Sender: linux-block-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org> writes:
+Christoph Hellwig <hch@lst.de> writes:
 
-Christoph,
+> Split sd_setup_discard_cmnd into one function per provisioning type.  While
+> this creates some very slight duplication of boilerplate code it keeps the
+> code modular for additions of new provisioning types, and for reusing the
+> write same functions for the upcoming scsi implementation of the Write Zeroes
+> operation.
 
-> This series makes REQ_OP_WRITE_ZEROES the only zeroing offload
-> supported by the block layer, and switches existing implementations
-> of REQ_OP_DISCARD that correctly set discard_zeroes_data to it,
-> removes incorrect discard_zeroes_data, and also switches WRITE SAME
-> based zeroing in SCSI to this new method.
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-Very, very nice. I think this is the correct approach.
-
-I'm going to send two follow-up patches that allow us to use UNMAP for
-discards and WRITE SAME w/ UNMAP for zeroout. That appears to be the
-preferred configuration for most storage devices.
+Minor nit: Patch header should be "sd: ..." instead of " d: ...".
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
