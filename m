@@ -1,16 +1,15 @@
 From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 03/25] block: implement splitting of
-	REQ_OP_WRITE_ZEROES bios
-Date: Wed, 05 Apr 2017 07:43:40 -0400
-Message-ID: <yq1inmjt6z7.fsf@oracle.com>
+Subject: Re: [PATCH 04/25] sd: implement REQ_OP_WRITE_ZEROES
+Date: Wed, 05 Apr 2017 07:44:43 -0400
+Message-ID: <yq1efx7t6xg.fsf@oracle.com>
 References: <20170331163313.31821-1-hch@lst.de>
-	<20170331163313.31821-4-hch@lst.de>
+	<20170331163313.31821-5-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-In-Reply-To: <20170331163313.31821-4-hch-jcswGhMUV9g@public.gmane.org> (Christoph Hellwig's message
-	of "Fri, 31 Mar 2017 18:32:51 +0200")
+In-Reply-To: <20170331163313.31821-5-hch-jcswGhMUV9g@public.gmane.org> (Christoph Hellwig's message
+	of "Fri, 31 Mar 2017 18:32:52 +0200")
 List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
 	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
 List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
@@ -25,9 +24,6 @@ Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5
 List-Id: linux-scsi@vger.kernel.org
 
 Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org> writes:
-
-> Copy and past the REQ_OP_WRITE_SAME code to prepare to implementations
-> that limit the write zeroes size.
 
 Reviewed-by: Martin K. Petersen <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 
