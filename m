@@ -1,132 +1,64 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 04/27] sd: implement REQ_OP_WRITE_ZEROES
-Date: Wed,  5 Apr 2017 16:21:42 +0200
-Message-ID: <20170405142205.6477-5-hch@lst.de>
+Subject: [PATCH 12/27] block: add a new BLKDEV_ZERO_NOFALLBACK flag
+Date: Wed,  5 Apr 2017 16:21:50 +0200
+Message-ID: <20170405142205.6477-13-hch@lst.de>
 References: <20170405142205.6477-1-hch@lst.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:60598 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754051AbdDEOW0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Apr 2017 10:22:26 -0400
+Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20170405142205.6477-1-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-raid-owner@vger.kernel.org
 To: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, lars.ellenberg@linbit.com
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
+
+This avoids fallbacks to explicit zeroing in (__)blkdev_issue_zeroout if
+the caller doesn't want them.
+
+Also clean up the convoluted check for the return condition that this
+new flag is added to.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/sd.c     | 31 ++++++++++++++++++++++++++-----
- drivers/scsi/sd_zbc.c |  1 +
- 2 files changed, 27 insertions(+), 5 deletions(-)
+ block/blk-lib.c        | 5 ++++-
+ include/linux/blkdev.h | 1 +
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index b853f91fb3da..d8d9c0bdd93c 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -735,7 +735,7 @@ static int sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
- 	return scsi_init_io(cmd);
- }
+diff --git a/block/blk-lib.c b/block/blk-lib.c
+index 2f6d2cb2e1a2..2f882e22890b 100644
+--- a/block/blk-lib.c
++++ b/block/blk-lib.c
+@@ -281,6 +281,9 @@ static int __blkdev_issue_write_zeroes(struct block_device *bdev,
+  *
+  *  If a device is using logical block provisioning, the underlying space will
+  *  not be released if %flags contains BLKDEV_ZERO_NOUNMAP.
++ *
++ *  If %flags contains BLKDEV_ZERO_NOFALLBACK, the function will return
++ *  -EOPNOTSUPP if no explicit hardware offload for zeroing is provided.
+  */
+ int __blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
+ 		sector_t nr_sects, gfp_t gfp_mask, struct bio **biop,
+@@ -298,7 +301,7 @@ int __blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
  
--static int sd_setup_write_same16_cmnd(struct scsi_cmnd *cmd)
-+static int sd_setup_write_same16_cmnd(struct scsi_cmnd *cmd, bool unmap)
- {
- 	struct scsi_device *sdp = cmd->device;
- 	struct request *rq = cmd->request;
-@@ -752,13 +752,14 @@ static int sd_setup_write_same16_cmnd(struct scsi_cmnd *cmd)
+ 	ret = __blkdev_issue_write_zeroes(bdev, sector, nr_sects, gfp_mask,
+ 			biop, flags);
+-	if (ret == 0 || (ret && ret != -EOPNOTSUPP))
++	if (ret != -EOPNOTSUPP || (flags & BLKDEV_ZERO_NOFALLBACK))
+ 		goto out;
  
- 	cmd->cmd_len = 16;
- 	cmd->cmnd[0] = WRITE_SAME_16;
--	cmd->cmnd[1] = 0x8; /* UNMAP */
-+	if (unmap)
-+		cmd->cmnd[1] = 0x8; /* UNMAP */
- 	put_unaligned_be64(sector, &cmd->cmnd[2]);
- 	put_unaligned_be32(nr_sectors, &cmd->cmnd[10]);
+ 	ret = 0;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index e7513ce3dbde..a5055d760661 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1351,6 +1351,7 @@ extern int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+ 		struct bio **biop);
  
- 	cmd->allowed = SD_MAX_RETRIES;
- 	cmd->transfersize = data_len;
--	rq->timeout = SD_TIMEOUT;
-+	rq->timeout = unmap ? SD_TIMEOUT : SD_WRITE_SAME_TIMEOUT;
- 	scsi_req(rq)->resid_len = data_len;
+ #define BLKDEV_ZERO_NOUNMAP	(1 << 0)  /* do not free blocks */
++#define BLKDEV_ZERO_NOFALLBACK	(1 << 1)  /* don't write explicit zeroes */
  
- 	return scsi_init_io(cmd);
-@@ -788,12 +789,27 @@ static int sd_setup_write_same10_cmnd(struct scsi_cmnd *cmd, bool unmap)
- 
- 	cmd->allowed = SD_MAX_RETRIES;
- 	cmd->transfersize = data_len;
--	rq->timeout = SD_TIMEOUT;
-+	rq->timeout = unmap ? SD_TIMEOUT : SD_WRITE_SAME_TIMEOUT;
- 	scsi_req(rq)->resid_len = data_len;
- 
- 	return scsi_init_io(cmd);
- }
- 
-+static int sd_setup_write_zeroes_cmnd(struct scsi_cmnd *cmd)
-+{
-+	struct request *rq = cmd->request;
-+	struct scsi_device *sdp = cmd->device;
-+	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
-+	u64 sector = blk_rq_pos(rq) >> (ilog2(sdp->sector_size) - 9);
-+	u32 nr_sectors = blk_rq_sectors(rq) >> (ilog2(sdp->sector_size) - 9);
-+
-+	if (sdp->no_write_same)
-+		return BLKPREP_INVALID;
-+	if (sdkp->ws16 || sector > 0xffffffff || nr_sectors > 0xffff)
-+		return sd_setup_write_same16_cmnd(cmd, false);
-+	return sd_setup_write_same10_cmnd(cmd, false);
-+}
-+
- static void sd_config_write_same(struct scsi_disk *sdkp)
- {
- 	struct request_queue *q = sdkp->disk->queue;
-@@ -823,6 +839,8 @@ static void sd_config_write_same(struct scsi_disk *sdkp)
- out:
- 	blk_queue_max_write_same_sectors(q, sdkp->max_ws_blocks *
- 					 (logical_block_size >> 9));
-+	blk_queue_max_write_zeroes_sectors(q, sdkp->max_ws_blocks *
-+					 (logical_block_size >> 9));
- }
- 
- /**
-@@ -1163,7 +1181,7 @@ static int sd_init_command(struct scsi_cmnd *cmd)
- 		case SD_LBP_UNMAP:
- 			return sd_setup_unmap_cmnd(cmd);
- 		case SD_LBP_WS16:
--			return sd_setup_write_same16_cmnd(cmd);
-+			return sd_setup_write_same16_cmnd(cmd, true);
- 		case SD_LBP_WS10:
- 			return sd_setup_write_same10_cmnd(cmd, true);
- 		case SD_LBP_ZERO:
-@@ -1171,6 +1189,8 @@ static int sd_init_command(struct scsi_cmnd *cmd)
- 		default:
- 			return BLKPREP_INVALID;
- 		}
-+	case REQ_OP_WRITE_ZEROES:
-+		return sd_setup_write_zeroes_cmnd(cmd);
- 	case REQ_OP_WRITE_SAME:
- 		return sd_setup_write_same_cmnd(cmd);
- 	case REQ_OP_FLUSH:
-@@ -1810,6 +1830,7 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 
- 	switch (req_op(req)) {
- 	case REQ_OP_DISCARD:
-+	case REQ_OP_WRITE_ZEROES:
- 	case REQ_OP_WRITE_SAME:
- 	case REQ_OP_ZONE_RESET:
- 		if (!result) {
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 92620c8ea8ad..1994f7799fce 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -329,6 +329,7 @@ void sd_zbc_complete(struct scsi_cmnd *cmd,
- 
- 	switch (req_op(rq)) {
- 	case REQ_OP_WRITE:
-+	case REQ_OP_WRITE_ZEROES:
- 	case REQ_OP_WRITE_SAME:
- 	case REQ_OP_ZONE_RESET:
- 
+ extern int __blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
+ 		sector_t nr_sects, gfp_t gfp_mask, struct bio **biop,
 -- 
 2.11.0
+
