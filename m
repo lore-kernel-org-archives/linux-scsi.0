@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 17/27] loop: implement REQ_OP_WRITE_ZEROES
-Date: Wed,  5 Apr 2017 16:21:55 +0200
-Message-ID: <20170405142205.6477-18-hch@lst.de>
+Subject: [PATCH 16/27] zram: implement REQ_OP_WRITE_ZEROES
+Date: Wed,  5 Apr 2017 16:21:54 +0200
+Message-ID: <20170405142205.6477-17-hch@lst.de>
 References: <20170405142205.6477-1-hch@lst.de>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170405142205.6477-1-hch@lst.de>
@@ -10,50 +10,54 @@ To: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-It's identical to discard as hole punches will always leave us with
-zeroes on reads.
+Just the same as discard if the block size equals the system page size.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/block/loop.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/block/zram/zram_drv.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/block/loop.c b/drivers/block/loop.c
-index cc981f34e017..3bb04c1a4ba1 100644
---- a/drivers/block/loop.c
-+++ b/drivers/block/loop.c
-@@ -528,6 +528,7 @@ static int do_req_filebacked(struct loop_device *lo, struct request *rq)
- 	case REQ_OP_FLUSH:
- 		return lo_req_flush(lo, rq);
- 	case REQ_OP_DISCARD:
+diff --git a/drivers/block/zram/zram_drv.c b/drivers/block/zram/zram_drv.c
+index dceb5edd1e54..1710b06f04a7 100644
+--- a/drivers/block/zram/zram_drv.c
++++ b/drivers/block/zram/zram_drv.c
+@@ -829,10 +829,14 @@ static void __zram_make_request(struct zram *zram, struct bio *bio)
+ 	offset = (bio->bi_iter.bi_sector &
+ 		  (SECTORS_PER_PAGE - 1)) << SECTOR_SHIFT;
+ 
+-	if (unlikely(bio_op(bio) == REQ_OP_DISCARD)) {
++	switch (bio_op(bio)) {
++	case REQ_OP_DISCARD:
 +	case REQ_OP_WRITE_ZEROES:
- 		return lo_discard(lo, rq, pos);
- 	case REQ_OP_WRITE:
- 		if (lo->transfer)
-@@ -826,6 +827,7 @@ static void loop_config_discard(struct loop_device *lo)
- 		q->limits.discard_granularity = 0;
- 		q->limits.discard_alignment = 0;
- 		blk_queue_max_discard_sectors(q, 0);
-+		blk_queue_max_write_zeroes_sectors(q, 0);
- 		q->limits.discard_zeroes_data = 0;
- 		queue_flag_clear_unlocked(QUEUE_FLAG_DISCARD, q);
+ 		zram_bio_discard(zram, index, offset, bio);
+ 		bio_endio(bio);
  		return;
-@@ -834,6 +836,7 @@ static void loop_config_discard(struct loop_device *lo)
- 	q->limits.discard_granularity = inode->i_sb->s_blocksize;
- 	q->limits.discard_alignment = 0;
- 	blk_queue_max_discard_sectors(q, UINT_MAX >> 9);
-+	blk_queue_max_write_zeroes_sectors(q, UINT_MAX >> 9);
- 	q->limits.discard_zeroes_data = 1;
- 	queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, q);
- }
-@@ -1660,6 +1663,7 @@ static int loop_queue_rq(struct blk_mq_hw_ctx *hctx,
- 	switch (req_op(cmd->rq)) {
- 	case REQ_OP_FLUSH:
- 	case REQ_OP_DISCARD:
-+	case REQ_OP_WRITE_ZEROES:
- 		cmd->use_aio = false;
- 		break;
- 	default:
++	default:
++		break;
+ 	}
+ 
+ 	bio_for_each_segment(bvec, bio, iter) {
+@@ -1192,6 +1196,8 @@ static int zram_add(void)
+ 	zram->disk->queue->limits.max_sectors = SECTORS_PER_PAGE;
+ 	zram->disk->queue->limits.chunk_sectors = 0;
+ 	blk_queue_max_discard_sectors(zram->disk->queue, UINT_MAX);
++	queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, zram->disk->queue);
++
+ 	/*
+ 	 * zram_bio_discard() will clear all logical blocks if logical block
+ 	 * size is identical with physical block size(PAGE_SIZE). But if it is
+@@ -1201,10 +1207,7 @@ static int zram_add(void)
+ 	 * zeroed.
+ 	 */
+ 	if (ZRAM_LOGICAL_BLOCK_SIZE == PAGE_SIZE)
+-		zram->disk->queue->limits.discard_zeroes_data = 1;
+-	else
+-		zram->disk->queue->limits.discard_zeroes_data = 0;
+-	queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, zram->disk->queue);
++		blk_queue_max_write_zeroes_sectors(zram->disk->queue, UINT_MAX);
+ 
+ 	add_disk(zram->disk);
+ 
 -- 
 2.11.0
