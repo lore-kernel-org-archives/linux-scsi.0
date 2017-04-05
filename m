@@ -1,7 +1,8 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 06/27] dm io: discards don't take a payload
-Date: Wed,  5 Apr 2017 19:21:04 +0200
-Message-ID: <20170405172125.22600-7-hch@lst.de>
+Subject: [PATCH 03/27] block: implement splitting of
+	REQ_OP_WRITE_ZEROES bios
+Date: Wed,  5 Apr 2017 19:21:01 +0200
+Message-ID: <20170405172125.22600-4-hch@lst.de>
 References: <20170405172125.22600-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,41 +22,50 @@ To: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.
 Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-Fix up do_region to not allocate a bio_vec for discards.  We've
-got rid of the discard payload allocated by the caller years ago.
-
-Obviously this wasn't actually harmful given how long it's been
-there, but it's still good to avoid the pointless allocation.
+Copy and past the REQ_OP_WRITE_SAME code to prepare to implementations
+that limit the write zeroes size.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/md/dm-io.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ block/blk-merge.c | 17 +++++++++++++++--
+ 1 file changed, 15 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/md/dm-io.c b/drivers/md/dm-io.c
-index 03940bf36f6c..b808cbe22678 100644
---- a/drivers/md/dm-io.c
-+++ b/drivers/md/dm-io.c
-@@ -328,11 +328,17 @@ static void do_region(int op, int op_flags, unsigned region,
- 		/*
- 		 * Allocate a suitably sized-bio.
- 		 */
--		if ((op == REQ_OP_DISCARD) || (op == REQ_OP_WRITE_SAME))
-+		switch (op) {
-+		case REQ_OP_DISCARD:
-+			num_bvecs = 0;
-+			break;
-+		case REQ_OP_WRITE_SAME:
- 			num_bvecs = 1;
--		else
-+			break;
-+		default:
- 			num_bvecs = min_t(int, BIO_MAX_PAGES,
- 					  dm_sector_div_up(remaining, (PAGE_SIZE >> SECTOR_SHIFT)));
-+		}
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index 2afa262425d1..3990ae406341 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -54,6 +54,20 @@ static struct bio *blk_bio_discard_split(struct request_queue *q,
+ 	return bio_split(bio, split_sectors, GFP_NOIO, bs);
+ }
  
- 		bio = bio_alloc_bioset(GFP_NOIO, num_bvecs, io->client->bios);
- 		bio->bi_iter.bi_sector = where->sector + (where->count - remaining);
++static struct bio *blk_bio_write_zeroes_split(struct request_queue *q,
++		struct bio *bio, struct bio_set *bs, unsigned *nsegs)
++{
++	*nsegs = 1;
++
++	if (!q->limits.max_write_zeroes_sectors)
++		return NULL;
++
++	if (bio_sectors(bio) <= q->limits.max_write_zeroes_sectors)
++		return NULL;
++
++	return bio_split(bio, q->limits.max_write_zeroes_sectors, GFP_NOIO, bs);
++}
++
+ static struct bio *blk_bio_write_same_split(struct request_queue *q,
+ 					    struct bio *bio,
+ 					    struct bio_set *bs,
+@@ -200,8 +214,7 @@ void blk_queue_split(struct request_queue *q, struct bio **bio,
+ 		split = blk_bio_discard_split(q, *bio, bs, &nsegs);
+ 		break;
+ 	case REQ_OP_WRITE_ZEROES:
+-		split = NULL;
+-		nsegs = (*bio)->bi_phys_segments;
++		split = blk_bio_write_zeroes_split(q, *bio, bs, &nsegs);
+ 		break;
+ 	case REQ_OP_WRITE_SAME:
+ 		split = blk_bio_write_same_split(q, *bio, bs, &nsegs);
 -- 
 2.11.0
