@@ -1,47 +1,72 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 21/27] mmc: remove the discard_zeroes_data flag
-Date: Wed,  5 Apr 2017 19:21:19 +0200
-Message-ID: <20170405172125.22600-22-hch@lst.de>
+Subject: [PATCH 27/27] scsi: sd: Remove LBPRZ dependency for discards
+Date: Wed,  5 Apr 2017 19:21:25 +0200
+Message-ID: <20170405172125.22600-28-hch@lst.de>
 References: <20170405172125.22600-1-hch@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170405172125.22600-1-hch@lst.de>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
+Sender: linux-block-owner@vger.kernel.org
 To: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, lars.ellenberg@linbit.com
-Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-mmc only supports discarding on large alignments, so the zeroing code
-would always fall back to explicit writings of zeroes.
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 
+Separating discards and zeroout operations allows us to remove the LBPRZ
+block zeroing constraints from discards and honor the device preferences
+for UNMAP commands.
+
+If supported by the device, we'll also choose UNMAP over one of the
+WRITE SAME variants for discards.
+
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/mmc/core/queue.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/scsi/sd.c | 25 ++++++-------------------
+ 1 file changed, 6 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/mmc/core/queue.c b/drivers/mmc/core/queue.c
-index 493eb10ce580..4c54ad34e17a 100644
---- a/drivers/mmc/core/queue.c
-+++ b/drivers/mmc/core/queue.c
-@@ -167,8 +167,6 @@ static void mmc_queue_setup_discard(struct request_queue *q,
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index acf9d17b05d8..8cf34a8e3eea 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -685,24 +685,11 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
+ 	unsigned int logical_block_size = sdkp->device->sector_size;
+ 	unsigned int max_blocks = 0;
  
- 	queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, q);
- 	blk_queue_max_discard_sectors(q, max_discard);
--	if (card->erased_byte == 0 && !mmc_can_discard(card))
--		q->limits.discard_zeroes_data = 1;
- 	q->limits.discard_granularity = card->pref_erase << 9;
- 	/* granularity must not be greater than max. discard */
- 	if (card->pref_erase > max_discard)
+-	/*
+-	 * When LBPRZ is reported, discard alignment and granularity
+-	 * must be fixed to the logical block size. Otherwise the block
+-	 * layer will drop misaligned portions of the request which can
+-	 * lead to data corruption. If LBPRZ is not set, we honor the
+-	 * device preference.
+-	 */
+-	if (sdkp->lbprz) {
+-		q->limits.discard_alignment = 0;
+-		q->limits.discard_granularity = logical_block_size;
+-	} else {
+-		q->limits.discard_alignment = sdkp->unmap_alignment *
+-			logical_block_size;
+-		q->limits.discard_granularity =
+-			max(sdkp->physical_block_size,
+-			    sdkp->unmap_granularity * logical_block_size);
+-	}
+-
++	q->limits.discard_alignment =
++		sdkp->unmap_alignment * logical_block_size;
++	q->limits.discard_granularity =
++		max(sdkp->physical_block_size,
++		    sdkp->unmap_granularity * logical_block_size);
+ 	sdkp->provisioning_mode = mode;
+ 
+ 	switch (mode) {
+@@ -2842,7 +2829,7 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ 				sd_config_discard(sdkp, SD_LBP_WS16);
+ 
+ 		} else {	/* LBP VPD page tells us what to use */
+-			if (sdkp->lbpu && sdkp->max_unmap_blocks && !sdkp->lbprz)
++			if (sdkp->lbpu && sdkp->max_unmap_blocks)
+ 				sd_config_discard(sdkp, SD_LBP_UNMAP);
+ 			else if (sdkp->lbpws)
+ 				sd_config_discard(sdkp, SD_LBP_WS16);
 -- 
 2.11.0
