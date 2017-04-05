@@ -1,41 +1,61 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: always use REQ_OP_WRITE_ZEROES for zeroing offload V2
-Date: Wed,  5 Apr 2017 19:20:58 +0200
-Message-ID: <20170405172125.22600-1-hch@lst.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 06/27] dm io: discards don't take a payload
+Date: Wed,  5 Apr 2017 19:21:04 +0200
+Message-ID: <20170405172125.22600-7-hch@lst.de>
+References: <20170405172125.22600-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20170405172125.22600-1-hch@lst.de>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, lars.ellenberg@linbit.com
+Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-This series makes REQ_OP_WRITE_ZEROES the only zeroing offload
-supported by the block layer, and switches existing implementations
-of REQ_OP_DISCARD that correctly set discard_zeroes_data to it,
-removes incorrect discard_zeroes_data, and also switches WRITE SAME
-based zeroing in SCSI to this new method.
+Fix up do_region to not allocate a bio_vec for discards.  We've
+got rid of the discard payload allocated by the caller years ago.
 
-The series is against the block for-next tree.
+Obviously this wasn't actually harmful given how long it's been
+there, but it's still good to avoid the pointless allocation.
 
-A git tree is also avaiable at:
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/md/dm-io.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-    git://git.infradead.org/users/hch/block.git discard-rework.2
-
-Gitweb:
-
-    http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/discard-rework.2
-
-Changes since V2:
- - various spelling fixes
- - various reviews captured
- - two new patches from Martin at the end
+diff --git a/drivers/md/dm-io.c b/drivers/md/dm-io.c
+index 03940bf36f6c..b808cbe22678 100644
+--- a/drivers/md/dm-io.c
++++ b/drivers/md/dm-io.c
+@@ -328,11 +328,17 @@ static void do_region(int op, int op_flags, unsigned region,
+ 		/*
+ 		 * Allocate a suitably sized-bio.
+ 		 */
+-		if ((op == REQ_OP_DISCARD) || (op == REQ_OP_WRITE_SAME))
++		switch (op) {
++		case REQ_OP_DISCARD:
++			num_bvecs = 0;
++			break;
++		case REQ_OP_WRITE_SAME:
+ 			num_bvecs = 1;
+-		else
++			break;
++		default:
+ 			num_bvecs = min_t(int, BIO_MAX_PAGES,
+ 					  dm_sector_div_up(remaining, (PAGE_SIZE >> SECTOR_SHIFT)));
++		}
+ 
+ 		bio = bio_alloc_bioset(GFP_NOIO, num_bvecs, io->client->bios);
+ 		bio->bi_iter.bi_sector = where->sector + (where->count - remaining);
+-- 
+2.11.0
