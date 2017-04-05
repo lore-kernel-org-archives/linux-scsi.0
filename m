@@ -1,154 +1,163 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 24/27] drbd: implement REQ_OP_WRITE_ZEROES
-Date: Wed,  5 Apr 2017 19:21:22 +0200
-Message-ID: <20170405172125.22600-25-hch@lst.de>
+Subject: [PATCH 26/27] scsi: sd: Separate zeroout and discard command choices
+Date: Wed,  5 Apr 2017 19:21:24 +0200
+Message-ID: <20170405172125.22600-27-hch@lst.de>
 References: <20170405172125.22600-1-hch@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170405172125.22600-1-hch@lst.de>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
+Sender: linux-block-owner@vger.kernel.org
 To: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, lars.ellenberg@linbit.com
-Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-It seems like DRBD assumes its on the wire TRIM request always zeroes data.
-Use that fact to implement REQ_OP_WRITE_ZEROES.
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 
+Now that zeroout and discards are distinct operations we need to
+separate the policy of choosing the appropriate command. Create a
+zeroing_mode which can be one of:
+
+write:			Zeroout assist not present, use regular WRITE
+writesame:		Allow WRITE SAME(10/16) with a zeroed payload
+writesame_16_unmap:	Allow WRITE SAME(16) with UNMAP
+writesame_10_unmap:	Allow WRITE SAME(10) with UNMAP
+
+The last two are conditional on the device being thin provisioned with
+LBPRZ=1 and LBPWS=1 or LBPWS10=1 respectively.
+
+Whether to set the UNMAP bit or not depends on the REQ_NOUNMAP flag. And
+if none of the _unmap variants are supported, regular WRITE SAME will be
+used if the device supports it.
+
+The zeroout_mode is exported in sysfs and the detected mode for a given
+device can be overridden using the string constants above.
+
+With this change in place we can now issue WRITE SAME(16) with UNMAP set
+for block zeroing applications that require hard guarantees and
+logical_block_size granularity. And at the same time use the UNMAP
+command with the device's preferred granulary and alignment for discard
+operations.
+
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/block/drbd/drbd_main.c     | 3 ++-
- drivers/block/drbd/drbd_nl.c       | 2 ++
- drivers/block/drbd/drbd_receiver.c | 6 +++---
- drivers/block/drbd/drbd_req.c      | 7 +++++--
- drivers/block/drbd/drbd_worker.c   | 4 +++-
- 5 files changed, 15 insertions(+), 7 deletions(-)
+ drivers/scsi/sd.c | 56 ++++++++++++++++++++++++++++++++++++++++++++++++++++---
+ drivers/scsi/sd.h |  8 ++++++++
+ 2 files changed, 61 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/block/drbd/drbd_main.c b/drivers/block/drbd/drbd_main.c
-index 92c60cbd04ee..8e62d9f65510 100644
---- a/drivers/block/drbd/drbd_main.c
-+++ b/drivers/block/drbd/drbd_main.c
-@@ -1668,7 +1668,8 @@ static u32 bio_flags_to_wire(struct drbd_connection *connection,
- 			(bio->bi_opf & REQ_FUA ? DP_FUA : 0) |
- 			(bio->bi_opf & REQ_PREFLUSH ? DP_FLUSH : 0) |
- 			(bio_op(bio) == REQ_OP_WRITE_SAME ? DP_WSAME : 0) |
--			(bio_op(bio) == REQ_OP_DISCARD ? DP_DISCARD : 0);
-+			(bio_op(bio) == REQ_OP_DISCARD ? DP_DISCARD : 0) |
-+			(bio_op(bio) == REQ_OP_WRITE_ZEROES ? DP_DISCARD : 0);
- 	else
- 		return bio->bi_opf & REQ_SYNC ? DP_RW_SYNC : 0;
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index bcb0cb020fd2..acf9d17b05d8 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -418,6 +418,46 @@ provisioning_mode_store(struct device *dev, struct device_attribute *attr,
  }
-diff --git a/drivers/block/drbd/drbd_nl.c b/drivers/block/drbd/drbd_nl.c
-index 908c704e20aa..e4516d3b971d 100644
---- a/drivers/block/drbd/drbd_nl.c
-+++ b/drivers/block/drbd/drbd_nl.c
-@@ -1217,10 +1217,12 @@ static void decide_on_discard_support(struct drbd_device *device,
- 		blk_queue_discard_granularity(q, 512);
- 		q->limits.max_discard_sectors = drbd_max_discard_sectors(connection);
- 		queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, q);
-+		q->limits.max_write_zeroes_sectors = drbd_max_discard_sectors(connection);
- 	} else {
- 		queue_flag_clear_unlocked(QUEUE_FLAG_DISCARD, q);
- 		blk_queue_discard_granularity(q, 0);
- 		q->limits.max_discard_sectors = 0;
-+		q->limits.max_write_zeroes_sectors = 0;
+ static DEVICE_ATTR_RW(provisioning_mode);
+ 
++static const char *zeroing_mode[] = {
++	[SD_ZERO_WRITE]		= "write",
++	[SD_ZERO_WS]		= "writesame",
++	[SD_ZERO_WS16_UNMAP]	= "writesame_16_unmap",
++	[SD_ZERO_WS10_UNMAP]	= "writesame_10_unmap",
++};
++
++static ssize_t
++zeroing_mode_show(struct device *dev, struct device_attribute *attr,
++		  char *buf)
++{
++	struct scsi_disk *sdkp = to_scsi_disk(dev);
++
++	return snprintf(buf, 20, "%s\n", zeroing_mode[sdkp->zeroing_mode]);
++}
++
++static ssize_t
++zeroing_mode_store(struct device *dev, struct device_attribute *attr,
++		   const char *buf, size_t count)
++{
++	struct scsi_disk *sdkp = to_scsi_disk(dev);
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -EACCES;
++
++	if (!strncmp(buf, zeroing_mode[SD_ZERO_WRITE], 20))
++		sdkp->zeroing_mode = SD_ZERO_WRITE;
++	else if (!strncmp(buf, zeroing_mode[SD_ZERO_WS], 20))
++		sdkp->zeroing_mode = SD_ZERO_WS;
++	else if (!strncmp(buf, zeroing_mode[SD_ZERO_WS16_UNMAP], 20))
++		sdkp->zeroing_mode = SD_ZERO_WS16_UNMAP;
++	else if (!strncmp(buf, zeroing_mode[SD_ZERO_WS10_UNMAP], 20))
++		sdkp->zeroing_mode = SD_ZERO_WS10_UNMAP;
++	else
++		return -EINVAL;
++
++	return count;
++}
++static DEVICE_ATTR_RW(zeroing_mode);
++
+ static ssize_t
+ max_medium_access_timeouts_show(struct device *dev,
+ 				struct device_attribute *attr, char *buf)
+@@ -496,6 +536,7 @@ static struct attribute *sd_disk_attrs[] = {
+ 	&dev_attr_app_tag_own.attr,
+ 	&dev_attr_thin_provisioning.attr,
+ 	&dev_attr_provisioning_mode.attr,
++	&dev_attr_zeroing_mode.attr,
+ 	&dev_attr_max_write_same_blocks.attr,
+ 	&dev_attr_max_medium_access_timeouts.attr,
+ 	NULL,
+@@ -799,10 +840,10 @@ static int sd_setup_write_zeroes_cmnd(struct scsi_cmnd *cmd)
+ 	u32 nr_sectors = blk_rq_sectors(rq) >> (ilog2(sdp->sector_size) - 9);
+ 
+ 	if (!(rq->cmd_flags & REQ_NOUNMAP)) {
+-		switch (sdkp->provisioning_mode) {
+-		case SD_LBP_WS16:
++		switch (sdkp->zeroing_mode) {
++		case SD_ZERO_WS16_UNMAP:
+ 			return sd_setup_write_same16_cmnd(cmd, true);
+-		case SD_LBP_WS10:
++		case SD_ZERO_WS10_UNMAP:
+ 			return sd_setup_write_same10_cmnd(cmd, true);
+ 		}
  	}
- }
+@@ -840,6 +881,15 @@ static void sd_config_write_same(struct scsi_disk *sdkp)
+ 		sdkp->max_ws_blocks = 0;
+ 	}
  
-diff --git a/drivers/block/drbd/drbd_receiver.c b/drivers/block/drbd/drbd_receiver.c
-index bc1d296581f9..1b0a2be24f39 100644
---- a/drivers/block/drbd/drbd_receiver.c
-+++ b/drivers/block/drbd/drbd_receiver.c
-@@ -2285,7 +2285,7 @@ static unsigned long wire_flags_to_bio_flags(u32 dpf)
- static unsigned long wire_flags_to_bio_op(u32 dpf)
- {
- 	if (dpf & DP_DISCARD)
--		return REQ_OP_DISCARD;
-+		return REQ_OP_WRITE_ZEROES;
- 	else
- 		return REQ_OP_WRITE;
- }
-@@ -2476,7 +2476,7 @@ static int receive_Data(struct drbd_connection *connection, struct packet_info *
- 	op_flags = wire_flags_to_bio_flags(dp_flags);
- 	if (pi->cmd == P_TRIM) {
- 		D_ASSERT(peer_device, peer_req->i.size > 0);
--		D_ASSERT(peer_device, op == REQ_OP_DISCARD);
-+		D_ASSERT(peer_device, op == REQ_OP_WRITE_ZEROES);
- 		D_ASSERT(peer_device, peer_req->pages == NULL);
- 	} else if (peer_req->pages == NULL) {
- 		D_ASSERT(device, peer_req->i.size == 0);
-@@ -4789,7 +4789,7 @@ static int receive_rs_deallocated(struct drbd_connection *connection, struct pac
++	if (sdkp->lbprz && sdkp->lbpws)
++		sdkp->zeroing_mode = SD_ZERO_WS16_UNMAP;
++	else if (sdkp->lbprz && sdkp->lbpws10)
++		sdkp->zeroing_mode = SD_ZERO_WS10_UNMAP;
++	else if (sdkp->max_ws_blocks)
++		sdkp->zeroing_mode = SD_ZERO_WS;
++	else
++		sdkp->zeroing_mode = SD_ZERO_WRITE;
++
+ out:
+ 	blk_queue_max_write_same_sectors(q, sdkp->max_ws_blocks *
+ 					 (logical_block_size >> 9));
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 4dac35e96a75..a2c4b5c35379 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -59,6 +59,13 @@ enum {
+ 	SD_LBP_DISABLE,		/* Discard disabled due to failed cmd */
+ };
  
- 	if (get_ldev(device)) {
- 		struct drbd_peer_request *peer_req;
--		const int op = REQ_OP_DISCARD;
-+		const int op = REQ_OP_WRITE_ZEROES;
- 
- 		peer_req = drbd_alloc_peer_req(peer_device, ID_SYNCER, sector,
- 					       size, 0, GFP_NOIO);
-diff --git a/drivers/block/drbd/drbd_req.c b/drivers/block/drbd/drbd_req.c
-index 6da9ea8c48b6..b5730e17b455 100644
---- a/drivers/block/drbd/drbd_req.c
-+++ b/drivers/block/drbd/drbd_req.c
-@@ -59,6 +59,7 @@ static struct drbd_request *drbd_req_new(struct drbd_device *device, struct bio
- 	drbd_req_make_private_bio(req, bio_src);
- 	req->rq_state = (bio_data_dir(bio_src) == WRITE ? RQ_WRITE : 0)
- 		      | (bio_op(bio_src) == REQ_OP_WRITE_SAME ? RQ_WSAME : 0)
-+		      | (bio_op(bio_src) == REQ_OP_WRITE_ZEROES ? RQ_UNMAP : 0)
- 		      | (bio_op(bio_src) == REQ_OP_DISCARD ? RQ_UNMAP : 0);
- 	req->device = device;
- 	req->master_bio = bio_src;
-@@ -1180,7 +1181,8 @@ drbd_submit_req_private_bio(struct drbd_request *req)
- 	if (get_ldev(device)) {
- 		if (drbd_insert_fault(device, type))
- 			bio_io_error(bio);
--		else if (bio_op(bio) == REQ_OP_DISCARD)
-+		else if (bio_op(bio) == REQ_OP_WRITE_ZEROES ||
-+			 bio_op(bio) == REQ_OP_DISCARD)
- 			drbd_process_discard_req(req);
- 		else
- 			generic_make_request(bio);
-@@ -1234,7 +1236,8 @@ drbd_request_prepare(struct drbd_device *device, struct bio *bio, unsigned long
- 	_drbd_start_io_acct(device, req);
- 
- 	/* process discards always from our submitter thread */
--	if (bio_op(bio) & REQ_OP_DISCARD)
-+	if ((bio_op(bio) & REQ_OP_WRITE_ZEROES) ||
-+	    (bio_op(bio) & REQ_OP_DISCARD))
- 		goto queue_for_submitter_thread;
- 
- 	if (rw == WRITE && req->private_bio && req->i.size
-diff --git a/drivers/block/drbd/drbd_worker.c b/drivers/block/drbd/drbd_worker.c
-index 3bff33f21435..1afcb4e02d8d 100644
---- a/drivers/block/drbd/drbd_worker.c
-+++ b/drivers/block/drbd/drbd_worker.c
-@@ -174,7 +174,8 @@ void drbd_peer_request_endio(struct bio *bio)
- 	struct drbd_peer_request *peer_req = bio->bi_private;
- 	struct drbd_device *device = peer_req->peer_device->device;
- 	bool is_write = bio_data_dir(bio) == WRITE;
--	bool is_discard = !!(bio_op(bio) == REQ_OP_DISCARD);
-+	bool is_discard = bio_op(bio) == REQ_OP_WRITE_ZEROES ||
-+			  bio_op(bio) == REQ_OP_DISCARD;
- 
- 	if (bio->bi_error && __ratelimit(&drbd_ratelimit_state))
- 		drbd_warn(device, "%s: error=%d s=%llus\n",
-@@ -249,6 +250,7 @@ void drbd_request_endio(struct bio *bio)
- 	/* to avoid recursion in __req_mod */
- 	if (unlikely(bio->bi_error)) {
- 		switch (bio_op(bio)) {
-+		case REQ_OP_WRITE_ZEROES:
- 		case REQ_OP_DISCARD:
- 			if (bio->bi_error == -EOPNOTSUPP)
- 				what = DISCARD_COMPLETED_NOTSUPP;
++enum {
++	SD_ZERO_WRITE = 0,	/* Use WRITE(10/16) command */
++	SD_ZERO_WS,		/* Use WRITE SAME(10/16) command */
++	SD_ZERO_WS16_UNMAP,	/* Use WRITE SAME(16) with UNMAP */
++	SD_ZERO_WS10_UNMAP,	/* Use WRITE SAME(10) with UNMAP */
++};
++
+ struct scsi_disk {
+ 	struct scsi_driver *driver;	/* always &sd_template */
+ 	struct scsi_device *device;
+@@ -89,6 +96,7 @@ struct scsi_disk {
+ 	u8		write_prot;
+ 	u8		protection_type;/* Data Integrity Field */
+ 	u8		provisioning_mode;
++	u8		zeroing_mode;
+ 	unsigned	ATO : 1;	/* state of disk ATO bit */
+ 	unsigned	cache_override : 1; /* temp override of WCE,RCD */
+ 	unsigned	WCE : 1;	/* state of disk WCE bit */
 -- 
 2.11.0
