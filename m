@@ -1,39 +1,52 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: Re: always use REQ_OP_WRITE_ZEROES for zeroing offload
-Date: Wed, 5 Apr 2017 14:08:26 +0200
-Message-ID: <20170405120826.GA2275@lst.de>
-References: <20170331163313.31821-1-hch@lst.de> <yq1vaqjt74b.fsf@oracle.com>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 4/4] mtd: nand: nandsim: convert to memalloc_noreclaim_*()
+Date: Wed, 5 Apr 2017 14:09:36 +0200
+Message-ID: <20170405120936.GN6035@dhcp22.suse.cz>
+References: <20170405074700.29871-1-vbabka@suse.cz>
+ <20170405074700.29871-5-vbabka@suse.cz>
+ <20170405113157.GM6035@dhcp22.suse.cz>
+ <ee6649ed-b0e8-1c59-c193-d1688fdfe7f5@nod.at>
+ <9b9d5bca-e125-e07b-b700-196cc800bbd7@suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <yq1vaqjt74b.fsf-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+In-Reply-To: <9b9d5bca-e125-e07b-b700-196cc800bbd7@suse.cz>
+Sender: owner-linux-mm@kvack.org
+To: Vlastimil Babka <vbabka@suse.cz>
+Cc: Richard Weinberger <richard@nod.at>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Mel Gorman <mgorman@techsingularity.net>, Johannes Weiner <hannes@cmpxchg.org>, linux-block@vger.kernel.org, nbd-general@lists.sourceforge.net, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, Boris Brezillon <boris.brezillon@free-electrons.com>, Adrian Hunter <adrian.hunter@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Apr 05, 2017 at 07:40:36AM -0400, Martin K. Petersen wrote:
-> > This series makes REQ_OP_WRITE_ZEROES the only zeroing offload
-> > supported by the block layer, and switches existing implementations
-> > of REQ_OP_DISCARD that correctly set discard_zeroes_data to it,
-> > removes incorrect discard_zeroes_data, and also switches WRITE SAME
-> > based zeroing in SCSI to this new method.
+On Wed 05-04-17 13:39:16, Vlastimil Babka wrote:
+> On 04/05/2017 01:36 PM, Richard Weinberger wrote:
+> > Michal,
+> > 
+> > Am 05.04.2017 um 13:31 schrieb Michal Hocko:
+> >> On Wed 05-04-17 09:47:00, Vlastimil Babka wrote:
+> >>> Nandsim has own functions set_memalloc() and clear_memalloc() for robust
+> >>> setting and clearing of PF_MEMALLOC. Replace them by the new generic helpers.
+> >>> No functional change.
+> >>
+> >> This one smells like an abuser. Why the hell should read/write path
+> >> touch memory reserves at all!
+> > 
+> > Could be. Let's ask Adrian, AFAIK he wrote that code.
+> > Adrian, can you please clarify why nandsim needs to play with PF_MEMALLOC?
 > 
-> Very, very nice. I think this is the correct approach.
-> 
-> I'm going to send two follow-up patches that allow us to use UNMAP for
-> discards and WRITE SAME w/ UNMAP for zeroout. That appears to be the
-> preferred configuration for most storage devices.
+> I was thinking about it and concluded that since the simulator can be
+> used as a block device where reclaimed pages go to, writing the data out
+> is a memalloc operation. Then reading can be called as part of r-m-w
+> cycle, so reading as well. But it would be great if somebody more
+> knowledgeable confirmed this.
 
-Thanks, I'll resend it with your nitpicks fixed, your follow on
-patches tacked on and the various reviewed-by tags in a bit.
+then this deserves a big fat comment explaining all the details,
+including how the complete depletion of reserves is prevented.
+-- 
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
