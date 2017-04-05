@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 18/27] brd: remove discard support
-Date: Wed,  5 Apr 2017 19:21:16 +0200
-Message-ID: <20170405172125.22600-19-hch@lst.de>
+Subject: [PATCH 16/27] zram: implement REQ_OP_WRITE_ZEROES
+Date: Wed,  5 Apr 2017 19:21:14 +0200
+Message-ID: <20170405172125.22600-17-hch@lst.de>
 References: <20170405172125.22600-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,107 +21,54 @@ To: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.
 Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-It's just a in-driver reimplementation of writing zeroes to the pages,
-which fails if the discards aren't page aligned.
+Just the same as discard if the block size equals the system page size.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/block/brd.c | 54 -----------------------------------------------------
- 1 file changed, 54 deletions(-)
+ drivers/block/zram/zram_drv.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/block/brd.c b/drivers/block/brd.c
-index 3adc32a3153b..4ec84d504780 100644
---- a/drivers/block/brd.c
-+++ b/drivers/block/brd.c
-@@ -134,28 +134,6 @@ static struct page *brd_insert_page(struct brd_device *brd, sector_t sector)
- 	return page;
- }
- 
--static void brd_free_page(struct brd_device *brd, sector_t sector)
--{
--	struct page *page;
--	pgoff_t idx;
--
--	spin_lock(&brd->brd_lock);
--	idx = sector >> PAGE_SECTORS_SHIFT;
--	page = radix_tree_delete(&brd->brd_pages, idx);
--	spin_unlock(&brd->brd_lock);
--	if (page)
--		__free_page(page);
--}
--
--static void brd_zero_page(struct brd_device *brd, sector_t sector)
--{
--	struct page *page;
--
--	page = brd_lookup_page(brd, sector);
--	if (page)
--		clear_highpage(page);
--}
--
- /*
-  * Free all backing store pages and radix tree. This must only be called when
-  * there are no other users of the device.
-@@ -212,24 +190,6 @@ static int copy_to_brd_setup(struct brd_device *brd, sector_t sector, size_t n)
- 	return 0;
- }
- 
--static void discard_from_brd(struct brd_device *brd,
--			sector_t sector, size_t n)
--{
--	while (n >= PAGE_SIZE) {
--		/*
--		 * Don't want to actually discard pages here because
--		 * re-allocating the pages can result in writeback
--		 * deadlocks under heavy load.
--		 */
--		if (0)
--			brd_free_page(brd, sector);
--		else
--			brd_zero_page(brd, sector);
--		sector += PAGE_SIZE >> SECTOR_SHIFT;
--		n -= PAGE_SIZE;
--	}
--}
--
- /*
-  * Copy n bytes from src to the brd starting at sector. Does not sleep.
-  */
-@@ -338,14 +298,6 @@ static blk_qc_t brd_make_request(struct request_queue *q, struct bio *bio)
- 	if (bio_end_sector(bio) > get_capacity(bdev->bd_disk))
- 		goto io_error;
+diff --git a/drivers/block/zram/zram_drv.c b/drivers/block/zram/zram_drv.c
+index dceb5edd1e54..1710b06f04a7 100644
+--- a/drivers/block/zram/zram_drv.c
++++ b/drivers/block/zram/zram_drv.c
+@@ -829,10 +829,14 @@ static void __zram_make_request(struct zram *zram, struct bio *bio)
+ 	offset = (bio->bi_iter.bi_sector &
+ 		  (SECTORS_PER_PAGE - 1)) << SECTOR_SHIFT;
  
 -	if (unlikely(bio_op(bio) == REQ_OP_DISCARD)) {
--		if (sector & ((PAGE_SIZE >> SECTOR_SHIFT) - 1) ||
--		    bio->bi_iter.bi_size & ~PAGE_MASK)
--			goto io_error;
--		discard_from_brd(brd, sector, bio->bi_iter.bi_size);
--		goto out;
--	}
--
- 	bio_for_each_segment(bvec, bio, iter) {
- 		unsigned int len = bvec.bv_len;
- 		int err;
-@@ -357,7 +309,6 @@ static blk_qc_t brd_make_request(struct request_queue *q, struct bio *bio)
- 		sector += len >> SECTOR_SHIFT;
++	switch (bio_op(bio)) {
++	case REQ_OP_DISCARD:
++	case REQ_OP_WRITE_ZEROES:
+ 		zram_bio_discard(zram, index, offset, bio);
+ 		bio_endio(bio);
+ 		return;
++	default:
++		break;
  	}
  
--out:
- 	bio_endio(bio);
- 	return BLK_QC_T_NONE;
- io_error:
-@@ -464,11 +415,6 @@ static struct brd_device *brd_alloc(int i)
- 	 *  is harmless)
+ 	bio_for_each_segment(bvec, bio, iter) {
+@@ -1192,6 +1196,8 @@ static int zram_add(void)
+ 	zram->disk->queue->limits.max_sectors = SECTORS_PER_PAGE;
+ 	zram->disk->queue->limits.chunk_sectors = 0;
+ 	blk_queue_max_discard_sectors(zram->disk->queue, UINT_MAX);
++	queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, zram->disk->queue);
++
+ 	/*
+ 	 * zram_bio_discard() will clear all logical blocks if logical block
+ 	 * size is identical with physical block size(PAGE_SIZE). But if it is
+@@ -1201,10 +1207,7 @@ static int zram_add(void)
+ 	 * zeroed.
  	 */
- 	blk_queue_physical_block_size(brd->brd_queue, PAGE_SIZE);
--
--	brd->brd_queue->limits.discard_granularity = PAGE_SIZE;
--	blk_queue_max_discard_sectors(brd->brd_queue, UINT_MAX);
--	brd->brd_queue->limits.discard_zeroes_data = 1;
--	queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, brd->brd_queue);
- #ifdef CONFIG_BLK_DEV_RAM_DAX
- 	queue_flag_set_unlocked(QUEUE_FLAG_DAX, brd->brd_queue);
- #endif
+ 	if (ZRAM_LOGICAL_BLOCK_SIZE == PAGE_SIZE)
+-		zram->disk->queue->limits.discard_zeroes_data = 1;
+-	else
+-		zram->disk->queue->limits.discard_zeroes_data = 0;
+-	queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, zram->disk->queue);
++		blk_queue_max_write_zeroes_sectors(zram->disk->queue, UINT_MAX);
+ 
+ 	add_disk(zram->disk);
+ 
 -- 
 2.11.0
