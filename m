@@ -1,71 +1,47 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 03/27] block: implement splitting of
-	REQ_OP_WRITE_ZEROES bios
-Date: Wed,  5 Apr 2017 16:21:41 +0200
-Message-ID: <20170405142205.6477-4-hch@lst.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 08/27] dm kcopyd: switch to use REQ_OP_WRITE_ZEROES
+Date: Wed,  5 Apr 2017 16:21:46 +0200
+Message-ID: <20170405142205.6477-9-hch@lst.de>
 References: <20170405142205.6477-1-hch@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-In-Reply-To: <20170405142205.6477-1-hch-jcswGhMUV9g@public.gmane.org>
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170405142205.6477-1-hch@lst.de>
+Sender: linux-raid-owner@vger.kernel.org
+To: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, lars.ellenberg@linbit.com
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Copy and past the REQ_OP_WRITE_SAME code to prepare to implementations
-that limit the write zeroes size.
+It seems like the code currently passes whatever it was using for writes
+to WRITE SAME.  Just switch it to WRITE ZEROES, although that doesn't
+need any payload.
 
-Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Reviewed-by: Martin K. Petersen <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Reviewed-by: Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>
+Untested, and confused by the code, maybe someone who understands it
+better than me can help..
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- block/blk-merge.c | 17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
+ drivers/md/dm-kcopyd.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 2afa262425d1..3990ae406341 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -54,6 +54,20 @@ static struct bio *blk_bio_discard_split(struct request_queue *q,
- 	return bio_split(bio, split_sectors, GFP_NOIO, bs);
- }
+diff --git a/drivers/md/dm-kcopyd.c b/drivers/md/dm-kcopyd.c
+index 9e9d04cb7d51..f85846741d50 100644
+--- a/drivers/md/dm-kcopyd.c
++++ b/drivers/md/dm-kcopyd.c
+@@ -733,11 +733,11 @@ int dm_kcopyd_copy(struct dm_kcopyd_client *kc, struct dm_io_region *from,
+ 		job->pages = &zero_page_list;
  
-+static struct bio *blk_bio_write_zeroes_split(struct request_queue *q,
-+		struct bio *bio, struct bio_set *bs, unsigned *nsegs)
-+{
-+	*nsegs = 1;
-+
-+	if (!q->limits.max_write_zeroes_sectors)
-+		return NULL;
-+
-+	if (bio_sectors(bio) <= q->limits.max_write_zeroes_sectors)
-+		return NULL;
-+
-+	return bio_split(bio, q->limits.max_write_zeroes_sectors, GFP_NOIO, bs);
-+}
-+
- static struct bio *blk_bio_write_same_split(struct request_queue *q,
- 					    struct bio *bio,
- 					    struct bio_set *bs,
-@@ -200,8 +214,7 @@ void blk_queue_split(struct request_queue *q, struct bio **bio,
- 		split = blk_bio_discard_split(q, *bio, bs, &nsegs);
- 		break;
- 	case REQ_OP_WRITE_ZEROES:
--		split = NULL;
--		nsegs = (*bio)->bi_phys_segments;
-+		split = blk_bio_write_zeroes_split(q, *bio, bs, &nsegs);
- 		break;
- 	case REQ_OP_WRITE_SAME:
- 		split = blk_bio_write_same_split(q, *bio, bs, &nsegs);
+ 		/*
+-		 * Use WRITE SAME to optimize zeroing if all dests support it.
++		 * Use WRITE ZEROES to optimize zeroing if all dests support it.
+ 		 */
+-		job->rw = REQ_OP_WRITE_SAME;
++		job->rw = REQ_OP_WRITE_ZEROES;
+ 		for (i = 0; i < job->num_dests; i++)
+-			if (!bdev_write_same(job->dests[i].bdev)) {
++			if (!bdev_write_zeroes_sectors(job->dests[i].bdev)) {
+ 				job->rw = WRITE;
+ 				break;
+ 			}
 -- 
 2.11.0
+
