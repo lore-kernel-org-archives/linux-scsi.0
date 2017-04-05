@@ -1,15 +1,15 @@
 From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 15/25] nvme: implement REQ_OP_WRITE_ZEROES
-Date: Wed, 05 Apr 2017 07:49:31 -0400
-Message-ID: <yq1k26zrs50.fsf@oracle.com>
+Subject: Re: [PATCH 22/25] block: stop using discards for zeroing
+Date: Wed, 05 Apr 2017 07:55:39 -0400
+Message-ID: <yq1fuhnrrus.fsf@oracle.com>
 References: <20170331163313.31821-1-hch@lst.de>
-	<20170331163313.31821-16-hch@lst.de>
+	<20170331163313.31821-23-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-In-Reply-To: <20170331163313.31821-16-hch-jcswGhMUV9g@public.gmane.org> (Christoph Hellwig's message
-	of "Fri, 31 Mar 2017 18:33:03 +0200")
+In-Reply-To: <20170331163313.31821-23-hch-jcswGhMUV9g@public.gmane.org> (Christoph Hellwig's message
+	of "Fri, 31 Mar 2017 18:33:10 +0200")
 List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
 	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
 List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
@@ -25,9 +25,31 @@ List-Id: linux-scsi@vger.kernel.org
 
 Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org> writes:
 
-> But now for the real NVMe Write Zeroes yet, just to get rid of the
-> discard abuse for zeroing.  Also rename the quirk flag to be a bit
-> more self-explanatory.
+> Now that we have REQ_OP_WRITE_ZEROES implemented for all devices that
+> support efficient zeroing of devices we can remove the call to
+
+s/of devices/
+
+> blkdev_issue_discard.  This means we only have two ways of zeroing
+> left and can simply the code.
+
+simplify
+
+> + *  Note that this function may fail with -EOPNOTSUPP if the driver supports
+> + *  efficient zeroing operation, but the device capabilities can only be
+> + *  discovered by trial and error.  In this case the caller should call the
+> + *  function again, and it will use the fallback path.
+
+Maybe:
+
+"Note that this function may fail with -EOPNOTSUPP if the driver signals
+zeroing offload support but the device fails to process the command (for
+some devices there is no non-destructive way to verify whether this
+operation is actually supported). If -EOPNOTSUPP is returned, the caller
+should retry the blkdev_issue_zeroout() and the fallback path will be
+used."
+
+Otherwise OK.
 
 Reviewed-by: Martin K. Petersen <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 
