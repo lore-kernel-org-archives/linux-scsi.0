@@ -1,8 +1,8 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 09/27] block: stop using blkdev_issue_write_same
-	for zeroing
-Date: Wed,  5 Apr 2017 19:21:07 +0200
-Message-ID: <20170405172125.22600-10-hch@lst.de>
+Subject: [PATCH 12/27] block: add a new BLKDEV_ZERO_NOFALLBACK
+	flag
+Date: Wed,  5 Apr 2017 19:21:10 +0200
+Message-ID: <20170405172125.22600-13-hch@lst.de>
 References: <20170405172125.22600-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,29 +22,54 @@ To: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.
 Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-We'll always use the WRITE ZEROES code for zeroing now.
+This avoids fallbacks to explicit zeroing in (__)blkdev_issue_zeroout if
+the caller doesn't want them.
+
+Also clean up the convoluted check for the return condition that this
+new flag is added to.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- block/blk-lib.c | 4 ----
- 1 file changed, 4 deletions(-)
+ block/blk-lib.c        | 5 ++++-
+ include/linux/blkdev.h | 1 +
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/block/blk-lib.c b/block/blk-lib.c
-index e5b853f2b8a2..2a8d638544a7 100644
+index 2f6d2cb2e1a2..2f882e22890b 100644
 --- a/block/blk-lib.c
 +++ b/block/blk-lib.c
-@@ -364,10 +364,6 @@ int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
- 			return 0;
- 	}
+@@ -281,6 +281,9 @@ static int __blkdev_issue_write_zeroes(struct block_device *bdev,
+  *
+  *  If a device is using logical block provisioning, the underlying space will
+  *  not be released if %flags contains BLKDEV_ZERO_NOUNMAP.
++ *
++ *  If %flags contains BLKDEV_ZERO_NOFALLBACK, the function will return
++ *  -EOPNOTSUPP if no explicit hardware offload for zeroing is provided.
+  */
+ int __blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
+ 		sector_t nr_sects, gfp_t gfp_mask, struct bio **biop,
+@@ -298,7 +301,7 @@ int __blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
  
--	if (!blkdev_issue_write_same(bdev, sector, nr_sects, gfp_mask,
--			ZERO_PAGE(0)))
--		return 0;
--
- 	blk_start_plug(&plug);
- 	ret = __blkdev_issue_zeroout(bdev, sector, nr_sects, gfp_mask,
- 			&bio, discard);
+ 	ret = __blkdev_issue_write_zeroes(bdev, sector, nr_sects, gfp_mask,
+ 			biop, flags);
+-	if (ret == 0 || (ret && ret != -EOPNOTSUPP))
++	if (ret != -EOPNOTSUPP || (flags & BLKDEV_ZERO_NOFALLBACK))
+ 		goto out;
+ 
+ 	ret = 0;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index e7513ce3dbde..a5055d760661 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1351,6 +1351,7 @@ extern int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+ 		struct bio **biop);
+ 
+ #define BLKDEV_ZERO_NOUNMAP	(1 << 0)  /* do not free blocks */
++#define BLKDEV_ZERO_NOFALLBACK	(1 << 1)  /* don't write explicit zeroes */
+ 
+ extern int __blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
+ 		sector_t nr_sects, gfp_t gfp_mask, struct bio **biop,
 -- 
 2.11.0
