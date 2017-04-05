@@ -1,100 +1,71 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 15/27] nvme: implement REQ_OP_WRITE_ZEROES
-Date: Wed,  5 Apr 2017 16:21:53 +0200
-Message-ID: <20170405142205.6477-16-hch@lst.de>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: [PATCH 03/27] block: implement splitting of
+	REQ_OP_WRITE_ZEROES bios
+Date: Wed,  5 Apr 2017 16:21:41 +0200
+Message-ID: <20170405142205.6477-4-hch@lst.de>
 References: <20170405142205.6477-1-hch@lst.de>
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170405142205.6477-1-hch@lst.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, lars.ellenberg@linbit.com
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+In-Reply-To: <20170405142205.6477-1-hch-jcswGhMUV9g@public.gmane.org>
+List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
+List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
+Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-But now for the real NVMe Write Zeroes yet, just to get rid of the
-discard abuse for zeroing.  Also rename the quirk flag to be a bit
-more self-explanatory.
+Copy and past the REQ_OP_WRITE_SAME code to prepare to implementations
+that limit the write zeroes size.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Reviewed-by: Martin K. Petersen <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Reviewed-by: Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>
 ---
- drivers/nvme/host/core.c | 10 +++++-----
- drivers/nvme/host/nvme.h |  6 +++---
- drivers/nvme/host/pci.c  |  6 +++---
- 3 files changed, 11 insertions(+), 11 deletions(-)
+ block/blk-merge.c | 17 +++++++++++++++--
+ 1 file changed, 15 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index 3c908e1bc903..26d5129a640a 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -358,6 +358,8 @@ int nvme_setup_cmd(struct nvme_ns *ns, struct request *req,
- 	case REQ_OP_FLUSH:
- 		nvme_setup_flush(ns, cmd);
- 		break;
-+	case REQ_OP_WRITE_ZEROES:
-+		/* currently only aliased to deallocate for a few ctrls: */
- 	case REQ_OP_DISCARD:
- 		ret = nvme_setup_discard(ns, req, cmd);
- 		break;
-@@ -923,16 +925,14 @@ static void nvme_config_discard(struct nvme_ns *ns)
- 	BUILD_BUG_ON(PAGE_SIZE / sizeof(struct nvme_dsm_range) <
- 			NVME_DSM_MAX_RANGES);
- 
--	if (ctrl->quirks & NVME_QUIRK_DISCARD_ZEROES)
--		ns->queue->limits.discard_zeroes_data = 1;
--	else
--		ns->queue->limits.discard_zeroes_data = 0;
--
- 	ns->queue->limits.discard_alignment = logical_block_size;
- 	ns->queue->limits.discard_granularity = logical_block_size;
- 	blk_queue_max_discard_sectors(ns->queue, UINT_MAX);
- 	blk_queue_max_discard_segments(ns->queue, NVME_DSM_MAX_RANGES);
- 	queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, ns->queue);
-+
-+	if (ctrl->quirks & NVME_QUIRK_DEALLOCATE_ZEROES)
-+		blk_queue_max_write_zeroes_sectors(ns->queue, UINT_MAX);
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index 2afa262425d1..3990ae406341 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -54,6 +54,20 @@ static struct bio *blk_bio_discard_split(struct request_queue *q,
+ 	return bio_split(bio, split_sectors, GFP_NOIO, bs);
  }
  
- static int nvme_revalidate_ns(struct nvme_ns *ns, struct nvme_id_ns **id)
-diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
-index 227f281482db..f903726eeb68 100644
---- a/drivers/nvme/host/nvme.h
-+++ b/drivers/nvme/host/nvme.h
-@@ -68,10 +68,10 @@ enum nvme_quirks {
- 	NVME_QUIRK_IDENTIFY_CNS			= (1 << 1),
- 
- 	/*
--	 * The controller deterministically returns O's on reads to discarded
--	 * logical blocks.
-+	 * The controller deterministically returns O's on reads to
-+	 * logical blocks that deallocate was called on.
- 	 */
--	NVME_QUIRK_DISCARD_ZEROES		= (1 << 2),
-+	NVME_QUIRK_DEALLOCATE_ZEROES		= (1 << 2),
- 
- 	/*
- 	 * The controller needs a delay before starts checking the device
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index 9e686a67d93b..cb530a6bef3f 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -2113,13 +2113,13 @@ static const struct pci_error_handlers nvme_err_handler = {
- static const struct pci_device_id nvme_id_table[] = {
- 	{ PCI_VDEVICE(INTEL, 0x0953),
- 		.driver_data = NVME_QUIRK_STRIPE_SIZE |
--				NVME_QUIRK_DISCARD_ZEROES, },
-+				NVME_QUIRK_DEALLOCATE_ZEROES, },
- 	{ PCI_VDEVICE(INTEL, 0x0a53),
- 		.driver_data = NVME_QUIRK_STRIPE_SIZE |
--				NVME_QUIRK_DISCARD_ZEROES, },
-+				NVME_QUIRK_DEALLOCATE_ZEROES, },
- 	{ PCI_VDEVICE(INTEL, 0x0a54),
- 		.driver_data = NVME_QUIRK_STRIPE_SIZE |
--				NVME_QUIRK_DISCARD_ZEROES, },
-+				NVME_QUIRK_DEALLOCATE_ZEROES, },
- 	{ PCI_VDEVICE(INTEL, 0x5845),	/* Qemu emulated controller */
- 		.driver_data = NVME_QUIRK_IDENTIFY_CNS, },
- 	{ PCI_DEVICE(0x1c58, 0x0003),	/* HGST adapter */
++static struct bio *blk_bio_write_zeroes_split(struct request_queue *q,
++		struct bio *bio, struct bio_set *bs, unsigned *nsegs)
++{
++	*nsegs = 1;
++
++	if (!q->limits.max_write_zeroes_sectors)
++		return NULL;
++
++	if (bio_sectors(bio) <= q->limits.max_write_zeroes_sectors)
++		return NULL;
++
++	return bio_split(bio, q->limits.max_write_zeroes_sectors, GFP_NOIO, bs);
++}
++
+ static struct bio *blk_bio_write_same_split(struct request_queue *q,
+ 					    struct bio *bio,
+ 					    struct bio_set *bs,
+@@ -200,8 +214,7 @@ void blk_queue_split(struct request_queue *q, struct bio **bio,
+ 		split = blk_bio_discard_split(q, *bio, bs, &nsegs);
+ 		break;
+ 	case REQ_OP_WRITE_ZEROES:
+-		split = NULL;
+-		nsegs = (*bio)->bi_phys_segments;
++		split = blk_bio_write_zeroes_split(q, *bio, bs, &nsegs);
+ 		break;
+ 	case REQ_OP_WRITE_SAME:
+ 		split = blk_bio_write_same_split(q, *bio, bs, &nsegs);
 -- 
 2.11.0
-
