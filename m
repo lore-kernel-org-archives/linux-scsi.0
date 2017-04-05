@@ -1,16 +1,15 @@
 From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 13/25] block_dev: use blkdev_issue_zerout for
-	hole punches
-Date: Wed, 05 Apr 2017 07:48:24 -0400
-Message-ID: <yq1shlnrs6v.fsf@oracle.com>
+Subject: Re: [PATCH 14/25] sd: implement unmapping Write Zeroes
+Date: Wed, 05 Apr 2017 07:48:51 -0400
+Message-ID: <yq1o9wbrs64.fsf@oracle.com>
 References: <20170331163313.31821-1-hch@lst.de>
-	<20170331163313.31821-14-hch@lst.de>
+	<20170331163313.31821-15-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-In-Reply-To: <20170331163313.31821-14-hch-jcswGhMUV9g@public.gmane.org> (Christoph Hellwig's message
-	of "Fri, 31 Mar 2017 18:33:01 +0200")
+In-Reply-To: <20170331163313.31821-15-hch-jcswGhMUV9g@public.gmane.org> (Christoph Hellwig's message
+	of "Fri, 31 Mar 2017 18:33:02 +0200")
 List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
 	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
 List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
@@ -26,9 +25,8 @@ List-Id: linux-scsi@vger.kernel.org
 
 Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org> writes:
 
-> This gets us support for non-discard efficient write of zeroes
-> (e.g. NVMe) and prepare for removing the discard_zeroes_data flag.
-                         s
+> Try to use a write same with unmap bit variant if the device supports it
+> and the caller allows for it.
 
 Reviewed-by: Martin K. Petersen <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 
