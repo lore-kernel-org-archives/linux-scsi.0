@@ -1,101 +1,79 @@
 From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
-Subject: Re: [PATCH] scsi: ses: don't get power status of SES device slot on
- probe
-Date: Wed, 5 Apr 2017 10:13:15 -0300
-Message-ID: <1f73a9c2-8f59-2636-0685-3ede755648aa@linux.vnet.ibm.com>
-References: <1490835730-13181-1-git-send-email-mauricfo@linux.vnet.ibm.com>
- <CAPcyv4jqgh97JVnWMFC5kLJDeu6zaY2zZtaYAHTM0w2a0hBmSw@mail.gmail.com>
+Subject: Re: [lpfc 05/19] Fix driver unload/reload operation.
+Date: Wed, 5 Apr 2017 10:30:37 -0300
+Message-ID: <3b1f61b8-e8bb-84b7-0a94-a7b1c2b98545@linux.vnet.ibm.com>
+References: <1491326232-11255-1-git-send-email-rkennedy@broadcom.com>
+ <1491326232-11255-6-git-send-email-rkennedy@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:37087 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753722AbdDENNb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Apr 2017 09:13:31 -0400
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v35D8iD5115163
-        for <linux-scsi@vger.kernel.org>; Wed, 5 Apr 2017 09:13:31 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:50915 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1754342AbdDENbU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Apr 2017 09:31:20 -0400
+Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v35DT52t054156
+        for <linux-scsi@vger.kernel.org>; Wed, 5 Apr 2017 09:31:19 -0400
 Received: from e24smtp03.br.ibm.com (e24smtp03.br.ibm.com [32.104.18.24])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 29n075ks12-1
+        by mx0a-001b2d01.pphosted.com with ESMTP id 29mytgp14v-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Apr 2017 09:13:30 -0400
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Apr 2017 09:31:19 -0400
 Received: from localhost
         by e24smtp03.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-scsi@vger.kernel.org> from <mauricfo@linux.vnet.ibm.com>;
-        Wed, 5 Apr 2017 10:13:28 -0300
-Received: from d24av04.br.ibm.com (d24av04.br.ibm.com [9.8.31.97])
-        by d24relay04.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v35DDQ2934472190
-        for <linux-scsi@vger.kernel.org>; Wed, 5 Apr 2017 10:13:26 -0300
-Received: from d24av04.br.ibm.com (localhost [127.0.0.1])
-        by d24av04.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v35DDPi5005489
-        for <linux-scsi@vger.kernel.org>; Wed, 5 Apr 2017 10:13:26 -0300
-In-Reply-To: <CAPcyv4jqgh97JVnWMFC5kLJDeu6zaY2zZtaYAHTM0w2a0hBmSw@mail.gmail.com>
+        Wed, 5 Apr 2017 10:31:17 -0300
+Received: from d24av02.br.ibm.com (d24av02.br.ibm.com [9.8.31.93])
+        by d24relay04.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v35DVA8x32375024
+        for <linux-scsi@vger.kernel.org>; Wed, 5 Apr 2017 10:31:15 -0300
+Received: from d24av02.br.ibm.com (localhost [127.0.0.1])
+        by d24av02.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v35DUtjL006724
+        for <linux-scsi@vger.kernel.org>; Wed, 5 Apr 2017 10:30:55 -0300
+In-Reply-To: <1491326232-11255-6-git-send-email-rkennedy@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Song Liu <songliubraving@fb.com>, Jens Axboe <axboe@fb.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, gpiccoli@linux.vnet.ibm.com
+To: Dick Kennedy <dick.kennedy@broadcom.com>, linux-scsi@vger.kernel.org
+Cc: James Smart <james.smart@broadcom.com>
 
-Hi Dan,
+Hi Dick,
 
-Thanks for reviewing.
+If you don't mind me being pedantic, I've noticed a couple of things.
 
-On 04/04/2017 06:07 PM, Dan Williams wrote:
->> @@ -594,6 +594,10 @@ static ssize_t get_component_power_status(struct device *cdev,
->>
->>         if (edev->cb->get_power_status)
->>                 edev->cb->get_power_status(edev, ecomp);
->> +
->> +       if (ecomp->power_status == -1)
->> +               return -EINVAL;
->> +
-> Can we ever hit this if get_power_status is non-null?
+First, is your different email addresses in from/signed-off-by lines:
 
-I admit that is cautionary, and more for consistency with the chance
-of an uninitialized state being still in place, so not to return any
-(incorrect) value in that state.
+On 04/04/2017 02:16 PM, Dick Kennedy wrote:
+> From: Dick Kennedy <rkennedy@lvnvda1400.lvn.broadcom.net>
+[...]
+> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 
-But, yes, in a few cases -- although unlikely.
+Second, is there are several indentation/line-break changes in this
+'fix' patch too, of which at least one seems inconsistent in the code
+(see below) -- that would be better split off to another patch IMHO.
 
-1) imagine .get_power_status couldn't update the 'power_status' field
-    (it's a bit unlikely with the in-tree ses driver, but in the case
-     that ses_get_page2_descriptor() returns NULL, ses_get_power_status()
-     doesn't update 'power_status').
-
-2) an out-of-tree module employs another enclosure_component_callbacks
-    structure, which doesn't implement a .get_power_status hook.
-
-3) or it does, but that failed, and didn't update 'power_status' (e.g.,
-    like case 1)
+Maybe that would be covered in the scrubbing process you mentioned in
+the other/regression thread.
 
 
->> +static bool power_status_on_probe;     /* default: false, 0. */
->> +module_param(power_status_on_probe, bool, 0644);
->> +MODULE_PARM_DESC(power_status_on_probe, "get power status of SES device slots "
->> +                                       "(enclosure components) at probe time "
->> +                                       "(warning: may delay total probe time)");
->> +
-> I don't think we need this module parameter as long as the only way to
-> read the power status is through sysfs. We can always just leave it to
-> be read on-demand when needed.
+> @@ -10312,6 +10315,7 @@ lpfc_pci_probe_one_s3(struct pci_dev *pdev, const struct pci_device_id *pid)
+>  	}
+>
+>  	/* Initialize and populate the iocb list per host */
+> +
+>  	error = lpfc_init_iocb_list(phba, LPFC_IOCB_LIST_CNT);
+>  	if (error) {
+>  		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+> @@ -11092,7 +11096,6 @@ lpfc_pci_probe_one_s4(struct pci_dev *pdev, const struct pci_device_id *pid)
+>  	}
+>
+>  	/* Initialize and populate the iocb list per host */
+> -
+>  	lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+>  			"2821 initialize iocb list %d.\n",
+>  			phba->cfg_iocb_cnt*1024);
 
-I agree for the in-tree module.  My only concern, as described in the
-commit message, is the case someone is using an out-of-tree module /
-has an implementation that depends on that (e.g., reading the 'power_
-status' field directly, instead of using .get_power_status.
-
-I've been a bit overzealous when considering why that call was inserted
-in ses_enclosure_data_process(), and didn't want to break them.
-
-However, for an in-tree usage, it's clear that just dropping that line
-seemed to be sufficient -- the rest in the patch is just consideration
-for whoever might be using it in out-of-tree ways.
-
-(and if such consideration is deemed not to be required in this case,
-  I'd be fine with dropping the related changes and making this patch
-  a one-line. :- )
 
 cheers,
+
 
 -- 
 Mauricio Faria de Oliveira
