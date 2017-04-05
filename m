@@ -1,80 +1,64 @@
-From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
-Subject: Re: [lpfc 05/19] Fix driver unload/reload operation.
-Date: Wed, 5 Apr 2017 10:30:37 -0300
-Message-ID: <3b1f61b8-e8bb-84b7-0a94-a7b1c2b98545@linux.vnet.ibm.com>
-References: <1491326232-11255-1-git-send-email-rkennedy@broadcom.com>
- <1491326232-11255-6-git-send-email-rkennedy@broadcom.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:50915 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1754342AbdDENbU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Apr 2017 09:31:20 -0400
-Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v35DT52t054156
-        for <linux-scsi@vger.kernel.org>; Wed, 5 Apr 2017 09:31:19 -0400
-Received: from e24smtp03.br.ibm.com (e24smtp03.br.ibm.com [32.104.18.24])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 29mytgp14v-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Apr 2017 09:31:19 -0400
-Received: from localhost
-        by e24smtp03.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <mauricfo@linux.vnet.ibm.com>;
-        Wed, 5 Apr 2017 10:31:17 -0300
-Received: from d24av02.br.ibm.com (d24av02.br.ibm.com [9.8.31.93])
-        by d24relay04.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v35DVA8x32375024
-        for <linux-scsi@vger.kernel.org>; Wed, 5 Apr 2017 10:31:15 -0300
-Received: from d24av02.br.ibm.com (localhost [127.0.0.1])
-        by d24av02.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v35DUtjL006724
-        for <linux-scsi@vger.kernel.org>; Wed, 5 Apr 2017 10:30:55 -0300
-In-Reply-To: <1491326232-11255-6-git-send-email-rkennedy@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Kyle Fortin <kyle.fortin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] libiscsi: use vzalloc for large allocations in iscsi_pool_init
+Date: Wed, 5 Apr 2017 09:50:10 -0400
+Message-ID: <63C25EDB-036E-40D9-8A9D-42984E7EDB8E@oracle.com>
+References: <1491226221-24621-1-git-send-email-kyle.fortin@oracle.com> <CAHnHxtyP=OGgCePeb9bde1GR_-nk1QdG7Ou9ndMSpatxH=oomQ@mail.gmail.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Return-path: <open-iscsi+bncBDQYRBHCWYHBBGPMSPDQKGQEDIZRJBQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <CAHnHxtyP=OGgCePeb9bde1GR_-nk1QdG7Ou9ndMSpatxH=oomQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: Chet L <chetanloke-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, lduncan-IBi9RG/b67k@public.gmane.org, cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dick Kennedy <dick.kennedy@broadcom.com>, linux-scsi@vger.kernel.org
-Cc: James Smart <james.smart@broadcom.com>
 
-Hi Dick,
+On Apr 3, 2017, at 3:46 PM, Chet L <chetanloke-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+>=20
+> On Mon, Apr 3, 2017 at 6:30 AM, Kyle Fortin <kyle.fortin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org> wrot=
+e:
+>=20
+>>=20
+>>        for (i =3D 0; i < q->max; i++)
+>>                kfree(q->pool[i]);
+>> -       kfree(q->pool);
+>> +       if (q->is_pool_vmalloc)
+>=20
+> you could do something like:
+>=20
+> if (is_vmalloc_addr(q->pool))
+>    vfree(...);
+> else
+>    kfree(..);
+>=20
+> And then remove the bool.
+>=20
+> Chetan
 
-If you don't mind me being pedantic, I've noticed a couple of things.
+Using linux-mmots.git which includes the new kvmalloc api, this patch is gr=
+eatly simplified to a 2 character change (=E2=80=98v=E2=80=99 x 2) of using=
+ kvmalloc / kvfree for the iscsi_pool allocation.  When kvmalloc is accepte=
+d into mainline and makes it into scsi.git, then I=E2=80=99ll post the v2 p=
+atch using that.
 
-First, is your different email addresses in from/signed-off-by lines:
-
-On 04/04/2017 02:16 PM, Dick Kennedy wrote:
-> From: Dick Kennedy <rkennedy@lvnvda1400.lvn.broadcom.net>
-[...]
-> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-
-Second, is there are several indentation/line-break changes in this
-'fix' patch too, of which at least one seems inconsistent in the code
-(see below) -- that would be better split off to another patch IMHO.
-
-Maybe that would be covered in the scrubbing process you mentioned in
-the other/regression thread.
-
-
-> @@ -10312,6 +10315,7 @@ lpfc_pci_probe_one_s3(struct pci_dev *pdev, const struct pci_device_id *pid)
->  	}
->
->  	/* Initialize and populate the iocb list per host */
-> +
->  	error = lpfc_init_iocb_list(phba, LPFC_IOCB_LIST_CNT);
->  	if (error) {
->  		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-> @@ -11092,7 +11096,6 @@ lpfc_pci_probe_one_s4(struct pci_dev *pdev, const struct pci_device_id *pid)
->  	}
->
->  	/* Initialize and populate the iocb list per host */
-> -
->  	lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
->  			"2821 initialize iocb list %d.\n",
->  			phba->cfg_iocb_cnt*1024);
+--
+Kyle Fortin - Oracle Linux Engineering
 
 
-cheers,
 
 
--- 
-Mauricio Faria de Oliveira
-IBM Linux Technology Center
+--=20
+You received this message because you are subscribed to the Google Groups "=
+open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an e=
+mail to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
