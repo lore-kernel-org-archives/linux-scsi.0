@@ -1,37 +1,48 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: ->retries fixups V2
-Date: Wed, 5 Apr 2017 20:16:05 +0200
-Message-ID: <20170405181605.GA9702@lst.de>
-References: <20170405171812.19911-1-hch@lst.de> <20170405180653.GA5548@kernel.dk>
+From: Cathy Avery <cavery@redhat.com>
+Subject: [PATCH v3 0/2] scsi: storvsc: Add support for FC rport
+Date: Wed,  5 Apr 2017 14:45:11 -0400
+Message-ID: <1491417913-21530-1-git-send-email-cavery@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:58518 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933848AbdDESQH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 5 Apr 2017 14:16:07 -0400
-Content-Disposition: inline
-In-Reply-To: <20170405180653.GA5548@kernel.dk>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: kys@microsoft.com, hch@infradead.org, haiyangz@microsoft.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: devel@linuxdriverproject.org, linux-kernel@vger.kernel.org, dan.carpenter@oracle.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@lst.de>, Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, Apr 05, 2017 at 12:06:53PM -0600, Jens Axboe wrote:
-> On Wed, Apr 05 2017, Christoph Hellwig wrote:
-> > This series fixes a few lose bits in terms of how nvme uses ->retries,
-> > including fixing it for non-PCIe transports.  While at it I noticed that
-> > nvme and scsi use the field in entirely different ways, and no other
-> > driver uses it at all.  So I decided to move it into the nvme_request and
-> > scsi_request structures instead.
-> > 
-> > Changes since V1:
-> >  - better changelog for one patch
-> >  - move the new retries field to the end of struct nvme_request
-> 
-> Applied for 4.12. If we do the below on my box, we remove the (now) 2
-> holes from struct request and shrink it 8 bytes.
+The updated patch set provides a way for drivers ( specifically
+storvsc in this case ) that expose virturalized fc devices
+but that do not expose rports to be manually scanned. This is
+done via creating a pseudo rport in storvsc and a
+corresponding dummy initiator rport role in the fc transport.
 
-Looks good:
+Changes since v2:
+- Additional patch adding FC_PORT_ROLE_FCP_DUMMY_INITIATOR role
+  to fc_transport
+- Changed storvsc rport role to FC_PORT_ROLE_FCP_DUMMY_INITIATOR
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Changes since v1:
+- Fix fc_rport_identifiers init [Stephen Hemminger]
+- Better error checking
+
+
+Cathy Avery (2):
+  scsi: scsi_transport_fc: Add dummy initiator role to rport
+  scsi: storvsc: Add support for FC rport.
+
+ drivers/scsi/scsi_transport_fc.c | 10 ++++++----
+ drivers/scsi/storvsc_drv.c       | 23 ++++++++++++++++++-----
+ include/scsi/scsi_transport_fc.h |  1 +
+ 3 files changed, 25 insertions(+), 9 deletions(-)
+
+-- 
+2.5.0
