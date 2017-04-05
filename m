@@ -1,33 +1,89 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 4/5] nvme: move the retries count to struct nvme_request
-Date: Wed, 5 Apr 2017 17:25:11 +0200
-Message-ID: <20170405152511.GA6435@lst.de>
-References: <20170405141856.1862-1-hch@lst.de> <20170405141856.1862-5-hch@lst.de> <20170405151430.GS20181@localhost.localdomain>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH v2] scsi: ses: don't get power status of SES device slot
+ on probe
+Date: Wed, 5 Apr 2017 08:32:17 -0700
+Message-ID: <CAPcyv4iaXfgB1PBv5v+dyRrUvQbzAyyFf1Ozsaao0t8K0w9zwg@mail.gmail.com>
+References: <1491405499-5429-1-git-send-email-mauricfo@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:57810 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755631AbdDEPZN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 5 Apr 2017 11:25:13 -0400
-Content-Disposition: inline
-In-Reply-To: <20170405151430.GS20181@localhost.localdomain>
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:35140 "EHLO
+        mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932642AbdDEPcS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Apr 2017 11:32:18 -0400
+Received: by mail-oi0-f45.google.com with SMTP id f193so19498039oib.2
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Apr 2017 08:32:18 -0700 (PDT)
+In-Reply-To: <1491405499-5429-1-git-send-email-mauricfo@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Keith Busch <keith.busch@intel.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagi@grimberg.me>, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Song Liu <songliubraving@fb.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Jens Axboe <axboe@fb.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, gpiccoli@linux.vnet.ibm.com
 
-On Wed, Apr 05, 2017 at 11:14:30AM -0400, Keith Busch wrote:
-> On Wed, Apr 05, 2017 at 04:18:55PM +0200, Christoph Hellwig wrote:
-> > The way NVMe uses this field is entirely different from the older
-> > SCSI/BLOCK_PC usage, so move it into struct nvme_request.
-> > 
-> > Also reduce the size of the file to a unsigned char so that we leave space
-> > for additional smaller fields that will appear soon.
-> 
-> What new fields can we expect? Why temporarily pad the middle of the
-> struct instead of appending to the end? The "result" packed nicely
-> on 64-bit, at least.
+On Wed, Apr 5, 2017 at 8:18 AM, Mauricio Faria de Oliveira
+<mauricfo@linux.vnet.ibm.com> wrote:
+> The commit 08024885a2a3 ("ses: Add power_status to SES device slot")
+> introduced the 'power_status' attribute to enclosure components and
+> the associated callbacks.
+>
+> There are 2 callbacks available to get the power status of a device:
+> 1) ses_get_power_status() for 'struct enclosure_component_callbacks'
+> 2) get_component_power_status() for the sysfs device attribute
+> (these are available for kernel-space and user-space, respectively.)
+>
+> However, despite both methods being available to get power status
+> on demand, that commit also introduced a call to get power status
+> in ses_enclosure_data_process().
+>
+> This dramatically increased the total probe time for SCSI devices
+> on larger configurations, because ses_enclosure_data_process() is
+> called several times during the SCSI devices probe and loops over
+> the component devices (but that is another problem, another patch).
+>
+> That results in a tremendous continuous hammering of SCSI Receive
+> Diagnostics commands to the enclosure-services device, which does
+> delay the total probe time for the SCSI devices __significantly__:
+>
+>   Originally, ~34 minutes on a system attached to ~170 disks:
+>
+>     [ 9214.490703] mpt3sas version 13.100.00.00 loaded
+>     ...
+>     [11256.580231] scsi 17:0:177:0: qdepth(16), tagged(1), simple(0),
+>                    ordered(0), scsi_level(6), cmd_que(1)
+>
+>   With this patch, it decreased to ~2.5 minutes -- a 13.6x faster
+>
+>     [ 1002.992533] mpt3sas version 13.100.00.00 loaded
+>     ...
+>     [ 1151.978831] scsi 11:0:177:0: qdepth(16), tagged(1), simple(0),
+>                    ordered(0), scsi_level(6), cmd_que(1)
+>
+> Back to the commit discussion.. on the ses_get_power_status() call
+> introduced in ses_enclosure_data_process(): impact of removing it.
+>
+> That may possibly be in place to initialize the power status value
+> on device probe.  However, those 2 functions available to retrieve
+> that value _do_ automatically refresh/update it.  So the potential
+> benefit would be a direct access of the 'power_status' field which
+> does not use the callbacks...
+>
+> But the only reader of 'struct enclosure_component::power_status'
+> is the get_component_power_status() callback for sysfs attribute,
+> and it _does_ check for and call the .get_power_status callback,
+> (which indeed is defined and implemented by that commit), so the
+> power status value is, again, automatically updated.
+>
+> So, the remaining potential for a direct/non-callback access to
+> the power_status attribute would be out-of-tree modules -- well,
+> for those, if they are for whatever reason interested in values
+> that are set during device probe and not up-to-date by the time
+> they need it.. well, that would be curious.
+>
+> Well, to handle that more properly, set the initial power state
+> value to '-1' (i.e., uninitialized) instead of '1' (power 'on'),
+> and check for it in that callback which may do an direct access
+> to the field value _if_ a callback function is not defined.
+>
+> Signed-off-by: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+> Fixes: 08024885a2a3 ("ses: Add power_status to SES device slot")
 
-I've got another u8 and a u16 in pending patches.  That being said
-moving it to the end might make sense.
+Reviewed-by: Dan Williams <dan.j.williams@intel.com>
