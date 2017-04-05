@@ -1,36 +1,36 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [lpfc 03/19] Fix spelling in comments.
-Date: Wed, 5 Apr 2017 09:12:39 +0200
-Message-ID: <20170405071239.GC3941@linux-x5ow.site>
+Subject: Re: [lpfc 04/19] Fix PRLI ACC rsp for NVME
+Date: Wed, 5 Apr 2017 09:15:06 +0200
+Message-ID: <20170405071506.GD3941@linux-x5ow.site>
 References: <1491326232-11255-1-git-send-email-rkennedy@broadcom.com>
- <1491326232-11255-4-git-send-email-rkennedy@broadcom.com>
+ <1491326232-11255-5-git-send-email-rkennedy@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47025 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:47159 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751220AbdDEHMm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 5 Apr 2017 03:12:42 -0400
+        id S1752282AbdDEHPI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 5 Apr 2017 03:15:08 -0400
 Content-Disposition: inline
-In-Reply-To: <1491326232-11255-4-git-send-email-rkennedy@broadcom.com>
+In-Reply-To: <1491326232-11255-5-git-send-email-rkennedy@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Dick Kennedy <dick.kennedy@broadcom.com>
 Cc: linux-scsi@vger.kernel.org, James Smart <james.smart@broadcom.com>
 
-On Tue, Apr 04, 2017 at 10:16:56AM -0700, Dick Kennedy wrote:
+On Tue, Apr 04, 2017 at 10:16:57AM -0700, Dick Kennedy wrote:
 > From: Dick Kennedy <rkennedy@lvnvda1400.lvn.broadcom.net>
+> 
+> PRLI ACC from target is FCP oriented
+> 
 > 
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
 > ---
 
-So 3rd patch in the series and still no changelog. The subject line is no
-changelog.
-
-Apart from that,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Please read:
+http://lists.infradead.org/pipermail/linux-nvme/2017-March/009035.html
 
 -- 
 Johannes Thumshirn                                          Storage
