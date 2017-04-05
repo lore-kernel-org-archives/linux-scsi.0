@@ -1,77 +1,42 @@
-From: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Subject: Re: [PATCH 1/4] mm: prevent potential recursive reclaim due to
- clearing PF_MEMALLOC
-Date: Wed, 5 Apr 2017 14:40:43 +0300
-Message-ID: <1f26f654-abaf-3878-6abb-5e27ff3a289e@virtuozzo.com>
-References: <20170405074700.29871-1-vbabka@suse.cz>
- <20170405074700.29871-2-vbabka@suse.cz>
+From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: always use REQ_OP_WRITE_ZEROES for zeroing offload
+Date: Wed, 05 Apr 2017 07:40:36 -0400
+Message-ID: <yq1vaqjt74b.fsf@oracle.com>
+References: <20170331163313.31821-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20170405074700.29871-2-vbabka@suse.cz>
-Sender: owner-linux-mm@kvack.org
-To: Vlastimil Babka <vbabka@suse.cz>, Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, Michal Hocko <mhocko@kernel.org>, Mel Gorman <mgorman@techsingularity.net>, Johannes Weiner <hannes@cmpxchg.org>, linux-block@vger.kernel.org, nbd-general@lists.sourceforge.net, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, stable@vger.kernel.org
+Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+In-Reply-To: <20170331163313.31821-1-hch-jcswGhMUV9g@public.gmane.org> (Christoph Hellwig's message
+	of "Fri, 31 Mar 2017 18:32:48 +0200")
+List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
+List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
+Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 04/05/2017 10:46 AM, Vlastimil Babka wrote:
-> The function __alloc_pages_direct_compact() sets PF_MEMALLOC to prevent
-> deadlock during page migration by lock_page() (see the comment in
-> __unmap_and_move()). Then it unconditionally clears the flag, which can clear a
-> pre-existing PF_MEMALLOC flag and result in recursive reclaim. This was not a
-> problem until commit a8161d1ed609 ("mm, page_alloc: restructure direct
-> compaction handling in slowpath"), because direct compation was called only
-> after direct reclaim, which was skipped when PF_MEMALLOC flag was set.
-> 
-> Even now it's only a theoretical issue, as the new callsite of
-> __alloc_pages_direct_compact() is reached only for costly orders and when
-> gfp_pfmemalloc_allowed() is true, which means either __GFP_NOMEMALLOC is in
-                           is false			
+Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org> writes:
 
-> gfp_flags or in_interrupt() is true. There is no such known context, but let's
-> play it safe and make __alloc_pages_direct_compact() robust for cases where
-> PF_MEMALLOC is already set.
-> 
-> Fixes: a8161d1ed609 ("mm, page_alloc: restructure direct compaction handling in slowpath")
-> Reported-by: Andrey Ryabinin <aryabinin@virtuozzo.com>
-> Signed-off-by: Vlastimil Babka <vbabka@suse.cz>
-> Cc: <stable@vger.kernel.org>
-> ---
->  mm/page_alloc.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-> index 3589f8be53be..b84e6ffbe756 100644
-> --- a/mm/page_alloc.c
-> +++ b/mm/page_alloc.c
-> @@ -3288,6 +3288,7 @@ __alloc_pages_direct_compact(gfp_t gfp_mask, unsigned int order,
->  		enum compact_priority prio, enum compact_result *compact_result)
->  {
->  	struct page *page;
-> +	unsigned int noreclaim_flag = current->flags & PF_MEMALLOC;
->  
->  	if (!order)
->  		return NULL;
-> @@ -3295,7 +3296,7 @@ __alloc_pages_direct_compact(gfp_t gfp_mask, unsigned int order,
->  	current->flags |= PF_MEMALLOC;
->  	*compact_result = try_to_compact_pages(gfp_mask, order, alloc_flags, ac,
->  									prio);
-> -	current->flags &= ~PF_MEMALLOC;
-> +	current->flags = (current->flags & ~PF_MEMALLOC) | noreclaim_flag;
+Christoph,
 
-Perhaps this would look better:
+> This series makes REQ_OP_WRITE_ZEROES the only zeroing offload
+> supported by the block layer, and switches existing implementations
+> of REQ_OP_DISCARD that correctly set discard_zeroes_data to it,
+> removes incorrect discard_zeroes_data, and also switches WRITE SAME
+> based zeroing in SCSI to this new method.
 
-	tsk_restore_flags(current, noreclaim_flag, PF_MEMALLOC);
+Very, very nice. I think this is the correct approach.
 
-?
+I'm going to send two follow-up patches that allow us to use UNMAP for
+discards and WRITE SAME w/ UNMAP for zeroout. That appears to be the
+preferred configuration for most storage devices.
 
->  	if (*compact_result <= COMPACT_INACTIVE)
->  		return NULL;
-> 
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+Martin K. Petersen	Oracle Linux Engineering
