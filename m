@@ -1,8 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 12/27] block: add a new BLKDEV_ZERO_NOFALLBACK
-	flag
-Date: Wed,  5 Apr 2017 19:21:10 +0200
-Message-ID: <20170405172125.22600-13-hch@lst.de>
+Subject: [PATCH 18/27] brd: remove discard support
+Date: Wed,  5 Apr 2017 19:21:16 +0200
+Message-ID: <20170405172125.22600-19-hch@lst.de>
 References: <20170405172125.22600-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,54 +21,107 @@ To: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.
 Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-This avoids fallbacks to explicit zeroing in (__)blkdev_issue_zeroout if
-the caller doesn't want them.
-
-Also clean up the convoluted check for the return condition that this
-new flag is added to.
+It's just a in-driver reimplementation of writing zeroes to the pages,
+which fails if the discards aren't page aligned.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- block/blk-lib.c        | 5 ++++-
- include/linux/blkdev.h | 1 +
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ drivers/block/brd.c | 54 -----------------------------------------------------
+ 1 file changed, 54 deletions(-)
 
-diff --git a/block/blk-lib.c b/block/blk-lib.c
-index 2f6d2cb2e1a2..2f882e22890b 100644
---- a/block/blk-lib.c
-+++ b/block/blk-lib.c
-@@ -281,6 +281,9 @@ static int __blkdev_issue_write_zeroes(struct block_device *bdev,
-  *
-  *  If a device is using logical block provisioning, the underlying space will
-  *  not be released if %flags contains BLKDEV_ZERO_NOUNMAP.
-+ *
-+ *  If %flags contains BLKDEV_ZERO_NOFALLBACK, the function will return
-+ *  -EOPNOTSUPP if no explicit hardware offload for zeroing is provided.
+diff --git a/drivers/block/brd.c b/drivers/block/brd.c
+index 3adc32a3153b..4ec84d504780 100644
+--- a/drivers/block/brd.c
++++ b/drivers/block/brd.c
+@@ -134,28 +134,6 @@ static struct page *brd_insert_page(struct brd_device *brd, sector_t sector)
+ 	return page;
+ }
+ 
+-static void brd_free_page(struct brd_device *brd, sector_t sector)
+-{
+-	struct page *page;
+-	pgoff_t idx;
+-
+-	spin_lock(&brd->brd_lock);
+-	idx = sector >> PAGE_SECTORS_SHIFT;
+-	page = radix_tree_delete(&brd->brd_pages, idx);
+-	spin_unlock(&brd->brd_lock);
+-	if (page)
+-		__free_page(page);
+-}
+-
+-static void brd_zero_page(struct brd_device *brd, sector_t sector)
+-{
+-	struct page *page;
+-
+-	page = brd_lookup_page(brd, sector);
+-	if (page)
+-		clear_highpage(page);
+-}
+-
+ /*
+  * Free all backing store pages and radix tree. This must only be called when
+  * there are no other users of the device.
+@@ -212,24 +190,6 @@ static int copy_to_brd_setup(struct brd_device *brd, sector_t sector, size_t n)
+ 	return 0;
+ }
+ 
+-static void discard_from_brd(struct brd_device *brd,
+-			sector_t sector, size_t n)
+-{
+-	while (n >= PAGE_SIZE) {
+-		/*
+-		 * Don't want to actually discard pages here because
+-		 * re-allocating the pages can result in writeback
+-		 * deadlocks under heavy load.
+-		 */
+-		if (0)
+-			brd_free_page(brd, sector);
+-		else
+-			brd_zero_page(brd, sector);
+-		sector += PAGE_SIZE >> SECTOR_SHIFT;
+-		n -= PAGE_SIZE;
+-	}
+-}
+-
+ /*
+  * Copy n bytes from src to the brd starting at sector. Does not sleep.
   */
- int __blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
- 		sector_t nr_sects, gfp_t gfp_mask, struct bio **biop,
-@@ -298,7 +301,7 @@ int __blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
+@@ -338,14 +298,6 @@ static blk_qc_t brd_make_request(struct request_queue *q, struct bio *bio)
+ 	if (bio_end_sector(bio) > get_capacity(bdev->bd_disk))
+ 		goto io_error;
  
- 	ret = __blkdev_issue_write_zeroes(bdev, sector, nr_sects, gfp_mask,
- 			biop, flags);
--	if (ret == 0 || (ret && ret != -EOPNOTSUPP))
-+	if (ret != -EOPNOTSUPP || (flags & BLKDEV_ZERO_NOFALLBACK))
- 		goto out;
+-	if (unlikely(bio_op(bio) == REQ_OP_DISCARD)) {
+-		if (sector & ((PAGE_SIZE >> SECTOR_SHIFT) - 1) ||
+-		    bio->bi_iter.bi_size & ~PAGE_MASK)
+-			goto io_error;
+-		discard_from_brd(brd, sector, bio->bi_iter.bi_size);
+-		goto out;
+-	}
+-
+ 	bio_for_each_segment(bvec, bio, iter) {
+ 		unsigned int len = bvec.bv_len;
+ 		int err;
+@@ -357,7 +309,6 @@ static blk_qc_t brd_make_request(struct request_queue *q, struct bio *bio)
+ 		sector += len >> SECTOR_SHIFT;
+ 	}
  
- 	ret = 0;
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index e7513ce3dbde..a5055d760661 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1351,6 +1351,7 @@ extern int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
- 		struct bio **biop);
- 
- #define BLKDEV_ZERO_NOUNMAP	(1 << 0)  /* do not free blocks */
-+#define BLKDEV_ZERO_NOFALLBACK	(1 << 1)  /* don't write explicit zeroes */
- 
- extern int __blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
- 		sector_t nr_sects, gfp_t gfp_mask, struct bio **biop,
+-out:
+ 	bio_endio(bio);
+ 	return BLK_QC_T_NONE;
+ io_error:
+@@ -464,11 +415,6 @@ static struct brd_device *brd_alloc(int i)
+ 	 *  is harmless)
+ 	 */
+ 	blk_queue_physical_block_size(brd->brd_queue, PAGE_SIZE);
+-
+-	brd->brd_queue->limits.discard_granularity = PAGE_SIZE;
+-	blk_queue_max_discard_sectors(brd->brd_queue, UINT_MAX);
+-	brd->brd_queue->limits.discard_zeroes_data = 1;
+-	queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, brd->brd_queue);
+ #ifdef CONFIG_BLK_DEV_RAM_DAX
+ 	queue_flag_set_unlocked(QUEUE_FLAG_DAX, brd->brd_queue);
+ #endif
 -- 
 2.11.0
