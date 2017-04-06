@@ -1,30 +1,49 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] qla4xxx: drop redundant init_completion
-Date: Thu, 06 Apr 2017 13:15:04 -0400
-Message-ID: <yq1r315pief.fsf@oracle.com>
-References: <1490179462-16559-1-git-send-email-der.herr@hofr.at>
+Subject: Re: problem with discard granularity in sd
+Date: Thu, 06 Apr 2017 13:34:28 -0400
+Message-ID: <yq1mvbtphi3.fsf@oracle.com>
+References: <CA+Xd3XHp381w87Fr5_HGU5gBpWMSRSwD+pRacGkHu7Rp7CYUfg@mail.gmail.com>
+        <yq1d1crvhjv.fsf@oracle.com>
+        <CA+Xd3XGwXZRat_zF=3vraT81jm7WgU1RSjdNeNDBfioYD9-B9Q@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:22513 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752417AbdDFRPO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2017 13:15:14 -0400
-In-Reply-To: <1490179462-16559-1-git-send-email-der.herr@hofr.at> (Nicholas Mc
-        Guire's message of "Wed, 22 Mar 2017 11:44:22 +0100")
+Received: from aserp1040.oracle.com ([141.146.126.69]:43310 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932977AbdDFRee (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2017 13:34:34 -0400
+In-Reply-To: <CA+Xd3XGwXZRat_zF=3vraT81jm7WgU1RSjdNeNDBfioYD9-B9Q@mail.gmail.com>
+        (David Buckley's message of "Wed, 5 Apr 2017 09:14:45 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Nicholas Mc Guire <der.herr@hofr.at>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, QLogic-Storage-Upstream@qlogic.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: David Buckley <dbuckley@oreilly.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
-Nicholas Mc Guire <der.herr@hofr.at> writes:
+David Buckley <dbuckley@oreilly.com> writes:
 
-> The redundant init_completion() here seems to be a cut&past error as
-> struct scsi_qla_host only has 4 completion elements to initialize,
-> thus the duplicate init_completion(disable_acb_comp) is simply
-> removed.
+David,
 
-Applied to 4.12/scsi-queue.
+> As I mentioned previously, I'm fairly certain that the issue I'm
+> seeing is due to the fact that while NetApp LUNs are presented as 512B
+> logical/4K physical disks for compatibility, they actually don't
+> support requests smaller than 4K (which makes sense as NetApp LUNs are
+> actually just files allocated on the 4K-block WAFL filesystem).
+
+That may be. But they should still deallocate all the whole 4K blocks
+described by an UNMAP request. Even if head and tail are not aligned.
+
+> Let me know if there's any additional information I can provide. This
+> has resulted in a 2-3x increase in raw disk requirements for some
+> workloads (unfortunately on SSD too), and I'd love to find a solution
+> that doesn't require rolling back to a 3.10 kernel.
+
+I just posted some patches yesterday that will address this (using WRITE
+SAME w/ UNMAP for block zeroing and allowing discards to be sent using
+the UNMAP command, honoring the granularity and alignment suggested by
+the device). That's 4.13 material, though.
+
+The enterprise distros have many customers using NetApp filers. I'm a
+bit puzzled why this is the first we hear of this...
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
