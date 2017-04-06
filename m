@@ -1,31 +1,47 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] csiostor: switch to pci_alloc_irq_vectors
-Date: Thu, 06 Apr 2017 12:58:09 -0400
-Message-ID: <yq14ly1qxr2.fsf@oracle.com>
-References: <1484325046-31032-1-git-send-email-hch@lst.de>
-        <yq1h94tgsvd.fsf@oracle.com> <20170331065527.GA3024@lst.de>
-        <20170403145124.GA1743@chelsio.com> <20170404064614.GA9275@lst.de>
-        <20170404081943.GA1665@chelsio.com> <20170405062656.GA26470@lst.de>
-        <20170405153933.GA1912@chelsio.com> <20170406075858.GA32019@lst.de>
+Subject: Re: hpsa patches in mkp/4.12/scsi-queue and mkp/4.11/scsi-fixes
+Date: Thu, 06 Apr 2017 13:05:30 -0400
+Message-ID: <yq1ziftpiud.fsf@oracle.com>
+References: <1491481189.5348.12.camel@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:46716 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932096AbdDFQ6R (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2017 12:58:17 -0400
-In-Reply-To: <20170406075858.GA32019@lst.de> (Christoph Hellwig's message of
-        "Thu, 6 Apr 2017 09:58:58 +0200")
+Received: from aserp1040.oracle.com ([141.146.126.69]:26267 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933569AbdDFRFl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2017 13:05:41 -0400
+In-Reply-To: <1491481189.5348.12.camel@suse.com> (Martin Wilck's message of
+        "Thu, 06 Apr 2017 14:19:49 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Varun Prakash <varun@chelsio.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Martin Wilck <mwilck@suse.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
 
-Christoph Hellwig <hch@lst.de> writes:
+Martin Wilck <mwilck@suse.com> writes:
 
-> Ok, the version below simplify skip the function split entirely:
+Martin,
 
-Applied to 4.12/scsi-queue.
+> I noticed that the following commits
+>
+> eb94588dabec scsi: hpsa: fix volume offline state
+> 2ef288498087 scsi: hpsa: do not timeout reset operations
+> 87b9e6aa87d9 scsi: hpsa: limit outstanding rescans
+> 85b29008d8af scsi: hpsa: update check for logical volume status
+>
+> are included in mkp/4.11/scsi-fixes but not in mkp/4.12/scsi-queue.
+> Is there a specific reason for that?
+
+scsi-fixes and scsi-queue are usually forked from linus/master at the
+about same time after the merge window closes.
+
+ - Bugfixes for the current release go into scsi-fixes.
+
+ - New features for next release go into scsi-queue.
+
+Consequently, it's perfectly normal for fixes to be more "recent" than
+queue. I only rebase the queue if I absolutely have to (i.e. a new
+feature depends on something that happened in Linus' tree after the
+merge window closed).
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
