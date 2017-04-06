@@ -1,34 +1,44 @@
-From: Fam Zheng <famz@redhat.com>
-Subject: [PATCH] sd: Explicit type cast to fix calculating rw_max
-Date: Thu,  6 Apr 2017 16:20:59 +0800
-Message-ID: <20170406082059.26492-1-famz@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Stephen Rothwell <sfr@canb.auug.org.au>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] Make checking the scsi_device_get() return value
+ mandatory
+Date: Thu, 6 Apr 2017 10:25:08 +0200
+Message-ID: <20170406082508.GA3768@linux-x5ow.site>
+References: <201704060817.vbFGWYzD%fengguang.wu@intel.com>
+ <1491438642.2787.17.camel@sandisk.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:33459 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752692AbdDFIZO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 6 Apr 2017 04:25:14 -0400
+Content-Disposition: inline
+In-Reply-To: <1491438642.2787.17.camel@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-Some compilers don't like BLK_DEF_MAX_SECTORS being an enum (int) when
-expanding min_not_zero. Cast it to sector_t so it matches the type of
-the other operand, logical_to_sectors().
+On Thu, Apr 06, 2017 at 12:30:43AM +0000, Bart Van Assche wrote:
+> On Thu, 2017-04-06 at 08:27 +0800, kbuild test robot wrote:
+> > All warnings (new ones prefixed by >>):
+> > 
+> >    drivers//scsi/osd/osd_uld.c: In function 'osd_probe':
+> > > > drivers//scsi/osd/osd_uld.c:467:2: warning: ignoring return value of 'scsi_device_get', declared with attribute warn_unused_result [-Wunused-result]
+> > 
+> >      scsi_device_get(scsi_device);
+> >      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> 
+> Please ignore this warning. It is triggered because patch "osd_uld: Check
+> scsi_device_get() return value" is not yet upstream.
 
-Signed-off-by: Fam Zheng <famz@redhat.com>
----
- drivers/scsi/sd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+And verified this patch is valuable ;-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index ab9011a..8d2315a 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2957,7 +2957,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 		rw_max = logical_to_sectors(sdp, sdkp->opt_xfer_blocks);
- 	} else
- 		rw_max = min_not_zero(logical_to_sectors(sdp, dev_max),
--				      BLK_DEF_MAX_SECTORS);
-+				      (sector_t)BLK_DEF_MAX_SECTORS);
- 
- 	/* Combine with controller limits */
- 	q->limits.max_sectors = min(rw_max, queue_max_hw_sectors(q));
 -- 
-2.9.3
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
