@@ -1,96 +1,93 @@
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Subject: [PATCH] scsi: aacraid: fix PCI error recovery path
-Date: Thu,  6 Apr 2017 18:12:09 -0300
-Message-ID: <20170406211209.27129-1-gpiccoli@linux.vnet.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:45318 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753870AbdDFVMr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2017 17:12:47 -0400
-Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v36L91Vc029563
-        for <linux-scsi@vger.kernel.org>; Thu, 6 Apr 2017 17:12:46 -0400
-Received: from e24smtp02.br.ibm.com (e24smtp02.br.ibm.com [32.104.18.86])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 29nrdwcpwe-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Thu, 06 Apr 2017 17:12:46 -0400
-Received: from localhost
-        by e24smtp02.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-        Thu, 6 Apr 2017 18:12:44 -0300
-Received: from d24av02.br.ibm.com (d24av02.br.ibm.com [9.8.31.93])
-        by d24relay03.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v36LCaH78192162
-        for <linux-scsi@vger.kernel.org>; Thu, 6 Apr 2017 18:12:41 -0300
-Received: from d24av02.br.ibm.com (localhost [127.0.0.1])
-        by d24av02.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v36LCK55030718
-        for <linux-scsi@vger.kernel.org>; Thu, 6 Apr 2017 18:12:21 -0300
-Sender: linux-scsi-owner@vger.kernel.org
+From: Himanshu Madhani <himanshu.madhani@cavium.com>
+Subject: Re: [PATCH] scsi: qla2xxx: remove some redundant pointer
+ assignments
+Date: Thu, 6 Apr 2017 14:21:42 -0700 (PDT)
+Message-ID: <alpine.OSX.2.21.1704061421001.25469@deathstar.local>
+References: <20170406111957.17250-1-colin.king@canonical.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <20170406111957.17250-1-colin.king@canonical.com>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: qla2xxx-upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: aacraid@microsemi.com
-Cc: gpiccoli@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, RaghavaAditya.Renukunta@microsemi.com
 
-During a PCI error recovery, if aac_check_health() is not aware that
-a PCI error happened and we have an offline PCI channel, it might
-trigger some errors (like NULL pointer dereference) and inhibit the
-error recovery process to complete.
 
-This patch makes the health check procedure aware of PCI channel
-issues, and in case of error recovery process, the function
-aac_adapter_check_health() returns -1 and let the recovery process
-to complete successfully. This patch was tested on upstream kernel
-v4.11-rc5 in PowerPC ppc64le architecture with adapter 9005:028d
-(VID:DID) - the error recovery procedure was able to recover fine.
 
-Fixes: 5c63f7f710bd ("aacraid: Added EEH support")
-Cc: stable@vger.kernel.org # v4.6+
-Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
----
- drivers/scsi/aacraid/aacraid.h | 11 ++++++++---
- drivers/scsi/aacraid/commsup.c |  3 ++-
- 2 files changed, 10 insertions(+), 4 deletions(-)
+On Thu, 6 Apr 2017, 4:19am, Colin King wrote:
 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index d036a806f31c..d281492009fb 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -1690,9 +1690,6 @@ struct aac_dev
- #define aac_adapter_sync_cmd(dev, command, p1, p2, p3, p4, p5, p6, status, r1, r2, r3, r4) \
- 	(dev)->a_ops.adapter_sync_cmd(dev, command, p1, p2, p3, p4, p5, p6, status, r1, r2, r3, r4)
- 
--#define aac_adapter_check_health(dev) \
--	(dev)->a_ops.adapter_check_health(dev)
--
- #define aac_adapter_restart(dev, bled, reset_type) \
- 	((dev)->a_ops.adapter_restart(dev, bled, reset_type))
- 
-@@ -2615,6 +2612,14 @@ static inline unsigned int cap_to_cyls(sector_t capacity, unsigned divisor)
- 	return capacity;
- }
- 
-+static inline int aac_adapter_check_health(struct aac_dev *dev)
-+{
-+	if (unlikely(pci_channel_offline(dev->pdev)))
-+		return -1;
-+
-+	return (dev)->a_ops.adapter_check_health(dev);
-+}
-+
- /* SCp.phase values */
- #define AAC_OWNER_MIDLEVEL	0x101
- #define AAC_OWNER_LOWLEVEL	0x102
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index c8172f16cf33..1f4918355fdb 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -1873,7 +1873,8 @@ int aac_check_health(struct aac_dev * aac)
- 	spin_unlock_irqrestore(&aac->fib_lock, flagv);
- 
- 	if (BlinkLED < 0) {
--		printk(KERN_ERR "%s: Host adapter dead %d\n", aac->name, BlinkLED);
-+		printk(KERN_ERR "%s: Host adapter is dead (or got a PCI error) %d\n",
-+				aac->name, BlinkLED);
- 		goto out;
- 	}
- 
--- 
-2.11.0
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> There are several local or function parameter pointers that are
+> being assigned NULL after a kfree where and these have no effect
+> and hence can be removed.
+> 
+> Fixes various cppcheck warnings:
+> 
+> "Assignment of function parameter has no effect outside the
+> function. Did you forget dereferencing it"
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/scsi/qla2xxx/qla_os.c | 6 ------
+>  1 file changed, 6 deletions(-)
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+> index 83d61d2142e9..1c7957903283 100644
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
+> @@ -423,7 +423,6 @@ static void qla2x00_free_req_que(struct qla_hw_data *ha, struct req_que *req)
+>  		kfree(req->outstanding_cmds);
+>  
+>  	kfree(req);
+> -	req = NULL;
+>  }
+>  
+>  static void qla2x00_free_rsp_que(struct qla_hw_data *ha, struct rsp_que *rsp)
+> @@ -439,7 +438,6 @@ static void qla2x00_free_rsp_que(struct qla_hw_data *ha, struct rsp_que *rsp)
+>  		rsp->ring, rsp->dma);
+>  	}
+>  	kfree(rsp);
+> -	rsp = NULL;
+>  }
+>  
+>  static void qla2x00_free_queues(struct qla_hw_data *ha)
+> @@ -653,7 +651,6 @@ qla2x00_sp_free_dma(void *ptr)
+>  		ha->gbl_dsd_inuse -= ctx1->dsd_use_cnt;
+>  		ha->gbl_dsd_avail += ctx1->dsd_use_cnt;
+>  		mempool_free(ctx1, ha->ctx_mempool);
+> -		ctx1 = NULL;
+>  	}
+>  
+>  	CMD_SP(cmd) = NULL;
+> @@ -3256,7 +3253,6 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+>  	}
+>  	pci_release_selected_regions(ha->pdev, ha->bars);
+>  	kfree(ha);
+> -	ha = NULL;
+>  
+>  probe_out:
+>  	pci_disable_device(pdev);
+> @@ -3504,7 +3500,6 @@ qla2x00_remove_one(struct pci_dev *pdev)
+>  
+>  	pci_release_selected_regions(ha->pdev, ha->bars);
+>  	kfree(ha);
+> -	ha = NULL;
+>  
+>  	pci_disable_pcie_error_reporting(pdev);
+>  
+> @@ -3568,7 +3563,6 @@ void qla2x00_free_fcports(struct scsi_qla_host *vha)
+>  		list_del(&fcport->list);
+>  		qla2x00_clear_loop_id(fcport);
+>  		kfree(fcport);
+> -		fcport = NULL;
+>  	}
+>  }
+>  
+> 
+
+Looks Good. 
+
+Acked-By: Himanshu Madhani <himanshu.madhani@cavium.com>
+
