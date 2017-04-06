@@ -1,39 +1,35 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
 Subject: Re: [PATCH] Make checking the scsi_device_get() return value
  mandatory
-Date: Thu, 6 Apr 2017 10:25:08 +0200
-Message-ID: <20170406082508.GA3768@linux-x5ow.site>
-References: <201704060817.vbFGWYzD%fengguang.wu@intel.com>
- <1491438642.2787.17.camel@sandisk.com>
+Date: Thu, 6 Apr 2017 10:25:49 +0200
+Message-ID: <20170406082548.GB3768@linux-x5ow.site>
+References: <4b49f610-4ae7-ac4c-5c93-920c034e964d@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33459 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:33531 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752692AbdDFIZO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 6 Apr 2017 04:25:14 -0400
+        id S1752913AbdDFIZy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 6 Apr 2017 04:25:54 -0400
 Content-Disposition: inline
-In-Reply-To: <1491438642.2787.17.camel@sandisk.com>
+In-Reply-To: <4b49f610-4ae7-ac4c-5c93-920c034e964d@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, Apr 06, 2017 at 12:30:43AM +0000, Bart Van Assche wrote:
-> On Thu, 2017-04-06 at 08:27 +0800, kbuild test robot wrote:
-> > All warnings (new ones prefixed by >>):
-> > 
-> >    drivers//scsi/osd/osd_uld.c: In function 'osd_probe':
-> > > > drivers//scsi/osd/osd_uld.c:467:2: warning: ignoring return value of 'scsi_device_get', declared with attribute warn_unused_result [-Wunused-result]
-> > 
-> >      scsi_device_get(scsi_device);
-> >      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+On Wed, Apr 05, 2017 at 09:52:50AM -0700, Bart Van Assche wrote:
+> Now that all scsi_device_get() callers check the return value of this
+> function, make checking that return value mandatory.
 > 
-> Please ignore this warning. It is triggered because patch "osd_uld: Check
-> scsi_device_get() return value" is not yet upstream.
+> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Johannes Thumshirn <jthumshirn@suse.de>
+> ---
 
-And verified this patch is valuable ;-)
+Looks good,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
 -- 
 Johannes Thumshirn                                          Storage
