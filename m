@@ -1,65 +1,278 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 4/4] mtd: nand: nandsim: convert to memalloc_noreclaim_*()
-Date: Thu, 6 Apr 2017 09:27:55 +0200
-Message-ID: <20170406072754.GC5497@dhcp22.suse.cz>
-References: <20170405074700.29871-1-vbabka@suse.cz>
- <20170405074700.29871-5-vbabka@suse.cz>
- <20170405113157.GM6035@dhcp22.suse.cz>
- <ee6649ed-b0e8-1c59-c193-d1688fdfe7f5@nod.at>
- <9b9d5bca-e125-e07b-b700-196cc800bbd7@suse.cz>
- <fe1c21a4-0bc6-529c-5446-382b01d4c99e@intel.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] csiostor: switch to pci_alloc_irq_vectors
+Date: Thu, 6 Apr 2017 09:58:58 +0200
+Message-ID: <20170406075858.GA32019@lst.de>
+References: <1484325046-31032-1-git-send-email-hch@lst.de> <yq1h94tgsvd.fsf@oracle.com> <20170331065527.GA3024@lst.de> <20170403145124.GA1743@chelsio.com> <20170404064614.GA9275@lst.de> <20170404081943.GA1665@chelsio.com> <20170405062656.GA26470@lst.de> <20170405153933.GA1912@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <open-iscsi+bncBC4LN7MPQ4HRB763S7DQKGQE7C7BZQI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:60837 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756788AbdDFH7A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 6 Apr 2017 03:59:00 -0400
 Content-Disposition: inline
-In-Reply-To: <fe1c21a4-0bc6-529c-5446-382b01d4c99e-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: Adrian Hunter <adrian.hunter-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, nbd-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Boris Brezillon <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
+In-Reply-To: <20170405153933.GA1912@chelsio.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Varun Prakash <varun@chelsio.com>
+Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu 06-04-17 09:33:44, Adrian Hunter wrote:
-> On 05/04/17 14:39, Vlastimil Babka wrote:
-> > On 04/05/2017 01:36 PM, Richard Weinberger wrote:
-> >> Michal,
-> >>
-> >> Am 05.04.2017 um 13:31 schrieb Michal Hocko:
-> >>> On Wed 05-04-17 09:47:00, Vlastimil Babka wrote:
-> >>>> Nandsim has own functions set_memalloc() and clear_memalloc() for robust
-> >>>> setting and clearing of PF_MEMALLOC. Replace them by the new generic helpers.
-> >>>> No functional change.
-> >>>
-> >>> This one smells like an abuser. Why the hell should read/write path
-> >>> touch memory reserves at all!
-> >>
-> >> Could be. Let's ask Adrian, AFAIK he wrote that code.
-> >> Adrian, can you please clarify why nandsim needs to play with PF_MEMALLOC?
-> > 
-> > I was thinking about it and concluded that since the simulator can be
-> > used as a block device where reclaimed pages go to, writing the data out
-> > is a memalloc operation. Then reading can be called as part of r-m-w
-> > cycle, so reading as well.
-> 
-> IIRC it was to avoid getting stuck with nandsim waiting on memory reclaim
-> and memory reclaim waiting on nandsim.
+Ok, the version below simplify skip the function split entirely:
 
-I've got lost in the indirection. Could you describe how would reclaim
-get stuck waiting on these paths please?
+---
+>From 7c9ca58f1d8cf53b42f14a51e02d0f3d0f12ab45 Mon Sep 17 00:00:00 2001
+From: Christoph Hellwig <hch@lst.de>
+Date: Thu, 12 Jan 2017 11:17:29 +0100
+Subject: csiostor: switch to pci_alloc_irq_vectors
 
+And get automatic MSI-X affinity for free.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/csiostor/csio_hw.h  |   1 -
+ drivers/scsi/csiostor/csio_isr.c | 128 ++++++++++++++-------------------------
+ 2 files changed, 47 insertions(+), 82 deletions(-)
+
+diff --git a/drivers/scsi/csiostor/csio_hw.h b/drivers/scsi/csiostor/csio_hw.h
+index 029bef82c057..62758e830d3b 100644
+--- a/drivers/scsi/csiostor/csio_hw.h
++++ b/drivers/scsi/csiostor/csio_hw.h
+@@ -95,7 +95,6 @@ enum {
+ };
+ 
+ struct csio_msix_entries {
+-	unsigned short	vector;		/* Assigned MSI-X vector */
+ 	void		*dev_id;	/* Priv object associated w/ this msix*/
+ 	char		desc[24];	/* Description of this vector */
+ };
+diff --git a/drivers/scsi/csiostor/csio_isr.c b/drivers/scsi/csiostor/csio_isr.c
+index 2fb71c6c3b37..7c8814715711 100644
+--- a/drivers/scsi/csiostor/csio_isr.c
++++ b/drivers/scsi/csiostor/csio_isr.c
+@@ -383,17 +383,15 @@ csio_request_irqs(struct csio_hw *hw)
+ 	int rv, i, j, k = 0;
+ 	struct csio_msix_entries *entryp = &hw->msix_entries[0];
+ 	struct csio_scsi_cpu_info *info;
++	struct pci_dev *pdev = hw->pdev;
+ 
+ 	if (hw->intr_mode != CSIO_IM_MSIX) {
+-		rv = request_irq(hw->pdev->irq, csio_fcoe_isr,
+-					(hw->intr_mode == CSIO_IM_MSI) ?
+-							0 : IRQF_SHARED,
+-					KBUILD_MODNAME, hw);
++		rv = request_irq(pci_irq_vector(pdev, 0), csio_fcoe_isr,
++				hw->intr_mode == CSIO_IM_MSI ? 0 : IRQF_SHARED,
++				KBUILD_MODNAME, hw);
+ 		if (rv) {
+-			if (hw->intr_mode == CSIO_IM_MSI)
+-				pci_disable_msi(hw->pdev);
+ 			csio_err(hw, "Failed to allocate interrupt line.\n");
+-			return -EINVAL;
++			goto out_free_irqs;
+ 		}
+ 
+ 		goto out;
+@@ -402,22 +400,22 @@ csio_request_irqs(struct csio_hw *hw)
+ 	/* Add the MSIX vector descriptions */
+ 	csio_add_msix_desc(hw);
+ 
+-	rv = request_irq(entryp[k].vector, csio_nondata_isr, 0,
++	rv = request_irq(pci_irq_vector(pdev, k), csio_nondata_isr, 0,
+ 			 entryp[k].desc, hw);
+ 	if (rv) {
+ 		csio_err(hw, "IRQ request failed for vec %d err:%d\n",
+-			 entryp[k].vector, rv);
+-		goto err;
++			 pci_irq_vector(pdev, k), rv);
++		goto out_free_irqs;
+ 	}
+ 
+-	entryp[k++].dev_id = (void *)hw;
++	entryp[k++].dev_id = hw;
+ 
+-	rv = request_irq(entryp[k].vector, csio_fwevt_isr, 0,
++	rv = request_irq(pci_irq_vector(pdev, k), csio_fwevt_isr, 0,
+ 			 entryp[k].desc, hw);
+ 	if (rv) {
+ 		csio_err(hw, "IRQ request failed for vec %d err:%d\n",
+-			 entryp[k].vector, rv);
+-		goto err;
++			 pci_irq_vector(pdev, k), rv);
++		goto out_free_irqs;
+ 	}
+ 
+ 	entryp[k++].dev_id = (void *)hw;
+@@ -429,51 +427,31 @@ csio_request_irqs(struct csio_hw *hw)
+ 			struct csio_scsi_qset *sqset = &hw->sqset[i][j];
+ 			struct csio_q *q = hw->wrm.q_arr[sqset->iq_idx];
+ 
+-			rv = request_irq(entryp[k].vector, csio_scsi_isr, 0,
++			rv = request_irq(pci_irq_vector(pdev, k), csio_scsi_isr, 0,
+ 					 entryp[k].desc, q);
+ 			if (rv) {
+ 				csio_err(hw,
+ 				       "IRQ request failed for vec %d err:%d\n",
+-				       entryp[k].vector, rv);
+-				goto err;
++				       pci_irq_vector(pdev, k), rv);
++				goto out_free_irqs;
+ 			}
+ 
+-			entryp[k].dev_id = (void *)q;
++			entryp[k].dev_id = q;
+ 
+ 		} /* for all scsi cpus */
+ 	} /* for all ports */
+ 
+ out:
+ 	hw->flags |= CSIO_HWF_HOST_INTR_ENABLED;
+-
+ 	return 0;
+ 
+-err:
+-	for (i = 0; i < k; i++) {
+-		entryp = &hw->msix_entries[i];
+-		free_irq(entryp->vector, entryp->dev_id);
+-	}
+-	pci_disable_msix(hw->pdev);
+-
++out_free_irqs:
++	for (i = 0; i < k; i++)
++		free_irq(pci_irq_vector(pdev, i), hw->msix_entries[i].dev_id);
++	pci_free_irq_vectors(hw->pdev);
+ 	return -EINVAL;
+ }
+ 
+-static void
+-csio_disable_msix(struct csio_hw *hw, bool free)
+-{
+-	int i;
+-	struct csio_msix_entries *entryp;
+-	int cnt = hw->num_sqsets + CSIO_EXTRA_VECS;
+-
+-	if (free) {
+-		for (i = 0; i < cnt; i++) {
+-			entryp = &hw->msix_entries[i];
+-			free_irq(entryp->vector, entryp->dev_id);
+-		}
+-	}
+-	pci_disable_msix(hw->pdev);
+-}
+-
+ /* Reduce per-port max possible CPUs */
+ static void
+ csio_reduce_sqsets(struct csio_hw *hw, int cnt)
+@@ -500,10 +478,9 @@ static int
+ csio_enable_msix(struct csio_hw *hw)
+ {
+ 	int i, j, k, n, min, cnt;
+-	struct csio_msix_entries *entryp;
+-	struct msix_entry *entries;
+ 	int extra = CSIO_EXTRA_VECS;
+ 	struct csio_scsi_cpu_info *info;
++	struct irq_affinity desc = { .pre_vectors = 2 };
+ 
+ 	min = hw->num_pports + extra;
+ 	cnt = hw->num_sqsets + extra;
+@@ -512,50 +489,35 @@ csio_enable_msix(struct csio_hw *hw)
+ 	if (hw->flags & CSIO_HWF_USING_SOFT_PARAMS || !csio_is_hw_master(hw))
+ 		cnt = min_t(uint8_t, hw->cfg_niq, cnt);
+ 
+-	entries = kzalloc(sizeof(struct msix_entry) * cnt, GFP_KERNEL);
+-	if (!entries)
+-		return -ENOMEM;
+-
+-	for (i = 0; i < cnt; i++)
+-		entries[i].entry = (uint16_t)i;
+-
+ 	csio_dbg(hw, "FW supp #niq:%d, trying %d msix's\n", hw->cfg_niq, cnt);
+ 
+-	cnt = pci_enable_msix_range(hw->pdev, entries, min, cnt);
+-	if (cnt < 0) {
+-		kfree(entries);
++	cnt = pci_alloc_irq_vectors_affinity(hw->pdev, min, cnt,
++			PCI_IRQ_MSIX | PCI_IRQ_AFFINITY, &desc);
++	if (cnt < 0)
+ 		return cnt;
+-	}
+ 
+ 	if (cnt < (hw->num_sqsets + extra)) {
+ 		csio_dbg(hw, "Reducing sqsets to %d\n", cnt - extra);
+ 		csio_reduce_sqsets(hw, cnt - extra);
+ 	}
+ 
+-	/* Save off vectors */
+-	for (i = 0; i < cnt; i++) {
+-		entryp = &hw->msix_entries[i];
+-		entryp->vector = entries[i].vector;
+-	}
+-
+ 	/* Distribute vectors */
+ 	k = 0;
+-	csio_set_nondata_intr_idx(hw, entries[k].entry);
+-	csio_set_mb_intr_idx(csio_hw_to_mbm(hw), entries[k++].entry);
+-	csio_set_fwevt_intr_idx(hw, entries[k++].entry);
++	csio_set_nondata_intr_idx(hw, k);
++	csio_set_mb_intr_idx(csio_hw_to_mbm(hw), k++);
++	csio_set_fwevt_intr_idx(hw, k++);
+ 
+ 	for (i = 0; i < hw->num_pports; i++) {
+ 		info = &hw->scsi_cpu_info[i];
+ 
+ 		for (j = 0; j < hw->num_scsi_msix_cpus; j++) {
+ 			n = (j % info->max_cpus) +  k;
+-			hw->sqset[i][j].intr_idx = entries[n].entry;
++			hw->sqset[i][j].intr_idx = n;
+ 		}
+ 
+ 		k += info->max_cpus;
+ 	}
+ 
+-	kfree(entries);
+ 	return 0;
+ }
+ 
+@@ -597,22 +559,26 @@ csio_intr_disable(struct csio_hw *hw, bool free)
+ {
+ 	csio_hw_intr_disable(hw);
+ 
+-	switch (hw->intr_mode) {
+-	case CSIO_IM_MSIX:
+-		csio_disable_msix(hw, free);
+-		break;
+-	case CSIO_IM_MSI:
+-		if (free)
+-			free_irq(hw->pdev->irq, hw);
+-		pci_disable_msi(hw->pdev);
+-		break;
+-	case CSIO_IM_INTX:
+-		if (free)
+-			free_irq(hw->pdev->irq, hw);
+-		break;
+-	default:
+-		break;
++	if (free) {
++		int i;
++
++		switch (hw->intr_mode) {
++		case CSIO_IM_MSIX:
++			for (i = 0; i < hw->num_sqsets + CSIO_EXTRA_VECS; i++) {
++				free_irq(pci_irq_vector(hw->pdev, i),
++					 hw->msix_entries[i].dev_id);
++			}
++			break;
++		case CSIO_IM_MSI:
++		case CSIO_IM_INTX:
++			free_irq(pci_irq_vector(hw->pdev, 0), hw);
++			break;
++		default:
++			break;
++		}
+ 	}
++
++	pci_free_irq_vectors(hw->pdev);
+ 	hw->intr_mode = CSIO_IM_NONE;
+ 	hw->flags &= ~CSIO_HWF_HOST_INTR_ENABLED;
+ }
 -- 
-Michal Hocko
-SUSE Labs
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+2.11.0
