@@ -1,37 +1,87 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 1/5] nvme: move ->retries setup to nvme_setup_cmd
-Date: Thu, 6 Apr 2017 10:55:16 +0200
-Message-ID: <20170406085513.GC3768@linux-x5ow.site>
-References: <20170405171812.19911-1-hch@lst.de>
- <20170405171812.19911-2-hch@lst.de>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: qla2xxx: remove some redundant pointer assignments
+Date: Thu,  6 Apr 2017 12:19:57 +0100
+Message-ID: <20170406111957.17250-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170405171812.19911-2-hch@lst.de>
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:55615 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754268AbdDFLUC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2017 07:20:02 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: qla2xxx-upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org
 
-On Wed, Apr 05, 2017 at 07:18:08PM +0200, Christoph Hellwig wrote:
-> ->retries is counting the number of times a command is resubmitted, and
-> be cleared on the first time we see the command.  We currently don't do
-> that for non-PCIe command, which is easily fixed by moving the setup
-> to common code.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+From: Colin Ian King <colin.king@canonical.com>
 
-Thanks a lot.
+There are several local or function parameter pointers that are
+being assigned NULL after a kfree where and these have no effect
+and hence can be removed.
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Fixes various cppcheck warnings:
 
+"Assignment of function parameter has no effect outside the
+function. Did you forget dereferencing it"
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/qla2xxx/qla_os.c | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 83d61d2142e9..1c7957903283 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -423,7 +423,6 @@ static void qla2x00_free_req_que(struct qla_hw_data *ha, struct req_que *req)
+ 		kfree(req->outstanding_cmds);
+ 
+ 	kfree(req);
+-	req = NULL;
+ }
+ 
+ static void qla2x00_free_rsp_que(struct qla_hw_data *ha, struct rsp_que *rsp)
+@@ -439,7 +438,6 @@ static void qla2x00_free_rsp_que(struct qla_hw_data *ha, struct rsp_que *rsp)
+ 		rsp->ring, rsp->dma);
+ 	}
+ 	kfree(rsp);
+-	rsp = NULL;
+ }
+ 
+ static void qla2x00_free_queues(struct qla_hw_data *ha)
+@@ -653,7 +651,6 @@ qla2x00_sp_free_dma(void *ptr)
+ 		ha->gbl_dsd_inuse -= ctx1->dsd_use_cnt;
+ 		ha->gbl_dsd_avail += ctx1->dsd_use_cnt;
+ 		mempool_free(ctx1, ha->ctx_mempool);
+-		ctx1 = NULL;
+ 	}
+ 
+ 	CMD_SP(cmd) = NULL;
+@@ -3256,7 +3253,6 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	}
+ 	pci_release_selected_regions(ha->pdev, ha->bars);
+ 	kfree(ha);
+-	ha = NULL;
+ 
+ probe_out:
+ 	pci_disable_device(pdev);
+@@ -3504,7 +3500,6 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 
+ 	pci_release_selected_regions(ha->pdev, ha->bars);
+ 	kfree(ha);
+-	ha = NULL;
+ 
+ 	pci_disable_pcie_error_reporting(pdev);
+ 
+@@ -3568,7 +3563,6 @@ void qla2x00_free_fcports(struct scsi_qla_host *vha)
+ 		list_del(&fcport->list);
+ 		qla2x00_clear_loop_id(fcport);
+ 		kfree(fcport);
+-		fcport = NULL;
+ 	}
+ }
+ 
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+2.11.0
