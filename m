@@ -1,139 +1,96 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 16/25] xen-blkfront: don't use req->errors
-Date: Thu,  6 Apr 2017 17:39:35 +0200
-Message-ID: <20170406153944.10058-17-hch@lst.de>
+Subject: [PATCH 15/25] mtip32xx: add a status field to struct mtip_cmd
+Date: Thu,  6 Apr 2017 17:39:34 +0200
+Message-ID: <20170406153944.10058-16-hch@lst.de>
 References: <20170406153944.10058-1-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:56489 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:55590 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755472AbdDFPkl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2017 11:40:41 -0400
+        with ESMTP id S1755472AbdDFPki (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2017 11:40:38 -0400
 In-Reply-To: <20170406153944.10058-1-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
 Cc: Josef Bacik <jbacik@fb.com>, James Smart <james.smart@broadcom.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, =?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, dm-devel@redhat.com
 
-xen-blkfron is the last users using rq->errros for passing back error to
-blk-mq, and I'd like to get rid of that.  In the longer run the driver
-should be moving more of the completion processing into .complete, but
-this is the minimal change to move forward for now.
+Instead of using req->errors, which will go away.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/block/xen-blkfront.c | 36 +++++++++++++++++++++++++-----------
- 1 file changed, 25 insertions(+), 11 deletions(-)
+ drivers/block/mtip32xx/mtip32xx.c | 16 +++++++++-------
+ drivers/block/mtip32xx/mtip32xx.h |  1 +
+ 2 files changed, 10 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/block/xen-blkfront.c b/drivers/block/xen-blkfront.c
-index d137ef8a72be..08172f679a64 100644
---- a/drivers/block/xen-blkfront.c
-+++ b/drivers/block/xen-blkfront.c
-@@ -115,6 +115,15 @@ struct split_bio {
- 	atomic_t pending;
- };
+diff --git a/drivers/block/mtip32xx/mtip32xx.c b/drivers/block/mtip32xx/mtip32xx.c
+index 30076e7753bc..ec998e80cfaf 100644
+--- a/drivers/block/mtip32xx/mtip32xx.c
++++ b/drivers/block/mtip32xx/mtip32xx.c
+@@ -241,7 +241,8 @@ static void mtip_async_complete(struct mtip_port *port,
  
-+struct blkif_req {
-+	int	error;
-+};
-+
-+static inline struct blkif_req *blkif_req(struct request *rq)
-+{
-+	return blk_mq_rq_to_pdu(rq);
-+}
-+
- static DEFINE_MUTEX(blkfront_mutex);
- static const struct block_device_operations xlvbd_block_fops;
+ 	rq = mtip_rq_from_tag(dd, tag);
  
-@@ -907,8 +916,14 @@ static int blkif_queue_rq(struct blk_mq_hw_ctx *hctx,
- 	return BLK_MQ_RQ_QUEUE_BUSY;
+-	blk_mq_complete_request(rq, status);
++	cmd->status = status;
++	blk_mq_complete_request(rq, 0);
  }
  
-+static void blkif_complete_rq(struct request *rq)
-+{
-+	blk_mq_end_request(rq, blkif_req(rq)->error);
-+}
-+
- static const struct blk_mq_ops blkfront_mq_ops = {
- 	.queue_rq = blkif_queue_rq,
-+	.complete = blkif_complete_rq,
+ /*
+@@ -2910,18 +2911,19 @@ static void mtip_softirq_done_fn(struct request *rq)
+ 	if (unlikely(cmd->unaligned))
+ 		up(&dd->port->cmd_slot_unal);
+ 
+-	blk_mq_end_request(rq, rq->errors);
++	blk_mq_end_request(rq, cmd->status);
+ }
+ 
+ static void mtip_abort_cmd(struct request *req, void *data,
+ 							bool reserved)
+ {
++	struct mtip_cmd *cmd = blk_mq_rq_to_pdu(req);
+ 	struct driver_data *dd = data;
+ 
+ 	dbg_printk(MTIP_DRV_NAME " Aborting request, tag = %d\n", req->tag);
+ 
+ 	clear_bit(req->tag, dd->port->cmds_to_issue);
+-	req->errors = -EIO;
++	cmd->status = -EIO;
+ 	mtip_softirq_done_fn(req);
+ }
+ 
+@@ -3816,7 +3818,6 @@ static int mtip_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 	if (likely(!ret))
+ 		return BLK_MQ_RQ_QUEUE_OK;
+ 
+-	rq->errors = ret;
+ 	return BLK_MQ_RQ_QUEUE_ERROR;
+ }
+ 
+@@ -4107,9 +4108,10 @@ static void mtip_no_dev_cleanup(struct request *rq, void *data, bool reserv)
+ 	struct driver_data *dd = (struct driver_data *)data;
+ 	struct mtip_cmd *cmd;
+ 
+-	if (likely(!reserv))
+-		blk_mq_complete_request(rq, -ENODEV);
+-	else if (test_bit(MTIP_PF_IC_ACTIVE_BIT, &dd->port->flags)) {
++	if (likely(!reserv)) {
++		cmd->status = -ENODEV;
++		blk_mq_complete_request(rq, 0);
++	} else if (test_bit(MTIP_PF_IC_ACTIVE_BIT, &dd->port->flags)) {
+ 
+ 		cmd = mtip_cmd_from_tag(dd, MTIP_TAG_INTERNAL);
+ 		if (cmd->comp_func)
+diff --git a/drivers/block/mtip32xx/mtip32xx.h b/drivers/block/mtip32xx/mtip32xx.h
+index 7617888f7944..57b41528a824 100644
+--- a/drivers/block/mtip32xx/mtip32xx.h
++++ b/drivers/block/mtip32xx/mtip32xx.h
+@@ -352,6 +352,7 @@ struct mtip_cmd {
+ 	int retries; /* The number of retries left for this command. */
+ 
+ 	int direction; /* Data transfer direction */
++	int status;
  };
  
- static void blkif_set_queue_limits(struct blkfront_info *info)
-@@ -969,7 +984,7 @@ static int xlvbd_init_blk_queue(struct gendisk *gd, u16 sector_size,
- 		info->tag_set.queue_depth = BLK_RING_SIZE(info);
- 	info->tag_set.numa_node = NUMA_NO_NODE;
- 	info->tag_set.flags = BLK_MQ_F_SHOULD_MERGE | BLK_MQ_F_SG_MERGE;
--	info->tag_set.cmd_size = 0;
-+	info->tag_set.cmd_size = sizeof(struct blkif_req);
- 	info->tag_set.driver_data = info;
- 
- 	if (blk_mq_alloc_tag_set(&info->tag_set))
-@@ -1543,7 +1558,6 @@ static irqreturn_t blkif_interrupt(int irq, void *dev_id)
- 	unsigned long flags;
- 	struct blkfront_ring_info *rinfo = (struct blkfront_ring_info *)dev_id;
- 	struct blkfront_info *info = rinfo->dev_info;
--	int error;
- 
- 	if (unlikely(info->connected != BLKIF_STATE_CONNECTED))
- 		return IRQ_HANDLED;
-@@ -1587,37 +1601,36 @@ static irqreturn_t blkif_interrupt(int irq, void *dev_id)
- 			continue;
- 		}
- 
--		error = (bret->status == BLKIF_RSP_OKAY) ? 0 : -EIO;
-+		blkif_req(req)->error = (bret->status == BLKIF_RSP_OKAY) ? 0 : -EIO;
- 		switch (bret->operation) {
- 		case BLKIF_OP_DISCARD:
- 			if (unlikely(bret->status == BLKIF_RSP_EOPNOTSUPP)) {
- 				struct request_queue *rq = info->rq;
- 				printk(KERN_WARNING "blkfront: %s: %s op failed\n",
- 					   info->gd->disk_name, op_name(bret->operation));
--				error = -EOPNOTSUPP;
-+				blkif_req(req)->error = -EOPNOTSUPP;
- 				info->feature_discard = 0;
- 				info->feature_secdiscard = 0;
- 				queue_flag_clear(QUEUE_FLAG_DISCARD, rq);
- 				queue_flag_clear(QUEUE_FLAG_SECERASE, rq);
- 			}
--			blk_mq_complete_request(req, error);
- 			break;
- 		case BLKIF_OP_FLUSH_DISKCACHE:
- 		case BLKIF_OP_WRITE_BARRIER:
- 			if (unlikely(bret->status == BLKIF_RSP_EOPNOTSUPP)) {
- 				printk(KERN_WARNING "blkfront: %s: %s op failed\n",
- 				       info->gd->disk_name, op_name(bret->operation));
--				error = -EOPNOTSUPP;
-+				blkif_req(req)->error = -EOPNOTSUPP;
- 			}
- 			if (unlikely(bret->status == BLKIF_RSP_ERROR &&
- 				     rinfo->shadow[id].req.u.rw.nr_segments == 0)) {
- 				printk(KERN_WARNING "blkfront: %s: empty %s op failed\n",
- 				       info->gd->disk_name, op_name(bret->operation));
--				error = -EOPNOTSUPP;
-+				blkif_req(req)->error = -EOPNOTSUPP;
- 			}
--			if (unlikely(error)) {
--				if (error == -EOPNOTSUPP)
--					error = 0;
-+			if (unlikely(blkif_req(req)->error)) {
-+				if (blkif_req(req)->error == -EOPNOTSUPP)
-+					blkif_req(req)->error = 0;
- 				info->feature_fua = 0;
- 				info->feature_flush = 0;
- 				xlvbd_flush(info);
-@@ -1629,11 +1642,12 @@ static irqreturn_t blkif_interrupt(int irq, void *dev_id)
- 				dev_dbg(&info->xbdev->dev, "Bad return from blkdev data "
- 					"request: %x\n", bret->status);
- 
--			blk_mq_complete_request(req, error);
- 			break;
- 		default:
- 			BUG();
- 		}
-+
-+		blk_mq_complete_request(req, 0);
- 	}
- 
- 	rinfo->ring.rsp_cons = i;
+ /* Structure used to describe a port. */
 -- 
 2.11.0
