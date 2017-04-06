@@ -1,87 +1,58 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: qla2xxx: remove some redundant pointer assignments
-Date: Thu,  6 Apr 2017 12:19:57 +0100
-Message-ID: <20170406111957.17250-1-colin.king@canonical.com>
+From: Mel Gorman <mgorman@techsingularity.net>
+Subject: Re: [Nbd] [PATCH 3/4] treewide: convert PF_MEMALLOC manipulations to
+ new helpers
+Date: Thu, 6 Apr 2017 12:25:26 +0100
+Message-ID: <20170406112526.jj7zwzxqvushy5g2@techsingularity.net>
+References: <20170405074700.29871-1-vbabka@suse.cz>
+ <20170405074700.29871-4-vbabka@suse.cz>
+ <20170405113030.GL6035@dhcp22.suse.cz>
+ <20170406063810.dmv4fg2irsqgdvyq@grep.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:55615 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754268AbdDFLUC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2017 07:20:02 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-15
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170406063810.dmv4fg2irsqgdvyq@grep.be>
+Sender: netdev-owner@vger.kernel.org
+To: Wouter Verhelst <w@uter.be>
+Cc: Michal Hocko <mhocko@kernel.org>, Vlastimil Babka <vbabka@suse.cz>, nbd-general@lists.sourceforge.net, Chris Leech <cleech@redhat.com>, linux-scsi@vger.kernel.org, Josef Bacik <jbacik@fb.com>, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org, Eric Dumazet <edumazet@google.com>, Lee Duncan <lduncan@suse.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, open-iscsi@googlegroups.com, "David S. Miller" <davem@davemloft.net>
 List-Id: linux-scsi@vger.kernel.org
-To: qla2xxx-upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+On Thu, Apr 06, 2017 at 08:38:10AM +0200, Wouter Verhelst wrote:
+> On Wed, Apr 05, 2017 at 01:30:31PM +0200, Michal Hocko wrote:
+> > On Wed 05-04-17 09:46:59, Vlastimil Babka wrote:
+> > > We now have memalloc_noreclaim_{save,restore} helpers for robust setting and
+> > > clearing of PF_MEMALLOC. Let's convert the code which was using the generic
+> > > tsk_restore_flags(). No functional change.
+> > 
+> > It would be really great to revisit why those places outside of the mm
+> > proper really need this flag. I know this is a painful exercise but I
+> > wouldn't be surprised if there were abusers there.
+> [...]
+> > > ---
+> > >  drivers/block/nbd.c      | 7 ++++---
+> > >  drivers/scsi/iscsi_tcp.c | 7 ++++---
+> > >  net/core/dev.c           | 7 ++++---
+> > >  net/core/sock.c          | 7 ++++---
+> > >  4 files changed, 16 insertions(+), 12 deletions(-)
+> 
+> These were all done to make swapping over network safe. The idea is that
+> if a socket has SOCK_MEMALLOC set, incoming packets for that socket can
+> access PFMEMALLOC reserves (whereas other sockets cannot); this all in
+> the hope that one packe destined to that socket will contain the TCP ACK
+> that confirms the swapout was successful and we can now release RAM
+> pages for other processes.
+> 
+> I don't know whether they need the PF_MEMALLOC flag specifically (not a
+> kernel hacker), but they do need to interact with it at any rate.
+> 
 
-There are several local or function parameter pointers that are
-being assigned NULL after a kfree where and these have no effect
-and hence can be removed.
+At the time it was required to get access to emergency reserves so swapping
+can continue. The flip side is that the memory is then protected so pages
+allocated from emergency reserves are not used for network traffic that
+is not involved with swap. This means that under heavy swap load, it was
+perfectly possible for unrelated traffic to get dropped for quite some
+time.
 
-Fixes various cppcheck warnings:
-
-"Assignment of function parameter has no effect outside the
-function. Did you forget dereferencing it"
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/qla2xxx/qla_os.c | 6 ------
- 1 file changed, 6 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 83d61d2142e9..1c7957903283 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -423,7 +423,6 @@ static void qla2x00_free_req_que(struct qla_hw_data *ha, struct req_que *req)
- 		kfree(req->outstanding_cmds);
- 
- 	kfree(req);
--	req = NULL;
- }
- 
- static void qla2x00_free_rsp_que(struct qla_hw_data *ha, struct rsp_que *rsp)
-@@ -439,7 +438,6 @@ static void qla2x00_free_rsp_que(struct qla_hw_data *ha, struct rsp_que *rsp)
- 		rsp->ring, rsp->dma);
- 	}
- 	kfree(rsp);
--	rsp = NULL;
- }
- 
- static void qla2x00_free_queues(struct qla_hw_data *ha)
-@@ -653,7 +651,6 @@ qla2x00_sp_free_dma(void *ptr)
- 		ha->gbl_dsd_inuse -= ctx1->dsd_use_cnt;
- 		ha->gbl_dsd_avail += ctx1->dsd_use_cnt;
- 		mempool_free(ctx1, ha->ctx_mempool);
--		ctx1 = NULL;
- 	}
- 
- 	CMD_SP(cmd) = NULL;
-@@ -3256,7 +3253,6 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	}
- 	pci_release_selected_regions(ha->pdev, ha->bars);
- 	kfree(ha);
--	ha = NULL;
- 
- probe_out:
- 	pci_disable_device(pdev);
-@@ -3504,7 +3500,6 @@ qla2x00_remove_one(struct pci_dev *pdev)
- 
- 	pci_release_selected_regions(ha->pdev, ha->bars);
- 	kfree(ha);
--	ha = NULL;
- 
- 	pci_disable_pcie_error_reporting(pdev);
- 
-@@ -3568,7 +3563,6 @@ void qla2x00_free_fcports(struct scsi_qla_host *vha)
- 		list_del(&fcport->list);
- 		qla2x00_clear_loop_id(fcport);
- 		kfree(fcport);
--		fcport = NULL;
- 	}
- }
- 
 -- 
-2.11.0
+Mel Gorman
+SUSE Labs
