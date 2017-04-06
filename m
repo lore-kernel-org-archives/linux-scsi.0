@@ -1,28 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] Make checking the scsi_device_get() return value mandatory
-Date: Thu, 06 Apr 2017 12:46:40 -0400
-Message-ID: <yq1h921qya7.fsf@oracle.com>
-References: <4b49f610-4ae7-ac4c-5c93-920c034e964d@sandisk.com>
+Subject: Re: [PATCH v2] scsi: ses: don't get power status of SES device slot on probe
+Date: Thu, 06 Apr 2017 12:49:14 -0400
+Message-ID: <yq1d1cpqy5x.fsf@oracle.com>
+References: <1491405499-5429-1-git-send-email-mauricfo@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:39719 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:41563 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754592AbdDFQqs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2017 12:46:48 -0400
-In-Reply-To: <4b49f610-4ae7-ac4c-5c93-920c034e964d@sandisk.com> (Bart Van
-        Assche's message of "Wed, 5 Apr 2017 09:52:50 -0700")
+        with ESMTP id S1755194AbdDFQtc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2017 12:49:32 -0400
+In-Reply-To: <1491405499-5429-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+        (Mauricio Faria de Oliveira's message of "Wed, 5 Apr 2017 12:18:19
+        -0300")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, songliubraving@fb.com, dan.j.williams@intel.com, jejb@linux.vnet.ibm.com, axboe@fb.com, hare@suse.de, hch@lst.de, gpiccoli@linux.vnet.ibm.com
 
-Bart Van Assche <bart.vanassche@sandisk.com> writes:
 
-> Now that all scsi_device_get() callers check the return value of this
-> function, make checking that return value mandatory.
+Mauricio,
 
-Applied to 4.12/scsi-queue.
+> The commit 08024885a2a3 ("ses: Add power_status to SES device slot")
+> introduced the 'power_status' attribute to enclosure components and
+> the associated callbacks.
+
+Applied to 4.12/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
