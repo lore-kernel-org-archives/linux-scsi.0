@@ -1,44 +1,55 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv6 4/8] libsas: allow async aborts
-Date: Thu,  6 Apr 2017 15:36:32 +0200
-Message-ID: <1491485796-44411-5-git-send-email-hare@suse.de>
+Subject: [PATCHv6 3/8] scsi: always send command aborts
+Date: Thu,  6 Apr 2017 15:36:31 +0200
+Message-ID: <1491485796-44411-4-git-send-email-hare@suse.de>
 References: <1491485796-44411-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38422 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:38411 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934724AbdDFNgq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S934233AbdDFNgq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Thu, 6 Apr 2017 09:36:46 -0400
 In-Reply-To: <1491485796-44411-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>, Hannes Reinecke <hare@suse.com>
 
-From: Christoph Hellwig <hch@lst.de>
+When a command has timed out we always should be sending an
+abort; with the previous code a failed abort might signal
+SCSI EH to start, and all other timed out commands will
+never be aborted, even though they might belong to a
+different ITL nexus.
 
-We now first try to call ->eh_abort_handler from a work queue, but libsas
-was always failing that for no good reason.  Allow async aborts.
-
-Reviewed-by: Johannes Thumshirn <jth@kernel.org>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Cc: Benjamin Block <bblock@linux.vnet.ibm.com>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/libsas/sas_scsi_host.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/scsi/scsi_error.c | 12 ------------
+ 1 file changed, 12 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 9bd55bc..ee6b39a 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -491,9 +491,6 @@ int sas_eh_abort_handler(struct scsi_cmnd *cmd)
- 	struct Scsi_Host *host = cmd->device->host;
- 	struct sas_internal *i = to_sas_internal(host->transportt);
- 
--	if (current != host->ehandler)
--		return FAILED;
--
- 	if (!i->dft->lldd_abort_task)
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 370f6c0..cff7d9d 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -196,19 +196,7 @@ static int scsi_host_eh_past_deadline(struct Scsi_Host *shost)
  		return FAILED;
+ 	}
  
+-	/*
+-	 * Do not try a command abort if
+-	 * SCSI EH has already started.
+-	 */
+ 	spin_lock_irqsave(shost->host_lock, flags);
+-	if (scsi_host_in_recovery(shost)) {
+-		spin_unlock_irqrestore(shost->host_lock, flags);
+-		SCSI_LOG_ERROR_RECOVERY(3,
+-			scmd_printk(KERN_INFO, scmd,
+-				    "not aborting, host in recovery\n"));
+-		return FAILED;
+-	}
+-
+ 	if (shost->eh_deadline != -1 && !shost->last_reset)
+ 		shost->last_reset = jiffies;
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
 -- 
 1.8.5.6
