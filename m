@@ -1,103 +1,54 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv4 4/6] sg: check for valid direction before starting the request
-Date: Fri,  7 Apr 2017 09:34:15 +0200
-Message-ID: <1491550457-78302-5-git-send-email-hare@suse.de>
-References: <1491550457-78302-1-git-send-email-hare@suse.de>
+Subject: [PATCHv4 0/6] sanitize sg
+Date: Fri,  7 Apr 2017 09:34:11 +0200
+Message-ID: <1491550457-78302-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54200 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:54209 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753235AbdDGHeX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1753336AbdDGHeX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Fri, 7 Apr 2017 03:34:23 -0400
-In-Reply-To: <1491550457-78302-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <"james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, DougGilberdgilbert"@interlog.com>, Johannes Thumshirn <jth@kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <"james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, DougGilberdgilbert"@interlog.com>, Johannes Thumshirn <jth@kernel.org>, Hannes Reinecke <hare@suse.de>
 
-From: Johannes Thumshirn <jthumshirn@suse.de>
+Hi all,
 
-Check for a valid direction before starting the request, otherwise we risk
-running into an assertion in the scsi midlayer checking for vaild requests.
+the infamous syzkaller incovered some more issues in the sg driver.
+This patchset fixes those two issues (and adds a fix for yet another
+potential issue; checking for a NULL dxferp when dxfer_len is not 0).
+It also removes handling of the SET_FORCE_LOW_DMA ioctl, which never
+worked since the initial git checkin. And does some code cleanup by
+removing the private list implementation, using standard lists instead.
 
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Link: http://www.spinics.net/lists/linux-scsi/msg104400.html
-Reported-by: Dmitry Vyukov <dvyukov@google.com>
-Signed-off-by: Hannes Reinecke <hare@suse.com>
-Tested-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/sg.c | 46 ++++++++++++++++++++++++++++++++++------------
- 1 file changed, 34 insertions(+), 12 deletions(-)
+As usual, comments and reviews are welcome.
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index ddc1808..5f12273 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -663,18 +663,14 @@ static int sg_allow_access(struct file *filp, unsigned char *cmd)
- 	 * is a non-zero input_size, so emit a warning.
- 	 */
- 	if (hp->dxfer_direction == SG_DXFER_TO_FROM_DEV) {
--		static char cmd[TASK_COMM_LEN];
--		if (strcmp(current->comm, cmd)) {
--			printk_ratelimited(KERN_WARNING
--					   "sg_write: data in/out %d/%d bytes "
--					   "for SCSI command 0x%x-- guessing "
--					   "data in;\n   program %s not setting "
--					   "count and/or reply_len properly\n",
--					   old_hdr.reply_len - (int)SZ_SG_HEADER,
--					   input_size, (unsigned int) cmnd[0],
--					   current->comm);
--			strcpy(cmd, current->comm);
--		}
-+		printk_ratelimited(KERN_WARNING
-+				   "sg_write: data in/out %d/%d bytes "
-+				   "for SCSI command 0x%x-- guessing "
-+				   "data in;\n   program %s not setting "
-+				   "count and/or reply_len properly\n",
-+				   old_hdr.reply_len - (int)SZ_SG_HEADER,
-+				   input_size, (unsigned int) cmnd[0],
-+				   current->comm);
- 	}
- 	k = sg_common_write(sfp, srp, cmnd, sfp->timeout, blocking);
- 	return (k < 0) ? k : count;
-@@ -753,6 +749,29 @@ static int sg_allow_access(struct file *filp, unsigned char *cmd)
- 	return count;
- }
- 
-+static bool sg_is_valid_dxfer(sg_io_hdr_t *hp)
-+{
-+	switch (hp->dxfer_direction) {
-+	case SG_DXFER_NONE:
-+		if (hp->dxferp || hp->dxfer_len > 0)
-+			return false;
-+		return true;
-+	case SG_DXFER_TO_DEV:
-+	case SG_DXFER_FROM_DEV:
-+	case SG_DXFER_TO_FROM_DEV:
-+		if (!hp->dxferp || hp->dxfer_len == 0)
-+			return false;
-+		return true;
-+	case SG_DXFER_UNKNOWN:
-+		if ((!hp->dxferp && hp->dxfer_len) ||
-+		    (hp->dxferp && hp->dxfer_len == 0))
-+			return false;
-+		return true;
-+	default:
-+		return false;
-+	}
-+}
-+
- static int
- sg_common_write(Sg_fd * sfp, Sg_request * srp,
- 		unsigned char *cmnd, int timeout, int blocking)
-@@ -773,6 +792,9 @@ static int sg_allow_access(struct file *filp, unsigned char *cmd)
- 			"sg_common_write:  scsi opcode=0x%02x, cmd_size=%d\n",
- 			(int) cmnd[0], (int) hp->cmd_len));
- 
-+	if (!sg_is_valid_dxfer(hp))
-+		return -EINVAL;
-+
- 	k = sg_start_req(srp, cmnd);
- 	if (k) {
- 		SCSI_LOG_TIMEOUT(1, sg_printk(KERN_INFO, sfp->parentdp,
+Changes to v1:
+- Include reviews from Christoph
+- Add patch to close race condition in sg_remove_sfp_usercontext()
+- Remove stale variable 'save_scat_len'
+
+Changes to v2:
+- Move misplaced hunk
+- Add Reviewed-by: and Tested-by: tags
+
+Changes to v3:
+- Review locking in 'sg: protect accesses ...'
+- Reshuffle hunks to keep kbuild robot happy
+
+Hannes Reinecke (5):
+  sg: disable SET_FORCE_LOW_DMA
+  sg: remove 'save_scat_len'
+  sg: protect accesses to 'reserved' page array
+  sg: use standard lists for sg_requests
+  sg: close race condition in sg_remove_sfp_usercontext()
+
+Johannes Thumshirn (1):
+  sg: check for valid direction before starting the request
+
+ drivers/scsi/sg.c | 282 +++++++++++++++++++++++++++---------------------------
+ include/scsi/sg.h |   1 -
+ 2 files changed, 139 insertions(+), 144 deletions(-)
+
 -- 
 1.8.5.6
