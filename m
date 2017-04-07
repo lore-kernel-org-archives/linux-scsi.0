@@ -1,90 +1,119 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH 08/12] hpsa: correct queue depth for externals
-Date: Fri, 7 Apr 2017 15:06:33 -0500
-Message-ID: <149159559386.15658.4419606166353478976.stgit@brunhilda>
+Subject: [PATCH 09/12] hpsa: separate monitor events from heartbeat worker
+Date: Fri, 7 Apr 2017 15:06:40 -0500
+Message-ID: <149159560000.15658.13539404380272805930.stgit@brunhilda>
 References: <149159483812.15658.615814291766210537.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0042.outbound.protection.outlook.com ([104.47.42.42]:27808
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam02on0063.outbound.protection.outlook.com ([104.47.36.63]:5792
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932199AbdDGUGl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 7 Apr 2017 16:06:41 -0400
+        id S932199AbdDGUGp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 7 Apr 2017 16:06:45 -0400
 In-Reply-To: <149159483812.15658.615814291766210537.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
 Cc: linux-scsi@vger.kernel.org
 
- - queue depth assignment not in correct place, had no effect.
+From: Scott Teel <scott.teel@microsemi.com>
+
+create new worker thread to monitor controller events
+ - detect controller events more frequently.
+ - leave heartbeat check at 30 seconds.
 
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
 Reviewed-by: Scott Teel <scott.teel@microsemi.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/hpsa.c |   22 ++++++++++------------
+ drivers/scsi/hpsa.c |   32 ++++++++++++++++++++++++++++++--
  drivers/scsi/hpsa.h |    1 +
- 2 files changed, 11 insertions(+), 12 deletions(-)
+ 2 files changed, 31 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index a6a37e0..40a87f9 100644
+index 40a87f9..50f7c09 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -2066,10 +2066,13 @@ static int hpsa_slave_configure(struct scsi_device *sdev)
- 	sd = sdev->hostdata;
- 	sdev->no_uld_attach = !sd || !sd->expose_device;
+@@ -1110,6 +1110,7 @@ static int is_firmware_flash_cmd(u8 *cdb)
+  */
+ #define HEARTBEAT_SAMPLE_INTERVAL_DURING_FLASH (240 * HZ)
+ #define HEARTBEAT_SAMPLE_INTERVAL (30 * HZ)
++#define HPSA_EVENT_MONITOR_INTERVAL (15 * HZ)
+ static void dial_down_lockup_detection_during_fw_flash(struct ctlr_info *h,
+ 		struct CommandList *c)
+ {
+@@ -8650,6 +8651,29 @@ static int hpsa_luns_changed(struct ctlr_info *h)
+ 	return rc;
+ }
  
--	if (sd)
--		queue_depth = sd->queue_depth != 0 ?
--			sd->queue_depth : sdev->host->can_queue;
--	else
-+	if (sd) {
-+		if (sd->external)
-+			queue_depth = EXTERNAL_QD;
-+		else
-+			queue_depth = sd->queue_depth != 0 ?
-+					sd->queue_depth : sdev->host->can_queue;
-+	} else
- 		queue_depth = sdev->host->can_queue;
- 
- 	scsi_change_queue_depth(sdev, queue_depth);
-@@ -3912,6 +3915,9 @@ static int hpsa_update_device_info(struct ctlr_info *h,
- 		this_device->queue_depth = h->nr_cmds;
++/*
++ * watch for controller events
++ */
++static void hpsa_event_monitor_worker(struct work_struct *work)
++{
++	struct ctlr_info *h = container_of(to_delayed_work(work),
++	struct ctlr_info, event_monitor_work);
++
++	if (h->remove_in_progress)
++		return;
++
++	if (hpsa_ctlr_needs_rescan(h)) {
++		scsi_host_get(h->scsi_host);
++		hpsa_ack_ctlr_events(h);
++		hpsa_scan_start(h->scsi_host);
++		scsi_host_put(h->scsi_host);
++	}
++
++	if (!h->remove_in_progress)
++		schedule_delayed_work(&h->event_monitor_work,
++					HPSA_EVENT_MONITOR_INTERVAL);
++}
++
+ static void hpsa_rescan_ctlr_worker(struct work_struct *work)
+ {
+ 	unsigned long flags;
+@@ -8668,9 +8692,9 @@ static void hpsa_rescan_ctlr_worker(struct work_struct *work)
+ 		return;
  	}
  
-+	if (this_device->external)
-+		this_device->queue_depth = EXTERNAL_QD;
-+
- 	if (is_OBDR_device) {
- 		/* See if this is a One-Button-Disaster-Recovery device
- 		 * by looking for "$DR-10" at offset 43 in inquiry data.
-@@ -4120,14 +4126,6 @@ static void hpsa_get_ioaccel_drive_info(struct ctlr_info *h,
- 	int rc;
- 	struct ext_report_lun_entry *rle;
+-	if (hpsa_ctlr_needs_rescan(h) || hpsa_offline_devices_ready(h)) {
++	if (h->drv_req_rescan || hpsa_offline_devices_ready(h)) {
++		h->drv_req_rescan = 0;
+ 		scsi_host_get(h->scsi_host);
+-		hpsa_ack_ctlr_events(h);
+ 		hpsa_scan_start(h->scsi_host);
+ 		scsi_host_put(h->scsi_host);
+ 	} else if (h->discovery_polling) {
+@@ -8949,6 +8973,9 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	INIT_DELAYED_WORK(&h->rescan_ctlr_work, hpsa_rescan_ctlr_worker);
+ 	queue_delayed_work(h->rescan_ctlr_wq, &h->rescan_ctlr_work,
+ 				h->heartbeat_sample_interval);
++	INIT_DELAYED_WORK(&h->event_monitor_work, hpsa_event_monitor_worker);
++	schedule_delayed_work(&h->event_monitor_work,
++				HPSA_EVENT_MONITOR_INTERVAL);
+ 	return 0;
  
--	/*
--	 * external targets don't support BMIC
--	 */
--	if (dev->external) {
--		dev->queue_depth = 7;
--		return;
--	}
--
- 	rle = &rlep->LUN[rle_index];
+ clean7: /* perf, sg, cmd, irq, shost, pci, lu, aer/h */
+@@ -9117,6 +9144,7 @@ static void hpsa_remove_one(struct pci_dev *pdev)
+ 	spin_unlock_irqrestore(&h->lock, flags);
+ 	cancel_delayed_work_sync(&h->monitor_ctlr_work);
+ 	cancel_delayed_work_sync(&h->rescan_ctlr_work);
++	cancel_delayed_work_sync(&h->event_monitor_work);
+ 	destroy_workqueue(h->rescan_ctlr_wq);
+ 	destroy_workqueue(h->resubmit_wq);
  
- 	dev->ioaccel_handle = rle->ioaccel_handle;
 diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index 6f04f2a..99539c0 100644
+index 99539c0..3c22ac1 100644
 --- a/drivers/scsi/hpsa.h
 +++ b/drivers/scsi/hpsa.h
-@@ -57,6 +57,7 @@ struct hpsa_sas_phy {
- 	bool added_to_port;
- };
- 
-+#define EXTERNAL_QD 7
- struct hpsa_scsi_dev_t {
- 	unsigned int devtype;
- 	int bus, target, lun;		/* as presented to the OS */
+@@ -245,6 +245,7 @@ struct ctlr_info {
+ 	u32 __percpu *lockup_detected;
+ 	struct delayed_work monitor_ctlr_work;
+ 	struct delayed_work rescan_ctlr_work;
++	struct delayed_work event_monitor_work;
+ 	int remove_in_progress;
+ 	/* Address of h->q[x] is passed to intr handler to know which queue */
+ 	u8 q[MAX_REPLY_QUEUES];
