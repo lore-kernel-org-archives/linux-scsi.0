@@ -1,71 +1,77 @@
-From: Corentin Labbe <clabbe.montjoie@gmail.com>
-Subject: [PATCH] scsi: smartpqi: remove writeq/readq function definitions
-Date: Fri,  7 Apr 2017 15:33:22 +0200
-Message-ID: <20170407133322.30440-1-clabbe.montjoie@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:36494 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756232AbdDGNf3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Apr 2017 09:35:29 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH] scsi: libfc: directly call ELS request handlers
+Date: Fri,  7 Apr 2017 15:42:24 +0200
+Message-ID: <20170407134224.14804-1-jthumshirn@suse.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: don.brace@microsemi.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, esc.storagedev@microsemi.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Corentin Labbe <clabbe.montjoie@gmail.com>
 
-Instead of rewriting write/readq, use linux/io-64-nonatomic-lo-hi.h which
-already have them.
+Directly call ELS request handler functions in fc_lport_recv_els_req
+instead of saving the pointer to the handler's receive function and then
+later dereferencing this pointer.
 
-Signed-off-by: Corentin Labbe <clabbe.montjoie@gmail.com>
+This makes the code a bit more obvious.
+
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/smartpqi/smartpqi.h | 31 ++-----------------------------
- 1 file changed, 2 insertions(+), 29 deletions(-)
+ drivers/scsi/libfc/fc_lport.c | 20 +++++++++-----------
+ 1 file changed, 9 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-index b673825..2850ece 100644
---- a/drivers/scsi/smartpqi/smartpqi.h
-+++ b/drivers/scsi/smartpqi/smartpqi.h
-@@ -19,6 +19,8 @@
- #if !defined(_SMARTPQI_H)
- #define _SMARTPQI_H
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index aa76f36..2fd0ec6 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -887,8 +887,6 @@ static void fc_lport_recv_flogi_req(struct fc_lport *lport,
+ static void fc_lport_recv_els_req(struct fc_lport *lport,
+ 				  struct fc_frame *fp)
+ {
+-	void (*recv)(struct fc_lport *, struct fc_frame *);
+-
+ 	mutex_lock(&lport->lp_mutex);
  
-+#include <linux/io-64-nonatomic-lo-hi.h>
-+
- #pragma pack(1)
- 
- #define PQI_DEVICE_SIGNATURE	"PQI DREG"
-@@ -1102,33 +1104,4 @@ struct pqi_scsi_dev *pqi_find_device_by_sas_rphy(
- 
- extern struct sas_function_template pqi_sas_transport_functions;
- 
--#if !defined(readq)
--#define readq readq
--static inline u64 readq(const volatile void __iomem *addr)
--{
--	u32 lower32;
--	u32 upper32;
+ 	/*
+@@ -902,31 +900,31 @@ static void fc_lport_recv_els_req(struct fc_lport *lport,
+ 		/*
+ 		 * Check opcode.
+ 		 */
+-		recv = fc_rport_recv_req;
+ 		switch (fc_frame_payload_op(fp)) {
+ 		case ELS_FLOGI:
+ 			if (!lport->point_to_multipoint)
+-				recv = fc_lport_recv_flogi_req;
++				fc_lport_recv_flogi_req(lport, fp);
+ 			break;
+ 		case ELS_LOGO:
+ 			if (fc_frame_sid(fp) == FC_FID_FLOGI)
+-				recv = fc_lport_recv_logo_req;
++				fc_lport_recv_logo_req(lport, fp);
+ 			break;
+ 		case ELS_RSCN:
+-			recv = lport->tt.disc_recv_req;
++			lport->tt.disc_recv_req(lport, fp);
+ 			break;
+ 		case ELS_ECHO:
+-			recv = fc_lport_recv_echo_req;
++			fc_lport_recv_echo_req(lport, fp);
+ 			break;
+ 		case ELS_RLIR:
+-			recv = fc_lport_recv_rlir_req;
++			fc_lport_recv_rlir_req(lport, fp);
+ 			break;
+ 		case ELS_RNID:
+-			recv = fc_lport_recv_rnid_req;
++			fc_lport_recv_rnid_req(lport, fp);
++			break;
++		default:
++			fc_rport_recv_req(lport, fp);
+ 			break;
+ 		}
 -
--	lower32 = readl(addr);
--	upper32 = readl(addr + 4);
--
--	return ((u64)upper32 << 32) | lower32;
--}
--#endif
--
--#if !defined(writeq)
--#define writeq writeq
--static inline void writeq(u64 value, volatile void __iomem *addr)
--{
--	u32 lower32;
--	u32 upper32;
--
--	lower32 = lower_32_bits(value);
--	upper32 = upper_32_bits(value);
--
--	writel(lower32, addr);
--	writel(upper32, addr + 4);
--}
--#endif
--
- #endif /* _SMARTPQI_H */
+-		recv(lport, fp);
+ 	}
+ 	mutex_unlock(&lport->lp_mutex);
+ }
 -- 
-2.10.2
+1.8.5.6
