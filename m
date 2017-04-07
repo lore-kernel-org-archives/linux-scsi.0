@@ -1,41 +1,68 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH 12/12] hpsa: bump driver version
-Date: Fri, 7 Apr 2017 15:06:58 -0500
-Message-ID: <149159561851.15658.12213464065502623821.stgit@brunhilda>
-References: <149159483812.15658.615814291766210537.stgit@brunhilda>
+From: Michael Cyr <mikecyr@linux.vnet.ibm.com>
+Subject: Re: [PATCH] ibmvscsis: Do not send aborted task response
+Date: Fri, 7 Apr 2017 16:14:30 -0500
+Message-ID: <402a3e4d-0466-e315-7981-ce9c240236dc@linux.vnet.ibm.com>
+References: <1491580154-30489-1-git-send-email-bryantly@linux.vnet.ibm.com>
+ <0c80c6e3-168a-d8bd-d7b4-e727723bcf18@sandisk.com>
+ <5297a130-5349-1796-2fe4-2336daa346ab@linux.vnet.ibm.com>
+ <1491583008.2559.12.camel@sandisk.com>
+ <63af0be8-f36f-a42d-9898-a7ef642a8c17@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0062.outbound.protection.outlook.com ([104.47.42.62]:20016
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932199AbdDGUHS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 7 Apr 2017 16:07:18 -0400
-In-Reply-To: <149159483812.15658.615814291766210537.stgit@brunhilda>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <63af0be8-f36f-a42d-9898-a7ef642a8c17@linux.vnet.ibm.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, Bart Van Assche <Bart.VanAssche@sandisk.com>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "seroyer@linux.vnet.ibm.com" <seroyer@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
-Cc: linux-scsi@vger.kernel.org
 
-Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
-Reviewed-by: Scott Teel <scott.teel@microsemi.com>
-Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
-Signed-off-by: Don Brace <don.brace@microsemi.com>
----
- drivers/scsi/hpsa.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On 4/7/17 12:01 PM, Bryant G. Ly wrote:
+>
+>
+> On 4/7/17 11:36 AM, Bart Van Assche wrote:
+>> On Fri, 2017-04-07 at 11:12 -0500, Bryant G. Ly wrote:
+>>> So from this stack trace it looks like the ibmvscsis driver is 
+>>> sending an
+>>> extra response through send_messages even though an abort was issued.
+>>> IBMi, reported this issue internally when they were testing the driver,
+>>> because their client didn't like getting a response back for the 
+>>> aborted op.
+>>> They are only expecting a TMR from the abort request, NOT the 
+>>> aborted op.
+>> Hello Bryant,
+>>
+>> What is the root cause of this behavior? Why is it that the behavior of
+>> the ibmvscsi_tgt contradicts what has been implemented in the LIO core?
+>> Sorry but the patch at the start of this thread looks to me like an
+>> attempt to paper over the problem instead of addressing the root cause.
+>>
+>> Thanks,
+>>
+> IBMi clients received a response for an aborted operation, so they 
+> sent an abort tm request.
+> Afterwards they get a CRQ response to the op that they aborted. That 
+> should not happen, because they are only supposed to get a response 
+> for the tm request NOT the aborted operation.
+> Looking at the code it looks like it is due to send messages, 
+> processing a response without checking to see if it was an aborted op.
+> This patch addresses a bug within the ibmvscsis driver and the fact 
+> that it SENT a response to the aborted operation(which is wrong since) 
+> without looking at what LIO core had done.
+> The driver isn't supposed to send any response to the aborted 
+> operation, BUT only a response to the abort tm request, which LIO core 
+> currently does.
+>
+> -Bryant
+>
+I think I can clarify the issue here: ibmvscsis_tgt does not send the 
+response to the client until release_cmd time.  The reason for this was 
+because if we did it at queue_status time, then the client would be free 
+to reuse the tag for that command, but we're still using the tag until 
+the command is released at release_cmd time, so we chose to delay 
+sending the response until then.
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 33db581..42047f0 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -60,7 +60,7 @@
-  * HPSA_DRIVER_VERSION must be 3 byte values (0-255) separated by '.'
-  * with an optional trailing '-' followed by a byte value (0-255).
-  */
--#define HPSA_DRIVER_VERSION "3.4.18-0"
-+#define HPSA_DRIVER_VERSION "3.4.20-0"
- #define DRIVER_NAME "HP HPSA Driver (v " HPSA_DRIVER_VERSION ")"
- #define HPSA "hpsa"
- 
+That then caused this issue, because release_cmd is always called, even 
+if queue_status is not.  Perhaps it would be cleaner to set some sort of 
+status valid flag during queue_status instead of setting a flag in 
+aborted_task?
