@@ -1,39 +1,74 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: linux-next: manual merge of the scsi-mkp tree with the char-misc
- tree
-Date: Fri, 7 Apr 2017 19:50:58 +0000
-Message-ID: <1491594657.2559.24.camel@sandisk.com>
-References: <20170407153351.0ecafd59@canb.auug.org.au>
-         <47b500d6-0700-812f-dda3-44a14014b66e@sandisk.com>
-         <ba19c6cf-a762-f7f7-6e27-ef64e3e578c1@deltatee.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: [PATCH 00/12] hpsa updates
+Date: Fri, 7 Apr 2017 14:53:49 -0500
+Message-ID: <149159358701.15361.14834169361887562272.stgit@brunhilda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <ba19c6cf-a762-f7f7-6e27-ef64e3e578c1@deltatee.com>
-Content-Language: en-US
-Content-ID: <830232C872956D4280080F23832D69D7@namprd04.prod.outlook.com>
-Sender: linux-next-owner@vger.kernel.org
-To: "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>, "logang@deltatee.com" <logang@deltatee.com>, "greg@kroah.com" <greg@kroah.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "arnd@arndb.de" <arnd@arndb.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "ooo@electrozaur.com" <ooo@electrozaur.com>, "openosd@gmail.com" <openosd@gmail.com>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0083.outbound.protection.outlook.com ([104.47.36.83]:64896
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933636AbdDGTx5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 7 Apr 2017 15:53:57 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2017-04-07 at 13:29 -0600, Logan Gunthorpe wrote:
-> On 07/04/17 09:49 AM, Bart Van Assche wrote:
-> > Sorry that I had not yet noticed Logan's patch series. Should my two
-> > patches that conflict with Logan's patch series be dropped and reworked
-> > after Logan's patches are upstream?
->=20
-> Yeah, Greg took my patchset around a few maintainers relatively quickly.
-> This is the second conflict, so sorry about that. Looks like the easiest
-> thing would be to just base your change off of mine. It doesn't look too
-> difficult. If you can do it before my patch hits upstream, I'd
-> appreciate some testing and/or review as no one from the scsi side
-> responded and that particular patch was a bit more involved than I would
-> have liked.
+These patches are based on Linus's tree
 
-Boaz, had you noticed Logan's osd patch? If not, can you have a look?
+These patches are for: 
+ - Multipath failover support in general.
 
-Thanks,
+The changes are:
+ - update identify physical device structure
+   - align with FW
+ - stop getting enclosure info for externals
+   - no BMIC support
+ - update reset handler
+   - update to match out of box driver
+ - do not reset enclosures
+   - reset can sometimes hang
+ - rescan later if reset in progress
+   - wait for devices to settle.
+ - correct resets on retried commands
+   - was not calling scsi_done on retried completion
+ - correct queue depth for externals
+   - Code not in correct function
+ - separate monitor events from heartbeat worker
+   - allows driver to check for changes more frequently
+     without affecting controller lockup detection.
+ - send ioaccel requests with 0 length down raid path
+   - avoid hang issues for customers running older FW.
+ - remove abort handler
+   - align driver with our out of box driver
+ - bump driver version
+   - align version with out of box driver for multi-path changes
 
-Bart.=
+---
+
+Don Brace (11):
+      hpsa: update identify physical device structure
+      hpsa: do not get enclosure info for external devices
+      hpsa: update reset handler
+      hpsa: do not reset enclosures
+      hpsa: rescan later if reset in progress
+      hpsa: correct resets on retried commands
+      hpsa: cleanup reset handler
+      hpsa: correct queue depth for externals
+      hpsa: send ioaccel requests with 0 length down raid path
+      hpsa: remove abort handler
+      hpsa: bump driver version
+
+Scott Teel (1):
+      hpsa: separate monitor events from heartbeat worker
+
+
+ drivers/scsi/hpsa.c     |  790 +++++++++--------------------------------------
+ drivers/scsi/hpsa.h     |    3 
+ drivers/scsi/hpsa_cmd.h |   20 +
+ 3 files changed, 164 insertions(+), 649 deletions(-)
+
+--
+Signature
