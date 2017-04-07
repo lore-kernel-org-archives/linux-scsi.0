@@ -1,53 +1,140 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: linux-next: manual merge of the scsi-mkp tree with the char-misc
- tree
-Date: Fri, 7 Apr 2017 08:49:14 -0700
-Message-ID: <47b500d6-0700-812f-dda3-44a14014b66e@sandisk.com>
-References: <20170407153351.0ecafd59@canb.auug.org.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20170407153351.0ecafd59@canb.auug.org.au>
-Sender: linux-next-owner@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg KH <greg@kroah.com>, Arnd Bergmann <arnd@arndb.de>
-Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Logan Gunthorpe <logang@deltatee.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH] ibmvscsis: Do not send aborted task response
+Date: Fri,  7 Apr 2017 10:49:14 -0500
+Message-ID: <1491580154-30489-1-git-send-email-bryantly@linux.vnet.ibm.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: nab@linux-iscsi.org
+Cc: seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 04/06/2017 10:33 PM, Stephen Rothwell wrote:
-> Hi Martin,
-> 
-> Today's linux-next merge of the scsi-mkp tree got a conflict in:
-> 
->   drivers/scsi/osd/osd_uld.c
-> 
-> between commit:
-> 
->   ac1ddc584e98 ("scsi: utilize new cdev_device_add helper function")
-> 
-> from the char-misc tree and commit:
-> 
->   c02465fa13b6 ("scsi: osd_uld: Check scsi_device_get() return value")
-> 
-> from the scsi-mkp tree.
-> 
-> I am not sure how to resolve this, so I have just effectively recerted
-> the latter commit fo today.  Better suggestions welcome.
-> 
-> I fixed it up and can carry the fix as necessary. This is now fixed as
-> far as linux-next is concerned, but any non trivial conflicts should be
-> mentioned to your upstream maintainer when your tree is submitted for
-> merging.  You may also want to consider cooperating with the maintainer
-> of the conflicting tree to minimise any particularly complex conflicts.
+The driver is sending a response to the aborted task response
+along with LIO sending the tmr response. SCSI spec says
+that the initiator that sends the abort task TM NEVER gets a
+response to the aborted op and with the current code it will
+send a response. Thus this fix will remove that response if the
+op is aborted.
 
-(+linux-scsi)
+Cc: <stable@vger.kernel.org> # v4.8+
+Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+---
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 60 +++++++++++++++++++++-----------
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.h |  1 +
+ 2 files changed, 40 insertions(+), 21 deletions(-)
 
-Hello Martin,
-
-Sorry that I had not yet noticed Logan's patch series. Should my two
-patches that conflict with Logan's patch series be dropped and reworked
-after Logan's patches are upstream?
-
-Thanks,
-
-Bart.
+diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+index 4bb5635..8e2733f 100644
+--- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
++++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+@@ -1169,6 +1169,7 @@ static struct ibmvscsis_cmd *ibmvscsis_get_free_cmd(struct scsi_info *vscsi)
+ 		cmd = list_first_entry_or_null(&vscsi->free_cmd,
+ 					       struct ibmvscsis_cmd, list);
+ 		if (cmd) {
++			cmd->flags &= ~(CMD_ABORTED);
+ 			list_del(&cmd->list);
+ 			cmd->iue = iue;
+ 			cmd->type = UNSET_TYPE;
+@@ -1758,33 +1759,41 @@ static void ibmvscsis_send_messages(struct scsi_info *vscsi)
+ 
+ 	if (!(vscsi->flags & RESPONSE_Q_DOWN)) {
+ 		list_for_each_entry_safe(cmd, nxt, &vscsi->waiting_rsp, list) {
+-			iue = cmd->iue;
++			/*
++			 * If an Abort flag is set then dont send response
++			 */
++			if (cmd->flags & CMD_ABORTED) {
++				list_del(&cmd->list);
++				ibmvscsis_free_cmd_resources(vscsi, cmd);
++			} else {
++				iue = cmd->iue;
+ 
+-			crq->valid = VALID_CMD_RESP_EL;
+-			crq->format = cmd->rsp.format;
++				crq->valid = VALID_CMD_RESP_EL;
++				crq->format = cmd->rsp.format;
+ 
+-			if (cmd->flags & CMD_FAST_FAIL)
+-				crq->status = VIOSRP_ADAPTER_FAIL;
++				if (cmd->flags & CMD_FAST_FAIL)
++					crq->status = VIOSRP_ADAPTER_FAIL;
+ 
+-			crq->IU_length = cpu_to_be16(cmd->rsp.len);
++				crq->IU_length = cpu_to_be16(cmd->rsp.len);
+ 
+-			rc = h_send_crq(vscsi->dma_dev->unit_address,
+-					be64_to_cpu(msg_hi),
+-					be64_to_cpu(cmd->rsp.tag));
++				rc = h_send_crq(vscsi->dma_dev->unit_address,
++						be64_to_cpu(msg_hi),
++						be64_to_cpu(cmd->rsp.tag));
+ 
+-			pr_debug("send_messages: cmd %p, tag 0x%llx, rc %ld\n",
+-				 cmd, be64_to_cpu(cmd->rsp.tag), rc);
++				pr_debug("send_messages: cmd %p, tag 0x%llx, rc %ld\n",
++					 cmd, be64_to_cpu(cmd->rsp.tag), rc);
+ 
+-			/* if all ok free up the command element resources */
+-			if (rc == H_SUCCESS) {
+-				/* some movement has occurred */
+-				vscsi->rsp_q_timer.timer_pops = 0;
+-				list_del(&cmd->list);
++				/* if all ok free up the command element resources */
++				if (rc == H_SUCCESS) {
++					/* some movement has occurred */
++					vscsi->rsp_q_timer.timer_pops = 0;
++					list_del(&cmd->list);
+ 
+-				ibmvscsis_free_cmd_resources(vscsi, cmd);
+-			} else {
+-				srp_snd_msg_failed(vscsi, rc);
+-				break;
++					ibmvscsis_free_cmd_resources(vscsi, cmd);
++				} else {
++					srp_snd_msg_failed(vscsi, rc);
++					break;
++				}
+ 			}
+ 		}
+ 
+@@ -3581,9 +3590,15 @@ static int ibmvscsis_write_pending(struct se_cmd *se_cmd)
+ {
+ 	struct ibmvscsis_cmd *cmd = container_of(se_cmd, struct ibmvscsis_cmd,
+ 						 se_cmd);
++	struct scsi_info *vscsi = cmd->adapter;
+ 	struct iu_entry *iue = cmd->iue;
+ 	int rc;
+ 
++	if ((vscsi->flags & (CLIENT_FAILED | RESPONSE_Q_DOWN))) {
++		pr_err("write_pending failed since: %d\n", vscsi->flags);
++		return -EIO;
++	}
++
+ 	rc = srp_transfer_data(cmd, &vio_iu(iue)->srp.cmd, ibmvscsis_rdma,
+ 			       1, 1);
+ 	if (rc) {
+@@ -3674,7 +3689,10 @@ static void ibmvscsis_queue_tm_rsp(struct se_cmd *se_cmd)
+ 
+ static void ibmvscsis_aborted_task(struct se_cmd *se_cmd)
+ {
+-	/* TBD: What (if anything) should we do here? */
++	struct ibmvscsis_cmd *cmd = container_of(se_cmd, struct ibmvscsis_cmd,
++						 se_cmd);
++
++	cmd->flags |= CMD_ABORTED;
+ 	pr_debug("ibmvscsis_aborted_task %p\n", se_cmd);
+ }
+ 
+diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.h b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.h
+index 98b0ca7..24db7a9 100644
+--- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.h
++++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.h
+@@ -171,6 +171,7 @@ struct ibmvscsis_cmd {
+ 	unsigned char sense_buf[TRANSPORT_SENSE_BUFFER];
+ 	u64 init_time;
+ #define CMD_FAST_FAIL	BIT(0)
++#define CMD_ABORTED	BIT(1)
+ 	u32 flags;
+ 	char type;
+ };
+-- 
+2.5.4 (Apple Git-61)
