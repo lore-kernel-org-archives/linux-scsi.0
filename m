@@ -1,77 +1,53 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH] scsi: libfc: directly call ELS request handlers
-Date: Fri,  7 Apr 2017 15:42:24 +0200
-Message-ID: <20170407134224.14804-1-jthumshirn@suse.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: linux-next: manual merge of the scsi-mkp tree with the char-misc
+ tree
+Date: Fri, 7 Apr 2017 08:49:14 -0700
+Message-ID: <47b500d6-0700-812f-dda3-44a14014b66e@sandisk.com>
+References: <20170407153351.0ecafd59@canb.auug.org.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <20170407153351.0ecafd59@canb.auug.org.au>
+Sender: linux-next-owner@vger.kernel.org
+To: Stephen Rothwell <sfr@canb.auug.org.au>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg KH <greg@kroah.com>, Arnd Bergmann <arnd@arndb.de>
+Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Logan Gunthorpe <logang@deltatee.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Directly call ELS request handler functions in fc_lport_recv_els_req
-instead of saving the pointer to the handler's receive function and then
-later dereferencing this pointer.
+On 04/06/2017 10:33 PM, Stephen Rothwell wrote:
+> Hi Martin,
+> 
+> Today's linux-next merge of the scsi-mkp tree got a conflict in:
+> 
+>   drivers/scsi/osd/osd_uld.c
+> 
+> between commit:
+> 
+>   ac1ddc584e98 ("scsi: utilize new cdev_device_add helper function")
+> 
+> from the char-misc tree and commit:
+> 
+>   c02465fa13b6 ("scsi: osd_uld: Check scsi_device_get() return value")
+> 
+> from the scsi-mkp tree.
+> 
+> I am not sure how to resolve this, so I have just effectively recerted
+> the latter commit fo today.  Better suggestions welcome.
+> 
+> I fixed it up and can carry the fix as necessary. This is now fixed as
+> far as linux-next is concerned, but any non trivial conflicts should be
+> mentioned to your upstream maintainer when your tree is submitted for
+> merging.  You may also want to consider cooperating with the maintainer
+> of the conflicting tree to minimise any particularly complex conflicts.
 
-This makes the code a bit more obvious.
+(+linux-scsi)
 
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/libfc/fc_lport.c | 20 +++++++++-----------
- 1 file changed, 9 insertions(+), 11 deletions(-)
+Hello Martin,
 
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index aa76f36..2fd0ec6 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -887,8 +887,6 @@ static void fc_lport_recv_flogi_req(struct fc_lport *lport,
- static void fc_lport_recv_els_req(struct fc_lport *lport,
- 				  struct fc_frame *fp)
- {
--	void (*recv)(struct fc_lport *, struct fc_frame *);
--
- 	mutex_lock(&lport->lp_mutex);
- 
- 	/*
-@@ -902,31 +900,31 @@ static void fc_lport_recv_els_req(struct fc_lport *lport,
- 		/*
- 		 * Check opcode.
- 		 */
--		recv = fc_rport_recv_req;
- 		switch (fc_frame_payload_op(fp)) {
- 		case ELS_FLOGI:
- 			if (!lport->point_to_multipoint)
--				recv = fc_lport_recv_flogi_req;
-+				fc_lport_recv_flogi_req(lport, fp);
- 			break;
- 		case ELS_LOGO:
- 			if (fc_frame_sid(fp) == FC_FID_FLOGI)
--				recv = fc_lport_recv_logo_req;
-+				fc_lport_recv_logo_req(lport, fp);
- 			break;
- 		case ELS_RSCN:
--			recv = lport->tt.disc_recv_req;
-+			lport->tt.disc_recv_req(lport, fp);
- 			break;
- 		case ELS_ECHO:
--			recv = fc_lport_recv_echo_req;
-+			fc_lport_recv_echo_req(lport, fp);
- 			break;
- 		case ELS_RLIR:
--			recv = fc_lport_recv_rlir_req;
-+			fc_lport_recv_rlir_req(lport, fp);
- 			break;
- 		case ELS_RNID:
--			recv = fc_lport_recv_rnid_req;
-+			fc_lport_recv_rnid_req(lport, fp);
-+			break;
-+		default:
-+			fc_rport_recv_req(lport, fp);
- 			break;
- 		}
--
--		recv(lport, fp);
- 	}
- 	mutex_unlock(&lport->lp_mutex);
- }
--- 
-1.8.5.6
+Sorry that I had not yet noticed Logan's patch series. Should my two
+patches that conflict with Logan's patch series be dropped and reworked
+after Logan's patches are upstream?
+
+Thanks,
+
+Bart.
