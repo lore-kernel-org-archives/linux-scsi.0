@@ -1,73 +1,83 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 3/3] iscsi-target: Improve size determinations in four
- functions
-Date: Sun, 9 Apr 2017 16:28:42 +0200
-Message-ID: <b2f306db-d191-67bb-1e9b-0e91cd540481@users.sourceforge.net>
-References: <f573fbbe-aef2-7b68-1540-ceb2f30a6aa6@users.sourceforge.net>
+From: <jha@billund.dk>
+Subject: (unknown)
+Date: Sun, 09 Apr 2017 15:30:41 -0000
+Message-ID: <149175184162.16609.11972072131880398512@knology.net>
+Reply-To: <jha@billund.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <f573fbbe-aef2-7b68-1540-ceb2f30a6aa6@users.sourceforge.net>
-Content-Language: en-GB
-Sender: target-devel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Hannes Reinecke <hare@suse.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Varun Prakash <varun@chelsio.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
+Content-Type: application/zip; name="84128993426851_linux-scsi.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from static-76-73-214-219.knology.net ([76.73.214.219]:4680 "HELO
+        knology.net" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+        id S1752203AbdDIPap (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 9 Apr 2017 11:30:45 -0400
+Content-Disposition: attachment
+Subject: 
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sun, 9 Apr 2017 16:00:39 +0200
-
-Replace the specification of four data structures by pointer dereferences
-as the parameter for the operator "sizeof" to make the corresponding size
-determinations a bit safer according to the Linux coding style convention.
-
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/target/iscsi/iscsi_target.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 196e9dd138ca..5ef6eb238174 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -128,7 +128,7 @@ struct iscsi_tiqn *iscsit_add_tiqn(unsigned char *buf)
- 		return ERR_PTR(-EINVAL);
- 	}
- 
--	tiqn = kzalloc(sizeof(struct iscsi_tiqn), GFP_KERNEL);
-+	tiqn = kzalloc(sizeof(*tiqn), GFP_KERNEL);
- 	if (!tiqn)
- 		return ERR_PTR(-ENOMEM);
- 
-@@ -360,7 +360,7 @@ struct iscsi_np *iscsit_add_np(
- 		return np;
- 	}
- 
--	np = kzalloc(sizeof(struct iscsi_np), GFP_KERNEL);
-+	np = kzalloc(sizeof(*np), GFP_KERNEL);
- 	if (!np) {
- 		mutex_unlock(&np_lock);
- 		return ERR_PTR(-ENOMEM);
-@@ -694,8 +694,7 @@ static int __init iscsi_target_init_module(void)
- 	int ret = 0, size;
- 
- 	pr_debug("iSCSI-Target "ISCSIT_VERSION"\n");
--
--	iscsit_global = kzalloc(sizeof(struct iscsit_global), GFP_KERNEL);
-+	iscsit_global = kzalloc(sizeof(*iscsit_global), GFP_KERNEL);
- 	if (!iscsit_global)
- 		return -1;
- 
-@@ -1987,8 +1986,7 @@ iscsit_handle_task_mgt_cmd(struct iscsi_conn *conn, struct iscsi_cmd *cmd,
- 		hdr->refcmdsn = cpu_to_be32(ISCSI_RESERVED_TAG);
- 
- 	cmd->data_direction = DMA_NONE;
--
--	cmd->tmr_req = kzalloc(sizeof(struct iscsi_tmr_req), GFP_KERNEL);
-+	cmd->tmr_req = kzalloc(sizeof(*cmd->tmr_req), GFP_KERNEL);
- 	if (!cmd->tmr_req)
- 		return iscsit_add_reject_cmd(cmd,
- 					     ISCSI_REASON_BOOKMARK_NO_RESOURCES,
--- 
-2.12.2
+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
+AAAArA0AAAAA
