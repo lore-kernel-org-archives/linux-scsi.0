@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 1/6] scsi: hisi_sas: workaround STP link SoC bug
-Date: Mon, 10 Apr 2017 21:21:56 +0800
-Message-ID: <1491830521-21437-2-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 2/6] scsi: hisi_sas: workaround a SoC SATA IO processing bug
+Date: Mon, 10 Apr 2017 21:21:57 +0800
+Message-ID: <1491830521-21437-3-git-send-email-john.garry@huawei.com>
 References: <1491830521-21437-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,164 +14,195 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-After resetting the controller, the process of scanning SATA disks
-attached to an expander may fail occasionally. The issue is that
-the controller can't close the STP link created by target if the
-max link time is 0.
+This patch provides a workaround a SoC bug where SATA IPTTs for
+different devices may conflict.
 
-To workaround this issue, we reject STP link after resetting the
-controller, and change the corresponding PHY to accept STP link
-only after receiving data.
+The workaround solution requests the following:
+1. SATA device id must be even and not equal to SAS IPTT.
+2. SATA device can not share the same IPTT with other SAS or
+SATA device.
 
-We do this check in cq interrupt handler. In order not to reduce
-efficiency, we use an variable to control whether we should check
-and change PHY to accept STP link.
+Besides we shall consider IPTT value 0 is reserved for another SoC
+bug (STP device open link at firstly after SAS controller reset).
 
-The function phys_reject_stp_links_v2_hw() should be called after
-resetting the controller.
-
-The solution of another SoC bug "SATA IO timeout", that also uses
-the same register to control STP link, is not effective before
-the PHY accepts STP link.
+To sum up, the solution is:
+Each SATA device uses independent and continuous 32 even IPTT from
+64 to 4094, then v2 hw can only support 63 SATA devices.
+All SAS device(SSP/SMP devices) share odd IPTT value from 1 to
+4095.
 
 Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  1 +
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 60 +++++++++++++++++++++++++++++++++-
- 2 files changed, 60 insertions(+), 1 deletion(-)
+ drivers/scsi/hisi_sas/hisi_sas.h       |  2 +
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 83 ++++++++++++++++++++++++++++------
+ 2 files changed, 72 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 6aa0b62..72347b6 100644
+index 72347b6..c80ca83 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas.h
 +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -203,6 +203,7 @@ struct hisi_hba {
+@@ -115,6 +115,7 @@ struct hisi_sas_device {
+ 	atomic64_t running_req;
+ 	struct list_head	list;
+ 	u8 dev_status;
++	int sata_idx;
+ };
  
- 	int slot_index_count;
- 	unsigned long *slot_index_tags;
-+	unsigned long reject_stp_links_msk;
+ struct hisi_sas_slot {
+@@ -238,6 +239,7 @@ struct hisi_hba {
+ 	struct hisi_sas_slot	*slot_info;
+ 	unsigned long flags;
+ 	const struct hisi_sas_hw *hw;	/* Low level hw interface */
++	unsigned long sata_dev_bitmap[BITS_TO_LONGS(HISI_SAS_MAX_DEVICES)];
+ 	struct work_struct rst_work;
+ };
  
- 	/* SCSI/SAS glue */
- 	struct sas_ha_struct sha;
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 66c2de8..c550cc4 100644
+index c550cc4..fc8d8296 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -218,6 +218,9 @@
- #define RX_IDAF_DWORD6			(PORT_BASE + 0xdc)
- #define RXOP_CHECK_CFG_H		(PORT_BASE + 0xfc)
- #define CON_CONTROL			(PORT_BASE + 0x118)
-+#define CON_CONTROL_CFG_OPEN_ACC_STP_OFF	0
-+#define CON_CONTROL_CFG_OPEN_ACC_STP_MSK	\
-+		(0x01 << CON_CONTROL_CFG_OPEN_ACC_STP_OFF)
- #define DONE_RECEIVED_TIME		(PORT_BASE + 0x11c)
- #define CHL_INT0			(PORT_BASE + 0x1b4)
- #define CHL_INT0_HOTPLUG_TOUT_OFF	0
-@@ -240,6 +243,9 @@
- #define CHL_INT1_MSK			(PORT_BASE + 0x1c4)
- #define CHL_INT2_MSK			(PORT_BASE + 0x1c8)
- #define CHL_INT_COAL_EN			(PORT_BASE + 0x1d0)
-+#define DMA_TX_DFX1			(PORT_BASE + 0x204)
-+#define DMA_TX_DFX1_IPTT_OFF		0
-+#define DMA_TX_DFX1_IPTT_MSK		(0xffff << DMA_TX_DFX1_IPTT_OFF)
- #define PHY_CTRL_RDY_MSK		(PORT_BASE + 0x2b0)
- #define PHYCTRL_NOT_RDY_MSK		(PORT_BASE + 0x2b4)
- #define PHYCTRL_DWS_RESET_MSK		(PORT_BASE + 0x2b8)
-@@ -593,7 +599,8 @@ static u32 hisi_sas_phy_read32(struct hisi_hba *hisi_hba,
- slot_index_alloc_quirk_v2_hw(struct hisi_hba *hisi_hba, int *slot_idx,
- 		       struct domain_device *device)
- {
--	unsigned int index = 0;
-+	/* STP link chip bug workaround:index start from 1 */
-+	unsigned int index = 1;
- 	void *bitmap = hisi_hba->slot_index_tags;
- 	int sata_dev = dev_is_sata(device);
+@@ -537,6 +537,7 @@ enum {
+ };
  
-@@ -875,6 +882,46 @@ static int reset_hw_v2_hw(struct hisi_hba *hisi_hba)
+ #define HISI_SAS_COMMAND_ENTRIES_V2_HW 4096
++#define HISI_MAX_SATA_SUPPORT_V2_HW	(HISI_SAS_COMMAND_ENTRIES_V2_HW/64 - 1)
+ 
+ #define DIR_NO_DATA 0
+ #define DIR_TO_INI 1
+@@ -597,39 +598,86 @@ static u32 hisi_sas_phy_read32(struct hisi_hba *hisi_hba,
+ /* This function needs to be protected from pre-emption. */
+ static int
+ slot_index_alloc_quirk_v2_hw(struct hisi_hba *hisi_hba, int *slot_idx,
+-		       struct domain_device *device)
++			     struct domain_device *device)
+ {
+-	/* STP link chip bug workaround:index start from 1 */
+-	unsigned int index = 1;
+-	void *bitmap = hisi_hba->slot_index_tags;
+ 	int sata_dev = dev_is_sata(device);
++	void *bitmap = hisi_hba->slot_index_tags;
++	struct hisi_sas_device *sas_dev = device->lldd_dev;
++	int sata_idx = sas_dev->sata_idx;
++	int start, end;
++
++	if (!sata_dev) {
++		/*
++		 * STP link SoC bug workaround: index starts from 1.
++		 * additionally, we can only allocate odd IPTT(1~4095)
++		 * for SAS/SMP device.
++		 */
++		start = 1;
++		end = hisi_hba->slot_index_count;
++	} else {
++		if (sata_idx >= HISI_MAX_SATA_SUPPORT_V2_HW)
++			return -EINVAL;
++
++		/*
++		 * For SATA device: allocate even IPTT in this interval
++		 * [64*(sata_idx+1), 64*(sata_idx+2)], then each SATA device
++		 * own 32 IPTTs. IPTT 0 shall not be used duing to STP link
++		 * SoC bug workaround. So we ignore the first 32 even IPTTs.
++		 */
++		start = 64 * (sata_idx + 1);
++		end = 64 * (sata_idx + 2);
++	}
+ 
+ 	while (1) {
+-		index = find_next_zero_bit(bitmap, hisi_hba->slot_index_count,
+-					   index);
+-		if (index >= hisi_hba->slot_index_count)
++		start = find_next_zero_bit(bitmap,
++					hisi_hba->slot_index_count, start);
++		if (start >= end)
+ 			return -SAS_QUEUE_FULL;
+ 		/*
+-		 * SAS IPTT bit0 should be 1
+-		 */
+-		if (sata_dev || (index & 1))
++		  * SAS IPTT bit0 should be 1, and SATA IPTT bit0 should be 0.
++		  */
++		if (sata_dev ^ (start & 1))
+ 			break;
+-		index++;
++		start++;
+ 	}
+ 
+-	set_bit(index, bitmap);
+-	*slot_idx = index;
++	set_bit(start, bitmap);
++	*slot_idx = start;
  	return 0;
  }
  
-+/* This function needs to be called after resetting SAS controller. */
-+static void phys_reject_stp_links_v2_hw(struct hisi_hba *hisi_hba)
++static bool sata_index_alloc_v2_hw(struct hisi_hba *hisi_hba, int *idx)
 +{
-+	u32 cfg;
-+	int phy_no;
++	unsigned int index;
++	struct device *dev = &hisi_hba->pdev->dev;
++	void *bitmap = hisi_hba->sata_dev_bitmap;
 +
-+	hisi_hba->reject_stp_links_msk = (1 << hisi_hba->n_phy) - 1;
-+	for (phy_no = 0; phy_no < hisi_hba->n_phy; phy_no++) {
-+		cfg = hisi_sas_phy_read32(hisi_hba, phy_no, CON_CONTROL);
-+		if (!(cfg & CON_CONTROL_CFG_OPEN_ACC_STP_MSK))
-+			continue;
-+
-+		cfg &= ~CON_CONTROL_CFG_OPEN_ACC_STP_MSK;
-+		hisi_sas_phy_write32(hisi_hba, phy_no, CON_CONTROL, cfg);
++	index = find_first_zero_bit(bitmap, HISI_MAX_SATA_SUPPORT_V2_HW);
++	if (index >= HISI_MAX_SATA_SUPPORT_V2_HW) {
++		dev_warn(dev, "alloc sata index failed, index=%d\n", index);
++		return false;
 +	}
++
++	set_bit(index, bitmap);
++	*idx = index;
++	return true;
 +}
 +
-+static void phys_try_accept_stp_links_v2_hw(struct hisi_hba *hisi_hba)
-+{
-+	int phy_no;
-+	u32 dma_tx_dfx1;
 +
-+	for (phy_no = 0; phy_no < hisi_hba->n_phy; phy_no++) {
-+		if (!(hisi_hba->reject_stp_links_msk & BIT(phy_no)))
-+			continue;
-+
-+		dma_tx_dfx1 = hisi_sas_phy_read32(hisi_hba, phy_no,
-+						DMA_TX_DFX1);
-+		if (dma_tx_dfx1 & DMA_TX_DFX1_IPTT_MSK) {
-+			u32 cfg = hisi_sas_phy_read32(hisi_hba,
-+				phy_no, CON_CONTROL);
-+
-+			cfg |= CON_CONTROL_CFG_OPEN_ACC_STP_MSK;
-+			hisi_sas_phy_write32(hisi_hba, phy_no,
-+				CON_CONTROL, cfg);
-+			clear_bit(phy_no, &hisi_hba->reject_stp_links_msk);
-+		}
-+	}
-+}
-+
- static void init_reg_v2_hw(struct hisi_hba *hisi_hba)
+ static struct
+ hisi_sas_device *alloc_dev_quirk_v2_hw(struct domain_device *device)
  {
- 	struct device *dev = &hisi_hba->pdev->dev;
-@@ -1012,6 +1059,9 @@ static void link_timeout_enable_link(unsigned long data)
- 	int i, reg_val;
- 
- 	for (i = 0; i < hisi_hba->n_phy; i++) {
-+		if (hisi_hba->reject_stp_links_msk & BIT(i))
-+			continue;
-+
- 		reg_val = hisi_sas_phy_read32(hisi_hba, i, CON_CONTROL);
- 		if (!(reg_val & BIT(0))) {
- 			hisi_sas_phy_write32(hisi_hba, i,
-@@ -1031,6 +1081,9 @@ static void link_timeout_disable_link(unsigned long data)
- 
- 	reg_val = hisi_sas_read32(hisi_hba, PHY_STATE);
- 	for (i = 0; i < hisi_hba->n_phy && reg_val; i++) {
-+		if (hisi_hba->reject_stp_links_msk & BIT(i))
-+			continue;
-+
- 		if (reg_val & BIT(i)) {
- 			hisi_sas_phy_write32(hisi_hba, i,
- 					CON_CONTROL, 0x6);
-@@ -2867,6 +2920,9 @@ static void cq_tasklet_v2_hw(unsigned long val)
- 	u32 rd_point = cq->rd_point, wr_point, dev_id;
- 	int queue = cq->id;
- 
-+	if (unlikely(hisi_hba->reject_stp_links_msk))
-+		phys_try_accept_stp_links_v2_hw(hisi_hba);
-+
- 	complete_queue = hisi_hba->complete_hdr[queue];
+ 	struct hisi_hba *hisi_hba = device->port->ha->lldd_ha;
+ 	struct hisi_sas_device *sas_dev = NULL;
+ 	int i, sata_dev = dev_is_sata(device);
++	int sata_idx = -1;
  
  	spin_lock(&hisi_hba->lock);
-@@ -3214,6 +3270,8 @@ static int soft_reset_v2_hw(struct hisi_hba *hisi_hba)
++
++	if (sata_dev)
++		if (!sata_index_alloc_v2_hw(hisi_hba, &sata_idx))
++			goto out;
++
+ 	for (i = 0; i < HISI_SAS_MAX_DEVICES; i++) {
+ 		/*
+ 		 * SATA device id bit0 should be 0
+@@ -643,10 +691,13 @@ hisi_sas_device *alloc_dev_quirk_v2_hw(struct domain_device *device)
+ 			sas_dev->dev_type = device->dev_type;
+ 			sas_dev->hisi_hba = hisi_hba;
+ 			sas_dev->sas_device = device;
++			sas_dev->sata_idx = sata_idx;
+ 			INIT_LIST_HEAD(&hisi_hba->devices[i].list);
+ 			break;
+ 		}
+ 	}
++
++out:
+ 	spin_unlock(&hisi_hba->lock);
+ 
+ 	return sas_dev;
+@@ -753,6 +804,10 @@ static void free_device_v2_hw(struct hisi_hba *hisi_hba,
+ 	u32 reg_val = hisi_sas_read32(hisi_hba, ENT_INT_SRC3);
+ 	int i;
+ 
++	/* SoC bug workaround */
++	if (dev_is_sata(sas_dev->sas_device))
++		clear_bit(sas_dev->sata_idx, hisi_hba->sata_dev_bitmap);
++
+ 	/* clear the itct interrupt state */
+ 	if (ENT_INT_SRC3_ITC_INT_MSK & reg_val)
+ 		hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
+@@ -3197,6 +3252,8 @@ static int hisi_sas_v2_init(struct hisi_hba *hisi_hba)
+ {
+ 	int rc;
+ 
++	memset(hisi_hba->sata_dev_bitmap, 0, sizeof(hisi_hba->sata_dev_bitmap));
++
+ 	rc = hw_init_v2_hw(hisi_hba);
  	if (rc)
  		return rc;
- 
-+	phys_reject_stp_links_v2_hw(hisi_hba);
-+
- 	/* Re-enable the PHYs */
- 	for (phy_no = 0; phy_no < hisi_hba->n_phy; phy_no++) {
- 		struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
 -- 
 1.9.1
