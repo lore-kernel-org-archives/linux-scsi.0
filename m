@@ -1,45 +1,121 @@
-From: Chad Dupuis <chad.dupuis@cavium.com>
-Subject: Re: [REEEEPOST] bnx2i + bnx2fc: convert to generic workqueue (#3)
-Date: Mon, 10 Apr 2017 14:20:41 -0400 (EDT)
-Message-ID: <alpine.OSX.2.00.1704101420150.1637@n8054ir3xxd7w1.qlogic.org>
-References: <20170410171254.30367-1-bigeasy@linutronix.de>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0087.outbound.protection.outlook.com ([104.47.41.87]:2896
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752999AbdDJSVF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 10 Apr 2017 14:21:05 -0400
-In-Reply-To: <20170410171254.30367-1-bigeasy@linutronix.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH] ibmvscsis: Do not send aborted task response
+Date: Mon, 10 Apr 2017 13:52:48 -0500
+Message-ID: <1491850368-7201-1-git-send-email-bryantly@linux.vnet.ibm.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: nab@linux-iscsi.org, Bart.VanAssche@sandisk.com
+Cc: seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, rt@linutronix.de, Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>, Chad Dupuis <chad.dupuis@qlogic.com>, QLogic-Storage-Upstream@qlogic.com, Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, Andrew Morton <akpm@linux-foundation.org>
 
+The driver is sending a response to the aborted task response
+along with LIO sending the tmr response.
+ibmvscsis_tgt does not send the response to the client until
+release_cmd time. The reason for this was because if we did it
+at queue_status time, then the client would be free to reuse the
+tag for that command, but we're still using the tag until the
+command is released at release_cmd time, so we chose to delay
+sending the response until then. That then caused this issue, because
+release_cmd is always called, even if queue_status is not.
 
-On Mon, 10 Apr 2017, 5:12pm -0000, Sebastian Andrzej Siewior wrote:
+SCSI spec says that the initiator that sends the abort task
+TM NEVER gets a response to the aborted op and with the current
+code it will send a response. Thus this fix will remove that response
+if the TAS bit is set.
 
-> This is a repost to get the patches applied against v4.11-rc6. mkp's scsi
-> for-next tree can be merged with no conflicts.
-> 
-> The last repost [0] was not merged and stalled after Martin pinged Chad
-> [1]. He didn't even reply after tglx pinged him approx two weeks later.
-> 
-> Johannes Thumshirn was so kind to test the FCoE part of the old series
-> [2]. I did not add a tested-by tag due to the rebase.
-> 
-> If my memory is correct then my first attempt on this (with hotplug
-> threads back then) was around December 2015.
-> 
-> The whole series is also available at
->  git://git.kernel.org/pub/scm/linux/kernel/git/bigeasy/hotplug-staging.git scsi/bnx2_v2
-> 
-> [0] http://www.spinics.net/lists/linux-scsi/msg102143.html
-> [1] http://www.spinics.net/lists/linux-scsi/msg102295.html
-> [2] http://www.spinics.net/lists/linux-scsi/msg102716.html
-> 
-> Sebastian
-> 
+Cc: <stable@vger.kernel.org> # v4.8+
+Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+---
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 60 +++++++++++++++++++++-----------
+ 1 file changed, 40 insertions(+), 20 deletions(-)
 
-Sebastian, will take a look. 
+diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+index 4bb5635..f75948a 100644
+--- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
++++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+@@ -1758,33 +1758,42 @@ static void ibmvscsis_send_messages(struct scsi_info *vscsi)
+ 
+ 	if (!(vscsi->flags & RESPONSE_Q_DOWN)) {
+ 		list_for_each_entry_safe(cmd, nxt, &vscsi->waiting_rsp, list) {
+-			iue = cmd->iue;
++			/*
++			 * If Task Abort Status Bit is set, then dont send a
++			 * response.
++			 */
++			if (cmd->se_cmd.transport_state & CMD_T_TAS) {
++				list_del(&cmd->list);
++				ibmvscsis_free_cmd_resources(vscsi, cmd);
++			} else {
++				iue = cmd->iue;
+ 
+-			crq->valid = VALID_CMD_RESP_EL;
+-			crq->format = cmd->rsp.format;
++				crq->valid = VALID_CMD_RESP_EL;
++				crq->format = cmd->rsp.format;
+ 
+-			if (cmd->flags & CMD_FAST_FAIL)
+-				crq->status = VIOSRP_ADAPTER_FAIL;
++				if (cmd->flags & CMD_FAST_FAIL)
++					crq->status = VIOSRP_ADAPTER_FAIL;
+ 
+-			crq->IU_length = cpu_to_be16(cmd->rsp.len);
++				crq->IU_length = cpu_to_be16(cmd->rsp.len);
+ 
+-			rc = h_send_crq(vscsi->dma_dev->unit_address,
+-					be64_to_cpu(msg_hi),
+-					be64_to_cpu(cmd->rsp.tag));
++				rc = h_send_crq(vscsi->dma_dev->unit_address,
++						be64_to_cpu(msg_hi),
++						be64_to_cpu(cmd->rsp.tag));
+ 
+-			pr_debug("send_messages: cmd %p, tag 0x%llx, rc %ld\n",
+-				 cmd, be64_to_cpu(cmd->rsp.tag), rc);
++				pr_debug("send_messages: cmd %p, tag 0x%llx, rc %ld\n",
++					 cmd, be64_to_cpu(cmd->rsp.tag), rc);
+ 
+-			/* if all ok free up the command element resources */
+-			if (rc == H_SUCCESS) {
+-				/* some movement has occurred */
+-				vscsi->rsp_q_timer.timer_pops = 0;
+-				list_del(&cmd->list);
++				/* if all ok free up the command element resources */
++				if (rc == H_SUCCESS) {
++					/* some movement has occurred */
++					vscsi->rsp_q_timer.timer_pops = 0;
++					list_del(&cmd->list);
+ 
+-				ibmvscsis_free_cmd_resources(vscsi, cmd);
+-			} else {
+-				srp_snd_msg_failed(vscsi, rc);
+-				break;
++					ibmvscsis_free_cmd_resources(vscsi, cmd);
++				} else {
++					srp_snd_msg_failed(vscsi, rc);
++					break;
++				}
+ 			}
+ 		}
+ 
+@@ -3581,9 +3590,20 @@ static int ibmvscsis_write_pending(struct se_cmd *se_cmd)
+ {
+ 	struct ibmvscsis_cmd *cmd = container_of(se_cmd, struct ibmvscsis_cmd,
+ 						 se_cmd);
++	struct scsi_info *vscsi = cmd->adapter;
+ 	struct iu_entry *iue = cmd->iue;
+ 	int rc;
+ 
++	/*
++	 * If CLIENT_FAILED OR RESPONSE_Q_DOWN, then just return success
++	 * since LIO can't do anything about it, and we dont want to
++	 * attempt an srp_transfer_data.
++	 */
++	if ((vscsi->flags & (CLIENT_FAILED | RESPONSE_Q_DOWN))) {
++		pr_err("write_pending failed since: %d\n", vscsi->flags);
++		return 0;
++	}
++
+ 	rc = srp_transfer_data(cmd, &vio_iu(iue)->srp.cmd, ibmvscsis_rdma,
+ 			       1, 1);
+ 	if (rc) {
+-- 
+2.5.4 (Apple Git-61)
