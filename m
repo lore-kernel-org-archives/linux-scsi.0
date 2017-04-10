@@ -1,50 +1,50 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 2/6] scsi: hisi_sas: workaround a SoC SATA IO processing
- bug
-Date: Mon, 10 Apr 2017 16:07:00 +0200
-Message-ID: <20170410140700.GT1978@linux-x5ow.site>
-References: <1491830521-21437-1-git-send-email-john.garry@huawei.com>
- <1491830521-21437-3-git-send-email-john.garry@huawei.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v4 4/6] blk-mq: Introduce blk_mq_delay_run_hw_queue()
+Date: Mon, 10 Apr 2017 09:02:14 -0600
+Message-ID: <601a809a-b552-3084-b41d-a89767ba5c84@kernel.dk>
+References: <20170407181654.27836-1-bart.vanassche@sandisk.com>
+ <20170407181654.27836-5-bart.vanassche@sandisk.com>
+ <20170410071219.GD5559@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1491830521-21437-3-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, john.garry2@mail.dcu.ie, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhangfei.gao@linaro.org, Xiaofei Tan <tanxiaofei@huawei.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-io0-f171.google.com ([209.85.223.171]:33047 "EHLO
+        mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753664AbdDJPCU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Apr 2017 11:02:20 -0400
+Received: by mail-io0-f171.google.com with SMTP id t68so66260639iof.0
+        for <linux-scsi@vger.kernel.org>; Mon, 10 Apr 2017 08:02:20 -0700 (PDT)
+In-Reply-To: <20170410071219.GD5559@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Long Li <longli@microsoft.com>, "K . Y . Srinivasan" <kys@microsoft.com>
 
-On Mon, Apr 10, 2017 at 09:21:57PM +0800, John Garry wrote:
-> From: Xiaofei Tan <tanxiaofei@huawei.com>
+On 04/10/2017 01:12 AM, Christoph Hellwig wrote:
+>> +	if (msecs == 0)
+>> +		kblockd_schedule_work_on(blk_mq_hctx_next_cpu(hctx),
+>> +					 &hctx->run_work);
+>> +	else
+>> +		kblockd_schedule_delayed_work_on(blk_mq_hctx_next_cpu(hctx),
+>> +						 &hctx->delayed_run_work,
+>> +						 msecs_to_jiffies(msecs));
+>> +}
 > 
-> This patch provides a workaround a SoC bug where SATA IPTTs for
-> different devices may conflict.
-> 
-> The workaround solution requests the following:
-> 1. SATA device id must be even and not equal to SAS IPTT.
-> 2. SATA device can not share the same IPTT with other SAS or
-> SATA device.
-> 
-> Besides we shall consider IPTT value 0 is reserved for another SoC
-> bug (STP device open link at firstly after SAS controller reset).
-> 
-> To sum up, the solution is:
-> Each SATA device uses independent and continuous 32 even IPTT from
-> 64 to 4094, then v2 hw can only support 63 SATA devices.
-> All SAS device(SSP/SMP devices) share odd IPTT value from 1 to
-> 4095.
-> 
-> Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
-> Signed-off-by: John Garry <john.garry@huawei.com>
-> ---
+> I'd rather make run_work a delayed_work (again) and use
+> kblockd_schedule_delayed_work_on with a timeout of zero for the immediate
+> run case instead of having two competing work structs.
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Yeah that's a good point, it'd have to be an incremental patch at this
+point though. Also note that blk_mq_stop_hw_queue() isn't currently
+canceling the new ->delayed_run_work, that looks like a bug.
+
+And looking at it, right now we have 3 (three!) work items in the
+hardware queue. The two delayed items differ in that one of them only
+runs the queue it was previously stopped, that's it. The non-delayed one
+is identical to the non stopped checking delayed variant.
+
+I'll send out a patch.
+
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Jens Axboe
