@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 5/6] scsi: hisi_sas: fix NULL deference when TMF timeouts
-Date: Mon, 10 Apr 2017 21:22:00 +0800
-Message-ID: <1491830521-21437-6-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 3/6] scsi: hisi_sas: workaround SoC about abort timeout bug
+Date: Mon, 10 Apr 2017 21:21:58 +0800
+Message-ID: <1491830521-21437-4-git-send-email-john.garry@huawei.com>
 References: <1491830521-21437-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,122 +9,184 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1491830521-21437-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: john.garry2@mail.dcu.ie, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhangfei.gao@linaro.org, John Garry <john.garry@huawei.com>
+Cc: john.garry2@mail.dcu.ie, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhangfei.gao@linaro.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-If a TMF timeouts (maybe due to unlikely scenario of an expander
-being unplugged when TMF for remote device is active), when we
-eventually try to free the slot, we crash as we dereference the
-slot's task, which has already been released.
+From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-As a fix, add checks in the slot release code for a NULL task.
+This patch adds a workaround solution for a SoC bug which
+may cause SoC logic fatal error when disabling a PHY.
+Then we find internal abort IO timeout may occur, and the
+controller IO breakpoint may be corrupted.
 
+We work around this SoC bug by optimizing the flow of disabling
+a PHY.
+
+Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 60 +++++++++++++++++++----------------
- 1 file changed, 33 insertions(+), 27 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 127 ++++++++++++++++++++++++++++++++-
+ 1 file changed, 126 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index a5c6d06..7e6e882 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -77,17 +77,22 @@ static void hisi_sas_slot_index_init(struct hisi_hba *hisi_hba)
- void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
- 			     struct hisi_sas_slot *slot)
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index fc8d8296..a1eb88d 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -207,6 +207,8 @@
+ #define TXID_AUTO			(PORT_BASE + 0xb8)
+ #define TXID_AUTO_CT3_OFF		1
+ #define TXID_AUTO_CT3_MSK		(0x1 << TXID_AUTO_CT3_OFF)
++#define TXID_AUTO_CTB_OFF		11
++#define TXID_AUTO_CTB_MSK		(0x1 << TXID_AUTO_CTB_OFF)
+ #define TX_HARDRST_OFF          2
+ #define TX_HARDRST_MSK          (0x1 << TX_HARDRST_OFF)
+ #define RX_IDAF_DWORD0			(PORT_BASE + 0xc4)
+@@ -243,9 +245,17 @@
+ #define CHL_INT1_MSK			(PORT_BASE + 0x1c4)
+ #define CHL_INT2_MSK			(PORT_BASE + 0x1c8)
+ #define CHL_INT_COAL_EN			(PORT_BASE + 0x1d0)
++#define DMA_TX_DFX0			(PORT_BASE + 0x200)
+ #define DMA_TX_DFX1			(PORT_BASE + 0x204)
+ #define DMA_TX_DFX1_IPTT_OFF		0
+ #define DMA_TX_DFX1_IPTT_MSK		(0xffff << DMA_TX_DFX1_IPTT_OFF)
++#define DMA_TX_FIFO_DFX0		(PORT_BASE + 0x240)
++#define PORT_DFX0			(PORT_BASE + 0x258)
++#define LINK_DFX2			(PORT_BASE + 0X264)
++#define LINK_DFX2_RCVR_HOLD_STS_OFF	9
++#define LINK_DFX2_RCVR_HOLD_STS_MSK	(0x1 << LINK_DFX2_RCVR_HOLD_STS_OFF)
++#define LINK_DFX2_SEND_HOLD_STS_OFF	10
++#define LINK_DFX2_SEND_HOLD_STS_MSK	(0x1 << LINK_DFX2_SEND_HOLD_STS_OFF)
+ #define PHY_CTRL_RDY_MSK		(PORT_BASE + 0x2b0)
+ #define PHYCTRL_NOT_RDY_MSK		(PORT_BASE + 0x2b4)
+ #define PHYCTRL_DWS_RESET_MSK		(PORT_BASE + 0x2b8)
+@@ -1194,12 +1204,127 @@ static bool is_sata_phy_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
+ 	return false;
+ }
+ 
++static bool tx_fifo_is_empty_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
++{
++	u32 dfx_val;
++
++	dfx_val = hisi_sas_phy_read32(hisi_hba, phy_no, DMA_TX_DFX1);
++
++	if (dfx_val & BIT(16))
++		return false;
++
++	return true;
++}
++
++static bool axi_bus_is_idle_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
++{
++	int i, max_loop = 1000;
++	struct device *dev = &hisi_hba->pdev->dev;
++	u32 status, axi_status, dfx_val, dfx_tx_val;
++
++	for (i = 0; i < max_loop; i++) {
++		status = hisi_sas_read32_relaxed(hisi_hba,
++			AXI_MASTER_CFG_BASE + AM_CURR_TRANS_RETURN);
++
++		axi_status = hisi_sas_read32(hisi_hba, AXI_CFG);
++		dfx_val = hisi_sas_phy_read32(hisi_hba, phy_no, DMA_TX_DFX1);
++		dfx_tx_val = hisi_sas_phy_read32(hisi_hba,
++			phy_no, DMA_TX_FIFO_DFX0);
++
++		if ((status == 0x3) && (axi_status == 0x0) &&
++		    (dfx_val & BIT(20)) && (dfx_tx_val & BIT(10)))
++			return true;
++		udelay(10);
++	}
++	dev_err(dev, "bus is not idle phy%d, axi150:0x%x axi100:0x%x port204:0x%x port240:0x%x\n",
++			phy_no, status, axi_status,
++			dfx_val, dfx_tx_val);
++	return false;
++}
++
++static bool wait_io_done_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
++{
++	int i, max_loop = 1000;
++	struct device *dev = &hisi_hba->pdev->dev;
++	u32 status, tx_dfx0;
++
++	for (i = 0; i < max_loop; i++) {
++		status = hisi_sas_phy_read32(hisi_hba, phy_no, LINK_DFX2);
++		status = (status & 0x3fc0) >> 6;
++
++		if (status != 0x1)
++			return true;
++
++		tx_dfx0 = hisi_sas_phy_read32(hisi_hba, phy_no, DMA_TX_DFX0);
++		if ((tx_dfx0 & 0x1ff) == 0x2)
++			return true;
++		udelay(10);
++	}
++	dev_err(dev, "IO not done phy%d, port264:0x%x port200:0x%x\n",
++			phy_no, status, tx_dfx0);
++	return false;
++}
++
++static bool allowed_disable_phy_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
++{
++	if (tx_fifo_is_empty_v2_hw(hisi_hba, phy_no))
++		return true;
++
++	if (!axi_bus_is_idle_v2_hw(hisi_hba, phy_no))
++		return false;
++
++	if (!wait_io_done_v2_hw(hisi_hba, phy_no))
++		return false;
++
++	return true;
++}
++
++
+ static void disable_phy_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
  {
--	struct device *dev = &hisi_hba->pdev->dev;
--	struct domain_device *device = task->dev;
--	struct hisi_sas_device *sas_dev = device->lldd_dev;
- 
--	if (!slot->task)
--		return;
-+	if (task) {
-+		struct device *dev = &hisi_hba->pdev->dev;
-+		struct domain_device *device = task->dev;
-+		struct hisi_sas_device *sas_dev = device->lldd_dev;
- 
--	if (!sas_protocol_ata(task->task_proto))
--		if (slot->n_elem)
--			dma_unmap_sg(dev, task->scatter, slot->n_elem,
--				     task->data_dir);
-+		if (!sas_protocol_ata(task->task_proto))
-+			if (slot->n_elem)
-+				dma_unmap_sg(dev, task->scatter, slot->n_elem,
-+					     task->data_dir);
+-	u32 cfg = hisi_sas_phy_read32(hisi_hba, phy_no, PHY_CFG);
++	u32 cfg, axi_val, dfx0_val, txid_auto;
++	struct device *dev = &hisi_hba->pdev->dev;
 +
-+		task->lldd_task = NULL;
++	/* Close axi bus. */
++	axi_val = hisi_sas_read32(hisi_hba, AXI_MASTER_CFG_BASE +
++				AM_CTRL_GLOBAL);
++	axi_val |= 0x1;
++	hisi_sas_write32(hisi_hba, AXI_MASTER_CFG_BASE +
++		AM_CTRL_GLOBAL, axi_val);
 +
-+		if (sas_dev)
-+			atomic64_dec(&sas_dev->running_req);
++	if (is_sata_phy_v2_hw(hisi_hba, phy_no)) {
++		if (allowed_disable_phy_v2_hw(hisi_hba, phy_no))
++			goto do_disable;
++
++		/* Reset host controller. */
++		queue_work(hisi_hba->wq, &hisi_hba->rst_work);
++		return;
++	}
++
++	dfx0_val = hisi_sas_phy_read32(hisi_hba, phy_no, PORT_DFX0);
++	dfx0_val = (dfx0_val & 0x1fc0) >> 6;
++	if (dfx0_val != 0x4)
++		goto do_disable;
++
++	if (!tx_fifo_is_empty_v2_hw(hisi_hba, phy_no)) {
++		dev_warn(dev, "phy%d, wait tx fifo need send break\n",
++			phy_no);
++		txid_auto = hisi_sas_phy_read32(hisi_hba, phy_no,
++					TXID_AUTO);
++		txid_auto |= TXID_AUTO_CTB_MSK;
++		hisi_sas_phy_write32(hisi_hba, phy_no, TXID_AUTO,
++					txid_auto);
 +	}
  
- 	if (slot->command_table)
- 		dma_pool_free(hisi_hba->command_table_pool,
-@@ -102,12 +107,10 @@ void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
- 			      slot->sge_page_dma);
- 
- 	list_del_init(&slot->entry);
--	task->lldd_task = NULL;
- 	slot->task = NULL;
- 	slot->port = NULL;
- 	hisi_sas_slot_index_free(hisi_hba, slot->idx);
--	if (sas_dev)
--		atomic64_dec(&sas_dev->running_req);
++do_disable:
++	cfg = hisi_sas_phy_read32(hisi_hba, phy_no, PHY_CFG);
+ 	cfg &= ~PHY_CFG_ENA_MSK;
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
 +
- 	/* slot memory is fully zeroed when it is reused */
- }
- EXPORT_SYMBOL_GPL(hisi_sas_slot_task_free);
-@@ -569,25 +572,23 @@ static void hisi_sas_port_notify_formed(struct asd_sas_phy *sas_phy)
- 	spin_unlock_irqrestore(&hisi_hba->lock, flags);
++	/* Open axi bus. */
++	axi_val &= ~0x1;
++	hisi_sas_write32(hisi_hba, AXI_MASTER_CFG_BASE +
++		AM_CTRL_GLOBAL, axi_val);
  }
  
--static void hisi_sas_do_release_task(struct hisi_hba *hisi_hba,
--				     struct sas_task *task,
-+static void hisi_sas_do_release_task(struct hisi_hba *hisi_hba, struct sas_task *task,
- 				     struct hisi_sas_slot *slot)
- {
--	struct task_status_struct *ts;
--	unsigned long flags;
--
--	if (!task)
--		return;
-+	if (task) {
-+		unsigned long flags;
-+		struct task_status_struct *ts;
- 
--	ts = &task->task_status;
-+		ts = &task->task_status;
- 
--	ts->resp = SAS_TASK_COMPLETE;
--	ts->stat = SAS_ABORTED_TASK;
--	spin_lock_irqsave(&task->task_state_lock, flags);
--	task->task_state_flags &=
--		~(SAS_TASK_STATE_PENDING | SAS_TASK_AT_INITIATOR);
--	task->task_state_flags |= SAS_TASK_STATE_DONE;
--	spin_unlock_irqrestore(&task->task_state_lock, flags);
-+		ts->resp = SAS_TASK_COMPLETE;
-+		ts->stat = SAS_ABORTED_TASK;
-+		spin_lock_irqsave(&task->task_state_lock, flags);
-+		task->task_state_flags &=
-+			~(SAS_TASK_STATE_PENDING | SAS_TASK_AT_INITIATOR);
-+		task->task_state_flags |= SAS_TASK_STATE_DONE;
-+		spin_unlock_irqrestore(&task->task_state_lock, flags);
-+	}
- 
- 	hisi_sas_slot_task_free(hisi_hba, task, slot);
- }
-@@ -742,7 +743,12 @@ static int hisi_sas_exec_internal_tmf_task(struct domain_device *device,
- 		/* Even TMF timed out, return direct. */
- 		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
- 			if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
-+				struct hisi_sas_slot *slot = task->lldd_task;
-+
- 				dev_err(dev, "abort tmf: TMF task timeout\n");
-+				if (slot)
-+					slot->task = NULL;
-+
- 				goto ex_err;
- 			}
- 		}
+ static void start_phy_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
 -- 
 1.9.1
