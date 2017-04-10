@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 4/6] scsi: hisi_sas: add v2 hw internal abort timeout workaround
-Date: Mon, 10 Apr 2017 21:21:59 +0800
-Message-ID: <1491830521-21437-5-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 1/6] scsi: hisi_sas: workaround STP link SoC bug
+Date: Mon, 10 Apr 2017 21:21:56 +0800
+Message-ID: <1491830521-21437-2-git-send-email-john.garry@huawei.com>
 References: <1491830521-21437-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,173 +9,169 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1491830521-21437-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: john.garry2@mail.dcu.ie, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhangfei.gao@linaro.org, John Garry <john.garry@huawei.com>, Xiaofei Tan <tanxiaofei@huawei.com>
+Cc: john.garry2@mail.dcu.ie, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhangfei.gao@linaro.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch is a workaround for a SoC bug where an internal abort
-command may timeout. In v2 hw, the channel should become idle in
-order to finish abort process. If the target side has been sending
-HOLD, host side channel failed to complete the frame to send, and
-can not enter the idle state. Then internal abort command will
-timeout.
+From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-As this issue is only in v2 hw, we deal with it in the hw layer.
-Our workaround solution is:
-If abort is not finished within a certain period of time, we will check
-HOLD status. If HOLD has been sending, we will send break command.
+After resetting the controller, the process of scanning SATA disks
+attached to an expander may fail occasionally. The issue is that
+the controller can't close the STP link created by target if the
+max link time is 0.
 
-Signed-off-by: John Garry <john.garry@huawei.com>
+To workaround this issue, we reject STP link after resetting the
+controller, and change the corresponding PHY to accept STP link
+only after receiving data.
+
+We do this check in cq interrupt handler. In order not to reduce
+efficiency, we use an variable to control whether we should check
+and change PHY to accept STP link.
+
+The function phys_reject_stp_links_v2_hw() should be called after
+resetting the controller.
+
+The solution of another SoC bug "SATA IO timeout", that also uses
+the same register to control STP link, is not effective before
+the PHY accepts STP link.
+
 Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 ---
  drivers/scsi/hisi_sas/hisi_sas.h       |  1 +
- drivers/scsi/hisi_sas/hisi_sas_main.c  |  2 +-
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 62 +++++++++++++++++++++++++++++-----
- 3 files changed, 55 insertions(+), 10 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 60 +++++++++++++++++++++++++++++++++-
+ 2 files changed, 60 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index c80ca83..4e28f32 100644
+index 6aa0b62..72347b6 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas.h
 +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -138,6 +138,7 @@ struct hisi_sas_slot {
- 	struct hisi_sas_sge_page *sge_page;
- 	dma_addr_t sge_page_dma;
- 	struct work_struct abort_slot;
-+	struct timer_list internal_abort_timer;
- };
+@@ -203,6 +203,7 @@ struct hisi_hba {
  
- struct hisi_sas_tmf_task {
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 9890dfd..a5c6d06 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1224,7 +1224,7 @@ static int hisi_sas_query_task(struct sas_task *task)
- 	task->task_done = hisi_sas_task_done;
- 	task->slow_task->timer.data = (unsigned long)task;
- 	task->slow_task->timer.function = hisi_sas_tmf_timedout;
--	task->slow_task->timer.expires = jiffies + 20*HZ;
-+	task->slow_task->timer.expires = jiffies + msecs_to_jiffies(110);
- 	add_timer(&task->slow_task->timer);
+ 	int slot_index_count;
+ 	unsigned long *slot_index_tags;
++	unsigned long reject_stp_links_msk;
  
- 	/* Lock as we are alloc'ing a slot, which cannot be interrupted */
+ 	/* SCSI/SAS glue */
+ 	struct sas_ha_struct sha;
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index a1eb88d..cc5675b 100644
+index 66c2de8..c550cc4 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -194,9 +194,9 @@
- #define SL_CONTROL_NOTIFY_EN_MSK	(0x1 << SL_CONTROL_NOTIFY_EN_OFF)
- #define SL_CONTROL_CTA_OFF		17
- #define SL_CONTROL_CTA_MSK		(0x1 << SL_CONTROL_CTA_OFF)
--#define RX_PRIMS_STATUS         (PORT_BASE + 0x98)
--#define RX_BCAST_CHG_OFF        1
--#define RX_BCAST_CHG_MSK        (0x1 << RX_BCAST_CHG_OFF)
-+#define RX_PRIMS_STATUS			(PORT_BASE + 0x98)
-+#define RX_BCAST_CHG_OFF		1
-+#define RX_BCAST_CHG_MSK		(0x1 << RX_BCAST_CHG_OFF)
- #define TX_ID_DWORD0			(PORT_BASE + 0x9c)
- #define TX_ID_DWORD1			(PORT_BASE + 0xa0)
- #define TX_ID_DWORD2			(PORT_BASE + 0xa4)
-@@ -209,8 +209,8 @@
- #define TXID_AUTO_CT3_MSK		(0x1 << TXID_AUTO_CT3_OFF)
- #define TXID_AUTO_CTB_OFF		11
- #define TXID_AUTO_CTB_MSK		(0x1 << TXID_AUTO_CTB_OFF)
--#define TX_HARDRST_OFF          2
--#define TX_HARDRST_MSK          (0x1 << TX_HARDRST_OFF)
-+#define TX_HARDRST_OFF			2
-+#define TX_HARDRST_MSK			(0x1 << TX_HARDRST_OFF)
- #define RX_IDAF_DWORD0			(PORT_BASE + 0xc4)
- #define RX_IDAF_DWORD1			(PORT_BASE + 0xc8)
- #define RX_IDAF_DWORD2			(PORT_BASE + 0xcc)
-@@ -245,13 +245,13 @@
+@@ -218,6 +218,9 @@
+ #define RX_IDAF_DWORD6			(PORT_BASE + 0xdc)
+ #define RXOP_CHECK_CFG_H		(PORT_BASE + 0xfc)
+ #define CON_CONTROL			(PORT_BASE + 0x118)
++#define CON_CONTROL_CFG_OPEN_ACC_STP_OFF	0
++#define CON_CONTROL_CFG_OPEN_ACC_STP_MSK	\
++		(0x01 << CON_CONTROL_CFG_OPEN_ACC_STP_OFF)
+ #define DONE_RECEIVED_TIME		(PORT_BASE + 0x11c)
+ #define CHL_INT0			(PORT_BASE + 0x1b4)
+ #define CHL_INT0_HOTPLUG_TOUT_OFF	0
+@@ -240,6 +243,9 @@
  #define CHL_INT1_MSK			(PORT_BASE + 0x1c4)
  #define CHL_INT2_MSK			(PORT_BASE + 0x1c8)
  #define CHL_INT_COAL_EN			(PORT_BASE + 0x1d0)
--#define DMA_TX_DFX0			(PORT_BASE + 0x200)
--#define DMA_TX_DFX1			(PORT_BASE + 0x204)
-+#define DMA_TX_DFX0				(PORT_BASE + 0x200)
-+#define DMA_TX_DFX1				(PORT_BASE + 0x204)
- #define DMA_TX_DFX1_IPTT_OFF		0
- #define DMA_TX_DFX1_IPTT_MSK		(0xffff << DMA_TX_DFX1_IPTT_OFF)
- #define DMA_TX_FIFO_DFX0		(PORT_BASE + 0x240)
--#define PORT_DFX0			(PORT_BASE + 0x258)
--#define LINK_DFX2			(PORT_BASE + 0X264)
-+#define PORT_DFX0				(PORT_BASE + 0x258)
-+#define LINK_DFX2					(PORT_BASE + 0X264)
- #define LINK_DFX2_RCVR_HOLD_STS_OFF	9
- #define LINK_DFX2_RCVR_HOLD_STS_MSK	(0x1 << LINK_DFX2_RCVR_HOLD_STS_OFF)
- #define LINK_DFX2_SEND_HOLD_STS_OFF	10
-@@ -2260,15 +2260,18 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
- 	case STAT_IO_COMPLETE:
- 		/* internal abort command complete */
- 		ts->stat = TMF_RESP_FUNC_SUCC;
-+		del_timer(&slot->internal_abort_timer);
- 		goto out;
- 	case STAT_IO_NO_DEVICE:
- 		ts->stat = TMF_RESP_FUNC_COMPLETE;
-+		del_timer(&slot->internal_abort_timer);
- 		goto out;
- 	case STAT_IO_NOT_VALID:
- 		/* abort single io, controller don't find
- 		 * the io need to abort
- 		 */
- 		ts->stat = TMF_RESP_FUNC_FAILED;
-+		del_timer(&slot->internal_abort_timer);
- 		goto out;
- 	default:
- 		break;
-@@ -2502,6 +2505,40 @@ static int prep_ata_v2_hw(struct hisi_hba *hisi_hba,
++#define DMA_TX_DFX1			(PORT_BASE + 0x204)
++#define DMA_TX_DFX1_IPTT_OFF		0
++#define DMA_TX_DFX1_IPTT_MSK		(0xffff << DMA_TX_DFX1_IPTT_OFF)
+ #define PHY_CTRL_RDY_MSK		(PORT_BASE + 0x2b0)
+ #define PHYCTRL_NOT_RDY_MSK		(PORT_BASE + 0x2b4)
+ #define PHYCTRL_DWS_RESET_MSK		(PORT_BASE + 0x2b8)
+@@ -593,7 +599,8 @@ static u32 hisi_sas_phy_read32(struct hisi_hba *hisi_hba,
+ slot_index_alloc_quirk_v2_hw(struct hisi_hba *hisi_hba, int *slot_idx,
+ 		       struct domain_device *device)
+ {
+-	unsigned int index = 0;
++	/* STP link chip bug workaround:index start from 1 */
++	unsigned int index = 1;
+ 	void *bitmap = hisi_hba->slot_index_tags;
+ 	int sata_dev = dev_is_sata(device);
+ 
+@@ -875,6 +882,46 @@ static int reset_hw_v2_hw(struct hisi_hba *hisi_hba)
  	return 0;
  }
  
-+static void hisi_sas_internal_abort_quirk_timeout(unsigned long data)
++/* This function needs to be called after resetting SAS controller. */
++static void phys_reject_stp_links_v2_hw(struct hisi_hba *hisi_hba)
 +{
-+	struct hisi_sas_slot *slot = (struct hisi_sas_slot *)data;
-+	struct hisi_sas_port *port = slot->port;
-+	struct asd_sas_port *asd_sas_port;
-+	struct asd_sas_phy *sas_phy;
++	u32 cfg;
++	int phy_no;
 +
-+	if (!port)
-+		return;
++	hisi_hba->reject_stp_links_msk = (1 << hisi_hba->n_phy) - 1;
++	for (phy_no = 0; phy_no < hisi_hba->n_phy; phy_no++) {
++		cfg = hisi_sas_phy_read32(hisi_hba, phy_no, CON_CONTROL);
++		if (!(cfg & CON_CONTROL_CFG_OPEN_ACC_STP_MSK))
++			continue;
 +
-+	asd_sas_port = &port->sas_port;
++		cfg &= ~CON_CONTROL_CFG_OPEN_ACC_STP_MSK;
++		hisi_sas_phy_write32(hisi_hba, phy_no, CON_CONTROL, cfg);
++	}
++}
 +
-+	/* Kick the hardware - send break command */
-+	list_for_each_entry(sas_phy, &asd_sas_port->phy_list, port_phy_el) {
-+		struct hisi_sas_phy *phy = sas_phy->lldd_phy;
-+		struct hisi_hba *hisi_hba = phy->hisi_hba;
-+		int phy_no = sas_phy->id;
-+		u32 link_dfx2;
++static void phys_try_accept_stp_links_v2_hw(struct hisi_hba *hisi_hba)
++{
++	int phy_no;
++	u32 dma_tx_dfx1;
 +
-+		link_dfx2 = hisi_sas_phy_read32(hisi_hba, phy_no, LINK_DFX2);
-+		if ((link_dfx2 == LINK_DFX2_RCVR_HOLD_STS_MSK) ||
-+		    (link_dfx2 & LINK_DFX2_SEND_HOLD_STS_MSK)) {
-+			u32 txid_auto;
++	for (phy_no = 0; phy_no < hisi_hba->n_phy; phy_no++) {
++		if (!(hisi_hba->reject_stp_links_msk & BIT(phy_no)))
++			continue;
 +
-+			txid_auto = hisi_sas_phy_read32(hisi_hba, phy_no,
-+							TXID_AUTO);
-+			txid_auto |= TXID_AUTO_CTB_MSK;
-+			hisi_sas_phy_write32(hisi_hba, phy_no, TXID_AUTO,
-+					     txid_auto);
-+			return;
++		dma_tx_dfx1 = hisi_sas_phy_read32(hisi_hba, phy_no,
++						DMA_TX_DFX1);
++		if (dma_tx_dfx1 & DMA_TX_DFX1_IPTT_MSK) {
++			u32 cfg = hisi_sas_phy_read32(hisi_hba,
++				phy_no, CON_CONTROL);
++
++			cfg |= CON_CONTROL_CFG_OPEN_ACC_STP_MSK;
++			hisi_sas_phy_write32(hisi_hba, phy_no,
++				CON_CONTROL, cfg);
++			clear_bit(phy_no, &hisi_hba->reject_stp_links_msk);
 +		}
 +	}
 +}
 +
- static int prep_abort_v2_hw(struct hisi_hba *hisi_hba,
- 		struct hisi_sas_slot *slot,
- 		int device_id, int abort_flag, int tag_to_abort)
-@@ -2510,6 +2547,13 @@ static int prep_abort_v2_hw(struct hisi_hba *hisi_hba,
- 	struct domain_device *dev = task->dev;
- 	struct hisi_sas_cmd_hdr *hdr = slot->cmd_hdr;
- 	struct hisi_sas_port *port = slot->port;
-+	struct timer_list *timer = &slot->internal_abort_timer;
-+
-+	/* setup the quirk timer */
-+	setup_timer(timer, hisi_sas_internal_abort_quirk_timeout,
-+		    (unsigned long)slot);
-+	/* Set the timeout to 10ms less than internal abort timeout */
-+	mod_timer(timer, jiffies + msecs_to_jiffies(100));
+ static void init_reg_v2_hw(struct hisi_hba *hisi_hba)
+ {
+ 	struct device *dev = &hisi_hba->pdev->dev;
+@@ -1012,6 +1059,9 @@ static void link_timeout_enable_link(unsigned long data)
+ 	int i, reg_val;
  
- 	/* dw0 */
- 	hdr->dw0 = cpu_to_le32((5 << CMD_HDR_CMD_OFF) | /*abort*/
+ 	for (i = 0; i < hisi_hba->n_phy; i++) {
++		if (hisi_hba->reject_stp_links_msk & BIT(i))
++			continue;
++
+ 		reg_val = hisi_sas_phy_read32(hisi_hba, i, CON_CONTROL);
+ 		if (!(reg_val & BIT(0))) {
+ 			hisi_sas_phy_write32(hisi_hba, i,
+@@ -1031,6 +1081,9 @@ static void link_timeout_disable_link(unsigned long data)
+ 
+ 	reg_val = hisi_sas_read32(hisi_hba, PHY_STATE);
+ 	for (i = 0; i < hisi_hba->n_phy && reg_val; i++) {
++		if (hisi_hba->reject_stp_links_msk & BIT(i))
++			continue;
++
+ 		if (reg_val & BIT(i)) {
+ 			hisi_sas_phy_write32(hisi_hba, i,
+ 					CON_CONTROL, 0x6);
+@@ -2867,6 +2920,9 @@ static void cq_tasklet_v2_hw(unsigned long val)
+ 	u32 rd_point = cq->rd_point, wr_point, dev_id;
+ 	int queue = cq->id;
+ 
++	if (unlikely(hisi_hba->reject_stp_links_msk))
++		phys_try_accept_stp_links_v2_hw(hisi_hba);
++
+ 	complete_queue = hisi_hba->complete_hdr[queue];
+ 
+ 	spin_lock(&hisi_hba->lock);
+@@ -3214,6 +3270,8 @@ static int soft_reset_v2_hw(struct hisi_hba *hisi_hba)
+ 	if (rc)
+ 		return rc;
+ 
++	phys_reject_stp_links_v2_hw(hisi_hba);
++
+ 	/* Re-enable the PHYs */
+ 	for (phy_no = 0; phy_no < hisi_hba->n_phy; phy_no++) {
+ 		struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
 -- 
 1.9.1
