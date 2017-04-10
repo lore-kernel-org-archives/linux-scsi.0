@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 2/6] scsi: hisi_sas: workaround a SoC SATA IO processing bug
-Date: Mon, 10 Apr 2017 21:21:57 +0800
-Message-ID: <1491830521-21437-3-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 5/6] scsi: hisi_sas: fix NULL deference when TMF timeouts
+Date: Mon, 10 Apr 2017 21:22:00 +0800
+Message-ID: <1491830521-21437-6-git-send-email-john.garry@huawei.com>
 References: <1491830521-21437-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,200 +9,122 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1491830521-21437-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: john.garry2@mail.dcu.ie, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhangfei.gao@linaro.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
+Cc: john.garry2@mail.dcu.ie, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhangfei.gao@linaro.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiaofei Tan <tanxiaofei@huawei.com>
+If a TMF timeouts (maybe due to unlikely scenario of an expander
+being unplugged when TMF for remote device is active), when we
+eventually try to free the slot, we crash as we dereference the
+slot's task, which has already been released.
 
-This patch provides a workaround a SoC bug where SATA IPTTs for
-different devices may conflict.
+As a fix, add checks in the slot release code for a NULL task.
 
-The workaround solution requests the following:
-1. SATA device id must be even and not equal to SAS IPTT.
-2. SATA device can not share the same IPTT with other SAS or
-SATA device.
-
-Besides we shall consider IPTT value 0 is reserved for another SoC
-bug (STP device open link at firstly after SAS controller reset).
-
-To sum up, the solution is:
-Each SATA device uses independent and continuous 32 even IPTT from
-64 to 4094, then v2 hw can only support 63 SATA devices.
-All SAS device(SSP/SMP devices) share odd IPTT value from 1 to
-4095.
-
-Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  2 +
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 83 ++++++++++++++++++++++++++++------
- 2 files changed, 72 insertions(+), 13 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 60 +++++++++++++++++++----------------
+ 1 file changed, 33 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 72347b6..c80ca83 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -115,6 +115,7 @@ struct hisi_sas_device {
- 	atomic64_t running_req;
- 	struct list_head	list;
- 	u8 dev_status;
-+	int sata_idx;
- };
- 
- struct hisi_sas_slot {
-@@ -238,6 +239,7 @@ struct hisi_hba {
- 	struct hisi_sas_slot	*slot_info;
- 	unsigned long flags;
- 	const struct hisi_sas_hw *hw;	/* Low level hw interface */
-+	unsigned long sata_dev_bitmap[BITS_TO_LONGS(HISI_SAS_MAX_DEVICES)];
- 	struct work_struct rst_work;
- };
- 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index c550cc4..fc8d8296 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -537,6 +537,7 @@ enum {
- };
- 
- #define HISI_SAS_COMMAND_ENTRIES_V2_HW 4096
-+#define HISI_MAX_SATA_SUPPORT_V2_HW	(HISI_SAS_COMMAND_ENTRIES_V2_HW/64 - 1)
- 
- #define DIR_NO_DATA 0
- #define DIR_TO_INI 1
-@@ -597,39 +598,86 @@ static u32 hisi_sas_phy_read32(struct hisi_hba *hisi_hba,
- /* This function needs to be protected from pre-emption. */
- static int
- slot_index_alloc_quirk_v2_hw(struct hisi_hba *hisi_hba, int *slot_idx,
--		       struct domain_device *device)
-+			     struct domain_device *device)
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index a5c6d06..7e6e882 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -77,17 +77,22 @@ static void hisi_sas_slot_index_init(struct hisi_hba *hisi_hba)
+ void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
+ 			     struct hisi_sas_slot *slot)
  {
--	/* STP link chip bug workaround:index start from 1 */
--	unsigned int index = 1;
--	void *bitmap = hisi_hba->slot_index_tags;
- 	int sata_dev = dev_is_sata(device);
-+	void *bitmap = hisi_hba->slot_index_tags;
-+	struct hisi_sas_device *sas_dev = device->lldd_dev;
-+	int sata_idx = sas_dev->sata_idx;
-+	int start, end;
+-	struct device *dev = &hisi_hba->pdev->dev;
+-	struct domain_device *device = task->dev;
+-	struct hisi_sas_device *sas_dev = device->lldd_dev;
+ 
+-	if (!slot->task)
+-		return;
++	if (task) {
++		struct device *dev = &hisi_hba->pdev->dev;
++		struct domain_device *device = task->dev;
++		struct hisi_sas_device *sas_dev = device->lldd_dev;
+ 
+-	if (!sas_protocol_ata(task->task_proto))
+-		if (slot->n_elem)
+-			dma_unmap_sg(dev, task->scatter, slot->n_elem,
+-				     task->data_dir);
++		if (!sas_protocol_ata(task->task_proto))
++			if (slot->n_elem)
++				dma_unmap_sg(dev, task->scatter, slot->n_elem,
++					     task->data_dir);
 +
-+	if (!sata_dev) {
-+		/*
-+		 * STP link SoC bug workaround: index starts from 1.
-+		 * additionally, we can only allocate odd IPTT(1~4095)
-+		 * for SAS/SMP device.
-+		 */
-+		start = 1;
-+		end = hisi_hba->slot_index_count;
-+	} else {
-+		if (sata_idx >= HISI_MAX_SATA_SUPPORT_V2_HW)
-+			return -EINVAL;
++		task->lldd_task = NULL;
 +
-+		/*
-+		 * For SATA device: allocate even IPTT in this interval
-+		 * [64*(sata_idx+1), 64*(sata_idx+2)], then each SATA device
-+		 * own 32 IPTTs. IPTT 0 shall not be used duing to STP link
-+		 * SoC bug workaround. So we ignore the first 32 even IPTTs.
-+		 */
-+		start = 64 * (sata_idx + 1);
-+		end = 64 * (sata_idx + 2);
++		if (sas_dev)
++			atomic64_dec(&sas_dev->running_req);
 +	}
  
- 	while (1) {
--		index = find_next_zero_bit(bitmap, hisi_hba->slot_index_count,
--					   index);
--		if (index >= hisi_hba->slot_index_count)
-+		start = find_next_zero_bit(bitmap,
-+					hisi_hba->slot_index_count, start);
-+		if (start >= end)
- 			return -SAS_QUEUE_FULL;
- 		/*
--		 * SAS IPTT bit0 should be 1
--		 */
--		if (sata_dev || (index & 1))
-+		  * SAS IPTT bit0 should be 1, and SATA IPTT bit0 should be 0.
-+		  */
-+		if (sata_dev ^ (start & 1))
- 			break;
--		index++;
-+		start++;
- 	}
+ 	if (slot->command_table)
+ 		dma_pool_free(hisi_hba->command_table_pool,
+@@ -102,12 +107,10 @@ void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
+ 			      slot->sge_page_dma);
  
--	set_bit(index, bitmap);
--	*slot_idx = index;
-+	set_bit(start, bitmap);
-+	*slot_idx = start;
- 	return 0;
+ 	list_del_init(&slot->entry);
+-	task->lldd_task = NULL;
+ 	slot->task = NULL;
+ 	slot->port = NULL;
+ 	hisi_sas_slot_index_free(hisi_hba, slot->idx);
+-	if (sas_dev)
+-		atomic64_dec(&sas_dev->running_req);
++
+ 	/* slot memory is fully zeroed when it is reused */
+ }
+ EXPORT_SYMBOL_GPL(hisi_sas_slot_task_free);
+@@ -569,25 +572,23 @@ static void hisi_sas_port_notify_formed(struct asd_sas_phy *sas_phy)
+ 	spin_unlock_irqrestore(&hisi_hba->lock, flags);
  }
  
-+static bool sata_index_alloc_v2_hw(struct hisi_hba *hisi_hba, int *idx)
-+{
-+	unsigned int index;
-+	struct device *dev = &hisi_hba->pdev->dev;
-+	void *bitmap = hisi_hba->sata_dev_bitmap;
-+
-+	index = find_first_zero_bit(bitmap, HISI_MAX_SATA_SUPPORT_V2_HW);
-+	if (index >= HISI_MAX_SATA_SUPPORT_V2_HW) {
-+		dev_warn(dev, "alloc sata index failed, index=%d\n", index);
-+		return false;
+-static void hisi_sas_do_release_task(struct hisi_hba *hisi_hba,
+-				     struct sas_task *task,
++static void hisi_sas_do_release_task(struct hisi_hba *hisi_hba, struct sas_task *task,
+ 				     struct hisi_sas_slot *slot)
+ {
+-	struct task_status_struct *ts;
+-	unsigned long flags;
+-
+-	if (!task)
+-		return;
++	if (task) {
++		unsigned long flags;
++		struct task_status_struct *ts;
+ 
+-	ts = &task->task_status;
++		ts = &task->task_status;
+ 
+-	ts->resp = SAS_TASK_COMPLETE;
+-	ts->stat = SAS_ABORTED_TASK;
+-	spin_lock_irqsave(&task->task_state_lock, flags);
+-	task->task_state_flags &=
+-		~(SAS_TASK_STATE_PENDING | SAS_TASK_AT_INITIATOR);
+-	task->task_state_flags |= SAS_TASK_STATE_DONE;
+-	spin_unlock_irqrestore(&task->task_state_lock, flags);
++		ts->resp = SAS_TASK_COMPLETE;
++		ts->stat = SAS_ABORTED_TASK;
++		spin_lock_irqsave(&task->task_state_lock, flags);
++		task->task_state_flags &=
++			~(SAS_TASK_STATE_PENDING | SAS_TASK_AT_INITIATOR);
++		task->task_state_flags |= SAS_TASK_STATE_DONE;
++		spin_unlock_irqrestore(&task->task_state_lock, flags);
 +	}
-+
-+	set_bit(index, bitmap);
-+	*idx = index;
-+	return true;
-+}
-+
-+
- static struct
- hisi_sas_device *alloc_dev_quirk_v2_hw(struct domain_device *device)
- {
- 	struct hisi_hba *hisi_hba = device->port->ha->lldd_ha;
- 	struct hisi_sas_device *sas_dev = NULL;
- 	int i, sata_dev = dev_is_sata(device);
-+	int sata_idx = -1;
  
- 	spin_lock(&hisi_hba->lock);
+ 	hisi_sas_slot_task_free(hisi_hba, task, slot);
+ }
+@@ -742,7 +743,12 @@ static int hisi_sas_exec_internal_tmf_task(struct domain_device *device,
+ 		/* Even TMF timed out, return direct. */
+ 		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
+ 			if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
++				struct hisi_sas_slot *slot = task->lldd_task;
 +
-+	if (sata_dev)
-+		if (!sata_index_alloc_v2_hw(hisi_hba, &sata_idx))
-+			goto out;
+ 				dev_err(dev, "abort tmf: TMF task timeout\n");
++				if (slot)
++					slot->task = NULL;
 +
- 	for (i = 0; i < HISI_SAS_MAX_DEVICES; i++) {
- 		/*
- 		 * SATA device id bit0 should be 0
-@@ -643,10 +691,13 @@ hisi_sas_device *alloc_dev_quirk_v2_hw(struct domain_device *device)
- 			sas_dev->dev_type = device->dev_type;
- 			sas_dev->hisi_hba = hisi_hba;
- 			sas_dev->sas_device = device;
-+			sas_dev->sata_idx = sata_idx;
- 			INIT_LIST_HEAD(&hisi_hba->devices[i].list);
- 			break;
+ 				goto ex_err;
+ 			}
  		}
- 	}
-+
-+out:
- 	spin_unlock(&hisi_hba->lock);
- 
- 	return sas_dev;
-@@ -753,6 +804,10 @@ static void free_device_v2_hw(struct hisi_hba *hisi_hba,
- 	u32 reg_val = hisi_sas_read32(hisi_hba, ENT_INT_SRC3);
- 	int i;
- 
-+	/* SoC bug workaround */
-+	if (dev_is_sata(sas_dev->sas_device))
-+		clear_bit(sas_dev->sata_idx, hisi_hba->sata_dev_bitmap);
-+
- 	/* clear the itct interrupt state */
- 	if (ENT_INT_SRC3_ITC_INT_MSK & reg_val)
- 		hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
-@@ -3197,6 +3252,8 @@ static int hisi_sas_v2_init(struct hisi_hba *hisi_hba)
- {
- 	int rc;
- 
-+	memset(hisi_hba->sata_dev_bitmap, 0, sizeof(hisi_hba->sata_dev_bitmap));
-+
- 	rc = hw_init_v2_hw(hisi_hba);
- 	if (rc)
- 		return rc;
 -- 
 1.9.1
