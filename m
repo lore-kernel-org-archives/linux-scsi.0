@@ -1,14 +1,14 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [PATCH] scsi: ibmvfc: don't check for failure from mempool_alloc()
-Date: Mon, 10 Apr 2017 12:15:13 +1000
-Message-ID: <878tn9xb2m.fsf@notabene.neil.brown.name>
+Subject: [PATCH] virtio_scsi: don't check for failure from mempool_alloc()
+Date: Mon, 10 Apr 2017 12:16:28 +1000
+Message-ID: <8760idxb0j.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 --=-=-=
@@ -22,27 +22,33 @@ So remove this pointless code.
 
 Signed-off-by: NeilBrown <neilb@suse.com>
 =2D--
- drivers/scsi/ibmvscsi/ibmvfc.c | 6 ------
+ drivers/scsi/virtio_scsi.c | 6 ------
  1 file changed, 6 deletions(-)
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index 2c92dabb55f6..26cd3c28186a 100644
-=2D-- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -3910,12 +3910,6 @@ static int ibmvfc_alloc_target(struct ibmvfc_host *v=
-host, u64 scsi_id)
- 	spin_unlock_irqrestore(vhost->host->host_lock, flags);
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 939c47df73fa..7c2a5f7c5fb7 100644
+=2D-- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -688,9 +688,6 @@ static int virtscsi_device_reset(struct scsi_cmnd *sc)
 =20
- 	tgt =3D mempool_alloc(vhost->tgt_pool, GFP_NOIO);
-=2D	if (!tgt) {
-=2D		dev_err(vhost->dev, "Target allocation failure for scsi id %08llx\n",
-=2D			scsi_id);
-=2D		return -ENOMEM;
-=2D	}
+ 	sdev_printk(KERN_INFO, sc->device, "device reset\n");
+ 	cmd =3D mempool_alloc(virtscsi_cmd_pool, GFP_NOIO);
+=2D	if (!cmd)
+=2D		return FAILED;
 =2D
- 	memset(tgt, 0, sizeof(*tgt));
- 	tgt->scsi_id =3D scsi_id;
- 	tgt->new_scsi_id =3D scsi_id;
+ 	memset(cmd, 0, sizeof(*cmd));
+ 	cmd->sc =3D sc;
+ 	cmd->req.tmf =3D (struct virtio_scsi_ctrl_tmf_req){
+@@ -725,9 +722,6 @@ static int virtscsi_abort(struct scsi_cmnd *sc)
+=20
+ 	scmd_printk(KERN_INFO, sc, "abort\n");
+ 	cmd =3D mempool_alloc(virtscsi_cmd_pool, GFP_NOIO);
+=2D	if (!cmd)
+=2D		return FAILED;
+=2D
+ 	memset(cmd, 0, sizeof(*cmd));
+ 	cmd->sc =3D sc;
+ 	cmd->req.tmf =3D (struct virtio_scsi_ctrl_tmf_req){
 =2D-=20
 2.12.2
 
@@ -52,18 +58,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljq6rEACgkQOeye3VZi
-gbngbQ//XtuQiu7ppun4sOfhtZVgLW+G1k4u3zn7N4O+u4gvRO7Cb5Ki9jq6Nx58
-aiHnOOJbBdBupSowZe/kfHeNGQCgk3/BdvVq48i5A33OmVJhcKRHPJpinI+Y11Ei
-WguYoeqjokO9aaNEVQ8X3SD0mz/L5su3oF3dxIPKjW1KsWOD1iAjjrINw03YrqOP
-OQCOsvENbwThBAxqdIN6LIexcHycdiR7g6bxx35ywzefNy6JGWz2+fJs1RXTYRWk
-yTq75+622ek0qACG3uWWT3WwGzqMrcTWK8UhVVnge4eQGBJuwqzXJuNBAZnIjokQ
-bMyPwuoSexEx0kalL7IUxpvmzLzt1X4NITTu349vd33ZVA7WX3EJtW5I82W3Auyj
-ORQU328e4rAJooccDKCue2ZxNs/FPBw5OjCRyGGd43cf2oBKFyLZGMRgBiLypbgf
-TSyQTlee2W55KA0/4C24PAeUuDqDgB1EN+QH8mk5+pRgj1cOI+I3TJGDil3ptwpW
-T5FY5xUqbD/Z5kZIT8IHyVyZOeA3sOnGf1b+LOGODzw1W0ld/2PV9RS8jYbAsJgN
-Y12amk5eleKT7/Pu5Og41gq3FByL+9ml5jJvtVGrJ2EVPihB6y4bVyfHakYfTeKK
-pBHGA3S2ywZA+jO3i8MMPoIJfbIhutXNZkJbA9Wf8bICNsaWQ1U=
-=Gvh/
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljq6vwACgkQOeye3VZi
+gblVPxAAuLMOoIJ5M2xgzHOp1hZDzF0Y96A64DmWvN4SjMMyWT4nkHr+HdyCCnJA
+uvcnlmHnIZ0FjH+DuhRmdUXgisNxDC8zjwYqfRn9XkEBYnGPz3X0gcorsxlb+TR5
+ea2zEwWMfD1n1mP72OGK1acHjFByvtHCx+UChTVuzgETcT8Of7ObWzP5NHPOdatL
+GGn3X7LZpML6mXAJRkTSpOA80nsbFVQ4z0xfdR33c8nvNU/Ixwm2LAR4W90Rghhf
+QdRRVNgbTqXZQMJIv/CFYAWJR9PCVaPvQl+9FWh+J4odbkYFTJPUqtJy6nOx2UgX
+FsW05+viOV54QbBRe0s3wZsSfm7Fsew2cZpalZ5aaK7fDTw0FQIu9syFpHSas1th
+o8teScPaEBmlk3u1rZhqQOjphw+C+Q8n1IvqtzFD2KS8kFm6AVhpUvAtcQVx5zQA
+8SkV4WRoan65o5Z4LD3VVkkD6LcggmHtVgFuYvIGrTE44xvzyQbyQJCjxfaafwni
+O59YYVZ2Ovc2zTLcDMA/Rf1tMabJ8SeKcfBOfIpC7Jm6Lth0+lA9w39EYp9o0eWo
+MaxK8Uju1je4SyTvsKr3fYy33y33R1kIV5cfeBYjNm3yxRDhU4AaCnwkZAoO40i8
+yFW9VQXztTep93Pnjjo7rzQmI5IXKX6zCOqhXmx8lEaKTB0ZjC0=
+=hGWW
 -----END PGP SIGNATURE-----
 --=-=-=--
