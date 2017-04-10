@@ -1,48 +1,71 @@
-From: Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>
-Subject: Re: [RFC 6/8] nvmet: Be careful about using iomem accesses when
- dealing with p2pmem
-Date: Mon, 10 Apr 2017 11:29:57 +0300
-Message-ID: <7fcc3ac8-8b96-90f5-3942-87f999c7499d@grimberg.me>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1490911959-5146-7-git-send-email-logang@deltatee.com>
- <080b68b4-eba3-861c-4f29-5d829425b5e7@grimberg.me>
- <20170404154629.GA13552@obsidianresearch.com>
- <4df229d8-8124-664a-9bc4-6401bc034be1@grimberg.me>
- <3E85B4D4-9EBC-4299-8209-2D8740947764@raithlin.com>
+From: <kkaplanidou@hhp.ufl.edu>
+Subject: (unknown)
+Date: Mon, 10 Apr 2017 08:37:50 -0000
+Message-ID: <149181347098.7747.8438641931332663666@zaural.ru>
+Reply-To: <kkaplanidou@hhp.ufl.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <3E85B4D4-9EBC-4299-8209-2D8740947764-pv7U853sEMVWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Stephen Bates <sbates-pv7U853sEMVWk0Htik3J/w@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org" <linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org>, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Content-Type: application/zip; name="81477342108520_linux-scsi.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ws229.255.50.zone94.zaural.ru ([94.50.255.229]:36036 "HELO
+        zaural.ru" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+        id S1751442AbdDJIhz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 10 Apr 2017 04:37:55 -0400
+Subject: 
+Content-Disposition: attachment
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-
-> Sagi
->
-> As long as legA, legB and the RC are all connected to the same switch then ordering will be preserved (I think many other topologies also work). Here is how it would work for the problem case you are concerned about (which is a read from the NVMe drive).
->
-> 1. Disk device DMAs out the data to the p2pmem device via a string of PCIe MemWr TLPs.
-> 2. Disk device writes to the completion queue (in system memory) via a MemWr TLP.
-> 3. The last of the MemWrs from step 1 might have got stalled in the PCIe switch due to congestion but if so they are stalled in the egress path of the switch for the p2pmem port.
-> 4. The RC determines the IO is complete when the TLP associated with step 2 updates the memory associated with the CQ. It issues some operation to read the p2pmem.
-> 5. Regardless of whether the MemRd TLP comes from the RC or another device connected to the switch it is queued in the egress queue for the p2pmem FIO behind the last DMA TLP (from step 1).
-> PCIe ordering ensures that this MemRd cannot overtake the MemWr (Reads can never pass writes).
-> Therefore the MemRd can never get to the p2pmem device until after the last DMA MemWr has.
-
-What you are saying is surprising to me. The switch needs to preserve
-ordering across different switch ports ??
-
-You are suggesting that there is a *switch-wide* state that tracks
-MemRds never pass MemWrs across all the switch ports? That is a very
-non-trivial statement...
+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
+TQAAAAILAAAAAA==
