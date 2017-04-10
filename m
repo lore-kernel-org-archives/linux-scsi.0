@@ -1,124 +1,36 @@
-From: Sumit Semwal <sumit.semwal@linaro.org>
-Subject: [PATCH for-4.4 15/16] blk-mq: Avoid memory reclaim when remapping queues
-Date: Mon, 10 Apr 2017 23:14:31 +0530
-Message-ID: <1491846272-14882-16-git-send-email-sumit.semwal@linaro.org>
-References: <1491846272-14882-1-git-send-email-sumit.semwal@linaro.org>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH 0/3] Unblock SCSI devices even if the LLD is being
+ unloaded
+Date: Mon, 10 Apr 2017 17:46:10 +0000
+Message-ID: <1491846369.4199.17.camel@sandisk.com>
+References: <20170316205650.3322-1-bart.vanassche@sandisk.com>
+         <1489704797.4650.8.camel@HansenPartnership.com>
+         <1489706379.2574.24.camel@sandisk.com>
+         <1489755268.2373.11.camel@HansenPartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f52.google.com ([74.125.83.52]:32884 "EHLO
-        mail-pg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753970AbdDJRpx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Apr 2017 13:45:53 -0400
-Received: by mail-pg0-f52.google.com with SMTP id x125so109394060pgb.0
-        for <linux-scsi@vger.kernel.org>; Mon, 10 Apr 2017 10:45:53 -0700 (PDT)
-In-Reply-To: <1491846272-14882-1-git-send-email-sumit.semwal@linaro.org>
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:7242 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753648AbdDJRq3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Apr 2017 13:46:29 -0400
+In-Reply-To: <1489755268.2373.11.camel@HansenPartnership.com>
+Content-Language: en-US
+Content-ID: <18FC5EA8E1B9204F8CC5650598811302@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: stable@vger.kernel.org
-Cc: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, Douglas Miller <dougmill@linux.vnet.ibm.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, Sumit Semwal <sumit.semwal@linaro.org>
+To: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "maxg@mellanox.com" <maxg@mellanox.com>, "israelr@mellanox.com" <israelr@mellanox.com>, "hare@suse.de" <hare@suse.de>
 
-From: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+On Fri, 2017-03-17 at 05:54 -0700, James Bottomley wrote:
+> but if you want to pursue your approach fixing the
+> race with module exit is a requirement.
 
-[ Upstream commit 36e1f3d107867b25c616c2fd294f5a1c9d4e5d09 ]
+Hello James,
 
-While stressing memory and IO at the same time we changed SMT settings,
-we were able to consistently trigger deadlocks in the mm system, which
-froze the entire machine.
+Sorry that it took so long but I finally found the time to implement and
+test an alternative. I will post the patches that implement that new approa=
+ch.
 
-I think that under memory stress conditions, the large allocations
-performed by blk_mq_init_rq_map may trigger a reclaim, which stalls
-waiting on the block layer remmaping completion, thus deadlocking the
-system.  The trace below was collected after the machine stalled,
-waiting for the hotplug event completion.
-
-The simplest fix for this is to make allocations in this path
-non-reclaimable, with GFP_NOIO.  With this patch, We couldn't hit the
-issue anymore.
-
-This should apply on top of Jens's for-next branch cleanly.
-
-Changes since v1:
-  - Use GFP_NOIO instead of GFP_NOWAIT.
-
- Call Trace:
-[c000000f0160aaf0] [c000000f0160ab50] 0xc000000f0160ab50 (unreliable)
-[c000000f0160acc0] [c000000000016624] __switch_to+0x2e4/0x430
-[c000000f0160ad20] [c000000000b1a880] __schedule+0x310/0x9b0
-[c000000f0160ae00] [c000000000b1af68] schedule+0x48/0xc0
-[c000000f0160ae30] [c000000000b1b4b0] schedule_preempt_disabled+0x20/0x30
-[c000000f0160ae50] [c000000000b1d4fc] __mutex_lock_slowpath+0xec/0x1f0
-[c000000f0160aed0] [c000000000b1d678] mutex_lock+0x78/0xa0
-[c000000f0160af00] [d000000019413cac] xfs_reclaim_inodes_ag+0x33c/0x380 [xfs]
-[c000000f0160b0b0] [d000000019415164] xfs_reclaim_inodes_nr+0x54/0x70 [xfs]
-[c000000f0160b0f0] [d0000000194297f8] xfs_fs_free_cached_objects+0x38/0x60 [xfs]
-[c000000f0160b120] [c0000000003172c8] super_cache_scan+0x1f8/0x210
-[c000000f0160b190] [c00000000026301c] shrink_slab.part.13+0x21c/0x4c0
-[c000000f0160b2d0] [c000000000268088] shrink_zone+0x2d8/0x3c0
-[c000000f0160b380] [c00000000026834c] do_try_to_free_pages+0x1dc/0x520
-[c000000f0160b450] [c00000000026876c] try_to_free_pages+0xdc/0x250
-[c000000f0160b4e0] [c000000000251978] __alloc_pages_nodemask+0x868/0x10d0
-[c000000f0160b6f0] [c000000000567030] blk_mq_init_rq_map+0x160/0x380
-[c000000f0160b7a0] [c00000000056758c] blk_mq_map_swqueue+0x33c/0x360
-[c000000f0160b820] [c000000000567904] blk_mq_queue_reinit+0x64/0xb0
-[c000000f0160b850] [c00000000056a16c] blk_mq_queue_reinit_notify+0x19c/0x250
-[c000000f0160b8a0] [c0000000000f5d38] notifier_call_chain+0x98/0x100
-[c000000f0160b8f0] [c0000000000c5fb0] __cpu_notify+0x70/0xe0
-[c000000f0160b930] [c0000000000c63c4] notify_prepare+0x44/0xb0
-[c000000f0160b9b0] [c0000000000c52f4] cpuhp_invoke_callback+0x84/0x250
-[c000000f0160ba10] [c0000000000c570c] cpuhp_up_callbacks+0x5c/0x120
-[c000000f0160ba60] [c0000000000c7cb8] _cpu_up+0xf8/0x1d0
-[c000000f0160bac0] [c0000000000c7eb0] do_cpu_up+0x120/0x150
-[c000000f0160bb40] [c0000000006fe024] cpu_subsys_online+0x64/0xe0
-[c000000f0160bb90] [c0000000006f5124] device_online+0xb4/0x120
-[c000000f0160bbd0] [c0000000006f5244] online_store+0xb4/0xc0
-[c000000f0160bc20] [c0000000006f0a68] dev_attr_store+0x68/0xa0
-[c000000f0160bc60] [c0000000003ccc30] sysfs_kf_write+0x80/0xb0
-[c000000f0160bca0] [c0000000003cbabc] kernfs_fop_write+0x17c/0x250
-[c000000f0160bcf0] [c00000000030fe6c] __vfs_write+0x6c/0x1e0
-[c000000f0160bd90] [c000000000311490] vfs_write+0xd0/0x270
-[c000000f0160bde0] [c0000000003131fc] SyS_write+0x6c/0x110
-[c000000f0160be30] [c000000000009204] system_call+0x38/0xec
-
-Signed-off-by: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
-Cc: Brian King <brking@linux.vnet.ibm.com>
-Cc: Douglas Miller <dougmill@linux.vnet.ibm.com>
-Cc: linux-block@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Jens Axboe <axboe@fb.com>
-Signed-off-by: Sumit Semwal <sumit.semwal@linaro.org>
----
- block/blk-mq.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index d8d63c3..0d1af3e 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -1470,7 +1470,7 @@ static struct blk_mq_tags *blk_mq_init_rq_map(struct blk_mq_tag_set *set,
- 	INIT_LIST_HEAD(&tags->page_list);
- 
- 	tags->rqs = kzalloc_node(set->queue_depth * sizeof(struct request *),
--				 GFP_KERNEL | __GFP_NOWARN | __GFP_NORETRY,
-+				 GFP_NOIO | __GFP_NOWARN | __GFP_NORETRY,
- 				 set->numa_node);
- 	if (!tags->rqs) {
- 		blk_mq_free_tags(tags);
-@@ -1496,7 +1496,7 @@ static struct blk_mq_tags *blk_mq_init_rq_map(struct blk_mq_tag_set *set,
- 
- 		do {
- 			page = alloc_pages_node(set->numa_node,
--				GFP_KERNEL | __GFP_NOWARN | __GFP_NORETRY | __GFP_ZERO,
-+				GFP_NOIO | __GFP_NOWARN | __GFP_NORETRY | __GFP_ZERO,
- 				this_order);
- 			if (page)
- 				break;
-@@ -1517,7 +1517,7 @@ static struct blk_mq_tags *blk_mq_init_rq_map(struct blk_mq_tag_set *set,
- 		 * Allow kmemleak to scan these pages as they contain pointers
- 		 * to additional allocations like via ops->init_request().
- 		 */
--		kmemleak_alloc(p, order_to_size(this_order), 1, GFP_KERNEL);
-+		kmemleak_alloc(p, order_to_size(this_order), 1, GFP_NOIO);
- 		entries_per_page = order_to_size(this_order) / rq_size;
- 		to_do = min(entries_per_page, set->queue_depth - i);
- 		left -= to_do * rq_size;
--- 
-2.7.4
+Bart.=
