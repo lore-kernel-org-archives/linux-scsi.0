@@ -1,176 +1,124 @@
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH 3/5] scsi: bnx2fc: clean up header definitions
-Date: Mon, 10 Apr 2017 19:12:52 +0200
-Message-ID: <20170410171254.30367-4-bigeasy@linutronix.de>
-References: <20170410171254.30367-1-bigeasy@linutronix.de>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+From: Sumit Semwal <sumit.semwal@linaro.org>
+Subject: [PATCH for-4.4 15/16] blk-mq: Avoid memory reclaim when remapping queues
+Date: Mon, 10 Apr 2017 23:14:31 +0530
+Message-ID: <1491846272-14882-16-git-send-email-sumit.semwal@linaro.org>
+References: <1491846272-14882-1-git-send-email-sumit.semwal@linaro.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:52121 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753852AbdDJRNU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Apr 2017 13:13:20 -0400
-In-Reply-To: <20170410171254.30367-1-bigeasy@linutronix.de>
+Received: from mail-pg0-f52.google.com ([74.125.83.52]:32884 "EHLO
+        mail-pg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753970AbdDJRpx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Apr 2017 13:45:53 -0400
+Received: by mail-pg0-f52.google.com with SMTP id x125so109394060pgb.0
+        for <linux-scsi@vger.kernel.org>; Mon, 10 Apr 2017 10:45:53 -0700 (PDT)
+In-Reply-To: <1491846272-14882-1-git-send-email-sumit.semwal@linaro.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
-Cc: rt@linutronix.de, Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>, Chad Dupuis <chad.dupuis@qlogic.com>, QLogic-Storage-Upstream@qlogic.com, Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, Andrew Morton <akpm@linux-foundation.org>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: stable@vger.kernel.org
+Cc: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, Douglas Miller <dougmill@linux.vnet.ibm.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, Sumit Semwal <sumit.semwal@linaro.org>
 
-- All symbols which are only used within one .c file are marked static
-  and removed from the bnx2fc.h file if possible.
+From: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
 
-- the declarion of bnx2fc_percpu is moved into the header file
+[ Upstream commit 36e1f3d107867b25c616c2fd294f5a1c9d4e5d09 ]
 
-This patch was only compile-tested due to -ENODEV.
+While stressing memory and IO at the same time we changed SMT settings,
+we were able to consistently trigger deadlocks in the mm system, which
+froze the entire machine.
 
-Cc: QLogic-Storage-Upstream@qlogic.com
-Cc: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+I think that under memory stress conditions, the large allocations
+performed by blk_mq_init_rq_map may trigger a reclaim, which stalls
+waiting on the block layer remmaping completion, thus deadlocking the
+system.  The trace below was collected after the machine stalled,
+waiting for the hotplug event completion.
+
+The simplest fix for this is to make allocations in this path
+non-reclaimable, with GFP_NOIO.  With this patch, We couldn't hit the
+issue anymore.
+
+This should apply on top of Jens's for-next branch cleanly.
+
+Changes since v1:
+  - Use GFP_NOIO instead of GFP_NOWAIT.
+
+ Call Trace:
+[c000000f0160aaf0] [c000000f0160ab50] 0xc000000f0160ab50 (unreliable)
+[c000000f0160acc0] [c000000000016624] __switch_to+0x2e4/0x430
+[c000000f0160ad20] [c000000000b1a880] __schedule+0x310/0x9b0
+[c000000f0160ae00] [c000000000b1af68] schedule+0x48/0xc0
+[c000000f0160ae30] [c000000000b1b4b0] schedule_preempt_disabled+0x20/0x30
+[c000000f0160ae50] [c000000000b1d4fc] __mutex_lock_slowpath+0xec/0x1f0
+[c000000f0160aed0] [c000000000b1d678] mutex_lock+0x78/0xa0
+[c000000f0160af00] [d000000019413cac] xfs_reclaim_inodes_ag+0x33c/0x380 [xfs]
+[c000000f0160b0b0] [d000000019415164] xfs_reclaim_inodes_nr+0x54/0x70 [xfs]
+[c000000f0160b0f0] [d0000000194297f8] xfs_fs_free_cached_objects+0x38/0x60 [xfs]
+[c000000f0160b120] [c0000000003172c8] super_cache_scan+0x1f8/0x210
+[c000000f0160b190] [c00000000026301c] shrink_slab.part.13+0x21c/0x4c0
+[c000000f0160b2d0] [c000000000268088] shrink_zone+0x2d8/0x3c0
+[c000000f0160b380] [c00000000026834c] do_try_to_free_pages+0x1dc/0x520
+[c000000f0160b450] [c00000000026876c] try_to_free_pages+0xdc/0x250
+[c000000f0160b4e0] [c000000000251978] __alloc_pages_nodemask+0x868/0x10d0
+[c000000f0160b6f0] [c000000000567030] blk_mq_init_rq_map+0x160/0x380
+[c000000f0160b7a0] [c00000000056758c] blk_mq_map_swqueue+0x33c/0x360
+[c000000f0160b820] [c000000000567904] blk_mq_queue_reinit+0x64/0xb0
+[c000000f0160b850] [c00000000056a16c] blk_mq_queue_reinit_notify+0x19c/0x250
+[c000000f0160b8a0] [c0000000000f5d38] notifier_call_chain+0x98/0x100
+[c000000f0160b8f0] [c0000000000c5fb0] __cpu_notify+0x70/0xe0
+[c000000f0160b930] [c0000000000c63c4] notify_prepare+0x44/0xb0
+[c000000f0160b9b0] [c0000000000c52f4] cpuhp_invoke_callback+0x84/0x250
+[c000000f0160ba10] [c0000000000c570c] cpuhp_up_callbacks+0x5c/0x120
+[c000000f0160ba60] [c0000000000c7cb8] _cpu_up+0xf8/0x1d0
+[c000000f0160bac0] [c0000000000c7eb0] do_cpu_up+0x120/0x150
+[c000000f0160bb40] [c0000000006fe024] cpu_subsys_online+0x64/0xe0
+[c000000f0160bb90] [c0000000006f5124] device_online+0xb4/0x120
+[c000000f0160bbd0] [c0000000006f5244] online_store+0xb4/0xc0
+[c000000f0160bc20] [c0000000006f0a68] dev_attr_store+0x68/0xa0
+[c000000f0160bc60] [c0000000003ccc30] sysfs_kf_write+0x80/0xb0
+[c000000f0160bca0] [c0000000003cbabc] kernfs_fop_write+0x17c/0x250
+[c000000f0160bcf0] [c00000000030fe6c] __vfs_write+0x6c/0x1e0
+[c000000f0160bd90] [c000000000311490] vfs_write+0xd0/0x270
+[c000000f0160bde0] [c0000000003131fc] SyS_write+0x6c/0x110
+[c000000f0160be30] [c000000000009204] system_call+0x38/0xec
+
+Signed-off-by: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+Cc: Brian King <brking@linux.vnet.ibm.com>
+Cc: Douglas Miller <dougmill@linux.vnet.ibm.com>
+Cc: linux-block@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Jens Axboe <axboe@fb.com>
+Signed-off-by: Sumit Semwal <sumit.semwal@linaro.org>
 ---
- drivers/scsi/bnx2fc/bnx2fc.h      |  5 +----
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 19 +++++++++----------
- drivers/scsi/bnx2fc/bnx2fc_hwi.c  |  6 ++----
- 3 files changed, 12 insertions(+), 18 deletions(-)
+ block/blk-mq.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
-index 0279cc8de7a0..5b2151e7d894 100644
---- a/drivers/scsi/bnx2fc/bnx2fc.h
-+++ b/drivers/scsi/bnx2fc/bnx2fc.h
-@@ -172,6 +172,7 @@ struct bnx2fc_percpu_s {
- 	struct list_head work_list;
- 	spinlock_t fp_work_lock;
- };
-+DECLARE_PER_CPU(struct bnx2fc_percpu_s, bnx2fc_percpu);
-=20
- struct bnx2fc_fw_stats {
- 	u64	fc_crc_cnt;
-@@ -513,7 +514,6 @@ void bnx2fc_cmd_mgr_free(struct bnx2fc_cmd_mgr *cmgr);
- void bnx2fc_get_link_state(struct bnx2fc_hba *hba);
- char *bnx2fc_get_next_rqe(struct bnx2fc_rport *tgt, u8 num_items);
- void bnx2fc_return_rqe(struct bnx2fc_rport *tgt, u8 num_items);
--int bnx2fc_get_paged_crc_eof(struct sk_buff *skb, int tlen);
- int bnx2fc_send_rrq(struct bnx2fc_cmd *aborted_io_req);
- int bnx2fc_send_adisc(struct bnx2fc_rport *tgt, struct fc_frame *fp);
- int bnx2fc_send_logo(struct bnx2fc_rport *tgt, struct fc_frame *fp);
-@@ -537,7 +537,6 @@ void bnx2fc_init_task(struct bnx2fc_cmd *io_req,
- void bnx2fc_add_2_sq(struct bnx2fc_rport *tgt, u16 xid);
- void bnx2fc_ring_doorbell(struct bnx2fc_rport *tgt);
- int bnx2fc_eh_abort(struct scsi_cmnd *sc_cmd);
--int bnx2fc_eh_host_reset(struct scsi_cmnd *sc_cmd);
- int bnx2fc_eh_target_reset(struct scsi_cmnd *sc_cmd);
- int bnx2fc_eh_device_reset(struct scsi_cmnd *sc_cmd);
- void bnx2fc_rport_event_handler(struct fc_lport *lport,
-@@ -570,8 +569,6 @@ struct fc_seq *bnx2fc_elsct_send(struct fc_lport *lport=
-, u32 did,
- 						   struct fc_frame *,
- 						   void *),
- 				      void *arg, u32 timeout);
--void bnx2fc_arm_cq(struct bnx2fc_rport *tgt);
--int bnx2fc_process_new_cqes(struct bnx2fc_rport *tgt);
- void bnx2fc_process_cq_compl(struct bnx2fc_rport *tgt, u16 wqe);
- struct bnx2fc_rport *bnx2fc_tgt_lookup(struct fcoe_port *port,
- 					     u32 port_id);
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc=
-_fcoe.c
-index 329922d51f8a..2f66c2ea093c 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -49,7 +49,7 @@ struct workqueue_struct *bnx2fc_wq;
-  * Here the io threads are per cpu but the l2 thread is just one
-  */
- struct fcoe_percpu_s bnx2fc_global;
--DEFINE_SPINLOCK(bnx2fc_global_lock);
-+static DEFINE_SPINLOCK(bnx2fc_global_lock);
-=20
- static struct cnic_ulp_ops bnx2fc_cnic_cb;
- static struct libfc_function_template bnx2fc_libfc_fcn_templ;
-@@ -107,22 +107,22 @@ MODULE_PARM_DESC(debug_logging,
- 		"\t\t0x10 - fcoe L2 fame related logs.\n"
- 		"\t\t0xff - LOG all messages.");
-=20
--uint bnx2fc_devloss_tmo;
-+static uint bnx2fc_devloss_tmo;
- module_param_named(devloss_tmo, bnx2fc_devloss_tmo, uint, S_IRUGO);
- MODULE_PARM_DESC(devloss_tmo, " Change devloss_tmo for the remote ports "
- 	"attached via bnx2fc.");
-=20
--uint bnx2fc_max_luns =3D BNX2FC_MAX_LUN;
-+static uint bnx2fc_max_luns =3D BNX2FC_MAX_LUN;
- module_param_named(max_luns, bnx2fc_max_luns, uint, S_IRUGO);
- MODULE_PARM_DESC(max_luns, " Change the default max_lun per SCSI host. Def=
-ault "
- 	"0xffff.");
-=20
--uint bnx2fc_queue_depth;
-+static uint bnx2fc_queue_depth;
- module_param_named(queue_depth, bnx2fc_queue_depth, uint, S_IRUGO);
- MODULE_PARM_DESC(queue_depth, " Change the default queue depth of SCSI dev=
-ices "
- 	"attached via bnx2fc.");
-=20
--uint bnx2fc_log_fka;
-+static uint bnx2fc_log_fka;
- module_param_named(log_fka, bnx2fc_log_fka, uint, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(log_fka, " Print message to kernel log when fcoe is "
- 	"initiating a FIP keep alive when debug logging is enabled.");
-@@ -167,7 +167,7 @@ static void bnx2fc_clean_rx_queue(struct fc_lport *lp)
- 	spin_unlock_bh(&bg->fcoe_rx_list.lock);
- }
-=20
--int bnx2fc_get_paged_crc_eof(struct sk_buff *skb, int tlen)
-+static int bnx2fc_get_paged_crc_eof(struct sk_buff *skb, int tlen)
- {
- 	int rc;
- 	spin_lock(&bnx2fc_global_lock);
-@@ -1395,10 +1395,9 @@ static struct bnx2fc_hba *bnx2fc_hba_create(struct c=
-nic_dev *cnic)
- 	return NULL;
- }
-=20
--static struct bnx2fc_interface *
--bnx2fc_interface_create(struct bnx2fc_hba *hba,
--			struct net_device *netdev,
--			enum fip_state fip_mode)
-+static struct bnx2fc_interface *bnx2fc_interface_create(struct bnx2fc_hba =
-*hba,
-+				      struct net_device *netdev,
-+				      enum fip_state fip_mode)
- {
- 	struct fcoe_ctlr_device *ctlr_dev;
- 	struct bnx2fc_interface *interface;
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_=
-hwi.c
-index 1ed7a1784e15..c2288d6cd217 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-@@ -14,8 +14,6 @@
-=20
- #include "bnx2fc.h"
-=20
--DECLARE_PER_CPU(struct bnx2fc_percpu_s, bnx2fc_percpu);
--
- static void bnx2fc_fastpath_notification(struct bnx2fc_hba *hba,
- 					struct fcoe_kcqe *new_cqe_kcqe);
- static void bnx2fc_process_ofld_cmpl(struct bnx2fc_hba *hba,
-@@ -980,7 +978,7 @@ void bnx2fc_process_cq_compl(struct bnx2fc_rport *tgt, =
-u16 wqe)
- 	spin_unlock_bh(&tgt->tgt_lock);
- }
-=20
--void bnx2fc_arm_cq(struct bnx2fc_rport *tgt)
-+static void bnx2fc_arm_cq(struct bnx2fc_rport *tgt)
- {
- 	struct b577xx_fcoe_rx_doorbell *rx_db =3D &tgt->rx_db;
- 	u32 msg;
-@@ -1007,7 +1005,7 @@ static struct bnx2fc_work *bnx2fc_alloc_work(struct b=
-nx2fc_rport *tgt, u16 wqe)
- 	return work;
- }
-=20
--int bnx2fc_process_new_cqes(struct bnx2fc_rport *tgt)
-+static int bnx2fc_process_new_cqes(struct bnx2fc_rport *tgt)
- {
- 	struct fcoe_cqe *cq;
- 	u32 cq_cons;
---=20
-2.11.0
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index d8d63c3..0d1af3e 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -1470,7 +1470,7 @@ static struct blk_mq_tags *blk_mq_init_rq_map(struct blk_mq_tag_set *set,
+ 	INIT_LIST_HEAD(&tags->page_list);
+ 
+ 	tags->rqs = kzalloc_node(set->queue_depth * sizeof(struct request *),
+-				 GFP_KERNEL | __GFP_NOWARN | __GFP_NORETRY,
++				 GFP_NOIO | __GFP_NOWARN | __GFP_NORETRY,
+ 				 set->numa_node);
+ 	if (!tags->rqs) {
+ 		blk_mq_free_tags(tags);
+@@ -1496,7 +1496,7 @@ static struct blk_mq_tags *blk_mq_init_rq_map(struct blk_mq_tag_set *set,
+ 
+ 		do {
+ 			page = alloc_pages_node(set->numa_node,
+-				GFP_KERNEL | __GFP_NOWARN | __GFP_NORETRY | __GFP_ZERO,
++				GFP_NOIO | __GFP_NOWARN | __GFP_NORETRY | __GFP_ZERO,
+ 				this_order);
+ 			if (page)
+ 				break;
+@@ -1517,7 +1517,7 @@ static struct blk_mq_tags *blk_mq_init_rq_map(struct blk_mq_tag_set *set,
+ 		 * Allow kmemleak to scan these pages as they contain pointers
+ 		 * to additional allocations like via ops->init_request().
+ 		 */
+-		kmemleak_alloc(p, order_to_size(this_order), 1, GFP_KERNEL);
++		kmemleak_alloc(p, order_to_size(this_order), 1, GFP_NOIO);
+ 		entries_per_page = order_to_size(this_order) / rq_size;
+ 		to_do = min(entries_per_page, set->queue_depth - i);
+ 		left -= to_do * rq_size;
+-- 
+2.7.4
