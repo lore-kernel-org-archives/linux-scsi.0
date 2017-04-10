@@ -1,76 +1,93 @@
 From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH v2 4/4] Avoid that __scsi_remove_device() hangs
-Date: Mon, 10 Apr 2017 10:54:02 -0700
-Message-ID: <20170410175402.9003-5-bart.vanassche@sandisk.com>
+Subject: [PATCH v2 1/4] Introduce scsi_start_queue()
+Date: Mon, 10 Apr 2017 10:53:59 -0700
+Message-ID: <20170410175402.9003-2-bart.vanassche@sandisk.com>
 References: <20170410175402.9003-1-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:49699 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753274AbdDJRyQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Apr 2017 13:54:16 -0400
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:2832 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753440AbdDJRyS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Apr 2017 13:54:18 -0400
 In-Reply-To: <20170410175402.9003-1-bart.vanassche@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Max Gurtovoy <maxg@mellanox.com>, Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Israel Rukshin <israelr@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>, Hannes Reinecke <hare@suse.de>
 
-Since scsi_target_unblock() uses starget_for_each_device(), since
-starget_for_each_device() uses scsi_device_get(), since
-scsi_device_get() fails after unloading of the LLD kernel module
-has been started scsi_target_unblock() may skip devices that were
-affected by scsi_target_block(). Ensure that __scsi_remove_device()
-does not hang for blocked SCSI devices. This patch avoids that
-unloading the ib_srp kernel module can trigger the following hang:
+This patch does not change any functionality.
 
-Call Trace:
- schedule+0x35/0x80
- schedule_timeout+0x237/0x2d0
- io_schedule_timeout+0xa6/0x110
- wait_for_completion_io+0xa3/0x110
- blk_execute_rq+0xdf/0x120
- scsi_execute+0xce/0x150 [scsi_mod]
- scsi_execute_req_flags+0x8f/0xf0 [scsi_mod]
- sd_sync_cache+0xa9/0x190 [sd_mod]
- sd_shutdown+0x6a/0x100 [sd_mod]
- sd_remove+0x64/0xc0 [sd_mod]
- __device_release_driver+0x8d/0x120
- device_release_driver+0x1e/0x30
- bus_remove_device+0xf9/0x170
- device_del+0x127/0x240
- __scsi_remove_device+0xc1/0xd0 [scsi_mod]
- scsi_forget_host+0x57/0x60 [scsi_mod]
- scsi_remove_host+0x72/0x110 [scsi_mod]
- srp_remove_work+0x8b/0x200 [ib_srp]
-
-Reported-by: Israel Rukshin <israelr@mellanox.com>
 Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Israel Rukshin <israelr@mellanox.com>
 Cc: Max Gurtovoy <maxg@mellanox.com>
 Cc: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi_sysfs.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/scsi/scsi_lib.c  | 25 +++++++++++++++----------
+ drivers/scsi/scsi_priv.h |  1 +
+ 2 files changed, 16 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 82dfe07b1d47..e090c35ba6ee 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1299,6 +1299,15 @@ void __scsi_remove_device(struct scsi_device *sdev)
- 	 * device.
- 	 */
- 	scsi_device_set_state(sdev, SDEV_DEL);
-+	/*
-+	 * Since scsi_target_unblock() is a no-op after unloading of the SCSI
-+	 * LLD has started, explicitly restart the queue. Do this after the
-+	 * device state has been changed into SDEV_DEL because
-+	 * scsi_prep_state_check() returns BLKPREP_KILL for the SDEV_DEL state
-+	 * Do this before calling blk_cleanup_queue() to avoid that that
-+	 * function encounters a stopped queue.
-+	 */
-+	scsi_start_queue(sdev);
- 	blk_cleanup_queue(sdev->request_queue);
- 	cancel_work_sync(&sdev->requeue_work);
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index f41e6b84a1bd..4893f2908edf 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2987,6 +2987,20 @@ scsi_internal_device_block(struct scsi_device *sdev, bool wait)
+ }
+ EXPORT_SYMBOL_GPL(scsi_internal_device_block);
+  
++void scsi_start_queue(struct scsi_device *sdev)
++{
++	struct request_queue *q = sdev->request_queue;
++	unsigned long flags;
++
++	if (q->mq_ops) {
++		blk_mq_start_stopped_hw_queues(q, false);
++	} else {
++		spin_lock_irqsave(q->queue_lock, flags);
++		blk_start_queue(q);
++		spin_unlock_irqrestore(q->queue_lock, flags);
++	}
++}
++
+ /**
+  * scsi_internal_device_unblock - resume a device after a block request
+  * @sdev:	device to resume
+@@ -3007,9 +3021,6 @@ int
+ scsi_internal_device_unblock(struct scsi_device *sdev,
+ 			     enum scsi_device_state new_state)
+ {
+-	struct request_queue *q = sdev->request_queue; 
+-	unsigned long flags;
+-
+ 	/*
+ 	 * Try to transition the scsi device to SDEV_RUNNING or one of the
+ 	 * offlined states and goose the device queue if successful.
+@@ -3027,13 +3038,7 @@ scsi_internal_device_unblock(struct scsi_device *sdev,
+ 		 sdev->sdev_state != SDEV_OFFLINE)
+ 		return -EINVAL;
  
+-	if (q->mq_ops) {
+-		blk_mq_start_stopped_hw_queues(q, false);
+-	} else {
+-		spin_lock_irqsave(q->queue_lock, flags);
+-		blk_start_queue(q);
+-		spin_unlock_irqrestore(q->queue_lock, flags);
+-	}
++	scsi_start_queue(sdev);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index f11bd102d6d5..c7629e31a75b 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -89,6 +89,7 @@ extern void scsi_run_host_queues(struct Scsi_Host *shost);
+ extern void scsi_requeue_run_queue(struct work_struct *work);
+ extern struct request_queue *scsi_alloc_queue(struct scsi_device *sdev);
+ extern struct request_queue *scsi_mq_alloc_queue(struct scsi_device *sdev);
++extern void scsi_start_queue(struct scsi_device *sdev);
+ extern int scsi_mq_setup_tags(struct Scsi_Host *shost);
+ extern void scsi_mq_destroy_tags(struct Scsi_Host *shost);
+ extern int scsi_init_queue(void);
 -- 
 2.12.0
