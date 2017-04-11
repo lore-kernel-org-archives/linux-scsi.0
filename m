@@ -1,101 +1,49 @@
 From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
 Subject: Re: Race to power off harming SATA SSDs
-Date: Mon, 10 Apr 2017 22:26:12 -0300
-Message-ID: <20170411012612.GC10185@khazad-dum.debian.net>
+Date: Mon, 10 Apr 2017 23:02:35 -0300
+Message-ID: <20170411020235.GD10185@khazad-dum.debian.net>
 References: <20170410232118.GA4816@khazad-dum.debian.net>
  <20170410235206.GA28603@wtj.duckdns.org>
+ <1491868675.2473.22.camel@HansenPartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170410235206.GA28603@wtj.duckdns.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
+In-Reply-To: <1491868675.2473.22.camel@HansenPartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 11 Apr 2017, Tejun Heo wrote:
-> > The kernel then continues the shutdown path while the SSD is still
-> > preparing itself to be powered off, and it becomes a race.  When the
-> > kernel + firmware wins, platform power is cut before the SSD has
-> > finished (i.e. the SSD is subject to an unclean power-off).
+On Mon, 10 Apr 2017, James Bottomley wrote:
+> On Tue, 2017-04-11 at 08:52 +0900, Tejun Heo wrote:
+> [...]
+> > > Any comments?  Any clues on how to make the delay "smarter" to 
+> > > trigger only once during platform shutdown, but still trigger per
+> > > -device when doing per-device hotswapping ?
+> > 
+> > So, if this is actually an issue, sure, we can try to work around;
+> > however, can we first confirm that this has any other consequences
+> > than a SMART counter being bumped up?  I'm not sure how meaningful
+> > that is in itself.
 > 
-> At that point, the device is fully flushed and in terms of data
-> integrity should be fine with losing power at any point anyway.
+> Seconded; especially as the proposed patch is way too invasive: we run
 
-All bets are off at this point, really.
+It is a proof of concept thing.  It even says so in the patch commit
+log, and in the cover text.
 
-We issued a command that explicitly orders the SSD to checkpoint and
-stop all background tasks, and flush *everything* including invisible
-state (device data, stats, logs, translation tables, flash metadata,
-etc)...  and then cut its power before it finished.
+I don't want an one second delay per device.  I never proposed that,
+either.  In fact, I *specifically* asked for something else in the
+paragraph you quoted.
 
-> > NOTE: unclean SSD power-offs are dangerous and may brick the device in
-> > the worst case, or otherwise harm it (reduce longevity, damage flash
-> > blocks).  It is also not impossible to get data corruption.
-> 
-> I get that the incrementing counters might not be pretty but I'm a bit
-> skeptical about this being an actual issue.  Because if that were
+I would much prefer an one- or two-seconds delay per platform *power
+off*.  And that's for platforms that do ACPI-like heavy-duty S3/S4/S5
+like x86/x86-64.  Opportunistic high-frequency suspend on mobile likely
+requires no such handling.
 
-As an *example* I know of because I tracked it personally, Crucial SSDs
-models from a few years ago were known to eventually brick on any
-platforms where they were being subject to repeated unclean shutdowns,
-*Windows included*.  There are some threads on their forums about it.
-Firmware revisions made it harder to happen, but still...
-
-> true, the device would be bricking itself from any sort of power
-> losses be that an actual power loss, battery rundown or hard power off
-> after crash.
-
-Bricking is a worst-case, really.  I guess they learned to keep the
-device always in a will-not-brick state using append-only logs for
-critical state or something, so it really takes very nasty flash damage
-to exactly the wrong place to render it unusable.
-
-> > Fixing the issue properly:
-> > 
-> > The proof of concept patch works fine, but it "punishes" the system with
-> > too much delay.  Also, if sd device shutdown is serialized, it will
-> > punish systems with many /dev/sd devices severely.
-> > 
-> > 1. The delay needs to happen only once right before powering down for
-> >    hibernation/suspend/power-off.  There is no need to delay per-device
-> >    for platform power off/suspend/hibernate.
-> > 
-> > 2. A per-device delay needs to happen before signaling that a device
-> >    can be safely removed when doing controlled hotswap (e.g. when
-> >    deleting the SD device due to a sysfs command).
-> > 
-> > I am unsure how much *total* delay would be enough.  Two seconds seems
-> > like a safe bet.
-> > 
-> > Any comments?  Any clues on how to make the delay "smarter" to trigger
-> > only once during platform shutdown, but still trigger per-device when
-> > doing per-device hotswapping ?
-> 
-> So, if this is actually an issue, sure, we can try to work around;
-> however, can we first confirm that this has any other consequences
-> than a SMART counter being bumped up?  I'm not sure how meaningful
-> that is in itself.
-
-I have no idea how to confirm an SSD is being either less, or more
-damaged by the "STANDBY-IMMEDIATE and cut power too early", when
-compared with "sudden power cut".  At least not without actually
-damaging the SSDs using three groups (normal power cuts,
-STANDBY-IMMEDIATE + power cut, control group).
-
-A "SSD power cut test" search on duckduckgo shows several papers and
-testing reports on the first results page.  I don't think there is any
-doubt whatsoever that your typical consumer SSD *can* get damaged by a
-"sudden power cut" so badly that it is actually noticed by the user.
-
-That FLASH itself gets damaged or can have stored data corrupted by
-power cuts at bad times is quite clear:
-
-http://cseweb.ucsd.edu/users/swanson/papers/DAC2011PowerCut.pdf
-
-SSDs do a lot of work to recover from that without data loss.  You won't
-notice it easily unless that recovery work *fails*.
+The per-device delay would be needed only for hotplug removal (device
+delete), and that's just because some hardware powers down bays (like
+older thinkpads with ATA-compatible bays, and some industrial systems).
 
 -- 
   Henrique Holschuh
