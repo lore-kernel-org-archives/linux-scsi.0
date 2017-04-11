@@ -1,64 +1,87 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH v4 6/6] dm rq: Avoid that request processing
- stalls sporadically
-Date: Tue, 11 Apr 2017 14:03:58 -0400
-Message-ID: <20170411180358.GA19660@redhat.com>
-References: <20170407181654.27836-1-bart.vanassche@sandisk.com>
-	<20170407181654.27836-7-bart.vanassche@sandisk.com>
-	<20170411160958.GA19222@redhat.com>
-	<1491928005.2654.6.camel@sandisk.com>
-	<20170411174739.GA19620@redhat.com>
-	<1491933092.2654.10.camel@sandisk.com>
+From: David Buckley <dbuckley@oreilly.com>
+Subject: Re: problem with discard granularity in sd
+Date: Tue, 11 Apr 2017 11:07:43 -0700
+Message-ID: <CA+Xd3XG1AN-ZTjn3SfZffrY=4vezSS8RrE88jG0QEsuyHC5k8A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <1491933092.2654.10.camel@sandisk.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-lf0-f54.google.com ([209.85.215.54]:35288 "EHLO
+        mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752626AbdDKSI0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2017 14:08:26 -0400
+Received: by mail-lf0-f54.google.com with SMTP id 75so2567445lfs.2
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Apr 2017 11:08:25 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Apr 11 2017 at  1:51pm -0400,
-Bart Van Assche <Bart.VanAssche@sandisk.com> wrote:
+(re-sending as I somehow lost the subject on my previous reply)
 
-> On Tue, 2017-04-11 at 13:47 -0400, Mike Snitzer wrote:
-> > Other drivers will very likely be caught about by
-> > this blk-mq quirk in the future.
-> =
+Martin,
 
-> Hello Mike,
-> =
+I'm rather surprised nobody else has previously reported this as well,
+especially as NetApp hadn't received any reports.  The only probable
+explanation I could think of is that EL 7 is still based on a 3.10
+kernel so is too old to be affected, and that is likely to be what
+most NetApp customers are running.
 
-> Are you aware that the requirement that blk-mq drivers rerun the queue af=
-ter
-> having returned BLK_MQ_RQ_QUEUE_BUSY is a requirement that is shared with
-> traditional block drivers? From dm_old_request_fn():
-> =
 
-> 	if (... ||=A0(ti->type->busy && ti->type->busy(ti))) {
-> 		blk_delay_queue(q, 10);
-> 		return;
-> 	}
 
-No, and pointing to DM code that does something with the old .request_fn
-case to justify why blk-mq requires the same is pretty specious.
+I've been trying to test some additional kernels to try and narrow the
+versions affected, and the change in discard_granularity does not
+correspond with discard failing (as you suggested).
 
-Rather than working so hard to use DM code against me, your argument
-should be: "blk-mq drivers X, Y and Z rerun the hw queue; this is a well
-established pattern"
+With kernel 3.13,  discard works as expected with
+discard_granularity=4096 and discard_max_bytes=4194304.
 
-I see drivers/nvme/host/fc.c:nvme_fc_start_fcp_op() does.  But that is
-only one other driver out of ~20 BLK_MQ_RQ_QUEUE_BUSY returns
-tree-wide.
+With kernel 3.19, discard stops working completely, with
+discard_granularity=4096 and discard_max_bytes=8388608.
 
-Could be there are some others, but hardly a well-established pattern.
+Do you think the change in discard_max_bytes could be relevant?  If
+that comes from the VPD data it seems odd it would change.
+
+I am wondering if part of the issue is that in my use case, UNMAP and
+WRITE SAME zeros result in very different results.  With thin
+provisioned LUNs, UNMAP requests result in the blocks being freed and
+thus reduces the actual size of the LUN allocation on disk.  If WRITE SAME
+requests are used to zero the blocks, they remain allocated and thus the
+real size of the LUN grows to match the allocated size (effectively
+thick-provisioning the LUN).  This matches what I am
+seeing on kernels with discard not working; running 'fstrim
+/lun/mount' results in the LUN growing to its max size.
+
+Thank you again for your help with this!
+
+-David
+
+On Thu, Apr 6, 2017 at 10:34 AM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+> David Buckley <dbuckley@oreilly.com> writes:
+>
+> David,
+>
+>> As I mentioned previously, I'm fairly certain that the issue I'm
+>> seeing is due to the fact that while NetApp LUNs are presented as 512B
+>> logical/4K physical disks for compatibility, they actually don't
+>> support requests smaller than 4K (which makes sense as NetApp LUNs are
+>> actually just files allocated on the 4K-block WAFL filesystem).
+>
+> That may be. But they should still deallocate all the whole 4K blocks
+> described by an UNMAP request. Even if head and tail are not aligned.
+>
+>> Let me know if there's any additional information I can provide. This
+>> has resulted in a 2-3x increase in raw disk requirements for some
+>> workloads (unfortunately on SSD too), and I'd love to find a solution
+>> that doesn't require rolling back to a 3.10 kernel.
+>
+> I just posted some patches yesterday that will address this (using WRITE
+> SAME w/ UNMAP for block zeroing and allowing discards to be sent using
+> the UNMAP command, honoring the granularity and alignment suggested by
+> the device). That's 4.13 material, though.
+>
+> The enterprise distros have many customers using NetApp filers. I'm a
+> bit puzzled why this is the first we hear of this...
+>
+> --
+> Martin K. Petersen      Oracle Linux Engineering
