@@ -1,48 +1,42 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH RESEND] scsi: return correct blkprep status code in case scsi_init_io() fails.
-Date: Tue, 11 Apr 2017 09:46:44 +0200
-Message-ID: <20170411074644.6071-1-jthumshirn@suse.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 195285] qla2xxx FW immediatly crashing after target start
+Date: Tue, 11 Apr 2017 08:09:37 +0000
+Message-ID: <bug-195285-11613-QRJmhAHjQX@https.bugzilla.kernel.org/>
+References: <bug-195285-11613@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:55744 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754138AbdDKIJ5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 11 Apr 2017 04:09:57 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id C5FD9284C9
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Apr 2017 08:09:56 +0000 (UTC)
+Received: from pdx-korg-bugzilla-1.web.codeaurora.org (unknown [172.30.200.120])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 9B158284C9
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Apr 2017 08:09:56 +0000 (UTC)
+In-Reply-To: <bug-195285-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@kernel.org
 
-When instrumenting the SCSI layer to run into the
-!blk_rq_nr_phys_segments(rq) case the following  warning emitted from the
-block layer:
+https://bugzilla.kernel.org/show_bug.cgi?id=195285
 
-blk_peek_request: bad return=-22
+--- Comment #2 from Anthony (anthony.bloodoff@gmail.com) ---
+All my test and and production environments a the same:
+on tagret:
+RAID controller (HP SmartArray / Adaptec 65xx)
+BCache in writeback mode on Intel SSD NVME
+QLE2564 in target mode
 
-This happens because since commit fd3fc0b4d730 ('scsi: don't BUG_ON()
-empty DMA transfers') we return the wrong error value from iscsi_prep_fn()
-back to the block layer.
+on initiator
+QLE2562
 
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Fixes: fd3fc0b4d730 scsi: don't BUG_ON() empty DMA transfers
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/scsi_lib.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+optical patches 1 meter (MM) without FC switch
 
- Re-send as in the initial send I forgot to Cc linux-scsi@
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 19125d72f322..5558e212368b 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1061,10 +1061,10 @@ int scsi_init_io(struct scsi_cmnd *cmd)
- 	struct scsi_device *sdev = cmd->device;
- 	struct request *rq = cmd->request;
- 	bool is_mq = (rq->mq_ctx != NULL);
--	int error;
-+	int error = BLKPREP_KILL;
- 
- 	if (WARN_ON_ONCE(!blk_rq_nr_phys_segments(rq)))
--		return -EINVAL;
-+		goto err_exit;
- 
- 	error = scsi_init_sgtable(rq, &cmd->sdb);
- 	if (error)
 -- 
-2.12.0
+You are receiving this mail because:
+You are watching the assignee of the bug.
