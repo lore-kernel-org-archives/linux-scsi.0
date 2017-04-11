@@ -1,119 +1,58 @@
-From: Martin Steigerwald <martin@lichtvoll.de>
-Subject: Re: Race to power off harming SATA SSDs
-Date: Tue, 11 Apr 2017 12:37:43 +0200
-Message-ID: <3231980.BbEtxjAFS5@merkaba>
-References: <20170410232118.GA4816@khazad-dum.debian.net> <20170410235206.GA28603@wtj.duckdns.org>
+From: <jha@billund.dk>
+Subject: 42912 linux-scsi
+Date: Tue, 11 Apr 2017 11:45:01 -0000
+Message-ID: <149191110143.19119.15646952870587013266@hinet.net>
+Reply-To: <jha@billund.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: application/zip; name="7285515759.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mondschein.lichtvoll.de ([194.150.191.11]:48511 "EHLO
-        mail.lichtvoll.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754497AbdDKKqv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2017 06:46:51 -0400
-In-Reply-To: <20170410235206.GA28603@wtj.duckdns.org>
+Received: from 111-246-212-35.dynamic.hinet.net ([111.246.212.35]:37464 "HELO
+        hinet.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+        id S1753490AbdDKLpI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 11 Apr 2017 07:45:08 -0400
+Content-Disposition: attachment
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
+To: linux-scsi@vger.kernel.org
 
-Am Dienstag, 11. April 2017, 08:52:06 CEST schrieb Tejun Heo:
-> > Evidently, how often the SSD will lose the race depends on a platform
-> > and SSD combination, and also on how often the system is powered off.
-> > A sluggish firmware that takes its time to cut power can save the day...
-> > 
-> > 
-> > Observing the effects:
-> > 
-> > An unclean SSD power-off will be signaled by the SSD device through an
-> > increase on a specific S.M.A.R.T attribute.  These SMART attributes can
-> > be read using the smartmontools package from www.smartmontools.org,
-> > which should be available in just about every Linux distro.
-> > 
-> > smartctl -A /dev/sd#
-> > 
-> > The SMART attribute related to unclean power-off is vendor-specific, so
-> > one might have to track down the SSD datasheet to know which attribute a
-> > particular SSD uses.  The naming of the attribute also varies.
-> > 
-> > For a Crucial M500 SSD with up-to-date firmware, this would be attribute
-> > 174 "Unexpect_Power_Loss_Ct", for example.
-> > 
-> > NOTE: unclean SSD power-offs are dangerous and may brick the device in
-> > the worst case, or otherwise harm it (reduce longevity, damage flash
-> > blocks).  It is also not impossible to get data corruption.
-> 
-> I get that the incrementing counters might not be pretty but I'm a bit
-> skeptical about this being an actual issue.  Because if that were
-> true, the device would be bricking itself from any sort of power
-> losses be that an actual power loss, battery rundown or hard power off
-> after crash.
-
-The write-up by Henrique has been a very informative and interesting read for 
-me. I wondered about the same question tough.
-
-I do have a Crucial M500 and I do have an increase of that counter:
-
-martin@merkaba:~[…]/Crucial-M500> grep "^174" smartctl-a-201*   
-smartctl-a-2014-03-05.txt:174 Unexpect_Power_Loss_Ct  0x0032   100   100   000    
-Old_age   Always       -       1
-smartctl-a-2014-10-11-nach-prüfsummenfehlern.txt:174 Unexpect_Power_Loss_Ct  
-0x0032   100   100   000    Old_age   Always       -       67
-smartctl-a-2015-05-01.txt:174 Unexpect_Power_Loss_Ct  0x0032   100   100   000    
-Old_age   Always       -       105
-smartctl-a-2016-02-06.txt:174 Unexpect_Power_Loss_Ct  0x0032   100   100   000    
-Old_age   Always       -       148
-smartctl-a-2016-07-08-unreadable-sector.txt:174 Unexpect_Power_Loss_Ct  0x0032   
-100   100   000    Old_age   Always       -       201
-smartctl-a-2017-04-11.txt:174 Unexpect_Power_Loss_Ct  0x0032   100   100   000    
-Old_age   Always       -       272
-
-
-I mostly didn´t notice anything, except for one time where I indeed had a 
-BTRFS checksum error, luckily within a BTRFS RAID 1 with an Intel SSD (which 
-also has an attribute for unclean shutdown which raises).
-
-I blogged about this in german language quite some time ago:
-
-https://blog.teamix.de/2015/01/19/btrfs-raid-1-selbstheilung-in-aktion/
-
-(I think its easy enough to get the point of the blog post even when not 
-understanding german)
-
-Result of scrub:
-
-   scrub started at Thu Oct  9 15:52:00 2014 and finished after 564 seconds
-        total bytes scrubbed: 268.36GiB with 60 errors
-        error details: csum=60
-        corrected errors: 60, uncorrectable errors: 0, unverified errors: 0
-
-Device errors were on:
-
-merkaba:~> btrfs device stats /home
-[/dev/mapper/msata-home].write_io_errs   0
-[/dev/mapper/msata-home].read_io_errs    0
-[/dev/mapper/msata-home].flush_io_errs   0
-[/dev/mapper/msata-home].corruption_errs 60
-[/dev/mapper/msata-home].generation_errs 0
-[…]
-
-(thats the Crucial m500)
-
-
-I didn´t have any explaination of this, but I suspected some unclean shutdown, 
-even tough I remembered no unclean shutdown. I take good care to always has a 
-battery in this ThinkPad T520, due to unclean shutdown issues with Intel SSD 
-320 (bricked device which reports 8 MiB as capacity, probably fixed by the 
-firmware update I applied back then).
-
-The write-up Henrique gave me the idea, that maybe it wasn´t an user triggered 
-unclean shutdown that caused the issue, but an unclean shutdown triggered by 
-the Linux kernel SSD shutdown procedure implementation.
-
-Of course, I don´t know whether this is the case and I think there is no way 
-to proof or falsify it years after this happened. I never had this happen 
-again.
-
-Thanks,
--- 
-Martin
+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
