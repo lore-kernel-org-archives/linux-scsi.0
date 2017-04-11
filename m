@@ -1,142 +1,69 @@
 From: Martin Wilck <mwilck@suse.com>
-Subject: Re: [PATCH 09/12] hpsa: separate monitor events from heartbeat
- worker
-Date: Tue, 11 Apr 2017 14:18:40 +0200
-Message-ID: <1491913120.4742.13.camel@suse.com>
+Subject: Re: [PATCH 07/12] hpsa: cleanup reset handler
+Date: Tue, 11 Apr 2017 14:35:38 +0200
+Message-ID: <1491914138.4742.17.camel@suse.com>
 References: <149159483812.15658.615814291766210537.stgit@brunhilda>
-         <149159560000.15658.13539404380272805930.stgit@brunhilda>
+         <149159558766.15658.11389910379646196354.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from prv3-mh.provo.novell.com ([137.65.250.26]:47703 "EHLO
+Received: from prv3-mh.provo.novell.com ([137.65.250.26]:55583 "EHLO
         prv3-mh.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752596AbdDKMS5 (ORCPT
+        with ESMTP id S1752410AbdDKMf6 (ORCPT
         <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-        Tue, 11 Apr 2017 08:18:57 -0400
-In-Reply-To: <149159560000.15658.13539404380272805930.stgit@brunhilda>
+        Tue, 11 Apr 2017 08:35:58 -0400
+In-Reply-To: <149159558766.15658.11389910379646196354.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Don Brace <don.brace@microsemi.com>, joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
 Cc: linux-scsi@vger.kernel.org
 
 On Fri, 2017-04-07 at 15:06 -0500, Don Brace wrote:
-> From: Scott Teel <scott.teel@microsemi.com>
-> 
-> create new worker thread to monitor controller events
->  - detect controller events more frequently.
->  - leave heartbeat check at 30 seconds.
-> 
+>  - mark device state sooner.
+>
 > Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
 > Reviewed-by: Scott Teel <scott.teel@microsemi.com>
 > Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
 > Signed-off-by: Don Brace <don.brace@microsemi.com>
 > ---
->  drivers/scsi/hpsa.c |   32 ++++++++++++++++++++++++++++++--
->  drivers/scsi/hpsa.h |    1 +
->  2 files changed, 31 insertions(+), 2 deletions(-)
+>  drivers/scsi/hpsa.c |   44 ++++++++++++++++++++++++++++++-----------
+> ---
+>  1 file changed, 30 insertions(+), 14 deletions(-)
 > 
 > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 40a87f9..50f7c09 100644
+> index a2852da..a6a37e0 100644
 > --- a/drivers/scsi/hpsa.c
 > +++ b/drivers/scsi/hpsa.c
-> @@ -1110,6 +1110,7 @@ static int is_firmware_flash_cmd(u8 *cdb)
+> @@ -5834,7 +5834,7 @@ static int
+> wait_for_device_to_become_ready(struct ctlr_info *h,
 >   */
->  #define HEARTBEAT_SAMPLE_INTERVAL_DURING_FLASH (240 * HZ)
->  #define HEARTBEAT_SAMPLE_INTERVAL (30 * HZ)
-> +#define HPSA_EVENT_MONITOR_INTERVAL (15 * HZ)
->  static void dial_down_lockup_detection_during_fw_flash(struct
-> ctlr_info *h,
->  		struct CommandList *c)
+>  static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
 >  {
-> @@ -8650,6 +8651,29 @@ static int hpsa_luns_changed(struct ctlr_info
-> *h)
->  	return rc;
->  }
+> -	int rc;
+> +	int rc = SUCCESS;
+>  	struct ctlr_info *h;
+>  	struct hpsa_scsi_dev_t *dev;
+>  	u8 reset_type;
+> @@ -5845,17 +5845,24 @@ static int
+> hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
+>  	if (h == NULL) /* paranoia */
+>  		return FAILED;
 >  
-> +/*
-> + * watch for controller events
-> + */
-> +static void hpsa_event_monitor_worker(struct work_struct *work)
-> +{
-> +	struct ctlr_info *h = container_of(to_delayed_work(work),
-> +	struct ctlr_info, event_monitor_work);
+> -	if (lockup_detected(h))
+> -		return FAILED;
+> +	h->reset_in_progress = 1;
 > +
-> +	if (h->remove_in_progress)
-> +		return;
-> +
-> +	if (hpsa_ctlr_needs_rescan(h)) {
-> +		scsi_host_get(h->scsi_host);
-> +		hpsa_ack_ctlr_events(h);
-> +		hpsa_scan_start(h->scsi_host);
-> +		scsi_host_put(h->scsi_host);
+> +	if (lockup_detected(h)) {
+> +		rc = FAILED;
+> +		goto return_reset_status;
 > +	}
-> +
-> +	if (!h->remove_in_progress)
-> +		schedule_delayed_work(&h->event_monitor_work,
-> +					HPSA_EVENT_MONITOR_INTERVAL)
-> ;
-> +}
-> +
->  static void hpsa_rescan_ctlr_worker(struct work_struct *work)
->  {
->  	unsigned long flags;
-> @@ -8668,9 +8692,9 @@ static void hpsa_rescan_ctlr_worker(struct
-> work_struct *work)
->  		return;
->  	}
->  
-> -	if (hpsa_ctlr_needs_rescan(h) ||
-> hpsa_offline_devices_ready(h)) {
-> +	if (h->drv_req_rescan || hpsa_offline_devices_ready(h)) {
-> +		h->drv_req_rescan = 0;
->  		scsi_host_get(h->scsi_host);
-> -		hpsa_ack_ctlr_events(h);
->  		hpsa_scan_start(h->scsi_host);
->  		scsi_host_put(h->scsi_host);
->  	} else if (h->discovery_polling) {
-> @@ -8949,6 +8973,9 @@ static int hpsa_init_one(struct pci_dev *pdev,
-> const struct pci_device_id *ent)
->  	INIT_DELAYED_WORK(&h->rescan_ctlr_work,
-> hpsa_rescan_ctlr_worker);
->  	queue_delayed_work(h->rescan_ctlr_wq, &h->rescan_ctlr_work,
->  				h->heartbeat_sample_interval);
-> +	INIT_DELAYED_WORK(&h->event_monitor_work,
-> hpsa_event_monitor_worker);
-> +	schedule_delayed_work(&h->event_monitor_work,
-> +				HPSA_EVENT_MONITOR_INTERVAL);
->  	return 0;
->  
->  clean7: /* perf, sg, cmd, irq, shost, pci, lu, aer/h */
-> @@ -9117,6 +9144,7 @@ static void hpsa_remove_one(struct pci_dev
-> *pdev)
->  	spin_unlock_irqrestore(&h->lock, flags);
->  	cancel_delayed_work_sync(&h->monitor_ctlr_work);
->  	cancel_delayed_work_sync(&h->rescan_ctlr_work);
-> +	cancel_delayed_work_sync(&h->event_monitor_work);
->  	destroy_workqueue(h->rescan_ctlr_wq);
->  	destroy_workqueue(h->resubmit_wq);
->  
-> diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-> index 99539c0..3c22ac1 100644
-> --- a/drivers/scsi/hpsa.h
-> +++ b/drivers/scsi/hpsa.h
-> @@ -245,6 +245,7 @@ struct ctlr_info {
->  	u32 __percpu *lockup_detected;
->  	struct delayed_work monitor_ctlr_work;
->  	struct delayed_work rescan_ctlr_work;
-> +	struct delayed_work event_monitor_work;
->  	int remove_in_progress;
->  	/* Address of h->q[x] is passed to intr handler to know
-> which queue */
->  	u8 q[MAX_REPLY_QUEUES];
 
-The new worker thread duplicates code from hpsa_rescan_ctlr_worker. I
-find this a bit irritating. Could you maybe use just a single worker,
-and just check using time stamps whether the "big" heartbeat needs to
-be performed?
+if this is meant to communicate host state to other threads, maybe you
+should use an atomic type for h->reset_in_progress, or locking of some
+sort?
 
-Regards
+Regards,
 Martin
 
 -- 
