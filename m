@@ -1,49 +1,151 @@
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: Race to power off harming SATA SSDs
-Date: Mon, 10 Apr 2017 23:02:35 -0300
-Message-ID: <20170411020235.GD10185@khazad-dum.debian.net>
-References: <20170410232118.GA4816@khazad-dum.debian.net>
- <20170410235206.GA28603@wtj.duckdns.org>
- <1491868675.2473.22.camel@HansenPartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1491868675.2473.22.camel@HansenPartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
+From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Subject: [PATCH] ipr: do not set DID_PASSTHROUGH on CHECK CONDITION
+Date: Mon, 10 Apr 2017 23:28:51 -0300
+Message-ID: <1491877731-19287-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:35045 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751660AbdDKC3b (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 10 Apr 2017 22:29:31 -0400
+Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v3B2Su6V112041
+        for <linux-scsi@vger.kernel.org>; Mon, 10 Apr 2017 22:29:30 -0400
+Received: from e24smtp05.br.ibm.com (e24smtp05.br.ibm.com [32.104.18.26])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 29rh6y3c6x-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Mon, 10 Apr 2017 22:29:30 -0400
+Received: from localhost
+        by e24smtp05.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <mauricfo@linux.vnet.ibm.com>;
+        Mon, 10 Apr 2017 23:29:27 -0300
+Received: from d24av02.br.ibm.com (d24av02.br.ibm.com [9.8.31.93])
+        by d24relay04.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v3B2TKAp34078960
+        for <linux-scsi@vger.kernel.org>; Mon, 10 Apr 2017 23:29:25 -0300
+Received: from d24av02.br.ibm.com (localhost [127.0.0.1])
+        by d24av02.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v3B2T4Qg016608
+        for <linux-scsi@vger.kernel.org>; Mon, 10 Apr 2017 23:29:05 -0300
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, wenxiong@linux.vnet.ibm.com
+Cc: martin.petersen@oracle.com
 
-On Mon, 10 Apr 2017, James Bottomley wrote:
-> On Tue, 2017-04-11 at 08:52 +0900, Tejun Heo wrote:
-> [...]
-> > > Any comments?  Any clues on how to make the delay "smarter" to 
-> > > trigger only once during platform shutdown, but still trigger per
-> > > -device when doing per-device hotswapping ?
-> > 
-> > So, if this is actually an issue, sure, we can try to work around;
-> > however, can we first confirm that this has any other consequences
-> > than a SMART counter being bumped up?  I'm not sure how meaningful
-> > that is in itself.
-> 
-> Seconded; especially as the proposed patch is way too invasive: we run
+On a dual controller setup with multipath enabled, some MEDIUM ERRORs
+caused both paths to be failed, thus I/O got queued/blocked since the
+'queue_if_no_path' feature is enabled by default on IPR controllers.
 
-It is a proof of concept thing.  It even says so in the patch commit
-log, and in the cover text.
+This example disabled 'queue_if_no_path' so the I/O failure is seen at
+the sg_dd program.  Notice that after the sg_dd test-case, both paths
+are in 'failed' state, and both path/priority groups are in 'enabled'
+state (not 'active') -- which would block I/O with 'queue_if_no_path'.
 
-I don't want an one second delay per device.  I never proposed that,
-either.  In fact, I *specifically* asked for something else in the
-paragraph you quoted.
+    # sg_dd if=/dev/dm-2 bs=4096 count=1 dio=1 verbose=4 blk_sgio=0
+    <...>
+    read(unix): count=4096, res=-1
+    sg_dd: reading, skip=0 : Input/output error
+    <...>
 
-I would much prefer an one- or two-seconds delay per platform *power
-off*.  And that's for platforms that do ACPI-like heavy-duty S3/S4/S5
-like x86/x86-64.  Opportunistic high-frequency suspend on mobile likely
-requires no such handling.
+    # dmesg
+    [...] sd 2:2:16:0: [sds] FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+    [...] sd 2:2:16:0: [sds] Sense Key : Medium Error [current]
+    [...] sd 2:2:16:0: [sds] Add. Sense: Unrecovered read error - recommend rewrite the data
+    [...] sd 2:2:16:0: [sds] CDB: Read(10) 28 00 00 00 00 00 00 00 20 00
+    [...] blk_update_request: I/O error, dev sds, sector 0
+    [...] device-mapper: multipath: Failing path 65:32.
+    <...>
+    [...] device-mapper: multipath: Failing path 65:224.
 
-The per-device delay would be needed only for hotplug removal (device
-delete), and that's just because some hardware powers down bays (like
-older thinkpads with ATA-compatible bays, and some industrial systems).
+    # multipath -l
+    1IBM_IPR-0_59C2AE0000001F80 dm-2 IBM     ,IPR-0   59C2AE00
+    size=5.2T features='0' hwhandler='1 alua' wp=rw
+    |-+- policy='service-time 0' prio=0 status=enabled
+    | `- 2:2:16:0 sds  65:32  failed undef running
+    `-+- policy='service-time 0' prio=0 status=enabled
+      `- 1:2:7:0  sdae 65:224 failed undef running
 
+This is not the desired behavior. The dm-multipath explicitly checks
+for the MEDIUM ERROR case (and a few others) so not to fail the path
+(e.g., I/O to other sectors could potentially happen without problems).
+See dm-mpath.c :: do_end_io_bio() -> noretry_error() !->! fail_path().
+
+The problem trace is:
+
+1) ipr_scsi_done()  // SENSE KEY/CHECK CONDITION detected, go to..
+2) ipr_erp_start()  // ipr_is_gscsi() and masked_ioasc OK, go to..
+3) ipr_gen_sense()  // masked_ioasc is IPR_IOASC_MED_DO_NOT_REALLOC,
+                    // so set DID_PASSTHROUGH.
+
+4) scsi_decide_disposition()  // check for DID_PASSTHROUGH and return
+                              // early on, faking a DID_OK.. *instead*
+                              // of reaching scsi_check_sense().
+
+                              // Had it reached the latter, that would
+                              // set host_byte to DID_MEDIUM_ERROR.
+
+5) scsi_finish_command()
+6) scsi_io_completion()
+7) __scsi_error_from_host_byte()  // That would be converted to -ENODATA
+<...>
+8) dm_softirq_done()
+9) multipath_end_io()
+10) do_end_io()
+11) noretry_error()  // And that is checked in dm-mpath :: noretry_error()
+                     // which would cause fail_path() not to be called.
+
+With this patch applied, the I/O is failed but the paths are not.  This
+multipath device continues accepting more I/O requests without blocking.
+(and notice the different host byte/driver byte handling per SCSI layer).
+
+    # dmesg
+    [...] sd 2:2:7:0: [sdaf] Done: SUCCESS Result: hostbyte=0x13 driverbyte=DRIVER_OK
+    [...] sd 2:2:7:0: [sdaf] CDB: Read(10) 28 00 00 00 00 00 00 00 40 00
+    [...] sd 2:2:7:0: [sdaf] Sense Key : Medium Error [current]
+    [...] sd 2:2:7:0: [sdaf] Add. Sense: Unrecovered read error - recommend rewrite the data
+    [...] blk_update_request: critical medium error, dev sdaf, sector 0
+    [...] blk_update_request: critical medium error, dev dm-6, sector 0
+    [...] sd 2:2:7:0: [sdaf] Done: SUCCESS Result: hostbyte=0x13 driverbyte=DRIVER_OK
+    [...] sd 2:2:7:0: [sdaf] CDB: Read(10) 28 00 00 00 00 00 00 00 10 00
+    [...] sd 2:2:7:0: [sdaf] Sense Key : Medium Error [current]
+    [...] sd 2:2:7:0: [sdaf] Add. Sense: Unrecovered read error - recommend rewrite the data
+    [...] blk_update_request: critical medium error, dev sdaf, sector 0
+    [...] blk_update_request: critical medium error, dev dm-6, sector 0
+    [...] Buffer I/O error on dev dm-6, logical block 0, async page read
+
+    # multipath -l 1IBM_IPR-0_59C2AE0000001F80
+    1IBM_IPR-0_59C2AE0000001F80 dm-6 IBM     ,IPR-0   59C2AE00
+    size=5.2T features='1 queue_if_no_path' hwhandler='1 alua' wp=rw
+    |-+- policy='service-time 0' prio=0 status=active
+    | `- 2:2:7:0  sdaf 65:240 active undef running
+    `-+- policy='service-time 0' prio=0 status=enabled
+      `- 1:2:7:0  sdh  8:112  active undef running
+
+Signed-off-by: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+---
+
+P.S.:  The switch-case checking this condition predates linux.git, so I'd
+       like to ask Brian for a review too, as I imagine he probably might
+       have worked with this back then (if memory may serve one this well :-)
+
+ drivers/scsi/ipr.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index b29afafc2885..1012674d9dc5 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -6293,7 +6293,12 @@ static void ipr_erp_start(struct ipr_ioa_cfg *ioa_cfg,
+ 		break;
+ 	case IPR_IOASC_MED_DO_NOT_REALLOC: /* prevent retries */
+ 	case IPR_IOASA_IR_DUAL_IOA_DISABLED:
+-		scsi_cmd->result |= (DID_PASSTHROUGH << 16);
++		/*
++		 * exception: do not set DID_PASSTHROUGH on CHECK CONDITION
++		 * so SCSI mid-layer and upper layers handle it accordingly.
++		 */
++		if (ipr_cmd->scsi_cmd->result != SAM_STAT_CHECK_CONDITION)
++			scsi_cmd->result |= (DID_PASSTHROUGH << 16);
+ 		break;
+ 	case IPR_IOASC_BUS_WAS_RESET:
+ 	case IPR_IOASC_BUS_WAS_RESET_BY_OTHER:
 -- 
-  Henrique Holschuh
+1.8.3.1
