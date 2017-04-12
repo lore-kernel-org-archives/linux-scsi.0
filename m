@@ -1,104 +1,109 @@
-From: Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-Date: Thu, 13 Apr 2017 07:55:24 +1000
-Message-ID: <1492034124.7236.77.camel@kernel.crashing.org>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1491974532.7236.43.camel@kernel.crashing.org>
- <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
+From: David Buckley <dbuckley@oreilly.com>
+Subject: Re: problem with discard granularity in sd
+Date: Wed, 12 Apr 2017 16:58:22 -0700
+Message-ID: <CA+Xd3XFoRY+SgowfzP69X1ZCSAPGTmec=qMxStoX=trths8kDg@mail.gmail.com>
+References: <CA+Xd3XG1AN-ZTjn3SfZffrY=4vezSS8RrE88jG0QEsuyHC5k8A@mail.gmail.com>
+ <yq14lxuv187.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <5ac22496-56ec-025d-f153-140001d2a7f9-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, Stephen Bates <sbates-pv7U853sEMVWk0Htik3J/w@public.gmane.org>, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Jerome Glisse <jglisse-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-lf0-f54.google.com ([209.85.215.54]:33555 "EHLO
+        mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755833AbdDLX7F (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Apr 2017 19:59:05 -0400
+Received: by mail-lf0-f54.google.com with SMTP id h125so21987314lfe.0
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Apr 2017 16:59:04 -0700 (PDT)
+In-Reply-To: <yq14lxuv187.fsf@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
-T24gV2VkLCAyMDE3LTA0LTEyIGF0IDExOjA5IC0wNjAwLCBMb2dhbiBHdW50aG9ycGUgd3JvdGU6
-Cj4gCj4gPiBEbyB5b3UgaGFuZGxlIGZ1bmt5IGFkZHJlc3MgdHJhbnNsYXRpb24gdG9vID8gSUUu
-IHRoZSBmYWN0IHRoYXQgdGhlIFBDSQo+ID4gYWRkcmVzc2VzIGFyZW4ndCB0aGUgc2FtZSBhcyB0
-aGUgQ1BVIHBoeXNpY2FsIGFkZHJlc3NlcyBmb3IgYSBCQVIgPwo+IAo+IE5vLCB3ZSB1c2UgdGhl
-IENQVSBwaHlzaWNhbCBhZGRyZXNzIG9mIHRoZSBCQVIuIElmIGl0J3Mgbm90IG1hcHBlZCB0aGF0
-Cj4gd2F5IHdlIGNhbid0IHVzZSBpdC4KCk9rLCB5b3UgbmVlZCB0byBmaXggdGhhdCBvciBhIGJ1
-bmNoIG9mIGFyY2hpdGVjdHVyZXMgd29uJ3Qgd29yay4gCgpMb29rIGF0IHBjaWJpb3NfcmVzb3Vy
-Y2VfdG9fYnVzKCkgYW5kIHBjaWJpb3NfYnVzX3RvX3Jlc291cmNlKCkuIFRoZXkKd2lsbCBwZXJm
-b3JtIHRoZSBjb252ZXJzaW9uIGJldHdlZW4gdGhlIHN0cnVjdCByZXNvdXJjZSBjb250ZW50IChD
-UFUKcGh5c2ljYWwgYWRkcmVzcykgYW5kIHRoZSBhY3R1YWwgUENJIGJ1cyBzaWRlIGFkZHJlc3Mu
-CgpXaGVuIGJlaGluZCB0aGUgc2FtZSBzd2l0Y2ggeW91IG5lZWQgdG8gdXNlIFBDSSBhZGRyZXNz
-ZXMuIElmIG9uZSB0cmllcwpsYXRlciB0byBkbyBQMlAgYmV0d2VlbiBob3N0IGJyaWRnZXMgKHZp
-YSB0aGUgQ1BVIGZhYnJpYykgdGhpbmdzIGdldAptb3JlIGNvbXBsZXggYW5kIG9uZSB3aWxsIGhh
-dmUgdG8gdXNlIGVpdGhlciBDUFUgYWRkcmVzc2VzIG9yIHNvbWV0aGluZwplbHNlIGFsbHRvZ2V0
-aGVyIChwcm9iYWJseSB3b3VsZCBoYXZlIHRvIHRlYWNoIHRoZSBhcmNoIERNQSBtYXBwaW5nCnJv
-dXRpbmVzIHRvIHdvcmsgd2l0aCB0aG9zZSBzdHJ1Y3QgcGFnZXMgeW91IGNyZWF0ZSBhbmQgcmV0
-dXJuIHRoZQpyaWdodCB0aGluZykuCgo+ID4gPiBUaGlzIHdpbGwgbWVhbiBtYW55IHNldHVwcyB0
-aGF0IGNvdWxkIGxpa2VseQo+ID4gPiB3b3JrIHdlbGwgd2lsbCBub3QgYmUgc3VwcG9ydGVkIHNv
-IHRoYXQgd2UgY2FuIGJlIG1vcmUgY29uZmlkZW50IGl0Cj4gPiA+IHdpbGwgd29yayBhbmQgbm90
-IHBsYWNlIGFueSByZXNwb25zaWJpbGl0eSBvbiB0aGUgdXNlciB0byB1bmRlcnN0YW5kCj4gPiA+
-IHRoZWlyIHRvcG9sb2d5LiAoV2UndmUgY2hvc2VuIHRvIGdvIHRoaXMgcm91dGUgYmFzZWQgb24g
-ZmVlZGJhY2sgd2UKPiA+ID4gcmVjZWl2ZWQgYXQgTFNGKS4KPiA+ID4gCj4gPiA+IEluIG9yZGVy
-IHRvIGVuYWJsZSB0aGlzIGZ1bmN0aW9uYWxpdHkgd2UgaW50cm9kdWNlIGEgbmV3IHAycG1lbSBk
-ZXZpY2UKPiA+ID4gd2hpY2ggY2FuIGJlIGluc3RhbnRpYXRlZCBieSBQQ0kgZHJpdmVycy4gVGhl
-IGRldmljZSB3aWxsIHJlZ2lzdGVyIHNvbWUKPiA+ID4gUENJIG1lbW9yeSBhcyBaT05FX0RFVklD
-RSBhbmQgcHJvdmlkZSBhbiBnZW5hbGxvYyBiYXNlZCBhbGxvY2F0b3IgZm9yCj4gPiA+IHVzZXJz
-IG9mIHRoZXNlIGRldmljZXMgdG8gZ2V0IGJ1ZmZlcnMuCj4gPiAKPiA+IEkgZG9uJ3QgY29tcGxl
-dGVseSB1bmRlcnN0YW5kIHRoaXMuIFRoaXMgaXMgYWN0dWFsIG1lbW9yeSBvbiB0aGUgUENJCj4g
-PiBidXMgPyBXaGVyZSBkb2VzIGl0IGNvbWUgZnJvbSA/IE9yIGFyZSB5b3UganVzdCB0cnlpbmcg
-dG8gY3JlYXRlIHN0cnVjdAo+ID4gcGFnZXMgdGhhdCBjb3ZlciB5b3VyIFBDSWUgRE1BIHRhcmdl
-dCA/Cj4gCj4gWWVzLCB0aGUgbWVtb3J5IGlzIG9uIHRoZSBQQ0kgYnVzIGluIGEgQkFSLiBGb3Ig
-bm93IHdlIGhhdmUgYSBzcGVjaWFsCj4gUENJIGNhcmQgZm9yIHRoaXMsIGJ1dCBpbiB0aGUgZnV0
-dXJlIGl0IHdvdWxkIGxpa2VseSBiZSB0aGUgQ01CIGluIGFuCj4gTlZNZSBjYXJkLiBUaGVzZSBw
-YXRjaGVzIGNyZWF0ZSBzdHJ1Y3QgcGFnZXMgdG8gbWFwIHRoZXNlIEJBUiBhZGRyZXNzZXMKPiB1
-c2luZyBaT05FX0RFVklDRS4KCk9rLgoKU28gaWRlYWxseSB3ZSdkIHdhbnQgdGhpbmdzIGxpa2Ug
-ZG1hX21hcF8qIHRvIGJlIGFibGUgdG8gYmUgZmVkIHRob3NlCnN0cnVjdCBwYWdlcyBhbmQgZG8g
-dGhlIHJpZ2h0IHRoaW5nIHdoaWNoIGlzIC4uLiB0cmlja3ksIGVzcGVjaWFsbHkKd2l0aCB0aGUg
-YWRkcmVzcyB0cmFuc2xhdGlvbiBJIG1lbnRpb25lZCBzaW5jZSB0aGUgYWRkcmVzcyB3aWxsIGJl
-CmRpZmZlcmVudCB3aGV0aGVyIHRoZSBpbml0aWF0b3IgaXMgb24gdGhlIHNhbWUgaG9zdCBicmlk
-Z2UgYXMgdGhlCnRhcmdldCBvciBub3QuCgo+ID4gU28gY29ycmVjdCBtZSBpZiBJJ20gd3Jvbmcs
-IHlvdSBhcmUgdHJ5aW5nIHRvIGNyZWF0ZSBzdHJ1Y3QgcGFnZSdzIHRoYXQKPiA+IG1hcCBhIFBD
-SWUgQkFSIHJpZ2h0ID8gSSdtIHRyeWluZyB0byB1bmRlcnN0YW5kIGhvdyB0aGF0IGludGVyYWN0
-cyB3aXRoCj4gPiB3aGF0IEplcm9tZSBpcyBkb2luZyBmb3IgSE1NLgo+IAo+IFllcywgd2VsbCB3
-ZSBhcmUgdXNpbmcgWk9ORV9ERVZJQ0UgaW4gdGhlIGV4YWN0IHNhbWUgd2F5IGFzIHRoZSBkYXgg
-Y29kZQo+IGlzLiBUaGVzZSBwYXRjaGVzIHVzZSB0aGUgZXhpc3RpbmcgQVBJIHdpdGggbm8gbW9k
-aWZpY2F0aW9ucy4gQXMgSQo+IHVuZGVyc3RhbmQgaXQsIEhNTSB3YXMgdXNpbmcgWk9ORV9ERVZJ
-Q0UgaW4gYSB3YXkgdGhhdCB3YXMgcXVpdGUKPiBkaWZmZXJlbnQgdG8gaG93IGl0IHdhcyBvcmln
-aW5hbGx5IGRlc2lnbmVkLgoKU29ydC1vZi4gSSBkb24ndCBzZWUgd2h5IHRoZXJlIHdvdWxkIGJl
-IGEgY29uZmxpY3Qgd2l0aCB0aGUgc3RydWN0CnBhZ2VzIHVzZSB0aG91Z2guIEplcm9tZSBjYW4g
-eW91IGNoaW1lIGluID8gSmVyb21lOiBJdCBsb29rcyBsaWtlIHRoZXkKYXJlIGp1c3QgbGF5aW5n
-IG91dCBzdHJ1Y3QgcGFnZSBvdmVyIGEgQkFSIHdoaWNoIGlzIHRoZSBzYW1lIHRoaW5nIEkKdGhp
-bmsgeW91IHNob3VsZCBkbyB3aGVuIHRoZSBCQVIgaXMgImxhcmdlIGVub3VnaCIgZm9yIHRoZSBH
-UFUgbWVtb3J5LgoKVGhlIGNhc2Ugd2hlcmUgSE1NIHVzZXMgImhvbGVzIiBpbiB0aGUgYWRkcmVz
-cyBzcGFjZSBmb3IgaXRzIHN0cnVjdApwYWdlIGlzIHNvbWV3aGF0IG9ydGhvZ29uYWwgYnV0IEkg
-YWxzbyBzZWUgbm8gY29uZmxpY3QgaGVyZS4KCj4gPiBUaGUgcmVhc29uIGlzIHRoYXQgdGhlIEhN
-TSBjdXJyZW50bHkgY3JlYXRlcyB0aGUgc3RydWN0IHBhZ2VzIHdpdGgKPiA+ICJmYWtlIiBQRk5z
-IHBvaW50aW5nIHRvIGEgaG9sZSBpbiB0aGUgYWRkcmVzcyBzcGFjZSByYXRoZXIgdGhhbgo+ID4g
-Y292ZXJpbmcgdGhlIGFjdHVhbCBQQ0llIG1lbW9yeSBvZiB0aGUgR1BVLiBIZSBkb2VzIHRoYXQg
-dG8gZGVhbCB3aXRoCj4gPiB0aGUgZmFjdCB0aGF0IHNvbWUgR1BVcyBoYXZlIGEgc21hbGxlciBh
-cGVydHVyZSBvbiBQQ0llIHRoYW4gdGhlaXIKPiA+IHRvdGFsIG1lbW9yeS4KPiAKPiBJJ20gYXdh
-cmUgb2Ygd2hhdCBITU0gaXMgdHJ5aW5nIHRvIGRvIGFuZCBhbHRob3VnaCBJJ20gbm90IGZhbWls
-aWFyIHdpdGgKPiB0aGUgaW50aW1hdGUgZGV0YWlscywgSSBzYXcgaXQgYXMgZmFpcmx5IG9ydGhv
-Z29uYWwgdG8gd2hhdCB3ZSBhcmUKPiBhdHRlbXB0aW5nIHRvIGRvLgoKUmlnaHQuCgo+ID4gSG93
-ZXZlciwgSSBoYXZlIGFza2VkIGhpbSB0byBvbmx5IGFwcGx5IHRoYXQgcG9saWN5IGlmIHRoZSBh
-cGVydHVyZSBpcwo+ID4gaW5kZWVkIHNtYWxsZXIsIGFuZCBpZiBub3QsIGNyZWF0ZSBzdHJ1Y3Qg
-cGFnZXMgdGhhdCBkaXJlY3RseSBjb3ZlciB0aGUKPiA+IFBDSWUgQkFSIG9mIHRoZSBHUFUgaW5z
-dGVhZCwgd2hpY2ggd2lsbCB3b3JrIGJldHRlciBvbiBzeXN0ZW1zIG9yCj4gPiBhcmNoaXRlY3R1
-cmUgdGhhdCBkb24ndCBoYXZlIGEgInBpbmhvbGUiIHdpbmRvdyBsaW1pdGF0aW9uLgo+ID4gSG93
-ZXZlciBoZSB3YXMgdW5kZXIgdGhlIGltcHJlc3Npb24gdGhhdCB0aGlzIHdhcyBnb2luZyB0byBj
-b2xsaWRlIHdpdGgKPiA+IHdoYXQgeW91IGd1eXMgYXJlIGRvaW5nLCBzbyBJJ20gdHJ5aW5nIHRv
-IHVuZGVyc3RhbmQgaG93LsKgCj4gCj4gSSdtIG5vdCBzdXJlIEkgdW5kZXJzdGFuZCBob3cgZWl0
-aGVyLiBIb3dldmVyLCBJIHN1c3BlY3QgaWYgeW91IGNvbGxpZGUKPiB3aXRoIHRoZXNlIHBhdGNo
-ZXMgdGhlbiB5b3UnZCBhbHNvIGJlIGJyZWFraW5nIGRheCB0b28uCgpQb3NzaWJseSBidXQgYXMg
-SSBzYWlkLCBJIGRvbid0IHNlZSB3aHkgc28gSSdsbCBsZXQgSmVyb21lIGNoaW1lIGluCnNpbmNl
-IGhlIHdhcyB1bmRlciB0aGUgaW1wcmVzc2lvbiB0aGF0IHRoZXJlIHdhcyBhIGNvbmZsaWN0IGhl
-cmUgOi0pCgpDaGVlcnMsCkJlbi4KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fCkxpbnV4LW52ZGltbSBtYWlsaW5nIGxpc3QKTGludXgtbnZkaW1tQGxpc3Rz
-LjAxLm9yZwpodHRwczovL2xpc3RzLjAxLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LW52ZGlt
-bQo=
+Hi Martin,
+
+I have identified the key difference between the older working kernels
+and newer ones; on older kernels the provisioning_mode is set to
+'unmap', while on newer kernels it is 'writesame_16'.  This is due to
+a change in sd_read_block_limits which prevents selection of
+SD_LBP_UNMAP if the disk reports lbprz=1, which I'm assuming is the
+desired behavior.
+
+As I mentioned previously, one difference between working and failing
+kernels is that discard_max_bytes is double the size on the latter.
+To determine whether the NetApp incorrectly handles WRITE SAME with
+UNMAP in general or if the increase in discard_max_bytes was
+responsible, I swapped max_ws_blocks with max_unmap_blocks for WS16
+requests in sd_config_discard in my test kernel.  Testing with this
+change showed UNMAP requests working as expected, indicating that the
+discard_max_bytes change is directly responsible for the failing
+requests.
+
+The underlying issue seems to be that (per VPD page) the maximum
+supported unmap request is 8192 * 512 = 4194304 bytes, while the
+maximum write same request is 0x4000 * 512 = 8388608 bytes.  It
+appears both of these values are correct, and in the case where a WS
+UNMAP request larger than 8192 blocks is received the UNMAP is ignored
+and the result is effectively a WS ZERO request.
+
+If I'm correct in my understanding, then it seems like the root cause
+of the failures is that the current code assumes a disk will always
+support WS UNMAP requests up to max_ws_blocks and does not account for
+a case where max_unmap_blocks is smaller than max_ws_blocks.
+
+I would think something like this could be a reasonable fix:
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index fe0f799..b0233c2 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -643,6 +643,8 @@ static void sd_config_discard(struct scsi_disk
+*sdkp, unsigned int mode)
+        struct request_queue *q = sdkp->disk->queue;
+        unsigned int logical_block_size = sdkp->device->sector_size;
+        unsigned int max_blocks = 0;
++        unsigned int max_ws_unmap_blocks =
++                min_not_zero(sdkp->max_ws_blocks, sdkp->max_unmap_blocks);
+
+        q->limits.discard_zeroes_data = 0;
+
+@@ -679,7 +681,7 @@ static void sd_config_discard(struct scsi_disk
+*sdkp, unsigned int mode)
+                break;
+
+        case SD_LBP_WS16:
+-               max_blocks = min_not_zero(sdkp->max_ws_blocks,
++               max_blocks = min_not_zero(max_ws_unmap_blocks,
+                                          (u32)SD_MAX_WS16_BLOCKS);
+                q->limits.discard_zeroes_data = sdkp->lbprz;
+                break;
+
+
+Thanks yet again for all your help.
+
+-David
+
+On Tue, Apr 11, 2017 at 6:55 PM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>
+> David,
+>
+>> I am wondering if part of the issue is that in my use case, UNMAP and
+>> WRITE SAME zeros result in very different results.  With thin
+>> provisioned LUNs, UNMAP requests result in the blocks being freed and
+>> thus reduces the actual size of the LUN allocation on disk.  If WRITE
+>> SAME requests are used to zero the blocks, they remain allocated and
+>> thus the real size of the LUN grows to match the allocated size
+>> (effectively thick-provisioning the LUN).
+>
+> The filer explicitly reported support for WRITE SAME(10/16) with UNMAP.
+> It seems very odd that it would then completely ignore the UNMAP bit and
+> do a regular WRITE SAME.
+>
+> Are you running latest firmware, btw.?
+>
+> In any case. The changes I mentioned are now queued up for 4.12. But
+> it'll obviously take a while for those to trickle into the
+> distributions...
+>
+> --
+> Martin K. Petersen      Oracle Linux Engineering
