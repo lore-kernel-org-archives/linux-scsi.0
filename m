@@ -1,113 +1,42 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH 10/25] loop: zero-fill bio on the submitting cpu
-Date: Wed, 12 Apr 2017 18:24:35 +0800
-Message-ID: <20170412102434.GB8835@ming.t460p>
-References: <20170406153944.10058-1-hch@lst.de>
- <20170406153944.10058-11-hch@lst.de>
+From: Benjamin Block <bblock@linux.vnet.ibm.com>
+Subject: Re: [PATCH v4 0/6] Avoid that scsi-mq and dm-mq queue processing
+ stalls sporadically
+Date: Wed, 12 Apr 2017 12:55:38 +0200
+Message-ID: <20170412105538.GB22576@bblock-ThinkPad-W530>
+References: <20170407181654.27836-1-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51340 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751147AbdDLKYz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 12 Apr 2017 06:24:55 -0400
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170406153944.10058-11-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20170407181654.27836-1-bart.vanassche@sandisk.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Josef Bacik <jbacik@fb.com>, James Smart <james.smart@broadcom.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, dm-devel@redhat.com
 
-On Thu, Apr 06, 2017 at 05:39:29PM +0200, Christoph Hellwig wrote:
-> In thruth I've just audited which blk-mq drivers don't currently have a
-> complete callback, but I think this change is at least borderline useful.
+On Fri, Apr 07, 2017 at 11:16:48AM -0700, Bart Van Assche wrote:
+> Hello Jens,
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/block/loop.c | 30 ++++++++++++++----------------
->  drivers/block/loop.h |  1 +
->  2 files changed, 15 insertions(+), 16 deletions(-)
+> The six patches in this patch series fix the queue lockup I reported
+> recently on the linux-block mailing list. Please consider these patches
+> for inclusion in the upstream kernel.
 > 
-> diff --git a/drivers/block/loop.c b/drivers/block/loop.c
-> index cc981f34e017..6924ec611a49 100644
-> --- a/drivers/block/loop.c
-> +++ b/drivers/block/loop.c
-> @@ -445,32 +445,27 @@ static int lo_req_flush(struct loop_device *lo, struct request *rq)
->  	return ret;
->  }
->  
-> -static inline void handle_partial_read(struct loop_cmd *cmd, long bytes)
-> +static void lo_complete_rq(struct request *rq)
->  {
-> -	if (bytes < 0 || op_is_write(req_op(cmd->rq)))
-> -		return;
-> +	struct loop_cmd *cmd = blk_mq_rq_to_pdu(rq);
->  
-> -	if (unlikely(bytes < blk_rq_bytes(cmd->rq))) {
-> +	if (unlikely(req_op(cmd->rq) == REQ_OP_READ && cmd->use_aio &&
-> +		     cmd->ret >= 0 && cmd->ret < blk_rq_bytes(cmd->rq))) {
->  		struct bio *bio = cmd->rq->bio;
->  
-> -		bio_advance(bio, bytes);
-> +		bio_advance(bio, cmd->ret);
->  		zero_fill_bio(bio);
->  	}
-> +
-> +	blk_mq_end_request(rq, cmd->ret < 0 ? -EIO : 0);
->  }
->  
->  static void lo_rw_aio_complete(struct kiocb *iocb, long ret, long ret2)
->  {
->  	struct loop_cmd *cmd = container_of(iocb, struct loop_cmd, iocb);
-> -	struct request *rq = cmd->rq;
-> -
-> -	handle_partial_read(cmd, ret);
->  
-> -	if (ret > 0)
-> -		ret = 0;
-> -	else if (ret < 0)
-> -		ret = -EIO;
-> -
-> -	blk_mq_complete_request(rq, ret);
-> +	cmd->ret = ret;
-> +	blk_mq_complete_request(cmd->rq, 0);
->  }
->  
->  static int lo_rw_aio(struct loop_device *lo, struct loop_cmd *cmd,
-> @@ -1686,8 +1681,10 @@ static void loop_handle_cmd(struct loop_cmd *cmd)
->  	ret = do_req_filebacked(lo, cmd->rq);
->   failed:
->  	/* complete non-aio request */
-> -	if (!cmd->use_aio || ret)
-> -		blk_mq_complete_request(cmd->rq, ret ? -EIO : 0);
-> +	if (!cmd->use_aio || ret) {
-> +		cmd->ret = ret ? -EIO : 0;
-> +		blk_mq_complete_request(cmd->rq, 0);
-> +	}
->  }
->  
->  static void loop_queue_work(struct kthread_work *work)
-> @@ -1713,6 +1710,7 @@ static int loop_init_request(void *data, struct request *rq,
->  static const struct blk_mq_ops loop_mq_ops = {
->  	.queue_rq       = loop_queue_rq,
->  	.init_request	= loop_init_request,
-> +	.complete	= lo_complete_rq,
->  };
->  
->  static int loop_add(struct loop_device **l, int i)
-> diff --git a/drivers/block/loop.h b/drivers/block/loop.h
-> index fb2237c73e61..fecd3f97ef8c 100644
-> --- a/drivers/block/loop.h
-> +++ b/drivers/block/loop.h
-> @@ -70,6 +70,7 @@ struct loop_cmd {
->  	struct request *rq;
->  	struct list_head list;
->  	bool use_aio;           /* use AIO interface to handle I/O */
-> +	long ret;
->  	struct kiocb iocb;
->  };
 
-Reviewed-by: Ming Lei <ming.lei@redhat.com>
+Hey Bart,
 
-Thanks,
-Ming
+just out of curiosity. Is this maybe related to similar stuff happening
+when CPUs are hot plugged - at least in that the stack gets stuck? Like
+in this thread here:
+https://www.mail-archive.com/linux-block@vger.kernel.org/msg06057.html
+
+Would be interesting, because we recently saw similar stuff happening.
+
+
+                                                    Beste Grüße / Best regards,
+                                                      - Benjamin Block
+-- 
+Linux on z Systems Development         /         IBM Systems & Technology Group
+		  IBM Deutschland Research & Development GmbH 
+Vorsitz. AufsR.: Martina Koederitz     /        Geschäftsführung: Dirk Wittkopp
+Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
