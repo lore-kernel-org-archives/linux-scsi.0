@@ -1,27 +1,45 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: linux-next: manual merge of the scsi-mkp tree with the char-misc tree
-Date: Tue, 11 Apr 2017 21:00:46 -0400
-Message-ID: <yq1k26qv3r5.fsf@oracle.com>
-References: <20170407153351.0ecafd59@canb.auug.org.au>
-        <47b500d6-0700-812f-dda3-44a14014b66e@sandisk.com>
+Subject: Re: [PATCH 1/2] scsi: sd: Separate zeroout and discard command choices
+Date: Tue, 11 Apr 2017 21:04:17 -0400
+Message-ID: <yq1d1civ3la.fsf@oracle.com>
+References: <20170405114111.26864-1-martin.petersen@oracle.com>
+        <1491589694.2559.16.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <47b500d6-0700-812f-dda3-44a14014b66e@sandisk.com> (Bart Van
-        Assche's message of "Fri, 7 Apr 2017 08:49:14 -0700")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg KH <greg@kroah.com>, Arnd Bergmann <arnd@arndb.de>, Linux-Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Logan Gunthorpe <logang@deltatee.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:39372 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751444AbdDLBEZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2017 21:04:25 -0400
+In-Reply-To: <1491589694.2559.16.camel@sandisk.com> (Bart Van Assche's message
+        of "Fri, 7 Apr 2017 18:28:15 +0000")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hch@lst.de" <hch@lst.de>
 
-Bart Van Assche <bart.vanassche@sandisk.com> writes:
+Bart Van Assche <Bart.VanAssche@sandisk.com> writes:
 
-> Sorry that I had not yet noticed Logan's patch series. Should my two
-> patches that conflict with Logan's patch series be dropped and
-> reworked after Logan's patches are upstream?
+Bart,
 
-Obviously things break the minute you go on vacation. I'm back
-now. What's the current status?
+> characters then zeroing_mode_show() will truncate it. Since all
+> strings in the zeroing_mode[] array are short, have you considered to
+> use sprintf() instead? And if you do not want to use sprintf(), how
+> about using snprintf(buf, PAGE_SIZE, ...)? I'm asking this because I'm
+> no fan of magic constants.
+
+Yeah, this was just a copy and paste from the provisioning code.
+
+> Since sysfs guarantees that buf is '\0'-terminated, why does the above
+> function call strncmp() instead of strcmp()?
+>
+> Can the above chain of if-statements be replaced by a for-loop such that
+> zeroing_mode_store() won't have to be updated if the zeroing_mode[] array
+> is modified?
+
+I have a patch that converts sd.c to sysfs_match_string(). That's much
+cleaner but will have to wait until the latter gets merged.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
