@@ -1,59 +1,88 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH v4 6/6] dm rq: Avoid that request processing stalls
- sporadically
-Date: Wed, 12 Apr 2017 11:42:35 +0800
-Message-ID: <20170412034229.GA8835@ming.t460p>
-References: <20170407181654.27836-1-bart.vanassche@sandisk.com>
- <20170407181654.27836-7-bart.vanassche@sandisk.com>
- <20170411160958.GA19222@redhat.com>
- <1491928005.2654.6.camel@sandisk.com>
- <20170411174739.GA19620@redhat.com>
- <1491933092.2654.10.camel@sandisk.com>
- <20170411180358.GA19660@redhat.com>
- <1491934715.2654.14.camel@sandisk.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [GIT PULL] target fixes for v4.11-rc7
+Date: Tue, 11 Apr 2017 21:47:41 -0700
+Message-ID: <1491972461.8231.114.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1491934715.2654.14.camel@sandisk.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc: "snitzer@redhat.com" <snitzer@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Apr 11, 2017 at 06:18:36PM +0000, Bart Van Assche wrote:
-> On Tue, 2017-04-11 at 14:03 -0400, Mike Snitzer wrote:
-> > Rather than working so hard to use DM code against me, your argument
-> > should be: "blk-mq drivers X, Y and Z rerun the hw queue; this is a well
-> > established pattern"
-> > 
-> > I see drivers/nvme/host/fc.c:nvme_fc_start_fcp_op() does.  But that is
-> > only one other driver out of ~20 BLK_MQ_RQ_QUEUE_BUSY returns
-> > tree-wide.
-> > 
-> > Could be there are some others, but hardly a well-established pattern.
-> 
-> Hello Mike,
-> 
-> Several blk-mq drivers that can return BLK_MQ_RQ_QUEUE_BUSY from their
-> .queue_rq() implementation stop the request queue (blk_mq_stop_hw_queue())
-> before returning "busy" and restart the queue after the busy condition has
-> been cleared (blk_mq_start_stopped_hw_queues()). Examples are virtio_blk and
-> xen-blkfront. However, this approach is not appropriate for the dm-mq core
-> nor for the scsi core since both drivers already use the "stopped" state for
-> another purpose than tracking whether or not a hardware queue is busy. Hence
-> the blk_mq_delay_run_hw_queue() and blk_mq_run_hw_queue() calls in these last
-> two drivers to rerun a hardware queue after the busy state has been cleared.
+Hi Linus,
 
-But looks this patch just reruns the hw queue after 100ms, which isn't
-that after the busy state has been cleared, right?
+Here are the outstanding target-pending bug-fixes for v4.11-rc7.
 
-Actually if BLK_MQ_RQ_QUEUE_BUSY is returned from .queue_rq(), blk-mq
-will buffer this request into hctx->dispatch and run the hw queue again,
-so looks blk_mq_delay_run_hw_queue() in this situation shouldn't have been
-needed at my 1st impression. Or maybe Bart has more stories about this usage,
-better to comments it?
+Please go ahead and pull from:
 
-Thanks,
-Ming
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
+
+There has been work in a number of different areas over the last weeks,
+including:
+
+  - Fix target-core-user (TCMU) back-end bi-directional handling
+    (Xiubo Li + Mike Christie + Ilias Tsitsimpis)
+  - Fix iscsi-target TMR reference leak during session shutdown
+    (Rob Millner + Chu Yuan Lin)
+  - Fix target_core_fabric_configfs.c race between LUN shutdown +
+    mapped LUN creation (James Shen)
+  - Fix target-core unknown fabric callback queue-full errors
+    (Potnuri Bharat Teja)
+  - Fix iscsi-target + iser-target queue-full handling in order
+    to support iw_cxgb4 RNICs. (Potnuri Bharat Teja + Sagi Grimberg)
+  - Fix ALUA transition state race between multiple initiator
+    (Mike Christie)
+  - Drop work-around for legacy GlobalSAN initiator, to allow
+    QLogic 57840S + 579xx offload HBAs to work out-of-the-box
+    in MSFT environments. (Martin Svec + Arun Easi)
+
+Note that a number are CC'ed for stable, and although the queue-full
+bug-fixes required for iser-target to work with iw_cxgb4 aren't CC'ed
+here, they'll be posted to Greg-KH separately.
+
+Thank you,
+
+--nab
+
+Manish Narani (1):
+  usb: gadget: Correct usb EP argument for BOT status request
+
+Mike Christie (1):
+  target: Fix ALUA transition state race between multiple initiators
+
+Nicholas Bellinger (7):
+  tcmu: Allow cmd_time_out to be set to zero (disabled)
+  iscsi-target: Fix TMR reference leak during session shutdown
+  target: Avoid mappedlun symlink creation during lun shutdown
+  target: Fix unknown fabric callback queue-full errors
+  iscsi-target: Propigate queue_data_in + queue_status errors
+  iser-target: Fix queue-full response handling
+  iscsi-target: Drop work-around for legacy GlobalSAN initiator
+
+Sagi Grimberg (1):
+  iser-target: avoid posting a recv buffer twice
+
+Xiubo Li (3):
+  tcmu: Fix possible overwrite of t_data_sg's last iov[]
+  tcmu: Fix wrongly calculating of the base_command_size
+  tcmu: Skip Data-Out blocks before gathering Data-In buffer for BIDI
+    case
+
+ drivers/infiniband/ulp/isert/ib_isert.c        |  65 ++++++++----
+ drivers/infiniband/ulp/isert/ib_isert.h        |   3 +-
+ drivers/target/iscsi/iscsi_target.c            |   3 +-
+ drivers/target/iscsi/iscsi_target_configfs.c   |  13 +--
+ drivers/target/iscsi/iscsi_target_parameters.c |  16 ---
+ drivers/target/iscsi/iscsi_target_util.c       |  17 ++--
+ drivers/target/iscsi/iscsi_target_util.h       |   2 +-
+ drivers/target/target_core_alua.c              | 136 +++++++++----------------
+ drivers/target/target_core_configfs.c          |   2 +-
+ drivers/target/target_core_fabric_configfs.c   |   5 +
+ drivers/target/target_core_tpg.c               |   4 +
+ drivers/target/target_core_transport.c         | 102 ++++++++++++-------
+ drivers/target/target_core_user.c              |  97 ++++++++++++------
+ drivers/usb/gadget/function/f_tcm.c            |   2 +-
+ include/target/target_core_base.h              |  10 +-
+ 15 files changed, 261 insertions(+), 216 deletions(-)
