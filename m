@@ -1,8 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/8] target/iblock: convert WRITE_SAME to
-	blkdev_issue_zeroout
-Date: Wed, 12 Apr 2017 10:48:03 +0200
-Message-ID: <20170412084809.8245-3-hch@lst.de>
+Subject: [PATCH 3/8] sd: remove write same support
+Date: Wed, 12 Apr 2017 10:48:04 +0200
+Message-ID: <20170412084809.8245-4-hch@lst.de>
 References: <20170412084809.8245-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -19,108 +18,128 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
 To: axboe@kernel.dk, martin.petersen@oracle.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, target-devel@vger.kernel.org
-Cc: linux-block@vger.kernel.org, dm-devel@redhat.com, Nicholas Bellinger <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com
+Cc: linux-block@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
-
-The people who are actively using iblock_execute_write_same_direct() are
-doing so in the context of ESX VAAI BlockZero, together with
-EXTENDED_COPY and COMPARE_AND_WRITE primitives.
-
-In practice though I've not seen any users of IBLOCK WRITE_SAME for
-anything other than VAAI BlockZero, so just using blkdev_issue_zeroout()
-when available, and falling back to iblock_execute_write_same() if the
-WRITE_SAME buffer contains anything other than zeros should be OK.
+There are no more end-users of REQ_OP_WRITE_SAME left, so we can start
+deleting it.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/target/target_core_iblock.c | 44 +++++++++++++++++++++++--------------
- 1 file changed, 27 insertions(+), 17 deletions(-)
+ drivers/scsi/sd.c     | 70 ---------------------------------------------------
+ drivers/scsi/sd_zbc.c |  1 -
+ 2 files changed, 71 deletions(-)
 
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index d316ed537d59..5bfde20481d7 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -86,6 +86,7 @@ static int iblock_configure_device(struct se_device *dev)
- 	struct block_device *bd = NULL;
- 	struct blk_integrity *bi;
- 	fmode_t mode;
-+	unsigned int max_write_zeroes_sectors;
- 	int ret = -ENOMEM;
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 8cf34a8e3eea..a905802e927e 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -878,77 +878,10 @@ static void sd_config_write_same(struct scsi_disk *sdkp)
+ 		sdkp->zeroing_mode = SD_ZERO_WRITE;
  
- 	if (!(ib_dev->ibd_flags & IBDF_HAS_UDEV_PATH)) {
-@@ -129,7 +130,11 @@ static int iblock_configure_device(struct se_device *dev)
- 	 * Enable write same emulation for IBLOCK and use 0xFFFF as
- 	 * the smaller WRITE_SAME(10) only has a two-byte block count.
- 	 */
--	dev->dev_attrib.max_write_same_len = 0xFFFF;
-+	max_write_zeroes_sectors = bdev_write_zeroes_sectors(bd);
-+	if (max_write_zeroes_sectors)
-+		dev->dev_attrib.max_write_same_len = max_write_zeroes_sectors;
-+	else
-+		dev->dev_attrib.max_write_same_len = 0xFFFF;
- 
- 	if (blk_queue_nonrot(q))
- 		dev->dev_attrib.is_nonrot = 1;
-@@ -415,28 +420,31 @@ iblock_execute_unmap(struct se_cmd *cmd, sector_t lba, sector_t nolb)
+ out:
+-	blk_queue_max_write_same_sectors(q, sdkp->max_ws_blocks *
+-					 (logical_block_size >> 9));
+ 	blk_queue_max_write_zeroes_sectors(q, sdkp->max_ws_blocks *
+ 					 (logical_block_size >> 9));
  }
  
- static sense_reason_t
--iblock_execute_write_same_direct(struct block_device *bdev, struct se_cmd *cmd)
-+iblock_execute_zero_out(struct block_device *bdev, struct se_cmd *cmd)
- {
- 	struct se_device *dev = cmd->se_dev;
- 	struct scatterlist *sg = &cmd->t_data_sg[0];
--	struct page *page = NULL;
+-/**
+- * sd_setup_write_same_cmnd - write the same data to multiple blocks
+- * @cmd: command to prepare
+- *
+- * Will issue either WRITE SAME(10) or WRITE SAME(16) depending on
+- * preference indicated by target device.
+- **/
+-static int sd_setup_write_same_cmnd(struct scsi_cmnd *cmd)
+-{
+-	struct request *rq = cmd->request;
+-	struct scsi_device *sdp = cmd->device;
+-	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
+-	struct bio *bio = rq->bio;
+-	sector_t sector = blk_rq_pos(rq);
+-	unsigned int nr_sectors = blk_rq_sectors(rq);
+-	unsigned int nr_bytes = blk_rq_bytes(rq);
 -	int ret;
-+	unsigned char *buf, zero = 0x00, *p = &zero;
-+	int rc, ret;
- 
--	if (sg->offset) {
--		page = alloc_page(GFP_KERNEL);
--		if (!page)
--			return TCM_OUT_OF_RESOURCES;
--		sg_copy_to_buffer(sg, cmd->t_data_nents, page_address(page),
--				  dev->dev_attrib.block_size);
+-
+-	if (sdkp->device->no_write_same)
+-		return BLKPREP_INVALID;
+-
+-	BUG_ON(bio_offset(bio) || bio_iovec(bio).bv_len != sdp->sector_size);
+-
+-	if (sd_is_zoned(sdkp)) {
+-		ret = sd_zbc_setup_write_cmnd(cmd);
+-		if (ret != BLKPREP_OK)
+-			return ret;
 -	}
-+	buf = kmap(sg_page(sg)) + sg->offset;
-+	if (!buf)
-+		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-+	/*
-+	 * Fall back to block_execute_write_same() slow-path if
-+	 * incoming WRITE_SAME payload does not contain zeros.
-+	 */
-+	rc = memcmp(buf, p, cmd->data_length);
-+	kunmap(sg_page(sg));
-+
-+	if (rc)
-+		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+-
+-	sector >>= ilog2(sdp->sector_size) - 9;
+-	nr_sectors >>= ilog2(sdp->sector_size) - 9;
+-
+-	rq->timeout = SD_WRITE_SAME_TIMEOUT;
+-
+-	if (sdkp->ws16 || sector > 0xffffffff || nr_sectors > 0xffff) {
+-		cmd->cmd_len = 16;
+-		cmd->cmnd[0] = WRITE_SAME_16;
+-		put_unaligned_be64(sector, &cmd->cmnd[2]);
+-		put_unaligned_be32(nr_sectors, &cmd->cmnd[10]);
+-	} else {
+-		cmd->cmd_len = 10;
+-		cmd->cmnd[0] = WRITE_SAME;
+-		put_unaligned_be32(sector, &cmd->cmnd[2]);
+-		put_unaligned_be16(nr_sectors, &cmd->cmnd[7]);
+-	}
+-
+-	cmd->transfersize = sdp->sector_size;
+-	cmd->allowed = SD_MAX_RETRIES;
+-
+-	/*
+-	 * For WRITE SAME the data transferred via the DATA OUT buffer is
+-	 * different from the amount of data actually written to the target.
+-	 *
+-	 * We set up __data_len to the amount of data transferred via the
+-	 * DATA OUT buffer so that blk_rq_map_sg sets up the proper S/G list
+-	 * to transfer a single sector of data first, but then reset it to
+-	 * the amount of data to be written right after so that the I/O path
+-	 * knows how much to actually write.
+-	 */
+-	rq->__data_len = sdp->sector_size;
+-	ret = scsi_init_io(cmd);
+-	rq->__data_len = nr_bytes;
+-	return ret;
+-}
+-
+ static int sd_setup_flush_cmnd(struct scsi_cmnd *cmd)
+ {
+ 	struct request *rq = cmd->request;
+@@ -1232,8 +1165,6 @@ static int sd_init_command(struct scsi_cmnd *cmd)
+ 		}
+ 	case REQ_OP_WRITE_ZEROES:
+ 		return sd_setup_write_zeroes_cmnd(cmd);
+-	case REQ_OP_WRITE_SAME:
+-		return sd_setup_write_same_cmnd(cmd);
+ 	case REQ_OP_FLUSH:
+ 		return sd_setup_flush_cmnd(cmd);
+ 	case REQ_OP_READ:
+@@ -1872,7 +1803,6 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ 	switch (req_op(req)) {
+ 	case REQ_OP_DISCARD:
+ 	case REQ_OP_WRITE_ZEROES:
+-	case REQ_OP_WRITE_SAME:
+ 	case REQ_OP_ZONE_RESET:
+ 		if (!result) {
+ 			good_bytes = blk_rq_bytes(req);
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index 1994f7799fce..8af6c9cd30ca 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -330,7 +330,6 @@ void sd_zbc_complete(struct scsi_cmnd *cmd,
+ 	switch (req_op(rq)) {
+ 	case REQ_OP_WRITE:
+ 	case REQ_OP_WRITE_ZEROES:
+-	case REQ_OP_WRITE_SAME:
+ 	case REQ_OP_ZONE_RESET:
  
--	ret = blkdev_issue_write_same(bdev,
-+	ret = blkdev_issue_zeroout(bdev,
- 				target_to_linux_sector(dev, cmd->t_task_lba),
- 				target_to_linux_sector(dev,
- 					sbc_get_write_same_sectors(cmd)),
--				GFP_KERNEL, page ? page : sg_page(sg));
--	if (page)
--		__free_page(page);
-+				GFP_KERNEL, false);
- 	if (ret)
- 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 
-@@ -472,8 +480,10 @@ iblock_execute_write_same(struct se_cmd *cmd)
- 		return TCM_INVALID_CDB_FIELD;
- 	}
- 
--	if (bdev_write_same(bdev))
--		return iblock_execute_write_same_direct(bdev, cmd);
-+	if (bdev_write_zeroes_sectors(bdev)) {
-+		if (!iblock_execute_zero_out(bdev, cmd))
-+			return 0;
-+	}
- 
- 	ibr = kzalloc(sizeof(struct iblock_req), GFP_KERNEL);
- 	if (!ibr)
+ 		/* Unlock the zone */
 -- 
 2.11.0
