@@ -1,29 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: libfc: directly call ELS request handlers
-Date: Tue, 11 Apr 2017 20:59:03 -0400
-Message-ID: <yq1o9w2v3u0.fsf@oracle.com>
-References: <20170407134224.14804-1-jthumshirn@suse.de>
+Subject: Re: linux-next: manual merge of the scsi-mkp tree with the char-misc tree
+Date: Tue, 11 Apr 2017 21:00:46 -0400
+Message-ID: <yq1k26qv3r5.fsf@oracle.com>
+References: <20170407153351.0ecafd59@canb.auug.org.au>
+        <47b500d6-0700-812f-dda3-44a14014b66e@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:30409 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751273AbdDLA7K (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Apr 2017 20:59:10 -0400
-In-Reply-To: <20170407134224.14804-1-jthumshirn@suse.de> (Johannes Thumshirn's
-        message of "Fri, 7 Apr 2017 15:42:24 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <47b500d6-0700-812f-dda3-44a14014b66e@sandisk.com> (Bart Van
+        Assche's message of "Fri, 7 Apr 2017 08:49:14 -0700")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg KH <greg@kroah.com>, Arnd Bergmann <arnd@arndb.de>, Linux-Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Logan Gunthorpe <logang@deltatee.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>
 
-Johannes Thumshirn <jthumshirn@suse.de> writes:
+Bart Van Assche <bart.vanassche@sandisk.com> writes:
 
-> Directly call ELS request handler functions in fc_lport_recv_els_req
-> instead of saving the pointer to the handler's receive function and then
-> later dereferencing this pointer.
+> Sorry that I had not yet noticed Logan's patch series. Should my two
+> patches that conflict with Logan's patch series be dropped and
+> reworked after Logan's patches are upstream?
 
-Applied to 4.12/scsi-queue.
+Obviously things break the minute you go on vacation. I'm back
+now. What's the current status?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
