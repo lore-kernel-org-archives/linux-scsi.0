@@ -1,88 +1,136 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target fixes for v4.11-rc7
-Date: Tue, 11 Apr 2017 21:47:41 -0700
-Message-ID: <1491972461.8231.114.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCH 2/8] target: remove iblock WRITE_SAME passthrough support
+Date: Tue, 11 Apr 2017 22:30:41 -0700
+Message-ID: <1491975041.8231.131.camel@haakon3.risingtidesystems.com>
+References: <20170410160807.23674-1-hch@lst.de>
+         <20170410160807.23674-3-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20170410160807.23674-3-hch@lst.de>
 Sender: target-devel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: axboe@kernel.dk, martin.petersen@oracle.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, target-devel@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Linus,
+On Mon, 2017-04-10 at 18:08 +0200, Christoph Hellwig wrote:
+> Use the pscsi driver to support arbitrary command passthrough
+> instead.
+> 
 
-Here are the outstanding target-pending bug-fixes for v4.11-rc7.
+The people who are actively using iblock_execute_write_same_direct() are
+doing so in the context of ESX VAAI BlockZero, together with
+EXTENDED_COPY and COMPARE_AND_WRITE primitives.  Just using PSCSI is not
+an option for them.
 
-Please go ahead and pull from:
+In practice though I've not seen any users of IBLOCK WRITE_SAME for
+anything other than VAAI BlockZero, so just using blkdev_issue_zeroout()
+when available, and falling back to iblock_execute_write_same() if the
+WRITE_SAME buffer contains anything other than zeros should be OK.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
+How about something like the following below..?
 
-There has been work in a number of different areas over the last weeks,
-including:
+This would bring parity to how blkdev_issue_write_same() works atm wrt
+to synchronous bio completions.  However, most folks with a raw
+make_request or blk-mq backend driver that supports multiple GB/sec of
+zero bandwidth end up changing IBLOCK to support asynchronous
+REQ_WRITE_SAME completions anyways.
 
-  - Fix target-core-user (TCMU) back-end bi-directional handling
-    (Xiubo Li + Mike Christie + Ilias Tsitsimpis)
-  - Fix iscsi-target TMR reference leak during session shutdown
-    (Rob Millner + Chu Yuan Lin)
-  - Fix target_core_fabric_configfs.c race between LUN shutdown +
-    mapped LUN creation (James Shen)
-  - Fix target-core unknown fabric callback queue-full errors
-    (Potnuri Bharat Teja)
-  - Fix iscsi-target + iser-target queue-full handling in order
-    to support iw_cxgb4 RNICs. (Potnuri Bharat Teja + Sagi Grimberg)
-  - Fix ALUA transition state race between multiple initiator
-    (Mike Christie)
-  - Drop work-around for legacy GlobalSAN initiator, to allow
-    QLogic 57840S + 579xx offload HBAs to work out-of-the-box
-    in MSFT environments. (Martin Svec + Arun Easi)
+I'd be happy to add support for that using __blkdev_issue_zeroout() once
+the basic conversion is in place.
 
-Note that a number are CC'ed for stable, and although the queue-full
-bug-fixes required for iser-target to work with iw_cxgb4 aren't CC'ed
-here, they'll be posted to Greg-KH separately.
+>From ff74012eaff38f9fa0d74aca60507b9964f484ce Mon Sep 17 00:00:00 2001
+From: Nicholas Bellinger <nab@linux-iscsi.org>
+Date: Tue, 11 Apr 2017 22:21:47 -0700
+Subject: [PATCH] target/iblock: Convert WRITE_SAME to blkdev_issue_zeroout
 
-Thank you,
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_iblock.c | 44 +++++++++++++++++++++++--------------
+ 1 file changed, 27 insertions(+), 17 deletions(-)
 
---nab
-
-Manish Narani (1):
-  usb: gadget: Correct usb EP argument for BOT status request
-
-Mike Christie (1):
-  target: Fix ALUA transition state race between multiple initiators
-
-Nicholas Bellinger (7):
-  tcmu: Allow cmd_time_out to be set to zero (disabled)
-  iscsi-target: Fix TMR reference leak during session shutdown
-  target: Avoid mappedlun symlink creation during lun shutdown
-  target: Fix unknown fabric callback queue-full errors
-  iscsi-target: Propigate queue_data_in + queue_status errors
-  iser-target: Fix queue-full response handling
-  iscsi-target: Drop work-around for legacy GlobalSAN initiator
-
-Sagi Grimberg (1):
-  iser-target: avoid posting a recv buffer twice
-
-Xiubo Li (3):
-  tcmu: Fix possible overwrite of t_data_sg's last iov[]
-  tcmu: Fix wrongly calculating of the base_command_size
-  tcmu: Skip Data-Out blocks before gathering Data-In buffer for BIDI
-    case
-
- drivers/infiniband/ulp/isert/ib_isert.c        |  65 ++++++++----
- drivers/infiniband/ulp/isert/ib_isert.h        |   3 +-
- drivers/target/iscsi/iscsi_target.c            |   3 +-
- drivers/target/iscsi/iscsi_target_configfs.c   |  13 +--
- drivers/target/iscsi/iscsi_target_parameters.c |  16 ---
- drivers/target/iscsi/iscsi_target_util.c       |  17 ++--
- drivers/target/iscsi/iscsi_target_util.h       |   2 +-
- drivers/target/target_core_alua.c              | 136 +++++++++----------------
- drivers/target/target_core_configfs.c          |   2 +-
- drivers/target/target_core_fabric_configfs.c   |   5 +
- drivers/target/target_core_tpg.c               |   4 +
- drivers/target/target_core_transport.c         | 102 ++++++++++++-------
- drivers/target/target_core_user.c              |  97 ++++++++++++------
- drivers/usb/gadget/function/f_tcm.c            |   2 +-
- include/target/target_core_base.h              |  10 +-
- 15 files changed, 261 insertions(+), 216 deletions(-)
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index d316ed5..5bfde20 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -86,6 +86,7 @@ static int iblock_configure_device(struct se_device *dev)
+ 	struct block_device *bd = NULL;
+ 	struct blk_integrity *bi;
+ 	fmode_t mode;
++	unsigned int max_write_zeroes_sectors;
+ 	int ret = -ENOMEM;
+ 
+ 	if (!(ib_dev->ibd_flags & IBDF_HAS_UDEV_PATH)) {
+@@ -129,7 +130,11 @@ static int iblock_configure_device(struct se_device *dev)
+ 	 * Enable write same emulation for IBLOCK and use 0xFFFF as
+ 	 * the smaller WRITE_SAME(10) only has a two-byte block count.
+ 	 */
+-	dev->dev_attrib.max_write_same_len = 0xFFFF;
++	max_write_zeroes_sectors = bdev_write_zeroes_sectors(bd);
++	if (max_write_zeroes_sectors)
++		dev->dev_attrib.max_write_same_len = max_write_zeroes_sectors;
++	else
++		dev->dev_attrib.max_write_same_len = 0xFFFF;
+ 
+ 	if (blk_queue_nonrot(q))
+ 		dev->dev_attrib.is_nonrot = 1;
+@@ -415,28 +420,31 @@ static void iblock_end_io_flush(struct bio *bio)
+ }
+ 
+ static sense_reason_t
+-iblock_execute_write_same_direct(struct block_device *bdev, struct se_cmd *cmd)
++iblock_execute_zero_out(struct block_device *bdev, struct se_cmd *cmd)
+ {
+ 	struct se_device *dev = cmd->se_dev;
+ 	struct scatterlist *sg = &cmd->t_data_sg[0];
+-	struct page *page = NULL;
+-	int ret;
++	unsigned char *buf, zero = 0x00, *p = &zero;
++	int rc, ret;
+ 
+-	if (sg->offset) {
+-		page = alloc_page(GFP_KERNEL);
+-		if (!page)
+-			return TCM_OUT_OF_RESOURCES;
+-		sg_copy_to_buffer(sg, cmd->t_data_nents, page_address(page),
+-				  dev->dev_attrib.block_size);
+-	}
++	buf = kmap(sg_page(sg)) + sg->offset;
++	if (!buf)
++		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
++	/*
++	 * Fall back to block_execute_write_same() slow-path if
++	 * incoming WRITE_SAME payload does not contain zeros.
++	 */
++	rc = memcmp(buf, p, cmd->data_length);
++	kunmap(sg_page(sg));
++
++	if (rc)
++		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+ 
+-	ret = blkdev_issue_write_same(bdev,
++	ret = blkdev_issue_zeroout(bdev,
+ 				target_to_linux_sector(dev, cmd->t_task_lba),
+ 				target_to_linux_sector(dev,
+ 					sbc_get_write_same_sectors(cmd)),
+-				GFP_KERNEL, page ? page : sg_page(sg));
+-	if (page)
+-		__free_page(page);
++				GFP_KERNEL, false);
+ 	if (ret)
+ 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+ 
+@@ -472,8 +480,10 @@ static void iblock_end_io_flush(struct bio *bio)
+ 		return TCM_INVALID_CDB_FIELD;
+ 	}
+ 
+-	if (bdev_write_same(bdev))
+-		return iblock_execute_write_same_direct(bdev, cmd);
++	if (bdev_write_zeroes_sectors(bdev)) {
++		if (!iblock_execute_zero_out(bdev, cmd))
++			return 0;
++	}
+ 
+ 	ibr = kzalloc(sizeof(struct iblock_req), GFP_KERNEL);
+ 	if (!ibr)
