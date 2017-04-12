@@ -1,42 +1,39 @@
-From: Benjamin Block <bblock@linux.vnet.ibm.com>
-Subject: Re: [PATCH v4 0/6] Avoid that scsi-mq and dm-mq queue processing
- stalls sporadically
-Date: Wed, 12 Apr 2017 12:55:38 +0200
-Message-ID: <20170412105538.GB22576@bblock-ThinkPad-W530>
-References: <20170407181654.27836-1-bart.vanassche@sandisk.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] snic: fix spelling mistake: "Cann't" -> "Cannot"
+Date: Wed, 12 Apr 2017 15:12:35 +0100
+Message-ID: <20170412141235.18094-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170407181654.27836-1-bart.vanassche@sandisk.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Karan Tilak Kumar <kartilak@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Apr 07, 2017 at 11:16:48AM -0700, Bart Van Assche wrote:
-> Hello Jens,
-> 
-> The six patches in this patch series fix the queue lockup I reported
-> recently on the linux-block mailing list. Please consider these patches
-> for inclusion in the upstream kernel.
-> 
+From: Colin Ian King <colin.king@canonical.com>
 
-Hey Bart,
+Trivial fix to spelling mistake in SNIC_ERR error message text,
+one cannot have "Cann't".
 
-just out of curiosity. Is this maybe related to similar stuff happening
-when CPUs are hot plugged - at least in that the stack gets stuck? Like
-in this thread here:
-https://www.mail-archive.com/linux-block@vger.kernel.org/msg06057.html
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/snic/snic_debugfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Would be interesting, because we recently saw similar stuff happening.
-
-
-                                                    Beste Grüße / Best regards,
-                                                      - Benjamin Block
+diff --git a/drivers/scsi/snic/snic_debugfs.c b/drivers/scsi/snic/snic_debugfs.c
+index d30280326bde..269ddf791a73 100644
+--- a/drivers/scsi/snic/snic_debugfs.c
++++ b/drivers/scsi/snic/snic_debugfs.c
+@@ -548,7 +548,7 @@ snic_trc_debugfs_init(void)
+ 				 &snic_trc_fops);
+ 
+ 	if (!de) {
+-		SNIC_ERR("Cann't create trace file.\n");
++		SNIC_ERR("Cannot create trace file.\n");
+ 
+ 		return ret;
+ 	}
 -- 
-Linux on z Systems Development         /         IBM Systems & Technology Group
-		  IBM Deutschland Research & Development GmbH 
-Vorsitz. AufsR.: Martina Koederitz     /        Geschäftsführung: Dirk Wittkopp
-Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
+2.11.0
+
