@@ -1,53 +1,36 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH RESEND] scsi: return correct blkprep status code in case
- scsi_init_io() fails.
-Date: Wed, 12 Apr 2017 08:54:13 +0200
-Message-ID: <20170412065413.GA4988@linux-x5ow.site>
-References: <20170411074644.6071-1-jthumshirn@suse.de>
- <1491936200.2654.18.camel@sandisk.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [GIT PULL] target fixes for v4.11-rc7
+Date: Tue, 11 Apr 2017 23:55:28 -0700
+Message-ID: <CA+55aFyn1matXDTkeDA1d2+tHBSVkBvS5kP-7Ngh86=uut+yyg@mail.gmail.com>
+References: <1491972461.8231.114.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1491936200.2654.18.camel@sandisk.com>
+In-Reply-To: <1491972461.8231.114.camel@haakon3.risingtidesystems.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hch@lst.de" <hch@lst.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hare@suse.de" <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Apr 11, 2017 at 06:43:22PM +0000, Bart Van Assche wrote:
-> On Tue, 2017-04-11 at 09:46 +0200, Johannes Thumshirn wrote:
-> > When instrumenting the SCSI layer to run into the
-> > !blk_rq_nr_phys_segments(rq) case the following  warning emitted from the
-> > block layer:
-> > 
-> > blk_peek_request: bad return=-22
-> > 
-> > This happens because since commit fd3fc0b4d730 ('scsi: don't BUG_ON()
-> > empty DMA transfers') we return the wrong error value from iscsi_prep_fn()
->                                                              ^^^^^^^^^^^^^^^
-> There is no iscsi_prep_fn() in the kernel tree. Did you perhaps mean
-> scsi_prep_fn()?
+On Tue, Apr 11, 2017 at 9:47 PM, Nicholas A. Bellinger
+<nab@linux-iscsi.org> wrote:
+> Hi Linus,
+>
+> Here are the outstanding target-pending bug-fixes for v4.11-rc7.
 
-*doh* Yup, you're right.
+So I'm pulling this, but I'm getting real tired of this crap. We're
+late in the rc's, I shouldn['t be getting pull requests of hundreds of
+lines any more.
 
-> 
-> > back to the block layer.
-> > 
-> > Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> > Fixes: fd3fc0b4d730 scsi: don't BUG_ON() empty DMA transfers
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> Commit fd3fc0b4d730 has a "Cc: stable" tag. I assume that that means that
-> this patch also needs that tag?
+A lot of these fixes look like things that HAVE NEVER WORKED.
 
-Probably yes. I'll include both "fixes" in my resend.
+If something has never worked, it damn well isn't a "fix" any more,
+it's actual real development. It should go in the development branch.
 
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+The rc stuff is for regressions, and for things that actually are
+nasty problems (security, keeping people from getting work done).
+
+The rc stuff is *not* supposed to be development of stuff that has
+ever worked before. That's *new* code, not a bugfix.
+
+                    Linus
