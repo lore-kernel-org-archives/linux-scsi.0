@@ -1,10 +1,10 @@
 From: Sumit Semwal <sumit.semwal@linaro.org>
-Subject: [PATCH for-4.9 1/5] blk-mq: Avoid memory reclaim when remapping queues
-Date: Wed, 12 Apr 2017 23:06:31 +0530
-Message-ID: <1492018595-13167-2-git-send-email-sumit.semwal@linaro.org>
-References: <1492018595-13167-1-git-send-email-sumit.semwal@linaro.org>
+Subject: [v2 PATCH for-4.4 15/16] blk-mq: Avoid memory reclaim when remapping queues
+Date: Wed, 12 Apr 2017 23:13:49 +0530
+Message-ID: <1492019030-13567-16-git-send-email-sumit.semwal@linaro.org>
+References: <1492019030-13567-1-git-send-email-sumit.semwal@linaro.org>
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1492018595-13167-1-git-send-email-sumit.semwal@linaro.org>
+In-Reply-To: <1492019030-13567-1-git-send-email-sumit.semwal@linaro.org>
 Sender: linux-block-owner@vger.kernel.org
 To: stable@vger.kernel.org
 Cc: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, Douglas Miller <dougmill@linux.vnet.ibm.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, Sumit Semwal <sumit.semwal@linaro.org>
@@ -84,10 +84,10 @@ Signed-off-by: Sumit Semwal <sumit.semwal@linaro.org>
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/block/blk-mq.c b/block/blk-mq.c
-index ee54ad0..7b597ec 100644
+index d8d63c3..0d1af3e 100644
 --- a/block/blk-mq.c
 +++ b/block/blk-mq.c
-@@ -1474,7 +1474,7 @@ static struct blk_mq_tags *blk_mq_init_rq_map(struct blk_mq_tag_set *set,
+@@ -1470,7 +1470,7 @@ static struct blk_mq_tags *blk_mq_init_rq_map(struct blk_mq_tag_set *set,
  	INIT_LIST_HEAD(&tags->page_list);
  
  	tags->rqs = kzalloc_node(set->queue_depth * sizeof(struct request *),
@@ -96,7 +96,7 @@ index ee54ad0..7b597ec 100644
  				 set->numa_node);
  	if (!tags->rqs) {
  		blk_mq_free_tags(tags);
-@@ -1500,7 +1500,7 @@ static struct blk_mq_tags *blk_mq_init_rq_map(struct blk_mq_tag_set *set,
+@@ -1496,7 +1496,7 @@ static struct blk_mq_tags *blk_mq_init_rq_map(struct blk_mq_tag_set *set,
  
  		do {
  			page = alloc_pages_node(set->numa_node,
@@ -105,7 +105,7 @@ index ee54ad0..7b597ec 100644
  				this_order);
  			if (page)
  				break;
-@@ -1521,7 +1521,7 @@ static struct blk_mq_tags *blk_mq_init_rq_map(struct blk_mq_tag_set *set,
+@@ -1517,7 +1517,7 @@ static struct blk_mq_tags *blk_mq_init_rq_map(struct blk_mq_tag_set *set,
  		 * Allow kmemleak to scan these pages as they contain pointers
  		 * to additional allocations like via ops->init_request().
  		 */
