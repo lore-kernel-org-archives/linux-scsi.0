@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 4/4] scsi: remove the SCSI OSD library
-Date: Wed, 12 Apr 2017 18:01:09 +0200
-Message-ID: <20170412160109.10598-5-hch@lst.de>
+Subject: [PATCH 3/4] nfs: remove the objlayout driver
+Date: Wed, 12 Apr 2017 18:01:08 +0200
+Message-ID: <20170412160109.10598-4-hch@lst.de>
 References: <20170412160109.10598-1-hch@lst.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20170412160109.10598-1-hch@lst.de>
@@ -10,381 +10,155 @@ To: ooo@electrozaur.com, martin.petersen@oracle.com, trond.myklebust@primarydata
 Cc: osd-dev@open-osd.org, linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Now that all the users are gone the SCSI OSD library can be removed
-as well.
+The objlayout code has been in the tree, but it's been unmaintained and
+no server product for it actually ever shipped.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- Documentation/scsi/osd.txt       |  192 ----
- drivers/scsi/Makefile            |    1 -
- drivers/scsi/osd/Kbuild          |   20 -
- drivers/scsi/osd/Kconfig         |   49 -
- drivers/scsi/osd/osd_debug.h     |   30 -
- drivers/scsi/osd/osd_initiator.c | 2076 --------------------------------------
- drivers/scsi/osd/osd_uld.c       |  595 -----------
- include/scsi/osd_initiator.h     |  515 ----------
- include/scsi/osd_ore.h           |  201 ----
- 9 files changed, 3679 deletions(-)
- delete mode 100644 Documentation/scsi/osd.txt
- delete mode 100644 drivers/scsi/osd/Kbuild
- delete mode 100644 drivers/scsi/osd/Kconfig
- delete mode 100644 drivers/scsi/osd/osd_debug.h
- delete mode 100644 drivers/scsi/osd/osd_initiator.c
- delete mode 100644 drivers/scsi/osd/osd_uld.c
- delete mode 100644 include/scsi/osd_initiator.h
- delete mode 100644 include/scsi/osd_ore.h
+ Documentation/admin-guide/kernel-parameters.txt |   6 -
+ Documentation/filesystems/nfs/pnfs.txt          |  37 --
+ fs/nfs/Kconfig                                  |   5 -
+ fs/nfs/Makefile                                 |   1 -
+ fs/nfs/objlayout/Kbuild                         |   5 -
+ fs/nfs/objlayout/objio_osd.c                    | 675 ----------------------
+ fs/nfs/objlayout/objlayout.c                    | 706 ------------------------
+ fs/nfs/objlayout/objlayout.h                    | 183 ------
+ fs/nfs/objlayout/pnfs_osd_xdr_cli.c             | 415 --------------
+ 9 files changed, 2033 deletions(-)
+ delete mode 100644 fs/nfs/objlayout/Kbuild
+ delete mode 100644 fs/nfs/objlayout/objio_osd.c
+ delete mode 100644 fs/nfs/objlayout/objlayout.c
+ delete mode 100644 fs/nfs/objlayout/objlayout.h
+ delete mode 100644 fs/nfs/objlayout/pnfs_osd_xdr_cli.c
 
-diff --git a/Documentation/scsi/osd.txt b/Documentation/scsi/osd.txt
-deleted file mode 100644
-index 2bc2ab06b0c0..000000000000
---- a/Documentation/scsi/osd.txt
-+++ /dev/null
-@@ -1,192 +0,0 @@
--The OSD Standard
--================
--OSD (Object-Based Storage Device) is a T10 SCSI command set that is designed
--to provide efficient operation of input/output logical units that manage the
--allocation, placement, and accessing of variable-size data-storage containers,
--called objects. Objects are intended to contain operating system and application
--constructs. Each object has associated attributes attached to it, which are
--integral part of the object and provide metadata about the object. The standard
--defines some common obligatory attributes, but user attributes can be added as
--needed.
--
--See: http://www.t10.org/ftp/t10/drafts/osd2/ for the latest draft for OSD 2
--or search the web for "OSD SCSI"
--
--OSD in the Linux Kernel
--=======================
--osd-initiator:
--  The main component of OSD in Kernel is the osd-initiator library. Its main
--user is intended to be the pNFS-over-objects layout driver, which uses objects
--as its back-end data storage. Other clients are the other osd parts listed below.
--
--osd-uld:
--  This is a SCSI ULD that registers for OSD type devices and provides a testing
--platform, both for the in-kernel initiator as well as connected targets. It
--currently has no useful user-mode API, though it could have if need be.
--
--osd target:
--  There are no current plans for an OSD target implementation in kernel. For all
--needs, a user-mode target that is based on the scsi tgt target framework is
--available from Ohio Supercomputer Center (OSC) at:
--http://www.open-osd.org/bin/view/Main/OscOsdProject
--There are several other target implementations. See http://open-osd.org for more
--links.
--
--Files and Folders
--=================
--This is the complete list of files included in this work:
--include/scsi/
--	osd_initiator.h   Main API for the initiator library
--	osd_types.h	  Common OSD types
--	osd_sec.h	  Security Manager API
--	osd_protocol.h	  Wire definitions of the OSD standard protocol
--	osd_attributes.h  Wire definitions of OSD attributes
--
--drivers/scsi/osd/
--	osd_initiator.c   OSD-Initiator library implementation
--	osd_uld.c	  The OSD scsi ULD
--	osd_ktest.{h,c}	  In-kernel test suite (called by osd_uld)
--	osd_debug.h	  Some printk macros
--	Makefile	  For both in-tree and out-of-tree compilation
--	Kconfig		  Enables inclusion of the different pieces
--	osd_test.c	  User-mode application to call the kernel tests
--
--The OSD-Initiator Library
--=========================
--osd_initiator is a low level implementation of an osd initiator encoder.
--But even though, it should be intuitive and easy to use. Perhaps over time an
--higher lever will form that automates some of the more common recipes.
--
--init/fini:
--- osd_dev_init() associates a scsi_device with an osd_dev structure
--  and initializes some global pools. This should be done once per scsi_device
--  (OSD LUN). The osd_dev structure is needed for calling osd_start_request().
--
--- osd_dev_fini() cleans up before a osd_dev/scsi_device destruction.
--
--OSD commands encoding, execution, and decoding of results:
--
--struct osd_request's is used to iteratively encode an OSD command and carry
--its state throughout execution. Each request goes through these stages:
--
--a. osd_start_request() allocates the request.
--
--b. Any of the osd_req_* methods is used to encode a request of the specified
--   type.
--
--c. osd_req_add_{get,set}_attr_* may be called to add get/set attributes to the
--   CDB. "List" or "Page" mode can be used exclusively. The attribute-list API
--   can be called multiple times on the same request. However, only one
--   attribute-page can be read, as mandated by the OSD standard.
--
--d. osd_finalize_request() computes offsets into the data-in and data-out buffers
--   and signs the request using the provided capability key and integrity-
--   check parameters.
--
--e. osd_execute_request() may be called to execute the request via the block
--   layer and wait for its completion.  The request can be executed
--   asynchronously by calling the block layer API directly.
--
--f. After execution, osd_req_decode_sense() can be called to decode the request's
--   sense information.
--
--g. osd_req_decode_get_attr() may be called to retrieve osd_add_get_attr_list()
--   values.
--
--h. osd_end_request() must be called to deallocate the request and any resource
--   associated with it. Note that osd_end_request cleans up the request at any
--   stage and it must always be called after a successful osd_start_request().
--
--osd_request's structure:
--
--The OSD standard defines a complex structure of IO segments pointed to by
--members in the CDB. Up to 3 segments can be deployed in the IN-Buffer and up to
--4 in the OUT-Buffer. The ASCII illustration below depicts a secure-read with
--associated get+set of attributes-lists. Other combinations very on the same
--basic theme. From no-segments-used up to all-segments-used.
--
--|________OSD-CDB__________|
--|                         |
--|read_len (offset=0)     -|---------\
--|                         |         |
--|get_attrs_list_length    |         |
--|get_attrs_list_offset   -|----\    |
--|                         |    |    |
--|retrieved_attrs_alloc_len|    |    |
--|retrieved_attrs_offset  -|----|----|-\
--|                         |    |    | |
--|set_attrs_list_length    |    |    | |
--|set_attrs_list_offset   -|-\  |    | |
--|                         | |  |    | |
--|in_data_integ_offset    -|-|--|----|-|-\
--|out_data_integ_offset   -|-|--|--\ | | |
--\_________________________/ |  |  | | | |
--                            |  |  | | | |
--|_______OUT-BUFFER________| |  |  | | | |
--|      Set attr list      |</  |  | | | |
--|                         |    |  | | | |
--|-------------------------|    |  | | | |
--|   Get attr descriptors  |<---/  | | | |
--|                         |       | | | |
--|-------------------------|       | | | |
--|    Out-data integrity   |<------/ | | |
--|                         |         | | |
--\_________________________/         | | |
--                                    | | |
--|________IN-BUFFER________|         | | |
--|      In-Data read       |<--------/ | |
--|                         |           | |
--|-------------------------|           | |
--|      Get attr list      |<----------/ |
--|                         |             |
--|-------------------------|             |
--|    In-data integrity    |<------------/
--|                         |
--\_________________________/
--
--A block device request can carry bidirectional payload by means of associating
--a bidi_read request with a main write-request. Each in/out request is described
--by a chain of BIOs associated with each request.
--The CDB is of a SCSI VARLEN CDB format, as described by OSD standard.
--The OSD standard also mandates alignment restrictions at start of each segment.
--
--In the code, in struct osd_request, there are two _osd_io_info structures to
--describe the IN/OUT buffers above, two BIOs for the data payload and up to five
--_osd_req_data_segment structures to hold the different segments allocation and
--information.
--
--Important: We have chosen to disregard the assumption that a BIO-chain (and
--the resulting sg-list) describes a linear memory buffer. Meaning only first and
--last scatter chain can be incomplete and all the middle chains are of PAGE_SIZE.
--For us, a scatter-gather-list, as its name implies and as used by the Networking
--layer, is to describe a vector of buffers that will be transferred to/from the
--wire. It works very well with current iSCSI transport. iSCSI is currently the
--only deployed OSD transport. In the future we anticipate SAS and FC attached OSD
--devices as well.
--
--The OSD Testing ULD
--===================
--TODO: More user-mode control on tests.
--
--Authors, Mailing list
--=====================
--Please communicate with us on any deployment of osd, whether using this code
--or not.
--
--Any problems, questions, bug reports, lonely OSD nights, please email:
--   OSD Dev List <osd-dev@open-osd.org>
--
--More up-to-date information can be found on:
--http://open-osd.org
--
--Boaz Harrosh <ooo@electrozaur.com>
--
--References
--==========
--Weber, R., "SCSI Object-Based Storage Device Commands",
--T10/1355-D ANSI/INCITS 400-2004,
--http://www.t10.org/ftp/t10/drafts/osd/osd-r10.pdf
--
--Weber, R., "SCSI Object-Based Storage Device Commands -2 (OSD-2)"
--T10/1729-D, Working Draft, rev. 3
--http://www.t10.org/ftp/t10/drafts/osd2/osd2r03.pdf
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index fc2855565a51..f5e75a3dac9e 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -152,7 +152,6 @@ obj-$(CONFIG_CHR_DEV_SG)	+= sg.o
- obj-$(CONFIG_CHR_DEV_SCH)	+= ch.o
- obj-$(CONFIG_SCSI_ENCLOSURE)	+= ses.o
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index facc20a3f962..17156d66b124 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -2419,12 +2419,6 @@
+ 			and gids from such clients.  This is intended to ease
+ 			migration from NFSv2/v3.
  
--obj-$(CONFIG_SCSI_OSD_INITIATOR) += osd/
- obj-$(CONFIG_SCSI_HISI_SAS) += hisi_sas/
+-	objlayoutdriver.osd_login_prog=
+-			[NFS] [OBJLAYOUT] sets the pathname to the program which
+-			is used to automatically discover and login into new
+-			osd-targets. Please see:
+-			Documentation/filesystems/pnfs.txt for more explanations
+-
+ 	nmi_debug=	[KNL,AVR32,SH] Specify one or more actions to take
+ 			when a NMI is triggered.
+ 			Format: [state][,regs][,debounce][,die]
+diff --git a/Documentation/filesystems/nfs/pnfs.txt b/Documentation/filesystems/nfs/pnfs.txt
+index 8de578a98222..80dc0bdc302a 100644
+--- a/Documentation/filesystems/nfs/pnfs.txt
++++ b/Documentation/filesystems/nfs/pnfs.txt
+@@ -64,46 +64,9 @@ table which are called by the nfs-client pnfs-core to implement the
+ different layout types.
  
- # This goes last, so that "real" scsi devices probe earlier
-diff --git a/drivers/scsi/osd/Kbuild b/drivers/scsi/osd/Kbuild
+ Files-layout-driver code is in: fs/nfs/filelayout/.. directory
+-Objects-layout-driver code is in: fs/nfs/objlayout/.. directory
+ Blocks-layout-driver code is in: fs/nfs/blocklayout/.. directory
+ Flexfiles-layout-driver code is in: fs/nfs/flexfilelayout/.. directory
+ 
+-objects-layout setup
+---------------------
+-
+-As part of the full STD implementation the objlayoutdriver.ko needs, at times,
+-to automatically login to yet undiscovered iscsi/osd devices. For this the
+-driver makes up-calles to a user-mode script called *osd_login*
+-
+-The path_name of the script to use is by default:
+-	/sbin/osd_login.
+-This name can be overridden by the Kernel module parameter:
+-	objlayoutdriver.osd_login_prog
+-
+-If Kernel does not find the osd_login_prog path it will zero it out
+-and will not attempt farther logins. An admin can then write new value
+-to the objlayoutdriver.osd_login_prog Kernel parameter to re-enable it.
+-
+-The /sbin/osd_login is part of the nfs-utils package, and should usually
+-be installed on distributions that support this Kernel version.
+-
+-The API to the login script is as follows:
+-	Usage: $0 -u <URI> -o <OSDNAME> -s <SYSTEMID>
+-	Options:
+-		-u		target uri e.g. iscsi://<ip>:<port>
+-				(always exists)
+-				(More protocols can be defined in the future.
+-				 The client does not interpret this string it is
+-				 passed unchanged as received from the Server)
+-		-o		osdname of the requested target OSD
+-				(Might be empty)
+-				(A string which denotes the OSD name, there is a
+-				 limit of 64 chars on this string)
+-		-s 		systemid of the requested target OSD
+-				(Might be empty)
+-				(This string, if not empty is always an hex
+-				 representation of the 20 bytes osd_system_id)
+-
+ blocks-layout setup
+ -------------------
+ 
+diff --git a/fs/nfs/Kconfig b/fs/nfs/Kconfig
+index f31fd0dd92c6..69d02cf8cf37 100644
+--- a/fs/nfs/Kconfig
++++ b/fs/nfs/Kconfig
+@@ -123,11 +123,6 @@ config PNFS_BLOCK
+ 	depends on NFS_V4_1 && BLK_DEV_DM
+ 	default NFS_V4
+ 
+-config PNFS_OBJLAYOUT
+-	tristate
+-	depends on NFS_V4_1 && SCSI_OSD_ULD
+-	default NFS_V4
+-
+ config PNFS_FLEXFILE_LAYOUT
+ 	tristate
+ 	depends on NFS_V4_1 && NFS_V3
+diff --git a/fs/nfs/Makefile b/fs/nfs/Makefile
+index 6abdda209642..98f4e5728a67 100644
+--- a/fs/nfs/Makefile
++++ b/fs/nfs/Makefile
+@@ -31,6 +31,5 @@ nfsv4-$(CONFIG_NFS_V4_1)	+= pnfs.o pnfs_dev.o pnfs_nfs.o
+ nfsv4-$(CONFIG_NFS_V4_2)	+= nfs42proc.o
+ 
+ obj-$(CONFIG_PNFS_FILE_LAYOUT) += filelayout/
+-obj-$(CONFIG_PNFS_OBJLAYOUT) += objlayout/
+ obj-$(CONFIG_PNFS_BLOCK) += blocklayout/
+ obj-$(CONFIG_PNFS_FLEXFILE_LAYOUT) += flexfilelayout/
+diff --git a/fs/nfs/objlayout/Kbuild b/fs/nfs/objlayout/Kbuild
 deleted file mode 100644
-index 58cecd45b0f5..000000000000
---- a/drivers/scsi/osd/Kbuild
+index ed30ea072bb8..000000000000
+--- a/fs/nfs/objlayout/Kbuild
 +++ /dev/null
-@@ -1,20 +0,0 @@
+@@ -1,5 +0,0 @@
 -#
--# Kbuild for the OSD modules
+-# Makefile for the pNFS Objects Layout Driver kernel module
 -#
--# Copyright (C) 2008 Panasas Inc.  All rights reserved.
--#
--# Authors:
--#   Boaz Harrosh <ooo@electrozaur.com>
--#   Benny Halevy <bhalevy@panasas.com>
--#
--# This program is free software; you can redistribute it and/or modify
--# it under the terms of the GNU General Public License version 2
--#
--
--# libosd.ko - osd-initiator library
--libosd-y := osd_initiator.o
--obj-$(CONFIG_SCSI_OSD_INITIATOR) += libosd.o
--
--# osd.ko - SCSI ULD and char-device
--osd-y := osd_uld.o
--obj-$(CONFIG_SCSI_OSD_ULD) += osd.o
-diff --git a/drivers/scsi/osd/Kconfig b/drivers/scsi/osd/Kconfig
+-objlayoutdriver-y := objio_osd.o pnfs_osd_xdr_cli.o objlayout.o
+-obj-$(CONFIG_PNFS_OBJLAYOUT) += objlayoutdriver.o
+diff --git a/fs/nfs/objlayout/objio_osd.c b/fs/nfs/objlayout/objio_osd.c
 deleted file mode 100644
-index 347cc5e33749..000000000000
---- a/drivers/scsi/osd/Kconfig
+index 049c1b1f2932..000000000000
+--- a/fs/nfs/objlayout/objio_osd.c
 +++ /dev/null
-@@ -1,49 +0,0 @@
--#
--# Kernel configuration file for the OSD scsi protocol
--#
--# Copyright (C) 2008 Panasas Inc.  All rights reserved.
--#
--# Authors:
--#   Boaz Harrosh <ooo@electrozaur.com>
--#   Benny Halevy <bhalevy@panasas.com>
--#
--# This program is free software; you can redistribute it and/or modify
--# it under the terms of the GNU General Public version 2 License as
--# published by the Free Software Foundation
--#
--config SCSI_OSD_INITIATOR
--	tristate "OSD-Initiator library"
--	depends on SCSI
--	help
--		Enable the OSD-Initiator library (libosd.ko).
--		NOTE: You must also select CRYPTO_SHA1 + CRYPTO_HMAC and their
--		dependencies
--
--config SCSI_OSD_ULD
--	tristate "OSD Upper Level driver"
--	depends on SCSI_OSD_INITIATOR
--	help
--		Build a SCSI upper layer driver that exports /dev/osdX devices
--		to user-mode for testing and controlling OSD devices. It is also
--		needed by exofs, for mounting an OSD based file system.
--
--config SCSI_OSD_DPRINT_SENSE
--    int "(0-2) When sense is returned, DEBUG print all sense descriptors"
--    default 1
--    depends on SCSI_OSD_INITIATOR
--    help
--        When a CHECK_CONDITION status is returned from a target, and a
--        sense-buffer is retrieved, turning this on will dump a full
--        sense-decoding message. Setting to 2 will also print recoverable
--        errors that might be regularly returned for some filesystem
--        operations.
--
--config SCSI_OSD_DEBUG
--	bool "Compile All OSD modules with lots of DEBUG prints"
--	default n
--	depends on SCSI_OSD_INITIATOR
--	help
--		OSD Code is populated with lots of OSD_DEBUG(..) printouts to
--		dmesg. Enable this if you found a bug and you want to help us
--		track the problem (see also MAINTAINERS). Setting this will also
--		force SCSI_OSD_DPRINT_SENSE=2.
-diff --git a/drivers/scsi/osd/osd_debug.h b/drivers/scsi/osd/osd_debug.h
-deleted file mode 100644
-index 26341261bb5c..000000000000
---- a/drivers/scsi/osd/osd_debug.h
-+++ /dev/null
-@@ -1,30 +0,0 @@
+@@ -1,675 +0,0 @@
 -/*
-- * osd_debug.h - Some kprintf macros
+- *  pNFS Objects layout implementation over open-osd initiator library
 - *
-- * Copyright (C) 2008 Panasas Inc.  All rights reserved.
+- *  Copyright (C) 2009 Panasas Inc. [year of first publication]
+- *  All rights reserved.
 - *
-- * Authors:
-- *   Boaz Harrosh <ooo@electrozaur.com>
-- *   Benny Halevy <bhalevy@panasas.com>
+- *  Benny Halevy <bhalevy@panasas.com>
+- *  Boaz Harrosh <ooo@electrozaur.com>
 - *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2
+- *  This program is free software; you can redistribute it and/or modify
+- *  it under the terms of the GNU General Public License version 2
+- *  See the file COPYING included with this distribution for more details.
 - *
-- */
--#ifndef __OSD_DEBUG_H__
--#define __OSD_DEBUG_H__
--
--#define OSD_ERR(fmt, a...) printk(KERN_ERR "osd: " fmt, ##a)
--#define OSD_INFO(fmt, a...) printk(KERN_NOTICE "osd: " fmt, ##a)
--
--#ifdef CONFIG_SCSI_OSD_DEBUG
--#define OSD_DEBUG(fmt, a...) \
--	printk(KERN_NOTICE "osd @%s:%d: " fmt, __func__, __LINE__, ##a)
--#else
--#define OSD_DEBUG(fmt, a...) do {} while (0)
--#endif
--
--/* u64 has problems with printk this will cast it to unsigned long long */
--#define _LLU(x) (unsigned long long)(x)
--
--#endif /* ndef __OSD_DEBUG_H__ */
-diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
-deleted file mode 100644
-index 9d0727b2bdec..000000000000
---- a/drivers/scsi/osd/osd_initiator.c
-+++ /dev/null
-@@ -1,2076 +0,0 @@
--/*
-- * osd_initiator - Main body of the osd initiator library.
-- *
-- * Note: The file does not contain the advanced security functionality which
-- * is only needed by the security_manager's initiators.
-- *
-- * Copyright (C) 2008 Panasas Inc.  All rights reserved.
-- *
-- * Authors:
-- *   Boaz Harrosh <ooo@electrozaur.com>
-- *   Benny Halevy <bhalevy@panasas.com>
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2
-- *
-- * Redistribution and use in source and binary forms, with or without
-- * modification, are permitted provided that the following conditions
-- * are met:
+- *  Redistribution and use in source and binary forms, with or without
+- *  modification, are permitted provided that the following conditions
+- *  are met:
 - *
 - *  1. Redistributions of source code must retain the above copyright
 - *     notice, this list of conditions and the following disclaimer.
@@ -395,3382 +169,1976 @@ index 9d0727b2bdec..000000000000
 - *     contributors may be used to endorse or promote products derived
 - *     from this software without specific prior written permission.
 - *
-- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED
-- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-- * DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
-- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
-- * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- *  THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED
+- *  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+- *  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+- *  DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+- *  FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+- *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+- *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+- *  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+- *  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+- *  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+- *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 - */
 -
--#include <linux/slab.h>
 -#include <linux/module.h>
+-#include <scsi/osd_ore.h>
 -
--#include <scsi/osd_initiator.h>
--#include <scsi/osd_sec.h>
--#include <scsi/osd_attributes.h>
--#include <scsi/osd_sense.h>
+-#include "objlayout.h"
+-#include "../internal.h"
 -
--#include <scsi/scsi_device.h>
--#include <scsi/scsi_request.h>
+-#define NFSDBG_FACILITY         NFSDBG_PNFS_LD
 -
--#include "osd_debug.h"
--
--#ifndef __unused
--#    define __unused			__attribute__((unused))
--#endif
--
--enum { OSD_REQ_RETRIES = 1 };
--
--MODULE_AUTHOR("Boaz Harrosh <ooo@electrozaur.com>");
--MODULE_DESCRIPTION("open-osd initiator library libosd.ko");
--MODULE_LICENSE("GPL");
--
--static inline void build_test(void)
--{
--	/* structures were not packed */
--	BUILD_BUG_ON(sizeof(struct osd_capability) != OSD_CAP_LEN);
--	BUILD_BUG_ON(sizeof(struct osdv2_cdb) != OSD_TOTAL_CDB_LEN);
--	BUILD_BUG_ON(sizeof(struct osdv1_cdb) != OSDv1_TOTAL_CDB_LEN);
--}
--
--static const char *_osd_ver_desc(struct osd_request *or)
--{
--	return osd_req_is_ver1(or) ? "OSD1" : "OSD2";
--}
--
--#define ATTR_DEF_RI(id, len) ATTR_DEF(OSD_APAGE_ROOT_INFORMATION, id, len)
--
--static int _osd_get_print_system_info(struct osd_dev *od,
--	void *caps, struct osd_dev_info *odi)
--{
--	struct osd_request *or;
--	struct osd_attr get_attrs[] = {
--		ATTR_DEF_RI(OSD_ATTR_RI_VENDOR_IDENTIFICATION, 8),
--		ATTR_DEF_RI(OSD_ATTR_RI_PRODUCT_IDENTIFICATION, 16),
--		ATTR_DEF_RI(OSD_ATTR_RI_PRODUCT_MODEL, 32),
--		ATTR_DEF_RI(OSD_ATTR_RI_PRODUCT_REVISION_LEVEL, 4),
--		ATTR_DEF_RI(OSD_ATTR_RI_PRODUCT_SERIAL_NUMBER, 64 /*variable*/),
--		ATTR_DEF_RI(OSD_ATTR_RI_OSD_NAME, 64 /*variable*/),
--		ATTR_DEF_RI(OSD_ATTR_RI_TOTAL_CAPACITY, 8),
--		ATTR_DEF_RI(OSD_ATTR_RI_USED_CAPACITY, 8),
--		ATTR_DEF_RI(OSD_ATTR_RI_NUMBER_OF_PARTITIONS, 8),
--		ATTR_DEF_RI(OSD_ATTR_RI_CLOCK, 6),
--		/* IBM-OSD-SIM Has a bug with this one put it last */
--		ATTR_DEF_RI(OSD_ATTR_RI_OSD_SYSTEM_ID, 20),
--	};
--	void *iter = NULL, *pFirst;
--	int nelem = ARRAY_SIZE(get_attrs), a = 0;
--	int ret;
--
--	or = osd_start_request(od, GFP_KERNEL);
--	if (!or)
--		return -ENOMEM;
--
--	/* get attrs */
--	osd_req_get_attributes(or, &osd_root_object);
--	osd_req_add_get_attr_list(or, get_attrs, ARRAY_SIZE(get_attrs));
--
--	ret = osd_finalize_request(or, 0, caps, NULL);
--	if (ret)
--		goto out;
--
--	ret = osd_execute_request(or);
--	if (ret) {
--		OSD_ERR("Failed to detect %s => %d\n", _osd_ver_desc(or), ret);
--		goto out;
--	}
--
--	osd_req_decode_get_attr_list(or, get_attrs, &nelem, &iter);
--
--	OSD_INFO("Detected %s device\n",
--		_osd_ver_desc(or));
--
--	pFirst = get_attrs[a++].val_ptr;
--	OSD_INFO("VENDOR_IDENTIFICATION  [%s]\n",
--		(char *)pFirst);
--
--	pFirst = get_attrs[a++].val_ptr;
--	OSD_INFO("PRODUCT_IDENTIFICATION [%s]\n",
--		(char *)pFirst);
--
--	pFirst = get_attrs[a++].val_ptr;
--	OSD_INFO("PRODUCT_MODEL          [%s]\n",
--		(char *)pFirst);
--
--	pFirst = get_attrs[a++].val_ptr;
--	OSD_INFO("PRODUCT_REVISION_LEVEL [%u]\n",
--		pFirst ? get_unaligned_be32(pFirst) : ~0U);
--
--	pFirst = get_attrs[a++].val_ptr;
--	OSD_INFO("PRODUCT_SERIAL_NUMBER  [%s]\n",
--		(char *)pFirst);
--
--	odi->osdname_len = get_attrs[a].len;
--	/* Avoid NULL for memcmp optimization 0-length is good enough */
--	odi->osdname = kzalloc(odi->osdname_len + 1, GFP_KERNEL);
--	if (!odi->osdname) {
--		ret = -ENOMEM;
--		goto out;
--	}
--	if (odi->osdname_len)
--		memcpy(odi->osdname, get_attrs[a].val_ptr, odi->osdname_len);
--	OSD_INFO("OSD_NAME               [%s]\n", odi->osdname);
--	a++;
--
--	pFirst = get_attrs[a++].val_ptr;
--	OSD_INFO("TOTAL_CAPACITY         [0x%llx]\n",
--		pFirst ? _LLU(get_unaligned_be64(pFirst)) : ~0ULL);
--
--	pFirst = get_attrs[a++].val_ptr;
--	OSD_INFO("USED_CAPACITY          [0x%llx]\n",
--		pFirst ? _LLU(get_unaligned_be64(pFirst)) : ~0ULL);
--
--	pFirst = get_attrs[a++].val_ptr;
--	OSD_INFO("NUMBER_OF_PARTITIONS   [%llu]\n",
--		pFirst ? _LLU(get_unaligned_be64(pFirst)) : ~0ULL);
--
--	if (a >= nelem)
--		goto out;
--
--	/* FIXME: Where are the time utilities */
--	pFirst = get_attrs[a++].val_ptr;
--	OSD_INFO("CLOCK                  [0x%6phN]\n", pFirst);
--
--	if (a < nelem) { /* IBM-OSD-SIM bug, Might not have it */
--		unsigned len = get_attrs[a].len;
--		char sid_dump[32*4 + 2]; /* 2nibbles+space+ASCII */
--
--		hex_dump_to_buffer(get_attrs[a].val_ptr, len, 32, 1,
--				   sid_dump, sizeof(sid_dump), true);
--		OSD_INFO("OSD_SYSTEM_ID(%d)\n"
--			 "        [%s]\n", len, sid_dump);
--
--		if (unlikely(len > sizeof(odi->systemid))) {
--			OSD_ERR("OSD Target error: OSD_SYSTEM_ID too long(%d). "
--				"device identification might not work\n", len);
--			len = sizeof(odi->systemid);
--		}
--		odi->systemid_len = len;
--		memcpy(odi->systemid, get_attrs[a].val_ptr, len);
--		a++;
--	}
--out:
--	osd_end_request(or);
--	return ret;
--}
--
--int osd_auto_detect_ver(struct osd_dev *od,
--	void *caps, struct osd_dev_info *odi)
--{
--	int ret;
--
--	/* Auto-detect the osd version */
--	ret = _osd_get_print_system_info(od, caps, odi);
--	if (ret) {
--		osd_dev_set_ver(od, OSD_VER1);
--		OSD_DEBUG("converting to OSD1\n");
--		ret = _osd_get_print_system_info(od, caps, odi);
--	}
--
--	return ret;
--}
--EXPORT_SYMBOL(osd_auto_detect_ver);
--
--static unsigned _osd_req_cdb_len(struct osd_request *or)
--{
--	return osd_req_is_ver1(or) ? OSDv1_TOTAL_CDB_LEN : OSD_TOTAL_CDB_LEN;
--}
--
--static unsigned _osd_req_alist_elem_size(struct osd_request *or, unsigned len)
--{
--	return osd_req_is_ver1(or) ?
--		osdv1_attr_list_elem_size(len) :
--		osdv2_attr_list_elem_size(len);
--}
--
--static void _osd_req_alist_elem_encode(struct osd_request *or,
--	void *attr_last, const struct osd_attr *oa)
--{
--	if (osd_req_is_ver1(or)) {
--		struct osdv1_attributes_list_element *attr = attr_last;
--
--		attr->attr_page = cpu_to_be32(oa->attr_page);
--		attr->attr_id = cpu_to_be32(oa->attr_id);
--		attr->attr_bytes = cpu_to_be16(oa->len);
--		memcpy(attr->attr_val, oa->val_ptr, oa->len);
--	} else {
--		struct osdv2_attributes_list_element *attr = attr_last;
--
--		attr->attr_page = cpu_to_be32(oa->attr_page);
--		attr->attr_id = cpu_to_be32(oa->attr_id);
--		attr->attr_bytes = cpu_to_be16(oa->len);
--		memcpy(attr->attr_val, oa->val_ptr, oa->len);
--	}
--}
--
--static int _osd_req_alist_elem_decode(struct osd_request *or,
--	void *cur_p, struct osd_attr *oa, unsigned max_bytes)
--{
--	unsigned inc;
--	if (osd_req_is_ver1(or)) {
--		struct osdv1_attributes_list_element *attr = cur_p;
--
--		if (max_bytes < sizeof(*attr))
--			return -1;
--
--		oa->len = be16_to_cpu(attr->attr_bytes);
--		inc = _osd_req_alist_elem_size(or, oa->len);
--		if (inc > max_bytes)
--			return -1;
--
--		oa->attr_page = be32_to_cpu(attr->attr_page);
--		oa->attr_id = be32_to_cpu(attr->attr_id);
--
--		/* OSD1: On empty attributes we return a pointer to 2 bytes
--		 * of zeros. This keeps similar behaviour with OSD2.
--		 * (See below)
--		 */
--		oa->val_ptr = likely(oa->len) ? attr->attr_val :
--						(u8 *)&attr->attr_bytes;
--	} else {
--		struct osdv2_attributes_list_element *attr = cur_p;
--
--		if (max_bytes < sizeof(*attr))
--			return -1;
--
--		oa->len = be16_to_cpu(attr->attr_bytes);
--		inc = _osd_req_alist_elem_size(or, oa->len);
--		if (inc > max_bytes)
--			return -1;
--
--		oa->attr_page = be32_to_cpu(attr->attr_page);
--		oa->attr_id = be32_to_cpu(attr->attr_id);
--
--		/* OSD2: For convenience, on empty attributes, we return 8 bytes
--		 * of zeros here. This keeps the same behaviour with OSD2r04,
--		 * and is nice with null terminating ASCII fields.
--		 * oa->val_ptr == NULL marks the end-of-list, or error.
--		 */
--		oa->val_ptr = likely(oa->len) ? attr->attr_val : attr->reserved;
--	}
--	return inc;
--}
--
--static unsigned _osd_req_alist_size(struct osd_request *or, void *list_head)
--{
--	return osd_req_is_ver1(or) ?
--		osdv1_list_size(list_head) :
--		osdv2_list_size(list_head);
--}
--
--static unsigned _osd_req_sizeof_alist_header(struct osd_request *or)
--{
--	return osd_req_is_ver1(or) ?
--		sizeof(struct osdv1_attributes_list_header) :
--		sizeof(struct osdv2_attributes_list_header);
--}
--
--static void _osd_req_set_alist_type(struct osd_request *or,
--	void *list, int list_type)
--{
--	if (osd_req_is_ver1(or)) {
--		struct osdv1_attributes_list_header *attr_list = list;
--
--		memset(attr_list, 0, sizeof(*attr_list));
--		attr_list->type = list_type;
--	} else {
--		struct osdv2_attributes_list_header *attr_list = list;
--
--		memset(attr_list, 0, sizeof(*attr_list));
--		attr_list->type = list_type;
--	}
--}
--
--static bool _osd_req_is_alist_type(struct osd_request *or,
--	void *list, int list_type)
--{
--	if (!list)
--		return false;
--
--	if (osd_req_is_ver1(or)) {
--		struct osdv1_attributes_list_header *attr_list = list;
--
--		return attr_list->type == list_type;
--	} else {
--		struct osdv2_attributes_list_header *attr_list = list;
--
--		return attr_list->type == list_type;
--	}
--}
--
--/* This is for List-objects not Attributes-Lists */
--static void _osd_req_encode_olist(struct osd_request *or,
--	struct osd_obj_id_list *list)
--{
--	struct osd_cdb_head *cdbh = osd_cdb_head(&or->cdb);
--
--	if (osd_req_is_ver1(or)) {
--		cdbh->v1.list_identifier = list->list_identifier;
--		cdbh->v1.start_address = list->continuation_id;
--	} else {
--		cdbh->v2.list_identifier = list->list_identifier;
--		cdbh->v2.start_address = list->continuation_id;
--	}
--}
--
--static osd_cdb_offset osd_req_encode_offset(struct osd_request *or,
--	u64 offset, unsigned *padding)
--{
--	return __osd_encode_offset(offset, padding,
--			osd_req_is_ver1(or) ?
--				OSDv1_OFFSET_MIN_SHIFT : OSD_OFFSET_MIN_SHIFT,
--			OSD_OFFSET_MAX_SHIFT);
--}
--
--static struct osd_security_parameters *
--_osd_req_sec_params(struct osd_request *or)
--{
--	struct osd_cdb *ocdb = &or->cdb;
--
--	if (osd_req_is_ver1(or))
--		return (struct osd_security_parameters *)&ocdb->v1.sec_params;
--	else
--		return (struct osd_security_parameters *)&ocdb->v2.sec_params;
--}
--
--void osd_dev_init(struct osd_dev *osdd, struct scsi_device *scsi_device)
--{
--	memset(osdd, 0, sizeof(*osdd));
--	osdd->scsi_device = scsi_device;
--	osdd->def_timeout = BLK_DEFAULT_SG_TIMEOUT;
--#ifdef OSD_VER1_SUPPORT
--	osdd->version = OSD_VER2;
--#endif
--	/* TODO: Allocate pools for osd_request attributes ... */
--}
--EXPORT_SYMBOL(osd_dev_init);
--
--void osd_dev_fini(struct osd_dev *osdd)
--{
--	/* TODO: De-allocate pools */
--
--	osdd->scsi_device = NULL;
--}
--EXPORT_SYMBOL(osd_dev_fini);
--
--static struct osd_request *_osd_request_alloc(gfp_t gfp)
--{
--	struct osd_request *or;
--
--	/* TODO: Use mempool with one saved request */
--	or = kzalloc(sizeof(*or), gfp);
--	return or;
--}
--
--static void _osd_request_free(struct osd_request *or)
--{
--	kfree(or);
--}
--
--struct osd_request *osd_start_request(struct osd_dev *dev, gfp_t gfp)
--{
--	struct osd_request *or;
--
--	or = _osd_request_alloc(gfp);
--	if (!or)
--		return NULL;
--
--	or->osd_dev = dev;
--	or->alloc_flags = gfp;
--	or->timeout = dev->def_timeout;
--	or->retries = OSD_REQ_RETRIES;
--
--	return or;
--}
--EXPORT_SYMBOL(osd_start_request);
--
--static void _osd_free_seg(struct osd_request *or __unused,
--	struct _osd_req_data_segment *seg)
--{
--	if (!seg->buff || !seg->alloc_size)
--		return;
--
--	kfree(seg->buff);
--	seg->buff = NULL;
--	seg->alloc_size = 0;
--}
--
--static void _put_request(struct request *rq)
--{
--	/*
--	 * If osd_finalize_request() was called but the request was not
--	 * executed through the block layer, then we must release BIOs.
--	 * TODO: Keep error code in or->async_error. Need to audit all
--	 *       code paths.
--	 */
--	if (unlikely(rq->bio))
--		blk_end_request(rq, -ENOMEM, blk_rq_bytes(rq));
--	else
--		blk_put_request(rq);
--}
--
--void osd_end_request(struct osd_request *or)
--{
--	struct request *rq = or->request;
--
--	if (rq) {
--		if (rq->next_rq) {
--			_put_request(rq->next_rq);
--			rq->next_rq = NULL;
--		}
--
--		_put_request(rq);
--	}
--
--	_osd_free_seg(or, &or->get_attr);
--	_osd_free_seg(or, &or->enc_get_attr);
--	_osd_free_seg(or, &or->set_attr);
--	_osd_free_seg(or, &or->cdb_cont);
--
--	_osd_request_free(or);
--}
--EXPORT_SYMBOL(osd_end_request);
--
--static void _set_error_resid(struct osd_request *or, struct request *req,
--			     int error)
--{
--	or->async_error = error;
--	or->req_errors = req->errors ? : error;
--	or->sense_len = scsi_req(req)->sense_len;
--	if (or->sense_len)
--		memcpy(or->sense, scsi_req(req)->sense, or->sense_len);
--	if (or->out.req)
--		or->out.residual = scsi_req(or->out.req)->resid_len;
--	if (or->in.req)
--		or->in.residual = scsi_req(or->in.req)->resid_len;
--}
--
--int osd_execute_request(struct osd_request *or)
--{
--	int error = blk_execute_rq(or->request->q, NULL, or->request, 0);
--
--	_set_error_resid(or, or->request, error);
--	return error;
--}
--EXPORT_SYMBOL(osd_execute_request);
--
--static void osd_request_async_done(struct request *req, int error)
--{
--	struct osd_request *or = req->end_io_data;
--
--	_set_error_resid(or, req, error);
--	if (req->next_rq) {
--		__blk_put_request(req->q, req->next_rq);
--		req->next_rq = NULL;
--	}
--
--	__blk_put_request(req->q, req);
--	or->request = NULL;
--	or->in.req = NULL;
--	or->out.req = NULL;
--
--	if (or->async_done)
--		or->async_done(or, or->async_private);
--	else
--		osd_end_request(or);
--}
--
--int osd_execute_request_async(struct osd_request *or,
--	osd_req_done_fn *done, void *private)
--{
--	or->request->end_io_data = or;
--	or->async_private = private;
--	or->async_done = done;
--
--	blk_execute_rq_nowait(or->request->q, NULL, or->request, 0,
--			      osd_request_async_done);
--	return 0;
--}
--EXPORT_SYMBOL(osd_execute_request_async);
--
--u8 sg_out_pad_buffer[1 << OSDv1_OFFSET_MIN_SHIFT];
--u8 sg_in_pad_buffer[1 << OSDv1_OFFSET_MIN_SHIFT];
--
--static int _osd_realloc_seg(struct osd_request *or,
--	struct _osd_req_data_segment *seg, unsigned max_bytes)
--{
--	void *buff;
--
--	if (seg->alloc_size >= max_bytes)
--		return 0;
--
--	buff = krealloc(seg->buff, max_bytes, or->alloc_flags);
--	if (!buff) {
--		OSD_ERR("Failed to Realloc %d-bytes was-%d\n", max_bytes,
--			seg->alloc_size);
--		return -ENOMEM;
--	}
--
--	memset(buff + seg->alloc_size, 0, max_bytes - seg->alloc_size);
--	seg->buff = buff;
--	seg->alloc_size = max_bytes;
--	return 0;
--}
--
--static int _alloc_cdb_cont(struct osd_request *or, unsigned total_bytes)
--{
--	OSD_DEBUG("total_bytes=%d\n", total_bytes);
--	return _osd_realloc_seg(or, &or->cdb_cont, total_bytes);
--}
--
--static int _alloc_set_attr_list(struct osd_request *or,
--	const struct osd_attr *oa, unsigned nelem, unsigned add_bytes)
--{
--	unsigned total_bytes = add_bytes;
--
--	for (; nelem; --nelem, ++oa)
--		total_bytes += _osd_req_alist_elem_size(or, oa->len);
--
--	OSD_DEBUG("total_bytes=%d\n", total_bytes);
--	return _osd_realloc_seg(or, &or->set_attr, total_bytes);
--}
--
--static int _alloc_get_attr_desc(struct osd_request *or, unsigned max_bytes)
--{
--	OSD_DEBUG("total_bytes=%d\n", max_bytes);
--	return _osd_realloc_seg(or, &or->enc_get_attr, max_bytes);
--}
--
--static int _alloc_get_attr_list(struct osd_request *or)
--{
--	OSD_DEBUG("total_bytes=%d\n", or->get_attr.total_bytes);
--	return _osd_realloc_seg(or, &or->get_attr, or->get_attr.total_bytes);
--}
--
--/*
-- * Common to all OSD commands
-- */
--
--static void _osdv1_req_encode_common(struct osd_request *or,
--	__be16 act, const struct osd_obj_id *obj, u64 offset, u64 len)
--{
--	struct osdv1_cdb *ocdb = &or->cdb.v1;
--
--	/*
--	 * For speed, the commands
--	 *	OSD_ACT_PERFORM_SCSI_COMMAND	, V1 0x8F7E, V2 0x8F7C
--	 *	OSD_ACT_SCSI_TASK_MANAGEMENT	, V1 0x8F7F, V2 0x8F7D
--	 * are not supported here. Should pass zero and set after the call
--	 */
--	act &= cpu_to_be16(~0x0080); /* V1 action code */
--
--	OSD_DEBUG("OSDv1 execute opcode 0x%x\n", be16_to_cpu(act));
--
--	ocdb->h.varlen_cdb.opcode = VARIABLE_LENGTH_CMD;
--	ocdb->h.varlen_cdb.additional_cdb_length = OSD_ADDITIONAL_CDB_LENGTH;
--	ocdb->h.varlen_cdb.service_action = act;
--
--	ocdb->h.partition = cpu_to_be64(obj->partition);
--	ocdb->h.object = cpu_to_be64(obj->id);
--	ocdb->h.v1.length = cpu_to_be64(len);
--	ocdb->h.v1.start_address = cpu_to_be64(offset);
--}
--
--static void _osdv2_req_encode_common(struct osd_request *or,
--	 __be16 act, const struct osd_obj_id *obj, u64 offset, u64 len)
--{
--	struct osdv2_cdb *ocdb = &or->cdb.v2;
--
--	OSD_DEBUG("OSDv2 execute opcode 0x%x\n", be16_to_cpu(act));
--
--	ocdb->h.varlen_cdb.opcode = VARIABLE_LENGTH_CMD;
--	ocdb->h.varlen_cdb.additional_cdb_length = OSD_ADDITIONAL_CDB_LENGTH;
--	ocdb->h.varlen_cdb.service_action = act;
--
--	ocdb->h.partition = cpu_to_be64(obj->partition);
--	ocdb->h.object = cpu_to_be64(obj->id);
--	ocdb->h.v2.length = cpu_to_be64(len);
--	ocdb->h.v2.start_address = cpu_to_be64(offset);
--}
--
--static void _osd_req_encode_common(struct osd_request *or,
--	__be16 act, const struct osd_obj_id *obj, u64 offset, u64 len)
--{
--	if (osd_req_is_ver1(or))
--		_osdv1_req_encode_common(or, act, obj, offset, len);
--	else
--		_osdv2_req_encode_common(or, act, obj, offset, len);
--}
--
--/*
-- * Device commands
-- */
--/*TODO: void osd_req_set_master_seed_xchg(struct osd_request *, ...); */
--/*TODO: void osd_req_set_master_key(struct osd_request *, ...); */
--
--void osd_req_format(struct osd_request *or, u64 tot_capacity)
--{
--	_osd_req_encode_common(or, OSD_ACT_FORMAT_OSD, &osd_root_object, 0,
--				tot_capacity);
--}
--EXPORT_SYMBOL(osd_req_format);
--
--int osd_req_list_dev_partitions(struct osd_request *or,
--	osd_id initial_id, struct osd_obj_id_list *list, unsigned nelem)
--{
--	return osd_req_list_partition_objects(or, 0, initial_id, list, nelem);
--}
--EXPORT_SYMBOL(osd_req_list_dev_partitions);
--
--static void _osd_req_encode_flush(struct osd_request *or,
--	enum osd_options_flush_scope_values op)
--{
--	struct osd_cdb_head *ocdb = osd_cdb_head(&or->cdb);
--
--	ocdb->command_specific_options = op;
--}
--
--void osd_req_flush_obsd(struct osd_request *or,
--	enum osd_options_flush_scope_values op)
--{
--	_osd_req_encode_common(or, OSD_ACT_FLUSH_OSD, &osd_root_object, 0, 0);
--	_osd_req_encode_flush(or, op);
--}
--EXPORT_SYMBOL(osd_req_flush_obsd);
--
--/*TODO: void osd_req_perform_scsi_command(struct osd_request *,
--	const u8 *cdb, ...); */
--/*TODO: void osd_req_task_management(struct osd_request *, ...); */
--
--/*
-- * Partition commands
-- */
--static void _osd_req_encode_partition(struct osd_request *or,
--	__be16 act, osd_id partition)
--{
--	struct osd_obj_id par = {
--		.partition = partition,
--		.id = 0,
--	};
--
--	_osd_req_encode_common(or, act, &par, 0, 0);
--}
--
--void osd_req_create_partition(struct osd_request *or, osd_id partition)
--{
--	_osd_req_encode_partition(or, OSD_ACT_CREATE_PARTITION, partition);
--}
--EXPORT_SYMBOL(osd_req_create_partition);
--
--void osd_req_remove_partition(struct osd_request *or, osd_id partition)
--{
--	_osd_req_encode_partition(or, OSD_ACT_REMOVE_PARTITION, partition);
--}
--EXPORT_SYMBOL(osd_req_remove_partition);
--
--/*TODO: void osd_req_set_partition_key(struct osd_request *,
--	osd_id partition, u8 new_key_id[OSD_CRYPTO_KEYID_SIZE],
--	u8 seed[OSD_CRYPTO_SEED_SIZE]); */
--
--static int _osd_req_list_objects(struct osd_request *or,
--	__be16 action, const struct osd_obj_id *obj, osd_id initial_id,
--	struct osd_obj_id_list *list, unsigned nelem)
--{
--	struct request_queue *q = osd_request_queue(or->osd_dev);
--	u64 len = nelem * sizeof(osd_id) + sizeof(*list);
--	struct bio *bio;
--
--	_osd_req_encode_common(or, action, obj, (u64)initial_id, len);
--
--	if (list->list_identifier)
--		_osd_req_encode_olist(or, list);
--
--	WARN_ON(or->in.bio);
--	bio = bio_map_kern(q, list, len, or->alloc_flags);
--	if (IS_ERR(bio)) {
--		OSD_ERR("!!! Failed to allocate list_objects BIO\n");
--		return PTR_ERR(bio);
--	}
--
--	bio_set_op_attrs(bio, REQ_OP_READ, 0);
--	or->in.bio = bio;
--	or->in.total_bytes = bio->bi_iter.bi_size;
--	return 0;
--}
--
--int osd_req_list_partition_collections(struct osd_request *or,
--	osd_id partition, osd_id initial_id, struct osd_obj_id_list *list,
--	unsigned nelem)
--{
--	struct osd_obj_id par = {
--		.partition = partition,
--		.id = 0,
--	};
--
--	return osd_req_list_collection_objects(or, &par, initial_id, list,
--					       nelem);
--}
--EXPORT_SYMBOL(osd_req_list_partition_collections);
--
--int osd_req_list_partition_objects(struct osd_request *or,
--	osd_id partition, osd_id initial_id, struct osd_obj_id_list *list,
--	unsigned nelem)
--{
--	struct osd_obj_id par = {
--		.partition = partition,
--		.id = 0,
--	};
--
--	return _osd_req_list_objects(or, OSD_ACT_LIST, &par, initial_id, list,
--				     nelem);
--}
--EXPORT_SYMBOL(osd_req_list_partition_objects);
--
--void osd_req_flush_partition(struct osd_request *or,
--	osd_id partition, enum osd_options_flush_scope_values op)
--{
--	_osd_req_encode_partition(or, OSD_ACT_FLUSH_PARTITION, partition);
--	_osd_req_encode_flush(or, op);
--}
--EXPORT_SYMBOL(osd_req_flush_partition);
--
--/*
-- * Collection commands
-- */
--/*TODO: void osd_req_create_collection(struct osd_request *,
--	const struct osd_obj_id *); */
--/*TODO: void osd_req_remove_collection(struct osd_request *,
--	const struct osd_obj_id *); */
--
--int osd_req_list_collection_objects(struct osd_request *or,
--	const struct osd_obj_id *obj, osd_id initial_id,
--	struct osd_obj_id_list *list, unsigned nelem)
--{
--	return _osd_req_list_objects(or, OSD_ACT_LIST_COLLECTION, obj,
--				     initial_id, list, nelem);
--}
--EXPORT_SYMBOL(osd_req_list_collection_objects);
--
--/*TODO: void query(struct osd_request *, ...); V2 */
--
--void osd_req_flush_collection(struct osd_request *or,
--	const struct osd_obj_id *obj, enum osd_options_flush_scope_values op)
--{
--	_osd_req_encode_common(or, OSD_ACT_FLUSH_PARTITION, obj, 0, 0);
--	_osd_req_encode_flush(or, op);
--}
--EXPORT_SYMBOL(osd_req_flush_collection);
--
--/*TODO: void get_member_attrs(struct osd_request *, ...); V2 */
--/*TODO: void set_member_attrs(struct osd_request *, ...); V2 */
--
--/*
-- * Object commands
-- */
--void osd_req_create_object(struct osd_request *or, struct osd_obj_id *obj)
--{
--	_osd_req_encode_common(or, OSD_ACT_CREATE, obj, 0, 0);
--}
--EXPORT_SYMBOL(osd_req_create_object);
--
--void osd_req_remove_object(struct osd_request *or, struct osd_obj_id *obj)
--{
--	_osd_req_encode_common(or, OSD_ACT_REMOVE, obj, 0, 0);
--}
--EXPORT_SYMBOL(osd_req_remove_object);
--
--
--/*TODO: void osd_req_create_multi(struct osd_request *or,
--	struct osd_obj_id *first, struct osd_obj_id_list *list, unsigned nelem);
--*/
--
--void osd_req_write(struct osd_request *or,
--	const struct osd_obj_id *obj, u64 offset,
--	struct bio *bio, u64 len)
--{
--	_osd_req_encode_common(or, OSD_ACT_WRITE, obj, offset, len);
--	WARN_ON(or->out.bio || or->out.total_bytes);
--	WARN_ON(!op_is_write(bio_op(bio)));
--	or->out.bio = bio;
--	or->out.total_bytes = len;
--}
--EXPORT_SYMBOL(osd_req_write);
--
--int osd_req_write_kern(struct osd_request *or,
--	const struct osd_obj_id *obj, u64 offset, void* buff, u64 len)
--{
--	struct request_queue *req_q = osd_request_queue(or->osd_dev);
--	struct bio *bio = bio_map_kern(req_q, buff, len, GFP_KERNEL);
--
--	if (IS_ERR(bio))
--		return PTR_ERR(bio);
--
--	bio_set_op_attrs(bio, REQ_OP_WRITE, 0);
--	osd_req_write(or, obj, offset, bio, len);
--	return 0;
--}
--EXPORT_SYMBOL(osd_req_write_kern);
--
--/*TODO: void osd_req_append(struct osd_request *,
--	const struct osd_obj_id *, struct bio *data_out); */
--/*TODO: void osd_req_create_write(struct osd_request *,
--	const struct osd_obj_id *, struct bio *data_out, u64 offset); */
--/*TODO: void osd_req_clear(struct osd_request *,
--	const struct osd_obj_id *, u64 offset, u64 len); */
--/*TODO: void osd_req_punch(struct osd_request *,
--	const struct osd_obj_id *, u64 offset, u64 len); V2 */
--
--void osd_req_flush_object(struct osd_request *or,
--	const struct osd_obj_id *obj, enum osd_options_flush_scope_values op,
--	/*V2*/ u64 offset, /*V2*/ u64 len)
--{
--	if (unlikely(osd_req_is_ver1(or) && (offset || len))) {
--		OSD_DEBUG("OSD Ver1 flush on specific range ignored\n");
--		offset = 0;
--		len = 0;
--	}
--
--	_osd_req_encode_common(or, OSD_ACT_FLUSH, obj, offset, len);
--	_osd_req_encode_flush(or, op);
--}
--EXPORT_SYMBOL(osd_req_flush_object);
--
--void osd_req_read(struct osd_request *or,
--	const struct osd_obj_id *obj, u64 offset,
--	struct bio *bio, u64 len)
--{
--	_osd_req_encode_common(or, OSD_ACT_READ, obj, offset, len);
--	WARN_ON(or->in.bio || or->in.total_bytes);
--	WARN_ON(op_is_write(bio_op(bio)));
--	or->in.bio = bio;
--	or->in.total_bytes = len;
--}
--EXPORT_SYMBOL(osd_req_read);
--
--int osd_req_read_kern(struct osd_request *or,
--	const struct osd_obj_id *obj, u64 offset, void* buff, u64 len)
--{
--	struct request_queue *req_q = osd_request_queue(or->osd_dev);
--	struct bio *bio = bio_map_kern(req_q, buff, len, GFP_KERNEL);
--
--	if (IS_ERR(bio))
--		return PTR_ERR(bio);
--
--	osd_req_read(or, obj, offset, bio, len);
--	return 0;
--}
--EXPORT_SYMBOL(osd_req_read_kern);
--
--static int _add_sg_continuation_descriptor(struct osd_request *or,
--	const struct osd_sg_entry *sglist, unsigned numentries, u64 *len)
--{
--	struct osd_sg_continuation_descriptor *oscd;
--	u32 oscd_size;
--	unsigned i;
--	int ret;
--
--	oscd_size = sizeof(*oscd) + numentries * sizeof(oscd->entries[0]);
--
--	if (!or->cdb_cont.total_bytes) {
--		/* First time, jump over the header, we will write to:
--		 *	cdb_cont.buff + cdb_cont.total_bytes
--		 */
--		or->cdb_cont.total_bytes =
--				sizeof(struct osd_continuation_segment_header);
--	}
--
--	ret = _alloc_cdb_cont(or, or->cdb_cont.total_bytes + oscd_size);
--	if (unlikely(ret))
--		return ret;
--
--	oscd = or->cdb_cont.buff + or->cdb_cont.total_bytes;
--	oscd->hdr.type = cpu_to_be16(SCATTER_GATHER_LIST);
--	oscd->hdr.pad_length = 0;
--	oscd->hdr.length = cpu_to_be32(oscd_size - sizeof(*oscd));
--
--	*len = 0;
--	/* copy the sg entries and convert to network byte order */
--	for (i = 0; i < numentries; i++) {
--		oscd->entries[i].offset = cpu_to_be64(sglist[i].offset);
--		oscd->entries[i].len    = cpu_to_be64(sglist[i].len);
--		*len += sglist[i].len;
--	}
--
--	or->cdb_cont.total_bytes += oscd_size;
--	OSD_DEBUG("total_bytes=%d oscd_size=%d numentries=%d\n",
--		  or->cdb_cont.total_bytes, oscd_size, numentries);
--	return 0;
--}
--
--static int _osd_req_finalize_cdb_cont(struct osd_request *or, const u8 *cap_key)
--{
--	struct request_queue *req_q = osd_request_queue(or->osd_dev);
--	struct bio *bio;
--	struct osd_cdb_head *cdbh = osd_cdb_head(&or->cdb);
--	struct osd_continuation_segment_header *cont_seg_hdr;
--
--	if (!or->cdb_cont.total_bytes)
--		return 0;
--
--	cont_seg_hdr = or->cdb_cont.buff;
--	cont_seg_hdr->format = CDB_CONTINUATION_FORMAT_V2;
--	cont_seg_hdr->service_action = cdbh->varlen_cdb.service_action;
--
--	/* create a bio for continuation segment */
--	bio = bio_map_kern(req_q, or->cdb_cont.buff, or->cdb_cont.total_bytes,
--			   GFP_KERNEL);
--	if (IS_ERR(bio))
--		return PTR_ERR(bio);
--
--	bio_set_op_attrs(bio, REQ_OP_WRITE, 0);
--
--	/* integrity check the continuation before the bio is linked
--	 * with the other data segments since the continuation
--	 * integrity is separate from the other data segments.
--	 */
--	osd_sec_sign_data(cont_seg_hdr->integrity_check, bio, cap_key);
--
--	cdbh->v2.cdb_continuation_length = cpu_to_be32(or->cdb_cont.total_bytes);
--
--	/* we can't use _req_append_segment, because we need to link in the
--	 * continuation bio to the head of the bio list - the
--	 * continuation segment (if it exists) is always the first segment in
--	 * the out data buffer.
--	 */
--	bio->bi_next = or->out.bio;
--	or->out.bio = bio;
--	or->out.total_bytes += or->cdb_cont.total_bytes;
--
--	return 0;
--}
--
--/* osd_req_write_sg: Takes a @bio that points to the data out buffer and an
-- * @sglist that has the scatter gather entries. Scatter-gather enables a write
-- * of multiple none-contiguous areas of an object, in a single call. The extents
-- * may overlap and/or be in any order. The only constrain is that:
-- *	total_bytes(sglist) >= total_bytes(bio)
-- */
--int osd_req_write_sg(struct osd_request *or,
--	const struct osd_obj_id *obj, struct bio *bio,
--	const struct osd_sg_entry *sglist, unsigned numentries)
--{
--	u64 len;
--	int ret = _add_sg_continuation_descriptor(or, sglist, numentries, &len);
--
--	if (ret)
--		return ret;
--	osd_req_write(or, obj, 0, bio, len);
--
--	return 0;
--}
--EXPORT_SYMBOL(osd_req_write_sg);
--
--/* osd_req_read_sg: Read multiple extents of an object into @bio
-- * See osd_req_write_sg
-- */
--int osd_req_read_sg(struct osd_request *or,
--	const struct osd_obj_id *obj, struct bio *bio,
--	const struct osd_sg_entry *sglist, unsigned numentries)
--{
--	u64 len;
--	u64 off;
--	int ret;
--
--	if (numentries > 1) {
--		off = 0;
--		ret = _add_sg_continuation_descriptor(or, sglist, numentries,
--						      &len);
--		if (ret)
--			return ret;
--	} else {
--		/* Optimize the case of single segment, read_sg is a
--		 * bidi operation.
--		 */
--		len = sglist->len;
--		off = sglist->offset;
--	}
--	osd_req_read(or, obj, off, bio, len);
--
--	return 0;
--}
--EXPORT_SYMBOL(osd_req_read_sg);
--
--/* SG-list write/read Kern API
-- *
-- * osd_req_{write,read}_sg_kern takes an array of @buff pointers and an array
-- * of sg_entries. @numentries indicates how many pointers and sg_entries there
-- * are.  By requiring an array of buff pointers. This allows a caller to do a
-- * single write/read and scatter into multiple buffers.
-- * NOTE: Each buffer + len should not cross a page boundary.
-- */
--static struct bio *_create_sg_bios(struct osd_request *or,
--	void **buff, const struct osd_sg_entry *sglist, unsigned numentries)
--{
--	struct request_queue *q = osd_request_queue(or->osd_dev);
--	struct bio *bio;
--	unsigned i;
--
--	bio = bio_kmalloc(GFP_KERNEL, numentries);
--	if (unlikely(!bio)) {
--		OSD_DEBUG("Failed to allocate BIO size=%u\n", numentries);
--		return ERR_PTR(-ENOMEM);
--	}
--
--	for (i = 0; i < numentries; i++) {
--		unsigned offset = offset_in_page(buff[i]);
--		struct page *page = virt_to_page(buff[i]);
--		unsigned len = sglist[i].len;
--		unsigned added_len;
--
--		BUG_ON(offset + len > PAGE_SIZE);
--		added_len = bio_add_pc_page(q, bio, page, len, offset);
--		if (unlikely(len != added_len)) {
--			OSD_DEBUG("bio_add_pc_page len(%d) != added_len(%d)\n",
--				  len, added_len);
--			bio_put(bio);
--			return ERR_PTR(-ENOMEM);
--		}
--	}
--
--	return bio;
--}
--
--int osd_req_write_sg_kern(struct osd_request *or,
--	const struct osd_obj_id *obj, void **buff,
--	const struct osd_sg_entry *sglist, unsigned numentries)
--{
--	struct bio *bio = _create_sg_bios(or, buff, sglist, numentries);
--	if (IS_ERR(bio))
--		return PTR_ERR(bio);
--
--	bio_set_op_attrs(bio, REQ_OP_WRITE, 0);
--	osd_req_write_sg(or, obj, bio, sglist, numentries);
--
--	return 0;
--}
--EXPORT_SYMBOL(osd_req_write_sg_kern);
--
--int osd_req_read_sg_kern(struct osd_request *or,
--	const struct osd_obj_id *obj, void **buff,
--	const struct osd_sg_entry *sglist, unsigned numentries)
--{
--	struct bio *bio = _create_sg_bios(or, buff, sglist, numentries);
--	if (IS_ERR(bio))
--		return PTR_ERR(bio);
--
--	osd_req_read_sg(or, obj, bio, sglist, numentries);
--
--	return 0;
--}
--EXPORT_SYMBOL(osd_req_read_sg_kern);
--
--
--
--void osd_req_get_attributes(struct osd_request *or,
--	const struct osd_obj_id *obj)
--{
--	_osd_req_encode_common(or, OSD_ACT_GET_ATTRIBUTES, obj, 0, 0);
--}
--EXPORT_SYMBOL(osd_req_get_attributes);
--
--void osd_req_set_attributes(struct osd_request *or,
--	const struct osd_obj_id *obj)
--{
--	_osd_req_encode_common(or, OSD_ACT_SET_ATTRIBUTES, obj, 0, 0);
--}
--EXPORT_SYMBOL(osd_req_set_attributes);
--
--/*
-- * Attributes List-mode
-- */
--
--int osd_req_add_set_attr_list(struct osd_request *or,
--	const struct osd_attr *oa, unsigned nelem)
--{
--	unsigned total_bytes = or->set_attr.total_bytes;
--	void *attr_last;
--	int ret;
--
--	if (or->attributes_mode &&
--	    or->attributes_mode != OSD_CDB_GET_SET_ATTR_LISTS) {
--		WARN_ON(1);
--		return -EINVAL;
--	}
--	or->attributes_mode = OSD_CDB_GET_SET_ATTR_LISTS;
--
--	if (!total_bytes) { /* first-time: allocate and put list header */
--		total_bytes = _osd_req_sizeof_alist_header(or);
--		ret = _alloc_set_attr_list(or, oa, nelem, total_bytes);
--		if (ret)
--			return ret;
--		_osd_req_set_alist_type(or, or->set_attr.buff,
--					OSD_ATTR_LIST_SET_RETRIEVE);
--	}
--	attr_last = or->set_attr.buff + total_bytes;
--
--	for (; nelem; --nelem) {
--		unsigned elem_size = _osd_req_alist_elem_size(or, oa->len);
--
--		total_bytes += elem_size;
--		if (unlikely(or->set_attr.alloc_size < total_bytes)) {
--			or->set_attr.total_bytes = total_bytes - elem_size;
--			ret = _alloc_set_attr_list(or, oa, nelem, total_bytes);
--			if (ret)
--				return ret;
--			attr_last =
--				or->set_attr.buff + or->set_attr.total_bytes;
--		}
--
--		_osd_req_alist_elem_encode(or, attr_last, oa);
--
--		attr_last += elem_size;
--		++oa;
--	}
--
--	or->set_attr.total_bytes = total_bytes;
--	return 0;
--}
--EXPORT_SYMBOL(osd_req_add_set_attr_list);
--
--static int _req_append_segment(struct osd_request *or,
--	unsigned padding, struct _osd_req_data_segment *seg,
--	struct _osd_req_data_segment *last_seg, struct _osd_io_info *io)
--{
--	void *pad_buff;
--	int ret;
--
--	if (padding) {
--		/* check if we can just add it to last buffer */
--		if (last_seg &&
--		    (padding <= last_seg->alloc_size - last_seg->total_bytes))
--			pad_buff = last_seg->buff + last_seg->total_bytes;
--		else
--			pad_buff = io->pad_buff;
--
--		ret = blk_rq_map_kern(io->req->q, io->req, pad_buff, padding,
--				       or->alloc_flags);
--		if (ret)
--			return ret;
--		io->total_bytes += padding;
--	}
--
--	ret = blk_rq_map_kern(io->req->q, io->req, seg->buff, seg->total_bytes,
--			       or->alloc_flags);
--	if (ret)
--		return ret;
--
--	io->total_bytes += seg->total_bytes;
--	OSD_DEBUG("padding=%d buff=%p total_bytes=%d\n", padding, seg->buff,
--		  seg->total_bytes);
--	return 0;
--}
--
--static int _osd_req_finalize_set_attr_list(struct osd_request *or)
--{
--	struct osd_cdb_head *cdbh = osd_cdb_head(&or->cdb);
--	unsigned padding;
--	int ret;
--
--	if (!or->set_attr.total_bytes) {
--		cdbh->attrs_list.set_attr_offset = OSD_OFFSET_UNUSED;
--		return 0;
--	}
--
--	cdbh->attrs_list.set_attr_bytes = cpu_to_be32(or->set_attr.total_bytes);
--	cdbh->attrs_list.set_attr_offset =
--		osd_req_encode_offset(or, or->out.total_bytes, &padding);
--
--	ret = _req_append_segment(or, padding, &or->set_attr,
--				  or->out.last_seg, &or->out);
--	if (ret)
--		return ret;
--
--	or->out.last_seg = &or->set_attr;
--	return 0;
--}
--
--int osd_req_add_get_attr_list(struct osd_request *or,
--	const struct osd_attr *oa, unsigned nelem)
--{
--	unsigned total_bytes = or->enc_get_attr.total_bytes;
--	void *attr_last;
--	int ret;
--
--	if (or->attributes_mode &&
--	    or->attributes_mode != OSD_CDB_GET_SET_ATTR_LISTS) {
--		WARN_ON(1);
--		return -EINVAL;
--	}
--	or->attributes_mode = OSD_CDB_GET_SET_ATTR_LISTS;
--
--	/* first time calc data-in list header size */
--	if (!or->get_attr.total_bytes)
--		or->get_attr.total_bytes = _osd_req_sizeof_alist_header(or);
--
--	/* calc data-out info */
--	if (!total_bytes) { /* first-time: allocate and put list header */
--		unsigned max_bytes;
--
--		total_bytes = _osd_req_sizeof_alist_header(or);
--		max_bytes = total_bytes +
--			nelem * sizeof(struct osd_attributes_list_attrid);
--		ret = _alloc_get_attr_desc(or, max_bytes);
--		if (ret)
--			return ret;
--
--		_osd_req_set_alist_type(or, or->enc_get_attr.buff,
--					OSD_ATTR_LIST_GET);
--	}
--	attr_last = or->enc_get_attr.buff + total_bytes;
--
--	for (; nelem; --nelem) {
--		struct osd_attributes_list_attrid *attrid;
--		const unsigned cur_size = sizeof(*attrid);
--
--		total_bytes += cur_size;
--		if (unlikely(or->enc_get_attr.alloc_size < total_bytes)) {
--			or->enc_get_attr.total_bytes = total_bytes - cur_size;
--			ret = _alloc_get_attr_desc(or,
--					total_bytes + nelem * sizeof(*attrid));
--			if (ret)
--				return ret;
--			attr_last = or->enc_get_attr.buff +
--				or->enc_get_attr.total_bytes;
--		}
--
--		attrid = attr_last;
--		attrid->attr_page = cpu_to_be32(oa->attr_page);
--		attrid->attr_id = cpu_to_be32(oa->attr_id);
--
--		attr_last += cur_size;
--
--		/* calc data-in size */
--		or->get_attr.total_bytes +=
--			_osd_req_alist_elem_size(or, oa->len);
--		++oa;
--	}
--
--	or->enc_get_attr.total_bytes = total_bytes;
--
--	OSD_DEBUG(
--	       "get_attr.total_bytes=%u(%u) enc_get_attr.total_bytes=%u(%zu)\n",
--	       or->get_attr.total_bytes,
--	       or->get_attr.total_bytes - _osd_req_sizeof_alist_header(or),
--	       or->enc_get_attr.total_bytes,
--	       (or->enc_get_attr.total_bytes - _osd_req_sizeof_alist_header(or))
--			/ sizeof(struct osd_attributes_list_attrid));
--
--	return 0;
--}
--EXPORT_SYMBOL(osd_req_add_get_attr_list);
--
--static int _osd_req_finalize_get_attr_list(struct osd_request *or)
--{
--	struct osd_cdb_head *cdbh = osd_cdb_head(&or->cdb);
--	unsigned out_padding;
--	unsigned in_padding;
--	int ret;
--
--	if (!or->enc_get_attr.total_bytes) {
--		cdbh->attrs_list.get_attr_desc_offset = OSD_OFFSET_UNUSED;
--		cdbh->attrs_list.get_attr_offset = OSD_OFFSET_UNUSED;
--		return 0;
--	}
--
--	ret = _alloc_get_attr_list(or);
--	if (ret)
--		return ret;
--
--	/* The out-going buffer info update */
--	OSD_DEBUG("out-going\n");
--	cdbh->attrs_list.get_attr_desc_bytes =
--		cpu_to_be32(or->enc_get_attr.total_bytes);
--
--	cdbh->attrs_list.get_attr_desc_offset =
--		osd_req_encode_offset(or, or->out.total_bytes, &out_padding);
--
--	ret = _req_append_segment(or, out_padding, &or->enc_get_attr,
--				  or->out.last_seg, &or->out);
--	if (ret)
--		return ret;
--	or->out.last_seg = &or->enc_get_attr;
--
--	/* The incoming buffer info update */
--	OSD_DEBUG("in-coming\n");
--	cdbh->attrs_list.get_attr_alloc_length =
--		cpu_to_be32(or->get_attr.total_bytes);
--
--	cdbh->attrs_list.get_attr_offset =
--		osd_req_encode_offset(or, or->in.total_bytes, &in_padding);
--
--	ret = _req_append_segment(or, in_padding, &or->get_attr, NULL,
--				  &or->in);
--	if (ret)
--		return ret;
--	or->in.last_seg = &or->get_attr;
--
--	return 0;
--}
--
--int osd_req_decode_get_attr_list(struct osd_request *or,
--	struct osd_attr *oa, int *nelem, void **iterator)
--{
--	unsigned cur_bytes, returned_bytes;
--	int n;
--	const unsigned sizeof_attr_list = _osd_req_sizeof_alist_header(or);
--	void *cur_p;
--
--	if (!_osd_req_is_alist_type(or, or->get_attr.buff,
--				    OSD_ATTR_LIST_SET_RETRIEVE)) {
--		oa->attr_page = 0;
--		oa->attr_id = 0;
--		oa->val_ptr = NULL;
--		oa->len = 0;
--		*iterator = NULL;
--		return 0;
--	}
--
--	if (*iterator) {
--		BUG_ON((*iterator < or->get_attr.buff) ||
--		     (or->get_attr.buff + or->get_attr.alloc_size < *iterator));
--		cur_p = *iterator;
--		cur_bytes = (*iterator - or->get_attr.buff) - sizeof_attr_list;
--		returned_bytes = or->get_attr.total_bytes;
--	} else { /* first time decode the list header */
--		cur_bytes = sizeof_attr_list;
--		returned_bytes = _osd_req_alist_size(or, or->get_attr.buff) +
--					sizeof_attr_list;
--
--		cur_p = or->get_attr.buff + sizeof_attr_list;
--
--		if (returned_bytes > or->get_attr.alloc_size) {
--			OSD_DEBUG("target report: space was not big enough! "
--				  "Allocate=%u Needed=%u\n",
--				  or->get_attr.alloc_size,
--				  returned_bytes + sizeof_attr_list);
--
--			returned_bytes =
--				or->get_attr.alloc_size - sizeof_attr_list;
--		}
--		or->get_attr.total_bytes = returned_bytes;
--	}
--
--	for (n = 0; (n < *nelem) && (cur_bytes < returned_bytes); ++n) {
--		int inc = _osd_req_alist_elem_decode(or, cur_p, oa,
--						 returned_bytes - cur_bytes);
--
--		if (inc < 0) {
--			OSD_ERR("BAD FOOD from target. list not valid!"
--				"c=%d r=%d n=%d\n",
--				cur_bytes, returned_bytes, n);
--			oa->val_ptr = NULL;
--			cur_bytes = returned_bytes; /* break the caller loop */
--			break;
--		}
--
--		cur_bytes += inc;
--		cur_p += inc;
--		++oa;
--	}
--
--	*iterator = (returned_bytes - cur_bytes) ? cur_p : NULL;
--	*nelem = n;
--	return returned_bytes - cur_bytes;
--}
--EXPORT_SYMBOL(osd_req_decode_get_attr_list);
--
--/*
-- * Attributes Page-mode
-- */
--
--int osd_req_add_get_attr_page(struct osd_request *or,
--	u32 page_id, void *attar_page, unsigned max_page_len,
--	const struct osd_attr *set_one_attr)
--{
--	struct osd_cdb_head *cdbh = osd_cdb_head(&or->cdb);
--
--	if (or->attributes_mode &&
--	    or->attributes_mode != OSD_CDB_GET_ATTR_PAGE_SET_ONE) {
--		WARN_ON(1);
--		return -EINVAL;
--	}
--	or->attributes_mode = OSD_CDB_GET_ATTR_PAGE_SET_ONE;
--
--	or->get_attr.buff = attar_page;
--	or->get_attr.total_bytes = max_page_len;
--
--	cdbh->attrs_page.get_attr_page = cpu_to_be32(page_id);
--	cdbh->attrs_page.get_attr_alloc_length = cpu_to_be32(max_page_len);
--
--	if (!set_one_attr || !set_one_attr->attr_page)
--		return 0; /* The set is optional */
--
--	or->set_attr.buff = set_one_attr->val_ptr;
--	or->set_attr.total_bytes = set_one_attr->len;
--
--	cdbh->attrs_page.set_attr_page = cpu_to_be32(set_one_attr->attr_page);
--	cdbh->attrs_page.set_attr_id = cpu_to_be32(set_one_attr->attr_id);
--	cdbh->attrs_page.set_attr_length = cpu_to_be32(set_one_attr->len);
--	return 0;
--}
--EXPORT_SYMBOL(osd_req_add_get_attr_page);
--
--static int _osd_req_finalize_attr_page(struct osd_request *or)
--{
--	struct osd_cdb_head *cdbh = osd_cdb_head(&or->cdb);
--	unsigned in_padding, out_padding;
--	int ret;
--
--	/* returned page */
--	cdbh->attrs_page.get_attr_offset =
--		osd_req_encode_offset(or, or->in.total_bytes, &in_padding);
--
--	ret = _req_append_segment(or, in_padding, &or->get_attr, NULL,
--				  &or->in);
--	if (ret)
--		return ret;
--
--	if (or->set_attr.total_bytes == 0)
--		return 0;
--
--	/* set one value */
--	cdbh->attrs_page.set_attr_offset =
--		osd_req_encode_offset(or, or->out.total_bytes, &out_padding);
--
--	ret = _req_append_segment(or, out_padding, &or->set_attr, NULL,
--				  &or->out);
--	return ret;
--}
--
--static inline void osd_sec_parms_set_out_offset(bool is_v1,
--	struct osd_security_parameters *sec_parms, osd_cdb_offset offset)
--{
--	if (is_v1)
--		sec_parms->v1.data_out_integrity_check_offset = offset;
--	else
--		sec_parms->v2.data_out_integrity_check_offset = offset;
--}
--
--static inline void osd_sec_parms_set_in_offset(bool is_v1,
--	struct osd_security_parameters *sec_parms, osd_cdb_offset offset)
--{
--	if (is_v1)
--		sec_parms->v1.data_in_integrity_check_offset = offset;
--	else
--		sec_parms->v2.data_in_integrity_check_offset = offset;
--}
--
--static int _osd_req_finalize_data_integrity(struct osd_request *or,
--	bool has_in, bool has_out, struct bio *out_data_bio, u64 out_data_bytes,
--	const u8 *cap_key)
--{
--	struct osd_security_parameters *sec_parms = _osd_req_sec_params(or);
--	int ret;
--
--	if (!osd_is_sec_alldata(sec_parms))
--		return 0;
--
--	if (has_out) {
--		struct _osd_req_data_segment seg = {
--			.buff = &or->out_data_integ,
--			.total_bytes = sizeof(or->out_data_integ),
--		};
--		unsigned pad;
--
--		or->out_data_integ.data_bytes = cpu_to_be64(out_data_bytes);
--		or->out_data_integ.set_attributes_bytes = cpu_to_be64(
--			or->set_attr.total_bytes);
--		or->out_data_integ.get_attributes_bytes = cpu_to_be64(
--			or->enc_get_attr.total_bytes);
--
--		osd_sec_parms_set_out_offset(osd_req_is_ver1(or), sec_parms,
--			osd_req_encode_offset(or, or->out.total_bytes, &pad));
--
--		ret = _req_append_segment(or, pad, &seg, or->out.last_seg,
--					  &or->out);
--		if (ret)
--			return ret;
--		or->out.last_seg = NULL;
--
--		/* they are now all chained to request sign them all together */
--		osd_sec_sign_data(&or->out_data_integ, out_data_bio,
--				  cap_key);
--	}
--
--	if (has_in) {
--		struct _osd_req_data_segment seg = {
--			.buff = &or->in_data_integ,
--			.total_bytes = sizeof(or->in_data_integ),
--		};
--		unsigned pad;
--
--		osd_sec_parms_set_in_offset(osd_req_is_ver1(or), sec_parms,
--			osd_req_encode_offset(or, or->in.total_bytes, &pad));
--
--		ret = _req_append_segment(or, pad, &seg, or->in.last_seg,
--					  &or->in);
--		if (ret)
--			return ret;
--
--		or->in.last_seg = NULL;
--	}
--
--	return 0;
--}
--
--/*
-- * osd_finalize_request and helpers
-- */
--static struct request *_make_request(struct request_queue *q, bool has_write,
--			      struct _osd_io_info *oii, gfp_t flags)
--{
--	struct request *req;
--	struct bio *bio = oii->bio;
--	int ret;
--
--	req = blk_get_request(q, has_write ? REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN,
--			flags);
--	if (IS_ERR(req))
--		return req;
--	scsi_req_init(req);
--
--	for_each_bio(bio) {
--		struct bio *bounce_bio = bio;
--
--		blk_queue_bounce(req->q, &bounce_bio);
--		ret = blk_rq_append_bio(req, bounce_bio);
--		if (ret)
--			return ERR_PTR(ret);
--	}
--
--	return req;
--}
--
--static int _init_blk_request(struct osd_request *or,
--	bool has_in, bool has_out)
--{
--	gfp_t flags = or->alloc_flags;
--	struct scsi_device *scsi_device = or->osd_dev->scsi_device;
--	struct request_queue *q = scsi_device->request_queue;
--	struct request *req;
--	int ret;
--
--	req = _make_request(q, has_out, has_out ? &or->out : &or->in, flags);
--	if (IS_ERR(req)) {
--		ret = PTR_ERR(req);
--		goto out;
--	}
--
--	or->request = req;
--	req->rq_flags |= RQF_QUIET;
--
--	req->timeout = or->timeout;
--	scsi_req(req)->retries = or->retries;
--
--	if (has_out) {
--		or->out.req = req;
--		if (has_in) {
--			/* allocate bidi request */
--			req = _make_request(q, false, &or->in, flags);
--			if (IS_ERR(req)) {
--				OSD_DEBUG("blk_get_request for bidi failed\n");
--				ret = PTR_ERR(req);
--				goto out;
--			}
--			scsi_req_init(req);
--			or->in.req = or->request->next_rq = req;
--		}
--	} else if (has_in)
--		or->in.req = req;
--
--	ret = 0;
--out:
--	OSD_DEBUG("or=%p has_in=%d has_out=%d => %d, %p\n",
--			or, has_in, has_out, ret, or->request);
--	return ret;
--}
--
--int osd_finalize_request(struct osd_request *or,
--	u8 options, const void *cap, const u8 *cap_key)
--{
--	struct osd_cdb_head *cdbh = osd_cdb_head(&or->cdb);
--	bool has_in, has_out;
--	 /* Save for data_integrity without the cdb_continuation */
--	struct bio *out_data_bio = or->out.bio;
--	u64 out_data_bytes = or->out.total_bytes;
--	int ret;
--
--	if (options & OSD_REQ_FUA)
--		cdbh->options |= OSD_CDB_FUA;
--
--	if (options & OSD_REQ_DPO)
--		cdbh->options |= OSD_CDB_DPO;
--
--	if (options & OSD_REQ_BYPASS_TIMESTAMPS)
--		cdbh->timestamp_control = OSD_CDB_BYPASS_TIMESTAMPS;
--
--	osd_set_caps(&or->cdb, cap);
--
--	has_in = or->in.bio || or->get_attr.total_bytes;
--	has_out = or->out.bio || or->cdb_cont.total_bytes ||
--		or->set_attr.total_bytes || or->enc_get_attr.total_bytes;
--
--	ret = _osd_req_finalize_cdb_cont(or, cap_key);
--	if (ret) {
--		OSD_DEBUG("_osd_req_finalize_cdb_cont failed\n");
--		return ret;
--	}
--	ret = _init_blk_request(or, has_in, has_out);
--	if (ret) {
--		OSD_DEBUG("_init_blk_request failed\n");
--		return ret;
--	}
--
--	or->out.pad_buff = sg_out_pad_buffer;
--	or->in.pad_buff = sg_in_pad_buffer;
--
--	if (!or->attributes_mode)
--		or->attributes_mode = OSD_CDB_GET_SET_ATTR_LISTS;
--	cdbh->command_specific_options |= or->attributes_mode;
--	if (or->attributes_mode == OSD_CDB_GET_ATTR_PAGE_SET_ONE) {
--		ret = _osd_req_finalize_attr_page(or);
--		if (ret) {
--			OSD_DEBUG("_osd_req_finalize_attr_page failed\n");
--			return ret;
--		}
--	} else {
--		/* TODO: I think that for the GET_ATTR command these 2 should
--		 * be reversed to keep them in execution order (for embedded
--		 * targets with low memory footprint)
--		 */
--		ret = _osd_req_finalize_set_attr_list(or);
--		if (ret) {
--			OSD_DEBUG("_osd_req_finalize_set_attr_list failed\n");
--			return ret;
--		}
--
--		ret = _osd_req_finalize_get_attr_list(or);
--		if (ret) {
--			OSD_DEBUG("_osd_req_finalize_get_attr_list failed\n");
--			return ret;
--		}
--	}
--
--	ret = _osd_req_finalize_data_integrity(or, has_in, has_out,
--					       out_data_bio, out_data_bytes,
--					       cap_key);
--	if (ret)
--		return ret;
--
--	osd_sec_sign_cdb(&or->cdb, cap_key);
--
--	scsi_req(or->request)->cmd = or->cdb.buff;
--	scsi_req(or->request)->cmd_len = _osd_req_cdb_len(or);
--
--	return 0;
--}
--EXPORT_SYMBOL(osd_finalize_request);
--
--static bool _is_osd_security_code(int code)
--{
--	return	(code == osd_security_audit_value_frozen) ||
--		(code == osd_security_working_key_frozen) ||
--		(code == osd_nonce_not_unique) ||
--		(code == osd_nonce_timestamp_out_of_range) ||
--		(code == osd_invalid_dataout_buffer_integrity_check_value);
--}
--
--#define OSD_SENSE_PRINT1(fmt, a...) \
--	do { \
--		if (__cur_sense_need_output) \
--			OSD_ERR(fmt, ##a); \
--	} while (0)
--
--#define OSD_SENSE_PRINT2(fmt, a...) OSD_SENSE_PRINT1("    " fmt, ##a)
--
--int osd_req_decode_sense_full(struct osd_request *or,
--	struct osd_sense_info *osi, bool silent,
--	struct osd_obj_id *bad_obj_list __unused, int max_obj __unused,
--	struct osd_attr *bad_attr_list, int max_attr)
--{
--	int sense_len, original_sense_len;
--	struct osd_sense_info local_osi;
--	struct scsi_sense_descriptor_based *ssdb;
--	void *cur_descriptor;
--#if (CONFIG_SCSI_OSD_DPRINT_SENSE == 0)
--	const bool __cur_sense_need_output = false;
--#else
--	bool __cur_sense_need_output = !silent;
--#endif
--	int ret;
--
--	if (likely(!or->req_errors))
--		return 0;
--
--	osi = osi ? : &local_osi;
--	memset(osi, 0, sizeof(*osi));
--
--	ssdb = (typeof(ssdb))or->sense;
--	sense_len = or->sense_len;
--	if ((sense_len < (int)sizeof(*ssdb) || !ssdb->sense_key)) {
--		OSD_ERR("Block-layer returned error(0x%x) but "
--			"sense_len(%u) || key(%d) is empty\n",
--			or->req_errors, sense_len, ssdb->sense_key);
--		goto analyze;
--	}
--
--	if ((ssdb->response_code != 0x72) && (ssdb->response_code != 0x73)) {
--		OSD_ERR("Unrecognized scsi sense: rcode=%x length=%d\n",
--			ssdb->response_code, sense_len);
--		goto analyze;
--	}
--
--	osi->key = ssdb->sense_key;
--	osi->additional_code = be16_to_cpu(ssdb->additional_sense_code);
--	original_sense_len = ssdb->additional_sense_length + 8;
--
--#if (CONFIG_SCSI_OSD_DPRINT_SENSE == 1)
--	if (__cur_sense_need_output)
--		__cur_sense_need_output = (osi->key > scsi_sk_recovered_error);
--#endif
--	OSD_SENSE_PRINT1("Main Sense information key=0x%x length(%d, %d) "
--			"additional_code=0x%x async_error=%d errors=0x%x\n",
--			osi->key, original_sense_len, sense_len,
--			osi->additional_code, or->async_error,
--			or->req_errors);
--
--	if (original_sense_len < sense_len)
--		sense_len = original_sense_len;
--
--	cur_descriptor = ssdb->ssd;
--	sense_len -= sizeof(*ssdb);
--	while (sense_len > 0) {
--		struct scsi_sense_descriptor *ssd = cur_descriptor;
--		int cur_len = ssd->additional_length + 2;
--
--		sense_len -= cur_len;
--
--		if (sense_len < 0)
--			break; /* sense was truncated */
--
--		switch (ssd->descriptor_type) {
--		case scsi_sense_information:
--		case scsi_sense_command_specific_information:
--		{
--			struct scsi_sense_command_specific_data_descriptor
--				*sscd = cur_descriptor;
--
--			osi->command_info =
--				get_unaligned_be64(&sscd->information) ;
--			OSD_SENSE_PRINT2(
--				"command_specific_information 0x%llx \n",
--				_LLU(osi->command_info));
--			break;
--		}
--		case scsi_sense_key_specific:
--		{
--			struct scsi_sense_key_specific_data_descriptor
--				*ssks = cur_descriptor;
--
--			osi->sense_info = get_unaligned_be16(&ssks->value);
--			OSD_SENSE_PRINT2(
--				"sense_key_specific_information %u"
--				"sksv_cd_bpv_bp (0x%x)\n",
--				osi->sense_info, ssks->sksv_cd_bpv_bp);
--			break;
--		}
--		case osd_sense_object_identification:
--		{ /*FIXME: Keep first not last, Store in array*/
--			struct osd_sense_identification_data_descriptor
--				*osidd = cur_descriptor;
--
--			osi->not_initiated_command_functions =
--				le32_to_cpu(osidd->not_initiated_functions);
--			osi->completed_command_functions =
--				le32_to_cpu(osidd->completed_functions);
--			osi->obj.partition = be64_to_cpu(osidd->partition_id);
--			osi->obj.id = be64_to_cpu(osidd->object_id);
--			OSD_SENSE_PRINT2(
--				"object_identification pid=0x%llx oid=0x%llx\n",
--				_LLU(osi->obj.partition), _LLU(osi->obj.id));
--			OSD_SENSE_PRINT2(
--				"not_initiated_bits(%x) "
--				"completed_command_bits(%x)\n",
--				osi->not_initiated_command_functions,
--				osi->completed_command_functions);
--			break;
--		}
--		case osd_sense_response_integrity_check:
--		{
--			struct osd_sense_response_integrity_check_descriptor
--				*osricd = cur_descriptor;
--			const unsigned len =
--					  sizeof(osricd->integrity_check_value);
--			char key_dump[len*4 + 2]; /* 2nibbles+space+ASCII */
--
--			hex_dump_to_buffer(osricd->integrity_check_value, len,
--				       32, 1, key_dump, sizeof(key_dump), true);
--			OSD_SENSE_PRINT2("response_integrity [%s]\n", key_dump);
--		}
--		case osd_sense_attribute_identification:
--		{
--			struct osd_sense_attributes_data_descriptor
--				*osadd = cur_descriptor;
--			unsigned len = min(cur_len, sense_len);
--			struct osd_sense_attr *pattr = osadd->sense_attrs;
--
--			while (len >= sizeof(*pattr)) {
--				u32 attr_page = be32_to_cpu(pattr->attr_page);
--				u32 attr_id = be32_to_cpu(pattr->attr_id);
--
--				if (!osi->attr.attr_page) {
--					osi->attr.attr_page = attr_page;
--					osi->attr.attr_id = attr_id;
--				}
--
--				if (bad_attr_list && max_attr) {
--					bad_attr_list->attr_page = attr_page;
--					bad_attr_list->attr_id = attr_id;
--					bad_attr_list++;
--					max_attr--;
--				}
--
--				len -= sizeof(*pattr);
--				OSD_SENSE_PRINT2(
--					"osd_sense_attribute_identification"
--					"attr_page=0x%x attr_id=0x%x\n",
--					attr_page, attr_id);
--			}
--		}
--		/*These are not legal for OSD*/
--		case scsi_sense_field_replaceable_unit:
--			OSD_SENSE_PRINT2("scsi_sense_field_replaceable_unit\n");
--			break;
--		case scsi_sense_stream_commands:
--			OSD_SENSE_PRINT2("scsi_sense_stream_commands\n");
--			break;
--		case scsi_sense_block_commands:
--			OSD_SENSE_PRINT2("scsi_sense_block_commands\n");
--			break;
--		case scsi_sense_ata_return:
--			OSD_SENSE_PRINT2("scsi_sense_ata_return\n");
--			break;
--		default:
--			if (ssd->descriptor_type <= scsi_sense_Reserved_last)
--				OSD_SENSE_PRINT2(
--					"scsi_sense Reserved descriptor (0x%x)",
--					ssd->descriptor_type);
--			else
--				OSD_SENSE_PRINT2(
--					"scsi_sense Vendor descriptor (0x%x)",
--					ssd->descriptor_type);
--		}
--
--		cur_descriptor += cur_len;
--	}
--
--analyze:
--	if (!osi->key) {
--		/* scsi sense is Empty, the request was never issued to target
--		 * linux return code might tell us what happened.
--		 */
--		if (or->async_error == -ENOMEM)
--			osi->osd_err_pri = OSD_ERR_PRI_RESOURCE;
--		else
--			osi->osd_err_pri = OSD_ERR_PRI_UNREACHABLE;
--		ret = or->async_error;
--	} else if (osi->key <= scsi_sk_recovered_error) {
--		osi->osd_err_pri = 0;
--		ret = 0;
--	} else if (osi->additional_code == scsi_invalid_field_in_cdb) {
--		if (osi->cdb_field_offset == OSD_CFO_STARTING_BYTE) {
--			osi->osd_err_pri = OSD_ERR_PRI_CLEAR_PAGES;
--			ret = -EFAULT; /* caller should recover from this */
--		} else if (osi->cdb_field_offset == OSD_CFO_OBJECT_ID) {
--			osi->osd_err_pri = OSD_ERR_PRI_NOT_FOUND;
--			ret = -ENOENT;
--		} else if (osi->cdb_field_offset == OSD_CFO_PERMISSIONS) {
--			osi->osd_err_pri = OSD_ERR_PRI_NO_ACCESS;
--			ret = -EACCES;
--		} else {
--			osi->osd_err_pri = OSD_ERR_PRI_BAD_CRED;
--			ret = -EINVAL;
--		}
--	} else if (osi->additional_code == osd_quota_error) {
--		osi->osd_err_pri = OSD_ERR_PRI_NO_SPACE;
--		ret = -ENOSPC;
--	} else if (_is_osd_security_code(osi->additional_code)) {
--		osi->osd_err_pri = OSD_ERR_PRI_BAD_CRED;
--		ret = -EINVAL;
--	} else {
--		osi->osd_err_pri = OSD_ERR_PRI_EIO;
--		ret = -EIO;
--	}
--
--	if (!or->out.residual)
--		or->out.residual = or->out.total_bytes;
--	if (!or->in.residual)
--		or->in.residual = or->in.total_bytes;
--
--	return ret;
--}
--EXPORT_SYMBOL(osd_req_decode_sense_full);
--
--/*
-- * Implementation of osd_sec.h API
-- * TODO: Move to a separate osd_sec.c file at a later stage.
-- */
--
--enum { OSD_SEC_CAP_V1_ALL_CAPS =
--	OSD_SEC_CAP_APPEND | OSD_SEC_CAP_OBJ_MGMT | OSD_SEC_CAP_REMOVE   |
--	OSD_SEC_CAP_CREATE | OSD_SEC_CAP_SET_ATTR | OSD_SEC_CAP_GET_ATTR |
--	OSD_SEC_CAP_WRITE  | OSD_SEC_CAP_READ     | OSD_SEC_CAP_POL_SEC  |
--	OSD_SEC_CAP_GLOBAL | OSD_SEC_CAP_DEV_MGMT
+-struct objio_dev_ent {
+-	struct nfs4_deviceid_node id_node;
+-	struct ore_dev od;
 -};
 -
--enum { OSD_SEC_CAP_V2_ALL_CAPS =
--	OSD_SEC_CAP_V1_ALL_CAPS | OSD_SEC_CAP_QUERY | OSD_SEC_CAP_M_OBJECT
+-static void
+-objio_free_deviceid_node(struct nfs4_deviceid_node *d)
+-{
+-	struct objio_dev_ent *de = container_of(d, struct objio_dev_ent, id_node);
+-
+-	dprintk("%s: free od=%p\n", __func__, de->od.od);
+-	osduld_put_device(de->od.od);
+-	kfree_rcu(d, rcu);
+-}
+-
+-struct objio_segment {
+-	struct pnfs_layout_segment lseg;
+-
+-	struct ore_layout layout;
+-	struct ore_components oc;
 -};
 -
--void osd_sec_init_nosec_doall_caps(void *caps,
--	const struct osd_obj_id *obj, bool is_collection, const bool is_v1)
+-static inline struct objio_segment *
+-OBJIO_LSEG(struct pnfs_layout_segment *lseg)
 -{
--	struct osd_capability *cap = caps;
--	u8 type;
--	u8 descriptor_type;
--
--	if (likely(obj->id)) {
--		if (unlikely(is_collection)) {
--			type = OSD_SEC_OBJ_COLLECTION;
--			descriptor_type = is_v1 ? OSD_SEC_OBJ_DESC_OBJ :
--						  OSD_SEC_OBJ_DESC_COL;
--		} else {
--			type = OSD_SEC_OBJ_USER;
--			descriptor_type = OSD_SEC_OBJ_DESC_OBJ;
--		}
--		WARN_ON(!obj->partition);
--	} else {
--		type = obj->partition ? OSD_SEC_OBJ_PARTITION :
--					OSD_SEC_OBJ_ROOT;
--		descriptor_type = OSD_SEC_OBJ_DESC_PAR;
--	}
--
--	memset(cap, 0, sizeof(*cap));
--
--	cap->h.format = OSD_SEC_CAP_FORMAT_VER1;
--	cap->h.integrity_algorithm__key_version = 0; /* MAKE_BYTE(0, 0); */
--	cap->h.security_method = OSD_SEC_NOSEC;
--/*	cap->expiration_time;
--	cap->AUDIT[30-10];
--	cap->discriminator[42-30];
--	cap->object_created_time; */
--	cap->h.object_type = type;
--	osd_sec_set_caps(&cap->h, OSD_SEC_CAP_V1_ALL_CAPS);
--	cap->h.object_descriptor_type = descriptor_type;
--	cap->od.obj_desc.policy_access_tag = 0;
--	cap->od.obj_desc.allowed_partition_id = cpu_to_be64(obj->partition);
--	cap->od.obj_desc.allowed_object_id = cpu_to_be64(obj->id);
--}
--EXPORT_SYMBOL(osd_sec_init_nosec_doall_caps);
--
--/* FIXME: Extract version from caps pointer.
-- *        Also Pete's target only supports caps from OSDv1 for now
-- */
--void osd_set_caps(struct osd_cdb *cdb, const void *caps)
--{
--	/* NOTE: They start at same address */
--	memcpy(&cdb->v1.caps, caps, OSDv1_CAP_LEN);
+-	return container_of(lseg, struct objio_segment, lseg);
 -}
 -
--bool osd_is_sec_alldata(struct osd_security_parameters *sec_parms __unused)
+-struct objio_state {
+-	/* Generic layer */
+-	struct objlayout_io_res oir;
+-
+-	bool sync;
+-	/*FIXME: Support for extra_bytes at ore_get_rw_state() */
+-	struct ore_io_state *ios;
+-};
+-
+-/* Send and wait for a get_device_info of devices in the layout,
+-   then look them up with the osd_initiator library */
+-struct nfs4_deviceid_node *
+-objio_alloc_deviceid_node(struct nfs_server *server, struct pnfs_device *pdev,
+-			gfp_t gfp_flags)
 -{
--	return false;
--}
--
--void osd_sec_sign_cdb(struct osd_cdb *ocdb __unused, const u8 *cap_key __unused)
--{
--}
--
--void osd_sec_sign_data(void *data_integ __unused,
--		       struct bio *bio __unused, const u8 *cap_key __unused)
--{
--}
--
--/*
-- * Declared in osd_protocol.h
-- * 4.12.5 Data-In and Data-Out buffer offsets
-- * byte offset = mantissa * (2^(exponent+8))
-- * Returns the smallest allowed encoded offset that contains given @offset
-- * The actual encoded offset returned is @offset + *@padding.
-- */
--osd_cdb_offset __osd_encode_offset(
--	u64 offset, unsigned *padding, int min_shift, int max_shift)
--{
--	u64 try_offset = -1, mod, align;
--	osd_cdb_offset be32_offset;
--	int shift;
--
--	*padding = 0;
--	if (!offset)
--		return 0;
--
--	for (shift = min_shift; shift < max_shift; ++shift) {
--		try_offset = offset >> shift;
--		if (try_offset < (1 << OSD_OFFSET_MAX_BITS))
--			break;
--	}
--
--	BUG_ON(shift == max_shift);
--
--	align = 1 << shift;
--	mod = offset & (align - 1);
--	if (mod) {
--		*padding = align - mod;
--		try_offset += 1;
--	}
--
--	try_offset |= ((shift - 8) & 0xf) << 28;
--	be32_offset = cpu_to_be32((u32)try_offset);
--
--	OSD_DEBUG("offset=%llu mantissa=%llu exp=%d encoded=%x pad=%d\n",
--		 _LLU(offset), _LLU(try_offset & 0x0FFFFFFF), shift,
--		 be32_offset, *padding);
--	return be32_offset;
--}
-diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
-deleted file mode 100644
-index e0ce5d2fd14d..000000000000
---- a/drivers/scsi/osd/osd_uld.c
-+++ /dev/null
-@@ -1,595 +0,0 @@
--/*
-- * osd_uld.c - OSD Upper Layer Driver
-- *
-- * A Linux driver module that registers as a SCSI ULD and probes
-- * for OSD type SCSI devices.
-- * It's main function is to export osd devices to in-kernel users like
-- * osdfs and pNFS-objects-LD. It also provides one ioctl for running
-- * in Kernel tests.
-- *
-- * Copyright (C) 2008 Panasas Inc.  All rights reserved.
-- *
-- * Authors:
-- *   Boaz Harrosh <ooo@electrozaur.com>
-- *   Benny Halevy <bhalevy@panasas.com>
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2
-- *
-- * Redistribution and use in source and binary forms, with or without
-- * modification, are permitted provided that the following conditions
-- * are met:
-- *
-- *  1. Redistributions of source code must retain the above copyright
-- *     notice, this list of conditions and the following disclaimer.
-- *  2. Redistributions in binary form must reproduce the above copyright
-- *     notice, this list of conditions and the following disclaimer in the
-- *     documentation and/or other materials provided with the distribution.
-- *  3. Neither the name of the Panasas company nor the names of its
-- *     contributors may be used to endorse or promote products derived
-- *     from this software without specific prior written permission.
-- *
-- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED
-- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-- * DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
-- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
-- * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-- */
--
--#include <linux/namei.h>
--#include <linux/cdev.h>
--#include <linux/fs.h>
--#include <linux/module.h>
--#include <linux/device.h>
--#include <linux/idr.h>
--#include <linux/major.h>
--#include <linux/file.h>
--#include <linux/slab.h>
--
--#include <scsi/scsi.h>
--#include <scsi/scsi_driver.h>
--#include <scsi/scsi_device.h>
--#include <scsi/scsi_ioctl.h>
--
--#include <scsi/osd_initiator.h>
--#include <scsi/osd_sec.h>
--
--#include "osd_debug.h"
--
--#ifndef TYPE_OSD
--#  define TYPE_OSD 0x11
--#endif
--
--#ifndef SCSI_OSD_MAJOR
--#  define SCSI_OSD_MAJOR 260
--#endif
--#define SCSI_OSD_MAX_MINOR MINORMASK
--
--static const char osd_name[] = "osd";
--static const char *osd_version_string = "open-osd 0.2.1";
--
--MODULE_AUTHOR("Boaz Harrosh <ooo@electrozaur.com>");
--MODULE_DESCRIPTION("open-osd Upper-Layer-Driver osd.ko");
--MODULE_LICENSE("GPL");
--MODULE_ALIAS_CHARDEV_MAJOR(SCSI_OSD_MAJOR);
--MODULE_ALIAS_SCSI_DEVICE(TYPE_OSD);
--
--struct osd_uld_device {
--	int minor;
--	struct device class_dev;
--	struct cdev cdev;
--	struct osd_dev od;
+-	struct pnfs_osd_deviceaddr *deviceaddr;
+-	struct objio_dev_ent *ode = NULL;
+-	struct osd_dev *od;
 -	struct osd_dev_info odi;
--	struct gendisk *disk;
--};
--
--struct osd_dev_handle {
--	struct osd_dev od;
--	struct file *file;
--	struct osd_uld_device *oud;
--} ;
--
--static DEFINE_IDA(osd_minor_ida);
--
--/*
-- * scsi sysfs attribute operations
-- */
--static ssize_t osdname_show(struct device *dev, struct device_attribute *attr,
--			    char *buf)
--{
--	struct osd_uld_device *ould = container_of(dev, struct osd_uld_device,
--						   class_dev);
--	return sprintf(buf, "%s\n", ould->odi.osdname);
--}
--static DEVICE_ATTR_RO(osdname);
--
--static ssize_t systemid_show(struct device *dev, struct device_attribute *attr,
--			    char *buf)
--{
--	struct osd_uld_device *ould = container_of(dev, struct osd_uld_device,
--						   class_dev);
--
--	memcpy(buf, ould->odi.systemid, ould->odi.systemid_len);
--	return ould->odi.systemid_len;
--}
--static DEVICE_ATTR_RO(systemid);
--
--static struct attribute *osd_uld_attrs[] = {
--	&dev_attr_osdname.attr,
--	&dev_attr_systemid.attr,
--	NULL,
--};
--ATTRIBUTE_GROUPS(osd_uld);
--
--static struct class osd_uld_class = {
--	.owner		= THIS_MODULE,
--	.name		= "scsi_osd",
--	.dev_groups	= osd_uld_groups,
--};
--
--/*
-- * Char Device operations
-- */
--
--static int osd_uld_open(struct inode *inode, struct file *file)
--{
--	struct osd_uld_device *oud = container_of(inode->i_cdev,
--					struct osd_uld_device, cdev);
--
--	get_device(&oud->class_dev);
--	/* cache osd_uld_device on file handle */
--	file->private_data = oud;
--	OSD_DEBUG("osd_uld_open %p\n", oud);
--	return 0;
--}
--
--static int osd_uld_release(struct inode *inode, struct file *file)
--{
--	struct osd_uld_device *oud = file->private_data;
--
--	OSD_DEBUG("osd_uld_release %p\n", file->private_data);
--	file->private_data = NULL;
--	put_device(&oud->class_dev);
--	return 0;
--}
--
--/* FIXME: Only one vector for now */
--unsigned g_test_ioctl;
--do_test_fn *g_do_test;
--
--int osduld_register_test(unsigned ioctl, do_test_fn *do_test)
--{
--	if (g_test_ioctl)
--		return -EINVAL;
--
--	g_test_ioctl = ioctl;
--	g_do_test = do_test;
--	return 0;
--}
--EXPORT_SYMBOL(osduld_register_test);
--
--void osduld_unregister_test(unsigned ioctl)
--{
--	if (ioctl == g_test_ioctl) {
--		g_test_ioctl = 0;
--		g_do_test = NULL;
--	}
--}
--EXPORT_SYMBOL(osduld_unregister_test);
--
--static do_test_fn *_find_ioctl(unsigned cmd)
--{
--	if (g_test_ioctl == cmd)
--		return g_do_test;
--	else
--		return NULL;
--}
--
--static long osd_uld_ioctl(struct file *file, unsigned int cmd,
--	unsigned long arg)
--{
--	struct osd_uld_device *oud = file->private_data;
--	int ret;
--	do_test_fn *do_test;
--
--	do_test = _find_ioctl(cmd);
--	if (do_test)
--		ret = do_test(&oud->od, cmd, arg);
--	else {
--		OSD_ERR("Unknown ioctl %d: osd_uld_device=%p\n", cmd, oud);
--		ret = -ENOIOCTLCMD;
--	}
--	return ret;
--}
--
--static const struct file_operations osd_fops = {
--	.owner          = THIS_MODULE,
--	.open           = osd_uld_open,
--	.release        = osd_uld_release,
--	.unlocked_ioctl = osd_uld_ioctl,
--	.llseek		= noop_llseek,
--};
--
--struct osd_dev *osduld_path_lookup(const char *name)
--{
--	struct osd_uld_device *oud;
--	struct osd_dev_handle *odh;
--	struct file *file;
--	int error;
--
--	if (!name || !*name) {
--		OSD_ERR("Mount with !path || !*path\n");
--		return ERR_PTR(-EINVAL);
--	}
--
--	odh = kzalloc(sizeof(*odh), GFP_KERNEL);
--	if (unlikely(!odh))
--		return ERR_PTR(-ENOMEM);
--
--	file = filp_open(name, O_RDWR, 0);
--	if (IS_ERR(file)) {
--		error = PTR_ERR(file);
--		goto free_od;
--	}
--
--	if (file->f_op != &osd_fops){
--		error = -EINVAL;
--		goto close_file;
--	}
--
--	oud = file->private_data;
--
--	odh->od = oud->od;
--	odh->file = file;
--	odh->oud = oud;
--
--	return &odh->od;
--
--close_file:
--	fput(file);
--free_od:
--	kfree(odh);
--	return ERR_PTR(error);
--}
--EXPORT_SYMBOL(osduld_path_lookup);
--
--static inline bool _the_same_or_null(const u8 *a1, unsigned a1_len,
--				     const u8 *a2, unsigned a2_len)
--{
--	if (!a2_len) /* User string is Empty means don't care */
--		return true;
--
--	if (a1_len != a2_len)
--		return false;
--
--	return 0 == memcmp(a1, a2, a1_len);
--}
--
--static int _match_odi(struct device *dev, const void *find_data)
--{
--	struct osd_uld_device *oud = container_of(dev, struct osd_uld_device,
--						  class_dev);
--	const struct osd_dev_info *odi = find_data;
--
--	if (_the_same_or_null(oud->odi.systemid, oud->odi.systemid_len,
--			      odi->systemid, odi->systemid_len) &&
--	    _the_same_or_null(oud->odi.osdname, oud->odi.osdname_len,
--			      odi->osdname, odi->osdname_len)) {
--		OSD_DEBUG("found device sysid_len=%d osdname=%d\n",
--			  odi->systemid_len, odi->osdname_len);
--		return 1;
--	} else {
--		return 0;
--	}
--}
--
--/* osduld_info_lookup - Loop through all devices, return the requested osd_dev.
-- *
-- * if @odi->systemid_len and/or @odi->osdname_len are zero, they act as a don't
-- * care. .e.g if they're both zero /dev/osd0 is returned.
-- */
--struct osd_dev *osduld_info_lookup(const struct osd_dev_info *odi)
--{
--	struct device *dev = class_find_device(&osd_uld_class, NULL, odi, _match_odi);
--	if (likely(dev)) {
--		struct osd_dev_handle *odh = kzalloc(sizeof(*odh), GFP_KERNEL);
--		struct osd_uld_device *oud = container_of(dev,
--			struct osd_uld_device, class_dev);
--
--		if (unlikely(!odh)) {
--			put_device(dev);
--			return ERR_PTR(-ENOMEM);
--		}
--
--		odh->od = oud->od;
--		odh->oud = oud;
--
--		return &odh->od;
--	}
--
--	return ERR_PTR(-ENODEV);
--}
--EXPORT_SYMBOL(osduld_info_lookup);
--
--void osduld_put_device(struct osd_dev *od)
--{
--	if (od && !IS_ERR(od)) {
--		struct osd_dev_handle *odh =
--				container_of(od, struct osd_dev_handle, od);
--		struct osd_uld_device *oud = odh->oud;
--
--		BUG_ON(od->scsi_device != oud->od.scsi_device);
--
--		/* If scsi has released the device (logout), and exofs has last
--		 * reference on oud it will be freed by above osd_uld_release
--		 * within fput below. But this will oops in cdev_release which
--		 * is called after the fops->release. A get_/put_ pair makes
--		 * sure we have a cdev for the duration of fput
--		 */
--		if (odh->file) {
--			get_device(&oud->class_dev);
--			fput(odh->file);
--		}
--		put_device(&oud->class_dev);
--		kfree(odh);
--	}
--}
--EXPORT_SYMBOL(osduld_put_device);
--
--const struct osd_dev_info *osduld_device_info(struct osd_dev *od)
--{
--	struct osd_dev_handle *odh =
--				container_of(od, struct osd_dev_handle, od);
--	return &odh->oud->odi;
--}
--EXPORT_SYMBOL(osduld_device_info);
--
--bool osduld_device_same(struct osd_dev *od, const struct osd_dev_info *odi)
--{
--	struct osd_dev_handle *odh =
--				container_of(od, struct osd_dev_handle, od);
--	struct osd_uld_device *oud = odh->oud;
--
--	return (oud->odi.systemid_len == odi->systemid_len) &&
--		_the_same_or_null(oud->odi.systemid, oud->odi.systemid_len,
--				 odi->systemid, odi->systemid_len) &&
--		(oud->odi.osdname_len == odi->osdname_len) &&
--		_the_same_or_null(oud->odi.osdname, oud->odi.osdname_len,
--				  odi->osdname, odi->osdname_len);
--}
--EXPORT_SYMBOL(osduld_device_same);
--
--/*
-- * Scsi Device operations
-- */
--
--static int __detect_osd(struct osd_uld_device *oud)
--{
--	struct scsi_device *scsi_device = oud->od.scsi_device;
--	struct scsi_sense_hdr sense_hdr;
--	char caps[OSD_CAP_LEN];
--	int error;
--
--	/* sending a test_unit_ready as first command seems to be needed
--	 * by some targets
--	 */
--	OSD_DEBUG("start scsi_test_unit_ready %p %p %p\n",
--			oud, scsi_device, scsi_device->request_queue);
--	error = scsi_test_unit_ready(scsi_device, 10*HZ, 5, &sense_hdr);
--	if (error)
--		OSD_ERR("warning: scsi_test_unit_ready failed\n");
--
--	osd_sec_init_nosec_doall_caps(caps, &osd_root_object, false, true);
--	if (osd_auto_detect_ver(&oud->od, caps, &oud->odi))
--		return -ENODEV;
--
--	return 0;
--}
--
--static void __remove(struct device *dev)
--{
--	struct osd_uld_device *oud = container_of(dev, struct osd_uld_device,
--						  class_dev);
--	struct scsi_device *scsi_device = oud->od.scsi_device;
--
--	kfree(oud->odi.osdname);
--
--	if (oud->cdev.owner)
--		cdev_del(&oud->cdev);
--
--	osd_dev_fini(&oud->od);
--	scsi_device_put(scsi_device);
--
--	OSD_INFO("osd_remove %s\n",
--		 oud->disk ? oud->disk->disk_name : NULL);
--
--	if (oud->disk)
--		put_disk(oud->disk);
--	ida_remove(&osd_minor_ida, oud->minor);
--
--	kfree(oud);
--}
--
--static int osd_probe(struct device *dev)
--{
--	struct scsi_device *scsi_device = to_scsi_device(dev);
--	struct gendisk *disk;
--	struct osd_uld_device *oud;
--	int minor;
--	int error;
--
--	if (scsi_device->type != TYPE_OSD)
--		return -ENODEV;
--
--	do {
--		if (!ida_pre_get(&osd_minor_ida, GFP_KERNEL))
--			return -ENODEV;
--
--		error = ida_get_new(&osd_minor_ida, &minor);
--	} while (error == -EAGAIN);
--
--	if (error)
--		return error;
--	if (minor >= SCSI_OSD_MAX_MINOR) {
--		error = -EBUSY;
--		goto err_retract_minor;
--	}
--
--	error = -ENOMEM;
--	oud = kzalloc(sizeof(*oud), GFP_KERNEL);
--	if (NULL == oud)
--		goto err_retract_minor;
--
--	dev_set_drvdata(dev, oud);
--	oud->minor = minor;
--
--	/* allocate a disk and set it up */
--	/* FIXME: do we need this since sg has already done that */
--	disk = alloc_disk(1);
--	if (!disk) {
--		OSD_ERR("alloc_disk failed\n");
--		goto err_free_osd;
--	}
--	disk->major = SCSI_OSD_MAJOR;
--	disk->first_minor = oud->minor;
--	sprintf(disk->disk_name, "osd%d", oud->minor);
--	oud->disk = disk;
--
--	/* hold one more reference to the scsi_device that will get released
--	 * in __release, in case a logout is happening while fs is mounted
--	 */
--	scsi_device_get(scsi_device);
--	osd_dev_init(&oud->od, scsi_device);
--
--	/* Detect the OSD Version */
--	error = __detect_osd(oud);
--	if (error) {
--		OSD_ERR("osd detection failed, non-compatible OSD device\n");
--		goto err_put_disk;
--	}
--
--	/* init the char-device for communication with user-mode */
--	cdev_init(&oud->cdev, &osd_fops);
--	oud->cdev.owner = THIS_MODULE;
--	error = cdev_add(&oud->cdev,
--			 MKDEV(SCSI_OSD_MAJOR, oud->minor), 1);
--	if (error) {
--		OSD_ERR("cdev_add failed\n");
--		goto err_put_disk;
--	}
--
--	/* class device member */
--	oud->class_dev.devt = oud->cdev.dev;
--	oud->class_dev.class = &osd_uld_class;
--	oud->class_dev.parent = dev;
--	oud->class_dev.release = __remove;
--	error = dev_set_name(&oud->class_dev, "%s", disk->disk_name);
--	if (error) {
--		OSD_ERR("dev_set_name failed => %d\n", error);
--		goto err_put_cdev;
--	}
--
--	error = device_register(&oud->class_dev);
--	if (error) {
--		OSD_ERR("device_register failed => %d\n", error);
--		goto err_put_cdev;
--	}
--
--	get_device(&oud->class_dev);
--
--	OSD_INFO("osd_probe %s\n", disk->disk_name);
--	return 0;
--
--err_put_cdev:
--	cdev_del(&oud->cdev);
--err_put_disk:
--	scsi_device_put(scsi_device);
--	put_disk(disk);
--err_free_osd:
--	dev_set_drvdata(dev, NULL);
--	kfree(oud);
--err_retract_minor:
--	ida_remove(&osd_minor_ida, minor);
--	return error;
--}
--
--static int osd_remove(struct device *dev)
--{
--	struct scsi_device *scsi_device = to_scsi_device(dev);
--	struct osd_uld_device *oud = dev_get_drvdata(dev);
--
--	if (!oud || (oud->od.scsi_device != scsi_device)) {
--		OSD_ERR("Half cooked osd-device %p,%p || %p!=%p",
--			dev, oud, oud ? oud->od.scsi_device : NULL,
--			scsi_device);
--	}
--
--	device_unregister(&oud->class_dev);
--
--	put_device(&oud->class_dev);
--	return 0;
--}
--
--/*
-- * Global driver and scsi registration
-- */
--
--static struct scsi_driver osd_driver = {
--	.gendrv = {
--		.name		= osd_name,
--		.owner		= THIS_MODULE,
--		.probe		= osd_probe,
--		.remove		= osd_remove,
--	}
--};
--
--static int __init osd_uld_init(void)
--{
+-	bool retry_flag = true;
+-	__be32 *p;
 -	int err;
 -
--	err = class_register(&osd_uld_class);
--	if (err) {
--		OSD_ERR("Unable to register sysfs class => %d\n", err);
+-	deviceaddr = kzalloc(sizeof(*deviceaddr), gfp_flags);
+-	if (!deviceaddr)
+-		return NULL;
+-
+-	p = page_address(pdev->pages[0]);
+-	pnfs_osd_xdr_decode_deviceaddr(deviceaddr, p);
+-
+-	odi.systemid_len = deviceaddr->oda_systemid.len;
+-	if (odi.systemid_len > sizeof(odi.systemid)) {
+-		dprintk("%s: odi.systemid_len > sizeof(systemid=%zd)\n",
+-			__func__, sizeof(odi.systemid));
+-		err = -EINVAL;
+-		goto out;
+-	} else if (odi.systemid_len)
+-		memcpy(odi.systemid, deviceaddr->oda_systemid.data,
+-		       odi.systemid_len);
+-	odi.osdname_len	 = deviceaddr->oda_osdname.len;
+-	odi.osdname	 = (u8 *)deviceaddr->oda_osdname.data;
+-
+-	if (!odi.osdname_len && !odi.systemid_len) {
+-		dprintk("%s: !odi.osdname_len && !odi.systemid_len\n",
+-			__func__);
+-		err = -ENODEV;
+-		goto out;
+-	}
+-
+-retry_lookup:
+-	od = osduld_info_lookup(&odi);
+-	if (IS_ERR(od)) {
+-		err = PTR_ERR(od);
+-		dprintk("%s: osduld_info_lookup => %d\n", __func__, err);
+-		if (err == -ENODEV && retry_flag) {
+-			err = objlayout_autologin(deviceaddr);
+-			if (likely(!err)) {
+-				retry_flag = false;
+-				goto retry_lookup;
+-			}
+-		}
+-		goto out;
+-	}
+-
+-	dprintk("Adding new dev_id(%llx:%llx)\n",
+-		_DEVID_LO(&pdev->dev_id), _DEVID_HI(&pdev->dev_id));
+-
+-	ode = kzalloc(sizeof(*ode), gfp_flags);
+-	if (!ode) {
+-		dprintk("%s: -ENOMEM od=%p\n", __func__, od);
+-		goto out;
+-	}
+-
+-	nfs4_init_deviceid_node(&ode->id_node, server, &pdev->dev_id);
+-	kfree(deviceaddr);
+-
+-	ode->od.od = od;
+-	return &ode->id_node;
+-
+-out:
+-	kfree(deviceaddr);
+-	return NULL;
+-}
+-
+-static void copy_single_comp(struct ore_components *oc, unsigned c,
+-			     struct pnfs_osd_object_cred *src_comp)
+-{
+-	struct ore_comp *ocomp = &oc->comps[c];
+-
+-	WARN_ON(src_comp->oc_cap_key.cred_len > 0); /* libosd is NO_SEC only */
+-	WARN_ON(src_comp->oc_cap.cred_len > sizeof(ocomp->cred));
+-
+-	ocomp->obj.partition = src_comp->oc_object_id.oid_partition_id;
+-	ocomp->obj.id = src_comp->oc_object_id.oid_object_id;
+-
+-	memcpy(ocomp->cred, src_comp->oc_cap.cred, sizeof(ocomp->cred));
+-}
+-
+-static int __alloc_objio_seg(unsigned numdevs, gfp_t gfp_flags,
+-		       struct objio_segment **pseg)
+-{
+-/*	This is the in memory structure of the objio_segment
+- *
+- *	struct __alloc_objio_segment {
+- *		struct objio_segment olseg;
+- *		struct ore_dev *ods[numdevs];
+- *		struct ore_comp	comps[numdevs];
+- *	} *aolseg;
+- *	NOTE: The code as above compiles and runs perfectly. It is elegant,
+- *	type safe and compact. At some Past time Linus has decided he does not
+- *	like variable length arrays, For the sake of this principal we uglify
+- *	the code as below.
+- */
+-	struct objio_segment *lseg;
+-	size_t lseg_size = sizeof(*lseg) +
+-			numdevs * sizeof(lseg->oc.ods[0]) +
+-			numdevs * sizeof(*lseg->oc.comps);
+-
+-	lseg = kzalloc(lseg_size, gfp_flags);
+-	if (unlikely(!lseg)) {
+-		dprintk("%s: Failed allocation numdevs=%d size=%zd\n", __func__,
+-			numdevs, lseg_size);
+-		return -ENOMEM;
+-	}
+-
+-	lseg->oc.numdevs = numdevs;
+-	lseg->oc.single_comp = EC_MULTPLE_COMPS;
+-	lseg->oc.ods = (void *)(lseg + 1);
+-	lseg->oc.comps = (void *)(lseg->oc.ods + numdevs);
+-
+-	*pseg = lseg;
+-	return 0;
+-}
+-
+-int objio_alloc_lseg(struct pnfs_layout_segment **outp,
+-	struct pnfs_layout_hdr *pnfslay,
+-	struct pnfs_layout_range *range,
+-	struct xdr_stream *xdr,
+-	gfp_t gfp_flags)
+-{
+-	struct nfs_server *server = NFS_SERVER(pnfslay->plh_inode);
+-	struct objio_segment *objio_seg;
+-	struct pnfs_osd_xdr_decode_layout_iter iter;
+-	struct pnfs_osd_layout layout;
+-	struct pnfs_osd_object_cred src_comp;
+-	unsigned cur_comp;
+-	int err;
+-
+-	err = pnfs_osd_xdr_decode_layout_map(&layout, &iter, xdr);
+-	if (unlikely(err))
 -		return err;
--	}
 -
--	err = register_chrdev_region(MKDEV(SCSI_OSD_MAJOR, 0),
--				     SCSI_OSD_MAX_MINOR, osd_name);
--	if (err) {
--		OSD_ERR("Unable to register major %d for osd ULD => %d\n",
--			SCSI_OSD_MAJOR, err);
--		goto err_out;
--	}
+-	err = __alloc_objio_seg(layout.olo_num_comps, gfp_flags, &objio_seg);
+-	if (unlikely(err))
+-		return err;
 -
--	err = scsi_register_driver(&osd_driver.gendrv);
--	if (err) {
--		OSD_ERR("scsi_register_driver failed => %d\n", err);
--		goto err_out_chrdev;
--	}
+-	objio_seg->layout.stripe_unit = layout.olo_map.odm_stripe_unit;
+-	objio_seg->layout.group_width = layout.olo_map.odm_group_width;
+-	objio_seg->layout.group_depth = layout.olo_map.odm_group_depth;
+-	objio_seg->layout.mirrors_p1 = layout.olo_map.odm_mirror_cnt + 1;
+-	objio_seg->layout.raid_algorithm = layout.olo_map.odm_raid_algorithm;
 -
--	OSD_INFO("LOADED %s\n", osd_version_string);
+-	err = ore_verify_layout(layout.olo_map.odm_num_comps,
+-					  &objio_seg->layout);
+-	if (unlikely(err))
+-		goto err;
+-
+-	objio_seg->oc.first_dev = layout.olo_comps_index;
+-	cur_comp = 0;
+-	while (pnfs_osd_xdr_decode_layout_comp(&src_comp, &iter, xdr, &err)) {
+-		struct nfs4_deviceid_node *d;
+-		struct objio_dev_ent *ode;
+-
+-		copy_single_comp(&objio_seg->oc, cur_comp, &src_comp);
+-
+-		d = nfs4_find_get_deviceid(server,
+-				&src_comp.oc_object_id.oid_device_id,
+-				pnfslay->plh_lc_cred, gfp_flags);
+-		if (!d) {
+-			err = -ENXIO;
+-			goto err;
+-		}
+-
+-		ode = container_of(d, struct objio_dev_ent, id_node);
+-		objio_seg->oc.ods[cur_comp++] = &ode->od;
+-	}
+-	/* pnfs_osd_xdr_decode_layout_comp returns false on error */
+-	if (unlikely(err))
+-		goto err;
+-
+-	*outp = &objio_seg->lseg;
 -	return 0;
 -
--err_out_chrdev:
--	unregister_chrdev_region(MKDEV(SCSI_OSD_MAJOR, 0), SCSI_OSD_MAX_MINOR);
--err_out:
--	class_unregister(&osd_uld_class);
+-err:
+-	kfree(objio_seg);
+-	dprintk("%s: Error: return %d\n", __func__, err);
+-	*outp = NULL;
 -	return err;
 -}
 -
--static void __exit osd_uld_exit(void)
+-void objio_free_lseg(struct pnfs_layout_segment *lseg)
 -{
--	scsi_unregister_driver(&osd_driver.gendrv);
--	unregister_chrdev_region(MKDEV(SCSI_OSD_MAJOR, 0), SCSI_OSD_MAX_MINOR);
--	class_unregister(&osd_uld_class);
--	OSD_INFO("UNLOADED %s\n", osd_version_string);
+-	int i;
+-	struct objio_segment *objio_seg = OBJIO_LSEG(lseg);
+-
+-	for (i = 0; i < objio_seg->oc.numdevs; i++) {
+-		struct ore_dev *od = objio_seg->oc.ods[i];
+-		struct objio_dev_ent *ode;
+-
+-		if (!od)
+-			break;
+-		ode = container_of(od, typeof(*ode), od);
+-		nfs4_put_deviceid_node(&ode->id_node);
+-	}
+-	kfree(objio_seg);
 -}
 -
--module_init(osd_uld_init);
--module_exit(osd_uld_exit);
-diff --git a/include/scsi/osd_initiator.h b/include/scsi/osd_initiator.h
-deleted file mode 100644
-index a09cca829082..000000000000
---- a/include/scsi/osd_initiator.h
-+++ /dev/null
-@@ -1,515 +0,0 @@
+-static int
+-objio_alloc_io_state(struct pnfs_layout_hdr *pnfs_layout_type, bool is_reading,
+-	struct pnfs_layout_segment *lseg, struct page **pages, unsigned pgbase,
+-	loff_t offset, size_t count, void *rpcdata, gfp_t gfp_flags,
+-	struct objio_state **outp)
+-{
+-	struct objio_segment *objio_seg = OBJIO_LSEG(lseg);
+-	struct ore_io_state *ios;
+-	int ret;
+-	struct __alloc_objio_state {
+-		struct objio_state objios;
+-		struct pnfs_osd_ioerr ioerrs[objio_seg->oc.numdevs];
+-	} *aos;
+-
+-	aos = kzalloc(sizeof(*aos), gfp_flags);
+-	if (unlikely(!aos))
+-		return -ENOMEM;
+-
+-	objlayout_init_ioerrs(&aos->objios.oir, objio_seg->oc.numdevs,
+-			aos->ioerrs, rpcdata, pnfs_layout_type);
+-
+-	ret = ore_get_rw_state(&objio_seg->layout, &objio_seg->oc, is_reading,
+-			       offset, count, &ios);
+-	if (unlikely(ret)) {
+-		kfree(aos);
+-		return ret;
+-	}
+-
+-	ios->pages = pages;
+-	ios->pgbase = pgbase;
+-	ios->private = aos;
+-	BUG_ON(ios->nr_pages > (pgbase + count + PAGE_SIZE - 1) >> PAGE_SHIFT);
+-
+-	aos->objios.sync = 0;
+-	aos->objios.ios = ios;
+-	*outp = &aos->objios;
+-	return 0;
+-}
+-
+-void objio_free_result(struct objlayout_io_res *oir)
+-{
+-	struct objio_state *objios = container_of(oir, struct objio_state, oir);
+-
+-	ore_put_io_state(objios->ios);
+-	kfree(objios);
+-}
+-
+-static enum pnfs_osd_errno osd_pri_2_pnfs_err(enum osd_err_priority oep)
+-{
+-	switch (oep) {
+-	case OSD_ERR_PRI_NO_ERROR:
+-		return (enum pnfs_osd_errno)0;
+-
+-	case OSD_ERR_PRI_CLEAR_PAGES:
+-		BUG_ON(1);
+-		return 0;
+-
+-	case OSD_ERR_PRI_RESOURCE:
+-		return PNFS_OSD_ERR_RESOURCE;
+-	case OSD_ERR_PRI_BAD_CRED:
+-		return PNFS_OSD_ERR_BAD_CRED;
+-	case OSD_ERR_PRI_NO_ACCESS:
+-		return PNFS_OSD_ERR_NO_ACCESS;
+-	case OSD_ERR_PRI_UNREACHABLE:
+-		return PNFS_OSD_ERR_UNREACHABLE;
+-	case OSD_ERR_PRI_NOT_FOUND:
+-		return PNFS_OSD_ERR_NOT_FOUND;
+-	case OSD_ERR_PRI_NO_SPACE:
+-		return PNFS_OSD_ERR_NO_SPACE;
+-	default:
+-		WARN_ON(1);
+-		/* fallthrough */
+-	case OSD_ERR_PRI_EIO:
+-		return PNFS_OSD_ERR_EIO;
+-	}
+-}
+-
+-static void __on_dev_error(struct ore_io_state *ios,
+-	struct ore_dev *od, unsigned dev_index, enum osd_err_priority oep,
+-	u64 dev_offset, u64  dev_len)
+-{
+-	struct objio_state *objios = ios->private;
+-	struct pnfs_osd_objid pooid;
+-	struct objio_dev_ent *ode = container_of(od, typeof(*ode), od);
+-	/* FIXME: what to do with more-then-one-group layouts. We need to
+-	 * translate from ore_io_state index to oc->comps index
+-	 */
+-	unsigned comp = dev_index;
+-
+-	pooid.oid_device_id = ode->id_node.deviceid;
+-	pooid.oid_partition_id = ios->oc->comps[comp].obj.partition;
+-	pooid.oid_object_id = ios->oc->comps[comp].obj.id;
+-
+-	objlayout_io_set_result(&objios->oir, comp,
+-				&pooid, osd_pri_2_pnfs_err(oep),
+-				dev_offset, dev_len, !ios->reading);
+-}
+-
 -/*
-- * osd_initiator.h - OSD initiator API definition
-- *
-- * Copyright (C) 2008 Panasas Inc.  All rights reserved.
-- *
-- * Authors:
-- *   Boaz Harrosh <ooo@electrozaur.com>
-- *   Benny Halevy <bhalevy@panasas.com>
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2
-- *
+- * read
 - */
--#ifndef __OSD_INITIATOR_H__
--#define __OSD_INITIATOR_H__
+-static void _read_done(struct ore_io_state *ios, void *private)
+-{
+-	struct objio_state *objios = private;
+-	ssize_t status;
+-	int ret = ore_check_io(ios, &__on_dev_error);
 -
--#include <scsi/osd_protocol.h>
--#include <scsi/osd_types.h>
+-	/* FIXME: _io_free(ios) can we dealocate the libosd resources; */
 -
--#include <linux/blkdev.h>
--#include <scsi/scsi_device.h>
+-	if (likely(!ret))
+-		status = ios->length;
+-	else
+-		status = ret;
 -
--/* Note: "NI" in comments below means "Not Implemented yet" */
+-	objlayout_read_done(&objios->oir, status, objios->sync);
+-}
 -
--/* Configure of code:
-- * #undef if you *don't* want OSD v1 support in runtime.
-- * If #defined the initiator will dynamically configure to encode OSD v1
-- * CDB's if the target is detected to be OSD v1 only.
-- * OSD v2 only commands, options, and attributes will be ignored if target
-- * is v1 only.
-- * If #defined will result in bigger/slower code (OK Slower maybe not)
-- * Q: Should this be CONFIG_SCSI_OSD_VER1_SUPPORT and set from Kconfig?
-- */
--#define OSD_VER1_SUPPORT y
+-int objio_read_pagelist(struct nfs_pgio_header *hdr)
+-{
+-	struct objio_state *objios;
+-	int ret;
 -
--enum osd_std_version {
--	OSD_VER_NONE = 0,
--	OSD_VER1 = 1,
--	OSD_VER2 = 2,
--};
+-	ret = objio_alloc_io_state(NFS_I(hdr->inode)->layout, true,
+-			hdr->lseg, hdr->args.pages, hdr->args.pgbase,
+-			hdr->args.offset, hdr->args.count, hdr,
+-			GFP_KERNEL, &objios);
+-	if (unlikely(ret))
+-		return ret;
+-
+-	objios->ios->done = _read_done;
+-	dprintk("%s: offset=0x%llx length=0x%x\n", __func__,
+-		hdr->args.offset, hdr->args.count);
+-	ret = ore_read(objios->ios);
+-	if (unlikely(ret))
+-		objio_free_result(&objios->oir);
+-	return ret;
+-}
 -
 -/*
-- * Object-based Storage Device.
-- * This object represents an OSD device.
-- * It is not a full linux device in any way. It is only
-- * a place to hang resources associated with a Linux
-- * request Q and some default properties.
+- * write
 - */
--struct osd_dev {
--	struct scsi_device *scsi_device;
--	unsigned def_timeout;
--
--#ifdef OSD_VER1_SUPPORT
--	enum osd_std_version version;
--#endif
--};
--
--/* Unique Identification of an OSD device */
--struct osd_dev_info {
--	unsigned systemid_len;
--	u8 systemid[OSD_SYSTEMID_LEN];
--	unsigned osdname_len;
--	u8 *osdname;
--};
--
--/* Retrieve/return osd_dev(s) for use by Kernel clients
-- * Use IS_ERR/ERR_PTR on returned "osd_dev *".
-- */
--struct osd_dev *osduld_path_lookup(const char *dev_name);
--struct osd_dev *osduld_info_lookup(const struct osd_dev_info *odi);
--void osduld_put_device(struct osd_dev *od);
--
--const struct osd_dev_info *osduld_device_info(struct osd_dev *od);
--bool osduld_device_same(struct osd_dev *od, const struct osd_dev_info *odi);
--
--/* Add/remove test ioctls from external modules */
--typedef int (do_test_fn)(struct osd_dev *od, unsigned cmd, unsigned long arg);
--int osduld_register_test(unsigned ioctl, do_test_fn *do_test);
--void osduld_unregister_test(unsigned ioctl);
--
--/* These are called by uld at probe time */
--void osd_dev_init(struct osd_dev *od, struct scsi_device *scsi_device);
--void osd_dev_fini(struct osd_dev *od);
--
--/**
-- * osd_auto_detect_ver - Detect the OSD version, return Unique Identification
-- *
-- * @od:     OSD target lun handle
-- * @caps:   Capabilities authorizing OSD root read attributes access
-- * @odi:    Retrieved information uniquely identifying the osd target lun
-- *          Note: odi->osdname must be kfreed by caller.
-- *
-- * Auto detects the OSD version of the OSD target and sets the @od
-- * accordingly. Meanwhile also returns the "system id" and "osd name" root
-- * attributes which uniquely identify the OSD target. This member is usually
-- * called by the ULD. ULD users should call osduld_device_info().
-- * This rutine allocates osd requests and memory at GFP_KERNEL level and might
-- * sleep.
-- */
--int osd_auto_detect_ver(struct osd_dev *od,
--	void *caps, struct osd_dev_info *odi);
--
--static inline struct request_queue *osd_request_queue(struct osd_dev *od)
+-static void _write_done(struct ore_io_state *ios, void *private)
 -{
--	return od->scsi_device->request_queue;
+-	struct objio_state *objios = private;
+-	ssize_t status;
+-	int ret = ore_check_io(ios, &__on_dev_error);
+-
+-	/* FIXME: _io_free(ios) can we dealocate the libosd resources; */
+-
+-	if (likely(!ret)) {
+-		/* FIXME: should be based on the OSD's persistence model
+-		 * See OSD2r05 Section 4.13 Data persistence model */
+-		objios->oir.committed = NFS_FILE_SYNC;
+-		status = ios->length;
+-	} else {
+-		status = ret;
+-	}
+-
+-	objlayout_write_done(&objios->oir, status, objios->sync);
 -}
 -
--/* we might want to use function vector in the future */
--static inline void osd_dev_set_ver(struct osd_dev *od, enum osd_std_version v)
+-static struct page *__r4w_get_page(void *priv, u64 offset, bool *uptodate)
 -{
--#ifdef OSD_VER1_SUPPORT
--	od->version = v;
--#endif
+-	struct objio_state *objios = priv;
+-	struct nfs_pgio_header *hdr = objios->oir.rpcdata;
+-	struct address_space *mapping = hdr->inode->i_mapping;
+-	pgoff_t index = offset / PAGE_SIZE;
+-	struct page *page;
+-	loff_t i_size = i_size_read(hdr->inode);
+-
+-	if (offset >= i_size) {
+-		*uptodate = true;
+-		dprintk("%s: g_zero_page index=0x%lx\n", __func__, index);
+-		return ZERO_PAGE(0);
+-	}
+-
+-	page = find_get_page(mapping, index);
+-	if (!page) {
+-		page = find_or_create_page(mapping, index, GFP_NOFS);
+-		if (unlikely(!page)) {
+-			dprintk("%s: grab_cache_page Failed index=0x%lx\n",
+-				__func__, index);
+-			return NULL;
+-		}
+-		unlock_page(page);
+-	}
+-	*uptodate = PageUptodate(page);
+-	dprintk("%s: index=0x%lx uptodate=%d\n", __func__, index, *uptodate);
+-	return page;
 -}
 -
--static inline bool osd_dev_is_ver1(struct osd_dev *od)
+-static void __r4w_put_page(void *priv, struct page *page)
 -{
--#ifdef OSD_VER1_SUPPORT
--	return od->version == OSD_VER1;
--#else
+-	dprintk("%s: index=0x%lx\n", __func__,
+-		(page == ZERO_PAGE(0)) ? -1UL : page->index);
+-	if (ZERO_PAGE(0) != page)
+-		put_page(page);
+-	return;
+-}
+-
+-static const struct _ore_r4w_op _r4w_op = {
+-	.get_page = &__r4w_get_page,
+-	.put_page = &__r4w_put_page,
+-};
+-
+-int objio_write_pagelist(struct nfs_pgio_header *hdr, int how)
+-{
+-	struct objio_state *objios;
+-	int ret;
+-
+-	ret = objio_alloc_io_state(NFS_I(hdr->inode)->layout, false,
+-			hdr->lseg, hdr->args.pages, hdr->args.pgbase,
+-			hdr->args.offset, hdr->args.count, hdr, GFP_NOFS,
+-			&objios);
+-	if (unlikely(ret))
+-		return ret;
+-
+-	objios->sync = 0 != (how & FLUSH_SYNC);
+-	objios->ios->r4w = &_r4w_op;
+-
+-	if (!objios->sync)
+-		objios->ios->done = _write_done;
+-
+-	dprintk("%s: offset=0x%llx length=0x%x\n", __func__,
+-		hdr->args.offset, hdr->args.count);
+-	ret = ore_write(objios->ios);
+-	if (unlikely(ret)) {
+-		objio_free_result(&objios->oir);
+-		return ret;
+-	}
+-
+-	if (objios->sync)
+-		_write_done(objios->ios, objios);
+-
+-	return 0;
+-}
+-
+-/*
+- * Return 0 if @req cannot be coalesced into @pgio, otherwise return the number
+- * of bytes (maximum @req->wb_bytes) that can be coalesced.
+- */
+-static size_t objio_pg_test(struct nfs_pageio_descriptor *pgio,
+-			  struct nfs_page *prev, struct nfs_page *req)
+-{
+-	struct nfs_pgio_mirror *mirror = nfs_pgio_current_mirror(pgio);
+-	unsigned int size;
+-
+-	size = pnfs_generic_pg_test(pgio, prev, req);
+-
+-	if (!size || mirror->pg_count + req->wb_bytes >
+-	    (unsigned long)pgio->pg_layout_private)
+-		return 0;
+-
+-	return min(size, req->wb_bytes);
+-}
+-
+-static void objio_init_read(struct nfs_pageio_descriptor *pgio, struct nfs_page *req)
+-{
+-	pnfs_generic_pg_init_read(pgio, req);
+-	if (unlikely(pgio->pg_lseg == NULL))
+-		return; /* Not pNFS */
+-
+-	pgio->pg_layout_private = (void *)
+-				OBJIO_LSEG(pgio->pg_lseg)->layout.max_io_length;
+-}
+-
+-static bool aligned_on_raid_stripe(u64 offset, struct ore_layout *layout,
+-				   unsigned long *stripe_end)
+-{
+-	u32 stripe_off;
+-	unsigned stripe_size;
+-
+-	if (layout->raid_algorithm == PNFS_OSD_RAID_0)
+-		return true;
+-
+-	stripe_size = layout->stripe_unit *
+-				(layout->group_width - layout->parity);
+-
+-	div_u64_rem(offset, stripe_size, &stripe_off);
+-	if (!stripe_off)
+-		return true;
+-
+-	*stripe_end = stripe_size - stripe_off;
 -	return false;
--#endif
 -}
 -
--struct osd_request;
--typedef void (osd_req_done_fn)(struct osd_request *or, void *private);
--
--struct osd_request {
--	struct osd_cdb cdb;
--	struct osd_data_out_integrity_info out_data_integ;
--	struct osd_data_in_integrity_info in_data_integ;
--
--	struct osd_dev *osd_dev;
--	struct request *request;
--
--	struct _osd_req_data_segment {
--		void *buff;
--		unsigned alloc_size; /* 0 here means: don't call kfree */
--		unsigned total_bytes;
--	} cdb_cont, set_attr, enc_get_attr, get_attr;
--
--	struct _osd_io_info {
--		struct bio *bio;
--		u64 total_bytes;
--		u64 residual;
--		struct request *req;
--		struct _osd_req_data_segment *last_seg;
--		u8 *pad_buff;
--	} out, in;
--
--	gfp_t alloc_flags;
--	unsigned timeout;
--	unsigned retries;
--	unsigned sense_len;
--	u8 sense[OSD_MAX_SENSE_LEN];
--	enum osd_attributes_mode attributes_mode;
--
--	osd_req_done_fn *async_done;
--	void *async_private;
--	int async_error;
--	int req_errors;
--};
--
--static inline bool osd_req_is_ver1(struct osd_request *or)
+-static void objio_init_write(struct nfs_pageio_descriptor *pgio, struct nfs_page *req)
 -{
--	return osd_dev_is_ver1(or->osd_dev);
+-	unsigned long stripe_end = 0;
+-	u64 wb_size;
+-
+-	if (pgio->pg_dreq == NULL)
+-		wb_size = i_size_read(pgio->pg_inode) - req_offset(req);
+-	else
+-		wb_size = nfs_dreq_bytes_left(pgio->pg_dreq);
+-
+-	pnfs_generic_pg_init_write(pgio, req, wb_size);
+-	if (unlikely(pgio->pg_lseg == NULL))
+-		return; /* Not pNFS */
+-
+-	if (req->wb_offset ||
+-	    !aligned_on_raid_stripe(req->wb_index * PAGE_SIZE,
+-			       &OBJIO_LSEG(pgio->pg_lseg)->layout,
+-			       &stripe_end)) {
+-		pgio->pg_layout_private = (void *)stripe_end;
+-	} else {
+-		pgio->pg_layout_private = (void *)
+-				OBJIO_LSEG(pgio->pg_lseg)->layout.max_io_length;
+-	}
 -}
 -
--/*
-- * How to use the osd library:
-- *
-- * osd_start_request
-- *	Allocates a request.
-- *
-- * osd_req_*
-- *	Call one of, to encode the desired operation.
-- *
-- * osd_add_{get,set}_attr
-- *	Optionally add attributes to the CDB, list or page mode.
-- *
-- * osd_finalize_request
-- *	Computes final data out/in offsets and signs the request,
-- *	making it ready for execution.
-- *
-- * osd_execute_request
-- *	May be called to execute it through the block layer. Other wise submit
-- *	the associated block request in some other way.
-- *
-- * After execution:
-- * osd_req_decode_sense
-- *	Decodes sense information to verify execution results.
-- *
-- * osd_req_decode_get_attr
-- *	Retrieve osd_add_get_attr_list() values if used.
-- *
-- * osd_end_request
-- *	Must be called to deallocate the request.
-- */
--
--/**
-- * osd_start_request - Allocate and initialize an osd_request
-- *
-- * @osd_dev:    OSD device that holds the scsi-device and default values
-- *              that the request is associated with.
-- * @gfp:        The allocation flags to use for request allocation, and all
-- *              subsequent allocations. This will be stored at
-- *              osd_request->alloc_flags, can be changed by user later
-- *
-- * Allocate osd_request and initialize all members to the
-- * default/initial state.
-- */
--struct osd_request *osd_start_request(struct osd_dev *od, gfp_t gfp);
--
--enum osd_req_options {
--	OSD_REQ_FUA = 0x08,	/* Force Unit Access */
--	OSD_REQ_DPO = 0x10,	/* Disable Page Out */
--
--	OSD_REQ_BYPASS_TIMESTAMPS = 0x80,
+-static const struct nfs_pageio_ops objio_pg_read_ops = {
+-	.pg_init = objio_init_read,
+-	.pg_test = objio_pg_test,
+-	.pg_doio = pnfs_generic_pg_readpages,
+-	.pg_cleanup = pnfs_generic_pg_cleanup,
 -};
 -
--/**
-- * osd_finalize_request - Sign request and prepare request for execution
-- *
-- * @or:		osd_request to prepare
-- * @options:	combination of osd_req_options bit flags or 0.
-- * @cap:	A Pointer to an OSD_CAP_LEN bytes buffer that is received from
-- *              The security manager as capabilities for this cdb.
-- * @cap_key:	The cryptographic key used to sign the cdb/data. Can be null
-- *              if NOSEC is used.
-- *
-- * The actual request and bios are only allocated here, so are the get_attr
-- * buffers that will receive the returned attributes. Copy's @cap to cdb.
-- * Sign the cdb/data with @cap_key.
-- */
--int osd_finalize_request(struct osd_request *or,
--	u8 options, const void *cap, const u8 *cap_key);
--
--/**
-- * osd_execute_request - Execute the request synchronously through block-layer
-- *
-- * @or:		osd_request to Executed
-- *
-- * Calls blk_execute_rq to q the command and waits for completion.
-- */
--int osd_execute_request(struct osd_request *or);
--
--/**
-- * osd_execute_request_async - Execute the request without waitting.
-- *
-- * @or:                      - osd_request to Executed
-- * @done: (Optional)         - Called at end of execution
-- * @private:                 - Will be passed to @done function
-- *
-- * Calls blk_execute_rq_nowait to queue the command. When execution is done
-- * optionally calls @done with @private as parameter. @or->async_error will
-- * have the return code
-- */
--int osd_execute_request_async(struct osd_request *or,
--	osd_req_done_fn *done, void *private);
--
--/**
-- * osd_req_decode_sense_full - Decode sense information after execution.
-- *
-- * @or:           - osd_request to examine
-- * @osi           - Receives a more detailed error report information (optional).
-- * @silent        - Do not print to dmsg (Even if enabled)
-- * @bad_obj_list  - Some commands act on multiple objects. Failed objects will
-- *                  be received here (optional)
-- * @max_obj       - Size of @bad_obj_list.
-- * @bad_attr_list - List of failing attributes (optional)
-- * @max_attr      - Size of @bad_attr_list.
-- *
-- * After execution, osd_request results are analyzed using this function. The
-- * return code is the final disposition on the error. So it is possible that a
-- * CHECK_CONDITION was returned from target but this will return NO_ERROR, for
-- * example on recovered errors. All parameters are optional if caller does
-- * not need any returned information.
-- * Note: This function will also dump the error to dmsg according to settings
-- * of the SCSI_OSD_DPRINT_SENSE Kconfig value. Set @silent if you know the
-- * command would routinely fail, to not spam the dmsg file.
-- */
--
--/**
-- * osd_err_priority - osd categorized return codes in ascending severity.
-- *
-- * The categories are borrowed from the pnfs_osd_errno enum.
-- * See comments for translated Linux codes returned by osd_req_decode_sense.
-- */
--enum osd_err_priority {
--	OSD_ERR_PRI_NO_ERROR	= 0,
--	/* Recoverable, caller should clear_highpage() all pages */
--	OSD_ERR_PRI_CLEAR_PAGES = 1, /* -EFAULT */
--	OSD_ERR_PRI_RESOURCE	= 2, /* -ENOMEM */
--	OSD_ERR_PRI_BAD_CRED	= 3, /* -EINVAL */
--	OSD_ERR_PRI_NO_ACCESS	= 4, /* -EACCES */
--	OSD_ERR_PRI_UNREACHABLE	= 5, /* any other */
--	OSD_ERR_PRI_NOT_FOUND	= 6, /* -ENOENT */
--	OSD_ERR_PRI_NO_SPACE	= 7, /* -ENOSPC */
--	OSD_ERR_PRI_EIO		= 8, /* -EIO    */
+-static const struct nfs_pageio_ops objio_pg_write_ops = {
+-	.pg_init = objio_init_write,
+-	.pg_test = objio_pg_test,
+-	.pg_doio = pnfs_generic_pg_writepages,
+-	.pg_cleanup = pnfs_generic_pg_cleanup,
 -};
 -
--struct osd_sense_info {
--	enum osd_err_priority osd_err_pri;
+-static struct pnfs_layoutdriver_type objlayout_type = {
+-	.id = LAYOUT_OSD2_OBJECTS,
+-	.name = "LAYOUT_OSD2_OBJECTS",
+-	.flags                   = PNFS_LAYOUTRET_ON_SETATTR |
+-				   PNFS_LAYOUTRET_ON_ERROR,
 -
--	int key;		/* one of enum scsi_sense_keys */
--	int additional_code ;	/* enum osd_additional_sense_codes */
--	union { /* Sense specific information */
--		u16 sense_info;
--		u16 cdb_field_offset; 	/* scsi_invalid_field_in_cdb */
--	};
--	union { /* Command specific information */
--		u64 command_info;
--	};
+-	.max_deviceinfo_size	 = PAGE_SIZE,
+-	.owner		       	 = THIS_MODULE,
+-	.alloc_layout_hdr        = objlayout_alloc_layout_hdr,
+-	.free_layout_hdr         = objlayout_free_layout_hdr,
 -
--	u32 not_initiated_command_functions; /* osd_command_functions_bits */
--	u32 completed_command_functions; /* osd_command_functions_bits */
--	struct osd_obj_id obj;
--	struct osd_attr attr;
+-	.alloc_lseg              = objlayout_alloc_lseg,
+-	.free_lseg               = objlayout_free_lseg,
+-
+-	.read_pagelist           = objlayout_read_pagelist,
+-	.write_pagelist          = objlayout_write_pagelist,
+-	.pg_read_ops             = &objio_pg_read_ops,
+-	.pg_write_ops            = &objio_pg_write_ops,
+-
+-	.sync			 = pnfs_generic_sync,
+-
+-	.free_deviceid_node	 = objio_free_deviceid_node,
+-
+-	.encode_layoutcommit	 = objlayout_encode_layoutcommit,
+-	.encode_layoutreturn     = objlayout_encode_layoutreturn,
 -};
 -
--int osd_req_decode_sense_full(struct osd_request *or,
--	struct osd_sense_info *osi, bool silent,
--	struct osd_obj_id *bad_obj_list, int max_obj,
--	struct osd_attr *bad_attr_list, int max_attr);
+-MODULE_DESCRIPTION("pNFS Layout Driver for OSD2 objects");
+-MODULE_AUTHOR("Benny Halevy <bhalevy@panasas.com>");
+-MODULE_LICENSE("GPL");
 -
--static inline int osd_req_decode_sense(struct osd_request *or,
--	struct osd_sense_info *osi)
+-static int __init
+-objlayout_init(void)
 -{
--	return osd_req_decode_sense_full(or, osi, false, NULL, 0, NULL, 0);
+-	int ret = pnfs_register_layoutdriver(&objlayout_type);
+-
+-	if (ret)
+-		printk(KERN_INFO
+-			"NFS: %s: Registering OSD pNFS Layout Driver failed: error=%d\n",
+-			__func__, ret);
+-	else
+-		printk(KERN_INFO "NFS: %s: Registered OSD pNFS Layout Driver\n",
+-			__func__);
+-	return ret;
 -}
 -
--/**
-- * osd_end_request - return osd_request to free store
-- *
-- * @or:		osd_request to free
-- *
-- * Deallocate all osd_request resources (struct req's, BIOs, buffers, etc.)
-- */
--void osd_end_request(struct osd_request *or);
+-static void __exit
+-objlayout_exit(void)
+-{
+-	pnfs_unregister_layoutdriver(&objlayout_type);
+-	printk(KERN_INFO "NFS: %s: Unregistered OSD pNFS Layout Driver\n",
+-	       __func__);
+-}
 -
--/*
-- * CDB Encoding
-- *
-- * Note: call only one of the following methods.
-- */
+-MODULE_ALIAS("nfs-layouttype4-2");
 -
--/*
-- * Device commands
-- */
--void osd_req_set_master_seed_xchg(struct osd_request *or, ...);/* NI */
--void osd_req_set_master_key(struct osd_request *or, ...);/* NI */
--
--void osd_req_format(struct osd_request *or, u64 tot_capacity);
--
--/* list all partitions
-- * @list header must be initialized to zero on first run.
-- *
-- * Call osd_is_obj_list_done() to find if we got the complete list.
-- */
--int osd_req_list_dev_partitions(struct osd_request *or,
--	osd_id initial_id, struct osd_obj_id_list *list, unsigned nelem);
--
--void osd_req_flush_obsd(struct osd_request *or,
--	enum osd_options_flush_scope_values);
--
--void osd_req_perform_scsi_command(struct osd_request *or,
--	const u8 *cdb, ...);/* NI */
--void osd_req_task_management(struct osd_request *or, ...);/* NI */
--
--/*
-- * Partition commands
-- */
--void osd_req_create_partition(struct osd_request *or, osd_id partition);
--void osd_req_remove_partition(struct osd_request *or, osd_id partition);
--
--void osd_req_set_partition_key(struct osd_request *or,
--	osd_id partition, u8 new_key_id[OSD_CRYPTO_KEYID_SIZE],
--	u8 seed[OSD_CRYPTO_SEED_SIZE]);/* NI */
--
--/* list all collections in the partition
-- * @list header must be init to zero on first run.
-- *
-- * Call osd_is_obj_list_done() to find if we got the complete list.
-- */
--int osd_req_list_partition_collections(struct osd_request *or,
--	osd_id partition, osd_id initial_id, struct osd_obj_id_list *list,
--	unsigned nelem);
--
--/* list all objects in the partition
-- * @list header must be init to zero on first run.
-- *
-- * Call osd_is_obj_list_done() to find if we got the complete list.
-- */
--int osd_req_list_partition_objects(struct osd_request *or,
--	osd_id partition, osd_id initial_id, struct osd_obj_id_list *list,
--	unsigned nelem);
--
--void osd_req_flush_partition(struct osd_request *or,
--	osd_id partition, enum osd_options_flush_scope_values);
--
--/*
-- * Collection commands
-- */
--void osd_req_create_collection(struct osd_request *or,
--	const struct osd_obj_id *);/* NI */
--void osd_req_remove_collection(struct osd_request *or,
--	const struct osd_obj_id *);/* NI */
--
--/* list all objects in the collection */
--int osd_req_list_collection_objects(struct osd_request *or,
--	const struct osd_obj_id *, osd_id initial_id,
--	struct osd_obj_id_list *list, unsigned nelem);
--
--/* V2 only filtered list of objects in the collection */
--void osd_req_query(struct osd_request *or, ...);/* NI */
--
--void osd_req_flush_collection(struct osd_request *or,
--	const struct osd_obj_id *, enum osd_options_flush_scope_values);
--
--void osd_req_get_member_attrs(struct osd_request *or, ...);/* V2-only NI */
--void osd_req_set_member_attrs(struct osd_request *or, ...);/* V2-only NI */
--
--/*
-- * Object commands
-- */
--void osd_req_create_object(struct osd_request *or, struct osd_obj_id *);
--void osd_req_remove_object(struct osd_request *or, struct osd_obj_id *);
--
--void osd_req_write(struct osd_request *or,
--	const struct osd_obj_id *obj, u64 offset, struct bio *bio, u64 len);
--int osd_req_write_kern(struct osd_request *or,
--	const struct osd_obj_id *obj, u64 offset, void *buff, u64 len);
--void osd_req_append(struct osd_request *or,
--	const struct osd_obj_id *, struct bio *data_out);/* NI */
--void osd_req_create_write(struct osd_request *or,
--	const struct osd_obj_id *, struct bio *data_out, u64 offset);/* NI */
--void osd_req_clear(struct osd_request *or,
--	const struct osd_obj_id *, u64 offset, u64 len);/* NI */
--void osd_req_punch(struct osd_request *or,
--	const struct osd_obj_id *, u64 offset, u64 len);/* V2-only NI */
--
--void osd_req_flush_object(struct osd_request *or,
--	const struct osd_obj_id *, enum osd_options_flush_scope_values,
--	/*V2*/ u64 offset, /*V2*/ u64 len);
--
--void osd_req_read(struct osd_request *or,
--	const struct osd_obj_id *obj, u64 offset, struct bio *bio, u64 len);
--int osd_req_read_kern(struct osd_request *or,
--	const struct osd_obj_id *obj, u64 offset, void *buff, u64 len);
--
--/* Scatter/Gather write/read commands */
--int osd_req_write_sg(struct osd_request *or,
--	const struct osd_obj_id *obj, struct bio *bio,
--	const struct osd_sg_entry *sglist, unsigned numentries);
--int osd_req_read_sg(struct osd_request *or,
--	const struct osd_obj_id *obj, struct bio *bio,
--	const struct osd_sg_entry *sglist, unsigned numentries);
--int osd_req_write_sg_kern(struct osd_request *or,
--	const struct osd_obj_id *obj, void **buff,
--	const struct osd_sg_entry *sglist, unsigned numentries);
--int osd_req_read_sg_kern(struct osd_request *or,
--	const struct osd_obj_id *obj, void **buff,
--	const struct osd_sg_entry *sglist, unsigned numentries);
--
--/*
-- * Root/Partition/Collection/Object Attributes commands
-- */
--
--/* get before set */
--void osd_req_get_attributes(struct osd_request *or, const struct osd_obj_id *);
--
--/* set before get */
--void osd_req_set_attributes(struct osd_request *or, const struct osd_obj_id *);
--
--/*
-- * Attributes appended to most commands
-- */
--
--/* Attributes List mode (or V2 CDB) */
--  /*
--   * TODO: In ver2 if at finalize time only one attr was set and no gets,
--   * then the Attributes CDB mode is used automatically to save IO.
--   */
--
--/* set a list of attributes. */
--int osd_req_add_set_attr_list(struct osd_request *or,
--	const struct osd_attr *, unsigned nelem);
--
--/* get a list of attributes */
--int osd_req_add_get_attr_list(struct osd_request *or,
--	const struct osd_attr *, unsigned nelem);
--
--/*
-- * Attributes list decoding
-- * Must be called after osd_request.request was executed
-- * It is called in a loop to decode the returned get_attr
-- * (see osd_add_get_attr)
-- */
--int osd_req_decode_get_attr_list(struct osd_request *or,
--	struct osd_attr *, int *nelem, void **iterator);
--
--/* Attributes Page mode */
--
--/*
-- * Read an attribute page and optionally set one attribute
-- *
-- * Retrieves the attribute page directly to a user buffer.
-- * @attr_page_data shall stay valid until end of execution.
-- * See osd_attributes.h for common page structures
-- */
--int osd_req_add_get_attr_page(struct osd_request *or,
--	u32 page_id, void *attr_page_data, unsigned max_page_len,
--	const struct osd_attr *set_one);
--
--#endif /* __OSD_LIB_H__ */
-diff --git a/include/scsi/osd_ore.h b/include/scsi/osd_ore.h
+-module_init(objlayout_init);
+-module_exit(objlayout_exit);
+diff --git a/fs/nfs/objlayout/objlayout.c b/fs/nfs/objlayout/objlayout.c
 deleted file mode 100644
-index 7a8d2cd30328..000000000000
---- a/include/scsi/osd_ore.h
+index 8f3d2acb81c3..000000000000
+--- a/fs/nfs/objlayout/objlayout.c
 +++ /dev/null
-@@ -1,201 +0,0 @@
+@@ -1,706 +0,0 @@
 -/*
-- * Copyright (C) 2011
-- * Boaz Harrosh <ooo@electrozaur.com>
+- *  pNFS Objects layout driver high level definitions
 - *
-- * Public Declarations of the ORE API
+- *  Copyright (C) 2007 Panasas Inc. [year of first publication]
+- *  All rights reserved.
 - *
-- * This file is part of the ORE (Object Raid Engine) library.
+- *  Benny Halevy <bhalevy@panasas.com>
+- *  Boaz Harrosh <ooo@electrozaur.com>
 - *
-- * ORE is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2 as published
-- * by the Free Software Foundation. (GPL v2)
+- *  This program is free software; you can redistribute it and/or modify
+- *  it under the terms of the GNU General Public License version 2
+- *  See the file COPYING included with this distribution for more details.
 - *
-- * ORE is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
+- *  Redistribution and use in source and binary forms, with or without
+- *  modification, are permitted provided that the following conditions
+- *  are met:
 - *
-- * You should have received a copy of the GNU General Public License
-- * along with the ORE; if not, write to the Free Software
-- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- *  1. Redistributions of source code must retain the above copyright
+- *     notice, this list of conditions and the following disclaimer.
+- *  2. Redistributions in binary form must reproduce the above copyright
+- *     notice, this list of conditions and the following disclaimer in the
+- *     documentation and/or other materials provided with the distribution.
+- *  3. Neither the name of the Panasas company nor the names of its
+- *     contributors may be used to endorse or promote products derived
+- *     from this software without specific prior written permission.
+- *
+- *  THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED
+- *  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+- *  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+- *  DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+- *  FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+- *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+- *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+- *  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+- *  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+- *  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+- *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 - */
--#ifndef __ORE_H__
--#define __ORE_H__
 -
+-#include <linux/kmod.h>
+-#include <linux/moduleparam.h>
+-#include <linux/ratelimit.h>
 -#include <scsi/osd_initiator.h>
--#include <scsi/osd_attributes.h>
--#include <scsi/osd_sec.h>
+-#include "objlayout.h"
+-
+-#define NFSDBG_FACILITY         NFSDBG_PNFS_LD
+-/*
+- * Create a objlayout layout structure for the given inode and return it.
+- */
+-struct pnfs_layout_hdr *
+-objlayout_alloc_layout_hdr(struct inode *inode, gfp_t gfp_flags)
+-{
+-	struct objlayout *objlay;
+-
+-	objlay = kzalloc(sizeof(struct objlayout), gfp_flags);
+-	if (!objlay)
+-		return NULL;
+-	spin_lock_init(&objlay->lock);
+-	INIT_LIST_HEAD(&objlay->err_list);
+-	dprintk("%s: Return %p\n", __func__, objlay);
+-	return &objlay->pnfs_layout;
+-}
+-
+-/*
+- * Free an objlayout layout structure
+- */
+-void
+-objlayout_free_layout_hdr(struct pnfs_layout_hdr *lo)
+-{
+-	struct objlayout *objlay = OBJLAYOUT(lo);
+-
+-	dprintk("%s: objlay %p\n", __func__, objlay);
+-
+-	WARN_ON(!list_empty(&objlay->err_list));
+-	kfree(objlay);
+-}
+-
+-/*
+- * Unmarshall layout and store it in pnfslay.
+- */
+-struct pnfs_layout_segment *
+-objlayout_alloc_lseg(struct pnfs_layout_hdr *pnfslay,
+-		     struct nfs4_layoutget_res *lgr,
+-		     gfp_t gfp_flags)
+-{
+-	int status = -ENOMEM;
+-	struct xdr_stream stream;
+-	struct xdr_buf buf = {
+-		.pages =  lgr->layoutp->pages,
+-		.page_len =  lgr->layoutp->len,
+-		.buflen =  lgr->layoutp->len,
+-		.len = lgr->layoutp->len,
+-	};
+-	struct page *scratch;
+-	struct pnfs_layout_segment *lseg;
+-
+-	dprintk("%s: Begin pnfslay %p\n", __func__, pnfslay);
+-
+-	scratch = alloc_page(gfp_flags);
+-	if (!scratch)
+-		goto err_nofree;
+-
+-	xdr_init_decode(&stream, &buf, NULL);
+-	xdr_set_scratch_buffer(&stream, page_address(scratch), PAGE_SIZE);
+-
+-	status = objio_alloc_lseg(&lseg, pnfslay, &lgr->range, &stream, gfp_flags);
+-	if (unlikely(status)) {
+-		dprintk("%s: objio_alloc_lseg Return err %d\n", __func__,
+-			status);
+-		goto err;
+-	}
+-
+-	__free_page(scratch);
+-
+-	dprintk("%s: Return %p\n", __func__, lseg);
+-	return lseg;
+-
+-err:
+-	__free_page(scratch);
+-err_nofree:
+-	dprintk("%s: Err Return=>%d\n", __func__, status);
+-	return ERR_PTR(status);
+-}
+-
+-/*
+- * Free a layout segement
+- */
+-void
+-objlayout_free_lseg(struct pnfs_layout_segment *lseg)
+-{
+-	dprintk("%s: freeing layout segment %p\n", __func__, lseg);
+-
+-	if (unlikely(!lseg))
+-		return;
+-
+-	objio_free_lseg(lseg);
+-}
+-
+-/*
+- * I/O Operations
+- */
+-static inline u64
+-end_offset(u64 start, u64 len)
+-{
+-	u64 end;
+-
+-	end = start + len;
+-	return end >= start ? end : NFS4_MAX_UINT64;
+-}
+-
+-static void _fix_verify_io_params(struct pnfs_layout_segment *lseg,
+-			   struct page ***p_pages, unsigned *p_pgbase,
+-			   u64 offset, unsigned long count)
+-{
+-	u64 lseg_end_offset;
+-
+-	BUG_ON(offset < lseg->pls_range.offset);
+-	lseg_end_offset = end_offset(lseg->pls_range.offset,
+-				     lseg->pls_range.length);
+-	BUG_ON(offset >= lseg_end_offset);
+-	WARN_ON(offset + count > lseg_end_offset);
+-
+-	if (*p_pgbase > PAGE_SIZE) {
+-		dprintk("%s: pgbase(0x%x) > PAGE_SIZE\n", __func__, *p_pgbase);
+-		*p_pages += *p_pgbase >> PAGE_SHIFT;
+-		*p_pgbase &= ~PAGE_MASK;
+-	}
+-}
+-
+-/*
+- * I/O done common code
+- */
+-static void
+-objlayout_iodone(struct objlayout_io_res *oir)
+-{
+-	if (likely(oir->status >= 0)) {
+-		objio_free_result(oir);
+-	} else {
+-		struct objlayout *objlay = oir->objlay;
+-
+-		spin_lock(&objlay->lock);
+-		objlay->delta_space_valid = OBJ_DSU_INVALID;
+-		list_add(&objlay->err_list, &oir->err_list);
+-		spin_unlock(&objlay->lock);
+-	}
+-}
+-
+-/*
+- * objlayout_io_set_result - Set an osd_error code on a specific osd comp.
+- *
+- * The @index component IO failed (error returned from target). Register
+- * the error for later reporting at layout-return.
+- */
+-void
+-objlayout_io_set_result(struct objlayout_io_res *oir, unsigned index,
+-			struct pnfs_osd_objid *pooid, int osd_error,
+-			u64 offset, u64 length, bool is_write)
+-{
+-	struct pnfs_osd_ioerr *ioerr = &oir->ioerrs[index];
+-
+-	BUG_ON(index >= oir->num_comps);
+-	if (osd_error) {
+-		ioerr->oer_component = *pooid;
+-		ioerr->oer_comp_offset = offset;
+-		ioerr->oer_comp_length = length;
+-		ioerr->oer_iswrite = is_write;
+-		ioerr->oer_errno = osd_error;
+-
+-		dprintk("%s: err[%d]: errno=%d is_write=%d dev(%llx:%llx) "
+-			"par=0x%llx obj=0x%llx offset=0x%llx length=0x%llx\n",
+-			__func__, index, ioerr->oer_errno,
+-			ioerr->oer_iswrite,
+-			_DEVID_LO(&ioerr->oer_component.oid_device_id),
+-			_DEVID_HI(&ioerr->oer_component.oid_device_id),
+-			ioerr->oer_component.oid_partition_id,
+-			ioerr->oer_component.oid_object_id,
+-			ioerr->oer_comp_offset,
+-			ioerr->oer_comp_length);
+-	} else {
+-		/* User need not call if no error is reported */
+-		ioerr->oer_errno = 0;
+-	}
+-}
+-
+-/* Function scheduled on rpc workqueue to call ->nfs_readlist_complete().
+- * This is because the osd completion is called with ints-off from
+- * the block layer
+- */
+-static void _rpc_read_complete(struct work_struct *work)
+-{
+-	struct rpc_task *task;
+-	struct nfs_pgio_header *hdr;
+-
+-	dprintk("%s enter\n", __func__);
+-	task = container_of(work, struct rpc_task, u.tk_work);
+-	hdr = container_of(task, struct nfs_pgio_header, task);
+-
+-	pnfs_ld_read_done(hdr);
+-}
+-
+-void
+-objlayout_read_done(struct objlayout_io_res *oir, ssize_t status, bool sync)
+-{
+-	struct nfs_pgio_header *hdr = oir->rpcdata;
+-
+-	oir->status = hdr->task.tk_status = status;
+-	if (status >= 0)
+-		hdr->res.count = status;
+-	else
+-		hdr->pnfs_error = status;
+-	objlayout_iodone(oir);
+-	/* must not use oir after this point */
+-
+-	dprintk("%s: Return status=%zd eof=%d sync=%d\n", __func__,
+-		status, hdr->res.eof, sync);
+-
+-	if (sync)
+-		pnfs_ld_read_done(hdr);
+-	else {
+-		INIT_WORK(&hdr->task.u.tk_work, _rpc_read_complete);
+-		schedule_work(&hdr->task.u.tk_work);
+-	}
+-}
+-
+-/*
+- * Perform sync or async reads.
+- */
+-enum pnfs_try_status
+-objlayout_read_pagelist(struct nfs_pgio_header *hdr)
+-{
+-	struct inode *inode = hdr->inode;
+-	loff_t offset = hdr->args.offset;
+-	size_t count = hdr->args.count;
+-	int err;
+-	loff_t eof;
+-
+-	eof = i_size_read(inode);
+-	if (unlikely(offset + count > eof)) {
+-		if (offset >= eof) {
+-			err = 0;
+-			hdr->res.count = 0;
+-			hdr->res.eof = 1;
+-			/*FIXME: do we need to call pnfs_ld_read_done() */
+-			goto out;
+-		}
+-		count = eof - offset;
+-	}
+-
+-	hdr->res.eof = (offset + count) >= eof;
+-	_fix_verify_io_params(hdr->lseg, &hdr->args.pages,
+-			      &hdr->args.pgbase,
+-			      hdr->args.offset, hdr->args.count);
+-
+-	dprintk("%s: inode(%lx) offset 0x%llx count 0x%zx eof=%d\n",
+-		__func__, inode->i_ino, offset, count, hdr->res.eof);
+-
+-	err = objio_read_pagelist(hdr);
+- out:
+-	if (unlikely(err)) {
+-		hdr->pnfs_error = err;
+-		dprintk("%s: Returned Error %d\n", __func__, err);
+-		return PNFS_NOT_ATTEMPTED;
+-	}
+-	return PNFS_ATTEMPTED;
+-}
+-
+-/* Function scheduled on rpc workqueue to call ->nfs_writelist_complete().
+- * This is because the osd completion is called with ints-off from
+- * the block layer
+- */
+-static void _rpc_write_complete(struct work_struct *work)
+-{
+-	struct rpc_task *task;
+-	struct nfs_pgio_header *hdr;
+-
+-	dprintk("%s enter\n", __func__);
+-	task = container_of(work, struct rpc_task, u.tk_work);
+-	hdr = container_of(task, struct nfs_pgio_header, task);
+-
+-	pnfs_ld_write_done(hdr);
+-}
+-
+-void
+-objlayout_write_done(struct objlayout_io_res *oir, ssize_t status, bool sync)
+-{
+-	struct nfs_pgio_header *hdr = oir->rpcdata;
+-
+-	oir->status = hdr->task.tk_status = status;
+-	if (status >= 0) {
+-		hdr->res.count = status;
+-		hdr->verf.committed = oir->committed;
+-	} else {
+-		hdr->pnfs_error = status;
+-	}
+-	objlayout_iodone(oir);
+-	/* must not use oir after this point */
+-
+-	dprintk("%s: Return status %zd committed %d sync=%d\n", __func__,
+-		status, hdr->verf.committed, sync);
+-
+-	if (sync)
+-		pnfs_ld_write_done(hdr);
+-	else {
+-		INIT_WORK(&hdr->task.u.tk_work, _rpc_write_complete);
+-		schedule_work(&hdr->task.u.tk_work);
+-	}
+-}
+-
+-/*
+- * Perform sync or async writes.
+- */
+-enum pnfs_try_status
+-objlayout_write_pagelist(struct nfs_pgio_header *hdr, int how)
+-{
+-	int err;
+-
+-	_fix_verify_io_params(hdr->lseg, &hdr->args.pages,
+-			      &hdr->args.pgbase,
+-			      hdr->args.offset, hdr->args.count);
+-
+-	err = objio_write_pagelist(hdr, how);
+-	if (unlikely(err)) {
+-		hdr->pnfs_error = err;
+-		dprintk("%s: Returned Error %d\n", __func__, err);
+-		return PNFS_NOT_ATTEMPTED;
+-	}
+-	return PNFS_ATTEMPTED;
+-}
+-
+-void
+-objlayout_encode_layoutcommit(struct pnfs_layout_hdr *pnfslay,
+-			      struct xdr_stream *xdr,
+-			      const struct nfs4_layoutcommit_args *args)
+-{
+-	struct objlayout *objlay = OBJLAYOUT(pnfslay);
+-	struct pnfs_osd_layoutupdate lou;
+-	__be32 *start;
+-
+-	dprintk("%s: Begin\n", __func__);
+-
+-	spin_lock(&objlay->lock);
+-	lou.dsu_valid = (objlay->delta_space_valid == OBJ_DSU_VALID);
+-	lou.dsu_delta = objlay->delta_space_used;
+-	objlay->delta_space_used = 0;
+-	objlay->delta_space_valid = OBJ_DSU_INIT;
+-	lou.olu_ioerr_flag = !list_empty(&objlay->err_list);
+-	spin_unlock(&objlay->lock);
+-
+-	start = xdr_reserve_space(xdr, 4);
+-
+-	BUG_ON(pnfs_osd_xdr_encode_layoutupdate(xdr, &lou));
+-
+-	*start = cpu_to_be32((xdr->p - start - 1) * 4);
+-
+-	dprintk("%s: Return delta_space_used %lld err %d\n", __func__,
+-		lou.dsu_delta, lou.olu_ioerr_flag);
+-}
+-
+-static int
+-err_prio(u32 oer_errno)
+-{
+-	switch (oer_errno) {
+-	case 0:
+-		return 0;
+-
+-	case PNFS_OSD_ERR_RESOURCE:
+-		return OSD_ERR_PRI_RESOURCE;
+-	case PNFS_OSD_ERR_BAD_CRED:
+-		return OSD_ERR_PRI_BAD_CRED;
+-	case PNFS_OSD_ERR_NO_ACCESS:
+-		return OSD_ERR_PRI_NO_ACCESS;
+-	case PNFS_OSD_ERR_UNREACHABLE:
+-		return OSD_ERR_PRI_UNREACHABLE;
+-	case PNFS_OSD_ERR_NOT_FOUND:
+-		return OSD_ERR_PRI_NOT_FOUND;
+-	case PNFS_OSD_ERR_NO_SPACE:
+-		return OSD_ERR_PRI_NO_SPACE;
+-	default:
+-		WARN_ON(1);
+-		/* fallthrough */
+-	case PNFS_OSD_ERR_EIO:
+-		return OSD_ERR_PRI_EIO;
+-	}
+-}
+-
+-static void
+-merge_ioerr(struct pnfs_osd_ioerr *dest_err,
+-	    const struct pnfs_osd_ioerr *src_err)
+-{
+-	u64 dest_end, src_end;
+-
+-	if (!dest_err->oer_errno) {
+-		*dest_err = *src_err;
+-		/* accumulated device must be blank */
+-		memset(&dest_err->oer_component.oid_device_id, 0,
+-			sizeof(dest_err->oer_component.oid_device_id));
+-
+-		return;
+-	}
+-
+-	if (dest_err->oer_component.oid_partition_id !=
+-				src_err->oer_component.oid_partition_id)
+-		dest_err->oer_component.oid_partition_id = 0;
+-
+-	if (dest_err->oer_component.oid_object_id !=
+-				src_err->oer_component.oid_object_id)
+-		dest_err->oer_component.oid_object_id = 0;
+-
+-	if (dest_err->oer_comp_offset > src_err->oer_comp_offset)
+-		dest_err->oer_comp_offset = src_err->oer_comp_offset;
+-
+-	dest_end = end_offset(dest_err->oer_comp_offset,
+-			      dest_err->oer_comp_length);
+-	src_end =  end_offset(src_err->oer_comp_offset,
+-			      src_err->oer_comp_length);
+-	if (dest_end < src_end)
+-		dest_end = src_end;
+-
+-	dest_err->oer_comp_length = dest_end - dest_err->oer_comp_offset;
+-
+-	if ((src_err->oer_iswrite == dest_err->oer_iswrite) &&
+-	    (err_prio(src_err->oer_errno) > err_prio(dest_err->oer_errno))) {
+-			dest_err->oer_errno = src_err->oer_errno;
+-	} else if (src_err->oer_iswrite) {
+-		dest_err->oer_iswrite = true;
+-		dest_err->oer_errno = src_err->oer_errno;
+-	}
+-}
+-
+-static void
+-encode_accumulated_error(struct objlayout *objlay, __be32 *p)
+-{
+-	struct objlayout_io_res *oir, *tmp;
+-	struct pnfs_osd_ioerr accumulated_err = {.oer_errno = 0};
+-
+-	list_for_each_entry_safe(oir, tmp, &objlay->err_list, err_list) {
+-		unsigned i;
+-
+-		for (i = 0; i < oir->num_comps; i++) {
+-			struct pnfs_osd_ioerr *ioerr = &oir->ioerrs[i];
+-
+-			if (!ioerr->oer_errno)
+-				continue;
+-
+-			printk(KERN_ERR "NFS: %s: err[%d]: errno=%d "
+-				"is_write=%d dev(%llx:%llx) par=0x%llx "
+-				"obj=0x%llx offset=0x%llx length=0x%llx\n",
+-				__func__, i, ioerr->oer_errno,
+-				ioerr->oer_iswrite,
+-				_DEVID_LO(&ioerr->oer_component.oid_device_id),
+-				_DEVID_HI(&ioerr->oer_component.oid_device_id),
+-				ioerr->oer_component.oid_partition_id,
+-				ioerr->oer_component.oid_object_id,
+-				ioerr->oer_comp_offset,
+-				ioerr->oer_comp_length);
+-
+-			merge_ioerr(&accumulated_err, ioerr);
+-		}
+-		list_del(&oir->err_list);
+-		objio_free_result(oir);
+-	}
+-
+-	pnfs_osd_xdr_encode_ioerr(p, &accumulated_err);
+-}
+-
+-void
+-objlayout_encode_layoutreturn(struct xdr_stream *xdr,
+-			      const struct nfs4_layoutreturn_args *args)
+-{
+-	struct pnfs_layout_hdr *pnfslay = args->layout;
+-	struct objlayout *objlay = OBJLAYOUT(pnfslay);
+-	struct objlayout_io_res *oir, *tmp;
+-	__be32 *start;
+-
+-	dprintk("%s: Begin\n", __func__);
+-	start = xdr_reserve_space(xdr, 4);
+-	BUG_ON(!start);
+-
+-	spin_lock(&objlay->lock);
+-
+-	list_for_each_entry_safe(oir, tmp, &objlay->err_list, err_list) {
+-		__be32 *last_xdr = NULL, *p;
+-		unsigned i;
+-		int res = 0;
+-
+-		for (i = 0; i < oir->num_comps; i++) {
+-			struct pnfs_osd_ioerr *ioerr = &oir->ioerrs[i];
+-
+-			if (!ioerr->oer_errno)
+-				continue;
+-
+-			dprintk("%s: err[%d]: errno=%d is_write=%d "
+-				"dev(%llx:%llx) par=0x%llx obj=0x%llx "
+-				"offset=0x%llx length=0x%llx\n",
+-				__func__, i, ioerr->oer_errno,
+-				ioerr->oer_iswrite,
+-				_DEVID_LO(&ioerr->oer_component.oid_device_id),
+-				_DEVID_HI(&ioerr->oer_component.oid_device_id),
+-				ioerr->oer_component.oid_partition_id,
+-				ioerr->oer_component.oid_object_id,
+-				ioerr->oer_comp_offset,
+-				ioerr->oer_comp_length);
+-
+-			p = pnfs_osd_xdr_ioerr_reserve_space(xdr);
+-			if (unlikely(!p)) {
+-				res = -E2BIG;
+-				break; /* accumulated_error */
+-			}
+-
+-			last_xdr = p;
+-			pnfs_osd_xdr_encode_ioerr(p, &oir->ioerrs[i]);
+-		}
+-
+-		/* TODO: use xdr_write_pages */
+-		if (unlikely(res)) {
+-			/* no space for even one error descriptor */
+-			BUG_ON(!last_xdr);
+-
+-			/* we've encountered a situation with lots and lots of
+-			 * errors and no space to encode them all. Use the last
+-			 * available slot to report the union of all the
+-			 * remaining errors.
+-			 */
+-			encode_accumulated_error(objlay, last_xdr);
+-			goto loop_done;
+-		}
+-		list_del(&oir->err_list);
+-		objio_free_result(oir);
+-	}
+-loop_done:
+-	spin_unlock(&objlay->lock);
+-
+-	*start = cpu_to_be32((xdr->p - start - 1) * 4);
+-	dprintk("%s: Return\n", __func__);
+-}
+-
+-enum {
+-	OBJLAYOUT_MAX_URI_LEN = 256, OBJLAYOUT_MAX_OSDNAME_LEN = 64,
+-	OBJLAYOUT_MAX_SYSID_HEX_LEN = OSD_SYSTEMID_LEN * 2 + 1,
+-	OSD_LOGIN_UPCALL_PATHLEN  = 256
+-};
+-
+-static char osd_login_prog[OSD_LOGIN_UPCALL_PATHLEN] = "/sbin/osd_login";
+-
+-module_param_string(osd_login_prog, osd_login_prog, sizeof(osd_login_prog),
+-		    0600);
+-MODULE_PARM_DESC(osd_login_prog, "Path to the osd_login upcall program");
+-
+-struct __auto_login {
+-	char uri[OBJLAYOUT_MAX_URI_LEN];
+-	char osdname[OBJLAYOUT_MAX_OSDNAME_LEN];
+-	char systemid_hex[OBJLAYOUT_MAX_SYSID_HEX_LEN];
+-};
+-
+-static int __objlayout_upcall(struct __auto_login *login)
+-{
+-	static char *envp[] = { "HOME=/",
+-		"TERM=linux",
+-		"PATH=/sbin:/usr/sbin:/bin:/usr/bin",
+-		NULL
+-	};
+-	char *argv[8];
+-	int ret;
+-
+-	if (unlikely(!osd_login_prog[0])) {
+-		dprintk("%s: osd_login_prog is disabled\n", __func__);
+-		return -EACCES;
+-	}
+-
+-	dprintk("%s uri: %s\n", __func__, login->uri);
+-	dprintk("%s osdname %s\n", __func__, login->osdname);
+-	dprintk("%s systemid_hex %s\n", __func__, login->systemid_hex);
+-
+-	argv[0] = (char *)osd_login_prog;
+-	argv[1] = "-u";
+-	argv[2] = login->uri;
+-	argv[3] = "-o";
+-	argv[4] = login->osdname;
+-	argv[5] = "-s";
+-	argv[6] = login->systemid_hex;
+-	argv[7] = NULL;
+-
+-	ret = call_usermodehelper(argv[0], argv, envp, UMH_WAIT_PROC);
+-	/*
+-	 * Disable the upcall mechanism if we're getting an ENOENT or
+-	 * EACCES error. The admin can re-enable it on the fly by using
+-	 * sysfs to set the objlayoutdriver.osd_login_prog module parameter once
+-	 * the problem has been fixed.
+-	 */
+-	if (ret == -ENOENT || ret == -EACCES) {
+-		printk(KERN_ERR "PNFS-OBJ: %s was not found please set "
+-			"objlayoutdriver.osd_login_prog kernel parameter!\n",
+-			osd_login_prog);
+-		osd_login_prog[0] = '\0';
+-	}
+-	dprintk("%s %s return value: %d\n", __func__, osd_login_prog, ret);
+-
+-	return ret;
+-}
+-
+-/* Assume dest is all zeros */
+-static void __copy_nfsS_and_zero_terminate(struct nfs4_string s,
+-					   char *dest, int max_len,
+-					   const char *var_name)
+-{
+-	if (!s.len)
+-		return;
+-
+-	if (s.len >= max_len) {
+-		pr_warn_ratelimited(
+-			"objlayout_autologin: %s: s.len(%d) >= max_len(%d)",
+-			var_name, s.len, max_len);
+-		s.len = max_len - 1; /* space for null terminator */
+-	}
+-
+-	memcpy(dest, s.data, s.len);
+-}
+-
+-/* Assume sysid is all zeros */
+-static void _sysid_2_hex(struct nfs4_string s,
+-		  char sysid[OBJLAYOUT_MAX_SYSID_HEX_LEN])
+-{
+-	int i;
+-	char *cur;
+-
+-	if (!s.len)
+-		return;
+-
+-	if (s.len != OSD_SYSTEMID_LEN) {
+-		pr_warn_ratelimited(
+-		    "objlayout_autologin: systemid_len(%d) != OSD_SYSTEMID_LEN",
+-		    s.len);
+-		if (s.len > OSD_SYSTEMID_LEN)
+-			s.len = OSD_SYSTEMID_LEN;
+-	}
+-
+-	cur = sysid;
+-	for (i = 0; i < s.len; i++)
+-		cur = hex_byte_pack(cur, s.data[i]);
+-}
+-
+-int objlayout_autologin(struct pnfs_osd_deviceaddr *deviceaddr)
+-{
+-	int rc;
+-	struct __auto_login login;
+-
+-	if (!deviceaddr->oda_targetaddr.ota_netaddr.r_addr.len)
+-		return -ENODEV;
+-
+-	memset(&login, 0, sizeof(login));
+-	__copy_nfsS_and_zero_terminate(
+-		deviceaddr->oda_targetaddr.ota_netaddr.r_addr,
+-		login.uri, sizeof(login.uri), "URI");
+-
+-	__copy_nfsS_and_zero_terminate(
+-		deviceaddr->oda_osdname,
+-		login.osdname, sizeof(login.osdname), "OSDNAME");
+-
+-	_sysid_2_hex(deviceaddr->oda_systemid, login.systemid_hex);
+-
+-	rc = __objlayout_upcall(&login);
+-	if (rc > 0) /* script returns positive values */
+-		rc = -ENODEV;
+-
+-	return rc;
+-}
+diff --git a/fs/nfs/objlayout/objlayout.h b/fs/nfs/objlayout/objlayout.h
+deleted file mode 100644
+index fc94a5872ed4..000000000000
+--- a/fs/nfs/objlayout/objlayout.h
++++ /dev/null
+@@ -1,183 +0,0 @@
+-/*
+- *  Data types and function declerations for interfacing with the
+- *  pNFS standard object layout driver.
+- *
+- *  Copyright (C) 2007 Panasas Inc. [year of first publication]
+- *  All rights reserved.
+- *
+- *  Benny Halevy <bhalevy@panasas.com>
+- *  Boaz Harrosh <ooo@electrozaur.com>
+- *
+- *  This program is free software; you can redistribute it and/or modify
+- *  it under the terms of the GNU General Public License version 2
+- *  See the file COPYING included with this distribution for more details.
+- *
+- *  Redistribution and use in source and binary forms, with or without
+- *  modification, are permitted provided that the following conditions
+- *  are met:
+- *
+- *  1. Redistributions of source code must retain the above copyright
+- *     notice, this list of conditions and the following disclaimer.
+- *  2. Redistributions in binary form must reproduce the above copyright
+- *     notice, this list of conditions and the following disclaimer in the
+- *     documentation and/or other materials provided with the distribution.
+- *  3. Neither the name of the Panasas company nor the names of its
+- *     contributors may be used to endorse or promote products derived
+- *     from this software without specific prior written permission.
+- *
+- *  THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED
+- *  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+- *  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+- *  DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+- *  FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+- *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+- *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+- *  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+- *  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+- *  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+- *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- */
+-
+-#ifndef _OBJLAYOUT_H
+-#define _OBJLAYOUT_H
+-
+-#include <linux/nfs_fs.h>
 -#include <linux/pnfs_osd_xdr.h>
--#include <linux/bug.h>
+-#include "../pnfs.h"
 -
--struct ore_comp {
--	struct osd_obj_id	obj;
--	u8			cred[OSD_CAP_LEN];
+-/*
+- * per-inode layout
+- */
+-struct objlayout {
+-	struct pnfs_layout_hdr pnfs_layout;
+-
+-	 /* for layout_commit */
+-	enum osd_delta_space_valid_enum {
+-		OBJ_DSU_INIT = 0,
+-		OBJ_DSU_VALID,
+-		OBJ_DSU_INVALID,
+-	} delta_space_valid;
+-	s64 delta_space_used;  /* consumed by write ops */
+-
+-	 /* for layout_return */
+-	spinlock_t lock;
+-	struct list_head err_list;
 -};
 -
--struct ore_layout {
--	/* Our way of looking at the data_map */
--	enum pnfs_osd_raid_algorithm4
--		 raid_algorithm;
--	unsigned stripe_unit;
--	unsigned mirrors_p1;
--
--	unsigned group_width;
--	unsigned parity;
--	u64	 group_depth;
--	unsigned group_count;
--
--	/* Cached often needed calculations filled in by
--	 * ore_verify_layout
--	 */
--	unsigned long max_io_length;	/* Max length that should be passed to
--					 * ore_get_rw_state
--					 */
--};
--
--struct ore_dev {
--	struct osd_dev *od;
--};
--
--struct ore_components {
--	unsigned	first_dev;		/* First logical device no    */
--	unsigned	numdevs;		/* Num of devices in array    */
--	/* If @single_comp == EC_SINGLE_COMP, @comps points to a single
--	 * component. else there are @numdevs components
--	 */
--	enum EC_COMP_USAGE {
--		EC_SINGLE_COMP = 0, EC_MULTPLE_COMPS = 0xffffffff
--	}		single_comp;
--	struct ore_comp	*comps;
--
--	/* Array of pointers to ore_dev-* . User will usually have these pointed
--	 * too a bigger struct which contain an "ore_dev ored" member and use
--	 * container_of(oc->ods[i], struct foo_dev, ored) to access the bigger
--	 * structure.
--	 */
--	struct ore_dev	**ods;
--};
--
--/* ore_comp_dev Recievies a logical device index */
--static inline struct osd_dev *ore_comp_dev(
--	const struct ore_components *oc, unsigned i)
+-static inline struct objlayout *
+-OBJLAYOUT(struct pnfs_layout_hdr *lo)
 -{
--	BUG_ON((i < oc->first_dev) || (oc->first_dev + oc->numdevs <= i));
--	return oc->ods[i - oc->first_dev]->od;
+-	return container_of(lo, struct objlayout, pnfs_layout);
 -}
 -
--static inline void ore_comp_set_dev(
--	struct ore_components *oc, unsigned i, struct osd_dev *od)
+-/*
+- * per-I/O operation state
+- * embedded in objects provider io_state data structure
+- */
+-struct objlayout_io_res {
+-	struct objlayout *objlay;
+-
+-	void *rpcdata;
+-	int status;             /* res */
+-	int committed;          /* res */
+-
+-	/* Error reporting (layout_return) */
+-	struct list_head err_list;
+-	unsigned num_comps;
+-	/* Pointer to array of error descriptors of size num_comps.
+-	 * It should contain as many entries as devices in the osd_layout
+-	 * that participate in the I/O. It is up to the io_engine to allocate
+-	 * needed space and set num_comps.
+-	 */
+-	struct pnfs_osd_ioerr *ioerrs;
+-};
+-
+-static inline
+-void objlayout_init_ioerrs(struct objlayout_io_res *oir, unsigned num_comps,
+-			struct pnfs_osd_ioerr *ioerrs, void *rpcdata,
+-			struct pnfs_layout_hdr *pnfs_layout_type)
 -{
--	oc->ods[i - oc->first_dev]->od = od;
+-	oir->objlay = OBJLAYOUT(pnfs_layout_type);
+-	oir->rpcdata = rpcdata;
+-	INIT_LIST_HEAD(&oir->err_list);
+-	oir->num_comps = num_comps;
+-	oir->ioerrs = ioerrs;
 -}
 -
--struct ore_striping_info {
--	u64 offset;
--	u64 obj_offset;
--	u64 length;
--	u64 first_stripe_start; /* only used in raid writes */
--	u64 M; /* for truncate */
--	unsigned bytes_in_stripe;
--	unsigned dev;
--	unsigned par_dev;
--	unsigned unit_off;
--	unsigned cur_pg;
--	unsigned cur_comp;
--	unsigned maxdevUnits;
--};
+-/*
+- * Raid engine I/O API
+- */
+-extern int objio_alloc_lseg(struct pnfs_layout_segment **outp,
+-	struct pnfs_layout_hdr *pnfslay,
+-	struct pnfs_layout_range *range,
+-	struct xdr_stream *xdr,
+-	gfp_t gfp_flags);
+-extern void objio_free_lseg(struct pnfs_layout_segment *lseg);
 -
--struct ore_io_state;
--typedef void (*ore_io_done_fn)(struct ore_io_state *ios, void *private);
--struct _ore_r4w_op {
--	/* @Priv given here is passed ios->private */
--	struct page * (*get_page)(void *priv, u64 page_index, bool *uptodate);
--	void (*put_page)(void *priv, struct page *page);
--};
+-/* objio_free_result will free these @oir structs received from
+- * objlayout_{read,write}_done
+- */
+-extern void objio_free_result(struct objlayout_io_res *oir);
 -
--struct ore_io_state {
--	struct kref		kref;
--	struct ore_striping_info si;
+-extern int objio_read_pagelist(struct nfs_pgio_header *rdata);
+-extern int objio_write_pagelist(struct nfs_pgio_header *wdata, int how);
 -
--	void			*private;
--	ore_io_done_fn	done;
+-/*
+- * callback API
+- */
+-extern void objlayout_io_set_result(struct objlayout_io_res *oir,
+-			unsigned index, struct pnfs_osd_objid *pooid,
+-			int osd_error, u64 offset, u64 length, bool is_write);
 -
--	struct ore_layout	*layout;
--	struct ore_components	*oc;
--
--	/* Global read/write IO*/
--	loff_t			offset;
--	unsigned long		length;
--	void			*kern_buff;
--
--	struct page		**pages;
--	unsigned		nr_pages;
--	unsigned		pgbase;
--	unsigned		pages_consumed;
--
--	/* Attributes */
--	unsigned		in_attr_len;
--	struct osd_attr		*in_attr;
--	unsigned		out_attr_len;
--	struct osd_attr		*out_attr;
--
--	bool			reading;
--
--	/* House keeping of Parity pages */
--	bool			extra_part_alloc;
--	struct page		**parity_pages;
--	unsigned		max_par_pages;
--	unsigned		cur_par_page;
--	unsigned		sgs_per_dev;
--	struct __stripe_pages_2d *sp2d;
--	struct ore_io_state	 *ios_read_4_write;
--	const struct _ore_r4w_op *r4w;
--
--	/* Variable array of size numdevs */
--	unsigned numdevs;
--	struct ore_per_dev_state {
--		struct osd_request *or;
--		struct bio *bio;
--		loff_t offset;
--		unsigned length;
--		unsigned last_sgs_total;
--		unsigned dev;
--		struct osd_sg_entry *sglist;
--		unsigned cur_sg;
--	} per_dev[];
--};
--
--static inline unsigned ore_io_state_size(unsigned numdevs)
+-static inline void
+-objlayout_add_delta_space_used(struct objlayout *objlay, s64 space_used)
 -{
--	return sizeof(struct ore_io_state) +
--		sizeof(struct ore_per_dev_state) * numdevs;
+-	/* If one of the I/Os errored out and the delta_space_used was
+-	 * invalid we render the complete report as invalid. Protocol mandate
+-	 * the DSU be accurate or not reported.
+-	 */
+-	spin_lock(&objlay->lock);
+-	if (objlay->delta_space_valid != OBJ_DSU_INVALID) {
+-		objlay->delta_space_valid = OBJ_DSU_VALID;
+-		objlay->delta_space_used += space_used;
+-	}
+-	spin_unlock(&objlay->lock);
 -}
 -
--/* ore.c */
--int ore_verify_layout(unsigned total_comps, struct ore_layout *layout);
--void ore_calc_stripe_info(struct ore_layout *layout, u64 file_offset,
--			  u64 length, struct ore_striping_info *si);
--int ore_get_rw_state(struct ore_layout *layout, struct ore_components *comps,
--		     bool is_reading, u64 offset, u64 length,
--		     struct ore_io_state **ios);
--int ore_get_io_state(struct ore_layout *layout, struct ore_components *comps,
--		     struct ore_io_state **ios);
--void ore_put_io_state(struct ore_io_state *ios);
+-extern void objlayout_read_done(struct objlayout_io_res *oir,
+-				ssize_t status, bool sync);
+-extern void objlayout_write_done(struct objlayout_io_res *oir,
+-				 ssize_t status, bool sync);
 -
--typedef void (*ore_on_dev_error)(struct ore_io_state *ios, struct ore_dev *od,
--	unsigned dev_index, enum osd_err_priority oep,
--	u64 dev_offset, u64  dev_len);
--int ore_check_io(struct ore_io_state *ios, ore_on_dev_error rep);
+-/*
+- * exported generic objects function vectors
+- */
 -
--int ore_create(struct ore_io_state *ios);
--int ore_remove(struct ore_io_state *ios);
--int ore_write(struct ore_io_state *ios);
--int ore_read(struct ore_io_state *ios);
--int ore_truncate(struct ore_layout *layout, struct ore_components *comps,
--		 u64 size);
+-extern struct pnfs_layout_hdr *objlayout_alloc_layout_hdr(struct inode *, gfp_t gfp_flags);
+-extern void objlayout_free_layout_hdr(struct pnfs_layout_hdr *);
 -
--int extract_attr_from_ios(struct ore_io_state *ios, struct osd_attr *attr);
+-extern struct pnfs_layout_segment *objlayout_alloc_lseg(
+-	struct pnfs_layout_hdr *,
+-	struct nfs4_layoutget_res *,
+-	gfp_t gfp_flags);
+-extern void objlayout_free_lseg(struct pnfs_layout_segment *);
 -
--extern const struct osd_attr g_attr_logical_length;
+-extern enum pnfs_try_status objlayout_read_pagelist(
+-	struct nfs_pgio_header *);
 -
--#endif
+-extern enum pnfs_try_status objlayout_write_pagelist(
+-	struct nfs_pgio_header *,
+-	int how);
+-
+-extern void objlayout_encode_layoutcommit(
+-	struct pnfs_layout_hdr *,
+-	struct xdr_stream *,
+-	const struct nfs4_layoutcommit_args *);
+-
+-extern void objlayout_encode_layoutreturn(
+-	struct xdr_stream *,
+-	const struct nfs4_layoutreturn_args *);
+-
+-extern int objlayout_autologin(struct pnfs_osd_deviceaddr *deviceaddr);
+-
+-#endif /* _OBJLAYOUT_H */
+diff --git a/fs/nfs/objlayout/pnfs_osd_xdr_cli.c b/fs/nfs/objlayout/pnfs_osd_xdr_cli.c
+deleted file mode 100644
+index f093c7ec983b..000000000000
+--- a/fs/nfs/objlayout/pnfs_osd_xdr_cli.c
++++ /dev/null
+@@ -1,415 +0,0 @@
+-/*
+- *  Object-Based pNFS Layout XDR layer
+- *
+- *  Copyright (C) 2007 Panasas Inc. [year of first publication]
+- *  All rights reserved.
+- *
+- *  Benny Halevy <bhalevy@panasas.com>
+- *  Boaz Harrosh <ooo@electrozaur.com>
+- *
+- *  This program is free software; you can redistribute it and/or modify
+- *  it under the terms of the GNU General Public License version 2
+- *  See the file COPYING included with this distribution for more details.
+- *
+- *  Redistribution and use in source and binary forms, with or without
+- *  modification, are permitted provided that the following conditions
+- *  are met:
+- *
+- *  1. Redistributions of source code must retain the above copyright
+- *     notice, this list of conditions and the following disclaimer.
+- *  2. Redistributions in binary form must reproduce the above copyright
+- *     notice, this list of conditions and the following disclaimer in the
+- *     documentation and/or other materials provided with the distribution.
+- *  3. Neither the name of the Panasas company nor the names of its
+- *     contributors may be used to endorse or promote products derived
+- *     from this software without specific prior written permission.
+- *
+- *  THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED
+- *  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+- *  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+- *  DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+- *  FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+- *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+- *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+- *  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+- *  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+- *  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+- *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- */
+-
+-#include <linux/pnfs_osd_xdr.h>
+-
+-#define NFSDBG_FACILITY         NFSDBG_PNFS_LD
+-
+-/*
+- * The following implementation is based on RFC5664
+- */
+-
+-/*
+- * struct pnfs_osd_objid {
+- *	struct nfs4_deviceid	oid_device_id;
+- *	u64			oid_partition_id;
+- *	u64			oid_object_id;
+- * }; // xdr size 32 bytes
+- */
+-static __be32 *
+-_osd_xdr_decode_objid(__be32 *p, struct pnfs_osd_objid *objid)
+-{
+-	p = xdr_decode_opaque_fixed(p, objid->oid_device_id.data,
+-				    sizeof(objid->oid_device_id.data));
+-
+-	p = xdr_decode_hyper(p, &objid->oid_partition_id);
+-	p = xdr_decode_hyper(p, &objid->oid_object_id);
+-	return p;
+-}
+-/*
+- * struct pnfs_osd_opaque_cred {
+- *	u32 cred_len;
+- *	void *cred;
+- * }; // xdr size [variable]
+- * The return pointers are from the xdr buffer
+- */
+-static int
+-_osd_xdr_decode_opaque_cred(struct pnfs_osd_opaque_cred *opaque_cred,
+-			    struct xdr_stream *xdr)
+-{
+-	__be32 *p = xdr_inline_decode(xdr, 1);
+-
+-	if (!p)
+-		return -EINVAL;
+-
+-	opaque_cred->cred_len = be32_to_cpu(*p++);
+-
+-	p = xdr_inline_decode(xdr, opaque_cred->cred_len);
+-	if (!p)
+-		return -EINVAL;
+-
+-	opaque_cred->cred = p;
+-	return 0;
+-}
+-
+-/*
+- * struct pnfs_osd_object_cred {
+- *	struct pnfs_osd_objid		oc_object_id;
+- *	u32				oc_osd_version;
+- *	u32				oc_cap_key_sec;
+- *	struct pnfs_osd_opaque_cred	oc_cap_key
+- *	struct pnfs_osd_opaque_cred	oc_cap;
+- * }; // xdr size 32 + 4 + 4 + [variable] + [variable]
+- */
+-static int
+-_osd_xdr_decode_object_cred(struct pnfs_osd_object_cred *comp,
+-			    struct xdr_stream *xdr)
+-{
+-	__be32 *p = xdr_inline_decode(xdr, 32 + 4 + 4);
+-	int ret;
+-
+-	if (!p)
+-		return -EIO;
+-
+-	p = _osd_xdr_decode_objid(p, &comp->oc_object_id);
+-	comp->oc_osd_version = be32_to_cpup(p++);
+-	comp->oc_cap_key_sec = be32_to_cpup(p);
+-
+-	ret = _osd_xdr_decode_opaque_cred(&comp->oc_cap_key, xdr);
+-	if (unlikely(ret))
+-		return ret;
+-
+-	ret = _osd_xdr_decode_opaque_cred(&comp->oc_cap, xdr);
+-	return ret;
+-}
+-
+-/*
+- * struct pnfs_osd_data_map {
+- *	u32	odm_num_comps;
+- *	u64	odm_stripe_unit;
+- *	u32	odm_group_width;
+- *	u32	odm_group_depth;
+- *	u32	odm_mirror_cnt;
+- *	u32	odm_raid_algorithm;
+- * }; // xdr size 4 + 8 + 4 + 4 + 4 + 4
+- */
+-static inline int
+-_osd_data_map_xdr_sz(void)
+-{
+-	return 4 + 8 + 4 + 4 + 4 + 4;
+-}
+-
+-static __be32 *
+-_osd_xdr_decode_data_map(__be32 *p, struct pnfs_osd_data_map *data_map)
+-{
+-	data_map->odm_num_comps = be32_to_cpup(p++);
+-	p = xdr_decode_hyper(p, &data_map->odm_stripe_unit);
+-	data_map->odm_group_width = be32_to_cpup(p++);
+-	data_map->odm_group_depth = be32_to_cpup(p++);
+-	data_map->odm_mirror_cnt = be32_to_cpup(p++);
+-	data_map->odm_raid_algorithm = be32_to_cpup(p++);
+-	dprintk("%s: odm_num_comps=%u odm_stripe_unit=%llu odm_group_width=%u "
+-		"odm_group_depth=%u odm_mirror_cnt=%u odm_raid_algorithm=%u\n",
+-		__func__,
+-		data_map->odm_num_comps,
+-		(unsigned long long)data_map->odm_stripe_unit,
+-		data_map->odm_group_width,
+-		data_map->odm_group_depth,
+-		data_map->odm_mirror_cnt,
+-		data_map->odm_raid_algorithm);
+-	return p;
+-}
+-
+-int pnfs_osd_xdr_decode_layout_map(struct pnfs_osd_layout *layout,
+-	struct pnfs_osd_xdr_decode_layout_iter *iter, struct xdr_stream *xdr)
+-{
+-	__be32 *p;
+-
+-	memset(iter, 0, sizeof(*iter));
+-
+-	p = xdr_inline_decode(xdr, _osd_data_map_xdr_sz() + 4 + 4);
+-	if (unlikely(!p))
+-		return -EINVAL;
+-
+-	p = _osd_xdr_decode_data_map(p, &layout->olo_map);
+-	layout->olo_comps_index = be32_to_cpup(p++);
+-	layout->olo_num_comps = be32_to_cpup(p++);
+-	dprintk("%s: olo_comps_index=%d olo_num_comps=%d\n", __func__,
+-		layout->olo_comps_index, layout->olo_num_comps);
+-
+-	iter->total_comps = layout->olo_num_comps;
+-	return 0;
+-}
+-
+-bool pnfs_osd_xdr_decode_layout_comp(struct pnfs_osd_object_cred *comp,
+-	struct pnfs_osd_xdr_decode_layout_iter *iter, struct xdr_stream *xdr,
+-	int *err)
+-{
+-	BUG_ON(iter->decoded_comps > iter->total_comps);
+-	if (iter->decoded_comps == iter->total_comps)
+-		return false;
+-
+-	*err = _osd_xdr_decode_object_cred(comp, xdr);
+-	if (unlikely(*err)) {
+-		dprintk("%s: _osd_xdr_decode_object_cred=>%d decoded_comps=%d "
+-			"total_comps=%d\n", __func__, *err,
+-			iter->decoded_comps, iter->total_comps);
+-		return false; /* stop the loop */
+-	}
+-	dprintk("%s: dev(%llx:%llx) par=0x%llx obj=0x%llx "
+-		"key_len=%u cap_len=%u\n",
+-		__func__,
+-		_DEVID_LO(&comp->oc_object_id.oid_device_id),
+-		_DEVID_HI(&comp->oc_object_id.oid_device_id),
+-		comp->oc_object_id.oid_partition_id,
+-		comp->oc_object_id.oid_object_id,
+-		comp->oc_cap_key.cred_len, comp->oc_cap.cred_len);
+-
+-	iter->decoded_comps++;
+-	return true;
+-}
+-
+-/*
+- * Get Device Information Decoding
+- *
+- * Note: since Device Information is currently done synchronously, all
+- *       variable strings fields are left inside the rpc buffer and are only
+- *       pointed to by the pnfs_osd_deviceaddr members. So the read buffer
+- *       should not be freed while the returned information is in use.
+- */
+-/*
+- *struct nfs4_string {
+- *	unsigned int len;
+- *	char *data;
+- *}; // size [variable]
+- * NOTE: Returned string points to inside the XDR buffer
+- */
+-static __be32 *
+-__read_u8_opaque(__be32 *p, struct nfs4_string *str)
+-{
+-	str->len = be32_to_cpup(p++);
+-	str->data = (char *)p;
+-
+-	p += XDR_QUADLEN(str->len);
+-	return p;
+-}
+-
+-/*
+- * struct pnfs_osd_targetid {
+- *	u32			oti_type;
+- *	struct nfs4_string	oti_scsi_device_id;
+- * };// size 4 + [variable]
+- */
+-static __be32 *
+-__read_targetid(__be32 *p, struct pnfs_osd_targetid* targetid)
+-{
+-	u32 oti_type;
+-
+-	oti_type = be32_to_cpup(p++);
+-	targetid->oti_type = oti_type;
+-
+-	switch (oti_type) {
+-	case OBJ_TARGET_SCSI_NAME:
+-	case OBJ_TARGET_SCSI_DEVICE_ID:
+-		p = __read_u8_opaque(p, &targetid->oti_scsi_device_id);
+-	}
+-
+-	return p;
+-}
+-
+-/*
+- * struct pnfs_osd_net_addr {
+- *	struct nfs4_string	r_netid;
+- *	struct nfs4_string	r_addr;
+- * };
+- */
+-static __be32 *
+-__read_net_addr(__be32 *p, struct pnfs_osd_net_addr* netaddr)
+-{
+-	p = __read_u8_opaque(p, &netaddr->r_netid);
+-	p = __read_u8_opaque(p, &netaddr->r_addr);
+-
+-	return p;
+-}
+-
+-/*
+- * struct pnfs_osd_targetaddr {
+- *	u32				ota_available;
+- *	struct pnfs_osd_net_addr	ota_netaddr;
+- * };
+- */
+-static __be32 *
+-__read_targetaddr(__be32 *p, struct pnfs_osd_targetaddr *targetaddr)
+-{
+-	u32 ota_available;
+-
+-	ota_available = be32_to_cpup(p++);
+-	targetaddr->ota_available = ota_available;
+-
+-	if (ota_available)
+-		p = __read_net_addr(p, &targetaddr->ota_netaddr);
+-
+-
+-	return p;
+-}
+-
+-/*
+- * struct pnfs_osd_deviceaddr {
+- *	struct pnfs_osd_targetid	oda_targetid;
+- *	struct pnfs_osd_targetaddr	oda_targetaddr;
+- *	u8				oda_lun[8];
+- *	struct nfs4_string		oda_systemid;
+- *	struct pnfs_osd_object_cred	oda_root_obj_cred;
+- *	struct nfs4_string		oda_osdname;
+- * };
+- */
+-
+-/* We need this version for the pnfs_osd_xdr_decode_deviceaddr which does
+- * not have an xdr_stream
+- */
+-static __be32 *
+-__read_opaque_cred(__be32 *p,
+-			      struct pnfs_osd_opaque_cred *opaque_cred)
+-{
+-	opaque_cred->cred_len = be32_to_cpu(*p++);
+-	opaque_cred->cred = p;
+-	return p + XDR_QUADLEN(opaque_cred->cred_len);
+-}
+-
+-static __be32 *
+-__read_object_cred(__be32 *p, struct pnfs_osd_object_cred *comp)
+-{
+-	p = _osd_xdr_decode_objid(p, &comp->oc_object_id);
+-	comp->oc_osd_version = be32_to_cpup(p++);
+-	comp->oc_cap_key_sec = be32_to_cpup(p++);
+-
+-	p = __read_opaque_cred(p, &comp->oc_cap_key);
+-	p = __read_opaque_cred(p, &comp->oc_cap);
+-	return p;
+-}
+-
+-void pnfs_osd_xdr_decode_deviceaddr(
+-	struct pnfs_osd_deviceaddr *deviceaddr, __be32 *p)
+-{
+-	p = __read_targetid(p, &deviceaddr->oda_targetid);
+-
+-	p = __read_targetaddr(p, &deviceaddr->oda_targetaddr);
+-
+-	p = xdr_decode_opaque_fixed(p, deviceaddr->oda_lun,
+-				    sizeof(deviceaddr->oda_lun));
+-
+-	p = __read_u8_opaque(p, &deviceaddr->oda_systemid);
+-
+-	p = __read_object_cred(p, &deviceaddr->oda_root_obj_cred);
+-
+-	p = __read_u8_opaque(p, &deviceaddr->oda_osdname);
+-
+-	/* libosd likes this terminated in dbg. It's last, so no problems */
+-	deviceaddr->oda_osdname.data[deviceaddr->oda_osdname.len] = 0;
+-}
+-
+-/*
+- * struct pnfs_osd_layoutupdate {
+- *	u32	dsu_valid;
+- *	s64	dsu_delta;
+- *	u32	olu_ioerr_flag;
+- * }; xdr size 4 + 8 + 4
+- */
+-int
+-pnfs_osd_xdr_encode_layoutupdate(struct xdr_stream *xdr,
+-				 struct pnfs_osd_layoutupdate *lou)
+-{
+-	__be32 *p = xdr_reserve_space(xdr,  4 + 8 + 4);
+-
+-	if (!p)
+-		return -E2BIG;
+-
+-	*p++ = cpu_to_be32(lou->dsu_valid);
+-	if (lou->dsu_valid)
+-		p = xdr_encode_hyper(p, lou->dsu_delta);
+-	*p++ = cpu_to_be32(lou->olu_ioerr_flag);
+-	return 0;
+-}
+-
+-/*
+- * struct pnfs_osd_objid {
+- *	struct nfs4_deviceid	oid_device_id;
+- *	u64			oid_partition_id;
+- *	u64			oid_object_id;
+- * }; // xdr size 32 bytes
+- */
+-static inline __be32 *
+-pnfs_osd_xdr_encode_objid(__be32 *p, struct pnfs_osd_objid *object_id)
+-{
+-	p = xdr_encode_opaque_fixed(p, &object_id->oid_device_id.data,
+-				    sizeof(object_id->oid_device_id.data));
+-	p = xdr_encode_hyper(p, object_id->oid_partition_id);
+-	p = xdr_encode_hyper(p, object_id->oid_object_id);
+-
+-	return p;
+-}
+-
+-/*
+- * struct pnfs_osd_ioerr {
+- *	struct pnfs_osd_objid	oer_component;
+- *	u64			oer_comp_offset;
+- *	u64			oer_comp_length;
+- *	u32			oer_iswrite;
+- *	u32			oer_errno;
+- * }; // xdr size 32 + 24 bytes
+- */
+-void pnfs_osd_xdr_encode_ioerr(__be32 *p, struct pnfs_osd_ioerr *ioerr)
+-{
+-	p = pnfs_osd_xdr_encode_objid(p, &ioerr->oer_component);
+-	p = xdr_encode_hyper(p, ioerr->oer_comp_offset);
+-	p = xdr_encode_hyper(p, ioerr->oer_comp_length);
+-	*p++ = cpu_to_be32(ioerr->oer_iswrite);
+-	*p   = cpu_to_be32(ioerr->oer_errno);
+-}
+-
+-__be32 *pnfs_osd_xdr_ioerr_reserve_space(struct xdr_stream *xdr)
+-{
+-	__be32 *p;
+-
+-	p = xdr_reserve_space(xdr, 32 + 24);
+-	if (unlikely(!p))
+-		dprintk("%s: out of xdr space\n", __func__);
+-
+-	return p;
+-}
 -- 
 2.11.0
