@@ -1,25 +1,25 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH 16/17] cxlflash: Add hardware queues attribute
-Date: Wed, 12 Apr 2017 14:15:53 -0500
-Message-ID: <1492024553-56230-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH 17/17] cxlflash: Introduce hardware queue steering
+Date: Wed, 12 Apr 2017 14:16:02 -0500
+Message-ID: <1492024562-56266-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1492024215-55579-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:43429 "EHLO
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:35262 "EHLO
         mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752299AbdDLTQJ (ORCPT
+        by vger.kernel.org with ESMTP id S1752095AbdDLTQV (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 12 Apr 2017 15:16:09 -0400
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v3CJ98ER079682
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Apr 2017 15:16:09 -0400
-Received: from e31.co.us.ibm.com (e31.co.us.ibm.com [32.97.110.149])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 29snvj5ah9-1
+        Wed, 12 Apr 2017 15:16:21 -0400
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v3CJ98Bm054190
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Apr 2017 15:16:20 -0400
+Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 29sqnn79u1-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Apr 2017 15:16:08 -0400
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Apr 2017 15:16:20 -0400
 Received: from localhost
-        by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
-        Wed, 12 Apr 2017 13:16:07 -0600
+        Wed, 12 Apr 2017 13:16:19 -0600
 In-Reply-To: <1492024215-55579-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -28,290 +28,241 @@ Cc: linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donn
 
 From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
 
-As staging for supporting multiple hardware queues, add an attribute to
-show and set the current number of hardware queues for the host. Support
-specifying a hard limit or a CPU affinitized value. This will allow the
-number of hardware queues to be tuned by a system administrator.
+As an enhancement to distribute requests to multiple hardware queues, add
+the infrastructure to hash a SCSI command into a particular hardware queue.
+Support the following scenarios when deriving which queue to use: single
+queue, tagging when SCSI-MQ enabled, and simple hash via CPU ID when
+SCSI-MQ is disabled. Rather than altering the existing send API, the
+derived hardware queue is stored in the AFU command where it can be used
+for sending a command to the chosen hardware queue.
 
 Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/common.h |  10 ++--
- drivers/scsi/cxlflash/main.c   | 112 ++++++++++++++++++++++++++++++++++++-----
- 2 files changed, 106 insertions(+), 16 deletions(-)
+ drivers/scsi/cxlflash/common.h |  12 ++++-
+ drivers/scsi/cxlflash/main.c   | 120 +++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 126 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
-index b5858ae..8fd7a1f 100644
+index 8fd7a1f..256af81 100644
 --- a/drivers/scsi/cxlflash/common.h
 +++ b/drivers/scsi/cxlflash/common.h
-@@ -60,7 +60,9 @@ extern const struct file_operations cxlflash_cxl_fops;
- /* SQ for master issued cmds */
- #define NUM_SQ_ENTRY			CXLFLASH_MAX_CMDS
+@@ -96,6 +96,13 @@ enum cxlflash_state {
+ 	STATE_FAILTERM	/* Failed/terminating state, error out users/threads */
+ };
  
--#define CXLFLASH_NUM_HWQS		1
-+/* Hardware queue definitions */
-+#define CXLFLASH_DEF_HWQS		1
-+#define CXLFLASH_MAX_HWQS		8
- #define PRIMARY_HWQ			0
++enum cxlflash_hwq_mode {
++	HWQ_MODE_RR,	/* Roundrobin (default) */
++	HWQ_MODE_TAG,	/* Distribute based on block MQ tag */
++	HWQ_MODE_CPU,	/* CPU affinity */
++	MAX_HWQ_MODE
++};
++
+ /*
+  * Each context has its own set of resource handles that is visible
+  * only from that context.
+@@ -146,9 +153,9 @@ struct afu_cmd {
+ 	struct scsi_cmnd *scp;
+ 	struct completion cevent;
+ 	struct list_head queue;
++	u32 hwq_index;
  
+ 	u8 cmd_tmf:1;
+-	u32 hwq_index;
  
-@@ -201,7 +203,7 @@ struct hwq {
- } __aligned(cache_line_size());
- 
- struct afu {
--	struct hwq hwqs[CXLFLASH_NUM_HWQS];
-+	struct hwq hwqs[CXLFLASH_MAX_HWQS];
- 	int (*send_cmd)(struct afu *, struct afu_cmd *);
- 	void (*context_reset)(struct afu_cmd *);
- 
-@@ -211,6 +213,8 @@ struct afu {
+ 	/* As per the SISLITE spec the IOARCB EA has to be 16-byte aligned.
+ 	 * However for performance reasons the IOARCB/IOASA should be
+@@ -213,8 +220,11 @@ struct afu {
  	atomic_t cmds_active;	/* Number of currently active AFU commands */
  	u64 hb;
  	u32 internal_lun;	/* User-desired LUN mode for this AFU */
-+	u32 num_hwqs;		/* Number of hardware queues */
-+	u32 desired_hwqs;	/* Desired h/w queues, effective on AFU reset */
++
+ 	u32 num_hwqs;		/* Number of hardware queues */
+ 	u32 desired_hwqs;	/* Desired h/w queues, effective on AFU reset */
++	enum cxlflash_hwq_mode hwq_mode; /* Steering mode for h/w queues */
++	u32 hwq_rr_count;	/* Count to distribute traffic for roundrobin */
  
  	char version[16];
  	u64 interface_version;
-@@ -221,7 +225,7 @@ struct afu {
- 
- static inline struct hwq *get_hwq(struct afu *afu, u32 index)
- {
--	WARN_ON(index >= CXLFLASH_NUM_HWQS);
-+	WARN_ON(index >= CXLFLASH_MAX_HWQS);
- 
- 	return &afu->hwqs[index];
- }
 diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 5d06869..113797a 100644
+index 113797a..a7d57c3 100644
 --- a/drivers/scsi/cxlflash/main.c
 +++ b/drivers/scsi/cxlflash/main.c
-@@ -566,7 +566,7 @@ static void stop_afu(struct cxlflash_cfg *cfg)
- 			ssleep(1);
- 
- 		if (afu_is_irqpoll_enabled(afu)) {
--			for (i = 0; i < CXLFLASH_NUM_HWQS; i++) {
-+			for (i = 0; i < afu->num_hwqs; i++) {
- 				hwq = get_hwq(afu, i);
- 
- 				irq_poll_disable(&hwq->irqpoll);
-@@ -676,13 +676,13 @@ static void term_afu(struct cxlflash_cfg *cfg)
- 	 * 2) Unmap the problem state area
- 	 * 3) Stop each master context
- 	 */
--	for (k = CXLFLASH_NUM_HWQS - 1; k >= 0; k--)
-+	for (k = cfg->afu->num_hwqs - 1; k >= 0; k--)
- 		term_intr(cfg, UNMAP_THREE, k);
- 
- 	if (cfg->afu)
- 		stop_afu(cfg);
- 
--	for (k = CXLFLASH_NUM_HWQS - 1; k >= 0; k--)
-+	for (k = cfg->afu->num_hwqs - 1; k >= 0; k--)
- 		term_mc(cfg, k);
- 
- 	dev_dbg(dev, "%s: returning\n", __func__);
-@@ -823,6 +823,7 @@ static int alloc_mem(struct cxlflash_cfg *cfg)
- 		goto out;
- 	}
- 	cfg->afu->parent = cfg;
-+	cfg->afu->desired_hwqs = CXLFLASH_DEF_HWQS;
- 	cfg->afu->afu_map = NULL;
- out:
- 	return rc;
-@@ -1116,7 +1117,7 @@ static void afu_err_intr_init(struct afu *afu)
- 	/* IOARRIN yet), so there is nothing to clear. */
- 
- 	/* set LISN#, it is always sent to the context that wrote IOARRIN */
--	for (i = 0; i < CXLFLASH_NUM_HWQS; i++) {
-+	for (i = 0; i < afu->num_hwqs; i++) {
- 		hwq = get_hwq(afu, i);
- 
- 		writeq_be(SISL_MSI_SYNC_ERROR, &hwq->host_map->ctx_ctrl);
-@@ -1551,7 +1552,7 @@ static void init_pcr(struct cxlflash_cfg *cfg)
- 	}
- 
- 	/* Copy frequently used fields into hwq */
--	for (i = 0; i < CXLFLASH_NUM_HWQS; i++) {
-+	for (i = 0; i < afu->num_hwqs; i++) {
- 		hwq = get_hwq(afu, i);
- 
- 		hwq->ctx_hndl = (u16) cxl_process_element(hwq->ctx);
-@@ -1586,7 +1587,7 @@ static int init_global(struct cxlflash_cfg *cfg)
- 	}
- 
- 	/* Set up RRQ and SQ in HWQ for master issued cmds */
--	for (i = 0; i < CXLFLASH_NUM_HWQS; i++) {
-+	for (i = 0; i < afu->num_hwqs; i++) {
- 		hwq = get_hwq(afu, i);
- 		hmap = hwq->host_map;
- 
-@@ -1640,7 +1641,7 @@ static int init_global(struct cxlflash_cfg *cfg)
- 	/* Set up master's own CTX_CAP to allow real mode, host translation */
- 	/* tables, afu cmds and read/write GSCSI cmds. */
- 	/* First, unlock ctx_cap write by reading mbox */
--	for (i = 0; i < CXLFLASH_NUM_HWQS; i++) {
-+	for (i = 0; i < afu->num_hwqs; i++) {
- 		hwq = get_hwq(afu, i);
- 
- 		(void)readq_be(&hwq->ctrl_map->mbox_r);	/* unlock ctx_cap */
-@@ -1670,7 +1671,7 @@ static int start_afu(struct cxlflash_cfg *cfg)
- 	init_pcr(cfg);
- 
- 	/* Initialize each HWQ */
--	for (i = 0; i < CXLFLASH_NUM_HWQS; i++) {
-+	for (i = 0; i < afu->num_hwqs; i++) {
- 		hwq = get_hwq(afu, i);
- 
- 		/* After an AFU reset, RRQ entries are stale, clear them */
-@@ -1888,7 +1889,8 @@ static int init_afu(struct cxlflash_cfg *cfg)
- 
- 	cxl_perst_reloads_same_image(cfg->cxl_afu, true);
- 
--	for (i = 0; i < CXLFLASH_NUM_HWQS; i++) {
-+	afu->num_hwqs = afu->desired_hwqs;
-+	for (i = 0; i < afu->num_hwqs; i++) {
- 		rc = init_mc(cfg, i);
- 		if (rc) {
- 			dev_err(dev, "%s: init_mc failed rc=%d index=%d\n",
-@@ -1939,7 +1941,7 @@ static int init_afu(struct cxlflash_cfg *cfg)
- 	}
- 
- 	afu_err_intr_init(cfg->afu);
--	for (i = 0; i < CXLFLASH_NUM_HWQS; i++) {
-+	for (i = 0; i < afu->num_hwqs; i++) {
- 		hwq = get_hwq(afu, i);
- 
- 		spin_lock_init(&hwq->rrin_slock);
-@@ -1953,7 +1955,7 @@ static int init_afu(struct cxlflash_cfg *cfg)
- 	return rc;
- 
- err1:
--	for (i = CXLFLASH_NUM_HWQS - 1; i >= 0; i--) {
-+	for (i = afu->num_hwqs - 1; i >= 0; i--) {
- 		term_intr(cfg, UNMAP_THREE, i);
- 		term_mc(cfg, i);
- 	}
-@@ -2550,7 +2552,7 @@ static ssize_t irqpoll_weight_store(struct device *dev,
- 	}
- 
- 	if (afu_is_irqpoll_enabled(afu)) {
--		for (i = 0; i < CXLFLASH_NUM_HWQS; i++) {
-+		for (i = 0; i < afu->num_hwqs; i++) {
- 			hwq = get_hwq(afu, i);
- 
- 			irq_poll_disable(&hwq->irqpoll);
-@@ -2560,7 +2562,7 @@ static ssize_t irqpoll_weight_store(struct device *dev,
- 	afu->irqpoll_weight = weight;
- 
- 	if (weight > 0) {
--		for (i = 0; i < CXLFLASH_NUM_HWQS; i++) {
-+		for (i = 0; i < afu->num_hwqs; i++) {
- 			hwq = get_hwq(afu, i);
- 
- 			irq_poll_init(&hwq->irqpoll, weight, cxlflash_irqpoll);
-@@ -2571,6 +2573,88 @@ static ssize_t irqpoll_weight_store(struct device *dev,
+@@ -358,6 +358,43 @@ static int wait_resp(struct afu *afu, struct afu_cmd *cmd)
  }
  
  /**
-+ * num_hwqs_show() - presents the number of hardware queues for the host
++ * cmd_to_target_hwq() - selects a target hardware queue for a SCSI command
++ * @host:	SCSI host associated with device.
++ * @scp:	SCSI command to send.
++ * @afu:	SCSI command to send.
++ *
++ * Hashes a command based upon the hardware queue mode.
++ *
++ * Return: Trusted index of target hardware queue
++ */
++static u32 cmd_to_target_hwq(struct Scsi_Host *host, struct scsi_cmnd *scp,
++			     struct afu *afu)
++{
++	u32 tag;
++	u32 hwq = 0;
++
++	if (afu->num_hwqs == 1)
++		return 0;
++
++	switch (afu->hwq_mode) {
++	case HWQ_MODE_RR:
++		hwq = afu->hwq_rr_count++ % afu->num_hwqs;
++		break;
++	case HWQ_MODE_TAG:
++		tag = blk_mq_unique_tag(scp->request);
++		hwq = blk_mq_unique_tag_to_hwq(tag);
++		break;
++	case HWQ_MODE_CPU:
++		hwq = smp_processor_id() % afu->num_hwqs;
++		break;
++	default:
++		WARN_ON_ONCE(1);
++	}
++
++	return hwq;
++}
++
++/**
+  * send_tmf() - sends a Task Management Function (TMF)
+  * @afu:	AFU to checkout from.
+  * @scp:	SCSI command from stack.
+@@ -368,10 +405,12 @@ static int wait_resp(struct afu *afu, struct afu_cmd *cmd)
+  */
+ static int send_tmf(struct afu *afu, struct scsi_cmnd *scp, u64 tmfcmd)
+ {
+-	struct cxlflash_cfg *cfg = shost_priv(scp->device->host);
++	struct Scsi_Host *host = scp->device->host;
++	struct cxlflash_cfg *cfg = shost_priv(host);
+ 	struct afu_cmd *cmd = sc_to_afucz(scp);
+ 	struct device *dev = &cfg->dev->dev;
+-	struct hwq *hwq = get_hwq(afu, PRIMARY_HWQ);
++	int hwq_index = cmd_to_target_hwq(host, scp, afu);
++	struct hwq *hwq = get_hwq(afu, hwq_index);
+ 	ulong lock_flags;
+ 	int rc = 0;
+ 	ulong to;
+@@ -388,7 +427,7 @@ static int send_tmf(struct afu *afu, struct scsi_cmnd *scp, u64 tmfcmd)
+ 	cmd->scp = scp;
+ 	cmd->parent = afu;
+ 	cmd->cmd_tmf = true;
+-	cmd->hwq_index = hwq->index;
++	cmd->hwq_index = hwq_index;
+ 
+ 	cmd->rcb.ctx_id = hwq->ctx_hndl;
+ 	cmd->rcb.msi = SISL_MSI_RRQ_UPDATED;
+@@ -448,7 +487,8 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
+ 	struct device *dev = &cfg->dev->dev;
+ 	struct afu_cmd *cmd = sc_to_afucz(scp);
+ 	struct scatterlist *sg = scsi_sglist(scp);
+-	struct hwq *hwq = get_hwq(afu, PRIMARY_HWQ);
++	int hwq_index = cmd_to_target_hwq(host, scp, afu);
++	struct hwq *hwq = get_hwq(afu, hwq_index);
+ 	u16 req_flags = SISL_REQ_FLAGS_SUP_UNDERRUN;
+ 	ulong lock_flags;
+ 	int rc = 0;
+@@ -498,7 +538,7 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
+ 
+ 	cmd->scp = scp;
+ 	cmd->parent = afu;
+-	cmd->hwq_index = hwq->index;
++	cmd->hwq_index = hwq_index;
+ 
+ 	cmd->rcb.ctx_id = hwq->ctx_hndl;
+ 	cmd->rcb.msi = SISL_MSI_RRQ_UPDATED;
+@@ -2654,6 +2694,74 @@ static ssize_t num_hwqs_store(struct device *dev,
+ 	return count;
+ }
+ 
++static const char *hwq_mode_name[MAX_HWQ_MODE] = { "rr", "tag", "cpu" };
++
++/**
++ * hwq_mode_show() - presents the HWQ steering mode for the host
 + * @dev:	Generic device associated with the host.
-+ * @attr:	Device attribute representing the number of hardware queues.
-+ * @buf:	Buffer of length PAGE_SIZE to report back the number of hardware
-+ *		queues in ASCII.
++ * @attr:	Device attribute representing the HWQ steering mode.
++ * @buf:	Buffer of length PAGE_SIZE to report back the HWQ steering mode
++ *		as a character string.
 + *
 + * Return: The size of the ASCII string returned in @buf.
 + */
-+static ssize_t num_hwqs_show(struct device *dev,
++static ssize_t hwq_mode_show(struct device *dev,
 +			     struct device_attribute *attr, char *buf)
 +{
 +	struct cxlflash_cfg *cfg = shost_priv(class_to_shost(dev));
 +	struct afu *afu = cfg->afu;
 +
-+	return scnprintf(buf, PAGE_SIZE, "%u\n", afu->num_hwqs);
++	return scnprintf(buf, PAGE_SIZE, "%s\n", hwq_mode_name[afu->hwq_mode]);
 +}
 +
 +/**
-+ * num_hwqs_store() - sets the number of hardware queues for the host
++ * hwq_mode_store() - sets the HWQ steering mode for the host
 + * @dev:	Generic device associated with the host.
-+ * @attr:	Device attribute representing the number of hardware queues.
-+ * @buf:	Buffer of length PAGE_SIZE containing the number of hardware
-+ *		queues in ASCII.
++ * @attr:	Device attribute representing the HWQ steering mode.
++ * @buf:	Buffer of length PAGE_SIZE containing the HWQ steering mode
++ *		as a character string.
 + * @count:	Length of data resizing in @buf.
 + *
-+ * n > 0: num_hwqs = n
-+ * n = 0: num_hwqs = num_online_cpus()
-+ * n < 0: num_online_cpus() / abs(n)
++ * rr = Round-Robin
++ * tag = Block MQ Tagging
++ * cpu = CPU Affinity
 + *
 + * Return: The size of the ASCII string returned in @buf.
 + */
-+static ssize_t num_hwqs_store(struct device *dev,
++static ssize_t hwq_mode_store(struct device *dev,
 +			      struct device_attribute *attr,
 +			      const char *buf, size_t count)
 +{
-+	struct cxlflash_cfg *cfg = shost_priv(class_to_shost(dev));
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct cxlflash_cfg *cfg = shost_priv(shost);
++	struct device *cfgdev = &cfg->dev->dev;
 +	struct afu *afu = cfg->afu;
-+	int rc;
-+	int nhwqs, num_hwqs;
++	int i;
++	u32 mode = MAX_HWQ_MODE;
 +
-+	rc = kstrtoint(buf, 10, &nhwqs);
-+	if (rc)
-+		return -EINVAL;
-+
-+	if (nhwqs >= 1)
-+		num_hwqs = nhwqs;
-+	else if (nhwqs == 0)
-+		num_hwqs = num_online_cpus();
-+	else
-+		num_hwqs = num_online_cpus() / abs(nhwqs);
-+
-+	afu->desired_hwqs = min(num_hwqs, CXLFLASH_MAX_HWQS);
-+	WARN_ON_ONCE(afu->desired_hwqs == 0);
-+
-+retry:
-+	switch (cfg->state) {
-+	case STATE_NORMAL:
-+		cfg->state = STATE_RESET;
-+		drain_ioctls(cfg);
-+		cxlflash_mark_contexts_error(cfg);
-+		rc = afu_reset(cfg);
-+		if (rc)
-+			cfg->state = STATE_FAILTERM;
-+		else
-+			cfg->state = STATE_NORMAL;
-+		wake_up_all(&cfg->reset_waitq);
-+		break;
-+	case STATE_RESET:
-+		wait_event(cfg->reset_waitq, cfg->state != STATE_RESET);
-+		if (cfg->state == STATE_NORMAL)
-+			goto retry;
-+	default:
-+		/* Ideally should not happen */
-+		dev_err(dev, "%s: Device is not ready, state=%d\n",
-+			__func__, cfg->state);
-+		break;
++	for (i = 0; i < MAX_HWQ_MODE; i++) {
++		if (!strncmp(hwq_mode_name[i], buf, strlen(hwq_mode_name[i]))) {
++			mode = i;
++			break;
++		}
 +	}
++
++	if (mode >= MAX_HWQ_MODE) {
++		dev_info(cfgdev, "Invalid HWQ steering mode.\n");
++		return -EINVAL;
++	}
++
++	if ((mode == HWQ_MODE_TAG) && !shost_use_blk_mq(shost)) {
++		dev_info(cfgdev, "SCSI-MQ is not enabled, use a different "
++			 "HWQ steering mode.\n");
++		return -EINVAL;
++	}
++
++	afu->hwq_mode = mode;
 +
 +	return count;
 +}
 +
-+/**
+ /**
   * mode_show() - presents the current mode of the device
   * @dev:	Generic device associated with the device.
-  * @attr:	Device attribute representing the device mode.
-@@ -2601,6 +2685,7 @@ static DEVICE_ATTR_RO(port1_lun_table);
- static DEVICE_ATTR_RO(port2_lun_table);
+@@ -2686,6 +2794,7 @@ static DEVICE_ATTR_RO(port2_lun_table);
  static DEVICE_ATTR_RO(port3_lun_table);
  static DEVICE_ATTR_RW(irqpoll_weight);
-+static DEVICE_ATTR_RW(num_hwqs);
+ static DEVICE_ATTR_RW(num_hwqs);
++static DEVICE_ATTR_RW(hwq_mode);
  
  static struct device_attribute *cxlflash_host_attrs[] = {
  	&dev_attr_port0,
-@@ -2614,6 +2699,7 @@ static struct device_attribute *cxlflash_host_attrs[] = {
- 	&dev_attr_port2_lun_table,
+@@ -2700,6 +2809,7 @@ static struct device_attribute *cxlflash_host_attrs[] = {
  	&dev_attr_port3_lun_table,
  	&dev_attr_irqpoll_weight,
-+	&dev_attr_num_hwqs,
+ 	&dev_attr_num_hwqs,
++	&dev_attr_hwq_mode,
  	NULL
  };
  
