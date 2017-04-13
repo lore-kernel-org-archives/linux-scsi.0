@@ -1,74 +1,30 @@
-From: Stefan Hajnoczi <stefanha@redhat.com>
-Subject: Re: [PATCH] virtio_scsi: Always try to read VPD pages
-Date: Thu, 13 Apr 2017 14:39:09 +0100
-Message-ID: <20170413133909.GC13387@stefanha-x1.localdomain>
-References: <20170413021300.25023-1-david@gibson.dropbear.id.au>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH v2] scsi: return correct blkprep status code in case
+ scsi_init_io() fails.
+Date: Thu, 13 Apr 2017 15:16:19 +0000
+Message-ID: <1492096576.3298.2.camel@sandisk.com>
+References: <20170412072119.7529-1-jthumshirn@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="ALfTUftag+2gvp1h"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56802 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753231AbdDMNjV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 13 Apr 2017 09:39:21 -0400
-Content-Disposition: inline
-In-Reply-To: <20170413021300.25023-1-david@gibson.dropbear.id.au>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: David Gibson <david@gibson.dropbear.id.au>
-Cc: pbonzini@redhat.com, famz@redhat.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-
-
---ALfTUftag+2gvp1h
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170412072119.7529-1-jthumshirn@suse.de>
+Content-Language: en-US
+Content-ID: <AC51257182611E4EB9EB8A4AB344B384@namprd04.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hare@suse.de" <hare@suse.de>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Apr 13, 2017 at 12:13:00PM +1000, David Gibson wrote:
-> @@ -705,6 +706,28 @@ static int virtscsi_device_reset(struct scsi_cmnd *s=
-c)
->  	return virtscsi_tmf(vscsi, cmd);
->  }
-> =20
-> +static int virtscsi_device_alloc(struct scsi_device *sdevice)
-> +{
-> +	/*
-> +	 * Passed through SCSI targets (e.g. with qemu's 'scsi-block')
-> +	 * may have transfer limits which come from the host SCSI
-> +	 * controller something on the host side other than the target
+On Wed, 2017-04-12 at 09:21 +0200, Johannes Thumshirn wrote:
+> When instrumenting the SCSI layer to run into the
+> !blk_rq_nr_phys_segments(rq) case the following  warning emitted from the
+> block layer:
+>=20
+> blk_peek_request: bad return=3D-22
+>=20
+> This happens because since commit fd3fc0b4d730 ('scsi: don't BUG_ON()
+> empty DMA transfers') we return the wrong error value from scsi_prep_fn()
+> back to the block layer.
 
-s/controller something/controller or something/ ?
-
-> +	 * itself.
-> +	 *
-> +	 * To make this work properly, the hypervisor can adjust the
-> +	 * target's VPD information to advertise these limits.  But
-> +	 * for that to work, the guest has to look at the VPD pages,
-> +	 * which we won't do by default if it is an SPC-2 device, even
-> +	 * if it does actually support it.
-> +	 *
-> +	 * So, set the blist to always try to read the VPD pages.
-> +	 */
-> +	sdevice->sdev_bflags =3D BLIST_TRY_VPD_PAGES;
-> +
-> +	return 0;
-> +}
-
-Looks good to me.  Not a SCSI expert but I checked
-scsi_device_supports_vpd() callers and this seems sane.
-
---ALfTUftag+2gvp1h
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEcBAEBAgAGBQJY7399AAoJEJykq7OBq3PIB6QIAL6vbfJiGy3ZdOedLd2jv5Fl
-NYopdCnkosSKlZbutnqI4TKX9f3zonaiBtahmfNBheh20fDRxFlRGzigarzJjP/j
-KiINjFZBMi/uiNEOqOZtsVJUHhXa8M9bv+5fJIrzrevga/RLYWLFyCN9XWcCXukB
-pQaMg3otRyT9nOjJWJe1Cbe6HFnvVQvUvlos39PxZ0tehfAI+sgxwPMRyRWXhg+N
-/wJXJe6Y+eu0Nnw1k5+nuTU0f71iQuPsW1l4AOh+oZwowRHw4bo2Scav6o7auuxo
-cHT6CXXBGx7D1A9bRQ7c5dx6qBygaX5LE1HMZGBEu8uK8FXV5GmPoA0uUAL1Tb0=
-=JTpC
------END PGP SIGNATURE-----
-
---ALfTUftag+2gvp1h--
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>=
