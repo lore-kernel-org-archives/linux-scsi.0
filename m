@@ -1,119 +1,88 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH v4 6/6] dm rq: Avoid that request processing stalls
- sporadically
-Date: Thu, 13 Apr 2017 10:20:31 +0800
-Message-ID: <20170413022030.GD8835@ming.t460p>
-References: <20170407181654.27836-1-bart.vanassche@sandisk.com>
- <20170407181654.27836-7-bart.vanassche@sandisk.com>
- <20170411160958.GA19222@redhat.com>
- <1491928005.2654.6.camel@sandisk.com>
- <20170411174739.GA19620@redhat.com>
- <1491933092.2654.10.camel@sandisk.com>
- <20170411180358.GA19660@redhat.com>
- <1491934715.2654.14.camel@sandisk.com>
- <20170412034229.GA8835@ming.t460p>
- <1492022286.2764.15.camel@sandisk.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1492022286.2764.15.camel@sandisk.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "snitzer@redhat.com" <snitzer@redhat.com>, "axboe@kernel.dk" <axboe@kernel.dk>
+From: David Gibson <david@gibson.dropbear.id.au>
+Subject: [PATCH] virtio_scsi: Always try to read VPD pages
+Date: Thu, 13 Apr 2017 12:13:00 +1000
+Message-ID: <20170413021300.25023-1-david@gibson.dropbear.id.au>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ozlabs.org ([103.22.144.67]:34011 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751803AbdDMCWr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 12 Apr 2017 22:22:47 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: stefanha@redhat.com, pbonzini@redhat.com, famz@redhat.com
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, David Gibson <david@gibson.dropbear.id.au>
 
-On Wed, Apr 12, 2017 at 06:38:07PM +0000, Bart Van Assche wrote:
-> On Wed, 2017-04-12 at 11:42 +0800, Ming Lei wrote:
-> > On Tue, Apr 11, 2017 at 06:18:36PM +0000, Bart Van Assche wrote:
-> > > On Tue, 2017-04-11 at 14:03 -0400, Mike Snitzer wrote:
-> > > > Rather than working so hard to use DM code against me, your argument
-> > > > should be: "blk-mq drivers X, Y and Z rerun the hw queue; this is a well
-> > > > established pattern"
-> > > > 
-> > > > I see drivers/nvme/host/fc.c:nvme_fc_start_fcp_op() does.  But that is
-> > > > only one other driver out of ~20 BLK_MQ_RQ_QUEUE_BUSY returns
-> > > > tree-wide.
-> > > > 
-> > > > Could be there are some others, but hardly a well-established pattern.
-> > > 
-> > > Hello Mike,
-> > > 
-> > > Several blk-mq drivers that can return BLK_MQ_RQ_QUEUE_BUSY from their
-> > > .queue_rq() implementation stop the request queue (blk_mq_stop_hw_queue())
-> > > before returning "busy" and restart the queue after the busy condition has
-> > > been cleared (blk_mq_start_stopped_hw_queues()). Examples are virtio_blk and
-> > > xen-blkfront. However, this approach is not appropriate for the dm-mq core
-> > > nor for the scsi core since both drivers already use the "stopped" state for
-> > > another purpose than tracking whether or not a hardware queue is busy. Hence
-> > > the blk_mq_delay_run_hw_queue() and blk_mq_run_hw_queue() calls in these last
-> > > two drivers to rerun a hardware queue after the busy state has been cleared.
-> > 
-> > But looks this patch just reruns the hw queue after 100ms, which isn't
-> > that after the busy state has been cleared, right?
-> 
-> Hello Ming,
-> 
-> That patch can be considered as a first step that can be refined further, namely
-> by modifying the dm-rq code further such that dm-rq queues are only rerun after
-> the busy condition has been cleared. The patch at the start of this thread is
-> easier to review and easier to test than any patch that would only rerun dm-rq
-> queues after the busy condition has been cleared.
+Passed through SCSI targets may have transfer limits which come from the
+host SCSI controller something on the host side other than the target
+itself.
 
-OK, got it, it should have been better to add comments about this change
-since reruning the queue after 100ms is actually a workaround, instead
-of final solution.
+To make this work properly, the hypervisor can adjust the target's VPD
+information to advertise these limits.  But for that to work, the guest has
+to look at the VPD pages, which we won't do by default if it is an SPC-2
+device, even if it does actually support it.
 
-> 
-> > Actually if BLK_MQ_RQ_QUEUE_BUSY is returned from .queue_rq(), blk-mq
-> > will buffer this request into hctx->dispatch and run the hw queue again,
-> > so looks blk_mq_delay_run_hw_queue() in this situation shouldn't have been
-> > needed at my 1st impression.
-> 
-> If the blk-mq core would always rerun a hardware queue if a block driver
-> returns BLK_MQ_RQ_QUEUE_BUSY then that would cause 100% of a single CPU core
+This adds a workaround to address this, forcing devices attached to a
+virtio-scsi controller to always check the VPD pages.  This is modelled on
+a similar workaround for the storvsc (Hyper-V) SCSI controller, although
+that exists for slightly different reasons.
 
-It won't casue 100% CPU utilization since we restart queue in completion
-path and at that time at least one tag is available, then progress can be
-made.
+A specific case which causes this is a volume from IBM's IPR RAID
+controller (which presents as an SPC-2 device, although it does support
+VPD) passed through with qemu's 'scsi-block' device.
 
-> to be busy with polling a hardware queue until the "busy" condition has been
-> cleared. One can see easily that that's not what the blk-mq core does. From
-> blk_mq_sched_dispatch_requests():
-> 
-> 	if (!list_empty(&rq_list)) {
-> 		blk_mq_sched_mark_restart_hctx(hctx);
-> 		did_work = blk_mq_dispatch_rq_list(q, &rq_list);
-> 	}
-> 
-> From the end of blk_mq_dispatch_rq_list():
-> 
-> 	if (!list_empty(list)) {
-> 		[ ... ]
-> 		if (!blk_mq_sched_needs_restart(hctx) &&
-> 		    !test_bit(BLK_MQ_S_TAG_WAITING, &hctx->state))
-> 			blk_mq_run_hw_queue(hctx, true);
-> 	}
+Signed-off-by: David Gibson <david@gibson.dropbear.id.au>
+---
+ drivers/scsi/virtio_scsi.c | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
-That is exactly what I meant, blk-mq already provides this mechanism
-to rerun the queue automatically in case of BLK_MQ_RQ_QUEUE_BUSY. If the
-mechanism doesn't work well, we need to fix that, then why bother
-drivers to workaround it?
-
-> 
-> In other words, the BLK_MQ_S_SCHED_RESTART flag is set before the dispatch list
-> is examined and only if that flag gets cleared while blk_mq_dispatch_rq_list()
-> is in progress by a concurrent blk_mq_sched_restart_hctx() call then the
-> dispatch list will be rerun after a block driver returned BLK_MQ_RQ_QUEUE_BUSY.
-
-Yes, the queue is rerun either in completion path when
-BLK_MQ_S_SCHED_RESTART is set, or just .queue_rq() returning _BUSY
-and the flag is cleared at the same time from completion path.
-
-So in theroy we can make sure the queue will be run again if _BUSY
-happened, then what is the root cause why we have to add
-blk_mq_delay_run_hw_queue(hctx, 100) in dm's .queue_rq()?
-
-Thanks,
-Ming
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 939c47d..961a1fc 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -29,6 +29,7 @@
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_tcq.h>
++#include <scsi/scsi_devinfo.h>
+ #include <linux/seqlock.h>
+ #include <linux/blk-mq-virtio.h>
+ 
+@@ -705,6 +706,28 @@ static int virtscsi_device_reset(struct scsi_cmnd *sc)
+ 	return virtscsi_tmf(vscsi, cmd);
+ }
+ 
++static int virtscsi_device_alloc(struct scsi_device *sdevice)
++{
++	/*
++	 * Passed through SCSI targets (e.g. with qemu's 'scsi-block')
++	 * may have transfer limits which come from the host SCSI
++	 * controller something on the host side other than the target
++	 * itself.
++	 *
++	 * To make this work properly, the hypervisor can adjust the
++	 * target's VPD information to advertise these limits.  But
++	 * for that to work, the guest has to look at the VPD pages,
++	 * which we won't do by default if it is an SPC-2 device, even
++	 * if it does actually support it.
++	 *
++	 * So, set the blist to always try to read the VPD pages.
++	 */
++	sdevice->sdev_bflags = BLIST_TRY_VPD_PAGES;
++
++	return 0;
++}
++
++
+ /**
+  * virtscsi_change_queue_depth() - Change a virtscsi target's queue depth
+  * @sdev:	Virtscsi target whose queue depth to change
+@@ -783,6 +806,7 @@ static struct scsi_host_template virtscsi_host_template_single = {
+ 	.change_queue_depth = virtscsi_change_queue_depth,
+ 	.eh_abort_handler = virtscsi_abort,
+ 	.eh_device_reset_handler = virtscsi_device_reset,
++	.slave_alloc = virtscsi_device_alloc,
+ 
+ 	.can_queue = 1024,
+ 	.dma_boundary = UINT_MAX,
+-- 
+2.9.3
