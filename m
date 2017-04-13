@@ -1,55 +1,56 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH 4/4] scsi: scsi_dh_alua: do not print target port group
- state if it remains unavailable
-Date: Thu, 13 Apr 2017 21:40:44 +0000
-Message-ID: <1492119643.24345.28.camel@sandisk.com>
-References: <1491873481-23900-1-git-send-email-mauricfo@linux.vnet.ibm.com>
-         <1491873481-23900-5-git-send-email-mauricfo@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: Re: [PATCH 10/17] cxlflash: Fence EEH during probe
+Date: Thu, 13 Apr 2017 16:46:06 -0500
+Message-ID: <000DC1F9-1C50-4137-94D4-FC6284EB7458@linux.vnet.ibm.com>
+References: <1492024215-55579-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+ <1492024491-55992-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+ <5393e552-5c08-2b76-9a42-c7225ac11877@au1.ibm.com>
+Mime-Version: 1.0 (Mac OS X Mail 10.2 \(3259\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:46180 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751139AbdDMVkq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Apr 2017 17:40:46 -0400
-In-Reply-To: <1491873481-23900-5-git-send-email-mauricfo@linux.vnet.ibm.com>
-Content-Language: en-US
-Content-ID: <9BB7B8F093590849BBC5E9FCDA5F2D6D@namprd04.prod.outlook.com>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:58517 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751139AbdDMVqU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 13 Apr 2017 17:46:20 -0400
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v3DLhSaL077044
+        for <linux-scsi@vger.kernel.org>; Thu, 13 Apr 2017 17:46:19 -0400
+Received: from e17.ny.us.ibm.com (e17.ny.us.ibm.com [129.33.205.207])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 29t19yuk9s-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Thu, 13 Apr 2017 17:46:19 -0400
+Received: from localhost
+        by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+        Thu, 13 Apr 2017 17:46:19 -0400
+In-Reply-To: <5393e552-5c08-2b76-9a42-c7225ac11877@au1.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "mauricfo@linux.vnet.ibm.com" <mauricfo@linux.vnet.ibm.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+Cc: Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
-On Mon, 2017-04-10 at 22:18 -0300, Mauricio Faria de Oliveira wrote:
->  /*
-> + * alua_state_remains - Whether a RTPG state remains the same across 2 v=
-alues.
-> + * @state: the state value to check for.
-> + * @old_state: the old state value.
-> + * @new_state: the new state value.
-> + */
-> +static bool alua_state_remains(int state, int old_state, int new_state)
-> +{
-> +	return ((old_state =3D=3D state) && (new_state =3D=3D state));
-> +}
+> On Apr 13, 2017, at 1:27 AM, Andrew Donnellan <andrew.donnellan@au1.ibm.com> wrote:
+> 
+> On 13/04/17 05:14, Uma Krishnan wrote:
+>> From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+>> 
+>> An EEH during probe can lead to a crash as the recovery thread races
+>> with the probe thread. To avoid this issue, introduce new states to
+>> fence out EEH recovery until probe has completed. Also ensure the reset
+>> wait queue is flushed during device removal to avoid orphaned threads.
+>> 
+>> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+>> Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+> 
+> The use of the term "fence" in the commit message might be a bit confusing given how the term is already used in the context of EEH :)
 
-Hello Mauricio,
+Hi Andrew,
 
-All parentheses in the return statement are superfluous. Please consider
-removing these.
+I agree that it could be a bit misleading but think the commit message is
+descriptive enough to avoid confusion. If you feel strongly about it I'm happy
+to reword the commit.
 
-> +/*
-> -	alua_rtpg_print(sdev, pg, &valid_states);
-> +
-> +	/* Print RTPG information (except if state remains 'unavailable'). */
-> +	if (likely(!alua_state_remains(SCSI_ACCESS_STATE_UNAVAILABLE,
-> +					orig_state, pg->state)))
-> +		alua_rtpg_print(sdev, pg, &valid_states);
 
-Using "likely()" may prevent the CPU branch predictor to do it's work so in
-kernel code usually likely() is only used in code that is in the hot path.
-
-Thanks,
-
-Bart.=
+-matt
