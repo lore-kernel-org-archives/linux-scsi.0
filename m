@@ -1,59 +1,141 @@
 From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH 08/25] scsi: fix fast-fail for non-passthrough requests
-Date: Thu, 13 Apr 2017 20:41:07 +0000
-Message-ID: <1492116064.24345.12.camel@sandisk.com>
-References: <20170406153944.10058-1-hch@lst.de>
-         <20170406153944.10058-9-hch@lst.de>
+Subject: Re: [PATCH 1/4] scsi: scsi_dh_alua: allow I/O in the target port
+ unavailable state
+Date: Thu, 13 Apr 2017 21:14:14 +0000
+Message-ID: <1492118053.24345.20.camel@sandisk.com>
+References: <1491873481-23900-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+         <1491873481-23900-2-git-send-email-mauricfo@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170406153944.10058-9-hch@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:53193 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750735AbdDMVOX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Apr 2017 17:14:23 -0400
+In-Reply-To: <1491873481-23900-2-git-send-email-mauricfo@linux.vnet.ibm.com>
 Content-Language: en-US
-Content-ID: <9F9BCC3B00A9BD40BBAFED87C6DCCC21@namprd04.prod.outlook.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "hch@lst.de" <hch@lst.de>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>, "roger.pau@citrix.com" <roger.pau@citrix.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "jbacik@fb.com" <jbacik@fb.com>, "james.smart@broadcom.com" <james.smart@broadcom.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
+Content-ID: <512EE2940CFFFB4783DF2CB3F53C2AC5@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "mauricfo@linux.vnet.ibm.com" <mauricfo@linux.vnet.ibm.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, 2017-04-06 at 17:39 +0200, Christoph Hellwig wrote:
-> Currently error is always 0 for non-passthrough requests when reaching th=
-e
-> scsi_noretry_cmd check in scsi_io_completion, which effectively disables
-> all fastfail logic.  Fix this by having a single call to
-> __scsi_error_from_host_byte at the beginning of the function and always
-> having a valid error value.
+On Mon, 2017-04-10 at 22:17 -0300, Mauricio Faria de Oliveira wrote:
+> According to SPC-4 (5.15.2.4.5 Unavailable state), the unavailable
+> state may (or may not) transition to other states (e.g., microcode
+> downloading or hardware error, which may be temporary or permanent
+> conditions, respectively).
 >=20
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> But, scsi_dh_alua currently fails the I/O requests early once that
+> state is established (in alua_prep_fn()), which provides no chance
+> for path checkers going through that function path to really check
+> whether the path actually still fails I/O requests or recovered to
+> an active state.
+>=20
+> This might cause device-mapper multipath to fail all paths to some
+> storage system that moves the controllers to the unavailable state
+> for firmware upgrades, and never recover regardless of the storage
+> system doing upgrades one controller at a time and get them online.
+>=20
+> Then I/O requests are blocked indefinitely due to queue_if_no_path
+> but the underlying individual paths are fully operational, and can
+> be verified as such through other function paths (e.g., SG_IO):
+>=20
+>     # multipath -l
+>     mpatha (360050764008100dac000000000000100) dm-0 IBM,2145
+>     size=3D40G features=3D'2 queue_if_no_path retain_attached_hw_handler'
+>     hwhandler=3D'1 alua' wp=3Drw
+>     |-+- policy=3D'service-time 0' prio=3D0 status=3Denabled
+>     | |- 1:0:1:0 sdf 8:80  failed undef running
+>     | `- 2:0:1:0 sdn 8:208 failed undef running
+>     `-+- policy=3D'service-time 0' prio=3D0 status=3Denabled
+>       |- 1:0:0:0 sdb 8:16  failed undef running
+>       `- 2:0:0:0 sdj 8:144 failed undef running
+>=20
+>     # strace -e read \
+>         sg_dd if=3D/dev/sdj of=3D/dev/null bs=3D512 count=3D1 iflag=3Ddir=
+ect \
+>         2>&1 | grep 512
+>     read(3, 0x3fff7ba80000, 512) =3D -1 EIO (Input/output error)
+>=20
+>     # strace -e ioctl \
+>         sg_dd if=3D/dev/sdj of=3D/dev/null bs=3D512 count=3D1 iflag=3Ddir=
+ect \
+>         blk_sgio=3D1 \
+>         2>&1 | grep 512
+>     ioctl(3, SG_IO, {'S', SG_DXFER_FROM_DEV, cmd[10]=3D[28, 00, 00, 00,
+>     00, 00, 00, 00, 01, 00], <...>) =3D 0
+>=20
+> So, allow I/O to target port (groups) in the unavailable state, so the
+> path checkers can actually check them, and schedule a recheck whenever
+> the unavailable state is detected so pg->state can be updated properly
+> (and further SCSI IO error messages then silenced through alua_prep_fn())=
+.
+>=20
+> Once a path checker eventually detects an active state again, the port
+> group state will be updated by the path activation call, alua_activate(),
+> as it schedules an alua_rtpg() check.
+>=20
+> Signed-off-by: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+> Reported-by: Naresh Bannoth <nbannoth@in.ibm.com>
 > ---
->  drivers/scsi/scsi_lib.c | 28 +++++++---------------------
->  1 file changed, 7 insertions(+), 21 deletions(-)
+>  drivers/scsi/device_handler/scsi_dh_alua.c | 18 ++++++++++++++++++
+>  1 file changed, 18 insertions(+)
 >=20
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 11972d1075f1..89b4d9e69866 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -779,21 +779,17 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsi=
-gned int good_bytes)
->  		sense_valid =3D scsi_command_normalize_sense(cmd, &sshdr);
->  		if (sense_valid)
->  			sense_deferred =3D scsi_sense_is_deferred(&sshdr);
-> +
-> +		if (!sense_deferred)
-> +			error =3D __scsi_error_from_host_byte(cmd, result);
->  	}
+> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/de=
+vice_handler/scsi_dh_alua.c
+> index c01b47e5b55a..5e5a33cac951 100644
+> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+> @@ -431,6 +431,20 @@ static int alua_check_sense(struct scsi_device *sdev=
+,
+>  			alua_check(sdev, false);
+>  			return NEEDS_RETRY;
+>  		}
+> +		if (sense_hdr->asc =3D=3D 0x04 && sense_hdr->ascq =3D=3D 0x0c) {
+> +			/*
+> +			 * LUN Not Accessible - target port in unavailable state.
+> +			 *
+> +			 * It may (not) be possible to transition to other states;
+> +			 * the transition might take a while or not happen at all,
+> +			 * depending on the storage system model, error type, etc.
+> +			 *
+> +			 * Do not retry, so failover to another target port occur.
+> +			 * Schedule a recheck to update state for other functions.
+> +			 */
+> +			alua_check(sdev, true);
+> +			return SUCCESS;
+> +		}
+>  		break;
+>  	case UNIT_ATTENTION:
+>  		if (sense_hdr->asc =3D=3D 0x29 && sense_hdr->ascq =3D=3D 0x00) {
+> @@ -1057,6 +1071,8 @@ static void alua_check(struct scsi_device *sdev, bo=
+ol force)
+>   *
+>   * Fail I/O to all paths not in state
+>   * active/optimized or active/non-optimized.
+> + * Allow I/O to all paths in state unavailable
+> + * so path checkers can actually check them.
+>   */
+>  static int alua_prep_fn(struct scsi_device *sdev, struct request *req)
+>  {
+> @@ -1072,6 +1088,8 @@ static int alua_prep_fn(struct scsi_device *sdev, s=
+truct request *req)
+>  	rcu_read_unlock();
+>  	if (state =3D=3D SCSI_ACCESS_STATE_TRANSITIONING)
+>  		ret =3D BLKPREP_DEFER;
+> +	else if (state =3D=3D SCSI_ACCESS_STATE_UNAVAILABLE)
+> +		req->rq_flags |=3D RQF_QUIET;
+>  	else if (state !=3D SCSI_ACCESS_STATE_OPTIMAL &&
+>  		 state !=3D SCSI_ACCESS_STATE_ACTIVE &&
+>  		 state !=3D SCSI_ACCESS_STATE_LBA) {
 
-Hello Christoph,
+Hello Mauricio,
 
-Sorry but this doesn't look correct to me. Further down a "error =3D
-__scsi_error_from_host_byte(cmd, result)" statement is removed that does no=
-t
-depend on "if (!sense_deferred)" so I think that assignment should happen
-independent of the value of "sense_deferred". Additionally, how can it make
-sense to call __scsi_error_from_host_byte() only if sense_deferred =3D=3D f=
-alse?
-As you know the SCSI command result is generated by the LLD so I don't thin=
-k
-that it depends on whether or not the sense data has been deferred.
+Please also add support for the "standby" state to both alua_check_sense()
+and alua_prep_fn() while you are modifying these functions.
+
+Thanks,
 
 Bart.=
