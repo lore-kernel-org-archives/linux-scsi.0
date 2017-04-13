@@ -1,54 +1,105 @@
-From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-Date: Thu, 13 Apr 2017 15:22:06 -0600
-Message-ID: <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1491974532.7236.43.camel@kernel.crashing.org>
- <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
- <1492034124.7236.77.camel@kernel.crashing.org>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH 3/4] scsi: scsi_dh_alua: print changes to RTPG state of
+ other PGs too
+Date: Thu, 13 Apr 2017 21:35:54 +0000
+Message-ID: <1492119352.24345.26.camel@sandisk.com>
+References: <1491873481-23900-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+         <1491873481-23900-4-git-send-email-mauricfo@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <1492034124.7236.77.camel-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, Stephen Bates <sbates-pv7U853sEMVWk0Htik3J/w@public.gmane.org>, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Jerome Glisse <jglisse-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:10012 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751404AbdDMVf5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Apr 2017 17:35:57 -0400
+In-Reply-To: <1491873481-23900-4-git-send-email-mauricfo@linux.vnet.ibm.com>
+Content-Language: en-US
+Content-ID: <858F6B141D79A44589C40DEB87B1F1BF@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "mauricfo@linux.vnet.ibm.com" <mauricfo@linux.vnet.ibm.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+On Mon, 2017-04-10 at 22:18 -0300, Mauricio Faria de Oliveira wrote:
+> Currently, alua_rtpg() can change the 'state' and 'preferred'
+> values for the current port group _and_ of other port groups
+> present in the response buffer/descriptors.
+>=20
+> However, it reports such changes _only_ for the current port
+> group (i.e., only for 'pg' but not for 'tmp_pg').
+>=20
+> This might cause uncertainty and confusion when going through
+> the kernel logs for analyzing/debugging scsi_dh_alua behavior,
+> which is not helpful during support and development scenarios.
+>=20
+> So, print such changes for other port groups than the current
+> one.
+>=20
+> This requires finding a scsi_device to call sdev_printk() with
+> for that other port group. Using 'tmp_pg->rtpg_sdev' is not an
+> option because in that 'if' conditional the 'tmp_pg' is not in
+> the ALUA_PG_RUNNING state, so that pointer may be NULL. So the
+> for-loop over the tmp->pg device_handler structures is used to
+> find a valid scsi_device that is associated to this port group.
+>=20
+> Signed-off-by: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+> ---
+>  drivers/scsi/device_handler/scsi_dh_alua.c | 12 ++++++++++++
+>  1 file changed, 12 insertions(+)
+>=20
+> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/de=
+vice_handler/scsi_dh_alua.c
+> index 0d3508f2e285..c2c9173fd883 100644
+> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+> @@ -688,6 +688,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct=
+ alua_port_group *pg)
+>  				if ((tmp_pg =3D=3D pg) ||
+>  				    !(tmp_pg->flags & ALUA_PG_RUNNING)) {
+>  					struct alua_dh_data *h;
+> +					struct scsi_device *tmp_pg_sdev =3D NULL;
+> =20
+>  					tmp_pg->state =3D desc[0] & 0x0f;
+>  					tmp_pg->pref =3D desc[0] >> 7;
+> @@ -697,6 +698,17 @@ static int alua_rtpg(struct scsi_device *sdev, struc=
+t alua_port_group *pg)
+>  						/* h->sdev should always be valid */
+>  						BUG_ON(!h->sdev);
+>  						h->sdev->access_state =3D desc[0];
+> +
+> +						/*
+> +						 * If tmp_pg is not the running pg, and its worker
+> +						 * is not running, tmp_pg->rtpg_sdev might be NULL.
+> +						 * Use another/one associated scsi_device to print
+> +						 * its RTPG information.
+> +						 */
+> +						if ((tmp_pg !=3D pg) && !tmp_pg_sdev) {
+> +							tmp_pg_sdev =3D h->sdev;
+> +							alua_rtpg_print(tmp_pg_sdev, tmp_pg, NULL);
+> +						}
+>  					}
+>  					rcu_read_unlock();
+>  				}
 
+Hello Mauricio,
 
-On 12/04/17 03:55 PM, Benjamin Herrenschmidt wrote:
-> Look at pcibios_resource_to_bus() and pcibios_bus_to_resource(). They
-> will perform the conversion between the struct resource content (CPU
-> physical address) and the actual PCI bus side address.
+Please consider moving the alua_rtpg_print() call out of the loop. That wil=
+l
+not only allow to eliminate the tmp_pg_sdev variable but will also reduce t=
+he
+nesting depth of the code. E.g. something like the following (untested) cod=
+e:
 
-Ah, thanks for the tip! On my system, this translation returns the same
-address so it was not necessary. And, yes, that means this would have to
-find its way into the dma mapping routine somehow. This means we'll
-eventually need a way to look-up the p2pmem device from the struct page.
-Which means we will likely need a new flag bit in the struct page or
-something. The big difficulty I see is testing. Do you know what
-architectures or in what circumstances are these translations used?
-
-> When behind the same switch you need to use PCI addresses. If one tries
-> later to do P2P between host bridges (via the CPU fabric) things get
-> more complex and one will have to use either CPU addresses or something
-> else alltogether (probably would have to teach the arch DMA mapping
-> routines to work with those struct pages you create and return the
-> right thing).
-
-Probably for starters we'd want to explicitly deny cases between host
-bridges and add that later if someone wants to do the testing.
+					list_for_each_entry_rcu(h,
+						&tmp_pg->dh_list, node) {
+						[ ... ]
+					}
++=A0					h =3D list_first_or_null_rcu(&tmp_pg->dh_list, typeof(*h), node);
++=A0					if (tmp_pg !=3D pg && h)
++=A0						alua_rtpg_print(h->sdev, tmp_pg, NULL);
+=A0					rcu_read_unlock();
 
 Thanks,
 
-Logan
+Bart.=
