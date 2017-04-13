@@ -1,71 +1,54 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH 2/4] scsi: scsi_dh_alua: create alua_rtpg_print() for
- alua_rtpg() sdev_printk
-Date: Thu, 13 Apr 2017 21:18:47 +0000
-Message-ID: <1492118326.24345.22.camel@sandisk.com>
-References: <1491873481-23900-1-git-send-email-mauricfo@linux.vnet.ibm.com>
-         <1491873481-23900-3-git-send-email-mauricfo@linux.vnet.ibm.com>
+From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+Date: Thu, 13 Apr 2017 15:22:06 -0600
+Message-ID: <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1491974532.7236.43.camel@kernel.crashing.org>
+ <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
+ <1492034124.7236.77.camel@kernel.crashing.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:61784 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750735AbdDMVSt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Apr 2017 17:18:49 -0400
-In-Reply-To: <1491873481-23900-3-git-send-email-mauricfo@linux.vnet.ibm.com>
-Content-Language: en-US
-Content-ID: <BBF70E92435FBA4F9C2461791EF4BB6B@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <1492034124.7236.77.camel-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, Stephen Bates <sbates-pv7U853sEMVWk0Htik3J/w@public.gmane.org>, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Jerome Glisse <jglisse-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: "mauricfo@linux.vnet.ibm.com" <mauricfo@linux.vnet.ibm.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Mon, 2017-04-10 at 22:17 -0300, Mauricio Faria de Oliveira wrote:
->  /*
-> + * alua_rtpg_print - Print REPORT TARGET GROUP STATES information
-> + * @sdev: the device evaluated (or associated with this port group).
-> + * @pg: the port group the information is associated with.
-> + * @valid_states: pointer to valid_states value.
-> + *                (optional; e.g., obtained via another port group)
-> + *
-> + * Must be called with pg->lock held.
-> + */
 
-Please use lockdep_assert_held() instead of documenting locking conventions=
- as
-comments. lockdep_assert_held() is verified at runtime=A0with CONFIG_PROVE_=
-LOCKING=3Dy
-but comments not.
 
-> +static void alua_rtpg_print(struct scsi_device *sdev, struct alua_port_g=
-roup *pg,
-> +			    int *valid_states)
-> +{
-> +	if (valid_states)
-> +		sdev_printk(KERN_INFO, sdev,
-> +		    "%s: port group %02x state %c %s supports %c%c%c%c%c%c%c\n",
-> +		    ALUA_DH_NAME, pg->group_id, print_alua_state(pg->state),
-> +		    pg->pref ? "preferred" : "non-preferred",
-> +		    (*valid_states) & TPGS_SUPPORT_TRANSITION ? 'T' : 't',
-> +		    (*valid_states) & TPGS_SUPPORT_OFFLINE ? 'O' : 'o',
-> +		    (*valid_states) & TPGS_SUPPORT_LBA_DEPENDENT ? 'L' : 'l',
-> +		    (*valid_states) & TPGS_SUPPORT_UNAVAILABLE ? 'U' : 'u',
-> +		    (*valid_states) & TPGS_SUPPORT_STANDBY ? 'S' : 's',
-> +		    (*valid_states) & TPGS_SUPPORT_NONOPTIMIZED ? 'N' : 'n',
-> +		    (*valid_states) & TPGS_SUPPORT_OPTIMIZED  ?  'A' : 'a');
-> +	else
-> +		sdev_printk(KERN_INFO, sdev,
-> +		    "%s: port group %02x state %c %s\n",
-> +		    ALUA_DH_NAME, pg->group_id, print_alua_state(pg->state),
-> +		    pg->pref ? "preferred" : "non-preferred");
-> +}
+On 12/04/17 03:55 PM, Benjamin Herrenschmidt wrote:
+> Look at pcibios_resource_to_bus() and pcibios_bus_to_resource(). They
+> will perform the conversion between the struct resource content (CPU
+> physical address) and the actual PCI bus side address.
 
-Please define two functions - one for valid_states !=3D NULL and one for va=
-lid_states
-=3D=3D NULL such that valid_states can be passed by value instead of by ref=
-erence.
+Ah, thanks for the tip! On my system, this translation returns the same
+address so it was not necessary. And, yes, that means this would have to
+find its way into the dma mapping routine somehow. This means we'll
+eventually need a way to look-up the p2pmem device from the struct page.
+Which means we will likely need a new flag bit in the struct page or
+something. The big difficulty I see is testing. Do you know what
+architectures or in what circumstances are these translations used?
+
+> When behind the same switch you need to use PCI addresses. If one tries
+> later to do P2P between host bridges (via the CPU fabric) things get
+> more complex and one will have to use either CPU addresses or something
+> else alltogether (probably would have to teach the arch DMA mapping
+> routines to work with those struct pages you create and return the
+> right thing).
+
+Probably for starters we'd want to explicitly deny cases between host
+bridges and add that later if someone wants to do the testing.
 
 Thanks,
 
-Bart.=
+Logan
