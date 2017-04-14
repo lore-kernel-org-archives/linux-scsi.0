@@ -1,68 +1,63 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH] scsi: storvsc: remove return at end of void function
-Date: Thu, 13 Apr 2017 23:28:54 +0000
-Message-ID: <DM5PR03MB249034710FBFFF705EEA480CA0020@DM5PR03MB2490.namprd03.prod.outlook.com>
-References: <20170316065957.13405-1-miguel.bernal.marin@linux.intel.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH v4 6/6] dm rq: Avoid that request processing stalls
+ sporadically
+Date: Fri, 14 Apr 2017 09:13:29 +0800
+Message-ID: <20170414011324.GA29916@ming.t460p>
+References: <20170411160958.GA19222@redhat.com>
+ <1491928005.2654.6.camel@sandisk.com>
+ <20170411174739.GA19620@redhat.com>
+ <1491933092.2654.10.camel@sandisk.com>
+ <20170411180358.GA19660@redhat.com>
+ <1491934715.2654.14.camel@sandisk.com>
+ <20170412034229.GA8835@ming.t460p>
+ <1492022286.2764.15.camel@sandisk.com>
+ <20170413022030.GD8835@ming.t460p>
+ <25ebc19f-f6e0-2f71-f590-8416359d2fd1@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20170316065957.13405-1-miguel.bernal.marin@linux.intel.com>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Miguel Bernal Marin <miguel.bernal.marin@linux.intel.com>, "Martin K.
- Petersen" <martin.petersen@oracle.com>
-Cc: Stephen Hemminger <sthemmin@microsoft.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James
- E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Haiyang Zhang <haiyangz@microsoft.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:47502 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750764AbdDNBNo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 13 Apr 2017 21:13:44 -0400
+Content-Disposition: inline
+In-Reply-To: <25ebc19f-f6e0-2f71-f590-8416359d2fd1@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "snitzer@redhat.com" <snitzer@redhat.com>, "axboe@kernel.dk" <axboe@kernel.dk>
 
+On Thu, Apr 13, 2017 at 09:59:57AM -0700, Bart Van Assche wrote:
+> On 04/12/17 19:20, Ming Lei wrote:
+> > On Wed, Apr 12, 2017 at 06:38:07PM +0000, Bart Van Assche wrote:
+> >> If the blk-mq core would always rerun a hardware queue if a block driver
+> >> returns BLK_MQ_RQ_QUEUE_BUSY then that would cause 100% of a single CPU core
+> > 
+> > It won't casue 100% CPU utilization since we restart queue in completion
+> > path and at that time at least one tag is available, then progress can be
+> > made.
+> 
+> Hello Ming,
+> 
+> Sorry but you are wrong. If .queue_rq() returns BLK_MQ_RQ_QUEUE_BUSY
+> then it's likely that calling .queue_rq() again after only a few
+> microseconds will cause it to return BLK_MQ_RQ_QUEUE_BUSY again. If you
+> don't believe me, change "if (!blk_mq_sched_needs_restart(hctx) &&
+> !test_bit(BLK_MQ_S_TAG_WAITING, &hctx->state)) blk_mq_run_hw_queue(hctx,
+> true);" into "blk_mq_run_hw_queue(hctx, true);", trigger a busy
 
+Yes, that can be true, but I mean it is still OK to run the queue again
+with
 
-> -----Original Message-----
-> From: Miguel Bernal Marin [mailto:miguel.bernal.marin@linux.intel.com]
-> Sent: Thursday, March 16, 2017 12:00 AM
-> To: KY Srinivasan <kys@microsoft.com>; Martin K. Petersen
-> <martin.petersen@oracle.com>
-> Cc: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org;
-> devel@linuxdriverproject.org; Haiyang Zhang <haiyangz@microsoft.com>;
-> Stephen Hemminger <sthemmin@microsoft.com>; James E.J. Bottomley
-> <jejb@linux.vnet.ibm.com>
-> Subject: [PATCH] scsi: storvsc: remove return at end of void function
-> 
-> storvsc_on_channel_callback is a void function and the return
-> statement at the end is not useful.
-> 
-> Found with checkpatch.
-> 
-> Signed-off-by: Miguel Bernal Marin <miguel.bernal.marin@linux.intel.com>
+	if (!blk_mq_sched_needs_restart(hctx) &&
+	    !test_bit(BLK_MQ_S_TAG_WAITING, &hctx->state))
+			blk_mq_run_hw_queue(hctx, true);
 
-Reviewed-by:  K. Y. Srinivasan <kys@microsoft.com>
+and restarting queue in __blk_mq_finish_request() when
+BLK_MQ_RQ_QUEUE_BUSY is returned from .queue_rq(). And both are in current
+blk-mq implementation.
 
-> ---
->  drivers/scsi/storvsc_drv.c | 2 --
->  1 file changed, 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 3d70d1cf49a3..538f3e131275 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -1191,8 +1191,6 @@ static void storvsc_on_channel_callback(void
-> *context)
->  			break;
->  		}
->  	} while (1);
-> -
-> -	return;
->  }
-> 
->  static int storvsc_connect_to_vsp(struct hv_device *device, u32 ring_size,
-> --
-> 2.12.0
+Then why do we need blk_mq_delay_run_hw_queue(hctx, 100/*ms*/) in dm?
+
+Thanks,
+Ming
