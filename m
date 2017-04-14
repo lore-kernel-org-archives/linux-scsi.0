@@ -1,56 +1,45 @@
-From: <kkaplanidou@hhp.ufl.edu>
-Subject: 25491 linux-scsi
-Date: Fri, 14 Apr 2017 15:53:24 -0000
-Message-ID: <149218520477.10870.5309881229878350598@zaural.ru>
-Reply-To: <kkaplanidou@hhp.ufl.edu>
+From: Logan Gunthorpe <logang@deltatee.com>
+Subject: Re: [PATCH 09/22] dm-crypt: Make use of the new sg_map helper in 4
+ call sites
+Date: Fri, 14 Apr 2017 10:03:43 -0600
+Message-ID: <302ae5ab-d515-5427-2e54-d58a9cdb8241@deltatee.com>
+References: <1492121135-4437-1-git-send-email-logang@deltatee.com>
+ <1492121135-4437-10-git-send-email-logang@deltatee.com>
+ <20170414083921.GC25471@lst.de>
 Mime-Version: 1.0
-Content-Type: application/zip; name="50603840752.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ws198.241.50.zone94.zaural.ru ([94.50.241.198]:39357 "HELO
-        zaural.ru" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-        id S1751761AbdDNPx3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 14 Apr 2017 11:53:29 -0400
-Content-Disposition: attachment
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <20170414083921.GC25471@lst.de>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Steve Wise <swise@opengridcomputing.com>, linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>, target-devel@vger.kernel.org, Sumit Semwal <sumit.semwal@linaro.org>, devel@driverdev.osuosl.org, rds-devel@oss.oracle.com, Sagi Grimberg <sagi@grimberg.me>, linux-scsi@vger.kernel.org, Matthew Wilcox <mawilcox@microsoft.com>, linux-rdma@vger.kernel.org, fcoe-devel@open-fcoe.org, Ross Zwisler <ross.zwisler@linux.intel.com>, open-iscsi@googlegroups.com, linux-media@vger.kernel.org, Ming Lin <ming.l@ssi.samsung.com>, intel-gfx@lists.freedesktop.org, sparmaintainer@unisys.com, linux-raid@vger.kernel.org, dri-devel@lists.freedesktop.org, Dan Williams <dan.j.williams@intel.com>, megaraidlinux.pdl@broadcom.com, Jens Axboe <axboe@kernel.dk>, linaro-mm-sig@lists.linaro.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
 
-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
+
+
+On 14/04/17 02:39 AM, Christoph Hellwig wrote:
+> On Thu, Apr 13, 2017 at 04:05:22PM -0600, Logan Gunthorpe wrote:
+>> Very straightforward conversion to the new function in all four spots.
+> 
+> I think the right fix here is to switch dm-crypt to the ahash API
+> that takes a scatterlist.
+
+Hmm, well I'm not sure I understand the code enough to make that
+conversion. But I was looking at it. One tricky bit seems to be that
+crypt_iv_lmk_one adds a seed, skips the first 16 bytes in the page and
+then hashes another 16 bytes from other data. What would you do
+construct a new sgl for it and pass it to the ahash api?
+
+The other thing is crypt_iv_lmk_post also seems to modify the page after
+the hash with a  crypto_xor so you'd still need at least one kmap in there.
+
+Logan
