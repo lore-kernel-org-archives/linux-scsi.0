@@ -1,42 +1,56 @@
-From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: Re: [PATCH 03/22] libiscsi: Make use of new the sg_map helper function
-Date: Fri, 14 Apr 2017 09:37:20 -0600
-Message-ID: <85eda3a6-edab-e59e-d2d4-c3af5599d0fd@deltatee.com>
-References: <1492121135-4437-1-git-send-email-logang@deltatee.com>
- <1492121135-4437-4-git-send-email-logang@deltatee.com>
- <20170414083607.GB25471@lst.de>
+From: <kkaplanidou@hhp.ufl.edu>
+Subject: 25491 linux-scsi
+Date: Fri, 14 Apr 2017 15:53:24 -0000
+Message-ID: <149218520477.10870.5309881229878350598@zaural.ru>
+Reply-To: <kkaplanidou@hhp.ufl.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <20170414083607.GB25471-jcswGhMUV9g@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, rds-devel-N0ozoZBvEnrZJqsBc5GL+g@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ming Lin <ming.l-Vzezgt5dB6uUEJcrhfAQsw@public.gmane.org>, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, sparmaintainer-GLv8BlqOqDDQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, megaraidlinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, linaro-mm-sig-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj@k>
+Content-Type: application/zip; name="50603840752.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ws198.241.50.zone94.zaural.ru ([94.50.241.198]:39357 "HELO
+        zaural.ru" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+        id S1751761AbdDNPx3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 14 Apr 2017 11:53:29 -0400
+Content-Disposition: attachment
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-
-
-On 14/04/17 02:36 AM, Christoph Hellwig wrote:
-> On Thu, Apr 13, 2017 at 04:05:16PM -0600, Logan Gunthorpe wrote:
->> Convert the kmap and kmap_atomic uses to the sg_map function. We now
->> store the flags for the kmap instead of a boolean to indicate
->> atomicitiy. We also propogate a possible kmap error down and create
->> a new ISCSI_TCP_INTERNAL_ERR error type for this.
-> 
-> Can you split out the new error handling into a separate prep patch
-> which should go to the iscsi maintainers ASAP?
-> 
-
-Yes, I can do that. I'd just have thought they'd want to see the use
-case for the new error before accepting a patch like that...
-
-Logan
+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
