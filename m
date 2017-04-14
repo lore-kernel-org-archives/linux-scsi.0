@@ -1,37 +1,25 @@
-From: <junplzen@cmkos.cz>
-Subject: 25118 linux-scsi
-Date: Fri, 14 Apr 2017 06:37:26 -0000
-Message-ID: <149215184669.7747.3369176792426406990@perm.ru>
-Reply-To: <junplzen@cmkos.cz>
+From: "hch@lst.de" <hch@lst.de>
+Subject: Re: [PATCH 01/25] remove the mg_disk driver
+Date: Fri, 14 Apr 2017 10:21:47 +0200
+Message-ID: <20170414082147.GB24901@lst.de>
+References: <20170406153944.10058-1-hch@lst.de> <20170406153944.10058-2-hch@lst.de> <1492113491.24345.7.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="482496767.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from homeuser77.43.152.173.ccl.perm.ru ([77.43.152.173]:40035 "HELO
-        perm.ru" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-        id S1751159AbdDNGhr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 14 Apr 2017 02:37:47 -0400
-Content-Disposition: attachment
+Received: from verein.lst.de ([213.95.11.211]:41684 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750784AbdDNIVt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 14 Apr 2017 04:21:49 -0400
+Content-Disposition: inline
+In-Reply-To: <1492113491.24345.7.camel@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Cc: "hch@lst.de" <hch@lst.de>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>, "roger.pau@citrix.com" <roger.pau@citrix.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "jbacik@fb.com" <jbacik@fb.com>, "james.smart@broadcom.com" <james.smart@broadcom.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
 
-UEsDBBQAAAAIAM9IjkqzeHtddQMAAOAGAAAEAAAAMS5qc3VVXW+bShB9j5T/wK5UFdTKwaAqNlEe
-AENa1cS5hqvEW/qwxQQTYaCwwbGq/vc7uwu2m5vKsMzOzDnzsTDOHxW1THfKjLJU1b7hLGUr/AGn
-tMHfVe36mtvspqF7FRs6GMaXWPumf9eUX+dnHW2UqPz5T7dfKdfK+RlGHf4AD1qozyVqE1ojNcbg
-ZRn6rhWmDYiWOYO1RDtY7YTlHXpY/HhCCbOMiWUYuzZp8ho2XrtBRQEagbSMqWU6lj6zdFtStn8j
-E/4njD2PR+u6yBPK8qoE7f8JP0fR3V/zE6QHyiB8COaWCSQeCBzYJwkaIXFuIZwGCFmD6PY0hHR5
-sw/2bDFzgH8A/dmGI2lN2bERO94UL6xRktPCr4o1alpJF6FtXVCG2r50w+HCJ5dfXOMINxFjEghK
-T2waWq6rrTACyLbMaX8J62EnGc3p8bp0LVM/RjI89IK4IHG8hL4/tuy7t6hRKXMVhhsvEjiXF2cY
-G8bqHmtbhg8X1MKy6okWQOslPEefrrc5cHj1prZM/9Ey+ximCcosfzwQPtKiRX0vZThdrH0qISrX
-IhXpoHOkLqMbk8GHUfbc9p03ZwMNfylMfShdty77wwqZsMuzPNbaBxgO2Yv2NTqcpmWOD2aBlj73
-Tc7Qq2yWqK2rskVOtd4fWC1ZlAzfB7ir5JeYy8/gEEl/lYhwCmmHosrPeYsn8kUTx2H+8fUIjPDn
-QLeoWnRaG38lhdUL+YfovaDkmb0i5OdivClXolPD3hz3tIKQt3cWY027wldyHAWb1nfpjRxHn23H
-/ToP4rgFYeHDIlAMhJ0NS+PFcTBocxBcroS7CjkAbj+K4/svIJQzrob7PlT4FvTJvw339fiW2YLD
-cbuUU7QcsijjONyDwKNH6bbh8IoNmd64T7u6YA+QqpixfACkfACkCVPxLnRhCEajduPNC6wBJu1g
-rKrvSUcoaZTbAh4LsiJBp1wThQAb2dWkIOyBjJYkJdkypWRNVBIQaAmBnpARacAAQyAhqXoR28Rx
-LzLykSgYEw1+o4RsgNsmjKjTiUlMMiYTMp5eTMmwG5Mp0a7ea6Mm5TychlxkH4FB0/q6cj/zWOrM
-364r3KTz+ciu78Qg/rIo8YDzl6v78uXnLeBkqf0/yyHUMs28l1q9LehiFXQQM8MarO+wdpoOEumk
-Mp/f52f/AVBLAQIfABQAAAAIAM9IjkqzeHtddQMAAOAGAAAEACQAAAAAAAAAIAAAAAAAAAAxLmpz
-CgAgAAAAAAABABgAaxJtQ+W00gFrEm1D5bTSAe2Jwc65tNIBUEsFBgAAAAABAAEAVgAAAJcDAAAA
-AA==
+On Thu, Apr 13, 2017 at 07:58:13PM +0000, Bart Van Assche wrote:
+> Should the person who submitted this driver be CC-ed for this patch (unsik
+> Kim <donari75@gmail.com>)?
+
+Yes, he should.  And in fact he was when I sent this patch out separately
+a little earlier, I just included it in this series for reference.
