@@ -1,70 +1,51 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH v4 6/6] dm rq: Avoid that request processing stalls
- sporadically
-Date: Fri, 14 Apr 2017 17:12:50 +0000
-Message-ID: <1492189969.2644.9.camel@sandisk.com>
-References: <20170411160958.GA19222@redhat.com>
-         <1491928005.2654.6.camel@sandisk.com> <20170411174739.GA19620@redhat.com>
-         <1491933092.2654.10.camel@sandisk.com> <20170411180358.GA19660@redhat.com>
-         <1491934715.2654.14.camel@sandisk.com> <20170412034229.GA8835@ming.t460p>
-         <1492022286.2764.15.camel@sandisk.com> <20170413022030.GD8835@ming.t460p>
-         <25ebc19f-f6e0-2f71-f590-8416359d2fd1@sandisk.com>
-         <20170414011324.GA29916@ming.t460p>
+From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+Date: Fri, 14 Apr 2017 11:30:14 -0600
+Message-ID: <630c1c63-ff17-1116-e069-2b8f93e50fa2@deltatee.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1491974532.7236.43.camel@kernel.crashing.org>
+ <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
+ <1492034124.7236.77.camel@kernel.crashing.org>
+ <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
+ <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
+ <20170414041656.GA30694@obsidianresearch.com>
+ <1492169849.25766.3.camel@kernel.crashing.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170414011324.GA29916@ming.t460p>
-Content-Language: en-US
-Content-ID: <AE9D19915D1C354FA4761515ABBF6CDF@namprd04.prod.outlook.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "ming.lei@redhat.com" <ming.lei@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "snitzer@redhat.com" <snitzer@redhat.com>, "axboe@kernel.dk" <axboe@kernel.dk>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <1492169849.25766.3.camel-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Bjorn Helgaas <helgaas-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jerome Glisse <jglisse-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2017-04-14 at 09:13 +0800, Ming Lei wrote:
-> On Thu, Apr 13, 2017 at 09:59:57AM -0700, Bart Van Assche wrote:
-> > On 04/12/17 19:20, Ming Lei wrote:
-> > > On Wed, Apr 12, 2017 at 06:38:07PM +0000, Bart Van Assche wrote:
-> > > > If the blk-mq core would always rerun a hardware queue if a block d=
-river
-> > > > returns BLK_MQ_RQ_QUEUE_BUSY then that would cause 100% of a single=
- CPU core
-> > >=20
-> > > It won't casue 100% CPU utilization since we restart queue in complet=
-ion
-> > > path and at that time at least one tag is available, then progress ca=
-n be
-> > > made.
-> >=20
-> > Hello Ming,
-> >=20
-> > Sorry but you are wrong. If .queue_rq() returns BLK_MQ_RQ_QUEUE_BUSY
-> > then it's likely that calling .queue_rq() again after only a few
-> > microseconds will cause it to return BLK_MQ_RQ_QUEUE_BUSY again. If you
-> > don't believe me, change "if (!blk_mq_sched_needs_restart(hctx) &&
-> > !test_bit(BLK_MQ_S_TAG_WAITING, &hctx->state)) blk_mq_run_hw_queue(hctx=
-,
-> > true);" into "blk_mq_run_hw_queue(hctx, true);", trigger a busy
->=20
-> Yes, that can be true, but I mean it is still OK to run the queue again
-> with
->=20
-> 	if (!blk_mq_sched_needs_restart(hctx) &&
-> 	    !test_bit(BLK_MQ_S_TAG_WAITING, &hctx->state))
-> 			blk_mq_run_hw_queue(hctx, true);
->=20
-> and restarting queue in __blk_mq_finish_request() when
-> BLK_MQ_RQ_QUEUE_BUSY is returned from .queue_rq(). And both are in curren=
-t
-> blk-mq implementation.
->=20
-> Then why do we need blk_mq_delay_run_hw_queue(hctx, 100/*ms*/) in dm?
 
-Because if dm_mq_queue_rq() returns BLK_MQ_RQ_QUEUE_BUSY that there is no
-guarantee that __blk_mq_finish_request() will be called later on for the
-same queue. dm_mq_queue_rq() can e.g. return BLK_MQ_RQ_QUEUE_BUSY while no
-dm requests are in progress because the SCSI error handler is active for
-all underlying paths. See also scsi_lld_busy() and scsi_host_in_recovery().
 
-Bart.=
+On 14/04/17 05:37 AM, Benjamin Herrenschmidt wrote:
+> I object to designing a subsystem that by design cannot work on whole
+> categories of architectures out there.
+
+Hardly. That's extreme. We'd design a subsystem that works for the easy
+cases and needs more work to support the offset cases. It would not be
+designed in such a way that it could _never_ support those
+architectures. It would simply be such that it only permits use by the
+cases that are known to work. Then those cases could be expanded as time
+goes on and people work on adding more support.
+
+There's tons of stuff that needs to be done to get this upstream. I'd
+rather not require it to work for every possible architecture from the
+start. The testing alone would be impossible. Many subsystems start by
+working for x86 first and then adding support in other architectures
+later. (Often with that work done by the people who care about those
+systems and actually have the hardware to test with.)
+
+Logan
