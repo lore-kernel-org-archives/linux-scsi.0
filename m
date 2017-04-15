@@ -1,73 +1,53 @@
-From: <molino.petrone@libero.it>
-Subject: 53650 linux-scsi
-Date: Sat, 15 Apr 2017 05:14:10 -0000
-Message-ID: <149223325024.20709.5564575485310527208@rima-tde.net>
-Reply-To: <molino.petrone@libero.it>
+From: Milan Broz <gmazyland@gmail.com>
+Subject: Re: [PATCH 09/22] dm-crypt: Make use of the new sg_map helper in 4
+ call sites
+Date: Sat, 15 Apr 2017 14:10:17 +0200
+Message-ID: <22703638-27a9-7dc5-5180-536f61661592@gmail.com>
+References: <1492121135-4437-1-git-send-email-logang@deltatee.com>
+ <1492121135-4437-10-git-send-email-logang@deltatee.com>
+ <20170414083921.GC25471@lst.de>
+ <302ae5ab-d515-5427-2e54-d58a9cdb8241@deltatee.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="7.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 151.red-79-147-189.dynamicip.rima-tde.net ([79.147.189.151]:43497
-        "HELO rima-tde.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with SMTP id S1750981AbdDOFON (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Apr 2017 01:14:13 -0400
-Content-Disposition: attachment
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <302ae5ab-d515-5427-2e54-d58a9cdb8241@deltatee.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Logan Gunthorpe <logang@deltatee.com>, Christoph Hellwig <hch@lst.de>
+Cc: Steve Wise <swise@opengridcomputing.com>, linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>, target-devel@vger.kernel.org, Sumit Semwal <sumit.semwal@linaro.org>, devel@driverdev.osuosl.org, rds-devel@oss.oracle.com, Sagi Grimberg <sagi@grimberg.me>, linux-scsi@vger.kernel.org, Matthew Wilcox <mawilcox@microsoft.com>, linux-rdma@vger.kernel.org, fcoe-devel@open-fcoe.org, Ross Zwisler <ross.zwisler@linux.intel.com>, open-iscsi@googlegroups.com, linux-media@vger.kernel.org, Ming Lin <ming.l@ssi.samsung.com>, intel-gfx@lists.freedesktop.org, sparmaintainer@unisys.com, linux-raid@vger.kernel.org, dri-devel@lists.freedesktop.org, Dan Williams <dan.j.williams@intel.com>, megaraidlinux.pdl@broadcom.com, Jens Axboe <axboe@kernel.dk>, linaro-mm-sig@
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
 
-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
-AAAAUEsFBgAAAAABAAEATQAAALwLAAAAAA==
+On 04/14/2017 06:03 PM, Logan Gunthorpe wrote:
+> 
+> 
+> On 14/04/17 02:39 AM, Christoph Hellwig wrote:
+>> On Thu, Apr 13, 2017 at 04:05:22PM -0600, Logan Gunthorpe wrote:
+>>> Very straightforward conversion to the new function in all four spots.
+>>
+>> I think the right fix here is to switch dm-crypt to the ahash API
+>> that takes a scatterlist.
+> 
+> Hmm, well I'm not sure I understand the code enough to make that
+> conversion. But I was looking at it. One tricky bit seems to be that
+> crypt_iv_lmk_one adds a seed, skips the first 16 bytes in the page and
+> then hashes another 16 bytes from other data. What would you do
+> construct a new sgl for it and pass it to the ahash api?
+> 
+> The other thing is crypt_iv_lmk_post also seems to modify the page after
+> the hash with a  crypto_xor so you'd still need at least one kmap in there.
+
+yes, it is in fact modification of CBC mode implemented this hacky way.
+These IVs are only for compatibility with loopaes and very old trueCrypt formats.
+
+I think your patch is ok (if it is just plain conversion), if it is
+really needed, we can switch to ahash later in follow-up patch.
+
+All common code in dmcrypt uses async API already.
+
+p.s.
+there is a lot of lists on cc, but for this patch is missing dm-devel, dmcrypt changes
+need to go through Mike's tree (I added dm-devel to cc:)
+
+Milan
+
+
