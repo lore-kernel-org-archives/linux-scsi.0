@@ -1,27 +1,53 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] scsi: storvsc: Allow only one remove lun work item to be
- issued per lun
-Date: Sat, 15 Apr 2017 07:06:47 -0700
-Message-ID: <20170415140647.GA12851@infradead.org>
-References: <1492263790-11378-1-git-send-email-cavery@redhat.com>
+From: <demorton@dow.com>
+Subject: (unknown)
+Date: Sat, 15 Apr 2017 14:16:20 -0000
+Message-ID: <149226578098.20711.12314000324156258548@myrepublic.com.sg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-Content-Disposition: inline
-In-Reply-To: <1492263790-11378-1-git-send-email-cavery@redhat.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Cathy Avery <cavery@redhat.com>
-Cc: sthemmin@microsoft.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, haiyangz@microsoft.com, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, jejb@linux.vnet.ibm.com
+Content-Type: application/zip; name="REPORT_3030392596590_linux-scsi.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 47-185-100-101.myrepublic.com.sg ([101.100.185.47]:59965 "HELO
+        myrepublic.com.sg" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with SMTP id S1751541AbdDOOQ0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Apr 2017 10:16:26 -0400
+Subject: 
+Content-Disposition: attachment
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-Just add a singlethreaded workqueue for storvsc_handle_error and you'll
-get serialization for all error handling for free.
+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
