@@ -1,142 +1,122 @@
-From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-Date: Sat, 15 Apr 2017 23:36:34 -0600
-Message-ID: <3bf6ea2a-a480-0df9-de35-ee9aca64940e@deltatee.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1491974532.7236.43.camel@kernel.crashing.org>
- <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
- <1492034124.7236.77.camel@kernel.crashing.org>
- <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
- <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
- <20170414041656.GA30694@obsidianresearch.com>
- <1492169849.25766.3.camel@kernel.crashing.org>
- <630c1c63-ff17-1116-e069-2b8f93e50fa2@deltatee.com>
- <20170414190452.GA15679@bhelgaas-glaptop.roam.corp.google.com>
- <1492207643.25766.18.camel@kernel.crashing.org>
- <bff1e503-95a9-e19f-bfd9-0ff962c63a81@deltatee.com>
- <1492294628.25766.33.camel@kernel.crashing.org>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 4.4 13/18] blk-mq: Avoid memory reclaim when remapping queues
+Date: Sun, 16 Apr 2017 10:02:36 +0200
+Message-ID: <20170416080213.384525777@linuxfoundation.org>
+References: <20170416080212.713469777@linuxfoundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <1492294628.25766.33.camel-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>, Bjorn Helgaas <helgaas-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Jerome Glisse <jglisse-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170416080212.713469777@linuxfoundation.org>
+Sender: linux-block-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, Douglas Miller <dougmill@linux.vnet.ibm.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, Sumit Semwal <sumit.semwal@linaro.org>
 List-Id: linux-scsi@vger.kernel.org
 
+4.4-stable review patch.  If anyone has any objections, please let me know.
 
+------------------
 
-On 15/04/17 04:17 PM, Benjamin Herrenschmidt wrote:
-> You can't. If the iommu is on, everything is remapped. Or do you mean
-> to have dma_map_* not do a remapping ?
+From: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
 
-Well, yes, you'd have to change the code so that iomem pages do not get
-remapped and the raw BAR address is passed to the DMA engine. I said
-specifically we haven't done this at this time but it really doesn't
-seem like an unsolvable problem. It is something we will need to address
-before a proper patch set is posted though.
+commit 36e1f3d107867b25c616c2fd294f5a1c9d4e5d09 upstream.
 
-> That's the problem again, same as before, for that to work, the
-> dma_map_* ops would have to do something special that depends on *both*
-> the source and target device.
+While stressing memory and IO at the same time we changed SMT settings,
+we were able to consistently trigger deadlocks in the mm system, which
+froze the entire machine.
 
-No, I don't think you have to do things different based on the source.
-Have the p2pmem device layer restrict allocating p2pmem based on the
-devices in use (similar to how the RFC code works now) and when the dma
-mapping code sees iomem pages it just needs to leave the address alone
-so it's used directly by the dma in question.
+I think that under memory stress conditions, the large allocations
+performed by blk_mq_init_rq_map may trigger a reclaim, which stalls
+waiting on the block layer remmaping completion, thus deadlocking the
+system.  The trace below was collected after the machine stalled,
+waiting for the hotplug event completion.
 
-It's much better to make the decision on which memory to use when you
-allocate it. If you wait until you map it, it would be a pain to fall
-back to system memory if it doesn't look like it will work. So, if when
-you allocate it, you know everything will work you just need the dma
-mapping layer to stay out of the way.
+The simplest fix for this is to make allocations in this path
+non-reclaimable, with GFP_NOIO.  With this patch, We couldn't hit the
+issue anymore.
 
-> The dma_ops today are architecture specific and have no way to
-> differenciate between normal and those special P2P DMA pages.
+This should apply on top of Jens's for-next branch cleanly.
 
-Correct, unless Dan's idea works (which will need some investigation),
-we'd need a flag in struct page or some other similar method to
-determine that these are special iomem pages.
+Changes since v1:
+  - Use GFP_NOIO instead of GFP_NOWAIT.
 
->> Though if it does, I'd expect
->> everything would still work you just wouldn't get the performance or
->> traffic flow you are looking for. We've been testing with the software
->> iommu which doesn't have this problem.
-> 
-> So first, no, it's more than "you wouldn't get the performance". On
-> some systems it may also just not work. Also what do you mean by "the
-> SW iommu doesn't have this problem" ? It catches the fact that
-> addresses don't point to RAM and maps differently ?
+ Call Trace:
+[c000000f0160aaf0] [c000000f0160ab50] 0xc000000f0160ab50 (unreliable)
+[c000000f0160acc0] [c000000000016624] __switch_to+0x2e4/0x430
+[c000000f0160ad20] [c000000000b1a880] __schedule+0x310/0x9b0
+[c000000f0160ae00] [c000000000b1af68] schedule+0x48/0xc0
+[c000000f0160ae30] [c000000000b1b4b0] schedule_preempt_disabled+0x20/0x30
+[c000000f0160ae50] [c000000000b1d4fc] __mutex_lock_slowpath+0xec/0x1f0
+[c000000f0160aed0] [c000000000b1d678] mutex_lock+0x78/0xa0
+[c000000f0160af00] [d000000019413cac] xfs_reclaim_inodes_ag+0x33c/0x380 [xfs]
+[c000000f0160b0b0] [d000000019415164] xfs_reclaim_inodes_nr+0x54/0x70 [xfs]
+[c000000f0160b0f0] [d0000000194297f8] xfs_fs_free_cached_objects+0x38/0x60 [xfs]
+[c000000f0160b120] [c0000000003172c8] super_cache_scan+0x1f8/0x210
+[c000000f0160b190] [c00000000026301c] shrink_slab.part.13+0x21c/0x4c0
+[c000000f0160b2d0] [c000000000268088] shrink_zone+0x2d8/0x3c0
+[c000000f0160b380] [c00000000026834c] do_try_to_free_pages+0x1dc/0x520
+[c000000f0160b450] [c00000000026876c] try_to_free_pages+0xdc/0x250
+[c000000f0160b4e0] [c000000000251978] __alloc_pages_nodemask+0x868/0x10d0
+[c000000f0160b6f0] [c000000000567030] blk_mq_init_rq_map+0x160/0x380
+[c000000f0160b7a0] [c00000000056758c] blk_mq_map_swqueue+0x33c/0x360
+[c000000f0160b820] [c000000000567904] blk_mq_queue_reinit+0x64/0xb0
+[c000000f0160b850] [c00000000056a16c] blk_mq_queue_reinit_notify+0x19c/0x250
+[c000000f0160b8a0] [c0000000000f5d38] notifier_call_chain+0x98/0x100
+[c000000f0160b8f0] [c0000000000c5fb0] __cpu_notify+0x70/0xe0
+[c000000f0160b930] [c0000000000c63c4] notify_prepare+0x44/0xb0
+[c000000f0160b9b0] [c0000000000c52f4] cpuhp_invoke_callback+0x84/0x250
+[c000000f0160ba10] [c0000000000c570c] cpuhp_up_callbacks+0x5c/0x120
+[c000000f0160ba60] [c0000000000c7cb8] _cpu_up+0xf8/0x1d0
+[c000000f0160bac0] [c0000000000c7eb0] do_cpu_up+0x120/0x150
+[c000000f0160bb40] [c0000000006fe024] cpu_subsys_online+0x64/0xe0
+[c000000f0160bb90] [c0000000006f5124] device_online+0xb4/0x120
+[c000000f0160bbd0] [c0000000006f5244] online_store+0xb4/0xc0
+[c000000f0160bc20] [c0000000006f0a68] dev_attr_store+0x68/0xa0
+[c000000f0160bc60] [c0000000003ccc30] sysfs_kf_write+0x80/0xb0
+[c000000f0160bca0] [c0000000003cbabc] kernfs_fop_write+0x17c/0x250
+[c000000f0160bcf0] [c00000000030fe6c] __vfs_write+0x6c/0x1e0
+[c000000f0160bd90] [c000000000311490] vfs_write+0xd0/0x270
+[c000000f0160bde0] [c0000000003131fc] SyS_write+0x6c/0x110
+[c000000f0160be30] [c000000000009204] system_call+0x38/0xec
 
-I haven't tested it but I can't imagine why an iommu would not correctly
-map the memory in the bar. But that's _way_ beside the point. We
-_really_ want to avoid that situation anyway. If the iommu maps the
-memory it defeats what we are trying to accomplish.
+Signed-off-by: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+Cc: Brian King <brking@linux.vnet.ibm.com>
+Cc: Douglas Miller <dougmill@linux.vnet.ibm.com>
+Cc: linux-block@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Jens Axboe <axboe@fb.com>
+Signed-off-by: Sumit Semwal <sumit.semwal@linaro.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-I believe the sotfware iommu only uses bounce buffers if the DMA engine
-in use cannot address the memory. So in most cases, with modern
-hardware, it just passes the BAR's address to the DMA engine and
-everything works. The code posted in the RFC does in fact work without
-needing to do any of this fussing.
+---
+ block/blk-mq.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
->>> The problem is that the latter while seemingly easier, is also slower
->>> and not supported by all platforms and architectures (for example,
->>> POWER currently won't allow it, or rather only allows a store-only
->>> subset of it under special circumstances).
->>
->> Yes, I think situations where we have to cross host bridges will remain
->> unsupported by this work for a long time. There are two many cases where
->> it just doesn't work or it performs too poorly to be useful.
-> 
-> And the situation where you don't cross bridges is the one where you
-> need to also take into account the offsets.
-
-I think for the first incarnation we will just not support systems that
-have offsets. This makes things much easier and still supports all the
-use cases we are interested in.
-
-> So you are designing something that is built from scratch to only work
-> on a specific limited category of systems and is also incompatible with
-> virtualization.
-
-Yes, we are starting with support for specific use cases. Almost all
-technology starts that way. Dax has been in the kernel for years and
-only recently has someone submitted patches for it to support pmem on
-powerpc. This is not unusual. If you had forced the pmem developers to
-support all architectures in existence before allowing them upstream
-they couldn't possibly be as far as they are today.
-
-Virtualization specifically would be a _lot_ more difficult than simply
-supporting offsets. The actual topology of the bus will probably be lost
-on the guest OS and it would therefor have a difficult time figuring out
-when it's acceptable to use p2pmem. I also have a difficult time seeing
-a use case for it and thus I have a hard time with the argument that we
-can't support use cases that do want it because use cases that don't
-want it (perhaps yet) won't work.
-
-> This is an interesting experiement to look at I suppose, but if you
-> ever want this upstream I would like at least for you to develop a
-> strategy to support the wider case, if not an actual implementation.
-
-I think there are plenty of avenues forward to support offsets, etc.
-It's just work. Nothing we'd be proposing would be incompatible with it.
-We just don't want to have to do it all upfront especially when no one
-really knows how well various architecture's hardware supports this or
-if anyone even wants to run it on systems such as those. (Keep in mind
-this is a pretty specific optimization that mostly helps systems
-designed in specific ways -- not a general "everybody gets faster" type
-situation.) Get the cases working we know will work, can easily support
-and people actually want.  Then expand it to support others as people
-come around with hardware to test and use cases for it.
-
-Logan
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -1470,7 +1470,7 @@ static struct blk_mq_tags *blk_mq_init_r
+ 	INIT_LIST_HEAD(&tags->page_list);
+ 
+ 	tags->rqs = kzalloc_node(set->queue_depth * sizeof(struct request *),
+-				 GFP_KERNEL | __GFP_NOWARN | __GFP_NORETRY,
++				 GFP_NOIO | __GFP_NOWARN | __GFP_NORETRY,
+ 				 set->numa_node);
+ 	if (!tags->rqs) {
+ 		blk_mq_free_tags(tags);
+@@ -1496,7 +1496,7 @@ static struct blk_mq_tags *blk_mq_init_r
+ 
+ 		do {
+ 			page = alloc_pages_node(set->numa_node,
+-				GFP_KERNEL | __GFP_NOWARN | __GFP_NORETRY | __GFP_ZERO,
++				GFP_NOIO | __GFP_NOWARN | __GFP_NORETRY | __GFP_ZERO,
+ 				this_order);
+ 			if (page)
+ 				break;
+@@ -1517,7 +1517,7 @@ static struct blk_mq_tags *blk_mq_init_r
+ 		 * Allow kmemleak to scan these pages as they contain pointers
+ 		 * to additional allocations like via ops->init_request().
+ 		 */
+-		kmemleak_alloc(p, order_to_size(this_order), 1, GFP_KERNEL);
++		kmemleak_alloc(p, order_to_size(this_order), 1, GFP_NOIO);
+ 		entries_per_page = order_to_size(this_order) / rq_size;
+ 		to_do = min(entries_per_page, set->queue_depth - i);
+ 		left -= to_do * rq_size;
