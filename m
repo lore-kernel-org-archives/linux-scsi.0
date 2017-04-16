@@ -1,18 +1,18 @@
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.4 13/18] blk-mq: Avoid memory reclaim when remapping queues
-Date: Sun, 16 Apr 2017 10:02:36 +0200
-Message-ID: <20170416080213.384525777@linuxfoundation.org>
-References: <20170416080212.713469777@linuxfoundation.org>
+Subject: [PATCH 4.9 26/31] blk-mq: Avoid memory reclaim when remapping queues
+Date: Sun, 16 Apr 2017 10:04:17 +0200
+Message-ID: <20170416080223.164989771@linuxfoundation.org>
+References: <20170416080221.808058771@linuxfoundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170416080212.713469777@linuxfoundation.org>
-Sender: linux-block-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20170416080221.808058771@linuxfoundation.org>
+Sender: stable-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, Douglas Miller <dougmill@linux.vnet.ibm.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, Sumit Semwal <sumit.semwal@linaro.org>
 List-Id: linux-scsi@vger.kernel.org
 
-4.4-stable review patch.  If anyone has any objections, please let me know.
+4.9-stable review patch.  If anyone has any objections, please let me know.
 
 ------------------
 
@@ -93,7 +93,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
 --- a/block/blk-mq.c
 +++ b/block/blk-mq.c
-@@ -1470,7 +1470,7 @@ static struct blk_mq_tags *blk_mq_init_r
+@@ -1474,7 +1474,7 @@ static struct blk_mq_tags *blk_mq_init_r
  	INIT_LIST_HEAD(&tags->page_list);
  
  	tags->rqs = kzalloc_node(set->queue_depth * sizeof(struct request *),
@@ -102,7 +102,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
  				 set->numa_node);
  	if (!tags->rqs) {
  		blk_mq_free_tags(tags);
-@@ -1496,7 +1496,7 @@ static struct blk_mq_tags *blk_mq_init_r
+@@ -1500,7 +1500,7 @@ static struct blk_mq_tags *blk_mq_init_r
  
  		do {
  			page = alloc_pages_node(set->numa_node,
@@ -111,7 +111,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
  				this_order);
  			if (page)
  				break;
-@@ -1517,7 +1517,7 @@ static struct blk_mq_tags *blk_mq_init_r
+@@ -1521,7 +1521,7 @@ static struct blk_mq_tags *blk_mq_init_r
  		 * Allow kmemleak to scan these pages as they contain pointers
  		 * to additional allocations like via ops->init_request().
  		 */
