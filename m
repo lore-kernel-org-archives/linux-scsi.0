@@ -1,122 +1,54 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.9 26/31] blk-mq: Avoid memory reclaim when remapping queues
-Date: Sun, 16 Apr 2017 10:04:17 +0200
-Message-ID: <20170416080223.164989771@linuxfoundation.org>
-References: <20170416080221.808058771@linuxfoundation.org>
+From: <jha@billund.dk>
+Subject: (unknown)
+Date: Sun, 16 Apr 2017 08:21:17 -0000
+Message-ID: <149233087714.21738.9724627073128511170@vnpt.vn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20170416080221.808058771@linuxfoundation.org>
-Sender: stable-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, Douglas Miller <dougmill@linux.vnet.ibm.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, Sumit Semwal <sumit.semwal@linaro.org>
+Content-Type: application/zip; name="EMAIL_99997_linux-scsi.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from static.vnpt.vn ([14.162.60.69]:47866 "HELO vnpt.vn"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+        id S1755931AbdDPIVX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 16 Apr 2017 04:21:23 -0400
+Content-Disposition: attachment
+Subject: 
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-4.9-stable review patch.  If anyone has any objections, please let me know.
-
-------------------
-
-From: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
-
-commit 36e1f3d107867b25c616c2fd294f5a1c9d4e5d09 upstream.
-
-While stressing memory and IO at the same time we changed SMT settings,
-we were able to consistently trigger deadlocks in the mm system, which
-froze the entire machine.
-
-I think that under memory stress conditions, the large allocations
-performed by blk_mq_init_rq_map may trigger a reclaim, which stalls
-waiting on the block layer remmaping completion, thus deadlocking the
-system.  The trace below was collected after the machine stalled,
-waiting for the hotplug event completion.
-
-The simplest fix for this is to make allocations in this path
-non-reclaimable, with GFP_NOIO.  With this patch, We couldn't hit the
-issue anymore.
-
-This should apply on top of Jens's for-next branch cleanly.
-
-Changes since v1:
-  - Use GFP_NOIO instead of GFP_NOWAIT.
-
- Call Trace:
-[c000000f0160aaf0] [c000000f0160ab50] 0xc000000f0160ab50 (unreliable)
-[c000000f0160acc0] [c000000000016624] __switch_to+0x2e4/0x430
-[c000000f0160ad20] [c000000000b1a880] __schedule+0x310/0x9b0
-[c000000f0160ae00] [c000000000b1af68] schedule+0x48/0xc0
-[c000000f0160ae30] [c000000000b1b4b0] schedule_preempt_disabled+0x20/0x30
-[c000000f0160ae50] [c000000000b1d4fc] __mutex_lock_slowpath+0xec/0x1f0
-[c000000f0160aed0] [c000000000b1d678] mutex_lock+0x78/0xa0
-[c000000f0160af00] [d000000019413cac] xfs_reclaim_inodes_ag+0x33c/0x380 [xfs]
-[c000000f0160b0b0] [d000000019415164] xfs_reclaim_inodes_nr+0x54/0x70 [xfs]
-[c000000f0160b0f0] [d0000000194297f8] xfs_fs_free_cached_objects+0x38/0x60 [xfs]
-[c000000f0160b120] [c0000000003172c8] super_cache_scan+0x1f8/0x210
-[c000000f0160b190] [c00000000026301c] shrink_slab.part.13+0x21c/0x4c0
-[c000000f0160b2d0] [c000000000268088] shrink_zone+0x2d8/0x3c0
-[c000000f0160b380] [c00000000026834c] do_try_to_free_pages+0x1dc/0x520
-[c000000f0160b450] [c00000000026876c] try_to_free_pages+0xdc/0x250
-[c000000f0160b4e0] [c000000000251978] __alloc_pages_nodemask+0x868/0x10d0
-[c000000f0160b6f0] [c000000000567030] blk_mq_init_rq_map+0x160/0x380
-[c000000f0160b7a0] [c00000000056758c] blk_mq_map_swqueue+0x33c/0x360
-[c000000f0160b820] [c000000000567904] blk_mq_queue_reinit+0x64/0xb0
-[c000000f0160b850] [c00000000056a16c] blk_mq_queue_reinit_notify+0x19c/0x250
-[c000000f0160b8a0] [c0000000000f5d38] notifier_call_chain+0x98/0x100
-[c000000f0160b8f0] [c0000000000c5fb0] __cpu_notify+0x70/0xe0
-[c000000f0160b930] [c0000000000c63c4] notify_prepare+0x44/0xb0
-[c000000f0160b9b0] [c0000000000c52f4] cpuhp_invoke_callback+0x84/0x250
-[c000000f0160ba10] [c0000000000c570c] cpuhp_up_callbacks+0x5c/0x120
-[c000000f0160ba60] [c0000000000c7cb8] _cpu_up+0xf8/0x1d0
-[c000000f0160bac0] [c0000000000c7eb0] do_cpu_up+0x120/0x150
-[c000000f0160bb40] [c0000000006fe024] cpu_subsys_online+0x64/0xe0
-[c000000f0160bb90] [c0000000006f5124] device_online+0xb4/0x120
-[c000000f0160bbd0] [c0000000006f5244] online_store+0xb4/0xc0
-[c000000f0160bc20] [c0000000006f0a68] dev_attr_store+0x68/0xa0
-[c000000f0160bc60] [c0000000003ccc30] sysfs_kf_write+0x80/0xb0
-[c000000f0160bca0] [c0000000003cbabc] kernfs_fop_write+0x17c/0x250
-[c000000f0160bcf0] [c00000000030fe6c] __vfs_write+0x6c/0x1e0
-[c000000f0160bd90] [c000000000311490] vfs_write+0xd0/0x270
-[c000000f0160bde0] [c0000000003131fc] SyS_write+0x6c/0x110
-[c000000f0160be30] [c000000000009204] system_call+0x38/0xec
-
-Signed-off-by: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
-Cc: Brian King <brking@linux.vnet.ibm.com>
-Cc: Douglas Miller <dougmill@linux.vnet.ibm.com>
-Cc: linux-block@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Jens Axboe <axboe@fb.com>
-Signed-off-by: Sumit Semwal <sumit.semwal@linaro.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- block/blk-mq.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -1474,7 +1474,7 @@ static struct blk_mq_tags *blk_mq_init_r
- 	INIT_LIST_HEAD(&tags->page_list);
- 
- 	tags->rqs = kzalloc_node(set->queue_depth * sizeof(struct request *),
--				 GFP_KERNEL | __GFP_NOWARN | __GFP_NORETRY,
-+				 GFP_NOIO | __GFP_NOWARN | __GFP_NORETRY,
- 				 set->numa_node);
- 	if (!tags->rqs) {
- 		blk_mq_free_tags(tags);
-@@ -1500,7 +1500,7 @@ static struct blk_mq_tags *blk_mq_init_r
- 
- 		do {
- 			page = alloc_pages_node(set->numa_node,
--				GFP_KERNEL | __GFP_NOWARN | __GFP_NORETRY | __GFP_ZERO,
-+				GFP_NOIO | __GFP_NOWARN | __GFP_NORETRY | __GFP_ZERO,
- 				this_order);
- 			if (page)
- 				break;
-@@ -1521,7 +1521,7 @@ static struct blk_mq_tags *blk_mq_init_r
- 		 * Allow kmemleak to scan these pages as they contain pointers
- 		 * to additional allocations like via ops->init_request().
- 		 */
--		kmemleak_alloc(p, order_to_size(this_order), 1, GFP_KERNEL);
-+		kmemleak_alloc(p, order_to_size(this_order), 1, GFP_NOIO);
- 		entries_per_page = order_to_size(this_order) / rq_size;
- 		to_do = min(entries_per_page, set->queue_depth - i);
- 		left -= to_do * rq_size;
+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
+AVBLBQYAAAAAAQABAFsAAABxBwAAAAA=
