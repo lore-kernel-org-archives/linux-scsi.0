@@ -1,54 +1,49 @@
-From: <a.skucha@satis-poland.com>
-Subject: (unknown)
-Date: Sun, 16 Apr 2017 16:31:23 -0000
-Message-ID: <149236028363.20711.10214579578569900382@sunvy.com>
+From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+Date: Sun, 16 Apr 2017 10:34:54 -0600
+Message-ID: <5e43818e-8c6b-8be8-23ff-b798633d2a73@deltatee.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1491974532.7236.43.camel@kernel.crashing.org>
+ <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
+ <1492034124.7236.77.camel@kernel.crashing.org>
+ <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
+ <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
+ <20170414041656.GA30694@obsidianresearch.com>
+ <1492169849.25766.3.camel@kernel.crashing.org>
+ <630c1c63-ff17-1116-e069-2b8f93e50fa2@deltatee.com>
+ <20170414190452.GA15679@bhelgaas-glaptop.roam.corp.google.com>
+ <1492207643.25766.18.camel@kernel.crashing.org>
+ <bff1e503-95a9-e19f-bfd9-0ff962c63a81@deltatee.com>
+ <CAPcyv4jUeKzKDARp6Z35kdPLKnP-M6aF8X5KpOx55CLyjnj4dA@mail.gmail.com>
+ <1492311719.25766.37.camel@kernel.crashing.org>
+ <CAPcyv4iqnz1B00Q3xG-nGrLXdOyB7ditxmwZyotksLFgUqr+jA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="EMAIL_10968724_linux-scsi.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ipb6ab4e18.sunvy.com ([182.171.78.24]:56091 "HELO sunvy.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-        id S1756349AbdDPQb1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 16 Apr 2017 12:31:27 -0400
-Subject: 
-Content-Disposition: attachment
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <CAPcyv4iqnz1B00Q3xG-nGrLXdOyB7ditxmwZyotksLFgUqr+jA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Jerome Glisse <jglisse-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Bjorn Helgaas <helgaas-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-nvdimm <linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org>, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
 
-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
-AAABAAEAWwAAAGoHAAAAAA==
+
+
+On 16/04/17 09:53 AM, Dan Williams wrote:
+> ZONE_DEVICE allows you to redirect via get_dev_pagemap() to retrieve
+> context about the physical address in question. I'm thinking you can
+> hang bus address translation data off of that structure. This seems
+> vaguely similar to what HMM is doing.
+
+Thanks! I didn't realize you had the infrastructure to look up a device
+from a pfn/page. That would really come in handy for us.
+
+Logan
