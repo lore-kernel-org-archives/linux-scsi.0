@@ -1,80 +1,46 @@
-From: <ohnesorge-wiek@t-online.de>
-Subject: (unknown)
-Date: Sun, 16 Apr 2017 03:33:08 -0000
-Message-ID: <149231358864.20709.9584905846835490666@wanadoo.fr>
+From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+Date: Sat, 15 Apr 2017 22:46:25 -0600
+Message-ID: <ccdcb41c-f734-a0d4-beaf-906262076fac@deltatee.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1491974532.7236.43.camel@kernel.crashing.org>
+ <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
+ <1492034124.7236.77.camel@kernel.crashing.org>
+ <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
+ <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
+ <20170414041656.GA30694@obsidianresearch.com>
+ <1492169849.25766.3.camel@kernel.crashing.org>
+ <630c1c63-ff17-1116-e069-2b8f93e50fa2@deltatee.com>
+ <20170414190452.GA15679@bhelgaas-glaptop.roam.corp.google.com>
+ <1492207643.25766.18.camel@kernel.crashing.org>
+ <bff1e503-95a9-e19f-bfd9-0ff962c63a81@deltatee.com>
+ <CAPcyv4jUeKzKDARp6Z35kdPLKnP-M6aF8X5KpOx55CLyjnj4dA@mail.gmail.com>
+ <1492311719.25766.37.camel@kernel.crashing.org>
 Mime-Version: 1.0
-Content-Type: application/zip; name="EMAIL_3725766514_linux-scsi.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from LPuteaux-656-1-38-49.w82-127.abo.wanadoo.fr ([82.127.49.49]:43139
-        "HELO wanadoo.fr" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with SMTP id S1754704AbdDPDdS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Apr 2017 23:33:18 -0400
-Subject: 
-Content-Disposition: attachment
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <1492311719.25766.37.camel-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Jerome Glisse <jglisse-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Bjorn Helgaas <helgaas-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-nvdimm <linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org>, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
 
-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
-BgAAAAABAAEATQAAAEUNAAAAAA==
+
+
+On 15/04/17 09:01 PM, Benjamin Herrenschmidt wrote:
+> Are ZONE_DEVICE pages identifiable based on the struct page alone ? (a
+> flag ?)
+
+Well you can't use ZONE_DEVICE as an indicator. They may be regular RAM,
+(eg. pmem). It would need a separate flag indicating it is backed by iomem.
+
+Logan
