@@ -1,54 +1,77 @@
-From: <jha@billund.dk>
-Subject: (unknown)
-Date: Sun, 16 Apr 2017 08:21:17 -0000
-Message-ID: <149233087714.21738.9724627073128511170@vnpt.vn>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH v4 6/6] dm rq: Avoid that request processing stalls
+ sporadically
+Date: Sun, 16 Apr 2017 18:21:50 +0800
+Message-ID: <20170416102149.GA2538@ming.t460p>
+References: <20170411174739.GA19620@redhat.com>
+ <1491933092.2654.10.camel@sandisk.com>
+ <20170411180358.GA19660@redhat.com>
+ <1491934715.2654.14.camel@sandisk.com>
+ <20170412034229.GA8835@ming.t460p>
+ <1492022286.2764.15.camel@sandisk.com>
+ <20170413022030.GD8835@ming.t460p>
+ <25ebc19f-f6e0-2f71-f590-8416359d2fd1@sandisk.com>
+ <20170414011324.GA29916@ming.t460p>
+ <1492189969.2644.9.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="EMAIL_99997_linux-scsi.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from static.vnpt.vn ([14.162.60.69]:47866 "HELO vnpt.vn"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-        id S1755931AbdDPIVX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 16 Apr 2017 04:21:23 -0400
-Content-Disposition: attachment
-Subject: 
+Received: from mx1.redhat.com ([209.132.183.28]:47848 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752958AbdDPKWA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 16 Apr 2017 06:22:00 -0400
+Content-Disposition: inline
+In-Reply-To: <1492189969.2644.9.camel@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "snitzer@redhat.com" <snitzer@redhat.com>, "axboe@kernel.dk" <axboe@kernel.dk>
 
-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
-AVBLBQYAAAAAAQABAFsAAABxBwAAAAA=
+On Fri, Apr 14, 2017 at 05:12:50PM +0000, Bart Van Assche wrote:
+> On Fri, 2017-04-14 at 09:13 +0800, Ming Lei wrote:
+> > On Thu, Apr 13, 2017 at 09:59:57AM -0700, Bart Van Assche wrote:
+> > > On 04/12/17 19:20, Ming Lei wrote:
+> > > > On Wed, Apr 12, 2017 at 06:38:07PM +0000, Bart Van Assche wrote:
+> > > > > If the blk-mq core would always rerun a hardware queue if a block driver
+> > > > > returns BLK_MQ_RQ_QUEUE_BUSY then that would cause 100% of a single CPU core
+> > > > 
+> > > > It won't casue 100% CPU utilization since we restart queue in completion
+> > > > path and at that time at least one tag is available, then progress can be
+> > > > made.
+> > > 
+> > > Hello Ming,
+> > > 
+> > > Sorry but you are wrong. If .queue_rq() returns BLK_MQ_RQ_QUEUE_BUSY
+> > > then it's likely that calling .queue_rq() again after only a few
+> > > microseconds will cause it to return BLK_MQ_RQ_QUEUE_BUSY again. If you
+> > > don't believe me, change "if (!blk_mq_sched_needs_restart(hctx) &&
+> > > !test_bit(BLK_MQ_S_TAG_WAITING, &hctx->state)) blk_mq_run_hw_queue(hctx,
+> > > true);" into "blk_mq_run_hw_queue(hctx, true);", trigger a busy
+> > 
+> > Yes, that can be true, but I mean it is still OK to run the queue again
+> > with
+> > 
+> > 	if (!blk_mq_sched_needs_restart(hctx) &&
+> > 	    !test_bit(BLK_MQ_S_TAG_WAITING, &hctx->state))
+> > 			blk_mq_run_hw_queue(hctx, true);
+> > 
+> > and restarting queue in __blk_mq_finish_request() when
+> > BLK_MQ_RQ_QUEUE_BUSY is returned from .queue_rq(). And both are in current
+> > blk-mq implementation.
+> > 
+> > Then why do we need blk_mq_delay_run_hw_queue(hctx, 100/*ms*/) in dm?
+> 
+> Because if dm_mq_queue_rq() returns BLK_MQ_RQ_QUEUE_BUSY that there is no
+> guarantee that __blk_mq_finish_request() will be called later on for the
+> same queue. dm_mq_queue_rq() can e.g. return BLK_MQ_RQ_QUEUE_BUSY while no
+> dm requests are in progress because the SCSI error handler is active for
+> all underlying paths. See also scsi_lld_busy() and scsi_host_in_recovery().
+
+OK, thanks Bart for the explanation.
+
+Looks a very interesting BLK_MQ_RQ_QUEUE_BUSY case which isn't casued by
+too many pending I/O, and will study more about this case.
+
+
+Thanks,
+Ming
