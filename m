@@ -1,76 +1,165 @@
 From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH v3 4/4] Avoid that __scsi_remove_device() hangs
-Date: Mon, 17 Apr 2017 10:34:36 -0700
-Message-ID: <20170417173436.15555-5-bart.vanassche@sandisk.com>
+Subject: [PATCH v3 2/4] Introduce scsi_execute_async()
+Date: Mon, 17 Apr 2017 10:34:34 -0700
+Message-ID: <20170417173436.15555-3-bart.vanassche@sandisk.com>
 References: <20170417173436.15555-1-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:53161 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754627AbdDQRes (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Apr 2017 13:34:48 -0400
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:42563 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754113AbdDQRew (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Apr 2017 13:34:52 -0400
 In-Reply-To: <20170417173436.15555-1-bart.vanassche@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Max Gurtovoy <maxg@mellanox.com>, Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Israel Rukshin <israelr@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>, Hannes Reinecke <hare@suse.de>
 
-Since scsi_target_unblock() uses starget_for_each_device(), since
-starget_for_each_device() uses scsi_device_get(), since
-scsi_device_get() fails after unloading of the LLD kernel module
-has been started scsi_target_unblock() may skip devices that were
-affected by scsi_target_block(). Ensure that __scsi_remove_device()
-does not hang for blocked SCSI devices. This patch avoids that
-unloading the ib_srp kernel module can trigger the following hang:
+Move the code for submitting a SCSI command from scsi_execute()
+into scsi_build_rq(). Introduce scsi_execute_async(). This patch
+does not change any functionality.
 
-Call Trace:
- schedule+0x35/0x80
- schedule_timeout+0x237/0x2d0
- io_schedule_timeout+0xa6/0x110
- wait_for_completion_io+0xa3/0x110
- blk_execute_rq+0xdf/0x120
- scsi_execute+0xce/0x150 [scsi_mod]
- scsi_execute_req_flags+0x8f/0xf0 [scsi_mod]
- sd_sync_cache+0xa9/0x190 [sd_mod]
- sd_shutdown+0x6a/0x100 [sd_mod]
- sd_remove+0x64/0xc0 [sd_mod]
- __device_release_driver+0x8d/0x120
- device_release_driver+0x1e/0x30
- bus_remove_device+0xf9/0x170
- device_del+0x127/0x240
- __scsi_remove_device+0xc1/0xd0 [scsi_mod]
- scsi_forget_host+0x57/0x60 [scsi_mod]
- scsi_remove_host+0x72/0x110 [scsi_mod]
- srp_remove_work+0x8b/0x200 [ib_srp]
-
-Reported-by: Israel Rukshin <israelr@mellanox.com>
 Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Israel Rukshin <israelr@mellanox.com>
 Cc: Max Gurtovoy <maxg@mellanox.com>
 Cc: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi_sysfs.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/scsi/scsi_lib.c    | 89 +++++++++++++++++++++++++++++++++++++---------
+ include/scsi/scsi_device.h |  5 +++
+ 2 files changed, 77 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 82dfe07b1d47..e090c35ba6ee 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1299,6 +1299,15 @@ void __scsi_remove_device(struct scsi_device *sdev)
- 	 * device.
- 	 */
- 	scsi_device_set_state(sdev, SDEV_DEL);
-+	/*
-+	 * Since scsi_target_unblock() is a no-op after unloading of the SCSI
-+	 * LLD has started, explicitly restart the queue. Do this after the
-+	 * device state has been changed into SDEV_DEL because
-+	 * scsi_prep_state_check() returns BLKPREP_KILL for the SDEV_DEL state
-+	 * Do this before calling blk_cleanup_queue() to avoid that that
-+	 * function encounters a stopped queue.
-+	 */
-+	scsi_start_queue(sdev);
- 	blk_cleanup_queue(sdev->request_queue);
- 	cancel_work_sync(&sdev->requeue_work);
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 4893f2908edf..dc87456b3f23 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -213,6 +213,73 @@ void scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
+ 	__scsi_queue_insert(cmd, reason, 1);
+ }
  
++static struct request *scsi_build_rq(const struct scsi_device *sdev,
++		const unsigned char *cmd, int data_direction, void *buffer,
++		unsigned bufflen, int timeout, int retries, u64 flags,
++		req_flags_t rq_flags)
++{
++	struct request *req;
++	struct scsi_request *rq;
++	int ret;
++
++	req = blk_get_request(sdev->request_queue,
++			data_direction == DMA_TO_DEVICE ?
++			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, __GFP_RECLAIM);
++	if (IS_ERR(req))
++		return req;
++	rq = scsi_req(req);
++	scsi_req_init(req);
++
++	if (bufflen) {
++		ret = blk_rq_map_kern(sdev->request_queue, req,
++				      buffer, bufflen, __GFP_RECLAIM);
++		if (ret) {
++			blk_put_request(req);
++			return ERR_PTR(ret);
++		}
++	}
++
++	rq->cmd_len = COMMAND_SIZE(cmd[0]);
++	memcpy(rq->cmd, cmd, rq->cmd_len);
++	req->retries = retries;
++	req->timeout = timeout;
++	req->cmd_flags |= flags;
++	req->rq_flags |= rq_flags | RQF_QUIET | RQF_PREEMPT;
++
++	return req;
++}
++
++/**
++ * scsi_execute_async - insert a SCSI request
++ * @sdev:	scsi device
++ * @disk:       gendisk pointer that will be stored in the request structure
++ * @cmd:	scsi command
++ * @data_direction: data direction
++ * @buffer:	data buffer
++ * @bufflen:	length of buffer
++ * @timeout:	request timeout in seconds
++ * @retries:	number of times to retry request
++ * @flags:	flags for ->cmd_flags
++ * @rq_flags:	flags for ->rq_flags
++ * @done:       I/O completion function
++ */
++int scsi_execute_async(const struct scsi_device *sdev, struct gendisk *disk,
++		const unsigned char *cmd, int data_direction, void *buffer,
++		unsigned bufflen, int timeout, int retries, u64 flags,
++		req_flags_t rq_flags, rq_end_io_fn *done)
++{
++	struct request *req;
++
++	req = scsi_build_rq(sdev, cmd, data_direction, buffer, bufflen, timeout,
++			    retries, flags, rq_flags);
++	if (IS_ERR(req))
++		return PTR_ERR(req);
++	/* head injection *required* here otherwise quiesce won't work */
++	blk_execute_rq_nowait(req->q, disk, req, 1, done);
++
++	return 0;
++}
++EXPORT_SYMBOL(scsi_execute_async);
+ 
+ /**
+  * scsi_execute - insert request and wait for the result
+@@ -242,24 +309,12 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+ 	struct scsi_request *rq;
+ 	int ret = DRIVER_ERROR << 24;
+ 
+-	req = blk_get_request(sdev->request_queue,
+-			data_direction == DMA_TO_DEVICE ?
+-			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, __GFP_RECLAIM);
++	req = scsi_build_rq(sdev, cmd, data_direction, buffer, bufflen,
++			    timeout, retries, flags, rq_flags);
+ 	if (IS_ERR(req))
+-		return ret;
+-	rq = scsi_req(req);
+-	scsi_req_init(req);
++		return PTR_ERR(req);
+ 
+-	if (bufflen &&	blk_rq_map_kern(sdev->request_queue, req,
+-					buffer, bufflen, __GFP_RECLAIM))
+-		goto out;
+-
+-	rq->cmd_len = COMMAND_SIZE(cmd[0]);
+-	memcpy(rq->cmd, cmd, rq->cmd_len);
+-	req->retries = retries;
+-	req->timeout = timeout;
+-	req->cmd_flags |= flags;
+-	req->rq_flags |= rq_flags | RQF_QUIET | RQF_PREEMPT;
++	rq = scsi_req(req);
+ 
+ 	/*
+ 	 * head injection *required* here otherwise quiesce won't work
+@@ -282,7 +337,7 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+ 	if (sshdr)
+ 		scsi_normalize_sense(rq->sense, rq->sense_len, sshdr);
+ 	ret = req->errors;
+- out:
++
+ 	blk_put_request(req);
+ 
+ 	return ret;
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 080c7ce9bae8..38c73ee0a929 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -408,6 +408,11 @@ extern const char *scsi_device_state_name(enum scsi_device_state);
+ extern int scsi_is_sdev_device(const struct device *);
+ extern int scsi_is_target_device(const struct device *);
+ extern void scsi_sanitize_inquiry_string(unsigned char *s, int len);
++extern int scsi_execute_async(const struct scsi_device *sdev,
++		struct gendisk *disk, const unsigned char *cmd,
++		int data_direction, void *buffer, unsigned bufflen,
++		int timeout, int retries, u64 flags, req_flags_t rq_flags,
++			      rq_end_io_fn *done);
+ extern int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+ 			int data_direction, void *buffer, unsigned bufflen,
+ 			unsigned char *sense, struct scsi_sense_hdr *sshdr,
 -- 
 2.12.2
