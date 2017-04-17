@@ -1,47 +1,48 @@
 From: Tyrel Datwyler <turtle.in.the.kernel@gmail.com>
-Subject: Re: [PATCH] scsi: fc: remove redundant check of an unsigned long
- being less than zero
-Date: Mon, 17 Apr 2017 11:53:02 -0700
-Message-ID: <bc14cba3-5140-0e33-115c-56283b2ec44b@gmail.com>
-References: <20170414135802.6991-1-colin.king@canonical.com>
+Subject: Re: [PATCH] scsi: ibmvfc: don't check for failure from
+ mempool_alloc()
+Date: Mon, 17 Apr 2017 12:03:09 -0700
+Message-ID: <6b896452-e653-bc96-3c26-1deeae995890@gmail.com>
+References: <878tn9xb2m.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <20170414135802.6991-1-colin.king@canonical.com>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <878tn9xb2m.fsf@notabene.neil.brown.name>
+Sender: linux-kernel-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 04/14/2017 06:58 AM, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
+On 04/09/2017 07:15 PM, NeilBrown wrote:
 > 
-> The check for an unsigned long being less than zero is always false
-> so it is a redundant check and can be removed.
+> mempool_alloc() cannot fail when passed GFP_NOIO or any
+> other gfp setting that is permitted to sleep.
+> So remove this pointless code.
 > 
-> Detected by static analysis with by PVS-Studio
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> Signed-off-by: NeilBrown <neilb@suse.com>
 
-Reviewed-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Acked-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
 
 > ---
->  drivers/scsi/scsi_transport_fc.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/scsi/ibmvscsi/ibmvfc.c | 6 ------
+>  1 file changed, 6 deletions(-)
 > 
-> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-> index 2d753c93e07a..87b8f9d64d9b 100644
-> --- a/drivers/scsi/scsi_transport_fc.c
-> +++ b/drivers/scsi/scsi_transport_fc.c
-> @@ -850,7 +850,7 @@ static int fc_str_to_dev_loss(const char *buf, unsigned long *val)
->  	char *cp;
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+> index 2c92dabb55f6..26cd3c28186a 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+> @@ -3910,12 +3910,6 @@ static int ibmvfc_alloc_target(struct ibmvfc_host *vhost, u64 scsi_id)
+>  	spin_unlock_irqrestore(vhost->host->host_lock, flags);
 >  
->  	*val = simple_strtoul(buf, &cp, 0);
-> -	if ((*cp && (*cp != '\n')) || (*val < 0))
-> +	if (*cp && (*cp != '\n'))
->  		return -EINVAL;
->  	/*
->  	 * Check for overflow; dev_loss_tmo is u32
+>  	tgt = mempool_alloc(vhost->tgt_pool, GFP_NOIO);
+> -	if (!tgt) {
+> -		dev_err(vhost->dev, "Target allocation failure for scsi id %08llx\n",
+> -			scsi_id);
+> -		return -ENOMEM;
+> -	}
+> -
+>  	memset(tgt, 0, sizeof(*tgt));
+>  	tgt->scsi_id = scsi_id;
+>  	tgt->new_scsi_id = scsi_id;
 > 
-
