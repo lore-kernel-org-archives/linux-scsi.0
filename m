@@ -1,8 +1,7 @@
 From: Cathy Avery <cavery@redhat.com>
-Subject: [PATCH v3 1/2] scsi: scsi_transport_fc: Add dummy initiator role to
- rport
-Date: Mon, 17 Apr 2017 14:37:45 -0400
-Message-ID: <1492454266-24587-2-git-send-email-cavery@redhat.com>
+Subject: [PATCH v3 2/2] scsi: storvsc: Add support for FC rport.
+Date: Mon, 17 Apr 2017 14:37:46 -0400
+Message-ID: <1492454266-24587-3-git-send-email-cavery@redhat.com>
 References: <1492454266-24587-1-git-send-email-cavery@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,60 +21,81 @@ To: kys@microsoft.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, hch@
 Cc: devel@linuxdriverproject.org, haiyangz@microsoft.com, sthemmin@microsoft.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This patch allows scsi drivers that expose virturalized fibre channel
-devices but that do not expose rports to successfully rescan the scsi
-bus via echo "- - -" > /sys/class/scsi_host/hostX/scan.
-Drivers can create a pseudo rport and indicate
-FC_PORT_ROLE_FCP_DUMMY_INITIATOR as the rport's role in
-fc_rport_identifiers. This insures that a valid scsi_target_id
-is assigned to the newly created rport and it can meet the
-requirements of fc_user_scan_tgt calling scsi_scan_target.
+Included in the current storvsc driver for Hyper-V is the ability
+to access luns on an FC fabric via a virtualized fiber channel
+adapter exposed by the Hyper-V host. The driver also attaches to
+the FC transport to allow host and port names to be published under
+/sys/class/fc_host/hostX. Current customer tools running on the VM
+require that these names be available in the well known standard
+location under fc_host/hostX.
+
+This patch stubs in an rport per fc_host and sets its rport role
+as FC_PORT_ROLE_FCP_DUMMY_INITIATOR to indicate to the fc_transport
+that it is a pseudo rport in order to scan the scsi stack via
+echo "- - -" > /sys/class/scsi_host/hostX/scan.
 
 Signed-off-by: Cathy Avery <cavery@redhat.com>
 ---
- drivers/scsi/scsi_transport_fc.c | 10 ++++++----
- include/scsi/scsi_transport_fc.h |  1 +
- 2 files changed, 7 insertions(+), 4 deletions(-)
+ drivers/scsi/storvsc_drv.c | 23 ++++++++++++++++++-----
+ 1 file changed, 18 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 2d753c9..de85602 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -289,9 +289,10 @@ static const struct {
- 	u32 			value;
- 	char			*name;
- } fc_port_role_names[] = {
--	{ FC_PORT_ROLE_FCP_TARGET,	"FCP Target" },
--	{ FC_PORT_ROLE_FCP_INITIATOR,	"FCP Initiator" },
--	{ FC_PORT_ROLE_IP_PORT,		"IP Port" },
-+	{ FC_PORT_ROLE_FCP_TARGET,		"FCP Target" },
-+	{ FC_PORT_ROLE_FCP_INITIATOR,		"FCP Initiator" },
-+	{ FC_PORT_ROLE_IP_PORT,			"IP Port" },
-+	{ FC_PORT_ROLE_FCP_DUMMY_INITIATOR,	"FCP Dummy Initiator" },
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 016639d..1ec8579 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -476,6 +476,9 @@ struct storvsc_device {
+ 	 */
+ 	u64 node_name;
+ 	u64 port_name;
++#if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
++	struct fc_rport *rport;
++#endif
  };
- fc_bitfield_name_search(port_roles, fc_port_role_names)
  
-@@ -2628,7 +2629,8 @@ fc_remote_port_create(struct Scsi_Host *shost, int channel,
- 	spin_lock_irqsave(shost->host_lock, flags);
+ struct hv_host_device {
+@@ -1823,19 +1826,27 @@ static int storvsc_probe(struct hv_device *device,
+ 		target = (device->dev_instance.b[5] << 8 |
+ 			 device->dev_instance.b[4]);
+ 		ret = scsi_add_device(host, 0, target, 0);
+-		if (ret) {
+-			scsi_remove_host(host);
+-			goto err_out2;
+-		}
++		if (ret)
++			goto err_out3;
+ 	}
+ #if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
+ 	if (host->transportt == fc_transport_template) {
++		struct fc_rport_identifiers ids = {
++			.roles = FC_PORT_ROLE_FCP_DUMMY_INITIATOR,
++		};
++
+ 		fc_host_node_name(host) = stor_device->node_name;
+ 		fc_host_port_name(host) = stor_device->port_name;
++		stor_device->rport = fc_remote_port_add(host, 0, &ids);
++		if (!stor_device->rport)
++			goto err_out3;
+ 	}
+ #endif
+ 	return 0;
  
- 	rport->number = fc_host->next_rport_number++;
--	if (rport->roles & FC_PORT_ROLE_FCP_TARGET)
-+	if ((rport->roles & FC_PORT_ROLE_FCP_TARGET) ||
-+	    (rport->roles & FC_PORT_ROLE_FCP_DUMMY_INITIATOR))
- 		rport->scsi_target_id = fc_host->next_target_id++;
- 	else
- 		rport->scsi_target_id = -1;
-diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
-index b21b8aa5..6e208bb 100644
---- a/include/scsi/scsi_transport_fc.h
-+++ b/include/scsi/scsi_transport_fc.h
-@@ -162,6 +162,7 @@ enum fc_tgtid_binding_type  {
- #define FC_PORT_ROLE_FCP_TARGET			0x01
- #define FC_PORT_ROLE_FCP_INITIATOR		0x02
- #define FC_PORT_ROLE_IP_PORT			0x04
-+#define FC_PORT_ROLE_FCP_DUMMY_INITIATOR	0x08
++err_out3:
++	scsi_remove_host(host);
++
+ err_out2:
+ 	/*
+ 	 * Once we have connected with the host, we would need to
+@@ -1861,8 +1872,10 @@ static int storvsc_remove(struct hv_device *dev)
+ 	struct Scsi_Host *host = stor_device->host;
  
- /* The following are for compatibility */
- #define FC_RPORT_ROLE_UNKNOWN			FC_PORT_ROLE_UNKNOWN
+ #if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
+-	if (host->transportt == fc_transport_template)
++	if (host->transportt == fc_transport_template) {
++		fc_remote_port_delete(stor_device->rport);
+ 		fc_remove_host(host);
++	}
+ #endif
+ 	scsi_remove_host(host);
+ 	storvsc_dev_remove(dev);
 -- 
 2.5.0
