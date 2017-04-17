@@ -1,111 +1,93 @@
 From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH v3 3/4] sd: Make synchronize cache upon shutdown asynchronous
-Date: Mon, 17 Apr 2017 10:34:35 -0700
-Message-ID: <20170417173436.15555-4-bart.vanassche@sandisk.com>
+Subject: [PATCH v3 1/4] Introduce scsi_start_queue()
+Date: Mon, 17 Apr 2017 10:34:33 -0700
+Message-ID: <20170417173436.15555-2-bart.vanassche@sandisk.com>
 References: <20170417173436.15555-1-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:14425 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754627AbdDQRfD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Apr 2017 13:35:03 -0400
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:32059 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754704AbdDQRe5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Apr 2017 13:34:57 -0400
 In-Reply-To: <20170417173436.15555-1-bart.vanassche@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Israel Rukshin <israelr@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>, Hannes Reinecke <hare@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Israel Rukshin <israelr@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>, Hannes Reinecke <hare@suse.de>
 
-This patch avoids that sd_shutdown() hangs on the SYNCHRONIZE CACHE
-command if the block layer queue has been stopped by
-scsi_target_block().
+This patch does not change any functionality.
 
 Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
 Cc: Israel Rukshin <israelr@mellanox.com>
 Cc: Max Gurtovoy <maxg@mellanox.com>
 Cc: Hannes Reinecke <hare@suse.de>
-Cc: Benjamin Block <bblock@linux.vnet.ibm.com>
 ---
- drivers/scsi/sd.c | 45 ++++++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 40 insertions(+), 5 deletions(-)
+ drivers/scsi/scsi_lib.c  | 25 +++++++++++++++----------
+ drivers/scsi/scsi_priv.h |  1 +
+ 2 files changed, 16 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index fe0f7997074e..deff564fe649 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1489,6 +1489,33 @@ static unsigned int sd_check_events(struct gendisk *disk, unsigned int clearing)
- 	return retval;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index f41e6b84a1bd..4893f2908edf 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2987,6 +2987,20 @@ scsi_internal_device_block(struct scsi_device *sdev, bool wait)
  }
- 
-+static void sd_sync_cache_done(struct request *rq, int e)
+ EXPORT_SYMBOL_GPL(scsi_internal_device_block);
+  
++void scsi_start_queue(struct scsi_device *sdev)
 +{
-+	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
++	struct request_queue *q = sdev->request_queue;
++	unsigned long flags;
 +
-+	sd_printk(KERN_DEBUG, sdkp, "%s\n", __func__);
-+
-+	blk_put_request(rq);
++	if (q->mq_ops) {
++		blk_mq_start_stopped_hw_queues(q, false);
++	} else {
++		spin_lock_irqsave(q->queue_lock, flags);
++		blk_start_queue(q);
++		spin_unlock_irqrestore(q->queue_lock, flags);
++	}
 +}
 +
-+/*
-+ * Issue a SYNCHRONIZE CACHE command asynchronously. Since blk_cleanup_queue()
-+ * waits for all commands to finish, __scsi_remove_device() will wait for the
-+ * SYNCHRONIZE CACHE command to finish.
-+ */
-+static int sd_sync_cache_async(struct scsi_disk *sdkp)
-+{
-+	const struct scsi_device *sdp = sdkp->device;
-+	const int timeout = sdp->request_queue->rq_timeout *
-+			    SD_FLUSH_TIMEOUT_MULTIPLIER;
-+	const unsigned char cmd[10] = { SYNCHRONIZE_CACHE };
-+
-+	sd_printk(KERN_DEBUG, sdkp, "%s\n", __func__);
-+	return scsi_execute_async(sdp, sdkp->disk, cmd, DMA_NONE, NULL, 0,
-+				  timeout, SD_MAX_RETRIES, 0, 0,
-+				  sd_sync_cache_done);
-+}
-+
- static int sd_sync_cache(struct scsi_disk *sdkp)
+ /**
+  * scsi_internal_device_unblock - resume a device after a block request
+  * @sdev:	device to resume
+@@ -3007,9 +3021,6 @@ int
+ scsi_internal_device_unblock(struct scsi_device *sdev,
+ 			     enum scsi_device_state new_state)
  {
- 	int retries, res;
-@@ -3349,13 +3376,15 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
+-	struct request_queue *q = sdev->request_queue; 
+-	unsigned long flags;
+-
+ 	/*
+ 	 * Try to transition the scsi device to SDEV_RUNNING or one of the
+ 	 * offlined states and goose the device queue if successful.
+@@ -3027,13 +3038,7 @@ scsi_internal_device_unblock(struct scsi_device *sdev,
+ 		 sdev->sdev_state != SDEV_OFFLINE)
+ 		return -EINVAL;
+ 
+-	if (q->mq_ops) {
+-		blk_mq_start_stopped_hw_queues(q, false);
+-	} else {
+-		spin_lock_irqsave(q->queue_lock, flags);
+-		blk_start_queue(q);
+-		spin_unlock_irqrestore(q->queue_lock, flags);
+-	}
++	scsi_start_queue(sdev);
+ 
+ 	return 0;
  }
- 
- /*
-- * Send a SYNCHRONIZE CACHE instruction down to the device through
-- * the normal SCSI command structure.  Wait for the command to
-- * complete.
-+ * Send a SYNCHRONIZE CACHE instruction down to the device through the normal
-+ * SCSI command structure. When stopping the disk, wait for the command to
-+ * complete. When not stopping the disk, the blk_cleanup_queue() call in
-+ * __scsi_remove_device() will wait for this command to complete.
-  */
- static void sd_shutdown(struct device *dev)
- {
- 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
-+	bool stop_disk;
- 
- 	if (!sdkp)
- 		return;         /* this can happen */
-@@ -3363,12 +3392,18 @@ static void sd_shutdown(struct device *dev)
- 	if (pm_runtime_suspended(dev))
- 		return;
- 
-+	stop_disk = system_state != SYSTEM_RESTART &&
-+		sdkp->device->manage_start_stop;
-+
- 	if (sdkp->WCE && sdkp->media_present) {
- 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
--		sd_sync_cache(sdkp);
-+		if (stop_disk)
-+			sd_sync_cache(sdkp);
-+		else
-+			sd_sync_cache_async(sdkp);
- 	}
- 
--	if (system_state != SYSTEM_RESTART && sdkp->device->manage_start_stop) {
-+	if (stop_disk) {
- 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
- 		sd_start_stop_device(sdkp, 0);
- 	}
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index f11bd102d6d5..c7629e31a75b 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -89,6 +89,7 @@ extern void scsi_run_host_queues(struct Scsi_Host *shost);
+ extern void scsi_requeue_run_queue(struct work_struct *work);
+ extern struct request_queue *scsi_alloc_queue(struct scsi_device *sdev);
+ extern struct request_queue *scsi_mq_alloc_queue(struct scsi_device *sdev);
++extern void scsi_start_queue(struct scsi_device *sdev);
+ extern int scsi_mq_setup_tags(struct Scsi_Host *shost);
+ extern void scsi_mq_destroy_tags(struct Scsi_Host *shost);
+ extern int scsi_init_queue(void);
 -- 
 2.12.2
