@@ -1,217 +1,96 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [PATCH v3 3/4] sd: Make synchronize cache upon shutdown
  asynchronous
-Date: Tue, 18 Apr 2017 23:47:16 +0000
-Message-ID: <1492559235.2689.27.camel@sandisk.com>
+Date: Tue, 18 Apr 2017 16:56:12 -0700
+Message-ID: <1492559772.3306.58.camel@HansenPartnership.com>
 References: <20170417173436.15555-1-bart.vanassche@sandisk.com>
          <20170417173436.15555-4-bart.vanassche@sandisk.com>
          <20170418144429.GA28949@bblock-ThinkPad-W530>
          <1492530984.3306.25.camel@HansenPartnership.com>
+         <1492559235.2689.27.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-        boundary="_004_1492559235268927camelsandiskcom_"
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:64730 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758382AbdDRXrU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Apr 2017 19:47:20 -0400
-In-Reply-To: <1492530984.3306.25.camel@HansenPartnership.com>
-Content-Language: en-US
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:59724 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753789AbdDRX4O (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 18 Apr 2017 19:56:14 -0400
+In-Reply-To: <1492559235.2689.27.camel@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "bblock@linux.vnet.ibm.com" <bblock@linux.vnet.ibm.com>
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "bblock@linux.vnet.ibm.com" <bblock@linux.vnet.ibm.com>
 Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "maxg@mellanox.com" <maxg@mellanox.com>, "israelr@mellanox.com" <israelr@mellanox.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
---_004_1492559235268927camelsandiskcom_
-Content-Type: text/plain; charset="iso-8859-1"
-Content-ID: <12242ECBA3DBBC428E85F5080DAA56F0@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+On Tue, 2017-04-18 at 23:47 +0000, Bart Van Assche wrote:
+> On Tue, 2017-04-18 at 08:56 -0700, James Bottomley wrote:
+> > How about this approach.  It goes straight to DEL if the device is
+> > blocked (skipping CANCEL).  This means that all the commands issued
+> > in 
+> > ->shutdown will error in the mid-layer, thus making the removal
+> > proceed
+> > without being stopped.
+> 
+> Hello James,
+> 
+> The three attached patches pass my tests. Please let me know how you 
+> would like to proceed with patch 1/3. Would you like to submit it 
+> yourself or is it OK for you if I mention you as author and add your
+> Signed-off-by?
 
-On Tue, 2017-04-18 at 08:56 -0700, James Bottomley wrote:
-> How about this approach.  It goes straight to DEL if the device is
-> blocked (skipping CANCEL).  This means that all the commands issued in=20
-> ->shutdown will error in the mid-layer, thus making the removal proceed
-> without being stopped.
+Actually, I think 3/3 is wrong.  You need to start the queue as soon as
+we see it's blocked and the device has gone into DEL.  This is safe
+because DEL ensures nothing ever gets from the generic request function
+to queuecommand, so the device driver never sees anything.
 
-Hello James,
+This means the combined 1/3 3/3 patch looks like this:
 
-The three attached patches pass my tests. Please let me know how you would
-like to proceed with patch 1/3. Would you like to submit it yourself or is
-it OK for you if I mention you as author and add your Signed-off-by?
+James
 
-Thanks,
+---
 
-Bart.=
-
---_004_1492559235268927camelsandiskcom_
-Content-Type: text/x-patch;
-	name="0001-Make-__scsi_remove_device-go-straight-from-BLOCKED-t.patch"
-Content-Description: 0001-Make-__scsi_remove_device-go-straight-from-BLOCKED-t.patch
-Content-Disposition: attachment;
-	filename="0001-Make-__scsi_remove_device-go-straight-from-BLOCKED-t.patch";
-	size=2470; creation-date="Tue, 18 Apr 2017 23:47:15 GMT";
-	modification-date="Tue, 18 Apr 2017 23:47:15 GMT"
-Content-ID: <40B35D0A2596964FA5406C19E761A9DB@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
-
-RnJvbSA5NDgyZmRjOGIzMjJmMTVjZWQ2ZjY0ZDU3ZjQ1MDI2MzY3NjA0YTIzIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBCYXJ0IFZhbiBBc3NjaGUgPGJhcnQudmFuYXNzY2hlQHNhbmRp
-c2suY29tPgpEYXRlOiBUdWUsIDE4IEFwciAyMDE3IDEwOjExOjAyIC0wNzAwClN1YmplY3Q6IFtQ
-QVRDSCAxLzNdIE1ha2UgX19zY3NpX3JlbW92ZV9kZXZpY2UgZ28gc3RyYWlnaHQgZnJvbSBCTE9D
-S0VEIHRvIERFTAoKSWYgYSBkZXZpY2UgaXMgYmxvY2tlZCwgbWFrZSBfX3Njc2lfcmVtb3ZlX2Rl
-dmljZSgpIGNhdXNlIGl0IHRvCnRyYW5zaXRpb24gdG8gdGhlIERFTCBzdGF0ZS4gVGhpcyBtZWFu
-cyB0aGF0IGFsbCB0aGUgY29tbWFuZHMKaXNzdWVkIGluIC5zaHV0ZG93bigpIHdpbGwgZXJyb3Ig
-aW4gdGhlIG1pZC1sYXllciwgdGh1cyBtYWtpbmcKdGhlIHJlbW92YWwgcHJvY2VlZCB3aXRob3V0
-IGJlaW5nIHN0b3BwZWQuCgpUaGlzIHBhdGNoIGlzIGEgc2xpZ2h0bHkgbW9kaWZpZWQgdmVyc2lv
-biBvZiBhIHBhdGNoIGZyb20gSmFtZXMKQm90dG9tbGV5LgoKU2lnbmVkLW9mZi1ieTogQmFydCBW
-YW4gQXNzY2hlIDxiYXJ0LnZhbmFzc2NoZUBzYW5kaXNrLmNvbT4KQ2M6IEphbWVzIEJvdHRvbWxl
-eSA8SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbT4KQ2M6IElzcmFlbCBSdWtz
-aGluIDxpc3JhZWxyQG1lbGxhbm94LmNvbT4KQ2M6IE1heCBHdXJ0b3ZveSA8bWF4Z0BtZWxsYW5v
-eC5jb20+CkNjOiBIYW5uZXMgUmVpbmVja2UgPGhhcmVAc3VzZS5kZT4KQ2M6IEJlbmphbWluIEJs
-b2NrIDxiYmxvY2tAbGludXgudm5ldC5pYm0uY29tPgotLS0KIGRyaXZlcnMvc2NzaS9zY3NpX2xp
-Yi5jICAgfCAgMiArLQogZHJpdmVycy9zY3NpL3Njc2lfc3lzZnMuYyB8IDEyICsrKysrKysrKysr
-LQogMiBmaWxlcyBjaGFuZ2VkLCAxMiBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQoKZGlm
-ZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9zY3NpX2xpYi5jIGIvZHJpdmVycy9zY3NpL3Njc2lfbGli
-LmMKaW5kZXggZWVjYzAwNTA5OWIyLi4yNzdjOGIzYWU3YjAgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMv
-c2NzaS9zY3NpX2xpYi5jCisrKyBiL2RyaXZlcnMvc2NzaS9zY3NpX2xpYi5jCkBAIC0yNjExLDcg
-KzI2MTEsNiBAQCBzY3NpX2RldmljZV9zZXRfc3RhdGUoc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2
-LCBlbnVtIHNjc2lfZGV2aWNlX3N0YXRlIHN0YXRlKQogCQljYXNlIFNERVZfUVVJRVNDRToKIAkJ
-Y2FzZSBTREVWX09GRkxJTkU6CiAJCWNhc2UgU0RFVl9UUkFOU1BPUlRfT0ZGTElORToKLQkJY2Fz
-ZSBTREVWX0JMT0NLOgogCQkJYnJlYWs7CiAJCWRlZmF1bHQ6CiAJCQlnb3RvIGlsbGVnYWw7CkBA
-IC0yNjI1LDYgKzI2MjQsNyBAQCBzY3NpX2RldmljZV9zZXRfc3RhdGUoc3RydWN0IHNjc2lfZGV2
-aWNlICpzZGV2LCBlbnVtIHNjc2lfZGV2aWNlX3N0YXRlIHN0YXRlKQogCQljYXNlIFNERVZfT0ZG
-TElORToKIAkJY2FzZSBTREVWX1RSQU5TUE9SVF9PRkZMSU5FOgogCQljYXNlIFNERVZfQ0FOQ0VM
-OgorCQljYXNlIFNERVZfQkxPQ0s6CiAJCWNhc2UgU0RFVl9DUkVBVEVEX0JMT0NLOgogCQkJYnJl
-YWs7CiAJCWRlZmF1bHQ6CmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc2NzaV9zeXNmcy5jIGIv
-ZHJpdmVycy9zY3NpL3Njc2lfc3lzZnMuYwppbmRleCA4MmRmZTA3YjFkNDcuLmY5NWQxOTFlYzgw
-OSAxMDA2NDQKLS0tIGEvZHJpdmVycy9zY3NpL3Njc2lfc3lzZnMuYworKysgYi9kcml2ZXJzL3Nj
-c2kvc2NzaV9zeXNmcy5jCkBAIC0xMjgyLDkgKzEyODIsMTkgQEAgdm9pZCBfX3Njc2lfcmVtb3Zl
-X2RldmljZShzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXYpCiAJCXJldHVybjsKIAogCWlmIChzZGV2
-LT5pc192aXNpYmxlKSB7Ci0JCWlmIChzY3NpX2RldmljZV9zZXRfc3RhdGUoc2RldiwgU0RFVl9D
-QU5DRUwpICE9IDApCisJCS8qCisJCSAqIElmIGJsb2NrZWQsIHdlIGdvIHN0cmFpZ2h0IHRvIERF
-TCBzbyBhbnkgY29tbWFuZHMKKwkJICogaXNzdWVkIGR1cmluZyB0aGUgZHJpdmVyIHNodXRkb3du
-IChsaWtlIHN5bmMgY2FjaGUpCisJCSAqIGFyZSBlcnJvcmVkLgorCQkgKi8KKwkJaWYgKHNjc2lf
-ZGV2aWNlX3NldF9zdGF0ZShzZGV2LCBTREVWX0NBTkNFTCkgIT0gMCAmJgorCQkgICAgc2NzaV9k
-ZXZpY2Vfc2V0X3N0YXRlKHNkZXYsIFNERVZfREVMKSAhPSAwKQogCQkJcmV0dXJuOwogCisJCWlm
-IChzZGV2LT5zZGV2X3N0YXRlID09IFNERVZfREVMKQorCQkJc2Rldl9wcmludGsoS0VSTl9ERUJV
-Rywgc2RldiwKKwkJCQkgICAgIkNoYW5nZWQgc3RhdGUgZnJvbSBCTE9DS0VEIHRvIERFTFxuIik7
-CisKIAkJYnNnX3VucmVnaXN0ZXJfcXVldWUoc2Rldi0+cmVxdWVzdF9xdWV1ZSk7CiAJCWRldmlj
-ZV91bnJlZ2lzdGVyKCZzZGV2LT5zZGV2X2Rldik7CiAJCXRyYW5zcG9ydF9yZW1vdmVfZGV2aWNl
-KGRldik7Ci0tIAoyLjEyLjIKCg==
-
---_004_1492559235268927camelsandiskcom_
-Content-Type: text/x-patch; name="0002-Introduce-scsi_start_queue.patch"
-Content-Description: 0002-Introduce-scsi_start_queue.patch
-Content-Disposition: attachment;
-	filename="0002-Introduce-scsi_start_queue.patch"; size=2756;
-	creation-date="Tue, 18 Apr 2017 23:47:15 GMT";
-	modification-date="Tue, 18 Apr 2017 23:47:15 GMT"
-Content-ID: <8C3B7BC8025C004AB54E4577DEF7E57E@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
-
-RnJvbSBjM2Y4NWI3MTRmY2ZiMTJkNDM2NjliN2YyOTVhMDlmNDcxOGMyNzA0IE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBCYXJ0IFZhbiBBc3NjaGUgPGJhcnQudmFuYXNzY2hlQHNhbmRp
-c2suY29tPgpEYXRlOiBUdWUsIDI4IE1hciAyMDE3IDE0OjAwOjE3IC0wNzAwClN1YmplY3Q6IFtQ
-QVRDSCAyLzNdIEludHJvZHVjZSBzY3NpX3N0YXJ0X3F1ZXVlKCkKClRoaXMgcGF0Y2ggZG9lcyBu
-b3QgY2hhbmdlIGFueSBmdW5jdGlvbmFsaXR5LgoKU2lnbmVkLW9mZi1ieTogQmFydCBWYW4gQXNz
-Y2hlIDxiYXJ0LnZhbmFzc2NoZUBzYW5kaXNrLmNvbT4KQ2M6IElzcmFlbCBSdWtzaGluIDxpc3Jh
-ZWxyQG1lbGxhbm94LmNvbT4KQ2M6IE1heCBHdXJ0b3ZveSA8bWF4Z0BtZWxsYW5veC5jb20+CkNj
-OiBIYW5uZXMgUmVpbmVja2UgPGhhcmVAc3VzZS5kZT4KQ2M6IEJlbmphbWluIEJsb2NrIDxiYmxv
-Y2tAbGludXgudm5ldC5pYm0uY29tPgotLS0KIGRyaXZlcnMvc2NzaS9zY3NpX2xpYi5jICB8IDI1
-ICsrKysrKysrKysrKysrKy0tLS0tLS0tLS0KIGRyaXZlcnMvc2NzaS9zY3NpX3ByaXYuaCB8ICAx
-ICsKIDIgZmlsZXMgY2hhbmdlZCwgMTYgaW5zZXJ0aW9ucygrKSwgMTAgZGVsZXRpb25zKC0pCgpk
-aWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMgYi9kcml2ZXJzL3Njc2kvc2NzaV9s
-aWIuYwppbmRleCAyNzdjOGIzYWU3YjAuLjM3NmNkMWRhMTAyYyAxMDA2NDQKLS0tIGEvZHJpdmVy
-cy9zY3NpL3Njc2lfbGliLmMKKysrIGIvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMKQEAgLTI5ODcs
-NiArMjk4NywyMCBAQCBzY3NpX2ludGVybmFsX2RldmljZV9ibG9jayhzdHJ1Y3Qgc2NzaV9kZXZp
-Y2UgKnNkZXYsIGJvb2wgd2FpdCkKIH0KIEVYUE9SVF9TWU1CT0xfR1BMKHNjc2lfaW50ZXJuYWxf
-ZGV2aWNlX2Jsb2NrKTsKICAKK3ZvaWQgc2NzaV9zdGFydF9xdWV1ZShzdHJ1Y3Qgc2NzaV9kZXZp
-Y2UgKnNkZXYpCit7CisJc3RydWN0IHJlcXVlc3RfcXVldWUgKnEgPSBzZGV2LT5yZXF1ZXN0X3F1
-ZXVlOworCXVuc2lnbmVkIGxvbmcgZmxhZ3M7CisKKwlpZiAocS0+bXFfb3BzKSB7CisJCWJsa19t
-cV9zdGFydF9zdG9wcGVkX2h3X3F1ZXVlcyhxLCBmYWxzZSk7CisJfSBlbHNlIHsKKwkJc3Bpbl9s
-b2NrX2lycXNhdmUocS0+cXVldWVfbG9jaywgZmxhZ3MpOworCQlibGtfc3RhcnRfcXVldWUocSk7
-CisJCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUocS0+cXVldWVfbG9jaywgZmxhZ3MpOworCX0KK30K
-KwogLyoqCiAgKiBzY3NpX2ludGVybmFsX2RldmljZV91bmJsb2NrIC0gcmVzdW1lIGEgZGV2aWNl
-IGFmdGVyIGEgYmxvY2sgcmVxdWVzdAogICogQHNkZXY6CWRldmljZSB0byByZXN1bWUKQEAgLTMw
-MDcsOSArMzAyMSw2IEBAIGludAogc2NzaV9pbnRlcm5hbF9kZXZpY2VfdW5ibG9jayhzdHJ1Y3Qg
-c2NzaV9kZXZpY2UgKnNkZXYsCiAJCQkgICAgIGVudW0gc2NzaV9kZXZpY2Vfc3RhdGUgbmV3X3N0
-YXRlKQogewotCXN0cnVjdCByZXF1ZXN0X3F1ZXVlICpxID0gc2Rldi0+cmVxdWVzdF9xdWV1ZTsg
-Ci0JdW5zaWduZWQgbG9uZyBmbGFnczsKLQogCS8qCiAJICogVHJ5IHRvIHRyYW5zaXRpb24gdGhl
-IHNjc2kgZGV2aWNlIHRvIFNERVZfUlVOTklORyBvciBvbmUgb2YgdGhlCiAJICogb2ZmbGluZWQg
-c3RhdGVzIGFuZCBnb29zZSB0aGUgZGV2aWNlIHF1ZXVlIGlmIHN1Y2Nlc3NmdWwuCkBAIC0zMDI3
-LDEzICszMDM4LDcgQEAgc2NzaV9pbnRlcm5hbF9kZXZpY2VfdW5ibG9jayhzdHJ1Y3Qgc2NzaV9k
-ZXZpY2UgKnNkZXYsCiAJCSBzZGV2LT5zZGV2X3N0YXRlICE9IFNERVZfT0ZGTElORSkKIAkJcmV0
-dXJuIC1FSU5WQUw7CiAKLQlpZiAocS0+bXFfb3BzKSB7Ci0JCWJsa19tcV9zdGFydF9zdG9wcGVk
-X2h3X3F1ZXVlcyhxLCBmYWxzZSk7Ci0JfSBlbHNlIHsKLQkJc3Bpbl9sb2NrX2lycXNhdmUocS0+
-cXVldWVfbG9jaywgZmxhZ3MpOwotCQlibGtfc3RhcnRfcXVldWUocSk7Ci0JCXNwaW5fdW5sb2Nr
-X2lycXJlc3RvcmUocS0+cXVldWVfbG9jaywgZmxhZ3MpOwotCX0KKwlzY3NpX3N0YXJ0X3F1ZXVl
-KHNkZXYpOwogCiAJcmV0dXJuIDA7CiB9CmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc2NzaV9w
-cml2LmggYi9kcml2ZXJzL3Njc2kvc2NzaV9wcml2LmgKaW5kZXggZjExYmQxMDJkNmQ1Li5jNzYy
-OWUzMWE3NWIgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvc2NzaS9zY3NpX3ByaXYuaAorKysgYi9kcml2
-ZXJzL3Njc2kvc2NzaV9wcml2LmgKQEAgLTg5LDYgKzg5LDcgQEAgZXh0ZXJuIHZvaWQgc2NzaV9y
-dW5faG9zdF9xdWV1ZXMoc3RydWN0IFNjc2lfSG9zdCAqc2hvc3QpOwogZXh0ZXJuIHZvaWQgc2Nz
-aV9yZXF1ZXVlX3J1bl9xdWV1ZShzdHJ1Y3Qgd29ya19zdHJ1Y3QgKndvcmspOwogZXh0ZXJuIHN0
-cnVjdCByZXF1ZXN0X3F1ZXVlICpzY3NpX2FsbG9jX3F1ZXVlKHN0cnVjdCBzY3NpX2RldmljZSAq
-c2Rldik7CiBleHRlcm4gc3RydWN0IHJlcXVlc3RfcXVldWUgKnNjc2lfbXFfYWxsb2NfcXVldWUo
-c3RydWN0IHNjc2lfZGV2aWNlICpzZGV2KTsKK2V4dGVybiB2b2lkIHNjc2lfc3RhcnRfcXVldWUo
-c3RydWN0IHNjc2lfZGV2aWNlICpzZGV2KTsKIGV4dGVybiBpbnQgc2NzaV9tcV9zZXR1cF90YWdz
-KHN0cnVjdCBTY3NpX0hvc3QgKnNob3N0KTsKIGV4dGVybiB2b2lkIHNjc2lfbXFfZGVzdHJveV90
-YWdzKHN0cnVjdCBTY3NpX0hvc3QgKnNob3N0KTsKIGV4dGVybiBpbnQgc2NzaV9pbml0X3F1ZXVl
-KHZvaWQpOwotLSAKMi4xMi4yCgo=
-
---_004_1492559235268927camelsandiskcom_
-Content-Type: text/x-patch;
-	name="0003-Avoid-that-__scsi_remove_device-hangs.patch"
-Content-Description: 0003-Avoid-that-__scsi_remove_device-hangs.patch
-Content-Disposition: attachment;
-	filename="0003-Avoid-that-__scsi_remove_device-hangs.patch"; size=2422;
-	creation-date="Tue, 18 Apr 2017 23:47:15 GMT";
-	modification-date="Tue, 18 Apr 2017 23:47:15 GMT"
-Content-ID: <F7E5705F7A1DA041A3BBECDD7297F2F6@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
-
-RnJvbSBjMzgzNTUxYTcyMWQzMGQ4OTdkNDUyNDRhY2QzMzFmZjBhZjk0NjU2IE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBCYXJ0IFZhbiBBc3NjaGUgPGJhcnQudmFuYXNzY2hlQHNhbmRp
-c2suY29tPgpEYXRlOiBUdWUsIDI4IE1hciAyMDE3IDE0OjAwOjI1IC0wNzAwClN1YmplY3Q6IFtQ
-QVRDSCAzLzNdIEF2b2lkIHRoYXQgX19zY3NpX3JlbW92ZV9kZXZpY2UoKSBoYW5ncwoKU2luY2Ug
-c2NzaV90YXJnZXRfdW5ibG9jaygpIHVzZXMgc3RhcmdldF9mb3JfZWFjaF9kZXZpY2UoKSwgc2lu
-Y2UKc3RhcmdldF9mb3JfZWFjaF9kZXZpY2UoKSB1c2VzIHNjc2lfZGV2aWNlX2dldCgpLCBzaW5j
-ZQpzY3NpX2RldmljZV9nZXQoKSBmYWlscyBhZnRlciB1bmxvYWRpbmcgb2YgdGhlIExMRCBrZXJu
-ZWwgbW9kdWxlCmhhcyBiZWVuIHN0YXJ0ZWQgc2NzaV90YXJnZXRfdW5ibG9jaygpIG1heSBza2lw
-IGRldmljZXMgdGhhdCB3ZXJlCmFmZmVjdGVkIGJ5IHNjc2lfdGFyZ2V0X2Jsb2NrKCkuIEVuc3Vy
-ZSB0aGF0IF9fc2NzaV9yZW1vdmVfZGV2aWNlKCkKZG9lcyBub3QgaGFuZyBmb3IgYmxvY2tlZCBT
-Q1NJIGRldmljZXMuIFRoaXMgcGF0Y2ggYXZvaWRzIHRoYXQKdW5sb2FkaW5nIHRoZSBpYl9zcnAg
-a2VybmVsIG1vZHVsZSBjYW4gdHJpZ2dlciB0aGUgZm9sbG93aW5nIGhhbmc6CgpDYWxsIFRyYWNl
-Ogogc2NoZWR1bGUrMHgzNS8weDgwCiBzY2hlZHVsZV90aW1lb3V0KzB4MjM3LzB4MmQwCiBpb19z
-Y2hlZHVsZV90aW1lb3V0KzB4YTYvMHgxMTAKIHdhaXRfZm9yX2NvbXBsZXRpb25faW8rMHhhMy8w
-eDExMAogYmxrX2V4ZWN1dGVfcnErMHhkZi8weDEyMAogc2NzaV9leGVjdXRlKzB4Y2UvMHgxNTAg
-W3Njc2lfbW9kXQogc2NzaV9leGVjdXRlX3JlcV9mbGFncysweDhmLzB4ZjAgW3Njc2lfbW9kXQog
-c2Rfc3luY19jYWNoZSsweGE5LzB4MTkwIFtzZF9tb2RdCiBzZF9zaHV0ZG93bisweDZhLzB4MTAw
-IFtzZF9tb2RdCiBzZF9yZW1vdmUrMHg2NC8weGMwIFtzZF9tb2RdCiBfX2RldmljZV9yZWxlYXNl
-X2RyaXZlcisweDhkLzB4MTIwCiBkZXZpY2VfcmVsZWFzZV9kcml2ZXIrMHgxZS8weDMwCiBidXNf
-cmVtb3ZlX2RldmljZSsweGY5LzB4MTcwCiBkZXZpY2VfZGVsKzB4MTI3LzB4MjQwCiBfX3Njc2lf
-cmVtb3ZlX2RldmljZSsweGMxLzB4ZDAgW3Njc2lfbW9kXQogc2NzaV9mb3JnZXRfaG9zdCsweDU3
-LzB4NjAgW3Njc2lfbW9kXQogc2NzaV9yZW1vdmVfaG9zdCsweDcyLzB4MTEwIFtzY3NpX21vZF0K
-IHNycF9yZW1vdmVfd29yaysweDhiLzB4MjAwIFtpYl9zcnBdCgpSZXBvcnRlZC1ieTogSXNyYWVs
-IFJ1a3NoaW4gPGlzcmFlbHJAbWVsbGFub3guY29tPgpTaWduZWQtb2ZmLWJ5OiBCYXJ0IFZhbiBB
-c3NjaGUgPGJhcnQudmFuYXNzY2hlQHNhbmRpc2suY29tPgpDYzogTWF4IEd1cnRvdm95IDxtYXhn
-QG1lbGxhbm94LmNvbT4KQ2M6IEhhbm5lcyBSZWluZWNrZSA8aGFyZUBzdXNlLmRlPgpDYzogQmVu
-amFtaW4gQmxvY2sgPGJibG9ja0BsaW51eC52bmV0LmlibS5jb20+Ci0tLQogZHJpdmVycy9zY3Np
-L3Njc2lfc3lzZnMuYyB8IDkgKysrKysrKysrCiAxIGZpbGUgY2hhbmdlZCwgOSBpbnNlcnRpb25z
-KCspCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Njc2lfc3lzZnMuYyBiL2RyaXZlcnMvc2Nz
-aS9zY3NpX3N5c2ZzLmMKaW5kZXggZjk1ZDE5MWVjODA5Li5lOWU4MDI0MWFiNWUgMTAwNjQ0Ci0t
-LSBhL2RyaXZlcnMvc2NzaS9zY3NpX3N5c2ZzLmMKKysrIGIvZHJpdmVycy9zY3NpL3Njc2lfc3lz
-ZnMuYwpAQCAtMTMwOSw2ICsxMzA5LDE1IEBAIHZvaWQgX19zY3NpX3JlbW92ZV9kZXZpY2Uoc3Ry
-dWN0IHNjc2lfZGV2aWNlICpzZGV2KQogCSAqIGRldmljZS4KIAkgKi8KIAlzY3NpX2RldmljZV9z
-ZXRfc3RhdGUoc2RldiwgU0RFVl9ERUwpOworCS8qCisJICogU2luY2Ugc2NzaV90YXJnZXRfdW5i
-bG9jaygpIGlzIGEgbm8tb3AgYWZ0ZXIgdW5sb2FkaW5nIG9mIHRoZSBTQ1NJCisJICogTExEIGhh
-cyBzdGFydGVkLCBleHBsaWNpdGx5IHJlc3RhcnQgdGhlIHF1ZXVlLiBEbyB0aGlzIGFmdGVyIHRo
-ZQorCSAqIGRldmljZSBzdGF0ZSBoYXMgYmVlbiBjaGFuZ2VkIGludG8gU0RFVl9ERUwgYmVjYXVz
-ZQorCSAqIHNjc2lfcHJlcF9zdGF0ZV9jaGVjaygpIHJldHVybnMgQkxLUFJFUF9LSUxMIGZvciB0
-aGUgU0RFVl9ERUwgc3RhdGUKKwkgKiBEbyB0aGlzIGJlZm9yZSBjYWxsaW5nIGJsa19jbGVhbnVw
-X3F1ZXVlKCkgdG8gYXZvaWQgdGhhdCB0aGF0CisJICogZnVuY3Rpb24gZW5jb3VudGVycyBhIHN0
-b3BwZWQgcXVldWUuCisJICovCisJc2NzaV9zdGFydF9xdWV1ZShzZGV2KTsKIAlibGtfY2xlYW51
-cF9xdWV1ZShzZGV2LT5yZXF1ZXN0X3F1ZXVlKTsKIAljYW5jZWxfd29ya19zeW5jKCZzZGV2LT5y
-ZXF1ZXVlX3dvcmspOwogCi0tIAoyLjEyLjIKCg==
-
---_004_1492559235268927camelsandiskcom_--
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index e5a2d590a104..31171204cfd1 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2611,7 +2611,6 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
+ 		case SDEV_QUIESCE:
+ 		case SDEV_OFFLINE:
+ 		case SDEV_TRANSPORT_OFFLINE:
+-		case SDEV_BLOCK:
+ 			break;
+ 		default:
+ 			goto illegal;
+@@ -2625,6 +2624,7 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
+ 		case SDEV_OFFLINE:
+ 		case SDEV_TRANSPORT_OFFLINE:
+ 		case SDEV_CANCEL:
++		case SDEV_BLOCK:
+ 		case SDEV_CREATED_BLOCK:
+ 			break;
+ 		default:
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 82dfe07b1d47..e477f95bf169 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1282,8 +1282,17 @@ void __scsi_remove_device(struct scsi_device *sdev)
+ 		return;
+ 
+ 	if (sdev->is_visible) {
+-		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
+-			return;
++		/*
++		 * If blocked, we go straight to DEL so any commands
++		 * issued during the driver shutdown (like sync cache)
++		 * are errored
++		 */
++		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0) {
++			if (scsi_device_set_state(sdev, SDEV_DEL) != 0)
++				return;
++			else
++				scsi_start_queue(sdev);
++		}
+ 
+ 		bsg_unregister_queue(sdev->request_queue);
+ 		device_unregister(&sdev->sdev_dev);
