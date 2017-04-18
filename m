@@ -1,43 +1,40 @@
-From: Logan Gunthorpe <logang@deltatee.com>
-Subject: Re: [PATCH 16/22] xen-blkfront: Make use of the new
- sg_map helper function
-Date: Tue, 18 Apr 2017 09:59:09 -0600
-Message-ID: <bed54c06-eb00-e682-8a50-236ebb9c1db4@deltatee.com>
-References: <1492121135-4437-1-git-send-email-logang@deltatee.com>
- <1492121135-4437-17-git-send-email-logang@deltatee.com>
- <063D6719AE5E284EB5DD2968C1650D6DCFFD3CD7@AcuExch.aculab.com>
- <20170418142723.GA27133@char.us.oracle.com>
- <7930aa93-6106-e12f-ba76-e2771d4ec2dc@deltatee.com>
- <20170418155020.GF12001@char.us.oracle.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH v3 3/4] sd: Make synchronize cache upon shutdown
+ asynchronous
+Date: Tue, 18 Apr 2017 16:06:21 +0000
+Message-ID: <1492531579.2689.5.camel@sandisk.com>
+References: <20170417173436.15555-1-bart.vanassche@sandisk.com>
+         <20170417173436.15555-4-bart.vanassche@sandisk.com>
+         <20170418144429.GA28949@bblock-ThinkPad-W530>
+         <1492530984.3306.25.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-In-Reply-To: <20170418155020.GF12001@char.us.oracle.com>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>, Steve Wise <swise@opengridcomputing.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, Sumit Semwal <sumit.semwal@linaro.org>, "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>, "rds-devel@oss.oracle.com" <rds-devel@oss.oracle.com>, xen-devel@lists.xensource.com, Sagi Grimberg <sagi@grimberg.me>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Matthew Wilcox <mawilcox@microsoft.com>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Ross Zwisler <ross.zwisler@linux.intel.com>, "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>, "intel-gfx@lists.freedesktop.org" <intel-gfx@lists.freedesktop.org>, sparma
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:13454 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751849AbdDRQG1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Apr 2017 12:06:27 -0400
+In-Reply-To: <1492530984.3306.25.camel@HansenPartnership.com>
+Content-Language: en-US
+Content-ID: <C5B2A309851C8643854F8DE4D098562C@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "bblock@linux.vnet.ibm.com" <bblock@linux.vnet.ibm.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "maxg@mellanox.com" <maxg@mellanox.com>, "israelr@mellanox.com" <israelr@mellanox.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-CgpPbiAxOC8wNC8xNyAwOTo1MCBBTSwgS29ucmFkIFJ6ZXN6dXRlayBXaWxrIHdyb3RlOgo+IEkg
-YW0gbm90IHN1cmUgaWYgeW91IGtub3csIGJ1dCB5b3UgY2FuIGFkZCBvbiBlYWNoIHBhdGNoIHRo
-ZSByZXNwZWN0aXZlCj4gbWFpbnRhaW5lciB2aWEgJ0NDJy4gVGhhdCB3YXkgeW91IGNhbiBoYXZl
-IGNlcnRhaW4gbWFpbnRhaW5lcnMgQ0NlZCBvbmx5Cj4gb24gdGhlIHN1YnN5c3RlbXMgdGhleSBj
-b3Zlci4gWW91IHB1dCBpdCBhZnRlciAob3IgYmVmb3JlKSB5b3VyIFNvQiBhbmQKPiBnaXQgc2Vu
-ZC1lbWFpbCBoYXBwaWxseSBwaWNrcyBpdCB1cC4KClllcywgYnV0IEkndmUgc2VlbiBzb21lIG1h
-aW50YWluZXJzIGNvbXBsYWluIHdoZW4gdGhleSByZWNlaXZlIGEgcGF0Y2gKd2l0aCBubyBjb250
-ZXh0IChpZS4gY292ZXIgbGV0dGVyIGFuZCBmaXJzdCBwYXRjaCkuIFNvIEkgY2hvc2UgdG8gZG8g
-aXQKdGhpcyB3YXkuIEkgZXhwZWN0IGluIHRoaXMgc2l0dWF0aW9uLCBubyBtYXR0ZXIgd2hhdCB5
-b3UgZG8sIHNvbWVvbmUgaXMKZ29pbmcgdG8gY29tcGxhaW4gYWJvdXQgdGhlIGFwcHJvYWNoIGNo
-b3Nlbi4KClRoYW5rcyBhbnl3YXkgZm9yIHRoZSB0aXAuCgpMb2dhbgpfX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpJbnRlbC1nZnggbWFpbGluZyBsaXN0Cklu
-dGVsLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5v
-cmcvbWFpbG1hbi9saXN0aW5mby9pbnRlbC1nZngK
+On Tue, 2017-04-18 at 08:56 -0700, James Bottomley wrote:
+> How about this approach.  It goes straight to DEL if the device is
+> blocked (skipping CANCEL).  This means that all the commands issued in=20
+> ->shutdown will error in the mid-layer, thus making the removal proceed
+> without being stopped.
+
+Hello James,
+
+I think that's a good start but not a full solution. The block layer queue
+still needs to be restarted to make sure that any requests that got queued
+after the transition to the SDEV_BLOCK state and before the transition to
+SDEV_DEL get processed. Anyway, I will see whether I can come up with a
+patch based on this approach.
+
+Bart.
