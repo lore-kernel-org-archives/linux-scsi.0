@@ -1,39 +1,95 @@
 From: Christoph Hellwig <hch@bombadil.infradead.org>
-Subject: kill req->errors V2
-Date: Tue, 18 Apr 2017 08:52:06 -0700
-Message-ID: <20170418155229.5977-1-hch@bombadil.infradead.org>
+Subject: nvme-fc: fix status code handling in nvme_fc_fcpio_done
+Date: Tue, 18 Apr 2017 08:52:08 -0700
+Message-ID: <20170418155229.5977-3-hch@bombadil.infradead.org>
+References: <20170418155229.5977-1-hch@bombadil.infradead.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:36862 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:36827 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757414AbdDRPwp (ORCPT
+        with ESMTP id S1757269AbdDRPwp (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Apr 2017 11:52:45 -0400
+In-Reply-To: <20170418155229.5977-1-hch@bombadil.infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
-Cc: Josef Bacik <jbacik@fb.com>, James Smart <james.smart@broadcom.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, =?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, dm-devel@redhat.com
+Cc: Josef Bacik <jbacik@fb.com>, James Smart <james.smart@broadcom.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, =?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, dm-devel@redhat.com, Christoph Hellwig <hch@lst.de>
 
-Currently the request structure has an errors field that is used in
-various different ways.  The oldest drivers use it as an error count,
-blk-mq and the generic timeout code assume that it holds a Linux
-errno for block completions, and various drivers use it for internal
-status values, often overwriting them with Linux errnos later,
-that is unless they are processing passthrough requests in which
-case they'll leave their errors in it.
+From: Christoph Hellwig <hch@lst.de>
 
-This series kills the ->errors field and replaced it with new fields
-in the drivers (or an odd hack in a union in struct request for
-two bitrotting old drivers).
+nvme_complete_async_event expects the little endian status code
+including the phase bit, and a new completion handler I plan to
+introduce will do so as well.
 
-Also available in the following git tree:
+Change the status variable into the little endian format with the
+phase bit used in the NVMe CQE to fix / enable this.
 
-    git://git.infradead.org/users/hch/block.git request-errors
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/nvme/host/fc.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-Gitweb:
-
-    http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/request-errors
-
-
-Changes since V1:
- - rebased on top the latest block for-next tree
- - fix error handling in nfsd blocklayout
- - dropped "scsi: fix fast-fail for non-passthrough requests"
+diff --git a/drivers/nvme/host/fc.c b/drivers/nvme/host/fc.c
+index fc42172c796a..aad7f9c0be32 100644
+--- a/drivers/nvme/host/fc.c
++++ b/drivers/nvme/host/fc.c
+@@ -1147,7 +1147,7 @@ nvme_fc_fcpio_done(struct nvmefc_fcp_req *req)
+ 	struct nvme_fc_ctrl *ctrl = op->ctrl;
+ 	struct nvme_fc_queue *queue = op->queue;
+ 	struct nvme_completion *cqe = &op->rsp_iu.cqe;
+-	u16 status = NVME_SC_SUCCESS;
++	__le16 status = cpu_to_le16(NVME_SC_SUCCESS << 1);
+ 
+ 	/*
+ 	 * WARNING:
+@@ -1182,9 +1182,9 @@ nvme_fc_fcpio_done(struct nvmefc_fcp_req *req)
+ 				sizeof(op->rsp_iu), DMA_FROM_DEVICE);
+ 
+ 	if (atomic_read(&op->state) == FCPOP_STATE_ABORTED)
+-		status = NVME_SC_ABORT_REQ | NVME_SC_DNR;
++		status = cpu_to_le16((NVME_SC_ABORT_REQ | NVME_SC_DNR) << 1);
+ 	else if (freq->status)
+-		status = NVME_SC_FC_TRANSPORT_ERROR;
++		status = cpu_to_le16(NVME_SC_FC_TRANSPORT_ERROR << 1);
+ 
+ 	/*
+ 	 * For the linux implementation, if we have an unsuccesful
+@@ -1212,7 +1212,7 @@ nvme_fc_fcpio_done(struct nvmefc_fcp_req *req)
+ 		 */
+ 		if (freq->transferred_length !=
+ 			be32_to_cpu(op->cmd_iu.data_len)) {
+-			status = NVME_SC_FC_TRANSPORT_ERROR;
++			status = cpu_to_le16(NVME_SC_FC_TRANSPORT_ERROR << 1);
+ 			goto done;
+ 		}
+ 		op->nreq.result.u64 = 0;
+@@ -1229,15 +1229,15 @@ nvme_fc_fcpio_done(struct nvmefc_fcp_req *req)
+ 					freq->transferred_length ||
+ 			     op->rsp_iu.status_code ||
+ 			     op->rqno != le16_to_cpu(cqe->command_id))) {
+-			status = NVME_SC_FC_TRANSPORT_ERROR;
++			status = cpu_to_le16(NVME_SC_FC_TRANSPORT_ERROR << 1);
+ 			goto done;
+ 		}
+ 		op->nreq.result = cqe->result;
+-		status = le16_to_cpu(cqe->status) >> 1;
++		status = cqe->status;
+ 		break;
+ 
+ 	default:
+-		status = NVME_SC_FC_TRANSPORT_ERROR;
++		status = cpu_to_le16(NVME_SC_FC_TRANSPORT_ERROR << 1);
+ 		goto done;
+ 	}
+ 
+@@ -1249,7 +1249,7 @@ nvme_fc_fcpio_done(struct nvmefc_fcp_req *req)
+ 		return;
+ 	}
+ 
+-	blk_mq_complete_request(rq, status);
++	blk_mq_complete_request(rq, le16_to_cpu(status) >> 1);
+ }
+ 
+ static int
+-- 
+2.11.0
