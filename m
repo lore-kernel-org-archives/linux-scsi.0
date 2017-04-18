@@ -1,40 +1,61 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH v3 3/4] sd: Make synchronize cache upon shutdown
- asynchronous
-Date: Tue, 18 Apr 2017 16:06:21 +0000
-Message-ID: <1492531579.2689.5.camel@sandisk.com>
-References: <20170417173436.15555-1-bart.vanassche@sandisk.com>
-         <20170417173436.15555-4-bart.vanassche@sandisk.com>
-         <20170418144429.GA28949@bblock-ThinkPad-W530>
-         <1492530984.3306.25.camel@HansenPartnership.com>
+From: Boaz Harrosh <ooo@electrozaur.com>
+Subject: Re: RFC: drop the T10 OSD code and its users
+Date: Tue, 18 Apr 2017 19:24:06 +0300
+Message-ID: <13c543db-dd38-1825-a58d-b4dff99e5f3c@electrozaur.com>
+References: <20170412160109.10598-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:13454 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751849AbdDRQG1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Apr 2017 12:06:27 -0400
-In-Reply-To: <1492530984.3306.25.camel@HansenPartnership.com>
-Content-Language: en-US
-Content-ID: <C5B2A309851C8643854F8DE4D098562C@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170412160109.10598-1-hch@lst.de>
+Sender: linux-block-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, martin.petersen@oracle.com, trond.myklebust@primarydata.com, axboe@kernel.dk
+Cc: osd-dev@open-osd.org, linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "bblock@linux.vnet.ibm.com" <bblock@linux.vnet.ibm.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "maxg@mellanox.com" <maxg@mellanox.com>, "israelr@mellanox.com" <israelr@mellanox.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-On Tue, 2017-04-18 at 08:56 -0700, James Bottomley wrote:
-> How about this approach.  It goes straight to DEL if the device is
-> blocked (skipping CANCEL).  This means that all the commands issued in=20
-> ->shutdown will error in the mid-layer, thus making the removal proceed
-> without being stopped.
+On 04/12/2017 07:01 PM, Christoph Hellwig wrote:
 
-Hello James,
+Hi Sir Christoph
 
-I think that's a good start but not a full solution. The block layer queue
-still needs to be restarted to make sure that any requests that got queued
-after the transition to the SDEV_BLOCK state and before the transition to
-SDEV_DEL get processed. Anyway, I will see whether I can come up with a
-patch based on this approach.
+> The only real user of the T10 OSD protocol, the pNFS object layout
+> driver never went to the point of having shipping products, and the
+> other two users (osdblk and exofs) were simple example of it's usage.
+> 
 
-Bart.
+I understand why osdblk might be a pain, and was broken from day one, and
+should by all means go away ASAP.
+
+But exofs should not be bothering anyone, and as far as I know does
+not use any special API's except the osd_uld code of course.
+
+> The code has been mostly unmaintained for years and is getting in the
+> way of block / SCSI changes, so I think it's finally time to drop it.
+> 
+
+Please tell me what are those changes you are talking about? I might be
+able to help in conversion. I guess you mean osd_uld and the Upper SCSI API.
+Just point me at a tree where osd_uld is broken, and perhaps with a little
+guidance from you I can do a satisfactory conversion.
+
+Is true that no new code went in for a long while, but I still from time
+to time run a setup and test that the all stack, like iscsi-bidi and so on still
+works.
+
+That said, yes only a stand alone exofs was tested for a long time, a full
+pnfs setup is missing any supporting server. So Yes I admit that pnfs-obj is
+getting very rotten. And is most probably broken, on the pnfs side of things.
+[Which I admit makes my little plea kind of mute ;-) ]
+
+Every once in a while I get emails from Students basing all kind of interesting
+experiments on top of the exofs and object base storage. So for the sake of academics
+and for the sake of a true bidi-stack testing, might we want to evaluate what is the
+up coming cost, and what is a minimum set we are willing to keep?
+
+Please advise?
+
+thanks
+Boaz
+
+> These patches are against Jens' block for-next tree as that already
+> has various modifications of the SCSI code.
+> 
