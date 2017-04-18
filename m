@@ -1,34 +1,45 @@
-From: "hch@lst.de" <hch@lst.de>
-Subject: Re: [PATCH 02/25] block: remove the blk_execute_rq
-	return value
-Date: Tue, 18 Apr 2017 09:50:40 +0200
-Message-ID: <20170418075040.GA23003@lst.de>
-References: <20170406153944.10058-1-hch@lst.de>
-	<20170406153944.10058-3-hch@lst.de>
-	<1492113800.24345.9.camel@sandisk.com>
-	<20170414082231.GC24901@lst.de>
-	<3257b684-8bec-f48a-e97e-5f2e8f3ca6e4@kernel.dk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <3257b684-8bec-f48a-e97e-5f2e8f3ca6e4@kernel.dk>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Jens Axboe <axboe@kernel.dk>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>, "jbacik@fb.com" <jbacik@fb.com>, "james.smart@broadcom.com" <james.smart@broadcom.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Bart Van Assche <Bart.VanAssche@sandisk.com>, "hch@lst.de" <hch@lst.de>, "roger.pau@citrix.com" <roger.pau@citrix.com>
+From: Maurizio Lombardi <mlombard@redhat.com>
+Subject: [PATCH] scsi: lpfc: fix potential buffer overflow.
+Date: Tue, 18 Apr 2017 11:55:51 +0200
+Message-ID: <1492509351-25441-1-git-send-email-mlombard@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:51126 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754768AbdDRJzz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 18 Apr 2017 05:55:55 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: james.smart@broadcom.com
+Cc: dick.kennedy@broadcom.com, linux-scsi@vger.kernel.org, emilne@redhat.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 
-On Mon, Apr 17, 2017 at 10:01:09AM -0600, Jens Axboe wrote:
-> Are you respinning this series for 4.12?
+This patch fixes a potential buffer overflow in lpfc_nvme_info_show().
 
-Yes, I think I got enough feedback by now to resend it.  I'll try to
-get it out today.
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+---
+ drivers/scsi/lpfc/lpfc_attr.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index 22819af..1ce252f 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -181,7 +181,7 @@
+ 				wwn_to_u64(vport->fc_nodename.u.wwn),
+ 				phba->targetport->port_id);
+ 
+-		len += snprintf(buf + len, PAGE_SIZE,
++		len += snprintf(buf + len, PAGE_SIZE - len,
+ 				"\nNVME Target: Statistics\n");
+ 		tgtp = (struct lpfc_nvmet_tgtport *)phba->targetport->private;
+ 		len += snprintf(buf+len, PAGE_SIZE-len,
+@@ -326,7 +326,7 @@
+ 	}
+ 	spin_unlock_irq(shost->host_lock);
+ 
+-	len += snprintf(buf + len, PAGE_SIZE, "\nNVME Statistics\n");
++	len += snprintf(buf + len, PAGE_SIZE - len, "\nNVME Statistics\n");
+ 	len += snprintf(buf+len, PAGE_SIZE-len,
+ 			"LS: Xmt %016llx Cmpl %016llx\n",
+ 			phba->fc4NvmeLsRequests,
+-- 
+Maurizio Lombardi
