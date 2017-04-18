@@ -1,78 +1,31 @@
 From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: Re: [PATCH 16/22] xen-blkfront: Make use of the new sg_map helper
- function
-Date: Tue, 18 Apr 2017 10:27:23 -0400
-Message-ID: <20170418142723.GA27133@char.us.oracle.com>
-References: <1492121135-4437-1-git-send-email-logang@deltatee.com>
- <1492121135-4437-17-git-send-email-logang@deltatee.com>
- <063D6719AE5E284EB5DD2968C1650D6DCFFD3CD7@AcuExch.aculab.com>
+Subject: Re: kill req->errors
+Date: Tue, 18 Apr 2017 10:33:46 -0400
+Message-ID: <20170418143346.GA10356@char.us.oracle.com>
+References: <20170406153944.10058-1-hch@lst.de>
+ <20170406200024.GC6140@localhost.localdomain>
+ <20170407071124.GA26481@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DCFFD3CD7@AcuExch.aculab.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: David Laight <David.Laight@ACULAB.COM>, xen-devel@lists.xensource.com
-Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>, Steve Wise <swise@opengridcomputing.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, Sumit Semwal <sumit.semwal@linaro.org>, "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>, "rds-devel@oss.oracle.com" <rds-devel@oss.oracle.com>, Sagi Grimberg <sagi@grimberg.me>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Matthew Wilcox <mawilcox@microsoft.com>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, "fcoe-devel@open-fcoe.org" <fcoe-devel@open-fcoe.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>, Ming Lin <ming.l@ssi.samsung.com>, intel-gfx@list
+In-Reply-To: <20170407071124.GA26481@lst.de>
+Sender: linux-block-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Josef Bacik <jbacik@fb.com>, James Smart <james.smart@broadcom.com>, Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Apr 18, 2017 at 02:13:59PM +0000, David Laight wrote:
-> From: Logan Gunthorpe
-> > Sent: 13 April 2017 23:05
-> > Straightforward conversion to the new helper, except due to
-> > the lack of error path, we have to warn if unmapable memory
-> > is ever present in the sgl.
+On Fri, Apr 07, 2017 at 09:11:24AM +0200, Christoph Hellwig wrote:
+> On Thu, Apr 06, 2017 at 04:00:24PM -0400, Konrad Rzeszutek Wilk wrote:
+> > You wouldn't have a git tree to easily test it? Thanks.
+> 
+> git://git.infradead.org/users/hch/block.git request-errors
+> 
+> Gitweb:
+> 
+> http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/request-errors
 
-Interesting that you didn't CC any of the maintainers. Could you 
-do that in the future please?
+I tested it with Xen and it all worked out. Albeit in hindsight I didn't check
+the ones that matter - that is the error paths (duh!).
 
-> > 
-> > Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> > ---
-> >  drivers/block/xen-blkfront.c | 33 +++++++++++++++++++++++++++------
-> >  1 file changed, 27 insertions(+), 6 deletions(-)
-> > 
-> > diff --git a/drivers/block/xen-blkfront.c b/drivers/block/xen-blkfront.c
-> > index 5067a0a..7dcf41d 100644
-> > --- a/drivers/block/xen-blkfront.c
-> > +++ b/drivers/block/xen-blkfront.c
-> > @@ -807,8 +807,19 @@ static int blkif_queue_rw_req(struct request *req, struct blkfront_ring_info *ri
-> >  		BUG_ON(sg->offset + sg->length > PAGE_SIZE);
-> > 
-> >  		if (setup.need_copy) {
-> > -			setup.bvec_off = sg->offset;
-> > -			setup.bvec_data = kmap_atomic(sg_page(sg));
-> > +			setup.bvec_off = 0;
-> > +			setup.bvec_data = sg_map(sg, SG_KMAP_ATOMIC);
-> > +			if (IS_ERR(setup.bvec_data)) {
-> > +				/*
-> > +				 * This should really never happen unless
-> > +				 * the code is changed to use memory that is
-> > +				 * not mappable in the sg. Seeing there is a
-> > +				 * questionable error path out of here,
-> > +				 * we WARN.
-> > +				 */
-> > +				WARN(1, "Non-mappable memory used in sg!");
-> > +				return 1;
-> > +			}
-> ...
-> 
-> Perhaps add a flag to mark failure as 'unexpected' and trace (and panic?)
-> inside sg_map().
-> 
-> 	David
-> 
-> 
-> _______________________________________________
-> Linux-nvdimm mailing list
-> Linux-nvdimm@lists.01.org
-> https://lists.01.org/mailman/listinfo/linux-nvdimm
+So let me do that now.
