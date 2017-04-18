@@ -1,63 +1,64 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: scsi: introduce a new result field in struct scsi_request
-Date: Tue, 18 Apr 2017 22:34:20 +0000
-Message-ID: <1492554858.2689.17.camel@sandisk.com>
-References: <20170418155229.5977-1-hch@bombadil.infradead.org>
-         <20170418155229.5977-8-hch@bombadil.infradead.org>
+From: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+Date: Tue, 18 Apr 2017 16:42:25 -0600
+Message-ID: <20170418224225.GB27113@obsidianresearch.com>
+References: <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com>
+ <20170418190138.GH7181@obsidianresearch.com>
+ <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com>
+ <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
+ <20170418210339.GA24257@obsidianresearch.com>
+ <CAPcyv4h9n9Uzq4FAXR0ufieqvx5_txEwtnaaBWdxe-jF_XfTLg@mail.gmail.com>
+ <20170418212258.GA26838@obsidianresearch.com>
+ <CAPcyv4g5ifbpukthMXMro8qKdfoXAhftDpiwWWFCLZ4dK8JnnA@mail.gmail.com>
+ <96198489-1af5-abcf-f23f-9a7e41aa17f7@deltatee.com>
+ <CAPcyv4haUUs1Eew1PZTZkoGU4YFiHOuU93G+kG+CqfKzjz1gpw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:54255 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751131AbdDRWeY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Apr 2017 18:34:24 -0400
-In-Reply-To: <20170418155229.5977-8-hch@bombadil.infradead.org>
-Content-Language: en-US
-Content-ID: <7EA1ECB86EC18243A55B2A3A859E207E@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4haUUs1Eew1PZTZkoGU4YFiHOuU93G+kG+CqfKzjz1gpw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jerome Glisse <jglisse-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Bjorn Helgaas <helgaas-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm <linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org>, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "hch@bombadil.infradead.org" <hch@bombadil.infradead.org>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>, "roger.pau@citrix.com" <roger.pau@citrix.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "jbacik@fb.com" <jbacik@fb.com>, "james.smart@broadcom.com" <james.smart@broadcom.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
 
-On Tue, 2017-04-18 at 08:52 -0700, Christoph Hellwig wrote:
-> --- a/block/bsg.c
-> +++ b/block/bsg.c
-> @@ -391,13 +391,13 @@ static int blk_complete_sgv4_hdr_rq(struct request =
-*rq, struct sg_io_v4 *hdr,
->  	struct scsi_request *req =3D scsi_req(rq);
->  	int ret =3D 0;
-> =20
-> -	dprintk("rq %p bio %p 0x%x\n", rq, bio, rq->errors);
-> +	dprintk("rq %p bio %p 0x%x\n", rq, bio, rq->result);
+On Tue, Apr 18, 2017 at 03:28:17PM -0700, Dan Williams wrote:
 
-Hello Christoph,
+> Unlike the pci bus address offset case which I think is fundamental to
+> support since shipping archs do this toda
 
-Did you perhaps intend "req->result" instead of "rq->result"?
+But we can support this by modifying those arch's unique dma_ops
+directly.
 
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -229,8 +229,8 @@ void scsi_queue_insert(struct scsi_cmnd *cmd, int rea=
-son)
->   * @rq_flags:	flags for ->rq_flags
->   * @resid:	optional residual length
->   *
-> - * returns the req->errors value which is the scsi_cmnd result
-> - * field.
-> + * Returns the scsi_cmnd result field if a command was executed, or a ne=
-gative
-> + * Linux error code if we didn't get that war.
+Eg as I explained, my p2p_same_segment_map_page() helper concept would
+do the offset adjustment for same-segement DMA.
 
-Did you intend "war" or is that perhaps a typo?
+If PPC calls that in their IOMMU drivers then they will have proper
+support for this basic p2p, and the right framework to move on to more
+advanced cases of p2p.
 
-> @@ -1905,7 +1904,7 @@ static int scsi_mq_prep_fn(struct request *req)
->  static void scsi_mq_done(struct scsi_cmnd *cmd)
->  {
->  	trace_scsi_dispatch_cmd_done(cmd);
-> -	blk_mq_complete_request(cmd->request, cmd->request->errors);
-> +	blk_mq_complete_request(cmd->request, 0);
->  }
+This really seems like much less trouble than trying to wrapper all
+the arch's dma ops, and doesn't have the wonky restrictions.
 
-Why has cmd->request->errors been changed into 0?
+> I think it is ok to say p2p is restricted to a single sgl that gets
+> to talk to host memory or a single device.
 
-Bart.=
+RDMA and GPU would be sad with this restriction...
+
+> That said, what's wrong with a p2p aware map_sg implementation
+> calling up to the host memory map_sg implementation on a per sgl
+> basis?
+
+Setting up the iommu is fairly expensive, so getting rid of the
+batching would kill performance..
+
+Jason
