@@ -1,118 +1,91 @@
 From: Christoph Hellwig <hch@bombadil.infradead.org>
-Subject: blktrace: remove the unused block_rq_abort tracepoint
-Date: Tue, 18 Apr 2017 08:52:28 -0700
-Message-ID: <20170418155229.5977-23-hch@bombadil.infradead.org>
+Subject: nvme: make nvme_error_status private
+Date: Tue, 18 Apr 2017 08:52:10 -0700
+Message-ID: <20170418155229.5977-5-hch@bombadil.infradead.org>
 References: <20170418155229.5977-1-hch@bombadil.infradead.org>
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:49475 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753138AbdDRPwp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Apr 2017 11:52:45 -0400
 In-Reply-To: <20170418155229.5977-1-hch@bombadil.infradead.org>
-Sender: linux-block-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
 Cc: Josef Bacik <jbacik@fb.com>, James Smart <james.smart@broadcom.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, =?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, dm-devel@redhat.com, Christoph Hellwig <hch@lst.de>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Christoph Hellwig <hch@lst.de>
 
+Currently it's used by the lighnvm passthrough ioctl, but we'd like to make
+it private in preparation of block layer specific error code.  Lighnvm already
+returns the real NVMe status anyway, so I think we can just limit it to
+returning -EIO for any status set.
+
+This will need a careful audit from the lightnvm folks, though.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- include/trace/events/block.h | 44 ++++++++++----------------------------------
- kernel/trace/blktrace.c      |  9 ---------
- 2 files changed, 10 insertions(+), 43 deletions(-)
+ drivers/nvme/host/core.c     | 3 +--
+ drivers/nvme/host/lightnvm.c | 6 +++---
+ drivers/nvme/host/nvme.h     | 1 -
+ 3 files changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/include/trace/events/block.h b/include/trace/events/block.h
-index a88ed13446ff..99ed69fad041 100644
---- a/include/trace/events/block.h
-+++ b/include/trace/events/block.h
-@@ -61,7 +61,16 @@ DEFINE_EVENT(block_buffer, block_dirty_buffer,
- 	TP_ARGS(bh)
- );
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index c6f256d74b6b..805f250315ec 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -66,7 +66,7 @@ static DEFINE_SPINLOCK(dev_list_lock);
  
--DECLARE_EVENT_CLASS(block_rq_with_error,
-+/**
-+ * block_rq_requeue - place block IO request back on a queue
-+ * @q: queue holding operation
-+ * @rq: block IO operation request
-+ *
-+ * The block operation request @rq is being placed back into queue
-+ * @q.  For some reason the request was not completed and needs to be
-+ * put back in the queue.
-+ */
-+TRACE_EVENT(block_rq_requeue,
+ static struct class *nvme_class;
  
- 	TP_PROTO(struct request_queue *q, struct request *rq),
+-int nvme_error_status(struct request *req)
++static int nvme_error_status(struct request *req)
+ {
+ 	switch (nvme_req(req)->status & 0x7ff) {
+ 	case NVME_SC_SUCCESS:
+@@ -77,7 +77,6 @@ int nvme_error_status(struct request *req)
+ 		return -EIO;
+ 	}
+ }
+-EXPORT_SYMBOL_GPL(nvme_error_status);
  
-@@ -94,39 +103,6 @@ DECLARE_EVENT_CLASS(block_rq_with_error,
- );
+ static inline bool nvme_req_needs_retry(struct request *req)
+ {
+diff --git a/drivers/nvme/host/lightnvm.c b/drivers/nvme/host/lightnvm.c
+index f85e6e57d641..7f407d5f0095 100644
+--- a/drivers/nvme/host/lightnvm.c
++++ b/drivers/nvme/host/lightnvm.c
+@@ -599,7 +599,7 @@ static int nvme_nvm_submit_user_cmd(struct request_queue *q,
+ 	__le64 *metadata = NULL;
+ 	dma_addr_t metadata_dma;
+ 	DECLARE_COMPLETION_ONSTACK(wait);
+-	int ret;
++	int ret = 0;
  
- /**
-- * block_rq_abort - abort block operation request
-- * @q: queue containing the block operation request
-- * @rq: block IO operation request
-- *
-- * Called immediately after pending block IO operation request @rq in
-- * queue @q is aborted. The fields in the operation request @rq
-- * can be examined to determine which device and sectors the pending
-- * operation would access.
-- */
--DEFINE_EVENT(block_rq_with_error, block_rq_abort,
--
--	TP_PROTO(struct request_queue *q, struct request *rq),
--
--	TP_ARGS(q, rq)
--);
--
--/**
-- * block_rq_requeue - place block IO request back on a queue
-- * @q: queue holding operation
-- * @rq: block IO operation request
-- *
-- * The block operation request @rq is being placed back into queue
-- * @q.  For some reason the request was not completed and needs to be
-- * put back in the queue.
-- */
--DEFINE_EVENT(block_rq_with_error, block_rq_requeue,
--
--	TP_PROTO(struct request_queue *q, struct request *rq),
--
--	TP_ARGS(q, rq)
--);
--
--/**
-  * block_rq_complete - block IO operation completed by device driver
-  * @q: queue containing the block operation request
-  * @rq: block operations request
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index b2058a7f94bd..9f3624dadb09 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -716,12 +716,6 @@ static void blk_add_trace_rq(struct request_queue *q, struct request *rq,
- 			rq->cmd_flags, what, rq->errors, 0, NULL);
+ 	rq = nvme_alloc_request(q, (struct nvme_command *)vcmd, 0,
+ 			NVME_QID_ANY);
+@@ -671,8 +671,8 @@ static int nvme_nvm_submit_user_cmd(struct request_queue *q,
+ 
+ 	if (nvme_req(rq)->flags & NVME_REQ_CANCELLED)
+ 		ret = -EINTR;
+-	else
+-		ret = nvme_error_status(rq);
++	else if (nvme_req(rq)->status & 0x7ff)
++		ret = -EIO;
+ 	if (result)
+ 		*result = nvme_req(rq)->status & 0x7ff;
+ 	if (status)
+diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
+index d7330f75632d..550037f5efea 100644
+--- a/drivers/nvme/host/nvme.h
++++ b/drivers/nvme/host/nvme.h
+@@ -254,7 +254,6 @@ static inline void nvme_end_request(struct request *req, __le16 status,
+ 	blk_mq_complete_request(req, 0);
  }
  
--static void blk_add_trace_rq_abort(void *ignore,
--				   struct request_queue *q, struct request *rq)
--{
--	blk_add_trace_rq(q, rq, blk_rq_bytes(rq), BLK_TA_ABORT);
--}
--
- static void blk_add_trace_rq_insert(void *ignore,
- 				    struct request_queue *q, struct request *rq)
- {
-@@ -974,8 +968,6 @@ static void blk_register_tracepoints(void)
- {
- 	int ret;
- 
--	ret = register_trace_block_rq_abort(blk_add_trace_rq_abort, NULL);
--	WARN_ON(ret);
- 	ret = register_trace_block_rq_insert(blk_add_trace_rq_insert, NULL);
- 	WARN_ON(ret);
- 	ret = register_trace_block_rq_issue(blk_add_trace_rq_issue, NULL);
-@@ -1028,7 +1020,6 @@ static void blk_unregister_tracepoints(void)
- 	unregister_trace_block_rq_requeue(blk_add_trace_rq_requeue, NULL);
- 	unregister_trace_block_rq_issue(blk_add_trace_rq_issue, NULL);
- 	unregister_trace_block_rq_insert(blk_add_trace_rq_insert, NULL);
--	unregister_trace_block_rq_abort(blk_add_trace_rq_abort, NULL);
- 
- 	tracepoint_synchronize_unregister();
- }
+-int nvme_error_status(struct request *req);
+ void nvme_complete_rq(struct request *req);
+ void nvme_cancel_request(struct request *req, void *data, bool reserved);
+ bool nvme_change_ctrl_state(struct nvme_ctrl *ctrl,
 -- 
 2.11.0
