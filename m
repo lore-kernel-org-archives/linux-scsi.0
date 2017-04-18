@@ -1,12 +1,15 @@
 From: Christoph Hellwig <hch@bombadil.infradead.org>
-Subject: nvme: make nvme_error_status private
-Date: Tue, 18 Apr 2017 08:52:10 -0700
-Message-ID: <20170418155229.5977-5-hch@bombadil.infradead.org>
+Subject: xen-blkfront: don't use req->errors
+Date: Tue, 18 Apr 2017 08:52:20 -0700
+Message-ID: <20170418155229.5977-15-hch@bombadil.infradead.org>
 References: <20170418155229.5977-1-hch@bombadil.infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:49475 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:55271 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753138AbdDRPwp (ORCPT
+        with ESMTP id S1754025AbdDRPwp (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Apr 2017 11:52:45 -0400
 In-Reply-To: <20170418155229.5977-1-hch@bombadil.infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -16,76 +19,128 @@ Cc: Josef Bacik <jbacik@fb.com>, James Smart <james.smart@broadcom.com>, Konrad 
 
 From: Christoph Hellwig <hch@lst.de>
 
-Currently it's used by the lighnvm passthrough ioctl, but we'd like to make
-it private in preparation of block layer specific error code.  Lighnvm already
-returns the real NVMe status anyway, so I think we can just limit it to
-returning -EIO for any status set.
-
-This will need a careful audit from the lightnvm folks, though.
+xen-blkfron is the last users using rq->errros for passing back error to
+blk-mq, and I'd like to get rid of that.  In the longer run the driver
+should be moving more of the completion processing into .complete, but
+this is the minimal change to move forward for now.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Roger Pau Monné <roger.pau@citrix.com>
+Reviewed-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
 ---
- drivers/nvme/host/core.c     | 3 +--
- drivers/nvme/host/lightnvm.c | 6 +++---
- drivers/nvme/host/nvme.h     | 1 -
- 3 files changed, 4 insertions(+), 6 deletions(-)
+ drivers/block/xen-blkfront.c | 36 +++++++++++++++++++++++++-----------
+ 1 file changed, 25 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index c6f256d74b6b..805f250315ec 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -66,7 +66,7 @@ static DEFINE_SPINLOCK(dev_list_lock);
+diff --git a/drivers/block/xen-blkfront.c b/drivers/block/xen-blkfront.c
+index d137ef8a72be..08172f679a64 100644
+--- a/drivers/block/xen-blkfront.c
++++ b/drivers/block/xen-blkfront.c
+@@ -115,6 +115,15 @@ struct split_bio {
+ 	atomic_t pending;
+ };
  
- static struct class *nvme_class;
++struct blkif_req {
++	int	error;
++};
++
++static inline struct blkif_req *blkif_req(struct request *rq)
++{
++	return blk_mq_rq_to_pdu(rq);
++}
++
+ static DEFINE_MUTEX(blkfront_mutex);
+ static const struct block_device_operations xlvbd_block_fops;
  
--int nvme_error_status(struct request *req)
-+static int nvme_error_status(struct request *req)
- {
- 	switch (nvme_req(req)->status & 0x7ff) {
- 	case NVME_SC_SUCCESS:
-@@ -77,7 +77,6 @@ int nvme_error_status(struct request *req)
- 		return -EIO;
+@@ -907,8 +916,14 @@ static int blkif_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 	return BLK_MQ_RQ_QUEUE_BUSY;
+ }
+ 
++static void blkif_complete_rq(struct request *rq)
++{
++	blk_mq_end_request(rq, blkif_req(rq)->error);
++}
++
+ static const struct blk_mq_ops blkfront_mq_ops = {
+ 	.queue_rq = blkif_queue_rq,
++	.complete = blkif_complete_rq,
+ };
+ 
+ static void blkif_set_queue_limits(struct blkfront_info *info)
+@@ -969,7 +984,7 @@ static int xlvbd_init_blk_queue(struct gendisk *gd, u16 sector_size,
+ 		info->tag_set.queue_depth = BLK_RING_SIZE(info);
+ 	info->tag_set.numa_node = NUMA_NO_NODE;
+ 	info->tag_set.flags = BLK_MQ_F_SHOULD_MERGE | BLK_MQ_F_SG_MERGE;
+-	info->tag_set.cmd_size = 0;
++	info->tag_set.cmd_size = sizeof(struct blkif_req);
+ 	info->tag_set.driver_data = info;
+ 
+ 	if (blk_mq_alloc_tag_set(&info->tag_set))
+@@ -1543,7 +1558,6 @@ static irqreturn_t blkif_interrupt(int irq, void *dev_id)
+ 	unsigned long flags;
+ 	struct blkfront_ring_info *rinfo = (struct blkfront_ring_info *)dev_id;
+ 	struct blkfront_info *info = rinfo->dev_info;
+-	int error;
+ 
+ 	if (unlikely(info->connected != BLKIF_STATE_CONNECTED))
+ 		return IRQ_HANDLED;
+@@ -1587,37 +1601,36 @@ static irqreturn_t blkif_interrupt(int irq, void *dev_id)
+ 			continue;
+ 		}
+ 
+-		error = (bret->status == BLKIF_RSP_OKAY) ? 0 : -EIO;
++		blkif_req(req)->error = (bret->status == BLKIF_RSP_OKAY) ? 0 : -EIO;
+ 		switch (bret->operation) {
+ 		case BLKIF_OP_DISCARD:
+ 			if (unlikely(bret->status == BLKIF_RSP_EOPNOTSUPP)) {
+ 				struct request_queue *rq = info->rq;
+ 				printk(KERN_WARNING "blkfront: %s: %s op failed\n",
+ 					   info->gd->disk_name, op_name(bret->operation));
+-				error = -EOPNOTSUPP;
++				blkif_req(req)->error = -EOPNOTSUPP;
+ 				info->feature_discard = 0;
+ 				info->feature_secdiscard = 0;
+ 				queue_flag_clear(QUEUE_FLAG_DISCARD, rq);
+ 				queue_flag_clear(QUEUE_FLAG_SECERASE, rq);
+ 			}
+-			blk_mq_complete_request(req, error);
+ 			break;
+ 		case BLKIF_OP_FLUSH_DISKCACHE:
+ 		case BLKIF_OP_WRITE_BARRIER:
+ 			if (unlikely(bret->status == BLKIF_RSP_EOPNOTSUPP)) {
+ 				printk(KERN_WARNING "blkfront: %s: %s op failed\n",
+ 				       info->gd->disk_name, op_name(bret->operation));
+-				error = -EOPNOTSUPP;
++				blkif_req(req)->error = -EOPNOTSUPP;
+ 			}
+ 			if (unlikely(bret->status == BLKIF_RSP_ERROR &&
+ 				     rinfo->shadow[id].req.u.rw.nr_segments == 0)) {
+ 				printk(KERN_WARNING "blkfront: %s: empty %s op failed\n",
+ 				       info->gd->disk_name, op_name(bret->operation));
+-				error = -EOPNOTSUPP;
++				blkif_req(req)->error = -EOPNOTSUPP;
+ 			}
+-			if (unlikely(error)) {
+-				if (error == -EOPNOTSUPP)
+-					error = 0;
++			if (unlikely(blkif_req(req)->error)) {
++				if (blkif_req(req)->error == -EOPNOTSUPP)
++					blkif_req(req)->error = 0;
+ 				info->feature_fua = 0;
+ 				info->feature_flush = 0;
+ 				xlvbd_flush(info);
+@@ -1629,11 +1642,12 @@ static irqreturn_t blkif_interrupt(int irq, void *dev_id)
+ 				dev_dbg(&info->xbdev->dev, "Bad return from blkdev data "
+ 					"request: %x\n", bret->status);
+ 
+-			blk_mq_complete_request(req, error);
+ 			break;
+ 		default:
+ 			BUG();
+ 		}
++
++		blk_mq_complete_request(req, 0);
  	}
- }
--EXPORT_SYMBOL_GPL(nvme_error_status);
  
- static inline bool nvme_req_needs_retry(struct request *req)
- {
-diff --git a/drivers/nvme/host/lightnvm.c b/drivers/nvme/host/lightnvm.c
-index f85e6e57d641..7f407d5f0095 100644
---- a/drivers/nvme/host/lightnvm.c
-+++ b/drivers/nvme/host/lightnvm.c
-@@ -599,7 +599,7 @@ static int nvme_nvm_submit_user_cmd(struct request_queue *q,
- 	__le64 *metadata = NULL;
- 	dma_addr_t metadata_dma;
- 	DECLARE_COMPLETION_ONSTACK(wait);
--	int ret;
-+	int ret = 0;
- 
- 	rq = nvme_alloc_request(q, (struct nvme_command *)vcmd, 0,
- 			NVME_QID_ANY);
-@@ -671,8 +671,8 @@ static int nvme_nvm_submit_user_cmd(struct request_queue *q,
- 
- 	if (nvme_req(rq)->flags & NVME_REQ_CANCELLED)
- 		ret = -EINTR;
--	else
--		ret = nvme_error_status(rq);
-+	else if (nvme_req(rq)->status & 0x7ff)
-+		ret = -EIO;
- 	if (result)
- 		*result = nvme_req(rq)->status & 0x7ff;
- 	if (status)
-diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
-index d7330f75632d..550037f5efea 100644
---- a/drivers/nvme/host/nvme.h
-+++ b/drivers/nvme/host/nvme.h
-@@ -254,7 +254,6 @@ static inline void nvme_end_request(struct request *req, __le16 status,
- 	blk_mq_complete_request(req, 0);
- }
- 
--int nvme_error_status(struct request *req);
- void nvme_complete_rq(struct request *req);
- void nvme_cancel_request(struct request *req, void *data, bool reserved);
- bool nvme_change_ctrl_state(struct nvme_ctrl *ctrl,
+ 	rinfo->ring.rsp_cons = i;
 -- 
 2.11.0
