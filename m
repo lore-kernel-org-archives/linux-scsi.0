@@ -1,43 +1,61 @@
-From: James Smart <james.smart@broadcom.com>
-Subject: Re: nvme-fc: fix status code handling in nvme_fc_fcpio_done
-Date: Tue, 18 Apr 2017 14:08:33 -0700
-Message-ID: <96441c26-93b1-751d-6995-d9d0fab00eee@broadcom.com>
-References: <20170418155229.5977-1-hch@bombadil.infradead.org>
- <20170418155229.5977-3-hch@bombadil.infradead.org>
+From: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+Date: Tue, 18 Apr 2017 14:11:33 -0700
+Message-ID: <CAPcyv4h9n9Uzq4FAXR0ufieqvx5_txEwtnaaBWdxe-jF_XfTLg@mail.gmail.com>
+References: <CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
+ <1492381396.25766.43.camel@kernel.crashing.org>
+ <20170418164557.GA7181@obsidianresearch.com>
+ <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com>
+ <20170418190138.GH7181@obsidianresearch.com>
+ <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com>
+ <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
+ <20170418210339.GA24257@obsidianresearch.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wr0-f169.google.com ([209.85.128.169]:33472 "EHLO
-        mail-wr0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753112AbdDRVIj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Apr 2017 17:08:39 -0400
-Received: by mail-wr0-f169.google.com with SMTP id l28so3171780wre.0
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Apr 2017 14:08:38 -0700 (PDT)
-In-Reply-To: <20170418155229.5977-3-hch@bombadil.infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <20170418210339.GA24257-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jerome Glisse <jglisse-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Bjorn Helgaas <helgaas-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm <linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org>, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@bombadil.infradead.org>, Jens Axboe <axboe@kernel.dk>
-Cc: Josef Bacik <jbacik@fb.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, =?UTF-8?Q?Roger_Pau_Monn=c3=a9?= <roger.pau@citrix.com>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, dm-devel@redhat.com, Christoph Hellwig <hch@lst.de>
 
-
-On 4/18/2017 8:52 AM, Christoph Hellwig wrote:
-> From: Christoph Hellwig <hch@lst.de>
+On Tue, Apr 18, 2017 at 2:03 PM, Jason Gunthorpe
+<jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org> wrote:
+> On Tue, Apr 18, 2017 at 12:48:35PM -0700, Dan Williams wrote:
 >
-> nvme_complete_async_event expects the little endian status code
-> including the phase bit, and a new completion handler I plan to
-> introduce will do so as well.
+>> > Yes, I noticed this problem too and that makes sense. It just means
+>> > every dma_ops will probably need to be modified to either support p2p
+>> > pages or fail on them. Though, the only real difficulty there is that it
+>> > will be a lot of work.
+>>
+>> I don't think you need to go touch all dma_ops, I think you can just
+>> arrange for devices that are going to do dma to get redirected to a
+>> p2p aware provider of operations that overrides the system default
+>> dma_ops. I.e. just touch get_dma_ops().
 >
-> Change the status variable into the little endian format with the
-> phase bit used in the NVMe CQE to fix / enable this.
+> I don't follow, when does get_dma_ops() return a p2p aware provider?
+> It has no way to know if the DMA is going to involve p2p, get_dma_ops
+> is called with the device initiating the DMA.
 >
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-> ---
+> So you'd always return the P2P shim on a system that has registered
+> P2P memory?
 >
+> Even so, how does this shim work? dma_ops are not really intended to
+> be stacked. How would we make unmap work, for instance? What happens
+> when the underlying iommu dma ops actually natively understands p2p
+> and doesn't want the shim?
+>
+> I think this opens an even bigger can of worms..
 
-look good
-
--- james
-
-Signed-off-by: James Smart <james.smart@broadcom.com>
+No, I don't think it does. You'd only shim when the target page is
+backed by a device, not host memory, and you can figure this out by a
+is_zone_device_page()-style lookup.
