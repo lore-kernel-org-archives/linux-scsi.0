@@ -1,101 +1,118 @@
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: Re: [PATCH 16/22] xen-blkfront: Make use of the new sg_map helper
- function
-Date: Tue, 18 Apr 2017 11:50:20 -0400
-Message-ID: <20170418155020.GF12001@char.us.oracle.com>
-References: <1492121135-4437-1-git-send-email-logang@deltatee.com>
- <1492121135-4437-17-git-send-email-logang@deltatee.com>
- <063D6719AE5E284EB5DD2968C1650D6DCFFD3CD7@AcuExch.aculab.com>
- <20170418142723.GA27133@char.us.oracle.com>
- <7930aa93-6106-e12f-ba76-e2771d4ec2dc@deltatee.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-Content-Disposition: inline
-In-Reply-To: <7930aa93-6106-e12f-ba76-e2771d4ec2dc@deltatee.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>, Steve Wise <swise@opengridcomputing.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, Sumit Semwal <sumit.semwal@linaro.org>, "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>, "rds-devel@oss.oracle.com" <rds-devel@oss.oracle.com>, xen-devel@lists.xensource.com, Sagi Grimberg <sagi@grimberg.me>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Matthew Wilcox <mawilcox@microsoft.com>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, "fcoe-devel@open-fcoe.org" <fcoe-devel@open-fcoe.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>, Ming Lin <ming.l@ssi>
+From: Christoph Hellwig <hch@bombadil.infradead.org>
+Subject: blktrace: remove the unused block_rq_abort tracepoint
+Date: Tue, 18 Apr 2017 08:52:28 -0700
+Message-ID: <20170418155229.5977-23-hch@bombadil.infradead.org>
+References: <20170418155229.5977-1-hch@bombadil.infradead.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170418155229.5977-1-hch@bombadil.infradead.org>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Josef Bacik <jbacik@fb.com>, James Smart <james.smart@broadcom.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, =?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, dm-devel@redhat.com, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Apr 18, 2017 at 09:42:20AM -0600, Logan Gunthorpe wrote:
-> 
-> 
-> On 18/04/17 08:27 AM, Konrad Rzeszutek Wilk wrote:
-> > Interesting that you didn't CC any of the maintainers. Could you 
-> > do that in the future please?
-> 
-> Please read the cover letter. The distribution list for the patchset
-> would have been way too large to cc every maintainer (even as limited as
-> it was, I had mailing lists yelling at me). My plan was to get buy in
+From: Christoph Hellwig <hch@lst.de>
 
-I am not sure if you know, but you can add on each patch the respective
-maintainer via 'CC'. That way you can have certain maintainers CCed only
-on the subsystems they cover. You put it after (or before) your SoB and
-git send-email happilly picks it up.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ include/trace/events/block.h | 44 ++++++++++----------------------------------
+ kernel/trace/blktrace.c      |  9 ---------
+ 2 files changed, 10 insertions(+), 43 deletions(-)
 
-It does mean that for every patch you have to run something like this:
-
-$ more add_cc 
-#!/bin/bash
-
-git diff HEAD^.. > /tmp/a
-echo "---"
-scripts/get_maintainer.pl --no-l /tmp/a | while read file
-do
-    echo "Cc: $file"
-done
-
-Or such.
-
-
-> for the first patch, get it merged and resend the rest independently to
-> their respective maintainers. Of course, though, I'd be open to other
-> suggestions.
-> 
-> >>>
-> >>> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> >>> ---
-> >>>  drivers/block/xen-blkfront.c | 33 +++++++++++++++++++++++++++------
-> >>>  1 file changed, 27 insertions(+), 6 deletions(-)
-> >>>
-> >>> diff --git a/drivers/block/xen-blkfront.c b/drivers/block/xen-blkfront.c
-> >>> index 5067a0a..7dcf41d 100644
-> >>> --- a/drivers/block/xen-blkfront.c
-> >>> +++ b/drivers/block/xen-blkfront.c
-> >>> @@ -807,8 +807,19 @@ static int blkif_queue_rw_req(struct request *req, struct blkfront_ring_info *ri
-> >>>  		BUG_ON(sg->offset + sg->length > PAGE_SIZE);
-> >>>
-> >>>  		if (setup.need_copy) {
-> >>> -			setup.bvec_off = sg->offset;
-> >>> -			setup.bvec_data = kmap_atomic(sg_page(sg));
-> >>> +			setup.bvec_off = 0;
-> >>> +			setup.bvec_data = sg_map(sg, SG_KMAP_ATOMIC);
-> >>> +			if (IS_ERR(setup.bvec_data)) {
-> >>> +				/*
-> >>> +				 * This should really never happen unless
-> >>> +				 * the code is changed to use memory that is
-> >>> +				 * not mappable in the sg. Seeing there is a
-> >>> +				 * questionable error path out of here,
-> >>> +				 * we WARN.
-> >>> +				 */
-> >>> +				WARN(1, "Non-mappable memory used in sg!");
-> >>> +				return 1;
-> >>> +			}
-> >> ...
-> >>
-> >> Perhaps add a flag to mark failure as 'unexpected' and trace (and panic?)
-> >> inside sg_map().
-> 
-> Thanks, that's a good suggestion. I'll make the change for v2.
-> 
-> Logan
+diff --git a/include/trace/events/block.h b/include/trace/events/block.h
+index a88ed13446ff..99ed69fad041 100644
+--- a/include/trace/events/block.h
++++ b/include/trace/events/block.h
+@@ -61,7 +61,16 @@ DEFINE_EVENT(block_buffer, block_dirty_buffer,
+ 	TP_ARGS(bh)
+ );
+ 
+-DECLARE_EVENT_CLASS(block_rq_with_error,
++/**
++ * block_rq_requeue - place block IO request back on a queue
++ * @q: queue holding operation
++ * @rq: block IO operation request
++ *
++ * The block operation request @rq is being placed back into queue
++ * @q.  For some reason the request was not completed and needs to be
++ * put back in the queue.
++ */
++TRACE_EVENT(block_rq_requeue,
+ 
+ 	TP_PROTO(struct request_queue *q, struct request *rq),
+ 
+@@ -94,39 +103,6 @@ DECLARE_EVENT_CLASS(block_rq_with_error,
+ );
+ 
+ /**
+- * block_rq_abort - abort block operation request
+- * @q: queue containing the block operation request
+- * @rq: block IO operation request
+- *
+- * Called immediately after pending block IO operation request @rq in
+- * queue @q is aborted. The fields in the operation request @rq
+- * can be examined to determine which device and sectors the pending
+- * operation would access.
+- */
+-DEFINE_EVENT(block_rq_with_error, block_rq_abort,
+-
+-	TP_PROTO(struct request_queue *q, struct request *rq),
+-
+-	TP_ARGS(q, rq)
+-);
+-
+-/**
+- * block_rq_requeue - place block IO request back on a queue
+- * @q: queue holding operation
+- * @rq: block IO operation request
+- *
+- * The block operation request @rq is being placed back into queue
+- * @q.  For some reason the request was not completed and needs to be
+- * put back in the queue.
+- */
+-DEFINE_EVENT(block_rq_with_error, block_rq_requeue,
+-
+-	TP_PROTO(struct request_queue *q, struct request *rq),
+-
+-	TP_ARGS(q, rq)
+-);
+-
+-/**
+  * block_rq_complete - block IO operation completed by device driver
+  * @q: queue containing the block operation request
+  * @rq: block operations request
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index b2058a7f94bd..9f3624dadb09 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -716,12 +716,6 @@ static void blk_add_trace_rq(struct request_queue *q, struct request *rq,
+ 			rq->cmd_flags, what, rq->errors, 0, NULL);
+ }
+ 
+-static void blk_add_trace_rq_abort(void *ignore,
+-				   struct request_queue *q, struct request *rq)
+-{
+-	blk_add_trace_rq(q, rq, blk_rq_bytes(rq), BLK_TA_ABORT);
+-}
+-
+ static void blk_add_trace_rq_insert(void *ignore,
+ 				    struct request_queue *q, struct request *rq)
+ {
+@@ -974,8 +968,6 @@ static void blk_register_tracepoints(void)
+ {
+ 	int ret;
+ 
+-	ret = register_trace_block_rq_abort(blk_add_trace_rq_abort, NULL);
+-	WARN_ON(ret);
+ 	ret = register_trace_block_rq_insert(blk_add_trace_rq_insert, NULL);
+ 	WARN_ON(ret);
+ 	ret = register_trace_block_rq_issue(blk_add_trace_rq_issue, NULL);
+@@ -1028,7 +1020,6 @@ static void blk_unregister_tracepoints(void)
+ 	unregister_trace_block_rq_requeue(blk_add_trace_rq_requeue, NULL);
+ 	unregister_trace_block_rq_issue(blk_add_trace_rq_issue, NULL);
+ 	unregister_trace_block_rq_insert(blk_add_trace_rq_insert, NULL);
+-	unregister_trace_block_rq_abort(blk_add_trace_rq_abort, NULL);
+ 
+ 	tracepoint_synchronize_unregister();
+ }
+-- 
+2.11.0
