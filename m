@@ -1,38 +1,52 @@
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: Re: [PATCH 17/25] blk-mq: remove the error argument to
- blk_mq_complete_request
-Date: Tue, 18 Apr 2017 11:06:09 -0400
-Message-ID: <20170418150609.GB12001@char.us.oracle.com>
-References: <20170406153944.10058-1-hch@lst.de>
- <20170406153944.10058-18-hch@lst.de>
- <20170418150321.s7yqpt63reutbs24@dhcp-3-128.uk.xensource.com>
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: Re: [PATCH] scsi: lpfc: fix potential buffer overflow.
+Date: Tue, 18 Apr 2017 11:07:13 -0400
+Message-ID: <1492528033.27344.167.camel@localhost.localdomain>
+References: <1492509351-25441-1-git-send-email-mlombard@redhat.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20349 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754471AbdDRPGr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Apr 2017 11:06:47 -0400
-Content-Disposition: inline
-In-Reply-To: <20170418150321.s7yqpt63reutbs24@dhcp-3-128.uk.xensource.com>
+Received: from mx1.redhat.com ([209.132.183.28]:36898 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753767AbdDRPHP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 18 Apr 2017 11:07:15 -0400
+In-Reply-To: <1492509351-25441-1-git-send-email-mlombard@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Josef Bacik <jbacik@fb.com>, James Smart <james.smart@broadcom.com>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, dm-devel@redhat.com
+To: Maurizio Lombardi <mlombard@redhat.com>
+Cc: james.smart@broadcom.com, dick.kennedy@broadcom.com, linux-scsi@vger.kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 
-On Tue, Apr 18, 2017 at 04:03:21PM +0100, Roger Pau Monné wrote:
-> On Thu, Apr 06, 2017 at 05:39:36PM +0200, Christoph Hellwig wrote:
-> > Now that we always have a ->complete callback we can remove the direct
-> > call to blk_mq_end_request, as well as the error argument to
-> > blk_mq_complete_request.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Tue, 2017-04-18 at 11:55 +0200, Maurizio Lombardi wrote:
+> This patch fixes a potential buffer overflow in lpfc_nvme_info_show().
 > 
-> For blkfront:
+> Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+> ---
+>  drivers/scsi/lpfc/lpfc_attr.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> Acked-by: Roger Pau Monné <roger.pau@citrix.com>
-> 
+> diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+> index 22819af..1ce252f 100644
+> --- a/drivers/scsi/lpfc/lpfc_attr.c
+> +++ b/drivers/scsi/lpfc/lpfc_attr.c
+> @@ -181,7 +181,7 @@
+>  				wwn_to_u64(vport->fc_nodename.u.wwn),
+>  				phba->targetport->port_id);
+>  
+> -		len += snprintf(buf + len, PAGE_SIZE,
+> +		len += snprintf(buf + len, PAGE_SIZE - len,
+>  				"\nNVME Target: Statistics\n");
+>  		tgtp = (struct lpfc_nvmet_tgtport *)phba->targetport->private;
+>  		len += snprintf(buf+len, PAGE_SIZE-len,
+> @@ -326,7 +326,7 @@
+>  	}
+>  	spin_unlock_irq(shost->host_lock);
+>  
+> -	len += snprintf(buf + len, PAGE_SIZE, "\nNVME Statistics\n");
+> +	len += snprintf(buf + len, PAGE_SIZE - len, "\nNVME Statistics\n");
+>  	len += snprintf(buf+len, PAGE_SIZE-len,
+>  			"LS: Xmt %016llx Cmpl %016llx\n",
+>  			phba->fc4NvmeLsRequests,
 
-And also
-Reviewed-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
