@@ -1,22 +1,24 @@
-From: "hch@lst.de" <hch@lst.de>
-Subject: Re: block: add a error_count field to struct request
-Date: Wed, 19 Apr 2017 08:15:19 +0200
-Message-ID: <20170419061519.GC6257@lst.de>
-References: <20170418155229.5977-1-hch@bombadil.infradead.org> <20170418155229.5977-18-hch@bombadil.infradead.org> <1492556229.2689.22.camel@sandisk.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v3 1/2] scsi: scsi_transport_fc: Add dummy initiator role
+ to rport
+Date: Tue, 18 Apr 2017 23:46:46 -0700
+Message-ID: <20170419064646.GA446@infradead.org>
+References: <1492454266-24587-1-git-send-email-cavery@redhat.com>
+ <1492454266-24587-2-git-send-email-cavery@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:42472 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1760031AbdDSGqv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Apr 2017 02:46:51 -0400
 Content-Disposition: inline
-In-Reply-To: <1492556229.2689.22.camel@sandisk.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc: "hch@bombadil.infradead.org" <hch@bombadil.infradead.org>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>, "roger.pau@citrix.com" <roger.pau@citrix.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "jbacik@fb.com" <jbacik@fb.com>, "james.smart@broadcom.com" <james.smart@broadcom.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
+In-Reply-To: <1492454266-24587-2-git-send-email-cavery@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Cathy Avery <cavery@redhat.com>
+Cc: kys@microsoft.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, hch@infradead.org, sthemmin@microsoft.com, haiyangz@microsoft.com, devel@linuxdriverproject.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Apr 18, 2017 at 10:57:11PM +0000, Bart Van Assche wrote:
-> Both blk-mq and the traditional block layer support a .cmd_size field to
-> make the block layer core allocate driver-specific data at the end of struct
-> request. Could that mechanism have been used for the error_count field?
+Looks good,
 
-It could, and that's what I did for the modern drivers.  It would have
-been a bit of a pain for these old floppy drivers, though.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
