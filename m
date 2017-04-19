@@ -1,64 +1,116 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 20/23] ataflop: switch from req->errors to req->error_count
-Date: Wed, 19 Apr 2017 21:27:05 +0200
-Message-ID: <20170419192708.22098-21-hch@lst.de>
+Subject: [PATCH 22/23] blktrace: remove the unused block_rq_abort tracepoint
+Date: Wed, 19 Apr 2017 21:27:07 +0200
+Message-ID: <20170419192708.22098-23-hch@lst.de>
 References: <20170419192708.22098-1-hch@lst.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:35074 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934210AbdDST2P (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Apr 2017 15:28:15 -0400
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170419192708.22098-1-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
 Cc: Josef Bacik <jbacik@fb.com>, James Smart <james.smart@broadcom.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, =?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, dm-devel@redhat.com
+List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/block/ataflop.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+ include/trace/events/block.h | 44 ++++++++++----------------------------------
+ kernel/trace/blktrace.c      |  9 ---------
+ 2 files changed, 10 insertions(+), 43 deletions(-)
 
-diff --git a/drivers/block/ataflop.c b/drivers/block/ataflop.c
-index 2104b1b4ccda..fa69ecd52cb5 100644
---- a/drivers/block/ataflop.c
-+++ b/drivers/block/ataflop.c
-@@ -617,12 +617,12 @@ static void fd_error( void )
- 	if (!fd_request)
- 		return;
+diff --git a/include/trace/events/block.h b/include/trace/events/block.h
+index a88ed13446ff..99ed69fad041 100644
+--- a/include/trace/events/block.h
++++ b/include/trace/events/block.h
+@@ -61,7 +61,16 @@ DEFINE_EVENT(block_buffer, block_dirty_buffer,
+ 	TP_ARGS(bh)
+ );
  
--	fd_request->errors++;
--	if (fd_request->errors >= MAX_ERRORS) {
-+	fd_request->error_count++;
-+	if (fd_request->error_count >= MAX_ERRORS) {
- 		printk(KERN_ERR "fd%d: too many errors.\n", SelectedDrive );
- 		fd_end_request_cur(-EIO);
- 	}
--	else if (fd_request->errors == RECALIBRATE_ERRORS) {
-+	else if (fd_request->error_count == RECALIBRATE_ERRORS) {
- 		printk(KERN_WARNING "fd%d: recalibrating\n", SelectedDrive );
- 		if (SelectedDrive != -1)
- 			SUD.track = -1;
-@@ -1386,7 +1386,7 @@ static void setup_req_params( int drive )
- 	ReqData = ReqBuffer + 512 * ReqCnt;
+-DECLARE_EVENT_CLASS(block_rq_with_error,
++/**
++ * block_rq_requeue - place block IO request back on a queue
++ * @q: queue holding operation
++ * @rq: block IO operation request
++ *
++ * The block operation request @rq is being placed back into queue
++ * @q.  For some reason the request was not completed and needs to be
++ * put back in the queue.
++ */
++TRACE_EVENT(block_rq_requeue,
  
- 	if (UseTrackbuffer)
--		read_track = (ReqCmd == READ && fd_request->errors == 0);
-+		read_track = (ReqCmd == READ && fd_request->error_count == 0);
- 	else
- 		read_track = 0;
+ 	TP_PROTO(struct request_queue *q, struct request *rq),
  
-@@ -1409,8 +1409,10 @@ static struct request *set_next_request(void)
- 			fdc_queue = 0;
- 		if (q) {
- 			rq = blk_fetch_request(q);
--			if (rq)
-+			if (rq) {
-+				rq->error_count = 0;
- 				break;
-+			}
- 		}
- 	} while (fdc_queue != old_pos);
+@@ -94,39 +103,6 @@ DECLARE_EVENT_CLASS(block_rq_with_error,
+ );
  
+ /**
+- * block_rq_abort - abort block operation request
+- * @q: queue containing the block operation request
+- * @rq: block IO operation request
+- *
+- * Called immediately after pending block IO operation request @rq in
+- * queue @q is aborted. The fields in the operation request @rq
+- * can be examined to determine which device and sectors the pending
+- * operation would access.
+- */
+-DEFINE_EVENT(block_rq_with_error, block_rq_abort,
+-
+-	TP_PROTO(struct request_queue *q, struct request *rq),
+-
+-	TP_ARGS(q, rq)
+-);
+-
+-/**
+- * block_rq_requeue - place block IO request back on a queue
+- * @q: queue holding operation
+- * @rq: block IO operation request
+- *
+- * The block operation request @rq is being placed back into queue
+- * @q.  For some reason the request was not completed and needs to be
+- * put back in the queue.
+- */
+-DEFINE_EVENT(block_rq_with_error, block_rq_requeue,
+-
+-	TP_PROTO(struct request_queue *q, struct request *rq),
+-
+-	TP_ARGS(q, rq)
+-);
+-
+-/**
+  * block_rq_complete - block IO operation completed by device driver
+  * @q: queue containing the block operation request
+  * @rq: block operations request
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index b2058a7f94bd..9f3624dadb09 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -716,12 +716,6 @@ static void blk_add_trace_rq(struct request_queue *q, struct request *rq,
+ 			rq->cmd_flags, what, rq->errors, 0, NULL);
+ }
+ 
+-static void blk_add_trace_rq_abort(void *ignore,
+-				   struct request_queue *q, struct request *rq)
+-{
+-	blk_add_trace_rq(q, rq, blk_rq_bytes(rq), BLK_TA_ABORT);
+-}
+-
+ static void blk_add_trace_rq_insert(void *ignore,
+ 				    struct request_queue *q, struct request *rq)
+ {
+@@ -974,8 +968,6 @@ static void blk_register_tracepoints(void)
+ {
+ 	int ret;
+ 
+-	ret = register_trace_block_rq_abort(blk_add_trace_rq_abort, NULL);
+-	WARN_ON(ret);
+ 	ret = register_trace_block_rq_insert(blk_add_trace_rq_insert, NULL);
+ 	WARN_ON(ret);
+ 	ret = register_trace_block_rq_issue(blk_add_trace_rq_issue, NULL);
+@@ -1028,7 +1020,6 @@ static void blk_unregister_tracepoints(void)
+ 	unregister_trace_block_rq_requeue(blk_add_trace_rq_requeue, NULL);
+ 	unregister_trace_block_rq_issue(blk_add_trace_rq_issue, NULL);
+ 	unregister_trace_block_rq_insert(blk_add_trace_rq_insert, NULL);
+-	unregister_trace_block_rq_abort(blk_add_trace_rq_abort, NULL);
+ 
+ 	tracepoint_synchronize_unregister();
+ }
 -- 
 2.11.0
