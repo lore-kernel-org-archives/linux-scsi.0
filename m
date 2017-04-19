@@ -1,93 +1,89 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 03/23] nvme-fc: fix status code handling in nvme_fc_fcpio_done
-Date: Wed, 19 Apr 2017 21:26:48 +0200
-Message-ID: <20170419192708.22098-4-hch@lst.de>
+Subject: [PATCH 05/23] nvme: make nvme_error_status private
+Date: Wed, 19 Apr 2017 21:26:50 +0200
+Message-ID: <20170419192708.22098-6-hch@lst.de>
 References: <20170419192708.22098-1-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:47207 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:43886 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934133AbdDST10 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Apr 2017 15:27:26 -0400
+        with ESMTP id S937839AbdDST1d (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Apr 2017 15:27:33 -0400
 In-Reply-To: <20170419192708.22098-1-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
 Cc: Josef Bacik <jbacik@fb.com>, James Smart <james.smart@broadcom.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, =?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, dm-devel@redhat.com
 
-nvme_complete_async_event expects the little endian status code
-including the phase bit, and a new completion handler I plan to
-introduce will do so as well.
+Currently it's used by the lighnvm passthrough ioctl, but we'd like to make
+it private in preparation of block layer specific error code.  Lighnvm already
+returns the real NVMe status anyway, so I think we can just limit it to
+returning -EIO for any status set.
 
-Change the status variable into the little endian format with the
-phase bit used in the NVMe CQE to fix / enable this.
+This will need a careful audit from the lightnvm folks, though.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/nvme/host/fc.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+ drivers/nvme/host/core.c     | 3 +--
+ drivers/nvme/host/lightnvm.c | 6 +++---
+ drivers/nvme/host/nvme.h     | 1 -
+ 3 files changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/nvme/host/fc.c b/drivers/nvme/host/fc.c
-index fc42172c796a..aad7f9c0be32 100644
---- a/drivers/nvme/host/fc.c
-+++ b/drivers/nvme/host/fc.c
-@@ -1147,7 +1147,7 @@ nvme_fc_fcpio_done(struct nvmefc_fcp_req *req)
- 	struct nvme_fc_ctrl *ctrl = op->ctrl;
- 	struct nvme_fc_queue *queue = op->queue;
- 	struct nvme_completion *cqe = &op->rsp_iu.cqe;
--	u16 status = NVME_SC_SUCCESS;
-+	__le16 status = cpu_to_le16(NVME_SC_SUCCESS << 1);
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index c6f256d74b6b..805f250315ec 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -66,7 +66,7 @@ static DEFINE_SPINLOCK(dev_list_lock);
  
- 	/*
- 	 * WARNING:
-@@ -1182,9 +1182,9 @@ nvme_fc_fcpio_done(struct nvmefc_fcp_req *req)
- 				sizeof(op->rsp_iu), DMA_FROM_DEVICE);
+ static struct class *nvme_class;
  
- 	if (atomic_read(&op->state) == FCPOP_STATE_ABORTED)
--		status = NVME_SC_ABORT_REQ | NVME_SC_DNR;
-+		status = cpu_to_le16((NVME_SC_ABORT_REQ | NVME_SC_DNR) << 1);
- 	else if (freq->status)
--		status = NVME_SC_FC_TRANSPORT_ERROR;
-+		status = cpu_to_le16(NVME_SC_FC_TRANSPORT_ERROR << 1);
- 
- 	/*
- 	 * For the linux implementation, if we have an unsuccesful
-@@ -1212,7 +1212,7 @@ nvme_fc_fcpio_done(struct nvmefc_fcp_req *req)
- 		 */
- 		if (freq->transferred_length !=
- 			be32_to_cpu(op->cmd_iu.data_len)) {
--			status = NVME_SC_FC_TRANSPORT_ERROR;
-+			status = cpu_to_le16(NVME_SC_FC_TRANSPORT_ERROR << 1);
- 			goto done;
- 		}
- 		op->nreq.result.u64 = 0;
-@@ -1229,15 +1229,15 @@ nvme_fc_fcpio_done(struct nvmefc_fcp_req *req)
- 					freq->transferred_length ||
- 			     op->rsp_iu.status_code ||
- 			     op->rqno != le16_to_cpu(cqe->command_id))) {
--			status = NVME_SC_FC_TRANSPORT_ERROR;
-+			status = cpu_to_le16(NVME_SC_FC_TRANSPORT_ERROR << 1);
- 			goto done;
- 		}
- 		op->nreq.result = cqe->result;
--		status = le16_to_cpu(cqe->status) >> 1;
-+		status = cqe->status;
- 		break;
- 
- 	default:
--		status = NVME_SC_FC_TRANSPORT_ERROR;
-+		status = cpu_to_le16(NVME_SC_FC_TRANSPORT_ERROR << 1);
- 		goto done;
+-int nvme_error_status(struct request *req)
++static int nvme_error_status(struct request *req)
+ {
+ 	switch (nvme_req(req)->status & 0x7ff) {
+ 	case NVME_SC_SUCCESS:
+@@ -77,7 +77,6 @@ int nvme_error_status(struct request *req)
+ 		return -EIO;
  	}
+ }
+-EXPORT_SYMBOL_GPL(nvme_error_status);
  
-@@ -1249,7 +1249,7 @@ nvme_fc_fcpio_done(struct nvmefc_fcp_req *req)
- 		return;
- 	}
+ static inline bool nvme_req_needs_retry(struct request *req)
+ {
+diff --git a/drivers/nvme/host/lightnvm.c b/drivers/nvme/host/lightnvm.c
+index f85e6e57d641..7f407d5f0095 100644
+--- a/drivers/nvme/host/lightnvm.c
++++ b/drivers/nvme/host/lightnvm.c
+@@ -599,7 +599,7 @@ static int nvme_nvm_submit_user_cmd(struct request_queue *q,
+ 	__le64 *metadata = NULL;
+ 	dma_addr_t metadata_dma;
+ 	DECLARE_COMPLETION_ONSTACK(wait);
+-	int ret;
++	int ret = 0;
  
--	blk_mq_complete_request(rq, status);
-+	blk_mq_complete_request(rq, le16_to_cpu(status) >> 1);
+ 	rq = nvme_alloc_request(q, (struct nvme_command *)vcmd, 0,
+ 			NVME_QID_ANY);
+@@ -671,8 +671,8 @@ static int nvme_nvm_submit_user_cmd(struct request_queue *q,
+ 
+ 	if (nvme_req(rq)->flags & NVME_REQ_CANCELLED)
+ 		ret = -EINTR;
+-	else
+-		ret = nvme_error_status(rq);
++	else if (nvme_req(rq)->status & 0x7ff)
++		ret = -EIO;
+ 	if (result)
+ 		*result = nvme_req(rq)->status & 0x7ff;
+ 	if (status)
+diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
+index d7330f75632d..550037f5efea 100644
+--- a/drivers/nvme/host/nvme.h
++++ b/drivers/nvme/host/nvme.h
+@@ -254,7 +254,6 @@ static inline void nvme_end_request(struct request *req, __le16 status,
+ 	blk_mq_complete_request(req, 0);
  }
  
- static int
+-int nvme_error_status(struct request *req);
+ void nvme_complete_rq(struct request *req);
+ void nvme_cancel_request(struct request *req, void *data, bool reserved);
+ bool nvme_change_ctrl_state(struct nvme_ctrl *ctrl,
 -- 
 2.11.0
