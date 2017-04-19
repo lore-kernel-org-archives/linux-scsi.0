@@ -1,44 +1,38 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 26/27] scsi: sd: Separate zeroout and discard command
- choices
-Date: Wed, 19 Apr 2017 16:56:31 +0200
-Message-ID: <58c3d6a6-924e-cc86-1907-a9fd02a39c0e@redhat.com>
-References: <20170405172125.22600-1-hch@lst.de>
- <20170405172125.22600-27-hch@lst.de>
+Subject: Re: [PATCH] virtio_scsi: Always try to read VPD pages
+Date: Wed, 19 Apr 2017 16:57:54 +0200
+Message-ID: <b17265f8-60f7-ed39-94b0-016b75e577ee@redhat.com>
+References: <20170413021300.25023-1-david@gibson.dropbear.id.au>
+ <20170413133909.GC13387@stefanha-x1.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170405172125.22600-27-hch@lst.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, lars.ellenberg@linbit.com
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170413133909.GC13387@stefanha-x1.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Stefan Hajnoczi <stefanha@redhat.com>, David Gibson <david@gibson.dropbear.id.au>
+Cc: famz@redhat.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
 
-On 05/04/2017 19:21, Christoph Hellwig wrote:
-> +static ssize_t
-> +zeroing_mode_store(struct device *dev, struct device_attribute *attr,
-> +		   const char *buf, size_t count)
-> +{
-> +	struct scsi_disk *sdkp = to_scsi_disk(dev);
-> +
-> +	if (!capable(CAP_SYS_ADMIN))
-> +		return -EACCES;
-> +
-> +
-> +	if (!strncmp(buf, zeroing_mode[SD_ZERO_WRITE], 20))
-> +		sdkp->zeroing_mode = SD_ZERO_WRITE;
-> +	else if (!strncmp(buf, zeroing_mode[SD_ZERO_WS], 20))
-> +		sdkp->zeroing_mode = SD_ZERO_WS;
-> +	else if (!strncmp(buf, zeroing_mode[SD_ZERO_WS16_UNMAP], 20))
-> +		sdkp->zeroing_mode = SD_ZERO_WS16_UNMAP;
-> +	else if (!strncmp(buf, zeroing_mode[SD_ZERO_WS10_UNMAP], 20))
-> +		sdkp->zeroing_mode = SD_ZERO_WS10_UNMAP;
+On 13/04/2017 15:39, Stefan Hajnoczi wrote:
+> On Thu, Apr 13, 2017 at 12:13:00PM +1000, David Gibson wrote:
+>> @@ -705,6 +706,28 @@ static int virtscsi_device_reset(struct scsi_cmnd *sc)
+>>  	return virtscsi_tmf(vscsi, cmd);
+>>  }
+>>  
+>> +static int virtscsi_device_alloc(struct scsi_device *sdevice)
+>> +{
+>> +	/*
+>> +	 * Passed through SCSI targets (e.g. with qemu's 'scsi-block')
+>> +	 * may have transfer limits which come from the host SCSI
+>> +	 * controller something on the host side other than the target
+> 
+> s/controller something/controller or something/ ?
 
-Should this be conditional on lbprz, lbpws, lbpws10 and max_ws_blocks?
+Acked-by: Paolo Bonzini <pbonzini@redhat.com>
 
-Thanks,
+with this change.
 
 Paolo
