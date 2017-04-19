@@ -1,35 +1,33 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [PATCH] scsi: osd_uld: fix mismerge
-Date: Thu, 20 Apr 2017 09:29:25 +1000
-Message-ID: <20170420092925.400cb477@canb.auug.org.au>
-References: <20170419174415.4029467-1-arnd@arndb.de>
-        <1492624001.2543.9.camel@sandisk.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH v3 8/8] scsi: Implement blk_mq_ops.show_rq()
+Date: Wed, 19 Apr 2017 23:29:55 +0000
+Message-ID: <1492644594.2543.20.camel@sandisk.com>
+References: <20170418232949.5228-1-bart.vanassche@sandisk.com>
+         <20170418232949.5228-9-bart.vanassche@sandisk.com>
+         <yq1efworndq.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <1492624001.2543.9.camel@sandisk.com>
-Sender: linux-next-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc: "arnd@arndb.de" <arnd@arndb.de>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "ooo@electrozaur.com" <ooo@electrozaur.com>, "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "bhalevy@primarydata.com" <bhalevy@primarydata.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Greg KH <greg@kroah.com>, Linux-Next Mailing List <linux-next@vger.kernel.org>
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:27848 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964869AbdDSXaA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Apr 2017 19:30:00 -0400
+In-Reply-To: <yq1efworndq.fsf@oracle.com>
+Content-Language: en-US
+Content-ID: <6B8BC95D1CAEF149951D15773B400001@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "osandov@fb.com" <osandov@fb.com>, "hare@suse.com" <hare@suse.com>, "axboe@kernel.dk" <axboe@kernel.dk>
 
-Hi Bart,
+On Wed, 2017-04-19 at 19:25 -0400, Martin K. Petersen wrote:
+> Bart Van Assche <bart.vanassche@sandisk.com> writes:
+> > Show the SCSI CDB, .eh_eflags and .result for pending SCSI commands
+> > in /sys/kernel/debug/block/*/mq/*/dispatch and */rq_list.
+>=20
+> SCSI_EH_CANCEL_CMD is no more (as of a06586325f37).
 
-On Wed, 19 Apr 2017 17:46:43 +0000 Bart Van Assche <Bart.VanAssche@sandisk.com> wrote:
->
-> On Wed, 2017-04-19 at 19:44 +0200, Arnd Bergmann wrote:
-> > Fixes: c02465fa13b6 ("scsi: osd_uld: Check scsi_device_get() return value")
-> > Fixes: ac1ddc584e98 ("scsi: utilize new cdev_device_add helper function")  
-> 
-> Both these patches are fine as far as I can tell. Shouldn't the
-> "Fixes" tag refer to the merge commit instead of to the commits
-> that have been merged?
+Thanks Martin. I will remove that flag when I repost this patch series.
 
-Unfortunately, the merge commit is redone every day and will be redone
-by Linus during the merge window.  This fix should be incorporated into
-the merge commit itself.  I should have done it originally, but the
-conflict was such a mess that I took the easy way out :-)
--- 
-Cheers,
-Stephen Rothwell
+Bart.=
