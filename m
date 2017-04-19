@@ -1,23 +1,27 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3 1/2] scsi: scsi_transport_fc: Add dummy initiator role
- to rport
-Date: Tue, 18 Apr 2017 23:46:46 -0700
-Message-ID: <20170419064646.GA446@infradead.org>
+Subject: Re: [PATCH v3 2/2] scsi: storvsc: Add support for FC rport.
+Date: Tue, 18 Apr 2017 23:47:03 -0700
+Message-ID: <20170419064703.GB446@infradead.org>
 References: <1492454266-24587-1-git-send-email-cavery@redhat.com>
- <1492454266-24587-2-git-send-email-cavery@redhat.com>
+ <1492454266-24587-3-git-send-email-cavery@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:42472 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1760031AbdDSGqv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Apr 2017 02:46:51 -0400
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
 Content-Disposition: inline
-In-Reply-To: <1492454266-24587-2-git-send-email-cavery@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+In-Reply-To: <1492454266-24587-3-git-send-email-cavery@redhat.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
 To: Cathy Avery <cavery@redhat.com>
-Cc: kys@microsoft.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, hch@infradead.org, sthemmin@microsoft.com, haiyangz@microsoft.com, devel@linuxdriverproject.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: sthemmin@microsoft.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, haiyangz@microsoft.com, linux-kernel@vger.kernel.org, hch@infradead.org, devel@linuxdriverproject.org, jejb@linux.vnet.ibm.com
+List-Id: linux-scsi@vger.kernel.org
 
 Looks good,
 
