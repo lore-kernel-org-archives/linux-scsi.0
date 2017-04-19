@@ -1,37 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v3 0/2] scsi: storvsc: Add support for FC rport
-Date: Wed, 19 Apr 2017 19:14:50 -0400
-Message-ID: <yq1inm0rnv9.fsf@oracle.com>
-References: <1492454266-24587-1-git-send-email-cavery@redhat.com>
+Subject: Re: [PATCH v3 8/8] scsi: Implement blk_mq_ops.show_rq()
+Date: Wed, 19 Apr 2017 19:25:21 -0400
+Message-ID: <yq1efworndq.fsf@oracle.com>
+References: <20170418232949.5228-1-bart.vanassche@sandisk.com>
+        <20170418232949.5228-9-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1492454266-24587-1-git-send-email-cavery@redhat.com> (Cathy
- Avery's message of "Mon, 17 Apr 2017 14:37:44 -0400")
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Cathy Avery <cavery@redhat.com>
-Cc: sthemmin@microsoft.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, haiyangz@microsoft.com, linux-kernel@vger.kernel.org, hch@infradead.org, devel@linuxdriverproject.org, jejb@linux.vnet.ibm.com
+Content-Type: text/plain
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170418232949.5228-9-bart.vanassche@sandisk.com> (Bart Van
+        Assche's message of "Tue, 18 Apr 2017 16:29:49 -0700")
+Sender: linux-block-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Omar Sandoval <osandov@fb.com>, Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+Bart Van Assche <bart.vanassche@sandisk.com> writes:
 
-Cathy,
+Bart,
 
-> The updated patch set provides a way for drivers ( specifically
-> storvsc in this case ) that expose virturalized fc devices
-> but that do not expose rports to be manually scanned. This is
-> done via creating a pseudo rport in storvsc and a
-> corresponding dummy initiator rport role in the fc transport.
+> Show the SCSI CDB, .eh_eflags and .result for pending SCSI commands
+> in /sys/kernel/debug/block/*/mq/*/dispatch and */rq_list.
 
-Applied to 4.12/scsi-queue, thanks!
+SCSI_EH_CANCEL_CMD is no more (as of a06586325f37).
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
