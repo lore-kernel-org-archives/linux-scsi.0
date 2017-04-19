@@ -1,25 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi:cxgb4i: update module description
-Date: Tue, 18 Apr 2017 21:55:38 -0400
-Message-ID: <yq18tmxtb39.fsf@oracle.com>
-References: <1492444961-8396-1-git-send-email-varun@chelsio.com>
+Subject: Re: [PATCH] scsi: lpfc: fix potential buffer overflow.
+Date: Tue, 18 Apr 2017 22:01:31 -0400
+Message-ID: <yq14lxltatg.fsf@oracle.com>
+References: <1492509351-25441-1-git-send-email-mlombard@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39516 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:41169 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758707AbdDSBzo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Apr 2017 21:55:44 -0400
-In-Reply-To: <1492444961-8396-1-git-send-email-varun@chelsio.com> (Varun
-        Prakash's message of "Mon, 17 Apr 2017 21:32:41 +0530")
+        with ESMTP id S1757172AbdDSCBk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Apr 2017 22:01:40 -0400
+In-Reply-To: <1492509351-25441-1-git-send-email-mlombard@redhat.com> (Maurizio
+        Lombardi's message of "Tue, 18 Apr 2017 11:55:51 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Varun Prakash <varun@chelsio.com>
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, indranil@chelsio.com
+To: Maurizio Lombardi <mlombard@redhat.com>
+Cc: james.smart@broadcom.com, dick.kennedy@broadcom.com, linux-scsi@vger.kernel.org, emilne@redhat.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 
-Varun Prakash <varun@chelsio.com> writes:
+Maurizio Lombardi <mlombard@redhat.com> writes:
 
-Applied to 4.12/scsi-queue, thanks!
+> This patch fixes a potential buffer overflow in lpfc_nvme_info_show().
+
+Applied to 4.12/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
