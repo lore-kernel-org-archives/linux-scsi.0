@@ -1,35 +1,37 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] virtio_scsi: Always try to read VPD pages
-Date: Wed, 19 Apr 2017 19:12:56 -0400
-Message-ID: <yq1mvbcrnyf.fsf@oracle.com>
-References: <20170413021300.25023-1-david@gibson.dropbear.id.au>
+Subject: Re: [PATCH v3 0/2] scsi: storvsc: Add support for FC rport
+Date: Wed, 19 Apr 2017 19:14:50 -0400
+Message-ID: <yq1inm0rnv9.fsf@oracle.com>
+References: <1492454266-24587-1-git-send-email-cavery@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:41825 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938359AbdDSXNL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Apr 2017 19:13:11 -0400
-In-Reply-To: <20170413021300.25023-1-david@gibson.dropbear.id.au> (David
-        Gibson's message of "Thu, 13 Apr 2017 12:13:00 +1000")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1492454266-24587-1-git-send-email-cavery@redhat.com> (Cathy
+ Avery's message of "Mon, 17 Apr 2017 14:37:44 -0400")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Cathy Avery <cavery@redhat.com>
+Cc: sthemmin@microsoft.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, haiyangz@microsoft.com, linux-kernel@vger.kernel.org, hch@infradead.org, devel@linuxdriverproject.org, jejb@linux.vnet.ibm.com
 List-Id: linux-scsi@vger.kernel.org
-To: David Gibson <david@gibson.dropbear.id.au>
-Cc: stefanha@redhat.com, pbonzini@redhat.com, famz@redhat.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-David,
+Cathy,
 
-> Passed through SCSI targets may have transfer limits which come from
-> the host SCSI controller something on the host side other than the
-> target itself.
->
-> To make this work properly, the hypervisor can adjust the target's VPD
-> information to advertise these limits.  But for that to work, the
-> guest has to look at the VPD pages, which we won't do by default if it
-> is an SPC-2 device, even if it does actually support it.
+> The updated patch set provides a way for drivers ( specifically
+> storvsc in this case ) that expose virturalized fc devices
+> but that do not expose rports to be manually scanned. This is
+> done via creating a pseudo rport in storvsc and a
+> corresponding dummy initiator rport role in the fc transport.
 
-Applied to 4.12/scsi-queue.
+Applied to 4.12/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
