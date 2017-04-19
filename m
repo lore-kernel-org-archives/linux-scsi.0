@@ -1,74 +1,64 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 17/23] blk-mq: simplify __blk_mq_complete_request
-Date: Wed, 19 Apr 2017 21:27:02 +0200
-Message-ID: <20170419192708.22098-18-hch@lst.de>
+Subject: [PATCH 20/23] ataflop: switch from req->errors to req->error_count
+Date: Wed, 19 Apr 2017 21:27:05 +0200
+Message-ID: <20170419192708.22098-21-hch@lst.de>
 References: <20170419192708.22098-1-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:55221 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:35074 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938703AbdDST2N (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Apr 2017 15:28:13 -0400
+        with ESMTP id S934210AbdDST2P (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Apr 2017 15:28:15 -0400
 In-Reply-To: <20170419192708.22098-1-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
 Cc: Josef Bacik <jbacik@fb.com>, James Smart <james.smart@broadcom.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, =?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, dm-devel@redhat.com
 
-Merge blk_mq_ipi_complete_request and blk_mq_stat_add into their only
-caller.
-
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-mq.c | 25 ++++++++-----------------
- 1 file changed, 8 insertions(+), 17 deletions(-)
+ drivers/block/ataflop.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 0c19df66f5a0..1f98db082da3 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -406,12 +406,19 @@ static void __blk_mq_complete_request_remote(void *data)
- 	rq->q->softirq_done_fn(rq);
- }
- 
--static void blk_mq_ipi_complete_request(struct request *rq)
-+static void __blk_mq_complete_request(struct request *rq)
- {
- 	struct blk_mq_ctx *ctx = rq->mq_ctx;
- 	bool shared = false;
- 	int cpu;
- 
-+	if (rq->internal_tag != -1)
-+		blk_mq_sched_completed_request(rq);
-+	if (rq->rq_flags & RQF_STATS) {
-+		blk_mq_poll_stats_start(rq->q);
-+		blk_stat_add(rq);
-+	}
-+
- 	if (!test_bit(QUEUE_FLAG_SAME_COMP, &rq->q->queue_flags)) {
- 		rq->q->softirq_done_fn(rq);
+diff --git a/drivers/block/ataflop.c b/drivers/block/ataflop.c
+index 2104b1b4ccda..fa69ecd52cb5 100644
+--- a/drivers/block/ataflop.c
++++ b/drivers/block/ataflop.c
+@@ -617,12 +617,12 @@ static void fd_error( void )
+ 	if (!fd_request)
  		return;
-@@ -432,22 +439,6 @@ static void blk_mq_ipi_complete_request(struct request *rq)
- 	put_cpu();
- }
  
--static void blk_mq_stat_add(struct request *rq)
--{
--	if (rq->rq_flags & RQF_STATS) {
--		blk_mq_poll_stats_start(rq->q);
--		blk_stat_add(rq);
--	}
--}
--
--static void __blk_mq_complete_request(struct request *rq)
--{
--	if (rq->internal_tag != -1)
--		blk_mq_sched_completed_request(rq);
--	blk_mq_stat_add(rq);
--	blk_mq_ipi_complete_request(rq);
--}
--
- /**
-  * blk_mq_complete_request - end I/O on a request
-  * @rq:		the request being processed
+-	fd_request->errors++;
+-	if (fd_request->errors >= MAX_ERRORS) {
++	fd_request->error_count++;
++	if (fd_request->error_count >= MAX_ERRORS) {
+ 		printk(KERN_ERR "fd%d: too many errors.\n", SelectedDrive );
+ 		fd_end_request_cur(-EIO);
+ 	}
+-	else if (fd_request->errors == RECALIBRATE_ERRORS) {
++	else if (fd_request->error_count == RECALIBRATE_ERRORS) {
+ 		printk(KERN_WARNING "fd%d: recalibrating\n", SelectedDrive );
+ 		if (SelectedDrive != -1)
+ 			SUD.track = -1;
+@@ -1386,7 +1386,7 @@ static void setup_req_params( int drive )
+ 	ReqData = ReqBuffer + 512 * ReqCnt;
+ 
+ 	if (UseTrackbuffer)
+-		read_track = (ReqCmd == READ && fd_request->errors == 0);
++		read_track = (ReqCmd == READ && fd_request->error_count == 0);
+ 	else
+ 		read_track = 0;
+ 
+@@ -1409,8 +1409,10 @@ static struct request *set_next_request(void)
+ 			fdc_queue = 0;
+ 		if (q) {
+ 			rq = blk_fetch_request(q);
+-			if (rq)
++			if (rq) {
++				rq->error_count = 0;
+ 				break;
++			}
+ 		}
+ 	} while (fdc_queue != old_pos);
+ 
 -- 
 2.11.0
