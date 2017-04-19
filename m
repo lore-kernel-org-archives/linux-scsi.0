@@ -1,56 +1,160 @@
-From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-Date: Wed, 19 Apr 2017 12:41:29 -0600
-Message-ID: <f24888ac-00b8-1830-36f2-edd9587b0e58@deltatee.com>
-References: <20170418164557.GA7181@obsidianresearch.com>
- <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com>
- <20170418190138.GH7181@obsidianresearch.com>
- <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com>
- <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
- <20170418210339.GA24257@obsidianresearch.com>
- <1492564806.25766.124.camel@kernel.crashing.org>
- <20170419155557.GA8497@obsidianresearch.com>
- <4899b011-bdfb-18d8-ef00-33a1516216a6@deltatee.com>
- <CAPcyv4iJ9H8Ykwnjqa2R_D1qG6PsSQmi=QxYH-rKLF_ihrsWyw@mail.gmail.com>
- <20170419173225.GA11255@redhat.com>
- <CAPcyv4gxBgVsbSez7_dZYkZojUWU0X0txs7FxiJ+Z3xsMt6TqQ@mail.gmail.com>
- <c75b6f6e-2814-1be3-d044-e153849263ce@deltatee.com>
- <99a22044-8f15-f381-19ee-e239e9d2da29@deltatee.com>
- <CAPcyv4hPT3hEWC+q+DvQ_1o3rjeXsKmcRZT4GdKj9wFFVhdFpg@mail.gmail.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH v3 3/4] sd: Make synchronize cache upon shutdown
+ asynchronous
+Date: Wed, 19 Apr 2017 18:42:04 +0000
+Message-ID: <1492627323.2543.11.camel@sandisk.com>
+References: <20170417173436.15555-1-bart.vanassche@sandisk.com>
+         <20170417173436.15555-4-bart.vanassche@sandisk.com>
+         <20170418144429.GA28949@bblock-ThinkPad-W530>
+         <1492530984.3306.25.camel@HansenPartnership.com>
+         <1492559235.2689.27.camel@sandisk.com>
+         <1492559772.3306.58.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <CAPcyv4hPT3hEWC+q+DvQ_1o3rjeXsKmcRZT4GdKj9wFFVhdFpg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jerome Glisse <jglisse-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Bjorn Helgaas <helgaas-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm <linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org>, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Content-Type: multipart/mixed;
+        boundary="_003_1492627323254311camelsandiskcom_"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:16794 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966942AbdDSSmI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Apr 2017 14:42:08 -0400
+In-Reply-To: <1492559772.3306.58.camel@HansenPartnership.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "bblock@linux.vnet.ibm.com" <bblock@linux.vnet.ibm.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "maxg@mellanox.com" <maxg@mellanox.com>, "israelr@mellanox.com" <israelr@mellanox.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
+--_003_1492627323254311camelsandiskcom_
+Content-Type: text/plain; charset="iso-8859-1"
+Content-ID: <82863930DF4F3A4EBFF36423BAD9A44E@namprd04.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 
+On Tue, 2017-04-18 at 16:56 -0700, James Bottomley wrote:
+> This means the combined 1/3 3/3 patch looks like this:
+> [ ... ]
 
-On 19/04/17 12:30 PM, Dan Williams wrote:
-> Letting others users do the container_of() arrangement means that
-> struct page_map needs to become public and move into struct
-> dev_pagemap directly.
+Hello James,
 
-Ah, yes, I got a bit turned around by that and failed to notice that
-page_map and dev_pagemap are different. Why is it that dev_pagemap
-contains pretty much the exact same information as page_map? The only
-thing gained that I can see is that the struct resource gains const
-protection...
+The two attached patches pass my tests. How would you like to proceed
+with patch 1/2? Would you like to submit it yourself or is it OK for you
+if I mention you as author and add your Signed-off-by?
 
-> ...I think that encapsulation loss is worth it for the gain of clearly
-> separating the HMM-case from the base case.
+Bart.=
 
-Agreed.
+--_003_1492627323254311camelsandiskcom_
+Content-Type: text/x-patch; name="0001-Introduce-scsi_start_queue.patch"
+Content-Description: 0001-Introduce-scsi_start_queue.patch
+Content-Disposition: attachment;
+	filename="0001-Introduce-scsi_start_queue.patch"; size=2756;
+	creation-date="Wed, 19 Apr 2017 18:42:04 GMT";
+	modification-date="Wed, 19 Apr 2017 18:42:04 GMT"
+Content-ID: <908DF7AF60A12E42A0A736EDBE46FDD9@namprd04.prod.outlook.com>
+Content-Transfer-Encoding: base64
 
-Logan
+RnJvbSBjMzk1Y2UyYWFmNmQ4YTY0NDMxMWY0YzU1ZGZhNmFhNTYwYTkzMjQwIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBCYXJ0IFZhbiBBc3NjaGUgPGJhcnQudmFuYXNzY2hlQHNhbmRp
+c2suY29tPgpEYXRlOiBUdWUsIDI4IE1hciAyMDE3IDE0OjAwOjE3IC0wNzAwClN1YmplY3Q6IFtQ
+QVRDSCAxLzJdIEludHJvZHVjZSBzY3NpX3N0YXJ0X3F1ZXVlKCkKClRoaXMgcGF0Y2ggZG9lcyBu
+b3QgY2hhbmdlIGFueSBmdW5jdGlvbmFsaXR5LgoKU2lnbmVkLW9mZi1ieTogQmFydCBWYW4gQXNz
+Y2hlIDxiYXJ0LnZhbmFzc2NoZUBzYW5kaXNrLmNvbT4KQ2M6IElzcmFlbCBSdWtzaGluIDxpc3Jh
+ZWxyQG1lbGxhbm94LmNvbT4KQ2M6IE1heCBHdXJ0b3ZveSA8bWF4Z0BtZWxsYW5veC5jb20+CkNj
+OiBIYW5uZXMgUmVpbmVja2UgPGhhcmVAc3VzZS5kZT4KQ2M6IEJlbmphbWluIEJsb2NrIDxiYmxv
+Y2tAbGludXgudm5ldC5pYm0uY29tPgotLS0KIGRyaXZlcnMvc2NzaS9zY3NpX2xpYi5jICB8IDI1
+ICsrKysrKysrKysrKysrKy0tLS0tLS0tLS0KIGRyaXZlcnMvc2NzaS9zY3NpX3ByaXYuaCB8ICAx
+ICsKIDIgZmlsZXMgY2hhbmdlZCwgMTYgaW5zZXJ0aW9ucygrKSwgMTAgZGVsZXRpb25zKC0pCgpk
+aWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMgYi9kcml2ZXJzL3Njc2kvc2NzaV9s
+aWIuYwppbmRleCBlZWNjMDA1MDk5YjIuLmZmYTZlNjEyOTlhOSAxMDA2NDQKLS0tIGEvZHJpdmVy
+cy9zY3NpL3Njc2lfbGliLmMKKysrIGIvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMKQEAgLTI5ODcs
+NiArMjk4NywyMCBAQCBzY3NpX2ludGVybmFsX2RldmljZV9ibG9jayhzdHJ1Y3Qgc2NzaV9kZXZp
+Y2UgKnNkZXYsIGJvb2wgd2FpdCkKIH0KIEVYUE9SVF9TWU1CT0xfR1BMKHNjc2lfaW50ZXJuYWxf
+ZGV2aWNlX2Jsb2NrKTsKICAKK3ZvaWQgc2NzaV9zdGFydF9xdWV1ZShzdHJ1Y3Qgc2NzaV9kZXZp
+Y2UgKnNkZXYpCit7CisJc3RydWN0IHJlcXVlc3RfcXVldWUgKnEgPSBzZGV2LT5yZXF1ZXN0X3F1
+ZXVlOworCXVuc2lnbmVkIGxvbmcgZmxhZ3M7CisKKwlpZiAocS0+bXFfb3BzKSB7CisJCWJsa19t
+cV9zdGFydF9zdG9wcGVkX2h3X3F1ZXVlcyhxLCBmYWxzZSk7CisJfSBlbHNlIHsKKwkJc3Bpbl9s
+b2NrX2lycXNhdmUocS0+cXVldWVfbG9jaywgZmxhZ3MpOworCQlibGtfc3RhcnRfcXVldWUocSk7
+CisJCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUocS0+cXVldWVfbG9jaywgZmxhZ3MpOworCX0KK30K
+KwogLyoqCiAgKiBzY3NpX2ludGVybmFsX2RldmljZV91bmJsb2NrIC0gcmVzdW1lIGEgZGV2aWNl
+IGFmdGVyIGEgYmxvY2sgcmVxdWVzdAogICogQHNkZXY6CWRldmljZSB0byByZXN1bWUKQEAgLTMw
+MDcsOSArMzAyMSw2IEBAIGludAogc2NzaV9pbnRlcm5hbF9kZXZpY2VfdW5ibG9jayhzdHJ1Y3Qg
+c2NzaV9kZXZpY2UgKnNkZXYsCiAJCQkgICAgIGVudW0gc2NzaV9kZXZpY2Vfc3RhdGUgbmV3X3N0
+YXRlKQogewotCXN0cnVjdCByZXF1ZXN0X3F1ZXVlICpxID0gc2Rldi0+cmVxdWVzdF9xdWV1ZTsg
+Ci0JdW5zaWduZWQgbG9uZyBmbGFnczsKLQogCS8qCiAJICogVHJ5IHRvIHRyYW5zaXRpb24gdGhl
+IHNjc2kgZGV2aWNlIHRvIFNERVZfUlVOTklORyBvciBvbmUgb2YgdGhlCiAJICogb2ZmbGluZWQg
+c3RhdGVzIGFuZCBnb29zZSB0aGUgZGV2aWNlIHF1ZXVlIGlmIHN1Y2Nlc3NmdWwuCkBAIC0zMDI3
+LDEzICszMDM4LDcgQEAgc2NzaV9pbnRlcm5hbF9kZXZpY2VfdW5ibG9jayhzdHJ1Y3Qgc2NzaV9k
+ZXZpY2UgKnNkZXYsCiAJCSBzZGV2LT5zZGV2X3N0YXRlICE9IFNERVZfT0ZGTElORSkKIAkJcmV0
+dXJuIC1FSU5WQUw7CiAKLQlpZiAocS0+bXFfb3BzKSB7Ci0JCWJsa19tcV9zdGFydF9zdG9wcGVk
+X2h3X3F1ZXVlcyhxLCBmYWxzZSk7Ci0JfSBlbHNlIHsKLQkJc3Bpbl9sb2NrX2lycXNhdmUocS0+
+cXVldWVfbG9jaywgZmxhZ3MpOwotCQlibGtfc3RhcnRfcXVldWUocSk7Ci0JCXNwaW5fdW5sb2Nr
+X2lycXJlc3RvcmUocS0+cXVldWVfbG9jaywgZmxhZ3MpOwotCX0KKwlzY3NpX3N0YXJ0X3F1ZXVl
+KHNkZXYpOwogCiAJcmV0dXJuIDA7CiB9CmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc2NzaV9w
+cml2LmggYi9kcml2ZXJzL3Njc2kvc2NzaV9wcml2LmgKaW5kZXggZjExYmQxMDJkNmQ1Li5jNzYy
+OWUzMWE3NWIgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvc2NzaS9zY3NpX3ByaXYuaAorKysgYi9kcml2
+ZXJzL3Njc2kvc2NzaV9wcml2LmgKQEAgLTg5LDYgKzg5LDcgQEAgZXh0ZXJuIHZvaWQgc2NzaV9y
+dW5faG9zdF9xdWV1ZXMoc3RydWN0IFNjc2lfSG9zdCAqc2hvc3QpOwogZXh0ZXJuIHZvaWQgc2Nz
+aV9yZXF1ZXVlX3J1bl9xdWV1ZShzdHJ1Y3Qgd29ya19zdHJ1Y3QgKndvcmspOwogZXh0ZXJuIHN0
+cnVjdCByZXF1ZXN0X3F1ZXVlICpzY3NpX2FsbG9jX3F1ZXVlKHN0cnVjdCBzY3NpX2RldmljZSAq
+c2Rldik7CiBleHRlcm4gc3RydWN0IHJlcXVlc3RfcXVldWUgKnNjc2lfbXFfYWxsb2NfcXVldWUo
+c3RydWN0IHNjc2lfZGV2aWNlICpzZGV2KTsKK2V4dGVybiB2b2lkIHNjc2lfc3RhcnRfcXVldWUo
+c3RydWN0IHNjc2lfZGV2aWNlICpzZGV2KTsKIGV4dGVybiBpbnQgc2NzaV9tcV9zZXR1cF90YWdz
+KHN0cnVjdCBTY3NpX0hvc3QgKnNob3N0KTsKIGV4dGVybiB2b2lkIHNjc2lfbXFfZGVzdHJveV90
+YWdzKHN0cnVjdCBTY3NpX0hvc3QgKnNob3N0KTsKIGV4dGVybiBpbnQgc2NzaV9pbml0X3F1ZXVl
+KHZvaWQpOwotLSAKMi4xMi4yCgo=
+
+--_003_1492627323254311camelsandiskcom_
+Content-Type: text/x-patch;
+	name="0002-Make-__scsi_remove_device-go-straight-from-BLOCKED-t.patch"
+Content-Description: 0002-Make-__scsi_remove_device-go-straight-from-BLOCKED-t.patch
+Content-Disposition: attachment;
+	filename="0002-Make-__scsi_remove_device-go-straight-from-BLOCKED-t.patch";
+	size=2480; creation-date="Wed, 19 Apr 2017 18:42:04 GMT";
+	modification-date="Wed, 19 Apr 2017 18:42:04 GMT"
+Content-ID: <FB3F95FB0378184B86210ADC13524FCC@namprd04.prod.outlook.com>
+Content-Transfer-Encoding: base64
+
+RnJvbSA1NDBjZDM2ZDc5YTQ2YzYzNDM2ODM2NWQzZjBmNWI4YWRmNGZkNjg3IE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBCYXJ0IFZhbiBBc3NjaGUgPGJhcnQudmFuYXNzY2hlQHNhbmRp
+c2suY29tPgpEYXRlOiBUdWUsIDE4IEFwciAyMDE3IDEwOjExOjAyIC0wNzAwClN1YmplY3Q6IFtQ
+QVRDSCAyLzJdIE1ha2UgX19zY3NpX3JlbW92ZV9kZXZpY2UgZ28gc3RyYWlnaHQgZnJvbSBCTE9D
+S0VEIHRvIERFTAoKSWYgYSBkZXZpY2UgaXMgYmxvY2tlZCwgbWFrZSBfX3Njc2lfcmVtb3ZlX2Rl
+dmljZSgpIGNhdXNlIGl0IHRvCnRyYW5zaXRpb24gdG8gdGhlIERFTCBzdGF0ZS4gVGhpcyBtZWFu
+cyB0aGF0IGFsbCB0aGUgY29tbWFuZHMKaXNzdWVkIGluIC5zaHV0ZG93bigpIHdpbGwgZXJyb3Ig
+aW4gdGhlIG1pZC1sYXllciwgdGh1cyBtYWtpbmcKdGhlIHJlbW92YWwgcHJvY2VlZCB3aXRob3V0
+IGJlaW5nIHN0b3BwZWQuCgpUaGlzIHBhdGNoIGlzIGEgc2xpZ2h0bHkgbW9kaWZpZWQgdmVyc2lv
+biBvZiBhIHBhdGNoIGZyb20gSmFtZXMKQm90dG9tbGV5LgoKU2lnbmVkLW9mZi1ieTogQmFydCBW
+YW4gQXNzY2hlIDxiYXJ0LnZhbmFzc2NoZUBzYW5kaXNrLmNvbT4KQ2M6IEphbWVzIEJvdHRvbWxl
+eSA8SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbT4KQ2M6IElzcmFlbCBSdWtz
+aGluIDxpc3JhZWxyQG1lbGxhbm94LmNvbT4KQ2M6IE1heCBHdXJ0b3ZveSA8bWF4Z0BtZWxsYW5v
+eC5jb20+CkNjOiBIYW5uZXMgUmVpbmVja2UgPGhhcmVAc3VzZS5kZT4KQ2M6IEJlbmphbWluIEJs
+b2NrIDxiYmxvY2tAbGludXgudm5ldC5pYm0uY29tPgotLS0KIGRyaXZlcnMvc2NzaS9zY3NpX2xp
+Yi5jICAgfCAgMiArLQogZHJpdmVycy9zY3NpL3Njc2lfc3lzZnMuYyB8IDE1ICsrKysrKysrKysr
+KystLQogMiBmaWxlcyBjaGFuZ2VkLCAxNCBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQoK
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9zY3NpX2xpYi5jIGIvZHJpdmVycy9zY3NpL3Njc2lf
+bGliLmMKaW5kZXggZmZhNmU2MTI5OWE5Li4zNzZjZDFkYTEwMmMgMTAwNjQ0Ci0tLSBhL2RyaXZl
+cnMvc2NzaS9zY3NpX2xpYi5jCisrKyBiL2RyaXZlcnMvc2NzaS9zY3NpX2xpYi5jCkBAIC0yNjEx
+LDcgKzI2MTEsNiBAQCBzY3NpX2RldmljZV9zZXRfc3RhdGUoc3RydWN0IHNjc2lfZGV2aWNlICpz
+ZGV2LCBlbnVtIHNjc2lfZGV2aWNlX3N0YXRlIHN0YXRlKQogCQljYXNlIFNERVZfUVVJRVNDRToK
+IAkJY2FzZSBTREVWX09GRkxJTkU6CiAJCWNhc2UgU0RFVl9UUkFOU1BPUlRfT0ZGTElORToKLQkJ
+Y2FzZSBTREVWX0JMT0NLOgogCQkJYnJlYWs7CiAJCWRlZmF1bHQ6CiAJCQlnb3RvIGlsbGVnYWw7
+CkBAIC0yNjI1LDYgKzI2MjQsNyBAQCBzY3NpX2RldmljZV9zZXRfc3RhdGUoc3RydWN0IHNjc2lf
+ZGV2aWNlICpzZGV2LCBlbnVtIHNjc2lfZGV2aWNlX3N0YXRlIHN0YXRlKQogCQljYXNlIFNERVZf
+T0ZGTElORToKIAkJY2FzZSBTREVWX1RSQU5TUE9SVF9PRkZMSU5FOgogCQljYXNlIFNERVZfQ0FO
+Q0VMOgorCQljYXNlIFNERVZfQkxPQ0s6CiAJCWNhc2UgU0RFVl9DUkVBVEVEX0JMT0NLOgogCQkJ
+YnJlYWs7CiAJCWRlZmF1bHQ6CmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc2NzaV9zeXNmcy5j
+IGIvZHJpdmVycy9zY3NpL3Njc2lfc3lzZnMuYwppbmRleCA4MmRmZTA3YjFkNDcuLjczMmYxODcz
+ZjJmYiAxMDA2NDQKLS0tIGEvZHJpdmVycy9zY3NpL3Njc2lfc3lzZnMuYworKysgYi9kcml2ZXJz
+L3Njc2kvc2NzaV9zeXNmcy5jCkBAIC0xMjgyLDggKzEyODIsMTkgQEAgdm9pZCBfX3Njc2lfcmVt
+b3ZlX2RldmljZShzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXYpCiAJCXJldHVybjsKIAogCWlmIChz
+ZGV2LT5pc192aXNpYmxlKSB7Ci0JCWlmIChzY3NpX2RldmljZV9zZXRfc3RhdGUoc2RldiwgU0RF
+Vl9DQU5DRUwpICE9IDApCi0JCQlyZXR1cm47CisJCS8qCisJCSAqIElmIGJsb2NrZWQsIHdlIGdv
+IHN0cmFpZ2h0IHRvIERFTCBhbmQgcmVzdGFydCB0aGUgcXVldWUgc28KKwkJICogYW55IGNvbW1h
+bmRzIGlzc3VlZCBkdXJpbmcgZHJpdmVyIHNodXRkb3duIChsaWtlIHN5bmMKKwkJICogY2FjaGUp
+IGFyZSBlcnJvcmVkIGltbWVkaWF0ZWx5LgorCQkgKi8KKwkJaWYgKHNjc2lfZGV2aWNlX3NldF9z
+dGF0ZShzZGV2LCBTREVWX0NBTkNFTCkgIT0gMCkgeworCQkJaWYgKHNjc2lfZGV2aWNlX3NldF9z
+dGF0ZShzZGV2LCBTREVWX0RFTCkgIT0gMCkKKwkJCQlyZXR1cm47CisKKwkJCXNjc2lfc3RhcnRf
+cXVldWUoc2Rldik7CisJCQlzZGV2X3ByaW50ayhLRVJOX0RFQlVHLCBzZGV2LAorCQkJCSAgICAi
+Q2hhbmdlZCBzdGF0ZSBmcm9tIEJMT0NLRUQgdG8gREVMXG4iKTsKKwkJfQogCiAJCWJzZ191bnJl
+Z2lzdGVyX3F1ZXVlKHNkZXYtPnJlcXVlc3RfcXVldWUpOwogCQlkZXZpY2VfdW5yZWdpc3Rlcigm
+c2Rldi0+c2Rldl9kZXYpOwotLSAKMi4xMi4yCgo=
+
+--_003_1492627323254311camelsandiskcom_--
