@@ -1,81 +1,76 @@
-From: Kees Cook <keescook@chromium.org>
-Subject: [PATCH v3] scsi/bfa: use designated initializers
-Date: Thu, 20 Apr 2017 15:00:02 -0700
-Message-ID: <20170420220002.GA65324@beast>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: jsmart2021@gmail.com
+Subject: ["PATCH-v2" 02/22] Fix nvme unregister port timeout.
+Date: Thu, 20 Apr 2017 15:04:28 -0700
+Message-ID: <20170420220448.27095-3-jsmart2021@gmail.com>
+References: <20170420220448.27095-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f42.google.com ([209.85.218.42]:36808 "EHLO
-        mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S947842AbdDTWAF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 18:00:05 -0400
-Received: by mail-oi0-f42.google.com with SMTP id r203so69436878oib.3
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Apr 2017 15:00:05 -0700 (PDT)
-Content-Disposition: inline
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:33090 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S938903AbdDTWFA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 18:05:00 -0400
+Received: by mail-oi0-f68.google.com with SMTP id a189so14131209oib.0
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Apr 2017 15:05:00 -0700 (PDT)
+In-Reply-To: <20170420220448.27095-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, sagi@grimberg.me, martin.petersen@oracle.com
+Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-Prepare to mark sensitive kernel structures for randomization by making
-sure they're using designated initializers. This also initializes the
-array members using the enum used to look up __port_action entries.
+From: James Smart <jsmart2021@gmail.com>
 
-Signed-off-by: Kees Cook <keescook@chromium.org>
+During some link event testing it was observed that the
+wait_for_completion_timeout in the lpfc_nvme_unregister_port
+was timing out all the time.
+
+The initiator is claiming the nvme_fc_unregister_remoteport upcall is
+not completing the unregister in the time allotted.
+[ 2186.151317] lpfc 0000:07:00.0: 0:(0):6169 Unreg nvme wait failed 0
+
+ The wait_for_completion_timeout returns 0 when the wait has
+been outstanding for the jiffies passed by the caller.  In this error
+message, the nvme initiator passed value 5 - meaning 5 jiffies -
+and this is just wrong.
+
+Calculate 5 seconds in Jiffies and pass that value
+from the current jiffies.
+
+Also the log message for the unregister timeout was reduced
+because timeout failure is the same as timeout.
+
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <james.smart@broadcom.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
-v3:
-- drop bfa_module_s changes, since that has been removed entirely; hch.
-- init array with enum literals; hch.
----
- drivers/scsi/bfa/bfa_fcs_lport.c | 31 +++++++++++++++++++++----------
- 1 file changed, 21 insertions(+), 10 deletions(-)
+ drivers/scsi/lpfc/lpfc_nvme.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
-index 4ddda72f60e6..638c0a2857f7 100644
---- a/drivers/scsi/bfa/bfa_fcs_lport.c
-+++ b/drivers/scsi/bfa/bfa_fcs_lport.c
-@@ -89,16 +89,27 @@ static struct {
- 	void		(*online) (struct bfa_fcs_lport_s *port);
- 	void		(*offline) (struct bfa_fcs_lport_s *port);
- } __port_action[] = {
--	{
--	bfa_fcs_lport_unknown_init, bfa_fcs_lport_unknown_online,
--			bfa_fcs_lport_unknown_offline}, {
--	bfa_fcs_lport_fab_init, bfa_fcs_lport_fab_online,
--			bfa_fcs_lport_fab_offline}, {
--	bfa_fcs_lport_n2n_init, bfa_fcs_lport_n2n_online,
--			bfa_fcs_lport_n2n_offline}, {
--	bfa_fcs_lport_loop_init, bfa_fcs_lport_loop_online,
--			bfa_fcs_lport_loop_offline},
--	};
-+	[BFA_FCS_FABRIC_UNKNOWN] = {
-+		.init = bfa_fcs_lport_unknown_init,
-+		.online = bfa_fcs_lport_unknown_online,
-+		.offline = bfa_fcs_lport_unknown_offline
-+	},
-+	[BFA_FCS_FABRIC_SWITCHED] = {
-+		.init = bfa_fcs_lport_fab_init,
-+		.online = bfa_fcs_lport_fab_online,
-+		.offline = bfa_fcs_lport_fab_offline
-+	},
-+	[BFA_FCS_FABRIC_N2N] = {
-+		.init = bfa_fcs_lport_n2n_init,
-+		.online = bfa_fcs_lport_n2n_online,
-+		.offline = bfa_fcs_lport_n2n_offline
-+	},
-+	[BFA_FCS_FABRIC_LOOP] = {
-+		.init = bfa_fcs_lport_loop_init,
-+		.online = bfa_fcs_lport_loop_online,
-+		.offline = bfa_fcs_lport_loop_offline
-+	},
-+};
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index 0024de1..a39d72c 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -2409,6 +2409,7 @@ lpfc_nvme_unregister_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 	struct lpfc_nvme_lport *lport;
+ 	struct lpfc_nvme_rport *rport;
+ 	struct nvme_fc_remote_port *remoteport;
++	unsigned long wait_tmo;
  
- /*
-  *  fcs_port_sm FCS logical port state machine
+ 	localport = vport->localport;
+ 
+@@ -2451,11 +2452,12 @@ lpfc_nvme_unregister_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 		 * before proceeding.  This guarantees the transport and driver
+ 		 * have completed the unreg process.
+ 		 */
+-		ret = wait_for_completion_timeout(&rport->rport_unreg_done, 5);
++		wait_tmo = msecs_to_jiffies(5000);
++		ret = wait_for_completion_timeout(&rport->rport_unreg_done,
++						  wait_tmo);
+ 		if (ret == 0) {
+ 			lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_DISC,
+-					 "6169 Unreg nvme wait failed %d\n",
+-					 ret);
++					 "6169 Unreg nvme wait timeout\n");
+ 		}
+ 	}
+ 	return;
 -- 
-2.7.4
-
-
--- 
-Kees Cook
-Pixel Security
+2.9.3
