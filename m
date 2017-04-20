@@ -1,21 +1,23 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 08/23] scsi: introduce a result field in struct
-        scsi_request
-Date: Thu, 20 Apr 2017 07:17:30 +0200
-Message-ID: <20170420051730.GA10897@lst.de>
-References: <20170419192708.22098-1-hch@lst.de> <20170419192708.22098-9-hch@lst.de> <yq160hzsvkr.fsf@oracle.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/2] scsi: convert unrecovered read error to -EILSEQ
+Date: Wed, 19 Apr 2017 22:37:11 -0700
+Message-ID: <20170420053711.GA10381@infradead.org>
+References: <1491221029-1609-1-git-send-email-dmonakhov@openvz.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:39305 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S941484AbdDTFhM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 01:37:12 -0400
 Content-Disposition: inline
-In-Reply-To: <yq160hzsvkr.fsf@oracle.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Josef Bacik <jbacik@fb.com>, James Smart <james.smart@broadcom.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, dm-devel@redhat.com
+In-Reply-To: <1491221029-1609-1-git-send-email-dmonakhov@openvz.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dmitry Monakhov <dmonakhov@openvz.org>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, Apr 19, 2017 at 09:43:00PM -0400, Martin K. Petersen wrote:
-> Really wish we could just obliterate drivers/ide.
+Looks like I won't get the major error status changes into 4.12,
+so let's go with these patches for now:
 
-Same here.  It's been _the_ major pain point for doing block layer
-heavy lifting for the last 1 or two years.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
