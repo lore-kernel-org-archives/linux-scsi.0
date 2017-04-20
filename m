@@ -1,67 +1,48 @@
-From: kusumi.tomohiro@gmail.com
-Subject: [PATCH 2/2] scsi: ufs: make ufshcd_get_lists_status() register operation obvious
-Date: Thu, 20 Apr 2017 15:01:45 +0300
-Message-ID: <20170420120145.7035-2-tkusumi@tuxera.com>
-References: <20170420120145.7035-1-tkusumi@tuxera.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:33092 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S942853AbdDTMB5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 08:01:57 -0400
-Received: by mail-lf0-f67.google.com with SMTP id 88so5538686lfr.0
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Apr 2017 05:01:56 -0700 (PDT)
-In-Reply-To: <20170420120145.7035-1-tkusumi@tuxera.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Boaz Harrosh <ooo@electrozaur.com>
+Subject: Re: linux-next: manual merge of the scsi-mkp tree with the char-misc
+ tree
+Date: Thu, 20 Apr 2017 16:31:17 +0300
+Message-ID: <1102ca05-a6ea-156e-eddf-1073aa082e66@electrozaur.com>
+References: <20170407153351.0ecafd59@canb.auug.org.au>
+ <47b500d6-0700-812f-dda3-44a14014b66e@sandisk.com>
+ <ba19c6cf-a762-f7f7-6e27-ef64e3e578c1@deltatee.com>
+ <1491594657.2559.24.camel@sandisk.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1491594657.2559.24.camel@sandisk.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>, "logang@deltatee.com" <logang@deltatee.com>, "greg@kroah.com" <greg@kroah.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "arnd@arndb.de" <arnd@arndb.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "openosd@gmail.com" <openosd@gmail.com>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: subhashj@codeaurora.org, vinholikatti@gmail.com, linux-scsi@vger.kernel.org
-Cc: Tomohiro Kusumi <tkusumi@tuxera.com>
 
-From: Tomohiro Kusumi <tkusumi@tuxera.com>
+On 04/07/2017 10:50 PM, Bart Van Assche wrote:
+> On Fri, 2017-04-07 at 13:29 -0600, Logan Gunthorpe wrote:
+>> On 07/04/17 09:49 AM, Bart Van Assche wrote:
+>>> Sorry that I had not yet noticed Logan's patch series. Should my two
+>>> patches that conflict with Logan's patch series be dropped and reworked
+>>> after Logan's patches are upstream?
+>>
+>> Yeah, Greg took my patchset around a few maintainers relatively quickly.
+>> This is the second conflict, so sorry about that. Looks like the easiest
+>> thing would be to just base your change off of mine. It doesn't look too
+>> difficult. If you can do it before my patch hits upstream, I'd
+>> appreciate some testing and/or review as no one from the scsi side
+>> responded and that particular patch was a bit more involved than I would
+>> have liked.
+> 
+> Boaz, had you noticed Logan's osd patch? If not, can you have a look?
+> 
 
-It could be just cmp 0xe instead of >>1 and cmp 0x7, with readable code.
+I did look, I even sent an ACK on one of the early versions.
+The merge breakage is more of a build issue because I never
+had get_device fail for me in my testing so it is more
+academic.
 
-Signed-off-by: Tomohiro Kusumi <tkusumi@tuxera.com>
----
- drivers/scsi/ufs/ufshcd.c | 11 +----------
- drivers/scsi/ufs/ufshci.h |  4 ++++
- 2 files changed, 5 insertions(+), 10 deletions(-)
+Yes they both look fine BTW
+Boaz
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 9278666..ad9532b 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -668,16 +668,7 @@ static inline void ufshcd_outstanding_req_clear(struct ufs_hba *hba, int tag)
-  */
- static inline int ufshcd_get_lists_status(u32 reg)
- {
--	/*
--	 * The mask 0xFF is for the following HCS register bits
--	 * Bit		Description
--	 *  0		Device Present
--	 *  1		UTRLRDY
--	 *  2		UTMRLRDY
--	 *  3		UCRDY
--	 * 4-7		reserved
--	 */
--	return ((reg & 0xFF) >> 1) ^ 0x07;
-+	return !((reg & UFSHCD_STATUS_READY) == (u32)UFSHCD_STATUS_READY);
- }
- 
- /**
-diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-index d14e9b9..8cd4f0e 100644
---- a/drivers/scsi/ufs/ufshci.h
-+++ b/drivers/scsi/ufs/ufshci.h
-@@ -159,6 +159,10 @@ enum {
- #define DEVICE_ERROR_INDICATOR			UFS_BIT(5)
- #define UIC_POWER_MODE_CHANGE_REQ_STATUS_MASK	UFS_MASK(0x7, 8)
- 
-+#define UFSHCD_STATUS_READY	(UTP_TRANSFER_REQ_LIST_READY |\
-+				UTP_TASK_REQ_LIST_READY |\
-+				UIC_COMMAND_READY)
-+
- enum {
- 	PWR_OK		= 0x0,
- 	PWR_LOCAL	= 0x01,
--- 
-2.9.3
+> Thanks,
+> Bart.
+> 
