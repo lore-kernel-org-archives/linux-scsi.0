@@ -1,15 +1,15 @@
 From: jsmart2021@gmail.com
-Subject: ["PATCH-v2" 13/22] Fix nvme initiator handling when not enabled.
-Date: Thu, 20 Apr 2017 15:04:39 -0700
-Message-ID: <20170420220448.27095-14-jsmart2021@gmail.com>
+Subject: ["PATCH-v2" 17/22] Fix max_sgl_segments settings for NVME / NVMET
+Date: Thu, 20 Apr 2017 15:04:43 -0700
+Message-ID: <20170420220448.27095-18-jsmart2021@gmail.com>
 References: <20170420220448.27095-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:33276 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S947914AbdDTWFX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 18:05:23 -0400
-Received: by mail-oi0-f66.google.com with SMTP id a189so14132504oib.0
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Apr 2017 15:05:23 -0700 (PDT)
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:35105 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031205AbdDTWF0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 18:05:26 -0400
+Received: by mail-oi0-f68.google.com with SMTP id m34so5013451oik.2
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Apr 2017 15:05:25 -0700 (PDT)
 In-Reply-To: <20170420220448.27095-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,95 +18,125 @@ Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>
 
 From: James Smart <jsmart2021@gmail.com>
 
-Fix nvme initiator handline when CONFIG_LPFC_NVME_INITIATOR is not enabled.
+Cannot set NVME segment counts to a large number
 
-With update nvme upstream driver sources, loading
-the driver with nvme enabled resulting in this Oops.
+The existing module parameter lpfc_sg_seg_cnt is used for both
+SCSI and NVME.
 
- BUG: unable to handle kernel NULL pointer dereference at 0000000000000018
- IP: lpfc_nvme_update_localport+0x23/0xd0 [lpfc]
- PGD 0
- Oops: 0000 [#1] SMP
- CPU: 0 PID: 10256 Comm: lpfc_worker_0 Tainted
- Hardware name: ...
- task: ffff881028191c40 task.stack: ffff880ffdf00000
- RIP: 0010:lpfc_nvme_update_localport+0x23/0xd0 [lpfc]
- RSP: 0018:ffff880ffdf03c20 EFLAGS: 00010202
-
-Cause: As the initiator driver completes discovery at different stages,
-it call lpfc_nvme_update_localport to hint that the DID and role may have
-changed.  In the implementation of lpfc_nvme_update_localport, the driver
-was not validating the localport or the lport during the execution
-of the update_localport routine.  With the recent upstream additions to
-the driver, the create_localport routine didn't run and so the localport
-was NULL causing the page-fault Oops.
-
-Fix: Add the CONFIG_LPFC_NVME_INITIATOR preprocessor inclusions to
-lpfc_nvme_update_localport to turn off all routine processing when
-the running kernel does not have NVME configured.  Add NULL pointer
-checks on the localport and lport in lpfc_nvme_update_localport and
-dump messages if they are NULL and just exit.
-Also one alingment issue fixed.
-Repalces the ifdef with the IS_ENABLED macro.
+Limit the module parameter lpfc_sg_seg_cnt to 128 with the
+default being 64 for both NVME and NVMET, assuming NVME is enabled in the
+driver for that port. The driver will set max_sgl_segments in the
+NVME/NVMET template to lpfc_sg_seg_cnt + 1.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/lpfc/lpfc_attr.c |  2 +-
- drivers/scsi/lpfc/lpfc_nvme.c | 15 +++++++++++++--
- 2 files changed, 14 insertions(+), 3 deletions(-)
+ drivers/scsi/lpfc/lpfc.h       |  3 ++-
+ drivers/scsi/lpfc/lpfc_nvme.c  | 18 ++++++++++++++----
+ drivers/scsi/lpfc/lpfc_nvmet.c | 19 +++++++++++++++----
+ 3 files changed, 31 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 22819af..4b32d02 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -3335,7 +3335,7 @@ LPFC_ATTR_R(enable_fc4_type, LPFC_ENABLE_FCP,
-  * percentage will go to NVME.
-  */
- LPFC_ATTR_R(xri_split, 50, 10, 90,
--	     "Division of XRI resources between SCSI and NVME");
-+	    "Division of XRI resources between SCSI and NVME");
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index 257bbdd..0fc1450 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -56,7 +56,7 @@ struct lpfc_sli2_slim;
+ #define LPFC_MAX_SG_SEG_CNT	4096	/* sg element count per scsi cmnd */
+ #define LPFC_MAX_SGL_SEG_CNT	512	/* SGL element count per scsi cmnd */
+ #define LPFC_MAX_BPL_SEG_CNT	4096	/* BPL element count per scsi cmnd */
+-#define LPFC_MIN_NVME_SEG_CNT	254
++#define LPFC_MAX_NVME_SEG_CNT	128	/* max SGL element cnt per NVME cmnd */
  
- /*
- # lpfc_log_verbose: Only turn this flag on if you are willing to risk being
+ #define LPFC_MAX_SGE_SIZE       0x80000000 /* Maximum data allowed in a SGE */
+ #define LPFC_IOCB_LIST_CNT	2250	/* list of IOCBs for fast-path usage. */
+@@ -781,6 +781,7 @@ struct lpfc_hba {
+ 	uint32_t cfg_nvmet_fb_size;
+ 	uint32_t cfg_total_seg_cnt;
+ 	uint32_t cfg_sg_seg_cnt;
++	uint32_t cfg_nvme_seg_cnt;
+ 	uint32_t cfg_sg_dma_buf_size;
+ 	uint64_t cfg_soft_wwnn;
+ 	uint64_t cfg_soft_wwpn;
 diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index ee1a285..264da8f 100644
+index cb1e82b..278ae00 100644
 --- a/drivers/scsi/lpfc/lpfc_nvme.c
 +++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -2264,12 +2264,23 @@ lpfc_nvme_destroy_localport(struct lpfc_vport *vport)
- void
- lpfc_nvme_update_localport(struct lpfc_vport *vport)
- {
-+#if (IS_ENABLED(CONFIG_NVME_FC))
- 	struct nvme_fc_local_port *localport;
- 	struct lpfc_nvme_lport *lport;
+@@ -1114,12 +1114,12 @@ lpfc_nvme_prep_io_dma(struct lpfc_vport *vport,
  
- 	localport = vport->localport;
-+	if (!localport) {
-+		lpfc_printf_vlog(vport, KERN_WARNING, LOG_NVME,
-+				 "6710 Update NVME fail. No localport\n");
-+		return;
-+	}
- 	lport = (struct lpfc_nvme_lport *)localport->private;
--
-+	if (!lport) {
-+		lpfc_printf_vlog(vport, KERN_WARNING, LOG_NVME,
-+				 "6171 Update NVME fail. localP %p, No lport\n",
-+				 localport);
-+		return;
-+	}
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME,
- 			 "6012 Update NVME lport %p did x%x\n",
- 			 localport, vport->fc_myDID);
-@@ -2283,7 +2294,7 @@ lpfc_nvme_update_localport(struct lpfc_vport *vport)
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
- 			 "6030 bound lport %p to DID x%06x\n",
- 			 lport, localport->port_id);
--
-+#endif
- }
+ 		first_data_sgl = sgl;
+ 		lpfc_ncmd->seg_cnt = nCmd->sg_cnt;
+-		if (lpfc_ncmd->seg_cnt > phba->cfg_sg_seg_cnt) {
++		if (lpfc_ncmd->seg_cnt > phba->cfg_nvme_seg_cnt) {
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_NVME_IOERR,
+ 					"6058 Too many sg segments from "
+ 					"NVME Transport.  Max %d, "
+ 					"nvmeIO sg_cnt %d\n",
+-					phba->cfg_sg_seg_cnt,
++					phba->cfg_nvme_seg_cnt,
+ 					lpfc_ncmd->seg_cnt);
+ 			lpfc_ncmd->seg_cnt = 0;
+ 			return 1;
+@@ -2158,8 +2158,18 @@ lpfc_nvme_create_localport(struct lpfc_vport *vport)
+ 	nfcp_info.node_name = wwn_to_u64(vport->fc_nodename.u.wwn);
+ 	nfcp_info.port_name = wwn_to_u64(vport->fc_portname.u.wwn);
  
- int
+-	/* For now need + 1 to get around NVME transport logic */
+-	lpfc_nvme_template.max_sgl_segments = phba->cfg_sg_seg_cnt + 1;
++	/* Limit to LPFC_MAX_NVME_SEG_CNT.
++	 * For now need + 1 to get around NVME transport logic.
++	 */
++	if (phba->cfg_sg_seg_cnt > LPFC_MAX_NVME_SEG_CNT) {
++		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME | LOG_INIT,
++				 "6300 Reducing sg segment cnt to %d\n",
++				 LPFC_MAX_NVME_SEG_CNT);
++		phba->cfg_nvme_seg_cnt = LPFC_MAX_NVME_SEG_CNT;
++	} else {
++		phba->cfg_nvme_seg_cnt = phba->cfg_sg_seg_cnt;
++	}
++	lpfc_nvme_template.max_sgl_segments = phba->cfg_nvme_seg_cnt + 1;
+ 	lpfc_nvme_template.max_hw_queues = phba->cfg_nvme_io_channel;
+ 
+ 	/* localport is allocated from the stack, but the registration
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index 8348bb5..d0dda42 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -704,8 +704,19 @@ lpfc_nvmet_create_targetport(struct lpfc_hba *phba)
+ 	pinfo.port_name = wwn_to_u64(vport->fc_portname.u.wwn);
+ 	pinfo.port_id = vport->fc_myDID;
+ 
++	/* Limit to LPFC_MAX_NVME_SEG_CNT.
++	 * For now need + 1 to get around NVME transport logic.
++	 */
++	if (phba->cfg_sg_seg_cnt > LPFC_MAX_NVME_SEG_CNT) {
++		lpfc_printf_log(phba, KERN_INFO, LOG_NVME | LOG_INIT,
++				"6400 Reducing sg segment cnt to %d\n",
++				LPFC_MAX_NVME_SEG_CNT);
++		phba->cfg_nvme_seg_cnt = LPFC_MAX_NVME_SEG_CNT;
++	} else {
++		phba->cfg_nvme_seg_cnt = phba->cfg_sg_seg_cnt;
++	}
++	lpfc_tgttemplate.max_sgl_segments = phba->cfg_nvme_seg_cnt + 1;
+ 	lpfc_tgttemplate.max_hw_queues = phba->cfg_nvme_io_channel;
+-	lpfc_tgttemplate.max_sgl_segments = phba->cfg_sg_seg_cnt + 1;
+ 	lpfc_tgttemplate.target_features = NVMET_FCTGTFEAT_READDATA_RSP |
+ 					   NVMET_FCTGTFEAT_NEEDS_CMD_CPUSCHED |
+ 					   NVMET_FCTGTFEAT_CMD_IN_ISR |
+@@ -1278,11 +1289,11 @@ lpfc_nvmet_prep_fcp_wqe(struct lpfc_hba *phba,
+ 		return NULL;
+ 	}
+ 
+-	if (rsp->sg_cnt > phba->cfg_sg_seg_cnt) {
++	if (rsp->sg_cnt > phba->cfg_nvme_seg_cnt) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_NVME_IOERR,
+ 				"6109 lpfc_nvmet_prep_fcp_wqe: seg cnt err: "
+-				"NPORT x%x oxid:x%x\n",
+-				ctxp->sid, ctxp->oxid);
++				"NPORT x%x oxid:x%x cnt %d\n",
++				ctxp->sid, ctxp->oxid, phba->cfg_nvme_seg_cnt);
+ 		return NULL;
+ 	}
+ 
 -- 
 2.9.3
