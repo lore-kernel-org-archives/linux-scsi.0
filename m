@@ -1,41 +1,39 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: commit 1b6ac5e3f "fnic: Using rport->dd_data to check rport online instead of rport_lookup."
-Date: Wed, 19 Apr 2017 22:27:04 -0400
-Message-ID: <yq137d3reyv.fsf@oracle.com>
-References: <58DDA49B.6000300@oracle.com>
+Subject: Re: [PATCH V2] scsi: mpt3sas: remove redundant wmb
+Date: Wed, 19 Apr 2017 22:28:30 -0400
+Message-ID: <yq1y3uvq0c1.fsf@oracle.com>
+References: <1491591978-17880-1-git-send-email-okaya@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:19345 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:19796 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966736AbdDTC1O (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Apr 2017 22:27:14 -0400
-In-Reply-To: <58DDA49B.6000300@oracle.com> (Joe Jin's message of "Fri, 31 Mar
-        2017 08:36:43 +0800")
+        with ESMTP id S966609AbdDTC3G (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Apr 2017 22:29:06 -0400
+In-Reply-To: <1491591978-17880-1-git-send-email-okaya@codeaurora.org> (Sinan
+        Kaya's message of "Fri, 7 Apr 2017 15:06:18 -0400")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: satishkh@cisco.com
-Cc: Joe Jin <joe.jin@oracle.com>, linux-scsi@vger.kernel.org
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-scsi@vger.kernel.org, timur@codeaurora.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:LSILOGIC MPT FUSION DRIVERS
+        FC/SAS/SPI" <MPT-FusionLinux.pdl@broadcom.com>, open list <linux-kernel@vger.kernel.org>
 
-Joe Jin <joe.jin@oracle.com> writes:
+Sinan Kaya <okaya@codeaurora.org> writes:
 
-> My customer hit below error when issue LIP to fnic controller:
+> Due to relaxed ordering requirements on multiple architectures,
+> drivers are required to use wmb/rmb/mb combinations when they need to
+> guarantee observability between the memory and the HW.
 >
-> [94702.898408] sd 2:0:4:1: [sdx] tag#1 FAILED Result:
-> hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
-> [94702.898416] sd 2:0:4:1: [sdx] tag#1 CDB: Write(10) 2a 00 04 56 c0 08 00 00 08 00
-> [94702.898420] blk_update_request: I/O error, dev sdx, sector 72794120
-> [94702.898455] sd 2:0:4:10: [sdy] tag#2 FAILED Result:
-> hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
-> [94702.898459] sd 2:0:4:10: [sdy] tag#2 CDB: Read(10) 28 00 00 00 08 a8 00 00 02 00
-> [94702.898462] blk_update_request: I/O error, dev sdy, sector 2216
+> The mpt3sas driver is already using wmb() for this purpose.  However,
+> it issues a writel following wmb(). writel() function on arm/arm64
+> arhictectures have an embedded wmb() call inside.
 >
-> Looked at all changes of fnic I found it caused by commit 1b6ac5e3f "fnic: 
-> Using rport->dd_data to check rport online instead of rport_lookup.", a 
-> question is why changed state check from RPORT_ST_DELETE to RPORT_ST_READY
-> here?
+> This results in unnecessary performance loss and code duplication.
+>
+> writel already guarantees ordering for both cpu and bus. we don't need
+> additional wmb()
 
-Satish?
+Broadcom folks, please review!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
