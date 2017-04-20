@@ -1,22 +1,25 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 10/23] null_blk: don't pass always-0 req->errors to
+Subject: Re: [PATCH 11/23] dm rq: don't pass irrelevant error code to
  blk_mq_complete_request
-Date: Thu, 20 Apr 2017 17:02:37 +0200
-Message-ID: <20170420150237.GJ13676@linux-x5ow.site>
+Date: Thu, 20 Apr 2017 17:04:21 +0200
+Message-ID: <20170420150421.GK13676@linux-x5ow.site>
 References: <20170420140316.6546-1-hch@lst.de>
- <20170420140316.6546-11-hch@lst.de>
+ <20170420140316.6546-12-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170420140316.6546-11-hch@lst.de>
+In-Reply-To: <20170420140316.6546-12-hch@lst.de>
 Sender: linux-block-owner@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
 Cc: Jens Axboe <axboe@kernel.dk>, Josef Bacik <jbacik@fb.com>, James Smart <james.smart@broadcom.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Apr 20, 2017 at 04:03:03PM +0200, Christoph Hellwig wrote:
+On Thu, Apr 20, 2017 at 04:03:04PM +0200, Christoph Hellwig wrote:
+> dm never uses rq->errors, so there is no need to pass an error argument
+> to blk_mq_complete_request.
+> 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
 
