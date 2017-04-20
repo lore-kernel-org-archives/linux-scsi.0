@@ -1,27 +1,22 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 12/23] dm mpath: don't check for req->errors
-Date: Thu, 20 Apr 2017 17:04:39 +0200
-Message-ID: <20170420150439.GL13676@linux-x5ow.site>
+Subject: Re: [PATCH 14/23] mtip32xx: add a status field to struct mtip_cmd
+Date: Thu, 20 Apr 2017 17:13:36 +0200
+Message-ID: <20170420151335.GM13676@linux-x5ow.site>
 References: <20170420140316.6546-1-hch@lst.de>
- <20170420140316.6546-13-hch@lst.de>
+ <20170420140316.6546-15-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46166 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S942489AbdDTPEn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 20 Apr 2017 11:04:43 -0400
+Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170420140316.6546-13-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+In-Reply-To: <20170420140316.6546-15-hch@lst.de>
+Sender: linux-block-owner@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
 Cc: Jens Axboe <axboe@kernel.dk>, Josef Bacik <jbacik@fb.com>, James Smart <james.smart@broadcom.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, dm-devel@redhat.com
+List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Apr 20, 2017 at 04:03:05PM +0200, Christoph Hellwig wrote:
-> We'll get all proper errors reported through ->end_io and ->errors will
-> go away soon.
+On Thu, Apr 20, 2017 at 04:03:07PM +0200, Christoph Hellwig wrote:
+> Instead of using req->errors, which will go away.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
