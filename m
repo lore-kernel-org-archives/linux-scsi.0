@@ -1,30 +1,30 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH-v1 07/22] Remove unused defines for NVME PostBuf.
-Date: Thu, 20 Apr 2017 09:34:21 +0200
-Message-ID: <20170420073421.GH6217@linux-x5ow.site>
+Subject: Re: [PATCH-v1 08/22] Remove NULL ptr check before kfree.
+Date: Thu, 20 Apr 2017 09:34:58 +0200
+Message-ID: <20170420073458.GI6217@linux-x5ow.site>
 References: <20170420044641.10657-1-jsmart2021@gmail.com>
- <20170420044641.10657-8-jsmart2021@gmail.com>
+ <20170420044641.10657-9-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48267 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:48310 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S938925AbdDTHeY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 20 Apr 2017 03:34:24 -0400
+        id S1764621AbdDTHfC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 20 Apr 2017 03:35:02 -0400
 Content-Disposition: inline
-In-Reply-To: <20170420044641.10657-8-jsmart2021@gmail.com>
+In-Reply-To: <20170420044641.10657-9-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jsmart2021@gmail.com
 Cc: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, sagi@grimberg.me, martin.petersen@oracle.com, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-On Wed, Apr 19, 2017 at 09:46:26PM -0700, jsmart2021@gmail.com wrote:
+On Wed, Apr 19, 2017 at 09:46:27PM -0700, jsmart2021@gmail.com wrote:
 > From: James Smart <jsmart2021@gmail.com>
 > 
-> These defines for the posting of buffers for nvmet target were not used.
+> The check for NULL ptr is not necessary, kfree will check it.
 > 
-> Removing the unused defines.
+> Removing NULL ptr check.
 > 
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
