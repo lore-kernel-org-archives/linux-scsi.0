@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 19/23] floppy: switch from req->errors to req->error_count
-Date: Thu, 20 Apr 2017 16:03:12 +0200
-Message-ID: <20170420140316.6546-20-hch@lst.de>
+Subject: [PATCH 20/23] ataflop: switch from req->errors to req->error_count
+Date: Thu, 20 Apr 2017 16:03:13 +0200
+Message-ID: <20170420140316.6546-21-hch@lst.de>
 References: <20170420140316.6546-1-hch@lst.de>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170420140316.6546-1-hch@lst.de>
@@ -12,33 +12,49 @@ List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/block/floppy.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/block/ataflop.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/block/floppy.c b/drivers/block/floppy.c
-index ce102ec47ef2..60d4c7653178 100644
---- a/drivers/block/floppy.c
-+++ b/drivers/block/floppy.c
-@@ -2805,8 +2805,10 @@ static int set_next_request(void)
+diff --git a/drivers/block/ataflop.c b/drivers/block/ataflop.c
+index 2104b1b4ccda..fa69ecd52cb5 100644
+--- a/drivers/block/ataflop.c
++++ b/drivers/block/ataflop.c
+@@ -617,12 +617,12 @@ static void fd_error( void )
+ 	if (!fd_request)
+ 		return;
+ 
+-	fd_request->errors++;
+-	if (fd_request->errors >= MAX_ERRORS) {
++	fd_request->error_count++;
++	if (fd_request->error_count >= MAX_ERRORS) {
+ 		printk(KERN_ERR "fd%d: too many errors.\n", SelectedDrive );
+ 		fd_end_request_cur(-EIO);
+ 	}
+-	else if (fd_request->errors == RECALIBRATE_ERRORS) {
++	else if (fd_request->error_count == RECALIBRATE_ERRORS) {
+ 		printk(KERN_WARNING "fd%d: recalibrating\n", SelectedDrive );
+ 		if (SelectedDrive != -1)
+ 			SUD.track = -1;
+@@ -1386,7 +1386,7 @@ static void setup_req_params( int drive )
+ 	ReqData = ReqBuffer + 512 * ReqCnt;
+ 
+ 	if (UseTrackbuffer)
+-		read_track = (ReqCmd == READ && fd_request->errors == 0);
++		read_track = (ReqCmd == READ && fd_request->error_count == 0);
+ 	else
+ 		read_track = 0;
+ 
+@@ -1409,8 +1409,10 @@ static struct request *set_next_request(void)
  			fdc_queue = 0;
  		if (q) {
- 			current_req = blk_fetch_request(q);
--			if (current_req)
-+			if (current_req) {
-+				current_req->error_count = 0;
+ 			rq = blk_fetch_request(q);
+-			if (rq)
++			if (rq) {
++				rq->error_count = 0;
  				break;
 +			}
  		}
  	} while (fdc_queue != old_pos);
  
-@@ -2866,7 +2868,7 @@ static void redo_fd_request(void)
- 		_floppy = floppy_type + DP->autodetect[DRS->probed_format];
- 	} else
- 		probing = 0;
--	errors = &(current_req->errors);
-+	errors = &(current_req->error_count);
- 	tmp = make_raw_rw_request();
- 	if (tmp < 2) {
- 		request_done(tmp);
 -- 
 2.11.0
