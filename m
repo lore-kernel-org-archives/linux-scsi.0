@@ -1,15 +1,15 @@
 From: jsmart2021@gmail.com
-Subject: [PATCH-v1 15/22] Fix driver load issues when MRQ=8
-Date: Wed, 19 Apr 2017 21:46:34 -0700
-Message-ID: <20170420044641.10657-16-jsmart2021@gmail.com>
+Subject: [PATCH-v1 17/22] Fix max_sgl_segments settings for NVME / NVMET
+Date: Wed, 19 Apr 2017 21:46:36 -0700
+Message-ID: <20170420044641.10657-18-jsmart2021@gmail.com>
 References: <20170420044641.10657-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:35362 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S941145AbdDTErU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 00:47:20 -0400
-Received: by mail-oi0-f67.google.com with SMTP id g11so5673961oib.2
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Apr 2017 21:47:20 -0700 (PDT)
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:33340 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S941167AbdDTErZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 00:47:25 -0400
+Received: by mail-oi0-f68.google.com with SMTP id a189so5684852oib.0
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Apr 2017 21:47:24 -0700 (PDT)
 In-Reply-To: <20170420044641.10657-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,168 +18,127 @@ Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>
 
 From: James Smart <jsmart2021@gmail.com>
 
-The symptom is that the driver will fail to login to the fabric.
-The reason is because it is out of iocb resources.
+Cannot set NVME segment counts to a large number
 
-There is a one to one relationship between MRQs
-(receive buffers for NVMET-FC) and iocbs and the default number of
-IOCBs was not accounting for the number of MRQs that were being created.
+The existing module parameter lpfc_sg_seg_cnt is used for both
+SCSI and NVME.
 
-This fix aligns the number of MRQ resources with the total resources so
-that it can handle fabric events when needed.
+Limit the module parameter lpfc_sg_seg_cnt to 128 with the
+default being 64 for both NVME and NVMET, assuming NVME is enabled in the
+driver for that port. The driver will set max_sgl_segments in the
+NVME/NVMET template to lpfc_sg_seg_cnt + 1.
 
-Also the initialization of ctxlock to be on FCP commands, NOT LS commands.
-And modified log messages so that the log output can be correlated with
-the analyzer trace.
+Looks good,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_init.c  | 12 ++++++++----
- drivers/scsi/lpfc/lpfc_nvme.c  | 23 ++++++++++++-----------
- drivers/scsi/lpfc/lpfc_nvmet.c |  6 +++---
- 3 files changed, 23 insertions(+), 18 deletions(-)
+ drivers/scsi/lpfc/lpfc.h       |  3 ++-
+ drivers/scsi/lpfc/lpfc_nvme.c  | 18 ++++++++++++++----
+ drivers/scsi/lpfc/lpfc_nvmet.c | 19 +++++++++++++++----
+ 3 files changed, 31 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index cca7f81..88977b8 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -11061,7 +11061,7 @@ lpfc_pci_probe_one_s4(struct pci_dev *pdev, const struct pci_device_id *pid)
- 	struct lpfc_hba   *phba;
- 	struct lpfc_vport *vport = NULL;
- 	struct Scsi_Host  *shost = NULL;
--	int error;
-+	int error, cnt;
- 	uint32_t cfg_mode, intr_mode;
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index 257bbdd..0fc1450 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -56,7 +56,7 @@ struct lpfc_sli2_slim;
+ #define LPFC_MAX_SG_SEG_CNT	4096	/* sg element count per scsi cmnd */
+ #define LPFC_MAX_SGL_SEG_CNT	512	/* SGL element count per scsi cmnd */
+ #define LPFC_MAX_BPL_SEG_CNT	4096	/* BPL element count per scsi cmnd */
+-#define LPFC_MIN_NVME_SEG_CNT	254
++#define LPFC_MAX_NVME_SEG_CNT	128	/* max SGL element cnt per NVME cmnd */
  
- 	/* Allocate memory for HBA structure */
-@@ -11095,11 +11095,15 @@ lpfc_pci_probe_one_s4(struct pci_dev *pdev, const struct pci_device_id *pid)
- 		goto out_unset_pci_mem_s4;
- 	}
- 
-+	cnt = phba->cfg_iocb_cnt * 1024;
-+	if (phba->nvmet_support)
-+		cnt += (phba->cfg_nvmet_mrq_post * phba->cfg_nvmet_mrq);
-+
- 	/* Initialize and populate the iocb list per host */
- 	lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
--			"2821 initialize iocb list %d.\n",
--			phba->cfg_iocb_cnt*1024);
--	error = lpfc_init_iocb_list(phba, phba->cfg_iocb_cnt*1024);
-+			"2821 initialize iocb list %d total %d\n",
-+			phba->cfg_iocb_cnt, cnt);
-+	error = lpfc_init_iocb_list(phba, cnt);
- 
- 	if (error) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ #define LPFC_MAX_SGE_SIZE       0x80000000 /* Maximum data allowed in a SGE */
+ #define LPFC_IOCB_LIST_CNT	2250	/* list of IOCBs for fast-path usage. */
+@@ -781,6 +781,7 @@ struct lpfc_hba {
+ 	uint32_t cfg_nvmet_fb_size;
+ 	uint32_t cfg_total_seg_cnt;
+ 	uint32_t cfg_sg_seg_cnt;
++	uint32_t cfg_nvme_seg_cnt;
+ 	uint32_t cfg_sg_dma_buf_size;
+ 	uint64_t cfg_soft_wwnn;
+ 	uint64_t cfg_soft_wwpn;
 diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index f23496b..efe1242 100644
+index efe1242..1a83ade 100644
 --- a/drivers/scsi/lpfc/lpfc_nvme.c
 +++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -1494,6 +1494,7 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
- 				 "io buffer.  Skipping abort req.\n");
- 		return;
- 	}
-+	nvmereq_wqe = &lpfc_nbuf->cur_iocbq;
+@@ -1113,12 +1113,12 @@ lpfc_nvme_prep_io_dma(struct lpfc_vport *vport,
  
- 	/*
- 	 * The lpfc_nbuf and the mapped nvme_fcreq in the driver's
-@@ -1507,20 +1508,19 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME,
- 				 "6143 NVME req mismatch: "
- 				 "lpfc_nbuf %p nvmeCmd %p, "
--				 "pnvme_fcreq %p.  Skipping Abort\n",
-+				 "pnvme_fcreq %p.  Skipping Abort xri x%x\n",
- 				 lpfc_nbuf, lpfc_nbuf->nvmeCmd,
--				 pnvme_fcreq);
-+				 pnvme_fcreq, nvmereq_wqe->sli4_xritag);
- 		return;
- 	}
+ 		first_data_sgl = sgl;
+ 		lpfc_ncmd->seg_cnt = nCmd->sg_cnt;
+-		if (lpfc_ncmd->seg_cnt > phba->cfg_sg_seg_cnt) {
++		if (lpfc_ncmd->seg_cnt > phba->cfg_nvme_seg_cnt) {
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_NVME_IOERR,
+ 					"6058 Too many sg segments from "
+ 					"NVME Transport.  Max %d, "
+ 					"nvmeIO sg_cnt %d\n",
+-					phba->cfg_sg_seg_cnt,
++					phba->cfg_nvme_seg_cnt,
+ 					lpfc_ncmd->seg_cnt);
+ 			lpfc_ncmd->seg_cnt = 0;
+ 			return 1;
+@@ -2157,8 +2157,18 @@ lpfc_nvme_create_localport(struct lpfc_vport *vport)
+ 	nfcp_info.node_name = wwn_to_u64(vport->fc_nodename.u.wwn);
+ 	nfcp_info.port_name = wwn_to_u64(vport->fc_portname.u.wwn);
  
- 	/* Don't abort IOs no longer on the pending queue. */
--	nvmereq_wqe = &lpfc_nbuf->cur_iocbq;
- 	if (!(nvmereq_wqe->iocb_flag & LPFC_IO_ON_TXCMPLQ)) {
- 		spin_unlock_irqrestore(&phba->hbalock, flags);
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME,
- 				 "6142 NVME IO req %p not queued - skipping "
--				 "abort req\n",
--				 pnvme_fcreq);
-+				 "abort req xri x%x\n",
-+				 pnvme_fcreq, nvmereq_wqe->sli4_xritag);
- 		return;
- 	}
+-	/* For now need + 1 to get around NVME transport logic */
+-	lpfc_nvme_template.max_sgl_segments = phba->cfg_sg_seg_cnt + 1;
++	/* Limit to LPFC_MAX_NVME_SEG_CNT.
++	 * For now need + 1 to get around NVME transport logic.
++	 */
++	if (phba->cfg_sg_seg_cnt > LPFC_MAX_NVME_SEG_CNT) {
++		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME | LOG_INIT,
++				 "6300 Reducing sg segment cnt to %d\n",
++				 LPFC_MAX_NVME_SEG_CNT);
++		phba->cfg_nvme_seg_cnt = LPFC_MAX_NVME_SEG_CNT;
++	} else {
++		phba->cfg_nvme_seg_cnt = phba->cfg_sg_seg_cnt;
++	}
++	lpfc_nvme_template.max_sgl_segments = phba->cfg_nvme_seg_cnt + 1;
+ 	lpfc_nvme_template.max_hw_queues = phba->cfg_nvme_io_channel;
  
-@@ -1534,8 +1534,9 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME,
- 				 "6144 Outstanding NVME I/O Abort Request "
- 				 "still pending on nvme_fcreq %p, "
--				 "lpfc_ncmd %p\n",
--				 pnvme_fcreq, lpfc_nbuf);
-+				 "lpfc_ncmd %p xri x%x\n",
-+				 pnvme_fcreq, lpfc_nbuf,
-+				 nvmereq_wqe->sli4_xritag);
- 		return;
- 	}
- 
-@@ -1544,8 +1545,8 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
- 		spin_unlock_irqrestore(&phba->hbalock, flags);
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME,
- 				 "6136 No available abort wqes. Skipping "
--				 "Abts req for nvme_fcreq %p.\n",
--				 pnvme_fcreq);
-+				 "Abts req for nvme_fcreq %p xri x%x\n",
-+				 pnvme_fcreq, nvmereq_wqe->sli4_xritag);
- 		return;
- 	}
- 
-@@ -1603,7 +1604,7 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
- 	}
- 
- 	lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME,
--			 "6138 Transport Abort NVME Request Issued for\n"
-+			 "6138 Transport Abort NVME Request Issued for "
- 			 "ox_id x%x on reqtag x%x\n",
- 			 nvmereq_wqe->sli4_xritag,
- 			 abts_buf->iotag);
-@@ -2490,7 +2491,7 @@ lpfc_nvme_unregister_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
-  input_err:
- #endif
- 	lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_DISC,
--			 "6168: State error: lport %p, rport%p FCID x%06x\n",
-+			 "6168 State error: lport %p, rport%p FCID x%06x\n",
- 			 vport->localport, ndlp->rport, ndlp->nlp_DID);
- }
- 
+ 	/* localport is allocated from the stack, but the registration
 diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index 5a994a8..8348bb5 100644
+index 8348bb5..d0dda42 100644
 --- a/drivers/scsi/lpfc/lpfc_nvmet.c
 +++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -872,7 +872,6 @@ dropit:
- 	ctxp->wqeq = NULL;
- 	ctxp->state = LPFC_NVMET_STE_RCV;
- 	ctxp->rqb_buffer = (void *)nvmebuf;
--	spin_lock_init(&ctxp->ctxlock);
+@@ -704,8 +704,19 @@ lpfc_nvmet_create_targetport(struct lpfc_hba *phba)
+ 	pinfo.port_name = wwn_to_u64(vport->fc_portname.u.wwn);
+ 	pinfo.port_id = vport->fc_myDID;
  
- 	lpfc_nvmeio_data(phba, "NVMET LS   RCV: xri x%x sz %d from %06x\n",
- 			 oxid, size, sid);
-@@ -981,6 +980,7 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
- 	ctxp->rqb_buffer = nvmebuf;
- 	ctxp->entry_cnt = 1;
- 	ctxp->flag = 0;
-+	spin_lock_init(&ctxp->ctxlock);
- 
- #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
- 	if (phba->ktime_on) {
-@@ -1003,8 +1003,8 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
++	/* Limit to LPFC_MAX_NVME_SEG_CNT.
++	 * For now need + 1 to get around NVME transport logic.
++	 */
++	if (phba->cfg_sg_seg_cnt > LPFC_MAX_NVME_SEG_CNT) {
++		lpfc_printf_log(phba, KERN_INFO, LOG_NVME | LOG_INIT,
++				"6400 Reducing sg segment cnt to %d\n",
++				LPFC_MAX_NVME_SEG_CNT);
++		phba->cfg_nvme_seg_cnt = LPFC_MAX_NVME_SEG_CNT;
++	} else {
++		phba->cfg_nvme_seg_cnt = phba->cfg_sg_seg_cnt;
++	}
++	lpfc_tgttemplate.max_sgl_segments = phba->cfg_nvme_seg_cnt + 1;
+ 	lpfc_tgttemplate.max_hw_queues = phba->cfg_nvme_io_channel;
+-	lpfc_tgttemplate.max_sgl_segments = phba->cfg_sg_seg_cnt + 1;
+ 	lpfc_tgttemplate.target_features = NVMET_FCTGTFEAT_READDATA_RSP |
+ 					   NVMET_FCTGTFEAT_NEEDS_CMD_CPUSCHED |
+ 					   NVMET_FCTGTFEAT_CMD_IN_ISR |
+@@ -1278,11 +1289,11 @@ lpfc_nvmet_prep_fcp_wqe(struct lpfc_hba *phba,
+ 		return NULL;
  	}
- #endif
  
--	lpfc_nvmeio_data(phba, "NVMET FCP  RCV: xri x%x sz %d from %06x\n",
--			 oxid, size, sid);
-+	lpfc_nvmeio_data(phba, "NVMET FCP  RCV: xri x%x sz %d CPU %02x\n",
-+			 oxid, size, smp_processor_id());
+-	if (rsp->sg_cnt > phba->cfg_sg_seg_cnt) {
++	if (rsp->sg_cnt > phba->cfg_nvme_seg_cnt) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_NVME_IOERR,
+ 				"6109 lpfc_nvmet_prep_fcp_wqe: seg cnt err: "
+-				"NPORT x%x oxid:x%x\n",
+-				ctxp->sid, ctxp->oxid);
++				"NPORT x%x oxid:x%x cnt %d\n",
++				ctxp->sid, ctxp->oxid, phba->cfg_nvme_seg_cnt);
+ 		return NULL;
+ 	}
  
- 	atomic_inc(&tgtp->rcv_fcp_cmd_in);
- 	/*
 -- 
 2.1.0
