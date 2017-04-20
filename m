@@ -1,15 +1,15 @@
 From: jsmart2021@gmail.com
-Subject: [PATCH-v1 02/22] Fix nvme unregister port timeout.
-Date: Wed, 19 Apr 2017 21:46:21 -0700
-Message-ID: <20170420044641.10657-3-jsmart2021@gmail.com>
+Subject: [PATCH-v1 07/22] Remove unused defines for NVME PostBuf.
+Date: Wed, 19 Apr 2017 21:46:26 -0700
+Message-ID: <20170420044641.10657-8-jsmart2021@gmail.com>
 References: <20170420044641.10657-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:35857 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938019AbdDTEq5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 00:46:57 -0400
-Received: by mail-oi0-f66.google.com with SMTP id a3so345913oii.3
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Apr 2017 21:46:57 -0700 (PDT)
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:34795 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S941145AbdDTErG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 00:47:06 -0400
+Received: by mail-oi0-f68.google.com with SMTP id y11so3466940oie.1
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Apr 2017 21:47:05 -0700 (PDT)
 In-Reply-To: <20170420044641.10657-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,58 +18,29 @@ Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>
 
 From: James Smart <jsmart2021@gmail.com>
 
-During some link event testing it was observed that the
-wait_for_completion_timeout in the lpfc_nvme_unregister_port
-was timing out all the time.
+These defines for the posting of buffers for nvmet target were not used.
 
-The initiator is claiming the nvme_fc_unregister_remoteport upcall is
-not completing the unregister in the time allotted.
-[ 2186.151317] lpfc 0000:07:00.0: 0:(0):6169 Unreg nvme wait failed 0
-
- The wait_for_completion_timeout returns 0 when the wait has
-been outstanding for the jiffies passed by the caller.  In this error
-message, the nvme initiator passed value 5 - meaning 5 jiffies -
-and this is just wrong.
-
-Calculate 5 seconds in Jiffies and pass that value
-from the current jiffies.
-
-Also the log message for the unregister timeout was reduced
-because timeout failure is the same as timeout.
+Removing the unused defines.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_nvme.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/scsi/lpfc/lpfc_nvme.h | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 0024de1..a39d72c 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -2409,6 +2409,7 @@ lpfc_nvme_unregister_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 	struct lpfc_nvme_lport *lport;
- 	struct lpfc_nvme_rport *rport;
- 	struct nvme_fc_remote_port *remoteport;
-+	unsigned long wait_tmo;
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.h b/drivers/scsi/lpfc/lpfc_nvme.h
+index 6277796..2582f46 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.h
++++ b/drivers/scsi/lpfc/lpfc_nvme.h
+@@ -22,9 +22,6 @@
+  ********************************************************************/
  
- 	localport = vport->localport;
+ #define LPFC_NVME_DEFAULT_SEGS		(64 + 1)	/* 256K IOs */
+-#define LPFC_NVMET_MIN_POSTBUF		16
+-#define LPFC_NVMET_DEFAULT_POSTBUF	1024
+-#define LPFC_NVMET_MAX_POSTBUF		4096
+ #define LPFC_NVME_WQSIZE		256
  
-@@ -2451,11 +2452,12 @@ lpfc_nvme_unregister_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 		 * before proceeding.  This guarantees the transport and driver
- 		 * have completed the unreg process.
- 		 */
--		ret = wait_for_completion_timeout(&rport->rport_unreg_done, 5);
-+		wait_tmo = msecs_to_jiffies(5000);
-+		ret = wait_for_completion_timeout(&rport->rport_unreg_done,
-+						  wait_tmo);
- 		if (ret == 0) {
- 			lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_DISC,
--					 "6169 Unreg nvme wait failed %d\n",
--					 ret);
-+					 "6169 Unreg nvme wait timeout\n");
- 		}
- 	}
- 	return;
+ #define LPFC_NVME_ERSP_LEN		0x20
 -- 
 2.1.0
