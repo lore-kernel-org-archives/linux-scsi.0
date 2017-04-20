@@ -1,164 +1,47 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 1/4] scsi: pmcraid: use __iomem pointers for ioctl argument
-Date: Thu, 20 Apr 2017 19:54:45 +0200
-Message-ID: <20170420175549.3435196-1-arnd@arndb.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH 2/4] scsi: pmcraid: fix lock imbalance in pmcraid_reset_reload()
+Date: Thu, 20 Apr 2017 19:54:46 +0200
+Message-ID: <20170420175549.3435196-2-arnd@arndb.de>
+References: <20170420175549.3435196-1-arnd@arndb.de>
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20170420175549.3435196-1-arnd@arndb.de>
+Sender: stable-owner@vger.kernel.org
 To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Alexander Viro <viro@zeniv.linux.org.uk>, Johannes Berg <johannes.berg@intel.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, stable@vger.kernel.org, Johannes Berg <johannes.berg@intel.com>, Quentin Lambert <lambert.quentin@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-kernelci.org reports a new compile warning for old code in the pmcraid
-driver:
+sparse found a bug that has always been present since the driver
+was merged:
 
-arch/mips/include/asm/uaccess.h:138:21: warning: passing argument 1 of '__access_ok' makes pointer from integer without a cast [-Wint-conversion]
+drivers/scsi/pmcraid.c:2353:12: warning: context imbalance in 'pmcraid_reset_reload' - different lock contexts for basic block
 
-The warning got introduced by a cleanup to the access_ok() helper
-that requires the argument to be a pointer, where the old version
-silently accepts 'unsigned long' arguments as it still does on most
-other architectures.
+This adds the missing unlock at the end of the function. I could
+not figure out if this will happen in practice, but I could not
+prove that it doesn't happen, so to be on the safe side, let's
+backport this fix.
 
-The new behavior in MIPS however seems absolutely sensible, and so far I
-could only find one other file with the same issue, so the best solution
-seems to be to clean up the pmcraid driver.
-
-This makes the driver consistently use 'void __iomem *' pointers for
-passing around the address of the user space ioctl arguments, which gets
-rid of the kernelci warning as well as several sparse warnings.
-
-Fixes: f0a955f4eeec ("mips: sanitize __access_ok()")
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: stable@vger.kernel.org
+Fixes: 89a368104150 ("[SCSI] pmcraid: PMC-Sierra MaxRAID driver to support 6Gb/s SAS RAID controller")
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
-I wanted to be sure that I get all the __iomem annotations right, so
-I ended up fixing all other sparse warnings as well, see the three
-follow-up patches.
----
- drivers/scsi/pmcraid.c | 44 ++++++++++++++++----------------------------
- 1 file changed, 16 insertions(+), 28 deletions(-)
+ drivers/scsi/pmcraid.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
 diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index 49e70a383afa..096c704ca39a 100644
+index 096c704ca39a..35087e94c2ad 100644
 --- a/drivers/scsi/pmcraid.c
 +++ b/drivers/scsi/pmcraid.c
-@@ -3325,7 +3325,7 @@ static struct pmcraid_sglist *pmcraid_alloc_sglist(int buflen)
-  */
- static int pmcraid_copy_sglist(
- 	struct pmcraid_sglist *sglist,
--	unsigned long buffer,
-+	void __user *buffer,
- 	u32 len,
- 	int direction
- )
-@@ -3346,11 +3346,9 @@ static int pmcraid_copy_sglist(
- 
- 		kaddr = kmap(page);
- 		if (direction == DMA_TO_DEVICE)
--			rc = __copy_from_user(kaddr,
--					      (void *)buffer,
--					      bsize_elem);
-+			rc = __copy_from_user(kaddr, buffer, bsize_elem);
- 		else
--			rc = __copy_to_user((void *)buffer, kaddr, bsize_elem);
-+			rc = __copy_to_user(buffer, kaddr, bsize_elem);
- 
- 		kunmap(page);
- 
-@@ -3368,13 +3366,9 @@ static int pmcraid_copy_sglist(
- 		kaddr = kmap(page);
- 
- 		if (direction == DMA_TO_DEVICE)
--			rc = __copy_from_user(kaddr,
--					      (void *)buffer,
--					      len % bsize_elem);
-+			rc = __copy_from_user(kaddr, buffer, len % bsize_elem);
- 		else
--			rc = __copy_to_user((void *)buffer,
--					    kaddr,
--					    len % bsize_elem);
-+			rc = __copy_to_user(buffer, kaddr, len % bsize_elem);
- 
- 		kunmap(page);
- 
-@@ -3652,17 +3646,17 @@ static long pmcraid_ioctl_passthrough(
- 	struct pmcraid_instance *pinstance,
- 	unsigned int ioctl_cmd,
- 	unsigned int buflen,
--	unsigned long arg
-+	void __user *arg
- )
- {
- 	struct pmcraid_passthrough_ioctl_buffer *buffer;
- 	struct pmcraid_ioarcb *ioarcb;
- 	struct pmcraid_cmd *cmd;
- 	struct pmcraid_cmd *cancel_cmd;
--	unsigned long request_buffer;
-+	void __user *request_buffer;
- 	unsigned long request_offset;
- 	unsigned long lock_flags;
--	void *ioasa;
-+	void __user *ioasa;
- 	u32 ioasc;
- 	int request_size;
- 	int buffer_size;
-@@ -3701,13 +3695,10 @@ static long pmcraid_ioctl_passthrough(
- 
- 	request_buffer = arg + request_offset;
- 
--	rc = __copy_from_user(buffer,
--			     (struct pmcraid_passthrough_ioctl_buffer *) arg,
-+	rc = __copy_from_user(buffer, arg,
- 			     sizeof(struct pmcraid_passthrough_ioctl_buffer));
- 
--	ioasa =
--	(void *)(arg +
--		offsetof(struct pmcraid_passthrough_ioctl_buffer, ioasa));
-+	ioasa = arg + offsetof(struct pmcraid_passthrough_ioctl_buffer, ioasa);
- 
- 	if (rc) {
- 		pmcraid_err("ioctl: can't copy passthrough buffer\n");
-@@ -4021,6 +4012,7 @@ static long pmcraid_chr_ioctl(
- {
- 	struct pmcraid_instance *pinstance = NULL;
- 	struct pmcraid_ioctl_header *hdr = NULL;
-+	void __user *argp = (void __user *)arg;
- 	int retval = -ENOTTY;
- 
- 	hdr = kmalloc(sizeof(struct pmcraid_ioctl_header), GFP_KERNEL);
-@@ -4030,7 +4022,7 @@ static long pmcraid_chr_ioctl(
- 		return -ENOMEM;
+@@ -2411,8 +2411,11 @@ static int pmcraid_reset_reload(
+ 		scsi_unblock_requests(pinstance->host);
+ 		if (pinstance->ioa_state == target_state)
+ 			reset = 0;
++		spin_lock_irqsave(pinstance->host->host_lock, lock_flags);
  	}
  
--	retval = pmcraid_check_ioctl_buffer(cmd, (void *)arg, hdr);
-+	retval = pmcraid_check_ioctl_buffer(cmd, argp, hdr);
++	spin_unlock_irqrestore(pinstance->host->host_lock, lock_flags);
++
+ 	return reset;
+ }
  
- 	if (retval) {
- 		pmcraid_info("chr_ioctl: header check failed\n");
-@@ -4055,10 +4047,8 @@ static long pmcraid_chr_ioctl(
- 		if (cmd == PMCRAID_IOCTL_DOWNLOAD_MICROCODE)
- 			scsi_block_requests(pinstance->host);
- 
--		retval = pmcraid_ioctl_passthrough(pinstance,
--						   cmd,
--						   hdr->buffer_length,
--						   arg);
-+		retval = pmcraid_ioctl_passthrough(pinstance, cmd,
-+						   hdr->buffer_length, argp);
- 
- 		if (cmd == PMCRAID_IOCTL_DOWNLOAD_MICROCODE)
- 			scsi_unblock_requests(pinstance->host);
-@@ -4066,10 +4056,8 @@ static long pmcraid_chr_ioctl(
- 
- 	case PMCRAID_DRIVER_IOCTL:
- 		arg += sizeof(struct pmcraid_ioctl_header);
--		retval = pmcraid_ioctl_driver(pinstance,
--					      cmd,
--					      hdr->buffer_length,
--					      (void __user *)arg);
-+		retval = pmcraid_ioctl_driver(pinstance, cmd,
-+					      hdr->buffer_length, argp);
- 		break;
- 
- 	default:
 -- 
 2.9.0
