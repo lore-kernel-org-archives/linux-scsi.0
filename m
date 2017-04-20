@@ -1,52 +1,72 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH-v1 16/22] Fix crash after issuing lip reset
-Date: Thu, 20 Apr 2017 09:42:51 +0200
-Message-ID: <20170420074251.GQ6217@linux-x5ow.site>
+Subject: Re: [PATCH-v1 18/22] Add Fabric assigned WWN support.
+Date: Thu, 20 Apr 2017 09:49:10 +0200
+Message-ID: <20170420074910.GR6217@linux-x5ow.site>
 References: <20170420044641.10657-1-jsmart2021@gmail.com>
- <20170420044641.10657-17-jsmart2021@gmail.com>
+ <20170420044641.10657-19-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48999 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:50232 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S941043AbdDTHmy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 20 Apr 2017 03:42:54 -0400
+        id S941795AbdDTHtN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 20 Apr 2017 03:49:13 -0400
 Content-Disposition: inline
-In-Reply-To: <20170420044641.10657-17-jsmart2021@gmail.com>
+In-Reply-To: <20170420044641.10657-19-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jsmart2021@gmail.com
 Cc: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, sagi@grimberg.me, martin.petersen@oracle.com, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-On Wed, Apr 19, 2017 at 09:46:35PM -0700, jsmart2021@gmail.com wrote:
+On Wed, Apr 19, 2017 at 09:46:37PM -0700, jsmart2021@gmail.com wrote:
 > From: James Smart <jsmart2021@gmail.com>
 > 
-> When RPI is not available, driver sends WQE with invalid RPI value and
-> rejected by HBA.
-> lpfc 0000:82:00.3: 1:3154 BLS ABORT RSP failed, data:  x3/xa0320008
-> and
-> lpfc :2753 PLOGI failure DID:FFFFFA Status:x3/xa0240008
+> Adding support for Fabric assigned WWPN and WWNN.
 > 
-> In this case, driver accesses rpi_ids array out of bounds.
+> Firmware sends first FLOGI to fabric with vendor version changes.
+> On link up driver gets updated service parameter with FAWWN assigned port
+> name.  Driver sends 2nd FLOGI with updated fawwpn and modifies the
+> vport->fc_portname in driver.
 > 
-> Fix:
-> Check return value of lpfc_sli4_alloc_rpi(). Do not allocate
-> lpfc_nodelist entry if RPI is not available.
-> 
-> When RPI is not available, we will get discovery timeouts and
-> command drops for some of the vports as seen below.
-> 
-> 
-> lpfc :0273 Unexpected discovery timeout, vport State x0
-> lpfc :0230 Unexpected timeout, hba link state x5
-> lpfc :0111 Dropping received ELS cmd Data: x0 xc90c55 x0
+> Note:
+> Soft wwpn will not be allowed when fawwpn is enabled.
 > 
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
 > ---
 
+Aparrt form the superflous parenthesis like in this hunk:
+
+> @@ -354,9 +356,26 @@ lpfc_update_vport_wwn(struct lpfc_vport *vport)
+>  		memcpy(&vport->fc_sparam.nodeName, &vport->fc_nodename,
+>  			sizeof(struct lpfc_name));
+>  
+> -	if (vport->fc_portname.u.wwn[0] == 0 || vport->phba->cfg_soft_wwpn)
+> +	/*
+> +	 * If the port name has changed, then set the Param changes flag
+> +	 * to unreg the login
+> +	 */
+> +	if ((vport->fc_portname.u.wwn[0] != 0) &&
+> +		memcmp(&vport->fc_portname, &vport->fc_sparam.portName,
+> +			sizeof(struct lpfc_name)))
+> +		vport->vport_flag |= FAWWPN_PARAM_CHG;
+> +
+> +	if ((vport->fc_portname.u.wwn[0] == 0) ||
+> +	    (vport->phba->cfg_soft_wwpn) ||
+> +	    (vvvl == 1 && (cpu_to_be32(*fawwpn_key)) == FAPWWN_KEY_VENDOR) ||
+> +	    (vport->vport_flag & FAWWPN_SET)) {
+>  		memcpy(&vport->fc_portname, &vport->fc_sparam.portName,
+>  			sizeof(struct lpfc_name));
+> +		vport->vport_flag &= ~FAWWPN_SET;
+> +		if (vvvl == 1 && (cpu_to_be32(*fawwpn_key)) ==
+> +		    FAPWWN_KEY_VENDOR)
+> +			vport->vport_flag |= FAWWPN_SET;
+> +	}
+
+
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+
 -- 
 Johannes Thumshirn                                          Storage
 jthumshirn@suse.de                                +49 911 74053 689
