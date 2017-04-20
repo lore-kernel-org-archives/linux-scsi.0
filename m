@@ -1,50 +1,41 @@
-From: James Tan <tan.james197@gmail.com>
-Subject: (From: Mr. James Tan (Urgent & Confidential)
-Date: Thu, 20 Apr 2017 07:43:51 +0100
-Message-ID: <CAGUbhp2ZzBCqJ0LfQ-h3VeBQZVd21og-fS1wWz0QcM3nYJ7xBw__9956.68776236034$1492670706$gmane$org@mail.gmail.com>
-Reply-To: tanjames009@gmail.com
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH-v1 01/22] Standardize nvme SGL segment count
+Date: Thu, 20 Apr 2017 09:15:09 +0200
+Message-ID: <20170420071509.GB6217@linux-x5ow.site>
+References: <20170420044641.10657-1-jsmart2021@gmail.com>
+ <20170420044641.10657-2-jsmart2021@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:33246 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S942399AbdDTGny (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 02:43:54 -0400
-Received: by mail-wm0-f65.google.com with SMTP id o81so8825646wmb.0
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Apr 2017 23:43:53 -0700 (PDT)
+Received: from mx2.suse.de ([195.135.220.15]:47129 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S937295AbdDTHPN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 20 Apr 2017 03:15:13 -0400
+Content-Disposition: inline
+In-Reply-To: <20170420044641.10657-2-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jsmart2021@gmail.com
+Cc: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, sagi@grimberg.me, martin.petersen@oracle.com, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
+
+On Wed, Apr 19, 2017 at 09:46:20PM -0700, jsmart2021@gmail.com wrote:
+> From: James Smart <jsmart2021@gmail.com>
+> 
+> Standardize default SGL segment count for nvme target and initiator
+> 
+> The driver needs to make them the same for clarity.
+> 
+> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+> Signed-off-by: James Smart <james.smart@broadcom.com>
+> ---
+
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
 -- 
-(From: Mr.James Tan  (Urgent & Confidential)
-
-Good Day, Please Read.
-
-My name is Mr.James Tan , I am the Bill and Exchange manager here in
-Bank of Africa (BOA) Lome-Togo.West-Africa. I have a business proposal
-in the tune of $9.7m, (Nine Million Seven Hundred Thousand Dollars
-Only) after the successful transfer, we shall share in ratio of 40%
-for you and 60% for me.
-
-Should you be interested, please contact me through my private email
-(tanjames009@gmail.com) so we can commence all arrangements and i will
-give you more information on how we would handle this project.
-
-
-Please treat this business with utmost confidentiality and send me the
-Following:
-
-1. Your Full Name:............
-2. Your Phone Number:..........
-3. Your Age:....................
-4. Your Sex:...................
-5. Your Occupations:............
-6. Your Country and City:....
-
-Kind Regards,
-
-Mr.James Tan .
-Bill & Exchange manager
-(BOA) Bank of Africa.
-Lome-Togo.
-Email: tanjames009@gmail.com
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
