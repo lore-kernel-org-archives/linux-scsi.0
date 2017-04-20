@@ -1,38 +1,36 @@
-From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 26/27] scsi: sd: Separate zeroout and discard
-	command choices
-Date: Wed, 19 Apr 2017 21:34:18 -0400
-Message-ID: <yq1a87bsvz9.fsf@oracle.com>
-References: <20170405172125.22600-1-hch@lst.de>
-	<20170405172125.22600-27-hch@lst.de>
-	<58c3d6a6-924e-cc86-1907-a9fd02a39c0e@redhat.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 08/23] scsi: introduce a result field in struct scsi_request
+Date: Wed, 19 Apr 2017 21:43:00 -0400
+Message-ID: <yq160hzsvkr.fsf@oracle.com>
+References: <20170419192708.22098-1-hch@lst.de>
+        <20170419192708.22098-9-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-In-Reply-To: <58c3d6a6-924e-cc86-1907-a9fd02a39c0e-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> (Paolo
-	Bonzini's message of "Wed, 19 Apr 2017 16:56:31 +0200")
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:44211 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1764846AbdDTBnm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Apr 2017 21:43:42 -0400
+In-Reply-To: <20170419192708.22098-9-hch@lst.de> (Christoph Hellwig's message
+        of "Wed, 19 Apr 2017 21:26:53 +0200")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Josef Bacik <jbacik@fb.com>, James Smart <james.smart@broadcom.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, Roger Pau =?utf-8?Q?Monn=C3=A9?= <roger.pau@citrix.com>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, dm-devel@redhat.com
 
+Christoph Hellwig <hch@lst.de> writes:
 
-Paolo,
+> This passes on the scsi_cmnd result field to users of passthrough
+> requests.  Currently we abuse req->errors for this purpose, but that
+> field will go away in its current form.
 
-> Should this be conditional on lbprz, lbpws, lbpws10 and max_ws_blocks?
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-It is intentional that things can be overridden from userland for
-devices that report the "wrong" thing. We do the same for discard so
-people can set up udev rules.
+> Note that the old IDE code abuses the errors field in very creative
+> ways and stores all kinds of different values in it.  I didn't dare
+> to touch this magic, so the abuses are brought forward 1:1.
+
+Really wish we could just obliterate drivers/ide.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
