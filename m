@@ -1,15 +1,15 @@
 From: jsmart2021@gmail.com
-Subject: [PATCH-v1 22/22] lpfc revison 11.2.0.12
-Date: Wed, 19 Apr 2017 21:46:41 -0700
-Message-ID: <20170420044641.10657-23-jsmart2021@gmail.com>
+Subject: [PATCH-v1 21/22] Fix Express lane queue creation.
+Date: Wed, 19 Apr 2017 21:46:40 -0700
+Message-ID: <20170420044641.10657-22-jsmart2021@gmail.com>
 References: <20170420044641.10657-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:35448 "EHLO
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:33375 "EHLO
         mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S941199AbdDTEri (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 00:47:38 -0400
-Received: by mail-oi0-f67.google.com with SMTP id g11so5674601oib.2
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Apr 2017 21:47:33 -0700 (PDT)
+        with ESMTP id S941188AbdDTErg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 00:47:36 -0400
+Received: by mail-oi0-f67.google.com with SMTP id a189so5685119oib.0
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Apr 2017 21:47:36 -0700 (PDT)
 In-Reply-To: <20170420044641.10657-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,26 +18,47 @@ Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>
 
 From: James Smart <jsmart2021@gmail.com>
 
-Update lpfc version to reflect this set of changes.
+The older sli4 adapters only supported the 64 byte WQE entry size.
+The new adapter (fw) support both 64 and 128 byte WQE entry sizies.
+The Express lane WQ was not being created with the 128 byte WQE sizes
+when it was supported.
+
+Not having the right WQE size created for the express lane work queue
+caused the the firmware to overwrite the lun indentifier in the FCP header.
+
+This patch correctly creates the express lane work queue with the
+supported size.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_version.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_init.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
-index d4e95e2..1c26dc6 100644
---- a/drivers/scsi/lpfc/lpfc_version.h
-+++ b/drivers/scsi/lpfc/lpfc_version.h
-@@ -20,7 +20,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index e084a66..7d3b199 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -12040,6 +12040,7 @@ int
+ lpfc_fof_queue_create(struct lpfc_hba *phba)
+ {
+ 	struct lpfc_queue *qdesc;
++	uint32_t wqesize;
  
--#define LPFC_DRIVER_VERSION "11.2.0.10"
-+#define LPFC_DRIVER_VERSION "11.2.0.12"
- #define LPFC_DRIVER_NAME		"lpfc"
+ 	/* Create FOF EQ */
+ 	qdesc = lpfc_sli4_queue_alloc(phba, phba->sli4_hba.eq_esize,
+@@ -12060,8 +12061,11 @@ lpfc_fof_queue_create(struct lpfc_hba *phba)
+ 		phba->sli4_hba.oas_cq = qdesc;
  
- /* Used for SLI 2/3 */
+ 		/* Create OAS WQ */
+-		qdesc = lpfc_sli4_queue_alloc(phba, phba->sli4_hba.wq_esize,
++		wqesize = (phba->fcp_embed_io) ?
++				LPFC_WQE128_SIZE : phba->sli4_hba.wq_esize;
++		qdesc = lpfc_sli4_queue_alloc(phba, wqesize,
+ 					      phba->sli4_hba.wq_ecount);
++
+ 		if (!qdesc)
+ 			goto out_error;
+ 
 -- 
 2.1.0
