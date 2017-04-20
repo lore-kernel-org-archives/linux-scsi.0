@@ -1,15 +1,15 @@
 From: jsmart2021@gmail.com
-Subject: ["PATCH-v2" 09/22] Fix extra line print in rqpair debug print.
-Date: Thu, 20 Apr 2017 15:04:35 -0700
-Message-ID: <20170420220448.27095-10-jsmart2021@gmail.com>
+Subject: ["PATCH-v2" 14/22] Remove hba lock from NVMET issue WQE.
+Date: Thu, 20 Apr 2017 15:04:40 -0700
+Message-ID: <20170420220448.27095-15-jsmart2021@gmail.com>
 References: <20170420220448.27095-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:34480 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S947914AbdDTWFR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 18:05:17 -0400
-Received: by mail-oi0-f66.google.com with SMTP id y11so11898629oie.1
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Apr 2017 15:05:12 -0700 (PDT)
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:35057 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031169AbdDTWFU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 18:05:20 -0400
+Received: by mail-oi0-f68.google.com with SMTP id m34so5013090oik.2
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Apr 2017 15:05:20 -0700 (PDT)
 In-Reply-To: <20170420220448.27095-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,29 +18,41 @@ Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>
 
 From: James Smart <jsmart2021@gmail.com>
 
-An extra blank line was being added the the rqpair printing.
+Unnecessary lock is taken. ring lock should be sufficient to protect the
+work queue submission.
 
-Remove the extra line feed.
+This was noticed when doing performance testing. The hbalock is not
+needed to issue io to the nvme work queue.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/lpfc/lpfc_debugfs.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_nvmet.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index 76857e2..55a8d8f 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.c
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -3128,8 +3128,6 @@ __lpfc_idiag_print_rqpair(struct lpfc_queue *qp, struct lpfc_queue *datqp,
- 			datqp->queue_id, datqp->entry_count,
- 			datqp->entry_size, datqp->host_index,
- 			datqp->hba_index);
--	len +=  snprintf(pbuffer + len, LPFC_QUE_INFO_GET_BUF_SIZE - len, "\n");
--
- 	return len;
- }
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index c8a4941..5a994a8 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -517,7 +517,6 @@ lpfc_nvmet_xmt_fcp_op(struct nvmet_fc_target_port *tgtport,
+ 		container_of(rsp, struct lpfc_nvmet_rcv_ctx, ctx.fcp_req);
+ 	struct lpfc_hba *phba = ctxp->phba;
+ 	struct lpfc_iocbq *nvmewqeq;
+-	unsigned long iflags;
+ 	int rc, id;
  
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+@@ -571,10 +570,7 @@ lpfc_nvmet_xmt_fcp_op(struct nvmet_fc_target_port *tgtport,
+ 	lpfc_nvmeio_data(phba, "NVMET FCP CMND: xri x%x op x%x len x%x\n",
+ 			 ctxp->oxid, rsp->op, rsp->rsplen);
+ 
+-	/* For now we take hbalock */
+-	spin_lock_irqsave(&phba->hbalock, iflags);
+ 	rc = lpfc_sli4_issue_wqe(phba, LPFC_FCP_RING, nvmewqeq);
+-	spin_unlock_irqrestore(&phba->hbalock, iflags);
+ 	if (rc == WQE_SUCCESS) {
+ 		ctxp->flag |= LPFC_NVMET_IO_INP;
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
 -- 
 2.9.3
