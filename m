@@ -1,15 +1,15 @@
 From: jsmart2021@gmail.com
-Subject: ["PATCH-v2" 14/22] Remove hba lock from NVMET issue WQE.
-Date: Thu, 20 Apr 2017 15:04:40 -0700
-Message-ID: <20170420220448.27095-15-jsmart2021@gmail.com>
+Subject: ["PATCH-v2" 05/22] Add debug messages for nvme/fcp resource allocation.
+Date: Thu, 20 Apr 2017 15:04:31 -0700
+Message-ID: <20170420220448.27095-6-jsmart2021@gmail.com>
 References: <20170420220448.27095-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:35057 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031169AbdDTWFU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 18:05:20 -0400
-Received: by mail-oi0-f68.google.com with SMTP id m34so5013090oik.2
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Apr 2017 15:05:20 -0700 (PDT)
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:33141 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S938903AbdDTWFG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 18:05:06 -0400
+Received: by mail-oi0-f67.google.com with SMTP id a189so14131562oib.0
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Apr 2017 15:05:06 -0700 (PDT)
 In-Reply-To: <20170420220448.27095-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,41 +18,34 @@ Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>
 
 From: James Smart <jsmart2021@gmail.com>
 
-Unnecessary lock is taken. ring lock should be sufficient to protect the
-work queue submission.
+The xri resources are split into pools for NVME and FCP IO when NVME is
+enabled. There was not message in the log that identified this allocation.
 
-This was noticed when doing performance testing. The hbalock is not
-needed to issue io to the nvme work queue.
+Added debug message to log XRI split.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/lpfc/lpfc_nvmet.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index c8a4941..5a994a8 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -517,7 +517,6 @@ lpfc_nvmet_xmt_fcp_op(struct nvmet_fc_target_port *tgtport,
- 		container_of(rsp, struct lpfc_nvmet_rcv_ctx, ctx.fcp_req);
- 	struct lpfc_hba *phba = ctxp->phba;
- 	struct lpfc_iocbq *nvmewqeq;
--	unsigned long iflags;
- 	int rc, id;
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 6cc561b..b56da01 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -3508,6 +3508,12 @@ lpfc_sli4_scsi_sgl_update(struct lpfc_hba *phba)
+ 	spin_unlock(&phba->scsi_buf_list_put_lock);
+ 	spin_unlock_irq(&phba->scsi_buf_list_get_lock);
  
- #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
-@@ -571,10 +570,7 @@ lpfc_nvmet_xmt_fcp_op(struct nvmet_fc_target_port *tgtport,
- 	lpfc_nvmeio_data(phba, "NVMET FCP CMND: xri x%x op x%x len x%x\n",
- 			 ctxp->oxid, rsp->op, rsp->rsplen);
- 
--	/* For now we take hbalock */
--	spin_lock_irqsave(&phba->hbalock, iflags);
- 	rc = lpfc_sli4_issue_wqe(phba, LPFC_FCP_RING, nvmewqeq);
--	spin_unlock_irqrestore(&phba->hbalock, iflags);
- 	if (rc == WQE_SUCCESS) {
- 		ctxp->flag |= LPFC_NVMET_IO_INP;
- #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
++	lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
++			"6060 Current allocated SCSI xri-sgl count:%d, "
++			"maximum  SCSI xri count:%d (split:%d)\n",
++			phba->sli4_hba.scsi_xri_cnt,
++			phba->sli4_hba.scsi_xri_max, phba->cfg_xri_split);
++
+ 	if (phba->sli4_hba.scsi_xri_cnt > phba->sli4_hba.scsi_xri_max) {
+ 		/* max scsi xri shrinked below the allocated scsi buffers */
+ 		scsi_xri_cnt = phba->sli4_hba.scsi_xri_cnt -
 -- 
 2.9.3
