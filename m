@@ -1,72 +1,49 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH-v1 18/22] Add Fabric assigned WWN support.
-Date: Thu, 20 Apr 2017 09:49:10 +0200
-Message-ID: <20170420074910.GR6217@linux-x5ow.site>
+Subject: Re: [PATCH-v1 19/22] Fix implicit logo and RSCN handling for NVMET
+Date: Thu, 20 Apr 2017 09:53:58 +0200
+Message-ID: <20170420075358.GS6217@linux-x5ow.site>
 References: <20170420044641.10657-1-jsmart2021@gmail.com>
- <20170420044641.10657-19-jsmart2021@gmail.com>
+ <20170420044641.10657-20-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50232 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:51182 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S941795AbdDTHtN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 20 Apr 2017 03:49:13 -0400
+        id S938741AbdDTHyC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 20 Apr 2017 03:54:02 -0400
 Content-Disposition: inline
-In-Reply-To: <20170420044641.10657-19-jsmart2021@gmail.com>
+In-Reply-To: <20170420044641.10657-20-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jsmart2021@gmail.com
 Cc: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, sagi@grimberg.me, martin.petersen@oracle.com, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-On Wed, Apr 19, 2017 at 09:46:37PM -0700, jsmart2021@gmail.com wrote:
+On Wed, Apr 19, 2017 at 09:46:38PM -0700, jsmart2021@gmail.com wrote:
 > From: James Smart <jsmart2021@gmail.com>
 > 
-> Adding support for Fabric assigned WWPN and WWNN.
+> NVMET didn't have any RSCN handling at all and
+> would not execute implicit LOGO when receiving a PLOGI
+> from an rport that NVMET had in state UNMAPPED.
 > 
-> Firmware sends first FLOGI to fabric with vendor version changes.
-> On link up driver gets updated service parameter with FAWWN assigned port
-> name.  Driver sends 2nd FLOGI with updated fawwpn and modifies the
-> vport->fc_portname in driver.
-> 
-> Note:
-> Soft wwpn will not be allowed when fawwpn is enabled.
+> Clean up the logic in lpfc_nlp_state_cleanup for
+> initiators (FCP and NVME). NVMET should not respond to
+> RSCN including allocating new ndlps so this code was
+> conditionalized when nvmet_support is true.  The check
+> for NLP_RCV_PLOGI in lpfc_setup_disc_node was moved
+> below the check for nvmet_support to allow the NVMET
+> to recover initiator nodes correctly.  The implicit
+> logo was introduced with lpfc_rcv_plogi when NVMET gets
+> a PLOGI on an ndlp in UNMAPPED state.  The RSCN handling
+> was modified to not respond to an RSCN in NVMET.  Instead
+> NVMET sends a GID_FT and determines if an NVMEP_INITIATOR
+> it has is UNMAPPED but no longer in the zone membership.
 > 
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
 > ---
 
-Aparrt form the superflous parenthesis like in this hunk:
-
-> @@ -354,9 +356,26 @@ lpfc_update_vport_wwn(struct lpfc_vport *vport)
->  		memcpy(&vport->fc_sparam.nodeName, &vport->fc_nodename,
->  			sizeof(struct lpfc_name));
->  
-> -	if (vport->fc_portname.u.wwn[0] == 0 || vport->phba->cfg_soft_wwpn)
-> +	/*
-> +	 * If the port name has changed, then set the Param changes flag
-> +	 * to unreg the login
-> +	 */
-> +	if ((vport->fc_portname.u.wwn[0] != 0) &&
-> +		memcmp(&vport->fc_portname, &vport->fc_sparam.portName,
-> +			sizeof(struct lpfc_name)))
-> +		vport->vport_flag |= FAWWPN_PARAM_CHG;
-> +
-> +	if ((vport->fc_portname.u.wwn[0] == 0) ||
-> +	    (vport->phba->cfg_soft_wwpn) ||
-> +	    (vvvl == 1 && (cpu_to_be32(*fawwpn_key)) == FAPWWN_KEY_VENDOR) ||
-> +	    (vport->vport_flag & FAWWPN_SET)) {
->  		memcpy(&vport->fc_portname, &vport->fc_sparam.portName,
->  			sizeof(struct lpfc_name));
-> +		vport->vport_flag &= ~FAWWPN_SET;
-> +		if (vvvl == 1 && (cpu_to_be32(*fawwpn_key)) ==
-> +		    FAPWWN_KEY_VENDOR)
-> +			vport->vport_flag |= FAWWPN_SET;
-> +	}
-
-
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-
 -- 
 Johannes Thumshirn                                          Storage
 jthumshirn@suse.de                                +49 911 74053 689
