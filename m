@@ -1,20 +1,47 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/5] v2: block subsystem refcounter conversions
-Date: Thu, 20 Apr 2017 06:56:51 -0700
-Message-ID: <20170420135651.GA26595@infradead.org>
-References: <1492687644-4405-1-git-send-email-elena.reshetova@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1492687644-4405-1-git-send-email-elena.reshetova@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Elena Reshetova <elena.reshetova@intel.com>
-Cc: axboe@kernel.dk, james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-btrfs@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, fujita.tomonori@lab.ntt.co.jp, mingo@redhat.com, clm@fb.com, jbacik@fb.com, dsterba@suse.com
+From: Christoph Hellwig <hch@lst.de>
+Subject: kill req->errors V4
+Date: Thu, 20 Apr 2017 16:02:53 +0200
+Message-ID: <20170420140316.6546-1-hch@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:36129 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S946189AbdDTODa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 10:03:30 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Josef Bacik <jbacik@fb.com>, James Smart <james.smart@broadcom.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, =?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, dm-devel@redhat.com
 
+Currently the request structure has an errors field that is used in
+various different ways.  The oldest drivers use it as an error count,
+blk-mq and the generic timeout code assume that it holds a Linux
+errno for block completions, and various drivers use it for internal
+status values, often overwriting them with Linux errnos later,
+that is unless they are processing passthrough requests in which
+case they'll leave their errors in it.
 
-All the objections from DaveM on the amount of cycles spent on the
-new refcount_t apply to the block layer fast path operations as well.
+This series kills the ->errors field and replaced it with new fields
+in the drivers (or an odd hack in a union in struct request for
+two bitrotting old drivers).
 
-Please don't send any more conversions until those have been resolved.
+Also available in the following git tree:
+
+    git://git.infradead.org/users/hch/block.git request-errors
+
+Gitweb:
+
+    http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/request-errors
+
+Changes since V3:
+ - SCSI OSD fix
+ - Various Reviewed-by: tags
+
+Changes since V2;
+ - reorder one patch to be earlier in the series
+ - fix the argument to a bsg dprintk
+ - fix a kerneldoc comment
+
+Changes since V1:
+ - rebased on top the latest block for-next tree
+ - fix error handling in nfsd blocklayout
+ - dropped "scsi: fix fast-fail for non-passthrough requests"
