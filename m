@@ -1,30 +1,27 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 22/23] blktrace: remove the unused block_rq_abort
-        tracepoint
-Date: Thu, 20 Apr 2017 17:25:58 +0200
-Message-ID: <20170420152558.GA23516@lst.de>
-References: <20170420140316.6546-1-hch@lst.de> <20170420140316.6546-23-hch@lst.de> <20170420152056.GP13676@linux-x5ow.site>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH 12/23] dm mpath: don't check for req->errors
+Date: Thu, 20 Apr 2017 15:25:54 +0000
+Message-ID: <1492701953.2642.3.camel@sandisk.com>
+References: <20170420140316.6546-1-hch@lst.de>
+         <20170420140316.6546-13-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:41238 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S967294AbdDTP0A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 20 Apr 2017 11:26:00 -0400
-Content-Disposition: inline
-In-Reply-To: <20170420152056.GP13676@linux-x5ow.site>
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:63794 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S970528AbdDTP0M (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 11:26:12 -0400
+In-Reply-To: <20170420140316.6546-13-hch@lst.de>
+Content-Language: en-US
+Content-ID: <3E7AB6DD147BF044805A56E334C04DD9@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Josef Bacik <jbacik@fb.com>, James Smart <james.smart@broadcom.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, dm-devel@redhat.com
+To: "hch@lst.de" <hch@lst.de>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>, "roger.pau@citrix.com" <roger.pau@citrix.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "jbacik@fb.com" <jbacik@fb.com>, "james.smart@broadcom.com" <james.smart@broadcom.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
 
-On Thu, Apr 20, 2017 at 05:20:56PM +0200, Johannes Thumshirn wrote:
-> On Thu, Apr 20, 2017 at 04:03:15PM +0200, Christoph Hellwig wrote:
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> 
-> Just to be sure nothings forgotten, does this change need an update for
-> blktrace as well?
+On Thu, 2017-04-20 at 16:03 +0200, Christoph Hellwig wrote:
+> We'll get all proper errors reported through ->end_io and ->errors will
+> go away soon.
 
-I don't think so.  It will just never get this event before or after
-this patch.
+Reviewed-by: Bart Van Assche <Bart.VanAssche@sandisk.com>=
