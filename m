@@ -1,32 +1,29 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 23/23] block: remove the errors field from struct request
-Date: Thu, 20 Apr 2017 17:21:49 +0200
-Message-ID: <20170420152148.GQ13676@linux-x5ow.site>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH 08/23] scsi: introduce a result field in struct
+ scsi_request
+Date: Thu, 20 Apr 2017 15:25:12 +0000
+Message-ID: <1492701911.2642.1.camel@sandisk.com>
 References: <20170420140316.6546-1-hch@lst.de>
- <20170420140316.6546-24-hch@lst.de>
+         <20170420140316.6546-9-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170420140316.6546-24-hch@lst.de>
+In-Reply-To: <20170420140316.6546-9-hch@lst.de>
+Content-Language: en-US
+Content-ID: <565F811036077348B5B65F98BBE1E636@namprd04.prod.outlook.com>
 Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Josef Bacik <jbacik@fb.com>, James Smart <james.smart@broadcom.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, dm-devel@redhat.com
+To: "hch@lst.de" <hch@lst.de>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>, "roger.pau@citrix.com" <roger.pau@citrix.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "jbacik@fb.com" <jbacik@fb.com>, "james.smart@broadcom.com" <james.smart@broadcom.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Apr 20, 2017 at 04:03:16PM +0200, Christoph Hellwig wrote:
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Bart Van Assche <Bart.VanAssche@sandisk.com>
-> Acked-by: Roger Pau Monné <roger.pau@citrix.com>
-> Reviewed-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> ---
+On Thu, 2017-04-20 at 16:03 +0200, Christoph Hellwig wrote:
+> This passes on the scsi_cmnd result field to users of passthrough
+> requests.  Currently we abuse req->errors for this purpose, but that
+> field will go away in its current form.
+>=20
+> Note that the old IDE code abuses the errors field in very creative
+> ways and stores all kinds of different values in it.  I didn't dare
+> to touch this magic, so the abuses are brought forward 1:1.
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Reviewed-by: Bart Van Assche <Bart.VanAssche@sandisk.com>=
