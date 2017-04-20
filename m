@@ -1,15 +1,15 @@
 From: jsmart2021@gmail.com
-Subject: ["PATCH-v2" 08/22] Remove NULL ptr check before kfree.
-Date: Thu, 20 Apr 2017 15:04:34 -0700
-Message-ID: <20170420220448.27095-9-jsmart2021@gmail.com>
+Subject: ["PATCH-v2" 10/22] Fix PRLI ACC rsp for NVME
+Date: Thu, 20 Apr 2017 15:04:36 -0700
+Message-ID: <20170420220448.27095-11-jsmart2021@gmail.com>
 References: <20170420220448.27095-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:36380 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938903AbdDTWFK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 18:05:10 -0400
-Received: by mail-oi0-f68.google.com with SMTP id a3so8781666oii.3
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Apr 2017 15:05:10 -0700 (PDT)
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:36410 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S938903AbdDTWFO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 18:05:14 -0400
+Received: by mail-oi0-f66.google.com with SMTP id a3so8781863oii.3
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Apr 2017 15:05:13 -0700 (PDT)
 In-Reply-To: <20170420220448.27095-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,46 +18,42 @@ Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>
 
 From: James Smart <jsmart2021@gmail.com>
 
-The check for NULL ptr is not necessary, kfree will check it.
+PRLI ACC from target is FCP oriented.
 
-Removing NULL ptr check.
+Word 0 was wrong. This was noticed by another nvmet-fc vendor that
+was testing the lpfc nvme-fc initiator with their target.
+
+Verified results with analyzer.
+
+PRLI
+BC B5 56 56  22 61 04 00  00 61 00 00  01 29 00 00  20 00 00 00
+00 10 FF FF  00 00 00 00  20 14 00 18  28 00 00 00  00 00 00 00
+00 00 00 00  00 00 00 20  00 00 00 00  9C D8 DA C9  BC 95 75 75
+
+ACC
+BC B5 56 56  23 61 00 00  00 61 04 00  01 98 00 00  30 00 00 00
+00 10 00 18  00 00 00 00  02 14 00 18  28 00 01 00  00 00 00 00
+00 00 00 00  00 00 00 18  00 00 00 00  B0 6B 07 57  BC B5 75 75
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/lpfc/lpfc_debugfs.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index 913eed82..76857e2 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.c
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -5700,10 +5700,8 @@ lpfc_debugfs_terminate(struct lpfc_vport *vport)
- #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
- 	struct lpfc_hba   *phba = vport->phba;
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index d9c61d0..d6e0f58 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -4403,7 +4403,7 @@ lpfc_els_rsp_prli_acc(struct lpfc_vport *vport, struct lpfc_iocbq *oldiocb,
+ 	pcmd = (uint8_t *) (((struct lpfc_dmabuf *) elsiocb->context2)->virt);
+ 	memset(pcmd, 0, cmdsize);
  
--	if (vport->disc_trc) {
--		kfree(vport->disc_trc);
--		vport->disc_trc = NULL;
--	}
-+	kfree(vport->disc_trc);
-+	vport->disc_trc = NULL;
+-	*((uint32_t *) (pcmd)) = (ELS_CMD_ACC | (ELS_CMD_PRLI & ~ELS_RSP_MASK));
++	*((uint32_t *)(pcmd)) = elsrspcmd;
+ 	pcmd += sizeof(uint32_t);
  
- 	debugfs_remove(vport->debug_disc_trc); /* discovery_trace */
- 	vport->debug_disc_trc = NULL;
-@@ -5770,10 +5768,8 @@ lpfc_debugfs_terminate(struct lpfc_vport *vport)
- 		debugfs_remove(phba->debug_readRef); /* readRef */
- 		phba->debug_readRef = NULL;
- 
--		if (phba->slow_ring_trc) {
--			kfree(phba->slow_ring_trc);
--			phba->slow_ring_trc = NULL;
--		}
-+		kfree(phba->slow_ring_trc);
-+		phba->slow_ring_trc = NULL;
- 
- 		/* slow_ring_trace */
- 		debugfs_remove(phba->debug_slow_ring_trc);
+ 	/* For PRLI, remainder of payload is PRLI parameter page */
 -- 
 2.9.3
