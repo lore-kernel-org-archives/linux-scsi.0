@@ -1,15 +1,15 @@
 From: jsmart2021@gmail.com
-Subject: [PATCH-v1 01/22] Standardize nvme SGL segment count
-Date: Wed, 19 Apr 2017 21:46:20 -0700
-Message-ID: <20170420044641.10657-2-jsmart2021@gmail.com>
+Subject: [PATCH-v1 03/22] Fix rejected nvme LS Req.
+Date: Wed, 19 Apr 2017 21:46:22 -0700
+Message-ID: <20170420044641.10657-4-jsmart2021@gmail.com>
 References: <20170420044641.10657-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:34728 "EHLO
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:33140 "EHLO
         mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S941123AbdDTEq4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 00:46:56 -0400
-Received: by mail-oi0-f66.google.com with SMTP id y11so3466493oie.1
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Apr 2017 21:46:56 -0700 (PDT)
+        with ESMTP id S941123AbdDTEq7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 00:46:59 -0400
+Received: by mail-oi0-f66.google.com with SMTP id a189so5683487oib.0
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Apr 2017 21:46:59 -0700 (PDT)
 In-Reply-To: <20170420044641.10657-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,60 +18,69 @@ Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>
 
 From: James Smart <jsmart2021@gmail.com>
 
-Standardize default SGL segment count for nvme target and initiator
+In this case, the NVME initiator is sending an LS REQ command on an NDLP
+that is not MAPPED.  The FW rejects it.
 
-The driver needs to make them the same for clarity.
+ The lpfc_nvme_ls_req routine checks for a NULL ndlp pointer
+but does not check the NDLP state.  This allows the routine
+to send an LS IO when the ndlp is disconnected.
+
+ Check the ndlp for NULL, actual node, Target and MAPPED
+or Initiator and UNMAPPED. This avoids Fabric nodes getting
+the Create Association or Create Connection commands.  Initiators
+are free to Reject either Create.
+Also some of the messages numbers in lpfc_nvme_ls_req were changed because
+they were already used in other log messages.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_nvme.h  | 4 +---
- drivers/scsi/lpfc/lpfc_nvmet.c | 2 +-
- drivers/scsi/lpfc/lpfc_nvmet.h | 4 +---
- 3 files changed, 3 insertions(+), 7 deletions(-)
+ drivers/scsi/lpfc/lpfc_nvme.c | 25 ++++++++++++++++++++-----
+ 1 file changed, 20 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.h b/drivers/scsi/lpfc/lpfc_nvme.h
-index 1347deb..6277796 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.h
-+++ b/drivers/scsi/lpfc/lpfc_nvme.h
-@@ -21,9 +21,7 @@
-  * included with this package.                                     *
-  ********************************************************************/
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index a39d72c..2a87428 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -417,11 +417,26 @@ lpfc_nvme_ls_req(struct nvme_fc_local_port *pnvme_lport,
+ 	vport = lport->vport;
  
--#define LPFC_NVME_MIN_SEGS		16
--#define LPFC_NVME_DEFAULT_SEGS		66	/* 256K IOs - 64 + 2 */
--#define LPFC_NVME_MAX_SEGS		510
-+#define LPFC_NVME_DEFAULT_SEGS		(64 + 1)	/* 256K IOs */
- #define LPFC_NVMET_MIN_POSTBUF		16
- #define LPFC_NVMET_DEFAULT_POSTBUF	1024
- #define LPFC_NVMET_MAX_POSTBUF		4096
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index d488c33..c8a4941 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -709,7 +709,7 @@ lpfc_nvmet_create_targetport(struct lpfc_hba *phba)
- 	pinfo.port_id = vport->fc_myDID;
+ 	ndlp = lpfc_findnode_did(vport, pnvme_rport->port_id);
+-	if (!ndlp) {
+-		lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_DISC,
+-				 "6043 Could not find node for DID %x\n",
++	if (!ndlp || !NLP_CHK_NODE_ACT(ndlp)) {
++		lpfc_printf_vlog(vport, KERN_ERR, LOG_NODE | LOG_NVME_IOERR,
++				 "6051 DID x%06x not an active rport.\n",
+ 				 pnvme_rport->port_id);
+-		return 1;
++		return -ENODEV;
++	}
++
++	/* The remote node has to be a mapped nvme target or an
++	 * unmapped nvme initiator or it's an error.
++	 */
++	if (((ndlp->nlp_type & NLP_NVME_TARGET) &&
++	     (ndlp->nlp_state != NLP_STE_MAPPED_NODE)) ||
++	    ((ndlp->nlp_type & NLP_NVME_INITIATOR) &&
++	     (ndlp->nlp_state != NLP_STE_UNMAPPED_NODE))) {
++		lpfc_printf_vlog(vport, KERN_ERR, LOG_NODE | LOG_NVME_IOERR,
++				 "6088 DID x%06x not ready for "
++				 "IO. State x%x, Type x%x\n",
++				 pnvme_rport->port_id,
++				 ndlp->nlp_state, ndlp->nlp_type);
++		return -ENODEV;
+ 	}
+ 	bmp = kmalloc(sizeof(struct lpfc_dmabuf), GFP_KERNEL);
+ 	if (!bmp) {
+@@ -456,7 +471,7 @@ lpfc_nvme_ls_req(struct nvme_fc_local_port *pnvme_lport,
  
- 	lpfc_tgttemplate.max_hw_queues = phba->cfg_nvme_io_channel;
--	lpfc_tgttemplate.max_sgl_segments = phba->cfg_sg_seg_cnt;
-+	lpfc_tgttemplate.max_sgl_segments = phba->cfg_sg_seg_cnt + 1;
- 	lpfc_tgttemplate.target_features = NVMET_FCTGTFEAT_READDATA_RSP |
- 					   NVMET_FCTGTFEAT_NEEDS_CMD_CPUSCHED |
- 					   NVMET_FCTGTFEAT_CMD_IN_ISR |
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.h b/drivers/scsi/lpfc/lpfc_nvmet.h
-index 02735fc..d8bac4c 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.h
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.h
-@@ -21,9 +21,7 @@
-  * included with this package.                                     *
-  ********************************************************************/
- 
--#define LPFC_NVMET_MIN_SEGS		16
--#define LPFC_NVMET_DEFAULT_SEGS		64	/* 256K IOs */
--#define LPFC_NVMET_MAX_SEGS		510
-+#define LPFC_NVMET_DEFAULT_SEGS		(64 + 1)	/* 256K IOs */
- #define LPFC_NVMET_SUCCESS_LEN	12
- 
- /* Used for NVME Target */
+ 	/* Expand print to include key fields. */
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
+-			 "6051 ENTER.  lport %p, rport %p lsreq%p rqstlen:%d "
++			 "6149 ENTER.  lport %p, rport %p lsreq%p rqstlen:%d "
+ 			 "rsplen:%d %pad %pad\n",
+ 			 pnvme_lport, pnvme_rport,
+ 			 pnvme_lsreq, pnvme_lsreq->rqstlen,
 -- 
 2.1.0
