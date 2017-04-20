@@ -1,90 +1,81 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH v3 3/4] sd: Make synchronize cache upon shutdown
- asynchronous
-Date: Thu, 20 Apr 2017 21:59:11 +0000
-Message-ID: <1492725550.2642.9.camel@sandisk.com>
-References: <20170417173436.15555-1-bart.vanassche@sandisk.com>
-         <20170417173436.15555-4-bart.vanassche@sandisk.com>
-         <20170418144429.GA28949@bblock-ThinkPad-W530>
-         <1492530984.3306.25.camel@HansenPartnership.com>
-         <1492559235.2689.27.camel@sandisk.com>
-         <1492559772.3306.58.camel@HansenPartnership.com>
+From: Kees Cook <keescook@chromium.org>
+Subject: [PATCH v3] scsi/bfa: use designated initializers
+Date: Thu, 20 Apr 2017 15:00:02 -0700
+Message-ID: <20170420220002.GA65324@beast>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:46058 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S947836AbdDTV7U (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 17:59:20 -0400
-In-Reply-To: <1492559772.3306.58.camel@HansenPartnership.com>
-Content-Language: en-US
-Content-ID: <937CA135D74D2D4A852A55A6899778EC@namprd04.prod.outlook.com>
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:36808 "EHLO
+        mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S947842AbdDTWAF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 18:00:05 -0400
+Received: by mail-oi0-f42.google.com with SMTP id r203so69436878oib.3
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Apr 2017 15:00:05 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "bblock@linux.vnet.ibm.com" <bblock@linux.vnet.ibm.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "maxg@mellanox.com" <maxg@mellanox.com>, "israelr@mellanox.com" <israelr@mellanox.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, 2017-04-18 at 16:56 -0700, James Bottomley wrote:
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index e5a2d590a104..31171204cfd1 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -2611,7 +2611,6 @@ scsi_device_set_state(struct scsi_device *sdev, enu=
-m scsi_device_state state)
->  		case SDEV_QUIESCE:
->  		case SDEV_OFFLINE:
->  		case SDEV_TRANSPORT_OFFLINE:
-> -		case SDEV_BLOCK:
->  			break;
->  		default:
->  			goto illegal;
-> @@ -2625,6 +2624,7 @@ scsi_device_set_state(struct scsi_device *sdev, enu=
-m scsi_device_state state)
->  		case SDEV_OFFLINE:
->  		case SDEV_TRANSPORT_OFFLINE:
->  		case SDEV_CANCEL:
-> +		case SDEV_BLOCK:
->  		case SDEV_CREATED_BLOCK:
->  			break;
->  		default:
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index 82dfe07b1d47..e477f95bf169 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -1282,8 +1282,17 @@ void __scsi_remove_device(struct scsi_device *sdev=
-)
->  		return;
-> =20
->  	if (sdev->is_visible) {
-> -		if (scsi_device_set_state(sdev, SDEV_CANCEL) !=3D 0)
-> -			return;
-> +		/*
-> +		 * If blocked, we go straight to DEL so any commands
-> +		 * issued during the driver shutdown (like sync cache)
-> +		 * are errored
-> +		 */
-> +		if (scsi_device_set_state(sdev, SDEV_CANCEL) !=3D 0) {
-> +			if (scsi_device_set_state(sdev, SDEV_DEL) !=3D 0)
-> +				return;
-> +			else
-> +				scsi_start_queue(sdev);
-> +		}
-> =20
->  		bsg_unregister_queue(sdev->request_queue);
->  		device_unregister(&sdev->sdev_dev);
+Prepare to mark sensitive kernel structures for randomization by making
+sure they're using designated initializers. This also initializes the
+array members using the enum used to look up __port_action entries.
 
-Hello James,
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+v3:
+- drop bfa_module_s changes, since that has been removed entirely; hch.
+- init array with enum literals; hch.
+---
+ drivers/scsi/bfa/bfa_fcs_lport.c | 31 +++++++++++++++++++++----------
+ 1 file changed, 21 insertions(+), 10 deletions(-)
 
-This approach cannot work.=A0A scsi_target_block() call by the transport
-layer can happen concurrently with the __scsi_remove_device() call and henc=
-e
-can occur at any time between the scsi_start_queue() call by
-__scsi_remove_device() and the sd_shutdown() call, resulting in a deadlock.
-I have been able to trigger this with my tests by simulating a cable pull
-shortly before running "rmmod ib_srp".
+diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
+index 4ddda72f60e6..638c0a2857f7 100644
+--- a/drivers/scsi/bfa/bfa_fcs_lport.c
++++ b/drivers/scsi/bfa/bfa_fcs_lport.c
+@@ -89,16 +89,27 @@ static struct {
+ 	void		(*online) (struct bfa_fcs_lport_s *port);
+ 	void		(*offline) (struct bfa_fcs_lport_s *port);
+ } __port_action[] = {
+-	{
+-	bfa_fcs_lport_unknown_init, bfa_fcs_lport_unknown_online,
+-			bfa_fcs_lport_unknown_offline}, {
+-	bfa_fcs_lport_fab_init, bfa_fcs_lport_fab_online,
+-			bfa_fcs_lport_fab_offline}, {
+-	bfa_fcs_lport_n2n_init, bfa_fcs_lport_n2n_online,
+-			bfa_fcs_lport_n2n_offline}, {
+-	bfa_fcs_lport_loop_init, bfa_fcs_lport_loop_online,
+-			bfa_fcs_lport_loop_offline},
+-	};
++	[BFA_FCS_FABRIC_UNKNOWN] = {
++		.init = bfa_fcs_lport_unknown_init,
++		.online = bfa_fcs_lport_unknown_online,
++		.offline = bfa_fcs_lport_unknown_offline
++	},
++	[BFA_FCS_FABRIC_SWITCHED] = {
++		.init = bfa_fcs_lport_fab_init,
++		.online = bfa_fcs_lport_fab_online,
++		.offline = bfa_fcs_lport_fab_offline
++	},
++	[BFA_FCS_FABRIC_N2N] = {
++		.init = bfa_fcs_lport_n2n_init,
++		.online = bfa_fcs_lport_n2n_online,
++		.offline = bfa_fcs_lport_n2n_offline
++	},
++	[BFA_FCS_FABRIC_LOOP] = {
++		.init = bfa_fcs_lport_loop_init,
++		.online = bfa_fcs_lport_loop_online,
++		.offline = bfa_fcs_lport_loop_offline
++	},
++};
+ 
+ /*
+  *  fcs_port_sm FCS logical port state machine
+-- 
+2.7.4
 
-That deadlock did not occur with the patch series that makes synchronize
-cache upon shutdown asynchronous. I'm going to resubmit that patch series.
 
-Bart.=
+-- 
+Kees Cook
+Pixel Security
