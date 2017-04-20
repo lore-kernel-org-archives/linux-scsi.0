@@ -1,90 +1,50 @@
-From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 2/5] block: convert blk_queue_tag.refcnt from atomic_t to refcount_t
-Date: Thu, 20 Apr 2017 14:27:21 +0300
-Message-ID: <1492687644-4405-3-git-send-email-elena.reshetova@intel.com>
-References: <1492687644-4405-1-git-send-email-elena.reshetova@intel.com>
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1492687644-4405-1-git-send-email-elena.reshetova@intel.com>
-Sender: linux-block-owner@vger.kernel.org
-To: axboe@kernel.dk
-Cc: james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-btrfs@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, fujita.tomonori@lab.ntt.co.jp, mingo@redhat.com, clm@fb.com, jbacik@fb.com, dsterba@suse.com, Elena Reshetova <elena.reshetova@intel.com>, Hans Liljestrand <ishkamiel@gmail.com>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>
+From: kusumi.tomohiro@gmail.com
+Subject: [PATCH 1/2] scsi: ufs: use MASK_EE_STATUS
+Date: Thu, 20 Apr 2017 15:01:44 +0300
+Message-ID: <20170420120145.7035-1-tkusumi@tuxera.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:36375 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S940472AbdDTMB4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 08:01:56 -0400
+Received: by mail-lf0-f66.google.com with SMTP id 75so5536976lfs.3
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Apr 2017 05:01:55 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: subhashj@codeaurora.org, vinholikatti@gmail.com, linux-scsi@vger.kernel.org
+Cc: Tomohiro Kusumi <tkusumi@tuxera.com>
 
-refcount_t type and corresponding API should be
-used instead of atomic_t when the variable is used as
-a reference counter. This allows to avoid accidental
-refcounter overflows that might lead to use-after-free
-situations.
+From: Tomohiro Kusumi <tkusumi@tuxera.com>
 
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: David Windsor <dwindsor@gmail.com>
+MASK_EE_STATUS added by 66ec6d59 was unused, but it seems to have been
+defined to do this.
+
+Signed-off-by: Tomohiro Kusumi <tkusumi@tuxera.com>
 ---
- block/blk-tag.c        | 8 ++++----
- include/linux/blkdev.h | 3 ++-
- 2 files changed, 6 insertions(+), 5 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/block/blk-tag.c b/block/blk-tag.c
-index 07cc329..d83555e 100644
---- a/block/blk-tag.c
-+++ b/block/blk-tag.c
-@@ -35,7 +35,7 @@ EXPORT_SYMBOL(blk_queue_find_tag);
-  */
- void blk_free_tags(struct blk_queue_tag *bqt)
- {
--	if (atomic_dec_and_test(&bqt->refcnt)) {
-+	if (refcount_dec_and_test(&bqt->refcnt)) {
- 		BUG_ON(find_first_bit(bqt->tag_map, bqt->max_depth) <
- 							bqt->max_depth);
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 096e95b..9278666 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -4717,7 +4717,7 @@ static int ufshcd_disable_ee(struct ufs_hba *hba, u16 mask)
+ 		goto out;
  
-@@ -130,7 +130,7 @@ static struct blk_queue_tag *__blk_queue_init_tags(struct request_queue *q,
- 	if (init_tag_map(q, tags, depth))
- 		goto fail;
+ 	val = hba->ee_ctrl_mask & ~mask;
+-	val &= 0xFFFF; /* 2 bytes */
++	val &= MASK_EE_STATUS;
+ 	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+ 			QUERY_ATTR_IDN_EE_CONTROL, 0, 0, &val);
+ 	if (!err)
+@@ -4745,7 +4745,7 @@ static int ufshcd_enable_ee(struct ufs_hba *hba, u16 mask)
+ 		goto out;
  
--	atomic_set(&tags->refcnt, 1);
-+	refcount_set(&tags->refcnt, 1);
- 	tags->alloc_policy = alloc_policy;
- 	tags->next_tag = 0;
- 	return tags;
-@@ -180,7 +180,7 @@ int blk_queue_init_tags(struct request_queue *q, int depth,
- 		queue_flag_set(QUEUE_FLAG_QUEUED, q);
- 		return 0;
- 	} else
--		atomic_inc(&tags->refcnt);
-+		refcount_inc(&tags->refcnt);
- 
- 	/*
- 	 * assign it, all done
-@@ -225,7 +225,7 @@ int blk_queue_resize_tags(struct request_queue *q, int new_depth)
- 	 * Currently cannot replace a shared tag map with a new
- 	 * one, so error out if this is the case
- 	 */
--	if (atomic_read(&bqt->refcnt) != 1)
-+	if (refcount_read(&bqt->refcnt) != 1)
- 		return -EBUSY;
- 
- 	/*
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index aecca0e..95ef11c 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -25,6 +25,7 @@
- #include <linux/percpu-refcount.h>
- #include <linux/scatterlist.h>
- #include <linux/blkzoned.h>
-+#include <linux/refcount.h>
- 
- struct module;
- struct scsi_ioctl_command;
-@@ -288,7 +289,7 @@ struct blk_queue_tag {
- 	unsigned long *tag_map;		/* bit map of free/busy tags */
- 	int max_depth;			/* what we will send to device */
- 	int real_max_depth;		/* what the array can hold */
--	atomic_t refcnt;		/* map can be shared */
-+	refcount_t refcnt;		/* map can be shared */
- 	int alloc_policy;		/* tag allocation policy */
- 	int next_tag;			/* next tag */
- };
+ 	val = hba->ee_ctrl_mask | mask;
+-	val &= 0xFFFF; /* 2 bytes */
++	val &= MASK_EE_STATUS;
+ 	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+ 			QUERY_ATTR_IDN_EE_CONTROL, 0, 0, &val);
+ 	if (!err)
 -- 
-2.7.4
+2.9.3
