@@ -1,7 +1,7 @@
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 1/5] block: convert bio.__bi_cnt from atomic_t to refcount_t
-Date: Thu, 20 Apr 2017 14:27:20 +0300
-Message-ID: <1492687644-4405-2-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 4/5] block: convert io_context.active_ref from atomic_t to refcount_t
+Date: Thu, 20 Apr 2017 14:27:23 +0300
+Message-ID: <1492687644-4405-5-git-send-email-elena.reshetova@intel.com>
 References: <1492687644-4405-1-git-send-email-elena.reshetova@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1492687644-4405-1-git-send-email-elena.reshetova@intel.com>
@@ -21,95 +21,86 @@ Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
 Signed-off-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: David Windsor <dwindsor@gmail.com>
 ---
- block/bio.c               | 6 +++---
- fs/btrfs/volumes.c        | 2 +-
- include/linux/bio.h       | 4 ++--
- include/linux/blk_types.h | 3 ++-
- 4 files changed, 8 insertions(+), 7 deletions(-)
+ block/blk-ioc.c           | 4 ++--
+ block/cfq-iosched.c       | 4 ++--
+ include/linux/iocontext.h | 6 +++---
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index 5eec5e0..3dffc17 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -275,7 +275,7 @@ void bio_init(struct bio *bio, struct bio_vec *table,
- {
- 	memset(bio, 0, sizeof(*bio));
- 	atomic_set(&bio->__bi_remaining, 1);
--	atomic_set(&bio->__bi_cnt, 1);
-+	refcount_set(&bio->__bi_cnt, 1);
+diff --git a/block/blk-ioc.c b/block/blk-ioc.c
+index b12f9c8..130dc23 100644
+--- a/block/blk-ioc.c
++++ b/block/blk-ioc.c
+@@ -173,7 +173,7 @@ void put_io_context_active(struct io_context *ioc)
+ 	unsigned long flags;
+ 	struct io_cq *icq;
  
- 	bio->bi_io_vec = table;
- 	bio->bi_max_vecs = max_vecs;
-@@ -543,12 +543,12 @@ void bio_put(struct bio *bio)
- 	if (!bio_flagged(bio, BIO_REFFED))
- 		bio_free(bio);
- 	else {
--		BIO_BUG_ON(!atomic_read(&bio->__bi_cnt));
-+		BIO_BUG_ON(!refcount_read(&bio->__bi_cnt));
- 
- 		/*
- 		 * last put frees it
- 		 */
--		if (atomic_dec_and_test(&bio->__bi_cnt))
-+		if (refcount_dec_and_test(&bio->__bi_cnt))
- 			bio_free(bio);
+-	if (!atomic_dec_and_test(&ioc->active_ref)) {
++	if (!refcount_dec_and_test(&ioc->active_ref)) {
+ 		put_io_context(ioc);
+ 		return;
  	}
- }
-diff --git a/fs/btrfs/volumes.c b/fs/btrfs/volumes.c
-index 13e55d1..ff1fe9d 100644
---- a/fs/btrfs/volumes.c
-+++ b/fs/btrfs/volumes.c
-@@ -441,7 +441,7 @@ static noinline void run_scheduled_bios(struct btrfs_device *device)
- 		    waitqueue_active(&fs_info->async_submit_wait))
- 			wake_up(&fs_info->async_submit_wait);
+@@ -256,7 +256,7 @@ int create_task_io_context(struct task_struct *task, gfp_t gfp_flags, int node)
+ 	/* initialize */
+ 	atomic_long_set(&ioc->refcount, 1);
+ 	atomic_set(&ioc->nr_tasks, 1);
+-	atomic_set(&ioc->active_ref, 1);
++	refcount_set(&ioc->active_ref, 1);
+ 	spin_lock_init(&ioc->lock);
+ 	INIT_RADIX_TREE(&ioc->icq_tree, GFP_ATOMIC | __GFP_HIGH);
+ 	INIT_HLIST_HEAD(&ioc->icq_list);
+diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
+index 9212627..2871bb9 100644
+--- a/block/cfq-iosched.c
++++ b/block/cfq-iosched.c
+@@ -2959,7 +2959,7 @@ static void cfq_arm_slice_timer(struct cfq_data *cfqd)
+ 	 * task has exited, don't wait
+ 	 */
+ 	cic = cfqd->active_cic;
+-	if (!cic || !atomic_read(&cic->icq.ioc->active_ref))
++	if (!cic || !refcount_read(&cic->icq.ioc->active_ref))
+ 		return;
  
--		BUG_ON(atomic_read(&cur->__bi_cnt) == 0);
-+		BUG_ON(refcount_read(&cur->__bi_cnt) == 0);
+ 	/*
+@@ -3959,7 +3959,7 @@ cfq_update_idle_window(struct cfq_data *cfqd, struct cfq_queue *cfqq,
  
- 		/*
- 		 * if we're doing the sync list, record that our
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 8e52119..44ac678 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -234,7 +234,7 @@ static inline void bio_get(struct bio *bio)
- {
- 	bio->bi_flags |= (1 << BIO_REFFED);
- 	smp_mb__before_atomic();
--	atomic_inc(&bio->__bi_cnt);
-+	refcount_inc(&bio->__bi_cnt);
- }
+ 	if (cfqq->next_rq && req_noidle(cfqq->next_rq))
+ 		enable_idle = 0;
+-	else if (!atomic_read(&cic->icq.ioc->active_ref) ||
++	else if (!refcount_read(&cic->icq.ioc->active_ref) ||
+ 		 !cfqd->cfq_slice_idle ||
+ 		 (!cfq_cfqq_deep(cfqq) && CFQQ_SEEKY(cfqq)))
+ 		enable_idle = 0;
+diff --git a/include/linux/iocontext.h b/include/linux/iocontext.h
+index df38db2..e47b907 100644
+--- a/include/linux/iocontext.h
++++ b/include/linux/iocontext.h
+@@ -3,6 +3,7 @@
  
- static inline void bio_cnt_set(struct bio *bio, unsigned int count)
-@@ -243,7 +243,7 @@ static inline void bio_cnt_set(struct bio *bio, unsigned int count)
- 		bio->bi_flags |= (1 << BIO_REFFED);
- 		smp_mb__before_atomic();
- 	}
--	atomic_set(&bio->__bi_cnt, count);
-+	refcount_set(&bio->__bi_cnt, count);
- }
- 
- static inline bool bio_flagged(struct bio *bio, unsigned int bit)
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index d703acb..c41407f 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -7,6 +7,7 @@
- 
- #include <linux/types.h>
- #include <linux/bvec.h>
+ #include <linux/radix-tree.h>
+ #include <linux/rcupdate.h>
 +#include <linux/refcount.h>
+ #include <linux/workqueue.h>
  
- struct bio_set;
- struct bio;
-@@ -73,7 +74,7 @@ struct bio {
+ enum {
+@@ -96,7 +97,7 @@ struct io_cq {
+  */
+ struct io_context {
+ 	atomic_long_t refcount;
+-	atomic_t active_ref;
++	refcount_t active_ref;
+ 	atomic_t nr_tasks;
  
- 	unsigned short		bi_max_vecs;	/* max bvl_vecs we can hold */
+ 	/* all the fields below are protected by this lock */
+@@ -128,9 +129,8 @@ struct io_context {
+ static inline void get_io_context_active(struct io_context *ioc)
+ {
+ 	WARN_ON_ONCE(atomic_long_read(&ioc->refcount) <= 0);
+-	WARN_ON_ONCE(atomic_read(&ioc->active_ref) <= 0);
+ 	atomic_long_inc(&ioc->refcount);
+-	atomic_inc(&ioc->active_ref);
++	refcount_inc(&ioc->active_ref);
+ }
  
--	atomic_t		__bi_cnt;	/* pin count */
-+	refcount_t		__bi_cnt;	/* pin count */
- 
- 	struct bio_vec		*bi_io_vec;	/* the actual vec list */
- 
+ static inline void ioc_task_link(struct io_context *ioc)
 -- 
 2.7.4
