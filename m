@@ -1,40 +1,57 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH-v1 12/22] Fix driver usage of 128B WQEs when WQ_CREATE is
- V1.
-Date: Thu, 20 Apr 2017 09:37:41 +0200
-Message-ID: <20170420073740.GM6217@linux-x5ow.site>
+Subject: Re: [PATCH-v1 13/22] Fix nvme initiator handling when not enabled.
+Date: Thu, 20 Apr 2017 09:38:57 +0200
+Message-ID: <20170420073857.GN6217@linux-x5ow.site>
 References: <20170420044641.10657-1-jsmart2021@gmail.com>
- <20170420044641.10657-13-jsmart2021@gmail.com>
+ <20170420044641.10657-14-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48471 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:48556 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S941328AbdDTHho (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 20 Apr 2017 03:37:44 -0400
+        id S943087AbdDTHjA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 20 Apr 2017 03:39:00 -0400
 Content-Disposition: inline
-In-Reply-To: <20170420044641.10657-13-jsmart2021@gmail.com>
+In-Reply-To: <20170420044641.10657-14-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jsmart2021@gmail.com
 Cc: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, sagi@grimberg.me, martin.petersen@oracle.com, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-On Wed, Apr 19, 2017 at 09:46:31PM -0700, jsmart2021@gmail.com wrote:
+On Wed, Apr 19, 2017 at 09:46:32PM -0700, jsmart2021@gmail.com wrote:
 > From: James Smart <jsmart2021@gmail.com>
 > 
-> There are two versions of a structure for queue creation and setup that the
-> driver shares with FW. The driver was only treating as version 0.
+> Fix nvme initiator handline when CONFIG_LPFC_NVME_INITIATOR is not enabled.
 > 
-> Verify WQ_CREATE with 128B WQEs in V0 and V1.
+> With update nvme upstream driver sources, loading
+> the driver with nvme enabled resulting in this Oops.
 > 
-> Code review of another bug showed the driver passing
-> 128B WQEs and 8 pages in WQ CREATE and V0.
-> Code inspection/instrumentation showed that the driver
-> uses V0 in WQ_CREATE and if the caller passes queue->entry_size
-> 128B, the driver sets the hdr_version to V1 so all is good.
-> When I tested the V1 WQ_CREATE, the mailbox failed causing
-> the driver to unload.
+>  BUG: unable to handle kernel NULL pointer dereference at 0000000000000018
+>  IP: lpfc_nvme_update_localport+0x23/0xd0 [lpfc]
+>  PGD 0
+>  Oops: 0000 [#1] SMP
+>  CPU: 0 PID: 10256 Comm: lpfc_worker_0 Tainted
+>  Hardware name: ...
+>  task: ffff881028191c40 task.stack: ffff880ffdf00000
+>  RIP: 0010:lpfc_nvme_update_localport+0x23/0xd0 [lpfc]
+>  RSP: 0018:ffff880ffdf03c20 EFLAGS: 00010202
+> 
+> Cause: As the initiator driver completes discovery at different stages,
+> it call lpfc_nvme_update_localport to hint that the DID and role may have
+> changed.  In the implementation of lpfc_nvme_update_localport, the driver
+> was not validating the localport or the lport during the execution
+> of the update_localport routine.  With the recent upstream additions to
+> the driver, the create_localport routine didn't run and so the localport
+> was NULL causing the page-fault Oops.
+> 
+> Fix: Add the CONFIG_LPFC_NVME_INITIATOR preprocessor inclusions to
+> lpfc_nvme_update_localport to turn off all routine processing when
+> the running kernel does not have NVME configured.  Add NULL pointer
+> checks on the localport and lport in lpfc_nvme_update_localport and
+> dump messages if they are NULL and just exit.
+> Also one alingment issue fixed.
+> Repalces the ifdef with the IS_ENABLED macro.
 > 
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
