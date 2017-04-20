@@ -1,34 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: qedi,qedf: Use designated initializers
-Date: Wed, 19 Apr 2017 22:11:26 -0400
-Message-ID: <yq1o9vrrfox.fsf@oracle.com>
-References: <20170329205923.GA39690@beast>
+Subject: Re: [PATCH] bfa: remove bfa_module_s madness
+Date: Wed, 19 Apr 2017 22:14:17 -0400
+Message-ID: <yq1k26frfk6.fsf@oracle.com>
+References: <20170413080256.12451-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:50879 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:51845 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1765596AbdDTCLg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Apr 2017 22:11:36 -0400
-In-Reply-To: <20170329205923.GA39690@beast> (Kees Cook's message of "Wed, 29
-        Mar 2017 13:59:23 -0700")
+        with ESMTP id S1765900AbdDTCO0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Apr 2017 22:14:26 -0400
+In-Reply-To: <20170413080256.12451-1-hch@lst.de> (Christoph Hellwig's message
+        of "Thu, 13 Apr 2017 10:02:56 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: linux-kernel@vger.kernel.org, QLogic-Storage-Upstream@cavium.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: martin.petersen@oracle.com, anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com, keescook@chromium.org, linux-scsi@vger.kernel.org
 
+Christoph Hellwig <hch@lst.de> writes:
 
-Kees,
+> Just call the functions directly and remove a giant pile of
+> boilerplate code.
 
-> Prepare to mark sensitive kernel structures for randomization by
-> making sure they're using designated initializers. These were
-> identified during allyesconfig builds of x86, arm, and arm64, with
-> most initializer fixes extracted from grsecurity.
->
-> For these cases, terminate the list with { }, which will be
-> zero-filled, instead of undesignated NULLs.
-
-Applied to 4.12/scsi-queue. Thanks!
+Applied to 4.12/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
