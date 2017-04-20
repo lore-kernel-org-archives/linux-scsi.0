@@ -1,49 +1,31 @@
-From: Trond Myklebust <trondmy@primarydata.com>
-Subject: Re: [PATCH 3/4] nfs: remove the objlayout driver
-Date: Thu, 20 Apr 2017 20:18:28 +0000
-Message-ID: <1492719505.82584.3.camel@primarydata.com>
-References: <20170412160109.10598-1-hch@lst.de>
-         <20170412160109.10598-4-hch@lst.de>
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: Re: [REEEEPOST] bnx2i + bnx2fc: convert to generic workqueue (#3)
+Date: Thu, 20 Apr 2017 22:24:43 +0200
+Message-ID: <20170420202443.lryo4n7vobphezl2@linutronix.de>
+References: <20170410171254.30367-1-bigeasy@linutronix.de>
+ <alpine.OSX.2.00.1704101420150.1637@n8054ir3xxd7w1.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170412160109.10598-4-hch@lst.de>
-Content-Language: en-US
-Content-ID: <21D4B4FF9949A94B97C7CF7944780E0D@namprd11.prod.outlook.com>
-Sender: linux-block-owner@vger.kernel.org
-To: hch <hch@lst.de>, "ooo@electrozaur.com" <ooo@electrozaur.com>, Trond Myklebust <trondmy@primarydata.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "osd-dev@open-osd.org" <osd-dev@open-osd.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from Galois.linutronix.de ([146.0.238.70]:36924 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1033682AbdDTUYy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2017 16:24:54 -0400
+Content-Disposition: inline
+In-Reply-To: <alpine.OSX.2.00.1704101420150.1637@n8054ir3xxd7w1.qlogic.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Chad Dupuis <chad.dupuis@cavium.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, rt@linutronix.de, Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>, Chad Dupuis <chad.dupuis@qlogic.com>, QLogic-Storage-Upstream@qlogic.com, Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, Andrew Morton <akpm@linux-foundation.org>
 
-T24gV2VkLCAyMDE3LTA0LTEyIGF0IDE4OjAxICswMjAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90
-ZToNCj4gVGhlIG9iamxheW91dCBjb2RlIGhhcyBiZWVuIGluIHRoZSB0cmVlLCBidXQgaXQncyBi
-ZWVuIHVubWFpbnRhaW5lZA0KPiBhbmQNCj4gbm8gc2VydmVyIHByb2R1Y3QgZm9yIGl0IGFjdHVh
-bGx5IGV2ZXIgc2hpcHBlZC4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IENocmlzdG9waCBIZWxsd2ln
-IDxoY2hAbHN0LmRlPg0KPiAtLS0NCj4gwqBEb2N1bWVudGF0aW9uL2FkbWluLWd1aWRlL2tlcm5l
-bC1wYXJhbWV0ZXJzLnR4dCB8wqDCoMKgNiAtDQo+IMKgRG9jdW1lbnRhdGlvbi9maWxlc3lzdGVt
-cy9uZnMvcG5mcy50eHTCoMKgwqDCoMKgwqDCoMKgwqDCoHzCoMKgMzcgLS0NCj4gwqBmcy9uZnMv
-S2NvbmZpZ8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgfMKgwqDCoDUgLQ0KPiDCoGZzL25mcy9NYWtlZmlsZcKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oHzCoMKgwqAxIC0NCj4gwqBmcy9uZnMvb2JqbGF5b3V0L0tidWlsZMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgfMKgwqDCoDUgLQ0KPiDCoGZzL25mcy9v
-YmpsYXlvdXQvb2JqaW9fb3NkLmPCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgfCA2NzUgLS0tLS0tLS0tLS0tLS0NCj4gLS0tLS0tLS0NCj4gwqBmcy9uZnMvb2JqbGF5b3V0
-L29iamxheW91dC5jwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHwgNzA2
-IC0tLS0tLS0tLS0tLS0tDQo+IC0tLS0tLS0tLS0NCj4gwqBmcy9uZnMvb2JqbGF5b3V0L29iamxh
-eW91dC5owqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHwgMTgzIC0tLS0t
-LQ0KPiDCoGZzL25mcy9vYmpsYXlvdXQvcG5mc19vc2RfeGRyX2NsaS5jwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqB8IDQxNSAtLS0tLS0tLS0tLS0tLQ0KPiDCoDkgZmlsZXMgY2hhbmdlZCwgMjAz
-MyBkZWxldGlvbnMoLSkNCj4gwqBkZWxldGUgbW9kZSAxMDA2NDQgZnMvbmZzL29iamxheW91dC9L
-YnVpbGQNCj4gwqBkZWxldGUgbW9kZSAxMDA2NDQgZnMvbmZzL29iamxheW91dC9vYmppb19vc2Qu
-Yw0KPiDCoGRlbGV0ZSBtb2RlIDEwMDY0NCBmcy9uZnMvb2JqbGF5b3V0L29iamxheW91dC5jDQo+
-IMKgZGVsZXRlIG1vZGUgMTAwNjQ0IGZzL25mcy9vYmpsYXlvdXQvb2JqbGF5b3V0LmgNCj4gwqBk
-ZWxldGUgbW9kZSAxMDA2NDQgZnMvbmZzL29iamxheW91dC9wbmZzX29zZF94ZHJfY2xpLmMNCj4g
-DQoNCk9LLiBJJ20gYXBwbHlpbmcgdGhpcyBwYXRjaCBmb3IgdGhlIDQuMTIgbWVyZ2Ugd2luZG93
-LiBJZiwgYXMgQm9heg0Kc3VnZ2VzdHMsIHRoZXJlIGlzIHN0aWxsIGFuIGludGVyZXN0IGluIGV4
-b2ZzLCB0aGVuIEkgc3VnZ2VzdCB3ZSBwdXQNCnRoYXQgdG8gdGhlIHRlc3QgYnkgbW92aW5nIGl0
-IGludG8gdGhlIFNUQUdJTkcgYXJlYSwgdG8gc2VlIGlmIHNvbWVvbmUNCndpbGwgc3RlcCB1cCB0
-byBtYWludGFpbiBpdC4NCg0KQ2hlZXJzDQogIFRyb25kDQoNCi0tIA0KVHJvbmQgTXlrbGVidXN0
-DQpMaW51eCBORlMgY2xpZW50IG1haW50YWluZXIsIFByaW1hcnlEYXRhDQp0cm9uZC5teWtsZWJ1
-c3RAcHJpbWFyeWRhdGEuY29tDQo=
+On 2017-04-10 14:20:41 [-0400], Chad Dupuis wrote:
+> Sebastian, will take a look. 
+
+This [0] commit in tip's smp/hotplug branch is staged for the next merge
+window. It will trigger a lockdep warning on the recursive
+get_online_cpus() invocation in the two drivers. It is fixed/avoided by
+the series.
+
+[0] https://git.kernel.org/tip/tip/c/d215aab82d81974f438bfbc80aa437132f3c37c3
+
+Sebastian
