@@ -1,15 +1,15 @@
 From: jsmart2021@gmail.com
-Subject: [PATCH v3 07/22] Remove unused defines for NVME PostBuf.
-Date: Fri, 21 Apr 2017 16:04:51 -0700
-Message-ID: <20170421230506.925-8-jsmart2021@gmail.com>
+Subject: [PATCH v3 08/22] Remove NULL ptr check before kfree.
+Date: Fri, 21 Apr 2017 16:04:52 -0700
+Message-ID: <20170421230506.925-9-jsmart2021@gmail.com>
 References: <20170421230506.925-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:33003 "EHLO
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:36778 "EHLO
         mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1041162AbdDUXFV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 19:05:21 -0400
-Received: by mail-oi0-f67.google.com with SMTP id a189so23915886oib.0
-        for <linux-scsi@vger.kernel.org>; Fri, 21 Apr 2017 16:05:21 -0700 (PDT)
+        with ESMTP id S1041399AbdDUXFW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 19:05:22 -0400
+Received: by mail-oi0-f67.google.com with SMTP id a3so18440838oii.3
+        for <linux-scsi@vger.kernel.org>; Fri, 21 Apr 2017 16:05:22 -0700 (PDT)
 In-Reply-To: <20170421230506.925-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,30 +18,46 @@ Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>
 
 From: James Smart <jsmart2021@gmail.com>
 
-These defines for the posting of buffers for nvmet target were not used.
+The check for NULL ptr is not necessary, kfree will check it.
 
-Removing the unused defines.
+Removing NULL ptr check.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/lpfc/lpfc_nvme.h | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/scsi/lpfc/lpfc_debugfs.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.h b/drivers/scsi/lpfc/lpfc_nvme.h
-index 6277796..2582f46 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.h
-+++ b/drivers/scsi/lpfc/lpfc_nvme.h
-@@ -22,9 +22,6 @@
-  ********************************************************************/
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index 913eed82..76857e2 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -5700,10 +5700,8 @@ lpfc_debugfs_terminate(struct lpfc_vport *vport)
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+ 	struct lpfc_hba   *phba = vport->phba;
  
- #define LPFC_NVME_DEFAULT_SEGS		(64 + 1)	/* 256K IOs */
--#define LPFC_NVMET_MIN_POSTBUF		16
--#define LPFC_NVMET_DEFAULT_POSTBUF	1024
--#define LPFC_NVMET_MAX_POSTBUF		4096
- #define LPFC_NVME_WQSIZE		256
+-	if (vport->disc_trc) {
+-		kfree(vport->disc_trc);
+-		vport->disc_trc = NULL;
+-	}
++	kfree(vport->disc_trc);
++	vport->disc_trc = NULL;
  
- #define LPFC_NVME_ERSP_LEN		0x20
+ 	debugfs_remove(vport->debug_disc_trc); /* discovery_trace */
+ 	vport->debug_disc_trc = NULL;
+@@ -5770,10 +5768,8 @@ lpfc_debugfs_terminate(struct lpfc_vport *vport)
+ 		debugfs_remove(phba->debug_readRef); /* readRef */
+ 		phba->debug_readRef = NULL;
+ 
+-		if (phba->slow_ring_trc) {
+-			kfree(phba->slow_ring_trc);
+-			phba->slow_ring_trc = NULL;
+-		}
++		kfree(phba->slow_ring_trc);
++		phba->slow_ring_trc = NULL;
+ 
+ 		/* slow_ring_trace */
+ 		debugfs_remove(phba->debug_slow_ring_trc);
 -- 
 2.9.3
