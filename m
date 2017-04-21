@@ -1,15 +1,15 @@
 From: jsmart2021@gmail.com
-Subject: [PATCH v3 01/22] Standardize nvme SGL segment count
-Date: Fri, 21 Apr 2017 16:04:45 -0700
-Message-ID: <20170421230506.925-2-jsmart2021@gmail.com>
+Subject: [PATCH v3 05/22] Add debug messages for nvme/fcp resource allocation.
+Date: Fri, 21 Apr 2017 16:04:49 -0700
+Message-ID: <20170421230506.925-6-jsmart2021@gmail.com>
 References: <20170421230506.925-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:34301 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1426468AbdDUXFN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 19:05:13 -0400
-Received: by mail-oi0-f68.google.com with SMTP id y11so21736092oie.1
-        for <linux-scsi@vger.kernel.org>; Fri, 21 Apr 2017 16:05:12 -0700 (PDT)
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:36752 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1426480AbdDUXFS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 19:05:18 -0400
+Received: by mail-oi0-f65.google.com with SMTP id a3so18440676oii.3
+        for <linux-scsi@vger.kernel.org>; Fri, 21 Apr 2017 16:05:18 -0700 (PDT)
 In-Reply-To: <20170421230506.925-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,61 +18,34 @@ Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>
 
 From: James Smart <jsmart2021@gmail.com>
 
-Standardize default SGL segment count for nvme target and initiator
+The xri resources are split into pools for NVME and FCP IO when NVME is
+enabled. There was not message in the log that identified this allocation.
 
-The driver needs to make them the same for clarity.
+Added debug message to log XRI split.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/lpfc/lpfc_nvme.h  | 4 +---
- drivers/scsi/lpfc/lpfc_nvmet.c | 2 +-
- drivers/scsi/lpfc/lpfc_nvmet.h | 4 +---
- 3 files changed, 3 insertions(+), 7 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.h b/drivers/scsi/lpfc/lpfc_nvme.h
-index 1347deb..6277796 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.h
-+++ b/drivers/scsi/lpfc/lpfc_nvme.h
-@@ -21,9 +21,7 @@
-  * included with this package.                                     *
-  ********************************************************************/
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 6cc561b..b56da01 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -3508,6 +3508,12 @@ lpfc_sli4_scsi_sgl_update(struct lpfc_hba *phba)
+ 	spin_unlock(&phba->scsi_buf_list_put_lock);
+ 	spin_unlock_irq(&phba->scsi_buf_list_get_lock);
  
--#define LPFC_NVME_MIN_SEGS		16
--#define LPFC_NVME_DEFAULT_SEGS		66	/* 256K IOs - 64 + 2 */
--#define LPFC_NVME_MAX_SEGS		510
-+#define LPFC_NVME_DEFAULT_SEGS		(64 + 1)	/* 256K IOs */
- #define LPFC_NVMET_MIN_POSTBUF		16
- #define LPFC_NVMET_DEFAULT_POSTBUF	1024
- #define LPFC_NVMET_MAX_POSTBUF		4096
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index d488c33..c8a4941 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -709,7 +709,7 @@ lpfc_nvmet_create_targetport(struct lpfc_hba *phba)
- 	pinfo.port_id = vport->fc_myDID;
- 
- 	lpfc_tgttemplate.max_hw_queues = phba->cfg_nvme_io_channel;
--	lpfc_tgttemplate.max_sgl_segments = phba->cfg_sg_seg_cnt;
-+	lpfc_tgttemplate.max_sgl_segments = phba->cfg_sg_seg_cnt + 1;
- 	lpfc_tgttemplate.target_features = NVMET_FCTGTFEAT_READDATA_RSP |
- 					   NVMET_FCTGTFEAT_NEEDS_CMD_CPUSCHED |
- 					   NVMET_FCTGTFEAT_CMD_IN_ISR |
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.h b/drivers/scsi/lpfc/lpfc_nvmet.h
-index 02735fc..d8bac4c 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.h
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.h
-@@ -21,9 +21,7 @@
-  * included with this package.                                     *
-  ********************************************************************/
- 
--#define LPFC_NVMET_MIN_SEGS		16
--#define LPFC_NVMET_DEFAULT_SEGS		64	/* 256K IOs */
--#define LPFC_NVMET_MAX_SEGS		510
-+#define LPFC_NVMET_DEFAULT_SEGS		(64 + 1)	/* 256K IOs */
- #define LPFC_NVMET_SUCCESS_LEN	12
- 
- /* Used for NVME Target */
++	lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
++			"6060 Current allocated SCSI xri-sgl count:%d, "
++			"maximum  SCSI xri count:%d (split:%d)\n",
++			phba->sli4_hba.scsi_xri_cnt,
++			phba->sli4_hba.scsi_xri_max, phba->cfg_xri_split);
++
+ 	if (phba->sli4_hba.scsi_xri_cnt > phba->sli4_hba.scsi_xri_max) {
+ 		/* max scsi xri shrinked below the allocated scsi buffers */
+ 		scsi_xri_cnt = phba->sli4_hba.scsi_xri_cnt -
 -- 
 2.9.3
