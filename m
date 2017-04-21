@@ -1,172 +1,57 @@
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v2] target/user: PGR Support
-Date: Fri, 21 Apr 2017 12:59:29 -0500
-Message-ID: <1492797569-37588-1-git-send-email-bryantly@linux.vnet.ibm.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: nab@linux-iscsi.org, mchristi@redhat.com
-Cc: seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+From: Kees Cook <keescook@chromium.org>
+Subject: Re: [PATCH 0/5] v2: block subsystem refcounter conversions
+Date: Fri, 21 Apr 2017 10:11:45 -0700
+Message-ID: <CAGXu5jLZPZTykVd4VOgU1d+BpUCnnDC9gYdF6mbnRp+9b4ZMPg@mail.gmail.com>
+References: <1492687644-4405-1-git-send-email-elena.reshetova@intel.com>
+ <20170420135651.GA26595@infradead.org> <2236FBA76BA1254E88B949DDB74E612B41C8DA36@IRSMSX102.ger.corp.intel.com>
+ <20170420183319.GB103004@gmail.com> <2236FBA76BA1254E88B949DDB74E612B41C8E21B@IRSMSX102.ger.corp.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <2236FBA76BA1254E88B949DDB74E612B41C8E21B@IRSMSX102.ger.corp.intel.com>
+Sender: linux-block-owner@vger.kernel.org
+To: "Reshetova, Elena" <elena.reshetova@intel.com>, Eric Biggers <ebiggers3@gmail.com>, Christoph Hellwig <hch@infradead.org>, "axboe@kernel.dk" <axboe@kernel.dk>, "peterz@infradead.org" <peterz@infradead.org>
+Cc: "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "fujita.tomonori@lab.ntt.co.jp" <fujita.tomonori@lab.ntt.co.jp>, "mingo@redhat.com" <mingo@redhat.com>, "clm@fb.com" <clm@fb.com>, "jbacik@fb.com" <jbacik@fb.com>, "dsterba@suse.com" <dsterba@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This adds initial PGR support for just TCMU, since tcmu doesn't
-have the necessary IT_NEXUS info to process PGR in userspace,
-so have those commands be processed in kernel.
+On Fri, Apr 21, 2017 at 3:55 AM, Reshetova, Elena
+<elena.reshetova@intel.com> wrote:
+> On Thu, Apr 20, 2017 at 11:33 AM, Eric Biggers <ebiggers3@gmail.com> wrote:
+>> Of course, having extra checks behind a debug option is fine.  But they should
+>> not be part of the base feature; the base feature should just be mitigation of
+>> reference count *overflows*.  It would be nice to do more, of course; but when
+>> the extra stuff prevents people from using refcount_t for performance reasons,
+>> it defeats the point of the feature in the first place.
+>
+> Sure, but as I said above, I think the smaller tricks and fixes won't be convincing enough,
+> so their value is questionable.
+>
+>> I strongly encourage anyone who has been involved in refcount_t to experiment
+>> with removing a reference count decrement somewhere in their kernel, then trying
+>> to exploit it to gain code execution.  If you don't know what you're trying to
+>> protect against, you will not know which defences work and which don't.
+>
+> Well, we had successful CVEs and even exploits on this in the past.
+> @Kees, do you store a list of them in the project?
 
-HA support is not available yet, we will work on it if this patch
-is acceptable.
+Here are two from last year:
+http://perception-point.io/2016/01/14/analysis-and-exploitation-of-a-linux-kernel-vulnerability-cve-2016-0728/
+http://cyseclabs.com/page?n=02012016
 
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
----
- drivers/target/target_core_configfs.c | 10 ++++-----
- drivers/target/target_core_device.c   | 38 +++++++++++++++++++++++++++++++++++
- drivers/target/target_core_pr.c       |  2 +-
- drivers/target/target_core_pscsi.c    |  3 ++-
- include/target/target_core_backend.h  |  1 +
- 5 files changed, 47 insertions(+), 7 deletions(-)
+I don't disagree with Eric on the threat model: the primary concern
+for reference count protection is the overflow condition. Detecting a
+prior use-after-free is certainly nice to have, but the more important
+case is the initial overflow.
 
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index 38b5025..edfb098 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -1366,7 +1366,7 @@ static ssize_t target_pr_res_holder_show(struct config_item *item, char *page)
- 	struct se_device *dev = pr_to_dev(item);
- 	int ret;
- 
--	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH)
-+	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH_PGR)
- 		return sprintf(page, "Passthrough\n");
- 
- 	spin_lock(&dev->dev_reservation_lock);
-@@ -1506,7 +1506,7 @@ static ssize_t target_pr_res_type_show(struct config_item *item, char *page)
- {
- 	struct se_device *dev = pr_to_dev(item);
- 
--	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH)
-+	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH_PGR)
- 		return sprintf(page, "SPC_PASSTHROUGH\n");
- 	else if (dev->dev_reservation_flags & DRF_SPC2_RESERVATIONS)
- 		return sprintf(page, "SPC2_RESERVATIONS\n");
-@@ -1519,7 +1519,7 @@ static ssize_t target_pr_res_aptpl_active_show(struct config_item *item,
- {
- 	struct se_device *dev = pr_to_dev(item);
- 
--	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH)
-+	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH_PGR)
- 		return 0;
- 
- 	return sprintf(page, "APTPL Bit Status: %s\n",
-@@ -1531,7 +1531,7 @@ static ssize_t target_pr_res_aptpl_metadata_show(struct config_item *item,
- {
- 	struct se_device *dev = pr_to_dev(item);
- 
--	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH)
-+	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH_PGR)
- 		return 0;
- 
- 	return sprintf(page, "Ready to process PR APTPL metadata..\n");
-@@ -1577,7 +1577,7 @@ static ssize_t target_pr_res_aptpl_metadata_store(struct config_item *item,
- 	u16 tpgt = 0;
- 	u8 type = 0;
- 
--	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH)
-+	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH_PGR)
- 		return count;
- 	if (dev->dev_reservation_flags & DRF_SPC2_RESERVATIONS)
- 		return count;
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index c754ae3..80106cc 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -1045,6 +1045,8 @@ passthrough_parse_cdb(struct se_cmd *cmd,
- 	sense_reason_t (*exec_cmd)(struct se_cmd *cmd))
- {
- 	unsigned char *cdb = cmd->t_task_cdb;
-+	struct se_device *dev = cmd->se_dev;
-+	unsigned int size;
- 
- 	/*
- 	 * Clear a lun set in the cdb if the initiator talking to use spoke
-@@ -1076,6 +1078,42 @@ passthrough_parse_cdb(struct se_cmd *cmd,
- 		return TCM_NO_SENSE;
- 	}
- 
-+	/*
-+	 * For PERSISTENT RESERVE IN/OUT, RELEASE, and RESERVE we need to
-+	 * emulate the response, since tcmu does not have the information
-+	 * required to process these commands.
-+	 */
-+	if (!(dev->transport->transport_flags &
-+	      TRANSPORT_FLAG_PASSTHROUGH_PGR)) {
-+		if (cdb[0] == PERSISTENT_RESERVE_IN) {
-+			cmd->execute_cmd = target_scsi3_emulate_pr_in;
-+			size = (cdb[7] << 8) + cdb[8];
-+			return target_cmd_size_check(cmd, size);
-+		}
-+		if (cdb[0] == PERSISTENT_RESERVE_OUT) {
-+			cmd->execute_cmd = target_scsi3_emulate_pr_out;
-+			size = (cdb[7] << 8) + cdb[8];
-+			return target_cmd_size_check(cmd, size);
-+		}
-+
-+		if (cdb[0] == RELEASE || cdb[0] == RELEASE_10) {
-+			cmd->execute_cmd = target_scsi2_reservation_release;
-+			if (cdb[0] == RELEASE_10)
-+				size = (cdb[7] << 8) | cdb[8];
-+			else
-+				size = cmd->data_length;
-+			return target_cmd_size_check(cmd, size)
-+		}
-+		if (cdb[0] == RESERVE || cdb[0] == RESERVE_10) {
-+			cmd->execute_cmd = target_scsi2_reservation_reserve;
-+			if (cdb[0] == RESERVE_10)
-+				size = (cdb[7] << 8) | cdb[8];
-+			else
-+				size = cmd->data_length;
-+			return target_cmd_size_check(cmd, size);
-+		}
-+	}
-+
- 	/* Set DATA_CDB flag for ops that should have it */
- 	switch (cdb[0]) {
- 	case READ_6:
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index e180511..129ca57 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -4147,7 +4147,7 @@ target_check_reservation(struct se_cmd *cmd)
- 		return 0;
- 	if (dev->se_hba->hba_flags & HBA_FLAGS_INTERNAL_USE)
- 		return 0;
--	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH)
-+	if (dev->transport->transport_flags & TRANSPORT_FLAG_PASSTHROUGH_PGR)
- 		return 0;
- 
- 	spin_lock(&dev->dev_reservation_lock);
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index 94cda79..8943a62 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -1081,7 +1081,8 @@ static const struct target_backend_ops pscsi_ops = {
- 	.name			= "pscsi",
- 	.owner			= THIS_MODULE,
- 	.transport_flags	= TRANSPORT_FLAG_PASSTHROUGH |
--				  TRANSPORT_FLAG_PASSTHROUGH_ALUA,
-+				  TRANSPORT_FLAG_PASSTHROUGH_ALUA |
-+				  TRANSPORT_FLAG_PASSTHROUGH_PGR,
- 	.attach_hba		= pscsi_attach_hba,
- 	.detach_hba		= pscsi_detach_hba,
- 	.pmode_enable_hba	= pscsi_pmode_enable_hba,
-diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
-index 1b0f447..e475531 100644
---- a/include/target/target_core_backend.h
-+++ b/include/target/target_core_backend.h
-@@ -10,6 +10,7 @@
-  * backend module.
-  */
- #define TRANSPORT_FLAG_PASSTHROUGH_ALUA		0x2
-+#define TRANSPORT_FLAG_PASSTHROUGH_PGR          0x4
- 
- struct request_queue;
- struct scatterlist;
+How about we introduce something like CONFIG_HAVE_ARCH_FAST_REFCOUNT_T
+for per-arch implementations and CONFIG_FAST_REFCOUNT_T that trades
+coverage for speed, and checks only the overflow condition. This gets
+us the critical coverage without the changes in performance. This is
+basically what PaX/grsecurity already did: there is a tiny change to
+the atomic inc functions to detect the wrap.
+
+-Kees
+
 -- 
-2.5.4 (Apple Git-61)
+Kees Cook
+Pixel Security
