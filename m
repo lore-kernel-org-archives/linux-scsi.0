@@ -1,38 +1,38 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 0/5] v2: block subsystem refcounter conversions
-Date: Fri, 21 Apr 2017 10:29:45 -0600
-Message-ID: <99e3518a-bb1a-cab2-80b8-dd466827b5e6@kernel.dk>
-References: <1492687644-4405-1-git-send-email-elena.reshetova@intel.com>
- <20170420135651.GA26595@infradead.org>
- <2236FBA76BA1254E88B949DDB74E612B41C8DA36@IRSMSX102.ger.corp.intel.com>
- <20170420183319.GB103004@gmail.com>
- <2236FBA76BA1254E88B949DDB74E612B41C8E21B@IRSMSX102.ger.corp.intel.com>
- <31311853-3554-cefe-1210-2ffae1a20058@kernel.dk>
- <20170421152241.q45w3ckjax5xiddq@hirez.programming.kicks-ass.net>
+From: James Smart <james.smart@broadcom.com>
+Subject: Re: [PATCH-v1 00/22] lpfc updates for 11.2.0.12
+Date: Fri, 21 Apr 2017 09:41:31 -0700
+Message-ID: <08e8252e-826e-2560-7ae7-08253413fa96@broadcom.com>
+References: <20170420044641.10657-1-jsmart2021@gmail.com>
+ <20170420183047.GD22378@kernel.dk> <20170421070027.GB26346@linux-x5ow.site>
+ <yq1h91im2a8.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170421152241.q45w3ckjax5xiddq@hirez.programming.kicks-ass.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: "Reshetova, Elena" <elena.reshetova@intel.com>, Eric Biggers <ebiggers3@gmail.com>, Kees Cook <keescook@chromium.org>, Christoph Hellwig <hch@infradead.org>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "fujita.tomonori@lab.ntt.co.jp" <fujita.tomonori@lab.ntt.co.jp>, "mingo@redhat.com" <mingo@redhat.com>, "clm@fb.com" <clm@fb.com>, "jbacik@fb.com" <jbacik@fb.com>, "dsterba@suse.com" <dsterba@suse.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:35548 "EHLO
+        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1037491AbdDUQle (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 12:41:34 -0400
+Received: by mail-oi0-f53.google.com with SMTP id j201so102598145oih.2
+        for <linux-scsi@vger.kernel.org>; Fri, 21 Apr 2017 09:41:34 -0700 (PDT)
+In-Reply-To: <yq1h91im2a8.fsf@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Jens Axboe <axboe@kernel.dk>, jsmart2021@gmail.com, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, sagi@grimberg.me
 
-On 04/21/2017 09:22 AM, Peter Zijlstra wrote:
-> On Fri, Apr 21, 2017 at 08:03:13AM -0600, Jens Axboe wrote:
->> You have it so easy - the code is completely standalone, building a
->> small test framework around it and measuring performance in _user space_
->> is trivial.
-> 
-> Something like this you mean:
-> 
->   https://lkml.kernel.org/r/20170322165144.dtidvvbxey7w5pbd@hirez.programming.kicks-ass.net
+On 4/21/2017 4:24 AM, Martin K. Petersen wrote:
+> Johannes Thumshirn <jthumshirn@suse.de> writes:
+>
+>> Just for clarification, shouldn't Martin take the patches? They're for
+>> drivers/scsi/lpfc/ after all. I just want to avoid confusion and possible
+>> merge conflicts.
+> Yeah, at this point I think it's better we do a second stage merge
+> through 4.12/scsi-fixes. I'll set that up after Linus pulls from Jens.
+>
+no - most of the fixes are nvme related.  There are at best 3 that are 
+"generic" or scsi specific.  Given the nvme parts need the nvme-fc api 
+in the 2 dependencies... this won't be something that works well going 
+through scsi.
 
-Yes, exactly. But it'd be great to see better coverage of the API, and
-various cases of X threads running operations on the same refcount,
-so we get a full view of that side too. The above looks like just
-counting cycles for a single op of foo_inc().
-
--- 
-Jens Axboe
+-- james
