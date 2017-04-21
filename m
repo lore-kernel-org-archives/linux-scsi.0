@@ -1,27 +1,27 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/5] v2: block subsystem refcounter conversions
-Date: Fri, 21 Apr 2017 03:56:54 -0700
-Message-ID: <20170421105654.GC31499@infradead.org>
-References: <1492687644-4405-1-git-send-email-elena.reshetova@intel.com>
- <20170420135651.GA26595@infradead.org>
- <2236FBA76BA1254E88B949DDB74E612B41C8DA36@IRSMSX102.ger.corp.intel.com>
- <20170420183319.GB103004@gmail.com>
+From: Kredit <laszlo.cserhalmi@forsterkozpont.hu>
+Subject: (unknown)
+Date: Fri, 21 Apr 2017 11:51:50 +0200 (CEST)
+Message-ID: <143798518.4683606.1492768310745.JavaMail.zimbra@forsterkozpont.hu>
+Reply-To: "myers.terrylynn@aol.com" <myers.terrylynn@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170420183319.GB103004@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Eric Biggers <ebiggers3@gmail.com>
-Cc: "Reshetova, Elena" <elena.reshetova@intel.com>, Christoph Hellwig <hch@infradead.org>, "axboe@kernel.dk" <axboe@kernel.dk>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "fujita.tomonori@lab.ntt.co.jp" <fujita.tomonori@lab.ntt.co.jp>, "mingo@redhat.com" <mingo@redhat.com>, "clm@fb.com" <clm@fb.com>, "jbacik@fb.com" <jbacik@fb.com>, "dsterba@suse.com" <dsterba@suse.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.forsterkozpont.hu ([84.206.26.125]:36231 "EHLO
+        mail.forsterkozpont.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1038337AbdDULHh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 07:07:37 -0400
+Subject: 
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Apr 20, 2017 at 11:33:19AM -0700, Eric Biggers wrote:
-> Like I suggested months ago, how about doing an efficient implementation of
-> refcount_t which doesn't use the bloated cmpxchg loop?  Then there would be no
-> need for endless performance arguments.  In fact, in PaX there are already
-> example implementations for several architectures.  It's unfortunate that
-> they're still being ignored for some reason.
 
-Yes.  I will also NAK other conversions until this is done, which is a
-bit sad as the recount_t API itself is very useful.
+
+Hallo
+
+Wir bieten Darlehen von 5.000,00 Euro bis 20.000.000,00 Euro mit einer maximalen Rückzahlungsdauer von 30 Jahren zu 1.9% Zinssatz.
+Wenn Sie interessiert sind, kontaktieren Sie uns per E-Mail: myers.terrylynn@aol.com
+
+Mrs. Myers Terry Lynn.
+Darlehen / Finanzdienstleister.
+myers.terrylynn@universalcreditllc.com
