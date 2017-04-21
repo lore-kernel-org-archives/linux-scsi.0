@@ -1,7 +1,7 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH v2 2/5] aic94xx: remove the SAS host after the SCSI host
-Date: Fri, 21 Apr 2017 10:04:47 +0200
-Message-ID: <6662a9f80f6bc52dd0e28cf57d9612c3bef2fd4f.1492760075.git.jthumshirn@suse.de>
+Subject: [PATCH v2 3/5] scsi: hisi_sas: remove the SAS host after the SCSI host
+Date: Fri, 21 Apr 2017 10:04:48 +0200
+Message-ID: <0b94e2ae5bc364d8bd369bdd4db705504d0a0d73.1492760075.git.jthumshirn@suse.de>
 References: <cover.1492760075.git.jthumshirn@suse.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1492760075.git.jthumshirn@suse.de>
@@ -20,30 +20,24 @@ kobjects.
 Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/aic94xx/aic94xx_init.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
-index 662b2321d1b0..8b9c6b9ea67d 100644
---- a/drivers/scsi/aic94xx/aic94xx_init.c
-+++ b/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -701,13 +701,14 @@ static int asd_register_sas_ha(struct asd_ha_struct *asd_ha)
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 53637a941b94..9ae39226d454 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -1583,9 +1583,9 @@ int hisi_sas_remove(struct platform_device *pdev)
+ 	struct hisi_hba *hisi_hba = sha->lldd_ha;
+ 	struct Scsi_Host *shost = sha->core.shost;
  
- static int asd_unregister_sas_ha(struct asd_ha_struct *asd_ha)
- {
-+	struct Scsi_Host *shost = asd_ha->sas_ha.core.shost;
- 	int err;
- 
--	scsi_remove_host(asd_ha->sas_ha.core.shost);
- 	err = sas_unregister_ha(&asd_ha->sas_ha);
- 
--	sas_remove_host(asd_ha->sas_ha.core.shost);
--	scsi_host_put(asd_ha->sas_ha.core.shost);
+-	scsi_remove_host(sha->core.shost);
+ 	sas_unregister_ha(sha);
+-	sas_remove_host(sha->core.shost);
 +	sas_remove_host(shost);
 +	scsi_remove_host(shost);
-+	scsi_host_put(shost);
  
- 	kfree(asd_ha->sas_ha.sas_phy);
- 	kfree(asd_ha->sas_ha.sas_port);
+ 	hisi_sas_free(hisi_hba);
+ 	kfree(shost);
 -- 
 2.12.0
