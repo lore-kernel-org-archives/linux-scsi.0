@@ -1,77 +1,68 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH v4 4/4] Avoid that __scsi_remove_device() hangs
-Date: Fri, 21 Apr 2017 14:26:36 -0700
-Message-ID: <20170421212636.14376-5-bart.vanassche@sandisk.com>
-References: <20170421212636.14376-1-bart.vanassche@sandisk.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/5] v2: block subsystem refcounter conversions
+Date: Fri, 21 Apr 2017 14:27:43 -0700
+Message-ID: <1492810063.7079.56.camel@HansenPartnership.com>
+References: <1492687644-4405-1-git-send-email-elena.reshetova@intel.com>
+         <20170420135651.GA26595@infradead.org>
+         <2236FBA76BA1254E88B949DDB74E612B41C8DA36@IRSMSX102.ger.corp.intel.com>
+         <20170420183319.GB103004@gmail.com>
+         <2236FBA76BA1254E88B949DDB74E612B41C8E21B@IRSMSX102.ger.corp.intel.com>
+         <20170421195521.GE12755@gmail.com>
+         <CAGXu5j+6Ffyx56j_ZmM0Y5j_A_TwssQdRVQ9hX=qTa482r1nvA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:50048 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1422888AbdDUV05 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 17:26:57 -0400
-In-Reply-To: <20170421212636.14376-1-bart.vanassche@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <CAGXu5j+6Ffyx56j_ZmM0Y5j_A_TwssQdRVQ9hX=qTa482r1nvA@mail.gmail.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>, Eric Biggers <ebiggers3@gmail.com>
+Cc: "Reshetova, Elena" <elena.reshetova@intel.com>, Christoph Hellwig <hch@infradead.org>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "fujita.tomonori@lab.ntt.co.jp" <fujita.tomonori@lab.ntt.co.jp>, "mingo@redhat.com" <mingo@redhat.com>, "clm@fb.com" <clm@fb.com>, "jbacik@fb.com" <jbacik@fb.com>, "dsterba@suse.com" <dsterba@suse.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Max Gurtovoy <maxg@mellanox.com>, Hannes Reinecke <hare@suse.de>, Song Liu <songliubraving@fb.com>
 
-Since scsi_target_unblock() uses starget_for_each_device(), since
-starget_for_each_device() uses scsi_device_get(), since
-scsi_device_get() fails after unloading of the LLD kernel module
-has been started scsi_target_unblock() may skip devices that were
-affected by scsi_target_block(). Ensure that __scsi_remove_device()
-does not hang for blocked SCSI devices. This patch avoids that
-unloading the ib_srp kernel module can trigger the following hang:
+On Fri, 2017-04-21 at 13:22 -0700, Kees Cook wrote:
+> On Fri, Apr 21, 2017 at 12:55 PM, Eric Biggers <ebiggers3@gmail.com> 
+> wrote:
+> > > > Of course, having extra checks behind a debug option is fine. 
+> > > >  But they should not be part of the base feature; the base 
+> > > > feature should just be mitigation of reference count
+> > > > *overflows*.  It would be nice to do more, of
+> > > > course; but when the extra stuff prevents people from using 
+> > > > refcount_t for performance reasons, it defeats the point of the
+> > > > feature in the first place.
+> > > 
+> > > Sure, but as I said above, I think the smaller tricks and fixes 
+> > > won't be convincing enough, so their value is questionable.
+> > 
+> > This makes no sense, as the main point of the feature is supposed 
+> > to be the security improvement.  As-is, the extra debugging stuff 
+> > is actually preventing the security improvement from being adopted,
+> > which is unfortunate.
+> 
+> We've been trying to handle the conflicting desires of those wanting
+> very precise refcounting implementation and gaining the security
+> protections. Ultimately, the best way forward seemed to be to first
+> land the precise refcounting implementation, and start conversion
+> until we ran into concerns over performance. Now, since we're here, 
+> we can move forward with getting a fast implementation that provides 
+> the desired security protections without too greatly messing with the
+> refcount API.
 
-Call Trace:
- schedule+0x35/0x80
- schedule_timeout+0x237/0x2d0
- io_schedule_timeout+0xa6/0x110
- wait_for_completion_io+0xa3/0x110
- blk_execute_rq+0xdf/0x120
- scsi_execute+0xce/0x150 [scsi_mod]
- scsi_execute_req_flags+0x8f/0xf0 [scsi_mod]
- sd_sync_cache+0xa9/0x190 [sd_mod]
- sd_shutdown+0x6a/0x100 [sd_mod]
- sd_remove+0x64/0xc0 [sd_mod]
- __device_release_driver+0x8d/0x120
- device_release_driver+0x1e/0x30
- bus_remove_device+0xf9/0x170
- device_del+0x127/0x240
- __scsi_remove_device+0xc1/0xd0 [scsi_mod]
- scsi_forget_host+0x57/0x60 [scsi_mod]
- scsi_remove_host+0x72/0x110 [scsi_mod]
- srp_remove_work+0x8b/0x200 [ib_srp]
+But that's not what it really looks like.  What it looks like is
+someone came up with a new API and is now intent on forcing it through
+the kernel in about 500 patches using security as the hammer.
 
-Reported-by: Israel Rukshin <israelr@mellanox.com>
-Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Max Gurtovoy <maxg@mellanox.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Song Liu <songliubraving@fb.com>
----
- drivers/scsi/scsi_sysfs.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+If we were really concerned about security first, we'd have fixed the
+atomic overflow problem in the atomics and then built the precise
+refcounting on that and tried to persuade people of the merits.
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 82dfe07b1d47..e090c35ba6ee 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1299,6 +1299,15 @@ void __scsi_remove_device(struct scsi_device *sdev)
- 	 * device.
- 	 */
- 	scsi_device_set_state(sdev, SDEV_DEL);
-+	/*
-+	 * Since scsi_target_unblock() is a no-op after unloading of the SCSI
-+	 * LLD has started, explicitly restart the queue. Do this after the
-+	 * device state has been changed into SDEV_DEL because
-+	 * scsi_prep_state_check() returns BLKPREP_KILL for the SDEV_DEL state
-+	 * Do this before calling blk_cleanup_queue() to avoid that that
-+	 * function encounters a stopped queue.
-+	 */
-+	scsi_start_queue(sdev);
- 	blk_cleanup_queue(sdev->request_queue);
- 	cancel_work_sync(&sdev->requeue_work);
- 
--- 
-2.12.2
+Why can't we still do this?  It looks like the overflow protection will
+add only a couple of cycles to the atomics.  We can move the current
+version to an unchecked variant which can be used either in truly
+performance critical regions with no security implications or if
+someone really needs the atomic to overflow.  From my point of view it
+would give us the 90% case (security) and stop this endless argument
+over the fast paths.  Subsystems which have already moved to refcount
+would stay there and the rest get to evaluate a migration on the merits
+of the operational utility.
+
+James
