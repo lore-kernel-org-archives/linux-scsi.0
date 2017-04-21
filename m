@@ -1,15 +1,15 @@
 From: damien.lemoal@wdc.com
-Subject: [PATCH 4/9] sd: Improve sd_completed_bytes
-Date: Fri, 21 Apr 2017 18:16:44 +0900
-Message-ID: <20170421091649.25287-5-damien.lemoal@wdc.com>
+Subject: [PATCH 5/9] sd: Cleanup sd_done sense data handling
+Date: Fri, 21 Apr 2017 18:16:45 +0900
+Message-ID: <20170421091649.25287-6-damien.lemoal@wdc.com>
 References: <20170421091649.25287-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:53269 "EHLO
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:41482 "EHLO
         esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1037299AbdDUJRZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 05:17:25 -0400
+        with ESMTP id S1037300AbdDUJR1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 05:17:27 -0400
 In-Reply-To: <20170421091649.25287-1-damien.lemoal@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,88 +18,58 @@ Cc: Bart Van Assche <Bart.VanAssche@sandisk.com>, Hannes Reinecke <hare@suse.de>
 
 From: Damien Le Moal <damien.lemoal@wdc.com>
 
-Re-shuffle the code to be more efficient by not initializing
-variables upfront (i.e. do it only when necessary).
-Also replace the do_div calls with calls to sectors_to_logical().
+In sd_done(), for the ILLEGAL REQUEST sense key case, add an 'else'
+after the first 'if (sshdr.asc == 0x10)' test to avoid the second test
+(the values tested are different).
 
-No functional change is introduced by this patch.
+Still for the same ILLEGAL REQUEST case, move the declarations of the
+variables 'op' and 'unmap' within the scope of the second if since
+these variables are only used there.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 ---
- drivers/scsi/sd.c | 48 ++++++++++++++++++++++++++----------------------
- 1 file changed, 26 insertions(+), 22 deletions(-)
+ drivers/scsi/sd.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index c57084e..5ff0082 100644
+index 5ff0082..a59a107 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -1754,41 +1754,45 @@ static int sd_eh_action(struct scsi_cmnd *scmd, int eh_disp)
+@@ -1813,8 +1813,6 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ 	struct scsi_disk *sdkp = scsi_disk(SCpnt->request->rq_disk);
+ 	struct request *req = SCpnt->request;
+ 	bool sense_valid = false;
+-	unsigned char op = SCpnt->cmnd[0];
+-	unsigned char unmap = SCpnt->cmnd[1] & 8;
  
- static unsigned int sd_completed_bytes(struct scsi_cmnd *scmd)
- {
--	u64 start_lba = blk_rq_pos(scmd->request);
--	u64 end_lba = blk_rq_pos(scmd->request) + (scsi_bufflen(scmd) / 512);
--	u64 factor = scmd->device->sector_size / 512;
--	u64 bad_lba;
--	int info_valid;
-+	struct request *req = scmd->request;
-+	struct scsi_device *sdev = scmd->device;
-+	unsigned int transferred, good_bytes;
-+	u64 start_lba, end_lba, bad_lba;
+ 	switch (req_op(req)) {
+ 	case REQ_OP_DISCARD:
+@@ -1869,10 +1867,14 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ 			good_bytes = sd_completed_bytes(SCpnt);
+ 		break;
+ 	case ILLEGAL_REQUEST:
+-		if (sshdr.asc == 0x10)  /* DIX: Host detected corruption */
++		if (sshdr.asc == 0x10) {
++			/* DIX: Host detected corruption */
+ 			good_bytes = sd_completed_bytes(SCpnt);
+-		/* INVALID COMMAND OPCODE or INVALID FIELD IN CDB */
+-		if (sshdr.asc == 0x20 || sshdr.asc == 0x24) {
++		} else if (sshdr.asc == 0x20 || sshdr.asc == 0x24) {
++			/* INVALID COMMAND OPCODE or INVALID FIELD IN CDB */
++			unsigned char op = SCpnt->cmnd[0];
++			unsigned char unmap = SCpnt->cmnd[1] & 8;
 +
- 	/*
--	 * resid is optional but mostly filled in.  When it's unused,
--	 * its value is zero, so we assume the whole buffer transferred
-+	 * Some commands have a payload smaller than the device logical
-+	 * block size (e.g. INQUIRY on a 4K disk).
- 	 */
--	unsigned int transferred = scsi_bufflen(scmd) - scsi_get_resid(scmd);
--	unsigned int good_bytes;
+ 			switch (op) {
+ 			case UNMAP:
+ 				sd_config_discard(sdkp, SD_LBP_DISABLE);
+@@ -1884,8 +1886,6 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ 				else {
+ 					sdkp->device->no_write_same = 1;
+ 					sd_config_write_same(sdkp);
 -
--	info_valid = scsi_get_sense_info_fld(scmd->sense_buffer,
--					     SCSI_SENSE_BUFFERSIZE,
--					     &bad_lba);
--	if (!info_valid)
-+	if (scsi_bufflen(scmd) <= sdev->sector_size)
- 		return 0;
- 
--	if (scsi_bufflen(scmd) <= scmd->device->sector_size)
-+	/* Check if we have a 'bad_lba' information */
-+	if (!scsi_get_sense_info_fld(scmd->sense_buffer,
-+				     SCSI_SENSE_BUFFERSIZE,
-+				     &bad_lba))
- 		return 0;
- 
--	/* be careful ... don't want any overflows */
--	do_div(start_lba, factor);
--	do_div(end_lba, factor);
--
--	/* The bad lba was reported incorrectly, we have no idea where
-+	/*
-+	 * If the bad lba was reported incorrectly, we have no idea where
- 	 * the error is.
- 	 */
--	if (bad_lba < start_lba  || bad_lba >= end_lba)
-+	start_lba = sectors_to_logical(sdev, blk_rq_pos(req));
-+	end_lba = sectors_to_logical(sdev,
-+				blk_rq_pos(req) + (scsi_bufflen(scmd) >> 9));
-+	if (bad_lba < start_lba || bad_lba >= end_lba)
- 		return 0;
- 
-+	/*
-+	 * resid is optional but mostly filled in.  When it's unused,
-+	 * its value is zero, so we assume the whole buffer transferred
-+	 */
-+	transferred = scsi_bufflen(scmd) - scsi_get_resid(scmd);
-+
- 	/* This computation should always be done in terms of
- 	 * the resolution of the device's medium.
- 	 */
--	good_bytes = (bad_lba - start_lba) * scmd->device->sector_size;
-+	good_bytes = logical_to_bytes(sdev, bad_lba - start_lba);
-+
- 	return min(good_bytes, transferred);
- }
- 
+-					good_bytes = 0;
+ 					req->__data_len = blk_rq_bytes(req);
+ 					req->rq_flags |= RQF_QUIET;
+ 				}
 -- 
 2.9.3
