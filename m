@@ -1,151 +1,49 @@
-From: Jinpu Wang <jinpu.wang@profitbricks.com>
-Subject: Re: [PATCH] scsi: sas: move scsi_remove_host call into sas_remove_host
-Date: Fri, 21 Apr 2017 15:00:30 +0200
-Message-ID: <CAMGffE=eKXerSYhgx9YYp2Tug3bJNA_fSkAFBzF4WnOT+dU4VA@mail.gmail.com>
-References: <20170421121141.20701-1-jthumshirn@suse.de>
+From: Boaz Harrosh <ooo-rh7Tgz9RNieUD9Wbbkgo/g@public.gmane.org>
+Subject: Re: [PATCH 3/4] nfs: remove the objlayout driver
+Date: Fri, 21 Apr 2017 16:17:41 +0300
+Message-ID: <272aea55-0738-5de2-ca97-414e13b478af@electrozaur.com>
+References: <20170412160109.10598-1-hch@lst.de>
+ <20170412160109.10598-4-hch@lst.de>
+ <1492719505.82584.3.camel@primarydata.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f181.google.com ([209.85.220.181]:33087 "EHLO
-        mail-qk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1036729AbdDUNAv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 09:00:51 -0400
-Received: by mail-qk0-f181.google.com with SMTP id h67so71209261qke.0
-        for <linux-scsi@vger.kernel.org>; Fri, 21 Apr 2017 06:00:51 -0700 (PDT)
-In-Reply-To: <20170421121141.20701-1-jthumshirn@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1492719505.82584.3.camel-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org>
+Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Trond Myklebust <trondmy-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org>, hch <hch-jcswGhMUV9g@public.gmane.org>, "martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org" <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "osd-dev-yNzVSZO3znNg9hUCZPvPmw@public.gmane.org" <osd-dev-yNzVSZO3znNg9hUCZPvPmw@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, James Bottomley <jejb@linux.vnet.ibm.com>, John Garry <john.garry@huawei.com>
 
-On Fri, Apr 21, 2017 at 2:11 PM, Johannes Thumshirn <jthumshirn@suse.de> wrote:
-> Move scsi_remove_host call into sas_remove_host and remove it from SAS HBA
-> drivers, so we don't mess up the ordering. This solves an issue with double
-> deleting sysfs entries that was introduced by the change of sysfs behaviour
-> from commit bcdde7e ("sysfs: make __sysfs_remove_dir() recursive").
->
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> Suggested-by: Christoph Hellwig <hch@lst.de>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: James Bottomley <jejb@linux.vnet.ibm.com>
-> Cc: Jinpu Wang <jinpu.wang@profitbricks.com>
-> Cc: John Garry <john.garry@huawei.com>
-> ---
->  drivers/scsi/aic94xx/aic94xx_init.c   | 1 -
->  drivers/scsi/hisi_sas/hisi_sas_main.c | 1 -
->  drivers/scsi/isci/init.c              | 1 -
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c  | 1 -
->  drivers/scsi/mvsas/mv_init.c          | 1 -
->  drivers/scsi/pm8001/pm8001_init.c     | 1 -
->  drivers/scsi/scsi_transport_sas.c     | 8 ++++++--
->  7 files changed, 6 insertions(+), 8 deletions(-)
->
-> diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
-> index 662b2321d1b0..a14ba7a6b81e 100644
-> --- a/drivers/scsi/aic94xx/aic94xx_init.c
-> +++ b/drivers/scsi/aic94xx/aic94xx_init.c
-> @@ -703,7 +703,6 @@ static int asd_unregister_sas_ha(struct asd_ha_struct *asd_ha)
->  {
->         int err;
->
-> -       scsi_remove_host(asd_ha->sas_ha.core.shost);
->         err = sas_unregister_ha(&asd_ha->sas_ha);
->
->         sas_remove_host(asd_ha->sas_ha.core.shost);
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> index 53637a941b94..843bedae6c09 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> @@ -1583,7 +1583,6 @@ int hisi_sas_remove(struct platform_device *pdev)
->         struct hisi_hba *hisi_hba = sha->lldd_ha;
->         struct Scsi_Host *shost = sha->core.shost;
->
-> -       scsi_remove_host(sha->core.shost);
->         sas_unregister_ha(sha);
->         sas_remove_host(sha->core.shost);
->
-> diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-> index 0b5b5db0d0f8..45371179ab87 100644
-> --- a/drivers/scsi/isci/init.c
-> +++ b/drivers/scsi/isci/init.c
-> @@ -272,7 +272,6 @@ static void isci_unregister(struct isci_host *isci_host)
->                 return;
->
->         shost = to_shost(isci_host);
-> -       scsi_remove_host(shost);
->         sas_unregister_ha(&isci_host->sas_ha);
->
->         sas_remove_host(shost);
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> index 919ba2bb15f1..a5d872664257 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> @@ -8283,7 +8283,6 @@ static void scsih_remove(struct pci_dev *pdev)
->         }
->
->         sas_remove_host(shost);
-> -       scsi_remove_host(shost);
->         mpt3sas_base_detach(ioc);
->         spin_lock(&gioc_lock);
->         list_del(&ioc->list);
-> diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-> index 8280046fd1f0..4e047b5001a6 100644
-> --- a/drivers/scsi/mvsas/mv_init.c
-> +++ b/drivers/scsi/mvsas/mv_init.c
-> @@ -642,7 +642,6 @@ static void mvs_pci_remove(struct pci_dev *pdev)
->         tasklet_kill(&((struct mvs_prv_info *)sha->lldd_ha)->mv_tasklet);
->  #endif
->
-> -       scsi_remove_host(mvi->shost);
->         sas_unregister_ha(sha);
->         sas_remove_host(mvi->shost);
->
-> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-> index 417368ccb686..034b2f7d1135 100644
-> --- a/drivers/scsi/pm8001/pm8001_init.c
-> +++ b/drivers/scsi/pm8001/pm8001_init.c
-> @@ -1088,7 +1088,6 @@ static void pm8001_pci_remove(struct pci_dev *pdev)
->         struct pm8001_hba_info *pm8001_ha;
->         int i, j;
->         pm8001_ha = sha->lldd_ha;
-> -       scsi_remove_host(pm8001_ha->shost);
->         sas_unregister_ha(sha);
->         sas_remove_host(pm8001_ha->shost);
->         list_del(&pm8001_ha->list);
-> diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-> index cdbb293aca08..ca0e5a9a17f8 100644
-> --- a/drivers/scsi/scsi_transport_sas.c
-> +++ b/drivers/scsi/scsi_transport_sas.c
-> @@ -370,12 +370,16 @@ EXPORT_SYMBOL(sas_remove_children);
->   * sas_remove_host  -  tear down a Scsi_Host's SAS data structures
->   * @shost:     Scsi Host that is torn down
->   *
-> - * Removes all SAS PHYs and remote PHYs for a given Scsi_Host.
-> - * Must be called just before scsi_remove_host for SAS HBAs.
-> + * Removes all SAS PHYs and remote PHYs for a given Scsi_Host and remove the
-> + * Scsi_Host as well.
-> + *
-> + * Note: Do not call scsi_remove_host() on the Scsi_Host any more, as it is
-> + * already removed.
->   */
->  void sas_remove_host(struct Scsi_Host *shost)
->  {
->         sas_remove_children(&shost->shost_gendev);
-> +       scsi_remove_host(shost);
->  }
->  EXPORT_SYMBOL(sas_remove_host);
->
-> --
-> 2.12.0
->
-Thanks, Johannes,
+On 04/20/2017 11:18 PM, Trond Myklebust wrote:
+<>
+> 
+> OK. I'm applying this patch for the 4.12 merge window. 
 
-Reviewed-by:: Jack Wang <jinpu.wang@profitbricks.com>
+That is understandable this code was not tested for a long while
 
--- 
-Jack Wang
-Linux Kernel Developer
+> If, as Boaz
+> suggests, there is still an interest in exofs, then I suggest we put
+> that to the test by moving it into the STAGING area, to see if someone
+> will step up to maintain it.
+> 
 
-ProfitBricks GmbH
-Greifswalder Str. 207
-D - 10405 Berlin
+I do not understand what you mean by "someone will maintain it"
+What is it that is missing in exofs that you see needs development?
+
+As I said I regularly run and test this FS and update as things advance
+there where no new fixtures for a while, but no regressions either.
+
+Please explain what it means "will maintain it"
+
+> Cheers
+>   Trond
+> 
+
+Thanks
+Boaz
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
