@@ -1,51 +1,34 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH V2] scsi: mpt3sas: remove redundant wmb
-Date: Fri, 21 Apr 2017 10:10:57 -0500
-Message-ID: <c83bd8cf-cd83-f1d2-b982-a0cacf81370f@linux.vnet.ibm.com>
-References: <1491591978-17880-1-git-send-email-okaya@codeaurora.org>
- <yq1y3uvq0c1.fsf@oracle.com>
- <CAK=zhgpmcmq-CnWuU9=WRJpAaEduw63LSPLE9yZzF_sUHkM4AA@mail.gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: sas: move scsi_remove_host call into sas_remove_host
+Date: Fri, 21 Apr 2017 10:37:22 -0400
+Message-ID: <yq1tw5hltct.fsf@oracle.com>
+References: <20170421121141.20701-1-jthumshirn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <CAK=zhgpmcmq-CnWuU9=WRJpAaEduw63LSPLE9yZzF_sUHkM4AA@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Chaitra P B <chaitra.basappa@broadcom.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, timur@codeaurora.org, Sathya Prakash <sathya.prakash@broadcom.com>, open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "open list:LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)" <MPT-FusionLinux.pdl@broadcom.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1050.oracle.com ([141.146.126.70]:50253 "EHLO
+        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1161360AbdDUPhS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 11:37:18 -0400
+In-Reply-To: <20170421121141.20701-1-jthumshirn@suse.de> (Johannes Thumshirn's
+        message of "Fri, 21 Apr 2017 14:11:41 +0200")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, James Bottomley <jejb@linux.vnet.ibm.com>, Jinpu Wang <jinpu.wang@profitbricks.com>, John Garry <john.garry@huawei.com>
 
-On 04/21/2017 02:56 AM, Sreekanth Reddy wrote:
-> On Thu, Apr 20, 2017 at 7:58 AM, Martin K. Petersen
-> <martin.petersen@oracle.com> wrote:
->> Sinan Kaya <okaya@codeaurora.org> writes:
->>
->>> Due to relaxed ordering requirements on multiple architectures,
->>> drivers are required to use wmb/rmb/mb combinations when they need to
->>> guarantee observability between the memory and the HW.
->>>
->>> The mpt3sas driver is already using wmb() for this purpose.  However,
->>> it issues a writel following wmb(). writel() function on arm/arm64
->>> arhictectures have an embedded wmb() call inside.
-> 
-> [Sreekanth] Whether same thing applicable for SPARC & POWER
-> architectures. If yes then we are fine with this patch changes.
 
-This is also true for Power. 
+Johannes,
 
-Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
+> Move scsi_remove_host call into sas_remove_host and remove it from SAS
+> HBA drivers, so we don't mess up the ordering. This solves an issue
+> with double deleting sysfs entries that was introduced by the change
+> of sysfs behaviour from commit bcdde7e ("sysfs: make
+> __sysfs_remove_dir() recursive").
 
--Brian
+Yeah, I prefer this approach.
+
+Applied to 4.12/scsi-queue.
 
 -- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
+Martin K. Petersen	Oracle Linux Engineering
