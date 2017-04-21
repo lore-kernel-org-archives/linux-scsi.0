@@ -1,49 +1,47 @@
-From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: Re: [PATCH V2] scsi: mpt3sas: remove redundant wmb
-Date: Fri, 21 Apr 2017 13:26:29 +0530
-Message-ID: <CAK=zhgpmcmq-CnWuU9=WRJpAaEduw63LSPLE9yZzF_sUHkM4AA@mail.gmail.com>
-References: <1491591978-17880-1-git-send-email-okaya@codeaurora.org>
- <yq1y3uvq0c1.fsf@oracle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <yq1y3uvq0c1.fsf@oracle.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Chaitra P B <chaitra.basappa@broadcom.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, timur@codeaurora.org, Sathya Prakash <sathya.prakash@broadcom.com>, open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "open list:LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)" <MPT-FusionLinux.pdl@broadcom.com>, linux-arm-kernel@lists.infradead.org
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH v2 0/5] Re-order scsi_remove_host and sas_remove_host in SAS HBA LLDDs
+Date: Fri, 21 Apr 2017 10:04:45 +0200
+Message-ID: <cover.1492760075.git.jthumshirn@suse.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <jejb@linux.vnet.ibm.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Jinpu Wang <jinpu.wang@profitbricks.com>, John Garry <john.garry@huawei.com>, tj@kernel.org, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Apr 20, 2017 at 7:58 AM, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
-> Sinan Kaya <okaya@codeaurora.org> writes:
->
->> Due to relaxed ordering requirements on multiple architectures,
->> drivers are required to use wmb/rmb/mb combinations when they need to
->> guarantee observability between the memory and the HW.
->>
->> The mpt3sas driver is already using wmb() for this purpose.  However,
->> it issues a writel following wmb(). writel() function on arm/arm64
->> arhictectures have an embedded wmb() call inside.
+This series re-orders the calls to scsi_remove_host() and sas_remove_host() in
+all SAS HBA drivers (apart from mpt3sas which is doing it correctly). This is
+for two reasons:
+	1) After the change to recursive removal of sysfs entries, we're
+	   trying to remove already removed kobjects when doing a
+	   sas_remove_host() _after_ a scsi_remove_host()
+	2) the documentation mandates it even (becuase of 1)
 
-[Sreekanth] Whether same thing applicable for SPARC & POWER
-architectures. If yes then we are fine with this patch changes.
+Unfortunately this does not completely solve issues with recursive sysfs
+removals in SAS, as libsas has asynchronous behaviour where strong ordering
+would be needed. But I am working on it and I do know other do as well. So if
+anyone else (James, Christoph, Bart, I'm looking at you) has an idea, I do
+have test setups and I'm willing to take input in form of ideas and patches.
 
->>
->> This results in unnecessary performance loss and code duplication.
->>
->> writel already guarantees ordering for both cpu and bus. we don't need
->> additional wmb()
->
-> Broadcom folks, please review!
->
-> --
-> Martin K. Petersen      Oracle Linux Engineering
+I also dropped the SDEV_CANCEL state change for now. We re-evaluate it once we
+have an idea how to tackle the ordering issues and place it into
+sas_unregister_ha() as per James' comment.
+
+Thanks,
+	Johannes
+
+Johannes Thumshirn (5):
+  scsi: isci: remove the SAS host after the SCSI host
+  aic94xx: remove the SAS host after the SCSI host
+  scsi: hisi_sas: remove the SAS host after the SCSI host
+  mvsas: remove the SAS host after the SCSI host
+  scsi: pm8001: remove the SAS host after the SCSI host
+
+ drivers/scsi/aic94xx/aic94xx_init.c   | 7 ++++---
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 4 ++--
+ drivers/scsi/isci/init.c              | 3 ++-
+ drivers/scsi/mvsas/mv_init.c          | 6 ++++--
+ drivers/scsi/pm8001/pm8001_init.c     | 8 ++++++--
+ 5 files changed, 18 insertions(+), 10 deletions(-)
+
+-- 
+2.12.0
