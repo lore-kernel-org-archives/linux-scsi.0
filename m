@@ -1,15 +1,15 @@
 From: jsmart2021@gmail.com
-Subject: [PATCH v3 04/22] Fix log message in completion path.
-Date: Fri, 21 Apr 2017 16:04:48 -0700
-Message-ID: <20170421230506.925-5-jsmart2021@gmail.com>
+Subject: [PATCH v3 01/22] Standardize nvme SGL segment count
+Date: Fri, 21 Apr 2017 16:04:45 -0700
+Message-ID: <20170421230506.925-2-jsmart2021@gmail.com>
 References: <20170421230506.925-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:36743 "EHLO
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:34301 "EHLO
         mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1426478AbdDUXFR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 19:05:17 -0400
-Received: by mail-oi0-f68.google.com with SMTP id a3so18440630oii.3
-        for <linux-scsi@vger.kernel.org>; Fri, 21 Apr 2017 16:05:16 -0700 (PDT)
+        with ESMTP id S1426468AbdDUXFN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 19:05:13 -0400
+Received: by mail-oi0-f68.google.com with SMTP id y11so21736092oie.1
+        for <linux-scsi@vger.kernel.org>; Fri, 21 Apr 2017 16:05:12 -0700 (PDT)
 In-Reply-To: <20170421230506.925-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,35 +18,61 @@ Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>
 
 From: James Smart <jsmart2021@gmail.com>
 
-In the lpfc_nvme_io_cmd_wqe_cmpl routine the driver was printing two
-pointers and the DID for the rport whenever an IO completed on a now
-that had transitioned to a non active state.
+Standardize default SGL segment count for nvme target and initiator
 
-There is no need to print the node pointer address for a node that
-is not active the DID should be enough to debug.
+The driver needs to make them the same for clarity.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/lpfc/lpfc_nvme.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/scsi/lpfc/lpfc_nvme.h  | 4 +---
+ drivers/scsi/lpfc/lpfc_nvmet.c | 2 +-
+ drivers/scsi/lpfc/lpfc_nvmet.h | 4 +---
+ 3 files changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index cbf3fe3..ee1a285 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -788,9 +788,8 @@ lpfc_nvme_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
- 	ndlp = rport->ndlp;
- 	if (!ndlp || !NLP_CHK_NODE_ACT(ndlp)) {
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NODE | LOG_NVME_IOERR,
--				 "6061 rport %p, ndlp %p, DID x%06x ndlp "
--				 "not ready.\n",
--				 rport, ndlp, rport->remoteport->port_id);
-+				 "6061 rport %p,  DID x%06x node not ready.\n",
-+				 rport, rport->remoteport->port_id);
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.h b/drivers/scsi/lpfc/lpfc_nvme.h
+index 1347deb..6277796 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.h
++++ b/drivers/scsi/lpfc/lpfc_nvme.h
+@@ -21,9 +21,7 @@
+  * included with this package.                                     *
+  ********************************************************************/
  
- 		ndlp = lpfc_findnode_did(vport, rport->remoteport->port_id);
- 		if (!ndlp) {
+-#define LPFC_NVME_MIN_SEGS		16
+-#define LPFC_NVME_DEFAULT_SEGS		66	/* 256K IOs - 64 + 2 */
+-#define LPFC_NVME_MAX_SEGS		510
++#define LPFC_NVME_DEFAULT_SEGS		(64 + 1)	/* 256K IOs */
+ #define LPFC_NVMET_MIN_POSTBUF		16
+ #define LPFC_NVMET_DEFAULT_POSTBUF	1024
+ #define LPFC_NVMET_MAX_POSTBUF		4096
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index d488c33..c8a4941 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -709,7 +709,7 @@ lpfc_nvmet_create_targetport(struct lpfc_hba *phba)
+ 	pinfo.port_id = vport->fc_myDID;
+ 
+ 	lpfc_tgttemplate.max_hw_queues = phba->cfg_nvme_io_channel;
+-	lpfc_tgttemplate.max_sgl_segments = phba->cfg_sg_seg_cnt;
++	lpfc_tgttemplate.max_sgl_segments = phba->cfg_sg_seg_cnt + 1;
+ 	lpfc_tgttemplate.target_features = NVMET_FCTGTFEAT_READDATA_RSP |
+ 					   NVMET_FCTGTFEAT_NEEDS_CMD_CPUSCHED |
+ 					   NVMET_FCTGTFEAT_CMD_IN_ISR |
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.h b/drivers/scsi/lpfc/lpfc_nvmet.h
+index 02735fc..d8bac4c 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.h
++++ b/drivers/scsi/lpfc/lpfc_nvmet.h
+@@ -21,9 +21,7 @@
+  * included with this package.                                     *
+  ********************************************************************/
+ 
+-#define LPFC_NVMET_MIN_SEGS		16
+-#define LPFC_NVMET_DEFAULT_SEGS		64	/* 256K IOs */
+-#define LPFC_NVMET_MAX_SEGS		510
++#define LPFC_NVMET_DEFAULT_SEGS		(64 + 1)	/* 256K IOs */
+ #define LPFC_NVMET_SUCCESS_LEN	12
+ 
+ /* Used for NVME Target */
 -- 
 2.9.3
