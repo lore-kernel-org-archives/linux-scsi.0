@@ -1,38 +1,42 @@
-From: James Smart <james.smart@broadcom.com>
-Subject: Re: [PATCH-v1 00/22] lpfc updates for 11.2.0.12
-Date: Fri, 21 Apr 2017 09:41:31 -0700
-Message-ID: <08e8252e-826e-2560-7ae7-08253413fa96@broadcom.com>
-References: <20170420044641.10657-1-jsmart2021@gmail.com>
- <20170420183047.GD22378@kernel.dk> <20170421070027.GB26346@linux-x5ow.site>
- <yq1h91im2a8.fsf@oracle.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH 6/9] scsi: Improve scsi_get_sense_info_fld
+Date: Fri, 21 Apr 2017 16:58:43 +0000
+Message-ID: <1492793923.2550.9.camel@sandisk.com>
+References: <20170421091649.25287-1-damien.lemoal@wdc.com>
+         <20170421091649.25287-7-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:35548 "EHLO
-        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1037491AbdDUQle (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 12:41:34 -0400
-Received: by mail-oi0-f53.google.com with SMTP id j201so102598145oih.2
-        for <linux-scsi@vger.kernel.org>; Fri, 21 Apr 2017 09:41:34 -0700 (PDT)
-In-Reply-To: <yq1h91im2a8.fsf@oracle.com>
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:54749 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1162106AbdDURBs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 13:01:48 -0400
+In-Reply-To: <20170421091649.25287-7-damien.lemoal@wdc.com>
+Content-Language: en-US
+Content-ID: <1E4A7363C738254F805895B54022E768@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Jens Axboe <axboe@kernel.dk>, jsmart2021@gmail.com, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, sagi@grimberg.me
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "hch@lst.de" <hch@lst.de>, "hare@suse.de" <hare@suse.de>
 
-On 4/21/2017 4:24 AM, Martin K. Petersen wrote:
-> Johannes Thumshirn <jthumshirn@suse.de> writes:
->
->> Just for clarification, shouldn't Martin take the patches? They're for
->> drivers/scsi/lpfc/ after all. I just want to avoid confusion and possible
->> merge conflicts.
-> Yeah, at this point I think it's better we do a second stage merge
-> through 4.12/scsi-fixes. I'll set that up after Linus pulls from Jens.
->
-no - most of the fixes are nvme related.  There are at best 3 that are 
-"generic" or scsi specific.  Given the nvme parts need the nvme-fc api 
-in the 2 dependencies... this won't be something that works well going 
-through scsi.
+On Fri, 2017-04-21 at 18:16 +0900, damien.lemoal@wdc.com wrote:
+> @@ -2363,42 +2365,32 @@ EXPORT_SYMBOL(scsi_command_normalize_sense);
+>   * Return value:
+>   *	1 if information field found, 0 if not found.
+>   */
+> -int scsi_get_sense_info_fld(const u8 * sense_buffer, int sb_len,
+> -			    u64 * info_out)
+> +bool scsi_get_sense_info_fld(const u8 * sense_buffer, int sb_len,
+> +			     u64 * info_out)
 
--- james
+Hello Damien,
+
+If you have to repost this patch please address the checkpatch complaints
+of the following category triggered by the above declaration:
+
+ERROR: "foo * bar" should be "foo *bar"
+
+Otherwise this patch looks fine to me. Hence:
+
+Reviewed-by: Bart Van Assche <Bart.VanAssche@sandisk.com>
