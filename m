@@ -1,41 +1,31 @@
 From: Christoph Hellwig <hch@lst.de>
 Subject: Re: [PATCH v2 0/5] Re-order scsi_remove_host and sas_remove_host
         in SAS HBA LLDDs
-Date: Fri, 21 Apr 2017 13:19:41 +0200
-Message-ID: <20170421111941.GA17971@lst.de>
-References: <cover.1492760075.git.jthumshirn@suse.de>
+Date: Fri, 21 Apr 2017 13:20:32 +0200
+Message-ID: <20170421112032.GB17971@lst.de>
+References: <cover.1492760075.git.jthumshirn@suse.de> <f101e42e-0aed-b8ce-2f36-cf16d1964f46@huawei.com> <20170421083938.GD26346@linux-x5ow.site> <9f6fa127-4ee5-70ed-19a8-1cb4f45af40a@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:45292 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1161101AbdDULTs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 21 Apr 2017 07:19:48 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <cover.1492760075.git.jthumshirn@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <9f6fa127-4ee5-70ed-19a8-1cb4f45af40a@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Garry <john.garry@huawei.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Jinpu Wang <jinpu.wang@profitbricks.com>, tj@kernel.org, wangyijing@huawei.com, Heyousong <heyousong@huawei.com>, "chenqilin (C)" <chenqilin2@huawei.com>, Linuxarm <linuxarm@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Jinpu Wang <jinpu.wang@profitbricks.com>, John Garry <john.garry@huawei.com>, tj@kernel.org
 
-On Fri, Apr 21, 2017 at 10:04:45AM +0200, Johannes Thumshirn wrote:
-> This series re-orders the calls to scsi_remove_host() and sas_remove_host() in
-> all SAS HBA drivers (apart from mpt3sas which is doing it correctly). This is
-> for two reasons:
-> 	1) After the change to recursive removal of sysfs entries, we're
-> 	   trying to remove already removed kobjects when doing a
-> 	   sas_remove_host() _after_ a scsi_remove_host()
-> 	2) the documentation mandates it even (becuase of 1)
-> 
-> Unfortunately this does not completely solve issues with recursive sysfs
-> removals in SAS, as libsas has asynchronous behaviour where strong ordering
-> would be needed. But I am working on it and I do know other do as well. So if
-> anyone else (James, Christoph, Bart, I'm looking at you) has an idea, I do
-> have test setups and I'm willing to take input in form of ideas and patches.
-> 
-> I also dropped the SDEV_CANCEL state change for now. We re-evaluate it once we
-> have an idea how to tackle the ordering issues and place it into
-> sas_unregister_ha() as per James' comment.
+On Fri, Apr 21, 2017 at 09:57:37AM +0100, John Garry wrote:
+> On 21/04/2017 09:39, Johannes Thumshirn wrote:
+>>> wangyijing already sent an RFC for fixing this issue (mentioned above),
+>>> > which was a signifiagnt rewrite of some of libsas.
+>>> > I am hoping that he would retry, and that community would support/shepherd
+>>> > this activity, or at least say it will be accepted so effort is not wasted.
+>> Do you have a link to the series? No problem if not, I'll probably can find it
+>> in my archives. Anyways, if Wangyijing is re-sending his patches please Cc me
+>> on it.
+>>
+>
+> https://marc.info/?l=linux-scsi&m=147494612310529&w=2
 
-Any reason to not just make sas_remove_host call scsi_remove_host
-to ensure we get the ordering right?
+Please repost the series against the current tree.  Also a cover
+letter with a bit more explanation would be good.
