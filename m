@@ -1,49 +1,55 @@
-From: Boaz Harrosh <ooo-rh7Tgz9RNieUD9Wbbkgo/g@public.gmane.org>
-Subject: Re: [PATCH 3/4] nfs: remove the objlayout driver
-Date: Fri, 21 Apr 2017 16:17:41 +0300
-Message-ID: <272aea55-0738-5de2-ca97-414e13b478af@electrozaur.com>
-References: <20170412160109.10598-1-hch@lst.de>
- <20170412160109.10598-4-hch@lst.de>
- <1492719505.82584.3.camel@primarydata.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V2] scsi: mpt3sas: remove redundant wmb
+Date: Fri, 21 Apr 2017 09:47:50 -0400
+Message-ID: <63726ec2-56dc-4fe2-f7ea-e177832d6114@codeaurora.org>
+References: <1491591978-17880-1-git-send-email-okaya@codeaurora.org>
+ <yq1y3uvq0c1.fsf@oracle.com>
+ <CAK=zhgpmcmq-CnWuU9=WRJpAaEduw63LSPLE9yZzF_sUHkM4AA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1492719505.82584.3.camel-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org>
-Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Trond Myklebust <trondmy-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org>, hch <hch-jcswGhMUV9g@public.gmane.org>, "martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org" <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "osd-dev-yNzVSZO3znNg9hUCZPvPmw@public.gmane.org" <osd-dev-yNzVSZO3znNg9hUCZPvPmw@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:34986 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1040129AbdDUNry (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 09:47:54 -0400
+In-Reply-To: <CAK=zhgpmcmq-CnWuU9=WRJpAaEduw63LSPLE9yZzF_sUHkM4AA@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, timur@codeaurora.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "open list:LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)" <MPT-FusionLinux.pdl@broadcom.com>, open list <linux-kernel@vger.kernel.org>
 
-On 04/20/2017 11:18 PM, Trond Myklebust wrote:
-<>
-> 
-> OK. I'm applying this patch for the 4.12 merge window. 
+On 4/21/2017 3:56 AM, Sreekanth Reddy wrote:
+> [Sreekanth] Whether same thing applicable for SPARC & POWER
+> architectures. If yes then we are fine with this patch changes.
 
-That is understandable this code was not tested for a long while
+This behavior is common for all architectures according to this document.
 
-> If, as Boaz
-> suggests, there is still an interest in exofs, then I suggest we put
-> that to the test by moving it into the STAGING area, to see if someone
-> will step up to maintain it.
-> 
+Who would be the best person to comment on SPARC and POWER architectures
+in specific? James and I exchanged some comments on the first version. 
 
-I do not understand what you mean by "someone will maintain it"
-What is it that is missing in exofs that you see needs development?
+James? can you comment on POWER behavior.
 
-As I said I regularly run and test this FS and update as things advance
-there where no new fixtures for a while, but no regressions either.
+https://www.kernel.org/doc/Documentation/memory-barriers.txt
 
-Please explain what it means "will maintain it"
+Inside of the Linux kernel, I/O should be done through the appropriate accessor
+routines - such as inb() or writel() - which know how to make such accesses
+appropriately sequential.  
 
-> Cheers
->   Trond
-> 
+"Whilst this, for the most part, renders the explicit
+use of memory barriers unnecessary", 
 
-Thanks
-Boaz
+there are a couple of situations where they might be needed:
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ (1) On some systems, I/O stores are not strongly ordered across all CPUs, and
+     so for _all_ general drivers locks should be used and mmiowb() must be
+     issued prior to unlocking the critical section.
+
+ (2) If the accessor functions are used to refer to an I/O memory window with
+     relaxed memory access properties, then _mandatory_ memory barriers are
+     required to enforce ordering.
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
