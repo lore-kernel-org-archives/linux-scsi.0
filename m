@@ -1,102 +1,127 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 0/5] v2: block subsystem refcounter conversions
-Date: Fri, 21 Apr 2017 15:01:20 -0700
-Message-ID: <1492812080.7079.75.camel@HansenPartnership.com>
-References: <1492687644-4405-1-git-send-email-elena.reshetova@intel.com>
-         <20170420135651.GA26595@infradead.org>
-         <2236FBA76BA1254E88B949DDB74E612B41C8DA36@IRSMSX102.ger.corp.intel.com>
-         <20170420183319.GB103004@gmail.com>
-         <2236FBA76BA1254E88B949DDB74E612B41C8E21B@IRSMSX102.ger.corp.intel.com>
-         <20170421195521.GE12755@gmail.com>
-         <CAGXu5j+6Ffyx56j_ZmM0Y5j_A_TwssQdRVQ9hX=qTa482r1nvA@mail.gmail.com>
-         <1492810063.7079.56.camel@HansenPartnership.com>
-         <CAGXu5jJ70Xb42As8p5t=WZ027GkBGcxUXrVnuaJMykpkROHVMw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAGXu5jJ70Xb42As8p5t=WZ027GkBGcxUXrVnuaJMykpkROHVMw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: Eric Biggers <ebiggers3@gmail.com>, "Reshetova, Elena" <elena.reshetova@intel.com>, Christoph Hellwig <hch@infradead.org>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "fujita.tomonori@lab.ntt.co.jp" <fujita.tomonori@lab.ntt.co.jp>, "mingo@redhat.com" <mingo@redhat.com>, "clm@fb.com" <clm@fb.com>, "jbacik@fb.com" <jbacik@fb.com>, "dsterba@suse.com" <dsterba@suse.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] scsi: pmcraid: use normal copy_from_user
+Date: Sat, 22 Apr 2017 00:02:31 +0200
+Message-ID: <20170421220250.2427519-1-arnd@arndb.de>
+References: <20170420175549.3435196-1-arnd@arndb.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.133]:63010 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1426317AbdDUWDA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 18:03:00 -0400
+In-Reply-To: <20170420175549.3435196-1-arnd@arndb.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Arnd Bergmann <arnd@arndb.de>, Johannes Berg <johannes.berg@intel.com>, Baoyou Xie <baoyou.xie@linaro.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, 2017-04-21 at 14:30 -0700, Kees Cook wrote:
-> On Fri, Apr 21, 2017 at 2:27 PM, James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
-> > On Fri, 2017-04-21 at 13:22 -0700, Kees Cook wrote:
-> > > On Fri, Apr 21, 2017 at 12:55 PM, Eric Biggers <
-> > > ebiggers3@gmail.com>
-> > > wrote:
-> > > > > > Of course, having extra checks behind a debug option is 
-> > > > > > fine.  But they should not be part of the base feature; the 
-> > > > > > base feature should just be mitigation of reference count
-> > > > > > *overflows*.  It would be nice to do more, of course; but 
-> > > > > > when the extra stuff prevents people from using refcount_t 
-> > > > > > for performance reasons, it defeats the point of the
-> > > > > > feature in the first place.
-> > > > > 
-> > > > > Sure, but as I said above, I think the smaller tricks and 
-> > > > > fixes won't be convincing enough, so their value is
-> > > > > questionable.
-> > > > 
-> > > > This makes no sense, as the main point of the feature is 
-> > > > supposed to be the security improvement.  As-is, the extra 
-> > > > debugging stuff is actually preventing the security improvement 
-> > > > from being adopted, which is unfortunate.
-> > > 
-> > > We've been trying to handle the conflicting desires of those 
-> > > wanting very precise refcounting implementation and gaining the 
-> > > security protections. Ultimately, the best way forward seemed to 
-> > > be to first land the precise refcounting implementation, and 
-> > > start conversion until we ran into concerns over performance. 
-> > > Now, since we're here, we can move forward with getting a fast 
-> > > implementation that provides the desired security protections 
-> > > without too greatly messing with the refcount API.
-> > 
-> > But that's not what it really looks like.  What it looks like is
-> > someone came up with a new API and is now intent on forcing it 
-> > through the kernel in about 500 patches using security as the
-> > hammer.
-> 
-> The intent is to split refcounting and statistical counters away from
-> atomics, since they have distinct APIs. This will let us audit the
-> remaining atomic uses much more easily.
+As pointed out by Al Viro for my previous series, the driver has no need
+to call access_ok() and __copy_from_user()/__copy_to_user(). Changing
+it to regular copy_from_user()/copy_to_user() simplifies the code without
+any real downsides, making it less error-prone at best.
 
-But the security problem is counter overflow, right?  That problem, as
-far as I can see exists in the atomics as well.  I'm sure there might
-be one or two corner cases depending on overflow actually working, but
-I can't think of them.
+This patch by itself also addresses the warning about the access_ok()
+macro on MIPS, but both fixes improve the code, so ideally we apply
+them both.
 
-The refcount vs atomic comes on the precise meaning of decrement to
-zero.  I'm not saying there's no benefit to detecting the condition,
-but the security problem looks to be much more pressing which is why I
-think this can be argued on the merits later.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/pmcraid.c | 40 +++++++---------------------------------
+ 1 file changed, 7 insertions(+), 33 deletions(-)
 
-> > If we were really concerned about security first, we'd have fixed 
-> > the atomic overflow problem in the atomics and then built the 
-> > precise refcounting on that and tried to persuade people of the
-> > merits.
-> 
-> I agree, but this approach was NAKed by multiple atomics maintainers.
-
-Overriding that decision by trying to convince all the consumers to
-move to a new API doesn't seem to be going so well either.  Perhaps we
-could assist you in changing the minds of the atomics maintainers ...
-what was the primary problem?  The additional couple of cycles or the
-fact that some use cases want overflow (or something else)?
-
-James
-
-> > Why can't we still do this?  It looks like the overflow protection 
-> > will add only a couple of cycles to the atomics.  We can move the
-> > current version to an unchecked variant which can be used either in 
-> > truly performance critical regions with no security implications or 
-> > if someone really needs the atomic to overflow.  From my point of 
-> > view it would give us the 90% case (security) and stop this endless
-> > argument over the fast paths.  Subsystems which have already moved 
-> > to refcount would stay there and the rest get to evaluate a 
-> > migration on the merits of the operational utility.
-> 
-> -Kees
-> 
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index 63298f017171..2091bdf298ef 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -3348,9 +3348,9 @@ static int pmcraid_copy_sglist(
+ 
+ 		kaddr = kmap(page);
+ 		if (direction == DMA_TO_DEVICE)
+-			rc = __copy_from_user(kaddr, buffer, bsize_elem);
++			rc = copy_from_user(kaddr, buffer, bsize_elem);
+ 		else
+-			rc = __copy_to_user(buffer, kaddr, bsize_elem);
++			rc = copy_to_user(buffer, kaddr, bsize_elem);
+ 
+ 		kunmap(page);
+ 
+@@ -3368,9 +3368,9 @@ static int pmcraid_copy_sglist(
+ 		kaddr = kmap(page);
+ 
+ 		if (direction == DMA_TO_DEVICE)
+-			rc = __copy_from_user(kaddr, buffer, len % bsize_elem);
++			rc = copy_from_user(kaddr, buffer, len % bsize_elem);
+ 		else
+-			rc = __copy_to_user(buffer, kaddr, len % bsize_elem);
++			rc = copy_to_user(buffer, kaddr, len % bsize_elem);
+ 
+ 		kunmap(page);
+ 
+@@ -3697,7 +3697,7 @@ static long pmcraid_ioctl_passthrough(
+ 
+ 	request_buffer = arg + request_offset;
+ 
+-	rc = __copy_from_user(buffer, arg,
++	rc = copy_from_user(buffer, arg,
+ 			     sizeof(struct pmcraid_passthrough_ioctl_buffer));
+ 
+ 	ioasa = arg + offsetof(struct pmcraid_passthrough_ioctl_buffer, ioasa);
+@@ -3718,14 +3718,7 @@ static long pmcraid_ioctl_passthrough(
+ 		direction = DMA_FROM_DEVICE;
+ 	}
+ 
+-	if (request_size > 0) {
+-		rc = access_ok(access, arg, request_offset + request_size);
+-
+-		if (!rc) {
+-			rc = -EFAULT;
+-			goto out_free_buffer;
+-		}
+-	} else if (request_size < 0) {
++	if (request_size < 0) {
+ 		rc = -EINVAL;
+ 		goto out_free_buffer;
+ 	}
+@@ -3935,11 +3928,6 @@ static long pmcraid_ioctl_driver(
+ {
+ 	int rc = -ENOSYS;
+ 
+-	if (!access_ok(VERIFY_READ, user_buffer, _IOC_SIZE(cmd))) {
+-		pmcraid_err("ioctl_driver: access fault in request buffer\n");
+-		return -EFAULT;
+-	}
+-
+ 	switch (cmd) {
+ 	case PMCRAID_IOCTL_RESET_ADAPTER:
+ 		pmcraid_reset_bringup(pinstance);
+@@ -3971,8 +3959,7 @@ static int pmcraid_check_ioctl_buffer(
+ 	struct pmcraid_ioctl_header *hdr
+ )
+ {
+-	int rc = 0;
+-	int access = VERIFY_READ;
++	int rc;
+ 
+ 	if (copy_from_user(hdr, arg, sizeof(struct pmcraid_ioctl_header))) {
+ 		pmcraid_err("couldn't copy ioctl header from user buffer\n");
+@@ -3988,19 +3975,6 @@ static int pmcraid_check_ioctl_buffer(
+ 		return -EINVAL;
+ 	}
+ 
+-	/* check for appropriate buffer access */
+-	if ((_IOC_DIR(cmd) & _IOC_READ) == _IOC_READ)
+-		access = VERIFY_WRITE;
+-
+-	rc = access_ok(access,
+-		       (arg + sizeof(struct pmcraid_ioctl_header)),
+-		       hdr->buffer_length);
+-	if (!rc) {
+-		pmcraid_err("access failed for user buffer of size %d\n",
+-			     hdr->buffer_length);
+-		return -EFAULT;
+-	}
+-
+ 	return 0;
+ }
+ 
+-- 
+2.9.0
