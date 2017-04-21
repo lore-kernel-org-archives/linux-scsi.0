@@ -1,90 +1,96 @@
-From: Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH 0/5] v2: block subsystem refcounter conversions
-Date: Fri, 21 Apr 2017 13:22:53 -0700
-Message-ID: <CAGXu5j+6Ffyx56j_ZmM0Y5j_A_TwssQdRVQ9hX=qTa482r1nvA@mail.gmail.com>
-References: <1492687644-4405-1-git-send-email-elena.reshetova@intel.com>
- <20170420135651.GA26595@infradead.org> <2236FBA76BA1254E88B949DDB74E612B41C8DA36@IRSMSX102.ger.corp.intel.com>
- <20170420183319.GB103004@gmail.com> <2236FBA76BA1254E88B949DDB74E612B41C8E21B@IRSMSX102.ger.corp.intel.com>
- <20170421195521.GE12755@gmail.com>
+From: Song Liu <songliubraving@fb.com>
+Subject: [RFC] scsi: reduce protection of scan_mutex in scsi_remove_device
+Date: Fri, 21 Apr 2017 14:13:02 -0700
+Message-ID: <20170421211302.2667649-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170421195521.GE12755@gmail.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Eric Biggers <ebiggers3@gmail.com>
-Cc: "Reshetova, Elena" <elena.reshetova@intel.com>, Christoph Hellwig <hch@infradead.org>, "axboe@kernel.dk" <axboe@kernel.dk>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "fujita.tomonori@lab.ntt.co.jp" <fujita.tomonori@lab.ntt.co.jp>, "mingo@redhat.com" <mingo@redhat.com>, "clm@fb.com" <clm@fb.com>, "jbacik@fb.com" <jbacik@fb.com>, "dsterba@suse.com" <dsterba@suse.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:48941 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1042338AbdDUVNR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 21 Apr 2017 17:13:17 -0400
+Received: from pps.filterd (m0109334.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v3LLDGiu011750
+        for <linux-scsi@vger.kernel.org>; Fri, 21 Apr 2017 14:13:16 -0700
+Received: from mail.thefacebook.com ([199.201.64.23])
+        by mx0a-00082601.pphosted.com with ESMTP id 29ysarr3c1-5
+        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Fri, 21 Apr 2017 14:13:16 -0700
+Received: from facebook.com (2401:db00:2120:20f2:face:0:9:0)    by
+ mx-out.facebook.com (10.102.107.97) with ESMTP id
+ 527a777026d711e7bc070002c99331b0-295f99a0 for <linux-scsi@vger.kernel.org>;
+        Fri, 21 Apr 2017 14:13:10 -0700
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: hch@infradead.org, Bart.VanAssche@sandisk.com, Song Liu <songliubraving@fb.com>
 
-On Fri, Apr 21, 2017 at 12:55 PM, Eric Biggers <ebiggers3@gmail.com> wrote:
-> Hi Elena,
->
-> On Fri, Apr 21, 2017 at 10:55:29AM +0000, Reshetova, Elena wrote:
->> >
->> > At the very least, what is there now could probably be made about twice as fast
->> > by removing the checks that don't actually help mitigate refcount overflow bugs,
->> > specifically all the checks in refcount_dec(), and the part of refcount_inc()
->> > where it doesn't allow incrementing a 0 refcount.  Hint: if a refcount is 0, the
->> > object has already been freed, so the attacker will have had the opportunity to
->> > allocate it with contents they control already.
->>
->> refcount_dec() is used very little through the code actually, it is more like an exception
->> case since in order to use it one must really be sure that refcounter doesn't drop to zero.
->> Removing the warn around it wouldn't likely affect much overall and thus it is better to
->> stay to discourage people of API itself :)
->>
->> refcount_inc() is of course a different story, it is extensively used. I guess the perf issue
->> on checking increment from zero might only come from WARNs being printed,
->> but not really from an additional check here for zero since it is trivial and part of
->> the needed loop anyway. So, I think only removing the
->> WARNs might have any visible impact, but even this is probably not really that big.
->>
->> So, I think these changes won't really help adoption of interface if arguments against
->> is performance. If we do have a performance issue, I think arch. specific implementation
->> is likely the only way to considerably speed it up.
->
-> I should have used refcount_dec_and_test() as the example, as the same applies
-> to both refcount_dec() and refcount_dec_and_test().  There is negligible
-> security benefit to have these refcount release operations checked vs. just
-> calling through to atomic_dec() and atomic_dec_and_test().  It's unfortunate,
-> but there is no known way to detect ahead of time (i.e. before exploitation) if
-> there are too many refcount releases, only too many refcount acquires.
->
-> The WARN is only executed if there is a bug, so naturally it's only a problem if
-> the functions are to be inlined, creating bloat.  The actual performance problem
-> is the overhead associated with using comparisons and cmpxchg's to avoid
-> changing a refcount that is 0 or UINT_MAX.  The more efficient approach would be
-> to (a) drop the check for 0, and (b) don't require full operation to be atomic,
-> but rather do something like "lock incl %[counter]; js <handle_error>".  Yes
-> it's not "atomic", and people have complained about this, but there is no
-> technical reason why it needs to be atomic.  Attackers do *not* care whether
-> your exploit mitigation is theoretically "atomic" or not, they only care whether
-> it works or not.  And besides, it's not even "atomic_t" anymore, it's
-> "refcount_t".
->
->> > Of course, having extra checks behind a debug option is fine.  But they should
->> > not be part of the base feature; the base feature should just be mitigation of
->> > reference count *overflows*.  It would be nice to do more, of course; but when
->> > the extra stuff prevents people from using refcount_t for performance reasons,
->> > it defeats the point of the feature in the first place.
->>
->> Sure, but as I said above, I think the smaller tricks and fixes won't be convincing enough,
->> so their value is questionable.
->
-> This makes no sense, as the main point of the feature is supposed to be the
-> security improvement.  As-is, the extra debugging stuff is actually preventing
-> the security improvement from being adopted, which is unfortunate.
+When a device is deleted through sysfs handle "delete", the code
+locks shost->scan_mutex. If multiple devices are deleted at the
+same time, these deletes will be handled in series.
 
-We've been trying to handle the conflicting desires of those wanting
-very precise refcounting implementation and gaining the security
-protections. Ultimately, the best way forward seemed to be to first
-land the precise refcounting implementation, and start conversion
-until we ran into concerns over performance. Now, since we're here, we
-can move forward with getting a fast implementation that provides the
-desired security protections without too greatly messing with the
-refcount API.
+On the other hand, some devices do long latency IO during deletion,
+for example, sd_shutdown() may do sync cache and/or start_stop.
+It is not necessary for these commands to run in series.
 
--Kees
+To reduce latency of parallel "delete" requests, this patch reduces
+the protection of scan_mutex. The only function with Scsi_Host
+called in __scsi_remove_device() is the optional slave_destroy().
+Therefore, the protection of scan_mutex is only necessary for this
+function.
 
+Signed-off-by: Song Liu <songliubraving@fb.com>
+---
+ drivers/scsi/scsi_sysfs.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 82dfe07..e7a9e28 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -610,7 +610,7 @@ static int scsi_sdev_check_buf_bit(const char *buf)
+ 			return 1;
+ 		else if (buf[0] == '0')
+ 			return 0;
+-		else 
++		else
+ 			return -EINVAL;
+ 	} else
+ 		return -EINVAL;
+@@ -774,7 +774,7 @@ store_queue_type_field(struct device *dev, struct device_attribute *attr,
+ 
+ 	if (!sdev->tagged_supported)
+ 		return -EINVAL;
+-		
++
+ 	sdev_printk(KERN_INFO, sdev,
+ 		    "ignoring write to deprecated queue_type attribute");
+ 	return count;
+@@ -1302,8 +1302,11 @@ void __scsi_remove_device(struct scsi_device *sdev)
+ 	blk_cleanup_queue(sdev->request_queue);
+ 	cancel_work_sync(&sdev->requeue_work);
+ 
+-	if (sdev->host->hostt->slave_destroy)
++	if (sdev->host->hostt->slave_destroy) {
++		mutex_lock(&sdev->host->scan_mutex);
+ 		sdev->host->hostt->slave_destroy(sdev);
++		mutex_unlock(&sdev->host->scan_mutex);
++	}
+ 	transport_destroy_device(dev);
+ 
+ 	/*
+@@ -1322,11 +1325,7 @@ void __scsi_remove_device(struct scsi_device *sdev)
+  **/
+ void scsi_remove_device(struct scsi_device *sdev)
+ {
+-	struct Scsi_Host *shost = sdev->host;
+-
+-	mutex_lock(&shost->scan_mutex);
+ 	__scsi_remove_device(sdev);
+-	mutex_unlock(&shost->scan_mutex);
+ }
+ EXPORT_SYMBOL(scsi_remove_device);
+ 
 -- 
-Kees Cook
-Pixel Security
+2.9.3
