@@ -1,15 +1,15 @@
 From: damien.lemoal@wdc.com
-Subject: [PATCH 6/9] scsi: Improve scsi_get_sense_info_fld
-Date: Fri, 21 Apr 2017 18:16:46 +0900
-Message-ID: <20170421091649.25287-7-damien.lemoal@wdc.com>
+Subject: [PATCH 7/9] sd_zbc: Rename sd_zbc_setup_write_cmnd
+Date: Fri, 21 Apr 2017 18:16:47 +0900
+Message-ID: <20170421091649.25287-8-damien.lemoal@wdc.com>
 References: <20170421091649.25287-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:31247 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1037290AbdDUJR2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 05:17:28 -0400
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:48820 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1037303AbdDUJRa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 05:17:30 -0400
 In-Reply-To: <20170421091649.25287-1-damien.lemoal@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,100 +18,143 @@ Cc: Bart Van Assche <Bart.VanAssche@sandisk.com>, Hannes Reinecke <hare@suse.de>
 
 From: Damien Le Moal <damien.lemoal@wdc.com>
 
-Use get_unaligned_be32 and get_unaligned_be64 to obtain values from
-the sense buffer instead of open coding the operations.
-Also change the function return value to a bool.
+Rename sd_zbc_setup_write_cmnd() to sd_zbc_write_lock_zone() to be
+clear about what the function actually does. To be consistent, also
+rename sd_zbc_cancel_write_cmnd() to sd_zbc_write_unlock_zone().
 
 No functional change is introduced by this patch.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 ---
- drivers/scsi/scsi_error.c | 36 ++++++++++++++----------------------
- include/scsi/scsi_eh.h    |  4 ++--
- 2 files changed, 16 insertions(+), 24 deletions(-)
+ drivers/scsi/sd.c     |  8 ++++----
+ drivers/scsi/sd.h     |  8 ++++----
+ drivers/scsi/sd_zbc.c | 14 +++++---------
+ 3 files changed, 13 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 53e3343..9a966ba 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -46,6 +46,8 @@
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index a59a107..ce37d52 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -846,7 +846,7 @@ static int sd_setup_write_same_cmnd(struct scsi_cmnd *cmd)
+ 	BUG_ON(bio_offset(bio) || bio_iovec(bio).bv_len != sdp->sector_size);
  
- #include <trace/events/scsi.h>
+ 	if (sd_is_zoned(sdkp)) {
+-		ret = sd_zbc_setup_write_cmnd(cmd);
++		ret = sd_zbc_write_lock_zone(cmd);
+ 		if (ret != BLKPREP_OK)
+ 			return ret;
+ 	}
+@@ -918,7 +918,7 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
+ 	unsigned char protect;
  
-+#include <asm/unaligned.h>
-+
- static void scsi_eh_done(struct scsi_cmnd *scmd);
+ 	if (zoned_write) {
+-		ret = sd_zbc_setup_write_cmnd(SCpnt);
++		ret = sd_zbc_write_lock_zone(SCpnt);
+ 		if (ret != BLKPREP_OK)
+ 			return ret;
+ 	}
+@@ -1145,7 +1145,7 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
+ 	ret = BLKPREP_OK;
+  out:
+ 	if (zoned_write && ret != BLKPREP_OK)
+-		sd_zbc_cancel_write_cmnd(SCpnt);
++		sd_zbc_write_unlock_zone(SCpnt);
  
- /*
-@@ -2363,42 +2365,32 @@ EXPORT_SYMBOL(scsi_command_normalize_sense);
-  * Return value:
-  *	1 if information field found, 0 if not found.
-  */
--int scsi_get_sense_info_fld(const u8 * sense_buffer, int sb_len,
--			    u64 * info_out)
-+bool scsi_get_sense_info_fld(const u8 * sense_buffer, int sb_len,
-+			     u64 * info_out)
+ 	return ret;
+ }
+@@ -1783,7 +1783,7 @@ static unsigned int sd_completed_bytes(struct scsi_cmnd *scmd)
+ 		return 0;
+ 
+ 	/*
+-	 * resid is optional but mostly filled in.  When it's unused,
++	 * resid is optional but mostly filled in. When it's unused,
+ 	 * its value is zero, so we assume the whole buffer transferred
+ 	 */
+ 	transferred = scsi_bufflen(scmd) - scsi_get_resid(scmd);
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 0cf9680..2044e07a 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -267,8 +267,8 @@ static inline int sd_is_zoned(struct scsi_disk *sdkp)
+ extern int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buffer);
+ extern void sd_zbc_remove(struct scsi_disk *sdkp);
+ extern void sd_zbc_print_zones(struct scsi_disk *sdkp);
+-extern int sd_zbc_setup_write_cmnd(struct scsi_cmnd *cmd);
+-extern void sd_zbc_cancel_write_cmnd(struct scsi_cmnd *cmd);
++extern int sd_zbc_write_lock_zone(struct scsi_cmnd *cmd);
++extern void sd_zbc_write_unlock_zone(struct scsi_cmnd *cmd);
+ extern int sd_zbc_setup_report_cmnd(struct scsi_cmnd *cmd);
+ extern int sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd);
+ extern void sd_zbc_complete(struct scsi_cmnd *cmd, unsigned int good_bytes,
+@@ -286,13 +286,13 @@ static inline void sd_zbc_remove(struct scsi_disk *sdkp) {}
+ 
+ static inline void sd_zbc_print_zones(struct scsi_disk *sdkp) {}
+ 
+-static inline int sd_zbc_setup_write_cmnd(struct scsi_cmnd *cmd)
++static inline int sd_zbc_write_lock_zone(struct scsi_cmnd *cmd)
  {
--	int j;
- 	const u8 * ucp;
--	u64 ull;
+ 	/* Let the drive fail requests */
+ 	return BLKPREP_OK;
+ }
  
- 	if (sb_len < 7)
--		return 0;
-+		return false;
- 	switch (sense_buffer[0] & 0x7f) {
- 	case 0x70:
- 	case 0x71:
- 		if (sense_buffer[0] & 0x80) {
--			*info_out = (sense_buffer[3] << 24) +
--				    (sense_buffer[4] << 16) +
--				    (sense_buffer[5] << 8) + sense_buffer[6];
--			return 1;
--		} else
--			return 0;
-+			*info_out = get_unaligned_be32(&sense_buffer[3]);
-+			return true;
-+		}
-+		return false;
- 	case 0x72:
- 	case 0x73:
- 		ucp = scsi_sense_desc_find(sense_buffer, sb_len,
- 					   0 /* info desc */);
- 		if (ucp && (0xa == ucp[1])) {
--			ull = 0;
--			for (j = 0; j < 8; ++j) {
--				if (j > 0)
--					ull <<= 8;
--				ull |= ucp[4 + j];
--			}
--			*info_out = ull;
--			return 1;
--		} else
--			return 0;
-+			*info_out = get_unaligned_be64(&ucp[4]);
-+			return true;
-+		}
-+		return false;
- 	default:
--		return 0;
-+		return false;
+-static inline void sd_zbc_cancel_write_cmnd(struct scsi_cmnd *cmd) {}
++static inline void sd_zbc_write_unlock_zone(struct scsi_cmnd *cmd) {}
+ 
+ static inline int sd_zbc_setup_report_cmnd(struct scsi_cmnd *cmd)
+ {
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index 92620c8..13a10ea 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -269,7 +269,7 @@ int sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd)
+ 	return BLKPREP_OK;
+ }
+ 
+-int sd_zbc_setup_write_cmnd(struct scsi_cmnd *cmd)
++int sd_zbc_write_lock_zone(struct scsi_cmnd *cmd)
+ {
+ 	struct request *rq = cmd->request;
+ 	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
+@@ -278,7 +278,7 @@ int sd_zbc_setup_write_cmnd(struct scsi_cmnd *cmd)
+ 	unsigned int zno = sd_zbc_zone_no(sdkp, sector);
+ 
+ 	/*
+-	 * Note: Checks of the alignment of the write command on
++	 * Note: Checks of the alignment of the command on
+ 	 * logical blocks is done in sd.c
+ 	 */
+ 
+@@ -303,8 +303,9 @@ int sd_zbc_setup_write_cmnd(struct scsi_cmnd *cmd)
+ 	return BLKPREP_OK;
+ }
+ 
+-static void sd_zbc_unlock_zone(struct request *rq)
++void sd_zbc_write_unlock_zone(struct scsi_cmnd *cmd)
+ {
++	struct request *rq = cmd->request;
+ 	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
+ 
+ 	if (sdkp->zones_wlock) {
+@@ -315,11 +316,6 @@ static void sd_zbc_unlock_zone(struct request *rq)
  	}
  }
- EXPORT_SYMBOL(scsi_get_sense_info_fld);
-diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
-index a25b328..cf9e61d 100644
---- a/include/scsi/scsi_eh.h
-+++ b/include/scsi/scsi_eh.h
-@@ -23,8 +23,8 @@ static inline bool scsi_sense_is_deferred(const struct scsi_sense_hdr *sshdr)
- 	return ((sshdr->response_code >= 0x70) && (sshdr->response_code & 1));
- }
  
--extern int scsi_get_sense_info_fld(const u8 * sense_buffer, int sb_len,
--				   u64 * info_out);
-+extern bool scsi_get_sense_info_fld(const u8 * sense_buffer, int sb_len,
-+				    u64 * info_out);
+-void sd_zbc_cancel_write_cmnd(struct scsi_cmnd *cmd)
+-{
+-	sd_zbc_unlock_zone(cmd->request);
+-}
+-
+ void sd_zbc_complete(struct scsi_cmnd *cmd,
+ 		     unsigned int good_bytes,
+ 		     struct scsi_sense_hdr *sshdr)
+@@ -333,7 +329,7 @@ void sd_zbc_complete(struct scsi_cmnd *cmd,
+ 	case REQ_OP_ZONE_RESET:
  
- extern int scsi_ioctl_reset(struct scsi_device *, int __user *);
+ 		/* Unlock the zone */
+-		sd_zbc_unlock_zone(rq);
++		sd_zbc_write_unlock_zone(cmd);
  
+ 		if (!result ||
+ 		    sshdr->sense_key != ILLEGAL_REQUEST)
 -- 
 2.9.3
