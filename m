@@ -1,34 +1,52 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH v2 0/5] Re-order scsi_remove_host and sas_remove_host in
- SAS HBA LLDDs
-Date: Fri, 21 Apr 2017 09:57:37 +0100
-Message-ID: <9f6fa127-4ee5-70ed-19a8-1cb4f45af40a@huawei.com>
-References: <cover.1492760075.git.jthumshirn@suse.de>
- <f101e42e-0aed-b8ce-2f36-cf16d1964f46@huawei.com>
- <20170421083938.GD26346@linux-x5ow.site>
+From: damien.lemoal@wdc.com
+Subject: [PATCH 0/9] scsi: sd/sd_zbc cleanup and improvements
+Date: Fri, 21 Apr 2017 18:16:40 +0900
+Message-ID: <20170421091649.25287-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170421083938.GD26346@linux-x5ow.site>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Jinpu Wang <jinpu.wang@profitbricks.com>, tj@kernel.org, wangyijing@huawei.com, Heyousong <heyousong@huawei.com>, "chenqilin (C)" <chenqilin2@huawei.com>, Linuxarm <linuxarm@huawei.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:48820 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S970415AbdDUJRQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 05:17:16 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Bart Van Assche <Bart.VanAssche@sandisk.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Damien Le Moal <damien.lemoal@wdc.com>
 
-On 21/04/2017 09:39, Johannes Thumshirn wrote:
->> wangyijing already sent an RFC for fixing this issue (mentioned above),
->> > which was a signifiagnt rewrite of some of libsas.
->> > I am hoping that he would retry, and that community would support/shepherd
->> > this activity, or at least say it will be accepted so effort is not wasted.
-> Do you have a link to the series? No problem if not, I'll probably can find it
-> in my archives. Anyways, if Wangyijing is re-sending his patches please Cc me
-> on it.
->
+From: Damien Le Moal <damien.lemoal@wdc.com>
 
-https://marc.info/?l=linux-scsi&m=147494612310529&w=2
+This series of small patches cleanup code mainly in sd.c and sd_zbc.c, with
+another small improvement in scsi_error.c.
 
-> Thanks,
-> 	Johannes
+The first 2 patches are not stricktly necessary but would be great to apply to
+make emacs pretty printer happy and reduce its overhead (if white space
+highlighting is enabled).
 
-John
+The last patch is the only one that introduces a functional change. All other
+patches do not change any functionality.
+
+Comments and reviews are welcome.
+
+Bart Van Assche (1):
+  sd_zbc: Remove superfluous assignments
+
+Damien Le Moal (8):
+  sd: Remove white space before EOL
+  sd: Fix functions description
+  sd: Remove unecessary variable in sd_done()
+  sd: Improve sd_completed_bytes
+  sd: Cleanup sd_done sense data handling
+  scsi: Improve scsi_get_sense_info_fld
+  sd_zbc: Rename sd_zbc_setup_write_cmnd
+  sd_zbc: Do not write lock zones for reset
+
+ drivers/scsi/scsi_error.c |  36 ++---
+ drivers/scsi/sd.c         | 402 +++++++++++++++++++++++-----------------------
+ drivers/scsi/sd.h         |   8 +-
+ drivers/scsi/sd_zbc.c     |  60 +++----
+ include/scsi/scsi_eh.h    |   4 +-
+ 5 files changed, 243 insertions(+), 267 deletions(-)
+
+-- 
+2.9.3
