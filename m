@@ -1,15 +1,15 @@
 From: damien.lemoal@wdc.com
-Subject: [PATCH 7/9] sd_zbc: Rename sd_zbc_setup_write_cmnd
-Date: Fri, 21 Apr 2017 18:16:47 +0900
-Message-ID: <20170421091649.25287-8-damien.lemoal@wdc.com>
+Subject: [PATCH 9/9] sd_zbc: Do not write lock zones for reset
+Date: Fri, 21 Apr 2017 18:16:49 +0900
+Message-ID: <20170421091649.25287-10-damien.lemoal@wdc.com>
 References: <20170421091649.25287-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:48820 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1037303AbdDUJRa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 05:17:30 -0400
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:31247 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1037315AbdDUJRk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 05:17:40 -0400
 In-Reply-To: <20170421091649.25287-1-damien.lemoal@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,143 +18,96 @@ Cc: Bart Van Assche <Bart.VanAssche@sandisk.com>, Hannes Reinecke <hare@suse.de>
 
 From: Damien Le Moal <damien.lemoal@wdc.com>
 
-Rename sd_zbc_setup_write_cmnd() to sd_zbc_write_lock_zone() to be
-clear about what the function actually does. To be consistent, also
-rename sd_zbc_cancel_write_cmnd() to sd_zbc_write_unlock_zone().
-
-No functional change is introduced by this patch.
+Resetting a zone write pointer is equivalent to discarding sectors:
+after a reset, the zone sectors will contain zeros (or the format
+pattern). So there is no need for mutual exclusion between a zone reset
+and write. Similarly to discard, make it the responsability of the user
+to properly synchronize between reset and write (as is done now for
+discard and write).
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 ---
- drivers/scsi/sd.c     |  8 ++++----
- drivers/scsi/sd.h     |  8 ++++----
- drivers/scsi/sd_zbc.c | 14 +++++---------
- 3 files changed, 13 insertions(+), 17 deletions(-)
+ drivers/scsi/sd_zbc.c | 42 ++++++++++++++++--------------------------
+ 1 file changed, 16 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index a59a107..ce37d52 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -846,7 +846,7 @@ static int sd_setup_write_same_cmnd(struct scsi_cmnd *cmd)
- 	BUG_ON(bio_offset(bio) || bio_iovec(bio).bv_len != sdp->sector_size);
- 
- 	if (sd_is_zoned(sdkp)) {
--		ret = sd_zbc_setup_write_cmnd(cmd);
-+		ret = sd_zbc_write_lock_zone(cmd);
- 		if (ret != BLKPREP_OK)
- 			return ret;
- 	}
-@@ -918,7 +918,7 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
- 	unsigned char protect;
- 
- 	if (zoned_write) {
--		ret = sd_zbc_setup_write_cmnd(SCpnt);
-+		ret = sd_zbc_write_lock_zone(SCpnt);
- 		if (ret != BLKPREP_OK)
- 			return ret;
- 	}
-@@ -1145,7 +1145,7 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
- 	ret = BLKPREP_OK;
-  out:
- 	if (zoned_write && ret != BLKPREP_OK)
--		sd_zbc_cancel_write_cmnd(SCpnt);
-+		sd_zbc_write_unlock_zone(SCpnt);
- 
- 	return ret;
- }
-@@ -1783,7 +1783,7 @@ static unsigned int sd_completed_bytes(struct scsi_cmnd *scmd)
- 		return 0;
- 
- 	/*
--	 * resid is optional but mostly filled in.  When it's unused,
-+	 * resid is optional but mostly filled in. When it's unused,
- 	 * its value is zero, so we assume the whole buffer transferred
- 	 */
- 	transferred = scsi_bufflen(scmd) - scsi_get_resid(scmd);
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 0cf9680..2044e07a 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -267,8 +267,8 @@ static inline int sd_is_zoned(struct scsi_disk *sdkp)
- extern int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buffer);
- extern void sd_zbc_remove(struct scsi_disk *sdkp);
- extern void sd_zbc_print_zones(struct scsi_disk *sdkp);
--extern int sd_zbc_setup_write_cmnd(struct scsi_cmnd *cmd);
--extern void sd_zbc_cancel_write_cmnd(struct scsi_cmnd *cmd);
-+extern int sd_zbc_write_lock_zone(struct scsi_cmnd *cmd);
-+extern void sd_zbc_write_unlock_zone(struct scsi_cmnd *cmd);
- extern int sd_zbc_setup_report_cmnd(struct scsi_cmnd *cmd);
- extern int sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd);
- extern void sd_zbc_complete(struct scsi_cmnd *cmd, unsigned int good_bytes,
-@@ -286,13 +286,13 @@ static inline void sd_zbc_remove(struct scsi_disk *sdkp) {}
- 
- static inline void sd_zbc_print_zones(struct scsi_disk *sdkp) {}
- 
--static inline int sd_zbc_setup_write_cmnd(struct scsi_cmnd *cmd)
-+static inline int sd_zbc_write_lock_zone(struct scsi_cmnd *cmd)
- {
- 	/* Let the drive fail requests */
- 	return BLKPREP_OK;
- }
- 
--static inline void sd_zbc_cancel_write_cmnd(struct scsi_cmnd *cmd) {}
-+static inline void sd_zbc_write_unlock_zone(struct scsi_cmnd *cmd) {}
- 
- static inline int sd_zbc_setup_report_cmnd(struct scsi_cmnd *cmd)
- {
 diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 92620c8..13a10ea 100644
+index 1cf8897..b47251a 100644
 --- a/drivers/scsi/sd_zbc.c
 +++ b/drivers/scsi/sd_zbc.c
-@@ -269,7 +269,7 @@ int sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd)
- 	return BLKPREP_OK;
- }
- 
--int sd_zbc_setup_write_cmnd(struct scsi_cmnd *cmd)
-+int sd_zbc_write_lock_zone(struct scsi_cmnd *cmd)
- {
- 	struct request *rq = cmd->request;
+@@ -237,7 +237,6 @@ int sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd)
  	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
-@@ -278,7 +278,7 @@ int sd_zbc_setup_write_cmnd(struct scsi_cmnd *cmd)
- 	unsigned int zno = sd_zbc_zone_no(sdkp, sector);
+ 	sector_t sector = blk_rq_pos(rq);
+ 	sector_t block = sectors_to_logical(sdkp->device, sector);
+-	unsigned int zno = block >> sdkp->zone_shift;
  
- 	/*
--	 * Note: Checks of the alignment of the write command on
-+	 * Note: Checks of the alignment of the command on
- 	 * logical blocks is done in sd.c
- 	 */
+ 	if (!sd_is_zoned(sdkp))
+ 		/* Not a zoned device */
+@@ -250,11 +249,6 @@ int sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd)
+ 		/* Unaligned request */
+ 		return BLKPREP_KILL;
  
-@@ -303,8 +303,9 @@ int sd_zbc_setup_write_cmnd(struct scsi_cmnd *cmd)
- 	return BLKPREP_OK;
- }
- 
--static void sd_zbc_unlock_zone(struct request *rq)
-+void sd_zbc_write_unlock_zone(struct scsi_cmnd *cmd)
- {
-+	struct request *rq = cmd->request;
- 	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
- 
- 	if (sdkp->zones_wlock) {
-@@ -315,11 +316,6 @@ static void sd_zbc_unlock_zone(struct request *rq)
- 	}
- }
- 
--void sd_zbc_cancel_write_cmnd(struct scsi_cmnd *cmd)
--{
--	sd_zbc_unlock_zone(cmd->request);
--}
+-	/* Do not allow concurrent reset and writes */
+-	if (sdkp->zones_wlock &&
+-	    test_and_set_bit(zno, sdkp->zones_wlock))
+-		return BLKPREP_DEFER;
 -
- void sd_zbc_complete(struct scsi_cmnd *cmd,
- 		     unsigned int good_bytes,
- 		     struct scsi_sense_hdr *sshdr)
-@@ -333,7 +329,7 @@ void sd_zbc_complete(struct scsi_cmnd *cmd,
- 	case REQ_OP_ZONE_RESET:
+ 	cmd->cmd_len = 16;
+ 	memset(cmd->cmnd, 0, cmd->cmd_len);
+ 	cmd->cmnd[0] = ZBC_OUT;
+@@ -324,38 +318,34 @@ void sd_zbc_complete(struct scsi_cmnd *cmd,
+ 	struct request *rq = cmd->request;
+ 
+ 	switch (req_op(rq)) {
++	case REQ_OP_ZONE_RESET:
++
++		if (result &&
++		    sshdr->sense_key == ILLEGAL_REQUEST &&
++		    sshdr->asc == 0x24)
++			/*
++			 * INVALID FIELD IN CDB error: reset of a conventional
++			 * zone was attempted. Nothing to worry about, so be
++			 * quiet about the error.
++			 */
++			rq->rq_flags |= RQF_QUIET;
++		break;
++
+ 	case REQ_OP_WRITE:
+ 	case REQ_OP_WRITE_SAME:
+-	case REQ_OP_ZONE_RESET:
  
  		/* Unlock the zone */
--		sd_zbc_unlock_zone(rq);
-+		sd_zbc_write_unlock_zone(cmd);
+ 		sd_zbc_write_unlock_zone(cmd);
  
- 		if (!result ||
- 		    sshdr->sense_key != ILLEGAL_REQUEST)
+-		if (!result ||
+-		    sshdr->sense_key != ILLEGAL_REQUEST)
+-			break;
+-
+-		switch (sshdr->asc) {
+-		case 0x24:
+-			/*
+-			 * INVALID FIELD IN CDB error: For a zone reset,
+-			 * this means that a reset of a conventional
+-			 * zone was attempted. Nothing to worry about in
+-			 * this case, so be quiet about the error.
+-			 */
+-			if (req_op(rq) == REQ_OP_ZONE_RESET)
+-				rq->rq_flags |= RQF_QUIET;
+-			break;
+-		case 0x21:
++		if (result &&
++		    sshdr->sense_key == ILLEGAL_REQUEST &&
++		    sshdr->asc == 0x21)
+ 			/*
+ 			 * INVALID ADDRESS FOR WRITE error: It is unlikely that
+ 			 * retrying write requests failed with any kind of
+ 			 * alignement error will result in success. So don't.
+ 			 */
+ 			cmd->allowed = 0;
+-			break;
+-		}
+-
+ 		break;
+ 
+ 	case REQ_OP_ZONE_REPORT:
 -- 
 2.9.3
