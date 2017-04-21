@@ -1,33 +1,48 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [RFC] scsi: reduce protection of scan_mutex in scsi_remove_device
-Date: Fri, 21 Apr 2017 21:20:23 +0000
-Message-ID: <1492809623.2499.4.camel@sandisk.com>
-References: <20170421211302.2667649-1-songliubraving@fb.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: [PATCH v4 0/4] Avoid that __scsi_remove_device() hangs
+Date: Fri, 21 Apr 2017 14:26:32 -0700
+Message-ID: <20170421212636.14376-1-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:22244 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1041465AbdDUVU1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 17:20:27 -0400
-In-Reply-To: <20170421211302.2667649-1-songliubraving@fb.com>
-Content-Language: en-US
-Content-ID: <6264AB9F091AE84D85F5887D18187FE1@namprd04.prod.outlook.com>
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:60209 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1162284AbdDUV0p (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 17:26:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "songliubraving@fb.com" <songliubraving@fb.com>
-Cc: "hch@infradead.org" <hch@infradead.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>
 
-On Fri, 2017-04-21 at 14:13 -0700, Song Liu wrote:
-> On the other hand, some devices do long latency IO during deletion,
-> for example, sd_shutdown() may do sync cache and/or start_stop.
-> It is not necessary for these commands to run in series.
+__scsi_remove_device() hangs if it is waiting for the SYNCHRONIZE CACHE
+command submitted by the sd driver to finish if the block layer queue is
+stopped and does not get restarted. This patch series avoids that that
+hang occurs.
 
-Have you noticed my patch series that makes sd_shutdown() submit the
-SYNCHRONIZE CACHE command asynchronously? Have you tried whether that
-patch series would be a good alternative?
+Changes compared to v3:
+- Removed the logging statements from sd_sync_cache_done() that triggered
+  a crash due to a use-after-free.
 
-Thanks,
+Changes compared to v2:
+- Moved the "stop_disk" assignment after the sdkp check in the sd driver.
+- Added a completion function for asynchronous SYNCHRONIZE CACHE commands.
+- Added "disk" and "done" arguments to scsi_execute_async().
 
-Bart.=
+Changes compared to v1:
+- Reworked the approach of this patch series.
+
+Bart Van Assche (4):
+  Introduce scsi_start_queue()
+  Introduce scsi_execute_async()
+  sd: Make synchronize cache upon shutdown asynchronous
+  Avoid that __scsi_remove_device() hangs
+
+ drivers/scsi/scsi_lib.c    | 114 ++++++++++++++++++++++++++++++++++-----------
+ drivers/scsi/scsi_priv.h   |   1 +
+ drivers/scsi/scsi_sysfs.c  |   9 ++++
+ drivers/scsi/sd.c          |  39 ++++++++++++++--
+ include/scsi/scsi_device.h |   5 ++
+ 5 files changed, 136 insertions(+), 32 deletions(-)
+
+-- 
+2.12.2
