@@ -1,15 +1,15 @@
 From: damien.lemoal@wdc.com
-Subject: [PATCH 3/9] sd: Remove unecessary variable in sd_done()
-Date: Fri, 21 Apr 2017 18:16:43 +0900
-Message-ID: <20170421091649.25287-4-damien.lemoal@wdc.com>
+Subject: [PATCH 4/9] sd: Improve sd_completed_bytes
+Date: Fri, 21 Apr 2017 18:16:44 +0900
+Message-ID: <20170421091649.25287-5-damien.lemoal@wdc.com>
 References: <20170421091649.25287-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:8014 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1037297AbdDUJRW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 05:17:22 -0400
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:53269 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1037299AbdDUJRZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 05:17:25 -0400
 In-Reply-To: <20170421091649.25287-1-damien.lemoal@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,54 +18,88 @@ Cc: Bart Van Assche <Bart.VanAssche@sandisk.com>, Hannes Reinecke <hare@suse.de>
 
 From: Damien Le Moal <damien.lemoal@wdc.com>
 
-The 'sense_deferred' variable in sd_done() is set only if
-'sense_valid' is true. So it is not necessary and the result of
-scsi_sense_is_deferred() and of scsi_command_normalize_sense() can
-be combined together in 'sense_valid'.
-
-Also, since scsi_command_normalize_sense() returns a bool, use that
-type for 'sense_valid' declaration.
+Re-shuffle the code to be more efficient by not initializing
+variables upfront (i.e. do it only when necessary).
+Also replace the do_div calls with calls to sectors_to_logical().
 
 No functional change is introduced by this patch.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 ---
- drivers/scsi/sd.c | 14 +++++---------
- 1 file changed, 5 insertions(+), 9 deletions(-)
+ drivers/scsi/sd.c | 48 ++++++++++++++++++++++++++----------------------
+ 1 file changed, 26 insertions(+), 22 deletions(-)
 
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 935ce34..c57084e 100644
+index c57084e..5ff0082 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -1808,8 +1808,7 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 	struct scsi_sense_hdr sshdr;
- 	struct scsi_disk *sdkp = scsi_disk(SCpnt->request->rq_disk);
- 	struct request *req = SCpnt->request;
--	int sense_valid = 0;
--	int sense_deferred = 0;
-+	bool sense_valid = false;
- 	unsigned char op = SCpnt->cmnd[0];
- 	unsigned char unmap = SCpnt->cmnd[1] & 8;
+@@ -1754,41 +1754,45 @@ static int sd_eh_action(struct scsi_cmnd *scmd, int eh_disp)
  
-@@ -1837,15 +1836,12 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 		break;
- 	}
+ static unsigned int sd_completed_bytes(struct scsi_cmnd *scmd)
+ {
+-	u64 start_lba = blk_rq_pos(scmd->request);
+-	u64 end_lba = blk_rq_pos(scmd->request) + (scsi_bufflen(scmd) / 512);
+-	u64 factor = scmd->device->sector_size / 512;
+-	u64 bad_lba;
+-	int info_valid;
++	struct request *req = scmd->request;
++	struct scsi_device *sdev = scmd->device;
++	unsigned int transferred, good_bytes;
++	u64 start_lba, end_lba, bad_lba;
++
+ 	/*
+-	 * resid is optional but mostly filled in.  When it's unused,
+-	 * its value is zero, so we assume the whole buffer transferred
++	 * Some commands have a payload smaller than the device logical
++	 * block size (e.g. INQUIRY on a 4K disk).
+ 	 */
+-	unsigned int transferred = scsi_bufflen(scmd) - scsi_get_resid(scmd);
+-	unsigned int good_bytes;
+-
+-	info_valid = scsi_get_sense_info_fld(scmd->sense_buffer,
+-					     SCSI_SENSE_BUFFERSIZE,
+-					     &bad_lba);
+-	if (!info_valid)
++	if (scsi_bufflen(scmd) <= sdev->sector_size)
+ 		return 0;
  
--	if (result) {
--		sense_valid = scsi_command_normalize_sense(SCpnt, &sshdr);
--		if (sense_valid)
--			sense_deferred = scsi_sense_is_deferred(&sshdr);
--	}
-+	if (result)
-+		sense_valid = scsi_command_normalize_sense(SCpnt, &sshdr) &&
-+			!scsi_sense_is_deferred(&sshdr);
- 	sdkp->medium_access_timed_out = 0;
+-	if (scsi_bufflen(scmd) <= scmd->device->sector_size)
++	/* Check if we have a 'bad_lba' information */
++	if (!scsi_get_sense_info_fld(scmd->sense_buffer,
++				     SCSI_SENSE_BUFFERSIZE,
++				     &bad_lba))
+ 		return 0;
  
--	if (driver_byte(result) != DRIVER_SENSE &&
--	    (!sense_valid || sense_deferred))
-+	if (driver_byte(result) != DRIVER_SENSE && !sense_valid)
- 		goto out;
+-	/* be careful ... don't want any overflows */
+-	do_div(start_lba, factor);
+-	do_div(end_lba, factor);
+-
+-	/* The bad lba was reported incorrectly, we have no idea where
++	/*
++	 * If the bad lba was reported incorrectly, we have no idea where
+ 	 * the error is.
+ 	 */
+-	if (bad_lba < start_lba  || bad_lba >= end_lba)
++	start_lba = sectors_to_logical(sdev, blk_rq_pos(req));
++	end_lba = sectors_to_logical(sdev,
++				blk_rq_pos(req) + (scsi_bufflen(scmd) >> 9));
++	if (bad_lba < start_lba || bad_lba >= end_lba)
+ 		return 0;
  
- 	switch (sshdr.sense_key) {
++	/*
++	 * resid is optional but mostly filled in.  When it's unused,
++	 * its value is zero, so we assume the whole buffer transferred
++	 */
++	transferred = scsi_bufflen(scmd) - scsi_get_resid(scmd);
++
+ 	/* This computation should always be done in terms of
+ 	 * the resolution of the device's medium.
+ 	 */
+-	good_bytes = (bad_lba - start_lba) * scmd->device->sector_size;
++	good_bytes = logical_to_bytes(sdev, bad_lba - start_lba);
++
+ 	return min(good_bytes, transferred);
+ }
+ 
 -- 
 2.9.3
