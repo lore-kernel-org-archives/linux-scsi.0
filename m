@@ -1,48 +1,94 @@
 From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH v4 0/4] Avoid that __scsi_remove_device() hangs
-Date: Fri, 21 Apr 2017 14:26:32 -0700
-Message-ID: <20170421212636.14376-1-bart.vanassche@sandisk.com>
+Subject: [PATCH v4 1/4] Introduce scsi_start_queue()
+Date: Fri, 21 Apr 2017 14:26:33 -0700
+Message-ID: <20170421212636.14376-2-bart.vanassche@sandisk.com>
+References: <20170421212636.14376-1-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:60209 "EHLO
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:31274 "EHLO
         esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1162284AbdDUV0p (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 17:26:45 -0400
+        with ESMTP id S1162288AbdDUV0r (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 17:26:47 -0400
+In-Reply-To: <20170421212636.14376-1-bart.vanassche@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Israel Rukshin <israelr@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>, Hannes Reinecke <hare@suse.de>, Song Liu <songliubraving@fb.com>
 
-__scsi_remove_device() hangs if it is waiting for the SYNCHRONIZE CACHE
-command submitted by the sd driver to finish if the block layer queue is
-stopped and does not get restarted. This patch series avoids that that
-hang occurs.
+This patch does not change any functionality.
 
-Changes compared to v3:
-- Removed the logging statements from sd_sync_cache_done() that triggered
-  a crash due to a use-after-free.
+Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Israel Rukshin <israelr@mellanox.com>
+Cc: Max Gurtovoy <maxg@mellanox.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Song Liu <songliubraving@fb.com>
+---
+ drivers/scsi/scsi_lib.c  | 25 +++++++++++++++----------
+ drivers/scsi/scsi_priv.h |  1 +
+ 2 files changed, 16 insertions(+), 10 deletions(-)
 
-Changes compared to v2:
-- Moved the "stop_disk" assignment after the sdkp check in the sd driver.
-- Added a completion function for asynchronous SYNCHRONIZE CACHE commands.
-- Added "disk" and "done" arguments to scsi_execute_async().
-
-Changes compared to v1:
-- Reworked the approach of this patch series.
-
-Bart Van Assche (4):
-  Introduce scsi_start_queue()
-  Introduce scsi_execute_async()
-  sd: Make synchronize cache upon shutdown asynchronous
-  Avoid that __scsi_remove_device() hangs
-
- drivers/scsi/scsi_lib.c    | 114 ++++++++++++++++++++++++++++++++++-----------
- drivers/scsi/scsi_priv.h   |   1 +
- drivers/scsi/scsi_sysfs.c  |   9 ++++
- drivers/scsi/sd.c          |  39 ++++++++++++++--
- include/scsi/scsi_device.h |   5 ++
- 5 files changed, 136 insertions(+), 32 deletions(-)
-
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index eecc005099b2..ffa6e61299a9 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2987,6 +2987,20 @@ scsi_internal_device_block(struct scsi_device *sdev, bool wait)
+ }
+ EXPORT_SYMBOL_GPL(scsi_internal_device_block);
+  
++void scsi_start_queue(struct scsi_device *sdev)
++{
++	struct request_queue *q = sdev->request_queue;
++	unsigned long flags;
++
++	if (q->mq_ops) {
++		blk_mq_start_stopped_hw_queues(q, false);
++	} else {
++		spin_lock_irqsave(q->queue_lock, flags);
++		blk_start_queue(q);
++		spin_unlock_irqrestore(q->queue_lock, flags);
++	}
++}
++
+ /**
+  * scsi_internal_device_unblock - resume a device after a block request
+  * @sdev:	device to resume
+@@ -3007,9 +3021,6 @@ int
+ scsi_internal_device_unblock(struct scsi_device *sdev,
+ 			     enum scsi_device_state new_state)
+ {
+-	struct request_queue *q = sdev->request_queue; 
+-	unsigned long flags;
+-
+ 	/*
+ 	 * Try to transition the scsi device to SDEV_RUNNING or one of the
+ 	 * offlined states and goose the device queue if successful.
+@@ -3027,13 +3038,7 @@ scsi_internal_device_unblock(struct scsi_device *sdev,
+ 		 sdev->sdev_state != SDEV_OFFLINE)
+ 		return -EINVAL;
+ 
+-	if (q->mq_ops) {
+-		blk_mq_start_stopped_hw_queues(q, false);
+-	} else {
+-		spin_lock_irqsave(q->queue_lock, flags);
+-		blk_start_queue(q);
+-		spin_unlock_irqrestore(q->queue_lock, flags);
+-	}
++	scsi_start_queue(sdev);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index f11bd102d6d5..c7629e31a75b 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -89,6 +89,7 @@ extern void scsi_run_host_queues(struct Scsi_Host *shost);
+ extern void scsi_requeue_run_queue(struct work_struct *work);
+ extern struct request_queue *scsi_alloc_queue(struct scsi_device *sdev);
+ extern struct request_queue *scsi_mq_alloc_queue(struct scsi_device *sdev);
++extern void scsi_start_queue(struct scsi_device *sdev);
+ extern int scsi_mq_setup_tags(struct Scsi_Host *shost);
+ extern void scsi_mq_destroy_tags(struct Scsi_Host *shost);
+ extern int scsi_init_queue(void);
 -- 
 2.12.2
