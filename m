@@ -1,15 +1,15 @@
 From: jsmart2021@gmail.com
-Subject: [PATCH v3 13/22] Fix nvme initiator handling when not enabled.
-Date: Fri, 21 Apr 2017 16:04:57 -0700
-Message-ID: <20170421230506.925-14-jsmart2021@gmail.com>
+Subject: [PATCH v3 14/22] Remove hba lock from NVMET issue WQE.
+Date: Fri, 21 Apr 2017 16:04:58 -0700
+Message-ID: <20170421230506.925-15-jsmart2021@gmail.com>
 References: <20170421230506.925-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:34894 "EHLO
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:34904 "EHLO
         mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1426486AbdDUXF3 (ORCPT
+        with ESMTP id S1426487AbdDUXF3 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 19:05:29 -0400
-Received: by mail-oi0-f67.google.com with SMTP id m34so14689706oik.2
-        for <linux-scsi@vger.kernel.org>; Fri, 21 Apr 2017 16:05:28 -0700 (PDT)
+Received: by mail-oi0-f67.google.com with SMTP id m34so14689771oik.2
+        for <linux-scsi@vger.kernel.org>; Fri, 21 Apr 2017 16:05:29 -0700 (PDT)
 In-Reply-To: <20170421230506.925-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,95 +18,41 @@ Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>
 
 From: James Smart <jsmart2021@gmail.com>
 
-Fix nvme initiator handline when CONFIG_LPFC_NVME_INITIATOR is not enabled.
+Unnecessary lock is taken. ring lock should be sufficient to protect the
+work queue submission.
 
-With update nvme upstream driver sources, loading
-the driver with nvme enabled resulting in this Oops.
-
- BUG: unable to handle kernel NULL pointer dereference at 0000000000000018
- IP: lpfc_nvme_update_localport+0x23/0xd0 [lpfc]
- PGD 0
- Oops: 0000 [#1] SMP
- CPU: 0 PID: 10256 Comm: lpfc_worker_0 Tainted
- Hardware name: ...
- task: ffff881028191c40 task.stack: ffff880ffdf00000
- RIP: 0010:lpfc_nvme_update_localport+0x23/0xd0 [lpfc]
- RSP: 0018:ffff880ffdf03c20 EFLAGS: 00010202
-
-Cause: As the initiator driver completes discovery at different stages,
-it call lpfc_nvme_update_localport to hint that the DID and role may have
-changed.  In the implementation of lpfc_nvme_update_localport, the driver
-was not validating the localport or the lport during the execution
-of the update_localport routine.  With the recent upstream additions to
-the driver, the create_localport routine didn't run and so the localport
-was NULL causing the page-fault Oops.
-
-Fix: Add the CONFIG_LPFC_NVME_INITIATOR preprocessor inclusions to
-lpfc_nvme_update_localport to turn off all routine processing when
-the running kernel does not have NVME configured.  Add NULL pointer
-checks on the localport and lport in lpfc_nvme_update_localport and
-dump messages if they are NULL and just exit.
-Also one alingment issue fixed.
-Repalces the ifdef with the IS_ENABLED macro.
+This was noticed when doing performance testing. The hbalock is not
+needed to issue io to the nvme work queue.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/lpfc/lpfc_attr.c |  2 +-
- drivers/scsi/lpfc/lpfc_nvme.c | 15 +++++++++++++--
- 2 files changed, 14 insertions(+), 3 deletions(-)
+ drivers/scsi/lpfc/lpfc_nvmet.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 22819af..4b32d02 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -3335,7 +3335,7 @@ LPFC_ATTR_R(enable_fc4_type, LPFC_ENABLE_FCP,
-  * percentage will go to NVME.
-  */
- LPFC_ATTR_R(xri_split, 50, 10, 90,
--	     "Division of XRI resources between SCSI and NVME");
-+	    "Division of XRI resources between SCSI and NVME");
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index c8a4941..5a994a8 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -517,7 +517,6 @@ lpfc_nvmet_xmt_fcp_op(struct nvmet_fc_target_port *tgtport,
+ 		container_of(rsp, struct lpfc_nvmet_rcv_ctx, ctx.fcp_req);
+ 	struct lpfc_hba *phba = ctxp->phba;
+ 	struct lpfc_iocbq *nvmewqeq;
+-	unsigned long iflags;
+ 	int rc, id;
  
- /*
- # lpfc_log_verbose: Only turn this flag on if you are willing to risk being
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index ee1a285..264da8f 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -2264,12 +2264,23 @@ lpfc_nvme_destroy_localport(struct lpfc_vport *vport)
- void
- lpfc_nvme_update_localport(struct lpfc_vport *vport)
- {
-+#if (IS_ENABLED(CONFIG_NVME_FC))
- 	struct nvme_fc_local_port *localport;
- 	struct lpfc_nvme_lport *lport;
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+@@ -571,10 +570,7 @@ lpfc_nvmet_xmt_fcp_op(struct nvmet_fc_target_port *tgtport,
+ 	lpfc_nvmeio_data(phba, "NVMET FCP CMND: xri x%x op x%x len x%x\n",
+ 			 ctxp->oxid, rsp->op, rsp->rsplen);
  
- 	localport = vport->localport;
-+	if (!localport) {
-+		lpfc_printf_vlog(vport, KERN_WARNING, LOG_NVME,
-+				 "6710 Update NVME fail. No localport\n");
-+		return;
-+	}
- 	lport = (struct lpfc_nvme_lport *)localport->private;
--
-+	if (!lport) {
-+		lpfc_printf_vlog(vport, KERN_WARNING, LOG_NVME,
-+				 "6171 Update NVME fail. localP %p, No lport\n",
-+				 localport);
-+		return;
-+	}
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME,
- 			 "6012 Update NVME lport %p did x%x\n",
- 			 localport, vport->fc_myDID);
-@@ -2283,7 +2294,7 @@ lpfc_nvme_update_localport(struct lpfc_vport *vport)
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
- 			 "6030 bound lport %p to DID x%06x\n",
- 			 lport, localport->port_id);
--
-+#endif
- }
- 
- int
+-	/* For now we take hbalock */
+-	spin_lock_irqsave(&phba->hbalock, iflags);
+ 	rc = lpfc_sli4_issue_wqe(phba, LPFC_FCP_RING, nvmewqeq);
+-	spin_unlock_irqrestore(&phba->hbalock, iflags);
+ 	if (rc == WQE_SUCCESS) {
+ 		ctxp->flag |= LPFC_NVMET_IO_INP;
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
 -- 
 2.9.3
