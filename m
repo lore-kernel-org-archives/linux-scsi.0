@@ -1,106 +1,166 @@
 From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH v4 3/4] sd: Make synchronize cache upon shutdown asynchronous
-Date: Fri, 21 Apr 2017 14:26:35 -0700
-Message-ID: <20170421212636.14376-4-bart.vanassche@sandisk.com>
+Subject: [PATCH v4 2/4] Introduce scsi_execute_async()
+Date: Fri, 21 Apr 2017 14:26:34 -0700
+Message-ID: <20170421212636.14376-3-bart.vanassche@sandisk.com>
 References: <20170421212636.14376-1-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:50048 "EHLO
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:43220 "EHLO
         esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1422806AbdDUV0y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 17:26:54 -0400
+        with ESMTP id S1422807AbdDUV04 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Apr 2017 17:26:56 -0400
 In-Reply-To: <20170421212636.14376-1-bart.vanassche@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Israel Rukshin <israelr@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>, Hannes Reinecke <hare@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>, Song Liu <songliubraving@fb.com>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Israel Rukshin <israelr@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>, Hannes Reinecke <hare@suse.de>, Song Liu <songliubraving@fb.com>
 
-This patch avoids that sd_shutdown() hangs on the SYNCHRONIZE CACHE
-command if the block layer queue has been stopped by
-scsi_target_block().
+Move the code for submitting a SCSI command from scsi_execute()
+into scsi_build_rq(). Introduce scsi_execute_async(). This patch
+does not change any functionality.
 
 Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
 Cc: Israel Rukshin <israelr@mellanox.com>
 Cc: Max Gurtovoy <maxg@mellanox.com>
 Cc: Hannes Reinecke <hare@suse.de>
-Cc: Benjamin Block <bblock@linux.vnet.ibm.com>
 Cc: Song Liu <songliubraving@fb.com>
 ---
- drivers/scsi/sd.c | 39 ++++++++++++++++++++++++++++++++++-----
- 1 file changed, 34 insertions(+), 5 deletions(-)
+ drivers/scsi/scsi_lib.c    | 89 +++++++++++++++++++++++++++++++++++++---------
+ include/scsi/scsi_device.h |  5 +++
+ 2 files changed, 77 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index fe0f7997074e..354ec47584fe 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1489,6 +1489,27 @@ static unsigned int sd_check_events(struct gendisk *disk, unsigned int clearing)
- 	return retval;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index ffa6e61299a9..7f9c70fd0acd 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -213,6 +213,73 @@ void scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
+ 	__scsi_queue_insert(cmd, reason, 1);
  }
  
-+static void sd_sync_cache_done(struct request *rq, int e)
++static struct request *scsi_build_rq(const struct scsi_device *sdev,
++		const unsigned char *cmd, int data_direction, void *buffer,
++		unsigned bufflen, int timeout, int retries, u64 flags,
++		req_flags_t rq_flags)
 +{
-+	blk_put_request(rq);
++	struct request *req;
++	struct scsi_request *rq;
++	int ret;
++
++	req = blk_get_request(sdev->request_queue,
++			data_direction == DMA_TO_DEVICE ?
++			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, __GFP_RECLAIM);
++	if (IS_ERR(req))
++		return req;
++	rq = scsi_req(req);
++	scsi_req_init(req);
++
++	if (bufflen) {
++		ret = blk_rq_map_kern(sdev->request_queue, req,
++				      buffer, bufflen, __GFP_RECLAIM);
++		if (ret) {
++			blk_put_request(req);
++			return ERR_PTR(ret);
++		}
++	}
++
++	rq->cmd_len = COMMAND_SIZE(cmd[0]);
++	memcpy(rq->cmd, cmd, rq->cmd_len);
++	req->retries = retries;
++	req->timeout = timeout;
++	req->cmd_flags |= flags;
++	req->rq_flags |= rq_flags | RQF_QUIET | RQF_PREEMPT;
++
++	return req;
 +}
 +
-+/*
-+ * Issue a SYNCHRONIZE CACHE command asynchronously. Since blk_cleanup_queue()
-+ * waits for all commands to finish, __scsi_remove_device() will wait for the
-+ * SYNCHRONIZE CACHE command to finish.
++/**
++ * scsi_execute_async - insert a SCSI request
++ * @sdev:	scsi device
++ * @disk:       gendisk pointer that will be stored in the request structure
++ * @cmd:	scsi command
++ * @data_direction: data direction
++ * @buffer:	data buffer
++ * @bufflen:	length of buffer
++ * @timeout:	request timeout in seconds
++ * @retries:	number of times to retry request
++ * @flags:	flags for ->cmd_flags
++ * @rq_flags:	flags for ->rq_flags
++ * @done:       I/O completion function
 + */
-+static int sd_sync_cache_async(struct scsi_disk *sdkp)
++int scsi_execute_async(const struct scsi_device *sdev, struct gendisk *disk,
++		const unsigned char *cmd, int data_direction, void *buffer,
++		unsigned bufflen, int timeout, int retries, u64 flags,
++		req_flags_t rq_flags, rq_end_io_fn *done)
 +{
-+	const struct scsi_device *sdp = sdkp->device;
-+	const int timeout = sdp->request_queue->rq_timeout *
-+			    SD_FLUSH_TIMEOUT_MULTIPLIER;
-+	const unsigned char cmd[10] = { SYNCHRONIZE_CACHE };
++	struct request *req;
 +
-+	return scsi_execute_async(sdp, NULL, cmd, DMA_NONE, NULL, 0, timeout,
-+				  SD_MAX_RETRIES, 0, 0, sd_sync_cache_done);
++	req = scsi_build_rq(sdev, cmd, data_direction, buffer, bufflen, timeout,
++			    retries, flags, rq_flags);
++	if (IS_ERR(req))
++		return PTR_ERR(req);
++	/* head injection *required* here otherwise quiesce won't work */
++	blk_execute_rq_nowait(req->q, disk, req, 1, done);
++
++	return 0;
 +}
++EXPORT_SYMBOL(scsi_execute_async);
+ 
+ /**
+  * scsi_execute - insert request and wait for the result
+@@ -242,24 +309,12 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+ 	struct scsi_request *rq;
+ 	int ret = DRIVER_ERROR << 24;
+ 
+-	req = blk_get_request(sdev->request_queue,
+-			data_direction == DMA_TO_DEVICE ?
+-			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, __GFP_RECLAIM);
++	req = scsi_build_rq(sdev, cmd, data_direction, buffer, bufflen,
++			    timeout, retries, flags, rq_flags);
+ 	if (IS_ERR(req))
+-		return ret;
+-	rq = scsi_req(req);
+-	scsi_req_init(req);
++		return PTR_ERR(req);
+ 
+-	if (bufflen &&	blk_rq_map_kern(sdev->request_queue, req,
+-					buffer, bufflen, __GFP_RECLAIM))
+-		goto out;
+-
+-	rq->cmd_len = COMMAND_SIZE(cmd[0]);
+-	memcpy(rq->cmd, cmd, rq->cmd_len);
+-	req->retries = retries;
+-	req->timeout = timeout;
+-	req->cmd_flags |= flags;
+-	req->rq_flags |= rq_flags | RQF_QUIET | RQF_PREEMPT;
++	rq = scsi_req(req);
+ 
+ 	/*
+ 	 * head injection *required* here otherwise quiesce won't work
+@@ -282,7 +337,7 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+ 	if (sshdr)
+ 		scsi_normalize_sense(rq->sense, rq->sense_len, sshdr);
+ 	ret = req->errors;
+- out:
 +
- static int sd_sync_cache(struct scsi_disk *sdkp)
- {
- 	int retries, res;
-@@ -3349,13 +3370,15 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
- }
+ 	blk_put_request(req);
  
- /*
-- * Send a SYNCHRONIZE CACHE instruction down to the device through
-- * the normal SCSI command structure.  Wait for the command to
-- * complete.
-+ * Send a SYNCHRONIZE CACHE instruction down to the device through the normal
-+ * SCSI command structure. When stopping the disk, wait for the command to
-+ * complete. When not stopping the disk, the blk_cleanup_queue() call in
-+ * __scsi_remove_device() will wait for this command to complete.
-  */
- static void sd_shutdown(struct device *dev)
- {
- 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
-+	bool stop_disk;
- 
- 	if (!sdkp)
- 		return;         /* this can happen */
-@@ -3363,12 +3386,18 @@ static void sd_shutdown(struct device *dev)
- 	if (pm_runtime_suspended(dev))
- 		return;
- 
-+	stop_disk = system_state != SYSTEM_RESTART &&
-+		sdkp->device->manage_start_stop;
-+
- 	if (sdkp->WCE && sdkp->media_present) {
- 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
--		sd_sync_cache(sdkp);
-+		if (stop_disk)
-+			sd_sync_cache(sdkp);
-+		else
-+			sd_sync_cache_async(sdkp);
- 	}
- 
--	if (system_state != SYSTEM_RESTART && sdkp->device->manage_start_stop) {
-+	if (stop_disk) {
- 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
- 		sd_start_stop_device(sdkp, 0);
- 	}
+ 	return ret;
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 080c7ce9bae8..38c73ee0a929 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -408,6 +408,11 @@ extern const char *scsi_device_state_name(enum scsi_device_state);
+ extern int scsi_is_sdev_device(const struct device *);
+ extern int scsi_is_target_device(const struct device *);
+ extern void scsi_sanitize_inquiry_string(unsigned char *s, int len);
++extern int scsi_execute_async(const struct scsi_device *sdev,
++		struct gendisk *disk, const unsigned char *cmd,
++		int data_direction, void *buffer, unsigned bufflen,
++		int timeout, int retries, u64 flags, req_flags_t rq_flags,
++			      rq_end_io_fn *done);
+ extern int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+ 			int data_direction, void *buffer, unsigned bufflen,
+ 			unsigned char *sense, struct scsi_sense_hdr *sshdr,
 -- 
 2.12.2
