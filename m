@@ -1,44 +1,51 @@
-From: <a.skucha@satis-poland.com>
-Subject: 24346 linux-scsi
-Date: Sun, 23 Apr 2017 23:09:12 -0000
-Message-ID: <149298895296.15557.6625579664398019774@candw.ag>
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: Re: [PATCH 6/9] scsi: Improve scsi_get_sense_info_fld
+Date: Mon, 24 Apr 2017 08:59:12 +0900
+Message-ID: <e00e7dc3-5ff9-25c9-9e3c-0ad5183631e1@wdc.com>
+References: <20170421091649.25287-1-damien.lemoal@wdc.com>
+ <20170421091649.25287-7-damien.lemoal@wdc.com>
+ <1492793923.2550.9.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="648454.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 205-217-247-196.candw.ag ([205.217.247.196]:44686 "HELO
-        candw.ag" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-        id S1046354AbdDWXJ2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 23 Apr 2017 19:09:28 -0400
-Content-Disposition: attachment
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:42666 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1163580AbdDWX7a (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Apr 2017 19:59:30 -0400
+In-Reply-To: <1492793923.2550.9.camel@sandisk.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "hch@lst.de" <hch@lst.de>, "hare@suse.de" <hare@suse.de>
 
-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
+Bart,
+
+On 4/22/17 01:58, Bart Van Assche wrote:
+> On Fri, 2017-04-21 at 18:16 +0900, damien.lemoal@wdc.com wrote:
+>> @@ -2363,42 +2365,32 @@ EXPORT_SYMBOL(scsi_command_normalize_sense);
+>>   * Return value:
+>>   *   1 if information field found, 0 if not found.
+>>   */
+>> -int scsi_get_sense_info_fld(const u8 * sense_buffer, int sb_len,
+>> -                         u64 * info_out)
+>> +bool scsi_get_sense_info_fld(const u8 * sense_buffer, int sb_len,
+>> +                          u64 * info_out)
+> 
+> Hello Damien,
+> 
+> If you have to repost this patch please address the checkpatch complaints
+> of the following category triggered by the above declaration:
+> 
+> ERROR: "foo * bar" should be "foo *bar"
+> 
+> Otherwise this patch looks fine to me. Hence:
+> 
+> Reviewed-by: Bart Van Assche <Bart.VanAssche@sandisk.com>
+
+OK. Will do.
+
+-- 
+Damien Le Moal,
+Western Digital
