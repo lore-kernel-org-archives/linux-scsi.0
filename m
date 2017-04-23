@@ -1,31 +1,43 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/4] scsi: pmcraid: fix endianess sparse annotations
-Date: Sun, 23 Apr 2017 01:38:52 -0700
-Message-ID: <20170423083852.GC30869@infradead.org>
-References: <20170420175549.3435196-1-arnd@arndb.de>
- <20170420175549.3435196-3-arnd@arndb.de>
+Subject: Re: [PATCH] scsi: mvumi: add check for dma mapping errors
+Date: Sun, 23 Apr 2017 01:41:33 -0700
+Message-ID: <20170423084133.GE30869@infradead.org>
+References: <1492816670-25795-1-git-send-email-khoroshilov@ispras.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:34845 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:42657 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1427990AbdDWIiz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Apr 2017 04:38:55 -0400
+        with ESMTP id S1428006AbdDWIlk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Apr 2017 04:41:40 -0400
 Content-Disposition: inline
-In-Reply-To: <20170420175549.3435196-3-arnd@arndb.de>
+In-Reply-To: <1492816670-25795-1-git-send-email-khoroshilov@ispras.ru>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Berg <johannes.berg@intel.com>, Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
 
->  	mb();
-> -	iowrite32(le32_to_cpu(cmd->ioa_cb->ioarcb.ioarcb_bus_addr),
-> -		  pinstance->ioarrin);
-> +	iowrite32(le64_to_cpu(cmd->ioa_cb->ioarcb.ioarcb_bus_addr), pinstance->ioarrin);
+On Sat, Apr 22, 2017 at 02:17:50AM +0300, Alexey Khoroshilov wrote:
+>  	} else {
+> -		scmd->SCp.dma_handle = scsi_bufflen(scmd) ?
+> -			pci_map_single(mhba->pdev, scsi_sglist(scmd),
+> -				scsi_bufflen(scmd),
+> -				(int) scmd->sc_data_direction)
+> -			: 0;
+> +		if (!scsi_bufflen(scmd))
+> +			return -1;
+> +		scmd->SCp.dma_handle = pci_map_single(mhba->pdev,
+> +						scsi_sglist(scmd),
+> +						scsi_bufflen(scmd),
+> +						(int) scmd->sc_data_direction);
+> +		if (pci_dma_mapping_error(mhba->pdev, scmd->SCp.dma_handle))
+> +			return -1;
 
-It really seems like some of these fields should be swapped once
-and store in an in-memory structure.
+This looks completely broken.  Why would you DMA map the in-memory
+struct scatterlist?  It has no meaning for the hardware.
 
-But for now this patch looks fine to me:
+In fact this whole branch (and the equivalent in the unmap path)
+are dead - SCSI commands that transfer data always have a SG entry.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+So the right fix is to remove the !scsi_sg_count(scmd) map/unmap
+path.
