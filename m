@@ -1,44 +1,44 @@
-From: <eaya@otenet.gr>
-Subject: 21319 linux-scsi
-Date: Sun, 23 Apr 2017 09:29:45 -0000
-Message-ID: <149293978559.20066.15481877427736800720@zaural.ru>
+From: Boaz Harrosh <ooo@electrozaur.com>
+Subject: Re: [PATCH 3/4] nfs: remove the objlayout driver
+Date: Sun, 23 Apr 2017 12:36:09 +0300
+Message-ID: <e253b5f5-d241-9391-dbeb-8e5f6b25b6c0@electrozaur.com>
+References: <20170412160109.10598-1-hch@lst.de>
+ <20170412160109.10598-4-hch@lst.de>
+ <1492719505.82584.3.camel@primarydata.com>
+ <272aea55-0738-5de2-ca97-414e13b478af@electrozaur.com>
+ <B6CCD2A9-4691-45DC-AD60-E9A2ECDE22D3@primarydata.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="782.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ws121.zone31-163-138.zaural.ru ([31.163.138.121]:44895 "HELO
-        zaural.ru" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-        id S1044416AbdDWJ3z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 23 Apr 2017 05:29:55 -0400
-Content-Disposition: attachment
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <B6CCD2A9-4691-45DC-AD60-E9A2ECDE22D3@primarydata.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Trond Myklebust <trondmy@primarydata.com>
+Cc: hch <hch@lst.de>, Martin Petersen <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-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
+On 04/21/2017 05:00 PM, Trond Myklebust wrote:
+> Maintenance is not development. It’s about doing all the followup
+> _after_ the feature is declared to be developed. That’s been missing
+> for quite some time in the case of the OSD pNFS code, which is why
+> I’m not even bothering to consider staging. If you are saying you are
+> still maintaining exofs, and want to continue doing so, then great,
+> but note that there is a file called BUGS in that directory that has
+> been untouched since 2008, and that’s why I thing staging is a good
+> idea.
+> 
+
+No, the BUGS file is just stale. As you said was not ever updated. All
+the bugs (1) in there do no longer exist for a long long time.
+I will send a patch to remove the file.
+
+Yes I maintain this fs. It has the complete fixture list, of what was
+first intended. I keep running it every major kernel release to make
+sure it actually runs, and there are no regressions.
+
+If this FS stands in the way of any new development please anyone
+contact me and I will help in the conversion. Of exofs and the
+osd-uld.
+
+Thanks
+Boaz
