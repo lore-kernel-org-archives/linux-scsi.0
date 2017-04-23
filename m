@@ -1,220 +1,138 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v3 3/4] sd: Make synchronize cache upon shutdown
- asynchronous
-Date: Sun, 23 Apr 2017 12:28:29 -0500
-Message-ID: <1492968509.2414.6.camel@HansenPartnership.com>
-References: <20170417173436.15555-1-bart.vanassche@sandisk.com>
-         <20170417173436.15555-4-bart.vanassche@sandisk.com>
-         <20170418144429.GA28949@bblock-ThinkPad-W530>
-         <1492530984.3306.25.camel@HansenPartnership.com>
-         <1492559235.2689.27.camel@sandisk.com>
-         <1492559772.3306.58.camel@HansenPartnership.com>
-         <1492725550.2642.9.camel@sandisk.com>
-         <1492726397.21601.16.camel@HansenPartnership.com>
-         <1492728740.2642.14.camel@sandisk.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54036 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1162392AbdDWR2j (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 23 Apr 2017 13:28:39 -0400
-In-Reply-To: <1492728740.2642.14.camel@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Subject: [PATCH] scsi: mvumi: remove code handling zero scsi_sg_count(scmd) case
+Date: Mon, 24 Apr 2017 02:01:00 +0300
+Message-ID: <1492988460-453-1-git-send-email-khoroshilov@ispras.ru>
+References: <20170423084133.GE30869@infradead.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170423084133.GE30869@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "bblock@linux.vnet.ibm.com" <bblock@linux.vnet.ibm.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "maxg@mellanox.com" <maxg@mellanox.com>, "israelr@mellanox.com" <israelr@mellanox.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-On Thu, 2017-04-20 at 22:52 +0000, Bart Van Assche wrote:
-> On Thu, 2017-04-20 at 15:13 -0700, James Bottomley wrote:
-> > How is that possible?  Once the device goes into the CANCEL state,
-> > it
-> > no longer can be found by starget_for_each_device() because
-> > scsi_device_get() returns NULL ...
-> 
-> scsi_target_block() is not serialized against __scsi_remove_device().
-> I think
-> the following sequence of events can cause a queue to be stopped for
-> a device
-> in the CANCEL state:
-> (a) scsi_target_block() triggers a call to scsi_get_device().
-> (b) __scsi_remove_device() is called from the context of another
-> thread.
-> (c) __scsi_remove_device() changes the device state into SDEV_CANCEL.
-> (d) scsi_internal_device_block() calls blk_mq_stop_hw_queue().
+As Christoph Hellwig noted, SCSI commands that transfer data
+always have a SG entry. The patch removes dead code in
+mvumi_make_sgl(),  mvumi_complete_cmd() and mvumi_timed_out()
+that handle zero scsi_sg_count(scmd) case.
 
-OK, so the bug is that I didn't prevent the DEL->BLOCK transition which
-allows us to go blocked after the new DEL if you were blocked before
-when we reached cancel (corrected).  but looking at all of this, I
-don't like the loose binding of block and queue stop, so this one makes
-it more simplistic by deferring the queue stop until we try to execute
-a blocked request.
+Also the patch adds pci_unmap_sg() on failure path in mvumi_make_sgl().
 
-In doing all of this, I folded in your start queue patch (I bet if we
-fix this someone's going to want a backport to stable, so we shouldn't
-make it difficult).
-
-I also noticed the scsi_wait_for_queuecommand() should be event driven
-(we're not supposed to do sleep driven condition checking) and there's
-a spurious lock in scsi_request_fn_active() which means we could
-eliminate the whole function.
-
-However, the above is for another day.  This should work.
-
-James
-
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
 ---
+ drivers/scsi/mvumi.c | 85 ++++++++++++++++------------------------------------
+ 1 file changed, 26 insertions(+), 59 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index e5a2d590a104..a9ec35d9c91b 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1250,6 +1250,12 @@ scsi_prep_state_check(struct scsi_device *sdev, struct request *req)
- 			break;
- 		case SDEV_BLOCK:
- 		case SDEV_CREATED_BLOCK:
-+			/* q lock is held only in the non-mq case */
-+			if (req->q->mq_ops)
-+				blk_mq_stop_hw_queues(req->q);
-+			else
-+				blk_stop_queue(req->q);
-+
- 			ret = BLKPREP_DEFER;
- 			break;
- 		case SDEV_QUIESCE:
-@@ -2611,7 +2617,6 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
- 		case SDEV_QUIESCE:
- 		case SDEV_OFFLINE:
- 		case SDEV_TRANSPORT_OFFLINE:
--		case SDEV_BLOCK:
- 			break;
- 		default:
- 			goto illegal;
-@@ -2844,10 +2849,12 @@ static int scsi_request_fn_active(struct scsi_device *sdev)
-  */
- static void scsi_wait_for_queuecommand(struct scsi_device *sdev)
- {
--	WARN_ON_ONCE(sdev->host->use_blk_mq);
--
--	while (scsi_request_fn_active(sdev))
--		msleep(20);
-+	if (sdev->request_queue->mq_ops) {
-+		synchronize_rcu();
-+	} else {
-+		while (scsi_request_fn_active(sdev))
-+			msleep(20);
-+	}
- }
+diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
+index 247df5e79b71..fe97401ad192 100644
+--- a/drivers/scsi/mvumi.c
++++ b/drivers/scsi/mvumi.c
+@@ -210,39 +210,27 @@ static int mvumi_make_sgl(struct mvumi_hba *mhba, struct scsi_cmnd *scmd,
+ 	unsigned int sgnum = scsi_sg_count(scmd);
+ 	dma_addr_t busaddr;
  
- /**
-@@ -2953,8 +2960,6 @@ EXPORT_SYMBOL(scsi_target_resume);
- int
- scsi_internal_device_block(struct scsi_device *sdev, bool wait)
- {
--	struct request_queue *q = sdev->request_queue;
--	unsigned long flags;
- 	int err = 0;
- 
- 	err = scsi_device_set_state(sdev, SDEV_BLOCK);
-@@ -2970,23 +2975,27 @@ scsi_internal_device_block(struct scsi_device *sdev, bool wait)
- 	 * block layer from calling the midlayer with this device's
- 	 * request queue. 
- 	 */
-+	if (wait)
-+		scsi_wait_for_queuecommand(sdev);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(scsi_internal_device_block);
-+
-+void scsi_start_queue(struct scsi_device *sdev)
-+{
-+	struct request_queue *q = sdev->request_queue;
-+	unsigned long flags;
-+
- 	if (q->mq_ops) {
--		if (wait)
--			blk_mq_quiesce_queue(q);
--		else
--			blk_mq_stop_hw_queues(q);
-+		blk_mq_start_stopped_hw_queues(q, false);
- 	} else {
- 		spin_lock_irqsave(q->queue_lock, flags);
--		blk_stop_queue(q);
-+		blk_start_queue(q);
- 		spin_unlock_irqrestore(q->queue_lock, flags);
--		if (wait)
--			scsi_wait_for_queuecommand(sdev);
- 	}
+-	if (sgnum) {
+-		sg = scsi_sglist(scmd);
+-		*sg_count = pci_map_sg(mhba->pdev, sg, sgnum,
+-				(int) scmd->sc_data_direction);
+-		if (*sg_count > mhba->max_sge) {
+-			dev_err(&mhba->pdev->dev, "sg count[0x%x] is bigger "
+-						"than max sg[0x%x].\n",
+-						*sg_count, mhba->max_sge);
+-			return -1;
+-		}
+-		for (i = 0; i < *sg_count; i++) {
+-			busaddr = sg_dma_address(&sg[i]);
+-			m_sg->baseaddr_l = cpu_to_le32(lower_32_bits(busaddr));
+-			m_sg->baseaddr_h = cpu_to_le32(upper_32_bits(busaddr));
+-			m_sg->flags = 0;
+-			sgd_setsz(mhba, m_sg, cpu_to_le32(sg_dma_len(&sg[i])));
+-			if ((i + 1) == *sg_count)
+-				m_sg->flags |= 1U << mhba->eot_flag;
 -
--	return 0;
- }
--EXPORT_SYMBOL_GPL(scsi_internal_device_block);
-- 
-+
- /**
-  * scsi_internal_device_unblock - resume a device after a block request
-  * @sdev:	device to resume
-@@ -3007,9 +3016,6 @@ int
- scsi_internal_device_unblock(struct scsi_device *sdev,
- 			     enum scsi_device_state new_state)
- {
--	struct request_queue *q = sdev->request_queue; 
--	unsigned long flags;
--
- 	/*
- 	 * Try to transition the scsi device to SDEV_RUNNING or one of the
- 	 * offlined states and goose the device queue if successful.
-@@ -3027,13 +3033,7 @@ scsi_internal_device_unblock(struct scsi_device *sdev,
- 		 sdev->sdev_state != SDEV_OFFLINE)
- 		return -EINVAL;
- 
--	if (q->mq_ops) {
--		blk_mq_start_stopped_hw_queues(q, false);
+-			sgd_inc(mhba, m_sg);
+-		}
 -	} else {
--		spin_lock_irqsave(q->queue_lock, flags);
--		blk_start_queue(q);
--		spin_unlock_irqrestore(q->queue_lock, flags);
--	}
-+	scsi_start_queue(sdev);
+-		scmd->SCp.dma_handle = scsi_bufflen(scmd) ?
+-			pci_map_single(mhba->pdev, scsi_sglist(scmd),
+-				scsi_bufflen(scmd),
+-				(int) scmd->sc_data_direction)
+-			: 0;
+-		busaddr = scmd->SCp.dma_handle;
++	sg = scsi_sglist(scmd);
++	*sg_count = pci_map_sg(mhba->pdev, sg, sgnum,
++			       (int) scmd->sc_data_direction);
++	if (*sg_count > mhba->max_sge) {
++		dev_err(&mhba->pdev->dev,
++			"sg count[0x%x] is bigger than max sg[0x%x].\n",
++			*sg_count, mhba->max_sge);
++		pci_unmap_sg(mhba->pdev, sg, sgnum,
++			     (int) scmd->sc_data_direction);
++		return -1;
++	}
++	for (i = 0; i < *sg_count; i++) {
++		busaddr = sg_dma_address(&sg[i]);
+ 		m_sg->baseaddr_l = cpu_to_le32(lower_32_bits(busaddr));
+ 		m_sg->baseaddr_h = cpu_to_le32(upper_32_bits(busaddr));
+-		m_sg->flags = 1U << mhba->eot_flag;
+-		sgd_setsz(mhba, m_sg, cpu_to_le32(scsi_bufflen(scmd)));
+-		*sg_count = 1;
++		m_sg->flags = 0;
++		sgd_setsz(mhba, m_sg, cpu_to_le32(sg_dma_len(&sg[i])));
++		if ((i + 1) == *sg_count)
++			m_sg->flags |= 1U << mhba->eot_flag;
++
++		sgd_inc(mhba, m_sg);
+ 	}
  
  	return 0;
+@@ -1350,21 +1338,10 @@ static void mvumi_complete_cmd(struct mvumi_hba *mhba, struct mvumi_cmd *cmd,
+ 		break;
+ 	}
+ 
+-	if (scsi_bufflen(scmd)) {
+-		if (scsi_sg_count(scmd)) {
+-			pci_unmap_sg(mhba->pdev,
+-				scsi_sglist(scmd),
+-				scsi_sg_count(scmd),
+-				(int) scmd->sc_data_direction);
+-		} else {
+-			pci_unmap_single(mhba->pdev,
+-				scmd->SCp.dma_handle,
+-				scsi_bufflen(scmd),
+-				(int) scmd->sc_data_direction);
+-
+-			scmd->SCp.dma_handle = 0;
+-		}
+-	}
++	if (scsi_bufflen(scmd))
++		pci_unmap_sg(mhba->pdev, scsi_sglist(scmd),
++			     scsi_sg_count(scmd),
++			     (int) scmd->sc_data_direction);
+ 	cmd->scmd->scsi_done(scmd);
+ 	mvumi_return_cmd(mhba, cmd);
  }
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index f11bd102d6d5..c7629e31a75b 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -89,6 +89,7 @@ extern void scsi_run_host_queues(struct Scsi_Host *shost);
- extern void scsi_requeue_run_queue(struct work_struct *work);
- extern struct request_queue *scsi_alloc_queue(struct scsi_device *sdev);
- extern struct request_queue *scsi_mq_alloc_queue(struct scsi_device *sdev);
-+extern void scsi_start_queue(struct scsi_device *sdev);
- extern int scsi_mq_setup_tags(struct Scsi_Host *shost);
- extern void scsi_mq_destroy_tags(struct Scsi_Host *shost);
- extern int scsi_init_queue(void);
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 82dfe07b1d47..5e826801c84c 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1282,8 +1282,17 @@ void __scsi_remove_device(struct scsi_device *sdev)
- 		return;
- 
- 	if (sdev->is_visible) {
--		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
--			return;
-+		/*
-+		 * If blocked, we go straight to DEL so any commands
-+		 * issued during the driver shutdown (like sync cache)
-+		 * are errored
-+		 */
-+		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0) {
-+			if (scsi_device_set_state(sdev, SDEV_DEL) != 0)
-+				return;
-+
-+			scsi_start_queue(sdev);
-+		}
- 
- 		bsg_unregister_queue(sdev->request_queue);
- 		device_unregister(&sdev->sdev_dev);
+@@ -2171,19 +2148,9 @@ static enum blk_eh_timer_return mvumi_timed_out(struct scsi_cmnd *scmd)
+ 	scmd->result = (DRIVER_INVALID << 24) | (DID_ABORT << 16);
+ 	scmd->SCp.ptr = NULL;
+ 	if (scsi_bufflen(scmd)) {
+-		if (scsi_sg_count(scmd)) {
+-			pci_unmap_sg(mhba->pdev,
+-				scsi_sglist(scmd),
+-				scsi_sg_count(scmd),
+-				(int)scmd->sc_data_direction);
+-		} else {
+-			pci_unmap_single(mhba->pdev,
+-				scmd->SCp.dma_handle,
+-				scsi_bufflen(scmd),
+-				(int)scmd->sc_data_direction);
+-
+-			scmd->SCp.dma_handle = 0;
+-		}
++		pci_unmap_sg(mhba->pdev, scsi_sglist(scmd),
++			     scsi_sg_count(scmd),
++			     (int)scmd->sc_data_direction);
+ 	}
+ 	mvumi_return_cmd(mhba, cmd);
+ 	spin_unlock_irqrestore(mhba->shost->host_lock, flags);
+-- 
+2.7.4
