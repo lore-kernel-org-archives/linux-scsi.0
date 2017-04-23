@@ -1,38 +1,23 @@
-From: Pan Bian <bianpan2016@163.com>
-Subject: [PATCH 1/1] scsi: esas2r: fix unchecked return value
-Date: Sun, 23 Apr 2017 13:32:39 +0800
-Message-ID: <1492925559-1383-1-git-send-email-bianpan2016@163.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] scsi: pmcraid: use normal copy_from_user
+Date: Sun, 23 Apr 2017 01:28:56 -0700
+Message-ID: <20170423082856.GA30869@infradead.org>
+References: <20170420175549.3435196-1-arnd@arndb.de>
+ <20170421220250.2427519-1-arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from m50-133.163.com ([123.125.50.133]:40599 "EHLO m50-133.163.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932067AbdDWFdA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 23 Apr 2017 01:33:00 -0400
+Received: from bombadil.infradead.org ([65.50.211.133]:38414 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1427967AbdDWI3N (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Apr 2017 04:29:13 -0400
+Content-Disposition: inline
+In-Reply-To: <20170421220250.2427519-1-arnd@arndb.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bradley Grove <linuxdrivers@attotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Pan Bian <bianpan2016@163.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Johannes Berg <johannes.berg@intel.com>, Baoyou Xie <baoyou.xie@linaro.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Function pci_enable_device() returns a negative errno on failure, and
-its return value should be validated. In function esas2r_resume(), its
-return value is ignored. This patch fixes the bug.
+Looks good,
 
-Signed-off-by: Pan Bian <bianpan2016@163.com>
----
- drivers/scsi/esas2r/esas2r_init.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/scsi/esas2r/esas2r_init.c b/drivers/scsi/esas2r/esas2r_init.c
-index 6432a50..f482664 100644
---- a/drivers/scsi/esas2r/esas2r_init.c
-+++ b/drivers/scsi/esas2r/esas2r_init.c
-@@ -728,6 +728,8 @@ int esas2r_resume(struct pci_dev *pdev)
- 	esas2r_log_dev(ESAS2R_LOG_INFO, &(pdev->dev),
- 		       "pci_enable_device() called");
- 	rez = pci_enable_device(pdev);
-+	if (rez)
-+		goto error_exit;
- 	pci_set_master(pdev);
- 
- 	if (!a) {
--- 
-1.9.1
+Reviewed-by: Christoph Hellwig <hch@lst.de>
