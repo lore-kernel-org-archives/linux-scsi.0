@@ -1,138 +1,44 @@
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Subject: [PATCH] scsi: mvumi: remove code handling zero scsi_sg_count(scmd) case
-Date: Mon, 24 Apr 2017 02:01:00 +0300
-Message-ID: <1492988460-453-1-git-send-email-khoroshilov@ispras.ru>
-References: <20170423084133.GE30869@infradead.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170423084133.GE30869@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+From: <a.skucha@satis-poland.com>
+Subject: 24346 linux-scsi
+Date: Sun, 23 Apr 2017 23:09:12 -0000
+Message-ID: <149298895296.15557.6625579664398019774@candw.ag>
+Mime-Version: 1.0
+Content-Type: application/zip; name="648454.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 205-217-247-196.candw.ag ([205.217.247.196]:44686 "HELO
+        candw.ag" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+        id S1046354AbdDWXJ2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 23 Apr 2017 19:09:28 -0400
+Content-Disposition: attachment
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-As Christoph Hellwig noted, SCSI commands that transfer data
-always have a SG entry. The patch removes dead code in
-mvumi_make_sgl(),  mvumi_complete_cmd() and mvumi_timed_out()
-that handle zero scsi_sg_count(scmd) case.
-
-Also the patch adds pci_unmap_sg() on failure path in mvumi_make_sgl().
-
-Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
----
- drivers/scsi/mvumi.c | 85 ++++++++++++++++------------------------------------
- 1 file changed, 26 insertions(+), 59 deletions(-)
-
-diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
-index 247df5e79b71..fe97401ad192 100644
---- a/drivers/scsi/mvumi.c
-+++ b/drivers/scsi/mvumi.c
-@@ -210,39 +210,27 @@ static int mvumi_make_sgl(struct mvumi_hba *mhba, struct scsi_cmnd *scmd,
- 	unsigned int sgnum = scsi_sg_count(scmd);
- 	dma_addr_t busaddr;
- 
--	if (sgnum) {
--		sg = scsi_sglist(scmd);
--		*sg_count = pci_map_sg(mhba->pdev, sg, sgnum,
--				(int) scmd->sc_data_direction);
--		if (*sg_count > mhba->max_sge) {
--			dev_err(&mhba->pdev->dev, "sg count[0x%x] is bigger "
--						"than max sg[0x%x].\n",
--						*sg_count, mhba->max_sge);
--			return -1;
--		}
--		for (i = 0; i < *sg_count; i++) {
--			busaddr = sg_dma_address(&sg[i]);
--			m_sg->baseaddr_l = cpu_to_le32(lower_32_bits(busaddr));
--			m_sg->baseaddr_h = cpu_to_le32(upper_32_bits(busaddr));
--			m_sg->flags = 0;
--			sgd_setsz(mhba, m_sg, cpu_to_le32(sg_dma_len(&sg[i])));
--			if ((i + 1) == *sg_count)
--				m_sg->flags |= 1U << mhba->eot_flag;
--
--			sgd_inc(mhba, m_sg);
--		}
--	} else {
--		scmd->SCp.dma_handle = scsi_bufflen(scmd) ?
--			pci_map_single(mhba->pdev, scsi_sglist(scmd),
--				scsi_bufflen(scmd),
--				(int) scmd->sc_data_direction)
--			: 0;
--		busaddr = scmd->SCp.dma_handle;
-+	sg = scsi_sglist(scmd);
-+	*sg_count = pci_map_sg(mhba->pdev, sg, sgnum,
-+			       (int) scmd->sc_data_direction);
-+	if (*sg_count > mhba->max_sge) {
-+		dev_err(&mhba->pdev->dev,
-+			"sg count[0x%x] is bigger than max sg[0x%x].\n",
-+			*sg_count, mhba->max_sge);
-+		pci_unmap_sg(mhba->pdev, sg, sgnum,
-+			     (int) scmd->sc_data_direction);
-+		return -1;
-+	}
-+	for (i = 0; i < *sg_count; i++) {
-+		busaddr = sg_dma_address(&sg[i]);
- 		m_sg->baseaddr_l = cpu_to_le32(lower_32_bits(busaddr));
- 		m_sg->baseaddr_h = cpu_to_le32(upper_32_bits(busaddr));
--		m_sg->flags = 1U << mhba->eot_flag;
--		sgd_setsz(mhba, m_sg, cpu_to_le32(scsi_bufflen(scmd)));
--		*sg_count = 1;
-+		m_sg->flags = 0;
-+		sgd_setsz(mhba, m_sg, cpu_to_le32(sg_dma_len(&sg[i])));
-+		if ((i + 1) == *sg_count)
-+			m_sg->flags |= 1U << mhba->eot_flag;
-+
-+		sgd_inc(mhba, m_sg);
- 	}
- 
- 	return 0;
-@@ -1350,21 +1338,10 @@ static void mvumi_complete_cmd(struct mvumi_hba *mhba, struct mvumi_cmd *cmd,
- 		break;
- 	}
- 
--	if (scsi_bufflen(scmd)) {
--		if (scsi_sg_count(scmd)) {
--			pci_unmap_sg(mhba->pdev,
--				scsi_sglist(scmd),
--				scsi_sg_count(scmd),
--				(int) scmd->sc_data_direction);
--		} else {
--			pci_unmap_single(mhba->pdev,
--				scmd->SCp.dma_handle,
--				scsi_bufflen(scmd),
--				(int) scmd->sc_data_direction);
--
--			scmd->SCp.dma_handle = 0;
--		}
--	}
-+	if (scsi_bufflen(scmd))
-+		pci_unmap_sg(mhba->pdev, scsi_sglist(scmd),
-+			     scsi_sg_count(scmd),
-+			     (int) scmd->sc_data_direction);
- 	cmd->scmd->scsi_done(scmd);
- 	mvumi_return_cmd(mhba, cmd);
- }
-@@ -2171,19 +2148,9 @@ static enum blk_eh_timer_return mvumi_timed_out(struct scsi_cmnd *scmd)
- 	scmd->result = (DRIVER_INVALID << 24) | (DID_ABORT << 16);
- 	scmd->SCp.ptr = NULL;
- 	if (scsi_bufflen(scmd)) {
--		if (scsi_sg_count(scmd)) {
--			pci_unmap_sg(mhba->pdev,
--				scsi_sglist(scmd),
--				scsi_sg_count(scmd),
--				(int)scmd->sc_data_direction);
--		} else {
--			pci_unmap_single(mhba->pdev,
--				scmd->SCp.dma_handle,
--				scsi_bufflen(scmd),
--				(int)scmd->sc_data_direction);
--
--			scmd->SCp.dma_handle = 0;
--		}
-+		pci_unmap_sg(mhba->pdev, scsi_sglist(scmd),
-+			     scsi_sg_count(scmd),
-+			     (int)scmd->sc_data_direction);
- 	}
- 	mvumi_return_cmd(mhba, cmd);
- 	spin_unlock_irqrestore(mhba->shost->host_lock, flags);
--- 
-2.7.4
+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
