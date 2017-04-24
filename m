@@ -1,19 +1,19 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: Re: [PATCH 2/9] sd: Fix functions description
-Date: Mon, 24 Apr 2017 09:21:46 +0900
-Message-ID: <8ce95866-d2fb-0bb5-2731-876c380bd311@wdc.com>
+Subject: Re: [PATCH 5/9] sd: Cleanup sd_done sense data handling
+Date: Mon, 24 Apr 2017 09:23:18 +0900
+Message-ID: <a3193390-8b6e-9466-9edd-b63023e64735@wdc.com>
 References: <20170421091649.25287-1-damien.lemoal@wdc.com>
- <20170421091649.25287-3-damien.lemoal@wdc.com>
- <1492795708.2550.19.camel@sandisk.com>
+ <20170421091649.25287-6-damien.lemoal@wdc.com>
+ <1492800068.2550.25.camel@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:61350 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1163634AbdDXAV6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Apr 2017 20:21:58 -0400
-In-Reply-To: <1492795708.2550.19.camel@sandisk.com>
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:63312 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1163699AbdDXAXZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Apr 2017 20:23:25 -0400
+In-Reply-To: <1492800068.2550.25.camel@sandisk.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -22,38 +22,34 @@ Cc: "hch@lst.de" <hch@lst.de>, "hare@suse.de" <hare@suse.de>
 
 Bart,
 
-On 4/22/17 02:28, Bart Van Assche wrote:
+On 4/22/17 03:41, Bart Van Assche wrote:
 > On Fri, 2017-04-21 at 18:16 +0900, damien.lemoal@wdc.com wrote:
->> - *   Returns 0 if successful. Returns a negated errno value in case
->> - *   of error.
->> + * Returns 0 if successful. Returns a negated errno value in case
->> + * of error.
+>> @@ -1884,8 +1886,6 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+>>                                else {
+>>                                        sdkp->device->no_write_same = 1;
+>>                                        sd_config_write_same(sdkp);
+>> -
+>> -                                     good_bytes = 0;
+>>                                        req->__data_len = blk_rq_bytes(req);
+>>                                        req->rq_flags |= RQF_QUIET;
+>>                                }
 > 
-> Hello Damien,
+> This change looks fine to me but has not been described in the patch
+> description? Anyway:
 > 
-> The argument name fixes are definitely welcome in my opinion. But I see
-> that this patch not only fixes argument names and function descriptions
-> but also includes whitespace-only changes like the above. Sorry but I
-> don't like whitespace-only changes ...
+> Reviewed-by: Bart Van Assche <Bart.VanAssche@sandisk.com>
 
-Yes, I understand, you were clear about that.
-The "white space" changes intent are to match the preferred format for
-functions documentation (From Documentation/doc-guide/kerne-doc.rst)
-
-  /**
-   * foobar() - Brief description of foobar.
-   * @arg: Description of argument of foobar.
-   *
-   * Longer description of foobar.
-   *
-   * Return: Description of return value of foobar.
-   */
-
-If that is wrong/unnecessary, then I will rewrite that patch to only
-limit its scope to the argument name fixes.
-
-Best regards.
+Oops. Yes, I forgot to mention that in the commit message.
+(for result != 0, good_bytes is already set to 0, so that assignment is
+not necessary).
+Will resend.
 
 -- 
-Damien Le Moal,
-Western Digital
+Damien Le Moal, Ph.D.
+Sr. Manager, System Software Research Group,
+Western Digital Corporation
+Damien.LeMoal@wdc.com
+(+81) 0466-98-3593 (ext. 513593)
+1 kirihara-cho, Fujisawa,
+Kanagawa, 252-0888 Japan
+www.wdc.com, www.hgst.com
