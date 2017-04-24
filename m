@@ -1,15 +1,15 @@
 From: damien.lemoal@wdc.com
-Subject: [PATCH v2 1/7] sd: Fix functions description
-Date: Mon, 24 Apr 2017 16:51:09 +0900
-Message-ID: <20170424075115.30337-2-damien.lemoal@wdc.com>
+Subject: [PATCH v2 3/7] sd: Cleanup sd_done sense data handling
+Date: Mon, 24 Apr 2017 16:51:11 +0900
+Message-ID: <20170424075115.30337-4-damien.lemoal@wdc.com>
 References: <20170424075115.30337-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:21848 "EHLO
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:8132 "EHLO
         esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1166246AbdDXHvc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Apr 2017 03:51:32 -0400
+        with ESMTP id S1166253AbdDXHvh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Apr 2017 03:51:37 -0400
 In-Reply-To: <20170424075115.30337-1-damien.lemoal@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,103 +18,61 @@ Cc: Bart Van Assche <Bart.VanAssche@sandisk.com>, Hannes Reinecke <hare@suse.de>
 
 From: Damien Le Moal <damien.lemoal@wdc.com>
 
-Fix argument names and description of functions documentation comments.
-No functional change is introduced by this patch.
+In sd_done(), for the ILLEGAL REQUEST sense key case, add an 'else if'
+after the first 'if (sshdr.asc == 0x10)' test to avoid the second test
+(the values tested are different).
+
+Still for the same ILLEGAL REQUEST case, move the declarations of the
+variables 'op' and 'unmap' within the scope of the 'else if' case since
+these variables are only used there. At the same time, remove the
+unnecessary good_bytes 0 assignment as this code can only be executed
+with result != 0 and good_bytes is already set to 0 in that case.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+Reviewed-by: Bart Van Assche <Bart.VanAssche@sandisk.com>
 ---
- drivers/scsi/sd.c | 29 ++++++++++++++---------------
- 1 file changed, 14 insertions(+), 15 deletions(-)
+ drivers/scsi/sd.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 00b168b..ce62d2c 100644
+index 10c7657..2d1ac5c 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -705,11 +705,10 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
+@@ -1816,8 +1816,6 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ 	struct request *req = SCpnt->request;
+ 	int sense_valid = 0;
+ 	int sense_deferred = 0;
+-	unsigned char op = SCpnt->cmnd[0];
+-	unsigned char unmap = SCpnt->cmnd[1] & 8;
  
- /**
-  * sd_setup_discard_cmnd - unmap blocks on thinly provisioned device
-- * @sdp: scsi device to operate on
-- * @rq: Request to prepare
-+ * @cmd: command to prepare
-  *
-- * Will issue either UNMAP or WRITE SAME(16) depending on preference
-- * indicated by target device.
-+ * Will setup either UNMAP, WRITE SAME(16) or WRITE SAME(10) depending
-+ * on the provisioning mode of the target device.
-  **/
- static int sd_setup_discard_cmnd(struct scsi_cmnd *cmd)
- {
-@@ -827,8 +826,8 @@ static void sd_config_write_same(struct scsi_disk *sdkp)
-  * sd_setup_write_same_cmnd - write the same data to multiple blocks
-  * @cmd: command to prepare
-  *
-- * Will issue either WRITE SAME(10) or WRITE SAME(16) depending on
-- * preference indicated by target device.
-+ * Will setup either WRITE SAME(10) or WRITE SAME(16) depending on
-+ * the preference indicated by the target device.
-  **/
- static int sd_setup_write_same_cmnd(struct scsi_cmnd *cmd)
- {
-@@ -1190,8 +1189,8 @@ static void sd_uninit_command(struct scsi_cmnd *SCpnt)
- 
- /**
-  *	sd_open - open a scsi disk device
-- *	@inode: only i_rdev member may be used
-- *	@filp: only f_mode and f_flags may be used
-+ *	@bdev: Block device of the scsi disk to open
-+ *	@mode: FMODE_* mask
-  *
-  *	Returns 0 if successful. Returns a negated errno value in case 
-  *	of error.
-@@ -1267,8 +1266,8 @@ static int sd_open(struct block_device *bdev, fmode_t mode)
- /**
-  *	sd_release - invoked when the (last) close(2) is called on this
-  *	scsi disk.
-- *	@inode: only i_rdev member may be used
-- *	@filp: only f_mode and f_flags may be used
-+ *	@disk: disk to release
-+ *	@mode: FMODE_* mask
-  *
-  *	Returns 0. 
-  *
-@@ -1324,8 +1323,8 @@ static int sd_getgeo(struct block_device *bdev, struct hd_geometry *geo)
- 
- /**
-  *	sd_ioctl - process an ioctl
-- *	@inode: only i_rdev/i_bdev members may be used
-- *	@filp: only f_mode and f_flags may be used
-+ *	@bdev: target block device
-+ *	@mode: FMODE_* mask
-  *	@cmd: ioctl command number
-  *	@arg: this is third argument given to ioctl(2) system call.
-  *	Often contains a pointer.
-@@ -2713,7 +2712,7 @@ static void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
- 
- /**
-  * sd_read_block_limits - Query disk device for preferred I/O sizes.
-- * @disk: disk to query
-+ * @sdkp: disk to query
-  */
- static void sd_read_block_limits(struct scsi_disk *sdkp)
- {
-@@ -2779,7 +2778,7 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
- 
- /**
-  * sd_read_block_characteristics - Query block dev. characteristics
-- * @disk: disk to query
-+ * @sdkp: disk to query
-  */
- static void sd_read_block_characteristics(struct scsi_disk *sdkp)
- {
-@@ -2827,7 +2826,7 @@ static void sd_read_block_characteristics(struct scsi_disk *sdkp)
- 
- /**
-  * sd_read_block_provisioning - Query provisioning VPD page
-- * @disk: disk to query
-+ * @sdkp: disk to query
-  */
- static void sd_read_block_provisioning(struct scsi_disk *sdkp)
- {
+ 	switch (req_op(req)) {
+ 	case REQ_OP_DISCARD:
+@@ -1875,10 +1873,14 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ 			good_bytes = sd_completed_bytes(SCpnt);
+ 		break;
+ 	case ILLEGAL_REQUEST:
+-		if (sshdr.asc == 0x10)  /* DIX: Host detected corruption */
++		if (sshdr.asc == 0x10) {
++			/* DIX: Host detected corruption */
+ 			good_bytes = sd_completed_bytes(SCpnt);
+-		/* INVALID COMMAND OPCODE or INVALID FIELD IN CDB */
+-		if (sshdr.asc == 0x20 || sshdr.asc == 0x24) {
++		} else if (sshdr.asc == 0x20 || sshdr.asc == 0x24) {
++			/* INVALID COMMAND OPCODE or INVALID FIELD IN CDB */
++			unsigned char op = SCpnt->cmnd[0];
++			unsigned char unmap = SCpnt->cmnd[1] & 8;
++
+ 			switch (op) {
+ 			case UNMAP:
+ 				sd_config_discard(sdkp, SD_LBP_DISABLE);
+@@ -1890,8 +1892,6 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ 				else {
+ 					sdkp->device->no_write_same = 1;
+ 					sd_config_write_same(sdkp);
+-
+-					good_bytes = 0;
+ 					req->__data_len = blk_rq_bytes(req);
+ 					req->rq_flags |= RQF_QUIET;
+ 				}
 -- 
 2.9.3
