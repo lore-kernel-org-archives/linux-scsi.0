@@ -1,19 +1,19 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: Re: [PATCH 9/9] sd_zbc: Do not write lock zones for reset
-Date: Mon, 24 Apr 2017 09:11:15 +0900
-Message-ID: <6125d043-07f9-414f-f999-1773c4adb81f@wdc.com>
+Subject: Re: [PATCH 1/9] sd: Remove white space before EOL
+Date: Mon, 24 Apr 2017 09:14:50 +0900
+Message-ID: <67a5b1f7-ce7b-664b-20f9-a90bef35f919@wdc.com>
 References: <20170421091649.25287-1-damien.lemoal@wdc.com>
- <20170421091649.25287-10-damien.lemoal@wdc.com>
- <1492794954.2550.15.camel@sandisk.com>
+ <20170421091649.25287-2-damien.lemoal@wdc.com>
+ <1492795349.2550.17.camel@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:29425 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1163640AbdDXALb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Apr 2017 20:11:31 -0400
-In-Reply-To: <1492794954.2550.15.camel@sandisk.com>
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:39201 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758693AbdDXAOy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Apr 2017 20:14:54 -0400
+In-Reply-To: <1492795349.2550.17.camel@sandisk.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -22,52 +22,35 @@ Cc: "hch@lst.de" <hch@lst.de>, "hare@suse.de" <hare@suse.de>
 
 Bart,
 
-On 4/22/17 02:15, Bart Van Assche wrote:
+On 4/22/17 02:22, Bart Van Assche wrote:
 > On Fri, 2017-04-21 at 18:16 +0900, damien.lemoal@wdc.com wrote:
->> @@ -250,11 +249,6 @@ int sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd)
->>                /* Unaligned request */
->>                return BLKPREP_KILL;
->>  
->> -     /* Do not allow concurrent reset and writes */
->> -     if (sdkp->zones_wlock &&
->> -         test_and_set_bit(zno, sdkp->zones_wlock))
->> -             return BLKPREP_DEFER;
->> -
+>> No functional change is introduced by this patch.
 > 
 > Hello Damien,
 > 
-> Since concurrent zone resets and writes are easy to detect and since these
-> indicate a bug in the application that submits these, should an error
-> message
-> be logged if that happens? Otherwise this patch looks fine to me.
+> The only tree for which I know that this kind of whitespace / coding style
+> patches are welcome is the staging tree. In general such patches are not
+> considered welcome because:
+> - Such patches pollute the changelog and make it harder to use tools like
+>   git annotate / git blame.
+> - Such patches make it harder for distro maintainers to backport patches
+>   from upstream kernels to distro (enterprise) kernels.
+> - If any kernel developer has developed kernel patches for the sd driver
+>   against kernel v4.11 and wants to submit these after the v4.12 merge
+>   window then that developer will have to rebase (and retest) these
+>   patches on top of kernel v4.12-rc1. Whitespace patches trigger really
+>   ugly rebase conflicts and hence are painful for other kernel developers.
+> 
+> Hence my request to drop this patch.
 
-Yes, we could easily add a warning, but if we consider the 3 possible
-cases of reset+write combinations:
-1) Reset comes in while a write is already in the queue: The write will
-succeed (assuming it is directed at the zone write pointer) and the
-reset will also succeed.
-2) A write directed at the current write pointer comes in while a reset
-is in the queue: the write will fail.
-3) A write directed at the beginning of the zone comes in while a reset
-is in the queue: the write will succeed.
+OK. As I said, this patch was "optional".
+Just wondering though how we are supposed to do code maintenance if that
+kind of trivial cleanup cannot go in... (not to mention that checkpatch
+keep warning about white spaces in sd.c if a patch touches something
+near one of those multiple lines with white spaces).
 
-The warning would trigger only in case (1), but that case may be
-actually intentional by the user. Case (2) will get an "indirect"
-warning through the write align error, which clearly signals a bug to
-the user. For case (3), that may also be intentional by the user (not
-recommended though).
-
-So I am afraid that a warning may trigger false-positives and may not be
-that useful in the end.
-
-Best regards.
+But fine, let's drop it.
 
 -- 
-Damien Le Moal, Ph.D.
-Sr. Manager, System Software Research Group,
-Western Digital Corporation
-Damien.LeMoal@wdc.com
-(+81) 0466-98-3593 (ext. 513593)
-1 kirihara-cho, Fujisawa,
-Kanagawa, 252-0888 Japan
-www.wdc.com, www.hgst.com
+Damien Le Moal,
+Western Digital
