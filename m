@@ -1,21 +1,76 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3 00/22] lpfc updates for 11.2.0.12
-Date: Mon, 24 Apr 2017 00:26:51 -0700
-Message-ID: <20170424072651.GA13257@infradead.org>
-References: <20170421230506.925-1-jsmart2021@gmail.com>
+From: Hannes Reinecke <hare@suse.com>
+Subject: Re: [PATCH v4 10/10] scsi: Implement blk_mq_ops.show_rq()
+Date: Mon, 24 Apr 2017 09:35:41 +0200
+Message-ID: <39275522-8046-bf48-a0da-d3b693b699e2@suse.com>
+References: <20170421234026.18970-1-bart.vanassche@sandisk.com>
+ <20170421234026.18970-11-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:58785 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1166122AbdDXH0w (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Apr 2017 03:26:52 -0400
-Content-Disposition: inline
-In-Reply-To: <20170421230506.925-1-jsmart2021@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170421234026.18970-11-bart.vanassche@sandisk.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Omar Sandoval <osandov@fb.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jsmart2021@gmail.com
-Cc: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, sagi@grimberg.me, martin.petersen@oracle.com
 
-Applie to the nvme-4.12 branch.  Any praying we're not going to see
-any conflicts with the SCSI tree.
+On 04/22/2017 01:40 AM, Bart Van Assche wrote:
+> Show the SCSI CDB, .eh_eflags and .result for pending SCSI commands
+> in /sys/kernel/debug/block/*/mq/*/dispatch and */rq_list.
+> 
+> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Cc: Omar Sandoval <osandov@fb.com>
+> Cc: Hannes Reinecke <hare@suse.com>
+> Cc: <linux-scsi@vger.kernel.org>
+> ---
+>  drivers/scsi/scsi_lib.c | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 4a20e6098f7c..90bb269042df 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -2125,6 +2125,16 @@ static void scsi_exit_rq(struct request_queue *q, struct request *rq)
+>  	scsi_free_sense_buffer(shost, cmd->sense_buffer);
+>  }
+>  
+> +static void scsi_show_rq(struct seq_file *m, struct request *rq)
+> +{
+> +	struct scsi_cmnd *cmd = container_of(scsi_req(rq), typeof(*cmd), req);
+> +	unsigned int i;
+> +
+> +	seq_puts(m, ", .cmd =");
+> +	for (i = 0; i < cmd->cmd_len; i++)
+> +		seq_printf(m, " %02x", cmd->cmnd[i]);
+> +}
+> +
+>  struct request_queue *scsi_alloc_queue(struct scsi_device *sdev)
+>  {
+>  	struct Scsi_Host *shost = sdev->host;
+> @@ -2157,6 +2167,7 @@ static const struct blk_mq_ops scsi_mq_ops = {
+>  	.queue_rq	= scsi_queue_rq,
+>  	.complete	= scsi_softirq_done,
+>  	.timeout	= scsi_timeout,
+> +	.show_rq	= scsi_show_rq,
+>  	.init_request	= scsi_init_request,
+>  	.exit_request	= scsi_exit_request,
+>  	.map_queues	= scsi_map_queues,
+> 
+Hmm. Can't say I'm happy with this callback.
+And I really would like to see a similar implementation for NVMe.
+
+But if others agree:
+
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.com			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
