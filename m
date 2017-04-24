@@ -1,15 +1,15 @@
 From: damien.lemoal@wdc.com
-Subject: [PATCH v2 3/7] sd: Cleanup sd_done sense data handling
-Date: Mon, 24 Apr 2017 16:51:11 +0900
-Message-ID: <20170424075115.30337-4-damien.lemoal@wdc.com>
+Subject: [PATCH v2 2/7] sd: Improve sd_completed_bytes
+Date: Mon, 24 Apr 2017 16:51:10 +0900
+Message-ID: <20170424075115.30337-3-damien.lemoal@wdc.com>
 References: <20170424075115.30337-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:8132 "EHLO
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:12707 "EHLO
         esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1166253AbdDXHvh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Apr 2017 03:51:37 -0400
+        with ESMTP id S1166215AbdDXHve (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Apr 2017 03:51:34 -0400
 In-Reply-To: <20170424075115.30337-1-damien.lemoal@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,61 +18,88 @@ Cc: Bart Van Assche <Bart.VanAssche@sandisk.com>, Hannes Reinecke <hare@suse.de>
 
 From: Damien Le Moal <damien.lemoal@wdc.com>
 
-In sd_done(), for the ILLEGAL REQUEST sense key case, add an 'else if'
-after the first 'if (sshdr.asc == 0x10)' test to avoid the second test
-(the values tested are different).
+Re-shuffle the code to be more efficient by not initializing
+variables upfront (i.e. do it only when necessary).
+Also replace the do_div calls with calls to sectors_to_logical().
 
-Still for the same ILLEGAL REQUEST case, move the declarations of the
-variables 'op' and 'unmap' within the scope of the 'else if' case since
-these variables are only used there. At the same time, remove the
-unnecessary good_bytes 0 assignment as this code can only be executed
-with result != 0 and good_bytes is already set to 0 in that case.
+No functional change is introduced by this patch.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-Reviewed-by: Bart Van Assche <Bart.VanAssche@sandisk.com>
 ---
- drivers/scsi/sd.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/scsi/sd.c | 48 ++++++++++++++++++++++++++----------------------
+ 1 file changed, 26 insertions(+), 22 deletions(-)
 
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 10c7657..2d1ac5c 100644
+index ce62d2c..10c7657 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -1816,8 +1816,6 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 	struct request *req = SCpnt->request;
- 	int sense_valid = 0;
- 	int sense_deferred = 0;
--	unsigned char op = SCpnt->cmnd[0];
--	unsigned char unmap = SCpnt->cmnd[1] & 8;
+@@ -1758,41 +1758,45 @@ static int sd_eh_action(struct scsi_cmnd *scmd, int eh_disp)
  
- 	switch (req_op(req)) {
- 	case REQ_OP_DISCARD:
-@@ -1875,10 +1873,14 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 			good_bytes = sd_completed_bytes(SCpnt);
- 		break;
- 	case ILLEGAL_REQUEST:
--		if (sshdr.asc == 0x10)  /* DIX: Host detected corruption */
-+		if (sshdr.asc == 0x10) {
-+			/* DIX: Host detected corruption */
- 			good_bytes = sd_completed_bytes(SCpnt);
--		/* INVALID COMMAND OPCODE or INVALID FIELD IN CDB */
--		if (sshdr.asc == 0x20 || sshdr.asc == 0x24) {
-+		} else if (sshdr.asc == 0x20 || sshdr.asc == 0x24) {
-+			/* INVALID COMMAND OPCODE or INVALID FIELD IN CDB */
-+			unsigned char op = SCpnt->cmnd[0];
-+			unsigned char unmap = SCpnt->cmnd[1] & 8;
+ static unsigned int sd_completed_bytes(struct scsi_cmnd *scmd)
+ {
+-	u64 start_lba = blk_rq_pos(scmd->request);
+-	u64 end_lba = blk_rq_pos(scmd->request) + (scsi_bufflen(scmd) / 512);
+-	u64 factor = scmd->device->sector_size / 512;
+-	u64 bad_lba;
+-	int info_valid;
++	struct request *req = scmd->request;
++	struct scsi_device *sdev = scmd->device;
++	unsigned int transferred, good_bytes;
++	u64 start_lba, end_lba, bad_lba;
 +
- 			switch (op) {
- 			case UNMAP:
- 				sd_config_discard(sdkp, SD_LBP_DISABLE);
-@@ -1890,8 +1892,6 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 				else {
- 					sdkp->device->no_write_same = 1;
- 					sd_config_write_same(sdkp);
+ 	/*
+-	 * resid is optional but mostly filled in.  When it's unused,
+-	 * its value is zero, so we assume the whole buffer transferred
++	 * Some commands have a payload smaller than the device logical
++	 * block size (e.g. INQUIRY on a 4K disk).
+ 	 */
+-	unsigned int transferred = scsi_bufflen(scmd) - scsi_get_resid(scmd);
+-	unsigned int good_bytes;
 -
--					good_bytes = 0;
- 					req->__data_len = blk_rq_bytes(req);
- 					req->rq_flags |= RQF_QUIET;
- 				}
+-	info_valid = scsi_get_sense_info_fld(scmd->sense_buffer,
+-					     SCSI_SENSE_BUFFERSIZE,
+-					     &bad_lba);
+-	if (!info_valid)
++	if (scsi_bufflen(scmd) <= sdev->sector_size)
+ 		return 0;
+ 
+-	if (scsi_bufflen(scmd) <= scmd->device->sector_size)
++	/* Check if we have a 'bad_lba' information */
++	if (!scsi_get_sense_info_fld(scmd->sense_buffer,
++				     SCSI_SENSE_BUFFERSIZE,
++				     &bad_lba))
+ 		return 0;
+ 
+-	/* be careful ... don't want any overflows */
+-	do_div(start_lba, factor);
+-	do_div(end_lba, factor);
+-
+-	/* The bad lba was reported incorrectly, we have no idea where
++	/*
++	 * If the bad lba was reported incorrectly, we have no idea where
+ 	 * the error is.
+ 	 */
+-	if (bad_lba < start_lba  || bad_lba >= end_lba)
++	start_lba = sectors_to_logical(sdev, blk_rq_pos(req));
++	end_lba = sectors_to_logical(sdev,
++				blk_rq_pos(req) + (scsi_bufflen(scmd) >> 9));
++	if (bad_lba < start_lba || bad_lba >= end_lba)
+ 		return 0;
+ 
++	/*
++	 * resid is optional but mostly filled in.  When it's unused,
++	 * its value is zero, so we assume the whole buffer transferred
++	 */
++	transferred = scsi_bufflen(scmd) - scsi_get_resid(scmd);
++
+ 	/* This computation should always be done in terms of
+ 	 * the resolution of the device's medium.
+ 	 */
+-	good_bytes = (bad_lba - start_lba) * scmd->device->sector_size;
++	good_bytes = logical_to_bytes(sdev, bad_lba - start_lba);
++
+ 	return min(good_bytes, transferred);
+ }
+ 
 -- 
 2.9.3
