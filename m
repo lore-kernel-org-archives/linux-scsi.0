@@ -1,113 +1,40 @@
-From: damien.lemoal@wdc.com
-Subject: [PATCH v2 7/7] sd_zbc: Do not write lock zones for reset
-Date: Mon, 24 Apr 2017 16:51:15 +0900
-Message-ID: <20170424075115.30337-8-damien.lemoal@wdc.com>
-References: <20170424075115.30337-1-damien.lemoal@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] sg: reset 'res_in_use' after unlinking reserved array
+Date: Mon, 24 Apr 2017 10:26:36 +0200
+Message-ID: <1493022396-107620-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:22840 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1166215AbdDXHvw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Apr 2017 03:51:52 -0400
-In-Reply-To: <20170424075115.30337-1-damien.lemoal@wdc.com>
+Received: from mx2.suse.de ([195.135.220.15]:32962 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1166636AbdDXI0j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 24 Apr 2017 04:26:39 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Bart Van Assche <Bart.VanAssche@sandisk.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Damien Le Moal <damien.lemoal@wdc.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Johannes Thumshirn <jth@kernel.org>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-From: Damien Le Moal <damien.lemoal@wdc.com>
+Once the reserved page array is unused we can reset the
+'res_in_use' state; here we can do a lazy update without
+holding the mutex as we only need to check against
+concurrent access, not concurrent release.
 
-Resetting a zone write pointer is equivalent to discarding sectors:
-after a reset, the zone sectors will contain zeros (or the format
-pattern). So there is no need for mutual exclusion between a zone reset
-and write. Similarly to discard, make it the responsability of the user
-to properly synchronize between reset and write (as is done now for
-discard and write).
-
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+Fixes: 1bc0eb0 ("scsi: sg: protect accesses to 'reserved' page array")
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/sd_zbc.c | 42 ++++++++++++++++--------------------------
- 1 file changed, 16 insertions(+), 26 deletions(-)
+ drivers/scsi/sg.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 29ba1d7..fcf0fad 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -237,7 +237,6 @@ int sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd)
- 	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
- 	sector_t sector = blk_rq_pos(rq);
- 	sector_t block = sectors_to_logical(sdkp->device, sector);
--	unsigned int zno = block >> sdkp->zone_shift;
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 8147147..06503c1 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -2056,6 +2056,8 @@ static long sg_compat_ioctl(struct file *filp, unsigned int cmd_in, unsigned lon
+ 	req_schp->page_order = 0;
+ 	req_schp->sglist_len = 0;
+ 	srp->res_used = 0;
++	/* Called without mutex lock to avoid deadlock */
++	sfp->res_in_use = 0;
+ }
  
- 	if (!sd_is_zoned(sdkp))
- 		/* Not a zoned device */
-@@ -250,11 +249,6 @@ int sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd)
- 		/* Unaligned request */
- 		return BLKPREP_KILL;
- 
--	/* Do not allow concurrent reset and writes */
--	if (sdkp->zones_wlock &&
--	    test_and_set_bit(zno, sdkp->zones_wlock))
--		return BLKPREP_DEFER;
--
- 	cmd->cmd_len = 16;
- 	memset(cmd->cmnd, 0, cmd->cmd_len);
- 	cmd->cmnd[0] = ZBC_OUT;
-@@ -324,38 +318,34 @@ void sd_zbc_complete(struct scsi_cmnd *cmd,
- 	struct request *rq = cmd->request;
- 
- 	switch (req_op(rq)) {
-+	case REQ_OP_ZONE_RESET:
-+
-+		if (result &&
-+		    sshdr->sense_key == ILLEGAL_REQUEST &&
-+		    sshdr->asc == 0x24)
-+			/*
-+			 * INVALID FIELD IN CDB error: reset of a conventional
-+			 * zone was attempted. Nothing to worry about, so be
-+			 * quiet about the error.
-+			 */
-+			rq->rq_flags |= RQF_QUIET;
-+		break;
-+
- 	case REQ_OP_WRITE:
- 	case REQ_OP_WRITE_SAME:
--	case REQ_OP_ZONE_RESET:
- 
- 		/* Unlock the zone */
- 		sd_zbc_write_unlock_zone(cmd);
- 
--		if (!result ||
--		    sshdr->sense_key != ILLEGAL_REQUEST)
--			break;
--
--		switch (sshdr->asc) {
--		case 0x24:
--			/*
--			 * INVALID FIELD IN CDB error: For a zone reset,
--			 * this means that a reset of a conventional
--			 * zone was attempted. Nothing to worry about in
--			 * this case, so be quiet about the error.
--			 */
--			if (req_op(rq) == REQ_OP_ZONE_RESET)
--				rq->rq_flags |= RQF_QUIET;
--			break;
--		case 0x21:
-+		if (result &&
-+		    sshdr->sense_key == ILLEGAL_REQUEST &&
-+		    sshdr->asc == 0x21)
- 			/*
- 			 * INVALID ADDRESS FOR WRITE error: It is unlikely that
- 			 * retrying write requests failed with any kind of
- 			 * alignement error will result in success. So don't.
- 			 */
- 			cmd->allowed = 0;
--			break;
--		}
--
- 		break;
- 
- 	case REQ_OP_ZONE_REPORT:
+ static Sg_request *
 -- 
-2.9.3
+1.8.5.6
