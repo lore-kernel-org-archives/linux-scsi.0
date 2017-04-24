@@ -1,19 +1,19 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: Re: [PATCH 1/9] sd: Remove white space before EOL
-Date: Mon, 24 Apr 2017 09:14:50 +0900
-Message-ID: <67a5b1f7-ce7b-664b-20f9-a90bef35f919@wdc.com>
+Subject: Re: [PATCH 2/9] sd: Fix functions description
+Date: Mon, 24 Apr 2017 09:21:46 +0900
+Message-ID: <8ce95866-d2fb-0bb5-2731-876c380bd311@wdc.com>
 References: <20170421091649.25287-1-damien.lemoal@wdc.com>
- <20170421091649.25287-2-damien.lemoal@wdc.com>
- <1492795349.2550.17.camel@sandisk.com>
+ <20170421091649.25287-3-damien.lemoal@wdc.com>
+ <1492795708.2550.19.camel@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:39201 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758693AbdDXAOy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Apr 2017 20:14:54 -0400
-In-Reply-To: <1492795349.2550.17.camel@sandisk.com>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:61350 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1163634AbdDXAV6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Apr 2017 20:21:58 -0400
+In-Reply-To: <1492795708.2550.19.camel@sandisk.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -22,34 +22,37 @@ Cc: "hch@lst.de" <hch@lst.de>, "hare@suse.de" <hare@suse.de>
 
 Bart,
 
-On 4/22/17 02:22, Bart Van Assche wrote:
+On 4/22/17 02:28, Bart Van Assche wrote:
 > On Fri, 2017-04-21 at 18:16 +0900, damien.lemoal@wdc.com wrote:
->> No functional change is introduced by this patch.
+>> - *   Returns 0 if successful. Returns a negated errno value in case
+>> - *   of error.
+>> + * Returns 0 if successful. Returns a negated errno value in case
+>> + * of error.
 > 
 > Hello Damien,
 > 
-> The only tree for which I know that this kind of whitespace / coding style
-> patches are welcome is the staging tree. In general such patches are not
-> considered welcome because:
-> - Such patches pollute the changelog and make it harder to use tools like
->   git annotate / git blame.
-> - Such patches make it harder for distro maintainers to backport patches
->   from upstream kernels to distro (enterprise) kernels.
-> - If any kernel developer has developed kernel patches for the sd driver
->   against kernel v4.11 and wants to submit these after the v4.12 merge
->   window then that developer will have to rebase (and retest) these
->   patches on top of kernel v4.12-rc1. Whitespace patches trigger really
->   ugly rebase conflicts and hence are painful for other kernel developers.
-> 
-> Hence my request to drop this patch.
+> The argument name fixes are definitely welcome in my opinion. But I see
+> that this patch not only fixes argument names and function descriptions
+> but also includes whitespace-only changes like the above. Sorry but I
+> don't like whitespace-only changes ...
 
-OK. As I said, this patch was "optional".
-Just wondering though how we are supposed to do code maintenance if that
-kind of trivial cleanup cannot go in... (not to mention that checkpatch
-keep warning about white spaces in sd.c if a patch touches something
-near one of those multiple lines with white spaces).
+Yes, I understand, you were clear about that.
+The "white space" changes intent are to match the preferred format for
+functions documentation (From Documentation/doc-guide/kerne-doc.rst)
 
-But fine, let's drop it.
+  /**
+   * foobar() - Brief description of foobar.
+   * @arg: Description of argument of foobar.
+   *
+   * Longer description of foobar.
+   *
+   * Return: Description of return value of foobar.
+   */
+
+If that is wrong/unnecessary, then I will rewrite that patch to only
+limit its scope to the argument name fixes.
+
+Best regards.
 
 -- 
 Damien Le Moal,
