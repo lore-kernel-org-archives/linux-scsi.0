@@ -1,46 +1,36 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: fcoe: make fcoe_e_d_tov and fcoe_r_a_tov static
-Date: Mon, 24 Apr 2017 18:04:18 +0100
-Message-ID: <20170424170418.9625-1-colin.king@canonical.com>
+From: "Ms. Katherine" <ulia@distral.ro>
+Subject: EXTREMELY IMPORTANT
+Date: Mon, 24 Apr 2017 19:52:13 +0100
+Message-ID: <20170424185220.509A651B3352__24796.638536691$1493062865$gmane$org@mail.distral.ro>
+Reply-To: kathrynnmison@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:54434 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S975236AbdDXREZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Apr 2017 13:04:25 -0400
+Received: from mail.distral.ro ([5.2.192.160]:51744 "EHLO mail.distral.ro"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S972950AbdDXTlA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 24 Apr 2017 15:41:00 -0400
+Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jth@kernel.org>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Recipients <ulia@distral.ro>
 
-From: Colin Ian King <colin.king@canonical.com>
+Dear Beloved, Sorry for the inconvenience, I am getting in touch with you regarding an extremely important and urgent matter, Please I need your urgent assistance and idea to finish up a project (Orphanage Home) Due to my health condition, Everything is available to finish up the project, All I need is your idea and trust.
 
-These module parameter variables don't need global scope, make them static
+Sehr geehrte Geliebte, traurig für die Unannehmlichkeiten, ich bin in Kontakt mit Ihnen über eine äußerst wichtige und dringende Angelegenheit, Bitte brauche ich Ihre dringende Hilfe und Idee, um ein Projekt zu beenden (Orphanage Home) Wegen meines Gesundheitszustandes ist alles verfügbar Beenden Sie das Projekt, Alles was ich brauche ist Ihre Idee und Vertrauen.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Please contact me for more details.
+Contact Email: kathrynnmison@gmail.com
+
+Thanks
+
 ---
- drivers/scsi/fcoe/fcoe.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+This email has been checked for viruses by Avast antivirus software.
+https://www.avast.com/antivirus
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index ab7bc1505e0b..90939f66bc0d 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -63,11 +63,11 @@ unsigned int fcoe_debug_logging;
- module_param_named(debug_logging, fcoe_debug_logging, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(debug_logging, "a bit mask of logging levels");
- 
--unsigned int fcoe_e_d_tov = 2 * 1000;
-+static unsigned int fcoe_e_d_tov = 2 * 1000;
- module_param_named(e_d_tov, fcoe_e_d_tov, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(e_d_tov, "E_D_TOV in ms, default 2000");
- 
--unsigned int fcoe_r_a_tov = 2 * 2 * 1000;
-+static unsigned int fcoe_r_a_tov = 2 * 2 * 1000;
- module_param_named(r_a_tov, fcoe_r_a_tov, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(r_a_tov, "R_A_TOV in ms, default 4000");
- 
+
 -- 
-2.11.0
+This message has been scanned for viruses and
+dangerous content by MailScanner, and is
+believed to be clean.
