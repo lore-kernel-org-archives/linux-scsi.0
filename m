@@ -1,76 +1,85 @@
-From: Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCH v4 10/10] scsi: Implement blk_mq_ops.show_rq()
-Date: Mon, 24 Apr 2017 09:35:41 +0200
-Message-ID: <39275522-8046-bf48-a0da-d3b693b699e2@suse.com>
-References: <20170421234026.18970-1-bart.vanassche@sandisk.com>
- <20170421234026.18970-11-bart.vanassche@sandisk.com>
+From: Knut Omang <knut.omang-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+Date: Mon, 24 Apr 2017 09:36:37 +0200
+Message-ID: <1493019397.3171.118.camel@oracle.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1491974532.7236.43.camel@kernel.crashing.org>
+ <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
+ <1492034124.7236.77.camel@kernel.crashing.org>
+ <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
+ <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
+ <20170414041656.GA30694@obsidianresearch.com>
+ <1492169849.25766.3.camel@kernel.crashing.org>
+ <630c1c63-ff17-1116-e069-2b8f93e50fa2@deltatee.com>
+ <20170414190452.GA15679@bhelgaas-glaptop.roam.corp.google.com>
+ <1492207643.25766.18.camel@kernel.crashing.org>
+ <bff1e503-95a9-e19f-bfd9-0ff962c63a81@deltatee.com>
+ <CAPcyv4jUeKzKDARp6Z35kdPLKnP-M6aF8X5KpOx55CLyjnj4dA@mail.gmail.com>
+ <1492311719.25766.37.camel@kernel.crashing.org>
+ <CAPcyv4iqnz1B00Q3xG-nGrLXdOyB7ditxmwZyotksLFgUqr+jA@mail.gmail.com>
+ <5e43818e-8c6b-8be8-23ff-b798633d2a73@deltatee.com>
+ <1492381907.25766.49.camel@kernel.crashing.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170421234026.18970-11-bart.vanassche@sandisk.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Omar Sandoval <osandov@fb.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <1492381907.25766.49.camel-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>, Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Jerome Glisse <jglisse-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Bjorn Helgaas <helgaas-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-nvdimm <linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org>, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 04/22/2017 01:40 AM, Bart Van Assche wrote:
-> Show the SCSI CDB, .eh_eflags and .result for pending SCSI commands
-> in /sys/kernel/debug/block/*/mq/*/dispatch and */rq_list.
-> 
-> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-> Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Cc: Omar Sandoval <osandov@fb.com>
-> Cc: Hannes Reinecke <hare@suse.com>
-> Cc: <linux-scsi@vger.kernel.org>
-> ---
->  drivers/scsi/scsi_lib.c | 11 +++++++++++
->  1 file changed, 11 insertions(+)
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 4a20e6098f7c..90bb269042df 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -2125,6 +2125,16 @@ static void scsi_exit_rq(struct request_queue *q, struct request *rq)
->  	scsi_free_sense_buffer(shost, cmd->sense_buffer);
->  }
->  
-> +static void scsi_show_rq(struct seq_file *m, struct request *rq)
-> +{
-> +	struct scsi_cmnd *cmd = container_of(scsi_req(rq), typeof(*cmd), req);
-> +	unsigned int i;
-> +
-> +	seq_puts(m, ", .cmd =");
-> +	for (i = 0; i < cmd->cmd_len; i++)
-> +		seq_printf(m, " %02x", cmd->cmnd[i]);
-> +}
-> +
->  struct request_queue *scsi_alloc_queue(struct scsi_device *sdev)
->  {
->  	struct Scsi_Host *shost = sdev->host;
-> @@ -2157,6 +2167,7 @@ static const struct blk_mq_ops scsi_mq_ops = {
->  	.queue_rq	= scsi_queue_rq,
->  	.complete	= scsi_softirq_done,
->  	.timeout	= scsi_timeout,
-> +	.show_rq	= scsi_show_rq,
->  	.init_request	= scsi_init_request,
->  	.exit_request	= scsi_exit_request,
->  	.map_queues	= scsi_map_queues,
-> 
-Hmm. Can't say I'm happy with this callback.
-And I really would like to see a similar implementation for NVMe.
-
-But if others agree:
-
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.com			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+T24gTW9uLCAyMDE3LTA0LTE3IGF0IDA4OjMxICsxMDAwLCBCZW5qYW1pbiBIZXJyZW5zY2htaWR0
+IHdyb3RlOgo+IE9uIFN1biwgMjAxNy0wNC0xNiBhdCAxMDozNCAtMDYwMCwgTG9nYW4gR3VudGhv
+cnBlIHdyb3RlOgo+ID7CoAo+ID4gT24gMTYvMDQvMTcgMDk6NTMgQU0sIERhbiBXaWxsaWFtcyB3
+cm90ZToKPiA+ID4gWk9ORV9ERVZJQ0UgYWxsb3dzIHlvdSB0byByZWRpcmVjdCB2aWEgZ2V0X2Rl
+dl9wYWdlbWFwKCkgdG8gcmV0cmlldmUKPiA+ID4gY29udGV4dCBhYm91dCB0aGUgcGh5c2ljYWwg
+YWRkcmVzcyBpbiBxdWVzdGlvbi4gSSdtIHRoaW5raW5nIHlvdSBjYW4KPiA+ID4gaGFuZyBidXMg
+YWRkcmVzcyB0cmFuc2xhdGlvbiBkYXRhIG9mZiBvZiB0aGF0IHN0cnVjdHVyZS4gVGhpcyBzZWVt
+cwo+ID4gPiB2YWd1ZWx5IHNpbWlsYXIgdG8gd2hhdCBITU0gaXMgZG9pbmcuCj4gPsKgCj4gPiBU
+aGFua3MhIEkgZGlkbid0IHJlYWxpemUgeW91IGhhZCB0aGUgaW5mcmFzdHJ1Y3R1cmUgdG8gbG9v
+ayB1cCBhIGRldmljZQo+ID4gZnJvbSBhIHBmbi9wYWdlLiBUaGF0IHdvdWxkIHJlYWxseSBjb21l
+IGluIGhhbmR5IGZvciB1cy4KPiAKPiBJdCBkb2VzIGluZGVlZC4gSSB3b24ndCBiZSBhYmxlIHRv
+IHBsYXkgd2l0aCB0aGF0IG11Y2ggZm9yIGEgZmV3IHdlZWtzCj4gKHNlZSBteSBvdGhlciBlbWFp
+bCkgc28gaWYgeW91J3JlIGdvaW5nIHRvIHRhY2tsZSB0aGlzIHdoaWxlIEknbSBhd2F5LAo+IGNh
+biB5b3Ugd29yayB3aXRoIEplcm9tZSB0byBtYWtlIHN1cmUgeW91IGRvbid0IGNvbmZsaWN0IHdp
+dGggSE1NID8KPiAKPiBJIHJlYWxseSB3YW50IGEgd2F5IGZvciBITU0gdG8gYmUgYWJsZSB0byBs
+YXlvdXQgc3RydWN0IHBhZ2VzIG92ZXIgdGhlCj4gR1BVIEJBUnMgcmF0aGVyIHRoYW4gaW4gImFs
+bG9jYXRlZCBmcmVlIHNwYWNlIiBmb3IgdGhlIGNhc2Ugd2hlcmUgdGhlCj4gQkFSIGlzIGJpZyBl
+bm91Z2ggdG8gY292ZXIgYWxsIG9mIHRoZSBHUFUgbWVtb3J5Lgo+IAo+IEluIGdlbmVyYWwsIEkn
+ZCBsaWtlIGEgc2ltcGxlICYgZ2VuZXJpYyB3YXkgZm9yIGFueSBkcml2ZXIgdG8gYXNrIHRoZQo+
+IGNvcmUgdG8gbGF5b3V0IERNQSdibGUgc3RydWN0IHBhZ2VzIG92ZXIgQkFSIHNwYWNlLiBJIGFu
+IG5vdCBjb252aW5jZWQKPiB0aGlzIHJlcXVpcmVzIGEgInAybWVtIGRldmljZSIgdG8gYmUgY3Jl
+YXRlZCBvbiB0b3Agb2YgdGhpcyB0aG91Z2ggYnV0Cj4gdGhhdCdzIGEgZGlmZmVyZW50IGRpc2N1
+c3Npb24uCj4gCj4gT2YgY291cnNlIHRoZSBhY3R1YWwgYWJpbGl0eSB0byBwZXJmb3JtIHRoZSBE
+TUEgbWFwcGluZyB3aWxsIGJlIHN1YmplY3QKPiB0byB2YXJpb3VzIHJlc3RyaWN0aW9ucyB0aGF0
+IHdpbGwgaGF2ZSB0byBiZSBpbXBsZW1lbnRlZCBpbiB0aGUgYWN0dWFsCj4gImRtYV9vcHMgb3Zl
+cnJpZGUiIGJhY2tlbmQuIFdlIGNhbiBoYXZlIGdlbmVyaWMgY29kZSB0byBoYW5kbGUgdGhlIGNh
+c2UKPiB3aGVyZSBkZXZpY2VzIHJlc2lkZSBvbiB0aGUgc2FtZSBkb21haW4sIHdoaWNoIGNhbiBk
+ZWFsIHdpdGggc3dpdGNoCj4gY29uZmlndXJhdGlvbiBldGMuLi4gd2Ugd2lsbCBuZWVkIHRvIGhh
+dmUgaW9tbXUgc3BlY2lmaWMgY29kZSB0byBoYW5kbGUKPiB0aGUgY2FzZSBnb2luZyB0aHJvdWdo
+IHRoZSBmYWJyaWMuwqAKPiAKPiBWaXJ0dWFsaXphdGlvbiBpcyBhIHNlcGFyYXRlIGNhbiBvZiB3
+b3JtcyBkdWUgdG8gaG93IHFlbXUgY29tcGxldGVseQo+IGZha2VzIHRoZSBNTUlPIHNwYWNlLCB3
+ZSBjYW4gbG9vayBpbnRvIHRoYXQgbGF0ZXIuCgpNeSBmaXJzdCByZWZsZXggd2hlbiByZWFkaW5n
+IHRoaXMgdGhyZWFkIHdhcyB0byB0aGluayB0aGF0IHRoaXMgd2hvbGUgZG9tYWluCmxlbmRzIGl0
+IHNlbGYgZXhjZWxsZW50bHkgdG8gdGVzdGluZyB2aWEgUWVtdS4gQ291bGQgaXQgYmUgdGhhdCBk
+b2luZyB0aGlzIGluwqAKdGhlIG9wcG9zaXRlIGRpcmVjdGlvbiBtaWdodCBiZSBhIHNhZmVyIGFw
+cHJvYWNoIGluIHRoZSBsb25nIHJ1biBldmVuIHRob3VnaMKgCihzaWduaWZpY2FudCkgbW9yZSB3
+b3JrIHVwLWZyb250PwoKRWcuIHN0YXJ0IGJ5IGZpeGluZy9wcm92aWRpbmcvZG9jdW1lbnRpbmcg
+c3VpdGFibGUgbW9kZWwocynCoApmb3IgdGVzdGluZyB0aGlzIGluIFFlbXUsIHRoZW4gaW1wbGVt
+ZW50IHRoZSBwYXRjaCBzZXQgYmFzZWTCoApvbiB0aG9zZSBtb2RlbHM/CgpUaGFua3MsCktudXQK
+Cj4gCj4gQ2hlZXJzLAo+IEJlbi4KPiAKPiAtLQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBs
+aXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1yZG1hIiBpbgo+IHRoZSBib2R5
+IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnCj4gTW9yZSBtYWpvcmRv
+bW8gaW5mbyBhdMKgwqBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwK
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KTGludXgtbnZk
+aW1tIG1haWxpbmcgbGlzdApMaW51eC1udmRpbW1AbGlzdHMuMDEub3JnCmh0dHBzOi8vbGlzdHMu
+MDEub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtbnZkaW1tCg==
