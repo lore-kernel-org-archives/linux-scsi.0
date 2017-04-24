@@ -1,40 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 3/7] sd: Cleanup sd_done sense data handling
-Date: Mon, 24 Apr 2017 19:11:23 -0400
-Message-ID: <yq14lxdh04k.fsf@oracle.com>
-References: <20170424075115.30337-1-damien.lemoal@wdc.com>
-        <20170424075115.30337-4-damien.lemoal@wdc.com>
-        <20170424153535.GE895@lst.de>
+Subject: Re: [PATCH v4 10/10] scsi: Implement blk_mq_ops.show_rq()
+Date: Mon, 24 Apr 2017 19:19:50 -0400
+Message-ID: <yq1zif5fl61.fsf@oracle.com>
+References: <20170421234026.18970-1-bart.vanassche@sandisk.com>
+        <20170421234026.18970-11-bart.vanassche@sandisk.com>
+        <yq1k269ij5f.fsf@oracle.com> <1493070575.3394.19.camel@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:31320 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S978627AbdDXXLf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Apr 2017 19:11:35 -0400
-In-Reply-To: <20170424153535.GE895@lst.de> (Christoph Hellwig's message of
-        "Mon, 24 Apr 2017 17:35:35 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <1493070575.3394.19.camel@sandisk.com> (Bart Van Assche's message
+        of "Mon, 24 Apr 2017 21:49:37 +0000")
+Sender: linux-block-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "osandov@fb.com" <osandov@fb.com>, "hare@suse.com" <hare@suse.com>, "axboe@kernel.dk" <axboe@kernel.dk>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: damien.lemoal@wdc.com, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Hannes Reinecke <hare@suse.de>
 
 
-Christoph,
+Bart,
 
-> Use a switch for the sense key, and remove two pointless variables
-> that are only used once.
+> SCSI tracing has to be enabled before a test is started, produces a
+> huge amount of data, and deriving state information from a huge trace
+> is far from easy. The information in debugfs provides an easy to read
+> overview of the current state without having to analyze megabytes of
+> traces, without introducing any slowdown and without having to enable
+> any tracing mechanism from beforehand.
 
-> -				if (unmap)
-
-The rationale behind the unmap variable was clarity and avoiding magic
-values.
-
-I'm OK with this, however:
-
-> +				if (SCpnt->cmnd[1] & 8) { /* UNMAP */
-
-So I committed with that change.
+Fair enough. Just seems like there's an obvious overlap in plumbing.
+Don't know if that can be leveraged instead of introducing something
+completely new?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
