@@ -1,38 +1,49 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] sg: reset 'res_in_use' after unlinking reserved array
-Date: Mon, 24 Apr 2017 10:32:15 +0200
-Message-ID: <20170424083214.GA29543@linux-x5ow.site>
-References: <1493022396-107620-1-git-send-email-hare@suse.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] scsi: sas: move scsi_remove_host call into
+ sas_remove_host
+Date: Mon, 24 Apr 2017 11:14:13 +0200
+Message-ID: <cf24e5c7-0d3d-6e6e-87f6-5fe15d29979e@suse.de>
+References: <20170421121141.20701-1-jthumshirn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33679 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1166614AbdDXIcS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 24 Apr 2017 04:32:18 -0400
-Content-Disposition: inline
-In-Reply-To: <1493022396-107620-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170421121141.20701-1-jthumshirn@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, James Bottomley <jejb@linux.vnet.ibm.com>, Jinpu Wang <jinpu.wang@profitbricks.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Johannes Thumshirn <jth@kernel.org>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Mon, Apr 24, 2017 at 10:26:36AM +0200, Hannes Reinecke wrote:
-> Once the reserved page array is unused we can reset the
-> 'res_in_use' state; here we can do a lazy update without
-> holding the mutex as we only need to check against
-> concurrent access, not concurrent release.
+On 04/21/2017 02:11 PM, Johannes Thumshirn wrote:
+> Move scsi_remove_host call into sas_remove_host and remove it from SAS HBA
+> drivers, so we don't mess up the ordering. This solves an issue with double
+> deleting sysfs entries that was introduced by the change of sysfs behaviour
+> from commit bcdde7e ("sysfs: make __sysfs_remove_dir() recursive").
 > 
-> Fixes: 1bc0eb0 ("scsi: sg: protect accesses to 'reserved' page array")
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+> Suggested-by: Christoph Hellwig <hch@lst.de>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: James Bottomley <jejb@linux.vnet.ibm.com>
+> Cc: Jinpu Wang <jinpu.wang@profitbricks.com>
+> Cc: John Garry <john.garry@huawei.com>
 > ---
+>  drivers/scsi/aic94xx/aic94xx_init.c   | 1 -
+>  drivers/scsi/hisi_sas/hisi_sas_main.c | 1 -
+>  drivers/scsi/isci/init.c              | 1 -
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c  | 1 -
+>  drivers/scsi/mvsas/mv_init.c          | 1 -
+>  drivers/scsi/pm8001/pm8001_init.c     | 1 -
+>  drivers/scsi/scsi_transport_sas.c     | 8 ++++++--
+>  7 files changed, 6 insertions(+), 8 deletions(-)
+> 
+Sadly, you've left out mptsas; that's still in use for VMWare installations.
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Cheers,
+
+Hannes
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
 SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
 HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
