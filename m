@@ -1,55 +1,42 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: Re: [PATCH 5/9] sd: Cleanup sd_done sense data handling
-Date: Mon, 24 Apr 2017 09:23:18 +0900
-Message-ID: <a3193390-8b6e-9466-9edd-b63023e64735@wdc.com>
+Subject: Re: [PATCH 3/9] sd: Remove unecessary variable in sd_done()
+Date: Mon, 24 Apr 2017 09:25:09 +0900
+Message-ID: <9b3d760d-b8c4-f9f4-a59d-5dcd6ba91cb5@wdc.com>
 References: <20170421091649.25287-1-damien.lemoal@wdc.com>
- <20170421091649.25287-6-damien.lemoal@wdc.com>
- <1492800068.2550.25.camel@sandisk.com>
+ <20170421091649.25287-4-damien.lemoal@wdc.com>
+ <1492800162.7079.33.camel@HansenPartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:63312 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1163699AbdDXAXZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Apr 2017 20:23:25 -0400
-In-Reply-To: <1492800068.2550.25.camel@sandisk.com>
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:48361 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1163676AbdDXAZR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Apr 2017 20:25:17 -0400
+In-Reply-To: <1492800162.7079.33.camel@HansenPartnership.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "hch@lst.de" <hch@lst.de>, "hare@suse.de" <hare@suse.de>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Bart Van Assche <Bart.VanAssche@sandisk.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
 
-Bart,
+James,
 
-On 4/22/17 03:41, Bart Van Assche wrote:
-> On Fri, 2017-04-21 at 18:16 +0900, damien.lemoal@wdc.com wrote:
->> @@ -1884,8 +1886,6 @@ static int sd_done(struct scsi_cmnd *SCpnt)
->>                                else {
->>                                        sdkp->device->no_write_same = 1;
->>                                        sd_config_write_same(sdkp);
->> -
->> -                                     good_bytes = 0;
->>                                        req->__data_len = blk_rq_bytes(req);
->>                                        req->rq_flags |= RQF_QUIET;
->>                                }
+On 4/22/17 03:42, James Bottomley wrote:
+> Really, no, you're making the code less clear for no gain.  I'm fairly
+> certain the compiler can optimise this without any help and when you're
+> skimming the code you can easily see that the out jump is taken if you
+> have a sense code that's either invalid or deferred.  After your change
+> you have to glance one level deeper to come to the same conclusion.
 > 
-> This change looks fine to me but has not been described in the patch
-> description? Anyway:
-> 
-> Reviewed-by: Bart Van Assche <Bart.VanAssche@sandisk.com>
+> To be clear: I wouldn't object if the original function were written
+> the way you propose because we all get used to scanning code looking
+> for things like this.  However, a patch to change existing code fails
+> the net benefit test.
 
-Oops. Yes, I forgot to mention that in the commit message.
-(for result != 0, good_bytes is already set to 0, so that assignment is
-not necessary).
-Will resend.
+OK. Let's drop this patch then.
+Thank you for the review.
 
 -- 
-Damien Le Moal, Ph.D.
-Sr. Manager, System Software Research Group,
-Western Digital Corporation
-Damien.LeMoal@wdc.com
-(+81) 0466-98-3593 (ext. 513593)
-1 kirihara-cho, Fujisawa,
-Kanagawa, 252-0888 Japan
-www.wdc.com, www.hgst.com
+Damien Le Moal,
+Western Digital
