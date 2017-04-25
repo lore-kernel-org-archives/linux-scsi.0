@@ -1,137 +1,64 @@
-From: Tyrel Datwyler <turtle.in.the.kernel@gmail.com>
-Subject: Re: [PATCH] ibmvscsis: Do not send aborted task response
-Date: Tue, 25 Apr 2017 13:18:40 -0700
-Message-ID: <fb013771-cbbd-cd80-f9c6-f3975a099f52@gmail.com>
-References: <1491850368-7201-1-git-send-email-bryantly@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1491850368-7201-1-git-send-email-bryantly@linux.vnet.ibm.com>
-Sender: stable-owner@vger.kernel.org
-To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, nab@linux-iscsi.org, Bart.VanAssche@sandisk.com
-Cc: seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, stable@vger.kernel.org
+From: Jon Derrick <jonathan.derrick@intel.com>
+Subject: [PATCH] nvme-scsi: Use correct byte ordering for eui64 in Dev ID VPD
+Date: Tue, 25 Apr 2017 14:18:09 -0600
+Message-ID: <20170425201809.1683-1-jonathan.derrick@intel.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:30677 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1033572AbdDYUVm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Apr 2017 16:21:42 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: axboe@fb.com
+Cc: linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, keith.busch@intel.com, hch@infradead.org, sagi@grimberg.me, Jon Derrick <jonathan.derrick@intel.com>
 
-On 04/10/2017 11:52 AM, Bryant G. Ly wrote:
-> The driver is sending a response to the aborted task response
-> along with LIO sending the tmr response.
+NVME specifies an EUI64/NGUID in little-endian format, while SCSI
+specifies that the Device Identification VPD use big-endian for EUI
+formats. The current code copies this bytestream directly from the
+Identification Namespace page, meaning we just need to reverse the
+bytestream when passing it on to the VPD.
 
-I think this could be better worded. Something like the driver is sending a response to
-the actual ***scsi op*** that was aborted by an abort task TM, while LIO is sending a
-response to the abort task TM.
+This results in the correct values being parsed by sg-tools, eg:
+$ sg_inq -e -p 0x83 /dev/nvme1n1 -vvv
+open /dev/nvme1n1 with flags=0x800
+VPD INQUIRY: Device Identification page
+    inquiry cdb: 12 01 83 00 fc 00
+      duration=0 ms
+  Designation descriptor number 1, descriptor length: 20
+    designator_type: EUI-64 based,  code_set: Binary
+    associated with the addressed logical unit
+      EUI-64 based 16 byte identifier
+      Identifier extension: 0x100000001
+      IEEE Company_id: 0x5cd2e4
+      Vendor Specific Extension Identifier: 0x0
+      [0x00000001000000015cd2e40000000000]
 
-> ibmvscsis_tgt does not send the response to the client until
-> release_cmd time. The reason for this was because if we did it
-> at queue_status time, then the client would be free to reuse the
-> tag for that command, but we're still using the tag until the
-> command is released at release_cmd time, so we chose to delay
-> sending the response until then. That then caused this issue, because
-> release_cmd is always called, even if queue_status is not.
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+---
+ drivers/nvme/host/scsi.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-The above portion of the commit message is little convoluted in my opinion, and a bit hard
-to follow. Otherwise,
-
-Reviewed-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-
-> 
-> SCSI spec says that the initiator that sends the abort task
-> TM NEVER gets a response to the aborted op and with the current
-> code it will send a response. Thus this fix will remove that response
-> if the TAS bit is set.
-> 
-> Cc: <stable@vger.kernel.org> # v4.8+
-> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-> ---
->  drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 60 +++++++++++++++++++++-----------
->  1 file changed, 40 insertions(+), 20 deletions(-)
-> 
-> diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-> index 4bb5635..f75948a 100644
-> --- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-> +++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-> @@ -1758,33 +1758,42 @@ static void ibmvscsis_send_messages(struct scsi_info *vscsi)
->  
->  	if (!(vscsi->flags & RESPONSE_Q_DOWN)) {
->  		list_for_each_entry_safe(cmd, nxt, &vscsi->waiting_rsp, list) {
-> -			iue = cmd->iue;
-> +			/*
-> +			 * If Task Abort Status Bit is set, then dont send a
-> +			 * response.
-> +			 */
-> +			if (cmd->se_cmd.transport_state & CMD_T_TAS) {
-> +				list_del(&cmd->list);
-> +				ibmvscsis_free_cmd_resources(vscsi, cmd);
-> +			} else {
-> +				iue = cmd->iue;
->  
-> -			crq->valid = VALID_CMD_RESP_EL;
-> -			crq->format = cmd->rsp.format;
-> +				crq->valid = VALID_CMD_RESP_EL;
-> +				crq->format = cmd->rsp.format;
->  
-> -			if (cmd->flags & CMD_FAST_FAIL)
-> -				crq->status = VIOSRP_ADAPTER_FAIL;
-> +				if (cmd->flags & CMD_FAST_FAIL)
-> +					crq->status = VIOSRP_ADAPTER_FAIL;
->  
-> -			crq->IU_length = cpu_to_be16(cmd->rsp.len);
-> +				crq->IU_length = cpu_to_be16(cmd->rsp.len);
->  
-> -			rc = h_send_crq(vscsi->dma_dev->unit_address,
-> -					be64_to_cpu(msg_hi),
-> -					be64_to_cpu(cmd->rsp.tag));
-> +				rc = h_send_crq(vscsi->dma_dev->unit_address,
-> +						be64_to_cpu(msg_hi),
-> +						be64_to_cpu(cmd->rsp.tag));
->  
-> -			pr_debug("send_messages: cmd %p, tag 0x%llx, rc %ld\n",
-> -				 cmd, be64_to_cpu(cmd->rsp.tag), rc);
-> +				pr_debug("send_messages: cmd %p, tag 0x%llx, rc %ld\n",
-> +					 cmd, be64_to_cpu(cmd->rsp.tag), rc);
->  
-> -			/* if all ok free up the command element resources */
-> -			if (rc == H_SUCCESS) {
-> -				/* some movement has occurred */
-> -				vscsi->rsp_q_timer.timer_pops = 0;
-> -				list_del(&cmd->list);
-> +				/* if all ok free up the command element resources */
-> +				if (rc == H_SUCCESS) {
-> +					/* some movement has occurred */
-> +					vscsi->rsp_q_timer.timer_pops = 0;
-> +					list_del(&cmd->list);
->  
-> -				ibmvscsis_free_cmd_resources(vscsi, cmd);
-> -			} else {
-> -				srp_snd_msg_failed(vscsi, rc);
-> -				break;
-> +					ibmvscsis_free_cmd_resources(vscsi, cmd);
-> +				} else {
-> +					srp_snd_msg_failed(vscsi, rc);
-> +					break;
-> +				}
->  			}
->  		}
->  
-> @@ -3581,9 +3590,20 @@ static int ibmvscsis_write_pending(struct se_cmd *se_cmd)
->  {
->  	struct ibmvscsis_cmd *cmd = container_of(se_cmd, struct ibmvscsis_cmd,
->  						 se_cmd);
-> +	struct scsi_info *vscsi = cmd->adapter;
->  	struct iu_entry *iue = cmd->iue;
->  	int rc;
->  
-> +	/*
-> +	 * If CLIENT_FAILED OR RESPONSE_Q_DOWN, then just return success
-> +	 * since LIO can't do anything about it, and we dont want to
-> +	 * attempt an srp_transfer_data.
-> +	 */
-> +	if ((vscsi->flags & (CLIENT_FAILED | RESPONSE_Q_DOWN))) {
-> +		pr_err("write_pending failed since: %d\n", vscsi->flags);
-> +		return 0;
-> +	}
-> +
->  	rc = srp_transfer_data(cmd, &vio_iu(iue)->srp.cmd, ibmvscsis_rdma,
->  			       1, 1);
->  	if (rc) {
-> 
+diff --git a/drivers/nvme/host/scsi.c b/drivers/nvme/host/scsi.c
+index f49ae27..8f94e77 100644
+--- a/drivers/nvme/host/scsi.c
++++ b/drivers/nvme/host/scsi.c
+@@ -598,6 +598,7 @@ static int nvme_fill_device_id_eui64(struct nvme_ns *ns, struct sg_io_hdr *hdr,
+ 	int nvme_sc, res;
+ 	size_t len;
+ 	void *eui;
++	int i;
+ 
+ 	nvme_sc = nvme_identify_ns(ns->ctrl, ns->ns_id, &id_ns);
+ 	res = nvme_trans_status_code(hdr, nvme_sc);
+@@ -628,7 +629,8 @@ static int nvme_fill_device_id_eui64(struct nvme_ns *ns, struct sg_io_hdr *hdr,
+ 	inq_response[5] = 0x02;	/* PIV=0b | Asso=00b | Designator Type=2h */
+ 	inq_response[6] = 0x00;	/* Rsvd */
+ 	inq_response[7] = len;	/* Designator Length */
+-	memcpy(&inq_response[8], eui, len);
++	for (i = 0; i < len; i++)
++		inq_response[8 + i] = ((char *)eui)[len - (i + 1)];
+ 
+ 	res = nvme_trans_copy_to_user(hdr, inq_response, alloc_len);
+ out_free_id:
+-- 
+2.9.3
