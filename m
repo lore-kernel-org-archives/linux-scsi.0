@@ -1,47 +1,47 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [RFC] scsi: reduce protection of scan_mutex in scsi_remove_device
-Date: Tue, 25 Apr 2017 22:17:38 +0000
-Message-ID: <1493158657.2628.26.camel@sandisk.com>
-References: <20170421211302.2667649-1-songliubraving@fb.com>
-         <1493141028.2628.4.camel@sandisk.com>
-         <11AE7D30-E24A-4DF3-8237-AF97A342D239@fb.com>
-         <1493142729.2628.6.camel@sandisk.com>
-         <3B06D0B6-825E-4788-9B87-BE3F35055DB2@fb.com>
+From: <molino.petrone@libero.it>
+Subject: 44354 linux-scsi
+Date: Tue, 25 Apr 2017 23:15:12 -0000
+Message-ID: <149316211221.17249.18939955695259544@adamo.es>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: application/zip; name="1556947671002.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:60703 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1947837AbdDYWRm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Apr 2017 18:17:42 -0400
-In-Reply-To: <3B06D0B6-825E-4788-9B87-BE3F35055DB2@fb.com>
-Content-Language: en-US
-Content-ID: <C6CDC892277E5C4480B9EBD81039415A@namprd04.prod.outlook.com>
+Received: from cli-5b7e224b.wholesale.adamo.es ([91.126.34.75]:56414 "HELO
+        adamo.es" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+        id S1429520AbdDYXPV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Apr 2017 19:15:21 -0400
+Content-Disposition: attachment
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "songliubraving@fb.com" <songliubraving@fb.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>
+To: linux-scsi@vger.kernel.org
 
-On Tue, 2017-04-25 at 21:17 +0000, Song Liu wrote:
-> I am not sure I fully understand the problem here. If I understand the lo=
-gic=20
-> correctly, when a device is being removed, it will stay in scsi_host->__d=
-evices
-> until fully the remove routine is finished. And LUN scanning in parallel =
-will
-> find the device with scsi_device_lookup_by_target(), and thus it would no=
-t=20
-> rescan the device until the device is fully removed? Did I miss anything =
-here?
-
-Hello Song,
-
-The SCSI core is already complicated enough. Please don't complicate it fur=
-ther
-by making subtle changes to the semantics of scan_mutex. Please also note t=
-hat
-I have proposed an alternative, namely to make the START STOP UNIT command
-asynchronous.
-
-Bart.=
+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
