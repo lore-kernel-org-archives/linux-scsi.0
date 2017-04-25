@@ -1,96 +1,54 @@
-From: Song Liu <songliubraving@fb.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
 Subject: Re: [RFC] scsi: reduce protection of scan_mutex in scsi_remove_device
-Date: Tue, 25 Apr 2017 17:42:21 +0000
-Message-ID: <11AE7D30-E24A-4DF3-8237-AF97A342D239@fb.com>
+Date: Tue, 25 Apr 2017 17:52:09 +0000
+Message-ID: <1493142729.2628.6.camel@sandisk.com>
 References: <20170421211302.2667649-1-songliubraving@fb.com>
- <1493141028.2628.4.camel@sandisk.com>
+         <1493141028.2628.4.camel@sandisk.com>
+         <11AE7D30-E24A-4DF3-8237-AF97A342D239@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:59385 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S971186AbdDYRnT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Apr 2017 13:43:19 -0400
-In-Reply-To: <1493141028.2628.4.camel@sandisk.com>
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:6175 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1946490AbdDYRwN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Apr 2017 13:52:13 -0400
+In-Reply-To: <11AE7D30-E24A-4DF3-8237-AF97A342D239@fb.com>
 Content-Language: en-US
-Content-ID: <A52F3CB18F0AB94BB8F90062BFED5D9B@namprd15.prod.outlook.com>
+Content-ID: <E61FC8B2D173A3488ABEEB26549A8A77@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>
+To: "songliubraving@fb.com" <songliubraving@fb.com>
 Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>
 
-
-> On Apr 25, 2017, at 10:23 AM, Bart Van Assche <Bart.VanAssche@sandisk.com=
-> wrote:
+On Tue, 2017-04-25 at 17:42 +0000, Song Liu wrote:
+> I have been studying the code recently. I am wondering whether the follow=
+ing=20
+> would work:
 >=20
-> On Fri, 2017-04-21 at 14:13 -0700, Song Liu wrote:
->> When a device is deleted through sysfs handle "delete", the code
->> locks shost->scan_mutex. If multiple devices are deleted at the
->> same time, these deletes will be handled in series.
->>=20
->> On the other hand, some devices do long latency IO during deletion,
->> for example, sd_shutdown() may do sync cache and/or start_stop.
->> It is not necessary for these commands to run in series.
->>=20
->> To reduce latency of parallel "delete" requests, this patch reduces
->> the protection of scan_mutex. The only function with Scsi_Host
->> called in __scsi_remove_device() is the optional slave_destroy().
->> Therefore, the protection of scan_mutex is only necessary for this
->> function.
+> 1. Introduce a new mutex for scsi_device to protect most operations in th=
+e=20
+>    list you gathered above;
 >=20
-> Hello Song,
+> 2. For operations like host->slave_destroy(), ensure they access scsi_hos=
+t=20
+>    data with host_lock (or another spin lock).=20
 >=20
-> What you wrote above is wrong. It is necessary to serialize SCSI
-> scanning against SCSI device removal. That is why scan_mutex is held
-> around the __scsi_remove_device() call. When adding a LUN the following
-> (and several other) actions are performed:
-> * Allocation of memory for struct scsi_device.
-> * Allocation of a block layer request queue.
-> * Initialization of the .sdev_gendev and .sdev_dev device structures.
-> * Association of the transport layer driver with the SCSI device.
-> * Association of a device handler with the SCSI device (e.g. ALUA).
-> * Making the .sdev_gendev and .sdev_dev devices visible in sysfs.
-> * Making the transport layer attributes visible in sysfs.
-> * Creating a bsg device node in sysfs.
-> * Association of an upper layer driver
-> (e.g. sd or sr) with the SCSI LUN.
+>    I looked into all instances of slave_destroy, only 2 of them:=20
+>    dc395x_slave_destroy() and visorhba_slave_destroy() access scsi_host d=
+ata=20
+>    without protection of spin lock.=20
 >=20
-> Removal of a LUN means undoing all of the above. If adding and removing
-> a LUN would not be not serialized then there would be a risk that removal
-> and immediate reregistration of a LUN will fail due to the reregistration
-> process trying to add sysfs attributes that were not yet removed by the
-> removal step.
+> 3. Once 1 and 2 is ready, __scsi_remove_device() only need to hold the mu=
+tex
+>    for the scsi_device. scan_mutex is no longer required.=20
 >=20
-> Bart.
+> Is this a valid path?
 
-Hello Bart,=20
+Sorry but I don't think so. Unlocking and reacquiring scan_mutex would crea=
+te
+the potential that LUN scanning occurs in the meantime and hence that it fa=
+ils
+because LUN removal is incomplete.
 
-Thanks a lot for looking into this.=20
-
-I have been studying the code recently. I am wondering whether the followin=
-g=20
-would work:
-
-1. Introduce a new mutex for scsi_device to protect most operations in the=
-=20
-   list you gathered above;
-
-2. For operations like host->slave_destroy(), ensure they access scsi_host=
-=20
-   data with host_lock (or another spin lock).=20
-
-   I looked into all instances of slave_destroy, only 2 of them:=20
-   dc395x_slave_destroy() and visorhba_slave_destroy() access scsi_host dat=
-a=20
-   without protection of spin lock.=20
-
-3. Once 1 and 2 is ready, __scsi_remove_device() only need to hold the mute=
-x
-   for the scsi_device. scan_mutex is no longer required.=20
-
-Is this a valid path?
-
-Thanks again,
-Song
+Bart.=
