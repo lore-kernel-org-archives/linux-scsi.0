@@ -1,57 +1,68 @@
-From: "Stephen  Bates" <sbates-pv7U853sEMVWk0Htik3J/w@public.gmane.org>
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-Date: Tue, 25 Apr 2017 21:23:31 +0000
-Message-ID: <705B114E-A084-4C0C-84BD-47E752FEE198@raithlin.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1491974532.7236.43.camel@kernel.crashing.org>
- <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
- <1492034124.7236.77.camel@kernel.crashing.org>
- <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
- <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
- <20170414041656.GA30694@obsidianresearch.com>
- <1492169849.25766.3.camel@kernel.crashing.org>
- <630c1c63-ff17-1116-e069-2b8f93e50fa2@deltatee.com>
- <20170414190452.GA15679@bhelgaas-glaptop.roam.corp.google.com>
- <1492207643.25766.18.camel@kernel.crashing.org>
- <bff1e503-95a9-e19f-bfd9-0ff962c63a81@deltatee.com>
- <CAPcyv4jUeKzKDARp6Z35kdPLKnP-M6aF8X5KpOx55CLyjnj4dA@mail.gmail.com>
- <1492311719.25766.37.camel@kernel.crashing.org>
- <CAPcyv4iqnz1B00Q3xG-nGrLXdOyB7ditxmwZyotksLFgUqr+jA@mail.gmail.com>
- <5e43818e-8c6b-8be8-23ff-b798633d2a73@deltatee.com>
- <1492381907.25766.49.camel@kernel.crashing.org>
- <1493019397.3171.118.camel@oracle.com>
+From: Song Liu <songliubraving@fb.com>
+Subject: Re: [RFC] scsi: reduce protection of scan_mutex in scsi_remove_device
+Date: Tue, 25 Apr 2017 21:29:45 +0000
+Message-ID: <184B9E31-DD19-4DF8-AB5A-BC09F1D27AA5@fb.com>
+References: <20170421211302.2667649-1-songliubraving@fb.com>
+ <1492809623.2499.4.camel@sandisk.com>
+ <4C56F7C6-1A83-4B03-AFAD-E9C92BB2B2F6@fb.com>
+ <1493153988.2628.22.camel@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <1493019397.3171.118.camel-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:60064 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S2993728AbdDYVaU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Apr 2017 17:30:20 -0400
+In-Reply-To: <1493153988.2628.22.camel@sandisk.com>
 Content-Language: en-US
-Content-ID: <464D76A8CDBC4F4CB2762334B3E3CD7C-JkAt9bkEularoOM5E8FhRbjFIynDaujOfM0AETQt39g@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Knut Omang <knut.omang-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>, Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>, Dan
- Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, "James
- E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jerome Glisse <jglisse-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Bjorn Helgaas <helgaas-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-nvdimm <linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org>, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Content-ID: <FE4EEC1506CD4642BAD7FA0B320769B1@namprd15.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>
 
 
-> My first reflex when reading this thread was to think that this whole domain
-> lends it self excellently to testing via Qemu. Could it be that doing this in 
-> the opposite direction might be a safer approach in the long run even though 
-> (significant) more work up-front?
+> On Apr 25, 2017, at 1:59 PM, Bart Van Assche <Bart.VanAssche@sandisk.com>=
+ wrote:
+>=20
+> On Fri, 2017-04-21 at 22:31 +0000, Song Liu wrote:
+>> On Apr 21, 2017, at 2:20 PM, Bart Van Assche <Bart.VanAssche@sandisk.com=
+> wrote:
+>>> On Fri, 2017-04-21 at 14:13 -0700, Song Liu wrote:
+>>>> On the other hand, some devices do long latency IO during deletion,
+>>>> for example, sd_shutdown() may do sync cache and/or start_stop.
+>>>> It is not necessary for these commands to run in series.
+>>>=20
+>>> Have you noticed my patch series that makes sd_shutdown() submit the
+>>> SYNCHRONIZE CACHE command asynchronously? Have you tried whether that
+>>> patch series would be a good alternative?
+>>=20
+>> The asynchronous SYNCHRONIZE CACHE will not help our use case, where the=
+=20
+>> latency comes from sd_start_stop_device(). Seems it is not easy to make=
+=20
+>> the START STOP UNIT command async.=20
+>=20
+> Hello Song,
+>=20
+> It should be possible to make the START STOP UNIT command asynchronous to=
+o
+> by issuing it asynchronously from inside sd_sync_cache_done(). To avoid
+> dereferencing a stale struct scsi_disk pointer you will either have to ho=
+ld
+> an additional reference as long as the SYNCHRONIZE CACHE command is in
+> progress or copy the data needed from struct scsi_disk into the SCSI requ=
+est.
+>=20
 
-While the idea of QEMU for this work is attractive it will be a long time before QEMU is in a position to support this development. 
+Hello Bart,=20
 
-Another approach is to propose a common development platform for p2pmem work using a platform we know is going to work. This an extreme version of the whitelisting approach that was discussed on this thread. We can list a very specific set of hardware (motherboard, PCIe end-points and (possibly) PCIe switch enclosure) that has been shown to work that others can copy for their development purposes.
+As you stated in the patch: blk_cleanup_queue() in __scsi_remove_device()=20
+will wait for async SYNCHRONIZE CACHE and START STOP UNIT command to comple=
+te.=20
+Since __scsi_remove_device() is called with scan_mutex held, simultaneous=20
+START STOP UNIT requires are still serialized by the scan_mutex.=20
 
-p2pmem.io perhaps ;-)?
-
-Stephen
+Song
