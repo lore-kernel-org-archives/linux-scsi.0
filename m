@@ -1,61 +1,64 @@
-From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: Re: [RESEND][PATCH 07/10][SCSI]mpt2sas: Added Reply Descriptor Post
- Queue (RDPQ) Array support
-Date: Tue, 25 Apr 2017 17:21:07 +0530
-Message-ID: <CAK=zhgq=DfOZGjLcid4qJA+L_Vs4UjOHAmJza5Zh-V7u=LxcsQ@mail.gmail.com>
-References: <20140625103445.GA12943@avagotech.com> <yq1zjg2m6lu.fsf@sermon.lab.mkp.net>
- <CAK=zhgoQt5J=jh4jShAy5rBXNz34sN-tqf=uZDkY4zQJ9XhM5g@mail.gmail.com>
- <yq18unklvda.fsf@sermon.lab.mkp.net> <CAK=zhgpDWJLBMBB1mV-7u+o_UC86PiOCAp4vi4-UAn_hXHtF2A@mail.gmail.com>
- <yq1r41bkgdp.fsf@sermon.lab.mkp.net>
+From: Marta Rybczynska <mrybczyn-FNhOzJFKnXGHXe+LvDLADg@public.gmane.org>
+Subject: Re: [RFC 1/8] Introduce Peer-to-Peer memory (p2pmem) device
+Date: Tue, 25 Apr 2017 13:58:53 +0200 (CEST)
+Message-ID: <117239810.400362790.1493121533234.JavaMail.zimbra@kalray.eu>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <c8edc480-a2ac-a763-8438-18f3396db483@deltatee.com>
+ <e2165253dc355d5cb223e754d78047b1@codeaurora.org>
+ <c5d7da85-41fd-2769-fcf8-b3c2a1fab95f@deltatee.com>
+ <f0448277-9381-5c3d-d194-1efa1d1b44a6@codeaurora.org>
+ <63d73995-4dfa-6270-ca13-972e0628011b@deltatee.com>
+ <bed80d4e-7709-5991-498e-0ac361ca96a6@codeaurora.org>
+ <ef507444-d3e5-0454-86a0-b5c4ae4b4dd9@deltatee.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f52.google.com ([74.125.83.52]:33060 "EHLO
-        mail-pg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1947181AbdDYLvJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Apr 2017 07:51:09 -0400
-Received: by mail-pg0-f52.google.com with SMTP id 63so27485017pgh.0
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Apr 2017 04:51:08 -0700 (PDT)
-In-Reply-To: <yq1r41bkgdp.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <ef507444-d3e5-0454-86a0-b5c4ae4b4dd9-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Sinan Kaya <okaya-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Bjorn Helgaas <bhelgaas-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "jejb@kernel.org" <jejb@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 
-On Thu, Jul 24, 2014 at 1:16 AM, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->>>>>> "Sreekanth" == Sreekanth Reddy <sreekanth.reddy@avagotech.com> writes:
->
-> Sreekanth,
->
-> Sreekanth> 2. As per MPI Spec, each set of 8 reply descriptor post
-> Sreekanth> queues must have the same value for the upper 32-bits of
-> Sreekanth> their memory address. So allocated set of eight queues in a
-> Sreekanth> single pool and added a new function is_MSB_are_same() to
-> Sreekanth> check whether higher 32 bits of this pool memory address are
-> Sreekanth> same or not. If this functions returns zero then we are
-> Sreekanth> saving these pools in the bad_reply_post_pool list. then
-> Sreekanth> releasing these pools once we get the required memory pools.
->
-> Why don't you just set pci_set_consistent_dma_mask() to DMA_BIT_MASK(32)
-> before you allocate the queue entries?
+> On 02/04/17 03:03 PM, Sinan Kaya wrote:
+>> Push the decision all the way to the user. Let them decide whether they
+>> want this feature to work on a root port connected port or under the
+>> switch.
+> 
+> Yes, I prefer this too. If other folks agree with that I'd be very happy
+> to go back to user chooses. I think Sagi was the most vocal proponent
+> for kernel chooses at LSF so hopefully he will read this thread and
+> offer some opinion.
+> 
+>> I thought the issue was feature didn't work at all with some root ports
+>> or there was some kind of memory corruption issue that you were trying to
+>> avoid with the existing systems.
+> 
+> I *think* there are some much older root ports where P2P TLPs don't even
+> get through. But it doesn't really change the situation: in the nvmet
+> case, the user would enable p2pmem and then be unable to connect and
+> thus choose to disable it going forward. Not a big difference from the
+> user seeing bad performance and not choosing to enable it.
+> 
+>> I think you should get rid of all pci searching business in your code.
+> 
+> Yes, my original proposal was when you configure the nvme target you
+> chose the specific p2pmem device to use. That code had no tie ins to PCI
+> code and could, in theory, work generically with any device and bus.
+> 
 
-Martin,
+I would add one issue that doesn't seem to be addressed: in my experience
+P2P doesn't work when IOMMU activated. It works best with deactivation at
+the BIOS level, even the kernel options are not enough in some cases.
 
-I am taking out this old mail to find out is their any other better
-way to make sure that allocated DMA pool doesn't cross particular
-boundary line (in our case all upper 32 bits of this pool should be
-same, i.e. all the buffer from the pool should be within the 4GB
-boundary).
+This is another argument to leave the chose to user/integrator.
 
-We need to satisfy this condition on those system where 32 bit dma
-consistent mask is not supported and it only supports 64 bit dma
-consistent mask. So on these system we can't set
-pci_set_consistent_dma_mask() to DMA_BIT_MASK(32).
-
-Thanks,
-Sreekanth
-
->
-> --
-> Martin K. Petersen      Oracle Linux Engineering
+Marta
