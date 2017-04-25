@@ -1,68 +1,37 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: Re: [RFC] scsi: reduce protection of scan_mutex in scsi_remove_device
-Date: Tue, 25 Apr 2017 21:29:45 +0000
-Message-ID: <184B9E31-DD19-4DF8-AB5A-BC09F1D27AA5@fb.com>
-References: <20170421211302.2667649-1-songliubraving@fb.com>
- <1492809623.2499.4.camel@sandisk.com>
- <4C56F7C6-1A83-4B03-AFAD-E9C92BB2B2F6@fb.com>
- <1493153988.2628.22.camel@sandisk.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] qla4xxx: fix spelling mistake: "Tempalate" -> "Template"
+Date: Tue, 25 Apr 2017 22:37:10 +0100
+Message-ID: <20170425213710.20588-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:60064 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2993728AbdDYVaU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Apr 2017 17:30:20 -0400
-In-Reply-To: <1493153988.2628.22.camel@sandisk.com>
-Content-Language: en-US
-Content-ID: <FE4EEC1506CD4642BAD7FA0B320769B1@namprd15.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: QLogic-Storage-Upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>
 
+From: Colin Ian King <colin.king@canonical.com>
 
-> On Apr 25, 2017, at 1:59 PM, Bart Van Assche <Bart.VanAssche@sandisk.com>=
- wrote:
->=20
-> On Fri, 2017-04-21 at 22:31 +0000, Song Liu wrote:
->> On Apr 21, 2017, at 2:20 PM, Bart Van Assche <Bart.VanAssche@sandisk.com=
-> wrote:
->>> On Fri, 2017-04-21 at 14:13 -0700, Song Liu wrote:
->>>> On the other hand, some devices do long latency IO during deletion,
->>>> for example, sd_shutdown() may do sync cache and/or start_stop.
->>>> It is not necessary for these commands to run in series.
->>>=20
->>> Have you noticed my patch series that makes sd_shutdown() submit the
->>> SYNCHRONIZE CACHE command asynchronously? Have you tried whether that
->>> patch series would be a good alternative?
->>=20
->> The asynchronous SYNCHRONIZE CACHE will not help our use case, where the=
-=20
->> latency comes from sd_start_stop_device(). Seems it is not easy to make=
-=20
->> the START STOP UNIT command async.=20
->=20
-> Hello Song,
->=20
-> It should be possible to make the START STOP UNIT command asynchronous to=
-o
-> by issuing it asynchronously from inside sd_sync_cache_done(). To avoid
-> dereferencing a stale struct scsi_disk pointer you will either have to ho=
-ld
-> an additional reference as long as the SYNCHRONIZE CACHE command is in
-> progress or copy the data needed from struct scsi_disk into the SCSI requ=
-est.
->=20
+trivial fix to spelling mistake in DEBUG2 debug message
 
-Hello Bart,=20
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/qla4xxx/ql4_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-As you stated in the patch: blk_cleanup_queue() in __scsi_remove_device()=20
-will wait for async SYNCHRONIZE CACHE and START STOP UNIT command to comple=
-te.=20
-Since __scsi_remove_device() is called with scan_mutex held, simultaneous=20
-START STOP UNIT requires are still serialized by the scan_mutex.=20
-
-Song
+diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
+index 4180d6d9fe78..5d6d158bbfd6 100644
+--- a/drivers/scsi/qla4xxx/ql4_init.c
++++ b/drivers/scsi/qla4xxx/ql4_init.c
+@@ -389,7 +389,7 @@ void qla4xxx_alloc_fw_dump(struct scsi_qla_host *ha)
+ 		goto alloc_cleanup;
+ 
+ 	DEBUG2(ql4_printk(KERN_INFO, ha,
+-			  "Minidump Tempalate Size = 0x%x KB\n",
++			  "Minidump Template Size = 0x%x KB\n",
+ 			  ha->fw_dump_tmplt_size));
+ 	DEBUG2(ql4_printk(KERN_INFO, ha,
+ 			  "Total Minidump size = 0x%x KB\n", ha->fw_dump_size));
+-- 
+2.11.0
