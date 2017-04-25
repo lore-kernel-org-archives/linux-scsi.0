@@ -1,107 +1,35 @@
-From: Omar Sandoval <osandov@osandov.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
 Subject: Re: [PATCH v5 10/10] scsi: Implement blk_mq_ops.show_rq()
-Date: Tue, 25 Apr 2017 14:39:56 -0700
-Message-ID: <20170425213956.GD6361@vader>
+Date: Tue, 25 Apr 2017 22:06:24 +0000
+Message-ID: <1493157983.2628.24.camel@sandisk.com>
 References: <20170425203745.19946-1-bart.vanassche@sandisk.com>
- <20170425203745.19946-11-bart.vanassche@sandisk.com>
+         <20170425203745.19946-11-bart.vanassche@sandisk.com>
+         <20170425213956.GD6361@vader>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170425203745.19946-11-bart.vanassche@sandisk.com>
+In-Reply-To: <20170425213956.GD6361@vader>
+Content-Language: en-US
+Content-ID: <129C9A9C107CC8469DF773751F3E326F@namprd04.prod.outlook.com>
 Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Omar Sandoval <osandov@fb.com>, Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org
+To: "osandov@osandov.com" <osandov@osandov.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "hare@suse.com" <hare@suse.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "osandov@fb.com" <osandov@fb.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Apr 25, 2017 at 01:37:45PM -0700, Bart Van Assche wrote:
-> Show the SCSI CDB, .eh_eflags and .result for pending SCSI commands
-> in /sys/kernel/debug/block/*/mq/*/dispatch and */rq_list.
+On Tue, 2017-04-25 at 14:39 -0700, Omar Sandoval wrote:
+> On Tue, Apr 25, 2017 at 01:37:45PM -0700, Bart Van Assche wrote:
+> > Show the SCSI CDB, .eh_eflags and .result for pending SCSI commands
+> > in /sys/kernel/debug/block/*/mq/*/dispatch and */rq_list.
+>=20
+> Only thing I noticed was that the only other caller I see has buf[70].
+> No idea if that's a meaningful number. For the sake of this not getting
+> bike-shedded to death,
 
-Only thing I noticed was that the only other caller I see has buf[70].
-No idea if that's a meaningful number. For the sake of this not getting
-bike-shedded to death,
+Neither length is sufficient to avoid truncation of e.g. ATA pass-through
+commands or commands with variable length CDBs. However, from the point of
+view of debugging queue lockups the most useful information in a SCSI
+command are the first two bytes of the CDB. The chosen buffer length is
+definitely enough to make sure that these two bytes will be reported.
 
-Reviewed-by: Omar Sandoval <osandov@fb.com>
-
-> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-> Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Cc: Omar Sandoval <osandov@fb.com>
-> Cc: Hannes Reinecke <hare@suse.com>
-> Cc: <linux-scsi@vger.kernel.org>
-> ---
->  drivers/scsi/Makefile       |  1 +
->  drivers/scsi/scsi_debugfs.c | 13 +++++++++++++
->  drivers/scsi/scsi_debugfs.h |  4 ++++
->  drivers/scsi/scsi_lib.c     |  4 ++++
->  4 files changed, 22 insertions(+)
->  create mode 100644 drivers/scsi/scsi_debugfs.c
->  create mode 100644 drivers/scsi/scsi_debugfs.h
-> 
-> diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-> index fc2855565a51..93dbe58c47c8 100644
-> --- a/drivers/scsi/Makefile
-> +++ b/drivers/scsi/Makefile
-> @@ -166,6 +166,7 @@ scsi_mod-y			+= scsi_scan.o scsi_sysfs.o scsi_devinfo.o
->  scsi_mod-$(CONFIG_SCSI_NETLINK)	+= scsi_netlink.o
->  scsi_mod-$(CONFIG_SYSCTL)	+= scsi_sysctl.o
->  scsi_mod-$(CONFIG_SCSI_PROC_FS)	+= scsi_proc.o
-> +scsi_mod-$(CONFIG_BLK_DEBUG_FS)	+= scsi_debugfs.o
->  scsi_mod-y			+= scsi_trace.o scsi_logging.o
->  scsi_mod-$(CONFIG_PM)		+= scsi_pm.o
->  scsi_mod-$(CONFIG_SCSI_DH)	+= scsi_dh.o
-> diff --git a/drivers/scsi/scsi_debugfs.c b/drivers/scsi/scsi_debugfs.c
-> new file mode 100644
-> index 000000000000..f831c23fdee3
-> --- /dev/null
-> +++ b/drivers/scsi/scsi_debugfs.c
-> @@ -0,0 +1,13 @@
-> +#include <linux/seq_file.h>
-> +#include <scsi/scsi_cmnd.h>
-> +#include <scsi/scsi_dbg.h>
-> +#include "scsi_debugfs.h"
-> +
-> +void scsi_show_rq(struct seq_file *m, struct request *rq)
-> +{
-> +	struct scsi_cmnd *cmd = container_of(scsi_req(rq), typeof(*cmd), req);
-> +	char buf[64];
-> +
-> +	__scsi_format_command(buf, sizeof(buf), cmd->cmnd, cmd->cmd_len);
-> +	seq_printf(m, ", .cmd=%s", buf);
-> +}
-> diff --git a/drivers/scsi/scsi_debugfs.h b/drivers/scsi/scsi_debugfs.h
-> new file mode 100644
-> index 000000000000..951b043e82d0
-> --- /dev/null
-> +++ b/drivers/scsi/scsi_debugfs.h
-> @@ -0,0 +1,4 @@
-> +struct request;
-> +struct seq_file;
-> +
-> +void scsi_show_rq(struct seq_file *m, struct request *rq);
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index abc391e00f7d..1c3e87d6c48f 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -34,6 +34,7 @@
->  
->  #include <trace/events/scsi.h>
->  
-> +#include "scsi_debugfs.h"
->  #include "scsi_priv.h"
->  #include "scsi_logging.h"
->  
-> @@ -2157,6 +2158,9 @@ static const struct blk_mq_ops scsi_mq_ops = {
->  	.queue_rq	= scsi_queue_rq,
->  	.complete	= scsi_softirq_done,
->  	.timeout	= scsi_timeout,
-> +#ifdef CONFIG_BLK_DEBUG_FS
-> +	.show_rq	= scsi_show_rq,
-> +#endif
->  	.init_request	= scsi_init_request,
->  	.exit_request	= scsi_exit_request,
->  	.map_queues	= scsi_map_queues,
-> -- 
-> 2.12.2
-> 
+Bart.=
