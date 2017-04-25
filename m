@@ -1,93 +1,55 @@
 From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH 08/37] smartpqi: add suspend and resume support
-Date: Tue, 25 Apr 2017 20:05:28 +0000
-Message-ID: <1493150725.2628.13.camel@sandisk.com>
+Subject: Re: [PATCH 12/37] smartpqi: change functions to inline
+Date: Tue, 25 Apr 2017 20:07:45 +0000
+Message-ID: <1493150863.2628.14.camel@sandisk.com>
 References: <149314950730.13903.644081079070695025.stgit@brunhilda>
-         <149314960079.13903.626198058289190508.stgit@brunhilda>
+         <149314962544.13903.85998539939893843.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:10718 "EHLO
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:31653 "EHLO
         esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1953795AbdDYUFt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Apr 2017 16:05:49 -0400
-In-Reply-To: <149314960079.13903.626198058289190508.stgit@brunhilda>
+        with ESMTP id S1953910AbdDYUHy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Apr 2017 16:07:54 -0400
+In-Reply-To: <149314962544.13903.85998539939893843.stgit@brunhilda>
 Content-Language: en-US
-Content-ID: <F2788F3E2190BC44BC3B62BE0BA9B9A1@namprd04.prod.outlook.com>
+Content-ID: <89C5CDB6D79E4F46A5632BE5D99D60B8@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "hch@infradead.org" <hch@infradead.org>, "Viswas.G@microsemi.com" <Viswas.G@microsemi.com>, "gerry.morong@microsemi.com" <gerry.morong@microsemi.com>, "Mahesh.Rajashekhara@microsemi.com" <Mahesh.Rajashekhara@microsemi.com>, "POSWALD@suse.com" <POSWALD@suse.com>, "scott.benesh@microsemi.com" <scott.benesh@microsemi.com>, "don.brace@microsemi.com" <don.brace@microsemi.com>, "bader.alisaleh@microsemi.com" <bader.alisaleh@microsemi.com>, "Kevin.Barnett@microsemi.com" <Kevin.Barnett@microsemi.com>, "joseph.szczypek@hpe.com" <joseph.szczypek@hpe.com>, "scott.teel@microsemi.com" <scott.teel@microsemi.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "Justin.Lindley@microsemi.com" <Justin.Lindley@microsemi.com>, "john.hall@microsemi.com" <john.hall@microsemi.com>
 Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, 2017-04-25 at 14:46 -0500, Don Brace wrote:
-> +static int pqi_device_wait_for_pending_io(struct pqi_ctrl_info *ctrl_inf=
-o,
-> +=A0=A0=A0=A0=A0=A0=A0struct pqi_scsi_dev *device)
-> +{
-> +=A0=A0=A0=A0=A0=A0=A0while (atomic_read(&device->scsi_cmds_outstanding))=
- {
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0pqi_check_ctrl_health(ctrl_=
-info);
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0if (pqi_ctrl_offline(ctrl_i=
-nfo))
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0ret=
-urn -ENXIO;
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0usleep_range(1000, 2000);
-> +=A0=A0=A0=A0=A0=A0=A0}
-> +
-> +=A0=A0=A0=A0=A0=A0=A0return 0;
-> +}
-> +
-> +static int pqi_ctrl_wait_for_pending_io(struct pqi_ctrl_info *ctrl_info)
-> +{
-> +=A0=A0=A0=A0=A0=A0=A0bool io_pending;
-> +=A0=A0=A0=A0=A0=A0=A0unsigned long flags;
-> +=A0=A0=A0=A0=A0=A0=A0struct pqi_scsi_dev *device;
-> +
-> +=A0=A0=A0=A0=A0=A0=A0while (1) {
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0io_pending =3D false;
-> +
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0spin_lock_irqsave(&ctrl_inf=
-o->scsi_device_list_lock, flags);
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0list_for_each_entry(device,=
- &ctrl_info->scsi_device_list,
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0scs=
-i_device_list_entry) {
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0if =
-(atomic_read(&device->scsi_cmds_outstanding)) {
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0io_pending =3D true;
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0break;
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0}
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0}
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0spin_unlock_irqrestore(&ctr=
-l_info->scsi_device_list_lock,
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0flags);
-> +
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0if (!io_pending)
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0bre=
-ak;
-> +
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0pqi_check_ctrl_health(ctrl_=
-info);
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0if (pqi_ctrl_offline(ctrl_i=
-nfo))
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0ret=
-urn -ENXIO;
-> +
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0usleep_range(1000, 2000);
-> +=A0=A0=A0=A0=A0=A0=A0}
-> +
-> +=A0=A0=A0=A0=A0=A0=A0return 0;
-> +}
+On Tue, 2017-04-25 at 14:47 -0500, Don Brace wrote:
+> From: Kevin Barnett <kevin.barnett@hpe.com>
+>=20
+> Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
+> Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
+> Signed-off-by: Don Brace <don.brace@microsemi.com>
+> ---
+>  drivers/scsi/smartpqi/smartpqi_init.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpq=
+i/smartpqi_init.c
+> index 728db8f..523b730 100644
+> --- a/drivers/scsi/smartpqi/smartpqi_init.c
+> +++ b/drivers/scsi/smartpqi/smartpqi_init.c
+> @@ -432,7 +432,7 @@ static struct pqi_io_request *pqi_alloc_io_request(
+>  	return io_request;
+>  }
+> =20
+> -static void pqi_free_io_request(struct pqi_io_request *io_request)
+> +static inline void pqi_free_io_request(struct pqi_io_request *io_request=
+)
+>  {
+>  	atomic_dec(&io_request->refcount);
+>  }
 
-The same comment applies here that applies to the previous patch: please us=
-e
-scsi_target_block() / scsi_target_unblock() instead of reimplementing these
-functions.
+A patch description should not only explain what has been changed but also
+why a change has been made. What is the reason that this function has been
+declared inline? Why do you think that the compiler is not smart enough to
+decide on its own to inline this function?
 
 Thanks,
 
