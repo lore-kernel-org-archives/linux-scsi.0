@@ -1,17 +1,17 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH 01/37] smartpqi: correct remove scsi devices
-Date: Tue, 25 Apr 2017 14:45:57 -0500
-Message-ID: <149314955787.13903.7010111927127310826.stgit@brunhilda>
+Subject: [PATCH 02/37] smartpqi: cleanup interrupt management
+Date: Tue, 25 Apr 2017 14:46:04 -0500
+Message-ID: <149314956402.13903.6707238397795732028.stgit@brunhilda>
 References: <149314950730.13903.644081079070695025.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0077.outbound.protection.outlook.com ([104.47.41.77]:54149
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0075.outbound.protection.outlook.com ([104.47.37.75]:57613
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1031978AbdDYTqJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Apr 2017 15:46:09 -0400
+        id S1031978AbdDYTqP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Apr 2017 15:46:15 -0400
 In-Reply-To: <149314950730.13903.644081079070695025.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,49 +20,95 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Kevin Barnett <kevin.barnett@microsemi.com>
 
-correct a problem caused by holding a spinlock during device deletion.
+minor cleanup of interrupt initialization and tear-down.
 
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
 Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c |   20 +++++++++++++-------
- 1 file changed, 13 insertions(+), 7 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c |   45 ++++++++++++++++++++++-----------
+ 1 file changed, 30 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 657ad15..dd00c69 100644
+index dd00c69..39695a4 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -1823,19 +1823,25 @@ static void pqi_remove_all_scsi_devices(struct pqi_ctrl_info *ctrl_info)
+@@ -2892,9 +2892,9 @@ static irqreturn_t pqi_irq_handler(int irq, void *data)
+ 
+ static int pqi_request_irqs(struct pqi_ctrl_info *ctrl_info)
  {
- 	unsigned long flags;
- 	struct pqi_scsi_dev *device;
--	struct pqi_scsi_dev *next;
+-	struct pci_dev *pdev = ctrl_info->pci_dev;
+ 	int i;
+ 	int rc;
++	struct pci_dev *pdev = ctrl_info->pci_dev;
  
--	spin_lock_irqsave(&ctrl_info->scsi_device_list_lock, flags);
-+	while (1) {
-+		spin_lock_irqsave(&ctrl_info->scsi_device_list_lock, flags);
-+
-+		device = list_first_entry_or_null(&ctrl_info->scsi_device_list,
-+			struct pqi_scsi_dev, scsi_device_list_entry);
-+		if (device)
-+			list_del(&device->scsi_device_list_entry);
-+
-+		spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock,
-+			flags);
-+
-+		if (!device)
-+			break;
+ 	ctrl_info->event_irq = pci_irq_vector(pdev, 0);
  
--	list_for_each_entry_safe(device, next, &ctrl_info->scsi_device_list,
--		scsi_device_list_entry) {
- 		if (device->sdev)
- 			pqi_remove_device(ctrl_info, device);
--		list_del(&device->scsi_device_list_entry);
- 		pqi_free_device(device);
- 	}
--
--	spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
+@@ -2913,23 +2913,44 @@ static int pqi_request_irqs(struct pqi_ctrl_info *ctrl_info)
+ 	return 0;
  }
  
- static int pqi_scan_scsi_devices(struct pqi_ctrl_info *ctrl_info)
++static void pqi_free_irqs(struct pqi_ctrl_info *ctrl_info)
++{
++	int i;
++
++	for (i = 0; i < ctrl_info->num_msix_vectors_initialized; i++)
++		free_irq(pci_irq_vector(ctrl_info->pci_dev, i),
++			&ctrl_info->queue_groups[i]);
++
++	ctrl_info->num_msix_vectors_initialized = 0;
++}
++
+ static int pqi_enable_msix_interrupts(struct pqi_ctrl_info *ctrl_info)
+ {
+-	int ret;
++	int num_vectors_enabled;
+ 
+-	ret = pci_alloc_irq_vectors(ctrl_info->pci_dev,
++	num_vectors_enabled = pci_alloc_irq_vectors(ctrl_info->pci_dev,
+ 			PQI_MIN_MSIX_VECTORS, ctrl_info->num_queue_groups,
+ 			PCI_IRQ_MSIX | PCI_IRQ_AFFINITY);
+-	if (ret < 0) {
++	if (num_vectors_enabled < 0) {
+ 		dev_err(&ctrl_info->pci_dev->dev,
+-			"MSI-X init failed with error %d\n", ret);
+-		return ret;
++			"MSI-X init failed with error %d\n",
++			num_vectors_enabled);
++		return num_vectors_enabled;
+ 	}
+ 
+-	ctrl_info->num_msix_vectors_enabled = ret;
++	ctrl_info->num_msix_vectors_enabled = num_vectors_enabled;
++
+ 	return 0;
+ }
+ 
++static void pqi_disable_msix_interrupts(struct pqi_ctrl_info *ctrl_info)
++{
++	if (ctrl_info->num_msix_vectors_enabled) {
++		pci_free_irq_vectors(ctrl_info->pci_dev);
++		ctrl_info->num_msix_vectors_enabled = 0;
++	}
++}
++
+ static int pqi_alloc_operational_queues(struct pqi_ctrl_info *ctrl_info)
+ {
+ 	unsigned int i;
+@@ -5519,14 +5540,8 @@ static inline void pqi_free_ctrl_info(struct pqi_ctrl_info *ctrl_info)
+ 
+ static void pqi_free_interrupts(struct pqi_ctrl_info *ctrl_info)
+ {
+-	int i;
+-
+-	for (i = 0; i < ctrl_info->num_msix_vectors_initialized; i++) {
+-		free_irq(pci_irq_vector(ctrl_info->pci_dev, i),
+-				&ctrl_info->queue_groups[i]);
+-	}
+-
+-	pci_free_irq_vectors(ctrl_info->pci_dev);
++	pqi_free_irqs(ctrl_info);
++	pqi_disable_msix_interrupts(ctrl_info);
+ }
+ 
+ static void pqi_free_ctrl_resources(struct pqi_ctrl_info *ctrl_info)
