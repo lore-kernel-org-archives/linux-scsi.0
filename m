@@ -1,17 +1,17 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH 14/37] smartpqi: eliminate redundant error messages
-Date: Tue, 25 Apr 2017 14:47:17 -0500
-Message-ID: <149314963747.13903.15113483815995509031.stgit@brunhilda>
+Subject: [PATCH 15/37] smartpqi: correct BMIC identify physical drive
+Date: Tue, 25 Apr 2017 14:47:23 -0500
+Message-ID: <149314964345.13903.10458732477823158300.stgit@brunhilda>
 References: <149314950730.13903.644081079070695025.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0086.outbound.protection.outlook.com ([104.47.41.86]:15325
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+Received: from mail-bl2nam02on0079.outbound.protection.outlook.com ([104.47.38.79]:5407
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1043702AbdDYTr2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Apr 2017 15:47:28 -0400
+        id S1043702AbdDYTrd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Apr 2017 15:47:33 -0400
 In-Reply-To: <149314950730.13903.644081079070695025.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,48 +20,82 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Kevin Barnett <kevin.barnett@hpe.com>
 
-eliminate redundant error message during initialization
-if the controller has crashed.
+correct the BMIC Identify Physical Device structure
+ - missing 2 fields
 
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
 Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c |    5 +----
- drivers/scsi/smartpqi/smartpqi_sis.c  |    5 ++++-
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/smartpqi/smartpqi.h      |   20 ++++++++++++++++----
+ drivers/scsi/smartpqi/smartpqi_init.c |   16 ++++++++++++++++
+ 2 files changed, 32 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
+index 1ac09e7..e74d3ed 100644
+--- a/drivers/scsi/smartpqi/smartpqi.h
++++ b/drivers/scsi/smartpqi/smartpqi.h
+@@ -1126,9 +1126,9 @@ struct bmic_identify_physical_device {
+ 	u8	multi_lun_device_lun_count;
+ 	u8	minimum_good_fw_revision[8];
+ 	u8	unique_inquiry_bytes[20];
+-	u8	current_temperature_degreesC;
+-	u8	temperature_threshold_degreesC;
+-	u8	max_temperature_degreesC;
++	u8	current_temperature_degrees;
++	u8	temperature_threshold_degrees;
++	u8	max_temperature_degrees;
+ 	u8	logical_blocks_per_phys_block_exp;
+ 	__le16	current_queue_depth_limit;
+ 	u8	switch_name[10];
+@@ -1141,10 +1141,22 @@ struct bmic_identify_physical_device {
+ 	u8	smart_carrier_authentication;
+ 	u8	smart_carrier_app_fw_version;
+ 	u8	smart_carrier_bootloader_fw_version;
++	u8	sanitize_flags;
++	u8	encryption_key_flags;
+ 	u8	encryption_key_name[64];
+ 	__le32	misc_drive_flags;
+ 	__le16	dek_index;
+-	u8	padding[112];
++	__le16	hba_drive_encryption_flags;
++	__le16	max_overwrite_time;
++	__le16	max_block_erase_time;
++	__le16	max_crypto_erase_time;
++	u8	connector_info[5];
++	u8	connector_name[8][8];
++	u8	page_83_identifier[16];
++	u8	maximum_link_rate[256];
++	u8	negotiated_physical_link_rate[256];
++	u8	box_connector_name[8];
++	u8	padding_to_multiple_of_512[9];
+ };
+ 
+ #pragma pack()
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 0755af2..5a1fab1 100644
+index 5a1fab1..a32ff85 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -5797,11 +5797,8 @@ static int pqi_ctrl_init(struct pqi_ctrl_info *ctrl_info)
- 	 * commands.
- 	 */
- 	rc = sis_wait_for_ctrl_ready(ctrl_info);
--	if (rc) {
--		dev_err(&ctrl_info->pci_dev->dev,
--			"error initializing SIS interface\n");
-+	if (rc)
- 		return rc;
--	}
+@@ -6983,6 +6983,22 @@ static void __attribute__((unused)) verify_structures(void)
+ 	BUILD_BUG_ON(offsetof(struct bmic_identify_controller,
+ 		controller_mode) != 292);
  
- 	/*
- 	 * Get the controller properties.  This allows us to determine
-diff --git a/drivers/scsi/smartpqi/smartpqi_sis.c b/drivers/scsi/smartpqi/smartpqi_sis.c
-index 6ca05a6..7a8c0a6 100644
---- a/drivers/scsi/smartpqi/smartpqi_sis.c
-+++ b/drivers/scsi/smartpqi/smartpqi_sis.c
-@@ -102,8 +102,11 @@ static int sis_wait_for_ctrl_ready_with_timeout(struct pqi_ctrl_info *ctrl_info,
- 			if (status & SIS_CTRL_KERNEL_UP)
- 				break;
- 		}
--		if (time_after(jiffies, timeout))
-+		if (time_after(jiffies, timeout)) {
-+			dev_err(&ctrl_info->pci_dev->dev,
-+				"controller not ready\n");
- 			return -ETIMEDOUT;
-+		}
- 		msleep(SIS_CTRL_READY_POLL_INTERVAL_MSECS);
- 	}
- 
++	BUILD_BUG_ON(offsetof(struct bmic_identify_physical_device,
++		phys_bay_in_box) != 115);
++	BUILD_BUG_ON(offsetof(struct bmic_identify_physical_device,
++		device_type) != 120);
++	BUILD_BUG_ON(offsetof(struct bmic_identify_physical_device,
++		redundant_path_present_map) != 1736);
++	BUILD_BUG_ON(offsetof(struct bmic_identify_physical_device,
++		active_path_number) != 1738);
++	BUILD_BUG_ON(offsetof(struct bmic_identify_physical_device,
++		alternate_paths_phys_connector) != 1739);
++	BUILD_BUG_ON(offsetof(struct bmic_identify_physical_device,
++		alternate_paths_phys_box_on_port) != 1755);
++	BUILD_BUG_ON(offsetof(struct bmic_identify_physical_device,
++		current_queue_depth_limit) != 1796);
++	BUILD_BUG_ON(sizeof(struct bmic_identify_physical_device) != 2560);
++
+ 	BUILD_BUG_ON(PQI_ADMIN_IQ_NUM_ELEMENTS > 255);
+ 	BUILD_BUG_ON(PQI_ADMIN_OQ_NUM_ELEMENTS > 255);
+ 	BUILD_BUG_ON(PQI_ADMIN_IQ_ELEMENT_LENGTH %
