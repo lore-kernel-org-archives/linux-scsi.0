@@ -1,17 +1,17 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH 11/37] smartpqi: add pqi_wait_for_completion_io
-Date: Tue, 25 Apr 2017 14:46:59 -0500
-Message-ID: <149314961948.13903.17710642759310084033.stgit@brunhilda>
+Subject: [PATCH 12/37] smartpqi: change functions to inline
+Date: Tue, 25 Apr 2017 14:47:05 -0500
+Message-ID: <149314962544.13903.85998539939893843.stgit@brunhilda>
 References: <149314950730.13903.644081079070695025.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0056.outbound.protection.outlook.com ([104.47.34.56]:63744
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-co1nam03on0063.outbound.protection.outlook.com ([104.47.40.63]:7072
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1043702AbdDYTrL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Apr 2017 15:47:11 -0400
+        id S1043702AbdDYTrQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Apr 2017 15:47:16 -0400
 In-Reply-To: <149314950730.13903.644081079070695025.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,64 +20,23 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Kevin Barnett <kevin.barnett@hpe.com>
 
-Add check for controller lockup during waits for synchronous
-controller commands.
-
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
 Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c |   33 ++++++++++++++++++++++++++++++++-
- 1 file changed, 32 insertions(+), 1 deletion(-)
+ drivers/scsi/smartpqi/smartpqi_init.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 30fc7b1..728db8f 100644
+index 728db8f..523b730 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -3579,6 +3579,37 @@ static void pqi_start_io(struct pqi_ctrl_info *ctrl_info,
- 	spin_unlock_irqrestore(&queue_group->submit_lock[path], flags);
+@@ -432,7 +432,7 @@ static struct pqi_io_request *pqi_alloc_io_request(
+ 	return io_request;
  }
  
-+#define PQI_WAIT_FOR_COMPLETION_IO_TIMEOUT_SECS		10
-+
-+static int pqi_wait_for_completion_io(struct pqi_ctrl_info *ctrl_info,
-+	struct completion *wait)
-+{
-+	int rc;
-+	unsigned int wait_secs = 0;
-+
-+	while (1) {
-+		if (wait_for_completion_io_timeout(wait,
-+			PQI_WAIT_FOR_COMPLETION_IO_TIMEOUT_SECS * HZ)) {
-+			rc = 0;
-+			break;
-+		}
-+
-+		pqi_check_ctrl_health(ctrl_info);
-+		if (pqi_ctrl_offline(ctrl_info)) {
-+			rc = -ENXIO;
-+			break;
-+		}
-+
-+		wait_secs += PQI_WAIT_FOR_COMPLETION_IO_TIMEOUT_SECS;
-+
-+		dev_err(&ctrl_info->pci_dev->dev,
-+			"waiting %u seconds for completion\n",
-+			wait_secs);
-+	}
-+
-+	return rc;
-+}
-+
- static void pqi_raid_synchronous_complete(struct pqi_io_request *io_request,
- 	void *context)
+-static void pqi_free_io_request(struct pqi_io_request *io_request)
++static inline void pqi_free_io_request(struct pqi_io_request *io_request)
  {
-@@ -3602,7 +3633,7 @@ static int pqi_submit_raid_request_synchronous_with_io_request(
- 		io_request);
- 
- 	if (timeout_msecs == NO_TIMEOUT) {
--		wait_for_completion_io(&wait);
-+		pqi_wait_for_completion_io(ctrl_info, &wait);
- 	} else {
- 		if (!wait_for_completion_io_timeout(&wait,
- 			msecs_to_jiffies(timeout_msecs))) {
+ 	atomic_dec(&io_request->refcount);
+ }
