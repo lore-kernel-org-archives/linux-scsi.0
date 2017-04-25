@@ -1,17 +1,17 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH 31/37] smartpqi: enhance device add and remove messages
-Date: Tue, 25 Apr 2017 14:49:01 -0500
-Message-ID: <149314974169.13903.4255536500317735564.stgit@brunhilda>
+Subject: [PATCH 32/37] smartpqi: make raid bypass references consistent
+Date: Tue, 25 Apr 2017 14:49:07 -0500
+Message-ID: <149314974766.13903.11851546796238312485.stgit@brunhilda>
 References: <149314950730.13903.644081079070695025.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0052.outbound.protection.outlook.com ([104.47.38.52]:47639
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam02on0064.outbound.protection.outlook.com ([104.47.36.64]:35072
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1176519AbdDYTte (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Apr 2017 15:49:34 -0400
+        id S1430733AbdDYTtf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Apr 2017 15:49:35 -0400
 In-Reply-To: <149314950730.13903.644081079070695025.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,162 +20,184 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Kevin Barnett <kevin.barnett@hpe.com>
 
-Improved formatting of information displayed when devices
-are added/removed from the system.
+- make all references to RAID bypass consistent throughout driver.
 
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
 Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c |   90 +++++++++++++++++++++++++--------
- 1 file changed, 69 insertions(+), 21 deletions(-)
+ drivers/scsi/smartpqi/smartpqi.h      |   13 ++++----
+ drivers/scsi/smartpqi/smartpqi_init.c |   56 ++++++++++++++-------------------
+ 2 files changed, 30 insertions(+), 39 deletions(-)
 
+diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
+index 2ed15cf..e9f113a 100644
+--- a/drivers/scsi/smartpqi/smartpqi.h
++++ b/drivers/scsi/smartpqi/smartpqi.h
+@@ -805,12 +805,11 @@ struct pqi_scsi_dev {
+ 	u8	bay;
+ 	u8	box[8];
+ 	u16	phys_connector[8];
+-	int	offload_configured;	/* I/O accel RAID offload configured */
+-	int	offload_enabled;	/* I/O accel RAID offload enabled */
+-	int	offload_enabled_pending;
+-	int	offload_to_mirror;	/* Send next I/O accelerator RAID */
+-					/* offload request to mirror drive. */
+-	struct raid_map *raid_map;	/* I/O accelerator RAID map */
++	bool	raid_bypass_configured;	/* RAID bypass configured */
++	bool	raid_bypass_enabled;	/* RAID bypass enabled */
++	int	offload_to_mirror;	/* Send next RAID bypass request */
++					/* to mirror drive. */
++	struct raid_map *raid_map;	/* RAID bypass map */
+ 
+ 	struct pqi_sas_port *sas_port;
+ 	struct scsi_device *sdev;
+@@ -827,7 +826,7 @@ struct pqi_scsi_dev {
+ #define SCSI_VPD_SUPPORTED_PAGES	0x0	/* standard page */
+ #define SCSI_VPD_DEVICE_ID		0x83	/* standard page */
+ #define CISS_VPD_LV_DEVICE_GEOMETRY	0xc1	/* vendor-specific page */
+-#define CISS_VPD_LV_OFFLOAD_STATUS	0xc2	/* vendor-specific page */
++#define CISS_VPD_LV_BYPASS_STATUS	0xc2	/* vendor-specific page */
+ #define CISS_VPD_LV_STATUS		0xc3	/* vendor-specific page */
+ 
+ #define VPD_PAGE	(1 << 8)
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 52ad6e7..c20d731 100644
+index c20d731..23d4686 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -1454,24 +1454,66 @@ static enum pqi_find_result pqi_scsi_find_entry(struct pqi_ctrl_info *ctrl_info,
- 	return DEVICE_NOT_FOUND;
+@@ -1117,35 +1117,33 @@ static int pqi_get_raid_map(struct pqi_ctrl_info *ctrl_info,
+ 	return rc;
  }
  
-+#define PQI_DEV_INFO_BUFFER_LENGTH	128
-+
- static void pqi_dev_info(struct pqi_ctrl_info *ctrl_info,
- 	char *action, struct pqi_scsi_dev *device)
+-static void pqi_get_offload_status(struct pqi_ctrl_info *ctrl_info,
++static void pqi_get_raid_bypass_status(struct pqi_ctrl_info *ctrl_info,
+ 	struct pqi_scsi_dev *device)
  {
--	dev_info(&ctrl_info->pci_dev->dev,
--		"%s scsi %d:%d:%d:%d: %s %.8s %.16s %-12s SSDSmartPathCap%c En%c qd=%d\n",
--		action,
--		ctrl_info->scsi_host->host_no,
--		device->bus,
--		device->target,
--		device->lun,
-+	ssize_t count;
-+	char buffer[PQI_DEV_INFO_BUFFER_LENGTH];
-+
-+	count = snprintf(buffer, PQI_DEV_INFO_BUFFER_LENGTH,
-+		"%d:%d:", ctrl_info->scsi_host->host_no, device->bus);
-+
-+	if (device->target_lun_valid)
-+		count += snprintf(buffer + count,
-+			PQI_DEV_INFO_BUFFER_LENGTH - count,
-+			"%d:%d",
-+			device->target,
-+			device->lun);
-+	else
-+		count += snprintf(buffer + count,
-+			PQI_DEV_INFO_BUFFER_LENGTH - count,
-+			"-:-");
-+
-+	if (pqi_is_logical_device(device))
-+		count += snprintf(buffer + count,
-+			PQI_DEV_INFO_BUFFER_LENGTH - count,
-+			" %08x%08x",
-+			*((u32 *)&device->scsi3addr),
-+			*((u32 *)&device->scsi3addr[4]));
-+	else
-+		count += snprintf(buffer + count,
-+			PQI_DEV_INFO_BUFFER_LENGTH - count,
-+			" %016llx", device->sas_address);
-+
-+	count += snprintf(buffer + count, PQI_DEV_INFO_BUFFER_LENGTH - count,
-+		" %s %.8s %.16s ",
- 		scsi_device_type(device->devtype),
- 		device->vendor,
--		device->model,
--		pqi_is_logical_device(device) ?
--			pqi_raid_level_to_string(device->raid_level) : "",
--		device->offload_configured ? '+' : '-',
--		device->offload_enabled_pending ? '+' : '-',
--		device->queue_depth);
-+		device->model);
-+
-+	if (pqi_is_logical_device(device)) {
-+		if (device->devtype == TYPE_DISK)
-+			count += snprintf(buffer + count,
-+				PQI_DEV_INFO_BUFFER_LENGTH - count,
-+				"SSDSmartPathCap%c En%c %-12s",
-+				device->offload_configured ? '+' : '-',
-+				(device->offload_enabled ||
-+				device->offload_enabled_pending) ? '+' : '-',
-+				pqi_raid_level_to_string(device->raid_level));
-+	} else {
-+		count += snprintf(buffer + count,
-+			PQI_DEV_INFO_BUFFER_LENGTH - count,
-+			"AIO%c", device->aio_enabled ? '+' : '-');
-+		if (device->devtype == TYPE_DISK ||
-+			device->devtype == TYPE_ZBC)
-+			count += snprintf(buffer + count,
-+				PQI_DEV_INFO_BUFFER_LENGTH - count,
-+				" qd=%-6d", device->queue_depth);
-+	}
-+
-+	dev_info(&ctrl_info->pci_dev->dev, "%s %s\n", action, buffer);
- }
+ 	int rc;
+ 	u8 *buffer;
+-	u8 offload_status;
++	u8 bypass_status;
  
- /* Assumes the SCSI device list lock is held. */
-@@ -1644,14 +1686,14 @@ static void pqi_update_device_list(struct pqi_ctrl_info *ctrl_info,
- 	/* Remove all devices that have gone away. */
- 	list_for_each_entry_safe(device, next, &delete_list,
- 		delete_list_entry) {
--		if (device->sdev)
--			pqi_remove_device(ctrl_info, device);
- 		if (device->volume_offline) {
- 			pqi_dev_info(ctrl_info, "offline", device);
- 			pqi_show_volume_status(ctrl_info, device);
+ 	buffer = kmalloc(64, GFP_KERNEL);
+ 	if (!buffer)
+ 		return;
+ 
+ 	rc = pqi_scsi_inquiry(ctrl_info, device->scsi3addr,
+-		VPD_PAGE | CISS_VPD_LV_OFFLOAD_STATUS, buffer, 64);
++		VPD_PAGE | CISS_VPD_LV_BYPASS_STATUS, buffer, 64);
+ 	if (rc)
+ 		goto out;
+ 
+-#define OFFLOAD_STATUS_BYTE	4
+-#define OFFLOAD_CONFIGURED_BIT	0x1
+-#define OFFLOAD_ENABLED_BIT	0x2
++#define RAID_BYPASS_STATUS	4
++#define RAID_BYPASS_CONFIGURED	0x1
++#define RAID_BYPASS_ENABLED	0x2
+ 
+-	offload_status = buffer[OFFLOAD_STATUS_BYTE];
+-	device->offload_configured =
+-		!!(offload_status & OFFLOAD_CONFIGURED_BIT);
+-	if (device->offload_configured) {
+-		device->offload_enabled_pending =
+-			!!(offload_status & OFFLOAD_ENABLED_BIT);
+-		if (pqi_get_raid_map(ctrl_info, device))
+-			device->offload_enabled_pending = false;
+-	}
++	bypass_status = buffer[RAID_BYPASS_STATUS];
++	device->raid_bypass_configured =
++		(bypass_status & RAID_BYPASS_CONFIGURED) != 0;
++	if (device->raid_bypass_configured &&
++		(bypass_status & RAID_BYPASS_ENABLED) &&
++		pqi_get_raid_map(ctrl_info, device) == 0)
++		device->raid_bypass_enabled = true;
+ 
+ out:
+ 	kfree(buffer);
+@@ -1219,7 +1217,7 @@ static int pqi_get_device_info(struct pqi_ctrl_info *ctrl_info,
+ 			device->volume_offline = false;
  		} else {
- 			pqi_dev_info(ctrl_info, "removed", device);
+ 			pqi_get_raid_level(ctrl_info, device);
+-			pqi_get_offload_status(ctrl_info, device);
++			pqi_get_raid_bypass_status(ctrl_info, device);
+ 			pqi_get_volume_status(ctrl_info, device);
  		}
-+		if (device->sdev)
-+			pqi_remove_device(ctrl_info, device);
- 		list_del(&device->delete_list_entry);
- 		pqi_free_device(device);
  	}
-@@ -1673,6 +1715,7 @@ static void pqi_update_device_list(struct pqi_ctrl_info *ctrl_info,
- 	/* Expose any new devices. */
- 	list_for_each_entry_safe(device, next, &add_list, add_list_entry) {
- 		if (!device->sdev) {
-+			pqi_dev_info(ctrl_info, "added", device);
- 			rc = pqi_add_device(ctrl_info, device);
- 			if (rc) {
- 				dev_warn(&ctrl_info->pci_dev->dev,
-@@ -1681,10 +1724,8 @@ static void pqi_update_device_list(struct pqi_ctrl_info *ctrl_info,
- 					device->bus, device->target,
- 					device->lun);
- 				pqi_fixup_botched_add(ctrl_info, device);
--				continue;
- 			}
- 		}
--		pqi_dev_info(ctrl_info, "added", device);
+@@ -1498,9 +1496,8 @@ static void pqi_dev_info(struct pqi_ctrl_info *ctrl_info,
+ 			count += snprintf(buffer + count,
+ 				PQI_DEV_INFO_BUFFER_LENGTH - count,
+ 				"SSDSmartPathCap%c En%c %-12s",
+-				device->offload_configured ? '+' : '-',
+-				(device->offload_enabled ||
+-				device->offload_enabled_pending) ? '+' : '-',
++				device->raid_bypass_configured ? '+' : '-',
++				device->raid_bypass_enabled ? '+' : '-',
+ 				pqi_raid_level_to_string(device->raid_level));
+ 	} else {
+ 		count += snprintf(buffer + count,
+@@ -1552,13 +1549,13 @@ static void pqi_scsi_update_device(struct pqi_scsi_dev *existing_device,
+ 		sizeof(existing_device->box));
+ 	memcpy(existing_device->phys_connector, new_device->phys_connector,
+ 		sizeof(existing_device->phys_connector));
+-	existing_device->offload_configured = new_device->offload_configured;
+-	existing_device->offload_enabled = false;
+-	existing_device->offload_enabled_pending =
+-		new_device->offload_enabled_pending;
+ 	existing_device->offload_to_mirror = 0;
+ 	kfree(existing_device->raid_map);
+ 	existing_device->raid_map = new_device->raid_map;
++	existing_device->raid_bypass_configured =
++		new_device->raid_bypass_configured;
++	existing_device->raid_bypass_enabled =
++		new_device->raid_bypass_enabled;
+ 
+ 	/* To prevent this from being freed later. */
+ 	new_device->raid_map = NULL;
+@@ -1676,11 +1673,6 @@ static void pqi_update_device_list(struct pqi_ctrl_info *ctrl_info,
+ 		device->keep_device = true;
  	}
+ 
+-	list_for_each_entry(device, &ctrl_info->scsi_device_list,
+-		scsi_device_list_entry)
+-		device->offload_enabled =
+-			device->offload_enabled_pending;
+-
+ 	spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
+ 
+ 	/* Remove all devices that have gone away. */
+@@ -2050,7 +2042,7 @@ static inline void pqi_set_encryption_info(
  }
  
-@@ -1744,7 +1785,7 @@ static int pqi_update_scsi_devices(struct pqi_ctrl_info *ctrl_info)
- 	bool is_physical_device;
- 	u8 *scsi3addr;
- 	static char *out_of_memory_msg =
--		"out of memory, device discovery stopped";
-+		"failed to allocate memory, device discovery stopped";
+ /*
+- * Attempt to perform offload RAID mapping for a logical volume I/O.
++ * Attempt to perform RAID bypass mapping for a logical volume I/O.
+  */
  
- 	INIT_LIST_HEAD(&new_device_list_head);
+ #define PQI_RAID_BYPASS_INELIGIBLE	1
+@@ -2454,7 +2446,7 @@ static inline void pqi_aio_path_disabled(struct pqi_io_request *io_request)
+ 	struct pqi_scsi_dev *device;
  
-@@ -1845,9 +1886,16 @@ static int pqi_update_scsi_devices(struct pqi_ctrl_info *ctrl_info)
- 			goto out;
- 		}
- 		if (rc) {
--			dev_warn(&ctrl_info->pci_dev->dev,
--				"obtaining device info failed, skipping device %016llx\n",
--				get_unaligned_be64(device->scsi3addr));
-+			if (device->is_physical_device)
-+				dev_warn(&ctrl_info->pci_dev->dev,
-+					"obtaining device info failed, skipping physical device %016llx\n",
-+					get_unaligned_be64(
-+						&phys_lun_ext_entry->wwid));
-+			else
-+				dev_warn(&ctrl_info->pci_dev->dev,
-+					"obtaining device info failed, skipping logical device %08x%08x\n",
-+					*((u32 *)&device->scsi3addr),
-+					*((u32 *)&device->scsi3addr[4]));
- 			rc = 0;
- 			continue;
- 		}
+ 	device = io_request->scmd->device->hostdata;
+-	device->offload_enabled = false;
++	device->raid_bypass_enabled = false;
+ 	device->aio_enabled = false;
+ }
+ 
+@@ -5009,7 +5001,7 @@ static int pqi_scsi_queue_command(struct Scsi_Host *shost,
+ 
+ 	if (pqi_is_logical_device(device)) {
+ 		raid_bypassed = false;
+-		if (device->offload_enabled &&
++		if (device->raid_bypass_enabled &&
+ 				!blk_rq_is_passthrough(scmd->request)) {
+ 			rc = pqi_raid_bypass_submit_scsi_cmd(ctrl_info, device,
+ 				scmd, queue_group);
+@@ -5760,7 +5752,7 @@ static ssize_t pqi_ssd_smart_path_enabled_show(struct device *dev,
+ 	spin_lock_irqsave(&ctrl_info->scsi_device_list_lock, flags);
+ 
+ 	device = sdev->hostdata;
+-	buffer[0] = device->offload_enabled ? '1' : '0';
++	buffer[0] = device->raid_bypass_enabled ? '1' : '0';
+ 	buffer[1] = '\n';
+ 	buffer[2] = '\0';
+ 
