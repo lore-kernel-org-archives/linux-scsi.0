@@ -1,66 +1,41 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: Re: [PATCH v2 3/7] sd: Cleanup sd_done sense data handling
-Date: Tue, 25 Apr 2017 10:54:11 +0900
-Message-ID: <a9fecd09-3f80-f26c-eb33-cdb5a3ea3734@wdc.com>
-References: <20170424075115.30337-1-damien.lemoal@wdc.com>
- <20170424075115.30337-4-damien.lemoal@wdc.com> <20170424153535.GE895@lst.de>
- <yq14lxdh04k.fsf@oracle.com>
+From: Michael Schmitz <schmitzmic@gmail.com>
+Subject: Re: [PATCH] scsi/mac_esp: Replace bogus memory barrier with spinlock
+Date: Tue, 25 Apr 2017 14:14:47 +1200
+Message-ID: <c4715424-f497-9fe0-a3a4-22efb1076046@gmail.com>
+References: <1ecb1ec37388c616335dba37b42b4a7676df6c1e.1491115954.git.fthain@telegraphics.com.au>
+ <yq1lgqph21t.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=iso-8859-15
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:49273 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S969834AbdDYByV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Apr 2017 21:54:21 -0400
-In-Reply-To: <yq14lxdh04k.fsf@oracle.com>
-Content-Language: en-US
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:36670 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S979949AbdDYCO4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Apr 2017 22:14:56 -0400
+In-Reply-To: <yq1lgqph21t.fsf@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <Bart.VanAssche@sandisk.com>, Hannes Reinecke <hare@suse.de>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Finn Thain <fthain@telegraphics.com.au>, Ondrej Zary <linux@rainbow-software.org>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
 Martin,
 
-On 4/25/17 08:11, Martin K. Petersen wrote:
-> 
-> Christoph,
-> 
->> Use a switch for the sense key, and remove two pointless variables
->> that are only used once.
-> 
->> -				if (unmap)
-> 
-> The rationale behind the unmap variable was clarity and avoiding magic
-> values.
-> 
-> I'm OK with this, however:
-> 
->> +				if (SCpnt->cmnd[1] & 8) { /* UNMAP */
-> 
-> So I committed with that change.
+looks good to me, so:
 
-Thank you for the commit.
+Reviewed-By: Michael Schmitz <schmitzmic@gmail.com>
 
-Just one remark:
-You left the "good_bytes = 0;" in the else statement of the
-ILLEGAL_REQUEST && asc == 0x24 && command == WRITE_SAME case. Is it
-really necessary ?
 
-good_bytes is already set to 0 at the beginning of sd_done() when result
-!= 0 and again within the initial switch-case for REQ_OP_DISCARD and
-REQ_OP_WRITE_SAME cases, which are the only commands that can lead to
-hitting that "else" part in the sense data processing.
-I may be missing something, but I think that that assignment is redundant.
-
-Best regards.
-
--- 
-Damien Le Moal, Ph.D.
-Sr. Manager, System Software Research Group,
-Western Digital Corporation
-Damien.LeMoal@wdc.com
-(+81) 0466-98-3593 (ext. 513593)
-1 kirihara-cho, Fujisawa,
-Kanagawa, 252-0888 Japan
-www.wdc.com, www.hgst.com
+Am 25.04.2017 um 10:29 schrieb Martin K. Petersen:
+> 
+> Finn,
+> 
+>> Commit da244654c66e ("[SCSI] mac_esp: fix for quadras with two esp chips")
+>> added mac_scsi_esp_intr() to handle the IRQ lines from a pair of on-board
+>> ESP chips (a normal shared IRQ did not work).
+>>
+>> Proper mutual exclusion was missing from that patch. This patch fixes
+>> race conditions between comparison and assignment of esp_chips[]
+>> pointers.
+> 
+> Ondrej/Michael: Mind reviewing this change?
+> 
