@@ -1,65 +1,134 @@
-From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v2 19/21] mmc: sdricoh_cs: Make use of the new sg_map helper
- function
-Date: Tue, 25 Apr 2017 12:21:06 -0600
-Message-ID: <1493144468-22493-20-git-send-email-logang@deltatee.com>
-References: <1493144468-22493-1-git-send-email-logang@deltatee.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: [PATCH 00/37] smartpqi updates
+Date: Tue, 25 Apr 2017 14:45:51 -0500
+Message-ID: <149314950730.13903.644081079070695025.stgit@brunhilda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <1493144468-22493-1-git-send-email-logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, megaraidlinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, sparmaintainer-GLv8BlqOqDDQT0dZR+AlfA@public.gmane.org, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Ulf Hansson <ulf.hansson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Sascha Sommer <saschasommer-KuiJ5kEpwI6ELgA04lAiVw@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-cys01nam02on0073.outbound.protection.outlook.com ([104.47.37.73]:34902
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1031978AbdDYTqD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Apr 2017 15:46:03 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
+Cc: linux-scsi@vger.kernel.org
 
-This is a straightforward conversion to the new function.
+These patches are based on Linus's tree
 
-Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Cc: Sascha Sommer <saschasommer-KuiJ5kEpwI6ELgA04lAiVw@public.gmane.org>
-Cc: Ulf Hansson <ulf.hansson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+The changes are:
+
+ - correct remove SCSI devices
+   - Remove spin-lock
+ - cleanup interrupt management
+   - minor cleanup to align with in-house driver
+ - set PCI completion timeout 
+ - add in controller checkpoint for controller lockups.
+   - helps debug rare lockup conditions
+ - ensure controller is in SIS mode at driver init
+   - needed for kdump/kexec
+ - add supporting events
+   - manage event changes from controller
+ - enhance resets
+   - wait for all outstanding I/Os to complete
+ - add suspend and resume support
+   - Support S3/S4 system power states
+ - add heartbeat check
+   - add check for controller lockups
+ - correct bdma hw bug
+   - workaround for BDMA hardware bug 
+ - add pqi_wait_for_completion_io
+   - add check for controller lockup
+ - change functions to inline
+   - align code with in-house driver
+ - make pdev pointer names consistent
+   - align code with in-house driver
+ - eliminate redundant error messages
+ - correct BMIC identify physical drive
+ - minor driver cleanup
+   - align code with in-house driver
+ - add new PCI device IDs
+ - cleanup messages
+ - update copyright
+ - add ptraid support
+   - RBOD support
+ - change return value for LUN reset operations
+ - enhance kdump
+ - remove qdepth calculations for logical volumes
+ - add lockup action
+ - correct AIO error path
+   - send commands down RAID path when they fail
+     on AIO path
+ - update device offline
+   - improve off-lined device detection.
+ - update rescan worker
+ - cleanup controller branding
+   - make more generic
+ - map more raid errors to SCSI errors
+   - map RAID path errors to Linux SCSI errors
+ - update timeout on admin commands
+ - enhance device add and remove messages
+ - make AIO references consistent
+ - add raid level show sysfs entry
+ - cleanup list initialization
+ - add module parameters
+   - heat-beat and controller management
+ - remove writeq/readq function definitions
+   - from Corentin Labbe <clabbe.montjoie@gmail.com>
+ - bump driver version
+
 ---
- drivers/mmc/host/sdricoh_cs.c | 14 +++++++++-----
- 1 file changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/mmc/host/sdricoh_cs.c b/drivers/mmc/host/sdricoh_cs.c
-index 5ff26ab..03225c3 100644
---- a/drivers/mmc/host/sdricoh_cs.c
-+++ b/drivers/mmc/host/sdricoh_cs.c
-@@ -319,16 +319,20 @@ static void sdricoh_request(struct mmc_host *mmc, struct mmc_request *mrq)
- 		for (i = 0; i < data->blocks; i++) {
- 			size_t len = data->blksz;
- 			u8 *buf;
--			struct page *page;
- 			int result;
--			page = sg_page(data->sg);
- 
--			buf = kmap(page) + data->sg->offset + (len * i);
-+			buf = sg_map(data->sg, (len * i), SG_KMAP);
-+			if (IS_ERR(buf)) {
-+				cmd->error = PTR_ERR(buf);
-+				break;
-+			}
-+
- 			result =
- 				sdricoh_blockio(host,
- 					data->flags & MMC_DATA_READ, buf, len);
--			kunmap(page);
--			flush_dcache_page(page);
-+			sg_unmap(data->sg, buf, (len * i), SG_KMAP);
-+
-+			flush_dcache_page(sg_page(data->sg));
- 			if (result) {
- 				dev_err(dev, "sdricoh_request: cmd %i "
- 					"block transfer failed\n", cmd->opcode);
--- 
-2.1.4
+Corentin Labbe (1):
+      smartpqi: remove writeq/readq function definitions
+
+Kevin Barnett (36):
+      smartpqi: correct remove scsi devices
+      smartpqi: cleanup interrupt management
+      smartpqi: set pci completion timeout
+      smartpqi: add in controller checkpoint for controller lockups.
+      smartpqi: ensure controller is in SIS mode at init
+      smartpqi: add supporting events
+      smartpqi: enhance resets
+      smartpqi: add suspend and resume support
+      smartpqi: add heartbeat check
+      smartpqi: correct bdma hw bug
+      smartpqi: add pqi_wait_for_completion_io
+      smartpqi: change functions to inline
+      smartpqi: make pdev pointer names consistent
+      smartpqi: eliminate redundant error messages
+      smartpqi: correct BMIC identify physical drive
+      smartpqi: minor driver cleanup
+      smartpqi: add new PCI device IDs
+      smartpqi: cleanup messages
+      smartpqi: update copyright
+      smartpqi: add ptraid support
+      smartpqi: change return value for LUN reset operations
+      smartpqi: enhance kdump
+      smartpqi: remove qdepth calculations for logical volumes
+      smartpqi: add lockup action
+      smartpqi: correct aio error path
+      smartpqi: update device offline
+      smartpqi: controller offline improvements
+      smartpqi: cleanup controller branding
+      smartpqi: map more raid errors to SCSI errors
+      smartpqi: update timeout on admin commands
+      smartpqi: enhance device add and remove messages
+      smartpqi: make raid bypass references consistent
+      smartpqi: add raid level show
+      smartpqi: cleanup list initialization
+      smartpqi: add module parameters
+      smartpqi: bump driver version
+
+
+ drivers/scsi/smartpqi/smartpqi.h               |  192 +-
+ drivers/scsi/smartpqi/smartpqi_init.c          | 2430 ++++++++++++++++++------
+ drivers/scsi/smartpqi/smartpqi_sas_transport.c |    2 
+ drivers/scsi/smartpqi/smartpqi_sis.c           |  109 +
+ drivers/scsi/smartpqi/smartpqi_sis.h           |    7 
+ 5 files changed, 2051 insertions(+), 689 deletions(-)
+
+--
+Signature
