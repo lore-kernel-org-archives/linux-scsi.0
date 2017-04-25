@@ -1,17 +1,17 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH 15/37] smartpqi: correct BMIC identify physical drive
-Date: Tue, 25 Apr 2017 14:47:23 -0500
-Message-ID: <149314964345.13903.10458732477823158300.stgit@brunhilda>
+Subject: [PATCH 16/37] smartpqi: minor driver cleanup
+Date: Tue, 25 Apr 2017 14:47:29 -0500
+Message-ID: <149314964963.13903.14012776472974802241.stgit@brunhilda>
 References: <149314950730.13903.644081079070695025.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0079.outbound.protection.outlook.com ([104.47.38.79]:5407
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+Received: from mail-co1nam03on0056.outbound.protection.outlook.com ([104.47.40.56]:47104
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1043702AbdDYTrd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Apr 2017 15:47:33 -0400
+        id S1167641AbdDYTrj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Apr 2017 15:47:39 -0400
 In-Reply-To: <149314950730.13903.644081079070695025.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,82 +20,173 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Kevin Barnett <kevin.barnett@hpe.com>
 
-correct the BMIC Identify Physical Device structure
- - missing 2 fields
+- align with in-house driver
 
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
 Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/smartpqi/smartpqi.h      |   20 ++++++++++++++++----
- drivers/scsi/smartpqi/smartpqi_init.c |   16 ++++++++++++++++
- 2 files changed, 32 insertions(+), 4 deletions(-)
+ drivers/scsi/smartpqi/smartpqi.h      |    2 +-
+ drivers/scsi/smartpqi/smartpqi_init.c |   38 ++++++++++++---------------------
+ 2 files changed, 15 insertions(+), 25 deletions(-)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-index 1ac09e7..e74d3ed 100644
+index e74d3ed..7a95868 100644
 --- a/drivers/scsi/smartpqi/smartpqi.h
 +++ b/drivers/scsi/smartpqi/smartpqi.h
-@@ -1126,9 +1126,9 @@ struct bmic_identify_physical_device {
- 	u8	multi_lun_device_lun_count;
- 	u8	minimum_good_fw_revision[8];
- 	u8	unique_inquiry_bytes[20];
--	u8	current_temperature_degreesC;
--	u8	temperature_threshold_degreesC;
--	u8	max_temperature_degreesC;
-+	u8	current_temperature_degrees;
-+	u8	temperature_threshold_degrees;
-+	u8	max_temperature_degrees;
- 	u8	logical_blocks_per_phys_block_exp;
- 	__le16	current_queue_depth_limit;
- 	u8	switch_name[10];
-@@ -1141,10 +1141,22 @@ struct bmic_identify_physical_device {
- 	u8	smart_carrier_authentication;
- 	u8	smart_carrier_app_fw_version;
- 	u8	smart_carrier_bootloader_fw_version;
-+	u8	sanitize_flags;
-+	u8	encryption_key_flags;
- 	u8	encryption_key_name[64];
- 	__le32	misc_drive_flags;
- 	__le16	dek_index;
--	u8	padding[112];
-+	__le16	hba_drive_encryption_flags;
-+	__le16	max_overwrite_time;
-+	__le16	max_block_erase_time;
-+	__le16	max_crypto_erase_time;
-+	u8	connector_info[5];
-+	u8	connector_name[8][8];
-+	u8	page_83_identifier[16];
-+	u8	maximum_link_rate[256];
-+	u8	negotiated_physical_link_rate[256];
-+	u8	box_connector_name[8];
-+	u8	padding_to_multiple_of_512[9];
- };
+@@ -1053,7 +1053,7 @@ enum pqi_ctrl_mode {
+ #define BMIC_WRITE_HOST_WELLNESS		0xa5
+ #define BMIC_CACHE_FLUSH			0xc2
  
- #pragma pack()
+-#define SA_CACHE_FLUSH				0x01
++#define SA_CACHE_FLUSH				0x1
+ 
+ #define MASKED_DEVICE(lunid)			((lunid)[3] & 0xc0)
+ #define CISS_GET_BUS(lunid)			((lunid)[7] & 0x3f)
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 5a1fab1..a32ff85 100644
+index a32ff85..6da6db1 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -6983,6 +6983,22 @@ static void __attribute__((unused)) verify_structures(void)
- 	BUILD_BUG_ON(offsetof(struct bmic_identify_controller,
- 		controller_mode) != 292);
+@@ -57,8 +57,6 @@ MODULE_SUPPORTED_DEVICE("Microsemi Smart Family Controllers");
+ MODULE_VERSION(DRIVER_VERSION);
+ MODULE_LICENSE("GPL");
  
-+	BUILD_BUG_ON(offsetof(struct bmic_identify_physical_device,
-+		phys_bay_in_box) != 115);
-+	BUILD_BUG_ON(offsetof(struct bmic_identify_physical_device,
-+		device_type) != 120);
-+	BUILD_BUG_ON(offsetof(struct bmic_identify_physical_device,
-+		redundant_path_present_map) != 1736);
-+	BUILD_BUG_ON(offsetof(struct bmic_identify_physical_device,
-+		active_path_number) != 1738);
-+	BUILD_BUG_ON(offsetof(struct bmic_identify_physical_device,
-+		alternate_paths_phys_connector) != 1739);
-+	BUILD_BUG_ON(offsetof(struct bmic_identify_physical_device,
-+		alternate_paths_phys_box_on_port) != 1755);
-+	BUILD_BUG_ON(offsetof(struct bmic_identify_physical_device,
-+		current_queue_depth_limit) != 1796);
-+	BUILD_BUG_ON(sizeof(struct bmic_identify_physical_device) != 2560);
+-#define PQI_ENABLE_MULTI_QUEUE_SUPPORT	0
+-
+ static char *hpe_branded_controller = "HPE Smart Array Controller";
+ static char *microsemi_branded_controller = "Microsemi Smart Family Controller";
+ 
+@@ -94,7 +92,7 @@ static unsigned int pqi_supported_event_types[] = {
+ 
+ static int pqi_disable_device_id_wildcards;
+ module_param_named(disable_device_id_wildcards,
+-	pqi_disable_device_id_wildcards, int, S_IRUGO | S_IWUSR);
++	pqi_disable_device_id_wildcards, int, 0644);
+ MODULE_PARM_DESC(disable_device_id_wildcards,
+ 	"Disable device ID wildcards.");
+ 
+@@ -383,7 +381,6 @@ static int pqi_build_raid_path_request(struct pqi_ctrl_info *ctrl_info,
+ 	default:
+ 		dev_err(&ctrl_info->pci_dev->dev, "unknown command 0x%c\n",
+ 			cmd);
+-		WARN_ON(cmd);
+ 		break;
+ 	}
+ 
+@@ -1133,10 +1130,8 @@ static int pqi_get_device_info(struct pqi_ctrl_info *ctrl_info,
+ 	scsi_sanitize_inquiry_string(&buffer[16], 16);
+ 
+ 	device->devtype = buffer[0] & 0x1f;
+-	memcpy(device->vendor, &buffer[8],
+-		sizeof(device->vendor));
+-	memcpy(device->model, &buffer[16],
+-		sizeof(device->model));
++	memcpy(device->vendor, &buffer[8], sizeof(device->vendor));
++	memcpy(device->model, &buffer[16], sizeof(device->model));
+ 
+ 	if (pqi_is_logical_device(device) && device->devtype == TYPE_DISK) {
+ 		pqi_get_raid_level(ctrl_info, device);
+@@ -1607,9 +1602,6 @@ static void pqi_update_device_list(struct pqi_ctrl_info *ctrl_info,
+ 			 */
+ 			device->new_device = true;
+ 			break;
+-		default:
+-			WARN_ON(find_result);
+-			break;
+ 		}
+ 	}
+ 
+@@ -1742,7 +1734,7 @@ static inline bool pqi_skip_device(u8 *scsi3addr,
+ 	return false;
+ }
+ 
+-static inline bool pqi_expose_device(struct pqi_scsi_dev *device)
++static inline bool pqi_ok_to_expose_device(struct pqi_scsi_dev *device)
+ {
+ 	/* Expose all devices except for physical devices that are masked. */
+ 	if (device->is_physical_device && MASKED_DEVICE(device->scsi3addr))
+@@ -1883,7 +1875,7 @@ static int pqi_update_scsi_devices(struct pqi_ctrl_info *ctrl_info)
+ 
+ 		pqi_assign_bus_target_lun(device);
+ 
+-		device->expose_device = pqi_expose_device(device);
++		device->expose_device = pqi_ok_to_expose_device(device);
+ 
+ 		if (device->is_physical_device) {
+ 			device->wwid = phys_lun_ext_entry->wwid;
+@@ -2682,7 +2674,6 @@ static unsigned int pqi_process_io_intr(struct pqi_ctrl_info *ctrl_info,
+ 			dev_err(&ctrl_info->pci_dev->dev,
+ 				"unexpected IU type: 0x%x\n",
+ 				response->header.iu_type);
+-			WARN_ON(response->header.iu_type);
+ 			break;
+ 		}
+ 
+@@ -4643,7 +4634,6 @@ static int pqi_raid_submit_scsi_cmd(struct pqi_ctrl_info *ctrl_info,
+ 		dev_err(&ctrl_info->pci_dev->dev,
+ 			"unknown data direction: %d\n",
+ 			scmd->sc_data_direction);
+-		WARN_ON(scmd->sc_data_direction);
+ 		break;
+ 	}
+ 
+@@ -4726,7 +4716,6 @@ static int pqi_aio_submit_io(struct pqi_ctrl_info *ctrl_info,
+ 		dev_err(&ctrl_info->pci_dev->dev,
+ 			"unknown data direction: %d\n",
+ 			scmd->sc_data_direction);
+-		WARN_ON(scmd->sc_data_direction);
+ 		break;
+ 	}
+ 
+@@ -5486,8 +5475,8 @@ static ssize_t pqi_host_rescan_store(struct device *dev,
+ 	return count;
+ }
+ 
+-static DEVICE_ATTR(version, S_IRUGO, pqi_version_show, NULL);
+-static DEVICE_ATTR(rescan, S_IWUSR, NULL, pqi_host_rescan_store);
++static DEVICE_ATTR(version, 0444, pqi_version_show, NULL);
++static DEVICE_ATTR(rescan, 0200, NULL, pqi_host_rescan_store);
+ 
+ static struct device_attribute *pqi_shost_attrs[] = {
+ 	&dev_attr_version,
+@@ -5545,8 +5534,8 @@ static ssize_t pqi_ssd_smart_path_enabled_show(struct device *dev,
+ 	return 2;
+ }
+ 
+-static DEVICE_ATTR(sas_address, S_IRUGO, pqi_sas_address_show, NULL);
+-static DEVICE_ATTR(ssd_smart_path_enabled, S_IRUGO,
++static DEVICE_ATTR(sas_address, 0444, pqi_sas_address_show, NULL);
++static DEVICE_ATTR(ssd_smart_path_enabled, 0444,
+ 	pqi_ssd_smart_path_enabled_show, NULL);
+ 
+ static struct device_attribute *pqi_sdev_attrs[] = {
+@@ -6109,9 +6098,6 @@ static int pqi_pci_init(struct pqi_ctrl_info *ctrl_info)
+ 		goto release_regions;
+ 	}
+ 
+-	ctrl_info->registers = ctrl_info->iomem_base;
+-	ctrl_info->pqi_registers = &ctrl_info->registers->pqi_registers;
+-
+ #define PCI_EXP_COMP_TIMEOUT_65_TO_210_MS		0x6
+ 
+ 	/* Increase the PCIe completion timeout. */
+@@ -6126,6 +6112,9 @@ static int pqi_pci_init(struct pqi_ctrl_info *ctrl_info)
+ 	/* Enable bus mastering. */
+ 	pci_set_master(ctrl_info->pci_dev);
+ 
++	ctrl_info->registers = ctrl_info->iomem_base;
++	ctrl_info->pqi_registers = &ctrl_info->registers->pqi_registers;
 +
- 	BUILD_BUG_ON(PQI_ADMIN_IQ_NUM_ELEMENTS > 255);
- 	BUILD_BUG_ON(PQI_ADMIN_OQ_NUM_ELEMENTS > 255);
- 	BUILD_BUG_ON(PQI_ADMIN_IQ_ELEMENT_LENGTH %
+ 	pci_set_drvdata(ctrl_info->pci_dev, ctrl_info);
+ 
+ 	return 0;
+@@ -6142,7 +6131,8 @@ static void pqi_cleanup_pci_init(struct pqi_ctrl_info *ctrl_info)
+ {
+ 	iounmap(ctrl_info->iomem_base);
+ 	pci_release_regions(ctrl_info->pci_dev);
+-	pci_disable_device(ctrl_info->pci_dev);
++	if (pci_is_enabled(ctrl_info->pci_dev))
++		pci_disable_device(ctrl_info->pci_dev);
+ 	pci_set_drvdata(ctrl_info->pci_dev, NULL);
+ }
+ 
