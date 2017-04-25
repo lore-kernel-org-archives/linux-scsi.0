@@ -1,41 +1,66 @@
-From: Jon Derrick <jonathan.derrick@intel.com>
-Subject: [PATCH] nvme/scsi: Consider LBA format in IO splitting calculation
-Date: Mon, 24 Apr 2017 18:02:43 -0600
-Message-ID: <20170425000243.2019-1-jonathan.derrick@intel.com>
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: Re: [PATCH v2 3/7] sd: Cleanup sd_done sense data handling
+Date: Tue, 25 Apr 2017 10:54:11 +0900
+Message-ID: <a9fecd09-3f80-f26c-eb33-cdb5a3ea3734@wdc.com>
+References: <20170424075115.30337-1-damien.lemoal@wdc.com>
+ <20170424075115.30337-4-damien.lemoal@wdc.com> <20170424153535.GE895@lst.de>
+ <yq14lxdh04k.fsf@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:2178 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S979420AbdDYAFy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 24 Apr 2017 20:05:54 -0400
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:49273 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S969834AbdDYByV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Apr 2017 21:54:21 -0400
+In-Reply-To: <yq14lxdh04k.fsf@oracle.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: axboe@fb.com
-Cc: linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, keith.busch@intel.com, hch@infradead.org, sagi@grimberg.me, Jon Derrick <jonathan.derrick@intel.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <Bart.VanAssche@sandisk.com>, Hannes Reinecke <hare@suse.de>
 
-The current command submission code uses a sector-based value when
-considering the maximum number of blocks per command. With a
-4k-formatted namespace and a command exceeding max hardware limits, this
-calculation doesn't split IOs which should be split and fails in the
-nvme layer. This patch fixes that calculation and enables IO splitting
-in these circumstances.
+Martin,
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
----
- drivers/nvme/host/scsi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On 4/25/17 08:11, Martin K. Petersen wrote:
+> 
+> Christoph,
+> 
+>> Use a switch for the sense key, and remove two pointless variables
+>> that are only used once.
+> 
+>> -				if (unmap)
+> 
+> The rationale behind the unmap variable was clarity and avoiding magic
+> values.
+> 
+> I'm OK with this, however:
+> 
+>> +				if (SCpnt->cmnd[1] & 8) { /* UNMAP */
+> 
+> So I committed with that change.
 
-diff --git a/drivers/nvme/host/scsi.c b/drivers/nvme/host/scsi.c
-index f49ae27..988da61 100644
---- a/drivers/nvme/host/scsi.c
-+++ b/drivers/nvme/host/scsi.c
-@@ -1609,7 +1609,7 @@ static int nvme_trans_do_nvme_io(struct nvme_ns *ns, struct sg_io_hdr *hdr,
- 	struct nvme_command c;
- 	u8 opcode = (is_write ? nvme_cmd_write : nvme_cmd_read);
- 	u16 control;
--	u32 max_blocks = queue_max_hw_sectors(ns->queue);
-+	u32 max_blocks = queue_max_hw_sectors(ns->queue) >> (ns->lba_shift - 9);
- 
- 	num_cmds = nvme_trans_io_get_num_cmds(hdr, cdb_info, max_blocks);
- 
+Thank you for the commit.
+
+Just one remark:
+You left the "good_bytes = 0;" in the else statement of the
+ILLEGAL_REQUEST && asc == 0x24 && command == WRITE_SAME case. Is it
+really necessary ?
+
+good_bytes is already set to 0 at the beginning of sd_done() when result
+!= 0 and again within the initial switch-case for REQ_OP_DISCARD and
+REQ_OP_WRITE_SAME cases, which are the only commands that can lead to
+hitting that "else" part in the sense data processing.
+I may be missing something, but I think that that assignment is redundant.
+
+Best regards.
+
 -- 
-2.9.3
+Damien Le Moal, Ph.D.
+Sr. Manager, System Software Research Group,
+Western Digital Corporation
+Damien.LeMoal@wdc.com
+(+81) 0466-98-3593 (ext. 513593)
+1 kirihara-cho, Fujisawa,
+Kanagawa, 252-0888 Japan
+www.wdc.com, www.hgst.com
