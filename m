@@ -1,52 +1,112 @@
 From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH v5 0/4] Avoid that __scsi_remove_device() hangs
-Date: Tue, 25 Apr 2017 13:53:50 -0700
-Message-ID: <20170425205354.21181-1-bart.vanassche@sandisk.com>
+Subject: [PATCH v5 3/4] sd: Make synchronize cache upon shutdown asynchronous
+Date: Tue, 25 Apr 2017 13:53:53 -0700
+Message-ID: <20170425205354.21181-4-bart.vanassche@sandisk.com>
+References: <20170425205354.21181-1-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:52242 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1954501AbdDYUyD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Apr 2017 16:54:03 -0400
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:3120 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1950873AbdDYUyK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Apr 2017 16:54:10 -0400
+In-Reply-To: <20170425205354.21181-1-bart.vanassche@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Israel Rukshin <israelr@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>, Hannes Reinecke <hare@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>, Song Liu <songliubraving@fb.com>
 
-__scsi_remove_device() hangs if it is waiting for the SYNCHRONIZE CACHE
-command submitted by the sd driver to finish if the block layer queue is
-stopped and does not get restarted. This patch series avoids that that
-hang occurs.
+This patch avoids that sd_shutdown() hangs on the SYNCHRONIZE CACHE
+command if the block layer queue has been stopped by
+scsi_target_block().
 
-Changes compared to v4:
-- Fixed the deadlock reported by the 0-day bot by changing a blk_put_request()
-  call into __blk_put_request().
+Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Israel Rukshin <israelr@mellanox.com>
+Cc: Max Gurtovoy <maxg@mellanox.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Benjamin Block <bblock@linux.vnet.ibm.com>
+Cc: Song Liu <songliubraving@fb.com>
+---
+ drivers/scsi/sd.c | 45 ++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 40 insertions(+), 5 deletions(-)
 
-Changes compared to v3:
-- Removed the logging statements from sd_sync_cache_done() that triggered
-  a crash due to a use-after-free.
-
-Changes compared to v2:
-- Moved the "stop_disk" assignment after the sdkp check in the sd driver.
-- Added a completion function for asynchronous SYNCHRONIZE CACHE commands.
-- Added "disk" and "done" arguments to scsi_execute_async().
-
-Changes compared to v1:
-- Reworked the approach of this patch series.
-
-Bart Van Assche (4):
-  Introduce scsi_start_queue()
-  Introduce scsi_execute_async()
-  sd: Make synchronize cache upon shutdown asynchronous
-  Avoid that __scsi_remove_device() hangs
-
- drivers/scsi/scsi_lib.c    | 114 ++++++++++++++++++++++++++++++++++-----------
- drivers/scsi/scsi_priv.h   |   1 +
- drivers/scsi/scsi_sysfs.c  |   9 ++++
- drivers/scsi/sd.c          |  45 ++++++++++++++++--
- include/scsi/scsi_device.h |   5 ++
- 5 files changed, 142 insertions(+), 32 deletions(-)
-
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index fe0f7997074e..75575fc1b2d8 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1489,6 +1489,33 @@ static unsigned int sd_check_events(struct gendisk *disk, unsigned int clearing)
+ 	return retval;
+ }
+ 
++/*
++ * Callback function called indirectly by scsi_end_request() after the
++ * SYNCHRONIZE CACHE command has finished.
++ */
++static void sd_sync_cache_done(struct request *rq, int e)
++{
++	struct request_queue *q = rq->q;
++
++	__blk_put_request(q, rq);
++}
++
++/*
++ * Issue a SYNCHRONIZE CACHE command asynchronously. Since blk_cleanup_queue()
++ * waits for all commands to finish, __scsi_remove_device() will wait for the
++ * SYNCHRONIZE CACHE command to finish.
++ */
++static int sd_sync_cache_async(struct scsi_disk *sdkp)
++{
++	const struct scsi_device *sdp = sdkp->device;
++	const int timeout = sdp->request_queue->rq_timeout *
++			    SD_FLUSH_TIMEOUT_MULTIPLIER;
++	const unsigned char cmd[10] = { SYNCHRONIZE_CACHE };
++
++	return scsi_execute_async(sdp, NULL, cmd, DMA_NONE, NULL, 0, timeout,
++				  SD_MAX_RETRIES, 0, 0, sd_sync_cache_done);
++}
++
+ static int sd_sync_cache(struct scsi_disk *sdkp)
+ {
+ 	int retries, res;
+@@ -3349,13 +3376,15 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
+ }
+ 
+ /*
+- * Send a SYNCHRONIZE CACHE instruction down to the device through
+- * the normal SCSI command structure.  Wait for the command to
+- * complete.
++ * Send a SYNCHRONIZE CACHE instruction down to the device through the normal
++ * SCSI command structure. When stopping the disk, wait for the command to
++ * complete. When not stopping the disk, the blk_cleanup_queue() call in
++ * __scsi_remove_device() will wait for this command to complete.
+  */
+ static void sd_shutdown(struct device *dev)
+ {
+ 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
++	bool stop_disk;
+ 
+ 	if (!sdkp)
+ 		return;         /* this can happen */
+@@ -3363,12 +3392,18 @@ static void sd_shutdown(struct device *dev)
+ 	if (pm_runtime_suspended(dev))
+ 		return;
+ 
++	stop_disk = system_state != SYSTEM_RESTART &&
++		sdkp->device->manage_start_stop;
++
+ 	if (sdkp->WCE && sdkp->media_present) {
+ 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+-		sd_sync_cache(sdkp);
++		if (stop_disk)
++			sd_sync_cache(sdkp);
++		else
++			sd_sync_cache_async(sdkp);
+ 	}
+ 
+-	if (system_state != SYSTEM_RESTART && sdkp->device->manage_start_stop) {
++	if (stop_disk) {
+ 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
+ 		sd_start_stop_device(sdkp, 0);
+ 	}
 -- 
 2.12.2
