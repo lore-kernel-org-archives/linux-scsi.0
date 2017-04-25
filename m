@@ -1,76 +1,61 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: Re: [RFC] scsi: reduce protection of scan_mutex in scsi_remove_device
-Date: Tue, 25 Apr 2017 21:17:13 +0000
-Message-ID: <3B06D0B6-825E-4788-9B87-BE3F35055DB2@fb.com>
-References: <20170421211302.2667649-1-songliubraving@fb.com>
- <1493141028.2628.4.camel@sandisk.com>
- <11AE7D30-E24A-4DF3-8237-AF97A342D239@fb.com>
- <1493142729.2628.6.camel@sandisk.com>
+From: "Stephen  Bates" <sbates-pv7U853sEMVWk0Htik3J/w@public.gmane.org>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+Date: Tue, 25 Apr 2017 21:23:30 +0000
+Message-ID: <B5A68214-E3A6-45F6-9820-758C5C84688A@raithlin.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1492034124.7236.77.camel@kernel.crashing.org>
+ <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
+ <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
+ <20170414041656.GA30694@obsidianresearch.com>
+ <1492169849.25766.3.camel@kernel.crashing.org>
+ <630c1c63-ff17-1116-e069-2b8f93e50fa2@deltatee.com>
+ <20170414190452.GA15679@bhelgaas-glaptop.roam.corp.google.com>
+ <1492207643.25766.18.camel@kernel.crashing.org>
+ <bff1e503-95a9-e19f-bfd9-0ff962c63a81@deltatee.com>
+ <CAPcyv4jUeKzKDARp6Z35kdPLKnP-M6aF8X5KpOx55CLyjnj4dA@mail.gmail.com>
+ <1492311719.25766.37.camel@kernel.crashing.org>
+ <CAPcyv4iqnz1B00Q3xG-nGrLXdOyB7ditxmwZyotksLFgUqr+jA@mail.gmail.com>
+ <5e43818e-8c6b-8be8-23ff-b798633d2a73@deltatee.com>
+ <1492381907.25766.49.camel@kernel.crashing.org>
+ <1493019397.3171.118.camel@oracle.com>
+ <9b6c0830-a728-c7ca-e6c6-2135f3f760ed@deltatee.com>
+ <1493101803.3171.246.camel@oracle.com>
+ <0cc95df5-b9dd-6493-15fe-771d535c1020@deltatee.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:46379 "EHLO
-        mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1948907AbdDYVSk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Apr 2017 17:18:40 -0400
-In-Reply-To: <1493142729.2628.6.camel@sandisk.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <0cc95df5-b9dd-6493-15fe-771d535c1020-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
 Content-Language: en-US
-Content-ID: <3C9BA132C2ED1D4E8102522DE209F368@namprd15.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-ID: <2DE64262AC700A45B4EEDB3B78B07FB4-JkAt9bkEularoOM5E8FhRbjFIynDaujOfM0AETQt39g@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>, Knut Omang <knut.omang-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Jerome Glisse <jglisse-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Bjorn Helgaas <helgaas-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-nvdimm <linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org>, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>
 
-
-> On Apr 25, 2017, at 10:52 AM, Bart Van Assche <Bart.VanAssche@sandisk.com=
-> wrote:
->=20
-> On Tue, 2017-04-25 at 17:42 +0000, Song Liu wrote:
->> I have been studying the code recently. I am wondering whether the follo=
-wing=20
->> would work:
->>=20
->> 1. Introduce a new mutex for scsi_device to protect most operations in t=
-he=20
->>   list you gathered above;
->>=20
->> 2. For operations like host->slave_destroy(), ensure they access scsi_ho=
-st=20
->>   data with host_lock (or another spin lock).=20
->>=20
->>   I looked into all instances of slave_destroy, only 2 of them:=20
->>   dc395x_slave_destroy() and visorhba_slave_destroy() access scsi_host d=
-ata=20
->>   without protection of spin lock.=20
->>=20
->> 3. Once 1 and 2 is ready, __scsi_remove_device() only need to hold the m=
-utex
->>   for the scsi_device. scan_mutex is no longer required.=20
->>=20
->> Is this a valid path?
->=20
-> Sorry but I don't think so. Unlocking and reacquiring scan_mutex would cr=
-eate
-> the potential that LUN scanning occurs in the meantime and hence that it =
-fails
-> because LUN removal is incomplete.
->=20
-
-
-Hello Bart,=20
-
-I am not sure I fully understand the problem here. If I understand the logi=
-c=20
-correctly, when a device is being removed, it will stay in scsi_host->__dev=
-ices
-until fully the remove routine is finished. And LUN scanning in parallel wi=
-ll
-find the device with scsi_device_lookup_by_target(), and thus it would not=
-=20
-rescan the device until the device is fully removed? Did I miss anything he=
-re?
-
-Thanks,
-Song
+Pj4gWWVzLCB0aGF0J3Mgd2h5IEkgdXNlZCAnc2lnbmlmaWNhbnQnLiBPbmUgZ29vZCB0aGluZyBp
+cyB0aGF0IGdpdmVuIHJlc291cmNlcyANCj4+IGl0IGNhbiBlYXNpbHkgYmUgZG9uZSBpbiBwYXJh
+bGxlbCB3aXRoIG90aGVyIGRldmVsb3BtZW50LCBhbmQgd2lsbCBnaXZlIGFkZGl0aW9uYWwNCj4+
+IGluc2lnaHQgb2Ygc29tZSBmb3JtLg0KPg0KPll1cCwgd2VsbCBpZiBzb21lb25lIHdhbnRzIHRv
+IHN0YXJ0IHdvcmtpbmcgb24gYW4gZW11bGF0ZWQgUkRNQSBkZXZpY2UNCj50aGF0IGFjdHVhbGx5
+IHNpbXVsYXRlcyBwcm9wZXIgRE1BIHRyYW5zZmVycyB0aGF0IHdvdWxkIGJlIGdyZWF0IQ0KDQpH
+aXZlIHRoYXQgZWFjaCBSRE1BIHZlbmRvcuKAmXMgZGV2aWNlcyBleHBvc2UgYSBkaWZmZXJlbnQg
+TU1JTyBJIGRvbuKAmXQgZXhwZWN0IHRoaXMgdG8gaGFwcGVuIGFueXRpbWUgc29vbi4NCg0KPiBZ
+ZXMsIHRoZSBudm1lIGRldmljZSBpbiBxZW11IGhhcyBhIENNQiBidWZmZXIgd2hpY2ggaXMgYSBn
+b29kIGNob2ljZSB0bw0KPiB0ZXN0IHdpdGggYnV0IHdlIGRvbid0IGhhdmUgY29kZSB0byB1c2Ug
+aXQgZm9yIHAycCB0cmFuc2ZlcnMgaW4gdGhlDQo+a2VybmVsIHNvIGl0IGlzIGEgYml0IGF3a3dh
+cmQuDQoNCk5vdGUgdGhlIENNQiBjb2RlIGlzIG5vdCBpbiB1cHN0cmVhbSBRRU1VLCBpdOKAmXMg
+aW4gS2VpdGjigJlzIGZvcmsgWzFdLiBJIHdpbGwgc2VlIGlmIEkgY2FuIHB1c2ggdGhpcyB1cHN0
+cmVhbS4NCg0KU3RlcGhlbg0KDQpbMV0gZ2l0Oi8vZ2l0LmluZnJhZGVhZC5vcmcvdXNlcnMva2J1
+c2NoL3FlbXUtbnZtZS5naXQNCg0KDQpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fXwpMaW51eC1udmRpbW0gbWFpbGluZyBsaXN0CkxpbnV4LW52ZGltbUBsaXN0
+cy4wMS5vcmcKaHR0cHM6Ly9saXN0cy4wMS5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1udmRp
+bW0K
