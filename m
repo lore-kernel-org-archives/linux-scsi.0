@@ -1,17 +1,17 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH 29/37] smartpqi: map more raid errors to SCSI errors
-Date: Tue, 25 Apr 2017 14:48:49 -0500
-Message-ID: <149314972943.13903.12547252191952346399.stgit@brunhilda>
+Subject: [PATCH 30/37] smartpqi: update timeout on admin commands
+Date: Tue, 25 Apr 2017 14:48:55 -0500
+Message-ID: <149314973561.13903.18185640757974966656.stgit@brunhilda>
 References: <149314950730.13903.644081079070695025.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0073.outbound.protection.outlook.com ([104.47.41.73]:52160
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0079.outbound.protection.outlook.com ([104.47.37.79]:32789
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1430733AbdDYTtT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Apr 2017 15:49:19 -0400
+        id S1176519AbdDYTt3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Apr 2017 15:49:29 -0400
 In-Reply-To: <149314950730.13903.644081079070695025.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,62 +20,45 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Kevin Barnett <kevin.barnett@hpe.com>
 
-enhance mapping of RAID path errors to Linux SCSI host
-error codes.
+Increase the timeout on admin commands from 3 seconds to 60
+seconds and added a check for controller crash in the loop
+where the driver polls for admin command completion.
 
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
 Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c |   32 +++++++++++++++++++++++++++++++-
- 1 file changed, 31 insertions(+), 1 deletion(-)
+ drivers/scsi/smartpqi/smartpqi_init.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 790dfc4..e841c1b 100644
+index e841c1b..52ad6e7 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -2447,13 +2447,43 @@ static void pqi_process_raid_io_error(struct pqi_io_request *io_request)
- 	scsi_status = error_info->status;
- 	host_byte = DID_OK;
+@@ -3432,6 +3432,8 @@ static void pqi_submit_admin_request(struct pqi_ctrl_info *ctrl_info,
+ 	writel(iq_pi, admin_queues->iq_pi);
+ }
  
--	if (error_info->data_out_result == PQI_DATA_IN_OUT_UNDERFLOW) {
-+	switch (error_info->data_out_result) {
-+	case PQI_DATA_IN_OUT_GOOD:
-+		break;
-+	case PQI_DATA_IN_OUT_UNDERFLOW:
- 		xfer_count =
- 			get_unaligned_le32(&error_info->data_out_transferred);
- 		residual_count = scsi_bufflen(scmd) - xfer_count;
- 		scsi_set_resid(scmd, residual_count);
- 		if (xfer_count < scmd->underflow)
- 			host_byte = DID_SOFT_ERROR;
-+		break;
-+	case PQI_DATA_IN_OUT_UNSOLICITED_ABORT:
-+	case PQI_DATA_IN_OUT_ABORTED:
-+		host_byte = DID_ABORT;
-+		break;
-+	case PQI_DATA_IN_OUT_TIMEOUT:
-+		host_byte = DID_TIME_OUT;
-+		break;
-+	case PQI_DATA_IN_OUT_BUFFER_OVERFLOW:
-+	case PQI_DATA_IN_OUT_PROTOCOL_ERROR:
-+	case PQI_DATA_IN_OUT_BUFFER_ERROR:
-+	case PQI_DATA_IN_OUT_BUFFER_OVERFLOW_DESCRIPTOR_AREA:
-+	case PQI_DATA_IN_OUT_BUFFER_OVERFLOW_BRIDGE:
-+	case PQI_DATA_IN_OUT_ERROR:
-+	case PQI_DATA_IN_OUT_HARDWARE_ERROR:
-+	case PQI_DATA_IN_OUT_PCIE_FABRIC_ERROR:
-+	case PQI_DATA_IN_OUT_PCIE_COMPLETION_TIMEOUT:
-+	case PQI_DATA_IN_OUT_PCIE_COMPLETER_ABORT_RECEIVED:
-+	case PQI_DATA_IN_OUT_PCIE_UNSUPPORTED_REQUEST_RECEIVED:
-+	case PQI_DATA_IN_OUT_PCIE_ECRC_CHECK_FAILED:
-+	case PQI_DATA_IN_OUT_PCIE_UNSUPPORTED_REQUEST:
-+	case PQI_DATA_IN_OUT_PCIE_ACS_VIOLATION:
-+	case PQI_DATA_IN_OUT_PCIE_TLP_PREFIX_BLOCKED:
-+	case PQI_DATA_IN_OUT_PCIE_POISONED_MEMORY_READ:
-+	default:
-+		host_byte = DID_ERROR;
-+		break;
++#define PQI_ADMIN_REQUEST_TIMEOUT_SECS	60
++
+ static int pqi_poll_for_admin_response(struct pqi_ctrl_info *ctrl_info,
+ 	struct pqi_general_admin_response *response)
+ {
+@@ -3443,7 +3445,7 @@ static int pqi_poll_for_admin_response(struct pqi_ctrl_info *ctrl_info,
+ 	admin_queues = &ctrl_info->admin_queues;
+ 	oq_ci = admin_queues->oq_ci_copy;
+ 
+-	timeout = (3 * HZ) + jiffies;
++	timeout = (PQI_ADMIN_REQUEST_TIMEOUT_SECS * HZ) + jiffies;
+ 
+ 	while (1) {
+ 		oq_pi = *admin_queues->oq_pi;
+@@ -3454,6 +3456,8 @@ static int pqi_poll_for_admin_response(struct pqi_ctrl_info *ctrl_info,
+ 				"timed out waiting for admin response\n");
+ 			return -ETIMEDOUT;
+ 		}
++		if (!sis_is_firmware_running(ctrl_info))
++			return -ENXIO;
+ 		usleep_range(1000, 2000);
  	}
  
- 	sense_data_length = get_unaligned_le16(&error_info->sense_data_length);
