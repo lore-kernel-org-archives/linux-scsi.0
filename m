@@ -1,41 +1,42 @@
-From: Michael Schmitz <schmitzmic@gmail.com>
-Subject: Re: [PATCH] scsi/mac_esp: Replace bogus memory barrier with spinlock
-Date: Tue, 25 Apr 2017 14:14:47 +1200
-Message-ID: <c4715424-f497-9fe0-a3a4-22efb1076046@gmail.com>
-References: <1ecb1ec37388c616335dba37b42b4a7676df6c1e.1491115954.git.fthain@telegraphics.com.au>
- <yq1lgqph21t.fsf@oracle.com>
+From: Wei Yongjun <weiyj.lk@gmail.com>
+Subject: [PATCH -next] [SCSI] mac_esp: fix to pass correct device identity to free_irq()
+Date: Tue, 25 Apr 2017 03:08:45 +0000
+Message-ID: <20170425030845.7809-1-weiyj.lk@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:36670 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S979949AbdDYCO4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Apr 2017 22:14:56 -0400
-In-Reply-To: <yq1lgqph21t.fsf@oracle.com>
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:35957 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S980188AbdDYDIu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Apr 2017 23:08:50 -0400
+Received: by mail-pf0-f195.google.com with SMTP id v14so6262781pfd.3
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Apr 2017 20:08:50 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Finn Thain <fthain@telegraphics.com.au>, Ondrej Zary <linux@rainbow-software.org>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Wei Yongjun <weiyongjun1@huawei.com>, linux-scsi@vger.kernel.org
 
-Martin,
+From: Wei Yongjun <weiyongjun1@huawei.com>
 
-looks good to me, so:
+free_irq() expects the same device identity that was passed to
+corresponding request_irq(), otherwise the IRQ is not freed.
 
-Reviewed-By: Michael Schmitz <schmitzmic@gmail.com>
+Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+---
+ drivers/scsi/mac_esp.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
-Am 25.04.2017 um 10:29 schrieb Martin K. Petersen:
-> 
-> Finn,
-> 
->> Commit da244654c66e ("[SCSI] mac_esp: fix for quadras with two esp chips")
->> added mac_scsi_esp_intr() to handle the IRQ lines from a pair of on-board
->> ESP chips (a normal shared IRQ did not work).
->>
->> Proper mutual exclusion was missing from that patch. This patch fixes
->> race conditions between comparison and assignment of esp_chips[]
->> pointers.
-> 
-> Ondrej/Michael: Mind reviewing this change?
-> 
+diff --git a/drivers/scsi/mac_esp.c b/drivers/scsi/mac_esp.c
+index bb567d3..dda4da2 100644
+--- a/drivers/scsi/mac_esp.c
++++ b/drivers/scsi/mac_esp.c
+@@ -580,7 +580,7 @@ static int esp_mac_probe(struct platform_device *dev)
+ 
+ fail_free_irq:
+ 	if (esp_chips[!dev->id] == NULL)
+-		free_irq(host->irq, esp);
++		free_irq(host->irq, NULL);
+ fail_free_priv:
+ 	kfree(mep);
+ fail_free_command_block:
