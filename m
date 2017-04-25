@@ -1,86 +1,70 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH 35/37] smartpqi: add module parameters
-Date: Tue, 25 Apr 2017 14:49:25 -0500
-Message-ID: <149314976589.13903.14357586575899637114.stgit@brunhilda>
+Subject: [PATCH 36/37] smartpqi: remove writeq/readq function definitions
+Date: Tue, 25 Apr 2017 14:49:32 -0500
+Message-ID: <149314977225.13903.856016860870045906.stgit@brunhilda>
 References: <149314950730.13903.644081079070695025.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0057.outbound.protection.outlook.com ([104.47.40.57]:57568
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam01on0062.outbound.protection.outlook.com ([104.47.32.62]:22976
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1947129AbdDYTtq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Apr 2017 15:49:46 -0400
+        id S1947680AbdDYTtw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Apr 2017 15:49:52 -0400
 In-Reply-To: <149314950730.13903.644081079070695025.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Kevin Barnett <kevin.barnett@microsemi.com>
+From: Corentin Labbe <clabbe.montjoie@gmail.com>
 
-Add module parameters to disable heartbeat support and to disable
-shutting down the controller when a controller is taken offline.
+Instead of rewriting write/readq, use existing functions
 
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
+Signed-off-by: Corentin Labbe <clabbe.montjoie@gmail.com>
 Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c |   29 ++++++++++++++++++++++++-----
- 1 file changed, 24 insertions(+), 5 deletions(-)
+ drivers/scsi/smartpqi/smartpqi.h |   29 -----------------------------
+ 1 file changed, 29 deletions(-)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 13d3ed5..cf13f3e 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -122,6 +122,18 @@ module_param_named(disable_device_id_wildcards,
- MODULE_PARM_DESC(disable_device_id_wildcards,
- 	"Disable device ID wildcards.");
+diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
+index e9f113a..446e17b 100644
+--- a/drivers/scsi/smartpqi/smartpqi.h
++++ b/drivers/scsi/smartpqi/smartpqi.h
+@@ -1175,33 +1175,4 @@ void pqi_prep_for_scsi_done(struct scsi_cmnd *scmd);
  
-+static int pqi_disable_heartbeat;
-+module_param_named(disable_heartbeat,
-+	pqi_disable_heartbeat, int, 0644);
-+MODULE_PARM_DESC(disable_heartbeat,
-+	"Disable heartbeat.");
-+
-+static int pqi_disable_ctrl_shutdown;
-+module_param_named(disable_ctrl_shutdown,
-+	pqi_disable_ctrl_shutdown, int, 0644);
-+MODULE_PARM_DESC(disable_ctrl_shutdown,
-+	"Disable controller shutdown when controller locked up.");
-+
- static char *pqi_lockup_action_param;
- module_param_named(lockup_action,
- 	pqi_lockup_action_param, charp, 0644);
-@@ -5969,10 +5981,16 @@ static int pqi_process_config_table(struct pqi_ctrl_info *ctrl_info)
+ extern struct sas_function_template pqi_sas_transport_functions;
  
- 		switch (get_unaligned_le16(&section->section_id)) {
- 		case PQI_CONFIG_TABLE_SECTION_HEARTBEAT:
--			ctrl_info->heartbeat_counter = table_iomem_addr +
--				section_offset +
--				offsetof(struct pqi_config_table_heartbeat,
--					heartbeat_counter);
-+			if (pqi_disable_heartbeat)
-+				dev_warn(&ctrl_info->pci_dev->dev,
-+				"heartbeat disabled by module parameter\n");
-+			else
-+				ctrl_info->heartbeat_counter =
-+					table_iomem_addr +
-+					section_offset +
-+					offsetof(
-+					struct pqi_config_table_heartbeat,
-+						heartbeat_counter);
- 			break;
- 		}
- 
-@@ -6557,7 +6575,8 @@ static void pqi_take_ctrl_offline(struct pqi_ctrl_info *ctrl_info)
- 	ctrl_info->controller_online = false;
- 	ctrl_info->pqi_mode_enabled = false;
- 	pqi_ctrl_block_requests(ctrl_info);
--	sis_shutdown_ctrl(ctrl_info);
-+	if (!pqi_disable_ctrl_shutdown)
-+		sis_shutdown_ctrl(ctrl_info);
- 	pci_disable_device(ctrl_info->pci_dev);
- 	dev_err(&ctrl_info->pci_dev->dev, "controller offline\n");
- 	schedule_work(&ctrl_info->ctrl_offline_work);
+-#if !defined(readq)
+-#define readq readq
+-static inline u64 readq(const volatile void __iomem *addr)
+-{
+-	u32 lower32;
+-	u32 upper32;
+-
+-	lower32 = readl(addr);
+-	upper32 = readl(addr + 4);
+-
+-	return ((u64)upper32 << 32) | lower32;
+-}
+-#endif
+-
+-#if !defined(writeq)
+-#define writeq writeq
+-static inline void writeq(u64 value, volatile void __iomem *addr)
+-{
+-	u32 lower32;
+-	u32 upper32;
+-
+-	lower32 = lower_32_bits(value);
+-	upper32 = upper_32_bits(value);
+-
+-	writel(lower32, addr);
+-	writel(upper32, addr + 4);
+-}
+-#endif
+-
+ #endif /* _SMARTPQI_H */
