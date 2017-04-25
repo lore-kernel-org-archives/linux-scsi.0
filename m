@@ -1,36 +1,60 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 3/7] sd: Cleanup sd_done sense data handling
-Date: Tue, 25 Apr 2017 13:03:38 -0400
-Message-ID: <yq1shkwe7x1.fsf@oracle.com>
-References: <20170424075115.30337-1-damien.lemoal@wdc.com>
-        <20170424075115.30337-4-damien.lemoal@wdc.com>
-        <20170424153535.GE895@lst.de> <yq14lxdh04k.fsf@oracle.com>
-        <a9fecd09-3f80-f26c-eb33-cdb5a3ea3734@wdc.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [RFC] scsi: reduce protection of scan_mutex in scsi_remove_device
+Date: Tue, 25 Apr 2017 17:23:49 +0000
+Message-ID: <1493141028.2628.4.camel@sandisk.com>
+References: <20170421211302.2667649-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43434 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1951361AbdDYRD5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Apr 2017 13:03:57 -0400
-In-Reply-To: <a9fecd09-3f80-f26c-eb33-cdb5a3ea3734@wdc.com> (Damien Le Moal's
-        message of "Tue, 25 Apr 2017 10:54:11 +0900")
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:59937 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1952034AbdDYRXy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Apr 2017 13:23:54 -0400
+In-Reply-To: <20170421211302.2667649-1-songliubraving@fb.com>
+Content-Language: en-US
+Content-ID: <5DEB6C4C588F6546B97F7174D0F54774@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Damien Le Moal <damien.lemoal@wdc.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Bart Van Assche <Bart.VanAssche@sandisk.com>, Hannes Reinecke <hare@suse.de>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "songliubraving@fb.com" <songliubraving@fb.com>
+Cc: "hch@infradead.org" <hch@infradead.org>
 
+On Fri, 2017-04-21 at 14:13 -0700, Song Liu wrote:
+> When a device is deleted through sysfs handle "delete", the code
+> locks shost->scan_mutex. If multiple devices are deleted at the
+> same time, these deletes will be handled in series.
+>=20
+> On the other hand, some devices do long latency IO during deletion,
+> for example, sd_shutdown() may do sync cache and/or start_stop.
+> It is not necessary for these commands to run in series.
+>=20
+> To reduce latency of parallel "delete" requests, this patch reduces
+> the protection of scan_mutex. The only function with Scsi_Host
+> called in __scsi_remove_device() is the optional slave_destroy().
+> Therefore, the protection of scan_mutex is only necessary for this
+> function.
 
-Damien,
+Hello Song,
 
-> good_bytes is already set to 0 at the beginning of sd_done() when
-> result != 0 and again within the initial switch-case for
-> REQ_OP_DISCARD and REQ_OP_WRITE_SAME cases, which are the only
-> commands that can lead to hitting that "else" part in the sense data
-> processing.  I may be missing something, but I think that that
-> assignment is redundant.
+What you wrote above is wrong. It is necessary to serialize SCSI
+scanning against SCSI device removal. That is why scan_mutex is held
+around the __scsi_remove_device() call. When adding a LUN the following
+(and several other) actions are performed:
+* Allocation of memory for struct scsi_device.
+* Allocation of a block layer request queue.
+* Initialization of the .sdev_gendev and .sdev_dev device structures.
+* Association of the transport layer driver with the SCSI device.
+* Association of a device handler with the SCSI device (e.g. ALUA).
+* Making the .sdev_gendev and .sdev_dev devices visible in sysfs.
+* Making the transport layer attributes visible in sysfs.
+* Creating a bsg device node in sysfs.
+* Association of an upper layer driver
+(e.g. sd or sr) with the SCSI LUN.
 
-Fixed this up, thanks!
+Removal of a LUN means undoing all of the above. If adding and removing
+a LUN would not be not serialized then there would be a risk that removal
+and immediate reregistration of a LUN will fail due to the reregistration
+process trying to add sysfs attributes that were not yet removed by the
+removal step.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Bart.=
