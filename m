@@ -1,70 +1,56 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH 36/37] smartpqi: remove writeq/readq function definitions
-Date: Tue, 25 Apr 2017 14:49:32 -0500
-Message-ID: <149314977225.13903.856016860870045906.stgit@brunhilda>
+Subject: [PATCH 37/37] smartpqi: bump driver version
+Date: Tue, 25 Apr 2017 14:49:38 -0500
+Message-ID: <149314977832.13903.9156047611774470262.stgit@brunhilda>
 References: <149314950730.13903.644081079070695025.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0062.outbound.protection.outlook.com ([104.47.32.62]:22976
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-dm3nam03on0044.outbound.protection.outlook.com ([104.47.41.44]:6368
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1947680AbdDYTtw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Apr 2017 15:49:52 -0400
+        id S1038958AbdDYTuC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Apr 2017 15:50:02 -0400
 In-Reply-To: <149314950730.13903.644081079070695025.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Corentin Labbe <clabbe.montjoie@gmail.com>
-
-Instead of rewriting write/readq, use existing functions
+From: Kevin Barnett <kevin.barnett@hpe.com>
 
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
-Signed-off-by: Corentin Labbe <clabbe.montjoie@gmail.com>
+Reviewed-by: Gerry Morong <gerry.morong@microsemi.com>
 Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/smartpqi/smartpqi.h |   29 -----------------------------
- 1 file changed, 29 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c |   15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-index e9f113a..446e17b 100644
---- a/drivers/scsi/smartpqi/smartpqi.h
-+++ b/drivers/scsi/smartpqi/smartpqi.h
-@@ -1175,33 +1175,4 @@ void pqi_prep_for_scsi_done(struct scsi_cmnd *scmd);
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index cf13f3e..ef5ccb2 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -40,13 +40,14 @@
+ #define BUILD_TIMESTAMP
+ #endif
  
- extern struct sas_function_template pqi_sas_transport_functions;
+-#define DRIVER_VERSION		"0.9.13-370"
+-#define DRIVER_MAJOR		0
+-#define DRIVER_MINOR		9
+-#define DRIVER_RELEASE		13
+-#define DRIVER_REVISION		370
+-
+-#define DRIVER_NAME		"Microsemi PQI Driver (v" DRIVER_VERSION ")"
++#define DRIVER_VERSION		"1.0.4-100"
++#define DRIVER_MAJOR		1
++#define DRIVER_MINOR		0
++#define DRIVER_RELEASE		4
++#define DRIVER_REVISION		100
++
++#define DRIVER_NAME		"Microsemi PQI Driver (v" \
++				DRIVER_VERSION BUILD_TIMESTAMP ")"
+ #define DRIVER_NAME_SHORT	"smartpqi"
  
--#if !defined(readq)
--#define readq readq
--static inline u64 readq(const volatile void __iomem *addr)
--{
--	u32 lower32;
--	u32 upper32;
--
--	lower32 = readl(addr);
--	upper32 = readl(addr + 4);
--
--	return ((u64)upper32 << 32) | lower32;
--}
--#endif
--
--#if !defined(writeq)
--#define writeq writeq
--static inline void writeq(u64 value, volatile void __iomem *addr)
--{
--	u32 lower32;
--	u32 upper32;
--
--	lower32 = lower_32_bits(value);
--	upper32 = upper_32_bits(value);
--
--	writel(lower32, addr);
--	writel(upper32, addr + 4);
--}
--#endif
--
- #endif /* _SMARTPQI_H */
+ #define PQI_EXTRA_SGL_MEMORY	(12 * sizeof(struct pqi_sg_descriptor))
