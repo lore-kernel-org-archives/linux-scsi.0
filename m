@@ -1,17 +1,17 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH 30/37] smartpqi: update timeout on admin commands
-Date: Tue, 25 Apr 2017 14:48:55 -0500
-Message-ID: <149314973561.13903.18185640757974966656.stgit@brunhilda>
+Subject: [PATCH 31/37] smartpqi: enhance device add and remove messages
+Date: Tue, 25 Apr 2017 14:49:01 -0500
+Message-ID: <149314974169.13903.4255536500317735564.stgit@brunhilda>
 References: <149314950730.13903.644081079070695025.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0079.outbound.protection.outlook.com ([104.47.37.79]:32789
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+Received: from mail-bl2nam02on0052.outbound.protection.outlook.com ([104.47.38.52]:47639
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1176519AbdDYTt3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Apr 2017 15:49:29 -0400
+        id S1176519AbdDYTte (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Apr 2017 15:49:34 -0400
 In-Reply-To: <149314950730.13903.644081079070695025.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,45 +20,162 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Kevin Barnett <kevin.barnett@hpe.com>
 
-Increase the timeout on admin commands from 3 seconds to 60
-seconds and added a check for controller crash in the loop
-where the driver polls for admin command completion.
+Improved formatting of information displayed when devices
+are added/removed from the system.
 
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
 Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/scsi/smartpqi/smartpqi_init.c |   90 +++++++++++++++++++++++++--------
+ 1 file changed, 69 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index e841c1b..52ad6e7 100644
+index 52ad6e7..c20d731 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -3432,6 +3432,8 @@ static void pqi_submit_admin_request(struct pqi_ctrl_info *ctrl_info,
- 	writel(iq_pi, admin_queues->iq_pi);
+@@ -1454,24 +1454,66 @@ static enum pqi_find_result pqi_scsi_find_entry(struct pqi_ctrl_info *ctrl_info,
+ 	return DEVICE_NOT_FOUND;
  }
  
-+#define PQI_ADMIN_REQUEST_TIMEOUT_SECS	60
++#define PQI_DEV_INFO_BUFFER_LENGTH	128
 +
- static int pqi_poll_for_admin_response(struct pqi_ctrl_info *ctrl_info,
- 	struct pqi_general_admin_response *response)
+ static void pqi_dev_info(struct pqi_ctrl_info *ctrl_info,
+ 	char *action, struct pqi_scsi_dev *device)
  {
-@@ -3443,7 +3445,7 @@ static int pqi_poll_for_admin_response(struct pqi_ctrl_info *ctrl_info,
- 	admin_queues = &ctrl_info->admin_queues;
- 	oq_ci = admin_queues->oq_ci_copy;
+-	dev_info(&ctrl_info->pci_dev->dev,
+-		"%s scsi %d:%d:%d:%d: %s %.8s %.16s %-12s SSDSmartPathCap%c En%c qd=%d\n",
+-		action,
+-		ctrl_info->scsi_host->host_no,
+-		device->bus,
+-		device->target,
+-		device->lun,
++	ssize_t count;
++	char buffer[PQI_DEV_INFO_BUFFER_LENGTH];
++
++	count = snprintf(buffer, PQI_DEV_INFO_BUFFER_LENGTH,
++		"%d:%d:", ctrl_info->scsi_host->host_no, device->bus);
++
++	if (device->target_lun_valid)
++		count += snprintf(buffer + count,
++			PQI_DEV_INFO_BUFFER_LENGTH - count,
++			"%d:%d",
++			device->target,
++			device->lun);
++	else
++		count += snprintf(buffer + count,
++			PQI_DEV_INFO_BUFFER_LENGTH - count,
++			"-:-");
++
++	if (pqi_is_logical_device(device))
++		count += snprintf(buffer + count,
++			PQI_DEV_INFO_BUFFER_LENGTH - count,
++			" %08x%08x",
++			*((u32 *)&device->scsi3addr),
++			*((u32 *)&device->scsi3addr[4]));
++	else
++		count += snprintf(buffer + count,
++			PQI_DEV_INFO_BUFFER_LENGTH - count,
++			" %016llx", device->sas_address);
++
++	count += snprintf(buffer + count, PQI_DEV_INFO_BUFFER_LENGTH - count,
++		" %s %.8s %.16s ",
+ 		scsi_device_type(device->devtype),
+ 		device->vendor,
+-		device->model,
+-		pqi_is_logical_device(device) ?
+-			pqi_raid_level_to_string(device->raid_level) : "",
+-		device->offload_configured ? '+' : '-',
+-		device->offload_enabled_pending ? '+' : '-',
+-		device->queue_depth);
++		device->model);
++
++	if (pqi_is_logical_device(device)) {
++		if (device->devtype == TYPE_DISK)
++			count += snprintf(buffer + count,
++				PQI_DEV_INFO_BUFFER_LENGTH - count,
++				"SSDSmartPathCap%c En%c %-12s",
++				device->offload_configured ? '+' : '-',
++				(device->offload_enabled ||
++				device->offload_enabled_pending) ? '+' : '-',
++				pqi_raid_level_to_string(device->raid_level));
++	} else {
++		count += snprintf(buffer + count,
++			PQI_DEV_INFO_BUFFER_LENGTH - count,
++			"AIO%c", device->aio_enabled ? '+' : '-');
++		if (device->devtype == TYPE_DISK ||
++			device->devtype == TYPE_ZBC)
++			count += snprintf(buffer + count,
++				PQI_DEV_INFO_BUFFER_LENGTH - count,
++				" qd=%-6d", device->queue_depth);
++	}
++
++	dev_info(&ctrl_info->pci_dev->dev, "%s %s\n", action, buffer);
+ }
  
--	timeout = (3 * HZ) + jiffies;
-+	timeout = (PQI_ADMIN_REQUEST_TIMEOUT_SECS * HZ) + jiffies;
- 
- 	while (1) {
- 		oq_pi = *admin_queues->oq_pi;
-@@ -3454,6 +3456,8 @@ static int pqi_poll_for_admin_response(struct pqi_ctrl_info *ctrl_info,
- 				"timed out waiting for admin response\n");
- 			return -ETIMEDOUT;
+ /* Assumes the SCSI device list lock is held. */
+@@ -1644,14 +1686,14 @@ static void pqi_update_device_list(struct pqi_ctrl_info *ctrl_info,
+ 	/* Remove all devices that have gone away. */
+ 	list_for_each_entry_safe(device, next, &delete_list,
+ 		delete_list_entry) {
+-		if (device->sdev)
+-			pqi_remove_device(ctrl_info, device);
+ 		if (device->volume_offline) {
+ 			pqi_dev_info(ctrl_info, "offline", device);
+ 			pqi_show_volume_status(ctrl_info, device);
+ 		} else {
+ 			pqi_dev_info(ctrl_info, "removed", device);
  		}
-+		if (!sis_is_firmware_running(ctrl_info))
-+			return -ENXIO;
- 		usleep_range(1000, 2000);
++		if (device->sdev)
++			pqi_remove_device(ctrl_info, device);
+ 		list_del(&device->delete_list_entry);
+ 		pqi_free_device(device);
  	}
+@@ -1673,6 +1715,7 @@ static void pqi_update_device_list(struct pqi_ctrl_info *ctrl_info,
+ 	/* Expose any new devices. */
+ 	list_for_each_entry_safe(device, next, &add_list, add_list_entry) {
+ 		if (!device->sdev) {
++			pqi_dev_info(ctrl_info, "added", device);
+ 			rc = pqi_add_device(ctrl_info, device);
+ 			if (rc) {
+ 				dev_warn(&ctrl_info->pci_dev->dev,
+@@ -1681,10 +1724,8 @@ static void pqi_update_device_list(struct pqi_ctrl_info *ctrl_info,
+ 					device->bus, device->target,
+ 					device->lun);
+ 				pqi_fixup_botched_add(ctrl_info, device);
+-				continue;
+ 			}
+ 		}
+-		pqi_dev_info(ctrl_info, "added", device);
+ 	}
+ }
  
+@@ -1744,7 +1785,7 @@ static int pqi_update_scsi_devices(struct pqi_ctrl_info *ctrl_info)
+ 	bool is_physical_device;
+ 	u8 *scsi3addr;
+ 	static char *out_of_memory_msg =
+-		"out of memory, device discovery stopped";
++		"failed to allocate memory, device discovery stopped";
+ 
+ 	INIT_LIST_HEAD(&new_device_list_head);
+ 
+@@ -1845,9 +1886,16 @@ static int pqi_update_scsi_devices(struct pqi_ctrl_info *ctrl_info)
+ 			goto out;
+ 		}
+ 		if (rc) {
+-			dev_warn(&ctrl_info->pci_dev->dev,
+-				"obtaining device info failed, skipping device %016llx\n",
+-				get_unaligned_be64(device->scsi3addr));
++			if (device->is_physical_device)
++				dev_warn(&ctrl_info->pci_dev->dev,
++					"obtaining device info failed, skipping physical device %016llx\n",
++					get_unaligned_be64(
++						&phys_lun_ext_entry->wwid));
++			else
++				dev_warn(&ctrl_info->pci_dev->dev,
++					"obtaining device info failed, skipping logical device %08x%08x\n",
++					*((u32 *)&device->scsi3addr),
++					*((u32 *)&device->scsi3addr[4]));
+ 			rc = 0;
+ 			continue;
+ 		}
