@@ -1,94 +1,50 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH v5 1/4] Introduce scsi_start_queue()
-Date: Tue, 25 Apr 2017 13:53:51 -0700
-Message-ID: <20170425205354.21181-2-bart.vanassche@sandisk.com>
-References: <20170425205354.21181-1-bart.vanassche@sandisk.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [RFC] scsi: reduce protection of scan_mutex in scsi_remove_device
+Date: Tue, 25 Apr 2017 20:59:54 +0000
+Message-ID: <1493153988.2628.22.camel@sandisk.com>
+References: <20170421211302.2667649-1-songliubraving@fb.com>
+         <1492809623.2499.4.camel@sandisk.com>
+         <4C56F7C6-1A83-4B03-AFAD-E9C92BB2B2F6@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:43340 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1954550AbdDYUyE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Apr 2017 16:54:04 -0400
-In-Reply-To: <20170425205354.21181-1-bart.vanassche@sandisk.com>
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:57365 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1033861AbdDYU74 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Apr 2017 16:59:56 -0400
+In-Reply-To: <4C56F7C6-1A83-4B03-AFAD-E9C92BB2B2F6@fb.com>
+Content-Language: en-US
+Content-ID: <EFDE07C470188D4DA58654D2C11A6406@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Israel Rukshin <israelr@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>, Hannes Reinecke <hare@suse.de>, Song Liu <songliubraving@fb.com>
+To: "songliubraving@fb.com" <songliubraving@fb.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>
 
-This patch does not change any functionality.
+On Fri, 2017-04-21 at 22:31 +0000, Song Liu wrote:
+> On Apr 21, 2017, at 2:20 PM, Bart Van Assche <Bart.VanAssche@sandisk.com>=
+ wrote:
+> > On Fri, 2017-04-21 at 14:13 -0700, Song Liu wrote:
+> > > On the other hand, some devices do long latency IO during deletion,
+> > > for example, sd_shutdown() may do sync cache and/or start_stop.
+> > > It is not necessary for these commands to run in series.
+> >=20
+> > Have you noticed my patch series that makes sd_shutdown() submit the
+> > SYNCHRONIZE CACHE command asynchronously? Have you tried whether that
+> > patch series would be a good alternative?
+>=20
+> The asynchronous SYNCHRONIZE CACHE will not help our use case, where the=
+=20
+> latency comes from sd_start_stop_device(). Seems it is not easy to make=20
+> the START STOP UNIT command async.=20
 
-Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Israel Rukshin <israelr@mellanox.com>
-Cc: Max Gurtovoy <maxg@mellanox.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Song Liu <songliubraving@fb.com>
----
- drivers/scsi/scsi_lib.c  | 25 +++++++++++++++----------
- drivers/scsi/scsi_priv.h |  1 +
- 2 files changed, 16 insertions(+), 10 deletions(-)
+Hello Song,
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index eecc005099b2..ffa6e61299a9 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2987,6 +2987,20 @@ scsi_internal_device_block(struct scsi_device *sdev, bool wait)
- }
- EXPORT_SYMBOL_GPL(scsi_internal_device_block);
-  
-+void scsi_start_queue(struct scsi_device *sdev)
-+{
-+	struct request_queue *q = sdev->request_queue;
-+	unsigned long flags;
-+
-+	if (q->mq_ops) {
-+		blk_mq_start_stopped_hw_queues(q, false);
-+	} else {
-+		spin_lock_irqsave(q->queue_lock, flags);
-+		blk_start_queue(q);
-+		spin_unlock_irqrestore(q->queue_lock, flags);
-+	}
-+}
-+
- /**
-  * scsi_internal_device_unblock - resume a device after a block request
-  * @sdev:	device to resume
-@@ -3007,9 +3021,6 @@ int
- scsi_internal_device_unblock(struct scsi_device *sdev,
- 			     enum scsi_device_state new_state)
- {
--	struct request_queue *q = sdev->request_queue; 
--	unsigned long flags;
--
- 	/*
- 	 * Try to transition the scsi device to SDEV_RUNNING or one of the
- 	 * offlined states and goose the device queue if successful.
-@@ -3027,13 +3038,7 @@ scsi_internal_device_unblock(struct scsi_device *sdev,
- 		 sdev->sdev_state != SDEV_OFFLINE)
- 		return -EINVAL;
- 
--	if (q->mq_ops) {
--		blk_mq_start_stopped_hw_queues(q, false);
--	} else {
--		spin_lock_irqsave(q->queue_lock, flags);
--		blk_start_queue(q);
--		spin_unlock_irqrestore(q->queue_lock, flags);
--	}
-+	scsi_start_queue(sdev);
- 
- 	return 0;
- }
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index f11bd102d6d5..c7629e31a75b 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -89,6 +89,7 @@ extern void scsi_run_host_queues(struct Scsi_Host *shost);
- extern void scsi_requeue_run_queue(struct work_struct *work);
- extern struct request_queue *scsi_alloc_queue(struct scsi_device *sdev);
- extern struct request_queue *scsi_mq_alloc_queue(struct scsi_device *sdev);
-+extern void scsi_start_queue(struct scsi_device *sdev);
- extern int scsi_mq_setup_tags(struct Scsi_Host *shost);
- extern void scsi_mq_destroy_tags(struct Scsi_Host *shost);
- extern int scsi_init_queue(void);
--- 
-2.12.2
+It should be possible to make the START STOP UNIT command asynchronous too
+by issuing it asynchronously from inside sd_sync_cache_done(). To avoid
+dereferencing a stale struct scsi_disk pointer you will either have to hold
+an additional reference as long as the SYNCHRONIZE CACHE command is in
+progress or copy the data needed from struct scsi_disk into the SCSI reques=
+t.
+
+Bart.=
