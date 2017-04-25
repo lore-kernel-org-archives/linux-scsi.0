@@ -1,41 +1,40 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: Re: [PATCH] nvme/scsi: Consider LBA format in IO splitting
- calculation
-Date: Tue, 25 Apr 2017 13:43:20 +0900
-Message-ID: <5159e2b1-d9cf-b76b-7000-d0b7c3c0d975@wdc.com>
-References: <20170425000243.2019-1-jonathan.derrick@intel.com>
- <20170425040025.GA23572@kernel.dk>
- <267a4710-3a71-c08c-8e03-19bd2e73d056@wdc.com>
- <9a84df91-509d-1c1f-8653-849e42a50b6a@kernel.dk>
+From: Juergen Gross <jgross@suse.com>
+Subject: Re: [PATCH] xen/scsifront: use offset_in_page() macro
+Date: Tue, 25 Apr 2017 07:07:17 +0200
+Message-ID: <8758851a-a181-b33b-69b8-5c252d5af761@suse.com>
+References: <4dbc77ccaaed98b183cf4dba58a4fa325fd65048.1492758503.git.geliangtang@gmail.com>
+ <b066ac954374a00bca91fadf3f2d5aba0eb8cb0a.1492758340.git.geliangtang@gmail.com>
+ <ca4bb9e8-b614-a24d-e533-70ce75ff288f@suse.com> <yq17f29ihax.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <9a84df91-509d-1c1f-8653-849e42a50b6a@kernel.dk>
-Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, Jon Derrick <jonathan.derrick@intel.com>
-Cc: linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, keith.busch@intel.com, hch@infradead.org, sagi@grimberg.me
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:48776 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S976013AbdDYFHU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Apr 2017 01:07:20 -0400
+In-Reply-To: <yq17f29ihax.fsf@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Geliang Tang <geliangtang@gmail.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Jens,
-
-On 4/25/17 13:32, Jens Axboe wrote:
->> I just realized that this macro is defined in linux/device-mapper.h,
->> which does not seem like to best place to have it. Why not blkdev.h ?
->> Any particular reason ? This leads to some strange include dependencies,
->> like many nfs/blocklayout/ files including device-mapper.h just to get
->> that definition.
+On 25/04/17 00:15, Martin K. Petersen wrote:
 > 
-> I'm fine with moving it and using it everywhere. Right now we don't in
-> the block core at all, 9 is always hard coded. While that change would
-> be fine, it should be done independently of this patch, which is a real
-> bug fix.
+> Juergen,
+> 
+>> On 22/04/17 03:21, Geliang Tang wrote:
+>>> Use offset_in_page() macro instead of open-coding.
+>>>
+>>> Signed-off-by: Geliang Tang <geliangtang@gmail.com>
+>>
+>> Reviewed-by: Juergen Gross <jgross@suse.com>
+> 
+> Taking this through the Xen tree or should I queue it?
 
-Thank you for the clarification. I will try to send something later.
+I can take it through the Xen tree.
 
-Best regards.
 
--- 
-Damien Le Moal,
-Western Digital
+Thanks,
+
+Juergen
