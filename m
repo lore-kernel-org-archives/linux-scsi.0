@@ -1,70 +1,100 @@
-From: Dave Carroll <david.carroll@microsemi.com>
-Subject: RE: [PATCH v2 1/1] aacraid: pci_alloc_consistent() failures on ARM64
-Date: Tue, 25 Apr 2017 23:21:11 +0000
-Message-ID: <423FD6710FB8FB4F8728F93591889F9A51341B71@avsrvexchmbx1.microsemi.net>
-References: <1491389056-15543-1-git-send-email-mahesh.rajashekhara@microsemi.com>
- <20170425070721.GA13214@infradead.org>
+From: Song Liu <songliubraving@fb.com>
+Subject: Re: [RFC] scsi: reduce protection of scan_mutex in scsi_remove_device
+Date: Wed, 26 Apr 2017 00:41:48 +0000
+Message-ID: <7EED4CA5-AD83-4C49-810C-D796CEC2358A@fb.com>
+References: <20170421211302.2667649-1-songliubraving@fb.com>
+ <1493141028.2628.4.camel@sandisk.com>
+ <11AE7D30-E24A-4DF3-8237-AF97A342D239@fb.com>
+ <1493142729.2628.6.camel@sandisk.com>
+ <3B06D0B6-825E-4788-9B87-BE3F35055DB2@fb.com>
+ <1493158657.2628.26.camel@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0054.outbound.protection.outlook.com ([104.47.38.54]:46690
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1946221AbdDYXVS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Apr 2017 19:21:18 -0400
-In-Reply-To: <20170425070721.GA13214@infradead.org>
+Received: from [67.231.145.42] ([67.231.145.42]:48643 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-FAIL-FAIL-OK-OK)
+        by vger.kernel.org with ESMTP id S1433746AbdDZAof (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Apr 2017 20:44:35 -0400
+In-Reply-To: <1493158657.2628.26.camel@sandisk.com>
 Content-Language: en-US
+Content-ID: <35453D334EBB414EB994D45D149D6F4D@namprd15.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>
 
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@infradead.org]
-> Sent: Tuesday, April 25, 2017 12:07 AM
-> To: Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>
-> Cc: Dave Carroll <david.carroll@microsemi.com>; linux-scsi@vger.kernel.or=
-g;
-> jejb@linux.vnet.ibm.com; martin.petersen@oracle.com; dl-esc-Aacraid Linux
-> Driver <aacraid@microsemi.com>
-> Subject: Re: [PATCH v2 1/1] aacraid: pci_alloc_consistent() failures on A=
-RM64
+
+> On Apr 25, 2017, at 3:17 PM, Bart Van Assche <Bart.VanAssche@sandisk.com>=
+ wrote:
 >=20
-> On Wed, Apr 05, 2017 at 04:14:16PM +0530, Mahesh Rajashekhara wrote:
-> > There were pci_alloc_consistent() failures on ARM64 platform.
-> > Use dma_alloc_coherent() with GFP_KERNEL flag DMA memory allocations.
-> >
-> > Signed-off-by: Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>
-> > ---
-> > v2:
-> >  - Removed platform specific MACRO and call dma_*_coherent routines
-> directly.
-> >  - Removed all the casts to and from void * in the arguments and
-> > return values
+> On Tue, 2017-04-25 at 21:17 +0000, Song Liu wrote:
+>> I am not sure I fully understand the problem here. If I understand the l=
+ogic=20
+>> correctly, when a device is being removed, it will stay in scsi_host->__=
+devices
+>> until fully the remove routine is finished. And LUN scanning in parallel=
+ will
+>> find the device with scsi_device_lookup_by_target(), and thus it would n=
+ot=20
+>> rescan the device until the device is fully removed? Did I miss anything=
+ here?
 >=20
-> The indentation is weird, and you're also adding memsets of the allocatio=
-ns
-> which is a behavior change.  Please take a look at the the attached versi=
-on that
-> fixes this up.
+> Hello Song,
 >=20
-> If you really need the zeroing please send an additional patch to switch =
-to
-> dma_zalloc_coherent.
+> The SCSI core is already complicated enough. Please don't complicate it f=
+urther
+> by making subtle changes to the semantics of scan_mutex. Please also note=
+ that
+> I have proposed an alternative, namely to make the START STOP UNIT comman=
+d
+> asynchronous.
 >=20
-> ---
-> From 522b355c4fe021822d385332de525c7de5c2b290 Mon Sep 17 00:00:00
-> 2001
-> From: Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>
-> Date: Wed, 5 Apr 2017 16:14:16 +0530
-> Subject: aacraid: pci_alloc_consistent() failures on ARM64
->=20
-> There were pci_alloc_consistent() failures on ARM64 platform.
-> Use dma_alloc_coherent() with GFP_KERNEL flag DMA memory allocations.
->=20
-> Signed-off-by: Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>
-> [hch: tweaked indentation, removed memsets]
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
-Acked-by: Dave Carroll <david.carroll@microsemi.com>
+
+Hello Bart,=20
+
+I total agree with your concern in making SCSI core more complicated. Howev=
+er, I am
+not sure whether how asynchronous START STOP UNIT command makes multiple de=
+letes run
+in parallel. If I understand correctly, each device delete has the followin=
+g steps:
+  1. lock scan_mutex
+  2. issue async START STOP UNIT=20
+  3. wait START STOP UNIT to complete
+  4. unlock scan_mutex
+
+scan_mutex will prevent multiple device deletes to run in parallel.=20
+
+On the other hand, maybe the problem is simpler than I thought? Once we ens=
+ure all
+slave_destroy() holds proper lock to access host level data, something as f=
+ollows
+might just work. In this way, echoing into delete handle is not protected b=
+y=20
+scan_mutex. However, when the sysfs entry exists, the device should be full=
+y added=20
+to the system. And before delete operation finishes, future scan should not=
+ re-add=20
+the device (as the device can be found by scsi_device_lookup_by_target).=20
+
+Am I too optimistic here?
+
+Thanks,
+Song
+
+
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 82dfe07..d1c3338 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -710,7 +710,7 @@ sdev_store_delete(struct device *dev, struct device_att=
+ribute *attr,
+                  const char *buf, size_t count)
+ {
+        if (device_remove_file_self(dev, attr))
+-               scsi_remove_device(to_scsi_device(dev));
++               __scsi_remove_device(to_scsi_device(dev));
+        return count;
+ };=20
