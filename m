@@ -1,34 +1,38 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: Re: Checking error messages for failed memory allocations
-Date: Wed, 26 Apr 2017 20:50:13 +0200
-Message-ID: <f6da1799-02a1-b1dc-edcb-a2ea5563b51a@users.sourceforge.net>
-References: <75622f45-f46c-e52f-2b9e-6ff5ce32184a@users.sourceforge.net>
- <3d355c13-159a-2570-9ead-af93ad95c210@users.sourceforge.net>
- <019b6365c15b0764c156d6453648f7a2@codeaurora.org>
- <1493231242.18659.28.camel@perches.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH v5 0/4] Avoid that __scsi_remove_device() hangs
+Date: Wed, 26 Apr 2017 18:50:59 +0000
+Message-ID: <1493232656.2632.7.camel@sandisk.com>
+References: <20170425205354.21181-1-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.17.12]:59642 "EHLO mout.web.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753835AbdDZSub (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 26 Apr 2017 14:50:31 -0400
-In-Reply-To: <1493231242.18659.28.camel@perches.com>
-Content-Language: en-GB
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:53607 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965496AbdDZSvC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Apr 2017 14:51:02 -0400
+In-Reply-To: <20170425205354.21181-1-bart.vanassche@sandisk.com>
+Content-Language: en-US
+Content-ID: <1BEE889673E8B34F935976957ACFD6D8@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: Subhash Jadavani <subhashj@codeaurora.org>, linux-scsi@vger.kernel.org, "James E. J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Wolfram Sang <wsa@the-dreams.de>, linux-scsi-owner@vger.kernel.org
+To: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-> Basically most everything that has a gfp_t argument does a
-> dump_stack() on OOM unless __GFP_NOWARN is specified by that gfp_t.
+On Tue, 2017-04-25 at 13:53 -0700, Bart Van Assche wrote:
+> __scsi_remove_device() hangs if it is waiting for the SYNCHRONIZE CACHE
+> command submitted by the sd driver to finish if the block layer queue is
+> stopped and does not get restarted. This patch series avoids that that
+> hang occurs.
+> [ ... ]
 
-How do you think about to improve any programming interface documentation
-around such a function property?
+Hello Martin and James,
 
-Are there any special checks needed for function implementations
-which can pass the flag “__GFP_NOWARN”?
+Even with this version of this patch series there is still a lockup possibl=
+e,
+namely if the sd events checker submits a TUR while a SCSI device is blocke=
+d
+and before __scsi_remove_device() calls device_del(). The latter function
+namely waits for sd_check_events() to finish.
 
-Regards,
-Markus
+Bart.=
