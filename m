@@ -1,25 +1,31 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: three little req->errors follow ups
-Date: Wed, 26 Apr 2017 06:54:23 -0700
-Message-ID: <0cc3d6de-0e01-9723-451b-29951e0395a7@kernel.dk>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH 2/3] ide-pm: always pass 0 error to
+ __blk_end_request_all
+Date: Wed, 26 Apr 2017 10:39:00 -0400 (EDT)
+Message-ID: <20170426.103900.178089085115304059.davem@davemloft.net>
 References: <20170426073422.14511-1-hch@lst.de>
+        <20170426073422.14511-3-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170426073422.14511-1-hch@lst.de>
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from shards.monkeyblade.net ([184.105.139.130]:55754 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S638140AbdDZOjG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Apr 2017 10:39:06 -0400
+In-Reply-To: <20170426073422.14511-3-hch@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: hch@lst.de
+Cc: axboe@kernel.dk, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 
-On 04/26/2017 12:34 AM, Christoph Hellwig wrote:
-> While moving forward with the block error work I noticed three more
-> places that pass non-errno values to the end_request variants, and
-> never actually check those return values.  This little series fixes
-> those up to always pass 0.
+From: Christoph Hellwig <hch@lst.de>
+Date: Wed, 26 Apr 2017 09:34:21 +0200
 
-Applied, thanks.
+> ide_pm_execute_rq exectures a PM request synchronously, and in the failure
+> case where it calls __blk_end_request_all it never checks the error field
+> passed to the end_io callback, so don't bother setting it.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
--- 
-Jens Axboe
+Acked-by: David S. Miller <davem@davemloft.net>
