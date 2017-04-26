@@ -1,49 +1,37 @@
-From: Charles Chiou <ch1102chiou@gmail.com>
-Subject: Re: [PATCH] scsi: stex: make S6flag static
-Date: Wed, 26 Apr 2017 10:40:52 +0800
-Message-ID: <05e23578-0bc9-ebcc-28cd-22b8e6a06f00@gmail.com>
-References: <20170425173619.11955-1-colin.king@canonical.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Heloise <os@iscas.ac.cn>
+Subject: [PATCH] mpt3sas_base:fix memory leak in _base_request_irq
+Date: Tue, 25 Apr 2017 20:11:43 -0700
+Message-ID: <1493176303-9491-1-git-send-email-os@iscas.ac.cn>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:36841 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1432142AbdDZClF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Apr 2017 22:41:05 -0400
-In-Reply-To: <20170425173619.11955-1-colin.king@canonical.com>
-Content-Language: en-US
+Received: from m12-18.163.com ([220.181.12.18]:42166 "EHLO m12-18.163.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1434766AbdDZDUO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Apr 2017 23:20:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Colin King <colin.king@canonical.com>, Charles <charles.chiou@tw.promise.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Promise_Linux@promise.com
+To: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Heloise <os@iscas.ac.cn>
 
-Looks good to me.
-Thanks for the improvement.
+Signed-off-by: Heloise <os@iscas.ac.cn>
 
-On 4/26/2017 1:36 AM, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> This module specific flag can be made static as it does
-> not need to be in global scope.
-> 
- > Reviewed-by: Charles Chiou <charles.chiou@tw.promise.com>
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->   drivers/scsi/stex.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-> index 0751561b59da..9b20643ab49d 100644
-> --- a/drivers/scsi/stex.c
-> +++ b/drivers/scsi/stex.c
-> @@ -363,7 +363,7 @@ struct st_card_info {
->   	u16 sts_count;
->   };
->   
-> -int S6flag;
-> +static int S6flag;
->   static int stex_halt(struct notifier_block *nb, ulong event, void *buf);
->   static struct notifier_block stex_notifier = {
->   	stex_halt, NULL, 0
-> 
+In function _base_request_irq, variable reply_q applies for memory
+space 'reply_q=kzalloc()', but does not release it before the function
+returns, fix it.
+---
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 5b7aec5..801dfab 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -1884,6 +1884,7 @@ _base_request_irq(struct MPT3SAS_ADAPTER *ioc, u8 index)
+ 
+ 	INIT_LIST_HEAD(&reply_q->list);
+ 	list_add_tail(&reply_q->list, &ioc->reply_queue_list);
++	kfree(reply_q);
+ 	return 0;
+ }
+ 
+-- 
+2.1.0
