@@ -1,66 +1,28 @@
-From: Logan Gunthorpe <logang@deltatee.com>
-Subject: Re: [PATCH v2 01/21] scatterlist: Introduce sg_map helper functions
-Date: Wed, 26 Apr 2017 12:11:33 -0600
-Message-ID: <4736d44e-bbcf-5d59-a1a9-317d0f4da847@deltatee.com>
-References: <1493144468-22493-1-git-send-email-logang@deltatee.com>
- <1493144468-22493-2-git-send-email-logang@deltatee.com>
- <20170426074416.GA7936@lst.de>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH 2/3] scsi: ufs: Delete an error message for a failed
+ memory allocation in ufshcd_memory_alloc()
+Date: Wed, 26 Apr 2017 11:27:22 -0700
+Message-ID: <1493231242.18659.28.camel@perches.com>
+References: <75622f45-f46c-e52f-2b9e-6ff5ce32184a@users.sourceforge.net>
+         <3d355c13-159a-2570-9ead-af93ad95c210@users.sourceforge.net>
+         <019b6365c15b0764c156d6453648f7a2@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20170426074416.GA7936@lst.de>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: dri-devel@lists.freedesktop.org, Stephen Bates <sbates@raithlin.com>, dm-devel@redhat.com, target-devel@vger.kernel.org, Sumit Semwal <sumit.semwal@linaro.org>, devel@driverdev.osuosl.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, open-iscsi@googlegroups.com, linux-media@vger.kernel.org, intel-gfx@lists.freedesktop.org, sparmaintainer@unisys.com, linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, megaraidlinux.pdl@broadcom.com, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, netdev@vger.kernel.org, Matthew Wilcox <mawilcox@microsoft.com>, linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <019b6365c15b0764c156d6453648f7a2@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Subhash Jadavani <subhashj@codeaurora.org>, SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: linux-scsi@vger.kernel.org, "James E. J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Wolfram Sang <wsa@the-dreams.de>, linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-CgpPbiAyNi8wNC8xNyAwMTo0NCBBTSwgQ2hyaXN0b3BoIEhlbGx3aWcgd3JvdGU6Cj4gSSB0aGlu
-ayB3ZSdsbCBhdCBsZWFzdCBuZWVkIGEgZHJhZnQgb2YgdGhvc2UgdG8gbWFrZSBzZW5zZSBvZiB0
-aGVzZQo+IHBhdGNoZXMuICBPdGhlcndpc2UgdGhleSBqdXN0IGxvb2sgdmVyeSBjbHVtc3kuCgpP
-aywgSSdsbCB3b3JrIHVwIGEgZHJhZnQgcHJvcG9zYWwgYW5kIHNlbmQgaXQgaW4gYSBjb3VwbGUg
-ZGF5cy4gQnV0CndpdGhvdXQgYSBsb3Qgb2YgY2xlYW51cCBzdWNoIGFzIHRoaXMgc2VyaWVzIGl0
-J3Mgbm90IGdvaW5nIHRvIGV2ZW4gYmUKYWJsZSB0byBjb21waWxlLgoKPiBJJ20gc29ycnkgYnV0
-IHRoaXMgQVBJIGlzIGp1c3QgYSB0cmFpbndyZWNrLiAgUmlnaHQgbm93IHdlIGhhdmUgdGhlCj4g
-bmljZSBsaXR0bGUga21hcF9hdG9taWMgQVBJLCB3aGljaCBuZXZlciBmYWlscyBhbmQgaGFzIGEg
-dmVyeSBuaWNlCj4gY2FsbGluZyBjb252ZW50aW9uIHdoZXJlIHdlIGp1c3QgcGFzcyBiYWNrIHRo
-ZSByZXR1cm4gYWRkcmVzcywgYnV0IGRvZXMKPiBub3Qgc3VwcG9ydCBzbGVlcGluZyBpbnNpZGUg
-dGhlIGNyaXRpY2FsIHNlY3Rpb24uCj4gCj4gQW5kIGttYXAsIHdo0ZZjaCBtYXkgZmFpbCBhbmQg
-cmVxdWlyZXMgdGhlIG9yaWdpbmFsIHBhZ2UgdG8gYmUgcGFzc2VkCj4gYmFjay4gIEFueXRoaW5n
-IHRoYXQgbWl4ZXMgdGhlc2UgdHdvIGNvbmNlcHRzIHVwIGlzIHNpbXBseSBhIG5vbi1zdGFydGVy
-LgoKT2ssIHdlbGwgZm9yIHN0YXJ0ZXJzIEkgdGhpbmsgeW91IGFyZSBtaXN0YWtlbiBhYm91dCBr
-bWFwIGJlaW5nIGFibGUgdG8KZmFpbC4gSSdtIGhhdmluZyBhIGhhcmQgdGltZSBmaW5kaW5nIG1h
-bnkgdXNlcnMgb2YgdGhhdCBmdW5jdGlvbiB0aGF0CmJvdGhlciB0byBjaGVjayBmb3IgYW4gZXJy
-b3Igd2hlbiBjYWxsaW5nIGl0LiBUaGUgbWFpbiBkaWZmaWN1bHR5IHdlCmhhdmUgbm93IGlzIHRo
-YXQgbmVpdGhlciBvZiB0aG9zZSBmdW5jdGlvbnMgYXJlIGV4cGVjdGVkIHRvIGZhaWwgYW5kIHdl
-Cm5lZWQgdGhlbSB0byBiZSBhYmxlIHRvIGluIGNhc2VzIHdoZXJlIHRoZSBwYWdlIGRvZXNuJ3Qg
-bWFwIHRvIHN5c3RlbQpSQU0uIFRoaXMgcGF0Y2ggc2VyaWVzIGlzIHRyeWluZyB0byBhZGRyZXNz
-IGl0IGZvciB1c2VycyBvZiBzY2F0dGVybGlzdC4KSSdtIGNlcnRhaW5seSBvcGVuIHRvIG90aGVy
-IHN1Z2dlc3Rpb25zLgoKSSBhbHNvIGhhdmUgdG8gZGlzYWdyZWUgdGhhdCBrbWFwIGFuZCBrbWFw
-X2F0b21pYyBhcmUgYWxsIHRoYXQgIm5pY2UiLgpFeGNlcHQgZm9yIHRoZSBzbGVlcGluZyByZXN0
-cmljdGlvbiBhbmQgcGVyZm9ybWFuY2UsIHRoZXkgZWZmZWN0aXZlbHkgZG8KdGhlIHNhbWUgdGhp
-bmcuIEFuZCBpdCB3YXMgbmVjZXNzYXJ5IHRvIHdyaXRlIGEgbWFjcm8gd3JhcHBlciBhcm91bmQK
-a3VubWFwX2F0b21pYyB0byBlbnN1cmUgdGhhdCB1c2VycyBvZiB0aGF0IGZ1bmN0aW9uIGRvbid0
-IHNjcmV3IGl0IHVwLgooU2VlIDU5Nzc4MWYzZTUuKSBJJ2Qgc2F5IHRoZSBrbWFwL2ttYXBfYXRv
-bWljIGZ1bmN0aW9ucyBhcmUgdGhlCnRyYWlud3JlY2sgYW5kIEknbSB0cnlpbmcgdG8gZG8gbXkg
-YmVzdCB0byBjbGVhbnVwIGEgZmV3IGNhc2VzLgoKVGhlcmUgYXJlIGEgZmFpciBudW1iZXIgb2Yg
-Y2FzZXMgaW4gdGhlIGtlcm5lbCB0aGF0IGRvIHNvbWV0aGluZyBsaWtlOgoKaWYgKHNvbWV0aGlu
-ZykKICAgIHggPSBrbWFwKHBhZ2UpOwplbHNlCiAgICB4ID0ga21hcF9hdG9taWMocGFnZSk7Ci4u
-LgppZiAoc29tZXRoaW5nKQogICAga3VubWFwKHBhZ2UpCmVsc2UKICAgIGt1bm1hcF9hdG9taWMo
-eCkKCldoaWNoIGp1c3Qgc2VlbXMgY3VtYmVyc29tZSB0byBtZS4KCkluIGFueSBjYXNlLCBpZiB5
-b3UgY2FuIGFjY2VwdCBhbiBzZ19rbWFwIGFuZCBzZ19rbWFwX2F0b21pYyBhcGkganVzdApzYXkg
-c28gYW5kIEknbGwgbWFrZSB0aGUgY2hhbmdlLiBCdXQgSSdsbCBzdGlsbCBuZWVkIGEgZmxhZ3Mg
-dmFyaWFibGUKZm9yIFNHX01BUF9NVVNUX05PVF9GQUlMIHRvIHN1cHBvcnQgbGVnYWN5IGNhc2Vz
-IHRoYXQgaGF2ZSBubyBmYWlsIHBhdGgKYW5kIGJvdGggb2YgdGhvc2UgZnVuY3Rpb25zIHdpbGwg
-bmVlZCB0byBiZSBwcmV0dHkgbmVhcmx5IHJlcGxpY2FzIG9mCmVhY2ggb3RoZXIuCgpMb2dhbgoK
-Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmRldmVsIG1h
-aWxpbmcgbGlzdApkZXZlbEBsaW51eGRyaXZlcnByb2plY3Qub3JnCmh0dHA6Ly9kcml2ZXJkZXYu
-bGludXhkcml2ZXJwcm9qZWN0Lm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaXZlcmRldi1kZXZlbAo=
+On Wed, 2017-04-26 at 10:57 -0700, Subhash Jadavani wrote:
+> PS: ufshcd_memory_alloc() also does some DMA coherent memory allocation 
+> (via dmam_alloc_coherent() APIs) and tries to print out the message on 
+> allocation failure. Although i don't know "out of memory" messages will 
+> be printed out by dmam_alloc_coherent() APIs or not. If it does print it 
+> out then we might want to remove our local memory allocation failure log 
+> messages.
+
+Basically most everything that has a gfp_t argument does a
+dump_stack() on OOM unless __GFP_NOWARN is specified by that gfp_t.
