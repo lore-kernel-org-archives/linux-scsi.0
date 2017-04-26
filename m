@@ -1,75 +1,54 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH v2] scsi: ufs: make ufshcd_get_lists_status() register
- operation obvious
-Date: Wed, 26 Apr 2017 10:48:27 -0700
-Message-ID: <5a63fe68bc432843e186de0ebdc44c23@codeaurora.org>
-References: <20170426172858.56224-1-tkusumi@tuxera.com>
+Subject: Re: [PATCH 1/3] scsi: ufs: Use devm_kcalloc() in
+ ufshcd_memory_alloc()
+Date: Wed, 26 Apr 2017 10:52:50 -0700
+Message-ID: <4238f38b6990c86b239d30c794ed48b6@codeaurora.org>
+References: <75622f45-f46c-e52f-2b9e-6ff5ce32184a@users.sourceforge.net>
+ <ac344c69-44ef-07e3-a039-ad4e9a99b1d6@users.sourceforge.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40558 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753749AbdDZRs2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Apr 2017 13:48:28 -0400
-In-Reply-To: <20170426172858.56224-1-tkusumi@tuxera.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <ac344c69-44ef-07e3-a039-ad4e9a99b1d6@users.sourceforge.net>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: linux-scsi@vger.kernel.org, "James E. J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kusumi.tomohiro@gmail.com
-Cc: vinholikatti@gmail.com, linux-scsi@vger.kernel.org, Tomohiro Kusumi <tkusumi@tuxera.com>
 
-On 2017-04-26 10:28, kusumi.tomohiro@gmail.com wrote:
-> From: Tomohiro Kusumi <tkusumi@tuxera.com>
+On 2017-04-25 13:26, SF Markus Elfring wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Tue, 25 Apr 2017 21:45:25 +0200
 > 
-> It could be just cmp 0xe instead of >>1 and cmp 0x7, with readable 
-> code.
+> * A multiplication for the size determination of a memory allocation
+>   indicated that an array data structure should be processed.
+>   Thus use the corresponding function "devm_kcalloc".
 > 
-> Signed-off-by: Tomohiro Kusumi <tkusumi@tuxera.com>
+> * Replace the specification of a data structure by a pointer 
+> dereference
+>   to make the corresponding size determination a bit safer according to
+>   the Linux coding style convention.
+> 
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 > ---
->  drivers/scsi/ufs/ufshcd.c | 11 +----------
->  drivers/scsi/ufs/ufshci.h |  4 ++++
->  2 files changed, 5 insertions(+), 10 deletions(-)
+>  drivers/scsi/ufs/ufshcd.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
 > 
 > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 9278666..95911fea 100644
+> index 9ef8ce7f01a2..ce385911a20e 100644
 > --- a/drivers/scsi/ufs/ufshcd.c
 > +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -668,16 +668,7 @@ static inline void
-> ufshcd_outstanding_req_clear(struct ufs_hba *hba, int tag)
->   */
->  static inline int ufshcd_get_lists_status(u32 reg)
->  {
-> -	/*
-> -	 * The mask 0xFF is for the following HCS register bits
-> -	 * Bit		Description
-> -	 *  0		Device Present
-> -	 *  1		UTRLRDY
-> -	 *  2		UTMRLRDY
-> -	 *  3		UCRDY
-> -	 * 4-7		reserved
-> -	 */
-> -	return ((reg & 0xFF) >> 1) ^ 0x07;
-> +	return !((reg & UFSHCD_STATUS_READY) == UFSHCD_STATUS_READY);
->  }
+> @@ -3270,8 +3270,7 @@ static int ufshcd_memory_alloc(struct ufs_hba 
+> *hba)
+>  	}
 > 
->  /**
-> diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-> index d14e9b9..8cd4f0e 100644
-> --- a/drivers/scsi/ufs/ufshci.h
-> +++ b/drivers/scsi/ufs/ufshci.h
-> @@ -159,6 +159,10 @@ enum {
->  #define DEVICE_ERROR_INDICATOR			UFS_BIT(5)
->  #define UIC_POWER_MODE_CHANGE_REQ_STATUS_MASK	UFS_MASK(0x7, 8)
-> 
-> +#define UFSHCD_STATUS_READY	(UTP_TRANSFER_REQ_LIST_READY |\
-> +				UTP_TASK_REQ_LIST_READY |\
-> +				UIC_COMMAND_READY)
-> +
->  enum {
->  	PWR_OK		= 0x0,
->  	PWR_LOCAL	= 0x01,
-
+>  	/* Allocate memory for local reference block */
+> -	hba->lrb = devm_kzalloc(hba->dev,
+> -				hba->nutrs * sizeof(struct ufshcd_lrb),
+> +	hba->lrb = devm_kcalloc(hba->dev, hba->nutrs, sizeof(*hba->lrb),
+>  				GFP_KERNEL);
+>  	if (!hba->lrb) {
+>  		dev_err(hba->dev, "LRB Memory allocation failed\n");
 
 Looks good to me.
 Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
