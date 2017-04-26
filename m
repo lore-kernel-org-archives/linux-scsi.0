@@ -1,71 +1,37 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: RE: [PATCH 07/12] hpsa: cleanup reset handler
-Date: Wed, 26 Apr 2017 19:01:18 +0000
-Message-ID: <4993A297653ECB4581FA5C3C31323D1951A05258@avsrvexchmbx1.microsemi.net>
-References: <149159483812.15658.615814291766210537.stgit@brunhilda>
-         <149159558766.15658.11389910379646196354.stgit@brunhilda>
- <1491914138.4742.17.camel@suse.com>
+From: Joe Perches <joe@perches.com>
+Subject: Re: Checking error messages for failed memory allocations
+Date: Wed, 26 Apr 2017 12:05:49 -0700
+Message-ID: <1493233549.18659.33.camel@perches.com>
+References: <75622f45-f46c-e52f-2b9e-6ff5ce32184a@users.sourceforge.net>
+         <3d355c13-159a-2570-9ead-af93ad95c210@users.sourceforge.net>
+         <019b6365c15b0764c156d6453648f7a2@codeaurora.org>
+         <1493231242.18659.28.camel@perches.com>
+         <f6da1799-02a1-b1dc-edcb-a2ea5563b51a@users.sourceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0088.outbound.protection.outlook.com ([104.47.36.88]:39398
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S965694AbdDZTCM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 26 Apr 2017 15:02:12 -0400
-In-Reply-To: <1491914138.4742.17.camel@suse.com>
-Content-Language: en-US
+Received: from smtprelay0105.hostedemail.com ([216.40.44.105]:46785 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1753855AbdDZTFx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 26 Apr 2017 15:05:53 -0400
+In-Reply-To: <f6da1799-02a1-b1dc-edcb-a2ea5563b51a@users.sourceforge.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Wilck <mwilck@suse.com>, "joseph.szczypek@hpe.com" <joseph.szczypek@hpe.com>, Gerry Morong <gerry.morong@microsemi.com>, John Hall <John.Hall@microsemi.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, Bader Ali - Saleh <bader.alisaleh@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Viswas G <viswas.g@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "POSWALD@suse.com" <POSWALD@suse.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: Subhash Jadavani <subhashj@codeaurora.org>, linux-scsi@vger.kernel.org, "James E. J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Wolfram Sang <wsa@the-dreams.de>, linux-scsi-owner@vger.kernel.org
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBNYXJ0aW4gV2lsY2sgW21haWx0
-bzptd2lsY2tAc3VzZS5jb21dDQo+IFNlbnQ6IFR1ZXNkYXksIEFwcmlsIDExLCAyMDE3IDc6MzYg
-QU0NCj4gVG86IERvbiBCcmFjZSA8ZG9uLmJyYWNlQG1pY3Jvc2VtaS5jb20+OyBqb3NlcGguc3pj
-enlwZWtAaHBlLmNvbTsNCj4gR2VycnkgTW9yb25nIDxnZXJyeS5tb3JvbmdAbWljcm9zZW1pLmNv
-bT47IEpvaG4gSGFsbA0KPiA8Sm9obi5IYWxsQG1pY3Jvc2VtaS5jb20+OyBqZWpiQGxpbnV4LnZu
-ZXQuaWJtLmNvbTsgS2V2aW4gQmFybmV0dA0KPiA8a2V2aW4uYmFybmV0dEBtaWNyb3NlbWkuY29t
-PjsgTWFoZXNoIFJhamFzaGVraGFyYQ0KPiA8bWFoZXNoLnJhamFzaGVraGFyYUBtaWNyb3NlbWku
-Y29tPjsgQmFkZXIgQWxpIC0gU2FsZWgNCj4gPGJhZGVyLmFsaXNhbGVoQG1pY3Jvc2VtaS5jb20+
-OyBoY2hAaW5mcmFkZWFkLm9yZzsgU2NvdHQgVGVlbA0KPiA8c2NvdHQudGVlbEBtaWNyb3NlbWku
-Y29tPjsgVmlzd2FzIEcgPHZpc3dhcy5nQG1pY3Jvc2VtaS5jb20+OyBKdXN0aW4NCj4gTGluZGxl
-eSA8anVzdGluLmxpbmRsZXlAbWljcm9zZW1pLmNvbT47IFNjb3R0IEJlbmVzaA0KPiA8c2NvdHQu
-YmVuZXNoQG1pY3Jvc2VtaS5jb20+OyBQT1NXQUxEQHN1c2UuY29tDQo+IENjOiBsaW51eC1zY3Np
-QHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDA3LzEyXSBocHNhOiBjbGVh
-bnVwIHJlc2V0IGhhbmRsZXINCj4gDQo+IEVYVEVSTkFMIEVNQUlMDQo+IA0KPiANCj4gT24gRnJp
-LCAyMDE3LTA0LTA3IGF0IDE1OjA2IC0wNTAwLCBEb24gQnJhY2Ugd3JvdGU6DQo+ID4gIC0gbWFy
-ayBkZXZpY2Ugc3RhdGUgc29vbmVyLg0KPiA+DQo+ID4gUmV2aWV3ZWQtYnk6IFNjb3R0IEJlbmVz
-aCA8c2NvdHQuYmVuZXNoQG1pY3Jvc2VtaS5jb20+DQo+ID4gUmV2aWV3ZWQtYnk6IFNjb3R0IFRl
-ZWwgPHNjb3R0LnRlZWxAbWljcm9zZW1pLmNvbT4NCj4gPiBSZXZpZXdlZC1ieTogS2V2aW4gQmFy
-bmV0dCA8a2V2aW4uYmFybmV0dEBtaWNyb3NlbWkuY29tPg0KPiA+IFNpZ25lZC1vZmYtYnk6IERv
-biBCcmFjZSA8ZG9uLmJyYWNlQG1pY3Jvc2VtaS5jb20+DQo+ID4gLS0tDQo+ID4gIGRyaXZlcnMv
-c2NzaS9ocHNhLmMgfMKgwqDCoDQ0ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0t
-LS0tLS0tDQo+ID4gLS0tDQo+ID4gIDEgZmlsZSBjaGFuZ2VkLCAzMCBpbnNlcnRpb25zKCspLCAx
-NCBkZWxldGlvbnMoLSkNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvaHBzYS5j
-IGIvZHJpdmVycy9zY3NpL2hwc2EuYw0KPiA+IGluZGV4IGEyODUyZGEuLmE2YTM3ZTAgMTAwNjQ0
-DQo+ID4gLS0tIGEvZHJpdmVycy9zY3NpL2hwc2EuYw0KPiA+ICsrKyBiL2RyaXZlcnMvc2NzaS9o
-cHNhLmMNCj4gPiBAQCAtNTgzNCw3ICs1ODM0LDcgQEAgc3RhdGljIGludA0KPiA+IHdhaXRfZm9y
-X2RldmljZV90b19iZWNvbWVfcmVhZHkoc3RydWN0IGN0bHJfaW5mbyAqaCwNCj4gPiAgICovDQo+
-ID4gIHN0YXRpYyBpbnQgaHBzYV9laF9kZXZpY2VfcmVzZXRfaGFuZGxlcihzdHJ1Y3Qgc2NzaV9j
-bW5kICpzY3NpY21kKQ0KPiA+ICB7DQo+ID4gLSAgICAgaW50IHJjOw0KPiA+ICsgICAgIGludCBy
-YyA9IFNVQ0NFU1M7DQo+ID4gICAgICAgc3RydWN0IGN0bHJfaW5mbyAqaDsNCj4gPiAgICAgICBz
-dHJ1Y3QgaHBzYV9zY3NpX2Rldl90ICpkZXY7DQo+ID4gICAgICAgdTggcmVzZXRfdHlwZTsNCj4g
-PiBAQCAtNTg0NSwxNyArNTg0NSwyNCBAQCBzdGF0aWMgaW50DQo+ID4gaHBzYV9laF9kZXZpY2Vf
-cmVzZXRfaGFuZGxlcihzdHJ1Y3Qgc2NzaV9jbW5kICpzY3NpY21kKQ0KPiA+ICAgICAgIGlmICho
-ID09IE5VTEwpIC8qIHBhcmFub2lhICovDQo+ID4gICAgICAgICAgICAgICByZXR1cm4gRkFJTEVE
-Ow0KPiA+DQo+ID4gLSAgICAgaWYgKGxvY2t1cF9kZXRlY3RlZChoKSkNCj4gPiAtICAgICAgICAg
-ICAgIHJldHVybiBGQUlMRUQ7DQo+ID4gKyAgICAgaC0+cmVzZXRfaW5fcHJvZ3Jlc3MgPSAxOw0K
-PiA+ICsNCj4gPiArICAgICBpZiAobG9ja3VwX2RldGVjdGVkKGgpKSB7DQo+ID4gKyAgICAgICAg
-ICAgICByYyA9IEZBSUxFRDsNCj4gPiArICAgICAgICAgICAgIGdvdG8gcmV0dXJuX3Jlc2V0X3N0
-YXR1czsNCj4gPiArICAgICB9DQo+IA0KPiBpZiB0aGlzIGlzIG1lYW50IHRvIGNvbW11bmljYXRl
-IGhvc3Qgc3RhdGUgdG8gb3RoZXIgdGhyZWFkcywgbWF5YmUgeW91DQo+IHNob3VsZCB1c2UgYW4g
-YXRvbWljIHR5cGUgZm9yIGgtPnJlc2V0X2luX3Byb2dyZXNzLCBvciBsb2NraW5nIG9mIHNvbWUN
-Cj4gc29ydD8NCj4gDQo+IFJlZ2FyZHMsDQo+IE1hcnRpbg0KPiANCkFncmVlZC4NClRoYW5rcyBm
-b3IgeW91ciByZXZpZXcuIEl0IGhhcyBhY3R1YWxseSBoZWxwZWQgb3V0Li4uYSBsb3QuDQpUaGFu
-a3MsDQpEb24gQnJhY2UNCkVTQyAtIFNtYXJ0IFN0b3JhZ2UNCk1pY3Jvc2VtaSBDb3Jwb3JhdGlv
-bg0KDQoNCj4gLS0NCj4gRHIuIE1hcnRpbiBXaWxjayA8bXdpbGNrQHN1c2UuY29tPiwgVGVsLiAr
-NDkgKDApOTExIDc0MDUzIDIxMDcNCj4gU1VTRSBMaW51eCBHbWJILCBHRjogRmVsaXggSW1lbmTD
-tnJmZmVyLCBKYW5lIFNtaXRoYXJkLCBHcmFoYW0gTm9ydG9uDQo+IEhSQiAyMTI4NCAoQUcgTsO8
-cm5iZXJnKQ0KDQo=
+On Wed, 2017-04-26 at 20:50 +0200, SF Markus Elfring wrote:
+> > Basically most everything that has a gfp_t argument does a
+> > dump_stack() on OOM unless __GFP_NOWARN is specified by that gfp_t.
+> 
+> How do you think about to improve any programming interface documentation
+> around such a function property?
+
+Feel free to submit documentation patches.
+
+> Are there any special checks needed for function implementations
+> which can pass the flag “__GFP_NOWARN”?
+
+No.
