@@ -1,42 +1,49 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH] mac_esp: fix to pass correct device identity to free_irq()
-Date: Wed, 26 Apr 2017 15:43:59 +1000 (AEST)
-Message-ID: <alpine.LNX.2.00.1704261540340.26898@nippy.intranet>
-References: <20170425030845.7809-1-weiyj.lk@gmail.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:33328 "EHLO
-        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1035661AbdDZFnr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Apr 2017 01:43:47 -0400
-In-Reply-To: <20170425030845.7809-1-weiyj.lk@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: lixiubo@cmss.chinamobile.com
+Subject: [PATCH v6 0/2] tcmu: Dynamic growing data area support
+Date: Wed, 26 Apr 2017 14:25:50 +0800
+Message-ID: <1493187952-13125-1-git-send-email-lixiubo@cmss.chinamobile.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: mchristi@redhat.com, nab@linux-iscsi.org
+Cc: agrover@redhat.com, iliastsi@arrikto.com, namei.unix@gmail.com, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, Xiubo Li <lixiubo@cmss.chinamobile.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "James E. J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Wei Yongjun <weiyongjun1@huawei.com>, linux-scsi@vger.kernel.org
 
-From: Wei Yongjun <weiyongjun1@huawei.com>
+From: Xiubo Li <lixiubo@cmss.chinamobile.com>
 
-free_irq() expects the same device identity that was passed to
-corresponding request_irq(), otherwise the IRQ is not freed.
+Changed for V6:
+- Remove the tcmu_vma_close(). Since the unmap thread will do the same for it 
+- The unmap thread will skip the busy devices.
+- Using and testing the V5 version 3 weeks and the V6 for about 1 week, all in a higher IOPS environment:
+  * using fio and dd commands
+  * using about 4 targets based user:rbd/user:file backend
+  * set the global pool size to 512 * 1024 blocks * block_size, for 4K page size, the size is 2G.
+  * each target here needs more than 1100 blocks.
+  * fio: -iodepth 16 -thread -rw=[read write] -bs=[1M] -size=20G -numjobs=10 -runtime=1000  ...
+  * restart the tcmu-runner at any time.
 
-Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
----
+Changed for V5:
+- Rebase to the newest target-pending repository.
+- Add as many comments as possbile to make the patch more readable.
+- Move tcmu_handle_completions() in timeout handler to unmap thread
+  and then replace the spin lock with mutex lock(because the unmap_*
+  or zap_* may goto sleep) to simplify the patch and the code.
+- Thanks very much for Mike's tips and suggestions.
+- Tested this for more than 3 days by:
+  * using fio and dd commands
+  * using about 1~5 targets
+  * set the global pool size to [512 1024 2048 512 * 1024] blocks * block_size
+  * each target here needs more than 450 blocks when running in my environments.
+  * fio: -iodepth [1 2 4 8 16] -thread -rw=[read write] -bs=[1K 2K 3K 5K 7K 16K 64K 1M] -size=20G -numjobs=10 -runtime=1000  ...
+  * in the tcmu-runner, try to touch blocks out of tcmu_cmds' iov[] manually
+  * restart the tcmu-runner at any time.
+  * in my environment for the low IOPS case: the read throughput goes from about 5200KB/s to 6700KB/s; the write throughput goes from about 3000KB/s to 3700KB/s.
 
-Rebased on jejb-scsi/misc.
+Xiubo Li (2):
+  tcmu: Add dynamic growing data area feature support
+  tcmu: Add global data block pool support
 
-diff --git a/drivers/scsi/mac_esp.c b/drivers/scsi/mac_esp.c
-index 26c67c4..999699d 100644
---- a/drivers/scsi/mac_esp.c
-+++ b/drivers/scsi/mac_esp.c
-@@ -587,7 +587,7 @@ static int esp_mac_probe(struct platform_device *dev)
- 	esp_chips[dev->id] = NULL;
- 	if (esp_chips[!dev->id] == NULL) {
- 		spin_unlock(&esp_chips_lock);
--		free_irq(host->irq, esp);
-+		free_irq(host->irq, NULL);
- 	} else
- 		spin_unlock(&esp_chips_lock);
- fail_free_priv:
+ drivers/target/target_core_user.c | 598 ++++++++++++++++++++++++++++++--------
+ 1 file changed, 469 insertions(+), 129 deletions(-)
+
+-- 
+1.8.3.1
