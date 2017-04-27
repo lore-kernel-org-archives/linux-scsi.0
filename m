@@ -1,52 +1,48 @@
-From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: Re: [PATCH v2 01/21] scatterlist: Introduce sg_map helper functions
-Date: Thu, 27 Apr 2017 09:57:58 -0600
-Message-ID: <cb1ed262-110b-2a6c-f9da-e41c2fc0969d@deltatee.com>
-References: <1493144468-22493-1-git-send-email-logang@deltatee.com>
- <1493144468-22493-2-git-send-email-logang@deltatee.com>
- <20170426074416.GA7936@lst.de>
- <4736d44e-bbcf-5d59-a1a9-317d0f4da847@deltatee.com>
- <20170427065338.GA20677@lst.de> <20170427152720.GA7662@obsidianresearch.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH] libfc: do not flood console with messages 'libfc: queue
+ full ...'
+Date: Thu, 27 Apr 2017 16:07:29 +0000
+Message-ID: <1493309247.2625.4.camel@sandisk.com>
+References: <1493303103-113774-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <20170427152720.GA7662-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, sparmaintainer-GLv8BlqOqDDQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, megaraidlinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:32234 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754823AbdD0QHe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Apr 2017 12:07:34 -0400
+In-Reply-To: <1493303103-113774-1-git-send-email-hare@suse.de>
+Content-Language: en-US
+Content-ID: <2FBA3273D6DFFB44963F97006C73B4AE@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>
 
+On Thu, 2017-04-27 at 16:25 +0200, Hannes Reinecke wrote:
+> @@ -1896,11 +1899,11 @@ int fc_queuecommand(struct Scsi_Host *shost, stru=
+ct scsi_cmnd *sc_cmd)
+> =20
+>  	if (!fc_fcp_lport_queue_ready(lport)) {
+>  		if (lport->qfull) {
+> -			fc_fcp_can_queue_ramp_down(lport);
+> -			shost_printk(KERN_ERR, lport->host,
+> -				     "libfc: queue full, "
+> -				     "reducing can_queue to %d.\n",
+> -				     lport->host->can_queue);
+> +			if (fc_fcp_can_queue_ramp_down(lport))
+> +				shost_printk(KERN_ERR, lport->host,
+> +					     "libfc: queue full, "
+> +					     "reducing can_queue to %d.\n",
+> +					     lport->host->can_queue);
+>  		}
+>  		rc =3D SCSI_MLQUEUE_HOST_BUSY;
+>  		goto out;
 
+Hello Hannes,
 
-On 27/04/17 09:27 AM, Jason Gunthorpe wrote:
-> On Thu, Apr 27, 2017 at 08:53:38AM +0200, Christoph Hellwig wrote:
-> How about first switching as many call sites as possible to use
-> sg_copy_X_buffer instead of kmap?
+Although this would have been a good opportunity to join the log message
+that has been split over two lines:
 
-Yeah, I could look at doing that first.
-
-One problem is we might get more Naks of the form of Herbert Xu's who
-might be concerned with the performance implications.
-
-These are definitely a bit more invasive changes than thin wrappers
-around kmap calls.
-
-> A random audit of Logan's series suggests this is actually a fairly
-> common thing.
-
-It's not _that_ common but there are a significant fraction. One of my
-patches actually did this to two places that seemed to be reimplementing
-the sg_copy_X_buffer logic.
-
-Thanks,
-
-Logan
+Reviewed-by: Bart Van Assche <Bart.VanAssche@sandisk.com>=
