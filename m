@@ -1,88 +1,72 @@
-From: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
-Subject: Re: [PATCH v2 15/21] xen-blkfront: Make use of the new sg_map helper
- function
-Date: Thu, 27 Apr 2017 14:53:39 -0600
-Message-ID: <20170427205339.GB26330@obsidianresearch.com>
-References: <1493144468-22493-1-git-send-email-logang@deltatee.com>
- <1493144468-22493-16-git-send-email-logang@deltatee.com>
- <20170426073720.okv33ly2ldepilti@dhcp-3-128.uk.xensource.com>
- <df6586e2-7d45-6b0b-facb-4dea882df06e@deltatee.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH 09/12] hpsa: separate monitor events from heartbeat
+ worker
+Date: Thu, 27 Apr 2017 21:10:27 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D1951D38015@avsrvexchmbx2.microsemi.net>
+References: <149159483812.15658.615814291766210537.stgit@brunhilda>
+         <149159560000.15658.13539404380272805930.stgit@brunhilda>
+ <1491913120.4742.13.camel@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <df6586e2-7d45-6b0b-facb-4dea882df06e-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Cc: Boris Ostrovsky <boris.ostrovsky-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Juergen Gross <jgross-IBi9RG/b67k@public.gmane.org>, Julien Grall <julien.grall-5wv7dgnIgG8@public.gmane.org>, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, sparmaintainer-GLv8BlqOqDDQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, megaraidlinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh@linuxfoundati>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn3nam01on0051.outbound.protection.outlook.com ([104.47.33.51]:19136
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1030755AbdD0VKu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 27 Apr 2017 17:10:50 -0400
+In-Reply-To: <1491913120.4742.13.camel@suse.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Martin Wilck <mwilck@suse.com>, "joseph.szczypek@hpe.com" <joseph.szczypek@hpe.com>, Gerry Morong <gerry.morong@microsemi.com>, John Hall <John.Hall@microsemi.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, Bader Ali - Saleh <bader.alisaleh@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Viswas G <viswas.g@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "POSWALD@suse.com" <POSWALD@suse.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, Apr 27, 2017 at 02:19:24PM -0600, Logan Gunthorpe wrote:
-> =
-
-> =
-
-> On 26/04/17 01:37 AM, Roger Pau Monn=E9 wrote:
-> > On Tue, Apr 25, 2017 at 12:21:02PM -0600, Logan Gunthorpe wrote:
-> >> Straightforward conversion to the new helper, except due to the lack
-> >> of error path, we have to use SG_MAP_MUST_NOT_FAIL which may BUG_ON in
-> >> certain cases in the future.
-> >>
-> >> Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-> >> Cc: Boris Ostrovsky <boris.ostrovsky-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-> >> Cc: Juergen Gross <jgross-IBi9RG/b67k@public.gmane.org>
-> >> Cc: Konrad Rzeszutek Wilk <konrad.wilk-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-> >> Cc: "Roger Pau Monn=E9" <roger.pau-Sxgqhf6Nn4DQT0dZR+AlfA@public.gmane.org>
-> >>  drivers/block/xen-blkfront.c | 20 +++++++++++---------
-> >>  1 file changed, 11 insertions(+), 9 deletions(-)
-> >>
-> >> diff --git a/drivers/block/xen-blkfront.c b/drivers/block/xen-blkfront=
-.c
-> >> index 3945963..ed62175 100644
-> >> +++ b/drivers/block/xen-blkfront.c
-> >> @@ -816,8 +816,9 @@ static int blkif_queue_rw_req(struct request *req,=
- struct blkfront_ring_info *ri
-> >>  		BUG_ON(sg->offset + sg->length > PAGE_SIZE);
-> >>  =
-
-> >>  		if (setup.need_copy) {
-> >> -			setup.bvec_off =3D sg->offset;
-> >> -			setup.bvec_data =3D kmap_atomic(sg_page(sg));
-> >> +			setup.bvec_off =3D 0;
-> >> +			setup.bvec_data =3D sg_map(sg, 0, SG_KMAP_ATOMIC |
-> >> +						 SG_MAP_MUST_NOT_FAIL);
-> > =
-
-> > I assume that sg_map already adds sg->offset to the address?
-> =
-
-> Correct.
-> =
-
-> > Also wondering whether we can get rid of bvec_off and just increment bv=
-ec_data,
-> > adding Julien who IIRC added this code.
-> =
-
-> bvec_off is used to keep track of the offset within the current mapping
-> so it's not a great idea given that you'd want to kunmap_atomic the
-> original address and not something with an offset. It would be nice if
-> this could be converted to use the sg_miter interface but that's a much
-> more invasive change that would require someone who knows this code and
-> can properly test it. I'd be very grateful if someone actually took that =
-on.
-
-blkfront is one of the drivers I looked at, and it appears to only be
-memcpying with the bvec_data pointer, so I wonder why it does not use
-sg_copy_X_buffer instead..
-
-Jason
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1zY3NpLW93bmVyQHZn
+ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXNjc2ktDQo+IG93bmVyQHZnZXIua2VybmVsLm9y
+Z10gT24gQmVoYWxmIE9mIE1hcnRpbiBXaWxjaw0KPiBTZW50OiBUdWVzZGF5LCBBcHJpbCAxMSwg
+MjAxNyA3OjE5IEFNDQo+IFRvOiBEb24gQnJhY2UgPGRvbi5icmFjZUBtaWNyb3NlbWkuY29tPjsg
+am9zZXBoLnN6Y3p5cGVrQGhwZS5jb207DQo+IEdlcnJ5IE1vcm9uZyA8Z2VycnkubW9yb25nQG1p
+Y3Jvc2VtaS5jb20+OyBKb2huIEhhbGwNCj4gPEpvaG4uSGFsbEBtaWNyb3NlbWkuY29tPjsgamVq
+YkBsaW51eC52bmV0LmlibS5jb207IEtldmluIEJhcm5ldHQNCj4gPGtldmluLmJhcm5ldHRAbWlj
+cm9zZW1pLmNvbT47IE1haGVzaCBSYWphc2hla2hhcmENCj4gPG1haGVzaC5yYWphc2hla2hhcmFA
+bWljcm9zZW1pLmNvbT47IEJhZGVyIEFsaSAtIFNhbGVoDQo+IDxiYWRlci5hbGlzYWxlaEBtaWNy
+b3NlbWkuY29tPjsgaGNoQGluZnJhZGVhZC5vcmc7IFNjb3R0IFRlZWwNCj4gPHNjb3R0LnRlZWxA
+bWljcm9zZW1pLmNvbT47IFZpc3dhcyBHIDx2aXN3YXMuZ0BtaWNyb3NlbWkuY29tPjsgSnVzdGlu
+DQo+IExpbmRsZXkgPGp1c3Rpbi5saW5kbGV5QG1pY3Jvc2VtaS5jb20+OyBTY290dCBCZW5lc2gN
+Cj4gPHNjb3R0LmJlbmVzaEBtaWNyb3NlbWkuY29tPjsgUE9TV0FMREBzdXNlLmNvbQ0KPiBDYzog
+bGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUmU6IFtQQVRDSCAwOS8xMl0g
+aHBzYTogc2VwYXJhdGUgbW9uaXRvciBldmVudHMgZnJvbSBoZWFydGJlYXQNCj4gd29ya2VyDQo+
+IA0KPiA+ICsvKg0KPiA+ICsgKiB3YXRjaCBmb3IgY29udHJvbGxlciBldmVudHMNCj4gPiArICov
+DQo+ID4gK3N0YXRpYyB2b2lkIGhwc2FfZXZlbnRfbW9uaXRvcl93b3JrZXIoc3RydWN0IHdvcmtf
+c3RydWN0ICp3b3JrKQ0KPiA+ICt7DQo+ID4gKyAgICAgc3RydWN0IGN0bHJfaW5mbyAqaCA9IGNv
+bnRhaW5lcl9vZih0b19kZWxheWVkX3dvcmsod29yayksDQo+ID4gKyAgICAgc3RydWN0IGN0bHJf
+aW5mbywgZXZlbnRfbW9uaXRvcl93b3JrKTsNCj4gPiArDQo+ID4gKyAgICAgaWYgKGgtPnJlbW92
+ZV9pbl9wcm9ncmVzcykNCj4gPiArICAgICAgICAgICAgIHJldHVybjsNCj4gPiArDQo+ID4gKyAg
+ICAgaWYgKGhwc2FfY3Rscl9uZWVkc19yZXNjYW4oaCkpIHsNCj4gPiArICAgICAgICAgICAgIHNj
+c2lfaG9zdF9nZXQoaC0+c2NzaV9ob3N0KTsNCj4gPiArICAgICAgICAgICAgIGhwc2FfYWNrX2N0
+bHJfZXZlbnRzKGgpOw0KPiA+ICsgICAgICAgICAgICAgaHBzYV9zY2FuX3N0YXJ0KGgtPnNjc2lf
+aG9zdCk7DQo+ID4gKyAgICAgICAgICAgICBzY3NpX2hvc3RfcHV0KGgtPnNjc2lfaG9zdCk7DQo+
+ID4gKyAgICAgfQ0KPiA+ICsNCj4gPiArICAgICBpZiAoIWgtPnJlbW92ZV9pbl9wcm9ncmVzcykN
+Cj4gPiArICAgICAgICAgICAgIHNjaGVkdWxlX2RlbGF5ZWRfd29yaygmaC0+ZXZlbnRfbW9uaXRv
+cl93b3JrLA0KPiA+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgSFBTQV9F
+VkVOVF9NT05JVE9SX0lOVEVSVkFMKQ0KPiA+IDsNCj4gPiArfQ0KPiA+ICsNCj4gDQo+IFRoZSBu
+ZXcgd29ya2VyIHRocmVhZCBkdXBsaWNhdGVzIGNvZGUgZnJvbSBocHNhX3Jlc2Nhbl9jdGxyX3dv
+cmtlci4gSQ0KPiBmaW5kIHRoaXMgYSBiaXQgaXJyaXRhdGluZy4gQ291bGQgeW91IG1heWJlIHVz
+ZSBqdXN0IGEgc2luZ2xlIHdvcmtlciwNCj4gYW5kIGp1c3QgY2hlY2sgdXNpbmcgdGltZSBzdGFt
+cHMgd2hldGhlciB0aGUgImJpZyIgaGVhcnRiZWF0IG5lZWRzIHRvDQo+IGJlIHBlcmZvcm1lZD8N
+Cj4gDQo+IFJlZ2FyZHMNCj4gTWFydGluDQo+IA0KPiAtLQ0KPiBEci4gTWFydGluIFdpbGNrIDxt
+d2lsY2tAc3VzZS5jb20+LCBUZWwuICs0OSAoMCk5MTEgNzQwNTMgMjEwNw0KPiBTVVNFIExpbnV4
+IEdtYkgsIEdGOiBGZWxpeCBJbWVuZMO2cmZmZXIsIEphbmUgU21pdGhhcmQsIEdyYWhhbSBOb3J0
+b24NCj4gSFJCIDIxMjg0IChBRyBOw7xybmJlcmcpDQoNCldlIHRob3VnaHQgYWJvdXQgdGhhdCwg
+YnV0IHdlIHdhbnQgdG8gc2VwYXJhdGUgY29udHJvbGxlciBldmVudHMNCmZyb20gdGhlIHJlc2Nh
+biB3b3JrZXIuDQoNCkJvdGggY2FuIGNhdXNlIGEgcmVzY2FuIHRvIG9jY3VyIGhvd2V2ZXIgZm9y
+IG11bHRpcGF0aCB3ZSBoYXZlDQpmb3VuZCB0aGF0IHdlIG5lZWQgdG8gcmVzcG9uZCBmYXN0ZXIg
+dGhhbiB0aGUgbm9ybWFsIHNjaGVkdWxlZCByZXNjYW4NCmludGVydmFsIGZvciBwYXRoIGZhaWwt
+b3ZlcnMuDQoNCkdldHRpbmcgY29udHJvbGxlciBldmVudHMgb25seSBpbnZvbHZlcyByZWFkaW5n
+IGEgcmVnaXN0ZXIsIGJ1dA0KdGhlIHJlc2NhbiB3b3JrZXIgY2FuIG9idGFpbiBhbiB1cGRhdGVk
+IExVTiBsaXN0IHdoZW4gdGhlcmUNCmlzIGEgUFRSQUlEIGRldmljZSBwcmVzZW50Lg0KDQpIb3dl
+dmVyLCBJIGRpZCByZWZhY3RvciB0aGUgcGF0Y2ggdG8gbW92ZSBjb21tb24gY29kZSB0bw0KYSBz
+ZXBhcmF0ZSBmdW5jdGlvbi4NCg0KV291bGQgdGhpcyBiZSBtb3JlIGFjY2VwdGFibGU/DQoNClRo
+YW5rcywNCkRvbiBCcmFjZQ0KRVNDIC0gU21hcnQgU3RvcmFnZQ0KTWljcm9zZW1pIENvcnBvcmF0
+aW9uDQoNCg0K
