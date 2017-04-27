@@ -1,55 +1,162 @@
-From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: Re: [PATCH v2 15/21] xen-blkfront: Make use of the new sg_map helper
- function
-Date: Thu, 27 Apr 2017 15:53:37 -0600
-Message-ID: <02ba3c7b-5fab-a06c-fbbf-c3be1c0fae1b@deltatee.com>
-References: <1493144468-22493-1-git-send-email-logang@deltatee.com>
- <1493144468-22493-16-git-send-email-logang@deltatee.com>
- <20170426073720.okv33ly2ldepilti@dhcp-3-128.uk.xensource.com>
- <df6586e2-7d45-6b0b-facb-4dea882df06e@deltatee.com>
- <20170427205339.GB26330@obsidianresearch.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <20170427205339.GB26330-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
-Cc: Boris Ostrovsky <boris.ostrovsky-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Juergen Gross <jgross-IBi9RG/b67k@public.gmane.org>, Julien Grall <julien.grall-5wv7dgnIgG8@public.gmane.org>, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, sparmaintainer-GLv8BlqOqDDQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, megaraidlinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh@linuxfoundati>
+From: jsmart2021@gmail.com
+Subject: [PATCH v3] lpfc: Fix panic on BFS configuration.
+Date: Thu, 27 Apr 2017 15:08:26 -0700
+Message-ID: <20170427220826.12693-1-jsmart2021@gmail.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, sagi@grimberg.me, stable@vger.kernel.org
+Cc: loberman@redhat.com, jthumshirn@suse.de, emilne@redhat.com, James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
+From: James Smart <jsmart2021@gmail.com>
 
+To select the appropriate shost template, the driver is issuing
+a mailbox command to retrieve the wwn. Turns out the sending of
+the command precedes the reset of the function.  On SLI-4 adapters,
+this is inconsequential as the mailbox command location is specified
+by dma via the BMBX register. However, on SLI-3 adapters, the
+location of the mailbox command submission area changes. When the
+function is first powered on or reset, the cmd is submitted via PCI
+bar memory. Later the driver changes the function config to use
+host memory and DMA. The request to start a mailbox command is the
+same, a simple doorbell write, regardless of submission area.
+So.. if there has not been a boot driver run against the adapter,
+the mailbox command works as defaults are ok. But, if the boot
+driver has configured the card and, and if no platform pci
+function/slot reset occurs as the os starts, the mailbox command
+will fail. The SLI-3 device will use the stale boot driver dma
+location. This can cause PCI eeh errors.
 
-On 27/04/17 02:53 PM, Jason Gunthorpe wrote:
-> blkfront is one of the drivers I looked at, and it appears to only be
-> memcpying with the bvec_data pointer, so I wonder why it does not use
-> sg_copy_X_buffer instead..
+Fix is to reset the sli-3 function before sending the
+mailbox command, thus synchronizing the function/driver on mailbox
+location.
 
-Yes, sort of...
+Note: The fix uses routines that are typically invoked later in the
+call flow to reset the sli-3 device. The issue in using those routines is
+that the normal (non-fix) flow does additional initialization, namely the
+allocation of the pport structure. So, rather than significantly reworking
+the initialization flow so that the pport is alloc'd first, pointer checks
+are added to work around it. Checks are limited to the routines invoked
+by a sli-3 adapter (s3 routines) as this fix/early call is only invoked
+on a sli3 adapter. Nothing changes post the fix. Subsequent initialization,
+and another adapter reset, still occur - both on sli-3 and sli-4 adapters.
 
-But you'd potentially end up calling sg_copy_to_buffer multiple times
-per page within the sg (given that gnttab_foreach_grant_in_range might
-call blkif_copy_from_grant/blkif_setup_rw_req_grant multiple times).
-Even calling sg_copy_to_buffer once per page seems rather inefficient as
-it uses sg_miter internally.
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <james.smart@broadcom.com>
+Fixes: 96418b5e2c88 ("scsi: lpfc: Fix eh_deadline setting for sli3 adapters.")
+Cc: stable@vger.kernel.org
+---
+The issue was introduced by one of the patches in the lpfc 11.2.0.10
+patch set: http://www.spinics.net/lists/linux-scsi/msg105908.html
+As the set contained a number of NVME fixes, it was picked up only in
+the linux-block tree. The scsi trees are at ~11.2.0.7.
 
-Switching the for_each_sg to sg_miter is probably the nicer solution as
-it takes care of the mapping and the offset/length accounting for you
-and will have similar performance.
+This patch was cut against the nvme-4.12 tree, which is backed by
+linux-block. The patch must go in via the block tree.
 
-But, yes, if performance is not an issue, switching it to
-sg_copy_to_buffer would be a less invasive change than sg_miter. Which
-the same might be said about a lot of these cases.
+As the patch is scsi-specific, it was cherry-picked for stable trees.
+Thus the fix needs to be picked up by them.
 
-Unfortunately, changing from kmap_atomic (which is a null operation in a
-lot of cases) to sg_copy_X_buffer is a pretty big performance hit.
+Warning: the patch applies to pre-11.2.0.10 versions of lpfc (in the
+scsi trees) reporting only fuzz warnings, but creates something
+completely erroneous.
+---
+ drivers/scsi/lpfc/lpfc_crtn.h |  1 +
+ drivers/scsi/lpfc/lpfc_init.c |  7 +++++++
+ drivers/scsi/lpfc/lpfc_sli.c  | 19 ++++++++++++-------
+ 3 files changed, 20 insertions(+), 7 deletions(-)
 
-Logan
+diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+index 944b32c..1c55408 100644
+--- a/drivers/scsi/lpfc/lpfc_crtn.h
++++ b/drivers/scsi/lpfc/lpfc_crtn.h
+@@ -294,6 +294,7 @@ int lpfc_selective_reset(struct lpfc_hba *);
+ void lpfc_reset_barrier(struct lpfc_hba *);
+ int lpfc_sli_brdready(struct lpfc_hba *, uint32_t);
+ int lpfc_sli_brdkill(struct lpfc_hba *);
++int lpfc_sli_chipset_init(struct lpfc_hba *phba);
+ int lpfc_sli_brdreset(struct lpfc_hba *);
+ int lpfc_sli_brdrestart(struct lpfc_hba *);
+ int lpfc_sli_hba_setup(struct lpfc_hba *);
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 90ae354..e85f273 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -3602,6 +3602,13 @@ lpfc_get_wwpn(struct lpfc_hba *phba)
+ 	LPFC_MBOXQ_t *mboxq;
+ 	MAILBOX_t *mb;
+ 
++	if (phba->sli_rev < LPFC_SLI_REV4) {
++		/* Reset the port first */
++		lpfc_sli_brdrestart(phba);
++		rc = lpfc_sli_chipset_init(phba);
++		if (rc)
++			return (uint64_t)-1;
++	}
+ 
+ 	mboxq = (LPFC_MBOXQ_t *) mempool_alloc(phba->mbox_mem_pool,
+ 						GFP_KERNEL);
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index cf19f49..2a4fc00 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -4204,13 +4204,16 @@ lpfc_sli_brdreset(struct lpfc_hba *phba)
+ 	/* Reset HBA */
+ 	lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
+ 			"0325 Reset HBA Data: x%x x%x\n",
+-			phba->pport->port_state, psli->sli_flag);
++			(phba->pport) ? phba->pport->port_state : 0,
++			psli->sli_flag);
+ 
+ 	/* perform board reset */
+ 	phba->fc_eventTag = 0;
+ 	phba->link_events = 0;
+-	phba->pport->fc_myDID = 0;
+-	phba->pport->fc_prevDID = 0;
++	if (phba->pport) {
++		phba->pport->fc_myDID = 0;
++		phba->pport->fc_prevDID = 0;
++	}
+ 
+ 	/* Turn off parity checking and serr during the physical reset */
+ 	pci_read_config_word(phba->pcidev, PCI_COMMAND, &cfg_value);
+@@ -4336,7 +4339,8 @@ lpfc_sli_brdrestart_s3(struct lpfc_hba *phba)
+ 	/* Restart HBA */
+ 	lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
+ 			"0337 Restart HBA Data: x%x x%x\n",
+-			phba->pport->port_state, psli->sli_flag);
++			(phba->pport) ? phba->pport->port_state : 0,
++			psli->sli_flag);
+ 
+ 	word0 = 0;
+ 	mb = (MAILBOX_t *) &word0;
+@@ -4350,7 +4354,7 @@ lpfc_sli_brdrestart_s3(struct lpfc_hba *phba)
+ 	readl(to_slim); /* flush */
+ 
+ 	/* Only skip post after fc_ffinit is completed */
+-	if (phba->pport->port_state)
++	if (phba->pport && phba->pport->port_state)
+ 		word0 = 1;	/* This is really setting up word1 */
+ 	else
+ 		word0 = 0;	/* This is really setting up word1 */
+@@ -4359,7 +4363,8 @@ lpfc_sli_brdrestart_s3(struct lpfc_hba *phba)
+ 	readl(to_slim); /* flush */
+ 
+ 	lpfc_sli_brdreset(phba);
+-	phba->pport->stopped = 0;
++	if (phba->pport)
++		phba->pport->stopped = 0;
+ 	phba->link_state = LPFC_INIT_START;
+ 	phba->hba_flag = 0;
+ 	spin_unlock_irq(&phba->hbalock);
+@@ -4446,7 +4451,7 @@ lpfc_sli_brdrestart(struct lpfc_hba *phba)
+  * iteration, the function will restart the HBA again. The function returns
+  * zero if HBA successfully restarted else returns negative error code.
+  **/
+-static int
++int
+ lpfc_sli_chipset_init(struct lpfc_hba *phba)
+ {
+ 	uint32_t status, i = 0;
+-- 
+2.9.3
