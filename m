@@ -1,78 +1,70 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] libfc: do not flood console with messages 'libfc: queue full ...'
-Date: Thu, 27 Apr 2017 16:25:03 +0200
-Message-ID: <1493303103-113774-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39058 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751594AbdD0OZI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 27 Apr 2017 10:25:08 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
+Subject: Re: [PATCH v2 01/21] scatterlist: Introduce sg_map helper functions
+Date: Thu, 27 Apr 2017 09:27:20 -0600
+Message-ID: <20170427152720.GA7662@obsidianresearch.com>
+References: <1493144468-22493-1-git-send-email-logang@deltatee.com>
+ <1493144468-22493-2-git-send-email-logang@deltatee.com>
+ <20170426074416.GA7936@lst.de>
+ <4736d44e-bbcf-5d59-a1a9-317d0f4da847@deltatee.com>
+ <20170427065338.GA20677@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20170427065338.GA20677-jcswGhMUV9g@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: linux-nvdimm-y27Ovi1pjclAfugRpC6u6w@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, sparmaintainer-GLv8BlqOqDDQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, megaraidlinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-When the FCoE sending side becomes congested libfc tries to
-reduce the queue depth on the host; however due to the built-in
-lag before attempting to ramp down the queue depth _again_ the
-message log is flooded with messages
+On Thu, Apr 27, 2017 at 08:53:38AM +0200, Christoph Hellwig wrote:
 
-libfc: queue full, reducing can_queue to 512
+> > The main difficulty we
+> > have now is that neither of those functions are expected to fail and we
+> > need them to be able to in cases where the page doesn't map to system
+> > RAM. This patch series is trying to address it for users of scatterlist.
+> > I'm certainly open to other suggestions.
+> 
+> I think you'll need to follow the existing kmap semantics and never
+> fail the iomem version either.  Otherwise you'll have a special case
+> that's almost never used that has a different error path.
 
-With this patch the message is printed only once (ie when it's
-actually changed).
+How about first switching as many call sites as possible to use
+sg_copy_X_buffer instead of kmap?
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/libfc/fc_fcp.c | 15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
+A random audit of Logan's series suggests this is actually a fairly
+common thing.
 
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index a808e8e..234352da 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -407,11 +407,12 @@ static void fc_fcp_can_queue_ramp_up(struct fc_lport *lport)
-  * can_queue. Eventually we will hit the point where we run
-  * on all reserved structs.
-  */
--static void fc_fcp_can_queue_ramp_down(struct fc_lport *lport)
-+static bool fc_fcp_can_queue_ramp_down(struct fc_lport *lport)
- {
- 	struct fc_fcp_internal *si = fc_get_scsi_internal(lport);
- 	unsigned long flags;
- 	int can_queue;
-+	bool changed = false;
- 
- 	spin_lock_irqsave(lport->host->host_lock, flags);
- 
-@@ -427,9 +428,11 @@ static void fc_fcp_can_queue_ramp_down(struct fc_lport *lport)
- 	if (!can_queue)
- 		can_queue = 1;
- 	lport->host->can_queue = can_queue;
-+	changed = true;
- 
- unlock:
- 	spin_unlock_irqrestore(lport->host->host_lock, flags);
-+	return changed;
- }
- 
- /*
-@@ -1896,11 +1899,11 @@ int fc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *sc_cmd)
- 
- 	if (!fc_fcp_lport_queue_ready(lport)) {
- 		if (lport->qfull) {
--			fc_fcp_can_queue_ramp_down(lport);
--			shost_printk(KERN_ERR, lport->host,
--				     "libfc: queue full, "
--				     "reducing can_queue to %d.\n",
--				     lport->host->can_queue);
-+			if (fc_fcp_can_queue_ramp_down(lport))
-+				shost_printk(KERN_ERR, lport->host,
-+					     "libfc: queue full, "
-+					     "reducing can_queue to %d.\n",
-+					     lport->host->can_queue);
- 		}
- 		rc = SCSI_MLQUEUE_HOST_BUSY;
- 		goto out;
--- 
-1.8.5.6
+eg drivers/mmc/host/sdhci.c is only doing this:
+
+                                        buffer = sdhci_kmap_atomic(sg, &flags);
+                                        memcpy(buffer, align, size);
+                                        sdhci_kunmap_atomic(buffer, &flags);
+
+drivers/scsi/mvsas/mv_sas.c is this:
+
++			to = sg_map(sg_resp, 0, SG_KMAP_ATOMIC);
++			memcpy(to,
++			       slot->response + sizeof(struct mvs_err_info),
++			       sg_dma_len(sg_resp));
++			sg_unmap(sg_resp, to, 0, SG_KMAP_ATOMIC);
+
+etc.
+
+Lots of other places seem similar, if not sometimes a little bit more
+convoluted..
+
+Switching all the trivial cases to use copy might bring more clarity
+as to what is actually required for the remaining few users? If there
+are only a few then it may no longer matter if the API is not idyllic.
+
+Jason
