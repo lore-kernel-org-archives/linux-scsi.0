@@ -1,63 +1,62 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: target: fixup error message in
- target_tg_pt_gp_tg_pt_gp_id_store()
-Date: Thu, 27 Apr 2017 16:17:09 +0000
-Message-ID: <1493309828.2625.8.camel@sandisk.com>
-References: <1493302638-113622-1-git-send-email-hare@suse.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v2] lpfc: Fix panic on BFS configuration.
+Date: Thu, 27 Apr 2017 12:22:47 -0400
+Message-ID: <yq1efwd95wo.fsf@oracle.com>
+References: <20170426191926.6061-1-jsmart2021@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:4263 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S939262AbdD0QRY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Apr 2017 12:17:24 -0400
-In-Reply-To: <1493302638-113622-1-git-send-email-hare@suse.de>
-Content-Language: en-US
-Content-ID: <410D832FCEEE194C8BB07923E9692E25@namprd04.prod.outlook.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:51752 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755474AbdD0QXb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Apr 2017 12:23:31 -0400
+In-Reply-To: <20170426191926.6061-1-jsmart2021@gmail.com> (jsmart's message of
+        "Wed, 26 Apr 2017 12:19:26 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hare@suse.de" <hare@suse.de>, "nab@daterainc.com" <nab@daterainc.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>
+To: jsmart2021@gmail.com
+Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org, jthumshirn@suse.de, linux-nvme@lists.infradead.org, emilne@redhat.com, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-On Thu, 2017-04-27 at 16:17 +0200, Hannes Reinecke wrote:
-> When setting up an ALUA target port group with an invalid ID the
-> error message
->=20
-> kstrtoul() returned -22 for tg_pt_gp_id
->=20
-> is displayed, which is not really helpful.
-> Convert it to something sane.
->=20
-> Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Did you perhaps mean "Signed-off-by"?
+James,
 
->  drivers/target/target_core_configfs.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/target/target_core_configfs.c b/drivers/target/targe=
-t_core_configfs.c
-> index 1f229cc..27f7411 100644
-> --- a/drivers/target/target_core_configfs.c
-> +++ b/drivers/target/target_core_configfs.c
-> @@ -2691,8 +2691,8 @@ static ssize_t target_tg_pt_gp_tg_pt_gp_id_store(st=
-ruct config_item *item,
-> =20
->  	ret =3D kstrtoul(page, 0, &tg_pt_gp_id);
->  	if (ret < 0) {
-> -		pr_err("kstrtoul() returned %d for"
-> -			" tg_pt_gp_id\n", ret);
-> +		pr_err("ALUA tg_pt_gp_id: invalid value '%s' for"
-> +			" tg_pt_gp_id\n", page);
->  		return ret;
->  	}
->  	if (tg_pt_gp_id > 0x0000ffff) {
+Please run checkpatch on your submissions.
 
-Although this patch looks fine to me, this would have been a good opportuni=
-ty
-to join the two parts of the error message such that these appear on the sa=
-me
-source code line.
+> This issue was introduced by this patch:
+> http://www.spinics.net/lists/linux-scsi/msg105908.html
+> which is in the stable pools with commit id:
+> 96418b5e2c8867da3279d877f5d1ffabfe460c3d
 
-Bart.=
+This information needs to go in the tag section:
+
+Fixes: 96418b5e2c88 ("scsi: lpfc: Fix eh_deadline setting for sli3 adapters.")
+
+
+> This patch was cut against the scsi.git tree, misc branch and should
+> be pulled in via the scsi tree.
+>
+> This patch needs to be applied to the stable trees where ever the
+> introducing patch exists.
+
+The above commentary needs to go below the --- separator.
+
+
+And finally:
+
+drivers/scsi/lpfc/lpfc_init.c: In function ‘lpfc_handle_deferred_eratt’:
+drivers/scsi/lpfc/lpfc_init.c:1428:3: error: ‘rc’ undeclared (first use in this function)
+   rc = lpfc_sli_chipset_init(phba);
+   ^
+drivers/scsi/lpfc/lpfc_init.c:1428:3: note: each undeclared identifier is reported only once for each function it appears in
+drivers/scsi/lpfc/lpfc_init.c:1430:4: warning: ‘return’ with a value, in function returning void [enabled by default]
+    return (uint64_t)-1;
+    ^
+make[3]: *** [drivers/scsi/lpfc/lpfc_init.o] Error 1
+make[3]: *** Waiting for unfinished jobs....
+make[2]: *** [drivers/scsi/lpfc] Error 2
+make[1]: *** [drivers/scsi] Error 2
+make: *** [drivers] Error 2
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
