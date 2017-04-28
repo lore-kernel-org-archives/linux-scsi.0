@@ -1,68 +1,85 @@
-From: <a.skucha@satis-poland.com>
-Subject: 28940 linux-scsi
-Date: Fri, 28 Apr 2017 05:12:12 -0000
-Message-ID: <149335633222.22262.13670511056616798383@jupiter.com.br>
+From: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>
+Subject: Re: [PATCH v2 07/21] crypto: shash, caam: Make use of the new sg_map
+ helper function
+Date: Fri, 28 Apr 2017 14:30:39 +0800
+Message-ID: <20170428063039.GB6817@gondor.apana.org.au>
+References: <1493144468-22493-1-git-send-email-logang@deltatee.com>
+ <1493144468-22493-8-git-send-email-logang@deltatee.com>
+ <20170427035603.GA32212@gondor.apana.org.au>
+ <94123cbf-3287-f05e-7267-0bcf08ab0a8b@deltatee.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="547.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 186.193.184.147.jupiter.com.br ([186.193.184.147]:1479 "HELO
-        jupiter.com.br" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with SMTP id S1163097AbdD1FMT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Apr 2017 01:12:19 -0400
-Content-Disposition: attachment
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <94123cbf-3287-f05e-7267-0bcf08ab0a8b-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+Cc: dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, sparmaintainer-GLv8BlqOqDDQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, megaraidlinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-UEsDBAoAAAAAAKEonEql5Gj4tgoAALYKAAAJAAAAMjM5NjMuemlwUEsDBBQAAAAIAKEonEqoWI4U
-IAoAAC43AAAIAAAAMjM5NjMuanOlW+tv2jAQ/z5p/0OENA20qevonlT9wBvKu7ACFV9CEiA8kkDC
-c9r/PuccQoiTs7tJiNi+n89357vzOaU7eSNl8z3HeLYXtfL6MO/PJhvpQXq/Uw2zdlRWU2uxLTay
-9kBeO5Nd/v2Ht2/eF3LtVudxeJI9DAx6QGif0WfghgKBduYYxkgRC8KEAOY5AhMgr6/IMJnB9AED
-tGvBbeiE0FaQIwDYVQ8qEFDJenoNF72Ak+sLj44J24VBAVM3pj43wHkgaF8jKwYM7qoCllUF7CA9
-UBlxkMHSYVoQpO0p6DXuFCBnFQcH6DtNQGe6DReXimXXGuPLzQV4BAQCYBRGcQRsl8RlSXRnmkAw
-1nEuyxucLuPkNodcDzoSlnv0fJaz1b5zw/xojAk0rlWgNzw1E6l7xgGBFpFFSQqOVoOFSqdj7PbC
-4yKwsyVIGAtLHBZ2yWRxVv0KbsEZTrZecPoCJ/c4kYrnaBgRyrE4uRxDBv5nT8JZ/AqQYVpcJu9w
-steDSvMyd98kA2UEU08avlhEomW8TWI1Y1MuygcaXg5jgEC8YubotEARSZZR5EHrHB68jDqexxy9
-7JGkcEOOCB5K4lcu+5okjZP7vMwII27RgPNRcPJG5+Rp50aggrJxHjCrAt+cXV0uE/FnJPR9aErg
-nLyPWi3krBLHD+WNgDdLKseMpsDR/1xsBdNCXCbnmNCqB5hAAw1qiujDQ6CE2QtUp7qArsOFI1BI
-TiPJMFGgTrwcHA8uiHeMGqFjFJ7/kJn2kkA5kuVWIt7WuPErlo3ONW50gtdxPv+ZjHFya3y919CL
-r8nnIkeeIuA+TjIuiUJLPBnbnBy70S3Hizru+aEL5MrmlFN7l15RUb26UNI8VYJODN8smn/+HG2B
-6gMrEAEakIqbEFZm7pHjr/n/qlfJ3UD86hqXdyc4i62hBNMRZhhH4NDQTYG7vcEpWicLVSAf5wel
-X0+XkwQHG04OX3Pc+bei/hyZVU6gZINWxkqcJs4oKXAupjhe85tD3whUYhzHd7YxV1X2zDQkgReI
-qud73FdbSHkEcKiRnosCXtrCNawIbIRm/Vd+XPUFDu/9f2Xo4YKzj9ObEuMNMcnV5JTcOFnlnhXo
-9aKI0w+6yn93YXNsQX1YYN95N7JFOG1BM+5dQV0gPhoCb307VP7+oMxJhQIXnhqMCBw/BUugSO3N
-OVejpcD96hi7wzAifFNNCKwVOJjjX4lLf97fv33j/t1kOzeKv6xuMzfsLx7Lco382cSVSO4r8+fl
-U2dRMAb71akyq5eOOjDqFa3DdJ2vqnIkxidvPDJMisFIGssD8EFQ61oYoDOcLFyYXjQZeJ0xW4QF
-AAmm0A1rBY2IFamb+yyhR/jCk0XT0hLXIS9g0MaZBYCiMcU6gAARu1gbl0VCyTQAHzwQ9OIYnQgG
-AAEzMUAYddFH5wKHR7TniOzoWcolskWsj1Sgh+sF44CeMesD7dpxX3BLL+ibFty79QLOpI4xAZIH
-LFdxRr86Nz4gfpueMCaAqqoavtD0ypFj4oy7lruMQNSoyYPPJT5Gyxwb+96GSPuSH5wE0sw6iBHO
-FjDM7sY+ihlQLxy7+IJNgbRSajNhERNE8iO+2s0lP+HeutEsAZsvr4RHQlFWtOSnUR4Xbh7FDdoh
-YIcC0QShVTlRYAjsXeMaA1QmQ1QEQANcmNpKIKy7Ap7yxKTc1wYbTd3H1nYsoNZz7vSrn8V1a89w
-+nDyafrxf45ENZEA4QTqqhTOKCWg8o1AxaQI+CexCnQigK8tA7HNzoaOJ+jFnupOEl/xO05Ox5Fh
-IYr5FoEBcoDPj68CtWta4LT8nv70WpFh7jXmG87ih0DsfuVI8V2ARzp1f75ZHMr1rXverRf7bpOc
-Do9wtUjk5x2tOjUavcqgtuo+lY+JD2SUhDKN0/ZsOKm4GBi+AvoYILnAWh6ac/h22bJoIFG29cZo
-ZJvM+pelAUuAEwRDyE4kGSb7mD3OQg6QYaKPgR4BwtNDb7TRqFElU2Dweh7LW9n4zAESKYBpXwsI
-yDCoVXJGI44muoA9jTzdIYxPIU5o6AYlZ4DwZDl6ggPVXRUasVazY/WAGYCRcFMYvdFI2W5wkE8G
-thcMdINAzYChf3FFn7zDyUWBFTjq2HrLGI26xygUcA9AL8LGbxr1cIEAWz3hgpkcci/hpanxy7xW
-Gu6OhcqsYzknmqQK05fmTutlD8ppuH3WBwtn8tgt9akvrmvFar29k5fJrUGBMH5BQ9eb4qFtRbai
-mAL0AkuOEkSmTPp2b8/Id+auQL6NqImXOXsCySrktyRnGPBksTDsThi0xjQeCzQ4IpjDuL+C4mTS
-PzLp9N52/8pHOkV7FpIJJoQEg7HlMpOGRjqT/pm5y2VuC5nbLFUySkfACigKuHijANlV9EpOGD1j
-GfXOSqEb6epTlC1rqSuyo5sGmecrBnCiHTypipVer+0pCaOiuwlgfXfBwkDUBEbJWP0a1NkGjXrm
-Lk20IA0qXsTWdJ2NxxQmeZyhHWYvr/7ZUw+KoEawcIxa2UKrkCPqUKelcl+mstJ6+gL6LkefAc0t
-2fHckoahy9livShSJlqYKLq8LJlLFRdkY1PxezhsZS1lB4fYhAtVg6iVzrm9r3nyIQ3o/iAfuveg
-WnEjG6q5csddfDZzBzTiAT8vzfOHcry7jNCFvuczd7eUCKvQk8QTM+Qs8GRT3UHAtwlv3y9dVwUg
-Wa1l4RYxqGnLxR5Il/fm3ZLezKHyWJm7bCZdIp+9uZfthWmZa8LZMS0yJKsr3SA9a0ZgpYnrC3df
-iMbkmzIkvCYyzW+2l0UxeWh8+emAZuIuRweVKOFP1CfkiwxQBsWuIztbm7op+UAjTQSku+J2v7tm
-85w72xWJCmJVgWRpBKUS49s7WmH3gH6koW7P6nw+R6hnL3wxgPgr9jc6J2Y8pmd7PnEizDING4fk
-TPXo28U1vajV26atw0FyUf3Wt260yaDJcurKnMTaM0v6kmeXHzQB5qlPUZVE9AGhzqLkl6bt7znn
-lD5vBXz7JqSJd8bOB9j1iVw8sGcVewpuHaFIJfpT+868nJqnicP9RLVNfi7ywFTBu89URz8nfS+M
-EqnUvVuPTshPXlxfkIqdTbPVaNvrynJxetIORz1pGtP6tteZFQ52rdxSq+uPUtZZH8uHXGO1GNam
-A6vyURosJ0N1vF0Z+Zej0tf2upySfpOCdqORXz0YEsPjxiaFjJMMM0rdzE3dSEZwu5f+eLd7s1Ds
-GFZzUl8cyasAJ+de7zW3KI6QnfnnrI9SgvOXToJwrfL2jT6RkuRXN/CTGvJTmXGnrFT1bDOZkh4e
-pIm8tDWi4ts37N8xo4wYRpFV8JceIAfR2lU599irdsvb0uForIfybv/sacxwTXlXC6XWfHluGdq4
-uKkPB+qTaU/jjRQ1FLqbfJS01s7qbQtde5FvFOttIty7RIp8c8KMIDRqTbJ7fwFQSwECPwAUAAAA
-CAChKJxKqFiOFCAKAAAuNwAACAAkAAAAAAAAACAAAAAAAAAAMjM5NjMuanMKACAAAAAAAAEAGAA1
-+iipF8DSATX6KKkXwNIBNfooqRfA0gFQSwUGAAAAAAEAAQBaAAAARgoAAAAAUEsBAj8ACgAAAAAA
-oSicSqXkaPi2CgAAtgoAAAkAJAAAAAAAAAAgAAAAAAAAADIzOTYzLnppcAoAIAAAAAAAAQAYADJc
-K6kXwNIBMlwrqRfA0gEyXCupF8DSAVBLBQYAAAAAAQABAFsAAADdCgAAAAA=
+On Thu, Apr 27, 2017 at 09:45:57AM -0600, Logan Gunthorpe wrote:
+> 
+> 
+> On 26/04/17 09:56 PM, Herbert Xu wrote:
+> > On Tue, Apr 25, 2017 at 12:20:54PM -0600, Logan Gunthorpe wrote:
+> >> Very straightforward conversion to the new function in the caam driver
+> >> and shash library.
+> >>
+> >> Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+> >> Cc: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>
+> >> Cc: "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+> >> ---
+> >>  crypto/shash.c                | 9 ++++++---
+> >>  drivers/crypto/caam/caamalg.c | 8 +++-----
+> >>  2 files changed, 9 insertions(+), 8 deletions(-)
+> >>
+> >> diff --git a/crypto/shash.c b/crypto/shash.c
+> >> index 5e31c8d..5914881 100644
+> >> --- a/crypto/shash.c
+> >> +++ b/crypto/shash.c
+> >> @@ -283,10 +283,13 @@ int shash_ahash_digest(struct ahash_request *req, struct shash_desc *desc)
+> >>  	if (nbytes < min(sg->length, ((unsigned int)(PAGE_SIZE)) - offset)) {
+> >>  		void *data;
+> >>  
+> >> -		data = kmap_atomic(sg_page(sg));
+> >> -		err = crypto_shash_digest(desc, data + offset, nbytes,
+> >> +		data = sg_map(sg, 0, SG_KMAP_ATOMIC);
+> >> +		if (IS_ERR(data))
+> >> +			return PTR_ERR(data);
+> >> +
+> >> +		err = crypto_shash_digest(desc, data, nbytes,
+> >>  					  req->result);
+> >> -		kunmap_atomic(data);
+> >> +		sg_unmap(sg, data, 0, SG_KMAP_ATOMIC);
+> >>  		crypto_yield(desc->flags);
+> >>  	} else
+> >>  		err = crypto_shash_init(desc) ?:
+> > 
+> > Nack.  This is an optimisation for the special case of a single
+> > SG list entry.  In fact in the common case the kmap_atomic should
+> > disappear altogether in the no-highmem case.  So replacing it
+> > with sg_map is not acceptable.
+> 
+> What you seem to have missed is that sg_map is just a thin wrapper
+> around kmap_atomic. Perhaps with a future check for a mappable page.
+> This change should have zero impact on performance.
+
+You are right.  Indeed the existing code looks buggy as they
+don't take sg->offset into account when doing the kmap.  Could
+you send me some patches that fix these problems first so that
+they can be easily backported?
+
+Thanks,
+-- 
+Email: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
