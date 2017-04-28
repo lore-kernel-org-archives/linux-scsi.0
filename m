@@ -1,50 +1,87 @@
-From: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>
-Subject: Re: [PATCH v2 07/21] crypto: shash, caam: Make use of the new sg_map
- helper function
-Date: Sat, 29 Apr 2017 01:51:47 +0800
-Message-ID: <20170428175147.GA9596@gondor.apana.org.au>
-References: <1493144468-22493-1-git-send-email-logang@deltatee.com>
- <1493144468-22493-8-git-send-email-logang@deltatee.com>
- <20170427035603.GA32212@gondor.apana.org.au>
- <94123cbf-3287-f05e-7267-0bcf08ab0a8b@deltatee.com>
- <20170428063039.GB6817@gondor.apana.org.au>
- <5a08708b-c3b8-41fe-96de-607a109eacbd@deltatee.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: [PATCH V2 00/12] hpsa updates
+Date: Fri, 28 Apr 2017 13:19:46 -0500
+Message-ID: <149340349509.4102.15752249884898695693.stgit@brunhilda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <5a08708b-c3b8-41fe-96de-607a109eacbd-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Cc: dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, sparmaintainer-GLv8BlqOqDDQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, megaraidlinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2nam01on0072.outbound.protection.outlook.com ([104.47.34.72]:22160
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1426437AbdD1SUI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 28 Apr 2017 14:20:08 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Apr 28, 2017 at 10:53:45AM -0600, Logan Gunthorpe wrote:
-> 
-> 
-> On 28/04/17 12:30 AM, Herbert Xu wrote:
-> > You are right.  Indeed the existing code looks buggy as they
-> > don't take sg->offset into account when doing the kmap.  Could
-> > you send me some patches that fix these problems first so that
-> > they can be easily backported?
-> 
-> Ok, I think the only buggy one in crypto is hifn_795x. Shash and caam
-> both do have the sg->offset accounted for. I'll send a patch for the
-> buggy one shortly.
+These patches are based on Linus's tree
 
-I think they're all buggy when sg->offset is greater than PAGE_SIZE.
+These patches are for:
+ - RedHat BZ: 1404073 - [HPE 7.3 Bug] multipath failover not reliable
+ - Multipath failover support in general.
 
-Thanks,
--- 
-Email: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+The changes are:
+ - update identify physical device structure
+   - align with FW
+ - stop getting enclosure info for externals
+   - no BMIC support
+ - update reset handler
+   - update to match out of box driver
+ - do not reset enclosures
+   - reset can sometimes hang
+ - rescan later if reset in progress
+   - wait for devices to settle.
+ - correct resets on retried commands
+   - was not calling scsi_done on retried completion
+ - correct queue depth for externals
+   - Code not in correct function
+ - separate monitor events from rescan worker
+   - allows driver to check for controller events more frequently
+     without affecting controller lockup detection or check
+     for changes on PTRAID devices.
+ - send ioaccel requests with 0 length down raid path
+   - avoid hang issues for customers running older firmware.
+ - remove abort handler
+   - align driver with our out of box driver
+ - bump driver version
+   - align version with out of box driver for multi-path changes
+
+Changes since V1:
+ - changes based on Martin Wilck <mwilck@suse.com> reviews.
+    - cleanup reset handler
+      - added spin_lock protection around h->reset_in_progress
+        - this has helped solve a multipath issue, thanks Martin.
+    - renamed patch hpsa-separate-monitor-events-from-hearbeat-worker to
+      hpsa-separate-monitor-events-from-rescan-worker to more correctly
+         convey the patches intent.
+      - split out some commonality between the rescan worker and the
+        event monitor worker.
+      - updated the patch description.
+---
+
+Don Brace (11):
+      hpsa: update identify physical device structure
+      hpsa: do not get enclosure info for external devices
+      hpsa: update reset handler
+      hpsa: do not reset enclosures
+      hpsa: rescan later if reset in progress
+      hpsa: correct resets on retried commands
+      hpsa: cleanup reset handler
+      hpsa: correct queue depth for externals
+      hpsa: send ioaccel requests with 0 length down raid path
+      hpsa: remove abort handler
+      hpsa: bump driver version
+
+Scott Teel (1):
+      hpsa: separate monitor events from rescan worker
+
+
+ drivers/scsi/hpsa.c     |  849 +++++++++++------------------------------------
+ drivers/scsi/hpsa.h     |    4 
+ drivers/scsi/hpsa_cmd.h |   20 +
+ 3 files changed, 208 insertions(+), 665 deletions(-)
+
+--
+Signature
