@@ -1,7 +1,7 @@
 From: Romain Perier <romain.perier-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
-Subject: [PATCH v8 04/15] net: e100: Replace PCI pool old API
-Date: Fri, 28 Apr 2017 16:27:11 +0200
-Message-ID: <20170428142722.1282-5-romain.perier@collabora.com>
+Subject: [PATCH v8 03/15] IB/mthca: Replace PCI pool old API
+Date: Fri, 28 Apr 2017 16:27:10 +0200
+Message-ID: <20170428142722.1282-4-romain.perier@collabora.com>
 References: <20170428142722.1282-1-romain.perier@collabora.com>
 Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <20170428142722.1282-1-romain.perier-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
@@ -15,63 +15,125 @@ API by the appropriate function with the DMA pool API.
 
 Signed-off-by: Romain Perier <romain.perier-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
 Acked-by: Peter Senna Tschudin <peter.senna-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
-Acked-by: Jeff Kirsher <jeffrey.t.kirsher-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Tested-by: Peter Senna Tschudin <peter.senna-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
+Acked-by: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Tested-by: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- drivers/net/ethernet/intel/e100.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/infiniband/hw/mthca/mthca_av.c  | 10 +++++-----
+ drivers/infiniband/hw/mthca/mthca_cmd.c |  8 ++++----
+ drivers/infiniband/hw/mthca/mthca_dev.h |  4 ++--
+ 3 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/ethernet/intel/e100.c b/drivers/net/ethernet/intel/e100.c
-index 2b7323d392dc..d1002c21ce8c 100644
---- a/drivers/net/ethernet/intel/e100.c
-+++ b/drivers/net/ethernet/intel/e100.c
-@@ -607,7 +607,7 @@ struct nic {
- 	struct mem *mem;
- 	dma_addr_t dma_addr;
+diff --git a/drivers/infiniband/hw/mthca/mthca_av.c b/drivers/infiniband/hw/mthca/mthca_av.c
+index c9f0f364f484..9d041b67c2f3 100644
+--- a/drivers/infiniband/hw/mthca/mthca_av.c
++++ b/drivers/infiniband/hw/mthca/mthca_av.c
+@@ -186,7 +186,7 @@ int mthca_create_ah(struct mthca_dev *dev,
  
--	struct pci_pool *cbs_pool;
-+	struct dma_pool *cbs_pool;
- 	dma_addr_t cbs_dma_addr;
- 	u8 adaptive_ifs;
- 	u8 tx_threshold;
-@@ -1892,7 +1892,7 @@ static void e100_clean_cbs(struct nic *nic)
- 			nic->cb_to_clean = nic->cb_to_clean->next;
- 			nic->cbs_avail++;
- 		}
--		pci_pool_free(nic->cbs_pool, nic->cbs, nic->cbs_dma_addr);
-+		dma_pool_free(nic->cbs_pool, nic->cbs, nic->cbs_dma_addr);
- 		nic->cbs = NULL;
- 		nic->cbs_avail = 0;
- 	}
-@@ -1910,7 +1910,7 @@ static int e100_alloc_cbs(struct nic *nic)
- 	nic->cb_to_use = nic->cb_to_send = nic->cb_to_clean = NULL;
- 	nic->cbs_avail = 0;
+ on_hca_fail:
+ 	if (ah->type == MTHCA_AH_PCI_POOL) {
+-		ah->av = pci_pool_zalloc(dev->av_table.pool,
++		ah->av = dma_pool_zalloc(dev->av_table.pool,
+ 					 GFP_ATOMIC, &ah->avdma);
+ 		if (!ah->av)
+ 			return -ENOMEM;
+@@ -245,7 +245,7 @@ int mthca_destroy_ah(struct mthca_dev *dev, struct mthca_ah *ah)
+ 		break;
  
--	nic->cbs = pci_pool_alloc(nic->cbs_pool, GFP_KERNEL,
-+	nic->cbs = dma_pool_alloc(nic->cbs_pool, GFP_KERNEL,
- 				  &nic->cbs_dma_addr);
- 	if (!nic->cbs)
+ 	case MTHCA_AH_PCI_POOL:
+-		pci_pool_free(dev->av_table.pool, ah->av, ah->avdma);
++		dma_pool_free(dev->av_table.pool, ah->av, ah->avdma);
+ 		break;
+ 
+ 	case MTHCA_AH_KMALLOC:
+@@ -333,7 +333,7 @@ int mthca_init_av_table(struct mthca_dev *dev)
+ 	if (err)
+ 		return err;
+ 
+-	dev->av_table.pool = pci_pool_create("mthca_av", dev->pdev,
++	dev->av_table.pool = dma_pool_create("mthca_av", &dev->pdev->dev,
+ 					     MTHCA_AV_SIZE,
+ 					     MTHCA_AV_SIZE, 0);
+ 	if (!dev->av_table.pool)
+@@ -353,7 +353,7 @@ int mthca_init_av_table(struct mthca_dev *dev)
+ 	return 0;
+ 
+  out_free_pool:
+-	pci_pool_destroy(dev->av_table.pool);
++	dma_pool_destroy(dev->av_table.pool);
+ 
+  out_free_alloc:
+ 	mthca_alloc_cleanup(&dev->av_table.alloc);
+@@ -367,6 +367,6 @@ void mthca_cleanup_av_table(struct mthca_dev *dev)
+ 
+ 	if (dev->av_table.av_map)
+ 		iounmap(dev->av_table.av_map);
+-	pci_pool_destroy(dev->av_table.pool);
++	dma_pool_destroy(dev->av_table.pool);
+ 	mthca_alloc_cleanup(&dev->av_table.alloc);
+ }
+diff --git a/drivers/infiniband/hw/mthca/mthca_cmd.c b/drivers/infiniband/hw/mthca/mthca_cmd.c
+index 9d83a53c0c67..0b03c09e637c 100644
+--- a/drivers/infiniband/hw/mthca/mthca_cmd.c
++++ b/drivers/infiniband/hw/mthca/mthca_cmd.c
+@@ -538,7 +538,7 @@ int mthca_cmd_init(struct mthca_dev *dev)
  		return -ENOMEM;
-@@ -2958,8 +2958,8 @@ static int e100_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		netif_err(nic, probe, nic->netdev, "Cannot register net device, aborting\n");
- 		goto err_out_free;
  	}
--	nic->cbs_pool = pci_pool_create(netdev->name,
--			   nic->pdev,
-+	nic->cbs_pool = dma_pool_create(netdev->name,
-+			   &nic->pdev->dev,
- 			   nic->params.cbs.max * sizeof(struct cb),
- 			   sizeof(u32),
- 			   0);
-@@ -2999,7 +2999,7 @@ static void e100_remove(struct pci_dev *pdev)
- 		unregister_netdev(netdev);
- 		e100_free(nic);
- 		pci_iounmap(pdev, nic->csr);
--		pci_pool_destroy(nic->cbs_pool);
-+		dma_pool_destroy(nic->cbs_pool);
- 		free_netdev(netdev);
- 		pci_release_regions(pdev);
- 		pci_disable_device(pdev);
+ 
+-	dev->cmd.pool = pci_pool_create("mthca_cmd", dev->pdev,
++	dev->cmd.pool = dma_pool_create("mthca_cmd", &dev->pdev->dev,
+ 					MTHCA_MAILBOX_SIZE,
+ 					MTHCA_MAILBOX_SIZE, 0);
+ 	if (!dev->cmd.pool) {
+@@ -551,7 +551,7 @@ int mthca_cmd_init(struct mthca_dev *dev)
+ 
+ void mthca_cmd_cleanup(struct mthca_dev *dev)
+ {
+-	pci_pool_destroy(dev->cmd.pool);
++	dma_pool_destroy(dev->cmd.pool);
+ 	iounmap(dev->hcr);
+ 	if (dev->cmd.flags & MTHCA_CMD_POST_DOORBELLS)
+ 		iounmap(dev->cmd.dbell_map);
+@@ -621,7 +621,7 @@ struct mthca_mailbox *mthca_alloc_mailbox(struct mthca_dev *dev,
+ 	if (!mailbox)
+ 		return ERR_PTR(-ENOMEM);
+ 
+-	mailbox->buf = pci_pool_alloc(dev->cmd.pool, gfp_mask, &mailbox->dma);
++	mailbox->buf = dma_pool_alloc(dev->cmd.pool, gfp_mask, &mailbox->dma);
+ 	if (!mailbox->buf) {
+ 		kfree(mailbox);
+ 		return ERR_PTR(-ENOMEM);
+@@ -635,7 +635,7 @@ void mthca_free_mailbox(struct mthca_dev *dev, struct mthca_mailbox *mailbox)
+ 	if (!mailbox)
+ 		return;
+ 
+-	pci_pool_free(dev->cmd.pool, mailbox->buf, mailbox->dma);
++	dma_pool_free(dev->cmd.pool, mailbox->buf, mailbox->dma);
+ 	kfree(mailbox);
+ }
+ 
+diff --git a/drivers/infiniband/hw/mthca/mthca_dev.h b/drivers/infiniband/hw/mthca/mthca_dev.h
+index 4393a022867b..8c3f6edc42b7 100644
+--- a/drivers/infiniband/hw/mthca/mthca_dev.h
++++ b/drivers/infiniband/hw/mthca/mthca_dev.h
+@@ -118,7 +118,7 @@ enum {
+ };
+ 
+ struct mthca_cmd {
+-	struct pci_pool          *pool;
++	struct dma_pool          *pool;
+ 	struct mutex              hcr_mutex;
+ 	struct semaphore 	  poll_sem;
+ 	struct semaphore 	  event_sem;
+@@ -263,7 +263,7 @@ struct mthca_qp_table {
+ };
+ 
+ struct mthca_av_table {
+-	struct pci_pool   *pool;
++	struct dma_pool   *pool;
+ 	int                num_ddr_avs;
+ 	u64                ddr_av_base;
+ 	void __iomem      *av_map;
 -- 
 2.11.0
 
