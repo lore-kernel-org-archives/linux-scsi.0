@@ -1,169 +1,72 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: [PATCH v3] lpfc: Fix panic on BFS configuration.
-Date: Fri, 28 Apr 2017 16:36:13 -0400
-Message-ID: <1493411773.9835.83.camel@localhost.localdomain>
-References: <20170427220826.12693-1-jsmart2021@gmail.com>
-Reply-To: emilne@redhat.com
+From: "tj@kernel.org" <tj@kernel.org>
+Subject: Re: BUG: KASAN: use-after-free in scsi_exit_rq
+Date: Fri, 28 Apr 2017 17:46:47 -0400
+Message-ID: <20170428214647.GG22354@htj.duckdns.org>
+References: <20170420211849.GB7387@sbauer-Z170X-UD5>
+ <1492811357.2499.9.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20170427220826.12693-1-jsmart2021@gmail.com>
-Sender: stable-owner@vger.kernel.org
-To: jsmart2021@gmail.com
-Cc: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, sagi@grimberg.me, stable@vger.kernel.org, loberman@redhat.com, jthumshirn@suse.de, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yb0-f195.google.com ([209.85.213.195]:34759 "EHLO
+        mail-yb0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S939124AbdD1Vqu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Apr 2017 17:46:50 -0400
+Content-Disposition: inline
+In-Reply-To: <1492811357.2499.9.camel@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "scott.bauer@intel.com" <scott.bauer@intel.com>, "hch@lst.de" <hch@lst.de>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Jan Kara <jack@suse.com>
 
-On Thu, 2017-04-27 at 15:08 -0700, jsmart2021@gmail.com wrote:
-> From: James Smart <jsmart2021@gmail.com>
-> 
-> To select the appropriate shost template, the driver is issuing
-> a mailbox command to retrieve the wwn. Turns out the sending of
-> the command precedes the reset of the function.  On SLI-4 adapters,
-> this is inconsequential as the mailbox command location is specified
-> by dma via the BMBX register. However, on SLI-3 adapters, the
-> location of the mailbox command submission area changes. When the
-> function is first powered on or reset, the cmd is submitted via PCI
-> bar memory. Later the driver changes the function config to use
-> host memory and DMA. The request to start a mailbox command is the
-> same, a simple doorbell write, regardless of submission area.
-> So.. if there has not been a boot driver run against the adapter,
-> the mailbox command works as defaults are ok. But, if the boot
-> driver has configured the card and, and if no platform pci
-> function/slot reset occurs as the os starts, the mailbox command
-> will fail. The SLI-3 device will use the stale boot driver dma
-> location. This can cause PCI eeh errors.
-> 
-> Fix is to reset the sli-3 function before sending the
-> mailbox command, thus synchronizing the function/driver on mailbox
-> location.
-> 
-> Note: The fix uses routines that are typically invoked later in the
-> call flow to reset the sli-3 device. The issue in using those routines is
-> that the normal (non-fix) flow does additional initialization, namely the
-> allocation of the pport structure. So, rather than significantly reworking
-> the initialization flow so that the pport is alloc'd first, pointer checks
-> are added to work around it. Checks are limited to the routines invoked
-> by a sli-3 adapter (s3 routines) as this fix/early call is only invoked
-> on a sli3 adapter. Nothing changes post the fix. Subsequent initialization,
-> and another adapter reset, still occur - both on sli-3 and sli-4 adapters.
-> 
-> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-> Signed-off-by: James Smart <james.smart@broadcom.com>
-> Fixes: 96418b5e2c88 ("scsi: lpfc: Fix eh_deadline setting for sli3 adapters.")
-> Cc: stable@vger.kernel.org
-> ---
-> The issue was introduced by one of the patches in the lpfc 11.2.0.10
-> patch set: http://www.spinics.net/lists/linux-scsi/msg105908.html
-> As the set contained a number of NVME fixes, it was picked up only in
-> the linux-block tree. The scsi trees are at ~11.2.0.7.
-> 
-> This patch was cut against the nvme-4.12 tree, which is backed by
-> linux-block. The patch must go in via the block tree.
-> 
-> As the patch is scsi-specific, it was cherry-picked for stable trees.
-> Thus the fix needs to be picked up by them.
-> 
-> Warning: the patch applies to pre-11.2.0.10 versions of lpfc (in the
-> scsi trees) reporting only fuzz warnings, but creates something
-> completely erroneous.
-> ---
->  drivers/scsi/lpfc/lpfc_crtn.h |  1 +
->  drivers/scsi/lpfc/lpfc_init.c |  7 +++++++
->  drivers/scsi/lpfc/lpfc_sli.c  | 19 ++++++++++++-------
->  3 files changed, 20 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
-> index 944b32c..1c55408 100644
-> --- a/drivers/scsi/lpfc/lpfc_crtn.h
-> +++ b/drivers/scsi/lpfc/lpfc_crtn.h
-> @@ -294,6 +294,7 @@ int lpfc_selective_reset(struct lpfc_hba *);
->  void lpfc_reset_barrier(struct lpfc_hba *);
->  int lpfc_sli_brdready(struct lpfc_hba *, uint32_t);
->  int lpfc_sli_brdkill(struct lpfc_hba *);
-> +int lpfc_sli_chipset_init(struct lpfc_hba *phba);
->  int lpfc_sli_brdreset(struct lpfc_hba *);
->  int lpfc_sli_brdrestart(struct lpfc_hba *);
->  int lpfc_sli_hba_setup(struct lpfc_hba *);
-> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-> index 90ae354..e85f273 100644
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -3602,6 +3602,13 @@ lpfc_get_wwpn(struct lpfc_hba *phba)
->  	LPFC_MBOXQ_t *mboxq;
->  	MAILBOX_t *mb;
->  
-> +	if (phba->sli_rev < LPFC_SLI_REV4) {
-> +		/* Reset the port first */
-> +		lpfc_sli_brdrestart(phba);
-> +		rc = lpfc_sli_chipset_init(phba);
-> +		if (rc)
-> +			return (uint64_t)-1;
-> +	}
->  
->  	mboxq = (LPFC_MBOXQ_t *) mempool_alloc(phba->mbox_mem_pool,
->  						GFP_KERNEL);
-> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-> index cf19f49..2a4fc00 100644
-> --- a/drivers/scsi/lpfc/lpfc_sli.c
-> +++ b/drivers/scsi/lpfc/lpfc_sli.c
-> @@ -4204,13 +4204,16 @@ lpfc_sli_brdreset(struct lpfc_hba *phba)
->  	/* Reset HBA */
->  	lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
->  			"0325 Reset HBA Data: x%x x%x\n",
-> -			phba->pport->port_state, psli->sli_flag);
-> +			(phba->pport) ? phba->pport->port_state : 0,
-> +			psli->sli_flag);
->  
->  	/* perform board reset */
->  	phba->fc_eventTag = 0;
->  	phba->link_events = 0;
-> -	phba->pport->fc_myDID = 0;
-> -	phba->pport->fc_prevDID = 0;
-> +	if (phba->pport) {
-> +		phba->pport->fc_myDID = 0;
-> +		phba->pport->fc_prevDID = 0;
-> +	}
->  
->  	/* Turn off parity checking and serr during the physical reset */
->  	pci_read_config_word(phba->pcidev, PCI_COMMAND, &cfg_value);
-> @@ -4336,7 +4339,8 @@ lpfc_sli_brdrestart_s3(struct lpfc_hba *phba)
->  	/* Restart HBA */
->  	lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
->  			"0337 Restart HBA Data: x%x x%x\n",
-> -			phba->pport->port_state, psli->sli_flag);
-> +			(phba->pport) ? phba->pport->port_state : 0,
-> +			psli->sli_flag);
->  
->  	word0 = 0;
->  	mb = (MAILBOX_t *) &word0;
-> @@ -4350,7 +4354,7 @@ lpfc_sli_brdrestart_s3(struct lpfc_hba *phba)
->  	readl(to_slim); /* flush */
->  
->  	/* Only skip post after fc_ffinit is completed */
-> -	if (phba->pport->port_state)
-> +	if (phba->pport && phba->pport->port_state)
->  		word0 = 1;	/* This is really setting up word1 */
->  	else
->  		word0 = 0;	/* This is really setting up word1 */
-> @@ -4359,7 +4363,8 @@ lpfc_sli_brdrestart_s3(struct lpfc_hba *phba)
->  	readl(to_slim); /* flush */
->  
->  	lpfc_sli_brdreset(phba);
-> -	phba->pport->stopped = 0;
-> +	if (phba->pport)
-> +		phba->pport->stopped = 0;
->  	phba->link_state = LPFC_INIT_START;
->  	phba->hba_flag = 0;
->  	spin_unlock_irq(&phba->hbalock);
-> @@ -4446,7 +4451,7 @@ lpfc_sli_brdrestart(struct lpfc_hba *phba)
->   * iteration, the function will restart the HBA again. The function returns
->   * zero if HBA successfully restarted else returns negative error code.
->   **/
-> -static int
-> +int
->  lpfc_sli_chipset_init(struct lpfc_hba *phba)
->  {
->  	uint32_t status, i = 0;
+(cc'ing Jan)
 
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+Hello, Bart.
+
+On Fri, Apr 21, 2017 at 09:49:17PM +0000, Bart Van Assche wrote:
+> On Thu, 2017-04-20 at 15:18 -0600, Scott Bauer wrote:
+> > [  642.638860] BUG: KASAN: use-after-free in scsi_exit_rq+0xf3/0x120 at addr ffff8802b7fedf00
+> > [  642.639362] Read of size 1 by task rcuos/5/53
+> > [  642.639713] CPU: 7 PID: 53 Comm: rcuos/6 Not tainted 4.11.0-rc5+ #13
+> > [  642.640170] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.7.5-0-ge51488c-20140602_164612-nilsson.home.kraxel.org 04/01/2014
+> > [  642.640923] Call Trace:
+> > [  642.641080]  dump_stack+0x63/0x8f
+> > [  642.641289]  kasan_object_err+0x21/0x70
+> > [  642.641531]  kasan_report.part.1+0x231/0x500
+> > [  642.641823]  ? scsi_exit_rq+0xf3/0x120
+> > [  642.642054]  ? _raw_spin_unlock_irqrestore+0xe/0x10
+> > [  642.642353]  ? free_percpu+0x1b7/0x340
+> > [  642.642586]  ? put_task_stack+0x117/0x2b0
+> > [  642.642837]  __asan_report_load1_noabort+0x2e/0x30
+> > [  642.643138]  scsi_exit_rq+0xf3/0x120
+> > [  642.643366]  free_request_size+0x44/0x60
+> > [  642.643614]  mempool_destroy.part.6+0x9b/0x150
+> > [  642.643899]  ? kasan_slab_free+0x87/0xb0
+> > [  642.644152]  mempool_destroy+0x13/0x20
+> > [  642.644394]  blk_exit_rl+0x36/0x40
+> > [  642.644614]  blkg_free+0x146/0x200
+> > [  642.644836]  __blkg_release_rcu+0x121/0x220
+> > [  642.645112]  rcu_nocb_kthread+0x61f/0xca0
+> > [  642.645376]  ? get_state_synchronize_rcu+0x20/0x20
+> > [  642.645690]  ? pci_mmcfg_check_reserved+0x110/0x110
+> > [  642.646011]  kthread+0x298/0x390
+> > [  642.646224]  ? get_state_synchronize_rcu+0x20/0x20
+> > [  642.646535]  ? kthread_park+0x160/0x160
+> > [  642.646787]  ret_from_fork+0x2c/0x40
+> 
+> I'm not familiar with cgroups but seeing this makes me wonder whether it would
+> be possible to move the blk_exit_rl() calls from blk_release_queue() into
+> blk_cleanup_queue()? The SCSI core frees a SCSI host after blk_cleanup_queue()
+> has finished for all associated SCSI devices. This is why I think that calling
+> blk_exit_rl() earlier would be sufficient to avoid that scsi_exit_rq()
+> dereferences a SCSI host pointer after it has been freed.
+
+Hmm... I see.  Didn't know request put path involved derefing those
+structs.  The blk_exit_rl() call just replaced open coded
+mempool_destroy call, so the destruction order was always like this.
+We shouldn't have any request in flight by cleanup, so moving it there
+should be fine.
+
+Thanks.
+
+-- 
+tejun
