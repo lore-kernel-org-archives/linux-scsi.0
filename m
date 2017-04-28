@@ -1,59 +1,43 @@
-From: Peng Tao <bergwolf@gmail.com>
-Subject: [PATCH RFC] scsi: wait sd probing in manual scan
-Date: Fri, 28 Apr 2017 15:48:19 +0800
-Message-ID: <1493365699-25566-1-git-send-email-bergwolf@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Peng Tao <bergwolf@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] target: fixup error message in target_tg_pt_gp_alua_access_type_store()
+Date: Fri, 28 Apr 2017 10:03:38 +0200
+Message-ID: <1493366618-8460-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:40996 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932429AbdD1IDp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 28 Apr 2017 04:03:45 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Nic Bellinger <nab@daterainc.com>
+Cc: Bart van Assche <bart.vanassche@sandisk.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-We have a guest init programe trying to mount a device after doing scsi host scan
-at boot time. Occasionally it fails to find the device when mounting. After digging
-a bit, it seems the root cause is sd async_schedule probing.
+When setting up a target the error message:
 
-With async probing, there is no guarantee of device readiness when scsi host
-scan finishes. However, users do expect to have a valid way to make sure device
-is usable. Change scsi scan to wait sd probing in manual scan case so that we
-don't leave user with random device state when scsi host scan returns.
+Unable to do set ##_name ALUA state on non valid tg_pt_gp ID: 0
 
-Is this the right way to have such guarantee?
+is displayed.
+Apparently concatenation doesn't work in a string; one should be using
+implicit string concatenation here.
 
-CC: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-CC: "Martin K. Petersen" <martin.petersen@oracle.com>
-Signed-off-by: Peng Tao <bergwolf@gmail.com>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Bart van Assche <bart.vanassche@sandisk.com>
 ---
- drivers/scsi/scsi_scan.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/target/target_core_configfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 6f7128f..0208f40 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1077,6 +1077,11 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
- 			SCSI_LOG_SCAN_BUS(3, sdev_printk(KERN_INFO, sdev,
- 				"scsi scan: device exists on %s\n",
- 				dev_name(&sdev->sdev_gendev)));
-+			/* sd probing uses async_schedule.  Wait until it finishes if this
-+			 * is a user requested rescan.
-+			 */
-+			if (rescan == SCSI_SCAN_MANUAL && scsi_is_sdev_device(&sdev->sdev_gendev))
-+				async_synchronize_full_domain(&scsi_sd_probe_domain);
- 			if (sdevp)
- 				*sdevp = sdev;
- 			else
-@@ -1176,6 +1181,12 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
- 		}
- 	}
-
-+	/* sd probing uses async_schedule.  Wait until it finishes if this
-+	 * is a user requested rescan.
-+	 */
-+	if (rescan == SCSI_SCAN_MANUAL && scsi_is_sdev_device(&sdev->sdev_gendev))
-+		async_synchronize_full_domain(&scsi_sd_probe_domain);
-+
-  out_free_result:
- 	kfree(result);
-  out_free_sdev:
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index 54b36c9..e8850ae 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -2507,7 +2507,7 @@ static ssize_t target_tg_pt_gp_alua_access_type_store(struct config_item *item,
+ 	int ret;							\
+ 									\
+ 	if (!t->tg_pt_gp_valid_id) {					\
+-		pr_err("Unable to do set ##_name ALUA state on non"	\
++		pr_err("Unable to do set " #_name " ALUA state on non"	\
+ 		       " valid tg_pt_gp ID: %hu\n",			\
+ 		       t->tg_pt_gp_valid_id);				\
+ 		return -EINVAL;						\
 -- 
-2.7.4
+1.8.5.6
