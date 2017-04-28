@@ -1,69 +1,59 @@
-From: Martin Wilck <mwilck@suse.com>
-Subject: Re: [PATCH 09/12] hpsa: separate monitor events from heartbeat
- worker
-Date: Fri, 28 Apr 2017 09:06:39 +0200
-Message-ID: <1493363199.24450.1.camel@suse.com>
-References: <149159483812.15658.615814291766210537.stgit@brunhilda>
-         <149159560000.15658.13539404380272805930.stgit@brunhilda>
-         <1491913120.4742.13.camel@suse.com>
-         <4993A297653ECB4581FA5C3C31323D1951D38015@avsrvexchmbx2.microsemi.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:54556 "EHLO
-        prv3-mh.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1030872AbdD1HGx (ORCPT
-        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-        Fri, 28 Apr 2017 03:06:53 -0400
-In-Reply-To: <4993A297653ECB4581FA5C3C31323D1951D38015@avsrvexchmbx2.microsemi.net>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Peng Tao <bergwolf@gmail.com>
+Subject: [PATCH RFC] scsi: wait sd probing in manual scan
+Date: Fri, 28 Apr 2017 15:48:19 +0800
+Message-ID: <1493365699-25566-1-git-send-email-bergwolf@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Peng Tao <bergwolf@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>, "joseph.szczypek@hpe.com" <joseph.szczypek@hpe.com>, Gerry Morong <gerry.morong@microsemi.com>, John Hall <John.Hall@microsemi.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, Bader Ali - Saleh <bader.alisaleh@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Viswas G <viswas.g@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "POSWALD@suse.com" <POSWALD@suse.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, 2017-04-27 at 21:10 +0000, Don Brace wrote:
-> > -
-> > The new worker thread duplicates code from hpsa_rescan_ctlr_worker.
-> > I
-> > find this a bit irritating. Could you maybe use just a single
-> > worker,
-> > and just check using time stamps whether the "big" heartbeat needs
-> > to
-> > be performed?
-> > 
-> > Regards
-> > Martin
-> > 
-> > --
-> > Dr. Martin Wilck <mwilck@suse.com>, Tel. +49 (0)911 74053 2107
-> > SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham
-> > Norton
-> > HRB 21284 (AG Nürnberg)
-> 
-> We thought about that, but we want to separate controller events
-> from the rescan worker.
-> 
-> Both can cause a rescan to occur however for multipath we have
-> found that we need to respond faster than the normal scheduled rescan
-> interval for path fail-overs.
-> 
-> Getting controller events only involves reading a register, but
-> the rescan worker can obtain an updated LUN list when there
-> is a PTRAID device present.
-> 
-> However, I did refactor the patch to move common code to
-> a separate function.
-> 
-> Would this be more acceptable?
+We have a guest init programe trying to mount a device after doing scsi host scan
+at boot time. Occasionally it fails to find the device when mounting. After digging
+a bit, it seems the root cause is sd async_schedule probing.
 
-Sounds good, yes. I'd also appreciate if you'd add these additional
-comments to the commit message.
+With async probing, there is no guarantee of device readiness when scsi host
+scan finishes. However, users do expect to have a valid way to make sure device
+is usable. Change scsi scan to wait sd probing in manual scan case so that we
+don't leave user with random device state when scsi host scan returns.
 
-Regards
-Martin
+Is this the right way to have such guarantee?
 
+CC: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+CC: "Martin K. Petersen" <martin.petersen@oracle.com>
+Signed-off-by: Peng Tao <bergwolf@gmail.com>
+---
+ drivers/scsi/scsi_scan.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 6f7128f..0208f40 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1077,6 +1077,11 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
+ 			SCSI_LOG_SCAN_BUS(3, sdev_printk(KERN_INFO, sdev,
+ 				"scsi scan: device exists on %s\n",
+ 				dev_name(&sdev->sdev_gendev)));
++			/* sd probing uses async_schedule.  Wait until it finishes if this
++			 * is a user requested rescan.
++			 */
++			if (rescan == SCSI_SCAN_MANUAL && scsi_is_sdev_device(&sdev->sdev_gendev))
++				async_synchronize_full_domain(&scsi_sd_probe_domain);
+ 			if (sdevp)
+ 				*sdevp = sdev;
+ 			else
+@@ -1176,6 +1181,12 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
+ 		}
+ 	}
+
++	/* sd probing uses async_schedule.  Wait until it finishes if this
++	 * is a user requested rescan.
++	 */
++	if (rescan == SCSI_SCAN_MANUAL && scsi_is_sdev_device(&sdev->sdev_gendev))
++		async_synchronize_full_domain(&scsi_sd_probe_domain);
++
+  out_free_result:
+ 	kfree(result);
+  out_free_sdev:
 -- 
-Dr. Martin Wilck <mwilck@suse.com>, Tel. +49 (0)911 74053 2107
-SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
+2.7.4
