@@ -1,82 +1,41 @@
-From: Romain Perier <romain.perier@collabora.com>
-Subject: [PATCH v8 02/15] dmaengine: pch_dma: Replace PCI pool old API
-Date: Fri, 28 Apr 2017 16:27:09 +0200
-Message-ID: <20170428142722.1282-3-romain.perier@collabora.com>
-References: <20170428142722.1282-1-romain.perier@collabora.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170428142722.1282-1-romain.perier@collabora.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>, Doug Ledford <dledford@redhat.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, jeffrey.t.kirsher@intel.com, "David S. Miller" <davem@davemloft.net>, stas.yakovlev@gmail.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Felipe Balbi <balbi@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Romain Perier <romain.perier@collabora.com>, Peter Senna Tschudin <peter.senna@collabora.co.uk>
+From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+Subject: Re: [PATCH v2 07/21] crypto: shash, caam: Make use of the new sg_map
+ helper function
+Date: Fri, 28 Apr 2017 10:53:45 -0600
+Message-ID: <5a08708b-c3b8-41fe-96de-607a109eacbd@deltatee.com>
+References: <1493144468-22493-1-git-send-email-logang@deltatee.com>
+ <1493144468-22493-8-git-send-email-logang@deltatee.com>
+ <20170427035603.GA32212@gondor.apana.org.au>
+ <94123cbf-3287-f05e-7267-0bcf08ab0a8b@deltatee.com>
+ <20170428063039.GB6817@gondor.apana.org.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <20170428063039.GB6817-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>
+Cc: dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, sparmaintainer-GLv8BlqOqDDQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, megaraidlinux.pdl-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matthew Wilcox <mawilcox-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-The PCI pool API is deprecated. This commit replaces the PCI pool old
-API by the appropriate function with the DMA pool API.
 
-Signed-off-by: Romain Perier <romain.perier@collabora.com>
-Acked-by: Peter Senna Tschudin <peter.senna@collabora.com>
-Tested-by: Peter Senna Tschudin <peter.senna@collabora.com>
----
- drivers/dma/pch_dma.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/dma/pch_dma.c b/drivers/dma/pch_dma.c
-index f9028e9d0dfc..afd8f27bda96 100644
---- a/drivers/dma/pch_dma.c
-+++ b/drivers/dma/pch_dma.c
-@@ -123,7 +123,7 @@ struct pch_dma_chan {
- struct pch_dma {
- 	struct dma_device	dma;
- 	void __iomem *membase;
--	struct pci_pool		*pool;
-+	struct dma_pool		*pool;
- 	struct pch_dma_regs	regs;
- 	struct pch_dma_desc_regs ch_regs[MAX_CHAN_NR];
- 	struct pch_dma_chan	channels[MAX_CHAN_NR];
-@@ -437,7 +437,7 @@ static struct pch_dma_desc *pdc_alloc_desc(struct dma_chan *chan, gfp_t flags)
- 	struct pch_dma *pd = to_pd(chan->device);
- 	dma_addr_t addr;
- 
--	desc = pci_pool_zalloc(pd->pool, flags, &addr);
-+	desc = dma_pool_zalloc(pd->pool, flags, &addr);
- 	if (desc) {
- 		INIT_LIST_HEAD(&desc->tx_list);
- 		dma_async_tx_descriptor_init(&desc->txd, chan);
-@@ -549,7 +549,7 @@ static void pd_free_chan_resources(struct dma_chan *chan)
- 	spin_unlock_irq(&pd_chan->lock);
- 
- 	list_for_each_entry_safe(desc, _d, &tmp_list, desc_node)
--		pci_pool_free(pd->pool, desc, desc->txd.phys);
-+		dma_pool_free(pd->pool, desc, desc->txd.phys);
- 
- 	pdc_enable_irq(chan, 0);
- }
-@@ -880,7 +880,7 @@ static int pch_dma_probe(struct pci_dev *pdev,
- 		goto err_iounmap;
- 	}
- 
--	pd->pool = pci_pool_create("pch_dma_desc_pool", pdev,
-+	pd->pool = dma_pool_create("pch_dma_desc_pool", &pdev->dev,
- 				   sizeof(struct pch_dma_desc), 4, 0);
- 	if (!pd->pool) {
- 		dev_err(&pdev->dev, "Failed to alloc DMA descriptors\n");
-@@ -931,7 +931,7 @@ static int pch_dma_probe(struct pci_dev *pdev,
- 	return 0;
- 
- err_free_pool:
--	pci_pool_destroy(pd->pool);
-+	dma_pool_destroy(pd->pool);
- err_free_irq:
- 	free_irq(pdev->irq, pd);
- err_iounmap:
-@@ -963,7 +963,7 @@ static void pch_dma_remove(struct pci_dev *pdev)
- 			tasklet_kill(&pd_chan->tasklet);
- 		}
- 
--		pci_pool_destroy(pd->pool);
-+		dma_pool_destroy(pd->pool);
- 		pci_iounmap(pdev, pd->membase);
- 		pci_release_regions(pdev);
- 		pci_disable_device(pdev);
--- 
-2.11.0
+On 28/04/17 12:30 AM, Herbert Xu wrote:
+> You are right.  Indeed the existing code looks buggy as they
+> don't take sg->offset into account when doing the kmap.  Could
+> you send me some patches that fix these problems first so that
+> they can be easily backported?
+
+Ok, I think the only buggy one in crypto is hifn_795x. Shash and caam
+both do have the sg->offset accounted for. I'll send a patch for the
+buggy one shortly.
+
+Logan
