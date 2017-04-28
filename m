@@ -1,115 +1,50 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v3 3/4] sd: Make synchronize cache upon shutdown
- asynchronous
-Date: Fri, 28 Apr 2017 11:45:57 -0700
-Message-ID: <1493405157.15639.31.camel@HansenPartnership.com>
-References: <20170417173436.15555-1-bart.vanassche@sandisk.com>
-         <20170417173436.15555-4-bart.vanassche@sandisk.com>
-         <20170418144429.GA28949@bblock-ThinkPad-W530>
-         <1492530984.3306.25.camel@HansenPartnership.com>
-         <1493232838.2632.9.camel@sandisk.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Subject: Re: [PATCH v2 07/21] crypto: shash,
+ caam: Make use of the new sg_map helper function
+Date: Fri, 28 Apr 2017 13:01:39 -0600
+Message-ID: <d5242ef0-2670-63e4-02ce-a6d2368b7292@deltatee.com>
+References: <1493144468-22493-1-git-send-email-logang@deltatee.com>
+ <1493144468-22493-8-git-send-email-logang@deltatee.com>
+ <20170427035603.GA32212@gondor.apana.org.au>
+ <94123cbf-3287-f05e-7267-0bcf08ab0a8b@deltatee.com>
+ <20170428063039.GB6817@gondor.apana.org.au>
+ <5a08708b-c3b8-41fe-96de-607a109eacbd@deltatee.com>
+ <20170428175147.GA9596@gondor.apana.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:34744 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1425242AbdD1SqA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 28 Apr 2017 14:46:00 -0400
-In-Reply-To: <1493232838.2632.9.camel@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+In-Reply-To: <20170428175147.GA9596@gondor.apana.org.au>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: dri-devel@lists.freedesktop.org, Stephen Bates <sbates@raithlin.com>, dm-devel@redhat.com, target-devel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, devel@driverdev.osuosl.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org, Sumit Semwal <sumit.semwal@linaro.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, open-iscsi@googlegroups.com, linux-media@vger.kernel.org, intel-gfx@lists.freedesktop.org, sparmaintainer@unisys.com, linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, megaraidlinux.pdl@broadcom.com, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, netdev@vger.kernel.org, Matthew Wilcox <mawilcox@microsoft.com>, linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org, Greg Kroah-Hartman <gregkh@linu>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "bblock@linux.vnet.ibm.com" <bblock@linux.vnet.ibm.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "maxg@mellanox.com" <maxg@mellanox.com>, "israelr@mellanox.com" <israelr@mellanox.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-On Wed, 2017-04-26 at 18:53 +0000, Bart Van Assche wrote:
-> On Tue, 2017-04-18 at 08:56 -0700, James Bottomley wrote:
-> > The priority has got to be the removal we've been ordered to do
-> > rather
-> > than waiting around to see if the transport comes back so we can
-> > send a
-> > final flush.
-> > 
-> > How about this approach.  It goes straight to DEL if the device is
-> > blocked (skipping CANCEL).  This means that all the commands issued
-> > in 
-> > ->shutdown will error in the mid-layer, thus making the removal
-> > proceed
-> > without being stopped.
-> > 
-> > James
-> > 
-> > ---
-> > 
-> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> > index e5a2d590a104..31171204cfd1 100644
-> > --- a/drivers/scsi/scsi_lib.c
-> > +++ b/drivers/scsi/scsi_lib.c
-> > @@ -2611,7 +2611,6 @@ scsi_device_set_state(struct scsi_device
-> > *sdev, enum scsi_device_state state)
-> >  		case SDEV_QUIESCE:
-> >  		case SDEV_OFFLINE:
-> >  		case SDEV_TRANSPORT_OFFLINE:
-> > -		case SDEV_BLOCK:
-> >  			break;
-> >  		default:
-> >  			goto illegal;
-> > @@ -2625,6 +2624,7 @@ scsi_device_set_state(struct scsi_device
-> > *sdev, enum scsi_device_state state)
-> >  		case SDEV_OFFLINE:
-> >  		case SDEV_TRANSPORT_OFFLINE:
-> >  		case SDEV_CANCEL:
-> > +		case SDEV_BLOCK:
-> >  		case SDEV_CREATED_BLOCK:
-> >  			break;
-> >  		default:
-> > diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> > index 82dfe07b1d47..788309e307e9 100644
-> > --- a/drivers/scsi/scsi_sysfs.c
-> > +++ b/drivers/scsi/scsi_sysfs.c
-> > @@ -1282,8 +1282,14 @@ void __scsi_remove_device(struct scsi_device
-> > *sdev)
-> >  		return;
-> >  
-> >  	if (sdev->is_visible) {
-> > +		/*
-> > +		 * If blocked, we go straight to DEL so any
-> > commands
-> > +		 * issued during the driver shutdown (like sync
-> > cache)
-> > +		 * are errored
-> > +		 */
-> >  		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
-> > -			return;
-> > +			if (scsi_device_set_state(sdev, SDEV_DEL)
-> > != 0)
-> > +				return;
-> >  
-> >  		bsg_unregister_queue(sdev->request_queue);
-> >  		device_unregister(&sdev->sdev_dev);
-> > 
-> > 
-> 
-> Hello James,
-> 
-> How about modifying the above patch by adding a mutex to avoid that 
-> the transition to SDEV_DEL and blocking the request queue happen in 
-> the wrong order, e.g. as in the attached three patches?
-
-If you've hammered it with your usual testing and it survived, I think
-that's enough to prove its a concurrency problem we have to solve, so
-the critical section introduction looks good.  The only refinement I
-think I'd ask for is rather than creating an entirely new mutex, what
-about using the host->scan_mutex?  It simplifies your code in
-__scsi_remove_device because the scan mutex is already held on entry.
-
-I'm also not very happy with a conditional mutex: that's usually
-something we try to avoid.   I'd prefer an underscore version of
-scsi_internal_device_block that doesn't take the mutex and which
-mpt3sas uses (and make the non underscore version take the mutex and
-call the underscore version).
-
-Thanks,
-
-James
+CgpPbiAyOC8wNC8xNyAxMTo1MSBBTSwgSGVyYmVydCBYdSB3cm90ZToKPiBPbiBGcmksIEFwciAy
+OCwgMjAxNyBhdCAxMDo1Mzo0NUFNIC0wNjAwLCBMb2dhbiBHdW50aG9ycGUgd3JvdGU6Cj4+Cj4+
+Cj4+IE9uIDI4LzA0LzE3IDEyOjMwIEFNLCBIZXJiZXJ0IFh1IHdyb3RlOgo+Pj4gWW91IGFyZSBy
+aWdodC4gIEluZGVlZCB0aGUgZXhpc3RpbmcgY29kZSBsb29rcyBidWdneSBhcyB0aGV5Cj4+PiBk
+b24ndCB0YWtlIHNnLT5vZmZzZXQgaW50byBhY2NvdW50IHdoZW4gZG9pbmcgdGhlIGttYXAuICBD
+b3VsZAo+Pj4geW91IHNlbmQgbWUgc29tZSBwYXRjaGVzIHRoYXQgZml4IHRoZXNlIHByb2JsZW1z
+IGZpcnN0IHNvIHRoYXQKPj4+IHRoZXkgY2FuIGJlIGVhc2lseSBiYWNrcG9ydGVkPwo+Pgo+PiBP
+aywgSSB0aGluayB0aGUgb25seSBidWdneSBvbmUgaW4gY3J5cHRvIGlzIGhpZm5fNzk1eC4gU2hh
+c2ggYW5kIGNhYW0KPj4gYm90aCBkbyBoYXZlIHRoZSBzZy0+b2Zmc2V0IGFjY291bnRlZCBmb3Iu
+IEknbGwgc2VuZCBhIHBhdGNoIGZvciB0aGUKPj4gYnVnZ3kgb25lIHNob3J0bHkuCj4gCj4gSSB0
+aGluayB0aGV5J3JlIGFsbCBidWdneSB3aGVuIHNnLT5vZmZzZXQgaXMgZ3JlYXRlciB0aGFuIFBB
+R0VfU0laRS4KClllcywgdGVjaG5pY2FsbHkuIEJ1dCB0aGF0J3MgYSBfdmVyeV8gY29tbW9uIG1p
+c3Rha2UuIFByZXR0eSBuZWFybHkKZXZlcnkgY2FzZSBJIGxvb2tlZCBhdCBkaWQgbm90IHRha2Ug
+dGhhdCBpbnRvIGFjY291bnQuIEkgZG9uJ3QgdGhpbmsKc2cncyB0aGF0IHBvaW50IHRvIG1vcmUg
+dGhhbiBvbmUgY29udGludW91cyBwYWdlIGFyZSBhbGwgdGhhdCBjb21tb24uCgpGaXhpbmcgYWxs
+IHRob3NlIGNhc2VzIHdpdGhvdXQgbWFraW5nIGEgY29tbW9uIGZ1bmN0aW9uIGlzIGEgd2FzdGUg
+b2YKdGltZSBJTU8uCgpMb2dhbgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fXwpJbnRlbC1nZnggbWFpbGluZyBsaXN0CkludGVsLWdmeEBsaXN0cy5mcmVlZGVz
+a3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9p
+bnRlbC1nZngK
