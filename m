@@ -1,40 +1,53 @@
-From: =?utf-8?B?0LDQtNC80LjQvdC40YHRgtGA0LDRgtC+0YA=?=
-        <contact@grdc.esdm.go.id>
-Subject: (unknown)
-Date: Fri, 28 Apr 2017 15:36:03 +0700 (WIT)
-Message-ID: <1169937700.115328.1493368563090.JavaMail.zimbra__13320.661095395$1493369213$gmane$org@grdc.esdm.go.id>
-Reply-To: Sistemass_Adminss@mail2world.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: base64
+From: Zhou Zhengping <johnzzpcrystal@gmail.com>
+Subject: [PATCH] MegaRAID SAS: Raidcard hotswap wouldn't work if the device's fd is held in userspace
+Date: Fri, 28 Apr 2017 17:43:04 +0800
+Message-ID: <1493372584-1204-1-git-send-email-johnzzpcrystal@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from server-09.grdc.esdm.go.id ([203.189.88.57]:51314 "EHLO
-        server-09.grdc.esdm.go.id" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1423369AbdD1Iqg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Apr 2017 04:46:36 -0400
-Subject: 
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:32846 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756135AbdD1JnP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Apr 2017 05:43:15 -0400
+Received: by mail-pf0-f196.google.com with SMTP id b23so752497pfc.0
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Apr 2017 02:43:15 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Zhou Zhengping <johnzzpcrystal@gmail.com>
 
-0LLQvdC40LzQsNC90LjRjzsKCtCS0LDRiNC4INGB0L7QvtCx0YnQtdC90LjRjyDQv9GA0LXQstGL
-0YHQuNC7INC70LjQvNC40YIg0L/QsNC80Y/RgtC4LCDQutC+0YLQvtGA0YvQuSDRgdC+0YHRgtCw
-0LLQu9GP0LXRgiA1INCT0LEsINC+0L/RgNC10LTQtdC70LXQvdC90YvRhSDQsNC00LzQuNC90LjR
-gdGC0YDQsNGC0L7RgNC+0LwsINC60L7RgtC+0YDRi9C5INCyINC90LDRgdGC0L7Rj9GJ0LXQtSDQ
-stGA0LXQvNGPINGA0LDQsdC+0YLQsNC10YIg0L3QsCAxMC45R0IsINCS0Ysg0L3QtSDRgdC80L7Q
-ttC10YLQtSDQvtGC0L/RgNCw0LLQuNGC0Ywg0LjQu9C4INC/0L7Qu9GD0YfQuNGC0Ywg0L3QvtCy
-0YPRjiDQv9C+0YfRgtGDLCDQv9C+0LrQsCDQstGLINC/0L7QstGC0L7RgNC90L4g0L3QtSDQv9GA
-0L7QstC10YDQuNGC0Ywg0LLQsNGIINC/0L7Rh9GC0L7QstGL0Lkg0Y/RidC40Log0L/QvtGH0YLR
-iy4g0KfRgtC+0LHRiyDQstC+0YHRgdGC0LDQvdC+0LLQuNGC0Ywg0YDQsNCx0L7RgtC+0YHQv9C+
-0YHQvtCx0L3QvtGB0YLRjCDQktCw0YjQtdCz0L4g0L/QvtGH0YLQvtCy0L7Qs9C+INGP0YnQuNC6
-0LAsINC+0YLQv9GA0LDQstGM0YLQtSDRgdC70LXQtNGD0Y7RidGD0Y4g0LjQvdGE0L7RgNC80LDR
-htC40Y4g0L3QuNC20LU6CgrQuNC80Y86CtCY0LzRjyDQv9C+0LvRjNC30L7QstCw0YLQtdC70Y86
-CtC/0LDRgNC+0LvRjDoK0J/QvtC00YLQstC10YDQttC00LXQvdC40LUg0L/QsNGA0L7Qu9GPOgrQ
-kNC00YDQtdGBINGN0LvQtdC60YLRgNC+0L3QvdC+0Lkg0L/QvtGH0YLRizoK0YLQtdC70LXRhNC+
-0L06CgrQldGB0LvQuCDQstGLINC90LUg0LIg0YHQvtGB0YLQvtGP0L3QuNC4INC/0LXRgNC10L/R
-gNC+0LLQtdGA0LjRgtGMINGB0L7QvtCx0YnQtdC90LjRjywg0LLQsNGIINC/0L7Rh9GC0L7QstGL
-0Lkg0Y/RidC40Log0LHRg9C00LXRgiDQvtGC0LrQu9GO0YfQtdC9IQoK0J/RgNC40L3QvtGB0LjQ
-vCDQuNC30LLQuNC90LXQvdC40Y8g0LfQsCDQvdC10YPQtNC+0LHRgdGC0LLQsC4K0J/RgNC+0LLQ
-tdGA0L7Rh9C90YvQuSDQutC+0LQ6IEVOOiBSdS4uLjYzNTgyOXdqeG54bC4uLi43NDk5MC5SVS4y
-MDE3CtCf0L7Rh9GC0Ysg0YLQtdGF0L3QuNGH0LXRgdC60L7QuSDQv9C+0LTQtNC10YDQttC60Lgg
-wqkyMDE3CgrRgdC/0LDRgdC40LHQvgrRgdC40YHRgtC10LzRiyDQsNC00LzQuNC90LjRgdGC0YDQ
-sNGC0L7RgA==
+    When a scsi_device is unpluged from scsi controller, if the
+scsi_device is still be used by application layer,it won't be
+released until users release it. In this case, scsi_device_remove just set
+the scsi_device's state to be SDEV_DEL. But if you plug the disk
+just before the old scsi_device is released, then there will be two
+scsi_device structures in scsi_host->__devices. when the next unpluging
+event happens,some low-level drivers will check whether the scsi_device
+has been added to host (for example, the megaraid sas series controller)
+by calling scsi_device_lookup(call __scsi_device_lookup) in function
+megasas_aen_polling.__scsi_device_lookup will return the first scsi_device.
+Because its state is SDEV_DEL, the scsi_device_lookup will return NULL finally,
+making the low-level driver assume that the scsi_device has been
+removed,and won't call scsi_device_remove,which will lead the
+failure of hot swap.
+
+Signed-off-by: Zhou Zhengping <johnzzpcrystal@gmail.com>
+Tested-and-reported-by: Zeng Rujia <ZengRujia@sangfor.com.cn>
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=195607
+---
+ drivers/scsi/scsi.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 61c82a3..b455619 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -1262,6 +1262,8 @@ struct scsi_device *__scsi_device_lookup(struct Scsi_Host *shost,
+ 	struct scsi_device *sdev;
+ 
+ 	list_for_each_entry(sdev, &shost->__devices, siblings) {
++		if (sdev->sdev_state == SDEV_DEL)
++			continue;
+ 		if (sdev->channel == channel && sdev->id == id &&
+ 				sdev->lun ==lun)
+ 			return sdev;
+-- 
+1.8.3.1
