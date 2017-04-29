@@ -1,72 +1,46 @@
-From: "tj@kernel.org" <tj@kernel.org>
-Subject: Re: BUG: KASAN: use-after-free in scsi_exit_rq
-Date: Fri, 28 Apr 2017 17:46:47 -0400
-Message-ID: <20170428214647.GG22354@htj.duckdns.org>
-References: <20170420211849.GB7387@sbauer-Z170X-UD5>
- <1492811357.2499.9.camel@sandisk.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Geliang Tang <geliangtang@gmail.com>
+Subject: [PATCH] cciss: use memdup_user
+Date: Sat, 29 Apr 2017 09:45:11 +0800
+Message-ID: <4db2a0ba17dc68d7bcfbd7d47b0eb22ad9a220c2.1493381463.git.geliangtang@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yb0-f195.google.com ([209.85.213.195]:34759 "EHLO
-        mail-yb0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S939124AbdD1Vqu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Apr 2017 17:46:50 -0400
-Content-Disposition: inline
-In-Reply-To: <1492811357.2499.9.camel@sandisk.com>
+Received: from mail-it0-f66.google.com ([209.85.214.66]:34414 "EHLO
+        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1164635AbdD2BqE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Apr 2017 21:46:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "scott.bauer@intel.com" <scott.bauer@intel.com>, "hch@lst.de" <hch@lst.de>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Jan Kara <jack@suse.com>
+To: Don Brace <don.brace@microsemi.com>
+Cc: Geliang Tang <geliangtang@gmail.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-(cc'ing Jan)
+Use memdup_user() helper instead of open-coding to simplify the code.
 
-Hello, Bart.
+Signed-off-by: Geliang Tang <geliangtang@gmail.com>
+---
+ drivers/block/cciss.c | 12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
 
-On Fri, Apr 21, 2017 at 09:49:17PM +0000, Bart Van Assche wrote:
-> On Thu, 2017-04-20 at 15:18 -0600, Scott Bauer wrote:
-> > [  642.638860] BUG: KASAN: use-after-free in scsi_exit_rq+0xf3/0x120 at addr ffff8802b7fedf00
-> > [  642.639362] Read of size 1 by task rcuos/5/53
-> > [  642.639713] CPU: 7 PID: 53 Comm: rcuos/6 Not tainted 4.11.0-rc5+ #13
-> > [  642.640170] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.7.5-0-ge51488c-20140602_164612-nilsson.home.kraxel.org 04/01/2014
-> > [  642.640923] Call Trace:
-> > [  642.641080]  dump_stack+0x63/0x8f
-> > [  642.641289]  kasan_object_err+0x21/0x70
-> > [  642.641531]  kasan_report.part.1+0x231/0x500
-> > [  642.641823]  ? scsi_exit_rq+0xf3/0x120
-> > [  642.642054]  ? _raw_spin_unlock_irqrestore+0xe/0x10
-> > [  642.642353]  ? free_percpu+0x1b7/0x340
-> > [  642.642586]  ? put_task_stack+0x117/0x2b0
-> > [  642.642837]  __asan_report_load1_noabort+0x2e/0x30
-> > [  642.643138]  scsi_exit_rq+0xf3/0x120
-> > [  642.643366]  free_request_size+0x44/0x60
-> > [  642.643614]  mempool_destroy.part.6+0x9b/0x150
-> > [  642.643899]  ? kasan_slab_free+0x87/0xb0
-> > [  642.644152]  mempool_destroy+0x13/0x20
-> > [  642.644394]  blk_exit_rl+0x36/0x40
-> > [  642.644614]  blkg_free+0x146/0x200
-> > [  642.644836]  __blkg_release_rcu+0x121/0x220
-> > [  642.645112]  rcu_nocb_kthread+0x61f/0xca0
-> > [  642.645376]  ? get_state_synchronize_rcu+0x20/0x20
-> > [  642.645690]  ? pci_mmcfg_check_reserved+0x110/0x110
-> > [  642.646011]  kthread+0x298/0x390
-> > [  642.646224]  ? get_state_synchronize_rcu+0x20/0x20
-> > [  642.646535]  ? kthread_park+0x160/0x160
-> > [  642.646787]  ret_from_fork+0x2c/0x40
-> 
-> I'm not familiar with cgroups but seeing this makes me wonder whether it would
-> be possible to move the blk_exit_rl() calls from blk_release_queue() into
-> blk_cleanup_queue()? The SCSI core frees a SCSI host after blk_cleanup_queue()
-> has finished for all associated SCSI devices. This is why I think that calling
-> blk_exit_rl() earlier would be sufficient to avoid that scsi_exit_rq()
-> dereferences a SCSI host pointer after it has been freed.
-
-Hmm... I see.  Didn't know request put path involved derefing those
-structs.  The blk_exit_rl() call just replaced open coded
-mempool_destroy call, so the destruction order was always like this.
-We shouldn't have any request in flight by cleanup, so moving it there
-should be fine.
-
-Thanks.
-
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index cd37550..40ee715 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -1596,15 +1596,9 @@ static int cciss_bigpassthru(ctlr_info_t *h, void __user *argp)
+ 		return -EINVAL;
+ 	if (!capable(CAP_SYS_RAWIO))
+ 		return -EPERM;
+-	ioc = kmalloc(sizeof(*ioc), GFP_KERNEL);
+-	if (!ioc) {
+-		status = -ENOMEM;
+-		goto cleanup1;
+-	}
+-	if (copy_from_user(ioc, argp, sizeof(*ioc))) {
+-		status = -EFAULT;
+-		goto cleanup1;
+-	}
++	ioc = memdup_user(argp, sizeof(*ioc));
++	if (IS_ERR(ioc))
++		return PTR_ERR(ioc);
+ 	if ((ioc->buf_size < 1) &&
+ 	    (ioc->Request.Type.Direction != XFER_NONE)) {
+ 		status = -EINVAL;
 -- 
-tejun
+2.9.3
