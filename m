@@ -1,101 +1,146 @@
-From: <molino.petrone@libero.it>
-Subject: 55402 linux-scsi
-Date: Sun, 30 Apr 2017 18:42:18 -0000
-Message-ID: <149357773800.20800.2956437669946798594@vnpt-hanoi.com.vn>
-Mime-Version: 1.0
-Content-Type: application/zip; name="107769.zip"
-Content-Transfer-Encoding: base64
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH] scsi: fas216: Add __printf validation, fix fallout
+Date: Sun, 30 Apr 2017 14:50:11 -0700
+Message-ID: <ea0f8cf0ba961817f13225a5444c76a86e2ea610.1493588987.git.joe@perches.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from static.vnpt-hanoi.com.vn ([113.190.233.119]:36471 "HELO
-        vnpt-hanoi.com.vn" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with SMTP id S1165993AbdD3Sm1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Apr 2017 14:42:27 -0400
-Content-Disposition: attachment
+Received: from smtprelay0254.hostedemail.com ([216.40.44.254]:59262 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1424701AbdD3VuT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 30 Apr 2017 17:50:19 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Russell King <linux@armlinux.org.uk>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-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
-AAABAAEAWwAAABoSAAAAAA==
+__printf makes the compiler check format and arguments.
+
+Fix fallout.
+
+Miscellanea:
+
+o Convert formats to const char *
+o Use vsprintf extension %pV instead of a static buffer.
+o Add newline to logging and remove now unnecessary printk("\n")
+o Use pr_cont where appropriate
+
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/scsi/arm/fas216.c | 39 ++++++++++++++++++++-------------------
+ 1 file changed, 20 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
+index 24388795ee9a..112bec886192 100644
+--- a/drivers/scsi/arm/fas216.c
++++ b/drivers/scsi/arm/fas216.c
+@@ -289,17 +289,20 @@ static char fas216_target(FAS216_Info *info)
+ 		return 'H';
+ }
+ 
+-static void
+-fas216_do_log(FAS216_Info *info, char target, char *fmt, va_list ap)
++__printf(3, 0) static void
++fas216_do_log(FAS216_Info *info, char target, const char *fmt, va_list ap)
+ {
+-	static char buf[1024];
++	struct va_format vaf;
++
++	vaf.fmt = fmt;
++	vaf.va = &ap;
+ 
+-	vsnprintf(buf, sizeof(buf), fmt, ap);
+-	printk("scsi%d.%c: %s", info->host->host_no, target, buf);
++	printk("scsi%d.%c: %pV\n", info->host->host_no, target, &vaf);
+ }
+ 
++__printf(4, 5)
+ static void fas216_log_command(FAS216_Info *info, int level,
+-			       struct scsi_cmnd *SCpnt, char *fmt, ...)
++			       struct scsi_cmnd *SCpnt, const char *fmt, ...)
+ {
+ 	va_list args;
+ 
+@@ -313,8 +316,9 @@ static void fas216_log_command(FAS216_Info *info, int level,
+ 	scsi_print_command(SCpnt);
+ }
+ 
+-static void
+-fas216_log_target(FAS216_Info *info, int level, int target, char *fmt, ...)
++__printf(4, 5) static void
++fas216_log_target(FAS216_Info *info, int level, int target,
++		  const char *fmt, ...)
+ {
+ 	va_list args;
+ 
+@@ -329,11 +333,10 @@ fas216_log_target(FAS216_Info *info, int level, int target, char *fmt, ...)
+ 	va_start(args, fmt);
+ 	fas216_do_log(info, target, fmt, args);
+ 	va_end(args);
+-
+-	printk("\n");
+ }
+ 
+-static void fas216_log(FAS216_Info *info, int level, char *fmt, ...)
++__printf(3, 4)
++static void fas216_log(FAS216_Info *info, int level, const char *fmt, ...)
+ {
+ 	va_list args;
+ 
+@@ -343,8 +346,6 @@ static void fas216_log(FAS216_Info *info, int level, char *fmt, ...)
+ 	va_start(args, fmt);
+ 	fas216_do_log(info, fas216_target(info), fmt, args);
+ 	va_end(args);
+-
+-	printk("\n");
+ }
+ 
+ #define PH_SIZE	32
+@@ -431,7 +432,7 @@ fas216_get_last_msg(FAS216_Info *info, int pos)
+ 	}
+ 
+ 	fas216_log(info, LOG_MESSAGES,
+-		"Message: %04x found at position %02x\n", packed_msg, pos);
++		   "Message: %04x found at position %02x", packed_msg, pos);
+ 
+ 	return packed_msg;
+ }
+@@ -725,7 +726,7 @@ static void fas216_cleanuptransfer(FAS216_Info *info)
+ 	fifo = fas216_readb(info, REG_CFIS) & CFIS_CF;
+ 
+ 	fas216_log(info, LOG_BUFFER, "cleaning up from previous "
+-		   "transfer: length 0x%06x, residual 0x%x, fifo %d",
++		   "transfer: length 0x%06lx, residual 0x%lx, fifo %ld",
+ 		   total, residual, fifo);
+ 
+ 	/*
+@@ -1144,8 +1145,8 @@ static void fas216_parse_message(FAS216_Info *info, unsigned char *message, int
+ 	fas216_log(info, 0, "unrecognised message, rejecting");
+ 	printk("scsi%d.%c: message was", info->host->host_no, fas216_target(info));
+ 	for (i = 0; i < msglen; i++)
+-		printk("%s%02X", i & 31 ? " " : "\n  ", message[i]);
+-	printk("\n");
++		pr_cont("%s%02X", i & 31 ? " " : "\n  ", message[i]);
++	pr_cont("\n");
+ 
+ 	/*
+ 	 * Something strange seems to be happening here -
+@@ -1582,7 +1583,7 @@ static void fas216_funcdone_intr(FAS216_Info *info, unsigned int stat, unsigned
+ 	default:
+ 		fas216_log(info, 0, "internal phase %s for function done?"
+ 			"  What do I do with this?",
+-			fas216_target(info), fas216_drv_phase(info));
++			fas216_drv_phase(info));
+ 	}
+ }
+ 
+@@ -1642,7 +1643,7 @@ irqreturn_t fas216_intr(FAS216_Info *info)
+ 			fas216_bus_reset(info);
+ 			scsi_report_bus_reset(info->host, 0);
+ 		} else if (inst & INST_ILLEGALCMD) {
+-			fas216_log(info, LOG_ERROR, "illegal command given\n");
++			fas216_log(info, LOG_ERROR, "illegal command given");
+ 			fas216_dumpstate(info);
+ 			print_debug_list();
+ 		} else if (inst & INST_DISCONNECT)
+-- 
+2.10.0.rc2.1.g053435c
