@@ -1,152 +1,79 @@
-From: Mike Christie <mchristi@redhat.com>
-Subject: Re: [PATCH v6 2/2] tcmu: Add global data block pool support
-Date: Mon, 1 May 2017 13:40:32 -0500
-Message-ID: <59078120.3000200@redhat.com>
-References: <1493187952-13125-1-git-send-email-lixiubo@cmss.chinamobile.com>
- <1493187952-13125-3-git-send-email-lixiubo@cmss.chinamobile.com>
- <590592D4.8090607@redhat.com>
- <25e7247f-116f-aaa5-e895-b503c0a893f9@cmss.chinamobile.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH 25/27] block: remove the discard_zeroes_data flag
+Date: Mon, 1 May 2017 20:45:21 +0000
+Message-ID: <1493671519.2665.15.camel@sandisk.com>
+References: <20170405172125.22600-1-hch@lst.de>
+         <20170405172125.22600-26-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <25e7247f-116f-aaa5-e895-b503c0a893f9@cmss.chinamobile.com>
+In-Reply-To: <20170405172125.22600-26-hch@lst.de>
+Content-Language: en-US
+Content-ID: <6057828B6A69B94887FF6CB79814747D@namprd04.prod.outlook.com>
 Sender: target-devel-owner@vger.kernel.org
-To: Xiubo Li <lixiubo@cmss.chinamobile.com>, nab@linux-iscsi.org
-Cc: agrover@redhat.com, iliastsi@arrikto.com, namei.unix@gmail.com, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, Jianfei Hu <hujianfei@cmss.chinamobile.com>
+To: "agk@redhat.com" <agk@redhat.com>, "lars.ellenberg@linbit.com" <lars.ellenberg@linbit.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "philipp.reisner@linbit.com" <philipp.reisner@linbit.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "shli@kernel.org" <shli@kernel.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 04/30/2017 06:29 AM, Xiubo Li wrote:
-> [...]
->>> +static struct page *tcmu_try_get_block_page(struct tcmu_dev *udev,
->>> uint32_t dbi)
->>> +{
->>> +    struct page *page;
->>> +    int ret;
->>> +
->>> +    mutex_lock(&udev->cmdr_lock);
->>> +    page = tcmu_get_block_page(udev, dbi);
->>> +    if (likely(page)) {
->>> +        mutex_unlock(&udev->cmdr_lock);
->>> +        return page;
->>> +    }
->>> +
->>> +    /*
->>> +     * Normally it shouldn't be here:
->>> +     * Only when the userspace has touched the blocks which
->>> +     * are out of the tcmu_cmd's data iov[], and will return
->>> +     * one zeroed page.
->>
->> Is it a userspace bug when this happens? Do you know when it is
->> occcuring?
-> Since the UIO will map the whole ring buffer to the user space at the
-> beginning, and the userspace is allowed and legal to access any block
-> within the limits of the mapped ring area.
-> 
-> But actually when this happens, it normally will be one bug of the
-> userspace. Without this checking the kernel will output many page fault
-> dump traces.
-> 
-> Maybe here outputing some warning message is a good idea, and will be
-> easy to debug for userspace.
+On Wed, 2017-04-05 at 19:21 +0200, Christoph Hellwig wrote:
+> Now that we use the proper REQ_OP_WRITE_ZEROES operation everywhere we ca=
+n
+> kill this hack.
+>=20
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+> Reviewed-by: Hannes Reinecke <hare@suse.com>
+> [ ... ]
+> diff --git a/drivers/target/target_core_device.c b/drivers/target/target_=
+core_device.c
+> index c754ae33bf7b..d2f089cfa9ae 100644
+> --- a/drivers/target/target_core_device.c
+> +++ b/drivers/target/target_core_device.c
+> @@ -851,7 +851,7 @@ bool target_configure_unmap_from_queue(struct se_dev_=
+attrib *attrib,
+>  	attrib->unmap_granularity =3D q->limits.discard_granularity / block_siz=
+e;
+>  	attrib->unmap_granularity_alignment =3D q->limits.discard_alignment /
+>  								block_size;
+> -	attrib->unmap_zeroes_data =3D q->limits.discard_zeroes_data;
+> +	attrib->unmap_zeroes_data =3D 0;
+>  	return true;
+>  }
+>  EXPORT_SYMBOL(target_configure_unmap_from_queue);
 
-Yeah.
+Hello Christoph,
 
-> 
-> 
-> [...]
->>> @@ -1388,6 +1509,81 @@ static ssize_t tcmu_cmd_time_out_store(struct
->>> config_item *item, const char *pag
->>>       .tb_dev_attrib_attrs    = NULL,
->>>   };
->>>   +static int unmap_thread_fn(void *data)
->>> +{
->>> +    struct tcmu_dev *udev;
->>> +    loff_t off;
->>> +    uint32_t start, end, block;
->>> +    struct page *page;
->>> +    int i;
->>> +
->>> +    while (1) {
->>> +        DEFINE_WAIT(__wait);
->>> +
->>> +        prepare_to_wait(&unmap_wait, &__wait, TASK_INTERRUPTIBLE);
->>> +        schedule();
->>> +        finish_wait(&unmap_wait, &__wait);
->>> +
->>> +        mutex_lock(&root_udev_mutex);
->>> +        list_for_each_entry(udev, &root_udev, node) {
->>> +            mutex_lock(&udev->cmdr_lock);
->>> +
->>> +            /* Try to complete the finished commands first */
->>> +            tcmu_handle_completions(udev);
->>> +
->>> +            /* Skip the udevs waiting the global pool or in idle */
->>> +            if (udev->waiting_global || !udev->dbi_thresh) {
->>> +                mutex_unlock(&udev->cmdr_lock);
->>> +                continue;
->>> +            }
->>> +
->>> +            end = udev->dbi_max + 1;
->>> +            block = find_last_bit(udev->data_bitmap, end);
->>> +            if (block == udev->dbi_max) {
->>> +                /*
->>> +                 * The last bit is dbi_max, so there is
->>> +                 * no need to shrink any blocks.
->>> +                 */
->>> +                mutex_unlock(&udev->cmdr_lock);
->>> +                continue;
->>> +            } else if (block == end) {
->>> +                /* The current udev will goto idle state */
->>> +                udev->dbi_thresh = start = 0;
->>> +                udev->dbi_max = 0;
->>> +            } else {
->>> +                udev->dbi_thresh = start = block + 1;
->>> +                udev->dbi_max = block;
->>> +            }
->>> +
->>> +            /* Here will truncate the data area from off */
->>> +            off = udev->data_off + start * DATA_BLOCK_SIZE;
->>> +            unmap_mapping_range(udev->inode->i_mapping, off, 0, 1);
->>> +
->>> +            /* Release the block pages */
->>> +            for (i = start; i < end; i++) {
->>> +                page = radix_tree_delete(&udev->data_blocks, i);
->>> +                if (page) {
->>> +                    __free_page(page);
->>> +                    atomic_dec(&global_db_count);
->>> +                }
->>> +            }
->>> +            mutex_unlock(&udev->cmdr_lock);
->>> +        }
->>> +
->>> +        /*
->>> +         * Try to wake up the udevs who are waiting
->>> +         * for the global data pool.
->>> +         */
->>> +        list_for_each_entry(udev, &root_udev, node) {
->>> +            if (udev->waiting_global)
->>> +                wake_up(&udev->wait_cmdr);
->>> +        }
->>
->> To avoid starvation, I think you want a second list/fifo that holds the
->> watiers. In tcmu_get_empty_block if the list is not empty, record how
->> many pages we needed and then add the device to the list and wait in
->> tcmu_queue_cmd_ring.
->>
->> Above if we freed enough pages for the device at head then wake up the
->> device.
->>
->> I think you also need a wake_up call in the completion path in case the
->> initial call could not free enough pages. It could probably check if the
->> completion was going to free enough pages for a waiter and then call
->> wake.
->>
-> Yes, I meant to introduce this later after this series to not let the
-> patches too
-> complex to review.
-> 
-> If you agree I will do this later, or in V7 series ?
+Sorry that I hadn't noticed this before but I think that this patch
+introduces a significant performance regressions for LIO users. Before
+this patch the LBPRZ flag was reported correctly to initiator systems
+through the thin provisioning VPD. With this patch applied that flag
+will always be reported as zero, forcing initiators to submit WRITE
+commands with zeroed data buffers instead of submitting the SCSI UNMAP
+command to block devices for which=A0discard_zeroes_data was set. From
+target_core_spc.c:
 
+/* Thin Provisioning VPD */
+static sense_reason_t spc_emulate_evpd_b2(struct se_cmd *cmd, unsigned char=
+ *buf)
+{
+	[ ... ]
+	/*
+	 * The unmap_zeroes_data set means that the underlying device supports
+	 * REQ_DISCARD and has the discard_zeroes_data bit set. This satisfies
+	 * the SBC requirements for LBPRZ, meaning that a subsequent read
+	 * will return zeroes after an UNMAP or WRITE SAME (16) to an LBA
+	 * See sbc4r36 6.6.4.
+	 */
+	if (((dev->dev_attrib.emulate_tpu !=3D 0) ||
+	=A0=A0=A0=A0=A0(dev->dev_attrib.emulate_tpws !=3D 0)) &&
+	=A0=A0=A0=A0=A0(dev->dev_attrib.unmap_zeroes_data !=3D 0))
+		buf[5] |=3D 0x04;
+	[ ... ]
+}
 
-Yeah, I am ok with adding it after the initial patches go in.
+Please advise how to proceed.
+
+Thanks,
+
+Bart.=
