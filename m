@@ -1,23 +1,19 @@
-From: Brigitte =?utf-8?b?S8OkdHpsZXI=?= <b.kaetzler@tsn.at>
-Subject: Update Your Webmail Account Within 24 Hours
-Date: Mon, 01 May 2017 11:31:35 +0200
-Message-ID: <20170501113135.Horde.rV7LU_9K0osE18gQ__2B1fe@mail.tsn.at>
+From: Loans Service <contact@grdc.esdm.go.id>
+Subject: Fast Loans
+Date: Mon, 01 May 2017 16:58:42 +0530
+Message-ID: <20170501112707.94CF13855E9@server-09.grdc.esdm.go.id>
+Reply-To: payingfunds@3mail.ie
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed; DelSp=Yes
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from flaschenpost1.tsn.at ([193.170.198.123]:50836 "EHLO
-        flaschenpost1.tsn.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1952184AbdEAKB7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 May 2017 06:01:59 -0400
-Content-Disposition: inline
+Received: from server-09.grdc.esdm.go.id ([203.189.88.57]:47414 "EHLO
+        server-09.grdc.esdm.go.id" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1951519AbdEAOam (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 May 2017 10:30:42 -0400
+Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Recipients <contact@grdc.esdm.go.id>
 
-
-
-Dear E-mail User
-
-Please follow the link to update your webmail account  
-http://ets1n4w20.ulcraft.com
-
-Thank You
+Do you need a loan to pay up bill or to start a business? Email Us
