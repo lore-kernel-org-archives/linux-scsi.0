@@ -1,45 +1,49 @@
-From: "lixiubo" <lixiubo@cmss.chinamobile.com>
-Subject: =?UTF-8?Q?=E7=AD=94=E5=A4=8D:_=5BPATCH_v6_0/2=5D_tcmu:_Dynamic?=
-        =?UTF-8?Q?_growing_data_area_support?=
-Date: Tue, 2 May 2017 17:25:39 +0800
-Message-ID: <0b1c01d2c326$10d8c160$328a4420$@cmss.chinamobile.com>
-References: <1493187952-13125-1-git-send-email-lixiubo@cmss.chinamobile.com> <1493702720.23202.63.camel@haakon3.risingtidesystems.com>
+From: Jeff Layton <jlayton@redhat.com>
+Subject: Re: [PATCH, RFC] MAINTAINERS: update OSD entries
+Date: Tue, 02 May 2017 07:33:32 -0400
+Message-ID: <1493724812.2715.1.camel@redhat.com>
+References: <20170502075720.23570-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="UTF-8"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1493702720.23202.63.camel@haakon3.risingtidesystems.com>
-Content-Language: zh-cn
-Sender: target-devel-owner@vger.kernel.org
-To: "'Nicholas A. Bellinger'" <nab@linux-iscsi.org>
-Cc: mchristi@redhat.com, agrover@redhat.com, iliastsi@arrikto.com, namei.unix@gmail.com, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170502075720.23570-1-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, ooo@electrozaur.com, bhalevy@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-> > Xiubo Li (2):
-> >   tcmu: Add dynamic growing data area feature support
-> >   tcmu: Add global data block pool support
-> >
-> >  drivers/target/target_core_user.c | 598
-> > ++++++++++++++++++++++++++++++--------
-> >  1 file changed, 469 insertions(+), 129 deletions(-)
-> >
+On Tue, 2017-05-02 at 09:57 +0200, Christoph Hellwig wrote:
+> The open-osd domain doesn't exist anymore, and mails to the list lead
+> to really annoying bounced that repeat every day.
 > 
-> So based upon the feedback from MNC, this looks OK to merge.
+> Also the primarydata address for Benny bounces, and while I have a new
+> one for him he doesn't seem to be maintaining the OSD code any more.
 > 
-> It looks like there is one bug as reported by MNC introduced by patch 
-> #1.
+> Which beggs the question:  should we really leave the Supported status
+> in MAINTAINERS given that the code is barely maintained?
 > 
-
-It's actually one enhancement.
-
-> Please go ahead and post an incremental patch to address this at your 
-> earliest convenience.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  MAINTAINERS | 4 ----
+>  1 file changed, 4 deletions(-)
 > 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 1bb06c5f7716..28dd83a1d9e2 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -9418,10 +9418,6 @@ F:	drivers/net/wireless/intersil/orinoco/
+>  
+>  OSD LIBRARY and FILESYSTEM
+>  M:	Boaz Harrosh <ooo@electrozaur.com>
+> -M:	Benny Halevy <bhalevy@primarydata.com>
+> -L:	osd-dev@open-osd.org
+> -W:	http://open-osd.org
+> -T:	git git://git.open-osd.org/open-osd.git
+>  S:	Maintained
+>  F:	drivers/scsi/osd/
+>  F:	include/scsi/osd_*
 
-And I will address this later.
+Hah, you beat me to it! I was going to spin up a patch for this today.
 
-Thank,
-
-BRs
-Xiubo
+Acked-by: Jeff Layton <jlayton@redhat.com>
