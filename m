@@ -1,39 +1,65 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] target: fixup error message in
- target_tg_pt_gp_tg_pt_gp_id_store()
-Date: Mon, 01 May 2017 22:17:10 -0700
-Message-ID: <1493702230.23202.60.camel@haakon3.risingtidesystems.com>
-References: <1493366644-8534-1-git-send-email-hare@suse.de>
+Subject: Re: [PATCH v6 0/2] tcmu: Dynamic growing data area support
+Date: Mon, 01 May 2017 22:25:20 -0700
+Message-ID: <1493702720.23202.63.camel@haakon3.risingtidesystems.com>
+References: <1493187952-13125-1-git-send-email-lixiubo@cmss.chinamobile.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:34227 "EHLO
-        linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750848AbdEBFRM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 May 2017 01:17:12 -0400
-In-Reply-To: <1493366644-8534-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1493187952-13125-1-git-send-email-lixiubo@cmss.chinamobile.com>
+Sender: target-devel-owner@vger.kernel.org
+To: lixiubo@cmss.chinamobile.com
+Cc: mchristi@redhat.com, agrover@redhat.com, iliastsi@arrikto.com, namei.unix@gmail.com, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Nic Bellinger <nab@daterainc.com>, Bart van Assche <bart.vanassche@sandisk.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, 2017-04-28 at 10:04 +0200, Hannes Reinecke wrote:
-> When setting up an ALUA target port group with an invalid ID the
-> error message
+Hi Xiubo & Co,
+
+On Wed, 2017-04-26 at 14:25 +0800, lixiubo@cmss.chinamobile.com wrote:
+> From: Xiubo Li <lixiubo@cmss.chinamobile.com>
 > 
-> kstrtoul() returned -22 for tg_pt_gp_id
+> Changed for V6:
+> - Remove the tcmu_vma_close(). Since the unmap thread will do the same for it 
+> - The unmap thread will skip the busy devices.
+> - Using and testing the V5 version 3 weeks and the V6 for about 1 week, all in a higher IOPS environment:
+>   * using fio and dd commands
+>   * using about 4 targets based user:rbd/user:file backend
+>   * set the global pool size to 512 * 1024 blocks * block_size, for 4K page size, the size is 2G.
+>   * each target here needs more than 1100 blocks.
+>   * fio: -iodepth 16 -thread -rw=[read write] -bs=[1M] -size=20G -numjobs=10 -runtime=1000  ...
+>   * restart the tcmu-runner at any time.
 > 
-> is displayed, which is not really helpful.
-> Convert it to something sane.
-> And while we're at it, join the messages onto a single line.
+> Changed for V5:
+> - Rebase to the newest target-pending repository.
+> - Add as many comments as possbile to make the patch more readable.
+> - Move tcmu_handle_completions() in timeout handler to unmap thread
+>   and then replace the spin lock with mutex lock(because the unmap_*
+>   or zap_* may goto sleep) to simplify the patch and the code.
+> - Thanks very much for Mike's tips and suggestions.
+> - Tested this for more than 3 days by:
+>   * using fio and dd commands
+>   * using about 1~5 targets
+>   * set the global pool size to [512 1024 2048 512 * 1024] blocks * block_size
+>   * each target here needs more than 450 blocks when running in my environments.
+>   * fio: -iodepth [1 2 4 8 16] -thread -rw=[read write] -bs=[1K 2K 3K 5K 7K 16K 64K 1M] -size=20G -numjobs=10 -runtime=1000  ...
+>   * in the tcmu-runner, try to touch blocks out of tcmu_cmds' iov[] manually
+>   * restart the tcmu-runner at any time.
+>   * in my environment for the low IOPS case: the read throughput goes from about 5200KB/s to 6700KB/s; the write throughput goes from about 3000KB/s to 3700KB/s.
 > 
-> Signed-by: Hannes Reinecke <hare@suse.com>
-> ---
->  drivers/target/target_core_configfs.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
+> Xiubo Li (2):
+>   tcmu: Add dynamic growing data area feature support
+>   tcmu: Add global data block pool support
+> 
+>  drivers/target/target_core_user.c | 598 ++++++++++++++++++++++++++++++--------
+>  1 file changed, 469 insertions(+), 129 deletions(-)
 > 
 
-Applied.
+So based upon the feedback from MNC, this looks OK to merge.
 
-Thanks Hannes.
+It looks like there is one bug as reported by MNC introduced by patch
+#1.
+
+Please go ahead and post an incremental patch to address this at your
+earliest convenience.
+
+Thank you.
