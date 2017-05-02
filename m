@@ -1,63 +1,52 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH v7 0/2] tcmu: Dynamic growing data area support
-Date: Mon, 01 May 2017 22:56:25 -0700
-Message-ID: <1493704585.23202.66.camel@haakon3.risingtidesystems.com>
-References: <1493696286-2988-1-git-send-email-lixiubo@cmss.chinamobile.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/3] scsi_dh_alua: Do not modify the interval value for
+ retries
+Date: Tue, 2 May 2017 08:17:58 +0200
+Message-ID: <1844f5eb-11c1-e041-4b2d-e12520b4e576@suse.de>
+References: <20170428130626.32162-1-mwilck@suse.com>
+ <20170428130626.32162-2-mwilck@suse.com>
+ <1493404499.2767.13.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1493696286-2988-1-git-send-email-lixiubo@cmss.chinamobile.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: lixiubo@cmss.chinamobile.com
-Cc: mchristi@redhat.com, agrover@redhat.com, iliastsi@arrikto.com, namei.unix@gmail.com, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:43958 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751123AbdEBGSA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 2 May 2017 02:18:00 -0400
+In-Reply-To: <1493404499.2767.13.camel@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "mwilck@suse.com" <mwilck@suse.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "mauricfo@linux.vnet.ibm.com" <mauricfo@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, 2017-05-02 at 11:38 +0800, lixiubo@cmss.chinamobile.com wrote:
-> From: Xiubo Li <lixiubo@cmss.chinamobile.com>
+On 04/28/2017 08:35 PM, Bart Van Assche wrote:
+> On Fri, 2017-04-28 at 15:06 +0200, Martin Wilck wrote:
+>> @@ -886,7 +883,7 @@ static bool alua_rtpg_queue(struct alua_port_group *pg,
+>>  		force = true;
+>>  	}
+>>  	if (pg->rtpg_sdev == NULL) {
+>> -		pg->interval = 0;
+>> +		pg->interval = 2;
+>>  		pg->flags |= ALUA_PG_RUN_RTPG;
+>>  		kref_get(&pg->kref);
+>>  		pg->rtpg_sdev = sdev;
 > 
-> Changed for V7:
-> - #1 fix two issues.
-> - #2 fix kbuild warning and some issues.
+> Hello Hannes and Martin,
 > 
-> Changed for V6:
-> - Remove the tcmu_vma_close(). Since the unmap thread will do the same for it 
-> - The unmap thread will skip the busy devices.
-> - Using and testing the V5 version 3 weeks and the V6 for about 1 week, all in a higher IOPS environment:
->   * using fio and dd commands
->   * using about 4 targets based user:rbd/user:file backend
->   * set the global pool size to 512 * 1024 blocks * block_size, for 4K page size, the size is 2G.
->   * each target here needs more than 1100 blocks.
->   * fio: -iodepth 16 -thread -rw=[read write] -bs=[1M] -size=20G -numjobs=10 -runtime=1000  ...
->   * restart the tcmu-runner at any time.
+> Why is .interval initialized in alua_rtpg_queue() instead of in
+> alua_alloc_pg()? I think initializing it in alua_alloc_pg() would
+> make more clear that .interval is constant.
 > 
-> Changed for V5:
-> - Rebase to the newest target-pending repository.
-> - Add as many comments as possbile to make the patch more readable.
-> - Move tcmu_handle_completions() in timeout handler to unmap thread
->   and then replace the spin lock with mutex lock(because the unmap_*
->   or zap_* may goto sleep) to simplify the patch and the code.
-> - Thanks very much for Mike's tips and suggestions.
-> - Tested this for more than 3 days by:
->   * using fio and dd commands
->   * using about 1~5 targets
->   * set the global pool size to [512 1024 2048 512 * 1024] blocks * block_size
->   * each target here needs more than 450 blocks when running in my environments.
->   * fio: -iodepth [1 2 4 8 16] -thread -rw=[read write] -bs=[1K 2K 3K 5K 7K 16K 64K 1M] -size=20G -numjobs=10 -runtime=1000  ...
->   * in the tcmu-runner, try to touch blocks out of tcmu_cmds' iov[] manually
->   * restart the tcmu-runner at any time.
->   * in my environment for the low IOPS case: the read throughput goes from about 5200KB/s to 6700KB/s; the write throughput goes from about 3000KB/s to 3700KB/s.
-> 
-> Xiubo Li (2):
->   tcmu: Add dynamic growing data area feature support
->   tcmu: Add global data block pool support
-> 
->  drivers/target/target_core_user.c | 602 ++++++++++++++++++++++++++++++--------
->  1 file changed, 473 insertions(+), 129 deletions(-)
-> 
+Yes, valid point.
+Will be doing so.
 
-Ah, just missed the v7.  ;)
+Cheers,
 
-Applied.
-
-Thanks 
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
