@@ -1,20 +1,20 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: RE: [PATCH 07/37] smartpqi: enhance resets
-Date: Wed, 3 May 2017 19:19:29 +0000
-Message-ID: <4993A297653ECB4581FA5C3C31323D1951D40034@avsrvexchmbx2.microsemi.net>
+Subject: RE: [PATCH 08/37] smartpqi: add suspend and resume support
+Date: Wed, 3 May 2017 19:21:07 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D1951D4004D@avsrvexchmbx2.microsemi.net>
 References: <149314950730.13903.644081079070695025.stgit@brunhilda>
-         <149314959452.13903.17367079226921525023.stgit@brunhilda>
- <1493150504.2628.11.camel@sandisk.com>
+         <149314960079.13903.626198058289190508.stgit@brunhilda>
+ <1493150725.2628.13.camel@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0068.outbound.protection.outlook.com ([104.47.33.68]:42440
+Received: from mail-bn3nam01on0049.outbound.protection.outlook.com ([104.47.33.49]:6987
         "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1756575AbdECTTu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 3 May 2017 15:19:50 -0400
-In-Reply-To: <1493150504.2628.11.camel@sandisk.com>
+        id S1756830AbdECTVN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 3 May 2017 15:21:13 -0400
+In-Reply-To: <1493150725.2628.13.camel@sandisk.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -23,66 +23,63 @@ Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
 > -----Original Message-----
 > On Tue, 2017-04-25 at 14:46 -0500, Don Brace wrote:
-> > @@ -4655,23 +4860,46 @@ static int pqi_device_reset(struct pqi_ctrl_inf=
-o
-> *ctrl_info,
-> >  static int pqi_eh_device_reset_handler(struct scsi_cmnd *scmd)
-> >  {
-> >       int rc;
-> > +     struct Scsi_Host *shost;
-> >       struct pqi_ctrl_info *ctrl_info;
-> >       struct pqi_scsi_dev *device;
-> >
-> > -     ctrl_info =3D shost_to_hba(scmd->device->host);
-> > +     shost =3D scmd->device->host;
-> > +     ctrl_info =3D shost_to_hba(shost);
-> >       device =3D scmd->device->hostdata;
-> >
-> >       dev_err(&ctrl_info->pci_dev->dev,
-> >               "resetting scsi %d:%d:%d:%d\n",
-> > -             ctrl_info->scsi_host->host_no,
-> > -             device->bus, device->target, device->lun);
-> > +             shost->host_no, device->bus, device->target, device->lun)=
-;
-> >
-> > -     rc =3D pqi_device_reset(ctrl_info, device);
-> > +     pqi_check_ctrl_health(ctrl_info);
-> > +     if (pqi_ctrl_offline(ctrl_info)) {
-> > +             rc =3D FAILED;
-> > +             goto out;
-> > +     }
-> >
-> > +     mutex_lock(&ctrl_info->lun_reset_mutex);
+> > +static int pqi_device_wait_for_pending_io(struct pqi_ctrl_info *ctrl_i=
+nfo,
+> > +       struct pqi_scsi_dev *device)
+> > +{
+> > +       while (atomic_read(&device->scsi_cmds_outstanding)) {
+> > +               pqi_check_ctrl_health(ctrl_info);
+> > +               if (pqi_ctrl_offline(ctrl_info))
+> > +                       return -ENXIO;
+> > +               usleep_range(1000, 2000);
+> > +       }
 > > +
-> > +     pqi_ctrl_block_requests(ctrl_info);
-> > +     pqi_ctrl_wait_until_quiesced(ctrl_info);
-> > +     pqi_fail_io_queued_for_device(ctrl_info, device);
-> > +     rc =3D pqi_wait_until_inbound_queues_empty(ctrl_info);
-> > +     pqi_device_reset_start(device);
-> > +     pqi_ctrl_unblock_requests(ctrl_info);
+> > +       return 0;
+> > +}
 > > +
-> > +     if (rc)
-> > +             rc =3D FAILED;
-> > +     else
-> > +             rc =3D pqi_device_reset(ctrl_info, device);
+> > +static int pqi_ctrl_wait_for_pending_io(struct pqi_ctrl_info *ctrl_inf=
+o)
+> > +{
+> > +       bool io_pending;
+> > +       unsigned long flags;
+> > +       struct pqi_scsi_dev *device;
 > > +
-> > +     pqi_device_reset_done(device);
+> > +       while (1) {
+> > +               io_pending =3D false;
 > > +
-> > +     mutex_unlock(&ctrl_info->lun_reset_mutex);
+> > +               spin_lock_irqsave(&ctrl_info->scsi_device_list_lock, fl=
+ags);
+> > +               list_for_each_entry(device, &ctrl_info->scsi_device_lis=
+t,
+> > +                       scsi_device_list_entry) {
+> > +                       if (atomic_read(&device->scsi_cmds_outstanding)=
+) {
+> > +                               io_pending =3D true;
+> > +                               break;
+> > +                       }
+> > +               }
+> > +               spin_unlock_irqrestore(&ctrl_info->scsi_device_list_loc=
+k,
+> > +                                       flags);
 > > +
-> > +out:
-> >       dev_err(&ctrl_info->pci_dev->dev,
-> >               "reset of scsi %d:%d:%d:%d: %s\n",
-> > -             ctrl_info->scsi_host->host_no,
-> > -             device->bus, device->target, device->lun,
-> > +             shost->host_no, device->bus, device->target, device->lun,
-> >               rc =3D=3D SUCCESS ? "SUCCESS" : "FAILED");
-> >
-> >       return rc;
+> > +               if (!io_pending)
+> > +                       break;
+> > +
+> > +               pqi_check_ctrl_health(ctrl_info);
+> > +               if (pqi_ctrl_offline(ctrl_info))
+> > +                       return -ENXIO;
+> > +
+> > +               usleep_range(1000, 2000);
+> > +       }
+> > +
+> > +       return 0;
+> > +}
 >=20
-> Please use scsi_target_block() / scsi_target_unblock() instead of
-> reimplementing
-> these functions.
+> The same comment applies here that applies to the previous patch: please
+> use
+> scsi_target_block() / scsi_target_unblock() instead of reimplementing the=
+se
+> functions.
 >=20
 > Thanks,
 >=20
