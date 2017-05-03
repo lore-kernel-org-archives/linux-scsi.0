@@ -1,81 +1,88 @@
-From: Chad Dupuis <chad.dupuis@cavium.com>
-Subject: Re: [scsi-qedf] question about parameter ordering
-Date: Wed, 3 May 2017 14:50:11 -0400 (EDT)
-Message-ID: <alpine.OSX.2.00.1705031449180.1653@administrators-MacBook-Pro.local>
-References: <20170503125818.Horde.8rEDF6U_fTKRV29evjbXFMa@gator4166.hostgator.com> <alpine.OSX.2.00.1705031427250.1568@administrators-MacBook-Pro.local> <16696718-27c6-b5a6-912d-f5efc592df76@infradead.org>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2] ibmvscsis: Do not send aborted task response
+Date: Wed, 3 May 2017 13:55:54 -0500
+Message-ID: <7d900f15-4590-5b09-0f48-8e8be862665e@linux.vnet.ibm.com>
+References: <1493751261-81647-1-git-send-email-bryantly@linux.vnet.ibm.com>
+ <1493783006.23202.87.camel@haakon3.risingtidesystems.com>
+ <5c2536d3-7ff1-1e17-91c0-0be6a8befbfa@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0055.outbound.protection.outlook.com ([104.47.41.55]:61251
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751159AbdECSuY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 3 May 2017 14:50:24 -0400
-In-Reply-To: <16696718-27c6-b5a6-912d-f5efc592df76@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <5c2536d3-7ff1-1e17-91c0-0be6a8befbfa@linux.vnet.ibm.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Bart.VanAssche@sandisk.com, martin.petersen@oracle.com, turtle.in.the.kernel@gmail.com, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: "Gustavo A. R. Silva" <garsilva@embeddedor.com>, QLogic-Storage-Upstream@cavium.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Peter Senna Tschudin <peter.senna@gmail.com>
 
+On 5/3/17 11:38 AM, Bryant G. Ly wrote:
 
-On Wed, 3 May 2017, 2:36pm, Randy Dunlap wrote:
-
-> On 05/03/17 11:29, Chad Dupuis wrote:
-> > 
-> > On Wed, 3 May 2017, 1:58pm, Gustavo A. R. Silva wrote:
-> > 
-> >>
-> >> Hello everybody,
-> >>
-> >> While looking into Coverity ID 1402011 I ran into the following piece of code
-> >> at drivers/scsi/qedf/qedf_io.c:2057:
-> >>
-> >> /* Fill FC header */
-> >> fc_hdr = &(tm_req->req_fc_hdr);
-> >> sid = fcport->sid;
-> >> did = fcport->rdata->ids.port_id;
-> >> __fc_fill_fc_hdr(fc_hdr, FC_RCTL_DD_UNSOL_CMD, sid, did,
-> >>                   FC_TYPE_FCP, FC_FC_FIRST_SEQ | FC_FC_END_SEQ |
-> >>                   FC_FC_SEQ_INIT, 0);
-> >>
-> >> The issue here is that the position of arguments in the call to
-> >> __fc_fill_fc_hdr() function do not match the ordering of the parameters:
-> >>
-> >> _sid_ is passed to _did_
-> >> _did_ is passed to _sid_
-> >>
-> >> this is the function prototype:
-> >>
-> >> static inline void __fc_fill_fc_hdr(struct fc_frame_header *fh,
-> >>                                    enum fc_rctl r_ctl,
-> >>                                    u32 did, u32 sid, enum fc_fh_type type,
-> >>                                    u32 f_ctl, u32 parm_offset)
-> >>
-> >> My question here is if this is intentionala?
-> > 
-> > This may have been but this code has been superseded by commit 	
-> > be086e7c53f1fac51eed14523b28f2214b548dd2.B
-> 
-> what git tree is that in?
-> 
-> Thanks.
+> Hi Nick,
 >
+> On 5/2/17 10:43 PM, Nicholas A. Bellinger wrote:
+>
+>> On Tue, 2017-05-02 at 13:54 -0500, Bryant G. Ly wrote:
+>>> The driver is sending a response to the actual scsi op that was
+>>> aborted by an abort task TM, while LIO is sending a response to
+>>> the abort task TM.
+>>>
+>>> ibmvscsis_tgt does not send the response to the client until
+>>> release_cmd time. The reason for this was because if we did it
+>>> at queue_status time, then the client would be free to reuse the
+>>> tag for that command, but we're still using the tag until the
+>>> command is released at release_cmd time, so we chose to delay
+>>> sending the response until then. That then caused this issue, because
+>>> release_cmd is always called, even if queue_status is not.
+>>>
+>>> SCSI spec says that the initiator that sends the abort task
+>>> TM NEVER gets a response to the aborted op and with the current
+>>> code it will send a response. Thus this fix will remove that response
+>>> if the TAS bit is set.
+>>>
+>>> Cc: <stable@vger.kernel.org> # v4.8+
+>>> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+>>> Reviewed-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+>>> ---
+>>>   drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 66 
+>>> ++++++++++++++++++++++----------
+>>>   1 file changed, 45 insertions(+), 21 deletions(-)
+>> Applied, with a small update to the last sentence of the commit log wrt
+>> to 'if ABORTED && !TAS bit is set'.
+>>
+>> Thanks Bryant + Tyrel.
+>>
+> So I have been running tests on this patch extensively and it seems 
+> like after running 2 hrs of consecutive aborts it fails again with the 
+> same problem of driver sending a response to the actual scsi op.
+>
+> It looks like when LIO processes the abort and if 
+> (!__target_check_io_state(se_cmd, se_sess, 0)) then rsp gets set as 
+> TMR_TASK_DOES_NOT_EXIST.
+>
+> With that response the CMD_T_ABORTED state is not set, so then the 
+> ibmvscsis driver still sends that duplicate response.
+>
+> I think the best solution would be in driver when queue_tm_rsp gets 
+> called and when the driver builds the response to check for the 
+> TMR_TASK_DOES_NOT_EXIST and set our own flag.
+> Then we would also check for that flag, so it would be:
+>
+> if ((cmd->se_cmd.transport_state & CMD_T_ABORTED && 
+> !(cmd->se_cmd.transport_state & CMD_T_TAS)) || cmd->flags & 
+> CMD_ABORTED) {
+>
+> This will ensure in the CMD_T_ABORTED w/o CMD_T_TAS scenarios are 
+> handled and the ABORT_TASK: Sending TMR_TASK_DOES_NOT_EXIST case.
+>
+> -Bryant
+>
+>
+Hi Nick,
 
-Apologies, a couple of stray characters got into the commit ID.  This is 
-in mainline:
+You can ignore the email about the patch being broken. The script that was used for testing isn't right.
 
-commit be086e7c53f1fac51eed14523b28f2214b548dd2
-Author: Mintz, Yuval <Yuval.Mintz@cavium.com>
-Date:   Sat Mar 11 18:39:18 2017 +0200
+So the patch is working as intended now, where on an abort the client does not receive an extra response to the actual scsi op.
 
-    qed*: Utilize Firmware 8.15.3.0
- 
-> >> In case it is not, I will send a patch to fix it. But first it would be great
-> >> to hear any comment about it.
-> >>
-> >> By the way... the same is happening at drivers/scsi/qedf/qedf_els.c:109
-> > 
-> > May be a bug here so you could send a patch.
-> 
-> 
-> 
+Thanks,
+
+Bryant Ly
