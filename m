@@ -1,37 +1,27 @@
-From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+From: Randy Dunlap <rdunlap@infradead.org>
 Subject: Re: [scsi-qedf] question about parameter ordering
-Date: Wed, 03 May 2017 13:34:49 -0500
-Message-ID: <20170503133449.Horde.-WcP75Z1VExB_dKSscExwX4@gator4166.hostgator.com>
+Date: Wed, 3 May 2017 11:36:34 -0700
+Message-ID: <16696718-27c6-b5a6-912d-f5efc592df76@infradead.org>
 References: <20170503125818.Horde.8rEDF6U_fTKRV29evjbXFMa@gator4166.hostgator.com>
  <alpine.OSX.2.00.1705031427250.1568@administrators-MacBook-Pro.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed; DelSp=Yes
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gateway22.websitewelcome.com ([192.185.46.234]:40565 "EHLO
-        gateway22.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753376AbdECSew (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 May 2017 14:34:52 -0400
-Received: from cm10.websitewelcome.com (cm10.websitewelcome.com [100.42.49.4])
-        by gateway22.websitewelcome.com (Postfix) with ESMTP id F347255BF3
-        for <linux-scsi@vger.kernel.org>; Wed,  3 May 2017 13:34:49 -0500 (CDT)
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <alpine.OSX.2.00.1705031427250.1568@administrators-MacBook-Pro.local>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: Chad Dupuis <chad.dupuis@cavium.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Chad Dupuis <chad.dupuis@cavium.com>, "Gustavo A. R. Silva" <garsilva@embeddedor.com>
 Cc: QLogic-Storage-Upstream@cavium.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Peter Senna Tschudin <peter.senna@gmail.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Hi Chad,
-
-Quoting Chad Dupuis <chad.dupuis@cavium.com>:
-
+On 05/03/17 11:29, Chad Dupuis wrote:
+> 
 > On Wed, 3 May 2017, 1:58pm, Gustavo A. R. Silva wrote:
->
+> 
 >>
 >> Hello everybody,
 >>
->> While looking into Coverity ID 1402011 I ran into the following  
->> piece of code
+>> While looking into Coverity ID 1402011 I ran into the following piece of code
 >> at drivers/scsi/qedf/qedf_io.c:2057:
 >>
 >> /* Fill FC header */
@@ -56,24 +46,21 @@ Quoting Chad Dupuis <chad.dupuis@cavium.com>:
 >>                                    u32 f_ctl, u32 parm_offset)
 >>
 >> My question here is if this is intentionala?
->
-> This may have been but this code has been superseded by commit
+> 
+> This may have been but this code has been superseded by commit 	
 > be086e7c53f1fac51eed14523b28f2214b548dd2.B
->>
 
-Oh OK, great.
+what git tree is that in?
 
->> In case it is not, I will send a patch to fix it. But first it  
->> would be great
+Thanks.
+
+>> In case it is not, I will send a patch to fix it. But first it would be great
 >> to hear any comment about it.
 >>
 >> By the way... the same is happening at drivers/scsi/qedf/qedf_els.c:109
->
+> 
 > May be a bug here so you could send a patch.
->
 
-I'll send a patch for this shortly.
 
-Thanks for your comments.
---
-Gustavo A. R. Silva
+-- 
+~Randy
