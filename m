@@ -1,44 +1,40 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH v2] ibmvscsis: Do not send aborted task response
-Date: Tue, 02 May 2017 20:43:26 -0700
-Message-ID: <1493783006.23202.87.camel@haakon3.risingtidesystems.com>
-References: <1493751261-81647-1-git-send-email-bryantly@linux.vnet.ibm.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 176951] boot fails unless acpi=off Acer Travelmate X-349
+Date: Wed, 03 May 2017 05:59:26 +0000
+Message-ID: <bug-176951-11613-GSkBwMelDw@https.bugzilla.kernel.org/>
+References: <bug-176951-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1493751261-81647-1-git-send-email-bryantly@linux.vnet.ibm.com>
-Sender: stable-owner@vger.kernel.org
-To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Cc: Bart.VanAssche@sandisk.com, martin.petersen@oracle.com, turtle.in.the.kernel@gmail.com, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, stable@vger.kernel.org
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:44384 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751010AbdECF72 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 May 2017 01:59:28 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 10EF9285F1
+        for <linux-scsi@vger.kernel.org>; Wed,  3 May 2017 05:59:27 +0000 (UTC)
+In-Reply-To: <bug-176951-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@kernel.org
 
-On Tue, 2017-05-02 at 13:54 -0500, Bryant G. Ly wrote:
-> The driver is sending a response to the actual scsi op that was
-> aborted by an abort task TM, while LIO is sending a response to
-> the abort task TM.
-> 
-> ibmvscsis_tgt does not send the response to the client until
-> release_cmd time. The reason for this was because if we did it
-> at queue_status time, then the client would be free to reuse the
-> tag for that command, but we're still using the tag until the
-> command is released at release_cmd time, so we chose to delay
-> sending the response until then. That then caused this issue, because
-> release_cmd is always called, even if queue_status is not.
-> 
-> SCSI spec says that the initiator that sends the abort task
-> TM NEVER gets a response to the aborted op and with the current
-> code it will send a response. Thus this fix will remove that response
-> if the TAS bit is set.
-> 
-> Cc: <stable@vger.kernel.org> # v4.8+
-> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-> Reviewed-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-> ---
->  drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 66 ++++++++++++++++++++++----------
->  1 file changed, 45 insertions(+), 21 deletions(-)
+https://bugzilla.kernel.org/show_bug.cgi?id=176951
 
-Applied, with a small update to the last sentence of the commit log wrt
-to 'if ABORTED && !TAS bit is set'.
+Max (700ghz@gmail.com) changed:
 
-Thanks Bryant + Tyrel.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |700ghz@gmail.com
+
+--- Comment #23 from Max (700ghz@gmail.com) ---
+I can confirm the bug on my Acer Swift 3 Model SF314-51 (bios 1.08).
+I able to install just Mint 18.1. I found that it freezes when:
+1. ~4 times of 5 when my machine start ups (boot logo/black screen); 
+2. usually when chrome starts; 
+3. when brightness changes very fast; 
+4. when shut down.
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
