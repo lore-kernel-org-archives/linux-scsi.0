@@ -1,512 +1,440 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH V2 07/36] smartpqi: enhance resets
-Date: Wed, 3 May 2017 18:52:58 -0500
-Message-ID: <149385557879.11043.3362918334707605887.stgit@brunhilda>
+Subject: [PATCH V2 09/36] smartpqi: add heartbeat check
+Date: Wed, 3 May 2017 18:53:11 -0500
+Message-ID: <149385559190.11043.9310797221327705466.stgit@brunhilda>
 References: <149385549428.11043.8013091835763091910.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0047.outbound.protection.outlook.com ([104.47.33.47]:38336
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam01on0079.outbound.protection.outlook.com ([104.47.32.79]:12487
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752705AbdECXxJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 3 May 2017 19:53:09 -0400
+        id S1751366AbdECXxR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 3 May 2017 19:53:17 -0400
 In-Reply-To: <149385549428.11043.8013091835763091910.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Kevin Barnett <kevin.barnett@hpe.com>
+From: Kevin Barnett <kevin.barnett@microsemi.com>
 
-- Block all I/O targeted at LUN reset device.
-- Wait until all I/O targeted at LUN reset device has been
-  consumed by the controller.
-- Issue LUN reset request.
-- Wait until all outstanding I/Os and LUN reset completion
-  have been received by the host.
-- Return to OS results of LUN reset request.
+check for controller lockups
 
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
 Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/smartpqi/smartpqi.h      |   13 +-
- drivers/scsi/smartpqi/smartpqi_init.c |  279 ++++++++++++++++++++++++++++++---
- 2 files changed, 265 insertions(+), 27 deletions(-)
+ drivers/scsi/smartpqi/smartpqi.h      |   60 ++++++++++++++--
+ drivers/scsi/smartpqi/smartpqi_init.c |  126 ++++++++++++++++++++++-----------
+ drivers/scsi/smartpqi/smartpqi_sis.c  |    4 +
+ 3 files changed, 143 insertions(+), 47 deletions(-)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-index 02b3196..5b0c6fb 100644
+index 06e2b71..1ac09e7 100644
 --- a/drivers/scsi/smartpqi/smartpqi.h
 +++ b/drivers/scsi/smartpqi/smartpqi.h
-@@ -734,6 +734,8 @@ struct pqi_scsi_dev {
- 	u8	new_device : 1;
- 	u8	keep_device : 1;
- 	u8	volume_offline : 1;
-+	bool	in_reset;
-+	bool	device_offline;
- 	u8	vendor[8];		/* bytes 8-15 of inquiry data */
- 	u8	model[16];		/* bytes 16-31 of inquiry data */
- 	u64	sas_address;
-@@ -761,6 +763,8 @@ struct pqi_scsi_dev {
- 	struct list_head new_device_list_entry;
- 	struct list_head add_list_entry;
- 	struct list_head delete_list_entry;
-+
-+	atomic_t scsi_cmds_outstanding;
+@@ -490,7 +490,6 @@ struct pqi_raid_error_info {
+ #define PQI_EVENT_TYPE_LOGICAL_DEVICE		0x5
+ #define PQI_EVENT_TYPE_AIO_STATE_CHANGE		0xfd
+ #define PQI_EVENT_TYPE_AIO_CONFIG_CHANGE	0xfe
+-#define PQI_EVENT_TYPE_HEARTBEAT		0xff
+ 
+ #pragma pack()
+ 
+@@ -635,6 +634,58 @@ struct pqi_encryption_info {
+ 	u32	encrypt_tweak_upper;
  };
  
- /* VPD inquiry pages */
-@@ -926,7 +930,9 @@ struct pqi_ctrl_info {
- 	struct Scsi_Host *scsi_host;
++#pragma pack(1)
++
++#define PQI_CONFIG_TABLE_SIGNATURE	"CFGTABLE"
++#define PQI_CONFIG_TABLE_MAX_LENGTH	((u16)~0)
++
++/* configuration table section IDs */
++#define PQI_CONFIG_TABLE_SECTION_GENERAL_INFO		0
++#define PQI_CONFIG_TABLE_SECTION_FIRMWARE_FEATURES	1
++#define PQI_CONFIG_TABLE_SECTION_FIRMWARE_ERRATA	2
++#define PQI_CONFIG_TABLE_SECTION_DEBUG			3
++#define PQI_CONFIG_TABLE_SECTION_HEARTBEAT		4
++
++struct pqi_config_table {
++	u8	signature[8];		/* "CFGTABLE" */
++	__le32	first_section_offset;	/* offset in bytes from the base */
++					/* address of this table to the */
++					/* first section */
++};
++
++struct pqi_config_table_section_header {
++	__le16	section_id;		/* as defined by the */
++					/* PQI_CONFIG_TABLE_SECTION_* */
++					/* manifest constants above */
++	__le16	next_section_offset;	/* offset in bytes from base */
++					/* address of the table of the */
++					/* next section or 0 if last entry */
++};
++
++struct pqi_config_table_general_info {
++	struct pqi_config_table_section_header header;
++	__le32	section_length;		/* size of this section in bytes */
++					/* including the section header */
++	__le32	max_outstanding_requests;	/* max. outstanding */
++						/* commands supported by */
++						/* the controller */
++	__le32	max_sg_size;		/* max. transfer size of a single */
++					/* command */
++	__le32	max_sg_per_request;	/* max. number of scatter-gather */
++					/* entries supported in a single */
++					/* command */
++};
++
++struct pqi_config_table_debug {
++	struct pqi_config_table_section_header header;
++	__le32	scratchpad;
++};
++
++struct pqi_config_table_heartbeat {
++	struct pqi_config_table_section_header header;
++	__le32	heartbeat_counter;
++};
++
+ #define PQI_MAX_OUTSTANDING_REQUESTS	((u32)~0)
+ #define PQI_MAX_TRANSFER_SIZE		(4 * 1024U * 1024U)
  
- 	struct mutex	scan_mutex;
--	bool		controller_online : 1;
-+	struct mutex	lun_reset_mutex;
-+	bool		controller_online;
-+	bool		block_requests;
+@@ -645,8 +696,6 @@ struct pqi_encryption_info {
+ #define PQI_HBA_BUS			2
+ #define PQI_MAX_BUS			PQI_HBA_BUS
+ 
+-#pragma pack(1)
+-
+ struct report_lun_header {
+ 	__be32	list_length;
+ 	u8	extended_response;
+@@ -870,7 +919,6 @@ struct pqi_io_request {
+ 	struct list_head request_list_entry;
+ };
+ 
+-#define PQI_EVENT_HEARTBEAT		0
+ #define PQI_NUM_SUPPORTED_EVENTS	6
+ 
+ struct pqi_event {
+@@ -943,7 +991,6 @@ struct pqi_ctrl_info {
  	u8		inbound_spanning_supported : 1;
  	u8		outbound_spanning_supported : 1;
  	u8		pqi_mode_enabled : 1;
-@@ -953,7 +959,9 @@ struct pqi_ctrl_info {
+-	u8		heartbeat_timer_started : 1;
+ 	u8		update_time_worker_scheduled : 1;
+ 
+ 	struct list_head scsi_device_list;
+@@ -963,7 +1010,8 @@ struct pqi_ctrl_info {
+ 
+ 	atomic_t	num_interrupts;
+ 	int		previous_num_interrupts;
+-	unsigned int	num_heartbeats_requested;
++	u32		previous_heartbeat_count;
++	__le32 __iomem	*heartbeat_counter;
  	struct timer_list heartbeat_timer;
  
  	struct semaphore sync_request_sem;
--	struct semaphore lun_reset_sem;
-+	atomic_t	num_busy_threads;
-+	atomic_t	num_blocked_threads;
-+	wait_queue_head_t block_requests_wait;
- };
- 
- enum pqi_ctrl_mode {
-@@ -1092,6 +1100,7 @@ int pqi_add_sas_device(struct pqi_sas_node *pqi_sas_node,
- void pqi_remove_sas_device(struct pqi_scsi_dev *device);
- struct pqi_scsi_dev *pqi_find_device_by_sas_rphy(
- 	struct pqi_ctrl_info *ctrl_info, struct sas_rphy *rphy);
-+void pqi_prep_for_scsi_done(struct scsi_cmnd *scmd);
- 
- extern struct sas_function_template pqi_sas_transport_functions;
- 
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 279dd41..bd8a66d 100644
+index 7af4add..de33942 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -126,6 +126,7 @@ static char *pqi_raid_level_to_string(u8 raid_level)
- 
- static inline void pqi_scsi_done(struct scsi_cmnd *scmd)
- {
-+	pqi_prep_for_scsi_done(scmd);
- 	scmd->scsi_done(scmd);
+@@ -267,6 +267,14 @@ static inline void pqi_cancel_rescan_worker(struct pqi_ctrl_info *ctrl_info)
+ 	cancel_delayed_work_sync(&ctrl_info->rescan_work);
  }
  
-@@ -175,7 +176,85 @@ static inline void pqi_save_ctrl_mode(struct pqi_ctrl_info *ctrl_info,
- 	sis_write_driver_scratch(ctrl_info, mode);
++static inline u32 pqi_read_heartbeat_counter(struct pqi_ctrl_info *ctrl_info)
++{
++	if (!ctrl_info->heartbeat_counter)
++		return 0;
++
++	return readl(ctrl_info->heartbeat_counter);
++}
++
+ static int pqi_map_single(struct pci_dev *pci_dev,
+ 	struct pqi_sg_descriptor *sg_descriptor, void *buffer,
+ 	size_t buffer_length, int data_direction)
+@@ -2708,23 +2716,18 @@ static inline unsigned int pqi_num_elements_free(unsigned int pi,
+ 	return elements_in_queue - num_elements_used - 1;
  }
  
--#define PQI_RESCAN_WORK_INTERVAL	(10 * HZ)
-+#define PQI_RESCAN_WORK_INTERVAL       (10 * HZ)
-+static inline void pqi_ctrl_block_requests(struct pqi_ctrl_info *ctrl_info)
-+{
-+	ctrl_info->block_requests = true;
-+	scsi_block_requests(ctrl_info->scsi_host);
-+}
-+
-+static inline void pqi_ctrl_unblock_requests(struct pqi_ctrl_info *ctrl_info)
-+{
-+	ctrl_info->block_requests = false;
-+	wake_up_all(&ctrl_info->block_requests_wait);
-+	scsi_unblock_requests(ctrl_info->scsi_host);
-+}
-+
-+static inline bool pqi_ctrl_blocked(struct pqi_ctrl_info *ctrl_info)
-+{
-+	return ctrl_info->block_requests;
-+}
-+
-+static unsigned long pqi_wait_if_ctrl_blocked(struct pqi_ctrl_info *ctrl_info,
-+	unsigned long timeout_msecs)
-+{
-+	unsigned long remaining_msecs;
-+
-+	if (!pqi_ctrl_blocked(ctrl_info))
-+		return timeout_msecs;
-+
-+	atomic_inc(&ctrl_info->num_blocked_threads);
-+
-+	if (timeout_msecs == NO_TIMEOUT) {
-+		wait_event(ctrl_info->block_requests_wait,
-+			!pqi_ctrl_blocked(ctrl_info));
-+		remaining_msecs = timeout_msecs;
-+	} else {
-+		unsigned long remaining_jiffies;
-+
-+		remaining_jiffies =
-+			wait_event_timeout(ctrl_info->block_requests_wait,
-+				!pqi_ctrl_blocked(ctrl_info),
-+				msecs_to_jiffies(timeout_msecs));
-+		remaining_msecs = jiffies_to_msecs(remaining_jiffies);
-+	}
-+
-+	atomic_dec(&ctrl_info->num_blocked_threads);
-+
-+	return remaining_msecs;
-+}
-+
-+static inline void pqi_ctrl_busy(struct pqi_ctrl_info *ctrl_info)
-+{
-+	atomic_inc(&ctrl_info->num_busy_threads);
-+}
-+
-+static inline void pqi_ctrl_unbusy(struct pqi_ctrl_info *ctrl_info)
-+{
-+	atomic_dec(&ctrl_info->num_busy_threads);
-+}
-+
-+static inline void pqi_ctrl_wait_until_quiesced(struct pqi_ctrl_info *ctrl_info)
-+{
-+	while (atomic_read(&ctrl_info->num_busy_threads) >
-+		atomic_read(&ctrl_info->num_blocked_threads))
-+		usleep_range(1000, 2000);
-+}
-+
-+static inline void pqi_device_reset_start(struct pqi_scsi_dev *device)
-+{
-+	device->in_reset = true;
-+}
-+
-+static inline void pqi_device_reset_done(struct pqi_scsi_dev *device)
-+{
-+	device->in_reset = false;
-+}
-+
-+static inline bool pqi_device_in_reset(struct pqi_scsi_dev *device)
-+{
-+	return device->in_reset;
-+}
- 
- static inline void pqi_schedule_rescan_worker(struct pqi_ctrl_info *ctrl_info)
+-#define PQI_EVENT_ACK_TIMEOUT	30
+-
+-static void pqi_start_event_ack(struct pqi_ctrl_info *ctrl_info,
++static void pqi_send_event_ack(struct pqi_ctrl_info *ctrl_info,
+ 	struct pqi_event_acknowledge_request *iu, size_t iu_length)
  {
-@@ -2679,6 +2758,9 @@ static void pqi_event_worker(struct work_struct *work)
+ 	pqi_index_t iq_pi;
+ 	pqi_index_t iq_ci;
+ 	unsigned long flags;
+ 	void *next_element;
+-	unsigned long timeout;
+ 	struct pqi_queue_group *queue_group;
+ 
+ 	queue_group = &ctrl_info->queue_groups[PQI_DEFAULT_QUEUE_GROUP];
+ 	put_unaligned_le16(queue_group->oq_id, &iu->header.response_queue_id);
+ 
+-	timeout = (PQI_EVENT_ACK_TIMEOUT * HZ) + jiffies;
+-
+ 	while (1) {
+ 		spin_lock_irqsave(&queue_group->submit_lock[RAID_PATH], flags);
+ 
+@@ -2738,11 +2741,8 @@ static void pqi_start_event_ack(struct pqi_ctrl_info *ctrl_info,
+ 		spin_unlock_irqrestore(
+ 			&queue_group->submit_lock[RAID_PATH], flags);
+ 
+-		if (time_after(jiffies, timeout)) {
+-			dev_err(&ctrl_info->pci_dev->dev,
+-				"sending event acknowledge timed out\n");
++		if (pqi_ctrl_offline(ctrl_info))
+ 			return;
+-		}
+ 	}
+ 
+ 	next_element = queue_group->iq_element_array[RAID_PATH] +
+@@ -2751,7 +2751,6 @@ static void pqi_start_event_ack(struct pqi_ctrl_info *ctrl_info,
+ 	memcpy(next_element, iu, iu_length);
+ 
+ 	iq_pi = (iq_pi + 1) % ctrl_info->num_elements_per_iq;
+-
+ 	queue_group->iq_pi_copy[RAID_PATH] = iq_pi;
+ 
+ 	/*
+@@ -2777,7 +2776,7 @@ static void pqi_acknowledge_event(struct pqi_ctrl_info *ctrl_info,
+ 	request.event_id = event->event_id;
+ 	request.additional_event_id = event->additional_event_id;
+ 
+-	pqi_start_event_ack(ctrl_info, &request, sizeof(request));
++	pqi_send_event_ack(ctrl_info, &request, sizeof(request));
+ }
+ 
+ static void pqi_event_worker(struct work_struct *work)
+@@ -2785,7 +2784,6 @@ static void pqi_event_worker(struct work_struct *work)
+ 	unsigned int i;
+ 	struct pqi_ctrl_info *ctrl_info;
+ 	struct pqi_event *event;
+-	bool got_non_heartbeat_event = false;
  
  	ctrl_info = container_of(work, struct pqi_ctrl_info, event_work);
  
-+	pqi_ctrl_busy(ctrl_info);
-+	pqi_wait_if_ctrl_blocked(ctrl_info, NO_TIMEOUT);
-+
- 	event = ctrl_info->events;
- 	for (i = 0; i < PQI_NUM_SUPPORTED_EVENTS; i++) {
+@@ -2797,8 +2795,6 @@ static void pqi_event_worker(struct work_struct *work)
  		if (event->pending) {
-@@ -2690,8 +2772,9 @@ static void pqi_event_worker(struct work_struct *work)
+ 			event->pending = false;
+ 			pqi_acknowledge_event(ctrl_info, event);
+-			if (i != PQI_EVENT_TYPE_HEARTBEAT)
+-				got_non_heartbeat_event = true;
+ 		}
  		event++;
  	}
- 
--	if (got_non_heartbeat_event)
--		pqi_schedule_rescan_worker(ctrl_info);
-+	pqi_ctrl_unbusy(ctrl_info);
-+
-+	pqi_schedule_rescan_worker(ctrl_info);
+@@ -2848,57 +2844,58 @@ static void pqi_take_ctrl_offline(struct pqi_ctrl_info *ctrl_info)
+ 	}
  }
  
- static void pqi_take_ctrl_offline(struct pqi_ctrl_info *ctrl_info)
-@@ -3436,6 +3519,13 @@ static int pqi_submit_raid_request_synchronous(struct pqi_ctrl_info *ctrl_info,
+-#define PQI_HEARTBEAT_TIMER_INTERVAL	(5 * HZ)
+-#define PQI_MAX_HEARTBEAT_REQUESTS	5
++#define PQI_HEARTBEAT_TIMER_INTERVAL	(10 * HZ)
+ 
+ static void pqi_heartbeat_timer_handler(unsigned long data)
+ {
+ 	int num_interrupts;
++	u32 heartbeat_count;
+ 	struct pqi_ctrl_info *ctrl_info = (struct pqi_ctrl_info *)data;
+ 
+-	if (!ctrl_info->heartbeat_timer_started)
++	pqi_check_ctrl_health(ctrl_info);
++	if (pqi_ctrl_offline(ctrl_info))
+ 		return;
+ 
+ 	num_interrupts = atomic_read(&ctrl_info->num_interrupts);
++	heartbeat_count = pqi_read_heartbeat_counter(ctrl_info);
+ 
+ 	if (num_interrupts == ctrl_info->previous_num_interrupts) {
+-		ctrl_info->num_heartbeats_requested++;
+-		if (ctrl_info->num_heartbeats_requested >
+-			PQI_MAX_HEARTBEAT_REQUESTS) {
++		if (heartbeat_count == ctrl_info->previous_heartbeat_count) {
++			dev_err(&ctrl_info->pci_dev->dev,
++				"no heartbeat detected - last heartbeat count: %u\n",
++				heartbeat_count);
+ 			pqi_take_ctrl_offline(ctrl_info);
+ 			return;
  		}
+-		ctrl_info->events[PQI_EVENT_HEARTBEAT].pending = true;
+-		schedule_work(&ctrl_info->event_work);
+ 	} else {
+-		ctrl_info->num_heartbeats_requested = 0;
++		ctrl_info->previous_num_interrupts = num_interrupts;
  	}
  
-+	pqi_ctrl_busy(ctrl_info);
-+	timeout_msecs = pqi_wait_if_ctrl_blocked(ctrl_info, timeout_msecs);
-+	if (timeout_msecs == 0) {
-+		rc = -ETIMEDOUT;
-+		goto out;
-+	}
-+
- 	io_request = pqi_alloc_io_request(ctrl_info);
- 
- 	put_unaligned_le16(io_request->index,
-@@ -3476,6 +3566,8 @@ static int pqi_submit_raid_request_synchronous(struct pqi_ctrl_info *ctrl_info,
- 
- 	pqi_free_io_request(io_request);
- 
-+out:
-+	pqi_ctrl_unbusy(ctrl_info);
- 	up(&ctrl_info->sync_request_sem);
- 
- 	return rc;
-@@ -4499,6 +4591,19 @@ static int pqi_aio_submit_io(struct pqi_ctrl_info *ctrl_info,
- 	return 0;
+-	ctrl_info->previous_num_interrupts = num_interrupts;
++	ctrl_info->previous_heartbeat_count = heartbeat_count;
+ 	mod_timer(&ctrl_info->heartbeat_timer,
+ 		jiffies + PQI_HEARTBEAT_TIMER_INTERVAL);
  }
  
-+/*
-+ * This function gets called just before we hand the completed SCSI request
-+ * back to the SML.
-+ */
-+
-+void pqi_prep_for_scsi_done(struct scsi_cmnd *scmd)
-+{
-+	struct pqi_scsi_dev *device;
-+
-+	device = scmd->device->hostdata;
-+	atomic_dec(&device->scsi_cmds_outstanding);
-+}
-+
- static int pqi_scsi_queue_command(struct Scsi_Host *shost,
- 	struct scsi_cmnd *scmd)
+ static void pqi_start_heartbeat_timer(struct pqi_ctrl_info *ctrl_info)
  {
-@@ -4512,12 +4617,20 @@ static int pqi_scsi_queue_command(struct Scsi_Host *shost,
- 	device = scmd->device->hostdata;
- 	ctrl_info = shost_to_hba(shost);
- 
-+	atomic_inc(&device->scsi_cmds_outstanding);
++	if (!ctrl_info->heartbeat_counter)
++		return;
 +
- 	if (pqi_ctrl_offline(ctrl_info)) {
- 		set_host_byte(scmd, DID_NO_CONNECT);
- 		pqi_scsi_done(scmd);
- 		return 0;
- 	}
+ 	ctrl_info->previous_num_interrupts =
+ 		atomic_read(&ctrl_info->num_interrupts);
++	ctrl_info->previous_heartbeat_count =
++		pqi_read_heartbeat_counter(ctrl_info);
  
-+	pqi_ctrl_busy(ctrl_info);
-+	if (pqi_ctrl_blocked(ctrl_info) || pqi_device_in_reset(device)) {
-+		rc = SCSI_MLQUEUE_HOST_BUSY;
-+		goto out;
-+	}
-+
- 	/*
- 	 * This is necessary because the SML doesn't zero out this field during
- 	 * error recovery.
-@@ -4554,9 +4667,116 @@ static int pqi_scsi_queue_command(struct Scsi_Host *shost,
- 				queue_group);
- 	}
- 
-+out:
-+	pqi_ctrl_unbusy(ctrl_info);
-+	if (rc)
-+		atomic_dec(&device->scsi_cmds_outstanding);
-+
- 	return rc;
+-	init_timer(&ctrl_info->heartbeat_timer);
+ 	ctrl_info->heartbeat_timer.expires =
+ 		jiffies + PQI_HEARTBEAT_TIMER_INTERVAL;
+ 	ctrl_info->heartbeat_timer.data = (unsigned long)ctrl_info;
+ 	ctrl_info->heartbeat_timer.function = pqi_heartbeat_timer_handler;
+-	ctrl_info->heartbeat_timer_started = true;
+ 	add_timer(&ctrl_info->heartbeat_timer);
  }
  
-+static int pqi_wait_until_queued_io_drained(struct pqi_ctrl_info *ctrl_info,
-+	struct pqi_queue_group *queue_group)
-+{
-+	unsigned int path;
-+	unsigned long flags;
-+	bool list_is_empty;
-+
-+	for (path = 0; path < 2; path++) {
-+		while (1) {
-+			spin_lock_irqsave(
-+				&queue_group->submit_lock[path], flags);
-+			list_is_empty =
-+				list_empty(&queue_group->request_list[path]);
-+			spin_unlock_irqrestore(
-+				&queue_group->submit_lock[path], flags);
-+			if (list_is_empty)
-+				break;
-+			pqi_check_ctrl_health(ctrl_info);
-+			if (pqi_ctrl_offline(ctrl_info))
-+				return -ENXIO;
-+			usleep_range(1000, 2000);
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static int pqi_wait_until_inbound_queues_empty(struct pqi_ctrl_info *ctrl_info)
-+{
-+	int rc;
-+	unsigned int i;
-+	unsigned int path;
-+	struct pqi_queue_group *queue_group;
-+	pqi_index_t iq_pi;
-+	pqi_index_t iq_ci;
-+
-+	for (i = 0; i < ctrl_info->num_queue_groups; i++) {
-+		queue_group = &ctrl_info->queue_groups[i];
-+
-+		rc = pqi_wait_until_queued_io_drained(ctrl_info, queue_group);
-+		if (rc)
-+			return rc;
-+
-+		for (path = 0; path < 2; path++) {
-+			iq_pi = queue_group->iq_pi_copy[path];
-+
-+			while (1) {
-+				iq_ci = *queue_group->iq_ci[path];
-+				if (iq_ci == iq_pi)
-+					break;
-+				pqi_check_ctrl_health(ctrl_info);
-+				if (pqi_ctrl_offline(ctrl_info))
-+					return -ENXIO;
-+				usleep_range(1000, 2000);
-+			}
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static void pqi_fail_io_queued_for_device(struct pqi_ctrl_info *ctrl_info,
-+	struct pqi_scsi_dev *device)
-+{
-+	unsigned int i;
-+	unsigned int path;
-+	struct pqi_queue_group *queue_group;
-+	unsigned long flags;
-+	struct pqi_io_request *io_request;
-+	struct pqi_io_request *next;
-+	struct scsi_cmnd *scmd;
-+	struct pqi_scsi_dev *scsi_device;
-+
-+	for (i = 0; i < ctrl_info->num_queue_groups; i++) {
-+		queue_group = &ctrl_info->queue_groups[i];
-+
-+		for (path = 0; path < 2; path++) {
-+			spin_lock_irqsave(
-+				&queue_group->submit_lock[path], flags);
-+
-+			list_for_each_entry_safe(io_request, next,
-+				&queue_group->request_list[path],
-+				request_list_entry) {
-+				scmd = io_request->scmd;
-+				if (!scmd)
-+					continue;
-+
-+				scsi_device = scmd->device->hostdata;
-+				if (scsi_device != device)
-+					continue;
-+
-+				list_del(&io_request->request_list_entry);
-+				set_host_byte(scmd, DID_RESET);
-+				pqi_scsi_done(scmd);
-+			}
-+
-+			spin_unlock_irqrestore(
-+				&queue_group->submit_lock[path], flags);
-+		}
-+	}
-+}
-+
- static void pqi_lun_reset_complete(struct pqi_io_request *io_request,
- 	void *context)
+ static inline void pqi_stop_heartbeat_timer(struct pqi_ctrl_info *ctrl_info)
  {
-@@ -4571,7 +4791,6 @@ static int pqi_wait_for_lun_reset_completion(struct pqi_ctrl_info *ctrl_info,
- 	struct pqi_scsi_dev *device, struct completion *wait)
- {
- 	int rc;
--	unsigned int wait_secs = 0;
+-	if (ctrl_info->heartbeat_timer_started) {
+-		ctrl_info->heartbeat_timer_started = false;
+-		del_timer_sync(&ctrl_info->heartbeat_timer);
+-	}
++	del_timer_sync(&ctrl_info->heartbeat_timer);
+ }
+ 
+ static inline int pqi_event_type_to_event_index(unsigned int event_type)
+@@ -2925,12 +2922,10 @@ static unsigned int pqi_process_event_intr(struct pqi_ctrl_info *ctrl_info)
+ 	struct pqi_event_queue *event_queue;
+ 	struct pqi_event_response *response;
+ 	struct pqi_event *event;
+-	bool need_delayed_work;
+ 	int event_index;
+ 
+ 	event_queue = &ctrl_info->event_queue;
+ 	num_events = 0;
+-	need_delayed_work = false;
+ 	oq_ci = event_queue->oq_ci_copy;
  
  	while (1) {
- 		if (wait_for_completion_io_timeout(wait,
-@@ -4585,13 +4804,6 @@ static int pqi_wait_for_lun_reset_completion(struct pqi_ctrl_info *ctrl_info,
- 			rc = -ETIMEDOUT;
- 			break;
+@@ -2953,10 +2948,6 @@ static unsigned int pqi_process_event_intr(struct pqi_ctrl_info *ctrl_info)
+ 				event->event_id = response->event_id;
+ 				event->additional_event_id =
+ 					response->additional_event_id;
+-				if (event_index != PQI_EVENT_TYPE_HEARTBEAT) {
+-					event->pending = true;
+-					need_delayed_work = true;
+-				}
+ 			}
  		}
+ 
+@@ -2966,9 +2957,7 @@ static unsigned int pqi_process_event_intr(struct pqi_ctrl_info *ctrl_info)
+ 	if (num_events) {
+ 		event_queue->oq_ci_copy = oq_ci;
+ 		writel(oq_ci, event_queue->oq_ci);
 -
--		wait_secs += PQI_LUN_RESET_TIMEOUT_SECS;
--
--		dev_err(&ctrl_info->pci_dev->dev,
--			"resetting scsi %d:%d:%d:%d - waiting %u seconds\n",
--			ctrl_info->scsi_host->host_no, device->bus,
--			device->target, device->lun, wait_secs);
+-		if (need_delayed_work)
+-			schedule_work(&ctrl_info->event_work);
++		schedule_work(&ctrl_info->event_work);
  	}
  
- 	return rc;
-@@ -4605,8 +4817,6 @@ static int pqi_lun_reset(struct pqi_ctrl_info *ctrl_info,
- 	DECLARE_COMPLETION_ONSTACK(wait);
- 	struct pqi_task_management_request *request;
+ 	return num_events;
+@@ -3220,7 +3209,7 @@ static int pqi_alloc_operational_queues(struct pqi_ctrl_info *ctrl_info)
  
--	down(&ctrl_info->lun_reset_sem);
--
- 	io_request = pqi_alloc_io_request(ctrl_info);
- 	io_request->io_complete_callback = pqi_lun_reset_complete;
- 	io_request->context = &wait;
-@@ -4631,7 +4841,6 @@ static int pqi_lun_reset(struct pqi_ctrl_info *ctrl_info,
- 		rc = io_request->status;
+ 	if (!ctrl_info->queue_memory_base) {
+ 		dev_err(&ctrl_info->pci_dev->dev,
+-			"failed to allocate memory for PQI admin queues\n");
++			"unable to allocate memory for PQI admin queues\n");
+ 		return -ENOMEM;
+ 	}
  
- 	pqi_free_io_request(io_request);
--	up(&ctrl_info->lun_reset_sem);
- 
+@@ -5672,6 +5661,55 @@ static int pqi_get_ctrl_firmware_version(struct pqi_ctrl_info *ctrl_info)
  	return rc;
  }
-@@ -4643,10 +4852,6 @@ static int pqi_device_reset(struct pqi_ctrl_info *ctrl_info,
- {
- 	int rc;
  
--	pqi_check_ctrl_health(ctrl_info);
--	if (pqi_ctrl_offline(ctrl_info))
--		return FAILED;
--
- 	rc = pqi_lun_reset(ctrl_info, device);
- 
- 	return rc == 0 ? SUCCESS : FAILED;
-@@ -4655,23 +4860,46 @@ static int pqi_device_reset(struct pqi_ctrl_info *ctrl_info,
- static int pqi_eh_device_reset_handler(struct scsi_cmnd *scmd)
- {
- 	int rc;
-+	struct Scsi_Host *shost;
- 	struct pqi_ctrl_info *ctrl_info;
- 	struct pqi_scsi_dev *device;
- 
--	ctrl_info = shost_to_hba(scmd->device->host);
-+	shost = scmd->device->host;
-+	ctrl_info = shost_to_hba(shost);
- 	device = scmd->device->hostdata;
- 
- 	dev_err(&ctrl_info->pci_dev->dev,
- 		"resetting scsi %d:%d:%d:%d\n",
--		ctrl_info->scsi_host->host_no,
--		device->bus, device->target, device->lun);
-+		shost->host_no, device->bus, device->target, device->lun);
- 
--	rc = pqi_device_reset(ctrl_info, device);
-+	pqi_check_ctrl_health(ctrl_info);
-+	if (pqi_ctrl_offline(ctrl_info)) {
-+		rc = FAILED;
-+		goto out;
++static int pqi_process_config_table(struct pqi_ctrl_info *ctrl_info)
++{
++	u32 table_length;
++	u32 section_offset;
++	void __iomem *table_iomem_addr;
++	struct pqi_config_table *config_table;
++	struct pqi_config_table_section_header *section;
++
++	table_length = ctrl_info->config_table_length;
++
++	config_table = kmalloc(table_length, GFP_KERNEL);
++	if (!config_table) {
++		dev_err(&ctrl_info->pci_dev->dev,
++			"unable to allocate memory for PQI configuration table\n");
++		return -ENOMEM;
 +	}
++
++	/*
++	 * Copy the config table contents from I/O memory space into the
++	 * temporary buffer.
++	 */
++	table_iomem_addr = ctrl_info->iomem_base +
++		ctrl_info->config_table_offset;
++	memcpy_fromio(config_table, table_iomem_addr, table_length);
++
++	section_offset =
++		get_unaligned_le32(&config_table->first_section_offset);
++
++	while (section_offset) {
++		section = (void *)config_table + section_offset;
++
++		switch (get_unaligned_le16(&section->section_id)) {
++		case PQI_CONFIG_TABLE_SECTION_HEARTBEAT:
++			ctrl_info->heartbeat_counter = table_iomem_addr +
++				section_offset +
++				offsetof(struct pqi_config_table_heartbeat,
++					heartbeat_counter);
++			break;
++		}
++
++		section_offset =
++			get_unaligned_le16(&section->next_section_offset);
++	}
++
++	kfree(config_table);
++
++	return 0;
++}
++
+ /* Switches the controller from PQI mode back into SIS mode. */
  
-+	mutex_lock(&ctrl_info->lun_reset_mutex);
-+
-+	pqi_ctrl_block_requests(ctrl_info);
-+	pqi_ctrl_wait_until_quiesced(ctrl_info);
-+	pqi_fail_io_queued_for_device(ctrl_info, device);
-+	rc = pqi_wait_until_inbound_queues_empty(ctrl_info);
-+	pqi_device_reset_start(device);
-+	pqi_ctrl_unblock_requests(ctrl_info);
-+
+ static int pqi_revert_to_sis_mode(struct pqi_ctrl_info *ctrl_info)
+@@ -5783,6 +5821,10 @@ static int pqi_ctrl_init(struct pqi_ctrl_info *ctrl_info)
+ 	ctrl_info->pqi_mode_enabled = true;
+ 	pqi_save_ctrl_mode(ctrl_info, PQI_MODE);
+ 
++	rc = pqi_process_config_table(ctrl_info);
 +	if (rc)
-+		rc = FAILED;
-+	else
-+		rc = pqi_device_reset(ctrl_info, device);
++		return rc;
 +
-+	pqi_device_reset_done(device);
+ 	rc = pqi_alloc_admin_queues(ctrl_info);
+ 	if (rc) {
+ 		dev_err(&ctrl_info->pci_dev->dev,
+@@ -6091,6 +6133,8 @@ static struct pqi_ctrl_info *pqi_alloc_ctrl_info(int numa_node)
+ 	INIT_DELAYED_WORK(&ctrl_info->rescan_work, pqi_rescan_worker);
+ 	INIT_DELAYED_WORK(&ctrl_info->update_time_work, pqi_update_time_worker);
+ 
++	init_timer(&ctrl_info->heartbeat_timer);
 +
-+	mutex_unlock(&ctrl_info->lun_reset_mutex);
-+
-+out:
- 	dev_err(&ctrl_info->pci_dev->dev,
- 		"reset of scsi %d:%d:%d:%d: %s\n",
--		ctrl_info->scsi_host->host_no,
--		device->bus, device->target, device->lun,
-+		shost->host_no, device->bus, device->target, device->lun,
- 		rc == SUCCESS ? "SUCCESS" : "FAILED");
- 
- 	return rc;
-@@ -5552,6 +5780,7 @@ static struct pqi_ctrl_info *pqi_alloc_ctrl_info(int numa_node)
- 		return NULL;
- 
- 	mutex_init(&ctrl_info->scan_mutex);
-+	mutex_init(&ctrl_info->lun_reset_mutex);
- 
- 	INIT_LIST_HEAD(&ctrl_info->scsi_device_list);
- 	spin_lock_init(&ctrl_info->scsi_device_list_lock);
-@@ -5564,7 +5793,7 @@ static struct pqi_ctrl_info *pqi_alloc_ctrl_info(int numa_node)
- 
  	sema_init(&ctrl_info->sync_request_sem,
  		PQI_RESERVED_IO_SLOTS_SYNCHRONOUS_REQUESTS);
--	sema_init(&ctrl_info->lun_reset_sem, PQI_RESERVED_IO_SLOTS_LUN_RESET);
-+	init_waitqueue_head(&ctrl_info->block_requests_wait);
+ 	init_waitqueue_head(&ctrl_info->block_requests_wait);
+diff --git a/drivers/scsi/smartpqi/smartpqi_sis.c b/drivers/scsi/smartpqi/smartpqi_sis.c
+index 12853fd..3155bda 100644
+--- a/drivers/scsi/smartpqi/smartpqi_sis.c
++++ b/drivers/scsi/smartpqi/smartpqi_sis.c
+@@ -422,6 +422,10 @@ void sis_soft_reset(struct pqi_ctrl_info *ctrl_info)
  
- 	ctrl_info->ctrl_id = atomic_inc_return(&pqi_controller_count) - 1;
- 	ctrl_info->max_msix_vectors = PQI_MAX_MSIX_VECTORS;
+ void sis_shutdown_ctrl(struct pqi_ctrl_info *ctrl_info)
+ {
++	if (readl(&ctrl_info->registers->sis_firmware_status) &
++		SIS_CTRL_KERNEL_PANIC)
++		return;
++
+ 	writel(SIS_TRIGGER_SHUTDOWN,
+ 		&ctrl_info->registers->sis_host_to_ctrl_doorbell);
+ }
