@@ -1,63 +1,64 @@
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2] ibmvscsis: Do not send aborted task response
-Date: Wed, 3 May 2017 11:38:05 -0500
-Message-ID: <5c2536d3-7ff1-1e17-91c0-0be6a8befbfa@linux.vnet.ibm.com>
-References: <1493751261-81647-1-git-send-email-bryantly@linux.vnet.ibm.com>
- <1493783006.23202.87.camel@haakon3.risingtidesystems.com>
+From: Benny Halevy <bhalevy@gmail.com>
+Subject: Re: [PATCH, RFC] MAINTAINERS: update OSD entries
+Date: Wed, 3 May 2017 20:01:33 +0300
+Message-ID: <CA+isNRLxSEXhEaysjGGkChakocK87C7t2JhOnfOBbDfskSUjWQ@mail.gmail.com>
+References: <20170502075720.23570-1-hch@lst.de> <1493724812.2715.1.camel@redhat.com>
+ <f3320b22-060f-2c57-77a9-513747a148f4@electrozaur.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1493783006.23202.87.camel@haakon3.risingtidesystems.com>
-Sender: stable-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Bart.VanAssche@sandisk.com, martin.petersen@oracle.com, turtle.in.the.kernel@gmail.com, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, stable@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-vk0-f68.google.com ([209.85.213.68]:34019 "EHLO
+        mail-vk0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751394AbdECRCF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 May 2017 13:02:05 -0400
+In-Reply-To: <f3320b22-060f-2c57-77a9-513747a148f4@electrozaur.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Boaz Harrosh <ooo@electrozaur.com>
+Cc: Jeff Layton <jlayton@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-Hi Nick,
-
-On 5/2/17 10:43 PM, Nicholas A. Bellinger wrote:
-
-> On Tue, 2017-05-02 at 13:54 -0500, Bryant G. Ly wrote:
->> The driver is sending a response to the actual scsi op that was
->> aborted by an abort task TM, while LIO is sending a response to
->> the abort task TM.
->>
->> ibmvscsis_tgt does not send the response to the client until
->> release_cmd time. The reason for this was because if we did it
->> at queue_status time, then the client would be free to reuse the
->> tag for that command, but we're still using the tag until the
->> command is released at release_cmd time, so we chose to delay
->> sending the response until then. That then caused this issue, because
->> release_cmd is always called, even if queue_status is not.
->>
->> SCSI spec says that the initiator that sends the abort task
->> TM NEVER gets a response to the aborted op and with the current
->> code it will send a response. Thus this fix will remove that response
->> if the TAS bit is set.
->>
->> Cc: <stable@vger.kernel.org> # v4.8+
->> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
->> Reviewed-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
->> ---
->>   drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 66 ++++++++++++++++++++++----------
->>   1 file changed, 45 insertions(+), 21 deletions(-)
-> Applied, with a small update to the last sentence of the commit log wrt
-> to 'if ABORTED && !TAS bit is set'.
+On Wed, May 3, 2017 at 1:08 PM, Boaz Harrosh <ooo@electrozaur.com> wrote:
 >
-> Thanks Bryant + Tyrel.
+> On 05/02/2017 02:33 PM, Jeff Layton wrote:
+> > On Tue, 2017-05-02 at 09:57 +0200, Christoph Hellwig wrote:
+> >> The open-osd domain doesn't exist anymore, and mails to the list lead
+> >> to really annoying bounced that repeat every day.
+> >>
+> >> Also the primarydata address for Benny bounces, and while I have a new
+> >> one for him he doesn't seem to be maintaining the OSD code any more.
+> >>
+> >> Which beggs the question:  should we really leave the Supported status
+> >> in MAINTAINERS given that the code is barely maintained?
+> >>
+> >> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> >> ---
+> >>  MAINTAINERS | 4 ----
+> >>  1 file changed, 4 deletions(-)
+> >>
+> >> diff --git a/MAINTAINERS b/MAINTAINERS
+> >> index 1bb06c5f7716..28dd83a1d9e2 100644
+> >> --- a/MAINTAINERS
+> >> +++ b/MAINTAINERS
+> >> @@ -9418,10 +9418,6 @@ F:    drivers/net/wireless/intersil/orinoco/
+> >>
+> >>  OSD LIBRARY and FILESYSTEM
+> >>  M:  Boaz Harrosh <ooo@electrozaur.com>
+> >> -M:  Benny Halevy <bhalevy@primarydata.com>
+> >> -L:  osd-dev@open-osd.org
+> >> -W:  http://open-osd.org
+> >> -T:  git git://git.open-osd.org/open-osd.git
+> >>  S:  Maintained
+> >>  F:  drivers/scsi/osd/
+> >>  F:  include/scsi/osd_*
+> >
+> > Hah, you beat me to it! I was going to spin up a patch for this today.
+> >
+> > Acked-by: Jeff Layton <jlayton@redhat.com>
 >
-So I have been running tests on this patch extensively and it seems like after running 2 hrs of consecutive aborts it fails again with the same problem of driver sending a response to the actual scsi op.
+> Acked-by: Boaz Harrosh <ooo@electrozaur.com>
 
-It looks like when LIO processes the abort and if (!__target_check_io_state(se_cmd, se_sess, 0)) then rsp gets set as TMR_TASK_DOES_NOT_EXIST.
+Acked-by: Benny Halevy <bhalevy@gmail.com>
 
-With that response the CMD_T_ABORTED state is not set, so then the ibmvscsis driver still sends that duplicate response.
-
-I think the best solution would be in driver when queue_tm_rsp gets called and when the driver builds the response to check for the TMR_TASK_DOES_NOT_EXIST and set our own flag.
-Then we would also check for that flag, so it would be:
-
-if ((cmd->se_cmd.transport_state & CMD_T_ABORTED && !(cmd->se_cmd.transport_state & CMD_T_TAS)) || cmd->flags & CMD_ABORTED) {
-
-This will ensure in the CMD_T_ABORTED w/o CMD_T_TAS scenarios are handled and the ABORT_TASK: Sending TMR_TASK_DOES_NOT_EXIST case.
-
--Bryant
+>
+> >
+>
