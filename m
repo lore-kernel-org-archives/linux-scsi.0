@@ -1,17 +1,17 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH V2 05/36] smartpqi: ensure controller is in SIS mode at init
-Date: Wed, 3 May 2017 18:52:46 -0500
-Message-ID: <149385556687.11043.18396854898612403292.stgit@brunhilda>
+Subject: [PATCH V2 06/36] smartpqi: add supporting events
+Date: Wed, 3 May 2017 18:52:52 -0500
+Message-ID: <149385557281.11043.12956629023727024316.stgit@brunhilda>
 References: <149385549428.11043.8013091835763091910.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0056.outbound.protection.outlook.com ([104.47.32.56]:5539
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0042.outbound.protection.outlook.com ([104.47.37.42]:28124
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751961AbdECXxC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 3 May 2017 19:53:02 -0400
+        id S1752450AbdECXxF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 3 May 2017 19:53:05 -0400
 In-Reply-To: <149385549428.11043.8013091835763091910.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,149 +20,246 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Kevin Barnett <kevin.barnett@hpe.com>
 
-put in SIS mode during initialization.
-support kexec/kdump
+Only register for controller events that driver supports
+cleanup event handling.
 
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
-Reviewed-by: Scott Teel <scott.teel@microsemi.com>
 Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/smartpqi/smartpqi.h      |    2 +
- drivers/scsi/smartpqi/smartpqi_init.c |   60 +++++++++++++++++++--------------
- drivers/scsi/smartpqi/smartpqi_sis.c  |    6 +++
- drivers/scsi/smartpqi/smartpqi_sis.h  |    1 +
- 4 files changed, 42 insertions(+), 27 deletions(-)
+ drivers/scsi/smartpqi/smartpqi.h      |   11 +--
+ drivers/scsi/smartpqi/smartpqi_init.c |  110 ++++++++++++++++++---------------
+ 2 files changed, 61 insertions(+), 60 deletions(-)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-index 73754ca..62045c1 100644
+index 62045c1..02b3196 100644
 --- a/drivers/scsi/smartpqi/smartpqi.h
 +++ b/drivers/scsi/smartpqi/smartpqi.h
-@@ -964,7 +964,7 @@ struct pqi_ctrl_info {
+@@ -860,15 +860,8 @@ struct pqi_io_request {
+ 	struct list_head request_list_entry;
  };
  
- enum pqi_ctrl_mode {
--	UNKNOWN,
-+	SIS_MODE = 0,
- 	PQI_MODE
- };
+-/* for indexing into the pending_events[] field of struct pqi_ctrl_info */
+ #define PQI_EVENT_HEARTBEAT		0
+-#define PQI_EVENT_HOTPLUG		1
+-#define PQI_EVENT_HARDWARE		2
+-#define PQI_EVENT_PHYSICAL_DEVICE	3
+-#define PQI_EVENT_LOGICAL_DEVICE	4
+-#define PQI_EVENT_AIO_STATE_CHANGE	5
+-#define PQI_EVENT_AIO_CONFIG_CHANGE	6
+-#define PQI_NUM_SUPPORTED_EVENTS	7
++#define PQI_NUM_SUPPORTED_EVENTS	6
  
+ struct pqi_event {
+ 	bool	pending;
+@@ -951,7 +944,7 @@ struct pqi_ctrl_info {
+ 	struct pqi_io_request *io_request_pool;
+ 	u16		next_io_request_slot;
+ 
+-	struct pqi_event pending_events[PQI_NUM_SUPPORTED_EVENTS];
++	struct pqi_event events[PQI_NUM_SUPPORTED_EVENTS];
+ 	struct work_struct event_work;
+ 
+ 	atomic_t	num_interrupts;
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 14d74e1..5a5b9ab 100644
+index 5a5b9ab..279dd41 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -5245,38 +5245,50 @@ static int pqi_get_ctrl_firmware_version(struct pqi_ctrl_info *ctrl_info)
+@@ -81,6 +81,15 @@ static struct scsi_transport_template *pqi_sas_transport_template;
+ 
+ static atomic_t pqi_controller_count = ATOMIC_INIT(0);
+ 
++static unsigned int pqi_supported_event_types[] = {
++	PQI_EVENT_TYPE_HOTPLUG,
++	PQI_EVENT_TYPE_HARDWARE,
++	PQI_EVENT_TYPE_PHYSICAL_DEVICE,
++	PQI_EVENT_TYPE_LOGICAL_DEVICE,
++	PQI_EVENT_TYPE_AIO_STATE_CHANGE,
++	PQI_EVENT_TYPE_AIO_CONFIG_CHANGE,
++};
++
+ static int pqi_disable_device_id_wildcards;
+ module_param_named(disable_device_id_wildcards,
+ 	pqi_disable_device_id_wildcards, int, S_IRUGO | S_IWUSR);
+@@ -2665,20 +2674,20 @@ static void pqi_event_worker(struct work_struct *work)
+ {
+ 	unsigned int i;
+ 	struct pqi_ctrl_info *ctrl_info;
+-	struct pqi_event *pending_event;
++	struct pqi_event *event;
+ 	bool got_non_heartbeat_event = false;
+ 
+ 	ctrl_info = container_of(work, struct pqi_ctrl_info, event_work);
+ 
+-	pending_event = ctrl_info->pending_events;
++	event = ctrl_info->events;
+ 	for (i = 0; i < PQI_NUM_SUPPORTED_EVENTS; i++) {
+-		if (pending_event->pending) {
+-			pending_event->pending = false;
+-			pqi_acknowledge_event(ctrl_info, pending_event);
+-			if (i != PQI_EVENT_HEARTBEAT)
++		if (event->pending) {
++			event->pending = false;
++			pqi_acknowledge_event(ctrl_info, event);
++			if (i != PQI_EVENT_TYPE_HEARTBEAT)
+ 				got_non_heartbeat_event = true;
+ 		}
+-		pending_event++;
++		event++;
+ 	}
+ 
+ 	if (got_non_heartbeat_event)
+@@ -2742,7 +2751,7 @@ static void pqi_heartbeat_timer_handler(unsigned long data)
+ 			pqi_take_ctrl_offline(ctrl_info);
+ 			return;
+ 		}
+-		ctrl_info->pending_events[PQI_EVENT_HEARTBEAT].pending = true;
++		ctrl_info->events[PQI_EVENT_HEARTBEAT].pending = true;
+ 		schedule_work(&ctrl_info->event_work);
+ 	} else {
+ 		ctrl_info->num_heartbeats_requested = 0;
+@@ -2773,38 +2782,20 @@ static inline void pqi_stop_heartbeat_timer(struct pqi_ctrl_info *ctrl_info)
+ 		del_timer_sync(&ctrl_info->heartbeat_timer);
+ }
+ 
+-static int pqi_event_type_to_event_index(unsigned int event_type)
++static inline int pqi_event_type_to_event_index(unsigned int event_type)
+ {
+ 	int index;
+ 
+-	switch (event_type) {
+-	case PQI_EVENT_TYPE_HEARTBEAT:
+-		index = PQI_EVENT_HEARTBEAT;
+-		break;
+-	case PQI_EVENT_TYPE_HOTPLUG:
+-		index = PQI_EVENT_HOTPLUG;
+-		break;
+-	case PQI_EVENT_TYPE_HARDWARE:
+-		index = PQI_EVENT_HARDWARE;
+-		break;
+-	case PQI_EVENT_TYPE_PHYSICAL_DEVICE:
+-		index = PQI_EVENT_PHYSICAL_DEVICE;
+-		break;
+-	case PQI_EVENT_TYPE_LOGICAL_DEVICE:
+-		index = PQI_EVENT_LOGICAL_DEVICE;
+-		break;
+-	case PQI_EVENT_TYPE_AIO_STATE_CHANGE:
+-		index = PQI_EVENT_AIO_STATE_CHANGE;
+-		break;
+-	case PQI_EVENT_TYPE_AIO_CONFIG_CHANGE:
+-		index = PQI_EVENT_AIO_CONFIG_CHANGE;
+-		break;
+-	default:
+-		index = -1;
+-		break;
+-	}
++	for (index = 0; index < ARRAY_SIZE(pqi_supported_event_types); index++)
++		if (event_type == pqi_supported_event_types[index])
++			return index;
+ 
+-	return index;
++	return -1;
++}
++
++static inline bool pqi_is_supported_event(unsigned int event_type)
++{
++	return pqi_event_type_to_event_index(event_type) != -1;
+ }
+ 
+ static unsigned int pqi_process_event_intr(struct pqi_ctrl_info *ctrl_info)
+@@ -2814,7 +2805,7 @@ static unsigned int pqi_process_event_intr(struct pqi_ctrl_info *ctrl_info)
+ 	pqi_index_t oq_ci;
+ 	struct pqi_event_queue *event_queue;
+ 	struct pqi_event_response *response;
+-	struct pqi_event *pending_event;
++	struct pqi_event *event;
+ 	bool need_delayed_work;
+ 	int event_index;
+ 
+@@ -2837,15 +2828,14 @@ static unsigned int pqi_process_event_intr(struct pqi_ctrl_info *ctrl_info)
+ 
+ 		if (event_index >= 0) {
+ 			if (response->request_acknowlege) {
+-				pending_event =
+-					&ctrl_info->pending_events[event_index];
+-				pending_event->event_type =
+-					response->event_type;
+-				pending_event->event_id = response->event_id;
+-				pending_event->additional_event_id =
++				event = &ctrl_info->events[event_index];
++				event->pending = true;
++				event->event_type = response->event_type;
++				event->event_id = response->event_id;
++				event->additional_event_id =
+ 					response->additional_event_id;
+-				if (event_index != PQI_EVENT_HEARTBEAT) {
+-					pending_event->pending = true;
++				if (event_index != PQI_EVENT_TYPE_HEARTBEAT) {
++					event->pending = true;
+ 					need_delayed_work = true;
+ 				}
+ 			}
+@@ -3899,11 +3889,13 @@ static int pqi_create_queues(struct pqi_ctrl_info *ctrl_info)
+ 	(offsetof(struct pqi_event_config, descriptors) + \
+ 	(PQI_MAX_EVENT_DESCRIPTORS * sizeof(struct pqi_event_descriptor)))
+ 
+-static int pqi_configure_events(struct pqi_ctrl_info *ctrl_info)
++static int pqi_configure_events(struct pqi_ctrl_info *ctrl_info,
++	bool enable_events)
+ {
+ 	int rc;
+ 	unsigned int i;
+ 	struct pqi_event_config *event_config;
++	struct pqi_event_descriptor *event_descriptor;
+ 	struct pqi_general_management_request request;
+ 
+ 	event_config = kmalloc(PQI_REPORT_EVENT_CONFIG_BUFFER_LENGTH,
+@@ -3937,9 +3929,15 @@ static int pqi_configure_events(struct pqi_ctrl_info *ctrl_info)
+ 	if (rc)
+ 		goto out;
+ 
+-	for (i = 0; i < event_config->num_event_descriptors; i++)
+-		put_unaligned_le16(ctrl_info->event_queue.oq_id,
+-			&event_config->descriptors[i].oq_id);
++	for (i = 0; i < event_config->num_event_descriptors; i++) {
++		event_descriptor = &event_config->descriptors[i];
++		if (enable_events &&
++			pqi_is_supported_event(event_descriptor->event_type))
++			put_unaligned_le16(ctrl_info->event_queue.oq_id,
++					&event_descriptor->oq_id);
++		else
++			put_unaligned_le16(0, &event_descriptor->oq_id);
++	}
+ 
+ 	memset(&request, 0, sizeof(request));
+ 
+@@ -3970,6 +3968,16 @@ static int pqi_configure_events(struct pqi_ctrl_info *ctrl_info)
  	return rc;
  }
  
--static int pqi_kdump_init(struct pqi_ctrl_info *ctrl_info)
-+/* Switches the controller from PQI mode back into SIS mode. */
-+
-+static int pqi_revert_to_sis_mode(struct pqi_ctrl_info *ctrl_info)
++static inline int pqi_enable_events(struct pqi_ctrl_info *ctrl_info)
 +{
-+	int rc;
-+
-+	sis_disable_msix(ctrl_info);
-+	rc = pqi_reset(ctrl_info);
-+	if (rc)
-+		return rc;
-+	sis_reenable_sis_mode(ctrl_info);
-+	pqi_save_ctrl_mode(ctrl_info, SIS_MODE);
-+
-+	return 0;
++	return pqi_configure_events(ctrl_info, true);
 +}
 +
-+/*
-+ * If the controller isn't already in SIS mode, this function forces it into
-+ * SIS mode.
-+ */
++static inline int pqi_disable_events(struct pqi_ctrl_info *ctrl_info)
++{
++	return pqi_configure_events(ctrl_info, false);
++}
 +
-+static int pqi_force_sis_mode(struct pqi_ctrl_info *ctrl_info)
+ static void pqi_free_all_io_requests(struct pqi_ctrl_info *ctrl_info)
  {
- 	if (!sis_is_firmware_running(ctrl_info))
- 		return -ENXIO;
+ 	unsigned int i;
+@@ -5413,10 +5421,10 @@ static int pqi_ctrl_init(struct pqi_ctrl_info *ctrl_info)
  
--	if (pqi_get_ctrl_mode(ctrl_info) == PQI_MODE) {
--		sis_disable_msix(ctrl_info);
--		if (pqi_reset(ctrl_info) == 0)
--			sis_reenable_sis_mode(ctrl_info);
-+	if (pqi_get_ctrl_mode(ctrl_info) == SIS_MODE)
-+		return 0;
-+
-+	if (sis_is_kernel_up(ctrl_info)) {
-+		pqi_save_ctrl_mode(ctrl_info, SIS_MODE);
-+		return 0;
+ 	sis_enable_msix(ctrl_info);
+ 
+-	rc = pqi_configure_events(ctrl_info);
++	rc = pqi_enable_events(ctrl_info);
+ 	if (rc) {
+ 		dev_err(&ctrl_info->pci_dev->dev,
+-			"error configuring events\n");
++			"error enabling events\n");
+ 		return rc;
  	}
  
--	return 0;
-+	return pqi_revert_to_sis_mode(ctrl_info);
- }
- 
- static int pqi_ctrl_init(struct pqi_ctrl_info *ctrl_info)
- {
- 	int rc;
- 
--	if (reset_devices) {
--		rc = pqi_kdump_init(ctrl_info);
--		if (rc)
--			return rc;
--	}
--
--	/*
--	 * When the controller comes out of reset, it is always running
--	 * in legacy SIS mode.  This is so that it can be compatible
--	 * with legacy drivers shipped with OSes.  So we have to talk
--	 * to it using SIS commands at first.  Once we are satisified
--	 * that the controller supports PQI, we transition it into PQI
--	 * mode.
--	 */
-+	rc = pqi_force_sis_mode(ctrl_info);
-+	if (rc)
-+		return rc;
- 
- 	/*
- 	 * Wait until the controller is ready to start accepting SIS
-@@ -5594,12 +5606,8 @@ static void pqi_remove_ctrl(struct pqi_ctrl_info *ctrl_info)
- 	cancel_delayed_work_sync(&ctrl_info->update_time_work);
- 	pqi_remove_all_scsi_devices(ctrl_info);
- 	pqi_unregister_scsi(ctrl_info);
--
--	if (ctrl_info->pqi_mode_enabled) {
--		sis_disable_msix(ctrl_info);
--		if (pqi_reset(ctrl_info) == 0)
--			sis_reenable_sis_mode(ctrl_info);
--	}
-+	if (ctrl_info->pqi_mode_enabled)
-+		pqi_revert_to_sis_mode(ctrl_info);
- 	pqi_free_ctrl_resources(ctrl_info);
- }
- 
-diff --git a/drivers/scsi/smartpqi/smartpqi_sis.c b/drivers/scsi/smartpqi/smartpqi_sis.c
-index c7d9ea1..c5325a4 100644
---- a/drivers/scsi/smartpqi/smartpqi_sis.c
-+++ b/drivers/scsi/smartpqi/smartpqi_sis.c
-@@ -127,6 +127,12 @@ bool sis_is_firmware_running(struct pqi_ctrl_info *ctrl_info)
- 	return running;
- }
- 
-+bool sis_is_kernel_up(struct pqi_ctrl_info *ctrl_info)
-+{
-+	return readl(&ctrl_info->registers->sis_firmware_status) &
-+				SIS_CTRL_KERNEL_UP;
-+}
-+
- /* used for passing command parameters/results when issuing SIS commands */
- struct sis_sync_cmd_params {
- 	u32	mailbox[6];	/* mailboxes 0-5 */
-diff --git a/drivers/scsi/smartpqi/smartpqi_sis.h b/drivers/scsi/smartpqi/smartpqi_sis.h
-index 7f7b68c..157768d 100644
---- a/drivers/scsi/smartpqi/smartpqi_sis.h
-+++ b/drivers/scsi/smartpqi/smartpqi_sis.h
-@@ -21,6 +21,7 @@
- 
- int sis_wait_for_ctrl_ready(struct pqi_ctrl_info *ctrl_info);
- bool sis_is_firmware_running(struct pqi_ctrl_info *ctrl_info);
-+bool sis_is_kernel_up(struct pqi_ctrl_info *ctrl_info);
- int sis_get_ctrl_properties(struct pqi_ctrl_info *ctrl_info);
- int sis_get_pqi_capabilities(struct pqi_ctrl_info *ctrl_info);
- int sis_init_base_struct_addr(struct pqi_ctrl_info *ctrl_info);
