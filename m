@@ -1,17 +1,17 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH V2 15/36] smartpqi: minor driver cleanup
-Date: Wed, 3 May 2017 18:53:48 -0500
-Message-ID: <149385562824.11043.8553723448955371858.stgit@brunhilda>
+Subject: [PATCH V2 16/36] smartpqi: add new PCI device IDs
+Date: Wed, 3 May 2017 18:53:54 -0500
+Message-ID: <149385563436.11043.4532840713249628491.stgit@brunhilda>
 References: <149385549428.11043.8013091835763091910.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0081.outbound.protection.outlook.com ([104.47.32.81]:30336
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0087.outbound.protection.outlook.com ([104.47.37.87]:60097
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751391AbdECXxz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 3 May 2017 19:53:55 -0400
+        id S1751391AbdECXx7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 3 May 2017 19:53:59 -0400
 In-Reply-To: <149385549428.11043.8013091835763091910.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,177 +20,231 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Kevin Barnett <kevin.barnett@hpe.com>
 
- - remove debug code that is no longer necessary.
-   - Some WARN_ON checks were removed because the driver continues
-     to function when the conditions are met.
- - remove a MACRO that is no longer used.
- - remove unnecessary multi-line statements.
-
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
 Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/smartpqi/smartpqi.h      |    2 +-
- drivers/scsi/smartpqi/smartpqi_init.c |   38 ++++++++++++---------------------
- 2 files changed, 15 insertions(+), 25 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c |  134 +++++++++++++++++++++++++++------
+ 1 file changed, 109 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-index e74d3ed..7a95868 100644
---- a/drivers/scsi/smartpqi/smartpqi.h
-+++ b/drivers/scsi/smartpqi/smartpqi.h
-@@ -1053,7 +1053,7 @@ enum pqi_ctrl_mode {
- #define BMIC_WRITE_HOST_WELLNESS		0xa5
- #define BMIC_CACHE_FLUSH			0xc2
- 
--#define SA_CACHE_FLUSH				0x01
-+#define SA_CACHE_FLUSH				0x1
- 
- #define MASKED_DEVICE(lunid)			((lunid)[3] & 0xc0)
- #define CISS_GET_BUS(lunid)			((lunid)[7] & 0x3f)
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index acf47d8..91daedc 100644
+index 91daedc..6b20a91 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -57,8 +57,6 @@ MODULE_SUPPORTED_DEVICE("Microsemi Smart Family Controllers");
- MODULE_VERSION(DRIVER_VERSION);
- MODULE_LICENSE("GPL");
- 
--#define PQI_ENABLE_MULTI_QUEUE_SUPPORT	0
--
- static char *hpe_branded_controller = "HPE Smart Array Controller";
- static char *microsemi_branded_controller = "Microsemi Smart Family Controller";
- 
-@@ -94,7 +92,7 @@ static unsigned int pqi_supported_event_types[] = {
- 
- static int pqi_disable_device_id_wildcards;
- module_param_named(disable_device_id_wildcards,
--	pqi_disable_device_id_wildcards, int, S_IRUGO | S_IWUSR);
-+	pqi_disable_device_id_wildcards, int, 0644);
- MODULE_PARM_DESC(disable_device_id_wildcards,
- 	"Disable device ID wildcards.");
- 
-@@ -383,7 +381,6 @@ static int pqi_build_raid_path_request(struct pqi_ctrl_info *ctrl_info,
- 	default:
- 		dev_err(&ctrl_info->pci_dev->dev, "unknown command 0x%c\n",
- 			cmd);
--		WARN_ON(cmd);
- 		break;
- 	}
- 
-@@ -1133,10 +1130,8 @@ static int pqi_get_device_info(struct pqi_ctrl_info *ctrl_info,
- 	scsi_sanitize_inquiry_string(&buffer[16], 16);
- 
- 	device->devtype = buffer[0] & 0x1f;
--	memcpy(device->vendor, &buffer[8],
--		sizeof(device->vendor));
--	memcpy(device->model, &buffer[16],
--		sizeof(device->model));
-+	memcpy(device->vendor, &buffer[8], sizeof(device->vendor));
-+	memcpy(device->model, &buffer[16], sizeof(device->model));
- 
- 	if (pqi_is_logical_device(device) && device->devtype == TYPE_DISK) {
- 		pqi_get_raid_level(ctrl_info, device);
-@@ -1607,9 +1602,6 @@ static void pqi_update_device_list(struct pqi_ctrl_info *ctrl_info,
- 			 */
- 			device->new_device = true;
- 			break;
--		default:
--			WARN_ON(find_result);
--			break;
- 		}
- 	}
- 
-@@ -1742,7 +1734,7 @@ static inline bool pqi_skip_device(u8 *scsi3addr,
- 	return false;
- }
- 
--static inline bool pqi_expose_device(struct pqi_scsi_dev *device)
-+static inline bool pqi_ok_to_expose_device(struct pqi_scsi_dev *device)
- {
- 	/* Expose all devices except for physical devices that are masked. */
- 	if (device->is_physical_device && MASKED_DEVICE(device->scsi3addr))
-@@ -1883,7 +1875,7 @@ static int pqi_update_scsi_devices(struct pqi_ctrl_info *ctrl_info)
- 
- 		pqi_assign_bus_target_lun(device);
- 
--		device->expose_device = pqi_expose_device(device);
-+		device->expose_device = pqi_ok_to_expose_device(device);
- 
- 		if (device->is_physical_device) {
- 			device->wwid = phys_lun_ext_entry->wwid;
-@@ -2682,7 +2674,6 @@ static unsigned int pqi_process_io_intr(struct pqi_ctrl_info *ctrl_info,
- 			dev_err(&ctrl_info->pci_dev->dev,
- 				"unexpected IU type: 0x%x\n",
- 				response->header.iu_type);
--			WARN_ON(response->header.iu_type);
- 			break;
- 		}
- 
-@@ -4642,7 +4633,6 @@ static int pqi_raid_submit_scsi_cmd(struct pqi_ctrl_info *ctrl_info,
- 		dev_err(&ctrl_info->pci_dev->dev,
- 			"unknown data direction: %d\n",
- 			scmd->sc_data_direction);
--		WARN_ON(scmd->sc_data_direction);
- 		break;
- 	}
- 
-@@ -4725,7 +4715,6 @@ static int pqi_aio_submit_io(struct pqi_ctrl_info *ctrl_info,
- 		dev_err(&ctrl_info->pci_dev->dev,
- 			"unknown data direction: %d\n",
- 			scmd->sc_data_direction);
--		WARN_ON(scmd->sc_data_direction);
- 		break;
- 	}
- 
-@@ -5485,8 +5474,8 @@ static ssize_t pqi_host_rescan_store(struct device *dev,
- 	return count;
- }
- 
--static DEVICE_ATTR(version, S_IRUGO, pqi_version_show, NULL);
--static DEVICE_ATTR(rescan, S_IWUSR, NULL, pqi_host_rescan_store);
-+static DEVICE_ATTR(version, 0444, pqi_version_show, NULL);
-+static DEVICE_ATTR(rescan, 0200, NULL, pqi_host_rescan_store);
- 
- static struct device_attribute *pqi_shost_attrs[] = {
- 	&dev_attr_version,
-@@ -5544,8 +5533,8 @@ static ssize_t pqi_ssd_smart_path_enabled_show(struct device *dev,
- 	return 2;
- }
- 
--static DEVICE_ATTR(sas_address, S_IRUGO, pqi_sas_address_show, NULL);
--static DEVICE_ATTR(ssd_smart_path_enabled, S_IRUGO,
-+static DEVICE_ATTR(sas_address, 0444, pqi_sas_address_show, NULL);
-+static DEVICE_ATTR(ssd_smart_path_enabled, 0444,
- 	pqi_ssd_smart_path_enabled_show, NULL);
- 
- static struct device_attribute *pqi_sdev_attrs[] = {
-@@ -6108,9 +6097,6 @@ static int pqi_pci_init(struct pqi_ctrl_info *ctrl_info)
- 		goto release_regions;
- 	}
- 
--	ctrl_info->registers = ctrl_info->iomem_base;
--	ctrl_info->pqi_registers = &ctrl_info->registers->pqi_registers;
--
- #define PCI_EXP_COMP_TIMEOUT_65_TO_210_MS		0x6
- 
- 	/* Increase the PCIe completion timeout. */
-@@ -6125,6 +6111,9 @@ static int pqi_pci_init(struct pqi_ctrl_info *ctrl_info)
- 	/* Enable bus mastering. */
- 	pci_set_master(ctrl_info->pci_dev);
- 
-+	ctrl_info->registers = ctrl_info->iomem_base;
-+	ctrl_info->pqi_registers = &ctrl_info->registers->pqi_registers;
-+
- 	pci_set_drvdata(ctrl_info->pci_dev, ctrl_info);
- 
- 	return 0;
-@@ -6141,7 +6130,8 @@ static void pqi_cleanup_pci_init(struct pqi_ctrl_info *ctrl_info)
- {
- 	iounmap(ctrl_info->iomem_base);
- 	pci_release_regions(ctrl_info->pci_dev);
--	pci_disable_device(ctrl_info->pci_dev);
-+	if (pci_is_enabled(ctrl_info->pci_dev))
-+		pci_disable_device(ctrl_info->pci_dev);
- 	pci_set_drvdata(ctrl_info->pci_dev, NULL);
- }
- 
+@@ -6390,107 +6390,191 @@ static int pqi_resume(struct pci_dev *pci_dev)
+ static const struct pci_device_id pqi_pci_id_table[] = {
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x152d, 0x8a22)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x152d, 0x8a23)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x152d, 0x8a24)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x152d, 0x8a36)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x152d, 0x8a37)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+ 			       PCI_VENDOR_ID_ADAPTEC2, 0x0110)
+ 	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+-			       PCI_VENDOR_ID_HP, 0x0600)
++			       PCI_VENDOR_ID_ADAPTEC2, 0x0605)
+ 	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+-			       PCI_VENDOR_ID_HP, 0x0601)
++			       PCI_VENDOR_ID_ADAPTEC2, 0x0800)
+ 	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+-			       PCI_VENDOR_ID_HP, 0x0602)
++			       PCI_VENDOR_ID_ADAPTEC2, 0x0801)
+ 	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+-			       PCI_VENDOR_ID_HP, 0x0603)
++			       PCI_VENDOR_ID_ADAPTEC2, 0x0802)
+ 	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+-			       PCI_VENDOR_ID_HP, 0x0650)
++			       PCI_VENDOR_ID_ADAPTEC2, 0x0803)
+ 	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+-			       PCI_VENDOR_ID_HP, 0x0651)
++			       PCI_VENDOR_ID_ADAPTEC2, 0x0804)
+ 	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+-			       PCI_VENDOR_ID_HP, 0x0652)
++			       PCI_VENDOR_ID_ADAPTEC2, 0x0805)
+ 	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+-			       PCI_VENDOR_ID_HP, 0x0653)
++			       PCI_VENDOR_ID_ADAPTEC2, 0x0806)
+ 	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+-			       PCI_VENDOR_ID_HP, 0x0654)
++			       PCI_VENDOR_ID_ADAPTEC2, 0x0900)
+ 	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+-			       PCI_VENDOR_ID_HP, 0x0655)
++			       PCI_VENDOR_ID_ADAPTEC2, 0x0901)
+ 	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+-			       PCI_VENDOR_ID_HP, 0x0700)
++			       PCI_VENDOR_ID_ADAPTEC2, 0x0902)
+ 	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+-			       PCI_VENDOR_ID_HP, 0x0701)
++			       PCI_VENDOR_ID_ADAPTEC2, 0x0903)
+ 	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+-			       PCI_VENDOR_ID_ADAPTEC2, 0x0800)
++			       PCI_VENDOR_ID_ADAPTEC2, 0x0904)
+ 	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+-			       PCI_VENDOR_ID_ADAPTEC2, 0x0801)
++			       PCI_VENDOR_ID_ADAPTEC2, 0x0905)
+ 	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+-			       PCI_VENDOR_ID_ADAPTEC2, 0x0802)
++			       PCI_VENDOR_ID_ADAPTEC2, 0x0906)
+ 	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+-			       PCI_VENDOR_ID_ADAPTEC2, 0x0803)
++			       PCI_VENDOR_ID_ADAPTEC2, 0x0907)
+ 	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+-			       PCI_VENDOR_ID_ADAPTEC2, 0x0804)
++			       PCI_VENDOR_ID_ADAPTEC2, 0x0908)
+ 	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+-			       PCI_VENDOR_ID_ADAPTEC2, 0x0805)
++			       PCI_VENDOR_ID_ADAPTEC2, 0x1200)
+ 	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+-			       PCI_VENDOR_ID_ADAPTEC2, 0x0900)
++			       PCI_VENDOR_ID_ADAPTEC2, 0x1201)
+ 	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+-			       PCI_VENDOR_ID_ADAPTEC2, 0x0901)
++			       PCI_VENDOR_ID_ADAPTEC2, 0x1202)
+ 	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+-			       PCI_VENDOR_ID_ADAPTEC2, 0x0902)
++			       PCI_VENDOR_ID_ADAPTEC2, 0x1280)
+ 	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+-			       PCI_VENDOR_ID_ADAPTEC2, 0x0903)
++			       PCI_VENDOR_ID_ADAPTEC2, 0x1281)
+ 	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+-			       PCI_VENDOR_ID_ADAPTEC2, 0x0904)
++			       PCI_VENDOR_ID_ADAPTEC2, 0x1300)
+ 	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+-			       PCI_VENDOR_ID_ADAPTEC2, 0x0905)
++			       PCI_VENDOR_ID_ADAPTEC2, 0x1301)
+ 	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+-			       PCI_VENDOR_ID_ADAPTEC2, 0x0906)
++			       PCI_VENDOR_ID_ADAPTEC2, 0x1380)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       PCI_VENDOR_ID_HP, 0x0600)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       PCI_VENDOR_ID_HP, 0x0601)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       PCI_VENDOR_ID_HP, 0x0602)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       PCI_VENDOR_ID_HP, 0x0603)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       PCI_VENDOR_ID_HP, 0x0604)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       PCI_VENDOR_ID_HP, 0x0606)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       PCI_VENDOR_ID_HP, 0x0650)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       PCI_VENDOR_ID_HP, 0x0651)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       PCI_VENDOR_ID_HP, 0x0652)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       PCI_VENDOR_ID_HP, 0x0653)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       PCI_VENDOR_ID_HP, 0x0654)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       PCI_VENDOR_ID_HP, 0x0655)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       PCI_VENDOR_ID_HP, 0x0656)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       PCI_VENDOR_ID_HP, 0x0657)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       PCI_VENDOR_ID_HP, 0x0700)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       PCI_VENDOR_ID_HP, 0x0701)
+ 	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
