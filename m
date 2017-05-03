@@ -1,51 +1,44 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] tcmu: Recalculate the tcmu_cmd size to save cmd area
- memories
-Date: Tue, 02 May 2017 20:40:15 -0700
-Message-ID: <1493782815.23202.85.camel@haakon3.risingtidesystems.com>
-References: <1493711669-31508-1-git-send-email-lixiubo@cmss.chinamobile.com>
-         <59093B2B.7000802@redhat.com>
+Subject: Re: [PATCH v2] ibmvscsis: Do not send aborted task response
+Date: Tue, 02 May 2017 20:43:26 -0700
+Message-ID: <1493783006.23202.87.camel@haakon3.risingtidesystems.com>
+References: <1493751261-81647-1-git-send-email-bryantly@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <59093B2B.7000802@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Mike Christie <mchristi@redhat.com>
-Cc: lixiubo@cmss.chinamobile.com, agrover@redhat.com, namei.unix@gmail.com, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1493751261-81647-1-git-send-email-bryantly@linux.vnet.ibm.com>
+Sender: stable-owner@vger.kernel.org
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Cc: Bart.VanAssche@sandisk.com, martin.petersen@oracle.com, turtle.in.the.kernel@gmail.com, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2017-05-02 at 21:06 -0500, Mike Christie wrote:
-> On 05/02/2017 02:54 AM, lixiubo@cmss.chinamobile.com wrote:
-> > From: Xiubo Li <lixiubo@cmss.chinamobile.com>
-> > 
-> > For the "struct tcmu_cmd_entry" in cmd area, the minimum size
-> > will be sizeof(struct tcmu_cmd_entry) == 112 Bytes. And it could
-> > fill about (sizeof(struct rsp) - sizeof(struct req)) /
-> > sizeof(struct iovec) == 68 / 16 ~= 4 data regions(iov[4]) by
-> > default.
-> > 
-> > For most tcmu_cmds, the data block indexes allocated from the
-> > data area will be continuous. And for the continuous blocks they
-> > will be merged into the same region using only one iovec. For
-> > the current code, it will always allocates the same number of
-> > iovecs with blocks for each tcmu_cmd, and it will wastes much
-> > memories.
-> > 
-> > For example, when the block size is 4K and the DATA_OUT buffer
-> > size is 64K, and the regions needed is less than 5(on my
-> > environment is almost 99.7%). The current code will allocate
-> > about 16 iovecs, and there will be (16 - 4) * sizeof(struct
-> > iovec) = 192 Bytes cmd area memories wasted.
-> > 
-> > Here adds two helpers to calculate the base size and full size
-> > of the tcmu_cmd. And will recalculate them again when it make sure
-> > how many iovs is needed before insert it to cmd area.
-> > 
-> > Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
+On Tue, 2017-05-02 at 13:54 -0500, Bryant G. Ly wrote:
+> The driver is sending a response to the actual scsi op that was
+> aborted by an abort task TM, while LIO is sending a response to
+> the abort task TM.
 > 
-> Looks ok to me. Thanks.
+> ibmvscsis_tgt does not send the response to the client until
+> release_cmd time. The reason for this was because if we did it
+> at queue_status time, then the client would be free to reuse the
+> tag for that command, but we're still using the tag until the
+> command is released at release_cmd time, so we chose to delay
+> sending the response until then. That then caused this issue, because
+> release_cmd is always called, even if queue_status is not.
 > 
-> Acked-by: Mike Christie <mchristi@redhat.com>
+> SCSI spec says that the initiator that sends the abort task
+> TM NEVER gets a response to the aborted op and with the current
+> code it will send a response. Thus this fix will remove that response
+> if the TAS bit is set.
+> 
+> Cc: <stable@vger.kernel.org> # v4.8+
+> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+> Reviewed-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+> ---
+>  drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 66 ++++++++++++++++++++++----------
+>  1 file changed, 45 insertions(+), 21 deletions(-)
 
-Applied.  Thanks Xiubo + MNC.
+Applied, with a small update to the last sentence of the commit log wrt
+to 'if ABORTED && !TAS bit is set'.
+
+Thanks Bryant + Tyrel.
