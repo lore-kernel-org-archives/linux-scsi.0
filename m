@@ -1,18 +1,17 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH V2 22/36] smartpqi: remove qdepth calculations for logical
- volumes
-Date: Wed, 3 May 2017 18:54:31 -0500
-Message-ID: <149385567110.11043.10744116801191937172.stgit@brunhilda>
+Subject: [PATCH V2 23/36] smartpqi: add lockup action
+Date: Wed, 3 May 2017 18:54:37 -0500
+Message-ID: <149385567720.11043.7650554888716087645.stgit@brunhilda>
 References: <149385549428.11043.8013091835763091910.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0087.outbound.protection.outlook.com ([104.47.37.87]:16553
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam02on0059.outbound.protection.outlook.com ([104.47.36.59]:44643
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751860AbdECXyh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 3 May 2017 19:54:37 -0400
+        id S1752495AbdECXyo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 3 May 2017 19:54:44 -0400
 In-Reply-To: <149385549428.11043.8013091835763091910.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -21,286 +20,206 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Kevin Barnett <kevin.barnett@hpe.com>
 
-make the queue depth for LVs the same as the maximum
-I/Os supported by the controller
+add support for actions to take when controller goes offline.
 
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
 Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/smartpqi/smartpqi.h      |    6 -
- drivers/scsi/smartpqi/smartpqi_init.c |  140 ++-------------------------------
- 2 files changed, 8 insertions(+), 138 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c |  121 +++++++++++++++++++++++++++++++++
+ 1 file changed, 121 insertions(+)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-index 400d1fb..857d1be 100644
---- a/drivers/scsi/smartpqi/smartpqi.h
-+++ b/drivers/scsi/smartpqi/smartpqi.h
-@@ -726,7 +726,6 @@ struct report_phys_lun_extended_entry {
- };
- 
- /* for device_flags field of struct report_phys_lun_extended_entry */
--#define REPORT_PHYS_LUN_DEV_FLAG_NON_DISK	0x1
- #define REPORT_PHYS_LUN_DEV_FLAG_AIO_ENABLED	0x8
- 
- struct report_phys_lun_extended {
-@@ -786,8 +785,6 @@ struct pqi_scsi_dev {
- 	u8	is_physical_device : 1;
- 	u8	is_external_raid_device : 1;
- 	u8	target_lun_valid : 1;
--	u8	expose_device : 1;
--	u8	no_uld_attach : 1;
- 	u8	aio_enabled : 1;	/* only valid for physical disks */
- 	u8	device_gone : 1;
- 	u8	new_device : 1;
-@@ -1034,9 +1031,6 @@ enum pqi_ctrl_mode {
-  */
- #define PQI_PHYSICAL_DISK_DEFAULT_MAX_QUEUE_DEPTH	27
- 
--/* 0 = no limit */
--#define PQI_LOGICAL_DRIVE_DEFAULT_MAX_QUEUE_DEPTH	0
--
- /* CISS commands */
- #define CISS_READ		0xc0
- #define CISS_REPORT_LOG		0xc2	/* Report Logical LUNs */
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index cdc3407..23ebe22 100644
+index 23ebe22..15bb8c1 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -1302,87 +1302,6 @@ static void pqi_show_volume_status(struct pqi_ctrl_info *ctrl_info,
- 		device->bus, device->target, device->lun, status);
+@@ -24,6 +24,7 @@
+ #include <linux/sched.h>
+ #include <linux/rtc.h>
+ #include <linux/bcd.h>
++#include <linux/reboot.h>
+ #include <linux/cciss_ioctl.h>
+ #include <linux/blk-mq-pci.h>
+ #include <scsi/scsi_host.h>
+@@ -60,6 +61,7 @@ MODULE_LICENSE("GPL");
+ static char *hpe_branded_controller = "HPE Smart Array Controller";
+ static char *microsemi_branded_controller = "Microsemi Smart Family Controller";
+ 
++static void pqi_perform_lockup_action(void);
+ static void pqi_take_ctrl_offline(struct pqi_ctrl_info *ctrl_info);
+ static int pqi_scan_scsi_devices(struct pqi_ctrl_info *ctrl_info);
+ static void pqi_scan_start(struct Scsi_Host *shost);
+@@ -81,6 +83,32 @@ static struct scsi_transport_template *pqi_sas_transport_template;
+ 
+ static atomic_t pqi_controller_count = ATOMIC_INIT(0);
+ 
++enum pqi_lockup_action {
++	NONE,
++	REBOOT,
++	PANIC
++};
++
++static enum pqi_lockup_action pqi_lockup_action = NONE;
++
++static struct {
++	enum pqi_lockup_action	action;
++	char			*name;
++} pqi_lockup_actions[] = {
++	{
++		.action = NONE,
++		.name = "none",
++	},
++	{
++		.action = REBOOT,
++		.name = "reboot",
++	},
++	{
++		.action = PANIC,
++		.name = "panic",
++	},
++};
++
+ static unsigned int pqi_supported_event_types[] = {
+ 	PQI_EVENT_TYPE_HOTPLUG,
+ 	PQI_EVENT_TYPE_HARDWARE,
+@@ -96,6 +124,13 @@ module_param_named(disable_device_id_wildcards,
+ MODULE_PARM_DESC(disable_device_id_wildcards,
+ 	"Disable device ID wildcards.");
+ 
++static char *pqi_lockup_action_param;
++module_param_named(lockup_action,
++	pqi_lockup_action_param, charp, 0644);
++MODULE_PARM_DESC(lockup_action, "Action to take when controller locked up.\n"
++	"\t\tSupported: none, reboot, panic\n"
++	"\t\tDefault: none");
++
+ static char *raid_levels[] = {
+ 	"RAID-0",
+ 	"RAID-4",
+@@ -2729,6 +2764,8 @@ static void pqi_take_ctrl_offline(struct pqi_ctrl_info *ctrl_info)
+ 	ctrl_info->controller_online = false;
+ 	dev_err(&ctrl_info->pci_dev->dev, "controller offline\n");
+ 	sis_shutdown_ctrl(ctrl_info);
++	pci_disable_device(ctrl_info->pci_dev);
++	pqi_perform_lockup_action();
+ 
+ 	for (i = 0; i < ctrl_info->num_queue_groups; i++) {
+ 		queue_group = &ctrl_info->queue_groups[i];
+@@ -5381,12 +5418,55 @@ static ssize_t pqi_host_rescan_store(struct device *dev,
+ 	return count;
  }
  
--static struct pqi_scsi_dev *pqi_find_disk_by_aio_handle(
--	struct pqi_ctrl_info *ctrl_info, u32 aio_handle)
--{
--	struct pqi_scsi_dev *device;
--
--	list_for_each_entry(device, &ctrl_info->scsi_device_list,
--		scsi_device_list_entry) {
--		if (device->devtype != TYPE_DISK && device->devtype != TYPE_ZBC)
--			continue;
--		if (pqi_is_logical_device(device))
--			continue;
--		if (device->aio_handle == aio_handle)
--			return device;
--	}
--
--	return NULL;
--}
--
--static void pqi_update_logical_drive_queue_depth(
--	struct pqi_ctrl_info *ctrl_info, struct pqi_scsi_dev *logical_drive)
--{
--	unsigned int i;
--	struct raid_map *raid_map;
--	struct raid_map_disk_data *disk_data;
--	struct pqi_scsi_dev *phys_disk;
--	unsigned int num_phys_disks;
--	unsigned int num_raid_map_entries;
--	unsigned int queue_depth;
--
--	logical_drive->queue_depth = PQI_LOGICAL_DRIVE_DEFAULT_MAX_QUEUE_DEPTH;
--
--	raid_map = logical_drive->raid_map;
--	if (!raid_map)
--		return;
--
--	disk_data = raid_map->disk_data;
--	num_phys_disks = get_unaligned_le16(&raid_map->layout_map_count) *
--		(get_unaligned_le16(&raid_map->data_disks_per_row) +
--		get_unaligned_le16(&raid_map->metadata_disks_per_row));
--	num_raid_map_entries = num_phys_disks *
--		get_unaligned_le16(&raid_map->row_cnt);
--
--	queue_depth = 0;
--	for (i = 0; i < num_raid_map_entries; i++) {
--		phys_disk = pqi_find_disk_by_aio_handle(ctrl_info,
--			disk_data[i].aio_handle);
--
--		if (!phys_disk) {
--			dev_warn(&ctrl_info->pci_dev->dev,
--				"failed to find physical disk for logical drive %016llx\n",
--				get_unaligned_be64(logical_drive->scsi3addr));
--			logical_drive->offload_enabled = false;
--			logical_drive->offload_enabled_pending = false;
--			kfree(raid_map);
--			logical_drive->raid_map = NULL;
--			return;
--		}
--
--		queue_depth += phys_disk->queue_depth;
--	}
--
--	logical_drive->queue_depth = queue_depth;
--}
--
--static void pqi_update_all_logical_drive_queue_depths(
--	struct pqi_ctrl_info *ctrl_info)
--{
--	struct pqi_scsi_dev *device;
--
--	list_for_each_entry(device, &ctrl_info->scsi_device_list,
--		scsi_device_list_entry) {
--		if (device->devtype != TYPE_DISK && device->devtype != TYPE_ZBC)
--			continue;
--		if (!pqi_is_logical_device(device))
--			continue;
--		if (device->is_external_raid_device)
--			continue;
--		pqi_update_logical_drive_queue_depth(ctrl_info, device);
--	}
--}
--
- static void pqi_rescan_worker(struct work_struct *work)
- {
- 	struct pqi_ctrl_info *ctrl_info;
-@@ -1478,7 +1397,7 @@ static void pqi_dev_info(struct pqi_ctrl_info *ctrl_info,
- 	char *action, struct pqi_scsi_dev *device)
- {
- 	dev_info(&ctrl_info->pci_dev->dev,
--		"%s scsi %d:%d:%d:%d: %s %.8s %.16s %-12s SSDSmartPathCap%c En%c Exp%c qd=%d\n",
-+		"%s scsi %d:%d:%d:%d: %s %.8s %.16s %-12s SSDSmartPathCap%c En%c qd=%d\n",
- 		action,
- 		ctrl_info->scsi_host->host_no,
- 		device->bus,
-@@ -1491,7 +1410,6 @@ static void pqi_dev_info(struct pqi_ctrl_info *ctrl_info,
- 			pqi_raid_level_to_string(device->raid_level) : "",
- 		device->offload_configured ? '+' : '-',
- 		device->offload_enabled_pending ? '+' : '-',
--		device->expose_device ? '+' : '-',
- 		device->queue_depth);
++static ssize_t pqi_lockup_action_show(struct device *dev,
++	struct device_attribute *attr, char *buffer)
++{
++	int count = 0;
++	unsigned int i;
++
++	for (i = 0; i < ARRAY_SIZE(pqi_lockup_actions); i++) {
++		if (pqi_lockup_actions[i].action == pqi_lockup_action)
++			count += snprintf(buffer + count, PAGE_SIZE - count,
++				"[%s] ", pqi_lockup_actions[i].name);
++		else
++			count += snprintf(buffer + count, PAGE_SIZE - count,
++				"%s ", pqi_lockup_actions[i].name);
++	}
++
++	count += snprintf(buffer + count, PAGE_SIZE - count, "\n");
++
++	return count;
++}
++
++static ssize_t pqi_lockup_action_store(struct device *dev,
++	struct device_attribute *attr, const char *buffer, size_t count)
++{
++	unsigned int i;
++	char *action_name;
++	char action_name_buffer[32];
++
++	strlcpy(action_name_buffer, buffer, sizeof(action_name_buffer));
++	action_name = strstrip(action_name_buffer);
++
++	for (i = 0; i < ARRAY_SIZE(pqi_lockup_actions); i++) {
++		if (strcmp(action_name, pqi_lockup_actions[i].name) == 0) {
++			pqi_lockup_action = pqi_lockup_actions[i].action;
++			return count;
++		}
++	}
++
++	return -EINVAL;
++}
++
+ static DEVICE_ATTR(version, 0444, pqi_version_show, NULL);
+ static DEVICE_ATTR(rescan, 0200, NULL, pqi_host_rescan_store);
++static DEVICE_ATTR(lockup_action, 0644,
++	pqi_lockup_action_show, pqi_lockup_action_store);
+ 
+ static struct device_attribute *pqi_shost_attrs[] = {
+ 	&dev_attr_version,
+ 	&dev_attr_rescan,
++	&dev_attr_lockup_action,
+ 	NULL
+ };
+ 
+@@ -6133,6 +6213,21 @@ static void pqi_remove_ctrl(struct pqi_ctrl_info *ctrl_info)
+ 	pqi_free_ctrl_resources(ctrl_info);
  }
  
-@@ -1514,8 +1432,6 @@ static void pqi_scsi_update_device(struct pqi_scsi_dev *existing_device,
- 	existing_device->is_physical_device = new_device->is_physical_device;
- 	existing_device->is_external_raid_device =
- 		new_device->is_external_raid_device;
--	existing_device->expose_device = new_device->expose_device;
--	existing_device->no_uld_attach = new_device->no_uld_attach;
- 	existing_device->aio_enabled = new_device->aio_enabled;
- 	memcpy(existing_device->vendor, new_device->vendor,
- 		sizeof(existing_device->vendor));
-@@ -1657,8 +1573,6 @@ static void pqi_update_device_list(struct pqi_ctrl_info *ctrl_info,
- 		device->keep_device = true;
- 	}
- 
--	pqi_update_all_logical_drive_queue_depths(ctrl_info);
--
- 	list_for_each_entry(device, &ctrl_info->scsi_device_list,
- 		scsi_device_list_entry)
- 		device->offload_enabled =
-@@ -1697,7 +1611,7 @@ static void pqi_update_device_list(struct pqi_ctrl_info *ctrl_info,
- 
- 	/* Expose any new devices. */
- 	list_for_each_entry_safe(device, next, &add_list, add_list_entry) {
--		if (device->expose_device && !device->sdev) {
-+		if (!device->sdev) {
- 			rc = pqi_add_device(ctrl_info, device);
- 			if (rc) {
- 				dev_warn(&ctrl_info->pci_dev->dev,
-@@ -1740,38 +1654,15 @@ static bool pqi_is_supported_device(struct pqi_scsi_dev *device)
- 	return is_supported;
++static void pqi_perform_lockup_action(void)
++{
++	switch (pqi_lockup_action) {
++	case PANIC:
++		panic("FATAL: Smart Family Controller lockup detected");
++		break;
++	case REBOOT:
++		emergency_restart();
++		break;
++	case NONE:
++	default:
++		break;
++	}
++}
++
+ static void pqi_print_ctrl_info(struct pci_dev *pci_dev,
+ 	const struct pci_device_id *id)
+ {
+@@ -6238,6 +6333,30 @@ static void pqi_shutdown(struct pci_dev *pci_dev)
+ 		"unable to flush controller cache\n");
  }
  
--static inline bool pqi_skip_device(u8 *scsi3addr,
--	struct report_phys_lun_extended_entry *phys_lun_ext_entry)
-+static inline bool pqi_skip_device(u8 *scsi3addr)
- {
--	u8 device_flags;
--
--	if (!MASKED_DEVICE(scsi3addr))
--		return false;
--
--	/* The device is masked. */
--
--	device_flags = phys_lun_ext_entry->device_flags;
--
--	if (device_flags & REPORT_PHYS_LUN_DEV_FLAG_NON_DISK) {
--		/*
--		 * It's a non-disk device.  We ignore all devices of this type
--		 * when they're masked.
--		 */
-+	/* Ignore all masked devices. */
-+	if (MASKED_DEVICE(scsi3addr))
- 		return true;
--	}
++static void pqi_process_lockup_action_param(void)
++{
++	unsigned int i;
++
++	if (!pqi_lockup_action_param)
++		return;
++
++	for (i = 0; i < ARRAY_SIZE(pqi_lockup_actions); i++) {
++		if (strcmp(pqi_lockup_action_param,
++			pqi_lockup_actions[i].name) == 0) {
++			pqi_lockup_action = pqi_lockup_actions[i].action;
++			return;
++		}
++	}
++
++	pr_warn("%s: invalid lockup action setting \"%s\" - supported settings: none, reboot, panic\n",
++		DRIVER_NAME_SHORT, pqi_lockup_action_param);
++}
++
++static void pqi_process_module_params(void)
++{
++	pqi_process_lockup_action_param();
++}
++
+ #if defined(CONFIG_PM)
  
- 	return false;
- }
+ static int pqi_suspend(struct pci_dev *pci_dev, pm_message_t state)
+@@ -6545,6 +6664,8 @@ static int __init pqi_init(void)
+ 	if (!pqi_sas_transport_template)
+ 		return -ENODEV;
  
--static inline bool pqi_ok_to_expose_device(struct pqi_scsi_dev *device)
--{
--	/* Expose all devices except for physical devices that are masked. */
--	if (device->is_physical_device && MASKED_DEVICE(device->scsi3addr))
--		return false;
--
--	return true;
--}
--
- static int pqi_update_scsi_devices(struct pqi_ctrl_info *ctrl_info)
- {
- 	int i;
-@@ -1870,8 +1761,7 @@ static int pqi_update_scsi_devices(struct pqi_ctrl_info *ctrl_info)
- 			scsi3addr = log_lun_ext_entry->lunid;
- 		}
- 
--		if (is_physical_device &&
--			pqi_skip_device(scsi3addr, phys_lun_ext_entry))
-+		if (is_physical_device && pqi_skip_device(scsi3addr))
- 			continue;
- 
- 		if (device)
-@@ -1906,8 +1796,6 @@ static int pqi_update_scsi_devices(struct pqi_ctrl_info *ctrl_info)
- 
- 		pqi_assign_bus_target_lun(device);
- 
--		device->expose_device = pqi_ok_to_expose_device(device);
--
- 		if (device->is_physical_device) {
- 			device->wwid = phys_lun_ext_entry->wwid;
- 			if ((phys_lun_ext_entry->device_flags &
-@@ -4840,7 +4728,7 @@ static int pqi_scsi_queue_command(struct Scsi_Host *shost,
- 				rc == SCSI_MLQUEUE_HOST_BUSY ||
- 				rc == SAM_STAT_CHECK_CONDITION ||
- 				rc == SAM_STAT_RESERVATION_CONFLICT)
--				raid_bypassed = true;
-+					raid_bypassed = true;
- 		}
- 		if (!raid_bypassed)
- 			rc = pqi_raid_submit_scsi_cmd(ctrl_info, device, scmd,
-@@ -5166,7 +5054,7 @@ static int pqi_slave_alloc(struct scsi_device *sdev)
- 			sdev_id(sdev), sdev->lun);
- 	}
- 
--	if (device && device->expose_device) {
-+	if (device) {
- 		sdev->hostdata = device;
- 		device->sdev = sdev;
- 		if (device->queue_depth) {
-@@ -5181,17 +5069,6 @@ static int pqi_slave_alloc(struct scsi_device *sdev)
- 	return 0;
- }
- 
--static int pqi_slave_configure(struct scsi_device *sdev)
--{
--	struct pqi_scsi_dev *device;
--
--	device = sdev->hostdata;
--	if (!device->expose_device)
--		sdev->no_uld_attach = true;
--
--	return 0;
--}
--
- static int pqi_map_queues(struct Scsi_Host *shost)
- {
- 	struct pqi_ctrl_info *ctrl_info = shost_to_hba(shost);
-@@ -5585,7 +5462,6 @@ static struct scsi_host_template pqi_driver_template = {
- 	.eh_device_reset_handler = pqi_eh_device_reset_handler,
- 	.ioctl = pqi_ioctl,
- 	.slave_alloc = pqi_slave_alloc,
--	.slave_configure = pqi_slave_configure,
- 	.map_queues = pqi_map_queues,
- 	.sdev_attrs = pqi_sdev_attrs,
- 	.shost_attrs = pqi_shost_attrs,
++	pqi_process_module_params();
++
+ 	rc = pci_register_driver(&pqi_pci_driver);
+ 	if (rc)
+ 		sas_release_transport(pqi_sas_transport_template);
