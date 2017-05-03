@@ -1,18 +1,17 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH V2 04/36] smartpqi: add in controller checkpoint for
- controller lockups.
-Date: Wed, 3 May 2017 18:52:40 -0500
-Message-ID: <149385556077.11043.2690345216645272598.stgit@brunhilda>
+Subject: [PATCH V2 05/36] smartpqi: ensure controller is in SIS mode at init
+Date: Wed, 3 May 2017 18:52:46 -0500
+Message-ID: <149385556687.11043.18396854898612403292.stgit@brunhilda>
 References: <149385549428.11043.8013091835763091910.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0045.outbound.protection.outlook.com ([104.47.32.45]:58112
+Received: from mail-sn1nam01on0056.outbound.protection.outlook.com ([104.47.32.56]:5539
         "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751961AbdECXwv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 3 May 2017 19:52:51 -0400
+        id S1751961AbdECXxC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 3 May 2017 19:53:02 -0400
 In-Reply-To: <149385549428.11043.8013091835763091910.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -21,82 +20,149 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Kevin Barnett <kevin.barnett@hpe.com>
 
-tell smartpqi controller to generate a checkpoint for rare lockup
-conditions.
+put in SIS mode during initialization.
+support kexec/kdump
 
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
 Reviewed-by: Scott Teel <scott.teel@microsemi.com>
 Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/smartpqi/smartpqi.h      |    2 +-
- drivers/scsi/smartpqi/smartpqi_init.c |    1 +
- drivers/scsi/smartpqi/smartpqi_sis.c  |    7 +++++++
+ drivers/scsi/smartpqi/smartpqi.h      |    2 +
+ drivers/scsi/smartpqi/smartpqi_init.c |   60 +++++++++++++++++++--------------
+ drivers/scsi/smartpqi/smartpqi_sis.c  |    6 +++
  drivers/scsi/smartpqi/smartpqi_sis.h  |    1 +
- 4 files changed, 10 insertions(+), 1 deletion(-)
+ 4 files changed, 42 insertions(+), 27 deletions(-)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-index b673825..73754ca 100644
+index 73754ca..62045c1 100644
 --- a/drivers/scsi/smartpqi/smartpqi.h
 +++ b/drivers/scsi/smartpqi/smartpqi.h
-@@ -933,10 +933,10 @@ struct pqi_ctrl_info {
- 	struct Scsi_Host *scsi_host;
+@@ -964,7 +964,7 @@ struct pqi_ctrl_info {
+ };
  
- 	struct mutex	scan_mutex;
-+	bool		controller_online : 1;
- 	u8		inbound_spanning_supported : 1;
- 	u8		outbound_spanning_supported : 1;
- 	u8		pqi_mode_enabled : 1;
--	u8		controller_online : 1;
- 	u8		heartbeat_timer_started : 1;
+ enum pqi_ctrl_mode {
+-	UNKNOWN,
++	SIS_MODE = 0,
+ 	PQI_MODE
+ };
  
- 	struct list_head scsi_device_list;
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 735cef5..14d74e1 100644
+index 14d74e1..5a5b9ab 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -2697,6 +2697,7 @@ static void pqi_take_ctrl_offline(struct pqi_ctrl_info *ctrl_info)
- 
- 	ctrl_info->controller_online = false;
- 	dev_err(&ctrl_info->pci_dev->dev, "controller offline\n");
-+	sis_shutdown_ctrl(ctrl_info);
- 
- 	for (i = 0; i < ctrl_info->num_queue_groups; i++) {
- 		queue_group = &ctrl_info->queue_groups[i];
-diff --git a/drivers/scsi/smartpqi/smartpqi_sis.c b/drivers/scsi/smartpqi/smartpqi_sis.c
-index 71408f9..c7d9ea1 100644
---- a/drivers/scsi/smartpqi/smartpqi_sis.c
-+++ b/drivers/scsi/smartpqi/smartpqi_sis.c
-@@ -34,6 +34,7 @@
- #define SIS_REENABLE_SIS_MODE			0x1
- #define SIS_ENABLE_MSIX				0x40
- #define SIS_SOFT_RESET				0x100
-+#define SIS_TRIGGER_SHUTDOWN			0x800000
- #define SIS_CMD_READY				0x200
- #define SIS_CMD_COMPLETE			0x1000
- #define SIS_CLEAR_CTRL_TO_HOST_DOORBELL		0x1000
-@@ -342,6 +343,12 @@ void sis_soft_reset(struct pqi_ctrl_info *ctrl_info)
- 		&ctrl_info->registers->sis_host_to_ctrl_doorbell);
+@@ -5245,38 +5245,50 @@ static int pqi_get_ctrl_firmware_version(struct pqi_ctrl_info *ctrl_info)
+ 	return rc;
  }
  
-+void sis_shutdown_ctrl(struct pqi_ctrl_info *ctrl_info)
+-static int pqi_kdump_init(struct pqi_ctrl_info *ctrl_info)
++/* Switches the controller from PQI mode back into SIS mode. */
++
++static int pqi_revert_to_sis_mode(struct pqi_ctrl_info *ctrl_info)
 +{
-+	writel(SIS_TRIGGER_SHUTDOWN,
-+		&ctrl_info->registers->sis_host_to_ctrl_doorbell);
++	int rc;
++
++	sis_disable_msix(ctrl_info);
++	rc = pqi_reset(ctrl_info);
++	if (rc)
++		return rc;
++	sis_reenable_sis_mode(ctrl_info);
++	pqi_save_ctrl_mode(ctrl_info, SIS_MODE);
++
++	return 0;
 +}
 +
- #define SIS_MODE_READY_TIMEOUT_SECS	30
++/*
++ * If the controller isn't already in SIS mode, this function forces it into
++ * SIS mode.
++ */
++
++static int pqi_force_sis_mode(struct pqi_ctrl_info *ctrl_info)
+ {
+ 	if (!sis_is_firmware_running(ctrl_info))
+ 		return -ENXIO;
  
- int sis_reenable_sis_mode(struct pqi_ctrl_info *ctrl_info)
+-	if (pqi_get_ctrl_mode(ctrl_info) == PQI_MODE) {
+-		sis_disable_msix(ctrl_info);
+-		if (pqi_reset(ctrl_info) == 0)
+-			sis_reenable_sis_mode(ctrl_info);
++	if (pqi_get_ctrl_mode(ctrl_info) == SIS_MODE)
++		return 0;
++
++	if (sis_is_kernel_up(ctrl_info)) {
++		pqi_save_ctrl_mode(ctrl_info, SIS_MODE);
++		return 0;
+ 	}
+ 
+-	return 0;
++	return pqi_revert_to_sis_mode(ctrl_info);
+ }
+ 
+ static int pqi_ctrl_init(struct pqi_ctrl_info *ctrl_info)
+ {
+ 	int rc;
+ 
+-	if (reset_devices) {
+-		rc = pqi_kdump_init(ctrl_info);
+-		if (rc)
+-			return rc;
+-	}
+-
+-	/*
+-	 * When the controller comes out of reset, it is always running
+-	 * in legacy SIS mode.  This is so that it can be compatible
+-	 * with legacy drivers shipped with OSes.  So we have to talk
+-	 * to it using SIS commands at first.  Once we are satisified
+-	 * that the controller supports PQI, we transition it into PQI
+-	 * mode.
+-	 */
++	rc = pqi_force_sis_mode(ctrl_info);
++	if (rc)
++		return rc;
+ 
+ 	/*
+ 	 * Wait until the controller is ready to start accepting SIS
+@@ -5594,12 +5606,8 @@ static void pqi_remove_ctrl(struct pqi_ctrl_info *ctrl_info)
+ 	cancel_delayed_work_sync(&ctrl_info->update_time_work);
+ 	pqi_remove_all_scsi_devices(ctrl_info);
+ 	pqi_unregister_scsi(ctrl_info);
+-
+-	if (ctrl_info->pqi_mode_enabled) {
+-		sis_disable_msix(ctrl_info);
+-		if (pqi_reset(ctrl_info) == 0)
+-			sis_reenable_sis_mode(ctrl_info);
+-	}
++	if (ctrl_info->pqi_mode_enabled)
++		pqi_revert_to_sis_mode(ctrl_info);
+ 	pqi_free_ctrl_resources(ctrl_info);
+ }
+ 
+diff --git a/drivers/scsi/smartpqi/smartpqi_sis.c b/drivers/scsi/smartpqi/smartpqi_sis.c
+index c7d9ea1..c5325a4 100644
+--- a/drivers/scsi/smartpqi/smartpqi_sis.c
++++ b/drivers/scsi/smartpqi/smartpqi_sis.c
+@@ -127,6 +127,12 @@ bool sis_is_firmware_running(struct pqi_ctrl_info *ctrl_info)
+ 	return running;
+ }
+ 
++bool sis_is_kernel_up(struct pqi_ctrl_info *ctrl_info)
++{
++	return readl(&ctrl_info->registers->sis_firmware_status) &
++				SIS_CTRL_KERNEL_UP;
++}
++
+ /* used for passing command parameters/results when issuing SIS commands */
+ struct sis_sync_cmd_params {
+ 	u32	mailbox[6];	/* mailboxes 0-5 */
 diff --git a/drivers/scsi/smartpqi/smartpqi_sis.h b/drivers/scsi/smartpqi/smartpqi_sis.h
-index bd6e7b0..7f7b68c 100644
+index 7f7b68c..157768d 100644
 --- a/drivers/scsi/smartpqi/smartpqi_sis.h
 +++ b/drivers/scsi/smartpqi/smartpqi_sis.h
-@@ -27,6 +27,7 @@ int sis_init_base_struct_addr(struct pqi_ctrl_info *ctrl_info);
- void sis_enable_msix(struct pqi_ctrl_info *ctrl_info);
- void sis_disable_msix(struct pqi_ctrl_info *ctrl_info);
- void sis_soft_reset(struct pqi_ctrl_info *ctrl_info);
-+void sis_shutdown_ctrl(struct pqi_ctrl_info *ctrl_info);
- int sis_reenable_sis_mode(struct pqi_ctrl_info *ctrl_info);
- void sis_write_driver_scratch(struct pqi_ctrl_info *ctrl_info, u32 value);
- u32 sis_read_driver_scratch(struct pqi_ctrl_info *ctrl_info);
+@@ -21,6 +21,7 @@
+ 
+ int sis_wait_for_ctrl_ready(struct pqi_ctrl_info *ctrl_info);
+ bool sis_is_firmware_running(struct pqi_ctrl_info *ctrl_info);
++bool sis_is_kernel_up(struct pqi_ctrl_info *ctrl_info);
+ int sis_get_ctrl_properties(struct pqi_ctrl_info *ctrl_info);
+ int sis_get_pqi_capabilities(struct pqi_ctrl_info *ctrl_info);
+ int sis_init_base_struct_addr(struct pqi_ctrl_info *ctrl_info);
