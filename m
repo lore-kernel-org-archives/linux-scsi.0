@@ -1,44 +1,44 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH V3 05/14] hpsa: update reset handler
-Date: Thu, 4 May 2017 14:08:31 -0500
-Message-ID: <149392491148.10271.5890790888250403448.stgit@brunhilda>
+Subject: [PATCH V3 06/14] hpsa: do not reset enclosures
+Date: Thu, 4 May 2017 14:08:37 -0500
+Message-ID: <149392491757.10271.8975885257765983552.stgit@brunhilda>
 References: <149392483740.10271.14468343789177475526.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0053.outbound.protection.outlook.com ([104.47.40.53]:59010
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0057.outbound.protection.outlook.com ([104.47.37.57]:3220
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1756169AbdEDTIk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 4 May 2017 15:08:40 -0400
+        id S1756183AbdEDTIn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 4 May 2017 15:08:43 -0400
 In-Reply-To: <149392483740.10271.14468343789177475526.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
 Cc: linux-scsi@vger.kernel.org
 
-Use the return from TUR as a check for the
-device state.
+Prevent enclosure resets.
 
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
 Reviewed-by: Scott Teel <scott.tell@microsemi.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/hpsa.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/hpsa.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 8e22aed..9fb30c4 100644
+index 9fb30c4..2990897 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -3090,7 +3090,7 @@ static int hpsa_do_reset(struct ctlr_info *h, struct hpsa_scsi_dev_t *dev,
- 	if (unlikely(rc))
- 		atomic_set(&dev->reset_cmds_out, 0);
- 	else
--		wait_for_device_to_become_ready(h, scsi3addr, 0);
-+		rc = wait_for_device_to_become_ready(h, scsi3addr, 0);
+@@ -5853,6 +5853,9 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
+ 		return FAILED;
+ 	}
  
- 	mutex_unlock(&h->reset_mutex);
- 	return rc;
++	if (dev->devtype == TYPE_ENCLOSURE)
++		return SUCCESS;
++
+ 	/* if controller locked up, we can guarantee command won't complete */
+ 	if (lockup_detected(h)) {
+ 		snprintf(msg, sizeof(msg),
