@@ -1,48 +1,214 @@
-From: Scott Bauer <scott.bauer@intel.com>
-Subject: Re: [PATCH v2] Avoid that scsi_exit_rq() triggers a use-after-free
-Date: Thu, 4 May 2017 09:23:43 -0600
-Message-ID: <20170504152342.GB16489@sbauer-Z170X-UD5>
-References: <20170503180911.24326-1-bart.vanassche@sandisk.com>
- <20170504073013.GA3684@lst.de>
- <1493911596.2692.2.camel@sandisk.com>
- <20170504151525.GA16489@sbauer-Z170X-UD5>
- <1493911964.2692.4.camel@sandisk.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH V2 07/12] hpsa: cleanup reset handler
+Date: Thu, 4 May 2017 17:46:56 +0200
+Message-ID: <89db33d1-7122-e7c9-4836-d8f0ed1cdbe2@redhat.com>
+References: <149340349509.4102.15752249884898695693.stgit@brunhilda>
+ <149340362829.4102.17902813963900092821.stgit@brunhilda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:64088 "EHLO mga03.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:56640 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752221AbdEDPgb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 4 May 2017 11:36:31 -0400
-Content-Disposition: inline
-In-Reply-To: <1493911964.2692.4.camel@sandisk.com>
+        id S1754126AbdEDPrB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 4 May 2017 11:47:01 -0400
+In-Reply-To: <149340362829.4102.17902813963900092821.stgit@brunhilda>
+Content-Language: en-MW
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc: "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "jack@suse.cz" <jack@suse.cz>, "hare@suse.com" <hare@suse.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+To: Don Brace <don.brace@microsemi.com>, joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, May 04, 2017 at 03:32:44PM +0000, Bart Van Assche wrote:
-> On Thu, 2017-05-04 at 09:15 -0600, Scott Bauer wrote:
-> > On Thu, May 04, 2017 at 03:26:37PM +0000, Bart Van Assche wrote:
-> > > On Thu, 2017-05-04 at 09:30 +0200, Christoph Hellwig wrote:
-> > > > Please just add a flag to ->flags instead of adding a whole new field.
-> > > > 
-> > > > Otherwise this looks good to me.
-> > > 
-> > > Hello Christoph,
-> > > 
-> > > Thanks for the feedback. I will make the proposed change and post a second
-> > > version.
-> > 
-> > BTW, what branch was your last patch based off? I had some hunk errors while
-> > applying it.
-> 
-> Hello Scott,
-> 
-> That patch was based off kernel v4.11. Did you perhaps use a different kernel
-> version for your tests?
-> 
-> Bart.
+On 28.4.2017 20:20, Don Brace wrote:
+>  - mark device state sooner.
+>
+> Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
+> Reviewed-by: Scott Teel <scott.teel@microsemi.com>
+> Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
+> Signed-off-by: Don Brace <don.brace@microsemi.com>
+> ---
+>  drivers/scsi/hpsa.c |   59 +++++++++++++++++++++++++++++++++++++++------------
+>  drivers/scsi/hpsa.h |    1 +
+>  2 files changed, 46 insertions(+), 14 deletions(-)
+>
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index a2852da..71f32e9 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -1859,10 +1859,13 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h,
+>  	 * A reset can cause a device status to change
+>  	 * re-schedule the scan to see what happened.
+>  	 */
+> +	spin_lock_irqsave(&h->reset_lock, flags);
+>  	if (h->reset_in_progress) {
+> +		spin_unlock_irqrestore(&h->reset_lock, flags);
+>  		h->drv_req_rescan = 1;
+>  		return;
+>  	}
+> +	spin_unlock_irqrestore(&h->reset_lock, flags);
+>  
+>  	added = kzalloc(sizeof(*added) * HPSA_MAX_DEVICES, GFP_KERNEL);
+>  	removed = kzalloc(sizeof(*removed) * HPSA_MAX_DEVICES, GFP_KERNEL);
+> @@ -5618,11 +5621,14 @@ static void hpsa_scan_start(struct Scsi_Host *sh)
+>  	/*
+>  	 * Do the scan after a reset completion
+>  	 */
+> +	spin_lock_irqsave(&h->reset_lock, flags);
+>  	if (h->reset_in_progress) {
+> +		spin_unlock_irqrestore(&h->reset_lock, flags);
+>  		h->drv_req_rescan = 1;
+>  		hpsa_scan_complete(h);
+>  		return;
+>  	}
+> +	spin_unlock_irqrestore(&h->reset_lock, flags);
 
-I've been working on top of Jens' for-linus
-https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git/log/?h=for-linus
+Hi Don,
+I glad the spinlock helped, but how is the code protected when another thread
+enters hpsa_eh_device_reset_handler in parallel when the first thread just 
+called the 'spin_unlock_irqrestore(&h->reset_lock' ?
+
+tomash 
+
+ 
+
+>  
+>  	hpsa_update_scsi_devices(h);
+>  
+> @@ -5834,28 +5840,38 @@ static int wait_for_device_to_become_ready(struct ctlr_info *h,
+>   */
+>  static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
+>  {
+> -	int rc;
+> +	int rc = SUCCESS;
+>  	struct ctlr_info *h;
+>  	struct hpsa_scsi_dev_t *dev;
+>  	u8 reset_type;
+>  	char msg[48];
+> +	unsigned long flags;
+>  
+>  	/* find the controller to which the command to be aborted was sent */
+>  	h = sdev_to_hba(scsicmd->device);
+>  	if (h == NULL) /* paranoia */
+>  		return FAILED;
+>  
+> -	if (lockup_detected(h))
+> -		return FAILED;
+> +	spin_lock_irqsave(&h->reset_lock, flags);
+> +	h->reset_in_progress = 1;
+> +	spin_unlock_irqrestore(&h->reset_lock, flags);
+> +
+> +	if (lockup_detected(h)) {
+> +		rc = FAILED;
+> +		goto return_reset_status;
+> +	}
+>  
+>  	dev = scsicmd->device->hostdata;
+>  	if (!dev) {
+>  		dev_err(&h->pdev->dev, "%s: device lookup failed\n", __func__);
+> -		return FAILED;
+> +		rc = FAILED;
+> +		goto return_reset_status;
+>  	}
+>  
+> -	if (dev->devtype == TYPE_ENCLOSURE)
+> -		return SUCCESS;
+> +	if (dev->devtype == TYPE_ENCLOSURE) {
+> +		rc = SUCCESS;
+> +		goto return_reset_status;
+> +	}
+>  
+>  	/* if controller locked up, we can guarantee command won't complete */
+>  	if (lockup_detected(h)) {
+> @@ -5863,7 +5879,8 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
+>  			 "cmd %d RESET FAILED, lockup detected",
+>  			 hpsa_get_cmd_index(scsicmd));
+>  		hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
+> -		return FAILED;
+> +		rc = FAILED;
+> +		goto return_reset_status;
+>  	}
+>  
+>  	/* this reset request might be the result of a lockup; check */
+> @@ -5872,12 +5889,15 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
+>  			 "cmd %d RESET FAILED, new lockup detected",
+>  			 hpsa_get_cmd_index(scsicmd));
+>  		hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
+> -		return FAILED;
+> +		rc = FAILED;
+> +		goto return_reset_status;
+>  	}
+>  
+>  	/* Do not attempt on controller */
+> -	if (is_hba_lunid(dev->scsi3addr))
+> -		return SUCCESS;
+> +	if (is_hba_lunid(dev->scsi3addr)) {
+> +		rc = SUCCESS;
+> +		goto return_reset_status;
+> +	}
+>  
+>  	if (is_logical_dev_addr_mode(dev->scsi3addr))
+>  		reset_type = HPSA_DEVICE_RESET_MSG;
+> @@ -5888,17 +5908,24 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
+>  		reset_type == HPSA_DEVICE_RESET_MSG ? "logical " : "physical ");
+>  	hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
+>  
+> -	h->reset_in_progress = 1;
+> -
+>  	/* send a reset to the SCSI LUN which the command was sent to */
+>  	rc = hpsa_do_reset(h, dev, dev->scsi3addr, reset_type,
+>  			   DEFAULT_REPLY_QUEUE);
+> +	if (rc == 0)
+> +		rc = SUCCESS;
+> +	else
+> +		rc = FAILED;
+> +
+>  	sprintf(msg, "reset %s %s",
+>  		reset_type == HPSA_DEVICE_RESET_MSG ? "logical " : "physical ",
+> -		rc == 0 ? "completed successfully" : "failed");
+> +		rc == SUCCESS ? "completed successfully" : "failed");
+>  	hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
+> +
+> +return_reset_status:
+> +	spin_lock_irqsave(&h->reset_lock, flags);
+>  	h->reset_in_progress = 0;
+> -	return rc == 0 ? SUCCESS : FAILED;
+> +	spin_unlock_irqrestore(&h->reset_lock, flags);
+> +	return rc;
+>  }
+>  
+>  static void swizzle_abort_tag(u8 *tag)
+> @@ -8649,10 +8676,13 @@ static void hpsa_rescan_ctlr_worker(struct work_struct *work)
+>  	/*
+>  	 * Do the scan after the reset
+>  	 */
+> +	spin_lock_irqsave(&h->reset_lock, flags);
+>  	if (h->reset_in_progress) {
+> +		spin_unlock_irqrestore(&h->reset_lock, flags);
+>  		h->drv_req_rescan = 1;
+>  		return;
+>  	}
+> +	spin_unlock_irqrestore(&h->reset_lock, flags);
+>  
+>  	if (hpsa_ctlr_needs_rescan(h) || hpsa_offline_devices_ready(h)) {
+>  		scsi_host_get(h->scsi_host);
+> @@ -8759,6 +8789,7 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>  	spin_lock_init(&h->lock);
+>  	spin_lock_init(&h->offline_device_lock);
+>  	spin_lock_init(&h->scan_lock);
+> +	spin_lock_init(&h->reset_lock);
+>  	atomic_set(&h->passthru_cmds_avail, HPSA_MAX_CONCURRENT_PASSTHRUS);
+>  	atomic_set(&h->abort_cmds_available, HPSA_CMDS_RESERVED_FOR_ABORTS);
+>  
+> diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+> index 6f04f2a..5352664 100644
+> --- a/drivers/scsi/hpsa.h
+> +++ b/drivers/scsi/hpsa.h
+> @@ -301,6 +301,7 @@ struct ctlr_info {
+>  	struct mutex reset_mutex;
+>  	u8 reset_in_progress;
+>  	struct hpsa_sas_node *sas_host;
+> +	spinlock_t reset_lock;
+>  };
+>  
+>  struct offline_device_entry {
+>
