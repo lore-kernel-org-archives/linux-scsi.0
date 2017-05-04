@@ -1,43 +1,98 @@
-From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Subject: Re: [PATCH] scsi: pmcraid: remove redundant check to see if
- request_size is less than zero
-Date: Thu, 4 May 2017 12:46:46 -0700
-Message-ID: <79da6ab7-da2c-c1fc-e384-92d68028d091@linux.vnet.ibm.com>
-References: <20170503162901.3623-1-colin.king@canonical.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: [PATCH V4 00/12] hpsa updates
+Date: Thu, 4 May 2017 17:50:38 -0500
+Message-ID: <149393820493.19382.11709906672864416473.stgit@brunhilda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:56692 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751808AbdEDTqx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2017 15:46:53 -0400
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v44Jhing071991
-        for <linux-scsi@vger.kernel.org>; Thu, 4 May 2017 15:46:52 -0400
-Received: from e17.ny.us.ibm.com (e17.ny.us.ibm.com [129.33.205.207])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2a89sr2jph-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Thu, 04 May 2017 15:46:52 -0400
-Received: from localhost
-        by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <tyreld@linux.vnet.ibm.com>;
-        Thu, 4 May 2017 15:46:51 -0400
-In-Reply-To: <20170503162901.3623-1-colin.king@canonical.com>
+Received: from mail-bn3nam01on0083.outbound.protection.outlook.com ([104.47.33.83]:57024
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752701AbdEDWus (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 4 May 2017 18:50:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Colin King <colin.king@canonical.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
+Cc: linux-scsi@vger.kernel.org
 
-On 05/03/2017 09:29 AM, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> The 2nd check to see if request_size is less than zero is redundant
-> because the first check takes error exit path on this condition. So,
-> since it is redundant, remove it.
-> 
-> Detected by CoverityScan, CID#146149 ("Logically Dead Code")
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+These patches are based on Linus's tree
 
-Reviewed-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+These patches are for:
+ - RedHat BZ: 1404073 - [HPE 7.3 Bug] multipath failover not reliable
+ - Multipath failover support in general.
+
+The changes are:
+ - update identify physical device structure
+   - align with FW
+ - stop getting enclosure info for externals
+   - no BMIC support
+ - update reset handler
+   - update to match out of box driver
+ - do not reset enclosures
+   - reset can sometimes hang
+ - rescan later if reset in progress
+   - wait for devices to settle.
+ - correct resets on retried commands
+   - was not calling scsi_done on retried completion
+ - correct queue depth for externals
+   - Code not in correct function
+ - separate monitor events from rescan worker
+   - allows driver to check for controller events more frequently
+     without affecting controller lockup detection or check
+     for changes on PTRAID devices.
+ - send ioaccel requests with 0 length down raid path
+   - avoid hang issues for customers running older firmware.
+ - remove abort handler
+   - align driver with our out of box driver
+ - bump driver version
+   - align version with out of box driver for multi-path changes
+
+Changes since V1:
+ - includes changes based on Martin Wilck <mwilck@suse.com> reviews.
+    - cleanup reset handler
+      - added spin_lock protection around h->reset_in_progress
+        - this has helped solve a multipath issue, thanks Martin.
+    - renamed patch hpsa-separate-monitor-events-from-hearbeat-worker to
+      hpsa-separate-monitor-events-from-rescan-worker to more correctly
+         convey the patches intent.
+      - split out some commonality between the rescan worker and the
+        event monitor worker.
+      - updated the patch description.
+
+Changes since V2:
+ - includes a change based on Tomas Henzl <thenzl@redhat.com> review
+   - Corrected placement of spin_unlock_irqrestore in patch
+     hpsa-clean-up-reset-handler
+     - Thanks for your attention to hpsa Tomas
+
+Changes since V3:
+ - Removed patches hpsa-update-pci-ids and hpsa-change-driver-version
+   because they are already in. Sorry about that.
+
+---
+
+Don Brace (11):
+      hpsa: update identify physical device structure
+      hpsa: do not get enclosure info for external devices
+      hpsa: update reset handler
+      hpsa: do not reset enclosures
+      hpsa: rescan later if reset in progress
+      hpsa: correct resets on retried commands
+      hpsa: cleanup reset handler
+      hpsa: correct queue depth for externals
+      hpsa: send ioaccel requests with 0 length down raid path
+      hpsa: remove abort handler
+      hpsa: bump driver version
+
+Scott Teel (1):
+      hpsa: separate monitor events from rescan worker
+
+
+ drivers/scsi/hpsa.c     |  849 +++++++++++------------------------------------
+ drivers/scsi/hpsa.h     |    4 
+ drivers/scsi/hpsa_cmd.h |   20 +
+ 3 files changed, 208 insertions(+), 665 deletions(-)
+
+--
+Signature
