@@ -1,17 +1,17 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH V3 01/14] hpsa: update pci ids
-Date: Thu, 4 May 2017 14:08:07 -0500
-Message-ID: <149392488708.10271.16626508131926443200.stgit@brunhilda>
+Subject: [PATCH V3 02/14] hpsa: change driver version
+Date: Thu, 4 May 2017 14:08:13 -0500
+Message-ID: <149392489320.10271.7764048803092176685.stgit@brunhilda>
 References: <149392483740.10271.14468343789177475526.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0085.outbound.protection.outlook.com ([104.47.33.85]:57264
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+Received: from mail-dm3nam03on0089.outbound.protection.outlook.com ([104.47.41.89]:44736
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753018AbdEDTIM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 4 May 2017 15:08:12 -0400
+        id S1753018AbdEDTIT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 4 May 2017 15:08:19 -0400
 In-Reply-To: <149392483740.10271.14468343789177475526.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -22,36 +22,19 @@ Reviewed-by: Gerry Morong <gerry.morong@microsemi.com>
 Reviewed-by: Scott Teel <scott.teel@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/hpsa.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/scsi/hpsa.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 9d659aa..eabb826 100644
+index eabb826..73daace 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -108,10 +108,12 @@ static const struct pci_device_id hpsa_pci_device_id[] = {
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3354},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3355},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x3356},
-+	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103c, 0x1920},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1921},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1922},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1923},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1924},
-+	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103c, 0x1925},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1926},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1928},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSH,     0x103C, 0x1929},
-@@ -171,10 +173,12 @@ static struct board_type products[] = {
- 	{0x3354103C, "Smart Array P420i", &SA5_access},
- 	{0x3355103C, "Smart Array P220i", &SA5_access},
- 	{0x3356103C, "Smart Array P721m", &SA5_access},
-+	{0x1920103C, "Smart Array P430i", &SA5_access},
- 	{0x1921103C, "Smart Array P830i", &SA5_access},
- 	{0x1922103C, "Smart Array P430", &SA5_access},
- 	{0x1923103C, "Smart Array P431", &SA5_access},
- 	{0x1924103C, "Smart Array P830", &SA5_access},
-+	{0x1925103C, "Smart Array P831", &SA5_access},
- 	{0x1926103C, "Smart Array P731m", &SA5_access},
- 	{0x1928103C, "Smart Array P230i", &SA5_access},
- 	{0x1929103C, "Smart Array P530", &SA5_access},
+@@ -60,7 +60,7 @@
+  * HPSA_DRIVER_VERSION must be 3 byte values (0-255) separated by '.'
+  * with an optional trailing '-' followed by a byte value (0-255).
+  */
+-#define HPSA_DRIVER_VERSION "3.4.16-0"
++#define HPSA_DRIVER_VERSION "3.4.18-0"
+ #define DRIVER_NAME "HP HPSA Driver (v " HPSA_DRIVER_VERSION ")"
+ #define HPSA "hpsa"
+ 
