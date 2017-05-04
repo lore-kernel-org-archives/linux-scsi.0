@@ -1,44 +1,51 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 176951] boot fails unless acpi=off Acer Travelmate X-349
-Date: Thu, 04 May 2017 11:07:42 +0000
-Message-ID: <bug-176951-11613-k4GQauztJn@https.bugzilla.kernel.org/>
-References: <bug-176951-11613@https.bugzilla.kernel.org/>
+From: Chad Dupuis <chad.dupuis@cavium.com>
+Subject: Re: [PATCH] scsi: qedf: Cleanup the type of io_log->op
+Date: Thu, 4 May 2017 11:07:52 -0400 (EDT)
+Message-ID: <alpine.OSX.2.00.1705041107260.1192@n6024mn968stm1.qlogic.org>
+References: <20170503212357.cdl4e43ihpyzl2w6@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:56932 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751907AbdEDLHo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2017 07:07:44 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 8B2742869D
-        for <linux-scsi@vger.kernel.org>; Thu,  4 May 2017 11:07:43 +0000 (UTC)
-In-Reply-To: <bug-176951-11613@https.bugzilla.kernel.org/>
+Received: from mail-by2nam01on0060.outbound.protection.outlook.com ([104.47.34.60]:23903
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752126AbdEDPIC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 4 May 2017 11:08:02 -0400
+In-Reply-To: <20170503212357.cdl4e43ihpyzl2w6@mwanda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: QLogic-Storage-Upstream@cavium.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=176951
 
-Alberto Tiboni (a.tiboni@gmail.com) changed:
+On Wed, 3 May 2017, 5:23pm, Dan Carpenter wrote:
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |a.tiboni@gmail.com
+> We store sc_cmd->cmnd[0] which is an unsigned char in io_log->op so
+> this should also be unsigned char.  The other thing is that this is
+> displayed in the debugfs:
+> 
+> 	seq_printf(s, "0x%02x:", io_log->op);
+> 
+> Smatch complains that the formatting won't work for negative values so
+> changing it to unsigned silences that warning as well.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> diff --git a/drivers/scsi/qedf/qedf.h b/drivers/scsi/qedf/qedf.h
+> index 40aeb6bb96a2..07ee88200e91 100644
+> --- a/drivers/scsi/qedf/qedf.h
+> +++ b/drivers/scsi/qedf/qedf.h
+> @@ -259,7 +259,7 @@ struct qedf_io_log {
+>  	uint16_t task_id;
+>  	uint32_t port_id; /* Remote port fabric ID */
+>  	int lun;
+> -	char op; /* SCSI CDB */
+> +	unsigned char op; /* SCSI CDB */
+>  	uint8_t lba[4];
+>  	unsigned int bufflen; /* SCSI buffer length */
+>  	unsigned int sg_count; /* Number of SG elements */
+> 
 
---- Comment #24 from Alberto Tiboni (a.tiboni@gmail.com) ---
-I can confirm issue is still here: update bios at 1.08, nothing changed!
+Makes sense.
 
-Tried Ubuntu and Lubuntu distro, 16.04, 16.10 and 17.04, both 64 and 32bits.
-
-The only one that booted after installation was Lubuntu 16.04 32bit in legacy
-mode, with grub without "quite splash" parameters.
-
-but it works rarely: 9 on 10 times it produces a kernel panic on apci init.
-
-Now I'm trying linux Mint, but i'm quite sure problem will be there too.
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Acked-by: Chad Dupuis <chad.dupuis@cavium.com>
