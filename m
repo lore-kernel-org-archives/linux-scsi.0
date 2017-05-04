@@ -1,44 +1,44 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [bug report] scsi: cxlflash: Add hardware queues attribute
-Date: Thu, 4 May 2017 13:09:30 +0300
-Message-ID: <20170504100929.n4cuen56qu2mrmok@mwanda>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 176951] boot fails unless acpi=off Acer Travelmate X-349
+Date: Thu, 04 May 2017 11:07:42 +0000
+Message-ID: <bug-176951-11613-k4GQauztJn@https.bugzilla.kernel.org/>
+References: <bug-176951-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:39563 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751358AbdEDKJj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2017 06:09:39 -0400
-Content-Disposition: inline
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:56932 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751907AbdEDLHo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2017 07:07:44 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 8B2742869D
+        for <linux-scsi@vger.kernel.org>; Thu,  4 May 2017 11:07:43 +0000 (UTC)
+In-Reply-To: <bug-176951-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: mrochs@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@kernel.org
 
-Hello Matthew R. Ochs,
+https://bugzilla.kernel.org/show_bug.cgi?id=176951
 
-This is a semi-automatic email about new static checker warnings.
+Alberto Tiboni (a.tiboni@gmail.com) changed:
 
-The patch 3065267a80c8: "scsi: cxlflash: Add hardware queues 
-attribute" from Apr 12, 2017, leads to the following Smatch complaint:
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |a.tiboni@gmail.com
 
-drivers/scsi/cxlflash/main.c:722 term_afu()
-	 warn: variable dereferenced before check 'cfg->afu' (see line 719)
+--- Comment #24 from Alberto Tiboni (a.tiboni@gmail.com) ---
+I can confirm issue is still here: update bios at 1.08, nothing changed!
 
-drivers/scsi/cxlflash/main.c
-   718		 */
-   719		for (k = cfg->afu->num_hwqs - 1; k >= 0; k--)
-                         ^^^^^^^^
-Patch introduces a new dereference.
+Tried Ubuntu and Lubuntu distro, 16.04, 16.10 and 17.04, both 64 and 32bits.
 
-   720			term_intr(cfg, UNMAP_THREE, k);
-   721	
-   722		if (cfg->afu)
-                    ^^^^^^^^
-But the existing code assumed it could be NULL.  Presumably it can't?
+The only one that booted after installation was Lubuntu 16.04 32bit in legacy
+mode, with grub without "quite splash" parameters.
 
-   723			stop_afu(cfg);
-   724	
+but it works rarely: 9 on 10 times it produces a kernel panic on apci init.
 
-regards,
-dan carpenter
+Now I'm trying linux Mint, but i'm quite sure problem will be there too.
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
