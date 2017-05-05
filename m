@@ -1,211 +1,167 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH V4 07/12] hpsa: cleanup reset handler
-Date: Fri, 5 May 2017 15:27:47 +0200
-Message-ID: <03f66997-4bdb-68c0-9a53-47705ef71ee6@redhat.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH V4 07/12] hpsa: cleanup reset handler
+Date: Fri, 5 May 2017 16:10:59 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D19529CEE10@avsrvexchmbx2.microsemi.net>
 References: <149393820493.19382.11709906672864416473.stgit@brunhilda>
  <149393828251.19382.2089522128208165496.stgit@brunhilda>
+ <03f66997-4bdb-68c0-9a53-47705ef71ee6@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58950 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752560AbdEEN1x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 5 May 2017 09:27:53 -0400
-In-Reply-To: <149393828251.19382.2089522128208165496.stgit@brunhilda>
-Content-Language: en-MW
+Received: from mail-sn1nam02on0087.outbound.protection.outlook.com ([104.47.36.87]:63176
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750708AbdEEQLe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 5 May 2017 12:11:34 -0400
+In-Reply-To: <03f66997-4bdb-68c0-9a53-47705ef71ee6@redhat.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>, joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
-Cc: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>, "joseph.szczypek@hpe.com" <joseph.szczypek@hpe.com>, Gerry Morong <gerry.morong@microsemi.com>, John Hall <John.Hall@microsemi.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, Bader Ali - Saleh <bader.alisaleh@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Viswas G <viswas.g@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "POSWALD@suse.com" <POSWALD@suse.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 5.5.2017 00:51, Don Brace wrote:
->  - mark device state sooner.
->
-> Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
-> Reviewed-by: Scott Teel <scott.teel@microsemi.com>
-> Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
-> Signed-off-by: Don Brace <don.brace@microsemi.com>
-> ---
->  drivers/scsi/hpsa.c |   59 +++++++++++++++++++++++++++++++++++++++------------
->  drivers/scsi/hpsa.h |    1 +
->  2 files changed, 46 insertions(+), 14 deletions(-)
->
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index a2852da..20b4e83 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -1859,10 +1859,13 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h,
->  	 * A reset can cause a device status to change
->  	 * re-schedule the scan to see what happened.
->  	 */
-> +	spin_lock_irqsave(&h->reset_lock, flags);
->  	if (h->reset_in_progress) {
->  		h->drv_req_rescan = 1;
-> +		spin_unlock_irqrestore(&h->reset_lock, flags);
->  		return;
->  	}
-> +	spin_unlock_irqrestore(&h->reset_lock, flags);
->  
->  	added = kzalloc(sizeof(*added) * HPSA_MAX_DEVICES, GFP_KERNEL);
->  	removed = kzalloc(sizeof(*removed) * HPSA_MAX_DEVICES, GFP_KERNEL);
-> @@ -5618,11 +5621,14 @@ static void hpsa_scan_start(struct Scsi_Host *sh)
->  	/*
->  	 * Do the scan after a reset completion
->  	 */
-> +	spin_lock_irqsave(&h->reset_lock, flags);
->  	if (h->reset_in_progress) {
->  		h->drv_req_rescan = 1;
-> +		spin_unlock_irqrestore(&h->reset_lock, flags);
->  		hpsa_scan_complete(h);
->  		return;
->  	}
-> +	spin_unlock_irqrestore(&h->reset_lock, flags);
-
-The name 'reset_in_progress' suggest that you want to protect
-something else from running in parallel to the hpsa_eh_device_reset_handler.
-Which code parts are you protecting ?
-The remainder of this function below doesn't seem to be protected, is that fine ?
-tomash
-
->  
->  	hpsa_update_scsi_devices(h);
->  
-> @@ -5834,28 +5840,38 @@ static int wait_for_device_to_become_ready(struct ctlr_info *h,
->   */
->  static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
->  {
-> -	int rc;
-> +	int rc = SUCCESS;
->  	struct ctlr_info *h;
->  	struct hpsa_scsi_dev_t *dev;
->  	u8 reset_type;
->  	char msg[48];
-> +	unsigned long flags;
->  
->  	/* find the controller to which the command to be aborted was sent */
->  	h = sdev_to_hba(scsicmd->device);
->  	if (h == NULL) /* paranoia */
->  		return FAILED;
->  
-> -	if (lockup_detected(h))
-> -		return FAILED;
-> +	spin_lock_irqsave(&h->reset_lock, flags);
-> +	h->reset_in_progress = 1;
-> +	spin_unlock_irqrestore(&h->reset_lock, flags);
-> +
-> +	if (lockup_detected(h)) {
-> +		rc = FAILED;
-> +		goto return_reset_status;
-> +	}
->  
->  	dev = scsicmd->device->hostdata;
->  	if (!dev) {
->  		dev_err(&h->pdev->dev, "%s: device lookup failed\n", __func__);
-> -		return FAILED;
-> +		rc = FAILED;
-> +		goto return_reset_status;
->  	}
->  
-> -	if (dev->devtype == TYPE_ENCLOSURE)
-> -		return SUCCESS;
-> +	if (dev->devtype == TYPE_ENCLOSURE) {
-> +		rc = SUCCESS;
-> +		goto return_reset_status;
-> +	}
->  
->  	/* if controller locked up, we can guarantee command won't complete */
->  	if (lockup_detected(h)) {
-> @@ -5863,7 +5879,8 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
->  			 "cmd %d RESET FAILED, lockup detected",
->  			 hpsa_get_cmd_index(scsicmd));
->  		hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
-> -		return FAILED;
-> +		rc = FAILED;
-> +		goto return_reset_status;
->  	}
->  
->  	/* this reset request might be the result of a lockup; check */
-> @@ -5872,12 +5889,15 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
->  			 "cmd %d RESET FAILED, new lockup detected",
->  			 hpsa_get_cmd_index(scsicmd));
->  		hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
-> -		return FAILED;
-> +		rc = FAILED;
-> +		goto return_reset_status;
->  	}
->  
->  	/* Do not attempt on controller */
-> -	if (is_hba_lunid(dev->scsi3addr))
-> -		return SUCCESS;
-> +	if (is_hba_lunid(dev->scsi3addr)) {
-> +		rc = SUCCESS;
-> +		goto return_reset_status;
-> +	}
->  
->  	if (is_logical_dev_addr_mode(dev->scsi3addr))
->  		reset_type = HPSA_DEVICE_RESET_MSG;
-> @@ -5888,17 +5908,24 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
->  		reset_type == HPSA_DEVICE_RESET_MSG ? "logical " : "physical ");
->  	hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
->  
-> -	h->reset_in_progress = 1;
-> -
->  	/* send a reset to the SCSI LUN which the command was sent to */
->  	rc = hpsa_do_reset(h, dev, dev->scsi3addr, reset_type,
->  			   DEFAULT_REPLY_QUEUE);
-> +	if (rc == 0)
-> +		rc = SUCCESS;
-> +	else
-> +		rc = FAILED;
-> +
->  	sprintf(msg, "reset %s %s",
->  		reset_type == HPSA_DEVICE_RESET_MSG ? "logical " : "physical ",
-> -		rc == 0 ? "completed successfully" : "failed");
-> +		rc == SUCCESS ? "completed successfully" : "failed");
->  	hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
-> +
-> +return_reset_status:
-> +	spin_lock_irqsave(&h->reset_lock, flags);
->  	h->reset_in_progress = 0;
-> -	return rc == 0 ? SUCCESS : FAILED;
-> +	spin_unlock_irqrestore(&h->reset_lock, flags);
-> +	return rc;
->  }
->  
->  static void swizzle_abort_tag(u8 *tag)
-> @@ -8649,10 +8676,13 @@ static void hpsa_rescan_ctlr_worker(struct work_struct *work)
->  	/*
->  	 * Do the scan after the reset
->  	 */
-> +	spin_lock_irqsave(&h->reset_lock, flags);
->  	if (h->reset_in_progress) {
->  		h->drv_req_rescan = 1;
-> +		spin_unlock_irqrestore(&h->reset_lock, flags);
->  		return;
->  	}
-> +	spin_unlock_irqrestore(&h->reset_lock, flags);
->  
->  	if (hpsa_ctlr_needs_rescan(h) || hpsa_offline_devices_ready(h)) {
->  		scsi_host_get(h->scsi_host);
-> @@ -8759,6 +8789,7 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->  	spin_lock_init(&h->lock);
->  	spin_lock_init(&h->offline_device_lock);
->  	spin_lock_init(&h->scan_lock);
-> +	spin_lock_init(&h->reset_lock);
->  	atomic_set(&h->passthru_cmds_avail, HPSA_MAX_CONCURRENT_PASSTHRUS);
->  	atomic_set(&h->abort_cmds_available, HPSA_CMDS_RESERVED_FOR_ABORTS);
->  
-> diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-> index 6f04f2a..5352664 100644
-> --- a/drivers/scsi/hpsa.h
-> +++ b/drivers/scsi/hpsa.h
-> @@ -301,6 +301,7 @@ struct ctlr_info {
->  	struct mutex reset_mutex;
->  	u8 reset_in_progress;
->  	struct hpsa_sas_node *sas_host;
-> +	spinlock_t reset_lock;
->  };
->  
->  struct offline_device_entry {
->
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBPbiA1LjUuMjAxNyAwMDo1MSwgRG9uIEJy
+YWNlIHdyb3RlOg0KPiA+ICAtIG1hcmsgZGV2aWNlIHN0YXRlIHNvb25lci4NCj4gPg0KPiA+IFJl
+dmlld2VkLWJ5OiBTY290dCBCZW5lc2ggPHNjb3R0LmJlbmVzaEBtaWNyb3NlbWkuY29tPg0KPiA+
+IFJldmlld2VkLWJ5OiBTY290dCBUZWVsIDxzY290dC50ZWVsQG1pY3Jvc2VtaS5jb20+DQo+ID4g
+UmV2aWV3ZWQtYnk6IEtldmluIEJhcm5ldHQgPGtldmluLmJhcm5ldHRAbWljcm9zZW1pLmNvbT4N
+Cj4gPiBTaWduZWQtb2ZmLWJ5OiBEb24gQnJhY2UgPGRvbi5icmFjZUBtaWNyb3NlbWkuY29tPg0K
+PiA+IC0tLQ0KPiA+ICBkcml2ZXJzL3Njc2kvaHBzYS5jIHwgICA1OQ0KPiArKysrKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0tLS0NCj4gPiAgZHJpdmVycy9zY3Np
+L2hwc2EuaCB8ICAgIDEgKw0KPiA+ICAyIGZpbGVzIGNoYW5nZWQsIDQ2IGluc2VydGlvbnMoKyks
+IDE0IGRlbGV0aW9ucygtKQ0KPiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9ocHNh
+LmMgYi9kcml2ZXJzL3Njc2kvaHBzYS5jDQo+ID4gaW5kZXggYTI4NTJkYS4uMjBiNGU4MyAxMDA2
+NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3Njc2kvaHBzYS5jDQo+ID4gKysrIGIvZHJpdmVycy9zY3Np
+L2hwc2EuYw0KPiA+IEBAIC0xODU5LDEwICsxODU5LDEzIEBAIHN0YXRpYyB2b2lkIGFkanVzdF9o
+cHNhX3Njc2lfdGFibGUoc3RydWN0DQo+IGN0bHJfaW5mbyAqaCwNCj4gPiAgICAgICAgKiBBIHJl
+c2V0IGNhbiBjYXVzZSBhIGRldmljZSBzdGF0dXMgdG8gY2hhbmdlDQo+ID4gICAgICAgICogcmUt
+c2NoZWR1bGUgdGhlIHNjYW4gdG8gc2VlIHdoYXQgaGFwcGVuZWQuDQo+ID4gICAgICAgICovDQo+
+ID4gKyAgICAgc3Bpbl9sb2NrX2lycXNhdmUoJmgtPnJlc2V0X2xvY2ssIGZsYWdzKTsNCj4gPiAg
+ICAgICBpZiAoaC0+cmVzZXRfaW5fcHJvZ3Jlc3MpIHsNCj4gPiAgICAgICAgICAgICAgIGgtPmRy
+dl9yZXFfcmVzY2FuID0gMTsNCj4gPiArICAgICAgICAgICAgIHNwaW5fdW5sb2NrX2lycXJlc3Rv
+cmUoJmgtPnJlc2V0X2xvY2ssIGZsYWdzKTsNCj4gPiAgICAgICAgICAgICAgIHJldHVybjsNCj4g
+PiAgICAgICB9DQo+ID4gKyAgICAgc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmaC0+cmVzZXRfbG9j
+aywgZmxhZ3MpOw0KPiA+DQo+ID4gICAgICAgYWRkZWQgPSBremFsbG9jKHNpemVvZigqYWRkZWQp
+ICogSFBTQV9NQVhfREVWSUNFUywgR0ZQX0tFUk5FTCk7DQo+ID4gICAgICAgcmVtb3ZlZCA9IGt6
+YWxsb2Moc2l6ZW9mKCpyZW1vdmVkKSAqIEhQU0FfTUFYX0RFVklDRVMsDQo+IEdGUF9LRVJORUwp
+Ow0KPiA+IEBAIC01NjE4LDExICs1NjIxLDE0IEBAIHN0YXRpYyB2b2lkIGhwc2Ffc2Nhbl9zdGFy
+dChzdHJ1Y3QgU2NzaV9Ib3N0DQo+ICpzaCkNCj4gPiAgICAgICAvKg0KPiA+ICAgICAgICAqIERv
+IHRoZSBzY2FuIGFmdGVyIGEgcmVzZXQgY29tcGxldGlvbg0KPiA+ICAgICAgICAqLw0KPiA+ICsg
+ICAgIHNwaW5fbG9ja19pcnFzYXZlKCZoLT5yZXNldF9sb2NrLCBmbGFncyk7DQo+ID4gICAgICAg
+aWYgKGgtPnJlc2V0X2luX3Byb2dyZXNzKSB7DQo+ID4gICAgICAgICAgICAgICBoLT5kcnZfcmVx
+X3Jlc2NhbiA9IDE7DQo+ID4gKyAgICAgICAgICAgICBzcGluX3VubG9ja19pcnFyZXN0b3JlKCZo
+LT5yZXNldF9sb2NrLCBmbGFncyk7DQo+ID4gICAgICAgICAgICAgICBocHNhX3NjYW5fY29tcGxl
+dGUoaCk7DQo+ID4gICAgICAgICAgICAgICByZXR1cm47DQo+ID4gICAgICAgfQ0KPiA+ICsgICAg
+IHNwaW5fdW5sb2NrX2lycXJlc3RvcmUoJmgtPnJlc2V0X2xvY2ssIGZsYWdzKTsNCj4gDQo+IFRo
+ZSBuYW1lICdyZXNldF9pbl9wcm9ncmVzcycgc3VnZ2VzdCB0aGF0IHlvdSB3YW50IHRvIHByb3Rl
+Y3QNCj4gc29tZXRoaW5nIGVsc2UgZnJvbSBydW5uaW5nIGluIHBhcmFsbGVsIHRvIHRoZQ0KPiBo
+cHNhX2VoX2RldmljZV9yZXNldF9oYW5kbGVyLg0KPiBXaGljaCBjb2RlIHBhcnRzIGFyZSB5b3Ug
+cHJvdGVjdGluZyA/DQo+IFRoZSByZW1haW5kZXIgb2YgdGhpcyBmdW5jdGlvbiBiZWxvdyBkb2Vz
+bid0IHNlZW0gdG8gYmUgcHJvdGVjdGVkLCBpcyB0aGF0DQo+IGZpbmUgPw0KPiB0b21hc2gNCg0K
+VGhpcyBjb2RlIHdhcyBhZGRlZCB0byBwcmV2ZW50IGEgc2NhbiBvcGVyYXRpb24gZnJvbSBvY2N1
+cnJpbmcgd2hpbGUgYSByZXNldCBvcGVyYXRpb24NCmlzIGluIHByb2dyZXNzLiAgSXQgc2NoZWR1
+bGVzIGEgc2NhbiBsYXRlciBpZiBhIHJlc2V0IG9wZXJhdGlvbiBpcyBkZXRlY3RlZC4gVGhlcmUg
+YXJlIG1vcmUgY2hlY2tzIGZvciB0aGlzDQpsYXRlciBvbiBpbiB0aGUgc2NhbiBjb2RlIGFsc28u
+DQoNCkkgZm91bmQgdGhpcyBoZWxwcyBkdXJpbmcgbXVsdGlwYXRoIGZhaWxvdmVyIHRlc3Rpbmcu
+DQoNClNvLCB5ZXMgdGhpcyBpcyBvay4NCg0KSSBhcHByZWNpYXRlIHlvdXIgaW5wdXQuDQoNClRo
+YW5rcywNCkRvbiBCcmFjZQ0KRVNDIC0gU21hcnQgU3RvcmFnZQ0KTWljcm9zZW1pIENvcnBvcmF0
+aW9uDQoNCg0KPiANCj4gPg0KPiA+ICAgICAgIGhwc2FfdXBkYXRlX3Njc2lfZGV2aWNlcyhoKTsN
+Cj4gPg0KPiA+IEBAIC01ODM0LDI4ICs1ODQwLDM4IEBAIHN0YXRpYyBpbnQNCj4gd2FpdF9mb3Jf
+ZGV2aWNlX3RvX2JlY29tZV9yZWFkeShzdHJ1Y3QgY3Rscl9pbmZvICpoLA0KPiA+ICAgKi8NCj4g
+PiAgc3RhdGljIGludCBocHNhX2VoX2RldmljZV9yZXNldF9oYW5kbGVyKHN0cnVjdCBzY3NpX2Nt
+bmQgKnNjc2ljbWQpDQo+ID4gIHsNCj4gPiAtICAgICBpbnQgcmM7DQo+ID4gKyAgICAgaW50IHJj
+ID0gU1VDQ0VTUzsNCj4gPiAgICAgICBzdHJ1Y3QgY3Rscl9pbmZvICpoOw0KPiA+ICAgICAgIHN0
+cnVjdCBocHNhX3Njc2lfZGV2X3QgKmRldjsNCj4gPiAgICAgICB1OCByZXNldF90eXBlOw0KPiA+
+ICAgICAgIGNoYXIgbXNnWzQ4XTsNCj4gPiArICAgICB1bnNpZ25lZCBsb25nIGZsYWdzOw0KPiA+
+DQo+ID4gICAgICAgLyogZmluZCB0aGUgY29udHJvbGxlciB0byB3aGljaCB0aGUgY29tbWFuZCB0
+byBiZSBhYm9ydGVkIHdhcyBzZW50ICovDQo+ID4gICAgICAgaCA9IHNkZXZfdG9faGJhKHNjc2lj
+bWQtPmRldmljZSk7DQo+ID4gICAgICAgaWYgKGggPT0gTlVMTCkgLyogcGFyYW5vaWEgKi8NCj4g
+PiAgICAgICAgICAgICAgIHJldHVybiBGQUlMRUQ7DQo+ID4NCj4gPiAtICAgICBpZiAobG9ja3Vw
+X2RldGVjdGVkKGgpKQ0KPiA+IC0gICAgICAgICAgICAgcmV0dXJuIEZBSUxFRDsNCj4gPiArICAg
+ICBzcGluX2xvY2tfaXJxc2F2ZSgmaC0+cmVzZXRfbG9jaywgZmxhZ3MpOw0KPiA+ICsgICAgIGgt
+PnJlc2V0X2luX3Byb2dyZXNzID0gMTsNCj4gPiArICAgICBzcGluX3VubG9ja19pcnFyZXN0b3Jl
+KCZoLT5yZXNldF9sb2NrLCBmbGFncyk7DQo+ID4gKw0KPiA+ICsgICAgIGlmIChsb2NrdXBfZGV0
+ZWN0ZWQoaCkpIHsNCj4gPiArICAgICAgICAgICAgIHJjID0gRkFJTEVEOw0KPiA+ICsgICAgICAg
+ICAgICAgZ290byByZXR1cm5fcmVzZXRfc3RhdHVzOw0KPiA+ICsgICAgIH0NCj4gPg0KPiA+ICAg
+ICAgIGRldiA9IHNjc2ljbWQtPmRldmljZS0+aG9zdGRhdGE7DQo+ID4gICAgICAgaWYgKCFkZXYp
+IHsNCj4gPiAgICAgICAgICAgICAgIGRldl9lcnIoJmgtPnBkZXYtPmRldiwgIiVzOiBkZXZpY2Ug
+bG9va3VwIGZhaWxlZFxuIiwgX19mdW5jX18pOw0KPiA+IC0gICAgICAgICAgICAgcmV0dXJuIEZB
+SUxFRDsNCj4gPiArICAgICAgICAgICAgIHJjID0gRkFJTEVEOw0KPiA+ICsgICAgICAgICAgICAg
+Z290byByZXR1cm5fcmVzZXRfc3RhdHVzOw0KPiA+ICAgICAgIH0NCj4gPg0KPiA+IC0gICAgIGlm
+IChkZXYtPmRldnR5cGUgPT0gVFlQRV9FTkNMT1NVUkUpDQo+ID4gLSAgICAgICAgICAgICByZXR1
+cm4gU1VDQ0VTUzsNCj4gPiArICAgICBpZiAoZGV2LT5kZXZ0eXBlID09IFRZUEVfRU5DTE9TVVJF
+KSB7DQo+ID4gKyAgICAgICAgICAgICByYyA9IFNVQ0NFU1M7DQo+ID4gKyAgICAgICAgICAgICBn
+b3RvIHJldHVybl9yZXNldF9zdGF0dXM7DQo+ID4gKyAgICAgfQ0KPiA+DQo+ID4gICAgICAgLyog
+aWYgY29udHJvbGxlciBsb2NrZWQgdXAsIHdlIGNhbiBndWFyYW50ZWUgY29tbWFuZCB3b24ndCBj
+b21wbGV0ZQ0KPiAqLw0KPiA+ICAgICAgIGlmIChsb2NrdXBfZGV0ZWN0ZWQoaCkpIHsNCj4gPiBA
+QCAtNTg2Myw3ICs1ODc5LDggQEAgc3RhdGljIGludCBocHNhX2VoX2RldmljZV9yZXNldF9oYW5k
+bGVyKHN0cnVjdA0KPiBzY3NpX2NtbmQgKnNjc2ljbWQpDQo+ID4gICAgICAgICAgICAgICAgICAg
+ICAgICAiY21kICVkIFJFU0VUIEZBSUxFRCwgbG9ja3VwIGRldGVjdGVkIiwNCj4gPiAgICAgICAg
+ICAgICAgICAgICAgICAgIGhwc2FfZ2V0X2NtZF9pbmRleChzY3NpY21kKSk7DQo+ID4gICAgICAg
+ICAgICAgICBocHNhX3Nob3dfZGV2X21zZyhLRVJOX1dBUk5JTkcsIGgsIGRldiwgbXNnKTsNCj4g
+PiAtICAgICAgICAgICAgIHJldHVybiBGQUlMRUQ7DQo+ID4gKyAgICAgICAgICAgICByYyA9IEZB
+SUxFRDsNCj4gPiArICAgICAgICAgICAgIGdvdG8gcmV0dXJuX3Jlc2V0X3N0YXR1czsNCj4gPiAg
+ICAgICB9DQo+ID4NCj4gPiAgICAgICAvKiB0aGlzIHJlc2V0IHJlcXVlc3QgbWlnaHQgYmUgdGhl
+IHJlc3VsdCBvZiBhIGxvY2t1cDsgY2hlY2sgKi8NCj4gPiBAQCAtNTg3MiwxMiArNTg4OSwxNSBA
+QCBzdGF0aWMgaW50IGhwc2FfZWhfZGV2aWNlX3Jlc2V0X2hhbmRsZXIoc3RydWN0DQo+IHNjc2lf
+Y21uZCAqc2NzaWNtZCkNCj4gPiAgICAgICAgICAgICAgICAgICAgICAgICJjbWQgJWQgUkVTRVQg
+RkFJTEVELCBuZXcgbG9ja3VwIGRldGVjdGVkIiwNCj4gPiAgICAgICAgICAgICAgICAgICAgICAg
+IGhwc2FfZ2V0X2NtZF9pbmRleChzY3NpY21kKSk7DQo+ID4gICAgICAgICAgICAgICBocHNhX3No
+b3dfZGV2X21zZyhLRVJOX1dBUk5JTkcsIGgsIGRldiwgbXNnKTsNCj4gPiAtICAgICAgICAgICAg
+IHJldHVybiBGQUlMRUQ7DQo+ID4gKyAgICAgICAgICAgICByYyA9IEZBSUxFRDsNCj4gPiArICAg
+ICAgICAgICAgIGdvdG8gcmV0dXJuX3Jlc2V0X3N0YXR1czsNCj4gPiAgICAgICB9DQo+ID4NCj4g
+PiAgICAgICAvKiBEbyBub3QgYXR0ZW1wdCBvbiBjb250cm9sbGVyICovDQo+ID4gLSAgICAgaWYg
+KGlzX2hiYV9sdW5pZChkZXYtPnNjc2kzYWRkcikpDQo+ID4gLSAgICAgICAgICAgICByZXR1cm4g
+U1VDQ0VTUzsNCj4gPiArICAgICBpZiAoaXNfaGJhX2x1bmlkKGRldi0+c2NzaTNhZGRyKSkgew0K
+PiA+ICsgICAgICAgICAgICAgcmMgPSBTVUNDRVNTOw0KPiA+ICsgICAgICAgICAgICAgZ290byBy
+ZXR1cm5fcmVzZXRfc3RhdHVzOw0KPiA+ICsgICAgIH0NCj4gPg0KPiA+ICAgICAgIGlmIChpc19s
+b2dpY2FsX2Rldl9hZGRyX21vZGUoZGV2LT5zY3NpM2FkZHIpKQ0KPiA+ICAgICAgICAgICAgICAg
+cmVzZXRfdHlwZSA9IEhQU0FfREVWSUNFX1JFU0VUX01TRzsNCj4gPiBAQCAtNTg4OCwxNyArNTkw
+OCwyNCBAQCBzdGF0aWMgaW50IGhwc2FfZWhfZGV2aWNlX3Jlc2V0X2hhbmRsZXIoc3RydWN0DQo+
+IHNjc2lfY21uZCAqc2NzaWNtZCkNCj4gPiAgICAgICAgICAgICAgIHJlc2V0X3R5cGUgPT0gSFBT
+QV9ERVZJQ0VfUkVTRVRfTVNHID8gImxvZ2ljYWwgIiA6ICJwaHlzaWNhbCAiKTsNCj4gPiAgICAg
+ICBocHNhX3Nob3dfZGV2X21zZyhLRVJOX1dBUk5JTkcsIGgsIGRldiwgbXNnKTsNCj4gPg0KPiA+
+IC0gICAgIGgtPnJlc2V0X2luX3Byb2dyZXNzID0gMTsNCj4gPiAtDQo+ID4gICAgICAgLyogc2Vu
+ZCBhIHJlc2V0IHRvIHRoZSBTQ1NJIExVTiB3aGljaCB0aGUgY29tbWFuZCB3YXMgc2VudCB0byAq
+Lw0KPiA+ICAgICAgIHJjID0gaHBzYV9kb19yZXNldChoLCBkZXYsIGRldi0+c2NzaTNhZGRyLCBy
+ZXNldF90eXBlLA0KPiA+ICAgICAgICAgICAgICAgICAgICAgICAgICBERUZBVUxUX1JFUExZX1FV
+RVVFKTsNCj4gPiArICAgICBpZiAocmMgPT0gMCkNCj4gPiArICAgICAgICAgICAgIHJjID0gU1VD
+Q0VTUzsNCj4gPiArICAgICBlbHNlDQo+ID4gKyAgICAgICAgICAgICByYyA9IEZBSUxFRDsNCj4g
+PiArDQo+ID4gICAgICAgc3ByaW50Zihtc2csICJyZXNldCAlcyAlcyIsDQo+ID4gICAgICAgICAg
+ICAgICByZXNldF90eXBlID09IEhQU0FfREVWSUNFX1JFU0VUX01TRyA/ICJsb2dpY2FsICIgOiAi
+cGh5c2ljYWwgIiwNCj4gPiAtICAgICAgICAgICAgIHJjID09IDAgPyAiY29tcGxldGVkIHN1Y2Nl
+c3NmdWxseSIgOiAiZmFpbGVkIik7DQo+ID4gKyAgICAgICAgICAgICByYyA9PSBTVUNDRVNTID8g
+ImNvbXBsZXRlZCBzdWNjZXNzZnVsbHkiIDogImZhaWxlZCIpOw0KPiA+ICAgICAgIGhwc2Ffc2hv
+d19kZXZfbXNnKEtFUk5fV0FSTklORywgaCwgZGV2LCBtc2cpOw0KPiA+ICsNCj4gPiArcmV0dXJu
+X3Jlc2V0X3N0YXR1czoNCj4gPiArICAgICBzcGluX2xvY2tfaXJxc2F2ZSgmaC0+cmVzZXRfbG9j
+aywgZmxhZ3MpOw0KPiA+ICAgICAgIGgtPnJlc2V0X2luX3Byb2dyZXNzID0gMDsNCj4gPiAtICAg
+ICByZXR1cm4gcmMgPT0gMCA/IFNVQ0NFU1MgOiBGQUlMRUQ7DQo+ID4gKyAgICAgc3Bpbl91bmxv
+Y2tfaXJxcmVzdG9yZSgmaC0+cmVzZXRfbG9jaywgZmxhZ3MpOw0KPiA+ICsgICAgIHJldHVybiBy
+YzsNCj4gPiAgfQ0KPiA+DQo+ID4gIHN0YXRpYyB2b2lkIHN3aXp6bGVfYWJvcnRfdGFnKHU4ICp0
+YWcpDQo+ID4gQEAgLTg2NDksMTAgKzg2NzYsMTMgQEAgc3RhdGljIHZvaWQgaHBzYV9yZXNjYW5f
+Y3Rscl93b3JrZXIoc3RydWN0DQo+IHdvcmtfc3RydWN0ICp3b3JrKQ0KPiA+ICAgICAgIC8qDQo+
+ID4gICAgICAgICogRG8gdGhlIHNjYW4gYWZ0ZXIgdGhlIHJlc2V0DQo+ID4gICAgICAgICovDQo+
+ID4gKyAgICAgc3Bpbl9sb2NrX2lycXNhdmUoJmgtPnJlc2V0X2xvY2ssIGZsYWdzKTsNCj4gPiAg
+ICAgICBpZiAoaC0+cmVzZXRfaW5fcHJvZ3Jlc3MpIHsNCj4gPiAgICAgICAgICAgICAgIGgtPmRy
+dl9yZXFfcmVzY2FuID0gMTsNCj4gPiArICAgICAgICAgICAgIHNwaW5fdW5sb2NrX2lycXJlc3Rv
+cmUoJmgtPnJlc2V0X2xvY2ssIGZsYWdzKTsNCj4gPiAgICAgICAgICAgICAgIHJldHVybjsNCj4g
+PiAgICAgICB9DQo+ID4gKyAgICAgc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmaC0+cmVzZXRfbG9j
+aywgZmxhZ3MpOw0KPiA+DQo+ID4gICAgICAgaWYgKGhwc2FfY3Rscl9uZWVkc19yZXNjYW4oaCkg
+fHwgaHBzYV9vZmZsaW5lX2RldmljZXNfcmVhZHkoaCkpIHsNCj4gPiAgICAgICAgICAgICAgIHNj
+c2lfaG9zdF9nZXQoaC0+c2NzaV9ob3N0KTsNCj4gPiBAQCAtODc1OSw2ICs4Nzg5LDcgQEAgc3Rh
+dGljIGludCBocHNhX2luaXRfb25lKHN0cnVjdCBwY2lfZGV2ICpwZGV2LA0KPiBjb25zdCBzdHJ1
+Y3QgcGNpX2RldmljZV9pZCAqZW50KQ0KPiA+ICAgICAgIHNwaW5fbG9ja19pbml0KCZoLT5sb2Nr
+KTsNCj4gPiAgICAgICBzcGluX2xvY2tfaW5pdCgmaC0+b2ZmbGluZV9kZXZpY2VfbG9jayk7DQo+
+ID4gICAgICAgc3Bpbl9sb2NrX2luaXQoJmgtPnNjYW5fbG9jayk7DQo+ID4gKyAgICAgc3Bpbl9s
+b2NrX2luaXQoJmgtPnJlc2V0X2xvY2spOw0KPiA+ICAgICAgIGF0b21pY19zZXQoJmgtPnBhc3N0
+aHJ1X2NtZHNfYXZhaWwsDQo+IEhQU0FfTUFYX0NPTkNVUlJFTlRfUEFTU1RIUlVTKTsNCj4gPiAg
+ICAgICBhdG9taWNfc2V0KCZoLT5hYm9ydF9jbWRzX2F2YWlsYWJsZSwNCj4gSFBTQV9DTURTX1JF
+U0VSVkVEX0ZPUl9BQk9SVFMpOw0KPiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9o
+cHNhLmggYi9kcml2ZXJzL3Njc2kvaHBzYS5oDQo+ID4gaW5kZXggNmYwNGYyYS4uNTM1MjY2NCAx
+MDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3Njc2kvaHBzYS5oDQo+ID4gKysrIGIvZHJpdmVycy9z
+Y3NpL2hwc2EuaA0KPiA+IEBAIC0zMDEsNiArMzAxLDcgQEAgc3RydWN0IGN0bHJfaW5mbyB7DQo+
+ID4gICAgICAgc3RydWN0IG11dGV4IHJlc2V0X211dGV4Ow0KPiA+ICAgICAgIHU4IHJlc2V0X2lu
+X3Byb2dyZXNzOw0KPiA+ICAgICAgIHN0cnVjdCBocHNhX3Nhc19ub2RlICpzYXNfaG9zdDsNCj4g
+PiArICAgICBzcGlubG9ja190IHJlc2V0X2xvY2s7DQo+ID4gIH07DQo+ID4NCj4gPiAgc3RydWN0
+IG9mZmxpbmVfZGV2aWNlX2VudHJ5IHsNCj4gPg0KDQo=
