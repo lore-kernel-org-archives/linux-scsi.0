@@ -1,244 +1,46 @@
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v3] ibmvscsis: Do not send aborted task response
-Date: Fri,  5 May 2017 14:17:15 -0500
-Message-ID: <1494011835-29476-1-git-send-email-bryantly@linux.vnet.ibm.com>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: nab@linux-iscsi.org, Bart.VanAssche@sandisk.com, martin.petersen@oracle.com
-Cc: mikecyr@linux.vnet.ibm.com, mikecyr@us.ibm.com, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, stable@vger.kernel.org
+From: Kees Cook <keescook@chromium.org>
+Subject: [PATCH] scsi: qedf: Avoid reading past end of buffer
+Date: Fri, 5 May 2017 15:42:55 -0700
+Message-ID: <20170505224255.GA21521@beast>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: QLogic-Storage-Upstream@cavium.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org, Daniel Micay <danielmicay@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The driver is sending a response to the actual scsi op that was
-aborted by an abort task TM, while LIO is sending a response to
-the abort task TM.
+Using memcpy() from a string that is shorter than the length copied means
+the destination buffer is being filled with arbitrary data from the kernel
+rodata segment. Instead, use strncpy() which will fill the trailing bytes
+with zeros.
 
-ibmvscsis_tgt does not send the response to the client until
-release_cmd time. The reason for this was because if we did it
-at queue_status time, then the client would be free to reuse the
-tag for that command, but we're still using the tag until the
-command is released at release_cmd time, so we chose to delay
-sending the response until then. That then caused this issue, because
-release_cmd is always called, even if queue_status is not.
+This was found with the future CONFIG_FORTIFY_SOURCE feature.
 
-SCSI spec says that the initiator that sends the abort task
-TM NEVER gets a response to the aborted op and with the current
-code it will send a response. Thus this fix will remove that response
-if the CMD_T_ABORTED && !CMD_T_TAS.
-
-Another case with a small timing window is the case where if LIO sends a
-TMR_DOES_NOT_EXIST, and the release_cmd callback is called for the TMR Abort
-cmd before the release_cmd for the (attemped) aborted cmd, then we need to
-ensure that we send the response for the (attempted) abort cmd to the client
-before we send the response for the TMR Abort cmd.
-
-Cc: <stable@vger.kernel.org> # v4.8+
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-Signed-off-by: Michael Cyr <mikecyr@linux.vnet.ibm.com>
+Cc: Daniel Micay <danielmicay@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 114 ++++++++++++++++++++++++-------
- drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.h |   2 +
- 2 files changed, 91 insertions(+), 25 deletions(-)
+ drivers/scsi/qedf/qedf_main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-index 0f80779..d390325 100644
---- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-+++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-@@ -1170,6 +1170,7 @@ static struct ibmvscsis_cmd *ibmvscsis_get_free_cmd(struct scsi_info *vscsi)
- 		cmd = list_first_entry_or_null(&vscsi->free_cmd,
- 					       struct ibmvscsis_cmd, list);
- 		if (cmd) {
-+			cmd->flags &= ~(DELAY_SEND);
- 			list_del(&cmd->list);
- 			cmd->iue = iue;
- 			cmd->type = UNSET_TYPE;
-@@ -1749,45 +1750,79 @@ static void srp_snd_msg_failed(struct scsi_info *vscsi, long rc)
- static void ibmvscsis_send_messages(struct scsi_info *vscsi)
- {
- 	u64 msg_hi = 0;
--	/* note do not attmempt to access the IU_data_ptr with this pointer
-+	/* note do not attempt to access the IU_data_ptr with this pointer
- 	 * it is not valid
- 	 */
- 	struct viosrp_crq *crq = (struct viosrp_crq *)&msg_hi;
- 	struct ibmvscsis_cmd *cmd, *nxt;
- 	struct iu_entry *iue;
- 	long rc = ADAPT_SUCCESS;
-+	bool retry = false;
- 
- 	if (!(vscsi->flags & RESPONSE_Q_DOWN)) {
--		list_for_each_entry_safe(cmd, nxt, &vscsi->waiting_rsp, list) {
--			iue = cmd->iue;
-+		do {
-+			retry = false;
-+			list_for_each_entry_safe(cmd, nxt, &vscsi->waiting_rsp,
-+						 list) {
-+				/*
-+				 * Check to make sure abort cmd gets processed
-+				 * prior to the abort tmr cmd
-+				 */
-+				if (cmd->flags & DELAY_SEND)
-+					continue;
- 
--			crq->valid = VALID_CMD_RESP_EL;
--			crq->format = cmd->rsp.format;
-+				if (cmd->abort_cmd) {
-+					retry = true;
-+					cmd->abort_cmd->flags &= ~(DELAY_SEND);
-+				}
- 
--			if (cmd->flags & CMD_FAST_FAIL)
--				crq->status = VIOSRP_ADAPTER_FAIL;
-+				/*
-+				 * If CMD_T_ABORTED w/o CMD_T_TAS scenarios and
-+				 * the case where LIO issued a
-+				 * ABORT_TASK: Sending TMR_TASK_DOES_NOT_EXIST
-+				 * case then we dont send a response, since it
-+				 * was already done.
-+				 */
-+				if (cmd->se_cmd.transport_state & CMD_T_ABORTED &&
-+				    !(cmd->se_cmd.transport_state & CMD_T_TAS)) {
-+					list_del(&cmd->list);
-+					ibmvscsis_free_cmd_resources(vscsi,
-+								     cmd);
-+				} else {
-+					iue = cmd->iue;
- 
--			crq->IU_length = cpu_to_be16(cmd->rsp.len);
-+					crq->valid = VALID_CMD_RESP_EL;
-+					crq->format = cmd->rsp.format;
- 
--			rc = h_send_crq(vscsi->dma_dev->unit_address,
--					be64_to_cpu(msg_hi),
--					be64_to_cpu(cmd->rsp.tag));
-+					if (cmd->flags & CMD_FAST_FAIL)
-+						crq->status = VIOSRP_ADAPTER_FAIL;
- 
--			pr_debug("send_messages: cmd %p, tag 0x%llx, rc %ld\n",
--				 cmd, be64_to_cpu(cmd->rsp.tag), rc);
-+					crq->IU_length = cpu_to_be16(cmd->rsp.len);
- 
--			/* if all ok free up the command element resources */
--			if (rc == H_SUCCESS) {
--				/* some movement has occurred */
--				vscsi->rsp_q_timer.timer_pops = 0;
--				list_del(&cmd->list);
-+					rc = h_send_crq(vscsi->dma_dev->unit_address,
-+							be64_to_cpu(msg_hi),
-+							be64_to_cpu(cmd->rsp.tag));
- 
--				ibmvscsis_free_cmd_resources(vscsi, cmd);
--			} else {
--				srp_snd_msg_failed(vscsi, rc);
--				break;
-+					pr_debug("send_messages: cmd %p, tag 0x%llx, rc %ld\n",
-+						 cmd, be64_to_cpu(cmd->rsp.tag), rc);
-+
-+					/* if all ok free up the command
-+					 * element resources
-+					 */
-+					if (rc == H_SUCCESS) {
-+						/* some movement has occurred */
-+						vscsi->rsp_q_timer.timer_pops = 0;
-+						list_del(&cmd->list);
-+
-+						ibmvscsis_free_cmd_resources(vscsi,
-+									     cmd);
-+					} else {
-+						srp_snd_msg_failed(vscsi, rc);
-+						break;
-+					}
-+				}
- 			}
--		}
-+		} while (retry);
- 
- 		if (!rc) {
- 			/*
-@@ -2708,6 +2743,7 @@ static int ibmvscsis_alloc_cmds(struct scsi_info *vscsi, int num)
- 
- 	for (i = 0, cmd = (struct ibmvscsis_cmd *)vscsi->cmd_pool; i < num;
- 	     i++, cmd++) {
-+		cmd->abort_cmd = NULL;
- 		cmd->adapter = vscsi;
- 		INIT_WORK(&cmd->work, ibmvscsis_scheduler);
- 		list_add_tail(&cmd->list, &vscsi->free_cmd);
-@@ -3579,9 +3615,20 @@ static int ibmvscsis_write_pending(struct se_cmd *se_cmd)
- {
- 	struct ibmvscsis_cmd *cmd = container_of(se_cmd, struct ibmvscsis_cmd,
- 						 se_cmd);
-+	struct scsi_info *vscsi = cmd->adapter;
- 	struct iu_entry *iue = cmd->iue;
- 	int rc;
- 
-+	/*
-+	 * If CLIENT_FAILED OR RESPONSE_Q_DOWN, then just return success
-+	 * since LIO can't do anything about it, and we dont want to
-+	 * attempt an srp_transfer_data.
-+	 */
-+	if ((vscsi->flags & (CLIENT_FAILED | RESPONSE_Q_DOWN))) {
-+		pr_err("write_pending failed since: %d\n", vscsi->flags);
-+		return 0;
-+	}
-+
- 	rc = srp_transfer_data(cmd, &vio_iu(iue)->srp.cmd, ibmvscsis_rdma,
- 			       1, 1);
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index cceddd995a4b..a5c97342fd5d 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -2895,7 +2895,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
+ 	slowpath_params.drv_minor = QEDF_DRIVER_MINOR_VER;
+ 	slowpath_params.drv_rev = QEDF_DRIVER_REV_VER;
+ 	slowpath_params.drv_eng = QEDF_DRIVER_ENG_VER;
+-	memcpy(slowpath_params.name, "qedf", QED_DRV_VER_STR_SIZE);
++	strncpy(slowpath_params.name, "qedf", QED_DRV_VER_STR_SIZE);
+ 	rc = qed_ops->common->slowpath_start(qedf->cdev, &slowpath_params);
  	if (rc) {
-@@ -3660,11 +3707,28 @@ static void ibmvscsis_queue_tm_rsp(struct se_cmd *se_cmd)
- 	struct ibmvscsis_cmd *cmd = container_of(se_cmd, struct ibmvscsis_cmd,
- 						 se_cmd);
- 	struct scsi_info *vscsi = cmd->adapter;
-+	struct ibmvscsis_cmd *cmd_itr;
-+	struct iu_entry *iue = iue = cmd->iue;
-+	struct srp_tsk_mgmt *srp_tsk = &vio_iu(iue)->srp.tsk_mgmt;
-+	u64 tag_to_abort = be64_to_cpu(srp_tsk->task_tag);
- 	uint len;
- 
- 	pr_debug("queue_tm_rsp %p, status %d\n",
- 		 se_cmd, (int)se_cmd->se_tmr_req->response);
- 
-+	if (srp_tsk->tsk_mgmt_func == SRP_TSK_ABORT_TASK &&
-+	    cmd->se_cmd.se_tmr_req->response == TMR_TASK_DOES_NOT_EXIST) {
-+		spin_lock_bh(&vscsi->intr_lock);
-+		list_for_each_entry(cmd_itr, &vscsi->active_q, list) {
-+			if (tag_to_abort == cmd_itr->se_cmd.tag) {
-+				cmd_itr->abort_cmd = cmd;
-+				cmd->flags |= DELAY_SEND;
-+				break;
-+			}
-+		}
-+		spin_unlock_bh(&vscsi->intr_lock);
-+	}
-+
- 	srp_build_response(vscsi, cmd, &len);
- 	cmd->rsp.format = SRP_FORMAT;
- 	cmd->rsp.len = len;
-@@ -3672,8 +3736,8 @@ static void ibmvscsis_queue_tm_rsp(struct se_cmd *se_cmd)
- 
- static void ibmvscsis_aborted_task(struct se_cmd *se_cmd)
- {
--	/* TBD: What (if anything) should we do here? */
--	pr_debug("ibmvscsis_aborted_task %p\n", se_cmd);
-+	pr_debug("ibmvscsis_aborted_task %p task_tag: %llu\n",
-+		 se_cmd, se_cmd->tag);
- }
- 
- static struct se_wwn *ibmvscsis_make_tport(struct target_fabric_configfs *tf,
-diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.h b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.h
-index 65c6189..b4391a8 100644
---- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.h
-+++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.h
-@@ -168,10 +168,12 @@ struct ibmvscsis_cmd {
- 	struct iu_rsp rsp;
- 	struct work_struct work;
- 	struct scsi_info *adapter;
-+	struct ibmvscsis_cmd *abort_cmd;
- 	/* Sense buffer that will be mapped into outgoing status */
- 	unsigned char sense_buf[TRANSPORT_SENSE_BUFFER];
- 	u64 init_time;
- #define CMD_FAST_FAIL	BIT(0)
-+#define DELAY_SEND	BIT(1)
- 	u32 flags;
- 	char type;
- };
+ 		QEDF_ERR(&(qedf->dbg_ctx), "Cannot start slowpath.\n");
 -- 
-2.5.4 (Apple Git-61)
+2.7.4
+
+
+-- 
+Kees Cook
+Pixel Security
