@@ -1,31 +1,55 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH v2] ibmvscsis: Do not send aborted task response
-Date: Thu, 04 May 2017 20:01:10 -0700
-Message-ID: <1493953270.23202.89.camel@haakon3.risingtidesystems.com>
-References: <1493751261-81647-1-git-send-email-bryantly@linux.vnet.ibm.com>
-         <1493783006.23202.87.camel@haakon3.risingtidesystems.com>
-         <5c2536d3-7ff1-1e17-91c0-0be6a8befbfa@linux.vnet.ibm.com>
-         <7d900f15-4590-5b09-0f48-8e8be862665e@linux.vnet.ibm.com>
-         <6ac46ce3-77b9-c138-a1d9-fb119a98a9ea@linux.vnet.ibm.com>
+Subject: Re: [PATCH 25/27] block: remove the discard_zeroes_data flag
+Date: Thu, 04 May 2017 20:10:22 -0700
+Message-ID: <1493953822.23202.91.camel@haakon3.risingtidesystems.com>
+References: <20170405172125.22600-1-hch@lst.de>
+         <20170405172125.22600-26-hch@lst.de> <1493671519.2665.15.camel@sandisk.com>
+         <1493707425.23202.77.camel@haakon3.risingtidesystems.com>
+         <1493709373.23202.79.camel@haakon3.risingtidesystems.com>
+         <20170502072328.GA11522@lst.de>
+         <1493782395.23202.84.camel@haakon3.risingtidesystems.com>
+         <20170503143338.GA24111@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <6ac46ce3-77b9-c138-a1d9-fb119a98a9ea@linux.vnet.ibm.com>
+In-Reply-To: <20170503143338.GA24111@redhat.com>
 Sender: target-devel-owner@vger.kernel.org
-To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Cc: Bart.VanAssche@sandisk.com, martin.petersen@oracle.com, turtle.in.the.kernel@gmail.com, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, stable@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: "hch@lst.de" <hch@lst.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>, "agk@redhat.com" <agk@redhat.com>, "lars.ellenberg@linbit.com" <lars.ellenberg@linbit.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "philipp.reisner@linbit.com" <philipp.reisner@linbit.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "shli@kernel.org" <shli@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2017-05-04 at 18:13 -0500, Bryant G. Ly wrote:
+On Wed, 2017-05-03 at 10:33 -0400, Mike Snitzer wrote:
+> On Tue, May 02 2017 at 11:33pm -0400,
+> Nicholas A. Bellinger <nab@linux-iscsi.org> wrote:
 > 
->
-> Sorry Nick, but can you hold off on this patch. We are still getting extra responses but in a small timing window.
+> > On Tue, 2017-05-02 at 09:23 +0200, hch@lst.de wrote:
+> > > On Tue, May 02, 2017 at 12:16:13AM -0700, Nicholas A. Bellinger wrote:
+> > > > Or, another options is use bdev_write_zeroes_sectors() to determine when
+> > > > dev_attrib->unmap_zeroes_data should be set.
+> > > 
+> > > Yes, that in combination with your patch to use bdev_write_zeroes_sectors
+> > > for zeroing from write same seems like the right fix.
+> > 
+> > The larger target/iblock conversion patch looks like post v4.12 material
+> > at this point, so to avoid breakage wrt to existing LBPRZ behavior, I'll
+> > plan to push the following patch post -rc1.
+> > 
+> > diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+> > index d2f089c..e7caf78 100644
+> > --- a/drivers/target/target_core_device.c
+> > +++ b/drivers/target/target_core_device.c
+> > @@ -851,7 +851,7 @@ bool target_configure_unmap_from_queue(struct se_dev_attrib *attrib,
+> >         attrib->unmap_granularity = q->limits.discard_granularity / block_size;
+> >         attrib->unmap_granularity_alignment = q->limits.discard_alignment /
+> >                                                                 block_size;
+> > -       attrib->unmap_zeroes_data = 0;
+> > +       attrib->unmap_zeroes_data = (q->limits.max_write_zeroes_sectors);
+> >         return true;
+> >  }
+> >  EXPORT_SYMBOL(target_configure_unmap_from_queue);
+> > 
 > 
-> The majority of the aborts work but if we get an abort between LIO calling queue_state and LIO calling release_cmd, we get an extra response.
-> 
-> 
-> Working on a solution, and will still have to do the tests where we basically send aborts over and over on the client btwn random timing widows.
-> 
+> Completely a nit but: why the extra parenthesis?
 
-Sure, dropping this patch for now.
+dev_attrib->unmap_zeros_data is only compared as a bool.
