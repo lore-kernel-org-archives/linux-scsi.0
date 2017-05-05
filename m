@@ -1,167 +1,244 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: RE: [PATCH V4 07/12] hpsa: cleanup reset handler
-Date: Fri, 5 May 2017 16:10:59 +0000
-Message-ID: <4993A297653ECB4581FA5C3C31323D19529CEE10@avsrvexchmbx2.microsemi.net>
-References: <149393820493.19382.11709906672864416473.stgit@brunhilda>
- <149393828251.19382.2089522128208165496.stgit@brunhilda>
- <03f66997-4bdb-68c0-9a53-47705ef71ee6@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0087.outbound.protection.outlook.com ([104.47.36.87]:63176
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750708AbdEEQLe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 5 May 2017 12:11:34 -0400
-In-Reply-To: <03f66997-4bdb-68c0-9a53-47705ef71ee6@redhat.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH v3] ibmvscsis: Do not send aborted task response
+Date: Fri,  5 May 2017 14:17:15 -0500
+Message-ID: <1494011835-29476-1-git-send-email-bryantly@linux.vnet.ibm.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: nab@linux-iscsi.org, Bart.VanAssche@sandisk.com, martin.petersen@oracle.com
+Cc: mikecyr@linux.vnet.ibm.com, mikecyr@us.ibm.com, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, "joseph.szczypek@hpe.com" <joseph.szczypek@hpe.com>, Gerry Morong <gerry.morong@microsemi.com>, John Hall <John.Hall@microsemi.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, Bader Ali - Saleh <bader.alisaleh@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Viswas G <viswas.g@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "POSWALD@suse.com" <POSWALD@suse.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBPbiA1LjUuMjAxNyAwMDo1MSwgRG9uIEJy
-YWNlIHdyb3RlOg0KPiA+ICAtIG1hcmsgZGV2aWNlIHN0YXRlIHNvb25lci4NCj4gPg0KPiA+IFJl
-dmlld2VkLWJ5OiBTY290dCBCZW5lc2ggPHNjb3R0LmJlbmVzaEBtaWNyb3NlbWkuY29tPg0KPiA+
-IFJldmlld2VkLWJ5OiBTY290dCBUZWVsIDxzY290dC50ZWVsQG1pY3Jvc2VtaS5jb20+DQo+ID4g
-UmV2aWV3ZWQtYnk6IEtldmluIEJhcm5ldHQgPGtldmluLmJhcm5ldHRAbWljcm9zZW1pLmNvbT4N
-Cj4gPiBTaWduZWQtb2ZmLWJ5OiBEb24gQnJhY2UgPGRvbi5icmFjZUBtaWNyb3NlbWkuY29tPg0K
-PiA+IC0tLQ0KPiA+ICBkcml2ZXJzL3Njc2kvaHBzYS5jIHwgICA1OQ0KPiArKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0tLS0NCj4gPiAgZHJpdmVycy9zY3Np
-L2hwc2EuaCB8ICAgIDEgKw0KPiA+ICAyIGZpbGVzIGNoYW5nZWQsIDQ2IGluc2VydGlvbnMoKyks
-IDE0IGRlbGV0aW9ucygtKQ0KPiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9ocHNh
-LmMgYi9kcml2ZXJzL3Njc2kvaHBzYS5jDQo+ID4gaW5kZXggYTI4NTJkYS4uMjBiNGU4MyAxMDA2
-NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3Njc2kvaHBzYS5jDQo+ID4gKysrIGIvZHJpdmVycy9zY3Np
-L2hwc2EuYw0KPiA+IEBAIC0xODU5LDEwICsxODU5LDEzIEBAIHN0YXRpYyB2b2lkIGFkanVzdF9o
-cHNhX3Njc2lfdGFibGUoc3RydWN0DQo+IGN0bHJfaW5mbyAqaCwNCj4gPiAgICAgICAgKiBBIHJl
-c2V0IGNhbiBjYXVzZSBhIGRldmljZSBzdGF0dXMgdG8gY2hhbmdlDQo+ID4gICAgICAgICogcmUt
-c2NoZWR1bGUgdGhlIHNjYW4gdG8gc2VlIHdoYXQgaGFwcGVuZWQuDQo+ID4gICAgICAgICovDQo+
-ID4gKyAgICAgc3Bpbl9sb2NrX2lycXNhdmUoJmgtPnJlc2V0X2xvY2ssIGZsYWdzKTsNCj4gPiAg
-ICAgICBpZiAoaC0+cmVzZXRfaW5fcHJvZ3Jlc3MpIHsNCj4gPiAgICAgICAgICAgICAgIGgtPmRy
-dl9yZXFfcmVzY2FuID0gMTsNCj4gPiArICAgICAgICAgICAgIHNwaW5fdW5sb2NrX2lycXJlc3Rv
-cmUoJmgtPnJlc2V0X2xvY2ssIGZsYWdzKTsNCj4gPiAgICAgICAgICAgICAgIHJldHVybjsNCj4g
-PiAgICAgICB9DQo+ID4gKyAgICAgc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmaC0+cmVzZXRfbG9j
-aywgZmxhZ3MpOw0KPiA+DQo+ID4gICAgICAgYWRkZWQgPSBremFsbG9jKHNpemVvZigqYWRkZWQp
-ICogSFBTQV9NQVhfREVWSUNFUywgR0ZQX0tFUk5FTCk7DQo+ID4gICAgICAgcmVtb3ZlZCA9IGt6
-YWxsb2Moc2l6ZW9mKCpyZW1vdmVkKSAqIEhQU0FfTUFYX0RFVklDRVMsDQo+IEdGUF9LRVJORUwp
-Ow0KPiA+IEBAIC01NjE4LDExICs1NjIxLDE0IEBAIHN0YXRpYyB2b2lkIGhwc2Ffc2Nhbl9zdGFy
-dChzdHJ1Y3QgU2NzaV9Ib3N0DQo+ICpzaCkNCj4gPiAgICAgICAvKg0KPiA+ICAgICAgICAqIERv
-IHRoZSBzY2FuIGFmdGVyIGEgcmVzZXQgY29tcGxldGlvbg0KPiA+ICAgICAgICAqLw0KPiA+ICsg
-ICAgIHNwaW5fbG9ja19pcnFzYXZlKCZoLT5yZXNldF9sb2NrLCBmbGFncyk7DQo+ID4gICAgICAg
-aWYgKGgtPnJlc2V0X2luX3Byb2dyZXNzKSB7DQo+ID4gICAgICAgICAgICAgICBoLT5kcnZfcmVx
-X3Jlc2NhbiA9IDE7DQo+ID4gKyAgICAgICAgICAgICBzcGluX3VubG9ja19pcnFyZXN0b3JlKCZo
-LT5yZXNldF9sb2NrLCBmbGFncyk7DQo+ID4gICAgICAgICAgICAgICBocHNhX3NjYW5fY29tcGxl
-dGUoaCk7DQo+ID4gICAgICAgICAgICAgICByZXR1cm47DQo+ID4gICAgICAgfQ0KPiA+ICsgICAg
-IHNwaW5fdW5sb2NrX2lycXJlc3RvcmUoJmgtPnJlc2V0X2xvY2ssIGZsYWdzKTsNCj4gDQo+IFRo
-ZSBuYW1lICdyZXNldF9pbl9wcm9ncmVzcycgc3VnZ2VzdCB0aGF0IHlvdSB3YW50IHRvIHByb3Rl
-Y3QNCj4gc29tZXRoaW5nIGVsc2UgZnJvbSBydW5uaW5nIGluIHBhcmFsbGVsIHRvIHRoZQ0KPiBo
-cHNhX2VoX2RldmljZV9yZXNldF9oYW5kbGVyLg0KPiBXaGljaCBjb2RlIHBhcnRzIGFyZSB5b3Ug
-cHJvdGVjdGluZyA/DQo+IFRoZSByZW1haW5kZXIgb2YgdGhpcyBmdW5jdGlvbiBiZWxvdyBkb2Vz
-bid0IHNlZW0gdG8gYmUgcHJvdGVjdGVkLCBpcyB0aGF0DQo+IGZpbmUgPw0KPiB0b21hc2gNCg0K
-VGhpcyBjb2RlIHdhcyBhZGRlZCB0byBwcmV2ZW50IGEgc2NhbiBvcGVyYXRpb24gZnJvbSBvY2N1
-cnJpbmcgd2hpbGUgYSByZXNldCBvcGVyYXRpb24NCmlzIGluIHByb2dyZXNzLiAgSXQgc2NoZWR1
-bGVzIGEgc2NhbiBsYXRlciBpZiBhIHJlc2V0IG9wZXJhdGlvbiBpcyBkZXRlY3RlZC4gVGhlcmUg
-YXJlIG1vcmUgY2hlY2tzIGZvciB0aGlzDQpsYXRlciBvbiBpbiB0aGUgc2NhbiBjb2RlIGFsc28u
-DQoNCkkgZm91bmQgdGhpcyBoZWxwcyBkdXJpbmcgbXVsdGlwYXRoIGZhaWxvdmVyIHRlc3Rpbmcu
-DQoNClNvLCB5ZXMgdGhpcyBpcyBvay4NCg0KSSBhcHByZWNpYXRlIHlvdXIgaW5wdXQuDQoNClRo
-YW5rcywNCkRvbiBCcmFjZQ0KRVNDIC0gU21hcnQgU3RvcmFnZQ0KTWljcm9zZW1pIENvcnBvcmF0
-aW9uDQoNCg0KPiANCj4gPg0KPiA+ICAgICAgIGhwc2FfdXBkYXRlX3Njc2lfZGV2aWNlcyhoKTsN
-Cj4gPg0KPiA+IEBAIC01ODM0LDI4ICs1ODQwLDM4IEBAIHN0YXRpYyBpbnQNCj4gd2FpdF9mb3Jf
-ZGV2aWNlX3RvX2JlY29tZV9yZWFkeShzdHJ1Y3QgY3Rscl9pbmZvICpoLA0KPiA+ICAgKi8NCj4g
-PiAgc3RhdGljIGludCBocHNhX2VoX2RldmljZV9yZXNldF9oYW5kbGVyKHN0cnVjdCBzY3NpX2Nt
-bmQgKnNjc2ljbWQpDQo+ID4gIHsNCj4gPiAtICAgICBpbnQgcmM7DQo+ID4gKyAgICAgaW50IHJj
-ID0gU1VDQ0VTUzsNCj4gPiAgICAgICBzdHJ1Y3QgY3Rscl9pbmZvICpoOw0KPiA+ICAgICAgIHN0
-cnVjdCBocHNhX3Njc2lfZGV2X3QgKmRldjsNCj4gPiAgICAgICB1OCByZXNldF90eXBlOw0KPiA+
-ICAgICAgIGNoYXIgbXNnWzQ4XTsNCj4gPiArICAgICB1bnNpZ25lZCBsb25nIGZsYWdzOw0KPiA+
-DQo+ID4gICAgICAgLyogZmluZCB0aGUgY29udHJvbGxlciB0byB3aGljaCB0aGUgY29tbWFuZCB0
-byBiZSBhYm9ydGVkIHdhcyBzZW50ICovDQo+ID4gICAgICAgaCA9IHNkZXZfdG9faGJhKHNjc2lj
-bWQtPmRldmljZSk7DQo+ID4gICAgICAgaWYgKGggPT0gTlVMTCkgLyogcGFyYW5vaWEgKi8NCj4g
-PiAgICAgICAgICAgICAgIHJldHVybiBGQUlMRUQ7DQo+ID4NCj4gPiAtICAgICBpZiAobG9ja3Vw
-X2RldGVjdGVkKGgpKQ0KPiA+IC0gICAgICAgICAgICAgcmV0dXJuIEZBSUxFRDsNCj4gPiArICAg
-ICBzcGluX2xvY2tfaXJxc2F2ZSgmaC0+cmVzZXRfbG9jaywgZmxhZ3MpOw0KPiA+ICsgICAgIGgt
-PnJlc2V0X2luX3Byb2dyZXNzID0gMTsNCj4gPiArICAgICBzcGluX3VubG9ja19pcnFyZXN0b3Jl
-KCZoLT5yZXNldF9sb2NrLCBmbGFncyk7DQo+ID4gKw0KPiA+ICsgICAgIGlmIChsb2NrdXBfZGV0
-ZWN0ZWQoaCkpIHsNCj4gPiArICAgICAgICAgICAgIHJjID0gRkFJTEVEOw0KPiA+ICsgICAgICAg
-ICAgICAgZ290byByZXR1cm5fcmVzZXRfc3RhdHVzOw0KPiA+ICsgICAgIH0NCj4gPg0KPiA+ICAg
-ICAgIGRldiA9IHNjc2ljbWQtPmRldmljZS0+aG9zdGRhdGE7DQo+ID4gICAgICAgaWYgKCFkZXYp
-IHsNCj4gPiAgICAgICAgICAgICAgIGRldl9lcnIoJmgtPnBkZXYtPmRldiwgIiVzOiBkZXZpY2Ug
-bG9va3VwIGZhaWxlZFxuIiwgX19mdW5jX18pOw0KPiA+IC0gICAgICAgICAgICAgcmV0dXJuIEZB
-SUxFRDsNCj4gPiArICAgICAgICAgICAgIHJjID0gRkFJTEVEOw0KPiA+ICsgICAgICAgICAgICAg
-Z290byByZXR1cm5fcmVzZXRfc3RhdHVzOw0KPiA+ICAgICAgIH0NCj4gPg0KPiA+IC0gICAgIGlm
-IChkZXYtPmRldnR5cGUgPT0gVFlQRV9FTkNMT1NVUkUpDQo+ID4gLSAgICAgICAgICAgICByZXR1
-cm4gU1VDQ0VTUzsNCj4gPiArICAgICBpZiAoZGV2LT5kZXZ0eXBlID09IFRZUEVfRU5DTE9TVVJF
-KSB7DQo+ID4gKyAgICAgICAgICAgICByYyA9IFNVQ0NFU1M7DQo+ID4gKyAgICAgICAgICAgICBn
-b3RvIHJldHVybl9yZXNldF9zdGF0dXM7DQo+ID4gKyAgICAgfQ0KPiA+DQo+ID4gICAgICAgLyog
-aWYgY29udHJvbGxlciBsb2NrZWQgdXAsIHdlIGNhbiBndWFyYW50ZWUgY29tbWFuZCB3b24ndCBj
-b21wbGV0ZQ0KPiAqLw0KPiA+ICAgICAgIGlmIChsb2NrdXBfZGV0ZWN0ZWQoaCkpIHsNCj4gPiBA
-QCAtNTg2Myw3ICs1ODc5LDggQEAgc3RhdGljIGludCBocHNhX2VoX2RldmljZV9yZXNldF9oYW5k
-bGVyKHN0cnVjdA0KPiBzY3NpX2NtbmQgKnNjc2ljbWQpDQo+ID4gICAgICAgICAgICAgICAgICAg
-ICAgICAiY21kICVkIFJFU0VUIEZBSUxFRCwgbG9ja3VwIGRldGVjdGVkIiwNCj4gPiAgICAgICAg
-ICAgICAgICAgICAgICAgIGhwc2FfZ2V0X2NtZF9pbmRleChzY3NpY21kKSk7DQo+ID4gICAgICAg
-ICAgICAgICBocHNhX3Nob3dfZGV2X21zZyhLRVJOX1dBUk5JTkcsIGgsIGRldiwgbXNnKTsNCj4g
-PiAtICAgICAgICAgICAgIHJldHVybiBGQUlMRUQ7DQo+ID4gKyAgICAgICAgICAgICByYyA9IEZB
-SUxFRDsNCj4gPiArICAgICAgICAgICAgIGdvdG8gcmV0dXJuX3Jlc2V0X3N0YXR1czsNCj4gPiAg
-ICAgICB9DQo+ID4NCj4gPiAgICAgICAvKiB0aGlzIHJlc2V0IHJlcXVlc3QgbWlnaHQgYmUgdGhl
-IHJlc3VsdCBvZiBhIGxvY2t1cDsgY2hlY2sgKi8NCj4gPiBAQCAtNTg3MiwxMiArNTg4OSwxNSBA
-QCBzdGF0aWMgaW50IGhwc2FfZWhfZGV2aWNlX3Jlc2V0X2hhbmRsZXIoc3RydWN0DQo+IHNjc2lf
-Y21uZCAqc2NzaWNtZCkNCj4gPiAgICAgICAgICAgICAgICAgICAgICAgICJjbWQgJWQgUkVTRVQg
-RkFJTEVELCBuZXcgbG9ja3VwIGRldGVjdGVkIiwNCj4gPiAgICAgICAgICAgICAgICAgICAgICAg
-IGhwc2FfZ2V0X2NtZF9pbmRleChzY3NpY21kKSk7DQo+ID4gICAgICAgICAgICAgICBocHNhX3No
-b3dfZGV2X21zZyhLRVJOX1dBUk5JTkcsIGgsIGRldiwgbXNnKTsNCj4gPiAtICAgICAgICAgICAg
-IHJldHVybiBGQUlMRUQ7DQo+ID4gKyAgICAgICAgICAgICByYyA9IEZBSUxFRDsNCj4gPiArICAg
-ICAgICAgICAgIGdvdG8gcmV0dXJuX3Jlc2V0X3N0YXR1czsNCj4gPiAgICAgICB9DQo+ID4NCj4g
-PiAgICAgICAvKiBEbyBub3QgYXR0ZW1wdCBvbiBjb250cm9sbGVyICovDQo+ID4gLSAgICAgaWYg
-KGlzX2hiYV9sdW5pZChkZXYtPnNjc2kzYWRkcikpDQo+ID4gLSAgICAgICAgICAgICByZXR1cm4g
-U1VDQ0VTUzsNCj4gPiArICAgICBpZiAoaXNfaGJhX2x1bmlkKGRldi0+c2NzaTNhZGRyKSkgew0K
-PiA+ICsgICAgICAgICAgICAgcmMgPSBTVUNDRVNTOw0KPiA+ICsgICAgICAgICAgICAgZ290byBy
-ZXR1cm5fcmVzZXRfc3RhdHVzOw0KPiA+ICsgICAgIH0NCj4gPg0KPiA+ICAgICAgIGlmIChpc19s
-b2dpY2FsX2Rldl9hZGRyX21vZGUoZGV2LT5zY3NpM2FkZHIpKQ0KPiA+ICAgICAgICAgICAgICAg
-cmVzZXRfdHlwZSA9IEhQU0FfREVWSUNFX1JFU0VUX01TRzsNCj4gPiBAQCAtNTg4OCwxNyArNTkw
-OCwyNCBAQCBzdGF0aWMgaW50IGhwc2FfZWhfZGV2aWNlX3Jlc2V0X2hhbmRsZXIoc3RydWN0DQo+
-IHNjc2lfY21uZCAqc2NzaWNtZCkNCj4gPiAgICAgICAgICAgICAgIHJlc2V0X3R5cGUgPT0gSFBT
-QV9ERVZJQ0VfUkVTRVRfTVNHID8gImxvZ2ljYWwgIiA6ICJwaHlzaWNhbCAiKTsNCj4gPiAgICAg
-ICBocHNhX3Nob3dfZGV2X21zZyhLRVJOX1dBUk5JTkcsIGgsIGRldiwgbXNnKTsNCj4gPg0KPiA+
-IC0gICAgIGgtPnJlc2V0X2luX3Byb2dyZXNzID0gMTsNCj4gPiAtDQo+ID4gICAgICAgLyogc2Vu
-ZCBhIHJlc2V0IHRvIHRoZSBTQ1NJIExVTiB3aGljaCB0aGUgY29tbWFuZCB3YXMgc2VudCB0byAq
-Lw0KPiA+ICAgICAgIHJjID0gaHBzYV9kb19yZXNldChoLCBkZXYsIGRldi0+c2NzaTNhZGRyLCBy
-ZXNldF90eXBlLA0KPiA+ICAgICAgICAgICAgICAgICAgICAgICAgICBERUZBVUxUX1JFUExZX1FV
-RVVFKTsNCj4gPiArICAgICBpZiAocmMgPT0gMCkNCj4gPiArICAgICAgICAgICAgIHJjID0gU1VD
-Q0VTUzsNCj4gPiArICAgICBlbHNlDQo+ID4gKyAgICAgICAgICAgICByYyA9IEZBSUxFRDsNCj4g
-PiArDQo+ID4gICAgICAgc3ByaW50Zihtc2csICJyZXNldCAlcyAlcyIsDQo+ID4gICAgICAgICAg
-ICAgICByZXNldF90eXBlID09IEhQU0FfREVWSUNFX1JFU0VUX01TRyA/ICJsb2dpY2FsICIgOiAi
-cGh5c2ljYWwgIiwNCj4gPiAtICAgICAgICAgICAgIHJjID09IDAgPyAiY29tcGxldGVkIHN1Y2Nl
-c3NmdWxseSIgOiAiZmFpbGVkIik7DQo+ID4gKyAgICAgICAgICAgICByYyA9PSBTVUNDRVNTID8g
-ImNvbXBsZXRlZCBzdWNjZXNzZnVsbHkiIDogImZhaWxlZCIpOw0KPiA+ICAgICAgIGhwc2Ffc2hv
-d19kZXZfbXNnKEtFUk5fV0FSTklORywgaCwgZGV2LCBtc2cpOw0KPiA+ICsNCj4gPiArcmV0dXJu
-X3Jlc2V0X3N0YXR1czoNCj4gPiArICAgICBzcGluX2xvY2tfaXJxc2F2ZSgmaC0+cmVzZXRfbG9j
-aywgZmxhZ3MpOw0KPiA+ICAgICAgIGgtPnJlc2V0X2luX3Byb2dyZXNzID0gMDsNCj4gPiAtICAg
-ICByZXR1cm4gcmMgPT0gMCA/IFNVQ0NFU1MgOiBGQUlMRUQ7DQo+ID4gKyAgICAgc3Bpbl91bmxv
-Y2tfaXJxcmVzdG9yZSgmaC0+cmVzZXRfbG9jaywgZmxhZ3MpOw0KPiA+ICsgICAgIHJldHVybiBy
-YzsNCj4gPiAgfQ0KPiA+DQo+ID4gIHN0YXRpYyB2b2lkIHN3aXp6bGVfYWJvcnRfdGFnKHU4ICp0
-YWcpDQo+ID4gQEAgLTg2NDksMTAgKzg2NzYsMTMgQEAgc3RhdGljIHZvaWQgaHBzYV9yZXNjYW5f
-Y3Rscl93b3JrZXIoc3RydWN0DQo+IHdvcmtfc3RydWN0ICp3b3JrKQ0KPiA+ICAgICAgIC8qDQo+
-ID4gICAgICAgICogRG8gdGhlIHNjYW4gYWZ0ZXIgdGhlIHJlc2V0DQo+ID4gICAgICAgICovDQo+
-ID4gKyAgICAgc3Bpbl9sb2NrX2lycXNhdmUoJmgtPnJlc2V0X2xvY2ssIGZsYWdzKTsNCj4gPiAg
-ICAgICBpZiAoaC0+cmVzZXRfaW5fcHJvZ3Jlc3MpIHsNCj4gPiAgICAgICAgICAgICAgIGgtPmRy
-dl9yZXFfcmVzY2FuID0gMTsNCj4gPiArICAgICAgICAgICAgIHNwaW5fdW5sb2NrX2lycXJlc3Rv
-cmUoJmgtPnJlc2V0X2xvY2ssIGZsYWdzKTsNCj4gPiAgICAgICAgICAgICAgIHJldHVybjsNCj4g
-PiAgICAgICB9DQo+ID4gKyAgICAgc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmaC0+cmVzZXRfbG9j
-aywgZmxhZ3MpOw0KPiA+DQo+ID4gICAgICAgaWYgKGhwc2FfY3Rscl9uZWVkc19yZXNjYW4oaCkg
-fHwgaHBzYV9vZmZsaW5lX2RldmljZXNfcmVhZHkoaCkpIHsNCj4gPiAgICAgICAgICAgICAgIHNj
-c2lfaG9zdF9nZXQoaC0+c2NzaV9ob3N0KTsNCj4gPiBAQCAtODc1OSw2ICs4Nzg5LDcgQEAgc3Rh
-dGljIGludCBocHNhX2luaXRfb25lKHN0cnVjdCBwY2lfZGV2ICpwZGV2LA0KPiBjb25zdCBzdHJ1
-Y3QgcGNpX2RldmljZV9pZCAqZW50KQ0KPiA+ICAgICAgIHNwaW5fbG9ja19pbml0KCZoLT5sb2Nr
-KTsNCj4gPiAgICAgICBzcGluX2xvY2tfaW5pdCgmaC0+b2ZmbGluZV9kZXZpY2VfbG9jayk7DQo+
-ID4gICAgICAgc3Bpbl9sb2NrX2luaXQoJmgtPnNjYW5fbG9jayk7DQo+ID4gKyAgICAgc3Bpbl9s
-b2NrX2luaXQoJmgtPnJlc2V0X2xvY2spOw0KPiA+ICAgICAgIGF0b21pY19zZXQoJmgtPnBhc3N0
-aHJ1X2NtZHNfYXZhaWwsDQo+IEhQU0FfTUFYX0NPTkNVUlJFTlRfUEFTU1RIUlVTKTsNCj4gPiAg
-ICAgICBhdG9taWNfc2V0KCZoLT5hYm9ydF9jbWRzX2F2YWlsYWJsZSwNCj4gSFBTQV9DTURTX1JF
-U0VSVkVEX0ZPUl9BQk9SVFMpOw0KPiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9o
-cHNhLmggYi9kcml2ZXJzL3Njc2kvaHBzYS5oDQo+ID4gaW5kZXggNmYwNGYyYS4uNTM1MjY2NCAx
-MDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3Njc2kvaHBzYS5oDQo+ID4gKysrIGIvZHJpdmVycy9z
-Y3NpL2hwc2EuaA0KPiA+IEBAIC0zMDEsNiArMzAxLDcgQEAgc3RydWN0IGN0bHJfaW5mbyB7DQo+
-ID4gICAgICAgc3RydWN0IG11dGV4IHJlc2V0X211dGV4Ow0KPiA+ICAgICAgIHU4IHJlc2V0X2lu
-X3Byb2dyZXNzOw0KPiA+ICAgICAgIHN0cnVjdCBocHNhX3Nhc19ub2RlICpzYXNfaG9zdDsNCj4g
-PiArICAgICBzcGlubG9ja190IHJlc2V0X2xvY2s7DQo+ID4gIH07DQo+ID4NCj4gPiAgc3RydWN0
-IG9mZmxpbmVfZGV2aWNlX2VudHJ5IHsNCj4gPg0KDQo=
+The driver is sending a response to the actual scsi op that was
+aborted by an abort task TM, while LIO is sending a response to
+the abort task TM.
+
+ibmvscsis_tgt does not send the response to the client until
+release_cmd time. The reason for this was because if we did it
+at queue_status time, then the client would be free to reuse the
+tag for that command, but we're still using the tag until the
+command is released at release_cmd time, so we chose to delay
+sending the response until then. That then caused this issue, because
+release_cmd is always called, even if queue_status is not.
+
+SCSI spec says that the initiator that sends the abort task
+TM NEVER gets a response to the aborted op and with the current
+code it will send a response. Thus this fix will remove that response
+if the CMD_T_ABORTED && !CMD_T_TAS.
+
+Another case with a small timing window is the case where if LIO sends a
+TMR_DOES_NOT_EXIST, and the release_cmd callback is called for the TMR Abort
+cmd before the release_cmd for the (attemped) aborted cmd, then we need to
+ensure that we send the response for the (attempted) abort cmd to the client
+before we send the response for the TMR Abort cmd.
+
+Cc: <stable@vger.kernel.org> # v4.8+
+Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Signed-off-by: Michael Cyr <mikecyr@linux.vnet.ibm.com>
+---
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 114 ++++++++++++++++++++++++-------
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.h |   2 +
+ 2 files changed, 91 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+index 0f80779..d390325 100644
+--- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
++++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+@@ -1170,6 +1170,7 @@ static struct ibmvscsis_cmd *ibmvscsis_get_free_cmd(struct scsi_info *vscsi)
+ 		cmd = list_first_entry_or_null(&vscsi->free_cmd,
+ 					       struct ibmvscsis_cmd, list);
+ 		if (cmd) {
++			cmd->flags &= ~(DELAY_SEND);
+ 			list_del(&cmd->list);
+ 			cmd->iue = iue;
+ 			cmd->type = UNSET_TYPE;
+@@ -1749,45 +1750,79 @@ static void srp_snd_msg_failed(struct scsi_info *vscsi, long rc)
+ static void ibmvscsis_send_messages(struct scsi_info *vscsi)
+ {
+ 	u64 msg_hi = 0;
+-	/* note do not attmempt to access the IU_data_ptr with this pointer
++	/* note do not attempt to access the IU_data_ptr with this pointer
+ 	 * it is not valid
+ 	 */
+ 	struct viosrp_crq *crq = (struct viosrp_crq *)&msg_hi;
+ 	struct ibmvscsis_cmd *cmd, *nxt;
+ 	struct iu_entry *iue;
+ 	long rc = ADAPT_SUCCESS;
++	bool retry = false;
+ 
+ 	if (!(vscsi->flags & RESPONSE_Q_DOWN)) {
+-		list_for_each_entry_safe(cmd, nxt, &vscsi->waiting_rsp, list) {
+-			iue = cmd->iue;
++		do {
++			retry = false;
++			list_for_each_entry_safe(cmd, nxt, &vscsi->waiting_rsp,
++						 list) {
++				/*
++				 * Check to make sure abort cmd gets processed
++				 * prior to the abort tmr cmd
++				 */
++				if (cmd->flags & DELAY_SEND)
++					continue;
+ 
+-			crq->valid = VALID_CMD_RESP_EL;
+-			crq->format = cmd->rsp.format;
++				if (cmd->abort_cmd) {
++					retry = true;
++					cmd->abort_cmd->flags &= ~(DELAY_SEND);
++				}
+ 
+-			if (cmd->flags & CMD_FAST_FAIL)
+-				crq->status = VIOSRP_ADAPTER_FAIL;
++				/*
++				 * If CMD_T_ABORTED w/o CMD_T_TAS scenarios and
++				 * the case where LIO issued a
++				 * ABORT_TASK: Sending TMR_TASK_DOES_NOT_EXIST
++				 * case then we dont send a response, since it
++				 * was already done.
++				 */
++				if (cmd->se_cmd.transport_state & CMD_T_ABORTED &&
++				    !(cmd->se_cmd.transport_state & CMD_T_TAS)) {
++					list_del(&cmd->list);
++					ibmvscsis_free_cmd_resources(vscsi,
++								     cmd);
++				} else {
++					iue = cmd->iue;
+ 
+-			crq->IU_length = cpu_to_be16(cmd->rsp.len);
++					crq->valid = VALID_CMD_RESP_EL;
++					crq->format = cmd->rsp.format;
+ 
+-			rc = h_send_crq(vscsi->dma_dev->unit_address,
+-					be64_to_cpu(msg_hi),
+-					be64_to_cpu(cmd->rsp.tag));
++					if (cmd->flags & CMD_FAST_FAIL)
++						crq->status = VIOSRP_ADAPTER_FAIL;
+ 
+-			pr_debug("send_messages: cmd %p, tag 0x%llx, rc %ld\n",
+-				 cmd, be64_to_cpu(cmd->rsp.tag), rc);
++					crq->IU_length = cpu_to_be16(cmd->rsp.len);
+ 
+-			/* if all ok free up the command element resources */
+-			if (rc == H_SUCCESS) {
+-				/* some movement has occurred */
+-				vscsi->rsp_q_timer.timer_pops = 0;
+-				list_del(&cmd->list);
++					rc = h_send_crq(vscsi->dma_dev->unit_address,
++							be64_to_cpu(msg_hi),
++							be64_to_cpu(cmd->rsp.tag));
+ 
+-				ibmvscsis_free_cmd_resources(vscsi, cmd);
+-			} else {
+-				srp_snd_msg_failed(vscsi, rc);
+-				break;
++					pr_debug("send_messages: cmd %p, tag 0x%llx, rc %ld\n",
++						 cmd, be64_to_cpu(cmd->rsp.tag), rc);
++
++					/* if all ok free up the command
++					 * element resources
++					 */
++					if (rc == H_SUCCESS) {
++						/* some movement has occurred */
++						vscsi->rsp_q_timer.timer_pops = 0;
++						list_del(&cmd->list);
++
++						ibmvscsis_free_cmd_resources(vscsi,
++									     cmd);
++					} else {
++						srp_snd_msg_failed(vscsi, rc);
++						break;
++					}
++				}
+ 			}
+-		}
++		} while (retry);
+ 
+ 		if (!rc) {
+ 			/*
+@@ -2708,6 +2743,7 @@ static int ibmvscsis_alloc_cmds(struct scsi_info *vscsi, int num)
+ 
+ 	for (i = 0, cmd = (struct ibmvscsis_cmd *)vscsi->cmd_pool; i < num;
+ 	     i++, cmd++) {
++		cmd->abort_cmd = NULL;
+ 		cmd->adapter = vscsi;
+ 		INIT_WORK(&cmd->work, ibmvscsis_scheduler);
+ 		list_add_tail(&cmd->list, &vscsi->free_cmd);
+@@ -3579,9 +3615,20 @@ static int ibmvscsis_write_pending(struct se_cmd *se_cmd)
+ {
+ 	struct ibmvscsis_cmd *cmd = container_of(se_cmd, struct ibmvscsis_cmd,
+ 						 se_cmd);
++	struct scsi_info *vscsi = cmd->adapter;
+ 	struct iu_entry *iue = cmd->iue;
+ 	int rc;
+ 
++	/*
++	 * If CLIENT_FAILED OR RESPONSE_Q_DOWN, then just return success
++	 * since LIO can't do anything about it, and we dont want to
++	 * attempt an srp_transfer_data.
++	 */
++	if ((vscsi->flags & (CLIENT_FAILED | RESPONSE_Q_DOWN))) {
++		pr_err("write_pending failed since: %d\n", vscsi->flags);
++		return 0;
++	}
++
+ 	rc = srp_transfer_data(cmd, &vio_iu(iue)->srp.cmd, ibmvscsis_rdma,
+ 			       1, 1);
+ 	if (rc) {
+@@ -3660,11 +3707,28 @@ static void ibmvscsis_queue_tm_rsp(struct se_cmd *se_cmd)
+ 	struct ibmvscsis_cmd *cmd = container_of(se_cmd, struct ibmvscsis_cmd,
+ 						 se_cmd);
+ 	struct scsi_info *vscsi = cmd->adapter;
++	struct ibmvscsis_cmd *cmd_itr;
++	struct iu_entry *iue = iue = cmd->iue;
++	struct srp_tsk_mgmt *srp_tsk = &vio_iu(iue)->srp.tsk_mgmt;
++	u64 tag_to_abort = be64_to_cpu(srp_tsk->task_tag);
+ 	uint len;
+ 
+ 	pr_debug("queue_tm_rsp %p, status %d\n",
+ 		 se_cmd, (int)se_cmd->se_tmr_req->response);
+ 
++	if (srp_tsk->tsk_mgmt_func == SRP_TSK_ABORT_TASK &&
++	    cmd->se_cmd.se_tmr_req->response == TMR_TASK_DOES_NOT_EXIST) {
++		spin_lock_bh(&vscsi->intr_lock);
++		list_for_each_entry(cmd_itr, &vscsi->active_q, list) {
++			if (tag_to_abort == cmd_itr->se_cmd.tag) {
++				cmd_itr->abort_cmd = cmd;
++				cmd->flags |= DELAY_SEND;
++				break;
++			}
++		}
++		spin_unlock_bh(&vscsi->intr_lock);
++	}
++
+ 	srp_build_response(vscsi, cmd, &len);
+ 	cmd->rsp.format = SRP_FORMAT;
+ 	cmd->rsp.len = len;
+@@ -3672,8 +3736,8 @@ static void ibmvscsis_queue_tm_rsp(struct se_cmd *se_cmd)
+ 
+ static void ibmvscsis_aborted_task(struct se_cmd *se_cmd)
+ {
+-	/* TBD: What (if anything) should we do here? */
+-	pr_debug("ibmvscsis_aborted_task %p\n", se_cmd);
++	pr_debug("ibmvscsis_aborted_task %p task_tag: %llu\n",
++		 se_cmd, se_cmd->tag);
+ }
+ 
+ static struct se_wwn *ibmvscsis_make_tport(struct target_fabric_configfs *tf,
+diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.h b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.h
+index 65c6189..b4391a8 100644
+--- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.h
++++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.h
+@@ -168,10 +168,12 @@ struct ibmvscsis_cmd {
+ 	struct iu_rsp rsp;
+ 	struct work_struct work;
+ 	struct scsi_info *adapter;
++	struct ibmvscsis_cmd *abort_cmd;
+ 	/* Sense buffer that will be mapped into outgoing status */
+ 	unsigned char sense_buf[TRANSPORT_SENSE_BUFFER];
+ 	u64 init_time;
+ #define CMD_FAST_FAIL	BIT(0)
++#define DELAY_SEND	BIT(1)
+ 	u32 flags;
+ 	char type;
+ };
+-- 
+2.5.4 (Apple Git-61)
