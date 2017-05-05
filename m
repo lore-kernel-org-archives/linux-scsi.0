@@ -1,103 +1,222 @@
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2] ibmvscsis: Do not send aborted task response
-Date: Thu, 4 May 2017 18:13:30 -0500
-Message-ID: <6ac46ce3-77b9-c138-a1d9-fb119a98a9ea@linux.vnet.ibm.com>
-References: <1493751261-81647-1-git-send-email-bryantly@linux.vnet.ibm.com>
- <1493783006.23202.87.camel@haakon3.risingtidesystems.com>
- <5c2536d3-7ff1-1e17-91c0-0be6a8befbfa@linux.vnet.ibm.com>
- <7d900f15-4590-5b09-0f48-8e8be862665e@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: lixiubo@cmss.chinamobile.com
+Subject: [PATCH] tcmu: Add fifo type waiter list support to avoid starvation
+Date: Fri,  5 May 2017 10:51:26 +0800
+Message-ID: <1493952686-29396-1-git-send-email-lixiubo@cmss.chinamobile.com>
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <7d900f15-4590-5b09-0f48-8e8be862665e@linux.vnet.ibm.com>
 Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Bart.VanAssche@sandisk.com, martin.petersen@oracle.com, turtle.in.the.kernel@gmail.com, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, stable@vger.kernel.org
+To: mchristi@redhat.com, nab@linux-iscsi.org
+Cc: agrover@redhat.com, namei.unix@gmail.com, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, Xiubo Li <lixiubo@cmss.chinamobile.com>
 List-Id: linux-scsi@vger.kernel.org
 
+From: Xiubo Li <lixiubo@cmss.chinamobile.com>
 
+The fifo type waiter list will hold the udevs who are waiting for the
+blocks from the data global pool. The unmap thread will try to feed the
+first udevs in waiter list, if the global free blocks available are
+not enough, it will stop traversing the list and abort waking up the
+others.
 
-On 5/3/17 1:55 PM, Bryant G. Ly wrote:
-> On 5/3/17 11:38 AM, Bryant G. Ly wrote:
->
->> Hi Nick,
->>
->> On 5/2/17 10:43 PM, Nicholas A. Bellinger wrote:
->>
->>> On Tue, 2017-05-02 at 13:54 -0500, Bryant G. Ly wrote:
->>>> The driver is sending a response to the actual scsi op that was
->>>> aborted by an abort task TM, while LIO is sending a response to
->>>> the abort task TM.
->>>>
->>>> ibmvscsis_tgt does not send the response to the client until
->>>> release_cmd time. The reason for this was because if we did it
->>>> at queue_status time, then the client would be free to reuse the
->>>> tag for that command, but we're still using the tag until the
->>>> command is released at release_cmd time, so we chose to delay
->>>> sending the response until then. That then caused this issue, because
->>>> release_cmd is always called, even if queue_status is not.
->>>>
->>>> SCSI spec says that the initiator that sends the abort task
->>>> TM NEVER gets a response to the aborted op and with the current
->>>> code it will send a response. Thus this fix will remove that response
->>>> if the TAS bit is set.
->>>>
->>>> Cc: <stable@vger.kernel.org> # v4.8+
->>>> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
->>>> Reviewed-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
->>>> ---
->>>>   drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 66 
->>>> ++++++++++++++++++++++----------
->>>>   1 file changed, 45 insertions(+), 21 deletions(-)
->>> Applied, with a small update to the last sentence of the commit log wrt
->>> to 'if ABORTED && !TAS bit is set'.
->>>
->>> Thanks Bryant + Tyrel.
->>>
->> So I have been running tests on this patch extensively and it seems 
->> like after running 2 hrs of consecutive aborts it fails again with 
->> the same problem of driver sending a response to the actual scsi op.
->>
->> It looks like when LIO processes the abort and if 
->> (!__target_check_io_state(se_cmd, se_sess, 0)) then rsp gets set as 
->> TMR_TASK_DOES_NOT_EXIST.
->>
->> With that response the CMD_T_ABORTED state is not set, so then the 
->> ibmvscsis driver still sends that duplicate response.
->>
->> I think the best solution would be in driver when queue_tm_rsp gets 
->> called and when the driver builds the response to check for the 
->> TMR_TASK_DOES_NOT_EXIST and set our own flag.
->> Then we would also check for that flag, so it would be:
->>
->> if ((cmd->se_cmd.transport_state & CMD_T_ABORTED && 
->> !(cmd->se_cmd.transport_state & CMD_T_TAS)) || cmd->flags & 
->> CMD_ABORTED) {
->>
->> This will ensure in the CMD_T_ABORTED w/o CMD_T_TAS scenarios are 
->> handled and the ABORT_TASK: Sending TMR_TASK_DOES_NOT_EXIST case.
->>
->> -Bryant
->>
->>
-> Hi Nick,
->
-> You can ignore the email about the patch being broken. The script that 
-> was used for testing isn't right.
->
-> So the patch is working as intended now, where on an abort the client 
-> does not receive an extra response to the actual scsi op.
->
-> Thanks,
->
-> Bryant Ly
->
-Sorry Nick, but can you hold off on this patch. We are still getting extra responses but in a small timing window.
+Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
+---
+ drivers/target/target_core_user.c | 82 +++++++++++++++++++++++++++++++--------
+ 1 file changed, 66 insertions(+), 16 deletions(-)
 
-The majority of the aborts work but if we get an abort between LIO calling queue_state and LIO calling release_cmd, we get an extra response.
-
-
-Working on a solution, and will still have to do the tests where we basically send aborts over and over on the client btwn random timing widows.
-
--Bryant
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index 9045837..10c99e7 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -97,6 +97,7 @@ struct tcmu_hba {
+ 
+ struct tcmu_dev {
+ 	struct list_head node;
++	struct list_head waiter;
+ 
+ 	struct se_device se_dev;
+ 
+@@ -123,7 +124,7 @@ struct tcmu_dev {
+ 	wait_queue_head_t wait_cmdr;
+ 	struct mutex cmdr_lock;
+ 
+-	bool waiting_global;
++	uint32_t waiting_blocks;
+ 	uint32_t dbi_max;
+ 	uint32_t dbi_thresh;
+ 	DECLARE_BITMAP(data_bitmap, DATA_BLOCK_BITS);
+@@ -165,6 +166,10 @@ struct tcmu_cmd {
+ static DEFINE_MUTEX(root_udev_mutex);
+ static LIST_HEAD(root_udev);
+ 
++/* The data blocks global pool waiter list */
++static DEFINE_MUTEX(root_udev_waiter_mutex);
++static LIST_HEAD(root_udev_waiter);
++
+ static atomic_t global_db_count = ATOMIC_INIT(0);
+ 
+ static struct kmem_cache *tcmu_cmd_cache;
+@@ -195,6 +200,11 @@ enum tcmu_multicast_groups {
+ #define tcmu_cmd_set_dbi(cmd, index) ((cmd)->dbi[(cmd)->dbi_cur++] = (index))
+ #define tcmu_cmd_get_dbi(cmd) ((cmd)->dbi[(cmd)->dbi_cur++])
+ 
++static inline bool is_in_waiter_list(struct tcmu_dev *udev)
++{
++	return !!udev->waiting_blocks;
++}
++
+ static void tcmu_cmd_free_data(struct tcmu_cmd *tcmu_cmd, uint32_t len)
+ {
+ 	struct tcmu_dev *udev = tcmu_cmd->tcmu_dev;
+@@ -250,8 +260,6 @@ static bool tcmu_get_empty_blocks(struct tcmu_dev *udev,
+ {
+ 	int i;
+ 
+-	udev->waiting_global = false;
+-
+ 	for (i = tcmu_cmd->dbi_cur; i < tcmu_cmd->dbi_cnt; i++) {
+ 		if (!tcmu_get_empty_block(udev, tcmu_cmd))
+ 			goto err;
+@@ -259,9 +267,7 @@ static bool tcmu_get_empty_blocks(struct tcmu_dev *udev,
+ 	return true;
+ 
+ err:
+-	udev->waiting_global = true;
+-	/* Try to wake up the unmap thread */
+-	wake_up(&unmap_wait);
++	udev->waiting_blocks += tcmu_cmd->dbi_cnt - i;
+ 	return false;
+ }
+ 
+@@ -671,6 +677,7 @@ static inline size_t tcmu_cmd_get_cmd_size(struct tcmu_cmd *tcmu_cmd,
+ 
+ 	while (!is_ring_space_avail(udev, tcmu_cmd, command_size, data_length)) {
+ 		int ret;
++		bool is_waiting_blocks = !!udev->waiting_blocks;
+ 		DEFINE_WAIT(__wait);
+ 
+ 		prepare_to_wait(&udev->wait_cmdr, &__wait, TASK_INTERRUPTIBLE);
+@@ -688,6 +695,18 @@ static inline size_t tcmu_cmd_get_cmd_size(struct tcmu_cmd *tcmu_cmd,
+ 			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+ 		}
+ 
++		/*
++		 * Try to insert the current udev to waiter list and
++		 * then wake up the unmap thread
++		 */
++		if (is_waiting_blocks) {
++			mutex_lock(&root_udev_waiter_mutex);
++			list_add_tail(&udev->waiter, &root_udev_waiter);
++			mutex_unlock(&root_udev_waiter_mutex);
++
++			wake_up(&unmap_wait);
++		}
++
+ 		mutex_lock(&udev->cmdr_lock);
+ 
+ 		/* We dropped cmdr_lock, cmd_head is stale */
+@@ -902,8 +921,6 @@ static unsigned int tcmu_handle_completions(struct tcmu_dev *udev)
+ 	if (mb->cmd_tail == mb->cmd_head)
+ 		del_timer(&udev->timeout); /* no more pending cmds */
+ 
+-	wake_up(&udev->wait_cmdr);
+-
+ 	return handled;
+ }
+ 
+@@ -996,7 +1013,17 @@ static int tcmu_irqcontrol(struct uio_info *info, s32 irq_on)
+ 	struct tcmu_dev *tcmu_dev = container_of(info, struct tcmu_dev, uio_info);
+ 
+ 	mutex_lock(&tcmu_dev->cmdr_lock);
+-	tcmu_handle_completions(tcmu_dev);
++	/*
++	 * If the current udev is also in waiter list, this will
++	 * make sure that the other waiters in list be feeded ahead
++	 * of it.
++	 */
++	if (is_in_waiter_list(tcmu_dev)) {
++		wake_up(&unmap_wait);
++	} else {
++		tcmu_handle_completions(tcmu_dev);
++		wake_up(&tcmu_dev->wait_cmdr);
++	}
+ 	mutex_unlock(&tcmu_dev->cmdr_lock);
+ 
+ 	return 0;
+@@ -1231,7 +1258,7 @@ static int tcmu_configure_device(struct se_device *dev)
+ 	udev->data_off = CMDR_SIZE;
+ 	udev->data_size = DATA_SIZE;
+ 	udev->dbi_thresh = 0; /* Default in Idle state */
+-	udev->waiting_global = false;
++	udev->waiting_blocks = 0;
+ 
+ 	/* Initialise the mailbox of the ring buffer */
+ 	mb = udev->mb_addr;
+@@ -1345,6 +1372,13 @@ static void tcmu_free_device(struct se_device *dev)
+ 	list_del(&udev->node);
+ 	mutex_unlock(&root_udev_mutex);
+ 
++	mutex_lock(&root_udev_waiter_mutex);
++	mutex_lock(&udev->cmdr_lock);
++	if (is_in_waiter_list(udev))
++		list_del(&udev->waiter);
++	mutex_unlock(&udev->cmdr_lock);
++	mutex_unlock(&root_udev_waiter_mutex);
++
+ 	vfree(udev->mb_addr);
+ 
+ 	/* Upper layer should drain all requests before calling this */
+@@ -1550,6 +1584,7 @@ static int unmap_thread_fn(void *data)
+ 	struct tcmu_dev *udev;
+ 	loff_t off;
+ 	uint32_t start, end, block;
++	static uint32_t free_blocks;
+ 	struct page *page;
+ 	int i;
+ 
+@@ -1571,7 +1606,7 @@ static int unmap_thread_fn(void *data)
+ 			tcmu_handle_completions(udev);
+ 
+ 			/* Skip the udevs waiting the global pool or in idle */
+-			if (udev->waiting_global || !udev->dbi_thresh) {
++			if (is_in_waiter_list(udev) || !udev->dbi_thresh) {
+ 				mutex_unlock(&udev->cmdr_lock);
+ 				continue;
+ 			}
+@@ -1607,17 +1642,32 @@ static int unmap_thread_fn(void *data)
+ 				}
+ 			}
+ 			mutex_unlock(&udev->cmdr_lock);
++
++			free_blocks += end - start;
+ 		}
++		mutex_unlock(&root_udev_mutex);
+ 
+ 		/*
+ 		 * Try to wake up the udevs who are waiting
+-		 * for the global data pool.
++		 * for the global data pool blocks.
+ 		 */
+-		list_for_each_entry(udev, &root_udev, node) {
+-			if (udev->waiting_global)
+-				wake_up(&udev->wait_cmdr);
++		mutex_lock(&root_udev_waiter_mutex);
++		list_for_each_entry(udev, &root_udev_waiter, waiter) {
++			mutex_lock(&udev->cmdr_lock);
++			if (udev->waiting_blocks < free_blocks) {
++				mutex_unlock(&udev->cmdr_lock);
++				break;
++			}
++
++			free_blocks -= udev->waiting_blocks;
++			udev->waiting_blocks = 0;
++			mutex_unlock(&udev->cmdr_lock);
++
++			list_del(&udev->waiter);
++
++			wake_up(&udev->wait_cmdr);
+ 		}
+-		mutex_unlock(&root_udev_mutex);
++		mutex_unlock(&root_udev_waiter_mutex);
+ 	}
+ 
+ 	return 0;
+-- 
+1.8.3.1
