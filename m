@@ -1,32 +1,22 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: Re: remove REQ_OP_WRITE_SAME
-Date: Fri, 5 May 2017 10:57:13 +0200
-Message-ID: <20170505085713.GA5008@lst.de>
-References: <20170412084809.8245-1-hch@lst.de> <yq1mvbjwwvl.fsf@oracle.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 1/5] scsi: bnx2i: convert to workqueue
+Date: Fri, 5 May 2017 10:58:27 +0200
+Message-ID: <20170505085827.GB5008@lst.de>
+References: <20170410171254.30367-1-bigeasy@linutronix.de> <20170410171254.30367-2-bigeasy@linutronix.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:53802 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751116AbdEEI62 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 5 May 2017 04:58:28 -0400
 Content-Disposition: inline
-In-Reply-To: <yq1mvbjwwvl.fsf-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+In-Reply-To: <20170410171254.30367-2-bigeasy@linutronix.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, rt@linutronix.de, Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>, Chad Dupuis <chad.dupuis@qlogic.com>, QLogic-Storage-Upstream@qlogic.com, Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, Andrew Morton <akpm@linux-foundation.org>
 
-On Thu, Apr 13, 2017 at 10:23:10PM -0400, Martin K. Petersen wrote:
-> The other thing that keeps me a bit on the fence is that a bunch of the
-> plumbing to handle a bio with a payload different from bi_size is needed
-> for the copy offload token. I'm hoping to have those patches ready for
-> 4.13. Right now there are a bunch of places where handling of
-> REQ_OP_COPY_IN and REQ_OP_COPY_OUT share conditionals with WRITE SAME.
+Looks fine,
 
-Any chance to get a sneak preview of that work?
+Reviewed-by: Christoph Hellwig <hch@lst.de>
