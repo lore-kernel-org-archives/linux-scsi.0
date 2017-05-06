@@ -1,53 +1,42 @@
-From: Chad Dupuis <chad.dupuis@cavium.com>
-Subject: Re: [PATCH] scsi: qedf: Avoid reading past end of buffer
-Date: Sat, 6 May 2017 15:00:17 -0400 (EDT)
-Message-ID: <alpine.OSX.2.00.1705061459240.688@n5127mncfb42q1.qlogic.org>
-References: <20170505224255.GA21521@beast> <1494025263.2744.22.camel@sandisk.com> <CAGXu5jJicmBq36EBbyP_k0YKVOwoSA1FRs=ApRtOYFRV=d0avA@mail.gmail.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: lpfc: ensure els_wq is being checked before destroying it
+Date: Sat,  6 May 2017 23:13:55 +0100
+Message-ID: <20170506221355.13552-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0074.outbound.protection.outlook.com ([104.47.36.74]:19677
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752505AbdEFTAh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 6 May 2017 15:00:37 -0400
-In-Reply-To: <CAGXu5jJicmBq36EBbyP_k0YKVOwoSA1FRs=ApRtOYFRV=d0avA@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: Bart Van Assche <Bart.VanAssche@sandisk.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "QLogic-Storage-Upstream@cavium.com" <QLogic-Storage-Upstream@cavium.com>, "danielmicay@gmail.com" <danielmicay@gmail.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
+From: Colin Ian King <colin.king@canonical.com>
 
-On Fri, 5 May 2017, 7:10pm, Kees Cook wrote:
+I believe there is a typo on the wq destroy of els_wq, currently
+the driver is checking if els_cq is not null and I think this
+should be a check on els_wq instead.
 
-> On Fri, May 5, 2017 at 4:01 PM, Bart Van Assche
-> <Bart.VanAssche@sandisk.com> wrote:
-> > On Fri, 2017-05-05 at 15:42 -0700, Kees Cook wrote:
-> >> diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-> >> index cceddd995a4b..a5c97342fd5d 100644
-> >> --- a/drivers/scsi/qedf/qedf_main.c
-> >> +++ b/drivers/scsi/qedf/qedf_main.c
-> >> @@ -2895,7 +2895,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
-> >>       slowpath_params.drv_minor = QEDF_DRIVER_MINOR_VER;
-> >>       slowpath_params.drv_rev = QEDF_DRIVER_REV_VER;
-> >>       slowpath_params.drv_eng = QEDF_DRIVER_ENG_VER;
-> >> -     memcpy(slowpath_params.name, "qedf", QED_DRV_VER_STR_SIZE);
-> >> +     strncpy(slowpath_params.name, "qedf", QED_DRV_VER_STR_SIZE);
-> >>       rc = qed_ops->common->slowpath_start(qedf->cdev, &slowpath_params);
-> >>       if (rc) {
-> >>               QEDF_ERR(&(qedf->dbg_ctx), "Cannot start slowpath.\n");
-> >
-> > Hello Kees,
-> >
-> > Although this patch looks fine to me, isn't strlcpy() preferred over strncpy()?
-> 
-> strlcpy doesn't zero-pad, so I think strncpy is preferred here,
-> otherwise we may risk leaving portions of the destination buffer
-> filled with uninitialized data, maybe leaking kernel memory contents.
-> 
-> -Kees
-> 
+Detected by CoverityScan, CID#1411629 ("Copy-paste error")
 
-I'd agree with strncpy so we zero out the rest of the buffer.
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/lpfc/lpfc_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Acked-by: Chad Dupuis <chad.dupuis@cavium.com> 
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 90ae354a9c45..c925bbe9b35d 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -8847,7 +8847,7 @@ lpfc_sli4_queue_unset(struct lpfc_hba *phba)
+ 		lpfc_wq_destroy(phba, phba->sli4_hba.nvmels_wq);
+ 
+ 	/* Unset ELS work queue */
+-	if (phba->sli4_hba.els_cq)
++	if (phba->sli4_hba.els_wq)
+ 		lpfc_wq_destroy(phba, phba->sli4_hba.els_wq);
+ 
+ 	/* Unset unsolicited receive queue */
+-- 
+2.11.0
+
