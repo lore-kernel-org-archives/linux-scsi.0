@@ -1,42 +1,44 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: lpfc: ensure els_wq is being checked before destroying it
-Date: Sat,  6 May 2017 23:13:55 +0100
-Message-ID: <20170506221355.13552-1-colin.king@canonical.com>
+From: "hch-jcswGhMUV9g@public.gmane.org" <hch-jcswGhMUV9g@public.gmane.org>
+Subject: Re: [PATCH 25/27] block: remove the discard_zeroes_data
+	flag
+Date: Sun, 7 May 2017 11:22:09 +0200
+Message-ID: <20170507092209.GA27370@lst.de>
+References: <20170405172125.22600-1-hch@lst.de>
+	<20170405172125.22600-26-hch@lst.de>
+	<1493671519.2665.15.camel@sandisk.com>
+	<1493707425.23202.77.camel@haakon3.risingtidesystems.com>
+	<1493709373.23202.79.camel@haakon3.risingtidesystems.com>
+	<20170502072328.GA11522@lst.de>
+	<1493782395.23202.84.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1493782395.23202.84.camel-XoQW25Eq2zviZyQQd+hFbcojREIfoBdhmpATvIKMPHk@public.gmane.org>
+List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
+List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
+Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+To: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+Cc: "axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org" <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org" <philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Bart Van Assche <Bart.VanAssche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>, "lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org" <lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, "shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "hch-jcswGhMUV9g@public.gmane.org" <hch-jcswGhMUV9g@public.gmane.org>, "agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org" <drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+On Tue, May 02, 2017 at 08:33:15PM -0700, Nicholas A. Bellinger wrote:
+> The larger target/iblock conversion patch looks like post v4.12 material
+> at this point, so to avoid breakage wrt to existing LBPRZ behavior, I'll
+> plan to push the following patch post -rc1.
 
-I believe there is a typo on the wq destroy of els_wq, currently
-the driver is checking if els_cq is not null and I think this
-should be a check on els_wq instead.
+I don't think this is safe.  If you want to do the aboe you also
+need to ensure ->execute_unmap always zeroes the data.  For actual
+files in the file backend we should be all fine, but for the block
+device case [1] and iblock we'd need to use blkdev_issue_zeroout
+instead of blkdev_issue_discard when unmap_zeroes_data is set.
 
-Detected by CoverityScan, CID#1411629 ("Copy-paste error")
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/lpfc/lpfc_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 90ae354a9c45..c925bbe9b35d 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -8847,7 +8847,7 @@ lpfc_sli4_queue_unset(struct lpfc_hba *phba)
- 		lpfc_wq_destroy(phba, phba->sli4_hba.nvmels_wq);
- 
- 	/* Unset ELS work queue */
--	if (phba->sli4_hba.els_cq)
-+	if (phba->sli4_hba.els_wq)
- 		lpfc_wq_destroy(phba, phba->sli4_hba.els_wq);
- 
- 	/* Unset unsolicited receive queue */
--- 
-2.11.0
-
+[1] which btw already seems broken as it doesn't invalidate cached
+data when issuing a discard.
