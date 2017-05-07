@@ -1,92 +1,78 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 04/19] aacraid: Set correct Queue Depth for HBA1000 RAW disks
-Date: Sun, 7 May 2017 04:26:49 -0700
-Message-ID: <20170507112704.21940-5-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 15/19] aacraid: Make sure ioctl returns on controller reset
+Date: Sun, 7 May 2017 04:27:00 -0700
+Message-ID: <20170507112704.21940-16-RaghavaAditya.Renukunta@microsemi.com>
 References: <20170507112704.21940-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0045.outbound.protection.outlook.com ([104.47.42.45]:18944
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-bl2nam02on0046.outbound.protection.outlook.com ([104.47.38.46]:43008
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754735AbdEGVkX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 7 May 2017 17:40:23 -0400
+        id S1754623AbdEGVk1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 7 May 2017 17:40:27 -0400
 In-Reply-To: <20170507112704.21940-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, Prasad.Munirathnam@microsemi.com, RaghavaAditya.Renukunta@microsemi.com
 
-The default queue depth for non NATIVE RAW disks is calculated from the
-number of fibs and number of disks or a max of 256. This causes poor disk
-IO performance.
-
-The fix is to set default qd based on the type of disks
-(SATA -32 and SAS -64)
+Made sure that ioctl commands return in case of a controller reset.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 ---
- drivers/scsi/aacraid/linit.c | 28 ++++++++++++++++++++--------
- 1 file changed, 20 insertions(+), 8 deletions(-)
+ drivers/scsi/aacraid/commsup.c | 20 +++++++++++++++++---
+ 1 file changed, 17 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 5e1a2d6..9ef98e4 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -405,17 +405,23 @@ static int aac_slave_configure(struct scsi_device *sdev)
- 	int chn, tid;
- 	unsigned int depth = 0;
- 	unsigned int set_timeout = 0;
-+	bool set_qd_dev_type = false;
-+	u8 devtype = 0;
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index f26543a..a026790 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -804,10 +804,13 @@ int aac_hba_send(u8 command, struct fib *fibptr, fib_callback callback,
+ 			return -EFAULT;
  
- 	chn = aac_logical_to_phys(sdev_channel(sdev));
- 	tid = sdev_id(sdev);
--	if (chn < AAC_MAX_BUSES && tid < AAC_MAX_TARGETS &&
--		aac->hba_map[chn][tid].devtype == AAC_DEVTYPE_NATIVE_RAW) {
--		depth = aac->hba_map[chn][tid].qd_limit;
-+	if (chn < AAC_MAX_BUSES && tid < AAC_MAX_TARGETS && aac->sa_firmware) {
-+		devtype = aac->hba_map[chn][tid].devtype;
+ 		/* Only set for first known interruptable command */
++		fibptr->flags |= FIB_CONTEXT_FLAG_WAIT;
++		fibptr->flags &= ~(FIB_CONTEXT_FLAG_WAIT);
+ 		if (down_interruptible(&fibptr->event_wait)) {
+ 			fibptr->done = 2;
+ 			up(&fibptr->event_wait);
+ 		}
 +
-+		if (devtype == AAC_DEVTYPE_NATIVE_RAW)
-+			depth = aac->hba_map[chn][tid].qd_limit;
-+		else if (devtype == AAC_DEVTYPE_ARC_RAW)
-+			set_qd_dev_type = true;
-+
- 		set_timeout = 1;
- 		goto common_config;
- 	}
+ 		spin_lock_irqsave(&fibptr->event_lock, flags);
+ 		if ((fibptr->done == 0) || (fibptr->done == 2)) {
+ 			fibptr->done = 2; /* Tell interrupt we aborted */
+@@ -1514,6 +1517,7 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ 	int jafo = 0;
+ 	int bled;
+ 	u64 dmamask;
++	int num_of_fibs = 0;
  
--
- 	if (aac->jbod && (sdev->type == TYPE_DISK))
- 		sdev->removable = 1;
- 
-@@ -470,16 +476,22 @@ static int aac_slave_configure(struct scsi_device *sdev)
- 		if (sdev_channel(sdev) != NATIVE_CHANNEL)
- 			goto common_config;
- 
--		/*
--		 * Check if SATA drive
--		 */
-+		set_qd_dev_type = true;
-+
-+	}
-+
-+common_config:
-+
-+	/*
-+	 * Check if SATA drive
-+	 */
-+	if (set_qd_dev_type) {
- 		if (strncmp(sdev->vendor, "ATA", 3) == 0)
- 			depth = 32;
- 		else
- 			depth = 64;
- 	}
- 
--common_config:
  	/*
- 	 * Firmware has an individual device recovery time typically
- 	 * of 35 seconds, give us a margin.
+ 	 * Assumptions:
+@@ -1547,10 +1551,20 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ 	/*
+ 	 *	Loop through the fibs, close the synchronous FIBS
+ 	 */
+-	for (retval = 1, index = 0; index < (aac->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB); index++) {
++	retval = 1;
++	num_of_fibs = aac->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB;
++	for (index = 0; index <  num_of_fibs; index++) {
++
+ 		struct fib *fib = &aac->fibs[index];
+-		if (!(fib->hw_fib_va->header.XferState & cpu_to_le32(NoResponseExpected | Async)) &&
+-		  (fib->hw_fib_va->header.XferState & cpu_to_le32(ResponseExpected))) {
++		__le32 XferState = fib->hw_fib_va->header.XferState;
++		bool is_response_expected = false;
++
++		if (!(XferState & cpu_to_le32(NoResponseExpected | Async)) &&
++		   (XferState & cpu_to_le32(ResponseExpected)))
++			is_response_expected = true;
++
++		if (is_response_expected
++		  || fib->flags & FIB_CONTEXT_FLAG_WAIT) {
+ 			unsigned long flagv;
+ 			spin_lock_irqsave(&fib->event_lock, flagv);
+ 			up(&fib->event_wait);
 -- 
 2.7.4
