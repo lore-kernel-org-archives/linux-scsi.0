@@ -1,57 +1,98 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 06/19] aacraid: Change wait time for fib completion
-Date: Sun, 7 May 2017 06:34:11 -0700
-Message-ID: <1494164064-17715-7-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
-References: <1494164064-17715-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 13/19] aacraid: Rework aac_src_restart
+Date: Sun, 7 May 2017 04:26:58 -0700
+Message-ID: <20170507112704.21940-14-RaghavaAditya.Renukunta@microsemi.com>
+References: <20170507112704.21940-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0080.outbound.protection.outlook.com ([104.47.40.80]:51200
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+Received: from mail-dm3nam03on0059.outbound.protection.outlook.com ([104.47.41.59]:37120
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752166AbdEGVpU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 7 May 2017 17:45:20 -0400
-In-Reply-To: <1494164064-17715-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
+        id S1755264AbdEGVpV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 7 May 2017 17:45:21 -0400
+In-Reply-To: <20170507112704.21940-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, Prasad.Munirathnam@microsemi.com
+Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, Prasad.Munirathnam@microsemi.com, RaghavaAditya.Renukunta@microsemi.com
 
-Change the completion wait time for the fibs in the reset and abort
-callback from 2 minutes to 15 seconds.
-
-2 minutes is too long for waiting for completion.
+Removed switch case and replaced with if mask checks. Moved KERNEL_PANIC
+check to when bled is less than 0.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 ---
- drivers/scsi/aacraid/linit.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/aacraid/src.c | 34 ++++++++++++----------------------
+ 1 file changed, 12 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 9ef98e4..f6a11af 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -684,8 +684,8 @@ static int aac_eh_abort(struct scsi_cmnd* cmd)
- 				  (fib_callback) aac_hba_callback,
- 				  (void *) cmd);
+diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
+index 8ed7be0..10a589b 100644
+--- a/drivers/scsi/aacraid/src.c
++++ b/drivers/scsi/aacraid/src.c
+@@ -772,8 +772,7 @@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
  
--		/* Wait up to 2 minutes for completion */
--		for (count = 0; count < 120; ++count) {
-+		/* Wait up to 15 secs for completion */
-+		for (count = 0; count < 15; ++count) {
- 			if (cmd->SCp.sent_command) {
- 				ret = SUCCESS;
- 				break;
-@@ -840,8 +840,8 @@ static int aac_eh_reset(struct scsi_cmnd* cmd)
- 				  (fib_callback) aac_hba_callback,
- 				  (void *) cmd);
+ 	dev->a_ops.adapter_enable_int = aac_src_disable_interrupt;
  
--		/* Wait up to 2 minutes for completion */
--		for (count = 0; count < 120; ++count) {
-+		/* Wait up to 15 seconds for completion */
-+		for (count = 0; count < 15; ++count) {
- 			if (cmd->SCp.sent_command) {
- 				ret = SUCCESS;
- 				break;
+-	switch (reset_type) {
+-	case IOP_HWSOFT_RESET:
++	if (reset_type & HW_IOP_RESET) {
+ 		aac_send_iop_reset(dev);
+ 
+ 		/*
+@@ -784,12 +783,14 @@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
+ 			dev_err(&dev->pdev->dev, "IOP reset failed\n");
+ 		else
+ 			goto set_startup;
++	}
+ 
+-		if (!dev->sa_firmware) {
+-			ret = -ENODEV;
+-			goto out;
+-		}
++	if (!dev->sa_firmware) {
++		ret = -ENODEV;
++		goto out;
++	}
+ 
++	if (reset_type & HW_SOFT_RESET) {
+ 		aac_send_hardware_soft_reset(dev);
+ 		dev->msi_enabled = 0;
+ 
+@@ -799,30 +800,19 @@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
+ 			ret = -ENODEV;
+ 			goto out;
+ 		}
+-
+-		break;
+-	case HW_SOFT_RESET:
+-		if (dev->sa_firmware) {
+-			aac_send_hardware_soft_reset(dev);
+-			aac_set_intx_mode(dev);
+-		}
+-		break;
+-	default:
+-		aac_send_iop_reset(dev);
+-		break;
+ 	}
+ 
+-invalid_out:
+-
+-	if (src_readl(dev, MUnit.OMR) & KERNEL_PANIC)
+-		ret = -ENODEV;
+-
+ set_startup:
+ 	if (startup_timeout < 300)
+ 		startup_timeout = 300;
+ 
+ out:
+ 	return ret;
++
++invalid_out:
++	if (src_readl(dev, MUnit.OMR) & KERNEL_PANIC)
++		ret = -ENODEV;
++goto out;
+ }
+ 
+ /**
 -- 
 2.7.4
