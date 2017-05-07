@@ -1,83 +1,180 @@
-From: Pavel Machek <pavel@ucw.cz>
-Subject: Re: Race to power off harming SATA SSDs
-Date: Sun, 7 May 2017 22:40:07 +0200
-Message-ID: <20170507204007.GA25628@atrey.karlin.mff.cuni.cz>
-References: <20170410232118.GA4816@khazad-dum.debian.net>
- <20170410235206.GA28603@wtj.duckdns.org>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 02/19] aacraid: Fix DMAR issues with  iommu=pt
+Date: Sun, 7 May 2017 04:26:47 -0700
+Message-ID: <20170507112704.21940-3-RaghavaAditya.Renukunta@microsemi.com>
+References: <20170507112704.21940-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-mtd-bounces+gldm-linux-mtd-36=gmane.org@lists.infradead.org>
-Content-Disposition: inline
-In-Reply-To: <20170410235206.GA28603@wtj.duckdns.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mtd>,
- <mailto:linux-mtd-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mtd/>
-List-Post: <mailto:linux-mtd@lists.infradead.org>
-List-Help: <mailto:linux-mtd-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mtd>,
- <mailto:linux-mtd-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-mtd" <linux-mtd-bounces@lists.infradead.org>
-Errors-To: linux-mtd-bounces+gldm-linux-mtd-36=gmane.org@lists.infradead.org
-To: Tejun Heo <tj@kernel.org>
-Cc: boris.brezillon@free-electrons.com, linux-scsi@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-mtd@lists.infradead.org, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, dwmw2@infradead.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2nam03on0085.outbound.protection.outlook.com ([104.47.42.85]:35392
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754400AbdEGVjx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 7 May 2017 17:39:53 -0400
+In-Reply-To: <20170507112704.21940-1-RaghavaAditya.Renukunta@microsemi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, Prasad.Munirathnam@microsemi.com, RaghavaAditya.Renukunta@microsemi.com
 
-Hi!
+The driver changed the DMA consistent map after consistent memory was
+allocated, this invalidated the IOMMU identity mapping. The fix was to
+make sure that we set the DMA consistent mask setting once depending on
+the controller card.
 
-> > However, *IN PRACTICE*, SATA STANDBY IMMEDIATE command completion
-> > [often?] only indicates that the device is now switching to the target
-> > power management state, not that it has reached the target state.  Any
-> > further device status inquires would return that it is in STANDBY mode,
-> > even if it is still entering that state.
-> > 
-> > The kernel then continues the shutdown path while the SSD is still
-> > preparing itself to be powered off, and it becomes a race.  When the
-> > kernel + firmware wins, platform power is cut before the SSD has
-> > finished (i.e. the SSD is subject to an unclean power-off).
-> 
-> At that point, the device is fully flushed and in terms of data
-> integrity should be fine with losing power at any point anyway.
+Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+---
+ drivers/scsi/aacraid/aachba.c  | 17 ++++++-----------
+ drivers/scsi/aacraid/commsup.c | 29 ++++++++++++++++++-----------
+ drivers/scsi/aacraid/linit.c   | 32 +++++++++++++++++++-------------
+ 3 files changed, 43 insertions(+), 35 deletions(-)
 
-Actually, no, that is not how it works.
-
-"Fully flushed" is one thing, surviving power loss is
-different. Explanation below.
-
-> > NOTE: unclean SSD power-offs are dangerous and may brick the device in
-> > the worst case, or otherwise harm it (reduce longevity, damage flash
-> > blocks).  It is also not impossible to get data corruption.
-> 
-> I get that the incrementing counters might not be pretty but I'm a bit
-> skeptical about this being an actual issue.  Because if that were
-> true, the device would be bricking itself from any sort of power
-> losses be that an actual power loss, battery rundown or hard power off
-> after crash.
-
-And that's exactly what users see. If you do enough power fails on a
-SSD, you usually brick it, some die sooner than others. There was some
-test results published, some are here
-http://lkcl.net/reports/ssd_analysis.html, I believe I seen some
-others too.
-
-It is very hard for a NAND to work reliably in face of power
-failures. In fact, not even Linux MTD + UBIFS works well in that
-regards. See
-http://www.linux-mtd.infradead.org/faq/ubi.html. (Unfortunately, its
-down now?!). If we can't get it right, do you believe SSD manufactures
-do?
-
-[Issue is, if you powerdown during erase, you get "weakly erased"
-page, which will contain expected 0xff's, but you'll get bitflips
-there quickly. Similar issue exists for writes. It is solveable in
-software, just hard and slow... and we don't do it.]
-									
-									Pavel
-
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index 43d8838..707ee2f 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -2071,20 +2071,15 @@ int aac_get_adapter_info(struct aac_dev* dev)
+ 		expose_physicals = 0;
+ 	}
+ 
+-	if(dev->dac_support != 0) {
+-		if (!pci_set_dma_mask(dev->pdev, DMA_BIT_MASK(64)) &&
+-			!pci_set_consistent_dma_mask(dev->pdev, DMA_BIT_MASK(64))) {
++	if (dev->dac_support) {
++		if (!pci_set_dma_mask(dev->pdev, DMA_BIT_MASK(64))) {
+ 			if (!dev->in_reset)
+-				printk(KERN_INFO"%s%d: 64 Bit DAC enabled\n",
+-					dev->name, dev->id);
+-		} else if (!pci_set_dma_mask(dev->pdev, DMA_BIT_MASK(32)) &&
+-			!pci_set_consistent_dma_mask(dev->pdev, DMA_BIT_MASK(32))) {
+-			printk(KERN_INFO"%s%d: DMA mask set failed, 64 Bit DAC disabled\n",
+-				dev->name, dev->id);
++				dev_info(&dev->pdev->dev, "64 Bit DAC enabled\n");
++		} else if (!pci_set_dma_mask(dev->pdev, DMA_BIT_MASK(32))) {
++			dev_info(&dev->pdev->dev, "DMA mask set failed, 64 Bit DAC disabled\n");
+ 			dev->dac_support = 0;
+ 		} else {
+-			printk(KERN_WARNING"%s%d: No suitable DMA available.\n",
+-				dev->name, dev->id);
++			dev_info(&dev->pdev->dev, "No suitable DMA available\n");
+ 			rcode = -ENOMEM;
+ 		}
+ 	}
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index d08920d..47068b2 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -1513,6 +1513,7 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ 	struct scsi_cmnd *command_list;
+ 	int jafo = 0;
+ 	int bled;
++	u64 dmamask;
+ 
+ 	/*
+ 	 * Assumptions:
+@@ -1580,21 +1581,27 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ 	aac_free_irq(aac);
+ 	kfree(aac->fsa_dev);
+ 	aac->fsa_dev = NULL;
++
++	dmamask = DMA_BIT_MASK(32);
+ 	quirks = aac_get_driver_ident(index)->quirks;
+-	if (quirks & AAC_QUIRK_31BIT) {
+-		if (((retval = pci_set_dma_mask(aac->pdev, DMA_BIT_MASK(31)))) ||
+-		  ((retval = pci_set_consistent_dma_mask(aac->pdev, DMA_BIT_MASK(31)))))
+-			goto out;
+-	} else {
+-		if (((retval = pci_set_dma_mask(aac->pdev, DMA_BIT_MASK(32)))) ||
+-		  ((retval = pci_set_consistent_dma_mask(aac->pdev, DMA_BIT_MASK(32)))))
+-			goto out;
++	if (quirks & AAC_QUIRK_31BIT)
++		retval = pci_set_dma_mask(aac->pdev, dmamask);
++	else if (!(quirks & AAC_QUIRK_SRC))
++		retval = pci_set_dma_mask(aac->pdev, dmamask);
++	else
++		retval = pci_set_consistent_dma_mask(aac->pdev, dmamask);
++
++	if (quirks & AAC_QUIRK_31BIT && !retval) {
++		dmamask = DMA_BIT_MASK(31);
++		retval = pci_set_consistent_dma_mask(aac->pdev, dmamask);
+ 	}
++
++	if (retval)
++		goto out;
++
+ 	if ((retval = (*(aac_get_driver_ident(index)->init))(aac)))
+ 		goto out;
+-	if (quirks & AAC_QUIRK_31BIT)
+-		if ((retval = pci_set_dma_mask(aac->pdev, DMA_BIT_MASK(32))))
+-			goto out;
++
+ 	if (jafo) {
+ 		aac->thread = kthread_run(aac_command_thread, aac, "%s",
+ 					  aac->name);
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 372a075..5a201da 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -1403,6 +1403,7 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	int error = -ENODEV;
+ 	int unique_id = 0;
+ 	u64 dmamask;
++	int mask_bits = 0;
+ 	extern int aac_sync_mode;
+ 
+ 	/*
+@@ -1426,18 +1427,32 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		goto out;
+ 	error = -ENODEV;
+ 
++	if (!(aac_drivers[index].quirks & AAC_QUIRK_SRC)) {
++		error = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
++		if (error) {
++			dev_err(&pdev->dev, "PCI 32 BIT dma mask set failed");
++			goto out_disable_pdev;
++		}
++	}
++
+ 	/*
+ 	 * If the quirk31 bit is set, the adapter needs adapter
+ 	 * to driver communication memory to be allocated below 2gig
+ 	 */
+-	if (aac_drivers[index].quirks & AAC_QUIRK_31BIT)
++	if (aac_drivers[index].quirks & AAC_QUIRK_31BIT) {
+ 		dmamask = DMA_BIT_MASK(31);
+-	else
++		mask_bits = 31;
++	} else {
+ 		dmamask = DMA_BIT_MASK(32);
++		mask_bits = 32;
++	}
+ 
+-	if (pci_set_dma_mask(pdev, dmamask) ||
+-			pci_set_consistent_dma_mask(pdev, dmamask))
++	error = pci_set_consistent_dma_mask(pdev, dmamask);
++	if (error) {
++		dev_err(&pdev->dev, "PCI %d B consistent dma mask set failed\n"
++				, mask_bits);
+ 		goto out_disable_pdev;
++	}
+ 
+ 	pci_set_master(pdev);
+ 
+@@ -1501,15 +1516,6 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		goto out_deinit;
+ 	}
+ 
+-	/*
+-	 * If we had set a smaller DMA mask earlier, set it to 4gig
+-	 * now since the adapter can dma data to at least a 4gig
+-	 * address space.
+-	 */
+-	if (aac_drivers[index].quirks & AAC_QUIRK_31BIT)
+-		if (pci_set_dma_mask(pdev, DMA_BIT_MASK(32)))
+-			goto out_deinit;
+-
+ 	aac->maximum_num_channels = aac_drivers[index].channels;
+ 	error = aac_get_adapter_info(aac);
+ 	if (error < 0)
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
-
-______________________________________________________
-Linux MTD discussion mailing list
-http://lists.infradead.org/mailman/listinfo/linux-mtd/
+2.7.4
