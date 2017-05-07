@@ -1,157 +1,144 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 18/19] aacraid: Remove reference to Series-9
-Date: Sun, 7 May 2017 06:34:23 -0700
-Message-ID: <1494164064-17715-19-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 07/19] aacraid: Log count info of scsi cmds before reset
+Date: Sun, 7 May 2017 06:34:12 -0700
+Message-ID: <1494164064-17715-8-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 References: <1494164064-17715-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0057.outbound.protection.outlook.com ([104.47.32.57]:20064
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-bl2nam02on0064.outbound.protection.outlook.com ([104.47.38.64]:58464
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751874AbdEGVqg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 7 May 2017 17:46:36 -0400
+        id S1753381AbdEGVpk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 7 May 2017 17:45:40 -0400
 In-Reply-To: <1494164064-17715-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, Prasad.Munirathnam@microsemi.com
 
-Removed reference to Series-9 HBA and created arc ctrl check function.
+Log the location of the scsi cmds before triggering a reset. This
+information is useful for debugging.
 
-Signed-off-by: Prasad B Munirathnam <prasad.munirathnam@microsemi.com>
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 ---
- drivers/scsi/aacraid/aacraid.h  | 13 ++++++++++++-
- drivers/scsi/aacraid/comminit.c | 18 ++++--------------
- drivers/scsi/aacraid/commsup.c  |  5 +----
- drivers/scsi/aacraid/linit.c    |  9 ++-------
- 4 files changed, 19 insertions(+), 26 deletions(-)
+ drivers/scsi/aacraid/linit.c | 90 ++++++++++++++++++++++++++------------------
+ 1 file changed, 53 insertions(+), 37 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 829f3d8..58ccd2a 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -424,7 +424,6 @@ struct aac_ciss_identify_pd {
- #define PMC_DEVICE_S6	0x28b
- #define PMC_DEVICE_S7	0x28c
- #define PMC_DEVICE_S8	0x28d
--#define PMC_DEVICE_S9	0x28f
- 
- #define aac_phys_to_logical(x)  ((x)+1)
- #define aac_logical_to_phys(x)  ((x)?(x)-1:0)
-@@ -2684,6 +2683,18 @@ int aac_probe_container(struct aac_dev *dev, int cid);
- int _aac_rx_init(struct aac_dev *dev);
- int aac_rx_select_comm(struct aac_dev *dev, int comm);
- int aac_rx_deliver_producer(struct fib * fib);
-+
-+static inline int aac_is_src(struct aac_dev *dev)
-+{
-+	u16 device = dev->pdev->device;
-+
-+	if (device == PMC_DEVICE_S6 ||
-+		device == PMC_DEVICE_S7 ||
-+		device == PMC_DEVICE_S8)
-+		return 1;
-+	return 0;
-+}
-+
- char * get_container_type(unsigned type);
- extern int numacb;
- extern char aac_driver_version[];
-diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
-index 1151505..9ee025b 100644
---- a/drivers/scsi/aacraid/comminit.c
-+++ b/drivers/scsi/aacraid/comminit.c
-@@ -53,11 +53,8 @@ static inline int aac_is_msix_mode(struct aac_dev *dev)
- {
- 	u32 status = 0;
- 
--	if (dev->pdev->device == PMC_DEVICE_S6 ||
--		dev->pdev->device == PMC_DEVICE_S7 ||
--		dev->pdev->device == PMC_DEVICE_S8) {
-+	if (aac_is_src(dev))
- 		status = src_readl(dev, MUnit.OMR);
--	}
- 	return (status & AAC_INT_MODE_MSIX);
- }
- 
-@@ -325,9 +322,7 @@ int aac_send_shutdown(struct aac_dev * dev)
- 	/* FIB should be freed only after getting the response from the F/W */
- 	if (status != -ERESTARTSYS)
- 		aac_fib_free(fibctx);
--	if ((dev->pdev->device == PMC_DEVICE_S7 ||
--	     dev->pdev->device == PMC_DEVICE_S8 ||
--	     dev->pdev->device == PMC_DEVICE_S9) &&
-+	if (aac_is_src(dev) &&
- 	     dev->msi_enabled)
- 		aac_set_intx_mode(dev);
- 	return status;
-@@ -583,9 +578,7 @@ struct aac_dev *aac_init_adapter(struct aac_dev *dev)
- 		dev->max_fib_size = status[1] & 0xFFE0;
- 		host->sg_tablesize = status[2] >> 16;
- 		dev->sg_tablesize = status[2] & 0xFFFF;
--		if (dev->pdev->device == PMC_DEVICE_S7 ||
--		    dev->pdev->device == PMC_DEVICE_S8 ||
--		    dev->pdev->device == PMC_DEVICE_S9) {
-+		if (aac_is_src(dev)) {
- 			if (host->can_queue > (status[3] >> 16) -
- 					AAC_NUM_MGT_FIB)
- 				host->can_queue = (status[3] >> 16) -
-@@ -604,10 +597,7 @@ struct aac_dev *aac_init_adapter(struct aac_dev *dev)
- 			pr_warn("numacb=%d ignored\n", numacb);
- 	}
- 
--	if (dev->pdev->device == PMC_DEVICE_S6 ||
--	    dev->pdev->device == PMC_DEVICE_S7 ||
--	    dev->pdev->device == PMC_DEVICE_S8 ||
--	    dev->pdev->device == PMC_DEVICE_S9)
-+	if (aac_is_src(dev))
- 		aac_define_int_mode(dev);
- 	/*
- 	 *	Ok now init the communication subsystem
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index a026790..184e9cf 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -2595,10 +2595,7 @@ void aac_free_irq(struct aac_dev *dev)
- 	int cpu;
- 
- 	cpu = cpumask_first(cpu_online_mask);
--	if (dev->pdev->device == PMC_DEVICE_S6 ||
--	    dev->pdev->device == PMC_DEVICE_S7 ||
--	    dev->pdev->device == PMC_DEVICE_S8 ||
--	    dev->pdev->device == PMC_DEVICE_S9) {
-+	if (aac_is_src(dev)) {
- 		if (dev->max_msix > 1) {
- 			for (i = 0; i < dev->max_msix; i++)
- 				free_irq(pci_irq_vector(dev->pdev, i),
 diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index d933d2f..0f277df 100644
+index f6a11af..0a8d303 100644
 --- a/drivers/scsi/aacraid/linit.c
 +++ b/drivers/scsi/aacraid/linit.c
-@@ -1416,10 +1416,7 @@ static void __aac_shutdown(struct aac_dev * aac)
- 		kthread_stop(aac->thread);
- 	}
- 	aac_adapter_disable_int(aac);
--	if (aac->pdev->device == PMC_DEVICE_S6 ||
--	    aac->pdev->device == PMC_DEVICE_S7 ||
--	    aac->pdev->device == PMC_DEVICE_S8 ||
--	    aac->pdev->device == PMC_DEVICE_S9) {
-+	if (aac_is_src(aac)) {
- 		if (aac->max_msix > 1) {
- 			for (i = 0; i < aac->max_msix; i++) {
- 				free_irq(pci_irq_vector(aac->pdev, i),
-@@ -1684,9 +1681,7 @@ static int aac_acquire_resources(struct aac_dev *dev)
- 	aac_adapter_enable_int(dev);
+@@ -624,6 +624,56 @@ static int aac_ioctl(struct scsi_device *sdev, int cmd, void __user * arg)
+ 	return aac_do_ioctl(dev, cmd, arg);
+ }
  
++static int get_num_of_incomplete_fibs(struct aac_dev *aac)
++{
++
++	unsigned long flags;
++	struct scsi_device *sdev = NULL;
++	struct Scsi_Host *shost = aac->scsi_host_ptr;
++	struct scsi_cmnd *scmnd = NULL;
++	struct device *ctrl_dev;
++
++	int mlcnt  = 0;
++	int llcnt  = 0;
++	int ehcnt  = 0;
++	int fwcnt  = 0;
++	int krlcnt = 0;
++
++	__shost_for_each_device(sdev, shost) {
++		spin_lock_irqsave(&sdev->list_lock, flags);
++		list_for_each_entry(scmnd, &sdev->cmd_list, list) {
++			switch (scmnd->SCp.phase) {
++			case AAC_OWNER_FIRMWARE:
++				fwcnt++;
++				break;
++			case AAC_OWNER_ERROR_HANDLER:
++				ehcnt++;
++				break;
++			case AAC_OWNER_LOWLEVEL:
++				llcnt++;
++				break;
++			case AAC_OWNER_MIDLEVEL:
++				mlcnt++;
++				break;
++			default:
++				krlcnt++;
++				break;
++			}
++		}
++		spin_unlock_irqrestore(&sdev->list_lock, flags);
++	}
++
++	ctrl_dev = &aac->pdev->dev;
++
++	dev_info(ctrl_dev, "outstanding cmd: midlevel-%d\n", mlcnt);
++	dev_info(ctrl_dev, "outstanding cmd: lowlevel-%d\n", llcnt);
++	dev_info(ctrl_dev, "outstanding cmd: error handler-%d\n", ehcnt);
++	dev_info(ctrl_dev, "outstanding cmd: firmware-%d\n", fwcnt);
++	dev_info(ctrl_dev, "outstanding cmd: kernel-%d\n", krlcnt);
++
++	return mlcnt + llcnt + ehcnt + fwcnt;
++}
++
+ static int aac_eh_abort(struct scsi_cmnd* cmd)
+ {
+ 	struct scsi_device * dev = cmd->device;
+@@ -853,8 +903,6 @@ static int aac_eh_reset(struct scsi_cmnd* cmd)
+ 			pr_err("%s: Host adapter reset request timed out\n",
+ 			AAC_DRIVERNAME);
+ 	} else {
+-		struct scsi_cmnd *command;
+-		unsigned long flags;
  
--	if ((dev->pdev->device == PMC_DEVICE_S7 ||
--	     dev->pdev->device == PMC_DEVICE_S8 ||
--	     dev->pdev->device == PMC_DEVICE_S9))
-+	if (aac_is_src(dev))
- 		aac_define_int_mode(dev);
+ 		/* Mark the assoc. FIB to not complete, eh handler does this */
+ 		for (count = 0;
+@@ -873,41 +921,9 @@ static int aac_eh_reset(struct scsi_cmnd* cmd)
+ 		pr_err("%s: Host adapter reset request. SCSI hang ?\n",
+ 					AAC_DRIVERNAME);
  
- 	if (dev->msi_enabled)
+-		count = aac_check_health(aac);
+-		if (count)
+-			return count;
+-		/*
+-		 * Wait for all commands to complete to this specific
+-		 * target (block maximum 60 seconds).
+-		 */
+-		for (count = 60; count; --count) {
+-			int active = aac->in_reset;
+-
+-			if (active == 0)
+-			__shost_for_each_device(dev, host) {
+-				spin_lock_irqsave(&dev->list_lock, flags);
+-				list_for_each_entry(command, &dev->cmd_list,
+-					list) {
+-					if ((command != cmd) &&
+-					(command->SCp.phase ==
+-					AAC_OWNER_FIRMWARE)) {
+-						active++;
+-						break;
+-					}
+-				}
+-				spin_unlock_irqrestore(&dev->list_lock, flags);
+-				if (active)
+-					break;
+-
+-			}
+-			/*
+-			 * We can exit If all the commands are complete
+-			 */
+-			if (active == 0)
+-				return SUCCESS;
+-			ssleep(1);
+-		}
+-		pr_err("%s: SCSI bus appears hung\n", AAC_DRIVERNAME);
++		count = get_num_of_incomplete_fibs(aac);
++		if (count == 0)
++			return SUCCESS;
+ 
+ 		/*
+ 		 * This adapter needs a blind reset, only do so for
 -- 
 2.7.4
