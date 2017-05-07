@@ -1,55 +1,47 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH v3] ibmvscsis: Do not send aborted task response
-Date: Sun, 07 May 2017 14:59:21 -0700
-Message-ID: <1494194361.30469.0.camel@haakon3.risingtidesystems.com>
-References: <1494011835-29476-1-git-send-email-bryantly@linux.vnet.ibm.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 176951] boot fails unless acpi=off Acer Travelmate X-349
+Date: Sun, 07 May 2017 10:19:57 +0000
+Message-ID: <bug-176951-11613-TxjcMgmK1A@https.bugzilla.kernel.org/>
+References: <bug-176951-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:48646 "EHLO
-        linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754882AbdEGV7b (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 7 May 2017 17:59:31 -0400
-In-Reply-To: <1494011835-29476-1-git-send-email-bryantly@linux.vnet.ibm.com>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:47762 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1756275AbdEGWHI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 7 May 2017 18:07:08 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id AA91628481
+        for <linux-scsi@vger.kernel.org>; Sun,  7 May 2017 10:20:01 +0000 (UTC)
+In-Reply-To: <bug-176951-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Cc: Bart.VanAssche@sandisk.com, martin.petersen@oracle.com, mikecyr@linux.vnet.ibm.com, mikecyr@us.ibm.com, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, stable@vger.kernel.org
+To: linux-scsi@kernel.org
 
-On Fri, 2017-05-05 at 14:17 -0500, Bryant G. Ly wrote:
-> The driver is sending a response to the actual scsi op that was
-> aborted by an abort task TM, while LIO is sending a response to
-> the abort task TM.
-> 
-> ibmvscsis_tgt does not send the response to the client until
-> release_cmd time. The reason for this was because if we did it
-> at queue_status time, then the client would be free to reuse the
-> tag for that command, but we're still using the tag until the
-> command is released at release_cmd time, so we chose to delay
-> sending the response until then. That then caused this issue, because
-> release_cmd is always called, even if queue_status is not.
-> 
-> SCSI spec says that the initiator that sends the abort task
-> TM NEVER gets a response to the aborted op and with the current
-> code it will send a response. Thus this fix will remove that response
-> if the CMD_T_ABORTED && !CMD_T_TAS.
-> 
-> Another case with a small timing window is the case where if LIO sends a
-> TMR_DOES_NOT_EXIST, and the release_cmd callback is called for the TMR Abort
-> cmd before the release_cmd for the (attemped) aborted cmd, then we need to
-> ensure that we send the response for the (attempted) abort cmd to the client
-> before we send the response for the TMR Abort cmd.
-> 
-> Cc: <stable@vger.kernel.org> # v4.8+
-> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-> Signed-off-by: Michael Cyr <mikecyr@linux.vnet.ibm.com>
-> ---
->  drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 114 ++++++++++++++++++++++++-------
->  drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.h |   2 +
->  2 files changed, 91 insertions(+), 25 deletions(-)
-> 
+https://bugzilla.kernel.org/show_bug.cgi?id=176951
 
-Applied.
+--- Comment #25 from Alberto Tiboni (a.tiboni@gmail.com) ---
+(In reply to Alberto Tiboni from comment #24)
+> I can confirm issue is still here: update bios at 1.08, nothing changed!
+> 
+> Tried Ubuntu and Lubuntu distro, 16.04, 16.10 and 17.04, both 64 and 32bits.
+> 
+> The only one that booted after installation was Lubuntu 16.04 32bit in
+> legacy mode, with grub without "quite splash" parameters.
+> 
+> but it works rarely: 9 on 10 times it produces a kernel panic on apci init.
+> 
+> Now I'm trying linux Mint, but i'm quite sure problem will be there too.
 
-Thanks Bryant + Michael.
+
+
+Hi there, found this
+https://www.reddit.com/r/linuxmint/comments/5lu69k/installing_linux_mint_181_on_an_acer_swift_3/
+
+don't know if can help, but at second install attempt the system is stable with
+kernel 4.4.0-53-generic
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
