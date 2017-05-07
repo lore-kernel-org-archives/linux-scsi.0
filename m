@@ -1,15 +1,15 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 11/19] aacraid: Add periodic checks to see IOP reset status
-Date: Sun, 7 May 2017 04:26:56 -0700
-Message-ID: <20170507112704.21940-12-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 16/19] aacraid: Enable ctrl reset for both hba and arc
+Date: Sun, 7 May 2017 04:27:01 -0700
+Message-ID: <20170507112704.21940-17-RaghavaAditya.Renukunta@microsemi.com>
 References: <20170507112704.21940-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0073.outbound.protection.outlook.com ([104.47.38.73]:56168
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+Received: from mail-co1nam03on0087.outbound.protection.outlook.com ([104.47.40.87]:12320
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754648AbdEGVkZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1754772AbdEGVkZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Sun, 7 May 2017 17:40:25 -0400
 In-Reply-To: <20170507112704.21940-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -17,111 +17,119 @@ List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, Prasad.Munirathnam@microsemi.com, RaghavaAditya.Renukunta@microsemi.com
 
-Added function that waits with a timeout for the ctrl to be up and running
-after triggering an IOP reset. Also removed 30 sec sleep as it is not
-needed.
+Make sure that IOP and SOFT reset are enabled for both for both
+arc and hba1000 controllers.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 ---
- drivers/scsi/aacraid/aacraid.h |  1 +
- drivers/scsi/aacraid/src.c     | 45 ++++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 44 insertions(+), 2 deletions(-)
+ drivers/scsi/aacraid/linit.c | 77 +++++++++++++++++++++++---------------------
+ 1 file changed, 40 insertions(+), 37 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 993f134..829f3d8 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -2519,6 +2519,7 @@ struct aac_hba_info {
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 3dea438..d933d2f 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -828,6 +828,11 @@ static int aac_eh_reset(struct scsi_cmnd* cmd)
+ 	u32 bus, cid;
+ 	int ret = FAILED;
+ 	int status = 0;
++	__le32 supported_options2 = 0;
++	bool is_mu_reset;
++	bool is_ignore_reset;
++	bool is_doorbell_reset;
++
  
- #define	SELF_TEST_FAILED		0x00000004
- #define	MONITOR_PANIC			0x00000020
-+#define	KERNEL_BOOTING			0x00000040
- #define	KERNEL_UP_AND_RUNNING		0x00000080
- #define	KERNEL_PANIC			0x00000100
- #define	FLASH_UPD_PENDING		0x00002000
-diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-index e8e9178..67185eb 100644
---- a/drivers/scsi/aacraid/src.c
-+++ b/drivers/scsi/aacraid/src.c
-@@ -694,6 +694,37 @@ static void aac_dump_fw_fib_iop_reset(struct aac_dev *dev)
- 			0, 0, 0,  0, 0, 0, NULL, NULL, NULL, NULL, NULL);
- }
+ 	bus = aac_logical_to_phys(scmd_channel(cmd));
+ 	cid = scmd_id(cmd);
+@@ -900,9 +905,9 @@ static int aac_eh_reset(struct scsi_cmnd* cmd)
+ 			msleep(1000);
+ 		}
  
-+static bool aac_is_ctrl_up_and_running(struct aac_dev *dev)
-+{
-+	bool ctrl_up = true;
-+	unsigned long status, start;
-+	bool is_up = false;
+-		if (ret != SUCCESS)
+-			pr_err("%s: Host adapter reset request timed out\n",
+-			AAC_DRIVERNAME);
++		if (ret == SUCCESS)
++			goto out;
 +
-+	start = jiffies;
-+	do {
-+		schedule();
-+		status = src_readl(dev, MUnit.OMR);
-+
-+		if (status == 0xffffffff)
-+			status = 0;
-+
-+		if (status & KERNEL_BOOTING) {
-+			start = jiffies;
-+			continue;
-+		}
-+
-+		if (time_after(jiffies, start+HZ*SOFT_RESET_TIME)) {
-+			ctrl_up = false;
-+			break;
-+		}
-+
-+		is_up = status & KERNEL_UP_AND_RUNNING;
-+
-+	} while (!is_up);
-+
-+	return ctrl_up;
-+}
-+
- static void aac_notify_fw_of_iop_reset(struct aac_dev *dev)
- {
- 	aac_adapter_sync_cmd(dev, IOP_RESET_ALWAYS, 0, 0, 0, 0, 0, 0, NULL,
-@@ -709,8 +740,6 @@ static void aac_send_iop_reset(struct aac_dev *dev)
- 	aac_set_intx_mode(dev);
+ 	} else {
  
- 	src_writel(dev, MUnit.IDR, IOP_SRC_RESET_MASK);
+ 		/* Mark the assoc. FIB to not complete, eh handler does this */
+@@ -918,44 +923,42 @@ static int aac_eh_reset(struct scsi_cmnd* cmd)
+ 				cmd->SCp.phase = AAC_OWNER_ERROR_HANDLER;
+ 			}
+ 		}
++	}
+ 
+-		pr_err("%s: Host adapter reset request. SCSI hang ?\n",
+-					AAC_DRIVERNAME);
++	pr_err("%s: Host adapter reset request. SCSI hang ?\n", AAC_DRIVERNAME);
++
++	/*
++	 * Check the health of the controller
++	 */
++	status = aac_adapter_check_health(aac);
++	if (status)
++		dev_err(&aac->pdev->dev, "Adapter health - %d\n", status);
++
++	count = get_num_of_incomplete_fibs(aac);
++	if (count == 0)
++		return SUCCESS;
+ 
+-		/*
+-		 * Check the health of the controller
+-		 */
+-		status = aac_adapter_check_health(aac);
+-		if (status)
+-			dev_err(&aac->pdev->dev, "Adapter health - %d\n",
+-									status);
 -
--	msleep(30000);
+-		count = get_num_of_incomplete_fibs(aac);
+-		if (count == 0)
+-			return SUCCESS;
+-
+-		/*
+-		 * This adapter needs a blind reset, only do so for
+-		 * Adapters that support a register, instead of a commanded,
+-		 * reset.
+-		 */
+-		if (((aac->supplement_adapter_info.supported_options2 &
+-			  AAC_OPTION_MU_RESET) ||
+-			  (aac->supplement_adapter_info.supported_options2 &
+-			  AAC_OPTION_DOORBELL_RESET)) &&
+-			  aac_check_reset &&
+-			  ((aac_check_reset != 1) ||
+-			   !(aac->supplement_adapter_info.supported_options2 &
+-			    AAC_OPTION_IGNORE_RESET))) {
+-			/* Bypass wait for command quiesce */
+-			aac_reset_adapter(aac, 2, IOP_HWSOFT_RESET);
+-		}
+-		ret = SUCCESS;
+-	}
+ 	/*
+-	 * Cause an immediate retry of the command with a ten second delay
+-	 * after successful tur
++	 * Check if reset is supported by the firmware
+ 	 */
++	supported_options2 = aac->supplement_adapter_info.supported_options2;
++	is_mu_reset = supported_options2 & AAC_OPTION_MU_RESET;
++	is_doorbell_reset = supported_options2 & AAC_OPTION_DOORBELL_RESET;
++	is_ignore_reset = supported_options2 & AAC_OPTION_IGNORE_RESET;
++	/*
++	 * This adapter needs a blind reset, only do so for
++	 * Adapters that support a register, instead of a commanded,
++	 * reset.
++	 */
++	if ((is_mu_reset || is_doorbell_reset)
++	 && aac_check_reset
++	 && (aac_check_reset != -1 || !is_ignore_reset)) {
++		/* Bypass wait for command quiesce */
++		aac_reset_adapter(aac, 2, IOP_HWSOFT_RESET);
++	}
++	ret = SUCCESS;
++
++out:
+ 	return ret;
  }
- 
- static void aac_send_hardware_soft_reset(struct aac_dev *dev)
-@@ -726,6 +755,7 @@ static void aac_send_hardware_soft_reset(struct aac_dev *dev)
- static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
- {
- 	unsigned long status, start;
-+	bool is_ctrl_up;
- 
- 	if (bled < 0)
- 		goto invalid_out;
-@@ -745,6 +775,16 @@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
- 	switch (reset_type) {
- 	case IOP_HWSOFT_RESET:
- 		aac_send_iop_reset(dev);
-+
-+		/*
-+		 * Creates a delay or wait till up and running comes thru
-+		 */
-+		is_ctrl_up = aac_is_ctrl_up_and_running(dev);
-+		if (!is_ctrl_up)
-+			dev_err(&dev->pdev->dev, "IOP reset failed\n");
-+		else
-+			goto set_startup;
-+
- 		/*
- 		 * Check to see if KERNEL_UP_AND_RUNNING
- 		 * Wait for the adapter to be up and running.
-@@ -780,6 +820,7 @@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
- 	if (src_readl(dev, MUnit.OMR) & KERNEL_PANIC)
- 		return -ENODEV;
- 
-+set_startup:
- 	if (startup_timeout < 300)
- 		startup_timeout = 300;
  
 -- 
 2.7.4
