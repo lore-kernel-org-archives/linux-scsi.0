@@ -1,86 +1,68 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 17/19] aacraid : Add reset debugging statements
-Date: Sun, 7 May 2017 04:27:02 -0700
-Message-ID: <20170507112704.21940-18-RaghavaAditya.Renukunta@microsemi.com>
-References: <20170507112704.21940-1-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 03/19] aacraid: Added 32 and 64 queue depth for arc natives
+Date: Sun, 7 May 2017 06:34:08 -0700
+Message-ID: <1494164064-17715-4-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
+References: <1494164064-17715-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mail-by2nam03on0085.outbound.protection.outlook.com ([104.47.42.85]:35392
         "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754459AbdEGVj7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 7 May 2017 17:39:59 -0400
-In-Reply-To: <20170507112704.21940-1-RaghavaAditya.Renukunta@microsemi.com>
+        id S1754438AbdEGVkB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 7 May 2017 17:40:01 -0400
+In-Reply-To: <1494164064-17715-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, Prasad.Munirathnam@microsemi.com, RaghavaAditya.Renukunta@microsemi.com
+Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, Prasad.Munirathnam@microsemi.com
 
-Added info and error messages in controller reset function to log
-information about the status of the IOP/SOFT reset.
+The qd for ARC Native disks is calculated by dividing the max IO 1024
+by the number of disks or 256 which ever is lower. This causes poor
+disk IO performance.
+
+The fix is set the qd based on the type of disk (SAS - 64 and SATA -
+32).
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 ---
- drivers/scsi/aacraid/src.c | 15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
+ drivers/scsi/aacraid/aacraid.h |  1 +
+ drivers/scsi/aacraid/linit.c   | 11 +++++++++++
+ 2 files changed, 12 insertions(+)
 
-diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-index 10a589b..5367d3f 100644
---- a/drivers/scsi/aacraid/src.c
-+++ b/drivers/scsi/aacraid/src.c
-@@ -761,8 +761,7 @@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
- 		goto invalid_out;
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index d036a80..3ede6de 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -415,6 +415,7 @@ struct aac_ciss_identify_pd {
+  * These macros convert from physical channels to virtual channels
+  */
+ #define CONTAINER_CHANNEL		(0)
++#define NATIVE_CHANNEL			(1)
+ #define CONTAINER_TO_CHANNEL(cont)	(CONTAINER_CHANNEL)
+ #define CONTAINER_TO_ID(cont)		(cont)
+ #define CONTAINER_TO_LUN(cont)		(0)
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 5a201da..5e1a2d6 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -466,6 +466,17 @@ static int aac_slave_configure(struct scsi_device *sdev)
+ 			++num_lsu;
  
- 	if (bled)
--		pr_err("%s%d: adapter kernel panic'd %x.\n",
--				dev->name, dev->id, bled);
-+		dev_err(&dev->pdev->dev, "adapter kernel panic'd %x.\n", bled);
- 
- 	/*
- 	 * When there is a BlinkLED, IOP_RESET has not effect
-@@ -772,7 +771,10 @@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
- 
- 	dev->a_ops.adapter_enable_int = aac_src_disable_interrupt;
- 
-+	dev_err(&dev->pdev->dev, "Controller reset type is %d\n", reset_type);
+ 		depth = (host->can_queue - num_one) / num_lsu;
 +
- 	if (reset_type & HW_IOP_RESET) {
-+		dev_info(&dev->pdev->dev, "Issuing IOP reset\n");
- 		aac_send_iop_reset(dev);
- 
- 		/*
-@@ -781,16 +783,20 @@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
- 		is_ctrl_up = aac_is_ctrl_up_and_running(dev);
- 		if (!is_ctrl_up)
- 			dev_err(&dev->pdev->dev, "IOP reset failed\n");
--		else
-+		else {
-+			dev_info(&dev->pdev->dev, "IOP reset succeded\n");
- 			goto set_startup;
-+		}
++		if (sdev_channel(sdev) != NATIVE_CHANNEL)
++			goto common_config;
++
++		/*
++		 * Check if SATA drive
++		 */
++		if (strncmp(sdev->vendor, "ATA", 3) == 0)
++			depth = 32;
++		else
++			depth = 64;
  	}
  
- 	if (!dev->sa_firmware) {
-+		dev_err(&dev->pdev->dev, "ARC Reset attempt failed\n");
- 		ret = -ENODEV;
- 		goto out;
- 	}
- 
- 	if (reset_type & HW_SOFT_RESET) {
-+		dev_info(&dev->pdev->dev, "Issuing SOFT reset\n");
- 		aac_send_hardware_soft_reset(dev);
- 		dev->msi_enabled = 0;
- 
-@@ -799,7 +805,8 @@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
- 			dev_err(&dev->pdev->dev, "SOFT reset failed\n");
- 			ret = -ENODEV;
- 			goto out;
--		}
-+		} else
-+			dev_info(&dev->pdev->dev, "SOFT reset succeded\n");
- 	}
- 
- set_startup:
+ common_config:
 -- 
 2.7.4
