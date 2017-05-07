@@ -1,82 +1,82 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 01/19] aacraid: Remove GFP_DMA for raw srb memory
-Date: Sun, 7 May 2017 06:34:06 -0700
-Message-ID: <1494164064-17715-2-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 09/19] aacraid: Using single reset mask for IOP reset
+Date: Sun, 7 May 2017 06:34:14 -0700
+Message-ID: <1494164064-17715-10-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 References: <1494164064-17715-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0067.outbound.protection.outlook.com ([104.47.40.67]:13824
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+Received: from mail-bl2nam02on0072.outbound.protection.outlook.com ([104.47.38.72]:22896
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751819AbdEGVpi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 7 May 2017 17:45:38 -0400
+        id S1753341AbdEGVpj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 7 May 2017 17:45:39 -0400
 In-Reply-To: <1494164064-17715-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, Prasad.Munirathnam@microsemi.com
 
-The raw srb commands do not requires memory that in the ZONE_DMA
-memory space. For 32bit srb commands use __GFP_DMA32 to limit the memory
-to 32bit memory range (4GB).
+The driver can now trigger IOP reset with a single reset mask. Removed
+code that retrieves a reset_mask from the firmware.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 ---
- drivers/scsi/aacraid/commctrl.c | 13 ++++++-------
- 1 file changed, 6 insertions(+), 7 deletions(-)
+ drivers/scsi/aacraid/aacraid.h |  5 ++++-
+ drivers/scsi/aacraid/src.c     | 16 ++--------------
+ 2 files changed, 6 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-index d2f8d59..da01f9c 100644
---- a/drivers/scsi/aacraid/commctrl.c
-+++ b/drivers/scsi/aacraid/commctrl.c
-@@ -668,7 +668,7 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
- 				goto cleanup;
- 			}
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index 3ede6de..993f134 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -2381,6 +2381,7 @@ struct revision
+ #define SOFT_RESET_TIME			60
  
--			p = kmalloc(sg_count[i], GFP_KERNEL|__GFP_DMA);
-+			p = kmalloc(sg_count[i], GFP_KERNEL);
- 			if (!p) {
- 				rcode = -ENOMEM;
- 				goto cleanup;
-@@ -733,7 +733,7 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
- 					goto cleanup;
- 				}
- 				/* Does this really need to be GFP_DMA? */
--				p = kmalloc(sg_count[i], GFP_KERNEL|__GFP_DMA);
-+				p = kmalloc(sg_count[i], GFP_KERNEL);
- 				if(!p) {
- 					dprintk((KERN_DEBUG"aacraid: Could not allocate SG buffer - size = %d buffer number %d of %d\n",
- 					  sg_count[i], i, upsg->count));
-@@ -788,8 +788,8 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
- 					rcode = -EINVAL;
- 					goto cleanup;
- 				}
--				/* Does this really need to be GFP_DMA? */
--				p = kmalloc(sg_count[i], GFP_KERNEL|__GFP_DMA);
+ 
 +
-+				p = kmalloc(sg_count[i], GFP_KERNEL);
- 				if(!p) {
- 					dprintk((KERN_DEBUG "aacraid: Could not allocate SG buffer - size = %d buffer number %d of %d\n",
- 						sg_count[i], i, usg->count));
-@@ -845,8 +845,7 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
- 					rcode = -EINVAL;
- 					goto cleanup;
- 				}
--				/* Does this really need to be GFP_DMA? */
--				p = kmalloc(sg_count[i], GFP_KERNEL|__GFP_DMA);
-+				p = kmalloc(sg_count[i], GFP_KERNEL|GFP_DMA32);
- 				if (!p) {
- 					dprintk((KERN_DEBUG"aacraid: Could not allocate SG buffer - size = %d buffer number %d of %d\n",
- 						sg_count[i], i, usg->count));
-@@ -887,7 +886,7 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
- 					rcode = -EINVAL;
- 					goto cleanup;
- 				}
--				p = kmalloc(sg_count[i], GFP_KERNEL);
-+				p = kmalloc(sg_count[i], GFP_KERNEL|GFP_DMA32);
- 				if (!p) {
- 					dprintk((KERN_DEBUG"aacraid: Could not allocate SG buffer - size = %d buffer number %d of %d\n",
- 					  sg_count[i], i, upsg->count));
+ struct aac_common
+ {
+ 	/*
+@@ -2491,7 +2492,9 @@ struct aac_hba_info {
+ #define IOP_RESET_FW_FIB_DUMP		0x00000034
+ #define IOP_RESET			0x00001000
+ #define IOP_RESET_ALWAYS		0x00001001
+-#define RE_INIT_ADAPTER			0x000000ee
++#define RE_INIT_ADAPTER		0x000000ee
++
++#define IOP_SRC_RESET_MASK		0x00000100
+ 
+ /*
+  *	Adapter Status Register
+diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
+index 2e5338d..c0e5242 100644
+--- a/drivers/scsi/aacraid/src.c
++++ b/drivers/scsi/aacraid/src.c
+@@ -704,22 +704,10 @@ static void aac_send_iop_reset(struct aac_dev *dev, int bled)
+ 				    0, 0, 0, 0, 0, 0, &var,
+ 				    &reset_mask, NULL, NULL, NULL);
+ 
+-	if ((bled || var != 0x00000001) && !dev->doorbell_mask)
+-		bled = -EINVAL;
+-	else if (dev->doorbell_mask) {
+-		reset_mask = dev->doorbell_mask;
+-		bled = 0;
+-		var = 0x00000001;
+-	}
+-
+ 	aac_set_intx_mode(dev);
+ 
+-	if (!bled && (dev->supplement_adapter_info.supported_options2 &
+-	    AAC_OPTION_DOORBELL_RESET)) {
+-		src_writel(dev, MUnit.IDR, reset_mask);
+-	} else {
+-		src_writel(dev, MUnit.IDR, 0x100);
+-	}
++	src_writel(dev, MUnit.IDR, IOP_SRC_RESET_MASK);
++
+ 	msleep(30000);
+ }
+ 
 -- 
 2.7.4
