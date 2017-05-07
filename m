@@ -1,54 +1,62 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 00/19] aacraid: Patchset with reset rework and misc fixes
-Date: Sun, 7 May 2017 04:26:45 -0700
-Message-ID: <20170507112704.21940-1-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 05/19] aacraid: Remove reset support from check_health
+Date: Sun, 7 May 2017 04:26:50 -0700
+Message-ID: <20170507112704.21940-6-RaghavaAditya.Renukunta@microsemi.com>
+References: <20170507112704.21940-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0045.outbound.protection.outlook.com ([104.47.42.45]:18944
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-bl2nam02on0046.outbound.protection.outlook.com ([104.47.38.46]:43008
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754648AbdEGVkS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 7 May 2017 17:40:18 -0400
+        id S1754697AbdEGVkU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 7 May 2017 17:40:20 -0400
+In-Reply-To: <20170507112704.21940-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, Prasad.Munirathnam@microsemi.com, RaghavaAditya.Renukunta@microsemi.com
 
-This patchset primarily focuses on tweaking and hardening the controller
-reset support for both ARC and HBA1000 devices. Now the driver can only
-reset the controller thru eh reset. Included a srb memory fix and pci
-dma allocation fix.
+Check health does not need to reset the ctrl but just return the
+controller health status.
 
-Raghava Aditya Renukunta (19):
- [SCSI] aacraid: Remove GFP_DMA for raw srb memory
- [SCSI] aacraid: Fix DMAR issues with  iommu=pt
- [SCSI] aacraid: Added 32 and 64 queue depth for arc natives
- [SCSI] aacraid: Set correct Queue Depth for HBA1000 RAW disks
- [SCSI] aacraid: Remove reset support from check_health
- [SCSI] aacraid: Change wait time for fib completion
- [SCSI] aacraid: Log count info of scsi cmds before reset
- [SCSI] aacraid: Print ctrl status before eh reset
- [SCSI] aacraid: Using single reset mask for IOP reset
- [SCSI] aacraid: Rework IOP reset
- [SCSI] aacraid: Add periodic checks to see IOP reset status
- [SCSI] aacraid: Rework SOFT reset code
- [SCSI] aacraid: Rework aac_src_restart
- [SCSI] aacraid: Use correct function to get ctrl health
- [SCSI] aacraid: Make sure ioctl returns on controller reset
- [SCSI] aacraid: Enable ctrl reset for both hba and arc
- [SCSI] aacraid: Add reset debugging statements
- [SCSI] aacraid: Remove reference to Series-9
- [SCSI] aacraid: Update driver version to 50834
+Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+---
+ drivers/scsi/aacraid/commsup.c | 15 ---------------
+ 1 file changed, 15 deletions(-)
 
- drivers/scsi/aacraid/aachba.c   |  17 ++-
- drivers/scsi/aacraid/aacraid.h  |  22 +++-
- drivers/scsi/aacraid/commctrl.c |  13 ++-
- drivers/scsi/aacraid/comminit.c |  18 +---
- drivers/scsi/aacraid/commsup.c  |  73 +++++++------
- drivers/scsi/aacraid/linit.c    | 232 ++++++++++++++++++++++++----------------
- drivers/scsi/aacraid/src.c      | 136 +++++++++++++----------
- 7 files changed, 296 insertions(+), 215 deletions(-)
-
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index 47068b2..3299012 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -1775,8 +1775,6 @@ int aac_check_health(struct aac_dev * aac)
+ 	int BlinkLED;
+ 	unsigned long time_now, flagv = 0;
+ 	struct list_head * entry;
+-	struct Scsi_Host * host;
+-	int bled;
+ 
+ 	/* Extending the scope of fib_lock slightly to protect aac->in_reset */
+ 	if (spin_trylock_irqsave(&aac->fib_lock, flagv) == 0)
+@@ -1887,19 +1885,6 @@ int aac_check_health(struct aac_dev * aac)
+ 
+ 	printk(KERN_ERR "%s: Host adapter BLINK LED 0x%x\n", aac->name, BlinkLED);
+ 
+-	if (!aac_check_reset || ((aac_check_reset == 1) &&
+-		(aac->supplement_adapter_info.supported_options2 &
+-			AAC_OPTION_IGNORE_RESET)))
+-		goto out;
+-	host = aac->scsi_host_ptr;
+-	if (aac->thread->pid != current->pid)
+-		spin_lock_irqsave(host->host_lock, flagv);
+-	bled = aac_check_reset != 1 ? 1 : 0;
+-	_aac_reset_adapter(aac, bled, IOP_HWSOFT_RESET);
+-	if (aac->thread->pid != current->pid)
+-		spin_unlock_irqrestore(host->host_lock, flagv);
+-	return BlinkLED;
+-
+ out:
+ 	aac->in_reset = 0;
+ 	return BlinkLED;
 -- 
 2.7.4
