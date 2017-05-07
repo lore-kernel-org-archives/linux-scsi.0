@@ -1,127 +1,82 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 11/19] aacraid: Add periodic checks to see IOP reset status
-Date: Sun, 7 May 2017 06:34:16 -0700
-Message-ID: <1494164064-17715-12-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 01/19] aacraid: Remove GFP_DMA for raw srb memory
+Date: Sun, 7 May 2017 06:34:06 -0700
+Message-ID: <1494164064-17715-2-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 References: <1494164064-17715-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0060.outbound.protection.outlook.com ([104.47.38.60]:56655
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+Received: from mail-co1nam03on0067.outbound.protection.outlook.com ([104.47.40.67]:13824
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751693AbdEGVpf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 7 May 2017 17:45:35 -0400
+        id S1751819AbdEGVpi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 7 May 2017 17:45:38 -0400
 In-Reply-To: <1494164064-17715-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, Prasad.Munirathnam@microsemi.com
 
-Added function that waits with a timeout for the ctrl to be up and running
-after triggering an IOP reset. Also removed 30 sec sleep as it is not
-needed.
+The raw srb commands do not requires memory that in the ZONE_DMA
+memory space. For 32bit srb commands use __GFP_DMA32 to limit the memory
+to 32bit memory range (4GB).
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 ---
- drivers/scsi/aacraid/aacraid.h |  1 +
- drivers/scsi/aacraid/src.c     | 45 ++++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 44 insertions(+), 2 deletions(-)
+ drivers/scsi/aacraid/commctrl.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 993f134..829f3d8 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -2519,6 +2519,7 @@ struct aac_hba_info {
+diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+index d2f8d59..da01f9c 100644
+--- a/drivers/scsi/aacraid/commctrl.c
++++ b/drivers/scsi/aacraid/commctrl.c
+@@ -668,7 +668,7 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
+ 				goto cleanup;
+ 			}
  
- #define	SELF_TEST_FAILED		0x00000004
- #define	MONITOR_PANIC			0x00000020
-+#define	KERNEL_BOOTING			0x00000040
- #define	KERNEL_UP_AND_RUNNING		0x00000080
- #define	KERNEL_PANIC			0x00000100
- #define	FLASH_UPD_PENDING		0x00002000
-diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-index e8e9178..67185eb 100644
---- a/drivers/scsi/aacraid/src.c
-+++ b/drivers/scsi/aacraid/src.c
-@@ -694,6 +694,37 @@ static void aac_dump_fw_fib_iop_reset(struct aac_dev *dev)
- 			0, 0, 0,  0, 0, 0, NULL, NULL, NULL, NULL, NULL);
- }
- 
-+static bool aac_is_ctrl_up_and_running(struct aac_dev *dev)
-+{
-+	bool ctrl_up = true;
-+	unsigned long status, start;
-+	bool is_up = false;
+-			p = kmalloc(sg_count[i], GFP_KERNEL|__GFP_DMA);
++			p = kmalloc(sg_count[i], GFP_KERNEL);
+ 			if (!p) {
+ 				rcode = -ENOMEM;
+ 				goto cleanup;
+@@ -733,7 +733,7 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
+ 					goto cleanup;
+ 				}
+ 				/* Does this really need to be GFP_DMA? */
+-				p = kmalloc(sg_count[i], GFP_KERNEL|__GFP_DMA);
++				p = kmalloc(sg_count[i], GFP_KERNEL);
+ 				if(!p) {
+ 					dprintk((KERN_DEBUG"aacraid: Could not allocate SG buffer - size = %d buffer number %d of %d\n",
+ 					  sg_count[i], i, upsg->count));
+@@ -788,8 +788,8 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
+ 					rcode = -EINVAL;
+ 					goto cleanup;
+ 				}
+-				/* Does this really need to be GFP_DMA? */
+-				p = kmalloc(sg_count[i], GFP_KERNEL|__GFP_DMA);
 +
-+	start = jiffies;
-+	do {
-+		schedule();
-+		status = src_readl(dev, MUnit.OMR);
-+
-+		if (status == 0xffffffff)
-+			status = 0;
-+
-+		if (status & KERNEL_BOOTING) {
-+			start = jiffies;
-+			continue;
-+		}
-+
-+		if (time_after(jiffies, start+HZ*SOFT_RESET_TIME)) {
-+			ctrl_up = false;
-+			break;
-+		}
-+
-+		is_up = status & KERNEL_UP_AND_RUNNING;
-+
-+	} while (!is_up);
-+
-+	return ctrl_up;
-+}
-+
- static void aac_notify_fw_of_iop_reset(struct aac_dev *dev)
- {
- 	aac_adapter_sync_cmd(dev, IOP_RESET_ALWAYS, 0, 0, 0, 0, 0, 0, NULL,
-@@ -709,8 +740,6 @@ static void aac_send_iop_reset(struct aac_dev *dev)
- 	aac_set_intx_mode(dev);
- 
- 	src_writel(dev, MUnit.IDR, IOP_SRC_RESET_MASK);
--
--	msleep(30000);
- }
- 
- static void aac_send_hardware_soft_reset(struct aac_dev *dev)
-@@ -726,6 +755,7 @@ static void aac_send_hardware_soft_reset(struct aac_dev *dev)
- static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
- {
- 	unsigned long status, start;
-+	bool is_ctrl_up;
- 
- 	if (bled < 0)
- 		goto invalid_out;
-@@ -745,6 +775,16 @@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
- 	switch (reset_type) {
- 	case IOP_HWSOFT_RESET:
- 		aac_send_iop_reset(dev);
-+
-+		/*
-+		 * Creates a delay or wait till up and running comes thru
-+		 */
-+		is_ctrl_up = aac_is_ctrl_up_and_running(dev);
-+		if (!is_ctrl_up)
-+			dev_err(&dev->pdev->dev, "IOP reset failed\n");
-+		else
-+			goto set_startup;
-+
- 		/*
- 		 * Check to see if KERNEL_UP_AND_RUNNING
- 		 * Wait for the adapter to be up and running.
-@@ -780,6 +820,7 @@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
- 	if (src_readl(dev, MUnit.OMR) & KERNEL_PANIC)
- 		return -ENODEV;
- 
-+set_startup:
- 	if (startup_timeout < 300)
- 		startup_timeout = 300;
- 
++				p = kmalloc(sg_count[i], GFP_KERNEL);
+ 				if(!p) {
+ 					dprintk((KERN_DEBUG "aacraid: Could not allocate SG buffer - size = %d buffer number %d of %d\n",
+ 						sg_count[i], i, usg->count));
+@@ -845,8 +845,7 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
+ 					rcode = -EINVAL;
+ 					goto cleanup;
+ 				}
+-				/* Does this really need to be GFP_DMA? */
+-				p = kmalloc(sg_count[i], GFP_KERNEL|__GFP_DMA);
++				p = kmalloc(sg_count[i], GFP_KERNEL|GFP_DMA32);
+ 				if (!p) {
+ 					dprintk((KERN_DEBUG"aacraid: Could not allocate SG buffer - size = %d buffer number %d of %d\n",
+ 						sg_count[i], i, usg->count));
+@@ -887,7 +886,7 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
+ 					rcode = -EINVAL;
+ 					goto cleanup;
+ 				}
+-				p = kmalloc(sg_count[i], GFP_KERNEL);
++				p = kmalloc(sg_count[i], GFP_KERNEL|GFP_DMA32);
+ 				if (!p) {
+ 					dprintk((KERN_DEBUG"aacraid: Could not allocate SG buffer - size = %d buffer number %d of %d\n",
+ 					  sg_count[i], i, upsg->count));
 -- 
 2.7.4
