@@ -1,44 +1,83 @@
-From: "hch-jcswGhMUV9g@public.gmane.org" <hch-jcswGhMUV9g@public.gmane.org>
-Subject: Re: [PATCH 25/27] block: remove the discard_zeroes_data
-	flag
-Date: Sun, 7 May 2017 11:22:09 +0200
-Message-ID: <20170507092209.GA27370@lst.de>
-References: <20170405172125.22600-1-hch@lst.de>
-	<20170405172125.22600-26-hch@lst.de>
-	<1493671519.2665.15.camel@sandisk.com>
-	<1493707425.23202.77.camel@haakon3.risingtidesystems.com>
-	<1493709373.23202.79.camel@haakon3.risingtidesystems.com>
-	<20170502072328.GA11522@lst.de>
-	<1493782395.23202.84.camel@haakon3.risingtidesystems.com>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: Race to power off harming SATA SSDs
+Date: Sun, 7 May 2017 22:40:07 +0200
+Message-ID: <20170507204007.GA25628@atrey.karlin.mff.cuni.cz>
+References: <20170410232118.GA4816@khazad-dum.debian.net>
+ <20170410235206.GA28603@wtj.duckdns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+Return-path: <linux-mtd-bounces+gldm-linux-mtd-36=gmane.org@lists.infradead.org>
 Content-Disposition: inline
-In-Reply-To: <1493782395.23202.84.camel-XoQW25Eq2zviZyQQd+hFbcojREIfoBdhmpATvIKMPHk@public.gmane.org>
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
-Cc: "axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org" <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org" <philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Bart Van Assche <Bart.VanAssche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>, "lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org" <lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, "shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "hch-jcswGhMUV9g@public.gmane.org" <hch-jcswGhMUV9g@public.gmane.org>, "agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org" <drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+In-Reply-To: <20170410235206.GA28603@wtj.duckdns.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mtd>,
+ <mailto:linux-mtd-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-mtd/>
+List-Post: <mailto:linux-mtd@lists.infradead.org>
+List-Help: <mailto:linux-mtd-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mtd>,
+ <mailto:linux-mtd-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-mtd" <linux-mtd-bounces@lists.infradead.org>
+Errors-To: linux-mtd-bounces+gldm-linux-mtd-36=gmane.org@lists.infradead.org
+To: Tejun Heo <tj@kernel.org>
+Cc: boris.brezillon@free-electrons.com, linux-scsi@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-mtd@lists.infradead.org, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, dwmw2@infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, May 02, 2017 at 08:33:15PM -0700, Nicholas A. Bellinger wrote:
-> The larger target/iblock conversion patch looks like post v4.12 material
-> at this point, so to avoid breakage wrt to existing LBPRZ behavior, I'll
-> plan to push the following patch post -rc1.
+Hi!
 
-I don't think this is safe.  If you want to do the aboe you also
-need to ensure ->execute_unmap always zeroes the data.  For actual
-files in the file backend we should be all fine, but for the block
-device case [1] and iblock we'd need to use blkdev_issue_zeroout
-instead of blkdev_issue_discard when unmap_zeroes_data is set.
+> > However, *IN PRACTICE*, SATA STANDBY IMMEDIATE command completion
+> > [often?] only indicates that the device is now switching to the target
+> > power management state, not that it has reached the target state.  Any
+> > further device status inquires would return that it is in STANDBY mode,
+> > even if it is still entering that state.
+> > 
+> > The kernel then continues the shutdown path while the SSD is still
+> > preparing itself to be powered off, and it becomes a race.  When the
+> > kernel + firmware wins, platform power is cut before the SSD has
+> > finished (i.e. the SSD is subject to an unclean power-off).
+> 
+> At that point, the device is fully flushed and in terms of data
+> integrity should be fine with losing power at any point anyway.
 
-[1] which btw already seems broken as it doesn't invalidate cached
-data when issuing a discard.
+Actually, no, that is not how it works.
+
+"Fully flushed" is one thing, surviving power loss is
+different. Explanation below.
+
+> > NOTE: unclean SSD power-offs are dangerous and may brick the device in
+> > the worst case, or otherwise harm it (reduce longevity, damage flash
+> > blocks).  It is also not impossible to get data corruption.
+> 
+> I get that the incrementing counters might not be pretty but I'm a bit
+> skeptical about this being an actual issue.  Because if that were
+> true, the device would be bricking itself from any sort of power
+> losses be that an actual power loss, battery rundown or hard power off
+> after crash.
+
+And that's exactly what users see. If you do enough power fails on a
+SSD, you usually brick it, some die sooner than others. There was some
+test results published, some are here
+http://lkcl.net/reports/ssd_analysis.html, I believe I seen some
+others too.
+
+It is very hard for a NAND to work reliably in face of power
+failures. In fact, not even Linux MTD + UBIFS works well in that
+regards. See
+http://www.linux-mtd.infradead.org/faq/ubi.html. (Unfortunately, its
+down now?!). If we can't get it right, do you believe SSD manufactures
+do?
+
+[Issue is, if you powerdown during erase, you get "weakly erased"
+page, which will contain expected 0xff's, but you'll get bitflips
+there quickly. Similar issue exists for writes. It is solveable in
+software, just hard and slow... and we don't do it.]
+									
+									Pavel
+
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+
+______________________________________________________
+Linux MTD discussion mailing list
+http://lists.infradead.org/mailman/listinfo/linux-mtd/
