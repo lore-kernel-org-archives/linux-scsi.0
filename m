@@ -1,144 +1,54 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 07/19] aacraid: Log count info of scsi cmds before reset
-Date: Sun, 7 May 2017 06:34:12 -0700
-Message-ID: <1494164064-17715-8-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
-References: <1494164064-17715-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 00/19] aacraid: Patchset with reset rework and misc fixes
+Date: Sun, 7 May 2017 06:34:05 -0700
+Message-ID: <1494164064-17715-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0064.outbound.protection.outlook.com ([104.47.38.64]:58464
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+Received: from mail-dm3nam03on0059.outbound.protection.outlook.com ([104.47.41.59]:37120
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753381AbdEGVpk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 7 May 2017 17:45:40 -0400
-In-Reply-To: <1494164064-17715-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
+        id S1752615AbdEGVpK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 7 May 2017 17:45:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, Prasad.Munirathnam@microsemi.com
 
-Log the location of the scsi cmds before triggering a reset. This
-information is useful for debugging.
+This patchset primarily focuses on tweaking and hardening the controller
+reset support for both ARC and HBA1000 devices. Now the driver can only
+reset the controller thru eh reset. Included a srb memory fix and pci
+dma allocation fix.
 
-Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
----
- drivers/scsi/aacraid/linit.c | 90 ++++++++++++++++++++++++++------------------
- 1 file changed, 53 insertions(+), 37 deletions(-)
+Raghava Aditya Renukunta (19):
+ [SCSI] aacraid: Remove GFP_DMA for raw srb memory
+ [SCSI] aacraid: Fix DMAR issues with  iommu=pt
+ [SCSI] aacraid: Added 32 and 64 queue depth for arc natives
+ [SCSI] aacraid: Set correct Queue Depth for HBA1000 RAW disks
+ [SCSI] aacraid: Remove reset support from check_health
+ [SCSI] aacraid: Change wait time for fib completion
+ [SCSI] aacraid: Log count info of scsi cmds before reset
+ [SCSI] aacraid: Print ctrl status before eh reset
+ [SCSI] aacraid: Using single reset mask for IOP reset
+ [SCSI] aacraid: Rework IOP reset
+ [SCSI] aacraid: Add periodic checks to see IOP reset status
+ [SCSI] aacraid: Rework SOFT reset code
+ [SCSI] aacraid: Rework aac_src_restart
+ [SCSI] aacraid: Use correct function to get ctrl health
+ [SCSI] aacraid: Make sure ioctl returns on controller reset
+ [SCSI] aacraid: Enable ctrl reset for both hba and arc
+ [SCSI] aacraid: Add reset debugging statements
+ [SCSI] aacraid: Remove reference to Series-9
+ [SCSI] aacraid: Update driver version to 50834
 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index f6a11af..0a8d303 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -624,6 +624,56 @@ static int aac_ioctl(struct scsi_device *sdev, int cmd, void __user * arg)
- 	return aac_do_ioctl(dev, cmd, arg);
- }
- 
-+static int get_num_of_incomplete_fibs(struct aac_dev *aac)
-+{
-+
-+	unsigned long flags;
-+	struct scsi_device *sdev = NULL;
-+	struct Scsi_Host *shost = aac->scsi_host_ptr;
-+	struct scsi_cmnd *scmnd = NULL;
-+	struct device *ctrl_dev;
-+
-+	int mlcnt  = 0;
-+	int llcnt  = 0;
-+	int ehcnt  = 0;
-+	int fwcnt  = 0;
-+	int krlcnt = 0;
-+
-+	__shost_for_each_device(sdev, shost) {
-+		spin_lock_irqsave(&sdev->list_lock, flags);
-+		list_for_each_entry(scmnd, &sdev->cmd_list, list) {
-+			switch (scmnd->SCp.phase) {
-+			case AAC_OWNER_FIRMWARE:
-+				fwcnt++;
-+				break;
-+			case AAC_OWNER_ERROR_HANDLER:
-+				ehcnt++;
-+				break;
-+			case AAC_OWNER_LOWLEVEL:
-+				llcnt++;
-+				break;
-+			case AAC_OWNER_MIDLEVEL:
-+				mlcnt++;
-+				break;
-+			default:
-+				krlcnt++;
-+				break;
-+			}
-+		}
-+		spin_unlock_irqrestore(&sdev->list_lock, flags);
-+	}
-+
-+	ctrl_dev = &aac->pdev->dev;
-+
-+	dev_info(ctrl_dev, "outstanding cmd: midlevel-%d\n", mlcnt);
-+	dev_info(ctrl_dev, "outstanding cmd: lowlevel-%d\n", llcnt);
-+	dev_info(ctrl_dev, "outstanding cmd: error handler-%d\n", ehcnt);
-+	dev_info(ctrl_dev, "outstanding cmd: firmware-%d\n", fwcnt);
-+	dev_info(ctrl_dev, "outstanding cmd: kernel-%d\n", krlcnt);
-+
-+	return mlcnt + llcnt + ehcnt + fwcnt;
-+}
-+
- static int aac_eh_abort(struct scsi_cmnd* cmd)
- {
- 	struct scsi_device * dev = cmd->device;
-@@ -853,8 +903,6 @@ static int aac_eh_reset(struct scsi_cmnd* cmd)
- 			pr_err("%s: Host adapter reset request timed out\n",
- 			AAC_DRIVERNAME);
- 	} else {
--		struct scsi_cmnd *command;
--		unsigned long flags;
- 
- 		/* Mark the assoc. FIB to not complete, eh handler does this */
- 		for (count = 0;
-@@ -873,41 +921,9 @@ static int aac_eh_reset(struct scsi_cmnd* cmd)
- 		pr_err("%s: Host adapter reset request. SCSI hang ?\n",
- 					AAC_DRIVERNAME);
- 
--		count = aac_check_health(aac);
--		if (count)
--			return count;
--		/*
--		 * Wait for all commands to complete to this specific
--		 * target (block maximum 60 seconds).
--		 */
--		for (count = 60; count; --count) {
--			int active = aac->in_reset;
--
--			if (active == 0)
--			__shost_for_each_device(dev, host) {
--				spin_lock_irqsave(&dev->list_lock, flags);
--				list_for_each_entry(command, &dev->cmd_list,
--					list) {
--					if ((command != cmd) &&
--					(command->SCp.phase ==
--					AAC_OWNER_FIRMWARE)) {
--						active++;
--						break;
--					}
--				}
--				spin_unlock_irqrestore(&dev->list_lock, flags);
--				if (active)
--					break;
--
--			}
--			/*
--			 * We can exit If all the commands are complete
--			 */
--			if (active == 0)
--				return SUCCESS;
--			ssleep(1);
--		}
--		pr_err("%s: SCSI bus appears hung\n", AAC_DRIVERNAME);
-+		count = get_num_of_incomplete_fibs(aac);
-+		if (count == 0)
-+			return SUCCESS;
- 
- 		/*
- 		 * This adapter needs a blind reset, only do so for
+ drivers/scsi/aacraid/aachba.c   |  17 ++-
+ drivers/scsi/aacraid/aacraid.h  |  22 +++-
+ drivers/scsi/aacraid/commctrl.c |  13 ++-
+ drivers/scsi/aacraid/comminit.c |  18 +---
+ drivers/scsi/aacraid/commsup.c  |  73 +++++++------
+ drivers/scsi/aacraid/linit.c    | 232 ++++++++++++++++++++++++----------------
+ drivers/scsi/aacraid/src.c      | 136 +++++++++++++----------
+ 7 files changed, 296 insertions(+), 215 deletions(-)
+
 -- 
 2.7.4
