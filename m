@@ -1,78 +1,86 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 15/19] aacraid: Make sure ioctl returns on controller reset
-Date: Sun, 7 May 2017 06:34:20 -0700
-Message-ID: <1494164064-17715-16-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 17/19] aacraid : Add reset debugging statements
+Date: Sun, 7 May 2017 06:34:22 -0700
+Message-ID: <1494164064-17715-18-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 References: <1494164064-17715-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0082.outbound.protection.outlook.com ([104.47.41.82]:29700
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0067.outbound.protection.outlook.com ([104.47.37.67]:34981
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752906AbdEGVoB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 7 May 2017 17:44:01 -0400
+        id S1752860AbdEGVoi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 7 May 2017 17:44:38 -0400
 In-Reply-To: <1494164064-17715-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, Prasad.Munirathnam@microsemi.com
 
-Made sure that ioctl commands return in case of a controller reset.
+Added info and error messages in controller reset function to log
+information about the status of the IOP/SOFT reset.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 ---
- drivers/scsi/aacraid/commsup.c | 20 +++++++++++++++++---
- 1 file changed, 17 insertions(+), 3 deletions(-)
+ drivers/scsi/aacraid/src.c | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index f26543a..a026790 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -804,10 +804,13 @@ int aac_hba_send(u8 command, struct fib *fibptr, fib_callback callback,
- 			return -EFAULT;
+diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
+index 10a589b..5367d3f 100644
+--- a/drivers/scsi/aacraid/src.c
++++ b/drivers/scsi/aacraid/src.c
+@@ -761,8 +761,7 @@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
+ 		goto invalid_out;
  
- 		/* Only set for first known interruptable command */
-+		fibptr->flags |= FIB_CONTEXT_FLAG_WAIT;
-+		fibptr->flags &= ~(FIB_CONTEXT_FLAG_WAIT);
- 		if (down_interruptible(&fibptr->event_wait)) {
- 			fibptr->done = 2;
- 			up(&fibptr->event_wait);
- 		}
-+
- 		spin_lock_irqsave(&fibptr->event_lock, flags);
- 		if ((fibptr->done == 0) || (fibptr->done == 2)) {
- 			fibptr->done = 2; /* Tell interrupt we aborted */
-@@ -1514,6 +1517,7 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
- 	int jafo = 0;
- 	int bled;
- 	u64 dmamask;
-+	int num_of_fibs = 0;
+ 	if (bled)
+-		pr_err("%s%d: adapter kernel panic'd %x.\n",
+-				dev->name, dev->id, bled);
++		dev_err(&dev->pdev->dev, "adapter kernel panic'd %x.\n", bled);
  
  	/*
- 	 * Assumptions:
-@@ -1547,10 +1551,20 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
- 	/*
- 	 *	Loop through the fibs, close the synchronous FIBS
- 	 */
--	for (retval = 1, index = 0; index < (aac->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB); index++) {
-+	retval = 1;
-+	num_of_fibs = aac->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB;
-+	for (index = 0; index <  num_of_fibs; index++) {
+ 	 * When there is a BlinkLED, IOP_RESET has not effect
+@@ -772,7 +771,10 @@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
+ 
+ 	dev->a_ops.adapter_enable_int = aac_src_disable_interrupt;
+ 
++	dev_err(&dev->pdev->dev, "Controller reset type is %d\n", reset_type);
 +
- 		struct fib *fib = &aac->fibs[index];
--		if (!(fib->hw_fib_va->header.XferState & cpu_to_le32(NoResponseExpected | Async)) &&
--		  (fib->hw_fib_va->header.XferState & cpu_to_le32(ResponseExpected))) {
-+		__le32 XferState = fib->hw_fib_va->header.XferState;
-+		bool is_response_expected = false;
-+
-+		if (!(XferState & cpu_to_le32(NoResponseExpected | Async)) &&
-+		   (XferState & cpu_to_le32(ResponseExpected)))
-+			is_response_expected = true;
-+
-+		if (is_response_expected
-+		  || fib->flags & FIB_CONTEXT_FLAG_WAIT) {
- 			unsigned long flagv;
- 			spin_lock_irqsave(&fib->event_lock, flagv);
- 			up(&fib->event_wait);
+ 	if (reset_type & HW_IOP_RESET) {
++		dev_info(&dev->pdev->dev, "Issuing IOP reset\n");
+ 		aac_send_iop_reset(dev);
+ 
+ 		/*
+@@ -781,16 +783,20 @@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
+ 		is_ctrl_up = aac_is_ctrl_up_and_running(dev);
+ 		if (!is_ctrl_up)
+ 			dev_err(&dev->pdev->dev, "IOP reset failed\n");
+-		else
++		else {
++			dev_info(&dev->pdev->dev, "IOP reset succeded\n");
+ 			goto set_startup;
++		}
+ 	}
+ 
+ 	if (!dev->sa_firmware) {
++		dev_err(&dev->pdev->dev, "ARC Reset attempt failed\n");
+ 		ret = -ENODEV;
+ 		goto out;
+ 	}
+ 
+ 	if (reset_type & HW_SOFT_RESET) {
++		dev_info(&dev->pdev->dev, "Issuing SOFT reset\n");
+ 		aac_send_hardware_soft_reset(dev);
+ 		dev->msi_enabled = 0;
+ 
+@@ -799,7 +805,8 @@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
+ 			dev_err(&dev->pdev->dev, "SOFT reset failed\n");
+ 			ret = -ENODEV;
+ 			goto out;
+-		}
++		} else
++			dev_info(&dev->pdev->dev, "SOFT reset succeded\n");
+ 	}
+ 
+ set_startup:
 -- 
 2.7.4
