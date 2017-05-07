@@ -1,78 +1,55 @@
-From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 15/19] aacraid: Make sure ioctl returns on controller reset
-Date: Sun, 7 May 2017 04:27:00 -0700
-Message-ID: <20170507112704.21940-16-RaghavaAditya.Renukunta@microsemi.com>
-References: <20170507112704.21940-1-RaghavaAditya.Renukunta@microsemi.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH v3] ibmvscsis: Do not send aborted task response
+Date: Sun, 07 May 2017 14:59:21 -0700
+Message-ID: <1494194361.30469.0.camel@haakon3.risingtidesystems.com>
+References: <1494011835-29476-1-git-send-email-bryantly@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0046.outbound.protection.outlook.com ([104.47.38.46]:43008
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754623AbdEGVk1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 7 May 2017 17:40:27 -0400
-In-Reply-To: <20170507112704.21940-1-RaghavaAditya.Renukunta@microsemi.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:48646 "EHLO
+        linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754882AbdEGV7b (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 7 May 2017 17:59:31 -0400
+In-Reply-To: <1494011835-29476-1-git-send-email-bryantly@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, Prasad.Munirathnam@microsemi.com, RaghavaAditya.Renukunta@microsemi.com
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Cc: Bart.VanAssche@sandisk.com, martin.petersen@oracle.com, mikecyr@linux.vnet.ibm.com, mikecyr@us.ibm.com, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, stable@vger.kernel.org
 
-Made sure that ioctl commands return in case of a controller reset.
+On Fri, 2017-05-05 at 14:17 -0500, Bryant G. Ly wrote:
+> The driver is sending a response to the actual scsi op that was
+> aborted by an abort task TM, while LIO is sending a response to
+> the abort task TM.
+> 
+> ibmvscsis_tgt does not send the response to the client until
+> release_cmd time. The reason for this was because if we did it
+> at queue_status time, then the client would be free to reuse the
+> tag for that command, but we're still using the tag until the
+> command is released at release_cmd time, so we chose to delay
+> sending the response until then. That then caused this issue, because
+> release_cmd is always called, even if queue_status is not.
+> 
+> SCSI spec says that the initiator that sends the abort task
+> TM NEVER gets a response to the aborted op and with the current
+> code it will send a response. Thus this fix will remove that response
+> if the CMD_T_ABORTED && !CMD_T_TAS.
+> 
+> Another case with a small timing window is the case where if LIO sends a
+> TMR_DOES_NOT_EXIST, and the release_cmd callback is called for the TMR Abort
+> cmd before the release_cmd for the (attemped) aborted cmd, then we need to
+> ensure that we send the response for the (attempted) abort cmd to the client
+> before we send the response for the TMR Abort cmd.
+> 
+> Cc: <stable@vger.kernel.org> # v4.8+
+> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+> Signed-off-by: Michael Cyr <mikecyr@linux.vnet.ibm.com>
+> ---
+>  drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 114 ++++++++++++++++++++++++-------
+>  drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.h |   2 +
+>  2 files changed, 91 insertions(+), 25 deletions(-)
+> 
 
-Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
----
- drivers/scsi/aacraid/commsup.c | 20 +++++++++++++++++---
- 1 file changed, 17 insertions(+), 3 deletions(-)
+Applied.
 
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index f26543a..a026790 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -804,10 +804,13 @@ int aac_hba_send(u8 command, struct fib *fibptr, fib_callback callback,
- 			return -EFAULT;
- 
- 		/* Only set for first known interruptable command */
-+		fibptr->flags |= FIB_CONTEXT_FLAG_WAIT;
-+		fibptr->flags &= ~(FIB_CONTEXT_FLAG_WAIT);
- 		if (down_interruptible(&fibptr->event_wait)) {
- 			fibptr->done = 2;
- 			up(&fibptr->event_wait);
- 		}
-+
- 		spin_lock_irqsave(&fibptr->event_lock, flags);
- 		if ((fibptr->done == 0) || (fibptr->done == 2)) {
- 			fibptr->done = 2; /* Tell interrupt we aborted */
-@@ -1514,6 +1517,7 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
- 	int jafo = 0;
- 	int bled;
- 	u64 dmamask;
-+	int num_of_fibs = 0;
- 
- 	/*
- 	 * Assumptions:
-@@ -1547,10 +1551,20 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
- 	/*
- 	 *	Loop through the fibs, close the synchronous FIBS
- 	 */
--	for (retval = 1, index = 0; index < (aac->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB); index++) {
-+	retval = 1;
-+	num_of_fibs = aac->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB;
-+	for (index = 0; index <  num_of_fibs; index++) {
-+
- 		struct fib *fib = &aac->fibs[index];
--		if (!(fib->hw_fib_va->header.XferState & cpu_to_le32(NoResponseExpected | Async)) &&
--		  (fib->hw_fib_va->header.XferState & cpu_to_le32(ResponseExpected))) {
-+		__le32 XferState = fib->hw_fib_va->header.XferState;
-+		bool is_response_expected = false;
-+
-+		if (!(XferState & cpu_to_le32(NoResponseExpected | Async)) &&
-+		   (XferState & cpu_to_le32(ResponseExpected)))
-+			is_response_expected = true;
-+
-+		if (is_response_expected
-+		  || fib->flags & FIB_CONTEXT_FLAG_WAIT) {
- 			unsigned long flagv;
- 			spin_lock_irqsave(&fib->event_lock, flagv);
- 			up(&fib->event_wait);
--- 
-2.7.4
+Thanks Bryant + Michael.
