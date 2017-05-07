@@ -1,86 +1,92 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 17/19] aacraid : Add reset debugging statements
-Date: Sun, 7 May 2017 06:34:22 -0700
-Message-ID: <1494164064-17715-18-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 04/19] aacraid: Set correct Queue Depth for HBA1000 RAW disks
+Date: Sun, 7 May 2017 06:34:09 -0700
+Message-ID: <1494164064-17715-5-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 References: <1494164064-17715-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0067.outbound.protection.outlook.com ([104.47.37.67]:34981
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam03on0040.outbound.protection.outlook.com ([104.47.42.40]:33492
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752860AbdEGVoi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 7 May 2017 17:44:38 -0400
+        id S1752166AbdEGVpP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 7 May 2017 17:45:15 -0400
 In-Reply-To: <1494164064-17715-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, Prasad.Munirathnam@microsemi.com
 
-Added info and error messages in controller reset function to log
-information about the status of the IOP/SOFT reset.
+The default queue depth for non NATIVE RAW disks is calculated from the
+number of fibs and number of disks or a max of 256. This causes poor disk
+IO performance.
+
+The fix is to set default qd based on the type of disks
+(SATA -32 and SAS -64)
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 ---
- drivers/scsi/aacraid/src.c | 15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
+ drivers/scsi/aacraid/linit.c | 28 ++++++++++++++++++++--------
+ 1 file changed, 20 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-index 10a589b..5367d3f 100644
---- a/drivers/scsi/aacraid/src.c
-+++ b/drivers/scsi/aacraid/src.c
-@@ -761,8 +761,7 @@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
- 		goto invalid_out;
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 5e1a2d6..9ef98e4 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -405,17 +405,23 @@ static int aac_slave_configure(struct scsi_device *sdev)
+ 	int chn, tid;
+ 	unsigned int depth = 0;
+ 	unsigned int set_timeout = 0;
++	bool set_qd_dev_type = false;
++	u8 devtype = 0;
  
- 	if (bled)
--		pr_err("%s%d: adapter kernel panic'd %x.\n",
--				dev->name, dev->id, bled);
-+		dev_err(&dev->pdev->dev, "adapter kernel panic'd %x.\n", bled);
- 
- 	/*
- 	 * When there is a BlinkLED, IOP_RESET has not effect
-@@ -772,7 +771,10 @@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
- 
- 	dev->a_ops.adapter_enable_int = aac_src_disable_interrupt;
- 
-+	dev_err(&dev->pdev->dev, "Controller reset type is %d\n", reset_type);
+ 	chn = aac_logical_to_phys(sdev_channel(sdev));
+ 	tid = sdev_id(sdev);
+-	if (chn < AAC_MAX_BUSES && tid < AAC_MAX_TARGETS &&
+-		aac->hba_map[chn][tid].devtype == AAC_DEVTYPE_NATIVE_RAW) {
+-		depth = aac->hba_map[chn][tid].qd_limit;
++	if (chn < AAC_MAX_BUSES && tid < AAC_MAX_TARGETS && aac->sa_firmware) {
++		devtype = aac->hba_map[chn][tid].devtype;
 +
- 	if (reset_type & HW_IOP_RESET) {
-+		dev_info(&dev->pdev->dev, "Issuing IOP reset\n");
- 		aac_send_iop_reset(dev);
- 
- 		/*
-@@ -781,16 +783,20 @@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
- 		is_ctrl_up = aac_is_ctrl_up_and_running(dev);
- 		if (!is_ctrl_up)
- 			dev_err(&dev->pdev->dev, "IOP reset failed\n");
--		else
-+		else {
-+			dev_info(&dev->pdev->dev, "IOP reset succeded\n");
- 			goto set_startup;
-+		}
++		if (devtype == AAC_DEVTYPE_NATIVE_RAW)
++			depth = aac->hba_map[chn][tid].qd_limit;
++		else if (devtype == AAC_DEVTYPE_ARC_RAW)
++			set_qd_dev_type = true;
++
+ 		set_timeout = 1;
+ 		goto common_config;
  	}
  
- 	if (!dev->sa_firmware) {
-+		dev_err(&dev->pdev->dev, "ARC Reset attempt failed\n");
- 		ret = -ENODEV;
- 		goto out;
+-
+ 	if (aac->jbod && (sdev->type == TYPE_DISK))
+ 		sdev->removable = 1;
+ 
+@@ -470,16 +476,22 @@ static int aac_slave_configure(struct scsi_device *sdev)
+ 		if (sdev_channel(sdev) != NATIVE_CHANNEL)
+ 			goto common_config;
+ 
+-		/*
+-		 * Check if SATA drive
+-		 */
++		set_qd_dev_type = true;
++
++	}
++
++common_config:
++
++	/*
++	 * Check if SATA drive
++	 */
++	if (set_qd_dev_type) {
+ 		if (strncmp(sdev->vendor, "ATA", 3) == 0)
+ 			depth = 32;
+ 		else
+ 			depth = 64;
  	}
  
- 	if (reset_type & HW_SOFT_RESET) {
-+		dev_info(&dev->pdev->dev, "Issuing SOFT reset\n");
- 		aac_send_hardware_soft_reset(dev);
- 		dev->msi_enabled = 0;
- 
-@@ -799,7 +805,8 @@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
- 			dev_err(&dev->pdev->dev, "SOFT reset failed\n");
- 			ret = -ENODEV;
- 			goto out;
--		}
-+		} else
-+			dev_info(&dev->pdev->dev, "SOFT reset succeded\n");
- 	}
- 
- set_startup:
+-common_config:
+ 	/*
+ 	 * Firmware has an individual device recovery time typically
+ 	 * of 35 seconds, give us a margin.
 -- 
 2.7.4
