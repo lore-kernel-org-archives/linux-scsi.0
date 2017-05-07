@@ -1,144 +1,101 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 07/19] aacraid: Log count info of scsi cmds before reset
-Date: Sun, 7 May 2017 04:26:52 -0700
-Message-ID: <20170507112704.21940-8-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 12/19] aacraid: Rework SOFT reset code
+Date: Sun, 7 May 2017 04:26:57 -0700
+Message-ID: <20170507112704.21940-13-RaghavaAditya.Renukunta@microsemi.com>
 References: <20170507112704.21940-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0078.outbound.protection.outlook.com ([104.47.41.78]:46016
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam03on0045.outbound.protection.outlook.com ([104.47.42.45]:18944
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754438AbdEGVkX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 7 May 2017 17:40:23 -0400
+        id S1754438AbdEGVkc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 7 May 2017 17:40:32 -0400
 In-Reply-To: <20170507112704.21940-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, Prasad.Munirathnam@microsemi.com, RaghavaAditya.Renukunta@microsemi.com
 
-Log the location of the scsi cmds before triggering a reset. This
-information is useful for debugging.
+Now the driver issues a soft reset and waits for the controller to be up
+and running by periodically checking on the status of the controller
+health registers. Also prevents ARC adapters from issuing soft reset if
+IOP resets failed.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 ---
- drivers/scsi/aacraid/linit.c | 90 ++++++++++++++++++++++++++------------------
- 1 file changed, 53 insertions(+), 37 deletions(-)
+ drivers/scsi/aacraid/src.c | 38 ++++++++++++++++++--------------------
+ 1 file changed, 18 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index f6a11af..0a8d303 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -624,6 +624,56 @@ static int aac_ioctl(struct scsi_device *sdev, int cmd, void __user * arg)
- 	return aac_do_ioctl(dev, cmd, arg);
+diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
+index 67185eb..8ed7be0 100644
+--- a/drivers/scsi/aacraid/src.c
++++ b/drivers/scsi/aacraid/src.c
+@@ -754,8 +754,8 @@ static void aac_send_hardware_soft_reset(struct aac_dev *dev)
+ 
+ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
+ {
+-	unsigned long status, start;
+ 	bool is_ctrl_up;
++	int ret = 0;
+ 
+ 	if (bled < 0)
+ 		goto invalid_out;
+@@ -785,24 +785,21 @@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
+ 		else
+ 			goto set_startup;
+ 
+-		/*
+-		 * Check to see if KERNEL_UP_AND_RUNNING
+-		 * Wait for the adapter to be up and running.
+-		 * If !KERNEL_UP_AND_RUNNING issue HW Soft Reset
+-		 */
+-		status = src_readl(dev, MUnit.OMR);
+-		if (dev->sa_firmware
+-		 && !(status & KERNEL_UP_AND_RUNNING)) {
+-			start = jiffies;
+-			do {
+-				status = src_readl(dev, MUnit.OMR);
+-				if (time_after(jiffies,
+-				 start+HZ*SOFT_RESET_TIME)) {
+-					aac_send_hardware_soft_reset(dev);
+-					start = jiffies;
+-				}
+-			} while (!(status & KERNEL_UP_AND_RUNNING));
++		if (!dev->sa_firmware) {
++			ret = -ENODEV;
++			goto out;
+ 		}
++
++		aac_send_hardware_soft_reset(dev);
++		dev->msi_enabled = 0;
++
++		is_ctrl_up = aac_is_ctrl_up_and_running(dev);
++		if (!is_ctrl_up) {
++			dev_err(&dev->pdev->dev, "SOFT reset failed\n");
++			ret = -ENODEV;
++			goto out;
++		}
++
+ 		break;
+ 	case HW_SOFT_RESET:
+ 		if (dev->sa_firmware) {
+@@ -818,13 +815,14 @@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
+ invalid_out:
+ 
+ 	if (src_readl(dev, MUnit.OMR) & KERNEL_PANIC)
+-		return -ENODEV;
++		ret = -ENODEV;
+ 
+ set_startup:
+ 	if (startup_timeout < 300)
+ 		startup_timeout = 300;
+ 
+-	return 0;
++out:
++	return ret;
  }
  
-+static int get_num_of_incomplete_fibs(struct aac_dev *aac)
-+{
-+
-+	unsigned long flags;
-+	struct scsi_device *sdev = NULL;
-+	struct Scsi_Host *shost = aac->scsi_host_ptr;
-+	struct scsi_cmnd *scmnd = NULL;
-+	struct device *ctrl_dev;
-+
-+	int mlcnt  = 0;
-+	int llcnt  = 0;
-+	int ehcnt  = 0;
-+	int fwcnt  = 0;
-+	int krlcnt = 0;
-+
-+	__shost_for_each_device(sdev, shost) {
-+		spin_lock_irqsave(&sdev->list_lock, flags);
-+		list_for_each_entry(scmnd, &sdev->cmd_list, list) {
-+			switch (scmnd->SCp.phase) {
-+			case AAC_OWNER_FIRMWARE:
-+				fwcnt++;
-+				break;
-+			case AAC_OWNER_ERROR_HANDLER:
-+				ehcnt++;
-+				break;
-+			case AAC_OWNER_LOWLEVEL:
-+				llcnt++;
-+				break;
-+			case AAC_OWNER_MIDLEVEL:
-+				mlcnt++;
-+				break;
-+			default:
-+				krlcnt++;
-+				break;
-+			}
-+		}
-+		spin_unlock_irqrestore(&sdev->list_lock, flags);
-+	}
-+
-+	ctrl_dev = &aac->pdev->dev;
-+
-+	dev_info(ctrl_dev, "outstanding cmd: midlevel-%d\n", mlcnt);
-+	dev_info(ctrl_dev, "outstanding cmd: lowlevel-%d\n", llcnt);
-+	dev_info(ctrl_dev, "outstanding cmd: error handler-%d\n", ehcnt);
-+	dev_info(ctrl_dev, "outstanding cmd: firmware-%d\n", fwcnt);
-+	dev_info(ctrl_dev, "outstanding cmd: kernel-%d\n", krlcnt);
-+
-+	return mlcnt + llcnt + ehcnt + fwcnt;
-+}
-+
- static int aac_eh_abort(struct scsi_cmnd* cmd)
- {
- 	struct scsi_device * dev = cmd->device;
-@@ -853,8 +903,6 @@ static int aac_eh_reset(struct scsi_cmnd* cmd)
- 			pr_err("%s: Host adapter reset request timed out\n",
- 			AAC_DRIVERNAME);
- 	} else {
--		struct scsi_cmnd *command;
--		unsigned long flags;
- 
- 		/* Mark the assoc. FIB to not complete, eh handler does this */
- 		for (count = 0;
-@@ -873,41 +921,9 @@ static int aac_eh_reset(struct scsi_cmnd* cmd)
- 		pr_err("%s: Host adapter reset request. SCSI hang ?\n",
- 					AAC_DRIVERNAME);
- 
--		count = aac_check_health(aac);
--		if (count)
--			return count;
--		/*
--		 * Wait for all commands to complete to this specific
--		 * target (block maximum 60 seconds).
--		 */
--		for (count = 60; count; --count) {
--			int active = aac->in_reset;
--
--			if (active == 0)
--			__shost_for_each_device(dev, host) {
--				spin_lock_irqsave(&dev->list_lock, flags);
--				list_for_each_entry(command, &dev->cmd_list,
--					list) {
--					if ((command != cmd) &&
--					(command->SCp.phase ==
--					AAC_OWNER_FIRMWARE)) {
--						active++;
--						break;
--					}
--				}
--				spin_unlock_irqrestore(&dev->list_lock, flags);
--				if (active)
--					break;
--
--			}
--			/*
--			 * We can exit If all the commands are complete
--			 */
--			if (active == 0)
--				return SUCCESS;
--			ssleep(1);
--		}
--		pr_err("%s: SCSI bus appears hung\n", AAC_DRIVERNAME);
-+		count = get_num_of_incomplete_fibs(aac);
-+		if (count == 0)
-+			return SUCCESS;
- 
- 		/*
- 		 * This adapter needs a blind reset, only do so for
+ /**
 -- 
 2.7.4
