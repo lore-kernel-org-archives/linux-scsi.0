@@ -1,101 +1,78 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 12/19] aacraid: Rework SOFT reset code
-Date: Sun, 7 May 2017 06:34:17 -0700
-Message-ID: <1494164064-17715-13-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 15/19] aacraid: Make sure ioctl returns on controller reset
+Date: Sun, 7 May 2017 06:34:20 -0700
+Message-ID: <1494164064-17715-16-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 References: <1494164064-17715-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0057.outbound.protection.outlook.com ([104.47.41.57]:50912
+Received: from mail-dm3nam03on0082.outbound.protection.outlook.com ([104.47.41.82]:29700
         "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753270AbdEGVl5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 7 May 2017 17:41:57 -0400
+        id S1752906AbdEGVoB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 7 May 2017 17:44:01 -0400
 In-Reply-To: <1494164064-17715-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, Prasad.Munirathnam@microsemi.com
 
-Now the driver issues a soft reset and waits for the controller to be up
-and running by periodically checking on the status of the controller
-health registers. Also prevents ARC adapters from issuing soft reset if
-IOP resets failed.
+Made sure that ioctl commands return in case of a controller reset.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 ---
- drivers/scsi/aacraid/src.c | 38 ++++++++++++++++++--------------------
- 1 file changed, 18 insertions(+), 20 deletions(-)
+ drivers/scsi/aacraid/commsup.c | 20 +++++++++++++++++---
+ 1 file changed, 17 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-index 67185eb..8ed7be0 100644
---- a/drivers/scsi/aacraid/src.c
-+++ b/drivers/scsi/aacraid/src.c
-@@ -754,8 +754,8 @@ static void aac_send_hardware_soft_reset(struct aac_dev *dev)
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index f26543a..a026790 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -804,10 +804,13 @@ int aac_hba_send(u8 command, struct fib *fibptr, fib_callback callback,
+ 			return -EFAULT;
  
- static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
- {
--	unsigned long status, start;
- 	bool is_ctrl_up;
-+	int ret = 0;
- 
- 	if (bled < 0)
- 		goto invalid_out;
-@@ -785,24 +785,21 @@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
- 		else
- 			goto set_startup;
- 
--		/*
--		 * Check to see if KERNEL_UP_AND_RUNNING
--		 * Wait for the adapter to be up and running.
--		 * If !KERNEL_UP_AND_RUNNING issue HW Soft Reset
--		 */
--		status = src_readl(dev, MUnit.OMR);
--		if (dev->sa_firmware
--		 && !(status & KERNEL_UP_AND_RUNNING)) {
--			start = jiffies;
--			do {
--				status = src_readl(dev, MUnit.OMR);
--				if (time_after(jiffies,
--				 start+HZ*SOFT_RESET_TIME)) {
--					aac_send_hardware_soft_reset(dev);
--					start = jiffies;
--				}
--			} while (!(status & KERNEL_UP_AND_RUNNING));
-+		if (!dev->sa_firmware) {
-+			ret = -ENODEV;
-+			goto out;
+ 		/* Only set for first known interruptable command */
++		fibptr->flags |= FIB_CONTEXT_FLAG_WAIT;
++		fibptr->flags &= ~(FIB_CONTEXT_FLAG_WAIT);
+ 		if (down_interruptible(&fibptr->event_wait)) {
+ 			fibptr->done = 2;
+ 			up(&fibptr->event_wait);
  		}
 +
-+		aac_send_hardware_soft_reset(dev);
-+		dev->msi_enabled = 0;
+ 		spin_lock_irqsave(&fibptr->event_lock, flags);
+ 		if ((fibptr->done == 0) || (fibptr->done == 2)) {
+ 			fibptr->done = 2; /* Tell interrupt we aborted */
+@@ -1514,6 +1517,7 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ 	int jafo = 0;
+ 	int bled;
+ 	u64 dmamask;
++	int num_of_fibs = 0;
+ 
+ 	/*
+ 	 * Assumptions:
+@@ -1547,10 +1551,20 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ 	/*
+ 	 *	Loop through the fibs, close the synchronous FIBS
+ 	 */
+-	for (retval = 1, index = 0; index < (aac->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB); index++) {
++	retval = 1;
++	num_of_fibs = aac->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB;
++	for (index = 0; index <  num_of_fibs; index++) {
 +
-+		is_ctrl_up = aac_is_ctrl_up_and_running(dev);
-+		if (!is_ctrl_up) {
-+			dev_err(&dev->pdev->dev, "SOFT reset failed\n");
-+			ret = -ENODEV;
-+			goto out;
-+		}
+ 		struct fib *fib = &aac->fibs[index];
+-		if (!(fib->hw_fib_va->header.XferState & cpu_to_le32(NoResponseExpected | Async)) &&
+-		  (fib->hw_fib_va->header.XferState & cpu_to_le32(ResponseExpected))) {
++		__le32 XferState = fib->hw_fib_va->header.XferState;
++		bool is_response_expected = false;
 +
- 		break;
- 	case HW_SOFT_RESET:
- 		if (dev->sa_firmware) {
-@@ -818,13 +815,14 @@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
- invalid_out:
- 
- 	if (src_readl(dev, MUnit.OMR) & KERNEL_PANIC)
--		return -ENODEV;
-+		ret = -ENODEV;
- 
- set_startup:
- 	if (startup_timeout < 300)
- 		startup_timeout = 300;
- 
--	return 0;
-+out:
-+	return ret;
- }
- 
- /**
++		if (!(XferState & cpu_to_le32(NoResponseExpected | Async)) &&
++		   (XferState & cpu_to_le32(ResponseExpected)))
++			is_response_expected = true;
++
++		if (is_response_expected
++		  || fib->flags & FIB_CONTEXT_FLAG_WAIT) {
+ 			unsigned long flagv;
+ 			spin_lock_irqsave(&fib->event_lock, flagv);
+ 			up(&fib->event_wait);
 -- 
 2.7.4
