@@ -1,157 +1,180 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 18/19] aacraid: Remove reference to Series-9
-Date: Sun, 7 May 2017 04:27:03 -0700
-Message-ID: <20170507112704.21940-19-RaghavaAditya.Renukunta@microsemi.com>
-References: <20170507112704.21940-1-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 02/19] aacraid: Fix DMAR issues with  iommu=pt
+Date: Sun, 7 May 2017 06:34:07 -0700
+Message-ID: <1494164064-17715-3-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
+References: <1494164064-17715-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0065.outbound.protection.outlook.com ([104.47.41.65]:26400
+Received: from mail-dm3nam03on0057.outbound.protection.outlook.com ([104.47.41.57]:50912
         "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755877AbdEGVkr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 7 May 2017 17:40:47 -0400
-In-Reply-To: <20170507112704.21940-1-RaghavaAditya.Renukunta@microsemi.com>
+        id S1756245AbdEGVlo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 7 May 2017 17:41:44 -0400
+In-Reply-To: <1494164064-17715-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, Prasad.Munirathnam@microsemi.com, RaghavaAditya.Renukunta@microsemi.com
+Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, Prasad.Munirathnam@microsemi.com
 
-Removed reference to Series-9 HBA and created arc ctrl check function.
+The driver changed the DMA consistent map after consistent memory was
+allocated, this invalidated the IOMMU identity mapping. The fix was to
+make sure that we set the DMA consistent mask setting once depending on
+the controller card.
 
-Signed-off-by: Prasad B Munirathnam <prasad.munirathnam@microsemi.com>
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 ---
- drivers/scsi/aacraid/aacraid.h  | 13 ++++++++++++-
- drivers/scsi/aacraid/comminit.c | 18 ++++--------------
- drivers/scsi/aacraid/commsup.c  |  5 +----
- drivers/scsi/aacraid/linit.c    |  9 ++-------
- 4 files changed, 19 insertions(+), 26 deletions(-)
+ drivers/scsi/aacraid/aachba.c  | 17 ++++++-----------
+ drivers/scsi/aacraid/commsup.c | 29 ++++++++++++++++++-----------
+ drivers/scsi/aacraid/linit.c   | 32 +++++++++++++++++++-------------
+ 3 files changed, 43 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 829f3d8..58ccd2a 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -424,7 +424,6 @@ struct aac_ciss_identify_pd {
- #define PMC_DEVICE_S6	0x28b
- #define PMC_DEVICE_S7	0x28c
- #define PMC_DEVICE_S8	0x28d
--#define PMC_DEVICE_S9	0x28f
- 
- #define aac_phys_to_logical(x)  ((x)+1)
- #define aac_logical_to_phys(x)  ((x)?(x)-1:0)
-@@ -2684,6 +2683,18 @@ int aac_probe_container(struct aac_dev *dev, int cid);
- int _aac_rx_init(struct aac_dev *dev);
- int aac_rx_select_comm(struct aac_dev *dev, int comm);
- int aac_rx_deliver_producer(struct fib * fib);
-+
-+static inline int aac_is_src(struct aac_dev *dev)
-+{
-+	u16 device = dev->pdev->device;
-+
-+	if (device == PMC_DEVICE_S6 ||
-+		device == PMC_DEVICE_S7 ||
-+		device == PMC_DEVICE_S8)
-+		return 1;
-+	return 0;
-+}
-+
- char * get_container_type(unsigned type);
- extern int numacb;
- extern char aac_driver_version[];
-diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
-index 1151505..9ee025b 100644
---- a/drivers/scsi/aacraid/comminit.c
-+++ b/drivers/scsi/aacraid/comminit.c
-@@ -53,11 +53,8 @@ static inline int aac_is_msix_mode(struct aac_dev *dev)
- {
- 	u32 status = 0;
- 
--	if (dev->pdev->device == PMC_DEVICE_S6 ||
--		dev->pdev->device == PMC_DEVICE_S7 ||
--		dev->pdev->device == PMC_DEVICE_S8) {
-+	if (aac_is_src(dev))
- 		status = src_readl(dev, MUnit.OMR);
--	}
- 	return (status & AAC_INT_MODE_MSIX);
- }
- 
-@@ -325,9 +322,7 @@ int aac_send_shutdown(struct aac_dev * dev)
- 	/* FIB should be freed only after getting the response from the F/W */
- 	if (status != -ERESTARTSYS)
- 		aac_fib_free(fibctx);
--	if ((dev->pdev->device == PMC_DEVICE_S7 ||
--	     dev->pdev->device == PMC_DEVICE_S8 ||
--	     dev->pdev->device == PMC_DEVICE_S9) &&
-+	if (aac_is_src(dev) &&
- 	     dev->msi_enabled)
- 		aac_set_intx_mode(dev);
- 	return status;
-@@ -583,9 +578,7 @@ struct aac_dev *aac_init_adapter(struct aac_dev *dev)
- 		dev->max_fib_size = status[1] & 0xFFE0;
- 		host->sg_tablesize = status[2] >> 16;
- 		dev->sg_tablesize = status[2] & 0xFFFF;
--		if (dev->pdev->device == PMC_DEVICE_S7 ||
--		    dev->pdev->device == PMC_DEVICE_S8 ||
--		    dev->pdev->device == PMC_DEVICE_S9) {
-+		if (aac_is_src(dev)) {
- 			if (host->can_queue > (status[3] >> 16) -
- 					AAC_NUM_MGT_FIB)
- 				host->can_queue = (status[3] >> 16) -
-@@ -604,10 +597,7 @@ struct aac_dev *aac_init_adapter(struct aac_dev *dev)
- 			pr_warn("numacb=%d ignored\n", numacb);
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index 43d8838..707ee2f 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -2071,20 +2071,15 @@ int aac_get_adapter_info(struct aac_dev* dev)
+ 		expose_physicals = 0;
  	}
  
--	if (dev->pdev->device == PMC_DEVICE_S6 ||
--	    dev->pdev->device == PMC_DEVICE_S7 ||
--	    dev->pdev->device == PMC_DEVICE_S8 ||
--	    dev->pdev->device == PMC_DEVICE_S9)
-+	if (aac_is_src(dev))
- 		aac_define_int_mode(dev);
- 	/*
- 	 *	Ok now init the communication subsystem
+-	if(dev->dac_support != 0) {
+-		if (!pci_set_dma_mask(dev->pdev, DMA_BIT_MASK(64)) &&
+-			!pci_set_consistent_dma_mask(dev->pdev, DMA_BIT_MASK(64))) {
++	if (dev->dac_support) {
++		if (!pci_set_dma_mask(dev->pdev, DMA_BIT_MASK(64))) {
+ 			if (!dev->in_reset)
+-				printk(KERN_INFO"%s%d: 64 Bit DAC enabled\n",
+-					dev->name, dev->id);
+-		} else if (!pci_set_dma_mask(dev->pdev, DMA_BIT_MASK(32)) &&
+-			!pci_set_consistent_dma_mask(dev->pdev, DMA_BIT_MASK(32))) {
+-			printk(KERN_INFO"%s%d: DMA mask set failed, 64 Bit DAC disabled\n",
+-				dev->name, dev->id);
++				dev_info(&dev->pdev->dev, "64 Bit DAC enabled\n");
++		} else if (!pci_set_dma_mask(dev->pdev, DMA_BIT_MASK(32))) {
++			dev_info(&dev->pdev->dev, "DMA mask set failed, 64 Bit DAC disabled\n");
+ 			dev->dac_support = 0;
+ 		} else {
+-			printk(KERN_WARNING"%s%d: No suitable DMA available.\n",
+-				dev->name, dev->id);
++			dev_info(&dev->pdev->dev, "No suitable DMA available\n");
+ 			rcode = -ENOMEM;
+ 		}
+ 	}
 diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index a026790..184e9cf 100644
+index d08920d..47068b2 100644
 --- a/drivers/scsi/aacraid/commsup.c
 +++ b/drivers/scsi/aacraid/commsup.c
-@@ -2595,10 +2595,7 @@ void aac_free_irq(struct aac_dev *dev)
- 	int cpu;
+@@ -1513,6 +1513,7 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ 	struct scsi_cmnd *command_list;
+ 	int jafo = 0;
+ 	int bled;
++	u64 dmamask;
  
- 	cpu = cpumask_first(cpu_online_mask);
--	if (dev->pdev->device == PMC_DEVICE_S6 ||
--	    dev->pdev->device == PMC_DEVICE_S7 ||
--	    dev->pdev->device == PMC_DEVICE_S8 ||
--	    dev->pdev->device == PMC_DEVICE_S9) {
-+	if (aac_is_src(dev)) {
- 		if (dev->max_msix > 1) {
- 			for (i = 0; i < dev->max_msix; i++)
- 				free_irq(pci_irq_vector(dev->pdev, i),
+ 	/*
+ 	 * Assumptions:
+@@ -1580,21 +1581,27 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ 	aac_free_irq(aac);
+ 	kfree(aac->fsa_dev);
+ 	aac->fsa_dev = NULL;
++
++	dmamask = DMA_BIT_MASK(32);
+ 	quirks = aac_get_driver_ident(index)->quirks;
+-	if (quirks & AAC_QUIRK_31BIT) {
+-		if (((retval = pci_set_dma_mask(aac->pdev, DMA_BIT_MASK(31)))) ||
+-		  ((retval = pci_set_consistent_dma_mask(aac->pdev, DMA_BIT_MASK(31)))))
+-			goto out;
+-	} else {
+-		if (((retval = pci_set_dma_mask(aac->pdev, DMA_BIT_MASK(32)))) ||
+-		  ((retval = pci_set_consistent_dma_mask(aac->pdev, DMA_BIT_MASK(32)))))
+-			goto out;
++	if (quirks & AAC_QUIRK_31BIT)
++		retval = pci_set_dma_mask(aac->pdev, dmamask);
++	else if (!(quirks & AAC_QUIRK_SRC))
++		retval = pci_set_dma_mask(aac->pdev, dmamask);
++	else
++		retval = pci_set_consistent_dma_mask(aac->pdev, dmamask);
++
++	if (quirks & AAC_QUIRK_31BIT && !retval) {
++		dmamask = DMA_BIT_MASK(31);
++		retval = pci_set_consistent_dma_mask(aac->pdev, dmamask);
+ 	}
++
++	if (retval)
++		goto out;
++
+ 	if ((retval = (*(aac_get_driver_ident(index)->init))(aac)))
+ 		goto out;
+-	if (quirks & AAC_QUIRK_31BIT)
+-		if ((retval = pci_set_dma_mask(aac->pdev, DMA_BIT_MASK(32))))
+-			goto out;
++
+ 	if (jafo) {
+ 		aac->thread = kthread_run(aac_command_thread, aac, "%s",
+ 					  aac->name);
 diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index d933d2f..0f277df 100644
+index 372a075..5a201da 100644
 --- a/drivers/scsi/aacraid/linit.c
 +++ b/drivers/scsi/aacraid/linit.c
-@@ -1416,10 +1416,7 @@ static void __aac_shutdown(struct aac_dev * aac)
- 		kthread_stop(aac->thread);
+@@ -1403,6 +1403,7 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	int error = -ENODEV;
+ 	int unique_id = 0;
+ 	u64 dmamask;
++	int mask_bits = 0;
+ 	extern int aac_sync_mode;
+ 
+ 	/*
+@@ -1426,18 +1427,32 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		goto out;
+ 	error = -ENODEV;
+ 
++	if (!(aac_drivers[index].quirks & AAC_QUIRK_SRC)) {
++		error = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
++		if (error) {
++			dev_err(&pdev->dev, "PCI 32 BIT dma mask set failed");
++			goto out_disable_pdev;
++		}
++	}
++
+ 	/*
+ 	 * If the quirk31 bit is set, the adapter needs adapter
+ 	 * to driver communication memory to be allocated below 2gig
+ 	 */
+-	if (aac_drivers[index].quirks & AAC_QUIRK_31BIT)
++	if (aac_drivers[index].quirks & AAC_QUIRK_31BIT) {
+ 		dmamask = DMA_BIT_MASK(31);
+-	else
++		mask_bits = 31;
++	} else {
+ 		dmamask = DMA_BIT_MASK(32);
++		mask_bits = 32;
++	}
+ 
+-	if (pci_set_dma_mask(pdev, dmamask) ||
+-			pci_set_consistent_dma_mask(pdev, dmamask))
++	error = pci_set_consistent_dma_mask(pdev, dmamask);
++	if (error) {
++		dev_err(&pdev->dev, "PCI %d B consistent dma mask set failed\n"
++				, mask_bits);
+ 		goto out_disable_pdev;
++	}
+ 
+ 	pci_set_master(pdev);
+ 
+@@ -1501,15 +1516,6 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		goto out_deinit;
  	}
- 	aac_adapter_disable_int(aac);
--	if (aac->pdev->device == PMC_DEVICE_S6 ||
--	    aac->pdev->device == PMC_DEVICE_S7 ||
--	    aac->pdev->device == PMC_DEVICE_S8 ||
--	    aac->pdev->device == PMC_DEVICE_S9) {
-+	if (aac_is_src(aac)) {
- 		if (aac->max_msix > 1) {
- 			for (i = 0; i < aac->max_msix; i++) {
- 				free_irq(pci_irq_vector(aac->pdev, i),
-@@ -1684,9 +1681,7 @@ static int aac_acquire_resources(struct aac_dev *dev)
- 	aac_adapter_enable_int(dev);
  
- 
--	if ((dev->pdev->device == PMC_DEVICE_S7 ||
--	     dev->pdev->device == PMC_DEVICE_S8 ||
--	     dev->pdev->device == PMC_DEVICE_S9))
-+	if (aac_is_src(dev))
- 		aac_define_int_mode(dev);
- 
- 	if (dev->msi_enabled)
+-	/*
+-	 * If we had set a smaller DMA mask earlier, set it to 4gig
+-	 * now since the adapter can dma data to at least a 4gig
+-	 * address space.
+-	 */
+-	if (aac_drivers[index].quirks & AAC_QUIRK_31BIT)
+-		if (pci_set_dma_mask(pdev, DMA_BIT_MASK(32)))
+-			goto out_deinit;
+-
+ 	aac->maximum_num_channels = aac_drivers[index].channels;
+ 	error = aac_get_adapter_info(aac);
+ 	if (error < 0)
 -- 
 2.7.4
