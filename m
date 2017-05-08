@@ -1,61 +1,70 @@
-From: Hans de Goede <hdegoede@redhat.com>
+From: Pavel Machek <pavel@ucw.cz>
 Subject: Re: Race to power off harming SATA SSDs
-Date: Mon, 8 May 2017 11:09:43 +0200
-Message-ID: <7ee84982-cfad-94d7-4e22-4edbeb852b32@redhat.com>
+Date: Mon, 8 May 2017 11:28:47 +0200
+Message-ID: <20170508092846.GA11029@amd>
 References: <20170410232118.GA4816@khazad-dum.debian.net>
  <20170410235206.GA28603@wtj.duckdns.org>
  <20170507204007.GA25628@atrey.karlin.mff.cuni.cz>
  <1494228094.6528.14.camel@infradead.org>
- <alpine.DEB.2.11.1705080930150.6882@lnxricardw1>
- <1494231215.6528.22.camel@infradead.org>
- <alpine.DEB.2.11.1705081034420.6882@lnxricardw1>
- <1494233673.6528.28.camel@infradead.org>
- <alpine.DEB.2.11.1705081059580.6882@lnxricardw1>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.11.1705081059580.6882@lnxricardw1>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <1494228094.6528.14.camel@infradead.org>
 Sender: linux-ide-owner@vger.kernel.org
-To: Ricard Wanderlof <ricard.wanderlof@axis.com>, David Woodhouse <dwmw2@infradead.org>
-Cc: Pavel Machek <pavel@ucw.cz>, Tejun Heo <tj@kernel.org>, boris.brezillon@free-electrons.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-mtd@lists.infradead.org, Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: Tejun Heo <tj@kernel.org>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, boris.brezillon@free-electrons.com, linux-mtd@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
-
-On 08-05-17 11:06, Ricard Wanderlof wrote:
+On Mon 2017-05-08 08:21:34, David Woodhouse wrote:
+> On Sun, 2017-05-07 at 22:40 +0200, Pavel Machek wrote:
+> > > > NOTE: unclean SSD power-offs are dangerous and may brick the device in
+> > > > the worst case, or otherwise harm it (reduce longevity, damage flash
+> > > > blocks).  It is also not impossible to get data corruption.
+> >
+> > > I get that the incrementing counters might not be pretty but I'm a bit
+> > > skeptical about this being an actual issue.  Because if that were
+> > > true, the device would be bricking itself from any sort of power
+> > > losses be that an actual power loss, battery rundown or hard power off
+> > > after crash.
+> >
+> > And that's exactly what users see. If you do enough power fails on a
+> > SSD, you usually brick it, some die sooner than others. There was some
+> > test results published, some are here
+> > http://lkcl.net/reports/ssd_analysis.html, I believe I seen some
+> > others too.
+> > 
+> > It is very hard for a NAND to work reliably in face of power
+> > failures. In fact, not even Linux MTD + UBIFS works well in that
+> > regards. See
+> > http://www.linux-mtd.infradead.org/faq/ubi.html. (Unfortunately, its
+> > down now?!). If we can't get it right, do you believe SSD manufactures
+> > do?
+> > 
+> > [Issue is, if you powerdown during erase, you get "weakly erased"
+> > page, which will contain expected 0xff's, but you'll get bitflips
+> > there quickly. Similar issue exists for writes. It is solveable in
+> > software, just hard and slow... and we don't do it.]
 > 
-> On Mon, 8 May 2017, David Woodhouse wrote:
-> 
->>> On Mon, 8 May 2017, David Woodhouse wrote:
->>>> Our empirical testing trumps your "can never happen" theory :)
->>>
->>> I'm sure it does. But what is the explanation then? Has anyone analyzed
->>> what is going on using an oscilloscope to verify relationship between
->>> erase command and supply voltage drop?
->>
->> Not that I'm aware of. Once we have reached the "it does happen and we
->> have to cope" there was not a lot of point in working out *why* it
->> happened.
->>
->> In fact, the only examples I *personally* remember were on NOR flash,
->> which takes longer to erase. So it's vaguely possible that it doesn't
->> happen on NAND. But really, it's not something we should be depending
->> on and the software mechanisms have to remain in place.
-> 
-> My point is really that say that the problem is in fact not that the erase
-> is cut short due to the power fail, but that the software issues a second
-> command before the first erase command has completed, for instance, or
-> some other situation. Then we'd have a concrete situation which we can
-> resolve (i.e., fix the bug), rather than assuming that it's the hardware's
-> fault and implement various software workarounds.
+> It's not that hard. We certainly do it in JFFS2. I was fairly sure that
+> it was also part of the design considerations for UBI — it really ought
+> to be right there too. I'm less sure about UBIFS but I would have
+> expected it to be OK.
 
-You're forgetting that the SSD itself (this thread is about SSDs) also has
-a major software component which is doing housekeeping all the time, so even
-if the main CPU gets reset the SSD's controller may still happily be erasing
-blocks.
+Are you sure you have it right in JFFS2? Do you journal block erases?
+Apparently, that was pretty much non-issue on older flashes.
 
-Regards,
+https://web-beta.archive.org/web/20160923094716/http://www.linux-mtd.infradead.org:80/doc/ubifs.html#L_unstable_bits
 
-Hans
+> SSDs however are often crap; power fail those at your peril. And of
+> course there's nothing you can do when they do fail, whereas we accept
+> patches for things which are implemented in Linux.
+
+Agreed. If the SSD indiciates unexpected powerdown, it is a problem
+and we need to fix it.
+
+									Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
