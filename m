@@ -1,41 +1,52 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] scsi_lib: Add #include <scsi/scsi_transport.h>
-Date: Mon, 8 May 2017 09:35:32 +0200
-Message-ID: <20170508073532.GD3982@linux-x5ow.site>
-References: <20170502174503.13277-1-bart.vanassche@sandisk.com>
+From: Ricard Wanderlof <ricard.wanderlof@axis.com>
+Subject: Re: Race to power off harming SATA SSDs
+Date: Mon, 8 May 2017 09:38:24 +0200
+Message-ID: <alpine.DEB.2.11.1705080930150.6882@lnxricardw1>
+References: <20170410232118.GA4816@khazad-dum.debian.net> <20170410235206.GA28603@wtj.duckdns.org> <20170507204007.GA25628@atrey.karlin.mff.cuni.cz> <1494228094.6528.14.camel@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36339 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751982AbdEHHff (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 8 May 2017 03:35:35 -0400
-Content-Disposition: inline
-In-Reply-To: <20170502174503.13277-1-bart.vanassche@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1494228094.6528.14.camel@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: Pavel Machek <pavel@ucw.cz>, Tejun Heo <tj@kernel.org>, boris.brezillon@free-electrons.com, linux-scsi@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-mtd@lists.infradead.org, Henrique de Moraes Holschuh <hmh@hmh.eng.br>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>
 
-On Tue, May 02, 2017 at 10:45:03AM -0700, Bart Van Assche wrote:
-> This patch avoids that when building with W=1 the compiler
-> complains that __scsi_init_queue() has not been declared.
-> See also commit d48777a633d6 ("scsi: remove __scsi_alloc_queue").
+
+On Mon, 8 May 2017, David Woodhouse wrote:
+
+> > [Issue is, if you powerdown during erase, you get "weakly erased"
+> > page, which will contain expected 0xff's, but you'll get bitflips
+> > there quickly. Similar issue exists for writes. It is solveable in
+> > software, just hard and slow... and we don't do it.]
 > 
-> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Hannes Reinecke <hare@suse.com>
-> Cc: Johannes Thumshirn <jthumshirn@suse.de>
-> ---
+> It's not that hard. We certainly do it in JFFS2. I was fairly sure that
+> it was also part of the design considerations for UBI ? it really ought
+> to be right there too. I'm less sure about UBIFS but I would have
+> expected it to be OK.
 
-Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+I've got a problem with the underlying mechanism. How long does it take to 
+erase a NAND block? A couple of milliseconds. That means that for an erase 
+to be "weak" du to a power fail, the host CPU must issue an erase command, 
+and then the power to the NAND must drop within those milliseconds. 
+However, in most systems there will be a power monitor which will 
+essentially reset the CPU as soon as the power starts dropping. So in 
+practice, by the time the voltage is too low to successfully supply the 
+NAND chip, the CPU has already been reset, hence, no reset command will 
+have been given by the time NAND runs out of steam.
 
+Sure, with switchmode power supplies, we don't have those large capacitors 
+in the power supply which can keep the power going for a second or more, 
+but still, I would think that the power wouldn't die fast enough for this 
+to be an issue.
+
+But I could very well be wrong and I haven't had experience with that many 
+NAND flash systems. But then please tell me where the above reasoning is 
+flawed.
+
+/Ricard
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Ricard Wolf WanderlÃ¶f                           ricardw(at)axis.com
+Axis Communications AB, Lund, Sweden            www.axis.com
+Phone +46 46 272 2016                           Fax +46 46 13 61 30
