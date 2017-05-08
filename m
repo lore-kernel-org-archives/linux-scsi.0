@@ -1,63 +1,44 @@
-From: Pavel Machek <pavel@ucw.cz>
-Subject: Re: Race to power off harming SATA SSDs
-Date: Mon, 8 May 2017 14:32:24 +0200
-Message-ID: <20170508123224.GA9311@amd>
-References: <20170410232118.GA4816@khazad-dum.debian.net>
- <20170410235206.GA28603@wtj.duckdns.org>
- <20170507204007.GA25628@atrey.karlin.mff.cuni.cz>
- <1494228094.6528.14.camel@infradead.org>
- <20170508092846.GA11029@amd>
- <1494236048.6528.32.camel@infradead.org>
- <20170508104953.GA17773@amd>
- <1494241760.5407.6.camel@infradead.org>
-Mime-Version: 1.0
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: Re: [PATCH] cxlflash: Select IRQ_POLL
+Date: Mon, 8 May 2017 09:46:18 -0500
+Message-ID: <36D9CEDE-1A42-42C7-9140-9D786C01752C@linux.vnet.ibm.com>
+References: <1494027107-11234-1-git-send-email-linux@roeck-us.net>
+Mime-Version: 1.0 (Mac OS X Mail 10.2 \(3259\))
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1494241760.5407.6.camel@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: Tejun Heo <tj@kernel.org>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, boris.brezillon@free-electrons.com, linux-mtd@lists.infradead.org
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:40079 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1754078AbdEHOqZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 May 2017 10:46:25 -0400
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v48EYDrD113512
+        for <linux-scsi@vger.kernel.org>; Mon, 8 May 2017 10:46:24 -0400
+Received: from e18.ny.us.ibm.com (e18.ny.us.ibm.com [129.33.205.208])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2aap5gmqa9-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Mon, 08 May 2017 10:46:24 -0400
+Received: from localhost
+        by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+        Mon, 8 May 2017 10:46:23 -0400
+In-Reply-To: <1494027107-11234-1-git-send-email-linux@roeck-us.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: "Manoj N . Kumar" <manoj@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi!
-
-> > 'clean marker' is a good idea... empty pages have plenty of space.
+> On May 5, 2017, at 6:31 PM, Guenter Roeck <linux@roeck-us.net> wrote:
 > 
-> Well... you lose that space permanently. Although I suppose you could
-> do things differently and erase a block immediately prior to using it.
-> But in that case why ever write the cleanmarker? Just maintain a set of
-> blocks that you *will* erase and re-use.
-
-Yes, but erase is slow so that would hurt performance...?
-
-> > How do you handle the issue during regular write? Always ignore last
-> > successfully written block?
+> The driver now uses IRQ_POLL and needs to select it to avoid the following
+> build error.
 > 
-> Log nodes have a CRC. If you get interrupted during a write, that CRC
-> should fail.
-
-Umm. That is not what "unstable bits" issue is about, right?
-
-If you are interrupted during write, you can get into state where
-readback will be correct on next boot (CRC, ECC ok), but then the bits
-will go back few hours after that. You can't rely on checksums to
-detect that.. because the bits will have the right values -- for a while.
-
-> > Do you handle "paired pages" problem on MLC?
+> ERROR: ".irq_poll_complete" [drivers/scsi/cxlflash/cxlflash.ko] undefined!
+> ERROR: ".irq_poll_sched" [drivers/scsi/cxlflash/cxlflash.ko] undefined!
+> ERROR: ".irq_poll_disable" [drivers/scsi/cxlflash/cxlflash.ko] undefined!
+> ERROR: ".irq_poll_init" [drivers/scsi/cxlflash/cxlflash.ko] undefined!
 > 
-> No. It would theoretically be possible, by not considering a write to
-> the first page "committed" until the second page of the pair is also
-> written. Essentially, it's not far off expanding the existing 'wbuf'
-> which we use to gather writes into full pages for NAND, to cover the
-> *whole* of the set of pages which are affected by MLC.
-> 
-> But we mostly consider JFFS2 to be obsolete these days, in favour of
-> UBI/UBIFS or other approaches.
+> Fixes: cba06e6de403 ("scsi: cxlflash: Implement IRQ polling for RRQ processing")
+> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
 
-Yes, I guess MLC NAND chips are mostly too big for jjfs2.
-									Pavel
-
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
