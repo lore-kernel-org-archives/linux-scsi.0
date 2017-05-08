@@ -1,69 +1,47 @@
 From: David Woodhouse <dwmw2@infradead.org>
 Subject: Re: Race to power off harming SATA SSDs
-Date: Mon, 08 May 2017 11:12:28 +0100
-Message-ID: <1494238348.6528.40.camel@infradead.org>
+Date: Mon, 08 May 2017 11:13:10 +0100
+Message-ID: <1494238390.6528.42.camel@infradead.org>
 References: <20170410232118.GA4816@khazad-dum.debian.net>
- <20170410235206.GA28603@wtj.duckdns.org>
- <20170507204007.GA25628@atrey.karlin.mff.cuni.cz>
- <1494228094.6528.14.camel@infradead.org>
- <alpine.DEB.2.11.1705080930150.6882@lnxricardw1>
- <1494231215.6528.22.camel@infradead.org>
- <alpine.DEB.2.11.1705081034420.6882@lnxricardw1>
- <1494233673.6528.28.camel@infradead.org>
- <alpine.DEB.2.11.1705081059580.6882@lnxricardw1>
+         <20170410235206.GA28603@wtj.duckdns.org>
+         <20170507204007.GA25628@atrey.karlin.mff.cuni.cz>
+         <1494228094.6528.14.camel@infradead.org>
+         <alpine.DEB.2.11.1705080930150.6882@lnxricardw1>
+         <1494231215.6528.22.camel@infradead.org>
+         <alpine.DEB.2.11.1705081034420.6882@lnxricardw1>
+         <1494233673.6528.28.camel@infradead.org>
+         <alpine.DEB.2.11.1705081059580.6882@lnxricardw1>
+         <7ee84982-cfad-94d7-4e22-4edbeb852b32@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============4774185696650857025=="
-Return-path: <linux-mtd-bounces+gldm-linux-mtd-36=gmane.org@lists.infradead.org>
-In-Reply-To: <alpine.DEB.2.11.1705081059580.6882@lnxricardw1>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mtd>,
- <mailto:linux-mtd-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mtd/>
-List-Post: <mailto:linux-mtd@lists.infradead.org>
-List-Help: <mailto:linux-mtd-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mtd>,
- <mailto:linux-mtd-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-mtd" <linux-mtd-bounces@lists.infradead.org>
-Errors-To: linux-mtd-bounces+gldm-linux-mtd-36=gmane.org@lists.infradead.org
-To: Ricard Wanderlof <ricard.wanderlof@axis.com>
-Cc: boris.brezillon@free-electrons.com, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, linux-mtd@lists.infradead.org, Pavel Machek <pavel@ucw.cz>, Tejun Heo <tj@kernel.org>
+Content-Type: multipart/signed; micalg="sha-256"; protocol="application/x-pkcs7-signature"; boundary="=-8JBH18VD8ApS8F+6emjz"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from twosheds.infradead.org ([90.155.92.209]:60418 "EHLO
+        twosheds.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751373AbdEHKNQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 May 2017 06:13:16 -0400
+In-Reply-To: <7ee84982-cfad-94d7-4e22-4edbeb852b32@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hans de Goede <hdegoede@redhat.com>, Ricard Wanderlof <ricard.wanderlof@axis.com>
+Cc: Pavel Machek <pavel@ucw.cz>, Tejun Heo <tj@kernel.org>, boris.brezillon@free-electrons.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-mtd@lists.infradead.org, Henrique de Moraes Holschuh <hmh@hmh.eng.br>
 
 
---===============4774185696650857025==
-Content-Type: multipart/signed; micalg="sha-256"; protocol="application/x-pkcs7-signature"; boundary="=-F3Z6jQ/avaqqBC14RxUx"
-
-
---=-F3Z6jQ/avaqqBC14RxUx
+--=-8JBH18VD8ApS8F+6emjz
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2017-05-08 at 11:06 +0200, Ricard Wanderlof wrote:
->=20
-> My point is really that say that the problem is in fact not that the eras=
-e=C2=A0
-> is cut short due to the power fail, but that the software issues a second=
-=C2=A0
-> command before the first erase command has completed, for instance, or=C2=
-=A0
-> some other situation. Then we'd have a concrete situation which we can=C2=
-=A0
-> resolve (i.e., fix the bug), rather than assuming that it's the hardware'=
-s=C2=A0
-> fault and implement various software workarounds.
+On Mon, 2017-05-08 at 11:09 +0200, Hans de Goede wrote:
+> You're forgetting that the SSD itself (this thread is about SSDs) also ha=
+s
+> a major software component which is doing housekeeping all the time, so e=
+ven
+> if the main CPU gets reset the SSD's controller may still happily be eras=
+ing
+> blocks.
 
-On NOR flash we have *definitely* seen it during powerfail testing.
-
-A block looks like it's all 0xFF when you read it back on mount, but if
-you read it repeatedly, you may see bit flips because it wasn't
-completely erased. And even if you read it ten times and 'trust' that
-it's properly erased, it could start to show those bit flips when you
-start to program it.
-
-It was very repeatable, and that's when we implemented the 'clean
-markers' written after a successful erase, rather than trusting a block
-that "looks empty".
-
---=-F3Z6jQ/avaqqBC14RxUx
+We're not really talking about SSDs at all any more; we're talking
+about real flash with real maintainable software.
+--=-8JBH18VD8ApS8F+6emjz
 Content-Type: application/x-pkcs7-signature; name="smime.p7s"
 Content-Disposition: attachment; filename="smime.p7s"
 Content-Transfer-Encoding: base64
@@ -141,8 +119,8 @@ GeE6+vmbHDFFQ9Ealsti3jGCA9MwggPPAgEBMIGwMIGbMQswCQYDVQQGEwJHQjEbMBkGA1UECBMS
 R3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3JkMRowGAYDVQQKExFDT01PRE8gQ0Eg
 TGltaXRlZDFBMD8GA1UEAxM4Q09NT0RPIFNIQS0yNTYgQ2xpZW50IEF1dGhlbnRpY2F0aW9uIGFu
 ZCBTZWN1cmUgRW1haWwgQ0ECEGoLUFiVUy0EUE3iKBH+GjAwDQYJYIZIAWUDBAIBBQCgggHzMBgG
-CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE3MDUwODEwMTIyOFowLwYJ
-KoZIhvcNAQkEMSIEIPECytIbpD3aZzzZ5kVpvdNG7dq8RUuzXfpHZgmBnqfEMIHBBgkrBgEEAYI3
+CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE3MDUwODEwMTMxMFowLwYJ
+KoZIhvcNAQkEMSIEINlisZoANI4RTffjC/LC16ErZOHpPQ9Xbi2r9osesQjNMIHBBgkrBgEEAYI3
 EAQxgbMwgbAwgZsxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAO
 BgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMUEwPwYDVQQDEzhDT01P
 RE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRpb24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQagtQ
@@ -150,25 +128,11 @@ WJVTLQRQTeIoEf4aMDCBwwYLKoZIhvcNAQkQAgsxgbOggbAwgZsxCzAJBgNVBAYTAkdCMRswGQYD
 VQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9E
 TyBDQSBMaW1pdGVkMUEwPwYDVQQDEzhDT01PRE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRp
 b24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQagtQWJVTLQRQTeIoEf4aMDANBgkqhkiG9w0BAQEFAASC
-AQC0xsotl3tVH9HDiEYZIkUPcPsxMPOHvuikZNXsioH1u/jMarF1z7/wDkYLp2pPYl6nvz33pVAn
-yzsR6Ri0HR7zWp9MLvSC2ZGZYzNf/rGhoT+0FDfwHvH979vlW6Ba0NmQeLQ4dRHn3RgKbq6zwEzh
-KybvJRUwd/D6gkLI7P9TbtLWahH34bZKhcDmN4QHKT3QgOzVWQDzOmoP9vzV2L4mEzMcNd2nsVhK
-jXpmGw025kOFzSXuDyjIFxgyZEcGitqeUzUY7V+pK+kJA5EFUQuYRGozUXpoqb4F6MENAtuxHTeH
-2XtwXL2oAR3ANGguVFE8UiLGTeulPXI19ZTp6XpcAAAAAAAA
+AQAbEQ0cE/VwJrVYsEZPMkARGlaXtlO5867QF0o7BAOcSPQo8eqKxq1eaEXrrqOlU1ipNc0ufG3R
+K+vEene5TuytGBjK+Eja79oie1I7ADVhvQde0K9WW2NORxdDyvxzbX5dzQilxhUP/CREKnmfE1wz
+aiCHqtdVzAmwt4QBtG/8344HqVG0mnZAXQ/oGJIZy4iQ3ORErGGiZSCDsZ3gZJxNrwyQGxayJbSJ
+aLlc3OprzOYosZgCcmBt99Z34VCSnY5scOT+qPk31x9jfyDXxDtkrDFVOHQnEuj/o5247cqBMsvD
+ANRU2MgcC5dMsPRriPMNkU6SffDi7oYdBLYnP9axAAAAAAAA
 
 
---=-F3Z6jQ/avaqqBC14RxUx--
-
-
-
---===============4774185696650857025==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-______________________________________________________
-Linux MTD discussion mailing list
-http://lists.infradead.org/mailman/listinfo/linux-mtd/
-
---===============4774185696650857025==--
+--=-8JBH18VD8ApS8F+6emjz--
