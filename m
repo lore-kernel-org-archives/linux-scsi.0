@@ -1,103 +1,39 @@
 From: Boris Brezillon <boris.brezillon@free-electrons.com>
 Subject: Re: Race to power off harming SATA SSDs
-Date: Mon, 8 May 2017 13:48:07 +0200
-Message-ID: <20170508134807.498b3ee7@bbrezillon>
+Date: Mon, 8 May 2017 13:50:05 +0200
+Message-ID: <20170508135005.0b9b200b@bbrezillon>
 References: <20170410232118.GA4816@khazad-dum.debian.net>
         <20170410235206.GA28603@wtj.duckdns.org>
         <20170507204007.GA25628@atrey.karlin.mff.cuni.cz>
         <1494228094.6528.14.camel@infradead.org>
-        <20170508092846.GA11029@amd>
-        <1494236048.6528.32.camel@infradead.org>
-        <20170508104953.GA17773@amd>
-        <CAFLxGvzAmURHU_6K3gmBfOqHKgvQOkkO_+qgMKsmzhWZwwGnqw@mail.gmail.com>
+        <alpine.DEB.2.11.1705080930150.6882@lnxricardw1>
+        <1494231215.6528.22.camel@infradead.org>
+        <alpine.DEB.2.11.1705081034420.6882@lnxricardw1>
+        <1494233673.6528.28.camel@infradead.org>
+        <alpine.DEB.2.11.1705081059580.6882@lnxricardw1>
+        <7ee84982-cfad-94d7-4e22-4edbeb852b32@redhat.com>
+        <1494238390.6528.42.camel@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAFLxGvzAmURHU_6K3gmBfOqHKgvQOkkO_+qgMKsmzhWZwwGnqw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Richard Weinberger <richard.weinberger@gmail.com>
-Cc: Pavel Machek <pavel@ucw.cz>, David Woodhouse <dwmw2@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hans de Goede <hdegoede@redhat.com>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, "linux-mtd@lists.infradead.org" <linux-mtd@lists.infradead.org>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, Tejun Heo <tj@kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1494238390.6528.42.camel@infradead.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: Hans de Goede <hdegoede@redhat.com>, Ricard Wanderlof <ricard.wanderlof@axis.com>, Pavel Machek <pavel@ucw.cz>, Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-mtd@lists.infradead.org, Henrique de Moraes Holschuh <hmh@hmh.eng.br>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 8 May 2017 13:06:17 +0200
-Richard Weinberger <richard.weinberger@gmail.com> wrote:
+On Mon, 08 May 2017 11:13:10 +0100
+David Woodhouse <dwmw2@infradead.org> wrote:
 
-> On Mon, May 8, 2017 at 12:49 PM, Pavel Machek <pavel@ucw.cz> wrote:
-> > Aha, nice, so it looks like ubifs is a step back here.
-> >
-> > 'clean marker' is a good idea... empty pages have plenty of space.  
+> On Mon, 2017-05-08 at 11:09 +0200, Hans de Goede wrote:
+> > You're forgetting that the SSD itself (this thread is about SSDs) also has
+> > a major software component which is doing housekeeping all the time, so even
+> > if the main CPU gets reset the SSD's controller may still happily be erasing
+> > blocks.  
 > 
-> If UBI (not UBIFS) faces an empty block, it also re-erases it.
+> We're not really talking about SSDs at all any more; we're talking
+> about real flash with real maintainable software.
 
-Unfortunately, that's not the case, though UBI can easily be patched
-to do that (see below).
-
-> The EC header is uses as clean marker.
-
-That is true. If the EC header has been written to a block, that means
-this block has been correctly erased.
-
-> 
-> > How do you handle the issue during regular write? Always ignore last
-> > successfully written block?  
-
-I guess UBIFS can know what was written last, because of the log-based
-approach + the seqnum stored along with FS nodes, but I'm pretty sure
-UBIFS does not re-write the last written block in case of an unclean
-mount. Richard, am I wrong?
-
-> 
-> The last page of a block is inspected and allowed to be corrupted.
-
-Actually, it's not really about corrupted pages, it's about pages that
-might become unreadable after a few reads.
-
-> 
-> > Do you handle "paired pages" problem on MLC?  
-> 
-> Nope, no MLC support in mainline so far.
-
-Richard and I have put a lot of effort to reliably support MLC NANDs in
-mainline, unfortunately this projects has been paused. You can access
-the last version of our work here [1] if you're interested (it's
-clearly not in a shippable state ;-)).
-
-[1]https://github.com/bbrezillon/linux-sunxi/commits/bb/4.7/ubi-mlc
-
---->8---
-diff --git a/drivers/mtd/ubi/attach.c b/drivers/mtd/ubi/attach.c
-index 93ceea4f27d5..3d76941c9570 100644
---- a/drivers/mtd/ubi/attach.c
-+++ b/drivers/mtd/ubi/attach.c
-@@ -1121,21 +1121,20 @@ static int scan_peb(struct ubi_device *ubi, struct ubi_attach_info *ai,
-                        return err;
-                goto adjust_mean_ec;
-        case UBI_IO_FF_BITFLIPS:
-+       case UBI_IO_FF:
-+               /*
-+                * Always erase the block if the EC header is empty, even if
-+                * no bitflips were reported because otherwise we might
-+                * expose ourselves to the 'unstable bits' issue described
-+                * here:
-+                *
-+                * http://www.linux-mtd.infradead.org/doc/ubifs.html#L_unstable_bits
-+                */
-                err = add_to_list(ai, pnum, UBI_UNKNOWN, UBI_UNKNOWN,
-                                  ec, 1, &ai->erase);
-                if (err)
-                        return err;
-                goto adjust_mean_ec;
--       case UBI_IO_FF:
--               if (ec_err || bitflips)
--                       err = add_to_list(ai, pnum, UBI_UNKNOWN,
--                                         UBI_UNKNOWN, ec, 1, &ai->erase);
--               else
--                       err = add_to_list(ai, pnum, UBI_UNKNOWN,
--                                         UBI_UNKNOWN, ec, 0, &ai->free);
--               if (err)
--                       return err;
--               goto adjust_mean_ec;
-        default:
-                ubi_err(ubi, "'ubi_io_read_vid_hdr()' returned unknown code %d",
-                        err);
+It's probably a good sign that this new discussion should take place in
+a different thread :-).
