@@ -1,49 +1,44 @@
-From: Ricard Wanderlof <ricard.wanderlof@axis.com>
-Subject: Re: Race to power off harming SATA SSDs
-Date: Mon, 8 May 2017 10:36:54 +0200
-Message-ID: <alpine.DEB.2.11.1705081034420.6882@lnxricardw1>
-References: <20170410232118.GA4816@khazad-dum.debian.net>  <20170410235206.GA28603@wtj.duckdns.org>  <20170507204007.GA25628@atrey.karlin.mff.cuni.cz>  <1494228094.6528.14.camel@infradead.org>  <alpine.DEB.2.11.1705080930150.6882@lnxricardw1>
- <1494231215.6528.22.camel@infradead.org>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] libfc: do not flood console with messages 'libfc: queue
+ full ...'
+Date: Mon, 8 May 2017 10:48:45 +0200
+Message-ID: <20170508084845.GF3982@linux-x5ow.site>
+References: <1493303103-113774-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bes.se.axis.com ([195.60.68.10]:54851 "EHLO bes.se.axis.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751293AbdEHIhC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 8 May 2017 04:37:02 -0400
-In-Reply-To: <1494231215.6528.22.camel@infradead.org>
+Received: from mx2.suse.de ([195.135.220.15]:42590 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751055AbdEHIsw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 8 May 2017 04:48:52 -0400
+Content-Disposition: inline
+In-Reply-To: <1493303103-113774-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: Pavel Machek <pavel@ucw.cz>, Tejun Heo <tj@kernel.org>, boris.brezillon@free-electrons.com, linux-scsi@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-mtd@lists.infradead.org, Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
+On Thu, Apr 27, 2017 at 04:25:03PM +0200, Hannes Reinecke wrote:
+> When the FCoE sending side becomes congested libfc tries to
+> reduce the queue depth on the host; however due to the built-in
+> lag before attempting to ramp down the queue depth _again_ the
+> message log is flooded with messages
+> 
+> libfc: queue full, reducing can_queue to 512
+> 
+> With this patch the message is printed only once (ie when it's
+> actually changed).
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> ---
 
-On Mon, 8 May 2017, David Woodhouse wrote:
+Acked-by: Johannes Thumshirn <jth@kernel.org>
 
-> > I've got a problem with the underlying mechanism. How long does it take to 
-> > erase a NAND block? A couple of milliseconds. That means that for an erase 
-> > to be "weak" du to a power fail, the host CPU must issue an erase command, 
-> > and then the power to the NAND must drop within those milliseconds. 
-> > However, in most systems there will be a power monitor which will 
-> > essentially reset the CPU as soon as the power starts dropping. So in 
-> > practice, by the time the voltage is too low to successfully supply the 
-> > NAND chip, the CPU has already been reset, hence, no reset command will 
-> > have been given by the time NAND runs out of steam.
-> > 
-> > Sure, with switchmode power supplies, we don't have those large capacitors 
-> > in the power supply which can keep the power going for a second or more, 
-> > but still, I would think that the power wouldn't die fast enough for this 
-> > to be an issue.
-> > 
-> Our empirical testing trumps your "can never happen" theory :)
-
-I'm sure it does. But what is the explanation then? Has anyone analyzed 
-what is going on using an oscilloscope to verify relationship between 
-erase command and supply voltage drop?
-
-/Ricard
 -- 
-Ricard Wolf Wanderlöf                           ricardw(at)axis.com
-Axis Communications AB, Lund, Sweden            www.axis.com
-Phone +46 46 272 2016                           Fax +46 46 13 61 30
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N�rnberg
+GF: Felix Imend�rffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N�rnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
