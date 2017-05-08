@@ -1,42 +1,45 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: qla4xxx: check for null return from iscsi_lookup_endpoint
-Date: Sun,  7 May 2017 22:30:20 +0100
-Message-ID: <20170507213020.28354-1-colin.king@canonical.com>
+From: damien.lemoal@wdc.com
+Subject: [PATCH] sd: Unlock zone in case of error in sd_setup_write_same_cmnd()
+Date: Mon,  8 May 2017 14:59:02 +0900
+Message-ID: <20170508055903.28695-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:60467 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751479AbdEHF7Y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 May 2017 01:59:24 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Damien Le Moal <damien.lemoal@wdc.com>, stable@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+From: Damien Le Moal <damien.lemoal@wdc.com>
 
-iscsi_lookup_endpoint can potentially return null and in 9 out of
-the 10 calls to this function a null return is checked, so I think
-it is pertinent to perform a null check here too and return -EINVAL
-as in the other null cases.
+scsi_io_init() may fail, leaving a zone of a zoned block device locked.
+Fix this by properly unlocking the write same request target zone if
+scsi_io_init() fails.
 
-Detected by CoverityScan, CID#147282 ("Dereference null return value")
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: stable@vger.kernel.org
 ---
- drivers/scsi/qla4xxx/ql4_os.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/sd.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 64c6fa563fdb..803e342e1093 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -3189,6 +3189,8 @@ static int qla4xxx_conn_bind(struct iscsi_cls_session *cls_session,
- 	if (iscsi_conn_bind(cls_session, cls_conn, is_leading))
- 		return -EINVAL;
- 	ep = iscsi_lookup_endpoint(transport_fd);
-+	if (!ep)
-+		return -EINVAL;
- 	conn = cls_conn->dd_data;
- 	qla_conn = conn->dd_data;
- 	qla_conn->qla_ep = ep->dd_data;
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index f9d1432..e60a309 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -948,6 +948,10 @@ static int sd_setup_write_same_cmnd(struct scsi_cmnd *cmd)
+ 	rq->__data_len = sdp->sector_size;
+ 	ret = scsi_init_io(cmd);
+ 	rq->__data_len = nr_bytes;
++
++	if (sd_is_zoned(sdkp) && ret != BLKPREP_OK)
++		sd_zbc_write_unlock_zone(cmd);
++
+ 	return ret;
+ }
+ 
 -- 
-2.11.0
+2.9.3
