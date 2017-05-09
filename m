@@ -1,30 +1,24 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi_lib: Add #include <scsi/scsi_transport.h>
-Date: Mon, 08 May 2017 21:44:50 -0400
-Message-ID: <yq14lwuu7l9.fsf@oracle.com>
-References: <20170502174503.13277-1-bart.vanassche@sandisk.com>
+Subject: Re: [PATCH] scsi: qedf: properly update arguments position in function call
+Date: Mon, 08 May 2017 21:49:26 -0400
+Message-ID: <yq1ziemsst5.fsf@oracle.com>
+References: <20170503191754.GA590@embeddedgus>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:50287 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753221AbdEIBpM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 May 2017 21:45:12 -0400
-In-Reply-To: <20170502174503.13277-1-bart.vanassche@sandisk.com> (Bart Van
-        Assche's message of "Tue, 2 May 2017 10:45:03 -0700")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170503191754.GA590@embeddedgus> (Gustavo A. R. Silva's message
+        of "Wed, 3 May 2017 14:17:55 -0500")
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Cc: QLogic-Storage-Upstream@cavium.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
 
-Bart,
+Gustavo A.,
 
-> This patch avoids that when building with W=1 the compiler complains
-> that __scsi_init_queue() has not been declared.  See also commit
-> d48777a633d6 ("scsi: remove __scsi_alloc_queue").
+> Properly update the position of the arguments in function call.
 
-Applied to 4.12/scsi-fixes. Thanks!
+Applied to 4.12/scsi-fixes, thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
