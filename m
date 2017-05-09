@@ -1,59 +1,107 @@
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v1] ibmvscsis: Fix cleaning up pointers
-Date: Tue,  9 May 2017 11:50:26 -0500
-Message-ID: <1494348626-62378-1-git-send-email-bryantly@linux.vnet.ibm.com>
+From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Subject: [PATCH] scsi: qla2xxx: remove dead code
+Date: Tue, 9 May 2017 11:51:15 -0500
+Message-ID: <20170509165114.GA14533@embeddedgus>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:60751 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1754186AbdEIQud (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 May 2017 12:50:33 -0400
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v49GmtG4040617
-        for <linux-scsi@vger.kernel.org>; Tue, 9 May 2017 12:50:32 -0400
-Received: from e33.co.us.ibm.com (e33.co.us.ibm.com [32.97.110.151])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2ab91fgsx3-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Tue, 09 May 2017 12:50:32 -0400
-Received: from localhost
-        by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <bryantly@linux.vnet.ibm.com>;
-        Tue, 9 May 2017 10:50:30 -0600
+Received: from gateway34.websitewelcome.com ([192.185.148.214]:30813 "EHLO
+        gateway34.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753322AbdEIRPv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 May 2017 13:15:51 -0400
+Received: from cm5.websitewelcome.com (cm5.websitewelcome.com [108.167.139.22])
+        by gateway34.websitewelcome.com (Postfix) with ESMTP id 5011A55B5B
+        for <linux-scsi@vger.kernel.org>; Tue,  9 May 2017 11:51:17 -0500 (CDT)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: nab@linux-iscsi.org
-Cc: mikecyr@linux.vnet.ibm.com, mikecyr@us.ibm.com, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, stable@vger.kernel.org
+To: qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <garsilva@embeddedor.com>
 
-This patch is dependent on:
-'commit 25e78531268e ("ibmvscsis: Do not send aborted task response")'
-This patch cleans up some pointers after usage.
+Local variable page_mode is assigned to a constant value and it is never
+updated again. Remove this variable and the dead code it guards.
 
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-Reviewed-by: Michael Cyr <mikecyr@linux.vnet.ibm.com>
-Cc: <stable@vger.kernel.org> # v4.8+
+Addresses-Coverity-ID: 200420
+Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
 ---
- drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/qla2xxx/qla_nx.c | 48 -------------------------------------------
+ 1 file changed, 48 deletions(-)
 
-diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-index d390325..ee64241 100644
---- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-+++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-@@ -1170,6 +1170,8 @@ static struct ibmvscsis_cmd *ibmvscsis_get_free_cmd(struct scsi_info *vscsi)
- 		cmd = list_first_entry_or_null(&vscsi->free_cmd,
- 					       struct ibmvscsis_cmd, list);
- 		if (cmd) {
-+			if (cmd->abort_cmd)
-+				cmd->abort_cmd = NULL;
- 			cmd->flags &= ~(DELAY_SEND);
- 			list_del(&cmd->list);
- 			cmd->iue = iue;
-@@ -1774,6 +1776,7 @@ static void ibmvscsis_send_messages(struct scsi_info *vscsi)
- 				if (cmd->abort_cmd) {
- 					retry = true;
- 					cmd->abort_cmd->flags &= ~(DELAY_SEND);
-+					cmd->abort_cmd = NULL;
- 				}
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index 0a1723c..bff63b2 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -2676,26 +2676,9 @@ qla82xx_write_flash_data(struct scsi_qla_host *vha, uint32_t *dwptr,
+ 	int ret;
+ 	uint32_t liter;
+ 	uint32_t rest_addr;
+-	dma_addr_t optrom_dma;
+-	void *optrom = NULL;
+-	int page_mode = 0;
+ 	struct qla_hw_data *ha = vha->hw;
  
- 				/*
+ 	ret = -1;
+-
+-	/* Prepare burst-capable write on supported ISPs. */
+-	if (page_mode && !(faddr & 0xfff) &&
+-	    dwords > OPTROM_BURST_DWORDS) {
+-		optrom = dma_alloc_coherent(&ha->pdev->dev, OPTROM_BURST_SIZE,
+-		    &optrom_dma, GFP_KERNEL);
+-		if (!optrom) {
+-			ql_log(ql_log_warn, vha, 0xb01b,
+-			    "Unable to allocate memory "
+-			    "for optrom burst write (%x KB).\n",
+-			    OPTROM_BURST_SIZE / 1024);
+-		}
+-	}
+-
+ 	rest_addr = ha->fdt_block_size - 1;
+ 
+ 	ret = qla82xx_unprotect_flash(ha);
+@@ -2718,34 +2701,6 @@ qla82xx_write_flash_data(struct scsi_qla_host *vha, uint32_t *dwptr,
+ 			}
+ 		}
+ 
+-		/* Go with burst-write. */
+-		if (optrom && (liter + OPTROM_BURST_DWORDS) <= dwords) {
+-			/* Copy data to DMA'ble buffer. */
+-			memcpy(optrom, dwptr, OPTROM_BURST_SIZE);
+-
+-			ret = qla2x00_load_ram(vha, optrom_dma,
+-			    (ha->flash_data_off | faddr),
+-			    OPTROM_BURST_DWORDS);
+-			if (ret != QLA_SUCCESS) {
+-				ql_log(ql_log_warn, vha, 0xb01e,
+-				    "Unable to burst-write optrom segment "
+-				    "(%x/%x/%llx).\n", ret,
+-				    (ha->flash_data_off | faddr),
+-				    (unsigned long long)optrom_dma);
+-				ql_log(ql_log_warn, vha, 0xb01f,
+-				    "Reverting to slow-write.\n");
+-
+-				dma_free_coherent(&ha->pdev->dev,
+-				    OPTROM_BURST_SIZE, optrom, optrom_dma);
+-				optrom = NULL;
+-			} else {
+-				liter += OPTROM_BURST_DWORDS - 1;
+-				faddr += OPTROM_BURST_DWORDS - 1;
+-				dwptr += OPTROM_BURST_DWORDS - 1;
+-				continue;
+-			}
+-		}
+-
+ 		ret = qla82xx_write_flash_dword(ha, faddr,
+ 		    cpu_to_le32(*dwptr));
+ 		if (ret) {
+@@ -2761,9 +2716,6 @@ qla82xx_write_flash_data(struct scsi_qla_host *vha, uint32_t *dwptr,
+ 		ql_log(ql_log_warn, vha, 0xb021,
+ 		    "Unable to protect flash after update.\n");
+ write_done:
+-	if (optrom)
+-		dma_free_coherent(&ha->pdev->dev,
+-		    OPTROM_BURST_SIZE, optrom, optrom_dma);
+ 	return ret;
+ }
+ 
 -- 
-2.5.4 (Apple Git-61)
+2.5.0
