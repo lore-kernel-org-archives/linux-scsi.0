@@ -1,163 +1,37 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: [PATCH v3] sd: Ignore sync cache failures when not supported
-Date: Tue, 09 May 2017 15:20:16 -0400
-Message-ID: <1494357616.20773.44.camel@localhost.localdomain>
-References: <1494344612-24149-1-git-send-email-thierry.escande@collabora.com>
-Reply-To: emilne@redhat.com
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [REEEEPOST] bnx2i + bnx2fc: convert to generic workqueue (#3)
+Date: Tue, 09 May 2017 17:15:24 -0400
+Message-ID: <yq1fugdratv.fsf@oracle.com>
+References: <20170410171254.30367-1-bigeasy@linutronix.de>
+        <20170504174427.6hebbnqwfgems6dg@linutronix.de>
+        <yq1inlass3y.fsf@oracle.com>
+        <alpine.OSX.2.00.1705091015070.1067@administrators-MacBook-Pro.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35598 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753841AbdEITUS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 9 May 2017 15:20:18 -0400
-In-Reply-To: <1494344612-24149-1-git-send-email-thierry.escande@collabora.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:51733 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750778AbdEIVPx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 May 2017 17:15:53 -0400
+In-Reply-To: <alpine.OSX.2.00.1705091015070.1067@administrators-MacBook-Pro.local>
+        (Chad Dupuis's message of "Tue, 9 May 2017 10:17:03 -0400 (EDT)")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Thierry Escande <thierry.escande@collabora.com>
-Cc: Bart Van Assche <Bart.VanAssche@sandisk.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Chad Dupuis <chad.dupuis@cavium.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Chris Leech <cleech@redhat.com>, Chad Dupuis <chad.dupuis@qlogic.com>, rt@linutronix.de, Lee Duncan <lduncan@suse.com>, QLogic-Storage-Upstream@qlogic.com, Andrew Morton <akpm@linux-foundation.org>, Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>
 
-On Tue, 2017-05-09 at 17:43 +0200, Thierry Escande wrote:
-> From: Derek Basehore <dbasehore@chromium.org>
-> 
-> Some external hard drives don't support the sync command even though the
-> hard drive has write cache enabled. In this case, upon suspend request,
-> sync cache failures are ignored if the error code in the sense header is
-> ILLEGAL_REQUEST. There's not much we can do for these drives, so we
-> shouldn't fail to suspend for this error case. The drive may stay
-> powered if that's the setup for the port it's plugged into.
-> 
-> Signed-off-by: Derek Basehore <dbasehore@chromium.org>
-> Signed-off-by: Thierry Escande <thierry.escande@collabora.com>
-> ---
-> 
-> v3 changes:
-> - Pass the sense_hdr structure to sd_sync_cache() instead of the
->   lonely sense_key field
-> 
-> v2 changes:
-> - Change sense_key type to u8 in sd_sync_cache()
-> 
->  drivers/scsi/sd.c | 34 +++++++++++++++++++++++++---------
->  1 file changed, 25 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index fcfeddc..ee69fee 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -1489,17 +1489,21 @@ static unsigned int sd_check_events(struct gendisk *disk, unsigned int clearing)
->  	return retval;
->  }
->  
-> -static int sd_sync_cache(struct scsi_disk *sdkp)
-> +static int sd_sync_cache(struct scsi_disk *sdkp, struct scsi_sense_hdr *sshdr)
->  {
->  	int retries, res;
->  	struct scsi_device *sdp = sdkp->device;
->  	const int timeout = sdp->request_queue->rq_timeout
->  		* SD_FLUSH_TIMEOUT_MULTIPLIER;
-> -	struct scsi_sense_hdr sshdr;
-> +	struct scsi_sense_hdr my_sshdr;
->  
->  	if (!scsi_device_online(sdp))
->  		return -ENODEV;
->  
-> +	/* caller might not be interested in sense, but we need it */
-> +	if (!sshdr)
-> +		sshdr = &my_sshdr;
-> +
->  	for (retries = 3; retries > 0; --retries) {
->  		unsigned char cmd[10] = { 0 };
->  
-> @@ -1508,7 +1512,7 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
->  		 * Leave the rest of the command zero to indicate
->  		 * flush everything.
->  		 */
-> -		res = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL, &sshdr,
-> +		res = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL, sshdr,
->  				timeout, SD_MAX_RETRIES, 0, RQF_PM, NULL);
->  		if (res == 0)
->  			break;
-> @@ -1518,11 +1522,12 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
->  		sd_print_result(sdkp, "Synchronize Cache(10) failed", res);
->  
->  		if (driver_byte(res) & DRIVER_SENSE)
-> -			sd_print_sense_hdr(sdkp, &sshdr);
-> +			sd_print_sense_hdr(sdkp, sshdr);
-> +
->  		/* we need to evaluate the error return  */
-> -		if (scsi_sense_valid(&sshdr) &&
-> -			(sshdr.asc == 0x3a ||	/* medium not present */
-> -			 sshdr.asc == 0x20))	/* invalid command */
-> +		if (scsi_sense_valid(sshdr) &&
-> +			(sshdr->asc == 0x3a ||	/* medium not present */
-> +			 sshdr->asc == 0x20))	/* invalid command */
->  				/* this is no error here */
->  				return 0;
->  
-> @@ -3323,7 +3328,7 @@ static void sd_shutdown(struct device *dev)
->  
->  	if (sdkp->WCE && sdkp->media_present) {
->  		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
-> -		sd_sync_cache(sdkp);
-> +		sd_sync_cache(sdkp, NULL);
->  	}
->  
->  	if (system_state != SYSTEM_RESTART && sdkp->device->manage_start_stop) {
-> @@ -3335,6 +3340,7 @@ static void sd_shutdown(struct device *dev)
->  static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
->  {
->  	struct scsi_disk *sdkp = dev_get_drvdata(dev);
-> +	struct scsi_sense_hdr sshdr = { .sense_key = NO_SENSE };
->  	int ret = 0;
->  
->  	if (!sdkp)	/* E.g.: runtime suspend following sd_remove() */
-> @@ -3342,8 +3348,17 @@ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
->  
->  	if (sdkp->WCE && sdkp->media_present) {
->  		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
-> -		ret = sd_sync_cache(sdkp);
-> +		ret = sd_sync_cache(sdkp, &sshdr);
->  		if (ret) {
-> +			/*
-> +			 * If this drive doesn't support sync, there's not much
-> +			 * to do and suspend shouldn't fail.
-> +			 */
-> +			if (sshdr.sense_key == ILLEGAL_REQUEST) {
-> +				ret = 0;
-> +				goto start_stop;
-> +			}
-> +
->  			/* ignore OFFLINE device */
->  			if (ret == -ENODEV)
->  				ret = 0;
 
-I think you need to check for scsi_sense_valid(sshdr) prior to
-examining the .sense_key.  Also, I believe the check for -ENODEV
-should be made prior to checking the sense code, for consistency.
-You could also take the opportunity to eliminate both gotos in
-this code block, like this (untested):
+Chad,
 
---
-			if (ret == -ENODEV)
-				return 0;
+> To be honest, I'm reluctant to merge these patches on bnx2fc as the
+> I/O path on this driver has been stable for quite some time and given
+> that it's an older driver I'm not looking to make changes there.
 
-			else if ((scsi_sense_valid(sshdr) &&
-				 (sshdr.sense_key == ILLEGAL_REQUEST))
-				ret = 0;
+I understand that the driver is in maintenance mode. However, the Linux
+kernel and its interfaces are not. We do not offer any guarantees in
+that department. So even if you do not intend to add new features to
+bnx2fc, you will still need to keep it current wrt. the ongoing changes
+in kernel interfaces (for better and for worse).
 
---
-
-Comments?
-
--Ewan
-
-> @@ -3351,6 +3366,7 @@ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
->  		}
->  	}
->  
-> +start_stop:
->  	if (sdkp->device->manage_start_stop) {
->  		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
->  		/* an error is not worth aborting a system sleep */
+-- 
+Martin K. Petersen	Oracle Linux Engineering
