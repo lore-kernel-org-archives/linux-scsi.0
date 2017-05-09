@@ -1,38 +1,35 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [REEEEPOST] bnx2i + bnx2fc: convert to generic workqueue (#3)
-Date: Mon, 08 May 2017 22:04:33 -0400
-Message-ID: <yq1inlass3y.fsf@oracle.com>
-References: <20170410171254.30367-1-bigeasy@linutronix.de>
-        <20170504174427.6hebbnqwfgems6dg@linutronix.de>
+From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: remove REQ_OP_WRITE_SAME
+Date: Mon, 08 May 2017 22:06:30 -0400
+Message-ID: <yq1efvyss0p.fsf@oracle.com>
+References: <20170412084809.8245-1-hch@lst.de> <yq1mvbjwwvl.fsf@oracle.com>
+	<20170505085713.GA5008@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:19404 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751243AbdEICFJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 May 2017 22:05:09 -0400
-In-Reply-To: <20170504174427.6hebbnqwfgems6dg@linutronix.de> (Sebastian
-        Andrzej Siewior's message of "Thu, 4 May 2017 19:44:28 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+In-Reply-To: <20170505085713.GA5008-jcswGhMUV9g@public.gmane.org> (Christoph Hellwig's message of
+	"Fri, 5 May 2017 10:57:13 +0200")
+List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
+List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
+Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Chris Leech <cleech@redhat.com>, Chad Dupuis <chad.dupuis@qlogic.com>, rt@linutronix.de, Lee Duncan <lduncan@suse.com>, QLogic-Storage-Upstream@qlogic.com, Andrew Morton <akpm@linux-foundation.org>, Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, Chad Dupuis <chad.dupuis@cavium.com>
 
 
-Sebastian,
+Christoph,
 
-> Martin, do you see any chance to get this merged? Chad replied to the
-> list that he is going to test it on 2017-04-10, didn't respond to the
-> ping 10 days later. The series stalled last time in the same way.
+> Any chance to get a sneak preview of that work?
 
-I am very reluctant to merge something when a driver has an active
-maintainer and that person has not acked the change.
-
-That said, Chad: You have been sitting on this for quite a while. Please
-make it a priority. In exchange for veto rights you do have to provide
-timely feedback on anything that touches your driver.
-
-Thanks!
+I have been on the road since LSF/MM and just got back home. I'll make
+it a priority.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
