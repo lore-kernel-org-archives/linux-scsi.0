@@ -1,107 +1,163 @@
-From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-Subject: [PATCH] scsi: qla2xxx: remove dead code
-Date: Tue, 9 May 2017 11:51:15 -0500
-Message-ID: <20170509165114.GA14533@embeddedgus>
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: Re: [PATCH v3] sd: Ignore sync cache failures when not supported
+Date: Tue, 09 May 2017 15:20:16 -0400
+Message-ID: <1494357616.20773.44.camel@localhost.localdomain>
+References: <1494344612-24149-1-git-send-email-thierry.escande@collabora.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gateway34.websitewelcome.com ([192.185.148.214]:30813 "EHLO
-        gateway34.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753322AbdEIRPv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 May 2017 13:15:51 -0400
-Received: from cm5.websitewelcome.com (cm5.websitewelcome.com [108.167.139.22])
-        by gateway34.websitewelcome.com (Postfix) with ESMTP id 5011A55B5B
-        for <linux-scsi@vger.kernel.org>; Tue,  9 May 2017 11:51:17 -0500 (CDT)
-Content-Disposition: inline
+Received: from mx1.redhat.com ([209.132.183.28]:35598 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753841AbdEITUS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 9 May 2017 15:20:18 -0400
+In-Reply-To: <1494344612-24149-1-git-send-email-thierry.escande@collabora.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+To: Thierry Escande <thierry.escande@collabora.com>
+Cc: Bart Van Assche <Bart.VanAssche@sandisk.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Local variable page_mode is assigned to a constant value and it is never
-updated again. Remove this variable and the dead code it guards.
+On Tue, 2017-05-09 at 17:43 +0200, Thierry Escande wrote:
+> From: Derek Basehore <dbasehore@chromium.org>
+> 
+> Some external hard drives don't support the sync command even though the
+> hard drive has write cache enabled. In this case, upon suspend request,
+> sync cache failures are ignored if the error code in the sense header is
+> ILLEGAL_REQUEST. There's not much we can do for these drives, so we
+> shouldn't fail to suspend for this error case. The drive may stay
+> powered if that's the setup for the port it's plugged into.
+> 
+> Signed-off-by: Derek Basehore <dbasehore@chromium.org>
+> Signed-off-by: Thierry Escande <thierry.escande@collabora.com>
+> ---
+> 
+> v3 changes:
+> - Pass the sense_hdr structure to sd_sync_cache() instead of the
+>   lonely sense_key field
+> 
+> v2 changes:
+> - Change sense_key type to u8 in sd_sync_cache()
+> 
+>  drivers/scsi/sd.c | 34 +++++++++++++++++++++++++---------
+>  1 file changed, 25 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index fcfeddc..ee69fee 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -1489,17 +1489,21 @@ static unsigned int sd_check_events(struct gendisk *disk, unsigned int clearing)
+>  	return retval;
+>  }
+>  
+> -static int sd_sync_cache(struct scsi_disk *sdkp)
+> +static int sd_sync_cache(struct scsi_disk *sdkp, struct scsi_sense_hdr *sshdr)
+>  {
+>  	int retries, res;
+>  	struct scsi_device *sdp = sdkp->device;
+>  	const int timeout = sdp->request_queue->rq_timeout
+>  		* SD_FLUSH_TIMEOUT_MULTIPLIER;
+> -	struct scsi_sense_hdr sshdr;
+> +	struct scsi_sense_hdr my_sshdr;
+>  
+>  	if (!scsi_device_online(sdp))
+>  		return -ENODEV;
+>  
+> +	/* caller might not be interested in sense, but we need it */
+> +	if (!sshdr)
+> +		sshdr = &my_sshdr;
+> +
+>  	for (retries = 3; retries > 0; --retries) {
+>  		unsigned char cmd[10] = { 0 };
+>  
+> @@ -1508,7 +1512,7 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
+>  		 * Leave the rest of the command zero to indicate
+>  		 * flush everything.
+>  		 */
+> -		res = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL, &sshdr,
+> +		res = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL, sshdr,
+>  				timeout, SD_MAX_RETRIES, 0, RQF_PM, NULL);
+>  		if (res == 0)
+>  			break;
+> @@ -1518,11 +1522,12 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
+>  		sd_print_result(sdkp, "Synchronize Cache(10) failed", res);
+>  
+>  		if (driver_byte(res) & DRIVER_SENSE)
+> -			sd_print_sense_hdr(sdkp, &sshdr);
+> +			sd_print_sense_hdr(sdkp, sshdr);
+> +
+>  		/* we need to evaluate the error return  */
+> -		if (scsi_sense_valid(&sshdr) &&
+> -			(sshdr.asc == 0x3a ||	/* medium not present */
+> -			 sshdr.asc == 0x20))	/* invalid command */
+> +		if (scsi_sense_valid(sshdr) &&
+> +			(sshdr->asc == 0x3a ||	/* medium not present */
+> +			 sshdr->asc == 0x20))	/* invalid command */
+>  				/* this is no error here */
+>  				return 0;
+>  
+> @@ -3323,7 +3328,7 @@ static void sd_shutdown(struct device *dev)
+>  
+>  	if (sdkp->WCE && sdkp->media_present) {
+>  		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+> -		sd_sync_cache(sdkp);
+> +		sd_sync_cache(sdkp, NULL);
+>  	}
+>  
+>  	if (system_state != SYSTEM_RESTART && sdkp->device->manage_start_stop) {
+> @@ -3335,6 +3340,7 @@ static void sd_shutdown(struct device *dev)
+>  static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
+>  {
+>  	struct scsi_disk *sdkp = dev_get_drvdata(dev);
+> +	struct scsi_sense_hdr sshdr = { .sense_key = NO_SENSE };
+>  	int ret = 0;
+>  
+>  	if (!sdkp)	/* E.g.: runtime suspend following sd_remove() */
+> @@ -3342,8 +3348,17 @@ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
+>  
+>  	if (sdkp->WCE && sdkp->media_present) {
+>  		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+> -		ret = sd_sync_cache(sdkp);
+> +		ret = sd_sync_cache(sdkp, &sshdr);
+>  		if (ret) {
+> +			/*
+> +			 * If this drive doesn't support sync, there's not much
+> +			 * to do and suspend shouldn't fail.
+> +			 */
+> +			if (sshdr.sense_key == ILLEGAL_REQUEST) {
+> +				ret = 0;
+> +				goto start_stop;
+> +			}
+> +
+>  			/* ignore OFFLINE device */
+>  			if (ret == -ENODEV)
+>  				ret = 0;
 
-Addresses-Coverity-ID: 200420
-Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
----
- drivers/scsi/qla2xxx/qla_nx.c | 48 -------------------------------------------
- 1 file changed, 48 deletions(-)
+I think you need to check for scsi_sense_valid(sshdr) prior to
+examining the .sense_key.  Also, I believe the check for -ENODEV
+should be made prior to checking the sense code, for consistency.
+You could also take the opportunity to eliminate both gotos in
+this code block, like this (untested):
 
-diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
-index 0a1723c..bff63b2 100644
---- a/drivers/scsi/qla2xxx/qla_nx.c
-+++ b/drivers/scsi/qla2xxx/qla_nx.c
-@@ -2676,26 +2676,9 @@ qla82xx_write_flash_data(struct scsi_qla_host *vha, uint32_t *dwptr,
- 	int ret;
- 	uint32_t liter;
- 	uint32_t rest_addr;
--	dma_addr_t optrom_dma;
--	void *optrom = NULL;
--	int page_mode = 0;
- 	struct qla_hw_data *ha = vha->hw;
- 
- 	ret = -1;
--
--	/* Prepare burst-capable write on supported ISPs. */
--	if (page_mode && !(faddr & 0xfff) &&
--	    dwords > OPTROM_BURST_DWORDS) {
--		optrom = dma_alloc_coherent(&ha->pdev->dev, OPTROM_BURST_SIZE,
--		    &optrom_dma, GFP_KERNEL);
--		if (!optrom) {
--			ql_log(ql_log_warn, vha, 0xb01b,
--			    "Unable to allocate memory "
--			    "for optrom burst write (%x KB).\n",
--			    OPTROM_BURST_SIZE / 1024);
--		}
--	}
--
- 	rest_addr = ha->fdt_block_size - 1;
- 
- 	ret = qla82xx_unprotect_flash(ha);
-@@ -2718,34 +2701,6 @@ qla82xx_write_flash_data(struct scsi_qla_host *vha, uint32_t *dwptr,
- 			}
- 		}
- 
--		/* Go with burst-write. */
--		if (optrom && (liter + OPTROM_BURST_DWORDS) <= dwords) {
--			/* Copy data to DMA'ble buffer. */
--			memcpy(optrom, dwptr, OPTROM_BURST_SIZE);
--
--			ret = qla2x00_load_ram(vha, optrom_dma,
--			    (ha->flash_data_off | faddr),
--			    OPTROM_BURST_DWORDS);
--			if (ret != QLA_SUCCESS) {
--				ql_log(ql_log_warn, vha, 0xb01e,
--				    "Unable to burst-write optrom segment "
--				    "(%x/%x/%llx).\n", ret,
--				    (ha->flash_data_off | faddr),
--				    (unsigned long long)optrom_dma);
--				ql_log(ql_log_warn, vha, 0xb01f,
--				    "Reverting to slow-write.\n");
--
--				dma_free_coherent(&ha->pdev->dev,
--				    OPTROM_BURST_SIZE, optrom, optrom_dma);
--				optrom = NULL;
--			} else {
--				liter += OPTROM_BURST_DWORDS - 1;
--				faddr += OPTROM_BURST_DWORDS - 1;
--				dwptr += OPTROM_BURST_DWORDS - 1;
--				continue;
--			}
--		}
--
- 		ret = qla82xx_write_flash_dword(ha, faddr,
- 		    cpu_to_le32(*dwptr));
- 		if (ret) {
-@@ -2761,9 +2716,6 @@ qla82xx_write_flash_data(struct scsi_qla_host *vha, uint32_t *dwptr,
- 		ql_log(ql_log_warn, vha, 0xb021,
- 		    "Unable to protect flash after update.\n");
- write_done:
--	if (optrom)
--		dma_free_coherent(&ha->pdev->dev,
--		    OPTROM_BURST_SIZE, optrom, optrom_dma);
- 	return ret;
- }
- 
--- 
-2.5.0
+--
+			if (ret == -ENODEV)
+				return 0;
+
+			else if ((scsi_sense_valid(sshdr) &&
+				 (sshdr.sense_key == ILLEGAL_REQUEST))
+				ret = 0;
+
+--
+
+Comments?
+
+-Ewan
+
+> @@ -3351,6 +3366,7 @@ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
+>  		}
+>  	}
+>  
+> +start_stop:
+>  	if (sdkp->device->manage_start_stop) {
+>  		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
+>  		/* an error is not worth aborting a system sleep */
