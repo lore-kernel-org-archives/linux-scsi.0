@@ -1,37 +1,46 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [REEEEPOST] bnx2i + bnx2fc: convert to generic workqueue (#3)
-Date: Tue, 09 May 2017 17:15:24 -0400
-Message-ID: <yq1fugdratv.fsf@oracle.com>
-References: <20170410171254.30367-1-bigeasy@linutronix.de>
-        <20170504174427.6hebbnqwfgems6dg@linutronix.de>
-        <yq1inlass3y.fsf@oracle.com>
-        <alpine.OSX.2.00.1705091015070.1067@administrators-MacBook-Pro.local>
+From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Subject: [PATCH] target: remove dead code
+Date: Tue, 9 May 2017 16:46:04 -0500
+Message-ID: <20170509214604.GA7643@embeddedgus>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:51733 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750778AbdEIVPx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 May 2017 17:15:53 -0400
-In-Reply-To: <alpine.OSX.2.00.1705091015070.1067@administrators-MacBook-Pro.local>
-        (Chad Dupuis's message of "Tue, 9 May 2017 10:17:03 -0400 (EDT)")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <garsilva@embeddedor.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Chad Dupuis <chad.dupuis@cavium.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Chris Leech <cleech@redhat.com>, Chad Dupuis <chad.dupuis@qlogic.com>, rt@linutronix.de, Lee Duncan <lduncan@suse.com>, QLogic-Storage-Upstream@qlogic.com, Andrew Morton <akpm@linux-foundation.org>, Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>
 
+Local variable _ret_ is assigned to a constant value and it is never
+updated again. Remove this variable and the dead code it guards.
 
-Chad,
+Addresses-Coverity-ID: 140761
+Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+---
+ drivers/target/target_core_rd.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> To be honest, I'm reluctant to merge these patches on bnx2fc as the
-> I/O path on this driver has been stable for quite some time and given
-> that it's an older driver I'm not looking to make changes there.
-
-I understand that the driver is in maintenance mode. However, the Linux
-kernel and its interfaces are not. We do not offer any guarantees in
-that department. So even if you do not intend to add new features to
-bnx2fc, you will still need to keep it current wrt. the ongoing changes
-in kernel interfaces (for better and for worse).
-
+diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
+index ddc216c..6e8ef23 100644
+--- a/drivers/target/target_core_rd.c
++++ b/drivers/target/target_core_rd.c
+@@ -568,7 +568,7 @@ static ssize_t rd_set_configfs_dev_params(struct se_device *dev,
+ 	struct rd_dev *rd_dev = RD_DEV(dev);
+ 	char *orig, *ptr, *opts;
+ 	substring_t args[MAX_OPT_ARGS];
+-	int ret = 0, arg, token;
++	int arg, token;
+ 
+ 	opts = kstrdup(page, GFP_KERNEL);
+ 	if (!opts)
+@@ -603,7 +603,7 @@ static ssize_t rd_set_configfs_dev_params(struct se_device *dev,
+ 	}
+ 
+ 	kfree(orig);
+-	return (!ret) ? count : ret;
++	return count;
+ }
+ 
+ static ssize_t rd_show_configfs_dev_params(struct se_device *dev, char *b)
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.5.0
