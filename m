@@ -1,46 +1,160 @@
-From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-Subject: [PATCH] target: remove dead code
-Date: Tue, 9 May 2017 16:46:04 -0500
-Message-ID: <20170509214604.GA7643@embeddedgus>
+From: Kees Cook <keescook@chromium.org>
+Subject: [PATCH] csiostor: Avoid content leaks and casts
+Date: Tue, 9 May 2017 15:34:44 -0700
+Message-ID: <20170509223444.GA51314@beast>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pg0-f42.google.com ([74.125.83.42]:34841 "EHLO
+        mail-pg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750747AbdEIWeq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 May 2017 18:34:46 -0400
+Received: by mail-pg0-f42.google.com with SMTP id o3so6589064pgn.2
+        for <linux-scsi@vger.kernel.org>; Tue, 09 May 2017 15:34:46 -0700 (PDT)
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Daniel Micay <danielmicay@gmail.com>
 
-Local variable _ret_ is assigned to a constant value and it is never
-updated again. Remove this variable and the dead code it guards.
+When copying attributes, the len argument was padded out and the resulting
+memcpy() would copy beyond the end of the source buffer.  Avoid this,
+and use size_t for val_len to avoid all the casts. Similarly, avoid source
+buffer casts and use void *.
 
-Addresses-Coverity-ID: 140761
-Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+Additionally enforces val_len can be represented by u16 and that
+the DMA buffer was not overflowed. Fixes the size of mfa, which is not
+FC_FDMI_PORT_ATTR_MAXFRAMESIZE_LEN (but it will be padded up to 4). This
+was noticed by the future CONFIG_FORTIFY_SOURCE checks.
+
+Cc: Daniel Micay <danielmicay@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/target/target_core_rd.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/csiostor/csio_lnode.c | 43 +++++++++++++++++++++++---------------
+ 1 file changed, 26 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-index ddc216c..6e8ef23 100644
---- a/drivers/target/target_core_rd.c
-+++ b/drivers/target/target_core_rd.c
-@@ -568,7 +568,7 @@ static ssize_t rd_set_configfs_dev_params(struct se_device *dev,
- 	struct rd_dev *rd_dev = RD_DEV(dev);
- 	char *orig, *ptr, *opts;
- 	substring_t args[MAX_OPT_ARGS];
--	int ret = 0, arg, token;
-+	int arg, token;
- 
- 	opts = kstrdup(page, GFP_KERNEL);
- 	if (!opts)
-@@ -603,7 +603,7 @@ static ssize_t rd_set_configfs_dev_params(struct se_device *dev,
- 	}
- 
- 	kfree(orig);
--	return (!ret) ? count : ret;
-+	return count;
+diff --git a/drivers/scsi/csiostor/csio_lnode.c b/drivers/scsi/csiostor/csio_lnode.c
+index c00b2ff72b55..be5ee2d37815 100644
+--- a/drivers/scsi/csiostor/csio_lnode.c
++++ b/drivers/scsi/csiostor/csio_lnode.c
+@@ -238,14 +238,23 @@ csio_osname(uint8_t *buf, size_t buf_len)
  }
  
- static ssize_t rd_show_configfs_dev_params(struct se_device *dev, char *b)
+ static inline void
+-csio_append_attrib(uint8_t **ptr, uint16_t type, uint8_t *val, uint16_t len)
++csio_append_attrib(uint8_t **ptr, uint16_t type, void *val, size_t val_len)
+ {
++	uint16_t len;
+ 	struct fc_fdmi_attr_entry *ae = (struct fc_fdmi_attr_entry *)*ptr;
++
++	if (WARN_ON(val_len > U16_MAX))
++		return;
++
++	len = val_len;
++
+ 	ae->type = htons(type);
+ 	len += 4;		/* includes attribute type and length */
+ 	len = (len + 3) & ~3;	/* should be multiple of 4 bytes */
+ 	ae->len = htons(len);
+-	memcpy(ae->value, val, len);
++	memcpy(ae->value, val, val_len);
++	if (len > val_len)
++		memset(ae->value + val_len, 0, len - val_len);
+ 	*ptr += len;
+ }
+ 
+@@ -335,7 +344,7 @@ csio_ln_fdmi_rhba_cbfn(struct csio_hw *hw, struct csio_ioreq *fdmi_req)
+ 	numattrs++;
+ 	val = htonl(FC_PORTSPEED_1GBIT | FC_PORTSPEED_10GBIT);
+ 	csio_append_attrib(&pld, FC_FDMI_PORT_ATTR_SUPPORTEDSPEED,
+-			   (uint8_t *)&val,
++			   &val,
+ 			   FC_FDMI_PORT_ATTR_SUPPORTEDSPEED_LEN);
+ 	numattrs++;
+ 
+@@ -346,23 +355,22 @@ csio_ln_fdmi_rhba_cbfn(struct csio_hw *hw, struct csio_ioreq *fdmi_req)
+ 	else
+ 		val = htonl(CSIO_HBA_PORTSPEED_UNKNOWN);
+ 	csio_append_attrib(&pld, FC_FDMI_PORT_ATTR_CURRENTPORTSPEED,
+-			   (uint8_t *)&val,
+-			   FC_FDMI_PORT_ATTR_CURRENTPORTSPEED_LEN);
++			   &val, FC_FDMI_PORT_ATTR_CURRENTPORTSPEED_LEN);
+ 	numattrs++;
+ 
+ 	mfs = ln->ln_sparm.csp.sp_bb_data;
+ 	csio_append_attrib(&pld, FC_FDMI_PORT_ATTR_MAXFRAMESIZE,
+-			   (uint8_t *)&mfs, FC_FDMI_PORT_ATTR_MAXFRAMESIZE_LEN);
++			   &mfs, sizeof(mfs));
+ 	numattrs++;
+ 
+ 	strcpy(buf, "csiostor");
+ 	csio_append_attrib(&pld, FC_FDMI_PORT_ATTR_OSDEVICENAME, buf,
+-			   (uint16_t)strlen(buf));
++			   strlen(buf));
+ 	numattrs++;
+ 
+ 	if (!csio_hostname(buf, sizeof(buf))) {
+ 		csio_append_attrib(&pld, FC_FDMI_PORT_ATTR_HOSTNAME,
+-				   buf, (uint16_t)strlen(buf));
++				   buf, strlen(buf));
+ 		numattrs++;
+ 	}
+ 	attrib_blk->numattrs = htonl(numattrs);
+@@ -444,33 +452,32 @@ csio_ln_fdmi_dprt_cbfn(struct csio_hw *hw, struct csio_ioreq *fdmi_req)
+ 
+ 	strcpy(buf, "Chelsio Communications");
+ 	csio_append_attrib(&pld, FC_FDMI_HBA_ATTR_MANUFACTURER, buf,
+-			   (uint16_t)strlen(buf));
++			   strlen(buf));
+ 	numattrs++;
+ 	csio_append_attrib(&pld, FC_FDMI_HBA_ATTR_SERIALNUMBER,
+-			   hw->vpd.sn, (uint16_t)sizeof(hw->vpd.sn));
++			   hw->vpd.sn, sizeof(hw->vpd.sn));
+ 	numattrs++;
+ 	csio_append_attrib(&pld, FC_FDMI_HBA_ATTR_MODEL, hw->vpd.id,
+-			   (uint16_t)sizeof(hw->vpd.id));
++			   sizeof(hw->vpd.id));
+ 	numattrs++;
+ 	csio_append_attrib(&pld, FC_FDMI_HBA_ATTR_MODELDESCRIPTION,
+-			   hw->model_desc, (uint16_t)strlen(hw->model_desc));
++			   hw->model_desc, strlen(hw->model_desc));
+ 	numattrs++;
+ 	csio_append_attrib(&pld, FC_FDMI_HBA_ATTR_HARDWAREVERSION,
+-			   hw->hw_ver, (uint16_t)sizeof(hw->hw_ver));
++			   hw->hw_ver, sizeof(hw->hw_ver));
+ 	numattrs++;
+ 	csio_append_attrib(&pld, FC_FDMI_HBA_ATTR_FIRMWAREVERSION,
+-			   hw->fwrev_str, (uint16_t)strlen(hw->fwrev_str));
++			   hw->fwrev_str, strlen(hw->fwrev_str));
+ 	numattrs++;
+ 
+ 	if (!csio_osname(buf, sizeof(buf))) {
+ 		csio_append_attrib(&pld, FC_FDMI_HBA_ATTR_OSNAMEVERSION,
+-				   buf, (uint16_t)strlen(buf));
++				   buf, strlen(buf));
+ 		numattrs++;
+ 	}
+ 
+ 	csio_append_attrib(&pld, FC_FDMI_HBA_ATTR_MAXCTPAYLOAD,
+-			   (uint8_t *)&maxpayload,
+-			   FC_FDMI_HBA_ATTR_MAXCTPAYLOAD_LEN);
++			   &maxpayload, FC_FDMI_HBA_ATTR_MAXCTPAYLOAD_LEN);
+ 	len = (uint32_t)(pld - (uint8_t *)cmd);
+ 	numattrs++;
+ 	attrib_blk->numattrs = htonl(numattrs);
+@@ -1794,6 +1801,8 @@ csio_ln_mgmt_submit_req(struct csio_ioreq *io_req,
+ 	struct csio_mgmtm *mgmtm = csio_hw_to_mgmtm(hw);
+ 	int rv;
+ 
++	BUG_ON(pld_len > pld->len);
++
+ 	io_req->io_cbfn = io_cbfn;	/* Upper layer callback handler */
+ 	io_req->fw_handle = (uintptr_t) (io_req);
+ 	io_req->eq_idx = mgmtm->eq_idx;
 -- 
-2.5.0
+2.7.4
+
+
+-- 
+Kees Cook
+Pixel Security
