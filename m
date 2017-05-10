@@ -1,265 +1,349 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 12/15] lpfc: Cleanup entry_repost settings on SLI4 queues
-Date: Wed, 10 May 2017 12:07:10 -0700
-Message-ID: <20170510190713.30171-13-jsmart2021@gmail.com>
+Subject: [PATCH 14/15] lpfc: Add MDS Diagnostic support.
+Date: Wed, 10 May 2017 12:07:12 -0700
+Message-ID: <20170510190713.30171-15-jsmart2021@gmail.com>
 References: <20170510190713.30171-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:34263 "EHLO
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:34277 "EHLO
         mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754038AbdEJTHi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 May 2017 15:07:38 -0400
-Received: by mail-qk0-f194.google.com with SMTP id u75so726615qka.1
-        for <linux-scsi@vger.kernel.org>; Wed, 10 May 2017 12:07:37 -0700 (PDT)
+        with ESMTP id S1753632AbdEJTHk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 May 2017 15:07:40 -0400
+Received: by mail-qk0-f194.google.com with SMTP id u75so726755qka.1
+        for <linux-scsi@vger.kernel.org>; Wed, 10 May 2017 12:07:39 -0700 (PDT)
 In-Reply-To: <20170510190713.30171-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-Too many work items being processed in IRQ context take a lot
-of CPU time and cause problems.
-
-With a recent change, we get out of the ISR after hitting entry_repost
-work items on a queue. However, the actual values for entry repost are
-still high. EQ is 128 and CQ is 128, this could translate into
-processing 128 * 128 (16384) work items under IRQ context.
-
-Set entry_repost in the actual queue creation routine now.
-Limit EQ repost to 8 and CQ repost to 64 to further limit the amount
-of time spent in the IRQ.
-
-Fix fof IRQ routines as well.
+Added code to support Cisco MDS loopback diagnostic. The diagnostics
+run various loopbacks including one which loops-back frame through
+the driver.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_init.c |  3 --
- drivers/scsi/lpfc/lpfc_sli.c  | 64 +++++++++++--------------------------------
- drivers/scsi/lpfc/lpfc_sli4.h |  8 ++++--
- 3 files changed, 21 insertions(+), 54 deletions(-)
+ drivers/scsi/lpfc/lpfc.h         |   2 +
+ drivers/scsi/lpfc/lpfc_els.c     |   7 +++
+ drivers/scsi/lpfc/lpfc_hbadisc.c |   3 +-
+ drivers/scsi/lpfc/lpfc_hw4.h     |  15 ++++-
+ drivers/scsi/lpfc/lpfc_init.c    |  13 ++++
+ drivers/scsi/lpfc/lpfc_sli.c     | 131 ++++++++++++++++++++++++++++++++++++---
+ 6 files changed, 161 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index c47bde6205c9..f2c0ba6ced78 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -675,6 +675,8 @@ struct lpfc_hba {
+ 					/* INIT_LINK mailbox command */
+ #define LS_NPIV_FAB_SUPPORTED 0x2	/* Fabric supports NPIV */
+ #define LS_IGNORE_ERATT       0x4	/* intr handler should ignore ERATT */
++#define LS_MDS_LINK_DOWN      0x8	/* MDS Diagnostics Link Down */
++#define LS_MDS_LOOPBACK      0x16	/* MDS Diagnostics Link Up (Loopback) */
+ 
+ 	uint32_t hba_flag;	/* hba generic flags */
+ #define HBA_ERATT_HANDLED	0x1 /* This flag is set when eratt handled */
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 3085895464d9..1d36f82fa369 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -1047,6 +1047,13 @@ lpfc_cmpl_els_flogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 				 irsp->ulpStatus, irsp->un.ulpWord[4],
+ 				 irsp->ulpTimeout);
+ 
++
++		/* If this is not a loop open failure, bail out */
++		if (!(irsp->ulpStatus == IOSTAT_LOCAL_REJECT &&
++		      ((irsp->un.ulpWord[4] & IOERR_PARAM_MASK) ==
++					IOERR_LOOP_OPEN_FAILURE)))
++			goto flogifail;
++
+ 		/* FLOGI failed, so there is no fabric */
+ 		spin_lock_irq(shost->host_lock);
+ 		vport->fc_flag &= ~(FC_FABRIC | FC_PUBLIC_LOOP);
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index dcc9b3858778..3ffcd9215ca8 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -701,7 +701,8 @@ lpfc_work_done(struct lpfc_hba *phba)
+ 			/* Set the lpfc data pending flag */
+ 			set_bit(LPFC_DATA_READY, &phba->data_flags);
+ 		} else {
+-			if (phba->link_state >= LPFC_LINK_UP) {
++			if (phba->link_state >= LPFC_LINK_UP ||
++			    phba->link_flag & LS_MDS_LOOPBACK) {
+ 				pring->flag &= ~LPFC_DEFERRED_RING_EVENT;
+ 				lpfc_sli_handle_slow_ring_event(phba, pring,
+ 								(status &
+diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+index df97c6b7433b..e0a5fce416ae 100644
+--- a/drivers/scsi/lpfc/lpfc_hw4.h
++++ b/drivers/scsi/lpfc/lpfc_hw4.h
+@@ -4421,6 +4421,19 @@ struct fcp_treceive64_wqe {
+ };
+ #define TXRDY_PAYLOAD_LEN      12
+ 
++#define CMD_SEND_FRAME	0xE1
++
++struct send_frame_wqe {
++	struct ulp_bde64 bde;          /* words 0-2 */
++	uint32_t frame_len;            /* word 3 */
++	uint32_t fc_hdr_wd0;           /* word 4 */
++	uint32_t fc_hdr_wd1;           /* word 5 */
++	struct wqe_common wqe_com;     /* words 6-11 */
++	uint32_t fc_hdr_wd2;           /* word 12 */
++	uint32_t fc_hdr_wd3;           /* word 13 */
++	uint32_t fc_hdr_wd4;           /* word 14 */
++	uint32_t fc_hdr_wd5;           /* word 15 */
++};
+ 
+ union lpfc_wqe {
+ 	uint32_t words[16];
+@@ -4439,7 +4452,7 @@ union lpfc_wqe {
+ 	struct fcp_trsp64_wqe fcp_trsp;
+ 	struct fcp_tsend64_wqe fcp_tsend;
+ 	struct fcp_treceive64_wqe fcp_treceive;
+-
++	struct send_frame_wqe send_frame;
+ };
+ 
+ union lpfc_wqe128 {
 diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 472117eb9257..9f6c7e71814b 100644
+index 9f6c7e71814b..9add9473cae5 100644
 --- a/drivers/scsi/lpfc/lpfc_init.c
 +++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -8733,9 +8733,6 @@ lpfc_sli4_queue_setup(struct lpfc_hba *phba)
- 		goto out_destroy;
- 	}
+@@ -4540,6 +4540,19 @@ lpfc_sli4_async_fc_evt(struct lpfc_hba *phba, struct lpfc_acqe_fc_la *acqe_fc)
+ 	pmb->vport = phba->pport;
  
--	lpfc_rq_adjust_repost(phba, phba->sli4_hba.hdr_rq, LPFC_ELS_HBQ);
--	lpfc_rq_adjust_repost(phba, phba->sli4_hba.dat_rq, LPFC_ELS_HBQ);
--
- 	rc = lpfc_rq_create(phba, phba->sli4_hba.hdr_rq, phba->sli4_hba.dat_rq,
- 			    phba->sli4_hba.els_cq, LPFC_USOL);
- 	if (rc) {
+ 	if (phba->sli4_hba.link_state.status != LPFC_FC_LA_TYPE_LINK_UP) {
++		phba->link_flag &= ~(LS_MDS_LINK_DOWN | LS_MDS_LOOPBACK);
++
++		switch (phba->sli4_hba.link_state.status) {
++		case LPFC_FC_LA_TYPE_MDS_LINK_DOWN:
++			phba->link_flag |= LS_MDS_LINK_DOWN;
++			break;
++		case LPFC_FC_LA_TYPE_MDS_LOOPBACK:
++			phba->link_flag |= LS_MDS_LOOPBACK;
++			break;
++		default:
++			break;
++		}
++
+ 		/* Parse and translate status field */
+ 		mb = &pmb->u.mb;
+ 		mb->mbxStatus = lpfc_sli4_parse_latt_fault(phba,
 diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index c8f597f4d49a..903c06ff828a 100644
+index 903c06ff828a..d6b184839bc2 100644
 --- a/drivers/scsi/lpfc/lpfc_sli.c
 +++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -6978,11 +6978,6 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
- 			rqbp->entry_count = LPFC_NVMET_RQE_DEF_COUNT;
- 			rqbp->buffer_count = 0;
- 
--			phba->sli4_hba.nvmet_mrq_hdr[i]->entry_repost =
--				LPFC_QUEUE_MAX_REPOST;
--			phba->sli4_hba.nvmet_mrq_data[i]->entry_repost =
--				LPFC_QUEUE_MAX_REPOST;
--
- 			lpfc_post_rq_buffer(
- 				phba, phba->sli4_hba.nvmet_mrq_hdr[i],
- 				phba->sli4_hba.nvmet_mrq_data[i],
-@@ -13037,7 +13032,7 @@ lpfc_sli4_sp_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe,
- 		while ((cqe = lpfc_sli4_cq_get(cq))) {
- 			workposted |= lpfc_sli4_sp_handle_mcqe(phba, cqe);
- 			if (!(++ecount % cq->entry_repost))
--				lpfc_sli4_cq_release(cq, LPFC_QUEUE_NOARM);
-+				break;
- 			cq->CQ_mbox++;
- 		}
+@@ -74,6 +74,8 @@ static struct lpfc_iocbq *lpfc_sli4_els_wcqe_to_rspiocbq(struct lpfc_hba *,
+ 							 struct lpfc_iocbq *);
+ static void lpfc_sli4_send_seq_to_ulp(struct lpfc_vport *,
+ 				      struct hbq_dmabuf *);
++static void lpfc_sli4_handle_mds_loopback(struct lpfc_vport *vport,
++					  struct hbq_dmabuf *dmabuf);
+ static int lpfc_sli4_fp_handle_cqe(struct lpfc_hba *, struct lpfc_queue *,
+ 				    struct lpfc_cqe *);
+ static int lpfc_sli4_post_sgl_list(struct lpfc_hba *, struct list_head *,
+@@ -5907,7 +5909,7 @@ lpfc_set_features(struct lpfc_hba *phba, LPFC_MBOXQ_t *mbox,
+ 		bf_set(lpfc_mbx_set_feature_mds,
+ 		       &mbox->u.mqe.un.set_feature, 1);
+ 		bf_set(lpfc_mbx_set_feature_mds_deep_loopbk,
+-		       &mbox->u.mqe.un.set_feature, 0);
++		       &mbox->u.mqe.un.set_feature, 1);
+ 		mbox->u.mqe.un.set_feature.feature = LPFC_SET_MDS_DIAGS;
+ 		mbox->u.mqe.un.set_feature.param_len = 8;
  		break;
-@@ -13051,7 +13046,7 @@ lpfc_sli4_sp_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe,
- 				workposted |= lpfc_sli4_sp_handle_cqe(phba, cq,
- 								      cqe);
- 			if (!(++ecount % cq->entry_repost))
--				lpfc_sli4_cq_release(cq, LPFC_QUEUE_NOARM);
-+				break;
+@@ -8688,8 +8690,11 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq,
+ 		memset(wqe, 0, sizeof(union lpfc_wqe128));
+ 	/* Some of the fields are in the right position already */
+ 	memcpy(wqe, &iocbq->iocb, sizeof(union lpfc_wqe));
+-	wqe->generic.wqe_com.word7 = 0; /* The ct field has moved so reset */
+-	wqe->generic.wqe_com.word10 = 0;
++	if (iocbq->iocb.ulpCommand != CMD_SEND_FRAME) {
++		/* The ct field has moved so reset */
++		wqe->generic.wqe_com.word7 = 0;
++		wqe->generic.wqe_com.word10 = 0;
++	}
+ 
+ 	abort_tag = (uint32_t) iocbq->iotag;
+ 	xritag = iocbq->sli4_xritag;
+@@ -9183,6 +9188,10 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq,
  		}
  
- 		/* Track the max number of CQEs processed in 1 EQ */
-@@ -13547,7 +13542,7 @@ lpfc_sli4_fof_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe)
- 	while ((cqe = lpfc_sli4_cq_get(cq))) {
- 		workposted |= lpfc_sli4_fp_handle_cqe(phba, cq, cqe);
- 		if (!(++ecount % cq->entry_repost))
--			lpfc_sli4_cq_release(cq, LPFC_QUEUE_NOARM);
-+			break;
- 	}
+ 		break;
++	case CMD_SEND_FRAME:
++		bf_set(wqe_xri_tag, &wqe->generic.wqe_com, xritag);
++		bf_set(wqe_reqtag, &wqe->generic.wqe_com, iocbq->iotag);
++		return 0;
+ 	case CMD_XRI_ABORTED_CX:
+ 	case CMD_CREATE_XRI_CR: /* Do we expect to use this? */
+ 	case CMD_IOCB_FCP_IBIDIR64_CR: /* bidirectional xfer */
+@@ -16137,6 +16146,8 @@ lpfc_fc_frame_check(struct lpfc_hba *phba, struct fc_frame_header *fc_hdr)
+ 	struct fc_vft_header *fc_vft_hdr;
+ 	uint32_t *header = (uint32_t *) fc_hdr;
  
- 	/* Track the max number of CQEs processed in 1 EQ */
-@@ -13629,7 +13624,7 @@ lpfc_sli4_fof_intr_handler(int irq, void *dev_id)
- 	while ((eqe = lpfc_sli4_eq_get(eq))) {
- 		lpfc_sli4_fof_handle_eqe(phba, eqe);
- 		if (!(++ecount % eq->entry_repost))
--			lpfc_sli4_eq_release(eq, LPFC_QUEUE_NOARM);
-+			break;
- 		eq->EQ_processed++;
- 	}
- 
-@@ -13927,17 +13922,10 @@ lpfc_sli4_queue_alloc(struct lpfc_hba *phba, uint32_t entry_size,
- 	}
- 	queue->entry_size = entry_size;
- 	queue->entry_count = entry_count;
--
--	/*
--	 * entry_repost is calculated based on the number of entries in the
--	 * queue. This works out except for RQs. If buffers are NOT initially
--	 * posted for every RQE, entry_repost should be adjusted accordingly.
--	 */
--	queue->entry_repost = (entry_count >> 3);
--	if (queue->entry_repost < LPFC_QUEUE_MIN_REPOST)
--		queue->entry_repost = LPFC_QUEUE_MIN_REPOST;
- 	queue->phba = phba;
- 
-+	/* entry_repost will be set during q creation */
++#define FC_RCTL_MDS_DIAGS	0xF4
 +
- 	return queue;
- out_fail:
- 	lpfc_sli4_queue_free(queue);
-@@ -14168,6 +14156,7 @@ lpfc_eq_create(struct lpfc_hba *phba, struct lpfc_queue *eq, uint32_t imax)
- 		status = -ENXIO;
- 	eq->host_index = 0;
- 	eq->hba_index = 0;
-+	eq->entry_repost = LPFC_EQ_REPOST;
- 
- 	mempool_free(mbox, phba->mbox_mem_pool);
- 	return status;
-@@ -14241,9 +14230,9 @@ lpfc_cq_create(struct lpfc_hba *phba, struct lpfc_queue *cq,
+ 	switch (fc_hdr->fh_r_ctl) {
+ 	case FC_RCTL_DD_UNCAT:		/* uncategorized information */
+ 	case FC_RCTL_DD_SOL_DATA:	/* solicited data */
+@@ -16164,6 +16175,7 @@ lpfc_fc_frame_check(struct lpfc_hba *phba, struct fc_frame_header *fc_hdr)
+ 	case FC_RCTL_F_BSY:	/* fabric busy to data frame */
+ 	case FC_RCTL_F_BSYL:	/* fabric busy to link control frame */
+ 	case FC_RCTL_LCR:	/* link credit reset */
++	case FC_RCTL_MDS_DIAGS: /* MDS Diagnostics */
+ 	case FC_RCTL_END:	/* end */
+ 		break;
+ 	case FC_RCTL_VFTH:	/* Virtual Fabric tagging Header */
+@@ -16173,12 +16185,16 @@ lpfc_fc_frame_check(struct lpfc_hba *phba, struct fc_frame_header *fc_hdr)
  	default:
- 		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
- 				"0361 Unsupported CQ count: "
--				"entry cnt %d sz %d pg cnt %d repost %d\n",
-+				"entry cnt %d sz %d pg cnt %d\n",
- 				cq->entry_count, cq->entry_size,
--				cq->page_count, cq->entry_repost);
-+				cq->page_count);
- 		if (cq->entry_count < 256) {
- 			status = -EINVAL;
- 			goto out;
-@@ -14296,6 +14285,7 @@ lpfc_cq_create(struct lpfc_hba *phba, struct lpfc_queue *cq,
- 	cq->assoc_qid = eq->queue_id;
- 	cq->host_index = 0;
- 	cq->hba_index = 0;
-+	cq->entry_repost = LPFC_CQ_REPOST;
- 
- out:
- 	mempool_free(mbox, phba->mbox_mem_pool);
-@@ -14487,6 +14477,7 @@ lpfc_cq_create_set(struct lpfc_hba *phba, struct lpfc_queue **cqp,
- 		cq->assoc_qid = eq->queue_id;
- 		cq->host_index = 0;
- 		cq->hba_index = 0;
-+		cq->entry_repost = LPFC_CQ_REPOST;
- 
- 		rc = 0;
- 		list_for_each_entry(dmabuf, &cq->page_list, list) {
-@@ -14735,6 +14726,7 @@ lpfc_mq_create(struct lpfc_hba *phba, struct lpfc_queue *mq,
- 	mq->subtype = subtype;
- 	mq->host_index = 0;
- 	mq->hba_index = 0;
-+	mq->entry_repost = LPFC_MQ_REPOST;
- 
- 	/* link the mq onto the parent cq child list */
- 	list_add_tail(&mq->list, &cq->child_list);
-@@ -14960,34 +14952,6 @@ lpfc_wq_create(struct lpfc_hba *phba, struct lpfc_queue *wq,
+ 		goto drop;
+ 	}
++
++#define FC_TYPE_VENDOR_UNIQUE	0xFF
++
+ 	switch (fc_hdr->fh_type) {
+ 	case FC_TYPE_BLS:
+ 	case FC_TYPE_ELS:
+ 	case FC_TYPE_FCP:
+ 	case FC_TYPE_CT:
+ 	case FC_TYPE_NVME:
++	case FC_TYPE_VENDOR_UNIQUE:
+ 		break;
+ 	case FC_TYPE_IP:
+ 	case FC_TYPE_ILS:
+@@ -16189,12 +16205,14 @@ lpfc_fc_frame_check(struct lpfc_hba *phba, struct fc_frame_header *fc_hdr)
+ 	lpfc_printf_log(phba, KERN_INFO, LOG_ELS,
+ 			"2538 Received frame rctl:%s (x%x), type:%s (x%x), "
+ 			"frame Data:%08x %08x %08x %08x %08x %08x %08x\n",
++			(fc_hdr->fh_r_ctl == FC_RCTL_MDS_DIAGS) ? "MDS Diags" :
+ 			lpfc_rctl_names[fc_hdr->fh_r_ctl], fc_hdr->fh_r_ctl,
+-			lpfc_type_names[fc_hdr->fh_type], fc_hdr->fh_type,
+-			be32_to_cpu(header[0]), be32_to_cpu(header[1]),
+-			be32_to_cpu(header[2]), be32_to_cpu(header[3]),
+-			be32_to_cpu(header[4]), be32_to_cpu(header[5]),
+-			be32_to_cpu(header[6]));
++			(fc_hdr->fh_type == FC_TYPE_VENDOR_UNIQUE) ?
++			"Vendor Unique" : lpfc_type_names[fc_hdr->fh_type],
++			fc_hdr->fh_type, be32_to_cpu(header[0]),
++			be32_to_cpu(header[1]), be32_to_cpu(header[2]),
++			be32_to_cpu(header[3]), be32_to_cpu(header[4]),
++			be32_to_cpu(header[5]), be32_to_cpu(header[6]));
+ 	return 0;
+ drop:
+ 	lpfc_printf_log(phba, KERN_WARNING, LOG_ELS,
+@@ -17000,6 +17018,96 @@ lpfc_sli4_send_seq_to_ulp(struct lpfc_vport *vport,
+ 	lpfc_sli_release_iocbq(phba, iocbq);
  }
  
++static void
++lpfc_sli4_mds_loopback_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
++			    struct lpfc_iocbq *rspiocb)
++{
++	struct lpfc_dmabuf *pcmd = cmdiocb->context2;
++
++	if (pcmd && pcmd->virt)
++		pci_pool_free(phba->lpfc_drb_pool, pcmd->virt, pcmd->phys);
++	kfree(pcmd);
++	lpfc_sli_release_iocbq(phba, cmdiocb);
++}
++
++static void
++lpfc_sli4_handle_mds_loopback(struct lpfc_vport *vport,
++			      struct hbq_dmabuf *dmabuf)
++{
++	struct fc_frame_header *fc_hdr;
++	struct lpfc_hba *phba = vport->phba;
++	struct lpfc_iocbq *iocbq = NULL;
++	union  lpfc_wqe *wqe;
++	struct lpfc_dmabuf *pcmd = NULL;
++	uint32_t frame_len;
++	int rc;
++
++	fc_hdr = (struct fc_frame_header *)dmabuf->hbuf.virt;
++	frame_len = bf_get(lpfc_rcqe_length, &dmabuf->cq_event.cqe.rcqe_cmpl);
++
++	/* Send the received frame back */
++	iocbq = lpfc_sli_get_iocbq(phba);
++	if (!iocbq)
++		goto exit;
++
++	/* Allocate buffer for command payload */
++	pcmd = kmalloc(sizeof(struct lpfc_dmabuf), GFP_KERNEL);
++	if (pcmd)
++		pcmd->virt = pci_pool_alloc(phba->lpfc_drb_pool, GFP_KERNEL,
++					    &pcmd->phys);
++	if (!pcmd || !pcmd->virt)
++		goto exit;
++
++	INIT_LIST_HEAD(&pcmd->list);
++
++	/* copyin the payload */
++	memcpy(pcmd->virt, dmabuf->dbuf.virt, frame_len);
++
++	/* fill in BDE's for command */
++	iocbq->iocb.un.xseq64.bdl.addrHigh = putPaddrHigh(pcmd->phys);
++	iocbq->iocb.un.xseq64.bdl.addrLow = putPaddrLow(pcmd->phys);
++	iocbq->iocb.un.xseq64.bdl.bdeFlags = BUFF_TYPE_BDE_64;
++	iocbq->iocb.un.xseq64.bdl.bdeSize = frame_len;
++
++	iocbq->context2 = pcmd;
++	iocbq->vport = vport;
++	iocbq->iocb_flag &= ~LPFC_FIP_ELS_ID_MASK;
++	iocbq->iocb_flag |= LPFC_USE_FCPWQIDX;
++
++	/*
++	 * Setup rest of the iocb as though it were a WQE
++	 * Build the SEND_FRAME WQE
++	 */
++	wqe = (union lpfc_wqe *)&iocbq->iocb;
++
++	wqe->send_frame.frame_len = frame_len;
++	wqe->send_frame.fc_hdr_wd0 = be32_to_cpu(*((uint32_t *)fc_hdr));
++	wqe->send_frame.fc_hdr_wd1 = be32_to_cpu(*((uint32_t *)fc_hdr + 1));
++	wqe->send_frame.fc_hdr_wd2 = be32_to_cpu(*((uint32_t *)fc_hdr + 2));
++	wqe->send_frame.fc_hdr_wd3 = be32_to_cpu(*((uint32_t *)fc_hdr + 3));
++	wqe->send_frame.fc_hdr_wd4 = be32_to_cpu(*((uint32_t *)fc_hdr + 4));
++	wqe->send_frame.fc_hdr_wd5 = be32_to_cpu(*((uint32_t *)fc_hdr + 5));
++
++	iocbq->iocb.ulpCommand = CMD_SEND_FRAME;
++	iocbq->iocb.ulpLe = 1;
++	iocbq->iocb_cmpl = lpfc_sli4_mds_loopback_cmpl;
++	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, iocbq, 0);
++	if (rc == IOCB_ERROR)
++		goto exit;
++
++	lpfc_in_buf_free(phba, &dmabuf->dbuf);
++	return;
++
++exit:
++	lpfc_printf_log(phba, KERN_WARNING, LOG_SLI,
++			"2023 Unable to process MDS loopback frame\n");
++	if (pcmd && pcmd->virt)
++		pci_pool_free(phba->lpfc_drb_pool, pcmd->virt, pcmd->phys);
++	kfree(pcmd);
++	lpfc_sli_release_iocbq(phba, iocbq);
++	lpfc_in_buf_free(phba, &dmabuf->dbuf);
++}
++
  /**
-- * lpfc_rq_adjust_repost - Adjust entry_repost for an RQ
-- * @phba: HBA structure that indicates port to create a queue on.
-- * @rq:   The queue structure to use for the receive queue.
-- * @qno:  The associated HBQ number
-- *
-- *
-- * For SLI4 we need to adjust the RQ repost value based on
-- * the number of buffers that are initially posted to the RQ.
-- */
--void
--lpfc_rq_adjust_repost(struct lpfc_hba *phba, struct lpfc_queue *rq, int qno)
--{
--	uint32_t cnt;
--
--	/* sanity check on queue memory */
--	if (!rq)
--		return;
--	cnt = lpfc_hbq_defs[qno]->entry_count;
--
--	/* Recalc repost for RQs based on buffers initially posted */
--	cnt = (cnt >> 3);
--	if (cnt < LPFC_QUEUE_MIN_REPOST)
--		cnt = LPFC_QUEUE_MIN_REPOST;
--
--	rq->entry_repost = cnt;
--}
--
--/**
-  * lpfc_rq_create - Create a Receive Queue on the HBA
-  * @phba: HBA structure that indicates port to create a queue on.
-  * @hrq: The queue structure to use to create the header receive queue.
-@@ -15172,6 +15136,7 @@ lpfc_rq_create(struct lpfc_hba *phba, struct lpfc_queue *hrq,
- 	hrq->subtype = subtype;
- 	hrq->host_index = 0;
- 	hrq->hba_index = 0;
-+	hrq->entry_repost = LPFC_RQ_REPOST;
+  * lpfc_sli4_handle_received_buffer - Handle received buffers from firmware
+  * @phba: Pointer to HBA context object.
+@@ -17038,6 +17146,13 @@ lpfc_sli4_handle_received_buffer(struct lpfc_hba *phba,
+ 		fcfi = bf_get(lpfc_rcqe_fcf_id,
+ 			      &dmabuf->cq_event.cqe.rcqe_cmpl);
  
- 	/* now create the data queue */
- 	lpfc_sli4_config(phba, mbox, LPFC_MBOX_SUBSYSTEM_FCOE,
-@@ -15264,6 +15229,7 @@ lpfc_rq_create(struct lpfc_hba *phba, struct lpfc_queue *hrq,
- 	drq->subtype = subtype;
- 	drq->host_index = 0;
- 	drq->hba_index = 0;
-+	drq->entry_repost = LPFC_RQ_REPOST;
++	if (fc_hdr->fh_r_ctl == 0xF4 && fc_hdr->fh_type == 0xFF) {
++		vport = phba->pport;
++		/* Handle MDS Loopback frames */
++		lpfc_sli4_handle_mds_loopback(vport, dmabuf);
++		return;
++	}
++
+ 	/* d_id this frame is directed to */
+ 	did = sli4_did_from_fc_hdr(fc_hdr);
  
- 	/* link the header and data RQs onto the parent cq child list */
- 	list_add_tail(&hrq->list, &cq->child_list);
-@@ -15421,6 +15387,7 @@ lpfc_mrq_create(struct lpfc_hba *phba, struct lpfc_queue **hrqp,
- 		hrq->subtype = subtype;
- 		hrq->host_index = 0;
- 		hrq->hba_index = 0;
-+		hrq->entry_repost = LPFC_RQ_REPOST;
- 
- 		drq->db_format = LPFC_DB_RING_FORMAT;
- 		drq->db_regaddr = phba->sli4_hba.RQDBregaddr;
-@@ -15429,6 +15396,7 @@ lpfc_mrq_create(struct lpfc_hba *phba, struct lpfc_queue **hrqp,
- 		drq->subtype = subtype;
- 		drq->host_index = 0;
- 		drq->hba_index = 0;
-+		drq->entry_repost = LPFC_RQ_REPOST;
- 
- 		list_add_tail(&hrq->list, &cq->child_list);
- 		list_add_tail(&drq->list, &cq->child_list);
-diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
-index a650308a95c5..6ab52c2a6100 100644
---- a/drivers/scsi/lpfc/lpfc_sli4.h
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h
-@@ -24,7 +24,6 @@
- #define LPFC_XRI_EXCH_BUSY_WAIT_TMO		10000
- #define LPFC_XRI_EXCH_BUSY_WAIT_T1   		10
- #define LPFC_XRI_EXCH_BUSY_WAIT_T2              30000
--#define LPFC_RELEASE_NOTIFICATION_INTERVAL	32
- #define LPFC_RPI_LOW_WATER_MARK			10
- 
- #define LPFC_UNREG_FCF                          1
-@@ -155,8 +154,11 @@ struct lpfc_queue {
- 	uint32_t entry_count;	/* Number of entries to support on the queue */
- 	uint32_t entry_size;	/* Size of each queue entry. */
- 	uint32_t entry_repost;	/* Count of entries before doorbell is rung */
--#define LPFC_QUEUE_MIN_REPOST	8
--#define LPFC_QUEUE_MAX_REPOST	64
-+#define LPFC_EQ_REPOST		8
-+#define LPFC_MQ_REPOST		8
-+#define LPFC_CQ_REPOST		64
-+#define LPFC_RQ_REPOST		64
-+#define LPFC_RELEASE_NOTIFICATION_INTERVAL	32  /* For WQs */
- 	uint32_t queue_id;	/* Queue ID assigned by the hardware */
- 	uint32_t assoc_qid;     /* Queue ID associated with, for CQ/WQ/MQ */
- 	uint32_t page_count;	/* Number of pages allocated for this queue */
 -- 
 2.11.0
