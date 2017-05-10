@@ -1,65 +1,68 @@
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v1] ibmvscsis: Fix the incorrect req_lim_delta
-Date: Wed, 10 May 2017 13:53:09 -0500
-Message-ID: <1494442389-75706-1-git-send-email-bryantly@linux.vnet.ibm.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: nab@linux-iscsi.org
-Cc: mikecyr@linux.vnet.ibm.com, mikecyr@us.ibm.com, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, stable@vger.kernel.org
+From: James Smart <jsmart2021@gmail.com>
+Subject: [PATCH 00/15] lpfc updates for 11.2.0.14
+Date: Wed, 10 May 2017 12:06:58 -0700
+Message-ID: <20170510190713.30171-1-jsmart2021@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:36232 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753632AbdEJTHZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 May 2017 15:07:25 -0400
+Received: by mail-qt0-f193.google.com with SMTP id j13so48177qta.3
+        for <linux-scsi@vger.kernel.org>; Wed, 10 May 2017 12:07:24 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
+Cc: James Smart <jsmart2021@gmail.com>
 
-The current code is not correctly calculating the req_lim_delta.
+This patch set provides a number of bug fixes, code cleanups, and error
+handling, mostly in the nvme area of lpfc.
 
-We want to make sure vscsi->credit is always incremented when
-we do not send a response for the scsi op. Thus for the case where
-there is a successfully aborted task we need to make sure the
-vscsi->credit is incremented.
+There is one new feature in the series to add MDS diagnostics support
 
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-Reviewed-by: Michael Cyr <mikecyr@linux.vnet.ibm.com>
-Cc: <stable@vger.kernel.org> # v4.8+
----
- drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 21 +++++++++++++++++----
- 1 file changed, 17 insertions(+), 4 deletions(-)
+The patches were cut against the Martin's 4.12/scsi-fixes tree.
+There are no outside dependencies. The patches should merge via
+Martin's tree. 
 
-diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-index ee64241..2d97f02 100644
---- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-+++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-@@ -2965,10 +2965,7 @@ static long srp_build_response(struct scsi_info *vscsi,
- 
- 	rsp->opcode = SRP_RSP;
- 
--	if (vscsi->credit > 0 && vscsi->state == SRP_PROCESSING)
--		rsp->req_lim_delta = cpu_to_be32(vscsi->credit);
--	else
--		rsp->req_lim_delta = cpu_to_be32(1 + vscsi->credit);
-+	rsp->req_lim_delta = cpu_to_be32(1 + vscsi->credit);
- 	rsp->tag = cmd->rsp.tag;
- 	rsp->flags = 0;
- 
-@@ -3739,6 +3736,22 @@ static void ibmvscsis_queue_tm_rsp(struct se_cmd *se_cmd)
- 
- static void ibmvscsis_aborted_task(struct se_cmd *se_cmd)
- {
-+	struct ibmvscsis_cmd *cmd = container_of(se_cmd, struct ibmvscsis_cmd,
-+						 se_cmd);
-+	struct scsi_info *vscsi = cmd->adapter;
-+
-+	/*
-+	 * With a successfully aborted op through LIO we want to increment the
-+	 * the vscsi credit so that when we dont send a rsp to the original
-+	 * scsi abort op but the tm rsp to the abort is sent, the credit is
-+	 * correctly sent with the abort tm rsp. We would need 1 for the abort
-+	 * tm rsp and 1 credit for the aborted scsi op. Thus we need to
-+	 * increment here.
-+	 */
-+	spin_lock_bh(&vscsi->intr_lock);
-+	vscsi->credit += 1;
-+	spin_unlock_bh(&vscsi->intr_lock);
-+
- 	pr_debug("ibmvscsis_aborted_task %p task_tag: %llu\n",
- 		 se_cmd, se_cmd->tag);
- }
+
+James Smart (15):
+  lpfc: Fix used-RPI accounting problem.
+  lpfc: Fix system crash when port is reset.
+  lpfc: Adding additional stats counters for nvme.
+  lpfc: Fix nvmet RQ resource needs for large block writes.
+  lpfc: Fix NVMEI driver not decrementing counter causing bad rport
+    state.
+  lpfc: Fix NMI watchdog assertions when running nvmet IOPS tests
+  lpfc: Separate NVMET data buffer pool fir ELS/CT.
+  lpfc: Separate NVMET RQ buffer posting from IO resources
+    SGL/iocbq/context
+  lpfc: Added recovery logic for running out of NVMET IO context
+    resources
+  lpfc: Fix NVME I+T not registering NVME as a supported FC4 type
+  lpfc: Fix debugfs root inode "lpfc" not getting deleted on driver
+    unload.
+  lpfc: Cleanup entry_repost settings on SLI4 queues
+  lpfc: Fix NVMEI's handling of NVMET's PRLI response attributes
+  lpfc: Add MDS Diagnostic support.
+  lpfc: update version to 11.2.0.14
+
+ drivers/scsi/lpfc/lpfc.h           |  23 ++-
+ drivers/scsi/lpfc/lpfc_attr.c      |  45 ++--
+ drivers/scsi/lpfc/lpfc_crtn.h      |  11 +-
+ drivers/scsi/lpfc/lpfc_ct.c        |   1 +
+ drivers/scsi/lpfc/lpfc_debugfs.c   |  69 ++++---
+ drivers/scsi/lpfc/lpfc_disc.h      |   1 +
+ drivers/scsi/lpfc/lpfc_els.c       |  19 +-
+ drivers/scsi/lpfc/lpfc_hbadisc.c   |   9 +-
+ drivers/scsi/lpfc/lpfc_hw4.h       |  16 +-
+ drivers/scsi/lpfc/lpfc_init.c      | 137 ++++--------
+ drivers/scsi/lpfc/lpfc_mem.c       | 100 +++------
+ drivers/scsi/lpfc/lpfc_nportdisc.c |   6 +
+ drivers/scsi/lpfc/lpfc_nvmet.c     | 412 ++++++++++++++++++++++++++++++-------
+ drivers/scsi/lpfc/lpfc_nvmet.h     |  14 +-
+ drivers/scsi/lpfc/lpfc_sli.c       | 357 +++++++++++++++++++++++++-------
+ drivers/scsi/lpfc/lpfc_sli4.h      |  18 +-
+ drivers/scsi/lpfc/lpfc_version.h   |   2 +-
+ 17 files changed, 829 insertions(+), 411 deletions(-)
+
 -- 
-2.5.4 (Apple Git-61)
+2.11.0
