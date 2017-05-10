@@ -1,208 +1,538 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 04/15] lpfc: Fix nvmet RQ resource needs for large block writes.
-Date: Wed, 10 May 2017 12:07:02 -0700
-Message-ID: <20170510190713.30171-5-jsmart2021@gmail.com>
+Subject: [PATCH 03/15] lpfc: Adding additional stats counters for nvme.
+Date: Wed, 10 May 2017 12:07:01 -0700
+Message-ID: <20170510190713.30171-4-jsmart2021@gmail.com>
 References: <20170510190713.30171-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:35007 "EHLO
-        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753885AbdEJTH3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 May 2017 15:07:29 -0400
-Received: by mail-qk0-f193.google.com with SMTP id k74so723670qke.2
-        for <linux-scsi@vger.kernel.org>; Wed, 10 May 2017 12:07:28 -0700 (PDT)
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:33783 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753632AbdEJTH2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 May 2017 15:07:28 -0400
+Received: by mail-qk0-f196.google.com with SMTP id o85so735688qkh.0
+        for <linux-scsi@vger.kernel.org>; Wed, 10 May 2017 12:07:27 -0700 (PDT)
 In-Reply-To: <20170510190713.30171-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-Large block writes to the nvme target were failing because
-the default number of RQs posted was insufficient.
-
-Expand the NVMET RQs to 2048 RQEs and ensure a minimun of 2048
-RQEs are posted, no matter how many MRQs are configured.
+More debug messages added for nvme statistics.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_attr.c  |  4 ++--
- drivers/scsi/lpfc/lpfc_init.c  | 20 +++++++++++++++-----
- drivers/scsi/lpfc/lpfc_nvmet.c |  2 +-
- drivers/scsi/lpfc/lpfc_nvmet.h |  1 +
- drivers/scsi/lpfc/lpfc_sli.c   | 18 ++++++++++--------
- drivers/scsi/lpfc/lpfc_sli4.h  |  1 +
- 6 files changed, 30 insertions(+), 16 deletions(-)
+ drivers/scsi/lpfc/lpfc_attr.c    | 24 ++++++++++++---------
+ drivers/scsi/lpfc/lpfc_debugfs.c | 27 +++++++++++++----------
+ drivers/scsi/lpfc/lpfc_nvmet.c   | 46 ++++++++++++++++++++++++++++++----------
+ drivers/scsi/lpfc/lpfc_nvmet.h   | 12 ++++++-----
+ drivers/scsi/lpfc/lpfc_sli.c     | 38 ++++++++++++++++++++++++++++-----
+ drivers/scsi/lpfc/lpfc_sli4.h    |  2 +-
+ 6 files changed, 106 insertions(+), 43 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 41ec7451689b..ee4d9be95960 100644
+index 4830370bfab1..41ec7451689b 100644
 --- a/drivers/scsi/lpfc/lpfc_attr.c
 +++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -60,9 +60,9 @@
- #define LPFC_MIN_DEVLOSS_TMO	1
- #define LPFC_MAX_DEVLOSS_TMO	255
+@@ -205,8 +205,9 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+ 				atomic_read(&tgtp->xmt_ls_rsp_error));
  
--#define LPFC_DEF_MRQ_POST	256
-+#define LPFC_DEF_MRQ_POST	512
- #define LPFC_MIN_MRQ_POST	32
--#define LPFC_MAX_MRQ_POST	512
-+#define LPFC_MAX_MRQ_POST	2048
+ 		len += snprintf(buf+len, PAGE_SIZE-len,
+-				"FCP: Rcv %08x Drop %08x\n",
++				"FCP: Rcv %08x Release %08x Drop %08x\n",
+ 				atomic_read(&tgtp->rcv_fcp_cmd_in),
++				atomic_read(&tgtp->xmt_fcp_release),
+ 				atomic_read(&tgtp->rcv_fcp_cmd_drop));
  
- /*
-  * Write key size should be multiple of 4. If write key is changed
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index b1b181a756dc..66e3cc40d64e 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -3390,6 +3390,11 @@ lpfc_sli4_nvmet_sgl_update(struct lpfc_hba *phba)
- 	 */
- 	els_xri_cnt = lpfc_sli4_get_els_iocb_cnt(phba);
- 	nvmet_xri_cnt = phba->cfg_nvmet_mrq * phba->cfg_nvmet_mrq_post;
+ 		if (atomic_read(&tgtp->rcv_fcp_cmd_in) !=
+@@ -218,15 +219,12 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+ 		}
+ 
+ 		len += snprintf(buf+len, PAGE_SIZE-len,
+-				"FCP Rsp: RD %08x rsp %08x WR %08x rsp %08x\n",
++				"FCP Rsp: RD %08x rsp %08x WR %08x rsp %08x "
++				"drop %08x\n",
+ 				atomic_read(&tgtp->xmt_fcp_read),
+ 				atomic_read(&tgtp->xmt_fcp_read_rsp),
+ 				atomic_read(&tgtp->xmt_fcp_write),
+-				atomic_read(&tgtp->xmt_fcp_rsp));
+-
+-		len += snprintf(buf+len, PAGE_SIZE-len,
+-				"FCP Rsp: abort %08x drop %08x\n",
+-				atomic_read(&tgtp->xmt_fcp_abort),
++				atomic_read(&tgtp->xmt_fcp_rsp),
+ 				atomic_read(&tgtp->xmt_fcp_drop));
+ 
+ 		len += snprintf(buf+len, PAGE_SIZE-len,
+@@ -236,10 +234,16 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+ 				atomic_read(&tgtp->xmt_fcp_rsp_drop));
+ 
+ 		len += snprintf(buf+len, PAGE_SIZE-len,
+-				"ABORT: Xmt %08x Err %08x Cmpl %08x",
++				"ABORT: Xmt %08x Cmpl %08x\n",
++				atomic_read(&tgtp->xmt_fcp_abort),
++				atomic_read(&tgtp->xmt_fcp_abort_cmpl));
 +
-+	/* Ensure we at least meet the minimun for the system */
-+	if (nvmet_xri_cnt < LPFC_NVMET_RQE_DEF_COUNT)
-+		nvmet_xri_cnt = LPFC_NVMET_RQE_DEF_COUNT;
-+
- 	tot_cnt = phba->sli4_hba.max_cfg_param.max_xri - els_xri_cnt;
- 	if (nvmet_xri_cnt > tot_cnt) {
- 		phba->cfg_nvmet_mrq_post = tot_cnt / phba->cfg_nvmet_mrq;
-@@ -8158,7 +8163,7 @@ lpfc_sli4_queue_create(struct lpfc_hba *phba)
- 			/* Create NVMET Receive Queue for header */
- 			qdesc = lpfc_sli4_queue_alloc(phba,
- 						      phba->sli4_hba.rq_esize,
--						      phba->sli4_hba.rq_ecount);
-+						      LPFC_NVMET_RQE_DEF_COUNT);
- 			if (!qdesc) {
- 				lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
- 						"3146 Failed allocate "
-@@ -8180,7 +8185,7 @@ lpfc_sli4_queue_create(struct lpfc_hba *phba)
- 			/* Create NVMET Receive Queue for data */
- 			qdesc = lpfc_sli4_queue_alloc(phba,
- 						      phba->sli4_hba.rq_esize,
--						      phba->sli4_hba.rq_ecount);
-+						      LPFC_NVMET_RQE_DEF_COUNT);
- 			if (!qdesc) {
- 				lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
- 						"3156 Failed allocate "
-@@ -11096,7 +11101,7 @@ lpfc_pci_probe_one_s4(struct pci_dev *pdev, const struct pci_device_id *pid)
- 	struct lpfc_hba   *phba;
- 	struct lpfc_vport *vport = NULL;
- 	struct Scsi_Host  *shost = NULL;
--	int error, cnt;
-+	int error, cnt, num;
- 	uint32_t cfg_mode, intr_mode;
++		len += snprintf(buf + len, PAGE_SIZE - len,
++				"ABORT: Sol %08x  Usol %08x Err %08x Cmpl %08x",
++				atomic_read(&tgtp->xmt_abort_sol),
++				atomic_read(&tgtp->xmt_abort_unsol),
+ 				atomic_read(&tgtp->xmt_abort_rsp),
+-				atomic_read(&tgtp->xmt_abort_rsp_error),
+-				atomic_read(&tgtp->xmt_abort_cmpl));
++				atomic_read(&tgtp->xmt_abort_rsp_error));
  
- 	/* Allocate memory for HBA structure */
-@@ -11131,8 +11136,13 @@ lpfc_pci_probe_one_s4(struct pci_dev *pdev, const struct pci_device_id *pid)
+ 		len +=  snprintf(buf+len, PAGE_SIZE-len, "\n");
+ 		return len;
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index fce549a91911..a41daedeb967 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -798,21 +798,22 @@ lpfc_debugfs_nvmestat_data(struct lpfc_vport *vport, char *buf, int size)
+ 				atomic_read(&tgtp->xmt_fcp_rsp));
+ 
+ 		len += snprintf(buf + len, size - len,
+-				"FCP Rsp: abort %08x drop %08x\n",
+-				atomic_read(&tgtp->xmt_fcp_abort),
+-				atomic_read(&tgtp->xmt_fcp_drop));
+-
+-		len += snprintf(buf + len, size - len,
+ 				"FCP Rsp Cmpl: %08x err %08x drop %08x\n",
+ 				atomic_read(&tgtp->xmt_fcp_rsp_cmpl),
+ 				atomic_read(&tgtp->xmt_fcp_rsp_error),
+ 				atomic_read(&tgtp->xmt_fcp_rsp_drop));
+ 
+ 		len += snprintf(buf + len, size - len,
+-				"ABORT: Xmt %08x Err %08x Cmpl %08x",
++				"ABORT: Xmt %08x Cmpl %08x\n",
++				atomic_read(&tgtp->xmt_fcp_abort),
++				atomic_read(&tgtp->xmt_fcp_abort_cmpl));
++
++		len += snprintf(buf + len, size - len,
++				"ABORT: Sol %08x  Usol %08x Err %08x Cmpl %08x",
++				atomic_read(&tgtp->xmt_abort_sol),
++				atomic_read(&tgtp->xmt_abort_unsol),
+ 				atomic_read(&tgtp->xmt_abort_rsp),
+-				atomic_read(&tgtp->xmt_abort_rsp_error),
+-				atomic_read(&tgtp->xmt_abort_cmpl));
++				atomic_read(&tgtp->xmt_abort_rsp_error));
+ 
+ 		len +=  snprintf(buf + len, size - len, "\n");
+ 
+@@ -1959,6 +1960,7 @@ lpfc_debugfs_nvmestat_write(struct file *file, const char __user *buf,
+ 		atomic_set(&tgtp->rcv_ls_req_out, 0);
+ 		atomic_set(&tgtp->rcv_ls_req_drop, 0);
+ 		atomic_set(&tgtp->xmt_ls_abort, 0);
++		atomic_set(&tgtp->xmt_ls_abort_cmpl, 0);
+ 		atomic_set(&tgtp->xmt_ls_rsp, 0);
+ 		atomic_set(&tgtp->xmt_ls_drop, 0);
+ 		atomic_set(&tgtp->xmt_ls_rsp_error, 0);
+@@ -1967,19 +1969,22 @@ lpfc_debugfs_nvmestat_write(struct file *file, const char __user *buf,
+ 		atomic_set(&tgtp->rcv_fcp_cmd_in, 0);
+ 		atomic_set(&tgtp->rcv_fcp_cmd_out, 0);
+ 		atomic_set(&tgtp->rcv_fcp_cmd_drop, 0);
+-		atomic_set(&tgtp->xmt_fcp_abort, 0);
+ 		atomic_set(&tgtp->xmt_fcp_drop, 0);
+ 		atomic_set(&tgtp->xmt_fcp_read_rsp, 0);
+ 		atomic_set(&tgtp->xmt_fcp_read, 0);
+ 		atomic_set(&tgtp->xmt_fcp_write, 0);
+ 		atomic_set(&tgtp->xmt_fcp_rsp, 0);
++		atomic_set(&tgtp->xmt_fcp_release, 0);
+ 		atomic_set(&tgtp->xmt_fcp_rsp_cmpl, 0);
+ 		atomic_set(&tgtp->xmt_fcp_rsp_error, 0);
+ 		atomic_set(&tgtp->xmt_fcp_rsp_drop, 0);
+ 
++		atomic_set(&tgtp->xmt_fcp_abort, 0);
++		atomic_set(&tgtp->xmt_fcp_abort_cmpl, 0);
++		atomic_set(&tgtp->xmt_abort_sol, 0);
++		atomic_set(&tgtp->xmt_abort_unsol, 0);
+ 		atomic_set(&tgtp->xmt_abort_rsp, 0);
+ 		atomic_set(&tgtp->xmt_abort_rsp_error, 0);
+-		atomic_set(&tgtp->xmt_abort_cmpl, 0);
  	}
- 
- 	cnt = phba->cfg_iocb_cnt * 1024;
--	if (phba->nvmet_support)
--		cnt += phba->cfg_nvmet_mrq_post * phba->cfg_nvmet_mrq;
-+	if (phba->nvmet_support) {
-+		/* Ensure we at least meet the minimun for the system */
-+		num = (phba->cfg_nvmet_mrq_post * phba->cfg_nvmet_mrq);
-+		if (num < LPFC_NVMET_RQE_DEF_COUNT)
-+			num = LPFC_NVMET_RQE_DEF_COUNT;
-+		cnt += num;
-+	}
- 
- 	/* Initialize and populate the iocb list per host */
- 	lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+ 	return nbytes;
+ }
+@@ -3143,7 +3148,7 @@ __lpfc_idiag_print_rqpair(struct lpfc_queue *qp, struct lpfc_queue *datqp,
+ 			"\t\t%s RQ info: ", rqtype);
+ 	len += snprintf(pbuffer + len, LPFC_QUE_INFO_GET_BUF_SIZE - len,
+ 			"AssocCQID[%02d]: RQ-STAT[nopost:x%x nobuf:x%x "
+-			"trunc:x%x rcv:x%llx]\n",
++			"posted:x%x rcv:x%llx]\n",
+ 			qp->assoc_qid, qp->q_cnt_1, qp->q_cnt_2,
+ 			qp->q_cnt_3, (unsigned long long)qp->q_cnt_4);
+ 	len += snprintf(pbuffer + len, LPFC_QUE_INFO_GET_BUF_SIZE - len,
 diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index bb12e2c9fbf4..dfa7296499cf 100644
+index 94434e621c33..bb12e2c9fbf4 100644
 --- a/drivers/scsi/lpfc/lpfc_nvmet.c
 +++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -614,9 +614,9 @@ lpfc_nvmet_xmt_fcp_op(struct nvmet_fc_target_port *tgtport,
- 	lpfc_nvmeio_data(phba, "NVMET FCP CMND: xri x%x op x%x len x%x\n",
- 			 ctxp->oxid, rsp->op, rsp->rsplen);
+@@ -502,6 +502,7 @@ lpfc_nvmet_xmt_ls_rsp(struct nvmet_fc_target_port *tgtport,
+ 				"6150 LS Drop IO x%x: Prep\n",
+ 				ctxp->oxid);
+ 		lpfc_in_buf_free(phba, &nvmebuf->dbuf);
++		atomic_inc(&nvmep->xmt_ls_abort);
+ 		lpfc_nvmet_unsol_ls_issue_abort(phba, ctxp,
+ 						ctxp->sid, ctxp->oxid);
+ 		return -ENOMEM;
+@@ -545,6 +546,7 @@ lpfc_nvmet_xmt_ls_rsp(struct nvmet_fc_target_port *tgtport,
+ 	lpfc_nlp_put(nvmewqeq->context1);
  
-+	ctxp->flag |= LPFC_NVMET_IO_INP;
- 	rc = lpfc_sli4_issue_wqe(phba, LPFC_FCP_RING, nvmewqeq);
+ 	lpfc_in_buf_free(phba, &nvmebuf->dbuf);
++	atomic_inc(&nvmep->xmt_ls_abort);
+ 	lpfc_nvmet_unsol_ls_issue_abort(phba, ctxp, ctxp->sid, ctxp->oxid);
+ 	return -ENXIO;
+ }
+@@ -692,6 +694,7 @@ static void
+ lpfc_nvmet_xmt_fcp_release(struct nvmet_fc_target_port *tgtport,
+ 			   struct nvmefc_tgt_fcp_req *rsp)
+ {
++	struct lpfc_nvmet_tgtport *lpfc_nvmep = tgtport->private;
+ 	struct lpfc_nvmet_rcv_ctx *ctxp =
+ 		container_of(rsp, struct lpfc_nvmet_rcv_ctx, ctx.fcp_req);
+ 	struct lpfc_hba *phba = ctxp->phba;
+@@ -710,6 +713,8 @@ lpfc_nvmet_xmt_fcp_release(struct nvmet_fc_target_port *tgtport,
+ 	lpfc_nvmeio_data(phba, "NVMET FCP FREE: xri x%x ste %d\n", ctxp->oxid,
+ 			 ctxp->state, 0);
+ 
++	atomic_inc(&lpfc_nvmep->xmt_fcp_release);
++
+ 	if (aborting)
+ 		return;
+ 
+@@ -796,6 +801,7 @@ lpfc_nvmet_create_targetport(struct lpfc_hba *phba)
+ 		atomic_set(&tgtp->rcv_ls_req_out, 0);
+ 		atomic_set(&tgtp->rcv_ls_req_drop, 0);
+ 		atomic_set(&tgtp->xmt_ls_abort, 0);
++		atomic_set(&tgtp->xmt_ls_abort_cmpl, 0);
+ 		atomic_set(&tgtp->xmt_ls_rsp, 0);
+ 		atomic_set(&tgtp->xmt_ls_drop, 0);
+ 		atomic_set(&tgtp->xmt_ls_rsp_error, 0);
+@@ -803,18 +809,21 @@ lpfc_nvmet_create_targetport(struct lpfc_hba *phba)
+ 		atomic_set(&tgtp->rcv_fcp_cmd_in, 0);
+ 		atomic_set(&tgtp->rcv_fcp_cmd_out, 0);
+ 		atomic_set(&tgtp->rcv_fcp_cmd_drop, 0);
+-		atomic_set(&tgtp->xmt_fcp_abort, 0);
+ 		atomic_set(&tgtp->xmt_fcp_drop, 0);
+ 		atomic_set(&tgtp->xmt_fcp_read_rsp, 0);
+ 		atomic_set(&tgtp->xmt_fcp_read, 0);
+ 		atomic_set(&tgtp->xmt_fcp_write, 0);
+ 		atomic_set(&tgtp->xmt_fcp_rsp, 0);
++		atomic_set(&tgtp->xmt_fcp_release, 0);
+ 		atomic_set(&tgtp->xmt_fcp_rsp_cmpl, 0);
+ 		atomic_set(&tgtp->xmt_fcp_rsp_error, 0);
+ 		atomic_set(&tgtp->xmt_fcp_rsp_drop, 0);
++		atomic_set(&tgtp->xmt_fcp_abort, 0);
++		atomic_set(&tgtp->xmt_fcp_abort_cmpl, 0);
++		atomic_set(&tgtp->xmt_abort_unsol, 0);
++		atomic_set(&tgtp->xmt_abort_sol, 0);
+ 		atomic_set(&tgtp->xmt_abort_rsp, 0);
+ 		atomic_set(&tgtp->xmt_abort_rsp_error, 0);
+-		atomic_set(&tgtp->xmt_abort_cmpl, 0);
+ 	}
+ 	return error;
+ }
+@@ -1011,6 +1020,7 @@ lpfc_nvmet_unsol_ls_buffer(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 		oxid = 0;
+ 		size = 0;
+ 		sid = 0;
++		ctxp = NULL;
+ 		goto dropit;
+ 	}
+ 
+@@ -1117,6 +1127,7 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
+ 		oxid = 0;
+ 		size = 0;
+ 		sid = 0;
++		ctxp = NULL;
+ 		goto dropit;
+ 	}
+ 
+@@ -1193,8 +1204,11 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
+ 
+ 	atomic_inc(&tgtp->rcv_fcp_cmd_drop);
+ 	lpfc_printf_log(phba, KERN_ERR, LOG_NVME_IOERR,
+-			"6159 FCP Drop IO x%x: err x%x\n",
+-			ctxp->oxid, rc);
++			"6159 FCP Drop IO x%x: err x%x: x%x x%x x%x\n",
++			ctxp->oxid, rc,
++			atomic_read(&tgtp->rcv_fcp_cmd_in),
++			atomic_read(&tgtp->rcv_fcp_cmd_out),
++			atomic_read(&tgtp->xmt_fcp_release));
+ dropit:
+ 	lpfc_nvmeio_data(phba, "NVMET FCP DROP: xri x%x sz %d from %06x\n",
+ 			 oxid, size, sid);
+@@ -1206,7 +1220,7 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
+ 	if (nvmebuf) {
+ 		nvmebuf->iocbq->hba_wqidx = 0;
+ 		/* We assume a rcv'ed cmd ALWAYs fits into 1 buffer */
+-		lpfc_nvmet_rq_post(phba, NULL, &nvmebuf->hbuf);
++		lpfc_nvmet_rq_post(phba, ctxp, &nvmebuf->hbuf);
+ 	}
+ #endif
+ }
+@@ -1812,7 +1826,8 @@ lpfc_nvmet_sol_fcp_abort_cmp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdwqe,
+ 	result = wcqe->parameter;
+ 
+ 	tgtp = (struct lpfc_nvmet_tgtport *)phba->targetport->private;
+-	atomic_inc(&tgtp->xmt_abort_cmpl);
++	if (ctxp->flag & LPFC_NVMET_ABORT_OP)
++		atomic_inc(&tgtp->xmt_fcp_abort_cmpl);
+ 
+ 	ctxp->state = LPFC_NVMET_STE_DONE;
+ 
+@@ -1827,6 +1842,7 @@ lpfc_nvmet_sol_fcp_abort_cmp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdwqe,
+ 	}
+ 	ctxp->flag &= ~LPFC_NVMET_ABORT_OP;
+ 	spin_unlock_irqrestore(&ctxp->ctxlock, flags);
++	atomic_inc(&tgtp->xmt_abort_rsp);
+ 
+ 	lpfc_printf_log(phba, KERN_ERR, LOG_NVME_ABTS,
+ 			"6165 ABORT cmpl: xri x%x flg x%x (%d) "
+@@ -1877,7 +1893,8 @@ lpfc_nvmet_unsol_fcp_abort_cmp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdwqe,
+ 	result = wcqe->parameter;
+ 
+ 	tgtp = (struct lpfc_nvmet_tgtport *)phba->targetport->private;
+-	atomic_inc(&tgtp->xmt_abort_cmpl);
++	if (ctxp->flag & LPFC_NVMET_ABORT_OP)
++		atomic_inc(&tgtp->xmt_fcp_abort_cmpl);
+ 
+ 	if (!ctxp) {
+ 		/* if context is clear, related io alrady complete */
+@@ -1907,6 +1924,7 @@ lpfc_nvmet_unsol_fcp_abort_cmp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdwqe,
+ 	}
+ 	ctxp->flag &= ~LPFC_NVMET_ABORT_OP;
+ 	spin_unlock_irqrestore(&ctxp->ctxlock, flags);
++	atomic_inc(&tgtp->xmt_abort_rsp);
+ 
+ 	lpfc_printf_log(phba, KERN_INFO, LOG_NVME_ABTS,
+ 			"6316 ABTS cmpl xri x%x flg x%x (%x) "
+@@ -1953,7 +1971,7 @@ lpfc_nvmet_xmt_ls_abort_cmp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdwqe,
+ 	result = wcqe->parameter;
+ 
+ 	tgtp = (struct lpfc_nvmet_tgtport *)phba->targetport->private;
+-	atomic_inc(&tgtp->xmt_abort_cmpl);
++	atomic_inc(&tgtp->xmt_ls_abort_cmpl);
+ 
+ 	lpfc_printf_log(phba, KERN_INFO, LOG_NVME_ABTS,
+ 			"6083 Abort cmpl: ctx %p WCQE: %08x %08x %08x %08x\n",
+@@ -2104,6 +2122,7 @@ lpfc_nvmet_sol_fcp_issue_abort(struct lpfc_hba *phba,
+ 	/* Issue ABTS for this WQE based on iotag */
+ 	ctxp->abort_wqeq = lpfc_sli_get_iocbq(phba);
+ 	if (!ctxp->abort_wqeq) {
++		atomic_inc(&tgtp->xmt_abort_rsp_error);
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_NVME_ABTS,
+ 				"6161 ABORT failed: No wqeqs: "
+ 				"xri: x%x\n", ctxp->oxid);
+@@ -2128,6 +2147,7 @@ lpfc_nvmet_sol_fcp_issue_abort(struct lpfc_hba *phba,
+ 	/* driver queued commands are in process of being flushed */
+ 	if (phba->hba_flag & HBA_NVME_IOQ_FLUSH) {
+ 		spin_unlock_irqrestore(&phba->hbalock, flags);
++		atomic_inc(&tgtp->xmt_abort_rsp_error);
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_NVME,
+ 				"6163 Driver in reset cleanup - flushing "
+ 				"NVME Req now. hba_flag x%x oxid x%x\n",
+@@ -2140,6 +2160,7 @@ lpfc_nvmet_sol_fcp_issue_abort(struct lpfc_hba *phba,
+ 	/* Outstanding abort is in progress */
+ 	if (abts_wqeq->iocb_flag & LPFC_DRIVER_ABORTED) {
+ 		spin_unlock_irqrestore(&phba->hbalock, flags);
++		atomic_inc(&tgtp->xmt_abort_rsp_error);
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_NVME,
+ 				"6164 Outstanding NVME I/O Abort Request "
+ 				"still pending on oxid x%x\n",
+@@ -2190,9 +2211,12 @@ lpfc_nvmet_sol_fcp_issue_abort(struct lpfc_hba *phba,
+ 	abts_wqeq->context2 = ctxp;
+ 	rc = lpfc_sli4_issue_wqe(phba, LPFC_FCP_RING, abts_wqeq);
+ 	spin_unlock_irqrestore(&phba->hbalock, flags);
+-	if (rc == WQE_SUCCESS)
++	if (rc == WQE_SUCCESS) {
++		atomic_inc(&tgtp->xmt_abort_sol);
+ 		return 0;
++	}
+ 
++	atomic_inc(&tgtp->xmt_abort_rsp_error);
+ 	ctxp->flag &= ~LPFC_NVMET_ABORT_OP;
+ 	lpfc_sli_release_iocbq(phba, abts_wqeq);
+ 	lpfc_printf_log(phba, KERN_ERR, LOG_NVME_ABTS,
+@@ -2231,11 +2255,11 @@ lpfc_nvmet_unsol_fcp_issue_abort(struct lpfc_hba *phba,
+ 	rc = lpfc_sli4_issue_wqe(phba, LPFC_FCP_RING, abts_wqeq);
+ 	spin_unlock_irqrestore(&phba->hbalock, flags);
  	if (rc == WQE_SUCCESS) {
--		ctxp->flag |= LPFC_NVMET_IO_INP;
- #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
- 		if (!phba->ktime_on)
- 			return 0;
+-		atomic_inc(&tgtp->xmt_abort_rsp);
+ 		return 0;
+ 	}
+ 
+ aerr:
++	atomic_inc(&tgtp->xmt_abort_rsp_error);
+ 	ctxp->flag &= ~LPFC_NVMET_ABORT_OP;
+ 	atomic_inc(&tgtp->xmt_abort_rsp_error);
+ 	lpfc_printf_log(phba, KERN_WARNING, LOG_NVME_ABTS,
+@@ -2279,7 +2303,7 @@ lpfc_nvmet_unsol_ls_issue_abort(struct lpfc_hba *phba,
+ 	rc = lpfc_sli4_issue_wqe(phba, LPFC_ELS_RING, abts_wqeq);
+ 	spin_unlock_irqrestore(&phba->hbalock, flags);
+ 	if (rc == WQE_SUCCESS) {
+-		atomic_inc(&tgtp->xmt_abort_rsp);
++		atomic_inc(&tgtp->xmt_abort_unsol);
+ 		return 0;
+ 	}
+ 
 diff --git a/drivers/scsi/lpfc/lpfc_nvmet.h b/drivers/scsi/lpfc/lpfc_nvmet.h
-index 837210a3e7c8..55f2a859dc70 100644
+index 128759fe6650..837210a3e7c8 100644
 --- a/drivers/scsi/lpfc/lpfc_nvmet.h
 +++ b/drivers/scsi/lpfc/lpfc_nvmet.h
-@@ -22,6 +22,7 @@
-  ********************************************************************/
+@@ -34,6 +34,7 @@ struct lpfc_nvmet_tgtport {
+ 	atomic_t rcv_ls_req_out;
+ 	atomic_t rcv_ls_req_drop;
+ 	atomic_t xmt_ls_abort;
++	atomic_t xmt_ls_abort_cmpl;
  
- #define LPFC_NVMET_DEFAULT_SEGS		(64 + 1)	/* 256K IOs */
-+#define LPFC_NVMET_RQE_DEF_COUNT	512
- #define LPFC_NVMET_SUCCESS_LEN	12
+ 	/* Stats counters - lpfc_nvmet_xmt_ls_rsp */
+ 	atomic_t xmt_ls_rsp;
+@@ -47,9 +48,9 @@ struct lpfc_nvmet_tgtport {
+ 	atomic_t rcv_fcp_cmd_in;
+ 	atomic_t rcv_fcp_cmd_out;
+ 	atomic_t rcv_fcp_cmd_drop;
++	atomic_t xmt_fcp_release;
  
- /* Used for NVME Target */
+ 	/* Stats counters - lpfc_nvmet_xmt_fcp_op */
+-	atomic_t xmt_fcp_abort;
+ 	atomic_t xmt_fcp_drop;
+ 	atomic_t xmt_fcp_read_rsp;
+ 	atomic_t xmt_fcp_read;
+@@ -62,12 +63,13 @@ struct lpfc_nvmet_tgtport {
+ 	atomic_t xmt_fcp_rsp_drop;
+ 
+ 
+-	/* Stats counters - lpfc_nvmet_unsol_issue_abort */
++	/* Stats counters - lpfc_nvmet_xmt_fcp_abort */
++	atomic_t xmt_fcp_abort;
++	atomic_t xmt_fcp_abort_cmpl;
++	atomic_t xmt_abort_sol;
++	atomic_t xmt_abort_unsol;
+ 	atomic_t xmt_abort_rsp;
+ 	atomic_t xmt_abort_rsp_error;
+-
+-	/* Stats counters - lpfc_nvmet_xmt_abort_cmp */
+-	atomic_t xmt_abort_cmpl;
+ };
+ 
+ struct lpfc_nvmet_rcv_ctx {
 diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 333c5094b97d..cdf02a957690 100644
+index e2d25ae5ba45..333c5094b97d 100644
 --- a/drivers/scsi/lpfc/lpfc_sli.c
 +++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -479,22 +479,23 @@ lpfc_sli4_rq_put(struct lpfc_queue *hq, struct lpfc_queue *dq,
- 	if (unlikely(!hq) || unlikely(!dq))
- 		return -ENOMEM;
- 	put_index = hq->host_index;
--	temp_hrqe = hq->qe[hq->host_index].rqe;
-+	temp_hrqe = hq->qe[put_index].rqe;
- 	temp_drqe = dq->qe[dq->host_index].rqe;
- 
- 	if (hq->type != LPFC_HRQ || dq->type != LPFC_DRQ)
- 		return -EINVAL;
--	if (hq->host_index != dq->host_index)
-+	if (put_index != dq->host_index)
- 		return -EINVAL;
- 	/* If the host has not yet processed the next entry then we are done */
--	if (((hq->host_index + 1) % hq->entry_count) == hq->hba_index)
-+	if (((put_index + 1) % hq->entry_count) == hq->hba_index)
- 		return -EBUSY;
- 	lpfc_sli_pcimem_bcopy(hrqe, temp_hrqe, hq->entry_size);
- 	lpfc_sli_pcimem_bcopy(drqe, temp_drqe, dq->entry_size);
- 
- 	/* Update the host index to point to the next slot */
--	hq->host_index = ((hq->host_index + 1) % hq->entry_count);
-+	hq->host_index = ((put_index + 1) % hq->entry_count);
- 	dq->host_index = ((dq->host_index + 1) % dq->entry_count);
-+	hq->RQ_buf_posted++;
- 
- 	/* Ring The Header Receive Queue Doorbell */
- 	if (!(hq->host_index % hq->entry_repost)) {
-@@ -512,7 +513,6 @@ lpfc_sli4_rq_put(struct lpfc_queue *hq, struct lpfc_queue *dq,
+@@ -512,6 +512,7 @@ lpfc_sli4_rq_put(struct lpfc_queue *hq, struct lpfc_queue *dq,
  		} else {
  			return -EINVAL;
  		}
--		hq->RQ_buf_posted += hq->entry_repost;
++		hq->RQ_buf_posted += hq->entry_repost;
  		writel(doorbell.word0, hq->db_regaddr);
  	}
  	return put_index;
-@@ -6905,11 +6905,13 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
- 			INIT_LIST_HEAD(&rqbp->rqb_buffer_list);
- 			rqbp->rqb_alloc_buffer = lpfc_sli4_nvmet_alloc;
- 			rqbp->rqb_free_buffer = lpfc_sli4_nvmet_free;
--			rqbp->entry_count = 256;
-+			rqbp->entry_count = LPFC_NVMET_RQE_DEF_COUNT;
- 			rqbp->buffer_count = 0;
+@@ -12788,6 +12789,7 @@ lpfc_sli4_sp_handle_rcqe(struct lpfc_hba *phba, struct lpfc_rcqe *rcqe)
+ 	struct fc_frame_header *fc_hdr;
+ 	struct lpfc_queue *hrq = phba->sli4_hba.hdr_rq;
+ 	struct lpfc_queue *drq = phba->sli4_hba.dat_rq;
++	struct lpfc_nvmet_tgtport *tgtp;
+ 	struct hbq_dmabuf *dma_buf;
+ 	uint32_t status, rq_id;
+ 	unsigned long iflags;
+@@ -12808,7 +12810,6 @@ lpfc_sli4_sp_handle_rcqe(struct lpfc_hba *phba, struct lpfc_rcqe *rcqe)
+ 	case FC_STATUS_RQ_BUF_LEN_EXCEEDED:
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+ 				"2537 Receive Frame Truncated!!\n");
+-		hrq->RQ_buf_trunc++;
+ 	case FC_STATUS_RQ_SUCCESS:
+ 		lpfc_sli4_rq_release(hrq, drq);
+ 		spin_lock_irqsave(&phba->hbalock, iflags);
+@@ -12819,6 +12820,7 @@ lpfc_sli4_sp_handle_rcqe(struct lpfc_hba *phba, struct lpfc_rcqe *rcqe)
+ 			goto out;
+ 		}
+ 		hrq->RQ_rcv_buf++;
++		hrq->RQ_buf_posted--;
+ 		memcpy(&dma_buf->cq_event.cqe.rcqe_cmpl, rcqe, sizeof(*rcqe));
  
--			/* Divide by 4 and round down to multiple of 16 */
--			rc = (phba->cfg_nvmet_mrq_post >> 2) & 0xfff8;
-+			/* Divide by 8 and round down to multiple of 16 */
-+			rc = (phba->cfg_nvmet_mrq_post >> 3) & 0xfff8;
-+			if (rc > LPFC_QUEUE_MAX_REPOST)
-+				rc = LPFC_QUEUE_MAX_REPOST;
- 			phba->sli4_hba.nvmet_mrq_hdr[i]->entry_repost = rc;
- 			phba->sli4_hba.nvmet_mrq_data[i]->entry_repost = rc;
+ 		/* If a NVME LS event (type 0x28), treat it as Fast path */
+@@ -12832,8 +12834,21 @@ lpfc_sli4_sp_handle_rcqe(struct lpfc_hba *phba, struct lpfc_rcqe *rcqe)
+ 		spin_unlock_irqrestore(&phba->hbalock, iflags);
+ 		workposted = true;
+ 		break;
+-	case FC_STATUS_INSUFF_BUF_NEED_BUF:
+ 	case FC_STATUS_INSUFF_BUF_FRM_DISC:
++		if (phba->nvmet_support) {
++			tgtp = phba->targetport->private;
++			lpfc_printf_log(phba, KERN_ERR, LOG_SLI | LOG_NVME,
++					"6402 RQE Error x%x, posted %d err_cnt "
++					"%d: %x %x %x\n",
++					status, hrq->RQ_buf_posted,
++					hrq->RQ_no_posted_buf,
++					atomic_read(&tgtp->rcv_fcp_cmd_in),
++					atomic_read(&tgtp->rcv_fcp_cmd_out),
++					atomic_read(&tgtp->xmt_fcp_release));
++		}
++		/* fallthrough */
++
++	case FC_STATUS_INSUFF_BUF_NEED_BUF:
+ 		hrq->RQ_no_posted_buf++;
+ 		/* Post more buffers if possible */
+ 		spin_lock_irqsave(&phba->hbalock, iflags);
+@@ -13135,6 +13150,7 @@ lpfc_sli4_nvmet_handle_rcqe(struct lpfc_hba *phba, struct lpfc_queue *cq,
+ 	struct lpfc_queue *drq;
+ 	struct rqb_dmabuf *dma_buf;
+ 	struct fc_frame_header *fc_hdr;
++	struct lpfc_nvmet_tgtport *tgtp;
+ 	uint32_t status, rq_id;
+ 	unsigned long iflags;
+ 	uint32_t fctl, idx;
+@@ -13165,8 +13181,6 @@ lpfc_sli4_nvmet_handle_rcqe(struct lpfc_hba *phba, struct lpfc_queue *cq,
+ 	case FC_STATUS_RQ_BUF_LEN_EXCEEDED:
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+ 				"6126 Receive Frame Truncated!!\n");
+-		hrq->RQ_buf_trunc++;
+-		break;
+ 	case FC_STATUS_RQ_SUCCESS:
+ 		lpfc_sli4_rq_release(hrq, drq);
+ 		spin_lock_irqsave(&phba->hbalock, iflags);
+@@ -13178,6 +13192,7 @@ lpfc_sli4_nvmet_handle_rcqe(struct lpfc_hba *phba, struct lpfc_queue *cq,
+ 		}
+ 		spin_unlock_irqrestore(&phba->hbalock, iflags);
+ 		hrq->RQ_rcv_buf++;
++		hrq->RQ_buf_posted--;
+ 		fc_hdr = (struct fc_frame_header *)dma_buf->hbuf.virt;
  
+ 		/* Just some basic sanity checks on FCP Command frame */
+@@ -13200,8 +13215,21 @@ lpfc_sli4_nvmet_handle_rcqe(struct lpfc_hba *phba, struct lpfc_queue *cq,
+ drop:
+ 		lpfc_in_buf_free(phba, &dma_buf->dbuf);
+ 		break;
+-	case FC_STATUS_INSUFF_BUF_NEED_BUF:
+ 	case FC_STATUS_INSUFF_BUF_FRM_DISC:
++		if (phba->nvmet_support) {
++			tgtp = phba->targetport->private;
++			lpfc_printf_log(phba, KERN_ERR, LOG_SLI | LOG_NVME,
++					"6401 RQE Error x%x, posted %d err_cnt "
++					"%d: %x %x %x\n",
++					status, hrq->RQ_buf_posted,
++					hrq->RQ_no_posted_buf,
++					atomic_read(&tgtp->rcv_fcp_cmd_in),
++					atomic_read(&tgtp->rcv_fcp_cmd_out),
++					atomic_read(&tgtp->xmt_fcp_release));
++		}
++		/* fallthrough */
++
++	case FC_STATUS_INSUFF_BUF_NEED_BUF:
+ 		hrq->RQ_no_posted_buf++;
+ 		/* Post more buffers if possible */
+ 		spin_lock_irqsave(&phba->hbalock, iflags);
 diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
-index 7a8cbeb6a745..710a635dfbae 100644
+index 915e8d5581bd..7a8cbeb6a745 100644
 --- a/drivers/scsi/lpfc/lpfc_sli4.h
 +++ b/drivers/scsi/lpfc/lpfc_sli4.h
-@@ -156,6 +156,7 @@ struct lpfc_queue {
- 	uint32_t entry_size;	/* Size of each queue entry. */
- 	uint32_t entry_repost;	/* Count of entries before doorbell is rung */
- #define LPFC_QUEUE_MIN_REPOST	8
-+#define LPFC_QUEUE_MAX_REPOST	64
- 	uint32_t queue_id;	/* Queue ID assigned by the hardware */
- 	uint32_t assoc_qid;     /* Queue ID associated with, for CQ/WQ/MQ */
- 	uint32_t page_count;	/* Number of pages allocated for this queue */
+@@ -195,7 +195,7 @@ struct lpfc_queue {
+ /* defines for RQ stats */
+ #define	RQ_no_posted_buf	q_cnt_1
+ #define	RQ_no_buf_found		q_cnt_2
+-#define	RQ_buf_trunc		q_cnt_3
++#define	RQ_buf_posted		q_cnt_3
+ #define	RQ_rcv_buf		q_cnt_4
+ 
+ 	uint64_t isr_timestamp;
 -- 
 2.11.0
