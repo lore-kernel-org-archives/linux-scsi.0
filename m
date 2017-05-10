@@ -1,140 +1,232 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 06/15] lpfc: Fix NMI watchdog assertions when running nvmet IOPS tests
-Date: Wed, 10 May 2017 12:07:04 -0700
-Message-ID: <20170510190713.30171-7-jsmart2021@gmail.com>
+Subject: [PATCH 07/15] lpfc: Separate NVMET data buffer pool fir ELS/CT.
+Date: Wed, 10 May 2017 12:07:05 -0700
+Message-ID: <20170510190713.30171-8-jsmart2021@gmail.com>
 References: <20170510190713.30171-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:35022 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753632AbdEJTHb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 May 2017 15:07:31 -0400
-Received: by mail-qk0-f195.google.com with SMTP id k74so723820qke.2
-        for <linux-scsi@vger.kernel.org>; Wed, 10 May 2017 12:07:31 -0700 (PDT)
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:36298 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753970AbdEJTHc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 May 2017 15:07:32 -0400
+Received: by mail-qt0-f196.google.com with SMTP id j13so48680qta.3
+        for <linux-scsi@vger.kernel.org>; Wed, 10 May 2017 12:07:32 -0700 (PDT)
 In-Reply-To: <20170510190713.30171-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-After running IOPS test for 30 second we get
-kernel:NMI watchdog: Watchdog detected hard LOCKUP on cpu 0
+Using 2048 byte buffer and onle 128 bytes is needed.
 
-The driver is speend too much time in it's ISR.
-
-In ISR EQ and CQ processing routines, if we hit the entry_repost
-numbers of EQE/CQEs just break out of the routine as opposed to
-hitting the doorbell with NOARM and continue processing.
+Create nee LFPC_NVMET_DATA_BUF_SIZE define to use
+for NVMET RQ/MRQs.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_debugfs.c | 30 +++++++++++++++---------------
- drivers/scsi/lpfc/lpfc_sli.c     |  8 ++------
- 2 files changed, 17 insertions(+), 21 deletions(-)
+ drivers/scsi/lpfc/lpfc.h      |  1 +
+ drivers/scsi/lpfc/lpfc_crtn.h |  1 +
+ drivers/scsi/lpfc/lpfc_hw4.h  |  1 +
+ drivers/scsi/lpfc/lpfc_init.c |  7 ++++++-
+ drivers/scsi/lpfc/lpfc_mem.c  | 33 ++++++++++++++++++++++++++-------
+ drivers/scsi/lpfc/lpfc_sli.c  | 19 +++++++++++++++----
+ 6 files changed, 50 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index a41daedeb967..7284533f4df2 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.c
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -3075,11 +3075,11 @@ __lpfc_idiag_print_wq(struct lpfc_queue *qp, char *wqtype,
- 			qp->assoc_qid, qp->q_cnt_1,
- 			(unsigned long long)qp->q_cnt_4);
- 	len += snprintf(pbuffer + len, LPFC_QUE_INFO_GET_BUF_SIZE - len,
--			"\t\tWQID[%02d], QE-CNT[%04d], QE-SIZE[%04d], "
--			"HOST-IDX[%04d], PORT-IDX[%04d]",
-+			"\t\tWQID[%02d], QE-CNT[%04d], QE-SZ[%04d], "
-+			"HST-IDX[%04d], PRT-IDX[%04d], PST[%03d]",
- 			qp->queue_id, qp->entry_count,
- 			qp->entry_size, qp->host_index,
--			qp->hba_index);
-+			qp->hba_index, qp->entry_repost);
- 	len +=  snprintf(pbuffer + len,
- 			LPFC_QUE_INFO_GET_BUF_SIZE - len, "\n");
- 	return len;
-@@ -3126,11 +3126,11 @@ __lpfc_idiag_print_cq(struct lpfc_queue *qp, char *cqtype,
- 			qp->assoc_qid, qp->q_cnt_1, qp->q_cnt_2,
- 			qp->q_cnt_3, (unsigned long long)qp->q_cnt_4);
- 	len += snprintf(pbuffer + len, LPFC_QUE_INFO_GET_BUF_SIZE - len,
--			"\tCQID[%02d], QE-CNT[%04d], QE-SIZE[%04d], "
--			"HOST-IDX[%04d], PORT-IDX[%04d]",
-+			"\tCQID[%02d], QE-CNT[%04d], QE-SZ[%04d], "
-+			"HST-IDX[%04d], PRT-IDX[%04d], PST[%03d]",
- 			qp->queue_id, qp->entry_count,
- 			qp->entry_size, qp->host_index,
--			qp->hba_index);
-+			qp->hba_index, qp->entry_repost);
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index 62571fa9c6ad..c4b38491da8e 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -943,6 +943,7 @@ struct lpfc_hba {
+ 	struct pci_pool *lpfc_mbuf_pool;
+ 	struct pci_pool *lpfc_hrb_pool;	/* header receive buffer pool */
+ 	struct pci_pool *lpfc_drb_pool; /* data receive buffer pool */
++	struct pci_pool *lpfc_nvmet_drb_pool; /* data receive buffer pool */
+ 	struct pci_pool *lpfc_hbq_pool;	/* SLI3 hbq buffer pool */
+ 	struct pci_pool *txrdy_payload_pool;
+ 	struct lpfc_dma_pool lpfc_mbuf_safety_pool;
+diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+index 1c55408ac718..fb7fc48a1324 100644
+--- a/drivers/scsi/lpfc/lpfc_crtn.h
++++ b/drivers/scsi/lpfc/lpfc_crtn.h
+@@ -271,6 +271,7 @@ int lpfc_sli4_fcf_rr_next_proc(struct lpfc_vport *, uint16_t);
+ void lpfc_sli4_clear_fcf_rr_bmask(struct lpfc_hba *);
  
- 	len +=  snprintf(pbuffer + len, LPFC_QUE_INFO_GET_BUF_SIZE - len, "\n");
+ int lpfc_mem_alloc(struct lpfc_hba *, int align);
++int lpfc_nvmet_mem_alloc(struct lpfc_hba *phba);
+ int lpfc_mem_alloc_active_rrq_pool_s4(struct lpfc_hba *);
+ void lpfc_mem_free(struct lpfc_hba *);
+ void lpfc_mem_free_all(struct lpfc_hba *);
+diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+index 1d12f2be36bc..df97c6b7433b 100644
+--- a/drivers/scsi/lpfc/lpfc_hw4.h
++++ b/drivers/scsi/lpfc/lpfc_hw4.h
+@@ -1356,6 +1356,7 @@ struct lpfc_mbx_wq_destroy {
  
-@@ -3152,16 +3152,16 @@ __lpfc_idiag_print_rqpair(struct lpfc_queue *qp, struct lpfc_queue *datqp,
- 			qp->assoc_qid, qp->q_cnt_1, qp->q_cnt_2,
- 			qp->q_cnt_3, (unsigned long long)qp->q_cnt_4);
- 	len += snprintf(pbuffer + len, LPFC_QUE_INFO_GET_BUF_SIZE - len,
--			"\t\tHQID[%02d], QE-CNT[%04d], QE-SIZE[%04d], "
--			"HOST-IDX[%04d], PORT-IDX[%04d]\n",
-+			"\t\tHQID[%02d], QE-CNT[%04d], QE-SZ[%04d], "
-+			"HST-IDX[%04d], PRT-IDX[%04d], PST[%03d]\n",
- 			qp->queue_id, qp->entry_count, qp->entry_size,
--			qp->host_index, qp->hba_index);
-+			qp->host_index, qp->hba_index, qp->entry_repost);
- 	len += snprintf(pbuffer + len, LPFC_QUE_INFO_GET_BUF_SIZE - len,
--			"\t\tDQID[%02d], QE-CNT[%04d], QE-SIZE[%04d], "
--			"HOST-IDX[%04d], PORT-IDX[%04d]\n",
-+			"\t\tDQID[%02d], QE-CNT[%04d], QE-SZ[%04d], "
-+			"HST-IDX[%04d], PRT-IDX[%04d], PST[%03d]\n",
- 			datqp->queue_id, datqp->entry_count,
- 			datqp->entry_size, datqp->host_index,
--			datqp->hba_index);
-+			datqp->hba_index, datqp->entry_repost);
- 	return len;
+ #define LPFC_HDR_BUF_SIZE 128
+ #define LPFC_DATA_BUF_SIZE 2048
++#define LPFC_NVMET_DATA_BUF_SIZE 128
+ struct rq_context {
+ 	uint32_t word0;
+ #define lpfc_rq_context_rqe_count_SHIFT	16	/* Version 0 Only */
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 66e3cc40d64e..ced1fa3a3983 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -5956,16 +5956,21 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
+ 		for (i = 0; i < lpfc_enable_nvmet_cnt; i++) {
+ 			if (wwn == lpfc_enable_nvmet[i]) {
+ #if (IS_ENABLED(CONFIG_NVME_TARGET_FC))
++				if (lpfc_nvmet_mem_alloc(phba))
++					break;
++
++				phba->nvmet_support = 1; /* a match */
++
+ 				lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 						"6017 NVME Target %016llx\n",
+ 						wwn);
+-				phba->nvmet_support = 1; /* a match */
+ #else
+ 				lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 						"6021 Can't enable NVME Target."
+ 						" NVME_TARGET_FC infrastructure"
+ 						" is not in kernel\n");
+ #endif
++				break;
+ 			}
+ 		}
+ 	}
+diff --git a/drivers/scsi/lpfc/lpfc_mem.c b/drivers/scsi/lpfc/lpfc_mem.c
+index 5986c7957199..91060afc9721 100644
+--- a/drivers/scsi/lpfc/lpfc_mem.c
++++ b/drivers/scsi/lpfc/lpfc_mem.c
+@@ -214,6 +214,21 @@ lpfc_mem_alloc(struct lpfc_hba *phba, int align)
+ 	return -ENOMEM;
  }
  
-@@ -3247,10 +3247,10 @@ __lpfc_idiag_print_eq(struct lpfc_queue *qp, char *eqtype,
- 			eqtype, qp->q_cnt_1, qp->q_cnt_2, qp->q_cnt_3,
- 			(unsigned long long)qp->q_cnt_4);
- 	len += snprintf(pbuffer + len, LPFC_QUE_INFO_GET_BUF_SIZE - len,
--			"EQID[%02d], QE-CNT[%04d], QE-SIZE[%04d], "
--			"HOST-IDX[%04d], PORT-IDX[%04d]",
-+			"EQID[%02d], QE-CNT[%04d], QE-SZ[%04d], "
-+			"HST-IDX[%04d], PRT-IDX[%04d], PST[%03d]",
- 			qp->queue_id, qp->entry_count, qp->entry_size,
--			qp->host_index, qp->hba_index);
-+			qp->host_index, qp->hba_index, qp->entry_repost);
- 	len +=  snprintf(pbuffer + len, LPFC_QUE_INFO_GET_BUF_SIZE - len, "\n");
++int
++lpfc_nvmet_mem_alloc(struct lpfc_hba *phba)
++{
++	phba->lpfc_nvmet_drb_pool =
++		pci_pool_create("lpfc_nvmet_drb_pool",
++				phba->pcidev, LPFC_NVMET_DATA_BUF_SIZE,
++				SGL_ALIGN_SZ, 0);
++	if (!phba->lpfc_nvmet_drb_pool) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++				"6024 Can't enable NVME Target - no memory\n");
++		return -ENOMEM;
++	}
++	return 0;
++}
++
+ /**
+  * lpfc_mem_free - Frees memory allocated by lpfc_mem_alloc
+  * @phba: HBA to free memory for
+@@ -232,6 +247,9 @@ lpfc_mem_free(struct lpfc_hba *phba)
  
- 	return len;
+ 	/* Free HBQ pools */
+ 	lpfc_sli_hbqbuf_free_all(phba);
++	if (phba->lpfc_nvmet_drb_pool)
++		pci_pool_destroy(phba->lpfc_nvmet_drb_pool);
++	phba->lpfc_nvmet_drb_pool = NULL;
+ 	if (phba->lpfc_drb_pool)
+ 		pci_pool_destroy(phba->lpfc_drb_pool);
+ 	phba->lpfc_drb_pool = NULL;
+@@ -624,20 +642,20 @@ lpfc_sli4_nvmet_alloc(struct lpfc_hba *phba)
+ 		kfree(dma_buf);
+ 		return NULL;
+ 	}
+-	dma_buf->dbuf.virt = pci_pool_alloc(phba->lpfc_drb_pool, GFP_KERNEL,
+-					    &dma_buf->dbuf.phys);
++	dma_buf->dbuf.virt = pci_pool_alloc(phba->lpfc_nvmet_drb_pool,
++					    GFP_KERNEL, &dma_buf->dbuf.phys);
+ 	if (!dma_buf->dbuf.virt) {
+ 		pci_pool_free(phba->lpfc_hrb_pool, dma_buf->hbuf.virt,
+ 			      dma_buf->hbuf.phys);
+ 		kfree(dma_buf);
+ 		return NULL;
+ 	}
+-	dma_buf->total_size = LPFC_DATA_BUF_SIZE;
++	dma_buf->total_size = LPFC_NVMET_DATA_BUF_SIZE;
+ 
+ 	dma_buf->context = kzalloc(sizeof(struct lpfc_nvmet_rcv_ctx),
+ 				   GFP_KERNEL);
+ 	if (!dma_buf->context) {
+-		pci_pool_free(phba->lpfc_drb_pool, dma_buf->dbuf.virt,
++		pci_pool_free(phba->lpfc_nvmet_drb_pool, dma_buf->dbuf.virt,
+ 			      dma_buf->dbuf.phys);
+ 		pci_pool_free(phba->lpfc_hrb_pool, dma_buf->hbuf.virt,
+ 			      dma_buf->hbuf.phys);
+@@ -648,7 +666,7 @@ lpfc_sli4_nvmet_alloc(struct lpfc_hba *phba)
+ 	dma_buf->iocbq = lpfc_sli_get_iocbq(phba);
+ 	if (!dma_buf->iocbq) {
+ 		kfree(dma_buf->context);
+-		pci_pool_free(phba->lpfc_drb_pool, dma_buf->dbuf.virt,
++		pci_pool_free(phba->lpfc_nvmet_drb_pool, dma_buf->dbuf.virt,
+ 			      dma_buf->dbuf.phys);
+ 		pci_pool_free(phba->lpfc_hrb_pool, dma_buf->hbuf.virt,
+ 			      dma_buf->hbuf.phys);
+@@ -678,7 +696,7 @@ lpfc_sli4_nvmet_alloc(struct lpfc_hba *phba)
+ 	if (!dma_buf->sglq) {
+ 		lpfc_sli_release_iocbq(phba, dma_buf->iocbq);
+ 		kfree(dma_buf->context);
+-		pci_pool_free(phba->lpfc_drb_pool, dma_buf->dbuf.virt,
++		pci_pool_free(phba->lpfc_nvmet_drb_pool, dma_buf->dbuf.virt,
+ 			      dma_buf->dbuf.phys);
+ 		pci_pool_free(phba->lpfc_hrb_pool, dma_buf->hbuf.virt,
+ 			      dma_buf->hbuf.phys);
+@@ -718,7 +736,8 @@ lpfc_sli4_nvmet_free(struct lpfc_hba *phba, struct rqb_dmabuf *dmab)
+ 	lpfc_sli_release_iocbq(phba, dmab->iocbq);
+ 	kfree(dmab->context);
+ 	pci_pool_free(phba->lpfc_hrb_pool, dmab->hbuf.virt, dmab->hbuf.phys);
+-	pci_pool_free(phba->lpfc_drb_pool, dmab->dbuf.virt, dmab->dbuf.phys);
++	pci_pool_free(phba->lpfc_nvmet_drb_pool,
++		      dmab->dbuf.virt, dmab->dbuf.phys);
+ 	kfree(dmab);
+ }
+ 
 diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index cdf02a957690..66bb86656bba 100644
+index 66bb86656bba..da74724e0e3d 100644
 --- a/drivers/scsi/lpfc/lpfc_sli.c
 +++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -13234,10 +13234,6 @@ lpfc_sli4_nvmet_handle_rcqe(struct lpfc_hba *phba, struct lpfc_queue *cq,
- 	case FC_STATUS_INSUFF_BUF_NEED_BUF:
- 		hrq->RQ_no_posted_buf++;
- 		/* Post more buffers if possible */
--		spin_lock_irqsave(&phba->hbalock, iflags);
--		phba->hba_flag |= HBA_POST_RECEIVE_BUFFER;
--		spin_unlock_irqrestore(&phba->hbalock, iflags);
--		workposted = true;
- 		break;
+@@ -15113,7 +15113,12 @@ lpfc_rq_create(struct lpfc_hba *phba, struct lpfc_queue *hrq,
+ 	if (phba->sli4_hba.pc_sli4_params.rqv == LPFC_Q_CREATE_VERSION_1) {
+ 		bf_set(lpfc_rq_context_rqe_count_1,
+ 		       &rq_create->u.request.context, hrq->entry_count);
+-		rq_create->u.request.context.buffer_size = LPFC_DATA_BUF_SIZE;
++		if (subtype == LPFC_NVMET)
++			rq_create->u.request.context.buffer_size =
++				LPFC_NVMET_DATA_BUF_SIZE;
++		else
++			rq_create->u.request.context.buffer_size =
++				LPFC_DATA_BUF_SIZE;
+ 		bf_set(lpfc_rq_context_rqe_size, &rq_create->u.request.context,
+ 		       LPFC_RQE_SIZE_8);
+ 		bf_set(lpfc_rq_context_page_size, &rq_create->u.request.context,
+@@ -15150,8 +15155,14 @@ lpfc_rq_create(struct lpfc_hba *phba, struct lpfc_queue *hrq,
+ 			       LPFC_RQ_RING_SIZE_4096);
+ 			break;
+ 		}
+-		bf_set(lpfc_rq_context_buf_size, &rq_create->u.request.context,
+-		       LPFC_DATA_BUF_SIZE);
++		if (subtype == LPFC_NVMET)
++			bf_set(lpfc_rq_context_buf_size,
++			       &rq_create->u.request.context,
++			       LPFC_NVMET_DATA_BUF_SIZE);
++		else
++			bf_set(lpfc_rq_context_buf_size,
++			       &rq_create->u.request.context,
++			       LPFC_DATA_BUF_SIZE);
  	}
- out:
-@@ -13391,7 +13387,7 @@ lpfc_sli4_hba_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe,
- 	while ((cqe = lpfc_sli4_cq_get(cq))) {
- 		workposted |= lpfc_sli4_fp_handle_cqe(phba, cq, cqe);
- 		if (!(++ecount % cq->entry_repost))
--			lpfc_sli4_cq_release(cq, LPFC_QUEUE_NOARM);
-+			break;
- 	}
- 
- 	/* Track the max number of CQEs processed in 1 EQ */
-@@ -13681,7 +13677,7 @@ lpfc_sli4_hba_intr_handler(int irq, void *dev_id)
- 
- 		lpfc_sli4_hba_handle_eqe(phba, eqe, hba_eqidx);
- 		if (!(++ecount % fpeq->entry_repost))
--			lpfc_sli4_eq_release(fpeq, LPFC_QUEUE_NOARM);
-+			break;
- 		fpeq->EQ_processed++;
- 	}
- 
+ 	bf_set(lpfc_rq_context_cq_id, &rq_create->u.request.context,
+ 	       cq->queue_id);
+@@ -15296,7 +15307,7 @@ lpfc_mrq_create(struct lpfc_hba *phba, struct lpfc_queue **hrqp,
+ 			       cq->queue_id);
+ 			bf_set(lpfc_rq_context_data_size,
+ 			       &rq_create->u.request.context,
+-			       LPFC_DATA_BUF_SIZE);
++			       LPFC_NVMET_DATA_BUF_SIZE);
+ 			bf_set(lpfc_rq_context_hdr_size,
+ 			       &rq_create->u.request.context,
+ 			       LPFC_HDR_BUF_SIZE);
 -- 
 2.11.0
