@@ -1,184 +1,73 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH V2 02/19] aacraid: Fix DMAR issues with  iommu=pt
-Date: Wed, 10 May 2017 09:39:36 -0700
-Message-ID: <1494434393-17261-3-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH V2 03/19] aacraid: Added 32 and 64 queue depth for arc natives
+Date: Wed, 10 May 2017 09:39:37 -0700
+Message-ID: <1494434393-17261-4-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 References: <1494434393-17261-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0062.outbound.protection.outlook.com ([104.47.41.62]:55936
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+Received: from mail-bn3nam01on0040.outbound.protection.outlook.com ([104.47.33.40]:41712
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751483AbdEJGYH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 10 May 2017 02:24:07 -0400
+        id S1751545AbdEJGYI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 10 May 2017 02:24:08 -0400
 In-Reply-To: <1494434393-17261-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, Prasad.Munirathnam@microsemi.com
 
-The driver changed the DMA consistent map after consistent memory was
-allocated, this invalidated the IOMMU identity mapping. The fix was to
-make sure that we set the DMA consistent mask setting once depending on
-the controller card.
+The qd for ARC Native disks is calculated by dividing the max IO 1024
+by the number of disks or 256 which ever is lower. This causes poor
+disk IO performance.
+
+The fix is set the qd based on the type of disk (SAS - 64 and SATA -
+32).
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Reviewed-by: David Carroll <david.carroll@microsemi.com>
 
 ---
 Changes in V2:
 None
 
- drivers/scsi/aacraid/aachba.c  | 17 ++++++-----------
- drivers/scsi/aacraid/commsup.c | 29 ++++++++++++++++++-----------
- drivers/scsi/aacraid/linit.c   | 32 +++++++++++++++++++-------------
- 3 files changed, 43 insertions(+), 35 deletions(-)
+ drivers/scsi/aacraid/aacraid.h |  1 +
+ drivers/scsi/aacraid/linit.c   | 11 +++++++++++
+ 2 files changed, 12 insertions(+)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 43d8838..707ee2f 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -2071,20 +2071,15 @@ int aac_get_adapter_info(struct aac_dev* dev)
- 		expose_physicals = 0;
- 	}
- 
--	if(dev->dac_support != 0) {
--		if (!pci_set_dma_mask(dev->pdev, DMA_BIT_MASK(64)) &&
--			!pci_set_consistent_dma_mask(dev->pdev, DMA_BIT_MASK(64))) {
-+	if (dev->dac_support) {
-+		if (!pci_set_dma_mask(dev->pdev, DMA_BIT_MASK(64))) {
- 			if (!dev->in_reset)
--				printk(KERN_INFO"%s%d: 64 Bit DAC enabled\n",
--					dev->name, dev->id);
--		} else if (!pci_set_dma_mask(dev->pdev, DMA_BIT_MASK(32)) &&
--			!pci_set_consistent_dma_mask(dev->pdev, DMA_BIT_MASK(32))) {
--			printk(KERN_INFO"%s%d: DMA mask set failed, 64 Bit DAC disabled\n",
--				dev->name, dev->id);
-+				dev_info(&dev->pdev->dev, "64 Bit DAC enabled\n");
-+		} else if (!pci_set_dma_mask(dev->pdev, DMA_BIT_MASK(32))) {
-+			dev_info(&dev->pdev->dev, "DMA mask set failed, 64 Bit DAC disabled\n");
- 			dev->dac_support = 0;
- 		} else {
--			printk(KERN_WARNING"%s%d: No suitable DMA available.\n",
--				dev->name, dev->id);
-+			dev_info(&dev->pdev->dev, "No suitable DMA available\n");
- 			rcode = -ENOMEM;
- 		}
- 	}
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index d08920d..47068b2 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -1513,6 +1513,7 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
- 	struct scsi_cmnd *command_list;
- 	int jafo = 0;
- 	int bled;
-+	u64 dmamask;
- 
- 	/*
- 	 * Assumptions:
-@@ -1580,21 +1581,27 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
- 	aac_free_irq(aac);
- 	kfree(aac->fsa_dev);
- 	aac->fsa_dev = NULL;
-+
-+	dmamask = DMA_BIT_MASK(32);
- 	quirks = aac_get_driver_ident(index)->quirks;
--	if (quirks & AAC_QUIRK_31BIT) {
--		if (((retval = pci_set_dma_mask(aac->pdev, DMA_BIT_MASK(31)))) ||
--		  ((retval = pci_set_consistent_dma_mask(aac->pdev, DMA_BIT_MASK(31)))))
--			goto out;
--	} else {
--		if (((retval = pci_set_dma_mask(aac->pdev, DMA_BIT_MASK(32)))) ||
--		  ((retval = pci_set_consistent_dma_mask(aac->pdev, DMA_BIT_MASK(32)))))
--			goto out;
-+	if (quirks & AAC_QUIRK_31BIT)
-+		retval = pci_set_dma_mask(aac->pdev, dmamask);
-+	else if (!(quirks & AAC_QUIRK_SRC))
-+		retval = pci_set_dma_mask(aac->pdev, dmamask);
-+	else
-+		retval = pci_set_consistent_dma_mask(aac->pdev, dmamask);
-+
-+	if (quirks & AAC_QUIRK_31BIT && !retval) {
-+		dmamask = DMA_BIT_MASK(31);
-+		retval = pci_set_consistent_dma_mask(aac->pdev, dmamask);
- 	}
-+
-+	if (retval)
-+		goto out;
-+
- 	if ((retval = (*(aac_get_driver_ident(index)->init))(aac)))
- 		goto out;
--	if (quirks & AAC_QUIRK_31BIT)
--		if ((retval = pci_set_dma_mask(aac->pdev, DMA_BIT_MASK(32))))
--			goto out;
-+
- 	if (jafo) {
- 		aac->thread = kthread_run(aac_command_thread, aac, "%s",
- 					  aac->name);
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index d036a80..3ede6de 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -415,6 +415,7 @@ struct aac_ciss_identify_pd {
+  * These macros convert from physical channels to virtual channels
+  */
+ #define CONTAINER_CHANNEL		(0)
++#define NATIVE_CHANNEL			(1)
+ #define CONTAINER_TO_CHANNEL(cont)	(CONTAINER_CHANNEL)
+ #define CONTAINER_TO_ID(cont)		(cont)
+ #define CONTAINER_TO_LUN(cont)		(0)
 diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 372a075..5a201da 100644
+index 5a201da..5e1a2d6 100644
 --- a/drivers/scsi/aacraid/linit.c
 +++ b/drivers/scsi/aacraid/linit.c
-@@ -1403,6 +1403,7 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	int error = -ENODEV;
- 	int unique_id = 0;
- 	u64 dmamask;
-+	int mask_bits = 0;
- 	extern int aac_sync_mode;
+@@ -466,6 +466,17 @@ static int aac_slave_configure(struct scsi_device *sdev)
+ 			++num_lsu;
  
- 	/*
-@@ -1426,18 +1427,32 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		goto out;
- 	error = -ENODEV;
- 
-+	if (!(aac_drivers[index].quirks & AAC_QUIRK_SRC)) {
-+		error = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
-+		if (error) {
-+			dev_err(&pdev->dev, "PCI 32 BIT dma mask set failed");
-+			goto out_disable_pdev;
-+		}
-+	}
+ 		depth = (host->can_queue - num_one) / num_lsu;
 +
- 	/*
- 	 * If the quirk31 bit is set, the adapter needs adapter
- 	 * to driver communication memory to be allocated below 2gig
- 	 */
--	if (aac_drivers[index].quirks & AAC_QUIRK_31BIT)
-+	if (aac_drivers[index].quirks & AAC_QUIRK_31BIT) {
- 		dmamask = DMA_BIT_MASK(31);
--	else
-+		mask_bits = 31;
-+	} else {
- 		dmamask = DMA_BIT_MASK(32);
-+		mask_bits = 32;
-+	}
- 
--	if (pci_set_dma_mask(pdev, dmamask) ||
--			pci_set_consistent_dma_mask(pdev, dmamask))
-+	error = pci_set_consistent_dma_mask(pdev, dmamask);
-+	if (error) {
-+		dev_err(&pdev->dev, "PCI %d B consistent dma mask set failed\n"
-+				, mask_bits);
- 		goto out_disable_pdev;
-+	}
- 
- 	pci_set_master(pdev);
- 
-@@ -1501,15 +1516,6 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		goto out_deinit;
++		if (sdev_channel(sdev) != NATIVE_CHANNEL)
++			goto common_config;
++
++		/*
++		 * Check if SATA drive
++		 */
++		if (strncmp(sdev->vendor, "ATA", 3) == 0)
++			depth = 32;
++		else
++			depth = 64;
  	}
  
--	/*
--	 * If we had set a smaller DMA mask earlier, set it to 4gig
--	 * now since the adapter can dma data to at least a 4gig
--	 * address space.
--	 */
--	if (aac_drivers[index].quirks & AAC_QUIRK_31BIT)
--		if (pci_set_dma_mask(pdev, DMA_BIT_MASK(32)))
--			goto out_deinit;
--
- 	aac->maximum_num_channels = aac_drivers[index].channels;
- 	error = aac_get_adapter_info(aac);
- 	if (error < 0)
+ common_config:
 -- 
 2.7.4
