@@ -1,24 +1,23 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH V2 13/19] aacraid: Rework aac_src_restart
-Date: Wed, 10 May 2017 09:39:47 -0700
-Message-ID: <1494434393-17261-14-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH V2 19/19] aacraid: Update driver version to 50834
+Date: Wed, 10 May 2017 09:39:53 -0700
+Message-ID: <1494434393-17261-20-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 References: <1494434393-17261-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0073.outbound.protection.outlook.com ([104.47.32.73]:32485
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0063.outbound.protection.outlook.com ([104.47.37.63]:59441
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751235AbdEJGYV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 10 May 2017 02:24:21 -0400
+        id S1751877AbdEJGY3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 10 May 2017 02:24:29 -0400
 In-Reply-To: <1494434393-17261-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, Prasad.Munirathnam@microsemi.com
 
-Removed switch case and replaced with if mask checks. Moved KERNEL_PANIC
-check to when bled is less than 0.
+Update the driver version to 50834
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 Reviewed-by: David Carroll <david.carroll@microsemi.com>
@@ -27,77 +26,21 @@ Reviewed-by: David Carroll <david.carroll@microsemi.com>
 Changes in V2:
 None
 
- drivers/scsi/aacraid/src.c | 34 ++++++++++++----------------------
- 1 file changed, 12 insertions(+), 22 deletions(-)
+ drivers/scsi/aacraid/aacraid.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-index 8ed7be0..10a589b 100644
---- a/drivers/scsi/aacraid/src.c
-+++ b/drivers/scsi/aacraid/src.c
-@@ -772,8 +772,7 @@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index 58ccd2a..0995265 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -97,7 +97,7 @@ enum {
+ #define	PMC_GLOBAL_INT_BIT0		0x00000001
  
- 	dev->a_ops.adapter_enable_int = aac_src_disable_interrupt;
- 
--	switch (reset_type) {
--	case IOP_HWSOFT_RESET:
-+	if (reset_type & HW_IOP_RESET) {
- 		aac_send_iop_reset(dev);
- 
- 		/*
-@@ -784,12 +783,14 @@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
- 			dev_err(&dev->pdev->dev, "IOP reset failed\n");
- 		else
- 			goto set_startup;
-+	}
- 
--		if (!dev->sa_firmware) {
--			ret = -ENODEV;
--			goto out;
--		}
-+	if (!dev->sa_firmware) {
-+		ret = -ENODEV;
-+		goto out;
-+	}
- 
-+	if (reset_type & HW_SOFT_RESET) {
- 		aac_send_hardware_soft_reset(dev);
- 		dev->msi_enabled = 0;
- 
-@@ -799,30 +800,19 @@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled, u8 reset_type)
- 			ret = -ENODEV;
- 			goto out;
- 		}
--
--		break;
--	case HW_SOFT_RESET:
--		if (dev->sa_firmware) {
--			aac_send_hardware_soft_reset(dev);
--			aac_set_intx_mode(dev);
--		}
--		break;
--	default:
--		aac_send_iop_reset(dev);
--		break;
- 	}
- 
--invalid_out:
--
--	if (src_readl(dev, MUnit.OMR) & KERNEL_PANIC)
--		ret = -ENODEV;
--
- set_startup:
- 	if (startup_timeout < 300)
- 		startup_timeout = 300;
- 
- out:
- 	return ret;
-+
-+invalid_out:
-+	if (src_readl(dev, MUnit.OMR) & KERNEL_PANIC)
-+		ret = -ENODEV;
-+goto out;
- }
- 
- /**
+ #ifndef AAC_DRIVER_BUILD
+-# define AAC_DRIVER_BUILD 50792
++# define AAC_DRIVER_BUILD 50834
+ # define AAC_DRIVER_BRANCH "-custom"
+ #endif
+ #define MAXIMUM_NUM_CONTAINERS	32
 -- 
 2.7.4
