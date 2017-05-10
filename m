@@ -1,67 +1,97 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH V2 05/19] aacraid: Remove reset support from check_health
-Date: Wed, 10 May 2017 09:39:39 -0700
-Message-ID: <1494434393-17261-6-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH V2 04/19] aacraid: Set correct Queue Depth for HBA1000 RAW disks
+Date: Wed, 10 May 2017 09:39:38 -0700
+Message-ID: <1494434393-17261-5-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 References: <1494434393-17261-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0040.outbound.protection.outlook.com ([104.47.33.40]:41712
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam03on0043.outbound.protection.outlook.com ([104.47.42.43]:51300
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751585AbdEJGYL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 10 May 2017 02:24:11 -0400
+        id S1751552AbdEJGYJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 10 May 2017 02:24:09 -0400
 In-Reply-To: <1494434393-17261-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, Prasad.Munirathnam@microsemi.com
 
-Check health does not need to reset the ctrl but just return the
-controller health status.
+The default queue depth for non NATIVE RAW disks is calculated from the
+number of fibs and number of disks or a max of 256. This causes poor disk
+IO performance.
+
+The fix is to set default qd based on the type of disks
+(SATA -32 and SAS -64)
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 Reviewed-by: David Carroll <david.carroll@microsemi.com>
 
----
+--
 Changes in V2:
 None
-
- drivers/scsi/aacraid/commsup.c | 15 ---------------
- 1 file changed, 15 deletions(-)
-
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index 47068b2..3299012 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -1775,8 +1775,6 @@ int aac_check_health(struct aac_dev * aac)
- 	int BlinkLED;
- 	unsigned long time_now, flagv = 0;
- 	struct list_head * entry;
--	struct Scsi_Host * host;
--	int bled;
- 
- 	/* Extending the scope of fib_lock slightly to protect aac->in_reset */
- 	if (spin_trylock_irqsave(&aac->fib_lock, flagv) == 0)
-@@ -1887,19 +1885,6 @@ int aac_check_health(struct aac_dev * aac)
- 
- 	printk(KERN_ERR "%s: Host adapter BLINK LED 0x%x\n", aac->name, BlinkLED);
- 
--	if (!aac_check_reset || ((aac_check_reset == 1) &&
--		(aac->supplement_adapter_info.supported_options2 &
--			AAC_OPTION_IGNORE_RESET)))
--		goto out;
--	host = aac->scsi_host_ptr;
--	if (aac->thread->pid != current->pid)
--		spin_lock_irqsave(host->host_lock, flagv);
--	bled = aac_check_reset != 1 ? 1 : 0;
--	_aac_reset_adapter(aac, bled, IOP_HWSOFT_RESET);
--	if (aac->thread->pid != current->pid)
--		spin_unlock_irqrestore(host->host_lock, flagv);
--	return BlinkLED;
 -
- out:
- 	aac->in_reset = 0;
- 	return BlinkLED;
+ drivers/scsi/aacraid/linit.c | 28 ++++++++++++++++++++--------
+ 1 file changed, 20 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 5e1a2d6..9ef98e4 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -405,17 +405,23 @@ static int aac_slave_configure(struct scsi_device *sdev)
+ 	int chn, tid;
+ 	unsigned int depth = 0;
+ 	unsigned int set_timeout = 0;
++	bool set_qd_dev_type = false;
++	u8 devtype = 0;
+ 
+ 	chn = aac_logical_to_phys(sdev_channel(sdev));
+ 	tid = sdev_id(sdev);
+-	if (chn < AAC_MAX_BUSES && tid < AAC_MAX_TARGETS &&
+-		aac->hba_map[chn][tid].devtype == AAC_DEVTYPE_NATIVE_RAW) {
+-		depth = aac->hba_map[chn][tid].qd_limit;
++	if (chn < AAC_MAX_BUSES && tid < AAC_MAX_TARGETS && aac->sa_firmware) {
++		devtype = aac->hba_map[chn][tid].devtype;
++
++		if (devtype == AAC_DEVTYPE_NATIVE_RAW)
++			depth = aac->hba_map[chn][tid].qd_limit;
++		else if (devtype == AAC_DEVTYPE_ARC_RAW)
++			set_qd_dev_type = true;
++
+ 		set_timeout = 1;
+ 		goto common_config;
+ 	}
+ 
+-
+ 	if (aac->jbod && (sdev->type == TYPE_DISK))
+ 		sdev->removable = 1;
+ 
+@@ -470,16 +476,22 @@ static int aac_slave_configure(struct scsi_device *sdev)
+ 		if (sdev_channel(sdev) != NATIVE_CHANNEL)
+ 			goto common_config;
+ 
+-		/*
+-		 * Check if SATA drive
+-		 */
++		set_qd_dev_type = true;
++
++	}
++
++common_config:
++
++	/*
++	 * Check if SATA drive
++	 */
++	if (set_qd_dev_type) {
+ 		if (strncmp(sdev->vendor, "ATA", 3) == 0)
+ 			depth = 32;
+ 		else
+ 			depth = 64;
+ 	}
+ 
+-common_config:
+ 	/*
+ 	 * Firmware has an individual device recovery time typically
+ 	 * of 35 seconds, give us a margin.
 -- 
 2.7.4
