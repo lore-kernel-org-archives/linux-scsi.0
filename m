@@ -1,30 +1,62 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH v1] ibmvscsis: Fix cleaning up pointers
-Date: Tue, 09 May 2017 20:45:33 -0700
-Message-ID: <1494387933.16894.56.camel@haakon3.risingtidesystems.com>
-References: <1494348626-62378-1-git-send-email-bryantly@linux.vnet.ibm.com>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH V2 00/19] aacraid: Patchset with reset rework and misc fixes
+Date: Wed, 10 May 2017 09:39:34 -0700
+Message-ID: <1494434393-17261-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1494348626-62378-1-git-send-email-bryantly@linux.vnet.ibm.com>
-Sender: stable-owner@vger.kernel.org
-To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Cc: mikecyr@linux.vnet.ibm.com, mikecyr@us.ibm.com, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, stable@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam01on0042.outbound.protection.outlook.com ([104.47.32.42]:40015
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751235AbdEJGYE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 10 May 2017 02:24:04 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, Prasad.Munirathnam@microsemi.com
 
-On Tue, 2017-05-09 at 11:50 -0500, Bryant G. Ly wrote:
-> This patch is dependent on:
-> 'commit 25e78531268e ("ibmvscsis: Do not send aborted task response")'
-> This patch cleans up some pointers after usage.
-> 
-> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-> Reviewed-by: Michael Cyr <mikecyr@linux.vnet.ibm.com>
-> Cc: <stable@vger.kernel.org> # v4.8+
-> ---
->  drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 3 +++
->  1 file changed, 3 insertions(+)
+This patchset primarily focuses on tweaking and hardening the controller
+reset support for both ARC and HBA1000 devices. Now the driver can only
+reset the controller thru eh reset. Included a srb memory fix and pci dma
+allocation fix.
 
-Applied, with a more verbose commit message.
+Changes in V2:
+ - Corrected heading and description for srb memory patch and removed stray
+   comment.
+ - Removed incorrect up function call and cleared fib wait flag after call
+   to down interruptible in the ioctl return on ctrl reset patch.
+ - Added review acknowledgements by David Carroll thank you Dave for
+   finding the above issues in the above 2 patches.
 
-Thanks for splitting this out into an incremental patch.
+Raghava Aditya Renukunta (19):
+ [SCSI] aacraid: Remove __GFP_DMA for raw srb memory
+ [SCSI] aacraid: Fix DMAR issues with  iommu=pt
+ [SCSI] aacraid: Added 32 and 64 queue depth for arc natives
+ [SCSI] aacraid: Set correct Queue Depth for HBA1000 RAW disks
+ [SCSI] aacraid: Remove reset support from check_health
+ [SCSI] aacraid: Change wait time for fib completion
+ [SCSI] aacraid: Log count info of scsi cmds before reset
+ [SCSI] aacraid: Print ctrl status before eh reset
+ [SCSI] aacraid: Using single reset mask for IOP reset
+ [SCSI] aacraid: Rework IOP reset
+ [SCSI] aacraid: Add periodic checks to see IOP reset status
+ [SCSI] aacraid: Rework SOFT reset code
+ [SCSI] aacraid: Rework aac_src_restart
+ [SCSI] aacraid: Use correct function to get ctrl health
+ [SCSI] aacraid: Make sure ioctl returns on controller reset
+ [SCSI] aacraid: Enable ctrl reset for both hba and arc
+ [SCSI] aacraid: Add reset debugging statements
+ [SCSI] aacraid: Remove reference to Series-9
+ [SCSI] aacraid: Update driver version to 50834
+
+ drivers/scsi/aacraid/aachba.c   |  17 ++-
+ drivers/scsi/aacraid/aacraid.h  |  22 +++-
+ drivers/scsi/aacraid/commctrl.c |  15 ++-
+ drivers/scsi/aacraid/comminit.c |  18 +---
+ drivers/scsi/aacraid/commsup.c  |  78 +++++++-------
+ drivers/scsi/aacraid/linit.c    | 232 ++++++++++++++++++++++++----------------
+ drivers/scsi/aacraid/src.c      | 136 +++++++++++++----------
+ 7 files changed, 298 insertions(+), 220 deletions(-)
+
+-- 
+2.7.4
