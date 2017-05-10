@@ -1,63 +1,27 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: sanity check for timeout in sg_io()
-Date: Wed, 10 May 2017 08:34:36 -0500
-Message-ID: <1494423276.2396.4.camel@HansenPartnership.com>
-References: <1494422676-72745-1-git-send-email-hare@suse.de>
+From: "hch@lst.de" <hch@lst.de>
+Subject: Re: [PATCH 25/27] block: remove the discard_zeroes_data flag
+Date: Wed, 10 May 2017 16:06:27 +0200
+Message-ID: <20170510140627.GA23759@lst.de>
+References: <20170405172125.22600-1-hch@lst.de> <20170405172125.22600-26-hch@lst.de> <1493671519.2665.15.camel@sandisk.com> <1493707425.23202.77.camel@haakon3.risingtidesystems.com> <1493709373.23202.79.camel@haakon3.risingtidesystems.com> <20170502072328.GA11522@lst.de> <1493782395.23202.84.camel@haakon3.risingtidesystems.com> <20170507092209.GA27370@lst.de> <1494312374.16894.36.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1494422676-72745-1-git-send-email-hare@suse.de>
+Content-Disposition: inline
+In-Reply-To: <1494312374.16894.36.camel@haakon3.risingtidesystems.com>
 Sender: linux-block-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: "hch@lst.de" <hch@lst.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>, "agk@redhat.com" <agk@redhat.com>, "lars.ellenberg@linbit.com" <lars.ellenberg@linbit.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "philipp.reisner@linbit.com" <philipp.reisner@linbit.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "shli@kernel.org" <shli@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2017-05-10 at 15:24 +0200, Hannes Reinecke wrote:
-> sg_io() is using msecs_to_jiffies() to convert a passed in timeout
-> value (in milliseconds) to a jiffies value. However, if the value
-> is too large msecs_to_jiffies() will return MAX_JIFFY_OFFSET, which
-> will be truncated to -2 and cause the timeout to be set to 1.3
-> _years_. Which is probably too long for most applications.
+On Mon, May 08, 2017 at 11:46:14PM -0700, Nicholas A. Bellinger wrote:
+> That said, simply propagating up q->limits.max_write_zeroes_sectors as
+> dev_attrib->unmap_zeroes_data following existing code still looks like
+> the right thing to do.
 
-What makes you think that?  If a user specified timeout in ms is over
-MAX_JIFFY_OFFSET on, say a 250HZ machine, then they're already asking
-for something around this length of time in ms, which is probably their
-attempt at machine infinity, meaning they want effectively no timeout. 
- Your patch would now give them the default timeout, which looks way
-too short.
+It is not.  Martin has decoupled write same/zeroes support from discard
+support.  Any device will claim to support it initially, and we'll
+only clear the flag if a Write Same command fails.
 
-James
-
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> ---
->  block/scsi_ioctl.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-> index 4a294a5..53b95ea 100644
-> --- a/block/scsi_ioctl.c
-> +++ b/block/scsi_ioctl.c
-> @@ -231,6 +231,7 @@ static int blk_fill_sghdr_rq(struct request_queue
-> *q, struct request *rq,
->  			     struct sg_io_hdr *hdr, fmode_t mode)
->  {
->  	struct scsi_request *req = scsi_req(rq);
-> +	unsigned long timeout;
->  
->  	if (copy_from_user(req->cmd, hdr->cmdp, hdr->cmd_len))
->  		return -EFAULT;
-> @@ -242,7 +243,11 @@ static int blk_fill_sghdr_rq(struct
-> request_queue *q, struct request *rq,
->  	 */
->  	req->cmd_len = hdr->cmd_len;
->  
-> -	rq->timeout = msecs_to_jiffies(hdr->timeout);
-> +	timeout = msecs_to_jiffies(hdr->timeout);
-> +	if (timeout == MAX_JIFFY_OFFSET)
-> +		rq->timeout = 0;
-> +	else
-> +		rq->timeout = timeout;
->  	if (!rq->timeout)
->  		rq->timeout = q->sg_timeout;
->  	if (!rq->timeout)
+So even if LBPRZ is not set you can trivially get into a situation
+where discard is supported through UNMAP, and you'll incorrectly
+set LBPRZ and will cause data corruption.
