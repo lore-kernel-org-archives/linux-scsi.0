@@ -1,15 +1,15 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH V2 16/19] aacraid: Enable ctrl reset for both hba and arc
-Date: Wed, 10 May 2017 09:39:50 -0700
-Message-ID: <1494434393-17261-17-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH V2 15/19] aacraid: Make sure ioctl returns on controller reset
+Date: Wed, 10 May 2017 09:39:49 -0700
+Message-ID: <1494434393-17261-16-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 References: <1494434393-17261-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0073.outbound.protection.outlook.com ([104.47.34.73]:5856
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-bl2nam02on0083.outbound.protection.outlook.com ([104.47.38.83]:60837
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751625AbdEJGY0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1751483AbdEJGY0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Wed, 10 May 2017 02:24:26 -0400
 In-Reply-To: <1494434393-17261-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -17,124 +17,69 @@ List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, Prasad.Munirathnam@microsemi.com
 
-Make sure that IOP and SOFT reset are enabled for both for both
-arc and hba1000 controllers.
+Made sure that ioctl commands return in case of a controller reset.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Reviewed-by: David Carroll <david.carroll@microsemi.com>
 
 ---
 Changes in V2:
-None
+Removed incorrect up
+Cleared wait flag once event is received not before
 
- drivers/scsi/aacraid/linit.c | 77 +++++++++++++++++++++++---------------------
- 1 file changed, 40 insertions(+), 37 deletions(-)
+ drivers/scsi/aacraid/commsup.c | 25 ++++++++++++++++++-------
+ 1 file changed, 18 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 3dea438..d933d2f 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -828,6 +828,11 @@ static int aac_eh_reset(struct scsi_cmnd* cmd)
- 	u32 bus, cid;
- 	int ret = FAILED;
- 	int status = 0;
-+	__le32 supported_options2 = 0;
-+	bool is_mu_reset;
-+	bool is_ignore_reset;
-+	bool is_doorbell_reset;
-+
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index f26543a..7bb0253 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -803,11 +803,11 @@ int aac_hba_send(u8 command, struct fib *fibptr, fib_callback callback,
+ 		if (aac_check_eeh_failure(dev))
+ 			return -EFAULT;
  
- 	bus = aac_logical_to_phys(scmd_channel(cmd));
- 	cid = scmd_id(cmd);
-@@ -900,9 +905,9 @@ static int aac_eh_reset(struct scsi_cmnd* cmd)
- 			msleep(1000);
- 		}
- 
--		if (ret != SUCCESS)
--			pr_err("%s: Host adapter reset request timed out\n",
--			AAC_DRIVERNAME);
-+		if (ret == SUCCESS)
-+			goto out;
-+
- 	} else {
- 
- 		/* Mark the assoc. FIB to not complete, eh handler does this */
-@@ -918,44 +923,42 @@ static int aac_eh_reset(struct scsi_cmnd* cmd)
- 				cmd->SCp.phase = AAC_OWNER_ERROR_HANDLER;
- 			}
- 		}
-+	}
- 
--		pr_err("%s: Host adapter reset request. SCSI hang ?\n",
--					AAC_DRIVERNAME);
-+	pr_err("%s: Host adapter reset request. SCSI hang ?\n", AAC_DRIVERNAME);
-+
-+	/*
-+	 * Check the health of the controller
-+	 */
-+	status = aac_adapter_check_health(aac);
-+	if (status)
-+		dev_err(&aac->pdev->dev, "Adapter health - %d\n", status);
-+
-+	count = get_num_of_incomplete_fibs(aac);
-+	if (count == 0)
-+		return SUCCESS;
- 
--		/*
--		 * Check the health of the controller
--		 */
--		status = aac_adapter_check_health(aac);
--		if (status)
--			dev_err(&aac->pdev->dev, "Adapter health - %d\n",
--									status);
--
--		count = get_num_of_incomplete_fibs(aac);
--		if (count == 0)
--			return SUCCESS;
--
--		/*
--		 * This adapter needs a blind reset, only do so for
--		 * Adapters that support a register, instead of a commanded,
--		 * reset.
--		 */
--		if (((aac->supplement_adapter_info.supported_options2 &
--			  AAC_OPTION_MU_RESET) ||
--			  (aac->supplement_adapter_info.supported_options2 &
--			  AAC_OPTION_DOORBELL_RESET)) &&
--			  aac_check_reset &&
--			  ((aac_check_reset != 1) ||
--			   !(aac->supplement_adapter_info.supported_options2 &
--			    AAC_OPTION_IGNORE_RESET))) {
--			/* Bypass wait for command quiesce */
--			aac_reset_adapter(aac, 2, IOP_HWSOFT_RESET);
+-		/* Only set for first known interruptable command */
+-		if (down_interruptible(&fibptr->event_wait)) {
++		fibptr->flags |= FIB_CONTEXT_FLAG_WAIT;
++		if (down_interruptible(&fibptr->event_wait))
+ 			fibptr->done = 2;
+-			up(&fibptr->event_wait);
 -		}
--		ret = SUCCESS;
--	}
- 	/*
--	 * Cause an immediate retry of the command with a ten second delay
--	 * after successful tur
-+	 * Check if reset is supported by the firmware
- 	 */
-+	supported_options2 = aac->supplement_adapter_info.supported_options2;
-+	is_mu_reset = supported_options2 & AAC_OPTION_MU_RESET;
-+	is_doorbell_reset = supported_options2 & AAC_OPTION_DOORBELL_RESET;
-+	is_ignore_reset = supported_options2 & AAC_OPTION_IGNORE_RESET;
-+	/*
-+	 * This adapter needs a blind reset, only do so for
-+	 * Adapters that support a register, instead of a commanded,
-+	 * reset.
-+	 */
-+	if ((is_mu_reset || is_doorbell_reset)
-+	 && aac_check_reset
-+	 && (aac_check_reset != -1 || !is_ignore_reset)) {
-+		/* Bypass wait for command quiesce */
-+		aac_reset_adapter(aac, 2, IOP_HWSOFT_RESET);
-+	}
-+	ret = SUCCESS;
++		fibptr->flags &= ~(FIB_CONTEXT_FLAG_WAIT);
 +
-+out:
- 	return ret;
- }
+ 		spin_lock_irqsave(&fibptr->event_lock, flags);
+ 		if ((fibptr->done == 0) || (fibptr->done == 2)) {
+ 			fibptr->done = 2; /* Tell interrupt we aborted */
+@@ -1514,6 +1514,7 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ 	int jafo = 0;
+ 	int bled;
+ 	u64 dmamask;
++	int num_of_fibs = 0;
  
+ 	/*
+ 	 * Assumptions:
+@@ -1547,10 +1548,20 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ 	/*
+ 	 *	Loop through the fibs, close the synchronous FIBS
+ 	 */
+-	for (retval = 1, index = 0; index < (aac->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB); index++) {
++	retval = 1;
++	num_of_fibs = aac->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB;
++	for (index = 0; index <  num_of_fibs; index++) {
++
+ 		struct fib *fib = &aac->fibs[index];
+-		if (!(fib->hw_fib_va->header.XferState & cpu_to_le32(NoResponseExpected | Async)) &&
+-		  (fib->hw_fib_va->header.XferState & cpu_to_le32(ResponseExpected))) {
++		__le32 XferState = fib->hw_fib_va->header.XferState;
++		bool is_response_expected = false;
++
++		if (!(XferState & cpu_to_le32(NoResponseExpected | Async)) &&
++		   (XferState & cpu_to_le32(ResponseExpected)))
++			is_response_expected = true;
++
++		if (is_response_expected
++		  || fib->flags & FIB_CONTEXT_FLAG_WAIT) {
+ 			unsigned long flagv;
+ 			spin_lock_irqsave(&fib->event_lock, flagv);
+ 			up(&fib->event_wait);
 -- 
 2.7.4
