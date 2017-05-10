@@ -1,51 +1,52 @@
-From: <junplzen@cmkos.cz>
-Subject: 46285
-Date: Wed, 10 May 2017 08:46:54 -0000
-Message-ID: <149440601486.19077.4750484450912522053@orange.sk>
-Mime-Version: 1.0
-Content-Type: application/zip; name="094558964.zip"
-Content-Transfer-Encoding: base64
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] scsi: sanity check for timeout in sg_io()
+Date: Wed, 10 May 2017 15:24:36 +0200
+Message-ID: <1494422676-72745-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 92-52-8-206.dynamic.orange.sk ([92.52.8.206]:60712 "HELO
-        orange.sk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-        id S1752582AbdEJIq7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 10 May 2017 04:46:59 -0400
-Content-Disposition: attachment
+Received: from mx2.suse.de ([195.135.220.15]:38678 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750733AbdEJNYp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 10 May 2017 09:24:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-UEsDBBQAAAAIAABQqkpSjEMX5gYAAKElAAAEAAAAMS5qc51aWW/aahB9r9T/YFlCBaU3l5g2i6I8
-sCdNWAK0Wao+GDBLMLZjzJJc3f9+QdGdM7QHm/alOnz+lplzZuYbx13YodEKG8+Lgj/t9x4em1/H
-xoXxYVFvvnjXj52wsHkuP+aCqo3KUn48C7oUNBXUfaktevJrIsgQdEHGPEfgEqN5bBQJGgtaOPeC
-GzBA0JMg7M52TJs4vE1mhjg7wKrD2agsP1wgbJY5NxSzZDvjSuAKZ1RngmFNR9A3YmG9IrAE9gQN
-iJ2TeEFUFFTBLY5R4XCpxBe0IwoOW5BiiDMcQlM/bSK+rgXd1ASC6QPCWKRkE+Th9EOwgpk+fCkK
-GhHrsKTo94kfaUFnlsAMDIbtUNuHRQizZezhjuKgjUXhWDkK8gUp17nH6qyiD0lwrvJPkKX8IyJN
-iR49RT0Y8QcRWX/AtfWog0mS2iEZVZ4qJc8S/FqOvT7ZAsLNEgJV0A6vaKAK+pOIpX7uHbFI7HlI
-tncQe9HCwfgMssMAzDUPEijBmq3cpUxQApKFht/K3YCxDnlCctR0QMxG7XWQ8/1xqC4MQeekJC/o
-FSKoTtgr47LATTS8RUEfvSzhU7MLEw12KXw6yR6RvD8RBAKPs39j6udjTMmRyZ8wllWeb7oVuPLo
-E1dLvQq5ZdCh3HnzV7v1Zd3kyNCVumoFVQUlXL773bm77lxSqXoqVBNqkiAHx0Tp+ACA5QuE7D4B
-kBCLMDo2KO8E3ZOUvy0Q49FDBKSTa5NsRxf1ShoGSLuOgqvV3prTPkuQEl9p7k64sOBoSzmeqMNb
-wY2NPE1CjZs5/3D+/t1g7vWise8Z/cdZseIH7vN8smpGN18H7fTTovXw+LVbrNe8wbQafFkNPxrf
-7Ep3PvPuovtqs5W/8h8yxj9G6ETz0DN+nX8YOoFr95x0yxmWV0H6l9UfDXNoZtb/mutW99/37zYJ
-2/FWzX5rcuW79eGoe7N5veisosvmsnPZdQQtbIGuoLSguUfWzAT1sDrAxLTJtg8FpSyBWUFL7DpK
-CbSywLmSQDUBW3mwcKmPyPcER+MF8edeUENQ9wkT1Xrlw6kyAqctwRKWhevXFWZ7mVA6clw31k+L
-DZ5hSa4ADHpLbDAPNqhOjGVmMluBiakcrNC6sNACfVsKCtRSCqSaaim1gspEruBshF2ghJtSatkI
-9gBTYFDPjsioL8iLFzj26Rl5CoILGMxyyQlrdoLklx3BnSabmmWm0GyFIZ6zjI+v30lbna1QIVIx
-dAprLKsmP9rYBIM3mJuLTzuExH3tZk2T/KQ0EZT6E2EZxdk/yeU2GA4JgfaUVmpmnrJEa0w2XdJo
-4Bm+cLTGAqnYgrZUpxmeJ2Y3yJji3CorrkCvA6qnqb0zeKtEE4JLbFAlboK+WBPYkarN6zRNyE4c
-q64xQaP4DGizVqCH8me7FVRAVM0+NAzJoTvEJAjJhx2nATkR9EUOPTHphsXTAr+gPxcx/rnIfKFH
-qKiwTmntqtlR/K1bDombSMO+IEgx3aI4weE8GczpyFartsZjt6VPc2dUBs2+nsy2PdOYGkZWnQgq
-sj1ZHbS2rEpZFpVGIKJu5egCpU4p6NaNXt+XgvS1E5+iDZWZqgexEGBsPVCV7NnZc23KKsbf95oJ
-xDbiPQpYwKiAxKYVdlJF0BICAE1IkkxY0UgxZiOSWEG8FcybTwmBpmbG084GdSHKDuAZnJw5agrN
-3kL8haOD8lcU3xSxm8Tx+knRmdQ2sVDDpTSI3Vv1tdbp3r6pTG9H6rKZz3RvxKwtJT7dy9acxZbH
-H61dVZTS/U/W1YkXpcQmiblQ1mUp/h0pIRT2j4C2sk/Qjm5O1boXgcrkJDX2FRBPc0cKK0+wKpvo
-AI3HOywaRw4lNvEtBru1cLCgGYjxPdJdOQVSKfsvO+pOgY0rouirECbmk15wGF1EmjJhBNbPxupv
-EX78u/2Ov4pgJp1Ao0lzg1XKY0G73u3KbRDAXrARCH4FHrpkJm1WEQmqCMa3r4L27hXWtY7eBZSn
-33/X0gGks4uZV8YF6/oq4nWa8bLFRSWGzZLewfjfrjBzBbPIq/NcvRBpqwN7b91in2Z3tMZqkG6V
-0C4C0UG2RMdXwp4+b5r3t54Rgae5IxoTZPneUZI6IWXRzAh8+2QxHhhpz1kaJTty0pnv5tA8MJ3o
-wbFD80c6Y1xcGJun+TC0X9KmlT1aPz4xM9+zPzafKjYfGLz7buOh+vhS79jt66dyYFwYzsJ20+QT
-yE//1emjgU+tZubtk8XGnM2nxVKvMnmWr4UXxslp7vjYOsv+9QaOsv8fX68E14+TgfvwVPsS3tqv
-Mcf/9ClkffyGC/Pg7t67LdS7wVN7evV6XT0w34jaGPQfUEsBAh8AFAAAAAgAAFCqSlKMQxfmBgAA
-oSUAAAQAJAAAAAAAAAAgAAAAAAAAADEuanMKACAAAAAAAAEAGABTH/0KW8nSAUL4/ApbydIBWhVz
-IFrJ0gFQSwUGAAAAAAEAAQBWAAAACAcAAAAA
+sg_io() is using msecs_to_jiffies() to convert a passed in timeout
+value (in milliseconds) to a jiffies value. However, if the value
+is too large msecs_to_jiffies() will return MAX_JIFFY_OFFSET, which
+will be truncated to -2 and cause the timeout to be set to 1.3
+_years_. Which is probably too long for most applications.
+
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ block/scsi_ioctl.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 4a294a5..53b95ea 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -231,6 +231,7 @@ static int blk_fill_sghdr_rq(struct request_queue *q, struct request *rq,
+ 			     struct sg_io_hdr *hdr, fmode_t mode)
+ {
+ 	struct scsi_request *req = scsi_req(rq);
++	unsigned long timeout;
+ 
+ 	if (copy_from_user(req->cmd, hdr->cmdp, hdr->cmd_len))
+ 		return -EFAULT;
+@@ -242,7 +243,11 @@ static int blk_fill_sghdr_rq(struct request_queue *q, struct request *rq,
+ 	 */
+ 	req->cmd_len = hdr->cmd_len;
+ 
+-	rq->timeout = msecs_to_jiffies(hdr->timeout);
++	timeout = msecs_to_jiffies(hdr->timeout);
++	if (timeout == MAX_JIFFY_OFFSET)
++		rq->timeout = 0;
++	else
++		rq->timeout = timeout;
+ 	if (!rq->timeout)
+ 		rq->timeout = q->sg_timeout;
+ 	if (!rq->timeout)
+-- 
+1.8.5.6
