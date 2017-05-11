@@ -1,55 +1,41 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 15/15] lpfc: update version to 11.2.0.14
-Date: Thu, 11 May 2017 09:51:49 +0200
-Message-ID: <6eaf1cf3-5ced-65ad-f265-01b591f24a6a@suse.de>
-References: <20170510190713.30171-1-jsmart2021@gmail.com>
- <20170510190713.30171-16-jsmart2021@gmail.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] target/iscsi: make function target_parse_xcopy_cmd static
+Date: Thu, 11 May 2017 11:16:16 +0100
+Message-ID: <20170511101616.19790-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47515 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754953AbdEKHvv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 11 May 2017 03:51:51 -0400
-In-Reply-To: <20170510190713.30171-16-jsmart2021@gmail.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, "Nicholas A . Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
-Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-On 05/10/2017 09:07 PM, James Smart wrote:
-> Change driver version to 11.2.0.14
-> 
-> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-> Signed-off-by: James Smart <james.smart@broadcom.com>
-> ---
->  drivers/scsi/lpfc/lpfc_version.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
-> index 1c26dc67151b..c2653244221c 100644
-> --- a/drivers/scsi/lpfc/lpfc_version.h
-> +++ b/drivers/scsi/lpfc/lpfc_version.h
-> @@ -20,7 +20,7 @@
->   * included with this package.                                     *
->   *******************************************************************/
->  
-> -#define LPFC_DRIVER_VERSION "11.2.0.12"
-> +#define LPFC_DRIVER_VERSION "11.2.0.14"
->  #define LPFC_DRIVER_NAME		"lpfc"
->  
->  /* Used for SLI 2/3 */
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+From: Colin Ian King <colin.king@canonical.com>
 
-Cheers,
+Making target_parse_xcopy_cmd static fixes sparse warning:
 
-Hannes
+"warning: symbol 'target_parse_xcopy_cmd' was not declared.  Should
+it be static?"
+
+Fixes: 1bd05294519f76 ("target/iscsi: Fix a deadlock between the XCOPY code and session shutdown")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/target/target_core_xcopy.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
+index aecb36d955f0..00e0269e6be4 100644
+--- a/drivers/target/target_core_xcopy.c
++++ b/drivers/target/target_core_xcopy.c
+@@ -886,7 +886,7 @@ static void target_xcopy_do_work(struct work_struct *work)
+  * Returns TCM_NO_SENSE upon success or a sense code != TCM_NO_SENSE if parsing
+  * fails.
+  */
+-sense_reason_t target_parse_xcopy_cmd(struct xcopy_op *xop)
++static sense_reason_t target_parse_xcopy_cmd(struct xcopy_op *xop)
+ {
+ 	struct se_cmd *se_cmd = xop->xop_se_cmd;
+ 	unsigned char *p = NULL, *seg_desc;
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+2.11.0
