@@ -1,49 +1,40 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 07/15] lpfc: Separate NVMET data buffer pool fir ELS/CT.
-Date: Thu, 11 May 2017 08:22:08 +0200
-Message-ID: <80a3544a-6bad-e56f-9c0e-1b2f24b509cd@suse.de>
-References: <20170510190713.30171-1-jsmart2021@gmail.com>
- <20170510190713.30171-8-jsmart2021@gmail.com>
+From: "hch-jcswGhMUV9g@public.gmane.org" <hch-jcswGhMUV9g@public.gmane.org>
+Subject: Re: [PATCH 25/27] block: remove the discard_zeroes_data
+	flag
+Date: Thu, 11 May 2017 08:26:30 +0200
+Message-ID: <20170511062630.GA18517@lst.de>
+References: <20170405172125.22600-26-hch@lst.de>
+	<1493671519.2665.15.camel@sandisk.com>
+	<1493707425.23202.77.camel@haakon3.risingtidesystems.com>
+	<1493709373.23202.79.camel@haakon3.risingtidesystems.com>
+	<20170502072328.GA11522@lst.de>
+	<1493782395.23202.84.camel@haakon3.risingtidesystems.com>
+	<20170507092209.GA27370@lst.de>
+	<1494312374.16894.36.camel@haakon3.risingtidesystems.com>
+	<20170510140627.GA23759@lst.de>
+	<1494478235.16894.115.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41906 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751028AbdEKGWK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 11 May 2017 02:22:10 -0400
-In-Reply-To: <20170510190713.30171-8-jsmart2021@gmail.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1494478235.16894.115.camel-XoQW25Eq2zviZyQQd+hFbcojREIfoBdhmpATvIKMPHk@public.gmane.org>
+List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
+List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
+Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+To: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+Cc: "axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org" <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org" <philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Bart Van Assche <Bart.VanAssche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>, "lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org" <lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, "shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "hch-jcswGhMUV9g@public.gmane.org" <hch-jcswGhMUV9g@public.gmane.org>, "agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org" <drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
-Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-On 05/10/2017 09:07 PM, James Smart wrote:
-> Using 2048 byte buffer and onle 128 bytes is needed.
-> 
-> Create nee LFPC_NVMET_DATA_BUF_SIZE define to use
-> for NVMET RQ/MRQs.
-> 
-> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-> Signed-off-by: James Smart <james.smart@broadcom.com>
-> ---
->  drivers/scsi/lpfc/lpfc.h      |  1 +
->  drivers/scsi/lpfc/lpfc_crtn.h |  1 +
->  drivers/scsi/lpfc/lpfc_hw4.h  |  1 +
->  drivers/scsi/lpfc/lpfc_init.c |  7 ++++++-
->  drivers/scsi/lpfc/lpfc_mem.c  | 33 ++++++++++++++++++++++++++-------
->  drivers/scsi/lpfc/lpfc_sli.c  | 19 +++++++++++++++----
->  6 files changed, 50 insertions(+), 12 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+On Wed, May 10, 2017 at 09:50:35PM -0700, Nicholas A. Bellinger wrote:
+> 1) Expose a block_device or request_queue bit to signal 'real LBPRZ'
+> support up to IBLOCK, in order to maintain SCSI target feature
+> compatibility.
 
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+No way.  If you want to zero use REQ_OP_WRITE_ZEROES..
