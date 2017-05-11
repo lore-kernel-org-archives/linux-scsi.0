@@ -1,50 +1,86 @@
-From: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
-Subject: Re: [PATCH 25/27] block: remove the discard_zeroes_data
-	flag
-Date: Wed, 10 May 2017 23:36:22 -0700
-Message-ID: <1494484582.16894.156.camel@haakon3.risingtidesystems.com>
-References: <20170405172125.22600-26-hch@lst.de>
-	<1493671519.2665.15.camel@sandisk.com>
-	<1493707425.23202.77.camel@haakon3.risingtidesystems.com>
-	<1493709373.23202.79.camel@haakon3.risingtidesystems.com>
-	<20170502072328.GA11522@lst.de>
-	<1493782395.23202.84.camel@haakon3.risingtidesystems.com>
-	<20170507092209.GA27370@lst.de>
-	<1494312374.16894.36.camel@haakon3.risingtidesystems.com>
-	<20170510140627.GA23759@lst.de>
-	<1494478235.16894.115.camel@haakon3.risingtidesystems.com>
-	<20170511062630.GA18517@lst.de>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH v2] ibmvscsis: Fix the incorrect req_lim_delta
+Date: Wed, 10 May 2017 23:55:35 -0700
+Message-ID: <1494485735.16894.167.camel@haakon3.risingtidesystems.com>
+References: <1494444947-77322-1-git-send-email-bryantly@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-In-Reply-To: <20170511062630.GA18517-jcswGhMUV9g@public.gmane.org>
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: "hch-jcswGhMUV9g@public.gmane.org" <hch-jcswGhMUV9g@public.gmane.org>
-Cc: "axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org" <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org" <philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Bart Van Assche <Bart.VanAssche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>, "lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org" <lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, "shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org" <drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1494444947-77322-1-git-send-email-bryantly@linux.vnet.ibm.com>
+Sender: stable-owner@vger.kernel.org
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Cc: mikecyr@linux.vnet.ibm.com, mikecyr@us.ibm.com, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2017-05-11 at 08:26 +0200, hch-jcswGhMUV9g@public.gmane.org wrote:
-> On Wed, May 10, 2017 at 09:50:35PM -0700, Nicholas A. Bellinger wrote:
-> > 1) Expose a block_device or request_queue bit to signal 'real LBPRZ'
-> > support up to IBLOCK, in order to maintain SCSI target feature
-> > compatibility.
+On Wed, 2017-05-10 at 14:35 -0500, Bryant G. Ly wrote:
+> The current code is not correctly calculating the req_lim_delta.
 > 
-> No way.  If you want to zero use REQ_OP_WRITE_ZEROES..
+> We want to make sure vscsi->credit is always incremented when
+> we do not send a response for the scsi op. Thus for the case where
+> there is a successfully aborted task we need to make sure the
+> vscsi->credit is incremented.
+> 
+> v2 - Moves the original location of the vscsi->credit increment
+> to a better spot. Since if we increment credit, the next command
+> we send back will have increased req_lim_delta. But we probably
+> shouldn't be doing that until the aborted cmd is actually released.
+> Otherwise the client will think that it can send a new command, and
+> we could find ourselves short of command elements. Not likely, but could
+> happen.
+> 
+> This patch depends on both:
+> commit 25e78531268e ("ibmvscsis: Do not send aborted task response")
+> commit 38b2788edbd6 ("ibmvscsis: Clear left-over abort_cmd pointers")
+> 
+> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+> Reviewed-by: Michael Cyr <mikecyr@linux.vnet.ibm.com>
+> Cc: <stable@vger.kernel.org> # v4.8+
+> ---
+>  drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 24 ++++++++++++++++++++----
+>  1 file changed, 20 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+> index ee64241..abf6026 100644
+> --- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+> +++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+> @@ -1791,6 +1791,25 @@ static void ibmvscsis_send_messages(struct scsi_info *vscsi)
+>  					list_del(&cmd->list);
+>  					ibmvscsis_free_cmd_resources(vscsi,
+>  								     cmd);
+> +					/*
+> +					 * With a successfully aborted op
+> +					 * through LIO we want to increment the
+> +					 * the vscsi credit so that when we dont
+> +					 * send a rsp to the original scsi abort
+> +					 * op (h_send_crq), but the tm rsp to
+> +					 * the abort is sent, the credit is
+> +					 * correctly sent with the abort tm rsp.
+> +					 * We would need 1 for the abort tm rsp
+> +					 * and 1 credit for the aborted scsi op.
+> +					 * Thus we need to increment here.
+> +					 * Also we want to increment the credit
+> +					 * here because we want to make sure
+> +					 * cmd is actually released first
+> +					 * otherwise the client will think it
+> +					 * it can send a new cmd, and we could
+> +					 * find ourselves short of cmd elements.
+> +					 */
+> +					vscsi->credit += 1;
+>  				} else {
+>  					iue = cmd->iue;
+>  
+> @@ -2965,10 +2984,7 @@ static long srp_build_response(struct scsi_info *vscsi,
+>  
+>  	rsp->opcode = SRP_RSP;
+>  
+> -	if (vscsi->credit > 0 && vscsi->state == SRP_PROCESSING)
+> -		rsp->req_lim_delta = cpu_to_be32(vscsi->credit);
+> -	else
+> -		rsp->req_lim_delta = cpu_to_be32(1 + vscsi->credit);
+> +	rsp->req_lim_delta = cpu_to_be32(1 + vscsi->credit);
+>  	rsp->tag = cmd->rsp.tag;
+>  	rsp->flags = 0;
+>  
 
-Yes, I understand that part and it's what the earlier conversion of
-IBLOCK to use blkdev_issue_zeroout() already does.
-
-Once the blkdev_issue_zeroout() conversion is in place then LBPRZ can
-always be set to one for IBLOCK using blkdev_issue_zeroout().
-
-The point is this is not in -rc1, which as-is breaks LBPRZ compat for a
-release.
+Thanks Bryant.  Will apply post -rc1.
