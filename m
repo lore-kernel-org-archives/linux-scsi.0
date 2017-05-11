@@ -1,77 +1,135 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] target: Re-add check to reject control WRITEs with overflow data
-Date: Thu, 11 May 2017 18:04:02 +0000
-Message-ID: <1494525842-9389-1-git-send-email-nab@linux-iscsi.org>
+Subject: [GIT PULL] target updates for v4.12-rc1
+Date: Thu, 11 May 2017 11:42:55 -0700
+Message-ID: <1494528175.14920.25.camel@haakon3.risingtidesystems.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Roland Dreier <roland@purestorage.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+Hi Linus,
 
-During v4.3 when the overflow/underflow check was relaxed by
-commit c72c525022:
+Here are the target-pending updates for v4.12-rc1.  Please go ahead and
+pull from:
 
-  commit c72c5250224d475614a00c1d7e54a67f77cd3410
-  Author: Roland Dreier <roland@purestorage.com>
-  Date:   Wed Jul 22 15:08:18 2015 -0700
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next
 
-       target: allow underflow/overflow for PR OUT etc. commands
+Things where alot more calm than previously expected.  It's primarily
+fixes in various areas, with most of the new functionality centering
+around TCMU backend driver work that Xiubo Li has been driving.
 
-to allow underflow/overflow for Windows compliance + FCP, a
-consequence was to allow control CDBs to process overflow
-data for iscsi-target with immediate data as well.
+Here's the summary on the feature side:
 
-As per Roland's original change, continue to allow underflow
-cases for control CDBs to make Windows compliance + FCP happy,
-but until then explicitly reject all control WRITEs with
-overflow following pre v4.3.y logic.
+  - Make T10-PI verify configurable for emulated (FILEIO + RD) backends 
+    (Dmitry Monakhov)
+  - Allow target-core/TCMU pass-through to use in-kernel SPC-PR logic
+    (Bryant Ly + MNC)
+  - Add TCMU support for growing ring buffer size (Xiubo Li + MNC)
+  - Add TCMU support for global block data pool (Xiubo Li + MNC)
 
-Reported-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Roland Dreier <roland@purestorage.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_transport.c | 23 ++++++++++++++++++-----
- 1 file changed, 18 insertions(+), 5 deletions(-)
+and on the bug-fix side:
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 37f5735..6025935 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1160,15 +1160,28 @@ int transport_dump_vpd_ident(
- 	if (cmd->unknown_data_length) {
- 		cmd->data_length = size;
- 	} else if (size != cmd->data_length) {
--		pr_warn("TARGET_CORE[%s]: Expected Transfer Length:"
-+		pr_warn_ratelimited("TARGET_CORE[%s]: Expected Transfer Length:"
- 			" %u does not match SCSI CDB Length: %u for SAM Opcode:"
- 			" 0x%02x\n", cmd->se_tfo->get_fabric_name(),
- 				cmd->data_length, size, cmd->t_task_cdb[0]);
- 
--		if (cmd->data_direction == DMA_TO_DEVICE &&
--		    cmd->se_cmd_flags & SCF_SCSI_DATA_CDB) {
--			pr_err("Rejecting underflow/overflow WRITE data\n");
--			return TCM_INVALID_CDB_FIELD;
-+		if (cmd->data_direction == DMA_TO_DEVICE) {
-+			if (cmd->se_cmd_flags & SCF_SCSI_DATA_CDB) {
-+				pr_err_ratelimited("Rejecting underflow/overflow"
-+						   " for WRITE data CDB\n");
-+				return TCM_INVALID_CDB_FIELD;
-+			}
-+			/*
-+			 * Some fabric drivers like iscsi-target still expect to
-+			 * always reject overflow writes.  Reject this case until
-+			 * full fabric driver level support for overflow writes
-+			 * is introduced tree-wide.
-+			 */
-+			if (size > cmd->data_length) {
-+				pr_err_ratelimited("Rejecting overflow for"
-+						   " WRITE control CDB\n");
-+				return TCM_INVALID_CDB_FIELD;
-+			}
- 		}
- 		/*
- 		 * Reject READ_* or WRITE_* with overflow/underflow for
--- 
-1.9.1
+  - Fix COMPARE_AND_WRITE non GOOD status handling for READ phase 
+    failures (Gary Guo + nab)
+  - Fix iscsi-target hang with explicitly changing per NodeACL
+    CmdSN number depth with concurrent login driven session 
+    reinstatement.  (Gary Guo + nab)
+  - Fix ibmvscsis fabric driver ABORT task handling (Bryant Ly)
+  - Fix target-core/FILEIO zero length handling (Bart Van Assche)
+
+Also, there was an OOPs introduced with the WRITE_VERIFY changes that I
+ended up reverting at the last minute, because as not unusual Bart and I
+could not agree on the fix in time for -rc1.  Since it's specific to a
+conformance test, it's been reverted for now.
+
+There is a separate patch in the queue to address the underlying control
+CDB write overflow regression in >= v4.3 separate from the WRITE_VERIFY
+revert here, that will be pushed post -rc1.
+
+Thank you,
+
+--nab
+
+Bart Van Assche (4):
+  target: Fix VERIFY and WRITE VERIFY command parsing
+  target/fileio: Fix zero-length READ and WRITE handling
+  IB/srpt: Fix abort handling
+  IB/srpt: Avoid that aborting a command triggers a kernel warning
+
+Bryant G. Ly (3):
+  target: Add WRITE_VERIFY_16
+  target/user: PGR Support
+  ibmvscsis: Do not send aborted task response
+
+Christophe Vu-Brugier (1):
+  Documentation/target: add an example script to configure an iSCSI
+    target
+
+Dmitry Monakhov (2):
+  tcm_fileio: Prevent information leak for short reads
+  tcm: make pi data verification configurable
+
+Elena Reshetova (1):
+  target/iblock: convert iblock_req.pending from atomic_t to refcount_t
+
+Hannes Reinecke (2):
+  target: fixup error message in
+    target_tg_pt_gp_alua_access_type_store()
+  target: fixup error message in target_tg_pt_gp_tg_pt_gp_id_store()
+
+Markus Elfring (8):
+  iscsi-target: Use kcalloc() in iscsit_allocate_iovecs()
+  iscsi-target: Delete error messages for failed memory allocations
+  iscsi-target: Improve size determinations in four functions
+  target: Use kcalloc() in two functions
+  target: Delete error messages for failed memory allocations
+  target: Improve size determinations in two functions
+  target: Use kmalloc_array() in compare_and_write_callback()
+  target: Use kmalloc_array() in transport_kmap_data_sg()
+
+Mike Christie (1):
+  tcmu: fix module removal due to stuck thread
+
+Nicholas Bellinger (4):
+  target: Fix compare_and_write_callback handling for non GOOD status
+  iscsi-target: Set session_fall_back_to_erl0 when forcing reinstatement
+  target: Don't force session reset if queue_depth does not change
+  Revert "target: Fix VERIFY and WRITE VERIFY command parsing"
+
+Xiubo Li (3):
+  tcmu: Add dynamic growing data area feature support
+  tcmu: Add global data block pool support
+  tcmu: Recalculate the tcmu_cmd size to save cmd area memories
+
+Zhu Lingshan (1):
+  target/pr: update PR out action code table
+
+ Documentation/target/target-export-device    |  80 ++++
+ drivers/infiniband/ulp/srpt/ib_srpt.c        |   9 +-
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c     | 114 +++--
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.h     |   2 +
+ drivers/target/iscsi/iscsi_target.c          |  51 +--
+ drivers/target/iscsi/iscsi_target_configfs.c |   1 +
+ drivers/target/iscsi/iscsi_target_login.c    |   1 +
+ drivers/target/target_core_configfs.c        |  54 ++-
+ drivers/target/target_core_device.c          |  38 ++
+ drivers/target/target_core_file.c            |  32 +-
+ drivers/target/target_core_iblock.c          |  12 +-
+ drivers/target/target_core_iblock.h          |   3 +-
+ drivers/target/target_core_pr.c              |   2 +-
+ drivers/target/target_core_pr.h              |   9 +-
+ drivers/target/target_core_pscsi.c           |   3 +-
+ drivers/target/target_core_rd.c              |  50 +--
+ drivers/target/target_core_sbc.c             |  10 +-
+ drivers/target/target_core_tpg.c             |   7 +
+ drivers/target/target_core_transport.c       |   2 +-
+ drivers/target/target_core_user.c            | 645 +++++++++++++++++++++------
+ include/scsi/scsi_proto.h                    |   1 +
+ include/target/target_core_backend.h         |   1 +
+ include/target/target_core_base.h            |   1 +
+ 23 files changed, 859 insertions(+), 269 deletions(-)
+ create mode 100755 Documentation/target/target-export-device
