@@ -1,24 +1,38 @@
-From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Subject: Re: [PATCH] target: remove dead code
-Date: Thu, 11 May 2017 13:39:34 -0700
-Message-ID: <eb45ee9e-8dc7-c1a2-25c7-62fa5b962e08@linux.vnet.ibm.com>
-References: <20170509214604.GA7643@embeddedgus>
+From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Subject: [PATCH] scsi: libfc: fix incorrect variable assingment
+Date: Thu, 11 May 2017 17:24:44 -0500
+Message-ID: <20170511222444.GA6604@embeddedgus>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170509214604.GA7643@embeddedgus>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Johannes Thumshirn <jth@kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <garsilva@embeddedor.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 05/09/2017 02:46 PM, Gustavo A. R. Silva wrote:
-> Local variable _ret_ is assigned to a constant value and it is never
-> updated again. Remove this variable and the dead code it guards.
-> 
-> Addresses-Coverity-ID: 140761
-> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
-> ---
+Previous assignment was causing the use of the uninitialized variable
+_explan_ inside fc_seq_ls_rjt() function, which in this particular
+case is being called by fc_seq_els_rsp_send().
 
-Reviewed-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Addresses-Coverity-ID: 1398125
+Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+---
+ drivers/scsi/libfc/fc_rport.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index b44c313..5203258 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -1422,7 +1422,7 @@ static void fc_rport_recv_rtv_req(struct fc_rport_priv *rdata,
+ 	fp = fc_frame_alloc(lport, sizeof(*rtv));
+ 	if (!fp) {
+ 		rjt_data.reason = ELS_RJT_UNAB;
+-		rjt_data.reason = ELS_EXPL_INSUF_RES;
++		rjt_data.explan = ELS_EXPL_INSUF_RES;
+ 		fc_seq_els_rsp_send(in_fp, ELS_LS_RJT, &rjt_data);
+ 		goto drop;
+ 	}
+-- 
+2.5.0
