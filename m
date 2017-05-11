@@ -1,41 +1,31 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH v1] ibmvscsis: Fix cleaning up pointers
-Date: Thu, 11 May 2017 10:21:49 -0700
-Message-ID: <1494523309.14920.3.camel@haakon3.risingtidesystems.com>
-References: <1494348626-62378-1-git-send-email-bryantly@linux.vnet.ibm.com>
-         <1494387933.16894.56.camel@haakon3.risingtidesystems.com>
-         <068b2d6e-fde5-f72c-1032-485f6bab68f2@linux.vnet.ibm.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v1 3/4] scsi: ufs: Expose Task Management to ioctl() UAPI
+Date: Thu, 11 May 2017 10:57:47 -0700
+Message-ID: <20170511175747.GA24599@infradead.org>
+References: <1494511309-32256-1-git-send-email-michalx.potomski@intel.com>
+ <1494511309-32256-4-git-send-email-michalx.potomski@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <068b2d6e-fde5-f72c-1032-485f6bab68f2@linux.vnet.ibm.com>
-Sender: stable-owner@vger.kernel.org
-To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Cc: mikecyr@linux.vnet.ibm.com, mikecyr@us.ibm.com, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, stable@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:41529 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932376AbdEKR5s (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 May 2017 13:57:48 -0400
+Content-Disposition: inline
+In-Reply-To: <1494511309-32256-4-git-send-email-michalx.potomski@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Michal Potomski <michalx.potomski@intel.com>
+Cc: linux-scsi@vger.kernel.org, vinholikatti@gmail.com, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, subhashj@codeaurora.org
 
-On Thu, 2017-05-11 at 10:40 -0500, Bryant G. Ly wrote:
-> On 5/9/17 10:45 PM, Nicholas A. Bellinger wrote:
+On Thu, May 11, 2017 at 04:01:48PM +0200, Michal Potomski wrote:
+> From: Michał Potomski <michalx.potomski@intel.com>
 > 
-> > On Tue, 2017-05-09 at 11:50 -0500, Bryant G. Ly wrote:
-> >> This patch is dependent on:
-> >> 'commit 25e78531268e ("ibmvscsis: Do not send aborted task response")'
-> >> This patch cleans up some pointers after usage.
-> >>
-> >> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-> >> Reviewed-by: Michael Cyr <mikecyr@linux.vnet.ibm.com>
-> >> Cc: <stable@vger.kernel.org> # v4.8+
-> >> ---
-> >>   drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 3 +++
-> >>   1 file changed, 3 insertions(+)
-> > Applied, with a more verbose commit message.
-> >
-> > Thanks for splitting this out into an incremental patch.
-> >
-> No problem, did you end up forgetting it once you reverted Bart's VERIFY/WRITE VERIFY patch?
-> 
-> It seems to be missing from your for-next now.
-> 
+> Since we already have UFS ioctl() API some additional tools
+> like task management are "nice-to-have" for testing and management
+> purposes.
 
-Yep, going to include it post -rc1 with your latest patch.
+No way you're going to bypass the SCSI midlayer for task management.
+
+NAK with prejudice.
