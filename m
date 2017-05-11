@@ -1,86 +1,63 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH v2] ibmvscsis: Fix the incorrect req_lim_delta
-Date: Wed, 10 May 2017 23:55:35 -0700
-Message-ID: <1494485735.16894.167.camel@haakon3.risingtidesystems.com>
-References: <1494444947-77322-1-git-send-email-bryantly@linux.vnet.ibm.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 08/15] lpfc: Separate NVMET RQ buffer posting from IO
+ resources SGL/iocbq/context
+Date: Thu, 11 May 2017 09:23:00 +0200
+Message-ID: <968af0f0-078b-fd85-363c-0fe3c111d3f8@suse.de>
+References: <20170510190713.30171-1-jsmart2021@gmail.com>
+ <20170510190713.30171-9-jsmart2021@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1494444947-77322-1-git-send-email-bryantly@linux.vnet.ibm.com>
-Sender: stable-owner@vger.kernel.org
-To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Cc: mikecyr@linux.vnet.ibm.com, mikecyr@us.ibm.com, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, stable@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:45240 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750917AbdEKHXD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 11 May 2017 03:23:03 -0400
+In-Reply-To: <20170510190713.30171-9-jsmart2021@gmail.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
+Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-On Wed, 2017-05-10 at 14:35 -0500, Bryant G. Ly wrote:
-> The current code is not correctly calculating the req_lim_delta.
+On 05/10/2017 09:07 PM, James Smart wrote:
+> Currently IO resources are mapped 1 to 1 with RQ buffers posted
 > 
-> We want to make sure vscsi->credit is always incremented when
-> we do not send a response for the scsi op. Thus for the case where
-> there is a successfully aborted task we need to make sure the
-> vscsi->credit is incremented.
+> Added logic to separate RQE buffers from IO op resources
+> (sgl/iocbq/context). During initialization, the driver will determine
+> how many SGLs it will allocate for NVMET (based on what the
+> firmware reports) and associate a NVMET IOCBq and NVMET context
+> structure with each one.
 > 
-> v2 - Moves the original location of the vscsi->credit increment
-> to a better spot. Since if we increment credit, the next command
-> we send back will have increased req_lim_delta. But we probably
-> shouldn't be doing that until the aborted cmd is actually released.
-> Otherwise the client will think that it can send a new command, and
-> we could find ourselves short of command elements. Not likely, but could
-> happen.
+> Now that hdr/data buffers are immediately reposted back to the RQ,
+> 512 RQEs for each MRQ is sufficient. Also, since NVMET data buffers
+> are now 128 bytes, lpfc_nvmet_mrq_post is not necessary anymore
+> as we will always post the max (512) buffers per NVMET MRQ.
 > 
-> This patch depends on both:
-> commit 25e78531268e ("ibmvscsis: Do not send aborted task response")
-> commit 38b2788edbd6 ("ibmvscsis: Clear left-over abort_cmd pointers")
-> 
-> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-> Reviewed-by: Michael Cyr <mikecyr@linux.vnet.ibm.com>
-> Cc: <stable@vger.kernel.org> # v4.8+
+> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+> Signed-off-by: James Smart <james.smart@broadcom.com>
 > ---
->  drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 24 ++++++++++++++++++++----
->  1 file changed, 20 insertions(+), 4 deletions(-)
+>  drivers/scsi/lpfc/lpfc.h       |  11 +-
+>  drivers/scsi/lpfc/lpfc_attr.c  |  11 --
+>  drivers/scsi/lpfc/lpfc_crtn.h  |   8 +-
+>  drivers/scsi/lpfc/lpfc_init.c  |  92 ++-------------
+>  drivers/scsi/lpfc/lpfc_mem.c   |  73 +-----------
+>  drivers/scsi/lpfc/lpfc_nvmet.c | 246 +++++++++++++++++++++++++++++++----------
+>  drivers/scsi/lpfc/lpfc_nvmet.h |   1 +
+>  drivers/scsi/lpfc/lpfc_sli.c   |  88 +++++++++++++--
+>  drivers/scsi/lpfc/lpfc_sli4.h  |   4 +-
+>  9 files changed, 295 insertions(+), 239 deletions(-)
 > 
-> diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-> index ee64241..abf6026 100644
-> --- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-> +++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-> @@ -1791,6 +1791,25 @@ static void ibmvscsis_send_messages(struct scsi_info *vscsi)
->  					list_del(&cmd->list);
->  					ibmvscsis_free_cmd_resources(vscsi,
->  								     cmd);
-> +					/*
-> +					 * With a successfully aborted op
-> +					 * through LIO we want to increment the
-> +					 * the vscsi credit so that when we dont
-> +					 * send a rsp to the original scsi abort
-> +					 * op (h_send_crq), but the tm rsp to
-> +					 * the abort is sent, the credit is
-> +					 * correctly sent with the abort tm rsp.
-> +					 * We would need 1 for the abort tm rsp
-> +					 * and 1 credit for the aborted scsi op.
-> +					 * Thus we need to increment here.
-> +					 * Also we want to increment the credit
-> +					 * here because we want to make sure
-> +					 * cmd is actually released first
-> +					 * otherwise the client will think it
-> +					 * it can send a new cmd, and we could
-> +					 * find ourselves short of cmd elements.
-> +					 */
-> +					vscsi->credit += 1;
->  				} else {
->  					iue = cmd->iue;
->  
-> @@ -2965,10 +2984,7 @@ static long srp_build_response(struct scsi_info *vscsi,
->  
->  	rsp->opcode = SRP_RSP;
->  
-> -	if (vscsi->credit > 0 && vscsi->state == SRP_PROCESSING)
-> -		rsp->req_lim_delta = cpu_to_be32(vscsi->credit);
-> -	else
-> -		rsp->req_lim_delta = cpu_to_be32(1 + vscsi->credit);
-> +	rsp->req_lim_delta = cpu_to_be32(1 + vscsi->credit);
->  	rsp->tag = cmd->rsp.tag;
->  	rsp->flags = 0;
->  
+Re-posting must die :-)
 
-Thanks Bryant.  Will apply post -rc1.
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
