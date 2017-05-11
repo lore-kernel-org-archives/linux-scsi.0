@@ -1,41 +1,38 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH] target/iscsi: make function target_parse_xcopy_cmd static
-Date: Thu, 11 May 2017 13:55:58 +0000
-Message-ID: <1494510957.3018.1.camel@sandisk.com>
-References: <20170511101616.19790-1-colin.king@canonical.com>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: Re: [PATCH v1] ibmvscsis: Fix cleaning up pointers
+Date: Thu, 11 May 2017 10:40:45 -0500
+Message-ID: <068b2d6e-fde5-f72c-1032-485f6bab68f2@linux.vnet.ibm.com>
+References: <1494348626-62378-1-git-send-email-bryantly@linux.vnet.ibm.com>
+ <1494387933.16894.56.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170511101616.19790-1-colin.king@canonical.com>
-Content-Language: en-US
-Content-ID: <BC7CC5FBD5A29C4AAB7BC34A1D007EC0@namprd04.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "colin.king@canonical.com" <colin.king@canonical.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1494387933.16894.56.camel@haakon3.risingtidesystems.com>
+Sender: stable-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: mikecyr@linux.vnet.ibm.com, mikecyr@us.ibm.com, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-T24gVGh1LCAyMDE3LTA1LTExIGF0IDExOjE2ICswMTAwLCBDb2xpbiBLaW5nIHdyb3RlOg0KPiBG
-cm9tOiBDb2xpbiBJYW4gS2luZyA8Y29saW4ua2luZ0BjYW5vbmljYWwuY29tPg0KPiANCj4gTWFr
-aW5nIHRhcmdldF9wYXJzZV94Y29weV9jbWQgc3RhdGljIGZpeGVzIHNwYXJzZSB3YXJuaW5nOg0K
-PiANCj4gIndhcm5pbmc6IHN5bWJvbCAndGFyZ2V0X3BhcnNlX3hjb3B5X2NtZCcgd2FzIG5vdCBk
-ZWNsYXJlZC4gIFNob3VsZA0KPiBpdCBiZSBzdGF0aWM/Ig0KPiANCj4gRml4ZXM6IDFiZDA1Mjk0
-NTE5Zjc2ICgidGFyZ2V0L2lzY3NpOiBGaXggYSBkZWFkbG9jayBiZXR3ZWVuIHRoZSBYQ09QWSBj
-b2RlIGFuZCBzZXNzaW9uIHNodXRkb3duIikNCj4gU2lnbmVkLW9mZi1ieTogQ29saW4gSWFuIEtp
-bmcgPGNvbGluLmtpbmdAY2Fub25pY2FsLmNvbT4NCj4gLS0tDQo+ICBkcml2ZXJzL3RhcmdldC90
-YXJnZXRfY29yZV94Y29weS5jIHwgMiArLQ0KPiAgMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9u
-KCspLCAxIGRlbGV0aW9uKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy90YXJnZXQvdGFy
-Z2V0X2NvcmVfeGNvcHkuYyBiL2RyaXZlcnMvdGFyZ2V0L3RhcmdldF9jb3JlX3hjb3B5LmMNCj4g
-aW5kZXggYWVjYjM2ZDk1NWYwLi4wMGUwMjY5ZTZiZTQgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMv
-dGFyZ2V0L3RhcmdldF9jb3JlX3hjb3B5LmMNCj4gKysrIGIvZHJpdmVycy90YXJnZXQvdGFyZ2V0
-X2NvcmVfeGNvcHkuYw0KPiBAQCAtODg2LDcgKzg4Niw3IEBAIHN0YXRpYyB2b2lkIHRhcmdldF94
-Y29weV9kb193b3JrKHN0cnVjdCB3b3JrX3N0cnVjdCAqd29yaykNCj4gICAqIFJldHVybnMgVENN
-X05PX1NFTlNFIHVwb24gc3VjY2VzcyBvciBhIHNlbnNlIGNvZGUgIT0gVENNX05PX1NFTlNFIGlm
-IHBhcnNpbmcNCj4gICAqIGZhaWxzLg0KPiAgICovDQo+IC1zZW5zZV9yZWFzb25fdCB0YXJnZXRf
-cGFyc2VfeGNvcHlfY21kKHN0cnVjdCB4Y29weV9vcCAqeG9wKQ0KPiArc3RhdGljIHNlbnNlX3Jl
-YXNvbl90IHRhcmdldF9wYXJzZV94Y29weV9jbWQoc3RydWN0IHhjb3B5X29wICp4b3ApDQo+ICB7
-DQo+ICAJc3RydWN0IHNlX2NtZCAqc2VfY21kID0geG9wLT54b3Bfc2VfY21kOw0KPiAgCXVuc2ln
-bmVkIGNoYXIgKnAgPSBOVUxMLCAqc2VnX2Rlc2M7DQoNCkhlbGxvIENvbGluLA0KDQpUaGFua3Mg
-Zm9yIHRoZSBwYXRjaC4gSSB3aWxsIG1lcmdlIGl0IGluIHBhdGNoICJ0YXJnZXQvaXNjc2k6IEZp
-eCBhIGRlYWRsb2NrIGJldHdlZW4gdGhlDQpYQ09QWSBjb2RlIGFuZCBzZXNzaW9uIHNodXRkb3du
-Ii4NCg0KQmFydC4=
+On 5/9/17 10:45 PM, Nicholas A. Bellinger wrote:
+
+> On Tue, 2017-05-09 at 11:50 -0500, Bryant G. Ly wrote:
+>> This patch is dependent on:
+>> 'commit 25e78531268e ("ibmvscsis: Do not send aborted task response")'
+>> This patch cleans up some pointers after usage.
+>>
+>> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+>> Reviewed-by: Michael Cyr <mikecyr@linux.vnet.ibm.com>
+>> Cc: <stable@vger.kernel.org> # v4.8+
+>> ---
+>>   drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 3 +++
+>>   1 file changed, 3 insertions(+)
+> Applied, with a more verbose commit message.
+>
+> Thanks for splitting this out into an incremental patch.
+>
+No problem, did you end up forgetting it once you reverted Bart's VERIFY/WRITE VERIFY patch?
+
+It seems to be missing from your for-next now.
+
+-Bryant
