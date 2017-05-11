@@ -1,63 +1,157 @@
-From: Michal Potomski <michalx.potomski@intel.com>
-Subject: [PATCH v1 0/4] UFS ioctl UAPI
-Date: Thu, 11 May 2017 16:01:45 +0200
-Message-ID: <1494511309-32256-1-git-send-email-michalx.potomski@intel.com>
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: Re: [PATCH v4] sd: Ignore sync cache failures when not supported
+Date: Thu, 11 May 2017 12:44:29 -0400
+Message-ID: <1494521069.32302.6.camel@localhost.localdomain>
+References: <1494506064-19680-1-git-send-email-thierry.escande@collabora.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:54067 "EHLO mga11.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:51406 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933096AbdEKOBW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 11 May 2017 10:01:22 -0400
+        id S1755804AbdEKQoc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 11 May 2017 12:44:32 -0400
+In-Reply-To: <1494506064-19680-1-git-send-email-thierry.escande@collabora.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: vinholikatti@gmail.com, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, subhashj@codeaurora.org, =?UTF-8?q?Micha=C5=82=20Potomski?= <michalx.potomski@intel.com>
+To: Thierry Escande <thierry.escande@collabora.com>
+Cc: Bart Van Assche <Bart.VanAssche@sandisk.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-RnJvbTogTWljaGHFgiBQb3RvbXNraSA8bWljaGFseC5wb3RvbXNraUBpbnRlbC5jb20+CgpUaGlz
-IHBhdGNoc2V0IGludHJvZHVjZXMgVUZTIGlvY3RsIFVBUEkuIEl0J3MgbW9yZSByZWFkYWJsZSBh
-bmQgZmxleGlibGUKdGhhbiBpdHMgcG9zc2libGUgU3lzRlMgY291bnRlcnBhcnQuIE1vcmVvdmVy
-IGl0IHdpbGwgYmUgbmVlZGVkIGZvcgpmdXR1cmUgZmVhdHVyZXMsIHdoaWNoIHdpbGwgcmVxdWly
-ZSB1c2VyIHNldHVwLCBidXQgYXJlIG5vdCBzYXRpZmllZApieSBTeXNGUyAic2ltcGxlIHR5cGVz
-IiBydWxlLgoKV2UgaGF2ZSBkaXNjdXNzZWQgYW5kIG1vbml0b3JlZCBVRlMgVUFQSSB0b3BpYyBm
-b3Igc29tZSB0aW1lIG5vdyBhbmQgd2UKY2FtZSB0byBjb25jbHVzaW9uLCB0aGF0IGlvY3RsIEFQ
-SSBpcyBvdXIgYmVzdCBiZXQgYXMgY29tbW9uIGludGVyZmFjZSBmb3IgVUZTLgoKTWljaGHFgiBQ
-b3RvbXNraSAoMyk6CiAgc2NzaTogdWZzOiBBZGQgaW9jdGwoKSBpbnRlcmZhY2Ugd2l0aCBRdWVy
-eSBSZXF1ZXN0CiAgc2NzaTogdWZzOiBJbXBsZW1lbnQgQXV0by1IaWJlcm44IHNldHVwCiAgc2Nz
-aTogdWZzOiBFeHBvc2UgVGFzayBNYW5hZ2VtZW50IHRvIGlvY3RsKCkgVUFQSQoKU3p5bW9uIE1p
-ZWxjemFyZWsgKDEpOgogIHNjc2k6IHVmczogYWRkIGlvY3RsIGludGVyZmFjZSB0byByZWFkIFVJ
-QyBhdHRyaWJ1dGVzCgogRG9jdW1lbnRhdGlvbi9zY3NpL3Vmcy50eHQgICAgICB8IDE2NyArKysr
-KysrKysrKysrLQogZHJpdmVycy9zY3NpL3Vmcy9LY29uZmlnICAgICAgICB8ICAxMiArCiBkcml2
-ZXJzL3Njc2kvdWZzL01ha2VmaWxlICAgICAgIHwgICA1ICstCiBkcml2ZXJzL3Njc2kvdWZzL3Vm
-cy5oICAgICAgICAgIHwgIDYzICstLS0tLQogZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QtaW9jdGwu
-YyB8IDQ4MyArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrCiBkcml2ZXJz
-L3Njc2kvdWZzL3Vmc2hjZC1pb2N0bC5oIHwgIDMyICsrKwogZHJpdmVycy9zY3NpL3Vmcy91ZnNo
-Y2QuYyAgICAgICB8ICA3MiArKysrLS0KIGRyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmggICAgICAg
-fCAgMTkgKysKIGRyaXZlcnMvc2NzaS91ZnMvdWZzaGNpLmggICAgICAgfCAgIDkgKy0KIGluY2x1
-ZGUvc2NzaS9zY3NpLmggICAgICAgICAgICAgfCAgIDEgKwogaW5jbHVkZS91YXBpL3Njc2kvS2J1
-aWxkICAgICAgICB8ICAgMSArCiBpbmNsdWRlL3VhcGkvc2NzaS91ZnMvS2J1aWxkICAgIHwgICA0
-ICsKIGluY2x1ZGUvdWFwaS9zY3NpL3Vmcy9pb2N0bC5oICAgfCAxMzIgKysrKysrKysrKysKIGlu
-Y2x1ZGUvdWFwaS9zY3NpL3Vmcy91ZnMuaCAgICAgfCAgODEgKysrKysrKwogaW5jbHVkZS91YXBp
-L3Njc2kvdWZzL3Vmc2hjaS5oICB8ICAxNyArKwogMTUgZmlsZXMgY2hhbmdlZCwgMTAyOCBpbnNl
-cnRpb25zKCspLCA3MCBkZWxldGlvbnMoLSkKIGNyZWF0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL3Nj
-c2kvdWZzL3Vmc2hjZC1pb2N0bC5jCiBjcmVhdGUgbW9kZSAxMDA2NDQgZHJpdmVycy9zY3NpL3Vm
-cy91ZnNoY2QtaW9jdGwuaAogY3JlYXRlIG1vZGUgMTAwNjQ0IGluY2x1ZGUvdWFwaS9zY3NpL3Vm
-cy9LYnVpbGQKIGNyZWF0ZSBtb2RlIDEwMDY0NCBpbmNsdWRlL3VhcGkvc2NzaS91ZnMvaW9jdGwu
-aAogY3JlYXRlIG1vZGUgMTAwNjQ0IGluY2x1ZGUvdWFwaS9zY3NpL3Vmcy91ZnMuaAogY3JlYXRl
-IG1vZGUgMTAwNjQ0IGluY2x1ZGUvdWFwaS9zY3NpL3Vmcy91ZnNoY2kuaAoKLS0gCjEuOS4xCgot
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLQoKSW50ZWwgVGVjaG5vbG9neSBQb2xhbmQgc3AuIHogby5vLgp1bC4gU2xvd2Fj
-a2llZ28gMTczIHwgODAtMjk4IEdkYW5zayB8IFNhZCBSZWpvbm93eSBHZGFuc2sgUG9sbm9jIHwg
-VklJIFd5ZHppYWwgR29zcG9kYXJjenkgS3Jham93ZWdvIFJlamVzdHJ1IFNhZG93ZWdvIC0gS1JT
-IDEwMTg4MiB8IE5JUCA5NTctMDctNTItMzE2IHwgS2FwaXRhbCB6YWtsYWRvd3kgMjAwLjAwMCBQ
-TE4uCgpUYSB3aWFkb21vc2Mgd3JheiB6IHphbGFjem5pa2FtaSBqZXN0IHByemV6bmFjem9uYSBk
-bGEgb2tyZXNsb25lZ28gYWRyZXNhdGEgaSBtb3plIHphd2llcmFjIGluZm9ybWFjamUgcG91Zm5l
-LiBXIHJhemllIHByenlwYWRrb3dlZ28gb3RyenltYW5pYSB0ZWogd2lhZG9tb3NjaSwgcHJvc2lt
-eSBvIHBvd2lhZG9taWVuaWUgbmFkYXdjeSBvcmF6IHRyd2FsZSBqZWogdXN1bmllY2llOyBqYWtp
-ZWtvbHdpZWsKcHJ6ZWdsYWRhbmllIGx1YiByb3pwb3dzemVjaG5pYW5pZSBqZXN0IHphYnJvbmlv
-bmUuClRoaXMgZS1tYWlsIGFuZCBhbnkgYXR0YWNobWVudHMgbWF5IGNvbnRhaW4gY29uZmlkZW50
-aWFsIG1hdGVyaWFsIGZvciB0aGUgc29sZSB1c2Ugb2YgdGhlIGludGVuZGVkIHJlY2lwaWVudChz
-KS4gSWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVkIHJlY2lwaWVudCwgcGxlYXNlIGNvbnRhY3Qg
-dGhlIHNlbmRlciBhbmQgZGVsZXRlIGFsbCBjb3BpZXM7IGFueSByZXZpZXcgb3IgZGlzdHJpYnV0
-aW9uIGJ5Cm90aGVycyBpcyBzdHJpY3RseSBwcm9oaWJpdGVkLgo=
+On Thu, 2017-05-11 at 14:34 +0200, Thierry Escande wrote:
+> From: Derek Basehore <dbasehore@chromium.org>
+> 
+> Some external hard drives don't support the sync command even though the
+> hard drive has write cache enabled. In this case, upon suspend request,
+> sync cache failures are ignored if the error code in the sense header is
+> ILLEGAL_REQUEST. There's not much we can do for these drives, so we
+> shouldn't fail to suspend for this error case. The drive may stay
+> powered if that's the setup for the port it's plugged into.
+> 
+> Signed-off-by: Derek Basehore <dbasehore@chromium.org>
+> Signed-off-by: Thierry Escande <thierry.escande@collabora.com>
+> ---
+> 
+> v4 changes:
+> - Check sense header validity before checking the sense_key field
+> - Get rid of both goto statements (the one in the previous patch and the
+>   one in the existing code)
+> 
+> v3 changes:
+> - Pass the sense_hdr structure to sd_sync_cache() instead of the
+>   lonely sense_key field
+> 
+> v2 changes:
+> - Change sense_key type to u8 in sd_sync_cache()
+> 
+>  drivers/scsi/sd.c | 40 ++++++++++++++++++++++++++++------------
+>  1 file changed, 28 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index fcfeddc..823ab8b 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -1489,17 +1489,21 @@ static unsigned int sd_check_events(struct gendisk *disk, unsigned int clearing)
+>  	return retval;
+>  }
+>  
+> -static int sd_sync_cache(struct scsi_disk *sdkp)
+> +static int sd_sync_cache(struct scsi_disk *sdkp, struct scsi_sense_hdr *sshdr)
+>  {
+>  	int retries, res;
+>  	struct scsi_device *sdp = sdkp->device;
+>  	const int timeout = sdp->request_queue->rq_timeout
+>  		* SD_FLUSH_TIMEOUT_MULTIPLIER;
+> -	struct scsi_sense_hdr sshdr;
+> +	struct scsi_sense_hdr my_sshdr;
+>  
+>  	if (!scsi_device_online(sdp))
+>  		return -ENODEV;
+>  
+> +	/* caller might not be interested in sense, but we need it */
+> +	if (!sshdr)
+> +		sshdr = &my_sshdr;
+> +
+>  	for (retries = 3; retries > 0; --retries) {
+>  		unsigned char cmd[10] = { 0 };
+>  
+> @@ -1508,7 +1512,7 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
+>  		 * Leave the rest of the command zero to indicate
+>  		 * flush everything.
+>  		 */
+> -		res = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL, &sshdr,
+> +		res = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL, sshdr,
+>  				timeout, SD_MAX_RETRIES, 0, RQF_PM, NULL);
+>  		if (res == 0)
+>  			break;
+> @@ -1518,11 +1522,12 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
+>  		sd_print_result(sdkp, "Synchronize Cache(10) failed", res);
+>  
+>  		if (driver_byte(res) & DRIVER_SENSE)
+> -			sd_print_sense_hdr(sdkp, &sshdr);
+> +			sd_print_sense_hdr(sdkp, sshdr);
+> +
+>  		/* we need to evaluate the error return  */
+> -		if (scsi_sense_valid(&sshdr) &&
+> -			(sshdr.asc == 0x3a ||	/* medium not present */
+> -			 sshdr.asc == 0x20))	/* invalid command */
+> +		if (scsi_sense_valid(sshdr) &&
+> +			(sshdr->asc == 0x3a ||	/* medium not present */
+> +			 sshdr->asc == 0x20))	/* invalid command */
+>  				/* this is no error here */
+>  				return 0;
+>  
+> @@ -3323,7 +3328,7 @@ static void sd_shutdown(struct device *dev)
+>  
+>  	if (sdkp->WCE && sdkp->media_present) {
+>  		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+> -		sd_sync_cache(sdkp);
+> +		sd_sync_cache(sdkp, NULL);
+>  	}
+>  
+>  	if (system_state != SYSTEM_RESTART && sdkp->device->manage_start_stop) {
+> @@ -3335,6 +3340,7 @@ static void sd_shutdown(struct device *dev)
+>  static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
+>  {
+>  	struct scsi_disk *sdkp = dev_get_drvdata(dev);
+> +	struct scsi_sense_hdr sshdr;
+>  	int ret = 0;
+>  
+>  	if (!sdkp)	/* E.g.: runtime suspend following sd_remove() */
+> @@ -3342,12 +3348,23 @@ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
+>  
+>  	if (sdkp->WCE && sdkp->media_present) {
+>  		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+> -		ret = sd_sync_cache(sdkp);
+> +		ret = sd_sync_cache(sdkp, &sshdr);
+> +
+>  		if (ret) {
+>  			/* ignore OFFLINE device */
+>  			if (ret == -ENODEV)
+> -				ret = 0;
+> -			goto done;
+> +				return 0;
+> +
+> +			if (!scsi_sense_valid(&sshdr) ||
+> +			    sshdr.sense_key != ILLEGAL_REQUEST)
+> +				return ret;
+> +
+> +			/*
+> +			 * sshdr.sense_key == ILLEGAL_REQUEST means this drive
+> +			 * doesn't support sync. There's not much to do and
+> +			 * suspend shouldn't fail.
+> +			 */
+> +			 ret = 0;
+>  		}
+>  	}
+>  
+> @@ -3359,7 +3376,6 @@ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
+>  			ret = 0;
+>  	}
+>  
+> -done:
+>  	return ret;
+>  }
+>  
+
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
