@@ -1,38 +1,26 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 188961] Function mvs_task_prep() returns improper values on
- failures
-Date: Fri, 12 May 2017 00:20:09 +0000
-Message-ID: <bug-188961-11613-JhdFa88yCo@https.bugzilla.kernel.org/>
-References: <bug-188961-11613@https.bugzilla.kernel.org/>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH V2 00/36] smartpqi updates
+Date: Thu, 11 May 2017 23:06:58 -0400
+Message-ID: <yq1wp9mixil.fsf@oracle.com>
+References: <149385549428.11043.8013091835763091910.stgit@brunhilda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:49702 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753367AbdELAUY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 11 May 2017 20:20:24 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id D72BC28798
-        for <linux-scsi@vger.kernel.org>; Fri, 12 May 2017 00:20:23 +0000 (UTC)
-In-Reply-To: <bug-188961-11613@https.bugzilla.kernel.org/>
+Received: from aserp1040.oracle.com ([141.146.126.69]:51291 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755466AbdELDHq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 May 2017 23:07:46 -0400
+In-Reply-To: <149385549428.11043.8013091835763091910.stgit@brunhilda> (Don
+        Brace's message of "Wed, 3 May 2017 18:52:16 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@kernel.org
+To: Don Brace <don.brace@microsemi.com>
+Cc: joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com, linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=188961
 
-bianpan (bianpan2010@ruc.edu.cn) changed:
+Don,
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-         Resolution|---                         |CODE_FIX
-
---- Comment #1 from bianpan (bianpan2010@ruc.edu.cn) ---
-Fixed in linux-v4.11. So I will close the bug.
+Applied to 4.13/scsi-queue.
 
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Martin K. Petersen	Oracle Linux Engineering
