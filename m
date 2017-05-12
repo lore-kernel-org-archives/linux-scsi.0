@@ -1,32 +1,48 @@
-From: "Thomas Credit Firm" <miorellana@salud.gob.sv>
-Subject: APPLY FOR YOUR URGENT LOAN AT 2%
-Date: Fri, 12 May 2017 11:53:56 +0100
-Message-ID: <20170512105410.0245F4807243__14475.6523230628$1494587157$gmane$org@mail.salud.gob.sv>
-Reply-To: thomascreditfirm@gmail.com
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: Re: [PATCH] scsi: libfc: fix incorrect variable assingment
+Date: Fri, 12 May 2017 08:21:12 -0400
+Message-ID: <1494591672.1081.10.camel@localhost.localdomain>
+References: <20170511222444.GA6604@embeddedgus>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.salud.gob.sv ([190.5.143.2]:34356 "EHLO mail.salud.gob.sv"
+Received: from mx1.redhat.com ([209.132.183.28]:38282 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932184AbdELLFv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 12 May 2017 07:05:51 -0400
-Content-Description: Mail message body
+        id S1755430AbdELMVO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 12 May 2017 08:21:14 -0400
+In-Reply-To: <20170511222444.GA6604@embeddedgus>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: receipt <miorellana@salud.gob.sv>
+To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Cc: Johannes Thumshirn <jth@kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-* Do you need an urgent loan? We offer all kinds of loan
-* Very fast and urgent transfer to your bank account. 
-* Payment begins (6) months after you get the money in your bank account 
-* Low interest rates 2% 
-* Payment of long-term (1-30 years) duration 
-For more information and loan application form through the Contact now 
+On Thu, 2017-05-11 at 17:24 -0500, Gustavo A. R. Silva wrote:
+> Previous assignment was causing the use of the uninitialized variable
+> _explan_ inside fc_seq_ls_rjt() function, which in this particular
+> case is being called by fc_seq_els_rsp_send().
+> 
+> Addresses-Coverity-ID: 1398125
+> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+> ---
+>  drivers/scsi/libfc/fc_rport.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+> index b44c313..5203258 100644
+> --- a/drivers/scsi/libfc/fc_rport.c
+> +++ b/drivers/scsi/libfc/fc_rport.c
+> @@ -1422,7 +1422,7 @@ static void fc_rport_recv_rtv_req(struct fc_rport_priv *rdata,
+>  	fp = fc_frame_alloc(lport, sizeof(*rtv));
+>  	if (!fp) {
+>  		rjt_data.reason = ELS_RJT_UNAB;
+> -		rjt_data.reason = ELS_EXPL_INSUF_RES;
+> +		rjt_data.explan = ELS_EXPL_INSUF_RES;
+>  		fc_seq_els_rsp_send(in_fp, ELS_LS_RJT, &rjt_data);
+>  		goto drop;
+>  	}
 
-E-mail:  Thomascreditfirm@gmail.com 
-Thomas B. Dawson 
-THOMAS CREDIT FIRM
+s/assingment/assignment/
 
----
-This email has been checked for viruses by Avast antivirus software.
-https://www.avast.com/antivirus
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
