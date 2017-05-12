@@ -1,29 +1,53 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] scsi: sg: don't return bogus Sg_requests
-Date: Thu, 11 May 2017 23:15:34 -0400
-Message-ID: <yq1bmqyix49.fsf@oracle.com>
-References: <20170510075340.12125-1-jthumshirn@suse.de>
+From: Michal Potomski <michalx.potomski@intel.com>
+Subject: [PATCH] scsi: ufs: Clean up some rpm/spm level SysFS nodes upon remove
+Date: Fri, 12 May 2017 08:36:27 +0200
+Message-ID: <1494570987-10128-1-git-send-email-michalx.potomski@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170510075340.12125-1-jthumshirn@suse.de> (Johannes Thumshirn's
-        message of "Wed, 10 May 2017 09:53:40 +0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, Andrey Konovalov <andreyknvl@google.com>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Doug Gilbert <dgilbert@interlog.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:2167 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750708AbdELGfo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 12 May 2017 02:35:44 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: vinholikatti@gmail.com, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, subhashj@codeaurora.org, =?UTF-8?q?Micha=C5=82=20Potomski?= <michalx.potomski@intel.com>
 
-
-Johannes,
-
-> If the list search in sg_get_rq_mark() fails to find a valid request,
-> we return a bogus element. This then can later lead to a GPF in
-> sg_remove_scat().
->
-> So don't return bogus Sg_requests in sg_get_rq_mark() but NULL in case
-> the list search doesn't find a valid request.
-
-Applied to 4.12/scsi-fixes, thanks!
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+RnJvbTogTWljaGHFgiBQb3RvbXNraSA8bWljaGFseC5wb3RvbXNraUBpbnRlbC5jb20+CgpXaGVu
+IHJlbG9hZGluZyBtb2R1bGUgdGhlc2UgdHdvIGF0dHJpYnV0ZXMgYXJlbid0CmNsZWFuZWQgdXAg
+cHJvcGVybHkgYW5kIHRoZXkgcGVyc2lzdCBjYXVzaW5nIHdhcm5pbmdzCndoZW4gdHJ5aW5nIHRv
+IGxvYWQgbW9kdWxlIGFnYWluLiBBZGRpdGlvbmFsbHkgdGhleSBhcmUKbm90IHJlY3JlYXRlZCBw
+cm9wZXJseSBkdWUgdG8gdGhhdC4KClNpZ25lZC1vZmYtYnk6IE1pY2hhxYIgUG90b21za2kgPG1p
+Y2hhbHgucG90b21za2lAaW50ZWwuY29tPgotLS0KIGRyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMg
+fCA3ICsrKysrKysKIDEgZmlsZSBjaGFuZ2VkLCA3IGluc2VydGlvbnMoKykKCmRpZmYgLS1naXQg
+YS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYwpp
+bmRleCBhYmM3ZTg3Li5mZmU4ZDg2IDEwMDY0NAotLS0gYS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hj
+ZC5jCisrKyBiL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMKQEAgLTc2OTgsNiArNzY5OCwxMiBA
+QCBzdGF0aWMgaW5saW5lIHZvaWQgdWZzaGNkX2FkZF9zeXNmc19ub2RlcyhzdHJ1Y3QgdWZzX2hi
+YSAqaGJhKQogCXVmc2hjZF9hZGRfc3BtX2x2bF9zeXNmc19ub2RlcyhoYmEpOwogfQogCitzdGF0
+aWMgaW5saW5lIHZvaWQgdWZzaGNkX3JlbW92ZV9zeXNmc19ub2RlcyhzdHJ1Y3QgdWZzX2hiYSAq
+aGJhKQoreworCWRldmljZV9yZW1vdmVfZmlsZShoYmEtPmRldiwgJmhiYS0+cnBtX2x2bF9hdHRy
+KTsKKwlkZXZpY2VfcmVtb3ZlX2ZpbGUoaGJhLT5kZXYsICZoYmEtPnNwbV9sdmxfYXR0cik7Cit9
+CisKIC8qKgogICogdWZzaGNkX3NodXRkb3duIC0gc2h1dGRvd24gcm91dGluZQogICogQGhiYTog
+cGVyIGFkYXB0ZXIgaW5zdGFuY2UKQEAgLTc3MzUsNiArNzc0MSw3IEBAIGludCB1ZnNoY2Rfc2h1
+dGRvd24oc3RydWN0IHVmc19oYmEgKmhiYSkKICAqLwogdm9pZCB1ZnNoY2RfcmVtb3ZlKHN0cnVj
+dCB1ZnNfaGJhICpoYmEpCiB7CisJdWZzaGNkX3JlbW92ZV9zeXNmc19ub2RlcyhoYmEpOwogCXNj
+c2lfcmVtb3ZlX2hvc3QoaGJhLT5ob3N0KTsKIAkvKiBkaXNhYmxlIGludGVycnVwdHMgKi8KIAl1
+ZnNoY2RfZGlzYWJsZV9pbnRyKGhiYSwgaGJhLT5pbnRyX21hc2spOwotLSAKMS45LjEKCi0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tCgpJbnRlbCBUZWNobm9sb2d5IFBvbGFuZCBzcC4geiBvLm8uCnVsLiBTbG93YWNraWVn
+byAxNzMgfCA4MC0yOTggR2RhbnNrIHwgU2FkIFJlam9ub3d5IEdkYW5zayBQb2xub2MgfCBWSUkg
+V3lkemlhbCBHb3Nwb2RhcmN6eSBLcmFqb3dlZ28gUmVqZXN0cnUgU2Fkb3dlZ28gLSBLUlMgMTAx
+ODgyIHwgTklQIDk1Ny0wNy01Mi0zMTYgfCBLYXBpdGFsIHpha2xhZG93eSAyMDAuMDAwIFBMTi4K
+ClRhIHdpYWRvbW9zYyB3cmF6IHogemFsYWN6bmlrYW1pIGplc3QgcHJ6ZXpuYWN6b25hIGRsYSBv
+a3Jlc2xvbmVnbyBhZHJlc2F0YSBpIG1vemUgemF3aWVyYWMgaW5mb3JtYWNqZSBwb3VmbmUuIFcg
+cmF6aWUgcHJ6eXBhZGtvd2VnbyBvdHJ6eW1hbmlhIHRlaiB3aWFkb21vc2NpLCBwcm9zaW15IG8g
+cG93aWFkb21pZW5pZSBuYWRhd2N5IG9yYXogdHJ3YWxlIGplaiB1c3VuaWVjaWU7IGpha2lla29s
+d2llawpwcnplZ2xhZGFuaWUgbHViIHJvenBvd3N6ZWNobmlhbmllIGplc3QgemFicm9uaW9uZS4K
+VGhpcyBlLW1haWwgYW5kIGFueSBhdHRhY2htZW50cyBtYXkgY29udGFpbiBjb25maWRlbnRpYWwg
+bWF0ZXJpYWwgZm9yIHRoZSBzb2xlIHVzZSBvZiB0aGUgaW50ZW5kZWQgcmVjaXBpZW50KHMpLiBJ
+ZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQgcmVjaXBpZW50LCBwbGVhc2UgY29udGFjdCB0aGUg
+c2VuZGVyIGFuZCBkZWxldGUgYWxsIGNvcGllczsgYW55IHJldmlldyBvciBkaXN0cmlidXRpb24g
+YnkKb3RoZXJzIGlzIHN0cmljdGx5IHByb2hpYml0ZWQuCg==
