@@ -1,32 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] sd: Write lock zone for REQ_OP_WRITE_ZEROES
-Date: Thu, 11 May 2017 23:12:35 -0400
-Message-ID: <yq1fugaix98.fsf@oracle.com>
-References: <20170508064819.12414-1-damien.lemoal@wdc.com>
+Subject: Re: [PATCH v2] scsi: sg: don't return bogus Sg_requests
+Date: Thu, 11 May 2017 23:15:34 -0400
+Message-ID: <yq1bmqyix49.fsf@oracle.com>
+References: <20170510075340.12125-1-jthumshirn@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:16858 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755509AbdELDMp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 May 2017 23:12:45 -0400
-In-Reply-To: <20170508064819.12414-1-damien.lemoal@wdc.com> (damien lemoal's
-        message of "Mon, 8 May 2017 15:48:19 +0900")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170510075340.12125-1-jthumshirn@suse.de> (Johannes Thumshirn's
+        message of "Wed, 10 May 2017 09:53:40 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, Andrey Konovalov <andreyknvl@google.com>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Doug Gilbert <dgilbert@interlog.com>
 List-Id: linux-scsi@vger.kernel.org
-To: damien.lemoal@wdc.com
-Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>
 
 
-Damien,
+Johannes,
 
-> For a zoned block device, sd_zbc_complete() handles zone write unlock
-> on completion of a REQ_OP_WRITE_ZEROES command but the zone write
-> locking is missing from sd_setup_write_zeroes_cmnd(). This patch fixes
-> this problem by locking the target zone of a REQ_OP_WRITE_ZEROES
-> request.
+> If the list search in sg_get_rq_mark() fails to find a valid request,
+> we return a bogus element. This then can later lead to a GPF in
+> sg_remove_scat().
+>
+> So don't return bogus Sg_requests in sg_get_rq_mark() but NULL in case
+> the list search doesn't find a valid request.
 
-Applied to 4.12/scsi-fixes. Thanks!
+Applied to 4.12/scsi-fixes, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
