@@ -1,26 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH V2 00/36] smartpqi updates
-Date: Thu, 11 May 2017 23:06:58 -0400
-Message-ID: <yq1wp9mixil.fsf@oracle.com>
-References: <149385549428.11043.8013091835763091910.stgit@brunhilda>
+Subject: Re: [PATCH V2 00/19] aacraid: Patchset with reset rework and misc fixes
+Date: Thu, 11 May 2017 23:07:42 -0400
+Message-ID: <yq1o9uyixhd.fsf@oracle.com>
+References: <1494434393-17261-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51291 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755466AbdELDHq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 May 2017 23:07:46 -0400
-In-Reply-To: <149385549428.11043.8013091835763091910.stgit@brunhilda> (Don
-        Brace's message of "Wed, 3 May 2017 18:52:16 -0500")
+Received: from userp1040.oracle.com ([156.151.31.81]:22094 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755465AbdELDH5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 May 2017 23:07:57 -0400
+In-Reply-To: <1494434393-17261-1-git-send-email-RaghavaAditya.Renukunta@microsemi.com>
+        (Raghava Aditya Renukunta's message of "Wed, 10 May 2017 09:39:34
+        -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>
-Cc: joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com, linux-scsi@vger.kernel.org
+To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, Prasad.Munirathnam@microsemi.com
 
 
-Don,
+Raghava,
 
-Applied to 4.13/scsi-queue.
+> This patchset primarily focuses on tweaking and hardening the
+> controller reset support for both ARC and HBA1000 devices. Now the
+> driver can only reset the controller thru eh reset. Included a srb
+> memory fix and pci dma allocation fix.
+
+Applied to 4.13/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
