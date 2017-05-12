@@ -1,14 +1,14 @@
 From: Martin Wilck <mwilck@suse.com>
-Subject: [PATCH v2 1/4] scsi_dh_alua: Do not modify the interval value for retries
-Date: Fri, 12 May 2017 15:15:05 +0200
-Message-ID: <20170512131508.3231-2-mwilck@suse.com>
+Subject: [PATCH v2 2/4] scsi_dh_alua: Do not retry for unmapped device
+Date: Fri, 12 May 2017 15:15:06 +0200
+Message-ID: <20170512131508.3231-3-mwilck@suse.com>
 References: <20170512131508.3231-1-mwilck@suse.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from prv3-mh.provo.novell.com ([137.65.250.26]:54827 "EHLO
+Received: from victor.provo.novell.com ([137.65.250.26]:47185 "EHLO
         prv3-mh.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751900AbdELNPp (ORCPT
+        with ESMTP id S1754913AbdELNPq (ORCPT
         <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-        Fri, 12 May 2017 09:15:45 -0400
+        Fri, 12 May 2017 09:15:46 -0400
 In-Reply-To: <20170512131508.3231-1-mwilck@suse.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,85 +17,62 @@ Cc: Bart Van Assche <Bart.VanAssche@sandisk.com>, Mauricio Faria de Oliveira <ma
 
 From: Hannes Reinecke <hare@suse.de>
 
-We shouldn't set the interval value to 0 in alua_rtpg_work(), as the struct
-is accessed from different devices and hence we might end up scheduling
-too early.
-
-With this change, pg->interval is now effectively constant, thus we might
-as well replace it with a contant expression.
+If a device becomes unmapped on the target we should be returning
+SCSI_DH_DEV_OFFLINED.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
-Signed-off-by: Martin Wilck <mwilck@suse.com>
+Reviewed-by: Martin Wilck <mwilck@suse.com>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index c01b47e5b55a..f17dccb2f72b 100644
+index f17dccb2f72b..2b60f493f90e 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -53,6 +53,7 @@
- #define ALUA_FAILOVER_TIMEOUT		60
- #define ALUA_FAILOVER_RETRIES		5
- #define ALUA_RTPG_DELAY_MSECS		5
-+#define ALUA_RTPG_RETRY_INTERVAL	(2*HZ)
+@@ -522,7 +522,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 	struct alua_port_group *tmp_pg;
+ 	int len, k, off, valid_states = 0, bufflen = ALUA_RTPG_SIZE;
+ 	unsigned char *desc, *buff;
+-	unsigned err, retval;
++	unsigned err = SCSI_DH_OK, retval;
+ 	unsigned int tpg_desc_tbl_off;
+ 	unsigned char orig_transition_tmo;
+ 	unsigned long flags;
+@@ -541,7 +541,6 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 		return SCSI_DH_DEV_TEMP_BUSY;
  
- /* device handler flags */
- #define ALUA_OPTIMIZE_STPG		0x01
-@@ -86,7 +87,6 @@ struct alua_port_group {
- 	unsigned		flags; /* used for optimizing STPG */
- 	unsigned char		transition_tmo;
- 	unsigned long		expiry;
--	unsigned long		interval;
- 	struct delayed_work	rtpg_work;
- 	spinlock_t		lock;
- 	struct list_head	rtpg_list;
-@@ -681,7 +681,6 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 	case SCSI_ACCESS_STATE_TRANSITIONING:
- 		if (time_before(jiffies, pg->expiry)) {
- 			/* State transition, retry */
--			pg->interval = 2;
+  retry:
+-	err = 0;
+ 	retval = submit_rtpg(sdev, buff, bufflen, &sense_hdr, pg->flags);
+ 
+ 	if (retval) {
+@@ -569,6 +568,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 			pg->flags |= ALUA_RTPG_EXT_HDR_UNSUPP;
+ 			goto retry;
+ 		}
++		err = SCSI_DH_IO;
+ 		/*
+ 		 * Retry on ALUA state transition or if any
+ 		 * UNIT ATTENTION occurred.
+@@ -576,6 +576,9 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 		if (sense_hdr.sense_key == NOT_READY &&
+ 		    sense_hdr.asc == 0x04 && sense_hdr.ascq == 0x0a)
  			err = SCSI_DH_RETRY;
- 		} else {
- 			struct alua_dh_data *h;
-@@ -811,7 +810,7 @@ static void alua_rtpg_work(struct work_struct *work)
- 				pg->flags |= ALUA_PG_RUN_RTPG;
- 				spin_unlock_irqrestore(&pg->lock, flags);
- 				queue_delayed_work(alua_wq, &pg->rtpg_work,
--						   pg->interval * HZ);
-+						   ALUA_RTPG_RETRY_INTERVAL);
- 				return;
- 			}
- 			/* Send RTPG on failure or if TUR indicates SUCCESS */
-@@ -823,7 +822,7 @@ static void alua_rtpg_work(struct work_struct *work)
- 			pg->flags |= ALUA_PG_RUN_RTPG;
- 			spin_unlock_irqrestore(&pg->lock, flags);
- 			queue_delayed_work(alua_wq, &pg->rtpg_work,
--					   pg->interval * HZ);
-+					   ALUA_RTPG_RETRY_INTERVAL);
- 			return;
- 		}
- 		if (err != SCSI_DH_OK)
-@@ -836,11 +835,9 @@ static void alua_rtpg_work(struct work_struct *work)
- 		spin_lock_irqsave(&pg->lock, flags);
- 		if (err == SCSI_DH_RETRY || pg->flags & ALUA_PG_RUN_RTPG) {
- 			pg->flags |= ALUA_PG_RUN_RTPG;
--			pg->interval = 0;
- 			pg->flags &= ~ALUA_PG_RUNNING;
- 			spin_unlock_irqrestore(&pg->lock, flags);
--			queue_delayed_work(alua_wq, &pg->rtpg_work,
--					   pg->interval * HZ);
-+			queue_delayed_work(alua_wq, &pg->rtpg_work, 0);
- 			return;
- 		}
++		else if (sense_hdr.sense_key == ILLEGAL_REQUEST &&
++		    sense_hdr.asc == 0x25 && sense_hdr.ascq == 0x00)
++			err = SCSI_DH_DEV_OFFLINED;
+ 		else if (sense_hdr.sense_key == UNIT_ATTENTION)
+ 			err = SCSI_DH_RETRY;
+ 		if (err == SCSI_DH_RETRY &&
+@@ -591,7 +594,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 		scsi_print_sense_hdr(sdev, ALUA_DH_NAME, &sense_hdr);
+ 		kfree(buff);
+ 		pg->expiry = 0;
+-		return SCSI_DH_IO;
++		return err;
  	}
-@@ -886,7 +883,6 @@ static bool alua_rtpg_queue(struct alua_port_group *pg,
- 		force = true;
- 	}
- 	if (pg->rtpg_sdev == NULL) {
--		pg->interval = 0;
- 		pg->flags |= ALUA_PG_RUN_RTPG;
- 		kref_get(&pg->kref);
- 		pg->rtpg_sdev = sdev;
+ 
+ 	len = get_unaligned_be32(&buff[0]) + 4;
 -- 
 2.12.2
