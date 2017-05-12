@@ -1,38 +1,36 @@
-From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-Subject: [PATCH] scsi: libfc: fix incorrect variable assingment
-Date: Thu, 11 May 2017 17:24:44 -0500
-Message-ID: <20170511222444.GA6604@embeddedgus>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 188941] Function beiscsi_create_cqs() may return improper value
+ when the call to pci_alloc_consistent() fails, which may result in
+ use-after-free
+Date: Fri, 12 May 2017 00:14:31 +0000
+Message-ID: <bug-188941-11613-zJeoQQySlc@https.bugzilla.kernel.org/>
+References: <bug-188941-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jth@kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:49202 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1756730AbdELAOd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 11 May 2017 20:14:33 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id B5EFF28783
+        for <linux-scsi@vger.kernel.org>; Fri, 12 May 2017 00:14:32 +0000 (UTC)
+In-Reply-To: <bug-188941-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@kernel.org
 
-Previous assignment was causing the use of the uninitialized variable
-_explan_ inside fc_seq_ls_rjt() function, which in this particular
-case is being called by fc_seq_els_rsp_send().
+https://bugzilla.kernel.org/show_bug.cgi?id=188941
 
-Addresses-Coverity-ID: 1398125
-Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
----
- drivers/scsi/libfc/fc_rport.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+bianpan (bianpan2010@ruc.edu.cn) changed:
 
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index b44c313..5203258 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -1422,7 +1422,7 @@ static void fc_rport_recv_rtv_req(struct fc_rport_priv *rdata,
- 	fp = fc_frame_alloc(lport, sizeof(*rtv));
- 	if (!fp) {
- 		rjt_data.reason = ELS_RJT_UNAB;
--		rjt_data.reason = ELS_EXPL_INSUF_RES;
-+		rjt_data.explan = ELS_EXPL_INSUF_RES;
- 		fc_seq_els_rsp_send(in_fp, ELS_LS_RJT, &rjt_data);
- 		goto drop;
- 	}
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+         Resolution|---                         |CODE_FIX
+
 -- 
-2.5.0
+You are receiving this mail because:
+You are watching the assignee of the bug.
