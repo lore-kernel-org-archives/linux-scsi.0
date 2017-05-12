@@ -1,26 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH V4 00/12] hpsa updates
-Date: Thu, 11 May 2017 23:07:19 -0400
-Message-ID: <yq1shkaixi0.fsf@oracle.com>
-References: <149393820493.19382.11709906672864416473.stgit@brunhilda>
+Subject: Re: [PATCH] sd: Unlock zone in case of error in sd_setup_write_same_cmnd()
+Date: Thu, 11 May 2017 23:12:15 -0400
+Message-ID: <yq1k25mix9s.fsf@oracle.com>
+References: <20170508055903.28695-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:22146 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755465AbdELDIE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 May 2017 23:08:04 -0400
-In-Reply-To: <149393820493.19382.11709906672864416473.stgit@brunhilda> (Don
-        Brace's message of "Thu, 4 May 2017 17:50:38 -0500")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20170508055903.28695-1-damien.lemoal@wdc.com> (damien lemoal's
+        message of "Mon, 8 May 2017 14:59:02 +0900")
+Sender: stable-owner@vger.kernel.org
+To: damien.lemoal@wdc.com
+Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>
-Cc: joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com, linux-scsi@vger.kernel.org
 
 
-Don,
+Damien,
 
-Applied to 4.13/scsi-queue.
+> scsi_io_init() may fail, leaving a zone of a zoned block device locked.
+> Fix this by properly unlocking the write same request target zone if
+> scsi_io_init() fails.
+
+Applied to 4.12/scsi-fixes.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
