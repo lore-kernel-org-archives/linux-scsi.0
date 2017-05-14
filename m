@@ -1,30 +1,66 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [dm-devel] [Consult]: Can the coming Huawei scsi device handler
- be accepted in the scsi/device_handler
-Date: Sat, 13 May 2017 00:37:26 -0700
-Message-ID: <20170513073726.GA20048@infradead.org>
-References: <a708085e-e9f0-3b5f-0290-00db8071a6b2@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:55670 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750935AbdEMHhd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 13 May 2017 03:37:33 -0400
-Content-Disposition: inline
-In-Reply-To: <a708085e-e9f0-3b5f-0290-00db8071a6b2@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Mauro Carvalho Chehab <mchehab@s-opensource.com>
+Subject: [PATCH 06/13] ia64, scsi: update references for the device-io book
+Date: Sun, 14 May 2017 12:38:40 -0300
+Message-ID: <2e8bf21bea1eed30c96dfee69a87278e1b75270d.1494775891.git.mchehab@s-opensource.com>
+References: <cover.1494775891.git.mchehab@s-opensource.com>
+Return-path: <linux-doc-owner@vger.kernel.org>
+In-Reply-To: <cover.1494775891.git.mchehab@s-opensource.com>
+In-Reply-To: <cover.1494775891.git.mchehab@s-opensource.com>
+References: <cover.1494775891.git.mchehab@s-opensource.com>
+Sender: linux-doc-owner@vger.kernel.org
+To: Linux Doc Mailing List <linux-doc@vger.kernel.org>
+Cc: Mauro Carvalho Chehab <mchehab@s-opensource.com>, Mauro Carvalho Chehab <mchehab@infradead.org>, linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Tony Luck <tony.luck@intel.com>, Fenghua Yu <fenghua.yu@intel.com>, Michael Reed <mdr@sgi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ia64@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Guan Junxiong <guanjunxiong@huawei.com>
-Cc: agk@redhat.com, snitzer@redhat.com, "Zouming (IT)" <zouming.zouming@huawei.com>, Yang Feng <philip.yang@huawei.com>, shenhong09@huawei.com, dm-devel@redhat.com, "Hege (A)" <hege09@huawei.com>, linux-scsi@vger.kernel.org
 
-On Sat, May 13, 2017 at 12:07:04PM +0800, Guan Junxiong wrote:
-> Hello,Alasdair and Mike:
->     I am going to add our vendor specific Huawei scsi device handler based on scsi_dh
-> framework into the linux/drivers/scsi/device_handler directory.
->     Is it possible to be merged into the device handler list?
+The book is now at Documentation/driver-api/device-io.rst.
+Update such references.
 
-Any new device must support ALUA, other device handlers are legacy
-only.
+Signed-off-by: Mauro Carvalho Chehab <mchehab@s-opensource.com>
+---
+ arch/ia64/include/asm/io.h | 2 +-
+ arch/ia64/sn/kernel/iomv.c | 2 +-
+ drivers/scsi/qla1280.c     | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-And btw, the right list for this is linux-scsi.
+diff --git a/arch/ia64/include/asm/io.h b/arch/ia64/include/asm/io.h
+index 5de673ac9cb1..a2540e21f919 100644
+--- a/arch/ia64/include/asm/io.h
++++ b/arch/ia64/include/asm/io.h
+@@ -117,7 +117,7 @@ extern int valid_mmap_phys_addr_range (unsigned long pfn, size_t count);
+  * following the barrier will arrive after all previous writes.  For most
+  * ia64 platforms, this is a simple 'mf.a' instruction.
+  *
+- * See Documentation/DocBook/deviceiobook.tmpl for more information.
++ * See Documentation/driver-api/device-io.rst for more information.
+  */
+ static inline void ___ia64_mmiowb(void)
+ {
+diff --git a/arch/ia64/sn/kernel/iomv.c b/arch/ia64/sn/kernel/iomv.c
+index c77ebdf98119..2b22a71663c1 100644
+--- a/arch/ia64/sn/kernel/iomv.c
++++ b/arch/ia64/sn/kernel/iomv.c
+@@ -63,7 +63,7 @@ EXPORT_SYMBOL(sn_io_addr);
+ /**
+  * __sn_mmiowb - I/O space memory barrier
+  *
+- * See arch/ia64/include/asm/io.h and Documentation/DocBook/deviceiobook.tmpl
++ * See arch/ia64/include/asm/io.h and Documentation/driver-api/device-io.rst
+  * for details.
+  *
+  * On SN2, we wait for the PIO_WRITE_STATUS SHub register to clear.
+diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
+index 634254a52301..8a29fb09db14 100644
+--- a/drivers/scsi/qla1280.c
++++ b/drivers/scsi/qla1280.c
+@@ -3390,7 +3390,7 @@ qla1280_isp_cmd(struct scsi_qla_host *ha)
+ 	 *    On PCI bus, order reverses and write of 6 posts, then index 5,
+ 	 *       causing chip to issue full queue of stale commands
+ 	 * The mmiowb() prevents future writes from crossing the barrier.
+-	 * See Documentation/DocBook/deviceiobook.tmpl for more information.
++	 * See Documentation/driver-api/device-io.rst for more information.
+ 	 */
+ 	WRT_REG_WORD(&reg->mailbox4, ha->req_ring_index);
+ 	mmiowb();
+-- 
+2.9.3
+
