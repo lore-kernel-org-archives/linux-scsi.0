@@ -1,66 +1,123 @@
 From: Mauro Carvalho Chehab <mchehab@s-opensource.com>
-Subject: [PATCH 06/13] ia64, scsi: update references for the device-io book
-Date: Sun, 14 May 2017 12:38:40 -0300
-Message-ID: <2e8bf21bea1eed30c96dfee69a87278e1b75270d.1494775891.git.mchehab@s-opensource.com>
-References: <cover.1494775891.git.mchehab@s-opensource.com>
-Return-path: <linux-doc-owner@vger.kernel.org>
-In-Reply-To: <cover.1494775891.git.mchehab@s-opensource.com>
-In-Reply-To: <cover.1494775891.git.mchehab@s-opensource.com>
-References: <cover.1494775891.git.mchehab@s-opensource.com>
-Sender: linux-doc-owner@vger.kernel.org
+Subject: [PATCH 00/13] Get rid of DocBook
+Date: Sun, 14 May 2017 12:38:34 -0300
+Message-ID: <cover.1494775891.git.mchehab@s-opensource.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
 To: Linux Doc Mailing List <linux-doc@vger.kernel.org>
-Cc: Mauro Carvalho Chehab <mchehab@s-opensource.com>, Mauro Carvalho Chehab <mchehab@infradead.org>, linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Tony Luck <tony.luck@intel.com>, Fenghua Yu <fenghua.yu@intel.com>, Michael Reed <mdr@sgi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ia64@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-ia64@vger.kernel.org, Fenghua Yu <fenghua.yu@intel.com>, Peter Zijlstra <peterz@infradead.org>, linux-pci@vger.kernel.org, Richard Sailer <richard@weltraumpflege.org>, "Herton R. Krzesinski" <herton@redhat.com>, alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org, Jaroslav Kysela <perex@perex.cz>, Masahiro Yamada <yamada.masahiro@socionext.com>, Daniel Vetter <daniel.vetter@intel.com>, Jiri Slaby <jslaby@suse.cz>, Ingo Molnar <mingo@kernel.org>, Hans-Christian Noren Egtvedt <egtvedt@samfundet.no>, Markus Heiser <markus.heiser@darmarit.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Sanjeev <ghane0@gmail.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tony Luck <tony.luck@intel.com>, Mauro Carvalho Chehab <mchehab@s-open>
 List-Id: linux-scsi@vger.kernel.org
 
-The book is now at Documentation/driver-api/device-io.rst.
-Update such references.
-
-Signed-off-by: Mauro Carvalho Chehab <mchehab@s-opensource.com>
----
- arch/ia64/include/asm/io.h | 2 +-
- arch/ia64/sn/kernel/iomv.c | 2 +-
- drivers/scsi/qla1280.c     | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/arch/ia64/include/asm/io.h b/arch/ia64/include/asm/io.h
-index 5de673ac9cb1..a2540e21f919 100644
---- a/arch/ia64/include/asm/io.h
-+++ b/arch/ia64/include/asm/io.h
-@@ -117,7 +117,7 @@ extern int valid_mmap_phys_addr_range (unsigned long pfn, size_t count);
-  * following the barrier will arrive after all previous writes.  For most
-  * ia64 platforms, this is a simple 'mf.a' instruction.
-  *
-- * See Documentation/DocBook/deviceiobook.tmpl for more information.
-+ * See Documentation/driver-api/device-io.rst for more information.
-  */
- static inline void ___ia64_mmiowb(void)
- {
-diff --git a/arch/ia64/sn/kernel/iomv.c b/arch/ia64/sn/kernel/iomv.c
-index c77ebdf98119..2b22a71663c1 100644
---- a/arch/ia64/sn/kernel/iomv.c
-+++ b/arch/ia64/sn/kernel/iomv.c
-@@ -63,7 +63,7 @@ EXPORT_SYMBOL(sn_io_addr);
- /**
-  * __sn_mmiowb - I/O space memory barrier
-  *
-- * See arch/ia64/include/asm/io.h and Documentation/DocBook/deviceiobook.tmpl
-+ * See arch/ia64/include/asm/io.h and Documentation/driver-api/device-io.rst
-  * for details.
-  *
-  * On SN2, we wait for the PIO_WRITE_STATUS SHub register to clear.
-diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
-index 634254a52301..8a29fb09db14 100644
---- a/drivers/scsi/qla1280.c
-+++ b/drivers/scsi/qla1280.c
-@@ -3390,7 +3390,7 @@ qla1280_isp_cmd(struct scsi_qla_host *ha)
- 	 *    On PCI bus, order reverses and write of 6 posts, then index 5,
- 	 *       causing chip to issue full queue of stale commands
- 	 * The mmiowb() prevents future writes from crossing the barrier.
--	 * See Documentation/DocBook/deviceiobook.tmpl for more information.
-+	 * See Documentation/driver-api/device-io.rst for more information.
- 	 */
- 	WRT_REG_WORD(&reg->mailbox4, ha->req_ring_index);
- 	mmiowb();
--- 
-2.9.3
-
+QXMganVzdCBvbmUgYm9vayAobHNtKSB3YXMgbWlzc2luZyBjb252ZXJzaW9uLCBsZXQncyBjb252
+ZXJ0IGl0CmFuZCBzdG9yZSBhcyBpZiBpdCB3ZXJlIGEgcGxhaW4gdGV4dCBmaWxlIHVuZGVyIERv
+Y3VtZW50YXRpb24vbHNtLnR4dCwKYWRkaW5nIGEgbm90aWNlIHRoYXQgaXQgcmVxdWlyZXMgdXBk
+YXRlLgoKVGhpcyB3YXksIGFzIGV2ZXJ5dGhpbmcgaXMgbm93IGNvbnZlcnRlZCwgd2UgY2FuIGdl
+dCByaWQgb2YKdGhlIERvY0Jvb2sgYnVpbGRpbmcgc3lzdGVtIGFuZCB1cGRhdGUgcGxhY2VzIHRo
+YXQgd2VyZQptZW50aW9uaW5nIGl0LgoKUFMuOiBXZSBjb3VsZCBhbHNvIHJlbW92ZSB0aGUgcGFy
+dHMgb2YgdGhlIGtlcm5lbC1kb2Mgc2NyaXB0IHRoYXQKcHJvZHVjZSBEb2NCb29rIG91dHB1dHMs
+IGJ1dCwgYXMgdGhpcyBtaWdodCBzdGlsbCBiZSB1c2VmdWwKZm9yIHNvbWVvbmUsIGZvciBub3cg
+bGV0J3MganVzdCBrZWVwIHRoZSBmdW5jdGlvbmFsaXR5IHRoZXJlLgoKLQoKVGhpcyBwYXRjaCBz
+ZXJpZXMgaXMgYmFzZWQgb24gbXkgcGFzdCAwMC8wNSBhbmQgMDAvMzYgcGF0Y2ggc2VyaWVzCnRo
+YXQgY29udmVydCB0aGUgb3RoZXIgRG9jQm9va3MgdG8gUmVTVCwgYXBwbGllZCBvbiB0aGUgdG9w
+IG9mIApkb2NzIHRyZWUgKG5leHQgYnJhbmNoKS4KClRoZSBmdWxsIHBhdGNoIHNlcmllcyBpcyBv
+biB0aGlzIHRyZWUgaXMgYXQ6CgogICBodHRwczovL2dpdC5saW51eHR2Lm9yZy8vbWNoZWhhYi9l
+eHBlcmltZW50YWwuZ2l0L2xvZy8/aD1kb2Nib29rMgoKQW5kIHRoZSBIVE1MIG91dHB1dCBhdDoK
+CiAgaHR0cDovL3d3dy5pbmZyYWRlYWQub3JnL35tY2hlaGFiL2tlcm5lbF9kb2NzLwogIGh0dHBz
+Oi8vbWNoZWhhYi5mZWRvcmFwZW9wbGUub3JnL2tlcm5lbF9kb2NzLyAKCk1hdXJvIENhcnZhbGhv
+IENoZWhhYiAoMTMpOgogIGRvY3MtcnN0OiBjb252ZXJ0IGxzbSBmcm9tIERvY0Jvb2sgdG8gUmVT
+VAogIGRvY3M6IHJlbW92ZSBEb2NCb29rIGZyb20gdGhlIGJ1aWxkaW5nIHN5c3RlbQogIGRvY3M6
+IHVwZGF0ZSBvbGQgcmVmZXJlbmNlcyBmb3IgRG9jQm9vayBmcm9tIHRoZSBkb2N1bWVudGF0aW9u
+CiAgTUFJTlRBSU5FUlM6IHVwZGF0ZSBvbGQgcmVmZXJlbmNlcyBmb3IgRG9jQm9vayBkaXJlY3Rv
+cnkKICBhdGE6IHVwZGF0ZSByZWZlcmVuY2VzIGZvciBsaWJhdGEgZG9jdW1lbnRhdGlvbgogIGlh
+NjQsIHNjc2k6IHVwZGF0ZSByZWZlcmVuY2VzIGZvciB0aGUgZGV2aWNlLWlvIGJvb2sKICBpcnE6
+IHVwZGF0ZSBnZW5lcmljaXJxIGJvb2sgbG9jYXRpb24KICBmczogdXBkYXRlIGxvY2F0aW9uIG9m
+IGZpbGVzeXN0ZW1zIGRvY3VtZW50YXRpb24KICBsaWI6IHVwZGF0ZSBsb2NhdGlvbiBvZiBrZ2Ri
+IGRvY3VtZW50YXRpb24KICBzb3VuZDogZml4IHRoZSBjb21tZW50cyB0aGF0IHJlZmVycyB0byBr
+ZXJuZWwtZG9jCiAgZnM6IGZpeCB0aGUgbG9jYXRpb24gb2YgdGhlIGtlcm5lbC1hcGkgYm9vawog
+IHVzYjogZml4IHRoZSBjb21tZW50IHdpdGggcmVnYXJkcyB0byBEb2NCb29rCiAgZG9jcy1yc3Q6
+IGdldCByaWQgb2YgRG9jdW1lbnRhdGlvbi9zcGhpbngvdG1wbGN2dCBzY3JpcHQKCiBEb2N1bWVu
+dGF0aW9uLzAwLUlOREVYICAgICAgICAgICAgICAgICAgICAgfCAgIDYgKy0KIERvY3VtZW50YXRp
+b24vRG9jQm9vay8uZ2l0aWdub3JlICAgICAgICAgICB8ICAxNyAtLQogRG9jdW1lbnRhdGlvbi9E
+b2NCb29rL01ha2VmaWxlICAgICAgICAgICAgIHwgMjc2IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tCiBEb2N1bWVudGF0aW9uL0RvY0Jvb2svbHNtLnRtcGwgICAgICAgICAgICAgfCAyNjUg
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCiBEb2N1bWVudGF0aW9uL0RvY0Jvb2svc3R5bGVz
+aGVldC54c2wgICAgICAgfCAgMTEgLS0KIERvY3VtZW50YXRpb24vTWFrZWZpbGUgICAgICAgICAg
+ICAgICAgICAgICB8IDEyNSArKysrKysrKysrKysrCiBEb2N1bWVudGF0aW9uL01ha2VmaWxlLnNw
+aGlueCAgICAgICAgICAgICAgfCAxMzAgLS0tLS0tLS0tLS0tLS0KIERvY3VtZW50YXRpb24vUENJ
+L01TSS1IT1dUTy50eHQgICAgICAgICAgICB8ICAgMiArLQogRG9jdW1lbnRhdGlvbi9hZG1pbi1n
+dWlkZS9SRUFETUUucnN0ICAgICAgIHwgICA2IC0KIERvY3VtZW50YXRpb24vZG9jLWd1aWRlL2Rv
+Y2Jvb2sucnN0ICAgICAgICB8ICA5MCAtLS0tLS0tLS0tCiBEb2N1bWVudGF0aW9uL2RvYy1ndWlk
+ZS9pbmRleC5yc3QgICAgICAgICAgfCAgIDEgLQogRG9jdW1lbnRhdGlvbi9kb2MtZ3VpZGUvc3Bo
+aW54LnJzdCAgICAgICAgIHwgICA1IC0KIERvY3VtZW50YXRpb24vZmIvYXBpLnR4dCAgICAgICAg
+ICAgICAgICAgICB8ICAgNCArLQogRG9jdW1lbnRhdGlvbi9ncHUvdG9kby5yc3QgICAgICAgICAg
+ICAgICAgIHwgICAyICstCiBEb2N1bWVudGF0aW9uL2tlcm5lbC1kb2MtbmFuby1IT1dUTy50eHQg
+ICAgfCAgNjUgKystLS0tLQogRG9jdW1lbnRhdGlvbi9sc20udHh0ICAgICAgICAgICAgICAgICAg
+ICAgIHwgMjAxICsrKysrKysrKysrKysrKysrKysrKwogRG9jdW1lbnRhdGlvbi9wcm9jZXNzL2No
+YW5nZXMucnN0ICAgICAgICAgIHwgIDI2ICstLQogRG9jdW1lbnRhdGlvbi9wcm9jZXNzL2hvd3Rv
+LnJzdCAgICAgICAgICAgIHwgICA4IC0KIERvY3VtZW50YXRpb24vcHJvY2Vzcy9rZXJuZWwtZG9j
+cy5yc3QgICAgICB8ICAzNCArLS0tCiBEb2N1bWVudGF0aW9uL3NwaGlueC90bXBsY3Z0ICAgICAg
+ICAgICAgICAgfCAgMjggLS0tCiBEb2N1bWVudGF0aW9uL3RyYW5zbGF0aW9ucy9qYV9KUC9ob3d0
+by5yc3QgfCAgIDcgLQogRG9jdW1lbnRhdGlvbi90cmFuc2xhdGlvbnMva29fS1IvaG93dG8ucnN0
+IHwgICA3IC0KIE1BSU5UQUlORVJTICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAg
+NSArLQogTWFrZWZpbGUgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgIDExICst
+CiBhcmNoL2lhNjQvaW5jbHVkZS9hc20vaW8uaCAgICAgICAgICAgICAgICAgfCAgIDIgKy0KIGFy
+Y2gvaWE2NC9zbi9rZXJuZWwvaW9tdi5jICAgICAgICAgICAgICAgICB8ICAgMiArLQogZHJpdmVy
+cy9hdGEvYWNhcmQtYWhjaS5jICAgICAgICAgICAgICAgICAgIHwgICAyICstCiBkcml2ZXJzL2F0
+YS9haGNpLmMgICAgICAgICAgICAgICAgICAgICAgICAgfCAgIDIgKy0KIGRyaXZlcnMvYXRhL2Fo
+Y2kuaCAgICAgICAgICAgICAgICAgICAgICAgICB8ICAgMiArLQogZHJpdmVycy9hdGEvYXRhX3Bp
+aXguYyAgICAgICAgICAgICAgICAgICAgIHwgICAyICstCiBkcml2ZXJzL2F0YS9saWJhaGNpLmMg
+ICAgICAgICAgICAgICAgICAgICAgfCAgIDIgKy0KIGRyaXZlcnMvYXRhL2xpYmF0YS1jb3JlLmMg
+ICAgICAgICAgICAgICAgICB8ICAgMiArLQogZHJpdmVycy9hdGEvbGliYXRhLWVoLmMgICAgICAg
+ICAgICAgICAgICAgIHwgICAyICstCiBkcml2ZXJzL2F0YS9saWJhdGEtc2NzaS5jICAgICAgICAg
+ICAgICAgICAgfCAgIDIgKy0KIGRyaXZlcnMvYXRhL2xpYmF0YS1zZmYuYyAgICAgICAgICAgICAg
+ICAgICB8ICAgMiArLQogZHJpdmVycy9hdGEvbGliYXRhLmggICAgICAgICAgICAgICAgICAgICAg
+IHwgICAyICstCiBkcml2ZXJzL2F0YS9wYXRhX3BkYzIwMjd4LmMgICAgICAgICAgICAgICAgfCAg
+IDIgKy0KIGRyaXZlcnMvYXRhL3BkY19hZG1hLmMgICAgICAgICAgICAgICAgICAgICB8ICAgMiAr
+LQogZHJpdmVycy9hdGEvc2F0YV9udi5jICAgICAgICAgICAgICAgICAgICAgIHwgICAyICstCiBk
+cml2ZXJzL2F0YS9zYXRhX3Byb21pc2UuYyAgICAgICAgICAgICAgICAgfCAgIDIgKy0KIGRyaXZl
+cnMvYXRhL3NhdGFfcHJvbWlzZS5oICAgICAgICAgICAgICAgICB8ICAgMiArLQogZHJpdmVycy9h
+dGEvc2F0YV9xc3Rvci5jICAgICAgICAgICAgICAgICAgIHwgICAyICstCiBkcml2ZXJzL2F0YS9z
+YXRhX3NpbC5jICAgICAgICAgICAgICAgICAgICAgfCAgIDIgKy0KIGRyaXZlcnMvYXRhL3NhdGFf
+c2lzLmMgICAgICAgICAgICAgICAgICAgICB8ICAgMiArLQogZHJpdmVycy9hdGEvc2F0YV9zdncu
+YyAgICAgICAgICAgICAgICAgICAgIHwgICAyICstCiBkcml2ZXJzL2F0YS9zYXRhX3N4NC5jICAg
+ICAgICAgICAgICAgICAgICAgfCAgIDIgKy0KIGRyaXZlcnMvYXRhL3NhdGFfdWxpLmMgICAgICAg
+ICAgICAgICAgICAgICB8ICAgMiArLQogZHJpdmVycy9hdGEvc2F0YV92aWEuYyAgICAgICAgICAg
+ICAgICAgICAgIHwgICAyICstCiBkcml2ZXJzL2F0YS9zYXRhX3ZzYy5jICAgICAgICAgICAgICAg
+ICAgICAgfCAgIDIgKy0KIGRyaXZlcnMvc2NzaS9xbGExMjgwLmMgICAgICAgICAgICAgICAgICAg
+ICB8ICAgMiArLQogZHJpdmVycy91c2IvZ2FkZ2V0L0tjb25maWcgICAgICAgICAgICAgICAgIHwg
+ICAyICstCiBmcy9kZWJ1Z2ZzL2ZpbGUuYyAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgIDIg
+Ky0KIGZzL2RlYnVnZnMvaW5vZGUuYyAgICAgICAgICAgICAgICAgICAgICAgICB8ICAgMiArLQog
+aW5jbHVkZS9saW51eC9hdGEuaCAgICAgICAgICAgICAgICAgICAgICAgIHwgICAyICstCiBpbmNs
+dWRlL2xpbnV4L2RlYnVnZnMuaCAgICAgICAgICAgICAgICAgICAgfCAgIDIgKy0KIGluY2x1ZGUv
+bGludXgvbGliYXRhLmggICAgICAgICAgICAgICAgICAgICB8ICAgMiArLQogaW5jbHVkZS9zb3Vu
+ZC9wY20uaCAgICAgICAgICAgICAgICAgICAgICAgIHwgICAyICstCiBrZXJuZWwvaXJxL2NoaXAu
+YyAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgIDIgKy0KIGtlcm5lbC9pcnEvaGFuZGxlLmMg
+ICAgICAgICAgICAgICAgICAgICAgICB8ICAgMiArLQoga2VybmVsL2lycS9pcnFkZXNjLmMgICAg
+ICAgICAgICAgICAgICAgICAgIHwgICAyICstCiBsaWIvS2NvbmZpZy5kZWJ1ZyAgICAgICAgICAg
+ICAgICAgICAgICAgICAgfCAgIDIgKy0KIGxpYi9LY29uZmlnLmtnZGIgICAgICAgICAgICAgICAg
+ICAgICAgICAgICB8ICAgMiArLQogc2NyaXB0cy9NYWtlZmlsZSAgICAgICAgICAgICAgICAgICAg
+ICAgICAgIHwgICA5ICstCiBzY3JpcHRzL2NoZWNrLWxjX2N0eXBlLmMgICAgICAgICAgICAgICAg
+ICAgfCAgMTEgLS0KIDY0IGZpbGVzIGNoYW5nZWQsIDM5NiBpbnNlcnRpb25zKCspLCAxMDMyIGRl
+bGV0aW9ucygtKQogZGVsZXRlIG1vZGUgMTAwNjQ0IERvY3VtZW50YXRpb24vRG9jQm9vay8uZ2l0
+aWdub3JlCiBkZWxldGUgbW9kZSAxMDA2NDQgRG9jdW1lbnRhdGlvbi9Eb2NCb29rL01ha2VmaWxl
+CiBkZWxldGUgbW9kZSAxMDA2NDQgRG9jdW1lbnRhdGlvbi9Eb2NCb29rL2xzbS50bXBsCiBkZWxl
+dGUgbW9kZSAxMDA2NDQgRG9jdW1lbnRhdGlvbi9Eb2NCb29rL3N0eWxlc2hlZXQueHNsCiBkZWxl
+dGUgbW9kZSAxMDA2NDQgRG9jdW1lbnRhdGlvbi9NYWtlZmlsZS5zcGhpbngKIGRlbGV0ZSBtb2Rl
+IDEwMDY0NCBEb2N1bWVudGF0aW9uL2RvYy1ndWlkZS9kb2Nib29rLnJzdAogY3JlYXRlIG1vZGUg
+MTAwNjQ0IERvY3VtZW50YXRpb24vbHNtLnR4dAogZGVsZXRlIG1vZGUgMTAwNzU1IERvY3VtZW50
+YXRpb24vc3BoaW54L3RtcGxjdnQKIGRlbGV0ZSBtb2RlIDEwMDY0NCBzY3JpcHRzL2NoZWNrLWxj
+X2N0eXBlLmMKCi0tIAoyLjkuMwoKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fCmRyaS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVk
+ZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZv
+L2RyaS1kZXZlbAo=
