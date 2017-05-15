@@ -1,189 +1,88 @@
-From: Mauro Carvalho Chehab <mchehab@s-opensource.com>
-Subject: [PATCH 00/36] Convert DocBook documents to ReST
-Date: Fri, 12 May 2017 10:59:43 -0300
-Message-ID: <cover.1494596071.git.mchehab@s-opensource.com>
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: Re: [RFC] scsi: generate uevent for SCSI sense code
+Date: Mon, 15 May 2017 08:31:52 -0400
+Message-ID: <1494851512.1081.28.camel@localhost.localdomain>
+References: <20170504005013.2865393-1-songliubraving@fb.com>
+         <20170504005013.2865393-2-songliubraving@fb.com>
+         <54323B49-47CF-403A-970E-F94EDE2E0558@fb.com>
+         <54b76bb9-8279-dc71-2c08-661eb3c4512f@suse.de>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <alsa-devel-bounces@alsa-project.org>
-List-Unsubscribe: <http://mailman.alsa-project.org/mailman/options/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
-List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel/>
-List-Post: <mailto:alsa-devel@alsa-project.org>
-List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
-List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
-Errors-To: alsa-devel-bounces@alsa-project.org
-Sender: alsa-devel-bounces@alsa-project.org
-To: linux-kernel@vger.kernel.org, Linux Doc Mailing List <linux-doc@vger.kernel.org>
-Cc: Andrew Lunn <andrew@lunn.ch>, alsa-devel@alsa-project.org, Takashi Iwai <tiwai@suse.de>, Jan Kiszka <jan.kiszka@siemens.com>, "Herton R. Krzesinski" <herton@redhat.com>, Alexei Starovoitov <ast@kernel.org>, "J. Bruce Fields" <bfields@fieldses.org>, linux-ide@vger.kernel.org, Eric Dumazet <edumazet@google.com>, netdev@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, Jan Kara <jack@suse.com>, Soheil Hassas Yeganeh <soheil@google.com>, linux-s390@vger.kernel.org, Florian Fainelli <f.fainelli@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Herbert Xu <herbert@gondor.apana.org.au>, linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Ursula Braun <ubraun@linux.vnet.ibm.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Mauro Carvalho Chehab <mchehab@s-opensource.com>, Peter Zijlstra <peterz@infradead.org>, Julian Anastasov <ja@ssi.bg>, Ingo
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:54198 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755038AbdEOMby (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 15 May 2017 08:31:54 -0400
+In-Reply-To: <54b76bb9-8279-dc71-2c08-661eb3c4512f@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Song Liu <songliubraving@fb.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@fb.com>, "axboe@kernel.dk" <axboe@kernel.dk>
 
-This patch series convert the following books from
-DocBook to ReST:
+On Mon, 2017-05-15 at 08:04 +0200, Hannes Reinecke wrote:
+> In general I like the idea; however, the 'filter' thingie is somewhat
+> odd. I could somewhat buy into the idea of filtering for sense keys, but
+> then I would have expected to use the 'sense_event_filter' as a bitmap
+> of allowed sense keys.
+> With your current design you can only filter for one specific sense key,
+> _and_ you leave the remaining bits of the sense_event_filter variable
+> unused.
+> So either turn it into a bitmap and allow for several sense keys to be
+> filtered, or treat it as mask for the _entire_ sense, but then you'd
+> need for ASC and ASCQ, too.
+> 
+> Cheers,
+> 
+> Hannes
 
-   - filesystems
-   - kernel-hacking
-   - kernel-locking
-   - kgdb
-   - libata
-   - networking
-   - rapidio
-   - s390-drivers
-   - scsi
-   - w1
-   - z8530book
+I think what would help here is understanding what you are trying to
+accomplish with this change.  Are you trying to allow generation of
+a uevent on a particular sense KCQ combination you know in advance,
+or a set of them, or do you want to be able to normally generate
+uevents for every sense keys/codes (i.e. all the bitmap bits set)
+and then perhaps narrow down to a specific one when you are looking
+for a problem?
 
-It also adjusts some Sphinx-pedantic errors/warnings on
-some kernel-doc markups.
+When I added the sense code uevent generation for Unit Attentions,
+one big concern I had was how many events per second would be generated.
+The userspace event handling is very slow, and can only handle a few
+hundred events per second before it starts backing up, and then you
+can lose events, which you don't want.
 
-I also added some patches here to add PDF output for all
-existing ReST books.
+Generating a uevent on MEDIUM ERROR is somewhat worrying, when a drive
+goes bad you could easily get these on every I/O.
 
-I did my best to check if what's there is not too outdated, but
-the best is if the subsystem maintainers could check it.
+Your actual uevent emit:
 
-After this series, there are only 4 DocBook remaining conversion:
-   - librs
-   - lsm
-   - mtdnand
-   - sh
++#ifdef CONFIG_SCSI_SENSE_UEVENT
++       case SDEV_EVT_SCSI_SENSE:
++               envp[idx++] = "SDEV_UA=SCSI_SENSE";
++               for (i = idx; i < idx + 3; ++i) {
++                       envp[i] = kzalloc(32, GFP_ATOMIC);
++                       if (!envp[i])
++                               break;
++                       free_envp = i;
++               }
++               snprintf(envp[idx++], 32, "LBA=%lu", evt->sense_evt_data.lba);
++               snprintf(envp[idx++], 32, "SIZE=%d", evt->sense_evt_data.size);
++               snprintf(envp[idx++], 32, "SENSE_CODE=%1x/%02x/%02x",
++                        evt->sense_evt_data.sshdr.sense_key,
++                        evt->sense_evt_data.sshdr.asc,
++                        evt->sense_evt_data.sshdr.ascq);
++               break;
++#endif
 
-I'll likely convert those remaining ones during this weekend.
+Is a little strange.  The "SDEV_UA" property implies that it was a
+UNIT ATTENTION, but you are filtering on other sense types, so you
+would probably want a different property.  Many SCSI commands do not
+have a LOGICAL BLOCK ADDRESS field, or a TRANSFER LENGTH field, so
+you might be reporting garbage if they don't.  And, since this is a
+SCSI command, you probably want to report the length from the command,
+not the count in bytes from the request structure.
 
--
+So I think a customizable sense reporting feature could be very useful,
+but it needs a little more development.
 
-This patch series is based on docs tree (next branch).
-The full patch series is on this tree:
-
-   https://git.linuxtv.org//mchehab/experimental.git/log/?h=docbook
-
-And the HTML output at:
-
-  http://www.infradead.org/~mchehab/kernel_docs/
-  https://mchehab.fedorapeople.org/kernel_docs/  
-
-Mauro Carvalho Chehab (36):
-  docs-rst: convert kernel-hacking to ReST
-  kernel-hacking: update document
-  docs-rst: convert kernel-locking to ReST
-  mutex, futex: adjust kernel-doc markups to generate ReST
-  locking.rst: reformat locking table
-  locking.rst: add captions to two tables
-  locking.rst: Update some ReST markups
-  docs-rst: convert kgdb DocBook to ReST
-  kgdb.rst: Adjust ReST markups
-  conf.py: define a color for important markup on PDF output
-  docs-rst: conf.py: sort LaTeX documents in alphabetical order
-  docs-rst: conf.py: remove kernel-documentation from LaTeX
-  docs-rst: add crypto API book to pdf output
-  docs-rst: add dev-tools book to pdf output
-  docs-rst: add sound book to pdf output
-  docs-rst: add userspace API book to pdf output
-  docs-rst: convert filesystems book to ReST
-  docs-rst: filesystems: use c domain references where needed
-  fs: jbd2: make jbd2_journal_start() kernel-doc parseable
-  docs-rst: don't ignore internal functions for jbd2 docs
-  fs: locks: Fix some troubles at kernel-doc comments
-  fs: add a blank lines on some kernel-doc comments
-  fs: eventfd: fix identation on kernel-doc
-  fs: jbd2: escape a string with special chars on a kernel-doc
-  docs-rst: convert libata book to ReST
-  libata.rst: add c function and struct cross-references
-  libata: fix identation on a kernel-doc markup
-  docs-rst: convert s390-drivers DocBook to ReST
-  docs-rst: convert networking book to ReST
-  net: skbuff.h: properly escape a macro name on kernel-doc
-  net: fix some identation issues at kernel-doc markups
-  docs-rst: convert z8530book DocBook to ReST
-  docs-rst: convert scsi DocBook to ReST
-  scsi: fix some kernel-doc markups
-  docs-rst: convert w1 book to ReST
-  docs-rst: convert rapidio book to ReST
-
- Documentation/DocBook/Makefile            |   11 +-
- Documentation/DocBook/filesystems.tmpl    |  381 -----
- Documentation/DocBook/kernel-hacking.tmpl | 1312 ------------------
- Documentation/DocBook/kernel-locking.tmpl | 2151 -----------------------------
- Documentation/DocBook/kgdb.tmpl           |  918 ------------
- Documentation/DocBook/libata.tmpl         | 1625 ----------------------
- Documentation/DocBook/networking.tmpl     |  111 --
- Documentation/DocBook/rapidio.tmpl        |  155 ---
- Documentation/DocBook/s390-drivers.tmpl   |  161 ---
- Documentation/DocBook/scsi.tmpl           |  409 ------
- Documentation/DocBook/w1.tmpl             |  101 --
- Documentation/DocBook/z8530book.tmpl      |  371 -----
- Documentation/conf.py                     |   35 +-
- Documentation/crypto/conf.py              |   10 +
- Documentation/dev-tools/index.rst         |    1 +
- Documentation/dev-tools/kgdb.rst          |  907 ++++++++++++
- Documentation/driver-api/index.rst        |    5 +
- Documentation/driver-api/libata.rst       | 1031 ++++++++++++++
- Documentation/driver-api/rapidio.rst      |  107 ++
- Documentation/driver-api/s390-drivers.rst |  111 ++
- Documentation/driver-api/scsi.rst         |  344 +++++
- Documentation/driver-api/w1.rst           |   70 +
- Documentation/filesystems/conf.py         |   10 +
- Documentation/filesystems/index.rst       |  317 +++++
- Documentation/index.rst                   |    3 +
- Documentation/kernel-hacking/conf.py      |   10 +
- Documentation/kernel-hacking/hacking.rst  |  811 +++++++++++
- Documentation/kernel-hacking/index.rst    |    5 +
- Documentation/kernel-hacking/locking.rst  | 1446 +++++++++++++++++++
- Documentation/networking/conf.py          |   10 +
- Documentation/networking/index.rst        |   18 +
- Documentation/networking/kapi.rst         |  147 ++
- Documentation/networking/z8530book.rst    |  256 ++++
- Documentation/sound/conf.py               |   10 +
- drivers/ata/libata-scsi.c                 |    7 +-
- drivers/net/phy/phy.c                     |    1 +
- drivers/scsi/scsi_scan.c                  |    7 +-
- drivers/scsi/scsi_transport_fc.c          |   18 +-
- drivers/scsi/scsicam.c                    |    4 +-
- fs/eventfd.c                              |    4 +-
- fs/fs-writeback.c                         |   12 +-
- fs/jbd2/transaction.c                     |   42 +-
- fs/locks.c                                |   18 +-
- fs/mpage.c                                |    1 +
- fs/namei.c                                |    1 +
- include/linux/mutex.h                     |    6 +-
- include/linux/netdevice.h                 |    9 +-
- include/linux/skbuff.h                    |    2 +-
- include/net/sock.h                        |    9 +-
- kernel/futex.c                            |   40 +-
- kernel/locking/mutex.c                    |    6 +-
- net/core/datagram.c                       |    2 +-
- net/core/sock.c                           |    7 +-
- 53 files changed, 5764 insertions(+), 7802 deletions(-)
- delete mode 100644 Documentation/DocBook/filesystems.tmpl
- delete mode 100644 Documentation/DocBook/kernel-hacking.tmpl
- delete mode 100644 Documentation/DocBook/kernel-locking.tmpl
- delete mode 100644 Documentation/DocBook/kgdb.tmpl
- delete mode 100644 Documentation/DocBook/libata.tmpl
- delete mode 100644 Documentation/DocBook/networking.tmpl
- delete mode 100644 Documentation/DocBook/rapidio.tmpl
- delete mode 100644 Documentation/DocBook/s390-drivers.tmpl
- delete mode 100644 Documentation/DocBook/scsi.tmpl
- delete mode 100644 Documentation/DocBook/w1.tmpl
- delete mode 100644 Documentation/DocBook/z8530book.tmpl
- create mode 100644 Documentation/crypto/conf.py
- create mode 100644 Documentation/dev-tools/kgdb.rst
- create mode 100644 Documentation/driver-api/libata.rst
- create mode 100644 Documentation/driver-api/rapidio.rst
- create mode 100644 Documentation/driver-api/s390-drivers.rst
- create mode 100644 Documentation/driver-api/scsi.rst
- create mode 100644 Documentation/driver-api/w1.rst
- create mode 100644 Documentation/filesystems/conf.py
- create mode 100644 Documentation/filesystems/index.rst
- create mode 100644 Documentation/kernel-hacking/conf.py
- create mode 100644 Documentation/kernel-hacking/hacking.rst
- create mode 100644 Documentation/kernel-hacking/index.rst
- create mode 100644 Documentation/kernel-hacking/locking.rst
- create mode 100644 Documentation/networking/conf.py
- create mode 100644 Documentation/networking/index.rst
- create mode 100644 Documentation/networking/kapi.rst
- create mode 100644 Documentation/networking/z8530book.rst
- create mode 100644 Documentation/sound/conf.py
-
--- 
-2.9.3
+-Ewan
