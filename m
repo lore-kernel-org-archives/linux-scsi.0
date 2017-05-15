@@ -1,87 +1,72 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: [PATCH] sd: fix sysfs writes to "provisioning_mode" and "zeroing_mode"
-Date: Mon, 15 May 2017 15:13:26 -0400
-Message-ID: <1494875606-6298-1-git-send-email-emilne@redhat.com>
+From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Subject: Re: [PATCH 02/15] lpfc: Fix system crash when port is reset.
+Date: Mon, 15 May 2017 16:31:32 -0300
+Message-ID: <20170515193132.22385-1-gpiccoli@linux.vnet.ibm.com>
+References: <20170510190713.30171-3-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44814 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S964967AbdEOTN2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 15 May 2017 15:13:28 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id D07E63680B
-        for <linux-scsi@vger.kernel.org>; Mon, 15 May 2017 19:13:27 +0000 (UTC)
-Received: from emilne.csb (unknown [10.18.25.104])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 6E69A5DD6D
-        for <linux-scsi@vger.kernel.org>; Mon, 15 May 2017 19:13:27 +0000 (UTC)
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:34806 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S933207AbdEOTbl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 15 May 2017 15:31:41 -0400
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v4FJVCm5038004
+        for <linux-scsi@vger.kernel.org>; Mon, 15 May 2017 15:31:40 -0400
+Received: from e24smtp05.br.ibm.com (e24smtp05.br.ibm.com [32.104.18.26])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2afjhsr0gf-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Mon, 15 May 2017 15:31:39 -0400
+Received: from localhost
+        by e24smtp05.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
+        Mon, 15 May 2017 16:31:37 -0300
+Received: from d24av03.br.ibm.com (d24av03.br.ibm.com [9.8.31.95])
+        by d24relay03.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v4FJVZGK29753410
+        for <linux-scsi@vger.kernel.org>; Mon, 15 May 2017 16:31:35 -0300
+Received: from d24av03.br.ibm.com (localhost [127.0.0.1])
+        by d24av03.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v4FJVaeZ017140
+        for <linux-scsi@vger.kernel.org>; Mon, 15 May 2017 16:31:36 -0300
+In-Reply-To: <20170510190713.30171-3-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: raphasil@linux.vnet.ibm.com, james.smart@broadcom.com, dick.kennedy@broadcom.com, gpiccoli@linux.vnet.ibm.com
 
-From: "Ewan D. Milne" <emilne@redhat.com>
+Hi James and Dick, thanks for this patch. We were investigating a pretty
+similar issue, and we raised a patch that looks like yours.
+Since you sent this one, we reviewed and seems it's missing a hunk to
+prevent the issue we are dealing here, in PCI error recovery.
 
-Change to use strlen() of the desired string for the length
-parameter to strncmp().  Otherwise one cannot simply use a
-command like 'echo "writesame_16" > .../provisioning_mode'.
-This patch makes sysfs writes consistent with other usage.
+Please see the attached patch. Basically, lpfc is dereferencing a NULL
+pointer on PCI error recovery path in lpfc_els_flush_cmd(). Feel free to
+take this hunk on your patch, or if you prefer we can send a complete patch.
 
-Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+Thanks in advance,
+
+
+Guilherme
+
 ---
- drivers/scsi/sd.c | 27 ++++++++++++++++++---------
- 1 file changed, 18 insertions(+), 9 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index f9d1432..a5eacea 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -402,15 +402,20 @@ provisioning_mode_store(struct device *dev, struct device_attribute *attr,
- 	if (sdp->type != TYPE_DISK)
- 		return -EINVAL;
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 67827e397431..4e354194cb54 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -7441,6 +7441,13 @@ lpfc_els_flush_cmd(struct lpfc_vport *vport)
+ 	 */
+ 	spin_lock_irq(&phba->hbalock);
+ 	pring = lpfc_phba_elsring(phba);
++
++	/* Bail out if we've no ELS wq, like in PCI error recovery case. */
++	if (unlikely(!pring)) {
++		spin_unlock_irq(&phba->hbalock);
++		return;
++	}
++
+ 	if (phba->sli_rev == LPFC_SLI_REV4)
+ 		spin_lock(&pring->ring_lock);
  
--	if (!strncmp(buf, lbp_mode[SD_LBP_UNMAP], 20))
-+	if (!strncmp(buf, lbp_mode[SD_LBP_UNMAP],
-+		     strlen(lbp_mode[SD_LBP_UNMAP])))
- 		sd_config_discard(sdkp, SD_LBP_UNMAP);
--	else if (!strncmp(buf, lbp_mode[SD_LBP_WS16], 20))
-+	else if (!strncmp(buf, lbp_mode[SD_LBP_WS16],
-+			  strlen(lbp_mode[SD_LBP_WS16])))
- 		sd_config_discard(sdkp, SD_LBP_WS16);
--	else if (!strncmp(buf, lbp_mode[SD_LBP_WS10], 20))
-+	else if (!strncmp(buf, lbp_mode[SD_LBP_WS10],
-+			  strlen(lbp_mode[SD_LBP_WS10])))
- 		sd_config_discard(sdkp, SD_LBP_WS10);
--	else if (!strncmp(buf, lbp_mode[SD_LBP_ZERO], 20))
-+	else if (!strncmp(buf, lbp_mode[SD_LBP_ZERO],
-+			  strlen(lbp_mode[SD_LBP_ZERO])))
- 		sd_config_discard(sdkp, SD_LBP_ZERO);
--	else if (!strncmp(buf, lbp_mode[SD_LBP_DISABLE], 20))
-+	else if (!strncmp(buf, lbp_mode[SD_LBP_DISABLE],
-+			  strlen(lbp_mode[SD_LBP_DISABLE])))
- 		sd_config_discard(sdkp, SD_LBP_DISABLE);
- 	else
- 		return -EINVAL;
-@@ -444,13 +449,17 @@ zeroing_mode_store(struct device *dev, struct device_attribute *attr,
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EACCES;
- 
--	if (!strncmp(buf, zeroing_mode[SD_ZERO_WRITE], 20))
-+	if (!strncmp(buf, zeroing_mode[SD_ZERO_WRITE],
-+		     strlen(zeroing_mode[SD_ZERO_WRITE])))
- 		sdkp->zeroing_mode = SD_ZERO_WRITE;
--	else if (!strncmp(buf, zeroing_mode[SD_ZERO_WS], 20))
-+	else if (!strncmp(buf, zeroing_mode[SD_ZERO_WS],
-+			  strlen(zeroing_mode[SD_ZERO_WS])))
- 		sdkp->zeroing_mode = SD_ZERO_WS;
--	else if (!strncmp(buf, zeroing_mode[SD_ZERO_WS16_UNMAP], 20))
-+	else if (!strncmp(buf, zeroing_mode[SD_ZERO_WS16_UNMAP],
-+			  strlen(zeroing_mode[SD_ZERO_WS16_UNMAP])))
- 		sdkp->zeroing_mode = SD_ZERO_WS16_UNMAP;
--	else if (!strncmp(buf, zeroing_mode[SD_ZERO_WS10_UNMAP], 20))
-+	else if (!strncmp(buf, zeroing_mode[SD_ZERO_WS10_UNMAP],
-+			  strlen(zeroing_mode[SD_ZERO_WS10_UNMAP])))
- 		sdkp->zeroing_mode = SD_ZERO_WS10_UNMAP;
- 	else
- 		return -EINVAL;
 -- 
-2.1.0
+2.12.0.rc0
