@@ -1,55 +1,59 @@
-From: walter harms <wharms@bfs.de>
-Subject: Re: [PATCH] scsi: aacraid: fix leak of data from stack back to userspace
-Date: Mon, 15 May 2017 17:07:10 +0200
-Message-ID: <5919C41E.7090309@bfs.de>
-References: <20170515145605.21461-1-colin.king@canonical.com>
-Reply-To: wharms@bfs.de
+From: Martin Wilck <mwilck@suse.com>
+Subject: Re: [PATCH v2 3/4] scsi_dh_alua: do not call BUG_ON when updating
+ port group
+Date: Mon, 15 May 2017 10:16:29 +0200
+Message-ID: <1494836189.4728.2.camel@suse.com>
+References: <20170512131508.3231-1-mwilck@suse.com>
+         <20170512131508.3231-4-mwilck@suse.com>
+         <1494606261.14477.3.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170515145605.21461-1-colin.king@canonical.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from prv3-mh.provo.novell.com ([137.65.250.26]:40388 "EHLO
+        prv3-mh.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933174AbdEOPjd (ORCPT
+        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
+        Mon, 15 May 2017 11:39:33 -0400
+In-Reply-To: <1494606261.14477.3.camel@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "mauricfo@linux.vnet.ibm.com" <mauricfo@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
 
-
-Am 15.05.2017 16:56, schrieb Colin King:
-> From: Colin Ian King <colin.king@canonical.com>
+On Fri, 2017-05-12 at 16:24 +0000, Bart Van Assche wrote:
 > 
-> The fields sense_data_size and sense_data are unitialized garbage from
-> the stack and are being copied back to userspace.  Fix this leak of
-> stack information by ensuring they are zero'd.
+> Hello Martin,
 > 
-> Detected by CoverityScan, CID#1435473 ("Uninitialized scalar variable")
+> Allowing races like the one this patch tries to address to exist
+> makes
+> the ALUA code harder to maintain than necessary. Have you considered
+> to
+> make alua_bus_detach() wait until ALUA work has finished by using
+> e.g.
+> cancel_work_sync() or rcu_synchronize()?
 > 
-> Fixes: 423400e64d377 ("scsi: aacraid: Include HBA direct interface")
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/scsi/aacraid/commctrl.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-> index 106b9332f718..6bb6ed48e31d 100644
-> --- a/drivers/scsi/aacraid/commctrl.c
-> +++ b/drivers/scsi/aacraid/commctrl.c
-> @@ -955,6 +955,8 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
->  			reply.srb_status = SRB_STATUS_SUCCESS;
->  			reply.scsi_status = 0;
->  			reply.data_xfer_length = byte_count;
-> +			reply.sense_data_size = 0;
-> +			memset(reply.sense_data, 0, AAC_SENSE_BUFFERSIZE);
->  		} else {
->  			reply.srb_status = err->service_response;
->  			reply.scsi_status = err->status;
+> Bart.
 
+Hello Bart,
 
-an other idea would be initialize the reply with zero:
-struct aac_srb_reply reply={0};
+to be honest, no, I didn't consider this yet. The current kernel
+crashes with BUG() if an ALUA device is detached at an inopportune
+point in time (not just theoretically, we actually observed this). The
+goal of my patch was to fix this with minimum risk to introduce other
+problems. The addition in patch 4/4 was an attempt to address the
+concern you had expressed in your review of the v1 patch.
 
-maybe that is more future proof but i have no idea about the speed penalty.
+I'm not opposed to try to find a better solution, but could we maybe
+get the fix for the BUG() (i.e. patch 3/4) applied in the first place?
+AFAICS it would not conflict with a solution like the one you
+suggested.
 
-just my 2 cents,
- wh
+Best regards and thanks for the review,
+Martin
+
+-- 
+Dr. Martin Wilck <mwilck@suse.com>, Tel. +49 (0)911 74053 2107
+SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
