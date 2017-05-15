@@ -1,32 +1,55 @@
-From: James Smart <jsmart2021@gmail.com>
-Subject: Re: [PATCH 12/15] lpfc: Cleanup entry_repost settings on SLI4 queues
-Date: Mon, 15 May 2017 15:13:44 -0700
-Message-ID: <ac3b9ca1-ce3f-02e2-8783-701939c46303@gmail.com>
-References: <20170510190713.30171-1-jsmart2021@gmail.com>
- <20170510190713.30171-13-jsmart2021@gmail.com>
- <1f3ad2eb-4db8-5181-02d9-cde8d43e952c@suse.de>
-Reply-To: jsmart2021@gmail.com
+From: Long Li <longli@microsoft.com>
+Subject: RE: [PATCH] scsi: zero per-cmd driver data for each MQ I/O
+Date: Mon, 15 May 2017 22:48:13 +0000
+Message-ID: <MWHPR03MB3136FC54E76FBFD54A178159CEE10@MWHPR03MB3136.namprd03.prod.outlook.com>
+References: <1494450443-2921-1-git-send-email-longli@exchange.microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:35169 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751268AbdEOWNt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 May 2017 18:13:49 -0400
-Received: by mail-wm0-f67.google.com with SMTP id v4so32230684wmb.2
-        for <linux-scsi@vger.kernel.org>; Mon, 15 May 2017 15:13:48 -0700 (PDT)
-In-Reply-To: <1f3ad2eb-4db8-5181-02d9-cde8d43e952c@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1494450443-2921-1-git-send-email-longli@exchange.microsoft.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Long Li <longli@microsoft.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: KY Srinivasan <kys@microsoft.com>, Stephen Hemminger <sthemmin@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
-Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-On 5/11/2017 12:49 AM, Hannes Reinecke wrote:
-> If this is a fix to a previous patch (Patch 6/15 ?), please merge it
-> with that.
+> -----Original Message-----
+> From: Long Li [mailto:longli@exchange.microsoft.com]
+> Sent: Wednesday, May 10, 2017 2:07 PM
+> To: James E.J. Bottomley <jejb@linux.vnet.ibm.com>; Martin K. Petersen
+> <martin.petersen@oracle.com>; linux-scsi@vger.kernel.org; linux-
+> kernel@vger.kernel.org
+> Cc: Long Li <longli@microsoft.com>
+> Subject: [PATCH] scsi: zero per-cmd driver data for each MQ I/O
+>=20
+> From: Long Li <longli@microsoft.com>
+>=20
+> Lower layer driver may not initialize private data before use. Zero them =
+out
+> to prevent use of stale data.
+>=20
+> Signed-off-by: Long Li <longli@microsoft.com>
 
-It was, in some areas.  Split those areas out and merged into the prior 
-patches. Affected patches 0004, 0006, and 0008.
+Can someone help review this patch?
 
--- james
+> ---
+>  drivers/scsi/scsi_lib.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c index
+> 19125d7..a821593 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1850,7 +1850,7 @@ static int scsi_mq_prep_fn(struct request *req)
+>=20
+>         /* zero out the cmd, except for the embedded scsi_request */
+>         memset((char *)cmd + sizeof(cmd->req), 0,
+> -               sizeof(*cmd) - sizeof(cmd->req));
+> +               sizeof(*cmd) - sizeof(cmd->req) +
+> + shost->hostt->cmd_size);
+>=20
+>         req->special =3D cmd;
+>=20
+> --
+> 2.7.4
