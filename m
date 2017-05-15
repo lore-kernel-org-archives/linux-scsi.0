@@ -1,72 +1,38 @@
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Subject: Re: [PATCH 02/15] lpfc: Fix system crash when port is reset.
-Date: Mon, 15 May 2017 16:31:32 -0300
-Message-ID: <20170515193132.22385-1-gpiccoli@linux.vnet.ibm.com>
-References: <20170510190713.30171-3-jsmart2021@gmail.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH] sd: fix sysfs writes to "provisioning_mode" and
+ "zeroing_mode"
+Date: Mon, 15 May 2017 20:14:50 +0000
+Message-ID: <1494879289.2567.3.camel@sandisk.com>
+References: <1494875606-6298-1-git-send-email-emilne@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:34806 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S933207AbdEOTbl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 15 May 2017 15:31:41 -0400
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v4FJVCm5038004
-        for <linux-scsi@vger.kernel.org>; Mon, 15 May 2017 15:31:40 -0400
-Received: from e24smtp05.br.ibm.com (e24smtp05.br.ibm.com [32.104.18.26])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2afjhsr0gf-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Mon, 15 May 2017 15:31:39 -0400
-Received: from localhost
-        by e24smtp05.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-        Mon, 15 May 2017 16:31:37 -0300
-Received: from d24av03.br.ibm.com (d24av03.br.ibm.com [9.8.31.95])
-        by d24relay03.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v4FJVZGK29753410
-        for <linux-scsi@vger.kernel.org>; Mon, 15 May 2017 16:31:35 -0300
-Received: from d24av03.br.ibm.com (localhost [127.0.0.1])
-        by d24av03.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v4FJVaeZ017140
-        for <linux-scsi@vger.kernel.org>; Mon, 15 May 2017 16:31:36 -0300
-In-Reply-To: <20170510190713.30171-3-jsmart2021@gmail.com>
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:1973 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934544AbdEOUOx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 May 2017 16:14:53 -0400
+In-Reply-To: <1494875606-6298-1-git-send-email-emilne@redhat.com>
+Content-Language: en-US
+Content-ID: <027CF85682E9D24B8A0AD94629A041CA@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: raphasil@linux.vnet.ibm.com, james.smart@broadcom.com, dick.kennedy@broadcom.com, gpiccoli@linux.vnet.ibm.com
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "emilne@redhat.com" <emilne@redhat.com>
 
-Hi James and Dick, thanks for this patch. We were investigating a pretty
-similar issue, and we raised a patch that looks like yours.
-Since you sent this one, we reviewed and seems it's missing a hunk to
-prevent the issue we are dealing here, in PCI error recovery.
+On Mon, 2017-05-15 at 15:13 -0400, Ewan D. Milne wrote:
+> From: "Ewan D. Milne" <emilne@redhat.com>
+>=20
+> Change to use strlen() of the desired string for the length
+> parameter to strncmp().  Otherwise one cannot simply use a
+> command like 'echo "writesame_16" > .../provisioning_mode'.
+> This patch makes sysfs writes consistent with other usage.
 
-Please see the attached patch. Basically, lpfc is dereferencing a NULL
-pointer on PCI error recovery path in lpfc_els_flush_cmd(). Feel free to
-take this hunk on your patch, or if you prefer we can send a complete patch.
+Hello Ewan,
 
-Thanks in advance,
+Sorry but I don't like the approach of this patch. Have you considered
+to strip the whitespace from 'buf' with e.g. strim() such that strcmp()
+can be used instead of strncmp(buf, ..., strlen(...))?
 
+Thanks,
 
-Guilherme
-
----
- drivers/scsi/lpfc/lpfc_els.c | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 67827e397431..4e354194cb54 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -7441,6 +7441,13 @@ lpfc_els_flush_cmd(struct lpfc_vport *vport)
- 	 */
- 	spin_lock_irq(&phba->hbalock);
- 	pring = lpfc_phba_elsring(phba);
-+
-+	/* Bail out if we've no ELS wq, like in PCI error recovery case. */
-+	if (unlikely(!pring)) {
-+		spin_unlock_irq(&phba->hbalock);
-+		return;
-+	}
-+
- 	if (phba->sli_rev == LPFC_SLI_REV4)
- 		spin_lock(&pring->ring_lock);
- 
--- 
-2.12.0.rc0
+Bart.=
