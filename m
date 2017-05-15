@@ -1,79 +1,87 @@
-From: Martin Wilck <mwilck@suse.com>
-Subject: Re: [PATCH v2 3/4] scsi_dh_alua: do not call BUG_ON when updating
- port group
-Date: Mon, 15 May 2017 20:30:19 +0200
-Message-ID: <1494873019.4728.11.camel@suse.com>
-References: <20170512131508.3231-1-mwilck@suse.com>
-         <20170512131508.3231-4-mwilck@suse.com>
-         <1494606261.14477.3.camel@sandisk.com> <1494836189.4728.2.camel@suse.com>
-         <1494864202.2567.1.camel@sandisk.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: [PATCH] sd: fix sysfs writes to "provisioning_mode" and "zeroing_mode"
+Date: Mon, 15 May 2017 15:13:26 -0400
+Message-ID: <1494875606-6298-1-git-send-email-emilne@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:59438 "EHLO
-        prv3-mh.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933211AbdEOSag (ORCPT
-        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-        Mon, 15 May 2017 14:30:36 -0400
-In-Reply-To: <1494864202.2567.1.camel@sandisk.com>
+Received: from mx1.redhat.com ([209.132.183.28]:44814 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S964967AbdEOTN2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 15 May 2017 15:13:28 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id D07E63680B
+        for <linux-scsi@vger.kernel.org>; Mon, 15 May 2017 19:13:27 +0000 (UTC)
+Received: from emilne.csb (unknown [10.18.25.104])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 6E69A5DD6D
+        for <linux-scsi@vger.kernel.org>; Mon, 15 May 2017 19:13:27 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "mauricfo@linux.vnet.ibm.com" <mauricfo@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Mon, 2017-05-15 at 16:03 +0000, Bart Van Assche wrote:
-> On Mon, 2017-05-15 at 10:16 +0200, Martin Wilck wrote:
-> > On Fri, 2017-05-12 at 16:24 +0000, Bart Van Assche wrote:
-> > > Allowing races like the one this patch tries to address to exist
-> > > makes the ALUA code harder to maintain than necessary. Have you
-> > > considered to make alua_bus_detach() wait until ALUA work has
-> > > finished by using e.g. cancel_work_sync() or rcu_synchronize()?
-> > 
-> > to be honest, no, I didn't consider this yet. The current kernel
-> > crashes with BUG() if an ALUA device is detached at an inopportune
-> > point in time (not just theoretically, we actually observed this).
-> > The
-> > goal of my patch was to fix this with minimum risk to introduce
-> > other
-> > problems. The addition in patch 4/4 was an attempt to address the
-> > concern you had expressed in your review of the v1 patch.
-> > 
-> > I'm not opposed to try to find a better solution, but could we
-> > maybe
-> > get the fix for the BUG() (i.e. patch 3/4) applied in the first
-> > place?
-> > AFAICS it would not conflict with a solution like the one you
-> > suggested.
-> 
-> Hello Martin,
-> 
-> Sorry but I don't think it's a good idea to merge patch 3/4 in the
-> upstream
-> kernel. Even with that patch applied there is nothing that prevents
-> that
-> h->handler_data would be freed while alua_rtpg() is in progress and
-> hence
-> that h->sdev is a completely random pointer if alua_rtpg() is
-> executed
-> concurrently with alua_bus_detach(). Please do not try to paper over
-> race
-> conditions but fix these properly.
+From: "Ewan D. Milne" <emilne@redhat.com>
 
-Hello Bart,
+Change to use strlen() of the desired string for the length
+parameter to strncmp().  Otherwise one cannot simply use a
+command like 'echo "writesame_16" > .../provisioning_mode'.
+This patch makes sysfs writes consistent with other usage.
 
-please be assured that I'm not trying to paper over anything. Your
-concern about sdev->handler_data is justified. While I think that it's
-a separate issue from what my patches were supposed to address, let me
-see if I can come up with something more comprehensive.
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+---
+ drivers/scsi/sd.c | 27 ++++++++++++++++++---------
+ 1 file changed, 18 insertions(+), 9 deletions(-)
 
-It will take time, though, until I fully comprehend the locking concept
-of scsi_dh_alua.c.
-
-Regards,
-Martin
-
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index f9d1432..a5eacea 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -402,15 +402,20 @@ provisioning_mode_store(struct device *dev, struct device_attribute *attr,
+ 	if (sdp->type != TYPE_DISK)
+ 		return -EINVAL;
+ 
+-	if (!strncmp(buf, lbp_mode[SD_LBP_UNMAP], 20))
++	if (!strncmp(buf, lbp_mode[SD_LBP_UNMAP],
++		     strlen(lbp_mode[SD_LBP_UNMAP])))
+ 		sd_config_discard(sdkp, SD_LBP_UNMAP);
+-	else if (!strncmp(buf, lbp_mode[SD_LBP_WS16], 20))
++	else if (!strncmp(buf, lbp_mode[SD_LBP_WS16],
++			  strlen(lbp_mode[SD_LBP_WS16])))
+ 		sd_config_discard(sdkp, SD_LBP_WS16);
+-	else if (!strncmp(buf, lbp_mode[SD_LBP_WS10], 20))
++	else if (!strncmp(buf, lbp_mode[SD_LBP_WS10],
++			  strlen(lbp_mode[SD_LBP_WS10])))
+ 		sd_config_discard(sdkp, SD_LBP_WS10);
+-	else if (!strncmp(buf, lbp_mode[SD_LBP_ZERO], 20))
++	else if (!strncmp(buf, lbp_mode[SD_LBP_ZERO],
++			  strlen(lbp_mode[SD_LBP_ZERO])))
+ 		sd_config_discard(sdkp, SD_LBP_ZERO);
+-	else if (!strncmp(buf, lbp_mode[SD_LBP_DISABLE], 20))
++	else if (!strncmp(buf, lbp_mode[SD_LBP_DISABLE],
++			  strlen(lbp_mode[SD_LBP_DISABLE])))
+ 		sd_config_discard(sdkp, SD_LBP_DISABLE);
+ 	else
+ 		return -EINVAL;
+@@ -444,13 +449,17 @@ zeroing_mode_store(struct device *dev, struct device_attribute *attr,
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EACCES;
+ 
+-	if (!strncmp(buf, zeroing_mode[SD_ZERO_WRITE], 20))
++	if (!strncmp(buf, zeroing_mode[SD_ZERO_WRITE],
++		     strlen(zeroing_mode[SD_ZERO_WRITE])))
+ 		sdkp->zeroing_mode = SD_ZERO_WRITE;
+-	else if (!strncmp(buf, zeroing_mode[SD_ZERO_WS], 20))
++	else if (!strncmp(buf, zeroing_mode[SD_ZERO_WS],
++			  strlen(zeroing_mode[SD_ZERO_WS])))
+ 		sdkp->zeroing_mode = SD_ZERO_WS;
+-	else if (!strncmp(buf, zeroing_mode[SD_ZERO_WS16_UNMAP], 20))
++	else if (!strncmp(buf, zeroing_mode[SD_ZERO_WS16_UNMAP],
++			  strlen(zeroing_mode[SD_ZERO_WS16_UNMAP])))
+ 		sdkp->zeroing_mode = SD_ZERO_WS16_UNMAP;
+-	else if (!strncmp(buf, zeroing_mode[SD_ZERO_WS10_UNMAP], 20))
++	else if (!strncmp(buf, zeroing_mode[SD_ZERO_WS10_UNMAP],
++			  strlen(zeroing_mode[SD_ZERO_WS10_UNMAP])))
+ 		sdkp->zeroing_mode = SD_ZERO_WS10_UNMAP;
+ 	else
+ 		return -EINVAL;
 -- 
-Dr. Martin Wilck <mwilck@suse.com>, Tel. +49 (0)911 74053 2107
-SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
+2.1.0
