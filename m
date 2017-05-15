@@ -1,45 +1,72 @@
-From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH] lpfc: fix build issue if NVME_FC_TARGET is not defined
-Date: Tue, 16 May 2017 20:52:29 -0700
-Message-ID: <20170517035229.1145-1-jsmart2021@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:34855 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751319AbdEQDwp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 May 2017 23:52:45 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Jonathan Corbet <corbet@lwn.net>
+Subject: Re: [PATCH 00/36] Convert DocBook documents to ReST
+Date: Mon, 15 May 2017 11:11:41 -0600
+Message-ID: <20170515111141.0fcd5ee6@lwn.net>
+References: <cover.1494596071.git.mchehab@s-opensource.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <alsa-devel-bounces@alsa-project.org>
+In-Reply-To: <cover.1494596071.git.mchehab@s-opensource.com>
+List-Unsubscribe: <http://mailman.alsa-project.org/mailman/options/alsa-devel>,
+ <mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
+List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel/>
+List-Post: <mailto:alsa-devel@alsa-project.org>
+List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
+List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
+ <mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
+Errors-To: alsa-devel-bounces@alsa-project.org
+Sender: alsa-devel-bounces@alsa-project.org
+To: Mauro Carvalho Chehab <mchehab@s-opensource.com>
+Cc: Andrew Lunn <andrew@lunn.ch>, alsa-devel@alsa-project.org, Linux Doc Mailing List <linux-doc@vger.kernel.org>, Takashi Iwai <tiwai@suse.de>, Jan Kiszka <jan.kiszka@siemens.com>, "Herton R.
+ Krzesinski" <herton@redhat.com>, Alexei Starovoitov <ast@kernel.org>, Takashi Iwai <tiwai@suse.com>, "J. Bruce
+ Fields" <bfields@fieldses.org>, linux-ide@vger.kernel.org, Eric Dumazet <edumazet@google.com>, netdev@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, Jan Kara <jack@suse.com>, Soheil Hassas Yeganeh <soheil@google.com>, linux-s390@vger.kernel.org, Florian Fainelli <f.fainelli@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Herbert Xu <herbert@gondor.apana.org.au>, linux-scsi@vger.kernel.org, Ursula Braun <ubraun@linux.vnet.ibm.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Peter Zijlstra <peterz@infradead.org>, Julian Anastasov <ja@ssi.bg>, Ingo
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, sfr@canb.auug.org.au, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-next@vger.kernel.org, hare@suse.com
-Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-fix build issue if NVME_FC_TARGET is not defined. noop the code.
-The code will never be invoked if target mode is not enabled.
+On Fri, 12 May 2017 10:59:43 -0300
+Mauro Carvalho Chehab <mchehab@s-opensource.com> wrote:
 
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <james.smart@broadcom.com>
----
- drivers/scsi/lpfc/lpfc_nvmet.c | 2 ++
- 1 file changed, 2 insertions(+)
+> This patch series convert the following books from
+> DocBook to ReST:
+> 
+>    - filesystems
+>    - kernel-hacking
+>    - kernel-locking
+>    - kgdb
+>    - libata
+>    - networking
+>    - rapidio
+>    - s390-drivers
+>    - scsi
+>    - w1
+>    - z8530book
+> 
+> It also adjusts some Sphinx-pedantic errors/warnings on
+> some kernel-doc markups.
+> 
+> I also added some patches here to add PDF output for all
+> existing ReST books.
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index 312f54278bd4..f94294b77b7b 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -157,6 +157,7 @@ lpfc_nvmet_xmt_ls_rsp_cmp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdwqe,
- void
- lpfc_nvmet_ctxbuf_post(struct lpfc_hba *phba, struct lpfc_nvmet_ctxbuf *ctx_buf)
- {
-+#if (IS_ENABLED(CONFIG_NVME_TARGET_FC))
- 	struct lpfc_nvmet_rcv_ctx *ctxp = ctx_buf->context;
- 	struct lpfc_nvmet_tgtport *tgtp;
- 	struct fc_frame_header *fc_hdr;
-@@ -260,6 +261,7 @@ lpfc_nvmet_ctxbuf_post(struct lpfc_hba *phba, struct lpfc_nvmet_ctxbuf *ctx_buf)
- 		      &phba->sli4_hba.lpfc_nvmet_ctx_list);
- 	phba->sli4_hba.nvmet_ctx_cnt++;
- 	spin_unlock_irqrestore(&phba->sli4_hba.nvmet_io_lock, iflag);
-+#endif
- }
- 
- #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
--- 
-2.11.0
+So I've been through the series (including digging out the parts that
+weren't sent to me).  
+
+> I did my best to check if what's there is not too outdated, but
+> the best is if the subsystem maintainers could check it.
+
+That has been my real concern with those remaining books; many of them
+have not been touched in any significant way in at least ten years.  Just
+shoveling a bunch of stuff into RST doesn't really solve the problem that
+Documentation/ is an unorganized jumble of sometimes highly outdated
+documentation.
+
+But, then, I guess there's value in having a disorganized jumble that
+depends on only one fragile toolchain rather than two :)  So maybe we
+should just do this.
+
+I only had one real comment with the series beyond the general stuff
+here.  I see Markus had a few.  When the tweaks are done, can you send me
+a series for the stuff I can apply, and I'll do it?
+
+Thanks,
+
+jon
