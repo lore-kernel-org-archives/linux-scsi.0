@@ -1,370 +1,115 @@
 From: Song Liu <songliubraving@fb.com>
 Subject: Re: [RFC] scsi: generate uevent for SCSI sense code
-Date: Mon, 15 May 2017 16:35:13 +0000
-Message-ID: <58BD0D5D-81F2-40FC-8AF6-86FC5625AA92@fb.com>
+Date: Mon, 15 May 2017 16:57:10 +0000
+Message-ID: <25F5D4C2-F452-46D5-919C-EA84A972ED91@fb.com>
 References: <20170504005013.2865393-1-songliubraving@fb.com>
  <20170504005013.2865393-2-songliubraving@fb.com>
  <54323B49-47CF-403A-970E-F94EDE2E0558@fb.com>
  <54b76bb9-8279-dc71-2c08-661eb3c4512f@suse.de>
+ <1494851512.1081.28.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:49183 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1757952AbdEOQfW (ORCPT
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:58542 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S932514AbdEOQ5V (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 15 May 2017 12:35:22 -0400
-In-Reply-To: <54b76bb9-8279-dc71-2c08-661eb3c4512f@suse.de>
+        Mon, 15 May 2017 12:57:21 -0400
+In-Reply-To: <1494851512.1081.28.camel@localhost.localdomain>
 Content-Language: en-US
-Content-ID: <D579A372CF83EC4C815F63E13DF3BBEA@namprd15.prod.outlook.com>
+Content-ID: <55BF178A21C2F74AA08C8BF8EE9A9C35@namprd15.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@fb.com>, "axboe@kernel.dk" <axboe@kernel.dk>
+To: "emilne@redhat.com" <emilne@redhat.com>
+Cc: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@fb.com>, "axboe@kernel.dk" <axboe@kernel.dk>
 
 
-> On May 14, 2017, at 11:04 PM, Hannes Reinecke <hare@suse.de> wrote:
+> On May 15, 2017, at 5:31 AM, Ewan D. Milne <emilne@redhat.com> wrote:
 >=20
-> On 05/12/2017 09:02 PM, Song Liu wrote:
+> On Mon, 2017-05-15 at 08:04 +0200, Hannes Reinecke wrote:
+>> In general I like the idea; however, the 'filter' thingie is somewhat
+>> odd. I could somewhat buy into the idea of filtering for sense keys, but
+>> then I would have expected to use the 'sense_event_filter' as a bitmap
+>> of allowed sense keys.
+>> With your current design you can only filter for one specific sense key,
+>> _and_ you leave the remaining bits of the sense_event_filter variable
+>> unused.
+>> So either turn it into a bitmap and allow for several sense keys to be
+>> filtered, or treat it as mask for the _entire_ sense, but then you'd
+>> need for ASC and ASCQ, too.
 >>=20
->>> On May 3, 2017, at 5:50 PM, Song Liu <songliubraving@fb.com> wrote:
->>>=20
->>> This patch adds capability for SCSI layer to generate uevent for SCSI
->>> sense code. The feature is gated by CONFIG_SCSI_SENSE_UEVENT.
->>>=20
->>> We can configure which sense keys generate uevent for each device
->>> through sysfs entry sense_event_filter. For example, the following
->>> enables uevent for MEDIUM_ERROR (0x03) and HARDWARE_ERROR (0x04)
->>> on scsi drive sdc:
->>>=20
->>>   echo 0x000c > /sys/block/sdc/device/sense_event_filter
->>>=20
->>> Here is an example output captured by udevadm:
->>>=20
->>> KERNEL[1214.945358] change   /devices/pci0000:00/XXXXXXX
->>> ACTION=3Dchange
->>> DEVPATH=3D/devices/pci0000:00/0000:00:01.0/0000:01:00.0/host6/XXXXXXX
->>> DEVTYPE=3Dscsi_device
->>> DRIVER=3Dsd
->>> LBA=3D0
->>> MODALIAS=3Dscsi:t-0x00
->>> SDEV_UA=3DSCSI_SENSE
->>> SENSE_CODE=3D3/11/14
->>> SEQNUM=3D4536
->>> SIZE=3D4096
->>> SUBSYSTEM=3Dscsi
->>>=20
->>> Signed-off-by: Song Liu <songliubraving@fb.com>
->>> ---
->>> drivers/scsi/Kconfig       | 14 +++++++++++
->>> drivers/scsi/scsi_error.c  | 26 ++++++++++++++++++++
->>> drivers/scsi/scsi_lib.c    | 27 +++++++++++++++++++--
->>> drivers/scsi/scsi_sysfs.c  | 60 +++++++++++++++++++++++++++++++++++++++=
-+++++++
->>> include/scsi/scsi_device.h | 26 +++++++++++++++++++-
->>> 5 files changed, 150 insertions(+), 3 deletions(-)
->>>=20
->>> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
->>> index 3c52867..4f7f211 100644
->>> --- a/drivers/scsi/Kconfig
->>> +++ b/drivers/scsi/Kconfig
->>> @@ -237,6 +237,20 @@ config SCSI_LOGGING
->>> 	  there should be no noticeable performance impact as long as you have
->>> 	  logging turned off.
->>>=20
->>> +config SCSI_SENSE_UEVENT
->>> +	bool "SCSI sense code logging"
->>> +	depends on SCSI
->>> +	default n
->>> +	---help---
->>> +	  This turns on uevent for SCSI sense code.
->>> +
->>> +	  You can configure which sense keys generate uevent for each device
->>> +	  through sysfs entry sense_event_filter. For example, the following
->>> +	  enables uevent for MEDIUM_ERROR (0x03) and HARDWARE_ERROR (0x04)
->>> +	  on scsi drive sdc:
->>> +
->>> +	  echo 0x000c > /sys/block/sdc/device/sense_event_filter
->>> +
->>> config SCSI_SCAN_ASYNC
->>> 	bool "Asynchronous SCSI scanning"
->>> 	depends on SCSI
->>> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
->>> index d70c67c..eda150e 100644
->>> --- a/drivers/scsi/scsi_error.c
->>> +++ b/drivers/scsi/scsi_error.c
->>> @@ -426,6 +426,31 @@ static void scsi_report_sense(struct scsi_device *=
-sdev,
->>> 	}
->>> }
->>>=20
->>> +/*
->>> + * generate uevent when receiving sense code from device
->>> + */
->>> +static void scsi_send_sense_uevent(struct scsi_device *sdev,
->>> +				   struct scsi_cmnd *scmd,
->>> +				   struct scsi_sense_hdr *sshdr)
->>> +{
->>> +#ifdef CONFIG_SCSI_SENSE_UEVENT
->>> +	struct scsi_event *evt;
->>> +
->>> +	if (!test_bit(sshdr->sense_key & 0xf,
->>> +		      &sdev->sense_event_filter))
->>> +		return;
->>> +	evt =3D sdev_evt_alloc(SDEV_EVT_SCSI_SENSE, GFP_ATOMIC);
->>> +	if (!evt)
->>> +		return;
->>> +
->>> +	evt->sense_evt_data.lba =3D scsi_get_lba(scmd);
->>> +	evt->sense_evt_data.size =3D blk_rq_bytes(scmd->request);
->>> +	memcpy(&evt->sense_evt_data.sshdr, sshdr,
->>> +	       sizeof(struct scsi_sense_hdr));
->>> +	sdev_evt_send(sdev, evt);
->>> +#endif
->>> +}
->>> +
->>> /**
->>> * scsi_check_sense - Examine scsi cmd sense
->>> * @scmd:	Cmd to have sense checked.
->>> @@ -446,6 +471,7 @@ int scsi_check_sense(struct scsi_cmnd *scmd)
->>> 		return FAILED;	/* no valid sense data */
->>>=20
->>> 	scsi_report_sense(sdev, &sshdr);
->>> +	scsi_send_sense_uevent(sdev, scmd, &sshdr);
->>>=20
->>> 	if (scsi_sense_is_deferred(&sshdr))
->>> 		return NEEDS_RETRY;
->>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
->>> index 95f963b..1095f27 100644
->>> --- a/drivers/scsi/scsi_lib.c
->>> +++ b/drivers/scsi/scsi_lib.c
->>> @@ -2656,8 +2656,9 @@ EXPORT_SYMBOL(scsi_device_set_state);
->>> */
->>> static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *=
-evt)
->>> {
->>> -	int idx =3D 0;
->>> -	char *envp[3];
->>> +	int idx =3D 0, i;
->>> +	char *envp[5];	/* SDEV_EVT_SCSI_SENSE needs most entries (4) */
->>> +	int free_envp =3D -1;
->>>=20
->>> 	switch (evt->evt_type) {
->>> 	case SDEV_EVT_MEDIA_CHANGE:
->>> @@ -2682,6 +2683,23 @@ static void scsi_evt_emit(struct scsi_device *sd=
-ev, struct scsi_event *evt)
->>> 	case SDEV_EVT_ALUA_STATE_CHANGE_REPORTED:
->>> 		envp[idx++] =3D "SDEV_UA=3DASYMMETRIC_ACCESS_STATE_CHANGED";
->>> 		break;
->>> +#ifdef CONFIG_SCSI_SENSE_UEVENT
->>> +	case SDEV_EVT_SCSI_SENSE:
->>> +		envp[idx++] =3D "SDEV_UA=3DSCSI_SENSE";
->>> +		for (i =3D idx; i < idx + 3; ++i) {
->>> +			envp[i] =3D kzalloc(32, GFP_ATOMIC);
->>> +			if (!envp[i])
->>> +				break;
->>> +			free_envp =3D i;
->>> +		}
->>> +		snprintf(envp[idx++], 32, "LBA=3D%lu", evt->sense_evt_data.lba);
->>> +		snprintf(envp[idx++], 32, "SIZE=3D%d", evt->sense_evt_data.size);
->>> +		snprintf(envp[idx++], 32, "SENSE_CODE=3D%1x/%02x/%02x",
->>> +			 evt->sense_evt_data.sshdr.sense_key,
->>> +			 evt->sense_evt_data.sshdr.asc,
->>> +			 evt->sense_evt_data.sshdr.ascq);
->>> +		break;
->>> +#endif
->>> 	default:
->>> 		/* do nothing */
->>> 		break;
->>> @@ -2690,6 +2708,10 @@ static void scsi_evt_emit(struct scsi_device *sd=
-ev, struct scsi_event *evt)
->>> 	envp[idx++] =3D NULL;
->>>=20
->>> 	kobject_uevent_env(&sdev->sdev_gendev.kobj, KOBJ_CHANGE, envp);
->>> +
->>> +	/* no need to free envp[0], so start with i =3D 1 */
->>> +	for (i =3D 1 ; i < free_envp; ++i)
->>> +		kfree(envp[i]);
->>> }
->>>=20
-> This can't be right; you're just allocating envp starting from 'idx',
-> but free up all of them.
-Yeah, I did some math manually, which is not good. I will fix it with one m=
-ore=20
-variables (free_start_envp).=20
+>> Cheers,
+>>=20
+>> Hannes
+>=20
+> I think what would help here is understanding what you are trying to
+> accomplish with this change.  Are you trying to allow generation of
+> a uevent on a particular sense KCQ combination you know in advance,
+> or a set of them, or do you want to be able to normally generate
+> uevents for every sense keys/codes (i.e. all the bitmap bits set)
+> and then perhaps narrow down to a specific one when you are looking
+> for a problem?
+
+Thanks for these feedbacks!
+
+My goal here is to generate uevent for a set of sense keys. I would=20
+like to store these information for a fleet of many HDDs over a=20
+couple years. We are hoping to use these information to get insights
+in the quality of the HDDs.=20
+
+> When I added the sense code uevent generation for Unit Attentions,
+> one big concern I had was how many events per second would be generated.
+> The userspace event handling is very slow, and can only handle a few
+> hundred events per second before it starts backing up, and then you
+> can lose events, which you don't want.
+
+Thanks for this information. I am trying to limit the rate with the=20
+filter. But I am not sure whether this is sufficient.=20
+
+> Generating a uevent on MEDIUM ERROR is somewhat worrying, when a drive
+> goes bad you could easily get these on every I/O.
+
+MEDIUM ERROR is an important event that we would like to keep. Maybe=20
+we need better mechanism for rate limit, for example, no more than 10=20
+MEDIUM ERROR per second per drive.=20
 
 >=20
->>> /**
->>> @@ -2786,6 +2808,7 @@ struct scsi_event *sdev_evt_alloc(enum scsi_devic=
-e_event evt_type,
->>> 	case SDEV_EVT_MODE_PARAMETER_CHANGE_REPORTED:
->>> 	case SDEV_EVT_LUN_CHANGE_REPORTED:
->>> 	case SDEV_EVT_ALUA_STATE_CHANGE_REPORTED:
->>> +	case SDEV_EVT_SCSI_SENSE:
->>> 	default:
->>> 		/* do nothing */
->>> 		break;
->>> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
->>> index 82dfe07..cfc7380 100644
->>> --- a/drivers/scsi/scsi_sysfs.c
->>> +++ b/drivers/scsi/scsi_sysfs.c
->>> @@ -1072,6 +1072,63 @@ static DEVICE_ATTR(queue_ramp_up_period, S_IRUGO=
- | S_IWUSR,
->>> 		   sdev_show_queue_ramp_up_period,
->>> 		   sdev_store_queue_ramp_up_period);
->>>=20
->>> +#ifdef CONFIG_SCSI_SENSE_UEVENT
->>> +
->>> +/*
->>> + * SCSI sense key could be 0x00 - 0x08, 0x0a, 0x0b, 0x0d, 0x0e, so the
->>> + * mask is 0x6dff.
->>> + */
->>> +#define SCSI_SENSE_EVENT_FILTER_MASK	0x6dff
->>> +
->>> +static ssize_t
->>> +sdev_show_sense_event_filter(struct device *dev,
->>> +			     struct device_attribute *attr,
->>> +			     char *buf)
->>> +{
->>> +	struct scsi_device *sdev;
->>> +
->>> +	sdev =3D to_scsi_device(dev);
->>> +	return snprintf(buf, 20, "0x%04lx\n",
->>> +			(sdev->sense_event_filter &
->>> +			 SCSI_SENSE_EVENT_FILTER_MASK));
->>> +}
->>> +
->>> +static ssize_t
->>> +sdev_store_sense_event_filter(struct device *dev,
->>> +			      struct device_attribute *attr,
->>> +			      const char *buf, size_t count)
->>> +{
->>> +	struct scsi_device *sdev =3D to_scsi_device(dev);
->>> +	unsigned long filter;
->>> +	int i;
->>> +
->>> +	if (buf[0] =3D=3D '0' && buf[1] =3D=3D 'x') {
->>> +		if (kstrtoul(buf + 2, 16, &filter))
->>> +			return -EINVAL;
->>> +	} else
->>> +		if (kstrtoul(buf, 10, &filter))
->>> +			return -EINVAL;
->>> +
->>> +	/*
->>> +	 * Accurate mask for all sense keys is 0x6dff. However, we allow
->>> +	 * user to enable event for all sense keys by echoing 0xffff
->>> +	 */
->>> +	if ((filter & 0xffff) !=3D filter)
->>> +		return -EINVAL;
->>> +
->>> +	for (i =3D 0; i < 15; i++)
->>> +		if (filter & SCSI_SENSE_EVENT_FILTER_MASK  & (1 << i))
->>> +			set_bit(i, &sdev->sense_event_filter);
->>> +		else
->>> +			clear_bit(i, &sdev->sense_event_filter);
->>> +	return count;
->>> +}
->>> +
->>> +static DEVICE_ATTR(sense_event_filter, 0644,
->>> +		   sdev_show_sense_event_filter,
->>> +		   sdev_store_sense_event_filter);
->>> +#endif
->>> +
->>> static umode_t scsi_sdev_attr_is_visible(struct kobject *kobj,
->>> 					 struct attribute *attr, int i)
->>> {
->>> @@ -1142,6 +1199,9 @@ static struct attribute *scsi_sdev_attrs[] =3D {
->>> 	&dev_attr_preferred_path.attr,
->>> #endif
->>> 	&dev_attr_queue_ramp_up_period.attr,
->>> +#ifdef CONFIG_SCSI_SENSE_UEVENT
->>> +	&dev_attr_sense_event_filter.attr,
->>> +#endif
->>> 	REF_EVT(media_change),
->>> 	REF_EVT(inquiry_change_reported),
->>> 	REF_EVT(capacity_change_reported),
->>> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
->>> index 05641ae..d160bd7 100644
->>> --- a/include/scsi/scsi_device.h
->>> +++ b/include/scsi/scsi_device.h
->>> @@ -64,13 +64,23 @@ enum scsi_device_event {
->>> 	SDEV_EVT_MODE_PARAMETER_CHANGE_REPORTED,	/* 2A 01  UA reported */
->>> 	SDEV_EVT_LUN_CHANGE_REPORTED,			/* 3F 0E  UA reported */
->>> 	SDEV_EVT_ALUA_STATE_CHANGE_REPORTED,		/* 2A 06  UA reported */
->>> +	SDEV_EVT_SCSI_SENSE,
->>>=20
->>> 	SDEV_EVT_FIRST		=3D SDEV_EVT_MEDIA_CHANGE,
->>> -	SDEV_EVT_LAST		=3D SDEV_EVT_ALUA_STATE_CHANGE_REPORTED,
->>> +	SDEV_EVT_LAST		=3D SDEV_EVT_SCSI_SENSE,
->>>=20
->>> 	SDEV_EVT_MAXBITS	=3D SDEV_EVT_LAST + 1
->>> };
->>>=20
->>> +#ifdef CONFIG_SCSI_SENSE_UEVENT
->>> +/* data for for SDEV_EVT_SCSI_SENSE */
->>> +struct scsi_sense_uevent_data {
->>> +	sector_t		lba;	/* LBA from the scsi command */
->>> +	int			size;	/* size of the request */
->>> +	struct scsi_sense_hdr	sshdr;
->>> +};
->>> +#endif
->>> +
->>> struct scsi_event {
->>> 	enum scsi_device_event	evt_type;
->>> 	struct list_head	node;
->>> @@ -78,6 +88,11 @@ struct scsi_event {
->>> 	/* put union of data structures, for non-simple event types,
->>> 	 * here
->>> 	 */
->>> +	union {
->>> +#ifdef CONFIG_SCSI_SENSE_UEVENT
->>> +		struct scsi_sense_uevent_data sense_evt_data;
->>> +#endif
->>> +	};
->>> };
->>>=20
->>> struct scsi_device {
->>> @@ -197,6 +212,15 @@ struct scsi_device {
->>> 	atomic_t iodone_cnt;
->>> 	atomic_t ioerr_cnt;
->>>=20
->>> +#ifdef CONFIG_SCSI_SENSE_UEVENT
->>> +	/*
->>> +	 * filter of sense code uevent
->>> +	 * setting bit X (0x00 - 0x0e) of sense_event_filter enables
->>> +	 * uevent for sense key X
->>> +	 */
->>> +	unsigned long		sense_event_filter;
->>> +#endif
->>> +
->>> 	struct device		sdev_gendev,
->>> 				sdev_dev;
->>>=20
->>> --=20
->>> 2.9.3
->>=20
-> In general I like the idea; however, the 'filter' thingie is somewhat
-> odd. I could somewhat buy into the idea of filtering for sense keys, but
-> then I would have expected to use the 'sense_event_filter' as a bitmap
-> of allowed sense keys.
-> With your current design you can only filter for one specific sense key,
-> _and_ you leave the remaining bits of the sense_event_filter variable
-> unused.
-> So either turn it into a bitmap and allow for several sense keys to be
-> filtered, or treat it as mask for the _entire_ sense, but then you'd
-> need for ASC and ASCQ, too.
+> Your actual uevent emit:
+>=20
+> +#ifdef CONFIG_SCSI_SENSE_UEVENT
+> +       case SDEV_EVT_SCSI_SENSE:
+> +               envp[idx++] =3D "SDEV_UA=3DSCSI_SENSE";
+> +               for (i =3D idx; i < idx + 3; ++i) {
+> +                       envp[i] =3D kzalloc(32, GFP_ATOMIC);
+> +                       if (!envp[i])
+> +                               break;
+> +                       free_envp =3D i;
+> +               }
+> +               snprintf(envp[idx++], 32, "LBA=3D%lu", evt->sense_evt_dat=
+a.lba);
+> +               snprintf(envp[idx++], 32, "SIZE=3D%d", evt->sense_evt_dat=
+a.size);
+> +               snprintf(envp[idx++], 32, "SENSE_CODE=3D%1x/%02x/%02x",
+> +                        evt->sense_evt_data.sshdr.sense_key,
+> +                        evt->sense_evt_data.sshdr.asc,
+> +                        evt->sense_evt_data.sshdr.ascq);
+> +               break;
+> +#endif
+>=20
+> Is a little strange.  The "SDEV_UA" property implies that it was a
+> UNIT ATTENTION, but you are filtering on other sense types, so you
+> would probably want a different property.  Many SCSI commands do not
+> have a LOGICAL BLOCK ADDRESS field, or a TRANSFER LENGTH field, so
+> you might be reporting garbage if they don't.  And, since this is a
+> SCSI command, you probably want to report the length from the command,
+> not the count in bytes from the request structure.
 
-Maybe I didn't explain/implement this cleanly, but my original design is=20
-to use the filter as a bitmap:
+I didn't realize SDEV_UA means UNIT ATTENTION. Let me think about a=20
+different name.=20
 
->>> +	if (!test_bit(sshdr->sense_key & 0xf,
->>> +		      &sdev->sense_event_filter))
->>> +		return;
+For the data being logged, I was thinking to log the whole SCSI command
+and full sense buffer. Let me try a few different things.=20
 
-
-If the filter is set to 0x000f, the code will generate event for sense=20
-keys 0, 1, 2, and 3, but not other sense keys.=20
-
-Thanks,
-Song=
+Thanks again,
+Song
