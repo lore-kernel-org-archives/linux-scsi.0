@@ -1,56 +1,58 @@
-From: <armiksanaye@gmail.com>
-Subject: (unknown)
-Date: Tue, 16 May 2017 03:06:39 -0000
-Message-ID: <149490399975.6152.15006475396807944994@mari-el.ru>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 195285] qla2xxx FW immediatly crashing after target start
+Date: Tue, 16 May 2017 06:14:32 +0000
+Message-ID: <bug-195285-11613-wG2TJmmBkQ@https.bugzilla.kernel.org/>
+References: <bug-195285-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: application/zip; name="EMAIL_94744_linux-scsi.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 136.54.pppoe.mari-el.ru ([77.40.54.136]:44520 "HELO mari-el.ru"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-        id S1750713AbdEPDGn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 15 May 2017 23:06:43 -0400
-Subject: 
-Content-Disposition: attachment
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:55912 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751011AbdEPGOw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 16 May 2017 02:14:52 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 4E5F0289F2
+        for <linux-scsi@vger.kernel.org>; Tue, 16 May 2017 06:14:51 +0000 (UTC)
+In-Reply-To: <bug-195285-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi@kernel.org
 
-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
-ANMHAAAAAA==
+https://bugzilla.kernel.org/show_bug.cgi?id=195285
+
+--- Comment #3 from Anthony (anthony.bloodoff@gmail.com) ---
+Two cards installed in new test machine: QLE2462 and QLE2560
+qle2560 spam with errors (without starting a target)
+
+scsi host8: qla2xxx
+qla2xxx [0000:05:00.1]-00fb:8: QLogic QLE2462 - PCI-Express Dual Channel 4Gb
+Fibre Channel HBA.
+qla2xxx [0000:05:00.1]-00fc:8: ISP2432: PCIe (2.5GT/s x4) @ 0000:05:00.1 hdma+
+host#=8 fw=8.06.00 (9496).
+qla2xxx [0000:09:00.0]-001a: : MSI-X vector count: 32.
+qla2xxx [0000:09:00.0]-001d: : Found an ISP2532 irq 16 iobase
+0xffffba4886335000.
+qla2xxx [0000:09:00.0]-504b:9: RISC paused -- HCCR=40, Dumping firmware.
+qla2xxx [0000:09:00.0]-d001:9: Firmware dump saved to temp buffer
+(9/ffffba488c001000), dump status flags (0x3f).
+qla2xxx [0000:09:00.0]-1005:9: Cmd 0x59 aborted with timeout since ISP Abort is
+pending
+scsi host9: qla2xxx
+qla2xxx [0000:09:00.0]-00fb:9: QLogic QLE2560 - PCI-Express Single Channel 8Gb
+Fibre Channel HBA.
+qla2xxx [0000:09:00.0]-00fc:9: ISP2532: PCIe (5.0GT/s x8) @ 0000:09:00.0 hdma+
+host#=9 fw=8.06.00 (90d5).
+qla2xxx [0000:05:00.0]-500a:7: LOOP UP detected (4 Gbps).
+qla2xxx [0000:05:00.1]-500a:8: LOOP UP detected (4 Gbps).
+qla2xxx [0000:09:00.0]-00af:9: Performing ISP error recovery -
+ha=ffff98315ee30000.
+qla2xxx [0000:09:00.0]-504b:9: RISC paused -- HCCR=40, Dumping firmware.
+qla2xxx [0000:09:00.0]-d009:9: Firmware has been previously dumped
+(ffffba488c001000) -- ignoring request.
+qla2xxx [0000:09:00.0]-504b:9: RISC paused -- HCCR=40, Dumping firmware.
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
