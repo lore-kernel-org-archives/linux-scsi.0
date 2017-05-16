@@ -1,65 +1,42 @@
-From: Mauro Carvalho Chehab <mchehab@s-opensource.com>
-Subject: [PATCH v2 46/53] ia64, scsi: update references for the device-io book
-Date: Tue, 16 May 2017 09:16:38 -0300
-Message-ID: <2a76213072c8d6ac4364455e236d52b7d36601ca.1494935649.git.mchehab@s-opensource.com>
-References: <cover.1494935649.git.mchehab@s-opensource.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1494935649.git.mchehab@s-opensource.com>
-In-Reply-To: <cover.1494935649.git.mchehab@s-opensource.com>
-References: <cover.1494935649.git.mchehab@s-opensource.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linux Doc Mailing List <linux-doc@vger.kernel.org>
-Cc: Mauro Carvalho Chehab <mchehab@s-opensource.com>, Mauro Carvalho Chehab <mchehab@infradead.org>, linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, David Woodhouse <dwmw2@infradead.org>, Brian Norris <computersforpeace@gmail.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, Marek Vasut <marek.vasut@gmail.com>, Richard Weinberger <richard@nod.at>, Cyrille Pitchen <cyrille.pitchen@atmel.com>, linux-mtd@lists.infradead.org, Tony Luck <tony.luck@intel.com>, Fenghua Yu <fenghua.yu@intel.com>, Michael Reed <mdr@sgi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ia64@vger.kernel.org, linux-scsi@vger.kernel.org
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: Re: [PATCH] sd: fix sysfs writes to "provisioning_mode" and
+ "zeroing_mode"
+Date: Tue, 16 May 2017 08:52:39 -0400
+Message-ID: <1494939159.1081.52.camel@localhost.localdomain>
+References: <1494875606-6298-1-git-send-email-emilne@redhat.com>
+         <1494879289.2567.3.camel@sandisk.com>
+         <1494882178.1081.43.camel@localhost.localdomain>
+         <1494882849.2567.6.camel@sandisk.com>  <yq1mvades4t.fsf@oracle.com>
+Reply-To: emilne@redhat.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:43378 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752541AbdEPMwl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 16 May 2017 08:52:41 -0400
+In-Reply-To: <yq1mvades4t.fsf@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Bart Van Assche <Bart.VanAssche@sandisk.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-The book is now at Documentation/driver-api/device-io.rst.
-Update such references.
+On Mon, 2017-05-15 at 17:18 -0400, Martin K. Petersen wrote:
+> Bart,
+> 
+> >> So, are you suggesting we change all the other sysfs store routines?
+> >
+> > I will leave it to Martin and James to comment on this.
+> 
+> As I mentioned a few weeks ago, I have a patch that converts all these
+> to sysfs_match_string(). Now that the latter is upstream I intend to
+> post the patch.
+> 
 
-Signed-off-by: Mauro Carvalho Chehab <mchehab@s-opensource.com>
----
- arch/ia64/include/asm/io.h | 2 +-
- arch/ia64/sn/kernel/iomv.c | 2 +-
- drivers/scsi/qla1280.c     | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+OK good.  One other thing I wanted to check -- I assume it is
+intentional that the provisioning mode cannot be set back to "full"
+once the device probe has set it and/or it has been manually set via
+sysfs?
 
-diff --git a/arch/ia64/include/asm/io.h b/arch/ia64/include/asm/io.h
-index 5de673ac9cb1..a2540e21f919 100644
---- a/arch/ia64/include/asm/io.h
-+++ b/arch/ia64/include/asm/io.h
-@@ -117,7 +117,7 @@ extern int valid_mmap_phys_addr_range (unsigned long pfn, size_t count);
-  * following the barrier will arrive after all previous writes.  For most
-  * ia64 platforms, this is a simple 'mf.a' instruction.
-  *
-- * See Documentation/DocBook/deviceiobook.tmpl for more information.
-+ * See Documentation/driver-api/device-io.rst for more information.
-  */
- static inline void ___ia64_mmiowb(void)
- {
-diff --git a/arch/ia64/sn/kernel/iomv.c b/arch/ia64/sn/kernel/iomv.c
-index c77ebdf98119..2b22a71663c1 100644
---- a/arch/ia64/sn/kernel/iomv.c
-+++ b/arch/ia64/sn/kernel/iomv.c
-@@ -63,7 +63,7 @@ EXPORT_SYMBOL(sn_io_addr);
- /**
-  * __sn_mmiowb - I/O space memory barrier
-  *
-- * See arch/ia64/include/asm/io.h and Documentation/DocBook/deviceiobook.tmpl
-+ * See arch/ia64/include/asm/io.h and Documentation/driver-api/device-io.rst
-  * for details.
-  *
-  * On SN2, we wait for the PIO_WRITE_STATUS SHub register to clear.
-diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
-index 634254a52301..8a29fb09db14 100644
---- a/drivers/scsi/qla1280.c
-+++ b/drivers/scsi/qla1280.c
-@@ -3390,7 +3390,7 @@ qla1280_isp_cmd(struct scsi_qla_host *ha)
- 	 *    On PCI bus, order reverses and write of 6 posts, then index 5,
- 	 *       causing chip to issue full queue of stale commands
- 	 * The mmiowb() prevents future writes from crossing the barrier.
--	 * See Documentation/DocBook/deviceiobook.tmpl for more information.
-+	 * See Documentation/driver-api/device-io.rst for more information.
- 	 */
- 	WRT_REG_WORD(&reg->mailbox4, ha->req_ring_index);
- 	mmiowb();
--- 
-2.9.3
+-Ewan
