@@ -1,7 +1,7 @@
 From: Mauro Carvalho Chehab <mchehab@s-opensource.com>
-Subject: [PATCH v2 33/53] scsi: fix some kernel-doc markups
-Date: Tue, 16 May 2017 09:16:25 -0300
-Message-ID: <739aca06a2d2d2c3435c526bca8b27a6c9a8c3e7.1494935649.git.mchehab@s-opensource.com>
+Subject: [PATCH v2 46/53] ia64, scsi: update references for the device-io book
+Date: Tue, 16 May 2017 09:16:38 -0300
+Message-ID: <2a76213072c8d6ac4364455e236d52b7d36601ca.1494935649.git.mchehab@s-opensource.com>
 References: <cover.1494935649.git.mchehab@s-opensource.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1494935649.git.mchehab@s-opensource.com>
@@ -9,95 +9,57 @@ In-Reply-To: <cover.1494935649.git.mchehab@s-opensource.com>
 References: <cover.1494935649.git.mchehab@s-opensource.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Linux Doc Mailing List <linux-doc@vger.kernel.org>
-Cc: Mauro Carvalho Chehab <mchehab@s-opensource.com>, Mauro Carvalho Chehab <mchehab@infradead.org>, linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, David Woodhouse <dwmw2@infradead.org>, Brian Norris <computersforpeace@gmail.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, Marek Vasut <marek.vasut@gmail.com>, Richard Weinberger <richard@nod.at>, Cyrille Pitchen <cyrille.pitchen@atmel.com>, linux-mtd@lists.infradead.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: Mauro Carvalho Chehab <mchehab@s-opensource.com>, Mauro Carvalho Chehab <mchehab@infradead.org>, linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, David Woodhouse <dwmw2@infradead.org>, Brian Norris <computersforpeace@gmail.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, Marek Vasut <marek.vasut@gmail.com>, Richard Weinberger <richard@nod.at>, Cyrille Pitchen <cyrille.pitchen@atmel.com>, linux-mtd@lists.infradead.org, Tony Luck <tony.luck@intel.com>, Fenghua Yu <fenghua.yu@intel.com>, Michael Reed <mdr@sgi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ia64@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Sphinx is very pedantic with regards to ident/spacing.
-Fix some kernel-doc markups in order to solve those
-errors/warnings:
-
-./drivers/scsi/scsicam.c:121: WARNING: Inline emphasis start-string without end-string.
-./drivers/scsi/scsicam.c:121: WARNING: Inline emphasis start-string without end-string.
-./drivers/scsi/scsicam.c:121: WARNING: Inline emphasis start-string without end-string.
-./drivers/scsi/scsi_scan.c:1056: ERROR: Unexpected indentation.
-./drivers/scsi/scsi_scan.c:1057: WARNING: Block quote ends without a blank line; unexpected unindent.
-./drivers/scsi/scsi_transport_fc.c:2918: ERROR: Unexpected indentation.
-./drivers/scsi/scsi_transport_fc.c:2921: WARNING: Block quote ends without a blank line; unexpected unindent.
-./drivers/scsi/scsi_transport_fc.c:2922: WARNING: Enumerated list ends without a blank line; unexpected unindent.
-
-No functional changes.
+The book is now at Documentation/driver-api/device-io.rst.
+Update such references.
 
 Signed-off-by: Mauro Carvalho Chehab <mchehab@s-opensource.com>
 ---
- drivers/scsi/scsi_scan.c         |  7 ++++---
- drivers/scsi/scsi_transport_fc.c | 18 ++++++++++--------
- drivers/scsi/scsicam.c           |  4 ++--
- 3 files changed, 16 insertions(+), 13 deletions(-)
+ arch/ia64/include/asm/io.h | 2 +-
+ arch/ia64/sn/kernel/iomv.c | 2 +-
+ drivers/scsi/qla1280.c     | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 6f7128f49c30..69979574004f 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1051,10 +1051,11 @@ static unsigned char *scsi_inq_str(unsigned char *buf, unsigned char *inq,
-  *     allocate and set it up by calling scsi_add_lun.
+diff --git a/arch/ia64/include/asm/io.h b/arch/ia64/include/asm/io.h
+index 5de673ac9cb1..a2540e21f919 100644
+--- a/arch/ia64/include/asm/io.h
++++ b/arch/ia64/include/asm/io.h
+@@ -117,7 +117,7 @@ extern int valid_mmap_phys_addr_range (unsigned long pfn, size_t count);
+  * following the barrier will arrive after all previous writes.  For most
+  * ia64 platforms, this is a simple 'mf.a' instruction.
   *
-  * Return:
-- *     SCSI_SCAN_NO_RESPONSE: could not allocate or setup a scsi_device
-- *     SCSI_SCAN_TARGET_PRESENT: target responded, but no device is
-+ *
-+ *   - SCSI_SCAN_NO_RESPONSE: could not allocate or setup a scsi_device
-+ *   - SCSI_SCAN_TARGET_PRESENT: target responded, but no device is
-  *         attached at the LUN
-- *     SCSI_SCAN_LUN_PRESENT: a new scsi_device was allocated and initialized
-+ *   - SCSI_SCAN_LUN_PRESENT: a new scsi_device was allocated and initialized
-  **/
- static int scsi_probe_and_add_lun(struct scsi_target *starget,
- 				  u64 lun, int *bflagsp,
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index d4cf32d55546..1df77453f6b6 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -2914,16 +2914,18 @@ EXPORT_SYMBOL(fc_remote_port_add);
-  * port is no longer part of the topology. Note: Although a port
-  * may no longer be part of the topology, it may persist in the remote
-  * ports displayed by the fc_host. We do this under 2 conditions:
-+ *
-  * 1) If the port was a scsi target, we delay its deletion by "blocking" it.
-- *   This allows the port to temporarily disappear, then reappear without
-- *   disrupting the SCSI device tree attached to it. During the "blocked"
-- *   period the port will still exist.
-+ *    This allows the port to temporarily disappear, then reappear without
-+ *    disrupting the SCSI device tree attached to it. During the "blocked"
-+ *    period the port will still exist.
-+ *
-  * 2) If the port was a scsi target and disappears for longer than we
-- *   expect, we'll delete the port and the tear down the SCSI device tree
-- *   attached to it. However, we want to semi-persist the target id assigned
-- *   to that port if it eventually does exist. The port structure will
-- *   remain (although with minimal information) so that the target id
-- *   bindings remails.
-+ *    expect, we'll delete the port and the tear down the SCSI device tree
-+ *    attached to it. However, we want to semi-persist the target id assigned
-+ *    to that port if it eventually does exist. The port structure will
-+ *    remain (although with minimal information) so that the target id
-+ *    bindings remails.
-  *
-  * If the remote port is not an FCP Target, it will be fully torn down
-  * and deallocated, including the fc_remote_port class device.
-diff --git a/drivers/scsi/scsicam.c b/drivers/scsi/scsicam.c
-index 910f4a7a3924..31273468589c 100644
---- a/drivers/scsi/scsicam.c
-+++ b/drivers/scsi/scsicam.c
-@@ -116,8 +116,8 @@ EXPORT_SYMBOL(scsicam_bios_param);
-  * @hds: put heads here
-  * @secs: put sectors here
-  *
-- * Description: determine the BIOS mapping/geometry used to create the partition
-- *      table, storing the results in *cyls, *hds, and *secs 
-+ * Determine the BIOS mapping/geometry used to create the partition
-+ * table, storing the results in @cyls, @hds, and @secs
-  *
-  * Returns: -1 on failure, 0 on success.
+- * See Documentation/DocBook/deviceiobook.tmpl for more information.
++ * See Documentation/driver-api/device-io.rst for more information.
   */
+ static inline void ___ia64_mmiowb(void)
+ {
+diff --git a/arch/ia64/sn/kernel/iomv.c b/arch/ia64/sn/kernel/iomv.c
+index c77ebdf98119..2b22a71663c1 100644
+--- a/arch/ia64/sn/kernel/iomv.c
++++ b/arch/ia64/sn/kernel/iomv.c
+@@ -63,7 +63,7 @@ EXPORT_SYMBOL(sn_io_addr);
+ /**
+  * __sn_mmiowb - I/O space memory barrier
+  *
+- * See arch/ia64/include/asm/io.h and Documentation/DocBook/deviceiobook.tmpl
++ * See arch/ia64/include/asm/io.h and Documentation/driver-api/device-io.rst
+  * for details.
+  *
+  * On SN2, we wait for the PIO_WRITE_STATUS SHub register to clear.
+diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
+index 634254a52301..8a29fb09db14 100644
+--- a/drivers/scsi/qla1280.c
++++ b/drivers/scsi/qla1280.c
+@@ -3390,7 +3390,7 @@ qla1280_isp_cmd(struct scsi_qla_host *ha)
+ 	 *    On PCI bus, order reverses and write of 6 posts, then index 5,
+ 	 *       causing chip to issue full queue of stale commands
+ 	 * The mmiowb() prevents future writes from crossing the barrier.
+-	 * See Documentation/DocBook/deviceiobook.tmpl for more information.
++	 * See Documentation/driver-api/device-io.rst for more information.
+ 	 */
+ 	WRT_REG_WORD(&reg->mailbox4, ha->req_ring_index);
+ 	mmiowb();
 -- 
 2.9.3
