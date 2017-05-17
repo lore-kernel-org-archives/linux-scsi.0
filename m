@@ -1,330 +1,47 @@
 From: Varun Prakash <varun@chelsio.com>
-Subject: [PATCH] scsi: csiostor: add support for Chelsio T6 adapters
-Date: Wed, 17 May 2017 20:30:20 +0530
-Message-ID: <1495033220-20223-1-git-send-email-varun@chelsio.com>
+Subject: [PATCH] scsi: csiostor: fix use after free in csio_hw_use_fwconfig()
+Date: Wed, 17 May 2017 20:30:43 +0530
+Message-ID: <1495033243-20262-1-git-send-email-varun@chelsio.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([12.32.117.8]:41652 "EHLO
+Received: from stargate.chelsio.com ([12.32.117.8]:33679 "EHLO
         stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754488AbdEQPAs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2017 11:00:48 -0400
+        with ESMTP id S1754508AbdEQPBA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2017 11:01:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, indranil@chelsio.com, varun@chelsio.com, rajesh.kumar@chelsio.com
 
+mbp pointer is passed to csio_hw_validate_caps() so call
+mempool_free() after calling csio_hw_validate_caps().
+
 Signed-off-by: Varun Prakash <varun@chelsio.com>
 ---
- drivers/scsi/csiostor/csio_hw.c      | 79 ++++++++++++++++++++++++++++++------
- drivers/scsi/csiostor/csio_hw_chip.h | 14 +++++++
- drivers/scsi/csiostor/csio_hw_t5.c   | 29 +------------
- drivers/scsi/csiostor/csio_init.c    |  6 ++-
- drivers/scsi/csiostor/csio_wr.c      |  4 +-
- 5 files changed, 88 insertions(+), 44 deletions(-)
+ drivers/scsi/csiostor/csio_hw.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio_hw.c
-index 622bdab..5ca4099 100644
+index 5ca4099..c6e1814 100644
 --- a/drivers/scsi/csiostor/csio_hw.c
 +++ b/drivers/scsi/csiostor/csio_hw.c
-@@ -794,18 +794,24 @@ csio_hw_dev_ready(struct csio_hw *hw)
- {
- 	uint32_t reg;
- 	int cnt = 6;
-+	int src_pf;
+@@ -1780,7 +1780,6 @@ csio_hw_use_fwconfig(struct csio_hw *hw, int reset, u32 *fw_cfg_param)
+ 		goto bye;
+ 	}
  
- 	while (((reg = csio_rd_reg32(hw, PL_WHOAMI_A)) == 0xFFFFFFFF) &&
- 	       (--cnt != 0))
- 		mdelay(100);
- 
--	if ((cnt == 0) && (((int32_t)(SOURCEPF_G(reg)) < 0) ||
--			   (SOURCEPF_G(reg) >= CSIO_MAX_PFN))) {
-+	if (csio_is_t5(hw->pdev->device & CSIO_HW_CHIP_MASK))
-+		src_pf = SOURCEPF_G(reg);
-+	else
-+		src_pf = T6_SOURCEPF_G(reg);
+-	mempool_free(mbp, hw->mb_mempool);
+ 	if (finicsum != cfcsum) {
+ 		csio_warn(hw,
+ 		      "Config File checksum mismatch: csum=%#x, computed=%#x\n",
+@@ -1791,6 +1790,10 @@ csio_hw_use_fwconfig(struct csio_hw *hw, int reset, u32 *fw_cfg_param)
+ 	rv = csio_hw_validate_caps(hw, mbp);
+ 	if (rv != 0)
+ 		goto bye;
 +
-+	if ((cnt == 0) && (((int32_t)(src_pf) < 0) ||
-+			   (src_pf >= CSIO_MAX_PFN))) {
- 		csio_err(hw, "PL_WHOAMI returned 0x%x, cnt:%d\n", reg, cnt);
- 		return -EIO;
- 	}
- 
--	hw->pfn = SOURCEPF_G(reg);
-+	hw->pfn = src_pf;
- 
- 	return 0;
- }
-@@ -1581,10 +1587,16 @@ csio_hw_flash_config(struct csio_hw *hw, u32 *fw_cfg_param, char *path)
- 	unsigned int mtype = 0, maddr = 0;
- 	uint32_t *cfg_data;
- 	int value_to_add = 0;
-+	const char *fw_cfg_file;
-+
-+	if (csio_is_t5(pci_dev->device & CSIO_HW_CHIP_MASK))
-+		fw_cfg_file = FW_CFG_NAME_T5;
-+	else
-+		fw_cfg_file = FW_CFG_NAME_T6;
- 
--	if (request_firmware(&cf, FW_CFG_NAME_T5, dev) < 0) {
-+	if (request_firmware(&cf, fw_cfg_file, dev) < 0) {
- 		csio_err(hw, "could not find config file %s, err: %d\n",
--			 FW_CFG_NAME_T5, ret);
-+			 fw_cfg_file, ret);
- 		return -ENOENT;
- 	}
- 
-@@ -1623,9 +1635,8 @@ csio_hw_flash_config(struct csio_hw *hw, u32 *fw_cfg_param, char *path)
- 		ret = csio_memory_write(hw, mtype, maddr + size, 4, &last.word);
- 	}
- 	if (ret == 0) {
--		csio_info(hw, "config file upgraded to %s\n",
--			  FW_CFG_NAME_T5);
--		snprintf(path, 64, "%s%s", "/lib/firmware/", FW_CFG_NAME_T5);
-+		csio_info(hw, "config file upgraded to %s\n", fw_cfg_file);
-+		snprintf(path, 64, "%s%s", "/lib/firmware/", fw_cfg_file);
- 	}
- 
- leave:
-@@ -1883,6 +1894,19 @@ static struct fw_info fw_info_array[] = {
- 			.intfver_iscsi = FW_INTFVER(T5, ISCSI),
- 			.intfver_fcoe = FW_INTFVER(T5, FCOE),
- 		},
-+	}, {
-+		.chip = CHELSIO_T6,
-+		.fs_name = FW_CFG_NAME_T6,
-+		.fw_mod_name = FW_FNAME_T6,
-+		.fw_hdr = {
-+			.chip = FW_HDR_CHIP_T6,
-+			.fw_ver = __cpu_to_be32(FW_VERSION(T6)),
-+			.intfver_nic = FW_INTFVER(T6, NIC),
-+			.intfver_vnic = FW_INTFVER(T6, VNIC),
-+			.intfver_ri = FW_INTFVER(T6, RI),
-+			.intfver_iscsi = FW_INTFVER(T6, ISCSI),
-+			.intfver_fcoe = FW_INTFVER(T6, FCOE),
-+		},
- 	}
- };
- 
-@@ -1999,6 +2023,7 @@ csio_hw_flash_fw(struct csio_hw *hw, int *reset)
- 	struct device *dev = &pci_dev->dev ;
- 	const u8 *fw_data = NULL;
- 	unsigned int fw_size = 0;
-+	const char *fw_bin_file;
- 
- 	/* This is the firmware whose headers the driver was compiled
- 	 * against
-@@ -2011,9 +2036,14 @@ csio_hw_flash_fw(struct csio_hw *hw, int *reset)
- 		return -EINVAL;
- 	}
- 
--	if (request_firmware(&fw, FW_FNAME_T5, dev) < 0) {
-+	if (csio_is_t5(pci_dev->device & CSIO_HW_CHIP_MASK))
-+		fw_bin_file = FW_FNAME_T5;
-+	else
-+		fw_bin_file = FW_FNAME_T6;
-+
-+	if (request_firmware(&fw, fw_bin_file, dev) < 0) {
- 		csio_err(hw, "could not find firmware image %s, err: %d\n",
--			 FW_FNAME_T5, ret);
-+			 fw_bin_file, ret);
- 	} else {
- 		fw_data = fw->data;
- 		fw_size = fw->size;
-@@ -2238,9 +2268,14 @@ static void
- csio_hw_intr_enable(struct csio_hw *hw)
- {
- 	uint16_t vec = (uint16_t)csio_get_mb_intr_idx(csio_hw_to_mbm(hw));
--	uint32_t pf = SOURCEPF_G(csio_rd_reg32(hw, PL_WHOAMI_A));
-+	u32 pf = 0;
- 	uint32_t pl = csio_rd_reg32(hw, PL_INT_ENABLE_A);
- 
-+	if (csio_is_t5(hw->pdev->device & CSIO_HW_CHIP_MASK))
-+		pf = SOURCEPF_G(csio_rd_reg32(hw, PL_WHOAMI_A));
-+	else
-+		pf = T6_SOURCEPF_G(csio_rd_reg32(hw, PL_WHOAMI_A));
++	mempool_free(mbp, hw->mb_mempool);
++	mbp = NULL;
 +
  	/*
- 	 * Set aivec for MSI/MSIX. PCIE_PF_CFG.INTXType is set up
- 	 * by FW, so do nothing for INTX.
-@@ -2290,7 +2325,12 @@ csio_hw_intr_enable(struct csio_hw *hw)
- void
- csio_hw_intr_disable(struct csio_hw *hw)
- {
--	uint32_t pf = SOURCEPF_G(csio_rd_reg32(hw, PL_WHOAMI_A));
-+	u32 pf = 0;
-+
-+	if (csio_is_t5(hw->pdev->device & CSIO_HW_CHIP_MASK))
-+		pf = SOURCEPF_G(csio_rd_reg32(hw, PL_WHOAMI_A));
-+	else
-+		pf = T6_SOURCEPF_G(csio_rd_reg32(hw, PL_WHOAMI_A));
- 
- 	if (!(hw->flags & CSIO_HWF_HW_INTR_ENABLED))
- 		return;
-@@ -2915,6 +2955,8 @@ static void csio_cplsw_intr_handler(struct csio_hw *hw)
-  */
- static void csio_le_intr_handler(struct csio_hw *hw)
- {
-+	enum chip_type chip = CHELSIO_CHIP_VERSION(hw->chip_id);
-+
- 	static struct intr_info le_intr_info[] = {
- 		{ LIPMISS_F, "LE LIP miss", -1, 0 },
- 		{ LIP0_F, "LE 0 LIP error", -1, 0 },
-@@ -2924,7 +2966,18 @@ static void csio_le_intr_handler(struct csio_hw *hw)
- 		{ 0, NULL, 0, 0 }
- 	};
- 
--	if (csio_handle_intr_status(hw, LE_DB_INT_CAUSE_A, le_intr_info))
-+	static struct intr_info t6_le_intr_info[] = {
-+		{ T6_LIPMISS_F, "LE LIP miss", -1, 0 },
-+		{ T6_LIP0_F, "LE 0 LIP error", -1, 0 },
-+		{ TCAMINTPERR_F, "LE parity error", -1, 1 },
-+		{ T6_UNKNOWNCMD_F, "LE unknown command", -1, 1 },
-+		{ SSRAMINTPERR_F, "LE request queue parity error", -1, 1 },
-+		{ 0, NULL, 0, 0 }
-+	};
-+
-+	if (csio_handle_intr_status(hw, LE_DB_INT_CAUSE_A,
-+				    (chip == CHELSIO_T5) ?
-+				    le_intr_info : t6_le_intr_info))
- 		csio_hw_fatal_err(hw);
- }
- 
-diff --git a/drivers/scsi/csiostor/csio_hw_chip.h b/drivers/scsi/csiostor/csio_hw_chip.h
-index b56a11d..aaabdbe 100644
---- a/drivers/scsi/csiostor/csio_hw_chip.h
-+++ b/drivers/scsi/csiostor/csio_hw_chip.h
-@@ -39,11 +39,15 @@
- /* Define MACRO values */
- #define CSIO_HW_T5				0x5000
- #define CSIO_T5_FCOE_ASIC			0x5600
-+#define CSIO_HW_T6				0x6000
-+#define CSIO_T6_FCOE_ASIC			0x6600
- #define CSIO_HW_CHIP_MASK			0xF000
- 
- #define T5_REGMAP_SIZE				(332 * 1024)
- #define FW_FNAME_T5				"cxgb4/t5fw.bin"
- #define FW_CFG_NAME_T5				"cxgb4/t5-config.txt"
-+#define FW_FNAME_T6				"cxgb4/t6fw.bin"
-+#define FW_CFG_NAME_T6				"cxgb4/t6-config.txt"
- 
- #define CHELSIO_CHIP_CODE(version, revision) (((version) << 4) | (revision))
- #define CHELSIO_CHIP_FPGA          0x100
-@@ -51,12 +55,17 @@
- #define CHELSIO_CHIP_RELEASE(code) ((code) & 0xf)
- 
- #define CHELSIO_T5		0x5
-+#define CHELSIO_T6		0x6
- 
- enum chip_type {
- 	T5_A0 = CHELSIO_CHIP_CODE(CHELSIO_T5, 0),
- 	T5_A1 = CHELSIO_CHIP_CODE(CHELSIO_T5, 1),
- 	T5_FIRST_REV	= T5_A0,
- 	T5_LAST_REV	= T5_A1,
-+
-+	T6_A0 = CHELSIO_CHIP_CODE(CHELSIO_T6, 0),
-+	T6_FIRST_REV    = T6_A0,
-+	T6_LAST_REV     = T6_A0,
- };
- 
- static inline int csio_is_t5(uint16_t chip)
-@@ -64,6 +73,11 @@ static inline int csio_is_t5(uint16_t chip)
- 	return (chip == CSIO_HW_T5);
- }
- 
-+static inline int csio_is_t6(uint16_t chip)
-+{
-+	return (chip == CSIO_HW_T6);
-+}
-+
- /* Define MACRO DEFINITIONS */
- #define CSIO_DEVICE(devid, idx)						\
- 	{ PCI_VENDOR_ID_CHELSIO, (devid), PCI_ANY_ID, PCI_ANY_ID, 0, 0, (idx) }
-diff --git a/drivers/scsi/csiostor/csio_hw_t5.c b/drivers/scsi/csiostor/csio_hw_t5.c
-index 3267f4f..f24def6 100644
---- a/drivers/scsi/csiostor/csio_hw_t5.c
-+++ b/drivers/scsi/csiostor/csio_hw_t5.c
-@@ -71,27 +71,6 @@ csio_t5_set_mem_win(struct csio_hw *hw, uint32_t win)
- static void
- csio_t5_pcie_intr_handler(struct csio_hw *hw)
- {
--	static struct intr_info sysbus_intr_info[] = {
--		{ RNPP_F, "RXNP array parity error", -1, 1 },
--		{ RPCP_F, "RXPC array parity error", -1, 1 },
--		{ RCIP_F, "RXCIF array parity error", -1, 1 },
--		{ RCCP_F, "Rx completions control array parity error", -1, 1 },
--		{ RFTP_F, "RXFT array parity error", -1, 1 },
--		{ 0, NULL, 0, 0 }
--	};
--	static struct intr_info pcie_port_intr_info[] = {
--		{ TPCP_F, "TXPC array parity error", -1, 1 },
--		{ TNPP_F, "TXNP array parity error", -1, 1 },
--		{ TFTP_F, "TXFT array parity error", -1, 1 },
--		{ TCAP_F, "TXCA array parity error", -1, 1 },
--		{ TCIP_F, "TXCIF array parity error", -1, 1 },
--		{ RCAP_F, "RXCA array parity error", -1, 1 },
--		{ OTDD_F, "outbound request TLP discarded", -1, 1 },
--		{ RDPE_F, "Rx data parity error", -1, 1 },
--		{ TDUE_F, "Tx uncorrectable data error", -1, 1 },
--		{ 0, NULL, 0, 0 }
--	};
--
- 	static struct intr_info pcie_intr_info[] = {
- 		{ MSTGRPPERR_F, "Master Response Read Queue parity error",
- 		-1, 1 },
-@@ -133,13 +112,7 @@ csio_t5_pcie_intr_handler(struct csio_hw *hw)
- 	};
- 
- 	int fat;
--	fat = csio_handle_intr_status(hw,
--				      PCIE_CORE_UTL_SYSTEM_BUS_AGENT_STATUS_A,
--				      sysbus_intr_info) +
--	      csio_handle_intr_status(hw,
--				      PCIE_CORE_UTL_PCI_EXPRESS_PORT_STATUS_A,
--				      pcie_port_intr_info) +
--	      csio_handle_intr_status(hw, PCIE_INT_CAUSE_A, pcie_intr_info);
-+	fat = csio_handle_intr_status(hw, PCIE_INT_CAUSE_A, pcie_intr_info);
- 	if (fat)
- 		csio_hw_fatal_err(hw);
- }
-diff --git a/drivers/scsi/csiostor/csio_init.c b/drivers/scsi/csiostor/csio_init.c
-index dbe416f..ea0c310 100644
---- a/drivers/scsi/csiostor/csio_init.c
-+++ b/drivers/scsi/csiostor/csio_init.c
-@@ -952,8 +952,9 @@ static int csio_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	struct csio_hw *hw;
- 	struct csio_lnode *ln;
- 
--	/* probe only T5 cards */
--	if (!csio_is_t5((pdev->device & CSIO_HW_CHIP_MASK)))
-+	/* probe only T5 and T6 cards */
-+	if (!csio_is_t5((pdev->device & CSIO_HW_CHIP_MASK)) &&
-+	    !csio_is_t6((pdev->device & CSIO_HW_CHIP_MASK)))
- 		return -ENODEV;
- 
- 	rv = csio_pci_init(pdev, &bars);
-@@ -1253,3 +1254,4 @@ MODULE_LICENSE(CSIO_DRV_LICENSE);
- MODULE_DEVICE_TABLE(pci, csio_pci_tbl);
- MODULE_VERSION(CSIO_DRV_VERSION);
- MODULE_FIRMWARE(FW_FNAME_T5);
-+MODULE_FIRMWARE(FW_FNAME_T6);
-diff --git a/drivers/scsi/csiostor/csio_wr.c b/drivers/scsi/csiostor/csio_wr.c
-index e8f1817..c0a1778 100644
---- a/drivers/scsi/csiostor/csio_wr.c
-+++ b/drivers/scsi/csiostor/csio_wr.c
-@@ -480,12 +480,14 @@ csio_wr_iq_create(struct csio_hw *hw, void *priv, int iq_idx,
- 
- 	flq_idx = csio_q_iq_flq_idx(hw, iq_idx);
- 	if (flq_idx != -1) {
-+		enum chip_type chip = CHELSIO_CHIP_VERSION(hw->chip_id);
- 		struct csio_q *flq = hw->wrm.q_arr[flq_idx];
- 
- 		iqp.fl0paden	= 1;
- 		iqp.fl0packen	= flq->un.fl.packen ? 1 : 0;
- 		iqp.fl0fbmin	= X_FETCHBURSTMIN_64B;
--		iqp.fl0fbmax	= X_FETCHBURSTMAX_512B;
-+		iqp.fl0fbmax	= ((chip == CHELSIO_T5) ?
-+				  X_FETCHBURSTMAX_512B : X_FETCHBURSTMAX_256B);
- 		iqp.fl0size	= csio_q_size(hw, flq_idx) / CSIO_QCREDIT_SZ;
- 		iqp.fl0addr	= csio_q_pstart(hw, flq_idx);
- 	}
+ 	 * Note that we're operating with parameters
+ 	 * not supplied by the driver, rather than from hard-wired
 -- 
 2.0.2
