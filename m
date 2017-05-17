@@ -1,66 +1,85 @@
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2 02/15] lpfc: Fix system crash when port is reset.
-Date: Wed, 17 May 2017 19:06:16 -0300
-Message-ID: <85ccdd5a-3466-ed7e-4d61-b59e9d8233de@linux.vnet.ibm.com>
-References: <20170515222052.26004-1-jsmart2021@gmail.com>
- <20170515222052.26004-3-jsmart2021@gmail.com>
- <73cdc776-8eea-b63b-89af-ffa9829e1f9d@linux.vnet.ibm.com>
- <c2bf3df0-e65e-2f1c-5bb7-cb5b62697e30@gmail.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH] scsi: zero per-cmd driver data for each MQ I/O
+Date: Wed, 17 May 2017 23:05:18 +0000
+Message-ID: <1495062317.2679.1.camel@sandisk.com>
+References: <MWHPR03MB31361482F0BAE79275957D63CEE10@MWHPR03MB3136.namprd03.prod.outlook.com>
+         <1494892845.2567.14.camel@sandisk.com>
+         <MWHPR03MB3136DEB8FD09EDDF7CDB8BF5CEE60@MWHPR03MB3136.namprd03.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:57641 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753658AbdEQWG0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 17 May 2017 18:06:26 -0400
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v4HM1TX7050334
-        for <linux-scsi@vger.kernel.org>; Wed, 17 May 2017 18:06:26 -0400
-Received: from e24smtp05.br.ibm.com (e24smtp05.br.ibm.com [32.104.18.26])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2agsbdew2q-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 17 May 2017 18:06:25 -0400
-Received: from localhost
-        by e24smtp05.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-        Wed, 17 May 2017 19:06:23 -0300
-Received: from d24av03.br.ibm.com (d24av03.br.ibm.com [9.8.31.95])
-        by d24relay04.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v4HM6LXI1901000
-        for <linux-scsi@vger.kernel.org>; Wed, 17 May 2017 19:06:21 -0300
-Received: from d24av03.br.ibm.com (localhost [127.0.0.1])
-        by d24av03.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v4HM6LTV005817
-        for <linux-scsi@vger.kernel.org>; Wed, 17 May 2017 19:06:22 -0300
-In-Reply-To: <c2bf3df0-e65e-2f1c-5bb7-cb5b62697e30@gmail.com>
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:55525 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751957AbdEQXFV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2017 19:05:21 -0400
+In-Reply-To: <MWHPR03MB3136DEB8FD09EDDF7CDB8BF5CEE60@MWHPR03MB3136.namprd03.prod.outlook.com>
+Content-Language: en-US
+Content-ID: <BA52143A5E3CC94EB36366D807572497@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jsmart2021@gmail.com, linux-nvme@lists.infradead.org
-Cc: raphasil@linux.vnet.ibm.com, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
+To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "longli@microsoft.com" <longli@microsoft.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "sthemmin@microsoft.com" <sthemmin@microsoft.com>, "kys@microsoft.com" <kys@microsoft.com>
 
-On 05/17/2017 03:49 PM, James Smart wrote:
-> Your patch is still needed.  Can you repost your patch with a new 
-> subject and add my signature:
-> 
-> Signed-off-by: James Smart <james.smart@broadcom.com>
-> 
-> Sorry, I didn't see it to roll it into the set.
+On Tue, 2017-05-16 at 17:31 +0000, Long Li wrote:
+> > -----Original Message-----
+> > From: Bart Van Assche [mailto:Bart.VanAssche@sandisk.com]
+> > Sent: Monday, May 15, 2017 5:01 PM
+> > To: jejb@linux.vnet.ibm.com; linux-scsi@vger.kernel.org; linux-
+> > kernel@vger.kernel.org; Long Li <longli@microsoft.com>;
+> > martin.petersen@oracle.com
+> > Cc: Stephen Hemminger <sthemmin@microsoft.com>; KY Srinivasan
+> > <kys@microsoft.com>
+> > Subject: Re: [PATCH] scsi: zero per-cmd driver data for each MQ I/O
+> >=20
+> > On Mon, 2017-05-15 at 23:32 +0000, Long Li wrote:
+> > > Thanks for looking! Yes this is for chasing a bug.
+> > >=20
+> > > With the patch, we also zero the private data used by lower layer
+> > > driver, in addition to the private data in scsi_cmnd.
+> >=20
+> > Hello Long,
+> >=20
+> > What bug did you encounter, with which combination of ULP (sd?) and LLD=
+ SCSI
+> > driver(s) and for which request type (REQ_OP_*)? You will have to menti=
+on
+> > that information in the patch description anyway if you want your patch=
+ to get
+> > accepted.
+> >=20
+> > If the bug that you encountered only occurs with a single LLD, would it=
+ be
+> > possible to implement a fix by modifying the LLD instead of the SCSI co=
+re?
+>=20
+> The bug I encounter is that in hv_storvsc (a LLD), sometime we are gettin=
+g stale data in the private driver data memory allocated by SCSI. As a LLD,=
+ we expect the memory allocated by SCSI to be zeroed. If not we may send un=
+expected commands to the device.
+>=20
+> A little background on private data: In LLD's scsi_host_template, the dri=
+ver may optionally ask SCSI to allocate its private driver memory for each =
+command, by specifying cmd_size. This memory is allocated at the end of scs=
+i_cmnd by SCSI. Later when SCSI queues a command, the LLD can use scsi_cmd_=
+priv to get its private data.
+>=20
+> hv_storvsc doesn't clear its private data before use. I'm not sure about =
+other LLD drivers. Although it's possible to fix it in LLD not SCSI core, I=
+ think that is not the ideal place to do it. Whoever is allocating the SCSI=
+ command should also zero it.
+>=20
+> There is a similar patch that fixed a similar issue for non-MQ case:
+> commit ee5242360424b9b967454e9183767323d10cf985
+>=20
+> I'm sorry I should have put more details in the patch.=20
 
-No problem James, already sent it to linux-scsi:
-https://marc.info/?l=linux-scsi&m=149505857715991
+Hello Long,
 
-Cheers,
+Thank you for the feedback. I'm working on a patch series that merges the s=
+csi-sq
+and scsi-mq code paths for command initialization and that should fix the b=
+ug you
+encountered.
 
-
-Guilherme
-
-> 
-> -- james
-> 
-> 
-> 
-> _______________________________________________
-> Linux-nvme mailing list
-> Linux-nvme@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-nvme
-> 
+Bart.=
