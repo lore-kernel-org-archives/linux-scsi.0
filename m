@@ -1,116 +1,96 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 21/22] scsi: hisi_sas: add v3 code to fill some more hw function pointers
-Date: Wed, 17 May 2017 18:49:56 +0800
-Message-ID: <1495018197-120535-22-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 18/22] scsi: hisi_sas: add v3 code to send internal abort command
+Date: Wed, 17 May 2017 18:49:53 +0800
+Message-ID: <1495018197-120535-19-git-send-email-john.garry@huawei.com>
 References: <1495018197-120535-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([45.249.212.187]:6761 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754438AbdEQKTu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2017 06:19:50 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1495018197-120535-1-git-send-email-john.garry@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: john.garry2@mail.dcu.ie, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Add code to fill the interface of phy_hard_reset, phy_get_max_linkrate,
-and phy enable/disable.
+Add code to prepare internal abort command.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 39 ++++++++++++++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 38 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 195276b..766455a 100644
+index cbc2640..9d5047e 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -195,6 +195,8 @@
- #define TXID_AUTO				(PORT_BASE + 0xb8)
- #define CT3_OFF		1
- #define CT3_MSK		(0x1 << CT3_OFF)
-+#define TX_HARDRST_OFF          2
-+#define TX_HARDRST_MSK          (0x1 << TX_HARDRST_OFF)
- #define RX_IDAF_DWORD0			(PORT_BASE + 0xc4)
- #define RXOP_CHECK_CFG_H		(PORT_BASE + 0xfc)
- #define SAS_SSP_CON_TIMER_CFG		(PORT_BASE + 0x134)
-@@ -648,6 +650,14 @@ static void enable_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
- 	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
- }
+@@ -165,6 +165,10 @@
+ /* HW dma structures */
+ /* Delivery queue header */
+ /* dw0 */
++#define CMD_HDR_ABORT_FLAG_OFF		0
++#define CMD_HDR_ABORT_FLAG_MSK		(0x3 << CMD_HDR_ABORT_FLAG_OFF)
++#define CMD_HDR_ABORT_DEVICE_TYPE_OFF	2
++#define CMD_HDR_ABORT_DEVICE_TYPE_MSK	(0x1 << CMD_HDR_ABORT_DEVICE_TYPE_OFF)
+ #define CMD_HDR_RESP_REPORT_OFF		5
+ #define CMD_HDR_RESP_REPORT_MSK		(0x1 << CMD_HDR_RESP_REPORT_OFF)
+ #define CMD_HDR_TLR_CTRL_OFF		6
+@@ -204,6 +208,11 @@
+ #define CMD_HDR_DIF_SGL_LEN_MSK		(0xffff << CMD_HDR_DIF_SGL_LEN_OFF)
+ #define CMD_HDR_DATA_SGL_LEN_OFF	16
+ #define CMD_HDR_DATA_SGL_LEN_MSK	(0xffff << CMD_HDR_DATA_SGL_LEN_OFF)
++/* dw7 */
++#define CMD_HDR_ADDR_MODE_SEL_OFF		15
++#define CMD_HDR_ADDR_MODE_SEL_MSK		(1 << CMD_HDR_ADDR_MODE_SEL_OFF)
++#define CMD_HDR_ABORT_IPTT_OFF		16
++#define CMD_HDR_ABORT_IPTT_MSK		(0xffff << CMD_HDR_ABORT_IPTT_OFF)
  
-+static void disable_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
-+{
-+	u32 cfg = hisi_sas_phy_read32(hisi_hba, phy_no, PHY_CFG);
-+
-+	cfg &= ~PHY_CFG_ENA_MSK;
-+	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
-+}
-+
- static void start_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
- {
- 	config_id_frame_v3_hw(hisi_hba, phy_no);
-@@ -655,6 +665,11 @@ static void start_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
- 	enable_phy_v3_hw(hisi_hba, phy_no);
- }
- 
-+static void stop_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
-+{
-+	disable_phy_v3_hw(hisi_hba, phy_no);
-+}
-+
- static void start_phys_v3_hw(struct hisi_hba *hisi_hba)
- {
- 	int i;
-@@ -663,6 +678,22 @@ static void start_phys_v3_hw(struct hisi_hba *hisi_hba)
- 		start_phy_v3_hw(hisi_hba, i);
- }
- 
-+static void phy_hard_reset_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
-+{
-+	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
-+	u32 txid_auto;
-+
-+	stop_phy_v3_hw(hisi_hba, phy_no);
-+	if (phy->identify.device_type == SAS_END_DEVICE) {
-+		txid_auto = hisi_sas_phy_read32(hisi_hba, phy_no, TXID_AUTO);
-+		hisi_sas_phy_write32(hisi_hba, phy_no, TXID_AUTO,
-+					txid_auto | TX_HARDRST_MSK);
-+	}
-+	msleep(100);
-+	start_phy_v3_hw(hisi_hba, phy_no);
-+}
-+
-+
- static void phys_init_v3_hw(struct hisi_hba *hisi_hba)
- {
- 	start_phys_v3_hw(hisi_hba);
-@@ -1961,6 +1992,10 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
+ /* Completion header */
+ /* dw0 */
+@@ -927,6 +936,34 @@ static int prep_ata_v3_hw(struct hisi_hba *hisi_hba,
  	return 0;
  }
  
-+enum sas_linkrate phy_get_max_linkrate_v3_hw(void)
++static int prep_abort_v3_hw(struct hisi_hba *hisi_hba,
++		struct hisi_sas_slot *slot,
++		int device_id, int abort_flag, int tag_to_abort)
 +{
-+	return SAS_LINK_RATE_12_0_GBPS;
++	struct sas_task *task = slot->task;
++	struct domain_device *dev = task->dev;
++	struct hisi_sas_cmd_hdr *hdr = slot->cmd_hdr;
++	struct hisi_sas_port *port = slot->port;
++
++	/* dw0 */
++	hdr->dw0 = cpu_to_le32((5 << CMD_HDR_CMD_OFF) | /*abort*/
++			       (port->id << CMD_HDR_PORT_OFF) |
++				   ((dev_is_sata(dev) ? 1:0)
++					<< CMD_HDR_ABORT_DEVICE_TYPE_OFF) |
++					(abort_flag
++					 << CMD_HDR_ABORT_FLAG_OFF));
++
++	/* dw1 */
++	hdr->dw1 = cpu_to_le32(device_id
++			<< CMD_HDR_DEV_ID_OFF);
++
++	/* dw7 */
++	hdr->dw7 = cpu_to_le32(tag_to_abort << CMD_HDR_ABORT_IPTT_OFF);
++	hdr->transfer_tags = cpu_to_le32(slot->idx);
++
++	return 0;
 +}
- 
- static const struct hisi_sas_hw hisi_sas_v3_hw = {
- 	.hw_init = hisi_sas_v3_init,
-@@ -1978,6 +2013,10 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
++
+ static int phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
+ {
+ 	int i, res = 0;
+@@ -1526,6 +1563,7 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
+ 	.prep_ssp = prep_ssp_v3_hw,
+ 	.prep_smp = prep_smp_v3_hw,
+ 	.prep_stp = prep_ata_v3_hw,
++	.prep_abort = prep_abort_v3_hw,
+ 	.get_free_slot = get_free_slot_v3_hw,
  	.start_delivery = start_delivery_v3_hw,
  	.slot_complete = slot_complete_v3_hw,
- 	.phys_init = phys_init_v3_hw,
-+	.phy_enable = enable_phy_v3_hw,
-+	.phy_disable = disable_phy_v3_hw,
-+	.phy_hard_reset = phy_hard_reset_v3_hw,
-+	.phy_get_max_linkrate = phy_get_max_linkrate_v3_hw,
- };
- 
- enum {
 -- 
 1.9.1
