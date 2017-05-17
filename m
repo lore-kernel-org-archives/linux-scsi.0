@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 08/22] scsi: hisi_sas: add bare v3 hw driver
-Date: Wed, 17 May 2017 18:49:43 +0800
-Message-ID: <1495018197-120535-9-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 10/22] scsi: hisi_sas: add v3 hw init
+Date: Wed, 17 May 2017 18:49:45 +0800
+Message-ID: <1495018197-120535-11-git-send-email-john.garry@huawei.com>
 References: <1495018197-120535-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,102 +9,305 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1495018197-120535-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: john.garry2@mail.dcu.ie, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, John Garry <john.garry@huawei.com>, Xiang Chen <chenxiang66@hisilicon.com>
+Cc: john.garry2@mail.dcu.ie, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Add new file hisi_sas_v3_hw.c for hip08 support.
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-The controller design is quite similar to v2 hw in hip07.
-
-However key differences include:
--All v2 hw bugs are fixed (hopefully), so workarounds are not
-required
--support for device deregistration
--some interrupt modifications
--configurable max device support
-
-Not yet supported:
-- controller reset
+Add code to initialise v3 hardware.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/Makefile         |  1 +
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 57 ++++++++++++++++++++++++++++++++++
- 2 files changed, 58 insertions(+)
- create mode 100644 drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 275 +++++++++++++++++++++++++++++++++
+ 1 file changed, 275 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/Makefile b/drivers/scsi/hisi_sas/Makefile
-index 3a036a8..54774a4 100644
---- a/drivers/scsi/hisi_sas/Makefile
-+++ b/drivers/scsi/hisi_sas/Makefile
-@@ -1,3 +1,4 @@
- obj-$(CONFIG_SCSI_HISI_SAS)		+= hisi_sas_main.o
- obj-$(CONFIG_SCSI_HISI_SAS)		+= hisi_sas_v1_hw.o hisi_sas_v2_hw.o
- obj-$(CONFIG_SCSI_HISI_SAS_PCI)		+= hisi_sas_pci_init.o
-+obj-$(CONFIG_SCSI_HISI_SAS_PCI)		+= hisi_sas_v3_hw.o
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-new file mode 100644
-index 0000000..80707f6
---- /dev/null
+index 68b9b0e..f2ea8c8 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -0,0 +1,57 @@
-+/*
-+ * Copyright (c) 2017 Hisilicon Limited.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ */
+@@ -11,7 +11,282 @@
+ #include "hisi_sas.h"
+ #define DRV_NAME "hisi_sas_v3_hw"
+ 
++/* global registers need init*/
++#define DLVRY_QUEUE_ENABLE		0x0
++#define IOST_BASE_ADDR_LO		0x8
++#define IOST_BASE_ADDR_HI		0xc
++#define ITCT_BASE_ADDR_LO		0x10
++#define ITCT_BASE_ADDR_HI		0x14
++#define IO_BROKEN_MSG_ADDR_LO		0x18
++#define IO_BROKEN_MSG_ADDR_HI		0x1c
++#define AXI_AHB_CLK_CFG			0x3c
++#define AXI_USER1			0x48
++#define AXI_USER2			0x4c
++#define IO_SATA_BROKEN_MSG_ADDR_LO	0x58
++#define IO_SATA_BROKEN_MSG_ADDR_HI	0x5c
++#define SATA_INITI_D2H_STORE_ADDR_LO	0x60
++#define SATA_INITI_D2H_STORE_ADDR_HI	0x64
++#define CFG_MAX_TAG			0x68
++#define HGC_SAS_TX_OPEN_FAIL_RETRY_CTRL	0x84
++#define HGC_SAS_TXFAIL_RETRY_CTRL	0x88
++#define HGC_GET_ITV_TIME		0x90
++#define DEVICE_MSG_WORK_MODE		0x94
++#define OPENA_WT_CONTI_TIME		0x9c
++#define I_T_NEXUS_LOSS_TIME		0xa0
++#define MAX_CON_TIME_LIMIT_TIME		0xa4
++#define BUS_INACTIVE_LIMIT_TIME		0xa8
++#define REJECT_TO_OPEN_LIMIT_TIME	0xac
++#define CFG_AGING_TIME			0xbc
++#define HGC_DFX_CFG2			0xc0
++#define CFG_ABT_SET_QUERY_IPTT	0xd4
++#define CFG_SET_ABORTED_IPTT_OFF	0
++#define CFG_SET_ABORTED_IPTT_MSK	(0xfff << CFG_SET_ABORTED_IPTT_OFF)
++#define CFG_1US_TIMER_TRSH		0xcc
++#define INT_COAL_EN			0x19c
++#define OQ_INT_COAL_TIME		0x1a0
++#define OQ_INT_COAL_CNT			0x1a4
++#define ENT_INT_COAL_TIME		0x1a8
++#define ENT_INT_COAL_CNT		0x1ac
++#define OQ_INT_SRC			0x1b0
++#define OQ_INT_SRC_MSK			0x1b4
++#define ENT_INT_SRC1			0x1b8
++#define ENT_INT_SRC1_D2H_FIS_CH0_OFF	0
++#define ENT_INT_SRC1_D2H_FIS_CH0_MSK	(0x1 << ENT_INT_SRC1_D2H_FIS_CH0_OFF)
++#define ENT_INT_SRC1_D2H_FIS_CH1_OFF	8
++#define ENT_INT_SRC1_D2H_FIS_CH1_MSK	(0x1 << ENT_INT_SRC1_D2H_FIS_CH1_OFF)
++#define ENT_INT_SRC2			0x1bc
++#define ENT_INT_SRC3			0x1c0
++#define ENT_INT_SRC3_WP_DEPTH_OFF		8
++#define ENT_INT_SRC3_IPTT_SLOT_NOMATCH_OFF	9
++#define ENT_INT_SRC3_RP_DEPTH_OFF		10
++#define ENT_INT_SRC3_AXI_OFF			11
++#define ENT_INT_SRC3_FIFO_OFF			12
++#define ENT_INT_SRC3_LM_OFF				14
++#define ENT_INT_SRC3_ITC_INT_OFF	15
++#define ENT_INT_SRC3_ITC_INT_MSK	(0x1 << ENT_INT_SRC3_ITC_INT_OFF)
++#define ENT_INT_SRC3_ABT_OFF		16
++#define ENT_INT_SRC_MSK1		0x1c4
++#define ENT_INT_SRC_MSK2		0x1c8
++#define ENT_INT_SRC_MSK3		0x1cc
++#define CHNL_PHYUPDOWN_INT_MSK		0x1d0
++#define CHNL_ENT_INT_MSK			0x1d4
++#define HGC_COM_INT_MSK				0x1d8
++#define SAS_ECC_INTR			0x1e8
++#define SAS_ECC_INTR_MSK		0x1ec
++#define HGC_ERR_STAT_EN			0x238
++#define DLVRY_Q_0_BASE_ADDR_LO		0x260
++#define DLVRY_Q_0_BASE_ADDR_HI		0x264
++#define DLVRY_Q_0_DEPTH			0x268
++#define DLVRY_Q_0_WR_PTR		0x26c
++#define DLVRY_Q_0_RD_PTR		0x270
++#define HYPER_STREAM_ID_EN_CFG		0xc80
++#define OQ0_INT_SRC_MSK			0xc90
++#define COMPL_Q_0_BASE_ADDR_LO		0x4e0
++#define COMPL_Q_0_BASE_ADDR_HI		0x4e4
++#define COMPL_Q_0_DEPTH			0x4e8
++#define COMPL_Q_0_WR_PTR		0x4ec
++#define COMPL_Q_0_RD_PTR		0x4f0
++#define AWQOS_AWCACHE_CFG	0xc84
++#define ARQOS_ARCACHE_CFG	0xc88
 +
-+#include "hisi_sas.h"
-+#define DRV_NAME "hisi_sas_v3_hw"
-+
-+static const struct hisi_sas_hw hisi_sas_v3_hw = {
++/* phy registers requiring init */
++#define PORT_BASE			(0x2000)
++#define PROG_PHY_LINK_RATE		(PORT_BASE + 0x8)
++#define PHY_CTRL			(PORT_BASE + 0x14)
++#define PHY_CTRL_RESET_OFF		0
++#define PHY_CTRL_RESET_MSK		(0x1 << PHY_CTRL_RESET_OFF)
++#define SL_CFG				(PORT_BASE + 0x84)
++#define RXOP_CHECK_CFG_H		(PORT_BASE + 0xfc)
++#define SAS_SSP_CON_TIMER_CFG		(PORT_BASE + 0x134)
++#define SAS_SMP_CON_TIMER_CFG		(PORT_BASE + 0x138)
++#define SAS_STP_CON_TIMER_CFG		(PORT_BASE + 0x13c)
++#define CHL_INT0			(PORT_BASE + 0x1b4)
++#define CHL_INT0_HOTPLUG_TOUT_OFF	0
++#define CHL_INT0_HOTPLUG_TOUT_MSK	(0x1 << CHL_INT0_HOTPLUG_TOUT_OFF)
++#define CHL_INT0_SL_RX_BCST_ACK_OFF	1
++#define CHL_INT0_SL_RX_BCST_ACK_MSK	(0x1 << CHL_INT0_SL_RX_BCST_ACK_OFF)
++#define CHL_INT0_SL_PHY_ENABLE_OFF	2
++#define CHL_INT0_SL_PHY_ENABLE_MSK	(0x1 << CHL_INT0_SL_PHY_ENABLE_OFF)
++#define CHL_INT0_NOT_RDY_OFF		4
++#define CHL_INT0_NOT_RDY_MSK		(0x1 << CHL_INT0_NOT_RDY_OFF)
++#define CHL_INT0_PHY_RDY_OFF		5
++#define CHL_INT0_PHY_RDY_MSK		(0x1 << CHL_INT0_PHY_RDY_OFF)
++#define CHL_INT1			(PORT_BASE + 0x1b8)
++#define CHL_INT1_DMAC_TX_ECC_ERR_OFF	15
++#define CHL_INT1_DMAC_TX_ECC_ERR_MSK	(0x1 << CHL_INT1_DMAC_TX_ECC_ERR_OFF)
++#define CHL_INT1_DMAC_RX_ECC_ERR_OFF	17
++#define CHL_INT1_DMAC_RX_ECC_ERR_MSK	(0x1 << CHL_INT1_DMAC_RX_ECC_ERR_OFF)
++#define CHL_INT2			(PORT_BASE + 0x1bc)
++#define CHL_INT0_MSK			(PORT_BASE + 0x1c0)
++#define CHL_INT1_MSK			(PORT_BASE + 0x1c4)
++#define CHL_INT2_MSK			(PORT_BASE + 0x1c8)
++#define CHL_INT_COAL_EN			(PORT_BASE + 0x1d0)
++#define PHY_CTRL_RDY_MSK		(PORT_BASE + 0x2b0)
++#define PHYCTRL_NOT_RDY_MSK		(PORT_BASE + 0x2b4)
++#define PHYCTRL_DWS_RESET_MSK		(PORT_BASE + 0x2b8)
++#define PHYCTRL_PHY_ENA_MSK		(PORT_BASE + 0x2bc)
++#define SL_RX_BCAST_CHK_MSK		(PORT_BASE + 0x2c0)
++#define PHYCTRL_OOB_RESTART_MSK		(PORT_BASE + 0x2c4)
++struct hisi_sas_complete_v3_hdr {
++	__le32 dw0;
++	__le32 dw1;
++	__le32 act;
++	__le32 dw3;
 +};
 +
-+enum {
-+	/* instances of the controller */
-+	hip08,
-+};
++#define HISI_SAS_COMMAND_ENTRIES_V3_HW 4096
 +
-+static const struct hisi_sas_pci_hw hisi_sas_pci_hw_info[] = {
-+	[hip08] = {8, 16, &hisi_sas_v3_hw},
-+};
-+
-+static const struct pci_device_id sas_v3_pci_table[] = {
-+	{ PCI_VDEVICE(HUAWEI, 0xa230), hip08},
-+	{}
-+};
-+
-+static int
-+hisi_sas_v3_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
++static void hisi_sas_write32(struct hisi_hba *hisi_hba, u32 off, u32 val)
 +{
-+	const struct hisi_sas_pci_hw *hw;
++	void __iomem *regs = hisi_hba->regs + off;
 +
-+	hw = &hisi_sas_pci_hw_info[ent->driver_data];
-+	return hisi_sas_pci_probe(pdev, hw);
++	writel(val, regs);
 +}
 +
-+static void hisi_sas_v3_remove(struct pci_dev *pdev)
++static void hisi_sas_phy_write32(struct hisi_hba *hisi_hba, int phy_no,
++				 u32 off, u32 val)
 +{
-+	hisi_sas_pci_remove(pdev);
++	void __iomem *regs = hisi_hba->regs + (0x400 * phy_no) + off;
++
++	writel(val, regs);
 +}
 +
-+static struct pci_driver sas_v3_pci_driver = {
-+	.name		= DRV_NAME,
-+	.id_table	= sas_v3_pci_table,
-+	.probe		= hisi_sas_v3_probe,
-+	.remove		= hisi_sas_v3_remove,
-+};
++static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
++{
++	int i;
 +
-+module_pci_driver(sas_v3_pci_driver);
++	/* Global registers init */
++	hisi_sas_write32(hisi_hba, DLVRY_QUEUE_ENABLE,
++			 (u32)((1ULL << hisi_hba->queue_count) - 1));
++	hisi_sas_write32(hisi_hba, AXI_USER1, 0x0);
++	hisi_sas_write32(hisi_hba, AXI_USER2, 0x40000060);
++	hisi_sas_write32(hisi_hba, HGC_SAS_TXFAIL_RETRY_CTRL, 0x108);
++	hisi_sas_write32(hisi_hba, CFG_1US_TIMER_TRSH, 0xd);
++	hisi_sas_write32(hisi_hba, INT_COAL_EN, 0x1);
++	hisi_sas_write32(hisi_hba, OQ_INT_COAL_TIME, 0x1);
++	hisi_sas_write32(hisi_hba, OQ_INT_COAL_CNT, 0x1);
++	hisi_sas_write32(hisi_hba, OQ_INT_SRC, 0xffff);
++	hisi_sas_write32(hisi_hba, ENT_INT_SRC1, 0xffffffff);
++	hisi_sas_write32(hisi_hba, ENT_INT_SRC2, 0xffffffff);
++	hisi_sas_write32(hisi_hba, ENT_INT_SRC3, 0xffffffff);
++	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK1, 0xfefefefe);
++	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK2, 0xfefefefe);
++	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, 0xffffffff);
++	hisi_sas_write32(hisi_hba, CHNL_PHYUPDOWN_INT_MSK, 0x0);
++	hisi_sas_write32(hisi_hba, CHNL_ENT_INT_MSK, 0x0);
++	hisi_sas_write32(hisi_hba, HGC_COM_INT_MSK, 0x0);
++	hisi_sas_write32(hisi_hba, SAS_ECC_INTR_MSK, 0xfff00c30);
++	hisi_sas_write32(hisi_hba, AWQOS_AWCACHE_CFG, 0xf0f0);
++	hisi_sas_write32(hisi_hba, ARQOS_ARCACHE_CFG, 0xf0f0);
++	for (i = 0; i < hisi_hba->queue_count; i++)
++		hisi_sas_write32(hisi_hba, OQ0_INT_SRC_MSK+0x4*i, 0);
 +
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("John Garry <john.garry@huawei.com>");
-+MODULE_DESCRIPTION("HISILICON SAS controller v3 hw driver");
-+MODULE_ALIAS("platform:" DRV_NAME);
++	hisi_sas_write32(hisi_hba, AXI_AHB_CLK_CFG, 1);
++	hisi_sas_write32(hisi_hba, HYPER_STREAM_ID_EN_CFG, 1);
++	hisi_sas_write32(hisi_hba, CFG_MAX_TAG, 0xfff07fff);
++
++	for (i = 0; i < hisi_hba->n_phy; i++) {
++		hisi_sas_phy_write32(hisi_hba, i, PROG_PHY_LINK_RATE, 0x801);
++		hisi_sas_phy_write32(hisi_hba, i, CHL_INT0, 0xffffffff);
++		hisi_sas_phy_write32(hisi_hba, i, CHL_INT1, 0xffffffff);
++		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2, 0xffffffff);
++		hisi_sas_phy_write32(hisi_hba, i, RXOP_CHECK_CFG_H, 0x1000);
++		hisi_sas_phy_write32(hisi_hba, i, CHL_INT1_MSK, 0xffffffff);
++		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2_MSK, 0x8ffffbff);
++		hisi_sas_phy_write32(hisi_hba, i, SL_CFG, 0x83f801fc);
++		hisi_sas_phy_write32(hisi_hba, i, PHY_CTRL_RDY_MSK, 0x0);
++		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_NOT_RDY_MSK, 0x0);
++		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_DWS_RESET_MSK, 0x0);
++		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_PHY_ENA_MSK, 0x0);
++		hisi_sas_phy_write32(hisi_hba, i, SL_RX_BCAST_CHK_MSK, 0x0);
++		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_OOB_RESTART_MSK, 0x0);
++		hisi_sas_phy_write32(hisi_hba, i, PHY_CTRL, 0x199b4fa);
++		hisi_sas_phy_write32(hisi_hba, i, SAS_SSP_CON_TIMER_CFG,
++				     0xa0064);
++		hisi_sas_phy_write32(hisi_hba, i, SAS_STP_CON_TIMER_CFG,
++				     0xa0064);
++	}
++	for (i = 0; i < hisi_hba->queue_count; i++) {
++		/* Delivery queue */
++		hisi_sas_write32(hisi_hba,
++				 DLVRY_Q_0_BASE_ADDR_HI + (i * 0x14),
++				 upper_32_bits(hisi_hba->cmd_hdr_dma[i]));
++
++		hisi_sas_write32(hisi_hba, DLVRY_Q_0_BASE_ADDR_LO + (i * 0x14),
++				 lower_32_bits(hisi_hba->cmd_hdr_dma[i]));
++
++		hisi_sas_write32(hisi_hba, DLVRY_Q_0_DEPTH + (i * 0x14),
++				 HISI_SAS_QUEUE_SLOTS);
++
++		/* Completion queue */
++		hisi_sas_write32(hisi_hba, COMPL_Q_0_BASE_ADDR_HI + (i * 0x14),
++				 upper_32_bits(hisi_hba->complete_hdr_dma[i]));
++
++		hisi_sas_write32(hisi_hba, COMPL_Q_0_BASE_ADDR_LO + (i * 0x14),
++				 lower_32_bits(hisi_hba->complete_hdr_dma[i]));
++
++		hisi_sas_write32(hisi_hba, COMPL_Q_0_DEPTH + (i * 0x14),
++				 HISI_SAS_QUEUE_SLOTS);
++	}
++
++	/* itct */
++	hisi_sas_write32(hisi_hba, ITCT_BASE_ADDR_LO,
++			 lower_32_bits(hisi_hba->itct_dma));
++
++	hisi_sas_write32(hisi_hba, ITCT_BASE_ADDR_HI,
++			 upper_32_bits(hisi_hba->itct_dma));
++
++	/* iost */
++	hisi_sas_write32(hisi_hba, IOST_BASE_ADDR_LO,
++			 lower_32_bits(hisi_hba->iost_dma));
++
++	hisi_sas_write32(hisi_hba, IOST_BASE_ADDR_HI,
++			 upper_32_bits(hisi_hba->iost_dma));
++
++	/* breakpoint */
++	hisi_sas_write32(hisi_hba, IO_BROKEN_MSG_ADDR_LO,
++			 lower_32_bits(hisi_hba->breakpoint_dma));
++
++	hisi_sas_write32(hisi_hba, IO_BROKEN_MSG_ADDR_HI,
++			 upper_32_bits(hisi_hba->breakpoint_dma));
++
++	/* SATA broken msg */
++	hisi_sas_write32(hisi_hba, IO_SATA_BROKEN_MSG_ADDR_LO,
++			 lower_32_bits(hisi_hba->sata_breakpoint_dma));
++
++	hisi_sas_write32(hisi_hba, IO_SATA_BROKEN_MSG_ADDR_HI,
++			 upper_32_bits(hisi_hba->sata_breakpoint_dma));
++
++	/* SATA initial fis */
++	hisi_sas_write32(hisi_hba, SATA_INITI_D2H_STORE_ADDR_LO,
++			 lower_32_bits(hisi_hba->initial_fis_dma));
++
++	hisi_sas_write32(hisi_hba, SATA_INITI_D2H_STORE_ADDR_HI,
++			 upper_32_bits(hisi_hba->initial_fis_dma));
++}
++
++static int hw_init_v3_hw(struct hisi_hba *hisi_hba)
++{
++	init_reg_v3_hw(hisi_hba);
++
++	return 0;
++}
++
++static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
++{
++	int rc;
++
++	rc = hw_init_v3_hw(hisi_hba);
++	if (rc)
++		return rc;
++
++	return 0;
++}
++
+ static const struct hisi_sas_hw hisi_sas_v3_hw = {
++	.hw_init = hisi_sas_v3_init,
++	.max_command_entries = HISI_SAS_COMMAND_ENTRIES_V3_HW,
++	.complete_hdr_size = sizeof(struct hisi_sas_complete_v3_hdr),
+ };
+ 
+ enum {
 -- 
 1.9.1
