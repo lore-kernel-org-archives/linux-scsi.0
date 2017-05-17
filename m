@@ -1,50 +1,65 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 00/22] hisi_sas: hip08 support
-Date: Wed, 17 May 2017 14:38:52 +0200
-Message-ID: <CAK8P3a0=QtVNQ0JUxo8=YKeWN38_+LVfUqW_8xTtSRAkZ-=HRQ@mail.gmail.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 20/22] scsi: hisi_sas: Add v3 code to support ECC and AXI
+ bus fatal error
+Date: Wed, 17 May 2017 13:38:27 +0100
+Message-ID: <438a97a7-b424-a599-0c65-1e79dcdf8e86@huawei.com>
 References: <1495018197-120535-1-git-send-email-john.garry@huawei.com>
+ <1495018197-120535-21-git-send-email-john.garry@huawei.com>
+ <CAK8P3a3jh8QqcHgdAkpA9SADZ0RfD2i63A-RHkN9+gJ31sL74g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:33859 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754074AbdEQMix (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2017 08:38:53 -0400
-In-Reply-To: <1495018197-120535-1-git-send-email-john.garry@huawei.com>
+Received: from szxga02-in.huawei.com ([45.249.212.188]:6336 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752067AbdEQMjU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2017 08:39:20 -0400
+In-Reply-To: <CAK8P3a3jh8QqcHgdAkpA9SADZ0RfD2i63A-RHkN9+gJ31sL74g@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, John Garry <john.garry2@mail.dcu.ie>, linuxarm@huawei.com, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, John Garry <john.garry2@mail.dcu.ie>, linuxarm@huawei.com, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Xiang Chen <chenxiang66@hisilicon.com>
 
-On Wed, May 17, 2017 at 12:49 PM, John Garry <john.garry@huawei.com> wrote:
-> This patchset adds support for the HiSilicon SAS controller
-> in the hip08 chipset.
+On 17/05/2017 13:27, Arnd Bergmann wrote:
+> On Wed, May 17, 2017 at 12:49 PM, John Garry <john.garry@huawei.com> wrote:
+>> > From: Xiang Chen <chenxiang66@hisilicon.com>
+>> >
+>> > For ECC 1bit error, logic can recover it, so we only print a warning.
+>> > For ECC multi-bit and AXI bus fatal error, we panic.
+>> >
+>> > Signed-off-by: John Garry <john.garry@huawei.com>
+>> > Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+> This one is tricky as there are conflicting requirements:
 >
-> The key difference compared to earlier chipsets is that the
-> controller is an integrated PCI endpoint in hip08.
-> As such, the controller is a pci device (not a platform device,
-> like v2 hw in hip07).
+> - For debugging purposes, you want to continue running the system
+>   to figure out what exactly went wrong. Often enough, having the
+>   kernel panic means you don't get to see the panic message because
+>   console access is unavailable and you cannot log in any more
 >
-> The driver is refactored so it can support both platform and
-> pci device-based controllers.
+> - For data consistency purposes you want to stop the system as
+>   soon as there is any uncorrectable data error
 >
-> File hisi_sas_pci_init.c is introduced for pci device probing
-> and initialization. Common functionality is still in
-> hisi_sas_main.c, along with platform device probing and
-> initialization.
+> I see that most scsi drivers don't ever call panic or BUG(), though
+> you already do so for v1 and v2 hw.
 >
-> New hw layer file hisi_sas_v3_hw.c is added for hip08
-> controller support. HW revisions v2 and v3 are very similar,
-> but it was decided to keep support in separate files for now.
+> Maybe the SCSI maintainers can provide some more guidance here.
 >
-> As for the patches, (ignoring #1 and #2) the first few
-> reorganise some functions from v2 hw.c into main.c, as they
-> are required for v3 hw. Then support is added for pci
-> device-based controller in subsequent patches.
-> And then hip08 support is added in the final patches.
+>       Arnd
+>
+> .
+>
 
-Looks good overall, but I have some high-level comments
-on a couple of patches. I'm sure we can resolve them all
-easily.
+Hi Arnd,
 
-      Arnd
+Actually latest code for v2 has been updated to do a controller reset, 
+and not panic, for unrecoverable error:
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c?h=v4.12-rc1#n2926
+
+We never got around to implementing controller reset for v1 as this 
+platform (hip05) is not used much anymore.
+
+As for v3, we will change to to do same once controller reset is 
+implemented. I should have added this to the commit log.
+
+Thanks,
+John
