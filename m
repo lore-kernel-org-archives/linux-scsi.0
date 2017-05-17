@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 07/22] scsi: hisi_sas: add the initialisation for pci-based controller
-Date: Wed, 17 May 2017 18:49:42 +0800
-Message-ID: <1495018197-120535-8-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 22/22] scsi: hisi_sas: modify internal abort dev flow for v3 hw
+Date: Wed, 17 May 2017 18:49:57 +0800
+Message-ID: <1495018197-120535-23-git-send-email-john.garry@huawei.com>
 References: <1495018197-120535-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,364 +9,141 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1495018197-120535-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: john.garry2@mail.dcu.ie, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, John Garry <john.garry@huawei.com>, Xiang Chen <chenxiang66@hisilicon.com>
+Cc: john.garry2@mail.dcu.ie, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Add the code to initialise controller which is based on pci device
-in hisi_sas_pci_init.c
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-The main functionality added is for probing and initialisation of
-the controller based on pci device.
+There is a change for abort dev for v3 hw: add registers to configure
+unaborted iptt for a device, and then inform this to logic.
 
-The core controller routines are still in hisi_sas_main.c; some
-common initialisation functions and structures are also exported from
-hisi_sas_main.c for pci init.
-
-For platform device-based controller, controller properties - like
-phy count - were read from the firmware. For pci-based controller this
-information is hard-coded in the driver, in new struct hisi_sas_pci_hw.
-
-Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/Kconfig             |  10 +-
- drivers/scsi/hisi_sas/Makefile            |   1 +
- drivers/scsi/hisi_sas/hisi_sas.h          |  19 ++++
- drivers/scsi/hisi_sas/hisi_sas_main.c     |  18 ++-
- drivers/scsi/hisi_sas/hisi_sas_pci_init.c | 182 ++++++++++++++++++++++++++++++
- 5 files changed, 223 insertions(+), 7 deletions(-)
- create mode 100644 drivers/scsi/hisi_sas/hisi_sas_pci_init.c
+ drivers/scsi/hisi_sas/hisi_sas.h       |  2 ++
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 15 +++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 28 ++++++++++++++++++++++++++++
+ 3 files changed, 45 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/Kconfig b/drivers/scsi/hisi_sas/Kconfig
-index 374a329..d42f29a 100644
---- a/drivers/scsi/hisi_sas/Kconfig
-+++ b/drivers/scsi/hisi_sas/Kconfig
-@@ -6,4 +6,12 @@ config SCSI_HISI_SAS
- 	select BLK_DEV_INTEGRITY
- 	depends on ATA
- 	help
--		This driver supports HiSilicon's SAS HBA
-+		This driver supports HiSilicon's SAS HBA, including support based
-+		on platform device
-+
-+config SCSI_HISI_SAS_PCI
-+	tristate "HiSilicon SAS on PCI bus"
-+	depends on SCSI_HISI_SAS
-+	depends on PCI
-+	help
-+		This driver supports HiSilicon's SAS HBA based on PCI device
-diff --git a/drivers/scsi/hisi_sas/Makefile b/drivers/scsi/hisi_sas/Makefile
-index c6d3a1b..3a036a8 100644
---- a/drivers/scsi/hisi_sas/Makefile
-+++ b/drivers/scsi/hisi_sas/Makefile
-@@ -1,2 +1,3 @@
- obj-$(CONFIG_SCSI_HISI_SAS)		+= hisi_sas_main.o
- obj-$(CONFIG_SCSI_HISI_SAS)		+= hisi_sas_v1_hw.o hisi_sas_v2_hw.o
-+obj-$(CONFIG_SCSI_HISI_SAS_PCI)		+= hisi_sas_pci_init.o
 diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 18044b7..9bc9550 100644
+index c7d1144..757a134 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas.h
 +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -186,6 +186,12 @@ struct hisi_sas_hw {
+@@ -181,6 +181,8 @@ struct hisi_sas_hw {
+ 	void (*free_device)(struct hisi_hba *hisi_hba,
+ 			    struct hisi_sas_device *dev);
+ 	int (*get_wideport_bitmap)(struct hisi_hba *hisi_hba, int port_id);
++	void (*dereg_device)(struct hisi_hba *hisi_hba,
++				struct domain_device *device);
+ 	int (*soft_reset)(struct hisi_hba *hisi_hba);
+ 	int max_command_entries;
  	int complete_hdr_size;
- };
- 
-+struct hisi_sas_pci_hw {
-+	int n_phy;
-+	int queue_count;
-+	const struct hisi_sas_hw *hw;
-+};
-+
- struct hisi_hba {
- 	/* This must be the first element, used by SHOST_TO_SAS_HA */
- 	struct sas_ha_struct *p;
-@@ -359,6 +365,19 @@ struct hisi_sas_command_table_ssp {
- 	struct hisi_sas_command_table_stp stp;
- };
- 
-+extern struct scsi_transport_template *hisi_sas_stt;
-+extern struct scsi_host_template *hisi_sas_sht;
-+
-+extern void hisi_sas_init_add(struct hisi_hba *hisi_hba);
-+extern int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost);
-+extern void hisi_sas_free(struct hisi_hba *hisi_hba);
-+
-+#if IS_ENABLED(CONFIG_SCSI_HISI_SAS_PCI)
-+extern int hisi_sas_pci_probe(struct pci_dev *pdev,
-+		       const struct hisi_sas_pci_hw *hw);
-+extern void hisi_sas_pci_remove(struct pci_dev *pdev);
-+#endif
-+
- extern u8 hisi_sas_get_ata_protocol(u8 cmd, int direction);
- extern struct hisi_sas_port *to_hisi_sas_port(struct asd_sas_port *sas_port);
- extern void hisi_sas_sata_done(struct sas_task *task,
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index d20a2f2..33bd3c45 100644
+index 156b66b..80ffba4 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1476,9 +1476,10 @@ void hisi_sas_rescan_topology(struct hisi_hba *hisi_hba, u32 old_state,
+@@ -760,6 +760,13 @@ static void hisi_sas_release_tasks(struct hisi_hba *hisi_hba)
+ 	}
  }
- EXPORT_SYMBOL_GPL(hisi_sas_rescan_topology);
  
--static struct scsi_transport_template *hisi_sas_stt;
-+struct scsi_transport_template *hisi_sas_stt;
-+EXPORT_SYMBOL_GPL(hisi_sas_stt);
++static void hisi_sas_dereg_device(struct hisi_hba *hisi_hba,
++				struct domain_device *device)
++{
++	if (hisi_hba->hw->dereg_device)
++		hisi_hba->hw->dereg_device(hisi_hba, device);
++}
++
+ static void hisi_sas_dev_gone(struct domain_device *device)
+ {
+ 	struct hisi_sas_device *sas_dev = device->lldd_dev;
+@@ -773,6 +780,8 @@ static void hisi_sas_dev_gone(struct domain_device *device)
+ 	hisi_sas_internal_task_abort(hisi_hba, device,
+ 				     HISI_SAS_INT_ABT_DEV, 0);
  
--static struct scsi_host_template hisi_sas_sht = {
-+static struct scsi_host_template _hisi_sas_sht = {
- 	.module			= THIS_MODULE,
- 	.name			= DRV_NAME,
- 	.queuecommand		= sas_queuecommand,
-@@ -1498,6 +1499,8 @@ void hisi_sas_rescan_topology(struct hisi_hba *hisi_hba, u32 old_state,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
++	hisi_sas_dereg_device(hisi_hba, device);
++
+ 	hisi_hba->hw->free_device(hisi_hba, sas_dev);
+ 	device->lldd_dev = NULL;
+ 	memset(sas_dev, 0, sizeof(*sas_dev));
+@@ -1104,6 +1113,7 @@ static int hisi_sas_abort_task(struct sas_task *task)
+ 		if (task->dev->dev_type == SAS_SATA_DEV) {
+ 			hisi_sas_internal_task_abort(hisi_hba, device,
+ 						     HISI_SAS_INT_ABT_DEV, 0);
++			hisi_sas_dereg_device(hisi_hba, device);
+ 			rc = hisi_sas_softreset_ata_disk(device);
+ 		}
+ 	} else if (task->task_proto & SAS_PROTOCOL_SMP) {
+@@ -1170,6 +1180,10 @@ static int hisi_sas_I_T_nexus_reset(struct domain_device *device)
+ 		return TMF_RESP_FUNC_FAILED;
+ 	sas_dev->dev_status = HISI_SAS_DEV_NORMAL;
+ 
++	hisi_sas_internal_task_abort(hisi_hba, device,
++					HISI_SAS_INT_ABT_DEV, 0);
++	hisi_sas_dereg_device(hisi_hba, device);
++
+ 	rc = hisi_sas_debug_I_T_nexus_reset(device);
+ 
+ 	if (rc == TMF_RESP_FUNC_COMPLETE) {
+@@ -1197,6 +1211,7 @@ static int hisi_sas_lu_reset(struct domain_device *device, u8 *lun)
+ 						  HISI_SAS_INT_ABT_DEV, 0);
+ 		if (rc == TMF_RESP_FUNC_FAILED)
+ 			goto out;
++		hisi_sas_dereg_device(hisi_hba, device);
+ 
+ 		phy = sas_get_local_phy(device);
+ 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 766455a..54546cf 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -50,6 +50,10 @@
+ #define CFG_ABT_SET_QUERY_IPTT	0xd4
+ #define CFG_SET_ABORTED_IPTT_OFF	0
+ #define CFG_SET_ABORTED_IPTT_MSK	(0xfff << CFG_SET_ABORTED_IPTT_OFF)
++#define CFG_SET_ABORTED_EN_OFF	12
++#define CFG_ABT_SET_IPTT_DONE	0xd8
++#define CFG_ABT_SET_IPTT_DONE_OFF	0
++#define HGC_IOMB_PROC1_STATUS	0x104
+ #define CFG_1US_TIMER_TRSH		0xcc
+ #define HGC_LM_DFX_STATUS2		0x128
+ #define HGC_LM_DFX_STATUS2_IOSTLIST_OFF		0
+@@ -1997,6 +2001,29 @@ enum sas_linkrate phy_get_max_linkrate_v3_hw(void)
+ 	return SAS_LINK_RATE_12_0_GBPS;
+ }
+ 
++static void dereg_device_v3_hw(struct hisi_hba *hisi_hba,
++				struct domain_device *device)
++{
++	struct hisi_sas_slot *slot, *slot2;
++	struct hisi_sas_device *sas_dev = device->lldd_dev;
++	u32 cfg_abt_set_query_iptt;
++
++	cfg_abt_set_query_iptt = hisi_sas_read32(hisi_hba,
++		CFG_ABT_SET_QUERY_IPTT);
++	list_for_each_entry_safe(slot, slot2, &sas_dev->list, entry) {
++		cfg_abt_set_query_iptt &= ~CFG_SET_ABORTED_IPTT_MSK;
++		cfg_abt_set_query_iptt |= (1 << CFG_SET_ABORTED_EN_OFF) |
++			(slot->idx << CFG_SET_ABORTED_IPTT_OFF);
++		hisi_sas_write32(hisi_hba, CFG_ABT_SET_QUERY_IPTT,
++			cfg_abt_set_query_iptt);
++	}
++	cfg_abt_set_query_iptt &= ~(1 << CFG_SET_ABORTED_EN_OFF);
++	hisi_sas_write32(hisi_hba, CFG_ABT_SET_QUERY_IPTT,
++		cfg_abt_set_query_iptt);
++	hisi_sas_write32(hisi_hba, CFG_ABT_SET_IPTT_DONE,
++					1 << CFG_ABT_SET_IPTT_DONE_OFF);
++}
++
+ static const struct hisi_sas_hw hisi_sas_v3_hw = {
+ 	.hw_init = hisi_sas_v3_init,
+ 	.setup_itct = setup_itct_v3_hw,
+@@ -2017,6 +2044,7 @@ enum sas_linkrate phy_get_max_linkrate_v3_hw(void)
+ 	.phy_disable = disable_phy_v3_hw,
+ 	.phy_hard_reset = phy_hard_reset_v3_hw,
+ 	.phy_get_max_linkrate = phy_get_max_linkrate_v3_hw,
++	.dereg_device = dereg_device_v3_hw,
  };
-+struct scsi_host_template *hisi_sas_sht = &_hisi_sas_sht;
-+EXPORT_SYMBOL_GPL(hisi_sas_sht);
  
- static struct sas_domain_function_template hisi_sas_transport_ops = {
- 	.lldd_dev_found		= hisi_sas_dev_found,
-@@ -1545,7 +1548,7 @@ void hisi_sas_init_mem(struct hisi_hba *hisi_hba)
- }
- EXPORT_SYMBOL_GPL(hisi_sas_init_mem);
- 
--static int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
-+int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
- {
- 	struct device *dev = hisi_hba->dev;
- 	int i, s, max_command_entries = hisi_hba->hw->max_command_entries;
-@@ -1664,8 +1667,9 @@ static int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
- err_out:
- 	return -ENOMEM;
- }
-+EXPORT_SYMBOL_GPL(hisi_sas_alloc);
- 
--static void hisi_sas_free(struct hisi_hba *hisi_hba)
-+void hisi_sas_free(struct hisi_hba *hisi_hba)
- {
- 	struct device *dev = hisi_hba->dev;
- 	int i, s, max_command_entries = hisi_hba->hw->max_command_entries;
-@@ -1720,6 +1724,7 @@ static void hisi_sas_free(struct hisi_hba *hisi_hba)
- 	if (hisi_hba->wq)
- 		destroy_workqueue(hisi_hba->wq);
- }
-+EXPORT_SYMBOL_GPL(hisi_sas_free);
- 
- static void hisi_sas_rst_work_handler(struct work_struct *work)
- {
-@@ -1739,7 +1744,7 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
- 	struct device_node *np = pdev->dev.of_node;
- 	struct clk *refclk;
- 
--	shost = scsi_host_alloc(&hisi_sas_sht, sizeof(*hisi_hba));
-+	shost = scsi_host_alloc(hisi_sas_sht, sizeof(*hisi_hba));
- 	if (!shost) {
- 		dev_err(dev, "scsi host alloc failed\n");
- 		return NULL;
-@@ -1814,7 +1819,7 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
- 	return NULL;
- }
- 
--static void hisi_sas_init_add(struct hisi_hba *hisi_hba)
-+void hisi_sas_init_add(struct hisi_hba *hisi_hba)
- {
- 	int i;
- 
-@@ -1823,6 +1828,7 @@ static void hisi_sas_init_add(struct hisi_hba *hisi_hba)
- 		       hisi_hba->sas_addr,
- 		       SAS_ADDR_SIZE);
- }
-+EXPORT_SYMBOL_GPL(hisi_sas_init_add);
- 
- int hisi_sas_probe(struct platform_device *pdev,
- 			 const struct hisi_sas_hw *hw)
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_pci_init.c b/drivers/scsi/hisi_sas/hisi_sas_pci_init.c
-new file mode 100644
-index 0000000..e00b482
---- /dev/null
-+++ b/drivers/scsi/hisi_sas/hisi_sas_pci_init.c
-@@ -0,0 +1,182 @@
-+/*
-+ * Copyright (c) 2017 Hisilicon Limited.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ */
-+
-+#include "hisi_sas.h"
-+#define DRV_NAME "hisi_sas_pci"
-+
-+static struct Scsi_Host *
-+hisi_sas_shost_alloc_pci(struct pci_dev *pdev,
-+			 const struct hisi_sas_pci_hw *hw)
-+{
-+	struct Scsi_Host *shost;
-+	struct hisi_hba *hisi_hba;
-+	struct device *dev = &pdev->dev;
-+
-+	shost = scsi_host_alloc(hisi_sas_sht, sizeof(*hisi_hba));
-+	if (!shost)
-+		goto err_out;
-+	hisi_hba = shost_priv(shost);
-+
-+	hisi_hba->hw = hw->hw;
-+	hisi_hba->queue_count = hw->queue_count;
-+	hisi_hba->n_phy = hw->n_phy;
-+	hisi_hba->pci_dev = pdev;
-+	hisi_hba->dev = dev;
-+	hisi_hba->shost = shost;
-+	SHOST_TO_SAS_HA(shost) = &hisi_hba->sha;
-+
-+	init_timer(&hisi_hba->timer);
-+
-+	if (hisi_sas_alloc(hisi_hba, shost)) {
-+		hisi_sas_free(hisi_hba);
-+		goto err_out;
-+	}
-+
-+	return shost;
-+err_out:
-+	dev_err(dev, "shost alloc failed\n");
-+	return NULL;
-+}
-+
-+int hisi_sas_pci_probe(struct pci_dev *pdev,
-+		       const struct hisi_sas_pci_hw *hw)
-+{
-+	struct Scsi_Host *shost;
-+	struct hisi_hba *hisi_hba;
-+	struct device *dev = &pdev->dev;
-+	struct asd_sas_phy **arr_phy;
-+	struct asd_sas_port **arr_port;
-+	struct sas_ha_struct *sha;
-+	int rc, phy_nr, port_nr, i;
-+
-+	rc = pci_enable_device(pdev);
-+	if (rc)
-+		goto err_out;
-+
-+	pci_set_master(pdev);
-+
-+	rc = pci_request_regions(pdev, DRV_NAME);
-+	if (rc)
-+		goto err_out_disable_device;
-+
-+	if ((pci_set_dma_mask(pdev, DMA_BIT_MASK(64)) != 0) ||
-+	    (pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64)) != 0)) {
-+		if ((pci_set_dma_mask(pdev, DMA_BIT_MASK(32)) != 0) ||
-+		   (pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32)) != 0)) {
-+			dev_err(dev, "No usable DMA addressing method\n");
-+			rc = -EIO;
-+			goto err_out_regions;
-+		}
-+	}
-+
-+	shost = hisi_sas_shost_alloc_pci(pdev, hw);
-+	if (!shost) {
-+		rc = -ENOMEM;
-+		goto err_out_regions;
-+	}
-+
-+	sha = SHOST_TO_SAS_HA(shost);
-+	hisi_hba = shost_priv(shost);
-+	dev_set_drvdata(dev, sha);
-+
-+	hisi_hba->regs = pcim_iomap(pdev, 5, 0);
-+	if (!hisi_hba->regs) {
-+		dev_err(dev, "cannot map register.\n");
-+		rc = -ENOMEM;
-+		goto err_out_ha;
-+	}
-+
-+	phy_nr = port_nr = hisi_hba->n_phy;
-+
-+	arr_phy = devm_kcalloc(dev, phy_nr, sizeof(void *), GFP_KERNEL);
-+	arr_port = devm_kcalloc(dev, port_nr, sizeof(void *), GFP_KERNEL);
-+	if (!arr_phy || !arr_port) {
-+		rc = -ENOMEM;
-+		goto err_out_ha;
-+	}
-+
-+	sha->sas_phy = arr_phy;
-+	sha->sas_port = arr_port;
-+	sha->core.shost = shost;
-+	sha->lldd_ha = hisi_hba;
-+
-+	shost->transportt = hisi_sas_stt;
-+	shost->max_id = HISI_SAS_MAX_DEVICES;
-+	shost->max_lun = ~0;
-+	shost->max_channel = 1;
-+	shost->max_cmd_len = 16;
-+	shost->sg_tablesize = min_t(u16, SG_ALL, HISI_SAS_SGE_PAGE_CNT);
-+	shost->can_queue = hisi_hba->hw->max_command_entries;
-+	shost->cmd_per_lun = hisi_hba->hw->max_command_entries;
-+
-+	sha->sas_ha_name = DRV_NAME;
-+	sha->dev = dev;
-+	sha->lldd_module = THIS_MODULE;
-+	sha->sas_addr = &hisi_hba->sas_addr[0];
-+	sha->num_phys = hisi_hba->n_phy;
-+	sha->core.shost = hisi_hba->shost;
-+
-+	for (i = 0; i < hisi_hba->n_phy; i++) {
-+		sha->sas_phy[i] = &hisi_hba->phy[i].sas_phy;
-+		sha->sas_port[i] = &hisi_hba->port[i].sas_port;
-+	}
-+
-+	hisi_sas_init_add(hisi_hba);
-+
-+	rc = scsi_add_host(shost, dev);
-+	if (rc)
-+		goto err_out_ha;
-+
-+	rc = sas_register_ha(sha);
-+	if (rc)
-+		goto err_out_register_ha;
-+
-+	rc = hisi_hba->hw->hw_init(hisi_hba);
-+	if (rc)
-+		goto err_out_register_ha;
-+
-+	scsi_scan_host(shost);
-+
-+	return 0;
-+
-+err_out_register_ha:
-+	scsi_remove_host(shost);
-+err_out_ha:
-+	kfree(shost);
-+err_out_regions:
-+	pci_release_regions(pdev);
-+err_out_disable_device:
-+	pci_disable_device(pdev);
-+err_out:
-+	return rc;
-+}
-+EXPORT_SYMBOL_GPL(hisi_sas_pci_probe);
-+
-+void hisi_sas_pci_remove(struct pci_dev *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct sas_ha_struct *sha = dev_get_drvdata(dev);
-+	struct hisi_hba *hisi_hba = sha->lldd_ha;
-+
-+	scsi_remove_host(sha->core.shost);
-+	sas_unregister_ha(sha);
-+	sas_remove_host(sha->core.shost);
-+
-+	hisi_sas_free(hisi_hba);
-+	pci_release_regions(pdev);
-+	pci_disable_device(pdev);
-+}
-+EXPORT_SYMBOL_GPL(hisi_sas_pci_remove);
-+
-+MODULE_VERSION(DRV_VERSION);
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("John Garry <john.garry@huawei.com>");
-+MODULE_DESCRIPTION("HISILICON SAS pci controller driver");
-+MODULE_ALIAS("platform:" DRV_NAME);
+ enum {
 -- 
 1.9.1
