@@ -1,123 +1,51 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: [PATCH] ses: fix error message in ses_intf_add()
-Date: Wed, 17 May 2017 09:41:26 -0400
-Message-ID: <1495028486.3629.10.camel@localhost.localdomain>
-References: <1495026008-25704-1-git-send-email-mlombard@redhat.com>
-Reply-To: emilne@redhat.com
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 09/22] scsi: hisi_sas: retrieve SAS address for pci-based controller
+Date: Wed, 17 May 2017 16:13:02 +0200
+Message-ID: <CAK8P3a0bo7L07X18_0e2vswLmCb+cu4CrzSoGKb0jk-yrKxTbQ@mail.gmail.com>
+References: <1495018197-120535-1-git-send-email-john.garry@huawei.com>
+ <1495018197-120535-10-git-send-email-john.garry@huawei.com>
+ <CAK8P3a0RxVq6Y0OpQWikDKBSvu0z42TCAEVRmrFD0CJwmh3SXw@mail.gmail.com> <e01dac0a-69a9-b625-76c1-f30fe5663890@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36658 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751155AbdEQNl1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 17 May 2017 09:41:27 -0400
-In-Reply-To: <1495026008-25704-1-git-send-email-mlombard@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <e01dac0a-69a9-b625-76c1-f30fe5663890@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Garry <john.garry@huawei.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, John Garry <john.garry2@mail.dcu.ie>, linuxarm@huawei.com, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Maurizio Lombardi <mlombard@redhat.com>
-Cc: linux-scsi@vger.kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 
-On Wed, 2017-05-17 at 15:00 +0200, Maurizio Lombardi wrote:
-> The "result" variable contains a negative error code and
-> should not be logged as an hex value.
-> This fixes the following error message:
-> 
-> [  250.068869] scsi 8:0:2:254: Wrong diagnostic page; asked for 2 got 0
-> [  250.068872] scsi 8:0:2:254: Failed to get diagnostic page 0xffffffea
-> 
-> Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
-> ---
->  drivers/scsi/ses.c | 21 +++++++++++++--------
->  1 file changed, 13 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-> index f1cdf32..0ac45be 100644
-> --- a/drivers/scsi/ses.c
-> +++ b/drivers/scsi/ses.c
-> @@ -604,6 +604,7 @@ static int ses_intf_add(struct device *cdev,
->  	unsigned char *buf = NULL, *hdr_buf, *type_ptr;
->  	struct ses_device *ses_dev;
->  	u32 result;
-> +	int page;
->  	int i, types, len, components = 0;
->  	int err = -ENOMEM;
->  	int num_enclosures;
-> @@ -630,7 +631,8 @@ static int ses_intf_add(struct device *cdev,
->  	if (!hdr_buf || !ses_dev)
->  		goto err_init_free;
->  
-> -	result = ses_recv_diag(sdev, 1, hdr_buf, INIT_ALLOC_SIZE);
-> +	page = 1;
-> +	result = ses_recv_diag(sdev, page, hdr_buf, INIT_ALLOC_SIZE);
->  	if (result)
->  		goto recv_failed;
->  
-> @@ -639,7 +641,7 @@ static int ses_intf_add(struct device *cdev,
->  	if (!buf)
->  		goto err_free;
->  
-> -	result = ses_recv_diag(sdev, 1, buf, len);
-> +	result = ses_recv_diag(sdev, page, buf, len);
->  	if (result)
->  		goto recv_failed;
->  
-> @@ -669,7 +671,8 @@ static int ses_intf_add(struct device *cdev,
->  	ses_dev->page1_len = len;
->  	buf = NULL;
->  
-> -	result = ses_recv_diag(sdev, 2, hdr_buf, INIT_ALLOC_SIZE);
-> +	page = 2;
-> +	result = ses_recv_diag(sdev, page, hdr_buf, INIT_ALLOC_SIZE);
->  	if (result)
->  		goto recv_failed;
->  
-> @@ -679,7 +682,7 @@ static int ses_intf_add(struct device *cdev,
->  		goto err_free;
->  
->  	/* make sure getting page 2 actually works */
-> -	result = ses_recv_diag(sdev, 2, buf, len);
-> +	result = ses_recv_diag(sdev, page, buf, len);
->  	if (result)
->  		goto recv_failed;
->  	ses_dev->page2 = buf;
-> @@ -688,7 +691,8 @@ static int ses_intf_add(struct device *cdev,
->  
->  	/* The additional information page --- allows us
->  	 * to match up the devices */
-> -	result = ses_recv_diag(sdev, 10, hdr_buf, INIT_ALLOC_SIZE);
-> +	page = 10;
-> +	result = ses_recv_diag(sdev, page, hdr_buf, INIT_ALLOC_SIZE);
->  	if (!result) {
->  
->  		len = (hdr_buf[2] << 8) + hdr_buf[3] + 4;
-> @@ -696,7 +700,7 @@ static int ses_intf_add(struct device *cdev,
->  		if (!buf)
->  			goto err_free;
->  
-> -		result = ses_recv_diag(sdev, 10, buf, len);
-> +		result = ses_recv_diag(sdev, page, buf, len);
->  		if (result)
->  			goto recv_failed;
->  		ses_dev->page10 = buf;
-> @@ -733,8 +737,9 @@ static int ses_intf_add(struct device *cdev,
->  	return 0;
->  
->   recv_failed:
-> -	sdev_printk(KERN_ERR, sdev, "Failed to get diagnostic page 0x%x\n",
-> -		    result);
-> +	sdev_printk(KERN_ERR, sdev,
-> +		    "Failed to get diagnostic page %d with error %d\n",
-> +		    page, result);
->  	err = -ENODEV;
->   err_free:
->  	kfree(buf);
+On Wed, May 17, 2017 at 3:37 PM, John Garry <john.garry@huawei.com> wrote:
+> On 17/05/2017 13:37, Arnd Bergmann wrote:
 
-This looks OK but I think we should consider suppressing these
-messages.  There are a lot of devices that return page 0 instead of
-the correct page, we should either say something like "enclosure
-services not supported", or else work with what we get instead of
-logging a message on every device probe that make it sound like
-the device is failing.  I've received several complaints about this.
+>> Since this uses the _DSD information that was introduced for compatibility
+>> between device tree and ACPI based data, why not write the code so that
+>> it can work for both?
+>>
+>> Ideally this should just look up the property for pci_dev->fwnode, but I'm
+>> not entirely sure if this works the same way on ACPI and DT today.
+>>
+>
+> Hi Arnd,
+>
+> There is no relation at all between the pci device and the ACPI DSDT, apart
+> from the fact that the device node name is known by the driver, that being
+> "SAS0". I am not 100% comfortable with this, as we are introducing some sort
+> of device indexing in the driver.
+>
+> Please note that Cavium did something similar on their thunderx network
+> driver:
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/net/ethernet/cavium/thunder/thunder_bgx.c?h=v4.12-rc1#n1162
+>
+> As for your suggestion, in theory it could be ok to have a pci_dev->fwnode,
+> and this would work for Unified Device Properties Interface (if that is
+> indeed what you mean). But how to create/match this fwnode?
 
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+pci_scan_device sets the dev->of_node field for DT based probing, we
+could add a trivial patch to set the fwnode field as well if that isn't
+already done elsewhere.
+
+>From what I can tell, the ACPI code sets up a 'companion' device for
+any PCI device that is listed in the ACPI tables, at least it refers to
+that later on, but I could not figure out where it actually gets set.
+
+        Arnd
