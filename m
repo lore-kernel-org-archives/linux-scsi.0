@@ -1,14 +1,14 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 17/22] scsi: hisi_sas: add v3 code for itct setup and free
-Date: Wed, 17 May 2017 18:49:52 +0800
-Message-ID: <1495018197-120535-18-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 11/22] scsi: hisi_sas: add v3 hw PHY init
+Date: Wed, 17 May 2017 18:49:46 +0800
+Message-ID: <1495018197-120535-12-git-send-email-john.garry@huawei.com>
 References: <1495018197-120535-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([45.249.212.187]:6312 "EHLO
+Received: from szxga01-in.huawei.com ([45.249.212.187]:6311 "EHLO
         szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754396AbdEQKTp (ORCPT
+        with ESMTP id S1754183AbdEQKTp (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2017 06:19:45 -0400
 In-Reply-To: <1495018197-120535-1-git-send-email-john.garry@huawei.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -18,163 +18,215 @@ Cc: john.garry2@mail.dcu.ie, linuxarm@huawei.com, linux-scsi@vger.kernel.org, li
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Add code for itct setup and free for v3 hw.
+Add code to configure PHYs for v3 hw.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 115 +++++++++++++++++++++++++++++++++
- 1 file changed, 115 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 126 +++++++++++++++++++++++++++++++++
+ 1 file changed, 126 insertions(+)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 976c6e6..cbc2640 100644
+index f2ea8c8..ea18582 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -24,6 +24,11 @@
- #define PHY_PORT_NUM_MA			0x28
- #define PHY_CONN_RATE			0x30
+@@ -19,6 +19,10 @@
+ #define ITCT_BASE_ADDR_HI		0x14
+ #define IO_BROKEN_MSG_ADDR_LO		0x18
+ #define IO_BROKEN_MSG_ADDR_HI		0x1c
++#define PHY_CONTEXT			0x20
++#define PHY_STATE			0x24
++#define PHY_PORT_NUM_MA			0x28
++#define PHY_CONN_RATE			0x30
  #define AXI_AHB_CLK_CFG			0x3c
-+#define ITCT_CLR			0x44
-+#define ITCT_CLR_EN_OFF			16
-+#define ITCT_CLR_EN_MSK			(0x1 << ITCT_CLR_EN_OFF)
-+#define ITCT_DEV_OFF			0
-+#define ITCT_DEV_MSK			(0x7ff << ITCT_DEV_OFF)
  #define AXI_USER1			0x48
  #define AXI_USER2			0x4c
- #define IO_SATA_BROKEN_MSG_ADDR_LO	0x58
-@@ -226,6 +231,27 @@
- #define CMPLT_HDR_IO_IN_TARGET_OFF	17
- #define CMPLT_HDR_IO_IN_TARGET_MSK	(0x1 << CMPLT_HDR_IO_IN_TARGET_OFF)
+@@ -42,6 +46,7 @@
+ #define CFG_SET_ABORTED_IPTT_OFF	0
+ #define CFG_SET_ABORTED_IPTT_MSK	(0xfff << CFG_SET_ABORTED_IPTT_OFF)
+ #define CFG_1US_TIMER_TRSH		0xcc
++#define CHNL_INT_STATUS			0x148
+ #define INT_COAL_EN			0x19c
+ #define OQ_INT_COAL_TIME		0x1a0
+ #define OQ_INT_COAL_CNT			0x1a4
+@@ -68,9 +73,11 @@
+ #define ENT_INT_SRC_MSK1		0x1c4
+ #define ENT_INT_SRC_MSK2		0x1c8
+ #define ENT_INT_SRC_MSK3		0x1cc
++#define ENT_INT_SRC_MSK3_ENT95_MSK_OFF	31
+ #define CHNL_PHYUPDOWN_INT_MSK		0x1d0
+ #define CHNL_ENT_INT_MSK			0x1d4
+ #define HGC_COM_INT_MSK				0x1d8
++#define ENT_INT_SRC_MSK3_ENT95_MSK_MSK	(0x1 << ENT_INT_SRC_MSK3_ENT95_MSK_OFF)
+ #define SAS_ECC_INTR			0x1e8
+ #define SAS_ECC_INTR_MSK		0x1ec
+ #define HGC_ERR_STAT_EN			0x238
+@@ -91,11 +98,33 @@
  
-+/* ITCT header */
-+/* qw0 */
-+#define ITCT_HDR_DEV_TYPE_OFF		0
-+#define ITCT_HDR_DEV_TYPE_MSK		(0x3 << ITCT_HDR_DEV_TYPE_OFF)
-+#define ITCT_HDR_VALID_OFF		2
-+#define ITCT_HDR_VALID_MSK		(0x1 << ITCT_HDR_VALID_OFF)
-+#define ITCT_HDR_MCR_OFF		5
-+#define ITCT_HDR_MCR_MSK		(0xf << ITCT_HDR_MCR_OFF)
-+#define ITCT_HDR_VLN_OFF		9
-+#define ITCT_HDR_VLN_MSK		(0xf << ITCT_HDR_VLN_OFF)
-+#define ITCT_HDR_SMP_TIMEOUT_OFF	16
-+#define ITCT_HDR_AWT_CONTINUE_OFF	25
-+#define ITCT_HDR_PORT_ID_OFF		28
-+#define ITCT_HDR_PORT_ID_MSK		(0xf << ITCT_HDR_PORT_ID_OFF)
-+/* qw2 */
-+#define ITCT_HDR_INLT_OFF		0
-+#define ITCT_HDR_INLT_MSK		(0xffffULL << ITCT_HDR_INLT_OFF)
-+#define ITCT_HDR_RTOLT_OFF		48
-+#define ITCT_HDR_RTOLT_MSK		(0xffffULL << ITCT_HDR_RTOLT_OFF)
+ /* phy registers requiring init */
+ #define PORT_BASE			(0x2000)
++#define PHY_CFG				(PORT_BASE + 0x0)
++#define HARD_PHY_LINKRATE		(PORT_BASE + 0x4)
++#define PHY_CFG_ENA_OFF			0
++#define PHY_CFG_ENA_MSK			(0x1 << PHY_CFG_ENA_OFF)
++#define PHY_CFG_DC_OPT_OFF		2
++#define PHY_CFG_DC_OPT_MSK		(0x1 << PHY_CFG_DC_OPT_OFF)
+ #define PROG_PHY_LINK_RATE		(PORT_BASE + 0x8)
+ #define PHY_CTRL			(PORT_BASE + 0x14)
+ #define PHY_CTRL_RESET_OFF		0
+ #define PHY_CTRL_RESET_MSK		(0x1 << PHY_CTRL_RESET_OFF)
+ #define SL_CFG				(PORT_BASE + 0x84)
++#define SL_CONTROL			(PORT_BASE + 0x94)
++#define SL_CONTROL_NOTIFY_EN_OFF	0
++#define SL_CONTROL_NOTIFY_EN_MSK	(0x1 << SL_CONTROL_NOTIFY_EN_OFF)
++#define SL_CTA_OFF		17
++#define SL_CTA_MSK		(0x1 << SL_CTA_OFF)
++#define TX_ID_DWORD0			(PORT_BASE + 0x9c)
++#define TX_ID_DWORD1			(PORT_BASE + 0xa0)
++#define TX_ID_DWORD2			(PORT_BASE + 0xa4)
++#define TX_ID_DWORD3			(PORT_BASE + 0xa8)
++#define TX_ID_DWORD4			(PORT_BASE + 0xaC)
++#define TX_ID_DWORD5			(PORT_BASE + 0xb0)
++#define TX_ID_DWORD6			(PORT_BASE + 0xb4)
++#define TXID_AUTO				(PORT_BASE + 0xb8)
++#define CT3_OFF		1
++#define CT3_MSK		(0x1 << CT3_OFF)
++#define RX_IDAF_DWORD0			(PORT_BASE + 0xc4)
+ #define RXOP_CHECK_CFG_H		(PORT_BASE + 0xfc)
+ #define SAS_SSP_CON_TIMER_CFG		(PORT_BASE + 0x134)
+ #define SAS_SMP_CON_TIMER_CFG		(PORT_BASE + 0x138)
+@@ -135,6 +164,13 @@ struct hisi_sas_complete_v3_hdr {
+ };
+ 
+ #define HISI_SAS_COMMAND_ENTRIES_V3_HW 4096
++#define HISI_SAS_MSI_COUNT_V3_HW 32
 +
-+
- struct hisi_sas_complete_v3_hdr {
- 	__le32 dw0;
- 	__le32 dw1;
-@@ -444,6 +470,93 @@ static void config_id_frame_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
- 			__swab32(identify_buffer[5]));
++enum {
++	HISI_SAS_PHY_PHY_UPDOWN,
++	HISI_SAS_PHY_CHNL_INT,
++	HISI_SAS_PHY_INT_NR
++};
+ 
+ static void hisi_sas_write32(struct hisi_hba *hisi_hba, u32 off, u32 val)
+ {
+@@ -151,6 +187,14 @@ static void hisi_sas_phy_write32(struct hisi_hba *hisi_hba, int phy_no,
+ 	writel(val, regs);
  }
  
-+static void setup_itct_v3_hw(struct hisi_hba *hisi_hba,
-+			     struct hisi_sas_device *sas_dev)
++static u32 hisi_sas_phy_read32(struct hisi_hba *hisi_hba,
++				      int phy_no, u32 off)
 +{
-+	struct domain_device *device = sas_dev->sas_device;
-+	struct device *dev = hisi_hba->dev;
-+	u64 qw0, device_id = sas_dev->device_id;
-+	struct hisi_sas_itct *itct = &hisi_hba->itct[device_id];
-+	struct domain_device *parent_dev = device->parent;
-+	struct asd_sas_port *sas_port = device->port;
-+	struct hisi_sas_port *port = to_hisi_sas_port(sas_port);
++	void __iomem *regs = hisi_hba->regs + (0x400 * phy_no) + off;
 +
-+	memset(itct, 0, sizeof(*itct));
-+
-+	/* qw0 */
-+	qw0 = 0;
-+	switch (sas_dev->dev_type) {
-+	case SAS_END_DEVICE:
-+	case SAS_EDGE_EXPANDER_DEVICE:
-+	case SAS_FANOUT_EXPANDER_DEVICE:
-+		qw0 = HISI_SAS_DEV_TYPE_SSP << ITCT_HDR_DEV_TYPE_OFF;
-+		break;
-+	case SAS_SATA_DEV:
-+	case SAS_SATA_PENDING:
-+		if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
-+			qw0 = HISI_SAS_DEV_TYPE_STP << ITCT_HDR_DEV_TYPE_OFF;
-+		else
-+			qw0 = HISI_SAS_DEV_TYPE_SATA << ITCT_HDR_DEV_TYPE_OFF;
-+		break;
-+	default:
-+		dev_warn(dev, "setup itct: unsupported dev type (%d)\n",
-+			 sas_dev->dev_type);
-+	}
-+
-+	qw0 |= ((1 << ITCT_HDR_VALID_OFF) |
-+		(device->linkrate << ITCT_HDR_MCR_OFF) |
-+		(1 << ITCT_HDR_VLN_OFF) |
-+		(0xfa << ITCT_HDR_SMP_TIMEOUT_OFF) |
-+		(1 << ITCT_HDR_AWT_CONTINUE_OFF) |
-+		(port->id << ITCT_HDR_PORT_ID_OFF));
-+	itct->qw0 = cpu_to_le64(qw0);
-+
-+	/* qw1 */
-+	memcpy(&itct->sas_addr, device->sas_addr, SAS_ADDR_SIZE);
-+	itct->sas_addr = __swab64(itct->sas_addr);
-+
-+	/* qw2 */
-+	if (!dev_is_sata(device))
-+		itct->qw2 = cpu_to_le64((5000ULL << ITCT_HDR_INLT_OFF) |
-+					(0x1ULL << ITCT_HDR_RTOLT_OFF));
++	return readl(regs);
 +}
 +
-+static void free_device_v3_hw(struct hisi_hba *hisi_hba,
-+			      struct hisi_sas_device *sas_dev)
+ static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
+ {
+ 	int i;
+@@ -265,6 +309,45 @@ static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
+ 			 upper_32_bits(hisi_hba->initial_fis_dma));
+ }
+ 
++static void config_phy_opt_mode_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
 +{
-+	u64 dev_id = sas_dev->device_id;
-+	struct device *dev = hisi_hba->dev;
-+	struct hisi_sas_itct *itct = &hisi_hba->itct[dev_id];
-+	u32 reg_val = hisi_sas_read32(hisi_hba, ENT_INT_SRC3);
++	u32 cfg = hisi_sas_phy_read32(hisi_hba, phy_no, PHY_CFG);
 +
-+	/* clear the itct interrupt state */
-+	if (ENT_INT_SRC3_ITC_INT_MSK & reg_val)
-+		hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
-+				 ENT_INT_SRC3_ITC_INT_MSK);
++	cfg &= ~PHY_CFG_DC_OPT_MSK;
++	cfg |= 1 << PHY_CFG_DC_OPT_OFF;
++	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
++}
 +
-+	/* clear the itct table*/
-+	reg_val = hisi_sas_read32(hisi_hba, ITCT_CLR);
-+	reg_val |= ITCT_CLR_EN_MSK | (dev_id & ITCT_DEV_MSK);
-+	hisi_sas_write32(hisi_hba, ITCT_CLR, reg_val);
++static void config_id_frame_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
++{
++	struct sas_identify_frame identify_frame;
++	u32 *identify_buffer;
 +
-+	udelay(10);
-+	reg_val = hisi_sas_read32(hisi_hba, ENT_INT_SRC3);
-+	if (ENT_INT_SRC3_ITC_INT_MSK & reg_val) {
-+		dev_dbg(dev, "got clear ITCT done interrupt\n");
++	memset(&identify_frame, 0, sizeof(identify_frame));
++	identify_frame.dev_type = SAS_END_DEVICE;
++	identify_frame.frame_type = 0;
++	identify_frame._un1 = 1;
++	identify_frame.initiator_bits = SAS_PROTOCOL_ALL;
++	identify_frame.target_bits = SAS_PROTOCOL_NONE;
++	memcpy(&identify_frame._un4_11[0], hisi_hba->sas_addr, SAS_ADDR_SIZE);
++	memcpy(&identify_frame.sas_addr[0], hisi_hba->sas_addr,	SAS_ADDR_SIZE);
++	identify_frame.phy_id = phy_no;
++	identify_buffer = (u32 *)(&identify_frame);
 +
-+		/* invalid the itct state*/
-+		memset(itct, 0, sizeof(struct hisi_sas_itct));
-+		hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
-+				 ENT_INT_SRC3_ITC_INT_MSK);
-+		hisi_hba->devices[dev_id].dev_type = SAS_PHY_UNUSED;
-+		hisi_hba->devices[dev_id].dev_status = HISI_SAS_DEV_NORMAL;
-+
-+		/* clear the itct */
-+		hisi_sas_write32(hisi_hba, ITCT_CLR, 0);
-+		dev_dbg(dev, "clear ITCT ok\n");
-+	}
++	hisi_sas_phy_write32(hisi_hba, phy_no, TX_ID_DWORD0,
++			__swab32(identify_buffer[0]));
++	hisi_sas_phy_write32(hisi_hba, phy_no, TX_ID_DWORD1,
++			__swab32(identify_buffer[1]));
++	hisi_sas_phy_write32(hisi_hba, phy_no, TX_ID_DWORD2,
++			__swab32(identify_buffer[2]));
++	hisi_sas_phy_write32(hisi_hba, phy_no, TX_ID_DWORD3,
++			__swab32(identify_buffer[3]));
++	hisi_sas_phy_write32(hisi_hba, phy_no, TX_ID_DWORD4,
++			__swab32(identify_buffer[4]));
++	hisi_sas_phy_write32(hisi_hba, phy_no, TX_ID_DWORD5,
++			__swab32(identify_buffer[5]));
 +}
 +
  static int hw_init_v3_hw(struct hisi_hba *hisi_hba)
  {
  	init_reg_v3_hw(hisi_hba);
-@@ -1405,9 +1518,11 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
+@@ -272,6 +355,47 @@ static int hw_init_v3_hw(struct hisi_hba *hisi_hba)
+ 	return 0;
+ }
  
++static void enable_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
++{
++	u32 cfg = hisi_sas_phy_read32(hisi_hba, phy_no, PHY_CFG);
++
++	cfg |= PHY_CFG_ENA_MSK;
++	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
++}
++
++static void start_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
++{
++	config_id_frame_v3_hw(hisi_hba, phy_no);
++	config_phy_opt_mode_v3_hw(hisi_hba, phy_no);
++	enable_phy_v3_hw(hisi_hba, phy_no);
++}
++
++static void start_phys_v3_hw(struct hisi_hba *hisi_hba)
++{
++	int i;
++
++	for (i = 0; i < hisi_hba->n_phy; i++)
++		start_phy_v3_hw(hisi_hba, i);
++}
++
++static void phys_init_v3_hw(struct hisi_hba *hisi_hba)
++{
++	start_phys_v3_hw(hisi_hba);
++}
++
++static void sl_notify_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
++{
++	u32 sl_control;
++
++	sl_control = hisi_sas_phy_read32(hisi_hba, phy_no, SL_CONTROL);
++	sl_control |= SL_CONTROL_NOTIFY_EN_MSK;
++	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
++	msleep(1);
++	sl_control = hisi_sas_phy_read32(hisi_hba, phy_no, SL_CONTROL);
++	sl_control &= ~SL_CONTROL_NOTIFY_EN_MSK;
++	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
++}
++
+ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
+ {
+ 	int rc;
+@@ -286,7 +410,9 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
  static const struct hisi_sas_hw hisi_sas_v3_hw = {
  	.hw_init = hisi_sas_v3_init,
-+	.setup_itct = setup_itct_v3_hw,
  	.max_command_entries = HISI_SAS_COMMAND_ENTRIES_V3_HW,
- 	.sl_notify = sl_notify_v3_hw,
++	.sl_notify = sl_notify_v3_hw,
  	.complete_hdr_size = sizeof(struct hisi_sas_complete_v3_hdr),
-+	.free_device = free_device_v3_hw,
- 	.prep_ssp = prep_ssp_v3_hw,
- 	.prep_smp = prep_smp_v3_hw,
- 	.prep_stp = prep_ata_v3_hw,
++	.phys_init = phys_init_v3_hw,
+ };
+ 
+ enum {
 -- 
 1.9.1
