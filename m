@@ -1,85 +1,84 @@
-From: Mauro Carvalho Chehab <mchehab@s-opensource.com>
-Subject: Re: [PATCH 00/36] Convert DocBook documents to ReST
-Date: Mon, 15 May 2017 14:41:03 -0300
-Message-ID: <20170515144103.306189d6@vento.lan>
-References: <cover.1494596071.git.mchehab@s-opensource.com>
- <20170515111141.0fcd5ee6@lwn.net>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH 01/22] scsi: hisi_sas: fix timeout check in hisi_sas_internal_task_abort()
+Date: Wed, 17 May 2017 18:49:36 +0800
+Message-ID: <1495018197-120535-2-git-send-email-john.garry@huawei.com>
+References: <1495018197-120535-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <alsa-devel-bounces@alsa-project.org>
-In-Reply-To: <20170515111141.0fcd5ee6@lwn.net>
-List-Unsubscribe: <http://mailman.alsa-project.org/mailman/options/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
-List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel/>
-List-Post: <mailto:alsa-devel@alsa-project.org>
-List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
-List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
-Errors-To: alsa-devel-bounces@alsa-project.org
-Sender: alsa-devel-bounces@alsa-project.org
-To: Jonathan Corbet <corbet@lwn.net>
-Cc: Andrew Lunn <andrew@lunn.ch>, alsa-devel@alsa-project.org, Linux Doc Mailing List <linux-doc@vger.kernel.org>, Takashi Iwai <tiwai@suse.de>, Jan Kiszka <jan.kiszka@siemens.com>, "Herton R.
- Krzesinski" <herton@redhat.com>, Alexei Starovoitov <ast@kernel.org>, Takashi Iwai <tiwai@suse.com>, "J. Bruce
- Fields" <bfields@fieldses.org>, linux-ide@vger.kernel.org, Eric Dumazet <edumazet@google.com>, netdev@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, Jan Kara <jack@suse.com>, Soheil Hassas Yeganeh <soheil@google.com>, linux-s390@vger.kernel.org, Florian Fainelli <f.fainelli@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Herbert Xu <herbert@gondor.apana.org.au>, linux-scsi@vger.kernel.org, Ursula Braun <ubraun@linux.vnet.ibm.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Peter Zijlstra <peterz@infradead.org>, Julian Anastasov <ja@ssi.bg>, Ingo
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([45.249.212.187]:6309 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752913AbdEQKTl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2017 06:19:41 -0400
+In-Reply-To: <1495018197-120535-1-git-send-email-john.garry@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: john.garry2@mail.dcu.ie, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
 
-Em Mon, 15 May 2017 11:11:41 -0600
-Jonathan Corbet <corbet@lwn.net> escreveu:
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-> On Fri, 12 May 2017 10:59:43 -0300
-> Mauro Carvalho Chehab <mchehab@s-opensource.com> wrote:
-> 
-> > This patch series convert the following books from
-> > DocBook to ReST:
-> > 
-> >    - filesystems
-> >    - kernel-hacking
-> >    - kernel-locking
-> >    - kgdb
-> >    - libata
-> >    - networking
-> >    - rapidio
-> >    - s390-drivers
-> >    - scsi
-> >    - w1
-> >    - z8530book
-> > 
-> > It also adjusts some Sphinx-pedantic errors/warnings on
-> > some kernel-doc markups.
-> > 
-> > I also added some patches here to add PDF output for all
-> > existing ReST books.  
-> 
-> So I've been through the series (including digging out the parts that
-> weren't sent to me).  
-> 
-> > I did my best to check if what's there is not too outdated, but
-> > the best is if the subsystem maintainers could check it.  
-> 
-> That has been my real concern with those remaining books; many of them
-> have not been touched in any significant way in at least ten years. Just
-> shoveling a bunch of stuff into RST doesn't really solve the problem that
-> Documentation/ is an unorganized jumble of sometimes highly outdated
-> documentation.
+We need to check for timeout before task status, or the task will be
+mistook as completed internal abort command.
+Also add protection for sas_task.task_state_flags in
+hisi_sas_tmf_timedout().
 
-True. Yet, on the checks I did, on the books that have API descriptions,
-the C domain references still exist. On the books that just have
-kernel-doc tags, I wouldn't expect any changes there, as the API
-changes should be, instead, at the C code.
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 25 +++++++++++++++++--------
+ 1 file changed, 17 insertions(+), 8 deletions(-)
 
-So, I guess that it is not that bad, and, by having them in ReST will
-make them easier to be updated, as ReST is basically ascii with benefits.
-
-> But, then, I guess there's value in having a disorganized jumble that
-> depends on only one fragile toolchain rather than two :)  So maybe we
-> should just do this.
-> 
-> I only had one real comment with the series beyond the general stuff
-> here.  I see Markus had a few.  When the tweaks are done, can you send me
-> a series for the stuff I can apply, and I'll do it?
-
-Sure, I'm addressing the comments and will send you a new series.
-
-Thanks,
-Mauro
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index d622db5..98535aa 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -691,8 +691,13 @@ static void hisi_sas_task_done(struct sas_task *task)
+ static void hisi_sas_tmf_timedout(unsigned long data)
+ {
+ 	struct sas_task *task = (struct sas_task *)data;
++	unsigned long flags;
++
++	spin_lock_irqsave(&task->task_state_lock, flags);
++	if (!(task->task_state_flags & SAS_TASK_STATE_DONE))
++		task->task_state_flags |= SAS_TASK_STATE_ABORTED;
++	spin_unlock_irqrestore(&task->task_state_lock, flags);
+ 
+-	task->task_state_flags |= SAS_TASK_STATE_ABORTED;
+ 	complete(&task->slow_task->completion);
+ }
+ 
+@@ -1247,6 +1252,17 @@ static int hisi_sas_query_task(struct sas_task *task)
+ 	wait_for_completion(&task->slow_task->completion);
+ 	res = TMF_RESP_FUNC_FAILED;
+ 
++	/* Internal abort timed out */
++	if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
++		if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
++			struct hisi_sas_slot *slot = task->lldd_task;
++
++			if (slot)
++				slot->task = NULL;
++			dev_err(dev, "internal task abort: timeout.\n");
++		}
++	}
++
+ 	if (task->task_status.resp == SAS_TASK_COMPLETE &&
+ 		task->task_status.stat == TMF_RESP_FUNC_COMPLETE) {
+ 		res = TMF_RESP_FUNC_COMPLETE;
+@@ -1259,13 +1275,6 @@ static int hisi_sas_query_task(struct sas_task *task)
+ 		goto exit;
+ 	}
+ 
+-	/* Internal abort timed out */
+-	if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
+-		if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
+-			dev_err(dev, "internal task abort: timeout.\n");
+-		}
+-	}
+-
+ exit:
+ 	dev_dbg(dev, "internal task abort: task to dev %016llx task=%p "
+ 		"resp: 0x%x sts 0x%x\n",
+-- 
+1.9.1
