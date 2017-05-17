@@ -1,221 +1,112 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 03/22] scsi: hisi_sas: relocate get_ata_protocol()
-Date: Wed, 17 May 2017 18:49:38 +0800
-Message-ID: <1495018197-120535-4-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 04/22] scsi: hisi_sas: relocate sata_done_v2_hw()
+Date: Wed, 17 May 2017 18:49:39 +0800
+Message-ID: <1495018197-120535-5-git-send-email-john.garry@huawei.com>
 References: <1495018197-120535-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([45.249.212.187]:6324 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754168AbdEQKUB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2017 06:20:01 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1495018197-120535-1-git-send-email-john.garry@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: john.garry2@mail.dcu.ie, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Relocate get_ata_protocol() to a common location, as future
-hw versions will require it.
+Relocate get_ata_protocol() to a common location, as future hw
+versions will require it.
 Also rename with "hisi_sas_" prefix for consistency.
 
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  1 +
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 65 +++++++++++++++++++++++++++++++++
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 67 +---------------------------------
- 3 files changed, 68 insertions(+), 65 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas.h       |  2 ++
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 15 +++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 18 ++----------------
+ 3 files changed, 19 insertions(+), 16 deletions(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 88f06be..02ec10b 100644
+index 02ec10b..d0c0844 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas.h
 +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -355,6 +355,7 @@ struct hisi_sas_command_table_ssp {
- 	struct hisi_sas_command_table_stp stp;
- };
+@@ -357,6 +357,8 @@ struct hisi_sas_command_table_ssp {
  
-+extern u8 hisi_sas_get_ata_protocol(u8 cmd, int direction);
+ extern u8 hisi_sas_get_ata_protocol(u8 cmd, int direction);
  extern struct hisi_sas_port *to_hisi_sas_port(struct asd_sas_port *sas_port);
++extern void hisi_sas_sata_done(struct sas_task *task,
++			    struct hisi_sas_slot *slot);
  extern int hisi_sas_probe(struct platform_device *pdev,
  			  const struct hisi_sas_hw *ops);
+ extern int hisi_sas_remove(struct platform_device *pdev);
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index c986618..437eefe 100644
+index 437eefe..335f3ba4 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -15,6 +15,12 @@
- #define DEV_IS_GONE(dev) \
- 	((!dev) || (dev->dev_type == SAS_PHY_UNUSED))
+@@ -88,6 +88,21 @@ u8 hisi_sas_get_ata_protocol(u8 cmd, int direction)
+ }
+ EXPORT_SYMBOL_GPL(hisi_sas_get_ata_protocol);
  
-+#define SATA_PROTOCOL_NONDATA		0x1
-+#define SATA_PROTOCOL_PIO		0x2
-+#define SATA_PROTOCOL_DMA		0x4
-+#define SATA_PROTOCOL_FPDMA		0x8
-+#define SATA_PROTOCOL_ATAPI		0x10
-+
- static int hisi_sas_debug_issue_ssp_tmf(struct domain_device *device,
- 				u8 *lun, struct hisi_sas_tmf_task *tmf);
- static int
-@@ -23,6 +29,65 @@ static int hisi_sas_debug_issue_ssp_tmf(struct domain_device *device,
- 			     int abort_flag, int tag);
- static int hisi_sas_softreset_ata_disk(struct domain_device *device);
- 
-+u8 hisi_sas_get_ata_protocol(u8 cmd, int direction)
++void hisi_sas_sata_done(struct sas_task *task,
++			    struct hisi_sas_slot *slot)
 +{
-+	switch (cmd) {
-+	case ATA_CMD_FPDMA_WRITE:
-+	case ATA_CMD_FPDMA_READ:
-+	case ATA_CMD_FPDMA_RECV:
-+	case ATA_CMD_FPDMA_SEND:
-+	case ATA_CMD_NCQ_NON_DATA:
-+	return SATA_PROTOCOL_FPDMA;
++	struct task_status_struct *ts = &task->task_status;
++	struct ata_task_resp *resp = (struct ata_task_resp *)ts->buf;
++	struct dev_to_host_fis *d2h = slot->status_buffer +
++				      sizeof(struct hisi_sas_err_record);
 +
-+	case ATA_CMD_DOWNLOAD_MICRO:
-+	case ATA_CMD_ID_ATA:
-+	case ATA_CMD_PMP_READ:
-+	case ATA_CMD_READ_LOG_EXT:
-+	case ATA_CMD_PIO_READ:
-+	case ATA_CMD_PIO_READ_EXT:
-+	case ATA_CMD_PMP_WRITE:
-+	case ATA_CMD_WRITE_LOG_EXT:
-+	case ATA_CMD_PIO_WRITE:
-+	case ATA_CMD_PIO_WRITE_EXT:
-+	return SATA_PROTOCOL_PIO;
++	resp->frame_len = sizeof(struct dev_to_host_fis);
++	memcpy(&resp->ending_fis[0], d2h, sizeof(struct dev_to_host_fis));
 +
-+	case ATA_CMD_DSM:
-+	case ATA_CMD_DOWNLOAD_MICRO_DMA:
-+	case ATA_CMD_PMP_READ_DMA:
-+	case ATA_CMD_PMP_WRITE_DMA:
-+	case ATA_CMD_READ:
-+	case ATA_CMD_READ_EXT:
-+	case ATA_CMD_READ_LOG_DMA_EXT:
-+	case ATA_CMD_READ_STREAM_DMA_EXT:
-+	case ATA_CMD_TRUSTED_RCV_DMA:
-+	case ATA_CMD_TRUSTED_SND_DMA:
-+	case ATA_CMD_WRITE:
-+	case ATA_CMD_WRITE_EXT:
-+	case ATA_CMD_WRITE_FUA_EXT:
-+	case ATA_CMD_WRITE_QUEUED:
-+	case ATA_CMD_WRITE_LOG_DMA_EXT:
-+	case ATA_CMD_WRITE_STREAM_DMA_EXT:
-+	return SATA_PROTOCOL_DMA;
-+
-+	case ATA_CMD_CHK_POWER:
-+	case ATA_CMD_DEV_RESET:
-+	case ATA_CMD_EDD:
-+	case ATA_CMD_FLUSH:
-+	case ATA_CMD_FLUSH_EXT:
-+	case ATA_CMD_VERIFY:
-+	case ATA_CMD_VERIFY_EXT:
-+	case ATA_CMD_SET_FEATURES:
-+	case ATA_CMD_STANDBY:
-+	case ATA_CMD_STANDBYNOW1:
-+	return SATA_PROTOCOL_NONDATA;
-+	default:
-+		if (direction == DMA_NONE)
-+			return SATA_PROTOCOL_NONDATA;
-+		return SATA_PROTOCOL_PIO;
-+	}
++	ts->buf_valid_size = sizeof(*resp);
 +}
-+EXPORT_SYMBOL_GPL(hisi_sas_get_ata_protocol);
++EXPORT_SYMBOL_GPL(hisi_sas_sata_done);
 +
  static struct hisi_hba *dev_to_hisi_hba(struct domain_device *device)
  {
  	return device->port->ha->lldd_ha;
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 193cc43..397f01e 100644
+index 397f01e..51140dc 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -554,12 +554,6 @@ enum {
- #define DIR_TO_DEVICE 2
- #define DIR_RESERVED 3
- 
--#define SATA_PROTOCOL_NONDATA		0x1
--#define SATA_PROTOCOL_PIO		0x2
--#define SATA_PROTOCOL_DMA		0x4
--#define SATA_PROTOCOL_FPDMA		0x8
--#define SATA_PROTOCOL_ATAPI		0x10
--
- #define ERR_ON_TX_PHASE(err_phase) (err_phase == 0x2 || \
- 		err_phase == 0x4 || err_phase == 0x8 ||\
- 		err_phase == 0x6 || err_phase == 0xa)
-@@ -2348,64 +2342,6 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
- 	return sts;
+@@ -1679,20 +1679,6 @@ static int prep_ssp_v2_hw(struct hisi_hba *hisi_hba,
+ 	return 0;
  }
  
--static u8 get_ata_protocol(u8 cmd, int direction)
+-static void sata_done_v2_hw(struct hisi_hba *hisi_hba, struct sas_task *task,
+-			    struct hisi_sas_slot *slot)
 -{
--	switch (cmd) {
--	case ATA_CMD_FPDMA_WRITE:
--	case ATA_CMD_FPDMA_READ:
--	case ATA_CMD_FPDMA_RECV:
--	case ATA_CMD_FPDMA_SEND:
--	case ATA_CMD_NCQ_NON_DATA:
--	return SATA_PROTOCOL_FPDMA;
+-	struct task_status_struct *ts = &task->task_status;
+-	struct ata_task_resp *resp = (struct ata_task_resp *)ts->buf;
+-	struct dev_to_host_fis *d2h = slot->status_buffer +
+-				      sizeof(struct hisi_sas_err_record);
 -
--	case ATA_CMD_DOWNLOAD_MICRO:
--	case ATA_CMD_ID_ATA:
--	case ATA_CMD_PMP_READ:
--	case ATA_CMD_READ_LOG_EXT:
--	case ATA_CMD_PIO_READ:
--	case ATA_CMD_PIO_READ_EXT:
--	case ATA_CMD_PMP_WRITE:
--	case ATA_CMD_WRITE_LOG_EXT:
--	case ATA_CMD_PIO_WRITE:
--	case ATA_CMD_PIO_WRITE_EXT:
--	return SATA_PROTOCOL_PIO;
+-	resp->frame_len = sizeof(struct dev_to_host_fis);
+-	memcpy(&resp->ending_fis[0], d2h, sizeof(struct dev_to_host_fis));
 -
--	case ATA_CMD_DSM:
--	case ATA_CMD_DOWNLOAD_MICRO_DMA:
--	case ATA_CMD_PMP_READ_DMA:
--	case ATA_CMD_PMP_WRITE_DMA:
--	case ATA_CMD_READ:
--	case ATA_CMD_READ_EXT:
--	case ATA_CMD_READ_LOG_DMA_EXT:
--	case ATA_CMD_READ_STREAM_DMA_EXT:
--	case ATA_CMD_TRUSTED_RCV_DMA:
--	case ATA_CMD_TRUSTED_SND_DMA:
--	case ATA_CMD_WRITE:
--	case ATA_CMD_WRITE_EXT:
--	case ATA_CMD_WRITE_FUA_EXT:
--	case ATA_CMD_WRITE_QUEUED:
--	case ATA_CMD_WRITE_LOG_DMA_EXT:
--	case ATA_CMD_WRITE_STREAM_DMA_EXT:
--	return SATA_PROTOCOL_DMA;
--
--	case ATA_CMD_CHK_POWER:
--	case ATA_CMD_DEV_RESET:
--	case ATA_CMD_EDD:
--	case ATA_CMD_FLUSH:
--	case ATA_CMD_FLUSH_EXT:
--	case ATA_CMD_VERIFY:
--	case ATA_CMD_VERIFY_EXT:
--	case ATA_CMD_SET_FEATURES:
--	case ATA_CMD_STANDBY:
--	case ATA_CMD_STANDBYNOW1:
--	return SATA_PROTOCOL_NONDATA;
--	default:
--		if (direction == DMA_NONE)
--			return SATA_PROTOCOL_NONDATA;
--		return SATA_PROTOCOL_PIO;
--	}
+-	ts->buf_valid_size = sizeof(*resp);
 -}
 -
- static int get_ncq_tag_v2_hw(struct sas_task *task, u32 *tag)
- {
- 	struct ata_queued_cmd *qc = task->uldd_task;
-@@ -2460,7 +2396,8 @@ static int prep_ata_v2_hw(struct hisi_hba *hisi_hba,
- 			(task->ata_task.fis.control & ATA_SRST))
- 		dw1 |= 1 << CMD_HDR_RESET_OFF;
- 
--	dw1 |= (get_ata_protocol(task->ata_task.fis.command, task->data_dir))
-+	dw1 |= (hisi_sas_get_ata_protocol(
-+		task->ata_task.fis.command, task->data_dir))
- 		<< CMD_HDR_FRAME_TYPE_OFF;
- 	dw1 |= sas_dev->device_id << CMD_HDR_DEV_ID_OFF;
- 	hdr->dw1 = cpu_to_le32(dw1);
+ #define TRANS_TX_ERR	0
+ #define TRANS_RX_ERR	1
+ #define DMA_TX_ERR		2
+@@ -2185,7 +2171,7 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
+ 			break;
+ 		}
+ 		}
+-		sata_done_v2_hw(hisi_hba, task, slot);
++		hisi_sas_sata_done(task, slot);
+ 	}
+ 		break;
+ 	default:
+@@ -2313,7 +2299,7 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
+ 	case SAS_PROTOCOL_SATA | SAS_PROTOCOL_STP:
+ 	{
+ 		ts->stat = SAM_STAT_GOOD;
+-		sata_done_v2_hw(hisi_hba, task, slot);
++		hisi_sas_sata_done(task, slot);
+ 		break;
+ 	}
+ 	default:
 -- 
 1.9.1
