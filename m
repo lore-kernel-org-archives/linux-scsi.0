@@ -1,51 +1,74 @@
-From: James Smart <jsmart2021@gmail.com>
-Subject: Re: [PATCH v2 02/15] lpfc: Fix system crash when port is reset.
-Date: Wed, 17 May 2017 11:49:10 -0700
-Message-ID: <c2bf3df0-e65e-2f1c-5bb7-cb5b62697e30@gmail.com>
-References: <20170515222052.26004-1-jsmart2021@gmail.com>
- <20170515222052.26004-3-jsmart2021@gmail.com>
- <73cdc776-8eea-b63b-89af-ffa9829e1f9d@linux.vnet.ibm.com>
-Reply-To: jsmart2021@gmail.com
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 09/22] scsi: hisi_sas: retrieve SAS address for pci-based controller
+Date: Wed, 17 May 2017 21:23:25 +0200
+Message-ID: <CAK8P3a0obfJYviU4kZ+KtfbrEpjOaJJazJQbV0_xJ24+YYMD_A@mail.gmail.com>
+References: <1495018197-120535-1-git-send-email-john.garry@huawei.com>
+ <1495018197-120535-10-git-send-email-john.garry@huawei.com>
+ <CAK8P3a0RxVq6Y0OpQWikDKBSvu0z42TCAEVRmrFD0CJwmh3SXw@mail.gmail.com>
+ <e01dac0a-69a9-b625-76c1-f30fe5663890@huawei.com> <CAK8P3a0bo7L07X18_0e2vswLmCb+cu4CrzSoGKb0jk-yrKxTbQ@mail.gmail.com>
+ <dd20a241-b137-6779-63c9-6b881fc393c7@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:35619 "EHLO
-        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750838AbdEQStO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2017 14:49:14 -0400
-Received: by mail-qk0-f193.google.com with SMTP id k74so2900009qke.2
-        for <linux-scsi@vger.kernel.org>; Wed, 17 May 2017 11:49:13 -0700 (PDT)
-In-Reply-To: <73cdc776-8eea-b63b-89af-ffa9829e1f9d@linux.vnet.ibm.com>
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:33474 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751649AbdEQTX0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2017 15:23:26 -0400
+In-Reply-To: <dd20a241-b137-6779-63c9-6b881fc393c7@huawei.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>, linux-nvme@lists.infradead.org
-Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>, raphasil@linux.vnet.ibm.com, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
+To: John Garry <john.garry@huawei.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, John Garry <john.garry2@mail.dcu.ie>, linuxarm@huawei.com, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On 5/16/2017 5:26 AM, Guilherme G. Piccoli wrote:
-> On 05/15/2017 07:20 PM, James Smart wrote:
->> The driver panic when using the els_wq during port reset.
+On Wed, May 17, 2017 at 6:45 PM, John Garry <john.garry@huawei.com> wrote:
+> On 17/05/2017 15:13, Arnd Bergmann wrote:
+>> On Wed, May 17, 2017 at 3:37 PM, John Garry <john.garry@huawei.com> wrote:
+>>> On 17/05/2017 13:37, Arnd Bergmann wrote:
+>>> As for your suggestion, in theory it could be ok to have a
+>>> pci_dev->fwnode,
+>>> and this would work for Unified Device Properties Interface (if that is
+>>> indeed what you mean). But how to create/match this fwnode?
 >>
->> Check for NULL els_wq before dereferencing.
+>>
+>> pci_scan_device sets the dev->of_node field for DT based probing, we
+>> could add a trivial patch to set the fwnode field as well if that isn't
+>> already done elsewhere.
+>>
+>>> From what I can tell, the ACPI code sets up a 'companion' device for
+>>
+>> any PCI device that is listed in the ACPI tables, at least it refers to
+>> that later on, but I could not figure out where it actually gets set.
+>>
 >
-> James/Dick, if possible please take a look on:
-> https://marc.info/?l=linux-scsi&m=149487670315697
+> Hi Arnd,
 >
-> For some reason that email didn't get threaded as I expect. And also I
-> forgot to include James' Gmail address, sorry.
+> Currently there is no pci device listed in the ACPI tables.
 >
-> Thanks in advance,
+> What I am doing is declaring a fake device in the root of the System bus
+> tree of the ACPI tables, and in the kernel driver finding it by matching the
+> name. It is not the ACPI companion for the pci device.
 >
->
-> Guilherme
+> So I think that we can define the pci device under the pci bus in the ACPI
+> tables, and define the ADR and DSD. Then we would have an ACPI companion for
+> the device, and from that get the SAS address.
 
-Gilherme,
+Yes, that would be much better, and allow us to use the device properties
+interface directly. An additional advantage is that the property definition
+can be exactly the same as for the v1/v2 platform_device properties
+for anything that might be needed across all versions.  sas-addr already
+fits in there, and there might be additional properties you need in the
+future.
 
-Your patch is still needed.  Can you repost your patch with a new 
-subject and add my signature:
+> An alternative to this ACPI device method is for UEFI to write the SAS
+> address to a defined free location in device's pci config space, which the
+> driver can read.
 
-Signed-off-by: James Smart <james.smart@broadcom.com>
+That sounds ok as well, it would be nice to not rely on firmware data here,
+but I'd have to see how the implementation ends up: IIRC you should
+not just put the data at a fixed location in the config space but instead use
+the 'extended capabilities' infrastructure to find the data.
+PCI_EXT_CAP_ID_VNDR might be the right one here, but I don't
+know enough about this, so please consult with someone who does
+(or the PCIe specification).
 
-Sorry, I didn't see it to roll it into the set.
-
--- james
+      Arnd
