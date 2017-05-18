@@ -1,25 +1,36 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] lpfc: fix build issue if NVME_FC_TARGET is not defined
-Date: Wed, 17 May 2017 20:23:31 -0400
-Message-ID: <yq1tw4j6mik.fsf@oracle.com>
-References: <20170517035229.1145-1-jsmart2021@gmail.com>
+From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Subject: [PATCH] scsi: remove useless variable assignment
+Date: Wed, 17 May 2017 19:30:43 -0500
+Message-ID: <20170518003043.GA5664@embeddedgus>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170517035229.1145-1-jsmart2021@gmail.com> (James Smart's
-        message of "Tue, 16 May 2017 20:52:29 -0700")
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Smart <jsmart2021@gmail.com>
-Cc: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, sfr@canb.auug.org.au, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-next@vger.kernel.org, hare@suse.com, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <garsilva@embeddedor.com>
 List-Id: linux-scsi@vger.kernel.org
 
+Remove this assignment once the value stored in variable _k_ is
+overwritten after a few lines.
 
-James,
+Addresses-Coverity-ID: 1226927
+Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+---
+ drivers/scsi/qlogicfas408.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-> fix build issue if NVME_FC_TARGET is not defined. noop the code.
-> The code will never be invoked if target mode is not enabled.
-
-Applied to 4.12/scsi-fixes. Thanks!
-
+diff --git a/drivers/scsi/qlogicfas408.c b/drivers/scsi/qlogicfas408.c
+index c3a9151..269440a 100644
+--- a/drivers/scsi/qlogicfas408.c
++++ b/drivers/scsi/qlogicfas408.c
+@@ -329,7 +329,6 @@ static unsigned int ql_pcmd(struct scsi_cmnd *cmd)
+ 		 */
+ 		if ((k = ql_wai(priv)))
+ 			return (k << 16);
+-		k = inb(qbase + 5);	/* should be 0x10, bus service */
+ 	}
+ 
+ 	/*
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.5.0
