@@ -1,61 +1,48 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Need help with handling failed ATA pass-through command and sense
- data
-Date: Thu, 18 May 2017 10:35:48 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1705181018490.1619-100000@iolanthe.rowland.org>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH net-next] qed: Utilize FW 8.20.0.0
+Date: Thu, 18 May 2017 10:43:00 -0400 (EDT)
+Message-ID: <20170518.104300.795177460216894201.davem@davemloft.net>
+References: <1495049920-22782-1-git-send-email-Yuval.Mintz@cavium.com>
+        <20170518.103428.1194147893495615244.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:53126 "HELO
-        iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S1756500AbdEROfu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 May 2017 10:35:50 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=iso-8859-7
+Content-Transfer-Encoding: base64
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20170518.103428.1194147893495615244.davem@davemloft.net>
+Sender: netdev-owner@vger.kernel.org
+To: Yuval.Mintz@cavium.com
+Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, Chad.Dupuis@cavium.com, Ram.Amrani@cavium.com, Tomer.Tayar@cavium.com, Manish.Rangankar@cavium.com
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
-Cc: GeekGirl1 <my.e.mail1@verizon.net>
 
-This is in reference to
-
-	https://bugzilla.redhat.com/show_bug.cgi?id=1351305
-
-The problem is that some program (probably udisks2) periodically sends
-the following ATA pass-through command to a USB-ATA bridge attached to
-a Western Digital drive:
-
-	85062000 00000000 00000000 0000e500
-
-I don't know what this command does (some sort of reset?).  The command
-fails and the device returns the following sense data:
-
-	72000000 0000000e 090c0000 00ff0000 00000000 0050
-
-I don't know how to decode this -- I don't have copies of the relevant
-documents.  Can anybody decode this for me?
-
-Anyway, the SCSI core treats it as a Hardware Error and puts warning
-messages in the kernel log:
-
-[17244.280612] sd 7:0:0:0: [sdd] tag#0 FAILED Result: hostbyte=DID_ERROR driverbyte=DRIVER_SENSE
-[17244.280614] sd 7:0:0:0: [sdd] tag#0 Sense Key : Hardware Error [current] [descriptor] 
-[17244.280616] sd 7:0:0:0: [sdd] tag#0 Add. Sense: No additional sense information
-[17244.280618] sd 7:0:0:0: [sdd] tag#0 CDB: ATA command pass through(16) 85 06 20 00 00 00 00 00 00 00 00 00 00 00 e5 00
-
-Is this really the right thing to do?  Could it be that we are failing 
-to interpret this sense data correctly?
-
-Other commands provoke similar responses from the device, but without 
-obnoxious log messages.  For example, the command:
-
-	85082e00 00000100 00000000 0000ec00
-
-fails with the following sense data:
-
-	72000000 0000000e 090c0000 00000000 00000000 0050
-
-and no output to the log.  I don't know why the behavior is different.  
-There are other similar examples, with and without log messages.
-
-Any help would be appreciated.
-
-Alan Stern
+RnJvbTogRGF2aWQgTWlsbGVyIDxkYXZlbUBkYXZlbWxvZnQubmV0Pg0KRGF0ZTogVGh1LCAxOCBN
+YXkgMjAxNyAxMDozNDoyOCAtMDQwMCAoRURUKQ0KDQo+IEZyb206IFl1dmFsIE1pbnR6IDxZdXZh
+bC5NaW50ekBjYXZpdW0uY29tPg0KPiBEYXRlOiBXZWQsIDE3IE1heSAyMDE3IDIyOjM4OjQwICsw
+MzAwDQo+IA0KPj4gVGhpcyBwdXNoZXMgcWVkIFthbmQgYXMgcmVzdWx0LCBhbGwgcWVkKiBkcml2
+ZXJzXSBpbnRvIHVzaW5nIDguMjAuMC4wDQo+PiBmaXJtd2FyZS4gVGhlIGNoYW5nZXMgYXJlIG1v
+c3RseSBjb250YWluZWQgaW4gcWVkIHdpdGggbWlub3IgY2hhbmdlcw0KPj4gdG8gcWVkaSBkdWUg
+dG8gc29tZSBIU0kgY2hhbmdlcy4NCj4+IA0KPj4gQ29udGVudC13aXNlLCB0aGUgZmlybXdhcmUg
+Y29udGFpbnMgZml4ZXMgdG8gdmFyaW91cyBpc3N1ZXMgZXhwb3NlZA0KPj4gc2luY2UgdGhlIHJl
+bGVhc2Ugb2YgdGhlIHByZXZpb3VzIGZpcm13YXJlLCBpbmNsdWRpbmc6DQo+PiAgLSBDb3JyZWN0
+cyBpU0NTSSBmYXN0IHJldHJhbnNtaXQgd2hlbiBkYXRhIGRpZ2VzdCBpcyBlbmFibGVkLg0KPj4g
+IC0gU3RvcCBkcmFpbmluZyBwYWNrZXRzIHdoZW4gcmVjZWl2aW5nIHNldmVyYWwgY29uc2VjdXRp
+dmUgUEZDcy4NCj4+ICAtIFByZXZlbnQgcG9zc2libGUgYXNzZXJ0aW9uIHdoZW4gY29uc2VjdXRp
+dmVseSBvcGVuaW5nL2Nsb3NpbmcNCj4+ICAgIG1hbnkgY29ubmVjdGlvbnMuDQo+PiAgLSBQcmV2
+ZW50IHBvc3NpYmxlIGFzc2VydGlvbiBkdWUgdG8gdG9vIGxvbmcgQkRRIGZldGNoIHRpbWUuDQo+
+PiANCj4+IEluIGFkZGl0aW9uLCB0aGUgbmV3IGZpcm13YXJlIHdvdWxkIGFsbG93IHVzIHRvIGxh
+dGVyIGFkZCBpV0FSUCBzdXBwb3J0DQo+PiBpbiBxZWQgYW5kIHFlZHIuDQo+PiANCj4+IFNpZ25l
+ZC1vZmYtYnk6IENoYWQgRHVwdWlzIDxDaGFkLkR1cHVpc0BjYXZpdW0uY29tPg0KPj4gU2lnbmVk
+LW9mZi1ieTogUmFtIEFtcmFuaSA8UmFtLkFtcmFuaUBjYXZpdW0uY29tPg0KPj4gU2lnbmVkLW9m
+Zi1ieTogVG9tZXIgVGF5YXIgPFRvbWVyLlRheWFyQGNhdml1bS5jb20+DQo+PiBTaWduZWQtb2Zm
+LWJ5OiBNYW5pc2ggUmFuZ2Fua2FyIDxNYW5pc2guUmFuZ2Fua2FyQGNhdml1bS5jb20+DQo+PiBT
+aWduZWQtb2ZmLWJ5OiBZdXZhbCBNaW50eiA8WXV2YWwuTWludHpAY2F2aXVtLmNvbT4NCj4gDQo+
+IEFwcGxpZWQuDQoNCkFjdHVhbGx5IEkgaGFkIHRvIHJldmVydC4gIFBsZWFzZSBsb29rIGF0IHRo
+ZSBjb21waWxlciBvdXRwdXQgYmVmb3JlDQpzdWJtaXR0aW5nIGNoYW5nZXM6DQoNCmRyaXZlcnMv
+bmV0L2V0aGVybmV0L3Fsb2dpYy9xZWQvcWVkX2RlYnVnLmM6IEluIGZ1bmN0aW9uIKFxZWRfZ3Jj
+X2R1bXCiOg0KZHJpdmVycy9uZXQvZXRoZXJuZXQvcWxvZ2ljL3FlZC9xZWRfZGVidWcuYzoyNDI1
+OjY6IHdhcm5pbmc6IKFhZGRyoiBtYXkgYmUgdXNlZCB1bmluaXRpYWxpemVkIGluIHRoaXMgZnVu
+Y3Rpb24gWy1XbWF5YmUtdW5pbml0aWFsaXplZF0NCiAgdTMyIGJ5dGVfYWRkciA9IERXT1JEU19U
+T19CWVRFUyhhZGRyKSwgb2Zmc2V0ID0gMCwgaTsNCiAgICAgIF4NCmRyaXZlcnMvbmV0L2V0aGVy
+bmV0L3Fsb2dpYy9xZWQvcWVkX2RlYnVnLmM6MzUzNDo3OiBub3RlOiChYWRkcqIgd2FzIGRlY2xh
+cmVkIGhlcmUNCiAgIHUzMiBhZGRyLCBzaXplID0gUlNTX1JFR19SU1NfUkFNX0RBVEFfU0laRTsN
+CiAgICAgICBeDQoNCidhZGRyJyBpcyBuZXZlciwgZXZlciwgYXNzaWduZWQgYSB2YWx1ZSwgeWV0
+IGl0IGlzIHBhc3NlZCBpbnRvIGEgZnVuY3Rpb24gYXMgYW4NCmFyZ3VtZW50Lg0K
