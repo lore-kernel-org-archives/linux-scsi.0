@@ -1,35 +1,80 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: blktests and /dev/sg syzkaller reproducers
-Date: Thu, 18 May 2017 09:36:17 +0200
-Message-ID: <ed7bae97-5623-2191-f46d-4fc288eda13e@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
-To: Omar Sandoval <osandov@osandov.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] scsi: smartpqi: mark PM functions as __maybe_unused
+Date: Thu, 18 May 2017 10:32:18 +0200
+Message-ID: <20170518083243.2927102-1-arnd@arndb.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Kevin Barnett <kevin.barnett@hpe.com>, Scott Benesh <scott.benesh@microsemi.com>, Scott Teel <scott.teel@microsemi.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Omar,
+The newly added suspend/resume support causes harmless warnings
+when CONFIG_PM is disabled:
 
-I was thinking of adding some of the syszcaller reproducers I've
-collected, which have been crashing the SCSI generic driver.
+smartpqi/smartpqi_init.c:5147:12: error: 'pqi_ctrl_wait_for_pending_io' defined but not used [-Werror=unused-function]
+smartpqi/smartpqi_init.c:2019:13: error: 'pqi_wait_until_lun_reset_finished' defined but not used [-Werror=unused-function]
+smartpqi/smartpqi_init.c:2013:13: error: 'pqi_wait_until_scan_finished' defined but not used [-Werror=unused-function]
 
-This would require blktests to have a build infrastructure (not a big
-deal I know).
+We can avoid the warnings by removing the #ifdef around the
+handlers and instead marking them as __maybe_unused, which will
+let gcc drop the unused code silently.
 
-So my question is, are you comfortable with adding these tests (in a new
-group probably) I'll look through my reproducer collection and work on a
-patch set.
+Fixes: f44d210312a6 ("scsi: smartpqi: add suspend and resume support")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/smartpqi/smartpqi_init.c | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
 
-Byte,
-	Johannes
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 0b11ae7e96dc..cb8f886e705c 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -6213,8 +6213,6 @@ static int pqi_ctrl_init(struct pqi_ctrl_info *ctrl_info)
+ 	return 0;
+ }
+ 
+-#if defined(CONFIG_PM)
+-
+ static void pqi_reinit_queues(struct pqi_ctrl_info *ctrl_info)
+ {
+ 	unsigned int i;
+@@ -6321,8 +6319,6 @@ static int pqi_ctrl_init_resume(struct pqi_ctrl_info *ctrl_info)
+ 	return 0;
+ }
+ 
+-#endif /* CONFIG_PM */
+-
+ static inline int pqi_set_pcie_completion_timeout(struct pci_dev *pci_dev,
+ 	u16 timeout)
+ {
+@@ -6696,9 +6692,7 @@ static void pqi_process_module_params(void)
+ 	pqi_process_lockup_action_param();
+ }
+ 
+-#if defined(CONFIG_PM)
+-
+-static int pqi_suspend(struct pci_dev *pci_dev, pm_message_t state)
++static __maybe_unused int pqi_suspend(struct pci_dev *pci_dev, pm_message_t state)
+ {
+ 	struct pqi_ctrl_info *ctrl_info;
+ 
+@@ -6728,7 +6722,7 @@ static int pqi_suspend(struct pci_dev *pci_dev, pm_message_t state)
+ 	return 0;
+ }
+ 
+-static int pqi_resume(struct pci_dev *pci_dev)
++static __maybe_unused int pqi_resume(struct pci_dev *pci_dev)
+ {
+ 	int rc;
+ 	struct pqi_ctrl_info *ctrl_info;
+@@ -6759,8 +6753,6 @@ static int pqi_resume(struct pci_dev *pci_dev)
+ 	return pqi_ctrl_init_resume(ctrl_info);
+ }
+ 
+-#endif /* CONFIG_PM */
+-
+ /* Define the PCI IDs for the controllers that we support. */
+ static const struct pci_device_id pqi_pci_id_table[] = {
+ 	{
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+2.9.0
