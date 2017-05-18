@@ -1,44 +1,35 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [PATCH] scsi: remove useless variable assignment
-Date: Wed, 17 May 2017 21:39:58 -0700
-Message-ID: <1495082398.2840.14.camel@linux.vnet.ibm.com>
-References: <20170518003043.GA5664@embeddedgus>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] scsi: csiostor: add support for Chelsio T6 adapters
+Date: Thu, 18 May 2017 08:55:27 +0200
+Message-ID: <e806839a-20e0-8703-a163-19fcc65cb3e1@suse.de>
+References: <1495033220-20223-1-git-send-email-varun@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170518003043.GA5664@embeddedgus>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:51987 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751957AbdERGz3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 18 May 2017 02:55:29 -0400
+In-Reply-To: <1495033220-20223-1-git-send-email-varun@chelsio.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Varun Prakash <varun@chelsio.com>, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, indranil@chelsio.com, rajesh.kumar@chelsio.com
 
-On Wed, 2017-05-17 at 19:30 -0500, Gustavo A. R. Silva wrote:
-> Remove this assignment once the value stored in variable _k_ is
-> overwritten after a few lines.
-> 
-> Addresses-Coverity-ID: 1226927
-> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+On 05/17/2017 05:00 PM, Varun Prakash wrote:
+> Signed-off-by: Varun Prakash <varun@chelsio.com>
 > ---
->  drivers/scsi/qlogicfas408.c | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/qlogicfas408.c
-> b/drivers/scsi/qlogicfas408.c
-> index c3a9151..269440a 100644
-> --- a/drivers/scsi/qlogicfas408.c
-> +++ b/drivers/scsi/qlogicfas408.c
-> @@ -329,7 +329,6 @@ static unsigned int ql_pcmd(struct scsi_cmnd
-> *cmd)
->  		 */
->  		if ((k = ql_wai(priv)))
->  			return (k << 16);
-> -		k = inb(qbase + 5);	/* should be 0x10, bus
-> service */
 
-That doesn't look right to me.  inb() is a statement which has an
-effect on the I/O device regardless of whether the returned value is
-used or discarded.  In this case I think it's being used to clear
-pending interrupts, so removing it will likely cause a phase error.
+Please be a bit more verbose with the changelog.
 
-James
+Thanks,
+	Johannes
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
