@@ -1,67 +1,51 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: Need help with handling failed ATA pass-through command and
- sense data
-Date: Thu, 18 May 2017 16:01:00 -0400
-Message-ID: <1495137660.3629.44.camel@localhost.localdomain>
-References: <Pine.LNX.4.44L0.1705181322570.1619-100000@iolanthe.rowland.org>
-Reply-To: emilne@redhat.com
+From: Omar Sandoval <osandov@osandov.com>
+Subject: Re: [PATCH blktests 2/3] tests/sg: add SCSI generic test grouop
+Date: Thu, 18 May 2017 14:06:20 -0700
+Message-ID: <20170518210620.GA26871@vader.DHCP.thefacebook.com>
+References: <cover.1495109149.git.jthumshirn@suse.de>
+ <b9201d03f70519230dcffd5cfa92496a3bad5da4.1495109149.git.jthumshirn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41026 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753845AbdERUBB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 18 May 2017 16:01:01 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1705181322570.1619-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <b9201d03f70519230dcffd5cfa92496a3bad5da4.1495109149.git.jthumshirn@suse.de>
+Sender: linux-block-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Linux Block Layer Mailinglist <linux-block@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, GeekGirl1 <my.e.mail1@verizon.net>
 
-On Thu, 2017-05-18 at 13:37 -0400, Alan Stern wrote:
+On Thu, May 18, 2017 at 02:13:07PM +0200, Johannes Thumshirn wrote:
+> Add a test group for tests of the SCSI generic driver and and
+> functions common to the SCSI generic driver and it's test cases.
 > 
-> I had completely forgotten about this code.  :-(
+> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+> ---
+>  common/sg      | 22 ++++++++++++++++++++++
+>  tests/sg/group | 40 ++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 62 insertions(+)
+>  create mode 100644 common/sg
+>  create mode 100644 tests/sg/group
 > 
-> Looks like you put your finger on the source of the problem.  So if the 
-> device sends back essentially empty sense data (SK = No Sense, ASC = 
-> ASCQ = 0), but the USB transport indicates command failure, how should 
-> we inform the SCSI core in a way that won't cause infinite retries or 
-> obnoxious log messages?
-> 
-> Should we be doing a better job of detecting empty sense data -- that 
-> is, do we need to check for non-empty ATA status?
-> 
-> Or has the SCSI core improved so that it no longer does infinite
-> retries (see commit f1a0743bc0e7 "USB: storage: When a device returns
-> no sense data, call it a Hardware Error" and Bugzilla entry #14118),
-> meaning that this code can be removed entirely?
-> 
-> Alan Stern
+> diff --git a/common/sg b/common/sg
+> new file mode 100644
+> index 000000000000..30b5089c68f7
+> --- /dev/null
+> +++ b/common/sg
+> +# TODO: if this test group has extra requirements for what devices it can be
+> +# run on, it should define a group_device_requires() function. If tests in this
+> +# group can be run on the test device, it should return zero. Otherwise, it
+> +# should return non-zero and set the $SKIP_REASON variable. $TEST_DEV is the
+> +# full path of the block device (e.g., /dev/nvme0n1 or /dev/sda1), and
+> +# $TEST_DEV_SYSFS is the sysfs path of the disk (not the partition, e.g.,
+> +# /sys/block/nvme0n1 or /sys/block/sda).
+> +#
+> +# Usually, group_device_requires() just needs to check that the test device is
+> +# the right type of hardware or supports any necessary features using the
+> +# _test_dev_foo helpers. If group_device_requires() returns non-zero, all tests
+> +# in this group will be skipped on that device.
+> +# group_device_requires() {
+> +# 	_test_dev_is_foo && _test_dev_supports_bar
+> +# }
 
-We added:
-
-commit ee60b2c52ec8ecdcbcd2f85cc117b525f649441f
-Author: Eiichi Tsukata <eiichi.tsukata.xh@hitachi.com>
-Date:   Tue Feb 11 14:29:52 2014 +0900
-
-    [SCSI] Add timeout to avoid infinite command retry
-
-but this may not give you the behavior you want, because it bounds
-the execution time to (# of retries + 1) * timeout.  So if you get
-an immediate error return it could still take a while for this code
-to give up retrying, i.e. it does not have the same properties as
-your commit f1a0743bc0e7.
-
-I suppose you could decode the ATA Status Return sense data descriptor
-but I don't know how good the compliance is among all the ATA devices.
-Table 177 in section 1.2.2.8 of SAT-4 r06 seems to say that most of
-the fields in the sense data are unspecified for ATA PASS-THROUGH
-commands, so this probably explains why you see nothing else useful.
-Perhaps the logging should be delegated to the USB or ATA code for
-these commands, since they are not really part of SCSI?
-
-I have seen a case of a Fibre Channel array returning all zeroes
-in the sense data, but this was because it was malfunctioning.
-
--Ewan
+Leftover TODO, I'll remove it when applying. If we add an sg test that
+runs on an actual device, we can define group_device_requires().
