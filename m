@@ -1,46 +1,42 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH] scsi: zero per-cmd driver data for each MQ I/O
-Date: Thu, 18 May 2017 13:29:19 +0000
-Message-ID: <BN6PR03MB248142AAC3E0D9851D2A841DA0E40@BN6PR03MB2481.namprd03.prod.outlook.com>
-References: <MWHPR03MB31361482F0BAE79275957D63CEE10@MWHPR03MB3136.namprd03.prod.outlook.com>
- <1494892845.2567.14.camel@sandisk.com>
- <MWHPR03MB3136DEB8FD09EDDF7CDB8BF5CEE60@MWHPR03MB3136.namprd03.prod.outlook.com>
- <1495062317.2679.1.camel@sandisk.com> <20170518065454.GA25180@infradead.org>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH blktests 0/3] Add SCSI generic test group
+Date: Thu, 18 May 2017 15:29:45 +0200
+Message-ID: <94150f71-5bbb-2ee2-b7d4-d0f2f7124684@suse.de>
+References: <cover.1495109149.git.jthumshirn@suse.de>
+ <20170518131928.GA26060@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170518065454.GA25180@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170518131928.GA26060@infradead.org>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Long Li <longli@microsoft.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Stephen Hemminger <sthemmin@microsoft.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Omar Sandoval <osandov@osandov.com>, Linux Block Layer Mailinglist <linux-block@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On 05/18/2017 03:19 PM, Christoph Hellwig wrote:
+> All SG_IO test should also apply to block device nodes that support
+> the ioctl..
+> 
 
+But these are not necessarily SG_IO tests, are they?
 
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@infradead.org]
-> Sent: Wednesday, May 17, 2017 11:55 PM
-> To: Bart Van Assche <Bart.VanAssche@sandisk.com>
-> Cc: jejb@linux.vnet.ibm.com; linux-scsi@vger.kernel.org; linux-
-> kernel@vger.kernel.org; Long Li <longli@microsoft.com>;
-> martin.petersen@oracle.com; Stephen Hemminger
-> <sthemmin@microsoft.com>; KY Srinivasan <kys@microsoft.com>
-> Subject: Re: [PATCH] scsi: zero per-cmd driver data for each MQ I/O
->=20
-> On Wed, May 17, 2017 at 11:05:18PM +0000, Bart Van Assche wrote:
-> > Thank you for the feedback. I'm working on a patch series that merges t=
-he
-> scsi-sq
-> > and scsi-mq code paths for command initialization and that should fix t=
-he
-> bug you
-> > encountered.
->=20
-> While that sounds great (I tried it a while ago but gave up due to
-> priorities) I think we should merge this patch as-is and backport it
-> to stable for now and rebase your series on top of it.
-Thanks Christoph.
+The test included is doesn't hit the SG_IO path in the sg driver, but
+the sg_read path.
 
-K. Y
+Of cause we can make a generic sg_io tool but IMHO it's quite convenient
+to just throw in the reproducers we get.
+
+And as it exercises the /dev/sg character device I decided to make a new
+group.
+
+	Johannes
+
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
