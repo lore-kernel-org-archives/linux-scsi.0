@@ -1,139 +1,77 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Need help with handling failed ATA pass-through command and
- sense data
-Date: Thu, 18 May 2017 13:37:27 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1705181322570.1619-100000@iolanthe.rowland.org>
-References: <1495126097.3629.25.camel@localhost.localdomain>
+From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Subject: Re: [PATCH] scsi: remove useless variable assignment
+Date: Thu, 18 May 2017 12:41:07 -0500
+Message-ID: <20170518124107.Horde.TAwM83c0HSIrAfOVg_W7two@gator4166.hostgator.com>
+References: <20170518003043.GA5664@embeddedgus>
+ <1495082398.2840.14.camel@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8; format=flowed; DelSp=Yes
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:53722 "HELO
-        iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S1753638AbdERRh2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 May 2017 13:37:28 -0400
-In-Reply-To: <1495126097.3629.25.camel@localhost.localdomain>
+Received: from gateway20.websitewelcome.com ([192.185.46.107]:11855 "EHLO
+        gateway20.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932338AbdERRlM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 18 May 2017 13:41:12 -0400
+Received: from cm6.websitewelcome.com (cm6.websitewelcome.com [108.167.139.19])
+        by gateway20.websitewelcome.com (Postfix) with ESMTP id CF42F400D33EF
+        for <linux-scsi@vger.kernel.org>; Thu, 18 May 2017 12:41:09 -0500 (CDT)
+In-Reply-To: <1495082398.2840.14.camel@linux.vnet.ibm.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ewan D. Milne" <emilne@redhat.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, GeekGirl1 <my.e.mail1@verizon.net>
+To: James Bottomley <jejb@linux.vnet.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, 18 May 2017, Ewan D. Milne wrote:
+Hi James,
 
-> On Thu, 2017-05-18 at 11:34 -0400, Ewan D. Milne wrote:
-> > On Thu, 2017-05-18 at 10:35 -0400, Alan Stern wrote:
-> > > This is in reference to
-> > > 
-> > > 	https://bugzilla.redhat.com/show_bug.cgi?id=1351305
-> > > 
-> > > The problem is that some program (probably udisks2) periodically sends
-> > > the following ATA pass-through command to a USB-ATA bridge attached to
-> > > a Western Digital drive:
-> > > 
-> > > 	85062000 00000000 00000000 0000e500
-> > 
-> > According to T10 SAT-4 this is an ATA PASS-THROUGH(16) command, with
-> > PROTOCOL=3 (non-data), CK_COND=1, COMMAND=E5h (the ATA command).
-> > 
-> > > 
-> > > I don't know what this command does (some sort of reset?).  The command
-> > > fails and the device returns the following sense data:
-> > > 
-> > > 	72000000 0000000e 090c0000 00ff0000 00000000 0050
-> > > 
-> > > I don't know how to decode this -- I don't have copies of the relevant
-> > > documents.  Can anybody decode this for me?
-> > 
-> > This is a current descriptor format sense data wih a single
-> > ATA Status Return sense data descriptor (beginning at 8 bytes into
-> > the sense data buffer 090c...)  The relevant fields are COUNT=255 LBA=0
-> > and STATUS=50h (which I suspect is what is the interesting part).
-> > 
-> > > 
-> > > Anyway, the SCSI core treats it as a Hardware Error and puts warning
-> > > messages in the kernel log:
-> > > 
-> > > [17244.280612] sd 7:0:0:0: [sdd] tag#0 FAILED Result: hostbyte=DID_ERROR driverbyte=DRIVER_SENSE
-> > > [17244.280614] sd 7:0:0:0: [sdd] tag#0 Sense Key : Hardware Error [current] [descriptor] 
-> > > [17244.280616] sd 7:0:0:0: [sdd] tag#0 Add. Sense: No additional sense information
-> > > [17244.280618] sd 7:0:0:0: [sdd] tag#0 CDB: ATA command pass through(16) 85 06 20 00 00 00 00 00 00 00 00 00 00 00 e5 00
-> > > 
-> > > Is this really the right thing to do?  Could it be that we are failing 
-> > > to interpret this sense data correctly?
-> > 
-> > With the 72000000 0000000e 090c0000 00ff0000 00000000 0050 sense data
-> > buffer above scsi_sense_key_string() should have returned "No Sense" as
-> > the array value is 0.  Even if we somehow managed to fail to correctly
-> > interpret descriptor format sense vs. fixed format sense.
-> > 
-> > > 
-> > > Other commands provoke similar responses from the device, but without 
-> > > obnoxious log messages.  For example, the command:
-> > > 
-> > > 	85082e00 00000100 00000000 0000ec00
-> > > 
-> > > fails with the following sense data:
-> > > 
-> > > 	72000000 0000000e 090c0000 00000000 00000000 0050
-> > > 
-> > > and no output to the log.  I don't know why the behavior is different.  
-> > > There are other similar examples, with and without log messages.
-> > 
-> > It seems more likely that somehow there is a path where the wrong or
-> > uninitialized sshdr structure is being passed to the logging routine.
-> > 
-> > -Ewan
-> 
-> Oh, wait.  You said USB-ATA bridge.
-> 
-> There is this code in drivers/usb/storage/transport.c:
-> Perhaps this is responsible.  It is forcing the sense key to
-> HARDWARE_ERROR under certain conditions.  That would cause the
-> logging message you see to be output.
-> 
->                 /*                                                                                                                                                                                                 
->                  * We often get empty sense data.  This could indicate that                                                                                                                                        
->                  * everything worked or that there was an unspecified                                                                                                                                              
->                  * problem.  We have to decide which.                                                                                                                                                              
->                  */
->                 if (sshdr.sense_key == 0 && sshdr.asc == 0 && sshdr.ascq == 0 &&
->                     fm_ili == 0) {
->                         /*                                                                                                                                                                                         
->                          * If things are really okay, then let's show that.                                                                                                                                        
->                          * Zero out the sense buffer so the higher layers                                                                                                                                          
->                          * won't realize we did an unsolicited auto-sense.                                                                                                                                         
->                          */
->                         if (result == USB_STOR_TRANSPORT_GOOD) {
->                                 srb->result = SAM_STAT_GOOD;
->                                 srb->sense_buffer[0] = 0x0;
-> 
->                         /*                                                                                                                                                                                         
->                          * If there was a problem, report an unspecified                                                                                                                                           
->                          * hardware error to prevent the higher layers from                                                                                                                                        
->                          * entering an infinite retry loop.                                                                                                                                                        
->                          */
->                         } else {
->                                 srb->result = DID_ERROR << 16;
->                                 if ((sshdr.response_code & 0x72) == 0x72)
->                                         srb->sense_buffer[1] = HARDWARE_ERROR;
->                                 else
->                                         srb->sense_buffer[2] = HARDWARE_ERROR;
->                         }
->                 }
+Quoting James Bottomley <jejb@linux.vnet.ibm.com>:
 
-I had completely forgotten about this code.  :-(
+> On Wed, 2017-05-17 at 19:30 -0500, Gustavo A. R. Silva wrote:
+>> Remove this assignment once the value stored in variable _k_ is
+>> overwritten after a few lines.
+>>
+>> Addresses-Coverity-ID: 1226927
+>> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
+>> ---
+>>  drivers/scsi/qlogicfas408.c | 1 -
+>>  1 file changed, 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/qlogicfas408.c
+>> b/drivers/scsi/qlogicfas408.c
+>> index c3a9151..269440a 100644
+>> --- a/drivers/scsi/qlogicfas408.c
+>> +++ b/drivers/scsi/qlogicfas408.c
+>> @@ -329,7 +329,6 @@ static unsigned int ql_pcmd(struct scsi_cmnd
+>> *cmd)
+>>  		 */
+>>  		if ((k = ql_wai(priv)))
+>>  			return (k << 16);
+>> -		k = inb(qbase + 5);	/* should be 0x10, bus
+>> service */
+>
+> That doesn't look right to me.  inb() is a statement which has an
+> effect on the I/O device regardless of whether the returned value is
+> used or discarded.  In this case I think it's being used to clear
+> pending interrupts, so removing it will likely cause a phase error.
+>
 
-Looks like you put your finger on the source of the problem.  So if the 
-device sends back essentially empty sense data (SK = No Sense, ASC = 
-ASCQ = 0), but the USB transport indicates command failure, how should 
-we inform the SCSI core in a way that won't cause infinite retries or 
-obnoxious log messages?
+You are right, I get it.
 
-Should we be doing a better job of detecting empty sense data -- that 
-is, do we need to check for non-empty ATA status?
+In this case I think a patch to ignore the return value could be applied:
 
-Or has the SCSI core improved so that it no longer does infinite
-retries (see commit f1a0743bc0e7 "USB: storage: When a device returns
-no sense data, call it a Hardware Error" and Bugzilla entry #14118),
-meaning that this code can be removed entirely?
+index c3a9151..8f5339a 100644
+--- a/drivers/scsi/qlogicfas408.c
++++ b/drivers/scsi/qlogicfas408.c
+@@ -329,7 +329,7 @@ static unsigned int ql_pcmd(struct scsi_cmnd *cmd)
+                  */
+                 if ((k = ql_wai(priv)))
+                         return (k << 16);
+-               k = inb(qbase + 5);     /* should be 0x10, bus service */
++               inb(qbase + 5); /* should be 0x10, bus service */
+         }
 
-Alan Stern
+What do you think?
+
+Thank you for the clarification.
+--
+Gustavo A. R. Silva
