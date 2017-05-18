@@ -1,26 +1,41 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] scsi: zero per-cmd driver data for each MQ I/O
-Date: Wed, 17 May 2017 23:54:54 -0700
-Message-ID: <20170518065454.GA25180@infradead.org>
-References: <MWHPR03MB31361482F0BAE79275957D63CEE10@MWHPR03MB3136.namprd03.prod.outlook.com>
- <1494892845.2567.14.camel@sandisk.com>
- <MWHPR03MB3136DEB8FD09EDDF7CDB8BF5CEE60@MWHPR03MB3136.namprd03.prod.outlook.com>
- <1495062317.2679.1.camel@sandisk.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] scsi: csiostor: fix use after free in
+ csio_hw_use_fwconfig()
+Date: Thu, 18 May 2017 09:00:12 +0200
+Message-ID: <db1ac799-d614-4e7d-7fcc-1021cf70a8ba@suse.de>
+References: <1495033243-20262-1-git-send-email-varun@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1495062317.2679.1.camel@sandisk.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "longli@microsoft.com" <longli@microsoft.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "sthemmin@microsoft.com" <sthemmin@microsoft.com>, "kys@microsoft.com" <kys@microsoft.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:52296 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752075AbdERHAO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 18 May 2017 03:00:14 -0400
+In-Reply-To: <1495033243-20262-1-git-send-email-varun@chelsio.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Varun Prakash <varun@chelsio.com>, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, indranil@chelsio.com, rajesh.kumar@chelsio.com
 
-On Wed, May 17, 2017 at 11:05:18PM +0000, Bart Van Assche wrote:
-> Thank you for the feedback. I'm working on a patch series that merges the scsi-sq
-> and scsi-mq code paths for command initialization and that should fix the bug you
-> encountered.
+On 05/17/2017 05:00 PM, Varun Prakash wrote:
+> mbp pointer is passed to csio_hw_validate_caps() so call
+> mempool_free() after calling csio_hw_validate_caps().
+> 
+> Signed-off-by: Varun Prakash <varun@chelsio.com>
+> ---
 
-While that sounds great (I tried it a while ago but gave up due to
-priorities) I think we should merge this patch as-is and backport it
-to stable for now and rebase your series on top of it.
+Fixes: 541c571fa2fd ("csiostor:Use firmware version from
+cxgb4/t4fw_version.h")
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+
+Thanks,
+	Johannes
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
