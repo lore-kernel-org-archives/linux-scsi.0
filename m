@@ -1,38 +1,37 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] ses: fix error message in ses_intf_add()
-Date: Wed, 17 May 2017 20:18:21 -0400
-Message-ID: <yq137c381bm.fsf@oracle.com>
-References: <1495026008-25704-1-git-send-email-mlombard@redhat.com>
-        <1495028486.3629.10.camel@localhost.localdomain>
+Subject: Re: [PATCH] lpfc: Fix NULL pointer dereference during PCI error recovery
+Date: Wed, 17 May 2017 20:21:04 -0400
+Message-ID: <yq1y3tv6mmn.fsf@oracle.com>
+References: <20170517220217.28337-1-gpiccoli@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:33325 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:33948 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753218AbdERAS3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2017 20:18:29 -0400
-In-Reply-To: <1495028486.3629.10.camel@localhost.localdomain> (Ewan D. Milne's
-        message of "Wed, 17 May 2017 09:41:26 -0400")
+        with ESMTP id S1753845AbdERAVR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 May 2017 20:21:17 -0400
+In-Reply-To: <20170517220217.28337-1-gpiccoli@linux.vnet.ibm.com> (Guilherme
+        G. Piccoli's message of "Wed, 17 May 2017 19:02:17 -0300")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ewan D. Milne" <emilne@redhat.com>
-Cc: Maurizio Lombardi <mlombard@redhat.com>, linux-scsi@vger.kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, raphasil@linux.vnet.ibm.com, james.smart@broadcom.com, dick.kennedy@broadcom.com, jsmart2021@gmail.com
 
 
-Ewan,
+Guilherme,
 
-> This looks OK but I think we should consider suppressing these
-> messages.  There are a lot of devices that return page 0 instead of
-> the correct page, we should either say something like "enclosure
-> services not supported", or else work with what we get instead of
-> logging a message on every device probe that make it sound like
-> the device is failing.
+> Recent commit on patchset "lpfc updates for 11.2.0.14" fixed an issue
+> about dereferencing a NULL pointer on port reset. The specific commit,
+> named "lpfc: Fix system crash when port is reset.", is missing a check
+> against NULL pointer on lpfc_els_flush_cmd() though.
+>
+> Since we destroy the queues on adapter resets, like in PCI error
+> recovery path, we need the validation present on this patch in order
+> to avoid a NULL pointer dereference when trying to flush commands of
+> ELS wq, after it has been destroyed (which would lead to a kernel
+> oops).
 
-I agree.
-
-> I've received several complaints about this.
-
-Me too. There appears to be a ton of bad devices out there.
+Applied to 4.12/scsi-fixes. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
