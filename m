@@ -1,74 +1,29 @@
-From: <armiksanaye@gmail.com>
-Subject: (unknown)
-Date: Sun, 21 May 2017 20:35:14 -0000
-Message-ID: <149539891400.6150.3419696467405538863@zaural.ru>
+From: "Mr Albert Yang" <alber.yang22@gmail.com>
+Subject: Viable partnership request.
+Date: Thu, 18 May 2017 17:06:52 +0100
+Message-ID: <20170518160654.29770A83734@balva.myphotos.cc>
+Reply-To: alber.yang222@gmail.com
 Mime-Version: 1.0
-Content-Type: application/zip; name="66504.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ws37.252.50.zone94.zaural.ru ([94.50.252.37]:45620 "HELO
-        zaural.ru" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-        id S932069AbdEUUfS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 21 May 2017 16:35:18 -0400
-Content-Disposition: attachment
-Subject: 
+Received: from 74.149.75.80.abo.tutor.fr ([80.75.149.74]:4671 "EHLO
+        balva.myphotos.cc" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751309AbdEUVE7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 21 May 2017 17:04:59 -0400
+Received: from user-PC (69-7-0-18.meganet.net [69.7.0.18])
+        (Authenticated sender: root)
+        by balva.myphotos.cc (Postfix) with ESMTPA id 29770A83734
+        for <linux-scsi@vger.kernel.org>; Thu, 18 May 2017 18:06:52 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-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
+Compliment of the day,
+
+
+I have access to very vital information that can be used to move a huge amount of money . I have done my homework very well and i have the machineries in place to get it done since I am still in active service. If it was possible for me to do it alone I would not have bothered contacting you, ultimately I need a honest foreigner to play an important role in the completion of this business deal.
+
+
+Regards,
+Albert.
