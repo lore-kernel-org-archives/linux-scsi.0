@@ -1,7 +1,7 @@
 From: Stephen Hemminger <stephen@networkplumber.org>
-Subject: [PATCH 2/2] storvsc: remove unnecessary channel inbound lock
-Date: Thu, 18 May 2017 09:18:12 -0700
-Message-ID: <20170518161812.14124-3-sthemmin@microsoft.com>
+Subject: [PATCH 1/2] storvsc: use in place iterator function
+Date: Thu, 18 May 2017 09:18:11 -0700
+Message-ID: <20170518161812.14124-2-sthemmin@microsoft.com>
 References: <20170518161812.14124-1-sthemmin@microsoft.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,71 +21,80 @@ To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, kys@microsoft.com
 Cc: devel@linuxdriverproject.org, Stephen Hemminger <sthemmin@microsoft.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-In storvsc driver, inbound messages do not go through inbound lock.
-The only effect of this lock was is to provide a barrier for
-connect and remove logic.
+In 4.12-rc1, new functions were added to support iterating
+over elements in the vmbus event ring. This patch uses them to
+simplify the ring buffer handling in virtual SCSI driver as well.
 
 Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
 ---
- drivers/hv/channel_mgmt.c  | 1 -
- drivers/scsi/storvsc_drv.c | 8 +++-----
- include/linux/hyperv.h     | 1 -
- 3 files changed, 3 insertions(+), 7 deletions(-)
+ drivers/scsi/storvsc_drv.c | 44 +++++++++++++++-----------------------------
+ 1 file changed, 15 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/hv/channel_mgmt.c b/drivers/hv/channel_mgmt.c
-index 735f9363f2e4..685572bae1f0 100644
---- a/drivers/hv/channel_mgmt.c
-+++ b/drivers/hv/channel_mgmt.c
-@@ -332,7 +332,6 @@ static struct vmbus_channel *alloc_channel(void)
- 	if (!channel)
- 		return NULL;
- 
--	spin_lock_init(&channel->inbound_lock);
- 	spin_lock_init(&channel->lock);
- 
- 	INIT_LIST_HEAD(&channel->sc_list);
 diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index f8a1649e4c63..8d955db6424f 100644
+index ae966dc3bbc5..f8a1649e4c63 100644
 --- a/drivers/scsi/storvsc_drv.c
 +++ b/drivers/scsi/storvsc_drv.c
-@@ -1206,13 +1206,13 @@ static int storvsc_connect_to_vsp(struct hv_device *device, u32 ring_size,
- static int storvsc_dev_remove(struct hv_device *device)
+@@ -1149,13 +1149,9 @@ static void storvsc_on_receive(struct storvsc_device *stor_device,
+ static void storvsc_on_channel_callback(void *context)
  {
+ 	struct vmbus_channel *channel = (struct vmbus_channel *)context;
++	const struct vmpacket_descriptor *desc;
+ 	struct hv_device *device;
  	struct storvsc_device *stor_device;
--	unsigned long flags;
+-	u32 bytes_recvd;
+-	u64 request_id;
+-	unsigned char packet[ALIGN(sizeof(struct vstor_packet), 8)];
+-	struct storvsc_cmd_request *request;
+-	int ret;
  
- 	stor_device = hv_get_drvdata(device);
+ 	if (channel->primary_channel != NULL)
+ 		device = channel->primary_channel->device_obj;
+@@ -1166,32 +1162,22 @@ static void storvsc_on_channel_callback(void *context)
+ 	if (!stor_device)
+ 		return;
  
--	spin_lock_irqsave(&device->channel->inbound_lock, flags);
- 	stor_device->destroy = true;
--	spin_unlock_irqrestore(&device->channel->inbound_lock, flags);
+-	do {
+-		ret = vmbus_recvpacket(channel, packet,
+-				       ALIGN((sizeof(struct vstor_packet) -
+-					     vmscsi_size_delta), 8),
+-				       &bytes_recvd, &request_id);
+-		if (ret == 0 && bytes_recvd > 0) {
+-
+-			request = (struct storvsc_cmd_request *)
+-					(unsigned long)request_id;
+-
+-			if ((request == &stor_device->init_request) ||
+-			    (request == &stor_device->reset_request)) {
+-
+-				memcpy(&request->vstor_packet, packet,
+-				       (sizeof(struct vstor_packet) -
+-					vmscsi_size_delta));
+-				complete(&request->wait_event);
+-			} else {
+-				storvsc_on_receive(stor_device,
+-						(struct vstor_packet *)packet,
+-						request);
+-			}
++	foreach_vmbus_pkt(desc, channel) {
++		void *packet = hv_pkt_data(desc);
++		struct storvsc_cmd_request *request;
 +
-+	/* Make sure flag is set before waiting */
-+	wmb();
++		request = (struct storvsc_cmd_request *)
++			((unsigned long)desc->trans_id);
++
++		if (request == &stor_device->init_request ||
++		    request == &stor_device->reset_request) {
++			memcpy(&request->vstor_packet, packet,
++			       (sizeof(struct vstor_packet) - vmscsi_size_delta));
++			complete(&request->wait_event);
+ 		} else {
+-			break;
++			storvsc_on_receive(stor_device, packet, request);
+ 		}
+-	} while (1);
++	}
+ }
  
- 	/*
- 	 * At this point, all outbound traffic should be disable. We
-@@ -1229,9 +1229,7 @@ static int storvsc_dev_remove(struct hv_device *device)
- 	 * we have drained - to drain the outgoing packets, we need to
- 	 * allow incoming packets.
- 	 */
--	spin_lock_irqsave(&device->channel->inbound_lock, flags);
- 	hv_set_drvdata(device, NULL);
--	spin_unlock_irqrestore(&device->channel->inbound_lock, flags);
- 
- 	/* Close the channel */
- 	vmbus_close(device->channel);
-diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-index e09fc8290c2f..b7d7bbec74e0 100644
---- a/include/linux/hyperv.h
-+++ b/include/linux/hyperv.h
-@@ -744,7 +744,6 @@ struct vmbus_channel {
- 	u32 ringbuffer_pagecount;
- 	struct hv_ring_buffer_info outbound;	/* send to parent */
- 	struct hv_ring_buffer_info inbound;	/* receive from parent */
--	spinlock_t inbound_lock;
- 
- 	struct vmbus_close_msg close_msg;
- 
+ static int storvsc_connect_to_vsp(struct hv_device *device, u32 ring_size,
 -- 
 2.11.0
