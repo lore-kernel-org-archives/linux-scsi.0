@@ -1,16 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 06/25] qla2xxx: Reduce excessive debug print during 27xx fwdump.
-Date: Fri, 19 May 2017 14:53:25 -0700
-Message-ID: <20170519215344.2168-7-himanshu.madhani@cavium.com>
+Subject: [PATCH 10/25] qla2xxx: Prevent null pointer dereference of ctx.
+Date: Fri, 19 May 2017 14:53:29 -0700
+Message-ID: <20170519215344.2168-11-himanshu.madhani@cavium.com>
 References: <20170519215344.2168-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0041.outbound.protection.outlook.com ([104.47.36.41]:5734
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-dm3nam03on0078.outbound.protection.outlook.com ([104.47.41.78]:61312
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1756806AbdESVyF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 19 May 2017 17:54:05 -0400
+        id S1756731AbdESVyH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 19 May 2017 17:54:07 -0400
 In-Reply-To: <20170519215344.2168-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,89 +19,163 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Joe Carnuccio <joe.carnuccio@cavium.com>
 
-Retain loop test for fwdump length exceeding buffer length.
+Fixes following signature in the stack trace:
+
+BUG: unable to handle kernel NULL pointer dereference at 0000000000000374
+IP: [<ffffffffa06ec8eb>] qla2x00_sp_free_dma+0xeb/0x2a0 [qla2xxx]
 
 Cc: <stable@vger.kernel.org>
 Signed-off-by: Joe Carnuccio <joe.carnuccio@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c |  8 ++++----
- drivers/scsi/qla2xxx/qla_tmpl.c | 16 +++++++++-------
- 2 files changed, 13 insertions(+), 11 deletions(-)
+ drivers/scsi/qla2xxx/qla_inline.h | 26 +++++++-------------------
+ drivers/scsi/qla2xxx/qla_os.c     | 30 +++++++++++++++++++-----------
+ drivers/scsi/qla2xxx/qla_target.c |  8 +++++---
+ 3 files changed, 31 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index f6130e8b1ca1..eaaf73fd23d9 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -6356,8 +6356,8 @@ qla24xx_load_risc_flash(scsi_qla_host_t *vha, uint32_t *srisc_addr,
- 	    "-> template size %x bytes\n", dlen);
- 	if (dlen > risc_size * sizeof(*dcode)) {
- 		ql_log(ql_log_warn, vha, 0x0167,
--		    "Failed fwdump template exceeds array by %x bytes\n",
--		    (uint32_t)(dlen - risc_size * sizeof(*dcode)));
-+		    "Failed fwdump template exceeds array by %lx bytes\n",
-+		    dlen - risc_size * sizeof(*dcode));
- 		goto default_template;
- 	}
- 	ha->fw_dump_template_len = dlen;
-@@ -6658,8 +6658,8 @@ qla24xx_load_risc_blob(scsi_qla_host_t *vha, uint32_t *srisc_addr)
- 	    "-> template size %x bytes\n", dlen);
- 	if (dlen > risc_size * sizeof(*fwcode)) {
- 		ql_log(ql_log_warn, vha, 0x0177,
--		    "Failed fwdump template exceeds array by %x bytes\n",
--		    (uint32_t)(dlen - risc_size * sizeof(*fwcode)));
-+		    "Failed fwdump template exceeds array by %lx bytes\n",
-+		    dlen - risc_size * sizeof(*fwcode));
- 		goto default_template;
- 	}
- 	ha->fw_dump_template_len = dlen;
-diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_tmpl.c
-index 8a58ef3adab4..2f2633a8c4ad 100644
---- a/drivers/scsi/qla2xxx/qla_tmpl.c
-+++ b/drivers/scsi/qla2xxx/qla_tmpl.c
-@@ -219,8 +219,6 @@ qla27xx_skip_entry(struct qla27xx_fwdt_entry *ent, void *buf)
- {
- 	if (buf)
- 		ent->hdr.driver_flags |= DRIVER_FLAG_SKIP_ENTRY;
--	ql_dbg(ql_dbg_misc + ql_dbg_verbose, NULL, 0xd011,
--	    "Skipping entry %d\n", ent->hdr.entry_type);
+diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla_inline.h
+index 66df6cec59da..c61a6a871c8e 100644
+--- a/drivers/scsi/qla2xxx/qla_inline.h
++++ b/drivers/scsi/qla2xxx/qla_inline.h
+@@ -129,28 +129,16 @@ qla2x00_clear_loop_id(fc_port_t *fcport) {
  }
  
- static int
-@@ -818,6 +816,8 @@ qla27xx_walk_template(struct scsi_qla_host *vha,
- 	ql_dbg(ql_dbg_misc, vha, 0xd01a,
- 	    "%s: entry count %lx\n", __func__, count);
- 	while (count--) {
-+		if (buf && *len >= vha->hw->fw_dump_len)
-+			break;
- 		if (qla27xx_find_entry(ent->hdr.entry_type)(vha, ent, buf, len))
- 			break;
- 		ent = qla27xx_next_entry(ent);
-@@ -825,18 +825,20 @@ qla27xx_walk_template(struct scsi_qla_host *vha,
+ static inline void
+-qla2x00_clean_dsd_pool(struct qla_hw_data *ha, srb_t *sp,
+-	struct qla_tgt_cmd *tc)
++qla2x00_clean_dsd_pool(struct qla_hw_data *ha, struct crc_context *ctx)
+ {
+-	struct dsd_dma *dsd_ptr, *tdsd_ptr;
+-	struct crc_context *ctx;
+-
+-	if (sp)
+-		ctx = (struct crc_context *)GET_CMD_CTX_SP(sp);
+-	else if (tc)
+-		ctx = (struct crc_context *)tc->ctx;
+-	else {
+-		BUG();
+-		return;
+-	}
++	struct dsd_dma *dsd, *tdsd;
  
- 	if (count)
- 		ql_dbg(ql_dbg_misc, vha, 0xd018,
--		    "%s: residual count (%lx)\n", __func__, count);
-+		    "%s: entry residual count (%lx)\n", __func__, count);
- 
- 	if (ent->hdr.entry_type != ENTRY_TYPE_TMP_END)
- 		ql_dbg(ql_dbg_misc, vha, 0xd019,
--		    "%s: missing end (%lx)\n", __func__, count);
-+		    "%s: missing end entry (%lx)\n", __func__, count);
- 
--	ql_dbg(ql_dbg_misc, vha, 0xd01b,
--	    "%s: len=%lx\n", __func__, *len);
-+	if (buf && *len != vha->hw->fw_dump_len)
-+		ql_dbg(ql_dbg_misc, vha, 0xd01b,
-+		    "%s: length=%#lx residual=%+ld\n",
-+		    __func__, *len, vha->hw->fw_dump_len - *len);
- 
- 	if (buf) {
- 		ql_log(ql_log_warn, vha, 0xd015,
--		    "Firmware dump saved to temp buffer (%ld/%p)\n",
-+		    "Firmware dump saved to temp buffer (%lu/%p)\n",
- 		    vha->host_no, vha->hw->fw_dump);
- 		qla2x00_post_uevent_work(vha, QLA_UEVENT_CODE_FW_DUMP);
+ 	/* clean up allocated prev pool */
+-	list_for_each_entry_safe(dsd_ptr, tdsd_ptr,
+-	    &ctx->dsd_list, list) {
+-		dma_pool_free(ha->dl_dma_pool, dsd_ptr->dsd_addr,
+-		    dsd_ptr->dsd_list_dma);
+-		list_del(&dsd_ptr->list);
+-		kfree(dsd_ptr);
++	list_for_each_entry_safe(dsd, tdsd, &ctx->dsd_list, list) {
++		dma_pool_free(ha->dl_dma_pool, dsd->dsd_addr,
++		    dsd->dsd_list_dma);
++		list_del(&dsd->list);
++		kfree(dsd);
  	}
+ 	INIT_LIST_HEAD(&ctx->dsd_list);
+ }
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 1c7957903283..c8282a1ab6dc 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -630,29 +630,34 @@ qla2x00_sp_free_dma(void *ptr)
+ 		sp->flags &= ~SRB_CRC_PROT_DMA_VALID;
+ 	}
+ 
++	if (!ctx)
++		goto end;
++
+ 	if (sp->flags & SRB_CRC_CTX_DSD_VALID) {
+ 		/* List assured to be having elements */
+-		qla2x00_clean_dsd_pool(ha, sp, NULL);
++		qla2x00_clean_dsd_pool(ha, ctx);
+ 		sp->flags &= ~SRB_CRC_CTX_DSD_VALID;
+ 	}
+ 
+ 	if (sp->flags & SRB_CRC_CTX_DMA_VALID) {
+-		dma_pool_free(ha->dl_dma_pool, ctx,
+-		    ((struct crc_context *)ctx)->crc_ctx_dma);
++		struct crc_context *ctx0 = ctx;
++
++		dma_pool_free(ha->dl_dma_pool, ctx0, ctx0->crc_ctx_dma);
+ 		sp->flags &= ~SRB_CRC_CTX_DMA_VALID;
+ 	}
+ 
+ 	if (sp->flags & SRB_FCP_CMND_DMA_VALID) {
+-		struct ct6_dsd *ctx1 = (struct ct6_dsd *)ctx;
++		struct ct6_dsd *ctx1 = ctx;
+ 
+ 		dma_pool_free(ha->fcp_cmnd_dma_pool, ctx1->fcp_cmnd,
+-			ctx1->fcp_cmnd_dma);
++		    ctx1->fcp_cmnd_dma);
+ 		list_splice(&ctx1->dsd_list, &ha->gbl_dsd_list);
+ 		ha->gbl_dsd_inuse -= ctx1->dsd_use_cnt;
+ 		ha->gbl_dsd_avail += ctx1->dsd_use_cnt;
+ 		mempool_free(ctx1, ha->ctx_mempool);
+ 	}
+ 
++end:
+ 	CMD_SP(cmd) = NULL;
+ 	qla2x00_rel_sp(sp);
+ }
+@@ -699,21 +704,24 @@ qla2xxx_qpair_sp_free_dma(void *ptr)
+ 		sp->flags &= ~SRB_CRC_PROT_DMA_VALID;
+ 	}
+ 
++	if (!ctx)
++		goto end;
++
+ 	if (sp->flags & SRB_CRC_CTX_DSD_VALID) {
+ 		/* List assured to be having elements */
+-		qla2x00_clean_dsd_pool(ha, sp, NULL);
++		qla2x00_clean_dsd_pool(ha, ctx);
+ 		sp->flags &= ~SRB_CRC_CTX_DSD_VALID;
+ 	}
+ 
+ 	if (sp->flags & SRB_CRC_CTX_DMA_VALID) {
+-		dma_pool_free(ha->dl_dma_pool, ctx,
+-		    ((struct crc_context *)ctx)->crc_ctx_dma);
++		struct crc_context *ctx0 = ctx;
++
++		dma_pool_free(ha->dl_dma_pool, ctx, ctx0->crc_ctx_dma);
+ 		sp->flags &= ~SRB_CRC_CTX_DMA_VALID;
+ 	}
+ 
+ 	if (sp->flags & SRB_FCP_CMND_DMA_VALID) {
+-		struct ct6_dsd *ctx1 = (struct ct6_dsd *)ctx;
+-
++		struct ct6_dsd *ctx1 = ctx;
+ 		dma_pool_free(ha->fcp_cmnd_dma_pool, ctx1->fcp_cmnd,
+ 		    ctx1->fcp_cmnd_dma);
+ 		list_splice(&ctx1->dsd_list, &ha->gbl_dsd_list);
+@@ -721,7 +729,7 @@ qla2xxx_qpair_sp_free_dma(void *ptr)
+ 		ha->gbl_dsd_avail += ctx1->dsd_use_cnt;
+ 		mempool_free(ctx1, ha->ctx_mempool);
+ 	}
+-
++end:
+ 	CMD_SP(cmd) = NULL;
+ 	qla2xxx_rel_qpair_sp(sp->qpair, sp);
+ }
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 4c64f8e3f9b6..a2e17a5794ab 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -2246,11 +2246,13 @@ static void qlt_unmap_sg(struct scsi_qla_host *vha, struct qla_tgt_cmd *cmd)
+ 		pci_unmap_sg(ha->pdev, cmd->prot_sg, cmd->prot_sg_cnt,
+ 			cmd->dma_data_direction);
+ 
++	if (!cmd->ctx)
++		return;
++
+ 	if (cmd->ctx_dsd_alloced)
+-		qla2x00_clean_dsd_pool(ha, NULL, cmd);
++		qla2x00_clean_dsd_pool(ha, cmd->ctx);
+ 
+-	if (cmd->ctx)
+-		dma_pool_free(ha->dl_dma_pool, cmd->ctx, cmd->ctx->crc_ctx_dma);
++	dma_pool_free(ha->dl_dma_pool, cmd->ctx, cmd->ctx->crc_ctx_dma);
+ }
+ 
+ static int qlt_check_reserve_free_req(struct scsi_qla_host *vha,
 -- 
 2.12.0
