@@ -1,34 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: libcxgbi: fix skb use after free
-Date: Thu, 18 May 2017 21:36:59 -0400
-Message-ID: <yq1lgpt4og4.fsf@oracle.com>
-References: <1494942824-2252-1-git-send-email-varun@chelsio.com>
+Subject: Re: [PATCH] scsi: csiostor: fix use after free in csio_hw_use_fwconfig()
+Date: Thu, 18 May 2017 21:38:17 -0400
+Message-ID: <yq1h90h4ody.fsf@oracle.com>
+References: <1495033243-20262-1-git-send-email-varun@chelsio.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:24772 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932317AbdESBhJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 May 2017 21:37:09 -0400
-In-Reply-To: <1494942824-2252-1-git-send-email-varun@chelsio.com> (Varun
-        Prakash's message of "Tue, 16 May 2017 19:23:44 +0530")
+Received: from aserp1040.oracle.com ([141.146.126.69]:46252 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933253AbdESBi2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 May 2017 21:38:28 -0400
+In-Reply-To: <1495033243-20262-1-git-send-email-varun@chelsio.com> (Varun
+        Prakash's message of "Wed, 17 May 2017 20:30:43 +0530")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Varun Prakash <varun@chelsio.com>
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, indranil@chelsio.com
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, indranil@chelsio.com, rajesh.kumar@chelsio.com
 
 
-> skb->data is assigned to task->hdr in cxgbi_conn_alloc_pdu(),
-> skb gets freed after tx but task->hdr is still dereferenced in
-> iscsi_tcp_task_xmit() to avoid this call skb_get() after allocating
-> skb and free the skb in cxgbi_cleanup_task() or before allocating new
-> skb in cxgbi_conn_alloc_pdu().
+Varun,
 
-Somebody please review!
+> mbp pointer is passed to csio_hw_validate_caps() so call
+> mempool_free() after calling csio_hw_validate_caps().
 
-https://patchwork.kernel.org/patch/9729239/
-
-Thanks!
+Applied to 4.12/scsi-fixes. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
