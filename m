@@ -1,72 +1,75 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 195285] qla2xxx FW immediatly crashing after target start
-Date: Fri, 19 May 2017 16:44:41 +0000
-Message-ID: <bug-195285-11613-vvIdHiCKYU@https.bugzilla.kernel.org/>
-References: <bug-195285-11613@https.bugzilla.kernel.org/>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: [PATCH 17/18] scsi: Consolidate more initialization code
+Date: Fri, 19 May 2017 11:30:15 -0700
+Message-ID: <20170519183016.12646-18-bart.vanassche@sandisk.com>
+References: <20170519183016.12646-1-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:60480 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751208AbdESQom (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 19 May 2017 12:44:42 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id CFDB1284A6
-        for <linux-scsi@vger.kernel.org>; Fri, 19 May 2017 16:44:41 +0000 (UTC)
-In-Reply-To: <bug-195285-11613@https.bugzilla.kernel.org/>
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:60868 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755705AbdESSaZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 May 2017 14:30:25 -0400
+In-Reply-To: <20170519183016.12646-1-bart.vanassche@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=195285
+Initialize struct scsi_cmnd.request from inside scsi_initialize_rq()
+instead of every time a request is prepared. Note: moving the tag
+initialization into scsi_initialize_rq() is not possible because
+the single-queue block layer only assigns a tag to a request after
+a request has been started.
 
---- Comment #12 from himanshu.madhani@cavium.com (himanshu.madhani@qlogic.com) ---
-(In reply to loberman from comment #11)
-> ----- Original Message -----
-> > From: "Laurence Oberman" <loberman@redhat.com>
-> > To: bugzilla-daemon@bugzilla.kernel.org
-> > Cc: linux-scsi@kernel.org
-> > Sent: Thursday, May 18, 2017 2:11:43 PM
-> > Subject: Re: [Bug 195285] qla2xxx FW immediatly crashing after target start
-> > 
-> > 
-> > 
-> > ----- Original Message -----
-> > > From: bugzilla-daemon@bugzilla.kernel.org
-> > > To: linux-scsi@kernel.org
-> > > Sent: Thursday, May 18, 2017 2:09:51 PM
-> > > Subject: [Bug 195285] qla2xxx FW immediatly crashing after target start
-> > > 
-> > > https://bugzilla.kernel.org/show_bug.cgi?id=195285
-> > > 
-> > > --- Comment #6 from himanshu.madhani@cavium.com
-> > > (himanshu.madhani@qlogic.com)
-> > > ---
-> > > Hi Anthony, Laurence,
-> > > 
-> > > Can you try attached patch to see if it works for you?
-> > > 
-> > > if Yes, I'll send out to SCSI mailing list to be included into upstream.
-> > > 
-> > > Thanks,
-> > > Himanshu
-> > > 
-> > > --
-> > > You are receiving this mail because:
-> > > You are watching the assignee of the bug.
-> > > 
-> > Absolutely, and thanks
-> > Regards
-> > Laurence
-> 
-> Its working fine for me too now
-> Thanks!!
-> Laurence
+Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/scsi_error.c | 1 -
+ drivers/scsi/scsi_lib.c   | 4 +---
+ 2 files changed, 1 insertion(+), 4 deletions(-)
 
-Thanks Laurence. Appreciate your effort on testing this out.
-
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 2b7221bc0f32..7c2aba4b167a 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -2293,7 +2293,6 @@ scsi_ioctl_reset(struct scsi_device *dev, int __user *arg)
+ 	blk_rq_init(dev->request_queue, rq);
+ 
+ 	scmd = (struct scsi_cmnd *)(rq + 1);
+-	scmd->request = rq;
+ 	scmd->cmnd = scsi_req(rq)->cmd;
+ 
+ 	scmd->scsi_done		= scsi_reset_provider_done_command;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index e0c4481cb943..5431d114c897 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1166,6 +1166,7 @@ static void scsi_initialize_rq(struct request *rq)
+ 	cmd->device = dev;
+ 	cmd->sense_buffer = buf;
+ 	cmd->prot_sdb = prot;
++	cmd->request = rq;
+ 	INIT_DELAYED_WORK(&cmd->abort_work, scmd_eh_abort_handler);
+ 	cmd->jiffies_at_alloc = jiffies;
+ }
+@@ -1345,7 +1346,6 @@ static int scsi_prep_fn(struct request_queue *q, struct request *req)
+ 	}
+ 
+ 	cmd->tag = req->tag;
+-	cmd->request = req;
+ 	cmd->prot_op = SCSI_PROT_NORMAL;
+ 
+ 	ret = scsi_setup_cmnd(sdev, req);
+@@ -1865,8 +1865,6 @@ static int scsi_mq_prep_fn(struct request *req)
+ 
+ 	req->special = cmd;
+ 
+-	cmd->request = req;
+-
+ 	cmd->tag = req->tag;
+ 	cmd->prot_op = SCSI_PROT_NORMAL;
+ 
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+2.12.2
