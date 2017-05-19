@@ -1,38 +1,40 @@
-From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] scsi: libiscsi: use kvzalloc for iscsi_pool_init
-Date: Thu, 18 May 2017 21:40:37 -0400
-Message-ID: <yq1d1b54oa2.fsf@oracle.com>
-References: <1495052514-3327-1-git-send-email-kyle.fortin@oracle.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v2] scsi: zero per-cmd private driver data for each MQ I/O
+Date: Thu, 18 May 2017 21:45:24 -0400
+Message-ID: <yq18tlt4o23.fsf@oracle.com>
+References: <1495147205-28778-1-git-send-email-longli@exchange.microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <open-iscsi+bncBDVIJONZ3YDRBG427HEAKGQEOOQVXSY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <1495052514-3327-1-git-send-email-kyle.fortin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org> (Kyle
-	Fortin's message of "Wed, 17 May 2017 16:21:54 -0400")
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: Kyle Fortin <kyle.fortin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: lduncan-IBi9RG/b67k@public.gmane.org, cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, joe.slember-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, lance.hartmann-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:47777 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755450AbdESBqV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 May 2017 21:46:21 -0400
+In-Reply-To: <1495147205-28778-1-git-send-email-longli@exchange.microsoft.com>
+        (Long Li's message of "Thu, 18 May 2017 15:40:05 -0700")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Long Li <longli@exchange.microsoft.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, KY Srinivasan <kys@microsoft.com>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Christoph Hellwig <hch@infradead.org>, Stephen Hemminger <sthemmin@microsoft.com>, Long Li <longli@microsoft.com>, stable@vger.kernel.org
 
 
-Kyle,
+Long,
 
-> Use kvzalloc for iscsi_pool in iscsi_pool_init.
+> In lower layer driver's (LLD) scsi_host_template, the driver may
+> optionally ask SCSI to allocate its private driver memory for each
+> command, by specifying cmd_size. This memory is allocated at the end
+> of scsi_cmnd by SCSI.  Later when SCSI queues a command, the LLD can
+> use scsi_cmd_priv to get to its private data.
+>  
+> Some LLD, e.g. hv_storvsc, doesn't clear its private data before
+> use. In this case, the LLD may get to stale or uninitialized data in
+> its private driver memory. This may result in unexpected driver and
+> hardware behavior.
+>
+> Fix this problem by also zeroing the private driver memory before
+> passing them to LLD.
 
-Applied to 4.13/scsi-queue. Thank you!
+Applied to 4.12/scsi-fixes. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
