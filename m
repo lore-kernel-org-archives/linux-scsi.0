@@ -1,40 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] scsi: zero per-cmd private driver data for each MQ I/O
-Date: Thu, 18 May 2017 21:45:24 -0400
-Message-ID: <yq18tlt4o23.fsf@oracle.com>
-References: <1495147205-28778-1-git-send-email-longli@exchange.microsoft.com>
+Subject: Re: [PATCH] scsi: smartpqi: mark PM functions as __maybe_unused
+Date: Thu, 18 May 2017 21:53:37 -0400
+Message-ID: <yq14lwh4noe.fsf@oracle.com>
+References: <20170518083243.2927102-1-arnd@arndb.de>
+        <CAK8P3a2KD5aJanDcaRUHi2GeotJ_pfC_UY+KrWdYua1_k3GYow@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:47777 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:49450 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755450AbdESBqV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 May 2017 21:46:21 -0400
-In-Reply-To: <1495147205-28778-1-git-send-email-longli@exchange.microsoft.com>
-        (Long Li's message of "Thu, 18 May 2017 15:40:05 -0700")
+        with ESMTP id S1753200AbdESBxt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 May 2017 21:53:49 -0400
+In-Reply-To: <CAK8P3a2KD5aJanDcaRUHi2GeotJ_pfC_UY+KrWdYua1_k3GYow@mail.gmail.com>
+        (Arnd Bergmann's message of "Thu, 18 May 2017 11:09:16 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Long Li <longli@exchange.microsoft.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, KY Srinivasan <kys@microsoft.com>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Christoph Hellwig <hch@infradead.org>, Stephen Hemminger <sthemmin@microsoft.com>, Long Li <longli@microsoft.com>, stable@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Scott Benesh <scott.benesh@microsemi.com>, Scott Teel <scott.teel@microsemi.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Kevin Barnett <kevin.barnett@microsemi.com>
 
 
-Long,
+Arnd,
 
-> In lower layer driver's (LLD) scsi_host_template, the driver may
-> optionally ask SCSI to allocate its private driver memory for each
-> command, by specifying cmd_size. This memory is allocated at the end
-> of scsi_cmnd by SCSI.  Later when SCSI queues a command, the LLD can
-> use scsi_cmd_priv to get to its private data.
->  
-> Some LLD, e.g. hv_storvsc, doesn't clear its private data before
-> use. In this case, the LLD may get to stale or uninitialized data in
-> its private driver memory. This may result in unexpected driver and
-> hardware behavior.
->
-> Fix this problem by also zeroing the private driver memory before
-> passing them to LLD.
+> I notice that today's linux-next no longer contains the patch that
+> introduced the warning.
 
-Applied to 4.12/scsi-fixes. Thank you!
+I had tagged my 4.12 fixes branch with for-next. It should be back to
+4.13 material shortly.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
