@@ -1,16 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 20/25] qla2xxx: Remove redundant code
-Date: Fri, 19 May 2017 14:53:39 -0700
-Message-ID: <20170519215344.2168-21-himanshu.madhani@cavium.com>
+Subject: [PATCH 19/25] qla2xxx: Replace ql2xexchoffld & ql_dm_tgt_ex_pct parameter
+Date: Fri, 19 May 2017 14:53:38 -0700
+Message-ID: <20170519215344.2168-20-himanshu.madhani@cavium.com>
 References: <20170519215344.2168-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0044.outbound.protection.outlook.com ([104.47.41.44]:21572
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+Received: from mail-bl2nam02on0048.outbound.protection.outlook.com ([104.47.38.48]:3063
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1756823AbdESVyZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 19 May 2017 17:54:25 -0400
+        id S1756731AbdESVyX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 19 May 2017 17:54:23 -0400
 In-Reply-To: <20170519215344.2168-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,58 +19,432 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-During ABTS or Abort task, qla2xxx does a pre-search for
-the se_cmd, based on command's tag. The same search is
-performed by TCM. Remove the extra search from qla2xxx.
+Replace driver parameters ql2xexchoffld & ql_dm_tgt_ex_pct with
+ql2xtgtexchg & ql2xiniexchg for readability.
+
+Previously, the ql2xexchoffld module parameter was used to control
+the max number of exchanges to be offload onto host memory.
+Module parameter ql_dm_tgt_ex_pct was used to control the percentage
+of exchanges allocated to the Target side.
+
+With the updated module parameters, users can control the exact number
+of exchanges for either Initiator or Target. The exchange offload feature
+will be automatically enabled when the total number of exchanges exceeds
+2048 limit.
 
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 29 ++++-------------------------
- 1 file changed, 4 insertions(+), 25 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h    |   6 +-
+ drivers/scsi/qla2xxx/qla_gbl.h    |   5 +-
+ drivers/scsi/qla2xxx/qla_init.c   |   2 +-
+ drivers/scsi/qla2xxx/qla_inline.h |  16 +++++
+ drivers/scsi/qla2xxx/qla_mbx.c    |  14 ++--
+ drivers/scsi/qla2xxx/qla_os.c     | 138 +++++++++++++++++++++++++++-----------
+ drivers/scsi/qla2xxx/qla_target.c |  53 +++------------
+ 7 files changed, 141 insertions(+), 93 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 21e8993baf4b..b8e609ae6cff 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1836,34 +1836,13 @@ static int __qlt_24xx_handle_abts(struct scsi_qla_host *vha,
- 	struct abts_recv_from_24xx *abts, struct fc_port *sess)
- {
- 	struct qla_hw_data *ha = vha->hw;
--	struct se_session *se_sess = sess->se_sess;
- 	struct qla_tgt_mgmt_cmd *mcmd;
--	struct se_cmd *se_cmd;
- 	int rc;
--	bool found_lun = false;
--	unsigned long flags;
--
--	spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
--	list_for_each_entry(se_cmd, &se_sess->sess_cmd_list, se_cmd_list) {
--		if (se_cmd->tag == abts->exchange_addr_to_abort) {
--			found_lun = true;
--			break;
--		}
--	}
--	spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 51b262b236b4..ddf93efe3986 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -286,7 +286,7 @@ struct name_list_extended {
+ #define RESPONSE_ENTRY_CNT_MQ		128	/* Number of response entries.*/
+ #define ATIO_ENTRY_CNT_24XX		4096	/* Number of ATIO entries. */
+ #define RESPONSE_ENTRY_CNT_FX00		256     /* Number of response entries.*/
+-#define EXTENDED_EXCH_ENTRY_CNT		32768   /* Entries for offload case */
++#define FW_DEF_EXCHANGES_CNT 2048
  
--	/* cmd not in LIO lists, look in qla list */
--	if (!found_lun) {
--		if (abort_cmd_for_tag(vha, abts->exchange_addr_to_abort)) {
--			/* send TASK_ABORT response immediately */
--			qlt_24xx_send_abts_resp(vha, abts, FCP_TMF_CMPL, false);
--			return 0;
--		} else {
--			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf081,
--			    "unable to find cmd in driver or LIO for tag 0x%x\n",
--			    abts->exchange_addr_to_abort);
--			return -ENOENT;
--		}
-+	if (abort_cmd_for_tag(vha, abts->exchange_addr_to_abort)) {
-+		/* send TASK_ABORT response immediately */
-+		qlt_24xx_send_abts_resp(vha, abts, FCP_TMF_CMPL, false);
-+		return 0;
+ struct req_que;
+ struct qla_tgt_sess;
+@@ -3593,6 +3593,10 @@ struct qla_hw_data {
+ #define IS_SHADOW_REG_CAPABLE(ha)  (IS_QLA27XX(ha))
+ #define IS_DPORT_CAPABLE(ha)  (IS_QLA83XX(ha) || IS_QLA27XX(ha))
+ #define IS_FAWWN_CAPABLE(ha)	(IS_QLA83XX(ha) || IS_QLA27XX(ha))
++#define IS_EXCHG_OFFLD_CAPABLE(ha) \
++	(IS_QLA81XX(ha) || IS_QLA83XX(ha) || IS_QLA27XX(ha))
++#define IS_EXLOGIN_OFFLD_CAPABLE(ha) \
++	(IS_QLA25XX(ha) || IS_QLA81XX(ha) || IS_QLA83XX(ha) || IS_QLA27XX(ha))
+ 
+ 	/* HBA serial number */
+ 	uint8_t		serial0;
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 5b2451745e9f..8ceb7299014c 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -136,7 +136,8 @@ extern uint64_t ql2xmaxlun;
+ extern int ql2xmdcapmask;
+ extern int ql2xmdenable;
+ extern int ql2xexlogins;
+-extern int ql2xexchoffld;
++extern int ql2xiniexchg;
++extern int ql2xtgtexchg;
+ extern int ql2xfwholdabts;
+ extern int ql2xmvasynctoatio;
+ 
+@@ -839,7 +840,7 @@ extern int qla_get_exlogin_status(scsi_qla_host_t *, uint16_t *,
+ 	uint16_t *);
+ extern int qla_set_exlogin_mem_cfg(scsi_qla_host_t *vha, dma_addr_t phys_addr);
+ extern int qla_get_exchoffld_status(scsi_qla_host_t *, uint16_t *, uint16_t *);
+-extern int qla_set_exchoffld_mem_cfg(scsi_qla_host_t *, dma_addr_t);
++extern int qla_set_exchoffld_mem_cfg(scsi_qla_host_t *);
+ extern void qlt_handle_abts_recv(struct scsi_qla_host *, response_t *);
+ 
+ int qla24xx_async_notify_ack(scsi_qla_host_t *, fc_port_t *,
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 32fb3ed4fb33..0b91b886e5a3 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2730,7 +2730,7 @@ qla2x00_setup_chip(scsi_qla_host_t *vha)
+ 			if (ql2xexlogins)
+ 				ha->flags.exlogins_enabled = 1;
+ 
+-			if (ql2xexchoffld)
++			if (qla_is_exch_offld_enabled(vha))
+ 				ha->flags.exchoffld_enabled = 1;
+ 
+ 			rval = qla2x00_execute_fw(vha, srisc_address);
+diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla_inline.h
+index c61a6a871c8e..2ad74353f21e 100644
+--- a/drivers/scsi/qla2xxx/qla_inline.h
++++ b/drivers/scsi/qla2xxx/qla_inline.h
+@@ -307,3 +307,19 @@ qla2x00_set_retry_delay_timestamp(fc_port_t *fcport, uint16_t retry_delay)
+ 		fcport->retry_delay_timestamp = jiffies +
+ 		    (retry_delay * HZ / 10);
+ }
++
++static inline bool
++qla_is_exch_offld_enabled(struct scsi_qla_host *vha)
++{
++	if (qla_ini_mode_enabled(vha) &&
++	    (ql2xiniexchg > FW_DEF_EXCHANGES_CNT))
++		return true;
++	else if (qla_tgt_mode_enabled(vha) &&
++	    (ql2xtgtexchg > FW_DEF_EXCHANGES_CNT))
++		return true;
++	else if (qla_dual_mode_enabled(vha) &&
++	    ((ql2xiniexchg + ql2xtgtexchg) > FW_DEF_EXCHANGES_CNT))
++		return true;
++	else
++		return false;
++}
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 8c9f238631ee..e69b854f19ae 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -821,7 +821,7 @@ qla_get_exchoffld_status(scsi_qla_host_t *vha, uint16_t *buf_sz,
+  */
+ #define CONFIG_XCHOFFLD_MEM	0x3
+ int
+-qla_set_exchoffld_mem_cfg(scsi_qla_host_t *vha, dma_addr_t phys_addr)
++qla_set_exchoffld_mem_cfg(scsi_qla_host_t *vha)
+ {
+ 	int		rval;
+ 	mbx_cmd_t	mc;
+@@ -834,12 +834,12 @@ qla_set_exchoffld_mem_cfg(scsi_qla_host_t *vha, dma_addr_t phys_addr)
+ 	memset(mcp->mb, 0 , sizeof(mcp->mb));
+ 	mcp->mb[0] = MBC_GET_MEM_OFFLOAD_CNTRL_STAT;
+ 	mcp->mb[1] = CONFIG_XCHOFFLD_MEM;
+-	mcp->mb[2] = MSW(phys_addr);
+-	mcp->mb[3] = LSW(phys_addr);
+-	mcp->mb[6] = MSW(MSD(phys_addr));
+-	mcp->mb[7] = LSW(MSD(phys_addr));
+-	mcp->mb[8] = MSW(ha->exlogin_size);
+-	mcp->mb[9] = LSW(ha->exlogin_size);
++	mcp->mb[2] = MSW(ha->exchoffld_buf_dma);
++	mcp->mb[3] = LSW(ha->exchoffld_buf_dma);
++	mcp->mb[6] = MSW(MSD(ha->exchoffld_buf_dma));
++	mcp->mb[7] = LSW(MSD(ha->exchoffld_buf_dma));
++	mcp->mb[8] = MSW(ha->exchoffld_size);
++	mcp->mb[9] = LSW(ha->exchoffld_size);
+ 	mcp->out_mb = MBX_9|MBX_8|MBX_7|MBX_6|MBX_3|MBX_2|MBX_1|MBX_0;
+ 	mcp->in_mb = MBX_11|MBX_0;
+ 	mcp->tov = MBX_TOV_SECONDS;
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index a46a38ecbd8b..ea885f3881ed 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -224,11 +224,15 @@ MODULE_PARM_DESC(ql2xexlogins,
+ 		 "Number of extended Logins. "
+ 		 "0 (Default)- Disabled.");
+ 
+-int ql2xexchoffld = 0;
+-module_param(ql2xexchoffld, uint, S_IRUGO|S_IWUSR);
+-MODULE_PARM_DESC(ql2xexchoffld,
+-		 "Number of exchanges to offload. "
+-		 "0 (Default)- Disabled.");
++int ql2xtgtexchg = 1024;
++module_param(ql2xtgtexchg, uint, 0644);
++MODULE_PARM_DESC(ql2xtgtexchg,
++	"Number of target exchanges.");
++
++int ql2xiniexchg = 1024;
++module_param(ql2xiniexchg, uint, 0644);
++MODULE_PARM_DESC(ql2xtgtexchg,
++	"Number of initiator exchanges.");
+ 
+ int ql2xfwholdabts = 0;
+ module_param(ql2xfwholdabts, int, S_IRUGO);
+@@ -3982,6 +3986,9 @@ qla2x00_set_exlogins_buffer(scsi_qla_host_t *vha)
+ 	if (!ql2xexlogins)
+ 		return QLA_SUCCESS;
+ 
++	if (!IS_EXLOGIN_OFFLD_CAPABLE(ha))
++		return QLA_SUCCESS;
++
+ 	ql_log(ql_log_info, vha, 0xd021, "EXLOGIN count: %d.\n", ql2xexlogins);
+ 	max_cnt = 0;
+ 	rval = qla_get_exlogin_status(vha, &size, &max_cnt);
+@@ -3992,21 +3999,27 @@ qla2x00_set_exlogins_buffer(scsi_qla_host_t *vha)
  	}
  
- 	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf00f,
+ 	temp = (ql2xexlogins > max_cnt) ? max_cnt : ql2xexlogins;
+-	ha->exlogin_size = (size * temp);
+-	ql_log(ql_log_info, vha, 0xd024,
+-		"EXLOGIN: max_logins=%d, portdb=0x%x, total=%d.\n",
+-		max_cnt, size, temp);
+-
+-	ql_log(ql_log_info, vha, 0xd025, "EXLOGIN: requested size=0x%x\n",
+-		ha->exlogin_size);
+-
+-	/* Get consistent memory for extended logins */
+-	ha->exlogin_buf = dma_alloc_coherent(&ha->pdev->dev,
+-	    ha->exlogin_size, &ha->exlogin_buf_dma, GFP_KERNEL);
+-	if (!ha->exlogin_buf) {
+-		ql_log_pci(ql_log_fatal, ha->pdev, 0xd02a,
++	temp *= size;
++
++	if (temp != ha->exlogin_size) {
++		qla2x00_free_exlogin_buffer(ha);
++		ha->exlogin_size = temp;
++
++		ql_log(ql_log_info, vha, 0xd024,
++		    "EXLOGIN: max_logins=%d, portdb=0x%x, total=%d.\n",
++		    max_cnt, size, temp);
++
++		ql_log(ql_log_info, vha, 0xd025,
++		    "EXLOGIN: requested size=0x%x\n", ha->exlogin_size);
++
++		/* Get consistent memory for extended logins */
++		ha->exlogin_buf = dma_alloc_coherent(&ha->pdev->dev,
++			ha->exlogin_size, &ha->exlogin_buf_dma, GFP_KERNEL);
++		if (!ha->exlogin_buf) {
++			ql_log_pci(ql_log_fatal, ha->pdev, 0xd02a,
+ 		    "Failed to allocate memory for exlogin_buf_dma.\n");
+-		return -ENOMEM;
++			return -ENOMEM;
++		}
+ 	}
+ 
+ 	/* Now configure the dma buffer */
+@@ -4037,15 +4050,49 @@ qla2x00_free_exlogin_buffer(struct qla_hw_data *ha)
+ 	}
+ }
+ 
++static void
++qla2x00_number_of_exch(scsi_qla_host_t *vha, u32 *ret_cnt, u16 max_cnt)
++{
++	u32 temp;
++	*ret_cnt = FW_DEF_EXCHANGES_CNT;
++
++	if (qla_ini_mode_enabled(vha)) {
++		if (ql2xiniexchg > max_cnt)
++			ql2xiniexchg = max_cnt;
++
++		if (ql2xiniexchg > FW_DEF_EXCHANGES_CNT)
++			*ret_cnt = ql2xiniexchg;
++	} else if (qla_tgt_mode_enabled(vha)) {
++		if (ql2xtgtexchg > max_cnt)
++			ql2xtgtexchg = max_cnt;
++
++		if (ql2xtgtexchg > FW_DEF_EXCHANGES_CNT)
++			*ret_cnt = ql2xtgtexchg;
++	} else if (qla_dual_mode_enabled(vha)) {
++		temp = ql2xiniexchg + ql2xtgtexchg;
++		if (temp > max_cnt) {
++			ql2xiniexchg -= (temp - max_cnt)/2;
++			ql2xtgtexchg -= (((temp - max_cnt)/2) + 1);
++			temp = max_cnt;
++		}
++
++		if (temp > FW_DEF_EXCHANGES_CNT)
++			*ret_cnt = temp;
++	}
++}
++
+ int
+ qla2x00_set_exchoffld_buffer(scsi_qla_host_t *vha)
+ {
+ 	int rval;
+-	uint16_t	size, max_cnt, temp;
++	u16 size, max_cnt;
++	u32 temp;
+ 	struct qla_hw_data *ha = vha->hw;
+ 
+-	/* Return if we don't need to alloacate any extended logins */
+-	if (!ql2xexchoffld)
++	if (!ha->flags.exchoffld_enabled)
++		return QLA_SUCCESS;
++
++	if (!IS_EXCHG_OFFLD_CAPABLE(ha))
+ 		return QLA_SUCCESS;
+ 
+ 	max_cnt = 0;
+@@ -4056,30 +4103,45 @@ qla2x00_set_exchoffld_buffer(scsi_qla_host_t *vha)
+ 		return rval;
+ 	}
+ 
+-	temp = (ql2xexchoffld > max_cnt) ? max_cnt : ql2xexchoffld;
+-	ha->exchoffld_size = (size * temp);
+-	ql_log(ql_log_info, vha, 0xd016,
+-		"Exchange offload: max_count=%d, buffers=0x%x, total=%d.\n",
+-		max_cnt, size, temp);
++	qla2x00_number_of_exch(vha, &temp, max_cnt);
++	temp *= size;
+ 
+-	ql_log(ql_log_info, vha, 0xd017,
+-	    "Exchange Buffers requested size = 0x%x\n", ha->exchoffld_size);
+-
+-	/* Get consistent memory for extended logins */
+-	ha->exchoffld_buf = dma_alloc_coherent(&ha->pdev->dev,
+-	    ha->exchoffld_size, &ha->exchoffld_buf_dma, GFP_KERNEL);
+-	if (!ha->exchoffld_buf) {
+-		ql_log_pci(ql_log_fatal, ha->pdev, 0xd013,
+-		    "Failed to allocate memory for exchoffld_buf_dma.\n");
+-		return -ENOMEM;
++	if (temp != ha->exchoffld_size) {
++		qla2x00_free_exchoffld_buffer(ha);
++		ha->exchoffld_size = temp;
++
++		ql_log(ql_log_info, vha, 0xd016,
++		    "Exchange offload: max_count=%d, buffers=0x%x, total=%d.\n",
++		    max_cnt, size, temp);
++
++		ql_log(ql_log_info, vha, 0xd017,
++		    "Exchange Buffers requested size = 0x%x\n",
++		    ha->exchoffld_size);
++
++		/* Get consistent memory for extended logins */
++		ha->exchoffld_buf = dma_alloc_coherent(&ha->pdev->dev,
++			ha->exchoffld_size, &ha->exchoffld_buf_dma, GFP_KERNEL);
++		if (!ha->exchoffld_buf) {
++			ql_log_pci(ql_log_fatal, ha->pdev, 0xd013,
++			"Failed to allocate memory for exchoffld_buf_dma.\n");
++			return -ENOMEM;
++		}
+ 	}
+ 
+ 	/* Now configure the dma buffer */
+-	rval = qla_set_exchoffld_mem_cfg(vha, ha->exchoffld_buf_dma);
++	rval = qla_set_exchoffld_mem_cfg(vha);
+ 	if (rval) {
+ 		ql_log(ql_log_fatal, vha, 0xd02e,
+ 		    "Setup exchange offload buffer ****FAILED****.\n");
+ 		qla2x00_free_exchoffld_buffer(ha);
++	} else {
++		/* re-adjust number of target exchange */
++		struct init_cb_81xx *icb = (struct init_cb_81xx *)ha->init_cb;
++
++		if (qla_ini_mode_enabled(vha))
++			icb->exchange_count = 0;
++		else
++			icb->exchange_count = cpu_to_le16(ql2xtgtexchg);
+ 	}
+ 
+ 	return rval;
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 4fce4ff406d8..21e8993baf4b 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -59,13 +59,6 @@ MODULE_PARM_DESC(qlini_mode,
+ 	"when ready "
+ 	"\"enabled\" (default) - initiator mode will always stay enabled.");
+ 
+-static int ql_dm_tgt_ex_pct = 50;
+-module_param(ql_dm_tgt_ex_pct, int, S_IRUGO|S_IWUSR);
+-MODULE_PARM_DESC(ql_dm_tgt_ex_pct,
+-	"For Dual Mode (qlini_mode=dual), this parameter determines "
+-	"the percentage of exchanges/cmds FW will allocate resources "
+-	"for Target mode.");
+-
+ int ql2x_ini_mode = QLA2XXX_INI_MODE_EXCLUSIVE;
+ 
+ static int temp_sam_status = SAM_STAT_BUSY;
+@@ -6437,8 +6430,9 @@ void
+ qlt_24xx_config_nvram_stage1(struct scsi_qla_host *vha, struct nvram_24xx *nv)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+-	u32 tmp;
+-	u16 t;
++
++	if (!QLA_TGT_MODE_ENABLED())
++		return;
+ 
+ 	if (qla_tgt_mode_enabled(vha) || qla_dual_mode_enabled(vha)) {
+ 		if (!ha->tgt.saved_set) {
+@@ -6453,24 +6447,10 @@ qlt_24xx_config_nvram_stage1(struct scsi_qla_host *vha, struct nvram_24xx *nv)
+ 			ha->tgt.saved_set = 1;
+ 		}
+ 
+-		if (qla_tgt_mode_enabled(vha)) {
++		if (qla_tgt_mode_enabled(vha))
+ 			nv->exchange_count = cpu_to_le16(0xFFFF);
+-		} else {			/* dual */
+-			if (ql_dm_tgt_ex_pct > 100) {
+-				ql_dm_tgt_ex_pct = 50;
+-			} else if (ql_dm_tgt_ex_pct == 100) {
+-				/* leave some for FW */
+-				ql_dm_tgt_ex_pct = 95;
+-			}
+-
+-			tmp = ha->orig_fw_xcb_count * ql_dm_tgt_ex_pct;
+-			tmp = tmp/100;
+-			if (tmp > 0xffff)
+-				tmp = 0xffff;
+-
+-			t = tmp & 0xffff;
+-			nv->exchange_count = cpu_to_le16(t);
+-		}
++		else			/* dual */
++			nv->exchange_count = cpu_to_le16(ql2xtgtexchg);
+ 
+ 		/* Enable target mode */
+ 		nv->firmware_options_1 |= cpu_to_le32(BIT_4);
+@@ -6555,8 +6535,6 @@ void
+ qlt_81xx_config_nvram_stage1(struct scsi_qla_host *vha, struct nvram_81xx *nv)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+-	u32 tmp;
+-	u16 t;
+ 
+ 	if (!QLA_TGT_MODE_ENABLED())
+ 		return;
+@@ -6574,23 +6552,10 @@ qlt_81xx_config_nvram_stage1(struct scsi_qla_host *vha, struct nvram_81xx *nv)
+ 			ha->tgt.saved_set = 1;
+ 		}
+ 
+-		if (qla_tgt_mode_enabled(vha)) {
++		if (qla_tgt_mode_enabled(vha))
+ 			nv->exchange_count = cpu_to_le16(0xFFFF);
+-		} else {			/* dual */
+-			if (ql_dm_tgt_ex_pct > 100) {
+-				ql_dm_tgt_ex_pct = 50;
+-			} else if (ql_dm_tgt_ex_pct == 100) {
+-				/* leave some for FW */
+-				ql_dm_tgt_ex_pct = 95;
+-			}
+-
+-			tmp = ha->orig_fw_xcb_count * ql_dm_tgt_ex_pct;
+-			tmp = tmp/100;
+-			if (tmp > 0xffff)
+-				tmp = 0xffff;
+-			t = tmp & 0xffff;
+-			nv->exchange_count = cpu_to_le16(t);
+-		}
++		else			/* dual */
++			nv->exchange_count = cpu_to_le16(ql2xtgtexchg);
+ 
+ 		/* Enable target mode */
+ 		nv->firmware_options_1 |= cpu_to_le32(BIT_4);
 -- 
 2.12.0
