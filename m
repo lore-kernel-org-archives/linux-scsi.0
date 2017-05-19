@@ -1,53 +1,48 @@
 From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH 05/18] nfsd: Check private request size before submitting a SCSI request
-Date: Fri, 19 May 2017 11:30:03 -0700
-Message-ID: <20170519183016.12646-6-bart.vanassche@sandisk.com>
+Subject: [PATCH 14/18] scsi: Make scsi_initialize_rq() zero the entire struct scsi_cmnd
+Date: Fri, 19 May 2017 11:30:12 -0700
+Message-ID: <20170519183016.12646-15-bart.vanassche@sandisk.com>
 References: <20170519183016.12646-1-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:10207 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755096AbdESSa0 (ORCPT
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:58563 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755824AbdESSa0 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 May 2017 14:30:26 -0400
 In-Reply-To: <20170519183016.12646-1-bart.vanassche@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, "J . Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@poochiereds.net>, Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, Omar Sandoval <osandov@fb.com>, Hannes Reinecke <hare@suse.com>, linux-nfs@vger.kernel.org, linux-block@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>
 
-Since using scsi_req() is only allowed against request queues for which
-struct scsi_request is the first member of their private request
-data, refuse to register block layer queues for which the private
-data is smaller than struct scsi_request.
+This simplifies the memset() call in scsi_initialize_rq() and avoids
+that any stale data is left behind in struct scsi_request.
 
-References: commit 82ed4db499b8 ("block: split scsi_request out of struct request")
 Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: J. Bruce Fields <bfields@fieldses.org>
-Cc: Jeff Layton <jlayton@poochiereds.net>
-Cc: Jens Axboe <axboe@fb.com>
 Cc: Christoph Hellwig <hch@lst.de>
-Cc: Omar Sandoval <osandov@fb.com>
 Cc: Hannes Reinecke <hare@suse.com>
-Cc: linux-nfs@vger.kernel.org
-Cc: linux-block@vger.kernel.org
 ---
- fs/nfsd/blocklayout.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/scsi_lib.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/fs/nfsd/blocklayout.c b/fs/nfsd/blocklayout.c
-index fb5213afc854..90d1df31491b 100644
---- a/fs/nfsd/blocklayout.c
-+++ b/fs/nfsd/blocklayout.c
-@@ -219,6 +219,9 @@ static int nfsd4_scsi_identify_device(struct block_device *bdev,
- 	u8 *buf, *d, type, assoc;
- 	int error;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index eeb668935836..791bae192bfb 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1160,11 +1160,9 @@ static void scsi_initialize_rq(struct request *rq)
+ 	void *buf = cmd->sense_buffer;
+ 	void *prot = cmd->prot_sdb;
  
-+	if (WARN_ON_ONCE(blk_queue_cmd_size(q) < sizeof(struct scsi_request)))
-+		return -EINVAL;
-+
- 	buf = kzalloc(bufflen, GFP_KERNEL);
- 	if (!buf)
- 		return -ENOMEM;
+-	/* zero out the cmd, except for the embedded scsi_request */
+-	memset((char *)cmd + sizeof(cmd->req), 0,
+-		sizeof(*cmd) - sizeof(cmd->req) + dev->host->hostt->cmd_size);
++	memset(cmd, 0, blk_queue_cmd_size(rq->q));
+ 	scsi_req_init(&cmd->req);
+-	cmd->req.sense = cmd->sense_buffer;
++	cmd->req.sense = buf;
+ 	cmd->device = dev;
+ 	cmd->sense_buffer = buf;
+ 	cmd->prot_sdb = prot;
 -- 
 2.12.2
