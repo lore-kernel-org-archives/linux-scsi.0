@@ -1,86 +1,109 @@
 From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH 00/18] Unify and simplify SCSI request initialization
-Date: Fri, 19 May 2017 11:29:58 -0700
-Message-ID: <20170519183016.12646-1-bart.vanassche@sandisk.com>
+Subject: [PATCH 09/18] scsi: Change argument type of scsi_req_init()
+Date: Fri, 19 May 2017 11:30:07 -0700
+Message-ID: <20170519183016.12646-10-bart.vanassche@sandisk.com>
+References: <20170519183016.12646-1-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:13694 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755933AbdESSa1 (ORCPT
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:16178 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755988AbdESSa1 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 May 2017 14:30:27 -0400
+In-Reply-To: <20170519183016.12646-1-bart.vanassche@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>
 
-Hello Martin and James,
+Since scsi_req_init() works on a struct scsi_request, change the
+argument type into struct scsi_request *.
 
-The patches in this series unify scsi-mq and scsi-sq request initialization,
-significantly simplify request initialization and fix a recently introduced
-bug in the request initialization code. Please consider these patches for
-kernel v4.13.
+Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.com>
+---
+ block/scsi_ioctl.c                | 10 +++++++---
+ drivers/ide/ide-probe.c           |  2 +-
+ drivers/scsi/scsi_lib.c           |  4 +++-
+ drivers/scsi/scsi_transport_sas.c |  2 +-
+ include/scsi/scsi_request.h       |  2 +-
+ 5 files changed, 13 insertions(+), 7 deletions(-)
 
-Thanks,
-
-Bart.
-
-Bart Van Assche (18):
-  block: Introduce blk_queue_cmd_size()
-  bsg: Check private request size before attaching to a queue
-  pktcdvd: Check private request size before attaching to a queue
-  cdrom: Check private request size before attaching to a queue
-  nfsd: Check private request size before submitting a SCSI request
-  scsi: Make scsi_ioctl_reset() pass the request queue pointer to
-    blk_rq_init()
-  block: Introduce request_queue.initialize_rq_fn()
-  block: Make scsi_req_init() calls implicit
-  scsi: Change argument type of scsi_req_init()
-  scsi: Only add commands to the device command list if required by the
-    LLD
-  scsi: Move most of scsi_init_command() into scsi_initialize_rq()
-  scsi: Inline scsi_init_command()
-  scsi: Move sense buffer pointer initialization into
-    scsi_initialize_rq()
-  scsi: Make scsi_initialize_rq() zero the entire struct scsi_cmnd
-  scsi: storvsc: Initialize driver-private command before using it
-  scsi-mq: Make behavior scsi_mq_prep_fn() closer to that of
-    scsi_prep_fn()
-  scsi: Consolidate more initialization code
-  scsi_setup_fs_cmnd(): Call scsi_req_init() instead of open-coding it
-
- block/blk-core.c                   | 13 ++++++
- block/blk-mq.c                     |  3 ++
- block/bsg.c                        |  7 ++-
- block/scsi_ioctl.c                 | 13 +++---
- drivers/block/pktcdvd.c            |  7 ++-
- drivers/cdrom/cdrom.c              |  6 ++-
- drivers/ide/ide-atapi.c            |  2 -
- drivers/ide/ide-cd.c               |  1 -
- drivers/ide/ide-cd_ioctl.c         |  1 -
- drivers/ide/ide-devsets.c          |  1 -
- drivers/ide/ide-disk.c             |  1 -
- drivers/ide/ide-ioctls.c           |  2 -
- drivers/ide/ide-park.c             |  2 -
- drivers/ide/ide-pm.c               |  2 -
- drivers/ide/ide-probe.c            |  6 +--
- drivers/ide/ide-tape.c             |  1 -
- drivers/ide/ide-taskfile.c         |  1 -
- drivers/scsi/osd/osd_initiator.c   |  2 -
- drivers/scsi/osst.c                |  1 -
- drivers/scsi/scsi.c                |  9 +---
- drivers/scsi/scsi_error.c          | 10 +++--
- drivers/scsi/scsi_lib.c            | 91 ++++++++++++++++++--------------------
- drivers/scsi/scsi_priv.h           |  3 +-
- drivers/scsi/scsi_transport_sas.c  |  6 +++
- drivers/scsi/sg.c                  |  2 -
- drivers/scsi/st.c                  |  1 -
- drivers/scsi/storvsc_drv.c         |  1 +
- drivers/target/target_core_pscsi.c |  2 -
- fs/nfsd/blocklayout.c              |  4 +-
- include/linux/blkdev.h             |  5 +++
- include/scsi/scsi_request.h        |  2 +-
- 31 files changed, 112 insertions(+), 96 deletions(-)
-
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index f96c51f5df40..7440de44dd85 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -741,10 +741,14 @@ int scsi_cmd_blk_ioctl(struct block_device *bd, fmode_t mode,
+ }
+ EXPORT_SYMBOL(scsi_cmd_blk_ioctl);
+ 
+-void scsi_req_init(struct request *rq)
++/**
++ * scsi_req_init - initialize certain fields of a scsi_request structure
++ * @req: Pointer to a scsi_request structure.
++ * Initializes .__cmd[], .cmd, .cmd_len and .sense_len but no other members
++ * of struct scsi_request.
++ */
++void scsi_req_init(struct scsi_request *req)
+ {
+-	struct scsi_request *req = scsi_req(rq);
+-
+ 	memset(req->__cmd, 0, sizeof(req->__cmd));
+ 	req->cmd = req->__cmd;
+ 	req->cmd_len = BLK_MAX_CDB;
+diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
+index 824eae707d25..5f77e31c9487 100644
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -745,7 +745,7 @@ static void ide_initialize_rq(struct request *rq)
+ {
+ 	struct ide_request *req = blk_mq_rq_to_pdu(rq);
+ 
+-	scsi_req_init(rq);
++	scsi_req_init(&req->sreq);
+ 	req->sreq.sense = req->sense;
+ }
+ 
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index a294a010d585..efa5741cab02 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1136,7 +1136,9 @@ EXPORT_SYMBOL(scsi_init_io);
+ /* Called from inside blk_get_request() */
+ static void scsi_initialize_rq(struct request *rq)
+ {
+-	scsi_req_init(rq);
++	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
++
++	scsi_req_init(&cmd->req);
+ }
+ 
+ /* Called after a request has been started. */
+diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+index 6de65e73201d..fc049b0265ee 100644
+--- a/drivers/scsi/scsi_transport_sas.c
++++ b/drivers/scsi/scsi_transport_sas.c
+@@ -215,7 +215,7 @@ static void sas_host_release(struct device *dev)
+ 
+ static void sas_initialize_rq(struct request *rq)
+ {
+-	scsi_req_init(rq);
++	scsi_req_init(scsi_req(rq));
+ }
+ 
+ static int sas_bsg_initialize(struct Scsi_Host *shost, struct sas_rphy *rphy)
+diff --git a/include/scsi/scsi_request.h b/include/scsi/scsi_request.h
+index f0c76f9dc285..e0afa445ee4e 100644
+--- a/include/scsi/scsi_request.h
++++ b/include/scsi/scsi_request.h
+@@ -27,6 +27,6 @@ static inline void scsi_req_free_cmd(struct scsi_request *req)
+ 		kfree(req->cmd);
+ }
+ 
+-void scsi_req_init(struct request *);
++void scsi_req_init(struct scsi_request *req);
+ 
+ #endif /* _SCSI_SCSI_REQUEST_H */
 -- 
 2.12.2
