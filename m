@@ -1,16 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 21/25] qla2xxx: Remove redundant wait when target is stopped.
-Date: Fri, 19 May 2017 14:53:40 -0700
-Message-ID: <20170519215344.2168-22-himanshu.madhani@cavium.com>
+Subject: [PATCH 16/25] qla2xxx: Fix name server relogin
+Date: Fri, 19 May 2017 14:53:35 -0700
+Message-ID: <20170519215344.2168-17-himanshu.madhani@cavium.com>
 References: <20170519215344.2168-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0042.outbound.protection.outlook.com ([104.47.36.42]:61100
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0046.outbound.protection.outlook.com ([104.47.37.46]:25760
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1756855AbdESVyb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 19 May 2017 17:54:31 -0400
+        id S1756809AbdESVy3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 19 May 2017 17:54:29 -0400
 In-Reply-To: <20170519215344.2168-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,105 +19,186 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-Current code already destroy all target sessions when
-target Mode is stopped. Target core would waits for
-all commands that belong to each session to purge.
-The extra wait for interrupts to settle down is not
-relevant.
-
-stop phase 2 is not using the correct vha pointer
-for npiv case.
+Name server login is normally handle by FW. In some
+rare case where one of the switches is being updated,
+name server login could get affected. Trigger relogin
+to name server when driver detects this condition.
 
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 33 ++++++++++++++++-----------------
- 1 file changed, 16 insertions(+), 17 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h  |  2 ++
+ drivers/scsi/qla2xxx/qla_gs.c   | 21 +++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_init.c | 38 +++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/qla2xxx/qla_isr.c  | 17 +++++++++++++++++
+ 4 files changed, 77 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index b8e609ae6cff..5a8ed73e6ef2 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1420,6 +1420,8 @@ int qlt_stop_phase1(struct qla_tgt *tgt)
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 4127f35b669c..51b262b236b4 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -252,6 +252,8 @@
+ #define NPH_F_PORT		0x7fe		/*  FFFFFE */
+ #define NPH_IP_BROADCAST	0x7ff		/*  FFFFFF */
  
- 		if (npiv_vports) {
- 			mutex_unlock(&qla_tgt_mutex);
-+			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf021,
-+			    "NPIV is in use. Can not stop target\n");
- 			return -EPERM;
- 		}
- 	}
-@@ -1430,7 +1432,7 @@ int qlt_stop_phase1(struct qla_tgt *tgt)
- 		return -EPERM;
- 	}
- 
--	ql_dbg(ql_dbg_tgt, vha, 0xe003, "Stopping target for host %ld(%p)\n",
-+	ql_dbg(ql_dbg_tgt_mgt, vha, 0xe003, "Stopping target for host %ld(%p)\n",
- 	    vha->host_no, vha);
- 	/*
- 	 * Mutex needed to sync with qla_tgt_fc_port_[added,deleted].
-@@ -1473,9 +1475,7 @@ EXPORT_SYMBOL(qlt_stop_phase1);
- /* Called by tcm_qla2xxx configfs code */
- void qlt_stop_phase2(struct qla_tgt *tgt)
- {
--	struct qla_hw_data *ha = tgt->ha;
--	scsi_qla_host_t *vha = pci_get_drvdata(ha->pdev);
--	unsigned long flags;
-+	scsi_qla_host_t *vha = tgt->vha;
- 
- 	if (tgt->tgt_stopped) {
- 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf04f,
-@@ -1483,24 +1483,19 @@ void qlt_stop_phase2(struct qla_tgt *tgt)
- 		dump_stack();
- 		return;
- 	}
--
--	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf00b,
--	    "Waiting for %d IRQ commands to complete (tgt %p)",
--	    tgt->irq_cmd_count, tgt);
-+	if (!tgt->tgt_stop) {
-+		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf00b,
-+		    "%s: phase1 stop is not completed\n", __func__);
-+		dump_stack();
-+		return;
-+	}
- 
- 	mutex_lock(&vha->vha_tgt.tgt_mutex);
--	spin_lock_irqsave(&ha->hardware_lock, flags);
--	while ((tgt->irq_cmd_count != 0) || (tgt->atio_irq_cmd_count != 0)) {
--		spin_unlock_irqrestore(&ha->hardware_lock, flags);
--		udelay(2);
--		spin_lock_irqsave(&ha->hardware_lock, flags);
--	}
- 	tgt->tgt_stop = 0;
- 	tgt->tgt_stopped = 1;
--	spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 	mutex_unlock(&vha->vha_tgt.tgt_mutex);
- 
--	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf00c, "Stop of tgt %p finished",
-+	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf00c, "Stop of tgt %p finished\n",
- 	    tgt);
- }
- EXPORT_SYMBOL(qlt_stop_phase2);
-@@ -1510,6 +1505,10 @@ static void qlt_release(struct qla_tgt *tgt)
- {
- 	scsi_qla_host_t *vha = tgt->vha;
- 
-+	if ((vha->vha_tgt.qla_tgt != NULL) && !tgt->tgt_stop &&
-+	    !tgt->tgt_stopped)
-+		qlt_stop_phase1(tgt);
++#define NPH_SNS_LID(ha)	(IS_FWI2_CAPABLE(ha) ? NPH_SNS : SIMPLE_NAME_SERVER)
 +
- 	if ((vha->vha_tgt.qla_tgt != NULL) && !tgt->tgt_stopped)
- 		qlt_stop_phase2(tgt);
+ #define MAX_CMDSZ	16		/* SCSI maximum CDB size. */
+ #include "qla_fw.h"
  
-@@ -5502,7 +5501,7 @@ void qlt_async_event(uint16_t code, struct scsi_qla_host *vha,
- 	struct qla_tgt *tgt = vha->vha_tgt.qla_tgt;
- 	int login_code;
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index 5acebaf57796..3c003c2ee2c5 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -124,6 +124,7 @@ qla2x00_chk_ms_status(scsi_qla_host_t *vha, ms_iocb_entry_t *ms_pkt,
+ 	int rval;
+ 	uint16_t comp_status;
+ 	struct qla_hw_data *ha = vha->hw;
++	bool lid_is_sns = false;
  
--	if (!ha->tgt.tgt_ops)
-+	if (!tgt || tgt->tgt_stop || tgt->tgt_stopped)
- 		return;
+ 	rval = QLA_FUNCTION_FAILED;
+ 	if (ms_pkt->entry_status != 0) {
+@@ -155,6 +156,26 @@ qla2x00_chk_ms_status(scsi_qla_host_t *vha, ms_iocb_entry_t *ms_pkt,
+ 			} else
+ 				rval = QLA_SUCCESS;
+ 			break;
++		case CS_PORT_LOGGED_OUT:
++			if (IS_FWI2_CAPABLE(ha)) {
++				if (le16_to_cpu(ms_pkt->loop_id.extended) ==
++				    NPH_SNS)
++					lid_is_sns = true;
++			} else {
++				if (le16_to_cpu(ms_pkt->loop_id.extended) ==
++				    SIMPLE_NAME_SERVER)
++					lid_is_sns = true;
++			}
++
++			if (lid_is_sns) {
++				ql_dbg(ql_dbg_async, vha, 0x502b,
++					"%s failed, Name server has logged out",
++					routine);
++				rval = QLA_NOT_LOGGED_IN;
++				set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
++				set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
++			}
++			break;
+ 		default:
+ 			ql_dbg(ql_dbg_disc, vha, 0x2033,
+ 			    "%s failed, completion status (%x) on port_id: "
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 2d36844a040c..12cde5692621 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -1041,6 +1041,20 @@ void qla2x00_fcport_event_handler(scsi_qla_host_t *vha, struct event_arg *ea)
  
- 	if (unlikely(tgt == NULL)) {
+ 	switch (ea->event) {
+ 	case FCME_RELOGIN:
++	case FCME_RSCN:
++	case FCME_GIDPN_DONE:
++	case FCME_GPSC_DONE:
++	case FCME_GPNID_DONE:
++		if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags) ||
++		    test_bit(LOOP_RESYNC_ACTIVE, &vha->dpc_flags))
++			return;
++		break;
++	default:
++		break;
++	}
++
++	switch (ea->event) {
++	case FCME_RELOGIN:
+ 		if (test_bit(UNLOADING, &vha->dpc_flags))
+ 			return;
+ 
+@@ -4458,20 +4472,31 @@ qla2x00_configure_fabric(scsi_qla_host_t *vha)
+ 				/* EMPTY */
+ 				ql_dbg(ql_dbg_disc, vha, 0x2045,
+ 				    "Register FC-4 TYPE failed.\n");
++				if (test_bit(LOOP_RESYNC_NEEDED,
++				    &vha->dpc_flags))
++					break;
+ 			}
+ 			if (qla2x00_rff_id(vha)) {
+ 				/* EMPTY */
+ 				ql_dbg(ql_dbg_disc, vha, 0x2049,
+ 				    "Register FC-4 Features failed.\n");
++				if (test_bit(LOOP_RESYNC_NEEDED,
++				    &vha->dpc_flags))
++					break;
+ 			}
+ 			if (qla2x00_rnn_id(vha)) {
+ 				/* EMPTY */
+ 				ql_dbg(ql_dbg_disc, vha, 0x204f,
+ 				    "Register Node Name failed.\n");
++				if (test_bit(LOOP_RESYNC_NEEDED,
++				    &vha->dpc_flags))
++					break;
+ 			} else if (qla2x00_rsnn_nn(vha)) {
+ 				/* EMPTY */
+ 				ql_dbg(ql_dbg_disc, vha, 0x2053,
+ 				    "Register Symobilic Node Name failed.\n");
++				if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
++					break;
+ 			}
+ 		}
+ 
+@@ -4543,17 +4568,28 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha)
+ 		memset(swl, 0, ha->max_fibre_devices * sizeof(sw_info_t));
+ 		if (qla2x00_gid_pt(vha, swl) != QLA_SUCCESS) {
+ 			swl = NULL;
++			if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
++				return rval;
+ 		} else if (qla2x00_gpn_id(vha, swl) != QLA_SUCCESS) {
+ 			swl = NULL;
++			if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
++				return rval;
+ 		} else if (qla2x00_gnn_id(vha, swl) != QLA_SUCCESS) {
+ 			swl = NULL;
++			if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
++				return rval;
+ 		} else if (qla2x00_gfpn_id(vha, swl) != QLA_SUCCESS) {
+ 			swl = NULL;
++			if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
++				return rval;
+ 		}
+ 
+ 		/* If other queries succeeded probe for FC-4 type */
+-		if (swl)
++		if (swl) {
+ 			qla2x00_gff_id(vha, swl);
++			if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
++				return rval;
++		}
+ 	}
+ 	swl_idx = 0;
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 2572121b765b..1eb46eb45005 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -973,6 +973,23 @@ qla2x00_async_event(scsi_qla_host_t *vha, struct rsp_que *rsp, uint16_t *mb)
+ 			if (mb[1] == 0xffff)
+ 				goto global_port_update;
+ 
++			if (mb[1] == NPH_SNS_LID(ha)) {
++				set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
++				set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
++				break;
++			}
++
++			/* use handle_cnt for loop id/nport handle */
++			if (IS_FWI2_CAPABLE(ha))
++				handle_cnt = NPH_SNS;
++			else
++				handle_cnt = SIMPLE_NAME_SERVER;
++			if (mb[1] == handle_cnt) {
++				set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
++				set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
++				break;
++			}
++
+ 			/* Port logout */
+ 			fcport = qla2x00_find_fcport_by_loopid(vha, mb[1]);
+ 			if (!fcport)
 -- 
 2.12.0
