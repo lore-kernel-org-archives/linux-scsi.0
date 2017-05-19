@@ -1,44 +1,45 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] lpfc: nvmet_fc: fix format string
-Date: Fri, 19 May 2017 10:04:31 +0200
-Message-ID: <20170519080447.1043039-1-arnd@arndb.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Manish Rangankar <manish.rangankar@cavium.com>
+Subject: [PATCH 0/7]qedi: Bug fixes.
+Date: Fri, 19 May 2017 01:33:14 -0700
+Message-ID: <20170519083321.18030-1-manish.rangankar@cavium.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0042.outbound.protection.outlook.com ([104.47.36.42]:27866
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752475AbdESId0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 19 May 2017 04:33:26 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com
+Cc: linux-scsi@vger.kernel.org, QLogic-Storage-Upstream@cavium.com
 
-The lpfc_nvmeio_data() tracing helper always takes a format string and
-three additional arguments. The latest caller has a format string with
-only two integer arguments, causing this harmless warning:
+Martin,
 
-drivers/scsi/lpfc/lpfc_nvmet.c: In function 'lpfc_nvmet_xmt_fcp_release':
-drivers/scsi/lpfc/lpfc_nvmet.c:802:25: error: too many arguments for format [-Werror=format-extra-args]
-  lpfc_nvmeio_data(phba, "NVMET FCP FREE: xri x%x ste %d\n", ctxp->oxid,
+Please apply this patch set to next 'scsi-fixes' series.
 
-We could add a dummy argument here, but it seems reasonable to print
-the 'abort' flag as the third argument.
+Thanks,
+Manish
 
-Fixes: 19b58d9473e8 ("nvmet_fc: add req_release to lldd api")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/scsi/lpfc/lpfc_nvmet.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Arun Easi (1):
+  qedi: Fix bad pte call trace when iscsiuio is stopped.
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index f94294b77b7b..24d54dd016d4 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -799,8 +799,8 @@ lpfc_nvmet_xmt_fcp_release(struct nvmet_fc_target_port *tgtport,
- 	}
- 	spin_unlock_irqrestore(&ctxp->ctxlock, flags);
- 
--	lpfc_nvmeio_data(phba, "NVMET FCP FREE: xri x%x ste %d\n", ctxp->oxid,
--			 ctxp->state, 0);
-+	lpfc_nvmeio_data(phba, "NVMET FCP FREE: xri x%x ste %d abt %d\n", ctxp->oxid,
-+			 ctxp->state, aborting);
- 
- 	atomic_inc(&lpfc_nvmep->xmt_fcp_release);
- 
+Manish Rangankar (5):
+  qedi: Correctly set firmware max supported BDs.
+  qedi: Set dma_boundary to 0xfff.
+  qedi: Fix endpoint NULL panic in qedi_set_path.
+  qedi: Set firmware tcp msl timer value.
+  qedi: Fix endpoint NULL panic during recovery.
+
+Nilesh Javali (1):
+  qedi: set max_fin_rt default value
+
+ drivers/scsi/qedi/qedi.h       |  3 ++-
+ drivers/scsi/qedi/qedi_fw.c    |  2 ++
+ drivers/scsi/qedi/qedi_iscsi.c |  7 ++++++-
+ drivers/scsi/qedi/qedi_main.c  | 25 +++++++++++++------------
+ 4 files changed, 23 insertions(+), 14 deletions(-)
+
 -- 
-2.9.0
+1.8.3.1
