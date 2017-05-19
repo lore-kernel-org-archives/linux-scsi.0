@@ -1,67 +1,71 @@
 From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: work queue of scsi fc transports should be serialized
-Date: Fri, 19 May 2017 22:32:44 +0000
-Message-ID: <1495233163.2581.5.camel@sandisk.com>
-References: <23B7B563BA4E9446B962B142C86EF24A088AE2FB@CNMAILEX03.lenovo.com>
+Subject: Re: [PATCH 02/25] qla2xxx: Remove redundant fc_host_port_name call
+Date: Fri, 19 May 2017 22:37:31 +0000
+Message-ID: <1495233450.2581.7.camel@sandisk.com>
+References: <20170519215344.2168-1-himanshu.madhani@cavium.com>
+         <20170519215344.2168-3-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:46968 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750818AbdESWfu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 May 2017 18:35:50 -0400
-In-Reply-To: <23B7B563BA4E9446B962B142C86EF24A088AE2FB@CNMAILEX03.lenovo.com>
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:51518 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755997AbdESWhe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 May 2017 18:37:34 -0400
+In-Reply-To: <20170519215344.2168-3-himanshu.madhani@cavium.com>
 Content-Language: en-US
-Content-ID: <06AFFAA23DC05C4BAB3D66657902A44B@namprd04.prod.outlook.com>
+Content-ID: <0944C626703B9246994724E884E07532@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "caods1@lenovo.com" <caods1@lenovo.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, 2017-05-19 at 09:36 +0000, Dashi DS1 Cao wrote:
-> It seems there is a race of multiple "fc_starget_delete" of the same rpor=
-t,
-> thus of the same SCSI host. The race leads to the race of scsi_remove_tar=
-get
-> and it cannot be prevented by the code snippet alone, even of the most re=
-cent
-> version:
->         spin_lock_irqsave(shost->host_lock, flags);
->         list_for_each_entry(starget, &shost->__targets, siblings) {
->                 if (starget->state =3D=3D STARGET_DEL ||
->                     starget->state =3D=3D STARGET_REMOVE)
->                         continue;
-> If there is a possibility that the starget is under deletion(state =3D=3D
-> STARGET_DEL), it should be possible that list_next_entry(starget, sibling=
-s)
-> could cause a read access violation.
+On Fri, 2017-05-19 at 14:53 -0700, Himanshu Madhani wrote:
+> From: Quinn Tran <quinn.tran@cavium.com>
+>=20
+> Remove redundant fc_host_port_name calls to prevent
+> early access of scsi_host->shost_data buffer. This
+> prevent null pointer access.
+>=20
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
+> Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+> ---
+>  drivers/scsi/qla2xxx/qla_mbx.c | 9 ---------
+>  1 file changed, 9 deletions(-)
+>=20
+> diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mb=
+x.c
+> index a113ab3592a7..12fea77e31c6 100644
+> --- a/drivers/scsi/qla2xxx/qla_mbx.c
+> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
+> @@ -3676,15 +3676,6 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha=
+,
+>  				qlt_update_host_map(vha, id);
+>  			}
+> =20
+> -			fc_host_port_name(vha->host) =3D
+> -			    wwn_to_u64(vha->port_name);
+> -
+> -			if (qla_ini_mode_enabled(vha))
+> -				ql_dbg(ql_dbg_mbx, vha, 0x1018,
+> -				    "FA-WWN portname %016llx (%x)\n",
+> -				    fc_host_port_name(vha->host),
+> -				    rptid_entry->vp_status);
+> -
+>  			set_bit(REGISTER_FC4_NEEDED, &vha->dpc_flags);
+>  			set_bit(REGISTER_FDMI_NEEDED, &vha->dpc_flags);
+>  		} else {
 
-Hello Dashi,
+Hello Himanshu,
 
-Something else must be going on. From scsi_remove_target():
+If the above host port name assignment is redundant, what is the host
+port name assignment it is redundant with?
 
-restart:
-	spin_lock_irqsave(shost->host_lock, flags);
-	list_for_each_entry(starget, &shost->__targets, siblings) {
-		if (starget->state =3D=3D STARGET_DEL ||
-		=A0=A0=A0=A0starget->state =3D=3D STARGET_REMOVE)
-			continue;
-		if (starget->dev.parent =3D=3D dev || &starget->dev =3D=3D dev) {
-			kref_get(&starget->reap_ref);
-			starget->state =3D STARGET_REMOVE;
-			spin_unlock_irqrestore(shost->host_lock, flags);
-			__scsi_remove_target(starget);
-			scsi_target_reap(starget);
-			goto restart;
-		}
-	}
-	spin_unlock_irqrestore(shost->host_lock, flags);
+Which of the removed statements could trigger a NULL pointer access, and
+from what context? Is there perhaps a call trace available of the NULL
+pointer access?
 
-In other words, before scsi_remove_target() decides to call
-__scsi_remove_target(), it changes the target state into STARGET_REMOVE
-while holding the host lock. This means that scsi_remove_target() won't
-call=A0__scsi_remove_target() twice and also that it won't invoke
-list_next_entry(starget, siblings) after starget has been freed.
+Thanks,
 
 Bart.=
