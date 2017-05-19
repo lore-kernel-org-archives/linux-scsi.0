@@ -1,182 +1,72 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 11/25] qla2xxx: Include Exchange offload/Extended Login into FW dump
-Date: Fri, 19 May 2017 14:53:30 -0700
-Message-ID: <20170519215344.2168-12-himanshu.madhani@cavium.com>
+Subject: [PATCH 14/25] qla2xxx: Use flag PFLG_DISCONNECTED.
+Date: Fri, 19 May 2017 14:53:33 -0700
+Message-ID: <20170519215344.2168-15-himanshu.madhani@cavium.com>
 References: <20170519215344.2168-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0067.outbound.protection.outlook.com ([104.47.32.67]:57696
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam03on0061.outbound.protection.outlook.com ([104.47.42.61]:21162
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1756792AbdESVyJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 19 May 2017 17:54:09 -0400
+        id S1756731AbdESVyN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 19 May 2017 17:54:13 -0400
 In-Reply-To: <20170519215344.2168-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Quinn Tran <quinn.tran@cavium.com>
+From: Sawan Chandak <sawan.chandak@cavium.com>
 
-Add missing memory dump of Exchange Offload and Extended
-login into FW dump.
+There is already flag defined PFLG_DISCONNECTED, which is set
+for PCI or register disconnect error condition. There is no need to have
+flag PCI_ERR, which has same purpose. Remove use of PCI_ERR flag and use
+PFLG_DISCONNECTED flag during error condition.
 
 Cc: <stable@vger.kernel.org>
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
+Fixes: 783e0dc4f66a ("qla2xxx: Check for device state before unloading the driver.")
+Signed-off-by: Sawan Chandak <sawan.chandak@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_dbg.c  | 52 +++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_dbg.h  | 12 ++++++++++
- drivers/scsi/qla2xxx/qla_init.c |  7 ++++++
- drivers/scsi/qla2xxx/qla_os.c   |  3 ---
- 4 files changed, 71 insertions(+), 3 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h | 1 -
+ drivers/scsi/qla2xxx/qla_mbx.c | 5 ++---
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 88748a6ab73f..ba8cd7c4e3a6 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -498,6 +498,53 @@ qla25xx_copy_fce(struct qla_hw_data *ha, void *ptr, uint32_t **last_chain)
- }
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index eddbc1218a39..4127f35b669c 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -4017,7 +4017,6 @@ typedef struct scsi_qla_host {
+ #define PFLG_DISCONNECTED	0	/* PCI device removed */
+ #define PFLG_DRIVER_REMOVING	1	/* PCI driver .remove */
+ #define PFLG_DRIVER_PROBING	2	/* PCI driver .probe */
+-#define PCI_ERR			30
  
- static inline void *
-+qla25xx_copy_exlogin(struct qla_hw_data *ha, void *ptr, uint32_t **last_chain)
-+{
-+	struct qla2xxx_offld_chain *c = ptr;
-+
-+	if (!ha->exlogin_buf)
-+		return ptr;
-+
-+	*last_chain = &c->type;
-+
-+	c->type = htonl(DUMP_CHAIN_EXLOGIN);
-+	c->chain_size = htonl(sizeof(struct qla2xxx_offld_chain) +
-+	    ha->exlogin_size);
-+	c->size = htonl(ha->exlogin_size);
-+	c->addr_l = htonl(LSD(ha->exlogin_buf_dma));
-+	c->addr_h = htonl(MSD(ha->exlogin_buf_dma));
-+
-+	ptr += sizeof(struct qla2xxx_offld_chain);
-+	memcpy(ptr, ha->exlogin_buf, ha->exlogin_size);
-+
-+	return (char *)ptr + ntohl(c->size);
-+}
-+
-+static inline void *
-+qla81xx_copy_exchoffld(struct qla_hw_data *ha, void *ptr, uint32_t **last_chain)
-+{
-+	struct qla2xxx_offld_chain *c = ptr;
-+
-+	if (!ha->exchoffld_buf)
-+		return ptr;
-+
-+	*last_chain = &c->type;
-+
-+	c->type = htonl(DUMP_CHAIN_EXCHG);
-+	c->chain_size = htonl(sizeof(struct qla2xxx_offld_chain) +
-+	    ha->exchoffld_size);
-+	c->size = htonl(ha->exchoffld_size);
-+	c->addr_l = htonl(LSD(ha->exchoffld_buf_dma));
-+	c->addr_h = htonl(MSD(ha->exchoffld_buf_dma));
-+
-+	ptr += sizeof(struct qla2xxx_offld_chain);
-+	memcpy(ptr, ha->exchoffld_buf, ha->exchoffld_size);
-+
-+	return (char *)ptr + ntohl(c->size);
-+}
-+
-+
-+static inline void *
- qla2xxx_copy_atioqueues(struct qla_hw_data *ha, void *ptr,
- 	uint32_t **last_chain)
- {
-@@ -1606,6 +1653,7 @@ qla25xx_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
- 	nxt_chain = qla25xx_copy_fce(ha, nxt_chain, &last_chain);
- 	nxt_chain = qla25xx_copy_mqueues(ha, nxt_chain, &last_chain);
- 	nxt_chain = qla2xxx_copy_atioqueues(ha, nxt_chain, &last_chain);
-+	nxt_chain = qla25xx_copy_exlogin(ha, nxt_chain, &last_chain);
- 	if (last_chain) {
- 		ha->fw_dump->version |= htonl(DUMP_CHAIN_VARIANT);
- 		*last_chain |= htonl(DUMP_CHAIN_LAST);
-@@ -1932,6 +1980,8 @@ qla81xx_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
- 	nxt_chain = qla25xx_copy_fce(ha, nxt_chain, &last_chain);
- 	nxt_chain = qla25xx_copy_mqueues(ha, nxt_chain, &last_chain);
- 	nxt_chain = qla2xxx_copy_atioqueues(ha, nxt_chain, &last_chain);
-+	nxt_chain = qla25xx_copy_exlogin(ha, nxt_chain, &last_chain);
-+	nxt_chain = qla81xx_copy_exchoffld(ha, nxt_chain, &last_chain);
- 	if (last_chain) {
- 		ha->fw_dump->version |= htonl(DUMP_CHAIN_VARIANT);
- 		*last_chain |= htonl(DUMP_CHAIN_LAST);
-@@ -2443,6 +2493,8 @@ qla83xx_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
- 	nxt_chain = qla25xx_copy_fce(ha, nxt_chain, &last_chain);
- 	nxt_chain = qla25xx_copy_mqueues(ha, nxt_chain, &last_chain);
- 	nxt_chain = qla2xxx_copy_atioqueues(ha, nxt_chain, &last_chain);
-+	nxt_chain = qla25xx_copy_exlogin(ha, nxt_chain, &last_chain);
-+	nxt_chain = qla81xx_copy_exchoffld(ha, nxt_chain, &last_chain);
- 	if (last_chain) {
- 		ha->fw_dump->version |= htonl(DUMP_CHAIN_VARIANT);
- 		*last_chain |= htonl(DUMP_CHAIN_LAST);
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.h b/drivers/scsi/qla2xxx/qla_dbg.h
-index c6bffe929fe7..c4b1bb76cf48 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.h
-+++ b/drivers/scsi/qla2xxx/qla_dbg.h
-@@ -232,6 +232,16 @@ struct qla2xxx_fce_chain {
- 	uint32_t eregs[8];
- };
+ 	uint32_t	device_flags;
+ #define SWITCH_FOUND		BIT_0
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index cba1fc5e8be9..fffa1f7cd8d2 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -124,7 +124,8 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 	}
  
-+/* used by exchange off load and extended login offload */
-+struct qla2xxx_offld_chain {
-+	uint32_t type;
-+	uint32_t chain_size;
-+
-+	uint32_t size;
-+	uint32_t addr_l;
-+	uint32_t addr_h;
-+};
-+
- struct qla2xxx_mq_chain {
- 	uint32_t type;
- 	uint32_t chain_size;
-@@ -258,6 +268,8 @@ struct qla2xxx_mqueue_chain {
- #define DUMP_CHAIN_FCE		0x7FFFFAF0
- #define DUMP_CHAIN_MQ		0x7FFFFAF1
- #define DUMP_CHAIN_QUEUE	0x7FFFFAF2
-+#define DUMP_CHAIN_EXLOGIN	0x7FFFFAF3
-+#define DUMP_CHAIN_EXCHG	0x7FFFFAF4
- #define DUMP_CHAIN_LAST		0x80000000
- 
- struct qla2xxx_fw_dump {
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index eaaf73fd23d9..2d36844a040c 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -2524,6 +2524,13 @@ qla2x00_alloc_fw_dump(scsi_qla_host_t *vha)
- 	ha->chain_offset = dump_size;
- 	dump_size += mq_size + fce_size;
- 
-+	if (ha->exchoffld_buf)
-+		dump_size += sizeof(struct qla2xxx_offld_chain) +
-+			ha->exchoffld_size;
-+	if (ha->exlogin_buf)
-+		dump_size += sizeof(struct qla2xxx_offld_chain) +
-+			ha->exlogin_size;
-+
- allocate:
- 	ha->fw_dump = vmalloc(dump_size);
- 	if (!ha->fw_dump) {
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index c8282a1ab6dc..e437122bd534 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -4048,9 +4048,6 @@ qla2x00_set_exchoffld_buffer(scsi_qla_host_t *vha)
- 	if (!ql2xexchoffld)
- 		return QLA_SUCCESS;
- 
--	ql_log(ql_log_info, vha, 0xd014,
--	    "Exchange offload count: %d.\n", ql2xexlogins);
--
- 	max_cnt = 0;
- 	rval = qla_get_exchoffld_status(vha, &size, &max_cnt);
- 	if (rval != QLA_SUCCESS) {
+ 	/* if PCI error, then avoid mbx processing.*/
+-	if (test_bit(PCI_ERR, &base_vha->dpc_flags)) {
++	if (test_bit(PFLG_DISCONNECTED, &base_vha->dpc_flags) &&
++	    test_bit(UNLOADING, &base_vha->dpc_flags)) {
+ 		ql_log(ql_log_warn, vha, 0x1191,
+ 		    "PCI error, exiting.\n");
+ 		return QLA_FUNCTION_TIMEOUT;
+@@ -384,8 +385,6 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 				 * then only PCI ERR flag would be set.
+ 				 * we will do premature exit for above case.
+ 				 */
+-				if (test_bit(UNLOADING, &base_vha->dpc_flags))
+-					set_bit(PCI_ERR, &base_vha->dpc_flags);
+ 				ha->flags.mbox_busy = 0;
+ 				rval = QLA_FUNCTION_TIMEOUT;
+ 				goto premature_exit;
 -- 
 2.12.0
