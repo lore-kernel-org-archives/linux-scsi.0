@@ -1,34 +1,34 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] csiostor: Avoid content leaks and casts
-Date: Thu, 18 May 2017 21:35:27 -0400
-Message-ID: <yq1pof54oio.fsf@oracle.com>
-References: <20170509223444.GA51314@beast>
+Subject: Re: [PATCH] scsi: libcxgbi: fix skb use after free
+Date: Thu, 18 May 2017 21:36:59 -0400
+Message-ID: <yq1lgpt4og4.fsf@oracle.com>
+References: <1494942824-2252-1-git-send-email-varun@chelsio.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170509223444.GA51314@beast> (Kees Cook's message of "Tue, 9
-        May 2017 15:34:44 -0700")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Varun Prakash <varun@chelsio.com>
-Cc: linux-kernel@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Daniel Micay <danielmicay@gmail.com>, Kees Cook <keescook@chromium.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:24772 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932317AbdESBhJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 May 2017 21:37:09 -0400
+In-Reply-To: <1494942824-2252-1-git-send-email-varun@chelsio.com> (Varun
+        Prakash's message of "Tue, 16 May 2017 19:23:44 +0530")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Varun Prakash <varun@chelsio.com>
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, indranil@chelsio.com
 
 
-Varun,
+> skb->data is assigned to task->hdr in cxgbi_conn_alloc_pdu(),
+> skb gets freed after tx but task->hdr is still dereferenced in
+> iscsi_tcp_task_xmit() to avoid this call skb_get() after allocating
+> skb and free the skb in cxgbi_cleanup_task() or before allocating new
+> skb in cxgbi_conn_alloc_pdu().
 
-You weren't CC:ed on this patch. Please review. Thanks!
+Somebody please review!
 
-> When copying attributes, the len argument was padded out and the
-> resulting memcpy() would copy beyond the end of the source buffer.
-> Avoid this, and use size_t for val_len to avoid all the
-> casts. Similarly, avoid source buffer casts and use void *.
->
-> Additionally enforces val_len can be represented by u16 and that the
-> DMA buffer was not overflowed. Fixes the size of mfa, which is not
-> FC_FDMI_PORT_ATTR_MAXFRAMESIZE_LEN (but it will be padded up to
-> 4). This was noticed by the future CONFIG_FORTIFY_SOURCE checks.
+https://patchwork.kernel.org/patch/9729239/
 
-https://patchwork.kernel.org/patch/9718995/
+Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
