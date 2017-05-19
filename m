@@ -1,136 +1,113 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 04/25] qla2xxx: Replace usage of spin_lock with spin_lock_irqsave
-Date: Fri, 19 May 2017 14:53:23 -0700
-Message-ID: <20170519215344.2168-5-himanshu.madhani@cavium.com>
+Subject: [PATCH 05/25] qla2xxx: Fix number of queue pairs creation for MQ
+Date: Fri, 19 May 2017 14:53:24 -0700
+Message-ID: <20170519215344.2168-6-himanshu.madhani@cavium.com>
 References: <20170519215344.2168-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0060.outbound.protection.outlook.com ([104.47.42.60]:60336
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0054.outbound.protection.outlook.com ([104.47.37.54]:23072
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1756703AbdESVyB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 19 May 2017 17:54:01 -0400
+        id S1756760AbdESVyC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 19 May 2017 17:54:02 -0400
 In-Reply-To: <20170519215344.2168-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Quinn Tran <quinn.tran@cavium.com>
+From: Sawan Chandak <sawan.chandak@cavium.com>
 
-qla2xxx driver lives in interrupt context. Remove
-spin_lock usage to prevent leaving CPU in a strange
-state.
+when driver is loaded with Multi Queue enabled, it was
+noticed that there was one less queue pair created.
 
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
+Following message would indicate this
+
+"No resources to create additional q pair."
+
+The result of one less queue pair means that system can crash,
+if the block mq layer thinks there is an extra hardware queue
+available, and the driver will use a NULL ptr qpair in that instance.
+
+Following stack trace is seen in one of the crash
+
+irq_create_affinity_masks+0x98/0x530
+irq_create_affinity_masks+0x98/0x530
+__pci_enable_msix+0x321/0x4e0
+mutex_lock+0x12/0x40
+pci_alloc_irq_vectors_affinity+0xb5/0x140
+qla24xx_enable_msix+0x79/0x530 [qla2xxx]
+qla2x00_request_irqs+0x61/0x2d0 [qla2xxx]
+qla2x00_probe_one+0xc73/0x2390 [qla2xxx]
+ida_simple_get+0x98/0x100
+kernfs_next_descendant_post+0x40/0x50
+local_pci_probe+0x45/0xa0
+pci_device_probe+0xfc/0x140
+driver_probe_device+0x2c5/0x470
+__driver_attach+0xdd/0xe0
+driver_probe_device+0x470/0x470
+bus_for_each_dev+0x6c/0xc0
+driver_attach+0x1e/0x20
+bus_add_driver+0x45/0x270
+driver_register+0x60/0xe0
+__pci_register_driver+0x4c/0x50
+qla2x00_module_init+0x1ce/0x21e [qla2xxx]
+
+Cc: <stable@vger.kernel.org> #4.10
+Signed-off-by: Sawan Chandak <sawan.chandak@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 26 ++++++++++++++------------
- 1 file changed, 14 insertions(+), 12 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h  | 1 +
+ drivers/scsi/qla2xxx/qla_init.c | 5 ++++-
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 0e03ca2ab3e5..4c64f8e3f9b6 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1762,13 +1762,13 @@ static int abort_cmd_for_tag(struct scsi_qla_host *vha, uint32_t tag)
- {
- 	struct qla_tgt_sess_op *op;
- 	struct qla_tgt_cmd *cmd;
-+	unsigned long flags;
- 
--	spin_lock(&vha->cmd_list_lock);
--
-+	spin_lock_irqsave(&vha->cmd_list_lock, flags);
- 	list_for_each_entry(op, &vha->qla_sess_op_cmd_list, cmd_list) {
- 		if (tag == op->atio.u.isp24.exchange_addr) {
- 			op->aborted = true;
--			spin_unlock(&vha->cmd_list_lock);
-+			spin_unlock_irqrestore(&vha->cmd_list_lock, flags);
- 			return 1;
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index ae119018dfaa..eddbc1218a39 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -3425,6 +3425,7 @@ struct qla_hw_data {
+ 	uint8_t 	max_req_queues;
+ 	uint8_t 	max_rsp_queues;
+ 	uint8_t		max_qpairs;
++	uint8_t		num_qpairs;
+ 	struct qla_qpair *base_qpair;
+ 	struct qla_npiv_entry *npiv_info;
+ 	uint16_t	nvram_npiv_size;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index a017a1af1707..f6130e8b1ca1 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -7546,12 +7546,13 @@ struct qla_qpair *qla2xxx_create_qpair(struct scsi_qla_host *vha, int qos, int v
+ 		/* Assign available que pair id */
+ 		mutex_lock(&ha->mq_lock);
+ 		qpair_id = find_first_zero_bit(ha->qpair_qid_map, ha->max_qpairs);
+-		if (qpair_id >= ha->max_qpairs) {
++		if (ha->num_qpairs >= ha->max_qpairs) {
+ 			mutex_unlock(&ha->mq_lock);
+ 			ql_log(ql_log_warn, vha, 0x0183,
+ 			    "No resources to create additional q pair.\n");
+ 			goto fail_qid_map;
  		}
- 	}
-@@ -1776,7 +1776,7 @@ static int abort_cmd_for_tag(struct scsi_qla_host *vha, uint32_t tag)
- 	list_for_each_entry(op, &vha->unknown_atio_list, cmd_list) {
- 		if (tag == op->atio.u.isp24.exchange_addr) {
- 			op->aborted = true;
--			spin_unlock(&vha->cmd_list_lock);
-+			spin_unlock_irqrestore(&vha->cmd_list_lock, flags);
- 			return 1;
- 		}
- 	}
-@@ -1784,12 +1784,12 @@ static int abort_cmd_for_tag(struct scsi_qla_host *vha, uint32_t tag)
- 	list_for_each_entry(cmd, &vha->qla_cmd_list, cmd_list) {
- 		if (tag == cmd->atio.u.isp24.exchange_addr) {
- 			cmd->aborted = 1;
--			spin_unlock(&vha->cmd_list_lock);
-+			spin_unlock_irqrestore(&vha->cmd_list_lock, flags);
- 			return 1;
- 		}
- 	}
-+	spin_unlock_irqrestore(&vha->cmd_list_lock, flags);
- 
--	spin_unlock(&vha->cmd_list_lock);
- 	return 0;
- }
- 
-@@ -1804,9 +1804,10 @@ static void abort_cmds_for_lun(struct scsi_qla_host *vha,
- 	struct qla_tgt_sess_op *op;
- 	struct qla_tgt_cmd *cmd;
- 	uint32_t key;
-+	unsigned long flags;
- 
- 	key = sid_to_key(s_id);
--	spin_lock(&vha->cmd_list_lock);
-+	spin_lock_irqsave(&vha->cmd_list_lock, flags);
- 	list_for_each_entry(op, &vha->qla_sess_op_cmd_list, cmd_list) {
- 		uint32_t op_key;
- 		uint32_t op_lun;
-@@ -1839,7 +1840,7 @@ static void abort_cmds_for_lun(struct scsi_qla_host *vha,
- 		if (cmd_key == key && cmd_lun == lun)
- 			cmd->aborted = 1;
- 	}
--	spin_unlock(&vha->cmd_list_lock);
-+	spin_unlock_irqrestore(&vha->cmd_list_lock, flags);
- }
- 
- /* ha->hardware_lock supposed to be held on entry */
-@@ -4214,9 +4215,9 @@ static int qlt_handle_cmd_for_atio(struct scsi_qla_host *vha,
- 		memcpy(&op->atio, atio, sizeof(*atio));
- 		op->vha = vha;
- 
--		spin_lock(&vha->cmd_list_lock);
-+		spin_lock_irqsave(&vha->cmd_list_lock, flags);
- 		list_add_tail(&op->cmd_list, &vha->qla_sess_op_cmd_list);
--		spin_unlock(&vha->cmd_list_lock);
-+		spin_unlock_irqrestore(&vha->cmd_list_lock, flags);
- 
- 		INIT_WORK(&op->work, qlt_create_sess_from_atio);
- 		queue_work(qla_tgt_wq, &op->work);
-@@ -4527,12 +4528,13 @@ static int abort_cmds_for_s_id(struct scsi_qla_host *vha, port_id_t *s_id)
- 	struct qla_tgt_cmd *cmd;
- 	uint32_t key;
- 	int count = 0;
-+	unsigned long flags;
- 
- 	key = (((u32)s_id->b.domain << 16) |
- 	       ((u32)s_id->b.area   <<  8) |
- 	       ((u32)s_id->b.al_pa));
- 
--	spin_lock(&vha->cmd_list_lock);
-+	spin_lock_irqsave(&vha->cmd_list_lock, flags);
- 	list_for_each_entry(op, &vha->qla_sess_op_cmd_list, cmd_list) {
- 		uint32_t op_key = sid_to_key(op->atio.u.isp24.fcp_hdr.s_id);
- 
-@@ -4557,7 +4559,7 @@ static int abort_cmds_for_s_id(struct scsi_qla_host *vha, port_id_t *s_id)
- 			count++;
- 		}
- 	}
--	spin_unlock(&vha->cmd_list_lock);
-+	spin_unlock_irqrestore(&vha->cmd_list_lock, flags);
- 
- 	return count;
- }
++		ha->num_qpairs++;
+ 		set_bit(qpair_id, ha->qpair_qid_map);
+ 		ha->queue_pair_map[qpair_id] = qpair;
+ 		qpair->id = qpair_id;
+@@ -7638,6 +7639,7 @@ struct qla_qpair *qla2xxx_create_qpair(struct scsi_qla_host *vha, int qos, int v
+ fail_msix:
+ 	ha->queue_pair_map[qpair_id] = NULL;
+ 	clear_bit(qpair_id, ha->qpair_qid_map);
++	ha->num_qpairs--;
+ 	mutex_unlock(&ha->mq_lock);
+ fail_qid_map:
+ 	kfree(qpair);
+@@ -7663,6 +7665,7 @@ int qla2xxx_delete_qpair(struct scsi_qla_host *vha, struct qla_qpair *qpair)
+ 	mutex_lock(&ha->mq_lock);
+ 	ha->queue_pair_map[qpair->id] = NULL;
+ 	clear_bit(qpair->id, ha->qpair_qid_map);
++	ha->num_qpairs--;
+ 	list_del(&qpair->qp_list_elem);
+ 	if (list_empty(&vha->qp_list))
+ 		vha->flags.qpairs_available = 0;
 -- 
 2.12.0
