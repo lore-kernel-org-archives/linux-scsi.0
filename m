@@ -1,72 +1,62 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 14/25] qla2xxx: Use flag PFLG_DISCONNECTED.
-Date: Fri, 19 May 2017 14:53:33 -0700
-Message-ID: <20170519215344.2168-15-himanshu.madhani@cavium.com>
+Subject: [PATCH 13/25] tcm_qla2xxx: Do not allow aborted cmd to advance.
+Date: Fri, 19 May 2017 14:53:32 -0700
+Message-ID: <20170519215344.2168-14-himanshu.madhani@cavium.com>
 References: <20170519215344.2168-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0061.outbound.protection.outlook.com ([104.47.42.61]:21162
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0088.outbound.protection.outlook.com ([104.47.37.88]:21419
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1756731AbdESVyN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 19 May 2017 17:54:13 -0400
+        id S1756672AbdESVyM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 19 May 2017 17:54:12 -0400
 In-Reply-To: <20170519215344.2168-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Sawan Chandak <sawan.chandak@cavium.com>
+From: Quinn Tran <quinn.tran@cavium.com>
 
-There is already flag defined PFLG_DISCONNECTED, which is set
-for PCI or register disconnect error condition. There is no need to have
-flag PCI_ERR, which has same purpose. Remove use of PCI_ERR flag and use
-PFLG_DISCONNECTED flag during error condition.
+In case of hardware queue full, commands can loop between
+TCM stack and tcm_qla2xx shim layers for retry. While command
+is waiting for retry, task mgmt can get ahead and abort the
+cmmand that encountered queue full condition. Fix this by
+dropping the command, if task mgmt has already started the
+command free process.
 
 Cc: <stable@vger.kernel.org>
-Fixes: 783e0dc4f66a ("qla2xxx: Check for device state before unloading the driver.")
-Signed-off-by: Sawan Chandak <sawan.chandak@cavium.com>
+Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h | 1 -
- drivers/scsi/qla2xxx/qla_mbx.c | 5 ++---
- 2 files changed, 2 insertions(+), 4 deletions(-)
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index eddbc1218a39..4127f35b669c 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -4017,7 +4017,6 @@ typedef struct scsi_qla_host {
- #define PFLG_DISCONNECTED	0	/* PCI device removed */
- #define PFLG_DRIVER_REMOVING	1	/* PCI driver .remove */
- #define PFLG_DRIVER_PROBING	2	/* PCI driver .probe */
--#define PCI_ERR			30
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 7443e4efa3ae..07f8ad001bcb 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -686,6 +686,20 @@ static int tcm_qla2xxx_queue_status(struct se_cmd *se_cmd)
+ 				struct qla_tgt_cmd, se_cmd);
+ 	int xmit_type = QLA_TGT_XMIT_STATUS;
  
- 	uint32_t	device_flags;
- #define SWITCH_FOUND		BIT_0
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index cba1fc5e8be9..fffa1f7cd8d2 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -124,7 +124,8 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
- 	}
- 
- 	/* if PCI error, then avoid mbx processing.*/
--	if (test_bit(PCI_ERR, &base_vha->dpc_flags)) {
-+	if (test_bit(PFLG_DISCONNECTED, &base_vha->dpc_flags) &&
-+	    test_bit(UNLOADING, &base_vha->dpc_flags)) {
- 		ql_log(ql_log_warn, vha, 0x1191,
- 		    "PCI error, exiting.\n");
- 		return QLA_FUNCTION_TIMEOUT;
-@@ -384,8 +385,6 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
- 				 * then only PCI ERR flag would be set.
- 				 * we will do premature exit for above case.
- 				 */
--				if (test_bit(UNLOADING, &base_vha->dpc_flags))
--					set_bit(PCI_ERR, &base_vha->dpc_flags);
- 				ha->flags.mbox_busy = 0;
- 				rval = QLA_FUNCTION_TIMEOUT;
- 				goto premature_exit;
++	if (cmd->aborted) {
++		/*
++		 * Cmd can loop during Q-full. tcm_qla2xxx_aborted_task
++		 * can get ahead of this cmd. tcm_qla2xxx_aborted_task
++		 * already kick start the free.
++		 */
++		pr_debug(
++		    "queue_data_in aborted cmd[%p] refcount %d transport_state %x, t_state %x, se_cmd_flags %x\n",
++		    cmd, kref_read(&cmd->se_cmd.cmd_kref),
++		    cmd->se_cmd.transport_state, cmd->se_cmd.t_state,
++		    cmd->se_cmd.se_cmd_flags);
++		return 0;
++	}
++
+ 	cmd->bufflen = se_cmd->data_length;
+ 	cmd->sg = NULL;
+ 	cmd->sg_cnt = 0;
 -- 
 2.12.0
