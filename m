@@ -1,38 +1,136 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH] lpfc: nvmet_fc: fix format string
-Date: Sat, 20 May 2017 03:28:47 -0700
-Message-ID: <1495276127.27714.4.camel@perches.com>
-References: <20170519080447.1043039-1-arnd@arndb.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtprelay0058.hostedemail.com ([216.40.44.58]:46038 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750898AbdETK2v (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 20 May 2017 06:28:51 -0400
-In-Reply-To: <20170519080447.1043039-1-arnd@arndb.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
+Subject: [PATCH 1/2] scsi: nsp32: add __printf attribute to logging functions
+Date: Sat, 20 May 2017 13:16:27 +0200
+Message-ID: <20170520111628.24787-1-nicolas.iooss_linux@m4x.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: GOTO Masanori <gotom@debian.or.jp>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nicolas Iooss <nicolas.iooss_linux@m4x.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>, James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, 2017-05-19 at 10:04 +0200, Arnd Bergmann wrote:
-> The lpfc_nvmeio_data() tracing helper always takes a format string and
-> three additional arguments.
+nsp32_message() and nsp32_dmessage() use printf format strings in order
+to format a message. Adding __printf attributes helps to detect errors
+in such format strings at build time, like:
 
-No it doesn't.  It takes a format and arguments.
+    drivers/scsi/nsp32.c:3314:23: error: format '%ld' expects argument
+    of type 'long int', but argument 6 has type 'pm_message_t {aka
+    struct pm_message}' [-Werror=format=]
+      nsp32_msg(KERN_INFO,
+      "pci-suspend: pdev=0x%p, state=%ld, slot=%s, host=0x%p",
+      pdev, state, pci_name(pdev), host);
 
-I don't disagree with the patch, just the characterization
-of the lpfc_mvmeio_data call in the commit message.
+Fix all format string errors which were reported by gcc.
 
-> The latest caller has a format string with
-> only two integer arguments, causing this harmless warning:
-> 
-> drivers/scsi/lpfc/lpfc_nvmet.c: In function 'lpfc_nvmet_xmt_fcp_release':
-> drivers/scsi/lpfc/lpfc_nvmet.c:802:25: error: too many arguments for format [-Werror=format-extra-args]
->   lpfc_nvmeio_data(phba, "NVMET FCP FREE: xri x%x ste %d\n", ctxp->oxid,
-> 
-> We could add a dummy argument here, but it seems reasonable to print
-> the 'abort' flag as the third argument.
+Signed-off-by: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
+---
+ drivers/scsi/nsp32.c | 28 ++++++++++++++++------------
+ 1 file changed, 16 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
+index 53c84771f0e8..0689b0564fbf 100644
+--- a/drivers/scsi/nsp32.c
++++ b/drivers/scsi/nsp32.c
+@@ -257,9 +257,11 @@ static        void nsp32_prom_set      (nsp32_hw_data *, int, int);
+ static        int  nsp32_prom_get      (nsp32_hw_data *, int);
+ 
+ /* debug/warning/info message */
+-static void nsp32_message (const char *, int, char *, char *, ...);
++static __printf(4, 5)
++void nsp32_message (const char *, int, char *, const char *, ...);
+ #ifdef NSP32_DEBUG
+-static void nsp32_dmessage(const char *, int, int,    char *, ...);
++static __printf(4, 5)
++void nsp32_dmessage(const char *, int, int,    const char *, ...);
+ #endif
+ 
+ /*
+@@ -321,7 +323,8 @@ static struct scsi_host_template nsp32_template = {
+ 
+ #define NSP32_DEBUG_BUF_LEN		100
+ 
+-static void nsp32_message(const char *func, int line, char *type, char *fmt, ...)
++static __printf(4, 5)
++void nsp32_message(const char *func, int line, char *type, const char *fmt, ...)
+ {
+ 	va_list args;
+ 	char buf[NSP32_DEBUG_BUF_LEN];
+@@ -338,7 +341,8 @@ static void nsp32_message(const char *func, int line, char *type, char *fmt, ...
+ }
+ 
+ #ifdef NSP32_DEBUG
+-static void nsp32_dmessage(const char *func, int line, int mask, char *fmt, ...)
++static __printf(4, 5)
++void nsp32_dmessage(const char *func, int line, int mask, const char *fmt, ...)
+ {
+ 	va_list args;
+ 	char buf[NSP32_DEBUG_BUF_LEN];
+@@ -697,7 +701,7 @@ static int nsp32_selection_autoscsi(struct scsi_cmnd *SCpnt)
+ 	nsp32_write1(base, ACK_WIDTH, data->cur_target->ackwidth);
+ 
+ 	nsp32_dbg(NSP32_DEBUG_AUTOSCSI,
+-		  "syncreg=0x%x, ackwidth=0x%x, sgtpaddr=0x%x, id=0x%x",
++		  "syncreg=0x%x, ackwidth=0x%x, sgtpaddr=0x%lx, id=0x%x",
+ 		  nsp32_read1(base, SYNC_REG), nsp32_read1(base, ACK_WIDTH),
+ 		  nsp32_read4(base, SGT_ADR), nsp32_read1(base, SCSI_OUT_LATCH_TARGET_ID));
+ 	nsp32_dbg(NSP32_DEBUG_AUTOSCSI, "msgout_len=%d, msgout=0x%x",
+@@ -888,11 +892,11 @@ static int nsp32_setup_sg_table(struct scsi_cmnd *SCpnt)
+ 
+ 			if (le32_to_cpu(sgt[i].len) > 0x10000) {
+ 				nsp32_msg(KERN_ERR,
+-					"can't transfer over 64KB at a time, size=0x%lx", le32_to_cpu(sgt[i].len));
++					"can't transfer over 64KB at a time, size=0x%x", le32_to_cpu(sgt[i].len));
+ 				return FALSE;
+ 			}
+ 			nsp32_dbg(NSP32_DEBUG_SGLIST,
+-				  "num 0x%x : addr 0x%lx len 0x%lx",
++				  "num 0x%x : addr 0x%x len 0x%x",
+ 				  i,
+ 				  le32_to_cpu(sgt[i].addr),
+ 				  le32_to_cpu(sgt[i].len ));
+@@ -915,7 +919,7 @@ static int nsp32_queuecommand_lck(struct scsi_cmnd *SCpnt, void (*done)(struct s
+ 
+ 	nsp32_dbg(NSP32_DEBUG_QUEUECOMMAND,
+ 		  "enter. target: 0x%x LUN: 0x%llx cmnd: 0x%x cmndlen: 0x%x "
+-		  "use_sg: 0x%x reqbuf: 0x%lx reqlen: 0x%x",
++		  "use_sg: 0x%x reqbuf: %p reqlen: 0x%x",
+ 		  SCpnt->device->id, SCpnt->device->lun, SCpnt->cmnd[0], SCpnt->cmd_len,
+ 		  scsi_sg_count(SCpnt), scsi_sglist(SCpnt), scsi_bufflen(SCpnt));
+ 
+@@ -2742,7 +2746,7 @@ static int nsp32_detect(struct pci_dev *pdev)
+ 	res = request_region(host->io_port, host->n_io_port, "nsp32");
+ 	if (res == NULL) {
+ 		nsp32_msg(KERN_ERR, 
+-			  "I/O region 0x%lx+0x%lx is already used",
++			  "I/O region 0x%x+0x%x is already used",
+ 			  data->BaseAddress, data->NumAddress);
+ 		goto free_irq;
+         }
+@@ -2853,7 +2857,7 @@ static int nsp32_eh_bus_reset(struct scsi_cmnd *SCpnt)
+ 	spin_lock_irq(SCpnt->device->host->host_lock);
+ 
+ 	nsp32_msg(KERN_INFO, "Bus Reset");	
+-	nsp32_dbg(NSP32_DEBUG_BUSRESET, "SCpnt=0x%x", SCpnt);
++	nsp32_dbg(NSP32_DEBUG_BUSRESET, "SCpnt=%p", SCpnt);
+ 
+ 	nsp32_write2(base, IRQ_CONTROL, IRQ_CONTROL_ALL_IRQ_MASK);
+ 	nsp32_do_bus_reset(data);
+@@ -2912,7 +2916,7 @@ static int nsp32_eh_host_reset(struct scsi_cmnd *SCpnt)
+ 	nsp32_hw_data    *data = (nsp32_hw_data *)host->hostdata;
+ 
+ 	nsp32_msg(KERN_INFO, "Host Reset");	
+-	nsp32_dbg(NSP32_DEBUG_BUSRESET, "SCpnt=0x%x", SCpnt);
++	nsp32_dbg(NSP32_DEBUG_BUSRESET, "SCpnt=%p", SCpnt);
+ 
+ 	spin_lock_irq(SCpnt->device->host->host_lock);
+ 
+@@ -3307,7 +3311,7 @@ static int nsp32_suspend(struct pci_dev *pdev, pm_message_t state)
+ {
+ 	struct Scsi_Host *host = pci_get_drvdata(pdev);
+ 
+-	nsp32_msg(KERN_INFO, "pci-suspend: pdev=0x%p, state=%ld, slot=%s, host=0x%p", pdev, state, pci_name(pdev), host);
++	nsp32_msg(KERN_INFO, "pci-suspend: pdev=0x%p, state=%d, slot=%s, host=0x%p", pdev, state.event, pci_name(pdev), host);
+ 
+ 	pci_save_state     (pdev);
+ 	pci_disable_device (pdev);
+-- 
+2.12.2
