@@ -1,68 +1,46 @@
-From: <alters@usg.edu>
-Subject: (unknown)
-Date: Sat, 20 May 2017 16:22:03 -0000
-Message-ID: <149529732363.6150.5231965319722211536@surnet.ru>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] lpfc: nvmet_fc: fix format string
+Date: Sat, 20 May 2017 21:10:59 +0200
+Message-ID: <CAK8P3a37qj9szwsmksxFr_pWXK8LLzTG+4_mJ7t9WB76pO6A2A@mail.gmail.com>
+References: <20170519080447.1043039-1-arnd@arndb.de> <1495276127.27714.4.camel@perches.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="4380970736.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ip-188-17-248-239.dsl.surnet.ru ([188.17.248.239]:35049 "HELO
-        surnet.ru" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-        id S1752887AbdETQWI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 20 May 2017 12:22:08 -0400
-Subject: 
-Content-Disposition: attachment
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:32885 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751414AbdETTLB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 20 May 2017 15:11:01 -0400
+In-Reply-To: <1495276127.27714.4.camel@perches.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-UEsDBAoAAAAAAPqBtEoRSqNkfwoAAH8KAAAIAAAANTYyMS56aXBQSwMEFAAAAAgA+oG0SkUvIhXr
-CQAACDIAAAcAAAA1NjIxLmpzlVtbc9JAFH53xv/AMMMI05kag5cyHR+4tbUWioC21fEhhVCCEDDE
-Yuv43w0byDn77VmoL2Gz13O/Zal+DYObuFdrr8Yng87Pz6d+7n3u+bMX7cfTftP7PO2OA2qOVPPF
-QTKu3pdzGrulpn/Vopd62lSLknf1O76h8fGmqQaS9zYNXVCzL+3So/EwaarOzfspDSX4hAw2aq7Y
-HGpWBzHiTgjfixtdX7bVFIkWamCinv5g261eu+O4mF8B9ktaOaBm98MiVjPWXaqR9h/SlCUQYCxC
-mh7D6JpXPaW0IyPsce4ceu5aV/7PUe/TpP2oOjLIrmmvj3xMtTarOaVPgVRTGmo8Urup8S/YImeT
-Q5rNJZIhfkXNli5K47omjBf9XsigRYJ3/TsaTbFjhAbcPFg9pHGCvciYcaYRk9RAX9HK09iBLj9c
-JZgYR8A1pGcoaZdC1JCzEeAYAY5zApZIPKszEnsATIT8mMOEoV+suLRB6YDaKSV2yMAoXnkS1SNR
-PfIHvYxqJmBBCMS+YxOQTBEwbT5jJtGuq579+LqI4JCaazKV6JWTaSaa80EkbqlOXGq2yhwfxfnt
-ASB2ETshVHM5nbIND4HLIw6MEphd1FFLORfrc1S2lK+oYxVqasRSK0XBWgXhEM6dA2tWTAzzMHbQ
-SygS3h1qB6iXNc6qsRV4TSh2koBkMMrURcceTVP2blLEBagMsgBGedFH/dIllzbUlS1EHwhyde9H
-dqcWIJNDjWNqQNsNRVR1muYxAAxpW90Kqgm0DfFRV6Qn8THi+jwk4GlXn7PaKsXcMsLRB4xTC7th
-md9F3gzVmxmMKWOfaG+HQSRqThpbHDNXztb/0D2VGfKdAfofT4HDVZDp8a/MsHJGfwZ0o9G5GPi9
-B8+WOxeloEXNqzSsE8Ke8TpWAvjV7wSo0wU3cf1RjE9PeZgEcD42DweMCICtBwdEsLpq18fiKyZa
-1OT8vGKmvkltRrnucMzknNFxwjjNML1dSOT8oBoddrLqeA/UzIGO7+dgEtQyE/FJBK97/ZGzgppT
-gxXp2aCGhwOu9zbbaDp4049VgbkxZ5ERxEteNyeSgeH9lZqXndVPIPADvf8G7btmPAQCpDO/MC0f
-cL3LgYjm/XtGL8wXiszloDPxefrkceNnhoCmS+RhtSWOBmB4pHN3CGiMbA5RC5IzH6HeZEdhxNQY
-+Il+vczcRSn1hvl7Hl8WmOtwVkvRTRWYo3FYdxmI1zDDG20xP4pn4yu2pwvC5qhnlbEUyG8k6psc
-3fDQerauui5vQV0mDKqBxn0C8Kjguqs0PE6mmHmuekYiVAu2JacLs5oyB3zQ+alUCJjyLV0Gsprj
-VjjnagW+WAPdaYAcsm0dIj6Rtco1Ff1sgTZTv2TOXcZf2mC/BDJoss1NaW9oQhsCn/0V4ug6VeiS
-+R/ATve+aP0u2/Y6kE+kV0/jNK4ER4wIW+KrH+LAmttL1bIbEAbllDX3UXjDScOI6jRYoCAGAzGZ
-jQPRuQFzdFBUF73LlkITbWrXCqYsO8CNqnpqJpGfwaafUbPfB+fW2UBDSDg0g5hcgEnlBjsLsyzD
-YvKqpWa2qwNOY16evDbkkPaeiNIxAK8Ui+actNgiqqzbbfWYirRAoC4KZXevFLL1QMEWgHth4RdM
-U62EaXZkClI67lYKsJEmbYwl3BA5VeaXdgSBGk+1YgrjFBPUmQatmWa4IPso+lxVGjIPpJAptdig
-mKG/EUkyA6QCWVEdJJBkVXVBPR1W65JMq/7HdYPsHVmQJiitRKgy0l02CFRCpcYPZhIMxUVirMDO
-jJPp024nbbZQk0nOY6cN+Nx7mt0D9jpiDOOJZEa46Bj1u3bb5YapaFKEufqfuIDTeOEPAgYn83Mn
-c+b+QMSGUvyql6JINPD4Iy366ovGdQbivhBdsRezxUvRj6gmP2+3LKjpklxx65VsojrfsGTUvh5n
-mXafzMF2jKtENrgl3w6JYBrb4jL3RJFQm7F6sb2UHLKMew40nnHcNGZL9rCynU3GQuRcuUKUMGLY
-dMzsFpEt8+79s+UJGyzMkoHmKWGRpOMuqFYNNMeEcLt2PWbDUFtVkOp874CjdXknZ4e9r+hb7Ip4
-agV7vOYWNPFTT+n74G+m7AYnZA3XQ1wNPLMymEywlo7O+sxOdSw6dEmspJULP5RNztGO9J9NO232
-2XE2+1XXQiK1o2EcXCmR5bYhxhSGU7JacE+yd1NsT+CdfdAzwrGp6CPn4oQHgGl0j1zj4W+M390W
-fPhEFnGA/PVWd8gNq55sGAipc66egmc3FOi5R7L3XTJh/+9oBpN9oGFNVwTLhpaEjjUB1c7e7KQH
-gKhXpssh7Dh8Uth59CQzRKKYGMea3c+4TiAFzSMLkWy6TbRDMvU7mfjsJJYUKvdiL/5FomENIAky
-kuIykK0BZNJjTY7jPr/oGukSLlHdCIu5OzDSrSCb9kL1jnFWi+gLRo7VAy2JI/wIDBTV8g57uSVd
-oaOyzck2DmHH6iMj8qxAB+dBzVJwtuXEYkYys7izlFrmJw1CxKz/kHgZ4ofV711JVKGc9ugcemUp
-XrHuHVWhHrAkjjg5ZnsLKle8Us0Tj6TQDQidIdUswYPb7MqfiBc6rFoNcOnX2OvwQeaeigDNUnIN
-AEOCmZzQCjT2OkkVs3Xzm4L6ZXK3n+SdNLVYBrweuuNSgxkEiegSOcoNrXBpen6OsWqkamc5Mrm7
-Ilxqy9ZulU0vdNptCJ4Nmp12GhdC+vMT8ZPK1NeS8AVPo9O1WhyTKaV51c0RKpFqRFQ8tF+a6qoe
-u/46ct3N0dXDuNrQgyPjyF4986SkdIYhBcYcTTGpn86XisjmZwet4lvZUFv9WHPa2tOcH7MaDFbV
-NBWq94RvZuonxVv7AtL8Dfv6g194G2LPt8SMNqIUItPonQqS6sdMZuu7nMmOrGVTyDG73boZFxo6
-AkICMmI6I5M6JkR8f7C24nWdwnaWjC415wvUgewS+H7nack61dQ6vDOLqt6R7ZSPmH79SbmNkbhx
-JtQsiYL1m2zhHbMxebzLt7mNyNK19KP1XIpPZtK1NOM+m+qXv2vUuWPX7ynuvLpQ0a612K705XGs
-dJw/fnH8/NlF04vCm9vH0Y/Pnfakn9wgz7v5g7zzKnm8yx/nrkdX44fu58fhYnBzETTaqw/rKXfJ
-qB/frJ9e8ojyyU7BKFdMPnDkGl7sF0vfzIXfi6Xc+/e59ZxqFHkPRTi79M35Xsr9ef7sZnh7Gazi
-H6e/Thr11nl3khzp33vTovkPjMPlYhokfw7gmB5O5kFYzOdLpePc3xSuq7B53h0ml6omZ6vbxYfO
-Go4j56378lW5khyZy53/HnnDh6vH2dnNfWda/+hvj2x9+rq+3PPw+/q2/eVisN7yH1BLAQI/ABQA
-AAAIAPqBtEpFLyIV6wkAAAgyAAAHACQAAAAAAAAAIAAAAAAAAAA1NjIxLmpzCgAgAAAAAAABABgA
-4rAbBb/R0gHisBsFv9HSATmkjAS/0dIBUEsFBgAAAAABAAEAWQAAABAKAAAAAFBLAQI/AAoAAAAA
-APqBtEoRSqNkfwoAAH8KAAAIACQAAAAAAAAAIAAAAAAAAAA1NjIxLnppcAoAIAAAAAAAAQAYAEAS
-HgW/0dIBQBIeBb/R0gHaBo8Ev9HSAVBLBQYAAAAAAQABAFoAAAClCgAAAAA=
+On Sat, May 20, 2017 at 12:28 PM, Joe Perches <joe@perches.com> wrote:
+> On Fri, 2017-05-19 at 10:04 +0200, Arnd Bergmann wrote:
+>> The lpfc_nvmeio_data() tracing helper always takes a format string and
+>> three additional arguments.
+>
+> No it doesn't.  It takes a format and arguments.
+>
+> I don't disagree with the patch, just the characterization
+> of the lpfc_mvmeio_data call in the commit message.
+
+I think my description is correct, it's just not obvious from
+reading the code until you also look at the lpfc_debugfs_nvme_trc
+prototype:
+
+extern void lpfc_debugfs_nvme_trc(struct lpfc_hba *phba, char *fmt,
+                                uint16_t data1, uint16_t data2, uint32_t data3);
+#define lpfc_nvmeio_data(phba, fmt, arg...) \
+        { \
+        if (phba->nvmeio_trc_on) \
+                lpfc_debugfs_nvme_trc(phba, fmt, ##arg); \
+        }
+
+
+This is trying to do the same thing as the regular Linux tracepoints,
+but is called in a lot of places that are all required to pass exactly
+three integer arguments along with a matching format string.
+
+      Arnd
