@@ -1,420 +1,115 @@
-From: Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 2/2] libsas: Enhance libsas hotplug
-Date: Sat, 20 May 2017 14:39:20 +0800
-Message-ID: <1495262360-40135-3-git-send-email-wangyijing@huawei.com>
-References: <1495262360-40135-1-git-send-email-wangyijing@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1495262360-40135-1-git-send-email-wangyijing@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: chenqilin2@huawei.com, hare@suse.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chenxiang66@hisilicon.com, huangdaode@hisilicon.com, wangkefeng.wang@huawei.com, zhaohongjiang@huawei.com, dingtianhong@huawei.com, guohanjun@huawei.com, john.garry@huawei.com, fangwei1@huawei.com, yanaijie@huawei.com, hch@lst.de, dan.j.williams@intel.com, Yijing Wang <wangyijing@huawei.com>
+From: Artem Savkov <asavkov@redhat.com>
+Subject: [PATCH v2] Use ctlr directly in rdac_failover_get()
+Date: Sat, 20 May 2017 09:58:10 +0200
+Message-ID: <1495267090-8591-1-git-send-email-asavkov@redhat.com>
+References: <1495232608.2581.3.camel@sandisk.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:50640 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751861AbdETH6i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 20 May 2017 03:58:38 -0400
+In-Reply-To: <1495232608.2581.3.camel@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: hare@suse.de
+Cc: axboe@fb.com, hch@lst.de, martin.petersen@oracle.com, Bart Van Assche <Bart.VanAssche@sandisk.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Artem Savkov <asavkov@redhat.com>, stable@vger.kernel.org
 
-Libsas complete a hotplug event notified by LLDD in several works,
-for example, if libsas receive a PHYE_LOSS_OF_SIGNAL, we process it
-in following steps:
+rdac_failover_get references struct rdac_controller as
+ctlr->ms_sdev->handler_data->ctlr for no apparent reason. Besides being
+inefficient this also introduces a null-pointer dereference as
+send_mode_select() sets ctlr->ms_sdev to NULL before calling
+rdac_failover_get():
 
-notify_phy_event	[interrupt context]
-	sas_queue_event		[queue work on shost->work_q]
-		sas_phye_loss_of_signal		[running in shost->work_q]
-			sas_deform_port		[remove sas port]
-				sas_unregister_dev
-					sas_discover_event	[queue destruct work on shost->work_q tail]
+[   18.432550] device-mapper: multipath service-time: version 0.3.0 loaded
+[   18.436124] BUG: unable to handle kernel NULL pointer dereference at 0000000000000790
+[   18.436129] IP: send_mode_select+0xca/0x560
+[   18.436129] PGD 0
+[   18.436130] P4D 0
+[   18.436130]
+[   18.436132] Oops: 0000 [#1] SMP
+[   18.436133] Modules linked in: dm_service_time sd_mod dm_multipath amdkfd amd_iommu_v2 radeon(+) i2c_algo_bit drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops ttm qla2xxx drm serio_raw scsi_transport_fc bnx2 i2c_core dm_mirror dm_region_hash dm_log dm_mod
+[   18.436143] CPU: 4 PID: 443 Comm: kworker/u16:2 Not tainted 4.12.0-rc1.1.el7.test.x86_64 #1
+[   18.436144] Hardware name: IBM BladeCenter LS22 -[79013SG]-/Server Blade, BIOS -[L8E164AUS-1.07]- 05/25/2011
+[   18.436145] Workqueue: kmpath_rdacd send_mode_select
+[   18.436146] task: ffff880225116a40 task.stack: ffffc90002bd8000
+[   18.436148] RIP: 0010:send_mode_select+0xca/0x560
+[   18.436148] RSP: 0018:ffffc90002bdbda8 EFLAGS: 00010246
+[   18.436149] RAX: 0000000000000000 RBX: ffffc90002bdbe08 RCX: ffff88017ef04a80
+[   18.436150] RDX: ffffc90002bdbe08 RSI: ffff88017ef04a80 RDI: ffff8802248e4388
+[   18.436151] RBP: ffffc90002bdbe48 R08: 0000000000000000 R09: ffffffff81c104c0
+[   18.436151] R10: 00000000000001ff R11: 000000000000035a R12: ffffc90002bdbdd8
+[   18.436152] R13: ffff8802248e4390 R14: ffff880225152800 R15: ffff8802248e4400
+[   18.436153] FS:  0000000000000000(0000) GS:ffff880227d00000(0000) knlGS:0000000000000000
+[   18.436154] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   18.436154] CR2: 0000000000000790 CR3: 000000042535b000 CR4: 00000000000006e0
+[   18.436155] Call Trace:
+[   18.436159]  ? rdac_activate+0x14e/0x150
+[   18.436161]  ? refcount_dec_and_test+0x11/0x20
+[   18.436162]  ? kobject_put+0x1c/0x50
+[   18.436165]  ? scsi_dh_activate+0x6f/0xd0
+[   18.436168]  process_one_work+0x149/0x360
+[   18.436170]  worker_thread+0x4d/0x3c0
+[   18.436172]  kthread+0x109/0x140
+[   18.436173]  ? rescuer_thread+0x380/0x380
+[   18.436174]  ? kthread_park+0x60/0x60
+[   18.436176]  ret_from_fork+0x2c/0x40
+[   18.436177] Code: 49 c7 46 20 00 00 00 00 4c 89 ef c6 07 00 0f 1f 40 00 45 31 ed c7 45 b0 05 00 00 00 44 89 6d b4 4d 89 f5 4c 8b 75 a8 49 8b 45 20 <48> 8b b0 90 07 00 00 48 8b 56 10 8b 42 10 48 8d 7a 28 85 c0 0f
+[   18.436192] RIP: send_mode_select+0xca/0x560 RSP: ffffc90002bdbda8
+[   18.436192] CR2: 0000000000000790
+[   18.436198] ---[ end trace 40f3e4dca1ffabdd ]---
+[   18.436199] Kernel panic - not syncing: Fatal exception
+[   18.436222] Kernel Offset: disabled
+[-- MARK -- Thu May 18 11:45:00 2017]
 
-In above case, complete whole hotplug in two works, remove sas port first, then
-put the destruction of device in another work and queue it on in the tail of
-workqueue, since sas port is the parent of the children rphy device, so if remove
-sas port first, the children rphy device would also be deleted, when the destruction
-work coming, it would find the target has been removed already, and report a
-sysfs warning calltrace.
-
-queue tail                                             queue head
-DISCE_DESTRUCT----> PORTE_BYTES_DMAED event ----->PHYE_LOSS_OF_SIGNAL[running]
-
-There are other hotplug issues in current framework, in above case, if there is
-hotadd sas event queued between hotremove works, the hotplug order would be broken
-and unexpected issues would happen.
-
-In this patch, we try to solve these issues in following steps:
-1. create a new workqueue used to run sas event work, instead of scsi host workqueue,
-   because we may block sas event work, we cannot block the normal scsi works.
-2. create a new workqueue used to run sas discovery events work, instead of scsi host
-   workqueue, because in some cases, eg. in revalidate domain event, we may unregister
-   a sas device and discover new one, we must sync the execution, wait the remove process
-   finish, then start a new discovery. So we must put the probe and destruct discovery
-   events in a new workqueue to avoid deadlock.
-3. introudce a asd_sas_port level wait-complete and a sas_discovery level wait-complete
-   we use former wait-complete to achieve a sas event atomic process and use latter to
-   make a sas discovery sync.
-4. remove disco_mutex in sas_revalidate_domain, since now sas_revalidate_domain sync
-   the destruct discovery event execution, it's no need to lock disco mutex there.
-
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Fixes: 3278255 scsi_dh_rdac: switch to scsi_execute_req_flags()
+Cc: stable@vger.kernel.org
+Signed-off-by: Artem Savkov <asavkov@redhat.com>
 ---
- drivers/scsi/libsas/sas_discover.c | 58 ++++++++++++++++++++++++++++----------
- drivers/scsi/libsas/sas_event.c    |  2 +-
- drivers/scsi/libsas/sas_expander.c |  9 +++++-
- drivers/scsi/libsas/sas_init.c     | 31 +++++++++++++++++++-
- drivers/scsi/libsas/sas_internal.h | 50 ++++++++++++++++++++++++++++++++
- drivers/scsi/libsas/sas_port.c     |  4 +++
- include/scsi/libsas.h              | 11 +++++++-
- 7 files changed, 146 insertions(+), 19 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_rdac.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index 60de662..43e8a1e 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -503,11 +503,10 @@ static void sas_revalidate_domain(struct work_struct *work)
- 	struct domain_device *ddev = port->port_dev;
+diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
+index 3cbab87..2ceff58 100644
+--- a/drivers/scsi/device_handler/scsi_dh_rdac.c
++++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
+@@ -265,18 +265,16 @@ static unsigned int rdac_failover_get(struct rdac_controller *ctlr,
+ 				      struct list_head *list,
+ 				      unsigned char *cdb)
+ {
+-	struct scsi_device *sdev = ctlr->ms_sdev;
+-	struct rdac_dh_data *h = sdev->handler_data;
+ 	struct rdac_mode_common *common;
+ 	unsigned data_size;
+ 	struct rdac_queue_data *qdata;
+ 	u8 *lun_table;
  
- 	/* prevent revalidation from finding sata links in recovery */
--	mutex_lock(&ha->disco_mutex);
- 	if (test_bit(SAS_HA_ATA_EH_ACTIVE, &ha->state)) {
- 		SAS_DPRINTK("REVALIDATION DEFERRED on port %d, pid:%d\n",
- 			    port->id, task_pid_nr(current));
--		goto out;
-+		return;
+-	if (h->ctlr->use_ms10) {
++	if (ctlr->use_ms10) {
+ 		struct rdac_pg_expanded *rdac_pg;
+ 
+ 		data_size = sizeof(struct rdac_pg_expanded);
+-		rdac_pg = &h->ctlr->mode_select.expanded;
++		rdac_pg = &ctlr->mode_select.expanded;
+ 		memset(rdac_pg, 0, data_size);
+ 		common = &rdac_pg->common;
+ 		rdac_pg->page_code = RDAC_PAGE_CODE_REDUNDANT_CONTROLLER + 0x40;
+@@ -288,7 +286,7 @@ static unsigned int rdac_failover_get(struct rdac_controller *ctlr,
+ 		struct rdac_pg_legacy *rdac_pg;
+ 
+ 		data_size = sizeof(struct rdac_pg_legacy);
+-		rdac_pg = &h->ctlr->mode_select.legacy;
++		rdac_pg = &ctlr->mode_select.legacy;
+ 		memset(rdac_pg, 0, data_size);
+ 		common = &rdac_pg->common;
+ 		rdac_pg->page_code = RDAC_PAGE_CODE_REDUNDANT_CONTROLLER;
+@@ -304,7 +302,7 @@ static unsigned int rdac_failover_get(struct rdac_controller *ctlr,
  	}
  
- 	clear_bit(DISCE_REVALIDATE_DOMAIN, &port->disc.pending);
-@@ -521,20 +520,57 @@ static void sas_revalidate_domain(struct work_struct *work)
- 
- 	SAS_DPRINTK("done REVALIDATING DOMAIN on port %d, pid:%d, res 0x%x\n",
- 		    port->id, task_pid_nr(current), res);
-- out:
--	mutex_unlock(&ha->disco_mutex);
-+}
-+
-+static const work_func_t sas_event_fns[DISC_NUM_EVENTS] = {
-+	[DISCE_DISCOVER_DOMAIN] = sas_discover_domain,
-+	[DISCE_REVALIDATE_DOMAIN] = sas_revalidate_domain,
-+	[DISCE_PROBE] = sas_probe_devices,
-+	[DISCE_SUSPEND] = sas_suspend_devices,
-+	[DISCE_RESUME] = sas_resume_devices,
-+	[DISCE_DESTRUCT] = sas_destruct_devices,
-+};
-+
-+/* a simple wrapper for sas discover event funtions */
-+static void sas_discover_common_fn(struct work_struct *work)
-+{
-+	struct sas_discovery_event *ev = to_sas_discovery_event(work);
-+	struct asd_sas_port *port = ev->port;
-+
-+	sas_event_fns[ev->type](work);
-+	sas_unbusy_port(port);
- }
- 
- /* ---------- Events ---------- */
- 
- static void sas_chain_work(struct sas_ha_struct *ha, struct sas_work *sw)
- {
-+	int ret;
-+	struct sas_discovery_event *ev = to_sas_discovery_event(&sw->work);
-+	struct asd_sas_port *port = ev->port;
-+
- 	/* chained work is not subject to SA_HA_DRAINING or
- 	 * SAS_HA_REGISTERED, because it is either submitted in the
- 	 * workqueue, or known to be submitted from a context that is
- 	 * not racing against draining
- 	 */
--	scsi_queue_work(ha->core.shost, &sw->work);
-+	sas_busy_port(port);
-+
-+	/*
-+	 * discovery event probe and destruct would be called in other
-+	 * discovery event like discover domain and revalidate domain
-+	 * events, in some cases, we need to sync execute probe and destruct
-+	 * events, so run discover events except probe/destruct in a new
-+	 * workqueue.
-+	 */
-+	if (ev->type == DISCE_PROBE || ev->type == DISCE_DESTRUCT)
-+		ret = scsi_queue_work(ha->core.shost, &sw->work);
-+	else
-+		ret = queue_work(ha->disc_q, &sw->work);
-+
-+	if (ret != 1)
-+		/* queue a work fail, unbusy the ha before return */
-+		sas_unbusy_port(port);
- }
- 
- static void sas_chain_event(int event, unsigned long *pending,
-@@ -575,18 +611,10 @@ void sas_init_disc(struct sas_discovery *disc, struct asd_sas_port *port)
- {
- 	int i;
- 
--	static const work_func_t sas_event_fns[DISC_NUM_EVENTS] = {
--		[DISCE_DISCOVER_DOMAIN] = sas_discover_domain,
--		[DISCE_REVALIDATE_DOMAIN] = sas_revalidate_domain,
--		[DISCE_PROBE] = sas_probe_devices,
--		[DISCE_SUSPEND] = sas_suspend_devices,
--		[DISCE_RESUME] = sas_resume_devices,
--		[DISCE_DESTRUCT] = sas_destruct_devices,
--	};
--
- 	disc->pending = 0;
- 	for (i = 0; i < DISC_NUM_EVENTS; i++) {
--		INIT_SAS_WORK(&disc->disc_work[i].work, sas_event_fns[i]);
-+		INIT_SAS_WORK(&disc->disc_work[i].work, sas_discover_common_fn);
- 		disc->disc_work[i].port = port;
-+		disc->disc_work[i].type = i;
- 	}
- }
-diff --git a/drivers/scsi/libsas/sas_event.c b/drivers/scsi/libsas/sas_event.c
-index 06c5c4b..c0fc07d 100644
---- a/drivers/scsi/libsas/sas_event.c
-+++ b/drivers/scsi/libsas/sas_event.c
-@@ -41,7 +41,7 @@ void sas_queue_work(struct sas_ha_struct *ha, struct sas_work *sw)
- 		if (list_empty(&sw->drain_node))
- 			list_add(&sw->drain_node, &ha->defer_q);
- 	} else
--		scsi_queue_work(ha->core.shost, &sw->work);
-+		queue_work(ha->event_q, &sw->work);
- }
- 
- static void sas_queue_event(int event, struct sas_work *work,
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index 570b2cb..a8c8ae1 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -822,7 +822,9 @@ static struct domain_device *sas_ex_discover_end_dev(
- 
- 		list_add_tail(&child->disco_list_node, &parent->port->disco_list);
- 
-+		wait_discover_event_init(child->port);
- 		res = sas_discover_sata(child);
-+		wait_for_discover_event_finish(child->port);
- 		if (res) {
- 			SAS_DPRINTK("sas_discover_sata() for device %16llx at "
- 				    "%016llx:0x%x returned 0x%x\n",
-@@ -847,7 +849,9 @@ static struct domain_device *sas_ex_discover_end_dev(
- 
- 		list_add_tail(&child->disco_list_node, &parent->port->disco_list);
- 
-+		wait_discover_event_init(child->port);
- 		res = sas_discover_end_dev(child);
-+		wait_for_discover_event_finish(child->port);
- 		if (res) {
- 			SAS_DPRINTK("sas_discover_end_dev() for device %16llx "
- 				    "at %016llx:0x%x returned 0x%x\n",
-@@ -1890,8 +1894,11 @@ static void sas_unregister_devs_sas_addr(struct domain_device *parent,
- 				if (child->dev_type == SAS_EDGE_EXPANDER_DEVICE ||
- 				    child->dev_type == SAS_FANOUT_EXPANDER_DEVICE)
- 					sas_unregister_ex_tree(parent->port, child);
--				else
-+				else {
-+					wait_discover_event_init(parent->port);
- 					sas_unregister_dev(parent->port, child);
-+					wait_for_discover_event_finish(parent->port);
-+				}
- 				found = child;
- 				break;
- 			}
-diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-index 79f95d0..1c49483 100644
---- a/drivers/scsi/libsas/sas_init.c
-+++ b/drivers/scsi/libsas/sas_init.c
-@@ -38,6 +38,8 @@
- 
- #include "../scsi_sas_internal.h"
- 
-+static DEFINE_IDA(sas_ida);
-+
- static struct kmem_cache *sas_task_cache;
- 
- struct sas_task *sas_alloc_task(gfp_t flags)
-@@ -116,6 +118,7 @@ void sas_hae_reset(struct work_struct *work)
- int sas_register_ha(struct sas_ha_struct *sas_ha)
- {
- 	int error = 0;
-+	char name[64];
- 
- 	mutex_init(&sas_ha->disco_mutex);
- 	spin_lock_init(&sas_ha->phy_port_lock);
-@@ -146,6 +149,30 @@ int sas_register_ha(struct sas_ha_struct *sas_ha)
- 		goto Undo_ports;
- 	}
- 
-+	sas_ha->id = ida_simple_get(&sas_ida, 0, 0, GFP_KERNEL);
-+	if(sas_ha->id < 0)
-+		goto Undo_ports;
-+
-+	memset(name, 0, 64);
-+	snprintf(name, 64, "sas-event-%d", sas_ha->id);
-+	sas_ha->event_q = create_singlethread_workqueue(name);
-+
-+	/*
-+	 * sas-disc-xx workqueue run the discover work except
-+	 * probe and destruct.
-+	 */
-+	snprintf(name, 64, "sas-disc-%d", sas_ha->id);
-+	sas_ha->disc_q = create_singlethread_workqueue(name);
-+	if(!sas_ha->event_q || !sas_ha->disc_q) {
-+		ida_simple_remove(&sas_ida, sas_ha->id);
-+		if (sas_ha->event_q)
-+			destroy_workqueue(sas_ha->event_q);
-+		if (sas_ha->disc_q)
-+			destroy_workqueue(sas_ha->disc_q);
-+		goto Undo_ports;
-+	}
-+
-+
- 	INIT_LIST_HEAD(&sas_ha->eh_done_q);
- 	INIT_LIST_HEAD(&sas_ha->eh_ata_q);
- 
-@@ -181,6 +208,9 @@ int sas_unregister_ha(struct sas_ha_struct *sas_ha)
- 	__sas_drain_work(sas_ha);
- 	mutex_unlock(&sas_ha->drain_mutex);
- 
-+	destroy_workqueue(sas_ha->event_q);
-+	destroy_workqueue(sas_ha->disc_q);
-+	ida_simple_remove(&sas_ida, sas_ha->id);
- 	return 0;
- }
- 
-@@ -568,7 +598,6 @@ void sas_domain_release_transport(struct scsi_transport_template *stt)
- EXPORT_SYMBOL_GPL(sas_domain_release_transport);
- 
- /* ---------- SAS Class register/unregister ---------- */
--
- static int __init sas_class_init(void)
- {
- 	sas_task_cache = KMEM_CACHE(sas_task, SLAB_HWCACHE_ALIGN);
-diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-index 33ce7e5..276df8e 100644
---- a/drivers/scsi/libsas/sas_internal.h
-+++ b/drivers/scsi/libsas/sas_internal.h
-@@ -100,6 +100,56 @@ void sas_free_device(struct kref *kref);
- extern const work_func_t sas_phy_event_fns[PHY_NUM_EVENTS];
- extern const work_func_t sas_port_event_fns[PORT_NUM_EVENTS];
- 
-+static inline void wait_discover_event_init(struct asd_sas_port *port)
-+{
-+	if (port) {
-+		init_completion(&port->disc.completion);
-+		port->disc.wait = 1;
-+	}
-+}
-+
-+static inline void wait_for_discover_event_finish(
-+		struct asd_sas_port *port)
-+{
-+	if (port && port->disc.wait == 1)
-+		wait_for_completion(&port->disc.completion);
-+}
-+
-+static inline void wait_sas_event_init(struct asd_sas_port *port)
-+{
-+	if (port) {
-+		init_completion(&port->completion);
-+		port->busy = 0;
-+	}
-+}
-+
-+static inline void wait_for_sas_event_finish(
-+		struct asd_sas_port *port)
-+{
-+	if (port && port->busy)
-+		wait_for_completion(&port->completion);
-+}
-+
-+static inline void sas_busy_port(struct asd_sas_port *port)
-+{
-+	if (port)
-+		port->busy++;
-+}
-+
-+static inline void sas_unbusy_port(struct asd_sas_port *port)
-+{
-+	if (port && (port->busy > 0)) {
-+		port->busy--;
-+		if (!port->busy)
-+			complete(&port->completion);
-+	}
-+
-+	if (port && (port->disc.wait == 1)) {
-+		complete(&port->disc.completion);
-+		port->disc.wait = 0;
-+	}
-+}
-+
- #ifdef CONFIG_SCSI_SAS_HOST_SMP
- extern int sas_smp_host_handler(struct Scsi_Host *shost, struct request *req,
- 				struct request *rsp);
-diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
-index 9326628..8d8b38c 100644
---- a/drivers/scsi/libsas/sas_port.c
-+++ b/drivers/scsi/libsas/sas_port.c
-@@ -191,7 +191,9 @@ static void sas_form_port(struct asd_sas_phy *phy)
- 	if (si->dft->lldd_port_formed)
- 		si->dft->lldd_port_formed(phy);
- 
-+	wait_sas_event_init(port);
- 	sas_discover_event(phy->port, DISCE_DISCOVER_DOMAIN);
-+	wait_for_sas_event_finish(port);
- }
- 
- /**
-@@ -218,7 +220,9 @@ void sas_deform_port(struct asd_sas_phy *phy, int gone)
- 		dev->pathways--;
- 
- 	if (port->num_phys == 1) {
-+		wait_sas_event_init(port);
- 		sas_unregister_domain_devices(port, gone);
-+		wait_for_sas_event_finish(port);
- 		sas_port_delete(port->port);
- 		port->port = NULL;
- 	} else {
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index c4444ad..4b931d4 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -240,6 +240,9 @@ static inline void INIT_SAS_WORK(struct sas_work *sw, void (*fn)(struct work_str
- struct sas_discovery_event {
- 	struct sas_work work;
- 	struct asd_sas_port *port;
-+	enum discover_event	type;
-+	int wait;
-+	struct completion completion;
- };
- 
- static inline struct sas_discovery_event *to_sas_discovery_event(struct work_struct *work)
-@@ -256,6 +259,8 @@ struct sas_discovery {
- 	u8     eeds_a[8];
- 	u8     eeds_b[8];
- 	int    max_level;
-+	int    wait;
-+	struct completion completion;
- };
- 
- /* The port struct is Class:RW, driver:RO */
-@@ -276,7 +281,8 @@ struct asd_sas_port {
- 
- /* public: */
- 	int id;
--
-+	int busy;
-+	struct completion completion;
- 	enum sas_class   class;
- 	u8               sas_addr[SAS_ADDR_SIZE];
- 	u8               attached_sas_addr[SAS_ADDR_SIZE];
-@@ -387,6 +393,7 @@ struct sas_ha_struct {
- 	int		  eh_active;
- 	wait_queue_head_t eh_wait_q;
- 	struct list_head  eh_dev_q;
-+	int       id; /* for create workqueue */
- 
- 	struct mutex disco_mutex;
- 
-@@ -396,6 +403,8 @@ struct sas_ha_struct {
- 	char *sas_ha_name;
- 	struct device *dev;	  /* should be set */
- 	struct module *lldd_module; /* should be set */
-+	struct workqueue_struct	*event_q;
-+	struct workqueue_struct	*disc_q;
- 
- 	u8 *sas_addr;		  /* must be set */
- 	u8 hashed_sas_addr[HASHED_SAS_ADDR_SIZE];
+ 	/* Prepare the command. */
+-	if (h->ctlr->use_ms10) {
++	if (ctlr->use_ms10) {
+ 		cdb[0] = MODE_SELECT_10;
+ 		cdb[7] = data_size >> 8;
+ 		cdb[8] = data_size & 0xff;
 -- 
-2.5.0
+2.7.4
