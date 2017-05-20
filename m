@@ -1,115 +1,110 @@
-From: Artem Savkov <asavkov@redhat.com>
-Subject: [PATCH v2] Use ctlr directly in rdac_failover_get()
-Date: Sat, 20 May 2017 09:58:10 +0200
-Message-ID: <1495267090-8591-1-git-send-email-asavkov@redhat.com>
-References: <1495232608.2581.3.camel@sandisk.com>
+From: Dashi DS1 Cao <caods1@lenovo.com>
+Subject: RE: work queue of scsi fc transports should be serialized
+Date: Sat, 20 May 2017 08:25:09 +0000
+Message-ID: <23B7B563BA4E9446B962B142C86EF24A088AF8B0@CNMAILEX03.lenovo.com>
+References: <23B7B563BA4E9446B962B142C86EF24A088AE2FB@CNMAILEX03.lenovo.com>
+ <1495233163.2581.5.camel@sandisk.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50640 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751861AbdETH6i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 20 May 2017 03:58:38 -0400
-In-Reply-To: <1495232608.2581.3.camel@sandisk.com>
+Received: from mail1.bemta8.messagelabs.com ([216.82.243.208]:56906 "EHLO
+        mail1.bemta8.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754755AbdETI0B (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 20 May 2017 04:26:01 -0400
+In-Reply-To: <1495233163.2581.5.camel@sandisk.com>
+Content-Language: zh-CN
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: hare@suse.de
-Cc: axboe@fb.com, hch@lst.de, martin.petersen@oracle.com, Bart Van Assche <Bart.VanAssche@sandisk.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Artem Savkov <asavkov@redhat.com>, stable@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-rdac_failover_get references struct rdac_controller as
-ctlr->ms_sdev->handler_data->ctlr for no apparent reason. Besides being
-inefficient this also introduces a null-pointer dereference as
-send_mode_select() sets ctlr->ms_sdev to NULL before calling
-rdac_failover_get():
+On Fri, 2017-05-19 at 09:36 +0000, Dashi DS1 Cao wrote:
+> It seems there is a race of multiple "fc_starget_delete" of the same 
+> rport, thus of the same SCSI host. The race leads to the race of 
+> scsi_remove_target and it cannot be prevented by the code snippet 
+> alone, even of the most recent
+> version:
+>         spin_lock_irqsave(shost->host_lock, flags);
+>         list_for_each_entry(starget, &shost->__targets, siblings) {
+>                 if (starget->state == STARGET_DEL ||
+>                     starget->state == STARGET_REMOVE)
+>                         continue;
+> If there is a possibility that the starget is under deletion(state == 
+> STARGET_DEL), it should be possible that list_next_entry(starget, 
+> siblings) could cause a read access violation.
 
-[   18.432550] device-mapper: multipath service-time: version 0.3.0 loaded
-[   18.436124] BUG: unable to handle kernel NULL pointer dereference at 0000000000000790
-[   18.436129] IP: send_mode_select+0xca/0x560
-[   18.436129] PGD 0
-[   18.436130] P4D 0
-[   18.436130]
-[   18.436132] Oops: 0000 [#1] SMP
-[   18.436133] Modules linked in: dm_service_time sd_mod dm_multipath amdkfd amd_iommu_v2 radeon(+) i2c_algo_bit drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops ttm qla2xxx drm serio_raw scsi_transport_fc bnx2 i2c_core dm_mirror dm_region_hash dm_log dm_mod
-[   18.436143] CPU: 4 PID: 443 Comm: kworker/u16:2 Not tainted 4.12.0-rc1.1.el7.test.x86_64 #1
-[   18.436144] Hardware name: IBM BladeCenter LS22 -[79013SG]-/Server Blade, BIOS -[L8E164AUS-1.07]- 05/25/2011
-[   18.436145] Workqueue: kmpath_rdacd send_mode_select
-[   18.436146] task: ffff880225116a40 task.stack: ffffc90002bd8000
-[   18.436148] RIP: 0010:send_mode_select+0xca/0x560
-[   18.436148] RSP: 0018:ffffc90002bdbda8 EFLAGS: 00010246
-[   18.436149] RAX: 0000000000000000 RBX: ffffc90002bdbe08 RCX: ffff88017ef04a80
-[   18.436150] RDX: ffffc90002bdbe08 RSI: ffff88017ef04a80 RDI: ffff8802248e4388
-[   18.436151] RBP: ffffc90002bdbe48 R08: 0000000000000000 R09: ffffffff81c104c0
-[   18.436151] R10: 00000000000001ff R11: 000000000000035a R12: ffffc90002bdbdd8
-[   18.436152] R13: ffff8802248e4390 R14: ffff880225152800 R15: ffff8802248e4400
-[   18.436153] FS:  0000000000000000(0000) GS:ffff880227d00000(0000) knlGS:0000000000000000
-[   18.436154] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[   18.436154] CR2: 0000000000000790 CR3: 000000042535b000 CR4: 00000000000006e0
-[   18.436155] Call Trace:
-[   18.436159]  ? rdac_activate+0x14e/0x150
-[   18.436161]  ? refcount_dec_and_test+0x11/0x20
-[   18.436162]  ? kobject_put+0x1c/0x50
-[   18.436165]  ? scsi_dh_activate+0x6f/0xd0
-[   18.436168]  process_one_work+0x149/0x360
-[   18.436170]  worker_thread+0x4d/0x3c0
-[   18.436172]  kthread+0x109/0x140
-[   18.436173]  ? rescuer_thread+0x380/0x380
-[   18.436174]  ? kthread_park+0x60/0x60
-[   18.436176]  ret_from_fork+0x2c/0x40
-[   18.436177] Code: 49 c7 46 20 00 00 00 00 4c 89 ef c6 07 00 0f 1f 40 00 45 31 ed c7 45 b0 05 00 00 00 44 89 6d b4 4d 89 f5 4c 8b 75 a8 49 8b 45 20 <48> 8b b0 90 07 00 00 48 8b 56 10 8b 42 10 48 8d 7a 28 85 c0 0f
-[   18.436192] RIP: send_mode_select+0xca/0x560 RSP: ffffc90002bdbda8
-[   18.436192] CR2: 0000000000000790
-[   18.436198] ---[ end trace 40f3e4dca1ffabdd ]---
-[   18.436199] Kernel panic - not syncing: Fatal exception
-[   18.436222] Kernel Offset: disabled
-[-- MARK -- Thu May 18 11:45:00 2017]
+>Hello Dashi,
 
-Fixes: 3278255 scsi_dh_rdac: switch to scsi_execute_req_flags()
-Cc: stable@vger.kernel.org
-Signed-off-by: Artem Savkov <asavkov@redhat.com>
----
- drivers/scsi/device_handler/scsi_dh_rdac.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+>Something else must be going on. From scsi_remove_target():
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
-index 3cbab87..2ceff58 100644
---- a/drivers/scsi/device_handler/scsi_dh_rdac.c
-+++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
-@@ -265,18 +265,16 @@ static unsigned int rdac_failover_get(struct rdac_controller *ctlr,
- 				      struct list_head *list,
- 				      unsigned char *cdb)
- {
--	struct scsi_device *sdev = ctlr->ms_sdev;
--	struct rdac_dh_data *h = sdev->handler_data;
- 	struct rdac_mode_common *common;
- 	unsigned data_size;
- 	struct rdac_queue_data *qdata;
- 	u8 *lun_table;
- 
--	if (h->ctlr->use_ms10) {
-+	if (ctlr->use_ms10) {
- 		struct rdac_pg_expanded *rdac_pg;
- 
- 		data_size = sizeof(struct rdac_pg_expanded);
--		rdac_pg = &h->ctlr->mode_select.expanded;
-+		rdac_pg = &ctlr->mode_select.expanded;
- 		memset(rdac_pg, 0, data_size);
- 		common = &rdac_pg->common;
- 		rdac_pg->page_code = RDAC_PAGE_CODE_REDUNDANT_CONTROLLER + 0x40;
-@@ -288,7 +286,7 @@ static unsigned int rdac_failover_get(struct rdac_controller *ctlr,
- 		struct rdac_pg_legacy *rdac_pg;
- 
- 		data_size = sizeof(struct rdac_pg_legacy);
--		rdac_pg = &h->ctlr->mode_select.legacy;
-+		rdac_pg = &ctlr->mode_select.legacy;
- 		memset(rdac_pg, 0, data_size);
- 		common = &rdac_pg->common;
- 		rdac_pg->page_code = RDAC_PAGE_CODE_REDUNDANT_CONTROLLER;
-@@ -304,7 +302,7 @@ static unsigned int rdac_failover_get(struct rdac_controller *ctlr,
- 	}
- 
- 	/* Prepare the command. */
--	if (h->ctlr->use_ms10) {
-+	if (ctlr->use_ms10) {
- 		cdb[0] = MODE_SELECT_10;
- 		cdb[7] = data_size >> 8;
- 		cdb[8] = data_size & 0xff;
--- 
-2.7.4
+>restart:
+>	spin_lock_irqsave(shost->host_lock, flags);
+>	list_for_each_entry(starget, &shost->__targets, siblings) {
+>		if (starget->state == STARGET_DEL ||
+>		    starget->state == STARGET_REMOVE)
+>			continue;
+>		if (starget->dev.parent == dev || &starget->dev == dev) {
+>			kref_get(&starget->reap_ref);
+>			starget->state = STARGET_REMOVE;
+>			spin_unlock_irqrestore(shost->host_lock, flags);
+>			__scsi_remove_target(starget);
+>			scsi_target_reap(starget);
+>			goto restart;
+>		}
+>	}
+>	spin_unlock_irqrestore(shost->host_lock, flags);
+
+>In other words, before scsi_remove_target() decides to call __scsi_remove_target(), it changes the target state into STARGET_REMOVE while holding the host lock. 
+>This means that scsi_remove_target() won't call __scsi_remove_target() twice and also that it won't invoke list_next_entry(starget, siblings) after starget has been 
+>freed.
+>Bart.
+
+In the crashes of Suse 12 sp1, the root cause is the deletion of a list node without holding the lock:
+        spin_lock_irqsave(shost->host_lock, flags);
+        list_for_each_entry_safe(starget, tmp, &shost->__targets, siblings) {
+                if (starget->state == STARGET_DEL)
+                        continue;
+                if (starget->dev.parent == dev || &starget->dev == dev) {
+                        /* assuming new targets arrive at the end */
+                        kref_get(&starget->reap_ref);
+                        spin_unlock_irqrestore(shost->host_lock, flags);
+
+                        __scsi_remove_target(starget);
+                        list_move_tail(&starget->siblings, &reap_list);  --this deletion from shost->__targets list is done without the lock.
+                        spin_lock_irqsave(shost->host_lock, flags);
+                 }
+          }
+          spin_unlock_irqrestore(shost->host_lock, flags);
+
+A better solution is as follows, without introducing more states:
+
+restart:
+        spin_lock_irqsave(shost->host_lock, flags);
+        list_for_each_entry_safe(starget, tmp, &shost->__targets, siblings) {
+                if (starget->dev.parent == dev || &starget->dev == dev) {
+                        /* assuming new targets arrive at the end */
+                        kref_get(&starget->reap_ref);
+                        list_move_tail(&starget->siblings, &reap_list);
+                        spin_unlock_irqrestore(shost->host_lock, flags);
+                        __scsi_remove_target(starget);
+                        goto restart;
+                }
+        }
+        spin_unlock_irqrestore(shost->host_lock, flags);
+        list_for_each_entry_safe(starget, tmp, &reap_list, siblings)
+                scsi_target_reap(starget);
+
+Another place that should be modified is the scsi_transport_fc.c:
+From:
+        if (rport->scsi_target_id != -1)
+                fc_starget_delete(&rport->stgt_delete_work);
+To:
+        if (rport->scsi_target_id != -1) {
+                fc_flush_work(shost);
+                BUG_ON(ACCESS_ONCE(rport->scsi_target_id) != -1);
+        }
+
+Regards,
+Dashi Cao
