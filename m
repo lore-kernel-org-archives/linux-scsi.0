@@ -1,21 +1,18 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 01/18] block: Introduce blk_queue_cmd_size()
-Date: Sun, 21 May 2017 08:54:21 +0200
-Message-ID: <20170521065421.GA13004@lst.de>
-References: <20170519183016.12646-1-bart.vanassche@sandisk.com> <20170519183016.12646-2-bart.vanassche@sandisk.com>
+Subject: Re: [PATCH v2] Use ctlr directly in rdac_failover_get()
+Date: Sun, 21 May 2017 08:54:42 +0200
+Message-ID: <20170521065442.GB13004@lst.de>
+References: <1495232608.2581.3.camel@sandisk.com> <1495267090-8591-1-git-send-email-asavkov@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170519183016.12646-2-bart.vanassche@sandisk.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, Omar Sandoval <osandov@fb.com>, Hannes Reinecke <hare@suse.com>, linux-block@vger.kernel.org
+In-Reply-To: <1495267090-8591-1-git-send-email-asavkov@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Artem Savkov <asavkov@redhat.com>
+Cc: hare@suse.de, axboe@fb.com, hch@lst.de, martin.petersen@oracle.com, Bart Van Assche <Bart.VanAssche@sandisk.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, May 19, 2017 at 11:29:59AM -0700, Bart Van Assche wrote:
-> This function will be used by later patches in this series.
-
-And it could already be used to simplify blk_alloc_flush_queue a bit..
+Looks fine,
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
