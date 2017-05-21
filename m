@@ -1,32 +1,37 @@
 From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH 02/18] bsg: Check private request size before attaching to
- a queue
-Date: Sun, 21 May 2017 14:33:05 +0000
-Message-ID: <1495377183.3192.1.camel@sandisk.com>
+Subject: Re: [PATCH 06/18] scsi: Make scsi_ioctl_reset() pass the request
+ queue pointer to blk_rq_init()
+Date: Sun, 21 May 2017 16:41:38 +0000
+Message-ID: <1495384897.3192.3.camel@sandisk.com>
 References: <20170519183016.12646-1-bart.vanassche@sandisk.com>
-         <20170519183016.12646-3-bart.vanassche@sandisk.com>
-         <20170521063237.GE12287@lst.de>
+         <20170519183016.12646-7-bart.vanassche@sandisk.com>
+         <20170521065003.GE12891@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:48040 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751302AbdEUOdI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 21 May 2017 10:33:08 -0400
-In-Reply-To: <20170521063237.GE12287@lst.de>
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:30142 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751233AbdEUQlm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 21 May 2017 12:41:42 -0400
+In-Reply-To: <20170521065003.GE12891@lst.de>
 Content-Language: en-US
-Content-ID: <0376D58B615219428EEC6D961DF9B882@namprd04.prod.outlook.com>
+Content-ID: <8E67E06CA87E2F468280F61BDED91744@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "hch@lst.de" <hch@lst.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "osandov@fb.com" <osandov@fb.com>, "hare@suse.com" <hare@suse.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "hare@suse.com" <hare@suse.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-T24gU3VuLCAyMDE3LTA1LTIxIGF0IDA4OjMyICswMjAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90
-ZToNCj4gQW5kIGJ0dywgSSBkaWRuJ3QgZ2V0IHlvdXIgY292ZXIgbGV0dGVyIFswLzE4XSwgZGlk
-IHRoYXQgZ2V0IGxvc3QNCj4gc29tZXdoZXJlPw0KDQpIZWxsbyBDaHJpc3RvcGgsDQoNClRoYW5r
-cyBmb3IgdGhlIHJldmlldyBjb21tZW50cy4gVGhlIGNvdmVyIGxldHRlciBzaG91bGQgaGF2ZSBt
-YWRlIGl0IHRvIGF0DQpsZWFzdCB0aGUgbGludXgtc2NzaSBtYWlsaW5nIGxpc3Qgc2luY2UgaXQg
-c2hvd3MgdXAgaW4gYXQgbGVhc3Qgb25lIGFyY2hpdmUgb2YNCnRoYXQgbWFpbGluZyBsaXN0OiBo
-dHRwczovL3d3dy5zcGluaWNzLm5ldC9saXN0cy9saW51eC1zY3NpL21zZzEwODk0MC5odG1sLg0K
-DQpCYXJ0Lg==
+T24gU3VuLCAyMDE3LTA1LTIxIGF0IDA4OjUwICswMjAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90
+ZToNCj4gQWx0aG91Z2ggd2UgcmVhbGx5IG5lZWQgdG8gc3RvcCBhYnVzaW5nIHJlcXVlc3RzL2Nt
+ZHMgZm9yIEVILi4NCj4gKEhhbm5lcywgdGltZSB0byBkdXN0IG9mZiB5b3VyIG9sZCBwYXRjaGVz
+ISkNCg0KSGVsbG8gQ2hyaXN0b3BoIGFuZCBIYW5uZXMsDQoNCkhvdyBhYm91dCBwYXNzaW5nIGEg
+c3RydWN0IHNjc2lfZGV2aWNlIHBvaW50ZXIgdG8gdGhlIGVoXypfcmVzZXRfaGFuZGxlcg0KY2Fs
+bGJhY2tzIGluc3RlYWQgb2YgYSBzdHJ1Y3Qgc2NzaV9jbW5kIHBvaW50ZXI/IE1vc3QgU0NTSSBM
+TEQNCmVoXypfcmVzZXRfaGFuZGxlciBpbXBsZW1lbnRhdGlvbnMgZG9uJ3QgZG8gYW55dGhpbmcg
+d2l0aCB0aGUgaW5mb3JtYXRpb24NCnBhc3NlZCB0aHJvdWdoIHRoZSBzdHJ1Y3Qgc2NzaV9jbW5k
+IHBvaW50ZXIgZXhjZXB0IHJlYWRpbmcgdGhlIFNDU0kgZGV2aWNlDQpwb2ludGVyIGFuZCBsb2dn
+aW5nIHRoZSBTQ1NJIGNvbW1hbmQgQ0RCLiBIYW5uZXMsIGlzIHRoaXMgdGhlIHNhbWUgYXMgeW91
+cg0KcHJvcG9zYWw/IERvIHlvdSB3YW50IHRvIHdvcmsgb24gdGhpcyBvciBkbyB5b3UgcGVyaGFw
+cyBleHBlY3QgbWUgdG8gcHJlcGFyZQ0KcGF0Y2hlcyB0byBpbXBsZW1lbnQgdGhhdCBjaGFuZ2U/
+DQoNCkJhcnQu
