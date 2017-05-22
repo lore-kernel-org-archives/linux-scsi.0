@@ -1,35 +1,64 @@
-From: "hch@lst.de" <hch@lst.de>
-Subject: Re: [PATCH 06/18] scsi: Make scsi_ioctl_reset() pass the request
-        queue pointer to blk_rq_init()
-Date: Mon, 22 May 2017 15:00:40 +0200
-Message-ID: <20170522130040.GA12773@lst.de>
-References: <20170519183016.12646-1-bart.vanassche@sandisk.com> <20170519183016.12646-7-bart.vanassche@sandisk.com> <20170521065003.GE12891@lst.de> <1495384897.3192.3.camel@sandisk.com> <1a2b631a-8b12-f167-b3b8-3a74bd179daa@suse.com> <20170522075443.GC2081@lst.de> <78097a2b-73c6-3206-803a-c108fe464c45@suse.com> <20170522124809.GB11869@lst.de> <95b0aba4-9463-eb8e-5c27-4a6951c3112a@suse.com>
+From: Varun Prakash <varun@chelsio.com>
+Subject: Re: [PATCH] csiostor: Avoid content leaks and casts
+Date: Mon, 22 May 2017 20:35:47 +0530
+Message-ID: <20170522150544.GA1677@chelsio.com>
+References: <20170509223444.GA51314@beast>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:48026 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933572AbdEVNAl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 22 May 2017 09:00:41 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <95b0aba4-9463-eb8e-5c27-4a6951c3112a@suse.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20170509223444.GA51314@beast>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>
+Cc: linux-kernel@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Daniel Micay <danielmicay@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.com>
-Cc: "hch@lst.de" <hch@lst.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-On Mon, May 22, 2017 at 02:56:18PM +0200, Hannes Reinecke wrote:
-> > No, we don't.  The driver simply sets a tag aside and doesn't expose
-> > it to the block layer.  Similar to what smartpqi already does for LUN
-> > resets and AENs, mpt3sas does for the ioctl tags and NVMe does for AERs.
-> > Personally I feel a bit uncomfortable by setting aside just one tag for
-> TMFs; this assumes we'll never be sending LUN resets to devices in parallel.
+On Tue, May 09, 2017 at 03:34:44PM -0700, Kees Cook wrote:
+> When copying attributes, the len argument was padded out and the resulting
+> memcpy() would copy beyond the end of the source buffer.  Avoid this,
+> and use size_t for val_len to avoid all the casts. Similarly, avoid source
+> buffer casts and use void *.
 > 
-> But maybe this is a discussion for another time, if and when we finally
-> move to that.
+> Additionally enforces val_len can be represented by u16 and that
+> the DMA buffer was not overflowed. Fixes the size of mfa, which is not
+> FC_FDMI_PORT_ATTR_MAXFRAMESIZE_LEN (but it will be padded up to 4). This
+> was noticed by the future CONFIG_FORTIFY_SOURCE checks.
+> 
+> Cc: Daniel Micay <danielmicay@gmail.com>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
+>  drivers/scsi/csiostor/csio_lnode.c | 43 +++++++++++++++++++++++---------------
+>  1 file changed, 26 insertions(+), 17 deletions(-)
+> 
+> diff --git a/drivers/scsi/csiostor/csio_lnode.c b/drivers/scsi/csiostor/csio_lnode.c
+> index c00b2ff72b55..be5ee2d37815 100644
+> --- a/drivers/scsi/csiostor/csio_lnode.c
+> +++ b/drivers/scsi/csiostor/csio_lnode.c
+> @@ -238,14 +238,23 @@ csio_osname(uint8_t *buf, size_t buf_len)
+>  }
+>  
 
-For midlayer initiated EH that's the case - they are serialized by
-being issued from the eh thread.  For the ioctl we have the
-scsi_block_when_processing_errors / scsi_host_in_recovery magic,
-although that hand crafted primitive is a bit of a mess, we'd
-be much better off with a real EH mutex.
+
+>  
+>  	csio_append_attrib(&pld, FC_FDMI_HBA_ATTR_MAXCTPAYLOAD,
+> -			   (uint8_t *)&maxpayload,
+> -			   FC_FDMI_HBA_ATTR_MAXCTPAYLOAD_LEN);
+> +			   &maxpayload, FC_FDMI_HBA_ATTR_MAXCTPAYLOAD_LEN);
+>  	len = (uint32_t)(pld - (uint8_t *)cmd);
+>  	numattrs++;
+>  	attrib_blk->numattrs = htonl(numattrs);
+> @@ -1794,6 +1801,8 @@ csio_ln_mgmt_submit_req(struct csio_ioreq *io_req,
+>  	struct csio_mgmtm *mgmtm = csio_hw_to_mgmtm(hw);
+>  	int rv;
+>  
+> +	BUG_ON(pld_len > pld->len);
+> +
+
+I think WARN_ON() is better than BUG_ON() in this case
+
+	if (WARN_ON(pld_len > pld->len))
+		return -EINVAL;
+
+>  	io_req->io_cbfn = io_cbfn;	/* Upper layer callback handler */
+>  	io_req->fw_handle = (uintptr_t) (io_req);
+>  	io_req->eq_idx = mgmtm->eq_idx;
