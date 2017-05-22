@@ -1,82 +1,75 @@
-From: Romain Perier <romain.perier@collabora.com>
-Subject: [PATCH v9 02/15] dmaengine: pch_dma: Replace PCI pool old API
-Date: Mon, 22 May 2017 18:48:54 +0200
-Message-ID: <20170522164907.22915-3-romain.perier@collabora.com>
-References: <20170522164907.22915-1-romain.perier@collabora.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170522164907.22915-1-romain.perier@collabora.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>, Doug Ledford <dledford@redhat.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, jeffrey.t.kirsher@intel.com, "David S. Miller" <davem@davemloft.net>, stas.yakovlev@gmail.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Felipe Balbi <balbi@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Romain Perier <romain.perier@collabora.com>, Peter Senna Tschudin <peter.senna@collabora.co.uk>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH 07/18] block: Introduce request_queue.initialize_rq_fn()
+Date: Mon, 22 May 2017 17:07:13 +0000
+Message-ID: <1495472831.2610.4.camel@sandisk.com>
+References: <20170519183016.12646-1-bart.vanassche@sandisk.com>
+         <20170519183016.12646-8-bart.vanassche@sandisk.com>
+         <20170521063443.GF12287@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170521063443.GF12287@lst.de>
+Content-Language: en-US
+Content-ID: <C2A03BD7A7B24644AF264055BD2A6994@namprd04.prod.outlook.com>
+Sender: linux-block-owner@vger.kernel.org
+To: "hch@lst.de" <hch@lst.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "osandov@fb.com" <osandov@fb.com>, "hare@suse.com" <hare@suse.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@fb.com" <axboe@fb.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The PCI pool API is deprecated. This commit replaces the PCI pool old
-API by the appropriate function with the DMA pool API.
+On Sun, 2017-05-21 at 08:34 +0200, Christoph Hellwig wrote:
+> On Fri, May 19, 2017 at 11:30:05AM -0700, Bart Van Assche wrote:
+> > Several block drivers need to initialize the driver-private data
+> > after having called blk_get_request() and before .prep_rq_fn() is
+> > called, e.g. when submitting a REQ_OP_SCSI_* request. Avoid that
+> > that initialization code has to be repeated after every
+> > blk_get_request() call by adding a new callback function to struct
+> > request_queue.
+> >=20
+> > Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> > Cc: Jens Axboe <axboe@fb.com>
+> > Cc: Christoph Hellwig <hch@lst.de>
+> > Cc: Omar Sandoval <osandov@fb.com>
+> > Cc: Hannes Reinecke <hare@suse.com>
+> > Cc: linux-block@vger.kernel.org
+> > ---
+> >  block/blk-core.c       | 3 +++
+> >  block/blk-mq.c         | 3 +++
+> >  include/linux/blkdev.h | 4 ++++
+> >  3 files changed, 10 insertions(+)
+> >=20
+> > diff --git a/block/blk-core.c b/block/blk-core.c
+> > index a69d420b7ff0..f2540d164679 100644
+> > --- a/block/blk-core.c
+> > +++ b/block/blk-core.c
+> > @@ -126,6 +126,9 @@ void blk_rq_init(struct request_queue *q, struct re=
+quest *rq)
+> >  	rq->start_time =3D jiffies;
+> >  	set_start_time_ns(rq);
+> >  	rq->part =3D NULL;
+> > +
+> > +	if (q->initialize_rq_fn)
+> > +		q->initialize_rq_fn(rq);
+>=20
+> Can we keep this out of the fast path and only do it from the
+> blk_get_request / blk_mq_alloc_request path?  And while were at it
+> I think those two should be merged as far as the public interface
+> goes, that is we should also expose the flags argument for the
+> legacy path.
 
-Signed-off-by: Romain Perier <romain.perier@collabora.com>
-Acked-by: Peter Senna Tschudin <peter.senna@collabora.com>
-Tested-by: Peter Senna Tschudin <peter.senna@collabora.com>
----
- drivers/dma/pch_dma.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+Hello Christoph,
 
-diff --git a/drivers/dma/pch_dma.c b/drivers/dma/pch_dma.c
-index f9028e9d0dfc..afd8f27bda96 100644
---- a/drivers/dma/pch_dma.c
-+++ b/drivers/dma/pch_dma.c
-@@ -123,7 +123,7 @@ struct pch_dma_chan {
- struct pch_dma {
- 	struct dma_device	dma;
- 	void __iomem *membase;
--	struct pci_pool		*pool;
-+	struct dma_pool		*pool;
- 	struct pch_dma_regs	regs;
- 	struct pch_dma_desc_regs ch_regs[MAX_CHAN_NR];
- 	struct pch_dma_chan	channels[MAX_CHAN_NR];
-@@ -437,7 +437,7 @@ static struct pch_dma_desc *pdc_alloc_desc(struct dma_chan *chan, gfp_t flags)
- 	struct pch_dma *pd = to_pd(chan->device);
- 	dma_addr_t addr;
- 
--	desc = pci_pool_zalloc(pd->pool, flags, &addr);
-+	desc = dma_pool_zalloc(pd->pool, flags, &addr);
- 	if (desc) {
- 		INIT_LIST_HEAD(&desc->tx_list);
- 		dma_async_tx_descriptor_init(&desc->txd, chan);
-@@ -549,7 +549,7 @@ static void pd_free_chan_resources(struct dma_chan *chan)
- 	spin_unlock_irq(&pd_chan->lock);
- 
- 	list_for_each_entry_safe(desc, _d, &tmp_list, desc_node)
--		pci_pool_free(pd->pool, desc, desc->txd.phys);
-+		dma_pool_free(pd->pool, desc, desc->txd.phys);
- 
- 	pdc_enable_irq(chan, 0);
- }
-@@ -880,7 +880,7 @@ static int pch_dma_probe(struct pci_dev *pdev,
- 		goto err_iounmap;
- 	}
- 
--	pd->pool = pci_pool_create("pch_dma_desc_pool", pdev,
-+	pd->pool = dma_pool_create("pch_dma_desc_pool", &pdev->dev,
- 				   sizeof(struct pch_dma_desc), 4, 0);
- 	if (!pd->pool) {
- 		dev_err(&pdev->dev, "Failed to alloc DMA descriptors\n");
-@@ -931,7 +931,7 @@ static int pch_dma_probe(struct pci_dev *pdev,
- 	return 0;
- 
- err_free_pool:
--	pci_pool_destroy(pd->pool);
-+	dma_pool_destroy(pd->pool);
- err_free_irq:
- 	free_irq(pdev->irq, pd);
- err_iounmap:
-@@ -963,7 +963,7 @@ static void pch_dma_remove(struct pci_dev *pdev)
- 			tasklet_kill(&pd_chan->tasklet);
- 		}
- 
--		pci_pool_destroy(pd->pool);
-+		dma_pool_destroy(pd->pool);
- 		pci_iounmap(pdev, pd->membase);
- 		pci_release_regions(pdev);
- 		pci_disable_device(pdev);
--- 
-2.11.0
+For blk-mq I could move the .initialize_rq_fn() call from
+blk_mq_rq_ctx_init() into blk_mq_sched_get_request(). I can't move it
+higher up in the request allocation call chain because otherwise
+blk_mq_alloc_request_hctx() wouldn't call .initialize_rq_fn().
+
+For blk-sq I'm not sure that the .initialize_rq_fn() call can be
+moved because I'd like all blk_rq_init() callers to call
+.initialize_rq_fn(), including ide_prep_sense().
+
+Are you sure it would help to move the .initialize_rq_fn() calls?
+
+Thanks,
+
+Bart.=
