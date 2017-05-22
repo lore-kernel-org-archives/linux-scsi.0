@@ -1,71 +1,94 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH 19/25] qla2xxx: Replace ql2xexchoffld & ql_dm_tgt_ex_pct
- parameter
-Date: Mon, 22 May 2017 17:39:12 +0000
-Message-ID: <9E2AEDEB-CDBF-4F17-BE3A-DFADF44933EE@cavium.com>
-References: <20170519215344.2168-1-himanshu.madhani@cavium.com>
- <20170519215344.2168-20-himanshu.madhani@cavium.com>
- <1495236443.2581.17.camel@sandisk.com>
+From: Omar Sandoval <osandov@osandov.com>
+Subject: Re: [PATCH blktests v2 3/3] sg/001: add regression test for
+ syzcaller generated GPF in sg_read path
+Date: Mon, 22 May 2017 10:59:05 -0700
+Message-ID: <20170522175905.GA17738@vader.DHCP.thefacebook.com>
+References: <cover.1495201975.git.jthumshirn@suse.de>
+ <79600648b662bc8b9e701ff6627986887384585b.1495201975.git.jthumshirn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0064.outbound.protection.outlook.com ([104.47.41.64]:34936
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1760523AbdEVRjP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 22 May 2017 13:39:15 -0400
-In-Reply-To: <1495236443.2581.17.camel@sandisk.com>
-Content-Language: en-US
-Content-ID: <B977FFBD2D8B6846A82058A9C9446143@namprd07.prod.outlook.com>
+Received: from mail-pf0-f180.google.com ([209.85.192.180]:34384 "EHLO
+        mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1760846AbdEVR7Q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 May 2017 13:59:16 -0400
+Received: by mail-pf0-f180.google.com with SMTP id 9so89285592pfj.1
+        for <linux-scsi@vger.kernel.org>; Mon, 22 May 2017 10:59:16 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <79600648b662bc8b9e701ff6627986887384585b.1495201975.git.jthumshirn@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Linux Block Layer Mailinglist <linux-block@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
 
-Hi Bart,=20
+On Fri, May 19, 2017 at 03:55:31PM +0200, Johannes Thumshirn wrote:
+> Add a regression test for commit 48ae8484e9fc ("scsi: sg: don't return
+> bogus Sg_requests"). This is a general protection fault triggered by
+> syzcaller via issuing bogus read(2)s on the /dev/sg devices.
+> 
+> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+> ---
+>  tests/sg/001     | 47 +++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/sg/001.out |  2 ++
+>  2 files changed, 49 insertions(+)
+>  create mode 100755 tests/sg/001
+>  create mode 100644 tests/sg/001.out
+> 
+> diff --git a/tests/sg/001 b/tests/sg/001
+> new file mode 100755
+> index 000000000000..86430409b6a3
+> --- /dev/null
+> +++ b/tests/sg/001
+> @@ -0,0 +1,47 @@
+> +#!/bin/bash
+> +#
+> +# Regression test for commit 48ae8484e9fc ("scsi: sg: don't return bogus
+> +# Sg_requests")
+> +#
+> +# Copyright (C) 2017 Johannes Thumshirn <jthumshirn@suse.de>
+> +#
+> +# This program is free software: you can redistribute it and/or modify
+> +# it under the terms of the GNU General Public License as published by
+> +# the Free Software Foundation, either version 3 of the License, or
+> +# (at your option) any later version.
+> +#
+> +# This program is distributed in the hope that it will be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+> +
+> +. common/sg
+> +. common/scsi_debug
+> +
+> +DESCRIPTION="try triggering a kernel GPF with 0 byte SG reads"
+> +QUICK=1
+> +
+> +requires() {
+> +	_have_program src/sg-001 \
+> +	    && _have_scsi_debug \
+> +	    && _have_scsi_generic
+> +}
+> +
+> +
+> +test() {
+> +	echo "Running ${TEST_NAME}"
+> +
+> +	if ! _get_scsi_debug_dev; then
+> +	    return 1
+> +	fi
+> +
+> +	SG_DEV=$(_get_sg_from_blockdev "$SCSI_DEBUG_NAME")
+> +	timeout -s INT 10s ./src/sg-001 "$SG_DEV"
+> +
+> +	_put_scsi_debug_dev
+> +
+> +	echo "Test complete"
+> +}
 
-> On May 19, 2017, at 4:27 PM, Bart Van Assche <bart.vanassche@sandisk.com>=
- wrote:
->=20
-> On Fri, 2017-05-19 at 14:53 -0700, Himanshu Madhani wrote:
->> [ ... ]
->> -int ql2xexchoffld =3D 0;
->> -module_param(ql2xexchoffld, uint, S_IRUGO|S_IWUSR);
->> -MODULE_PARM_DESC(ql2xexchoffld,
->> -		 "Number of exchanges to offload. "
->> -		 "0 (Default)- Disabled.");
->> +int ql2xtgtexchg =3D 1024;
->> +module_param(ql2xtgtexchg, uint, 0644);
->> +MODULE_PARM_DESC(ql2xtgtexchg,
->> +	"Number of target exchanges.");
->> +
->> +int ql2xiniexchg =3D 1024;
->> +module_param(ql2xiniexchg, uint, 0644);
->> +MODULE_PARM_DESC(ql2xtgtexchg,
->> +	"Number of initiator exchanges.");
->>=20
->=20
-> [ ... ]
->=20
->> -static int ql_dm_tgt_ex_pct =3D 50;
->> -module_param(ql_dm_tgt_ex_pct, int, S_IRUGO|S_IWUSR);
->> -MODULE_PARM_DESC(ql_dm_tgt_ex_pct,
->> -	"For Dual Mode (qlini_mode=3Ddual), this parameter determines "
->> -	"the percentage of exchanges/cmds FW will allocate resources "
->> -	"for Target mode.");
->> -
->=20
-> Hello Himanshu and Quinn,
->=20
-> Renaming internal variables is fine but renaming module parameters is not
-> acceptable. Please don't do this.
->=20
-> Thanks,
->=20
-> Bart.
-
-Will update patch to preserve module parameter.=20
-
-Thanks,
-- Himanshu
+This looks much better, thanks! One question for you: is there any value
+in running this on specific test devices (i.e., changing test() to
+test_device() and using "$TEST_DEV" instead of a scsi-debug device), or
+would it be a waste of time since it's just exercising generic code?
