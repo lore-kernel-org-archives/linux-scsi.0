@@ -1,44 +1,93 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH] qla2xxx: Remove an unused structure member
-Date: Mon, 22 May 2017 13:10:53 -0700
-Message-ID: <20170522201053.7093-1-bart.vanassche@sandisk.com>
+From: "Tran, Quinn" <Quinn.Tran@cavium.com>
+Subject: Re: [PATCH 20/25] qla2xxx: Remove redundant code
+Date: Mon, 22 May 2017 22:14:46 +0000
+Message-ID: <71DF2234-3414-4AD7-AE31-E974F92E4708@cavium.com>
+References: <20170519215344.2168-1-himanshu.madhani@cavium.com>
+ <20170519215344.2168-21-himanshu.madhani@cavium.com>
+ <1495237379.2581.19.camel@sandisk.com>
+ <1495427279.27407.20.camel@haakon3.risingtidesystems.com>
+ <1495477383.1017.3.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:25536 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753170AbdEVULI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 May 2017 16:11:08 -0400
+Received: from mail-by2nam03on0076.outbound.protection.outlook.com ([104.47.42.76]:39424
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S935269AbdEVWOy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 22 May 2017 18:14:54 -0400
+In-Reply-To: <1495477383.1017.3.camel@sandisk.com>
+Content-Language: en-US
+Content-ID: <04A06534ACF01C4480CF3FE0C7E7401F@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Quinn Tran <quinn.tran@cavium.com>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>, David Disseldorp <ddiss@suse.de>
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-qla_tgt_cmd.free_work is not used by the qla2xxx driver. Hence
-remove that member of struct qla_tgt_cmd.
-
-Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Acked-by: Himanshu Madhani <himanshu.madhani@cavium.com>
-Cc: Quinn Tran <quinn.tran@cavium.com>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Andy Grover <agrover@redhat.com>
-Cc: David Disseldorp <ddiss@suse.de>
----
- drivers/scsi/qla2xxx/qla_target.h | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index d64420251194..dae278859554 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -862,7 +862,6 @@ struct qla_tgt_cmd {
- 	struct se_cmd se_cmd;
- 	struct fc_port *sess;
- 	int state;
--	struct work_struct free_work;
- 	struct work_struct work;
- 	/* Sense buffer that will be mapped into outgoing status */
- 	unsigned char sense_buffer[TRANSPORT_SENSE_BUFFER];
--- 
-2.12.2
+LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IDxsaW51eC1zY3NpLW93bmVyQHZnZXIu
+a2VybmVsLm9yZz4gb24gYmVoYWxmIG9mIEJhcnQgVmFuIEFzc2NoZSA8QmFydC5WYW5Bc3NjaGVA
+c2FuZGlzay5jb20+DQpEYXRlOiBNb25kYXksIE1heSAyMiwgMjAxNyBhdCAxMToyMyBBTQ0KVG86
+IE5pY2hvbGFzIEJlbGxpbmdlciA8bmFiQGxpbnV4LWlzY3NpLm9yZz4NCkNjOiAibGludXgtc2Nz
+aUB2Z2VyLmtlcm5lbC5vcmciIDxsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZz4sICJKYW1lcy5C
+b3R0b21sZXlASGFuc2VuUGFydG5lcnNoaXAuY29tIiA8SmFtZXMuQm90dG9tbGV5QEhhbnNlblBh
+cnRuZXJzaGlwLmNvbT4sICJNYWRoYW5pLCBIaW1hbnNodSIgPEhpbWFuc2h1Lk1hZGhhbmlAY2F2
+aXVtLmNvbT4sICJtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbSIgPG1hcnRpbi5wZXRlcnNlbkBv
+cmFjbGUuY29tPg0KU3ViamVjdDogUmU6IFtQQVRDSCAyMC8yNV0gcWxhMnh4eDogUmVtb3ZlIHJl
+ZHVuZGFudCBjb2RlDQoNCiAgICBPbiBTdW4sIDIwMTctMDUtMjEgYXQgMjE6MjcgLTA3MDAsIE5p
+Y2hvbGFzIEEuIEJlbGxpbmdlciB3cm90ZToNCiAgICA+IFRoZSB0aHJlZSBsaXN0cyBhYm9ydF9j
+bWRfZm9yX3RhZygpIHdhbGtzIGZyb20gX19xbHRfMjR4eF9oYW5kbGVfYWJ0cygpDQogICAgPiBh
+cmUgdXNlZCB0byB0cmFjayBkZXNjcmlwdG9ycyBvbmx5IGJlZm9yZSBfX3FsdF9kb193b3JrKCkg
+aXMgcmVhY2hlZCwNCiAgICA+IGFuZCBiZWZvcmUgYSBkZXNjcmlwdG9yIGlzIHN1Ym1pdHRlZCBp
+bnRvIHRjbV9xbGEyeHh4IGNvZGUuDQogICAgPiANCiAgICA+IE9yIHJhdGhlciwgdGhlIHRocmVl
+IGxpc3RzIGluIGFib3J0X2NtZF9mb3JfdGFnKCkgb25seSBjb250YWluDQogICAgPiBxbGFfdGd0
+X2NtZCBvciBxbGFfdGd0X3Nlc3Nfb3AgZGVzY3JpcHRvcnMgdGhhdCBoYXZlIG5vdCB5ZXQgcmVh
+Y2hlZA0KICAgID4gcWxhX3RndF9mdW5jX3RtcGwtPmhhbmRsZV9jbWQoKSBjb2RlLg0KICAgID4g
+DQogICAgPiBCb3RoIHFsdF9kb193b3JrKCkgYW5kIHFsdF9jcmVhdGVfc2Vzc19mcm9tX2F0aW8o
+KSBkcm9wIHRoZWlyIHJlc3BlY3RpdmUNCiAgICA+IGRlc2NyaXB0b3JzIGZyb20gLT5jbWRfbGlz
+dCBiZWZvcmUgZGlzcGF0Y2hpbmcgaW50byB0Y21fcWxhMnh4eCAtPg0KICAgID4gdGFyZ2V0LWNv
+cmUsIHdoaWNoIG1lYW5zIHRoZXJlIGlzIG5vIHdheSBmb3IgYSBkZXNjcmlwdG9yIHRvIGJlIHBh
+cnQgb2YNCiAgICA+IGludGVybmFsIGxpc3RzIG9uY2UgX19xbHRfZG9fd29yaygpIGlzIGNhbGxl
+ZC4NCiAgICA+IA0KICAgID4gVGhhdCBzYWlkLCB0aGUgcGF0Y2ggaXMgY29ycmVjdCBhbmQgcmVt
+b3ZlcyB0aGUgcmVkdW5kYW50IGxvb2t1cC4NCiAgICANCiAgICBJIGRvIG5vdCBhZ3JlZSB0aGF0
+IHRoaXMgcGF0Y2ggaXMgbWFrZXMgQUJUUyBoYW5kbGluZyBmdWxseSByb2J1c3QuIEl0IHNlZW1z
+DQogICAgbGlrZSB5b3UgaGF2ZSBub3Qgbm90aWNlZCB0aGF0IHRoZSBmb2xsb3dpbmcgcmFjZSBj
+YW4gb2NjdXIgd2l0aCBvciB3aXRob3V0DQogICAgdGhpcyBwYXRjaCBhcHBsaWVkOiBpZiBhYm9y
+dF9jbWRfZm9yX3RhZygpIGFuZCBxbHRfdHJ5X3RvX2RlcXVldWVfdW5rbm93bl9hdGlvcygpDQog
+ICAgYXJlIGNhbGxlZCBjb25jdXJyZW50bHksIHNpbmNlIHRoZSBsYXR0ZXIgZnVuY3Rpb24gY2Fs
+bHMgbGlzdF9kZWwoKSBhZnRlcg0KICAgIHFsdF9zZW5kX3Rlcm1fZXhjaGFuZ2UoKSwgYWJvcnRf
+Y21kX2Zvcl90YWcoKSBjYW4gcmV0dXJuIDEgYW5kIHRoZXJlYnkgdHJpZ2dlcg0KICAgIGEgY2Fs
+bCB0byBxbHRfMjR4eF9zZW5kX2FidHNfcmVzcCgpIHdoaWxlIHFsdF90cnlfdG9fZGVxdWV1ZV91
+bmtub3duX2F0aW9zKCkNCiAgICBjYWxscyBxbHRfc2VuZF90ZXJtX2V4Y2hhbmdlKCkgY29uY3Vy
+cmVudGx5LiANCg0KUVQ6ICDigJxbUEFUQ0ggMDMvMjVdIHFsYTJ4eHg6IEFsbG93IEFCVFMgUlgs
+IFJJREEgb24gQVRJT1EgZm9yIElTUDgzWFgvMjdYWOKAnSBhdHRlbXB0cyB0byByZWR1Y2UgdGhl
+IGRlc2NyaWJlIGNvbmN1cnJlbmN5IGJ5IG1vdmluZyB0aGUgSU9DQiBmcm9tIHRoZSBSU1BRIHRo
+cmVhZCB0byB0aGUgQVRJT1EgdGhyZWFkLiAgVGhpcyBoZWxwcyBwcmVzZXJ2ZSB0aGUgb3JkZXJp
+bmcgYmV0d2VlbiBTQ1NJIGNtZCAmIEFCVFMuDQoNCkkgdGhpbmsgYW4gaW5pdGlhdG9yIGNvdWxk
+IGdldA0KICAgIHJlYWxseSBjb25mdXNlZCBpZiBpdCByZWNlaXZlcyB0d28gcmVzcG9uc2VzIGZv
+ciB0aGUgc2FtZSBleGNoYW5nZS4NCg0KUVQ6ICBJIGRvIHNlZSB0aGUgd2luZG93IHlvdeKAmXJl
+IGRlc2NyaWJpbmcgaW4gdGhlIHFsdF90cnlfdG9fZGVxdWV1ZV91bmtub3duX2F0aW9zKCkuICBX
+aWxsIGhhdmUgdG8gZm9sbG93IHVwIHdpdGggYW5vdGhlciBwYXRjaC4gICBUaGlzIHBhdGNoIGlz
+IG5vdCBtZWFudCBmb3IgdGhpcyB3aW5kb3cgeW914oCZdmUganVzdCBpZGVudGlmeS4NCg0KICAg
+IA0KICAgIEFuIGV4aXN0aW5nIGlzc3VlIHRoYXQgaXMgbm90IGFkZHJlc3NlZCBieSB0aGlzIHBh
+dGNoIGlzIHRoYXQgaWYgYW4gQUJUUyBpcw0KICAgIHJlY2VpdmVkIGFmdGVyIHFsdF9kb193b3Jr
+KCkgaGFzIGNhbGxlZCBsaXN0X2RlbCgpIGFuZCBiZWZvcmUgX19xbHRfZG9fd29yaygpDQogICAg
+dHJpZ2dlcnMgYSBjYWxsIHRhcmdldF9zdWJtaXRfY21kKCkgdGhhdCBhIGNvbW1hbmQgaXMgbm90
+IG9uIGFueSBsaXN0IGFuZCBoZW5jZQ0KICAgIHRoYXQgYWJvcnRfY21kX2Zvcl90YWcoKSB3b24n
+dCBiZSBhYmxlIHRvIGZpbmQgaXQgYW55d2hlcmUuDQoNClFUOiAgQWN0dWFsbHksIHdl4oCZcmUg
+Y292ZXJlZCBpbiB0aGlzIGNhc2UuICAgIFRoZXJlIDIgcmVzcG9uZHMgZm9yIDIgSU9DQi90cmFu
+c2FjdGlvbnMuICAxKSBUaGUgIGFib3J0X2NtZF9mb3JfdGFnKCkgZmluZHMgdGhlIFNDU0kgY29t
+bWFuZCBvbiB0aGUgcWxhX2NtZF9saXN0IGFuZCB0dXJucyBvbiB0aGUgYWJvcnQgZmxhZyB3aGls
+ZSBjbWQgaXMgaW4gd29yayBxdWV1ZSAmIGJlZm9yZSBfX3FsdF9kb193b3JrIGlzIGNhbGxlZC4g
+IFdoZW4gX19xbHRfZG9fd29yayBpcyBjYWxsIGFuZCBzZWVzIHRoZSBhYm9ydGVkIGZsYWcsIHRo
+ZSB0aHJlYWQgd2lsbCB0ZXJtaW5hdGUvY2xlYW51cCB0aGUgU0NTSSBjb21tYW5kIGFuZCB3aWxs
+IG5vdCBzdWJtaXQgdG8gVENNLg0KDQpBcyBmb3IgdGhlIEFCVFMsIHRoZSBhYm9ydF9jbWRfZm9y
+X3RhZygpIHJldHVybnMgMSBhZnRlciBmaW5kaW5nIHRoZSBjb21tYW5kIHdpbGwgdHJpZ2dlciBh
+biBBQlRTIHJlc3BvbmQuICANCg0Kc3RhdGljIHZvaWQgX19xbHRfZG9fd29yayhzdHJ1Y3QgcWxh
+X3RndF9jbWQgKmNtZCkNCnsNCiAgICAgICBpZiAoY21kLT5hYm9ydGVkKSB7DQogICAgICAgICAg
+ICAgICAgcWxfZGJnKHFsX2RiZ190Z3RfbWd0LCB2aGEsIDB4ZjA4MiwNCiAgICAgICAgICAgICAg
+ICAgICAgImNtZCB3aXRoIHRhZyAldSBpcyBhYm9ydGVkXG4iLA0KICAgICAgICAgICAgICAgICAg
+ICBjbWQtPmF0aW8udS5pc3AyNC5leGNoYW5nZV9hZGRyKTsNCiAgICAgICAgICAgICAgICBnb3Rv
+IG91dF90ZXJtOw0KICAgICAgICB9DQp9DQoNCiAgICBTaG91bGRuJ3QgdGhlc2UgaXNzdWVzIGJl
+IGFkZHJlc3NlZCBwcm9wZXJseT8NCg0KUVQ6IFdpbGwgZm9sbG93IHVwIHdpdGggYW5vdGhlciBw
+YXRjaCBmb3IgdGhlIG5ldyBwcm9ibGVtLiB0aGFua3MgZm9yIHRoZSBleHRyYSBleWVzLg0KICAg
+IA0KICAgIEJhcnQuDQoNCg==
