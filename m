@@ -1,37 +1,34 @@
-From: "hch@lst.de" <hch@lst.de>
-Subject: Re: [PATCH 06/18] scsi: Make scsi_ioctl_reset() pass the request
-        queue pointer to blk_rq_init()
-Date: Mon, 22 May 2017 14:48:09 +0200
-Message-ID: <20170522124809.GB11869@lst.de>
-References: <20170519183016.12646-1-bart.vanassche@sandisk.com> <20170519183016.12646-7-bart.vanassche@sandisk.com> <20170521065003.GE12891@lst.de> <1495384897.3192.3.camel@sandisk.com> <1a2b631a-8b12-f167-b3b8-3a74bd179daa@suse.com> <20170522075443.GC2081@lst.de> <78097a2b-73c6-3206-803a-c108fe464c45@suse.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] scsi: smartpqi: mark PM functions as __maybe_unused
+Date: Mon, 22 May 2017 14:49:02 +0200
+Message-ID: <CAK8P3a3-_WZb6ua+gE4+p-5f8311dR3rMt+se-YZe1m3VXw+dA@mail.gmail.com>
+References: <20170518083243.2927102-1-arnd@arndb.de> <CAK8P3a2KD5aJanDcaRUHi2GeotJ_pfC_UY+KrWdYua1_k3GYow@mail.gmail.com>
+ <yq14lwh4noe.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:47931 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751769AbdEVMsL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 22 May 2017 08:48:11 -0400
-Content-Disposition: inline
-In-Reply-To: <78097a2b-73c6-3206-803a-c108fe464c45@suse.com>
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:35161 "EHLO
+        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757963AbdEVMtR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 May 2017 08:49:17 -0400
+In-Reply-To: <yq14lwh4noe.fsf@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.com>
-Cc: "hch@lst.de" <hch@lst.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Scott Benesh <scott.benesh@microsemi.com>, Scott Teel <scott.teel@microsemi.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Kevin Barnett <kevin.barnett@microsemi.com>
 
-On Mon, May 22, 2017 at 10:46:10AM +0200, Hannes Reinecke wrote:
-> > That seems to be overkill to me for the few drivers.  And I suspect
-> > most of them would be better off now even using blk-mq private tags
-> > (which we'd have to implement for the legacy path first or just
-> > kill it off) but just not expose a tag per host to the scsi and block
-> > layers and set that aside.
-> > 
-> IE not using blk-mq private tags for EH? Hmm.
-> But then we'd need a SCSI-internal mechanism to get one of them. I
-> really would want to avoid having each driver to implement it's own
-> mechanism on how to get a TMF tag; that sort of thing only leads to
-> copy-and-paste errors.
-> Ok; will be looking into it.
+On Fri, May 19, 2017 at 3:53 AM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>
+> Arnd,
+>
+>> I notice that today's linux-next no longer contains the patch that
+>> introduced the warning.
+>
+> I had tagged my 4.12 fixes branch with for-next. It should be back to
+> 4.13 material shortly.
 
-No, we don't.  The driver simply sets a tag aside and doesn't expose
-it to the block layer.  Similar to what smartpqi already does for LUN
-resets and AENs, mpt3sas does for the ioctl tags and NVMe does for AERs.
+Ok, the patch is back now, so my fix is needed again. Let me know
+in case you want me to resend.
+
+        Arnd
