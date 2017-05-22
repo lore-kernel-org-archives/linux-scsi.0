@@ -1,45 +1,113 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH 15/18] scsi: storvsc: Initialize driver-private command
- before using it
-Date: Mon, 22 May 2017 17:15:37 +0000
-Message-ID: <1495473336.1017.1.camel@sandisk.com>
-References: <20170519183016.12646-1-bart.vanassche@sandisk.com>
-         <20170519183016.12646-16-bart.vanassche@sandisk.com>
-         <20170521065134.GF12891@lst.de>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH 02/25] qla2xxx: Remove redundant fc_host_port_name call
+Date: Mon, 22 May 2017 17:18:58 +0000
+Message-ID: <5653FF0F-C9E7-436B-BB94-DD82A7650553@cavium.com>
+References: <20170519215344.2168-1-himanshu.madhani@cavium.com>
+ <20170519215344.2168-3-himanshu.madhani@cavium.com>
+ <1495233450.2581.7.camel@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:14874 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752121AbdEVRQW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 May 2017 13:16:22 -0400
-In-Reply-To: <20170521065134.GF12891@lst.de>
+Received: from mail-cys01nam02on0061.outbound.protection.outlook.com ([104.47.37.61]:56316
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1758616AbdEVRTB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 22 May 2017 13:19:01 -0400
+In-Reply-To: <1495233450.2581.7.camel@sandisk.com>
 Content-Language: en-US
-Content-ID: <773043AFC495B1438B6F0747780F5778@namprd04.prod.outlook.com>
+Content-ID: <B8A7E3229E765043BB8B3D03663D7C67@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hch@lst.de" <hch@lst.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "hare@suse.com" <hare@suse.com>, "kys@microsoft.com" <kys@microsoft.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "longli@microsoft.com" <longli@microsoft.com>
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Sun, 2017-05-21 at 08:51 +0200, Christoph Hellwig wrote:
-> On Fri, May 19, 2017 at 11:30:13AM -0700, Bart Van Assche wrote:
-> > The storvsc driver is the only SCSI LLD that uses driver-private
-> > command data and that does not zero-initialize that data before
-> > reading it. Make this driver consistent with the other SCSI LLDs
-> > that use driver-private command data.
+Hi Bart,=20
+
+> On May 19, 2017, at 3:37 PM, Bart Van Assche <bart.vanassche@sandisk.com>=
+ wrote:
 >=20
-> Well.  Either we add zeroing to storvsc and remove it from common
-> code, or we remove the zeroing from the drivers.
+> On Fri, 2017-05-19 at 14:53 -0700, Himanshu Madhani wrote:
+>> From: Quinn Tran <quinn.tran@cavium.com>
+>>=20
+>> Remove redundant fc_host_port_name calls to prevent
+>> early access of scsi_host->shost_data buffer. This
+>> prevent null pointer access.
+>>=20
+>> Cc: <stable@vger.kernel.org>
+>> Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
+>> Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+>> ---
+>> drivers/scsi/qla2xxx/qla_mbx.c | 9 ---------
+>> 1 file changed, 9 deletions(-)
+>>=20
+>> diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_m=
+bx.c
+>> index a113ab3592a7..12fea77e31c6 100644
+>> --- a/drivers/scsi/qla2xxx/qla_mbx.c
+>> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
+>> @@ -3676,15 +3676,6 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vh=
+a,
+>> 				qlt_update_host_map(vha, id);
+>> 			}
+>>=20
+>> -			fc_host_port_name(vha->host) =3D
+>> -			    wwn_to_u64(vha->port_name);
+>> -
+>> -			if (qla_ini_mode_enabled(vha))
+>> -				ql_dbg(ql_dbg_mbx, vha, 0x1018,
+>> -				    "FA-WWN portname %016llx (%x)\n",
+>> -				    fc_host_port_name(vha->host),
+>> -				    rptid_entry->vp_status);
+>> -
+>> 			set_bit(REGISTER_FC4_NEEDED, &vha->dpc_flags);
+>> 			set_bit(REGISTER_FDMI_NEEDED, &vha->dpc_flags);
+>> 		} else {
 >=20
-> We shouldn't do both.  Given that we already zero the remaining
-> command it seems to me like keeping the zeroing in common code
-> would be preferred, but I'm open to discussion.
+> Hello Himanshu,
+>=20
+> If the above host port name assignment is redundant, what is the host
+> port name assignment it is redundant with?
+>=20
 
-Hello Christoph,
+> Which of the removed statements could trigger a NULL pointer access, and
+> from what context? Is there perhaps a call trace available of the NULL
+> pointer access?
+>=20
+> Thanks,
+>=20
+> Bart.
 
-I will remove the code that zeroes driver-private command data from the oth=
-er
-SCSI LLDs and add it to the scsi-sq request preparation code path.
+We see following NULL pointer access on a faster systems. So far its has be=
+en only seen on
+couple systems in our env.=20
 
-Bart.=
+[  498.637517] BUG: unable to handle kernel NULL pointer dereference at 000=
+0000000000008
+[  498.637572] IP: qla24xx_report_id_acquisition+0x22d/0x3a0 [qla2xxx]
+
+GDB showed following lines were causing NULL pointer deference.=20
+
+(gdb) l *qla24xx_report_id_acquisition+0x22d
+0x2012d is in qla24xx_report_id_acquisition (drivers/scsi/qla2xxx/qla_mbx.c=
+:3679).
+3674                                                                       =
+}
+3675      =20
+3676                                                                       =
+qlt_update_host_map(vha, id);
+3677                                                       }
+3678      =20
+3679                                                       fc_host_port_nam=
+e(vha->host) =3D
+3680                                                           wwn_to_u64(v=
+ha->port_name);
+3681      =20
+3682                                                       if (qla_ini_mode=
+_enabled(vha))
+3683                                                                       =
+ql_dbg(ql_dbg_mbx, vha, 0x1018,
+(gdb)=20
+
+Thanks,
+- Himanshu
