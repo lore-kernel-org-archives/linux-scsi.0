@@ -1,102 +1,96 @@
 From: "Dupuis, Chad" <chad.dupuis@cavium.com>
-Subject: [PATCH 08/15] qedf: Use same logic for SCSI host reset and FC lip_reset.
-Date: Tue, 23 May 2017 06:19:24 -0700
-Message-ID: <20170523131931.1777-9-chad.dupuis@cavium.com>
+Subject: [PATCH 04/15] qedf: Look at all descriptors when processing a clear virtual link.
+Date: Tue, 23 May 2017 06:19:20 -0700
+Message-ID: <20170523131931.1777-5-chad.dupuis@cavium.com>
 References: <20170523131931.1777-1-chad.dupuis@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0061.outbound.protection.outlook.com ([104.47.34.61]:19872
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam03on0056.outbound.protection.outlook.com ([104.47.42.56]:31264
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S937116AbdEWNTz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 23 May 2017 09:19:55 -0400
+        id S937109AbdEWNTs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 23 May 2017 09:19:48 -0400
 In-Reply-To: <20170523131931.1777-1-chad.dupuis@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, QLogic-Storage-Upstream@cavium.com
 
-We should be using the same logic to do a soft reset of the FCoE function
-whether it is initiated via sg_reset or the fc_host issue_lip attribute.
-Refactor the host reset and fcoe reset handlers to use the preferred logic
-which is currently contained in qedf_eh_host_reset().
+If there are multiple descriptors for a particular type in a clear virtual
+link we receive, we will not process it correctly but rather take the last
+value. This can cause us not to not flap the virtual link as the value from
+the descriptors that we compare against the our stored FCF or fc_lport values
+may not match.
+
+Change is to do a comparison when processing the each descriptor instead of at
+the end and then set a bool if we need to do the reset.
 
 Signed-off-by: Chad Dupuis <chad.dupuis@cavium.com>
 ---
- drivers/scsi/qedf/qedf_main.c | 39 +++++++++++++++++++++++----------------
- 1 file changed, 23 insertions(+), 16 deletions(-)
+ drivers/scsi/qedf/qedf_fip.c | 20 +++++++++-----------
+ 1 file changed, 9 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index d6049cd..fa5a2f8 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -640,27 +640,17 @@ void qedf_wait_for_upload(struct qedf_ctx *qedf)
- 	}
- }
+diff --git a/drivers/scsi/qedf/qedf_fip.c b/drivers/scsi/qedf/qedf_fip.c
+index 2dfb817..64b04f2 100644
+--- a/drivers/scsi/qedf/qedf_fip.c
++++ b/drivers/scsi/qedf/qedf_fip.c
+@@ -156,10 +156,9 @@ void qedf_fip_recv(struct qedf_ctx *qedf, struct sk_buff *skb)
+ 	struct fip_wwn_desc *wp;
+ 	struct fip_vn_desc *vp;
+ 	size_t rlen, dlen;
+-	uint32_t cvl_port_id;
+-	__u8 cvl_mac[ETH_ALEN];
+ 	u16 op;
+ 	u8 sub;
++	bool do_reset = false;
  
--/* Reset the host by gracefully logging out and then logging back in */
--static int qedf_eh_host_reset(struct scsi_cmnd *sc_cmd)
-+/* Performs soft reset of qedf_ctx by simulating a link down/up */
-+static void qedf_ctx_soft_reset(struct fc_lport *lport)
- {
--	struct fc_lport *lport;
- 	struct qedf_ctx *qedf;
+ 	eth_hdr = (struct ethhdr *)skb_mac_header(skb);
+ 	fiph = (struct fip_header *) ((void *)skb->data + 2 * ETH_ALEN + 2);
+@@ -190,8 +189,6 @@ void qedf_fip_recv(struct qedf_ctx *qedf, struct sk_buff *skb)
+ 			return;
+ 		}
  
--	lport = shost_priv(sc_cmd->device->host);
--
- 	if (lport->vport) {
- 		QEDF_ERR(NULL, "Cannot issue host reset on NPIV port.\n");
--		return SUCCESS;
-+		return;
- 	}
+-		cvl_port_id = 0;
+-		memset(cvl_mac, 0, ETH_ALEN);
+ 		/*
+ 		 * We need to loop through the CVL descriptors to determine
+ 		 * if we want to reset the fcoe link
+@@ -205,7 +202,9 @@ void qedf_fip_recv(struct qedf_ctx *qedf, struct sk_buff *skb)
+ 				mp = (struct fip_mac_desc *)desc;
+ 				QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_LL2,
+ 				    "fd_mac=%pM\n", mp->fd_mac);
+-				ether_addr_copy(cvl_mac, mp->fd_mac);
++				if (ether_addr_equal(mp->fd_mac,
++				    qedf->ctlr.sel_fcf->fcf_mac))
++					do_reset = true;
+ 				break;
+ 			case FIP_DT_NAME:
+ 				wp = (struct fip_wwn_desc *)desc;
+@@ -217,7 +216,9 @@ void qedf_fip_recv(struct qedf_ctx *qedf, struct sk_buff *skb)
+ 				vp = (struct fip_vn_desc *)desc;
+ 				QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_LL2,
+ 				    "fd_fc_id=%x.\n", ntoh24(vp->fd_fc_id));
+-				cvl_port_id = ntoh24(vp->fd_fc_id);
++				if (ntoh24(vp->fd_fc_id) ==
++				    qedf->lport->port_id)
++					do_reset = true;
+ 				break;
+ 			default:
+ 				/* Ignore anything else */
+@@ -228,11 +229,8 @@ void qedf_fip_recv(struct qedf_ctx *qedf, struct sk_buff *skb)
+ 		}
  
--	qedf = (struct qedf_ctx *)lport_priv(lport);
--
--	if (atomic_read(&qedf->link_state) == QEDF_LINK_DOWN ||
--	    test_bit(QEDF_UNLOADING, &qedf->flags) ||
--	    test_bit(QEDF_DBG_STOP_IO, &qedf->flags))
--		return FAILED;
--
--	QEDF_ERR(&(qedf->dbg_ctx), "HOST RESET Issued...");
-+	qedf = lport_priv(lport);
- 
- 	/* For host reset, essentially do a soft link up/down */
- 	atomic_set(&qedf->link_state, QEDF_LINK_DOWN);
-@@ -672,6 +662,24 @@ static int qedf_eh_host_reset(struct scsi_cmnd *sc_cmd)
- 	qedf->vlan_id  = 0;
- 	queue_delayed_work(qedf->link_update_wq, &qedf->link_update,
- 	    0);
-+}
-+
-+/* Reset the host by gracefully logging out and then logging back in */
-+static int qedf_eh_host_reset(struct scsi_cmnd *sc_cmd)
-+{
-+	struct fc_lport *lport;
-+	struct qedf_ctx *qedf;
-+
-+	lport = shost_priv(sc_cmd->device->host);
-+	qedf = lport_priv(lport);
-+
-+	if (atomic_read(&qedf->link_state) == QEDF_LINK_DOWN ||
-+	    test_bit(QEDF_UNLOADING, &qedf->flags))
-+		return FAILED;
-+
-+	QEDF_ERR(&(qedf->dbg_ctx), "HOST RESET Issued...");
-+
-+	qedf_ctx_soft_reset(lport);
- 
- 	return SUCCESS;
- }
-@@ -1670,8 +1678,7 @@ static int qedf_fcoe_reset(struct Scsi_Host *shost)
- {
- 	struct fc_lport *lport = shost_priv(shost);
- 
--	fc_fabric_logoff(lport);
--	fc_fabric_login(lport);
-+	qedf_ctx_soft_reset(lport);
- 	return 0;
- }
- 
+ 		QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_LL2,
+-		    "cvl_port_id=%06x cvl_mac=%pM.\n", cvl_port_id,
+-		    cvl_mac);
+-		if (cvl_port_id == qedf->lport->port_id &&
+-		    ether_addr_equal(cvl_mac,
+-		    qedf->ctlr.sel_fcf->fcf_mac)) {
++		    "do_reset=%d.\n", do_reset);
++		if (do_reset) {
+ 			fcoe_ctlr_link_down(&qedf->ctlr);
+ 			qedf_wait_for_upload(qedf);
+ 			fcoe_ctlr_link_up(&qedf->ctlr);
 -- 
 1.8.5.6
