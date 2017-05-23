@@ -1,42 +1,26 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH blktests v2 3/3] sg/001: add regression test for syzcaller
- generated GPF in sg_read path
-Date: Tue, 23 May 2017 08:58:32 +0200
-Message-ID: <b8de93e9-af4b-d0fc-270e-b938f68688b4@suse.de>
-References: <cover.1495201975.git.jthumshirn@suse.de>
- <79600648b662bc8b9e701ff6627986887384585b.1495201975.git.jthumshirn@suse.de>
- <20170522175905.GA17738@vader.DHCP.thefacebook.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] qla2xxx: Remove an unused structure member
+Date: Tue, 23 May 2017 09:20:27 +0200
+Message-ID: <20170523072027.GA18234@lst.de>
+References: <20170522201053.7093-1-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170522175905.GA17738@vader.DHCP.thefacebook.com>
-Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
-To: Omar Sandoval <osandov@osandov.com>
-Cc: Linux Block Layer Mailinglist <linux-block@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:52324 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935490AbdEWHU3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 23 May 2017 03:20:29 -0400
+Content-Disposition: inline
+In-Reply-To: <20170522201053.7093-1-bart.vanassche@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Quinn Tran <quinn.tran@cavium.com>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>, David Disseldorp <ddiss@suse.de>
 
-On 05/22/2017 07:59 PM, Omar Sandoval wrote:
-> This looks much better, thanks! One question for you: is there any value
-> in running this on specific test devices (i.e., changing test() to
-> test_device() and using "$TEST_DEV" instead of a scsi-debug device), or
-> would it be a waste of time since it's just exercising generic code?
+On Mon, May 22, 2017 at 01:10:53PM -0700, Bart Van Assche wrote:
+> qla_tgt_cmd.free_work is not used by the qla2xxx driver. Hence
+> remove that member of struct qla_tgt_cmd.
 
-That's just generic code. All I need is a SCSI device so I get a /dev/sg
-device node.
+Looks fine,
 
-One could do a check if $TEST_DEV is a SCSI device and have a fall-back
-to scsi_debug if it isn't, but I'm not sure if this isn't just a waste
-of time.
-
-Byte,
-	Johannes
-
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Reviewed-by: Christoph Hellwig <hch@lst.de>
