@@ -1,77 +1,114 @@
-From: Varun Prakash <varun@chelsio.com>
-Subject: Re: [PATCH] csiostor: Avoid content leaks and casts
-Date: Tue, 23 May 2017 15:00:26 +0530
-Message-ID: <20170523093024.GA1667@chelsio.com>
-References: <20170509223444.GA51314@beast>
- <20170522150544.GA1677@chelsio.com>
- <CAGXu5jL6nN79vHLrWeC5YNkhUcuSR9mUNOt19Y2VXuj1qBvhSQ@mail.gmail.com>
+From: "Dupuis, Chad" <chad.dupuis@cavium.com>
+Subject: [PATCH 01/15] qedf: Enable basic FDMI information.
+Date: Tue, 23 May 2017 06:19:17 -0700
+Message-ID: <20170523131931.1777-2-chad.dupuis@cavium.com>
+References: <20170523131931.1777-1-chad.dupuis@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAGXu5jL6nN79vHLrWeC5YNkhUcuSR9mUNOt19Y2VXuj1qBvhSQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Daniel Micay <danielmicay@gmail.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-dm3nam03on0076.outbound.protection.outlook.com ([104.47.41.76]:45395
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S965465AbdEWNTi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 23 May 2017 09:19:38 -0400
+In-Reply-To: <20170523131931.1777-1-chad.dupuis@cavium.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, QLogic-Storage-Upstream@cavium.com
 
-On Mon, May 22, 2017 at 09:29:41AM -0700, Kees Cook wrote:
-> On Mon, May 22, 2017 at 8:05 AM, Varun Prakash <varun@chelsio.com> wrote:
-> > On Tue, May 09, 2017 at 03:34:44PM -0700, Kees Cook wrote:
-> >> When copying attributes, the len argument was padded out and the resulting
-> >> memcpy() would copy beyond the end of the source buffer.  Avoid this,
-> >> and use size_t for val_len to avoid all the casts. Similarly, avoid source
-> >> buffer casts and use void *.
-> >>
-> >> Additionally enforces val_len can be represented by u16 and that
-> >> the DMA buffer was not overflowed. Fixes the size of mfa, which is not
-> >> FC_FDMI_PORT_ATTR_MAXFRAMESIZE_LEN (but it will be padded up to 4). This
-> >> was noticed by the future CONFIG_FORTIFY_SOURCE checks.
-> >>
-> >> Cc: Daniel Micay <danielmicay@gmail.com>
-> >> Signed-off-by: Kees Cook <keescook@chromium.org>
-> >> ---
-> >>  drivers/scsi/csiostor/csio_lnode.c | 43 +++++++++++++++++++++++---------------
-> >>  1 file changed, 26 insertions(+), 17 deletions(-)
-> >>
-> >> diff --git a/drivers/scsi/csiostor/csio_lnode.c b/drivers/scsi/csiostor/csio_lnode.c
-> >> index c00b2ff72b55..be5ee2d37815 100644
-> >> --- a/drivers/scsi/csiostor/csio_lnode.c
-> >> +++ b/drivers/scsi/csiostor/csio_lnode.c
-> >> @@ -238,14 +238,23 @@ csio_osname(uint8_t *buf, size_t buf_len)
-> >>  }
-> >>
-> >
-> >
-> >>
-> >>       csio_append_attrib(&pld, FC_FDMI_HBA_ATTR_MAXCTPAYLOAD,
-> >> -                        (uint8_t *)&maxpayload,
-> >> -                        FC_FDMI_HBA_ATTR_MAXCTPAYLOAD_LEN);
-> >> +                        &maxpayload, FC_FDMI_HBA_ATTR_MAXCTPAYLOAD_LEN);
-> >>       len = (uint32_t)(pld - (uint8_t *)cmd);
-> >>       numattrs++;
-> >>       attrib_blk->numattrs = htonl(numattrs);
-> >> @@ -1794,6 +1801,8 @@ csio_ln_mgmt_submit_req(struct csio_ioreq *io_req,
-> >>       struct csio_mgmtm *mgmtm = csio_hw_to_mgmtm(hw);
-> >>       int rv;
-> >>
-> >> +     BUG_ON(pld_len > pld->len);
-> >> +
-> >
-> > I think WARN_ON() is better than BUG_ON() in this case
-> >
-> >         if (WARN_ON(pld_len > pld->len))
-> >                 return -EINVAL;
-> >
-> >>       io_req->io_cbfn = io_cbfn;      /* Upper layer callback handler */
-> >>       io_req->fw_handle = (uintptr_t) (io_req);
-> >>       io_req->eq_idx = mgmtm->eq_idx;
-> 
-> I chose BUG_ON here because the damage has already been done. If this
-> assertion is hit, the heap buffers have already been overrun. This
-> isn't a state we should only warn about...
-> 
+For libfc to register FDMI attributes we need to do two things:
 
-Ok.
+- Set the appropriate fc_host attributes that libfc will use to form the
+  FDMI registration commands
+- Set lport->fdmi_enabled to 1
 
-Acked-by: Varun Prakash <varun@chelsio.com>
+Signed-off-by: Chad Dupuis <chad.dupuis@cavium.com>
+---
+ drivers/scsi/qedf/qedf_main.c | 57 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 57 insertions(+)
+
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index cceddd9..2949932 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -22,6 +22,7 @@
+ #include <linux/if_vlan.h>
+ #include <linux/cpu.h>
+ #include "qedf.h"
++#include <uapi/linux/pci_regs.h>
+ 
+ const struct qed_fcoe_ops *qed_ops;
+ 
+@@ -1334,6 +1335,60 @@ static void qedf_fcoe_ctlr_setup(struct qedf_ctx *qedf)
+ 	ether_addr_copy(qedf->ctlr.ctl_src_addr, qedf->mac);
+ }
+ 
++static void qedf_setup_fdmi(struct qedf_ctx *qedf)
++{
++	struct fc_lport *lport = qedf->lport;
++	u8 buf[8];
++	int i, pos;
++
++	/*
++	 * fdmi_enabled needs to be set for libfc to execute FDMI registration.
++	 */
++	lport->fdmi_enabled = 1;
++
++	/*
++	 * Setup the necessary fc_host attributes to that will be used to fill
++	 * in the FDMI information.
++	 */
++
++	/* Get the PCI-e Device Serial Number Capability */
++	pos = pci_find_ext_capability(qedf->pdev, PCI_EXT_CAP_ID_DSN);
++	if (pos) {
++		pos += 4;
++		for (i = 0; i < 8; i++)
++			pci_read_config_byte(qedf->pdev, pos + i, &buf[i]);
++
++		snprintf(fc_host_serial_number(lport->host),
++		    FC_SERIAL_NUMBER_SIZE,
++		    "%02X%02X%02X%02X%02X%02X%02X%02X",
++		    buf[7], buf[6], buf[5], buf[4],
++		    buf[3], buf[2], buf[1], buf[0]);
++	} else
++		snprintf(fc_host_serial_number(lport->host),
++		    FC_SERIAL_NUMBER_SIZE, "Unknown");
++
++	snprintf(fc_host_manufacturer(lport->host),
++	    FC_SERIAL_NUMBER_SIZE, "%s", "Cavium Inc.");
++
++	snprintf(fc_host_model(lport->host),
++	    FC_SYMBOLIC_NAME_SIZE, "%s", "QL41000");
++
++	snprintf(fc_host_model_description(lport->host),
++	    FC_SYMBOLIC_NAME_SIZE, "%s", "QLogic FastLinQ QL41000 Series "
++	    "10/25/40/50GGbE Controller (FCoE)");
++
++	snprintf(fc_host_hardware_version(lport->host),
++	    FC_VERSION_STRING_SIZE, "Rev %d", qedf->pdev->revision);
++
++	snprintf(fc_host_driver_version(lport->host),
++	    FC_VERSION_STRING_SIZE, "%s", QEDF_VERSION);
++
++	snprintf(fc_host_firmware_version(lport->host),
++	    FC_VERSION_STRING_SIZE, "%d.%d.%d.%d",
++	    FW_MAJOR_VERSION, FW_MINOR_VERSION, FW_REVISION_VERSION,
++	    FW_ENGINEERING_VERSION);
++}
++
+ static int qedf_lport_setup(struct qedf_ctx *qedf)
+ {
+ 	struct fc_lport *lport = qedf->lport;
+@@ -1377,6 +1432,8 @@ static int qedf_lport_setup(struct qedf_ctx *qedf)
+ 	snprintf(fc_host_symbolic_name(lport->host), 256,
+ 	    "QLogic %s v%s", QEDF_MODULE_NAME, QEDF_VERSION);
+ 
++	qedf_setup_fdmi(qedf);
++
+ 	return 0;
+ }
+ 
+-- 
+1.8.5.6
