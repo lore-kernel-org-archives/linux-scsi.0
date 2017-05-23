@@ -1,115 +1,75 @@
 From: "Dupuis, Chad" <chad.dupuis@cavium.com>
-Subject: [PATCH 06/15] qedf: Add fka_period SCSI host attribute to show fip keep alive period.
-Date: Tue, 23 May 2017 06:19:22 -0700
-Message-ID: <20170523131931.1777-7-chad.dupuis@cavium.com>
+Subject: [PATCH 12/15] qedf: Move some prints to a debug level so they do not print when no debugging is enabled.
+Date: Tue, 23 May 2017 06:19:28 -0700
+Message-ID: <20170523131931.1777-13-chad.dupuis@cavium.com>
 References: <20170523131931.1777-1-chad.dupuis@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0058.outbound.protection.outlook.com ([104.47.41.58]:54285
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0082.outbound.protection.outlook.com ([104.47.37.82]:27776
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S937120AbdEWNT6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 23 May 2017 09:19:58 -0400
+        id S937123AbdEWNT7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 23 May 2017 09:19:59 -0400
 In-Reply-To: <20170523131931.1777-1-chad.dupuis@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, QLogic-Storage-Upstream@cavium.com
 
-Expose this information for interested applications.
-
-Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+Signed-off-by: Chad Dupuis <chad.dupuis@cavium.com>
 ---
- drivers/scsi/qedf/qedf_attr.c | 60 +++++++++++++++++++++++++++++--------------
- 1 file changed, 41 insertions(+), 19 deletions(-)
+ drivers/scsi/qedf/qedf_main.c | 19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/qedf/qedf_attr.c b/drivers/scsi/qedf/qedf_attr.c
-index 1349f8a..68e2b77 100644
---- a/drivers/scsi/qedf/qedf_attr.c
-+++ b/drivers/scsi/qedf/qedf_attr.c
-@@ -8,6 +8,25 @@
-  */
- #include "qedf.h"
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index 7d1a953..340cf74 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -442,7 +442,8 @@ static void qedf_link_update(void *dev, struct qed_link_output *link)
+ 		qedf_update_link_speed(qedf, link);
  
-+inline bool qedf_is_vport(struct qedf_ctx *qedf)
-+{
-+	return (!(qedf->lport->vport == NULL));
-+}
-+
-+/* Get base qedf for physical port from vport */
-+static struct qedf_ctx *qedf_get_base_qedf(struct qedf_ctx *qedf)
-+{
-+	struct fc_lport *lport;
-+	struct fc_lport *base_lport;
-+
-+	if (!(qedf_is_vport(qedf)))
-+		return NULL;
-+
-+	lport = qedf->lport;
-+	base_lport = shost_priv(vport_to_shost(lport->vport));
-+	return (struct qedf_ctx *)(lport_priv(base_lport));
-+}
-+
- static ssize_t
- qedf_fcoe_mac_show(struct device *dev,
- 	struct device_attribute *attr, char *buf)
-@@ -26,34 +45,37 @@
- 	return scnprintf(buf, PAGE_SIZE, "%pM\n", fcoe_mac);
- }
+ 		if (atomic_read(&qedf->dcbx) == QEDF_DCBX_DONE) {
+-			QEDF_ERR(&(qedf->dbg_ctx), "DCBx done.\n");
++			QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_DISC,
++			     "DCBx done.\n");
+ 			if (atomic_read(&qedf->link_down_tmo_valid) > 0)
+ 				queue_delayed_work(qedf->link_update_wq,
+ 				    &qedf->link_recovery, 0);
+@@ -2156,16 +2157,16 @@ static void qedf_recv_frame(struct qedf_ctx *qedf,
+ 	}
  
-+static ssize_t
-+qedf_fka_period_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct fc_lport *lport = shost_priv(class_to_shost(dev));
-+	struct qedf_ctx *qedf = lport_priv(lport);
-+	int fka_period = -1;
-+
-+	if (qedf_is_vport(qedf))
-+		qedf = qedf_get_base_qedf(qedf);
-+
-+	if (!qedf->ctlr.sel_fcf)
-+		goto out;
-+
-+	fka_period = qedf->ctlr.sel_fcf->fka_period;
-+
-+out:
-+	return scnprintf(buf, PAGE_SIZE, "%d\n", fka_period);
-+}
-+
- static DEVICE_ATTR(fcoe_mac, S_IRUGO, qedf_fcoe_mac_show, NULL);
-+static DEVICE_ATTR(fka_period, S_IRUGO, qedf_fka_period_show, NULL);
+ 	if (ntoh24(&dest_mac[3]) != ntoh24(fh->fh_d_id)) {
+-		QEDF_ERR(&(qedf->dbg_ctx), "FC frame d_id mismatch with MAC "
+-		    "%pM.\n", dest_mac);
++		QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_LL2,
++		    "FC frame d_id mismatch with MAC %pM.\n", dest_mac);
+ 		return;
+ 	}
  
- struct device_attribute *qedf_host_attrs[] = {
- 	&dev_attr_fcoe_mac,
-+	&dev_attr_fka_period,
- 	NULL,
- };
- 
- extern const struct qed_fcoe_ops *qed_ops;
- 
--inline bool qedf_is_vport(struct qedf_ctx *qedf)
--{
--	return (!(qedf->lport->vport == NULL));
--}
--
--/* Get base qedf for physical port from vport */
--static struct qedf_ctx *qedf_get_base_qedf(struct qedf_ctx *qedf)
--{
--	struct fc_lport *lport;
--	struct fc_lport *base_lport;
--
--	if (!(qedf_is_vport(qedf)))
--		return NULL;
--
--	lport = qedf->lport;
--	base_lport = shost_priv(vport_to_shost(lport->vport));
--	return (struct qedf_ctx *)(lport_priv(base_lport));
--}
--
- void qedf_capture_grc_dump(struct qedf_ctx *qedf)
- {
- 	struct qedf_ctx *base_qedf;
+ 	if (qedf->ctlr.state) {
+ 		if (!ether_addr_equal(mac, qedf->ctlr.dest_addr)) {
+-			QEDF_ERR(&(qedf->dbg_ctx), "Wrong source address: "
+-			    "mac:%pM dest_addr:%pM.\n", mac,
+-			    qedf->ctlr.dest_addr);
++			QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_LL2,
++			    "Wrong source address: mac:%pM dest_addr:%pM.\n",
++			    mac, qedf->ctlr.dest_addr);
+ 			kfree_skb(skb);
+ 			return;
+ 		}
+@@ -2179,9 +2180,9 @@ static void qedf_recv_frame(struct qedf_ctx *qedf,
+ 	 * empty then this is not addressed to our port so simply drop it.
+ 	 */
+ 	if (lport->port_id != ntoh24(fh->fh_d_id) && !vn_port) {
+-		QEDF_ERR(&(qedf->dbg_ctx), "Dropping frame due to "
+-		    "destination mismatch: lport->port_id=%x "
+-		    "fh->d_id=%x.\n",
++		QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_LL2,
++		    "Dropping frame due to destination mismatch: "
++		    "lport->port_id=%x fh->d_id=%x.\n",
+ 		    lport->port_id, ntoh24(fh->fh_d_id));
+ 		kfree_skb(skb);
+ 		return;
 -- 
 1.8.5.6
