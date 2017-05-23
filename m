@@ -1,87 +1,77 @@
-From: Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v9 06/15] mlx5: Replace PCI pool old API
-Date: Tue, 23 May 2017 12:28:53 +0300
-Message-ID: <20170523092853.GL17751@mtr-leonro.local>
-References: <20170522164907.22915-1-romain.perier@collabora.com>
- <20170522164907.22915-7-romain.perier@collabora.com>
- <20170523072743.GJ17751@mtr-leonro.local>
- <18745ec7-020a-a3d2-3e50-6a2405baaac2@collabora.com>
+From: Varun Prakash <varun@chelsio.com>
+Subject: Re: [PATCH] csiostor: Avoid content leaks and casts
+Date: Tue, 23 May 2017 15:00:26 +0530
+Message-ID: <20170523093024.GA1667@chelsio.com>
+References: <20170509223444.GA51314@beast>
+ <20170522150544.GA1677@chelsio.com>
+ <CAGXu5jL6nN79vHLrWeC5YNkhUcuSR9mUNOt19Y2VXuj1qBvhSQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="EVh9lyqKgK19OcEf"
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <18745ec7-020a-a3d2-3e50-6a2405baaac2-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Romain Perier <romain.perier-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-Cc: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sean Hefty <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hal Rosenstock <hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, jeffrey.t.kirsher-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, stas.yakovlev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Felipe Balbi <balbi-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Peter Senna Tschudin <peter.senna-ZGY8ohtN/8pPYcu2f3hruQ@public.gmane.org>
+In-Reply-To: <CAGXu5jL6nN79vHLrWeC5YNkhUcuSR9mUNOt19Y2VXuj1qBvhSQ@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Daniel Micay <danielmicay@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-
---EVh9lyqKgK19OcEf
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, May 23, 2017 at 10:53:36AM +0200, Romain Perier wrote:
-> Hello,
->
->
-> Le 23/05/2017 =E0 09:27, Leon Romanovsky a =E9crit :
-> > On Mon, May 22, 2017 at 06:48:58PM +0200, Romain Perier wrote:
-> >> The PCI pool API is deprecated. This commit replaces the PCI pool old
-> >> API by the appropriate function with the DMA pool API.
+On Mon, May 22, 2017 at 09:29:41AM -0700, Kees Cook wrote:
+> On Mon, May 22, 2017 at 8:05 AM, Varun Prakash <varun@chelsio.com> wrote:
+> > On Tue, May 09, 2017 at 03:34:44PM -0700, Kees Cook wrote:
+> >> When copying attributes, the len argument was padded out and the resulting
+> >> memcpy() would copy beyond the end of the source buffer.  Avoid this,
+> >> and use size_t for val_len to avoid all the casts. Similarly, avoid source
+> >> buffer casts and use void *.
 > >>
-> >> Signed-off-by: Romain Perier <romain.perier-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
-> >> Reviewed-by: Peter Senna Tschudin <peter.senna-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
-> >> Acked-by: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> >> Tested-by: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> >> Additionally enforces val_len can be represented by u16 and that
+> >> the DMA buffer was not overflowed. Fixes the size of mfa, which is not
+> >> FC_FDMI_PORT_ATTR_MAXFRAMESIZE_LEN (but it will be padded up to 4). This
+> >> was noticed by the future CONFIG_FORTIFY_SOURCE checks.
+> >>
+> >> Cc: Daniel Micay <danielmicay@gmail.com>
+> >> Signed-off-by: Kees Cook <keescook@chromium.org>
 > >> ---
-> >>  drivers/net/ethernet/mellanox/mlx5/core/cmd.c | 11 ++++++-----
-> >>  include/linux/mlx5/driver.h                   |  2 +-
-> >>  2 files changed, 7 insertions(+), 6 deletions(-)
+> >>  drivers/scsi/csiostor/csio_lnode.c | 43 +++++++++++++++++++++++---------------
+> >>  1 file changed, 26 insertions(+), 17 deletions(-)
 > >>
-> > Who is supposed to merge this patch series?
+> >> diff --git a/drivers/scsi/csiostor/csio_lnode.c b/drivers/scsi/csiostor/csio_lnode.c
+> >> index c00b2ff72b55..be5ee2d37815 100644
+> >> --- a/drivers/scsi/csiostor/csio_lnode.c
+> >> +++ b/drivers/scsi/csiostor/csio_lnode.c
+> >> @@ -238,14 +238,23 @@ csio_osname(uint8_t *buf, size_t buf_len)
+> >>  }
+> >>
 > >
-> > Acked-by: Leon Romanovsky <leonro-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-> Each maintainer of the corresponding subsystem, can take a patch, I
-> guess. No ?
+> >
+> >>
+> >>       csio_append_attrib(&pld, FC_FDMI_HBA_ATTR_MAXCTPAYLOAD,
+> >> -                        (uint8_t *)&maxpayload,
+> >> -                        FC_FDMI_HBA_ATTR_MAXCTPAYLOAD_LEN);
+> >> +                        &maxpayload, FC_FDMI_HBA_ATTR_MAXCTPAYLOAD_LEN);
+> >>       len = (uint32_t)(pld - (uint8_t *)cmd);
+> >>       numattrs++;
+> >>       attrib_blk->numattrs = htonl(numattrs);
+> >> @@ -1794,6 +1801,8 @@ csio_ln_mgmt_submit_req(struct csio_ioreq *io_req,
+> >>       struct csio_mgmtm *mgmtm = csio_hw_to_mgmtm(hw);
+> >>       int rv;
+> >>
+> >> +     BUG_ON(pld_len > pld->len);
+> >> +
+> >
+> > I think WARN_ON() is better than BUG_ON() in this case
+> >
+> >         if (WARN_ON(pld_len > pld->len))
+> >                 return -EINVAL;
+> >
+> >>       io_req->io_cbfn = io_cbfn;      /* Upper layer callback handler */
+> >>       io_req->fw_handle = (uintptr_t) (io_req);
+> >>       io_req->eq_idx = mgmtm->eq_idx;
+> 
+> I chose BUG_ON here because the damage has already been done. If this
+> assertion is hit, the heap buffers have already been overrun. This
+> isn't a state we should only warn about...
+> 
 
-I wonder if they know that.
+Ok.
 
-Dave,
-
-Do you want us to resubmit mlx4/mlx5 patches as part of our general series,
-or do you prefer to grab them from this patch series?
-
-Thanks
-
-
->
-> Romain
-
---EVh9lyqKgK19OcEf
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEkhr/r4Op1/04yqaB5GN7iDZyWKcFAlkkANUACgkQ5GN7iDZy
-WKdBSQ//akrEhgcSBBwwAKW/zMdcOs98lhPxnXXfTQBlOhDHlDtJXh/lGwHjP+/9
-kr0UjoTcv5y01F+CnLBwV3kJHvcPf8HAQ+QID29hNH9RmY7/0vNJ92MXyFWkeaJM
-o1oNMdnrDDdD5N/CYT0Bb9VMYpMeEcU6trs3G9cQkZ+58K13br3HO0z/JORmfrjq
-G59y64WJbS4XM48dD9xu9DfQY2Z2G57JmVk5luHw6Nef9OShd1tcjd0aBTWNLevH
-MVCUujcaBqLBvWuc79niFq8vMVzIg8jkeKQKxKOM6yzS0IEcudN3SYuLgVqiKd8A
-DqD/GHWfp1oUUzwin2BgrDsftdc35VsvtQrtgs8gHKoTY8g+X+7435tqy+zo2/QS
-Xrdo09S+YyDYAO5Ycvz2jWN54y55Qek0P+LtDFCUHW7IUK9RBtlAGceQrFEXkz4L
-gjudNrtD636SgfibSO/ExWHgahiwuCRaGOBIitJ1dp1EJsMcyHslzix1GtthX6ts
-1TnqzM5uzqVd0PAyZgkij8GV3UhK60acDhE5LnemKJozjjcVYtFW5OL3dPqJ5rVh
-r5ohPz+x2O70A2Tk47UepqZ/557jlH11evUZPIh8hzfy/5zpZf2YenG7PU2dzdo8
-TO0jDjdI/BGqwe2DPLyY2nARvH7myhRR2d/ELbVsd7lM6HG+4eA=
-=ncEe
------END PGP SIGNATURE-----
-
---EVh9lyqKgK19OcEf--
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Acked-by: Varun Prakash <varun@chelsio.com>
