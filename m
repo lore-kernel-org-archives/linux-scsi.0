@@ -1,67 +1,41 @@
-From: "Dupuis, Chad" <chad.dupuis@cavium.com>
-Subject: [PATCH 09/15] qedf: Add bus_reset No-op.
-Date: Tue, 23 May 2017 06:19:25 -0700
-Message-ID: <20170523131931.1777-10-chad.dupuis@cavium.com>
-References: <20170523131931.1777-1-chad.dupuis@cavium.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH blktests v2 3/3] sg/001: add regression test for syzcaller
+ generated GPF in sg_read path
+Date: Tue, 23 May 2017 08:15:26 -0600
+Message-ID: <f278026c-42f6-9022-f72a-84439141f5d7@kernel.dk>
+References: <cover.1495201975.git.jthumshirn@suse.de>
+ <79600648b662bc8b9e701ff6627986887384585b.1495201975.git.jthumshirn@suse.de>
+ <20170522175905.GA17738@vader.DHCP.thefacebook.com>
+ <b8de93e9-af4b-d0fc-270e-b938f68688b4@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0061.outbound.protection.outlook.com ([104.47.34.61]:19872
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S937130AbdEWNUD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 23 May 2017 09:20:03 -0400
-In-Reply-To: <20170523131931.1777-1-chad.dupuis@cavium.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <b8de93e9-af4b-d0fc-270e-b938f68688b4@suse.de>
+Content-Language: en-US
+Sender: linux-block-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>, Omar Sandoval <osandov@osandov.com>
+Cc: Linux Block Layer Mailinglist <linux-block@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, QLogic-Storage-Upstream@cavium.com
 
-We need to add a bus reset no-op as without it some of the LUNs attached to a
-vport may go offline when the error handler escalates to host reset due to not
-having a bus reset handler in the driver. What happens is we escalate to host
-reset which does a soft link down/link up to reset the adapter. However with
-multiple vports attached it's been observed that if the vports do log back into
-the target within 5 seconds, the SCSI layer offlines the devices most likely
-due to a TUR timing out to verify that the device is online. Adding a bus
-reset handler will cause the TUR to be sent after the bus reset handler where
-the devices will still be online if the bus reset is initiated by sg_reset
-(which is the case in the test that was failing). The bus reset will succeed
-and not needlessly bring the device offline/online.
+On 05/23/2017 12:58 AM, Johannes Thumshirn wrote:
+> On 05/22/2017 07:59 PM, Omar Sandoval wrote:
+>> This looks much better, thanks! One question for you: is there any value
+>> in running this on specific test devices (i.e., changing test() to
+>> test_device() and using "$TEST_DEV" instead of a scsi-debug device), or
+>> would it be a waste of time since it's just exercising generic code?
+> 
+> That's just generic code. All I need is a SCSI device so I get a /dev/sg
+> device node.
+> 
+> One could do a check if $TEST_DEV is a SCSI device and have a fall-back
+> to scsi_debug if it isn't, but I'm not sure if this isn't just a waste
+> of time.
 
-Signed-off-by: Chad Dupuis <chad.dupuis@cavium.com>
----
- drivers/scsi/qedf/qedf_main.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+Add some code to the framework that allows you to get the corresponding
+SG device for a SCSI block device? Make that part of the prepare, skip
+the test if the block device isn't a SCSI dev.
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index fa5a2f8..7dae915 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -628,6 +628,16 @@ static int qedf_eh_device_reset(struct scsi_cmnd *sc_cmd)
- 	return qedf_initiate_tmf(sc_cmd, FCP_TMF_LUN_RESET);
- }
- 
-+static int qedf_eh_bus_reset(struct scsi_cmnd *sc_cmd)
-+{
-+	QEDF_ERR(NULL, "BUS RESET Issued...\n");
-+	/*
-+	 * Essentially a no-op but return SUCCESS to prevent
-+	 * unnecessary escalation to the host reset handler.
-+	 */
-+	return SUCCESS;
-+}
-+
- void qedf_wait_for_upload(struct qedf_ctx *qedf)
- {
- 	while (1) {
-@@ -705,6 +715,7 @@ static int qedf_slave_configure(struct scsi_device *sdev)
- 	.eh_abort_handler	= qedf_eh_abort,
- 	.eh_device_reset_handler = qedf_eh_device_reset, /* lun reset */
- 	.eh_target_reset_handler = qedf_eh_target_reset, /* target reset */
-+	.eh_bus_reset_handler = qedf_eh_bus_reset,
- 	.eh_host_reset_handler  = qedf_eh_host_reset,
- 	.slave_configure	= qedf_slave_configure,
- 	.dma_boundary = QED_HW_DMA_BOUNDARY,
+
 -- 
-1.8.5.6
+Jens Axboe
