@@ -1,49 +1,99 @@
-From: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-Subject: Re: [PATCH v9 06/15] mlx5: Replace PCI pool old API
-Date: Tue, 23 May 2017 11:26:58 -0400 (EDT)
-Message-ID: <20170523.112658.1479025487863881513.davem@davemloft.net>
-References: <20170522164907.22915-7-romain.perier@collabora.com>
-        <20170523072743.GJ17751@mtr-leonro.local>
-        <18745ec7-020a-a3d2-3e50-6a2405baaac2@collabora.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Need help with handling failed ATA pass-through command and
+ sense data
+Date: Tue, 23 May 2017 14:34:06 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1705231430550.1853-100000@iolanthe.rowland.org>
+References: <1495137660.3629.44.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <18745ec7-020a-a3d2-3e50-6a2405baaac2-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: romain.perier-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org
-Cc: leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, jeffrey.t.kirsher-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, stas.yakovlev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, balbi-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, peter.senna-ZGY8ohtN/8pPYcu2f3hruQ@public.gmane.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:55034 "HELO
+        iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1758692AbdEWSeH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2017 14:34:07 -0400
+In-Reply-To: <1495137660.3629.44.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Ewan D. Milne" <emilne@redhat.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, GeekGirl1 <my.e.mail1@verizon.net>
 
-From: Romain Perier <romain.perier-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
-Date: Tue, 23 May 2017 10:53:36 +0200
+On Thu, 18 May 2017, Ewan D. Milne wrote:
 
-> Hello,
+> On Thu, 2017-05-18 at 13:37 -0400, Alan Stern wrote:
+> > 
+> > I had completely forgotten about this code.  :-(
+> > 
+> > Looks like you put your finger on the source of the problem.  So if the 
+> > device sends back essentially empty sense data (SK = No Sense, ASC = 
+> > ASCQ = 0), but the USB transport indicates command failure, how should 
+> > we inform the SCSI core in a way that won't cause infinite retries or 
+> > obnoxious log messages?
+> > 
+> > Should we be doing a better job of detecting empty sense data -- that 
+> > is, do we need to check for non-empty ATA status?
+> > 
+> > Or has the SCSI core improved so that it no longer does infinite
+> > retries (see commit f1a0743bc0e7 "USB: storage: When a device returns
+> > no sense data, call it a Hardware Error" and Bugzilla entry #14118),
+> > meaning that this code can be removed entirely?
+> > 
+> > Alan Stern
 > 
+> We added:
 > 
-> Le 23/05/2017 à 09:27, Leon Romanovsky a écrit :
->> On Mon, May 22, 2017 at 06:48:58PM +0200, Romain Perier wrote:
->>> The PCI pool API is deprecated. This commit replaces the PCI pool old
->>> API by the appropriate function with the DMA pool API.
->>>
->>> Signed-off-by: Romain Perier <romain.perier-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
->>> Reviewed-by: Peter Senna Tschudin <peter.senna-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
->>> Acked-by: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->>> Tested-by: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->>> ---
->>>  drivers/net/ethernet/mellanox/mlx5/core/cmd.c | 11 ++++++-----
->>>  include/linux/mlx5/driver.h                   |  2 +-
->>>  2 files changed, 7 insertions(+), 6 deletions(-)
->>>
->> Who is supposed to merge this patch series?
->>
->> Acked-by: Leon Romanovsky <leonro-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-> Each maintainer of the corresponding subsystem, can take a patch, I
-> guess. No ?
+> commit ee60b2c52ec8ecdcbcd2f85cc117b525f649441f
+> Author: Eiichi Tsukata <eiichi.tsukata.xh@hitachi.com>
+> Date:   Tue Feb 11 14:29:52 2014 +0900
+> 
+>     [SCSI] Add timeout to avoid infinite command retry
+> 
+> but this may not give you the behavior you want, because it bounds
+> the execution time to (# of retries + 1) * timeout.  So if you get
+> an immediate error return it could still take a while for this code
+> to give up retrying, i.e. it does not have the same properties as
+> your commit f1a0743bc0e7.
+> 
+> I suppose you could decode the ATA Status Return sense data descriptor
+> but I don't know how good the compliance is among all the ATA devices.
+> Table 177 in section 1.2.2.8 of SAT-4 r06 seems to say that most of
+> the fields in the sense data are unspecified for ATA PASS-THROUGH
+> commands, so this probably explains why you see nothing else useful.
+> Perhaps the logging should be delegated to the USB or ATA code for
+> these commands, since they are not really part of SCSI?
+> 
+> I have seen a case of a Fibre Channel array returning all zeroes
+> in the sense data, but this was because it was malfunctioning.
 
-It might be easier to accumulate acks and you submit them as a series,
-in my opinion.
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+All right, suppose we don't return DID_ERROR and don't call it a
+hardware error.  I don't know if this will help at all, and I don't
+know if it will cause any regressions.
+
+GeekGirl1, can you try applying the patch below to see if it makes any 
+difference?  If you don't know how, I will attach it to the Bugzilla 
+report so somebody else can try it.
+
+Alan Stern
+
+
+
+
+Index: usb-4.x/drivers/usb/storage/transport.c
+===================================================================
+--- usb-4.x.orig/drivers/usb/storage/transport.c
++++ usb-4.x/drivers/usb/storage/transport.c
+@@ -835,6 +835,7 @@ Retry_Sense:
+ 				srb->result = SAM_STAT_GOOD;
+ 				srb->sense_buffer[0] = 0x0;
+ 
++#if 0
+ 			/*
+ 			 * If there was a problem, report an unspecified
+ 			 * hardware error to prevent the higher layers from
+@@ -846,6 +847,7 @@ Retry_Sense:
+ 					srb->sense_buffer[1] = HARDWARE_ERROR;
+ 				else
+ 					srb->sense_buffer[2] = HARDWARE_ERROR;
++#endif
+ 			}
+ 		}
+ 	}
