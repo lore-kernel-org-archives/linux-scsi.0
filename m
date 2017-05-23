@@ -1,43 +1,43 @@
 From: "Dupuis, Chad" <chad.dupuis@cavium.com>
-Subject: [PATCH 13/15] qedf: Change cmd_per_lun in scsi_host_template to 32 to increase performance.
-Date: Tue, 23 May 2017 06:19:29 -0700
-Message-ID: <20170523131931.1777-14-chad.dupuis@cavium.com>
+Subject: [PATCH 15/15] qedf: Update version number to 8.18.22.0.
+Date: Tue, 23 May 2017 06:19:31 -0700
+Message-ID: <20170523131931.1777-16-chad.dupuis@cavium.com>
 References: <20170523131931.1777-1-chad.dupuis@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0040.outbound.protection.outlook.com ([104.47.42.40]:22464
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0042.outbound.protection.outlook.com ([104.47.37.42]:40960
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S937106AbdEWNUB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 23 May 2017 09:20:01 -0400
+        id S937131AbdEWNUD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 23 May 2017 09:20:03 -0400
 In-Reply-To: <20170523131931.1777-1-chad.dupuis@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, QLogic-Storage-Upstream@cavium.com
 
-Increase the default number of commands that the driver tells the
-SCSI mid-layer it can do to increase the default performance of the
-driver.
-
 Signed-off-by: Chad Dupuis <chad.dupuis@cavium.com>
 ---
- drivers/scsi/qedf/qedf_main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/qedf/qedf_version.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 340cf74..bc85c56 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -708,7 +708,7 @@ static int qedf_slave_configure(struct scsi_device *sdev)
- 	.module 	= THIS_MODULE,
- 	.name 		= QEDF_MODULE_NAME,
- 	.this_id 	= -1,
--	.cmd_per_lun 	= 3,
-+	.cmd_per_lun	= 32,
- 	.use_clustering = ENABLE_CLUSTERING,
- 	.max_sectors 	= 0xffff,
- 	.queuecommand 	= qedf_queuecommand,
+diff --git a/drivers/scsi/qedf/qedf_version.h b/drivers/scsi/qedf/qedf_version.h
+index d46c487..6fa4420 100644
+--- a/drivers/scsi/qedf/qedf_version.h
++++ b/drivers/scsi/qedf/qedf_version.h
+@@ -7,9 +7,9 @@
+  *  this source tree.
+  */
+ 
+-#define QEDF_VERSION		"8.10.7.0"
++#define QEDF_VERSION		"8.18.22.0"
+ #define QEDF_DRIVER_MAJOR_VER		8
+-#define QEDF_DRIVER_MINOR_VER		10
+-#define QEDF_DRIVER_REV_VER		7
++#define QEDF_DRIVER_MINOR_VER		18
++#define QEDF_DRIVER_REV_VER		22
+ #define QEDF_DRIVER_ENG_VER		0
+ 
 -- 
 1.8.5.6
