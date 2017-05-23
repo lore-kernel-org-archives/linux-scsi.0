@@ -1,81 +1,63 @@
 From: "Dupuis, Chad" <chad.dupuis@cavium.com>
-Subject: [PATCH 05/15] qedf: Check that fcport is offloaded before dereferencing pointers in initiate_abts|cleanup.
-Date: Tue, 23 May 2017 06:19:21 -0700
-Message-ID: <20170523131931.1777-6-chad.dupuis@cavium.com>
-References: <20170523131931.1777-1-chad.dupuis@cavium.com>
+Subject: [PATCH 00/15] qedf: Update driver to version 8.18.22.0.
+Date: Tue, 23 May 2017 06:19:16 -0700
+Message-ID: <20170523131931.1777-1-chad.dupuis@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0048.outbound.protection.outlook.com ([104.47.42.48]:23360
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0068.outbound.protection.outlook.com ([104.47.37.68]:43648
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S937106AbdEWNTp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 23 May 2017 09:19:45 -0400
-In-Reply-To: <20170523131931.1777-1-chad.dupuis@cavium.com>
+        id S933347AbdEWNTq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 23 May 2017 09:19:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, QLogic-Storage-Upstream@cavium.com
 
-If an fcport is not offloaded then the members of the qedf_rport struct
-are undefined which may cause a system crash.
+Hi Martin,
 
-Signed-off-by: Chad Dupuis <chad.dupuis@cavium.com>
----
- drivers/scsi/qedf/qedf_io.c | 22 ++++++++++++++++------
- 1 file changed, 16 insertions(+), 6 deletions(-)
+Please apply the following patches to the scsi tree at your earliest convenience.
 
-diff --git a/drivers/scsi/qedf/qedf_io.c b/drivers/scsi/qedf/qedf_io.c
-index ca9097b..db16004 100644
---- a/drivers/scsi/qedf/qedf_io.c
-+++ b/drivers/scsi/qedf/qedf_io.c
-@@ -1476,8 +1476,8 @@ int qedf_initiate_abts(struct qedf_ioreq *io_req, bool return_scsi_cmd_on_abts)
- {
- 	struct fc_lport *lport;
- 	struct qedf_rport *fcport = io_req->fcport;
--	struct fc_rport_priv *rdata = fcport->rdata;
--	struct qedf_ctx *qedf = fcport->qedf;
-+	struct fc_rport_priv *rdata;
-+	struct qedf_ctx *qedf;
- 	u16 xid;
- 	u32 r_a_tov = 0;
- 	int rc = 0;
-@@ -1485,15 +1485,18 @@ int qedf_initiate_abts(struct qedf_ioreq *io_req, bool return_scsi_cmd_on_abts)
- 	struct fcoe_wqe *sqe;
- 	u16 sqe_idx;
- 
--	r_a_tov = rdata->r_a_tov;
--	lport = qedf->lport;
--
-+	/* Sanity check qedf_rport before dereferencing any pointers */
- 	if (!test_bit(QEDF_RPORT_SESSION_READY, &fcport->flags)) {
--		QEDF_ERR(&(qedf->dbg_ctx), "tgt not offloaded\n");
-+		QEDF_ERR(NULL, "tgt not offloaded\n");
- 		rc = 1;
- 		goto abts_err;
- 	}
- 
-+	rdata = fcport->rdata;
-+	r_a_tov = rdata->r_a_tov;
-+	qedf = fcport->qedf;
-+	lport = qedf->lport;
-+
- 	if (lport->state != LPORT_ST_READY || !(lport->link_up)) {
- 		QEDF_ERR(&(qedf->dbg_ctx), "link is not ready\n");
- 		rc = 1;
-@@ -1729,6 +1732,13 @@ int qedf_initiate_cleanup(struct qedf_ioreq *io_req,
- 		return SUCCESS;
- 	}
- 
-+	/* Sanity check qedf_rport before dereferencing any pointers */
-+	if (!test_bit(QEDF_RPORT_SESSION_READY, &fcport->flags)) {
-+		QEDF_ERR(NULL, "tgt not offloaded\n");
-+		rc = 1;
-+		return SUCCESS;
-+	}
-+
- 	qedf = fcport->qedf;
- 	if (!qedf) {
- 		QEDF_ERR(NULL, "qedf is NULL.\n");
+Thanks,
+Chad
+
+Dupuis, Chad (15):
+  qedf: Enable basic FDMI information.
+  qedf: Update copyright to 2017.
+  qedf: Honor qed_ops->common->set_fp_int() return code.
+  qedf: Look at all descriptors when processing a clear virtual link.
+  qedf: Check that fcport is offloaded before dereferencing pointers in
+    initiate_abts|cleanup.
+  qedf: Add fka_period SCSI host attribute to show fip keep alive
+    period.
+  qedf: Set qed logging level to QED_LEVEL_NOTICE.
+  qedf: Use same logic for SCSI host reset and FC lip_reset.
+  qedf: Add bus_reset No-op.
+  qedf: Add non-offload receive filters.
+  qedf: Fixup unnecessary paratheses around test_bit operations.
+  qedf: Move some prints to a debug level so they do not print when no
+    debugging is enabled.
+  qedf: Change cmd_per_lun in scsi_host_template to 32 to increase
+    performance.
+  qedf: Add change_queue_depth member to scsi_host_template().
+  qedf: Update version number to 8.18.22.0.
+
+ drivers/scsi/qedf/drv_fcoe_fw_funcs.c |   2 +-
+ drivers/scsi/qedf/drv_fcoe_fw_funcs.h |   2 +-
+ drivers/scsi/qedf/drv_scsi_fw_funcs.c |   2 +-
+ drivers/scsi/qedf/drv_scsi_fw_funcs.h |   2 +-
+ drivers/scsi/qedf/qedf.h              |   2 +-
+ drivers/scsi/qedf/qedf_attr.c         |  62 ++++++++-----
+ drivers/scsi/qedf/qedf_dbg.h          |   2 +-
+ drivers/scsi/qedf/qedf_debugfs.c      |   2 +-
+ drivers/scsi/qedf/qedf_els.c          |   8 +-
+ drivers/scsi/qedf/qedf_fip.c          |  22 +++--
+ drivers/scsi/qedf/qedf_hsi.h          |   2 +-
+ drivers/scsi/qedf/qedf_io.c           |  26 ++++--
+ drivers/scsi/qedf/qedf_main.c         | 165 +++++++++++++++++++++++++++++-----
+ drivers/scsi/qedf/qedf_version.h      |   8 +-
+ 14 files changed, 231 insertions(+), 76 deletions(-)
+
 -- 
 1.8.5.6
