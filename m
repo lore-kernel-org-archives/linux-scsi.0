@@ -1,51 +1,51 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH 15/15] qedf: Update version number to 8.18.22.0.
-Date: Wed, 24 May 2017 16:51:13 +0000
-Message-ID: <1495644672.2823.33.camel@sandisk.com>
-References: <20170523131931.1777-1-chad.dupuis@cavium.com>
-         <20170523131931.1777-16-chad.dupuis@cavium.com>
+From: "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>
+Subject: Re: [PATCH] qla2xxx: don't disable a not previously enabled PCI
+ device
+Date: Wed, 24 May 2017 17:12:19 +0000
+Message-ID: <D54B0CBF.941D8%giridhar.malavali@cavium.com>
+References: <20170523145047.5020-1-jthumshirn@suse.de>
+ <1495640832.2823.5.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:55994 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S968090AbdEXQvP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 May 2017 12:51:15 -0400
-In-Reply-To: <20170523131931.1777-16-chad.dupuis@cavium.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1495640832.2823.5.camel@sandisk.com>
 Content-Language: en-US
-Content-ID: <0AE2C2D6924D844C8CDE7D1175957A00@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-ID: <7117F73BA2C59B4E8C2B23F874A69368@namprd07.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "chad.dupuis@cavium.com" <chad.dupuis@cavium.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "QLogic-Storage-Upstream@cavium.com" <QLogic-Storage-Upstream@cavium.com>
 
-On Tue, 2017-05-23 at 06:19 -0700, Dupuis, Chad wrote:
-> Signed-off-by: Chad Dupuis <chad.dupuis@cavium.com>
-> ---
->  drivers/scsi/qedf/qedf_version.h | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
->=20
-> diff --git a/drivers/scsi/qedf/qedf_version.h b/drivers/scsi/qedf/qedf_ve=
-rsion.h
-> index d46c487..6fa4420 100644
-> --- a/drivers/scsi/qedf/qedf_version.h
-> +++ b/drivers/scsi/qedf/qedf_version.h
-> @@ -7,9 +7,9 @@
->   *  this source tree.
->   */
-> =20
-> -#define QEDF_VERSION		"8.10.7.0"
-> +#define QEDF_VERSION		"8.18.22.0"
->  #define QEDF_DRIVER_MAJOR_VER		8
-> -#define QEDF_DRIVER_MINOR_VER		10
-> -#define QEDF_DRIVER_REV_VER		7
-> +#define QEDF_DRIVER_MINOR_VER		18
-> +#define QEDF_DRIVER_REV_VER		22
->  #define QEDF_DRIVER_ENG_VER		0
-> =20
 
-Although I'm not sure having driver version information in an upstream
-driver is useful:
 
-Reviewed-by: Bart Van Assche <Bart.VanAssche@sandisk.com>=
+On 5/24/17, 8:47 AM, "Bart Van Assche" <Bart.VanAssche@sandisk.com> wrote:
+
+>On Tue, 2017-05-23 at 16:50 +0200, Johannes Thumshirn wrote:
+>> When pci_enable_device() or pci_enable_device_mem() fail in
+>> qla2x00_probe_one() we bail out but do a call to
+>> pci_disable_device(). This causes the dev_WARN_ON() in
+>> pci_disable_device() to trigger, as the device wasn't enabled
+>> previously.
+>>=20
+>> So instead of taking the 'probe_out' error path we can directly return
+>> *iff* one of the pci_enable_device() calls fails.
+>>=20
+>> Additionally rename the 'probe_out' goto label's name to the more
+>> descriptive 'disable_device'.
+>>=20
+>> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+>> Fixes: e315cd28b9ef ("[SCSI] qla2xxx: Code changes for qla data
+>>structure refactoring")
+>
+>Hello Johannes,
+>
+>Please consider adding a Cc: stable tag to this patch. Since otherwise
+>this
+>patch looks fine to me:
+>
+>Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+
+Looks good to me.=20
+
+Reviewed-by: Giridhar Malavali <giridhar.malavali@cavium.com>
