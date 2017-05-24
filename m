@@ -1,37 +1,40 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 19/31] scsi: Change argument type of scsi_req_init()
-Date: Wed, 24 May 2017 08:06:49 +0200
-Message-ID: <29ec26ad-f57e-2b9b-e793-153fd419600c@suse.de>
+Subject: Re: [PATCH 20/31] scsi: Only add commands to the device command list
+ if required by the LLD
+Date: Wed, 24 May 2017 08:07:48 +0200
+Message-ID: <fce61a1e-fa89-d21b-b064-d79e23bb0507@suse.de>
 References: <20170524003420.5381-1-bart.vanassche@sandisk.com>
- <20170524003420.5381-20-bart.vanassche@sandisk.com>
+ <20170524003420.5381-21-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170524003420.5381-20-bart.vanassche@sandisk.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:59293 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933980AbdEXGHu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 24 May 2017 02:07:50 -0400
+In-Reply-To: <20170524003420.5381-21-bart.vanassche@sandisk.com>
 Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Hannes Reinecke <hare@suse.com>
-List-Id: linux-scsi@vger.kernel.org
 
 On 05/24/2017 02:34 AM, Bart Van Assche wrote:
-> Since scsi_req_init() works on a struct scsi_request, change the
-> argument type into struct scsi_request *.
+> Just like for the scsi-mq code path, in the single queue SCSI code
+> path only add commands to the per-device command list if required
+> by the SCSI LLD. This patch will make it easier to merge the
+> single-queue and multiqueue command initialization code.
 > 
 > Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
 > Cc: Hannes Reinecke <hare@suse.com>
 > ---
->  block/scsi_ioctl.c                | 10 +++++++---
->  drivers/ide/ide-probe.c           |  2 +-
->  drivers/scsi/scsi_lib.c           |  4 +++-
->  drivers/scsi/scsi_transport_sas.c |  2 +-
->  include/scsi/scsi_request.h       |  2 +-
->  5 files changed, 13 insertions(+), 7 deletions(-)
+>  drivers/scsi/scsi.c      |  9 +--------
+>  drivers/scsi/scsi_lib.c  | 52 +++++++++++++++++++++++++++++-------------------
+>  drivers/scsi/scsi_priv.h |  2 ++
+>  3 files changed, 35 insertions(+), 28 deletions(-)
 > 
-Ah, right. Now it's clear.
-
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
