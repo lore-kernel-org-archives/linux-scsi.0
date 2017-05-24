@@ -1,34 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] qla2xxx: don't disable a not previously enabled PCI device
-Date: Wed, 24 May 2017 15:11:48 -0400
-Message-ID: <yq1fufuul1n.fsf@oracle.com>
-References: <20170523145047.5020-1-jthumshirn@suse.de>
+Subject: Re: [PATCH 00/15] qedf: Update driver to version 8.18.22.0.
+Date: Wed, 24 May 2017 15:12:42 -0400
+Message-ID: <yq1bmqiul05.fsf@oracle.com>
+References: <20170523131931.1777-1-chad.dupuis@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170523145047.5020-1-jthumshirn@suse.de> (Johannes Thumshirn's
-        message of "Tue, 23 May 2017 16:50:47 +0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, qla2xxx-upstream@qlogic.com, himanshu.madhani@cavium.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:22322 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934277AbdEXTMy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 May 2017 15:12:54 -0400
+In-Reply-To: <20170523131931.1777-1-chad.dupuis@cavium.com> (Chad Dupuis's
+        message of "Tue, 23 May 2017 06:19:16 -0700")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Dupuis, Chad" <chad.dupuis@cavium.com>
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, QLogic-Storage-Upstream@cavium.com
 
 
-Johannes,
+Chad,
 
-> When pci_enable_device() or pci_enable_device_mem() fail in
-> qla2x00_probe_one() we bail out but do a call to
-> pci_disable_device(). This causes the dev_WARN_ON() in
-> pci_disable_device() to trigger, as the device wasn't enabled
-> previously.
->
-> So instead of taking the 'probe_out' error path we can directly return
-> *iff* one of the pci_enable_device() calls fails.
->
-> Additionally rename the 'probe_out' goto label's name to the more
-> descriptive 'disable_device'.
+> Please apply the following patches to the scsi tree at your earliest
+> convenience.
 
-Applied to 4.12/scsi-fixes. Thank you!
+Please address Bart's comments and resubmit.
+
+Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
