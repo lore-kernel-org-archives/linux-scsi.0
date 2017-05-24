@@ -1,55 +1,87 @@
 From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH 23/31] scsi: Move sense buffer pointer initialization into scsi_initialize_rq()
-Date: Tue, 23 May 2017 17:34:12 -0700
-Message-ID: <20170524003420.5381-24-bart.vanassche@sandisk.com>
+Subject: [PATCH 22/31] scsi: Inline scsi_init_command()
+Date: Tue, 23 May 2017 17:34:11 -0700
+Message-ID: <20170524003420.5381-23-bart.vanassche@sandisk.com>
 References: <20170524003420.5381-1-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:5764 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759591AbdEXAe4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2017 20:34:56 -0400
 In-Reply-To: <20170524003420.5381-1-bart.vanassche@sandisk.com>
-Sender: linux-block-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Hannes Reinecke <hare@suse.com>
-List-Id: linux-scsi@vger.kernel.org
 
-This patch is a preparation for the next patch that will zero
-the struct scsi_request embedded in struct scsi_cmnd before
-calling scsi_req_init().
+The two drivers that use the per-device command list, namely aacraid
+and dpt_i2o, expect that that list contains only SCSI commands and
+no task management functions. Hence only call scsi_add_cmd_to_list()
+from the block layer prep callback functions and not from
+scsi_ioctl_reset().
 
 Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Cc: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/scsi_lib.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/scsi_error.c |  1 -
+ drivers/scsi/scsi_lib.c   | 10 ++--------
+ drivers/scsi/scsi_priv.h  |  1 -
+ 3 files changed, 2 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index e2e614e990a8..374dea0885f6 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -2293,7 +2293,6 @@ scsi_ioctl_reset(struct scsi_device *dev, int __user *arg)
+ 	blk_rq_init(dev->request_queue, rq);
+ 
+ 	scmd = (struct scsi_cmnd *)(rq + 1);
+-	scsi_init_command(dev, scmd);
+ 	scmd->request = rq;
+ 	scmd->cmnd = scsi_req(rq)->cmd;
+ 
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 359f824ab78c..10c6adb208dc 100644
+index d2e6b4c14e35..359f824ab78c 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -1164,6 +1164,7 @@ static void scsi_initialize_rq(struct request *rq)
- 	       sizeof(*cmd) - sizeof(cmd->req));
- 	scsi_req_init(&cmd->req);
- 	cmd->device = dev;
-+	cmd->req.sense = cmd->sense_buffer;
- 	cmd->sense_buffer = buf;
- 	cmd->prot_sdb = prot;
- 	INIT_DELAYED_WORK(&cmd->abort_work, scmd_eh_abort_handler);
-@@ -2025,7 +2026,6 @@ static int scsi_init_request(struct blk_mq_tag_set *set, struct request *rq,
- 						    GFP_KERNEL, numa_node);
- 	if (!cmd->sense_buffer)
- 		return -ENOMEM;
--	cmd->req.sense = cmd->sense_buffer;
- 	return 0;
+@@ -1170,13 +1170,6 @@ static void scsi_initialize_rq(struct request *rq)
+ 	cmd->jiffies_at_alloc = jiffies;
  }
  
-@@ -2123,7 +2123,6 @@ static int scsi_init_rq(struct request_queue *q, struct request *rq, gfp_t gfp)
- 						    NUMA_NO_NODE);
- 	if (!cmd->sense_buffer)
- 		goto fail;
--	cmd->req.sense = cmd->sense_buffer;
+-/* Called after a request has been started. */
+-void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
+-{
+-	memset(scsi_cmd_priv(cmd), 0, dev->host->hostt->cmd_size);
+-	scsi_add_cmd_to_list(cmd);
+-}
+-
+ static int scsi_setup_scsi_cmnd(struct scsi_device *sdev, struct request *req)
+ {
+ 	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
+@@ -1347,7 +1340,8 @@ static int scsi_prep_fn(struct request_queue *q, struct request *req)
+ 			goto out;
+ 		}
  
- 	if (scsi_host_get_prot(shost) >= SHOST_DIX_TYPE0_PROTECTION) {
- 		cmd->prot_sdb = kmem_cache_zalloc(scsi_sdb_cache, gfp);
+-		scsi_init_command(sdev, cmd);
++		memset(scsi_cmd_priv(cmd), 0, dev->host->hostt->cmd_size);
++		scsi_add_cmd_to_list(cmd);
+ 		req->special = cmd;
+ 	}
+ 
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index c11c1f9c912c..67d1550d8b64 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -30,7 +30,6 @@ extern void scsi_exit_hosts(void);
+ /* scsi.c */
+ extern bool scsi_use_blk_mq;
+ int scsi_init_sense_cache(struct Scsi_Host *shost);
+-void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd);
+ #ifdef CONFIG_SCSI_LOGGING
+ void scsi_log_send(struct scsi_cmnd *cmd);
+ void scsi_log_completion(struct scsi_cmnd *cmd, int disposition);
 -- 
 2.12.2
