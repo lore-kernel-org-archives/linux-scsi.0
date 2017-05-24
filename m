@@ -1,62 +1,68 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 14/31] cdrom: Check private request size before attaching
- to a queue
-Date: Wed, 24 May 2017 08:02:29 +0200
-Message-ID: <bc522b30-a9b1-29b6-f063-2e12741096b1@suse.de>
+From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: [PATCH 15/31] nfsd: Check private request size before submitting
+ a SCSI request
+Date: Wed, 24 May 2017 08:02:49 +0200
+Message-ID: <ea6d2932-4ae8-5561-763b-628bd4e8429a@suse.de>
 References: <20170524003420.5381-1-bart.vanassche@sandisk.com>
- <20170524003420.5381-15-bart.vanassche@sandisk.com>
+ <20170524003420.5381-16-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170524003420.5381-15-bart.vanassche@sandisk.com>
+Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20170524003420.5381-16-bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
 Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, Omar Sandoval <osandov@fb.com>, Hannes Reinecke <hare@suse.com>
+Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>, "Martin K . Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "J . Bruce Fields" <bfields-uC3wQj2KruNg9hUCZPvPmw@public.gmane.org>, Jeff Layton <jlayton-vpEMnDpepFuMZCB2o+C8xQ@public.gmane.org>, Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Omar Sandoval <osandov-b10kYP2dOMg@public.gmane.org>, Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
 On 05/24/2017 02:34 AM, Bart Van Assche wrote:
-> Since the cdrom driver only supports request queues for which
-> struct scsi_request is the first member of their private request
-> data, refuse to register block layer queues for which this is
-> not the case.
+> Since using scsi_req() is only allowed against request queues for
+> which struct scsi_request is the first member of their private
+> request data, refuse to submit SCSI commands against a queue for
+> which this is not the case.
 > 
 > References: commit 82ed4db499b8 ("block: split scsi_request out of struct request")
-> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-> Cc: Jens Axboe <axboe@fb.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Omar Sandoval <osandov@fb.com>
-> Cc: Hannes Reinecke <hare@suse.com>
-> Cc: linux-block@vger.kernel.org
+> Signed-off-by: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+> Cc: J. Bruce Fields <bfields-uC3wQj2KruNg9hUCZPvPmw@public.gmane.org>
+> Cc: Jeff Layton <jlayton-vpEMnDpepFuMZCB2o+C8xQ@public.gmane.org>
+> Cc: Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>
+> Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+> Cc: Omar Sandoval <osandov-b10kYP2dOMg@public.gmane.org>
+> Cc: Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>
+> Cc: linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 > ---
->  drivers/cdrom/cdrom.c | 4 ++++
->  1 file changed, 4 insertions(+)
+>  fs/nfsd/blocklayout.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-> index 76c952fd9ab9..070568d496dc 100644
-> --- a/drivers/cdrom/cdrom.c
-> +++ b/drivers/cdrom/cdrom.c
-> @@ -594,6 +594,10 @@ int register_cdrom(struct cdrom_device_info *cdi)
+> diff --git a/fs/nfsd/blocklayout.c b/fs/nfsd/blocklayout.c
+> index fb5213afc854..9ca0ca5efbc8 100644
+> --- a/fs/nfsd/blocklayout.c
+> +++ b/fs/nfsd/blocklayout.c
+> @@ -219,6 +219,9 @@ static int nfsd4_scsi_identify_device(struct block_device *bdev,
+>  	u8 *buf, *d, type, assoc;
+>  	int error;
 >  
->  	if (cdo->open == NULL || cdo->release == NULL)
->  		return -EINVAL;
-> +	if (!blk_queue_scsi_sup(cdi->disk->queue)) {
-> +		WARN_ONCE(true, "Attempt to register a non-SCSI queue\n");
+> +	if (WARN_ON_ONCE(!blk_queue_scsi_sup(q)))
 > +		return -EINVAL;
-> +	}
->  	if (!banner_printed) {
->  		pr_info("Uniform CD-ROM driver " REVISION "\n");
->  		banner_printed = 1;
+> +
+>  	buf = kzalloc(bufflen, GFP_KERNEL);
+>  	if (!buf)
+>  		return -ENOMEM;
 > 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>
 
 Cheers,
 
 Hannes
 -- 
 Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
+hare-l3A5Bk7waGM@public.gmane.org			               +49 911 74053 688
 SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
 GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
 HRB 21284 (AG Nürnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
