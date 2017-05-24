@@ -1,38 +1,49 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH 00/31] SCSI patches for kernel v4.13.
-Date: Wed, 24 May 2017 04:43:01 +0000
-Message-ID: <1495600980.2714.1.camel@sandisk.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 01/31] Split scsi_internal_device_block()
+Date: Wed, 24 May 2017 07:48:10 +0200
+Message-ID: <b5be5f9c-686b-b100-86a6-602ec8ef5262@suse.de>
 References: <20170524003420.5381-1-bart.vanassche@sandisk.com>
-         <28a3029c-b5eb-ca56-f0ef-75600ca1dd6e@kernel.dk>
+ <20170524003420.5381-2-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:48301 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965715AbdEXEnF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 May 2017 00:43:05 -0400
-In-Reply-To: <28a3029c-b5eb-ca56-f0ef-75600ca1dd6e@kernel.dk>
+Received: from mx2.suse.de ([195.135.220.15]:53851 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S938289AbdEXFsN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 24 May 2017 01:48:13 -0400
+In-Reply-To: <20170524003420.5381-2-bart.vanassche@sandisk.com>
 Content-Language: en-US
-Content-ID: <7A50C577156B7045BB6E61C3B69E232D@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+To: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 
-T24gVHVlLCAyMDE3LTA1LTIzIGF0IDIxOjU1IC0wNjAwLCBKZW5zIEF4Ym9lIHdyb3RlOg0KPiBP
-biAwNS8yMy8yMDE3IDA2OjMzIFBNLCBCYXJ0IFZhbiBBc3NjaGUgd3JvdGU6DQo+ID4gSGVsbG8g
-TWFydGluLA0KPiA+IA0KPiA+IFRoaXMgcGF0Y2ggc2VyaWVzIGNvbnNpc3RzIG9mIHRoZSBidWcg
-Zml4ZXMgSSBjYW1lIHVwIHdpdGggZHVyaW5nDQo+ID4gdGhlIHBhc3QgdHdvIG1vbnRocy4gUGxl
-YXNlIGNvbnNpZGVyIHRoZXNlIHBhdGNoZXMgZm9yIGtlcm5lbCB2NC4xMy4NCj4gDQo+IEVobSwg
-bGFzdCBJIGNoZWNrZWQgdGhlIGJsb2NrIHBhdGNoZXMgaGFkbid0IGJlZW4gcmV2aWV3ZWQvc2ln
-bmVkLW9mZg0KPiBieSBhbnlvbmUgZWxzZS4gV2Ugc3RpbGwgaGF2ZSB0aGF0IGluaXQgYWRkaXRp
-b24gaW4gdGhlIGhvdCBwYXRoIGZvcg0KPiByZXF1ZXN0IGluaXRpYWxpemF0aW9uLCBhcyBDaHJp
-c3RvcGggcG9pbnRlZCBvdXQuDQo+IA0KPiBTbyBsZXQncyBob2xkIG9mZiBvbiB0aGlzIGEgYml0
-LCBhdCBsZWFzdCBvbiB0aGUgYmxvY2sgcGFydHMsIHVudGlsDQo+IHdlIGhhdmUgdGhpbmdzIHBy
-b3Blcmx5IHNpZ25lZCBvZmYuDQoNCkhpIEplbnMsDQoNCkluIGNhc2UgdGhpcyB3b3VsZG4ndCBi
-ZSBjbGVhciwgSSBmdWxseSBhZ3JlZSB3aXRoIHlvdSB0aGF0IHlvdXIgYXBwcm92YWwNCmlzIHJl
-cXVpcmVkIGZvciB0aGUgYmxvY2sgbGF5ZXIgcGF0Y2hlcy4gSXQncyBiZWNhdXNlIHRoZXJlIGFy
-ZSBzZXZlcmFsDQpibG9jayBsYXllciBwYXRjaGVzIGluIHRoaXMgc2VyaWVzIHRoYXQgSSBoYXZl
-IENjLWVkIHRoZSBibG9jayBsYXllcg0KbWFpbGluZyBsaXN0IGZvciB0aGUgd2hvbGUgc2VyaWVz
-Lg0KDQpCYXJ0Lg==
+On 05/24/2017 02:33 AM, Bart Van Assche wrote:
+> Instead of passing a "wait" argument to scsi_internal_device_block(),
+> split this function into a function that waits and a function that
+> doesn't wait. This will make it easier to serialize SCSI device state
+> changes through a mutex.
+> 
+> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Hannes Reinecke <hare@suse.com>
+> Cc: Johannes Thumshirn <jthumshirn@suse.de>
+> Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+> ---
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c |  4 +-
+>  drivers/scsi/scsi_lib.c              | 73 +++++++++++++++++++++++-------------
+>  include/scsi/scsi_device.h           |  2 +-
+>  3 files changed, 50 insertions(+), 29 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
