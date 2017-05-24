@@ -1,41 +1,63 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 02/31] Create two versions of
- scsi_internal_device_unblock()
-Date: Wed, 24 May 2017 07:48:44 +0200
-Message-ID: <3cc1fc64-245c-6aff-f3a5-c1f26f890124@suse.de>
+Subject: Re: [PATCH 03/31] Protect SCSI device state changes with a mutex
+Date: Wed, 24 May 2017 07:51:13 +0200
+Message-ID: <7d437d97-29ff-14f4-1564-5ba32f00948f@suse.de>
 References: <20170524003420.5381-1-bart.vanassche@sandisk.com>
- <20170524003420.5381-3-bart.vanassche@sandisk.com>
+ <20170524003420.5381-4-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54015 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S938289AbdEXFss (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 24 May 2017 01:48:48 -0400
-In-Reply-To: <20170524003420.5381-3-bart.vanassche@sandisk.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170524003420.5381-4-bart.vanassche@sandisk.com>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
 To: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
+List-Id: linux-scsi@vger.kernel.org
 
 On 05/24/2017 02:33 AM, Bart Van Assche wrote:
-> This will make it easier to serialize SCSI device state changes
-> through a mutex.
+> Enable this mechanism for all scsi_target_*block() callers but not
+> for the scsi_internal_device_unblock() calls from the mpt3sas driver
+> because that driver can call scsi_internal_device_unblock() from
+> atomic context.
 > 
 > Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
 > Cc: Christoph Hellwig <hch@lst.de>
 > Cc: Hannes Reinecke <hare@suse.com>
 > Cc: Johannes Thumshirn <jthumshirn@suse.de>
-> Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 > ---
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c |  4 ++--
->  drivers/scsi/scsi_lib.c              | 46 +++++++++++++++++++++++++-----------
->  include/scsi/scsi_device.h           |  4 ++--
->  3 files changed, 36 insertions(+), 18 deletions(-)
+>  drivers/scsi/scsi_error.c         |  8 +++++++-
+>  drivers/scsi/scsi_lib.c           | 27 +++++++++++++++++++++------
+>  drivers/scsi/scsi_scan.c          | 16 +++++++++-------
+>  drivers/scsi/scsi_sysfs.c         | 24 +++++++++++++++++++-----
+>  drivers/scsi/scsi_transport_srp.c |  7 ++++---
+>  drivers/scsi/sd.c                 |  7 +++++--
+>  include/scsi/scsi_device.h        |  1 +
+>  7 files changed, 66 insertions(+), 24 deletions(-)
 > 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+[ .. ]
+> diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
+> index 3c5d89852e9f..f617021c94f7 100644
+> --- a/drivers/scsi/scsi_transport_srp.c
+> +++ b/drivers/scsi/scsi_transport_srp.c
+> @@ -554,11 +554,12 @@ int srp_reconnect_rport(struct srp_rport *rport)
+>  		 * invoking scsi_target_unblock() won't change the state of
+>  		 * these devices into running so do that explicitly.
+>  		 */
+> -		spin_lock_irq(shost->host_lock);
+> -		__shost_for_each_device(sdev, shost)
+> +		shost_for_each_device(sdev, shost) {
+> +			mutex_lock(&sdev->state_mutex);
+>  			if (sdev->sdev_state == SDEV_OFFLINE)
+>  				sdev->sdev_state = SDEV_RUNNING;
+> -		spin_unlock_irq(shost->host_lock);
+> +			mutex_unlock(&sdev->state_mutex);
+> +		}
+>  	} else if (rport->state == SRP_RPORT_RUNNING) {
+>  		/*
+>  		 * srp_reconnect_rport() has been invoked with fast_io_fail
+Why do you drop the host lock here? I thought that the host lock is
+needed to protect shost_for_each_device()?
 
 Cheers,
 
