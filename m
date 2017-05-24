@@ -1,29 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] qla2xxx: Remove an unused structure member
-Date: Tue, 23 May 2017 22:05:14 -0400
-Message-ID: <yq1shjvvwkl.fsf@oracle.com>
-References: <20170522201053.7093-1-bart.vanassche@sandisk.com>
+Subject: Re: [PATCH 0/7]qedi: Bug fixes.
+Date: Tue, 23 May 2017 22:17:54 -0400
+Message-ID: <yq1lgpnvvzh.fsf@oracle.com>
+References: <20170519083321.18030-1-manish.rangankar@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:19865 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:22799 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1760737AbdEXCIK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2017 22:08:10 -0400
-In-Reply-To: <20170522201053.7093-1-bart.vanassche@sandisk.com> (Bart Van
-        Assche's message of "Mon, 22 May 2017 13:10:53 -0700")
+        with ESMTP id S1753804AbdEXCUk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2017 22:20:40 -0400
+In-Reply-To: <20170519083321.18030-1-manish.rangankar@cavium.com> (Manish
+        Rangankar's message of "Fri, 19 May 2017 01:33:14 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Quinn Tran <quinn.tran@cavium.com>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>, David Disseldorp <ddiss@suse.de>
+To: Manish Rangankar <manish.rangankar@cavium.com>
+Cc: martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com, linux-scsi@vger.kernel.org, QLogic-Storage-Upstream@cavium.com
 
 
-Bart,
+Manish,
 
-> qla_tgt_cmd.free_work is not used by the qla2xxx driver. Hence remove
-> that member of struct qla_tgt_cmd.
+> Please apply this patch set to next 'scsi-fixes' series.
 
-Applied to 4.13/scsi-queue. Thanks, Bart!
+Applied to 4.12/scsi-fixes. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
