@@ -1,26 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] lpfc: nvmet_fc: fix format string
-Date: Tue, 23 May 2017 22:36:14 -0400
-Message-ID: <yq14lwbvv4x.fsf@oracle.com>
-References: <20170519080447.1043039-1-arnd@arndb.de>
+Subject: Re: [PATCH] scsi: libcxgbi: fix skb use after free
+Date: Tue, 23 May 2017 22:39:36 -0400
+Message-ID: <yq1vaorugev.fsf@oracle.com>
+References: <1494942824-2252-1-git-send-email-varun@chelsio.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170519080447.1043039-1-arnd@arndb.de> (Arnd Bergmann's message
-        of "Fri, 19 May 2017 10:04:31 +0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:26977 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933113AbdEXCjm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2017 22:39:42 -0400
+In-Reply-To: <1494942824-2252-1-git-send-email-varun@chelsio.com> (Varun
+        Prakash's message of "Tue, 16 May 2017 19:23:44 +0530")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Varun Prakash <varun@chelsio.com>
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, indranil@chelsio.com
 
 
-Arnd,
+Varun,
 
-> The lpfc_nvmeio_data() tracing helper always takes a format string and
-> three additional arguments. The latest caller has a format string with
-> only two integer arguments, causing this harmless warning:
+> skb->data is assigned to task->hdr in cxgbi_conn_alloc_pdu(),
+> skb gets freed after tx but task->hdr is still dereferenced in
+> iscsi_tcp_task_xmit() to avoid this call skb_get() after allocating
+> skb and free the skb in cxgbi_cleanup_task() or before allocating new
+> skb in cxgbi_conn_alloc_pdu().
 
-James?
+Applied to 4.12/scsi-fixes, thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
