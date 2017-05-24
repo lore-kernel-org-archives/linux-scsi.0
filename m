@@ -1,99 +1,111 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Need help with handling failed ATA pass-through command and
- sense data
-Date: Tue, 23 May 2017 14:34:06 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1705231430550.1853-100000@iolanthe.rowland.org>
-References: <1495137660.3629.44.camel@localhost.localdomain>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: [PATCH 00/31] SCSI patches for kernel v4.13.
+Date: Tue, 23 May 2017 17:33:49 -0700
+Message-ID: <20170524003420.5381-1-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:55034 "HELO
-        iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S1758692AbdEWSeH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2017 14:34:07 -0400
-In-Reply-To: <1495137660.3629.44.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Ewan D. Milne" <emilne@redhat.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, GeekGirl1 <my.e.mail1@verizon.net>
 
-On Thu, 18 May 2017, Ewan D. Milne wrote:
+Hello Martin,
 
-> On Thu, 2017-05-18 at 13:37 -0400, Alan Stern wrote:
-> > 
-> > I had completely forgotten about this code.  :-(
-> > 
-> > Looks like you put your finger on the source of the problem.  So if the 
-> > device sends back essentially empty sense data (SK = No Sense, ASC = 
-> > ASCQ = 0), but the USB transport indicates command failure, how should 
-> > we inform the SCSI core in a way that won't cause infinite retries or 
-> > obnoxious log messages?
-> > 
-> > Should we be doing a better job of detecting empty sense data -- that 
-> > is, do we need to check for non-empty ATA status?
-> > 
-> > Or has the SCSI core improved so that it no longer does infinite
-> > retries (see commit f1a0743bc0e7 "USB: storage: When a device returns
-> > no sense data, call it a Hardware Error" and Bugzilla entry #14118),
-> > meaning that this code can be removed entirely?
-> > 
-> > Alan Stern
-> 
-> We added:
-> 
-> commit ee60b2c52ec8ecdcbcd2f85cc117b525f649441f
-> Author: Eiichi Tsukata <eiichi.tsukata.xh@hitachi.com>
-> Date:   Tue Feb 11 14:29:52 2014 +0900
-> 
->     [SCSI] Add timeout to avoid infinite command retry
-> 
-> but this may not give you the behavior you want, because it bounds
-> the execution time to (# of retries + 1) * timeout.  So if you get
-> an immediate error return it could still take a while for this code
-> to give up retrying, i.e. it does not have the same properties as
-> your commit f1a0743bc0e7.
-> 
-> I suppose you could decode the ATA Status Return sense data descriptor
-> but I don't know how good the compliance is among all the ATA devices.
-> Table 177 in section 1.2.2.8 of SAT-4 r06 seems to say that most of
-> the fields in the sense data are unspecified for ATA PASS-THROUGH
-> commands, so this probably explains why you see nothing else useful.
-> Perhaps the logging should be delegated to the USB or ATA code for
-> these commands, since they are not really part of SCSI?
-> 
-> I have seen a case of a Fibre Channel array returning all zeroes
-> in the sense data, but this was because it was malfunctioning.
+This patch series consists of the bug fixes I came up with during
+the past two months. Please consider these patches for kernel v4.13.
 
-All right, suppose we don't return DID_ERROR and don't call it a
-hardware error.  I don't know if this will help at all, and I don't
-know if it will cause any regressions.
+Thanks,
 
-GeekGirl1, can you try applying the patch below to see if it makes any 
-difference?  If you don't know how, I will attach it to the Bugzilla 
-report so somebody else can try it.
+Bart.
 
-Alan Stern
+Bart Van Assche (31):
+  Split scsi_internal_device_block()
+  Create two versions of scsi_internal_device_unblock()
+  Protect SCSI device state changes with a mutex
+  Introduce scsi_start_queue()
+  Make __scsi_remove_device go straight from BLOCKED to DEL
+  scmd_eh_abort_handler(): Add a comment
+  scsi: Use blk_mq_rq_to_pdu() to convert a request to a SCSI command
+    pointer
+  sd, sr: Convert two assignments into warning statements
+  block: Avoid that blk_exit_rl() triggers a use-after-free
+  Avoid that scsi_exit_rq() triggers a use-after-free
+  block: Introduce queue flag QUEUE_FLAG_SCSI_SUP
+  bsg: Check queue type before attaching to a queue
+  pktcdvd: Check queue type before attaching to a queue
+  cdrom: Check private request size before attaching to a queue
+  nfsd: Check private request size before submitting a SCSI request
+  scsi: Make scsi_ioctl_reset() pass the request queue pointer to
+    blk_rq_init()
+  block: Introduce request_queue.initialize_rq_fn()
+  block: Make scsi_req_init() calls implicit
+  scsi: Change argument type of scsi_req_init()
+  scsi: Only add commands to the device command list if required by the
+    LLD
+  scsi: Move most of scsi_init_command() into scsi_initialize_rq()
+  scsi: Inline scsi_init_command()
+  scsi: Move sense buffer pointer initialization into
+    scsi_initialize_rq()
+  scsi: Make scsi_initialize_rq() zero the entire struct scsi_cmnd
+  scsi-mq: Make behavior scsi_mq_prep_fn() closer to that of
+    scsi_prep_fn()
+  scsi: Move the code for clearing private command data into
+    scsi_dispatch_cmd()
+  scsi: Consolidate more initialization code
+  scsi_setup_fs_cmnd(): Call scsi_req_init() instead of open-coding it
+  scsi: snic: Remove code that zeroes driver-private command data
+  scsi: virtio: Remove code that zeroes driver-private command data
+  xen/scsifront: Remove code that zeroes driver-private command data
 
+ block/blk-cgroup.c                   |   2 +-
+ block/blk-core.c                     |  13 +-
+ block/blk-mq.c                       |   3 +
+ block/blk-sysfs.c                    |   2 +-
+ block/blk.h                          |   2 +-
+ block/bsg-lib.c                      |   1 +
+ block/bsg.c                          |   7 +-
+ block/scsi_ioctl.c                   |  13 +-
+ drivers/block/cciss.c                |   1 +
+ drivers/block/pktcdvd.c              |   6 +-
+ drivers/cdrom/cdrom.c                |   5 +-
+ drivers/ide/ide-atapi.c              |   2 -
+ drivers/ide/ide-cd.c                 |   1 -
+ drivers/ide/ide-cd_ioctl.c           |   1 -
+ drivers/ide/ide-devsets.c            |   1 -
+ drivers/ide/ide-disk.c               |   1 -
+ drivers/ide/ide-ioctls.c             |   2 -
+ drivers/ide/ide-park.c               |   2 -
+ drivers/ide/ide-pm.c                 |   2 -
+ drivers/ide/ide-probe.c              |   7 +-
+ drivers/ide/ide-tape.c               |   1 -
+ drivers/ide/ide-taskfile.c           |   1 -
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c |   8 +-
+ drivers/scsi/osd/osd_initiator.c     |   2 -
+ drivers/scsi/osst.c                  |   1 -
+ drivers/scsi/scsi.c                  |   9 +-
+ drivers/scsi/scsi_error.c            |  26 ++-
+ drivers/scsi/scsi_lib.c              | 327 +++++++++++++++++++++--------------
+ drivers/scsi/scsi_priv.h             |   4 +-
+ drivers/scsi/scsi_scan.c             |  16 +-
+ drivers/scsi/scsi_sysfs.c            |  37 +++-
+ drivers/scsi/scsi_transport_sas.c    |   7 +
+ drivers/scsi/scsi_transport_srp.c    |   7 +-
+ drivers/scsi/sd.c                    |   9 +-
+ drivers/scsi/sg.c                    |   2 -
+ drivers/scsi/snic/snic_scsi.c        |   2 -
+ drivers/scsi/sr.c                    |   2 +-
+ drivers/scsi/st.c                    |   1 -
+ drivers/scsi/virtio_scsi.c           |   1 -
+ drivers/scsi/xen-scsifront.c         |   1 -
+ drivers/target/target_core_pscsi.c   |   2 -
+ fs/nfsd/blocklayout.c                |   4 +-
+ include/linux/blkdev.h               |   6 +
+ include/scsi/scsi_cmnd.h             |   1 +
+ include/scsi/scsi_device.h           |   7 +-
+ include/scsi/scsi_request.h          |   2 +-
+ include/scsi/scsi_tcq.h              |   2 +-
+ 47 files changed, 345 insertions(+), 217 deletions(-)
 
-
-
-Index: usb-4.x/drivers/usb/storage/transport.c
-===================================================================
---- usb-4.x.orig/drivers/usb/storage/transport.c
-+++ usb-4.x/drivers/usb/storage/transport.c
-@@ -835,6 +835,7 @@ Retry_Sense:
- 				srb->result = SAM_STAT_GOOD;
- 				srb->sense_buffer[0] = 0x0;
- 
-+#if 0
- 			/*
- 			 * If there was a problem, report an unspecified
- 			 * hardware error to prevent the higher layers from
-@@ -846,6 +847,7 @@ Retry_Sense:
- 					srb->sense_buffer[1] = HARDWARE_ERROR;
- 				else
- 					srb->sense_buffer[2] = HARDWARE_ERROR;
-+#endif
- 			}
- 		}
- 	}
+-- 
+2.12.2
