@@ -1,41 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] qla2xxx: don't disable a not previously enabled PCI device
-Date: Tue, 23 May 2017 22:37:10 -0400
-Message-ID: <yq1zie3ugix.fsf@oracle.com>
-References: <20170523145047.5020-1-jthumshirn@suse.de>
+Subject: Re: [PATCH] lpfc: nvmet_fc: fix format string
+Date: Tue, 23 May 2017 22:36:14 -0400
+Message-ID: <yq14lwbvv4x.fsf@oracle.com>
+References: <20170519080447.1043039-1-arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:26468 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751420AbdEXCh0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2017 22:37:26 -0400
-In-Reply-To: <20170523145047.5020-1-jthumshirn@suse.de> (Johannes Thumshirn's
-        message of "Tue, 23 May 2017 16:50:47 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170519080447.1043039-1-arnd@arndb.de> (Arnd Bergmann's message
+        of "Fri, 19 May 2017 10:04:31 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, qla2xxx-upstream@qlogic.com, himanshu.madhani@cavium.com
 
 
-Johannes,
+Arnd,
 
-> When pci_enable_device() or pci_enable_device_mem() fail in
-> qla2x00_probe_one() we bail out but do a call to
-> pci_disable_device(). This causes the dev_WARN_ON() in
-> pci_disable_device() to trigger, as the device wasn't enabled
-> previously.
->
-> So instead of taking the 'probe_out' error path we can directly return
-> *iff* one of the pci_enable_device() calls fails.
->
-> Additionally rename the 'probe_out' goto label's name to the more
-> descriptive 'disable_device'.
->
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> Fixes: e315cd28b9ef ("[SCSI] qla2xxx: Code changes for qla data structure refactoring")
+> The lpfc_nvmeio_data() tracing helper always takes a format string and
+> three additional arguments. The latest caller has a format string with
+> only two integer arguments, causing this harmless warning:
 
-Himanshu/Quinn: Please review!
+James?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
