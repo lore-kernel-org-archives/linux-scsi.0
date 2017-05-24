@@ -1,35 +1,33 @@
-From: Chad Dupuis <chad.dupuis@cavium.com>
-Subject: Re: [PATCH 00/15] qedf: Update driver to version 8.18.22.0.
-Date: Wed, 24 May 2017 15:14:28 -0400 (EDT)
-Message-ID: <alpine.OSX.2.00.1705241514070.2965@n5127mncfb42q1.qlogic.org>
-References: <20170523131931.1777-1-chad.dupuis@cavium.com> <yq1bmqiul05.fsf@oracle.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] bnx2fc: fix race condition in bnx2fc_get_host_stats()
+Date: Wed, 24 May 2017 15:15:26 -0400
+Message-ID: <yq17f16ukvl.fsf@oracle.com>
+References: <1495627784-21048-1-git-send-email-mlombard@redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0042.outbound.protection.outlook.com ([104.47.34.42]:23420
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S934210AbdEXTOu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 24 May 2017 15:14:50 -0400
-In-Reply-To: <yq1bmqiul05.fsf@oracle.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:23626 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934210AbdEXTPg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 May 2017 15:15:36 -0400
+In-Reply-To: <1495627784-21048-1-git-send-email-mlombard@redhat.com> (Maurizio
+        Lombardi's message of "Wed, 24 May 2017 14:09:44 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, QLogic-Storage-Upstream@cavium.com
+To: Maurizio Lombardi <mlombard@redhat.com>
+Cc: QLogic-Storage-Upstream@qlogic.com, linux-scsi@vger.kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 
 
-On Wed, 24 May 2017, 3:12pm, Martin K. Petersen wrote:
+Maurizio,
 
-> 
-> Chad,
-> 
-> > Please apply the following patches to the scsi tree at your earliest
-> > convenience.
-> 
-> Please address Bart's comments and resubmit.
-> 
-> Thanks!
-> 
-> 
+> If multiple tasks attempt to read the stats, it may happen that the
+> start_req_done completion is re-initialized while still being used by
+> another task, causing a list corruption.
+>
+> This patch fixes the bug by adding a mutex to serialize the calls to
+> bnx2fc_get_host_stats().
 
-Sure, will submit a V2 that addresses Bart's comments.
+Applied to 4.12/scsi-fixes. Thank you!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
