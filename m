@@ -1,42 +1,47 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 10/31] Avoid that scsi_exit_rq() triggers a use-after-free
-Date: Wed, 24 May 2017 07:58:51 +0200
-Message-ID: <cd37eb82-f85a-afca-c027-2fd1675bdb4c@suse.de>
+Subject: Re: [PATCH 11/31] block: Introduce queue flag QUEUE_FLAG_SCSI_SUP
+Date: Wed, 24 May 2017 08:01:14 +0200
+Message-ID: <ff6777f8-eb90-224c-a615-3dca235d1d18@suse.de>
 References: <20170524003420.5381-1-bart.vanassche@sandisk.com>
- <20170524003420.5381-11-bart.vanassche@sandisk.com>
+ <20170524003420.5381-12-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170524003420.5381-11-bart.vanassche@sandisk.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:57464 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S966241AbdEXGBR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 24 May 2017 02:01:17 -0400
+In-Reply-To: <20170524003420.5381-12-bart.vanassche@sandisk.com>
 Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Scott Bauer <scott.bauer@intel.com>, Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>, Hannes Reinecke <hare@suse.com>, stable@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, Omar Sandoval <osandov@fb.com>, Hannes Reinecke <hare@suse.com>
 
-On 05/24/2017 02:33 AM, Bart Van Assche wrote:
-> Dereferencing shost from scsi_exit_rq() is not safe because the
-> SCSI host may already have been freed when scsi_exit_rq() is
-> called. Increasing the shost reference count in scsi_init_rq()
-> and dropping that reference in scsi_exit_rq() is nontrivial since
-> scsi_host_dev_release() may sleep and since scsi_exit_rq() may
-> be called from interrupt context. Since scsi_exit_rq() only needs
-> a single bit from shost, copy that bit into struct scsi_cmnd.
+On 05/24/2017 02:34 AM, Bart Van Assche wrote:
+> From the context where a SCSI command is submitted it is not always
+> possible to figure out whether or not the queue the command is
+> submitted to has struct scsi_request as the first member of its
+> private data. Hence introduce the flag QUEUE_FLAG_SCSI_SUP.
 > 
-> Reported-by: Scott Bauer <scott.bauer@intel.com>
-> Fixes: e9c787e65c0c ("scsi: allocate scsi_cmnd structures as part of struct request")
 > Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-> Cc: Scott Bauer <scott.bauer@intel.com>
+> Cc: Jens Axboe <axboe@fb.com>
 > Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Jan Kara <jack@suse.cz>
+> Cc: Omar Sandoval <osandov@fb.com>
 > Cc: Hannes Reinecke <hare@suse.com>
-> Cc: <stable@vger.kernel.org>
 > ---
->  drivers/scsi/scsi_lib.c  | 43 +++++++++++++++++++++++++------------------
->  include/scsi/scsi_cmnd.h |  1 +
->  2 files changed, 26 insertions(+), 18 deletions(-)
+>  block/bsg-lib.c                   | 1 +
+>  drivers/block/cciss.c             | 1 +
+>  drivers/ide/ide-probe.c           | 1 +
+>  drivers/scsi/scsi_lib.c           | 2 ++
+>  drivers/scsi/scsi_transport_sas.c | 1 +
+>  include/linux/blkdev.h            | 2 ++
+>  6 files changed, 8 insertions(+)
 > 
+Bit of an odd name; what about QUEUE_FLAG_SCSI_PDU?
+
+Otherwise:
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
