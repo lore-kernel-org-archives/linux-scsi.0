@@ -1,111 +1,101 @@
 From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH 00/31] SCSI patches for kernel v4.13.
-Date: Tue, 23 May 2017 17:33:49 -0700
-Message-ID: <20170524003420.5381-1-bart.vanassche@sandisk.com>
+Subject: [PATCH 05/31] Make __scsi_remove_device go straight from BLOCKED to DEL
+Date: Tue, 23 May 2017 17:33:54 -0700
+Message-ID: <20170524003420.5381-6-bart.vanassche@sandisk.com>
+References: <20170524003420.5381-1-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170524003420.5381-1-bart.vanassche@sandisk.com>
 Sender: linux-block-owner@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Israel Rukshin <israelr@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>, Hannes Reinecke <hare@suse.de>, Benjamin Block <bblock@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello Martin,
+If a device is blocked, make __scsi_remove_device() cause it to
+transition to the DEL state. This means that all the commands
+issued in .shutdown() will error in the mid-layer, thus making
+the removal proceed without being stopped.
 
-This patch series consists of the bug fixes I came up with during
-the past two months. Please consider these patches for kernel v4.13.
+This patch is a slightly modified version of a patch from James
+Bottomley. This patch avoids that the following lockup occurs:
 
-Thanks,
+Call Trace:
+ schedule+0x35/0x80
+ schedule_timeout+0x237/0x2d0
+ io_schedule_timeout+0xa6/0x110
+ wait_for_completion_io+0xa3/0x110
+ blk_execute_rq+0xdf/0x120
+ scsi_execute+0xce/0x150 [scsi_mod]
+ scsi_execute_req_flags+0x8f/0xf0 [scsi_mod]
+ sd_sync_cache+0xa9/0x190 [sd_mod]
+ sd_shutdown+0x6a/0x100 [sd_mod]
+ sd_remove+0x64/0xc0 [sd_mod]
+ __device_release_driver+0x8d/0x120
+ device_release_driver+0x1e/0x30
+ bus_remove_device+0xf9/0x170
+ device_del+0x127/0x240
+ __scsi_remove_device+0xc1/0xd0 [scsi_mod]
+ scsi_forget_host+0x57/0x60 [scsi_mod]
+ scsi_remove_host+0x72/0x110 [scsi_mod]
+ srp_remove_work+0x8b/0x200 [ib_srp]
 
-Bart.
+Reported-by: Israel Rukshin <israelr@mellanox.com>
+Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Israel Rukshin <israelr@mellanox.com>
+Cc: Max Gurtovoy <maxg@mellanox.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Benjamin Block <bblock@linux.vnet.ibm.com>
+---
+ drivers/scsi/scsi_lib.c   |  2 +-
+ drivers/scsi/scsi_sysfs.c | 13 +++++++++++++
+ 2 files changed, 14 insertions(+), 1 deletion(-)
 
-Bart Van Assche (31):
-  Split scsi_internal_device_block()
-  Create two versions of scsi_internal_device_unblock()
-  Protect SCSI device state changes with a mutex
-  Introduce scsi_start_queue()
-  Make __scsi_remove_device go straight from BLOCKED to DEL
-  scmd_eh_abort_handler(): Add a comment
-  scsi: Use blk_mq_rq_to_pdu() to convert a request to a SCSI command
-    pointer
-  sd, sr: Convert two assignments into warning statements
-  block: Avoid that blk_exit_rl() triggers a use-after-free
-  Avoid that scsi_exit_rq() triggers a use-after-free
-  block: Introduce queue flag QUEUE_FLAG_SCSI_SUP
-  bsg: Check queue type before attaching to a queue
-  pktcdvd: Check queue type before attaching to a queue
-  cdrom: Check private request size before attaching to a queue
-  nfsd: Check private request size before submitting a SCSI request
-  scsi: Make scsi_ioctl_reset() pass the request queue pointer to
-    blk_rq_init()
-  block: Introduce request_queue.initialize_rq_fn()
-  block: Make scsi_req_init() calls implicit
-  scsi: Change argument type of scsi_req_init()
-  scsi: Only add commands to the device command list if required by the
-    LLD
-  scsi: Move most of scsi_init_command() into scsi_initialize_rq()
-  scsi: Inline scsi_init_command()
-  scsi: Move sense buffer pointer initialization into
-    scsi_initialize_rq()
-  scsi: Make scsi_initialize_rq() zero the entire struct scsi_cmnd
-  scsi-mq: Make behavior scsi_mq_prep_fn() closer to that of
-    scsi_prep_fn()
-  scsi: Move the code for clearing private command data into
-    scsi_dispatch_cmd()
-  scsi: Consolidate more initialization code
-  scsi_setup_fs_cmnd(): Call scsi_req_init() instead of open-coding it
-  scsi: snic: Remove code that zeroes driver-private command data
-  scsi: virtio: Remove code that zeroes driver-private command data
-  xen/scsifront: Remove code that zeroes driver-private command data
-
- block/blk-cgroup.c                   |   2 +-
- block/blk-core.c                     |  13 +-
- block/blk-mq.c                       |   3 +
- block/blk-sysfs.c                    |   2 +-
- block/blk.h                          |   2 +-
- block/bsg-lib.c                      |   1 +
- block/bsg.c                          |   7 +-
- block/scsi_ioctl.c                   |  13 +-
- drivers/block/cciss.c                |   1 +
- drivers/block/pktcdvd.c              |   6 +-
- drivers/cdrom/cdrom.c                |   5 +-
- drivers/ide/ide-atapi.c              |   2 -
- drivers/ide/ide-cd.c                 |   1 -
- drivers/ide/ide-cd_ioctl.c           |   1 -
- drivers/ide/ide-devsets.c            |   1 -
- drivers/ide/ide-disk.c               |   1 -
- drivers/ide/ide-ioctls.c             |   2 -
- drivers/ide/ide-park.c               |   2 -
- drivers/ide/ide-pm.c                 |   2 -
- drivers/ide/ide-probe.c              |   7 +-
- drivers/ide/ide-tape.c               |   1 -
- drivers/ide/ide-taskfile.c           |   1 -
- drivers/scsi/mpt3sas/mpt3sas_scsih.c |   8 +-
- drivers/scsi/osd/osd_initiator.c     |   2 -
- drivers/scsi/osst.c                  |   1 -
- drivers/scsi/scsi.c                  |   9 +-
- drivers/scsi/scsi_error.c            |  26 ++-
- drivers/scsi/scsi_lib.c              | 327 +++++++++++++++++++++--------------
- drivers/scsi/scsi_priv.h             |   4 +-
- drivers/scsi/scsi_scan.c             |  16 +-
- drivers/scsi/scsi_sysfs.c            |  37 +++-
- drivers/scsi/scsi_transport_sas.c    |   7 +
- drivers/scsi/scsi_transport_srp.c    |   7 +-
- drivers/scsi/sd.c                    |   9 +-
- drivers/scsi/sg.c                    |   2 -
- drivers/scsi/snic/snic_scsi.c        |   2 -
- drivers/scsi/sr.c                    |   2 +-
- drivers/scsi/st.c                    |   1 -
- drivers/scsi/virtio_scsi.c           |   1 -
- drivers/scsi/xen-scsifront.c         |   1 -
- drivers/target/target_core_pscsi.c   |   2 -
- fs/nfsd/blocklayout.c                |   4 +-
- include/linux/blkdev.h               |   6 +
- include/scsi/scsi_cmnd.h             |   1 +
- include/scsi/scsi_device.h           |   7 +-
- include/scsi/scsi_request.h          |   2 +-
- include/scsi/scsi_tcq.h              |   2 +-
- 47 files changed, 345 insertions(+), 217 deletions(-)
-
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 0ee5c2133e4c..5c6874cf4388 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2613,7 +2613,6 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
+ 		case SDEV_QUIESCE:
+ 		case SDEV_OFFLINE:
+ 		case SDEV_TRANSPORT_OFFLINE:
+-		case SDEV_BLOCK:
+ 			break;
+ 		default:
+ 			goto illegal;
+@@ -2627,6 +2626,7 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
+ 		case SDEV_OFFLINE:
+ 		case SDEV_TRANSPORT_OFFLINE:
+ 		case SDEV_CANCEL:
++		case SDEV_BLOCK:
+ 		case SDEV_CREATED_BLOCK:
+ 			break;
+ 		default:
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index a91537a3abbf..1f243ac16010 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1290,7 +1290,20 @@ void __scsi_remove_device(struct scsi_device *sdev)
+ 		 * wait until it has finished before changing the device state.
+ 		 */
+ 		mutex_lock(&sdev->state_mutex);
++		/*
++		 * If blocked, we go straight to DEL and restart the queue so
++		 * any commands issued during driver shutdown (like sync
++		 * cache) are errored immediately.
++		 */
+ 		res = scsi_device_set_state(sdev, SDEV_CANCEL);
++		if (res != 0) {
++			res = scsi_device_set_state(sdev, SDEV_DEL);
++			if (res == 0) {
++				scsi_start_queue(sdev);
++				sdev_printk(KERN_DEBUG, sdev,
++				    "Changed state from BLOCKED to DEL\n");
++			}
++		}
+ 		mutex_unlock(&sdev->state_mutex);
+ 
+ 		if (res != 0)
 -- 
 2.12.2
