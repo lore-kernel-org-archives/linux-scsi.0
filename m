@@ -1,51 +1,34 @@
-From: "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>
-Subject: Re: [PATCH] qla2xxx: don't disable a not previously enabled PCI
- device
-Date: Wed, 24 May 2017 17:12:19 +0000
-Message-ID: <D54B0CBF.941D8%giridhar.malavali@cavium.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] qla2xxx: don't disable a not previously enabled PCI device
+Date: Wed, 24 May 2017 15:11:48 -0400
+Message-ID: <yq1fufuul1n.fsf@oracle.com>
 References: <20170523145047.5020-1-jthumshirn@suse.de>
- <1495640832.2823.5.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1495640832.2823.5.camel@sandisk.com>
-Content-Language: en-US
-Content-ID: <7117F73BA2C59B4E8C2B23F874A69368@namprd07.prod.outlook.com>
+In-Reply-To: <20170523145047.5020-1-jthumshirn@suse.de> (Johannes Thumshirn's
+        message of "Tue, 23 May 2017 16:50:47 +0200")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, qla2xxx-upstream@qlogic.com, himanshu.madhani@cavium.com
 List-Id: linux-scsi@vger.kernel.org
 
 
+Johannes,
 
-On 5/24/17, 8:47 AM, "Bart Van Assche" <Bart.VanAssche@sandisk.com> wrote:
-
->On Tue, 2017-05-23 at 16:50 +0200, Johannes Thumshirn wrote:
->> When pci_enable_device() or pci_enable_device_mem() fail in
->> qla2x00_probe_one() we bail out but do a call to
->> pci_disable_device(). This causes the dev_WARN_ON() in
->> pci_disable_device() to trigger, as the device wasn't enabled
->> previously.
->>=20
->> So instead of taking the 'probe_out' error path we can directly return
->> *iff* one of the pci_enable_device() calls fails.
->>=20
->> Additionally rename the 'probe_out' goto label's name to the more
->> descriptive 'disable_device'.
->>=20
->> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
->> Fixes: e315cd28b9ef ("[SCSI] qla2xxx: Code changes for qla data
->>structure refactoring")
+> When pci_enable_device() or pci_enable_device_mem() fail in
+> qla2x00_probe_one() we bail out but do a call to
+> pci_disable_device(). This causes the dev_WARN_ON() in
+> pci_disable_device() to trigger, as the device wasn't enabled
+> previously.
 >
->Hello Johannes,
+> So instead of taking the 'probe_out' error path we can directly return
+> *iff* one of the pci_enable_device() calls fails.
 >
->Please consider adding a Cc: stable tag to this patch. Since otherwise
->this
->patch looks fine to me:
->
->Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> Additionally rename the 'probe_out' goto label's name to the more
+> descriptive 'disable_device'.
 
-Looks good to me.=20
+Applied to 4.12/scsi-fixes. Thank you!
 
-Reviewed-by: Giridhar Malavali <giridhar.malavali@cavium.com>
+-- 
+Martin K. Petersen	Oracle Linux Engineering
