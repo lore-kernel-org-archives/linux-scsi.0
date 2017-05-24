@@ -1,31 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 00/31] SCSI patches for kernel v4.13.
-Date: Tue, 23 May 2017 22:31:55 -0400
-Message-ID: <yq1d1azvvc4.fsf@oracle.com>
-References: <20170524003420.5381-1-bart.vanassche@sandisk.com>
+Subject: Re: [PATCH 00/15] qedf: Update driver to version 8.18.22.0.
+Date: Tue, 23 May 2017 22:35:52 -0400
+Message-ID: <yq18tlnvv5j.fsf@oracle.com>
+References: <20170523131931.1777-1-chad.dupuis@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:25077 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751420AbdEXCcC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2017 22:32:02 -0400
-In-Reply-To: <20170524003420.5381-1-bart.vanassche@sandisk.com> (Bart Van
-        Assche's message of "Tue, 23 May 2017 17:33:49 -0700")
+Received: from userp1040.oracle.com ([156.151.31.81]:43122 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751420AbdEXCgE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2017 22:36:04 -0400
+In-Reply-To: <20170523131931.1777-1-chad.dupuis@cavium.com> (Chad Dupuis's
+        message of "Tue, 23 May 2017 06:19:16 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+To: "Dupuis, Chad" <chad.dupuis@cavium.com>
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, QLogic-Storage-Upstream@cavium.com
 
 
-Bart,
+Chad,
 
-> This patch series consists of the bug fixes I came up with during the
-> past two months. Please consider these patches for kernel v4.13.
+> Please apply the following patches to the scsi tree at your earliest
+> convenience.
 
-I'll have some time tomorrow to go through these.
-
-It would be nice is somebody else would step up to review as well.
+Reviewers wanted!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
