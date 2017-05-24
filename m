@@ -1,45 +1,107 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 08/31] sd, sr: Convert two assignments into warning
- statements
-Date: Wed, 24 May 2017 09:52:11 +0200
-Message-ID: <7452f775-f802-8454-d929-b2953ee7955b@suse.de>
-References: <20170524003420.5381-1-bart.vanassche@sandisk.com>
- <20170524003420.5381-9-bart.vanassche@sandisk.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+From: Maurizio Lombardi <mlombard@redhat.com>
+Subject: [PATCH] bnx2fc: fix race condition in bnx2fc_get_host_stats()
+Date: Wed, 24 May 2017 14:09:44 +0200
+Message-ID: <1495627784-21048-1-git-send-email-mlombard@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54704 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S966972AbdEXHwN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 24 May 2017 03:52:13 -0400
-In-Reply-To: <20170524003420.5381-9-bart.vanassche@sandisk.com>
-Content-Language: en-US
+Received: from mx1.redhat.com ([209.132.183.28]:41020 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752119AbdEXMJq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 24 May 2017 08:09:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>
+To: QLogic-Storage-Upstream@qlogic.com
+Cc: linux-scsi@vger.kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 
-On 05/24/2017 02:33 AM, Bart Van Assche wrote:
-> Before scsi_prep_fn() calls the ULP .init_command() callback
-> function it stores the SCSI command pointer in request.special.
-> This means that the SCpnt = rq->special assignments in the sd
-> and sr drivers assign a pointer to itself. Hence convert these
-> two assignment statements into warning statements.
-> 
-> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Hannes Reinecke <hare@suse.com>
-> Cc: Johannes Thumshirn <jthumshirn@suse.de>
-> ---
+If multiple tasks attempt to read the stats, it may happen
+that the start_req_done completion is re-initialized while
+still being used by another task, causing a list corruption.
 
-Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+This patch fixes the bug by adding a mutex to serialize the
+calls to bnx2fc_get_host_stats().
 
+WARNING: at lib/list_debug.c:48 list_del+0x6e/0xa0() (Not tainted)
+Hardware name: PowerEdge R820
+list_del corruption. prev->next should be ffff882035627d90, but was ffff884069541588
+
+Pid: 40267, comm: perl Not tainted 2.6.32-642.3.1.el6.x86_64 #1
+Call Trace:
+ [<ffffffff8107c691>] ? warn_slowpath_common+0x91/0xe0
+ [<ffffffff8107c796>] ? warn_slowpath_fmt+0x46/0x60
+ [<ffffffff812ad16e>] ? list_del+0x6e/0xa0
+ [<ffffffff81547eed>] ? wait_for_common+0x14d/0x180
+ [<ffffffff8106c4a0>] ? default_wake_function+0x0/0x20
+ [<ffffffff81547fd3>] ? wait_for_completion_timeout+0x13/0x20
+ [<ffffffffa05410b1>] ? bnx2fc_get_host_stats+0xa1/0x280 [bnx2fc]
+ [<ffffffffa04cf630>] ? fc_stat_show+0x90/0xc0 [scsi_transport_fc]
+ [<ffffffffa04cf8b6>] ? show_fcstat_tx_frames+0x16/0x20 [scsi_transport_fc]
+ [<ffffffff8137c647>] ? dev_attr_show+0x27/0x50
+ [<ffffffff8113b9be>] ? __get_free_pages+0xe/0x50
+ [<ffffffff812170e1>] ? sysfs_read_file+0x111/0x200
+ [<ffffffff8119a305>] ? vfs_read+0xb5/0x1a0
+ [<ffffffff8119b0b6>] ? fget_light_pos+0x16/0x50
+ [<ffffffff8119a651>] ? sys_read+0x51/0xb0
+ [<ffffffff810ee1fe>] ? __audit_syscall_exit+0x25e/0x290
+ [<ffffffff8100b0d2>] ? system_call_fastpath+0x16/0x1b
+
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+---
+ drivers/scsi/bnx2fc/bnx2fc.h      |  1 +
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 10 ++++++++--
+ 2 files changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
+index 4fc8ed5..1f424e4 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc.h
++++ b/drivers/scsi/bnx2fc/bnx2fc.h
+@@ -191,6 +191,7 @@ struct bnx2fc_hba {
+ 	struct bnx2fc_cmd_mgr *cmd_mgr;
+ 	spinlock_t hba_lock;
+ 	struct mutex hba_mutex;
++	struct mutex hba_stats_mutex;
+ 	unsigned long adapter_state;
+ 		#define ADAPTER_STATE_UP		0
+ 		#define ADAPTER_STATE_GOING_DOWN	1
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 93b5a00..902722d 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -663,15 +663,17 @@ static struct fc_host_statistics *bnx2fc_get_host_stats(struct Scsi_Host *shost)
+ 	if (!fw_stats)
+ 		return NULL;
+ 
++	mutex_lock(&hba->hba_stats_mutex);
++
+ 	bnx2fc_stats = fc_get_host_stats(shost);
+ 
+ 	init_completion(&hba->stat_req_done);
+ 	if (bnx2fc_send_stat_req(hba))
+-		return bnx2fc_stats;
++		goto unlock_stats_mutex;
+ 	rc = wait_for_completion_timeout(&hba->stat_req_done, (2 * HZ));
+ 	if (!rc) {
+ 		BNX2FC_HBA_DBG(lport, "FW stat req timed out\n");
+-		return bnx2fc_stats;
++		goto unlock_stats_mutex;
+ 	}
+ 	BNX2FC_STATS(hba, rx_stat2, fc_crc_cnt);
+ 	bnx2fc_stats->invalid_crc_count += hba->bfw_stats.fc_crc_cnt;
+@@ -693,6 +695,9 @@ static struct fc_host_statistics *bnx2fc_get_host_stats(struct Scsi_Host *shost)
+ 
+ 	memcpy(&hba->prev_stats, hba->stats_buffer,
+ 	       sizeof(struct fcoe_statistics_params));
++
++unlock_stats_mutex:
++	mutex_unlock(&hba->hba_stats_mutex);
+ 	return bnx2fc_stats;
+ }
+ 
+@@ -1340,6 +1345,7 @@ static struct bnx2fc_hba *bnx2fc_hba_create(struct cnic_dev *cnic)
+ 	}
+ 	spin_lock_init(&hba->hba_lock);
+ 	mutex_init(&hba->hba_mutex);
++	mutex_init(&hba->hba_stats_mutex);
+ 
+ 	hba->cnic = cnic;
+ 
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Maurizio Lombardi
