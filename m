@@ -1,160 +1,177 @@
 From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH 20/31] scsi: Only add commands to the device command list if required by the LLD
-Date: Tue, 23 May 2017 17:34:09 -0700
-Message-ID: <20170524003420.5381-21-bart.vanassche@sandisk.com>
+Subject: [PATCH 01/31] Split scsi_internal_device_block()
+Date: Tue, 23 May 2017 17:33:50 -0700
+Message-ID: <20170524003420.5381-2-bart.vanassche@sandisk.com>
 References: <20170524003420.5381-1-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:54147 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1763378AbdEXAed (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2017 20:34:33 -0400
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170524003420.5381-1-bart.vanassche@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Hannes Reinecke <hare@suse.com>
+Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Just like for the scsi-mq code path, in the single queue SCSI code
-path only add commands to the per-device command list if required
-by the SCSI LLD. This patch will make it easier to merge the
-single-queue and multiqueue command initialization code.
+Instead of passing a "wait" argument to scsi_internal_device_block(),
+split this function into a function that waits and a function that
+doesn't wait. This will make it easier to serialize SCSI device state
+changes through a mutex.
 
 Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Cc: Christoph Hellwig <hch@lst.de>
 Cc: Hannes Reinecke <hare@suse.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/scsi.c      |  9 +--------
- drivers/scsi/scsi_lib.c  | 52 +++++++++++++++++++++++++++++-------------------
- drivers/scsi/scsi_priv.h |  2 ++
- 3 files changed, 35 insertions(+), 28 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c |  4 +-
+ drivers/scsi/scsi_lib.c              | 73 +++++++++++++++++++++++-------------
+ include/scsi/scsi_device.h           |  2 +-
+ 3 files changed, 50 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 7bfbcfa7af40..485684aafb9b 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -108,14 +108,7 @@ EXPORT_SYMBOL(scsi_sd_pm_domain);
-  */
- void scsi_put_command(struct scsi_cmnd *cmd)
- {
--	unsigned long flags;
--
--	/* serious error if the command hasn't come from a device list */
--	spin_lock_irqsave(&cmd->device->list_lock, flags);
--	BUG_ON(list_empty(&cmd->list));
--	list_del_init(&cmd->list);
--	spin_unlock_irqrestore(&cmd->device->list_lock, flags);
--
-+	scsi_del_cmd_from_list(cmd);
- 	BUG_ON(delayed_work_pending(&cmd->abort_work));
- }
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index a5d872664257..c63bc5ccce37 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -2859,7 +2859,7 @@ _scsih_internal_device_block(struct scsi_device *sdev,
+ 	    sas_device_priv_data->sas_target->handle);
+ 	sas_device_priv_data->block = 1;
  
+-	r = scsi_internal_device_block(sdev, false);
++	r = scsi_internal_device_block_nowait(sdev);
+ 	if (r == -EINVAL)
+ 		sdev_printk(KERN_WARNING, sdev,
+ 		    "device_block failed with return(%d) for handle(0x%04x)\n",
+@@ -2895,7 +2895,7 @@ _scsih_internal_device_unblock(struct scsi_device *sdev,
+ 		    "performing a block followed by an unblock\n",
+ 		    r, sas_device_priv_data->sas_target->handle);
+ 		sas_device_priv_data->block = 1;
+-		r = scsi_internal_device_block(sdev, false);
++		r = scsi_internal_device_block_nowait(sdev);
+ 		if (r)
+ 			sdev_printk(KERN_WARNING, sdev, "retried device_block "
+ 			    "failed with return(%d) for handle(0x%04x)\n",
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 31d2b9cd20e5..5e2f26524475 100644
+index e3f89b0e7027..74618f47a28e 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -582,19 +582,9 @@ static void scsi_mq_free_sgtables(struct scsi_cmnd *cmd)
+@@ -2932,28 +2932,20 @@ scsi_target_resume(struct scsi_target *starget)
+ EXPORT_SYMBOL(scsi_target_resume);
  
- static void scsi_mq_uninit_cmd(struct scsi_cmnd *cmd)
+ /**
+- * scsi_internal_device_block - internal function to put a device temporarily into the SDEV_BLOCK state
+- * @sdev:	device to block
+- * @wait:	Whether or not to wait until ongoing .queuecommand() /
+- *		.queue_rq() calls have finished.
++ * scsi_internal_device_block_nowait - try to transition to the SDEV_BLOCK state
++ * @sdev: device to block
+  *
+- * Block request made by scsi lld's to temporarily stop all
+- * scsi commands on the specified device. May sleep.
++ * Pause SCSI command processing on the specified device. Does not sleep.
+  *
+- * Returns zero if successful or error if not
++ * Returns zero if successful or a negative error code upon failure.
+  *
+- * Notes:       
+- *	This routine transitions the device to the SDEV_BLOCK state
+- *	(which must be a legal transition).  When the device is in this
+- *	state, all commands are deferred until the scsi lld reenables
+- *	the device with scsi_device_unblock or device_block_tmo fires.
+- *
+- * To do: avoid that scsi_send_eh_cmnd() calls queuecommand() after
+- * scsi_internal_device_block() has blocked a SCSI device and also
+- * remove the rport mutex lock and unlock calls from srp_queuecommand().
++ * Notes:
++ * This routine transitions the device to the SDEV_BLOCK state (which must be
++ * a legal transition). When the device is in this state, command processing
++ * is paused until the device leaves the SDEV_BLOCK state. See also
++ * scsi_internal_device_unblock_nowait().
+  */
+-int
+-scsi_internal_device_block(struct scsi_device *sdev, bool wait)
++int scsi_internal_device_block_nowait(struct scsi_device *sdev)
  {
--	struct scsi_device *sdev = cmd->device;
--	struct Scsi_Host *shost = sdev->host;
--	unsigned long flags;
--
- 	scsi_mq_free_sgtables(cmd);
- 	scsi_uninit_cmd(cmd);
--
--	if (shost->use_cmd_list) {
--		BUG_ON(list_empty(&cmd->list));
--		spin_lock_irqsave(&sdev->list_lock, flags);
--		list_del_init(&cmd->list);
--		spin_unlock_irqrestore(&sdev->list_lock, flags);
--	}
-+	scsi_del_cmd_from_list(cmd);
- }
+ 	struct request_queue *q = sdev->request_queue;
+ 	unsigned long flags;
+@@ -2973,21 +2965,50 @@ scsi_internal_device_block(struct scsi_device *sdev, bool wait)
+ 	 * request queue. 
+ 	 */
+ 	if (q->mq_ops) {
+-		if (wait)
+-			blk_mq_quiesce_queue(q);
+-		else
+-			blk_mq_stop_hw_queues(q);
++		blk_mq_stop_hw_queues(q);
+ 	} else {
+ 		spin_lock_irqsave(q->queue_lock, flags);
+ 		blk_stop_queue(q);
+ 		spin_unlock_irqrestore(q->queue_lock, flags);
+-		if (wait)
+-			scsi_wait_for_queuecommand(sdev);
+ 	}
  
- /*
-@@ -1132,6 +1122,35 @@ int scsi_init_io(struct scsi_cmnd *cmd)
+ 	return 0;
  }
- EXPORT_SYMBOL(scsi_init_io);
- 
-+/* Add a command to the list used by the aacraid and dpt_i2o drivers */
-+void scsi_add_cmd_to_list(struct scsi_cmnd *cmd)
+-EXPORT_SYMBOL_GPL(scsi_internal_device_block);
++EXPORT_SYMBOL_GPL(scsi_internal_device_block_nowait);
++
++/**
++ * scsi_internal_device_block - try to transition to the SDEV_BLOCK state
++ * @sdev: device to block
++ *
++ * Pause SCSI command processing on the specified device and wait until all
++ * ongoing scsi_request_fn() / scsi_queue_rq() calls have finished. May sleep.
++ *
++ * Returns zero if successful or a negative error code upon failure.
++ *
++ * Note:
++ * This routine transitions the device to the SDEV_BLOCK state (which must be
++ * a legal transition). When the device is in this state, command processing
++ * is paused until the device leaves the SDEV_BLOCK state. See also
++ * scsi_internal_device_unblock().
++ *
++ * To do: avoid that scsi_send_eh_cmnd() calls queuecommand() after
++ * scsi_internal_device_block() has blocked a SCSI device and also
++ * remove the rport mutex lock and unlock calls from srp_queuecommand().
++ */
++static int scsi_internal_device_block(struct scsi_device *sdev)
 +{
-+	struct scsi_device *sdev = cmd->device;
-+	struct Scsi_Host *shost = sdev->host;
-+	unsigned long flags;
++	struct request_queue *q = sdev->request_queue;
++	int err;
 +
-+	if (shost->use_cmd_list) {
-+		spin_lock_irqsave(&sdev->list_lock, flags);
-+		list_add_tail(&cmd->list, &sdev->cmd_list);
-+		spin_unlock_irqrestore(&sdev->list_lock, flags);
++	err = scsi_internal_device_block_nowait(sdev);
++	if (err == 0) {
++		if (q->mq_ops)
++			blk_mq_quiesce_queue(q);
++		else
++			scsi_wait_for_queuecommand(sdev);
 +	}
++	return err;
 +}
-+
-+/* Remove a command from the list used by the aacraid and dpt_i2o drivers */
-+void scsi_del_cmd_from_list(struct scsi_cmnd *cmd)
-+{
-+	struct scsi_device *sdev = cmd->device;
-+	struct Scsi_Host *shost = sdev->host;
-+	unsigned long flags;
-+
-+	if (shost->use_cmd_list) {
-+		spin_lock_irqsave(&sdev->list_lock, flags);
-+		BUG_ON(list_empty(&cmd->list));
-+		list_del_init(&cmd->list);
-+		spin_unlock_irqrestore(&sdev->list_lock, flags);
-+	}
-+}
-+
- /* Called from inside blk_get_request() */
- static void scsi_initialize_rq(struct request *rq)
+  
+ /**
+  * scsi_internal_device_unblock - resume a device after a block request
+@@ -3044,7 +3065,7 @@ EXPORT_SYMBOL_GPL(scsi_internal_device_unblock);
+ static void
+ device_block(struct scsi_device *sdev, void *data)
  {
-@@ -1145,7 +1164,6 @@ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
- {
- 	void *buf = cmd->sense_buffer;
- 	void *prot = cmd->prot_sdb;
--	unsigned long flags;
- 
- 	/* zero out the cmd, except for the embedded scsi_request */
- 	memset((char *)cmd + sizeof(cmd->req), 0,
-@@ -1157,9 +1175,7 @@ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
- 	INIT_DELAYED_WORK(&cmd->abort_work, scmd_eh_abort_handler);
- 	cmd->jiffies_at_alloc = jiffies;
- 
--	spin_lock_irqsave(&dev->list_lock, flags);
--	list_add_tail(&cmd->list, &dev->cmd_list);
--	spin_unlock_irqrestore(&dev->list_lock, flags);
-+	scsi_add_cmd_to_list(cmd);
+-	scsi_internal_device_block(sdev, true);
++	scsi_internal_device_block(sdev);
  }
  
- static int scsi_setup_scsi_cmnd(struct scsi_device *sdev, struct request *req)
-@@ -1874,11 +1890,7 @@ static int scsi_mq_prep_fn(struct request *req)
- 	INIT_DELAYED_WORK(&cmd->abort_work, scmd_eh_abort_handler);
- 	cmd->jiffies_at_alloc = jiffies;
+ static int
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 05641aebd181..6ce6888f3c69 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -472,7 +472,7 @@ static inline int scsi_device_created(struct scsi_device *sdev)
+ 		sdev->sdev_state == SDEV_CREATED_BLOCK;
+ }
  
--	if (shost->use_cmd_list) {
--		spin_lock_irq(&sdev->list_lock);
--		list_add_tail(&cmd->list, &sdev->cmd_list);
--		spin_unlock_irq(&sdev->list_lock);
--	}
-+	scsi_add_cmd_to_list(cmd);
+-int scsi_internal_device_block(struct scsi_device *sdev, bool wait);
++int scsi_internal_device_block_nowait(struct scsi_device *sdev);
+ int scsi_internal_device_unblock(struct scsi_device *sdev,
+ 				 enum scsi_device_state new_state);
  
- 	sg = (void *)cmd + sizeof(struct scsi_cmnd) + shost->hostt->cmd_size;
- 	cmd->sdb.table.sgl = sg;
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index f86057842f9a..c11c1f9c912c 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -80,6 +80,8 @@ int scsi_eh_get_sense(struct list_head *work_q,
- int scsi_noretry_cmd(struct scsi_cmnd *scmd);
- 
- /* scsi_lib.c */
-+extern void scsi_add_cmd_to_list(struct scsi_cmnd *cmd);
-+extern void scsi_del_cmd_from_list(struct scsi_cmnd *cmd);
- extern int scsi_maybe_unblock_host(struct scsi_device *sdev);
- extern void scsi_device_unbusy(struct scsi_device *sdev);
- extern void scsi_queue_insert(struct scsi_cmnd *cmd, int reason);
 -- 
 2.12.2
