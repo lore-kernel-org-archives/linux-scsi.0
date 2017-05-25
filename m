@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v2 01/22] scsi: hisi_sas: fix timeout check in hisi_sas_internal_task_abort()
-Date: Thu, 25 May 2017 20:04:50 +0800
-Message-ID: <1495713911-80476-2-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v2 04/22] scsi: hisi_sas: relocate sata_done_v2_hw()
+Date: Thu, 25 May 2017 20:04:53 +0800
+Message-ID: <1495713911-80476-5-git-send-email-john.garry@huawei.com>
 References: <1495713911-80476-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,67 +14,99 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-We need to check for timeout before task status, or the task will be
-mistook as completed internal abort command.
-Also add protection for sas_task.task_state_flags in
-hisi_sas_tmf_timedout().
+Relocate get_ata_protocol() to a common location, as future hw
+versions will require it.
+Also rename with "hisi_sas_" prefix for consistency.
 
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 25 +++++++++++++++++--------
- 1 file changed, 17 insertions(+), 8 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas.h       |  2 ++
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 15 +++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 18 ++----------------
+ 3 files changed, 19 insertions(+), 16 deletions(-)
 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 02ec10b..d0c0844 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -357,6 +357,8 @@ struct hisi_sas_command_table_ssp {
+ 
+ extern u8 hisi_sas_get_ata_protocol(u8 cmd, int direction);
+ extern struct hisi_sas_port *to_hisi_sas_port(struct asd_sas_port *sas_port);
++extern void hisi_sas_sata_done(struct sas_task *task,
++			    struct hisi_sas_slot *slot);
+ extern int hisi_sas_probe(struct platform_device *pdev,
+ 			  const struct hisi_sas_hw *ops);
+ extern int hisi_sas_remove(struct platform_device *pdev);
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index f720d3c..3605d28 100644
+index 8fce20b..3f2bb8e 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -691,8 +691,13 @@ static void hisi_sas_task_done(struct sas_task *task)
- static void hisi_sas_tmf_timedout(unsigned long data)
- {
- 	struct sas_task *task = (struct sas_task *)data;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&task->task_state_lock, flags);
-+	if (!(task->task_state_flags & SAS_TASK_STATE_DONE))
-+		task->task_state_flags |= SAS_TASK_STATE_ABORTED;
-+	spin_unlock_irqrestore(&task->task_state_lock, flags);
+@@ -88,6 +88,21 @@ u8 hisi_sas_get_ata_protocol(u8 cmd, int direction)
+ }
+ EXPORT_SYMBOL_GPL(hisi_sas_get_ata_protocol);
  
--	task->task_state_flags |= SAS_TASK_STATE_ABORTED;
- 	complete(&task->slow_task->completion);
++void hisi_sas_sata_done(struct sas_task *task,
++			    struct hisi_sas_slot *slot)
++{
++	struct task_status_struct *ts = &task->task_status;
++	struct ata_task_resp *resp = (struct ata_task_resp *)ts->buf;
++	struct dev_to_host_fis *d2h = slot->status_buffer +
++				      sizeof(struct hisi_sas_err_record);
++
++	resp->frame_len = sizeof(struct dev_to_host_fis);
++	memcpy(&resp->ending_fis[0], d2h, sizeof(struct dev_to_host_fis));
++
++	ts->buf_valid_size = sizeof(*resp);
++}
++EXPORT_SYMBOL_GPL(hisi_sas_sata_done);
++
+ static struct hisi_hba *dev_to_hisi_hba(struct domain_device *device)
+ {
+ 	return device->port->ha->lldd_ha;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index 397f01e..51140dc 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -1679,20 +1679,6 @@ static int prep_ssp_v2_hw(struct hisi_hba *hisi_hba,
+ 	return 0;
  }
  
-@@ -1247,6 +1252,17 @@ static int hisi_sas_query_task(struct sas_task *task)
- 	wait_for_completion(&task->slow_task->completion);
- 	res = TMF_RESP_FUNC_FAILED;
- 
-+	/* Internal abort timed out */
-+	if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
-+		if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
-+			struct hisi_sas_slot *slot = task->lldd_task;
-+
-+			if (slot)
-+				slot->task = NULL;
-+			dev_err(dev, "internal task abort: timeout.\n");
-+		}
-+	}
-+
- 	if (task->task_status.resp == SAS_TASK_COMPLETE &&
- 		task->task_status.stat == TMF_RESP_FUNC_COMPLETE) {
- 		res = TMF_RESP_FUNC_COMPLETE;
-@@ -1259,13 +1275,6 @@ static int hisi_sas_query_task(struct sas_task *task)
- 		goto exit;
- 	}
- 
--	/* Internal abort timed out */
--	if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
--		if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
--			dev_err(dev, "internal task abort: timeout.\n");
--		}
--	}
+-static void sata_done_v2_hw(struct hisi_hba *hisi_hba, struct sas_task *task,
+-			    struct hisi_sas_slot *slot)
+-{
+-	struct task_status_struct *ts = &task->task_status;
+-	struct ata_task_resp *resp = (struct ata_task_resp *)ts->buf;
+-	struct dev_to_host_fis *d2h = slot->status_buffer +
+-				      sizeof(struct hisi_sas_err_record);
 -
- exit:
- 	dev_dbg(dev, "internal task abort: task to dev %016llx task=%p "
- 		"resp: 0x%x sts 0x%x\n",
+-	resp->frame_len = sizeof(struct dev_to_host_fis);
+-	memcpy(&resp->ending_fis[0], d2h, sizeof(struct dev_to_host_fis));
+-
+-	ts->buf_valid_size = sizeof(*resp);
+-}
+-
+ #define TRANS_TX_ERR	0
+ #define TRANS_RX_ERR	1
+ #define DMA_TX_ERR		2
+@@ -2185,7 +2171,7 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
+ 			break;
+ 		}
+ 		}
+-		sata_done_v2_hw(hisi_hba, task, slot);
++		hisi_sas_sata_done(task, slot);
+ 	}
+ 		break;
+ 	default:
+@@ -2313,7 +2299,7 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
+ 	case SAS_PROTOCOL_SATA | SAS_PROTOCOL_STP:
+ 	{
+ 		ts->stat = SAM_STAT_GOOD;
+-		sata_done_v2_hw(hisi_hba, task, slot);
++		hisi_sas_sata_done(task, slot);
+ 		break;
+ 	}
+ 	default:
 -- 
 1.9.1
