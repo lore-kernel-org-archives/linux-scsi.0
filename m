@@ -1,176 +1,109 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v2 17/22] scsi: hisi_sas: add v3 code for itct setup and free
-Date: Thu, 25 May 2017 20:05:06 +0800
-Message-ID: <1495713911-80476-18-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v2 21/22] scsi: hisi_sas: add v3 code to fill some more hw function pointers
+Date: Thu, 25 May 2017 20:05:10 +0800
+Message-ID: <1495713911-80476-22-git-send-email-john.garry@huawei.com>
 References: <1495713911-80476-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([45.249.212.188]:6386 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1763961AbdEYLeh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 May 2017 07:34:37 -0400
 In-Reply-To: <1495713911-80476-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: john.garry2@mail.dcu.ie, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Add code to itct setup and free for v3 hw.
+Add code to fill the interface of phy_hard_reset, phy_get_max_linkrate,
+and phy enable/disable.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 115 +++++++++++++++++++++++++++++++++
- 1 file changed, 115 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 39 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index e682ad7..c8b6997 100644
+index 9add347..4a6f5c7 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -24,6 +24,11 @@
- #define PHY_PORT_NUM_MA			0x28
- #define PHY_CONN_RATE			0x30
- #define AXI_AHB_CLK_CFG			0x3c
-+#define ITCT_CLR			0x44
-+#define ITCT_CLR_EN_OFF			16
-+#define ITCT_CLR_EN_MSK			(0x1 << ITCT_CLR_EN_OFF)
-+#define ITCT_DEV_OFF			0
-+#define ITCT_DEV_MSK			(0x7ff << ITCT_DEV_OFF)
- #define AXI_USER1			0x48
- #define AXI_USER2			0x4c
- #define IO_SATA_BROKEN_MSG_ADDR_LO	0x58
-@@ -226,6 +231,27 @@
- #define CMPLT_HDR_IO_IN_TARGET_OFF	17
- #define CMPLT_HDR_IO_IN_TARGET_MSK	(0x1 << CMPLT_HDR_IO_IN_TARGET_OFF)
- 
-+/* ITCT header */
-+/* qw0 */
-+#define ITCT_HDR_DEV_TYPE_OFF		0
-+#define ITCT_HDR_DEV_TYPE_MSK		(0x3 << ITCT_HDR_DEV_TYPE_OFF)
-+#define ITCT_HDR_VALID_OFF		2
-+#define ITCT_HDR_VALID_MSK		(0x1 << ITCT_HDR_VALID_OFF)
-+#define ITCT_HDR_MCR_OFF		5
-+#define ITCT_HDR_MCR_MSK		(0xf << ITCT_HDR_MCR_OFF)
-+#define ITCT_HDR_VLN_OFF		9
-+#define ITCT_HDR_VLN_MSK		(0xf << ITCT_HDR_VLN_OFF)
-+#define ITCT_HDR_SMP_TIMEOUT_OFF	16
-+#define ITCT_HDR_AWT_CONTINUE_OFF	25
-+#define ITCT_HDR_PORT_ID_OFF		28
-+#define ITCT_HDR_PORT_ID_MSK		(0xf << ITCT_HDR_PORT_ID_OFF)
-+/* qw2 */
-+#define ITCT_HDR_INLT_OFF		0
-+#define ITCT_HDR_INLT_MSK		(0xffffULL << ITCT_HDR_INLT_OFF)
-+#define ITCT_HDR_RTOLT_OFF		48
-+#define ITCT_HDR_RTOLT_MSK		(0xffffULL << ITCT_HDR_RTOLT_OFF)
-+
-+
- struct hisi_sas_complete_v3_hdr {
- 	__le32 dw0;
- 	__le32 dw1;
-@@ -446,6 +472,93 @@ static void config_id_frame_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
- 			__swab32(identify_buffer[5]));
+@@ -195,6 +195,8 @@
+ #define TXID_AUTO				(PORT_BASE + 0xb8)
+ #define CT3_OFF		1
+ #define CT3_MSK		(0x1 << CT3_OFF)
++#define TX_HARDRST_OFF          2
++#define TX_HARDRST_MSK          (0x1 << TX_HARDRST_OFF)
+ #define RX_IDAF_DWORD0			(PORT_BASE + 0xc4)
+ #define RXOP_CHECK_CFG_H		(PORT_BASE + 0xfc)
+ #define SAS_SSP_CON_TIMER_CFG		(PORT_BASE + 0x134)
+@@ -650,6 +652,14 @@ static void enable_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
  }
  
-+static void setup_itct_v3_hw(struct hisi_hba *hisi_hba,
-+			     struct hisi_sas_device *sas_dev)
++static void disable_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
 +{
-+	struct domain_device *device = sas_dev->sas_device;
-+	struct device *dev = hisi_hba->dev;
-+	u64 qw0, device_id = sas_dev->device_id;
-+	struct hisi_sas_itct *itct = &hisi_hba->itct[device_id];
-+	struct domain_device *parent_dev = device->parent;
-+	struct asd_sas_port *sas_port = device->port;
-+	struct hisi_sas_port *port = to_hisi_sas_port(sas_port);
++	u32 cfg = hisi_sas_phy_read32(hisi_hba, phy_no, PHY_CFG);
 +
-+	memset(itct, 0, sizeof(*itct));
-+
-+	/* qw0 */
-+	qw0 = 0;
-+	switch (sas_dev->dev_type) {
-+	case SAS_END_DEVICE:
-+	case SAS_EDGE_EXPANDER_DEVICE:
-+	case SAS_FANOUT_EXPANDER_DEVICE:
-+		qw0 = HISI_SAS_DEV_TYPE_SSP << ITCT_HDR_DEV_TYPE_OFF;
-+		break;
-+	case SAS_SATA_DEV:
-+	case SAS_SATA_PENDING:
-+		if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
-+			qw0 = HISI_SAS_DEV_TYPE_STP << ITCT_HDR_DEV_TYPE_OFF;
-+		else
-+			qw0 = HISI_SAS_DEV_TYPE_SATA << ITCT_HDR_DEV_TYPE_OFF;
-+		break;
-+	default:
-+		dev_warn(dev, "setup itct: unsupported dev type (%d)\n",
-+			 sas_dev->dev_type);
-+	}
-+
-+	qw0 |= ((1 << ITCT_HDR_VALID_OFF) |
-+		(device->linkrate << ITCT_HDR_MCR_OFF) |
-+		(1 << ITCT_HDR_VLN_OFF) |
-+		(0xfa << ITCT_HDR_SMP_TIMEOUT_OFF) |
-+		(1 << ITCT_HDR_AWT_CONTINUE_OFF) |
-+		(port->id << ITCT_HDR_PORT_ID_OFF));
-+	itct->qw0 = cpu_to_le64(qw0);
-+
-+	/* qw1 */
-+	memcpy(&itct->sas_addr, device->sas_addr, SAS_ADDR_SIZE);
-+	itct->sas_addr = __swab64(itct->sas_addr);
-+
-+	/* qw2 */
-+	if (!dev_is_sata(device))
-+		itct->qw2 = cpu_to_le64((5000ULL << ITCT_HDR_INLT_OFF) |
-+					(0x1ULL << ITCT_HDR_RTOLT_OFF));
++	cfg &= ~PHY_CFG_ENA_MSK;
++	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
 +}
 +
-+static void free_device_v3_hw(struct hisi_hba *hisi_hba,
-+			      struct hisi_sas_device *sas_dev)
-+{
-+	u64 dev_id = sas_dev->device_id;
-+	struct device *dev = hisi_hba->dev;
-+	struct hisi_sas_itct *itct = &hisi_hba->itct[dev_id];
-+	u32 reg_val = hisi_sas_read32(hisi_hba, ENT_INT_SRC3);
-+
-+	/* clear the itct interrupt state */
-+	if (ENT_INT_SRC3_ITC_INT_MSK & reg_val)
-+		hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
-+				 ENT_INT_SRC3_ITC_INT_MSK);
-+
-+	/* clear the itct table*/
-+	reg_val = hisi_sas_read32(hisi_hba, ITCT_CLR);
-+	reg_val |= ITCT_CLR_EN_MSK | (dev_id & ITCT_DEV_MSK);
-+	hisi_sas_write32(hisi_hba, ITCT_CLR, reg_val);
-+
-+	udelay(10);
-+	reg_val = hisi_sas_read32(hisi_hba, ENT_INT_SRC3);
-+	if (ENT_INT_SRC3_ITC_INT_MSK & reg_val) {
-+		dev_dbg(dev, "got clear ITCT done interrupt\n");
-+
-+		/* invalid the itct state*/
-+		memset(itct, 0, sizeof(struct hisi_sas_itct));
-+		hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
-+				 ENT_INT_SRC3_ITC_INT_MSK);
-+		hisi_hba->devices[dev_id].dev_type = SAS_PHY_UNUSED;
-+		hisi_hba->devices[dev_id].dev_status = HISI_SAS_DEV_NORMAL;
-+
-+		/* clear the itct */
-+		hisi_sas_write32(hisi_hba, ITCT_CLR, 0);
-+		dev_dbg(dev, "clear ITCT ok\n");
-+	}
-+}
-+
- static int hw_init_v3_hw(struct hisi_hba *hisi_hba)
+ static void start_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
  {
- 	init_reg_v3_hw(hisi_hba);
-@@ -1568,9 +1681,11 @@ static void hisi_sas_v3_remove(struct pci_dev *pdev)
+ 	config_id_frame_v3_hw(hisi_hba, phy_no);
+@@ -657,6 +667,11 @@ static void start_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
+ 	enable_phy_v3_hw(hisi_hba, phy_no);
+ }
  
- static const struct hisi_sas_hw hisi_sas_v3_hw = {
- 	.hw_init = hisi_sas_v3_init,
-+	.setup_itct = setup_itct_v3_hw,
- 	.max_command_entries = HISI_SAS_COMMAND_ENTRIES_V3_HW,
- 	.sl_notify = sl_notify_v3_hw,
- 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v3_hdr),
-+	.free_device = free_device_v3_hw,
- 	.prep_ssp = prep_ssp_v3_hw,
- 	.prep_smp = prep_smp_v3_hw,
- 	.prep_stp = prep_ata_v3_hw,
++static void stop_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
++{
++	disable_phy_v3_hw(hisi_hba, phy_no);
++}
++
+ static void start_phys_v3_hw(struct hisi_hba *hisi_hba)
+ {
+ 	int i;
+@@ -665,6 +680,26 @@ static void start_phys_v3_hw(struct hisi_hba *hisi_hba)
+ 		start_phy_v3_hw(hisi_hba, i);
+ }
+ 
++static void phy_hard_reset_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
++{
++	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
++	u32 txid_auto;
++
++	stop_phy_v3_hw(hisi_hba, phy_no);
++	if (phy->identify.device_type == SAS_END_DEVICE) {
++		txid_auto = hisi_sas_phy_read32(hisi_hba, phy_no, TXID_AUTO);
++		hisi_sas_phy_write32(hisi_hba, phy_no, TXID_AUTO,
++					txid_auto | TX_HARDRST_MSK);
++	}
++	msleep(100);
++	start_phy_v3_hw(hisi_hba, phy_no);
++}
++
++enum sas_linkrate phy_get_max_linkrate_v3_hw(void)
++{
++	return SAS_LINK_RATE_12_0_GBPS;
++}
++
+ static void phys_init_v3_hw(struct hisi_hba *hisi_hba)
+ {
+ 	start_phys_v3_hw(hisi_hba);
+@@ -2141,6 +2176,10 @@ static void hisi_sas_v3_remove(struct pci_dev *pdev)
+ 	.start_delivery = start_delivery_v3_hw,
+ 	.slot_complete = slot_complete_v3_hw,
+ 	.phys_init = phys_init_v3_hw,
++	.phy_enable = enable_phy_v3_hw,
++	.phy_disable = disable_phy_v3_hw,
++	.phy_hard_reset = phy_hard_reset_v3_hw,
++	.phy_get_max_linkrate = phy_get_max_linkrate_v3_hw,
+ };
+ 
+ enum {
 -- 
 1.9.1
