@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v2 19/22] scsi: hisi_sas: add get_wideport_bitmap_v3_hw()
-Date: Thu, 25 May 2017 20:05:08 +0800
-Message-ID: <1495713911-80476-20-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v2 22/22] scsi: hisi_sas: modify internal abort dev flow for v3 hw
+Date: Thu, 25 May 2017 20:05:11 +0800
+Message-ID: <1495713911-80476-23-git-send-email-john.garry@huawei.com>
 References: <1495713911-80476-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,44 +14,136 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Add code for interface get_wide_port_bitmap_v3_hw().
+There is a change for abort dev for v3 hw: add registers to configure
+unaborted iptt for a device, and then inform this to logic.
 
-Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas.h       |  2 ++
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 15 +++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 28 ++++++++++++++++++++++++++++
+ 3 files changed, 45 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 6273368..4169e6a 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -616,6 +616,18 @@ static void sl_notify_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
- 	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 2315102..c465aab 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -181,6 +181,8 @@ struct hisi_sas_hw {
+ 	void (*free_device)(struct hisi_hba *hisi_hba,
+ 			    struct hisi_sas_device *dev);
+ 	int (*get_wideport_bitmap)(struct hisi_hba *hisi_hba, int port_id);
++	void (*dereg_device)(struct hisi_hba *hisi_hba,
++				struct domain_device *device);
+ 	int (*soft_reset)(struct hisi_hba *hisi_hba);
+ 	int max_command_entries;
+ 	int complete_hdr_size;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index a6d0bf8..1803374 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -760,6 +760,13 @@ static void hisi_sas_release_tasks(struct hisi_hba *hisi_hba)
+ 	}
  }
  
-+static int get_wideport_bitmap_v3_hw(struct hisi_hba *hisi_hba, int port_id)
++static void hisi_sas_dereg_device(struct hisi_hba *hisi_hba,
++				struct domain_device *device)
 +{
-+	int i, bitmap = 0;
-+	u32 phy_port_num_ma = hisi_sas_read32(hisi_hba, PHY_PORT_NUM_MA);
-+
-+	for (i = 0; i < hisi_hba->n_phy; i++)
-+		if (((phy_port_num_ma >> (i * 4)) & 0xf) == port_id)
-+			bitmap |= 1 << i;
-+
-+	return bitmap;
++	if (hisi_hba->hw->dereg_device)
++		hisi_hba->hw->dereg_device(hisi_hba, device);
 +}
 +
- /**
-  * The callpath to this function and upto writing the write
-  * queue pointer should be safe from interruption.
-@@ -1721,6 +1733,7 @@ static void hisi_sas_v3_remove(struct pci_dev *pdev)
- 	.setup_itct = setup_itct_v3_hw,
- 	.max_command_entries = HISI_SAS_COMMAND_ENTRIES_V3_HW,
- 	.sl_notify = sl_notify_v3_hw,
-+	.get_wideport_bitmap = get_wideport_bitmap_v3_hw,
- 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v3_hdr),
- 	.free_device = free_device_v3_hw,
- 	.prep_ssp = prep_ssp_v3_hw,
+ static void hisi_sas_dev_gone(struct domain_device *device)
+ {
+ 	struct hisi_sas_device *sas_dev = device->lldd_dev;
+@@ -773,6 +780,8 @@ static void hisi_sas_dev_gone(struct domain_device *device)
+ 	hisi_sas_internal_task_abort(hisi_hba, device,
+ 				     HISI_SAS_INT_ABT_DEV, 0);
+ 
++	hisi_sas_dereg_device(hisi_hba, device);
++
+ 	hisi_hba->hw->free_device(hisi_hba, sas_dev);
+ 	device->lldd_dev = NULL;
+ 	memset(sas_dev, 0, sizeof(*sas_dev));
+@@ -1104,6 +1113,7 @@ static int hisi_sas_abort_task(struct sas_task *task)
+ 		if (task->dev->dev_type == SAS_SATA_DEV) {
+ 			hisi_sas_internal_task_abort(hisi_hba, device,
+ 						     HISI_SAS_INT_ABT_DEV, 0);
++			hisi_sas_dereg_device(hisi_hba, device);
+ 			rc = hisi_sas_softreset_ata_disk(device);
+ 		}
+ 	} else if (task->lldd_task && task->task_proto & SAS_PROTOCOL_SMP) {
+@@ -1170,6 +1180,10 @@ static int hisi_sas_I_T_nexus_reset(struct domain_device *device)
+ 		return TMF_RESP_FUNC_FAILED;
+ 	sas_dev->dev_status = HISI_SAS_DEV_NORMAL;
+ 
++	hisi_sas_internal_task_abort(hisi_hba, device,
++					HISI_SAS_INT_ABT_DEV, 0);
++	hisi_sas_dereg_device(hisi_hba, device);
++
+ 	rc = hisi_sas_debug_I_T_nexus_reset(device);
+ 
+ 	if (rc == TMF_RESP_FUNC_COMPLETE) {
+@@ -1197,6 +1211,7 @@ static int hisi_sas_lu_reset(struct domain_device *device, u8 *lun)
+ 						  HISI_SAS_INT_ABT_DEV, 0);
+ 		if (rc == TMF_RESP_FUNC_FAILED)
+ 			goto out;
++		hisi_sas_dereg_device(hisi_hba, device);
+ 
+ 		phy = sas_get_local_phy(device);
+ 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 4a6f5c7..c1db7bc 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -50,6 +50,10 @@
+ #define CFG_ABT_SET_QUERY_IPTT	0xd4
+ #define CFG_SET_ABORTED_IPTT_OFF	0
+ #define CFG_SET_ABORTED_IPTT_MSK	(0xfff << CFG_SET_ABORTED_IPTT_OFF)
++#define CFG_SET_ABORTED_EN_OFF	12
++#define CFG_ABT_SET_IPTT_DONE	0xd8
++#define CFG_ABT_SET_IPTT_DONE_OFF	0
++#define HGC_IOMB_PROC1_STATUS	0x104
+ #define CFG_1US_TIMER_TRSH		0xcc
+ #define HGC_LM_DFX_STATUS2		0x128
+ #define HGC_LM_DFX_STATUS2_IOSTLIST_OFF		0
+@@ -637,6 +641,29 @@ static void free_device_v3_hw(struct hisi_hba *hisi_hba,
+ 	}
+ }
+ 
++static void dereg_device_v3_hw(struct hisi_hba *hisi_hba,
++				struct domain_device *device)
++{
++	struct hisi_sas_slot *slot, *slot2;
++	struct hisi_sas_device *sas_dev = device->lldd_dev;
++	u32 cfg_abt_set_query_iptt;
++
++	cfg_abt_set_query_iptt = hisi_sas_read32(hisi_hba,
++		CFG_ABT_SET_QUERY_IPTT);
++	list_for_each_entry_safe(slot, slot2, &sas_dev->list, entry) {
++		cfg_abt_set_query_iptt &= ~CFG_SET_ABORTED_IPTT_MSK;
++		cfg_abt_set_query_iptt |= (1 << CFG_SET_ABORTED_EN_OFF) |
++			(slot->idx << CFG_SET_ABORTED_IPTT_OFF);
++		hisi_sas_write32(hisi_hba, CFG_ABT_SET_QUERY_IPTT,
++			cfg_abt_set_query_iptt);
++	}
++	cfg_abt_set_query_iptt &= ~(1 << CFG_SET_ABORTED_EN_OFF);
++	hisi_sas_write32(hisi_hba, CFG_ABT_SET_QUERY_IPTT,
++		cfg_abt_set_query_iptt);
++	hisi_sas_write32(hisi_hba, CFG_ABT_SET_IPTT_DONE,
++					1 << CFG_ABT_SET_IPTT_DONE_OFF);
++}
++
+ static int hw_init_v3_hw(struct hisi_hba *hisi_hba)
+ {
+ 	init_reg_v3_hw(hisi_hba);
+@@ -2180,6 +2207,7 @@ static void hisi_sas_v3_remove(struct pci_dev *pdev)
+ 	.phy_disable = disable_phy_v3_hw,
+ 	.phy_hard_reset = phy_hard_reset_v3_hw,
+ 	.phy_get_max_linkrate = phy_get_max_linkrate_v3_hw,
++	.dereg_device = dereg_device_v3_hw,
+ };
+ 
+ enum {
 -- 
 1.9.1
