@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v2 16/22] scsi: hisi_sas: add v3 code to send ATA frame
-Date: Thu, 25 May 2017 20:05:05 +0800
-Message-ID: <1495713911-80476-17-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v2 18/22] scsi: hisi_sas: add v3 code to send internal abort command
+Date: Thu, 25 May 2017 20:05:07 +0800
+Message-ID: <1495713911-80476-19-git-send-email-john.garry@huawei.com>
 References: <1495713911-80476-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,146 +14,69 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Add code to prepare ATA frame for v3 hw
+Add code to prepare internal abort command.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 106 +++++++++++++++++++++++++++++++++
- 1 file changed, 106 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 38 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 5de4738..e682ad7 100644
+index c8b6997..6273368 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -171,8 +171,11 @@
- #define CMD_HDR_CMD_OFF			29
- #define CMD_HDR_CMD_MSK			(0x7 << CMD_HDR_CMD_OFF)
- /* dw1 */
-+#define CMD_HDR_UNCON_CMD_OFF	3
- #define CMD_HDR_DIR_OFF			5
- #define CMD_HDR_DIR_MSK			(0x3 << CMD_HDR_DIR_OFF)
-+#define CMD_HDR_RESET_OFF		7
-+#define CMD_HDR_RESET_MSK		(0x1 << CMD_HDR_RESET_OFF)
- #define CMD_HDR_VDTL_OFF		10
- #define CMD_HDR_VDTL_MSK		(0x1 << CMD_HDR_VDTL_OFF)
- #define CMD_HDR_FRAME_TYPE_OFF		11
-@@ -182,6 +185,8 @@
- /* dw2 */
- #define CMD_HDR_CFL_OFF			0
- #define CMD_HDR_CFL_MSK			(0x1ff << CMD_HDR_CFL_OFF)
-+#define CMD_HDR_NCQ_TAG_OFF		10
-+#define CMD_HDR_NCQ_TAG_MSK		(0x1f << CMD_HDR_NCQ_TAG_OFF)
- #define CMD_HDR_MRFL_OFF		15
- #define CMD_HDR_MRFL_MSK		(0x1ff << CMD_HDR_MRFL_OFF)
- #define CMD_HDR_SG_MOD_OFF		24
-@@ -246,6 +251,11 @@ enum {
- #define DIR_TO_DEVICE 2
- #define DIR_RESERVED 3
+@@ -165,6 +165,10 @@
+ /* HW dma structures */
+ /* Delivery queue header */
+ /* dw0 */
++#define CMD_HDR_ABORT_FLAG_OFF		0
++#define CMD_HDR_ABORT_FLAG_MSK		(0x3 << CMD_HDR_ABORT_FLAG_OFF)
++#define CMD_HDR_ABORT_DEVICE_TYPE_OFF	2
++#define CMD_HDR_ABORT_DEVICE_TYPE_MSK	(0x1 << CMD_HDR_ABORT_DEVICE_TYPE_OFF)
+ #define CMD_HDR_RESP_REPORT_OFF		5
+ #define CMD_HDR_RESP_REPORT_MSK		(0x1 << CMD_HDR_RESP_REPORT_OFF)
+ #define CMD_HDR_TLR_CTRL_OFF		6
+@@ -204,6 +208,11 @@
+ #define CMD_HDR_DIF_SGL_LEN_MSK		(0xffff << CMD_HDR_DIF_SGL_LEN_OFF)
+ #define CMD_HDR_DATA_SGL_LEN_OFF	16
+ #define CMD_HDR_DATA_SGL_LEN_MSK	(0xffff << CMD_HDR_DATA_SGL_LEN_OFF)
++/* dw7 */
++#define CMD_HDR_ADDR_MODE_SEL_OFF		15
++#define CMD_HDR_ADDR_MODE_SEL_MSK		(1 << CMD_HDR_ADDR_MODE_SEL_OFF)
++#define CMD_HDR_ABORT_IPTT_OFF		16
++#define CMD_HDR_ABORT_IPTT_MSK		(0xffff << CMD_HDR_ABORT_IPTT_OFF)
  
-+#define CMD_IS_UNCONSTRAINT(cmd) \
-+	((cmd == ATA_CMD_READ_LOG_EXT) || \
-+	(cmd == ATA_CMD_READ_LOG_DMA_EXT) || \
-+	(cmd == ATA_CMD_DEV_RESET))
-+
- static u32 hisi_sas_read32(struct hisi_hba *hisi_hba, u32 off)
- {
- 	void __iomem *regs = hisi_hba->regs + off;
-@@ -711,6 +721,101 @@ static int prep_smp_v3_hw(struct hisi_hba *hisi_hba,
- 	return rc;
+ /* Completion header */
+ /* dw0 */
+@@ -929,6 +938,34 @@ static int prep_ata_v3_hw(struct hisi_hba *hisi_hba,
+ 	return 0;
  }
  
-+static int get_ncq_tag_v3_hw(struct sas_task *task, u32 *tag)
-+{
-+	struct ata_queued_cmd *qc = task->uldd_task;
-+
-+	if (qc) {
-+		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
-+			qc->tf.command == ATA_CMD_FPDMA_READ) {
-+			*tag = qc->tag;
-+			return 1;
-+		}
-+	}
-+	return 0;
-+}
-+
-+static int prep_ata_v3_hw(struct hisi_hba *hisi_hba,
-+			  struct hisi_sas_slot *slot)
++static int prep_abort_v3_hw(struct hisi_hba *hisi_hba,
++		struct hisi_sas_slot *slot,
++		int device_id, int abort_flag, int tag_to_abort)
 +{
 +	struct sas_task *task = slot->task;
-+	struct domain_device *device = task->dev;
-+	struct domain_device *parent_dev = device->parent;
-+	struct hisi_sas_device *sas_dev = device->lldd_dev;
++	struct domain_device *dev = task->dev;
 +	struct hisi_sas_cmd_hdr *hdr = slot->cmd_hdr;
-+	struct asd_sas_port *sas_port = device->port;
-+	struct hisi_sas_port *port = to_hisi_sas_port(sas_port);
-+	u8 *buf_cmd;
-+	int has_data = 0, rc = 0, hdr_tag = 0;
-+	u32 dw1 = 0, dw2 = 0;
++	struct hisi_sas_port *port = slot->port;
 +
-+	hdr->dw0 = cpu_to_le32(port->id << CMD_HDR_PORT_OFF);
-+	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
-+		hdr->dw0 |= cpu_to_le32(3 << CMD_HDR_CMD_OFF);
-+	else
-+		hdr->dw0 |= cpu_to_le32(4 << CMD_HDR_CMD_OFF);
++	/* dw0 */
++	hdr->dw0 = cpu_to_le32((5 << CMD_HDR_CMD_OFF) | /*abort*/
++			       (port->id << CMD_HDR_PORT_OFF) |
++				   ((dev_is_sata(dev) ? 1:0)
++					<< CMD_HDR_ABORT_DEVICE_TYPE_OFF) |
++					(abort_flag
++					 << CMD_HDR_ABORT_FLAG_OFF));
 +
-+	switch (task->data_dir) {
-+	case DMA_TO_DEVICE:
-+		has_data = 1;
-+		dw1 |= DIR_TO_DEVICE << CMD_HDR_DIR_OFF;
-+		break;
-+	case DMA_FROM_DEVICE:
-+		has_data = 1;
-+		dw1 |= DIR_TO_INI << CMD_HDR_DIR_OFF;
-+		break;
-+	default:
-+		dw1 &= ~CMD_HDR_DIR_MSK;
-+	}
++	/* dw1 */
++	hdr->dw1 = cpu_to_le32(device_id
++			<< CMD_HDR_DEV_ID_OFF);
 +
-+	if ((task->ata_task.fis.command == ATA_CMD_DEV_RESET) &&
-+			(task->ata_task.fis.control & ATA_SRST))
-+		dw1 |= 1 << CMD_HDR_RESET_OFF;
-+
-+	dw1 |= (hisi_sas_get_ata_protocol(
-+		task->ata_task.fis.command, task->data_dir))
-+		<< CMD_HDR_FRAME_TYPE_OFF;
-+	dw1 |= sas_dev->device_id << CMD_HDR_DEV_ID_OFF;
-+
-+	if (CMD_IS_UNCONSTRAINT(task->ata_task.fis.command))
-+		dw1 |= 1 << CMD_HDR_UNCON_CMD_OFF;
-+
-+	hdr->dw1 = cpu_to_le32(dw1);
-+
-+	/* dw2 */
-+	if (task->ata_task.use_ncq && get_ncq_tag_v3_hw(task, &hdr_tag)) {
-+		task->ata_task.fis.sector_count |= (u8) (hdr_tag << 3);
-+		dw2 |= hdr_tag << CMD_HDR_NCQ_TAG_OFF;
-+	}
-+
-+	dw2 |= (HISI_SAS_MAX_STP_RESP_SZ / 4) << CMD_HDR_CFL_OFF |
-+			2 << CMD_HDR_SG_MOD_OFF;
-+	hdr->dw2 = cpu_to_le32(dw2);
-+
-+	/* dw3 */
++	/* dw7 */
++	hdr->dw7 = cpu_to_le32(tag_to_abort << CMD_HDR_ABORT_IPTT_OFF);
 +	hdr->transfer_tags = cpu_to_le32(slot->idx);
-+
-+	if (has_data) {
-+		rc = prep_prd_sge_v3_hw(hisi_hba, slot, hdr, task->scatter,
-+					slot->n_elem);
-+		if (rc)
-+			return rc;
-+	}
-+
-+	hdr->data_transfer_len = cpu_to_le32(task->total_xfer_len);
-+	hdr->cmd_table_addr = cpu_to_le64(slot->command_table_dma);
-+	hdr->sts_buffer_addr = cpu_to_le64(slot->status_buffer_dma);
-+
-+	buf_cmd = slot->command_table;
-+
-+	if (likely(!task->ata_task.device_control_reg_update))
-+		task->ata_task.fis.flags |= 0x80; /* C=1: update ATA cmd reg */
-+	/* fill in command FIS */
-+	memcpy(buf_cmd, &task->ata_task.fis, sizeof(struct host_to_dev_fis));
 +
 +	return 0;
 +}
@@ -161,11 +84,11 @@ index 5de4738..e682ad7 100644
  static int phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
  {
  	int i, res = 0;
-@@ -1468,6 +1573,7 @@ static void hisi_sas_v3_remove(struct pci_dev *pdev)
- 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v3_hdr),
+@@ -1689,6 +1726,7 @@ static void hisi_sas_v3_remove(struct pci_dev *pdev)
  	.prep_ssp = prep_ssp_v3_hw,
  	.prep_smp = prep_smp_v3_hw,
-+	.prep_stp = prep_ata_v3_hw,
+ 	.prep_stp = prep_ata_v3_hw,
++	.prep_abort = prep_abort_v3_hw,
  	.get_free_slot = get_free_slot_v3_hw,
  	.start_delivery = start_delivery_v3_hw,
  	.slot_complete = slot_complete_v3_hw,
