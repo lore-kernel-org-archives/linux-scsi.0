@@ -1,53 +1,125 @@
-From: Romain Perier <romain.perier@collabora.com>
-Subject: Re: [PATCH v9 06/15] mlx5: Replace PCI pool old API
-Date: Thu, 25 May 2017 13:37:33 +0200
-Message-ID: <6913fc09-ed8b-7f4a-4273-522f7c83c705@collabora.com>
-References: <20170522164907.22915-7-romain.perier@collabora.com>
- <20170523072743.GJ17751@mtr-leonro.local>
- <18745ec7-020a-a3d2-3e50-6a2405baaac2@collabora.com>
- <20170523.112658.1479025487863881513.davem@davemloft.net>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH v2 15/22] scsi: hisi_sas: add v3 code to send SMP frame
+Date: Thu, 25 May 2017 20:05:04 +0800
+Message-ID: <1495713911-80476-16-git-send-email-john.garry@huawei.com>
+References: <1495713911-80476-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170523.112658.1479025487863881513.davem@davemloft.net>
-Content-Language: en-US
+In-Reply-To: <1495713911-80476-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: leon@kernel.org, dan.j.williams@intel.com, dledford@redhat.com, sean.hefty@intel.com, hal.rosenstock@gmail.com, jeffrey.t.kirsher@intel.com, stas.yakovlev@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, balbi@kernel.org, gregkh@linuxfoundation.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, peter.senna@collabora.co.uk
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: john.garry2@mail.dcu.ie, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
+Add code to prepare SMP frame.
 
-Le 23/05/2017 à 17:26, David Miller a écrit :
-> From: Romain Perier <romain.perier@collabora.com>
-> Date: Tue, 23 May 2017 10:53:36 +0200
->
->> Hello,
->>
->>
->> Le 23/05/2017 à 09:27, Leon Romanovsky a écrit :
->>> On Mon, May 22, 2017 at 06:48:58PM +0200, Romain Perier wrote:
->>>> The PCI pool API is deprecated. This commit replaces the PCI pool old
->>>> API by the appropriate function with the DMA pool API.
->>>>
->>>> Signed-off-by: Romain Perier <romain.perier@collabora.com>
->>>> Reviewed-by: Peter Senna Tschudin <peter.senna@collabora.com>
->>>> Acked-by: Doug Ledford <dledford@redhat.com>
->>>> Tested-by: Doug Ledford <dledford@redhat.com>
->>>> ---
->>>>  drivers/net/ethernet/mellanox/mlx5/core/cmd.c | 11 ++++++-----
->>>>  include/linux/mlx5/driver.h                   |  2 +-
->>>>  2 files changed, 7 insertions(+), 6 deletions(-)
->>>>
->>> Who is supposed to merge this patch series?
->>>
->>> Acked-by: Leon Romanovsky <leonro@mellanox.com>
->> Each maintainer of the corresponding subsystem, can take a patch, I
->> guess. No ?
-> It might be easier to accumulate acks and you submit them as a series,
-> in my opinion.
-That's what I did already, no ?
+Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 74 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 74 insertions(+)
 
-Romain
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 7dd4804..5de4738 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -186,6 +186,9 @@
+ #define CMD_HDR_MRFL_MSK		(0x1ff << CMD_HDR_MRFL_OFF)
+ #define CMD_HDR_SG_MOD_OFF		24
+ #define CMD_HDR_SG_MOD_MSK		(0x3 << CMD_HDR_SG_MOD_OFF)
++/* dw3 */
++#define CMD_HDR_IPTT_OFF		0
++#define CMD_HDR_IPTT_MSK		(0xffff << CMD_HDR_IPTT_OFF)
+ /* dw6 */
+ #define CMD_HDR_DIF_SGL_LEN_OFF		0
+ #define CMD_HDR_DIF_SGL_LEN_MSK		(0xffff << CMD_HDR_DIF_SGL_LEN_OFF)
+@@ -638,6 +641,76 @@ static int prep_ssp_v3_hw(struct hisi_hba *hisi_hba,
+ 	return 0;
+ }
+ 
++static int prep_smp_v3_hw(struct hisi_hba *hisi_hba,
++			  struct hisi_sas_slot *slot)
++{
++	struct sas_task *task = slot->task;
++	struct hisi_sas_cmd_hdr *hdr = slot->cmd_hdr;
++	struct domain_device *device = task->dev;
++	struct device *dev = hisi_hba->dev;
++	struct hisi_sas_port *port = slot->port;
++	struct scatterlist *sg_req, *sg_resp;
++	struct hisi_sas_device *sas_dev = device->lldd_dev;
++	dma_addr_t req_dma_addr;
++	unsigned int req_len, resp_len;
++	int elem, rc;
++
++	/*
++	 * DMA-map SMP request, response buffers
++	 */
++	/* req */
++	sg_req = &task->smp_task.smp_req;
++	elem = dma_map_sg(dev, sg_req, 1, DMA_TO_DEVICE);
++	if (!elem)
++		return -ENOMEM;
++	req_len = sg_dma_len(sg_req);
++	req_dma_addr = sg_dma_address(sg_req);
++
++	/* resp */
++	sg_resp = &task->smp_task.smp_resp;
++	elem = dma_map_sg(dev, sg_resp, 1, DMA_FROM_DEVICE);
++	if (!elem) {
++		rc = -ENOMEM;
++		goto err_out_req;
++	}
++	resp_len = sg_dma_len(sg_resp);
++	if ((req_len & 0x3) || (resp_len & 0x3)) {
++		rc = -EINVAL;
++		goto err_out_resp;
++	}
++
++	/* create header */
++	/* dw0 */
++	hdr->dw0 = cpu_to_le32((port->id << CMD_HDR_PORT_OFF) |
++			       (1 << CMD_HDR_PRIORITY_OFF) | /* high pri */
++			       (2 << CMD_HDR_CMD_OFF)); /* smp */
++
++	/* map itct entry */
++	hdr->dw1 = cpu_to_le32((sas_dev->device_id << CMD_HDR_DEV_ID_OFF) |
++			       (1 << CMD_HDR_FRAME_TYPE_OFF) |
++			       (DIR_NO_DATA << CMD_HDR_DIR_OFF));
++
++	/* dw2 */
++	hdr->dw2 = cpu_to_le32((((req_len - 4) / 4) << CMD_HDR_CFL_OFF) |
++			       (HISI_SAS_MAX_SMP_RESP_SZ / 4 <<
++			       CMD_HDR_MRFL_OFF));
++
++	hdr->transfer_tags = cpu_to_le32(slot->idx << CMD_HDR_IPTT_OFF);
++
++	hdr->cmd_table_addr = cpu_to_le64(req_dma_addr);
++	hdr->sts_buffer_addr = cpu_to_le64(slot->status_buffer_dma);
++
++	return 0;
++
++err_out_resp:
++	dma_unmap_sg(dev, &slot->task->smp_task.smp_resp, 1,
++		     DMA_FROM_DEVICE);
++err_out_req:
++	dma_unmap_sg(dev, &slot->task->smp_task.smp_req, 1,
++		     DMA_TO_DEVICE);
++	return rc;
++}
++
+ static int phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
+ {
+ 	int i, res = 0;
+@@ -1394,6 +1467,7 @@ static void hisi_sas_v3_remove(struct pci_dev *pdev)
+ 	.sl_notify = sl_notify_v3_hw,
+ 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v3_hdr),
+ 	.prep_ssp = prep_ssp_v3_hw,
++	.prep_smp = prep_smp_v3_hw,
+ 	.get_free_slot = get_free_slot_v3_hw,
+ 	.start_delivery = start_delivery_v3_hw,
+ 	.slot_complete = slot_complete_v3_hw,
+-- 
+1.9.1
