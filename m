@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v2 20/22] scsi: hisi_sas: Add v3 code to support ECC and AXI bus fatal error
-Date: Thu, 25 May 2017 20:05:09 +0800
-Message-ID: <1495713911-80476-21-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v2 14/22] scsi: hisi_sas: add v3 code to send SSP frame
+Date: Thu, 25 May 2017 20:05:03 +0800
+Message-ID: <1495713911-80476-15-git-send-email-john.garry@huawei.com>
 References: <1495713911-80476-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,472 +14,263 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-For ECC 1bit error, logic can recover it, so we only print a warning.
-For ECC multi-bit and AXI bus fatal error, we panic.
-
-Note: once v3 hw controller reset support is added, the panic will
-      be replaced by a controller reset, like v2 hw.
+Add code to prepare SSP frame and deliver it to hardware.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 401 ++++++++++++++++++++++++++++++++-
- 1 file changed, 399 insertions(+), 2 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 209 ++++++++++++++++++++++++++++++++-
+ 1 file changed, 208 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 4169e6a..9add347 100644
+index f8ac239..7dd4804 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -51,7 +51,39 @@
- #define CFG_SET_ABORTED_IPTT_OFF	0
- #define CFG_SET_ABORTED_IPTT_MSK	(0xfff << CFG_SET_ABORTED_IPTT_OFF)
- #define CFG_1US_TIMER_TRSH		0xcc
-+#define HGC_LM_DFX_STATUS2		0x128
-+#define HGC_LM_DFX_STATUS2_IOSTLIST_OFF		0
-+#define HGC_LM_DFX_STATUS2_IOSTLIST_MSK	(0xfff <<\
-+					HGC_LM_DFX_STATUS2_IOSTLIST_OFF)
-+#define HGC_LM_DFX_STATUS2_ITCTLIST_OFF		12
-+#define HGC_LM_DFX_STATUS2_ITCTLIST_MSK	(0x7ff <<\
-+					HGC_LM_DFX_STATUS2_ITCTLIST_OFF)
-+#define HGC_CQE_ECC_ADDR		0x13c
-+#define HGC_CQE_ECC_1B_ADDR_OFF		0
-+#define HGC_CQE_ECC_1B_ADDR_MSK		(0x3f << HGC_CQE_ECC_1B_ADDR_OFF)
-+#define HGC_CQE_ECC_MB_ADDR_OFF		8
-+#define HGC_CQE_ECC_MB_ADDR_MSK		(0x3f << HGC_CQE_ECC_MB_ADDR_OFF)
-+#define HGC_IOST_ECC_ADDR		0x140
-+#define HGC_IOST_ECC_1B_ADDR_OFF	0
-+#define HGC_IOST_ECC_1B_ADDR_MSK	(0x3ff << HGC_IOST_ECC_1B_ADDR_OFF)
-+#define HGC_IOST_ECC_MB_ADDR_OFF	16
-+#define HGC_IOST_ECC_MB_ADDR_MSK	(0x3ff << HGC_IOST_ECC_MB_ADDR_OFF)
-+#define HGC_DQE_ECC_ADDR		0x144
-+#define HGC_DQE_ECC_1B_ADDR_OFF		0
-+#define HGC_DQE_ECC_1B_ADDR_MSK		(0xfff << HGC_DQE_ECC_1B_ADDR_OFF)
-+#define HGC_DQE_ECC_MB_ADDR_OFF		16
-+#define HGC_DQE_ECC_MB_ADDR_MSK		(0xfff << HGC_DQE_ECC_MB_ADDR_OFF)
- #define CHNL_INT_STATUS			0x148
-+#define HGC_ITCT_ECC_ADDR		0x150
-+#define HGC_ITCT_ECC_1B_ADDR_OFF	0
-+#define HGC_ITCT_ECC_1B_ADDR_MSK	(0x3ff << HGC_ITCT_ECC_1B_ADDR_OFF)
-+#define HGC_ITCT_ECC_MB_ADDR_OFF	16
-+#define HGC_ITCT_ECC_MB_ADDR_MSK	(0x3ff << HGC_ITCT_ECC_MB_ADDR_OFF)
-+#define HGC_AXI_FIFO_ERR_INFO	0x154
-+#define AXI_ERR_INFO_OFF		0
-+#define AXI_ERR_INFO_MSK		(0xff << AXI_ERR_INFO_OFF)
-+#define FIFO_ERR_INFO_OFF		8
-+#define FIFO_ERR_INFO_MSK		(0xff << FIFO_ERR_INFO_OFF)
- #define INT_COAL_EN			0x19c
- #define OQ_INT_COAL_TIME		0x1a0
- #define OQ_INT_COAL_CNT			0x1a4
-@@ -85,6 +117,26 @@
- #define ENT_INT_SRC_MSK3_ENT95_MSK_MSK	(0x1 << ENT_INT_SRC_MSK3_ENT95_MSK_OFF)
- #define SAS_ECC_INTR			0x1e8
- #define SAS_ECC_INTR_MSK		0x1ec
-+#define SAS_ECC_INTR_DQE_ECC_1B_OFF		0
-+#define SAS_ECC_INTR_DQE_ECC_MB_OFF		1
-+#define SAS_ECC_INTR_IOST_ECC_1B_OFF	2
-+#define SAS_ECC_INTR_IOST_ECC_MB_OFF	3
-+#define SAS_ECC_INTR_ITCT_ECC_MB_OFF	4
-+#define SAS_ECC_INTR_ITCT_ECC_1B_OFF	5
-+#define SAS_ECC_INTR_IOSTLIST_ECC_MB_OFF	6
-+#define SAS_ECC_INTR_IOSTLIST_ECC_1B_OFF	7
-+#define SAS_ECC_INTR_ITCTLIST_ECC_MB_OFF	8
-+#define SAS_ECC_INTR_ITCTLIST_ECC_1B_OFF	9
-+#define SAS_ECC_INTR_CQE_ECC_1B_OFF		10
-+#define SAS_ECC_INTR_CQE_ECC_MB_OFF		11
-+#define SAS_ECC_INTR_NCQ_MEM0_ECC_MB_OFF	12
-+#define SAS_ECC_INTR_NCQ_MEM0_ECC_1B_OFF	13
-+#define SAS_ECC_INTR_NCQ_MEM1_ECC_MB_OFF	14
-+#define SAS_ECC_INTR_NCQ_MEM1_ECC_1B_OFF	15
-+#define SAS_ECC_INTR_NCQ_MEM2_ECC_MB_OFF	16
-+#define SAS_ECC_INTR_NCQ_MEM2_ECC_1B_OFF	17
-+#define SAS_ECC_INTR_NCQ_MEM3_ECC_MB_OFF	18
-+#define SAS_ECC_INTR_NCQ_MEM3_ECC_1B_OFF	19
- #define HGC_ERR_STAT_EN			0x238
- #define DLVRY_Q_0_BASE_ADDR_LO		0x260
- #define DLVRY_Q_0_BASE_ADDR_HI		0x264
-@@ -98,6 +150,20 @@
- #define COMPL_Q_0_DEPTH			0x4e8
- #define COMPL_Q_0_WR_PTR		0x4ec
- #define COMPL_Q_0_RD_PTR		0x4f0
-+#define HGC_RXM_DFX_STATUS14	0xae8
-+#define HGC_RXM_DFX_STATUS14_MEM0_OFF		0
-+#define HGC_RXM_DFX_STATUS14_MEM0_MSK		(0x1ff <<\
-+						HGC_RXM_DFX_STATUS14_MEM0_OFF)
-+#define HGC_RXM_DFX_STATUS14_MEM1_OFF		9
-+#define HGC_RXM_DFX_STATUS14_MEM1_MSK		(0x1ff <<\
-+						HGC_RXM_DFX_STATUS14_MEM1_OFF)
-+#define HGC_RXM_DFX_STATUS14_MEM2_OFF		18
-+#define HGC_RXM_DFX_STATUS14_MEM2_MSK		(0x1ff <<\
-+						HGC_RXM_DFX_STATUS14_MEM2_OFF)
-+#define HGC_RXM_DFX_STATUS15	0xaec
-+#define HGC_RXM_DFX_STATUS15_MEM3_OFF		0
-+#define HGC_RXM_DFX_STATUS15_MEM3_MSK		(0x1ff <<\
-+						HGC_RXM_DFX_STATUS15_MEM3_OFF)
- #define AWQOS_AWCACHE_CFG	0xc84
- #define ARQOS_ARCACHE_CFG	0xc88
+@@ -157,6 +157,41 @@
+ #define SL_RX_BCAST_CHK_MSK		(PORT_BASE + 0x2c0)
+ #define PHYCTRL_OOB_RESTART_MSK		(PORT_BASE + 0x2c4)
  
-@@ -260,6 +326,7 @@
- #define ITCT_HDR_RTOLT_OFF		48
- #define ITCT_HDR_RTOLT_MSK		(0xffffULL << ITCT_HDR_RTOLT_OFF)
++/* HW dma structures */
++/* Delivery queue header */
++/* dw0 */
++#define CMD_HDR_RESP_REPORT_OFF		5
++#define CMD_HDR_RESP_REPORT_MSK		(0x1 << CMD_HDR_RESP_REPORT_OFF)
++#define CMD_HDR_TLR_CTRL_OFF		6
++#define CMD_HDR_TLR_CTRL_MSK		(0x3 << CMD_HDR_TLR_CTRL_OFF)
++#define CMD_HDR_PORT_OFF		18
++#define CMD_HDR_PORT_MSK		(0xf << CMD_HDR_PORT_OFF)
++#define CMD_HDR_PRIORITY_OFF		27
++#define CMD_HDR_PRIORITY_MSK		(0x1 << CMD_HDR_PRIORITY_OFF)
++#define CMD_HDR_CMD_OFF			29
++#define CMD_HDR_CMD_MSK			(0x7 << CMD_HDR_CMD_OFF)
++/* dw1 */
++#define CMD_HDR_DIR_OFF			5
++#define CMD_HDR_DIR_MSK			(0x3 << CMD_HDR_DIR_OFF)
++#define CMD_HDR_VDTL_OFF		10
++#define CMD_HDR_VDTL_MSK		(0x1 << CMD_HDR_VDTL_OFF)
++#define CMD_HDR_FRAME_TYPE_OFF		11
++#define CMD_HDR_FRAME_TYPE_MSK		(0x1f << CMD_HDR_FRAME_TYPE_OFF)
++#define CMD_HDR_DEV_ID_OFF		16
++#define CMD_HDR_DEV_ID_MSK		(0xffff << CMD_HDR_DEV_ID_OFF)
++/* dw2 */
++#define CMD_HDR_CFL_OFF			0
++#define CMD_HDR_CFL_MSK			(0x1ff << CMD_HDR_CFL_OFF)
++#define CMD_HDR_MRFL_OFF		15
++#define CMD_HDR_MRFL_MSK		(0x1ff << CMD_HDR_MRFL_OFF)
++#define CMD_HDR_SG_MOD_OFF		24
++#define CMD_HDR_SG_MOD_MSK		(0x3 << CMD_HDR_SG_MOD_OFF)
++/* dw6 */
++#define CMD_HDR_DIF_SGL_LEN_OFF		0
++#define CMD_HDR_DIF_SGL_LEN_MSK		(0xffff << CMD_HDR_DIF_SGL_LEN_OFF)
++#define CMD_HDR_DATA_SGL_LEN_OFF	16
++#define CMD_HDR_DATA_SGL_LEN_MSK	(0xffff << CMD_HDR_DATA_SGL_LEN_OFF)
++
+ /* Completion header */
+ /* dw0 */
+ #define CMPLT_HDR_CMPLT_OFF		0
+@@ -201,9 +236,13 @@ enum {
+ 	HISI_SAS_PHY_INT_NR
+ };
  
-+#define HISI_SAS_FATAL_INT_NR	2
+-
+ static const struct hisi_sas_hw hisi_sas_v3_hw;
  
- struct hisi_sas_complete_v3_hdr {
- 	__le32 dw0;
-@@ -1171,8 +1238,9 @@ static irqreturn_t int_chnl_int_v3_hw(int irq_no, void *p)
- 						irq_value1) {
- 			if (irq_value1 & (CHL_INT1_DMAC_RX_ECC_ERR_MSK |
- 					  CHL_INT1_DMAC_TX_ECC_ERR_MSK))
--				panic("%s: DMAC RX/TX ecc bad error! (0x%x)",
--					dev_name(dev), irq_value1);
-+				panic("%s: DMAC RX/TX ecc bad error!"
-+				      " (0x%x)",
-+				      dev_name(dev), irq_value1);
- 
- 			hisi_sas_phy_write32(hisi_hba, phy_no,
- 					     CHL_INT1, irq_value1);
-@@ -1199,6 +1267,320 @@ static irqreturn_t int_chnl_int_v3_hw(int irq_no, void *p)
- 	return IRQ_HANDLED;
++#define DIR_NO_DATA 0
++#define DIR_TO_INI 1
++#define DIR_TO_DEVICE 2
++#define DIR_RESERVED 3
++
+ static u32 hisi_sas_read32(struct hisi_hba *hisi_hba, u32 off)
+ {
+ 	void __iomem *regs = hisi_hba->regs + off;
+@@ -211,6 +250,13 @@ static u32 hisi_sas_read32(struct hisi_hba *hisi_hba, u32 off)
+ 	return readl(regs);
  }
  
-+static void one_bit_ecc_error_process_v3_hw(struct hisi_hba *hisi_hba,
-+		u32 irq_value)
++static u32 hisi_sas_read32_relaxed(struct hisi_hba *hisi_hba, u32 off)
 +{
-+	struct device *dev = hisi_hba->dev;
-+	u32 reg_val;
++	void __iomem *regs = hisi_hba->regs + off;
 +
-+	if (irq_value & BIT(SAS_ECC_INTR_DQE_ECC_1B_OFF)) {
-+		reg_val = hisi_sas_read32(hisi_hba, HGC_DQE_ECC_ADDR);
-+		dev_info(dev, "hgc_dqe_acc1b_intr found: Ram address is 0x%08X\n",
-+				(reg_val & HGC_DQE_ECC_1B_ADDR_MSK)
-+				>> HGC_DQE_ECC_1B_ADDR_OFF);
-+	}
-+
-+	if (irq_value & BIT(SAS_ECC_INTR_IOST_ECC_1B_OFF)) {
-+		reg_val = hisi_sas_read32(hisi_hba, HGC_IOST_ECC_ADDR);
-+		dev_info(dev, "hgc_iost_acc1b_intr found: Ram address is 0x%08X\n",
-+				(reg_val & HGC_IOST_ECC_1B_ADDR_MSK)
-+				>> HGC_IOST_ECC_1B_ADDR_OFF);
-+	}
-+
-+	if (irq_value & BIT(SAS_ECC_INTR_ITCT_ECC_1B_OFF)) {
-+		reg_val = hisi_sas_read32(hisi_hba, HGC_ITCT_ECC_ADDR);
-+		dev_info(dev, "hgc_itct_acc1b_intr found: Ram address is 0x%08X\n",
-+				(reg_val & HGC_ITCT_ECC_1B_ADDR_MSK)
-+				>> HGC_ITCT_ECC_1B_ADDR_OFF);
-+	}
-+
-+	if (irq_value & BIT(SAS_ECC_INTR_IOSTLIST_ECC_1B_OFF)) {
-+		reg_val = hisi_sas_read32(hisi_hba, HGC_LM_DFX_STATUS2);
-+		dev_info(dev, "hgc_iostl_acc1b_intr found: memory address is 0x%08X\n",
-+				(reg_val & HGC_LM_DFX_STATUS2_IOSTLIST_MSK)
-+				>> HGC_LM_DFX_STATUS2_IOSTLIST_OFF);
-+	}
-+
-+	if (irq_value & BIT(SAS_ECC_INTR_ITCTLIST_ECC_1B_OFF)) {
-+		reg_val = hisi_sas_read32(hisi_hba, HGC_LM_DFX_STATUS2);
-+		dev_info(dev, "hgc_itctl_acc1b_intr found: memory address is 0x%08X\n",
-+				(reg_val & HGC_LM_DFX_STATUS2_ITCTLIST_MSK)
-+				>> HGC_LM_DFX_STATUS2_ITCTLIST_OFF);
-+	}
-+
-+	if (irq_value & BIT(SAS_ECC_INTR_CQE_ECC_1B_OFF)) {
-+		reg_val = hisi_sas_read32(hisi_hba, HGC_CQE_ECC_ADDR);
-+		dev_info(dev, "hgc_cqe_acc1b_intr found: Ram address is 0x%08X\n",
-+				(reg_val & HGC_CQE_ECC_1B_ADDR_MSK)
-+				>> HGC_CQE_ECC_1B_ADDR_OFF);
-+	}
-+
-+	if (irq_value & BIT(SAS_ECC_INTR_NCQ_MEM0_ECC_1B_OFF)) {
-+		reg_val = hisi_sas_read32(hisi_hba, HGC_RXM_DFX_STATUS14);
-+		dev_info(dev, "rxm_mem0_acc1b_intr found: memory address is 0x%08X\n",
-+				(reg_val & HGC_RXM_DFX_STATUS14_MEM0_MSK)
-+				>> HGC_RXM_DFX_STATUS14_MEM0_OFF);
-+	}
-+
-+	if (irq_value & BIT(SAS_ECC_INTR_NCQ_MEM1_ECC_1B_OFF)) {
-+		reg_val = hisi_sas_read32(hisi_hba, HGC_RXM_DFX_STATUS14);
-+		dev_info(dev, "rxm_mem1_acc1b_intr found: memory address is 0x%08X\n",
-+				(reg_val & HGC_RXM_DFX_STATUS14_MEM1_MSK)
-+				>> HGC_RXM_DFX_STATUS14_MEM1_OFF);
-+	}
-+
-+	if (irq_value & BIT(SAS_ECC_INTR_NCQ_MEM2_ECC_1B_OFF)) {
-+		reg_val = hisi_sas_read32(hisi_hba, HGC_RXM_DFX_STATUS14);
-+		dev_info(dev, "rxm_mem2_acc1b_intr found: memory address is 0x%08X\n",
-+				(reg_val & HGC_RXM_DFX_STATUS14_MEM2_MSK)
-+				>> HGC_RXM_DFX_STATUS14_MEM2_OFF);
-+	}
-+
-+	if (irq_value & BIT(SAS_ECC_INTR_NCQ_MEM3_ECC_1B_OFF)) {
-+		reg_val = hisi_sas_read32(hisi_hba, HGC_RXM_DFX_STATUS15);
-+		dev_info(dev, "rxm_mem3_acc1b_intr found: memory address is 0x%08X\n",
-+				(reg_val & HGC_RXM_DFX_STATUS15_MEM3_MSK)
-+				>> HGC_RXM_DFX_STATUS15_MEM3_OFF);
-+	}
-+
++	return readl_relaxed(regs);
 +}
 +
-+static void multi_bit_ecc_error_process_v3_hw(struct hisi_hba *hisi_hba,
-+		u32 irq_value)
-+{
-+	u32 reg_val;
-+	struct device *dev = hisi_hba->dev;
-+
-+	if (irq_value & BIT(SAS_ECC_INTR_DQE_ECC_MB_OFF)) {
-+		reg_val = hisi_sas_read32(hisi_hba, HGC_DQE_ECC_ADDR);
-+		panic("%s: hgc_dqe_accbad_intr (0x%x) found:"
-+		      " Ram address is 0x%08X\n",
-+		      dev_name(dev), irq_value,
-+		      (reg_val & HGC_DQE_ECC_MB_ADDR_MSK)
-+		      >> HGC_DQE_ECC_MB_ADDR_OFF);
-+	}
-+
-+	if (irq_value & BIT(SAS_ECC_INTR_IOST_ECC_MB_OFF)) {
-+		reg_val = hisi_sas_read32(hisi_hba, HGC_IOST_ECC_ADDR);
-+		panic("%s: hgc_iost_accbad_intr (0x%x) found:"
-+		      " Ram address is 0x%08X\n",
-+		      dev_name(dev), irq_value,
-+		      (reg_val & HGC_IOST_ECC_MB_ADDR_MSK)
-+		      >> HGC_IOST_ECC_MB_ADDR_OFF);
-+	}
-+
-+	if (irq_value & BIT(SAS_ECC_INTR_ITCT_ECC_MB_OFF)) {
-+		reg_val = hisi_sas_read32(hisi_hba, HGC_ITCT_ECC_ADDR);
-+		panic("%s: hgc_itct_accbad_intr (0x%x) found:"
-+		      " Ram address is 0x%08X\n",
-+		      dev_name(dev), irq_value,
-+		      (reg_val & HGC_ITCT_ECC_MB_ADDR_MSK)
-+		      >> HGC_ITCT_ECC_MB_ADDR_OFF);
-+	}
-+
-+	if (irq_value & BIT(SAS_ECC_INTR_IOSTLIST_ECC_MB_OFF)) {
-+		reg_val = hisi_sas_read32(hisi_hba, HGC_LM_DFX_STATUS2);
-+		panic("%s: hgc_iostl_accbad_intr (0x%x) found:"
-+		      " memory address is 0x%08X\n",
-+		      dev_name(dev), irq_value,
-+		      (reg_val & HGC_LM_DFX_STATUS2_IOSTLIST_MSK)
-+		      >> HGC_LM_DFX_STATUS2_IOSTLIST_OFF);
-+	}
-+
-+	if (irq_value & BIT(SAS_ECC_INTR_ITCTLIST_ECC_MB_OFF)) {
-+		reg_val = hisi_sas_read32(hisi_hba, HGC_LM_DFX_STATUS2);
-+		panic("%s: hgc_itctl_accbad_intr (0x%x) found:"
-+		      " memory address is 0x%08X\n",
-+		      dev_name(dev), irq_value,
-+		      (reg_val & HGC_LM_DFX_STATUS2_ITCTLIST_MSK)
-+		      >> HGC_LM_DFX_STATUS2_ITCTLIST_OFF);
-+	}
-+
-+	if (irq_value & BIT(SAS_ECC_INTR_CQE_ECC_MB_OFF)) {
-+		reg_val = hisi_sas_read32(hisi_hba, HGC_CQE_ECC_ADDR);
-+		panic("%s: hgc_cqe_accbad_intr (0x%x) found:"
-+		      " Ram address is 0x%08X\n",
-+		      dev_name(dev), irq_value,
-+		      (reg_val & HGC_CQE_ECC_MB_ADDR_MSK)
-+		      >> HGC_CQE_ECC_MB_ADDR_OFF);
-+	}
-+
-+	if (irq_value & BIT(SAS_ECC_INTR_NCQ_MEM0_ECC_MB_OFF)) {
-+		reg_val = hisi_sas_read32(hisi_hba, HGC_RXM_DFX_STATUS14);
-+		panic("%s: rxm_mem0_accbad_intr (0x%x) found:"
-+		      "memory address is 0x%08X\n",
-+		      dev_name(dev), irq_value,
-+		      (reg_val & HGC_RXM_DFX_STATUS14_MEM0_MSK)
-+		      >> HGC_RXM_DFX_STATUS14_MEM0_OFF);
-+	}
-+
-+	if (irq_value & BIT(SAS_ECC_INTR_NCQ_MEM1_ECC_MB_OFF)) {
-+		reg_val = hisi_sas_read32(hisi_hba, HGC_RXM_DFX_STATUS14);
-+		panic("%s: rxm_mem1_accbad_intr (0x%x) found:"
-+		      " memory address is 0x%08X\n",
-+		      dev_name(dev), irq_value,
-+		      (reg_val & HGC_RXM_DFX_STATUS14_MEM1_MSK)
-+		      >> HGC_RXM_DFX_STATUS14_MEM1_OFF);
-+	}
-+
-+	if (irq_value & BIT(SAS_ECC_INTR_NCQ_MEM2_ECC_MB_OFF)) {
-+		reg_val = hisi_sas_read32(hisi_hba, HGC_RXM_DFX_STATUS14);
-+		panic("%s: rxm_mem2_accbad_intr (0x%x) found:"
-+		      " memory address is 0x%08X\n",
-+		      dev_name(dev), irq_value,
-+		      (reg_val & HGC_RXM_DFX_STATUS14_MEM2_MSK)
-+		      >> HGC_RXM_DFX_STATUS14_MEM2_OFF);
-+	}
-+
-+	if (irq_value & BIT(SAS_ECC_INTR_NCQ_MEM3_ECC_MB_OFF)) {
-+		reg_val = hisi_sas_read32(hisi_hba, HGC_RXM_DFX_STATUS15);
-+		panic("%s: rxm_mem3_accbad_intr (0x%x) found:"
-+		      " memory address is 0x%08X\n",
-+		      dev_name(dev), irq_value,
-+		      (reg_val & HGC_RXM_DFX_STATUS15_MEM3_MSK)
-+		      >> HGC_RXM_DFX_STATUS15_MEM3_OFF);
-+	}
-+
-+}
-+
-+static irqreturn_t fatal_ecc_int_v3_hw(int irq_no, struct hisi_hba *hisi_hba)
-+{
-+	u32 irq_value, irq_msk;
-+
-+	irq_msk = hisi_sas_read32(hisi_hba, SAS_ECC_INTR_MSK);
-+	hisi_sas_write32(hisi_hba, SAS_ECC_INTR_MSK, irq_msk | 0xffffffff);
-+
-+	irq_value = hisi_sas_read32(hisi_hba, SAS_ECC_INTR);
-+	if (irq_value) {
-+		multi_bit_ecc_error_process_v3_hw(hisi_hba, irq_value);
-+		one_bit_ecc_error_process_v3_hw(hisi_hba, irq_value);
-+	}
-+
-+	hisi_sas_write32(hisi_hba, SAS_ECC_INTR, irq_value);
-+	hisi_sas_write32(hisi_hba, SAS_ECC_INTR_MSK, irq_msk);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+#define AXI_ERR_NR	8
-+static const char axi_err_info[AXI_ERR_NR][32] = {
-+	"IOST_AXI_W_ERR",
-+	"IOST_AXI_R_ERR",
-+	"ITCT_AXI_W_ERR",
-+	"ITCT_AXI_R_ERR",
-+	"SATA_AXI_W_ERR",
-+	"SATA_AXI_R_ERR",
-+	"DQE_AXI_R_ERR",
-+	"CQE_AXI_W_ERR"
-+};
-+
-+#define FIFO_ERR_NR	5
-+static const char fifo_err_info[FIFO_ERR_NR][32] = {
-+	"CQE_WINFO_FIFO",
-+	"CQE_MSG_FIFIO",
-+	"GETDQE_FIFO",
-+	"CMDP_FIFO",
-+	"AWTCTRL_FIFO"
-+};
-+
-+static irqreturn_t fatal_axi_int_v3_hw(int irq_no, struct hisi_hba *hisi_hba)
-+{
-+	u32 irq_value, irq_msk, err_value;
-+	struct device *dev = hisi_hba->dev;
-+
-+	irq_msk = hisi_sas_read32(hisi_hba, ENT_INT_SRC_MSK3);
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, irq_msk | 0xfffffffe);
-+
-+	irq_value = hisi_sas_read32(hisi_hba, ENT_INT_SRC3);
-+	if (irq_value) {
-+		if (irq_value & BIT(ENT_INT_SRC3_WP_DEPTH_OFF)) {
-+			hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
-+					1 << ENT_INT_SRC3_WP_DEPTH_OFF);
-+			panic("%s: write pointer and depth error (0x%x) found!\n",
-+					dev_name(dev), irq_value);
-+		}
-+
-+		if (irq_value & BIT(ENT_INT_SRC3_IPTT_SLOT_NOMATCH_OFF)) {
-+			hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
-+				1 << ENT_INT_SRC3_IPTT_SLOT_NOMATCH_OFF);
-+			panic("%s: iptt no match slot error (0x%x) found!\n",
-+					dev_name(dev), irq_value);
-+		}
-+
-+		if (irq_value & BIT(ENT_INT_SRC3_RP_DEPTH_OFF))
-+			panic("%s: read pointer and depth error (0x%x) found!\n",
-+					dev_name(dev), irq_value);
-+
-+		if (irq_value & BIT(ENT_INT_SRC3_AXI_OFF)) {
-+			int i;
-+
-+			hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
-+					1 << ENT_INT_SRC3_AXI_OFF);
-+			err_value = hisi_sas_read32(hisi_hba,
-+						    HGC_AXI_FIFO_ERR_INFO);
-+
-+			for (i = 0; i < AXI_ERR_NR; i++) {
-+				if (err_value & BIT(i))
-+					panic("%s: %s (0x%x) found!\n",
-+					      dev_name(dev),
-+					      axi_err_info[i], irq_value);
-+			}
-+		}
-+
-+		if (irq_value & BIT(ENT_INT_SRC3_FIFO_OFF)) {
-+			int i;
-+
-+			hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
-+					1 << ENT_INT_SRC3_FIFO_OFF);
-+			err_value = hisi_sas_read32(hisi_hba,
-+						    HGC_AXI_FIFO_ERR_INFO);
-+
-+			for (i = 0; i < FIFO_ERR_NR; i++) {
-+				if (err_value & BIT(AXI_ERR_NR + i))
-+					panic("%s: %s (0x%x) found!\n",
-+					      dev_name(dev),
-+					      fifo_err_info[i], irq_value);
-+			}
-+
-+		}
-+
-+		if (irq_value & BIT(ENT_INT_SRC3_LM_OFF)) {
-+			hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
-+					1 << ENT_INT_SRC3_LM_OFF);
-+			panic("%s: LM add/fetch list error (0x%x) found!\n",
-+					dev_name(dev), irq_value);
-+		}
-+
-+		if (irq_value & BIT(ENT_INT_SRC3_ABT_OFF)) {
-+			hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
-+					1 << ENT_INT_SRC3_ABT_OFF);
-+			panic("%s: SAS_HGC_ABT fetch LM list error (0x%x) found!\n",
-+					dev_name(dev), irq_value);
-+		}
-+	}
-+
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, irq_msk);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static irqreturn_t fatal_interrupt_v3_hw(int irq_no, void *p)
-+{
-+	struct hisi_hba *hisi_hba = p;
-+	u32 irq_value1, irq_value2;
-+
-+	irq_value1 = hisi_sas_read32(hisi_hba, ENT_INT_SRC3);
-+	irq_value2 = hisi_sas_read32(hisi_hba, SAS_ECC_INTR);
-+
-+	if (irq_value1)
-+		return fatal_axi_int_v3_hw(irq_no, hisi_hba);
-+
-+	if (irq_value2)
-+		return fatal_ecc_int_v3_hw(irq_no, hisi_hba);
-+
-+	return IRQ_NONE;
-+}
-+
- static void slot_err_v3_hw(struct hisi_hba *hisi_hba,
- 				struct sas_task *task,
- 				struct hisi_sas_slot *slot)
-@@ -1525,6 +1907,21 @@ static int interrupt_init_v3_hw(struct hisi_hba *hisi_hba)
- 		}
- 	}
+ static void hisi_sas_write32(struct hisi_hba *hisi_hba, u32 off, u32 val)
+ {
+ 	void __iomem *regs = hisi_hba->regs + off;
+@@ -435,6 +481,163 @@ static void sl_notify_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
+ }
  
-+	irq = msi_vectors[11];
-+	if (!irq) {
-+		dev_err(dev, "irq init: fail map fatal interrupt 11\n");
-+		return -ENOENT;
++/**
++ * The callpath to this function and upto writing the write
++ * queue pointer should be safe from interruption.
++ */
++static int
++get_free_slot_v3_hw(struct hisi_hba *hisi_hba, struct hisi_sas_dq *dq)
++{
++	struct device *dev = hisi_hba->dev;
++	int queue = dq->id;
++	u32 r, w;
++
++	w = dq->wr_point;
++	r = hisi_sas_read32_relaxed(hisi_hba,
++				DLVRY_Q_0_RD_PTR + (queue * 0x14));
++	if (r == (w+1) % HISI_SAS_QUEUE_SLOTS) {
++		dev_warn(dev, "full queue=%d r=%d w=%d\n\n",
++				queue, r, w);
++		return -EAGAIN;
 +	}
 +
-+	rc = devm_request_irq(dev, irq, fatal_interrupt_v3_hw, 0,
-+			      DRV_NAME " fatal", hisi_hba);
-+	if (rc) {
-+		dev_err(dev,
-+			"irq init: could not request fatal interrupt 11, rc=%d\n",
-+			rc);
-+		return -ENOENT;
++	return 0;
++}
++
++static void start_delivery_v3_hw(struct hisi_sas_dq *dq)
++{
++	struct hisi_hba *hisi_hba = dq->hisi_hba;
++	int dlvry_queue = dq->slot_prep->dlvry_queue;
++	int dlvry_queue_slot = dq->slot_prep->dlvry_queue_slot;
++
++	dq->wr_point = ++dlvry_queue_slot % HISI_SAS_QUEUE_SLOTS;
++	hisi_sas_write32(hisi_hba, DLVRY_Q_0_WR_PTR + (dlvry_queue * 0x14),
++			 dq->wr_point);
++}
++
++static int prep_prd_sge_v3_hw(struct hisi_hba *hisi_hba,
++			      struct hisi_sas_slot *slot,
++			      struct hisi_sas_cmd_hdr *hdr,
++			      struct scatterlist *scatter,
++			      int n_elem)
++{
++	struct device *dev = hisi_hba->dev;
++	struct scatterlist *sg;
++	int i;
++
++	if (n_elem > HISI_SAS_SGE_PAGE_CNT) {
++		dev_err(dev, "prd err: n_elem(%d) > HISI_SAS_SGE_PAGE_CNT",
++			n_elem);
++		return -EINVAL;
 +	}
 +
- 	for (i = 0; i < hisi_hba->queue_count; i++) {
- 		int idx = i + 16; /* First cq interrupt is irq16 */
- 		struct hisi_sas_cq *cq = &hisi_hba->cq[i];
++	slot->sge_page = dma_pool_alloc(hisi_hba->sge_page_pool, GFP_ATOMIC,
++					&slot->sge_page_dma);
++	if (!slot->sge_page)
++		return -ENOMEM;
++
++	for_each_sg(scatter, sg, n_elem, i) {
++		struct hisi_sas_sge *entry = &slot->sge_page->sge[i];
++
++		entry->addr = cpu_to_le64(sg_dma_address(sg));
++		entry->page_ctrl_0 = entry->page_ctrl_1 = 0;
++		entry->data_len = cpu_to_le32(sg_dma_len(sg));
++		entry->data_off = 0;
++	}
++
++	hdr->prd_table_addr = cpu_to_le64(slot->sge_page_dma);
++	hdr->sg_len = cpu_to_le32(n_elem << CMD_HDR_DATA_SGL_LEN_OFF);
++
++	return 0;
++}
++
++static int prep_ssp_v3_hw(struct hisi_hba *hisi_hba,
++			  struct hisi_sas_slot *slot, int is_tmf,
++			  struct hisi_sas_tmf_task *tmf)
++{
++	struct sas_task *task = slot->task;
++	struct hisi_sas_cmd_hdr *hdr = slot->cmd_hdr;
++	struct domain_device *device = task->dev;
++	struct hisi_sas_device *sas_dev = device->lldd_dev;
++	struct hisi_sas_port *port = slot->port;
++	struct sas_ssp_task *ssp_task = &task->ssp_task;
++	struct scsi_cmnd *scsi_cmnd = ssp_task->cmd;
++	int has_data = 0, rc, priority = is_tmf;
++	u8 *buf_cmd;
++	u32 dw1 = 0, dw2 = 0;
++
++	hdr->dw0 = cpu_to_le32((1 << CMD_HDR_RESP_REPORT_OFF) |
++			       (2 << CMD_HDR_TLR_CTRL_OFF) |
++			       (port->id << CMD_HDR_PORT_OFF) |
++			       (priority << CMD_HDR_PRIORITY_OFF) |
++			       (1 << CMD_HDR_CMD_OFF)); /* ssp */
++
++	dw1 = 1 << CMD_HDR_VDTL_OFF;
++	if (is_tmf) {
++		dw1 |= 2 << CMD_HDR_FRAME_TYPE_OFF;
++		dw1 |= DIR_NO_DATA << CMD_HDR_DIR_OFF;
++	} else {
++		dw1 |= 1 << CMD_HDR_FRAME_TYPE_OFF;
++		switch (scsi_cmnd->sc_data_direction) {
++		case DMA_TO_DEVICE:
++			has_data = 1;
++			dw1 |= DIR_TO_DEVICE << CMD_HDR_DIR_OFF;
++			break;
++		case DMA_FROM_DEVICE:
++			has_data = 1;
++			dw1 |= DIR_TO_INI << CMD_HDR_DIR_OFF;
++			break;
++		default:
++			dw1 &= ~CMD_HDR_DIR_MSK;
++		}
++	}
++
++	/* map itct entry */
++	dw1 |= sas_dev->device_id << CMD_HDR_DEV_ID_OFF;
++	hdr->dw1 = cpu_to_le32(dw1);
++
++	dw2 = (((sizeof(struct ssp_command_iu) + sizeof(struct ssp_frame_hdr)
++	      + 3) / 4) << CMD_HDR_CFL_OFF) |
++	      ((HISI_SAS_MAX_SSP_RESP_SZ / 4) << CMD_HDR_MRFL_OFF) |
++	      (2 << CMD_HDR_SG_MOD_OFF);
++	hdr->dw2 = cpu_to_le32(dw2);
++	hdr->transfer_tags = cpu_to_le32(slot->idx);
++
++	if (has_data) {
++		rc = prep_prd_sge_v3_hw(hisi_hba, slot, hdr, task->scatter,
++					slot->n_elem);
++		if (rc)
++			return rc;
++	}
++
++	hdr->data_transfer_len = cpu_to_le32(task->total_xfer_len);
++	hdr->cmd_table_addr = cpu_to_le64(slot->command_table_dma);
++	hdr->sts_buffer_addr = cpu_to_le64(slot->status_buffer_dma);
++
++	buf_cmd = slot->command_table + sizeof(struct ssp_frame_hdr);
++	memcpy(buf_cmd, ssp_task->LUN, 8);
++
++	if (!is_tmf) {
++		buf_cmd[9] = ssp_task->task_attr | (ssp_task->task_prio << 3);
++		memcpy(buf_cmd + 12, scsi_cmnd->cmnd, scsi_cmnd->cmd_len);
++	} else {
++		buf_cmd[10] = tmf->tmf;
++		switch (tmf->tmf) {
++		case TMF_ABORT_TASK:
++		case TMF_QUERY_TASK:
++			buf_cmd[12] =
++				(tmf->tag_of_task_to_be_managed >> 8) & 0xff;
++			buf_cmd[13] =
++				tmf->tag_of_task_to_be_managed & 0xff;
++			break;
++		default:
++			break;
++		}
++	}
++
++	return 0;
++}
++
+ static int phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
+ {
+ 	int i, res = 0;
+@@ -1190,6 +1393,10 @@ static void hisi_sas_v3_remove(struct pci_dev *pdev)
+ 	.max_command_entries = HISI_SAS_COMMAND_ENTRIES_V3_HW,
+ 	.sl_notify = sl_notify_v3_hw,
+ 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v3_hdr),
++	.prep_ssp = prep_ssp_v3_hw,
++	.get_free_slot = get_free_slot_v3_hw,
++	.start_delivery = start_delivery_v3_hw,
++	.slot_complete = slot_complete_v3_hw,
+ 	.phys_init = phys_init_v3_hw,
+ };
+ 
 -- 
 1.9.1
