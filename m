@@ -1,59 +1,47 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 2/7] qla2xxx: Fix NULL pointer access due to redundant fc_host_port_name call
-Date: Wed, 24 May 2017 18:06:19 -0700
-Message-ID: <20170525010624.8886-3-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 4/7] qla2xxx: Modify T262 FW dump template to specify same start/end to debug customer issues.
+Date: Wed, 24 May 2017 18:06:21 -0700
+Message-ID: <20170525010624.8886-5-himanshu.madhani@cavium.com>
 References: <20170525010624.8886-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0070.outbound.protection.outlook.com ([104.47.32.70]:54770
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-co1nam03on0082.outbound.protection.outlook.com ([104.47.40.82]:5229
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1162190AbdEYBGe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 24 May 2017 21:06:34 -0400
+        id S1162163AbdEYBGg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 24 May 2017 21:06:36 -0400
 In-Reply-To: <20170525010624.8886-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Quinn Tran <quinn.tran@cavium.com>
+From: Joe Carnuccio <joe.carnuccio@cavium.com>
 
-Remove redundant fc_host_port_name calls to prevent
-early access of scsi_host->shost_data buffer. This
-prevent null pointer access.
+Firmware dump allows for debugging customer issues. This patch fixes
+start/end pointer calculation to capture T262 template entryfor dump
+tool.
 
-Following stack trace is seen
-
-BUG: unable to handle kernel NULL pointer dereference at 00000000000008
-IP: qla24xx_report_id_acquisition+0x22d/0x3a0 [qla2xxx]
-
-Cc: <stable@vger.kernel.org> # 4.11
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
+Cc: <stable@vger.kernel.org> # 4.10
+Signed-off-by: Joe Carnuccio <joe.carnuccio@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_mbx.c | 9 ---------
- 1 file changed, 9 deletions(-)
+ drivers/scsi/qla2xxx/qla_tmpl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index a113ab3592a7..12fea77e31c6 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -3676,15 +3676,6 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
- 				qlt_update_host_map(vha, id);
- 			}
+diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_tmpl.c
+index 8a58ef3adab4..c197972a3e2d 100644
+--- a/drivers/scsi/qla2xxx/qla_tmpl.c
++++ b/drivers/scsi/qla2xxx/qla_tmpl.c
+@@ -371,7 +371,7 @@ qla27xx_fwdt_entry_t262(struct scsi_qla_host *vha,
+ 		goto done;
+ 	}
  
--			fc_host_port_name(vha->host) =
--			    wwn_to_u64(vha->port_name);
--
--			if (qla_ini_mode_enabled(vha))
--				ql_dbg(ql_dbg_mbx, vha, 0x1018,
--				    "FA-WWN portname %016llx (%x)\n",
--				    fc_host_port_name(vha->host),
--				    rptid_entry->vp_status);
--
- 			set_bit(REGISTER_FC4_NEEDED, &vha->dpc_flags);
- 			set_bit(REGISTER_FDMI_NEEDED, &vha->dpc_flags);
- 		} else {
+-	if (end <= start || start == 0 || end == 0) {
++	if (end < start || start == 0 || end == 0) {
+ 		ql_dbg(ql_dbg_misc, vha, 0xd023,
+ 		    "%s: unusable range (start=%x end=%x)\n", __func__,
+ 		    ent->t262.end_addr, ent->t262.start_addr);
 -- 
 2.12.0
