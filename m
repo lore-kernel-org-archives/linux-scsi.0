@@ -1,83 +1,180 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v2 00/22] hisi_sas: hip08 support
-Date: Thu, 25 May 2017 20:04:49 +0800
-Message-ID: <1495713911-80476-1-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v2 07/22] scsi: hisi_sas: create hisi_sas_get_fw_info()
+Date: Thu, 25 May 2017 20:04:56 +0800
+Message-ID: <1495713911-80476-8-git-send-email-john.garry@huawei.com>
+References: <1495713911-80476-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1495713911-80476-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: john.garry2@mail.dcu.ie, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patchset adds support for the HiSilicon SAS controller
-in the hip08 chipset.
+Move the functionality to retrieve the fw info into
+a dedicated device type-agnostic function,
+hisi_sas_get_fw_info().
 
-The key difference compared to earlier chipsets is that the
-controller is an integrated PCI endpoint in hip08.
-As such, the controller is a pci device (not a platform device,
-like v2 hw in hip07).
+The reasoning is that this function will be required
+for future pci-based platforms.
 
-The driver is refactored so it can support both platform and 
-pci device-based controllers.
+Also add some debug prints for failure.
 
-New hw layer file hisi_sas_v3_hw.c is added for v3 hw
-support, which also includes pci device proving and
-initialisation. 
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas.h      |   1 +
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 103 ++++++++++++++++++++++------------
+ 2 files changed, 67 insertions(+), 37 deletions(-)
 
-Common functionality is still in hisi_sas_main.c, along with
-platform device probing and initialization.
-
-As for the patches, (ignoring #1 and #2) the first few
-reorganise some functions from v2 hw.c into main.c, as they
-are required for v3 hw. Then support is added for pci
-device-based controller in subsequent patches.
-And then hip08 support is added in the final patches.
-
-Differences to v1 series:
-- Addressed Arnd's comments, including:
- - read sas address from device node DSD under PCI host
-    bridge
- - add comment in fatal axi error patch commit log regarding
-    controller reset
- - eliminate hisi_sas_pci_init.c, and move functionality into
-    hisi_sas_v3_hw.c, eliminating one layer of indirection
-
-John Garry (4):
-  scsi: hisi_sas: add pci_dev in hisi_hba struct
-  scsi: hisi_sas: create hisi_sas_get_fw_info()
-  scsi: hisi_sas: add skeleton v3 hw driver
-  scsi: hisi_sas: add initialisation for v3 pci-based controller
-
-Xiang Chen (18):
-  scsi: hisi_sas: fix timeout check in hisi_sas_internal_task_abort()
-  scsi: hisi_sas: optimise the usage of hisi_hba.lock
-  scsi: hisi_sas: relocate get_ata_protocol()
-  scsi: hisi_sas: relocate sata_done_v2_hw()
-  scsi: hisi_sas: relocate get_ncq_tag_v2_hw()
-  scsi: hisi_sas: add v3 hw init
-  scsi: hisi_sas: add v3 hw PHY init
-  scsi: hisi_sas: add phy up/down/bcast and channel ISR
-  scsi: hisi_sas: add v3 cq interrupt handler
-  scsi: hisi_sas: add v3 code to send SSP frame
-  scsi: hisi_sas: add v3 code to send SMP frame
-  scsi: hisi_sas: add v3 code to send ATA frame
-  scsi: hisi_sas: add v3 code for itct setup and free
-  scsi: hisi_sas: add v3 code to send internal abort command
-  scsi: hisi_sas: add get_wideport_bitmap_v3_hw()
-  scsi: hisi_sas: Add v3 code to support ECC and AXI bus fatal error
-  scsi: hisi_sas: add v3 code to fill some more hw function pointers
-  scsi: hisi_sas: modify internal abort dev flow for v3 hw
-
- drivers/scsi/hisi_sas/Kconfig          |   10 +-
- drivers/scsi/hisi_sas/Makefile         |    1 +
- drivers/scsi/hisi_sas/hisi_sas.h       |   28 +-
- drivers/scsi/hisi_sas/hisi_sas_main.c  |  377 ++++--
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |   51 +-
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  175 +--
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 2236 ++++++++++++++++++++++++++++++++
- 7 files changed, 2622 insertions(+), 256 deletions(-)
- create mode 100644 drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 18044b7..d029aba 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -364,6 +364,7 @@ struct hisi_sas_command_table_ssp {
+ extern void hisi_sas_sata_done(struct sas_task *task,
+ 			    struct hisi_sas_slot *slot);
+ extern int hisi_sas_get_ncq_tag(struct sas_task *task, u32 *tag);
++extern int hisi_sas_get_fw_info(struct hisi_hba *hisi_hba);
+ extern int hisi_sas_probe(struct platform_device *pdev,
+ 			  const struct hisi_sas_hw *ops);
+ extern int hisi_sas_remove(struct platform_device *pdev);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index d4809cf..58c6cf0 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -1729,66 +1729,95 @@ static void hisi_sas_rst_work_handler(struct work_struct *work)
+ 	hisi_sas_controller_reset(hisi_hba);
+ }
+ 
+-static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
+-					      const struct hisi_sas_hw *hw)
++int hisi_sas_get_fw_info(struct hisi_hba *hisi_hba)
+ {
+-	struct resource *res;
+-	struct Scsi_Host *shost;
+-	struct hisi_hba *hisi_hba;
+-	struct device *dev = &pdev->dev;
+-	struct device_node *np = pdev->dev.of_node;
++	struct device *dev = hisi_hba->dev;
++	struct platform_device *pdev = hisi_hba->platform_dev;
++	struct device_node *np = pdev ? pdev->dev.of_node : NULL;
+ 	struct clk *refclk;
+ 
+-	shost = scsi_host_alloc(&hisi_sas_sht, sizeof(*hisi_hba));
+-	if (!shost) {
+-		dev_err(dev, "scsi host alloc failed\n");
+-		return NULL;
+-	}
+-	hisi_hba = shost_priv(shost);
+-
+-	INIT_WORK(&hisi_hba->rst_work, hisi_sas_rst_work_handler);
+-	hisi_hba->hw = hw;
+-	hisi_hba->platform_dev = pdev;
+-	hisi_hba->dev = dev;
+-	hisi_hba->shost = shost;
+-	SHOST_TO_SAS_HA(shost) = &hisi_hba->sha;
+-
+-	init_timer(&hisi_hba->timer);
+-
+ 	if (device_property_read_u8_array(dev, "sas-addr", hisi_hba->sas_addr,
+-					  SAS_ADDR_SIZE))
+-		goto err_out;
++					  SAS_ADDR_SIZE)) {
++		dev_err(dev, "could not get property sas-addr\n");
++		return -ENOENT;
++	}
+ 
+ 	if (np) {
+ 		hisi_hba->ctrl = syscon_regmap_lookup_by_phandle(np,
+ 					"hisilicon,sas-syscon");
+-		if (IS_ERR(hisi_hba->ctrl))
+-			goto err_out;
++		if (IS_ERR(hisi_hba->ctrl)) {
++			dev_err(dev, "could not get syscon\n");
++			return -ENOENT;
++		}
+ 
+ 		if (device_property_read_u32(dev, "ctrl-reset-reg",
+-					     &hisi_hba->ctrl_reset_reg))
+-			goto err_out;
++					     &hisi_hba->ctrl_reset_reg)) {
++			dev_err(dev,
++				"could not get property ctrl-reset-reg\n");
++			return -ENOENT;
++		}
+ 
+ 		if (device_property_read_u32(dev, "ctrl-reset-sts-reg",
+-					     &hisi_hba->ctrl_reset_sts_reg))
+-			goto err_out;
++					     &hisi_hba->ctrl_reset_sts_reg)) {
++			dev_err(dev,
++				"could not get property ctrl-reset-sts-reg\n");
++			return -ENOENT;
++		}
+ 
+ 		if (device_property_read_u32(dev, "ctrl-clock-ena-reg",
+-					     &hisi_hba->ctrl_clock_ena_reg))
+-			goto err_out;
++					     &hisi_hba->ctrl_clock_ena_reg)) {
++			dev_err(dev,
++				"could not get property ctrl-clock-ena-reg\n");
++			return -ENOENT;
++		}
+ 	}
+ 
+-	refclk = devm_clk_get(&pdev->dev, NULL);
++	refclk = devm_clk_get(dev, NULL);
+ 	if (IS_ERR(refclk))
+ 		dev_dbg(dev, "no ref clk property\n");
+ 	else
+ 		hisi_hba->refclk_frequency_mhz = clk_get_rate(refclk) / 1000000;
+ 
+-	if (device_property_read_u32(dev, "phy-count", &hisi_hba->n_phy))
+-		goto err_out;
++	if (device_property_read_u32(dev, "phy-count", &hisi_hba->n_phy)) {
++		dev_err(dev, "could not get property phy-count\n");
++		return -ENOENT;
++	}
+ 
+ 	if (device_property_read_u32(dev, "queue-count",
+-				     &hisi_hba->queue_count))
++				     &hisi_hba->queue_count)) {
++		dev_err(dev, "could not get property queue-count\n");
++		return -ENOENT;
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(hisi_sas_get_fw_info);
++
++static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
++					      const struct hisi_sas_hw *hw)
++{
++	struct resource *res;
++	struct Scsi_Host *shost;
++	struct hisi_hba *hisi_hba;
++	struct device *dev = &pdev->dev;
++
++	shost = scsi_host_alloc(&hisi_sas_sht, sizeof(*hisi_hba));
++	if (!shost) {
++		dev_err(dev, "scsi host alloc failed\n");
++		return NULL;
++	}
++	hisi_hba = shost_priv(shost);
++
++	INIT_WORK(&hisi_hba->rst_work, hisi_sas_rst_work_handler);
++	hisi_hba->hw = hw;
++	hisi_hba->dev = dev;
++	hisi_hba->platform_dev = pdev;
++	hisi_hba->shost = shost;
++	SHOST_TO_SAS_HA(shost) = &hisi_hba->sha;
++
++	init_timer(&hisi_hba->timer);
++
++	if (hisi_sas_get_fw_info(hisi_hba) < 0)
+ 		goto err_out;
+ 
+ 	if (dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64)) &&
 -- 
 1.9.1
