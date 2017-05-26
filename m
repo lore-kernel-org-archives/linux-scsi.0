@@ -1,372 +1,716 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] iscsi-target: Fix initial login PDU asynchronous socket close OOPs
-Date: Fri, 26 May 2017 05:32:31 +0000
-Message-ID: <1495776751-4746-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.com>, Sagi Grimberg <sagi@grimberg.me>, Varun Prakash <varun@chelsio.com>
+From: kbuild test robot <lkp@intel.com>
+Subject: Re: [PATCH 2/6] blk-mq: use the introduced
+	blk_mq_unquiesce_queue()
+Date: Fri, 26 May 2017 15:46:51 +0800
+Message-ID: <201705261505.zm4lMvaq%fengguang.wu@intel.com>
+References: <20170526030740.26959-3-ming.lei@redhat.com>
+Mime-Version: 1.0
+Content-Type: multipart/mixed; boundary="1yeeQ81UyVL57Vl7"
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20170526030740.26959-3-ming.lei@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Ming Lei <ming.lei@redhat.com>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-nvme@lists.infradead.org, Jens Axboe <axboe@fb.com>, dm-devel@redhat.com, kbuild-all@01.org, Bart Van Assche <bart.vanassche@sandisk.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch fixes a OOPs originally introduced by:
+--1yeeQ81UyVL57Vl7
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-   commit bb048357dad6d604520c91586334c9c230366a14
-   Author: Nicholas Bellinger <nab@linux-iscsi.org>
-   Date:   Thu Sep 5 14:54:04 2013 -0700
+Hi Ming,
 
-   iscsi-target: Add sk->sk_state_change to cleanup after TCP failure
+[auto build test ERROR on block/for-next]
+[also build test ERROR on v4.12-rc2 next-20170525]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
 
-which would trigger a NULL pointer dereference when a TCP connection
-was closed asynchronously via iscsi_target_sk_state_change(), but only
-when the initial PDU processing in iscsi_target_do_login() from iscsi_np
-process context was blocked waiting for backend I/O to complete.
+url:    https://github.com/0day-ci/linux/commits/Ming-Lei/blk-mq-introduce-blk_mq_unquiesce_queue/20170526-140138
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git for-next
+config: x86_64-randconfig-x019-201721 (attached as .config)
+compiler: gcc-6 (Debian 6.2.0-3) 6.2.0 20160901
+reproduce:
+        # save the attached .config to linux build tree
+        make ARCH=x86_64 
 
-To address this issue, this patch makes the following changes.
+Note: the linux-review/Ming-Lei/blk-mq-introduce-blk_mq_unquiesce_queue/20170526-140138 HEAD 470e70e5203ed8f76bb7c1a86db58023098bfc21 builds fine.
+      It only hurts bisectibility.
 
-First, it introduces some common helper functions used for checking
-socket closing state, checking login_flags, and atomically checking
-socket closing state + setting login_flags.
+All errors (new ones prefixed by >>):
 
-Second, it introduces a LOGIN_FLAGS_INITIAL_PDU bit to know when a TCP
-connection has dropped via iscsi_target_sk_state_change(), but the
-initial PDU processing within iscsi_target_do_login() in iscsi_np
-context is still running.  For this case, it sets LOGIN_FLAGS_CLOSED,
-but doesn't invoke schedule_delayed_work().
+   drivers/scsi/scsi_lib.c: In function 'scsi_internal_device_unblock':
+>> drivers/scsi/scsi_lib.c:3033:7: error: implicit declaration of function 'blk_queue_quiesced' [-Werror=implicit-function-declaration]
+      if (blk_queue_quiesced(q))
+          ^~~~~~~~~~~~~~~~~~
+   Cyclomatic Complexity 5 include/linux/compiler.h:__read_once_size
+   Cyclomatic Complexity 5 include/linux/compiler.h:__write_once_size
+   Cyclomatic Complexity 1 arch/x86/include/asm/bitops.h:test_and_clear_bit
+   Cyclomatic Complexity 1 arch/x86/include/asm/bitops.h:constant_test_bit
+   Cyclomatic Complexity 1 arch/x86/include/asm/bitops.h:variable_test_bit
+   Cyclomatic Complexity 1 arch/x86/include/asm/bitops.h:fls64
+   Cyclomatic Complexity 1 include/uapi/linux/swab.h:__swab16p
+   Cyclomatic Complexity 1 include/uapi/linux/byteorder/little_endian.h:__be16_to_cpup
+   Cyclomatic Complexity 1 include/linux/log2.h:__ilog2_u64
+   Cyclomatic Complexity 1 include/linux/list.h:INIT_LIST_HEAD
+   Cyclomatic Complexity 1 include/linux/list.h:__list_add_valid
+   Cyclomatic Complexity 1 include/linux/list.h:__list_del_entry_valid
+   Cyclomatic Complexity 2 include/linux/list.h:__list_add
+   Cyclomatic Complexity 1 include/linux/list.h:list_add_tail
+   Cyclomatic Complexity 1 include/linux/list.h:__list_del
+   Cyclomatic Complexity 2 include/linux/list.h:__list_del_entry
+   Cyclomatic Complexity 1 include/linux/list.h:list_del
+   Cyclomatic Complexity 1 include/linux/list.h:list_del_init
+   Cyclomatic Complexity 1 include/linux/list.h:list_move_tail
+   Cyclomatic Complexity 1 include/linux/list.h:list_empty
+   Cyclomatic Complexity 1 include/linux/list.h:__list_splice
+   Cyclomatic Complexity 2 include/linux/list.h:list_splice
+   Cyclomatic Complexity 2 include/linux/list.h:list_splice_init
+   Cyclomatic Complexity 1 arch/x86/include/asm/current.h:get_current
+   Cyclomatic Complexity 1 include/asm-generic/getorder.h:__get_order
+   Cyclomatic Complexity 1 arch/x86/include/asm/atomic.h:atomic_read
+   Cyclomatic Complexity 1 arch/x86/include/asm/atomic.h:atomic_set
+   Cyclomatic Complexity 1 arch/x86/include/asm/atomic.h:atomic_inc
+   Cyclomatic Complexity 1 arch/x86/include/asm/atomic.h:atomic_dec
+   Cyclomatic Complexity 1 arch/x86/include/asm/atomic.h:atomic_add_return
+   Cyclomatic Complexity 1 arch/x86/include/asm/atomic.h:atomic_sub_return
+   Cyclomatic Complexity 1 include/linux/jump_label.h:static_key_count
+   Cyclomatic Complexity 2 include/linux/jump_label.h:static_key_false
+   Cyclomatic Complexity 1 arch/x86/include/asm/paravirt.h:arch_local_save_flags
+   Cyclomatic Complexity 1 arch/x86/include/asm/irqflags.h:arch_irqs_disabled_flags
+   Cyclomatic Complexity 5 arch/x86/include/asm/preempt.h:__preempt_count_add
+   Cyclomatic Complexity 1 arch/x86/include/asm/preempt.h:__preempt_count_dec_and_test
+   Cyclomatic Complexity 1 include/linux/spinlock.h:spinlock_check
+   Cyclomatic Complexity 1 include/linux/spinlock.h:spin_lock_irq
+   Cyclomatic Complexity 1 include/linux/spinlock.h:spin_unlock_irq
+   Cyclomatic Complexity 1 include/linux/spinlock.h:spin_unlock_irqrestore
+   Cyclomatic Complexity 1 include/linux/rcupdate.h:rcu_read_lock_sched_notrace
+   Cyclomatic Complexity 1 include/linux/mm.h:lowmem_page_address
+   Cyclomatic Complexity 1 include/linux/uaccess.h:pagefault_disabled_inc
+   Cyclomatic Complexity 1 include/linux/uaccess.h:pagefault_disabled_dec
+   Cyclomatic Complexity 1 include/linux/uaccess.h:pagefault_disable
+   Cyclomatic Complexity 1 include/linux/uaccess.h:pagefault_enable
+   Cyclomatic Complexity 1 include/linux/highmem.h:kmap_atomic
+   Cyclomatic Complexity 1 include/linux/blk_types.h:op_is_write
+   Cyclomatic Complexity 1 include/linux/slab.h:kmem_cache_alloc_node
+   Cyclomatic Complexity 68 include/linux/slab.h:kmalloc_large
+   Cyclomatic Complexity 3 include/linux/slab.h:kmalloc
+   Cyclomatic Complexity 1 include/linux/slab.h:kzalloc
+   Cyclomatic Complexity 1 include/linux/blkdev.h:blk_rq_is_scsi
+   Cyclomatic Complexity 1 include/linux/blkdev.h:blk_rq_is_private
+   Cyclomatic Complexity 3 include/linux/blkdev.h:blk_rq_is_passthrough
+   Cyclomatic Complexity 1 include/linux/blkdev.h:blk_rq_bytes
+   Cyclomatic Complexity 2 include/linux/blkdev.h:blk_rq_payload_bytes
+   Cyclomatic Complexity 2 include/linux/blkdev.h:blk_rq_nr_phys_segments
+   Cyclomatic Complexity 1 include/linux/blkdev.h:blk_integrity_rq
+   Cyclomatic Complexity 1 include/linux/blkdev.h:blk_rq_count_integrity_sg
+   Cyclomatic Complexity 1 include/linux/blkdev.h:blk_rq_map_integrity_sg
+   Cyclomatic Complexity 1 include/linux/blkdev.h:blk_queue_max_integrity_segments
+   Cyclomatic Complexity 1 include/linux/blkdev.h:queue_max_integrity_segments
+   Cyclomatic Complexity 3 include/linux/dma-mapping.h:dma_get_max_seg_size
+   Cyclomatic Complexity 2 include/linux/dma-mapping.h:dma_set_seg_boundary
+   Cyclomatic Complexity 1 include/linux/dma-mapping.h:dma_max_pfn
+   Cyclomatic Complexity 1 include/linux/blk-mq.h:blk_mq_rq_to_pdu
+   Cyclomatic Complexity 1 include/linux/unaligned/access_ok.h:get_unaligned_be16
+   Cyclomatic Complexity 1 include/scsi/scsi_common.h:scsi_varlen_cdb_length
+   Cyclomatic Complexity 2 include/scsi/scsi_common.h:scsi_command_size
+   Cyclomatic Complexity 2 include/scsi/scsi_common.h:scsi_sense_valid
+   Cyclomatic Complexity 3 include/scsi/scsi.h:scsi_status_is_good
+   Cyclomatic Complexity 1 include/scsi/scsi_device.h:scsi_target
+   Cyclomatic Complexity 1 include/scsi/scsi_device.h:scsi_device_online
+   Cyclomatic Complexity 1 include/scsi/scsi_device.h:scsi_device_blocked
+   Cyclomatic Complexity 1 include/scsi/scsi_request.h:scsi_req
+   Cyclomatic Complexity 1 include/scsi/scsi_cmnd.h:scsi_cmd_to_driver
+   Cyclomatic Complexity 1 include/scsi/scsi_cmnd.h:scsi_set_resid
+   Cyclomatic Complexity 1 include/scsi/scsi_cmnd.h:scsi_get_resid
+   Cyclomatic Complexity 3 include/scsi/scsi_cmnd.h:scsi_bidi_cmnd
+   Cyclomatic Complexity 2 include/scsi/scsi_cmnd.h:scsi_in
+   Cyclomatic Complexity 2 include/scsi/scsi_cmnd.h:scsi_prot_sg_count
+   Cyclomatic Complexity 1 include/scsi/scsi_cmnd.h:set_host_byte
+   Cyclomatic Complexity 3 include/scsi/scsi_eh.h:scsi_sense_is_deferred
+   Cyclomatic Complexity 3 include/scsi/scsi_host.h:scsi_host_in_recovery
+   Cyclomatic Complexity 1 include/scsi/scsi_host.h:scsi_get_device
+   Cyclomatic Complexity 1 include/scsi/scsi_host.h:scsi_host_get_prot
+   Cyclomatic Complexity 1 include/scsi/scsi_host.h:scsi_host_prot_dma
+   Cyclomatic Complexity 1 drivers/scsi/scsi_priv.h:scsi_log_send
+   Cyclomatic Complexity 1 drivers/scsi/scsi_priv.h:scsi_log_completion
+   Cyclomatic Complexity 2 drivers/scsi/scsi_lib.c:scsi_select_sense_cache
+   Cyclomatic Complexity 1 drivers/scsi/scsi_lib.c:scsi_alloc_sense_buffer
+   Cyclomatic Complexity 4 drivers/scsi/scsi_lib.c:scsi_set_blocked
+   Cyclomatic Complexity 3 drivers/scsi/scsi_lib.c:scsi_device_is_busy
+   Cyclomatic Complexity 4 drivers/scsi/scsi_lib.c:scsi_target_is_busy
+   Cyclomatic Complexity 5 drivers/scsi/scsi_lib.c:scsi_host_is_busy
+   Cyclomatic Complexity 3 drivers/scsi/scsi_lib.c:scsi_uninit_cmd
 
-The original NULL pointer dereference case reported by MNC is now handled
-by iscsi_target_do_login() doing a iscsi_target_sk_check_close() before
-transitioning to FFP to determine when the socket has already closed,
-or iscsi_target_start_negotiation() if the login needs to exchange
-more PDUs (eg: iscsi_target_do_login returned 0) but the socket has
-closed.  For both of these cases, the cleanup up of remaining connection
-resources will occur in iscsi_target_start_negotiation() from iscsi_np
-process context once the failure is detected.
+vim +/blk_queue_quiesced +3033 drivers/scsi/scsi_lib.c
 
-Finally, to handle to case where iscsi_target_sk_state_change() is
-called after the initial PDU procesing is complete, it now invokes
-conn->login_work -> iscsi_target_do_login_rx() to perform cleanup once
-existing iscsi_target_sk_check_close() checks detect connection failure.
-For this case, the cleanup of remaining connection resources will occur
-in iscsi_target_do_login_rx() from delayed workqueue process context
-once the failure is detected.
+  3027				sdev->sdev_state = SDEV_CREATED;
+  3028		} else if (sdev->sdev_state != SDEV_CANCEL &&
+  3029			 sdev->sdev_state != SDEV_OFFLINE)
+  3030			return -EINVAL;
+  3031	
+  3032		if (q->mq_ops) {
+> 3033			if (blk_queue_quiesced(q))
+  3034				blk_mq_unquiesce_queue(q);
+  3035			else
+  3036				blk_mq_start_stopped_hw_queues(q, false);
 
-Reported-by: Mike Christie <mchristi@redhat.com>
-Cc: Mike Christie <mchristi@redhat.com>
-Reported-by: Hannes Reinecke <hare@suse.com>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Sagi Grimberg <sagi@grimberg.me>
-Cc: Varun Prakash <varun@chelsio.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/iscsi/iscsi_target_nego.c | 194 +++++++++++++++++++++----------
- include/target/iscsi/iscsi_target_core.h |   1 +
- 2 files changed, 133 insertions(+), 62 deletions(-)
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
-diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
-index 7ccc9c1..6f88b31 100644
---- a/drivers/target/iscsi/iscsi_target_nego.c
-+++ b/drivers/target/iscsi/iscsi_target_nego.c
-@@ -493,14 +493,60 @@ static void iscsi_target_restore_sock_callbacks(struct iscsi_conn *conn)
- 
- static int iscsi_target_do_login(struct iscsi_conn *, struct iscsi_login *);
- 
--static bool iscsi_target_sk_state_check(struct sock *sk)
-+static bool __iscsi_target_sk_check_close(struct sock *sk)
- {
- 	if (sk->sk_state == TCP_CLOSE_WAIT || sk->sk_state == TCP_CLOSE) {
--		pr_debug("iscsi_target_sk_state_check: TCP_CLOSE_WAIT|TCP_CLOSE,"
-+		pr_debug("__iscsi_target_sk_check_close: TCP_CLOSE_WAIT|TCP_CLOSE,"
- 			"returning FALSE\n");
--		return false;
-+		return true;
- 	}
--	return true;
-+	return false;
-+}
-+
-+static bool iscsi_target_sk_check_close(struct iscsi_conn *conn)
-+{
-+	bool state = false;
-+
-+	if (conn->sock) {
-+		struct sock *sk = conn->sock->sk;
-+
-+		read_lock_bh(&sk->sk_callback_lock);
-+		state = (__iscsi_target_sk_check_close(sk) ||
-+			 test_bit(LOGIN_FLAGS_CLOSED, &conn->login_flags));
-+		read_unlock_bh(&sk->sk_callback_lock);
-+	}
-+	return state;
-+}
-+
-+static bool iscsi_target_sk_check_flag(struct iscsi_conn *conn, unsigned int flag)
-+{
-+	bool state = false;
-+
-+	if (conn->sock) {
-+		struct sock *sk = conn->sock->sk;
-+
-+		read_lock_bh(&sk->sk_callback_lock);
-+		state = test_bit(flag, &conn->login_flags);
-+		read_unlock_bh(&sk->sk_callback_lock);
-+	}
-+	return state;
-+}
-+
-+static bool iscsi_target_sk_check_and_clear(struct iscsi_conn *conn, unsigned int flag)
-+{
-+	bool state = false;
-+
-+	if (conn->sock) {
-+		struct sock *sk = conn->sock->sk;
-+
-+		write_lock_bh(&sk->sk_callback_lock);
-+		state = (__iscsi_target_sk_check_close(sk) ||
-+			 test_bit(LOGIN_FLAGS_CLOSED, &conn->login_flags));
-+		if (!state)
-+			clear_bit(flag, &conn->login_flags);
-+		write_unlock_bh(&sk->sk_callback_lock);
-+	}
-+	return state;
- }
- 
- static void iscsi_target_login_drop(struct iscsi_conn *conn, struct iscsi_login *login)
-@@ -540,6 +586,20 @@ static void iscsi_target_do_login_rx(struct work_struct *work)
- 
- 	pr_debug("entering iscsi_target_do_login_rx, conn: %p, %s:%d\n",
- 			conn, current->comm, current->pid);
-+	/*
-+	 * If iscsi_target_do_login_rx() has been invoked by ->sk_data_ready()
-+	 * before initial PDU processing in iscsi_target_start_negotiation()
-+	 * has completed, go ahead and retry until it's cleared.
-+	 *
-+	 * Otherwise if the TCP connection drops while this is occuring,
-+	 * iscsi_target_start_negotiation() will detect the failure, call
-+	 * cancel_delayed_work_sync(&conn->login_work), and cleanup the
-+	 * remaining iscsi connection resources from iscsi_np process context.
-+	 */
-+	if (iscsi_target_sk_check_flag(conn, LOGIN_FLAGS_INITIAL_PDU)) {
-+		schedule_delayed_work(&conn->login_work, msecs_to_jiffies(10));
-+		return;
-+	}
- 
- 	spin_lock(&tpg->tpg_state_lock);
- 	state = (tpg->tpg_state == TPG_STATE_ACTIVE);
-@@ -547,26 +607,12 @@ static void iscsi_target_do_login_rx(struct work_struct *work)
- 
- 	if (!state) {
- 		pr_debug("iscsi_target_do_login_rx: tpg_state != TPG_STATE_ACTIVE\n");
--		iscsi_target_restore_sock_callbacks(conn);
--		iscsi_target_login_drop(conn, login);
--		iscsit_deaccess_np(np, tpg, tpg_np);
--		return;
-+		goto err;
- 	}
- 
--	if (conn->sock) {
--		struct sock *sk = conn->sock->sk;
--
--		read_lock_bh(&sk->sk_callback_lock);
--		state = iscsi_target_sk_state_check(sk);
--		read_unlock_bh(&sk->sk_callback_lock);
--
--		if (!state) {
--			pr_debug("iscsi_target_do_login_rx, TCP state CLOSE\n");
--			iscsi_target_restore_sock_callbacks(conn);
--			iscsi_target_login_drop(conn, login);
--			iscsit_deaccess_np(np, tpg, tpg_np);
--			return;
--		}
-+	if (iscsi_target_sk_check_close(conn)) {
-+		pr_debug("iscsi_target_do_login_rx, TCP state CLOSE\n");
-+		goto err;
- 	}
- 
- 	conn->login_kworker = current;
-@@ -584,34 +630,29 @@ static void iscsi_target_do_login_rx(struct work_struct *work)
- 	flush_signals(current);
- 	conn->login_kworker = NULL;
- 
--	if (rc < 0) {
--		iscsi_target_restore_sock_callbacks(conn);
--		iscsi_target_login_drop(conn, login);
--		iscsit_deaccess_np(np, tpg, tpg_np);
--		return;
--	}
-+	if (rc < 0)
-+		goto err;
- 
- 	pr_debug("iscsi_target_do_login_rx after rx_login_io, %p, %s:%d\n",
- 			conn, current->comm, current->pid);
- 
- 	rc = iscsi_target_do_login(conn, login);
- 	if (rc < 0) {
--		iscsi_target_restore_sock_callbacks(conn);
--		iscsi_target_login_drop(conn, login);
--		iscsit_deaccess_np(np, tpg, tpg_np);
-+		goto err;
- 	} else if (!rc) {
--		if (conn->sock) {
--			struct sock *sk = conn->sock->sk;
--
--			write_lock_bh(&sk->sk_callback_lock);
--			clear_bit(LOGIN_FLAGS_READ_ACTIVE, &conn->login_flags);
--			write_unlock_bh(&sk->sk_callback_lock);
--		}
-+		if (iscsi_target_sk_check_and_clear(conn, LOGIN_FLAGS_READ_ACTIVE))
-+			goto err;
- 	} else if (rc == 1) {
- 		iscsi_target_nego_release(conn);
- 		iscsi_post_login_handler(np, conn, zero_tsih);
- 		iscsit_deaccess_np(np, tpg, tpg_np);
- 	}
-+	return;
-+
-+err:
-+	iscsi_target_restore_sock_callbacks(conn);
-+	iscsi_target_login_drop(conn, login);
-+	iscsit_deaccess_np(np, tpg, tpg_np);
- }
- 
- static void iscsi_target_do_cleanup(struct work_struct *work)
-@@ -659,31 +700,54 @@ static void iscsi_target_sk_state_change(struct sock *sk)
- 		orig_state_change(sk);
- 		return;
- 	}
-+	state = __iscsi_target_sk_check_close(sk);
-+	pr_debug("__iscsi_target_sk_close_change: state: %d\n", state);
-+
- 	if (test_bit(LOGIN_FLAGS_READ_ACTIVE, &conn->login_flags)) {
- 		pr_debug("Got LOGIN_FLAGS_READ_ACTIVE=1 sk_state_change"
- 			 " conn: %p\n", conn);
-+		if (state)
-+			set_bit(LOGIN_FLAGS_CLOSED, &conn->login_flags);
- 		write_unlock_bh(&sk->sk_callback_lock);
- 		orig_state_change(sk);
- 		return;
- 	}
--	if (test_and_set_bit(LOGIN_FLAGS_CLOSED, &conn->login_flags)) {
-+	if (test_bit(LOGIN_FLAGS_CLOSED, &conn->login_flags)) {
- 		pr_debug("Got LOGIN_FLAGS_CLOSED=1 sk_state_change conn: %p\n",
- 			 conn);
- 		write_unlock_bh(&sk->sk_callback_lock);
- 		orig_state_change(sk);
- 		return;
- 	}
-+	/*
-+	 * If the TCP connection has dropped, go ahead and set LOGIN_FLAGS_CLOSED,
-+	 * but only queue conn->login_work -> iscsi_target_do_login_rx()
-+	 * processing if LOGIN_FLAGS_INITIAL_PDU has already been cleared.
-+	 *
-+	 * When iscsi_target_do_login_rx() runs, iscsi_target_sk_check_close()
-+	 * will detect the dropped TCP connection from delayed workqueue context.
-+	 *
-+	 * If LOGIN_FLAGS_INITIAL_PDU is still set, which means the initial
-+	 * iscsi_target_start_negotiation() is running, iscsi_target_do_login()
-+	 * via iscsi_target_sk_check_close() or iscsi_target_start_negotiation()
-+	 * via iscsi_target_sk_check_and_clear() is responsible for detecting the
-+	 * dropped TCP connection in iscsi_np process context, and cleaning up
-+	 * the remaining iscsi connection resources.
-+	 */
-+	if (state) {
-+		pr_debug("iscsi_target_sk_state_change got failed state\n");
-+		set_bit(LOGIN_FLAGS_CLOSED, &conn->login_flags);
-+		state = test_bit(LOGIN_FLAGS_INITIAL_PDU, &conn->login_flags);
-+		write_unlock_bh(&sk->sk_callback_lock);
- 
--	state = iscsi_target_sk_state_check(sk);
--	write_unlock_bh(&sk->sk_callback_lock);
--
--	pr_debug("iscsi_target_sk_state_change: state: %d\n", state);
-+		orig_state_change(sk);
- 
--	if (!state) {
--		pr_debug("iscsi_target_sk_state_change got failed state\n");
--		schedule_delayed_work(&conn->login_cleanup_work, 0);
-+		if (!state)
-+			schedule_delayed_work(&conn->login_work, 0);
- 		return;
- 	}
-+	write_unlock_bh(&sk->sk_callback_lock);
-+
- 	orig_state_change(sk);
- }
- 
-@@ -946,6 +1010,15 @@ static int iscsi_target_do_login(struct iscsi_conn *conn, struct iscsi_login *lo
- 			if (iscsi_target_handle_csg_one(conn, login) < 0)
- 				return -1;
- 			if (login_rsp->flags & ISCSI_FLAG_LOGIN_TRANSIT) {
-+				/*
-+				 * Check to make sure the TCP connection has not
-+				 * dropped asynchronously while session reinstatement
-+				 * was occuring in this kthread context, before
-+				 * transitioning to full feature phase operation.
-+				 */
-+				if (iscsi_target_sk_check_close(conn))
-+					return -1;
-+
- 				login->tsih = conn->sess->tsih;
- 				login->login_complete = 1;
- 				iscsi_target_restore_sock_callbacks(conn);
-@@ -972,21 +1045,6 @@ static int iscsi_target_do_login(struct iscsi_conn *conn, struct iscsi_login *lo
- 		break;
- 	}
- 
--	if (conn->sock) {
--		struct sock *sk = conn->sock->sk;
--		bool state;
--
--		read_lock_bh(&sk->sk_callback_lock);
--		state = iscsi_target_sk_state_check(sk);
--		read_unlock_bh(&sk->sk_callback_lock);
--
--		if (!state) {
--			pr_debug("iscsi_target_do_login() failed state for"
--				 " conn: %p\n", conn);
--			return -1;
--		}
--	}
--
- 	return 0;
- }
- 
-@@ -1255,10 +1313,22 @@ int iscsi_target_start_negotiation(
- 
- 		write_lock_bh(&sk->sk_callback_lock);
- 		set_bit(LOGIN_FLAGS_READY, &conn->login_flags);
-+		set_bit(LOGIN_FLAGS_INITIAL_PDU, &conn->login_flags);
- 		write_unlock_bh(&sk->sk_callback_lock);
- 	}
--
-+	/*
-+	 * If iscsi_target_do_login returns zero to signal more PDU
-+	 * exchanges are required to complete the login, go ahead and
-+	 * clear LOGIN_FLAGS_INITIAL_PDU but only if the TCP connection
-+	 * is still active.
-+	 *
-+	 * Otherwise if TCP connection dropped asynchronously, go ahead
-+	 * and perform connection cleanup now.
-+	 */
- 	ret = iscsi_target_do_login(conn, login);
-+	if (!ret && iscsi_target_sk_check_and_clear(conn, LOGIN_FLAGS_INITIAL_PDU))
-+		ret = -1;
-+
- 	if (ret < 0) {
- 		cancel_delayed_work_sync(&conn->login_work);
- 		cancel_delayed_work_sync(&conn->login_cleanup_work);
-diff --git a/include/target/iscsi/iscsi_target_core.h b/include/target/iscsi/iscsi_target_core.h
-index 275581d..5f17fb7 100644
---- a/include/target/iscsi/iscsi_target_core.h
-+++ b/include/target/iscsi/iscsi_target_core.h
-@@ -557,6 +557,7 @@ struct iscsi_conn {
- #define LOGIN_FLAGS_READ_ACTIVE		1
- #define LOGIN_FLAGS_CLOSED		2
- #define LOGIN_FLAGS_READY		4
-+#define LOGIN_FLAGS_INITIAL_PDU		8
- 	unsigned long		login_flags;
- 	struct delayed_work	login_work;
- 	struct delayed_work	login_cleanup_work;
--- 
-1.9.1
+--1yeeQ81UyVL57Vl7
+Content-Type: application/gzip
+Content-Disposition: attachment; filename=".config.gz"
+Content-Transfer-Encoding: base64
+
+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
+/g9BwSdUurgBAA==
+
+--1yeeQ81UyVL57Vl7
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+
+--1yeeQ81UyVL57Vl7--
