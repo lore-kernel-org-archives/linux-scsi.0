@@ -1,82 +1,50 @@
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v1 4/4] tcmu: Make dev_config configurable
-Date: Fri, 26 May 2017 09:27:23 -0500
-Message-ID: <1495808843-40222-5-git-send-email-bryantly@linux.vnet.ibm.com>
-References: <1495808843-40222-1-git-send-email-bryantly@linux.vnet.ibm.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1495808843-40222-1-git-send-email-bryantly@linux.vnet.ibm.com>
-Sender: target-devel-owner@vger.kernel.org
-To: nab@linux-iscsi.org, mchristi@redhat.com
-Cc: seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH 1/1] scsi: scsi_debug: Avoid PI being disabled when TGPS is enabled
+Date: Fri, 26 May 2017 12:59:35 -0400
+Message-ID: <20170526165935.19543-1-martin.petersen@oracle.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:38976 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750954AbdEZQ7y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 May 2017 12:59:54 -0400
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v4QGxofU018571
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-scsi@vger.kernel.org>; Fri, 26 May 2017 16:59:50 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v4QGxo1E010657
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-scsi@vger.kernel.org>; Fri, 26 May 2017 16:59:50 GMT
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v4QGxn9K007815
+        for <linux-scsi@vger.kernel.org>; Fri, 26 May 2017 16:59:50 GMT
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-This allows for userspace to change the device path after
-it has been created. Thus giving the user the ability to change
-the path. The use case for this is to allow for virtual optical
-to have media change.
+It was not possible to enable both T10 PI and TGPS because they share
+the same byte in the INQUIRY response. Logically OR the TPGS value
+instead of using assignment.
 
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Reported-by: Ritika Srivastava <ritika.srivastava@oracle.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/target/target_core_user.c | 40 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
+ drivers/scsi/scsi_debug.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index c8c84b7..3036a57 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -1548,6 +1548,45 @@ static ssize_t tcmu_cmd_time_out_store(struct config_item *item, const char *pag
- }
- CONFIGFS_ATTR(tcmu_, cmd_time_out);
- 
-+static ssize_t tcmu_dev_path_show(struct config_item *item, char *page)
-+{
-+	struct se_dev_attrib *da = container_of(to_config_group(item),
-+						struct se_dev_attrib, da_group);
-+	struct tcmu_dev *udev = TCMU_DEV(da->da_dev);
-+
-+	return snprintf(page, PAGE_SIZE, "%s\n", udev->dev_config);
-+}
-+
-+static ssize_t tcmu_dev_path_store(struct config_item *item, const char *page,
-+				   size_t count)
-+{
-+	struct se_dev_attrib *da = container_of(to_config_group(item),
-+						struct se_dev_attrib, da_group);
-+	struct tcmu_dev *udev = TCMU_DEV(da->da_dev);
-+	char *copy = NULL;
-+
-+	copy = kstrdup(page, GFP_KERNEL);
-+
-+	if (!copy)
-+		return -EINVAL;
-+
-+	strcpy(udev->dev_config, copy);
-+
-+	/* Check if device has been configured before */
-+	if (tcmu_dev_configured(udev)) {
-+		ret = tcmu_netlink_event(TCMU_CMD_RECONFIG_DEVICE,
-+					 udev->uio_info.name,
-+					 udev->uio_info.uio_dev->minor);
-+		if (ret) {
-+			pr_err("Unable to reconfigure device\n");
-+			return ret;
-+		}
-+	}
-+
-+	return count;
-+}
-+CONFIGFS_ATTR(tcmu_, dev_path);
-+
- static ssize_t tcmu_dev_size_show(struct config_item *item, char *page)
- {
- 	struct se_dev_attrib *da = container_of(to_config_group(item),
-@@ -1626,6 +1665,7 @@ CONFIGFS_ATTR(tcmu_, emulate_write_cache);
- 
- struct configfs_attribute *tcmu_attrib_attrs[] = {
- 	&tcmu_attr_cmd_time_out,
-+	&tcmu_attr_dev_path,
- 	&tcmu_attr_dev_size,
- 	&tcmu_attr_emulate_write_cache,
- 	NULL,
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 17249c3650fe..b945d187873f 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -1404,7 +1404,7 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	arr[4] = SDEBUG_LONG_INQ_SZ - 5;
+ 	arr[5] = (int)have_dif_prot;	/* PROTECT bit */
+ 	if (sdebug_vpd_use_hostno == 0)
+-		arr[5] = 0x10; /* claim: implicit TGPS */
++		arr[5] |= 0x10; /* claim: implicit TGPS */
+ 	arr[6] = 0x10; /* claim: MultiP */
+ 	/* arr[6] |= 0x40; ... claim: EncServ (enclosure services) */
+ 	arr[7] = 0xa; /* claim: LINKED + CMDQUE */
 -- 
-2.5.4 (Apple Git-61)
+2.13.0
