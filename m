@@ -1,53 +1,55 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH 4/6] blk-mq: update comments on blk_mq_quiesce_queue()
-Date: Fri, 26 May 2017 11:07:37 +0800
-Message-ID: <20170526030740.26959-5-ming.lei@redhat.com>
+Subject: [PATCH 5/6] blk-mq: don't stop queue for quiescing
+Date: Fri, 26 May 2017 11:07:38 +0800
+Message-ID: <20170526030740.26959-6-ming.lei@redhat.com>
 References: <20170526030740.26959-1-ming.lei@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40232 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934477AbdEZDIa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 25 May 2017 23:08:30 -0400
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170526030740.26959-1-ming.lei@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
 To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 Cc: Bart Van Assche <bart.vanassche@sandisk.com>, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
+List-Id: linux-scsi@vger.kernel.org
 
-Actually what we want to get from blk_mq_quiesce_queue()
-isn't only to wait for completion of all ongooing .queue_rq().
+Now we use the QUIESCED flag to drain & block dispatching,
+not necessary to stop queue any more.
 
-In the typical context of canceling requests, we need to
-make sure that the following is done in the dispatch path
-before starting to cancel requests:
-	- failed dispatched request is freeed
-	- busy dispatched request is requeued, and the STARTED
-	flag is cleared
+Also queue can be started by other blk-mq APIs, this limits
+uses of blk_mq_quiesce_queue().
+
+Now blk_mq_quiesce_queue() can be used safely and users won't
+worry about queue restart during quiescing.
 
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- block/blk-mq.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ block/blk-mq.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 864709453c90..e1fc9ab50c87 100644
+index e1fc9ab50c87..900eb91e0ece 100644
 --- a/block/blk-mq.c
 +++ b/block/blk-mq.c
-@@ -155,12 +155,12 @@ void blk_mq_unfreeze_queue(struct request_queue *q)
- EXPORT_SYMBOL_GPL(blk_mq_unfreeze_queue);
+@@ -168,8 +168,6 @@ void blk_mq_quiesce_queue(struct request_queue *q)
+ 	unsigned int i;
+ 	bool rcu = false;
  
- /**
-- * blk_mq_quiesce_queue() - wait until all ongoing queue_rq calls have finished
-+ * blk_mq_quiesce_queue() - wait until all ongoing dispatching have finished
-  * @q: request queue.
-  *
-  * Note: this function does not prevent that the struct request end_io()
-- * callback function is invoked. Additionally, it is not prevented that
-- * new queue_rq() calls occur unless the queue has been stopped first.
-+ * callback function is invoked. Once this function is returned, we make
-+ * sure no dispatching can happen.
-  */
- void blk_mq_quiesce_queue(struct request_queue *q)
- {
+-	__blk_mq_stop_hw_queues(q, true);
+-
+ 	spin_lock_irq(q->queue_lock);
+ 	queue_flag_set(QUEUE_FLAG_QUIESCED, q);
+ 	spin_unlock_irq(q->queue_lock);
+@@ -198,7 +196,12 @@ void blk_mq_unquiesce_queue(struct request_queue *q)
+ 	queue_flag_clear(QUEUE_FLAG_QUIESCED, q);
+ 	spin_unlock_irq(q->queue_lock);
+ 
+-	blk_mq_start_stopped_hw_queues(q, true);
++	/*
++	 * During quiescing, requests can be inserted
++	 * to scheduler queue or sw queue, so we run
++	 * queues for dispatching these requests.
++	 */
++	blk_mq_start_hw_queues(q);
+ }
+ EXPORT_SYMBOL_GPL(blk_mq_unquiesce_queue);
+ 
 -- 
 2.9.4
