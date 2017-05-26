@@ -1,7 +1,7 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH 1/6] blk-mq: introduce blk_mq_unquiesce_queue
-Date: Fri, 26 May 2017 11:07:34 +0800
-Message-ID: <20170526030740.26959-2-ming.lei@redhat.com>
+Subject: [PATCH 2/6] blk-mq: use the introduced blk_mq_unquiesce_queue()
+Date: Fri, 26 May 2017 11:07:35 +0800
+Message-ID: <20170526030740.26959-3-ming.lei@redhat.com>
 References: <20170526030740.26959-1-ming.lei@redhat.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170526030740.26959-1-ming.lei@redhat.com>
@@ -10,55 +10,56 @@ To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <h
 Cc: Bart Van Assche <bart.vanassche@sandisk.com>, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-Now we use blk_mq_start_stopped_hw_queues() implictely
-as pair of blk_mq_quiesce_queue(), now we introduce
-blk_mq_unquiesce_queue() explictely.
-
-Also this function is introduced for fixing
-current quiescing mechanism, which will be done
-in the following patches.
+blk_mq_unquiesce_queue() is used for unquiescing the queue.
 
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- block/blk-mq.c         | 13 +++++++++++++
- include/linux/blkdev.h |  1 +
- 2 files changed, 14 insertions(+)
+ drivers/md/dm-rq.c       | 2 +-
+ drivers/nvme/host/core.c | 2 +-
+ drivers/scsi/scsi_lib.c  | 5 ++++-
+ 3 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index f2224ffd225d..a26fee3fb389 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -181,6 +181,19 @@ void blk_mq_quiesce_queue(struct request_queue *q)
- }
- EXPORT_SYMBOL_GPL(blk_mq_quiesce_queue);
+diff --git a/drivers/md/dm-rq.c b/drivers/md/dm-rq.c
+index 2af27026aa2e..673fcf075077 100644
+--- a/drivers/md/dm-rq.c
++++ b/drivers/md/dm-rq.c
+@@ -71,7 +71,7 @@ static void dm_old_start_queue(struct request_queue *q)
  
-+/**
-+ * blk_mq_unquiesce_queue() - pair of blk_mq_quiesce_queue()
-+ * @q: request queue.
-+ *
-+ * This function recovers queue into the state before quiescing
-+ * done by blk_mq_quiesce_queue
-+ */
-+void blk_mq_unquiesce_queue(struct request_queue *q)
-+{
-+	blk_mq_start_stopped_hw_queues(q, true);
-+}
-+EXPORT_SYMBOL_GPL(blk_mq_unquiesce_queue);
-+
- void blk_mq_wake_waiters(struct request_queue *q)
+ static void dm_mq_start_queue(struct request_queue *q)
  {
- 	struct blk_mq_hw_ctx *hctx;
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index ab92c4ea138b..41291be82ac4 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -964,6 +964,7 @@ extern void __blk_run_queue_uncond(struct request_queue *q);
- extern void blk_run_queue(struct request_queue *);
- extern void blk_run_queue_async(struct request_queue *q);
- extern void blk_mq_quiesce_queue(struct request_queue *q);
-+extern void blk_mq_unquiesce_queue(struct request_queue *q);
- extern int blk_rq_map_user(struct request_queue *, struct request *,
- 			   struct rq_map_data *, void __user *, unsigned long,
- 			   gfp_t);
+-	blk_mq_start_stopped_hw_queues(q, true);
++	blk_mq_unquiesce_queue(q);
+ 	blk_mq_kick_requeue_list(q);
+ }
+ 
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index 04e115834702..231d36028afc 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -2514,7 +2514,7 @@ void nvme_start_queues(struct nvme_ctrl *ctrl)
+ 
+ 	mutex_lock(&ctrl->namespaces_mutex);
+ 	list_for_each_entry(ns, &ctrl->namespaces, list) {
+-		blk_mq_start_stopped_hw_queues(ns->queue, true);
++		blk_mq_unquiesce_queue(ns->queue);
+ 		blk_mq_kick_requeue_list(ns->queue);
+ 	}
+ 	mutex_unlock(&ctrl->namespaces_mutex);
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 814a4bd8405d..72b11f75719c 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -3030,7 +3030,10 @@ scsi_internal_device_unblock(struct scsi_device *sdev,
+ 		return -EINVAL;
+ 
+ 	if (q->mq_ops) {
+-		blk_mq_start_stopped_hw_queues(q, false);
++		if (blk_queue_quiesced(q))
++			blk_mq_unquiesce_queue(q);
++		else
++			blk_mq_start_stopped_hw_queues(q, false);
+ 	} else {
+ 		spin_lock_irqsave(q->queue_lock, flags);
+ 		blk_start_queue(q);
 -- 
 2.9.4
