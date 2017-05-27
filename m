@@ -1,54 +1,39 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH] scsi: sd: Use sysfs_match_string()
-Date: Fri, 26 May 2017 21:09:46 +0000
-Message-ID: <1495832984.2634.4.camel@sandisk.com>
-References: <20170526170239.19709-1-martin.petersen@oracle.com>
+From: Mike Christie <mchristi@redhat.com>
+Subject: Re: [PATCH] iscsi-target: Fix initial login PDU asynchronous socket
+ close OOPs
+Date: Fri, 26 May 2017 22:14:52 -0500
+Message-ID: <5928EF2C.6090609@redhat.com>
+References: <1495776751-4746-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:1137 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S944966AbdEZVJt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 May 2017 17:09:49 -0400
-In-Reply-To: <20170526170239.19709-1-martin.petersen@oracle.com>
-Content-Language: en-US
-Content-ID: <F17465E3734A6F4EAC9AD12723265B3A@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1495776751-4746-1-git-send-email-nab@linux-iscsi.org>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.com>, Sagi Grimberg <sagi@grimberg.me>, Varun Prakash <varun@chelsio.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-On Fri, 2017-05-26 at 13:02 -0400, Martin K. Petersen wrote:
-> Avoid unnecessary snprintf() when formatting variables for display in
-> sysfs and switch to sysfs_match_string() for validating user input.
+Thanks for the patch.
 
-Hello Martin,
+On 05/26/2017 12:32 AM, Nicholas A. Bellinger wrote:
+>  
+> -	state = iscsi_target_sk_state_check(sk);
+> -	write_unlock_bh(&sk->sk_callback_lock);
+> -
+> -	pr_debug("iscsi_target_sk_state_change: state: %d\n", state);
+> +		orig_state_change(sk);
+>  
+> -	if (!state) {
+> -		pr_debug("iscsi_target_sk_state_change got failed state\n");
+> -		schedule_delayed_work(&conn->login_cleanup_work, 0);
 
-Would it be worth it to split this patch into two patches - one for the
-snprintf() conversion and another patch for the sysfs_match_string()
-conversion?
+I think login_cleanup_work is no longer used so you can also remove it
+and its code.
 
-> @@ -155,7 +155,7 @@ static ssize_t
->  cache_type_store(struct device *dev, struct device_attribute *attr,
->  		 const char *buf, size_t count)
->  {
-> -	int i, ct =3D -1, rcd, wce, sp;
-> +	int ct =3D -1, rcd, wce, sp;
-
-Is it still necessary to initialize ct in this function?
-
-> +	mode =3D sysfs_match_string(lbp_mode, buf);
-> +	if (mode < 0)
->  		return -EINVAL;
-> [ ... ]
-> +	mode =3D sysfs_match_string(zeroing_mode, buf);
-> +	if (mode < 0)
->=A0=A0		return -EINVAL;=A0
-
-sysfs_match_string() only supports dense arrays. Maybe it's worth to add a
-comment above lbp_mode[] and zeroing_mode[] that these must be dense arrays
-or that the above calls to sysfs_match_string() will break?
-
-Otherwise this patch looks fine to me.
-
-Bart.=
+The patch fixes the crash for me. However, is there a possible
+regression where if the initiator attempts new relogins we could run out
+of memory? With the old code, we would free the login attempts resources
+at this time, but with the new code the initiator will send more login
+attempts and so we just keep allocating more memory for each attempt
+until we run out or the login is finally able to complete.
