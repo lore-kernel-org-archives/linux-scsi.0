@@ -1,71 +1,57 @@
-From: Mike Christie <mchristi@redhat.com>
-Subject: Re: [PATCH v1 3/4] tcmu: Make dev_size configurable via userspace
-Date: Mon, 29 May 2017 15:01:17 -0500
-Message-ID: <592C7E0D.5060600@redhat.com>
-References: <1495808843-40222-1-git-send-email-bryantly@linux.vnet.ibm.com>
- <1495808843-40222-4-git-send-email-bryantly@linux.vnet.ibm.com>
+From: Raphael Philipe Mendes da Silva <raphasil@linux.vnet.ibm.com>
+Subject: Re: [PATCH] scsi: lpfc: Fix crash on PCI hotplug remove path
+Date: Mon, 29 May 2017 18:32:37 -0300
+Message-ID: <20170529213236.GA14650@raphasil>
+References: <20170528214554.24336-1-gpiccoli@linux.vnet.ibm.com>
+ <cdc85e21-caf1-aeb6-a24f-dac063e66c5a@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1495808843-40222-4-git-send-email-bryantly@linux.vnet.ibm.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, nab@linux-iscsi.org
-Cc: seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:47644 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751053AbdE2Vcu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 29 May 2017 17:32:50 -0400
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v4TLSivS053744
+        for <linux-scsi@vger.kernel.org>; Mon, 29 May 2017 17:32:49 -0400
+Received: from e24smtp01.br.ibm.com (e24smtp01.br.ibm.com [32.104.18.85])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2arujbr4kq-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Mon, 29 May 2017 17:32:49 -0400
+Received: from localhost
+        by e24smtp01.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <raphasil@linux.vnet.ibm.com>;
+        Mon, 29 May 2017 18:32:47 -0300
+Received: from d24av01.br.ibm.com (d24av01.br.ibm.com [9.8.31.91])
+        by d24relay04.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v4TLWiL52359614
+        for <linux-scsi@vger.kernel.org>; Mon, 29 May 2017 18:32:44 -0300
+Received: from d24av01.br.ibm.com (localhost [127.0.0.1])
+        by d24av01.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v4TLWiMb024566
+        for <linux-scsi@vger.kernel.org>; Mon, 29 May 2017 18:32:45 -0300
+Content-Disposition: inline
+In-Reply-To: <cdc85e21-caf1-aeb6-a24f-dac063e66c5a@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, james.smart@broadcom.com, dick.kennedy@broadcom.com, jsmart2021@gmail.com, porcusbr@gmail.com
 
-On 05/26/2017 09:27 AM, Bryant G. Ly wrote:
-> Allow tcmu backstores to be able to set the device size
-> after it has been configured via set attribute.
+On Mon, May 29, 2017 at 09:56:09AM +0200, Johannes Thumshirn wrote:
+> On 05/28/2017 11:45 PM, Guilherme G. Piccoli wrote:
+> > During a PCI hotplug remove event we could have a NULL pointer
+> > dereference on lpfc_sli_abort_iocb(), if pring is NULL. This
+> > patch adds a check for this case and is able to circumvent the
+> > failure and continue the hotplug remove process with success.
+> > 
+> > This issue was introduced after the driver refactor made on
+> > commit 895427bd012c ("scsi: lpfc: NVME Initiator: Base modifications").
+> > 
+> > Fixes: 895427bd012c ("scsi: lpfc: NVME Initiator: Base modifications")
+> > Reported-by: Naresh Bannoth <nbannoth@in.ibm.com>
+> > Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
+> > ---
 > 
-> Part of support in userspace to support certain backstores
-> changing device size.
-> 
-> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-> ---
->  drivers/target/target_core_user.c | 59 +++++++++++++++++++++++++++++++++++----
->  1 file changed, 54 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-> index ae91822..c8c84b7 100644
-> --- a/drivers/target/target_core_user.c
-> +++ b/drivers/target/target_core_user.c
-> @@ -1548,6 +1548,44 @@ static ssize_t tcmu_cmd_time_out_store(struct config_item *item, const char *pag
->  }
->  CONFIGFS_ATTR(tcmu_, cmd_time_out);
->  
-> +static ssize_t tcmu_dev_size_show(struct config_item *item, char *page)
-> +{
-> +	struct se_dev_attrib *da = container_of(to_config_group(item),
-> +						struct se_dev_attrib, da_group);
-> +	struct tcmu_dev *udev = TCMU_DEV(da->da_dev);
-> +
-> +	return snprintf(page, PAGE_SIZE, "%zu\n", udev->dev_size);
-> +}
-> +
-> +static ssize_t tcmu_dev_size_store(struct config_item *item, const char *page,
-> +				   size_t count)
-> +{
-> +	struct se_dev_attrib *da = container_of(to_config_group(item),
-> +						struct se_dev_attrib, da_group);
-> +	struct tcmu_dev *udev = TCMU_DEV(da->da_dev);
-> +	unsigned long val;
-> +	int ret;
-> +
-> +	ret = kstrtoul(page, 0, &val);
-> +	if (ret < 0)
-> +		return ret;
-> +	udev->dev_size = val;
-> +
-> +	/* Check if device has been configured before */
-> +	if (tcmu_dev_configured(udev)) {
-> +		ret = tcmu_netlink_event(TCMU_CMD_RECONFIG_DEVICE,
+> Looks good,
+> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
-
-If we send an event for each attribute changed, maybe we want to add a
-type or more info about the attr being changed, so userspace can easily
-figure it out and it does not have to rescan everything multiple times.
-
-Or maybe we just want to add a reconfig attr or control opt where after
-userspace has reconfigured everything it wanted to runner can rescan
-everything and updates itself.
+Tested-by: Raphael Silva <raphasil@linux.vnet.ibm.com>
