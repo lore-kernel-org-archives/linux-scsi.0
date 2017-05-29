@@ -1,50 +1,56 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] scsi: lpfc: Avoid NULL pointer dereference in
- lpfc_els_abort()
-Date: Mon, 29 May 2017 10:19:50 +0200
-Message-ID: <96c8a878-8784-186f-00dc-17c1f79a3e1a@suse.de>
-References: <20170524214851.25428-1-gpiccoli@linux.vnet.ibm.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v2 07/22] scsi: hisi_sas: create hisi_sas_get_fw_info()
+Date: Mon, 29 May 2017 12:53:30 +0200
+Message-ID: <CAK8P3a1ySYpsa=sWo3xkXA7uBz_zYxfTecXMuX6C3d1HEg=qyg@mail.gmail.com>
+References: <1495713911-80476-1-git-send-email-john.garry@huawei.com> <1495713911-80476-8-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55943 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750873AbdE2IT5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 29 May 2017 04:19:57 -0400
-In-Reply-To: <20170524214851.25428-1-gpiccoli@linux.vnet.ibm.com>
-Content-Language: en-US
+Received: from mail-oi0-f54.google.com ([209.85.218.54]:33409 "EHLO
+        mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750903AbdE2Kxb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 May 2017 06:53:31 -0400
+In-Reply-To: <1495713911-80476-8-git-send-email-john.garry@huawei.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
-Cc: raphasil@linux.vnet.ibm.com, james.smart@broadcom.com, dick.kennedy@broadcom.com, jsmart2021@gmail.com
+To: John Garry <john.garry@huawei.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, John Garry <john.garry2@mail.dcu.ie>, linuxarm@huawei.com, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On 05/24/2017 11:48 PM, Guilherme G. Piccoli wrote:
-> We might have a NULL pring in lpfc_els_abort(), for example on
-> error recovery path, since queues are destroyed during error
-> recovery mechanism.
-> 
-> In this case, we should just drop the abort since the queues will
-> be recreated anyway. This patch just verifies for NULL pointer
-> and stop the abortion of the queue in case of a NULL pring.
-> 
-> Also, this patch converts return type of lpfc_els_abort() from int
-> to void, since it's not checked anywhere.
-> 
-> Reported-by: Harsha Thyagaraja <hathyaga@in.ibm.com>
-> Reported-by: Naresh Bannoth <nbannoth@in.ibm.com>
-> Tested-by: Raphael Silva <raphasil@linux.vnet.ibm.com>
-> Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
-> ---
+On Thu, May 25, 2017 at 2:04 PM, John Garry <john.garry@huawei.com> wrote:
+> Move the functionality to retrieve the fw info into
+> a dedicated device type-agnostic function,
+> hisi_sas_get_fw_info().
+>
+> The reasoning is that this function will be required
+> for future pci-based platforms.
+>
 
-Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+> -
+>         if (device_property_read_u8_array(dev, "sas-addr", hisi_hba->sas_addr,
+> -                                         SAS_ADDR_SIZE))
+> -               goto err_out;
+> +                                         SAS_ADDR_SIZE)) {
+> +               dev_err(dev, "could not get property sas-addr\n");
+> +               return -ENOENT;
+> +       }
+>
+>         if (np) {
+>                 hisi_hba->ctrl = syscon_regmap_lookup_by_phandle(np,
+>                                         "hisilicon,sas-syscon");
+> -               if (IS_ERR(hisi_hba->ctrl))
+> -                       goto err_out;
+> +               if (IS_ERR(hisi_hba->ctrl)) {
+> +                       dev_err(dev, "could not get syscon\n");
+> +                       return -ENOENT;
+> +               }
 
+If I read this right, it will fail to work for a PCI-based driver trying to read
+"sas-addr" but not the other properties that would now be hardcoded from
+the PCI ID.
 
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Maybe you just need
+
+-          if (np) {
++         if (np && is_platform_device) {
+
+       Arnd
