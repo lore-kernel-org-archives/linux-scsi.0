@@ -1,45 +1,42 @@
-From: ".Sarah Edward J" <mrs.sarahjohnsonn@gmail.com>
-Subject: Re: Charitable Organization~
-Date: Mon, 29 May 2017 02:49:16 -0700
-Message-ID: <CAEuXEc+FpspnYU2ids6-=N1yExByJiKbsG1RPnbRYChOz9weTQ@mail.gmail.com>
-References: <CAEuXEcLsy8+tLMT2Y-eLgn6YyrV4--QSNb=0VOBsxBB9jFZyHA@mail.gmail.com>
- <CAEuXEc+XdXs_TFHSYJdQaJqHVmR2ofpf5VzpAGYwaizk0C6+5A@mail.gmail.com>
-Reply-To: sarh.edward@hotmail.com
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH v2 3/8] blk-mq: use the introduced
+ blk_mq_unquiesce_queue()
+Date: Tue, 30 May 2017 15:12:41 +0000
+Message-ID: <1496157160.2627.7.camel@sandisk.com>
+References: <20170527142126.26079-1-ming.lei@redhat.com>
+         <20170527142126.26079-4-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:33584 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750837AbdE2JtR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 May 2017 05:49:17 -0400
-Received: by mail-pf0-f193.google.com with SMTP id f27so11726267pfe.0
-        for <linux-scsi@vger.kernel.org>; Mon, 29 May 2017 02:49:17 -0700 (PDT)
-In-Reply-To: <CAEuXEc+XdXs_TFHSYJdQaJqHVmR2ofpf5VzpAGYwaizk0C6+5A@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170527142126.26079-4-ming.lei@redhat.com>
+Content-Language: en-US
+Content-ID: <2B2EF5DA74383E4C9F687843D1D1183A@namprd04.prod.outlook.com>
+Sender: linux-block-owner@vger.kernel.org
+To: "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-`._..
+On Sat, 2017-05-27 at 22:21 +0800, Ming Lei wrote:
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -3030,7 +3030,10 @@ scsi_internal_device_unblock(struct scsi_device *s=
+dev,
+>  		return -EINVAL;
+> =20
+>  	if (q->mq_ops) {
+> -		blk_mq_start_stopped_hw_queues(q, false);
+> +		if (blk_queue_quiesced(q))
+> +			blk_mq_unquiesce_queue(q);
+> +		else
+> +			blk_mq_start_stopped_hw_queues(q, false);
+>  	} else {
+>  		spin_lock_irqsave(q->queue_lock, flags);
+>  		blk_start_queue(q);
 
-Glad to write to you this message,
+Hello Ming,
 
-I seek for your kind help in setting up a charitable organization to
-help the less privileged  people and also the elderly people under
-your care,
+Sorry but that change looks wrong to me. All what's needed here is a call
+to blk_mq_unquiesce_queue().
 
-I want to use my late husband wealth of $3,000,000.00 to set up a
-charity foundation to help the needy and the less privileged ones in
-your country under your care, Can you help to build this project in
-your country?
-
-All i need from you is your sincerity to use this funds to do this
-project as i desired to use it for less privileged ones and orphanage
-homes,
-
-We are the one who will make the world a better place when we help the
-needy sincerely,
-
-Reply and let me know your opinion in doing this noble work,
-
-Remain blessed,
-
-Mrs Sarah Edward J.
+Bart.=
