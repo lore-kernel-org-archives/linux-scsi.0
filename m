@@ -1,7 +1,7 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 16/17] qla2xxx: Remove unused irq_cmd_count field.
-Date: Tue, 30 May 2017 10:54:31 -0700
-Message-ID: <20170530175432.26984-17-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 13/17] qla2xxx: Remove redundant code
+Date: Tue, 30 May 2017 10:54:28 -0700
+Message-ID: <20170530175432.26984-14-himanshu.madhani@cavium.com>
 References: <20170530175432.26984-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,8 +9,8 @@ Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mail-cys01nam02on0076.outbound.protection.outlook.com ([104.47.37.76]:56960
         "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751002AbdE3RzG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 30 May 2017 13:55:06 -0400
+        id S1751157AbdE3RzL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 30 May 2017 13:55:11 -0400
 In-Reply-To: <20170530175432.26984-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,79 +19,91 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-When driver is unloaded, all sessions are torn down, all
-commmands are flushed, chip is reset to ensure there is
-no knowledge of target mode in ISP. The irq_cmd_count field
-was used to make sure all commands are processed on top of that.
-The irq_cmd_count is now redundant and not needed.
+During ABTS or Abort task, qla2xxx does a pre-search for
+the se_cmd, based on command's tag. The same search is
+performed by TCM. Remove the extra search from qla2xxx.
+
+The reason for hard coding LUN ID to 0 is that, from the FC
+protocol perspective, ABTS does not have any knowledge of
+LUN ID. So, there is no reason for qla2xxx driver to
+manufacture the LUN ID.
 
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+Acked-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 9 +--------
- drivers/scsi/qla2xxx/qla_target.h | 1 -
- 2 files changed, 1 insertion(+), 9 deletions(-)
+ drivers/scsi/qla2xxx/qla_target.c | 39 +++++++++++----------------------------
+ 1 file changed, 11 insertions(+), 28 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 3eb8e63834e6..c96dcd31b47b 100644
+index 765145151fa0..d2c9b565ca00 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -5338,8 +5338,6 @@ static void qlt_response_pkt(struct scsi_qla_host *vha, response_t *pkt)
- 	 * Otherwise, some commands can stuck.
- 	 */
+@@ -1838,40 +1838,24 @@ static void abort_cmds_for_lun(struct scsi_qla_host *vha,
+ 	spin_unlock_irqrestore(&vha->cmd_list_lock, flags);
+ }
  
--	tgt->irq_cmd_count++;
--
- 	switch (pkt->entry_type) {
- 	case CTIO_CRC2:
- 	case CTIO_TYPE7:
-@@ -5365,10 +5363,8 @@ static void qlt_response_pkt(struct scsi_qla_host *vha, response_t *pkt)
- 		}
++/*
++ * From FC protocol perspective, ABTS does not have any knowledge of LUN ID.
++ * Passing default LUN ID of 0.
++ */
++#define DEFAULT_LUN_ID 0
++
+ /* ha->hardware_lock supposed to be held on entry */
+ static int __qlt_24xx_handle_abts(struct scsi_qla_host *vha,
+ 	struct abts_recv_from_24xx *abts, struct fc_port *sess)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+-	struct se_session *se_sess = sess->se_sess;
+ 	struct qla_tgt_mgmt_cmd *mcmd;
+-	struct qla_tgt_cmd *cmd;
+-	struct se_cmd *se_cmd;
+ 	int rc;
+-	bool found_lun = false;
+-	unsigned long flags;
  
- 		rc = qlt_chk_qfull_thresh_hold(vha, atio, true);
--		if (rc != 0) {
--			tgt->irq_cmd_count--;
-+		if (rc != 0)
- 			return;
+-	spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
+-	list_for_each_entry(se_cmd, &se_sess->sess_cmd_list, se_cmd_list) {
+-		if (se_cmd->tag == abts->exchange_addr_to_abort) {
+-			found_lun = true;
+-			break;
 -		}
- 
- 		rc = qlt_handle_cmd_for_atio(vha, atio);
- 		if (unlikely(rc != 0)) {
-@@ -5500,7 +5496,6 @@ static void qlt_response_pkt(struct scsi_qla_host *vha, response_t *pkt)
- 		break;
+-	}
+-	spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
+-
+-	/* cmd not in LIO lists, look in qla list */
+-	if (!found_lun) {
+-		if (abort_cmd_for_tag(vha, abts->exchange_addr_to_abort)) {
+-			/* send TASK_ABORT response immediately */
+-			qlt_24xx_send_abts_resp(vha, abts, FCP_TMF_CMPL, false);
+-			return 0;
+-		} else {
+-			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf081,
+-			    "unable to find cmd in driver or LIO for tag 0x%x\n",
+-			    abts->exchange_addr_to_abort);
+-			return -ENOENT;
+-		}
++	if (abort_cmd_for_tag(vha, abts->exchange_addr_to_abort)) {
++		/* send TASK_ABORT response immediately */
++		qlt_24xx_send_abts_resp(vha, abts, FCP_TMF_CMPL, false);
++		return 0;
  	}
  
--	tgt->irq_cmd_count--;
- }
- 
- /*
-@@ -5530,7 +5525,6 @@ void qlt_async_event(uint16_t code, struct scsi_qla_host *vha,
- 	 * Otherwise, some commands can stuck.
- 	 */
- 
--	tgt->irq_cmd_count++;
- 
- 	switch (code) {
- 	case MBA_RESET:			/* Reset */
-@@ -5618,7 +5612,6 @@ void qlt_async_event(uint16_t code, struct scsi_qla_host *vha,
- 		break;
+ 	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf00f,
+@@ -1887,13 +1871,12 @@ static int __qlt_24xx_handle_abts(struct scsi_qla_host *vha,
  	}
+ 	memset(mcmd, 0, sizeof(*mcmd));
  
--	tgt->irq_cmd_count--;
- }
+-	cmd = container_of(se_cmd, struct qla_tgt_cmd, se_cmd);
+ 	mcmd->sess = sess;
+ 	memcpy(&mcmd->orig_iocb.abts, abts, sizeof(mcmd->orig_iocb.abts));
+ 	mcmd->reset_count = vha->hw->chip_reset;
+ 	mcmd->tmr_func = QLA_TGT_ABTS;
  
- static fc_port_t *qlt_get_port_database(struct scsi_qla_host *vha,
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index 07ff565485b7..c328a267c4c3 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -790,7 +790,6 @@ struct qla_tgt {
- 	 * because req_pkt() can drop/reaquire HW lock inside. Protected by
- 	 * HW lock.
- 	 */
--	int irq_cmd_count;
- 	int atio_irq_cmd_count;
- 
- 	int datasegs_per_cmd, datasegs_per_cont, sg_tablesize;
+-	rc = ha->tgt.tgt_ops->handle_tmr(mcmd, cmd->unpacked_lun, mcmd->tmr_func,
++	rc = ha->tgt.tgt_ops->handle_tmr(mcmd, DEFAULT_LUN_ID, mcmd->tmr_func,
+ 	    abts->exchange_addr_to_abort);
+ 	if (rc != 0) {
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf052,
 -- 
 2.12.0
