@@ -1,70 +1,203 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 07/17] qla2xxx: Use flag PFLG_DISCONNECTED.
-Date: Tue, 30 May 2017 10:54:22 -0700
-Message-ID: <20170530175432.26984-8-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 09/17] qla2xxx: Fix name server relogin
+Date: Tue, 30 May 2017 10:54:24 -0700
+Message-ID: <20170530175432.26984-10-himanshu.madhani@cavium.com>
 References: <20170530175432.26984-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0078.outbound.protection.outlook.com ([104.47.37.78]:40215
+Received: from mail-cys01nam02on0041.outbound.protection.outlook.com ([104.47.37.41]:43296
         "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751157AbdE3RzA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 30 May 2017 13:55:00 -0400
+        id S1751168AbdE3RzC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 30 May 2017 13:55:02 -0400
 In-Reply-To: <20170530175432.26984-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Sawan Chandak <sawan.chandak@cavium.com>
+From: Quinn Tran <quinn.tran@cavium.com>
 
-There is already flag defined PFLG_DISCONNECTED, which is set
-for PCI or register disconnect error condition. There is no need to have
-flag PCI_ERR, which has same purpose. Remove use of PCI_ERR flag and use
-PFLG_DISCONNECTED flag during error condition.
+Name server login is normally handle by FW. In some
+rare case where one of the switches is being updated,
+name server login could get affected. Trigger relogin
+to name server when driver detects this condition.
 
-Signed-off-by: Sawan Chandak <sawan.chandak@cavium.com>
+Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h | 1 -
- drivers/scsi/qla2xxx/qla_mbx.c | 5 ++---
- 2 files changed, 2 insertions(+), 4 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h  |  2 ++
+ drivers/scsi/qla2xxx/qla_gs.c   | 20 ++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_init.c | 38 +++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/qla2xxx/qla_isr.c  | 17 +++++++++++++++++
+ 4 files changed, 76 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index eddbc1218a39..4127f35b669c 100644
+index 4127f35b669c..51b262b236b4 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -4017,7 +4017,6 @@ typedef struct scsi_qla_host {
- #define PFLG_DISCONNECTED	0	/* PCI device removed */
- #define PFLG_DRIVER_REMOVING	1	/* PCI driver .remove */
- #define PFLG_DRIVER_PROBING	2	/* PCI driver .probe */
--#define PCI_ERR			30
+@@ -252,6 +252,8 @@
+ #define NPH_F_PORT		0x7fe		/*  FFFFFE */
+ #define NPH_IP_BROADCAST	0x7ff		/*  FFFFFF */
  
- 	uint32_t	device_flags;
- #define SWITCH_FOUND		BIT_0
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index cba1fc5e8be9..fffa1f7cd8d2 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -124,7 +124,8 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
++#define NPH_SNS_LID(ha)	(IS_FWI2_CAPABLE(ha) ? NPH_SNS : SIMPLE_NAME_SERVER)
++
+ #define MAX_CMDSZ	16		/* SCSI maximum CDB size. */
+ #include "qla_fw.h"
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index 5acebaf57796..ef8e8891d54f 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -124,6 +124,7 @@ qla2x00_chk_ms_status(scsi_qla_host_t *vha, ms_iocb_entry_t *ms_pkt,
+ 	int rval;
+ 	uint16_t comp_status;
+ 	struct qla_hw_data *ha = vha->hw;
++	bool lid_is_sns = false;
+ 
+ 	rval = QLA_FUNCTION_FAILED;
+ 	if (ms_pkt->entry_status != 0) {
+@@ -155,6 +156,25 @@ qla2x00_chk_ms_status(scsi_qla_host_t *vha, ms_iocb_entry_t *ms_pkt,
+ 			} else
+ 				rval = QLA_SUCCESS;
+ 			break;
++		case CS_PORT_LOGGED_OUT:
++			if (IS_FWI2_CAPABLE(ha)) {
++				if (le16_to_cpu(ms_pkt->loop_id.extended) ==
++				    NPH_SNS)
++					lid_is_sns = true;
++			} else {
++				if (le16_to_cpu(ms_pkt->loop_id.extended) ==
++				    SIMPLE_NAME_SERVER)
++					lid_is_sns = true;
++			}
++			if (lid_is_sns) {
++				ql_dbg(ql_dbg_async, vha, 0x502b,
++					"%s failed, Name server has logged out",
++					routine);
++				rval = QLA_NOT_LOGGED_IN;
++				set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
++				set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
++			}
++			break;
+ 		default:
+ 			ql_dbg(ql_dbg_disc, vha, 0x2033,
+ 			    "%s failed, completion status (%x) on port_id: "
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 2d23885083b0..33a7d7a7e870 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -1041,6 +1041,20 @@ void qla2x00_fcport_event_handler(scsi_qla_host_t *vha, struct event_arg *ea)
+ 
+ 	switch (ea->event) {
+ 	case FCME_RELOGIN:
++	case FCME_RSCN:
++	case FCME_GIDPN_DONE:
++	case FCME_GPSC_DONE:
++	case FCME_GPNID_DONE:
++		if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags) ||
++		    test_bit(LOOP_RESYNC_ACTIVE, &vha->dpc_flags))
++			return;
++		break;
++	default:
++		break;
++	}
++
++	switch (ea->event) {
++	case FCME_RELOGIN:
+ 		if (test_bit(UNLOADING, &vha->dpc_flags))
+ 			return;
+ 
+@@ -4458,20 +4472,31 @@ qla2x00_configure_fabric(scsi_qla_host_t *vha)
+ 				/* EMPTY */
+ 				ql_dbg(ql_dbg_disc, vha, 0x2045,
+ 				    "Register FC-4 TYPE failed.\n");
++				if (test_bit(LOOP_RESYNC_NEEDED,
++				    &vha->dpc_flags))
++					break;
+ 			}
+ 			if (qla2x00_rff_id(vha)) {
+ 				/* EMPTY */
+ 				ql_dbg(ql_dbg_disc, vha, 0x2049,
+ 				    "Register FC-4 Features failed.\n");
++				if (test_bit(LOOP_RESYNC_NEEDED,
++				    &vha->dpc_flags))
++					break;
+ 			}
+ 			if (qla2x00_rnn_id(vha)) {
+ 				/* EMPTY */
+ 				ql_dbg(ql_dbg_disc, vha, 0x204f,
+ 				    "Register Node Name failed.\n");
++				if (test_bit(LOOP_RESYNC_NEEDED,
++				    &vha->dpc_flags))
++					break;
+ 			} else if (qla2x00_rsnn_nn(vha)) {
+ 				/* EMPTY */
+ 				ql_dbg(ql_dbg_disc, vha, 0x2053,
+ 				    "Register Symobilic Node Name failed.\n");
++				if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
++					break;
+ 			}
+ 		}
+ 
+@@ -4543,17 +4568,28 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha)
+ 		memset(swl, 0, ha->max_fibre_devices * sizeof(sw_info_t));
+ 		if (qla2x00_gid_pt(vha, swl) != QLA_SUCCESS) {
+ 			swl = NULL;
++			if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
++				return rval;
+ 		} else if (qla2x00_gpn_id(vha, swl) != QLA_SUCCESS) {
+ 			swl = NULL;
++			if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
++				return rval;
+ 		} else if (qla2x00_gnn_id(vha, swl) != QLA_SUCCESS) {
+ 			swl = NULL;
++			if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
++				return rval;
+ 		} else if (qla2x00_gfpn_id(vha, swl) != QLA_SUCCESS) {
+ 			swl = NULL;
++			if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
++				return rval;
+ 		}
+ 
+ 		/* If other queries succeeded probe for FC-4 type */
+-		if (swl)
++		if (swl) {
+ 			qla2x00_gff_id(vha, swl);
++			if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
++				return rval;
++		}
  	}
+ 	swl_idx = 0;
  
- 	/* if PCI error, then avoid mbx processing.*/
--	if (test_bit(PCI_ERR, &base_vha->dpc_flags)) {
-+	if (test_bit(PFLG_DISCONNECTED, &base_vha->dpc_flags) &&
-+	    test_bit(UNLOADING, &base_vha->dpc_flags)) {
- 		ql_log(ql_log_warn, vha, 0x1191,
- 		    "PCI error, exiting.\n");
- 		return QLA_FUNCTION_TIMEOUT;
-@@ -384,8 +385,6 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
- 				 * then only PCI ERR flag would be set.
- 				 * we will do premature exit for above case.
- 				 */
--				if (test_bit(UNLOADING, &base_vha->dpc_flags))
--					set_bit(PCI_ERR, &base_vha->dpc_flags);
- 				ha->flags.mbox_busy = 0;
- 				rval = QLA_FUNCTION_TIMEOUT;
- 				goto premature_exit;
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 2572121b765b..1eb46eb45005 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -973,6 +973,23 @@ qla2x00_async_event(scsi_qla_host_t *vha, struct rsp_que *rsp, uint16_t *mb)
+ 			if (mb[1] == 0xffff)
+ 				goto global_port_update;
+ 
++			if (mb[1] == NPH_SNS_LID(ha)) {
++				set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
++				set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
++				break;
++			}
++
++			/* use handle_cnt for loop id/nport handle */
++			if (IS_FWI2_CAPABLE(ha))
++				handle_cnt = NPH_SNS;
++			else
++				handle_cnt = SIMPLE_NAME_SERVER;
++			if (mb[1] == handle_cnt) {
++				set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
++				set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
++				break;
++			}
++
+ 			/* Port logout */
+ 			fcport = qla2x00_find_fcport_by_loopid(vha, mb[1]);
+ 			if (!fcport)
 -- 
 2.12.0
