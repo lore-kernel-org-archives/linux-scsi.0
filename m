@@ -1,15 +1,15 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 05/17] qla2xxx: Fix path recovery
-Date: Tue, 30 May 2017 10:54:20 -0700
-Message-ID: <20170530175432.26984-6-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 06/17] tcm_qla2xxx: Do not allow aborted cmd to advance.
+Date: Tue, 30 May 2017 10:54:21 -0700
+Message-ID: <20170530175432.26984-7-himanshu.madhani@cavium.com>
 References: <20170530175432.26984-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0055.outbound.protection.outlook.com ([104.47.37.55]:43520
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam02on0041.outbound.protection.outlook.com ([104.47.36.41]:23968
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751032AbdE3Ry5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1751082AbdE3Ry5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Tue, 30 May 2017 13:54:57 -0400
 In-Reply-To: <20170530175432.26984-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -19,51 +19,43 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-If the port is moved/changed, current code would trigger
-a deletion. If the port is already deleted, then do relogin.
+In case of hardware queue full, commands can loop between
+TCM stack and tcm_qla2xx shim layers for retry. While command
+is waiting for retry, task mgmt can get ahead and abort the
+cmmand that encountered queue full condition. Fix this by
+dropping the command, if task mgmt has already started the
+command free process.
 
+Acked-by: Nicholas Bellinger <nab@linux-iscsi.org>
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_gs.c | 21 ++++++++++++++++-----
- 1 file changed, 16 insertions(+), 5 deletions(-)
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index 9bc9aa9e164a..5acebaf57796 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -3118,16 +3118,27 @@ void qla24xx_handle_gpnid_event(scsi_qla_host_t *vha, struct event_arg *ea)
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 7443e4efa3ae..1131fe8e2dd2 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -686,6 +686,19 @@ static int tcm_qla2xxx_queue_status(struct se_cmd *se_cmd)
+ 				struct qla_tgt_cmd, se_cmd);
+ 	int xmit_type = QLA_TGT_XMIT_STATUS;
  
- 	if (fcport) {
- 		/* cable moved. just plugged in */
--		ql_dbg(ql_dbg_disc, vha, 0xffff,
--			   "%s %d %8phC post del sess\n",
--			   __func__, __LINE__, fcport->port_name);
--
- 		fcport->rscn_gen++;
- 		fcport->d_id = ea->id;
- 		fcport->scan_state = QLA_FCPORT_FOUND;
- 		fcport->flags |= FCF_FABRIC_DEVICE;
- 
--		qlt_schedule_sess_for_deletion_lock(fcport);
-+		switch (fcport->disc_state) {
-+		case DSC_DELETED:
-+			ql_dbg(ql_dbg_disc, vha, 0x210d,
-+			    "%s %d %8phC login\n", __func__, __LINE__,
-+			    fcport->port_name);
-+			qla24xx_fcport_handle_login(vha, fcport);
-+			break;
-+		case DSC_DELETE_PEND:
-+			break;
-+		default:
-+			ql_dbg(ql_dbg_disc, vha, 0x2064,
-+			    "%s %d %8phC post del sess\n",
-+			    __func__, __LINE__, fcport->port_name);
-+			qlt_schedule_sess_for_deletion_lock(fcport);
-+			break;
-+		}
- 	} else {
- 		/* create new fcport */
- 		ql_dbg(ql_dbg_disc, vha, 0xffff,
++	if (cmd->aborted) {
++		/*
++		 * Cmd can loop during Q-full. tcm_qla2xxx_aborted_task
++		 * can get ahead of this cmd. tcm_qla2xxx_aborted_task
++		 * already kick start the free.
++		 */
++		pr_debug(
++		    "queue_data_in aborted cmd[%p] refcount %d transport_state %x, t_state %x, se_cmd_flags %x\n",
++		    cmd, kref_read(&cmd->se_cmd.cmd_kref),
++		    cmd->se_cmd.transport_state, cmd->se_cmd.t_state,
++		    cmd->se_cmd.se_cmd_flags);
++		return 0;
++	}
+ 	cmd->bufflen = se_cmd->data_length;
+ 	cmd->sg = NULL;
+ 	cmd->sg_cnt = 0;
 -- 
 2.12.0
