@@ -1,120 +1,77 @@
-From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 14/17] qla2xxx: Remove redundant wait when target is stopped.
-Date: Tue, 30 May 2017 10:54:29 -0700
-Message-ID: <20170530175432.26984-15-himanshu.madhani@cavium.com>
-References: <20170530175432.26984-1-himanshu.madhani@cavium.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0048.outbound.protection.outlook.com ([104.47.34.48]:45760
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750922AbdE3RzU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 30 May 2017 13:55:20 -0400
-In-Reply-To: <20170530175432.26984-1-himanshu.madhani@cavium.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH v2 1/5] tcmu: Support emulate_write_cache
+Date: Tue, 30 May 2017 13:31:16 -0500
+Message-ID: <1496169080-58746-2-git-send-email-bryantly@linux.vnet.ibm.com>
+References: <1496169080-58746-1-git-send-email-bryantly@linux.vnet.ibm.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1496169080-58746-1-git-send-email-bryantly@linux.vnet.ibm.com>
+Sender: target-devel-owner@vger.kernel.org
+To: nab@linux-iscsi.org, mchristi@redhat.com
+Cc: seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Quinn Tran <quinn.tran@cavium.com>
+This will enable the toggling of write_cache in tcmu through targetcli-fb
 
-Current code already destroy all target sessions when
-target Mode is stopped. Target core would waits for
-all commands that belong to each session to purge.
-The extra wait for interrupts to settle down is not
-relevant.
-
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
-Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Reviewed-By: Mike Christie <mchristi@redhat.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 33 ++++++++++++++++-----------------
- 1 file changed, 16 insertions(+), 17 deletions(-)
+ drivers/target/target_core_user.c | 30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index d2c9b565ca00..3eb8e63834e6 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1427,6 +1427,8 @@ int qlt_stop_phase1(struct qla_tgt *tgt)
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index beb5f09..0c797cc 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -1290,6 +1290,8 @@ static int tcmu_configure_device(struct se_device *dev)
+ 	/* Other attributes can be configured in userspace */
+ 	if (!dev->dev_attrib.hw_max_sectors)
+ 		dev->dev_attrib.hw_max_sectors = 128;
++	if (!dev->dev_attrib.emulate_write_cache)
++		dev->dev_attrib.emulate_write_cache = 0;
+ 	dev->dev_attrib.hw_queue_depth = 128;
  
- 		if (npiv_vports) {
- 			mutex_unlock(&qla_tgt_mutex);
-+			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf021,
-+			    "NPIV is in use. Can not stop target\n");
- 			return -EPERM;
- 		}
- 	}
-@@ -1437,7 +1439,7 @@ int qlt_stop_phase1(struct qla_tgt *tgt)
- 		return -EPERM;
- 	}
- 
--	ql_dbg(ql_dbg_tgt, vha, 0xe003, "Stopping target for host %ld(%p)\n",
-+	ql_dbg(ql_dbg_tgt_mgt, vha, 0xe003, "Stopping target for host %ld(%p)\n",
- 	    vha->host_no, vha);
  	/*
- 	 * Mutex needed to sync with qla_tgt_fc_port_[added,deleted].
-@@ -1480,9 +1482,7 @@ EXPORT_SYMBOL(qlt_stop_phase1);
- /* Called by tcm_qla2xxx configfs code */
- void qlt_stop_phase2(struct qla_tgt *tgt)
- {
--	struct qla_hw_data *ha = tgt->ha;
--	scsi_qla_host_t *vha = pci_get_drvdata(ha->pdev);
--	unsigned long flags;
-+	scsi_qla_host_t *vha = tgt->vha;
- 
- 	if (tgt->tgt_stopped) {
- 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf04f,
-@@ -1490,24 +1490,19 @@ void qlt_stop_phase2(struct qla_tgt *tgt)
- 		dump_stack();
- 		return;
- 	}
--
--	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf00b,
--	    "Waiting for %d IRQ commands to complete (tgt %p)",
--	    tgt->irq_cmd_count, tgt);
-+	if (!tgt->tgt_stop) {
-+		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf00b,
-+		    "%s: phase1 stop is not completed\n", __func__);
-+		dump_stack();
-+		return;
-+	}
- 
- 	mutex_lock(&vha->vha_tgt.tgt_mutex);
--	spin_lock_irqsave(&ha->hardware_lock, flags);
--	while ((tgt->irq_cmd_count != 0) || (tgt->atio_irq_cmd_count != 0)) {
--		spin_unlock_irqrestore(&ha->hardware_lock, flags);
--		udelay(2);
--		spin_lock_irqsave(&ha->hardware_lock, flags);
--	}
- 	tgt->tgt_stop = 0;
- 	tgt->tgt_stopped = 1;
--	spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 	mutex_unlock(&vha->vha_tgt.tgt_mutex);
- 
--	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf00c, "Stop of tgt %p finished",
-+	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf00c, "Stop of tgt %p finished\n",
- 	    tgt);
+@@ -1546,6 +1548,32 @@ static ssize_t tcmu_cmd_time_out_store(struct config_item *item, const char *pag
  }
- EXPORT_SYMBOL(qlt_stop_phase2);
-@@ -1517,6 +1512,10 @@ static void qlt_release(struct qla_tgt *tgt)
- {
- 	scsi_qla_host_t *vha = tgt->vha;
+ CONFIGFS_ATTR(tcmu_, cmd_time_out);
  
-+	if ((vha->vha_tgt.qla_tgt != NULL) && !tgt->tgt_stop &&
-+	    !tgt->tgt_stopped)
-+		qlt_stop_phase1(tgt);
++static ssize_t tcmu_emulate_write_cache_show(struct config_item *item,
++					     char *page)
++{
++	struct se_dev_attrib *da = container_of(to_config_group(item),
++					struct se_dev_attrib, da_group);
 +
- 	if ((vha->vha_tgt.qla_tgt != NULL) && !tgt->tgt_stopped)
- 		qlt_stop_phase2(tgt);
++	return snprintf(page, PAGE_SIZE, "%i\n", da->emulate_write_cache);
++}
++
++static ssize_t tcmu_emulate_write_cache_store(struct config_item *item,
++					      const char *page, size_t count)
++{
++	struct se_dev_attrib *da = container_of(to_config_group(item),
++					struct se_dev_attrib, da_group);
++	int val;
++	int ret;
++
++	ret = kstrtouint(page, 0, &val);
++	if (ret < 0)
++		return ret;
++
++	da->emulate_write_cache = val;
++	return count;
++}
++CONFIGFS_ATTR(tcmu_, emulate_write_cache);
++
+ static struct configfs_attribute **tcmu_attrs;
  
-@@ -5514,7 +5513,7 @@ void qlt_async_event(uint16_t code, struct scsi_qla_host *vha,
- 	struct qla_tgt *tgt = vha->vha_tgt.qla_tgt;
- 	int login_code;
+ static struct target_backend_ops tcmu_ops = {
+@@ -1682,6 +1710,8 @@ static int __init tcmu_module_init(void)
+ 		tcmu_attrs[i] = passthrough_attrib_attrs[i];
+ 	}
+ 	tcmu_attrs[i] = &tcmu_attr_cmd_time_out;
++	i++;
++	tcmu_attrs[i] = &tcmu_attr_emulate_write_cache;
+ 	tcmu_ops.tb_dev_attrib_attrs = tcmu_attrs;
  
--	if (!ha->tgt.tgt_ops)
-+	if (!tgt || tgt->tgt_stop || tgt->tgt_stopped)
- 		return;
- 
- 	if (unlikely(tgt == NULL)) {
+ 	ret = transport_backend_register(&tcmu_ops);
 -- 
-2.12.0
+2.5.4 (Apple Git-61)
