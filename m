@@ -1,96 +1,67 @@
 From: "Dupuis, Chad" <chad.dupuis@cavium.com>
-Subject: [PATCH V2 04/15] qedf: Look at all descriptors when processing a clear virtual link.
-Date: Wed, 31 May 2017 06:33:51 -0700
-Message-ID: <20170531133402.16629-5-chad.dupuis@cavium.com>
+Subject: [PATCH V2 09/15] qedf: Add bus_reset No-op.
+Date: Wed, 31 May 2017 06:33:56 -0700
+Message-ID: <20170531133402.16629-10-chad.dupuis@cavium.com>
 References: <20170531133402.16629-1-chad.dupuis@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0058.outbound.protection.outlook.com ([104.47.42.58]:12096
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0089.outbound.protection.outlook.com ([104.47.37.89]:41385
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751164AbdEaNef (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 31 May 2017 09:34:35 -0400
+        id S1751151AbdEaNep (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 31 May 2017 09:34:45 -0400
 In-Reply-To: <20170531133402.16629-1-chad.dupuis@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, QLogic-Storage-Upstream@cavium.com
 
-If there are multiple descriptors for a particular type in a clear virtual
-link we receive, we will not process it correctly but rather take the last
-value. This can cause us not to not flap the virtual link as the value from
-the descriptors that we compare against the our stored FCF or fc_lport values
-may not match.
-
-Change this to do a comparison when processing the each descriptor instead of at
-the end and then set a bool if we need to do the reset.
+We need to add a bus reset no-op as without it some of the LUNs attached to a
+vport may go offline when the error handler escalates to host reset due to not
+having a bus reset handler in the driver. What happens is we escalate to host
+reset which does a soft link down/link up to reset the adapter. However with
+multiple vports attached it's been observed that if the vports do log back into
+the target within 5 seconds, the SCSI layer offlines the devices most likely
+due to a TUR timing out to verify that the device is online. Adding a bus
+reset handler will cause the TUR to be sent after the bus reset handler where
+the devices will still be online if the bus reset is initiated by sg_reset
+(which is the case in the test that was failing). The bus reset will succeed
+and not needlessly bring the device offline/online.
 
 Signed-off-by: Chad Dupuis <chad.dupuis@cavium.com>
 ---
- drivers/scsi/qedf/qedf_fip.c | 20 +++++++++-----------
- 1 file changed, 9 insertions(+), 11 deletions(-)
+ drivers/scsi/qedf/qedf_main.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/drivers/scsi/qedf/qedf_fip.c b/drivers/scsi/qedf/qedf_fip.c
-index 2dfb817..64b04f2 100644
---- a/drivers/scsi/qedf/qedf_fip.c
-+++ b/drivers/scsi/qedf/qedf_fip.c
-@@ -156,10 +156,9 @@ void qedf_fip_recv(struct qedf_ctx *qedf, struct sk_buff *skb)
- 	struct fip_wwn_desc *wp;
- 	struct fip_vn_desc *vp;
- 	size_t rlen, dlen;
--	uint32_t cvl_port_id;
--	__u8 cvl_mac[ETH_ALEN];
- 	u16 op;
- 	u8 sub;
-+	bool do_reset = false;
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index 99d8822..d762b9f 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -628,6 +628,16 @@ static int qedf_eh_device_reset(struct scsi_cmnd *sc_cmd)
+ 	return qedf_initiate_tmf(sc_cmd, FCP_TMF_LUN_RESET);
+ }
  
- 	eth_hdr = (struct ethhdr *)skb_mac_header(skb);
- 	fiph = (struct fip_header *) ((void *)skb->data + 2 * ETH_ALEN + 2);
-@@ -190,8 +189,6 @@ void qedf_fip_recv(struct qedf_ctx *qedf, struct sk_buff *skb)
- 			return;
- 		}
- 
--		cvl_port_id = 0;
--		memset(cvl_mac, 0, ETH_ALEN);
- 		/*
- 		 * We need to loop through the CVL descriptors to determine
- 		 * if we want to reset the fcoe link
-@@ -205,7 +202,9 @@ void qedf_fip_recv(struct qedf_ctx *qedf, struct sk_buff *skb)
- 				mp = (struct fip_mac_desc *)desc;
- 				QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_LL2,
- 				    "fd_mac=%pM\n", mp->fd_mac);
--				ether_addr_copy(cvl_mac, mp->fd_mac);
-+				if (ether_addr_equal(mp->fd_mac,
-+				    qedf->ctlr.sel_fcf->fcf_mac))
-+					do_reset = true;
- 				break;
- 			case FIP_DT_NAME:
- 				wp = (struct fip_wwn_desc *)desc;
-@@ -217,7 +216,9 @@ void qedf_fip_recv(struct qedf_ctx *qedf, struct sk_buff *skb)
- 				vp = (struct fip_vn_desc *)desc;
- 				QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_LL2,
- 				    "fd_fc_id=%x.\n", ntoh24(vp->fd_fc_id));
--				cvl_port_id = ntoh24(vp->fd_fc_id);
-+				if (ntoh24(vp->fd_fc_id) ==
-+				    qedf->lport->port_id)
-+					do_reset = true;
- 				break;
- 			default:
- 				/* Ignore anything else */
-@@ -228,11 +229,8 @@ void qedf_fip_recv(struct qedf_ctx *qedf, struct sk_buff *skb)
- 		}
- 
- 		QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_LL2,
--		    "cvl_port_id=%06x cvl_mac=%pM.\n", cvl_port_id,
--		    cvl_mac);
--		if (cvl_port_id == qedf->lport->port_id &&
--		    ether_addr_equal(cvl_mac,
--		    qedf->ctlr.sel_fcf->fcf_mac)) {
-+		    "do_reset=%d.\n", do_reset);
-+		if (do_reset) {
- 			fcoe_ctlr_link_down(&qedf->ctlr);
- 			qedf_wait_for_upload(qedf);
- 			fcoe_ctlr_link_up(&qedf->ctlr);
++static int qedf_eh_bus_reset(struct scsi_cmnd *sc_cmd)
++{
++	QEDF_ERR(NULL, "BUS RESET Issued...\n");
++	/*
++	 * Essentially a no-op but return SUCCESS to prevent
++	 * unnecessary escalation to the host reset handler.
++	 */
++	return SUCCESS;
++}
++
+ void qedf_wait_for_upload(struct qedf_ctx *qedf)
+ {
+ 	while (1) {
+@@ -705,6 +715,7 @@ static int qedf_slave_configure(struct scsi_device *sdev)
+ 	.eh_abort_handler	= qedf_eh_abort,
+ 	.eh_device_reset_handler = qedf_eh_device_reset, /* lun reset */
+ 	.eh_target_reset_handler = qedf_eh_target_reset, /* target reset */
++	.eh_bus_reset_handler = qedf_eh_bus_reset,
+ 	.eh_host_reset_handler  = qedf_eh_host_reset,
+ 	.slave_configure	= qedf_slave_configure,
+ 	.dma_boundary = QED_HW_DMA_BOUNDARY,
 -- 
 1.8.5.6
