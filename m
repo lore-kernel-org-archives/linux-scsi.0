@@ -1,83 +1,139 @@
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v3 4/5] tcmu: Make dev_config configurable
-Date: Wed, 31 May 2017 09:17:49 -0500
-Message-ID: <1496240269-70123-1-git-send-email-bryantly@linux.vnet.ibm.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: nab@linux-iscsi.org, mchristi@redhat.com
-Cc: seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: [PATCH] scsi: Add STARGET_CREATE_REMOVE state to scsi_target_state
+Date: Wed, 31 May 2017 11:01:25 -0400
+Message-ID: <1496242885-5070-1-git-send-email-emilne@redhat.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This allows for userspace to change the device path after
-it has been created. Thus giving the user the ability to change
-the path. The use case for this is to allow for virtual optical
-to have media change.
+From: "Ewan D. Milne" <emilne@redhat.com>
 
-v3 - Fix kree spelling error to kfree
+The addition of the STARGET_REMOVE state had the side effect of
+introducing a race condition that can cause a crash.
 
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+scsi_target_reap_ref_release() checks the starget->state to
+see if it still in STARGET_CREATED, and if so, skips calling
+transport_remove_device() and device_del(), because the starget->state
+is only set to STARGET_RUNNING after scsi_target_add() has called
+device_add() and transport_add_device().
+
+However, if an rport loss occurs while a target is being scanned,
+it can happen that scsi_remove_target() will be called while the
+starget is still in the STARGET_CREATED state.  In this case, the
+starget->state will be set to STARGET_REMOVE, and as a result,
+scsi_target_reap_ref_release() will take the wrong path.  The end
+result is a panic:
+
+[ 1255.356653] Oops: 0000 [#1] SMP
+[ 1255.360154] Modules linked in: x86_pkg_temp_thermal kvm_intel kvm irqbypass crc32c_intel
+[ 1255.393234] CPU: 5 PID: 149 Comm: kworker/u96:4 Tainted: G        W       4.11.0+ #8
+[ 1255.401879] Hardware name: Dell Inc. PowerEdge R320/08VT7V, BIOS 2.0.22 11/19/2013
+[ 1255.410327] Workqueue: scsi_wq_6 fc_scsi_scan_rport [scsi_transport_fc]
+[ 1255.417720] task: ffff88060ca8c8c0 task.stack: ffffc900048a8000
+[ 1255.424331] RIP: 0010:kernfs_find_ns+0x13/0xc0
+[ 1255.429287] RSP: 0018:ffffc900048abbf0 EFLAGS: 00010246
+[ 1255.435123] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
+[ 1255.443083] RDX: 0000000000000000 RSI: ffffffff8188d659 RDI: 0000000000000000
+[ 1255.451043] RBP: ffffc900048abc10 R08: 0000000000000000 R09: 0000012433fe0025
+[ 1255.459005] R10: 0000000025e5a4b5 R11: 0000000025e5a4b5 R12: ffffffff8188d659
+[ 1255.466972] R13: 0000000000000000 R14: ffff8805f55e5088 R15: 0000000000000000
+[ 1255.474931] FS:  0000000000000000(0000) GS:ffff880616b40000(0000) knlGS:0000000000000000
+[ 1255.483959] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 1255.490370] CR2: 0000000000000068 CR3: 0000000001c09000 CR4: 00000000000406e0
+[ 1255.498332] Call Trace:
+[ 1255.501058]  kernfs_find_and_get_ns+0x31/0x60
+[ 1255.505916]  sysfs_unmerge_group+0x1d/0x60
+[ 1255.510498]  dpm_sysfs_remove+0x22/0x60
+[ 1255.514783]  device_del+0xf4/0x2e0
+[ 1255.518577]  ? device_remove_file+0x19/0x20
+[ 1255.523241]  attribute_container_class_device_del+0x1a/0x20
+[ 1255.529457]  transport_remove_classdev+0x4e/0x60
+[ 1255.534607]  ? transport_add_class_device+0x40/0x40
+[ 1255.540046]  attribute_container_device_trigger+0xb0/0xc0
+[ 1255.546069]  transport_remove_device+0x15/0x20
+[ 1255.551025]  scsi_target_reap_ref_release+0x25/0x40
+[ 1255.556467]  scsi_target_reap+0x2e/0x40
+[ 1255.560744]  __scsi_scan_target+0xaa/0x5b0
+[ 1255.565312]  scsi_scan_target+0xec/0x100
+[ 1255.569689]  fc_scsi_scan_rport+0xb1/0xc0 [scsi_transport_fc]
+[ 1255.576099]  process_one_work+0x14b/0x390
+[ 1255.580569]  worker_thread+0x4b/0x390
+[ 1255.584651]  kthread+0x109/0x140
+[ 1255.588251]  ? rescuer_thread+0x330/0x330
+[ 1255.592730]  ? kthread_park+0x60/0x60
+[ 1255.596815]  ret_from_fork+0x29/0x40
+[ 1255.600801] Code: 24 08 48 83 42 40 01 5b 41 5c 5d c3 66 66 66 2e 0f 1f 84 00 00 00 00 00 66 66 66 66 90 
+[ 1255.621876] RIP: kernfs_find_ns+0x13/0xc0 RSP: ffffc900048abbf0
+[ 1255.628479] CR2: 0000000000000068
+[ 1255.632756] ---[ end trace 34a69ba0477d036f ]---
+
+Fix this by adding another scsi_target state STARGET_CREATED_REMOVE
+to distinguish this case.
+
+Fixes: f05795d3d771 ("scsi: Add intermediate STARGET_REMOVE state to scsi_target_state")
+Reported-by: David Jeffery <djeffery@redhat.com>
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+Cc: stable@vger.kernel.org
 ---
- drivers/target/target_core_user.c | 41 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 41 insertions(+)
+ drivers/scsi/scsi_scan.c   | 5 +++--
+ drivers/scsi/scsi_sysfs.c  | 8 ++++++--
+ include/scsi/scsi_device.h | 1 +
+ 3 files changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index a4cf678..eea4630 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -1577,6 +1577,46 @@ static ssize_t tcmu_cmd_time_out_store(struct config_item *item, const char *pag
- }
- CONFIGFS_ATTR(tcmu_, cmd_time_out);
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 6f7128f..27a6d3c 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -384,11 +384,12 @@ static void scsi_target_reap_ref_release(struct kref *kref)
+ 		= container_of(kref, struct scsi_target, reap_ref);
  
-+static ssize_t tcmu_dev_path_show(struct config_item *item, char *page)
-+{
-+	struct se_dev_attrib *da = container_of(to_config_group(item),
-+						struct se_dev_attrib, da_group);
-+	struct tcmu_dev *udev = TCMU_DEV(da->da_dev);
-+
-+	return snprintf(page, PAGE_SIZE, "%s\n", udev->dev_config);
-+}
-+
-+static ssize_t tcmu_dev_path_store(struct config_item *item, const char *page,
-+				   size_t count)
-+{
-+	struct se_dev_attrib *da = container_of(to_config_group(item),
-+						struct se_dev_attrib, da_group);
-+	struct tcmu_dev *udev = TCMU_DEV(da->da_dev);
-+	char *copy = NULL;
-+	int ret;
-+
-+	copy = kstrdup(page, GFP_KERNEL);
-+	if (!copy) {
-+		kfree(copy);
-+		return -EINVAL;
-+	}
-+	strcpy(udev->dev_config, copy);
-+
-+	/* Check if device has been configured before */
-+	if (tcmu_dev_configured(udev)) {
-+		ret = tcmu_netlink_event(TCMU_CMD_RECONFIG_DEVICE,
-+					 udev->uio_info.name,
-+					 udev->uio_info.uio_dev->minor);
-+		if (ret) {
-+			pr_err("Unable to reconfigure device\n");
-+			return ret;
-+		}
-+	}
-+
-+	return count;
-+}
-+CONFIGFS_ATTR(tcmu_, dev_path);
-+
- static ssize_t tcmu_dev_size_show(struct config_item *item, char *page)
- {
- 	struct se_dev_attrib *da = container_of(to_config_group(item),
-@@ -1655,6 +1695,7 @@ CONFIGFS_ATTR(tcmu_, emulate_write_cache);
+ 	/*
+-	 * if we get here and the target is still in the CREATED state that
++	 * if we get here and the target is still in a CREATED state that
+ 	 * means it was allocated but never made visible (because a scan
+ 	 * turned up no LUNs), so don't call device_del() on it.
+ 	 */
+-	if (starget->state != STARGET_CREATED) {
++	if ((starget->state != STARGET_CREATED) &&
++	    (starget->state != STARGET_CREATED_REMOVE)) {
+ 		transport_remove_device(&starget->dev);
+ 		device_del(&starget->dev);
+ 	}
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 82dfe07..3a6f557 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1370,11 +1370,15 @@ void scsi_remove_target(struct device *dev)
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	list_for_each_entry(starget, &shost->__targets, siblings) {
+ 		if (starget->state == STARGET_DEL ||
+-		    starget->state == STARGET_REMOVE)
++		    starget->state == STARGET_REMOVE ||
++		    starget->state == STARGET_CREATED_REMOVE)
+ 			continue;
+ 		if (starget->dev.parent == dev || &starget->dev == dev) {
+ 			kref_get(&starget->reap_ref);
+-			starget->state = STARGET_REMOVE;
++			if (starget->state == STARGET_CREATED)
++				starget->state = STARGET_CREATED_REMOVE;
++			else
++				starget->state = STARGET_REMOVE;
+ 			spin_unlock_irqrestore(shost->host_lock, flags);
+ 			__scsi_remove_target(starget);
+ 			scsi_target_reap(starget);
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 05641ae..148e651 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -248,6 +248,7 @@ enum scsi_target_state {
+ 	STARGET_CREATED = 1,
+ 	STARGET_RUNNING,
+ 	STARGET_REMOVE,
++	STARGET_CREATED_REMOVE,
+ 	STARGET_DEL,
+ };
  
- struct configfs_attribute *tcmu_attrib_attrs[] = {
- 	&tcmu_attr_cmd_time_out,
-+	&tcmu_attr_dev_path,
- 	&tcmu_attr_dev_size,
- 	&tcmu_attr_emulate_write_cache,
- 	NULL,
 -- 
-2.5.4 (Apple Git-61)
+2.1.0
