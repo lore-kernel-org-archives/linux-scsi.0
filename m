@@ -1,71 +1,81 @@
 From: "Dupuis, Chad" <chad.dupuis@cavium.com>
-Subject: [PATCH V2 11/15] qedf: Fixup unnecessary parantheses around test_bit operations.
-Date: Wed, 31 May 2017 06:33:58 -0700
-Message-ID: <20170531133402.16629-12-chad.dupuis@cavium.com>
+Subject: [PATCH V2 05/15] qedf: Check that fcport is offloaded before dereferencing pointers in initiate_abts|cleanup.
+Date: Wed, 31 May 2017 06:33:52 -0700
+Message-ID: <20170531133402.16629-6-chad.dupuis@cavium.com>
 References: <20170531133402.16629-1-chad.dupuis@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0050.outbound.protection.outlook.com ([104.47.41.50]:38474
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0089.outbound.protection.outlook.com ([104.47.37.89]:41385
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751019AbdEaNeu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 31 May 2017 09:34:50 -0400
+        id S1751164AbdEaNem (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 31 May 2017 09:34:42 -0400
 In-Reply-To: <20170531133402.16629-1-chad.dupuis@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, QLogic-Storage-Upstream@cavium.com
 
+If an fcport is not offloaded then the members of the qedf_rport struct
+are undefined which may cause a system crash.
+
 Signed-off-by: Chad Dupuis <chad.dupuis@cavium.com>
 ---
- drivers/scsi/qedf/qedf_els.c | 6 +++---
- drivers/scsi/qedf/qedf_io.c  | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/qedf/qedf_io.c | 22 ++++++++++++++++------
+ 1 file changed, 16 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/qedf/qedf_els.c b/drivers/scsi/qedf/qedf_els.c
-index e197fd6..78d9f1c 100644
---- a/drivers/scsi/qedf/qedf_els.c
-+++ b/drivers/scsi/qedf/qedf_els.c
-@@ -44,7 +44,7 @@ static int qedf_initiate_els(struct qedf_rport *fcport, unsigned int op,
- 		goto els_err;
- 	}
- 
--	if (!(test_bit(QEDF_RPORT_SESSION_READY, &fcport->flags))) {
-+	if (!test_bit(QEDF_RPORT_SESSION_READY, &fcport->flags)) {
- 		QEDF_ERR(&(qedf->dbg_ctx), "els 0x%x: fcport not ready\n", op);
- 		rc = -EINVAL;
- 		goto els_err;
-@@ -225,7 +225,7 @@ int qedf_send_rrq(struct qedf_ioreq *aborted_io_req)
- 	fcport = aborted_io_req->fcport;
- 
- 	/* Check that fcport is still offloaded */
--	if (!(test_bit(QEDF_RPORT_SESSION_READY, &fcport->flags))) {
-+	if (!test_bit(QEDF_RPORT_SESSION_READY, &fcport->flags)) {
- 		QEDF_ERR(NULL, "fcport is no longer offloaded.\n");
- 		return -EINVAL;
- 	}
-@@ -550,7 +550,7 @@ static int qedf_send_srr(struct qedf_ioreq *orig_io_req, u32 offset, u8 r_ctl)
- 	fcport = orig_io_req->fcport;
- 
- 	/* Check that fcport is still offloaded */
--	if (!(test_bit(QEDF_RPORT_SESSION_READY, &fcport->flags))) {
-+	if (!test_bit(QEDF_RPORT_SESSION_READY, &fcport->flags)) {
- 		QEDF_ERR(NULL, "fcport is no longer offloaded.\n");
- 		return -EINVAL;
- 	}
 diff --git a/drivers/scsi/qedf/qedf_io.c b/drivers/scsi/qedf/qedf_io.c
-index db16004..ea37c78 100644
+index ca9097b..db16004 100644
 --- a/drivers/scsi/qedf/qedf_io.c
 +++ b/drivers/scsi/qedf/qedf_io.c
-@@ -1847,7 +1847,7 @@ static int qedf_execute_tmf(struct qedf_rport *fcport, struct scsi_cmnd *sc_cmd,
- 		return FAILED;
+@@ -1476,8 +1476,8 @@ int qedf_initiate_abts(struct qedf_ioreq *io_req, bool return_scsi_cmd_on_abts)
+ {
+ 	struct fc_lport *lport;
+ 	struct qedf_rport *fcport = io_req->fcport;
+-	struct fc_rport_priv *rdata = fcport->rdata;
+-	struct qedf_ctx *qedf = fcport->qedf;
++	struct fc_rport_priv *rdata;
++	struct qedf_ctx *qedf;
+ 	u16 xid;
+ 	u32 r_a_tov = 0;
+ 	int rc = 0;
+@@ -1485,15 +1485,18 @@ int qedf_initiate_abts(struct qedf_ioreq *io_req, bool return_scsi_cmd_on_abts)
+ 	struct fcoe_wqe *sqe;
+ 	u16 sqe_idx;
+ 
+-	r_a_tov = rdata->r_a_tov;
+-	lport = qedf->lport;
+-
++	/* Sanity check qedf_rport before dereferencing any pointers */
+ 	if (!test_bit(QEDF_RPORT_SESSION_READY, &fcport->flags)) {
+-		QEDF_ERR(&(qedf->dbg_ctx), "tgt not offloaded\n");
++		QEDF_ERR(NULL, "tgt not offloaded\n");
+ 		rc = 1;
+ 		goto abts_err;
  	}
  
--	if (!(test_bit(QEDF_RPORT_SESSION_READY, &fcport->flags))) {
++	rdata = fcport->rdata;
++	r_a_tov = rdata->r_a_tov;
++	qedf = fcport->qedf;
++	lport = qedf->lport;
++
+ 	if (lport->state != LPORT_ST_READY || !(lport->link_up)) {
+ 		QEDF_ERR(&(qedf->dbg_ctx), "link is not ready\n");
+ 		rc = 1;
+@@ -1729,6 +1732,13 @@ int qedf_initiate_cleanup(struct qedf_ioreq *io_req,
+ 		return SUCCESS;
+ 	}
+ 
++	/* Sanity check qedf_rport before dereferencing any pointers */
 +	if (!test_bit(QEDF_RPORT_SESSION_READY, &fcport->flags)) {
- 		QEDF_ERR(&(qedf->dbg_ctx), "fcport not offloaded\n");
- 		rc = FAILED;
- 		return FAILED;
++		QEDF_ERR(NULL, "tgt not offloaded\n");
++		rc = 1;
++		return SUCCESS;
++	}
++
+ 	qedf = fcport->qedf;
+ 	if (!qedf) {
+ 		QEDF_ERR(NULL, "qedf is NULL.\n");
 -- 
 1.8.5.6
