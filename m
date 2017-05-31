@@ -1,285 +1,133 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 01/15] lpfc: Add nvme initiator devloss support
-Date: Tue, 30 May 2017 23:04:25 -0700
-Message-ID: <20170531060439.2073-2-jsmart2021@gmail.com>
+Subject: [PATCH 03/15] lpfc: Fix nvme port role handling in sysfs and debugfs handlers.
+Date: Tue, 30 May 2017 23:04:27 -0700
+Message-ID: <20170531060439.2073-4-jsmart2021@gmail.com>
 References: <20170531060439.2073-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:34825 "EHLO
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:34523 "EHLO
         mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750930AbdEaGEv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 May 2017 02:04:51 -0400
-Received: by mail-qt0-f195.google.com with SMTP id r58so809243qtb.2
-        for <linux-scsi@vger.kernel.org>; Tue, 30 May 2017 23:04:51 -0700 (PDT)
+        with ESMTP id S1750930AbdEaGEy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 May 2017 02:04:54 -0400
+Received: by mail-qt0-f195.google.com with SMTP id l39so810931qtb.1
+        for <linux-scsi@vger.kernel.org>; Tue, 30 May 2017 23:04:54 -0700 (PDT)
 In-Reply-To: <20170531060439.2073-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-Add nvme initiator devloss support
+While debugging Devloss and recovery, debugfs and sysfs
+were found to not show the NVME port roles consistently.
 
-The existing implementation was based on no devloss behavior
-in the transport (e.g. immediate teardown) so code didn't
-properly handle delayed nvme rport device unregister calls.
-In addition, the driver was not correctly cycling the rport
-port role for each register-unregister-reregister process.
+The port role FC_PORT_ROLE_NVME_DISCOVERY was added with
+the devloss bringup and the other issues were just oversight.
 
-This patch does the following:
-Rework the code to properly handle rport device unregister
-calls and potential re-allocation of the remoteport structure
-if the port comes back in under dev_loss_tmo.
-
-Correct code that was incorrectly cycling the rport
-port role for each register-unregister-reregister process.
-
-Prep the code to enable calling the nvme_fc transport api
-to dynamically update dev_loss_tmo when the scsi sysfs interface
-changes it.
-
-Memset the rpinfo structure in the registration call to enforce
-"accept nvme transport defaults" in the registration call.  Driver
-parameters do influence the dev_loss_tmo transport setting
-dynamically.
-
-Simplifies the register function: the driver was incorrectly
-searching its local rport list to determine resume or new semantics,
-which is not valid as the transport already handles this.  The rport
-was resumed if the rport handed back matches the ndlp->nrport pointer.
-Otherwise, devloss fired and the ndlp's nrport is NULL.
+Add NVME Target and DISCSRVC to debugfs nodeinfo and sysfs
+nvme info handlers. The full port role was added to the NVME
+data only not the generic nodelist.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_attr.c |   7 ++-
- drivers/scsi/lpfc/lpfc_nvme.c | 141 ++++++++++++++++--------------------------
- 2 files changed, 57 insertions(+), 91 deletions(-)
+ drivers/scsi/lpfc/lpfc_attr.c    | 22 ++++++++++------------
+ drivers/scsi/lpfc/lpfc_debugfs.c | 32 ++++++++++++++++++--------------
+ 2 files changed, 28 insertions(+), 26 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index bb2d9e238225..37f258fcf6d4 100644
+index 6d9b83cd82a2..200a614bb540 100644
 --- a/drivers/scsi/lpfc/lpfc_attr.c
 +++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -3198,9 +3198,12 @@ lpfc_update_rport_devloss_tmo(struct lpfc_vport *vport)
+@@ -312,25 +312,23 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+ 		len += snprintf(buf + len, PAGE_SIZE - len, "DID x%06x ",
+ 				nrport->port_id);
  
- 	shost = lpfc_shost_from_vport(vport);
- 	spin_lock_irq(shost->host_lock);
--	list_for_each_entry(ndlp, &vport->fc_nodes, nlp_listp)
--		if (NLP_CHK_NODE_ACT(ndlp) && ndlp->rport)
-+	list_for_each_entry(ndlp, &vport->fc_nodes, nlp_listp) {
-+		if (!NLP_CHK_NODE_ACT(ndlp))
-+			continue;
-+		if (ndlp->rport)
- 			ndlp->rport->dev_loss_tmo = vport->cfg_devloss_tmo;
-+	}
- 	spin_unlock_irq(shost->host_lock);
- }
- 
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 8008c8205fb6..70675fd7d884 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -186,13 +186,13 @@ lpfc_nvme_remoteport_delete(struct nvme_fc_remote_port *remoteport)
- 
- 	/* Remove this rport from the lport's list - memory is owned by the
- 	 * transport. Remove the ndlp reference for the NVME transport before
--	 * calling state machine to remove the node, this is devloss = 0
--	 * semantics.
-+	 * calling state machine to remove the node.
- 	 */
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
- 			"6146 remoteport delete complete %p\n",
- 			remoteport);
- 	list_del(&rport->list);
-+	ndlp->nrport = NULL;
- 	lpfc_nlp_put(ndlp);
- 
-  rport_err:
-@@ -1466,7 +1466,7 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
- 
- 	/* The remote node has to be ready to send an abort. */
- 	if ((ndlp->nlp_state != NLP_STE_MAPPED_NODE) &&
--	    !(ndlp->nlp_type & NLP_NVME_TARGET)) {
-+	    (ndlp->nlp_type & NLP_NVME_TARGET)) {
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_ABTS,
- 				 "6048 rport %p, DID x%06x not ready for "
- 				 "IO. State x%x, Type x%x\n",
-@@ -2340,69 +2340,44 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 	localport = vport->localport;
- 	lport = (struct lpfc_nvme_lport *)localport->private;
- 
--	if (ndlp->nlp_type & (NLP_NVME_TARGET | NLP_NVME_INITIATOR)) {
--
--		/* The driver isn't expecting the rport wwn to change
--		 * but it might get a different DID on a different
--		 * fabric.
-+	/* NVME rports are not preserved across devloss.
-+	 * Just register this instance.  Note, rpinfo->dev_loss_tmo
-+	 * is left 0 to indicate accept transport defaults.  The
-+	 * driver communicates port role capabilities consistent
-+	 * with the PRLI response data.
-+	 */
-+	memset(&rpinfo, 0, sizeof(struct nvme_fc_port_info));
-+	rpinfo.port_id = ndlp->nlp_DID;
-+	if (ndlp->nlp_type & NLP_NVME_TARGET)
-+		rpinfo.port_role |= FC_PORT_ROLE_NVME_TARGET;
-+	if (ndlp->nlp_type & NLP_NVME_INITIATOR)
-+		rpinfo.port_role |= FC_PORT_ROLE_NVME_INITIATOR;
+-		switch (nrport->port_role) {
+-		case FC_PORT_ROLE_NVME_INITIATOR:
++		/* An NVME rport can have multiple roles. */
++		if (nrport->port_role & FC_PORT_ROLE_NVME_INITIATOR)
+ 			len +=  snprintf(buf + len, PAGE_SIZE - len,
+ 					 "INITIATOR ");
+-			break;
+-		case FC_PORT_ROLE_NVME_TARGET:
++		if (nrport->port_role & FC_PORT_ROLE_NVME_TARGET)
+ 			len +=  snprintf(buf + len, PAGE_SIZE - len,
+ 					 "TARGET ");
+-			break;
+-		case FC_PORT_ROLE_NVME_DISCOVERY:
++		if (nrport->port_role & FC_PORT_ROLE_NVME_DISCOVERY)
+ 			len +=  snprintf(buf + len, PAGE_SIZE - len,
+-					 "DISCOVERY ");
+-			break;
+-		default:
++					 "DISCSRVC ");
++		if (nrport->port_role & ~(FC_PORT_ROLE_NVME_INITIATOR |
++					  FC_PORT_ROLE_NVME_TARGET |
++					  FC_PORT_ROLE_NVME_DISCOVERY))
+ 			len +=  snprintf(buf + len, PAGE_SIZE - len,
+-					 "UNKNOWN_ROLE x%x",
++					 "UNKNOWN ROLE x%x",
+ 					 nrport->port_role);
+-			break;
+-		}
 +
-+	if (ndlp->nlp_type & NLP_NVME_DISCOVERY)
-+		rpinfo.port_role |= FC_PORT_ROLE_NVME_DISCOVERY;
+ 		len +=  snprintf(buf + len, PAGE_SIZE - len, "%s  ", statep);
+ 		/* Terminate the string. */
+ 		len +=  snprintf(buf + len, PAGE_SIZE - len, "\n");
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index d71bda24b08e..dd8598bc50f3 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -621,6 +621,13 @@ lpfc_debugfs_nodelist_data(struct lpfc_vport *vport, char *buf, int size)
+ 				ndlp->nlp_sid);
+ 		if (ndlp->nlp_type & NLP_FCP_INITIATOR)
+ 			len += snprintf(buf+len, size-len, "FCP_INITIATOR ");
++		if (ndlp->nlp_type & NLP_NVME_TARGET)
++			len += snprintf(buf + len,
++					size - len, "NVME_TGT sid:%d ",
++					NLP_NO_SID);
++		if (ndlp->nlp_type & NLP_NVME_INITIATOR)
++			len += snprintf(buf + len,
++					size - len, "NVME_INITIATOR ");
+ 		len += snprintf(buf+len, size-len, "usgmap:%x ",
+ 			ndlp->nlp_usg_map);
+ 		len += snprintf(buf+len, size-len, "refcnt:%x",
+@@ -698,26 +705,23 @@ lpfc_debugfs_nodelist_data(struct lpfc_vport *vport, char *buf, int size)
+ 				nrport->port_name);
+ 		len += snprintf(buf + len, size - len, "WWNN x%llx ",
+ 				nrport->node_name);
+-		switch (nrport->port_role) {
+-		case FC_PORT_ROLE_NVME_INITIATOR:
 +
-+	rpinfo.port_name = wwn_to_u64(ndlp->nlp_portname.u.wwn);
-+	rpinfo.node_name = wwn_to_u64(ndlp->nlp_nodename.u.wwn);
-+	ret = nvme_fc_register_remoteport(localport, &rpinfo, &remote_port);
-+	if (!ret) {
-+		/* If the ndlp already has an nrport, this is just
-+		 * a resume of the existing rport.  Else this is a
-+		 * new rport.
- 		 */
--		list_for_each_entry(rport, &lport->rport_list, list) {
--			if (rport->remoteport->port_name !=
--			    wwn_to_u64(ndlp->nlp_portname.u.wwn))
--				continue;
--			lpfc_printf_vlog(ndlp->vport, KERN_INFO, LOG_NVME_DISC,
--					 "6035 lport %p, found matching rport "
--					 "at wwpn 0x%llx, Data: x%x x%x x%x "
--					 "x%06x\n",
--					 lport,
--					 rport->remoteport->port_name,
--					 rport->remoteport->port_id,
--					 rport->remoteport->port_role,
-+		rport = remote_port->private;
-+		if (ndlp->nrport == rport) {
-+			lpfc_printf_vlog(ndlp->vport, KERN_INFO,
-+					 LOG_NVME_DISC,
-+					 "6014 Rebinding lport to "
-+					 "rport wwpn 0x%llx, "
-+					 "Data: x%x x%x x%x x%06x\n",
-+					 remote_port->port_name,
-+					 remote_port->port_id,
-+					 remote_port->port_role,
- 					 ndlp->nlp_type,
- 					 ndlp->nlp_DID);
--			remote_port = rport->remoteport;
--			if ((remote_port->port_id == 0) &&
--			    (remote_port->port_role ==
--			     FC_PORT_ROLE_NVME_DISCOVERY)) {
--				remote_port->port_id = ndlp->nlp_DID;
--				remote_port->port_role &=
--					~FC_PORT_ROLE_NVME_DISCOVERY;
--				if (ndlp->nlp_type & NLP_NVME_TARGET)
--					remote_port->port_role |=
--						FC_PORT_ROLE_NVME_TARGET;
--				if (ndlp->nlp_type & NLP_NVME_INITIATOR)
--					remote_port->port_role |=
--						FC_PORT_ROLE_NVME_INITIATOR;
--
--				lpfc_printf_vlog(ndlp->vport, KERN_INFO,
--						 LOG_NVME_DISC,
--						 "6014 Rebinding lport to "
--						 "rport wwpn 0x%llx, "
--						 "Data: x%x x%x x%x x%06x\n",
--						 remote_port->port_name,
--						 remote_port->port_id,
--						 remote_port->port_role,
--						 ndlp->nlp_type,
--						 ndlp->nlp_DID);
--			}
--			return 0;
++		/* An NVME rport can have multiple roles. */
++		if (nrport->port_role & FC_PORT_ROLE_NVME_INITIATOR)
+ 			len +=  snprintf(buf + len, size - len,
+-					 "NVME INITIATOR ");
+-			break;
+-		case FC_PORT_ROLE_NVME_TARGET:
++					 "INITIATOR ");
++		if (nrport->port_role & FC_PORT_ROLE_NVME_TARGET)
+ 			len +=  snprintf(buf + len, size - len,
+-					 "NVME TARGET ");
+-			break;
+-		case FC_PORT_ROLE_NVME_DISCOVERY:
++					 "TARGET ");
++		if (nrport->port_role & FC_PORT_ROLE_NVME_DISCOVERY)
+ 			len +=  snprintf(buf + len, size - len,
+-					 "NVME DISCOVERY ");
+-			break;
+-		default:
++					 "DISCSRVC ");
++		if (nrport->port_role & ~(FC_PORT_ROLE_NVME_INITIATOR |
++					  FC_PORT_ROLE_NVME_TARGET |
++					  FC_PORT_ROLE_NVME_DISCOVERY))
+ 			len +=  snprintf(buf + len, size - len,
+ 					 "UNKNOWN ROLE x%x",
+ 					 nrport->port_role);
+-			break;
 -		}
 -
--		/* NVME rports are not preserved across devloss.
--		 * Just register this instance.
--		 */
--		rpinfo.port_id = ndlp->nlp_DID;
--		rpinfo.port_role = 0;
--		if (ndlp->nlp_type & NLP_NVME_TARGET)
--			rpinfo.port_role |= FC_PORT_ROLE_NVME_TARGET;
--		if (ndlp->nlp_type & NLP_NVME_INITIATOR)
--			rpinfo.port_role |= FC_PORT_ROLE_NVME_INITIATOR;
--		rpinfo.port_name = wwn_to_u64(ndlp->nlp_portname.u.wwn);
--		rpinfo.node_name = wwn_to_u64(ndlp->nlp_nodename.u.wwn);
--		ret = nvme_fc_register_remoteport(localport, &rpinfo,
--						  &remote_port);
--		if (!ret) {
--			rport = remote_port->private;
-+		} else {
-+			/* New rport. */
- 			rport->remoteport = remote_port;
- 			rport->lport = lport;
- 			rport->ndlp = lpfc_nlp_get(ndlp);
-@@ -2413,26 +2388,22 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 			list_add_tail(&rport->list, &lport->rport_list);
- 			lpfc_printf_vlog(vport, KERN_INFO,
- 					 LOG_NVME_DISC | LOG_NODE,
--					 "6022 Binding new rport to lport %p "
--					 "Rport WWNN 0x%llx, Rport WWPN 0x%llx "
--					 "DID x%06x Role x%x\n",
-+					 "6022 Binding new rport to "
-+					 "lport %p Rport WWNN 0x%llx, "
-+					 "Rport WWPN 0x%llx DID "
-+					 "x%06x Role x%x\n",
- 					 lport,
- 					 rpinfo.node_name, rpinfo.port_name,
- 					 rpinfo.port_id, rpinfo.port_role);
--		} else {
--			lpfc_printf_vlog(vport, KERN_ERR,
--					 LOG_NVME_DISC | LOG_NODE,
--					 "6031 RemotePort Registration failed "
--					 "err: %d, DID x%06x\n",
--					 ret, ndlp->nlp_DID);
- 		}
- 	} else {
--		ret = -EINVAL;
--		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
--				 "6027 Unknown nlp_type x%x on DID x%06x "
--				 "ndlp %p.  Not Registering nvme rport\n",
--				 ndlp->nlp_type, ndlp->nlp_DID, ndlp);
-+		lpfc_printf_vlog(vport, KERN_ERR,
-+				 LOG_NVME_DISC | LOG_NODE,
-+				 "6031 RemotePort Registration failed "
-+				 "err: %d, DID x%06x\n",
-+				 ret, ndlp->nlp_DID);
+ 		/* Terminate the string. */
+ 		len +=  snprintf(buf + len, size - len, "\n");
  	}
-+
- 	return ret;
- #else
- 	return 0;
-@@ -2460,7 +2431,6 @@ lpfc_nvme_unregister_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 	struct lpfc_nvme_lport *lport;
- 	struct lpfc_nvme_rport *rport;
- 	struct nvme_fc_remote_port *remoteport;
--	unsigned long wait_tmo;
- 
- 	localport = vport->localport;
- 
-@@ -2491,6 +2461,10 @@ lpfc_nvme_unregister_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 	 */
- 	if (ndlp->nlp_type & (NLP_NVME_TARGET | NLP_NVME_INITIATOR)) {
- 		init_completion(&rport->rport_unreg_done);
-+
-+		/* No concern about the role change on the nvme remoteport.
-+		 * The transport will update it.
-+		 */
- 		ret = nvme_fc_unregister_remoteport(remoteport);
- 		if (ret != 0) {
- 			lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_DISC,
-@@ -2499,17 +2473,6 @@ lpfc_nvme_unregister_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 					 ret, remoteport->port_state);
- 		}
- 
--		/* Wait for the driver's delete completion routine to finish
--		 * before proceeding.  This guarantees the transport and driver
--		 * have completed the unreg process.
--		 */
--		wait_tmo = msecs_to_jiffies(5000);
--		ret = wait_for_completion_timeout(&rport->rport_unreg_done,
--						  wait_tmo);
--		if (ret == 0) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_DISC,
--					 "6169 Unreg nvme wait timeout\n");
--		}
- 	}
- 	return;
- 
 -- 
 2.11.0
