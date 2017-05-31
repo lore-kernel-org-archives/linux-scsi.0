@@ -1,102 +1,83 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v3 06/23] scsi: hisi_sas: relocate get_ncq_tag_v2_hw()
-Date: Wed, 31 May 2017 22:32:58 +0800
-Message-ID: <1496241195-217678-7-git-send-email-john.garry@huawei.com>
-References: <1496241195-217678-1-git-send-email-john.garry@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1496241195-217678-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: john.garry2@mail.dcu.ie, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH v3 4/5] tcmu: Make dev_config configurable
+Date: Wed, 31 May 2017 09:17:49 -0500
+Message-ID: <1496240269-70123-1-git-send-email-bryantly@linux.vnet.ibm.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: nab@linux-iscsi.org, mchristi@redhat.com
+Cc: seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+This allows for userspace to change the device path after
+it has been created. Thus giving the user the ability to change
+the path. The use case for this is to allow for virtual optical
+to have media change.
 
-Relocate get_ncq_tag_v2_hw() to a common location, as
-future hw versions will require it.
-Also rename with "hisi_sas_" prefix for consistency.
+v3 - Fix kree spelling error to kfree
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  1 +
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 15 +++++++++++++++
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 16 +---------------
- 3 files changed, 17 insertions(+), 15 deletions(-)
+ drivers/target/target_core_user.c | 41 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 41 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index f2d69cd..439b1f2 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -360,6 +360,7 @@ struct hisi_sas_command_table_ssp {
- extern struct hisi_sas_port *to_hisi_sas_port(struct asd_sas_port *sas_port);
- extern void hisi_sas_sata_done(struct sas_task *task,
- 			    struct hisi_sas_slot *slot);
-+extern int hisi_sas_get_ncq_tag(struct sas_task *task, u32 *tag);
- extern int hisi_sas_probe(struct platform_device *pdev,
- 			  const struct hisi_sas_hw *ops);
- extern int hisi_sas_remove(struct platform_device *pdev);
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 88ace7c..32962d3 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -103,6 +103,21 @@ void hisi_sas_sata_done(struct sas_task *task,
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index a4cf678..eea4630 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -1577,6 +1577,46 @@ static ssize_t tcmu_cmd_time_out_store(struct config_item *item, const char *pag
  }
- EXPORT_SYMBOL_GPL(hisi_sas_sata_done);
+ CONFIGFS_ATTR(tcmu_, cmd_time_out);
  
-+int hisi_sas_get_ncq_tag(struct sas_task *task, u32 *tag)
++static ssize_t tcmu_dev_path_show(struct config_item *item, char *page)
 +{
-+	struct ata_queued_cmd *qc = task->uldd_task;
++	struct se_dev_attrib *da = container_of(to_config_group(item),
++						struct se_dev_attrib, da_group);
++	struct tcmu_dev *udev = TCMU_DEV(da->da_dev);
 +
-+	if (qc) {
-+		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
-+			qc->tf.command == ATA_CMD_FPDMA_READ) {
-+			*tag = qc->tag;
-+			return 1;
++	return snprintf(page, PAGE_SIZE, "%s\n", udev->dev_config);
++}
++
++static ssize_t tcmu_dev_path_store(struct config_item *item, const char *page,
++				   size_t count)
++{
++	struct se_dev_attrib *da = container_of(to_config_group(item),
++						struct se_dev_attrib, da_group);
++	struct tcmu_dev *udev = TCMU_DEV(da->da_dev);
++	char *copy = NULL;
++	int ret;
++
++	copy = kstrdup(page, GFP_KERNEL);
++	if (!copy) {
++		kfree(copy);
++		return -EINVAL;
++	}
++	strcpy(udev->dev_config, copy);
++
++	/* Check if device has been configured before */
++	if (tcmu_dev_configured(udev)) {
++		ret = tcmu_netlink_event(TCMU_CMD_RECONFIG_DEVICE,
++					 udev->uio_info.name,
++					 udev->uio_info.uio_dev->minor);
++		if (ret) {
++			pr_err("Unable to reconfigure device\n");
++			return ret;
 +		}
 +	}
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(hisi_sas_get_ncq_tag);
 +
- static struct hisi_hba *dev_to_hisi_hba(struct domain_device *device)
++	return count;
++}
++CONFIGFS_ATTR(tcmu_, dev_path);
++
+ static ssize_t tcmu_dev_size_show(struct config_item *item, char *page)
  {
- 	return device->port->ha->lldd_ha;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index fdd7019..9cc5435 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -2332,20 +2332,6 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
- 	return sts;
- }
+ 	struct se_dev_attrib *da = container_of(to_config_group(item),
+@@ -1655,6 +1695,7 @@ CONFIGFS_ATTR(tcmu_, emulate_write_cache);
  
--static int get_ncq_tag_v2_hw(struct sas_task *task, u32 *tag)
--{
--	struct ata_queued_cmd *qc = task->uldd_task;
--
--	if (qc) {
--		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
--			qc->tf.command == ATA_CMD_FPDMA_READ) {
--			*tag = qc->tag;
--			return 1;
--		}
--	}
--	return 0;
--}
--
- static int prep_ata_v2_hw(struct hisi_hba *hisi_hba,
- 			  struct hisi_sas_slot *slot)
- {
-@@ -2393,7 +2379,7 @@ static int prep_ata_v2_hw(struct hisi_hba *hisi_hba,
- 	hdr->dw1 = cpu_to_le32(dw1);
- 
- 	/* dw2 */
--	if (task->ata_task.use_ncq && get_ncq_tag_v2_hw(task, &hdr_tag)) {
-+	if (task->ata_task.use_ncq && hisi_sas_get_ncq_tag(task, &hdr_tag)) {
- 		task->ata_task.fis.sector_count |= (u8) (hdr_tag << 3);
- 		dw2 |= hdr_tag << CMD_HDR_NCQ_TAG_OFF;
- 	}
+ struct configfs_attribute *tcmu_attrib_attrs[] = {
+ 	&tcmu_attr_cmd_time_out,
++	&tcmu_attr_dev_path,
+ 	&tcmu_attr_dev_size,
+ 	&tcmu_attr_emulate_write_cache,
+ 	NULL,
 -- 
-1.9.1
+2.5.4 (Apple Git-61)
