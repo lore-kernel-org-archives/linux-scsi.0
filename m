@@ -1,56 +1,76 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 12/15] lpfc: Null pointer dereference when log_verbose is set to 0xffffffff
-Date: Tue, 30 May 2017 23:04:36 -0700
-Message-ID: <20170531060439.2073-13-jsmart2021@gmail.com>
+Subject: [PATCH 13/15] lpfc: Fix PRLI retry handling when target rejects it.
+Date: Tue, 30 May 2017 23:04:37 -0700
+Message-ID: <20170531060439.2073-14-jsmart2021@gmail.com>
 References: <20170531060439.2073-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:33531 "EHLO
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:35462 "EHLO
         mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751002AbdEaGFJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 May 2017 02:05:09 -0400
-Received: by mail-qk0-f193.google.com with SMTP id c206so738902qkb.0
-        for <linux-scsi@vger.kernel.org>; Tue, 30 May 2017 23:05:09 -0700 (PDT)
+        with ESMTP id S1751081AbdEaGFL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 May 2017 02:05:11 -0400
+Received: by mail-qk0-f193.google.com with SMTP id v195so738314qka.2
+        for <linux-scsi@vger.kernel.org>; Tue, 30 May 2017 23:05:10 -0700 (PDT)
 In-Reply-To: <20170531060439.2073-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-Kernel panic when log_verbose is set to 0xffffffff
+The nvmet driver was rejecting the initiator's PRLI because
+its reg_rpi for the PLOGI was still outstanding.  The initiator
+would resend the PRLI without delay and get the same answer.
+The PRLI retries would exhaust causing the nvme initiator to
+set the nvmet ndlp to UNMAPPED.
 
-phba->pport is dereferenced before it is initialized
+The driver's lpfc_els_retry handler did not have a policy for an
+LS_RJT with explanation CMD_IN_PROGRESS for PRLI or NVME_PRLI.
+This caused the delay to remain at 0 but retry set 1.
 
-Fix: Do not dereference phba->pport if it is NULL
+Fix: When the ELS response is LS_RJT, TPC and the command was PRLI
+or NVME_PRLI, just set the delay to 1000 mS to get a 1 second
+delay on the PRLI retry.  This was enough to allow the REG_RPI to
+complete at the target.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c | 17 ++++++++++++++---
+ 1 file changed, 14 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index c4ceef69bd6b..fb4c708ae747 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -7513,7 +7513,8 @@ lpfc_sli_issue_mbox_s3(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmbox,
- 				"(%d):0308 Mbox cmd issue - BUSY Data: "
- 				"x%x x%x x%x x%x\n",
- 				pmbox->vport ? pmbox->vport->vpi : 0xffffff,
--				mbx->mbxCommand, phba->pport->port_state,
-+				mbx->mbxCommand,
-+				phba->pport ? phba->pport->port_state : 0xff,
- 				psli->sli_flag, flag);
- 
- 		psli->slistat.mbox_busy++;
-@@ -7565,7 +7566,8 @@ lpfc_sli_issue_mbox_s3(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmbox,
- 			"(%d):0309 Mailbox cmd x%x issue Data: x%x x%x "
- 			"x%x\n",
- 			pmbox->vport ? pmbox->vport->vpi : 0,
--			mbx->mbxCommand, phba->pport->port_state,
-+			mbx->mbxCommand,
-+			phba->pport ? phba->pport->port_state : 0xff,
- 			psli->sli_flag, flag);
- 
- 	if (mbx->mbxCommand != MBX_HEARTBEAT) {
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 8e532b39ae93..a140318d6159 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -3332,6 +3332,19 @@ lpfc_els_retry(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 		 */
+ 		switch (stat.un.b.lsRjtRsnCode) {
+ 		case LSRJT_UNABLE_TPC:
++			/* The driver has a VALID PLOGI but the rport has
++			 * rejected the PRLI - can't do it now.  Delay
++			 * for 1 second and try again - don't care about
++			 * the explanation.
++			 */
++			if (cmd == ELS_CMD_PRLI || cmd == ELS_CMD_NVMEPRLI) {
++				delay = 1000;
++				maxretry = lpfc_max_els_tries + 1;
++				retry = 1;
++				break;
++			}
++
++			/* Legacy bug fix code for targets with PLOGI delays. */
+ 			if (stat.un.b.lsRjtRsnCodeExp ==
+ 			    LSEXP_CMD_IN_PROGRESS) {
+ 				if (cmd == ELS_CMD_PLOGI) {
+@@ -3350,9 +3363,7 @@ lpfc_els_retry(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 				retry = 1;
+ 				break;
+ 			}
+-			if ((cmd == ELS_CMD_PLOGI) ||
+-			    (cmd == ELS_CMD_PRLI) ||
+-			    (cmd == ELS_CMD_NVMEPRLI)) {
++			if (cmd == ELS_CMD_PLOGI) {
+ 				delay = 1000;
+ 				maxretry = lpfc_max_els_tries + 1;
+ 				retry = 1;
 -- 
 2.11.0
