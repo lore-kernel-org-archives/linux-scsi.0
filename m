@@ -1,52 +1,59 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 0/3] libfc: fix potential timer list corruption
-Date: Wed, 31 May 2017 11:27:04 +0200
-Message-ID: <46cc3e51-4fcd-8811-a9a8-dac975aef706@suse.de>
-References: <1496157254-114166-1-git-send-email-hare@suse.de>
+From: Sumit Saxena <sumit.saxena@broadcom.com>
+Subject: RE: [PATCH] megaraid: Fix a sleep-in-atomic bug
+Date: Wed, 31 May 2017 15:48:03 +0530
+Message-ID: <ecd2b8137043d6c6b75c4f44b963bebd@mail.gmail.com>
+References: <1496199416-2556-1-git-send-email-baijiaju1990@163.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36985 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751004AbdEaJ1I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 31 May 2017 05:27:08 -0400
-In-Reply-To: <1496157254-114166-1-git-send-email-hare@suse.de>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1496199416-2556-1-git-send-email-baijiaju1990@163.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jia-Ju Bai <baijiaju1990@163.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Johannes Thumshirn <jth@kernel.org>, linux-scsi@vger.kernel.org
 
-On 05/30/2017 05:14 PM, Hannes Reinecke wrote:
-> Hi all,
-> 
-> we've seen reports for a crash with an invalid timer_list->function,
-> which turned out to be an unsafe usage of libfc discovery callbacks.
-> This patchset fixes up the problem
-> 
-> As usual, comments and reviews are welcome.
+>-----Original Message-----
+>From: Jia-Ju Bai [mailto:baijiaju1990@163.com]
+>Sent: Wednesday, May 31, 2017 8:27 AM
+>To: kashyap.desai@broadcom.com; sumit.saxena@broadcom.com;
+>shivasharan.srikanteshwara@broadcom.com; jejb@linux.vnet.ibm.com;
+>martin.petersen@oracle.com
+>Cc: megaraidlinux.pdl@broadcom.com; linux-scsi@vger.kernel.org; linux-
+>kernel@vger.kernel.org; Jia-Ju Bai
+>Subject: [PATCH] megaraid: Fix a sleep-in-atomic bug
+>
+>The driver may sleep under a spin lock, and the function call path is:
+>mraid_mm_attach_buf (acquire the lock by spin_lock_irqsave)
+>  pci_pool_alloc(GFP_KERNEL) --> may sleep
+>
+>To fix it, the "GFP_KERNEL" is replaced with "GFP_ATOMIC".
+>
+>Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
+>---
+> drivers/scsi/megaraid/megaraid_mm.c |    2 +-
+> 1 file changed, 1 insertion(+), 1 deletion(-)
+>
+>diff --git a/drivers/scsi/megaraid/megaraid_mm.c
+>b/drivers/scsi/megaraid/megaraid_mm.c
+>index 4cf9ed9..c43afb8 100644
+>--- a/drivers/scsi/megaraid/megaraid_mm.c
+>+++ b/drivers/scsi/megaraid/megaraid_mm.c
+>@@ -574,7 +574,7 @@
+>
+> 	kioc->pool_index	= right_pool;
+> 	kioc->free_buf		= 1;
+>-	kioc->buf_vaddr 	= pci_pool_alloc(pool->handle, GFP_KERNEL,
+>+	kioc->buf_vaddr 	= pci_pool_alloc(pool->handle, GFP_ATOMIC,
+> 							&kioc->buf_paddr);
+> 	spin_unlock_irqrestore(&pool->lock, flags);
 
-The patches look good themselves, but I'd prefer a *why* in the commit
-message. For instance in patch 1 you have:
+This is very old driver and reached EOL. Did you face any issue because of
+this bug or discover this through code review?
+Anyways patch looks good to me.
 
-"Move 'pending' and 'requested' setting out of fc_disc_gpn_fc_req()
-into the calling function.
+Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
 
-No functional change."
-
-But why do you need to move the 'pending' and 'requested' settings?
-
-With an a bit more verbose changelog
-
-Acked-by: Johannes Thumshirn <jth@kernel.org>
-
-for the whole series
-
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+>
+>--
+>1.7.9.5
+>
