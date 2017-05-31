@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v3 17/23] scsi: hisi_sas: add v3 code to send ATA frame
-Date: Wed, 31 May 2017 22:33:09 +0800
-Message-ID: <1496241195-217678-18-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v3 22/23] scsi: hisi_sas: add v3 code to fill some more hw function pointers
+Date: Wed, 31 May 2017 22:33:14 +0800
+Message-ID: <1496241195-217678-23-git-send-email-john.garry@huawei.com>
 References: <1496241195-217678-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,160 +14,100 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Add code to prepare ATA frame for v3 hw
+Add code to fill the interface of phy_hard_reset, phy_get_max_linkrate,
+and phy enable/disable.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 106 +++++++++++++++++++++++++++++++++
- 1 file changed, 106 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 40 +++++++++++++++++++++++++++++++++-
+ 1 file changed, 39 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index d4e4844..613c625 100644
+index 3203221..17f9ac9 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -171,8 +171,11 @@
- #define CMD_HDR_CMD_OFF			29
- #define CMD_HDR_CMD_MSK			(0x7 << CMD_HDR_CMD_OFF)
- /* dw1 */
-+#define CMD_HDR_UNCON_CMD_OFF	3
- #define CMD_HDR_DIR_OFF			5
- #define CMD_HDR_DIR_MSK			(0x3 << CMD_HDR_DIR_OFF)
-+#define CMD_HDR_RESET_OFF		7
-+#define CMD_HDR_RESET_MSK		(0x1 << CMD_HDR_RESET_OFF)
- #define CMD_HDR_VDTL_OFF		10
- #define CMD_HDR_VDTL_MSK		(0x1 << CMD_HDR_VDTL_OFF)
- #define CMD_HDR_FRAME_TYPE_OFF		11
-@@ -182,6 +185,8 @@
- /* dw2 */
- #define CMD_HDR_CFL_OFF			0
- #define CMD_HDR_CFL_MSK			(0x1ff << CMD_HDR_CFL_OFF)
-+#define CMD_HDR_NCQ_TAG_OFF		10
-+#define CMD_HDR_NCQ_TAG_MSK		(0x1f << CMD_HDR_NCQ_TAG_OFF)
- #define CMD_HDR_MRFL_OFF		15
- #define CMD_HDR_MRFL_MSK		(0x1ff << CMD_HDR_MRFL_OFF)
- #define CMD_HDR_SG_MOD_OFF		24
-@@ -244,6 +249,11 @@ enum {
- #define DIR_TO_DEVICE 2
- #define DIR_RESERVED 3
- 
-+#define CMD_IS_UNCONSTRAINT(cmd) \
-+	((cmd == ATA_CMD_READ_LOG_EXT) || \
-+	(cmd == ATA_CMD_READ_LOG_DMA_EXT) || \
-+	(cmd == ATA_CMD_DEV_RESET))
-+
- static u32 hisi_sas_read32(struct hisi_hba *hisi_hba, u32 off)
- {
- 	void __iomem *regs = hisi_hba->regs + off;
-@@ -709,6 +719,101 @@ static int prep_smp_v3_hw(struct hisi_hba *hisi_hba,
- 	return rc;
+@@ -195,6 +195,8 @@
+ #define TXID_AUTO				(PORT_BASE + 0xb8)
+ #define CT3_OFF		1
+ #define CT3_MSK		(0x1 << CT3_OFF)
++#define TX_HARDRST_OFF          2
++#define TX_HARDRST_MSK          (0x1 << TX_HARDRST_OFF)
+ #define RX_IDAF_DWORD0			(PORT_BASE + 0xc4)
+ #define RXOP_CHECK_CFG_H		(PORT_BASE + 0xfc)
+ #define SAS_SSP_CON_TIMER_CFG		(PORT_BASE + 0x134)
+@@ -648,6 +650,14 @@ static void enable_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
  }
  
-+static int get_ncq_tag_v3_hw(struct sas_task *task, u32 *tag)
++static void disable_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
 +{
-+	struct ata_queued_cmd *qc = task->uldd_task;
++	u32 cfg = hisi_sas_phy_read32(hisi_hba, phy_no, PHY_CFG);
 +
-+	if (qc) {
-+		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
-+			qc->tf.command == ATA_CMD_FPDMA_READ) {
-+			*tag = qc->tag;
-+			return 1;
-+		}
-+	}
-+	return 0;
++	cfg &= ~PHY_CFG_ENA_MSK;
++	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
 +}
 +
-+static int prep_ata_v3_hw(struct hisi_hba *hisi_hba,
-+			  struct hisi_sas_slot *slot)
-+{
-+	struct sas_task *task = slot->task;
-+	struct domain_device *device = task->dev;
-+	struct domain_device *parent_dev = device->parent;
-+	struct hisi_sas_device *sas_dev = device->lldd_dev;
-+	struct hisi_sas_cmd_hdr *hdr = slot->cmd_hdr;
-+	struct asd_sas_port *sas_port = device->port;
-+	struct hisi_sas_port *port = to_hisi_sas_port(sas_port);
-+	u8 *buf_cmd;
-+	int has_data = 0, rc = 0, hdr_tag = 0;
-+	u32 dw1 = 0, dw2 = 0;
-+
-+	hdr->dw0 = cpu_to_le32(port->id << CMD_HDR_PORT_OFF);
-+	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
-+		hdr->dw0 |= cpu_to_le32(3 << CMD_HDR_CMD_OFF);
-+	else
-+		hdr->dw0 |= cpu_to_le32(4 << CMD_HDR_CMD_OFF);
-+
-+	switch (task->data_dir) {
-+	case DMA_TO_DEVICE:
-+		has_data = 1;
-+		dw1 |= DIR_TO_DEVICE << CMD_HDR_DIR_OFF;
-+		break;
-+	case DMA_FROM_DEVICE:
-+		has_data = 1;
-+		dw1 |= DIR_TO_INI << CMD_HDR_DIR_OFF;
-+		break;
-+	default:
-+		dw1 &= ~CMD_HDR_DIR_MSK;
-+	}
-+
-+	if ((task->ata_task.fis.command == ATA_CMD_DEV_RESET) &&
-+			(task->ata_task.fis.control & ATA_SRST))
-+		dw1 |= 1 << CMD_HDR_RESET_OFF;
-+
-+	dw1 |= (hisi_sas_get_ata_protocol(
-+		task->ata_task.fis.command, task->data_dir))
-+		<< CMD_HDR_FRAME_TYPE_OFF;
-+	dw1 |= sas_dev->device_id << CMD_HDR_DEV_ID_OFF;
-+
-+	if (CMD_IS_UNCONSTRAINT(task->ata_task.fis.command))
-+		dw1 |= 1 << CMD_HDR_UNCON_CMD_OFF;
-+
-+	hdr->dw1 = cpu_to_le32(dw1);
-+
-+	/* dw2 */
-+	if (task->ata_task.use_ncq && get_ncq_tag_v3_hw(task, &hdr_tag)) {
-+		task->ata_task.fis.sector_count |= (u8) (hdr_tag << 3);
-+		dw2 |= hdr_tag << CMD_HDR_NCQ_TAG_OFF;
-+	}
-+
-+	dw2 |= (HISI_SAS_MAX_STP_RESP_SZ / 4) << CMD_HDR_CFL_OFF |
-+			2 << CMD_HDR_SG_MOD_OFF;
-+	hdr->dw2 = cpu_to_le32(dw2);
-+
-+	/* dw3 */
-+	hdr->transfer_tags = cpu_to_le32(slot->idx);
-+
-+	if (has_data) {
-+		rc = prep_prd_sge_v3_hw(hisi_hba, slot, hdr, task->scatter,
-+					slot->n_elem);
-+		if (rc)
-+			return rc;
-+	}
-+
-+	hdr->data_transfer_len = cpu_to_le32(task->total_xfer_len);
-+	hdr->cmd_table_addr = cpu_to_le64(slot->command_table_dma);
-+	hdr->sts_buffer_addr = cpu_to_le64(slot->status_buffer_dma);
-+
-+	buf_cmd = slot->command_table;
-+
-+	if (likely(!task->ata_task.device_control_reg_update))
-+		task->ata_task.fis.flags |= 0x80; /* C=1: update ATA cmd reg */
-+	/* fill in command FIS */
-+	memcpy(buf_cmd, &task->ata_task.fis, sizeof(struct host_to_dev_fis));
-+
-+	return 0;
-+}
-+
- static int phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
+ static void start_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
  {
- 	int i, res = 0;
-@@ -1304,6 +1409,7 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
- 	.sl_notify = sl_notify_v3_hw,
- 	.prep_ssp = prep_ssp_v3_hw,
- 	.prep_smp = prep_smp_v3_hw,
-+	.prep_stp = prep_ata_v3_hw,
- 	.get_free_slot = get_free_slot_v3_hw,
+ 	config_id_frame_v3_hw(hisi_hba, phy_no);
+@@ -655,6 +665,11 @@ static void start_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
+ 	enable_phy_v3_hw(hisi_hba, phy_no);
+ }
+ 
++static void stop_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
++{
++	disable_phy_v3_hw(hisi_hba, phy_no);
++}
++
+ static void start_phys_v3_hw(struct hisi_hba *hisi_hba)
+ {
+ 	int i;
+@@ -663,6 +678,26 @@ static void start_phys_v3_hw(struct hisi_hba *hisi_hba)
+ 		start_phy_v3_hw(hisi_hba, i);
+ }
+ 
++static void phy_hard_reset_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
++{
++	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
++	u32 txid_auto;
++
++	stop_phy_v3_hw(hisi_hba, phy_no);
++	if (phy->identify.device_type == SAS_END_DEVICE) {
++		txid_auto = hisi_sas_phy_read32(hisi_hba, phy_no, TXID_AUTO);
++		hisi_sas_phy_write32(hisi_hba, phy_no, TXID_AUTO,
++					txid_auto | TX_HARDRST_MSK);
++	}
++	msleep(100);
++	start_phy_v3_hw(hisi_hba, phy_no);
++}
++
++enum sas_linkrate phy_get_max_linkrate_v3_hw(void)
++{
++	return SAS_LINK_RATE_12_0_GBPS;
++}
++
+ static void phys_init_v3_hw(struct hisi_hba *hisi_hba)
+ {
+ 	start_phys_v3_hw(hisi_hba);
+@@ -1977,6 +2012,10 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
  	.start_delivery = start_delivery_v3_hw,
  	.slot_complete = slot_complete_v3_hw,
+ 	.phys_init = phys_init_v3_hw,
++	.phy_enable = enable_phy_v3_hw,
++	.phy_disable = disable_phy_v3_hw,
++	.phy_hard_reset = phy_hard_reset_v3_hw,
++	.phy_get_max_linkrate = phy_get_max_linkrate_v3_hw,
+ };
+ 
+ static struct Scsi_Host *
+@@ -2141,7 +2180,6 @@ static void hisi_sas_v3_remove(struct pci_dev *pdev)
+ 	pci_disable_device(pdev);
+ }
+ 
+-
+ enum {
+ 	/* instances of the controller */
+ 	hip08,
 -- 
 1.9.1
