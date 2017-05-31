@@ -1,97 +1,96 @@
 From: "Dupuis, Chad" <chad.dupuis@cavium.com>
-Subject: [PATCH V2 10/15] qedf: Add non-offload receive filters.
-Date: Wed, 31 May 2017 06:33:57 -0700
-Message-ID: <20170531133402.16629-11-chad.dupuis@cavium.com>
+Subject: [PATCH V2 04/15] qedf: Look at all descriptors when processing a clear virtual link.
+Date: Wed, 31 May 2017 06:33:51 -0700
+Message-ID: <20170531133402.16629-5-chad.dupuis@cavium.com>
 References: <20170531133402.16629-1-chad.dupuis@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0057.outbound.protection.outlook.com ([104.47.34.57]:35328
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam03on0058.outbound.protection.outlook.com ([104.47.42.58]:12096
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751161AbdEaNem (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 31 May 2017 09:34:42 -0400
+        id S1751164AbdEaNef (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 31 May 2017 09:34:35 -0400
 In-Reply-To: <20170531133402.16629-1-chad.dupuis@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, QLogic-Storage-Upstream@cavium.com
 
-Drop invalid or unexpected FCoE frames that come into the non-offload path
-since the FCoE firmware would not do the filtering for us.
+If there are multiple descriptors for a particular type in a clear virtual
+link we receive, we will not process it correctly but rather take the last
+value. This can cause us not to not flap the virtual link as the value from
+the descriptors that we compare against the our stored FCF or fc_lport values
+may not match.
+
+Change this to do a comparison when processing the each descriptor instead of at
+the end and then set a bool if we need to do the reset.
 
 Signed-off-by: Chad Dupuis <chad.dupuis@cavium.com>
 ---
- drivers/scsi/qedf/qedf_main.c | 43 +++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 43 insertions(+)
+ drivers/scsi/qedf/qedf_fip.c | 20 +++++++++-----------
+ 1 file changed, 9 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index d762b9f..45c741b 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -2087,6 +2087,8 @@ static void qedf_recv_frame(struct qedf_ctx *qedf,
- 	u8 *dest_mac = NULL;
- 	struct fcoe_hdr *hp;
- 	struct qedf_rport *fcport;
-+	struct fc_lport *vn_port;
-+	u32 f_ctl;
+diff --git a/drivers/scsi/qedf/qedf_fip.c b/drivers/scsi/qedf/qedf_fip.c
+index 2dfb817..64b04f2 100644
+--- a/drivers/scsi/qedf/qedf_fip.c
++++ b/drivers/scsi/qedf/qedf_fip.c
+@@ -156,10 +156,9 @@ void qedf_fip_recv(struct qedf_ctx *qedf, struct sk_buff *skb)
+ 	struct fip_wwn_desc *wp;
+ 	struct fip_vn_desc *vp;
+ 	size_t rlen, dlen;
+-	uint32_t cvl_port_id;
+-	__u8 cvl_mac[ETH_ALEN];
+ 	u16 op;
+ 	u8 sub;
++	bool do_reset = false;
  
- 	lport = qedf->lport;
- 	if (lport == NULL || lport->state == LPORT_ST_DISABLED) {
-@@ -2123,6 +2125,10 @@ static void qedf_recv_frame(struct qedf_ctx *qedf,
+ 	eth_hdr = (struct ethhdr *)skb_mac_header(skb);
+ 	fiph = (struct fip_header *) ((void *)skb->data + 2 * ETH_ALEN + 2);
+@@ -190,8 +189,6 @@ void qedf_fip_recv(struct qedf_ctx *qedf, struct sk_buff *skb)
+ 			return;
+ 		}
  
- 	fh = fc_frame_header_get(fp);
+-		cvl_port_id = 0;
+-		memset(cvl_mac, 0, ETH_ALEN);
+ 		/*
+ 		 * We need to loop through the CVL descriptors to determine
+ 		 * if we want to reset the fcoe link
+@@ -205,7 +202,9 @@ void qedf_fip_recv(struct qedf_ctx *qedf, struct sk_buff *skb)
+ 				mp = (struct fip_mac_desc *)desc;
+ 				QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_LL2,
+ 				    "fd_mac=%pM\n", mp->fd_mac);
+-				ether_addr_copy(cvl_mac, mp->fd_mac);
++				if (ether_addr_equal(mp->fd_mac,
++				    qedf->ctlr.sel_fcf->fcf_mac))
++					do_reset = true;
+ 				break;
+ 			case FIP_DT_NAME:
+ 				wp = (struct fip_wwn_desc *)desc;
+@@ -217,7 +216,9 @@ void qedf_fip_recv(struct qedf_ctx *qedf, struct sk_buff *skb)
+ 				vp = (struct fip_vn_desc *)desc;
+ 				QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_LL2,
+ 				    "fd_fc_id=%x.\n", ntoh24(vp->fd_fc_id));
+-				cvl_port_id = ntoh24(vp->fd_fc_id);
++				if (ntoh24(vp->fd_fc_id) ==
++				    qedf->lport->port_id)
++					do_reset = true;
+ 				break;
+ 			default:
+ 				/* Ignore anything else */
+@@ -228,11 +229,8 @@ void qedf_fip_recv(struct qedf_ctx *qedf, struct sk_buff *skb)
+ 		}
  
-+	/*
-+	 * Invalid frame filters.
-+	 */
-+
- 	if (fh->fh_r_ctl == FC_RCTL_DD_SOL_DATA &&
- 	    fh->fh_type == FC_TYPE_FCP) {
- 		/* Drop FCP data. We dont this in L2 path */
-@@ -2148,6 +2154,43 @@ static void qedf_recv_frame(struct qedf_ctx *qedf,
- 		return;
- 	}
- 
-+	if (ntoh24(&dest_mac[3]) != ntoh24(fh->fh_d_id)) {
-+		QEDF_ERR(&(qedf->dbg_ctx), "FC frame d_id mismatch with MAC %pM.\n",
-+		    dest_mac);
-+		return;
-+	}
-+
-+	if (qedf->ctlr.state) {
-+		if (!ether_addr_equal(mac, qedf->ctlr.dest_addr)) {
-+			QEDF_ERR(&(qedf->dbg_ctx), "Wrong source address mac:%pM dest_addr:%pM.\n",
-+			    mac, qedf->ctlr.dest_addr);
-+			kfree_skb(skb);
-+			return;
-+		}
-+	}
-+
-+	vn_port = fc_vport_id_lookup(lport, ntoh24(fh->fh_d_id));
-+
-+	/*
-+	 * If the destination ID from the frame header does not match what we
-+	 * have on record for lport and the search for a NPIV port came up
-+	 * empty then this is not addressed to our port so simply drop it.
-+	 */
-+	if (lport->port_id != ntoh24(fh->fh_d_id) && !vn_port) {
-+		QEDF_ERR(&(qedf->dbg_ctx), "Dropping frame due to destination mismatch: lport->port_id=%x fh->d_id=%x.\n",
-+		    lport->port_id, ntoh24(fh->fh_d_id));
-+		kfree_skb(skb);
-+		return;
-+	}
-+
-+	f_ctl = ntoh24(fh->fh_f_ctl);
-+	if ((fh->fh_type == FC_TYPE_BLS) && (f_ctl & FC_FC_SEQ_CTX) &&
-+	    (f_ctl & FC_FC_EX_CTX)) {
-+		/* Drop incoming ABTS response that has both SEQ/EX CTX set */
-+		kfree_skb(skb);
-+		return;
-+	}
-+
- 	/*
- 	 * If a connection is uploading, drop incoming FCoE frames as there
- 	 * is a small window where we could try to return a frame while libfc
+ 		QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_LL2,
+-		    "cvl_port_id=%06x cvl_mac=%pM.\n", cvl_port_id,
+-		    cvl_mac);
+-		if (cvl_port_id == qedf->lport->port_id &&
+-		    ether_addr_equal(cvl_mac,
+-		    qedf->ctlr.sel_fcf->fcf_mac)) {
++		    "do_reset=%d.\n", do_reset);
++		if (do_reset) {
+ 			fcoe_ctlr_link_down(&qedf->ctlr);
+ 			qedf_wait_for_upload(qedf);
+ 			fcoe_ctlr_link_up(&qedf->ctlr);
 -- 
 1.8.5.6
