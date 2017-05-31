@@ -1,345 +1,56 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 08/15] lpfc: Fix counters so outstandng NVME IO count is accurate
-Date: Tue, 30 May 2017 23:04:32 -0700
-Message-ID: <20170531060439.2073-9-jsmart2021@gmail.com>
+Subject: [PATCH 12/15] lpfc: Null pointer dereference when log_verbose is set to 0xffffffff
+Date: Tue, 30 May 2017 23:04:36 -0700
+Message-ID: <20170531060439.2073-13-jsmart2021@gmail.com>
 References: <20170531060439.2073-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:36471 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751053AbdEaGFD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 May 2017 02:05:03 -0400
-Received: by mail-qk0-f196.google.com with SMTP id y128so733305qka.3
-        for <linux-scsi@vger.kernel.org>; Tue, 30 May 2017 23:05:03 -0700 (PDT)
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:33531 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751002AbdEaGFJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 May 2017 02:05:09 -0400
+Received: by mail-qk0-f193.google.com with SMTP id c206so738902qkb.0
+        for <linux-scsi@vger.kernel.org>; Tue, 30 May 2017 23:05:09 -0700 (PDT)
 In-Reply-To: <20170531060439.2073-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-NVME FC counters don't reflect actual results
+Kernel panic when log_verbose is set to 0xffffffff
 
-Since counters are not atomic, or protected by a lock,
-the values often get screwed up.
+phba->pport is dereferenced before it is initialized
 
-Make them atomic, like NVMET.
-Fix up sysfs and debugfs display accordingly
-Added Outstanding IOs to stats display
+Fix: Do not dereference phba->pport if it is NULL
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc.h         | 20 ++++++++++----------
- drivers/scsi/lpfc/lpfc_attr.c    | 32 +++++++++++++++++++++-----------
- drivers/scsi/lpfc/lpfc_debugfs.c | 30 +++++++++++++++++++++---------
- drivers/scsi/lpfc/lpfc_init.c    | 10 ++++++++++
- drivers/scsi/lpfc/lpfc_nvme.c    | 19 +++++++++++++------
- drivers/scsi/lpfc/lpfc_scsi.c    | 19 ++++++++++++++-----
- 6 files changed, 89 insertions(+), 41 deletions(-)
+ drivers/scsi/lpfc/lpfc_sli.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index f2c0ba6ced78..a9d73728a68c 100644
---- a/drivers/scsi/lpfc/lpfc.h
-+++ b/drivers/scsi/lpfc/lpfc.h
-@@ -913,16 +913,16 @@ struct lpfc_hba {
- 	/*
- 	 * stat  counters
- 	 */
--	uint64_t fc4ScsiInputRequests;
--	uint64_t fc4ScsiOutputRequests;
--	uint64_t fc4ScsiControlRequests;
--	uint64_t fc4ScsiIoCmpls;
--	uint64_t fc4NvmeInputRequests;
--	uint64_t fc4NvmeOutputRequests;
--	uint64_t fc4NvmeControlRequests;
--	uint64_t fc4NvmeIoCmpls;
--	uint64_t fc4NvmeLsRequests;
--	uint64_t fc4NvmeLsCmpls;
-+	atomic_t fc4ScsiInputRequests;
-+	atomic_t fc4ScsiOutputRequests;
-+	atomic_t fc4ScsiControlRequests;
-+	atomic_t fc4ScsiIoCmpls;
-+	atomic_t fc4NvmeInputRequests;
-+	atomic_t fc4NvmeOutputRequests;
-+	atomic_t fc4NvmeControlRequests;
-+	atomic_t fc4NvmeIoCmpls;
-+	atomic_t fc4NvmeLsRequests;
-+	atomic_t fc4NvmeLsCmpls;
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index c4ceef69bd6b..fb4c708ae747 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -7513,7 +7513,8 @@ lpfc_sli_issue_mbox_s3(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmbox,
+ 				"(%d):0308 Mbox cmd issue - BUSY Data: "
+ 				"x%x x%x x%x x%x\n",
+ 				pmbox->vport ? pmbox->vport->vpi : 0xffffff,
+-				mbx->mbxCommand, phba->pport->port_state,
++				mbx->mbxCommand,
++				phba->pport ? phba->pport->port_state : 0xff,
+ 				psli->sli_flag, flag);
  
- 	uint64_t bg_guard_err_cnt;
- 	uint64_t bg_apptag_err_cnt;
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 200a614bb540..eb33473cbc62 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -150,6 +150,7 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
- 	struct nvme_fc_local_port *localport;
- 	struct lpfc_nodelist *ndlp;
- 	struct nvme_fc_remote_port *nrport;
-+	uint64_t data1, data2, data3, tot;
- 	char *statep;
- 	int len = 0;
+ 		psli->slistat.mbox_busy++;
+@@ -7565,7 +7566,8 @@ lpfc_sli_issue_mbox_s3(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmbox,
+ 			"(%d):0309 Mailbox cmd x%x issue Data: x%x x%x "
+ 			"x%x\n",
+ 			pmbox->vport ? pmbox->vport->vpi : 0,
+-			mbx->mbxCommand, phba->pport->port_state,
++			mbx->mbxCommand,
++			phba->pport ? phba->pport->port_state : 0xff,
+ 			psli->sli_flag, flag);
  
-@@ -244,11 +245,18 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
- 				atomic_read(&tgtp->xmt_abort_rsp),
- 				atomic_read(&tgtp->xmt_abort_rsp_error));
- 
-+		spin_lock(&phba->sli4_hba.nvmet_io_lock);
-+		tot = phba->sli4_hba.nvmet_xri_cnt -
-+			phba->sli4_hba.nvmet_ctx_cnt;
-+		spin_unlock(&phba->sli4_hba.nvmet_io_lock);
-+
- 		len += snprintf(buf + len, PAGE_SIZE - len,
--				"IO_CTX: %08x outstanding %08x total %x",
-+				"IO_CTX: %08x  WAIT: cur %08x tot %08x\n"
-+				"CTX Outstanding %08llx\n",
- 				phba->sli4_hba.nvmet_ctx_cnt,
- 				phba->sli4_hba.nvmet_io_wait_cnt,
--				phba->sli4_hba.nvmet_io_wait_total);
-+				phba->sli4_hba.nvmet_io_wait_total,
-+				tot);
- 
- 		len +=  snprintf(buf+len, PAGE_SIZE-len, "\n");
- 		return len;
-@@ -337,19 +345,21 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
- 
- 	len += snprintf(buf + len, PAGE_SIZE - len, "\nNVME Statistics\n");
- 	len += snprintf(buf+len, PAGE_SIZE-len,
--			"LS: Xmt %016llx Cmpl %016llx\n",
--			phba->fc4NvmeLsRequests,
--			phba->fc4NvmeLsCmpls);
--
-+			"LS: Xmt %016x Cmpl %016x\n",
-+			atomic_read(&phba->fc4NvmeLsRequests),
-+			atomic_read(&phba->fc4NvmeLsCmpls));
-+
-+	tot = atomic_read(&phba->fc4NvmeIoCmpls);
-+	data1 = atomic_read(&phba->fc4NvmeInputRequests);
-+	data2 = atomic_read(&phba->fc4NvmeOutputRequests);
-+	data3 = atomic_read(&phba->fc4NvmeControlRequests);
- 	len += snprintf(buf+len, PAGE_SIZE-len,
- 			"FCP: Rd %016llx Wr %016llx IO %016llx\n",
--			phba->fc4NvmeInputRequests,
--			phba->fc4NvmeOutputRequests,
--			phba->fc4NvmeControlRequests);
-+			data1, data2, data3);
- 
- 	len += snprintf(buf+len, PAGE_SIZE-len,
--			"    Cmpl %016llx\n", phba->fc4NvmeIoCmpls);
--
-+			"    Cmpl %016llx Outstanding %016llx\n",
-+			tot, (data1 + data2 + data3) - tot);
- 	return len;
- }
- 
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index dd8598bc50f3..6089690fb345 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.c
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -750,6 +750,7 @@ lpfc_debugfs_nvmestat_data(struct lpfc_vport *vport, char *buf, int size)
- 	struct lpfc_hba   *phba = vport->phba;
- 	struct lpfc_nvmet_tgtport *tgtp;
- 	struct lpfc_nvmet_rcv_ctx *ctxp, *next_ctxp;
-+	uint64_t tot, data1, data2, data3;
- 	int len = 0;
- 	int cnt;
- 
-@@ -847,11 +848,18 @@ lpfc_debugfs_nvmestat_data(struct lpfc_vport *vport, char *buf, int size)
- 			spin_unlock(&phba->sli4_hba.abts_nvme_buf_list_lock);
- 		}
- 
-+		spin_lock(&phba->sli4_hba.nvmet_io_lock);
-+		tot = phba->sli4_hba.nvmet_xri_cnt -
-+			phba->sli4_hba.nvmet_ctx_cnt;
-+		spin_unlock(&phba->sli4_hba.nvmet_io_lock);
-+
- 		len += snprintf(buf + len, size - len,
--				"IO_CTX: %08x  outstanding %08x total %08x\n",
-+				"IO_CTX: %08x  WAIT: cur %08x tot %08x\n"
-+				"CTX Outstanding %08llx\n",
- 				phba->sli4_hba.nvmet_ctx_cnt,
- 				phba->sli4_hba.nvmet_io_wait_cnt,
--				phba->sli4_hba.nvmet_io_wait_total);
-+				phba->sli4_hba.nvmet_io_wait_total,
-+				tot);
- 	} else {
- 		if (!(phba->cfg_enable_fc4_type & LPFC_ENABLE_NVME))
- 			return len;
-@@ -860,18 +868,22 @@ lpfc_debugfs_nvmestat_data(struct lpfc_vport *vport, char *buf, int size)
- 				"\nNVME Lport Statistics\n");
- 
- 		len += snprintf(buf + len, size - len,
--				"LS: Xmt %016llx Cmpl %016llx\n",
--				phba->fc4NvmeLsRequests,
--				phba->fc4NvmeLsCmpls);
-+				"LS: Xmt %016x Cmpl %016x\n",
-+				atomic_read(&phba->fc4NvmeLsRequests),
-+				atomic_read(&phba->fc4NvmeLsCmpls));
-+
-+		tot = atomic_read(&phba->fc4NvmeIoCmpls);
-+		data1 = atomic_read(&phba->fc4NvmeInputRequests);
-+		data2 = atomic_read(&phba->fc4NvmeOutputRequests);
-+		data3 = atomic_read(&phba->fc4NvmeControlRequests);
- 
- 		len += snprintf(buf + len, size - len,
- 				"FCP: Rd %016llx Wr %016llx IO %016llx\n",
--				phba->fc4NvmeInputRequests,
--				phba->fc4NvmeOutputRequests,
--				phba->fc4NvmeControlRequests);
-+				data1, data2, data3);
- 
- 		len += snprintf(buf + len, size - len,
--				"    Cmpl %016llx\n", phba->fc4NvmeIoCmpls);
-+				"    Cmpl %016llx Outstanding %016llx\n",
-+				tot, (data1 + data2 + data3) - tot);
- 	}
- 
- 	return len;
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 9add9473cae5..3064f0768033 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -6731,6 +6731,16 @@ lpfc_create_shost(struct lpfc_hba *phba)
- 	phba->fc_arbtov = FF_DEF_ARBTOV;
- 
- 	atomic_set(&phba->sdev_cnt, 0);
-+	atomic_set(&phba->fc4ScsiInputRequests, 0);
-+	atomic_set(&phba->fc4ScsiOutputRequests, 0);
-+	atomic_set(&phba->fc4ScsiControlRequests, 0);
-+	atomic_set(&phba->fc4ScsiIoCmpls, 0);
-+	atomic_set(&phba->fc4NvmeInputRequests, 0);
-+	atomic_set(&phba->fc4NvmeOutputRequests, 0);
-+	atomic_set(&phba->fc4NvmeControlRequests, 0);
-+	atomic_set(&phba->fc4NvmeIoCmpls, 0);
-+	atomic_set(&phba->fc4NvmeLsRequests, 0);
-+	atomic_set(&phba->fc4NvmeLsCmpls, 0);
- 	vport = lpfc_create_port(phba, phba->brd_no, &phba->pcidev->dev);
- 	if (!vport)
- 		return -ENODEV;
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index ede42411e57b..8206aa5493e3 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -211,7 +211,7 @@ lpfc_nvme_cmpl_gen_req(struct lpfc_hba *phba, struct lpfc_iocbq *cmdwqe,
- 	struct lpfc_dmabuf *buf_ptr;
- 	struct lpfc_nodelist *ndlp;
- 
--	vport->phba->fc4NvmeLsCmpls++;
-+	atomic_inc(&vport->phba->fc4NvmeLsCmpls);
- 
- 	pnvme_lsreq = (struct nvmefc_ls_req *)cmdwqe->context2;
- 	status = bf_get(lpfc_wcqe_c_status, wcqe) & LPFC_IOCB_STATUS_MASK;
-@@ -478,7 +478,7 @@ lpfc_nvme_ls_req(struct nvme_fc_local_port *pnvme_lport,
- 			 pnvme_lsreq->rsplen, &pnvme_lsreq->rqstdma,
- 			 &pnvme_lsreq->rspdma);
- 
--	vport->phba->fc4NvmeLsRequests++;
-+	atomic_inc(&vport->phba->fc4NvmeLsRequests);
- 
- 	/* Hardcode the wait to 30 seconds.  Connections are failing otherwise.
- 	 * This code allows it all to work.
-@@ -773,7 +773,7 @@ lpfc_nvme_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
- 				 wcqe);
- 		return;
- 	}
--	phba->fc4NvmeIoCmpls++;
-+	atomic_inc(&phba->fc4NvmeIoCmpls);
- 
- 	nCmd = lpfc_ncmd->nvmeCmd;
- 	rport = lpfc_ncmd->nrport;
-@@ -998,7 +998,7 @@ lpfc_nvme_prep_io_cmd(struct lpfc_vport *vport,
- 			bf_set(wqe_cmd_type, &wqe->generic.wqe_com,
- 			       NVME_WRITE_CMD);
- 
--			phba->fc4NvmeOutputRequests++;
-+			atomic_inc(&phba->fc4NvmeOutputRequests);
- 		} else {
- 			/* Word 7 */
- 			bf_set(wqe_cmnd, &wqe->generic.wqe_com,
-@@ -1019,7 +1019,7 @@ lpfc_nvme_prep_io_cmd(struct lpfc_vport *vport,
- 			bf_set(wqe_cmd_type, &wqe->generic.wqe_com,
- 			       NVME_READ_CMD);
- 
--			phba->fc4NvmeInputRequests++;
-+			atomic_inc(&phba->fc4NvmeInputRequests);
- 		}
- 	} else {
- 		/* Word 4 */
-@@ -1040,7 +1040,7 @@ lpfc_nvme_prep_io_cmd(struct lpfc_vport *vport,
- 		/* Word 11 */
- 		bf_set(wqe_cmd_type, &wqe->generic.wqe_com, NVME_READ_CMD);
- 
--		phba->fc4NvmeControlRequests++;
-+		atomic_inc(&phba->fc4NvmeControlRequests);
- 	}
- 	/*
- 	 * Finish initializing those WQE fields that are independent
-@@ -1361,6 +1361,13 @@ lpfc_nvme_fcp_io_submit(struct nvme_fc_local_port *pnvme_lport,
- 	return 0;
- 
-  out_free_nvme_buf:
-+	if (lpfc_ncmd->nvmeCmd->sg_cnt) {
-+		if (lpfc_ncmd->nvmeCmd->io_dir == NVMEFC_FCP_WRITE)
-+			atomic_dec(&phba->fc4NvmeOutputRequests);
-+		else
-+			atomic_dec(&phba->fc4NvmeInputRequests);
-+	} else
-+		atomic_dec(&phba->fc4NvmeControlRequests);
- 	lpfc_release_nvme_buf(phba, lpfc_ncmd);
-  out_fail:
- 	return ret;
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 54fd0c81ceaf..cfe1d01eb73f 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -3931,7 +3931,7 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pIocbIn,
- 	struct Scsi_Host *shost;
- 	uint32_t logit = LOG_FCP;
- 
--	phba->fc4ScsiIoCmpls++;
-+	atomic_inc(&phba->fc4ScsiIoCmpls);
- 
- 	/* Sanity check on return of outstanding command */
- 	cmd = lpfc_cmd->pCmd;
-@@ -4250,19 +4250,19 @@ lpfc_scsi_prep_cmnd(struct lpfc_vport *vport, struct lpfc_scsi_buf *lpfc_cmd,
- 						vport->cfg_first_burst_size;
- 			}
- 			fcp_cmnd->fcpCntl3 = WRITE_DATA;
--			phba->fc4ScsiOutputRequests++;
-+			atomic_inc(&phba->fc4ScsiOutputRequests);
- 		} else {
- 			iocb_cmd->ulpCommand = CMD_FCP_IREAD64_CR;
- 			iocb_cmd->ulpPU = PARM_READ_CHECK;
- 			fcp_cmnd->fcpCntl3 = READ_DATA;
--			phba->fc4ScsiInputRequests++;
-+			atomic_inc(&phba->fc4ScsiInputRequests);
- 		}
- 	} else {
- 		iocb_cmd->ulpCommand = CMD_FCP_ICMND64_CR;
- 		iocb_cmd->un.fcpi.fcpi_parm = 0;
- 		iocb_cmd->ulpPU = 0;
- 		fcp_cmnd->fcpCntl3 = 0;
--		phba->fc4ScsiControlRequests++;
-+		atomic_inc(&phba->fc4ScsiControlRequests);
- 	}
- 	if (phba->sli_rev == 3 &&
- 	    !(phba->sli3_options & LPFC_SLI3_BG_ENABLED))
-@@ -4640,7 +4640,16 @@ lpfc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
- 				 (uint32_t)
- 				 (cmnd->request->timeout / 1000));
- 
--
-+		switch (lpfc_cmd->fcp_cmnd->fcpCntl3) {
-+		case WRITE_DATA:
-+			atomic_dec(&phba->fc4ScsiOutputRequests);
-+			break;
-+		case READ_DATA:
-+			atomic_dec(&phba->fc4ScsiInputRequests);
-+			break;
-+		default:
-+			atomic_dec(&phba->fc4ScsiControlRequests);
-+		}
- 		goto out_host_busy_free_buf;
- 	}
- 	if (phba->cfg_poll & ENABLE_FCP_RING_POLLING) {
+ 	if (mbx->mbxCommand != MBX_HEARTBEAT) {
 -- 
 2.11.0
