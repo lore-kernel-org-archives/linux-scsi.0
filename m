@@ -1,90 +1,99 @@
-From: Jia-Ju Bai <baijiaju1990@163.com>
-Subject: [PATCH V2] qla4xxx: Fix a sleep-in-atomic bug
-Date: Wed, 31 May 2017 11:37:43 +0800
-Message-ID: <1496201863-11993-1-git-send-email-baijiaju1990@163.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from m12-17.163.com ([220.181.12.17]:55460 "EHLO m12-17.163.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751113AbdEaDfs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 30 May 2017 23:35:48 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] iscsi-target: Fix initial login PDU asynchronous socket
+ close OOPs
+Date: Tue, 30 May 2017 21:58:43 -0700
+Message-ID: <1496206723.27407.119.camel@haakon3.risingtidesystems.com>
+References: <1495776751-4746-1-git-send-email-nab@linux-iscsi.org>
+         <5928EF2C.6090609@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <5928EF2C.6090609@redhat.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Mike Christie <mchristi@redhat.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.com>, Sagi Grimberg <sagi@grimberg.me>, Varun Prakash <varun@chelsio.com>
 List-Id: linux-scsi@vger.kernel.org
-To: QLogic-Storage-Upstream@qlogic.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@163.com>
 
-The driver may sleep under a write spin lock, the function call path is:
-qla4_82xx_wr_32 (acquire the lock)
-  qla4_82xx_crb_win_lock
-      schedule or cpu_relax
+Hey MNC,
 
-To fix it, the lock is released before "schedule" and "cpu_relax",
-and the lock is acquired again after "schedule" and "cpu_relax".
+On Fri, 2017-05-26 at 22:14 -0500, Mike Christie wrote:
+> Thanks for the patch.
+> 
 
-Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
----
- drivers/scsi/qla4xxx/ql4_glbl.h |    2 +-
- drivers/scsi/qla4xxx/ql4_nx.c   |    8 +++++---
- 2 files changed, 6 insertions(+), 4 deletions(-)
+Btw, after running DATERA's internal longevity and scale tests across
+~20 racks on v4.1.y with this patch over the long weekend, there haven't
+been any additional regressions.
 
-diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
-index bce96a5..b723bef 100644
---- a/drivers/scsi/qla4xxx/ql4_glbl.h
-+++ b/drivers/scsi/qla4xxx/ql4_glbl.h
-@@ -115,7 +115,7 @@ uint8_t qla4xxx_update_local_ifcb(struct scsi_qla_host *ha,
- void qla4_82xx_queue_iocb(struct scsi_qla_host *ha);
- void qla4_82xx_complete_iocb(struct scsi_qla_host *ha);
- 
--int qla4_82xx_crb_win_lock(struct scsi_qla_host *);
-+int qla4_82xx_crb_win_lock(struct scsi_qla_host *, unsigned long);
- void qla4_82xx_crb_win_unlock(struct scsi_qla_host *);
- int qla4_82xx_pci_get_crb_addr_2M(struct scsi_qla_host *, ulong *);
- void qla4_82xx_wr_32(struct scsi_qla_host *, ulong, u32);
-diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
-index e91abb3..1cf5f4a 100644
---- a/drivers/scsi/qla4xxx/ql4_nx.c
-+++ b/drivers/scsi/qla4xxx/ql4_nx.c
-@@ -386,7 +386,7 @@
- 
- 	if (rv == 1) {
- 		write_lock_irqsave(&ha->hw_lock, flags);
--		qla4_82xx_crb_win_lock(ha);
-+		qla4_82xx_crb_win_lock(ha, flags);
- 		qla4_82xx_pci_set_crbwindow_2M(ha, &off);
- 	}
- 
-@@ -410,7 +410,7 @@ uint32_t qla4_82xx_rd_32(struct scsi_qla_host *ha, ulong off)
- 
- 	if (rv == 1) {
- 		write_lock_irqsave(&ha->hw_lock, flags);
--		qla4_82xx_crb_win_lock(ha);
-+		qla4_82xx_crb_win_lock(ha, flags);
- 		qla4_82xx_pci_set_crbwindow_2M(ha, &off);
- 	}
- 	data = readl((void __iomem *)off);
-@@ -476,7 +476,7 @@ int qla4_82xx_md_wr_32(struct scsi_qla_host *ha, uint32_t off, uint32_t data)
- 
- #define CRB_WIN_LOCK_TIMEOUT 100000000
- 
--int qla4_82xx_crb_win_lock(struct scsi_qla_host *ha)
-+int qla4_82xx_crb_win_lock(struct scsi_qla_host *ha, unsigned long flags)
- {
- 	int i;
- 	int done = 0, timeout = 0;
-@@ -491,6 +491,7 @@ int qla4_82xx_crb_win_lock(struct scsi_qla_host *ha)
- 
- 		timeout++;
- 
-+		write_unlock_irqrestore(&ha->hw_lock, flags);
- 		/* Yield CPU */
- 		if (!in_interrupt())
- 			schedule();
-@@ -498,6 +499,7 @@ int qla4_82xx_crb_win_lock(struct scsi_qla_host *ha)
- 			for (i = 0; i < 20; i++)
- 				cpu_relax();    /*This a nop instr on i386*/
- 		}
-+		write_lock_irqsave(&ha->hw_lock, flags);
- 	}
- 	qla4_82xx_wr_32(ha, QLA82XX_CRB_WIN_LOCK_ID, ha->func_num);
- 	return 0;
--- 
-1.7.9.5
+> On 05/26/2017 12:32 AM, Nicholas A. Bellinger wrote:
+> >  
+> > -	state = iscsi_target_sk_state_check(sk);
+> > -	write_unlock_bh(&sk->sk_callback_lock);
+> > -
+> > -	pr_debug("iscsi_target_sk_state_change: state: %d\n", state);
+> > +		orig_state_change(sk);
+> >  
+> > -	if (!state) {
+> > -		pr_debug("iscsi_target_sk_state_change got failed state\n");
+> > -		schedule_delayed_work(&conn->login_cleanup_work, 0);
+> 
+> I think login_cleanup_work is no longer used so you can also remove it
+> and its code.
+
+Yep, since this needs to goto stable, I left that part out for now..
+
+Will take care of that post -rc4.
+
+> 
+> The patch fixes the crash for me. However, is there a possible
+> regression where if the initiator attempts new relogins we could run out
+> of memory? With the old code, we would free the login attempts resources
+> at this time, but with the new code the initiator will send more login
+> attempts and so we just keep allocating more memory for each attempt
+> until we run out or the login is finally able to complete.
+
+AFAICT, no. For the two cases in question:
+
+ - Initial login request PDU processing done within iscsi_np kthread
+context in iscsi_target_start_negotiation(), and
+ - subsequent login request PDU processing done by delayed work-queue
+kthread context in iscsi_target_do_login_rx() 
+
+this patch doesn't change how aggressively connection cleanup happens
+for failed login attempts in the face of new connection login attempts
+for either case.
+
+For the first case when iscsi_np process context invokes
+iscsi_target_start_negotiation() -> iscsi_target_do_login() ->
+iscsi_check_for_session_reinstatement() to wait for backend I/O to
+complete, it still blocks other new connections from being accepted on
+the specific iscsi_np process context.
+
+This patch doesn't change this behavior.
+
+What it does change is when the host closes the connection and
+iscsi_target_sk_state_change() gets invoked, iscsi_np process context
+waits for iscsi_check_for_session_reinstatement() to complete before
+releasing the connection resources.
+
+However since iscsi_np process context is blocked, new connections won't
+be accepted until the new connection forcing session reinstatement
+finishes waiting for outstanding backend I/O to complete.
+
+For the second case of subsequent non initial login request PDUs handled
+within delayed work-queue process context, AFAICT this patch doesn't
+change the original behavior either..
+
+Namely when iscsi_target_do_login_rx() is active and host closes the
+connection causing iscsi_target_sk_state_change() to be invoked, it
+still checks for LOGIN_FLAGS_READ_ACTIVE and doesn't queue shutdown to
+occur.
+
+As per the original logic preceding this change, it continues to wait
+for iscsi_target_do_login_rx() to complete in delayed work-queue
+context, unless sock_recvmsg() returns a failure (which it should once
+TCP_CLOSE occurs) or times out via iscsi_target_login_timeout().  Once
+the failure is detected from iscsi_target_do_login_rx(), the remaining
+connection resources are related from there.
+
+That said, was there another case you had in mind..?
