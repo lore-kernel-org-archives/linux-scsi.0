@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v3 16/23] scsi: hisi_sas: add v3 code to send SMP frame
-Date: Wed, 31 May 2017 22:33:08 +0800
-Message-ID: <1496241195-217678-17-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v3 23/23] scsi: hisi_sas: modify internal abort dev flow for v3 hw
+Date: Wed, 31 May 2017 22:33:15 +0800
+Message-ID: <1496241195-217678-24-git-send-email-john.garry@huawei.com>
 References: <1496241195-217678-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,112 +14,136 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Add code to prepare SMP frame.
+There is a change for abort dev for v3 hw: add registers to configure
+unaborted iptt for a device, and then inform this to logic.
 
-Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 74 ++++++++++++++++++++++++++++++++++
- 1 file changed, 74 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas.h       |  2 ++
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 15 +++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 28 ++++++++++++++++++++++++++++
+ 3 files changed, 45 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 7be3a53..d4e4844 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -186,6 +186,9 @@
- #define CMD_HDR_MRFL_MSK		(0x1ff << CMD_HDR_MRFL_OFF)
- #define CMD_HDR_SG_MOD_OFF		24
- #define CMD_HDR_SG_MOD_MSK		(0x3 << CMD_HDR_SG_MOD_OFF)
-+/* dw3 */
-+#define CMD_HDR_IPTT_OFF		0
-+#define CMD_HDR_IPTT_MSK		(0xffff << CMD_HDR_IPTT_OFF)
- /* dw6 */
- #define CMD_HDR_DIF_SGL_LEN_OFF		0
- #define CMD_HDR_DIF_SGL_LEN_MSK		(0xffff << CMD_HDR_DIF_SGL_LEN_OFF)
-@@ -636,6 +639,76 @@ static int prep_ssp_v3_hw(struct hisi_hba *hisi_hba,
- 	return 0;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index d7545ff..cf2a593 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -182,6 +182,8 @@ struct hisi_sas_hw {
+ 	void (*free_device)(struct hisi_hba *hisi_hba,
+ 			    struct hisi_sas_device *dev);
+ 	int (*get_wideport_bitmap)(struct hisi_hba *hisi_hba, int port_id);
++	void (*dereg_device)(struct hisi_hba *hisi_hba,
++				struct domain_device *device);
+ 	int (*soft_reset)(struct hisi_hba *hisi_hba);
+ 	int max_command_entries;
+ 	int complete_hdr_size;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index b90eb50..96a23af 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -763,6 +763,13 @@ static void hisi_sas_release_tasks(struct hisi_hba *hisi_hba)
+ 	}
  }
  
-+static int prep_smp_v3_hw(struct hisi_hba *hisi_hba,
-+			  struct hisi_sas_slot *slot)
++static void hisi_sas_dereg_device(struct hisi_hba *hisi_hba,
++				struct domain_device *device)
 +{
-+	struct sas_task *task = slot->task;
-+	struct hisi_sas_cmd_hdr *hdr = slot->cmd_hdr;
-+	struct domain_device *device = task->dev;
-+	struct device *dev = hisi_hba->dev;
-+	struct hisi_sas_port *port = slot->port;
-+	struct scatterlist *sg_req, *sg_resp;
-+	struct hisi_sas_device *sas_dev = device->lldd_dev;
-+	dma_addr_t req_dma_addr;
-+	unsigned int req_len, resp_len;
-+	int elem, rc;
-+
-+	/*
-+	 * DMA-map SMP request, response buffers
-+	 */
-+	/* req */
-+	sg_req = &task->smp_task.smp_req;
-+	elem = dma_map_sg(dev, sg_req, 1, DMA_TO_DEVICE);
-+	if (!elem)
-+		return -ENOMEM;
-+	req_len = sg_dma_len(sg_req);
-+	req_dma_addr = sg_dma_address(sg_req);
-+
-+	/* resp */
-+	sg_resp = &task->smp_task.smp_resp;
-+	elem = dma_map_sg(dev, sg_resp, 1, DMA_FROM_DEVICE);
-+	if (!elem) {
-+		rc = -ENOMEM;
-+		goto err_out_req;
-+	}
-+	resp_len = sg_dma_len(sg_resp);
-+	if ((req_len & 0x3) || (resp_len & 0x3)) {
-+		rc = -EINVAL;
-+		goto err_out_resp;
-+	}
-+
-+	/* create header */
-+	/* dw0 */
-+	hdr->dw0 = cpu_to_le32((port->id << CMD_HDR_PORT_OFF) |
-+			       (1 << CMD_HDR_PRIORITY_OFF) | /* high pri */
-+			       (2 << CMD_HDR_CMD_OFF)); /* smp */
-+
-+	/* map itct entry */
-+	hdr->dw1 = cpu_to_le32((sas_dev->device_id << CMD_HDR_DEV_ID_OFF) |
-+			       (1 << CMD_HDR_FRAME_TYPE_OFF) |
-+			       (DIR_NO_DATA << CMD_HDR_DIR_OFF));
-+
-+	/* dw2 */
-+	hdr->dw2 = cpu_to_le32((((req_len - 4) / 4) << CMD_HDR_CFL_OFF) |
-+			       (HISI_SAS_MAX_SMP_RESP_SZ / 4 <<
-+			       CMD_HDR_MRFL_OFF));
-+
-+	hdr->transfer_tags = cpu_to_le32(slot->idx << CMD_HDR_IPTT_OFF);
-+
-+	hdr->cmd_table_addr = cpu_to_le64(req_dma_addr);
-+	hdr->sts_buffer_addr = cpu_to_le64(slot->status_buffer_dma);
-+
-+	return 0;
-+
-+err_out_resp:
-+	dma_unmap_sg(dev, &slot->task->smp_task.smp_resp, 1,
-+		     DMA_FROM_DEVICE);
-+err_out_req:
-+	dma_unmap_sg(dev, &slot->task->smp_task.smp_req, 1,
-+		     DMA_TO_DEVICE);
-+	return rc;
++	if (hisi_hba->hw->dereg_device)
++		hisi_hba->hw->dereg_device(hisi_hba, device);
 +}
 +
- static int phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
+ static void hisi_sas_dev_gone(struct domain_device *device)
  {
- 	int i, res = 0;
-@@ -1230,6 +1303,7 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
- 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v3_hdr),
- 	.sl_notify = sl_notify_v3_hw,
- 	.prep_ssp = prep_ssp_v3_hw,
-+	.prep_smp = prep_smp_v3_hw,
- 	.get_free_slot = get_free_slot_v3_hw,
- 	.start_delivery = start_delivery_v3_hw,
- 	.slot_complete = slot_complete_v3_hw,
+ 	struct hisi_sas_device *sas_dev = device->lldd_dev;
+@@ -776,6 +783,8 @@ static void hisi_sas_dev_gone(struct domain_device *device)
+ 	hisi_sas_internal_task_abort(hisi_hba, device,
+ 				     HISI_SAS_INT_ABT_DEV, 0);
+ 
++	hisi_sas_dereg_device(hisi_hba, device);
++
+ 	hisi_hba->hw->free_device(hisi_hba, sas_dev);
+ 	device->lldd_dev = NULL;
+ 	memset(sas_dev, 0, sizeof(*sas_dev));
+@@ -1107,6 +1116,7 @@ static int hisi_sas_abort_task(struct sas_task *task)
+ 		if (task->dev->dev_type == SAS_SATA_DEV) {
+ 			hisi_sas_internal_task_abort(hisi_hba, device,
+ 						     HISI_SAS_INT_ABT_DEV, 0);
++			hisi_sas_dereg_device(hisi_hba, device);
+ 			rc = hisi_sas_softreset_ata_disk(device);
+ 		}
+ 	} else if (task->lldd_task && task->task_proto & SAS_PROTOCOL_SMP) {
+@@ -1173,6 +1183,10 @@ static int hisi_sas_I_T_nexus_reset(struct domain_device *device)
+ 		return TMF_RESP_FUNC_FAILED;
+ 	sas_dev->dev_status = HISI_SAS_DEV_NORMAL;
+ 
++	hisi_sas_internal_task_abort(hisi_hba, device,
++					HISI_SAS_INT_ABT_DEV, 0);
++	hisi_sas_dereg_device(hisi_hba, device);
++
+ 	rc = hisi_sas_debug_I_T_nexus_reset(device);
+ 
+ 	if (rc == TMF_RESP_FUNC_COMPLETE) {
+@@ -1200,6 +1214,7 @@ static int hisi_sas_lu_reset(struct domain_device *device, u8 *lun)
+ 						  HISI_SAS_INT_ABT_DEV, 0);
+ 		if (rc == TMF_RESP_FUNC_FAILED)
+ 			goto out;
++		hisi_sas_dereg_device(hisi_hba, device);
+ 
+ 		phy = sas_get_local_phy(device);
+ 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 17f9ac9..63239ca 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -50,6 +50,10 @@
+ #define CFG_ABT_SET_QUERY_IPTT	0xd4
+ #define CFG_SET_ABORTED_IPTT_OFF	0
+ #define CFG_SET_ABORTED_IPTT_MSK	(0xfff << CFG_SET_ABORTED_IPTT_OFF)
++#define CFG_SET_ABORTED_EN_OFF	12
++#define CFG_ABT_SET_IPTT_DONE	0xd8
++#define CFG_ABT_SET_IPTT_DONE_OFF	0
++#define HGC_IOMB_PROC1_STATUS	0x104
+ #define CFG_1US_TIMER_TRSH		0xcc
+ #define HGC_LM_DFX_STATUS2		0x128
+ #define HGC_LM_DFX_STATUS2_IOSTLIST_OFF		0
+@@ -635,6 +639,29 @@ static void free_device_v3_hw(struct hisi_hba *hisi_hba,
+ 	}
+ }
+ 
++static void dereg_device_v3_hw(struct hisi_hba *hisi_hba,
++				struct domain_device *device)
++{
++	struct hisi_sas_slot *slot, *slot2;
++	struct hisi_sas_device *sas_dev = device->lldd_dev;
++	u32 cfg_abt_set_query_iptt;
++
++	cfg_abt_set_query_iptt = hisi_sas_read32(hisi_hba,
++		CFG_ABT_SET_QUERY_IPTT);
++	list_for_each_entry_safe(slot, slot2, &sas_dev->list, entry) {
++		cfg_abt_set_query_iptt &= ~CFG_SET_ABORTED_IPTT_MSK;
++		cfg_abt_set_query_iptt |= (1 << CFG_SET_ABORTED_EN_OFF) |
++			(slot->idx << CFG_SET_ABORTED_IPTT_OFF);
++		hisi_sas_write32(hisi_hba, CFG_ABT_SET_QUERY_IPTT,
++			cfg_abt_set_query_iptt);
++	}
++	cfg_abt_set_query_iptt &= ~(1 << CFG_SET_ABORTED_EN_OFF);
++	hisi_sas_write32(hisi_hba, CFG_ABT_SET_QUERY_IPTT,
++		cfg_abt_set_query_iptt);
++	hisi_sas_write32(hisi_hba, CFG_ABT_SET_IPTT_DONE,
++					1 << CFG_ABT_SET_IPTT_DONE_OFF);
++}
++
+ static int hw_init_v3_hw(struct hisi_hba *hisi_hba)
+ {
+ 	init_reg_v3_hw(hisi_hba);
+@@ -2016,6 +2043,7 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
+ 	.phy_disable = disable_phy_v3_hw,
+ 	.phy_hard_reset = phy_hard_reset_v3_hw,
+ 	.phy_get_max_linkrate = phy_get_max_linkrate_v3_hw,
++	.dereg_device = dereg_device_v3_hw,
+ };
+ 
+ static struct Scsi_Host *
 -- 
 1.9.1
