@@ -1,113 +1,70 @@
 From: "Dupuis, Chad" <chad.dupuis@cavium.com>
-Subject: [PATCH V2 01/15] qedf: Enable basic FDMI information.
-Date: Wed, 31 May 2017 06:33:48 -0700
-Message-ID: <20170531133402.16629-2-chad.dupuis@cavium.com>
-References: <20170531133402.16629-1-chad.dupuis@cavium.com>
+Subject: [PATCH V2 00/15] qedf: Update driver to version 8.18.22.0.
+Date: Wed, 31 May 2017 06:33:47 -0700
+Message-ID: <20170531133402.16629-1-chad.dupuis@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0054.outbound.protection.outlook.com ([104.47.42.54]:48144
+Received: from mail-by2nam03on0085.outbound.protection.outlook.com ([104.47.42.85]:24950
         "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751022AbdEaNeV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 31 May 2017 09:34:21 -0400
-In-Reply-To: <20170531133402.16629-1-chad.dupuis@cavium.com>
+        id S1750904AbdEaNeJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 31 May 2017 09:34:09 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, QLogic-Storage-Upstream@cavium.com
 
-For libfc to register FDMI attributes we need to do two things:
+Hi Martin,
 
-- Set the appropriate fc_host attributes that libfc will use to form the
-  FDMI registration commands
-- Set lport->fdmi_enabled to 1
+Please apply the following patches to the scsi tree at your earliest convenience.
 
-Signed-off-by: Chad Dupuis <chad.dupuis@cavium.com>
----
- drivers/scsi/qedf/qedf_main.c | 56 +++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 56 insertions(+)
+Thanks,
+Chad
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index cceddd9..8d0a999 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -22,6 +22,7 @@
- #include <linux/if_vlan.h>
- #include <linux/cpu.h>
- #include "qedf.h"
-+#include <uapi/linux/pci_regs.h>
- 
- const struct qed_fcoe_ops *qed_ops;
- 
-@@ -1334,6 +1335,59 @@ static void qedf_fcoe_ctlr_setup(struct qedf_ctx *qedf)
- 	ether_addr_copy(qedf->ctlr.ctl_src_addr, qedf->mac);
- }
- 
-+static void qedf_setup_fdmi(struct qedf_ctx *qedf)
-+{
-+	struct fc_lport *lport = qedf->lport;
-+	struct fc_host_attrs *fc_host = shost_to_fc_host(lport->host);
-+	u8 buf[8];
-+	int i, pos;
-+
-+	/*
-+	 * fdmi_enabled needs to be set for libfc to execute FDMI registration.
-+	 */
-+	lport->fdmi_enabled = 1;
-+
-+	/*
-+	 * Setup the necessary fc_host attributes to that will be used to fill
-+	 * in the FDMI information.
-+	 */
-+
-+	/* Get the PCI-e Device Serial Number Capability */
-+	pos = pci_find_ext_capability(qedf->pdev, PCI_EXT_CAP_ID_DSN);
-+	if (pos) {
-+		pos += 4;
-+		for (i = 0; i < 8; i++)
-+			pci_read_config_byte(qedf->pdev, pos + i, &buf[i]);
-+
-+		snprintf(fc_host->serial_number,
-+		    sizeof(fc_host->serial_number),
-+		    "%02X%02X%02X%02X%02X%02X%02X%02X",
-+		    buf[7], buf[6], buf[5], buf[4],
-+		    buf[3], buf[2], buf[1], buf[0]);
-+	} else
-+		snprintf(fc_host->serial_number,
-+		    sizeof(fc_host->serial_number), "Unknown");
-+
-+	snprintf(fc_host->manufacturer,
-+	    sizeof(fc_host->manufacturer), "%s", "Cavium Inc.");
-+
-+	snprintf(fc_host->model, sizeof(fc_host->model), "%s", "QL41000");
-+
-+	snprintf(fc_host->model_description, sizeof(fc_host->model_description),
-+	    "%s", "QLogic FastLinQ QL41000 Series 10/25/40/50GGbE Controller"
-+	    "(FCoE)");
-+
-+	snprintf(fc_host->hardware_version, sizeof(fc_host->hardware_version),
-+	    "Rev %d", qedf->pdev->revision);
-+
-+	snprintf(fc_host->driver_version, sizeof(fc_host->driver_version),
-+	    "%s", QEDF_VERSION);
-+
-+	snprintf(fc_host->firmware_version, sizeof(fc_host->firmware_version),
-+	    "%d.%d.%d.%d", FW_MAJOR_VERSION, FW_MINOR_VERSION,
-+	    FW_REVISION_VERSION, FW_ENGINEERING_VERSION);
-+}
-+
- static int qedf_lport_setup(struct qedf_ctx *qedf)
- {
- 	struct fc_lport *lport = qedf->lport;
-@@ -1377,6 +1431,8 @@ static int qedf_lport_setup(struct qedf_ctx *qedf)
- 	snprintf(fc_host_symbolic_name(lport->host), 256,
- 	    "QLogic %s v%s", QEDF_MODULE_NAME, QEDF_VERSION);
- 
-+	qedf_setup_fdmi(qedf);
-+
- 	return 0;
- }
- 
+Change from V1 -> V2:
+
+- Use fc_host attributes directly instead of using fc_host_* macros when setting FDMI attributes
+- Fix typos in patch descriptions
+- Implement suggested code refactoring for fka_period sysfs attribute
+- Keep newly introduced error message strings on one line
+
+Dupuis, Chad (15):
+  qedf: Enable basic FDMI information.
+  qedf: Update copyright to 2017.
+  qedf: Honor qed_ops->common->set_fp_int() return code.
+  qedf: Look at all descriptors when processing a clear virtual link.
+  qedf: Check that fcport is offloaded before dereferencing pointers in
+    initiate_abts|cleanup.
+  qedf: Add fka_period SCSI host attribute to show fip keep alive
+    period.
+  qedf: Set qed logging level to QED_LEVEL_NOTICE.
+  qedf: Use same logic for SCSI host reset and FC lip_reset.
+  qedf: Add bus_reset No-op.
+  qedf: Add non-offload receive filters.
+  qedf: Fixup unnecessary parantheses around test_bit operations.
+  qedf: Move some prints to a debug level so they do not print when no
+    debugging is enabled.
+  qedf: Change cmd_per_lun in scsi_host_template to 32 to increase
+    performance.
+  qedf: Add change_queue_depth member to scsi_host_template().
+  qedf: Update version number to 8.18.22.0.
+
+ drivers/scsi/qedf/drv_fcoe_fw_funcs.c |   2 +-
+ drivers/scsi/qedf/drv_fcoe_fw_funcs.h |   2 +-
+ drivers/scsi/qedf/drv_scsi_fw_funcs.c |   2 +-
+ drivers/scsi/qedf/drv_scsi_fw_funcs.h |   2 +-
+ drivers/scsi/qedf/qedf.h              |   2 +-
+ drivers/scsi/qedf/qedf_attr.c         |  59 +++++++-----
+ drivers/scsi/qedf/qedf_dbg.h          |   2 +-
+ drivers/scsi/qedf/qedf_debugfs.c      |   2 +-
+ drivers/scsi/qedf/qedf_els.c          |   8 +-
+ drivers/scsi/qedf/qedf_fip.c          |  22 +++--
+ drivers/scsi/qedf/qedf_hsi.h          |   2 +-
+ drivers/scsi/qedf/qedf_io.c           |  26 ++++--
+ drivers/scsi/qedf/qedf_main.c         | 163 +++++++++++++++++++++++++++++-----
+ drivers/scsi/qedf/qedf_version.h      |   8 +-
+ 14 files changed, 226 insertions(+), 76 deletions(-)
+
 -- 
 1.8.5.6
