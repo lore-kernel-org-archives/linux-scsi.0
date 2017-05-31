@@ -1,43 +1,113 @@
 From: "Dupuis, Chad" <chad.dupuis@cavium.com>
-Subject: [PATCH V2 03/15] qedf: Honor qed_ops->common->set_fp_int() return code.
-Date: Wed, 31 May 2017 06:33:50 -0700
-Message-ID: <20170531133402.16629-4-chad.dupuis@cavium.com>
+Subject: [PATCH V2 01/15] qedf: Enable basic FDMI information.
+Date: Wed, 31 May 2017 06:33:48 -0700
+Message-ID: <20170531133402.16629-2-chad.dupuis@cavium.com>
 References: <20170531133402.16629-1-chad.dupuis@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0065.outbound.protection.outlook.com ([104.47.38.65]:32549
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam03on0054.outbound.protection.outlook.com ([104.47.42.54]:48144
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751015AbdEaNeS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 31 May 2017 09:34:18 -0400
+        id S1751022AbdEaNeV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 31 May 2017 09:34:21 -0400
 In-Reply-To: <20170531133402.16629-1-chad.dupuis@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, QLogic-Storage-Upstream@cavium.com
 
-We need to check the return code the set_fp_int() callback in case we were
-not allocated any fastpath interrupts or there was an error setting up the
-fastpath interrupts from the qed perspective.
+For libfc to register FDMI attributes we need to do two things:
+
+- Set the appropriate fc_host attributes that libfc will use to form the
+  FDMI registration commands
+- Set lport->fdmi_enabled to 1
 
 Signed-off-by: Chad Dupuis <chad.dupuis@cavium.com>
 ---
- drivers/scsi/qedf/qedf_main.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/qedf/qedf_main.c | 56 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
 
 diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 9457665..884103b 100644
+index cceddd9..8d0a999 100644
 --- a/drivers/scsi/qedf/qedf_main.c
 +++ b/drivers/scsi/qedf/qedf_main.c
-@@ -2035,6 +2035,8 @@ static int qedf_setup_int(struct qedf_ctx *qedf)
- 	 * Learn interrupt configuration
- 	 */
- 	rc = qed_ops->common->set_fp_int(qedf->cdev, num_online_cpus());
-+	if (rc <= 0)
-+		return 0;
+@@ -22,6 +22,7 @@
+ #include <linux/if_vlan.h>
+ #include <linux/cpu.h>
+ #include "qedf.h"
++#include <uapi/linux/pci_regs.h>
  
- 	rc  = qed_ops->common->get_fp_int(qedf->cdev, &qedf->int_info);
- 	if (rc)
+ const struct qed_fcoe_ops *qed_ops;
+ 
+@@ -1334,6 +1335,59 @@ static void qedf_fcoe_ctlr_setup(struct qedf_ctx *qedf)
+ 	ether_addr_copy(qedf->ctlr.ctl_src_addr, qedf->mac);
+ }
+ 
++static void qedf_setup_fdmi(struct qedf_ctx *qedf)
++{
++	struct fc_lport *lport = qedf->lport;
++	struct fc_host_attrs *fc_host = shost_to_fc_host(lport->host);
++	u8 buf[8];
++	int i, pos;
++
++	/*
++	 * fdmi_enabled needs to be set for libfc to execute FDMI registration.
++	 */
++	lport->fdmi_enabled = 1;
++
++	/*
++	 * Setup the necessary fc_host attributes to that will be used to fill
++	 * in the FDMI information.
++	 */
++
++	/* Get the PCI-e Device Serial Number Capability */
++	pos = pci_find_ext_capability(qedf->pdev, PCI_EXT_CAP_ID_DSN);
++	if (pos) {
++		pos += 4;
++		for (i = 0; i < 8; i++)
++			pci_read_config_byte(qedf->pdev, pos + i, &buf[i]);
++
++		snprintf(fc_host->serial_number,
++		    sizeof(fc_host->serial_number),
++		    "%02X%02X%02X%02X%02X%02X%02X%02X",
++		    buf[7], buf[6], buf[5], buf[4],
++		    buf[3], buf[2], buf[1], buf[0]);
++	} else
++		snprintf(fc_host->serial_number,
++		    sizeof(fc_host->serial_number), "Unknown");
++
++	snprintf(fc_host->manufacturer,
++	    sizeof(fc_host->manufacturer), "%s", "Cavium Inc.");
++
++	snprintf(fc_host->model, sizeof(fc_host->model), "%s", "QL41000");
++
++	snprintf(fc_host->model_description, sizeof(fc_host->model_description),
++	    "%s", "QLogic FastLinQ QL41000 Series 10/25/40/50GGbE Controller"
++	    "(FCoE)");
++
++	snprintf(fc_host->hardware_version, sizeof(fc_host->hardware_version),
++	    "Rev %d", qedf->pdev->revision);
++
++	snprintf(fc_host->driver_version, sizeof(fc_host->driver_version),
++	    "%s", QEDF_VERSION);
++
++	snprintf(fc_host->firmware_version, sizeof(fc_host->firmware_version),
++	    "%d.%d.%d.%d", FW_MAJOR_VERSION, FW_MINOR_VERSION,
++	    FW_REVISION_VERSION, FW_ENGINEERING_VERSION);
++}
++
+ static int qedf_lport_setup(struct qedf_ctx *qedf)
+ {
+ 	struct fc_lport *lport = qedf->lport;
+@@ -1377,6 +1431,8 @@ static int qedf_lport_setup(struct qedf_ctx *qedf)
+ 	snprintf(fc_host_symbolic_name(lport->host), 256,
+ 	    "QLogic %s v%s", QEDF_MODULE_NAME, QEDF_VERSION);
+ 
++	qedf_setup_fdmi(qedf);
++
+ 	return 0;
+ }
+ 
 -- 
 1.8.5.6
