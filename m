@@ -1,43 +1,90 @@
-From: "Dupuis, Chad" <chad.dupuis@cavium.com>
-Subject: [PATCH V2 13/15] qedf: Change cmd_per_lun in scsi_host_template to 32 to increase performance.
-Date: Wed, 31 May 2017 06:34:00 -0700
-Message-ID: <20170531133402.16629-14-chad.dupuis@cavium.com>
-References: <20170531133402.16629-1-chad.dupuis@cavium.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH v3 00/23] hisi_sas: hip08 support
+Date: Wed, 31 May 2017 22:32:52 +0800
+Message-ID: <1496241195-217678-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0056.outbound.protection.outlook.com ([104.47.38.56]:4971
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751019AbdEaNfE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 31 May 2017 09:35:04 -0400
-In-Reply-To: <20170531133402.16629-1-chad.dupuis@cavium.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: john.garry2@mail.dcu.ie, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, QLogic-Storage-Upstream@cavium.com
 
-Increase the default number of commands that the driver tells the
-SCSI mid-layer it can do to increase the default performance of the
-driver.
+This patchset adds support for the HiSilicon SAS controller
+in the hip08 chipset.
 
-Signed-off-by: Chad Dupuis <chad.dupuis@cavium.com>
----
- drivers/scsi/qedf/qedf_main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+The key difference compared to earlier chipsets is that the
+controller is an integrated PCI endpoint in hip08.
+As such, the controller is a pci device (not a platform device,
+like v2 hw in hip07).
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 4b688d6..27a9e26 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -708,7 +708,7 @@ static int qedf_slave_configure(struct scsi_device *sdev)
- 	.module 	= THIS_MODULE,
- 	.name 		= QEDF_MODULE_NAME,
- 	.this_id 	= -1,
--	.cmd_per_lun 	= 3,
-+	.cmd_per_lun	= 32,
- 	.use_clustering = ENABLE_CLUSTERING,
- 	.max_sectors 	= 0xffff,
- 	.queuecommand 	= qedf_queuecommand,
+The driver is refactored so it can support both platform and 
+pci device-based controllers.
+
+New hw layer file hisi_sas_v3_hw.c is added for v3 hw
+support, which also includes pci device proving and
+initialisation. 
+
+Common functionality is still in hisi_sas_main.c, along with
+platform device probing and initialization.
+
+As for the patches, (ignoring #1-3) the first few
+reorganise some functions from v2 hw.c into main.c, as they
+are required for v3 hw. Then support is added for pci
+device-based controller in subsequent patches.
+And then hip08 support is added in the final patches.
+
+Differences to v2 series:
+- Add patch to change hisi_sas_device.device_id size
+- Add device dq pointer
+- Remove hisi_sas_v3_hw prototype in v3 driver
+- Add explicit comment in hisi_sas_get_fw_info()
+
+Differences to v1 series:
+- Addressed Arnd's comments, including:
+ - read sas address from device node DSD under PCI host
+    bridge
+ - add comment in fatal axi error patch commit log regarding
+    controller reset
+ - eliminate hisi_sas_pci_init.c, and move functionality into
+    hisi_sas_v3_hw.c, eliminating one layer of indirection
+
+John Garry (5):
+  scsi: hisi_sas: define hisi_sas_device.device_id as int
+  scsi: hisi_sas: add pci_dev in hisi_hba struct
+  scsi: hisi_sas: create hisi_sas_get_fw_info()
+  scsi: hisi_sas: add skeleton v3 hw driver
+  scsi: hisi_sas: add initialisation for v3 pci-based controller
+
+Xiang Chen (18):
+  scsi: hisi_sas: fix timeout check in hisi_sas_internal_task_abort()
+  scsi: hisi_sas: optimise the usage of hisi_hba.lock
+  scsi: hisi_sas: relocate get_ata_protocol()
+  scsi: hisi_sas: relocate sata_done_v2_hw()
+  scsi: hisi_sas: relocate get_ncq_tag_v2_hw()
+  scsi: hisi_sas: add v3 hw init
+  scsi: hisi_sas: add v3 hw PHY init
+  scsi: hisi_sas: add phy up/down/bcast and channel ISR
+  scsi: hisi_sas: add v3 cq interrupt handler
+  scsi: hisi_sas: add v3 code to send SSP frame
+  scsi: hisi_sas: add v3 code to send SMP frame
+  scsi: hisi_sas: add v3 code to send ATA frame
+  scsi: hisi_sas: add v3 code for itct setup and free
+  scsi: hisi_sas: add v3 code to send internal abort command
+  scsi: hisi_sas: add get_wideport_bitmap_v3_hw()
+  scsi: hisi_sas: Add v3 code to support ECC and AXI bus fatal error
+  scsi: hisi_sas: add v3 code to fill some more hw function pointers
+  scsi: hisi_sas: modify internal abort dev flow for v3 hw
+
+ drivers/scsi/hisi_sas/Kconfig          |   10 +-
+ drivers/scsi/hisi_sas/Makefile         |    1 +
+ drivers/scsi/hisi_sas/hisi_sas.h       |   37 +-
+ drivers/scsi/hisi_sas/hisi_sas_main.c  |  393 ++++--
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |   51 +-
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  179 +--
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 2234 ++++++++++++++++++++++++++++++++
+ 7 files changed, 2640 insertions(+), 265 deletions(-)
+ create mode 100644 drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+
 -- 
-1.8.5.6
+1.9.1
