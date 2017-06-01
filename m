@@ -1,24 +1,35 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: lpfc: fix spelling mistake "entrys" -> "entries"
-Date: Wed, 31 May 2017 22:51:00 -0400
-Message-ID: <yq1mv9sl8tn.fsf@oracle.com>
-References: <20170526101137.14282-1-colin.king@canonical.com>
+Subject: Re: [PATCH 1/1] scsi: scsi_debug: Avoid PI being disabled when TGPS is enabled
+Date: Wed, 31 May 2017 22:59:45 -0400
+Message-ID: <yq1inkgl8f2.fsf@oracle.com>
+References: <20170526165935.19543-1-martin.petersen@oracle.com>
+        <1496244104.4753.104.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170526101137.14282-1-colin.king@canonical.com> (Colin King's
-        message of "Fri, 26 May 2017 11:11:37 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:46708 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751052AbdFAC74 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 May 2017 22:59:56 -0400
+In-Reply-To: <1496244104.4753.104.camel@localhost.localdomain> (Ewan
+        D. Milne's message of "Wed, 31 May 2017 11:21:44 -0400")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Ewan D. Milne" <emilne@redhat.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
 
-Colin,
+Ewan,
 
-> Trivial fix to spelling mistake in debugfs message
+> Code is correct.
+>
+> s/TGPS/TPGS in the subject line and in one place in the patch
+> description.
 
-Applied to 4.13/scsi-queue. Thanks!
+Also fixed the original, incorrect comment in the code that begat the
+patch description typo. Thanks!
+
+Applied to 4.12/scsi-fixes.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
