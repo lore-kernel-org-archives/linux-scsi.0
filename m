@@ -1,60 +1,70 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: Re: [RFC v2 0/2] generate uevent for SCSI sense code
-Date: Thu, 1 Jun 2017 16:50:53 +0000
-Message-ID: <48F3810D-7189-4306-AD76-8E27C1B2D5E5@fb.com>
-References: <20170518181456.1955523-1-songliubraving@fb.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH v2 04/17] qla2xxx: Include Exchange offload/Extended Login
+ into FW dump
+Date: Thu, 1 Jun 2017 18:30:32 +0000
+Message-ID: <F3BA4E18-F2DB-448C-B691-46836729C8E3@cavium.com>
+References: <20170530175432.26984-1-himanshu.madhani@cavium.com>
+ <20170530175432.26984-5-himanshu.madhani@cavium.com>
+ <1496272352.2608.22.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:40881 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751432AbdFAQvF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2017 12:51:05 -0400
-In-Reply-To: <20170518181456.1955523-1-songliubraving@fb.com>
+Received: from mail-by2nam03on0057.outbound.protection.outlook.com ([104.47.42.57]:15672
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751130AbdFASae (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 1 Jun 2017 14:30:34 -0400
+In-Reply-To: <1496272352.2608.22.camel@sandisk.com>
 Content-Language: en-US
-Content-ID: <359ABD1B7F89B944B78A3F8DE950F670@namprd15.prod.outlook.com>
+Content-ID: <49DD81219F8D1945AEA139D4B41E4056@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@fb.com>, "axboe@kernel.dk" <axboe@kernel.dk>, Benjamin Block <bblock@linux.vnet.ibm.com>, "emilne@redhat.com" <emilne@redhat.com>
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
 
-> On May 18, 2017, at 11:14 AM, Song Liu <songliubraving@fb.com> wrote:
+> On May 31, 2017, at 4:12 PM, Bart Van Assche <bart.vanassche@sandisk.com>=
+ wrote:
 >=20
-> This change is to follow up our discussion on event log for media
-> management during LSF/MM 2017.
+> On Tue, 2017-05-30 at 10:54 -0700, Himanshu Madhani wrote:
+>> static inline void *
+>> +qla25xx_copy_exlogin(struct qla_hw_data *ha, void *ptr, uint32_t **last=
+_chain)
+>> +{
+>> +	struct qla2xxx_offld_chain *c =3D ptr;
+>> +
+>> +	if (!ha->exlogin_buf)
+>> +		return ptr;
+>> +
+>> +	*last_chain =3D &c->type;
+>> +
+>> +	c->type =3D htonl(DUMP_CHAIN_EXLOGIN);
+>> +	c->chain_size =3D htonl(sizeof(struct qla2xxx_offld_chain) +
+>> +	    ha->exlogin_size);
+>> +	c->size =3D htonl(ha->exlogin_size);
 >=20
-> I have included feedbacks from Hannes Reinecke, Ewan D. Milne, and
-> Benjamin Block.
+> Since this is not networking code, why is this code using htonl() instead=
+ of=20
+> cpu_to_be32()?
 >=20
-> Please kindly let me know your thoughts on this.
+>> +	c->addr_l =3D htonl(LSD(ha->exlogin_buf_dma));
+>> +	c->addr_h =3D htonl(MSD(ha->exlogin_buf_dma));
+>=20
+> Please use cpu_to_be64() instead of this weird construct.
+>=20
+>> +	uint32_t addr_l;
+>> +	uint32_t addr_h;
+>=20
+> Please declare this as a single 64-bit variable instead of using this wei=
+rd
+> split into two 32-bit variables.
 >=20
 > Thanks,
-> Song
 >=20
-> Song Liu (2):
->  scsi: generate uevent for SCSI sense code
->  scsi: add rate limit to scsi sense code uevent
->=20
-> drivers/scsi/Kconfig       | 14 +++++++++++
-> drivers/scsi/scsi_error.c  | 58 +++++++++++++++++++++++++++++++++++++++++=
-+++++
-> drivers/scsi/scsi_lib.c    | 58 +++++++++++++++++++++++++++++++++++++++++=
-++++-
-> drivers/scsi/scsi_scan.c   |  4 ++++
-> drivers/scsi/scsi_sysfs.c  | 51 ++++++++++++++++++++++++++++++++++++++++
-> include/scsi/scsi_common.h |  6 +++++
-> include/scsi/scsi_device.h | 37 ++++++++++++++++++++++++++++-
-> 7 files changed, 226 insertions(+), 2 deletions(-)
->=20
-> --
-> 2.9.3
+> Bart.
 
-Dear Hannes, James, Benjamin, and Ewan,=20
-
-Could you please share your feedback on this version of the RFC? Does it=20
-need major changes?
+Sure. Will update patch with the correct construct.=20
 
 Thanks,
-Song
+- Himanshu
