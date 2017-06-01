@@ -1,37 +1,41 @@
 From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [ufs]: [scsi]: BUG: spinlock recursion on CPU#4
-Date: Thu, 1 Jun 2017 14:02:22 +0000
-Message-ID: <1496325738.3075.1.camel@sandisk.com>
-References: <bd79226b-833c-f53b-f92a-0c4ebffeb1ee@codeaurora.org>
+Subject: Re: [PATCH 00/31] SCSI patches for kernel v4.13.
+Date: Thu, 1 Jun 2017 14:08:04 +0000
+Message-ID: <1496326082.3075.3.camel@sandisk.com>
+References: <20170524003420.5381-1-bart.vanassche@sandisk.com>
+         <yq1o9uhsnco.fsf@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:20880 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751078AbdFAOCZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2017 10:02:25 -0400
-In-Reply-To: <bd79226b-833c-f53b-f92a-0c4ebffeb1ee@codeaurora.org>
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:32847 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751090AbdFAOIH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2017 10:08:07 -0400
+In-Reply-To: <yq1o9uhsnco.fsf@oracle.com>
 Content-Language: en-US
-Content-ID: <5105D612FF61F241903DE87F3B73C19E@namprd04.prod.outlook.com>
+Content-ID: <6C17A57715A75940BB773862334A4545@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>
-Cc: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>
+To: "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 
-On Thu, 2017-06-01 at 12:28 +0530, Asutosh Das (asd) wrote:
-> Please can you check if this is actually a bug and my understanding is=20
-> correct.
+On Wed, 2017-05-24 at 22:04 -0400, Martin K. Petersen wrote:
+> > This patch series consists of the bug fixes I came up with during the
+> > past two months. Please consider these patches for kernel v4.13.
+>=20
+> No major objections from me. Although you may have to slice and dice the
+> series differently so we can get the block bits queued through Jens and
+> then do the rest as a stage 2 merge.
 
-Hello Asutosh,
+Hello Martin,
 
-Spinlock recursion is always a bug. With what kernel version did you encoun=
-ter
-this? Was it with a kernel from kernel.org, a distro kernel or an Android k=
-ernel?
-Have you already tried to reproduce this with kernel debugging enabled? Ena=
-bling
-CONFIG_DEBUG_SPINLOCK and CONFIG_PROVE_LOCKING should provide more detailed
-information.
+The first eight patches in this series do not depend on any block layer cha=
+nges.
+Do you want me to repost this patches or can you perhaps queue these withou=
+t a
+repost?
+
+Thanks,
 
 Bart.=
