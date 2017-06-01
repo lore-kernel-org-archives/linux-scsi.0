@@ -1,57 +1,43 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH v2 13/17] qla2xxx: Remove redundant code
-Date: Thu, 1 Jun 2017 18:33:43 +0000
-Message-ID: <1E552265-64D2-4E6D-9E6B-787DF447766B@cavium.com>
-References: <20170530175432.26984-1-himanshu.madhani@cavium.com>
- <20170530175432.26984-14-himanshu.madhani@cavium.com>
- <1496273866.2608.27.camel@sandisk.com>
+From: Raphael Philipe Mendes da Silva <raphasil@linux.vnet.ibm.com>
+Subject: Re: [PATCH 10/15] lpfc: Fix crash on powering off BFS VM with
+ passthrough device
+Date: Thu, 1 Jun 2017 16:27:25 -0300
+Message-ID: <a96ff6be-02c6-1a44-38c2-0f30fed937bc@linux.vnet.ibm.com>
+References: <20170531060439.2073-1-jsmart2021@gmail.com>
+ <20170531060439.2073-11-jsmart2021@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0053.outbound.protection.outlook.com ([104.47.36.53]:45280
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751130AbdFASdq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 1 Jun 2017 14:33:46 -0400
-In-Reply-To: <1496273866.2608.27.camel@sandisk.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:59217 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751097AbdFAT23 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2017 15:28:29 -0400
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v51JO1L1134820
+        for <linux-scsi@vger.kernel.org>; Thu, 1 Jun 2017 15:28:28 -0400
+Received: from e24smtp04.br.ibm.com (e24smtp04.br.ibm.com [32.104.18.25])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2atmk4d9qd-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Thu, 01 Jun 2017 15:28:28 -0400
+Received: from localhost
+        by e24smtp04.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <raphasil@linux.vnet.ibm.com>;
+        Thu, 1 Jun 2017 16:28:25 -0300
+Received: from d24av02.br.ibm.com (d24av02.br.ibm.com [9.8.31.93])
+        by d24relay03.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v51JSETC15007834
+        for <linux-scsi@vger.kernel.org>; Thu, 1 Jun 2017 16:28:23 -0300
+Received: from d24av02.br.ibm.com (localhost [127.0.0.1])
+        by d24av02.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v51JRoVs017800
+        for <linux-scsi@vger.kernel.org>; Thu, 1 Jun 2017 16:27:51 -0300
+In-Reply-To: <20170531060439.2073-11-jsmart2021@gmail.com>
 Content-Language: en-US
-Content-ID: <B6C8E8C51972414AA61A41C98498EE99@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
+Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
+Answering to https://marc.info/?l=linux-scsi&m=149625285323719&w=2
+Yes, it solves the error.
 
-> On May 31, 2017, at 4:37 PM, Bart Van Assche <bart.vanassche@sandisk.com>=
- wrote:
->=20
-> On Tue, 2017-05-30 at 10:54 -0700, Himanshu Madhani wrote:
->> The reason for hard coding LUN ID to 0 is that, from the FC
->> protocol perspective, ABTS does not have any knowledge of
->> LUN ID. So, there is no reason for qla2xxx driver to
->> manufacture the LUN ID.
->=20
-> Sorry but I think this is completely wrong. Are you aware that
-> target_submit_tmr() performs an exact match on the LUN specified as the f=
-ourth
-> argument? This patch will cause ABTS requests to be ignored that apply to
-> commands that have been submitted to another LUN than LUN 0.
->=20
-> Please note that I had proposed a better approach three months ago on the
-> target-devel mailing list and that I'm still waiting for someone from Cav=
-ium to
-> review these patches:
-> * [PATCH v6 09/33] target: Make it possible to specify I_T nexus for SCSI
->   abort (http://www.spinics.net/lists/target-devel/msg14534.html).
-> * [PATCH v6 10/33] tcm_qla2xxx: Let the target core look up the LUN of th=
-e
->   aborted cmd (http://www.spinics.net/lists/target-devel/msg14563.html).
->=20
-> Bart.
-
-We will drop this patch from current series and will look at the alternativ=
-es you have posted.
-
-Thanks,
-- Himanshu
+Tested-by: Raphael Silva <raphasil@linux.vnet.ibm.com>
