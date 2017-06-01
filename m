@@ -1,38 +1,62 @@
-From: Colin Ian King <colin.king@canonical.com>
-Subject: Re: [PATCH] scsi: lpfc: fix spelling mistake "entrys" -> "entries"
-Date: Thu, 1 Jun 2017 15:40:25 +0100
-Message-ID: <b5f2ac31-d1cf-7f29-e0cd-0b8f8954ad9a@canonical.com>
-References: <20170526101137.14282-1-colin.king@canonical.com>
- <20170601143519.mk4tvxwcl63y3zwm@mwanda>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH] Eliminate extra 'out_free' label from fcoe_init function
+Date: Thu, 1 Jun 2017 18:02:33 +0300
+Message-ID: <20170601150233.2j6lxormywlvu7fa@mwanda>
+References: <a1ea0104-83ed-2249-3450-dc5c31517558@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170601143519.mk4tvxwcl63y3zwm@mwanda>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:17452 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751096AbdFAPCo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2017 11:02:44 -0400
+Content-Disposition: inline
+In-Reply-To: <a1ea0104-83ed-2249-3450-dc5c31517558@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Milan P. Gandhi" <mgandhi@redhat.com>
+Cc: linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Laurence Oberman <loberman@redhat.com>
 
-On 01/06/17 15:35, Dan Carpenter wrote:
-> On Fri, May 26, 2017 at 11:11:37AM +0100, Colin King wrote:
->> From: Colin Ian King <colin.king@canonical.com>
->>
->> Trivial fix to spelling mistake in debugfs message
->>
+On Thu, Jun 01, 2017 at 05:41:06PM +0530, Milan P. Gandhi wrote:
+> Simplify the check for return code of fcoe_if_init routine
+> in fcoe_init function such that we could eliminate need for
+> extra 'out_free' label.
 > 
-> Are you using a tool to find all these spelling mistakes?
-
-Yep, I'm using kernelscan [1]
-
-kernelscan -c path-to-kernel-source
-
-I run this daily and diff the latest with the previous results. It uses
-the dictionary from "spell". It's been hand optimized to be rather fast.
-
-[1] https://github.com/ColinIanKing/kernelscan
-
+> Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
+> ---
+>  drivers/scsi/fcoe/fcoe.c | 10 ++++------
+>  1 file changed, 4 insertions(+), 6 deletions(-)
 > 
-> regards,
-> dan carpenter
-> 
+> diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+> index ea21e7b..fb2a4c9 100644
+> --- a/drivers/scsi/fcoe/fcoe.c
+> +++ b/drivers/scsi/fcoe/fcoe.c
+> @@ -2523,13 +2523,11 @@ static int __init fcoe_init(void)
+>  	fcoe_dev_setup();
+>  
+>  	rc = fcoe_if_init();
+> -	if (rc)
+> -		goto out_free;
+> -
+> -	mutex_unlock(&fcoe_config_mutex);
+> -	return 0;
+> +	if (rc == 0) {
+> +		mutex_unlock(&fcoe_config_mutex);
+> +		return 0;
+> +	}
+>  
+> -out_free:
+>  	mutex_unlock(&fcoe_config_mutex);
+
+Gar...  Stop!  No1  Don't do this.
+
+Do failure handling, not success handling.
+
+People always think they should get creative with the last if statement
+in a function.  This leads to spaghetti code and it's confusing.  Please
+never do this again.
+
+The original is correct and the new code is bad rubbish code.
+
+regards,
+dan carpenter
