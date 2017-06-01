@@ -1,98 +1,44 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] iscsi-target: Fix initial login PDU asynchronous socket
- close OOPs
-Date: Wed, 31 May 2017 16:53:51 -0700
-Message-ID: <1496274831.27407.153.camel@haakon3.risingtidesystems.com>
-References: <1495776751-4746-1-git-send-email-nab@linux-iscsi.org>
-         <5928EF2C.6090609@redhat.com>
-         <1496206723.27407.119.camel@haakon3.risingtidesystems.com>
-         <592F2774.8010901@redhat.com>
+From: elvir cerrato <elvircerrato46@gmail.com>
+Subject: Hello Dear Greetings from the Almighty God
+Date: Wed, 31 May 2017 17:44:39 -0700
+Message-ID: <CAHiy+2RuH8tSu_82dYOWCFQ=_sMj6_+pdUE=K9dSPASkY4+DpA@mail.gmail.com>
+References: <CAHiy+2Ry2VFk59hNJGwz3Eh7+bpc9gh5KoQ_eLpZzckf3rdWeg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <592F2774.8010901@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Mike Christie <mchristi@redhat.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.com>, Sagi Grimberg <sagi@grimberg.me>, Varun Prakash <varun@chelsio.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:34415 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750954AbdFAAol (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 May 2017 20:44:41 -0400
+Received: by mail-wm0-f68.google.com with SMTP id d127so7349232wmf.1
+        for <linux-scsi@vger.kernel.org>; Wed, 31 May 2017 17:44:41 -0700 (PDT)
+In-Reply-To: <CAHiy+2Ry2VFk59hNJGwz3Eh7+bpc9gh5KoQ_eLpZzckf3rdWeg@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2017-05-31 at 15:28 -0500, Mike Christie wrote:
-> On 05/30/2017 11:58 PM, Nicholas A. Bellinger wrote:
-> > Hey MNC,
-> > 
-> > On Fri, 2017-05-26 at 22:14 -0500, Mike Christie wrote:
-> >> Thanks for the patch.
-
-<SNIP>
-
-> >> The patch fixes the crash for me. However, is there a possible
-> >> regression where if the initiator attempts new relogins we could run out
-> >> of memory? With the old code, we would free the login attempts resources
-> >> at this time, but with the new code the initiator will send more login
-> >> attempts and so we just keep allocating more memory for each attempt
-> >> until we run out or the login is finally able to complete.
-> > 
-> > AFAICT, no. For the two cases in question:
-> > 
-> >  - Initial login request PDU processing done within iscsi_np kthread
-> > context in iscsi_target_start_negotiation(), and
-> >  - subsequent login request PDU processing done by delayed work-queue
-> > kthread context in iscsi_target_do_login_rx() 
-> > 
-> > this patch doesn't change how aggressively connection cleanup happens
-> > for failed login attempts in the face of new connection login attempts
-> > for either case.
-> > 
-> > For the first case when iscsi_np process context invokes
-> > iscsi_target_start_negotiation() -> iscsi_target_do_login() ->
-> > iscsi_check_for_session_reinstatement() to wait for backend I/O to
-> > complete, it still blocks other new connections from being accepted on
-> > the specific iscsi_np process context.
-> > 
-> > This patch doesn't change this behavior.
-> > 
-> > What it does change is when the host closes the connection and
-> > iscsi_target_sk_state_change() gets invoked, iscsi_np process context
-> > waits for iscsi_check_for_session_reinstatement() to complete before
-> > releasing the connection resources.
-> > 
-> > However since iscsi_np process context is blocked, new connections won't
-> > be accepted until the new connection forcing session reinstatement
-> > finishes waiting for outstanding backend I/O to complete.
-> 
-> I was seeing this. My original mail asked about iscsi login resources
-> incorrectly, but like you said we do not get that far. I get a giant
-> backlog (1 connection request per 5 seconds that we waited) of tcp level
-> connection requests and drops. When the wait is done I get a flood of
-> "iSCSI Login negotiation failed" due to the target handling all those
-> now stale requests/drops.
-
-Ah, I see what you mean.  The TCP backlog = 256 default can fill up when
-a small host side login timeout is used while iscsi_np is blocked
-waiting for session reinstatement to complete.
-
-> 
-> If we do not care about the memory use at the network level for this
-> case (it seems like a little and reconnects are not aggressive), then
-> patch works ok for me. I am guessing it gets nasty to handle, so maybe
-> not worth it to handle right now? 
-
-Yeah, since it's a issue separate from root cause here, getting this
-merged first makes sense.
-
-> I tried to do it in my patch which is why it got all crazy with the waits/wakeups :)
-> 
-
-One option to consider is to immediately queue into delayed work-queue
-context from iscsi_target_start_negotiation() instead of doing the
-iscsi_target_do_login() and session reinstatement from iscsi_np context.
-
-Just taking a quick look, this seems like it would be a pretty
-straight-forward change..
-
-> Thanks, and you can add a tested-by or reviewed-by from me.
-
-Great, thanks MNC.
-
-Will send out a PULL request for -rc4 shortly.
+Hello dear greetings to you from the almighty God  , my name is Mrs
+Elvir Cerrato from Honduras  i am 45 years old , i ma a dying woman
+who have decided to donate what i have to the churches , mosque ,
+motherless homes , less privilege and the poor through you i was
+diagonsed for cancer two years ago but recently my health condition is
+getting worst by the day ,i have been toched by God to use what he has
+given me to put a smile on the faces of the poor the needy and the
+less privilege through you i have asked God to show me a trusted
+person that will help me and do this humannitarian work because if i
+die now the money will not used well and the security company where i
+deposited the money will confiscate the money because no one knows
+about the fund  and i will never be a happy woman in the spirit world
+because i made a promise to God that i will donate all he has given me
+to charity organization , the doctor told me that i have less than 30
+days to live, at the moment I cannot take any telephone calls right
+now due to the doctors instructions  and my health status also I need
+you to contact the security company where i deposited my( $3,500,000)
+with  your full name home address  where you will like them to ship
+this trunk box to  and your mobile number and i will instruct them to
+make the delivery of my money to you by quoting my personal reference
+number:( Jlk/Wds/95773/50015/GwrI/3196 )and I have also notified  them
+that I am willing that amount to you for a good, effective and prudent
+work. I know I don't know you but I have been directed to do this by
+God please let me know as soon as you contact the security compmay ok
+here is the security company's email address
+(speedex.deliveryandvaultcompany@mail.ru)
