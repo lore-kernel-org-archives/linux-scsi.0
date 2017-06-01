@@ -1,89 +1,135 @@
-From: "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Subject: [ufs]: [scsi]: BUG: spinlock recursion on CPU#4
-Date: Thu, 1 Jun 2017 12:28:02 +0530
-Message-ID: <bd79226b-833c-f53b-f92a-0c4ebffeb1ee@codeaurora.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH-v2] target/iblock: Convert WRITE_SAME to blkdev_issue_zeroout
+Date: Thu,  1 Jun 2017 07:05:02 +0000
+Message-ID: <1496300702-21835-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: "linux-arm-msm@vger.kernel.org; linux-kernel@vger.kernel.org; subhashj"@codeaurora.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@fb.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi All,
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Recently, I came across an issue with the below call stack.
+The people who are actively using iblock_execute_write_same_direct() are
+doing so in the context of ESX VAAI BlockZero, together with
+EXTENDED_COPY and COMPARE_AND_WRITE primitives.
 
--000|arch_counter_get_cntvct(inline)
--000|__delay()
--001|__const_udelay(?)
--002|msm_trigger_wdog_bite()
--003|spin_dump(inline)
--003|spin_bug(lock = ?, ?)
--004|current_thread_info(inline)
--004|debug_spin_lock_before(inline)
--004|do_raw_spin_lock()
--005|raw_spin_lock_irqsave(lock = ?)
--006|blk_end_bidi_request(inline)
--006|blk_end_request_all(rq = ?, error = 0) <-- this tries to acquire 
-the lock acquired by blk_delay_work (-024) and spinbug recursion occurs
+In practice though I've not seen any users of IBLOCK WRITE_SAME for
+anything other than VAAI BlockZero, so just using blkdev_issue_zeroout()
+when available, and falling back to iblock_execute_write_same() if the
+WRITE_SAME buffer contains anything other than zeros should be OK.
 
--007|dm_end_request(clone = ?, error = 0)
--008|dm_done(inline)
--008|dm_softirq_done()
--009|blk_done_softirq()
--010|__read_once_size(inline)
--010|static_key_count(inline)
--010|static_key_false(inline)
--010|trace_softirq_exit(inline)
--010|__do_softirq()
--011|do_softirq_own_stack(inline)
--011|invoke_softirq(inline) <-- softirq is triggered because 
-scsi_request_fn (-016) enabled interrupts on this cpu
+(Hook up max_write_zeroes_sectors to signal LBPRZ feature bit in
+ target_configure_unmap_from_queue - nab)
 
--011|irq_exit()
--012|handle_IPI()
--013|gic_handle_irq()
--014|el1_irq(asm)
-  -->|exception
--015|__raw_spin_unlock_irq(inline)
--015|raw_spin_unlock_irq(lock = ?)
--016|scsi_request_fn() <-- Unlocks the queue using spin_unlock, doesn't 
-restore the flags, thus enabling the interrupts
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Mike Christie <mchristi@redhat.com>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: Jens Axboe <axboe@fb.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_device.c |  2 +-
+ drivers/target/target_core_iblock.c | 44 +++++++++++++++++++++++--------------
+ 2 files changed, 28 insertions(+), 18 deletions(-)
 
--017|__blk_run_queue_uncond(inline)
--017|__blk_run_queue(q = ?)
--018|__elv_add_request()
--019|blk_insert_cloned_request() <-- acquires the queue lock & saves the 
-flags
-
--020|dm_dispatch_clone_request(clone = ?, rq = ?)
--021|map_request()
--022|dm_request_fn()
--023|__blk_run_queue_uncond(inline)
--023|__blk_run_queue
--024|spin_unlock_irq(inline)
--024|blk_delay_work(?) <-- also acquires a queue lock, but this is a 
-different queue, blk_end_request_all will reference this queue
-
--025|__read_once_size(inline)
--025|static_key_count(inline)
--025|static_key_false(inline)
--025|trace_workqueue_execute_end(inline)
--025|process_one_work()
--026|worker_thread()
--027|kthread()
--028|ret_from_fork(asm)
-  ---|end of frame
-
-Please can you check if this is actually a bug and my understanding is 
-correct.
-If so, I can put up a patch for the same.
-
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index 8add07f38..a5762e6 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -851,7 +851,7 @@ bool target_configure_unmap_from_queue(struct se_dev_attrib *attrib,
+ 	attrib->unmap_granularity = q->limits.discard_granularity / block_size;
+ 	attrib->unmap_granularity_alignment = q->limits.discard_alignment /
+ 								block_size;
+-	attrib->unmap_zeroes_data = 0;
++	attrib->unmap_zeroes_data = (q->limits.max_write_zeroes_sectors);
+ 	return true;
+ }
+ EXPORT_SYMBOL(target_configure_unmap_from_queue);
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index bb069eb..b204413 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -86,6 +86,7 @@ static int iblock_configure_device(struct se_device *dev)
+ 	struct block_device *bd = NULL;
+ 	struct blk_integrity *bi;
+ 	fmode_t mode;
++	unsigned int max_write_zeroes_sectors;
+ 	int ret = -ENOMEM;
+ 
+ 	if (!(ib_dev->ibd_flags & IBDF_HAS_UDEV_PATH)) {
+@@ -129,7 +130,11 @@ static int iblock_configure_device(struct se_device *dev)
+ 	 * Enable write same emulation for IBLOCK and use 0xFFFF as
+ 	 * the smaller WRITE_SAME(10) only has a two-byte block count.
+ 	 */
+-	dev->dev_attrib.max_write_same_len = 0xFFFF;
++	max_write_zeroes_sectors = bdev_write_zeroes_sectors(bd);
++	if (max_write_zeroes_sectors)
++		dev->dev_attrib.max_write_same_len = max_write_zeroes_sectors;
++	else
++		dev->dev_attrib.max_write_same_len = 0xFFFF;
+ 
+ 	if (blk_queue_nonrot(q))
+ 		dev->dev_attrib.is_nonrot = 1;
+@@ -415,28 +420,31 @@ static void iblock_end_io_flush(struct bio *bio)
+ }
+ 
+ static sense_reason_t
+-iblock_execute_write_same_direct(struct block_device *bdev, struct se_cmd *cmd)
++iblock_execute_zero_out(struct block_device *bdev, struct se_cmd *cmd)
+ {
+ 	struct se_device *dev = cmd->se_dev;
+ 	struct scatterlist *sg = &cmd->t_data_sg[0];
+-	struct page *page = NULL;
+-	int ret;
++	unsigned char *buf, zero = 0x00, *p = &zero;
++	int rc, ret;
+ 
+-	if (sg->offset) {
+-		page = alloc_page(GFP_KERNEL);
+-		if (!page)
+-			return TCM_OUT_OF_RESOURCES;
+-		sg_copy_to_buffer(sg, cmd->t_data_nents, page_address(page),
+-				  dev->dev_attrib.block_size);
+-	}
++	buf = kmap(sg_page(sg)) + sg->offset;
++	if (!buf)
++		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
++	/*
++	 * Fall back to block_execute_write_same() slow-path if
++	 * incoming WRITE_SAME payload does not contain zeros.
++	 */
++	rc = memcmp(buf, p, cmd->data_length);
++	kunmap(sg_page(sg));
++
++	if (rc)
++		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+ 
+-	ret = blkdev_issue_write_same(bdev,
++	ret = blkdev_issue_zeroout(bdev,
+ 				target_to_linux_sector(dev, cmd->t_task_lba),
+ 				target_to_linux_sector(dev,
+ 					sbc_get_write_same_sectors(cmd)),
+-				GFP_KERNEL, page ? page : sg_page(sg));
+-	if (page)
+-		__free_page(page);
++				GFP_KERNEL, false);
+ 	if (ret)
+ 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+ 
+@@ -472,8 +480,10 @@ static void iblock_end_io_flush(struct bio *bio)
+ 		return TCM_INVALID_CDB_FIELD;
+ 	}
+ 
+-	if (bdev_write_same(bdev))
+-		return iblock_execute_write_same_direct(bdev, cmd);
++	if (bdev_write_zeroes_sectors(bdev)) {
++		if (!iblock_execute_zero_out(bdev, cmd))
++			return 0;
++	}
+ 
+ 	ibr = kzalloc(sizeof(struct iblock_req), GFP_KERNEL);
+ 	if (!ibr)
 -- 
-Asutosh Das (asd)
-
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
-Linux Foundation Collaborative Project
+1.9.1
