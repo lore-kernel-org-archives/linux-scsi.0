@@ -1,68 +1,60 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH v3 3/9] blk-mq: use the introduced
- blk_mq_unquiesce_queue()
-Date: Thu, 1 Jun 2017 08:54:28 +0800
-Message-ID: <20170601005423.GA23563@ming.t460p>
-References: <20170531123706.20885-1-ming.lei@redhat.com>
- <20170531123706.20885-4-ming.lei@redhat.com>
- <1496244100.2608.3.camel@sandisk.com>
+From: Alice Ferrazzi <alicef@gentoo.org>
+Subject: Linux kernel 4.9.25: signed integer overflow in
+ drivers/scsi/scsicam.c:173:29
+Date: Thu, 1 Jun 2017 10:44:35 +0900
+Message-ID: <20170601014435.GA9708@alitoo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="azLHFNyN32YCQGCU"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pf0-f171.google.com ([209.85.192.171]:33619 "EHLO
+        mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751015AbdFABou (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 May 2017 21:44:50 -0400
 Content-Disposition: inline
-In-Reply-To: <1496244100.2608.3.camel@sandisk.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc: "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, segmentation-fault@outlook.com, security@gentoo.org
 
-On Wed, May 31, 2017 at 03:21:41PM +0000, Bart Van Assche wrote:
-> On Wed, 2017-05-31 at 20:37 +0800, Ming Lei wrote:
-> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> > index 99e16ac479e3..ffcf05765e2b 100644
-> > --- a/drivers/scsi/scsi_lib.c
-> > +++ b/drivers/scsi/scsi_lib.c
-> > @@ -3031,7 +3031,10 @@ scsi_internal_device_unblock(struct scsi_device *sdev,
-> >  		return -EINVAL;
-> >  
-> >  	if (q->mq_ops) {
-> > -		blk_mq_start_stopped_hw_queues(q, false);
-> > +		if (blk_queue_quiesced(q))
-> > +			blk_mq_unquiesce_queue(q);
-> > +		else
-> > +			blk_mq_start_stopped_hw_queues(q, false);
-> >  	} else {
-> >  		spin_lock_irqsave(q->queue_lock, flags);
-> >  		blk_start_queue(q);
-> 
-> As I commented on v2, this change is really wrong. All what's needed here is
-> a call to blk_mq_unquiesce_queue() and nothing else. Adding a call to
-> blk_mq_start_stopped_hw_queues() is wrong because it makes it impossible to
-> use the STOPPED flag in the SCSI core to make the block layer core stop calling
-> .queue_rq() if a SCSI LLD returns "busy".
 
-I am not sure if I understand your idea, could you explain a bit why it is wrong?
+--azLHFNyN32YCQGCU
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Let's see the function of scsi_internal_device_block():
 
-	if (q->mq_ops) {
-                if (wait)
-                        blk_mq_quiesce_queue(q);
-                else
-                        blk_mq_stop_hw_queues(q);
-	}
+Hello scsi maintainer,
 
-So the queue may be put into quiesced if 'wait' is true, or it is
-stopped if 'wait' is false.
+I would like to report a signed integer overflow in drivers/scsi/scsicam.c:=
+173:29=20
+reported on the Gentoo bug reporting system.=20
+https://bugs.gentoo.org/show_bug.cgi?id=3D617820
 
-And this patch just makes the two SCSI APIs symmetrical.
+The problem looks present ,at least , in the Linux kernel 4.9.25
+regards,
 
-Since we will not stop queue in blk_mq_quiesce_queue() later,
-I have to unquiese one queue only if it is quiesced.
+Alice Ferrazzi
+Gentoo kernel project leader
 
-So suppose the queue is put into stopped in scsi_internal_device_block(),
-do we expect not to restart it in scsi_internal_device_unblock() via
-blk_mq_unquiesce_queue()?
+--azLHFNyN32YCQGCU
+Content-Type: application/pgp-signature; name="signature.asc"
 
-Thanks,
-Ming
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEELk4IVkYcBYUTNvSWViGmsoY4eBoFAlkvcWoACgkQViGmsoY4
+eBo83A/9GTaMcehY4FBwhze25xdviVC9vOPUSVDLZagKBsC+DD6JKL1Ujw+csMnf
+69gp5k4aao9s5EJ02bIbbj1RbfCgO7w9poUBFy4SyAdFHzLj8WY3MNPMQ4v/fJFb
+AYHjfK20ejRC/Z4voVdbvMXnyfuYxsDZMpBysJ4Nk6JuJzTIrCDbs+mHG9uomShj
+ZqKLgFp484dg7KErowOOOtt0VGSxEGCqMVgvdbKWOiCnlZ77gLW3fKHhyT4/yR3E
+kU4kOTTNc5d5Ghx63tvh8f6ohs5qAFXz/6Ku2iSl4j9LYi9oxBNTo7hSTGppXbcD
+NXJIu/MsxO+twAtDoQlTYQeoi7DGGS5nEGQLd2I2iKVefyZTLLteXvTu//el5Vgb
+TFivs0LYeiVI3OczzlaJZa7QDoFB3aRIWfHD2nSYrMXdQYHMMvmsBGp67BeismJd
+rN0Pa8M9O64FwHB8nIIiq1vuOKIiEbfJHGs75RtnXLUKvudSO5owPdj/KwWfZrk5
+/WyJ83Meszd3my8h+R/FjYiBcEbgATr21DUZcRyUi9L8vJLB5Fw/wbniD7Aq4oLj
+akr3DmH0cN4TGoJF12AOu2ydsjEXHmi26HNFboFj1BTiI3779e1SUTiW6zXWhPwj
+XEz49XDeVl78SU7FdvkTatrlSQYeBsaV5FR2iVrZMA2O9qXEV+I=
+=egDG
+-----END PGP SIGNATURE-----
+
+--azLHFNyN32YCQGCU--
