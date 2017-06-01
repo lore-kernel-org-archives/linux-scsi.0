@@ -1,135 +1,23 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH-v2] target/iblock: Convert WRITE_SAME to blkdev_issue_zeroout
-Date: Thu,  1 Jun 2017 07:05:02 +0000
-Message-ID: <1496300702-21835-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@fb.com>
+Subject: Re: [PATCH] target: Avoid target_shutdown_sessions loop during
+ queue_depth change
+Date: Thu, 01 Jun 2017 00:04:39 -0700
+Message-ID: <1496300679.27407.207.camel@haakon3.risingtidesystems.com>
+References: <1496300046-21234-1-git-send-email-nab@linux-iscsi.org>
+         <20170601065715.GA17147@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20170601065715.GA17147@lst.de>
+Sender: target-devel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Thu, 2017-06-01 at 08:57 +0200, Christoph Hellwig wrote:
+> How about this slightly easier to read version?
 
-The people who are actively using iblock_execute_write_same_direct() are
-doing so in the context of ESX VAAI BlockZero, together with
-EXTENDED_COPY and COMPARE_AND_WRITE primitives.
+Fine by me.
 
-In practice though I've not seen any users of IBLOCK WRITE_SAME for
-anything other than VAAI BlockZero, so just using blkdev_issue_zeroout()
-when available, and falling back to iblock_execute_write_same() if the
-WRITE_SAME buffer contains anything other than zeros should be OK.
-
-(Hook up max_write_zeroes_sectors to signal LBPRZ feature bit in
- target_configure_unmap_from_queue - nab)
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Mike Christie <mchristi@redhat.com>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Jens Axboe <axboe@fb.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_device.c |  2 +-
- drivers/target/target_core_iblock.c | 44 +++++++++++++++++++++++--------------
- 2 files changed, 28 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 8add07f38..a5762e6 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -851,7 +851,7 @@ bool target_configure_unmap_from_queue(struct se_dev_attrib *attrib,
- 	attrib->unmap_granularity = q->limits.discard_granularity / block_size;
- 	attrib->unmap_granularity_alignment = q->limits.discard_alignment /
- 								block_size;
--	attrib->unmap_zeroes_data = 0;
-+	attrib->unmap_zeroes_data = (q->limits.max_write_zeroes_sectors);
- 	return true;
- }
- EXPORT_SYMBOL(target_configure_unmap_from_queue);
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index bb069eb..b204413 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -86,6 +86,7 @@ static int iblock_configure_device(struct se_device *dev)
- 	struct block_device *bd = NULL;
- 	struct blk_integrity *bi;
- 	fmode_t mode;
-+	unsigned int max_write_zeroes_sectors;
- 	int ret = -ENOMEM;
- 
- 	if (!(ib_dev->ibd_flags & IBDF_HAS_UDEV_PATH)) {
-@@ -129,7 +130,11 @@ static int iblock_configure_device(struct se_device *dev)
- 	 * Enable write same emulation for IBLOCK and use 0xFFFF as
- 	 * the smaller WRITE_SAME(10) only has a two-byte block count.
- 	 */
--	dev->dev_attrib.max_write_same_len = 0xFFFF;
-+	max_write_zeroes_sectors = bdev_write_zeroes_sectors(bd);
-+	if (max_write_zeroes_sectors)
-+		dev->dev_attrib.max_write_same_len = max_write_zeroes_sectors;
-+	else
-+		dev->dev_attrib.max_write_same_len = 0xFFFF;
- 
- 	if (blk_queue_nonrot(q))
- 		dev->dev_attrib.is_nonrot = 1;
-@@ -415,28 +420,31 @@ static void iblock_end_io_flush(struct bio *bio)
- }
- 
- static sense_reason_t
--iblock_execute_write_same_direct(struct block_device *bdev, struct se_cmd *cmd)
-+iblock_execute_zero_out(struct block_device *bdev, struct se_cmd *cmd)
- {
- 	struct se_device *dev = cmd->se_dev;
- 	struct scatterlist *sg = &cmd->t_data_sg[0];
--	struct page *page = NULL;
--	int ret;
-+	unsigned char *buf, zero = 0x00, *p = &zero;
-+	int rc, ret;
- 
--	if (sg->offset) {
--		page = alloc_page(GFP_KERNEL);
--		if (!page)
--			return TCM_OUT_OF_RESOURCES;
--		sg_copy_to_buffer(sg, cmd->t_data_nents, page_address(page),
--				  dev->dev_attrib.block_size);
--	}
-+	buf = kmap(sg_page(sg)) + sg->offset;
-+	if (!buf)
-+		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-+	/*
-+	 * Fall back to block_execute_write_same() slow-path if
-+	 * incoming WRITE_SAME payload does not contain zeros.
-+	 */
-+	rc = memcmp(buf, p, cmd->data_length);
-+	kunmap(sg_page(sg));
-+
-+	if (rc)
-+		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 
--	ret = blkdev_issue_write_same(bdev,
-+	ret = blkdev_issue_zeroout(bdev,
- 				target_to_linux_sector(dev, cmd->t_task_lba),
- 				target_to_linux_sector(dev,
- 					sbc_get_write_same_sectors(cmd)),
--				GFP_KERNEL, page ? page : sg_page(sg));
--	if (page)
--		__free_page(page);
-+				GFP_KERNEL, false);
- 	if (ret)
- 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 
-@@ -472,8 +480,10 @@ static void iblock_end_io_flush(struct bio *bio)
- 		return TCM_INVALID_CDB_FIELD;
- 	}
- 
--	if (bdev_write_same(bdev))
--		return iblock_execute_write_same_direct(bdev, cmd);
-+	if (bdev_write_zeroes_sectors(bdev)) {
-+		if (!iblock_execute_zero_out(bdev, cmd))
-+			return 0;
-+	}
- 
- 	ibr = kzalloc(sizeof(struct iblock_req), GFP_KERNEL);
- 	if (!ibr)
--- 
-1.9.1
+Applied.
