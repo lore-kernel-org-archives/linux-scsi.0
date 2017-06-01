@@ -1,233 +1,81 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] tcmu: Add fifo type waiter list support to avoid
- starvation
-Date: Wed, 31 May 2017 23:13:03 -0700
-Message-ID: <1496297583.27407.198.camel@haakon3.risingtidesystems.com>
-References: <1493952686-29396-1-git-send-email-lixiubo@cmss.chinamobile.com>
+Subject: Re: [PATCH] iscsi: Fix a sleep-in-atomic bug
+Date: Wed, 31 May 2017 23:21:33 -0700
+Message-ID: <1496298093.27407.203.camel@haakon3.risingtidesystems.com>
+References: <1496201199-3661-1-git-send-email-baijiaju1990@163.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1493952686-29396-1-git-send-email-lixiubo@cmss.chinamobile.com>
+In-Reply-To: <1496201199-3661-1-git-send-email-baijiaju1990@163.com>
 Sender: target-devel-owner@vger.kernel.org
-To: lixiubo@cmss.chinamobile.com
-Cc: mchristi@redhat.com, agrover@redhat.com, namei.unix@gmail.com, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jia-Ju Bai <baijiaju1990@163.com>
+Cc: bart.vanassche@sandisk.com, davem@davemloft.net, hare@suse.com, elfring@users.sourceforge.net, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hey MNC,
+Hi Jia-Ju,
 
-Any comments on this..?
-
-It's been sitting on the list for a while now..  ;)
-
-On Fri, 2017-05-05 at 10:51 +0800, lixiubo@cmss.chinamobile.com wrote:
-> From: Xiubo Li <lixiubo@cmss.chinamobile.com>
+On Wed, 2017-05-31 at 11:26 +0800, Jia-Ju Bai wrote:
+> The driver may sleep under a spin lock, and the function call path is:
+> iscsit_tpg_enable_portal_group (acquire the lock by spin_lock)
+>   iscsi_update_param_value
+>     kstrdup(GFP_KERNEL) --> may sleep
 > 
-> The fifo type waiter list will hold the udevs who are waiting for the
-> blocks from the data global pool. The unmap thread will try to feed the
-> first udevs in waiter list, if the global free blocks available are
-> not enough, it will stop traversing the list and abort waking up the
-> others.
+> To fix it, the "GFP_KERNEL" is replaced with "GFP_ATOMIC".
 > 
-> Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
+> Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
 > ---
->  drivers/target/target_core_user.c | 82 +++++++++++++++++++++++++++++++--------
->  1 file changed, 66 insertions(+), 16 deletions(-)
-> 
-> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-> index 9045837..10c99e7 100644
-> --- a/drivers/target/target_core_user.c
-> +++ b/drivers/target/target_core_user.c
-> @@ -97,6 +97,7 @@ struct tcmu_hba {
->  
->  struct tcmu_dev {
->  	struct list_head node;
-> +	struct list_head waiter;
->  
->  	struct se_device se_dev;
->  
-> @@ -123,7 +124,7 @@ struct tcmu_dev {
->  	wait_queue_head_t wait_cmdr;
->  	struct mutex cmdr_lock;
->  
-> -	bool waiting_global;
-> +	uint32_t waiting_blocks;
->  	uint32_t dbi_max;
->  	uint32_t dbi_thresh;
->  	DECLARE_BITMAP(data_bitmap, DATA_BLOCK_BITS);
-> @@ -165,6 +166,10 @@ struct tcmu_cmd {
->  static DEFINE_MUTEX(root_udev_mutex);
->  static LIST_HEAD(root_udev);
->  
-> +/* The data blocks global pool waiter list */
-> +static DEFINE_MUTEX(root_udev_waiter_mutex);
-> +static LIST_HEAD(root_udev_waiter);
-> +
->  static atomic_t global_db_count = ATOMIC_INIT(0);
->  
->  static struct kmem_cache *tcmu_cmd_cache;
-> @@ -195,6 +200,11 @@ enum tcmu_multicast_groups {
->  #define tcmu_cmd_set_dbi(cmd, index) ((cmd)->dbi[(cmd)->dbi_cur++] = (index))
->  #define tcmu_cmd_get_dbi(cmd) ((cmd)->dbi[(cmd)->dbi_cur++])
->  
-> +static inline bool is_in_waiter_list(struct tcmu_dev *udev)
-> +{
-> +	return !!udev->waiting_blocks;
-> +}
-> +
->  static void tcmu_cmd_free_data(struct tcmu_cmd *tcmu_cmd, uint32_t len)
->  {
->  	struct tcmu_dev *udev = tcmu_cmd->tcmu_dev;
-> @@ -250,8 +260,6 @@ static bool tcmu_get_empty_blocks(struct tcmu_dev *udev,
->  {
->  	int i;
->  
-> -	udev->waiting_global = false;
-> -
->  	for (i = tcmu_cmd->dbi_cur; i < tcmu_cmd->dbi_cnt; i++) {
->  		if (!tcmu_get_empty_block(udev, tcmu_cmd))
->  			goto err;
-> @@ -259,9 +267,7 @@ static bool tcmu_get_empty_blocks(struct tcmu_dev *udev,
->  	return true;
->  
->  err:
-> -	udev->waiting_global = true;
-> -	/* Try to wake up the unmap thread */
-> -	wake_up(&unmap_wait);
-> +	udev->waiting_blocks += tcmu_cmd->dbi_cnt - i;
->  	return false;
->  }
->  
-> @@ -671,6 +677,7 @@ static inline size_t tcmu_cmd_get_cmd_size(struct tcmu_cmd *tcmu_cmd,
->  
->  	while (!is_ring_space_avail(udev, tcmu_cmd, command_size, data_length)) {
->  		int ret;
-> +		bool is_waiting_blocks = !!udev->waiting_blocks;
->  		DEFINE_WAIT(__wait);
->  
->  		prepare_to_wait(&udev->wait_cmdr, &__wait, TASK_INTERRUPTIBLE);
-> @@ -688,6 +695,18 @@ static inline size_t tcmu_cmd_get_cmd_size(struct tcmu_cmd *tcmu_cmd,
->  			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
->  		}
->  
-> +		/*
-> +		 * Try to insert the current udev to waiter list and
-> +		 * then wake up the unmap thread
-> +		 */
-> +		if (is_waiting_blocks) {
-> +			mutex_lock(&root_udev_waiter_mutex);
-> +			list_add_tail(&udev->waiter, &root_udev_waiter);
-> +			mutex_unlock(&root_udev_waiter_mutex);
-> +
-> +			wake_up(&unmap_wait);
-> +		}
-> +
->  		mutex_lock(&udev->cmdr_lock);
->  
->  		/* We dropped cmdr_lock, cmd_head is stale */
-> @@ -902,8 +921,6 @@ static unsigned int tcmu_handle_completions(struct tcmu_dev *udev)
->  	if (mb->cmd_tail == mb->cmd_head)
->  		del_timer(&udev->timeout); /* no more pending cmds */
->  
-> -	wake_up(&udev->wait_cmdr);
-> -
->  	return handled;
->  }
->  
-> @@ -996,7 +1013,17 @@ static int tcmu_irqcontrol(struct uio_info *info, s32 irq_on)
->  	struct tcmu_dev *tcmu_dev = container_of(info, struct tcmu_dev, uio_info);
->  
->  	mutex_lock(&tcmu_dev->cmdr_lock);
-> -	tcmu_handle_completions(tcmu_dev);
-> +	/*
-> +	 * If the current udev is also in waiter list, this will
-> +	 * make sure that the other waiters in list be feeded ahead
-> +	 * of it.
-> +	 */
-> +	if (is_in_waiter_list(tcmu_dev)) {
-> +		wake_up(&unmap_wait);
-> +	} else {
-> +		tcmu_handle_completions(tcmu_dev);
-> +		wake_up(&tcmu_dev->wait_cmdr);
-> +	}
->  	mutex_unlock(&tcmu_dev->cmdr_lock);
->  
->  	return 0;
-> @@ -1231,7 +1258,7 @@ static int tcmu_configure_device(struct se_device *dev)
->  	udev->data_off = CMDR_SIZE;
->  	udev->data_size = DATA_SIZE;
->  	udev->dbi_thresh = 0; /* Default in Idle state */
-> -	udev->waiting_global = false;
-> +	udev->waiting_blocks = 0;
->  
->  	/* Initialise the mailbox of the ring buffer */
->  	mb = udev->mb_addr;
-> @@ -1345,6 +1372,13 @@ static void tcmu_free_device(struct se_device *dev)
->  	list_del(&udev->node);
->  	mutex_unlock(&root_udev_mutex);
->  
-> +	mutex_lock(&root_udev_waiter_mutex);
-> +	mutex_lock(&udev->cmdr_lock);
-> +	if (is_in_waiter_list(udev))
-> +		list_del(&udev->waiter);
-> +	mutex_unlock(&udev->cmdr_lock);
-> +	mutex_unlock(&root_udev_waiter_mutex);
-> +
->  	vfree(udev->mb_addr);
->  
->  	/* Upper layer should drain all requests before calling this */
-> @@ -1550,6 +1584,7 @@ static int unmap_thread_fn(void *data)
->  	struct tcmu_dev *udev;
->  	loff_t off;
->  	uint32_t start, end, block;
-> +	static uint32_t free_blocks;
->  	struct page *page;
->  	int i;
->  
-> @@ -1571,7 +1606,7 @@ static int unmap_thread_fn(void *data)
->  			tcmu_handle_completions(udev);
->  
->  			/* Skip the udevs waiting the global pool or in idle */
-> -			if (udev->waiting_global || !udev->dbi_thresh) {
-> +			if (is_in_waiter_list(udev) || !udev->dbi_thresh) {
->  				mutex_unlock(&udev->cmdr_lock);
->  				continue;
->  			}
-> @@ -1607,17 +1642,32 @@ static int unmap_thread_fn(void *data)
->  				}
->  			}
->  			mutex_unlock(&udev->cmdr_lock);
-> +
-> +			free_blocks += end - start;
->  		}
-> +		mutex_unlock(&root_udev_mutex);
->  
->  		/*
->  		 * Try to wake up the udevs who are waiting
-> -		 * for the global data pool.
-> +		 * for the global data pool blocks.
->  		 */
-> -		list_for_each_entry(udev, &root_udev, node) {
-> -			if (udev->waiting_global)
-> -				wake_up(&udev->wait_cmdr);
-> +		mutex_lock(&root_udev_waiter_mutex);
-> +		list_for_each_entry(udev, &root_udev_waiter, waiter) {
-> +			mutex_lock(&udev->cmdr_lock);
-> +			if (udev->waiting_blocks < free_blocks) {
-> +				mutex_unlock(&udev->cmdr_lock);
-> +				break;
-> +			}
-> +
-> +			free_blocks -= udev->waiting_blocks;
-> +			udev->waiting_blocks = 0;
-> +			mutex_unlock(&udev->cmdr_lock);
-> +
-> +			list_del(&udev->waiter);
-> +
-> +			wake_up(&udev->wait_cmdr);
->  		}
-> -		mutex_unlock(&root_udev_mutex);
-> +		mutex_unlock(&root_udev_waiter_mutex);
->  	}
->  
->  	return 0;
+>  drivers/target/iscsi/iscsi_target_parameters.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+
+Btw, the use of tpg->tpg_state_lock in iscsit_tpg_enable_portal_group()
+while checking existing state and calling iscsi_update_param_value() is
+not necessary, since lio_target_tpg_enable_store() is already holding
+iscsit_get_tpg() -> tpg->tpg_access_lock.
+
+How about the following instead to only take tpg->tpg_state_lock when
+updating tpg->tpg_state instead..?
+
+diff --git a/drivers/target/iscsi/iscsi_target_tpg.c b/drivers/target/iscsi/iscsi_target_tpg.c
+index 2e7e08d..abaabba 100644
+--- a/drivers/target/iscsi/iscsi_target_tpg.c
++++ b/drivers/target/iscsi/iscsi_target_tpg.c
+@@ -311,11 +311,9 @@ int iscsit_tpg_enable_portal_group(struct iscsi_portal_group *tpg)
+        struct iscsi_tiqn *tiqn = tpg->tpg_tiqn;
+        int ret;
+ 
+-       spin_lock(&tpg->tpg_state_lock);
+        if (tpg->tpg_state == TPG_STATE_ACTIVE) {
+                pr_err("iSCSI target portal group: %hu is already"
+                        " active, ignoring request.\n", tpg->tpgt);
+-               spin_unlock(&tpg->tpg_state_lock);
+                return -EINVAL;
+        }
+        /*
+@@ -324,10 +322,8 @@ int iscsit_tpg_enable_portal_group(struct iscsi_portal_group *tpg)
+         * is enforced (as per default), and remove the NONE option.
+         */
+        param = iscsi_find_param_from_key(AUTHMETHOD, tpg->param_list);
+-       if (!param) {
+-               spin_unlock(&tpg->tpg_state_lock);
++       if (!param)
+                return -EINVAL;
+-       }
+ 
+        if (tpg->tpg_attrib.authentication) {
+                if (!strcmp(param->value, NONE)) {
+@@ -341,6 +337,7 @@ int iscsit_tpg_enable_portal_group(struct iscsi_portal_group *tpg)
+                        goto err;
+        }
+ 
++       spin_lock(&tpg->tpg_state_lock);
+        tpg->tpg_state = TPG_STATE_ACTIVE;
+        spin_unlock(&tpg->tpg_state_lock);
+ 
+@@ -353,7 +350,6 @@ int iscsit_tpg_enable_portal_group(struct iscsi_portal_group *tpg)
+        return 0;
+ 
+ err:
+-       spin_unlock(&tpg->tpg_state_lock);
+        return ret;
+ }
