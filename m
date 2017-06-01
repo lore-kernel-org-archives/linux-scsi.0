@@ -1,46 +1,140 @@
 From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH v2 10/12] snic: Remove code that zeroes driver-private command data
-Date: Thu, 1 Jun 2017 16:27:09 -0700
-Message-ID: <20170601232711.29062-11-bart.vanassche@sandisk.com>
+Subject: [PATCH v2 03/12] Create two versions of scsi_internal_device_unblock()
+Date: Thu, 1 Jun 2017 16:27:02 -0700
+Message-ID: <20170601232711.29062-4-bart.vanassche@sandisk.com>
 References: <20170601232711.29062-1-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:64778 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751159AbdFAX1X (ORCPT
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:19781 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751157AbdFAX1X (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2017 19:27:23 -0400
 In-Reply-To: <20170601232711.29062-1-bart.vanassche@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@sandisk.com>, Narsimhulu Musini <nmusini@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, Johannes Thumshirn <jthumshirn@suse.de>
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@sandisk.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 
-Since the SCSI core zeroes driver-private command data, remove
-that code from the snic driver.
+This will make it easier to serialize SCSI device state changes
+through a mutex.
 
 Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
-Cc: Narsimhulu Musini <nmusini@cisco.com>
-Cc: Sesidhar Baddela <sebaddel@cisco.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 Cc: Christoph Hellwig <hch@lst.de>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/snic/snic_scsi.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c |  4 ++--
+ drivers/scsi/scsi_lib.c              | 46 +++++++++++++++++++++++++-----------
+ include/scsi/scsi_device.h           |  4 ++--
+ 3 files changed, 36 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/scsi/snic/snic_scsi.c b/drivers/scsi/snic/snic_scsi.c
-index da979a73baa0..05c3a7282d4a 100644
---- a/drivers/scsi/snic/snic_scsi.c
-+++ b/drivers/scsi/snic/snic_scsi.c
-@@ -359,8 +359,6 @@ snic_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *sc)
- 	SNIC_SCSI_DBG(shost, "sc %p Tag %d (sc %0x) lun %lld in snic_qcmd\n",
- 		      sc, snic_cmd_tag(sc), sc->cmnd[0], sc->device->lun);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index c63bc5ccce37..22998cbd538f 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -2883,7 +2883,7 @@ _scsih_internal_device_unblock(struct scsi_device *sdev,
+ 	sdev_printk(KERN_WARNING, sdev, "device_unblock and setting to running, "
+ 	    "handle(0x%04x)\n", sas_device_priv_data->sas_target->handle);
+ 	sas_device_priv_data->block = 0;
+-	r = scsi_internal_device_unblock(sdev, SDEV_RUNNING);
++	r = scsi_internal_device_unblock_nowait(sdev, SDEV_RUNNING);
+ 	if (r == -EINVAL) {
+ 		/* The device has been set to SDEV_RUNNING by SD layer during
+ 		 * device addition but the request queue is still stopped by
+@@ -2902,7 +2902,7 @@ _scsih_internal_device_unblock(struct scsi_device *sdev,
+ 			    r, sas_device_priv_data->sas_target->handle);
  
--	memset(scsi_cmd_priv(sc), 0, sizeof(struct snic_internal_io_state));
--
- 	ret = snic_issue_scsi_req(snic, tgt, sc);
- 	if (ret) {
- 		SNIC_HOST_ERR(shost, "Failed to Q, Scsi Req w/ err %d.\n", ret);
+ 		sas_device_priv_data->block = 0;
+-		r = scsi_internal_device_unblock(sdev, SDEV_RUNNING);
++		r = scsi_internal_device_unblock_nowait(sdev, SDEV_RUNNING);
+ 		if (r)
+ 			sdev_printk(KERN_WARNING, sdev, "retried device_unblock"
+ 			    " failed with return(%d) for handle(0x%04x)\n",
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index c9ce36d16df0..aa84b77e41dc 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -3022,24 +3022,22 @@ static int scsi_internal_device_block(struct scsi_device *sdev)
+ }
+  
+ /**
+- * scsi_internal_device_unblock - resume a device after a block request
++ * scsi_internal_device_unblock_nowait - resume a device after a block request
+  * @sdev:	device to resume
+- * @new_state:	state to set devices to after unblocking
++ * @new_state:	state to set the device to after unblocking
+  *
+- * Called by scsi lld's or the midlayer to restart the device queue
+- * for the previously suspended scsi device.  Called from interrupt or
+- * normal process context.
++ * Restart the device queue for a previously suspended SCSI device. Does not
++ * sleep.
+  *
+- * Returns zero if successful or error if not.
++ * Returns zero if successful or a negative error code upon failure.
+  *
+- * Notes:       
+- *	This routine transitions the device to the SDEV_RUNNING state
+- *	or to one of the offline states (which must be a legal transition)
+- *	allowing the midlayer to goose the queue for this device.
++ * Notes:
++ * This routine transitions the device to the SDEV_RUNNING state or to one of
++ * the offline states (which must be a legal transition) allowing the midlayer
++ * to goose the queue for this device.
+  */
+-int
+-scsi_internal_device_unblock(struct scsi_device *sdev,
+-			     enum scsi_device_state new_state)
++int scsi_internal_device_unblock_nowait(struct scsi_device *sdev,
++					enum scsi_device_state new_state)
+ {
+ 	struct request_queue *q = sdev->request_queue; 
+ 	unsigned long flags;
+@@ -3071,7 +3069,27 @@ scsi_internal_device_unblock(struct scsi_device *sdev,
+ 
+ 	return 0;
+ }
+-EXPORT_SYMBOL_GPL(scsi_internal_device_unblock);
++EXPORT_SYMBOL_GPL(scsi_internal_device_unblock_nowait);
++
++/**
++ * scsi_internal_device_unblock - resume a device after a block request
++ * @sdev:	device to resume
++ * @new_state:	state to set the device to after unblocking
++ *
++ * Restart the device queue for a previously suspended SCSI device. May sleep.
++ *
++ * Returns zero if successful or a negative error code upon failure.
++ *
++ * Notes:
++ * This routine transitions the device to the SDEV_RUNNING state or to one of
++ * the offline states (which must be a legal transition) allowing the midlayer
++ * to goose the queue for this device.
++ */
++static int scsi_internal_device_unblock(struct scsi_device *sdev,
++					enum scsi_device_state new_state)
++{
++	return scsi_internal_device_unblock_nowait(sdev, new_state);
++}
+ 
+ static void
+ device_block(struct scsi_device *sdev, void *data)
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 6ce6888f3c69..5f24dae2a8e1 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -473,8 +473,8 @@ static inline int scsi_device_created(struct scsi_device *sdev)
+ }
+ 
+ int scsi_internal_device_block_nowait(struct scsi_device *sdev);
+-int scsi_internal_device_unblock(struct scsi_device *sdev,
+-				 enum scsi_device_state new_state);
++int scsi_internal_device_unblock_nowait(struct scsi_device *sdev,
++					enum scsi_device_state new_state);
+ 
+ /* accessor functions for the SCSI parameters */
+ static inline int scsi_device_sync(struct scsi_device *sdev)
 -- 
 2.12.2
