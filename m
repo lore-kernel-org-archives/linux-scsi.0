@@ -1,110 +1,105 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH v3 3/9] blk-mq: use the introduced
- blk_mq_unquiesce_queue()
-Date: Thu, 1 Jun 2017 23:09:00 +0000
-Message-ID: <1496358538.3075.12.camel@sandisk.com>
-References: <20170531123706.20885-1-ming.lei@redhat.com>
-         <20170531123706.20885-4-ming.lei@redhat.com>
-         <1496244100.2608.3.camel@sandisk.com> <20170601005423.GA23563@ming.t460p>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: [PATCH v2 06/12] Make __scsi_remove_device go straight from BLOCKED to DEL
+Date: Thu, 1 Jun 2017 16:27:05 -0700
+Message-ID: <20170601232711.29062-7-bart.vanassche@sandisk.com>
+References: <20170601232711.29062-1-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170601005423.GA23563@ming.t460p>
-Content-Language: en-US
-Content-ID: <9FD2FDAFCD537B4B931F3B0AB502F1A8@namprd04.prod.outlook.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "ming.lei@redhat.com" <ming.lei@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "axboe@fb.com" <axboe@fb.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:64778 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751105AbdFAX1U (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2017 19:27:20 -0400
+In-Reply-To: <20170601232711.29062-1-bart.vanassche@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@sandisk.com>, Israel Rukshin <israelr@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>, Benjamin Block <bblock@linux.vnet.ibm.com>
 
-On Thu, 2017-06-01 at 08:54 +0800, Ming Lei wrote:
-> On Wed, May 31, 2017 at 03:21:41PM +0000, Bart Van Assche wrote:
-> > On Wed, 2017-05-31 at 20:37 +0800, Ming Lei wrote:
-> > > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> > > index 99e16ac479e3..ffcf05765e2b 100644
-> > > --- a/drivers/scsi/scsi_lib.c
-> > > +++ b/drivers/scsi/scsi_lib.c
-> > > @@ -3031,7 +3031,10 @@ scsi_internal_device_unblock(struct scsi_devic=
-e *sdev,
-> > >  		return -EINVAL;
-> > > =20
-> > >  	if (q->mq_ops) {
-> > > -		blk_mq_start_stopped_hw_queues(q, false);
-> > > +		if (blk_queue_quiesced(q))
-> > > +			blk_mq_unquiesce_queue(q);
-> > > +		else
-> > > +			blk_mq_start_stopped_hw_queues(q, false);
-> > >  	} else {
-> > >  		spin_lock_irqsave(q->queue_lock, flags);
-> > >  		blk_start_queue(q);
-> >=20
-> > As I commented on v2, this change is really wrong. All what's needed he=
-re is
-> > a call to blk_mq_unquiesce_queue() and nothing else. Adding a call to
-> > blk_mq_start_stopped_hw_queues() is wrong because it makes it impossibl=
-e to
-> > use the STOPPED flag in the SCSI core to make the block layer core stop=
- calling
-> > .queue_rq() if a SCSI LLD returns "busy".
->=20
-> I am not sure if I understand your idea, could you explain a bit why it i=
-s wrong?
->=20
-> Let's see the function of scsi_internal_device_block():
->=20
-> 	if (q->mq_ops) {
->                 if (wait)
->                         blk_mq_quiesce_queue(q);
->                 else
->                         blk_mq_stop_hw_queues(q);
-> 	}
->=20
-> So the queue may be put into quiesced if 'wait' is true, or it is
-> stopped if 'wait' is false.
->=20
-> And this patch just makes the two SCSI APIs symmetrical.
->=20
-> Since we will not stop queue in blk_mq_quiesce_queue() later,
-> I have to unquiese one queue only if it is quiesced.
->=20
-> So suppose the queue is put into stopped in scsi_internal_device_block(),
-> do we expect not to restart it in scsi_internal_device_unblock() via
-> blk_mq_unquiesce_queue()?
+If a device is blocked, make __scsi_remove_device() cause it to
+transition to the DEL state. This means that all the commands
+issued in .shutdown() will error in the mid-layer, thus making
+the removal proceed without being stopped.
 
-Hello Ming,
+This patch is a slightly modified version of a patch from James
+Bottomley. This patch avoids that the following lockup occurs:
 
-My opinion is that scsi_internal_device_block() and scsi_internal_device_un=
-block()
-should be changed as follows for the scsi-mq code path:
-* scsi_internal_device_block() should call blk_mq_quiesce_queue(q) if the "=
-wait"
-  argument is true and should set the QUEUE_FLAG_QUIESCED flag if the "wait=
-"
-  argument is false.
-* scsi_internal_device_unblock() should call blk_mq_unquiesce_queue().
+Call Trace:
+ schedule+0x35/0x80
+ schedule_timeout+0x237/0x2d0
+ io_schedule_timeout+0xa6/0x110
+ wait_for_completion_io+0xa3/0x110
+ blk_execute_rq+0xdf/0x120
+ scsi_execute+0xce/0x150 [scsi_mod]
+ scsi_execute_req_flags+0x8f/0xf0 [scsi_mod]
+ sd_sync_cache+0xa9/0x190 [sd_mod]
+ sd_shutdown+0x6a/0x100 [sd_mod]
+ sd_remove+0x64/0xc0 [sd_mod]
+ __device_release_driver+0x8d/0x120
+ device_release_driver+0x1e/0x30
+ bus_remove_device+0xf9/0x170
+ device_del+0x127/0x240
+ __scsi_remove_device+0xc1/0xd0 [scsi_mod]
+ scsi_forget_host+0x57/0x60 [scsi_mod]
+ scsi_remove_host+0x72/0x110 [scsi_mod]
+ srp_remove_work+0x8b/0x200 [ib_srp]
 
-I am aware it sounds weird to set the QUEUE_FLAG_QUIESCED flag without wait=
-ing
-until ongoing .queue_rq() calls have finished. The only driver that trigger=
-s
-that code path is the mpt3sas driver. I think it's unfortunate that that dr=
-iver
-has ever been allowed to call scsi_internal_device_block() because it's the=
- only
-driver that calls that function from a context where sleeping is not allowe=
-d.
-No matter whether the scsi_internal_device_block() call from the mpt3sas dr=
-iver
-sets the QUEUE_FLAG_QUIESCED or the BLK_MQ_S_STOPPED flag, I don't think th=
-at
-will have the effect the authors of this driver intended. Unfortunately I'm=
- not
-familiar enough with the mpt3sas driver to fix that driver myself.
+Reported-by: Israel Rukshin <israelr@mellanox.com>
+Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Israel Rukshin <israelr@mellanox.com>
+Cc: Max Gurtovoy <maxg@mellanox.com>
+Cc: Benjamin Block <bblock@linux.vnet.ibm.com>
+---
+ drivers/scsi/scsi_lib.c   |  2 +-
+ drivers/scsi/scsi_sysfs.c | 13 +++++++++++++
+ 2 files changed, 14 insertions(+), 1 deletion(-)
 
-Note: these changes conflict with a patch SCSI patch series I started worki=
-ng on
-about two months ago. See also https://www.spinics.net/lists/linux-scsi/msg=
-109103.html.
-
-Bart.=
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 6a58a124714f..8665eccd2fc8 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2624,7 +2624,6 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
+ 		case SDEV_QUIESCE:
+ 		case SDEV_OFFLINE:
+ 		case SDEV_TRANSPORT_OFFLINE:
+-		case SDEV_BLOCK:
+ 			break;
+ 		default:
+ 			goto illegal;
+@@ -2638,6 +2637,7 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
+ 		case SDEV_OFFLINE:
+ 		case SDEV_TRANSPORT_OFFLINE:
+ 		case SDEV_CANCEL:
++		case SDEV_BLOCK:
+ 		case SDEV_CREATED_BLOCK:
+ 			break;
+ 		default:
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index a91537a3abbf..1f243ac16010 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1290,7 +1290,20 @@ void __scsi_remove_device(struct scsi_device *sdev)
+ 		 * wait until it has finished before changing the device state.
+ 		 */
+ 		mutex_lock(&sdev->state_mutex);
++		/*
++		 * If blocked, we go straight to DEL and restart the queue so
++		 * any commands issued during driver shutdown (like sync
++		 * cache) are errored immediately.
++		 */
+ 		res = scsi_device_set_state(sdev, SDEV_CANCEL);
++		if (res != 0) {
++			res = scsi_device_set_state(sdev, SDEV_DEL);
++			if (res == 0) {
++				scsi_start_queue(sdev);
++				sdev_printk(KERN_DEBUG, sdev,
++				    "Changed state from BLOCKED to DEL\n");
++			}
++		}
+ 		mutex_unlock(&sdev->state_mutex);
+ 
+ 		if (res != 0)
+-- 
+2.12.2
