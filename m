@@ -1,106 +1,94 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 1/2] target/configfs: Kill se_device->dev_link_magic
-Date: Thu,  1 Jun 2017 10:38:00 +0000
-Message-ID: <1496313481-22083-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
+Subject: [PATCH 2/2] target/configfs: Kill se_lun->lun_link_magic
+Date: Thu,  1 Jun 2017 10:38:01 +0000
+Message-ID: <1496313481-22083-2-git-send-email-nab@linux-iscsi.org>
+References: <1496313481-22083-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1496313481-22083-1-git-send-email-nab@linux-iscsi.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Instead of using a hardcoded magic value in se_device when verifying
-a target config_item symlink source during target_fabric_port_link(),
-go ahead and use target_core_dev_item_ops directly instead.
+Instead of using a hardcoded magic value in se_lun when verifying
+a target config_item symlink source during target_fabric_mappedlun_link(),
+go ahead and use target_fabric_port_item_ops directly instead.
 
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Mike Christie <mchristi@redhat.com>
 Cc: Hannes Reinecke <hare@suse.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_configfs.c        |  6 +++++-
- drivers/target/target_core_device.c          |  1 -
- drivers/target/target_core_fabric_configfs.c | 12 +++++++-----
+ drivers/target/target_core_fabric_configfs.c | 13 ++++++++-----
+ drivers/target/target_core_tpg.c             |  1 -
  include/target/target_core_base.h            |  2 --
- 4 files changed, 12 insertions(+), 9 deletions(-)
+ 3 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index 0326607..9b8abd5 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -2236,7 +2236,11 @@ static void target_core_dev_release(struct config_item *item)
- 	target_free_device(dev);
- }
- 
--static struct configfs_item_operations target_core_dev_item_ops = {
-+/*
-+ * Used in target_core_fabric_configfs.c to verify valid se_device symlink
-+ * within target_fabric_port_link()
-+ */
-+struct configfs_item_operations target_core_dev_item_ops = {
- 	.release		= target_core_dev_release,
- };
- 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index a5762e6..e4771ce 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -756,7 +756,6 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
- 	if (!dev)
- 		return NULL;
- 
--	dev->dev_link_magic = SE_DEV_LINK_MAGIC;
- 	dev->se_hba = hba;
- 	dev->transport = hba->backend->ops;
- 	dev->prot_length = sizeof(struct t10_pi_tuple);
 diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
-index d1e6cab..2cbaecd 100644
+index 2cbaecd..e9e917c 100644
 --- a/drivers/target/target_core_fabric_configfs.c
 +++ b/drivers/target/target_core_fabric_configfs.c
-@@ -620,6 +620,8 @@ static ssize_t target_fabric_port_alua_tg_pt_write_md_store(
- 	NULL,
- };
+@@ -65,6 +65,8 @@
+ 	pr_debug("Setup generic %s\n", __stringify(_name));		\
+ }
  
-+extern struct configfs_item_operations target_core_dev_item_ops;
++static struct configfs_item_operations target_fabric_port_item_ops;
 +
- static int target_fabric_port_link(
- 	struct config_item *lun_ci,
- 	struct config_item *se_dev_ci)
-@@ -628,16 +630,16 @@ static int target_fabric_port_link(
- 	struct se_lun *lun = container_of(to_config_group(lun_ci),
- 				struct se_lun, lun_group);
- 	struct se_portal_group *se_tpg;
--	struct se_device *dev =
--		container_of(to_config_group(se_dev_ci), struct se_device, dev_group);
-+	struct se_device *dev;
- 	struct target_fabric_configfs *tf;
- 	int ret;
+ /* Start of tfc_tpg_mappedlun_cit */
  
--	if (dev->dev_link_magic != SE_DEV_LINK_MAGIC) {
--		pr_err("Bad dev->dev_link_magic, not a valid se_dev_ci pointer:"
--			" %p to struct se_device: %p\n", se_dev_ci, dev);
-+	if (!se_dev_ci->ci_type ||
-+	    se_dev_ci->ci_type->ct_item_ops != &target_core_dev_item_ops) {
-+		pr_err("Bad se_dev_ci, not a valid se_dev_ci pointer: %p\n", se_dev_ci);
+ static int target_fabric_mappedlun_link(
+@@ -72,19 +74,20 @@ static int target_fabric_mappedlun_link(
+ 	struct config_item *lun_ci)
+ {
+ 	struct se_dev_entry *deve;
+-	struct se_lun *lun = container_of(to_config_group(lun_ci),
+-			struct se_lun, lun_group);
++	struct se_lun *lun;
+ 	struct se_lun_acl *lacl = container_of(to_config_group(lun_acl_ci),
+ 			struct se_lun_acl, se_lun_group);
+ 	struct se_portal_group *se_tpg;
+ 	struct config_item *nacl_ci, *tpg_ci, *tpg_ci_s, *wwn_ci, *wwn_ci_s;
+ 	bool lun_access_ro;
+ 
+-	if (lun->lun_link_magic != SE_LUN_LINK_MAGIC) {
+-		pr_err("Bad lun->lun_link_magic, not a valid lun_ci pointer:"
+-			" %p to struct lun: %p\n", lun_ci, lun);
++	if (!lun_ci->ci_type ||
++	    lun_ci->ci_type->ct_item_ops != &target_fabric_port_item_ops) {
++		pr_err("Bad lun_ci, not a valid lun_ci pointer: %p\n", lun_ci);
  		return -EFAULT;
  	}
-+	dev = container_of(to_config_group(se_dev_ci), struct se_device, dev_group);
- 
- 	if (!(dev->dev_flags & DF_CONFIGURED)) {
- 		pr_err("se_device not configured yet, cannot port link\n");
++	lun = container_of(to_config_group(lun_ci), struct se_lun, lun_group);
++
+ 	/*
+ 	 * Ensure that the source port exists
+ 	 */
+diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
+index 74893ac..6b20b9f 100644
+--- a/drivers/target/target_core_tpg.c
++++ b/drivers/target/target_core_tpg.c
+@@ -584,7 +584,6 @@ struct se_lun *core_tpg_alloc_lun(
+ 		return ERR_PTR(-ENOMEM);
+ 	}
+ 	lun->unpacked_lun = unpacked_lun;
+-	lun->lun_link_magic = SE_LUN_LINK_MAGIC;
+ 	atomic_set(&lun->lun_acl_count, 0);
+ 	init_completion(&lun->lun_ref_comp);
+ 	init_completion(&lun->lun_shutdown_comp);
 diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 0c1dce2..c3c14d0 100644
+index c3c14d0..47d9f38 100644
 --- a/include/target/target_core_base.h
 +++ b/include/target/target_core_base.h
-@@ -746,8 +746,6 @@ struct se_dev_stat_grps {
- };
+@@ -701,8 +701,6 @@ struct scsi_port_stats {
  
- struct se_device {
--#define SE_DEV_LINK_MAGIC			0xfeeddeef
--	u32			dev_link_magic;
- 	/* RELATIVE TARGET PORT IDENTIFER Counter */
- 	u16			dev_rpti_counter;
- 	/* Used for SAM Task Attribute ordering */
+ struct se_lun {
+ 	u64			unpacked_lun;
+-#define SE_LUN_LINK_MAGIC			0xffff7771
+-	u32			lun_link_magic;
+ 	bool			lun_shutdown;
+ 	bool			lun_access_ro;
+ 	u32			lun_index;
 -- 
 1.9.1
