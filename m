@@ -1,76 +1,294 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target fixes for v4.12-rc4
-Date: Wed, 31 May 2017 21:17:34 -0700
-Message-ID: <1496290654.27407.173.camel@haakon3.risingtidesystems.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v3 13/23] scsi: hisi_sas: add phy up/down/bcast and
+ channel ISR
+Date: Wed, 31 May 2017 22:41:06 -0700
+Message-ID: <20170601054106.GA4743@infradead.org>
+References: <1496241195-217678-1-git-send-email-john.garry@huawei.com>
+ <1496241195-217678-14-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1496241195-217678-14-git-send-email-john.garry@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Garry <john.garry@huawei.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, john.garry2@mail.dcu.ie, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, Xiang Chen <chenxiang66@hisilicon.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello Linus,
+On Wed, May 31, 2017 at 10:33:05PM +0800, John Garry wrote:
+> From: Xiang Chen <chenxiang66@hisilicon.com>
+> 
+> Add code to initialise interrupts and add some interrupt handlers.
+> 
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+> ---
+>  drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 281 +++++++++++++++++++++++++++++++++
+>  1 file changed, 281 insertions(+)
+> 
+> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> index 9651658..49f14d2 100644
+> --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> @@ -173,6 +173,13 @@ enum {
+>  	HISI_SAS_PHY_INT_NR
+>  };
+>  
+> +static u32 hisi_sas_read32(struct hisi_hba *hisi_hba, u32 off)
+> +{
+> +	void __iomem *regs = hisi_hba->regs + off;
+> +
+> +	return readl(regs);
+> +}
+> +
+>  static void hisi_sas_write32(struct hisi_hba *hisi_hba, u32 off, u32 val)
+>  {
+>  	void __iomem *regs = hisi_hba->regs + off;
+> @@ -397,6 +404,276 @@ static void sl_notify_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
+>  	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
+>  }
+>  
+> +static int phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
+> +{
+> +	int i, res = 0;
+> +	u32 context, port_id, link_rate, hard_phy_linkrate;
+> +	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
+> +	struct asd_sas_phy *sas_phy = &phy->sas_phy;
+> +	struct device *dev = hisi_hba->dev;
+> +
+> +	hisi_sas_phy_write32(hisi_hba, phy_no, PHYCTRL_PHY_ENA_MSK, 1);
+> +
+> +	port_id = hisi_sas_read32(hisi_hba, PHY_PORT_NUM_MA);
+> +	port_id = (port_id >> (4 * phy_no)) & 0xf;
+> +	link_rate = hisi_sas_read32(hisi_hba, PHY_CONN_RATE);
+> +	link_rate = (link_rate >> (phy_no * 4)) & 0xf;
+> +
+> +	if (port_id == 0xf) {
+> +		dev_err(dev, "phyup: phy%d invalid portid\n", phy_no);
+> +		res = IRQ_NONE;
+> +		goto end;
+> +	}
+> +	sas_phy->linkrate = link_rate;
+> +	hard_phy_linkrate = hisi_sas_phy_read32(hisi_hba, phy_no,
+> +						HARD_PHY_LINKRATE);
+> +	phy->maximum_linkrate = hard_phy_linkrate & 0xf;
+> +	phy->minimum_linkrate = (hard_phy_linkrate >> 4) & 0xf;
+> +	phy->phy_type &= ~(PORT_TYPE_SAS | PORT_TYPE_SATA);
+> +
+> +	/* Check for SATA dev */
+> +	context = hisi_sas_read32(hisi_hba, PHY_CONTEXT);
+> +	if (context & (1 << phy_no)) {
+> +		struct hisi_sas_initial_fis *initial_fis;
+> +		struct dev_to_host_fis *fis;
+> +		u8 attached_sas_addr[SAS_ADDR_SIZE] = {0};
+> +
+> +		dev_info(dev, "phyup: phy%d link_rate=%d\n", phy_no, link_rate);
+> +		initial_fis = &hisi_hba->initial_fis[phy_no];
+> +		fis = &initial_fis->fis;
+> +		sas_phy->oob_mode = SATA_OOB_MODE;
+> +		attached_sas_addr[0] = 0x50;
+> +		attached_sas_addr[7] = phy_no;
+> +		memcpy(sas_phy->attached_sas_addr,
+> +		       attached_sas_addr,
+> +		       SAS_ADDR_SIZE);
+> +		memcpy(sas_phy->frame_rcvd, fis,
+> +		       sizeof(struct dev_to_host_fis));
+> +		phy->phy_type |= PORT_TYPE_SATA;
+> +		phy->identify.device_type = SAS_SATA_DEV;
+> +		phy->frame_rcvd_size = sizeof(struct dev_to_host_fis);
+> +		phy->identify.target_port_protocols = SAS_PROTOCOL_SATA;
+> +	} else {
+> +		u32 *frame_rcvd = (u32 *)sas_phy->frame_rcvd;
+> +		struct sas_identify_frame *id =
+> +			(struct sas_identify_frame *)frame_rcvd;
+> +
+> +		dev_info(dev, "phyup: phy%d link_rate=%d\n", phy_no, link_rate);
+> +		for (i = 0; i < 6; i++) {
+> +			u32 idaf = hisi_sas_phy_read32(hisi_hba, phy_no,
+> +					       RX_IDAF_DWORD0 + (i * 4));
+> +			frame_rcvd[i] = __swab32(idaf);
+> +		}
+> +		sas_phy->oob_mode = SAS_OOB_MODE;
+> +		memcpy(sas_phy->attached_sas_addr,
+> +		       &id->sas_addr,
+> +		       SAS_ADDR_SIZE);
+> +		phy->phy_type |= PORT_TYPE_SAS;
+> +		phy->identify.device_type = id->dev_type;
+> +		phy->frame_rcvd_size = sizeof(struct sas_identify_frame);
+> +		if (phy->identify.device_type == SAS_END_DEVICE)
+> +			phy->identify.target_port_protocols =
+> +				SAS_PROTOCOL_SSP;
+> +		else if (phy->identify.device_type != SAS_PHY_UNUSED)
+> +			phy->identify.target_port_protocols =
+> +				SAS_PROTOCOL_SMP;
+> +	}
+> +
+> +	phy->port_id = port_id;
+> +	phy->phy_attached = 1;
+> +	queue_work(hisi_hba->wq, &phy->phyup_ws);
+> +
+> +end:
+> +	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0,
+> +			     CHL_INT0_SL_PHY_ENABLE_MSK);
+> +	hisi_sas_phy_write32(hisi_hba, phy_no, PHYCTRL_PHY_ENA_MSK, 0);
+> +
+> +	return res;
+> +}
+> +
+> +static int phy_down_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
+> +{
+> +	int res = 0;
+> +	u32 phy_state, sl_ctrl, txid_auto;
+> +	struct device *dev = hisi_hba->dev;
+> +
+> +	hisi_sas_phy_write32(hisi_hba, phy_no, PHYCTRL_NOT_RDY_MSK, 1);
+> +
+> +	phy_state = hisi_sas_read32(hisi_hba, PHY_STATE);
+> +	dev_info(dev, "phydown: phy%d phy_state=0x%x\n", phy_no, phy_state);
+> +	hisi_sas_phy_down(hisi_hba, phy_no, (phy_state & 1 << phy_no) ? 1 : 0);
+> +
+> +	sl_ctrl = hisi_sas_phy_read32(hisi_hba, phy_no, SL_CONTROL);
+> +	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL,
+> +						sl_ctrl&(~SL_CTA_MSK));
+> +
+> +	txid_auto = hisi_sas_phy_read32(hisi_hba, phy_no, TXID_AUTO);
+> +	hisi_sas_phy_write32(hisi_hba, phy_no, TXID_AUTO,
+> +						txid_auto | CT3_MSK);
+> +
+> +	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0, CHL_INT0_NOT_RDY_MSK);
+> +	hisi_sas_phy_write32(hisi_hba, phy_no, PHYCTRL_NOT_RDY_MSK, 0);
+> +
+> +	return res;
+> +}
+> +
+> +static void phy_bcast_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
+> +{
+> +	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
+> +	struct asd_sas_phy *sas_phy = &phy->sas_phy;
+> +	struct sas_ha_struct *sas_ha = &hisi_hba->sha;
+> +
+> +	hisi_sas_phy_write32(hisi_hba, phy_no, SL_RX_BCAST_CHK_MSK, 1);
+> +	sas_ha->notify_port_event(sas_phy, PORTE_BROADCAST_RCVD);
+> +	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0,
+> +			     CHL_INT0_SL_RX_BCST_ACK_MSK);
+> +	hisi_sas_phy_write32(hisi_hba, phy_no, SL_RX_BCAST_CHK_MSK, 0);
+> +}
+> +
+> +static irqreturn_t int_phy_up_down_bcast_v3_hw(int irq_no, void *p)
+> +{
+> +	struct hisi_hba *hisi_hba = p;
+> +	u32 irq_msk;
+> +	int phy_no = 0;
+> +	irqreturn_t res = IRQ_NONE;
+> +
+> +	irq_msk = hisi_sas_read32(hisi_hba, CHNL_INT_STATUS)
+> +				& 0x11111111;
+> +	while (irq_msk) {
+> +		if (irq_msk  & 1) {
+> +			u32 irq_value = hisi_sas_phy_read32(hisi_hba, phy_no,
+> +							    CHL_INT0);
+> +			u32 phy_state = hisi_sas_read32(hisi_hba, PHY_STATE);
+> +			int rdy = phy_state & (1 << phy_no);
+> +
+> +			if (rdy) {
+> +				if (irq_value & CHL_INT0_SL_PHY_ENABLE_MSK)
+> +					/* phy up */
+> +					if (phy_up_v3_hw(phy_no, hisi_hba)
+> +							== IRQ_HANDLED)
+> +						res = IRQ_HANDLED;
+> +				if (irq_value & CHL_INT0_SL_RX_BCST_ACK_MSK)
+> +					/* phy bcast */
+> +					phy_bcast_v3_hw(phy_no, hisi_hba);
+> +			} else {
+> +				if (irq_value & CHL_INT0_NOT_RDY_MSK)
+> +					/* phy down */
+> +					if (phy_down_v3_hw(phy_no, hisi_hba)
+> +							== IRQ_HANDLED)
+> +						res = IRQ_HANDLED;
+> +			}
+> +		}
+> +		irq_msk >>= 4;
+> +		phy_no++;
+> +	}
+> +
+> +	return res;
+> +}
+> +
+> +static irqreturn_t int_chnl_int_v3_hw(int irq_no, void *p)
+> +{
+> +	struct hisi_hba *hisi_hba = p;
+> +	struct device *dev = hisi_hba->dev;
+> +	u32 ent_msk, ent_tmp, irq_msk;
+> +	int phy_no = 0;
+> +
+> +	ent_msk = hisi_sas_read32(hisi_hba, ENT_INT_SRC_MSK3);
+> +	ent_tmp = ent_msk;
+> +	ent_msk |= ENT_INT_SRC_MSK3_ENT95_MSK_MSK;
+> +	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, ent_msk);
+> +
+> +	irq_msk = hisi_sas_read32(hisi_hba, CHNL_INT_STATUS)
+> +				& 0xeeeeeeee;
+> +
+> +	while (irq_msk) {
+> +		u32 irq_value0 = hisi_sas_phy_read32(hisi_hba, phy_no,
+> +						     CHL_INT0);
+> +		u32 irq_value1 = hisi_sas_phy_read32(hisi_hba, phy_no,
+> +						     CHL_INT1);
+> +		u32 irq_value2 = hisi_sas_phy_read32(hisi_hba, phy_no,
+> +						     CHL_INT2);
+> +
+> +		if ((irq_msk & (4 << (phy_no * 4))) &&
+> +						irq_value1) {
+> +			if (irq_value1 & (CHL_INT1_DMAC_RX_ECC_ERR_MSK |
+> +					  CHL_INT1_DMAC_TX_ECC_ERR_MSK))
+> +				panic("%s: DMAC RX/TX ecc bad error! (0x%x)",
+> +					dev_name(dev), irq_value1);
+> +
+> +			hisi_sas_phy_write32(hisi_hba, phy_no,
+> +					     CHL_INT1, irq_value1);
+> +		}
+> +
+> +		if (irq_msk & (8 << (phy_no * 4)) && irq_value2)
+> +			hisi_sas_phy_write32(hisi_hba, phy_no,
+> +					     CHL_INT2, irq_value2);
+> +
+> +
+> +		if (irq_msk & (2 << (phy_no * 4)) && irq_value0) {
+> +			hisi_sas_phy_write32(hisi_hba, phy_no,
+> +					CHL_INT0, irq_value0
+> +					& (~CHL_INT0_HOTPLUG_TOUT_MSK)
+> +					& (~CHL_INT0_SL_PHY_ENABLE_MSK)
+> +					& (~CHL_INT0_NOT_RDY_MSK));
+> +		}
+> +		irq_msk &= ~(0xe << (phy_no * 4));
+> +		phy_no++;
+> +	}
+> +
+> +	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, ent_tmp);
+> +
+> +	return IRQ_HANDLED;
+> +}
+> +
+> +static irq_handler_t phy_interrupts[HISI_SAS_PHY_INT_NR] = {
+> +	int_phy_up_down_bcast_v3_hw,
+> +	int_chnl_int_v3_hw,
+> +};
+> +
+> +static int interrupt_init_v3_hw(struct hisi_hba *hisi_hba)
+> +{
+> +	struct device *dev = hisi_hba->dev;
+> +	struct pci_dev *pdev = hisi_hba->pci_dev;
+> +	int vectors, i, irq, rc;
+> +	int max_msi = HISI_SAS_MSI_COUNT_V3_HW;
+> +	int msi_vectors[HISI_SAS_MSI_COUNT_V3_HW];
+> +
+> +	if (pdev->msi_enabled)
+> +		pci_disable_msi(pdev);
 
-Here are the target-pending fixes for v4.12-rc4.  Please go ahead and
-pull from:
+How could MSIs be enabled at init time?  Even if so you should use
+pci_free_irq_vectors.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
+> +	for (i = 0; i < vectors; i++)
+> +		msi_vectors[i] = pdev->irq + i;
 
-This includes:
-
-  - ibmviscsis ABORT_TASK handling fixes that missed the v4.12 merge 
-    window. (Bryant Ly and Michael Cyr)
-  - Re-add a target-core check enforcing WRITE overflow reject that was 
-    relaxed in v4.3, to avoid unsupported iscsi-target immediate data 
-    overflow. (nab)
-  - Fix a target-core-user OOPs during device removal. (MNC + Bryant Ly)
-  - Fix a long standing iscsi-target potential issue where kthread exit 
-    did not wait for kthread_should_stop(). (Jiang Yi)
-  - Fix a iscsi-target v3.12.y regression OOPs involving initial login 
-    PDU processing during asynchronous TCP connection close. (MNC + nab)
-
-This is a little larger than usual for an -rc4, primarily due to the
-iscsi-target v3.12.y regression OOPs bug-fix.
-
-However, it's an important patch as MNC + Hannes where both able to
-trigger it using a reduced iscsi initiator login timeout combined with a
-backend taking a long time to complete I/Os during iscsi login driven
-session reinstatement.
-
-Note the trailing two patches have a recent CommitDate, as the second to
-last was updated today to include MNC's tested-by and reviewed-by tags.
-The patches themselves has not changed though, and both have been run
-through manual and automated regression testing from multiple parties
-over the last 7 days.
-
-Thank you,
-
---nab
-
-Bryant G. Ly (2):
-  ibmvscsis: Clear left-over abort_cmd pointers
-  ibmvscsis: Fix the incorrect req_lim_delta
-
-Jiang Yi (1):
-  iscsi-target: Always wait for kthread_should_stop() before kthread
-    exit
-
-Mike Christie (1):
-  tcmu: fix crash during device removal
-
-Nicholas Bellinger (2):
-  target: Re-add check to reject control WRITEs with overflow data
-  iscsi-target: Fix initial login PDU asynchronous socket close OOPs
-
- drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c  |  27 ++++-
- drivers/target/iscsi/iscsi_target.c       |  30 ++++-
- drivers/target/iscsi/iscsi_target_erl0.c  |   6 +-
- drivers/target/iscsi/iscsi_target_erl0.h  |   2 +-
- drivers/target/iscsi/iscsi_target_login.c |   4 +
- drivers/target/iscsi/iscsi_target_nego.c  | 194 ++++++++++++++++++++----------
- drivers/target/target_core_transport.c    |  23 +++-
- drivers/target/target_core_user.c         |  46 +++++--
- include/target/iscsi/iscsi_target_core.h  |   1 +
- 9 files changed, 241 insertions(+), 92 deletions(-)
+You should not need this array, just use pci_irq_vectors().
