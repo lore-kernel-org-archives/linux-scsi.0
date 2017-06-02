@@ -1,55 +1,86 @@
-From: Corentin Labbe <clabbe.montjoie@gmail.com>
-Subject: [PATCH] qla2xxx: remove writeq/readq function definitions
-Date: Fri,  2 Jun 2017 13:32:25 +0200
-Message-ID: <20170602113225.24816-1-clabbe.montjoie@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: qla2xxx-upstream@qlogic.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Corentin Labbe <clabbe.montjoie@gmail.com>
+From: "Milan P. Gandhi" <mgandhi@redhat.com>
+Subject: Re: [PATCH] Eliminate extra 'out_free' label from fcoe_init function
+Date: Fri, 2 Jun 2017 18:03:38 +0530
+Message-ID: <fefc51f4-62fa-57b8-09de-271dc10bd682@redhat.com>
+References: <a1ea0104-83ed-2249-3450-dc5c31517558@redhat.com>
+ <20170601150233.2j6lxormywlvu7fa@mwanda>
+ <e318d328-71f4-5212-c697-f71e5c77b660@redhat.com>
+ <alpine.DEB.2.20.1706020748480.2312@hadrien>
+Reply-To: mgandhi@redhat.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.2.20.1706020748480.2312@hadrien>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Julia Lawall <julia.lawall@lip6.fr>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Laurence Oberman <loberman@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Instead of rewriting write/readq, use linux/io-64-nonatomic-lo-hi.h which
-already have them.
+On 06/02/2017 11:19 AM, Julia Lawall wrote:
+> 
+> 
+> On Fri, 2 Jun 2017, Milan P. Gandhi wrote:
+> 
+>> On 06/01/2017 08:32 PM, Dan Carpenter wrote:
+>>> On Thu, Jun 01, 2017 at 05:41:06PM +0530, Milan P. Gandhi wrote:
+>>>> Simplify the check for return code of fcoe_if_init routine
+>>>> in fcoe_init function such that we could eliminate need for
+>>>> extra 'out_free' label.
+>>>>
+>>>> Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
+>>>> ---
+>>>>  drivers/scsi/fcoe/fcoe.c | 10 ++++------
+>>>>  1 file changed, 4 insertions(+), 6 deletions(-)
+>>>>
+>>>> diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+>>>> index ea21e7b..fb2a4c9 100644
+>>>> --- a/drivers/scsi/fcoe/fcoe.c
+>>>> +++ b/drivers/scsi/fcoe/fcoe.c
+>>>> @@ -2523,13 +2523,11 @@ static int __init fcoe_init(void)
+>>>>  	fcoe_dev_setup();
+>>>>
+>>>>  	rc = fcoe_if_init();
+>>>> -	if (rc)
+>>>> -		goto out_free;
+>>>> -
+>>>> -	mutex_unlock(&fcoe_config_mutex);
+>>>> -	return 0;
+>>>> +	if (rc == 0) {
+>>>> +		mutex_unlock(&fcoe_config_mutex);
+>>>> +		return 0;
+>>>> +	}
+>>>>
+>>>> -out_free:
+>>>>  	mutex_unlock(&fcoe_config_mutex);
+>>>
+>>> Gar...  Stop!  No1  Don't do this.
+>>>
+>>> Do failure handling, not success handling.
+>>>
+>>> People always think they should get creative with the last if statement
+>>> in a function.  This leads to spaghetti code and it's confusing.  Please
+>>> never do this again.
+>>>
+>>> The original is correct and the new code is bad rubbish code.
+>>>
+>>> regards,
+>>> dan carpenter
+>>>
+>>>
+>>
+>> Oops, my bad sir. Will keep this in mind.
+> 
+> Still, does the mutex_unlock really need to be duplicated?
+> 
+> julia
+> 
 
-Signed-off-by: Corentin Labbe <clabbe.montjoie@gmail.com>
----
- drivers/scsi/qla2xxx/qla_nx.h | 17 ++---------------
- 1 file changed, 2 insertions(+), 15 deletions(-)
+Hello Julia,
 
-diff --git a/drivers/scsi/qla2xxx/qla_nx.h b/drivers/scsi/qla2xxx/qla_nx.h
-index 77624eac95a4..71a41093530e 100644
---- a/drivers/scsi/qla2xxx/qla_nx.h
-+++ b/drivers/scsi/qla2xxx/qla_nx.h
-@@ -7,6 +7,8 @@
- #ifndef __QLA_NX_H
- #define __QLA_NX_H
- 
-+#include <linux/io-64-nonatomic-lo-hi.h>
-+
- /*
-  * Following are the states of the Phantom. Phantom will set them and
-  * Host will read to check if the fields are correct.
-@@ -819,21 +821,6 @@ struct qla82xx_uri_data_desc{
- #define MIU_TEST_AGT_WRDATA_UPPER_LO		(0x0b0)
- #define	MIU_TEST_AGT_WRDATA_UPPER_HI		(0x0b4)
- 
--#ifndef readq
--static inline u64 readq(void __iomem *addr)
--{
--	return readl(addr) | (((u64) readl(addr + 4)) << 32LL);
--}
--#endif
--
--#ifndef writeq
--static inline void writeq(u64 val, void __iomem *addr)
--{
--	writel(((u32) (val)), (addr));
--	writel(((u32) (val >> 32)), (addr + 4));
--}
--#endif
--
- /* Request and response queue size */
- #define REQUEST_ENTRY_CNT_82XX		128	/* Number of request entries. */
- #define RESPONSE_ENTRY_CNT_82XX		128	/* Number of response entries.*/
--- 
-2.13.0
+Thanks for your hint! I have found a better way to remove a need for 
+duplicate mutex_unlock statement and extra 'out_free' label. Will send
+the corrected path for the same.
+
+Many thanks,
+Milan.
