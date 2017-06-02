@@ -1,84 +1,56 @@
-From: Julia Lawall <julia.lawall@lip6.fr>
-Subject: Re: [PATCH] Eliminate extra 'out_free' label from fcoe_init
- function
-Date: Fri, 2 Jun 2017 07:49:17 +0200 (CEST)
-Message-ID: <alpine.DEB.2.20.1706020748480.2312@hadrien>
-References: <a1ea0104-83ed-2249-3450-dc5c31517558@redhat.com> <20170601150233.2j6lxormywlvu7fa@mwanda> <e318d328-71f4-5212-c697-f71e5c77b660@redhat.com>
+From: Yuval Mintz <Yuval.Mintz@cavium.com>
+Subject: [PATCH net-next 0/4] qed: Enhance storage APIs
+Date: Fri, 2 Jun 2017 08:58:29 +0300
+Message-ID: <20170602055833.21814-1-Yuval.Mintz@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <e318d328-71f4-5212-c697-f71e5c77b660@redhat.com>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: "Milan P. Gandhi" <mgandhi@redhat.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Laurence Oberman <loberman@redhat.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn3nam01on0042.outbound.protection.outlook.com ([104.47.33.42]:19540
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751145AbdFBF7G (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 2 Jun 2017 01:59:06 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: netdev@vger.kernel.org, davem@davemloft.net
+Cc: linux-scsi@vger.kernel.org, nilesh.javali@cavium.com, chad.dupuis@cavium.com, saurav.kashyap@cavium.com, Yuval Mintz <Yuval.Mintz@cavium.com>
 
+This series is intended to add additional information and features
+to the API between qed and its storage protocol drivers [qedi, qedf].
 
+Patch #2 adds some information stored on device such as wwpn & wwnn
+to allow qedf utilize it; #1 fixes an issue with the reading of those
+values [which were unused until now].
 
-On Fri, 2 Jun 2017, Milan P. Gandhi wrote:
+Patch #3 would allow the protocol drivers access to images on persistent
+storage which is a prerequirement for adding boot from SAN support.
 
-> On 06/01/2017 08:32 PM, Dan Carpenter wrote:
-> > On Thu, Jun 01, 2017 at 05:41:06PM +0530, Milan P. Gandhi wrote:
-> >> Simplify the check for return code of fcoe_if_init routine
-> >> in fcoe_init function such that we could eliminate need for
-> >> extra 'out_free' label.
-> >>
-> >> Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
-> >> ---
-> >>  drivers/scsi/fcoe/fcoe.c | 10 ++++------
-> >>  1 file changed, 4 insertions(+), 6 deletions(-)
-> >>
-> >> diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-> >> index ea21e7b..fb2a4c9 100644
-> >> --- a/drivers/scsi/fcoe/fcoe.c
-> >> +++ b/drivers/scsi/fcoe/fcoe.c
-> >> @@ -2523,13 +2523,11 @@ static int __init fcoe_init(void)
-> >>  	fcoe_dev_setup();
-> >>
-> >>  	rc = fcoe_if_init();
-> >> -	if (rc)
-> >> -		goto out_free;
-> >> -
-> >> -	mutex_unlock(&fcoe_config_mutex);
-> >> -	return 0;
-> >> +	if (rc == 0) {
-> >> +		mutex_unlock(&fcoe_config_mutex);
-> >> +		return 0;
-> >> +	}
-> >>
-> >> -out_free:
-> >>  	mutex_unlock(&fcoe_config_mutex);
-> >
-> > Gar...  Stop!  No1  Don't do this.
-> >
-> > Do failure handling, not success handling.
-> >
-> > People always think they should get creative with the last if statement
-> > in a function.  This leads to spaghetti code and it's confusing.  Please
-> > never do this again.
-> >
-> > The original is correct and the new code is bad rubbish code.
-> >
-> > regards,
-> > dan carpenter
-> >
-> >
->
-> Oops, my bad sir. Will keep this in mind.
+Patch #4 adds infrastrucutre to a future feature for qedi.
 
-Still, does the mutex_unlock really need to be duplicated?
+Dave,
 
-julia
+Please consider applying this series to 'net-next'.
 
->
-> Thanks,
-> Milan.
->
->
-> Thanks,
-> Milan.
-> --
-> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Thanks,
+Yuval
+
+Yuval Mintz (4):
+  qed: Correct order of wwnn and wwpn
+  qed: Share additional information with qedf
+  qed: Support NVM-image reading API
+  qed: Add support for changing iSCSI mac
+
+ drivers/net/ethernet/qlogic/qed/qed_dev.c   |  8 ++-
+ drivers/net/ethernet/qlogic/qed/qed_fcoe.c  | 14 +++++
+ drivers/net/ethernet/qlogic/qed/qed_iscsi.c | 66 ++++++++++++++++++++
+ drivers/net/ethernet/qlogic/qed/qed_main.c  | 18 ++++++
+ drivers/net/ethernet/qlogic/qed/qed_mcp.c   | 97 +++++++++++++++++++++++++++--
+ drivers/net/ethernet/qlogic/qed/qed_mcp.h   | 21 +++++++
+ drivers/net/ethernet/qlogic/qed/qed_sp.h    |  1 +
+ include/linux/qed/qed_fcoe_if.h             |  5 ++
+ include/linux/qed/qed_if.h                  | 20 ++++++
+ include/linux/qed/qed_iscsi_if.h            |  7 +++
+ 10 files changed, 252 insertions(+), 5 deletions(-)
+
+-- 
+2.9.4
