@@ -1,94 +1,86 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH v2 05/12] Introduce scsi_start_queue()
-Date: Thu, 1 Jun 2017 16:27:04 -0700
-Message-ID: <20170601232711.29062-6-bart.vanassche@sandisk.com>
-References: <20170601232711.29062-1-bart.vanassche@sandisk.com>
+From: Jia-Ju Bai <baijiaju1990@163.com>
+Subject: Re: [PATCH] iscsi: Fix a sleep-in-atomic bug
+Date: Fri, 02 Jun 2017 09:13:37 +0800
+Message-ID: <5930BBC1.9070608@163.com>
+References: <1496201199-3661-1-git-send-email-baijiaju1990@163.com> <1496298093.27407.203.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:7438 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751105AbdFAXer (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2017 19:34:47 -0400
-In-Reply-To: <20170601232711.29062-1-bart.vanassche@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1496298093.27407.203.camel@haakon3.risingtidesystems.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: bart.vanassche@sandisk.com, davem@davemloft.net, hare@suse.com, elfring@users.sourceforge.net, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@sandisk.com>, Israel Rukshin <israelr@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>, Benjamin Block <bblock@linux.vnet.ibm.com>
 
-This patch does not change any functionality.
+On 06/01/2017 02:21 PM, Nicholas A. Bellinger wrote:
+> Hi Jia-Ju,
+>
+> On Wed, 2017-05-31 at 11:26 +0800, Jia-Ju Bai wrote:
+>> The driver may sleep under a spin lock, and the function call path is:
+>> iscsit_tpg_enable_portal_group (acquire the lock by spin_lock)
+>>    iscsi_update_param_value
+>>      kstrdup(GFP_KERNEL) -->  may sleep
+>>
+>> To fix it, the "GFP_KERNEL" is replaced with "GFP_ATOMIC".
+>>
+>> Signed-off-by: Jia-Ju Bai<baijiaju1990@163.com>
+>> ---
+>>   drivers/target/iscsi/iscsi_target_parameters.c |    2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+> Btw, the use of tpg->tpg_state_lock in iscsit_tpg_enable_portal_group()
+> while checking existing state and calling iscsi_update_param_value() is
+> not necessary, since lio_target_tpg_enable_store() is already holding
+> iscsit_get_tpg() ->  tpg->tpg_access_lock.
+>
+> How about the following instead to only take tpg->tpg_state_lock when
+> updating tpg->tpg_state instead..?
+>
+> diff --git a/drivers/target/iscsi/iscsi_target_tpg.c b/drivers/target/iscsi/iscsi_target_tpg.c
+> index 2e7e08d..abaabba 100644
+> --- a/drivers/target/iscsi/iscsi_target_tpg.c
+> +++ b/drivers/target/iscsi/iscsi_target_tpg.c
+> @@ -311,11 +311,9 @@ int iscsit_tpg_enable_portal_group(struct iscsi_portal_group *tpg)
+>          struct iscsi_tiqn *tiqn = tpg->tpg_tiqn;
+>          int ret;
+>
+> -       spin_lock(&tpg->tpg_state_lock);
+>          if (tpg->tpg_state == TPG_STATE_ACTIVE) {
+>                  pr_err("iSCSI target portal group: %hu is already"
+>                          " active, ignoring request.\n", tpg->tpgt);
+> -               spin_unlock(&tpg->tpg_state_lock);
+>                  return -EINVAL;
+>          }
+>          /*
+> @@ -324,10 +322,8 @@ int iscsit_tpg_enable_portal_group(struct iscsi_portal_group *tpg)
+>           * is enforced (as per default), and remove the NONE option.
+>           */
+>          param = iscsi_find_param_from_key(AUTHMETHOD, tpg->param_list);
+> -       if (!param) {
+> -               spin_unlock(&tpg->tpg_state_lock);
+> +       if (!param)
+>                  return -EINVAL;
+> -       }
+>
+>          if (tpg->tpg_attrib.authentication) {
+>                  if (!strcmp(param->value, NONE)) {
+> @@ -341,6 +337,7 @@ int iscsit_tpg_enable_portal_group(struct iscsi_portal_group *tpg)
+>                          goto err;
+>          }
+>
+> +       spin_lock(&tpg->tpg_state_lock);
+>          tpg->tpg_state = TPG_STATE_ACTIVE;
+>          spin_unlock(&tpg->tpg_state_lock);
+>
+> @@ -353,7 +350,6 @@ int iscsit_tpg_enable_portal_group(struct iscsi_portal_group *tpg)
+>          return 0;
+>
+>   err:
+> -       spin_unlock(&tpg->tpg_state_lock);
+>          return ret;
+>   }
+>
+I think it is fine to me.
 
-Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Cc: Israel Rukshin <israelr@mellanox.com>
-Cc: Max Gurtovoy <maxg@mellanox.com>
-Cc: Benjamin Block <bblock@linux.vnet.ibm.com>
----
- drivers/scsi/scsi_lib.c  | 25 +++++++++++++++----------
- drivers/scsi/scsi_priv.h |  1 +
- 2 files changed, 16 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 845d47244e70..6a58a124714f 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -3030,6 +3030,20 @@ static int scsi_internal_device_block(struct scsi_device *sdev)
- 	return err;
- }
-  
-+void scsi_start_queue(struct scsi_device *sdev)
-+{
-+	struct request_queue *q = sdev->request_queue;
-+	unsigned long flags;
-+
-+	if (q->mq_ops) {
-+		blk_mq_start_stopped_hw_queues(q, false);
-+	} else {
-+		spin_lock_irqsave(q->queue_lock, flags);
-+		blk_start_queue(q);
-+		spin_unlock_irqrestore(q->queue_lock, flags);
-+	}
-+}
-+
- /**
-  * scsi_internal_device_unblock_nowait - resume a device after a block request
-  * @sdev:	device to resume
-@@ -3048,9 +3062,6 @@ static int scsi_internal_device_block(struct scsi_device *sdev)
- int scsi_internal_device_unblock_nowait(struct scsi_device *sdev,
- 					enum scsi_device_state new_state)
- {
--	struct request_queue *q = sdev->request_queue; 
--	unsigned long flags;
--
- 	/*
- 	 * Try to transition the scsi device to SDEV_RUNNING or one of the
- 	 * offlined states and goose the device queue if successful.
-@@ -3068,13 +3079,7 @@ int scsi_internal_device_unblock_nowait(struct scsi_device *sdev,
- 		 sdev->sdev_state != SDEV_OFFLINE)
- 		return -EINVAL;
- 
--	if (q->mq_ops) {
--		blk_mq_start_stopped_hw_queues(q, false);
--	} else {
--		spin_lock_irqsave(q->queue_lock, flags);
--		blk_start_queue(q);
--		spin_unlock_irqrestore(q->queue_lock, flags);
--	}
-+	scsi_start_queue(sdev);
- 
- 	return 0;
- }
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 59ebc1795bb3..f86057842f9a 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -88,6 +88,7 @@ extern void scsi_run_host_queues(struct Scsi_Host *shost);
- extern void scsi_requeue_run_queue(struct work_struct *work);
- extern struct request_queue *scsi_alloc_queue(struct scsi_device *sdev);
- extern struct request_queue *scsi_mq_alloc_queue(struct scsi_device *sdev);
-+extern void scsi_start_queue(struct scsi_device *sdev);
- extern int scsi_mq_setup_tags(struct Scsi_Host *shost);
- extern void scsi_mq_destroy_tags(struct Scsi_Host *shost);
- extern int scsi_init_queue(void);
--- 
-2.12.2
+Thanks,
+Jia-Ju Bai
