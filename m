@@ -1,16 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v3 02/15] qla2xxx: Replace usage of spin_lock with spin_lock_irqsave
-Date: Fri, 2 Jun 2017 09:11:54 -0700
-Message-ID: <20170602161207.6660-3-himanshu.madhani@cavium.com>
+Subject: [PATCH v3 04/15] qla2xxx: Fix path recovery
+Date: Fri, 2 Jun 2017 09:11:56 -0700
+Message-ID: <20170602161207.6660-5-himanshu.madhani@cavium.com>
 References: <20170602161207.6660-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0085.outbound.protection.outlook.com ([104.47.36.85]:39392
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-co1nam03on0061.outbound.protection.outlook.com ([104.47.40.61]:38636
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751172AbdFBQMS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 2 Jun 2017 12:12:18 -0400
+        id S1751193AbdFBQMT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 2 Jun 2017 12:12:19 -0400
 In-Reply-To: <20170602161207.6660-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,117 +19,52 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-Convert usage of spin_lock to spin_lock_irqsave because qla2xxx driver
-can access all the data structures in an interrupt context.
+If the port is moved/changed, current code would trigger
+a deletion. If the port is already deleted, then do relogin.
 
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 Reviewed-by: Bart Van Assche <Bart.VanAssche@sandisk.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 26 ++++++++++++++------------
- 1 file changed, 14 insertions(+), 12 deletions(-)
+ drivers/scsi/qla2xxx/qla_gs.c | 21 ++++++++++++++++-----
+ 1 file changed, 16 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index e766d8412384..a2e17a5794ab 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1762,13 +1762,13 @@ static int abort_cmd_for_tag(struct scsi_qla_host *vha, uint32_t tag)
- {
- 	struct qla_tgt_sess_op *op;
- 	struct qla_tgt_cmd *cmd;
-+	unsigned long flags;
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index 9bc9aa9e164a..5acebaf57796 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -3118,16 +3118,27 @@ void qla24xx_handle_gpnid_event(scsi_qla_host_t *vha, struct event_arg *ea)
  
--	spin_lock(&vha->cmd_list_lock);
+ 	if (fcport) {
+ 		/* cable moved. just plugged in */
+-		ql_dbg(ql_dbg_disc, vha, 0xffff,
+-			   "%s %d %8phC post del sess\n",
+-			   __func__, __LINE__, fcport->port_name);
 -
-+	spin_lock_irqsave(&vha->cmd_list_lock, flags);
- 	list_for_each_entry(op, &vha->qla_sess_op_cmd_list, cmd_list) {
- 		if (tag == op->atio.u.isp24.exchange_addr) {
- 			op->aborted = true;
--			spin_unlock(&vha->cmd_list_lock);
-+			spin_unlock_irqrestore(&vha->cmd_list_lock, flags);
- 			return 1;
- 		}
- 	}
-@@ -1776,7 +1776,7 @@ static int abort_cmd_for_tag(struct scsi_qla_host *vha, uint32_t tag)
- 	list_for_each_entry(op, &vha->unknown_atio_list, cmd_list) {
- 		if (tag == op->atio.u.isp24.exchange_addr) {
- 			op->aborted = true;
--			spin_unlock(&vha->cmd_list_lock);
-+			spin_unlock_irqrestore(&vha->cmd_list_lock, flags);
- 			return 1;
- 		}
- 	}
-@@ -1784,12 +1784,12 @@ static int abort_cmd_for_tag(struct scsi_qla_host *vha, uint32_t tag)
- 	list_for_each_entry(cmd, &vha->qla_cmd_list, cmd_list) {
- 		if (tag == cmd->atio.u.isp24.exchange_addr) {
- 			cmd->aborted = 1;
--			spin_unlock(&vha->cmd_list_lock);
-+			spin_unlock_irqrestore(&vha->cmd_list_lock, flags);
- 			return 1;
- 		}
- 	}
-+	spin_unlock_irqrestore(&vha->cmd_list_lock, flags);
+ 		fcport->rscn_gen++;
+ 		fcport->d_id = ea->id;
+ 		fcport->scan_state = QLA_FCPORT_FOUND;
+ 		fcport->flags |= FCF_FABRIC_DEVICE;
  
--	spin_unlock(&vha->cmd_list_lock);
- 	return 0;
- }
- 
-@@ -1804,9 +1804,10 @@ static void abort_cmds_for_lun(struct scsi_qla_host *vha,
- 	struct qla_tgt_sess_op *op;
- 	struct qla_tgt_cmd *cmd;
- 	uint32_t key;
-+	unsigned long flags;
- 
- 	key = sid_to_key(s_id);
--	spin_lock(&vha->cmd_list_lock);
-+	spin_lock_irqsave(&vha->cmd_list_lock, flags);
- 	list_for_each_entry(op, &vha->qla_sess_op_cmd_list, cmd_list) {
- 		uint32_t op_key;
- 		uint32_t op_lun;
-@@ -1839,7 +1840,7 @@ static void abort_cmds_for_lun(struct scsi_qla_host *vha,
- 		if (cmd_key == key && cmd_lun == lun)
- 			cmd->aborted = 1;
- 	}
--	spin_unlock(&vha->cmd_list_lock);
-+	spin_unlock_irqrestore(&vha->cmd_list_lock, flags);
- }
- 
- /* ha->hardware_lock supposed to be held on entry */
-@@ -4216,9 +4217,9 @@ static int qlt_handle_cmd_for_atio(struct scsi_qla_host *vha,
- 		memcpy(&op->atio, atio, sizeof(*atio));
- 		op->vha = vha;
- 
--		spin_lock(&vha->cmd_list_lock);
-+		spin_lock_irqsave(&vha->cmd_list_lock, flags);
- 		list_add_tail(&op->cmd_list, &vha->qla_sess_op_cmd_list);
--		spin_unlock(&vha->cmd_list_lock);
-+		spin_unlock_irqrestore(&vha->cmd_list_lock, flags);
- 
- 		INIT_WORK(&op->work, qlt_create_sess_from_atio);
- 		queue_work(qla_tgt_wq, &op->work);
-@@ -4529,12 +4530,13 @@ static int abort_cmds_for_s_id(struct scsi_qla_host *vha, port_id_t *s_id)
- 	struct qla_tgt_cmd *cmd;
- 	uint32_t key;
- 	int count = 0;
-+	unsigned long flags;
- 
- 	key = (((u32)s_id->b.domain << 16) |
- 	       ((u32)s_id->b.area   <<  8) |
- 	       ((u32)s_id->b.al_pa));
- 
--	spin_lock(&vha->cmd_list_lock);
-+	spin_lock_irqsave(&vha->cmd_list_lock, flags);
- 	list_for_each_entry(op, &vha->qla_sess_op_cmd_list, cmd_list) {
- 		uint32_t op_key = sid_to_key(op->atio.u.isp24.fcp_hdr.s_id);
- 
-@@ -4559,7 +4561,7 @@ static int abort_cmds_for_s_id(struct scsi_qla_host *vha, port_id_t *s_id)
- 			count++;
- 		}
- 	}
--	spin_unlock(&vha->cmd_list_lock);
-+	spin_unlock_irqrestore(&vha->cmd_list_lock, flags);
- 
- 	return count;
- }
+-		qlt_schedule_sess_for_deletion_lock(fcport);
++		switch (fcport->disc_state) {
++		case DSC_DELETED:
++			ql_dbg(ql_dbg_disc, vha, 0x210d,
++			    "%s %d %8phC login\n", __func__, __LINE__,
++			    fcport->port_name);
++			qla24xx_fcport_handle_login(vha, fcport);
++			break;
++		case DSC_DELETE_PEND:
++			break;
++		default:
++			ql_dbg(ql_dbg_disc, vha, 0x2064,
++			    "%s %d %8phC post del sess\n",
++			    __func__, __LINE__, fcport->port_name);
++			qlt_schedule_sess_for_deletion_lock(fcport);
++			break;
++		}
+ 	} else {
+ 		/* create new fcport */
+ 		ql_dbg(ql_dbg_disc, vha, 0xffff,
 -- 
 2.12.0
