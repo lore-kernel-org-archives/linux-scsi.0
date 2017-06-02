@@ -1,16 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v3 13/15] qla2xxx: Accelerate SCSI BUSY status generation in target mode
-Date: Fri, 2 Jun 2017 09:12:05 -0700
-Message-ID: <20170602161207.6660-14-himanshu.madhani@cavium.com>
+Subject: [PATCH v3 10/15] qla2xxx: Turn on FW option for exchange check
+Date: Fri, 2 Jun 2017 09:12:02 -0700
+Message-ID: <20170602161207.6660-11-himanshu.madhani@cavium.com>
 References: <20170602161207.6660-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0053.outbound.protection.outlook.com ([104.47.37.53]:7808
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam01on0069.outbound.protection.outlook.com ([104.47.32.69]:39072
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751200AbdFBQM3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 2 Jun 2017 12:12:29 -0400
+        id S1751230AbdFBQM1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 2 Jun 2017 12:12:27 -0400
 In-Reply-To: <20170602161207.6660-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,54 +19,139 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-Accelerate generation of SCSI busy to let initiators slow
-down when target is running low in resources.
+Tell FW to track exchange/cmd state to prevent driver
+from using stale exchange or exchange that is not meant
+for this command.
 
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c | 13 +++++++++++--
- drivers/scsi/qla2xxx/qla_mbx.c  |  2 ++
- 2 files changed, 13 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c   | 18 ++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_target.c | 26 +++++++++++++++-----------
+ drivers/scsi/qla2xxx/qla_target.h |  2 +-
+ 3 files changed, 34 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 08000aebe8d4..436968ad4484 100644
+index c425d061cd80..f92e74639bb1 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -7374,10 +7374,19 @@ qla81xx_update_fw_options(scsi_qla_host_t *vha)
+@@ -2969,6 +2969,18 @@ qla24xx_update_fw_options(scsi_qla_host_t *vha)
+ 			ha->fw_options[2] &= ~BIT_11;
  	}
  
- 	if (qla_tgt_mode_enabled(vha) ||
--	    qla_dual_mode_enabled(vha))
-+	    qla_dual_mode_enabled(vha)) {
-+		/* FW auto send SCSI status during */
-+		ha->fw_options[1] |= BIT_8;
-+		ha->fw_options[10] |= (u16)SAM_STAT_BUSY << 8;
-+
-+		/* FW perform Exchange validation */
- 		ha->fw_options[2] |= BIT_4;
--	else
-+	} else {
-+		ha->fw_options[1]  &= ~BIT_8;
-+		ha->fw_options[10] &= 0x00ff;
-+
- 		ha->fw_options[2] &= ~BIT_4;
++	if (IS_QLA25XX(ha) || IS_QLA83XX(ha) || IS_QLA27XX(ha)) {
++		/*
++		 * Tell FW to track each exchange to prevent
++		 * driver from using stale exchange.
++		 */
++		if (qla_tgt_mode_enabled(vha) ||
++		    qla_dual_mode_enabled(vha))
++			ha->fw_options[2] |= BIT_4;
++		else
++			ha->fw_options[2] &= ~BIT_4;
 +	}
++
+ 	ql_dbg(ql_dbg_init, vha, 0x00e8,
+ 	    "%s, add FW options 1-3 = 0x%04x 0x%04x 0x%04x mode %x\n",
+ 	    __func__, ha->fw_options[1], ha->fw_options[2],
+@@ -7361,6 +7373,12 @@ qla81xx_update_fw_options(scsi_qla_host_t *vha)
+ 			ha->fw_options[2] &= ~BIT_11;
+ 	}
  
++	if (qla_tgt_mode_enabled(vha) ||
++	    qla_dual_mode_enabled(vha))
++		ha->fw_options[2] |= BIT_4;
++	else
++		ha->fw_options[2] &= ~BIT_4;
++
  	if (ql2xetsenable) {
  		/* Enable ETS Burst. */
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index bebac42d9e9e..f02a2baffb5b 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -1048,6 +1048,8 @@ qla2x00_set_fw_options(scsi_qla_host_t *vha, uint16_t *fwopts)
- 	mcp->in_mb = MBX_0;
- 	if (IS_FWI2_CAPABLE(vha->hw)) {
- 		mcp->in_mb |= MBX_1;
-+		mcp->mb[10] = fwopts[10];
-+		mcp->out_mb |= MBX_10;
- 	} else {
- 		mcp->mb[10] = fwopts[10];
- 		mcp->mb[11] = fwopts[11];
+ 		memset(ha->fw_options, 0, sizeof(ha->fw_options));
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 4ad09584d4a8..3cdffdd90279 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -2016,8 +2016,9 @@ static void qlt_24xx_send_task_mgmt_ctio(struct scsi_qla_host *ha,
+ 	ctio->initiator_id[1] = atio->u.isp24.fcp_hdr.s_id[1];
+ 	ctio->initiator_id[2] = atio->u.isp24.fcp_hdr.s_id[0];
+ 	ctio->exchange_addr = atio->u.isp24.exchange_addr;
+-	ctio->u.status1.flags = (atio->u.isp24.attr << 9) |
+-	    cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1 | CTIO7_FLAGS_SEND_STATUS);
++	temp = (atio->u.isp24.attr << 9)|
++		CTIO7_FLAGS_STATUS_MODE_1 | CTIO7_FLAGS_SEND_STATUS;
++	ctio->u.status1.flags = cpu_to_le16(temp);
+ 	temp = be16_to_cpu(atio->u.isp24.fcp_hdr.ox_id);
+ 	ctio->u.status1.ox_id = cpu_to_le16(temp);
+ 	ctio->u.status1.scsi_status =
+@@ -2070,8 +2071,9 @@ void qlt_send_resp_ctio(scsi_qla_host_t *vha, struct qla_tgt_cmd *cmd,
+ 	ctio->initiator_id[1] = atio->u.isp24.fcp_hdr.s_id[1];
+ 	ctio->initiator_id[2] = atio->u.isp24.fcp_hdr.s_id[0];
+ 	ctio->exchange_addr = atio->u.isp24.exchange_addr;
+-	ctio->u.status1.flags = (atio->u.isp24.attr << 9) |
+-	    cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1 | CTIO7_FLAGS_SEND_STATUS);
++	temp = (atio->u.isp24.attr << 9) |
++	    CTIO7_FLAGS_STATUS_MODE_1 | CTIO7_FLAGS_SEND_STATUS;
++	ctio->u.status1.flags = cpu_to_le16(temp);
+ 	temp = be16_to_cpu(atio->u.isp24.fcp_hdr.ox_id);
+ 	ctio->u.status1.ox_id = cpu_to_le16(temp);
+ 	ctio->u.status1.scsi_status =
+@@ -2359,7 +2361,8 @@ static int qlt_24xx_build_ctio_pkt(struct qla_tgt_prm *prm,
+ 	pkt->initiator_id[1] = atio->u.isp24.fcp_hdr.s_id[1];
+ 	pkt->initiator_id[2] = atio->u.isp24.fcp_hdr.s_id[0];
+ 	pkt->exchange_addr = atio->u.isp24.exchange_addr;
+-	pkt->u.status0.flags |= (atio->u.isp24.attr << 9);
++	temp = atio->u.isp24.attr << 9;
++	pkt->u.status0.flags |= cpu_to_le16(temp);
+ 	temp = be16_to_cpu(atio->u.isp24.fcp_hdr.ox_id);
+ 	pkt->u.status0.ox_id = cpu_to_le16(temp);
+ 	pkt->u.status0.relative_offset = cpu_to_le32(prm->cmd->offset);
+@@ -3484,9 +3487,9 @@ static int __qlt_send_term_exchange(struct scsi_qla_host *vha,
+ 	ctio24->initiator_id[1] = atio->u.isp24.fcp_hdr.s_id[1];
+ 	ctio24->initiator_id[2] = atio->u.isp24.fcp_hdr.s_id[0];
+ 	ctio24->exchange_addr = atio->u.isp24.exchange_addr;
+-	ctio24->u.status1.flags = (atio->u.isp24.attr << 9) |
+-	    cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1 |
+-		CTIO7_FLAGS_TERMINATE);
++	temp = (atio->u.isp24.attr << 9) | CTIO7_FLAGS_STATUS_MODE_1 |
++		CTIO7_FLAGS_TERMINATE;
++	ctio24->u.status1.flags = cpu_to_le16(temp);
+ 	temp = be16_to_cpu(atio->u.isp24.fcp_hdr.ox_id);
+ 	ctio24->u.status1.ox_id = cpu_to_le16(temp);
+ 
+@@ -4978,6 +4981,7 @@ static int __qlt_send_busy(struct scsi_qla_host *vha,
+ 	request_t *pkt;
+ 	struct fc_port *sess = NULL;
+ 	unsigned long flags;
++	u16 temp;
+ 
+ 	spin_lock_irqsave(&ha->tgt.sess_lock, flags);
+ 	sess = ha->tgt.tgt_ops->find_sess_by_s_id(vha,
+@@ -5010,10 +5014,10 @@ static int __qlt_send_busy(struct scsi_qla_host *vha,
+ 	ctio24->initiator_id[1] = atio->u.isp24.fcp_hdr.s_id[1];
+ 	ctio24->initiator_id[2] = atio->u.isp24.fcp_hdr.s_id[0];
+ 	ctio24->exchange_addr = atio->u.isp24.exchange_addr;
+-	ctio24->u.status1.flags = (atio->u.isp24.attr << 9) |
+-	    cpu_to_le16(
++	temp = (atio->u.isp24.attr << 9) |
+ 		CTIO7_FLAGS_STATUS_MODE_1 | CTIO7_FLAGS_SEND_STATUS |
+-		CTIO7_FLAGS_DONT_RET_CTIO);
++		CTIO7_FLAGS_DONT_RET_CTIO;
++	ctio24->u.status1.flags = cpu_to_le16(temp);
+ 	/*
+ 	 * CTIO from fw w/o se_cmd doesn't provide enough info to retry it,
+ 	 * if the explicit conformation is used.
+diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
+index 25ea90b8f6c9..07ff565485b7 100644
+--- a/drivers/scsi/qla2xxx/qla_target.h
++++ b/drivers/scsi/qla2xxx/qla_target.h
+@@ -426,7 +426,7 @@ struct ctio7_to_24xx {
+ 		} status0;
+ 		struct {
+ 			uint16_t sense_length;
+-			uint16_t flags;
++			__le16 flags;
+ 			uint32_t residual;
+ 			__le16 ox_id;
+ 			uint16_t scsi_status;
 -- 
 2.12.0
