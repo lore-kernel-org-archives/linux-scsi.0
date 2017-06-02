@@ -1,86 +1,52 @@
 From: "Milan P. Gandhi" <mgandhi@redhat.com>
-Subject: Re: [PATCH] Eliminate extra 'out_free' label from fcoe_init function
-Date: Fri, 2 Jun 2017 18:03:38 +0530
-Message-ID: <fefc51f4-62fa-57b8-09de-271dc10bd682@redhat.com>
-References: <a1ea0104-83ed-2249-3450-dc5c31517558@redhat.com>
- <20170601150233.2j6lxormywlvu7fa@mwanda>
- <e318d328-71f4-5212-c697-f71e5c77b660@redhat.com>
- <alpine.DEB.2.20.1706020748480.2312@hadrien>
+Subject: [PATCH RESEND] Eliminate extra 'out_free' label from fcoe_init
+ function
+Date: Fri, 2 Jun 2017 18:09:05 +0530
+Message-ID: <8e1e75c4-3a80-00c3-2697-37fb1c86f7a1@redhat.com>
 Reply-To: mgandhi@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.20.1706020748480.2312@hadrien>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Julia Lawall <julia.lawall@lip6.fr>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Laurence Oberman <loberman@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-it0-f47.google.com ([209.85.214.47]:38891 "EHLO
+        mail-it0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751130AbdFBMjK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jun 2017 08:39:10 -0400
+Received: by mail-it0-f47.google.com with SMTP id r63so18483813itc.1
+        for <linux-scsi@vger.kernel.org>; Fri, 02 Jun 2017 05:39:10 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jth@kernel.org>, Julia Lawall <julia.lawall@lip6.fr>, Dan Carpenter <dan.carpenter@oracle.com>, Laurence Oberman <loberman@redhat.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org
 
-On 06/02/2017 11:19 AM, Julia Lawall wrote:
-> 
-> 
-> On Fri, 2 Jun 2017, Milan P. Gandhi wrote:
-> 
->> On 06/01/2017 08:32 PM, Dan Carpenter wrote:
->>> On Thu, Jun 01, 2017 at 05:41:06PM +0530, Milan P. Gandhi wrote:
->>>> Simplify the check for return code of fcoe_if_init routine
->>>> in fcoe_init function such that we could eliminate need for
->>>> extra 'out_free' label.
->>>>
->>>> Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
->>>> ---
->>>>  drivers/scsi/fcoe/fcoe.c | 10 ++++------
->>>>  1 file changed, 4 insertions(+), 6 deletions(-)
->>>>
->>>> diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
->>>> index ea21e7b..fb2a4c9 100644
->>>> --- a/drivers/scsi/fcoe/fcoe.c
->>>> +++ b/drivers/scsi/fcoe/fcoe.c
->>>> @@ -2523,13 +2523,11 @@ static int __init fcoe_init(void)
->>>>  	fcoe_dev_setup();
->>>>
->>>>  	rc = fcoe_if_init();
->>>> -	if (rc)
->>>> -		goto out_free;
->>>> -
->>>> -	mutex_unlock(&fcoe_config_mutex);
->>>> -	return 0;
->>>> +	if (rc == 0) {
->>>> +		mutex_unlock(&fcoe_config_mutex);
->>>> +		return 0;
->>>> +	}
->>>>
->>>> -out_free:
->>>>  	mutex_unlock(&fcoe_config_mutex);
->>>
->>> Gar...  Stop!  No1  Don't do this.
->>>
->>> Do failure handling, not success handling.
->>>
->>> People always think they should get creative with the last if statement
->>> in a function.  This leads to spaghetti code and it's confusing.  Please
->>> never do this again.
->>>
->>> The original is correct and the new code is bad rubbish code.
->>>
->>> regards,
->>> dan carpenter
->>>
->>>
->>
->> Oops, my bad sir. Will keep this in mind.
-> 
-> Still, does the mutex_unlock really need to be duplicated?
-> 
-> julia
-> 
+Simplify the check for return code of fcoe_if_init routine
+in fcoe_init function such that we could eliminate need for
+extra 'out_free' label and duplicate mutex_unlock statement.
 
-Hello Julia,
+Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
+---
+ drivers/scsi/fcoe/fcoe.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-Thanks for your hint! I have found a better way to remove a need for 
-duplicate mutex_unlock statement and extra 'out_free' label. Will send
-the corrected path for the same.
-
-Many thanks,
-Milan.
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index ea21e7b..a2cf3d0 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -2523,14 +2523,13 @@ static int __init fcoe_init(void)
+ 	fcoe_dev_setup();
+ 
+ 	rc = fcoe_if_init();
++	mutex_unlock(&fcoe_config_mutex);
++
+ 	if (rc)
+-		goto out_free;
++		goto out_destroy;
+ 
+-	mutex_unlock(&fcoe_config_mutex);
+ 	return 0;
+ 
+-out_free:
+-	mutex_unlock(&fcoe_config_mutex);
+ out_destroy:
+ 	destroy_workqueue(fcoe_wq);
+ 	return rc;
