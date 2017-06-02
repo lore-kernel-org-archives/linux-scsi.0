@@ -1,16 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v3 10/15] qla2xxx: Turn on FW option for exchange check
-Date: Fri, 2 Jun 2017 09:12:02 -0700
-Message-ID: <20170602161207.6660-11-himanshu.madhani@cavium.com>
+Subject: [PATCH v3 12/15] qla2xxx: Remove redundant wait when target is stopped.
+Date: Fri, 2 Jun 2017 09:12:04 -0700
+Message-ID: <20170602161207.6660-13-himanshu.madhani@cavium.com>
 References: <20170602161207.6660-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0069.outbound.protection.outlook.com ([104.47.32.69]:39072
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-co1nam03on0089.outbound.protection.outlook.com ([104.47.40.89]:45201
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751230AbdFBQM1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 2 Jun 2017 12:12:27 -0400
+        id S1751208AbdFBQMa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 2 Jun 2017 12:12:30 -0400
 In-Reply-To: <20170602161207.6660-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,139 +19,102 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-Tell FW to track exchange/cmd state to prevent driver
-from using stale exchange or exchange that is not meant
-for this command.
+Current code already destroy all target sessions when
+target Mode is stopped. Target core would waits for
+all commands that belong to each session to purge.
+The extra wait for interrupts to settle down is not
+relevant.
 
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c   | 18 ++++++++++++++++++
- drivers/scsi/qla2xxx/qla_target.c | 26 +++++++++++++++-----------
- drivers/scsi/qla2xxx/qla_target.h |  2 +-
- 3 files changed, 34 insertions(+), 12 deletions(-)
+ drivers/scsi/qla2xxx/qla_target.c | 33 ++++++++++++++++-----------------
+ 1 file changed, 16 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index c425d061cd80..f92e74639bb1 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -2969,6 +2969,18 @@ qla24xx_update_fw_options(scsi_qla_host_t *vha)
- 			ha->fw_options[2] &= ~BIT_11;
- 	}
- 
-+	if (IS_QLA25XX(ha) || IS_QLA83XX(ha) || IS_QLA27XX(ha)) {
-+		/*
-+		 * Tell FW to track each exchange to prevent
-+		 * driver from using stale exchange.
-+		 */
-+		if (qla_tgt_mode_enabled(vha) ||
-+		    qla_dual_mode_enabled(vha))
-+			ha->fw_options[2] |= BIT_4;
-+		else
-+			ha->fw_options[2] &= ~BIT_4;
-+	}
-+
- 	ql_dbg(ql_dbg_init, vha, 0x00e8,
- 	    "%s, add FW options 1-3 = 0x%04x 0x%04x 0x%04x mode %x\n",
- 	    __func__, ha->fw_options[1], ha->fw_options[2],
-@@ -7361,6 +7373,12 @@ qla81xx_update_fw_options(scsi_qla_host_t *vha)
- 			ha->fw_options[2] &= ~BIT_11;
- 	}
- 
-+	if (qla_tgt_mode_enabled(vha) ||
-+	    qla_dual_mode_enabled(vha))
-+		ha->fw_options[2] |= BIT_4;
-+	else
-+		ha->fw_options[2] &= ~BIT_4;
-+
- 	if (ql2xetsenable) {
- 		/* Enable ETS Burst. */
- 		memset(ha->fw_options, 0, sizeof(ha->fw_options));
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 4ad09584d4a8..3cdffdd90279 100644
+index 324048476d9e..f9ccf845d084 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -2016,8 +2016,9 @@ static void qlt_24xx_send_task_mgmt_ctio(struct scsi_qla_host *ha,
- 	ctio->initiator_id[1] = atio->u.isp24.fcp_hdr.s_id[1];
- 	ctio->initiator_id[2] = atio->u.isp24.fcp_hdr.s_id[0];
- 	ctio->exchange_addr = atio->u.isp24.exchange_addr;
--	ctio->u.status1.flags = (atio->u.isp24.attr << 9) |
--	    cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1 | CTIO7_FLAGS_SEND_STATUS);
-+	temp = (atio->u.isp24.attr << 9)|
-+		CTIO7_FLAGS_STATUS_MODE_1 | CTIO7_FLAGS_SEND_STATUS;
-+	ctio->u.status1.flags = cpu_to_le16(temp);
- 	temp = be16_to_cpu(atio->u.isp24.fcp_hdr.ox_id);
- 	ctio->u.status1.ox_id = cpu_to_le16(temp);
- 	ctio->u.status1.scsi_status =
-@@ -2070,8 +2071,9 @@ void qlt_send_resp_ctio(scsi_qla_host_t *vha, struct qla_tgt_cmd *cmd,
- 	ctio->initiator_id[1] = atio->u.isp24.fcp_hdr.s_id[1];
- 	ctio->initiator_id[2] = atio->u.isp24.fcp_hdr.s_id[0];
- 	ctio->exchange_addr = atio->u.isp24.exchange_addr;
--	ctio->u.status1.flags = (atio->u.isp24.attr << 9) |
--	    cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1 | CTIO7_FLAGS_SEND_STATUS);
-+	temp = (atio->u.isp24.attr << 9) |
-+	    CTIO7_FLAGS_STATUS_MODE_1 | CTIO7_FLAGS_SEND_STATUS;
-+	ctio->u.status1.flags = cpu_to_le16(temp);
- 	temp = be16_to_cpu(atio->u.isp24.fcp_hdr.ox_id);
- 	ctio->u.status1.ox_id = cpu_to_le16(temp);
- 	ctio->u.status1.scsi_status =
-@@ -2359,7 +2361,8 @@ static int qlt_24xx_build_ctio_pkt(struct qla_tgt_prm *prm,
- 	pkt->initiator_id[1] = atio->u.isp24.fcp_hdr.s_id[1];
- 	pkt->initiator_id[2] = atio->u.isp24.fcp_hdr.s_id[0];
- 	pkt->exchange_addr = atio->u.isp24.exchange_addr;
--	pkt->u.status0.flags |= (atio->u.isp24.attr << 9);
-+	temp = atio->u.isp24.attr << 9;
-+	pkt->u.status0.flags |= cpu_to_le16(temp);
- 	temp = be16_to_cpu(atio->u.isp24.fcp_hdr.ox_id);
- 	pkt->u.status0.ox_id = cpu_to_le16(temp);
- 	pkt->u.status0.relative_offset = cpu_to_le32(prm->cmd->offset);
-@@ -3484,9 +3487,9 @@ static int __qlt_send_term_exchange(struct scsi_qla_host *vha,
- 	ctio24->initiator_id[1] = atio->u.isp24.fcp_hdr.s_id[1];
- 	ctio24->initiator_id[2] = atio->u.isp24.fcp_hdr.s_id[0];
- 	ctio24->exchange_addr = atio->u.isp24.exchange_addr;
--	ctio24->u.status1.flags = (atio->u.isp24.attr << 9) |
--	    cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1 |
--		CTIO7_FLAGS_TERMINATE);
-+	temp = (atio->u.isp24.attr << 9) | CTIO7_FLAGS_STATUS_MODE_1 |
-+		CTIO7_FLAGS_TERMINATE;
-+	ctio24->u.status1.flags = cpu_to_le16(temp);
- 	temp = be16_to_cpu(atio->u.isp24.fcp_hdr.ox_id);
- 	ctio24->u.status1.ox_id = cpu_to_le16(temp);
+@@ -1427,6 +1427,8 @@ int qlt_stop_phase1(struct qla_tgt *tgt)
  
-@@ -4978,6 +4981,7 @@ static int __qlt_send_busy(struct scsi_qla_host *vha,
- 	request_t *pkt;
- 	struct fc_port *sess = NULL;
- 	unsigned long flags;
-+	u16 temp;
+ 		if (npiv_vports) {
+ 			mutex_unlock(&qla_tgt_mutex);
++			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf021,
++			    "NPIV is in use. Can not stop target\n");
+ 			return -EPERM;
+ 		}
+ 	}
+@@ -1437,7 +1439,7 @@ int qlt_stop_phase1(struct qla_tgt *tgt)
+ 		return -EPERM;
+ 	}
  
- 	spin_lock_irqsave(&ha->tgt.sess_lock, flags);
- 	sess = ha->tgt.tgt_ops->find_sess_by_s_id(vha,
-@@ -5010,10 +5014,10 @@ static int __qlt_send_busy(struct scsi_qla_host *vha,
- 	ctio24->initiator_id[1] = atio->u.isp24.fcp_hdr.s_id[1];
- 	ctio24->initiator_id[2] = atio->u.isp24.fcp_hdr.s_id[0];
- 	ctio24->exchange_addr = atio->u.isp24.exchange_addr;
--	ctio24->u.status1.flags = (atio->u.isp24.attr << 9) |
--	    cpu_to_le16(
-+	temp = (atio->u.isp24.attr << 9) |
- 		CTIO7_FLAGS_STATUS_MODE_1 | CTIO7_FLAGS_SEND_STATUS |
--		CTIO7_FLAGS_DONT_RET_CTIO);
-+		CTIO7_FLAGS_DONT_RET_CTIO;
-+	ctio24->u.status1.flags = cpu_to_le16(temp);
+-	ql_dbg(ql_dbg_tgt, vha, 0xe003, "Stopping target for host %ld(%p)\n",
++	ql_dbg(ql_dbg_tgt_mgt, vha, 0xe003, "Stopping target for host %ld(%p)\n",
+ 	    vha->host_no, vha);
  	/*
- 	 * CTIO from fw w/o se_cmd doesn't provide enough info to retry it,
- 	 * if the explicit conformation is used.
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index 25ea90b8f6c9..07ff565485b7 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -426,7 +426,7 @@ struct ctio7_to_24xx {
- 		} status0;
- 		struct {
- 			uint16_t sense_length;
--			uint16_t flags;
-+			__le16 flags;
- 			uint32_t residual;
- 			__le16 ox_id;
- 			uint16_t scsi_status;
+ 	 * Mutex needed to sync with qla_tgt_fc_port_[added,deleted].
+@@ -1480,9 +1482,7 @@ EXPORT_SYMBOL(qlt_stop_phase1);
+ /* Called by tcm_qla2xxx configfs code */
+ void qlt_stop_phase2(struct qla_tgt *tgt)
+ {
+-	struct qla_hw_data *ha = tgt->ha;
+-	scsi_qla_host_t *vha = pci_get_drvdata(ha->pdev);
+-	unsigned long flags;
++	scsi_qla_host_t *vha = tgt->vha;
+ 
+ 	if (tgt->tgt_stopped) {
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf04f,
+@@ -1490,24 +1490,19 @@ void qlt_stop_phase2(struct qla_tgt *tgt)
+ 		dump_stack();
+ 		return;
+ 	}
+-
+-	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf00b,
+-	    "Waiting for %d IRQ commands to complete (tgt %p)",
+-	    tgt->irq_cmd_count, tgt);
++	if (!tgt->tgt_stop) {
++		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf00b,
++		    "%s: phase1 stop is not completed\n", __func__);
++		dump_stack();
++		return;
++	}
+ 
+ 	mutex_lock(&vha->vha_tgt.tgt_mutex);
+-	spin_lock_irqsave(&ha->hardware_lock, flags);
+-	while ((tgt->irq_cmd_count != 0) || (tgt->atio_irq_cmd_count != 0)) {
+-		spin_unlock_irqrestore(&ha->hardware_lock, flags);
+-		udelay(2);
+-		spin_lock_irqsave(&ha->hardware_lock, flags);
+-	}
+ 	tgt->tgt_stop = 0;
+ 	tgt->tgt_stopped = 1;
+-	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 	mutex_unlock(&vha->vha_tgt.tgt_mutex);
+ 
+-	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf00c, "Stop of tgt %p finished",
++	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf00c, "Stop of tgt %p finished\n",
+ 	    tgt);
+ }
+ EXPORT_SYMBOL(qlt_stop_phase2);
+@@ -1517,6 +1512,10 @@ static void qlt_release(struct qla_tgt *tgt)
+ {
+ 	scsi_qla_host_t *vha = tgt->vha;
+ 
++	if ((vha->vha_tgt.qla_tgt != NULL) && !tgt->tgt_stop &&
++	    !tgt->tgt_stopped)
++		qlt_stop_phase1(tgt);
++
+ 	if ((vha->vha_tgt.qla_tgt != NULL) && !tgt->tgt_stopped)
+ 		qlt_stop_phase2(tgt);
+ 
+@@ -5531,7 +5530,7 @@ void qlt_async_event(uint16_t code, struct scsi_qla_host *vha,
+ 	struct qla_tgt *tgt = vha->vha_tgt.qla_tgt;
+ 	int login_code;
+ 
+-	if (!ha->tgt.tgt_ops)
++	if (!tgt || tgt->tgt_stop || tgt->tgt_stopped)
+ 		return;
+ 
+ 	if (unlikely(tgt == NULL)) {
 -- 
 2.12.0
