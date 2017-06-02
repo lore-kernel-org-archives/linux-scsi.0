@@ -1,64 +1,31 @@
-From: walter harms <wharms@bfs.de>
-Subject: Re: [PATCH RESEND] Eliminate extra 'out_free' label from fcoe_init
- function
-Date: Fri, 02 Jun 2017 15:01:29 +0200
-Message-ID: <593161A9.9000100@bfs.de>
-References: <8e1e75c4-3a80-00c3-2697-37fb1c86f7a1@redhat.com>
-Reply-To: wharms@bfs.de
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH net-next 0/4] qed: Enhance storage APIs
+Date: Fri, 02 Jun 2017 10:36:39 -0400 (EDT)
+Message-ID: <20170602.103639.467332997454061541.davem@davemloft.net>
+References: <20170602055833.21814-1-Yuval.Mintz@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <8e1e75c4-3a80-00c3-2697-37fb1c86f7a1@redhat.com>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: mgandhi@redhat.com
-Cc: Johannes Thumshirn <jth@kernel.org>, Julia Lawall <julia.lawall@lip6.fr>, Dan Carpenter <dan.carpenter@oracle.com>, Laurence Oberman <loberman@redhat.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20170602055833.21814-1-Yuval.Mintz@cavium.com>
+Sender: netdev-owner@vger.kernel.org
+To: Yuval.Mintz@cavium.com
+Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, nilesh.javali@cavium.com, chad.dupuis@cavium.com, saurav.kashyap@cavium.com
 List-Id: linux-scsi@vger.kernel.org
 
+From: Yuval Mintz <Yuval.Mintz@cavium.com>
+Date: Fri, 2 Jun 2017 08:58:29 +0300
 
-
-Am 02.06.2017 14:39, schrieb Milan P. Gandhi:
-> Simplify the check for return code of fcoe_if_init routine
-> in fcoe_init function such that we could eliminate need for
-> extra 'out_free' label and duplicate mutex_unlock statement.
+> This series is intended to add additional information and features
+> to the API between qed and its storage protocol drivers [qedi, qedf].
 > 
-> Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
-> ---
->  drivers/scsi/fcoe/fcoe.c | 7 +++----
->  1 file changed, 3 insertions(+), 4 deletions(-)
+> Patch #2 adds some information stored on device such as wwpn & wwnn
+> to allow qedf utilize it; #1 fixes an issue with the reading of those
+> values [which were unused until now].
 > 
-> diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-> index ea21e7b..a2cf3d0 100644
-> --- a/drivers/scsi/fcoe/fcoe.c
-> +++ b/drivers/scsi/fcoe/fcoe.c
-> @@ -2523,14 +2523,13 @@ static int __init fcoe_init(void)
->  	fcoe_dev_setup();
->  
->  	rc = fcoe_if_init();
-> +	mutex_unlock(&fcoe_config_mutex);
-> +
->  	if (rc)
-> -		goto out_free;
-> +		goto out_destroy;
->  
-> -	mutex_unlock(&fcoe_config_mutex);
->  	return 0;
->  
-if you do that, why not
-if (!rc) return 0;
-
-re,
- wh
-
-
-
-> -out_free:
-> -	mutex_unlock(&fcoe_config_mutex);
->  out_destroy:
->  	destroy_workqueue(fcoe_wq);
->  	return rc;
-> --
-> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Patch #3 would allow the protocol drivers access to images on persistent
+> storage which is a prerequirement for adding boot from SAN support.
 > 
+> Patch #4 adds infrastrucutre to a future feature for qedi.
+
+Series applied.
