@@ -1,15 +1,15 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v3 07/15] qla2xxx: Convert 32-bit LUN usage to 64-bit
-Date: Fri, 2 Jun 2017 09:11:59 -0700
-Message-ID: <20170602161207.6660-8-himanshu.madhani@cavium.com>
+Subject: [PATCH v3 08/15] qla2xxx: Fix name server relogin
+Date: Fri, 2 Jun 2017 09:12:00 -0700
+Message-ID: <20170602161207.6660-9-himanshu.madhani@cavium.com>
 References: <20170602161207.6660-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0044.outbound.protection.outlook.com ([104.47.34.44]:46240
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam02on0047.outbound.protection.outlook.com ([104.47.36.47]:37089
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751208AbdFBQMX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1751217AbdFBQMX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Fri, 2 Jun 2017 12:12:23 -0400
 In-Reply-To: <20170602161207.6660-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -19,182 +19,185 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-Acked-by: Nicholas Bellinger <nab@linux-iscsi.org>
+Name server login is normally handle by FW. In some
+rare case where one of the switches is being updated,
+name server login could get affected. Trigger relogin
+to name server when driver detects this condition.
+
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
-Reviewed-by: Bart Van Assche <Bart.VanAssche@sandisk.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c  | 32 +++++++++++++++-----------------
- drivers/scsi/qla2xxx/qla_target.h  |  4 ++--
- drivers/scsi/qla2xxx/tcm_qla2xxx.c |  2 +-
- 3 files changed, 18 insertions(+), 20 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h  |  2 ++
+ drivers/scsi/qla2xxx/qla_gs.c   | 20 ++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_init.c | 38 +++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/qla2xxx/qla_isr.c  | 17 +++++++++++++++++
+ 4 files changed, 76 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index a2e17a5794ab..a1f33b06019d 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1799,7 +1799,7 @@ static int abort_cmd_for_tag(struct scsi_qla_host *vha, uint32_t tag)
-  *     for the same lun)
-  */
- static void abort_cmds_for_lun(struct scsi_qla_host *vha,
--				uint32_t lun, uint8_t *s_id)
-+			        u64 lun, uint8_t *s_id)
- {
- 	struct qla_tgt_sess_op *op;
- 	struct qla_tgt_cmd *cmd;
-@@ -1810,7 +1810,7 @@ static void abort_cmds_for_lun(struct scsi_qla_host *vha,
- 	spin_lock_irqsave(&vha->cmd_list_lock, flags);
- 	list_for_each_entry(op, &vha->qla_sess_op_cmd_list, cmd_list) {
- 		uint32_t op_key;
--		uint32_t op_lun;
-+		u64 op_lun;
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 4127f35b669c..51b262b236b4 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -252,6 +252,8 @@
+ #define NPH_F_PORT		0x7fe		/*  FFFFFE */
+ #define NPH_IP_BROADCAST	0x7ff		/*  FFFFFF */
  
- 		op_key = sid_to_key(op->atio.u.isp24.fcp_hdr.s_id);
- 		op_lun = scsilun_to_int(
-@@ -1832,7 +1832,7 @@ static void abort_cmds_for_lun(struct scsi_qla_host *vha,
++#define NPH_SNS_LID(ha)	(IS_FWI2_CAPABLE(ha) ? NPH_SNS : SIMPLE_NAME_SERVER)
++
+ #define MAX_CMDSZ	16		/* SCSI maximum CDB size. */
+ #include "qla_fw.h"
  
- 	list_for_each_entry(cmd, &vha->qla_cmd_list, cmd_list) {
- 		uint32_t cmd_key;
--		uint32_t cmd_lun;
-+		u64 cmd_lun;
- 
- 		cmd_key = sid_to_key(cmd->atio.u.isp24.fcp_hdr.s_id);
- 		cmd_lun = scsilun_to_int(
-@@ -1850,18 +1850,15 @@ static int __qlt_24xx_handle_abts(struct scsi_qla_host *vha,
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index 5acebaf57796..ef8e8891d54f 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -124,6 +124,7 @@ qla2x00_chk_ms_status(scsi_qla_host_t *vha, ms_iocb_entry_t *ms_pkt,
+ 	int rval;
+ 	uint16_t comp_status;
  	struct qla_hw_data *ha = vha->hw;
- 	struct se_session *se_sess = sess->se_sess;
- 	struct qla_tgt_mgmt_cmd *mcmd;
-+	struct qla_tgt_cmd *cmd;
- 	struct se_cmd *se_cmd;
--	u32 lun = 0;
- 	int rc;
- 	bool found_lun = false;
- 	unsigned long flags;
++	bool lid_is_sns = false;
  
- 	spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
- 	list_for_each_entry(se_cmd, &se_sess->sess_cmd_list, se_cmd_list) {
--		struct qla_tgt_cmd *cmd =
--			container_of(se_cmd, struct qla_tgt_cmd, se_cmd);
- 		if (se_cmd->tag == abts->exchange_addr_to_abort) {
--			lun = cmd->unpacked_lun;
- 			found_lun = true;
+ 	rval = QLA_FUNCTION_FAILED;
+ 	if (ms_pkt->entry_status != 0) {
+@@ -155,6 +156,25 @@ qla2x00_chk_ms_status(scsi_qla_host_t *vha, ms_iocb_entry_t *ms_pkt,
+ 			} else
+ 				rval = QLA_SUCCESS;
  			break;
++		case CS_PORT_LOGGED_OUT:
++			if (IS_FWI2_CAPABLE(ha)) {
++				if (le16_to_cpu(ms_pkt->loop_id.extended) ==
++				    NPH_SNS)
++					lid_is_sns = true;
++			} else {
++				if (le16_to_cpu(ms_pkt->loop_id.extended) ==
++				    SIMPLE_NAME_SERVER)
++					lid_is_sns = true;
++			}
++			if (lid_is_sns) {
++				ql_dbg(ql_dbg_async, vha, 0x502b,
++					"%s failed, Name server has logged out",
++					routine);
++				rval = QLA_NOT_LOGGED_IN;
++				set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
++				set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
++			}
++			break;
+ 		default:
+ 			ql_dbg(ql_dbg_disc, vha, 0x2033,
+ 			    "%s failed, completion status (%x) on port_id: "
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index e4876f4220e4..4ea4aa5bddaa 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -1041,6 +1041,20 @@ void qla2x00_fcport_event_handler(scsi_qla_host_t *vha, struct event_arg *ea)
+ 
+ 	switch (ea->event) {
+ 	case FCME_RELOGIN:
++	case FCME_RSCN:
++	case FCME_GIDPN_DONE:
++	case FCME_GPSC_DONE:
++	case FCME_GPNID_DONE:
++		if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags) ||
++		    test_bit(LOOP_RESYNC_ACTIVE, &vha->dpc_flags))
++			return;
++		break;
++	default:
++		break;
++	}
++
++	switch (ea->event) {
++	case FCME_RELOGIN:
+ 		if (test_bit(UNLOADING, &vha->dpc_flags))
+ 			return;
+ 
+@@ -4451,20 +4465,31 @@ qla2x00_configure_fabric(scsi_qla_host_t *vha)
+ 				/* EMPTY */
+ 				ql_dbg(ql_dbg_disc, vha, 0x2045,
+ 				    "Register FC-4 TYPE failed.\n");
++				if (test_bit(LOOP_RESYNC_NEEDED,
++				    &vha->dpc_flags))
++					break;
+ 			}
+ 			if (qla2x00_rff_id(vha)) {
+ 				/* EMPTY */
+ 				ql_dbg(ql_dbg_disc, vha, 0x2049,
+ 				    "Register FC-4 Features failed.\n");
++				if (test_bit(LOOP_RESYNC_NEEDED,
++				    &vha->dpc_flags))
++					break;
+ 			}
+ 			if (qla2x00_rnn_id(vha)) {
+ 				/* EMPTY */
+ 				ql_dbg(ql_dbg_disc, vha, 0x204f,
+ 				    "Register Node Name failed.\n");
++				if (test_bit(LOOP_RESYNC_NEEDED,
++				    &vha->dpc_flags))
++					break;
+ 			} else if (qla2x00_rsnn_nn(vha)) {
+ 				/* EMPTY */
+ 				ql_dbg(ql_dbg_disc, vha, 0x2053,
+ 				    "Register Symobilic Node Name failed.\n");
++				if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
++					break;
+ 			}
  		}
-@@ -1895,12 +1892,13 @@ static int __qlt_24xx_handle_abts(struct scsi_qla_host *vha,
+ 
+@@ -4536,17 +4561,28 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha)
+ 		memset(swl, 0, ha->max_fibre_devices * sizeof(sw_info_t));
+ 		if (qla2x00_gid_pt(vha, swl) != QLA_SUCCESS) {
+ 			swl = NULL;
++			if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
++				return rval;
+ 		} else if (qla2x00_gpn_id(vha, swl) != QLA_SUCCESS) {
+ 			swl = NULL;
++			if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
++				return rval;
+ 		} else if (qla2x00_gnn_id(vha, swl) != QLA_SUCCESS) {
+ 			swl = NULL;
++			if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
++				return rval;
+ 		} else if (qla2x00_gfpn_id(vha, swl) != QLA_SUCCESS) {
+ 			swl = NULL;
++			if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
++				return rval;
+ 		}
+ 
+ 		/* If other queries succeeded probe for FC-4 type */
+-		if (swl)
++		if (swl) {
+ 			qla2x00_gff_id(vha, swl);
++			if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
++				return rval;
++		}
  	}
- 	memset(mcmd, 0, sizeof(*mcmd));
+ 	swl_idx = 0;
  
-+	cmd = container_of(se_cmd, struct qla_tgt_cmd, se_cmd);
- 	mcmd->sess = sess;
- 	memcpy(&mcmd->orig_iocb.abts, abts, sizeof(mcmd->orig_iocb.abts));
- 	mcmd->reset_count = vha->hw->chip_reset;
- 	mcmd->tmr_func = QLA_TGT_ABTS;
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 2572121b765b..1eb46eb45005 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -973,6 +973,23 @@ qla2x00_async_event(scsi_qla_host_t *vha, struct rsp_que *rsp, uint16_t *mb)
+ 			if (mb[1] == 0xffff)
+ 				goto global_port_update;
  
--	rc = ha->tgt.tgt_ops->handle_tmr(mcmd, lun, mcmd->tmr_func,
-+	rc = ha->tgt.tgt_ops->handle_tmr(mcmd, cmd->unpacked_lun, mcmd->tmr_func,
- 	    abts->exchange_addr_to_abort);
- 	if (rc != 0) {
- 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf052,
-@@ -4334,13 +4332,12 @@ static int qlt_handle_task_mgmt(struct scsi_qla_host *vha, void *iocb)
- 	struct qla_hw_data *ha = vha->hw;
- 	struct qla_tgt *tgt;
- 	struct fc_port *sess;
--	uint32_t lun, unpacked_lun;
-+	u64 unpacked_lun;
- 	int fn;
- 	unsigned long flags;
- 
- 	tgt = vha->vha_tgt.qla_tgt;
- 
--	lun = a->u.isp24.fcp_cmnd.lun;
- 	fn = a->u.isp24.fcp_cmnd.task_mgmt_flags;
- 
- 	spin_lock_irqsave(&ha->tgt.sess_lock, flags);
-@@ -4348,7 +4345,8 @@ static int qlt_handle_task_mgmt(struct scsi_qla_host *vha, void *iocb)
- 	    a->u.isp24.fcp_hdr.s_id);
- 	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
- 
--	unpacked_lun = scsilun_to_int((struct scsi_lun *)&lun);
-+	unpacked_lun =
-+	    scsilun_to_int((struct scsi_lun *)&a->u.isp24.fcp_cmnd.lun);
- 
- 	if (!sess) {
- 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf024,
-@@ -4371,7 +4369,7 @@ static int __qlt_abort_task(struct scsi_qla_host *vha,
- 	struct atio_from_isp *a = (struct atio_from_isp *)iocb;
- 	struct qla_hw_data *ha = vha->hw;
- 	struct qla_tgt_mgmt_cmd *mcmd;
--	uint32_t lun, unpacked_lun;
-+	u64 unpacked_lun;
- 	int rc;
- 
- 	mcmd = mempool_alloc(qla_tgt_mgmt_cmd_mempool, GFP_ATOMIC);
-@@ -4387,8 +4385,8 @@ static int __qlt_abort_task(struct scsi_qla_host *vha,
- 	memcpy(&mcmd->orig_iocb.imm_ntfy, iocb,
- 	    sizeof(mcmd->orig_iocb.imm_ntfy));
- 
--	lun = a->u.isp24.fcp_cmnd.lun;
--	unpacked_lun = scsilun_to_int((struct scsi_lun *)&lun);
-+	unpacked_lun =
-+	    scsilun_to_int((struct scsi_lun *)&a->u.isp24.fcp_cmnd.lun);
- 	mcmd->reset_count = vha->hw->chip_reset;
- 	mcmd->tmr_func = QLA_TGT_2G_ABORT_TASK;
- 
-@@ -5877,7 +5875,7 @@ static void qlt_tmr_work(struct qla_tgt *tgt,
- 	unsigned long flags;
- 	uint8_t *s_id = NULL; /* to hide compiler warnings */
- 	int rc;
--	uint32_t lun, unpacked_lun;
-+	u64 unpacked_lun;
- 	int fn;
- 	void *iocb;
- 
-@@ -5913,9 +5911,9 @@ static void qlt_tmr_work(struct qla_tgt *tgt,
- 	}
- 
- 	iocb = a;
--	lun = a->u.isp24.fcp_cmnd.lun;
- 	fn = a->u.isp24.fcp_cmnd.task_mgmt_flags;
--	unpacked_lun = scsilun_to_int((struct scsi_lun *)&lun);
-+	unpacked_lun =
-+	    scsilun_to_int((struct scsi_lun *)&a->u.isp24.fcp_cmnd.lun);
- 
- 	rc = qlt_issue_task_mgmt(sess, unpacked_lun, fn, iocb, 0);
- 	ha->tgt.tgt_ops->put_sess(sess);
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index dae278859554..25ea90b8f6c9 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -675,7 +675,7 @@ struct qla_tgt_func_tmpl {
- 	int (*handle_cmd)(struct scsi_qla_host *, struct qla_tgt_cmd *,
- 			unsigned char *, uint32_t, int, int, int);
- 	void (*handle_data)(struct qla_tgt_cmd *);
--	int (*handle_tmr)(struct qla_tgt_mgmt_cmd *, uint32_t, uint16_t,
-+	int (*handle_tmr)(struct qla_tgt_mgmt_cmd *, u64, uint16_t,
- 			uint32_t);
- 	void (*free_cmd)(struct qla_tgt_cmd *);
- 	void (*free_mcmd)(struct qla_tgt_mgmt_cmd *);
-@@ -884,7 +884,7 @@ struct qla_tgt_cmd {
- 	int sg_cnt;		/* SG segments count */
- 	int bufflen;		/* cmd buffer length */
- 	int offset;
--	uint32_t unpacked_lun;
-+	u64 unpacked_lun;
- 	enum dma_data_direction dma_data_direction;
- 	uint32_t reset_count;
- 
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index 1131fe8e2dd2..238abad4b481 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -595,7 +595,7 @@ static int tcm_qla2xxx_dif_tags(struct qla_tgt_cmd *cmd,
- /*
-  * Called from qla_target.c:qlt_issue_task_mgmt()
-  */
--static int tcm_qla2xxx_handle_tmr(struct qla_tgt_mgmt_cmd *mcmd, uint32_t lun,
-+static int tcm_qla2xxx_handle_tmr(struct qla_tgt_mgmt_cmd *mcmd, u64 lun,
- 	uint16_t tmr_func, uint32_t tag)
- {
- 	struct fc_port *sess = mcmd->sess;
++			if (mb[1] == NPH_SNS_LID(ha)) {
++				set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
++				set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
++				break;
++			}
++
++			/* use handle_cnt for loop id/nport handle */
++			if (IS_FWI2_CAPABLE(ha))
++				handle_cnt = NPH_SNS;
++			else
++				handle_cnt = SIMPLE_NAME_SERVER;
++			if (mb[1] == handle_cnt) {
++				set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
++				set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
++				break;
++			}
++
+ 			/* Port logout */
+ 			fcport = qla2x00_find_fcport_by_loopid(vha, mb[1]);
+ 			if (!fcport)
 -- 
 2.12.0
