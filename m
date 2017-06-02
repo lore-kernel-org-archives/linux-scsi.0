@@ -1,105 +1,97 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH-v2] target: Avoid target_shutdown_sessions loop during queue_depth change
-Date: Fri,  2 Jun 2017 03:11:33 +0000
-Message-ID: <1496373093-8852-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.com>
+Subject: Re: [PATCH] iscsi: Fix a sleep-in-atomic bug
+Date: Thu, 01 Jun 2017 20:20:03 -0700
+Message-ID: <1496373603.27407.211.camel@haakon3.risingtidesystems.com>
+References: <1496201199-3661-1-git-send-email-baijiaju1990@163.com>
+         <1496298093.27407.203.camel@haakon3.risingtidesystems.com>
+         <5930BBC1.9070608@163.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:39293 "EHLO
+        linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751130AbdFBDUF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2017 23:20:05 -0400
+In-Reply-To: <5930BBC1.9070608@163.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jia-Ju Bai <baijiaju1990@163.com>
+Cc: bart.vanassche@sandisk.com, davem@davemloft.net, hare@suse.com, elfring@users.sourceforge.net, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Fri, 2017-06-02 at 09:13 +0800, Jia-Ju Bai wrote:
+> On 06/01/2017 02:21 PM, Nicholas A. Bellinger wrote:
+> > Hi Jia-Ju,
+> >
+> > On Wed, 2017-05-31 at 11:26 +0800, Jia-Ju Bai wrote:
+> >> The driver may sleep under a spin lock, and the function call path is:
+> >> iscsit_tpg_enable_portal_group (acquire the lock by spin_lock)
+> >>    iscsi_update_param_value
+> >>      kstrdup(GFP_KERNEL) -->  may sleep
+> >>
+> >> To fix it, the "GFP_KERNEL" is replaced with "GFP_ATOMIC".
+> >>
+> >> Signed-off-by: Jia-Ju Bai<baijiaju1990@163.com>
+> >> ---
+> >>   drivers/target/iscsi/iscsi_target_parameters.c |    2 +-
+> >>   1 file changed, 1 insertion(+), 1 deletion(-)
+> > Btw, the use of tpg->tpg_state_lock in iscsit_tpg_enable_portal_group()
+> > while checking existing state and calling iscsi_update_param_value() is
+> > not necessary, since lio_target_tpg_enable_store() is already holding
+> > iscsit_get_tpg() ->  tpg->tpg_access_lock.
+> >
+> > How about the following instead to only take tpg->tpg_state_lock when
+> > updating tpg->tpg_state instead..?
+> >
+> > diff --git a/drivers/target/iscsi/iscsi_target_tpg.c b/drivers/target/iscsi/iscsi_target_tpg.c
+> > index 2e7e08d..abaabba 100644
+> > --- a/drivers/target/iscsi/iscsi_target_tpg.c
+> > +++ b/drivers/target/iscsi/iscsi_target_tpg.c
+> > @@ -311,11 +311,9 @@ int iscsit_tpg_enable_portal_group(struct iscsi_portal_group *tpg)
+> >          struct iscsi_tiqn *tiqn = tpg->tpg_tiqn;
+> >          int ret;
+> >
+> > -       spin_lock(&tpg->tpg_state_lock);
+> >          if (tpg->tpg_state == TPG_STATE_ACTIVE) {
+> >                  pr_err("iSCSI target portal group: %hu is already"
+> >                          " active, ignoring request.\n", tpg->tpgt);
+> > -               spin_unlock(&tpg->tpg_state_lock);
+> >                  return -EINVAL;
+> >          }
+> >          /*
+> > @@ -324,10 +322,8 @@ int iscsit_tpg_enable_portal_group(struct iscsi_portal_group *tpg)
+> >           * is enforced (as per default), and remove the NONE option.
+> >           */
+> >          param = iscsi_find_param_from_key(AUTHMETHOD, tpg->param_list);
+> > -       if (!param) {
+> > -               spin_unlock(&tpg->tpg_state_lock);
+> > +       if (!param)
+> >                  return -EINVAL;
+> > -       }
+> >
+> >          if (tpg->tpg_attrib.authentication) {
+> >                  if (!strcmp(param->value, NONE)) {
+> > @@ -341,6 +337,7 @@ int iscsit_tpg_enable_portal_group(struct iscsi_portal_group *tpg)
+> >                          goto err;
+> >          }
+> >
+> > +       spin_lock(&tpg->tpg_state_lock);
+> >          tpg->tpg_state = TPG_STATE_ACTIVE;
+> >          spin_unlock(&tpg->tpg_state_lock);
+> >
+> > @@ -353,7 +350,6 @@ int iscsit_tpg_enable_portal_group(struct iscsi_portal_group *tpg)
+> >          return 0;
+> >
+> >   err:
+> > -       spin_unlock(&tpg->tpg_state_lock);
+> >          return ret;
+> >   }
+> >
+> I think it is fine to me.
+> 
+> Thanks,
+> Jia-Ju Bai
 
-When target_shutdown_sessions() is invoked to shutdown all active
-sessions associated with a se_node_acl when se_node_acl->queue_depth
-is changed via core_tpg_set_initiator_node_queue_depth(), it's
-possible that new connections reconnect immediately after explicit
-shutdown occurs via target_shutdown_sessions().
+Applied with your Reported-by and Reviewed-by.
 
-Which means it's possible for the newly reconnected session with
-the proper queue_depth can be shutdown multiple times when
-target_shutdown_sessions() loops to drain all active sessions
-for all cases.
-
-This was regression was introduced by:
-
-  commit bc6e6bb470eda42f44bcac96c261cff1216577b3
-  Author: Christoph Hellwig <hch@lst.de>
-  Date:   Mon May 2 15:45:19 2016 +0200
-
-      target: consolidate and fix session shutdown
-
-To avoid this case, instead change target_shutdown_sessions() to
-pass 'do_restart' and avoid the looping drain of sessions when
-invoked via core_tpg_set_initiator_node_queue_depth(), but still
-loop during normal se_node_acl delete until all associated
-sessions have been shutdown.
-
-(v2 - go back to the original version instead of a local list,
- in order to protect list_del_init(&sess->sess_acl_list) from
- transport_deregister_session_configfs.
- Also use safe list walking in target_shutdown_sessions - nab)
-
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Mike Christie <mchristi@redhat.com>
-Cc: Hannes Reinecke <hare@suse.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_tpg.c | 16 ++++++++++------
- 1 file changed, 10 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
-index 3691373..1b2b60e 100644
---- a/drivers/target/target_core_tpg.c
-+++ b/drivers/target/target_core_tpg.c
-@@ -336,14 +336,14 @@ struct se_node_acl *core_tpg_add_initiator_node_acl(
- 	return acl;
- }
- 
--static void target_shutdown_sessions(struct se_node_acl *acl)
-+static void target_shutdown_sessions(struct se_node_acl *acl, bool do_restart)
- {
--	struct se_session *sess;
-+	struct se_session *sess, *sess_tmp;
- 	unsigned long flags;
- 
- restart:
- 	spin_lock_irqsave(&acl->nacl_sess_lock, flags);
--	list_for_each_entry(sess, &acl->acl_sess_list, sess_acl_list) {
-+	list_for_each_entry_safe(sess, sess_tmp, &acl->acl_sess_list, sess_acl_list) {
- 		if (sess->sess_tearing_down)
- 			continue;
- 
-@@ -352,7 +352,11 @@ static void target_shutdown_sessions(struct se_node_acl *acl)
- 
- 		if (acl->se_tpg->se_tpg_tfo->close_session)
- 			acl->se_tpg->se_tpg_tfo->close_session(sess);
--		goto restart;
-+
-+		if (do_restart)
-+			goto restart;
-+
-+		spin_lock_irqsave(&acl->nacl_sess_lock, flags);
- 	}
- 	spin_unlock_irqrestore(&acl->nacl_sess_lock, flags);
- }
-@@ -367,7 +371,7 @@ void core_tpg_del_initiator_node_acl(struct se_node_acl *acl)
- 	list_del(&acl->acl_list);
- 	mutex_unlock(&tpg->acl_node_mutex);
- 
--	target_shutdown_sessions(acl);
-+	target_shutdown_sessions(acl, true);
- 
- 	target_put_nacl(acl);
- 	/*
-@@ -414,7 +418,7 @@ int core_tpg_set_initiator_node_queue_depth(
- 	/*
- 	 * Shutdown all pending sessions to force session reinstatement.
- 	 */
--	target_shutdown_sessions(acl);
-+	target_shutdown_sessions(acl, false);
- 
- 	pr_debug("Successfully changed queue depth to: %d for Initiator"
- 		" Node: %s on %s Target Portal Group: %u\n", acl->queue_depth,
--- 
-1.9.1
+Thanks!
