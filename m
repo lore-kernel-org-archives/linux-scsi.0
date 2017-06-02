@@ -1,41 +1,84 @@
-From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v2 17/17] lpfc: update to revision to 11.4.0.0
-Date: Thu,  1 Jun 2017 21:07:11 -0700
-Message-ID: <20170602040711.21046-18-jsmart2021@gmail.com>
-References: <20170602040711.21046-1-jsmart2021@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:33402 "EHLO
-        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751194AbdFBEIN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jun 2017 00:08:13 -0400
-Received: by mail-qk0-f193.google.com with SMTP id c206so8290053qkb.0
-        for <linux-scsi@vger.kernel.org>; Thu, 01 Jun 2017 21:08:13 -0700 (PDT)
-In-Reply-To: <20170602040711.21046-1-jsmart2021@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Julia Lawall <julia.lawall@lip6.fr>
+Subject: Re: [PATCH] Eliminate extra 'out_free' label from fcoe_init
+ function
+Date: Fri, 2 Jun 2017 07:49:17 +0200 (CEST)
+Message-ID: <alpine.DEB.2.20.1706020748480.2312@hadrien>
+References: <a1ea0104-83ed-2249-3450-dc5c31517558@redhat.com> <20170601150233.2j6lxormywlvu7fa@mwanda> <e318d328-71f4-5212-c697-f71e5c77b660@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <e318d328-71f4-5212-c697-f71e5c77b660@redhat.com>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: "Milan P. Gandhi" <mgandhi@redhat.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Laurence Oberman <loberman@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-Set lpfc driver revision to 11.4.0.0
 
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <james.smart@broadcom.com>
----
- drivers/scsi/lpfc/lpfc_version.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
-index c2653244221c..067c9e8a4b2d 100644
---- a/drivers/scsi/lpfc/lpfc_version.h
-+++ b/drivers/scsi/lpfc/lpfc_version.h
-@@ -20,7 +20,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
- 
--#define LPFC_DRIVER_VERSION "11.2.0.14"
-+#define LPFC_DRIVER_VERSION "11.4.0.0"
- #define LPFC_DRIVER_NAME		"lpfc"
- 
- /* Used for SLI 2/3 */
--- 
-2.11.0
+On Fri, 2 Jun 2017, Milan P. Gandhi wrote:
+
+> On 06/01/2017 08:32 PM, Dan Carpenter wrote:
+> > On Thu, Jun 01, 2017 at 05:41:06PM +0530, Milan P. Gandhi wrote:
+> >> Simplify the check for return code of fcoe_if_init routine
+> >> in fcoe_init function such that we could eliminate need for
+> >> extra 'out_free' label.
+> >>
+> >> Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
+> >> ---
+> >>  drivers/scsi/fcoe/fcoe.c | 10 ++++------
+> >>  1 file changed, 4 insertions(+), 6 deletions(-)
+> >>
+> >> diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+> >> index ea21e7b..fb2a4c9 100644
+> >> --- a/drivers/scsi/fcoe/fcoe.c
+> >> +++ b/drivers/scsi/fcoe/fcoe.c
+> >> @@ -2523,13 +2523,11 @@ static int __init fcoe_init(void)
+> >>  	fcoe_dev_setup();
+> >>
+> >>  	rc = fcoe_if_init();
+> >> -	if (rc)
+> >> -		goto out_free;
+> >> -
+> >> -	mutex_unlock(&fcoe_config_mutex);
+> >> -	return 0;
+> >> +	if (rc == 0) {
+> >> +		mutex_unlock(&fcoe_config_mutex);
+> >> +		return 0;
+> >> +	}
+> >>
+> >> -out_free:
+> >>  	mutex_unlock(&fcoe_config_mutex);
+> >
+> > Gar...  Stop!  No1  Don't do this.
+> >
+> > Do failure handling, not success handling.
+> >
+> > People always think they should get creative with the last if statement
+> > in a function.  This leads to spaghetti code and it's confusing.  Please
+> > never do this again.
+> >
+> > The original is correct and the new code is bad rubbish code.
+> >
+> > regards,
+> > dan carpenter
+> >
+> >
+>
+> Oops, my bad sir. Will keep this in mind.
+
+Still, does the mutex_unlock really need to be duplicated?
+
+julia
+
+>
+> Thanks,
+> Milan.
+>
+>
+> Thanks,
+> Milan.
+> --
+> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
