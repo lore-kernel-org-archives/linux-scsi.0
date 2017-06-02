@@ -1,72 +1,67 @@
-From: "Milan P. Gandhi" <mgandhi@redhat.com>
-Subject: Re: [PATCH] Eliminate extra 'out_free' label from fcoe_init function
-Date: Fri, 2 Jun 2017 09:05:11 +0530
-Message-ID: <e318d328-71f4-5212-c697-f71e5c77b660@redhat.com>
-References: <a1ea0104-83ed-2249-3450-dc5c31517558@redhat.com>
- <20170601150233.2j6lxormywlvu7fa@mwanda>
-Reply-To: mgandhi@redhat.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <20170601150233.2j6lxormywlvu7fa@mwanda>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Laurence Oberman <loberman@redhat.com>
+From: James Smart <jsmart2021@gmail.com>
+Subject: [PATCH v2 00/17] lpfc updates for 11.4.0.0
+Date: Thu,  1 Jun 2017 21:06:54 -0700
+Message-ID: <20170602040711.21046-1-jsmart2021@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qt0-f181.google.com ([209.85.216.181]:34301 "EHLO
+        mail-qt0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750747AbdFBEH1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jun 2017 00:07:27 -0400
+Received: by mail-qt0-f181.google.com with SMTP id c13so51428063qtc.1
+        for <linux-scsi@vger.kernel.org>; Thu, 01 Jun 2017 21:07:27 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James Smart <jsmart2021@gmail.com>
 
-On 06/01/2017 08:32 PM, Dan Carpenter wrote:
-> On Thu, Jun 01, 2017 at 05:41:06PM +0530, Milan P. Gandhi wrote:
->> Simplify the check for return code of fcoe_if_init routine
->> in fcoe_init function such that we could eliminate need for
->> extra 'out_free' label.
->>
->> Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
->> ---
->>  drivers/scsi/fcoe/fcoe.c | 10 ++++------
->>  1 file changed, 4 insertions(+), 6 deletions(-)
->>
->> diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
->> index ea21e7b..fb2a4c9 100644
->> --- a/drivers/scsi/fcoe/fcoe.c
->> +++ b/drivers/scsi/fcoe/fcoe.c
->> @@ -2523,13 +2523,11 @@ static int __init fcoe_init(void)
->>  	fcoe_dev_setup();
->>  
->>  	rc = fcoe_if_init();
->> -	if (rc)
->> -		goto out_free;
->> -
->> -	mutex_unlock(&fcoe_config_mutex);
->> -	return 0;
->> +	if (rc == 0) {
->> +		mutex_unlock(&fcoe_config_mutex);
->> +		return 0;
->> +	}
->>  
->> -out_free:
->>  	mutex_unlock(&fcoe_config_mutex);
-> 
-> Gar...  Stop!  No1  Don't do this.
-> 
-> Do failure handling, not success handling.
-> 
-> People always think they should get creative with the last if statement
-> in a function.  This leads to spaghetti code and it's confusing.  Please
-> never do this again.
-> 
-> The original is correct and the new code is bad rubbish code.
-> 
-> regards,
-> dan carpenter
-> 
-> 
+This patch set provides a number of bug fixes, code cleanups, and error
+handling in lpfc.
 
-Oops, my bad sir. Will keep this in mind.
+The patches were cut against the Martin's 4.12/scsi-fixes tree.
+There are no outside dependencies. The patches should merge via
+Martin's tree. 
 
-Thanks,
-Milan.
+Version 2 is a recut against scsi-fixes and includes 2 additional
+patches (Coverity scan and EQ delay).
 
+James Smart (17):
+  lpfc: Add nvme initiator devloss support
+  lpfc: Fix transition nvme-i rport handling to nport only.
+  lpfc: Fix nvme port role handling in sysfs and debugfs handlers.
+  lpfc: Add changes to assist in NVMET debugging
+  lpfc: Fix Lun Priority level shown as NA
+  lpfc: Fix nvmet node ref count handling
+  lpfc: Fix Port going offline after multiple resets.
+  lpfc: Fix counters so outstandng NVME IO count is accurate
+  lpfc: Fix return value of board_mode store routine in case of online
+    failure
+  lpfc: Fix crash on powering off BFS VM with passthrough device
+  lpfc: Fix System panic after loading the driver
+  lpfc: Null pointer dereference when log_verbose is set to 0xffffffff
+  lpfc: Fix PRLI retry handling when target rejects it.
+  lpfc: Fix vports not logging into target
+  lpfc: Fix defects reported by Coverity Scan
+  lpfc: Add auto EQ delay logic
+  lpfc: update to revision to 11.4.0.0
 
-Thanks,
-Milan.
+ drivers/scsi/lpfc/lpfc.h         |  23 +++--
+ drivers/scsi/lpfc/lpfc_attr.c    |  94 +++++++++++------
+ drivers/scsi/lpfc/lpfc_ct.c      |  31 +++---
+ drivers/scsi/lpfc/lpfc_debugfs.c |  76 ++++++++------
+ drivers/scsi/lpfc/lpfc_els.c     |  17 ++-
+ drivers/scsi/lpfc/lpfc_hbadisc.c |  14 +--
+ drivers/scsi/lpfc/lpfc_hw4.h     |  14 +++
+ drivers/scsi/lpfc/lpfc_init.c    | 125 ++++++++++++++++++++--
+ drivers/scsi/lpfc/lpfc_nvme.c    | 178 ++++++++++++--------------------
+ drivers/scsi/lpfc/lpfc_nvme.h    |   2 -
+ drivers/scsi/lpfc/lpfc_nvmet.c   | 218 ++++++++++++++++++++++++++-------------
+ drivers/scsi/lpfc/lpfc_nvmet.h   |  14 +--
+ drivers/scsi/lpfc/lpfc_scsi.c    |  19 +++-
+ drivers/scsi/lpfc/lpfc_sli.c     |  79 +++++++++-----
+ drivers/scsi/lpfc/lpfc_sli.h     |   1 +
+ drivers/scsi/lpfc/lpfc_sli4.h    |  12 ++-
+ drivers/scsi/lpfc/lpfc_version.h |   2 +-
+ 17 files changed, 588 insertions(+), 331 deletions(-)
+
+-- 
+2.11.0
