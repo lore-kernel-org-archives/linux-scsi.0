@@ -1,31 +1,62 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH net-next 0/4] qed: Enhance storage APIs
-Date: Fri, 02 Jun 2017 10:36:39 -0400 (EDT)
-Message-ID: <20170602.103639.467332997454061541.davem@davemloft.net>
-References: <20170602055833.21814-1-Yuval.Mintz@cavium.com>
+From: Julia Lawall <julia.lawall@lip6.fr>
+Subject: Re: [PATCH RESEND] Eliminate extra 'out_free' label from fcoe_init
+ function
+Date: Fri, 2 Jun 2017 18:06:49 +0200 (CEST)
+Message-ID: <alpine.DEB.2.20.1706021806010.19640@hadrien>
+References: <8e1e75c4-3a80-00c3-2697-37fb1c86f7a1@redhat.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20170602055833.21814-1-Yuval.Mintz@cavium.com>
-Sender: netdev-owner@vger.kernel.org
-To: Yuval.Mintz@cavium.com
-Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, nilesh.javali@cavium.com, chad.dupuis@cavium.com, saurav.kashyap@cavium.com
+Content-Type: text/plain; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:25390
+        "EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750955AbdFBQGw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jun 2017 12:06:52 -0400
+In-Reply-To: <8e1e75c4-3a80-00c3-2697-37fb1c86f7a1@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Milan P. Gandhi" <mgandhi@redhat.com>
+Cc: Johannes Thumshirn <jth@kernel.org>, Dan Carpenter <dan.carpenter@oracle.com>, Laurence Oberman <loberman@redhat.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-From: Yuval Mintz <Yuval.Mintz@cavium.com>
-Date: Fri, 2 Jun 2017 08:58:29 +0300
 
-> This series is intended to add additional information and features
-> to the API between qed and its storage protocol drivers [qedi, qedf].
-> 
-> Patch #2 adds some information stored on device such as wwpn & wwnn
-> to allow qedf utilize it; #1 fixes an issue with the reading of those
-> values [which were unused until now].
-> 
-> Patch #3 would allow the protocol drivers access to images on persistent
-> storage which is a prerequirement for adding boot from SAN support.
-> 
-> Patch #4 adds infrastrucutre to a future feature for qedi.
 
-Series applied.
+On Fri, 2 Jun 2017, Milan P. Gandhi wrote:
+
+> Simplify the check for return code of fcoe_if_init routine
+> in fcoe_init function such that we could eliminate need for
+> extra 'out_free' label and duplicate mutex_unlock statement.
+>
+> Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
+> ---
+>  drivers/scsi/fcoe/fcoe.c | 7 +++----
+>  1 file changed, 3 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+> index ea21e7b..a2cf3d0 100644
+> --- a/drivers/scsi/fcoe/fcoe.c
+> +++ b/drivers/scsi/fcoe/fcoe.c
+> @@ -2523,14 +2523,13 @@ static int __init fcoe_init(void)
+>  	fcoe_dev_setup();
+>
+>  	rc = fcoe_if_init();
+> +	mutex_unlock(&fcoe_config_mutex);
+> +
+>  	if (rc)
+> -		goto out_free;
+> +		goto out_destroy;
+>
+> -	mutex_unlock(&fcoe_config_mutex);
+
+That's what I was thinking of, but it's not a RESEND, but rather a v2.
+You need to explain under the --- what is the change since the original
+submission.
+
+julia
+
+>  	return 0;
+>
+> -out_free:
+> -	mutex_unlock(&fcoe_config_mutex);
+>  out_destroy:
+>  	destroy_workqueue(fcoe_wq);
+>  	return rc;
+>
