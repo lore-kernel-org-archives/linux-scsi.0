@@ -1,159 +1,19 @@
-From: Yuval Mintz <Yuval.Mintz@cavium.com>
-Subject: [PATCH net-next 4/4] qed: Add support for changing iSCSI mac
-Date: Fri, 2 Jun 2017 08:58:33 +0300
-Message-ID: <20170602055833.21814-5-Yuval.Mintz@cavium.com>
-References: <20170602055833.21814-1-Yuval.Mintz@cavium.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2 01/12] Avoid that scsi_exit_rq() triggers a
+        use-after-free
+Date: Fri, 2 Jun 2017 09:16:04 +0200
+Message-ID: <20170602071604.GA560@lst.de>
+References: <20170601232711.29062-1-bart.vanassche@sandisk.com> <20170601232711.29062-2-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0073.outbound.protection.outlook.com ([104.47.38.73]:47491
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751208AbdFBF7l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 2 Jun 2017 01:59:41 -0400
-In-Reply-To: <20170602055833.21814-1-Yuval.Mintz@cavium.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170601232711.29062-2-bart.vanassche@sandisk.com>
+Sender: stable-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Scott Bauer <scott.bauer@intel.com>, Jan Kara <jack@suse.cz>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: netdev@vger.kernel.org, davem@davemloft.net
-Cc: linux-scsi@vger.kernel.org, nilesh.javali@cavium.com, chad.dupuis@cavium.com, saurav.kashyap@cavium.com, Yuval Mintz <Yuval.Mintz@cavium.com>
 
-Enhance API between qedi and qed, allowing qedi to inform device's
-firmware when the iSCSI mac is to be changed.
+Looks fine,
 
-Signed-off-by: Yuval Mintz <Yuval.Mintz@cavium.com>
----
- drivers/net/ethernet/qlogic/qed/qed_iscsi.c | 66 +++++++++++++++++++++++++++++
- drivers/net/ethernet/qlogic/qed/qed_sp.h    |  1 +
- include/linux/qed/qed_iscsi_if.h            |  7 +++
- 3 files changed, 74 insertions(+)
-
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_iscsi.c b/drivers/net/ethernet/qlogic/qed/qed_iscsi.c
-index bc8ce09..787f66e 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_iscsi.c
-+++ b/drivers/net/ethernet/qlogic/qed/qed_iscsi.c
-@@ -488,6 +488,54 @@ static int qed_sp_iscsi_conn_update(struct qed_hwfn *p_hwfn,
- 	return qed_spq_post(p_hwfn, p_ent, NULL);
- }
- 
-+static int
-+qed_sp_iscsi_mac_update(struct qed_hwfn *p_hwfn,
-+			struct qed_iscsi_conn *p_conn,
-+			enum spq_mode comp_mode,
-+			struct qed_spq_comp_cb *p_comp_addr)
-+{
-+	struct iscsi_spe_conn_mac_update *p_ramrod = NULL;
-+	struct qed_spq_entry *p_ent = NULL;
-+	struct qed_sp_init_data init_data;
-+	int rc = -EINVAL;
-+	u8 ucval;
-+
-+	/* Get SPQ entry */
-+	memset(&init_data, 0, sizeof(init_data));
-+	init_data.cid = p_conn->icid;
-+	init_data.opaque_fid = p_hwfn->hw_info.opaque_fid;
-+	init_data.comp_mode = comp_mode;
-+	init_data.p_comp_data = p_comp_addr;
-+
-+	rc = qed_sp_init_request(p_hwfn, &p_ent,
-+				 ISCSI_RAMROD_CMD_ID_MAC_UPDATE,
-+				 PROTOCOLID_ISCSI, &init_data);
-+	if (rc)
-+		return rc;
-+
-+	p_ramrod = &p_ent->ramrod.iscsi_conn_mac_update;
-+	p_ramrod->hdr.op_code = ISCSI_RAMROD_CMD_ID_MAC_UPDATE;
-+	SET_FIELD(p_ramrod->hdr.flags,
-+		  ISCSI_SLOW_PATH_HDR_LAYER_CODE, p_conn->layer_code);
-+
-+	p_ramrod->conn_id = cpu_to_le16(p_conn->conn_id);
-+	p_ramrod->fw_cid = cpu_to_le32(p_conn->icid);
-+	ucval = p_conn->remote_mac[1];
-+	((u8 *)(&p_ramrod->remote_mac_addr_hi))[0] = ucval;
-+	ucval = p_conn->remote_mac[0];
-+	((u8 *)(&p_ramrod->remote_mac_addr_hi))[1] = ucval;
-+	ucval = p_conn->remote_mac[3];
-+	((u8 *)(&p_ramrod->remote_mac_addr_mid))[0] = ucval;
-+	ucval = p_conn->remote_mac[2];
-+	((u8 *)(&p_ramrod->remote_mac_addr_mid))[1] = ucval;
-+	ucval = p_conn->remote_mac[5];
-+	((u8 *)(&p_ramrod->remote_mac_addr_lo))[0] = ucval;
-+	ucval = p_conn->remote_mac[4];
-+	((u8 *)(&p_ramrod->remote_mac_addr_lo))[1] = ucval;
-+
-+	return qed_spq_post(p_hwfn, p_ent, NULL);
-+}
-+
- static int qed_sp_iscsi_conn_terminate(struct qed_hwfn *p_hwfn,
- 				       struct qed_iscsi_conn *p_conn,
- 				       enum spq_mode comp_mode,
-@@ -1324,6 +1372,23 @@ static int qed_iscsi_stats(struct qed_dev *cdev, struct qed_iscsi_stats *stats)
- 	return qed_iscsi_get_stats(QED_LEADING_HWFN(cdev), stats);
- }
- 
-+static int qed_iscsi_change_mac(struct qed_dev *cdev,
-+				u32 handle, const u8 *mac)
-+{
-+	struct qed_hash_iscsi_con *hash_con;
-+
-+	hash_con = qed_iscsi_get_hash(cdev, handle);
-+	if (!hash_con) {
-+		DP_NOTICE(cdev, "Failed to find connection for handle %d\n",
-+			  handle);
-+		return -EINVAL;
-+	}
-+
-+	return qed_sp_iscsi_mac_update(QED_LEADING_HWFN(cdev),
-+				       hash_con->con,
-+				       QED_SPQ_MODE_EBLOCK, NULL);
-+}
-+
- void qed_get_protocol_stats_iscsi(struct qed_dev *cdev,
- 				  struct qed_mcp_iscsi_stats *stats)
- {
-@@ -1358,6 +1423,7 @@ static const struct qed_iscsi_ops qed_iscsi_ops_pass = {
- 	.destroy_conn = &qed_iscsi_destroy_conn,
- 	.clear_sq = &qed_iscsi_clear_conn_sq,
- 	.get_stats = &qed_iscsi_stats,
-+	.change_mac = &qed_iscsi_change_mac,
- };
- 
- const struct qed_iscsi_ops *qed_get_iscsi_ops(void)
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_sp.h b/drivers/net/ethernet/qlogic/qed/qed_sp.h
-index b9464f3..00dd50f 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_sp.h
-+++ b/drivers/net/ethernet/qlogic/qed/qed_sp.h
-@@ -120,6 +120,7 @@ union ramrod_data {
- 	struct iscsi_spe_func_dstry iscsi_destroy;
- 	struct iscsi_spe_conn_offload iscsi_conn_offload;
- 	struct iscsi_conn_update_ramrod_params iscsi_conn_update;
-+	struct iscsi_spe_conn_mac_update iscsi_conn_mac_update;
- 	struct iscsi_spe_conn_termination iscsi_conn_terminate;
- 
- 	struct vf_start_ramrod_data vf_start;
-diff --git a/include/linux/qed/qed_iscsi_if.h b/include/linux/qed/qed_iscsi_if.h
-index 3414649..111e606 100644
---- a/include/linux/qed/qed_iscsi_if.h
-+++ b/include/linux/qed/qed_iscsi_if.h
-@@ -210,6 +210,11 @@ struct qed_iscsi_cb_ops {
-  *			@param stats - pointer to struck that would be filled
-  *				we stats
-  *			@return 0 on success, error otherwise.
-+ * @change_mac		Change MAC of interface
-+ *			@param cdev
-+ *			@param handle - the connection handle.
-+ *			@param mac - new MAC to configure.
-+ *			@return 0 on success, otherwise error value.
-  */
- struct qed_iscsi_ops {
- 	const struct qed_common_ops *common;
-@@ -248,6 +253,8 @@ struct qed_iscsi_ops {
- 
- 	int (*get_stats)(struct qed_dev *cdev,
- 			 struct qed_iscsi_stats *stats);
-+
-+	int (*change_mac)(struct qed_dev *cdev, u32 handle, const u8 *mac);
- };
- 
- const struct qed_iscsi_ops *qed_get_iscsi_ops(void);
--- 
-2.9.4
+Reviewed-by: Christoph Hellwig <hch@lst.de>
