@@ -1,95 +1,105 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH v3 3/9] blk-mq: use the introduced
- blk_mq_unquiesce_queue()
-Date: Fri, 2 Jun 2017 10:00:42 +0800
-Message-ID: <20170602020041.GE30505@ming.t460p>
-References: <20170531123706.20885-1-ming.lei@redhat.com>
- <20170531123706.20885-4-ming.lei@redhat.com>
- <1496244100.2608.3.camel@sandisk.com>
- <20170601005423.GA23563@ming.t460p>
- <1496358538.3075.12.camel@sandisk.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1496358538.3075.12.camel@sandisk.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "axboe@fb.com" <axboe@fb.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH-v2] target: Avoid target_shutdown_sessions loop during queue_depth change
+Date: Fri,  2 Jun 2017 03:11:33 +0000
+Message-ID: <1496373093-8852-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jun 01, 2017 at 11:09:00PM +0000, Bart Van Assche wrote:
-> On Thu, 2017-06-01 at 08:54 +0800, Ming Lei wrote:
-> > On Wed, May 31, 2017 at 03:21:41PM +0000, Bart Van Assche wrote:
-> > > On Wed, 2017-05-31 at 20:37 +0800, Ming Lei wrote:
-> > > > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> > > > index 99e16ac479e3..ffcf05765e2b 100644
-> > > > --- a/drivers/scsi/scsi_lib.c
-> > > > +++ b/drivers/scsi/scsi_lib.c
-> > > > @@ -3031,7 +3031,10 @@ scsi_internal_device_unblock(struct scsi_device *sdev,
-> > > >  		return -EINVAL;
-> > > >  
-> > > >  	if (q->mq_ops) {
-> > > > -		blk_mq_start_stopped_hw_queues(q, false);
-> > > > +		if (blk_queue_quiesced(q))
-> > > > +			blk_mq_unquiesce_queue(q);
-> > > > +		else
-> > > > +			blk_mq_start_stopped_hw_queues(q, false);
-> > > >  	} else {
-> > > >  		spin_lock_irqsave(q->queue_lock, flags);
-> > > >  		blk_start_queue(q);
-> > > 
-> > > As I commented on v2, this change is really wrong. All what's needed here is
-> > > a call to blk_mq_unquiesce_queue() and nothing else. Adding a call to
-> > > blk_mq_start_stopped_hw_queues() is wrong because it makes it impossible to
-> > > use the STOPPED flag in the SCSI core to make the block layer core stop calling
-> > > .queue_rq() if a SCSI LLD returns "busy".
-> > 
-> > I am not sure if I understand your idea, could you explain a bit why it is wrong?
-> > 
-> > Let's see the function of scsi_internal_device_block():
-> > 
-> > 	if (q->mq_ops) {
-> >                 if (wait)
-> >                         blk_mq_quiesce_queue(q);
-> >                 else
-> >                         blk_mq_stop_hw_queues(q);
-> > 	}
-> > 
-> > So the queue may be put into quiesced if 'wait' is true, or it is
-> > stopped if 'wait' is false.
-> > 
-> > And this patch just makes the two SCSI APIs symmetrical.
-> > 
-> > Since we will not stop queue in blk_mq_quiesce_queue() later,
-> > I have to unquiese one queue only if it is quiesced.
-> > 
-> > So suppose the queue is put into stopped in scsi_internal_device_block(),
-> > do we expect not to restart it in scsi_internal_device_unblock() via
-> > blk_mq_unquiesce_queue()?
-> 
-> Hello Ming,
-> 
-> My opinion is that scsi_internal_device_block() and scsi_internal_device_unblock()
-> should be changed as follows for the scsi-mq code path:
-> * scsi_internal_device_block() should call blk_mq_quiesce_queue(q) if the "wait"
->   argument is true and should set the QUEUE_FLAG_QUIESCED flag if the "wait"
->   argument is false.
-> * scsi_internal_device_unblock() should call blk_mq_unquiesce_queue().
-> 
-> I am aware it sounds weird to set the QUEUE_FLAG_QUIESCED flag without waiting
-> until ongoing .queue_rq() calls have finished. The only driver that triggers
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This way may break the contract of blk_mq_quiesce_queue() and is really weird.
-And the above change shouldn't be related with this patchset, so better
-to do whatever you want once this patch is merged.
+When target_shutdown_sessions() is invoked to shutdown all active
+sessions associated with a se_node_acl when se_node_acl->queue_depth
+is changed via core_tpg_set_initiator_node_queue_depth(), it's
+possible that new connections reconnect immediately after explicit
+shutdown occurs via target_shutdown_sessions().
 
-This patchset won't break current SCSI uses of blk_mq_quiesce_queue() and
-won't cause regression, and I setup one iSCSI target yesterday and it works
-just fine, how about just keeping this patch as it is?
+Which means it's possible for the newly reconnected session with
+the proper queue_depth can be shutdown multiple times when
+target_shutdown_sessions() loops to drain all active sessions
+for all cases.
 
-Once it is merged, you can figure out one perfect solution, but
-the contract of blk_mq_quiesce_queue() still shouldn't be broken.
+This was regression was introduced by:
 
-Thanks,
-Ming
+  commit bc6e6bb470eda42f44bcac96c261cff1216577b3
+  Author: Christoph Hellwig <hch@lst.de>
+  Date:   Mon May 2 15:45:19 2016 +0200
+
+      target: consolidate and fix session shutdown
+
+To avoid this case, instead change target_shutdown_sessions() to
+pass 'do_restart' and avoid the looping drain of sessions when
+invoked via core_tpg_set_initiator_node_queue_depth(), but still
+loop during normal se_node_acl delete until all associated
+sessions have been shutdown.
+
+(v2 - go back to the original version instead of a local list,
+ in order to protect list_del_init(&sess->sess_acl_list) from
+ transport_deregister_session_configfs.
+ Also use safe list walking in target_shutdown_sessions - nab)
+
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Mike Christie <mchristi@redhat.com>
+Cc: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_tpg.c | 16 ++++++++++------
+ 1 file changed, 10 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
+index 3691373..1b2b60e 100644
+--- a/drivers/target/target_core_tpg.c
++++ b/drivers/target/target_core_tpg.c
+@@ -336,14 +336,14 @@ struct se_node_acl *core_tpg_add_initiator_node_acl(
+ 	return acl;
+ }
+ 
+-static void target_shutdown_sessions(struct se_node_acl *acl)
++static void target_shutdown_sessions(struct se_node_acl *acl, bool do_restart)
+ {
+-	struct se_session *sess;
++	struct se_session *sess, *sess_tmp;
+ 	unsigned long flags;
+ 
+ restart:
+ 	spin_lock_irqsave(&acl->nacl_sess_lock, flags);
+-	list_for_each_entry(sess, &acl->acl_sess_list, sess_acl_list) {
++	list_for_each_entry_safe(sess, sess_tmp, &acl->acl_sess_list, sess_acl_list) {
+ 		if (sess->sess_tearing_down)
+ 			continue;
+ 
+@@ -352,7 +352,11 @@ static void target_shutdown_sessions(struct se_node_acl *acl)
+ 
+ 		if (acl->se_tpg->se_tpg_tfo->close_session)
+ 			acl->se_tpg->se_tpg_tfo->close_session(sess);
+-		goto restart;
++
++		if (do_restart)
++			goto restart;
++
++		spin_lock_irqsave(&acl->nacl_sess_lock, flags);
+ 	}
+ 	spin_unlock_irqrestore(&acl->nacl_sess_lock, flags);
+ }
+@@ -367,7 +371,7 @@ void core_tpg_del_initiator_node_acl(struct se_node_acl *acl)
+ 	list_del(&acl->acl_list);
+ 	mutex_unlock(&tpg->acl_node_mutex);
+ 
+-	target_shutdown_sessions(acl);
++	target_shutdown_sessions(acl, true);
+ 
+ 	target_put_nacl(acl);
+ 	/*
+@@ -414,7 +418,7 @@ int core_tpg_set_initiator_node_queue_depth(
+ 	/*
+ 	 * Shutdown all pending sessions to force session reinstatement.
+ 	 */
+-	target_shutdown_sessions(acl);
++	target_shutdown_sessions(acl, false);
+ 
+ 	pr_debug("Successfully changed queue depth to: %d for Initiator"
+ 		" Node: %s on %s Target Portal Group: %u\n", acl->queue_depth,
+-- 
+1.9.1
