@@ -1,196 +1,133 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v2 02/17] lpfc: Fix transition nvme-i rport handling to nport only.
-Date: Thu,  1 Jun 2017 21:06:56 -0700
-Message-ID: <20170602040711.21046-3-jsmart2021@gmail.com>
+Subject: [PATCH v2 03/17] lpfc: Fix nvme port role handling in sysfs and debugfs handlers.
+Date: Thu,  1 Jun 2017 21:06:57 -0700
+Message-ID: <20170602040711.21046-4-jsmart2021@gmail.com>
 References: <20170602040711.21046-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:33240 "EHLO
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:33937 "EHLO
         mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750826AbdFBEHd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jun 2017 00:07:33 -0400
-Received: by mail-qk0-f194.google.com with SMTP id c206so8288858qkb.0
-        for <linux-scsi@vger.kernel.org>; Thu, 01 Jun 2017 21:07:33 -0700 (PDT)
+        with ESMTP id S1750826AbdFBEHf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jun 2017 00:07:35 -0400
+Received: by mail-qk0-f194.google.com with SMTP id d14so5094842qkb.1
+        for <linux-scsi@vger.kernel.org>; Thu, 01 Jun 2017 21:07:35 -0700 (PDT)
 In-Reply-To: <20170602040711.21046-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-As the devloss API was implemented in the
-nvmei driver, an evaluation of the nvme transport
-and the lpfc driver showed dual management of the
-rports.  This creates a bug possibility when the
-thread count and SAN size increases.
+While debugging Devloss and recovery, debugfs and sysfs
+were found to not show the NVME port roles consistently.
 
-The nvmei driver code was based on a very
-early transport and was not revisited until the
-devloss API was introduced.
+The port role FC_PORT_ROLE_NVME_DISCOVERY was added with
+the devloss bringup and the other issues were just oversight.
 
-Remove the listhead in the driver's rport
-data structure and the listhead in the driver's
-lport data structure.  Remove all rport_list
-traversal.  Convert the driver to use the
-nrport (nvme rport) pointer that is now NULL
-or nonNULL depending on a devloss action.  Convert
-debugfs and nvme_info in sysfs to use the fc_nodes
-list in the vport.
+Add NVME Target and DISCSRVC to debugfs nodeinfo and sysfs
+nvme info handlers. The full port role was added to the NVME
+data only not the generic nodelist.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_attr.c    | 11 ++++++-----
- drivers/scsi/lpfc/lpfc_debugfs.c | 10 +++++-----
- drivers/scsi/lpfc/lpfc_nvme.c    | 18 ------------------
- drivers/scsi/lpfc/lpfc_nvme.h    |  2 --
- 4 files changed, 11 insertions(+), 30 deletions(-)
+ drivers/scsi/lpfc/lpfc_attr.c    | 22 ++++++++++------------
+ drivers/scsi/lpfc/lpfc_debugfs.c | 32 ++++++++++++++++++--------------
+ 2 files changed, 28 insertions(+), 26 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 37f258fcf6d4..6d9b83cd82a2 100644
+index 6d9b83cd82a2..200a614bb540 100644
 --- a/drivers/scsi/lpfc/lpfc_attr.c
 +++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -148,8 +148,7 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
- 	struct lpfc_hba   *phba = vport->phba;
- 	struct lpfc_nvmet_tgtport *tgtp;
- 	struct nvme_fc_local_port *localport;
--	struct lpfc_nvme_lport *lport;
--	struct lpfc_nvme_rport *rport;
-+	struct lpfc_nodelist *ndlp;
- 	struct nvme_fc_remote_port *nrport;
- 	char *statep;
- 	int len = 0;
-@@ -265,7 +264,6 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
- 	len = snprintf(buf, PAGE_SIZE, "NVME Initiator Enabled\n");
+@@ -312,25 +312,23 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+ 		len += snprintf(buf + len, PAGE_SIZE - len, "DID x%06x ",
+ 				nrport->port_id);
  
- 	spin_lock_irq(shost->host_lock);
--	lport = (struct lpfc_nvme_lport *)localport->private;
- 
- 	/* Port state is only one of two values for now. */
- 	if (localport->port_id)
-@@ -281,9 +279,12 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
- 			wwn_to_u64(vport->fc_nodename.u.wwn),
- 			localport->port_id, statep);
- 
--	list_for_each_entry(rport, &lport->rport_list, list) {
-+	list_for_each_entry(ndlp, &vport->fc_nodes, nlp_listp) {
-+		if (!ndlp->nrport)
-+			continue;
+-		switch (nrport->port_role) {
+-		case FC_PORT_ROLE_NVME_INITIATOR:
++		/* An NVME rport can have multiple roles. */
++		if (nrport->port_role & FC_PORT_ROLE_NVME_INITIATOR)
+ 			len +=  snprintf(buf + len, PAGE_SIZE - len,
+ 					 "INITIATOR ");
+-			break;
+-		case FC_PORT_ROLE_NVME_TARGET:
++		if (nrport->port_role & FC_PORT_ROLE_NVME_TARGET)
+ 			len +=  snprintf(buf + len, PAGE_SIZE - len,
+ 					 "TARGET ");
+-			break;
+-		case FC_PORT_ROLE_NVME_DISCOVERY:
++		if (nrport->port_role & FC_PORT_ROLE_NVME_DISCOVERY)
+ 			len +=  snprintf(buf + len, PAGE_SIZE - len,
+-					 "DISCOVERY ");
+-			break;
+-		default:
++					 "DISCSRVC ");
++		if (nrport->port_role & ~(FC_PORT_ROLE_NVME_INITIATOR |
++					  FC_PORT_ROLE_NVME_TARGET |
++					  FC_PORT_ROLE_NVME_DISCOVERY))
+ 			len +=  snprintf(buf + len, PAGE_SIZE - len,
+-					 "UNKNOWN_ROLE x%x",
++					 "UNKNOWN ROLE x%x",
+ 					 nrport->port_role);
+-			break;
+-		}
 +
- 		/* local short-hand pointer. */
--		nrport = rport->remoteport;
-+		nrport = ndlp->nrport->remoteport;
- 
- 		/* Port state is only one of two values for now. */
- 		switch (nrport->port_state) {
+ 		len +=  snprintf(buf + len, PAGE_SIZE - len, "%s  ", statep);
+ 		/* Terminate the string. */
+ 		len +=  snprintf(buf + len, PAGE_SIZE - len, "\n");
 diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index 4bcb92c844ca..d71bda24b08e 100644
+index d71bda24b08e..dd8598bc50f3 100644
 --- a/drivers/scsi/lpfc/lpfc_debugfs.c
 +++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -550,8 +550,6 @@ lpfc_debugfs_nodelist_data(struct lpfc_vport *vport, char *buf, int size)
- 	struct lpfc_nodelist *ndlp;
- 	unsigned char *statep;
- 	struct nvme_fc_local_port *localport;
--	struct lpfc_nvme_lport *lport;
--	struct lpfc_nvme_rport *rport;
- 	struct lpfc_nvmet_tgtport *tgtp;
- 	struct nvme_fc_remote_port *nrport;
- 
-@@ -660,7 +658,6 @@ lpfc_debugfs_nodelist_data(struct lpfc_vport *vport, char *buf, int size)
- 		goto out_exit;
- 
- 	spin_lock_irq(shost->host_lock);
--	lport = (struct lpfc_nvme_lport *)localport->private;
- 
- 	/* Port state is only one of two values for now. */
- 	if (localport->port_id)
-@@ -673,9 +670,12 @@ lpfc_debugfs_nodelist_data(struct lpfc_vport *vport, char *buf, int size)
- 			localport->port_id, statep);
- 
- 	len += snprintf(buf + len, size - len, "\tRport List:\n");
--	list_for_each_entry(rport, &lport->rport_list, list) {
-+	list_for_each_entry(ndlp, &vport->fc_nodes, nlp_listp) {
- 		/* local short-hand pointer. */
--		nrport = rport->remoteport;
-+		if (!ndlp->nrport)
-+			continue;
+@@ -621,6 +621,13 @@ lpfc_debugfs_nodelist_data(struct lpfc_vport *vport, char *buf, int size)
+ 				ndlp->nlp_sid);
+ 		if (ndlp->nlp_type & NLP_FCP_INITIATOR)
+ 			len += snprintf(buf+len, size-len, "FCP_INITIATOR ");
++		if (ndlp->nlp_type & NLP_NVME_TARGET)
++			len += snprintf(buf + len,
++					size - len, "NVME_TGT sid:%d ",
++					NLP_NO_SID);
++		if (ndlp->nlp_type & NLP_NVME_INITIATOR)
++			len += snprintf(buf + len,
++					size - len, "NVME_INITIATOR ");
+ 		len += snprintf(buf+len, size-len, "usgmap:%x ",
+ 			ndlp->nlp_usg_map);
+ 		len += snprintf(buf+len, size-len, "refcnt:%x",
+@@ -698,26 +705,23 @@ lpfc_debugfs_nodelist_data(struct lpfc_vport *vport, char *buf, int size)
+ 				nrport->port_name);
+ 		len += snprintf(buf + len, size - len, "WWNN x%llx ",
+ 				nrport->node_name);
+-		switch (nrport->port_role) {
+-		case FC_PORT_ROLE_NVME_INITIATOR:
 +
-+		nrport = ndlp->nrport->remoteport;
- 
- 		/* Port state is only one of two values for now. */
- 		switch (nrport->port_state) {
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 70675fd7d884..ede42411e57b 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -191,7 +191,6 @@ lpfc_nvme_remoteport_delete(struct nvme_fc_remote_port *remoteport)
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
- 			"6146 remoteport delete complete %p\n",
- 			remoteport);
--	list_del(&rport->list);
- 	ndlp->nrport = NULL;
- 	lpfc_nlp_put(ndlp);
- 
-@@ -2208,7 +2207,6 @@ lpfc_nvme_create_localport(struct lpfc_vport *vport)
- 		lport = (struct lpfc_nvme_lport *)localport->private;
- 		vport->localport = localport;
- 		lport->vport = vport;
--		INIT_LIST_HEAD(&lport->rport_list);
- 		vport->nvmei_support = 1;
- 		len  = lpfc_new_nvme_buf(vport, phba->sli4_hba.nvme_xri_max);
- 		vport->phba->total_nvme_bufs += len;
-@@ -2233,7 +2231,6 @@ lpfc_nvme_destroy_localport(struct lpfc_vport *vport)
- #if (IS_ENABLED(CONFIG_NVME_FC))
- 	struct nvme_fc_local_port *localport;
- 	struct lpfc_nvme_lport *lport;
--	struct lpfc_nvme_rport *rport = NULL, *rport_next = NULL;
- 	int ret;
- 
- 	if (vport->nvmei_support == 0)
-@@ -2246,19 +2243,6 @@ lpfc_nvme_destroy_localport(struct lpfc_vport *vport)
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME,
- 			 "6011 Destroying NVME localport %p\n",
- 			 localport);
--	list_for_each_entry_safe(rport, rport_next, &lport->rport_list, list) {
--		/* The last node ref has to get released now before the rport
--		 * private memory area is released by the transport.
--		 */
--		list_del(&rport->list);
++		/* An NVME rport can have multiple roles. */
++		if (nrport->port_role & FC_PORT_ROLE_NVME_INITIATOR)
+ 			len +=  snprintf(buf + len, size - len,
+-					 "NVME INITIATOR ");
+-			break;
+-		case FC_PORT_ROLE_NVME_TARGET:
++					 "INITIATOR ");
++		if (nrport->port_role & FC_PORT_ROLE_NVME_TARGET)
+ 			len +=  snprintf(buf + len, size - len,
+-					 "NVME TARGET ");
+-			break;
+-		case FC_PORT_ROLE_NVME_DISCOVERY:
++					 "TARGET ");
++		if (nrport->port_role & FC_PORT_ROLE_NVME_DISCOVERY)
+ 			len +=  snprintf(buf + len, size - len,
+-					 "NVME DISCOVERY ");
+-			break;
+-		default:
++					 "DISCSRVC ");
++		if (nrport->port_role & ~(FC_PORT_ROLE_NVME_INITIATOR |
++					  FC_PORT_ROLE_NVME_TARGET |
++					  FC_PORT_ROLE_NVME_DISCOVERY))
+ 			len +=  snprintf(buf + len, size - len,
+ 					 "UNKNOWN ROLE x%x",
+ 					 nrport->port_role);
+-			break;
+-		}
 -
--		init_completion(&rport->rport_unreg_done);
--		ret = nvme_fc_unregister_remoteport(rport->remoteport);
--		if (ret)
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_DISC,
--					 "6008 rport fail destroy %x\n", ret);
--		wait_for_completion_timeout(&rport->rport_unreg_done, 5);
--	}
- 
- 	/* lport's rport list is clear.  Unregister
- 	 * lport and release resources.
-@@ -2384,8 +2368,6 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 			if (!rport->ndlp)
- 				return -1;
- 			ndlp->nrport = rport;
--			INIT_LIST_HEAD(&rport->list);
--			list_add_tail(&rport->list, &lport->rport_list);
- 			lpfc_printf_vlog(vport, KERN_INFO,
- 					 LOG_NVME_DISC | LOG_NODE,
- 					 "6022 Binding new rport to "
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.h b/drivers/scsi/lpfc/lpfc_nvme.h
-index ec32f45daa66..d192bb268f99 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.h
-+++ b/drivers/scsi/lpfc/lpfc_nvme.h
-@@ -35,13 +35,11 @@ struct lpfc_nvme_qhandle {
- /* Declare nvme-based local and remote port definitions. */
- struct lpfc_nvme_lport {
- 	struct lpfc_vport *vport;
--	struct list_head rport_list;
- 	struct completion lport_unreg_done;
- 	/* Add sttats counters here */
- };
- 
- struct lpfc_nvme_rport {
--	struct list_head list;
- 	struct lpfc_nvme_lport *lport;
- 	struct nvme_fc_remote_port *remoteport;
- 	struct lpfc_nodelist *ndlp;
+ 		/* Terminate the string. */
+ 		len +=  snprintf(buf + len, size - len, "\n");
+ 	}
 -- 
 2.11.0
