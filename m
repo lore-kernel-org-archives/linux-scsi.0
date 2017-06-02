@@ -1,23 +1,55 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2 12/12] xen/scsifront: Remove code that zeroes
-        driver-private command data
-Date: Fri, 2 Jun 2017 09:23:16 +0200
-Message-ID: <20170602072316.GK560@lst.de>
-References: <20170601232711.29062-1-bart.vanassche@sandisk.com> <20170601232711.29062-13-bart.vanassche@sandisk.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:51517 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750772AbdFBHXR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 2 Jun 2017 03:23:17 -0400
-Content-Disposition: inline
-In-Reply-To: <20170601232711.29062-13-bart.vanassche@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Corentin Labbe <clabbe.montjoie@gmail.com>
+Subject: [PATCH] qla2xxx: remove writeq/readq function definitions
+Date: Fri,  2 Jun 2017 13:32:25 +0200
+Message-ID: <20170602113225.24816-1-clabbe.montjoie@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: qla2xxx-upstream@qlogic.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Corentin Labbe <clabbe.montjoie@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, xen-devel@lists.xenproject.org, Johannes Thumshirn <jthumshirn@suse.de>
 
-Looks fine,
+Instead of rewriting write/readq, use linux/io-64-nonatomic-lo-hi.h which
+already have them.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Corentin Labbe <clabbe.montjoie@gmail.com>
+---
+ drivers/scsi/qla2xxx/qla_nx.h | 17 ++---------------
+ 1 file changed, 2 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_nx.h b/drivers/scsi/qla2xxx/qla_nx.h
+index 77624eac95a4..71a41093530e 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.h
++++ b/drivers/scsi/qla2xxx/qla_nx.h
+@@ -7,6 +7,8 @@
+ #ifndef __QLA_NX_H
+ #define __QLA_NX_H
+ 
++#include <linux/io-64-nonatomic-lo-hi.h>
++
+ /*
+  * Following are the states of the Phantom. Phantom will set them and
+  * Host will read to check if the fields are correct.
+@@ -819,21 +821,6 @@ struct qla82xx_uri_data_desc{
+ #define MIU_TEST_AGT_WRDATA_UPPER_LO		(0x0b0)
+ #define	MIU_TEST_AGT_WRDATA_UPPER_HI		(0x0b4)
+ 
+-#ifndef readq
+-static inline u64 readq(void __iomem *addr)
+-{
+-	return readl(addr) | (((u64) readl(addr + 4)) << 32LL);
+-}
+-#endif
+-
+-#ifndef writeq
+-static inline void writeq(u64 val, void __iomem *addr)
+-{
+-	writel(((u32) (val)), (addr));
+-	writel(((u32) (val >> 32)), (addr + 4));
+-}
+-#endif
+-
+ /* Request and response queue size */
+ #define REQUEST_ENTRY_CNT_82XX		128	/* Number of request entries. */
+ #define RESPONSE_ENTRY_CNT_82XX		128	/* Number of response entries.*/
+-- 
+2.13.0
