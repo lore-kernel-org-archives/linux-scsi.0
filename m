@@ -1,43 +1,148 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH v2 0/5] TCMU Enable Reconfiguration Patches
-Date: Fri, 02 Jun 2017 23:58:03 -0700
-Message-ID: <1496473083.27407.315.camel@haakon3.risingtidesystems.com>
-References: <1496169080-58746-1-git-send-email-bryantly@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:55392 "EHLO
-        linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750753AbdFCG6F (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Jun 2017 02:58:05 -0400
-In-Reply-To: <1496169080-58746-1-git-send-email-bryantly@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Subject: [PATCH] target: Fix kref->refcount underflow in transport_cmd_finish_abort
+Date: Sat,  3 Jun 2017 21:09:04 +0000
+Message-ID: <1496524144-25580-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Sagi Grimberg <sagig@mellanox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Cc: mchristi@redhat.com, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 
-Hi Bryant & Co,
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-On Tue, 2017-05-30 at 13:31 -0500, Bryant G. Ly wrote:
-> This patch consists of adding a netlink to allow for reconfiguration
-> of a device in tcmu.
-> 
-> It also changes and adds some attributes that are reconfigurable:
-> write_cache, device size, and device path.
-> 
-> Bryant G. Ly (5):
->   tcmu: Support emulate_write_cache
->   tcmu: Add netlink for device reconfiguration
->   tcmu: Make dev_size configurable via userspace
->   tcmu: Make dev_config configurable
->   tcmu: Add Type of reconfig into netlink
-> 
->  drivers/target/target_core_user.c     | 159 ++++++++++++++++++++++++++++++++--
->  include/uapi/linux/target_core_user.h |   2 +
->  2 files changed, 155 insertions(+), 6 deletions(-)
-> 
+This patch fixes a se_cmd->cmd_kref underflow during CMD_T_ABORTED
+when a fabric driver drops it's second reference from below the
+target_core_tmr.c based callers of transport_cmd_finish_abort().
 
-Are these ready for merge..?
+Recently with the conversion of kref to refcount_t, this bug was
+manifesting itself as:
 
-MNC..?
+[705519.601034] refcount_t: underflow; use-after-free.
+[705519.604034] INFO: NMI handler (kgdb_nmi_handler) took too long to run: 20116.512 msecs
+[705539.719111] ------------[ cut here ]------------
+[705539.719117] WARNING: CPU: 3 PID: 26510 at lib/refcount.c:184 refcount_sub_and_test+0x33/0x51
+
+Since the original kref atomic_t based kref_put() didn't check for
+underflow and only invoked the final callback when zero was reached,
+this bug did not manifest in practice since all se_cmd memory is
+using preallocated tags.
+
+To address this, go ahead and propigate the existing return from
+transport_put_cmd() up via transport_cmd_finish_abort(), and
+change transport_cmd_finish_abort() + core_tmr_handle_tas_abort()
+callers to only do their local target_put_sess_cmd() if necessary.
+
+Reported-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Mike Christie <mchristi@redhat.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Cc: Sagi Grimberg <sagig@mellanox.com>
+Cc: stable@vger.kernel.org # 3.14+
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_internal.h  |  2 +-
+ drivers/target/target_core_tmr.c       | 16 ++++++++--------
+ drivers/target/target_core_transport.c |  9 ++++++---
+ 3 files changed, 15 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
+index 9ab7090..0912de7 100644
+--- a/drivers/target/target_core_internal.h
++++ b/drivers/target/target_core_internal.h
+@@ -136,7 +136,7 @@ struct se_node_acl *core_tpg_add_initiator_node_acl(struct se_portal_group *tpg,
+ void	release_se_kmem_caches(void);
+ u32	scsi_get_new_index(scsi_index_t);
+ void	transport_subsystem_check_init(void);
+-void	transport_cmd_finish_abort(struct se_cmd *, int);
++int	transport_cmd_finish_abort(struct se_cmd *, int);
+ unsigned char *transport_dump_cmd_direction(struct se_cmd *);
+ void	transport_dump_dev_state(struct se_device *, char *, int *);
+ void	transport_dump_dev_info(struct se_device *, struct se_lun *,
+diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
+index dce1e1b..13f47bf 100644
+--- a/drivers/target/target_core_tmr.c
++++ b/drivers/target/target_core_tmr.c
+@@ -75,7 +75,7 @@ void core_tmr_release_req(struct se_tmr_req *tmr)
+ 	kfree(tmr);
+ }
+ 
+-static void core_tmr_handle_tas_abort(struct se_cmd *cmd, int tas)
++static int core_tmr_handle_tas_abort(struct se_cmd *cmd, int tas)
+ {
+ 	unsigned long flags;
+ 	bool remove = true, send_tas;
+@@ -91,7 +91,7 @@ static void core_tmr_handle_tas_abort(struct se_cmd *cmd, int tas)
+ 		transport_send_task_abort(cmd);
+ 	}
+ 
+-	transport_cmd_finish_abort(cmd, remove);
++	return transport_cmd_finish_abort(cmd, remove);
+ }
+ 
+ static int target_check_cdb_and_preempt(struct list_head *list,
+@@ -184,8 +184,8 @@ void core_tmr_abort_task(
+ 		cancel_work_sync(&se_cmd->work);
+ 		transport_wait_for_tasks(se_cmd);
+ 
+-		transport_cmd_finish_abort(se_cmd, true);
+-		target_put_sess_cmd(se_cmd);
++		if (!transport_cmd_finish_abort(se_cmd, true))
++			target_put_sess_cmd(se_cmd);
+ 
+ 		printk("ABORT_TASK: Sending TMR_FUNCTION_COMPLETE for"
+ 				" ref_tag: %llu\n", ref_tag);
+@@ -281,8 +281,8 @@ static void core_tmr_drain_tmr_list(
+ 		cancel_work_sync(&cmd->work);
+ 		transport_wait_for_tasks(cmd);
+ 
+-		transport_cmd_finish_abort(cmd, 1);
+-		target_put_sess_cmd(cmd);
++		if (!transport_cmd_finish_abort(cmd, 1))
++			target_put_sess_cmd(cmd);
+ 	}
+ }
+ 
+@@ -380,8 +380,8 @@ static void core_tmr_drain_state_list(
+ 		cancel_work_sync(&cmd->work);
+ 		transport_wait_for_tasks(cmd);
+ 
+-		core_tmr_handle_tas_abort(cmd, tas);
+-		target_put_sess_cmd(cmd);
++		if (!core_tmr_handle_tas_abort(cmd, tas))
++			target_put_sess_cmd(cmd);
+ 	}
+ }
+ 
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 6025935..f1b3a46 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -651,9 +651,10 @@ static void transport_lun_remove_cmd(struct se_cmd *cmd)
+ 		percpu_ref_put(&lun->lun_ref);
+ }
+ 
+-void transport_cmd_finish_abort(struct se_cmd *cmd, int remove)
++int transport_cmd_finish_abort(struct se_cmd *cmd, int remove)
+ {
+ 	bool ack_kref = (cmd->se_cmd_flags & SCF_ACK_KREF);
++	int ret = 0;
+ 
+ 	if (cmd->se_cmd_flags & SCF_SE_LUN_CMD)
+ 		transport_lun_remove_cmd(cmd);
+@@ -665,9 +666,11 @@ void transport_cmd_finish_abort(struct se_cmd *cmd, int remove)
+ 		cmd->se_tfo->aborted_task(cmd);
+ 
+ 	if (transport_cmd_check_stop_to_fabric(cmd))
+-		return;
++		return 1;
+ 	if (remove && ack_kref)
+-		transport_put_cmd(cmd);
++		ret = transport_put_cmd(cmd);
++
++	return ret;
+ }
+ 
+ static void target_complete_failure_work(struct work_struct *work)
+-- 
+1.9.1
