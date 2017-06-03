@@ -1,37 +1,128 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 0/3] target: Add TARGET_SCF_LOOKUP_LUN_FROM_TAG support
-Date: Sat,  3 Jun 2017 22:10:05 +0000
-Message-ID: <1496527808-28789-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 2/3] target: Add TARGET_SCF_LOOKUP_LUN_FROM_TAG support for ABORT_TASK
+Date: Sat,  3 Jun 2017 22:10:07 +0000
+Message-ID: <1496527808-28789-3-git-send-email-nab@linux-iscsi.org>
+References: <1496527808-28789-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1496527808-28789-1-git-send-email-nab@linux-iscsi.org>
 Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Himanshu Madhani <himanshu.madhani@cavium.com>, Quinn Tran <quinn.tran@cavium.com>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Hi Himanshu + Quinn,
+This patch introduces support in target_submit_tmr() for locating a
+unpacked_lun from an existing se_cmd->tag during ABORT_TASK.
 
-Here is a small series to introduce proper percpu se_lun->lun_ref
-counting for TMR, and add common code in target_submit_tmr() to
-do tag lookup for unpacked_lun in order to drop the original
-driver specific lookup within __qlt_24xx_handle_abts().
+When TARGET_SCF_LOOKUP_LUN_FROM_TAG is set, target_submit_tmr()
+will do the extra lookup via target_lookup_lun_from_tag() and
+subsequently invoke transport_lookup_tmr_lun() so a proper
+percpu se_lun->lun_ref is taken before workqueue dispatch into
+se_device->tmr_wq happens.
 
-It's rather straight-forward, so review and test as a v4.13 item.
+Aside from the extra target_lookup_lun_from_tag(), the existing
+code-path remains unchanged.
 
-Thanks!
-
-Nicholas Bellinger (3):
-  target: Add support for TMR percpu reference counting
-  target: Add TARGET_SCF_LOOKUP_LUN_FROM_TAG support for ABORT_TASK
-  qla2xxx: Convert QLA_TGT_ABTS to TARGET_SCF_LOOKUP_LUN_FROM_TAG
-
- drivers/scsi/qla2xxx/qla_target.c      | 39 ++++++-----------------
- drivers/scsi/qla2xxx/tcm_qla2xxx.c     |  4 ++-
- drivers/target/target_core_device.c    | 14 ++++++---
- drivers/target/target_core_transport.c | 56 ++++++++++++++++++++++++++++------
+Cc: Himanshu Madhani <himanshu.madhani@cavium.com>
+Cc: Quinn Tran <quinn.tran@cavium.com>
+Cc: Mike Christie <mchristi@redhat.com>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_transport.c | 53 ++++++++++++++++++++++++++++------
  include/target/target_core_base.h      |  3 +-
- 5 files changed, 71 insertions(+), 45 deletions(-)
+ 2 files changed, 46 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 83bfc97..dbb8101 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -1592,6 +1592,29 @@ static void target_complete_tmr_failure(struct work_struct *work)
+ 	transport_cmd_check_stop_to_fabric(se_cmd);
+ }
+ 
++static bool target_lookup_lun_from_tag(struct se_session *se_sess, u64 tag,
++				       u64 *unpacked_lun)
++{
++	struct se_cmd *se_cmd;
++	unsigned long flags;
++	bool ret = false;
++
++	spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
++	list_for_each_entry(se_cmd, &se_sess->sess_cmd_list, se_cmd_list) {
++		if (se_cmd->se_cmd_flags & SCF_SCSI_TMR_CDB)
++			continue;
++
++		if (se_cmd->tag == tag) {
++			*unpacked_lun = se_cmd->orig_fe_lun;
++			ret = true;
++			break;
++		}
++	}
++	spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
++
++	return ret;
++}
++
+ /**
+  * target_submit_tmr - lookup unpacked lun and submit uninitialized se_cmd
+  *                     for TMR CDBs
+@@ -1639,19 +1662,31 @@ int target_submit_tmr(struct se_cmd *se_cmd, struct se_session *se_sess,
+ 		core_tmr_release_req(se_cmd->se_tmr_req);
+ 		return ret;
+ 	}
++	/*
++	 * If this is ABORT_TASK with no explicit fabric provided LUN,
++	 * go ahead and search active session tags for a match to figure
++	 * out unpacked_lun for the original se_cmd.
++	 */
++	if (tm_type == TMR_ABORT_TASK && (flags & TARGET_SCF_LOOKUP_LUN_FROM_TAG)) {
++		if (!target_lookup_lun_from_tag(se_sess, tag, &unpacked_lun))
++			goto failure;
++	}
+ 
+ 	ret = transport_lookup_tmr_lun(se_cmd, unpacked_lun);
+-	if (ret) {
+-		/*
+-		 * For callback during failure handling, push this work off
+-		 * to process context with TMR_LUN_DOES_NOT_EXIST status.
+-		 */
+-		INIT_WORK(&se_cmd->work, target_complete_tmr_failure);
+-		schedule_work(&se_cmd->work);
+-		return 0;
+-	}
++	if (ret)
++		goto failure;
++
+ 	transport_generic_handle_tmr(se_cmd);
+ 	return 0;
++
++	/*
++	 * For callback during failure handling, push this work off
++	 * to process context with TMR_LUN_DOES_NOT_EXIST status.
++	 */
++failure:
++	INIT_WORK(&se_cmd->work, target_complete_tmr_failure);
++	schedule_work(&se_cmd->work);
++	return 0;
+ }
+ EXPORT_SYMBOL(target_submit_tmr);
+ 
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index db2c7b3..a3af69f 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -188,7 +188,8 @@ enum target_sc_flags_table {
+ 	TARGET_SCF_BIDI_OP		= 0x01,
+ 	TARGET_SCF_ACK_KREF		= 0x02,
+ 	TARGET_SCF_UNKNOWN_SIZE		= 0x04,
+-	TARGET_SCF_USE_CPUID	= 0x08,
++	TARGET_SCF_USE_CPUID		= 0x08,
++	TARGET_SCF_LOOKUP_LUN_FROM_TAG	= 0x10,
+ };
+ 
+ /* fabric independent task management function values */
 -- 
 1.9.1
