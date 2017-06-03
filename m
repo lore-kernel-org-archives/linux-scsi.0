@@ -1,28 +1,21 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 2/3] target: Add TARGET_SCF_LOOKUP_LUN_FROM_TAG support for ABORT_TASK
-Date: Sat,  3 Jun 2017 22:10:07 +0000
-Message-ID: <1496527808-28789-3-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 3/3] qla2xxx: Convert QLA_TGT_ABTS to TARGET_SCF_LOOKUP_LUN_FROM_TAG
+Date: Sat,  3 Jun 2017 22:10:08 +0000
+Message-ID: <1496527808-28789-4-git-send-email-nab@linux-iscsi.org>
 References: <1496527808-28789-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1496527808-28789-1-git-send-email-nab@linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Himanshu Madhani <himanshu.madhani@cavium.com>, Quinn Tran <quinn.tran@cavium.com>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch introduces support in target_submit_tmr() for locating a
-unpacked_lun from an existing se_cmd->tag during ABORT_TASK.
-
-When TARGET_SCF_LOOKUP_LUN_FROM_TAG is set, target_submit_tmr()
-will do the extra lookup via target_lookup_lun_from_tag() and
-subsequently invoke transport_lookup_tmr_lun() so a proper
-percpu se_lun->lun_ref is taken before workqueue dispatch into
-se_device->tmr_wq happens.
-
-Aside from the extra target_lookup_lun_from_tag(), the existing
-code-path remains unchanged.
+Following Himanshu's earlier patch to drop the redundant tag
+lookup within __qlt_24xx_handle_abts(), go ahead and drop this
+now QLA_TGT_ABTS can use TARGET_SCF_LOOKUP_LUN_FROM_TAG and
+have target_submit_tmr() do this from common code.
 
 Cc: Himanshu Madhani <himanshu.madhani@cavium.com>
 Cc: Quinn Tran <quinn.tran@cavium.com>
@@ -31,98 +24,96 @@ Cc: Hannes Reinecke <hare@suse.com>
 Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_transport.c | 53 ++++++++++++++++++++++++++++------
- include/target/target_core_base.h      |  3 +-
- 2 files changed, 46 insertions(+), 10 deletions(-)
+ drivers/scsi/qla2xxx/qla_target.c  | 39 +++++++++-----------------------------
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c |  4 +++-
+ 2 files changed, 12 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 83bfc97..dbb8101 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1592,6 +1592,29 @@ static void target_complete_tmr_failure(struct work_struct *work)
- 	transport_cmd_check_stop_to_fabric(se_cmd);
- }
- 
-+static bool target_lookup_lun_from_tag(struct se_session *se_sess, u64 tag,
-+				       u64 *unpacked_lun)
-+{
-+	struct se_cmd *se_cmd;
-+	unsigned long flags;
-+	bool ret = false;
-+
-+	spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
-+	list_for_each_entry(se_cmd, &se_sess->sess_cmd_list, se_cmd_list) {
-+		if (se_cmd->se_cmd_flags & SCF_SCSI_TMR_CDB)
-+			continue;
-+
-+		if (se_cmd->tag == tag) {
-+			*unpacked_lun = se_cmd->orig_fe_lun;
-+			ret = true;
-+			break;
-+		}
-+	}
-+	spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
-+
-+	return ret;
-+}
-+
- /**
-  * target_submit_tmr - lookup unpacked lun and submit uninitialized se_cmd
-  *                     for TMR CDBs
-@@ -1639,19 +1662,31 @@ int target_submit_tmr(struct se_cmd *se_cmd, struct se_session *se_sess,
- 		core_tmr_release_req(se_cmd->se_tmr_req);
- 		return ret;
- 	}
-+	/*
-+	 * If this is ABORT_TASK with no explicit fabric provided LUN,
-+	 * go ahead and search active session tags for a match to figure
-+	 * out unpacked_lun for the original se_cmd.
-+	 */
-+	if (tm_type == TMR_ABORT_TASK && (flags & TARGET_SCF_LOOKUP_LUN_FROM_TAG)) {
-+		if (!target_lookup_lun_from_tag(se_sess, tag, &unpacked_lun))
-+			goto failure;
-+	}
- 
- 	ret = transport_lookup_tmr_lun(se_cmd, unpacked_lun);
--	if (ret) {
--		/*
--		 * For callback during failure handling, push this work off
--		 * to process context with TMR_LUN_DOES_NOT_EXIST status.
--		 */
--		INIT_WORK(&se_cmd->work, target_complete_tmr_failure);
--		schedule_work(&se_cmd->work);
--		return 0;
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 0e03ca2..401e245 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -1847,38 +1847,13 @@ static int __qlt_24xx_handle_abts(struct scsi_qla_host *vha,
+ 	struct abts_recv_from_24xx *abts, struct fc_port *sess)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+-	struct se_session *se_sess = sess->se_sess;
+ 	struct qla_tgt_mgmt_cmd *mcmd;
+-	struct se_cmd *se_cmd;
+-	u32 lun = 0;
+ 	int rc;
+-	bool found_lun = false;
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
+-	list_for_each_entry(se_cmd, &se_sess->sess_cmd_list, se_cmd_list) {
+-		struct qla_tgt_cmd *cmd =
+-			container_of(se_cmd, struct qla_tgt_cmd, se_cmd);
+-		if (se_cmd->tag == abts->exchange_addr_to_abort) {
+-			lun = cmd->unpacked_lun;
+-			found_lun = true;
+-			break;
+-		}
 -	}
-+	if (ret)
-+		goto failure;
-+
- 	transport_generic_handle_tmr(se_cmd);
- 	return 0;
-+
+-	spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
+ 
+-	/* cmd not in LIO lists, look in qla list */
+-	if (!found_lun) {
+-		if (abort_cmd_for_tag(vha, abts->exchange_addr_to_abort)) {
+-			/* send TASK_ABORT response immediately */
+-			qlt_24xx_send_abts_resp(vha, abts, FCP_TMF_CMPL, false);
+-			return 0;
+-		} else {
+-			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf081,
+-			    "unable to find cmd in driver or LIO for tag 0x%x\n",
+-			    abts->exchange_addr_to_abort);
+-			return -ENOENT;
+-		}
++	if (abort_cmd_for_tag(vha, abts->exchange_addr_to_abort)) {
++		/* send TASK_ABORT response immediately */
++		qlt_24xx_send_abts_resp(vha, abts, FCP_TMF_CMPL, false);
++		return 0;
+ 	}
+ 
+ 	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf00f,
+@@ -1899,7 +1874,11 @@ static int __qlt_24xx_handle_abts(struct scsi_qla_host *vha,
+ 	mcmd->reset_count = vha->hw->chip_reset;
+ 	mcmd->tmr_func = QLA_TGT_ABTS;
+ 
+-	rc = ha->tgt.tgt_ops->handle_tmr(mcmd, lun, mcmd->tmr_func,
 +	/*
-+	 * For callback during failure handling, push this work off
-+	 * to process context with TMR_LUN_DOES_NOT_EXIST status.
++	 * LUN is looked up by target-core internally based on the passed
++	 * abts->exchange_addr_to_abort tag.
 +	 */
-+failure:
-+	INIT_WORK(&se_cmd->work, target_complete_tmr_failure);
-+	schedule_work(&se_cmd->work);
-+	return 0;
++	rc = ha->tgt.tgt_ops->handle_tmr(mcmd, 0, mcmd->tmr_func,
+ 	    abts->exchange_addr_to_abort);
+ 	if (rc != 0) {
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf052,
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 7443e4e..75aeb9f 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -601,11 +601,13 @@ static int tcm_qla2xxx_handle_tmr(struct qla_tgt_mgmt_cmd *mcmd, uint32_t lun,
+ 	struct fc_port *sess = mcmd->sess;
+ 	struct se_cmd *se_cmd = &mcmd->se_cmd;
+ 	int transl_tmr_func = 0;
++	int flags = TARGET_SCF_ACK_KREF;
+ 
+ 	switch (tmr_func) {
+ 	case QLA_TGT_ABTS:
+ 		pr_debug("%ld: ABTS received\n", sess->vha->host_no);
+ 		transl_tmr_func = TMR_ABORT_TASK;
++		flags |= TARGET_SCF_LOOKUP_LUN_FROM_TAG;
+ 		break;
+ 	case QLA_TGT_2G_ABORT_TASK:
+ 		pr_debug("%ld: 2G Abort Task received\n", sess->vha->host_no);
+@@ -638,7 +640,7 @@ static int tcm_qla2xxx_handle_tmr(struct qla_tgt_mgmt_cmd *mcmd, uint32_t lun,
+ 	}
+ 
+ 	return target_submit_tmr(se_cmd, sess->se_sess, NULL, lun, mcmd,
+-	    transl_tmr_func, GFP_ATOMIC, tag, TARGET_SCF_ACK_KREF);
++	    transl_tmr_func, GFP_ATOMIC, tag, flags);
  }
- EXPORT_SYMBOL(target_submit_tmr);
  
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index db2c7b3..a3af69f 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -188,7 +188,8 @@ enum target_sc_flags_table {
- 	TARGET_SCF_BIDI_OP		= 0x01,
- 	TARGET_SCF_ACK_KREF		= 0x02,
- 	TARGET_SCF_UNKNOWN_SIZE		= 0x04,
--	TARGET_SCF_USE_CPUID	= 0x08,
-+	TARGET_SCF_USE_CPUID		= 0x08,
-+	TARGET_SCF_LOOKUP_LUN_FROM_TAG	= 0x10,
- };
- 
- /* fabric independent task management function values */
+ static int tcm_qla2xxx_queue_data_in(struct se_cmd *se_cmd)
 -- 
 1.9.1
