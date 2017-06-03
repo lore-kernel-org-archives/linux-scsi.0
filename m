@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 3/3] qla2xxx: Convert QLA_TGT_ABTS to TARGET_SCF_LOOKUP_LUN_FROM_TAG
-Date: Sat,  3 Jun 2017 22:10:08 +0000
-Message-ID: <1496527808-28789-4-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 1/3] target: Add support for TMR percpu reference counting
+Date: Sat,  3 Jun 2017 22:10:06 +0000
+Message-ID: <1496527808-28789-2-git-send-email-nab@linux-iscsi.org>
 References: <1496527808-28789-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1496527808-28789-1-git-send-email-nab@linux-iscsi.org>
@@ -12,10 +12,22 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Following Himanshu's earlier patch to drop the redundant tag
-lookup within __qlt_24xx_handle_abts(), go ahead and drop this
-now QLA_TGT_ABTS can use TARGET_SCF_LOOKUP_LUN_FROM_TAG and
-have target_submit_tmr() do this from common code.
+This patch introduces TMR percpu reference counting using
+se_lun->lun_ref in transport_lookup_tmr_lun(), following
+how existing non TMR per se_lun reference counting works
+within transport_lookup_cmd_lun().
+
+It also adds explicit transport_lun_remove_cmd() calls to
+drop the reference in the three tmr related locations that
+invoke transport_cmd_check_stop_to_fabric();
+
+   - target_tmr_work() during normal ->queue_tm_rsp()
+   - target_complete_tmr_failure() during error ->queue_tm_rsp()
+   - transport_generic_handle_tmr() during early failure
+
+Also, note the exception paths in transport_generic_free_cmd()
+and transport_cmd_finish_abort() already check SCF_SE_LUN_CMD,
+and will invoke transport_lun_remove_cmd() when necessary.
 
 Cc: Himanshu Madhani <himanshu.madhani@cavium.com>
 Cc: Quinn Tran <quinn.tran@cavium.com>
@@ -24,96 +36,73 @@ Cc: Hannes Reinecke <hare@suse.com>
 Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/qla2xxx/qla_target.c  | 39 +++++++++-----------------------------
- drivers/scsi/qla2xxx/tcm_qla2xxx.c |  4 +++-
- 2 files changed, 12 insertions(+), 31 deletions(-)
+ drivers/target/target_core_device.c    | 14 ++++++++++----
+ drivers/target/target_core_transport.c |  3 +++
+ 2 files changed, 13 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 0e03ca2..401e245 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1847,38 +1847,13 @@ static int __qlt_24xx_handle_abts(struct scsi_qla_host *vha,
- 	struct abts_recv_from_24xx *abts, struct fc_port *sess)
- {
- 	struct qla_hw_data *ha = vha->hw;
--	struct se_session *se_sess = sess->se_sess;
- 	struct qla_tgt_mgmt_cmd *mcmd;
--	struct se_cmd *se_cmd;
--	u32 lun = 0;
- 	int rc;
--	bool found_lun = false;
--	unsigned long flags;
--
--	spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
--	list_for_each_entry(se_cmd, &se_sess->sess_cmd_list, se_cmd_list) {
--		struct qla_tgt_cmd *cmd =
--			container_of(se_cmd, struct qla_tgt_cmd, se_cmd);
--		if (se_cmd->tag == abts->exchange_addr_to_abort) {
--			lun = cmd->unpacked_lun;
--			found_lun = true;
--			break;
--		}
--	}
--	spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
- 
--	/* cmd not in LIO lists, look in qla list */
--	if (!found_lun) {
--		if (abort_cmd_for_tag(vha, abts->exchange_addr_to_abort)) {
--			/* send TASK_ABORT response immediately */
--			qlt_24xx_send_abts_resp(vha, abts, FCP_TMF_CMPL, false);
--			return 0;
--		} else {
--			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf081,
--			    "unable to find cmd in driver or LIO for tag 0x%x\n",
--			    abts->exchange_addr_to_abort);
--			return -ENOENT;
--		}
-+	if (abort_cmd_for_tag(vha, abts->exchange_addr_to_abort)) {
-+		/* send TASK_ABORT response immediately */
-+		qlt_24xx_send_abts_resp(vha, abts, FCP_TMF_CMPL, false);
-+		return 0;
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index 8f0e0e3..11c80c4 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -168,11 +168,20 @@ int transport_lookup_tmr_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
+ 	rcu_read_lock();
+ 	deve = target_nacl_find_deve(nacl, unpacked_lun);
+ 	if (deve) {
+-		se_cmd->se_lun = rcu_dereference(deve->se_lun);
+ 		se_lun = rcu_dereference(deve->se_lun);
++
++		if (!percpu_ref_tryget_live(&se_lun->lun_ref)) {
++			se_lun = NULL;
++			goto out_unlock;
++		}
++
++		se_cmd->se_lun = rcu_dereference(deve->se_lun);
+ 		se_cmd->pr_res_key = deve->pr_res_key;
+ 		se_cmd->orig_fe_lun = unpacked_lun;
++		se_cmd->se_cmd_flags |= SCF_SE_LUN_CMD;
++		se_cmd->lun_ref_active = true;
  	}
++out_unlock:
+ 	rcu_read_unlock();
  
- 	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf00f,
-@@ -1899,7 +1874,11 @@ static int __qlt_24xx_handle_abts(struct scsi_qla_host *vha,
- 	mcmd->reset_count = vha->hw->chip_reset;
- 	mcmd->tmr_func = QLA_TGT_ABTS;
- 
--	rc = ha->tgt.tgt_ops->handle_tmr(mcmd, lun, mcmd->tmr_func,
-+	/*
-+	 * LUN is looked up by target-core internally based on the passed
-+	 * abts->exchange_addr_to_abort tag.
-+	 */
-+	rc = ha->tgt.tgt_ops->handle_tmr(mcmd, 0, mcmd->tmr_func,
- 	    abts->exchange_addr_to_abort);
- 	if (rc != 0) {
- 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf052,
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index 7443e4e..75aeb9f 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -601,11 +601,13 @@ static int tcm_qla2xxx_handle_tmr(struct qla_tgt_mgmt_cmd *mcmd, uint32_t lun,
- 	struct fc_port *sess = mcmd->sess;
- 	struct se_cmd *se_cmd = &mcmd->se_cmd;
- 	int transl_tmr_func = 0;
-+	int flags = TARGET_SCF_ACK_KREF;
- 
- 	switch (tmr_func) {
- 	case QLA_TGT_ABTS:
- 		pr_debug("%ld: ABTS received\n", sess->vha->host_no);
- 		transl_tmr_func = TMR_ABORT_TASK;
-+		flags |= TARGET_SCF_LOOKUP_LUN_FROM_TAG;
- 		break;
- 	case QLA_TGT_2G_ABORT_TASK:
- 		pr_debug("%ld: 2G Abort Task received\n", sess->vha->host_no);
-@@ -638,7 +640,7 @@ static int tcm_qla2xxx_handle_tmr(struct qla_tgt_mgmt_cmd *mcmd, uint32_t lun,
+ 	if (!se_lun) {
+@@ -182,9 +191,6 @@ int transport_lookup_tmr_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
+ 			unpacked_lun);
+ 		return -ENODEV;
  	}
+-	/*
+-	 * XXX: Add percpu se_lun->lun_ref reference count for TMR
+-	 */
+ 	se_cmd->se_dev = rcu_dereference_raw(se_lun->lun_se_dev);
+ 	se_tmr->tmr_dev = rcu_dereference_raw(se_lun->lun_se_dev);
  
- 	return target_submit_tmr(se_cmd, sess->se_sess, NULL, lun, mcmd,
--	    transl_tmr_func, GFP_ATOMIC, tag, TARGET_SCF_ACK_KREF);
-+	    transl_tmr_func, GFP_ATOMIC, tag, flags);
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index f16a789..83bfc97 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -1588,6 +1588,7 @@ static void target_complete_tmr_failure(struct work_struct *work)
+ 	se_cmd->se_tmr_req->response = TMR_LUN_DOES_NOT_EXIST;
+ 	se_cmd->se_tfo->queue_tm_rsp(se_cmd);
+ 
++	transport_lun_remove_cmd(se_cmd);
+ 	transport_cmd_check_stop_to_fabric(se_cmd);
  }
  
- static int tcm_qla2xxx_queue_data_in(struct se_cmd *se_cmd)
+@@ -3199,6 +3200,7 @@ static void target_tmr_work(struct work_struct *work)
+ 	cmd->se_tfo->queue_tm_rsp(cmd);
+ 
+ check_stop:
++	transport_lun_remove_cmd(cmd);
+ 	transport_cmd_check_stop_to_fabric(cmd);
+ }
+ 
+@@ -3221,6 +3223,7 @@ int transport_generic_handle_tmr(
+ 		pr_warn_ratelimited("handle_tmr caught CMD_T_ABORTED TMR %d"
+ 			"ref_tag: %llu tag: %llu\n", cmd->se_tmr_req->function,
+ 			cmd->se_tmr_req->ref_task_tag, cmd->tag);
++		transport_lun_remove_cmd(cmd);
+ 		transport_cmd_check_stop_to_fabric(cmd);
+ 		return 0;
+ 	}
 -- 
 1.9.1
