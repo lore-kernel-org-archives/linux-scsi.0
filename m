@@ -1,18 +1,15 @@
-From: "Seydou Thieba" <seydouthieba@tiscali.co.uk>
-Subject: Investment Interest & Offer
-Date: Sat, 03 Jun 2017 00:01:46 +0100
-Message-ID: <201706022301.v52MWdWe028766__9780.42986612326$1496551871$gmane$org@www.brfliseberg.se>
-Reply-To: seydouthiebaconsultant@gmail.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www.brfliseberg.se ([213.242.162.1]:57376 "EHLO
-        www.brfliseberg.se" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750847AbdFDEu5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Jun 2017 00:50:57 -0400
-Content-Description: Mail message body
-Sender: linux-scsi-owner@vger.kernel.org
+From: Christoph Hellwig <hch@lst.de>
+Subject: TCG Opal support for libata
+Date: Sun,  4 Jun 2017 14:42:19 +0200
+Message-ID: <20170604124225.27032-1-hch@lst.de>
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Scott Bauer <scott.bauer@intel.com>, Jonathan Derrick <jonathan.derrick@intel.com>, Rafael Antognolli <rafael.antognolli@intel.com>, Robert Elliott <elliott@hpe.com>, linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <seydouthieba@tiscali.co.uk>
 
+Hi all,
+
+this series adds support for using our new generic TCG OPAL code with
+SATA disks, and as side effect for SCSI disks (although so far it doesn't
+seem like none of those actually exist).
