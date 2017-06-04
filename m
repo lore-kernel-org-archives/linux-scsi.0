@@ -1,125 +1,92 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/6] libata: factor out a ata_log_supported helper
-Date: Sun,  4 Jun 2017 14:42:21 +0200
-Message-ID: <20170604124225.27032-3-hch@lst.de>
+Subject: [PATCH 3/6] libata: clarify log page naming / grouping
+Date: Sun,  4 Jun 2017 14:42:22 +0200
+Message-ID: <20170604124225.27032-4-hch@lst.de>
 References: <20170604124225.27032-1-hch@lst.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:47015 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751186AbdFDMmg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Jun 2017 08:42:36 -0400
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170604124225.27032-1-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
 Cc: Scott Bauer <scott.bauer@intel.com>, Jonathan Derrick <jonathan.derrick@intel.com>, Rafael Antognolli <rafael.antognolli@intel.com>, Robert Elliott <elliott@hpe.com>, linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/ata/libata-core.c | 59 +++++++++++++----------------------------------
- 1 file changed, 16 insertions(+), 43 deletions(-)
+ drivers/ata/libata-core.c | 10 +++++-----
+ include/linux/ata.h       | 10 +++++++---
+ 2 files changed, 12 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index d4bab5052268..0672733997bb 100644
+index 0672733997bb..445e7050637b 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -2111,6 +2111,15 @@ unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
- 	return err_mask;
- }
- 
-+static bool ata_log_supported(struct ata_device *dev, u8 log)
-+{
-+	struct ata_port *ap = dev->link->ap;
-+
-+	if (ata_read_log_page(dev, ATA_LOG_DIRECTORY, 0, ap->sector_buf, 1))
-+		return false;
-+	return get_unaligned_le16(&ap->sector_buf[log * 2]) ? true : false;
-+}
-+
- static int ata_do_link_spd_horkage(struct ata_device *dev)
- {
- 	struct ata_link *plink = ata_dev_phys_link(dev);
-@@ -2158,21 +2167,9 @@ static void ata_dev_config_ncq_send_recv(struct ata_device *dev)
- {
- 	struct ata_port *ap = dev->link->ap;
- 	unsigned int err_mask;
--	int log_index = ATA_LOG_NCQ_SEND_RECV * 2;
--	u16 log_pages;
- 
--	err_mask = ata_read_log_page(dev, ATA_LOG_DIRECTORY,
--				     0, ap->sector_buf, 1);
--	if (err_mask) {
--		ata_dev_dbg(dev,
--			    "failed to get Log Directory Emask 0x%x\n",
--			    err_mask);
--		return;
--	}
--	log_pages = get_unaligned_le16(&ap->sector_buf[log_index]);
--	if (!log_pages) {
--		ata_dev_warn(dev,
--			     "NCQ Send/Recv Log not supported\n");
-+	if (!ata_log_supported(dev, ATA_LOG_NCQ_SEND_RECV)) {
-+		ata_dev_warn(dev, "NCQ Send/Recv Log not supported\n");
- 		return;
+@@ -2226,7 +2226,7 @@ static void ata_dev_config_ncq_prio(struct ata_device *dev)
  	}
- 	err_mask = ata_read_log_page(dev, ATA_LOG_NCQ_SEND_RECV,
-@@ -2199,19 +2196,8 @@ static void ata_dev_config_ncq_non_data(struct ata_device *dev)
- {
- 	struct ata_port *ap = dev->link->ap;
- 	unsigned int err_mask;
--	int log_index = ATA_LOG_NCQ_NON_DATA * 2;
--	u16 log_pages;
  
--	err_mask = ata_read_log_page(dev, ATA_LOG_DIRECTORY,
--				     0, ap->sector_buf, 1);
--	if (err_mask) {
--		ata_dev_dbg(dev,
--			    "failed to get Log Directory Emask 0x%x\n",
--			    err_mask);
--		return;
--	}
--	log_pages = get_unaligned_le16(&ap->sector_buf[log_index]);
--	if (!log_pages) {
-+	if (!ata_log_supported(dev, ATA_LOG_NCQ_NON_DATA)) {
- 		ata_dev_warn(dev,
- 			     "NCQ Send/Recv Log not supported\n");
- 		return;
-@@ -2339,7 +2325,7 @@ static void ata_dev_config_zac(struct ata_device *dev)
- 	struct ata_port *ap = dev->link->ap;
- 	unsigned int err_mask;
- 	u8 *identify_buf = ap->sector_buf;
--	int log_index = ATA_LOG_SATA_ID_DEV_DATA * 2, i, found = 0;
-+	int i, found = 0;
- 	u16 log_pages;
- 
- 	dev->zac_zones_optimal_open = U32_MAX;
-@@ -2360,24 +2346,11 @@ static void ata_dev_config_zac(struct ata_device *dev)
+ 	err_mask = ata_read_log_page(dev,
+-				     ATA_LOG_SATA_ID_DEV_DATA,
++				     ATA_LOG_IDENTIFY_DEVICE,
+ 				     ATA_LOG_SATA_SETTINGS,
+ 				     ap->sector_buf,
+ 				     1);
+@@ -2346,7 +2346,7 @@ static void ata_dev_config_zac(struct ata_device *dev)
  	if (!(dev->flags & ATA_DFLAG_ZAC))
  		return;
  
--	/*
--	 * Read Log Directory to figure out if IDENTIFY DEVICE log
--	 * is supported.
--	 */
--	err_mask = ata_read_log_page(dev, ATA_LOG_DIRECTORY,
--				     0, ap->sector_buf, 1);
--	if (err_mask) {
--		ata_dev_info(dev,
--			     "failed to get Log Directory Emask 0x%x\n",
--			     err_mask);
--		return;
--	}
--	log_pages = get_unaligned_le16(&ap->sector_buf[log_index]);
--	if (log_pages == 0) {
--		ata_dev_warn(dev,
--			     "ATA Identify Device Log not supported\n");
-+	if (!ata_log_supported(dev, ATA_LOG_SATA_ID_DEV_DATA)) {
-+		ata_dev_warn(dev, "ATA Identify Device Log not supported\n");
+-	if (!ata_log_supported(dev, ATA_LOG_SATA_ID_DEV_DATA)) {
++	if (!ata_log_supported(dev, ATA_LOG_IDENTIFY_DEVICE)) {
+ 		ata_dev_warn(dev, "ATA Identify Device Log not supported\n");
  		return;
  	}
-+
- 	/*
+@@ -2355,7 +2355,7 @@ static void ata_dev_config_zac(struct ata_device *dev)
  	 * Read IDENTIFY DEVICE data log, page 0, to figure out
  	 * if page 9 is supported.
+ 	 */
+-	err_mask = ata_read_log_page(dev, ATA_LOG_SATA_ID_DEV_DATA, 0,
++	err_mask = ata_read_log_page(dev, ATA_LOG_IDENTIFY_DEVICE, 0,
+ 				     identify_buf, 1);
+ 	if (err_mask) {
+ 		ata_dev_info(dev,
+@@ -2379,7 +2379,7 @@ static void ata_dev_config_zac(struct ata_device *dev)
+ 	/*
+ 	 * Read IDENTIFY DEVICE data log, page 9 (Zoned-device information)
+ 	 */
+-	err_mask = ata_read_log_page(dev, ATA_LOG_SATA_ID_DEV_DATA,
++	err_mask = ata_read_log_page(dev, ATA_LOG_IDENTIFY_DEVICE,
+ 				     ATA_LOG_ZONED_INFORMATION,
+ 				     identify_buf, 1);
+ 	if (!err_mask) {
+@@ -2608,7 +2608,7 @@ int ata_dev_configure(struct ata_device *dev)
+ 
+ 			dev->flags |= ATA_DFLAG_DEVSLP;
+ 			err_mask = ata_read_log_page(dev,
+-						     ATA_LOG_SATA_ID_DEV_DATA,
++						     ATA_LOG_IDENTIFY_DEVICE,
+ 						     ATA_LOG_SATA_SETTINGS,
+ 						     sata_setting,
+ 						     1);
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index ad7d9ee89ff0..44de34c954d8 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -336,11 +336,15 @@ enum {
+ 	/* READ_LOG_EXT pages */
+ 	ATA_LOG_DIRECTORY	= 0x0,
+ 	ATA_LOG_SATA_NCQ	= 0x10,
+-	ATA_LOG_NCQ_NON_DATA	  = 0x12,
+-	ATA_LOG_NCQ_SEND_RECV	  = 0x13,
+-	ATA_LOG_SATA_ID_DEV_DATA  = 0x30,
++	ATA_LOG_NCQ_NON_DATA	= 0x12,
++	ATA_LOG_NCQ_SEND_RECV	= 0x13,
++	ATA_LOG_IDENTIFY_DEVICE	= 0x30,
++
++	/* Identify device log pages: */
+ 	ATA_LOG_SATA_SETTINGS	  = 0x08,
+ 	ATA_LOG_ZONED_INFORMATION = 0x09,
++
++	/* Identify device SATA settings log:*/
+ 	ATA_LOG_DEVSLP_OFFSET	  = 0x30,
+ 	ATA_LOG_DEVSLP_SIZE	  = 0x08,
+ 	ATA_LOG_DEVSLP_MDAT	  = 0x00,
 -- 
 2.11.0
