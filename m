@@ -1,108 +1,247 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 1/3] target: Add support for TMR percpu reference counting
-Date: Sat,  3 Jun 2017 22:10:06 +0000
-Message-ID: <1496527808-28789-2-git-send-email-nab@linux-iscsi.org>
-References: <1496527808-28789-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1496527808-28789-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Himanshu Madhani <himanshu.madhani@cavium.com>, Quinn Tran <quinn.tran@cavium.com>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>
+From: Mike Christie <mchristi@redhat.com>
+Subject: Re: [PATCH] tcmu: Add fifo type waiter list support to avoid
+ starvation
+Date: Sat, 3 Jun 2017 23:11:41 -0500
+Message-ID: <5933887D.5080708@redhat.com>
+References: <1493952686-29396-1-git-send-email-lixiubo@cmss.chinamobile.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1493952686-29396-1-git-send-email-lixiubo@cmss.chinamobile.com>
+Sender: target-devel-owner@vger.kernel.org
+To: lixiubo@cmss.chinamobile.com, nab@linux-iscsi.org
+Cc: agrover@redhat.com, namei.unix@gmail.com, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On 05/04/2017 09:51 PM, lixiubo@cmss.chinamobile.com wrote:
+> From: Xiubo Li <lixiubo@cmss.chinamobile.com>
+> 
+> The fifo type waiter list will hold the udevs who are waiting for the
+> blocks from the data global pool. The unmap thread will try to feed the
+> first udevs in waiter list, if the global free blocks available are
+> not enough, it will stop traversing the list and abort waking up the
+> others.
+> 
+> Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
+> ---
+>  drivers/target/target_core_user.c | 82 +++++++++++++++++++++++++++++++--------
+>  1 file changed, 66 insertions(+), 16 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+> index 9045837..10c99e7 100644
+> --- a/drivers/target/target_core_user.c
+> +++ b/drivers/target/target_core_user.c
+> @@ -97,6 +97,7 @@ struct tcmu_hba {
+>  
+>  struct tcmu_dev {
+>  	struct list_head node;
+> +	struct list_head waiter;
+>  
+>  	struct se_device se_dev;
+>  
+> @@ -123,7 +124,7 @@ struct tcmu_dev {
+>  	wait_queue_head_t wait_cmdr;
+>  	struct mutex cmdr_lock;
+>  
+> -	bool waiting_global;
+> +	uint32_t waiting_blocks;
+>  	uint32_t dbi_max;
+>  	uint32_t dbi_thresh;
+>  	DECLARE_BITMAP(data_bitmap, DATA_BLOCK_BITS);
+> @@ -165,6 +166,10 @@ struct tcmu_cmd {
+>  static DEFINE_MUTEX(root_udev_mutex);
+>  static LIST_HEAD(root_udev);
+>  
+> +/* The data blocks global pool waiter list */
+> +static DEFINE_MUTEX(root_udev_waiter_mutex);
 
-This patch introduces TMR percpu reference counting using
-se_lun->lun_ref in transport_lookup_tmr_lun(), following
-how existing non TMR per se_lun reference counting works
-within transport_lookup_cmd_lun().
+Sorry for the delay.
 
-It also adds explicit transport_lun_remove_cmd() calls to
-drop the reference in the three tmr related locations that
-invoke transport_cmd_check_stop_to_fabric();
 
-   - target_tmr_work() during normal ->queue_tm_rsp()
-   - target_complete_tmr_failure() during error ->queue_tm_rsp()
-   - transport_generic_handle_tmr() during early failure
+Could you just add a comment about the lock ordering. It will be helpful
+to new engineers/reviewers to check for errors.
 
-Also, note the exception paths in transport_generic_free_cmd()
-and transport_cmd_finish_abort() already check SCF_SE_LUN_CMD,
-and will invoke transport_lun_remove_cmd() when necessary.
 
-Cc: Himanshu Madhani <himanshu.madhani@cavium.com>
-Cc: Quinn Tran <quinn.tran@cavium.com>
-Cc: Mike Christie <mchristi@redhat.com>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_device.c    | 14 ++++++++++----
- drivers/target/target_core_transport.c |  3 +++
- 2 files changed, 13 insertions(+), 4 deletions(-)
+> +static LIST_HEAD(root_udev_waiter);
+> +
+>  static atomic_t global_db_count = ATOMIC_INIT(0);
+>  
+>  static struct kmem_cache *tcmu_cmd_cache;
+> @@ -195,6 +200,11 @@ enum tcmu_multicast_groups {
+>  #define tcmu_cmd_set_dbi(cmd, index) ((cmd)->dbi[(cmd)->dbi_cur++] = (index))
+>  #define tcmu_cmd_get_dbi(cmd) ((cmd)->dbi[(cmd)->dbi_cur++])
+>  
+> +static inline bool is_in_waiter_list(struct tcmu_dev *udev)
+> +{
+> +	return !!udev->waiting_blocks;
+> +}
+> +
+>  static void tcmu_cmd_free_data(struct tcmu_cmd *tcmu_cmd, uint32_t len)
+>  {
+>  	struct tcmu_dev *udev = tcmu_cmd->tcmu_dev;
+> @@ -250,8 +260,6 @@ static bool tcmu_get_empty_blocks(struct tcmu_dev *udev,
+>  {
+>  	int i;
+>  
+> -	udev->waiting_global = false;
+> -
+>  	for (i = tcmu_cmd->dbi_cur; i < tcmu_cmd->dbi_cnt; i++) {
+>  		if (!tcmu_get_empty_block(udev, tcmu_cmd))
+>  			goto err;
+> @@ -259,9 +267,7 @@ static bool tcmu_get_empty_blocks(struct tcmu_dev *udev,
+>  	return true;
+>  
+>  err:
+> -	udev->waiting_global = true;
+> -	/* Try to wake up the unmap thread */
+> -	wake_up(&unmap_wait);
+> +	udev->waiting_blocks += tcmu_cmd->dbi_cnt - i;
+>  	return false;
+>  }
+>  
+> @@ -671,6 +677,7 @@ static inline size_t tcmu_cmd_get_cmd_size(struct tcmu_cmd *tcmu_cmd,
+>  
+>  	while (!is_ring_space_avail(udev, tcmu_cmd, command_size, data_length)) {
+>  		int ret;
+> +		bool is_waiting_blocks = !!udev->waiting_blocks;
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 8f0e0e3..11c80c4 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -168,11 +168,20 @@ int transport_lookup_tmr_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
- 	rcu_read_lock();
- 	deve = target_nacl_find_deve(nacl, unpacked_lun);
- 	if (deve) {
--		se_cmd->se_lun = rcu_dereference(deve->se_lun);
- 		se_lun = rcu_dereference(deve->se_lun);
-+
-+		if (!percpu_ref_tryget_live(&se_lun->lun_ref)) {
-+			se_lun = NULL;
-+			goto out_unlock;
-+		}
-+
-+		se_cmd->se_lun = rcu_dereference(deve->se_lun);
- 		se_cmd->pr_res_key = deve->pr_res_key;
- 		se_cmd->orig_fe_lun = unpacked_lun;
-+		se_cmd->se_cmd_flags |= SCF_SE_LUN_CMD;
-+		se_cmd->lun_ref_active = true;
- 	}
-+out_unlock:
- 	rcu_read_unlock();
- 
- 	if (!se_lun) {
-@@ -182,9 +191,6 @@ int transport_lookup_tmr_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
- 			unpacked_lun);
- 		return -ENODEV;
- 	}
--	/*
--	 * XXX: Add percpu se_lun->lun_ref reference count for TMR
--	 */
- 	se_cmd->se_dev = rcu_dereference_raw(se_lun->lun_se_dev);
- 	se_tmr->tmr_dev = rcu_dereference_raw(se_lun->lun_se_dev);
- 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index f16a789..83bfc97 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1588,6 +1588,7 @@ static void target_complete_tmr_failure(struct work_struct *work)
- 	se_cmd->se_tmr_req->response = TMR_LUN_DOES_NOT_EXIST;
- 	se_cmd->se_tfo->queue_tm_rsp(se_cmd);
- 
-+	transport_lun_remove_cmd(se_cmd);
- 	transport_cmd_check_stop_to_fabric(se_cmd);
- }
- 
-@@ -3199,6 +3200,7 @@ static void target_tmr_work(struct work_struct *work)
- 	cmd->se_tfo->queue_tm_rsp(cmd);
- 
- check_stop:
-+	transport_lun_remove_cmd(cmd);
- 	transport_cmd_check_stop_to_fabric(cmd);
- }
- 
-@@ -3221,6 +3223,7 @@ int transport_generic_handle_tmr(
- 		pr_warn_ratelimited("handle_tmr caught CMD_T_ABORTED TMR %d"
- 			"ref_tag: %llu tag: %llu\n", cmd->se_tmr_req->function,
- 			cmd->se_tmr_req->ref_task_tag, cmd->tag);
-+		transport_lun_remove_cmd(cmd);
- 		transport_cmd_check_stop_to_fabric(cmd);
- 		return 0;
- 	}
--- 
-1.9.1
+You can use your helper is_in_waiter_list().
+
+>  		DEFINE_WAIT(__wait);
+>  
+>  		prepare_to_wait(&udev->wait_cmdr, &__wait, TASK_INTERRUPTIBLE);
+> @@ -688,6 +695,18 @@ static inline size_t tcmu_cmd_get_cmd_size(struct tcmu_cmd *tcmu_cmd,
+>  			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+>  		}
+>  
+> +		/*
+> +		 * Try to insert the current udev to waiter list and
+> +		 * then wake up the unmap thread
+> +		 */
+> +		if (is_waiting_blocks) {
+> +			mutex_lock(&root_udev_waiter_mutex);
+> +			list_add_tail(&udev->waiter, &root_udev_waiter);
+> +			mutex_unlock(&root_udev_waiter_mutex);
+> +
+> +			wake_up(&unmap_wait);
+> +		}
+
+Is this supposed to go before the schedule_timeout call?
+
+If we are here and schedule_timeout returned non zero then our wait_cmdr
+has been woken up from the unmap thread because it freed some space, so
+we do not want to again add ourself and call unmap again.
+
+
+> +
+>  		mutex_lock(&udev->cmdr_lock);
+>  
+>  		/* We dropped cmdr_lock, cmd_head is stale */
+> @@ -902,8 +921,6 @@ static unsigned int tcmu_handle_completions(struct tcmu_dev *udev)
+>  	if (mb->cmd_tail == mb->cmd_head)
+>  		del_timer(&udev->timeout); /* no more pending cmds */
+>  
+> -	wake_up(&udev->wait_cmdr);
+> -
+>  	return handled;
+>  }
+>  
+> @@ -996,7 +1013,17 @@ static int tcmu_irqcontrol(struct uio_info *info, s32 irq_on)
+>  	struct tcmu_dev *tcmu_dev = container_of(info, struct tcmu_dev, uio_info);
+>  
+>  	mutex_lock(&tcmu_dev->cmdr_lock);
+> -	tcmu_handle_completions(tcmu_dev);
+> +	/*
+> +	 * If the current udev is also in waiter list, this will
+> +	 * make sure that the other waiters in list be feeded ahead
+> +	 * of it.
+> +	 */
+> +	if (is_in_waiter_list(tcmu_dev)) {
+> +		wake_up(&unmap_wait);
+> +	} else {
+> +		tcmu_handle_completions(tcmu_dev);
+> +		wake_up(&tcmu_dev->wait_cmdr);
+> +	}
+>  	mutex_unlock(&tcmu_dev->cmdr_lock);
+>  
+>  	return 0;
+> @@ -1231,7 +1258,7 @@ static int tcmu_configure_device(struct se_device *dev)
+>  	udev->data_off = CMDR_SIZE;
+>  	udev->data_size = DATA_SIZE;
+>  	udev->dbi_thresh = 0; /* Default in Idle state */
+> -	udev->waiting_global = false;
+> +	udev->waiting_blocks = 0;
+>  
+>  	/* Initialise the mailbox of the ring buffer */
+>  	mb = udev->mb_addr;
+> @@ -1345,6 +1372,13 @@ static void tcmu_free_device(struct se_device *dev)
+>  	list_del(&udev->node);
+>  	mutex_unlock(&root_udev_mutex);
+>  
+> +	mutex_lock(&root_udev_waiter_mutex);
+> +	mutex_lock(&udev->cmdr_lock);
+> +	if (is_in_waiter_list(udev))
+> +		list_del(&udev->waiter);
+> +	mutex_unlock(&udev->cmdr_lock);
+> +	mutex_unlock(&root_udev_waiter_mutex);
+> +
+>  	vfree(udev->mb_addr);
+>  
+>  	/* Upper layer should drain all requests before calling this */
+> @@ -1550,6 +1584,7 @@ static int unmap_thread_fn(void *data)
+>  	struct tcmu_dev *udev;
+>  	loff_t off;
+>  	uint32_t start, end, block;
+> +	static uint32_t free_blocks;
+>  	struct page *page;
+>  	int i;
+>  
+> @@ -1571,7 +1606,7 @@ static int unmap_thread_fn(void *data)
+>  			tcmu_handle_completions(udev);
+>  
+>  			/* Skip the udevs waiting the global pool or in idle */
+> -			if (udev->waiting_global || !udev->dbi_thresh) {
+> +			if (is_in_waiter_list(udev) || !udev->dbi_thresh) {
+>  				mutex_unlock(&udev->cmdr_lock);
+>  				continue;
+>  			}
+> @@ -1607,17 +1642,32 @@ static int unmap_thread_fn(void *data)
+>  				}
+>  			}
+>  			mutex_unlock(&udev->cmdr_lock);
+> +
+> +			free_blocks += end - start;
+>  		}
+> +		mutex_unlock(&root_udev_mutex);
+>  
+>  		/*
+>  		 * Try to wake up the udevs who are waiting
+> -		 * for the global data pool.
+> +		 * for the global data pool blocks.
+>  		 */
+> -		list_for_each_entry(udev, &root_udev, node) {
+> -			if (udev->waiting_global)
+> -				wake_up(&udev->wait_cmdr);
+> +		mutex_lock(&root_udev_waiter_mutex);
+> +		list_for_each_entry(udev, &root_udev_waiter, waiter) {
+> +			mutex_lock(&udev->cmdr_lock);
+> +			if (udev->waiting_blocks < free_blocks) {
+> +				mutex_unlock(&udev->cmdr_lock);
+> +				break;
+> +			}
+> +
+> +			free_blocks -= udev->waiting_blocks;
+> +			udev->waiting_blocks = 0;
+> +			mutex_unlock(&udev->cmdr_lock);
+> +
+> +			list_del(&udev->waiter);
+> +
+> +			wake_up(&udev->wait_cmdr);
+>  		}
+> -		mutex_unlock(&root_udev_mutex);
+> +		mutex_unlock(&root_udev_waiter_mutex);
+>  	}
+>  
+>  	return 0;
+> 
