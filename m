@@ -1,34 +1,34 @@
-From: Adrian Hunter <adrian.hunter@intel.com>
-Subject: [PATCH 0/2] scsi: ufs: Add PCI driver for Intel Host controllers
-Date: Mon,  5 Jun 2017 11:36:53 +0300
-Message-ID: <1496651815-13416-1-git-send-email-adrian.hunter@intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vinayak Holikatti <vinholikatti@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Szymon Mielczarek <szymonx.mielczarek@intel.com>, Michal Potomski <michalx.potomski@intel.com>, Grzegorz Janca <grzegorz.janca@intel.com>
+From: "Milan P. Gandhi" <mgandhi@redhat.com>
+Subject: [PATCH] Remove white spaces from fcoe.h
+Date: Mon, 5 Jun 2017 14:22:40 +0530
+Message-ID: <0f8b6a7b-c1d2-bc95-7970-7572991495cb@redhat.com>
+Reply-To: mgandhi@redhat.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Johannes Thumshirn <jth@kernel.org>, kernel-janitors@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi
+Remove the white spaces in do/while loop used for checking fcoe
+debug logging
 
+Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
+---
+ drivers/scsi/fcoe/fcoe.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Here is a PCI driver for Intel UFS host controllers, with a small tidy-up
-precursor patch.
-
-
-Szymon Mielczarek (2):
-      scsi: ufs: Tidy clocks list head usage
-      scsi: ufshcd-intel-pci: Add PCI driver for Intel Host controllers
-
- drivers/scsi/ufs/Kconfig            |  11 +++
- drivers/scsi/ufs/Makefile           |   1 +
- drivers/scsi/ufs/tc-dwc-g210-pci.c  |   2 -
- drivers/scsi/ufs/ufshcd-intel-pci.c | 183 ++++++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufshcd-pci.c       |   2 -
- drivers/scsi/ufs/ufshcd-pltfrm.c    |   2 -
- drivers/scsi/ufs/ufshcd.c           |  12 ++-
- 7 files changed, 202 insertions(+), 11 deletions(-)
- create mode 100644 drivers/scsi/ufs/ufshcd-intel-pci.c
-
-
-Regards
-Adrian
+diff --git a/drivers/scsi/fcoe/fcoe.h b/drivers/scsi/fcoe/fcoe.h
+index 6aa4820..7406376 100644
+--- a/drivers/scsi/fcoe/fcoe.h
++++ b/drivers/scsi/fcoe/fcoe.h
+@@ -46,7 +46,7 @@ extern unsigned int fcoe_debug_logging;
+ #define FCOE_NETDEV_LOGGING 0x02 /* Netdevice logging */
+ 
+ #define FCOE_CHECK_LOGGING(LEVEL, CMD)					\
+-do {                                                            	\
++do {									\
+ 	if (unlikely(fcoe_debug_logging & LEVEL))			\
+ 		do {							\
+ 			CMD;						\
