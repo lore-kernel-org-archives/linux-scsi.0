@@ -1,39 +1,32 @@
-From: Michael Schmitz <schmitzmic@gmail.com>
-Subject: [PATCH] m68k/atari: atari_scsi.c - use m68k_realnum_memory for FastRAM test
-Date: Mon,  5 Jun 2017 19:37:59 +1200
-Message-ID: <1496648279-15702-1-git-send-email-schmitzmic@gmail.com>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Sender: linux-m68k-owner@vger.kernel.org
-To: linux-m68k@vger.kernel.org, fthain@telegraphics.com.au
-Cc: geert@linux-m68k.org, cts@debian.org, linux-scsi@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v3 04/12] Protect SCSI device state changes with a mutex
+Date: Mon, 5 Jun 2017 10:09:37 +0200
+Message-ID: <20170605080937.GB22028@lst.de>
+References: <20170602212203.30401-1-bart.vanassche@sandisk.com> <20170602212203.30401-5-bart.vanassche@sandisk.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:38664 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751336AbdFEIJj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 5 Jun 2017 04:09:39 -0400
+Content-Disposition: inline
+In-Reply-To: <20170602212203.30401-5-bart.vanassche@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-m68k_num_memory is unsuitable to test for the presence of FastRAM
-on CT60 if the kernel is located in FastRAM: in arch/m68k/mm/motorola.c
-the ST-RAM chunk is skipped and m68k_num_memory is decremented in this
-case. m68k_realnum_memory still contains the actual number of RAM chunks
-so use that.
+On Fri, Jun 02, 2017 at 02:21:55PM -0700, Bart Van Assche wrote:
+> Serializing SCSI device state changes avoids that two state changes
+> can occur concurrently, e.g. the state changes in scsi_target_block()
+> and __scsi_remove_device(). This serialization is essential to make
+> patch "Make __scsi_remove_device go straight from BLOCKED to DEL"
+> work reliably.
+> 
+> Enable this mechanism for all scsi_target_*block() callers but not
+> for the scsi_internal_device_unblock() calls from the mpt3sas driver
+> because that driver can call scsi_internal_device_unblock() from
+> atomic context.
 
-Tested by Christian Steiges on his Falcon with kernel loaded in FastRAM
-- could you please reply with your Tested-by tag, Christian?
-
-Signed-off-by: Michael Schmitz <schmitzmic@gmail.com>
----
- drivers/scsi/atari_scsi.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
-index f792420..a75feeb 100644
---- a/drivers/scsi/atari_scsi.c
-+++ b/drivers/scsi/atari_scsi.c
-@@ -776,7 +776,7 @@ static int __init atari_scsi_probe(struct platform_device *pdev)
- 	 * from/to alternative Ram.
- 	 */
- 	if (ATARIHW_PRESENT(ST_SCSI) && !ATARIHW_PRESENT(EXTD_DMA) &&
--	    m68k_num_memory > 1) {
-+	    m68k_realnum_memory > 1) {
- 		atari_dma_buffer = atari_stram_alloc(STRAM_BUFFER_SIZE, "SCSI");
- 		if (!atari_dma_buffer) {
- 			pr_err(PFX "can't allocate ST-RAM double buffer\n");
--- 
-1.7.0.4
+And not taking the lock in that path is safe because of what conditions?
