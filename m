@@ -1,67 +1,49 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH 4/6] libata: factor out a ata_identify_page_supported
- helper
-Date: Mon, 5 Jun 2017 15:46:42 +0300
-Message-ID: <950a1c26-c691-9bce-eaa4-873165d7a98b@cogentembedded.com>
-References: <20170604124225.27032-1-hch@lst.de>
- <20170604124225.27032-5-hch@lst.de>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH v3 04/12] Protect SCSI device state changes with a mutex
+Date: Mon, 5 Jun 2017 15:18:49 +0000
+Message-ID: <1496675927.2623.1.camel@sandisk.com>
+References: <20170602212203.30401-1-bart.vanassche@sandisk.com>
+         <20170602212203.30401-5-bart.vanassche@sandisk.com>
+         <20170605080937.GB22028@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lf0-f53.google.com ([209.85.215.53]:34595 "EHLO
-        mail-lf0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751294AbdFEMqq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jun 2017 08:46:46 -0400
-Received: by mail-lf0-f53.google.com with SMTP id v20so38291934lfa.1
-        for <linux-scsi@vger.kernel.org>; Mon, 05 Jun 2017 05:46:46 -0700 (PDT)
-In-Reply-To: <20170604124225.27032-5-hch@lst.de>
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:45394 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751153AbdFEPU2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jun 2017 11:20:28 -0400
+In-Reply-To: <20170605080937.GB22028@lst.de>
+Content-Language: en-US
+Content-ID: <4B02C86B948AD148AA58E54B2609C027@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>
-Cc: Scott Bauer <scott.bauer@intel.com>, Jonathan Derrick <jonathan.derrick@intel.com>, Rafael Antognolli <rafael.antognolli@intel.com>, Robert Elliott <elliott@hpe.com>, linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "hch@lst.de" <hch@lst.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "hare@suse.com" <hare@suse.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-Hello!
+On Mon, 2017-06-05 at 10:09 +0200, Christoph Hellwig wrote:
+> On Fri, Jun 02, 2017 at 02:21:55PM -0700, Bart Van Assche wrote:
+> > Serializing SCSI device state changes avoids that two state changes
+> > can occur concurrently, e.g. the state changes in scsi_target_block()
+> > and __scsi_remove_device(). This serialization is essential to make
+> > patch "Make __scsi_remove_device go straight from BLOCKED to DEL"
+> > work reliably.
+> >=20
+> > Enable this mechanism for all scsi_target_*block() callers but not
+> > for the scsi_internal_device_unblock() calls from the mpt3sas driver
+> > because that driver can call scsi_internal_device_unblock() from
+> > atomic context.
+>=20
+> And not taking the lock in that path is safe because of what conditions?
 
-On 06/04/2017 03:42 PM, Christoph Hellwig wrote:
+Hello Christoph,
 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/ata/libata-core.c | 59 +++++++++++++++++++++++++----------------------
->  1 file changed, 32 insertions(+), 27 deletions(-)
->
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 445e7050637b..f57131115594 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -2120,6 +2120,37 @@ static bool ata_log_supported(struct ata_device *dev, u8 log)
->  	return get_unaligned_le16(&ap->sector_buf[log * 2]) ? true : false;
->  }
->
-> +static bool ata_identify_page_supported(struct ata_device *dev, u8 page)
-> +{
-> +	struct ata_port *ap = dev->link->ap;
-> +	unsigned int err, i;
-> +
-> +	if (!ata_log_supported(dev, ATA_LOG_IDENTIFY_DEVICE)) {
-> +		ata_dev_warn(dev, "ATA Identify Device Log not supported\n");
-> +		return false;
-> +	}
-> +
-> +	/*
-> +	 * Read IDENTIFY DEVICE data log, page 0, to figure out if the page is
-> +	 * supported.
-> +	 */
-> +	err = ata_read_log_page(dev, ATA_LOG_IDENTIFY_DEVICE, 0, ap->sector_buf,
-> +			1);
-> +	if (err) {
-> +		ata_dev_info(dev,
-> +			     "failed to get Device Identify Log Emask 0x%x\n",
-> +			     err);
+The mpt3sas driver is the only driver that calls scsi_internal_device_block=
+()
+and scsi_internal_device_unblock() from atomic context. Since it's not an o=
+ption
+to protect the SCSI device state changes with a spinlock I prefer that the
+mpt3sas authors convert the scsi_internal_device_block() calls into
+scsi_target_block() calls.
 
-    Your line continuation style is spomewhat inconsistent: 2 tabs above and 
-tabs/spaces here...
-
-[...]
-
-MBR, Sergei
+Bart.=
