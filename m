@@ -1,49 +1,128 @@
-From: "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Subject: Re: [ufs]: [scsi]: BUG: spinlock recursion on CPU#4
-Date: Mon, 5 Jun 2017 12:16:10 +0530
-Message-ID: <94899e9e-abd3-5e70-838a-5a4659a9483e@codeaurora.org>
-References: <bd79226b-833c-f53b-f92a-0c4ebffeb1ee@codeaurora.org>
- <1496325738.3075.1.camel@sandisk.com>
+From: Sumit Saxena <sumit.saxena@broadcom.com>
+Subject: Application stops due to ext4 filesytsem IO error
+Date: Mon, 5 Jun 2017 12:58:51 +0530
+Message-ID: <3e25920f0068797bd74e5ea37a2dc3dc@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <1496325738.3075.1.camel@sandisk.com>
-Content-Language: en-US
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:35166 "EHLO
+        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751321AbdFEH2y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jun 2017 03:28:54 -0400
+Received: by mail-oi0-f51.google.com with SMTP id l18so148475460oig.2
+        for <linux-scsi@vger.kernel.org>; Mon, 05 Jun 2017 00:28:53 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+
+Jens,
+
+We am observing  application stops while running ext4 filesystem IOs along
+with target reset in parallel.
+Our suspect is this behavior can be attributed to linux block layer. See
+below for details-
+
+Problem statement - " Application stops due to IO error from file system
+buffered IO. (Note - It is always a FS meta data read failure)"
+Issue is reproducible - "Yes. It is consistently reproducible."
+Brief about setup -
+Latest 4.11 kernel. Issue hits irrespective of whether SCSI MQ is enabled
+or disabled. use_blk_mq=Y and use_blk_mq=N has similar issue.
+Direct attached 4 SAS/SATA drives connected to MegaRAID Invader
+controller.
+
+Reproduction steps -
+-Create ext4 FS on 4 JBODs(non RAID volumes) behind MegaRAID SAS
+controller.
+-Start Data integrity test on all four ext4 mounted partition. (Tool
+should be configured to send Buffered FS IO).
+-Send Target Reset  (have some delay between next reset to allow some IO
+on device) on each JBOD to simulate error condition. (sg_reset -d
+/dev/sdX).
+
+End result -
+Combination of target resets and FS IOs in parallel causes application
+halt with ext4 Filesystem IO error.
+We are able to restart  application without cleaning and unmounting
+filesystem.
+Below are the error logs at the time of application stop-
+
+--------------------------
+sd 0:0:53:0: target reset called for
+scmd(ffff88003cf25148)
+sd 0:0:53:0: attempting target reset!
+scmd(ffff88003cf25148) tm_dev_handle 0xb
+sd 0:0:53:0: [sde] tag#519 BRCM Debug: request->cmd_flags: 0x80700
+bio->bi_flags: 0x2          bio->bi_opf: 0x3000 rq_flags 0x20e3
+..
+sd 0:0:53:0: [sde] tag#519 CDB: Read(10) 28 00 15 00 11 10 00 00 f8 00
+EXT4-fs error (device sde): __ext4_get_inode_loc:4465: inode #11018287:
+block 44040738: comm chaos: unable to read itable block
+-----------------------
+
+We debug further to understand what is happening above LLD. See below-
+
+During target reset,  there may be IO coming from target with CHECK
+CONDITION with below sense information-.
+Sense Key : Aborted Command [current]
+Add. Sense: No additional sense information
+
+Such Aborted command should be retried by SML/Block layer. This happens
+from SML expect for FS Meta data read.
+>From driver level debug, we found IOs with REQ_FAILFAST_DEV bit set in
+scmd->request->cmd_flags are not retried by SML and that is also as
+expected.
+
+Below is the code in scsi_error.c(function- scsi_noretry_cmd) which causes
+IOs with REQ_FAILFAST_DEV enabled not getting retried bit completed back
+to upper layer-
+--------
+/*
+     * assume caller has checked sense and determined
+     * the check condition was retryable.
+     */
+    if (scmd->request->cmd_flags & REQ_FAILFAST_DEV ||
+        scmd->request->cmd_type == REQ_TYPE_BLOCK_PC)
+        return 1;
+    else
+        return 0;
+--------
+
+IO which causes application to stop has REQ_FAILFAST_DEV enabled inside
+"scmd->request->cmd_flags". We noticed that this bit will be set for
+filesystem Read ahead meta data IOs. In order to confirm the same, we
+mounted with option inode_readahead_blks=0 to disable ext4's inode table
+readahead algorithm and did not observe the issue. Issue does not hit with
+DIRECT IOs but only with cached/buffered IOs.
+
+2. From driver level debug prints, we also noticed - There are many IO
+failures with REQ_FAILFAST_DEV handled gracefully by filesystem.
+Application level failure happens only If IO has RQF_MIXED_MERGE set.
+If IO merging is disabled through sysfs parameter for SCSI device in
+question- nomerges set to 2, we are not seeing the issue.
+
+3. We added few prints in driver to dump "scmd->request->cmd_flags" and
+"scmd->request->rq_flags" for IOs completed with CHECK CONDITION and
+culprit IOs has all these bits- REQ_FAILFAST_DEV and REQ_RAHEAD bit set in
+"scmd->request->cmd_flags" and RQF_MIXED_MERGE bit set in
+"scmd->request->rq_flags". Also it's not necessarily true that all IOs
+with these three bits set will cause issue but whenever issue hits, these
+three bits are set for IO causing failure.
 
 
+In summary,
+FS mechanism of using READ AHEAD for meta data works fine (in case of IO
+failure) if there is no mix/merge at block layer.
+FS mechanism of using READ AHEAD for meta data has some corner case which
+is not handled properly (in case of IO failure) if  there was  mix/merge
+at block layer.
+megaraid_sas driver's behavior seems correct here. Aborted IO goes to SML
+with CHECK CONDITION settings and SML decided to fail fast IO as it was
+requested.
 
-On 6/1/2017 7:32 PM, Bart Van Assche wrote:
-> On Thu, 2017-06-01 at 12:28 +0530, Asutosh Das (asd) wrote:
->> Please can you check if this is actually a bug and my understanding is
->> correct.
-> 
-> Hello Asutosh,
-> 
-> Spinlock recursion is always a bug. With what kernel version did you encounter
-> this? Was it with a kernel from kernel.org, a distro kernel or an Android kernel?
-> Have you already tried to reproduce this with kernel debugging enabled? Enabling
-> CONFIG_DEBUG_SPINLOCK and CONFIG_PROVE_LOCKING should provide more detailed
-> information.
-> 
-> Bart.
-> 
+Query -  Is this block layer (page cache) issue?  What should be the ideal
+fix ?
 
-Hello Bart,
-Thanks.
-
-It's on 4.4 and its an Android kernel.
-
-No - I haven't tried it out yet. I could get some clues from the 
-call-stack itself, like I explained before. I can try these configs 
-though. While I do that, I'd like to know your thoughts on my analysis. 
-Do you think with the current data, it makes sense?
-
--- 
-Asutosh.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
-Linux Foundation Collaborative Project
+Thanks,
+Sumit
