@@ -1,27 +1,54 @@
-From: LOUISETTE MEDINA <louisettemedina@gmail.com>
-Subject: hello
-Date: Mon, 5 Jun 2017 21:08:12 +0200
-Message-ID: <CAN50=-ffpBemECcFgdUhjSa81hO_rm0Yp-qeSNFiqkKJR_iZUQ@mail.gmail.com>
-Reply-To: medinamoncella@gmail.com
+From: "Christian T. Steigies" <cts@debian.org>
+Subject: Re: [PATCH] m68k/atari: atari_scsi.c - use m68k_realnum_memory for
+ FastRAM test
+Date: Mon, 5 Jun 2017 21:17:09 +0200
+Message-ID: <20170605191709.GB4005@nunzio.venus.sol>
+References: <1496648279-15702-1-git-send-email-schmitzmic@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ot0-f194.google.com ([74.125.82.194]:33019 "EHLO
-        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751183AbdFETIX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jun 2017 15:08:23 -0400
-Received: by mail-ot0-f194.google.com with SMTP id k4so244794otd.0
-        for <linux-scsi@vger.kernel.org>; Mon, 05 Jun 2017 12:08:12 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-m68k-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1496648279-15702-1-git-send-email-schmitzmic@gmail.com>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Michael Schmitz <schmitzmic@gmail.com>
+Cc: linux-m68k@vger.kernel.org, fthain@telegraphics.com.au, geert@linux-m68k.org, cts@debian.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello ,I am called Ms. Louisette Moncella Medina I am of French nationality
-and I am a lenders special offer loans at a rate of 2
-%. The amount varies from 30.000 =E2=82=AC 7.000.000 =E2=82=AC. I want to h=
-ave to deal
-with people honest and trustworthy. If your application is
-serious send me an email. I pay my money only to
-people who are able to me to pay for it. If you are interested
-please do not hesitate to contact me directly my e-mail :
-medinamoncella@gmail.com
+On Mon, Jun 05, 2017 at 07:37:59PM +1200, Michael Schmitz wrote:
+> m68k_num_memory is unsuitable to test for the presence of FastRAM
+> on CT60 if the kernel is located in FastRAM: in arch/m68k/mm/motorola.c
+> the ST-RAM chunk is skipped and m68k_num_memory is decremented in this
+> case. m68k_realnum_memory still contains the actual number of RAM chunks
+> so use that.
+> 
+> Tested by Christian Steiges on his Falcon with kernel loaded in FastRAM
+> - could you please reply with your Tested-by tag, Christian?
+
+Sure, do I need to sign it or is this ok?
+
+Tested-by: Christian T. Steigies <cts@debian.org>
+> Signed-off-by: Michael Schmitz <schmitzmic@gmail.com>
+> ---
+>  drivers/scsi/atari_scsi.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
+> index f792420..a75feeb 100644
+> --- a/drivers/scsi/atari_scsi.c
+> +++ b/drivers/scsi/atari_scsi.c
+> @@ -776,7 +776,7 @@ static int __init atari_scsi_probe(struct platform_device *pdev)
+>  	 * from/to alternative Ram.
+>  	 */
+>  	if (ATARIHW_PRESENT(ST_SCSI) && !ATARIHW_PRESENT(EXTD_DMA) &&
+> -	    m68k_num_memory > 1) {
+> +	    m68k_realnum_memory > 1) {
+>  		atari_dma_buffer = atari_stram_alloc(STRAM_BUFFER_SIZE, "SCSI");
+>  		if (!atari_dma_buffer) {
+>  			pr_err(PFX "can't allocate ST-RAM double buffer\n");
+> -- 
+> 1.7.0.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-m68k" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
