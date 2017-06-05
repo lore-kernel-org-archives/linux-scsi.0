@@ -1,48 +1,49 @@
-From: Capa Edward <mrs.sarahjohnsonn@gmail.com>
-Subject: Re: Establishing Charity Organization**
-Date: Mon, 5 Jun 2017 09:56:18 +0100
-Message-ID: <CAOqy5dM477TpPA=3PJdh7k1hEkz0+1Yi5RVFjoSNUg6XarKM7w@mail.gmail.com>
-References: <CAOqy5dO05vp_mff76-icewqa3OB8z1io7CD9RFBaHARUXc6yug@mail.gmail.com>
- <CAOqy5dO5LF9Pa_vJqvikBRLo8VWExWwof5HB08w3AS54LCfwYg@mail.gmail.com> <CAOqy5dM9vXsE+X88tsV=TjmWXjC-gsLvMvCuRDT8eyZmzKN6qg@mail.gmail.com>
-Reply-To: sarh.edward@hotmail.com
+From: Julia Lawall <julia.lawall@lip6.fr>
+Subject: Re: [PATCH] Remove white spaces from fcoe.h
+Date: Mon, 5 Jun 2017 11:18:48 +0200 (CEST)
+Message-ID: <alpine.DEB.2.20.1706051118090.2010@hadrien>
+References: <0f8b6a7b-c1d2-bc95-7970-7572991495cb@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ua0-f193.google.com ([209.85.217.193]:36597 "EHLO
-        mail-ua0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751352AbdFEI4U (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jun 2017 04:56:20 -0400
-Received: by mail-ua0-f193.google.com with SMTP id u10so1756234uaf.3
-        for <linux-scsi@vger.kernel.org>; Mon, 05 Jun 2017 01:56:20 -0700 (PDT)
-In-Reply-To: <CAOqy5dM9vXsE+X88tsV=TjmWXjC-gsLvMvCuRDT8eyZmzKN6qg@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <0f8b6a7b-c1d2-bc95-7970-7572991495cb@redhat.com>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: "Milan P. Gandhi" <mgandhi@redhat.com>
+Cc: Johannes Thumshirn <jth@kernel.org>, kernel-janitors@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-`._..
 
-Peace be with you,
 
-Glad to write to you this message,
+On Mon, 5 Jun 2017, Milan P. Gandhi wrote:
 
-I seek for your kind help in setting up a charitable organization to
-help the less privileged  people and also the elderly people under
-your care,
+> Remove the white spaces in do/while loop used for checking fcoe
+> debug logging
 
-I want to use my late husband wealth of $3,000,000.00 to set up a
-charity foundation to help the needy and the less privileged ones in
-your country under your care, Can you help to build this project in
-your country?
+Is it converting spaces to tabs?  If so, saying that would be clearer.
 
-All i need from you is your sincerity to use this funds to do this
-project as i desired to use it for less privileged ones and orphanage
-homes,
+julia
 
-We are the one who will make the world a better place when we help the
-needy sincerely,
-
-Reply and let me know your opinion in doing this noble work for the
-help of mankind,
-
-Be blessed,
-
-Mrs Sarah Edward J.
+>
+> Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
+> ---
+>  drivers/scsi/fcoe/fcoe.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/fcoe/fcoe.h b/drivers/scsi/fcoe/fcoe.h
+> index 6aa4820..7406376 100644
+> --- a/drivers/scsi/fcoe/fcoe.h
+> +++ b/drivers/scsi/fcoe/fcoe.h
+> @@ -46,7 +46,7 @@ extern unsigned int fcoe_debug_logging;
+>  #define FCOE_NETDEV_LOGGING 0x02 /* Netdevice logging */
+>
+>  #define FCOE_CHECK_LOGGING(LEVEL, CMD)					\
+> -do {                                                            	\
+> +do {									\
+>  	if (unlikely(fcoe_debug_logging & LEVEL))			\
+>  		do {							\
+>  			CMD;						\
+> --
+> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
