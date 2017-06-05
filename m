@@ -1,95 +1,79 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH 2/3] target: Add TARGET_SCF_LOOKUP_LUN_FROM_TAG support
- for ABORT_TASK
-Date: Mon, 5 Jun 2017 15:57:30 +0000
-Message-ID: <1496678246.2623.5.camel@sandisk.com>
-References: <1496527808-28789-1-git-send-email-nab@linux-iscsi.org>
-         <1496527808-28789-3-git-send-email-nab@linux-iscsi.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:52342 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751077AbdFEP5d (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jun 2017 11:57:33 -0400
-In-Reply-To: <1496527808-28789-3-git-send-email-nab@linux-iscsi.org>
-Content-Language: en-US
-Content-ID: <062FB2E66570AE488DA94364C5B48DDE@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH v4 05/11] blk-mq: use the introduced blk_mq_unquiesce_queue()
+Date: Mon,  5 Jun 2017 23:59:19 +0800
+Message-ID: <20170605155925.7896-6-ming.lei@redhat.com>
+References: <20170605155925.7896-1-ming.lei@redhat.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170605155925.7896-1-ming.lei@redhat.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Ming Lei <ming.lei@redhat.com>, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "mchristi@redhat.com" <mchristi@redhat.com>, "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>, "quinn.tran@cavium.com" <quinn.tran@cavium.com>, "hare@suse.com" <hare@suse.com>, "hch@lst.de" <hch@lst.de>
 
-On Sat, 2017-06-03 at 22:10 +0000, Nicholas A. Bellinger wrote:
-> +static bool target_lookup_lun_from_tag(struct se_session *se_sess, u64 t=
-ag,
-> +				       u64 *unpacked_lun)
-> +{
-> +	struct se_cmd *se_cmd;
-> +	unsigned long flags;
-> +	bool ret =3D false;
-> +
-> +	spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
-> +	list_for_each_entry(se_cmd, &se_sess->sess_cmd_list, se_cmd_list) {
-> +		if (se_cmd->se_cmd_flags & SCF_SCSI_TMR_CDB)
-> +			continue;
-> +
-> +		if (se_cmd->tag =3D=3D tag) {
-> +			*unpacked_lun =3D se_cmd->orig_fe_lun;
-> +			ret =3D true;
-> +			break;
-> +		}
-> +	}
-> +	spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
-> +
-> +	return ret;
-> +}
-> +
->  /**
->   * target_submit_tmr - lookup unpacked lun and submit uninitialized se_c=
-md
->   *                     for TMR CDBs
-> @@ -1639,19 +1662,31 @@ int target_submit_tmr(struct se_cmd *se_cmd, stru=
-ct se_session *se_sess,
->  		core_tmr_release_req(se_cmd->se_tmr_req);
->  		return ret;
->  	}
-> +	/*
-> +	 * If this is ABORT_TASK with no explicit fabric provided LUN,
-> +	 * go ahead and search active session tags for a match to figure
-> +	 * out unpacked_lun for the original se_cmd.
-> +	 */
-> +	if (tm_type =3D=3D TMR_ABORT_TASK && (flags & TARGET_SCF_LOOKUP_LUN_FRO=
-M_TAG)) {
-> +		if (!target_lookup_lun_from_tag(se_sess, tag, &unpacked_lun))
-> +			goto failure;
-> +	}
-> =20
->  	ret =3D transport_lookup_tmr_lun(se_cmd, unpacked_lun);
-> -	if (ret) {
-> -		/*
-> -		 * For callback during failure handling, push this work off
-> -		 * to process context with TMR_LUN_DOES_NOT_EXIST status.
-> -		 */
-> -		INIT_WORK(&se_cmd->work, target_complete_tmr_failure);
-> -		schedule_work(&se_cmd->work);
-> -		return 0;
-> -	}
-> +	if (ret)
-> +		goto failure;
-> +
->  	transport_generic_handle_tmr(se_cmd);
->  	return 0;
+blk_mq_unquiesce_queue() is used for unquiescing the
+queue explicitly, so replace blk_mq_start_stopped_hw_queues()
+with it.
 
-Hello Nic,
+For the scsi part, this patch takes Bart's suggestion to
+switch to block quiesce/unquiesce API completely.
 
-So after LUN lookup has finished sess_cmd_lock lock is dropped, a context
-switch occurs due to the queue_work() call in transport_generic_handle_tmr(=
-)
-and next core_tmr_abort_task() reacquires that lock? Sorry but I'm afraid
-that if after that lock is dropped and before it is reacquired a command
-finishes and the initiator reuses the same tag for another command for the
-same LUN that this may result in the wrong command being aborted.
+Cc: linux-nvme@lists.infradead.org
+Cc: linux-scsi@vger.kernel.org
+Cc: dm-devel@redhat.com
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ drivers/md/dm-rq.c       | 2 +-
+ drivers/nvme/host/core.c | 2 +-
+ drivers/scsi/scsi_lib.c  | 4 ++--
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-Bart.=
+diff --git a/drivers/md/dm-rq.c b/drivers/md/dm-rq.c
+index b639fa7246ee..ea4029de077f 100644
+--- a/drivers/md/dm-rq.c
++++ b/drivers/md/dm-rq.c
+@@ -71,7 +71,7 @@ static void dm_old_start_queue(struct request_queue *q)
+ 
+ static void dm_mq_start_queue(struct request_queue *q)
+ {
+-	blk_mq_start_stopped_hw_queues(q, true);
++	blk_mq_unquiesce_queue(q);
+ 	blk_mq_kick_requeue_list(q);
+ }
+ 
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index a60926410438..c3f189e54d10 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -2526,7 +2526,7 @@ void nvme_start_queues(struct nvme_ctrl *ctrl)
+ 
+ 	mutex_lock(&ctrl->namespaces_mutex);
+ 	list_for_each_entry(ns, &ctrl->namespaces, list) {
+-		blk_mq_start_stopped_hw_queues(ns->queue, true);
++		blk_mq_unquiesce_queue(ns->queue);
+ 		blk_mq_kick_requeue_list(ns->queue);
+ 	}
+ 	mutex_unlock(&ctrl->namespaces_mutex);
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 884aaa84c2dd..d6df1dafdc9f 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2979,7 +2979,7 @@ scsi_internal_device_block(struct scsi_device *sdev, bool wait)
+ 		if (wait)
+ 			blk_mq_quiesce_queue(q);
+ 		else
+-			blk_mq_stop_hw_queues(q);
++			blk_mq_quiesce_queue_nowait(q);
+ 	} else {
+ 		spin_lock_irqsave(q->queue_lock, flags);
+ 		blk_stop_queue(q);
+@@ -3033,7 +3033,7 @@ scsi_internal_device_unblock(struct scsi_device *sdev,
+ 		return -EINVAL;
+ 
+ 	if (q->mq_ops) {
+-		blk_mq_start_stopped_hw_queues(q, false);
++		blk_mq_unquiesce_queue(q);
+ 	} else {
+ 		spin_lock_irqsave(q->queue_lock, flags);
+ 		blk_start_queue(q);
+-- 
+2.9.4
