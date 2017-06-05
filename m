@@ -1,79 +1,51 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH v4 05/11] blk-mq: use the introduced blk_mq_unquiesce_queue()
-Date: Mon,  5 Jun 2017 23:59:19 +0800
-Message-ID: <20170605155925.7896-6-ming.lei@redhat.com>
-References: <20170605155925.7896-1-ming.lei@redhat.com>
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170605155925.7896-1-ming.lei@redhat.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Ming Lei <ming.lei@redhat.com>, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH][scsi-next] scsi: qla2xxx: remove redundant null check on tgt
+Date: Mon,  5 Jun 2017 18:29:58 +0100
+Message-ID: <20170605172958.12844-1-colin.king@canonical.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:54448 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751338AbdFERaI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jun 2017 13:30:08 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: qla2xxx-upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 
-blk_mq_unquiesce_queue() is used for unquiescing the
-queue explicitly, so replace blk_mq_start_stopped_hw_queues()
-with it.
+From: Colin Ian King <colin.king@canonical.com>
 
-For the scsi part, this patch takes Bart's suggestion to
-switch to block quiesce/unquiesce API completely.
+An earlier commit ed7fb808477b846bb2 ("scsi: qla2xxx: Remove
+redundant wait when target is stopped.") removed a null check
+on ha->tgt.tgt_ops and replaced it with a new check that null
+checked tgt, thus making the subsequent null check on tgt
+totally redundant. Remove it.
 
-Cc: linux-nvme@lists.infradead.org
-Cc: linux-scsi@vger.kernel.org
-Cc: dm-devel@redhat.com
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
+Detected by CoverityScan, CID#1440452 ("Logically Dead Code")
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/md/dm-rq.c       | 2 +-
- drivers/nvme/host/core.c | 2 +-
- drivers/scsi/scsi_lib.c  | 4 ++--
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/qla2xxx/qla_target.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/drivers/md/dm-rq.c b/drivers/md/dm-rq.c
-index b639fa7246ee..ea4029de077f 100644
---- a/drivers/md/dm-rq.c
-+++ b/drivers/md/dm-rq.c
-@@ -71,7 +71,7 @@ static void dm_old_start_queue(struct request_queue *q)
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index cb33ca87ca37..3594a76f6155 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -5519,12 +5519,6 @@ void qlt_async_event(uint16_t code, struct scsi_qla_host *vha,
+ 	if (!tgt || tgt->tgt_stop || tgt->tgt_stopped)
+ 		return;
  
- static void dm_mq_start_queue(struct request_queue *q)
- {
--	blk_mq_start_stopped_hw_queues(q, true);
-+	blk_mq_unquiesce_queue(q);
- 	blk_mq_kick_requeue_list(q);
- }
- 
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index a60926410438..c3f189e54d10 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -2526,7 +2526,7 @@ void nvme_start_queues(struct nvme_ctrl *ctrl)
- 
- 	mutex_lock(&ctrl->namespaces_mutex);
- 	list_for_each_entry(ns, &ctrl->namespaces, list) {
--		blk_mq_start_stopped_hw_queues(ns->queue, true);
-+		blk_mq_unquiesce_queue(ns->queue);
- 		blk_mq_kick_requeue_list(ns->queue);
- 	}
- 	mutex_unlock(&ctrl->namespaces_mutex);
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 884aaa84c2dd..d6df1dafdc9f 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2979,7 +2979,7 @@ scsi_internal_device_block(struct scsi_device *sdev, bool wait)
- 		if (wait)
- 			blk_mq_quiesce_queue(q);
- 		else
--			blk_mq_stop_hw_queues(q);
-+			blk_mq_quiesce_queue_nowait(q);
- 	} else {
- 		spin_lock_irqsave(q->queue_lock, flags);
- 		blk_stop_queue(q);
-@@ -3033,7 +3033,7 @@ scsi_internal_device_unblock(struct scsi_device *sdev,
- 		return -EINVAL;
- 
- 	if (q->mq_ops) {
--		blk_mq_start_stopped_hw_queues(q, false);
-+		blk_mq_unquiesce_queue(q);
- 	} else {
- 		spin_lock_irqsave(q->queue_lock, flags);
- 		blk_start_queue(q);
+-	if (unlikely(tgt == NULL)) {
+-		ql_dbg(ql_dbg_tgt, vha, 0xe03a,
+-		    "ASYNC EVENT %#x, but no tgt (ha %p)\n", code, ha);
+-		return;
+-	}
+-
+ 	if (((code == MBA_POINT_TO_POINT) || (code == MBA_CHG_IN_CONNECTION)) &&
+ 	    IS_QLA2100(ha))
+ 		return;
 -- 
-2.9.4
+2.11.0
