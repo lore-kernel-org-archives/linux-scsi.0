@@ -1,42 +1,54 @@
-From: Scott Bauer <scott.bauer@intel.com>
-Subject: Re: [PATCH 6/6] sd: add support for TCG OPAL self encrypting disks
-Date: Tue, 6 Jun 2017 15:40:07 -0600
-Message-ID: <20170606214007.zx66c7rogeylptx6@sbauer-Z170X-UD5>
-References: <20170604124225.27032-1-hch@lst.de>
- <20170604124225.27032-7-hch@lst.de>
- <20170605211530.aqxwigcrxgsdvmhs@sbauer-Z170X-UD5>
- <20170606095955.GC20590@lst.de>
+From: Wolfram Sang <wsa@the-dreams.de>
+Subject: Re: next build: 113 warnings 0 failures (next/next-20170605)
+Date: Wed, 7 Jun 2017 00:36:22 +0200
+Message-ID: <20170606223621.GA3628@katana>
+References: <59351e18.c490630a.4dca5.e785@mx.google.com>
+ <CAK8P3a1D0r9XAfGN95EkiaXvCmkJq1Em=xggJw87yX7YH7o-vA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:47794 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751436AbdFFVyQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 6 Jun 2017 17:54:16 -0400
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="17pEHd4RhPHOinZp"
+Return-path: <linux-i2c-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170606095955.GC20590@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <CAK8P3a1D0r9XAfGN95EkiaXvCmkJq1Em=xggJw87yX7YH7o-vA@mail.gmail.com>
+Sender: linux-i2c-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Olof's autobuilder <build@lixom.net>, Olof Johansson <olof@lixom.net>, Kernel Build Reports Mailman List <kernel-build-reports@lists.linaro.org>, Joe Carnuccio <joe.carnuccio@cavium.com>, Himanshu Madhani <himanshu.madhani@cavium.com>, Bart Van Assche <Bart.VanAssche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, qla2xxx-upstream@qlogic.com, Wolfram Sang <wsa+renesas@sang-engineering.com>, Jean Delvare <jdelvare@suse.de>, linux-i2c@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Tejun Heo <tj@kernel.org>, Jonathan Derrick <jonathan.derrick@intel.com>, Rafael Antognolli <rafael.antognolli@intel.com>, Robert Elliott <elliott@hpe.com>, linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Jun 06, 2017 at 11:59:55AM +0200, Christoph Hellwig wrote:
-> On Mon, Jun 05, 2017 at 03:15:31PM -0600, Scott Bauer wrote:
-> > I'm not familiar at all with ATA, but I noticed there was no unlock from suspend support
-> > in the series. Does ATA not have a way to determine if we're coming out of a suspend?
-> 
-> I don't know, and not having a test system with a OPAL capable driver
-> and suspend support I could not even test the code.
-> 
-> > I see there are some power-ops in scsi/sd.c, if you do want to add it you can mabe toss a
-> > 
-> > if (sdkp->security)
-> >    opal_unlock_from_suspend(sdpk->opal_dev)
-> > 
-> > somewhere in the resume path? We handle null opal_devs and no unlock from suspend list
-> > so calling it when nothing is set up is just a no-op.
-> 
-> Yeah, maybe.  We'll just need someone who could test it first.
 
-I was given a sata drive that apparently has opal enabled on it. If it actually has opal
-I can run some tests.
+--17pEHd4RhPHOinZp
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+
+> >       2 drivers/i2c/i2c-stub.c:18:0: warning: "DEBUG" redefined
+>=20
+> Caused by 6c42778780c4 ("i2c: stub: use pr_fmt"): "#define DEBUG"
+> now conflicts with "ccflags-$(CONFIG_I2C_DEBUG_CORE) :=3D -DDEBUG"
+> in the Makefile.
+
+I'll fix it tomorrow!
+
+
+--17pEHd4RhPHOinZp
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAlk3LmEACgkQFA3kzBSg
+KbYLYBAAp2AylYFmxGreevx1fRKIiDneRMoyjsn2AoeokOgIfwUi6PuvQNOe1hnh
+mQM3hYefNlvJKvrWzfn2aCT+IcjznM3m+rb+w9LmnXyb0BUfB8SWYznctvYjDrnj
+yX1B6PkYZs1BTUzljwGPpoaTzL28FiazQn0joD879afFVLxQGApy32mewYtDo6qG
+/pUCQRfBS6M34ixsDdDW1crP6GHa0O7OAFflOHDy6ayFHIOGmkY1p74vdUVJNVAc
+SAiK8vtj1pSD1vSK1jXrzDEgBBWg+t4RBffSYn1H2VJ6N+oz0ROguVuJp04Ess1F
+7x7DxHsiqA5tuYFxcTEYTC8lhxicVJKtiHSH35MKSkSnE13rAKdIFFux065AMEhy
+Xb2NZ77yK9mnejr/syKl6vQnOQeVermwcU2wykrOSE2vpLTaflWC5p66USETmqxR
+V56EiHFVHsuuTaobGwqw5qRFtiQO++7VcqqM4TYrYXisBERi837CqlTWNgB9uFE/
+7EVOl73Q5AVZWUtljW/uXl9r08JaLJDvEwg2jrNewQ1CLis8+gKhOUOUkZuNLY0C
+S5hrmFXFj7a5AVyeus9Fwndpn/GGXRd6B2r9fxR+gevJCN4ofbYtLo71Go/EDf4s
+r15M8Cn0DlY05fEJyWM4mCg7wYfQqgJTPIuVMXRp4+C/4QDTHW8=
+=AR0e
+-----END PGP SIGNATURE-----
+
+--17pEHd4RhPHOinZp--
