@@ -1,37 +1,62 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 00/17] lpfc updates for 11.4.0.0
-Date: Mon, 05 Jun 2017 21:13:36 -0400
-Message-ID: <yq14lvtex4v.fsf@oracle.com>
-References: <20170602040711.21046-1-jsmart2021@gmail.com>
+From: Mike Christie <mchristi@redhat.com>
+Subject: Re: [PATCH v2 4/5] tcmu: Make dev_config configurable
+Date: Mon, 5 Jun 2017 21:02:30 -0500
+Message-ID: <59360D36.3030604@redhat.com>
+References: <1496169080-58746-1-git-send-email-bryantly@linux.vnet.ibm.com>
+ <1496169080-58746-5-git-send-email-bryantly@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20437 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751192AbdFFBNl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jun 2017 21:13:41 -0400
-In-Reply-To: <20170602040711.21046-1-jsmart2021@gmail.com> (James Smart's
-        message of "Thu, 1 Jun 2017 21:06:54 -0700")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1496169080-58746-5-git-send-email-bryantly@linux.vnet.ibm.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, nab@linux-iscsi.org
+Cc: seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <jsmart2021@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+
+On 05/30/2017 01:31 PM, Bryant G. Ly wrote:
+> This allows for userspace to change the device path after
+> it has been created. Thus giving the user the ability to change
+> the path. The use case for this is to allow for virtual optical
+> to have media change.
+> 
+> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+> ---
+>  drivers/target/target_core_user.c | 41 +++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 41 insertions(+)
+> 
+> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+> index c8c84b7..7575bc9 100644
+> --- a/drivers/target/target_core_user.c
+> +++ b/drivers/target/target_core_user.c
+> @@ -1548,6 +1548,46 @@ static ssize_t tcmu_cmd_time_out_store(struct config_item *item, const char *pag
+>  }
+>  CONFIGFS_ATTR(tcmu_, cmd_time_out);
+>  
+> +static ssize_t tcmu_dev_path_show(struct config_item *item, char *page)
+> +{
+> +	struct se_dev_attrib *da = container_of(to_config_group(item),
+> +						struct se_dev_attrib, da_group);
+> +	struct tcmu_dev *udev = TCMU_DEV(da->da_dev);
+> +
+> +	return snprintf(page, PAGE_SIZE, "%s\n", udev->dev_config);
+> +}
+> +
+> +static ssize_t tcmu_dev_path_store(struct config_item *item, const char *page,
+> +				   size_t count)
+> +{
+> +	struct se_dev_attrib *da = container_of(to_config_group(item),
+> +						struct se_dev_attrib, da_group);
+> +	struct tcmu_dev *udev = TCMU_DEV(da->da_dev);
+> +	char *copy = NULL;
+> +	int ret;
+> +
+> +	copy = kstrdup(page, GFP_KERNEL);
+> +	if (!copy) {
+> +		kree(copy);
+> +		return -EINVAL;
+> +	}
+> +	strcpy(udev->dev_config, copy);
 
 
-Hi James,
-
-> This patch set provides a number of bug fixes, code cleanups, and
-> error handling in lpfc.
->
-> The patches were cut against the Martin's 4.12/scsi-fixes tree.  There
-> are no outside dependencies. The patches should merge via Martin's
-> tree.
-
-We're approaching rc5 and there are several hundred-liners in this
-submission. The EQ delay logic patch in particular looks like a feature
-rather than a bug fix.
-
-How many of these are critical to get into 4.12 vs. 4.13?
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+I think we need to do strlcpy with TCMU_CONFIG_LEN here.
