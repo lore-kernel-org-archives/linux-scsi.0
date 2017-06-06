@@ -1,48 +1,37 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: next build: 113 warnings 0 failures (next/next-20170605)
-Date: Tue, 6 Jun 2017 15:14:07 +0200
-Message-ID: <CAK8P3a1D0r9XAfGN95EkiaXvCmkJq1Em=xggJw87yX7YH7o-vA@mail.gmail.com>
-References: <59351e18.c490630a.4dca5.e785@mx.google.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-i2c-owner@vger.kernel.org>
-In-Reply-To: <59351e18.c490630a.4dca5.e785@mx.google.com>
-Sender: linux-i2c-owner@vger.kernel.org
-To: Olof's autobuilder <build@lixom.net>
-Cc: Olof Johansson <olof@lixom.net>, Kernel Build Reports Mailman List <kernel-build-reports@lists.linaro.org>, Joe Carnuccio <joe.carnuccio@cavium.com>, Himanshu Madhani <himanshu.madhani@cavium.com>, Bart Van Assche <Bart.VanAssche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, qla2xxx-upstream@qlogic.com, Wolfram Sang <wsa+renesas@sang-engineering.com>, Jean Delvare <jdelvare@suse.de>, Wolfram Sang <wsa@the-dreams.de>, linux-i2c@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH v4 0/5] tcmu: Add Type of reconfig into netlink
+Date: Tue,  6 Jun 2017 09:28:47 -0500
+Message-ID: <1496759332-35216-1-git-send-email-bryantly@linux.vnet.ibm.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: nab@linux-iscsi.org, mchristi@redhat.com
+Cc: seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Bryant G. Ly" <bgly@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jun 5, 2017 at 11:02 AM, Olof's autobuilder <build@lixom.net> wrote:
-> Here are the build results from automated periodic testing.
->
-> The tree being built was next, found at:
->
-> http://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git (master branch)
->
-> Topmost commit:
->
-> f0090bf Add linux-next specific files for 20170605
->
-> Build logs (stderr only) can be found at the following link (experimental):
->
-> http://arm-soc.lixom.net/buildlogs/next/next-20170605/
-> Warnings:
->
->       1 drivers/scsi/qla2xxx/qla_init.c:6407:50: warning: format '%lx' expects argument of type 'long unsigned int', but argument 5 has type 'unsigned int' [-Wformat=]
->       1 drivers/scsi/qla2xxx/qla_init.c:6709:50: warning: format '%lx' expects argument of type 'long unsigned int', but argument 5 has type 'unsigned int' [-Wformat=]
+From: "Bryant G. Ly" <bgly@us.ibm.com>
 
-Caused by b95b9452aacf ("scsi: qla2xxx: Fix crash due to mismatch mumber
-of Q-pair creation for Multi queue"): Need to use %zx instead of %lx for
-printing a size_t
+This patch consists of adding a netlink to allow for reconfiguration
+of a device in tcmu.
 
->       2 drivers/i2c/i2c-stub.c:18:0: warning: "DEBUG" redefined
+It also changes and adds some attributes that are reconfigurable:
+write_cache, device size, and device path.
 
-Caused by 6c42778780c4 ("i2c: stub: use pr_fmt"): "#define DEBUG"
-now conflicts with "ccflags-$(CONFIG_I2C_DEBUG_CORE) := -DDEBUG"
-in the Makefile.
+V2 - Fixes kfree in tcmu: Make dev_config configurable
+V3 - Fixes spelling error
+V4 - change strcpy to strlcpy for tcmu_dev_path_store and move
+     tcmu_reconfig_type into target_core_user.h
 
->     109 drivers/usb/dwc2/hw.h:230:0: warning: "GUID" redefined
 
-This was introduced yesterday, but appears to be fixed again already.
+Bryant G. Ly (5):
+  tcmu: Support emulate_write_cache
+  tcmu: Add netlink for device reconfiguration
+  tcmu: Make dev_size configurable via userspace
+  tcmu: Make dev_config configurable
+  tcmu: Add Type of reconfig into netlink
 
-       Arnd
+ drivers/target/target_core_user.c     | 152 ++++++++++++++++++++++++++++++++--
+ include/uapi/linux/target_core_user.h |   9 ++
+ 2 files changed, 155 insertions(+), 6 deletions(-)
+
+-- 
+2.5.4 (Apple Git-61)
