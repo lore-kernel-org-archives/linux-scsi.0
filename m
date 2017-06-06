@@ -1,145 +1,128 @@
-From: Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: RE: Application stops due to ext4 filesytsem IO error
-Date: Tue, 6 Jun 2017 21:04:57 +0530
-Message-ID: <bf603f1c2f3873f58717101abb3d9c83@mail.gmail.com>
+From: Robert LeBlanc <robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org>
+Subject: [PATCH 4/7] scsi/be2iscsi: Update beiscsi_ep_connect to accept iface and sockaddr_storage.
+Date: Tue,  6 Jun 2017 12:07:14 -0600
+Message-ID: <20170606180717.5007-5-robert@leblancnet.us>
+References: <20170606180717.5007-1-robert@leblancnet.us>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-block-owner@vger.kernel.org>
-References: 3e25920f0068797bd74e5ea37a2dc3dc@mail.gmail.com
-In-Reply-To: 3e25920f0068797bd74e5ea37a2dc3dc@mail.gmail.com
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <open-iscsi+bncBCE4FWGB4QCRBY663PEQKGQET4RHLJY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <20170606180717.5007-1-robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org>
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: lduncan-IBi9RG/b67k@public.gmane.org
+Cc: cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org, roid-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, subbu.seetharaman-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, ketan.mukadam-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, jitendra.bhivare-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, QLogic-Storage-Upstream-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org, varun-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, Robert LeBlanc <robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Gentle ping..
+Update Emulex BladeEngine driver to accept the session iface for
+creating the iSCSI connection. Also accept dst_addr as sockaddr_storage
+instead of sockaddr.
 
->-----Original Message-----
->From: Sumit Saxena [mailto:sumit.saxena@broadcom.com]
->Sent: Monday, June 05, 2017 12:59 PM
->To: 'Jens Axboe'
->Cc: 'linux-block@vger.kernel.org'; 'linux-scsi@vger.kernel.org'
->Subject: Application stops due to ext4 filesytsem IO error
->
->Jens,
->
->We am observing  application stops while running ext4 filesystem IOs
-along
->with target reset in parallel.
->Our suspect is this behavior can be attributed to linux block layer. See
-below
->for details-
->
->Problem statement - " Application stops due to IO error from file system
->buffered IO. (Note - It is always a FS meta data read failure)"
->Issue is reproducible - "Yes. It is consistently reproducible."
->Brief about setup -
->Latest 4.11 kernel. Issue hits irrespective of whether SCSI MQ is enabled
-or
->disabled. use_blk_mq=Y and use_blk_mq=N has similar issue.
->Direct attached 4 SAS/SATA drives connected to MegaRAID Invader
->controller.
->
->Reproduction steps -
->-Create ext4 FS on 4 JBODs(non RAID volumes) behind MegaRAID SAS
->controller.
->-Start Data integrity test on all four ext4 mounted partition. (Tool
-should be
->configured to send Buffered FS IO).
->-Send Target Reset  (have some delay between next reset to allow some IO
->on device) on each JBOD to simulate error condition. (sg_reset -d
-/dev/sdX).
->
->End result -
->Combination of target resets and FS IOs in parallel causes application
-halt
->with ext4 Filesystem IO error.
->We are able to restart  application without cleaning and unmounting
->filesystem.
->Below are the error logs at the time of application stop-
->
->--------------------------
->sd 0:0:53:0: target reset called for
->scmd(ffff88003cf25148)
->sd 0:0:53:0: attempting target reset!
->scmd(ffff88003cf25148) tm_dev_handle 0xb
->sd 0:0:53:0: [sde] tag#519 BRCM Debug: request->cmd_flags: 0x80700   bio-
->>bi_flags: 0x2          bio->bi_opf: 0x3000 rq_flags 0x20e3
->..
->sd 0:0:53:0: [sde] tag#519 CDB: Read(10) 28 00 15 00 11 10 00 00 f8 00
->EXT4-fs error (device sde): __ext4_get_inode_loc:4465: inode #11018287:
->block 44040738: comm chaos: unable to read itable block
->-----------------------
->
->We debug further to understand what is happening above LLD. See below-
->
->During target reset,  there may be IO coming from target with CHECK
->CONDITION with below sense information-.
->Sense Key : Aborted Command [current]
->Add. Sense: No additional sense information
->
->Such Aborted command should be retried by SML/Block layer. This happens
->from SML expect for FS Meta data read.
->From driver level debug, we found IOs with REQ_FAILFAST_DEV bit set in
->scmd->request->cmd_flags are not retried by SML and that is also as
->expected.
->
->Below is the code in scsi_error.c(function- scsi_noretry_cmd) which
-causes
->IOs with REQ_FAILFAST_DEV enabled not getting retried bit completed back
->to upper layer-
->--------
->/*
->     * assume caller has checked sense and determined
->     * the check condition was retryable.
->     */
->    if (scmd->request->cmd_flags & REQ_FAILFAST_DEV ||
->        scmd->request->cmd_type == REQ_TYPE_BLOCK_PC)
->        return 1;
->    else
->        return 0;
->--------
->
->IO which causes application to stop has REQ_FAILFAST_DEV enabled inside
->"scmd->request->cmd_flags". We noticed that this bit will be set for
->filesystem Read ahead meta data IOs. In order to confirm the same, we
->mounted with option inode_readahead_blks=0 to disable ext4's inode table
->readahead algorithm and did not observe the issue. Issue does not hit
-with
->DIRECT IOs but only with cached/buffered IOs.
->
->2. From driver level debug prints, we also noticed - There are many IO
->failures with REQ_FAILFAST_DEV handled gracefully by filesystem.
->Application level failure happens only If IO has RQF_MIXED_MERGE set.
->If IO merging is disabled through sysfs parameter for SCSI device in
-question-
->nomerges set to 2, we are not seeing the issue.
->
->3. We added few prints in driver to dump "scmd->request->cmd_flags" and
->"scmd->request->rq_flags" for IOs completed with CHECK CONDITION and
->culprit IOs has all these bits- REQ_FAILFAST_DEV and REQ_RAHEAD bit set
-in
->"scmd->request->cmd_flags" and RQF_MIXED_MERGE bit set in "scmd-
->>request->rq_flags". Also it's not necessarily true that all IOs with
-these
->three bits set will cause issue but whenever issue hits, these three bits
-are
->set for IO causing failure.
->
->
->In summary,
->FS mechanism of using READ AHEAD for meta data works fine (in case of IO
->failure) if there is no mix/merge at block layer.
->FS mechanism of using READ AHEAD for meta data has some corner case
->which is not handled properly (in case of IO failure) if  there was
-mix/merge
->at block layer.
->megaraid_sas driver's behavior seems correct here. Aborted IO goes to SML
->with CHECK CONDITION settings and SML decided to fail fast IO as it was
->requested.
->
->Query -  Is this block layer (page cache) issue?  What should be the
-ideal fix ?
->
->Thanks,
->Sumit
+Signed-off-by: Robert LeBlanc <robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org>
+---
+ drivers/scsi/be2iscsi/be_cmds.c  | 1 +
+ drivers/scsi/be2iscsi/be_iscsi.c | 8 +++++---
+ drivers/scsi/be2iscsi/be_iscsi.h | 5 +++--
+ drivers/scsi/be2iscsi/be_main.c  | 1 +
+ drivers/scsi/be2iscsi/be_mgmt.c  | 1 +
+ 5 files changed, 11 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index a79a5e72c777..6617f2add9c6 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -13,6 +13,7 @@
+  */
+ 
+ #include <scsi/iscsi_proto.h>
++#include <linux/if.h>
+ 
+ #include "be_main.h"
+ #include "be.h"
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index 97dca4681784..90adf20dc373 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -12,6 +12,7 @@
+  *
+  */
+ 
++#include <linux/if.h>
+ #include <scsi/libiscsi.h>
+ #include <scsi/scsi_transport_iscsi.h>
+ #include <scsi/scsi_transport.h>
+@@ -1161,8 +1162,8 @@ static int beiscsi_open_conn(struct iscsi_endpoint *ep,
+  * This routines first asks chip to create a connection and then allocates an EP
+  */
+ struct iscsi_endpoint *
+-beiscsi_ep_connect(struct Scsi_Host *shost, struct sockaddr *dst_addr,
+-		   int non_blocking)
++beiscsi_ep_connect(struct Scsi_Host *shost, struct sockaddr_storage *dst_addr,
++		   int non_blocking, struct iface_rec *iface)
+ {
+ 	struct beiscsi_hba *phba;
+ 	struct beiscsi_endpoint *beiscsi_ep;
+@@ -1198,7 +1199,8 @@ beiscsi_ep_connect(struct Scsi_Host *shost, struct sockaddr *dst_addr,
+ 	beiscsi_ep = ep->dd_data;
+ 	beiscsi_ep->phba = phba;
+ 	beiscsi_ep->openiscsi_ep = ep;
+-	ret = beiscsi_open_conn(ep, NULL, dst_addr, non_blocking);
++	ret = beiscsi_open_conn(ep, NULL, (struct sockaddr *)dst_addr,
++		       		non_blocking);
+ 	if (ret) {
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
+ 			    "BS_%d : Failed in beiscsi_open_conn\n");
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.h b/drivers/scsi/be2iscsi/be_iscsi.h
+index b9d459a21f25..68616f81a12f 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.h
++++ b/drivers/scsi/be2iscsi/be_iscsi.h
+@@ -68,8 +68,9 @@ int beiscsi_set_param(struct iscsi_cls_conn *cls_conn,
+ int beiscsi_conn_start(struct iscsi_cls_conn *cls_conn);
+ 
+ struct iscsi_endpoint *beiscsi_ep_connect(struct Scsi_Host *shost,
+-					  struct sockaddr *dst_addr,
+-					  int non_blocking);
++					  struct sockaddr_storage *dst_addr,
++					  int non_blocking,
++					  struct iface_rec *iface);
+ 
+ int beiscsi_ep_poll(struct iscsi_endpoint *ep, int timeout_ms);
+ 
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index f862332261f8..aab7772e2678 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -25,6 +25,7 @@
+ #include <linux/module.h>
+ #include <linux/bsg-lib.h>
+ #include <linux/irq_poll.h>
++#include <linux/if.h>
+ 
+ #include <scsi/libiscsi.h>
+ #include <scsi/scsi_bsg_iscsi.h>
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index c73775368d09..926afa4ddb9d 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -13,6 +13,7 @@
+  */
+ 
+ #include <linux/bsg-lib.h>
++#include <linux/if.h>
+ #include <scsi/scsi_transport_iscsi.h>
+ #include <scsi/scsi_bsg_iscsi.h>
+ #include "be_mgmt.h"
+-- 
+2.11.0
+
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
