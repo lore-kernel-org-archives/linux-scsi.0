@@ -1,41 +1,126 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 6/6] sd: add support for TCG OPAL self encrypting disks
-Date: Tue, 6 Jun 2017 08:31:30 +0200
-Message-ID: <f626c9f5-ef7d-6cb6-1272-baf2db692d3a@suse.de>
-References: <20170604124225.27032-1-hch@lst.de>
- <20170604124225.27032-7-hch@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20170604124225.27032-7-hch@lst.de>
-Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>
-Cc: Scott Bauer <scott.bauer@intel.com>, Jonathan Derrick <jonathan.derrick@intel.com>, Rafael Antognolli <rafael.antognolli@intel.com>, Robert Elliott <elliott@hpe.com>, linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Adrian Hunter <adrian.hunter@intel.com>
+Subject: [PATCH V2 1/2] scsi: ufs: Tidy clocks list head usage
+Date: Tue,  6 Jun 2017 09:48:50 +0300
+Message-ID: <1496731731-19820-1-git-send-email-adrian.hunter@intel.com>
+References: <e9c987425ac32ff48bf87faa104a0a12@codeaurora.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <e9c987425ac32ff48bf87faa104a0a12@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Vinayak Holikatti <vinholikatti@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Szymon Mielczarek <szymonx.mielczarek@intel.com>, Michal Potomski <michalx.potomski@intel.com>, Grzegorz Janca <grzegorz.janca@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 06/04/2017 02:42 PM, Christoph Hellwig wrote:
-> Just wire up the generic TCG OPAL infrastructure to the SCSI disk driver
-> and the Security In/Out commands.
-> 
-> Note that I don't know of any actual SCSI disks that do support TCG OPAL,
-> but this is required to support ATA disks through libata.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/scsi/sd.c | 44 ++++++++++++++++++++++++++++++++++++++++++++
->  drivers/scsi/sd.h |  2 ++
->  2 files changed, 46 insertions(+)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+From: Szymon Mielczarek <szymonx.mielczarek@intel.com>
 
-Cheers,
+Move the initialization of clocks list head to ufshcd_alloc_host so that
+every driver doesn't have to do it. Remove checks for the list head being
+NULL because that is not possible.
 
-Hannes
+Signed-off-by: Szymon Mielczarek <szymonx.mielczarek@intel.com>
+Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+---
+ drivers/scsi/ufs/tc-dwc-g210-pci.c |  2 --
+ drivers/scsi/ufs/ufshcd-pci.c      |  2 --
+ drivers/scsi/ufs/ufshcd-pltfrm.c   |  2 --
+ drivers/scsi/ufs/ufshcd.c          | 12 +++++++-----
+ 4 files changed, 7 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/scsi/ufs/tc-dwc-g210-pci.c b/drivers/scsi/ufs/tc-dwc-g210-pci.c
+index c09a0fef0fe6..325d5e14fc0d 100644
+--- a/drivers/scsi/ufs/tc-dwc-g210-pci.c
++++ b/drivers/scsi/ufs/tc-dwc-g210-pci.c
+@@ -130,8 +130,6 @@ static void tc_dwc_g210_pci_remove(struct pci_dev *pdev)
+ 		return err;
+ 	}
+ 
+-	INIT_LIST_HEAD(&hba->clk_list_head);
+-
+ 	hba->vops = &tc_dwc_g210_pci_hba_vops;
+ 
+ 	err = ufshcd_init(hba, mmio_base, pdev->irq);
+diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
+index 52b546fb509b..5dd4122cbd85 100644
+--- a/drivers/scsi/ufs/ufshcd-pci.c
++++ b/drivers/scsi/ufs/ufshcd-pci.c
+@@ -143,8 +143,6 @@ static void ufshcd_pci_remove(struct pci_dev *pdev)
+ 		return err;
+ 	}
+ 
+-	INIT_LIST_HEAD(&hba->clk_list_head);
+-
+ 	err = ufshcd_init(hba, mmio_base, pdev->irq);
+ 	if (err) {
+ 		dev_err(&pdev->dev, "Initialization failed\n");
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index 8e5e6c04c035..e82bde077296 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -58,8 +58,6 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
+ 	if (!np)
+ 		goto out;
+ 
+-	INIT_LIST_HEAD(&hba->clk_list_head);
+-
+ 	cnt = of_property_count_strings(np, "clock-names");
+ 	if (!cnt || (cnt == -EINVAL)) {
+ 		dev_info(dev, "%s: Unable to find clocks, assuming enabled\n",
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index ffe8d8608818..88ccd63f83c1 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -314,7 +314,7 @@ static void ufshcd_print_clk_freqs(struct ufs_hba *hba)
+ 	struct ufs_clk_info *clki;
+ 	struct list_head *head = &hba->clk_list_head;
+ 
+-	if (!head || list_empty(head))
++	if (list_empty(head))
+ 		return;
+ 
+ 	list_for_each_entry(clki, head, list) {
+@@ -869,7 +869,7 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
+ 	ktime_t start = ktime_get();
+ 	bool clk_state_changed = false;
+ 
+-	if (!head || list_empty(head))
++	if (list_empty(head))
+ 		goto out;
+ 
+ 	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, PRE_CHANGE);
+@@ -943,7 +943,7 @@ static bool ufshcd_is_devfreq_scaling_required(struct ufs_hba *hba,
+ 	struct ufs_clk_info *clki;
+ 	struct list_head *head = &hba->clk_list_head;
+ 
+-	if (!head || list_empty(head))
++	if (list_empty(head))
+ 		return false;
+ 
+ 	list_for_each_entry(clki, head, list) {
+@@ -6752,7 +6752,7 @@ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
+ 	ktime_t start = ktime_get();
+ 	bool clk_state_changed = false;
+ 
+-	if (!head || list_empty(head))
++	if (list_empty(head))
+ 		goto out;
+ 
+ 	ret = ufshcd_vops_setup_clocks(hba, on, PRE_CHANGE);
+@@ -6818,7 +6818,7 @@ static int ufshcd_init_clocks(struct ufs_hba *hba)
+ 	struct device *dev = hba->dev;
+ 	struct list_head *head = &hba->clk_list_head;
+ 
+-	if (!head || list_empty(head))
++	if (list_empty(head))
+ 		goto out;
+ 
+ 	list_for_each_entry(clki, head, list) {
+@@ -7811,6 +7811,8 @@ int ufshcd_alloc_host(struct device *dev, struct ufs_hba **hba_handle)
+ 	hba->dev = dev;
+ 	*hba_handle = hba;
+ 
++	INIT_LIST_HEAD(&hba->clk_list_head);
++
+ out_error:
+ 	return err;
+ }
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+1.9.1
