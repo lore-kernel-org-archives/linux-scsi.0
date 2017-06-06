@@ -1,57 +1,42 @@
-From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH] qla2xxx: Fix compile warning
-Date: Tue, 6 Jun 2017 13:55:23 -0700
-Message-ID: <20170606205523.23507-1-himanshu.madhani@cavium.com>
+From: Scott Bauer <scott.bauer@intel.com>
+Subject: Re: [PATCH 6/6] sd: add support for TCG OPAL self encrypting disks
+Date: Tue, 6 Jun 2017 15:40:07 -0600
+Message-ID: <20170606214007.zx66c7rogeylptx6@sbauer-Z170X-UD5>
+References: <20170604124225.27032-1-hch@lst.de>
+ <20170604124225.27032-7-hch@lst.de>
+ <20170605211530.aqxwigcrxgsdvmhs@sbauer-Z170X-UD5>
+ <20170606095955.GC20590@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0081.outbound.protection.outlook.com ([104.47.33.81]:22316
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751247AbdFFUzj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 6 Jun 2017 16:55:39 -0400
+Received: from mga11.intel.com ([192.55.52.93]:47794 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751436AbdFFVyQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 6 Jun 2017 17:54:16 -0400
+Content-Disposition: inline
+In-Reply-To: <20170606095955.GC20590@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: Tejun Heo <tj@kernel.org>, Jonathan Derrick <jonathan.derrick@intel.com>, Rafael Antognolli <rafael.antognolli@intel.com>, Robert Elliott <elliott@hpe.com>, linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Fixes following 0-day kernel build warnings
+On Tue, Jun 06, 2017 at 11:59:55AM +0200, Christoph Hellwig wrote:
+> On Mon, Jun 05, 2017 at 03:15:31PM -0600, Scott Bauer wrote:
+> > I'm not familiar at all with ATA, but I noticed there was no unlock from suspend support
+> > in the series. Does ATA not have a way to determine if we're coming out of a suspend?
+> 
+> I don't know, and not having a test system with a OPAL capable driver
+> and suspend support I could not even test the code.
+> 
+> > I see there are some power-ops in scsi/sd.c, if you do want to add it you can mabe toss a
+> > 
+> > if (sdkp->security)
+> >    opal_unlock_from_suspend(sdpk->opal_dev)
+> > 
+> > somewhere in the resume path? We handle null opal_devs and no unlock from suspend list
+> > so calling it when nothing is set up is just a no-op.
+> 
+> Yeah, maybe.  We'll just need someone who could test it first.
 
-drivers/scsi/qla2xxx/qla_init.c:6407:50: warning: format '%lx' expects
-argument of type 'long unsigned int', but argument 5 has type 'unsigned
-int' [-Wformat=]
-drivers/scsi/qla2xxx/qla_init.c:6709:50: warning: format '%lx'
-expects argument of type 'long unsigned int', but argument 5 has
-type 'unsigned int' [-Wformat=]
-
-Fixes: b95b9452aacf ("scsi: qla2xxx: Fix crash due to mismatch mumber of Q-pair creation for Multi queue")
-Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
-Signed-off-by: Giridhar Malavali <giridhar.malavali@cavium.com>
----
- drivers/scsi/qla2xxx/qla_init.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 436968ad4484..730e7fe4344a 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -6404,7 +6404,7 @@ qla24xx_load_risc_flash(scsi_qla_host_t *vha, uint32_t *srisc_addr,
- 	    "-> template size %x bytes\n", dlen);
- 	if (dlen > risc_size * sizeof(*dcode)) {
- 		ql_log(ql_log_warn, vha, 0x0167,
--		    "Failed fwdump template exceeds array by %lx bytes\n",
-+		    "Failed fwdump template exceeds array by %zx bytes\n",
- 		    (size_t)(dlen - risc_size * sizeof(*dcode)));
- 		goto default_template;
- 	}
-@@ -6706,7 +6706,7 @@ qla24xx_load_risc_blob(scsi_qla_host_t *vha, uint32_t *srisc_addr)
- 	    "-> template size %x bytes\n", dlen);
- 	if (dlen > risc_size * sizeof(*fwcode)) {
- 		ql_log(ql_log_warn, vha, 0x0177,
--		    "Failed fwdump template exceeds array by %lx bytes\n",
-+		    "Failed fwdump template exceeds array by %zx bytes\n",
- 		    (size_t)(dlen - risc_size * sizeof(*fwcode)));
- 		goto default_template;
- 	}
--- 
-2.12.0
+I was given a sata drive that apparently has opal enabled on it. If it actually has opal
+I can run some tests.
