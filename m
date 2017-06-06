@@ -1,26 +1,39 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH V3 2/2] scsi: ufshcd-intel-pci: Add PCI driver for Intel
- Host controllers
-Date: Tue, 6 Jun 2017 03:10:34 -0700
-Message-ID: <20170606101034.GA20599@infradead.org>
-References: <20170606070757.GA1748@infradead.org>
- <1496740136-4024-1-git-send-email-adrian.hunter@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Adrian Hunter <adrian.hunter@intel.com>
+Subject: [PATCH V4 0/2] scsi: ufshcd-pci: Add Intel CNL support
+Date: Tue,  6 Jun 2017 14:35:29 +0300
+Message-ID: <1496748931-17162-1-git-send-email-adrian.hunter@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1496740136-4024-1-git-send-email-adrian.hunter@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Adrian Hunter <adrian.hunter@intel.com>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Szymon Mielczarek <szymonx.mielczarek@intel.com>, Michal Potomski <michalx.potomski@intel.com>, Grzegorz Janca <grzegorz.janca@intel.com>
+To: Vinayak Holikatti <vinholikatti@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Subhash Jadavani <subhashj@codeaurora.org>, Santosh Yaragnavi <santosh.sy@samsung.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Szymon Mielczarek <szymonx.mielczarek@intel.com>, Michal Potomski <michalx.potomski@intel.com>, Grzegorz Janca <grzegorz.janca@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
+Hi
 
-This looks much better.  But the new file still looks almost like
-a copy and paste of tc-dwc-g210-pci.c.  Wouldnt it make more sense to
-start with a common ufshcd-pci driver that sets up the ufs_hba_variant_opsA
-based on the PCI ID table?
+Here is V4 of patches to add support for Intel UFS host controllers.
 
-Also given that this almost entitrely a copy & paste job of
-tc-dwc-g210-pci.c. you should add the copyrights and following their
-license.
+
+Changes in V4:
+
+	New patch "scsi: ufshcd-pci: Fix PM config"
+	Do not use a separate driver for Intel
+
+Changes in V3:
+
+	Remove UFSHCI class code and match on PCI device ID
+
+Changes in V2:
+
+	Change variant name from intel to intel-pci
+
+
+Adrian Hunter (2):
+      scsi: ufshcd-pci: Fix PM config
+      scsi: ufshcd-pci: Add Intel CNL support
+
+ drivers/scsi/ufs/ufshcd-pci.c | 60 +++++++++++++++++++++++++++++++++----------
+ 1 file changed, 47 insertions(+), 13 deletions(-)
+
+
+Regards
+Adrian
