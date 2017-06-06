@@ -1,132 +1,80 @@
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v4 5/5] tcmu: Add Type of reconfig into netlink
-Date: Tue,  6 Jun 2017 09:28:52 -0500
-Message-ID: <1496759332-35216-6-git-send-email-bryantly@linux.vnet.ibm.com>
-References: <1496759332-35216-1-git-send-email-bryantly@linux.vnet.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:48197 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751433AbdFFO3b (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jun 2017 10:29:31 -0400
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v56ETUvG040495
-        for <linux-scsi@vger.kernel.org>; Tue, 6 Jun 2017 10:29:31 -0400
-Received: from e12.ny.us.ibm.com (e12.ny.us.ibm.com [129.33.205.202])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2aww80kspt-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Tue, 06 Jun 2017 10:29:30 -0400
-Received: from localhost
-        by e12.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <bryantly@linux.vnet.ibm.com>;
-        Tue, 6 Jun 2017 10:29:21 -0400
-In-Reply-To: <1496759332-35216-1-git-send-email-bryantly@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH v5 06/12] blk-mq: use the introduced blk_mq_unquiesce_queue()
+Date: Tue,  6 Jun 2017 23:22:04 +0800
+Message-ID: <20170606152210.22806-7-ming.lei@redhat.com>
+References: <20170606152210.22806-1-ming.lei@redhat.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170606152210.22806-1-ming.lei@redhat.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Ming Lei <ming.lei@redhat.com>, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: nab@linux-iscsi.org, mchristi@redhat.com
-Cc: seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
 
-This patch adds more info about the attribute being changed,
-so that usersapce can easily figure out what is happening.
+blk_mq_unquiesce_queue() is used for unquiescing the
+queue explicitly, so replace blk_mq_start_stopped_hw_queues()
+with it.
 
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+For the scsi part, this patch takes Bart's suggestion to
+switch to block quiesce/unquiesce API completely.
+
+Cc: linux-nvme@lists.infradead.org
+Cc: linux-scsi@vger.kernel.org
+Cc: dm-devel@redhat.com
+Reviewed-by: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/target/target_core_user.c     | 20 ++++++++++++++------
- include/uapi/linux/target_core_user.h |  8 ++++++++
- 2 files changed, 22 insertions(+), 6 deletions(-)
+ drivers/md/dm-rq.c       | 2 +-
+ drivers/nvme/host/core.c | 2 +-
+ drivers/scsi/scsi_lib.c  | 4 ++--
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 7c64757..afc1fd6 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -1176,7 +1176,8 @@ static int tcmu_release(struct uio_info *info, struct inode *inode)
- 	return 0;
+diff --git a/drivers/md/dm-rq.c b/drivers/md/dm-rq.c
+index b639fa7246ee..ea4029de077f 100644
+--- a/drivers/md/dm-rq.c
++++ b/drivers/md/dm-rq.c
+@@ -71,7 +71,7 @@ static void dm_old_start_queue(struct request_queue *q)
+ 
+ static void dm_mq_start_queue(struct request_queue *q)
+ {
+-	blk_mq_start_stopped_hw_queues(q, true);
++	blk_mq_unquiesce_queue(q);
+ 	blk_mq_kick_requeue_list(q);
  }
  
--static int tcmu_netlink_event(enum tcmu_genl_cmd cmd, const char *name, int minor)
-+static int tcmu_netlink_event(enum tcmu_genl_cmd cmd, const char *name,
-+			      int minor, int type)
- {
- 	struct sk_buff *skb;
- 	void *msg_header;
-@@ -1198,6 +1199,10 @@ static int tcmu_netlink_event(enum tcmu_genl_cmd cmd, const char *name, int mino
- 	if (ret < 0)
- 		goto free_skb;
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index a60926410438..c3f189e54d10 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -2526,7 +2526,7 @@ void nvme_start_queues(struct nvme_ctrl *ctrl)
  
-+	ret = nla_put_u32(skb, TCMU_ATTR_TYPE, type);
-+	if (ret < 0)
-+		goto free_skb;
-+
- 	genlmsg_end(skb, msg_header);
- 
- 	ret = genlmsg_multicast_allns(&tcmu_genl_family, skb, 0,
-@@ -1301,7 +1306,7 @@ static int tcmu_configure_device(struct se_device *dev)
- 	kref_get(&udev->kref);
- 
- 	ret = tcmu_netlink_event(TCMU_CMD_ADDED_DEVICE, udev->uio_info.name,
--				 udev->uio_info.uio_dev->minor);
-+				 udev->uio_info.uio_dev->minor, NO_RECONFIG);
- 	if (ret)
- 		goto err_netlink;
- 
-@@ -1383,7 +1388,7 @@ static void tcmu_free_device(struct se_device *dev)
- 
- 	if (tcmu_dev_configured(udev)) {
- 		tcmu_netlink_event(TCMU_CMD_REMOVED_DEVICE, udev->uio_info.name,
--				   udev->uio_info.uio_dev->minor);
-+				   udev->uio_info.uio_dev->minor, NO_RECONFIG);
- 
- 		uio_unregister_device(&udev->uio_info);
+ 	mutex_lock(&ctrl->namespaces_mutex);
+ 	list_for_each_entry(ns, &ctrl->namespaces, list) {
+-		blk_mq_start_stopped_hw_queues(ns->queue, true);
++		blk_mq_unquiesce_queue(ns->queue);
+ 		blk_mq_kick_requeue_list(ns->queue);
  	}
-@@ -1577,7 +1582,8 @@ static ssize_t tcmu_dev_path_store(struct config_item *item, const char *page,
- 	if (tcmu_dev_configured(udev)) {
- 		ret = tcmu_netlink_event(TCMU_CMD_RECONFIG_DEVICE,
- 					 udev->uio_info.name,
--					 udev->uio_info.uio_dev->minor);
-+					 udev->uio_info.uio_dev->minor,
-+					 CONFIG_PATH);
- 		if (ret) {
- 			pr_err("Unable to reconfigure device\n");
- 			return ret;
-@@ -1615,7 +1621,8 @@ static ssize_t tcmu_dev_size_store(struct config_item *item, const char *page,
- 	if (tcmu_dev_configured(udev)) {
- 		ret = tcmu_netlink_event(TCMU_CMD_RECONFIG_DEVICE,
- 					 udev->uio_info.name,
--					 udev->uio_info.uio_dev->minor);
-+					 udev->uio_info.uio_dev->minor,
-+					 CONFIG_SIZE);
- 		if (ret) {
- 			pr_err("Unable to reconfigure device\n");
- 			return ret;
-@@ -1654,7 +1661,8 @@ static ssize_t tcmu_emulate_write_cache_store(struct config_item *item,
- 	if (tcmu_dev_configured(udev)) {
- 		ret = tcmu_netlink_event(TCMU_CMD_RECONFIG_DEVICE,
- 					 udev->uio_info.name,
--					 udev->uio_info.uio_dev->minor);
-+					 udev->uio_info.uio_dev->minor,
-+					 CONFIG_WRITECACHE);
- 		if (ret) {
- 			pr_err("Unable to reconfigure device\n");
- 			return ret;
-diff --git a/include/uapi/linux/target_core_user.h b/include/uapi/linux/target_core_user.h
-index 403a61f..5b00e35 100644
---- a/include/uapi/linux/target_core_user.h
-+++ b/include/uapi/linux/target_core_user.h
-@@ -139,8 +139,16 @@ enum tcmu_genl_attr {
- 	TCMU_ATTR_UNSPEC,
- 	TCMU_ATTR_DEVICE,
- 	TCMU_ATTR_MINOR,
-+	TCMU_ATTR_TYPE,
- 	__TCMU_ATTR_MAX,
- };
- #define TCMU_ATTR_MAX (__TCMU_ATTR_MAX - 1)
+ 	mutex_unlock(&ctrl->namespaces_mutex);
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 884aaa84c2dd..d6df1dafdc9f 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2979,7 +2979,7 @@ scsi_internal_device_block(struct scsi_device *sdev, bool wait)
+ 		if (wait)
+ 			blk_mq_quiesce_queue(q);
+ 		else
+-			blk_mq_stop_hw_queues(q);
++			blk_mq_quiesce_queue_nowait(q);
+ 	} else {
+ 		spin_lock_irqsave(q->queue_lock, flags);
+ 		blk_stop_queue(q);
+@@ -3033,7 +3033,7 @@ scsi_internal_device_unblock(struct scsi_device *sdev,
+ 		return -EINVAL;
  
-+enum tcmu_reconfig_types {
-+	NO_RECONFIG,
-+	CONFIG_PATH,
-+	CONFIG_SIZE,
-+	CONFIG_WRITECACHE,
-+};
-+
- #endif
+ 	if (q->mq_ops) {
+-		blk_mq_start_stopped_hw_queues(q, false);
++		blk_mq_unquiesce_queue(q);
+ 	} else {
+ 		spin_lock_irqsave(q->queue_lock, flags);
+ 		blk_start_queue(q);
 -- 
-2.5.4 (Apple Git-61)
+2.9.4
