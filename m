@@ -1,84 +1,48 @@
-From: Adrian Hunter <adrian.hunter@intel.com>
-Subject: [PATCH V4 2/2] scsi: ufshcd-pci: Add Intel CNL support
-Date: Tue,  6 Jun 2017 14:35:31 +0300
-Message-ID: <1496748931-17162-3-git-send-email-adrian.hunter@intel.com>
-References: <1496748931-17162-1-git-send-email-adrian.hunter@intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1496748931-17162-1-git-send-email-adrian.hunter@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vinayak Holikatti <vinholikatti@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Subhash Jadavani <subhashj@codeaurora.org>, Santosh Yaragnavi <santosh.sy@samsung.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Szymon Mielczarek <szymonx.mielczarek@intel.com>, Michal Potomski <michalx.potomski@intel.com>, Grzegorz Janca <grzegorz.janca@intel.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: next build: 113 warnings 0 failures (next/next-20170605)
+Date: Tue, 6 Jun 2017 15:14:07 +0200
+Message-ID: <CAK8P3a1D0r9XAfGN95EkiaXvCmkJq1Em=xggJw87yX7YH7o-vA@mail.gmail.com>
+References: <59351e18.c490630a.4dca5.e785@mx.google.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-i2c-owner@vger.kernel.org>
+In-Reply-To: <59351e18.c490630a.4dca5.e785@mx.google.com>
+Sender: linux-i2c-owner@vger.kernel.org
+To: Olof's autobuilder <build@lixom.net>
+Cc: Olof Johansson <olof@lixom.net>, Kernel Build Reports Mailman List <kernel-build-reports@lists.linaro.org>, Joe Carnuccio <joe.carnuccio@cavium.com>, Himanshu Madhani <himanshu.madhani@cavium.com>, Bart Van Assche <Bart.VanAssche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, qla2xxx-upstream@qlogic.com, Wolfram Sang <wsa+renesas@sang-engineering.com>, Jean Delvare <jdelvare@suse.de>, Wolfram Sang <wsa@the-dreams.de>, linux-i2c@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Add PCI id and variant ops for Intel CNL UFS host controller.
+On Mon, Jun 5, 2017 at 11:02 AM, Olof's autobuilder <build@lixom.net> wrote:
+> Here are the build results from automated periodic testing.
+>
+> The tree being built was next, found at:
+>
+> http://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git (master branch)
+>
+> Topmost commit:
+>
+> f0090bf Add linux-next specific files for 20170605
+>
+> Build logs (stderr only) can be found at the following link (experimental):
+>
+> http://arm-soc.lixom.net/buildlogs/next/next-20170605/
+> Warnings:
+>
+>       1 drivers/scsi/qla2xxx/qla_init.c:6407:50: warning: format '%lx' expects argument of type 'long unsigned int', but argument 5 has type 'unsigned int' [-Wformat=]
+>       1 drivers/scsi/qla2xxx/qla_init.c:6709:50: warning: format '%lx' expects argument of type 'long unsigned int', but argument 5 has type 'unsigned int' [-Wformat=]
 
-Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
----
- drivers/scsi/ufs/ufshcd-pci.c | 38 ++++++++++++++++++++++++++++++++++++++
- 1 file changed, 38 insertions(+)
+Caused by b95b9452aacf ("scsi: qla2xxx: Fix crash due to mismatch mumber
+of Q-pair creation for Multi queue"): Need to use %zx instead of %lx for
+printing a size_t
 
-diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
-index 0dcff829f8b6..925b0ec7ec54 100644
---- a/drivers/scsi/ufs/ufshcd-pci.c
-+++ b/drivers/scsi/ufs/ufshcd-pci.c
-@@ -37,6 +37,41 @@
- #include <linux/pci.h>
- #include <linux/pm_runtime.h>
- 
-+static int ufs_intel_disable_lcc(struct ufs_hba *hba)
-+{
-+	u32 attr = UIC_ARG_MIB(PA_LOCAL_TX_LCC_ENABLE);
-+	u32 lcc_enable = 0;
-+
-+	ufshcd_dme_get(hba, attr, &lcc_enable);
-+	if (lcc_enable)
-+		ufshcd_dme_set(hba, attr, 0);
-+
-+	return 0;
-+}
-+
-+static int ufs_intel_link_startup_notify(struct ufs_hba *hba,
-+					 enum ufs_notify_change_status status)
-+{
-+	int err = 0;
-+
-+	switch (status) {
-+	case PRE_CHANGE:
-+		err = ufs_intel_disable_lcc(hba);
-+		break;
-+	case POST_CHANGE:
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	return err;
-+}
-+
-+static struct ufs_hba_variant_ops ufs_intel_cnl_hba_vops = {
-+	.name                   = "intel-pci",
-+	.link_startup_notify	= ufs_intel_link_startup_notify,
-+};
-+
- #ifdef CONFIG_PM_SLEEP
- /**
-  * ufshcd_pci_suspend - suspend power management function
-@@ -139,6 +174,8 @@ static void ufshcd_pci_remove(struct pci_dev *pdev)
- 		return err;
- 	}
- 
-+	hba->vops = (struct ufs_hba_variant_ops *)id->driver_data;
-+
- 	err = ufshcd_init(hba, mmio_base, pdev->irq);
- 	if (err) {
- 		dev_err(&pdev->dev, "Initialization failed\n");
-@@ -163,6 +200,7 @@ static void ufshcd_pci_remove(struct pci_dev *pdev)
- 
- static const struct pci_device_id ufshcd_pci_tbl[] = {
- 	{ PCI_VENDOR_ID_SAMSUNG, 0xC00C, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-+	{ PCI_VDEVICE(INTEL, 0x9DFA), (kernel_ulong_t)&ufs_intel_cnl_hba_vops },
- 	{ }	/* terminate list */
- };
- 
--- 
-1.9.1
+>       2 drivers/i2c/i2c-stub.c:18:0: warning: "DEBUG" redefined
+
+Caused by 6c42778780c4 ("i2c: stub: use pr_fmt"): "#define DEBUG"
+now conflicts with "ccflags-$(CONFIG_I2C_DEBUG_CORE) := -DDEBUG"
+in the Makefile.
+
+>     109 drivers/usb/dwc2/hw.h:230:0: warning: "GUID" redefined
+
+This was introduced yesterday, but appears to be fixed again already.
+
+       Arnd
