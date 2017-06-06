@@ -1,123 +1,132 @@
 From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v4 3/5] tcmu: Make dev_size configurable via userspace
-Date: Tue,  6 Jun 2017 09:28:50 -0500
-Message-ID: <1496759332-35216-4-git-send-email-bryantly@linux.vnet.ibm.com>
+Subject: [PATCH v4 5/5] tcmu: Add Type of reconfig into netlink
+Date: Tue,  6 Jun 2017 09:28:52 -0500
+Message-ID: <1496759332-35216-6-git-send-email-bryantly@linux.vnet.ibm.com>
 References: <1496759332-35216-1-git-send-email-bryantly@linux.vnet.ibm.com>
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:48197 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751433AbdFFO3b (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jun 2017 10:29:31 -0400
+Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v56ETUvG040495
+        for <linux-scsi@vger.kernel.org>; Tue, 6 Jun 2017 10:29:31 -0400
+Received: from e12.ny.us.ibm.com (e12.ny.us.ibm.com [129.33.205.202])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2aww80kspt-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Tue, 06 Jun 2017 10:29:30 -0400
+Received: from localhost
+        by e12.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <bryantly@linux.vnet.ibm.com>;
+        Tue, 6 Jun 2017 10:29:21 -0400
 In-Reply-To: <1496759332-35216-1-git-send-email-bryantly@linux.vnet.ibm.com>
-Sender: target-devel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: nab@linux-iscsi.org, mchristi@redhat.com
 Cc: seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-List-Id: linux-scsi@vger.kernel.org
 
-Allow tcmu backstores to be able to set the device size
-after it has been configured via set attribute.
-
-Part of support in userspace to support certain backstores
-changing device size.
+This patch adds more info about the attribute being changed,
+so that usersapce can easily figure out what is happening.
 
 Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
 ---
- drivers/target/target_core_user.c | 59 +++++++++++++++++++++++++++++++++++----
- 1 file changed, 54 insertions(+), 5 deletions(-)
+ drivers/target/target_core_user.c     | 20 ++++++++++++++------
+ include/uapi/linux/target_core_user.h |  8 ++++++++
+ 2 files changed, 22 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index ae91822..c8c84b7 100644
+index 7c64757..afc1fd6 100644
 --- a/drivers/target/target_core_user.c
 +++ b/drivers/target/target_core_user.c
-@@ -1548,6 +1548,44 @@ static ssize_t tcmu_cmd_time_out_store(struct config_item *item, const char *pag
+@@ -1176,7 +1176,8 @@ static int tcmu_release(struct uio_info *info, struct inode *inode)
+ 	return 0;
  }
- CONFIGFS_ATTR(tcmu_, cmd_time_out);
  
-+static ssize_t tcmu_dev_size_show(struct config_item *item, char *page)
-+{
-+	struct se_dev_attrib *da = container_of(to_config_group(item),
-+						struct se_dev_attrib, da_group);
-+	struct tcmu_dev *udev = TCMU_DEV(da->da_dev);
-+
-+	return snprintf(page, PAGE_SIZE, "%zu\n", udev->dev_size);
-+}
-+
-+static ssize_t tcmu_dev_size_store(struct config_item *item, const char *page,
-+				   size_t count)
-+{
-+	struct se_dev_attrib *da = container_of(to_config_group(item),
-+						struct se_dev_attrib, da_group);
-+	struct tcmu_dev *udev = TCMU_DEV(da->da_dev);
-+	unsigned long val;
-+	int ret;
-+
-+	ret = kstrtoul(page, 0, &val);
-+	if (ret < 0)
-+		return ret;
-+	udev->dev_size = val;
-+
-+	/* Check if device has been configured before */
-+	if (tcmu_dev_configured(udev)) {
-+		ret = tcmu_netlink_event(TCMU_CMD_RECONFIG_DEVICE,
-+					 udev->uio_info.name,
-+					 udev->uio_info.uio_dev->minor);
-+		if (ret) {
-+			pr_err("Unable to reconfigure device\n");
-+			return ret;
-+		}
-+	}
-+
-+	return count;
-+}
-+CONFIGFS_ATTR(tcmu_, dev_size);
-+
- static ssize_t tcmu_emulate_write_cache_show(struct config_item *item,
- 					     char *page)
+-static int tcmu_netlink_event(enum tcmu_genl_cmd cmd, const char *name, int minor)
++static int tcmu_netlink_event(enum tcmu_genl_cmd cmd, const char *name,
++			      int minor, int type)
  {
-@@ -1586,6 +1624,13 @@ static ssize_t tcmu_emulate_write_cache_store(struct config_item *item,
- }
- CONFIGFS_ATTR(tcmu_, emulate_write_cache);
+ 	struct sk_buff *skb;
+ 	void *msg_header;
+@@ -1198,6 +1199,10 @@ static int tcmu_netlink_event(enum tcmu_genl_cmd cmd, const char *name, int mino
+ 	if (ret < 0)
+ 		goto free_skb;
  
-+struct configfs_attribute *tcmu_attrib_attrs[] = {
-+	&tcmu_attr_cmd_time_out,
-+	&tcmu_attr_dev_size,
-+	&tcmu_attr_emulate_write_cache,
-+	NULL,
++	ret = nla_put_u32(skb, TCMU_ATTR_TYPE, type);
++	if (ret < 0)
++		goto free_skb;
++
+ 	genlmsg_end(skb, msg_header);
+ 
+ 	ret = genlmsg_multicast_allns(&tcmu_genl_family, skb, 0,
+@@ -1301,7 +1306,7 @@ static int tcmu_configure_device(struct se_device *dev)
+ 	kref_get(&udev->kref);
+ 
+ 	ret = tcmu_netlink_event(TCMU_CMD_ADDED_DEVICE, udev->uio_info.name,
+-				 udev->uio_info.uio_dev->minor);
++				 udev->uio_info.uio_dev->minor, NO_RECONFIG);
+ 	if (ret)
+ 		goto err_netlink;
+ 
+@@ -1383,7 +1388,7 @@ static void tcmu_free_device(struct se_device *dev)
+ 
+ 	if (tcmu_dev_configured(udev)) {
+ 		tcmu_netlink_event(TCMU_CMD_REMOVED_DEVICE, udev->uio_info.name,
+-				   udev->uio_info.uio_dev->minor);
++				   udev->uio_info.uio_dev->minor, NO_RECONFIG);
+ 
+ 		uio_unregister_device(&udev->uio_info);
+ 	}
+@@ -1577,7 +1582,8 @@ static ssize_t tcmu_dev_path_store(struct config_item *item, const char *page,
+ 	if (tcmu_dev_configured(udev)) {
+ 		ret = tcmu_netlink_event(TCMU_CMD_RECONFIG_DEVICE,
+ 					 udev->uio_info.name,
+-					 udev->uio_info.uio_dev->minor);
++					 udev->uio_info.uio_dev->minor,
++					 CONFIG_PATH);
+ 		if (ret) {
+ 			pr_err("Unable to reconfigure device\n");
+ 			return ret;
+@@ -1615,7 +1621,8 @@ static ssize_t tcmu_dev_size_store(struct config_item *item, const char *page,
+ 	if (tcmu_dev_configured(udev)) {
+ 		ret = tcmu_netlink_event(TCMU_CMD_RECONFIG_DEVICE,
+ 					 udev->uio_info.name,
+-					 udev->uio_info.uio_dev->minor);
++					 udev->uio_info.uio_dev->minor,
++					 CONFIG_SIZE);
+ 		if (ret) {
+ 			pr_err("Unable to reconfigure device\n");
+ 			return ret;
+@@ -1654,7 +1661,8 @@ static ssize_t tcmu_emulate_write_cache_store(struct config_item *item,
+ 	if (tcmu_dev_configured(udev)) {
+ 		ret = tcmu_netlink_event(TCMU_CMD_RECONFIG_DEVICE,
+ 					 udev->uio_info.name,
+-					 udev->uio_info.uio_dev->minor);
++					 udev->uio_info.uio_dev->minor,
++					 CONFIG_WRITECACHE);
+ 		if (ret) {
+ 			pr_err("Unable to reconfigure device\n");
+ 			return ret;
+diff --git a/include/uapi/linux/target_core_user.h b/include/uapi/linux/target_core_user.h
+index 403a61f..5b00e35 100644
+--- a/include/uapi/linux/target_core_user.h
++++ b/include/uapi/linux/target_core_user.h
+@@ -139,8 +139,16 @@ enum tcmu_genl_attr {
+ 	TCMU_ATTR_UNSPEC,
+ 	TCMU_ATTR_DEVICE,
+ 	TCMU_ATTR_MINOR,
++	TCMU_ATTR_TYPE,
+ 	__TCMU_ATTR_MAX,
+ };
+ #define TCMU_ATTR_MAX (__TCMU_ATTR_MAX - 1)
+ 
++enum tcmu_reconfig_types {
++	NO_RECONFIG,
++	CONFIG_PATH,
++	CONFIG_SIZE,
++	CONFIG_WRITECACHE,
 +};
 +
- static struct configfs_attribute **tcmu_attrs;
- 
- static struct target_backend_ops tcmu_ops = {
-@@ -1685,7 +1730,7 @@ static int unmap_thread_fn(void *data)
- 
- static int __init tcmu_module_init(void)
- {
--	int ret, i, len = 0;
-+	int ret, i, k, len = 0;
- 
- 	BUILD_BUG_ON((sizeof(struct tcmu_cmd_entry) % TCMU_OP_ALIGN_SIZE) != 0);
- 
-@@ -1710,7 +1755,10 @@ static int __init tcmu_module_init(void)
- 	for (i = 0; passthrough_attrib_attrs[i] != NULL; i++) {
- 		len += sizeof(struct configfs_attribute *);
- 	}
--	len += sizeof(struct configfs_attribute *) * 2;
-+	for (i = 0; tcmu_attrib_attrs[i] != NULL; i++) {
-+		len += sizeof(struct configfs_attribute *);
-+	}
-+	len += sizeof(struct configfs_attribute *);
- 
- 	tcmu_attrs = kzalloc(len, GFP_KERNEL);
- 	if (!tcmu_attrs) {
-@@ -1721,9 +1769,10 @@ static int __init tcmu_module_init(void)
- 	for (i = 0; passthrough_attrib_attrs[i] != NULL; i++) {
- 		tcmu_attrs[i] = passthrough_attrib_attrs[i];
- 	}
--	tcmu_attrs[i] = &tcmu_attr_cmd_time_out;
--	i++;
--	tcmu_attrs[i] = &tcmu_attr_emulate_write_cache;
-+	for (k = 0; tcmu_attrib_attrs[k] != NULL; k++) {
-+		tcmu_attrs[i] = tcmu_attrib_attrs[k];
-+		i++;
-+	}
- 	tcmu_ops.tb_dev_attrib_attrs = tcmu_attrs;
- 
- 	ret = transport_backend_register(&tcmu_ops);
+ #endif
 -- 
 2.5.4 (Apple Git-61)
