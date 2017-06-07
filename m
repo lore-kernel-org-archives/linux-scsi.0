@@ -1,7 +1,7 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 05/15] qla2xxx: Add debug knob for user control workload
-Date: Wed, 7 Jun 2017 14:43:23 -0700
-Message-ID: <20170607214333.23110-6-himanshu.madhani@cavium.com>
+Subject: [PATCH 12/15] qla2xxx: Remove datasegs_per_cmd and datasegs_per_cont field
+Date: Wed, 7 Jun 2017 14:43:30 -0700
+Message-ID: <20170607214333.23110-13-himanshu.madhani@cavium.com>
 References: <20170607214333.23110-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,267 +14,72 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-For Target mode, user can control the work load by placing qla2xxx's
-irq vector on certain CPU via the smp_affinity settings. This patch
-allows user to control the number of QPair's irq to be active. The
-irqs are allocated at driver load time until unload. The work itself
-is placed on the QPair based on user setting.
-
-New module parameter ql2xuctrlirq is added for allowing user to
-control IRQ affinity.
-
-Usage:
-  modprobe qla2xxx qlini_mode=disabled ql2xuctrlirq=1
-  mount -t debugfs none /sys/kernel/debug
-  echo 2 > /sys/kernel/debug/qla2xxx/qla2xxx_[host num]/naqp
-  echo [cpu id] > /proc/irq/[irq id]/smp_affinity_list
+These fields only hold one set of value. Replace it with macros.
 
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h    |  7 ++-
- drivers/scsi/qla2xxx/qla_dfs.c    | 89 +++++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_gbl.h    |  2 +
- drivers/scsi/qla2xxx/qla_isr.c    | 11 +++--
- drivers/scsi/qla2xxx/qla_target.c | 32 ++++++++++++++
- 5 files changed, 137 insertions(+), 4 deletions(-)
+ drivers/scsi/qla2xxx/qla_target.c | 12 +++++-------
+ drivers/scsi/qla2xxx/qla_target.h |  2 +-
+ 2 files changed, 6 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 8b52f431a812..18b37c864250 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -3322,6 +3322,7 @@ struct qlt_hw_data {
- 
- 	struct dentry *dfs_tgt_sess;
- 	struct dentry *dfs_tgt_port_database;
-+	struct dentry *dfs_naqp;
- 
- 	struct list_head q_full_list;
- 	uint32_t num_pend_cmds;
-@@ -3330,7 +3331,8 @@ struct qlt_hw_data {
- 	spinlock_t q_full_lock;
- 	uint32_t leak_exchg_thresh_hold;
- 	spinlock_t sess_lock;
--	int rspq_vector_cpuid;
-+	int num_act_qpairs;
-+#define DEFAULT_NAQP 2
- 	spinlock_t atio_lock ____cacheline_aligned;
- 	struct btree_head32 host_map;
- };
-@@ -4278,6 +4280,9 @@ enum nexus_wait_type {
- 	WAIT_LUN,
- };
- 
-+#define USER_CTRL_IRQ(_ha) (ql2xuctrlirq && QLA_TGT_MODE_ENABLED() && \
-+	(IS_QLA27XX(_ha) || IS_QLA83XX(_ha)))
-+
- #include "qla_target.h"
- #include "qla_gbl.h"
- #include "qla_dbg.h"
-diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
-index 391c50be2297..63d7374dce77 100644
---- a/drivers/scsi/qla2xxx/qla_dfs.c
-+++ b/drivers/scsi/qla2xxx/qla_dfs.c
-@@ -314,6 +314,81 @@ static const struct file_operations dfs_fce_ops = {
- 	.release	= qla2x00_dfs_fce_release,
- };
- 
-+static int
-+qla_dfs_naqp_show(struct seq_file *s, void *unused)
-+{
-+	struct scsi_qla_host *vha = s->private;
-+	struct qla_hw_data *ha = vha->hw;
-+
-+	seq_printf(s, "%d\n", ha->tgt.num_act_qpairs);
-+	return 0;
-+}
-+
-+static int
-+qla_dfs_naqp_open(struct inode *inode, struct file *file)
-+{
-+	struct scsi_qla_host *vha = inode->i_private;
-+
-+	return single_open(file, qla_dfs_naqp_show, vha);
-+}
-+
-+static ssize_t
-+qla_dfs_naqp_write(struct file *file, const char __user *buffer,
-+    size_t count, loff_t *pos)
-+{
-+	struct seq_file *s = file->private_data;
-+	struct scsi_qla_host *vha = s->private;
-+	struct qla_hw_data *ha = vha->hw;
-+	char *buf;
-+	int rc = 0;
-+	unsigned long num_act_qp;
-+
-+	if (!(IS_QLA27XX(ha) || IS_QLA83XX(ha))) {
-+		pr_err("host%ld: this adapter does not support Multi Q.",
-+		    vha->host_no);
-+		return -EINVAL;
-+	}
-+
-+	if (!vha->flags.qpairs_available) {
-+		pr_err("host%ld: Driver is not setup with Multi Q.",
-+		    vha->host_no);
-+		return -EINVAL;
-+	}
-+	buf = memdup_user_nul(buffer, count);
-+	if (IS_ERR(buf)) {
-+		pr_err("host%ld: fail to copy user buffer.",
-+		    vha->host_no);
-+		return PTR_ERR(buf);
-+	}
-+
-+	num_act_qp = simple_strtoul(buf, NULL, 0);
-+
-+	if (num_act_qp >= vha->hw->max_qpairs) {
-+		pr_err("User set invalid number of qpairs %lu. Max = %d",
-+		    num_act_qp, vha->hw->max_qpairs);
-+		rc = -EINVAL;
-+		goto out_free;
-+	}
-+
-+	if (num_act_qp != ha->tgt.num_act_qpairs) {
-+		ha->tgt.num_act_qpairs = num_act_qp;
-+		qlt_clr_qp_table(vha);
-+	}
-+	rc = count;
-+out_free:
-+	kfree(buf);
-+	return rc;
-+}
-+
-+static const struct file_operations dfs_naqp_ops = {
-+	.open		= qla_dfs_naqp_open,
-+	.read		= seq_read,
-+	.llseek		= seq_lseek,
-+	.release	= single_release,
-+	.write		= qla_dfs_naqp_write,
-+};
-+
-+
- int
- qla2x00_dfs_setup(scsi_qla_host_t *vha)
- {
-@@ -391,6 +466,15 @@ qla2x00_dfs_setup(scsi_qla_host_t *vha)
- 		goto out;
- 	}
- 
-+	if (IS_QLA27XX(ha) || IS_QLA83XX(ha)) {
-+		ha->tgt.dfs_naqp = debugfs_create_file("naqp",
-+		    0400, ha->dfs_dir, vha, &dfs_naqp_ops);
-+		if (!ha->tgt.dfs_naqp) {
-+			ql_log(ql_log_warn, vha, 0xd011,
-+			    "Unable to create debugFS naqp node.\n");
-+			goto out;
-+		}
-+	}
- out:
- 	return 0;
- }
-@@ -400,6 +484,11 @@ qla2x00_dfs_remove(scsi_qla_host_t *vha)
- {
- 	struct qla_hw_data *ha = vha->hw;
- 
-+	if (ha->tgt.dfs_naqp) {
-+		debugfs_remove(ha->tgt.dfs_naqp);
-+		ha->tgt.dfs_naqp = NULL;
-+	}
-+
- 	if (ha->tgt.dfs_tgt_sess) {
- 		debugfs_remove(ha->tgt.dfs_tgt_sess);
- 		ha->tgt.dfs_tgt_sess = NULL;
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index f5493eda0110..beebf96c23d4 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -139,6 +139,7 @@ extern int ql2xexchoffld;
- extern int ql2xiniexchg;
- extern int ql2xfwholdabts;
- extern int ql2xmvasynctoatio;
-+extern int ql2xuctrlirq;
- 
- extern int qla2x00_loop_reset(scsi_qla_host_t *);
- extern void qla2x00_abort_all_cmds(scsi_qla_host_t *, int);
-@@ -856,5 +857,6 @@ void qla24xx_delete_sess_fn(struct work_struct *);
- void qlt_unknown_atio_work_fn(struct work_struct *);
- void qlt_update_host_map(struct scsi_qla_host *, port_id_t);
- void qlt_remove_target_resources(struct qla_hw_data *);
-+void qlt_clr_qp_table(struct scsi_qla_host *vha);
- 
- #endif /* _QLA_GBL_H */
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 9eb946cc8297..3c9f9aa7f2c2 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -3227,9 +3227,14 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- 		min_vecs++;
- 	}
- 
--	ret = pci_alloc_irq_vectors_affinity(ha->pdev, min_vecs,
--			ha->msix_count, PCI_IRQ_MSIX | PCI_IRQ_AFFINITY,
--			&desc);
-+	if (USER_CTRL_IRQ(ha)) {
-+		/* user wants to control IRQ setting for target mode */
-+		ret = pci_alloc_irq_vectors(ha->pdev, min_vecs,
-+		    ha->msix_count, PCI_IRQ_MSIX);
-+	} else
-+		ret = pci_alloc_irq_vectors_affinity(ha->pdev, min_vecs,
-+		    ha->msix_count, PCI_IRQ_MSIX | PCI_IRQ_AFFINITY,
-+		    &desc);
- 
- 	if (ret < 0) {
- 		ql_log(ql_log_fatal, vha, 0x00c7,
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 8920b830722c..cbe6ff9f663e 100644
+index 411c1799c6e3..48d82c67e223 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -66,6 +66,13 @@ MODULE_PARM_DESC(ql_dm_tgt_ex_pct,
- 	"the percentage of exchanges/cmds FW will allocate resources "
- 	"for Target mode.");
+@@ -2228,10 +2228,10 @@ static int qlt_pci_map_calc_cnt(struct qla_tgt_prm *prm)
+ 		 * If greater than four sg entries then we need to allocate
+ 		 * the continuation entries
+ 		 */
+-		if (prm->seg_cnt > prm->tgt->datasegs_per_cmd)
++		if (prm->seg_cnt > QLA_TGT_DATASEGS_PER_CMD_24XX)
+ 			prm->req_cnt += DIV_ROUND_UP(prm->seg_cnt -
+-			prm->tgt->datasegs_per_cmd,
+-			prm->tgt->datasegs_per_cont);
++			QLA_TGT_DATASEGS_PER_CMD_24XX,
++			QLA_TGT_DATASEGS_PER_CONT_24XX);
+ 	} else {
+ 		/* DIF */
+ 		if ((cmd->se_cmd.prot_op == TARGET_PROT_DIN_INSERT) ||
+@@ -2448,7 +2448,7 @@ static void qlt_load_cont_data_segments(struct qla_tgt_prm *prm)
  
-+int ql2xuctrlirq = 1;
-+module_param(ql2xuctrlirq, int, 0644);
-+MODULE_PARM_DESC(ql2xuctrlirq,
-+    "User to control IRQ placement via smp_affinity."
-+    "Valid with qlini_mode=disabled."
-+    "1(default): enable");
-+
- int ql2x_ini_mode = QLA2XXX_INI_MODE_EXCLUSIVE;
+ 		/* Load continuation entry data segments */
+ 		for (cnt = 0;
+-		    cnt < prm->tgt->datasegs_per_cont && prm->seg_cnt;
++		    cnt < QLA_TGT_DATASEGS_PER_CONT_24XX && prm->seg_cnt;
+ 		    cnt++, prm->seg_cnt--) {
+ 			*dword_ptr++ =
+ 			    cpu_to_le32(pci_dma_lo32
+@@ -2492,7 +2492,7 @@ static void qlt_load_data_segments(struct qla_tgt_prm *prm)
  
- static int temp_sam_status = SAM_STAT_BUSY;
-@@ -4059,6 +4066,31 @@ static void qlt_do_work(struct work_struct *work)
- 	__qlt_do_work(cmd);
- }
+ 	/* Load command entry data segments */
+ 	for (cnt = 0;
+-	    (cnt < prm->tgt->datasegs_per_cmd) && prm->seg_cnt;
++	    (cnt < QLA_TGT_DATASEGS_PER_CMD_24XX) && prm->seg_cnt;
+ 	    cnt++, prm->seg_cnt--) {
+ 		*dword_ptr++ =
+ 		    cpu_to_le32(pci_dma_lo32(sg_dma_address(prm->sg)));
+@@ -6170,8 +6170,6 @@ int qlt_add_target(struct qla_hw_data *ha, struct scsi_qla_host *base_vha)
+ 		base_vha->vp_idx);
+ 	/* 3 is reserved */
+ 	tgt->sg_tablesize = QLA_TGT_MAX_SG_24XX(base_vha->req->length - 3);
+-	tgt->datasegs_per_cmd = QLA_TGT_DATASEGS_PER_CMD_24XX;
+-	tgt->datasegs_per_cont = QLA_TGT_DATASEGS_PER_CONT_24XX;
  
-+void qlt_clr_qp_table(struct scsi_qla_host *vha)
-+{
-+	unsigned long flags;
-+	struct qla_hw_data *ha = vha->hw;
-+	struct qla_tgt *tgt = vha->vha_tgt.qla_tgt;
-+	void *node;
-+	u64 key = 0;
-+
-+	ql_log(ql_log_info, vha, 0x706c,
-+	    "User update Number of Active Qpairs %d\n",
-+	    ha->tgt.num_act_qpairs);
-+
-+	spin_lock_irqsave(&ha->tgt.atio_lock, flags);
-+
-+	btree_for_each_safe64(&tgt->lun_qpair_map, key, node)
-+		btree_remove64(&tgt->lun_qpair_map, key);
-+
-+	ha->base_qpair->lun_cnt = 0;
-+	for (key = 0; key < ha->max_qpairs; key++)
-+		if (ha->queue_pair_map[key])
-+			ha->queue_pair_map[key]->lun_cnt = 0;
-+
-+	spin_unlock_irqrestore(&ha->tgt.atio_lock, flags);
-+}
-+
- static void qlt_assign_qpair(struct scsi_qla_host *vha,
- 	struct qla_tgt_cmd *cmd)
- {
+ 	mutex_lock(&qla_tgt_mutex);
+ 	list_add_tail(&tgt->tgt_list_entry, &qla_tgt_glist);
+diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
+index 902685f85506..7fe02d036bdf 100644
+--- a/drivers/scsi/qla2xxx/qla_target.h
++++ b/drivers/scsi/qla2xxx/qla_target.h
+@@ -806,7 +806,7 @@ struct qla_tgt {
+ 	 */
+ 	int atio_irq_cmd_count;
+ 
+-	int datasegs_per_cmd, datasegs_per_cont, sg_tablesize;
++	int sg_tablesize;
+ 
+ 	/* Target's flags, serialized by pha->hardware_lock */
+ 	unsigned int link_reinit_iocb_pending:1;
 -- 
 2.12.0
