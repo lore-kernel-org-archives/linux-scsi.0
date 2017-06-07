@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v4 19/23] scsi: hisi_sas: add v3 code to send internal abort command
-Date: Wed, 7 Jun 2017 23:20:22 +0800
-Message-ID: <1496848826-20534-20-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v4 06/23] scsi: hisi_sas: relocate get_ncq_tag_v2_hw()
+Date: Wed, 7 Jun 2017 23:20:09 +0800
+Message-ID: <1496848826-20534-7-git-send-email-john.garry@huawei.com>
 References: <1496848826-20534-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,83 +14,89 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Add code to prepare internal abort command.
+Relocate get_ncq_tag_v2_hw() to a common location, as
+future hw versions will require it.
+Also rename with "hisi_sas_" prefix for consistency.
 
-Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 38 ++++++++++++++++++++++++++++++++++
- 1 file changed, 38 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas.h       |  1 +
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 15 +++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 16 +---------------
+ 3 files changed, 17 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 9b9c070..2fb2455 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -165,6 +165,10 @@
- /* HW dma structures */
- /* Delivery queue header */
- /* dw0 */
-+#define CMD_HDR_ABORT_FLAG_OFF		0
-+#define CMD_HDR_ABORT_FLAG_MSK		(0x3 << CMD_HDR_ABORT_FLAG_OFF)
-+#define CMD_HDR_ABORT_DEVICE_TYPE_OFF	2
-+#define CMD_HDR_ABORT_DEVICE_TYPE_MSK	(0x1 << CMD_HDR_ABORT_DEVICE_TYPE_OFF)
- #define CMD_HDR_RESP_REPORT_OFF		5
- #define CMD_HDR_RESP_REPORT_MSK		(0x1 << CMD_HDR_RESP_REPORT_OFF)
- #define CMD_HDR_TLR_CTRL_OFF		6
-@@ -204,6 +208,11 @@
- #define CMD_HDR_DIF_SGL_LEN_MSK		(0xffff << CMD_HDR_DIF_SGL_LEN_OFF)
- #define CMD_HDR_DATA_SGL_LEN_OFF	16
- #define CMD_HDR_DATA_SGL_LEN_MSK	(0xffff << CMD_HDR_DATA_SGL_LEN_OFF)
-+/* dw7 */
-+#define CMD_HDR_ADDR_MODE_SEL_OFF		15
-+#define CMD_HDR_ADDR_MODE_SEL_MSK		(1 << CMD_HDR_ADDR_MODE_SEL_OFF)
-+#define CMD_HDR_ABORT_IPTT_OFF		16
-+#define CMD_HDR_ABORT_IPTT_MSK		(0xffff << CMD_HDR_ABORT_IPTT_OFF)
- 
- /* Completion header */
- /* dw0 */
-@@ -942,6 +951,34 @@ static int prep_ata_v3_hw(struct hisi_hba *hisi_hba,
- 	return 0;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 1dcdf66..19c6ffd 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -366,6 +366,7 @@ struct hisi_sas_command_table_ssp {
+ extern struct hisi_sas_port *to_hisi_sas_port(struct asd_sas_port *sas_port);
+ extern void hisi_sas_sata_done(struct sas_task *task,
+ 			    struct hisi_sas_slot *slot);
++extern int hisi_sas_get_ncq_tag(struct sas_task *task, u32 *tag);
+ extern int hisi_sas_probe(struct platform_device *pdev,
+ 			  const struct hisi_sas_hw *ops);
+ extern int hisi_sas_remove(struct platform_device *pdev);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index a7ba73b9..5e84314 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -97,6 +97,21 @@ void hisi_sas_sata_done(struct sas_task *task,
  }
+ EXPORT_SYMBOL_GPL(hisi_sas_sata_done);
  
-+static int prep_abort_v3_hw(struct hisi_hba *hisi_hba,
-+		struct hisi_sas_slot *slot,
-+		int device_id, int abort_flag, int tag_to_abort)
++int hisi_sas_get_ncq_tag(struct sas_task *task, u32 *tag)
 +{
-+	struct sas_task *task = slot->task;
-+	struct domain_device *dev = task->dev;
-+	struct hisi_sas_cmd_hdr *hdr = slot->cmd_hdr;
-+	struct hisi_sas_port *port = slot->port;
++	struct ata_queued_cmd *qc = task->uldd_task;
 +
-+	/* dw0 */
-+	hdr->dw0 = cpu_to_le32((5 << CMD_HDR_CMD_OFF) | /*abort*/
-+			       (port->id << CMD_HDR_PORT_OFF) |
-+				   ((dev_is_sata(dev) ? 1:0)
-+					<< CMD_HDR_ABORT_DEVICE_TYPE_OFF) |
-+					(abort_flag
-+					 << CMD_HDR_ABORT_FLAG_OFF));
-+
-+	/* dw1 */
-+	hdr->dw1 = cpu_to_le32(device_id
-+			<< CMD_HDR_DEV_ID_OFF);
-+
-+	/* dw7 */
-+	hdr->dw7 = cpu_to_le32(tag_to_abort << CMD_HDR_ABORT_IPTT_OFF);
-+	hdr->transfer_tags = cpu_to_le32(slot->idx);
-+
++	if (qc) {
++		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
++			qc->tf.command == ATA_CMD_FPDMA_READ) {
++			*tag = qc->tag;
++			return 1;
++		}
++	}
 +	return 0;
 +}
++EXPORT_SYMBOL_GPL(hisi_sas_get_ncq_tag);
 +
- static int phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
+ static struct hisi_hba *dev_to_hisi_hba(struct domain_device *device)
  {
- 	int i, res = 0;
-@@ -1544,6 +1581,7 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
- 	.prep_ssp = prep_ssp_v3_hw,
- 	.prep_smp = prep_smp_v3_hw,
- 	.prep_stp = prep_ata_v3_hw,
-+	.prep_abort = prep_abort_v3_hw,
- 	.get_free_slot = get_free_slot_v3_hw,
- 	.start_delivery = start_delivery_v3_hw,
- 	.slot_complete = slot_complete_v3_hw,
+ 	return device->port->ha->lldd_ha;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index fdd7019..9cc5435 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -2332,20 +2332,6 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
+ 	return sts;
+ }
+ 
+-static int get_ncq_tag_v2_hw(struct sas_task *task, u32 *tag)
+-{
+-	struct ata_queued_cmd *qc = task->uldd_task;
+-
+-	if (qc) {
+-		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
+-			qc->tf.command == ATA_CMD_FPDMA_READ) {
+-			*tag = qc->tag;
+-			return 1;
+-		}
+-	}
+-	return 0;
+-}
+-
+ static int prep_ata_v2_hw(struct hisi_hba *hisi_hba,
+ 			  struct hisi_sas_slot *slot)
+ {
+@@ -2393,7 +2379,7 @@ static int prep_ata_v2_hw(struct hisi_hba *hisi_hba,
+ 	hdr->dw1 = cpu_to_le32(dw1);
+ 
+ 	/* dw2 */
+-	if (task->ata_task.use_ncq && get_ncq_tag_v2_hw(task, &hdr_tag)) {
++	if (task->ata_task.use_ncq && hisi_sas_get_ncq_tag(task, &hdr_tag)) {
+ 		task->ata_task.fis.sector_count |= (u8) (hdr_tag << 3);
+ 		dw2 |= hdr_tag << CMD_HDR_NCQ_TAG_OFF;
+ 	}
 -- 
 1.9.1
