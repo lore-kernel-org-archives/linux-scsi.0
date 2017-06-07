@@ -1,177 +1,43 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 14/15] qla2xxx: Include Exchange offload/Extended Login into FW dump
-Date: Wed, 7 Jun 2017 14:43:32 -0700
-Message-ID: <20170607214333.23110-15-himanshu.madhani@cavium.com>
+Subject: [PATCH 15/15] qla2xxx: Update driver version to 9.01.00.00-k
+Date: Wed, 7 Jun 2017 14:43:33 -0700
+Message-ID: <20170607214333.23110-16-himanshu.madhani@cavium.com>
 References: <20170607214333.23110-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0084.outbound.protection.outlook.com ([104.47.41.84]:25952
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam01on0083.outbound.protection.outlook.com ([104.47.32.83]:59616
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751772AbdFGVoK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 7 Jun 2017 17:44:10 -0400
+        id S1751778AbdFGVoM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 7 Jun 2017 17:44:12 -0400
 In-Reply-To: <20170607214333.23110-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org, nab@linux-iscsi.org
 Cc: linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
 
-From: Quinn Tran <quinn.tran@cavium.com>
-
-Add missing memory dump of Exchange Offload and Extended
-login into FW dump.
-
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_dbg.c  | 49 +++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_dbg.h  | 11 +++++++++
- drivers/scsi/qla2xxx/qla_init.c |  7 ++++++
- drivers/scsi/qla2xxx/qla_os.c   |  3 ---
- 4 files changed, 67 insertions(+), 3 deletions(-)
+ drivers/scsi/qla2xxx/qla_version.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index c0c90dcc7c7b..f91ee717202d 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -498,6 +498,50 @@ qla25xx_copy_fce(struct qla_hw_data *ha, void *ptr, uint32_t **last_chain)
- }
+diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
+index 45bc84e8e3bf..dcbb9bb05e99 100644
+--- a/drivers/scsi/qla2xxx/qla_version.h
++++ b/drivers/scsi/qla2xxx/qla_version.h
+@@ -7,9 +7,9 @@
+ /*
+  * Driver version
+  */
+-#define QLA2XXX_VERSION      "9.00.00.00-k"
++#define QLA2XXX_VERSION      "9.01.00.00-k"
  
- static inline void *
-+qla25xx_copy_exlogin(struct qla_hw_data *ha, void *ptr, uint32_t **last_chain)
-+{
-+	struct qla2xxx_offld_chain *c = ptr;
-+
-+	if (!ha->exlogin_buf)
-+		return ptr;
-+
-+	*last_chain = &c->type;
-+
-+	c->type = cpu_to_be32(DUMP_CHAIN_EXLOGIN);
-+	c->chain_size = cpu_to_be32(sizeof(struct qla2xxx_offld_chain) +
-+	    ha->exlogin_size);
-+	c->size = cpu_to_be32(ha->exlogin_size);
-+	c->addr = cpu_to_be64(ha->exlogin_buf_dma);
-+
-+	ptr += sizeof(struct qla2xxx_offld_chain);
-+	memcpy(ptr, ha->exlogin_buf, ha->exlogin_size);
-+
-+	return (char *)ptr + cpu_to_be32(c->size);
-+}
-+
-+static inline void *
-+qla81xx_copy_exchoffld(struct qla_hw_data *ha, void *ptr, uint32_t **last_chain)
-+{
-+	struct qla2xxx_offld_chain *c = ptr;
-+
-+	if (!ha->exchoffld_buf)
-+		return ptr;
-+
-+	*last_chain = &c->type;
-+
-+	c->type = cpu_to_be32(DUMP_CHAIN_EXCHG);
-+	c->chain_size = cpu_to_be32(sizeof(struct qla2xxx_offld_chain) +
-+	    ha->exchoffld_size);
-+	c->size = cpu_to_be32(ha->exchoffld_size);
-+	c->addr = cpu_to_be64(ha->exchoffld_buf_dma);
-+
-+	ptr += sizeof(struct qla2xxx_offld_chain);
-+	memcpy(ptr, ha->exchoffld_buf, ha->exchoffld_size);
-+
-+	return (char *)ptr + cpu_to_be32(c->size);
-+}
-+
-+static inline void *
- qla2xxx_copy_atioqueues(struct qla_hw_data *ha, void *ptr,
- 	uint32_t **last_chain)
- {
-@@ -1606,6 +1650,7 @@ qla25xx_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
- 	nxt_chain = qla25xx_copy_fce(ha, nxt_chain, &last_chain);
- 	nxt_chain = qla25xx_copy_mqueues(ha, nxt_chain, &last_chain);
- 	nxt_chain = qla2xxx_copy_atioqueues(ha, nxt_chain, &last_chain);
-+	nxt_chain = qla25xx_copy_exlogin(ha, nxt_chain, &last_chain);
- 	if (last_chain) {
- 		ha->fw_dump->version |= htonl(DUMP_CHAIN_VARIANT);
- 		*last_chain |= htonl(DUMP_CHAIN_LAST);
-@@ -1932,6 +1977,8 @@ qla81xx_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
- 	nxt_chain = qla25xx_copy_fce(ha, nxt_chain, &last_chain);
- 	nxt_chain = qla25xx_copy_mqueues(ha, nxt_chain, &last_chain);
- 	nxt_chain = qla2xxx_copy_atioqueues(ha, nxt_chain, &last_chain);
-+	nxt_chain = qla25xx_copy_exlogin(ha, nxt_chain, &last_chain);
-+	nxt_chain = qla81xx_copy_exchoffld(ha, nxt_chain, &last_chain);
- 	if (last_chain) {
- 		ha->fw_dump->version |= htonl(DUMP_CHAIN_VARIANT);
- 		*last_chain |= htonl(DUMP_CHAIN_LAST);
-@@ -2443,6 +2490,8 @@ qla83xx_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
- 	nxt_chain = qla25xx_copy_fce(ha, nxt_chain, &last_chain);
- 	nxt_chain = qla25xx_copy_mqueues(ha, nxt_chain, &last_chain);
- 	nxt_chain = qla2xxx_copy_atioqueues(ha, nxt_chain, &last_chain);
-+	nxt_chain = qla25xx_copy_exlogin(ha, nxt_chain, &last_chain);
-+	nxt_chain = qla81xx_copy_exchoffld(ha, nxt_chain, &last_chain);
- 	if (last_chain) {
- 		ha->fw_dump->version |= htonl(DUMP_CHAIN_VARIANT);
- 		*last_chain |= htonl(DUMP_CHAIN_LAST);
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.h b/drivers/scsi/qla2xxx/qla_dbg.h
-index f60138f66dce..8877aa97d829 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.h
-+++ b/drivers/scsi/qla2xxx/qla_dbg.h
-@@ -232,6 +232,15 @@ struct qla2xxx_fce_chain {
- 	uint32_t eregs[8];
- };
- 
-+/* used by exchange off load and extended login offload */
-+struct qla2xxx_offld_chain {
-+	uint32_t type;
-+	uint32_t chain_size;
-+
-+	uint32_t size;
-+	u64	 addr;
-+};
-+
- struct qla2xxx_mq_chain {
- 	uint32_t type;
- 	uint32_t chain_size;
-@@ -258,6 +267,8 @@ struct qla2xxx_mqueue_chain {
- #define DUMP_CHAIN_FCE		0x7FFFFAF0
- #define DUMP_CHAIN_MQ		0x7FFFFAF1
- #define DUMP_CHAIN_QUEUE	0x7FFFFAF2
-+#define DUMP_CHAIN_EXLOGIN	0x7FFFFAF3
-+#define DUMP_CHAIN_EXCHG	0x7FFFFAF4
- #define DUMP_CHAIN_LAST		0x80000000
- 
- struct qla2xxx_fw_dump {
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 48c0a58330d4..72d9ca138ffd 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -2538,6 +2538,13 @@ qla2x00_alloc_fw_dump(scsi_qla_host_t *vha)
- 	ha->chain_offset = dump_size;
- 	dump_size += mq_size + fce_size;
- 
-+	if (ha->exchoffld_buf)
-+		dump_size += sizeof(struct qla2xxx_offld_chain) +
-+			ha->exchoffld_size;
-+	if (ha->exlogin_buf)
-+		dump_size += sizeof(struct qla2xxx_offld_chain) +
-+			ha->exlogin_size;
-+
- allocate:
- 	ha->fw_dump = vmalloc(dump_size);
- 	if (!ha->fw_dump) {
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 88e115fcea60..f7c4f723c405 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -4176,9 +4176,6 @@ qla2x00_set_exchoffld_buffer(scsi_qla_host_t *vha)
- 	if (!IS_EXCHG_OFFLD_CAPABLE(ha))
- 		return QLA_SUCCESS;
- 
--	ql_log(ql_log_info, vha, 0xd014,
--	    "Exchange offload count: %d.\n", ql2xexlogins);
--
- 	max_cnt = 0;
- 	rval = qla_get_exchoffld_status(vha, &size, &max_cnt);
- 	if (rval != QLA_SUCCESS) {
+ #define QLA_DRIVER_MAJOR_VER	9
+-#define QLA_DRIVER_MINOR_VER	0
++#define QLA_DRIVER_MINOR_VER	1
+ #define QLA_DRIVER_PATCH_VER	0
+ #define QLA_DRIVER_BETA_VER	0
 -- 
 2.12.0
