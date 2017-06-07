@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v4 12/23] scsi: hisi_sas: add v3 hw PHY init
-Date: Wed, 7 Jun 2017 23:20:15 +0800
-Message-ID: <1496848826-20534-13-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v4 14/23] scsi: hisi_sas: add v3 cq interrupt handler
+Date: Wed, 7 Jun 2017 23:20:17 +0800
+Message-ID: <1496848826-20534-15-git-send-email-john.garry@huawei.com>
 References: <1496848826-20534-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,222 +14,427 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Add code to configure PHYs for v3 hw.
+Add v3 cq interrupt handler slot_complete_v2_hw().
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 127 ++++++++++++++++++++++++++++++++-
- 1 file changed, 126 insertions(+), 1 deletion(-)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 365 +++++++++++++++++++++++++++++++++
+ 1 file changed, 365 insertions(+)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 1a5eae6..5580250 100644
+index 3065252..e327482 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -19,6 +19,10 @@
- #define ITCT_BASE_ADDR_HI		0x14
- #define IO_BROKEN_MSG_ADDR_LO		0x18
- #define IO_BROKEN_MSG_ADDR_HI		0x1c
-+#define PHY_CONTEXT			0x20
-+#define PHY_STATE			0x24
-+#define PHY_PORT_NUM_MA			0x28
-+#define PHY_CONN_RATE			0x30
- #define AXI_AHB_CLK_CFG			0x3c
- #define AXI_USER1			0x48
- #define AXI_USER2			0x4c
-@@ -42,6 +46,7 @@
- #define CFG_SET_ABORTED_IPTT_OFF	0
- #define CFG_SET_ABORTED_IPTT_MSK	(0xfff << CFG_SET_ABORTED_IPTT_OFF)
- #define CFG_1US_TIMER_TRSH		0xcc
-+#define CHNL_INT_STATUS			0x148
- #define INT_COAL_EN			0x19c
- #define OQ_INT_COAL_TIME		0x1a0
- #define OQ_INT_COAL_CNT			0x1a4
-@@ -68,9 +73,11 @@
- #define ENT_INT_SRC_MSK1		0x1c4
- #define ENT_INT_SRC_MSK2		0x1c8
- #define ENT_INT_SRC_MSK3		0x1cc
-+#define ENT_INT_SRC_MSK3_ENT95_MSK_OFF	31
- #define CHNL_PHYUPDOWN_INT_MSK		0x1d0
- #define CHNL_ENT_INT_MSK			0x1d4
- #define HGC_COM_INT_MSK				0x1d8
-+#define ENT_INT_SRC_MSK3_ENT95_MSK_MSK	(0x1 << ENT_INT_SRC_MSK3_ENT95_MSK_OFF)
- #define SAS_ECC_INTR			0x1e8
- #define SAS_ECC_INTR_MSK		0x1ec
- #define HGC_ERR_STAT_EN			0x238
-@@ -91,11 +98,33 @@
+@@ -157,6 +157,32 @@
+ #define SL_RX_BCAST_CHK_MSK		(PORT_BASE + 0x2c0)
+ #define PHYCTRL_OOB_RESTART_MSK		(PORT_BASE + 0x2c4)
  
- /* phy registers requiring init */
- #define PORT_BASE			(0x2000)
-+#define PHY_CFG				(PORT_BASE + 0x0)
-+#define HARD_PHY_LINKRATE		(PORT_BASE + 0x4)
-+#define PHY_CFG_ENA_OFF			0
-+#define PHY_CFG_ENA_MSK			(0x1 << PHY_CFG_ENA_OFF)
-+#define PHY_CFG_DC_OPT_OFF		2
-+#define PHY_CFG_DC_OPT_MSK		(0x1 << PHY_CFG_DC_OPT_OFF)
- #define PROG_PHY_LINK_RATE		(PORT_BASE + 0x8)
- #define PHY_CTRL			(PORT_BASE + 0x14)
- #define PHY_CTRL_RESET_OFF		0
- #define PHY_CTRL_RESET_MSK		(0x1 << PHY_CTRL_RESET_OFF)
- #define SL_CFG				(PORT_BASE + 0x84)
-+#define SL_CONTROL			(PORT_BASE + 0x94)
-+#define SL_CONTROL_NOTIFY_EN_OFF	0
-+#define SL_CONTROL_NOTIFY_EN_MSK	(0x1 << SL_CONTROL_NOTIFY_EN_OFF)
-+#define SL_CTA_OFF		17
-+#define SL_CTA_MSK		(0x1 << SL_CTA_OFF)
-+#define TX_ID_DWORD0			(PORT_BASE + 0x9c)
-+#define TX_ID_DWORD1			(PORT_BASE + 0xa0)
-+#define TX_ID_DWORD2			(PORT_BASE + 0xa4)
-+#define TX_ID_DWORD3			(PORT_BASE + 0xa8)
-+#define TX_ID_DWORD4			(PORT_BASE + 0xaC)
-+#define TX_ID_DWORD5			(PORT_BASE + 0xb0)
-+#define TX_ID_DWORD6			(PORT_BASE + 0xb4)
-+#define TXID_AUTO				(PORT_BASE + 0xb8)
-+#define CT3_OFF		1
-+#define CT3_MSK		(0x1 << CT3_OFF)
-+#define RX_IDAF_DWORD0			(PORT_BASE + 0xc4)
- #define RXOP_CHECK_CFG_H		(PORT_BASE + 0xfc)
- #define SAS_SSP_CON_TIMER_CFG		(PORT_BASE + 0x134)
- #define SAS_SMP_CON_TIMER_CFG		(PORT_BASE + 0x138)
-@@ -136,6 +165,13 @@ struct hisi_sas_complete_v3_hdr {
++/* Completion header */
++/* dw0 */
++#define CMPLT_HDR_CMPLT_OFF		0
++#define CMPLT_HDR_CMPLT_MSK		(0x3 << CMPLT_HDR_CMPLT_OFF)
++#define CMPLT_HDR_ERROR_PHASE_OFF   2
++#define CMPLT_HDR_ERROR_PHASE_MSK   (0xff << CMPLT_HDR_ERROR_PHASE_OFF)
++#define CMPLT_HDR_RSPNS_XFRD_OFF	10
++#define CMPLT_HDR_RSPNS_XFRD_MSK	(0x1 << CMPLT_HDR_RSPNS_XFRD_OFF)
++#define CMPLT_HDR_ERX_OFF		12
++#define CMPLT_HDR_ERX_MSK		(0x1 << CMPLT_HDR_ERX_OFF)
++#define CMPLT_HDR_ABORT_STAT_OFF	13
++#define CMPLT_HDR_ABORT_STAT_MSK	(0x7 << CMPLT_HDR_ABORT_STAT_OFF)
++/* abort_stat */
++#define STAT_IO_NOT_VALID		0x1
++#define STAT_IO_NO_DEVICE		0x2
++#define STAT_IO_COMPLETE		0x3
++#define STAT_IO_ABORTED			0x4
++/* dw1 */
++#define CMPLT_HDR_IPTT_OFF		0
++#define CMPLT_HDR_IPTT_MSK		(0xffff << CMPLT_HDR_IPTT_OFF)
++#define CMPLT_HDR_DEV_ID_OFF		16
++#define CMPLT_HDR_DEV_ID_MSK		(0xffff << CMPLT_HDR_DEV_ID_OFF)
++/* dw3 */
++#define CMPLT_HDR_IO_IN_TARGET_OFF	17
++#define CMPLT_HDR_IO_IN_TARGET_MSK	(0x1 << CMPLT_HDR_IO_IN_TARGET_OFF)
++
+ struct hisi_sas_complete_v3_hdr {
+ 	__le32 dw0;
+ 	__le32 dw1;
+@@ -164,6 +190,24 @@ struct hisi_sas_complete_v3_hdr {
+ 	__le32 dw3;
  };
  
- #define HISI_SAS_COMMAND_ENTRIES_V3_HW 4096
-+#define HISI_SAS_MSI_COUNT_V3_HW 32
++struct hisi_sas_err_record_v3 {
++	/* dw0 */
++	__le32 trans_tx_fail_type;
 +
-+enum {
-+	HISI_SAS_PHY_PHY_UPDOWN,
-+	HISI_SAS_PHY_CHNL_INT,
-+	HISI_SAS_PHY_INT_NR
++	/* dw1 */
++	__le32 trans_rx_fail_type;
++
++	/* dw2 */
++	__le16 dma_tx_err_type;
++	__le16 sipc_rx_err_type;
++
++	/* dw3 */
++	__le32 dma_rx_err_type;
 +};
++
++#define RX_DATA_LEN_UNDERFLOW_OFF	6
++#define RX_DATA_LEN_UNDERFLOW_MSK	(1 << RX_DATA_LEN_UNDERFLOW_OFF)
++
+ #define HISI_SAS_COMMAND_ENTRIES_V3_HW 4096
+ #define HISI_SAS_MSI_COUNT_V3_HW 32
  
- static void hisi_sas_write32(struct hisi_hba *hisi_hba, u32 off, u32 val)
- {
-@@ -152,6 +188,14 @@ static void hisi_sas_phy_write32(struct hisi_hba *hisi_hba, int phy_no,
- 	writel(val, regs);
+@@ -625,11 +669,300 @@ static irqreturn_t int_chnl_int_v3_hw(int irq_no, void *p)
+ 	return IRQ_HANDLED;
  }
  
-+static u32 hisi_sas_phy_read32(struct hisi_hba *hisi_hba,
-+				      int phy_no, u32 off)
++static void
++slot_err_v3_hw(struct hisi_hba *hisi_hba, struct sas_task *task,
++	       struct hisi_sas_slot *slot)
 +{
-+	void __iomem *regs = hisi_hba->regs + (0x400 * phy_no) + off;
++	struct task_status_struct *ts = &task->task_status;
++	struct hisi_sas_complete_v3_hdr *complete_queue =
++			hisi_hba->complete_hdr[slot->cmplt_queue];
++	struct hisi_sas_complete_v3_hdr *complete_hdr =
++			&complete_queue[slot->cmplt_queue_slot];
 +
-+	return readl(regs);
++	switch (task->task_proto) {
++	case SAS_PROTOCOL_SSP:
++		if (complete_hdr->dw3 & CMPLT_HDR_IO_IN_TARGET_MSK) {
++			ts->stat = SAS_QUEUE_FULL;
++			slot->abort = 1;
++		} else {
++			ts->stat = SAS_OPEN_REJECT;
++			ts->open_rej_reason = SAS_OREJ_RSVD_RETRY;
++		}
++		break;
++	case SAS_PROTOCOL_SATA:
++	case SAS_PROTOCOL_STP:
++	case SAS_PROTOCOL_SATA | SAS_PROTOCOL_STP:
++		if (complete_hdr->dw3 & CMPLT_HDR_IO_IN_TARGET_MSK) {
++			ts->stat = SAS_PHY_DOWN;
++			slot->abort = 1;
++		} else {
++			ts->stat = SAS_OPEN_REJECT;
++			ts->open_rej_reason = SAS_OREJ_RSVD_RETRY;
++		}
++		hisi_sas_sata_done(task, slot);
++		break;
++	case SAS_PROTOCOL_SMP:
++		ts->stat = SAM_STAT_CHECK_CONDITION;
++		break;
++	default:
++		break;
++	}
 +}
 +
- static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
++static int
++slot_complete_v3_hw(struct hisi_hba *hisi_hba, struct hisi_sas_slot *slot)
++{
++	struct sas_task *task = slot->task;
++	struct hisi_sas_device *sas_dev;
++	struct device *dev = hisi_hba->dev;
++	struct task_status_struct *ts;
++	struct domain_device *device;
++	enum exec_status sts;
++	struct hisi_sas_complete_v3_hdr *complete_queue =
++			hisi_hba->complete_hdr[slot->cmplt_queue];
++	struct hisi_sas_complete_v3_hdr *complete_hdr =
++			&complete_queue[slot->cmplt_queue_slot];
++	int aborted;
++	unsigned long flags;
++
++	if (unlikely(!task || !task->lldd_task || !task->dev))
++		return -EINVAL;
++
++	ts = &task->task_status;
++	device = task->dev;
++	sas_dev = device->lldd_dev;
++
++	spin_lock_irqsave(&task->task_state_lock, flags);
++	aborted = task->task_state_flags & SAS_TASK_STATE_ABORTED;
++	task->task_state_flags &=
++		~(SAS_TASK_STATE_PENDING | SAS_TASK_AT_INITIATOR);
++	spin_unlock_irqrestore(&task->task_state_lock, flags);
++
++	memset(ts, 0, sizeof(*ts));
++	ts->resp = SAS_TASK_COMPLETE;
++	if (unlikely(aborted)) {
++		ts->stat = SAS_ABORTED_TASK;
++		hisi_sas_slot_task_free(hisi_hba, task, slot);
++		return -1;
++	}
++
++	if (unlikely(!sas_dev)) {
++		dev_dbg(dev, "slot complete: port has not device\n");
++		ts->stat = SAS_PHY_DOWN;
++		goto out;
++	}
++
++	/*
++	 * Use SAS+TMF status codes
++	 */
++	switch ((complete_hdr->dw0 & CMPLT_HDR_ABORT_STAT_MSK)
++			>> CMPLT_HDR_ABORT_STAT_OFF) {
++	case STAT_IO_ABORTED:
++		/* this IO has been aborted by abort command */
++		ts->stat = SAS_ABORTED_TASK;
++		goto out;
++	case STAT_IO_COMPLETE:
++		/* internal abort command complete */
++		ts->stat = TMF_RESP_FUNC_SUCC;
++		goto out;
++	case STAT_IO_NO_DEVICE:
++		ts->stat = TMF_RESP_FUNC_COMPLETE;
++		goto out;
++	case STAT_IO_NOT_VALID:
++		/*
++		 * abort single IO, the controller can't find the IO
++		 */
++		ts->stat = TMF_RESP_FUNC_FAILED;
++		goto out;
++	default:
++		break;
++	}
++
++	/* check for erroneous completion */
++	if ((complete_hdr->dw0 & CMPLT_HDR_CMPLT_MSK) == 0x3) {
++		struct hisi_sas_err_record_v3 *record =	slot->status_buffer;
++		u32 dma_rx_err_type = cpu_to_le32(record->dma_rx_err_type);
++
++		/*
++		 * HW can report underflow even for completion without
++		 * error, so check for genuine underflow error.
++		 */
++		if (dma_rx_err_type & RX_DATA_LEN_UNDERFLOW_MSK) {
++			switch (task->task_proto) {
++			case SAS_PROTOCOL_SSP: {
++				int uflow = task->ssp_task.cmd->underflow;
++				u32 residual = record->trans_tx_fail_type;
++
++				if ((uflow == 0) ||
++				    (task->total_xfer_len - residual > uflow))
++					goto process;
++				break;
++			}
++			case SAS_PROTOCOL_SATA:
++			case SAS_PROTOCOL_STP:
++			case SAS_PROTOCOL_SATA | SAS_PROTOCOL_STP: {
++				u8 proto = hisi_sas_get_ata_protocol(
++						task->ata_task.fis.command,
++						task->data_dir);
++				if (proto == HISI_SAS_SATA_PROTOCOL_NONDATA)
++					goto process;
++				break;
++			}
++			default:
++				break;
++			}
++		}
++
++		slot_err_v3_hw(hisi_hba, task, slot);
++		if (unlikely(slot->abort))
++			return ts->stat;
++		goto out;
++	}
++
++process:
++	switch (task->task_proto) {
++	case SAS_PROTOCOL_SSP: {
++		struct ssp_response_iu *iu = slot->status_buffer +
++			sizeof(struct hisi_sas_err_record);
++
++		sas_ssp_task_response(dev, task, iu);
++		break;
++	}
++	case SAS_PROTOCOL_SMP: {
++		struct scatterlist *sg_resp = &task->smp_task.smp_resp;
++		void *to;
++
++		ts->stat = SAM_STAT_GOOD;
++		to = kmap_atomic(sg_page(sg_resp));
++
++		dma_unmap_sg(dev, &task->smp_task.smp_resp, 1,
++			     DMA_FROM_DEVICE);
++		dma_unmap_sg(dev, &task->smp_task.smp_req, 1,
++			     DMA_TO_DEVICE);
++		memcpy(to + sg_resp->offset,
++		       slot->status_buffer +
++		       sizeof(struct hisi_sas_err_record),
++		       sg_dma_len(sg_resp));
++		kunmap_atomic(to);
++		break;
++	}
++	case SAS_PROTOCOL_SATA:
++	case SAS_PROTOCOL_STP:
++	case SAS_PROTOCOL_SATA | SAS_PROTOCOL_STP:
++		ts->stat = SAM_STAT_GOOD;
++		hisi_sas_sata_done(task, slot);
++		break;
++	default:
++		ts->stat = SAM_STAT_CHECK_CONDITION;
++		break;
++	}
++
++	if (!slot->port->port_attached) {
++		dev_err(dev, "slot complete: port %d has removed\n",
++			slot->port->sas_port.id);
++		ts->stat = SAS_PHY_DOWN;
++	}
++
++out:
++	spin_lock_irqsave(&task->task_state_lock, flags);
++	task->task_state_flags |= SAS_TASK_STATE_DONE;
++	spin_unlock_irqrestore(&task->task_state_lock, flags);
++	spin_lock_irqsave(&hisi_hba->lock, flags);
++	hisi_sas_slot_task_free(hisi_hba, task, slot);
++	spin_unlock_irqrestore(&hisi_hba->lock, flags);
++	sts = ts->stat;
++
++	if (task->task_done)
++		task->task_done(task);
++
++	return sts;
++}
++
++static void cq_tasklet_v3_hw(unsigned long val)
++{
++	struct hisi_sas_cq *cq = (struct hisi_sas_cq *)val;
++	struct hisi_hba *hisi_hba = cq->hisi_hba;
++	struct hisi_sas_slot *slot;
++	struct hisi_sas_itct *itct;
++	struct hisi_sas_complete_v3_hdr *complete_queue;
++	u32 rd_point = cq->rd_point, wr_point, dev_id;
++	int queue = cq->id;
++	struct hisi_sas_dq *dq = &hisi_hba->dq[queue];
++
++	complete_queue = hisi_hba->complete_hdr[queue];
++
++	spin_lock(&dq->lock);
++	wr_point = hisi_sas_read32(hisi_hba, COMPL_Q_0_WR_PTR +
++				   (0x14 * queue));
++
++	while (rd_point != wr_point) {
++		struct hisi_sas_complete_v3_hdr *complete_hdr;
++		int iptt;
++
++		complete_hdr = &complete_queue[rd_point];
++
++		/* Check for NCQ completion */
++		if (complete_hdr->act) {
++			u32 act_tmp = complete_hdr->act;
++			int ncq_tag_count = ffs(act_tmp);
++
++			dev_id = (complete_hdr->dw1 & CMPLT_HDR_DEV_ID_MSK) >>
++				 CMPLT_HDR_DEV_ID_OFF;
++			itct = &hisi_hba->itct[dev_id];
++
++			/* The NCQ tags are held in the itct header */
++			while (ncq_tag_count) {
++				__le64 *ncq_tag = &itct->qw4_15[0];
++
++				ncq_tag_count -= 1;
++				iptt = (ncq_tag[ncq_tag_count / 5]
++					>> (ncq_tag_count % 5) * 12) & 0xfff;
++
++				slot = &hisi_hba->slot_info[iptt];
++				slot->cmplt_queue_slot = rd_point;
++				slot->cmplt_queue = queue;
++				slot_complete_v3_hw(hisi_hba, slot);
++
++				act_tmp &= ~(1 << ncq_tag_count);
++				ncq_tag_count = ffs(act_tmp);
++			}
++		} else {
++			iptt = (complete_hdr->dw1) & CMPLT_HDR_IPTT_MSK;
++			slot = &hisi_hba->slot_info[iptt];
++			slot->cmplt_queue_slot = rd_point;
++			slot->cmplt_queue = queue;
++			slot_complete_v3_hw(hisi_hba, slot);
++		}
++
++		if (++rd_point >= HISI_SAS_QUEUE_SLOTS)
++			rd_point = 0;
++	}
++
++	/* update rd_point */
++	cq->rd_point = rd_point;
++	hisi_sas_write32(hisi_hba, COMPL_Q_0_RD_PTR + (0x14 * queue), rd_point);
++	spin_unlock(&dq->lock);
++}
++
++static irqreturn_t cq_interrupt_v3_hw(int irq_no, void *p)
++{
++	struct hisi_sas_cq *cq = p;
++	struct hisi_hba *hisi_hba = cq->hisi_hba;
++	int queue = cq->id;
++
++	hisi_sas_write32(hisi_hba, OQ_INT_SRC, 1 << queue);
++
++	tasklet_schedule(&cq->tasklet);
++
++	return IRQ_HANDLED;
++}
++
+ static int interrupt_init_v3_hw(struct hisi_hba *hisi_hba)
  {
- 	int i;
-@@ -266,6 +310,45 @@ static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
- 			 upper_32_bits(hisi_hba->initial_fis_dma));
- }
+ 	struct device *dev = hisi_hba->dev;
+ 	struct pci_dev *pdev = hisi_hba->pci_dev;
+ 	int vectors, rc;
++	int i, k;
+ 	int max_msi = HISI_SAS_MSI_COUNT_V3_HW;
  
-+static void config_phy_opt_mode_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
-+{
-+	u32 cfg = hisi_sas_phy_read32(hisi_hba, phy_no, PHY_CFG);
+ 	vectors = pci_alloc_irq_vectors(hisi_hba->pci_dev, 1,
+@@ -657,9 +990,34 @@ static int interrupt_init_v3_hw(struct hisi_hba *hisi_hba)
+ 		goto free_phy_irq;
+ 	}
+ 
++	/* Init tasklets for cq only */
++	for (i = 0; i < hisi_hba->queue_count; i++) {
++		struct hisi_sas_cq *cq = &hisi_hba->cq[i];
++		struct tasklet_struct *t = &cq->tasklet;
 +
-+	cfg &= ~PHY_CFG_DC_OPT_MSK;
-+	cfg |= 1 << PHY_CFG_DC_OPT_OFF;
-+	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
-+}
++		rc = devm_request_irq(dev, pci_irq_vector(pdev, i+16),
++					  cq_interrupt_v3_hw, 0,
++					  DRV_NAME " cq", cq);
++		if (rc) {
++			dev_err(dev,
++				"could not request cq%d interrupt, rc=%d\n",
++				i, rc);
++			rc = -ENOENT;
++			goto free_cq_irqs;
++		}
 +
-+static void config_id_frame_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
-+{
-+	struct sas_identify_frame identify_frame;
-+	u32 *identify_buffer;
-+
-+	memset(&identify_frame, 0, sizeof(identify_frame));
-+	identify_frame.dev_type = SAS_END_DEVICE;
-+	identify_frame.frame_type = 0;
-+	identify_frame._un1 = 1;
-+	identify_frame.initiator_bits = SAS_PROTOCOL_ALL;
-+	identify_frame.target_bits = SAS_PROTOCOL_NONE;
-+	memcpy(&identify_frame._un4_11[0], hisi_hba->sas_addr, SAS_ADDR_SIZE);
-+	memcpy(&identify_frame.sas_addr[0], hisi_hba->sas_addr,	SAS_ADDR_SIZE);
-+	identify_frame.phy_id = phy_no;
-+	identify_buffer = (u32 *)(&identify_frame);
-+
-+	hisi_sas_phy_write32(hisi_hba, phy_no, TX_ID_DWORD0,
-+			__swab32(identify_buffer[0]));
-+	hisi_sas_phy_write32(hisi_hba, phy_no, TX_ID_DWORD1,
-+			__swab32(identify_buffer[1]));
-+	hisi_sas_phy_write32(hisi_hba, phy_no, TX_ID_DWORD2,
-+			__swab32(identify_buffer[2]));
-+	hisi_sas_phy_write32(hisi_hba, phy_no, TX_ID_DWORD3,
-+			__swab32(identify_buffer[3]));
-+	hisi_sas_phy_write32(hisi_hba, phy_no, TX_ID_DWORD4,
-+			__swab32(identify_buffer[4]));
-+	hisi_sas_phy_write32(hisi_hba, phy_no, TX_ID_DWORD5,
-+			__swab32(identify_buffer[5]));
-+}
-+
- static int hw_init_v3_hw(struct hisi_hba *hisi_hba)
- {
- 	init_reg_v3_hw(hisi_hba);
-@@ -273,6 +356,47 @@ static int hw_init_v3_hw(struct hisi_hba *hisi_hba)
++		tasklet_init(t, cq_tasklet_v3_hw, (unsigned long)cq);
++	}
+ 
  	return 0;
- }
  
-+static void enable_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
-+{
-+	u32 cfg = hisi_sas_phy_read32(hisi_hba, phy_no, PHY_CFG);
++free_cq_irqs:
++	for (k = 0; k < i; k++) {
++		struct hisi_sas_cq *cq = &hisi_hba->cq[k];
 +
-+	cfg |= PHY_CFG_ENA_MSK;
-+	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
-+}
-+
-+static void start_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
-+{
-+	config_id_frame_v3_hw(hisi_hba, phy_no);
-+	config_phy_opt_mode_v3_hw(hisi_hba, phy_no);
-+	enable_phy_v3_hw(hisi_hba, phy_no);
-+}
-+
-+static void start_phys_v3_hw(struct hisi_hba *hisi_hba)
-+{
++		free_irq(pci_irq_vector(pdev, k+16), cq);
++	}
++	free_irq(pci_irq_vector(pdev, 2), hisi_hba);
+ free_phy_irq:
+ 	free_irq(pci_irq_vector(pdev, 1), hisi_hba);
+ free_irq_vectors:
+@@ -840,8 +1198,15 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
+ static void
+ hisi_sas_v3_destroy_irqs(struct pci_dev *pdev, struct hisi_hba *hisi_hba)
+ {
 +	int i;
 +
-+	for (i = 0; i < hisi_hba->n_phy; i++)
-+		start_phy_v3_hw(hisi_hba, i);
-+}
+ 	free_irq(pci_irq_vector(pdev, 1), hisi_hba);
+ 	free_irq(pci_irq_vector(pdev, 2), hisi_hba);
++	for (i = 0; i < hisi_hba->queue_count; i++) {
++		struct hisi_sas_cq *cq = &hisi_hba->cq[i];
 +
-+static void phys_init_v3_hw(struct hisi_hba *hisi_hba)
-+{
-+	start_phys_v3_hw(hisi_hba);
-+}
-+
-+static void sl_notify_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
-+{
-+	u32 sl_control;
-+
-+	sl_control = hisi_sas_phy_read32(hisi_hba, phy_no, SL_CONTROL);
-+	sl_control |= SL_CONTROL_NOTIFY_EN_MSK;
-+	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
-+	msleep(1);
-+	sl_control = hisi_sas_phy_read32(hisi_hba, phy_no, SL_CONTROL);
-+	sl_control &= ~SL_CONTROL_NOTIFY_EN_MSK;
-+	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
-+}
-+
- static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
- {
- 	int rc;
-@@ -288,6 +412,8 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
- 	.hw_init = hisi_sas_v3_init,
- 	.max_command_entries = HISI_SAS_COMMAND_ENTRIES_V3_HW,
- 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v3_hdr),
-+	.sl_notify = sl_notify_v3_hw,
-+	.phys_init = phys_init_v3_hw,
- };
- 
- static struct Scsi_Host *
-@@ -451,7 +577,6 @@ static void hisi_sas_v3_remove(struct pci_dev *pdev)
- 	pci_disable_device(pdev);
++		free_irq(pci_irq_vector(pdev, i+16), cq);
++	}
+ 	pci_free_irq_vectors(pdev);
  }
  
--
- enum {
- 	/* instances of the controller */
- 	hip08,
 -- 
 1.9.1
