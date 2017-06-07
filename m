@@ -1,221 +1,174 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v4 04/23] scsi: hisi_sas: relocate get_ata_protocol()
-Date: Wed, 7 Jun 2017 23:20:07 +0800
-Message-ID: <1496848826-20534-5-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v4 18/23] scsi: hisi_sas: add v3 code for itct setup and free
+Date: Wed, 7 Jun 2017 23:20:21 +0800
+Message-ID: <1496848826-20534-19-git-send-email-john.garry@huawei.com>
 References: <1496848826-20534-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([45.249.212.188]:7321 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751671AbdFGOwA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2017 10:52:00 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1496848826-20534-1-git-send-email-john.garry@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
 Cc: linuxarm@huawei.com, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@infradead.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Relocate get_ata_protocol() to a common location, as future
-hw versions will require it.
-Also rename with "hisi_sas_" prefix for consistency.
+Add code to itct setup and free for v3 hw.
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  7 ++++
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 59 ++++++++++++++++++++++++++++++
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 67 +---------------------------------
- 3 files changed, 68 insertions(+), 65 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 114 +++++++++++++++++++++++++++++++++
+ 1 file changed, 114 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 68ba7bd..a50c699 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -46,6 +46,12 @@
- 	((type == SAS_EDGE_EXPANDER_DEVICE) || \
- 	(type == SAS_FANOUT_EXPANDER_DEVICE))
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 344230b..9b9c070 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -24,6 +24,11 @@
+ #define PHY_PORT_NUM_MA			0x28
+ #define PHY_CONN_RATE			0x30
+ #define AXI_AHB_CLK_CFG			0x3c
++#define ITCT_CLR			0x44
++#define ITCT_CLR_EN_OFF			16
++#define ITCT_CLR_EN_MSK			(0x1 << ITCT_CLR_EN_OFF)
++#define ITCT_DEV_OFF			0
++#define ITCT_DEV_MSK			(0x7ff << ITCT_DEV_OFF)
+ #define AXI_USER1			0x48
+ #define AXI_USER2			0x4c
+ #define IO_SATA_BROKEN_MSG_ADDR_LO	0x58
+@@ -226,6 +231,26 @@
+ #define CMPLT_HDR_IO_IN_TARGET_OFF	17
+ #define CMPLT_HDR_IO_IN_TARGET_MSK	(0x1 << CMPLT_HDR_IO_IN_TARGET_OFF)
  
-+#define HISI_SAS_SATA_PROTOCOL_NONDATA		0x1
-+#define HISI_SAS_SATA_PROTOCOL_PIO			0x2
-+#define HISI_SAS_SATA_PROTOCOL_DMA			0x4
-+#define HISI_SAS_SATA_PROTOCOL_FPDMA		0x8
-+#define HISI_SAS_SATA_PROTOCOL_ATAPI		0x10
++/* ITCT header */
++/* qw0 */
++#define ITCT_HDR_DEV_TYPE_OFF		0
++#define ITCT_HDR_DEV_TYPE_MSK		(0x3 << ITCT_HDR_DEV_TYPE_OFF)
++#define ITCT_HDR_VALID_OFF		2
++#define ITCT_HDR_VALID_MSK		(0x1 << ITCT_HDR_VALID_OFF)
++#define ITCT_HDR_MCR_OFF		5
++#define ITCT_HDR_MCR_MSK		(0xf << ITCT_HDR_MCR_OFF)
++#define ITCT_HDR_VLN_OFF		9
++#define ITCT_HDR_VLN_MSK		(0xf << ITCT_HDR_VLN_OFF)
++#define ITCT_HDR_SMP_TIMEOUT_OFF	16
++#define ITCT_HDR_AWT_CONTINUE_OFF	25
++#define ITCT_HDR_PORT_ID_OFF		28
++#define ITCT_HDR_PORT_ID_MSK		(0xf << ITCT_HDR_PORT_ID_OFF)
++/* qw2 */
++#define ITCT_HDR_INLT_OFF		0
++#define ITCT_HDR_INLT_MSK		(0xffffULL << ITCT_HDR_INLT_OFF)
++#define ITCT_HDR_RTOLT_OFF		48
++#define ITCT_HDR_RTOLT_MSK		(0xffffULL << ITCT_HDR_RTOLT_OFF)
 +
- struct hisi_hba;
- 
- enum {
-@@ -356,6 +362,7 @@ struct hisi_sas_command_table_ssp {
- 	struct hisi_sas_command_table_stp stp;
- };
- 
-+extern u8 hisi_sas_get_ata_protocol(u8 cmd, int direction);
- extern struct hisi_sas_port *to_hisi_sas_port(struct asd_sas_port *sas_port);
- extern int hisi_sas_probe(struct platform_device *pdev,
- 			  const struct hisi_sas_hw *ops);
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index b247220..08e33e8 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -23,6 +23,65 @@ static int hisi_sas_debug_issue_ssp_tmf(struct domain_device *device,
- 			     int abort_flag, int tag);
- static int hisi_sas_softreset_ata_disk(struct domain_device *device);
- 
-+u8 hisi_sas_get_ata_protocol(u8 cmd, int direction)
-+{
-+	switch (cmd) {
-+	case ATA_CMD_FPDMA_WRITE:
-+	case ATA_CMD_FPDMA_READ:
-+	case ATA_CMD_FPDMA_RECV:
-+	case ATA_CMD_FPDMA_SEND:
-+	case ATA_CMD_NCQ_NON_DATA:
-+	return HISI_SAS_SATA_PROTOCOL_FPDMA;
-+
-+	case ATA_CMD_DOWNLOAD_MICRO:
-+	case ATA_CMD_ID_ATA:
-+	case ATA_CMD_PMP_READ:
-+	case ATA_CMD_READ_LOG_EXT:
-+	case ATA_CMD_PIO_READ:
-+	case ATA_CMD_PIO_READ_EXT:
-+	case ATA_CMD_PMP_WRITE:
-+	case ATA_CMD_WRITE_LOG_EXT:
-+	case ATA_CMD_PIO_WRITE:
-+	case ATA_CMD_PIO_WRITE_EXT:
-+	return HISI_SAS_SATA_PROTOCOL_PIO;
-+
-+	case ATA_CMD_DSM:
-+	case ATA_CMD_DOWNLOAD_MICRO_DMA:
-+	case ATA_CMD_PMP_READ_DMA:
-+	case ATA_CMD_PMP_WRITE_DMA:
-+	case ATA_CMD_READ:
-+	case ATA_CMD_READ_EXT:
-+	case ATA_CMD_READ_LOG_DMA_EXT:
-+	case ATA_CMD_READ_STREAM_DMA_EXT:
-+	case ATA_CMD_TRUSTED_RCV_DMA:
-+	case ATA_CMD_TRUSTED_SND_DMA:
-+	case ATA_CMD_WRITE:
-+	case ATA_CMD_WRITE_EXT:
-+	case ATA_CMD_WRITE_FUA_EXT:
-+	case ATA_CMD_WRITE_QUEUED:
-+	case ATA_CMD_WRITE_LOG_DMA_EXT:
-+	case ATA_CMD_WRITE_STREAM_DMA_EXT:
-+	return HISI_SAS_SATA_PROTOCOL_DMA;
-+
-+	case ATA_CMD_CHK_POWER:
-+	case ATA_CMD_DEV_RESET:
-+	case ATA_CMD_EDD:
-+	case ATA_CMD_FLUSH:
-+	case ATA_CMD_FLUSH_EXT:
-+	case ATA_CMD_VERIFY:
-+	case ATA_CMD_VERIFY_EXT:
-+	case ATA_CMD_SET_FEATURES:
-+	case ATA_CMD_STANDBY:
-+	case ATA_CMD_STANDBYNOW1:
-+	return HISI_SAS_SATA_PROTOCOL_NONDATA;
-+	default:
-+		if (direction == DMA_NONE)
-+			return HISI_SAS_SATA_PROTOCOL_NONDATA;
-+		return HISI_SAS_SATA_PROTOCOL_PIO;
-+	}
-+}
-+EXPORT_SYMBOL_GPL(hisi_sas_get_ata_protocol);
-+
- static struct hisi_hba *dev_to_hisi_hba(struct domain_device *device)
- {
- 	return device->port->ha->lldd_ha;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 2607aac..d9314c4 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -554,12 +554,6 @@ enum {
- #define DIR_TO_DEVICE 2
- #define DIR_RESERVED 3
- 
--#define SATA_PROTOCOL_NONDATA		0x1
--#define SATA_PROTOCOL_PIO		0x2
--#define SATA_PROTOCOL_DMA		0x4
--#define SATA_PROTOCOL_FPDMA		0x8
--#define SATA_PROTOCOL_ATAPI		0x10
--
- #define ERR_ON_TX_PHASE(err_phase) (err_phase == 0x2 || \
- 		err_phase == 0x4 || err_phase == 0x8 ||\
- 		err_phase == 0x6 || err_phase == 0xa)
-@@ -2352,64 +2346,6 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
- 	return sts;
+ struct hisi_sas_complete_v3_hdr {
+ 	__le32 dw0;
+ 	__le32 dw1;
+@@ -460,6 +485,93 @@ static void config_id_frame_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
+ 			__swab32(identify_buffer[5]));
  }
  
--static u8 get_ata_protocol(u8 cmd, int direction)
--{
--	switch (cmd) {
--	case ATA_CMD_FPDMA_WRITE:
--	case ATA_CMD_FPDMA_READ:
--	case ATA_CMD_FPDMA_RECV:
--	case ATA_CMD_FPDMA_SEND:
--	case ATA_CMD_NCQ_NON_DATA:
--	return SATA_PROTOCOL_FPDMA;
--
--	case ATA_CMD_DOWNLOAD_MICRO:
--	case ATA_CMD_ID_ATA:
--	case ATA_CMD_PMP_READ:
--	case ATA_CMD_READ_LOG_EXT:
--	case ATA_CMD_PIO_READ:
--	case ATA_CMD_PIO_READ_EXT:
--	case ATA_CMD_PMP_WRITE:
--	case ATA_CMD_WRITE_LOG_EXT:
--	case ATA_CMD_PIO_WRITE:
--	case ATA_CMD_PIO_WRITE_EXT:
--	return SATA_PROTOCOL_PIO;
--
--	case ATA_CMD_DSM:
--	case ATA_CMD_DOWNLOAD_MICRO_DMA:
--	case ATA_CMD_PMP_READ_DMA:
--	case ATA_CMD_PMP_WRITE_DMA:
--	case ATA_CMD_READ:
--	case ATA_CMD_READ_EXT:
--	case ATA_CMD_READ_LOG_DMA_EXT:
--	case ATA_CMD_READ_STREAM_DMA_EXT:
--	case ATA_CMD_TRUSTED_RCV_DMA:
--	case ATA_CMD_TRUSTED_SND_DMA:
--	case ATA_CMD_WRITE:
--	case ATA_CMD_WRITE_EXT:
--	case ATA_CMD_WRITE_FUA_EXT:
--	case ATA_CMD_WRITE_QUEUED:
--	case ATA_CMD_WRITE_LOG_DMA_EXT:
--	case ATA_CMD_WRITE_STREAM_DMA_EXT:
--	return SATA_PROTOCOL_DMA;
--
--	case ATA_CMD_CHK_POWER:
--	case ATA_CMD_DEV_RESET:
--	case ATA_CMD_EDD:
--	case ATA_CMD_FLUSH:
--	case ATA_CMD_FLUSH_EXT:
--	case ATA_CMD_VERIFY:
--	case ATA_CMD_VERIFY_EXT:
--	case ATA_CMD_SET_FEATURES:
--	case ATA_CMD_STANDBY:
--	case ATA_CMD_STANDBYNOW1:
--	return SATA_PROTOCOL_NONDATA;
--	default:
--		if (direction == DMA_NONE)
--			return SATA_PROTOCOL_NONDATA;
--		return SATA_PROTOCOL_PIO;
--	}
--}
--
- static int get_ncq_tag_v2_hw(struct sas_task *task, u32 *tag)
++static void setup_itct_v3_hw(struct hisi_hba *hisi_hba,
++			     struct hisi_sas_device *sas_dev)
++{
++	struct domain_device *device = sas_dev->sas_device;
++	struct device *dev = hisi_hba->dev;
++	u64 qw0, device_id = sas_dev->device_id;
++	struct hisi_sas_itct *itct = &hisi_hba->itct[device_id];
++	struct domain_device *parent_dev = device->parent;
++	struct asd_sas_port *sas_port = device->port;
++	struct hisi_sas_port *port = to_hisi_sas_port(sas_port);
++
++	memset(itct, 0, sizeof(*itct));
++
++	/* qw0 */
++	qw0 = 0;
++	switch (sas_dev->dev_type) {
++	case SAS_END_DEVICE:
++	case SAS_EDGE_EXPANDER_DEVICE:
++	case SAS_FANOUT_EXPANDER_DEVICE:
++		qw0 = HISI_SAS_DEV_TYPE_SSP << ITCT_HDR_DEV_TYPE_OFF;
++		break;
++	case SAS_SATA_DEV:
++	case SAS_SATA_PENDING:
++		if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
++			qw0 = HISI_SAS_DEV_TYPE_STP << ITCT_HDR_DEV_TYPE_OFF;
++		else
++			qw0 = HISI_SAS_DEV_TYPE_SATA << ITCT_HDR_DEV_TYPE_OFF;
++		break;
++	default:
++		dev_warn(dev, "setup itct: unsupported dev type (%d)\n",
++			 sas_dev->dev_type);
++	}
++
++	qw0 |= ((1 << ITCT_HDR_VALID_OFF) |
++		(device->linkrate << ITCT_HDR_MCR_OFF) |
++		(1 << ITCT_HDR_VLN_OFF) |
++		(0xfa << ITCT_HDR_SMP_TIMEOUT_OFF) |
++		(1 << ITCT_HDR_AWT_CONTINUE_OFF) |
++		(port->id << ITCT_HDR_PORT_ID_OFF));
++	itct->qw0 = cpu_to_le64(qw0);
++
++	/* qw1 */
++	memcpy(&itct->sas_addr, device->sas_addr, SAS_ADDR_SIZE);
++	itct->sas_addr = __swab64(itct->sas_addr);
++
++	/* qw2 */
++	if (!dev_is_sata(device))
++		itct->qw2 = cpu_to_le64((5000ULL << ITCT_HDR_INLT_OFF) |
++					(0x1ULL << ITCT_HDR_RTOLT_OFF));
++}
++
++static void free_device_v3_hw(struct hisi_hba *hisi_hba,
++			      struct hisi_sas_device *sas_dev)
++{
++	u64 dev_id = sas_dev->device_id;
++	struct device *dev = hisi_hba->dev;
++	struct hisi_sas_itct *itct = &hisi_hba->itct[dev_id];
++	u32 reg_val = hisi_sas_read32(hisi_hba, ENT_INT_SRC3);
++
++	/* clear the itct interrupt state */
++	if (ENT_INT_SRC3_ITC_INT_MSK & reg_val)
++		hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
++				 ENT_INT_SRC3_ITC_INT_MSK);
++
++	/* clear the itct table*/
++	reg_val = hisi_sas_read32(hisi_hba, ITCT_CLR);
++	reg_val |= ITCT_CLR_EN_MSK | (dev_id & ITCT_DEV_MSK);
++	hisi_sas_write32(hisi_hba, ITCT_CLR, reg_val);
++
++	udelay(10);
++	reg_val = hisi_sas_read32(hisi_hba, ENT_INT_SRC3);
++	if (ENT_INT_SRC3_ITC_INT_MSK & reg_val) {
++		dev_dbg(dev, "got clear ITCT done interrupt\n");
++
++		/* invalid the itct state*/
++		memset(itct, 0, sizeof(struct hisi_sas_itct));
++		hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
++				 ENT_INT_SRC3_ITC_INT_MSK);
++		hisi_hba->devices[dev_id].dev_type = SAS_PHY_UNUSED;
++		hisi_hba->devices[dev_id].dev_status = HISI_SAS_DEV_NORMAL;
++
++		/* clear the itct */
++		hisi_sas_write32(hisi_hba, ITCT_CLR, 0);
++		dev_dbg(dev, "clear ITCT ok\n");
++	}
++}
++
+ static int hw_init_v3_hw(struct hisi_hba *hisi_hba)
  {
- 	struct ata_queued_cmd *qc = task->uldd_task;
-@@ -2464,7 +2400,8 @@ static int prep_ata_v2_hw(struct hisi_hba *hisi_hba,
- 			(task->ata_task.fis.control & ATA_SRST))
- 		dw1 |= 1 << CMD_HDR_RESET_OFF;
+ 	init_reg_v3_hw(hisi_hba);
+@@ -1424,8 +1536,10 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
  
--	dw1 |= (get_ata_protocol(task->ata_task.fis.command, task->data_dir))
-+	dw1 |= (hisi_sas_get_ata_protocol(
-+		task->ata_task.fis.command, task->data_dir))
- 		<< CMD_HDR_FRAME_TYPE_OFF;
- 	dw1 |= sas_dev->device_id << CMD_HDR_DEV_ID_OFF;
- 	hdr->dw1 = cpu_to_le32(dw1);
+ static const struct hisi_sas_hw hisi_sas_v3_hw = {
+ 	.hw_init = hisi_sas_v3_init,
++	.setup_itct = setup_itct_v3_hw,
+ 	.max_command_entries = HISI_SAS_COMMAND_ENTRIES_V3_HW,
+ 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v3_hdr),
++	.free_device = free_device_v3_hw,
+ 	.sl_notify = sl_notify_v3_hw,
+ 	.prep_ssp = prep_ssp_v3_hw,
+ 	.prep_smp = prep_smp_v3_hw,
 -- 
 1.9.1
