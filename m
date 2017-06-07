@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v4 06/23] scsi: hisi_sas: relocate get_ncq_tag_v2_hw()
-Date: Wed, 7 Jun 2017 23:20:09 +0800
-Message-ID: <1496848826-20534-7-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v4 16/23] scsi: hisi_sas: add v3 code to send SMP frame
+Date: Wed, 7 Jun 2017 23:20:19 +0800
+Message-ID: <1496848826-20534-17-git-send-email-john.garry@huawei.com>
 References: <1496848826-20534-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,89 +14,112 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Relocate get_ncq_tag_v2_hw() to a common location, as
-future hw versions will require it.
-Also rename with "hisi_sas_" prefix for consistency.
+Add code to prepare SMP frame.
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  1 +
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 15 +++++++++++++++
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 16 +---------------
- 3 files changed, 17 insertions(+), 15 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 74 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 74 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 1dcdf66..19c6ffd 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -366,6 +366,7 @@ struct hisi_sas_command_table_ssp {
- extern struct hisi_sas_port *to_hisi_sas_port(struct asd_sas_port *sas_port);
- extern void hisi_sas_sata_done(struct sas_task *task,
- 			    struct hisi_sas_slot *slot);
-+extern int hisi_sas_get_ncq_tag(struct sas_task *task, u32 *tag);
- extern int hisi_sas_probe(struct platform_device *pdev,
- 			  const struct hisi_sas_hw *ops);
- extern int hisi_sas_remove(struct platform_device *pdev);
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index a7ba73b9..5e84314 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -97,6 +97,21 @@ void hisi_sas_sata_done(struct sas_task *task,
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index a3b1397..d014e0b 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -186,6 +186,9 @@
+ #define CMD_HDR_MRFL_MSK		(0x1ff << CMD_HDR_MRFL_OFF)
+ #define CMD_HDR_SG_MOD_OFF		24
+ #define CMD_HDR_SG_MOD_MSK		(0x3 << CMD_HDR_SG_MOD_OFF)
++/* dw3 */
++#define CMD_HDR_IPTT_OFF		0
++#define CMD_HDR_IPTT_MSK		(0xffff << CMD_HDR_IPTT_OFF)
+ /* dw6 */
+ #define CMD_HDR_DIF_SGL_LEN_OFF		0
+ #define CMD_HDR_DIF_SGL_LEN_MSK		(0xffff << CMD_HDR_DIF_SGL_LEN_OFF)
+@@ -652,6 +655,76 @@ static int prep_ssp_v3_hw(struct hisi_hba *hisi_hba,
+ 	return 0;
  }
- EXPORT_SYMBOL_GPL(hisi_sas_sata_done);
  
-+int hisi_sas_get_ncq_tag(struct sas_task *task, u32 *tag)
++static int prep_smp_v3_hw(struct hisi_hba *hisi_hba,
++			  struct hisi_sas_slot *slot)
 +{
-+	struct ata_queued_cmd *qc = task->uldd_task;
++	struct sas_task *task = slot->task;
++	struct hisi_sas_cmd_hdr *hdr = slot->cmd_hdr;
++	struct domain_device *device = task->dev;
++	struct device *dev = hisi_hba->dev;
++	struct hisi_sas_port *port = slot->port;
++	struct scatterlist *sg_req, *sg_resp;
++	struct hisi_sas_device *sas_dev = device->lldd_dev;
++	dma_addr_t req_dma_addr;
++	unsigned int req_len, resp_len;
++	int elem, rc;
 +
-+	if (qc) {
-+		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
-+			qc->tf.command == ATA_CMD_FPDMA_READ) {
-+			*tag = qc->tag;
-+			return 1;
-+		}
++	/*
++	 * DMA-map SMP request, response buffers
++	 */
++	/* req */
++	sg_req = &task->smp_task.smp_req;
++	elem = dma_map_sg(dev, sg_req, 1, DMA_TO_DEVICE);
++	if (!elem)
++		return -ENOMEM;
++	req_len = sg_dma_len(sg_req);
++	req_dma_addr = sg_dma_address(sg_req);
++
++	/* resp */
++	sg_resp = &task->smp_task.smp_resp;
++	elem = dma_map_sg(dev, sg_resp, 1, DMA_FROM_DEVICE);
++	if (!elem) {
++		rc = -ENOMEM;
++		goto err_out_req;
 +	}
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(hisi_sas_get_ncq_tag);
++	resp_len = sg_dma_len(sg_resp);
++	if ((req_len & 0x3) || (resp_len & 0x3)) {
++		rc = -EINVAL;
++		goto err_out_resp;
++	}
 +
- static struct hisi_hba *dev_to_hisi_hba(struct domain_device *device)
++	/* create header */
++	/* dw0 */
++	hdr->dw0 = cpu_to_le32((port->id << CMD_HDR_PORT_OFF) |
++			       (1 << CMD_HDR_PRIORITY_OFF) | /* high pri */
++			       (2 << CMD_HDR_CMD_OFF)); /* smp */
++
++	/* map itct entry */
++	hdr->dw1 = cpu_to_le32((sas_dev->device_id << CMD_HDR_DEV_ID_OFF) |
++			       (1 << CMD_HDR_FRAME_TYPE_OFF) |
++			       (DIR_NO_DATA << CMD_HDR_DIR_OFF));
++
++	/* dw2 */
++	hdr->dw2 = cpu_to_le32((((req_len - 4) / 4) << CMD_HDR_CFL_OFF) |
++			       (HISI_SAS_MAX_SMP_RESP_SZ / 4 <<
++			       CMD_HDR_MRFL_OFF));
++
++	hdr->transfer_tags = cpu_to_le32(slot->idx << CMD_HDR_IPTT_OFF);
++
++	hdr->cmd_table_addr = cpu_to_le64(req_dma_addr);
++	hdr->sts_buffer_addr = cpu_to_le64(slot->status_buffer_dma);
++
++	return 0;
++
++err_out_resp:
++	dma_unmap_sg(dev, &slot->task->smp_task.smp_resp, 1,
++		     DMA_FROM_DEVICE);
++err_out_req:
++	dma_unmap_sg(dev, &slot->task->smp_task.smp_req, 1,
++		     DMA_TO_DEVICE);
++	return rc;
++}
++
+ static int phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
  {
- 	return device->port->ha->lldd_ha;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index fdd7019..9cc5435 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -2332,20 +2332,6 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
- 	return sts;
- }
- 
--static int get_ncq_tag_v2_hw(struct sas_task *task, u32 *tag)
--{
--	struct ata_queued_cmd *qc = task->uldd_task;
--
--	if (qc) {
--		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
--			qc->tf.command == ATA_CMD_FPDMA_READ) {
--			*tag = qc->tag;
--			return 1;
--		}
--	}
--	return 0;
--}
--
- static int prep_ata_v2_hw(struct hisi_hba *hisi_hba,
- 			  struct hisi_sas_slot *slot)
- {
-@@ -2393,7 +2379,7 @@ static int prep_ata_v2_hw(struct hisi_hba *hisi_hba,
- 	hdr->dw1 = cpu_to_le32(dw1);
- 
- 	/* dw2 */
--	if (task->ata_task.use_ncq && get_ncq_tag_v2_hw(task, &hdr_tag)) {
-+	if (task->ata_task.use_ncq && hisi_sas_get_ncq_tag(task, &hdr_tag)) {
- 		task->ata_task.fis.sector_count |= (u8) (hdr_tag << 3);
- 		dw2 |= hdr_tag << CMD_HDR_NCQ_TAG_OFF;
- 	}
+ 	int i, res = 0;
+@@ -1250,6 +1323,7 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
+ 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v3_hdr),
+ 	.sl_notify = sl_notify_v3_hw,
+ 	.prep_ssp = prep_ssp_v3_hw,
++	.prep_smp = prep_smp_v3_hw,
+ 	.get_free_slot = get_free_slot_v3_hw,
+ 	.start_delivery = start_delivery_v3_hw,
+ 	.slot_complete = slot_complete_v3_hw,
 -- 
 1.9.1
