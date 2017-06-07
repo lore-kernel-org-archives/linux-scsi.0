@@ -1,173 +1,116 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v4 17/23] scsi: hisi_sas: add v3 code to send ATA frame
-Date: Wed, 7 Jun 2017 23:20:20 +0800
-Message-ID: <1496848826-20534-18-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v4 05/23] scsi: hisi_sas: relocate sata_done_v2_hw()
+Date: Wed, 7 Jun 2017 23:20:08 +0800
+Message-ID: <1496848826-20534-6-git-send-email-john.garry@huawei.com>
 References: <1496848826-20534-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([45.249.212.188]:6883 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751614AbdFGOvn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2017 10:51:43 -0400
 In-Reply-To: <1496848826-20534-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
 Cc: linuxarm@huawei.com, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@infradead.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Add code to prepare ATA frame for v3 hw
+Relocate get_ata_protocol() to a common location, as future hw
+versions will require it.
+Also rename with "hisi_sas_" prefix for consistency.
 
-Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 106 +++++++++++++++++++++++++++++++++
- 1 file changed, 106 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas.h       |  2 ++
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 15 +++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 18 ++----------------
+ 3 files changed, 19 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index d014e0b..344230b 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -171,8 +171,11 @@
- #define CMD_HDR_CMD_OFF			29
- #define CMD_HDR_CMD_MSK			(0x7 << CMD_HDR_CMD_OFF)
- /* dw1 */
-+#define CMD_HDR_UNCON_CMD_OFF	3
- #define CMD_HDR_DIR_OFF			5
- #define CMD_HDR_DIR_MSK			(0x3 << CMD_HDR_DIR_OFF)
-+#define CMD_HDR_RESET_OFF		7
-+#define CMD_HDR_RESET_MSK		(0x1 << CMD_HDR_RESET_OFF)
- #define CMD_HDR_VDTL_OFF		10
- #define CMD_HDR_VDTL_MSK		(0x1 << CMD_HDR_VDTL_OFF)
- #define CMD_HDR_FRAME_TYPE_OFF		11
-@@ -182,6 +185,8 @@
- /* dw2 */
- #define CMD_HDR_CFL_OFF			0
- #define CMD_HDR_CFL_MSK			(0x1ff << CMD_HDR_CFL_OFF)
-+#define CMD_HDR_NCQ_TAG_OFF		10
-+#define CMD_HDR_NCQ_TAG_MSK		(0x1f << CMD_HDR_NCQ_TAG_OFF)
- #define CMD_HDR_MRFL_OFF		15
- #define CMD_HDR_MRFL_MSK		(0x1ff << CMD_HDR_MRFL_OFF)
- #define CMD_HDR_SG_MOD_OFF		24
-@@ -260,6 +265,11 @@ enum {
- #define DIR_TO_DEVICE 2
- #define DIR_RESERVED 3
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index a50c699..1dcdf66 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -364,6 +364,8 @@ struct hisi_sas_command_table_ssp {
  
-+#define CMD_IS_UNCONSTRAINT(cmd) \
-+	((cmd == ATA_CMD_READ_LOG_EXT) || \
-+	(cmd == ATA_CMD_READ_LOG_DMA_EXT) || \
-+	(cmd == ATA_CMD_DEV_RESET))
+ extern u8 hisi_sas_get_ata_protocol(u8 cmd, int direction);
+ extern struct hisi_sas_port *to_hisi_sas_port(struct asd_sas_port *sas_port);
++extern void hisi_sas_sata_done(struct sas_task *task,
++			    struct hisi_sas_slot *slot);
+ extern int hisi_sas_probe(struct platform_device *pdev,
+ 			  const struct hisi_sas_hw *ops);
+ extern int hisi_sas_remove(struct platform_device *pdev);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 08e33e8..a7ba73b9 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -82,6 +82,21 @@ u8 hisi_sas_get_ata_protocol(u8 cmd, int direction)
+ }
+ EXPORT_SYMBOL_GPL(hisi_sas_get_ata_protocol);
+ 
++void hisi_sas_sata_done(struct sas_task *task,
++			    struct hisi_sas_slot *slot)
++{
++	struct task_status_struct *ts = &task->task_status;
++	struct ata_task_resp *resp = (struct ata_task_resp *)ts->buf;
++	struct dev_to_host_fis *d2h = slot->status_buffer +
++				      sizeof(struct hisi_sas_err_record);
 +
- static u32 hisi_sas_read32(struct hisi_hba *hisi_hba, u32 off)
++	resp->frame_len = sizeof(struct dev_to_host_fis);
++	memcpy(&resp->ending_fis[0], d2h, sizeof(struct dev_to_host_fis));
++
++	ts->buf_valid_size = sizeof(*resp);
++}
++EXPORT_SYMBOL_GPL(hisi_sas_sata_done);
++
+ static struct hisi_hba *dev_to_hisi_hba(struct domain_device *device)
  {
- 	void __iomem *regs = hisi_hba->regs + off;
-@@ -725,6 +735,101 @@ static int prep_smp_v3_hw(struct hisi_hba *hisi_hba,
- 	return rc;
+ 	return device->port->ha->lldd_ha;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index d9314c4..fdd7019 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -1683,20 +1683,6 @@ static int prep_ssp_v2_hw(struct hisi_hba *hisi_hba,
+ 	return 0;
  }
  
-+static int get_ncq_tag_v3_hw(struct sas_task *task, u32 *tag)
-+{
-+	struct ata_queued_cmd *qc = task->uldd_task;
-+
-+	if (qc) {
-+		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
-+			qc->tf.command == ATA_CMD_FPDMA_READ) {
-+			*tag = qc->tag;
-+			return 1;
-+		}
-+	}
-+	return 0;
-+}
-+
-+static int prep_ata_v3_hw(struct hisi_hba *hisi_hba,
-+			  struct hisi_sas_slot *slot)
-+{
-+	struct sas_task *task = slot->task;
-+	struct domain_device *device = task->dev;
-+	struct domain_device *parent_dev = device->parent;
-+	struct hisi_sas_device *sas_dev = device->lldd_dev;
-+	struct hisi_sas_cmd_hdr *hdr = slot->cmd_hdr;
-+	struct asd_sas_port *sas_port = device->port;
-+	struct hisi_sas_port *port = to_hisi_sas_port(sas_port);
-+	u8 *buf_cmd;
-+	int has_data = 0, rc = 0, hdr_tag = 0;
-+	u32 dw1 = 0, dw2 = 0;
-+
-+	hdr->dw0 = cpu_to_le32(port->id << CMD_HDR_PORT_OFF);
-+	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
-+		hdr->dw0 |= cpu_to_le32(3 << CMD_HDR_CMD_OFF);
-+	else
-+		hdr->dw0 |= cpu_to_le32(4 << CMD_HDR_CMD_OFF);
-+
-+	switch (task->data_dir) {
-+	case DMA_TO_DEVICE:
-+		has_data = 1;
-+		dw1 |= DIR_TO_DEVICE << CMD_HDR_DIR_OFF;
-+		break;
-+	case DMA_FROM_DEVICE:
-+		has_data = 1;
-+		dw1 |= DIR_TO_INI << CMD_HDR_DIR_OFF;
-+		break;
-+	default:
-+		dw1 &= ~CMD_HDR_DIR_MSK;
-+	}
-+
-+	if ((task->ata_task.fis.command == ATA_CMD_DEV_RESET) &&
-+			(task->ata_task.fis.control & ATA_SRST))
-+		dw1 |= 1 << CMD_HDR_RESET_OFF;
-+
-+	dw1 |= (hisi_sas_get_ata_protocol(
-+		task->ata_task.fis.command, task->data_dir))
-+		<< CMD_HDR_FRAME_TYPE_OFF;
-+	dw1 |= sas_dev->device_id << CMD_HDR_DEV_ID_OFF;
-+
-+	if (CMD_IS_UNCONSTRAINT(task->ata_task.fis.command))
-+		dw1 |= 1 << CMD_HDR_UNCON_CMD_OFF;
-+
-+	hdr->dw1 = cpu_to_le32(dw1);
-+
-+	/* dw2 */
-+	if (task->ata_task.use_ncq && get_ncq_tag_v3_hw(task, &hdr_tag)) {
-+		task->ata_task.fis.sector_count |= (u8) (hdr_tag << 3);
-+		dw2 |= hdr_tag << CMD_HDR_NCQ_TAG_OFF;
-+	}
-+
-+	dw2 |= (HISI_SAS_MAX_STP_RESP_SZ / 4) << CMD_HDR_CFL_OFF |
-+			2 << CMD_HDR_SG_MOD_OFF;
-+	hdr->dw2 = cpu_to_le32(dw2);
-+
-+	/* dw3 */
-+	hdr->transfer_tags = cpu_to_le32(slot->idx);
-+
-+	if (has_data) {
-+		rc = prep_prd_sge_v3_hw(hisi_hba, slot, hdr, task->scatter,
-+					slot->n_elem);
-+		if (rc)
-+			return rc;
-+	}
-+
-+	hdr->data_transfer_len = cpu_to_le32(task->total_xfer_len);
-+	hdr->cmd_table_addr = cpu_to_le64(slot->command_table_dma);
-+	hdr->sts_buffer_addr = cpu_to_le64(slot->status_buffer_dma);
-+
-+	buf_cmd = slot->command_table;
-+
-+	if (likely(!task->ata_task.device_control_reg_update))
-+		task->ata_task.fis.flags |= 0x80; /* C=1: update ATA cmd reg */
-+	/* fill in command FIS */
-+	memcpy(buf_cmd, &task->ata_task.fis, sizeof(struct host_to_dev_fis));
-+
-+	return 0;
-+}
-+
- static int phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
- {
- 	int i, res = 0;
-@@ -1324,6 +1429,7 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
- 	.sl_notify = sl_notify_v3_hw,
- 	.prep_ssp = prep_ssp_v3_hw,
- 	.prep_smp = prep_smp_v3_hw,
-+	.prep_stp = prep_ata_v3_hw,
- 	.get_free_slot = get_free_slot_v3_hw,
- 	.start_delivery = start_delivery_v3_hw,
- 	.slot_complete = slot_complete_v3_hw,
+-static void sata_done_v2_hw(struct hisi_hba *hisi_hba, struct sas_task *task,
+-			    struct hisi_sas_slot *slot)
+-{
+-	struct task_status_struct *ts = &task->task_status;
+-	struct ata_task_resp *resp = (struct ata_task_resp *)ts->buf;
+-	struct dev_to_host_fis *d2h = slot->status_buffer +
+-				      sizeof(struct hisi_sas_err_record);
+-
+-	resp->frame_len = sizeof(struct dev_to_host_fis);
+-	memcpy(&resp->ending_fis[0], d2h, sizeof(struct dev_to_host_fis));
+-
+-	ts->buf_valid_size = sizeof(*resp);
+-}
+-
+ #define TRANS_TX_ERR	0
+ #define TRANS_RX_ERR	1
+ #define DMA_TX_ERR		2
+@@ -2189,7 +2175,7 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
+ 			break;
+ 		}
+ 		}
+-		sata_done_v2_hw(hisi_hba, task, slot);
++		hisi_sas_sata_done(task, slot);
+ 	}
+ 		break;
+ 	default:
+@@ -2317,7 +2303,7 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
+ 	case SAS_PROTOCOL_SATA | SAS_PROTOCOL_STP:
+ 	{
+ 		ts->stat = SAM_STAT_GOOD;
+-		sata_done_v2_hw(hisi_hba, task, slot);
++		hisi_sas_sata_done(task, slot);
+ 		break;
+ 	}
+ 	default:
 -- 
 1.9.1
