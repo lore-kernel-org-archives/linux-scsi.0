@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v4 16/23] scsi: hisi_sas: add v3 code to send SMP frame
-Date: Wed, 7 Jun 2017 23:20:19 +0800
-Message-ID: <1496848826-20534-17-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v4 08/23] scsi: hisi_sas: create hisi_sas_get_fw_info()
+Date: Wed, 7 Jun 2017 23:20:11 +0800
+Message-ID: <1496848826-20534-9-git-send-email-john.garry@huawei.com>
 References: <1496848826-20534-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,117 +9,176 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1496848826-20534-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linuxarm@huawei.com, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@infradead.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+Cc: linuxarm@huawei.com, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@infradead.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+Move the functionality to retrieve the fw info into
+a dedicated device type-agnostic function,
+hisi_sas_get_fw_info().
 
-Add code to prepare SMP frame.
+The reasoning is that this function will be required
+for future pci-based platforms.
+
+Also add some debug logs for failure.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 74 ++++++++++++++++++++++++++++++++++
- 1 file changed, 74 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas.h      |   1 +
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 107 ++++++++++++++++++++++------------
+ 2 files changed, 71 insertions(+), 37 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index a3b1397..d014e0b 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -186,6 +186,9 @@
- #define CMD_HDR_MRFL_MSK		(0x1ff << CMD_HDR_MRFL_OFF)
- #define CMD_HDR_SG_MOD_OFF		24
- #define CMD_HDR_SG_MOD_MSK		(0x3 << CMD_HDR_SG_MOD_OFF)
-+/* dw3 */
-+#define CMD_HDR_IPTT_OFF		0
-+#define CMD_HDR_IPTT_MSK		(0xffff << CMD_HDR_IPTT_OFF)
- /* dw6 */
- #define CMD_HDR_DIF_SGL_LEN_OFF		0
- #define CMD_HDR_DIF_SGL_LEN_MSK		(0xffff << CMD_HDR_DIF_SGL_LEN_OFF)
-@@ -652,6 +655,76 @@ static int prep_ssp_v3_hw(struct hisi_hba *hisi_hba,
- 	return 0;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 84cac98..c1f6669 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -371,6 +371,7 @@ struct hisi_sas_command_table_ssp {
+ extern void hisi_sas_sata_done(struct sas_task *task,
+ 			    struct hisi_sas_slot *slot);
+ extern int hisi_sas_get_ncq_tag(struct sas_task *task, u32 *tag);
++extern int hisi_sas_get_fw_info(struct hisi_hba *hisi_hba);
+ extern int hisi_sas_probe(struct platform_device *pdev,
+ 			  const struct hisi_sas_hw *ops);
+ extern int hisi_sas_remove(struct platform_device *pdev);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index ff033bd..1a6adf7 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -1725,66 +1725,99 @@ static void hisi_sas_rst_work_handler(struct work_struct *work)
+ 	hisi_sas_controller_reset(hisi_hba);
  }
  
-+static int prep_smp_v3_hw(struct hisi_hba *hisi_hba,
-+			  struct hisi_sas_slot *slot)
-+{
-+	struct sas_task *task = slot->task;
-+	struct hisi_sas_cmd_hdr *hdr = slot->cmd_hdr;
-+	struct domain_device *device = task->dev;
+-static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
+-					      const struct hisi_sas_hw *hw)
++int hisi_sas_get_fw_info(struct hisi_hba *hisi_hba)
+ {
+-	struct resource *res;
+-	struct Scsi_Host *shost;
+-	struct hisi_hba *hisi_hba;
+-	struct device *dev = &pdev->dev;
+-	struct device_node *np = pdev->dev.of_node;
 +	struct device *dev = hisi_hba->dev;
-+	struct hisi_sas_port *port = slot->port;
-+	struct scatterlist *sg_req, *sg_resp;
-+	struct hisi_sas_device *sas_dev = device->lldd_dev;
-+	dma_addr_t req_dma_addr;
-+	unsigned int req_len, resp_len;
-+	int elem, rc;
-+
-+	/*
-+	 * DMA-map SMP request, response buffers
-+	 */
-+	/* req */
-+	sg_req = &task->smp_task.smp_req;
-+	elem = dma_map_sg(dev, sg_req, 1, DMA_TO_DEVICE);
-+	if (!elem)
-+		return -ENOMEM;
-+	req_len = sg_dma_len(sg_req);
-+	req_dma_addr = sg_dma_address(sg_req);
-+
-+	/* resp */
-+	sg_resp = &task->smp_task.smp_resp;
-+	elem = dma_map_sg(dev, sg_resp, 1, DMA_FROM_DEVICE);
-+	if (!elem) {
-+		rc = -ENOMEM;
-+		goto err_out_req;
++	struct platform_device *pdev = hisi_hba->platform_dev;
++	struct device_node *np = pdev ? pdev->dev.of_node : NULL;
+ 	struct clk *refclk;
+ 
+-	shost = scsi_host_alloc(&hisi_sas_sht, sizeof(*hisi_hba));
+-	if (!shost) {
+-		dev_err(dev, "scsi host alloc failed\n");
+-		return NULL;
+-	}
+-	hisi_hba = shost_priv(shost);
+-
+-	INIT_WORK(&hisi_hba->rst_work, hisi_sas_rst_work_handler);
+-	hisi_hba->hw = hw;
+-	hisi_hba->platform_dev = pdev;
+-	hisi_hba->dev = dev;
+-	hisi_hba->shost = shost;
+-	SHOST_TO_SAS_HA(shost) = &hisi_hba->sha;
+-
+-	init_timer(&hisi_hba->timer);
+-
+ 	if (device_property_read_u8_array(dev, "sas-addr", hisi_hba->sas_addr,
+-					  SAS_ADDR_SIZE))
+-		goto err_out;
++					  SAS_ADDR_SIZE)) {
++		dev_err(dev, "could not get property sas-addr\n");
++		return -ENOENT;
 +	}
-+	resp_len = sg_dma_len(sg_resp);
-+	if ((req_len & 0x3) || (resp_len & 0x3)) {
-+		rc = -EINVAL;
-+		goto err_out_resp;
+ 
+ 	if (np) {
++		/*
++		 * These properties are only required for platform device-based
++		 * controller with DT firmware.
++		 */
+ 		hisi_hba->ctrl = syscon_regmap_lookup_by_phandle(np,
+ 					"hisilicon,sas-syscon");
+-		if (IS_ERR(hisi_hba->ctrl))
+-			goto err_out;
++		if (IS_ERR(hisi_hba->ctrl)) {
++			dev_err(dev, "could not get syscon\n");
++			return -ENOENT;
++		}
+ 
+ 		if (device_property_read_u32(dev, "ctrl-reset-reg",
+-					     &hisi_hba->ctrl_reset_reg))
+-			goto err_out;
++					     &hisi_hba->ctrl_reset_reg)) {
++			dev_err(dev,
++				"could not get property ctrl-reset-reg\n");
++			return -ENOENT;
++		}
+ 
+ 		if (device_property_read_u32(dev, "ctrl-reset-sts-reg",
+-					     &hisi_hba->ctrl_reset_sts_reg))
+-			goto err_out;
++					     &hisi_hba->ctrl_reset_sts_reg)) {
++			dev_err(dev,
++				"could not get property ctrl-reset-sts-reg\n");
++			return -ENOENT;
++		}
+ 
+ 		if (device_property_read_u32(dev, "ctrl-clock-ena-reg",
+-					     &hisi_hba->ctrl_clock_ena_reg))
+-			goto err_out;
++					     &hisi_hba->ctrl_clock_ena_reg)) {
++			dev_err(dev,
++				"could not get property ctrl-clock-ena-reg\n");
++			return -ENOENT;
++		}
+ 	}
+ 
+-	refclk = devm_clk_get(&pdev->dev, NULL);
++	refclk = devm_clk_get(dev, NULL);
+ 	if (IS_ERR(refclk))
+ 		dev_dbg(dev, "no ref clk property\n");
+ 	else
+ 		hisi_hba->refclk_frequency_mhz = clk_get_rate(refclk) / 1000000;
+ 
+-	if (device_property_read_u32(dev, "phy-count", &hisi_hba->n_phy))
+-		goto err_out;
++	if (device_property_read_u32(dev, "phy-count", &hisi_hba->n_phy)) {
++		dev_err(dev, "could not get property phy-count\n");
++		return -ENOENT;
 +	}
-+
-+	/* create header */
-+	/* dw0 */
-+	hdr->dw0 = cpu_to_le32((port->id << CMD_HDR_PORT_OFF) |
-+			       (1 << CMD_HDR_PRIORITY_OFF) | /* high pri */
-+			       (2 << CMD_HDR_CMD_OFF)); /* smp */
-+
-+	/* map itct entry */
-+	hdr->dw1 = cpu_to_le32((sas_dev->device_id << CMD_HDR_DEV_ID_OFF) |
-+			       (1 << CMD_HDR_FRAME_TYPE_OFF) |
-+			       (DIR_NO_DATA << CMD_HDR_DIR_OFF));
-+
-+	/* dw2 */
-+	hdr->dw2 = cpu_to_le32((((req_len - 4) / 4) << CMD_HDR_CFL_OFF) |
-+			       (HISI_SAS_MAX_SMP_RESP_SZ / 4 <<
-+			       CMD_HDR_MRFL_OFF));
-+
-+	hdr->transfer_tags = cpu_to_le32(slot->idx << CMD_HDR_IPTT_OFF);
-+
-+	hdr->cmd_table_addr = cpu_to_le64(req_dma_addr);
-+	hdr->sts_buffer_addr = cpu_to_le64(slot->status_buffer_dma);
+ 
+ 	if (device_property_read_u32(dev, "queue-count",
+-				     &hisi_hba->queue_count))
++				     &hisi_hba->queue_count)) {
++		dev_err(dev, "could not get property queue-count\n");
++		return -ENOENT;
++	}
 +
 +	return 0;
-+
-+err_out_resp:
-+	dma_unmap_sg(dev, &slot->task->smp_task.smp_resp, 1,
-+		     DMA_FROM_DEVICE);
-+err_out_req:
-+	dma_unmap_sg(dev, &slot->task->smp_task.smp_req, 1,
-+		     DMA_TO_DEVICE);
-+	return rc;
 +}
++EXPORT_SYMBOL_GPL(hisi_sas_get_fw_info);
 +
- static int phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
- {
- 	int i, res = 0;
-@@ -1250,6 +1323,7 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
- 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v3_hdr),
- 	.sl_notify = sl_notify_v3_hw,
- 	.prep_ssp = prep_ssp_v3_hw,
-+	.prep_smp = prep_smp_v3_hw,
- 	.get_free_slot = get_free_slot_v3_hw,
- 	.start_delivery = start_delivery_v3_hw,
- 	.slot_complete = slot_complete_v3_hw,
++static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
++					      const struct hisi_sas_hw *hw)
++{
++	struct resource *res;
++	struct Scsi_Host *shost;
++	struct hisi_hba *hisi_hba;
++	struct device *dev = &pdev->dev;
++
++	shost = scsi_host_alloc(&hisi_sas_sht, sizeof(*hisi_hba));
++	if (!shost) {
++		dev_err(dev, "scsi host alloc failed\n");
++		return NULL;
++	}
++	hisi_hba = shost_priv(shost);
++
++	INIT_WORK(&hisi_hba->rst_work, hisi_sas_rst_work_handler);
++	hisi_hba->hw = hw;
++	hisi_hba->dev = dev;
++	hisi_hba->platform_dev = pdev;
++	hisi_hba->shost = shost;
++	SHOST_TO_SAS_HA(shost) = &hisi_hba->sha;
++
++	init_timer(&hisi_hba->timer);
++
++	if (hisi_sas_get_fw_info(hisi_hba) < 0)
+ 		goto err_out;
+ 
+ 	if (dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64)) &&
 -- 
 1.9.1
