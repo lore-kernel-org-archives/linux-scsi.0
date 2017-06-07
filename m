@@ -1,126 +1,86 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 04/15] qla2xxx: Fix mailbox failure while deleting Queue pairs
-Date: Wed, 7 Jun 2017 14:43:22 -0700
-Message-ID: <20170607214333.23110-5-himanshu.madhani@cavium.com>
+Subject: [PATCH 08/15] qla2xxx: Use shadow register for ISP27XX
+Date: Wed, 7 Jun 2017 14:43:26 -0700
+Message-ID: <20170607214333.23110-9-himanshu.madhani@cavium.com>
 References: <20170607214333.23110-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2nam01on0063.outbound.protection.outlook.com ([104.47.34.63]:40418
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751694AbdFGVn7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 7 Jun 2017 17:43:59 -0400
 In-Reply-To: <20170607214333.23110-1-himanshu.madhani@cavium.com>
-Sender: target-devel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org, nab@linux-iscsi.org
 Cc: linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
-List-Id: linux-scsi@vger.kernel.org
 
-From: Sawan Chandak <sawan.chandak@cavium.com>
+From: Quinn Tran <quinn.tran@cavium.com>
 
-In target mode driver, queue pairs are created at the configuration
-time, instead of load time, after chip reset. If a user tries to
-load/unload driver after queue pairs are created, then there would
-be mailbox failure while trying to delete queue pairs. This patch adds
-a flag to check if queue pairs are created. Queue pairs will be
-deleted only If they were created during target configuration.
+For ISP27XX, use shadow register to read FW provided
+REQQ's consumer index. The shadow register is dma'ed
+by firmware.
 
-Signed-off-by: Sawan Chandak <sawan.chandak@cavium.com>
+Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h  |  2 ++
- drivers/scsi/qla2xxx/qla_init.c | 10 ++++++++--
- drivers/scsi/qla2xxx/qla_mid.c  |  4 ++++
- drivers/scsi/qla2xxx/qla_os.c   |  1 +
- 4 files changed, 15 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h    | 1 +
+ drivers/scsi/qla2xxx/qla_init.c   | 1 +
+ drivers/scsi/qla2xxx/qla_os.c     | 1 +
+ drivers/scsi/qla2xxx/qla_target.c | 3 ++-
+ 4 files changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 005ca2de3795..8b52f431a812 100644
+index dfa001357110..b3ba32773db4 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -3997,6 +3997,8 @@ typedef struct scsi_qla_host {
- 		uint32_t	fw_tgt_reported:1;
- 		uint32_t	bbcr_enable:1;
- 		uint32_t	qpairs_available:1;
-+		uint32_t	qpairs_req_created:1;
-+		uint32_t	qpairs_rsp_created:1;
- 	} flags;
+@@ -3266,6 +3266,7 @@ struct qla_qpair {
+ 	uint32_t fw_started:1;
+ 	uint32_t enable_class_2:1;
+ 	uint32_t enable_explicit_conf:1;
++	uint32_t use_shadow_reg:1;
  
- 	atomic_t	loop_state;
+ 	uint16_t id;			/* qp number used with FW */
+ 	uint16_t vp_idx;		/* vport ID */
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index fa5e6ab8e4a7..dcc306121a3d 100644
+index 360abede3f6b..f586f4f7dc57 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -7719,9 +7719,12 @@ struct qla_qpair *qla2xxx_create_qpair(struct scsi_qla_host *vha, int qos,
+@@ -7614,6 +7614,7 @@ struct qla_qpair *qla2xxx_create_qpair(struct scsi_qla_host *vha, int qos,
+ 		qpair->vha = vha;
+ 		qpair->qp_lock_ptr = &qpair->qp_lock;
+ 		spin_lock_init(&qpair->qp_lock);
++		qpair->use_shadow_reg = IS_SHADOW_REG_CAPABLE(ha) ? 1 : 0;
  
- int qla2xxx_delete_qpair(struct scsi_qla_host *vha, struct qla_qpair *qpair)
- {
--	int ret;
-+	int ret = QLA_FUNCTION_FAILED;
- 	struct qla_hw_data *ha = qpair->hw;
- 
-+	if (!vha->flags.qpairs_req_created && !vha->flags.qpairs_rsp_created)
-+		goto fail;
-+
- 	qpair->delete_in_progress = 1;
- 	while (atomic_read(&qpair->ref_count))
- 		msleep(500);
-@@ -7738,8 +7741,11 @@ int qla2xxx_delete_qpair(struct scsi_qla_host *vha, struct qla_qpair *qpair)
- 	clear_bit(qpair->id, ha->qpair_qid_map);
- 	ha->num_qpairs--;
- 	list_del(&qpair->qp_list_elem);
--	if (list_empty(&vha->qp_list))
-+	if (list_empty(&vha->qp_list)) {
- 		vha->flags.qpairs_available = 0;
-+		vha->flags.qpairs_req_created = 0;
-+		vha->flags.qpairs_rsp_created = 0;
-+	}
- 	mempool_destroy(qpair->srb_mempool);
- 	kfree(qpair);
- 	mutex_unlock(&ha->mq_lock);
-diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
-index 4ad452a42dbe..f0605cd196fb 100644
---- a/drivers/scsi/qla2xxx/qla_mid.c
-+++ b/drivers/scsi/qla2xxx/qla_mid.c
-@@ -645,6 +645,7 @@ qla25xx_create_req_que(struct qla_hw_data *ha, uint16_t options,
- 	int ret = 0;
- 	struct req_que *req = NULL;
- 	struct scsi_qla_host *base_vha = pci_get_drvdata(ha->pdev);
-+	struct scsi_qla_host *vha = pci_get_drvdata(ha->pdev);
- 	uint16_t que_id = 0;
- 	device_reg_t *reg;
- 	uint32_t cnt;
-@@ -741,6 +742,7 @@ qla25xx_create_req_que(struct qla_hw_data *ha, uint16_t options,
- 			mutex_unlock(&ha->mq_lock);
- 			goto que_failed;
- 		}
-+		vha->flags.qpairs_req_created = 1;
- 	}
- 
- 	return req->id;
-@@ -772,6 +774,7 @@ qla25xx_create_rsp_que(struct qla_hw_data *ha, uint16_t options,
- 	int ret = 0;
- 	struct rsp_que *rsp = NULL;
- 	struct scsi_qla_host *base_vha = pci_get_drvdata(ha->pdev);
-+	struct scsi_qla_host *vha = pci_get_drvdata(ha->pdev);
- 	uint16_t que_id = 0;
- 	device_reg_t *reg;
- 
-@@ -855,6 +858,7 @@ qla25xx_create_rsp_que(struct qla_hw_data *ha, uint16_t options,
- 			mutex_unlock(&ha->mq_lock);
- 			goto que_failed;
- 		}
-+		vha->flags.qpairs_rsp_created = 1;
- 	}
- 	rsp->req = NULL;
- 
+ 		/* Assign available que pair id */
+ 		mutex_lock(&ha->mq_lock);
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 3963602aef35..13e4d2428a9a 100644
+index 44be2c8237fd..1d66954b7e5a 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
 @@ -384,6 +384,7 @@ static int qla2x00_alloc_queues(struct qla_hw_data *ha, struct req_que *req,
  	ha->base_qpair->rsp = rsp;
  	ha->base_qpair->vha = vha;
  	ha->base_qpair->qp_lock_ptr = &ha->hardware_lock;
-+	/* init qpair to this cpu. Will adjust at run time. */
++	ha->base_qpair->use_shadow_reg = IS_SHADOW_REG_CAPABLE(ha) ? 1 : 0;
+ 	/* init qpair to this cpu. Will adjust at run time. */
  	ha->base_qpair->msix = &ha->msix_entries[QLA_MSIX_RSP_Q];
  	INIT_LIST_HEAD(&ha->base_qpair->hints_list);
- 	qla_cpu_update(rsp->qpair, smp_processor_id());
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 66bb4825339f..1d6cc24c0640 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -2288,7 +2288,8 @@ static int qlt_check_reserve_free_req(struct qla_qpair *qpair,
+ 	struct req_que *req = qpair->req;
+ 
+ 	if (req->cnt < (req_cnt + 2)) {
+-		cnt = (uint16_t)RD_REG_DWORD(req->req_q_out);
++		cnt = (uint16_t)(qpair->use_shadow_reg ? *req->out_ptr :
++		    RD_REG_DWORD_RELAXED(req->req_q_out));
+ 
+ 		if  (req->ring_index < cnt)
+ 			req->cnt = cnt - req->ring_index;
 -- 
 2.12.0
