@@ -1,155 +1,177 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 11/15] qla2xxx: Remove unused tgt_enable_64bit_addr flag
-Date: Wed, 7 Jun 2017 14:43:29 -0700
-Message-ID: <20170607214333.23110-12-himanshu.madhani@cavium.com>
+Subject: [PATCH 14/15] qla2xxx: Include Exchange offload/Extended Login into FW dump
+Date: Wed, 7 Jun 2017 14:43:32 -0700
+Message-ID: <20170607214333.23110-15-himanshu.madhani@cavium.com>
 References: <20170607214333.23110-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-dm3nam03on0084.outbound.protection.outlook.com ([104.47.41.84]:25952
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751772AbdFGVoK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 7 Jun 2017 17:44:10 -0400
 In-Reply-To: <20170607214333.23110-1-himanshu.madhani@cavium.com>
-Sender: target-devel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org, nab@linux-iscsi.org
 Cc: linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
-List-Id: linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-By default this flag is forced to true. Remove this flag and
-unneccessary check for this flag.
+Add missing memory dump of Exchange Offload and Extended
+login into FW dump.
 
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 44 ++++++++++++---------------------------
- drivers/scsi/qla2xxx/qla_target.h |  1 -
- 2 files changed, 13 insertions(+), 32 deletions(-)
+ drivers/scsi/qla2xxx/qla_dbg.c  | 49 +++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_dbg.h  | 11 +++++++++
+ drivers/scsi/qla2xxx/qla_init.c |  7 ++++++
+ drivers/scsi/qla2xxx/qla_os.c   |  3 ---
+ 4 files changed, 67 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 84be2b48246f..411c1799c6e3 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -2420,12 +2420,10 @@ static int qlt_24xx_build_ctio_pkt(struct qla_qpair *qpair,
-  * ha->hardware_lock supposed to be held on entry. We have already made sure
-  * that there is sufficient amount of request entries to not drop it.
-  */
--static void qlt_load_cont_data_segments(struct qla_tgt_prm *prm,
--	struct scsi_qla_host *vha)
-+static void qlt_load_cont_data_segments(struct qla_tgt_prm *prm)
- {
- 	int cnt;
- 	uint32_t *dword_ptr;
--	int enable_64bit_addressing = prm->tgt->tgt_enable_64bit_addr;
- 
- 	/* Build continuation packets */
- 	while (prm->seg_cnt > 0) {
-@@ -2445,16 +2443,8 @@ static void qlt_load_cont_data_segments(struct qla_tgt_prm *prm,
- 		cont_pkt64->entry_count = 1;
- 		cont_pkt64->sys_define = 0;
- 
--		if (enable_64bit_addressing) {
--			cont_pkt64->entry_type = CONTINUE_A64_TYPE;
--			dword_ptr =
--			    (uint32_t *)&cont_pkt64->dseg_0_address;
--		} else {
--			cont_pkt64->entry_type = CONTINUE_TYPE;
--			dword_ptr =
--			    (uint32_t *)&((cont_entry_t *)
--				cont_pkt64)->dseg_0_address;
--		}
-+		cont_pkt64->entry_type = CONTINUE_A64_TYPE;
-+		dword_ptr = (uint32_t *)&cont_pkt64->dseg_0_address;
- 
- 		/* Load continuation entry data segments */
- 		for (cnt = 0;
-@@ -2463,12 +2453,8 @@ static void qlt_load_cont_data_segments(struct qla_tgt_prm *prm,
- 			*dword_ptr++ =
- 			    cpu_to_le32(pci_dma_lo32
- 				(sg_dma_address(prm->sg)));
--			if (enable_64bit_addressing) {
--				*dword_ptr++ =
--				    cpu_to_le32(pci_dma_hi32
--					(sg_dma_address
--					(prm->sg)));
--			}
-+			*dword_ptr++ = cpu_to_le32(pci_dma_hi32
-+			    (sg_dma_address(prm->sg)));
- 			*dword_ptr++ = cpu_to_le32(sg_dma_len(prm->sg));
- 
- 			prm->sg = sg_next(prm->sg);
-@@ -2480,12 +2466,10 @@ static void qlt_load_cont_data_segments(struct qla_tgt_prm *prm,
-  * ha->hardware_lock supposed to be held on entry. We have already made sure
-  * that there is sufficient amount of request entries to not drop it.
-  */
--static void qlt_load_data_segments(struct qla_tgt_prm *prm,
--	struct scsi_qla_host *vha)
-+static void qlt_load_data_segments(struct qla_tgt_prm *prm)
- {
- 	int cnt;
- 	uint32_t *dword_ptr;
--	int enable_64bit_addressing = prm->tgt->tgt_enable_64bit_addr;
- 	struct ctio7_to_24xx *pkt24 = (struct ctio7_to_24xx *)prm->pkt;
- 
- 	pkt24->u.status0.transfer_length = cpu_to_le32(prm->cmd->bufflen);
-@@ -2512,17 +2496,16 @@ static void qlt_load_data_segments(struct qla_tgt_prm *prm,
- 	    cnt++, prm->seg_cnt--) {
- 		*dword_ptr++ =
- 		    cpu_to_le32(pci_dma_lo32(sg_dma_address(prm->sg)));
--		if (enable_64bit_addressing) {
--			*dword_ptr++ =
--			    cpu_to_le32(pci_dma_hi32(
--				sg_dma_address(prm->sg)));
--		}
-+
-+		*dword_ptr++ = cpu_to_le32(pci_dma_hi32(
-+			sg_dma_address(prm->sg)));
-+
- 		*dword_ptr++ = cpu_to_le32(sg_dma_len(prm->sg));
- 
- 		prm->sg = sg_next(prm->sg);
- 	}
- 
--	qlt_load_cont_data_segments(prm, vha);
-+	qlt_load_cont_data_segments(prm);
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index c0c90dcc7c7b..f91ee717202d 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -498,6 +498,50 @@ qla25xx_copy_fce(struct qla_hw_data *ha, void *ptr, uint32_t **last_chain)
  }
  
- static inline int qlt_has_data(struct qla_tgt_cmd *cmd)
-@@ -3136,7 +3119,7 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
- 			CTIO7_FLAGS_STATUS_MODE_0);
+ static inline void *
++qla25xx_copy_exlogin(struct qla_hw_data *ha, void *ptr, uint32_t **last_chain)
++{
++	struct qla2xxx_offld_chain *c = ptr;
++
++	if (!ha->exlogin_buf)
++		return ptr;
++
++	*last_chain = &c->type;
++
++	c->type = cpu_to_be32(DUMP_CHAIN_EXLOGIN);
++	c->chain_size = cpu_to_be32(sizeof(struct qla2xxx_offld_chain) +
++	    ha->exlogin_size);
++	c->size = cpu_to_be32(ha->exlogin_size);
++	c->addr = cpu_to_be64(ha->exlogin_buf_dma);
++
++	ptr += sizeof(struct qla2xxx_offld_chain);
++	memcpy(ptr, ha->exlogin_buf, ha->exlogin_size);
++
++	return (char *)ptr + cpu_to_be32(c->size);
++}
++
++static inline void *
++qla81xx_copy_exchoffld(struct qla_hw_data *ha, void *ptr, uint32_t **last_chain)
++{
++	struct qla2xxx_offld_chain *c = ptr;
++
++	if (!ha->exchoffld_buf)
++		return ptr;
++
++	*last_chain = &c->type;
++
++	c->type = cpu_to_be32(DUMP_CHAIN_EXCHG);
++	c->chain_size = cpu_to_be32(sizeof(struct qla2xxx_offld_chain) +
++	    ha->exchoffld_size);
++	c->size = cpu_to_be32(ha->exchoffld_size);
++	c->addr = cpu_to_be64(ha->exchoffld_buf_dma);
++
++	ptr += sizeof(struct qla2xxx_offld_chain);
++	memcpy(ptr, ha->exchoffld_buf, ha->exchoffld_size);
++
++	return (char *)ptr + cpu_to_be32(c->size);
++}
++
++static inline void *
+ qla2xxx_copy_atioqueues(struct qla_hw_data *ha, void *ptr,
+ 	uint32_t **last_chain)
+ {
+@@ -1606,6 +1650,7 @@ qla25xx_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
+ 	nxt_chain = qla25xx_copy_fce(ha, nxt_chain, &last_chain);
+ 	nxt_chain = qla25xx_copy_mqueues(ha, nxt_chain, &last_chain);
+ 	nxt_chain = qla2xxx_copy_atioqueues(ha, nxt_chain, &last_chain);
++	nxt_chain = qla25xx_copy_exlogin(ha, nxt_chain, &last_chain);
+ 	if (last_chain) {
+ 		ha->fw_dump->version |= htonl(DUMP_CHAIN_VARIANT);
+ 		*last_chain |= htonl(DUMP_CHAIN_LAST);
+@@ -1932,6 +1977,8 @@ qla81xx_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
+ 	nxt_chain = qla25xx_copy_fce(ha, nxt_chain, &last_chain);
+ 	nxt_chain = qla25xx_copy_mqueues(ha, nxt_chain, &last_chain);
+ 	nxt_chain = qla2xxx_copy_atioqueues(ha, nxt_chain, &last_chain);
++	nxt_chain = qla25xx_copy_exlogin(ha, nxt_chain, &last_chain);
++	nxt_chain = qla81xx_copy_exchoffld(ha, nxt_chain, &last_chain);
+ 	if (last_chain) {
+ 		ha->fw_dump->version |= htonl(DUMP_CHAIN_VARIANT);
+ 		*last_chain |= htonl(DUMP_CHAIN_LAST);
+@@ -2443,6 +2490,8 @@ qla83xx_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
+ 	nxt_chain = qla25xx_copy_fce(ha, nxt_chain, &last_chain);
+ 	nxt_chain = qla25xx_copy_mqueues(ha, nxt_chain, &last_chain);
+ 	nxt_chain = qla2xxx_copy_atioqueues(ha, nxt_chain, &last_chain);
++	nxt_chain = qla25xx_copy_exlogin(ha, nxt_chain, &last_chain);
++	nxt_chain = qla81xx_copy_exchoffld(ha, nxt_chain, &last_chain);
+ 	if (last_chain) {
+ 		ha->fw_dump->version |= htonl(DUMP_CHAIN_VARIANT);
+ 		*last_chain |= htonl(DUMP_CHAIN_LAST);
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.h b/drivers/scsi/qla2xxx/qla_dbg.h
+index f60138f66dce..8877aa97d829 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.h
++++ b/drivers/scsi/qla2xxx/qla_dbg.h
+@@ -232,6 +232,15 @@ struct qla2xxx_fce_chain {
+ 	uint32_t eregs[8];
+ };
  
- 		if (cmd->se_cmd.prot_op == TARGET_PROT_NORMAL)
--			qlt_load_data_segments(&prm, vha);
-+			qlt_load_data_segments(&prm);
++/* used by exchange off load and extended login offload */
++struct qla2xxx_offld_chain {
++	uint32_t type;
++	uint32_t chain_size;
++
++	uint32_t size;
++	u64	 addr;
++};
++
+ struct qla2xxx_mq_chain {
+ 	uint32_t type;
+ 	uint32_t chain_size;
+@@ -258,6 +267,8 @@ struct qla2xxx_mqueue_chain {
+ #define DUMP_CHAIN_FCE		0x7FFFFAF0
+ #define DUMP_CHAIN_MQ		0x7FFFFAF1
+ #define DUMP_CHAIN_QUEUE	0x7FFFFAF2
++#define DUMP_CHAIN_EXLOGIN	0x7FFFFAF3
++#define DUMP_CHAIN_EXCHG	0x7FFFFAF4
+ #define DUMP_CHAIN_LAST		0x80000000
  
- 		if (prm.add_status_pkt == 0) {
- 			if (xmit_type & QLA_TGT_XMIT_STATUS) {
-@@ -3272,7 +3255,7 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
- 	    CTIO7_FLAGS_STATUS_MODE_0);
+ struct qla2xxx_fw_dump {
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 48c0a58330d4..72d9ca138ffd 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2538,6 +2538,13 @@ qla2x00_alloc_fw_dump(scsi_qla_host_t *vha)
+ 	ha->chain_offset = dump_size;
+ 	dump_size += mq_size + fce_size;
  
- 	if (cmd->se_cmd.prot_op == TARGET_PROT_NORMAL)
--		qlt_load_data_segments(&prm, vha);
-+		qlt_load_data_segments(&prm);
++	if (ha->exchoffld_buf)
++		dump_size += sizeof(struct qla2xxx_offld_chain) +
++			ha->exchoffld_size;
++	if (ha->exlogin_buf)
++		dump_size += sizeof(struct qla2xxx_offld_chain) +
++			ha->exlogin_size;
++
+ allocate:
+ 	ha->fw_dump = vmalloc(dump_size);
+ 	if (!ha->fw_dump) {
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 88e115fcea60..f7c4f723c405 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -4176,9 +4176,6 @@ qla2x00_set_exchoffld_buffer(scsi_qla_host_t *vha)
+ 	if (!IS_EXCHG_OFFLD_CAPABLE(ha))
+ 		return QLA_SUCCESS;
  
- 	cmd->state = QLA_TGT_STATE_NEED_DATA;
- 	cmd->cmd_sent_to_fw = 1;
-@@ -6185,7 +6168,6 @@ int qlt_add_target(struct qla_hw_data *ha, struct scsi_qla_host *base_vha)
- 	ql_dbg(ql_dbg_tgt, base_vha, 0xe067,
- 		"qla_target(%d): using 64 Bit PCI addressing",
- 		base_vha->vp_idx);
--	tgt->tgt_enable_64bit_addr = 1;
- 	/* 3 is reserved */
- 	tgt->sg_tablesize = QLA_TGT_MAX_SG_24XX(base_vha->req->length - 3);
- 	tgt->datasegs_per_cmd = QLA_TGT_DATASEGS_PER_CMD_24XX;
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index bb8f73a86b2b..902685f85506 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -809,7 +809,6 @@ struct qla_tgt {
- 	int datasegs_per_cmd, datasegs_per_cont, sg_tablesize;
- 
- 	/* Target's flags, serialized by pha->hardware_lock */
--	unsigned int tgt_enable_64bit_addr:1; /* 64-bits PCI addr enabled */
- 	unsigned int link_reinit_iocb_pending:1;
- 
- 	/*
+-	ql_log(ql_log_info, vha, 0xd014,
+-	    "Exchange offload count: %d.\n", ql2xexlogins);
+-
+ 	max_cnt = 0;
+ 	rval = qla_get_exchoffld_status(vha, &size, &max_cnt);
+ 	if (rval != QLA_SUCCESS) {
 -- 
 2.12.0
