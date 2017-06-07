@@ -1,7 +1,7 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 12/15] qla2xxx: Remove datasegs_per_cmd and datasegs_per_cont field
-Date: Wed, 7 Jun 2017 14:43:30 -0700
-Message-ID: <20170607214333.23110-13-himanshu.madhani@cavium.com>
+Subject: [PATCH 11/15] qla2xxx: Remove unused tgt_enable_64bit_addr flag
+Date: Wed, 7 Jun 2017 14:43:29 -0700
+Message-ID: <20170607214333.23110-12-himanshu.madhani@cavium.com>
 References: <20170607214333.23110-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,72 +14,142 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-These fields only hold one set of value. Replace it with macros.
+By default this flag is forced to true. Remove this flag and
+unneccessary check for this flag.
 
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 12 +++++-------
- drivers/scsi/qla2xxx/qla_target.h |  2 +-
- 2 files changed, 6 insertions(+), 8 deletions(-)
+ drivers/scsi/qla2xxx/qla_target.c | 44 ++++++++++++---------------------------
+ drivers/scsi/qla2xxx/qla_target.h |  1 -
+ 2 files changed, 13 insertions(+), 32 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 411c1799c6e3..48d82c67e223 100644
+index 84be2b48246f..411c1799c6e3 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -2228,10 +2228,10 @@ static int qlt_pci_map_calc_cnt(struct qla_tgt_prm *prm)
- 		 * If greater than four sg entries then we need to allocate
- 		 * the continuation entries
- 		 */
--		if (prm->seg_cnt > prm->tgt->datasegs_per_cmd)
-+		if (prm->seg_cnt > QLA_TGT_DATASEGS_PER_CMD_24XX)
- 			prm->req_cnt += DIV_ROUND_UP(prm->seg_cnt -
--			prm->tgt->datasegs_per_cmd,
--			prm->tgt->datasegs_per_cont);
-+			QLA_TGT_DATASEGS_PER_CMD_24XX,
-+			QLA_TGT_DATASEGS_PER_CONT_24XX);
- 	} else {
- 		/* DIF */
- 		if ((cmd->se_cmd.prot_op == TARGET_PROT_DIN_INSERT) ||
-@@ -2448,7 +2448,7 @@ static void qlt_load_cont_data_segments(struct qla_tgt_prm *prm)
+@@ -2420,12 +2420,10 @@ static int qlt_24xx_build_ctio_pkt(struct qla_qpair *qpair,
+  * ha->hardware_lock supposed to be held on entry. We have already made sure
+  * that there is sufficient amount of request entries to not drop it.
+  */
+-static void qlt_load_cont_data_segments(struct qla_tgt_prm *prm,
+-	struct scsi_qla_host *vha)
++static void qlt_load_cont_data_segments(struct qla_tgt_prm *prm)
+ {
+ 	int cnt;
+ 	uint32_t *dword_ptr;
+-	int enable_64bit_addressing = prm->tgt->tgt_enable_64bit_addr;
+ 
+ 	/* Build continuation packets */
+ 	while (prm->seg_cnt > 0) {
+@@ -2445,16 +2443,8 @@ static void qlt_load_cont_data_segments(struct qla_tgt_prm *prm,
+ 		cont_pkt64->entry_count = 1;
+ 		cont_pkt64->sys_define = 0;
+ 
+-		if (enable_64bit_addressing) {
+-			cont_pkt64->entry_type = CONTINUE_A64_TYPE;
+-			dword_ptr =
+-			    (uint32_t *)&cont_pkt64->dseg_0_address;
+-		} else {
+-			cont_pkt64->entry_type = CONTINUE_TYPE;
+-			dword_ptr =
+-			    (uint32_t *)&((cont_entry_t *)
+-				cont_pkt64)->dseg_0_address;
+-		}
++		cont_pkt64->entry_type = CONTINUE_A64_TYPE;
++		dword_ptr = (uint32_t *)&cont_pkt64->dseg_0_address;
  
  		/* Load continuation entry data segments */
  		for (cnt = 0;
--		    cnt < prm->tgt->datasegs_per_cont && prm->seg_cnt;
-+		    cnt < QLA_TGT_DATASEGS_PER_CONT_24XX && prm->seg_cnt;
- 		    cnt++, prm->seg_cnt--) {
+@@ -2463,12 +2453,8 @@ static void qlt_load_cont_data_segments(struct qla_tgt_prm *prm,
  			*dword_ptr++ =
  			    cpu_to_le32(pci_dma_lo32
-@@ -2492,7 +2492,7 @@ static void qlt_load_data_segments(struct qla_tgt_prm *prm)
+ 				(sg_dma_address(prm->sg)));
+-			if (enable_64bit_addressing) {
+-				*dword_ptr++ =
+-				    cpu_to_le32(pci_dma_hi32
+-					(sg_dma_address
+-					(prm->sg)));
+-			}
++			*dword_ptr++ = cpu_to_le32(pci_dma_hi32
++			    (sg_dma_address(prm->sg)));
+ 			*dword_ptr++ = cpu_to_le32(sg_dma_len(prm->sg));
  
- 	/* Load command entry data segments */
- 	for (cnt = 0;
--	    (cnt < prm->tgt->datasegs_per_cmd) && prm->seg_cnt;
-+	    (cnt < QLA_TGT_DATASEGS_PER_CMD_24XX) && prm->seg_cnt;
+ 			prm->sg = sg_next(prm->sg);
+@@ -2480,12 +2466,10 @@ static void qlt_load_cont_data_segments(struct qla_tgt_prm *prm,
+  * ha->hardware_lock supposed to be held on entry. We have already made sure
+  * that there is sufficient amount of request entries to not drop it.
+  */
+-static void qlt_load_data_segments(struct qla_tgt_prm *prm,
+-	struct scsi_qla_host *vha)
++static void qlt_load_data_segments(struct qla_tgt_prm *prm)
+ {
+ 	int cnt;
+ 	uint32_t *dword_ptr;
+-	int enable_64bit_addressing = prm->tgt->tgt_enable_64bit_addr;
+ 	struct ctio7_to_24xx *pkt24 = (struct ctio7_to_24xx *)prm->pkt;
+ 
+ 	pkt24->u.status0.transfer_length = cpu_to_le32(prm->cmd->bufflen);
+@@ -2512,17 +2496,16 @@ static void qlt_load_data_segments(struct qla_tgt_prm *prm,
  	    cnt++, prm->seg_cnt--) {
  		*dword_ptr++ =
  		    cpu_to_le32(pci_dma_lo32(sg_dma_address(prm->sg)));
-@@ -6170,8 +6170,6 @@ int qlt_add_target(struct qla_hw_data *ha, struct scsi_qla_host *base_vha)
+-		if (enable_64bit_addressing) {
+-			*dword_ptr++ =
+-			    cpu_to_le32(pci_dma_hi32(
+-				sg_dma_address(prm->sg)));
+-		}
++
++		*dword_ptr++ = cpu_to_le32(pci_dma_hi32(
++			sg_dma_address(prm->sg)));
++
+ 		*dword_ptr++ = cpu_to_le32(sg_dma_len(prm->sg));
+ 
+ 		prm->sg = sg_next(prm->sg);
+ 	}
+ 
+-	qlt_load_cont_data_segments(prm, vha);
++	qlt_load_cont_data_segments(prm);
+ }
+ 
+ static inline int qlt_has_data(struct qla_tgt_cmd *cmd)
+@@ -3136,7 +3119,7 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
+ 			CTIO7_FLAGS_STATUS_MODE_0);
+ 
+ 		if (cmd->se_cmd.prot_op == TARGET_PROT_NORMAL)
+-			qlt_load_data_segments(&prm, vha);
++			qlt_load_data_segments(&prm);
+ 
+ 		if (prm.add_status_pkt == 0) {
+ 			if (xmit_type & QLA_TGT_XMIT_STATUS) {
+@@ -3272,7 +3255,7 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
+ 	    CTIO7_FLAGS_STATUS_MODE_0);
+ 
+ 	if (cmd->se_cmd.prot_op == TARGET_PROT_NORMAL)
+-		qlt_load_data_segments(&prm, vha);
++		qlt_load_data_segments(&prm);
+ 
+ 	cmd->state = QLA_TGT_STATE_NEED_DATA;
+ 	cmd->cmd_sent_to_fw = 1;
+@@ -6185,7 +6168,6 @@ int qlt_add_target(struct qla_hw_data *ha, struct scsi_qla_host *base_vha)
+ 	ql_dbg(ql_dbg_tgt, base_vha, 0xe067,
+ 		"qla_target(%d): using 64 Bit PCI addressing",
  		base_vha->vp_idx);
+-	tgt->tgt_enable_64bit_addr = 1;
  	/* 3 is reserved */
  	tgt->sg_tablesize = QLA_TGT_MAX_SG_24XX(base_vha->req->length - 3);
--	tgt->datasegs_per_cmd = QLA_TGT_DATASEGS_PER_CMD_24XX;
--	tgt->datasegs_per_cont = QLA_TGT_DATASEGS_PER_CONT_24XX;
- 
- 	mutex_lock(&qla_tgt_mutex);
- 	list_add_tail(&tgt->tgt_list_entry, &qla_tgt_glist);
+ 	tgt->datasegs_per_cmd = QLA_TGT_DATASEGS_PER_CMD_24XX;
 diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index 902685f85506..7fe02d036bdf 100644
+index bb8f73a86b2b..902685f85506 100644
 --- a/drivers/scsi/qla2xxx/qla_target.h
 +++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -806,7 +806,7 @@ struct qla_tgt {
- 	 */
- 	int atio_irq_cmd_count;
- 
--	int datasegs_per_cmd, datasegs_per_cont, sg_tablesize;
-+	int sg_tablesize;
+@@ -809,7 +809,6 @@ struct qla_tgt {
+ 	int datasegs_per_cmd, datasegs_per_cont, sg_tablesize;
  
  	/* Target's flags, serialized by pha->hardware_lock */
+-	unsigned int tgt_enable_64bit_addr:1; /* 64-bits PCI addr enabled */
  	unsigned int link_reinit_iocb_pending:1;
+ 
+ 	/*
 -- 
 2.12.0
