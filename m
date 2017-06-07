@@ -1,62 +1,46 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH 0/3] target: Add TARGET_SCF_LOOKUP_LUN_FROM_TAG support
-Date: Wed, 7 Jun 2017 05:02:51 +0000
-Message-ID: <A01A1524-3760-4FFC-956F-2A82874B668D@cavium.com>
-References: <1496527808-28789-1-git-send-email-nab@linux-iscsi.org>
+From: Omar Sandoval <osandov@osandov.com>
+Subject: Re: [PATCH blktests v2 0/3] Add SCSI generic test group
+Date: Tue, 6 Jun 2017 23:44:08 -0700
+Message-ID: <20170607064408.GA9840@vader>
+References: <cover.1495201975.git.jthumshirn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1496527808-28789-1-git-send-email-nab@linux-iscsi.org>
-Content-Language: en-US
-Content-ID: <FADF105E35EAD6418F280297936E8D24@namprd07.prod.outlook.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pf0-f173.google.com ([209.85.192.173]:33786 "EHLO
+        mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751273AbdFGGoK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2017 02:44:10 -0400
+Received: by mail-pf0-f173.google.com with SMTP id 83so2224315pfr.0
+        for <linux-scsi@vger.kernel.org>; Tue, 06 Jun 2017 23:44:10 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <cover.1495201975.git.jthumshirn@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Linux Block Layer Mailinglist <linux-block@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
 
+On Fri, May 19, 2017 at 03:55:28PM +0200, Johannes Thumshirn wrote:
+> Add a test group for the SCSI generic driver and one syzcaller
+> reproducer for this group.
+> 
+> The reprodcuer is distributed as a C program, so the makefile is
+> amended to build C files to be used in the test.
+> 
+> Changes to v1:
+> * Stripped left over TODO comment
+> * Modified reproducer to accept a device name
+> * Fixed Makefile so it can build more than one target
+> 
+> Johannes Thumshirn (3):
+>   Add ability to build test-cases
+>   tests/sg: add SCSI generic test grouop
+>   sg/001: add regression test for syzcaller generated GPF in sg_read
+>     path
 
-> On Jun 3, 2017, at 3:10 PM, Nicholas A. Bellinger <nab@linux-iscsi.org> w=
-rote:
->=20
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
->=20
-> Hi Himanshu + Quinn,
->=20
-> Here is a small series to introduce proper percpu se_lun->lun_ref
-> counting for TMR, and add common code in target_submit_tmr() to
-> do tag lookup for unpacked_lun in order to drop the original
-> driver specific lookup within __qlt_24xx_handle_abts().
->=20
-> It's rather straight-forward, so review and test as a v4.13 item.
->=20
-> Thanks!
->=20
-> Nicholas Bellinger (3):
->  target: Add support for TMR percpu reference counting
->  target: Add TARGET_SCF_LOOKUP_LUN_FROM_TAG support for ABORT_TASK
->  qla2xxx: Convert QLA_TGT_ABTS to TARGET_SCF_LOOKUP_LUN_FROM_TAG
->=20
-> drivers/scsi/qla2xxx/qla_target.c      | 39 ++++++-----------------
-> drivers/scsi/qla2xxx/tcm_qla2xxx.c     |  4 ++-
-> drivers/target/target_core_device.c    | 14 ++++++---
-> drivers/target/target_core_transport.c | 56 ++++++++++++++++++++++++++++-=
------
-> include/target/target_core_base.h      |  3 +-
-> 5 files changed, 71 insertions(+), 45 deletions(-)
->=20
-> --=20
-> 1.9.1
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe target-devel" i=
-n
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hey, Johannes,
 
-Series looks good.=20
-
-Acked-by: Himanshu Madhani <himanshu.madhani@cavium.com>
-
-Thanks,
-- Himanshu
+Sorry for the delay, I was chasing down a few Btrfs bugs for the last
+couple of weeks. I applied these with some small changes. I stuck with
+running syzkaller on the scsi-debug device like you had here, we can
+revisit that for future tests if it makes sense to run them on a real
+device. Thanks!
