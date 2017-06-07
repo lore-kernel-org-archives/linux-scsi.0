@@ -1,184 +1,61 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v4 08/23] scsi: hisi_sas: create hisi_sas_get_fw_info()
-Date: Wed, 7 Jun 2017 23:20:11 +0800
-Message-ID: <1496848826-20534-9-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v4 20/23] scsi: hisi_sas: add get_wideport_bitmap_v3_hw()
+Date: Wed, 7 Jun 2017 23:20:23 +0800
+Message-ID: <1496848826-20534-21-git-send-email-john.garry@huawei.com>
 References: <1496848826-20534-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([45.249.212.187]:7776 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751665AbdFGOwF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2017 10:52:05 -0400
 In-Reply-To: <1496848826-20534-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linuxarm@huawei.com, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@infradead.org, John Garry <john.garry@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: linuxarm@huawei.com, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@infradead.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
 
-Move the functionality to retrieve the fw info into
-a dedicated device type-agnostic function,
-hisi_sas_get_fw_info().
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-The reasoning is that this function will be required
-for future pci-based platforms.
-
-Also add some debug logs for failure.
+Add code for interface get_wideport_bitmap.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h      |   1 +
- drivers/scsi/hisi_sas/hisi_sas_main.c | 107 ++++++++++++++++++++++------------
- 2 files changed, 71 insertions(+), 37 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 84cac98..c1f6669 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -371,6 +371,7 @@ struct hisi_sas_command_table_ssp {
- extern void hisi_sas_sata_done(struct sas_task *task,
- 			    struct hisi_sas_slot *slot);
- extern int hisi_sas_get_ncq_tag(struct sas_task *task, u32 *tag);
-+extern int hisi_sas_get_fw_info(struct hisi_hba *hisi_hba);
- extern int hisi_sas_probe(struct platform_device *pdev,
- 			  const struct hisi_sas_hw *ops);
- extern int hisi_sas_remove(struct platform_device *pdev);
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index ff033bd..1a6adf7 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1725,66 +1725,99 @@ static void hisi_sas_rst_work_handler(struct work_struct *work)
- 	hisi_sas_controller_reset(hisi_hba);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 2fb2455..84305c9 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -629,6 +629,18 @@ static void sl_notify_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
  }
  
--static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
--					      const struct hisi_sas_hw *hw)
-+int hisi_sas_get_fw_info(struct hisi_hba *hisi_hba)
- {
--	struct resource *res;
--	struct Scsi_Host *shost;
--	struct hisi_hba *hisi_hba;
--	struct device *dev = &pdev->dev;
--	struct device_node *np = pdev->dev.of_node;
-+	struct device *dev = hisi_hba->dev;
-+	struct platform_device *pdev = hisi_hba->platform_dev;
-+	struct device_node *np = pdev ? pdev->dev.of_node : NULL;
- 	struct clk *refclk;
- 
--	shost = scsi_host_alloc(&hisi_sas_sht, sizeof(*hisi_hba));
--	if (!shost) {
--		dev_err(dev, "scsi host alloc failed\n");
--		return NULL;
--	}
--	hisi_hba = shost_priv(shost);
--
--	INIT_WORK(&hisi_hba->rst_work, hisi_sas_rst_work_handler);
--	hisi_hba->hw = hw;
--	hisi_hba->platform_dev = pdev;
--	hisi_hba->dev = dev;
--	hisi_hba->shost = shost;
--	SHOST_TO_SAS_HA(shost) = &hisi_hba->sha;
--
--	init_timer(&hisi_hba->timer);
--
- 	if (device_property_read_u8_array(dev, "sas-addr", hisi_hba->sas_addr,
--					  SAS_ADDR_SIZE))
--		goto err_out;
-+					  SAS_ADDR_SIZE)) {
-+		dev_err(dev, "could not get property sas-addr\n");
-+		return -ENOENT;
-+	}
- 
- 	if (np) {
-+		/*
-+		 * These properties are only required for platform device-based
-+		 * controller with DT firmware.
-+		 */
- 		hisi_hba->ctrl = syscon_regmap_lookup_by_phandle(np,
- 					"hisilicon,sas-syscon");
--		if (IS_ERR(hisi_hba->ctrl))
--			goto err_out;
-+		if (IS_ERR(hisi_hba->ctrl)) {
-+			dev_err(dev, "could not get syscon\n");
-+			return -ENOENT;
-+		}
- 
- 		if (device_property_read_u32(dev, "ctrl-reset-reg",
--					     &hisi_hba->ctrl_reset_reg))
--			goto err_out;
-+					     &hisi_hba->ctrl_reset_reg)) {
-+			dev_err(dev,
-+				"could not get property ctrl-reset-reg\n");
-+			return -ENOENT;
-+		}
- 
- 		if (device_property_read_u32(dev, "ctrl-reset-sts-reg",
--					     &hisi_hba->ctrl_reset_sts_reg))
--			goto err_out;
-+					     &hisi_hba->ctrl_reset_sts_reg)) {
-+			dev_err(dev,
-+				"could not get property ctrl-reset-sts-reg\n");
-+			return -ENOENT;
-+		}
- 
- 		if (device_property_read_u32(dev, "ctrl-clock-ena-reg",
--					     &hisi_hba->ctrl_clock_ena_reg))
--			goto err_out;
-+					     &hisi_hba->ctrl_clock_ena_reg)) {
-+			dev_err(dev,
-+				"could not get property ctrl-clock-ena-reg\n");
-+			return -ENOENT;
-+		}
- 	}
- 
--	refclk = devm_clk_get(&pdev->dev, NULL);
-+	refclk = devm_clk_get(dev, NULL);
- 	if (IS_ERR(refclk))
- 		dev_dbg(dev, "no ref clk property\n");
- 	else
- 		hisi_hba->refclk_frequency_mhz = clk_get_rate(refclk) / 1000000;
- 
--	if (device_property_read_u32(dev, "phy-count", &hisi_hba->n_phy))
--		goto err_out;
-+	if (device_property_read_u32(dev, "phy-count", &hisi_hba->n_phy)) {
-+		dev_err(dev, "could not get property phy-count\n");
-+		return -ENOENT;
-+	}
- 
- 	if (device_property_read_u32(dev, "queue-count",
--				     &hisi_hba->queue_count))
-+				     &hisi_hba->queue_count)) {
-+		dev_err(dev, "could not get property queue-count\n");
-+		return -ENOENT;
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(hisi_sas_get_fw_info);
-+
-+static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
-+					      const struct hisi_sas_hw *hw)
++static int get_wideport_bitmap_v3_hw(struct hisi_hba *hisi_hba, int port_id)
 +{
-+	struct resource *res;
-+	struct Scsi_Host *shost;
-+	struct hisi_hba *hisi_hba;
-+	struct device *dev = &pdev->dev;
++	int i, bitmap = 0;
++	u32 phy_port_num_ma = hisi_sas_read32(hisi_hba, PHY_PORT_NUM_MA);
 +
-+	shost = scsi_host_alloc(&hisi_sas_sht, sizeof(*hisi_hba));
-+	if (!shost) {
-+		dev_err(dev, "scsi host alloc failed\n");
-+		return NULL;
-+	}
-+	hisi_hba = shost_priv(shost);
++	for (i = 0; i < hisi_hba->n_phy; i++)
++		if (((phy_port_num_ma >> (i * 4)) & 0xf) == port_id)
++			bitmap |= 1 << i;
 +
-+	INIT_WORK(&hisi_hba->rst_work, hisi_sas_rst_work_handler);
-+	hisi_hba->hw = hw;
-+	hisi_hba->dev = dev;
-+	hisi_hba->platform_dev = pdev;
-+	hisi_hba->shost = shost;
-+	SHOST_TO_SAS_HA(shost) = &hisi_hba->sha;
++	return bitmap;
++}
 +
-+	init_timer(&hisi_hba->timer);
-+
-+	if (hisi_sas_get_fw_info(hisi_hba) < 0)
- 		goto err_out;
- 
- 	if (dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64)) &&
+ /**
+  * The callpath to this function and upto writing the write
+  * queue pointer should be safe from interruption.
+@@ -1575,6 +1587,7 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
+ 	.hw_init = hisi_sas_v3_init,
+ 	.setup_itct = setup_itct_v3_hw,
+ 	.max_command_entries = HISI_SAS_COMMAND_ENTRIES_V3_HW,
++	.get_wideport_bitmap = get_wideport_bitmap_v3_hw,
+ 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v3_hdr),
+ 	.free_device = free_device_v3_hw,
+ 	.sl_notify = sl_notify_v3_hw,
 -- 
 1.9.1
