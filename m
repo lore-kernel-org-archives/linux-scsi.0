@@ -1,16 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 09/15] qla2xxx: Add function call to qpair for door bell
-Date: Wed, 7 Jun 2017 14:43:27 -0700
-Message-ID: <20170607214333.23110-10-himanshu.madhani@cavium.com>
+Subject: [PATCH 06/15] qla2xxx: Add fw_started flags to qpair
+Date: Wed, 7 Jun 2017 14:43:24 -0700
+Message-ID: <20170607214333.23110-7-himanshu.madhani@cavium.com>
 References: <20170607214333.23110-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0066.outbound.protection.outlook.com ([104.47.40.66]:46976
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam01on0051.outbound.protection.outlook.com ([104.47.32.51]:52384
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751559AbdFGVoA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 7 Jun 2017 17:44:00 -0400
+        id S1751687AbdFGVn6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 7 Jun 2017 17:43:58 -0400
 In-Reply-To: <20170607214333.23110-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,345 +19,138 @@ Cc: linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-Add call back to door bell for qpair. This help reduce access
-to qla_hw_data structure.
+Add fw_started flag to qpair to reduce access to
+qla_hw_data structure by each qpair.
 
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h    |  3 ++
- drivers/scsi/qla2xxx/qla_init.c   |  3 ++
- drivers/scsi/qla2xxx/qla_inline.h | 15 +++++++++
- drivers/scsi/qla2xxx/qla_os.c     | 35 ++++++++++++-------
- drivers/scsi/qla2xxx/qla_target.c | 71 +++++++++++++++++++++++++++------------
- drivers/scsi/qla2xxx/qla_target.h |  2 +-
- 6 files changed, 94 insertions(+), 35 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h    | 21 +++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_init.c   |  4 ++--
+ drivers/scsi/qla2xxx/qla_isr.c    |  4 ++--
+ drivers/scsi/qla2xxx/qla_target.c |  6 ++----
+ 4 files changed, 27 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index b3ba32773db4..17b13dd92511 100644
+index 18b37c864250..0dec148a4580 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -3272,6 +3272,9 @@ struct qla_qpair {
- 	uint16_t vp_idx;		/* vport ID */
- 	mempool_t *srb_mempool;
+@@ -3262,6 +3262,7 @@ struct qla_qpair {
+ 	/* move vha->flags.difdix_supported here */
+ 	uint32_t difdix_supported:1;
+ 	uint32_t delete_in_progress:1;
++	uint32_t fw_started:1;
  
-+	struct pci_dev  *pdev;
-+	void (*reqq_start_iocbs)(struct qla_qpair *);
+ 	uint16_t id;			/* qp number used with FW */
+ 	uint16_t vp_idx;		/* vport ID */
+@@ -4183,6 +4184,26 @@ struct qla2_sgx {
+ 	srb_t			*sp;
+ };
+ 
++#define QLA_FW_STARTED(_ha) {			\
++	int i;					\
++	_ha->flags.fw_started = 1;		\
++	_ha->base_qpair->fw_started = 1;	\
++	for (i = 0; i < _ha->max_qpairs; i++) {	\
++	if (_ha->queue_pair_map[i])	\
++	_ha->queue_pair_map[i]->fw_started = 1;	\
++	}					\
++}
 +
- 	/* to do: New driver: move queues to here instead of pointers */
- 	struct req_que *req;
- 	struct rsp_que *rsp;
++#define QLA_FW_STOPPED(_ha) {			\
++	int i;					\
++	_ha->flags.fw_started = 0;		\
++	_ha->base_qpair->fw_started = 0;	\
++	for (i = 0; i < _ha->max_qpairs; i++) {	\
++	if (_ha->queue_pair_map[i])	\
++	_ha->queue_pair_map[i]->fw_started = 0;	\
++	}					\
++}
++
+ /*
+  * Macros to help code, maintain, etc.
+  */
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index f586f4f7dc57..48c0a58330d4 100644
+index dcc306121a3d..e6a1f9ca0e95 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -7653,6 +7653,9 @@ struct qla_qpair *qla2xxx_create_qpair(struct scsi_qla_host *vha, int qos,
- 
- 		qpair->msix->in_use = 1;
- 		list_add_tail(&qpair->qp_list_elem, &vha->qp_list);
-+		qpair->pdev = ha->pdev;
-+		if (IS_QLA27XX(ha) || IS_QLA83XX(ha))
-+			qpair->reqq_start_iocbs = qla_83xx_start_iocbs;
- 
- 		mutex_unlock(&ha->mq_lock);
- 
-diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla_inline.h
-index bd8cb796f64e..9a2c86eacf44 100644
---- a/drivers/scsi/qla2xxx/qla_inline.h
-+++ b/drivers/scsi/qla2xxx/qla_inline.h
-@@ -352,3 +352,18 @@ qla_qpair_to_hint(struct qla_tgt *tgt, struct qla_qpair *qpair)
- 
- 	return NULL;
- }
-+
-+static inline void
-+qla_83xx_start_iocbs(struct qla_qpair *qpair)
-+{
-+	struct req_que *req = qpair->req;
-+
-+	req->ring_index++;
-+	if (req->ring_index == req->length) {
-+		req->ring_index = 0;
-+		req->ring_ptr = req->ring;
-+	} else
-+		req->ring_ptr++;
-+
-+	WRT_REG_DWORD(req->req_q_in, req->ring_index);
-+}
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 1d66954b7e5a..88e115fcea60 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -351,6 +351,28 @@ int qla2xxx_mqueuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd,
- 	struct qla_qpair *qpair);
- 
- /* -------------------------------------------------------------------------- */
-+static void qla_init_base_qpair(struct scsi_qla_host *vha, struct req_que *req,
-+    struct rsp_que *rsp)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	rsp->qpair = ha->base_qpair;
-+	rsp->req = req;
-+	ha->base_qpair->req = req;
-+	ha->base_qpair->rsp = rsp;
-+	ha->base_qpair->vha = vha;
-+	ha->base_qpair->qp_lock_ptr = &ha->hardware_lock;
-+	ha->base_qpair->use_shadow_reg = IS_SHADOW_REG_CAPABLE(ha) ? 1 : 0;
-+	ha->base_qpair->msix = &ha->msix_entries[QLA_MSIX_RSP_Q];
-+	INIT_LIST_HEAD(&ha->base_qpair->hints_list);
-+	ha->base_qpair->enable_class_2 = ql2xenableclass2;
-+	/* init qpair to this cpu. Will adjust at run time. */
-+	qla_cpu_update(rsp->qpair, smp_processor_id());
-+	ha->base_qpair->pdev = ha->pdev;
-+
-+	if (IS_QLA27XX(ha) || IS_QLA83XX(ha))
-+		ha->base_qpair->reqq_start_iocbs = qla_83xx_start_iocbs;
-+}
-+
- static int qla2x00_alloc_queues(struct qla_hw_data *ha, struct req_que *req,
- 				struct rsp_que *rsp)
- {
-@@ -378,18 +400,7 @@ static int qla2x00_alloc_queues(struct qla_hw_data *ha, struct req_que *req,
- 		goto fail_base_qpair;
+@@ -3207,7 +3207,7 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
+ 	} else {
+ 		ql_dbg(ql_dbg_init, vha, 0x00d3,
+ 		    "Init Firmware -- success.\n");
+-		ha->flags.fw_started = 1;
++		QLA_FW_STARTED(ha);
  	}
  
--	rsp->qpair = ha->base_qpair;
--	rsp->req = req;
--	ha->base_qpair->req = req;
--	ha->base_qpair->rsp = rsp;
--	ha->base_qpair->vha = vha;
--	ha->base_qpair->qp_lock_ptr = &ha->hardware_lock;
--	ha->base_qpair->use_shadow_reg = IS_SHADOW_REG_CAPABLE(ha) ? 1 : 0;
--	/* init qpair to this cpu. Will adjust at run time. */
--	ha->base_qpair->msix = &ha->msix_entries[QLA_MSIX_RSP_Q];
--	INIT_LIST_HEAD(&ha->base_qpair->hints_list);
--	ha->base_qpair->enable_class_2 = ql2xenableclass2;
--	qla_cpu_update(rsp->qpair, smp_processor_id());
-+	qla_init_base_qpair(vha, req, rsp);
+ 	return (rval);
+@@ -6841,7 +6841,7 @@ qla2x00_try_to_stop_firmware(scsi_qla_host_t *vha)
+ 		ret = qla2x00_stop_firmware(vha);
+ 	}
  
- 	if (ql2xmqsupport && ha->max_qpairs) {
- 		ha->queue_pair_map = kcalloc(ha->max_qpairs, sizeof(struct qla_qpair *),
+-	ha->flags.fw_started = 0;
++	QLA_FW_STOPPED(ha);
+ 	ha->flags.fw_init_done = 0;
+ }
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 3c9f9aa7f2c2..7ebd92ee94c3 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -710,7 +710,7 @@ qla2x00_async_event(scsi_qla_host_t *vha, struct rsp_que *rsp, uint16_t *mb)
+ 
+ 		ha->isp_ops->fw_dump(vha, 1);
+ 		ha->flags.fw_init_done = 0;
+-		ha->flags.fw_started = 0;
++		QLA_FW_STOPPED(ha);
+ 
+ 		if (IS_FWI2_CAPABLE(ha)) {
+ 			if (mb[1] == 0 && mb[2] == 0) {
+@@ -2759,7 +2759,7 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
+ 	struct sts_entry_24xx *pkt;
+ 	struct qla_hw_data *ha = vha->hw;
+ 
+-	if (!ha->flags.fw_started)
++	if (!rsp->qpair->fw_started)
+ 		return;
+ 
+ 	if (rsp->qpair->cpuid != smp_processor_id())
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 1d6cc24c0640..f18a50867119 100644
+index cbe6ff9f663e..8e855093740c 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1728,7 +1728,10 @@ static void qlt_24xx_send_abts_resp(struct qla_qpair *qpair,
- 
- 	/* Memory Barrier */
- 	wmb();
--	qla2x00_start_iocbs(vha, qpair->req);
-+	if (qpair->reqq_start_iocbs)
-+		qpair->reqq_start_iocbs(qpair);
-+	else
-+		qla2x00_start_iocbs(vha, qpair->req);
- }
- 
- /*
-@@ -2058,7 +2061,10 @@ static void qlt_24xx_send_task_mgmt_ctio(struct qla_qpair *qpair,
- 
- 	/* Memory Barrier */
- 	wmb();
--	qla2x00_start_iocbs(ha, qpair->req);
-+	if (qpair->reqq_start_iocbs)
-+		qpair->reqq_start_iocbs(qpair);
-+	else
-+		qla2x00_start_iocbs(ha, qpair->req);
- }
- 
- void qlt_free_mcmd(struct qla_tgt_mgmt_cmd *mcmd)
-@@ -2071,12 +2077,13 @@ EXPORT_SYMBOL(qlt_free_mcmd);
-  * ha->hardware_lock supposed to be held on entry. Might drop it, then
-  * reacquire
-  */
--void qlt_send_resp_ctio(scsi_qla_host_t *vha, struct qla_tgt_cmd *cmd,
-+void qlt_send_resp_ctio(struct qla_qpair *qpair, struct qla_tgt_cmd *cmd,
-     uint8_t scsi_status, uint8_t sense_key, uint8_t asc, uint8_t ascq)
+@@ -3047,7 +3047,6 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
+ 	uint8_t scsi_status)
  {
- 	struct atio_from_isp *atio = &cmd->atio;
- 	struct ctio7_to_24xx *ctio;
- 	uint16_t temp;
-+	struct scsi_qla_host *vha = cmd->vha;
- 
- 	ql_dbg(ql_dbg_tgt_dif, vha, 0x3066,
- 	    "Sending response CTIO7 (vha=%p, atio=%p, scsi_status=%02x, "
-@@ -2127,7 +2134,11 @@ void qlt_send_resp_ctio(scsi_qla_host_t *vha, struct qla_tgt_cmd *cmd,
- 	/* Memory Barrier */
- 	wmb();
- 
--	qla2x00_start_iocbs(vha, vha->req);
-+	if (qpair->reqq_start_iocbs)
-+		qpair->reqq_start_iocbs(qpair);
-+	else
-+		qla2x00_start_iocbs(vha, qpair->req);
-+
- out:
- 	return;
- }
-@@ -2205,7 +2216,7 @@ static int qlt_pci_map_calc_cnt(struct qla_tgt_prm *prm)
- 	BUG_ON(cmd->sg_cnt == 0);
- 
- 	prm->sg = (struct scatterlist *)cmd->sg;
--	prm->seg_cnt = pci_map_sg(prm->tgt->ha->pdev, cmd->sg,
-+	prm->seg_cnt = pci_map_sg(cmd->qpair->pdev, cmd->sg,
- 	    cmd->sg_cnt, cmd->dma_data_direction);
- 	if (unlikely(prm->seg_cnt == 0))
- 		goto out_err;
-@@ -2232,7 +2243,7 @@ static int qlt_pci_map_calc_cnt(struct qla_tgt_prm *prm)
- 
- 		if (cmd->prot_sg_cnt) {
- 			prm->prot_sg      = cmd->prot_sg;
--			prm->prot_seg_cnt = pci_map_sg(prm->tgt->ha->pdev,
-+			prm->prot_seg_cnt = pci_map_sg(cmd->qpair->pdev,
- 				cmd->prot_sg, cmd->prot_sg_cnt,
- 				cmd->dma_data_direction);
- 			if (unlikely(prm->prot_seg_cnt == 0))
-@@ -2260,21 +2271,24 @@ static int qlt_pci_map_calc_cnt(struct qla_tgt_prm *prm)
- 
- static void qlt_unmap_sg(struct scsi_qla_host *vha, struct qla_tgt_cmd *cmd)
- {
+ 	struct scsi_qla_host *vha = cmd->vha;
 -	struct qla_hw_data *ha = vha->hw;
--
-+	struct qla_hw_data *ha;
-+	struct qla_qpair *qpair;
- 	if (!cmd->sg_mapped)
- 		return;
+ 	struct qla_qpair *qpair = cmd->qpair;
+ 	struct ctio7_to_24xx *pkt;
+ 	struct qla_tgt_prm prm;
+@@ -3086,7 +3085,7 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
+ 	else
+ 		vha->tgt_counters.core_qla_que_buf++;
  
--	pci_unmap_sg(ha->pdev, cmd->sg, cmd->sg_cnt, cmd->dma_data_direction);
-+	qpair = cmd->qpair;
-+
-+	pci_unmap_sg(qpair->pdev, cmd->sg, cmd->sg_cnt,
-+	    cmd->dma_data_direction);
- 	cmd->sg_mapped = 0;
- 
- 	if (cmd->prot_sg_cnt)
--		pci_unmap_sg(ha->pdev, cmd->prot_sg, cmd->prot_sg_cnt,
-+		pci_unmap_sg(qpair->pdev, cmd->prot_sg, cmd->prot_sg_cnt,
- 			cmd->dma_data_direction);
- 
- 	if (!cmd->ctx)
- 		return;
--
-+	ha = vha->hw;
- 	if (cmd->ctx_dsd_alloced)
- 		qla2x00_clean_dsd_pool(ha, cmd->ctx);
- 
-@@ -2324,7 +2338,6 @@ static inline void *qlt_get_req_pkt(struct req_que *req)
- /* ha->hardware_lock supposed to be held on entry */
- static inline uint32_t qlt_make_handle(struct qla_qpair *qpair)
+-	if (!ha->flags.fw_started || cmd->reset_count != ha->chip_reset) {
++	if (!qpair->fw_started || cmd->reset_count != qpair->chip_reset) {
+ 		/*
+ 		 * Either the port is not online or this request was from
+ 		 * previous life, just abort the processing.
+@@ -3206,7 +3205,6 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
  {
--	struct scsi_qla_host *vha = qpair->vha;
- 	uint32_t h;
- 	int index;
- 	uint8_t found = 0;
-@@ -2349,9 +2362,9 @@ static inline uint32_t qlt_make_handle(struct qla_qpair *qpair)
- 	if (found) {
- 		req->current_outstanding_cmd = h;
- 	} else {
--		ql_dbg(ql_dbg_io, vha, 0x305b,
--			"qla_target(%d): Ran out of empty cmd slots\n",
--			vha->vp_idx);
-+		ql_dbg(ql_dbg_io, qpair->vha, 0x305b,
-+		    "qla_target(%d): Ran out of empty cmd slots\n",
-+		    qpair->vha->vp_idx);
- 		h = QLA_TGT_NULL_HANDLE;
- 	}
+ 	struct ctio7_to_24xx *pkt;
+ 	struct scsi_qla_host *vha = cmd->vha;
+-	struct qla_hw_data *ha = vha->hw;
+ 	struct qla_tgt *tgt = cmd->tgt;
+ 	struct qla_tgt_prm prm;
+ 	unsigned long flags = 0;
+@@ -3223,7 +3221,7 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
+ 	if (qlt_pci_map_calc_cnt(&prm) != 0)
+ 		return -EAGAIN;
  
-@@ -3189,7 +3202,10 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
- 
- 	/* Memory Barrier */
- 	wmb();
--	qla2x00_start_iocbs(vha, qpair->req);
-+	if (qpair->reqq_start_iocbs)
-+		qpair->reqq_start_iocbs(qpair);
-+	else
-+		qla2x00_start_iocbs(vha, qpair->req);
- 	spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
- 
- 	return 0;
-@@ -3264,7 +3280,10 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
- 
- 	/* Memory Barrier */
- 	wmb();
--	qla2x00_start_iocbs(vha, qpair->req);
-+	if (qpair->reqq_start_iocbs)
-+		qpair->reqq_start_iocbs(qpair);
-+	else
-+		qla2x00_start_iocbs(vha, qpair->req);
- 	spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
- 
- 	return res;
-@@ -3282,7 +3301,7 @@ EXPORT_SYMBOL(qlt_rdy_to_xfer);
-  * it is assumed either hardware_lock or qpair lock is held.
-  */
- static void
--qlt_handle_dif_error(struct scsi_qla_host *vha, struct qla_tgt_cmd *cmd,
-+qlt_handle_dif_error(struct qla_qpair *qpair, struct qla_tgt_cmd *cmd,
- 	struct ctio_crc_from_fw *sts)
- {
- 	uint8_t		*ap = &sts->actual_dif[0];
-@@ -3290,6 +3309,7 @@ qlt_handle_dif_error(struct scsi_qla_host *vha, struct qla_tgt_cmd *cmd,
- 	uint64_t	lba = cmd->se_cmd.t_task_lba;
- 	uint8_t scsi_status, sense_key, asc, ascq;
- 	unsigned long flags;
-+	struct scsi_qla_host *vha = cmd->vha;
- 
- 	cmd->trc_flags |= TRC_DIF_ERR;
- 
-@@ -3370,7 +3390,8 @@ qlt_handle_dif_error(struct scsi_qla_host *vha, struct qla_tgt_cmd *cmd,
- 		}
- 		spin_unlock_irqrestore(&cmd->cmd_lock, flags);
- 
--		qlt_send_resp_ctio(vha, cmd, scsi_status, sense_key, asc, ascq);
-+		qlt_send_resp_ctio(qpair, cmd, scsi_status, sense_key, asc,
-+		    ascq);
- 		/* assume scsi status gets out on the wire.
- 		 * Will not wait for completion.
- 		 */
-@@ -3525,7 +3546,10 @@ static int __qlt_send_term_exchange(struct qla_qpair *qpair,
- 
- 	/* Memory Barrier */
- 	wmb();
--	qla2x00_start_iocbs(vha, qpair->req);
-+	if (qpair->reqq_start_iocbs)
-+		qpair->reqq_start_iocbs(qpair);
-+	else
-+		qla2x00_start_iocbs(vha, qpair->req);
- 	return ret;
- }
- 
-@@ -3883,7 +3907,7 @@ static void qlt_do_ctio_completion(struct scsi_qla_host *vha,
- 			    *((u64 *)&crc->actual_dif[0]),
- 			    *((u64 *)&crc->expected_dif[0]));
- 
--			qlt_handle_dif_error(vha, cmd, ctio);
-+			qlt_handle_dif_error(qpair, cmd, ctio);
- 			return;
- 		}
- 		default:
-@@ -5121,7 +5145,10 @@ static int __qlt_send_busy(struct qla_qpair *qpair,
- 	ctio24->u.status1.scsi_status = cpu_to_le16(status);
- 	/* Memory Barrier */
- 	wmb();
--	qla2x00_start_iocbs(vha, qpair->req);
-+	if (qpair->reqq_start_iocbs)
-+		qpair->reqq_start_iocbs(qpair);
-+	else
-+		qla2x00_start_iocbs(vha, qpair->req);
- 	return 0;
- }
- 
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index 5f497311d7b7..30a389445de4 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -1097,7 +1097,7 @@ extern int qlt_free_qfull_cmds(struct qla_qpair *);
- extern void qlt_logo_completion_handler(fc_port_t *, int);
- extern void qlt_do_generation_tick(struct scsi_qla_host *, int *);
- 
--void qlt_send_resp_ctio(scsi_qla_host_t *, struct qla_tgt_cmd *, uint8_t,
-+void qlt_send_resp_ctio(struct qla_qpair *, struct qla_tgt_cmd *, uint8_t,
-     uint8_t, uint8_t, uint8_t);
- extern void qlt_abort_cmd_on_host_reset(struct scsi_qla_host *,
-     struct qla_tgt_cmd *);
+-	if (!ha->flags.fw_started || (cmd->reset_count != ha->chip_reset) ||
++	if (!qpair->fw_started || (cmd->reset_count != qpair->chip_reset) ||
+ 	    (cmd->sess && cmd->sess->deleted)) {
+ 		/*
+ 		 * Either the port is not online or this request was from
 -- 
 2.12.0
