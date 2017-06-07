@@ -1,29 +1,173 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH V4 2/2] scsi: ufshcd-pci: Add Intel CNL support
-Date: Wed, 7 Jun 2017 06:16:25 -0700
-Message-ID: <20170607131625.GB18252@infradead.org>
-References: <1496748931-17162-1-git-send-email-adrian.hunter@intel.com>
- <1496748931-17162-3-git-send-email-adrian.hunter@intel.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH v4 17/23] scsi: hisi_sas: add v3 code to send ATA frame
+Date: Wed, 7 Jun 2017 23:20:20 +0800
+Message-ID: <1496848826-20534-18-git-send-email-john.garry@huawei.com>
+References: <1496848826-20534-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:42769 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751664AbdFGNQ2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2017 09:16:28 -0400
-Content-Disposition: inline
-In-Reply-To: <1496748931-17162-3-git-send-email-adrian.hunter@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1496848826-20534-1-git-send-email-john.garry@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: linuxarm@huawei.com, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@infradead.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Hunter <adrian.hunter@intel.com>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Subhash Jadavani <subhashj@codeaurora.org>, Santosh Yaragnavi <santosh.sy@samsung.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Szymon Mielczarek <szymonx.mielczarek@intel.com>, Michal Potomski <michalx.potomski@intel.com>, Grzegorz Janca <grzegorz.janca@intel.com>, Joao Pinto <Joao.Pinto@synopsys.com>
 
-On Tue, Jun 06, 2017 at 02:35:31PM +0300, Adrian Hunter wrote:
-> Add PCI id and variant ops for Intel CNL UFS host controller.
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Looks good:
+Add code to prepare ATA frame for v3 hw
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 106 +++++++++++++++++++++++++++++++++
+ 1 file changed, 106 insertions(+)
 
-It would be great if we could fold tc-dwc-g210-pci into ufshcd-pci the
-same way.
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index d014e0b..344230b 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -171,8 +171,11 @@
+ #define CMD_HDR_CMD_OFF			29
+ #define CMD_HDR_CMD_MSK			(0x7 << CMD_HDR_CMD_OFF)
+ /* dw1 */
++#define CMD_HDR_UNCON_CMD_OFF	3
+ #define CMD_HDR_DIR_OFF			5
+ #define CMD_HDR_DIR_MSK			(0x3 << CMD_HDR_DIR_OFF)
++#define CMD_HDR_RESET_OFF		7
++#define CMD_HDR_RESET_MSK		(0x1 << CMD_HDR_RESET_OFF)
+ #define CMD_HDR_VDTL_OFF		10
+ #define CMD_HDR_VDTL_MSK		(0x1 << CMD_HDR_VDTL_OFF)
+ #define CMD_HDR_FRAME_TYPE_OFF		11
+@@ -182,6 +185,8 @@
+ /* dw2 */
+ #define CMD_HDR_CFL_OFF			0
+ #define CMD_HDR_CFL_MSK			(0x1ff << CMD_HDR_CFL_OFF)
++#define CMD_HDR_NCQ_TAG_OFF		10
++#define CMD_HDR_NCQ_TAG_MSK		(0x1f << CMD_HDR_NCQ_TAG_OFF)
+ #define CMD_HDR_MRFL_OFF		15
+ #define CMD_HDR_MRFL_MSK		(0x1ff << CMD_HDR_MRFL_OFF)
+ #define CMD_HDR_SG_MOD_OFF		24
+@@ -260,6 +265,11 @@ enum {
+ #define DIR_TO_DEVICE 2
+ #define DIR_RESERVED 3
+ 
++#define CMD_IS_UNCONSTRAINT(cmd) \
++	((cmd == ATA_CMD_READ_LOG_EXT) || \
++	(cmd == ATA_CMD_READ_LOG_DMA_EXT) || \
++	(cmd == ATA_CMD_DEV_RESET))
++
+ static u32 hisi_sas_read32(struct hisi_hba *hisi_hba, u32 off)
+ {
+ 	void __iomem *regs = hisi_hba->regs + off;
+@@ -725,6 +735,101 @@ static int prep_smp_v3_hw(struct hisi_hba *hisi_hba,
+ 	return rc;
+ }
+ 
++static int get_ncq_tag_v3_hw(struct sas_task *task, u32 *tag)
++{
++	struct ata_queued_cmd *qc = task->uldd_task;
++
++	if (qc) {
++		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
++			qc->tf.command == ATA_CMD_FPDMA_READ) {
++			*tag = qc->tag;
++			return 1;
++		}
++	}
++	return 0;
++}
++
++static int prep_ata_v3_hw(struct hisi_hba *hisi_hba,
++			  struct hisi_sas_slot *slot)
++{
++	struct sas_task *task = slot->task;
++	struct domain_device *device = task->dev;
++	struct domain_device *parent_dev = device->parent;
++	struct hisi_sas_device *sas_dev = device->lldd_dev;
++	struct hisi_sas_cmd_hdr *hdr = slot->cmd_hdr;
++	struct asd_sas_port *sas_port = device->port;
++	struct hisi_sas_port *port = to_hisi_sas_port(sas_port);
++	u8 *buf_cmd;
++	int has_data = 0, rc = 0, hdr_tag = 0;
++	u32 dw1 = 0, dw2 = 0;
++
++	hdr->dw0 = cpu_to_le32(port->id << CMD_HDR_PORT_OFF);
++	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
++		hdr->dw0 |= cpu_to_le32(3 << CMD_HDR_CMD_OFF);
++	else
++		hdr->dw0 |= cpu_to_le32(4 << CMD_HDR_CMD_OFF);
++
++	switch (task->data_dir) {
++	case DMA_TO_DEVICE:
++		has_data = 1;
++		dw1 |= DIR_TO_DEVICE << CMD_HDR_DIR_OFF;
++		break;
++	case DMA_FROM_DEVICE:
++		has_data = 1;
++		dw1 |= DIR_TO_INI << CMD_HDR_DIR_OFF;
++		break;
++	default:
++		dw1 &= ~CMD_HDR_DIR_MSK;
++	}
++
++	if ((task->ata_task.fis.command == ATA_CMD_DEV_RESET) &&
++			(task->ata_task.fis.control & ATA_SRST))
++		dw1 |= 1 << CMD_HDR_RESET_OFF;
++
++	dw1 |= (hisi_sas_get_ata_protocol(
++		task->ata_task.fis.command, task->data_dir))
++		<< CMD_HDR_FRAME_TYPE_OFF;
++	dw1 |= sas_dev->device_id << CMD_HDR_DEV_ID_OFF;
++
++	if (CMD_IS_UNCONSTRAINT(task->ata_task.fis.command))
++		dw1 |= 1 << CMD_HDR_UNCON_CMD_OFF;
++
++	hdr->dw1 = cpu_to_le32(dw1);
++
++	/* dw2 */
++	if (task->ata_task.use_ncq && get_ncq_tag_v3_hw(task, &hdr_tag)) {
++		task->ata_task.fis.sector_count |= (u8) (hdr_tag << 3);
++		dw2 |= hdr_tag << CMD_HDR_NCQ_TAG_OFF;
++	}
++
++	dw2 |= (HISI_SAS_MAX_STP_RESP_SZ / 4) << CMD_HDR_CFL_OFF |
++			2 << CMD_HDR_SG_MOD_OFF;
++	hdr->dw2 = cpu_to_le32(dw2);
++
++	/* dw3 */
++	hdr->transfer_tags = cpu_to_le32(slot->idx);
++
++	if (has_data) {
++		rc = prep_prd_sge_v3_hw(hisi_hba, slot, hdr, task->scatter,
++					slot->n_elem);
++		if (rc)
++			return rc;
++	}
++
++	hdr->data_transfer_len = cpu_to_le32(task->total_xfer_len);
++	hdr->cmd_table_addr = cpu_to_le64(slot->command_table_dma);
++	hdr->sts_buffer_addr = cpu_to_le64(slot->status_buffer_dma);
++
++	buf_cmd = slot->command_table;
++
++	if (likely(!task->ata_task.device_control_reg_update))
++		task->ata_task.fis.flags |= 0x80; /* C=1: update ATA cmd reg */
++	/* fill in command FIS */
++	memcpy(buf_cmd, &task->ata_task.fis, sizeof(struct host_to_dev_fis));
++
++	return 0;
++}
++
+ static int phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
+ {
+ 	int i, res = 0;
+@@ -1324,6 +1429,7 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
+ 	.sl_notify = sl_notify_v3_hw,
+ 	.prep_ssp = prep_ssp_v3_hw,
+ 	.prep_smp = prep_smp_v3_hw,
++	.prep_stp = prep_ata_v3_hw,
+ 	.get_free_slot = get_free_slot_v3_hw,
+ 	.start_delivery = start_delivery_v3_hw,
+ 	.slot_complete = slot_complete_v3_hw,
+-- 
+1.9.1
