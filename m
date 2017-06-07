@@ -1,97 +1,48 @@
-From: "Tran, Quinn" <Quinn.Tran@cavium.com>
-Subject: Re: [PATCH 1/3] target: Add support for TMR percpu reference counting
-Date: Wed, 7 Jun 2017 01:13:32 +0000
-Message-ID: <386D71C4-353C-4237-8345-3043E8773EAF@cavium.com>
-References: <1496527808-28789-1-git-send-email-nab@linux-iscsi.org>
- <1496527808-28789-2-git-send-email-nab@linux-iscsi.org>
+From: James Smart <jsmart2021@gmail.com>
+Subject: Re: [PATCH v2 00/17] lpfc updates for 11.4.0.0
+Date: Tue, 6 Jun 2017 21:20:08 -0700
+Message-ID: <bd39df43-3f6c-c799-37a7-ede5790540d8@gmail.com>
+References: <20170602040711.21046-1-jsmart2021@gmail.com>
+ <yq14lvtex4v.fsf@oracle.com>
+Reply-To: jsmart2021@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1496527808-28789-2-git-send-email-nab@linux-iscsi.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:34045 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751049AbdFGEUM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2017 00:20:12 -0400
+Received: by mail-pf0-f194.google.com with SMTP id u1so314324pfg.1
+        for <linux-scsi@vger.kernel.org>; Tue, 06 Jun 2017 21:20:12 -0700 (PDT)
+In-Reply-To: <yq14lvtex4v.fsf@oracle.com>
 Content-Language: en-US
-Content-ID: <746EC59593ECE143AA45857A96AAED99@namprd07.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
-TG9va3MgZ29vZC4NCg0KUmVnYXJkcywNClF1aW5uIFRyYW4NCg0KLS0tLS1PcmlnaW5hbCBNZXNz
-YWdlLS0tLS0NCkZyb206IE5pY2hvbGFzIEJlbGxpbmdlciA8bmFiQGxpbnV4LWlzY3NpLm9yZz4N
-CkRhdGU6IFNhdHVyZGF5LCBKdW5lIDMsIDIwMTcgYXQgMzoxMCBQTQ0KVG86IHRhcmdldC1kZXZl
-bCA8dGFyZ2V0LWRldmVsQHZnZXIua2VybmVsLm9yZz4NCkNjOiBsaW51eC1zY3NpIDxsaW51eC1z
-Y3NpQHZnZXIua2VybmVsLm9yZz4sIGxrbWwgPGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc+
-LCBOaWNob2xhcyBCZWxsaW5nZXIgPG5hYkBsaW51eC1pc2NzaS5vcmc+LCAiTWFkaGFuaSwgSGlt
-YW5zaHUiIDxIaW1hbnNodS5NYWRoYW5pQGNhdml1bS5jb20+LCAiVHJhbiwgUXVpbm4iIDxRdWlu
-bi5UcmFuQGNhdml1bS5jb20+LCBNaWtlIENocmlzdGllIDxtY2hyaXN0aUByZWRoYXQuY29tPiwg
-SGFubmVzIFJlaW5lY2tlIDxoYXJlQHN1c2UuY29tPiwgQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBs
-c3QuZGU+DQpTdWJqZWN0OiBbUEFUQ0ggMS8zXSB0YXJnZXQ6IEFkZCBzdXBwb3J0IGZvciBUTVIg
-cGVyY3B1IHJlZmVyZW5jZSBjb3VudGluZw0KDQogICAgRnJvbTogTmljaG9sYXMgQmVsbGluZ2Vy
-IDxuYWJAbGludXgtaXNjc2kub3JnPg0KICAgIA0KICAgIFRoaXMgcGF0Y2ggaW50cm9kdWNlcyBU
-TVIgcGVyY3B1IHJlZmVyZW5jZSBjb3VudGluZyB1c2luZw0KICAgIHNlX2x1bi0+bHVuX3JlZiBp
-biB0cmFuc3BvcnRfbG9va3VwX3Rtcl9sdW4oKSwgZm9sbG93aW5nDQogICAgaG93IGV4aXN0aW5n
-IG5vbiBUTVIgcGVyIHNlX2x1biByZWZlcmVuY2UgY291bnRpbmcgd29ya3MNCiAgICB3aXRoaW4g
-dHJhbnNwb3J0X2xvb2t1cF9jbWRfbHVuKCkuDQogICAgDQogICAgSXQgYWxzbyBhZGRzIGV4cGxp
-Y2l0IHRyYW5zcG9ydF9sdW5fcmVtb3ZlX2NtZCgpIGNhbGxzIHRvDQogICAgZHJvcCB0aGUgcmVm
-ZXJlbmNlIGluIHRoZSB0aHJlZSB0bXIgcmVsYXRlZCBsb2NhdGlvbnMgdGhhdA0KICAgIGludm9r
-ZSB0cmFuc3BvcnRfY21kX2NoZWNrX3N0b3BfdG9fZmFicmljKCk7DQogICAgDQogICAgICAgLSB0
-YXJnZXRfdG1yX3dvcmsoKSBkdXJpbmcgbm9ybWFsIC0+cXVldWVfdG1fcnNwKCkNCiAgICAgICAt
-IHRhcmdldF9jb21wbGV0ZV90bXJfZmFpbHVyZSgpIGR1cmluZyBlcnJvciAtPnF1ZXVlX3RtX3Jz
-cCgpDQogICAgICAgLSB0cmFuc3BvcnRfZ2VuZXJpY19oYW5kbGVfdG1yKCkgZHVyaW5nIGVhcmx5
-IGZhaWx1cmUNCiAgICANCiAgICBBbHNvLCBub3RlIHRoZSBleGNlcHRpb24gcGF0aHMgaW4gdHJh
-bnNwb3J0X2dlbmVyaWNfZnJlZV9jbWQoKQ0KICAgIGFuZCB0cmFuc3BvcnRfY21kX2ZpbmlzaF9h
-Ym9ydCgpIGFscmVhZHkgY2hlY2sgU0NGX1NFX0xVTl9DTUQsDQogICAgYW5kIHdpbGwgaW52b2tl
-IHRyYW5zcG9ydF9sdW5fcmVtb3ZlX2NtZCgpIHdoZW4gbmVjZXNzYXJ5Lg0KICAgIA0KICAgIENj
-OiBIaW1hbnNodSBNYWRoYW5pIDxoaW1hbnNodS5tYWRoYW5pQGNhdml1bS5jb20+DQogICAgQ2M6
-IFF1aW5uIFRyYW4gPHF1aW5uLnRyYW5AY2F2aXVtLmNvbT4NCiAgICBDYzogTWlrZSBDaHJpc3Rp
-ZSA8bWNocmlzdGlAcmVkaGF0LmNvbT4NCiAgICBDYzogSGFubmVzIFJlaW5lY2tlIDxoYXJlQHN1
-c2UuY29tPg0KICAgIENjOiBDaHJpc3RvcGggSGVsbHdpZyA8aGNoQGxzdC5kZT4NCiAgICBTaWdu
-ZWQtb2ZmLWJ5OiBOaWNob2xhcyBCZWxsaW5nZXIgPG5hYkBsaW51eC1pc2NzaS5vcmc+DQogICAg
-LS0tDQogICAgIGRyaXZlcnMvdGFyZ2V0L3RhcmdldF9jb3JlX2RldmljZS5jICAgIHwgMTQgKysr
-KysrKysrKy0tLS0NCiAgICAgZHJpdmVycy90YXJnZXQvdGFyZ2V0X2NvcmVfdHJhbnNwb3J0LmMg
-fCAgMyArKysNCiAgICAgMiBmaWxlcyBjaGFuZ2VkLCAxMyBpbnNlcnRpb25zKCspLCA0IGRlbGV0
-aW9ucygtKQ0KICAgIA0KICAgIGRpZmYgLS1naXQgYS9kcml2ZXJzL3RhcmdldC90YXJnZXRfY29y
-ZV9kZXZpY2UuYyBiL2RyaXZlcnMvdGFyZ2V0L3RhcmdldF9jb3JlX2RldmljZS5jDQogICAgaW5k
-ZXggOGYwZTBlMy4uMTFjODBjNCAxMDA2NDQNCiAgICAtLS0gYS9kcml2ZXJzL3RhcmdldC90YXJn
-ZXRfY29yZV9kZXZpY2UuYw0KICAgICsrKyBiL2RyaXZlcnMvdGFyZ2V0L3RhcmdldF9jb3JlX2Rl
-dmljZS5jDQogICAgQEAgLTE2OCwxMSArMTY4LDIwIEBAIGludCB0cmFuc3BvcnRfbG9va3VwX3Rt
-cl9sdW4oc3RydWN0IHNlX2NtZCAqc2VfY21kLCB1NjQgdW5wYWNrZWRfbHVuKQ0KICAgICAJcmN1
-X3JlYWRfbG9jaygpOw0KICAgICAJZGV2ZSA9IHRhcmdldF9uYWNsX2ZpbmRfZGV2ZShuYWNsLCB1
-bnBhY2tlZF9sdW4pOw0KICAgICAJaWYgKGRldmUpIHsNCiAgICAtCQlzZV9jbWQtPnNlX2x1biA9
-IHJjdV9kZXJlZmVyZW5jZShkZXZlLT5zZV9sdW4pOw0KICAgICAJCXNlX2x1biA9IHJjdV9kZXJl
-ZmVyZW5jZShkZXZlLT5zZV9sdW4pOw0KICAgICsNCiAgICArCQlpZiAoIXBlcmNwdV9yZWZfdHJ5
-Z2V0X2xpdmUoJnNlX2x1bi0+bHVuX3JlZikpIHsNCiAgICArCQkJc2VfbHVuID0gTlVMTDsNCiAg
-ICArCQkJZ290byBvdXRfdW5sb2NrOw0KICAgICsJCX0NCiAgICArDQogICAgKwkJc2VfY21kLT5z
-ZV9sdW4gPSByY3VfZGVyZWZlcmVuY2UoZGV2ZS0+c2VfbHVuKTsNCiAgICAgCQlzZV9jbWQtPnBy
-X3Jlc19rZXkgPSBkZXZlLT5wcl9yZXNfa2V5Ow0KICAgICAJCXNlX2NtZC0+b3JpZ19mZV9sdW4g
-PSB1bnBhY2tlZF9sdW47DQogICAgKwkJc2VfY21kLT5zZV9jbWRfZmxhZ3MgfD0gU0NGX1NFX0xV
-Tl9DTUQ7DQogICAgKwkJc2VfY21kLT5sdW5fcmVmX2FjdGl2ZSA9IHRydWU7DQogICAgIAl9DQog
-ICAgK291dF91bmxvY2s6DQogICAgIAlyY3VfcmVhZF91bmxvY2soKTsNCiAgICAgDQogICAgIAlp
-ZiAoIXNlX2x1bikgew0KICAgIEBAIC0xODIsOSArMTkxLDYgQEAgaW50IHRyYW5zcG9ydF9sb29r
-dXBfdG1yX2x1bihzdHJ1Y3Qgc2VfY21kICpzZV9jbWQsIHU2NCB1bnBhY2tlZF9sdW4pDQogICAg
-IAkJCXVucGFja2VkX2x1bik7DQogICAgIAkJcmV0dXJuIC1FTk9ERVY7DQogICAgIAl9DQogICAg
-LQkvKg0KICAgIC0JICogWFhYOiBBZGQgcGVyY3B1IHNlX2x1bi0+bHVuX3JlZiByZWZlcmVuY2Ug
-Y291bnQgZm9yIFRNUg0KICAgIC0JICovDQogICAgIAlzZV9jbWQtPnNlX2RldiA9IHJjdV9kZXJl
-ZmVyZW5jZV9yYXcoc2VfbHVuLT5sdW5fc2VfZGV2KTsNCiAgICAgCXNlX3Rtci0+dG1yX2RldiA9
-IHJjdV9kZXJlZmVyZW5jZV9yYXcoc2VfbHVuLT5sdW5fc2VfZGV2KTsNCiAgICAgDQogICAgZGlm
-ZiAtLWdpdCBhL2RyaXZlcnMvdGFyZ2V0L3RhcmdldF9jb3JlX3RyYW5zcG9ydC5jIGIvZHJpdmVy
-cy90YXJnZXQvdGFyZ2V0X2NvcmVfdHJhbnNwb3J0LmMNCiAgICBpbmRleCBmMTZhNzg5Li44M2Jm
-Yzk3IDEwMDY0NA0KICAgIC0tLSBhL2RyaXZlcnMvdGFyZ2V0L3RhcmdldF9jb3JlX3RyYW5zcG9y
-dC5jDQogICAgKysrIGIvZHJpdmVycy90YXJnZXQvdGFyZ2V0X2NvcmVfdHJhbnNwb3J0LmMNCiAg
-ICBAQCAtMTU4OCw2ICsxNTg4LDcgQEAgc3RhdGljIHZvaWQgdGFyZ2V0X2NvbXBsZXRlX3Rtcl9m
-YWlsdXJlKHN0cnVjdCB3b3JrX3N0cnVjdCAqd29yaykNCiAgICAgCXNlX2NtZC0+c2VfdG1yX3Jl
-cS0+cmVzcG9uc2UgPSBUTVJfTFVOX0RPRVNfTk9UX0VYSVNUOw0KICAgICAJc2VfY21kLT5zZV90
-Zm8tPnF1ZXVlX3RtX3JzcChzZV9jbWQpOw0KICAgICANCiAgICArCXRyYW5zcG9ydF9sdW5fcmVt
-b3ZlX2NtZChzZV9jbWQpOw0KICAgICAJdHJhbnNwb3J0X2NtZF9jaGVja19zdG9wX3RvX2ZhYnJp
-YyhzZV9jbWQpOw0KICAgICB9DQogICAgIA0KICAgIEBAIC0zMTk5LDYgKzMyMDAsNyBAQCBzdGF0
-aWMgdm9pZCB0YXJnZXRfdG1yX3dvcmsoc3RydWN0IHdvcmtfc3RydWN0ICp3b3JrKQ0KICAgICAJ
-Y21kLT5zZV90Zm8tPnF1ZXVlX3RtX3JzcChjbWQpOw0KICAgICANCiAgICAgY2hlY2tfc3RvcDoN
-CiAgICArCXRyYW5zcG9ydF9sdW5fcmVtb3ZlX2NtZChjbWQpOw0KICAgICAJdHJhbnNwb3J0X2Nt
-ZF9jaGVja19zdG9wX3RvX2ZhYnJpYyhjbWQpOw0KICAgICB9DQogICAgIA0KICAgIEBAIC0zMjIx
-LDYgKzMyMjMsNyBAQCBpbnQgdHJhbnNwb3J0X2dlbmVyaWNfaGFuZGxlX3RtcigNCiAgICAgCQlw
-cl93YXJuX3JhdGVsaW1pdGVkKCJoYW5kbGVfdG1yIGNhdWdodCBDTURfVF9BQk9SVEVEIFRNUiAl
-ZCINCiAgICAgCQkJInJlZl90YWc6ICVsbHUgdGFnOiAlbGx1XG4iLCBjbWQtPnNlX3Rtcl9yZXEt
-PmZ1bmN0aW9uLA0KICAgICAJCQljbWQtPnNlX3Rtcl9yZXEtPnJlZl90YXNrX3RhZywgY21kLT50
-YWcpOw0KICAgICsJCXRyYW5zcG9ydF9sdW5fcmVtb3ZlX2NtZChjbWQpOw0KICAgICAJCXRyYW5z
-cG9ydF9jbWRfY2hlY2tfc3RvcF90b19mYWJyaWMoY21kKTsNCiAgICAgCQlyZXR1cm4gMDsNCiAg
-ICAgCX0NCiAgICAtLSANCiAgICAxLjkuMQ0KICAgIA0KICAgIA0KDQo=
+On 6/5/2017 6:13 PM, Martin K. Petersen wrote:
+> 
+> Hi James,
+> 
+>> This patch set provides a number of bug fixes, code cleanups, and
+>> error handling in lpfc.
+>>
+>> The patches were cut against the Martin's 4.12/scsi-fixes tree.  There
+>> are no outside dependencies. The patches should merge via Martin's
+>> tree.
+> 
+> We're approaching rc5 and there are several hundred-liners in this
+> submission. The EQ delay logic patch in particular looks like a feature
+> rather than a bug fix.
+> 
+> How many of these are critical to get into 4.12 vs. 4.13?
+> 
+
+
+What can be excluded: patch 04 and 16.
+
+All others I'd like to get in 4.12
+
+-- james
