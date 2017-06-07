@@ -1,156 +1,280 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 06/15] qla2xxx: Add fw_started flags to qpair
-Date: Wed, 7 Jun 2017 14:43:24 -0700
-Message-ID: <20170607214333.23110-7-himanshu.madhani@cavium.com>
+Subject: [PATCH 05/15] qla2xxx: Add debug knob for user control workload
+Date: Wed, 7 Jun 2017 14:43:23 -0700
+Message-ID: <20170607214333.23110-6-himanshu.madhani@cavium.com>
 References: <20170607214333.23110-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0051.outbound.protection.outlook.com ([104.47.32.51]:52384
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751687AbdFGVn6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 7 Jun 2017 17:43:58 -0400
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <20170607214333.23110-1-himanshu.madhani@cavium.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel@vger.kernel.org, nab@linux-iscsi.org
 Cc: linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
+List-Id: linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-Add fw_started flag to qpair to reduce access to
-qla_hw_data structure by each qpair.
+For Target mode, user can control the work load by placing qla2xxx's
+irq vector on certain CPU via the smp_affinity settings. This patch
+allows user to control the number of QPair's irq to be active. The
+irqs are allocated at driver load time until unload. The work itself
+is placed on the QPair based on user setting.
+
+New module parameter ql2xuctrlirq is added for allowing user to
+control IRQ affinity.
+
+Usage:
+  modprobe qla2xxx qlini_mode=disabled ql2xuctrlirq=1
+  mount -t debugfs none /sys/kernel/debug
+  echo 2 > /sys/kernel/debug/qla2xxx/qla2xxx_[host num]/naqp
+  echo [cpu id] > /proc/irq/[irq id]/smp_affinity_list
 
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h    | 21 +++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_init.c   |  4 ++--
- drivers/scsi/qla2xxx/qla_isr.c    |  4 ++--
- drivers/scsi/qla2xxx/qla_target.c |  6 ++----
- 4 files changed, 27 insertions(+), 8 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h    |  7 ++-
+ drivers/scsi/qla2xxx/qla_dfs.c    | 89 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_gbl.h    |  2 +
+ drivers/scsi/qla2xxx/qla_isr.c    | 11 +++--
+ drivers/scsi/qla2xxx/qla_target.c | 32 ++++++++++++++
+ 5 files changed, 137 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 18b37c864250..0dec148a4580 100644
+index 8b52f431a812..18b37c864250 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -3262,6 +3262,7 @@ struct qla_qpair {
- 	/* move vha->flags.difdix_supported here */
- 	uint32_t difdix_supported:1;
- 	uint32_t delete_in_progress:1;
-+	uint32_t fw_started:1;
+@@ -3322,6 +3322,7 @@ struct qlt_hw_data {
  
- 	uint16_t id;			/* qp number used with FW */
- 	uint16_t vp_idx;		/* vport ID */
-@@ -4183,6 +4184,26 @@ struct qla2_sgx {
- 	srb_t			*sp;
+ 	struct dentry *dfs_tgt_sess;
+ 	struct dentry *dfs_tgt_port_database;
++	struct dentry *dfs_naqp;
+ 
+ 	struct list_head q_full_list;
+ 	uint32_t num_pend_cmds;
+@@ -3330,7 +3331,8 @@ struct qlt_hw_data {
+ 	spinlock_t q_full_lock;
+ 	uint32_t leak_exchg_thresh_hold;
+ 	spinlock_t sess_lock;
+-	int rspq_vector_cpuid;
++	int num_act_qpairs;
++#define DEFAULT_NAQP 2
+ 	spinlock_t atio_lock ____cacheline_aligned;
+ 	struct btree_head32 host_map;
+ };
+@@ -4278,6 +4280,9 @@ enum nexus_wait_type {
+ 	WAIT_LUN,
  };
  
-+#define QLA_FW_STARTED(_ha) {			\
-+	int i;					\
-+	_ha->flags.fw_started = 1;		\
-+	_ha->base_qpair->fw_started = 1;	\
-+	for (i = 0; i < _ha->max_qpairs; i++) {	\
-+	if (_ha->queue_pair_map[i])	\
-+	_ha->queue_pair_map[i]->fw_started = 1;	\
-+	}					\
++#define USER_CTRL_IRQ(_ha) (ql2xuctrlirq && QLA_TGT_MODE_ENABLED() && \
++	(IS_QLA27XX(_ha) || IS_QLA83XX(_ha)))
++
+ #include "qla_target.h"
+ #include "qla_gbl.h"
+ #include "qla_dbg.h"
+diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
+index 391c50be2297..63d7374dce77 100644
+--- a/drivers/scsi/qla2xxx/qla_dfs.c
++++ b/drivers/scsi/qla2xxx/qla_dfs.c
+@@ -314,6 +314,81 @@ static const struct file_operations dfs_fce_ops = {
+ 	.release	= qla2x00_dfs_fce_release,
+ };
+ 
++static int
++qla_dfs_naqp_show(struct seq_file *s, void *unused)
++{
++	struct scsi_qla_host *vha = s->private;
++	struct qla_hw_data *ha = vha->hw;
++
++	seq_printf(s, "%d\n", ha->tgt.num_act_qpairs);
++	return 0;
 +}
 +
-+#define QLA_FW_STOPPED(_ha) {			\
-+	int i;					\
-+	_ha->flags.fw_started = 0;		\
-+	_ha->base_qpair->fw_started = 0;	\
-+	for (i = 0; i < _ha->max_qpairs; i++) {	\
-+	if (_ha->queue_pair_map[i])	\
-+	_ha->queue_pair_map[i]->fw_started = 0;	\
-+	}					\
++static int
++qla_dfs_naqp_open(struct inode *inode, struct file *file)
++{
++	struct scsi_qla_host *vha = inode->i_private;
++
++	return single_open(file, qla_dfs_naqp_show, vha);
 +}
 +
- /*
-  * Macros to help code, maintain, etc.
-  */
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index dcc306121a3d..e6a1f9ca0e95 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -3207,7 +3207,7 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
- 	} else {
- 		ql_dbg(ql_dbg_init, vha, 0x00d3,
- 		    "Init Firmware -- success.\n");
--		ha->flags.fw_started = 1;
-+		QLA_FW_STARTED(ha);
++static ssize_t
++qla_dfs_naqp_write(struct file *file, const char __user *buffer,
++    size_t count, loff_t *pos)
++{
++	struct seq_file *s = file->private_data;
++	struct scsi_qla_host *vha = s->private;
++	struct qla_hw_data *ha = vha->hw;
++	char *buf;
++	int rc = 0;
++	unsigned long num_act_qp;
++
++	if (!(IS_QLA27XX(ha) || IS_QLA83XX(ha))) {
++		pr_err("host%ld: this adapter does not support Multi Q.",
++		    vha->host_no);
++		return -EINVAL;
++	}
++
++	if (!vha->flags.qpairs_available) {
++		pr_err("host%ld: Driver is not setup with Multi Q.",
++		    vha->host_no);
++		return -EINVAL;
++	}
++	buf = memdup_user_nul(buffer, count);
++	if (IS_ERR(buf)) {
++		pr_err("host%ld: fail to copy user buffer.",
++		    vha->host_no);
++		return PTR_ERR(buf);
++	}
++
++	num_act_qp = simple_strtoul(buf, NULL, 0);
++
++	if (num_act_qp >= vha->hw->max_qpairs) {
++		pr_err("User set invalid number of qpairs %lu. Max = %d",
++		    num_act_qp, vha->hw->max_qpairs);
++		rc = -EINVAL;
++		goto out_free;
++	}
++
++	if (num_act_qp != ha->tgt.num_act_qpairs) {
++		ha->tgt.num_act_qpairs = num_act_qp;
++		qlt_clr_qp_table(vha);
++	}
++	rc = count;
++out_free:
++	kfree(buf);
++	return rc;
++}
++
++static const struct file_operations dfs_naqp_ops = {
++	.open		= qla_dfs_naqp_open,
++	.read		= seq_read,
++	.llseek		= seq_lseek,
++	.release	= single_release,
++	.write		= qla_dfs_naqp_write,
++};
++
++
+ int
+ qla2x00_dfs_setup(scsi_qla_host_t *vha)
+ {
+@@ -391,6 +466,15 @@ qla2x00_dfs_setup(scsi_qla_host_t *vha)
+ 		goto out;
  	}
  
- 	return (rval);
-@@ -6841,7 +6841,7 @@ qla2x00_try_to_stop_firmware(scsi_qla_host_t *vha)
- 		ret = qla2x00_stop_firmware(vha);
- 	}
- 
--	ha->flags.fw_started = 0;
-+	QLA_FW_STOPPED(ha);
- 	ha->flags.fw_init_done = 0;
++	if (IS_QLA27XX(ha) || IS_QLA83XX(ha)) {
++		ha->tgt.dfs_naqp = debugfs_create_file("naqp",
++		    0400, ha->dfs_dir, vha, &dfs_naqp_ops);
++		if (!ha->tgt.dfs_naqp) {
++			ql_log(ql_log_warn, vha, 0xd011,
++			    "Unable to create debugFS naqp node.\n");
++			goto out;
++		}
++	}
+ out:
+ 	return 0;
  }
- 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 3c9f9aa7f2c2..7ebd92ee94c3 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -710,7 +710,7 @@ qla2x00_async_event(scsi_qla_host_t *vha, struct rsp_que *rsp, uint16_t *mb)
- 
- 		ha->isp_ops->fw_dump(vha, 1);
- 		ha->flags.fw_init_done = 0;
--		ha->flags.fw_started = 0;
-+		QLA_FW_STOPPED(ha);
- 
- 		if (IS_FWI2_CAPABLE(ha)) {
- 			if (mb[1] == 0 && mb[2] == 0) {
-@@ -2759,7 +2759,7 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
- 	struct sts_entry_24xx *pkt;
+@@ -400,6 +484,11 @@ qla2x00_dfs_remove(scsi_qla_host_t *vha)
+ {
  	struct qla_hw_data *ha = vha->hw;
  
--	if (!ha->flags.fw_started)
-+	if (!rsp->qpair->fw_started)
- 		return;
++	if (ha->tgt.dfs_naqp) {
++		debugfs_remove(ha->tgt.dfs_naqp);
++		ha->tgt.dfs_naqp = NULL;
++	}
++
+ 	if (ha->tgt.dfs_tgt_sess) {
+ 		debugfs_remove(ha->tgt.dfs_tgt_sess);
+ 		ha->tgt.dfs_tgt_sess = NULL;
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index f5493eda0110..beebf96c23d4 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -139,6 +139,7 @@ extern int ql2xexchoffld;
+ extern int ql2xiniexchg;
+ extern int ql2xfwholdabts;
+ extern int ql2xmvasynctoatio;
++extern int ql2xuctrlirq;
  
- 	if (rsp->qpair->cpuid != smp_processor_id())
+ extern int qla2x00_loop_reset(scsi_qla_host_t *);
+ extern void qla2x00_abort_all_cmds(scsi_qla_host_t *, int);
+@@ -856,5 +857,6 @@ void qla24xx_delete_sess_fn(struct work_struct *);
+ void qlt_unknown_atio_work_fn(struct work_struct *);
+ void qlt_update_host_map(struct scsi_qla_host *, port_id_t);
+ void qlt_remove_target_resources(struct qla_hw_data *);
++void qlt_clr_qp_table(struct scsi_qla_host *vha);
+ 
+ #endif /* _QLA_GBL_H */
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 9eb946cc8297..3c9f9aa7f2c2 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -3227,9 +3227,14 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
+ 		min_vecs++;
+ 	}
+ 
+-	ret = pci_alloc_irq_vectors_affinity(ha->pdev, min_vecs,
+-			ha->msix_count, PCI_IRQ_MSIX | PCI_IRQ_AFFINITY,
+-			&desc);
++	if (USER_CTRL_IRQ(ha)) {
++		/* user wants to control IRQ setting for target mode */
++		ret = pci_alloc_irq_vectors(ha->pdev, min_vecs,
++		    ha->msix_count, PCI_IRQ_MSIX);
++	} else
++		ret = pci_alloc_irq_vectors_affinity(ha->pdev, min_vecs,
++		    ha->msix_count, PCI_IRQ_MSIX | PCI_IRQ_AFFINITY,
++		    &desc);
+ 
+ 	if (ret < 0) {
+ 		ql_log(ql_log_fatal, vha, 0x00c7,
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index cbe6ff9f663e..8e855093740c 100644
+index 8920b830722c..cbe6ff9f663e 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -3047,7 +3047,6 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
- 	uint8_t scsi_status)
- {
- 	struct scsi_qla_host *vha = cmd->vha;
--	struct qla_hw_data *ha = vha->hw;
- 	struct qla_qpair *qpair = cmd->qpair;
- 	struct ctio7_to_24xx *pkt;
- 	struct qla_tgt_prm prm;
-@@ -3086,7 +3085,7 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
- 	else
- 		vha->tgt_counters.core_qla_que_buf++;
+@@ -66,6 +66,13 @@ MODULE_PARM_DESC(ql_dm_tgt_ex_pct,
+ 	"the percentage of exchanges/cmds FW will allocate resources "
+ 	"for Target mode.");
  
--	if (!ha->flags.fw_started || cmd->reset_count != ha->chip_reset) {
-+	if (!qpair->fw_started || cmd->reset_count != qpair->chip_reset) {
- 		/*
- 		 * Either the port is not online or this request was from
- 		 * previous life, just abort the processing.
-@@ -3206,7 +3205,6 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
- {
- 	struct ctio7_to_24xx *pkt;
- 	struct scsi_qla_host *vha = cmd->vha;
--	struct qla_hw_data *ha = vha->hw;
- 	struct qla_tgt *tgt = cmd->tgt;
- 	struct qla_tgt_prm prm;
- 	unsigned long flags = 0;
-@@ -3223,7 +3221,7 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
- 	if (qlt_pci_map_calc_cnt(&prm) != 0)
- 		return -EAGAIN;
++int ql2xuctrlirq = 1;
++module_param(ql2xuctrlirq, int, 0644);
++MODULE_PARM_DESC(ql2xuctrlirq,
++    "User to control IRQ placement via smp_affinity."
++    "Valid with qlini_mode=disabled."
++    "1(default): enable");
++
+ int ql2x_ini_mode = QLA2XXX_INI_MODE_EXCLUSIVE;
  
--	if (!ha->flags.fw_started || (cmd->reset_count != ha->chip_reset) ||
-+	if (!qpair->fw_started || (cmd->reset_count != qpair->chip_reset) ||
- 	    (cmd->sess && cmd->sess->deleted)) {
- 		/*
- 		 * Either the port is not online or this request was from
+ static int temp_sam_status = SAM_STAT_BUSY;
+@@ -4059,6 +4066,31 @@ static void qlt_do_work(struct work_struct *work)
+ 	__qlt_do_work(cmd);
+ }
+ 
++void qlt_clr_qp_table(struct scsi_qla_host *vha)
++{
++	unsigned long flags;
++	struct qla_hw_data *ha = vha->hw;
++	struct qla_tgt *tgt = vha->vha_tgt.qla_tgt;
++	void *node;
++	u64 key = 0;
++
++	ql_log(ql_log_info, vha, 0x706c,
++	    "User update Number of Active Qpairs %d\n",
++	    ha->tgt.num_act_qpairs);
++
++	spin_lock_irqsave(&ha->tgt.atio_lock, flags);
++
++	btree_for_each_safe64(&tgt->lun_qpair_map, key, node)
++		btree_remove64(&tgt->lun_qpair_map, key);
++
++	ha->base_qpair->lun_cnt = 0;
++	for (key = 0; key < ha->max_qpairs; key++)
++		if (ha->queue_pair_map[key])
++			ha->queue_pair_map[key]->lun_cnt = 0;
++
++	spin_unlock_irqrestore(&ha->tgt.atio_lock, flags);
++}
++
+ static void qlt_assign_qpair(struct scsi_qla_host *vha,
+ 	struct qla_tgt_cmd *cmd)
+ {
 -- 
 2.12.0
