@@ -1,149 +1,94 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v4 23/23] scsi: hisi_sas: modify internal abort dev flow for v3 hw
-Date: Wed, 7 Jun 2017 23:20:26 +0800
-Message-ID: <1496848826-20534-24-git-send-email-john.garry@huawei.com>
-References: <1496848826-20534-1-git-send-email-john.garry@huawei.com>
+From: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 0/7] Enable iSCSI offload drivers to use information from
+ iface.
+Date: Wed, 7 Jun 2017 09:28:39 -0700
+Message-ID: <20170607162839.ludxvmddghx5ocn2@straylight.hirudinean.org>
+References: <20170606180717.5007-1-robert@leblancnet.us>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1496848826-20534-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linuxarm@huawei.com, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@infradead.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <open-iscsi+bncBCYMVIPVXQMBBPGT4DEQKGQEXC2ZXKQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Content-Disposition: inline
+In-Reply-To: <20170606180717.5007-1-robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org>
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: Robert LeBlanc <robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org>
+Cc: lduncan-IBi9RG/b67k@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org, roid-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, subbu.seetharaman-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, ketan.mukadam-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, jitendra.bhivare-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, QLogic-Storage-Upstream-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org, varun-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+On Tue, Jun 06, 2017 at 12:07:10PM -0600, Robert LeBlanc wrote:
+> This patchset enables iSCSI offload drivers to have access to the iface
+> information provided by iscsid. This allows users to have more control
+> of how the driver connects to the iSCSI target. iSER is updated to use
+> iface.ipaddress to set the source IP address if configured. This allows
+> iSER to use multiple ports on the same network or in more complicated
+> routed configurations.
+> 
+> Since there is already a change to the function parameters, dst_addr
+> is upgraded to sockaddr_storage so that it is more future proof and makes
+> the size of the struct static and not dependent on checking the SA_FAMILY.
+> 
+> This is dependent on updates to Open-iSCSI.
 
-There is a change for abort dev for v3 hw: add registers to configure
-unaborted iptt for a device, and then inform this to logic.
+Hi Robert,
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/hisi_sas/hisi_sas.h       |  2 ++
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 15 +++++++++++++++
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 28 ++++++++++++++++++++++++++++
- 3 files changed, 45 insertions(+)
+I don't think that passing the iface_rec structure directly from the
+iscsid internals into a netlink message is a good way to go about this.
+It's really big, there's an embedded list_head with user address
+pointers that needs to be left out, and there are 32/64-bit layout
+differences.
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index e89f6ae..4fc2308 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -188,6 +188,8 @@ struct hisi_sas_hw {
- 	void (*free_device)(struct hisi_hba *hisi_hba,
- 			    struct hisi_sas_device *dev);
- 	int (*get_wideport_bitmap)(struct hisi_hba *hisi_hba, int port_id);
-+	void (*dereg_device)(struct hisi_hba *hisi_hba,
-+				struct domain_device *device);
- 	int (*soft_reset)(struct hisi_hba *hisi_hba);
- 	int max_command_entries;
- 	int complete_hdr_size;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 92b7068..c4cefa88 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -725,6 +725,13 @@ static void hisi_sas_release_tasks(struct hisi_hba *hisi_hba)
- 	}
- }
+Let me take a look at how you're proposing using this info for iSER, if
+it makes sense I think we should come up with a better designed
+structure for passing the information.
+
+Thanks,
+Chris
  
-+static void hisi_sas_dereg_device(struct hisi_hba *hisi_hba,
-+				struct domain_device *device)
-+{
-+	if (hisi_hba->hw->dereg_device)
-+		hisi_hba->hw->dereg_device(hisi_hba, device);
-+}
-+
- static void hisi_sas_dev_gone(struct domain_device *device)
- {
- 	struct hisi_sas_device *sas_dev = device->lldd_dev;
-@@ -738,6 +745,8 @@ static void hisi_sas_dev_gone(struct domain_device *device)
- 	hisi_sas_internal_task_abort(hisi_hba, device,
- 				     HISI_SAS_INT_ABT_DEV, 0);
- 
-+	hisi_sas_dereg_device(hisi_hba, device);
-+
- 	hisi_hba->hw->free_device(hisi_hba, sas_dev);
- 	device->lldd_dev = NULL;
- 	memset(sas_dev, 0, sizeof(*sas_dev));
-@@ -1069,6 +1078,7 @@ static int hisi_sas_abort_task(struct sas_task *task)
- 		if (task->dev->dev_type == SAS_SATA_DEV) {
- 			hisi_sas_internal_task_abort(hisi_hba, device,
- 						     HISI_SAS_INT_ABT_DEV, 0);
-+			hisi_sas_dereg_device(hisi_hba, device);
- 			rc = hisi_sas_softreset_ata_disk(device);
- 		}
- 	} else if (task->lldd_task && task->task_proto & SAS_PROTOCOL_SMP) {
-@@ -1135,6 +1145,10 @@ static int hisi_sas_I_T_nexus_reset(struct domain_device *device)
- 		return TMF_RESP_FUNC_FAILED;
- 	sas_dev->dev_status = HISI_SAS_DEV_NORMAL;
- 
-+	hisi_sas_internal_task_abort(hisi_hba, device,
-+					HISI_SAS_INT_ABT_DEV, 0);
-+	hisi_sas_dereg_device(hisi_hba, device);
-+
- 	rc = hisi_sas_debug_I_T_nexus_reset(device);
- 
- 	if (rc == TMF_RESP_FUNC_COMPLETE) {
-@@ -1162,6 +1176,7 @@ static int hisi_sas_lu_reset(struct domain_device *device, u8 *lun)
- 						  HISI_SAS_INT_ABT_DEV, 0);
- 		if (rc == TMF_RESP_FUNC_FAILED)
- 			goto out;
-+		hisi_sas_dereg_device(hisi_hba, device);
- 
- 		phy = sas_get_local_phy(device);
- 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 52251ee..f33b913 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -50,6 +50,10 @@
- #define CFG_ABT_SET_QUERY_IPTT	0xd4
- #define CFG_SET_ABORTED_IPTT_OFF	0
- #define CFG_SET_ABORTED_IPTT_MSK	(0xfff << CFG_SET_ABORTED_IPTT_OFF)
-+#define CFG_SET_ABORTED_EN_OFF	12
-+#define CFG_ABT_SET_IPTT_DONE	0xd8
-+#define CFG_ABT_SET_IPTT_DONE_OFF	0
-+#define HGC_IOMB_PROC1_STATUS	0x104
- #define CFG_1US_TIMER_TRSH		0xcc
- #define HGC_LM_DFX_STATUS2		0x128
- #define HGC_LM_DFX_STATUS2_IOSTLIST_OFF		0
-@@ -651,6 +655,29 @@ static void free_device_v3_hw(struct hisi_hba *hisi_hba,
- 	}
- }
- 
-+static void dereg_device_v3_hw(struct hisi_hba *hisi_hba,
-+				struct domain_device *device)
-+{
-+	struct hisi_sas_slot *slot, *slot2;
-+	struct hisi_sas_device *sas_dev = device->lldd_dev;
-+	u32 cfg_abt_set_query_iptt;
-+
-+	cfg_abt_set_query_iptt = hisi_sas_read32(hisi_hba,
-+		CFG_ABT_SET_QUERY_IPTT);
-+	list_for_each_entry_safe(slot, slot2, &sas_dev->list, entry) {
-+		cfg_abt_set_query_iptt &= ~CFG_SET_ABORTED_IPTT_MSK;
-+		cfg_abt_set_query_iptt |= (1 << CFG_SET_ABORTED_EN_OFF) |
-+			(slot->idx << CFG_SET_ABORTED_IPTT_OFF);
-+		hisi_sas_write32(hisi_hba, CFG_ABT_SET_QUERY_IPTT,
-+			cfg_abt_set_query_iptt);
-+	}
-+	cfg_abt_set_query_iptt &= ~(1 << CFG_SET_ABORTED_EN_OFF);
-+	hisi_sas_write32(hisi_hba, CFG_ABT_SET_QUERY_IPTT,
-+		cfg_abt_set_query_iptt);
-+	hisi_sas_write32(hisi_hba, CFG_ABT_SET_IPTT_DONE,
-+					1 << CFG_ABT_SET_IPTT_DONE_OFF);
-+}
-+
- static int hw_init_v3_hw(struct hisi_hba *hisi_hba)
- {
- 	init_reg_v3_hw(hisi_hba);
-@@ -2031,6 +2058,7 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
- 	.phy_disable = disable_phy_v3_hw,
- 	.phy_hard_reset = phy_hard_reset_v3_hw,
- 	.phy_get_max_linkrate = phy_get_max_linkrate_v3_hw,
-+	.dereg_device = dereg_device_v3_hw,
- };
- 
- static struct Scsi_Host *
+> Robert LeBlanc (7):
+>   scsi/scsi_transport_iscsi: Add iface struct to kernel.
+>   scsi/scsi_transport_iscsi: Update ep_connect to include iface.
+>   ib/iSER: Add binding to source IP address.
+>   scsi/be2iscsi: Update beiscsi_ep_connect to accept iface and
+>     sockaddr_storage.
+>   scsi/bnx2i: Update bnx2i_ep_connect to accept iface and
+>     sockaddr_storage.
+>   scsi/cxgbi: Update cxgbi_ep_connect to accept iface and
+>     sockaddr_storage.
+>   scsi/qla4xxx: Update qla4xxx_ep_connect to accept iface and
+>     sockaddr_storage.
+> 
+>  drivers/infiniband/ulp/iser/iscsi_iser.c     |  33 +++++++--
+>  drivers/infiniband/ulp/iser/iscsi_iser.h     |   4 +-
+>  drivers/infiniband/ulp/iser/iser_initiator.c |   1 +
+>  drivers/infiniband/ulp/iser/iser_memory.c    |   1 +
+>  drivers/infiniband/ulp/iser/iser_verbs.c     |   8 ++-
+>  drivers/scsi/be2iscsi/be_cmds.c              |   1 +
+>  drivers/scsi/be2iscsi/be_iscsi.c             |   8 ++-
+>  drivers/scsi/be2iscsi/be_iscsi.h             |   5 +-
+>  drivers/scsi/be2iscsi/be_main.c              |   1 +
+>  drivers/scsi/be2iscsi/be_mgmt.c              |   1 +
+>  drivers/scsi/bnx2i/bnx2i_hwi.c               |   1 +
+>  drivers/scsi/bnx2i/bnx2i_iscsi.c             |  13 ++--
+>  drivers/scsi/cxgbi/libcxgbi.c                |  15 ++--
+>  drivers/scsi/cxgbi/libcxgbi.h                |   2 +-
+>  drivers/scsi/qla4xxx/ql4_os.c                |  15 ++--
+>  drivers/scsi/scsi_transport_iscsi.c          |   9 ++-
+>  include/scsi/scsi_transport_iscsi.h          | 100 ++++++++++++++++++++++++++-
+>  17 files changed, 179 insertions(+), 39 deletions(-)
+> 
+> -- 
+> 2.11.0
+> 
+
 -- 
-1.9.1
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
