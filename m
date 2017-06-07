@@ -1,48 +1,62 @@
-From: James Smart <jsmart2021@gmail.com>
-Subject: Re: [PATCH v2 00/17] lpfc updates for 11.4.0.0
-Date: Tue, 6 Jun 2017 21:20:08 -0700
-Message-ID: <bd39df43-3f6c-c799-37a7-ede5790540d8@gmail.com>
-References: <20170602040711.21046-1-jsmart2021@gmail.com>
- <yq14lvtex4v.fsf@oracle.com>
-Reply-To: jsmart2021@gmail.com
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH 0/3] target: Add TARGET_SCF_LOOKUP_LUN_FROM_TAG support
+Date: Wed, 7 Jun 2017 05:02:51 +0000
+Message-ID: <A01A1524-3760-4FFC-956F-2A82874B668D@cavium.com>
+References: <1496527808-28789-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:34045 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751049AbdFGEUM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2017 00:20:12 -0400
-Received: by mail-pf0-f194.google.com with SMTP id u1so314324pfg.1
-        for <linux-scsi@vger.kernel.org>; Tue, 06 Jun 2017 21:20:12 -0700 (PDT)
-In-Reply-To: <yq14lvtex4v.fsf@oracle.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1496527808-28789-1-git-send-email-nab@linux-iscsi.org>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-ID: <FADF105E35EAD6418F280297936E8D24@namprd07.prod.outlook.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-
-On 6/5/2017 6:13 PM, Martin K. Petersen wrote:
-> 
-> Hi James,
-> 
->> This patch set provides a number of bug fixes, code cleanups, and
->> error handling in lpfc.
->>
->> The patches were cut against the Martin's 4.12/scsi-fixes tree.  There
->> are no outside dependencies. The patches should merge via Martin's
->> tree.
-> 
-> We're approaching rc5 and there are several hundred-liners in this
-> submission. The EQ delay logic patch in particular looks like a feature
-> rather than a bug fix.
-> 
-> How many of these are critical to get into 4.12 vs. 4.13?
-> 
 
 
-What can be excluded: patch 04 and 16.
+> On Jun 3, 2017, at 3:10 PM, Nicholas A. Bellinger <nab@linux-iscsi.org> w=
+rote:
+>=20
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+>=20
+> Hi Himanshu + Quinn,
+>=20
+> Here is a small series to introduce proper percpu se_lun->lun_ref
+> counting for TMR, and add common code in target_submit_tmr() to
+> do tag lookup for unpacked_lun in order to drop the original
+> driver specific lookup within __qlt_24xx_handle_abts().
+>=20
+> It's rather straight-forward, so review and test as a v4.13 item.
+>=20
+> Thanks!
+>=20
+> Nicholas Bellinger (3):
+>  target: Add support for TMR percpu reference counting
+>  target: Add TARGET_SCF_LOOKUP_LUN_FROM_TAG support for ABORT_TASK
+>  qla2xxx: Convert QLA_TGT_ABTS to TARGET_SCF_LOOKUP_LUN_FROM_TAG
+>=20
+> drivers/scsi/qla2xxx/qla_target.c      | 39 ++++++-----------------
+> drivers/scsi/qla2xxx/tcm_qla2xxx.c     |  4 ++-
+> drivers/target/target_core_device.c    | 14 ++++++---
+> drivers/target/target_core_transport.c | 56 ++++++++++++++++++++++++++++-=
+-----
+> include/target/target_core_base.h      |  3 +-
+> 5 files changed, 71 insertions(+), 45 deletions(-)
+>=20
+> --=20
+> 1.9.1
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe target-devel" i=
+n
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-All others I'd like to get in 4.12
+Series looks good.=20
 
--- james
+Acked-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+
+Thanks,
+- Himanshu
