@@ -1,47 +1,32 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH] iscsi-target: Reject immediate data underflow larger than
- SCSI transfer length
-Date: Thu, 8 Jun 2017 15:37:34 +0000
-Message-ID: <1496936253.3028.1.camel@wdc.com>
-References: <1496895685-18464-1-git-send-email-nab@linux-iscsi.org>
+From: "hch@lst.de" <hch@lst.de>
+Subject: Re: [PATCH v3 04/12] Protect SCSI device state changes with a mutex
+Date: Thu, 8 Jun 2017 17:53:07 +0200
+Message-ID: <20170608155307.GB14771@lst.de>
+References: <20170602212203.30401-1-bart.vanassche@sandisk.com> <20170602212203.30401-5-bart.vanassche@sandisk.com> <20170605080937.GB22028@lst.de> <1496675927.2623.1.camel@sandisk.com> <1496687778.2623.17.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1496895685-18464-1-git-send-email-nab@linux-iscsi.org>
-Content-Language: en-US
-Content-ID: <88F4A4B7C39F01419B37EEBC690F3AF2@namprd04.prod.outlook.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "mchristi@redhat.com" <mchristi@redhat.com>, "roland@purestorage.com" <roland@purestorage.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:60165 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751798AbdFHPxJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 8 Jun 2017 11:53:09 -0400
+Content-Disposition: inline
+In-Reply-To: <1496687778.2623.17.camel@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Cc: "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "hare@suse.com" <hare@suse.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-On Thu, 2017-06-08 at 04:21 +0000, Nicholas A. Bellinger wrote:
-> +	/*
-> +	 * Check for underflow case where both EDTL and immediate data payload
-> +	 * exceeds what is presented by CDB's TRANSFER LENGTH, and what has
-> +	 * already been set in target_cmd_size_check() as se_cmd->data_length.
-> +	 *
-> +	 * For this special case, fail the command and dump the immediate data
-> +	 * payload.
-> +	 */
-> +	if (cmd->first_burst_len > cmd->se_cmd.data_length) {
-> +		cmd->sense_reason =3D TCM_INVALID_CDB_FIELD;
-> +		goto after_immediate_data;
-> +	}
+On Mon, Jun 05, 2017 at 06:36:19PM +0000, Bart Van Assche wrote:
+> > The mpt3sas driver is the only driver that calls scsi_internal_device_block()
+> > and scsi_internal_device_unblock() from atomic context. Since it's not an option
+> > to protect the SCSI device state changes with a spinlock I prefer that the
+> > mpt3sas authors convert the scsi_internal_device_block() calls into
+> > scsi_target_block() calls.
+> 
+> Please also note that although this patch series doesn't improve the mpt3sas
+> driver, it doesn't change its behavior.
 
-A quote from the iSCSI RFC (https://tools.ietf.org/html/rfc5048):
-
-   If SPDTL < EDTL for a task, iSCSI Underflow MUST be signaled in the
-=A0=A0=A0SCSI Response PDU as specified in [RFC3720].=A0=A0The Residual Cou=
-nt MUST
-=A0=A0=A0be set to the numerical value of (EDTL - SPDTL).
-
-Sorry but I don't think that sending TCM_INVALID_CDB_FIELD back to the
-initiator is compliant with the iSCSI RFC. Please note that a fix that is
-compliant with the iSCSI RFC is present in the following patch series: [PAT=
-CH
-00/33] SCSI target driver patches for kernel v4.13, 23 May 2017
-(https://www.spinics.net/lists/target-devel/msg15370.html).
-
-Bart.=
+Yes.  And normally we try to get things right.  I guess this series is
+useful enough without fixing everyone up, but adding a FIXME or getting
+the broadcom folks involved would be even better.
