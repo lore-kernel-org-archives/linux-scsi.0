@@ -1,20 +1,42 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] configfs: Fix race between create_link and
-        configfs_rmdir
-Date: Thu, 8 Jun 2017 09:21:29 +0200
-Message-ID: <20170608072129.GA13433@lst.de>
-References: <1496897514-20142-1-git-send-email-nab@linux-iscsi.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v3 14/23] scsi: hisi_sas: add v3 cq interrupt handler
+Date: Thu, 8 Jun 2017 00:34:00 -0700
+Message-ID: <20170608073400.GA9292@infradead.org>
+References: <1496241195-217678-1-git-send-email-john.garry@huawei.com>
+ <1496241195-217678-15-git-send-email-john.garry@huawei.com>
+ <20170601054147.GB4743@infradead.org>
+ <04821e06-7541-1861-d52b-4df869570ca7@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1496897514-20142-1-git-send-email-nab@linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, Christoph Hellwig <hch@lst.de>, Joel Becker <jlbec@evilplan.org>
+In-Reply-To: <04821e06-7541-1861-d52b-4df869570ca7@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Garry <john.garry@huawei.com>
+Cc: Christoph Hellwig <hch@infradead.org>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, john.garry2@mail.dcu.ie, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, Xiang Chen <chenxiang66@hisilicon.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Thanks Nic,
+Hi John,
 
-applied to the configfs-for-next tree.  I'm not entirely sure if we
-should bother adding this to 4.12 or if it hits rarely enough?
+sorry for dropping the ball, but your repost reminded me.
+
+On Thu, Jun 01, 2017 at 11:36:55AM +0100, John Garry wrote:
+> In the command completion code we need to check for abnormal completion due
+> to underflow, but ignore it when it occurs in some commands, like inquiry.
+> This is why we check for rw command - it is equivalent to !inquiry.
+> 
+> I'll see if we can change the check to explicitly ignore certain commands
+> which complete abnormally with underflow.
+
+In general it should be up to the higher level and not the driver
+to detect underflow, and that's how most (hopefully all, but I won't
+bet on some older ones) of our drivers operate.
+
+> 
+> > What about 32-byte CDs or things like Write Same?
+> > 
+> 
+> You're talking about VARIABLE_LENGTH_CMD (opcode 0x7f) for 32-byte CDs,
+> right?
+
+Yes.
