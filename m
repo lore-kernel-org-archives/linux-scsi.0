@@ -1,42 +1,51 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3 14/23] scsi: hisi_sas: add v3 cq interrupt handler
-Date: Thu, 8 Jun 2017 00:34:00 -0700
-Message-ID: <20170608073400.GA9292@infradead.org>
-References: <1496241195-217678-1-git-send-email-john.garry@huawei.com>
- <1496241195-217678-15-git-send-email-john.garry@huawei.com>
- <20170601054147.GB4743@infradead.org>
- <04821e06-7541-1861-d52b-4df869570ca7@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 2/7] scsi: ibmvscsi_tgt: remove use of class_attrs
+Date: Thu,  8 Jun 2017 10:12:37 +0200
+Message-ID: <20170608081242.27061-3-gregkh@linuxfoundation.org>
+References: <20170608081242.27061-1-gregkh@linuxfoundation.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <04821e06-7541-1861-d52b-4df869570ca7@huawei.com>
+In-Reply-To: <20170608081242.27061-1-gregkh@linuxfoundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: Christoph Hellwig <hch@infradead.org>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, john.garry2@mail.dcu.ie, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, Xiang Chen <chenxiang66@hisilicon.com>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, Michael Cyr <mikecyr@linux.vnet.ibm.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi John,
+The class_attrs pointer is going away and it's not even being used in
+this driver, so just remove it entirely.
 
-sorry for dropping the ball, but your repost reminded me.
+Cc: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Cc: Michael Cyr <mikecyr@linux.vnet.ibm.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: <linux-scsi@vger.kernel.org>
+Cc: <target-devel@vger.kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-On Thu, Jun 01, 2017 at 11:36:55AM +0100, John Garry wrote:
-> In the command completion code we need to check for abnormal completion due
-> to underflow, but ignore it when it occurs in some commands, like inquiry.
-> This is why we check for rw command - it is equivalent to !inquiry.
-> 
-> I'll see if we can change the check to explicitly ignore certain commands
-> which complete abnormally with underflow.
-
-In general it should be up to the higher level and not the driver
-to detect underflow, and that's how most (hopefully all, but I won't
-bet on some older ones) of our drivers operate.
-
-> 
-> > What about 32-byte CDs or things like Write Same?
-> > 
-> 
-> You're talking about VARIABLE_LENGTH_CMD (opcode 0x7f) for 32-byte CDs,
-> right?
-
-Yes.
+diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+index d390325c99ec..b480878e3258 100644
+--- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
++++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+@@ -3915,10 +3915,6 @@ static const struct target_core_fabric_ops ibmvscsis_ops = {
+ 
+ static void ibmvscsis_dev_release(struct device *dev) {};
+ 
+-static struct class_attribute ibmvscsis_class_attrs[] = {
+-	__ATTR_NULL,
+-};
+-
+ static struct device_attribute dev_attr_system_id =
+ 	__ATTR(system_id, S_IRUGO, system_id_show, NULL);
+ 
+@@ -3938,7 +3934,6 @@ ATTRIBUTE_GROUPS(ibmvscsis_dev);
+ static struct class ibmvscsis_class = {
+ 	.name		= "ibmvscsis",
+ 	.dev_release	= ibmvscsis_dev_release,
+-	.class_attrs	= ibmvscsis_class_attrs,
+ 	.dev_groups	= ibmvscsis_dev_groups,
+ };
+ 
+-- 
+2.13.1
