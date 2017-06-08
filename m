@@ -1,65 +1,82 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH 01/15] qla2xxx: Combine Active command arrays.
-Date: Wed, 7 Jun 2017 22:45:11 +0000
-Message-ID: <1496875510.27975.1.camel@wdc.com>
-References: <20170607214333.23110-1-himanshu.madhani@cavium.com>
-         <20170607214333.23110-2-himanshu.madhani@cavium.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH] iscsi-target: Reject immediate data underflow larger than SCSI transfer length
+Date: Thu,  8 Jun 2017 04:21:25 +0000
+Message-ID: <1496895685-18464-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20170607214333.23110-2-himanshu.madhani@cavium.com>
-Content-Language: en-US
-Content-ID: <9A8C21A5DA8C164B84D1641C8BDED9C5@namprd04.prod.outlook.com>
 Sender: target-devel-owner@vger.kernel.org
-To: "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Roland Dreier <roland@purestorage.com>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2017-06-07 at 14:43 -0700, Himanshu Madhani wrote:
-> +enum {
-> +	TYPE_SRB,
-> +	TYPE_TGT_CMD,
-> +};
-> +
->  typedef struct srb {
-> +	/*
-> +	 * Do not move cmd_type field, it needs to
-> +	 * line up with qla_tgt_cmd->cmd_type
-> +	 */
-> +	uint8_t cmd_type;
-> +	uint8_t pad[3];
->  	atomic_t ref_count;
->  	struct fc_port *fcport;
->  	struct scsi_qla_host *vha;
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-[ ... ]
-=20
->  struct qla_tgt_cmd {
-> +	/*
-> +	 * Do not move cmd_type field. it needs to line up with srb->cmd_type
-> +	 */
-> +	uint8_t cmd_type;
-> +	uint8_t pad[7];
->  	struct se_cmd se_cmd;
->  	struct fc_port *sess;
->  	int state;
+When iscsi WRITE underflow occurs there are two different scenarios
+that can happen.
 
-Hello Quinn and Himanshu,
+Normally in practice, when an EDTL vs. SCSI CDB TRANSFER LENGTH
+underflow is detected, the iscsi immediate data payload is the
+smaller SCSI CDB TRANSFER LENGTH.
 
-Sorry but this is really inelegant. Have you considered the following?
-- Keep the existing srb and qla_tgt_cmd data structures.
-- Introduce a new data structure with enum cmd_type as the first member and
-  a union of struct srb and struct qla_tgt_cmd as the second member.
-- Use __attribute__((aligned(...))) to express alignment requirements inste=
-ad
-  of explicitly inserting padding bytes.
+That is, when a host fabric LLD is using a fixed size EDTL for
+a specific control CDB, the SCSI CDB TRANSFER LENGTH and actual
+SCSI payload ends up being smaller than EDTL.  In iscsi, this
+means the received iscsi immediate data payload matches the
+smaller SCSI CDB TRANSFER LENGTH, because there is no more
+SCSI payload to accept beyond SCSI CDB TRANSFER LENGTH.
 
-With that approach no casts are needed to convert a pointer to the new data
-structure into a struct srb or struct qla_tgt_cmd pointer - all that will b=
-e
-needed is to take the address of the appropriate member of the union.
+However, it's possible for a malicous host to send a WRITE
+underflow where EDTL is larger than SCSI CDB TRANSFER LENGTH,
+but incoming iscsi immediate data actually matches EDTL.
 
-Thanks,
+In the wild, we've never had a iscsi host environment actually
+try to do this.
 
-Bart.=
+For this special case, it's wrong to truncate part of the
+control CDB payload and continue to process the command during
+underflow when immediate data payload received was larger than
+SCSI CDB TRANSFER LENGTH, so go ahead and reject and drop the
+bogus payload as a defensive action.
+
+Note this potential bug was originally relaxed by the following
+for allowing WRITE underflow in MSFT FCP host environments:
+
+   commit c72c5250224d475614a00c1d7e54a67f77cd3410
+   Author: Roland Dreier <roland@purestorage.com>
+   Date:   Wed Jul 22 15:08:18 2015 -0700
+
+      target: allow underflow/overflow for PR OUT etc. commands
+
+Cc: Roland Dreier <roland@purestorage.com>
+Cc: Mike Christie <mchristi@redhat.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/iscsi/iscsi_target.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index c025451..3fdca2c 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -1279,6 +1279,18 @@ int iscsit_process_scsi_cmd(struct iscsi_conn *conn, struct iscsi_cmd *cmd,
+ 	 */
+ 	if (dump_payload)
+ 		goto after_immediate_data;
++	/*
++	 * Check for underflow case where both EDTL and immediate data payload
++	 * exceeds what is presented by CDB's TRANSFER LENGTH, and what has
++	 * already been set in target_cmd_size_check() as se_cmd->data_length.
++	 *
++	 * For this special case, fail the command and dump the immediate data
++	 * payload.
++	 */
++	if (cmd->first_burst_len > cmd->se_cmd.data_length) {
++		cmd->sense_reason = TCM_INVALID_CDB_FIELD;
++		goto after_immediate_data;
++	}
+ 
+ 	immed_ret = iscsit_handle_immediate_data(cmd, hdr,
+ 					cmd->first_burst_len);
+-- 
+1.9.1
