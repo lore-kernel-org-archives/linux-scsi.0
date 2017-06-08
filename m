@@ -1,82 +1,95 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] iscsi-target: Reject immediate data underflow larger than SCSI transfer length
-Date: Thu,  8 Jun 2017 04:21:25 +0000
-Message-ID: <1496895685-18464-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
+Subject: [PATCH] configfs: Fix race between create_link and configfs_rmdir
+Date: Thu,  8 Jun 2017 04:51:54 +0000
+Message-ID: <1496897514-20142-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Roland Dreier <roland@purestorage.com>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, Christoph Hellwig <hch@lst.de>, Joel Becker <jlbec@evilplan.org>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-When iscsi WRITE underflow occurs there are two different scenarios
-that can happen.
+This patch closes a long standing race in configfs between
+the creation of a new symlink in create_link(), while the
+symlink target's config_item is being concurrently removed
+via configfs_rmdir().
 
-Normally in practice, when an EDTL vs. SCSI CDB TRANSFER LENGTH
-underflow is detected, the iscsi immediate data payload is the
-smaller SCSI CDB TRANSFER LENGTH.
+This can happen because the symlink target's reference
+is obtained by config_item_get() in create_link() before
+the CONFIGFS_USET_DROPPING bit set by configfs_detach_prep()
+during configfs_rmdir() shutdown is actually checked..
 
-That is, when a host fabric LLD is using a fixed size EDTL for
-a specific control CDB, the SCSI CDB TRANSFER LENGTH and actual
-SCSI payload ends up being smaller than EDTL.  In iscsi, this
-means the received iscsi immediate data payload matches the
-smaller SCSI CDB TRANSFER LENGTH, because there is no more
-SCSI payload to accept beyond SCSI CDB TRANSFER LENGTH.
+This originally manifested itself on ppc64 on v4.8.y under
+heavy load using ibmvscsi target ports with Novalink API:
 
-However, it's possible for a malicous host to send a WRITE
-underflow where EDTL is larger than SCSI CDB TRANSFER LENGTH,
-but incoming iscsi immediate data actually matches EDTL.
+[ 7877.289863] rpadlpar_io: slot U8247.22L.212A91A-V1-C8 added
+[ 7879.893760] ------------[ cut here ]------------
+[ 7879.893768] WARNING: CPU: 15 PID: 17585 at ./include/linux/kref.h:46 config_item_get+0x7c/0x90 [configfs]
+[ 7879.893811] CPU: 15 PID: 17585 Comm: targetcli Tainted: G           O 4.8.17-customv2.22 #12
+[ 7879.893812] task: c00000018a0d3400 task.stack: c0000001f3b40000
+[ 7879.893813] NIP: d000000002c664ec LR: d000000002c60980 CTR: c000000000b70870
+[ 7879.893814] REGS: c0000001f3b43810 TRAP: 0700   Tainted: G O     (4.8.17-customv2.22)
+[ 7879.893815] MSR: 8000000000029033 <SF,EE,ME,IR,DR,RI,LE>  CR: 28222242  XER: 00000000
+[ 7879.893820] CFAR: d000000002c664bc SOFTE: 1
+                GPR00: d000000002c60980 c0000001f3b43a90 d000000002c70908 c0000000fbc06820
+                GPR04: c0000001ef1bd900 0000000000000004 0000000000000001 0000000000000000
+                GPR08: 0000000000000000 0000000000000001 d000000002c69560 d000000002c66d80
+                GPR12: c000000000b70870 c00000000e798700 c0000001f3b43ca0 c0000001d4949d40
+                GPR16: c00000014637e1c0 0000000000000000 0000000000000000 c0000000f2392940
+                GPR20: c0000001f3b43b98 0000000000000041 0000000000600000 0000000000000000
+                GPR24: fffffffffffff000 0000000000000000 d000000002c60be0 c0000001f1dac490
+                GPR28: 0000000000000004 0000000000000000 c0000001ef1bd900 c0000000f2392940
+[ 7879.893839] NIP [d000000002c664ec] config_item_get+0x7c/0x90 [configfs]
+[ 7879.893841] LR [d000000002c60980] check_perm+0x80/0x2e0 [configfs]
+[ 7879.893842] Call Trace:
+[ 7879.893844] [c0000001f3b43ac0] [d000000002c60980] check_perm+0x80/0x2e0 [configfs]
+[ 7879.893847] [c0000001f3b43b10] [c000000000329770] do_dentry_open+0x2c0/0x460
+[ 7879.893849] [c0000001f3b43b70] [c000000000344480] path_openat+0x210/0x1490
+[ 7879.893851] [c0000001f3b43c80] [c00000000034708c] do_filp_open+0xfc/0x170
+[ 7879.893853] [c0000001f3b43db0] [c00000000032b5bc] do_sys_open+0x1cc/0x390
+[ 7879.893856] [c0000001f3b43e30] [c000000000009584] system_call+0x38/0xec
+[ 7879.893856] Instruction dump:
+[ 7879.893858] 409d0014 38210030 e8010010 7c0803a6 4e800020 3d220000 e94981e0 892a0000
+[ 7879.893861] 2f890000 409effe0 39200001 992a0000 <0fe00000> 4bffffd0 60000000 60000000
+[ 7879.893866] ---[ end trace 14078f0b3b5ad0aa ]---
 
-In the wild, we've never had a iscsi host environment actually
-try to do this.
+To close this race, go ahead and obtain the symlink's target
+config_item reference only after the existing CONFIGFS_USET_DROPPING
+check succeeds.
 
-For this special case, it's wrong to truncate part of the
-control CDB payload and continue to process the command during
-underflow when immediate data payload received was larger than
-SCSI CDB TRANSFER LENGTH, so go ahead and reject and drop the
-bogus payload as a defensive action.
+This way, if configfs_rmdir() wins create_link() will return -ENONET,
+and if create_link() wins configfs_rmdir() will return -EBUSY.
 
-Note this potential bug was originally relaxed by the following
-for allowing WRITE underflow in MSFT FCP host environments:
-
-   commit c72c5250224d475614a00c1d7e54a67f77cd3410
-   Author: Roland Dreier <roland@purestorage.com>
-   Date:   Wed Jul 22 15:08:18 2015 -0700
-
-      target: allow underflow/overflow for PR OUT etc. commands
-
-Cc: Roland Dreier <roland@purestorage.com>
-Cc: Mike Christie <mchristi@redhat.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Reported-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Tested-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Cc: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Joel Becker <jlbec@evilplan.org>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/iscsi/iscsi_target.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ fs/configfs/symlink.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index c025451..3fdca2c 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -1279,6 +1279,18 @@ int iscsit_process_scsi_cmd(struct iscsi_conn *conn, struct iscsi_cmd *cmd,
- 	 */
- 	if (dump_payload)
- 		goto after_immediate_data;
-+	/*
-+	 * Check for underflow case where both EDTL and immediate data payload
-+	 * exceeds what is presented by CDB's TRANSFER LENGTH, and what has
-+	 * already been set in target_cmd_size_check() as se_cmd->data_length.
-+	 *
-+	 * For this special case, fail the command and dump the immediate data
-+	 * payload.
-+	 */
-+	if (cmd->first_burst_len > cmd->se_cmd.data_length) {
-+		cmd->sense_reason = TCM_INVALID_CDB_FIELD;
-+		goto after_immediate_data;
-+	}
- 
- 	immed_ret = iscsit_handle_immediate_data(cmd, hdr,
- 					cmd->first_burst_len);
+diff --git a/fs/configfs/symlink.c b/fs/configfs/symlink.c
+index a6ab012..c8aabba 100644
+--- a/fs/configfs/symlink.c
++++ b/fs/configfs/symlink.c
+@@ -83,14 +83,13 @@ static int create_link(struct config_item *parent_item,
+ 	ret = -ENOMEM;
+ 	sl = kmalloc(sizeof(struct configfs_symlink), GFP_KERNEL);
+ 	if (sl) {
+-		sl->sl_target = config_item_get(item);
+ 		spin_lock(&configfs_dirent_lock);
+ 		if (target_sd->s_type & CONFIGFS_USET_DROPPING) {
+ 			spin_unlock(&configfs_dirent_lock);
+-			config_item_put(item);
+ 			kfree(sl);
+ 			return -ENOENT;
+ 		}
++		sl->sl_target = config_item_get(item);
+ 		list_add(&sl->sl_list, &target_sd->s_links);
+ 		spin_unlock(&configfs_dirent_lock);
+ 		ret = configfs_create_link(sl, parent_item->ci_dentry,
 -- 
 1.9.1
