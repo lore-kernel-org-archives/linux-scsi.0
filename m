@@ -1,157 +1,84 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] target: Fix kref->refcount underflow in
- transport_cmd_finish_abort
-Date: Thu, 08 Jun 2017 22:29:16 -0700
-Message-ID: <1496986156.28997.18.camel@haakon3.risingtidesystems.com>
-References: <1496524144-25580-1-git-send-email-nab@linux-iscsi.org>
+Subject: Re: [PATCH] iscsi-target: Fix delayed logout processing greater
+ than SECONDS_FOR_LOGOUT_COMP
+Date: Thu, 08 Jun 2017 22:29:36 -0700
+Message-ID: <1496986176.28997.19.camel@haakon3.risingtidesystems.com>
+References: <1496525574-26784-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1496524144-25580-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1496525574-26784-1-git-send-email-nab@linux-iscsi.org>
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Sagi Grimberg <sagig@mellanox.com>, "Tran, Quinn" <Quinn.Tran@cavium.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>
 List-Id: linux-scsi@vger.kernel.org
 
-(Adding Quinn CC')
+Reviews pretty please..?
 
-Reviews please..?
-
-On Sat, 2017-06-03 at 21:09 +0000, Nicholas A. Bellinger wrote:
+On Sat, 2017-06-03 at 21:32 +0000, Nicholas A. Bellinger wrote:
 > From: Nicholas Bellinger <nab@linux-iscsi.org>
 > 
-> This patch fixes a se_cmd->cmd_kref underflow during CMD_T_ABORTED
-> when a fabric driver drops it's second reference from below the
-> target_core_tmr.c based callers of transport_cmd_finish_abort().
+> This patch fixes a BUG() in iscsit_close_session() that could be
+> triggered when iscsit_logout_post_handler() execution from within
+> tx thread context was not run for more than SECONDS_FOR_LOGOUT_COMP
+> (15 seconds), and the TCP connection didn't already close before
+> then forcing tx thread context to automatically exit.
 > 
-> Recently with the conversion of kref to refcount_t, this bug was
-> manifesting itself as:
+> This would manifest itself during explicit logout as:
 > 
-> [705519.601034] refcount_t: underflow; use-after-free.
-> [705519.604034] INFO: NMI handler (kgdb_nmi_handler) took too long to run: 20116.512 msecs
-> [705539.719111] ------------[ cut here ]------------
-> [705539.719117] WARNING: CPU: 3 PID: 26510 at lib/refcount.c:184 refcount_sub_and_test+0x33/0x51
+> [33206.974254] 1 connection(s) still exist for iSCSI session to iqn.1993-08.org.debian:01:3f5523242179
+> [33206.980184] INFO: NMI handler (kgdb_nmi_handler) took too long to run: 2100.772 msecs
+> [33209.078643] ------------[ cut here ]------------
+> [33209.078646] kernel BUG at drivers/target/iscsi/iscsi_target.c:4346!
 > 
-> Since the original kref atomic_t based kref_put() didn't check for
-> underflow and only invoked the final callback when zero was reached,
-> this bug did not manifest in practice since all se_cmd memory is
-> using preallocated tags.
+> Normally when explicit logout attempt fails, the tx thread context
+> exits and iscsit_close_connection() from rx thread context does the
+> extra cleanup once it detects conn->conn_logout_remove has not been
+> cleared by the logout type specific post handlers.
 > 
-> To address this, go ahead and propigate the existing return from
-> transport_put_cmd() up via transport_cmd_finish_abort(), and
-> change transport_cmd_finish_abort() + core_tmr_handle_tas_abort()
-> callers to only do their local target_put_sess_cmd() if necessary.
+> To address this special case, if the logout post handler in tx thread
+> context detects conn->tx_thread_active has already been cleared, simply
+> return and exit in order for existing iscsit_close_connection()
+> logic from rx thread context do failed logout cleanup.
 > 
 > Reported-by: Bart Van Assche <bart.vanassche@sandisk.com>
 > Cc: Mike Christie <mchristi@redhat.com>
 > Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>
 > Cc: Sagi Grimberg <sagig@mellanox.com>
 > Cc: stable@vger.kernel.org # 3.14+
 > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 > ---
->  drivers/target/target_core_internal.h  |  2 +-
->  drivers/target/target_core_tmr.c       | 16 ++++++++--------
->  drivers/target/target_core_transport.c |  9 ++++++---
->  3 files changed, 15 insertions(+), 12 deletions(-)
+>  drivers/target/iscsi/iscsi_target.c | 10 ++++++++--
+>  1 file changed, 8 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
-> index 9ab7090..0912de7 100644
-> --- a/drivers/target/target_core_internal.h
-> +++ b/drivers/target/target_core_internal.h
-> @@ -136,7 +136,7 @@ struct se_node_acl *core_tpg_add_initiator_node_acl(struct se_portal_group *tpg,
->  void	release_se_kmem_caches(void);
->  u32	scsi_get_new_index(scsi_index_t);
->  void	transport_subsystem_check_init(void);
-> -void	transport_cmd_finish_abort(struct se_cmd *, int);
-> +int	transport_cmd_finish_abort(struct se_cmd *, int);
->  unsigned char *transport_dump_cmd_direction(struct se_cmd *);
->  void	transport_dump_dev_state(struct se_device *, char *, int *);
->  void	transport_dump_dev_info(struct se_device *, struct se_lun *,
-> diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
-> index dce1e1b..13f47bf 100644
-> --- a/drivers/target/target_core_tmr.c
-> +++ b/drivers/target/target_core_tmr.c
-> @@ -75,7 +75,7 @@ void core_tmr_release_req(struct se_tmr_req *tmr)
->  	kfree(tmr);
->  }
+> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+> index 0d8f815..c025451 100644
+> --- a/drivers/target/iscsi/iscsi_target.c
+> +++ b/drivers/target/iscsi/iscsi_target.c
+> @@ -4423,8 +4423,11 @@ static void iscsit_logout_post_handler_closesession(
+>  	 * always sleep waiting for RX/TX thread shutdown to complete
+>  	 * within iscsit_close_connection().
+>  	 */
+> -	if (!conn->conn_transport->rdma_shutdown)
+> +	if (!conn->conn_transport->rdma_shutdown) {
+>  		sleep = cmpxchg(&conn->tx_thread_active, true, false);
+> +		if (!sleep)
+> +			return;
+> +	}
 >  
-> -static void core_tmr_handle_tas_abort(struct se_cmd *cmd, int tas)
-> +static int core_tmr_handle_tas_abort(struct se_cmd *cmd, int tas)
+>  	atomic_set(&conn->conn_logout_remove, 0);
+>  	complete(&conn->conn_logout_comp);
+> @@ -4440,8 +4443,11 @@ static void iscsit_logout_post_handler_samecid(
 >  {
->  	unsigned long flags;
->  	bool remove = true, send_tas;
-> @@ -91,7 +91,7 @@ static void core_tmr_handle_tas_abort(struct se_cmd *cmd, int tas)
->  		transport_send_task_abort(cmd);
->  	}
+>  	int sleep = 1;
 >  
-> -	transport_cmd_finish_abort(cmd, remove);
-> +	return transport_cmd_finish_abort(cmd, remove);
->  }
+> -	if (!conn->conn_transport->rdma_shutdown)
+> +	if (!conn->conn_transport->rdma_shutdown) {
+>  		sleep = cmpxchg(&conn->tx_thread_active, true, false);
+> +		if (!sleep)
+> +			return;
+> +	}
 >  
->  static int target_check_cdb_and_preempt(struct list_head *list,
-> @@ -184,8 +184,8 @@ void core_tmr_abort_task(
->  		cancel_work_sync(&se_cmd->work);
->  		transport_wait_for_tasks(se_cmd);
->  
-> -		transport_cmd_finish_abort(se_cmd, true);
-> -		target_put_sess_cmd(se_cmd);
-> +		if (!transport_cmd_finish_abort(se_cmd, true))
-> +			target_put_sess_cmd(se_cmd);
->  
->  		printk("ABORT_TASK: Sending TMR_FUNCTION_COMPLETE for"
->  				" ref_tag: %llu\n", ref_tag);
-> @@ -281,8 +281,8 @@ static void core_tmr_drain_tmr_list(
->  		cancel_work_sync(&cmd->work);
->  		transport_wait_for_tasks(cmd);
->  
-> -		transport_cmd_finish_abort(cmd, 1);
-> -		target_put_sess_cmd(cmd);
-> +		if (!transport_cmd_finish_abort(cmd, 1))
-> +			target_put_sess_cmd(cmd);
->  	}
->  }
->  
-> @@ -380,8 +380,8 @@ static void core_tmr_drain_state_list(
->  		cancel_work_sync(&cmd->work);
->  		transport_wait_for_tasks(cmd);
->  
-> -		core_tmr_handle_tas_abort(cmd, tas);
-> -		target_put_sess_cmd(cmd);
-> +		if (!core_tmr_handle_tas_abort(cmd, tas))
-> +			target_put_sess_cmd(cmd);
->  	}
->  }
->  
-> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-> index 6025935..f1b3a46 100644
-> --- a/drivers/target/target_core_transport.c
-> +++ b/drivers/target/target_core_transport.c
-> @@ -651,9 +651,10 @@ static void transport_lun_remove_cmd(struct se_cmd *cmd)
->  		percpu_ref_put(&lun->lun_ref);
->  }
->  
-> -void transport_cmd_finish_abort(struct se_cmd *cmd, int remove)
-> +int transport_cmd_finish_abort(struct se_cmd *cmd, int remove)
->  {
->  	bool ack_kref = (cmd->se_cmd_flags & SCF_ACK_KREF);
-> +	int ret = 0;
->  
->  	if (cmd->se_cmd_flags & SCF_SE_LUN_CMD)
->  		transport_lun_remove_cmd(cmd);
-> @@ -665,9 +666,11 @@ void transport_cmd_finish_abort(struct se_cmd *cmd, int remove)
->  		cmd->se_tfo->aborted_task(cmd);
->  
->  	if (transport_cmd_check_stop_to_fabric(cmd))
-> -		return;
-> +		return 1;
->  	if (remove && ack_kref)
-> -		transport_put_cmd(cmd);
-> +		ret = transport_put_cmd(cmd);
-> +
-> +	return ret;
->  }
->  
->  static void target_complete_failure_work(struct work_struct *work)
+>  	atomic_set(&conn->conn_logout_remove, 0);
+>  	complete(&conn->conn_logout_comp);
