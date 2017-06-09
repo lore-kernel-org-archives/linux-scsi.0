@@ -1,184 +1,76 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v5 08/23] scsi: hisi_sas: create hisi_sas_get_fw_info()
-Date: Fri, 9 Jun 2017 22:16:21 +0800
-Message-ID: <1497017796-105067-9-git-send-email-john.garry@huawei.com>
-References: <1497017796-105067-1-git-send-email-john.garry@huawei.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH] scsi: qla2xxx: fix printk format string warning on 32-bit
+Date: Fri, 9 Jun 2017 14:09:22 +0000
+Message-ID: <BD5813D3-84B4-4C6B-A0E5-270349A77571@cavium.com>
+References: <20170609104711.3471894-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1497017796-105067-1-git-send-email-john.garry@huawei.com>
+In-Reply-To: <20170609104711.3471894-1-arnd@arndb.de>
+Content-Language: en-US
+Content-ID: <C33649677400414AAEEBF0712EDF1707@namprd07.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linuxarm@huawei.com, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@infradead.org, John Garry <john.garry@huawei.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Tran, Quinn" <Quinn.Tran@cavium.com>, Nicholas Bellinger <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Move the functionality to retrieve the fw info into
-a dedicated device type-agnostic function,
-hisi_sas_get_fw_info().
+Hi Arnd,=20
 
-The reasoning is that this function will be required
-for future pci-based platforms.
+> On Jun 9, 2017, at 3:46 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+>=20
+> On 32-bit architectures, we using %lx to print a size_t causes a harmless
+> warning:
+>=20
+> qla2xxx/qla_init.c: In function 'qla24xx_load_risc_flash':
+> qla2xxx/qla_init.c:6407:7: error: format '%lx' expects argument of type '=
+long unsigned int', but argument 5 has type 'unsigned int' [-Werror=3Dforma=
+t=3D]
+> qla2xxx/qla_init.c: In function 'qla24xx_load_risc_blob':
+> qla2xxx/qla_init.c:6709:7: error: format '%lx' expects argument of type '=
+long unsigned int', but argument 5 has type 'unsigned int' [-Werror=3Dforma=
+t=3D]
+>=20
+> The correct format string is %zx.
+>=20
+> Fixes: 0f110b54d157 ("scsi: qla2xxx: Retain loop test for fwdump length e=
+xceeding buffer length")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+> drivers/scsi/qla2xxx/qla_init.c | 4 ++--
+> 1 file changed, 2 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_i=
+nit.c
+> index 436968ad4484..730e7fe4344a 100644
+> --- a/drivers/scsi/qla2xxx/qla_init.c
+> +++ b/drivers/scsi/qla2xxx/qla_init.c
+> @@ -6404,7 +6404,7 @@ qla24xx_load_risc_flash(scsi_qla_host_t *vha, uint3=
+2_t *srisc_addr,
+> 	    "-> template size %x bytes\n", dlen);
+> 	if (dlen > risc_size * sizeof(*dcode)) {
+> 		ql_log(ql_log_warn, vha, 0x0167,
+> -		    "Failed fwdump template exceeds array by %lx bytes\n",
+> +		    "Failed fwdump template exceeds array by %zx bytes\n",
+> 		    (size_t)(dlen - risc_size * sizeof(*dcode)));
+> 		goto default_template;
+> 	}
+> @@ -6706,7 +6706,7 @@ qla24xx_load_risc_blob(scsi_qla_host_t *vha, uint32=
+_t *srisc_addr)
+> 	    "-> template size %x bytes\n", dlen);
+> 	if (dlen > risc_size * sizeof(*fwcode)) {
+> 		ql_log(ql_log_warn, vha, 0x0177,
+> -		    "Failed fwdump template exceeds array by %lx bytes\n",
+> +		    "Failed fwdump template exceeds array by %zx bytes\n",
+> 		    (size_t)(dlen - risc_size * sizeof(*fwcode)));
+> 		goto default_template;
+> 	}
+> --=20
+> 2.9.0
+>=20
 
-Also add some debug logs for failure.
+I had posted patch already to fix this https://patchwork.kernel.org/patch/9=
+769981/
 
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/hisi_sas/hisi_sas.h      |   1 +
- drivers/scsi/hisi_sas/hisi_sas_main.c | 107 ++++++++++++++++++++++------------
- 2 files changed, 71 insertions(+), 37 deletions(-)
-
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 84cac98..c1f6669 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -371,6 +371,7 @@ struct hisi_sas_command_table_ssp {
- extern void hisi_sas_sata_done(struct sas_task *task,
- 			    struct hisi_sas_slot *slot);
- extern int hisi_sas_get_ncq_tag(struct sas_task *task, u32 *tag);
-+extern int hisi_sas_get_fw_info(struct hisi_hba *hisi_hba);
- extern int hisi_sas_probe(struct platform_device *pdev,
- 			  const struct hisi_sas_hw *ops);
- extern int hisi_sas_remove(struct platform_device *pdev);
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index ff033bd..1a6adf7 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1725,66 +1725,99 @@ static void hisi_sas_rst_work_handler(struct work_struct *work)
- 	hisi_sas_controller_reset(hisi_hba);
- }
- 
--static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
--					      const struct hisi_sas_hw *hw)
-+int hisi_sas_get_fw_info(struct hisi_hba *hisi_hba)
- {
--	struct resource *res;
--	struct Scsi_Host *shost;
--	struct hisi_hba *hisi_hba;
--	struct device *dev = &pdev->dev;
--	struct device_node *np = pdev->dev.of_node;
-+	struct device *dev = hisi_hba->dev;
-+	struct platform_device *pdev = hisi_hba->platform_dev;
-+	struct device_node *np = pdev ? pdev->dev.of_node : NULL;
- 	struct clk *refclk;
- 
--	shost = scsi_host_alloc(&hisi_sas_sht, sizeof(*hisi_hba));
--	if (!shost) {
--		dev_err(dev, "scsi host alloc failed\n");
--		return NULL;
--	}
--	hisi_hba = shost_priv(shost);
--
--	INIT_WORK(&hisi_hba->rst_work, hisi_sas_rst_work_handler);
--	hisi_hba->hw = hw;
--	hisi_hba->platform_dev = pdev;
--	hisi_hba->dev = dev;
--	hisi_hba->shost = shost;
--	SHOST_TO_SAS_HA(shost) = &hisi_hba->sha;
--
--	init_timer(&hisi_hba->timer);
--
- 	if (device_property_read_u8_array(dev, "sas-addr", hisi_hba->sas_addr,
--					  SAS_ADDR_SIZE))
--		goto err_out;
-+					  SAS_ADDR_SIZE)) {
-+		dev_err(dev, "could not get property sas-addr\n");
-+		return -ENOENT;
-+	}
- 
- 	if (np) {
-+		/*
-+		 * These properties are only required for platform device-based
-+		 * controller with DT firmware.
-+		 */
- 		hisi_hba->ctrl = syscon_regmap_lookup_by_phandle(np,
- 					"hisilicon,sas-syscon");
--		if (IS_ERR(hisi_hba->ctrl))
--			goto err_out;
-+		if (IS_ERR(hisi_hba->ctrl)) {
-+			dev_err(dev, "could not get syscon\n");
-+			return -ENOENT;
-+		}
- 
- 		if (device_property_read_u32(dev, "ctrl-reset-reg",
--					     &hisi_hba->ctrl_reset_reg))
--			goto err_out;
-+					     &hisi_hba->ctrl_reset_reg)) {
-+			dev_err(dev,
-+				"could not get property ctrl-reset-reg\n");
-+			return -ENOENT;
-+		}
- 
- 		if (device_property_read_u32(dev, "ctrl-reset-sts-reg",
--					     &hisi_hba->ctrl_reset_sts_reg))
--			goto err_out;
-+					     &hisi_hba->ctrl_reset_sts_reg)) {
-+			dev_err(dev,
-+				"could not get property ctrl-reset-sts-reg\n");
-+			return -ENOENT;
-+		}
- 
- 		if (device_property_read_u32(dev, "ctrl-clock-ena-reg",
--					     &hisi_hba->ctrl_clock_ena_reg))
--			goto err_out;
-+					     &hisi_hba->ctrl_clock_ena_reg)) {
-+			dev_err(dev,
-+				"could not get property ctrl-clock-ena-reg\n");
-+			return -ENOENT;
-+		}
- 	}
- 
--	refclk = devm_clk_get(&pdev->dev, NULL);
-+	refclk = devm_clk_get(dev, NULL);
- 	if (IS_ERR(refclk))
- 		dev_dbg(dev, "no ref clk property\n");
- 	else
- 		hisi_hba->refclk_frequency_mhz = clk_get_rate(refclk) / 1000000;
- 
--	if (device_property_read_u32(dev, "phy-count", &hisi_hba->n_phy))
--		goto err_out;
-+	if (device_property_read_u32(dev, "phy-count", &hisi_hba->n_phy)) {
-+		dev_err(dev, "could not get property phy-count\n");
-+		return -ENOENT;
-+	}
- 
- 	if (device_property_read_u32(dev, "queue-count",
--				     &hisi_hba->queue_count))
-+				     &hisi_hba->queue_count)) {
-+		dev_err(dev, "could not get property queue-count\n");
-+		return -ENOENT;
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(hisi_sas_get_fw_info);
-+
-+static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
-+					      const struct hisi_sas_hw *hw)
-+{
-+	struct resource *res;
-+	struct Scsi_Host *shost;
-+	struct hisi_hba *hisi_hba;
-+	struct device *dev = &pdev->dev;
-+
-+	shost = scsi_host_alloc(&hisi_sas_sht, sizeof(*hisi_hba));
-+	if (!shost) {
-+		dev_err(dev, "scsi host alloc failed\n");
-+		return NULL;
-+	}
-+	hisi_hba = shost_priv(shost);
-+
-+	INIT_WORK(&hisi_hba->rst_work, hisi_sas_rst_work_handler);
-+	hisi_hba->hw = hw;
-+	hisi_hba->dev = dev;
-+	hisi_hba->platform_dev = pdev;
-+	hisi_hba->shost = shost;
-+	SHOST_TO_SAS_HA(shost) = &hisi_hba->sha;
-+
-+	init_timer(&hisi_hba->timer);
-+
-+	if (hisi_sas_get_fw_info(hisi_hba) < 0)
- 		goto err_out;
- 
- 	if (dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64)) &&
--- 
-1.9.1
+Thanks,
+- Himanshu
