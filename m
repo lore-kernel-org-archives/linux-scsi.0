@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v5 11/23] scsi: hisi_sas: add v3 hw init
-Date: Fri, 9 Jun 2017 22:16:24 +0800
-Message-ID: <1497017796-105067-12-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v5 15/23] scsi: hisi_sas: add v3 code to send SSP frame
+Date: Fri, 9 Jun 2017 22:16:28 +0800
+Message-ID: <1497017796-105067-16-git-send-email-john.garry@huawei.com>
 References: <1497017796-105067-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,309 +14,260 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Add code to initialise v3 hardware.
+Add code to prepare SSP frame and deliver it to hardware.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 277 +++++++++++++++++++++++++++++++++
- 1 file changed, 277 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 208 +++++++++++++++++++++++++++++++++
+ 1 file changed, 208 insertions(+)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index e9a9fb0..1a5eae6 100644
+index 4869b73..c869aca 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -11,7 +11,283 @@
- #include "hisi_sas.h"
- #define DRV_NAME "hisi_sas_v3_hw"
+@@ -157,6 +157,41 @@
+ #define SL_RX_BCAST_CHK_MSK		(PORT_BASE + 0x2c0)
+ #define PHYCTRL_OOB_RESTART_MSK		(PORT_BASE + 0x2c4)
  
-+/* global registers need init*/
-+#define DLVRY_QUEUE_ENABLE		0x0
-+#define IOST_BASE_ADDR_LO		0x8
-+#define IOST_BASE_ADDR_HI		0xc
-+#define ITCT_BASE_ADDR_LO		0x10
-+#define ITCT_BASE_ADDR_HI		0x14
-+#define IO_BROKEN_MSG_ADDR_LO		0x18
-+#define IO_BROKEN_MSG_ADDR_HI		0x1c
-+#define AXI_AHB_CLK_CFG			0x3c
-+#define AXI_USER1			0x48
-+#define AXI_USER2			0x4c
-+#define IO_SATA_BROKEN_MSG_ADDR_LO	0x58
-+#define IO_SATA_BROKEN_MSG_ADDR_HI	0x5c
-+#define SATA_INITI_D2H_STORE_ADDR_LO	0x60
-+#define SATA_INITI_D2H_STORE_ADDR_HI	0x64
-+#define CFG_MAX_TAG			0x68
-+#define HGC_SAS_TX_OPEN_FAIL_RETRY_CTRL	0x84
-+#define HGC_SAS_TXFAIL_RETRY_CTRL	0x88
-+#define HGC_GET_ITV_TIME		0x90
-+#define DEVICE_MSG_WORK_MODE		0x94
-+#define OPENA_WT_CONTI_TIME		0x9c
-+#define I_T_NEXUS_LOSS_TIME		0xa0
-+#define MAX_CON_TIME_LIMIT_TIME		0xa4
-+#define BUS_INACTIVE_LIMIT_TIME		0xa8
-+#define REJECT_TO_OPEN_LIMIT_TIME	0xac
-+#define CFG_AGING_TIME			0xbc
-+#define HGC_DFX_CFG2			0xc0
-+#define CFG_ABT_SET_QUERY_IPTT	0xd4
-+#define CFG_SET_ABORTED_IPTT_OFF	0
-+#define CFG_SET_ABORTED_IPTT_MSK	(0xfff << CFG_SET_ABORTED_IPTT_OFF)
-+#define CFG_1US_TIMER_TRSH		0xcc
-+#define INT_COAL_EN			0x19c
-+#define OQ_INT_COAL_TIME		0x1a0
-+#define OQ_INT_COAL_CNT			0x1a4
-+#define ENT_INT_COAL_TIME		0x1a8
-+#define ENT_INT_COAL_CNT		0x1ac
-+#define OQ_INT_SRC			0x1b0
-+#define OQ_INT_SRC_MSK			0x1b4
-+#define ENT_INT_SRC1			0x1b8
-+#define ENT_INT_SRC1_D2H_FIS_CH0_OFF	0
-+#define ENT_INT_SRC1_D2H_FIS_CH0_MSK	(0x1 << ENT_INT_SRC1_D2H_FIS_CH0_OFF)
-+#define ENT_INT_SRC1_D2H_FIS_CH1_OFF	8
-+#define ENT_INT_SRC1_D2H_FIS_CH1_MSK	(0x1 << ENT_INT_SRC1_D2H_FIS_CH1_OFF)
-+#define ENT_INT_SRC2			0x1bc
-+#define ENT_INT_SRC3			0x1c0
-+#define ENT_INT_SRC3_WP_DEPTH_OFF		8
-+#define ENT_INT_SRC3_IPTT_SLOT_NOMATCH_OFF	9
-+#define ENT_INT_SRC3_RP_DEPTH_OFF		10
-+#define ENT_INT_SRC3_AXI_OFF			11
-+#define ENT_INT_SRC3_FIFO_OFF			12
-+#define ENT_INT_SRC3_LM_OFF				14
-+#define ENT_INT_SRC3_ITC_INT_OFF	15
-+#define ENT_INT_SRC3_ITC_INT_MSK	(0x1 << ENT_INT_SRC3_ITC_INT_OFF)
-+#define ENT_INT_SRC3_ABT_OFF		16
-+#define ENT_INT_SRC_MSK1		0x1c4
-+#define ENT_INT_SRC_MSK2		0x1c8
-+#define ENT_INT_SRC_MSK3		0x1cc
-+#define CHNL_PHYUPDOWN_INT_MSK		0x1d0
-+#define CHNL_ENT_INT_MSK			0x1d4
-+#define HGC_COM_INT_MSK				0x1d8
-+#define SAS_ECC_INTR			0x1e8
-+#define SAS_ECC_INTR_MSK		0x1ec
-+#define HGC_ERR_STAT_EN			0x238
-+#define DLVRY_Q_0_BASE_ADDR_LO		0x260
-+#define DLVRY_Q_0_BASE_ADDR_HI		0x264
-+#define DLVRY_Q_0_DEPTH			0x268
-+#define DLVRY_Q_0_WR_PTR		0x26c
-+#define DLVRY_Q_0_RD_PTR		0x270
-+#define HYPER_STREAM_ID_EN_CFG		0xc80
-+#define OQ0_INT_SRC_MSK			0xc90
-+#define COMPL_Q_0_BASE_ADDR_LO		0x4e0
-+#define COMPL_Q_0_BASE_ADDR_HI		0x4e4
-+#define COMPL_Q_0_DEPTH			0x4e8
-+#define COMPL_Q_0_WR_PTR		0x4ec
-+#define COMPL_Q_0_RD_PTR		0x4f0
-+#define AWQOS_AWCACHE_CFG	0xc84
-+#define ARQOS_ARCACHE_CFG	0xc88
++/* HW dma structures */
++/* Delivery queue header */
++/* dw0 */
++#define CMD_HDR_RESP_REPORT_OFF		5
++#define CMD_HDR_RESP_REPORT_MSK		(0x1 << CMD_HDR_RESP_REPORT_OFF)
++#define CMD_HDR_TLR_CTRL_OFF		6
++#define CMD_HDR_TLR_CTRL_MSK		(0x3 << CMD_HDR_TLR_CTRL_OFF)
++#define CMD_HDR_PORT_OFF		18
++#define CMD_HDR_PORT_MSK		(0xf << CMD_HDR_PORT_OFF)
++#define CMD_HDR_PRIORITY_OFF		27
++#define CMD_HDR_PRIORITY_MSK		(0x1 << CMD_HDR_PRIORITY_OFF)
++#define CMD_HDR_CMD_OFF			29
++#define CMD_HDR_CMD_MSK			(0x7 << CMD_HDR_CMD_OFF)
++/* dw1 */
++#define CMD_HDR_DIR_OFF			5
++#define CMD_HDR_DIR_MSK			(0x3 << CMD_HDR_DIR_OFF)
++#define CMD_HDR_VDTL_OFF		10
++#define CMD_HDR_VDTL_MSK		(0x1 << CMD_HDR_VDTL_OFF)
++#define CMD_HDR_FRAME_TYPE_OFF		11
++#define CMD_HDR_FRAME_TYPE_MSK		(0x1f << CMD_HDR_FRAME_TYPE_OFF)
++#define CMD_HDR_DEV_ID_OFF		16
++#define CMD_HDR_DEV_ID_MSK		(0xffff << CMD_HDR_DEV_ID_OFF)
++/* dw2 */
++#define CMD_HDR_CFL_OFF			0
++#define CMD_HDR_CFL_MSK			(0x1ff << CMD_HDR_CFL_OFF)
++#define CMD_HDR_MRFL_OFF		15
++#define CMD_HDR_MRFL_MSK		(0x1ff << CMD_HDR_MRFL_OFF)
++#define CMD_HDR_SG_MOD_OFF		24
++#define CMD_HDR_SG_MOD_MSK		(0x3 << CMD_HDR_SG_MOD_OFF)
++/* dw6 */
++#define CMD_HDR_DIF_SGL_LEN_OFF		0
++#define CMD_HDR_DIF_SGL_LEN_MSK		(0xffff << CMD_HDR_DIF_SGL_LEN_OFF)
++#define CMD_HDR_DATA_SGL_LEN_OFF	16
++#define CMD_HDR_DATA_SGL_LEN_MSK	(0xffff << CMD_HDR_DATA_SGL_LEN_OFF)
 +
-+/* phy registers requiring init */
-+#define PORT_BASE			(0x2000)
-+#define PROG_PHY_LINK_RATE		(PORT_BASE + 0x8)
-+#define PHY_CTRL			(PORT_BASE + 0x14)
-+#define PHY_CTRL_RESET_OFF		0
-+#define PHY_CTRL_RESET_MSK		(0x1 << PHY_CTRL_RESET_OFF)
-+#define SL_CFG				(PORT_BASE + 0x84)
-+#define RXOP_CHECK_CFG_H		(PORT_BASE + 0xfc)
-+#define SAS_SSP_CON_TIMER_CFG		(PORT_BASE + 0x134)
-+#define SAS_SMP_CON_TIMER_CFG		(PORT_BASE + 0x138)
-+#define SAS_STP_CON_TIMER_CFG		(PORT_BASE + 0x13c)
-+#define CHL_INT0			(PORT_BASE + 0x1b4)
-+#define CHL_INT0_HOTPLUG_TOUT_OFF	0
-+#define CHL_INT0_HOTPLUG_TOUT_MSK	(0x1 << CHL_INT0_HOTPLUG_TOUT_OFF)
-+#define CHL_INT0_SL_RX_BCST_ACK_OFF	1
-+#define CHL_INT0_SL_RX_BCST_ACK_MSK	(0x1 << CHL_INT0_SL_RX_BCST_ACK_OFF)
-+#define CHL_INT0_SL_PHY_ENABLE_OFF	2
-+#define CHL_INT0_SL_PHY_ENABLE_MSK	(0x1 << CHL_INT0_SL_PHY_ENABLE_OFF)
-+#define CHL_INT0_NOT_RDY_OFF		4
-+#define CHL_INT0_NOT_RDY_MSK		(0x1 << CHL_INT0_NOT_RDY_OFF)
-+#define CHL_INT0_PHY_RDY_OFF		5
-+#define CHL_INT0_PHY_RDY_MSK		(0x1 << CHL_INT0_PHY_RDY_OFF)
-+#define CHL_INT1			(PORT_BASE + 0x1b8)
-+#define CHL_INT1_DMAC_TX_ECC_ERR_OFF	15
-+#define CHL_INT1_DMAC_TX_ECC_ERR_MSK	(0x1 << CHL_INT1_DMAC_TX_ECC_ERR_OFF)
-+#define CHL_INT1_DMAC_RX_ECC_ERR_OFF	17
-+#define CHL_INT1_DMAC_RX_ECC_ERR_MSK	(0x1 << CHL_INT1_DMAC_RX_ECC_ERR_OFF)
-+#define CHL_INT2			(PORT_BASE + 0x1bc)
-+#define CHL_INT0_MSK			(PORT_BASE + 0x1c0)
-+#define CHL_INT1_MSK			(PORT_BASE + 0x1c4)
-+#define CHL_INT2_MSK			(PORT_BASE + 0x1c8)
-+#define CHL_INT_COAL_EN			(PORT_BASE + 0x1d0)
-+#define PHY_CTRL_RDY_MSK		(PORT_BASE + 0x2b0)
-+#define PHYCTRL_NOT_RDY_MSK		(PORT_BASE + 0x2b4)
-+#define PHYCTRL_DWS_RESET_MSK		(PORT_BASE + 0x2b8)
-+#define PHYCTRL_PHY_ENA_MSK		(PORT_BASE + 0x2bc)
-+#define SL_RX_BCAST_CHK_MSK		(PORT_BASE + 0x2c0)
-+#define PHYCTRL_OOB_RESTART_MSK		(PORT_BASE + 0x2c4)
+ /* Completion header */
+ /* dw0 */
+ #define CMPLT_HDR_CMPLT_OFF		0
+@@ -217,6 +252,11 @@ enum {
+ 	HISI_SAS_PHY_INT_NR
+ };
+ 
++#define DIR_NO_DATA 0
++#define DIR_TO_INI 1
++#define DIR_TO_DEVICE 2
++#define DIR_RESERVED 3
 +
-+struct hisi_sas_complete_v3_hdr {
-+	__le32 dw0;
-+	__le32 dw1;
-+	__le32 act;
-+	__le32 dw3;
-+};
-+
-+#define HISI_SAS_COMMAND_ENTRIES_V3_HW 4096
-+
-+static void hisi_sas_write32(struct hisi_hba *hisi_hba, u32 off, u32 val)
+ static u32 hisi_sas_read32(struct hisi_hba *hisi_hba, u32 off)
+ {
+ 	void __iomem *regs = hisi_hba->regs + off;
+@@ -224,6 +264,13 @@ static u32 hisi_sas_read32(struct hisi_hba *hisi_hba, u32 off)
+ 	return readl(regs);
+ }
+ 
++static u32 hisi_sas_read32_relaxed(struct hisi_hba *hisi_hba, u32 off)
 +{
 +	void __iomem *regs = hisi_hba->regs + off;
 +
-+	writel(val, regs);
++	return readl_relaxed(regs);
 +}
 +
-+static void hisi_sas_phy_write32(struct hisi_hba *hisi_hba, int phy_no,
-+				 u32 off, u32 val)
-+{
-+	void __iomem *regs = hisi_hba->regs + (0x400 * phy_no) + off;
-+
-+	writel(val, regs);
-+}
-+
-+static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
-+{
-+	int i;
-+
-+	/* Global registers init */
-+	hisi_sas_write32(hisi_hba, DLVRY_QUEUE_ENABLE,
-+			 (u32)((1ULL << hisi_hba->queue_count) - 1));
-+	hisi_sas_write32(hisi_hba, AXI_USER1, 0x0);
-+	hisi_sas_write32(hisi_hba, AXI_USER2, 0x40000060);
-+	hisi_sas_write32(hisi_hba, HGC_SAS_TXFAIL_RETRY_CTRL, 0x108);
-+	hisi_sas_write32(hisi_hba, CFG_1US_TIMER_TRSH, 0xd);
-+	hisi_sas_write32(hisi_hba, INT_COAL_EN, 0x1);
-+	hisi_sas_write32(hisi_hba, OQ_INT_COAL_TIME, 0x1);
-+	hisi_sas_write32(hisi_hba, OQ_INT_COAL_CNT, 0x1);
-+	hisi_sas_write32(hisi_hba, OQ_INT_SRC, 0xffff);
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC1, 0xffffffff);
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC2, 0xffffffff);
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC3, 0xffffffff);
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK1, 0xfefefefe);
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK2, 0xfefefefe);
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, 0xffffffff);
-+	hisi_sas_write32(hisi_hba, CHNL_PHYUPDOWN_INT_MSK, 0x0);
-+	hisi_sas_write32(hisi_hba, CHNL_ENT_INT_MSK, 0x0);
-+	hisi_sas_write32(hisi_hba, HGC_COM_INT_MSK, 0x0);
-+	hisi_sas_write32(hisi_hba, SAS_ECC_INTR_MSK, 0xfff00c30);
-+	hisi_sas_write32(hisi_hba, AWQOS_AWCACHE_CFG, 0xf0f0);
-+	hisi_sas_write32(hisi_hba, ARQOS_ARCACHE_CFG, 0xf0f0);
-+	for (i = 0; i < hisi_hba->queue_count; i++)
-+		hisi_sas_write32(hisi_hba, OQ0_INT_SRC_MSK+0x4*i, 0);
-+
-+	hisi_sas_write32(hisi_hba, AXI_AHB_CLK_CFG, 1);
-+	hisi_sas_write32(hisi_hba, HYPER_STREAM_ID_EN_CFG, 1);
-+	hisi_sas_write32(hisi_hba, CFG_MAX_TAG, 0xfff07fff);
-+
-+	for (i = 0; i < hisi_hba->n_phy; i++) {
-+		hisi_sas_phy_write32(hisi_hba, i, PROG_PHY_LINK_RATE, 0x801);
-+		hisi_sas_phy_write32(hisi_hba, i, CHL_INT0, 0xffffffff);
-+		hisi_sas_phy_write32(hisi_hba, i, CHL_INT1, 0xffffffff);
-+		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2, 0xffffffff);
-+		hisi_sas_phy_write32(hisi_hba, i, RXOP_CHECK_CFG_H, 0x1000);
-+		hisi_sas_phy_write32(hisi_hba, i, CHL_INT1_MSK, 0xffffffff);
-+		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2_MSK, 0x8ffffbff);
-+		hisi_sas_phy_write32(hisi_hba, i, SL_CFG, 0x83f801fc);
-+		hisi_sas_phy_write32(hisi_hba, i, PHY_CTRL_RDY_MSK, 0x0);
-+		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_NOT_RDY_MSK, 0x0);
-+		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_DWS_RESET_MSK, 0x0);
-+		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_PHY_ENA_MSK, 0x0);
-+		hisi_sas_phy_write32(hisi_hba, i, SL_RX_BCAST_CHK_MSK, 0x0);
-+		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_OOB_RESTART_MSK, 0x0);
-+		hisi_sas_phy_write32(hisi_hba, i, PHY_CTRL, 0x199b4fa);
-+		hisi_sas_phy_write32(hisi_hba, i, SAS_SSP_CON_TIMER_CFG,
-+				     0xa0064);
-+		hisi_sas_phy_write32(hisi_hba, i, SAS_STP_CON_TIMER_CFG,
-+				     0xa0064);
-+	}
-+	for (i = 0; i < hisi_hba->queue_count; i++) {
-+		/* Delivery queue */
-+		hisi_sas_write32(hisi_hba,
-+				 DLVRY_Q_0_BASE_ADDR_HI + (i * 0x14),
-+				 upper_32_bits(hisi_hba->cmd_hdr_dma[i]));
-+
-+		hisi_sas_write32(hisi_hba, DLVRY_Q_0_BASE_ADDR_LO + (i * 0x14),
-+				 lower_32_bits(hisi_hba->cmd_hdr_dma[i]));
-+
-+		hisi_sas_write32(hisi_hba, DLVRY_Q_0_DEPTH + (i * 0x14),
-+				 HISI_SAS_QUEUE_SLOTS);
-+
-+		/* Completion queue */
-+		hisi_sas_write32(hisi_hba, COMPL_Q_0_BASE_ADDR_HI + (i * 0x14),
-+				 upper_32_bits(hisi_hba->complete_hdr_dma[i]));
-+
-+		hisi_sas_write32(hisi_hba, COMPL_Q_0_BASE_ADDR_LO + (i * 0x14),
-+				 lower_32_bits(hisi_hba->complete_hdr_dma[i]));
-+
-+		hisi_sas_write32(hisi_hba, COMPL_Q_0_DEPTH + (i * 0x14),
-+				 HISI_SAS_QUEUE_SLOTS);
-+	}
-+
-+	/* itct */
-+	hisi_sas_write32(hisi_hba, ITCT_BASE_ADDR_LO,
-+			 lower_32_bits(hisi_hba->itct_dma));
-+
-+	hisi_sas_write32(hisi_hba, ITCT_BASE_ADDR_HI,
-+			 upper_32_bits(hisi_hba->itct_dma));
-+
-+	/* iost */
-+	hisi_sas_write32(hisi_hba, IOST_BASE_ADDR_LO,
-+			 lower_32_bits(hisi_hba->iost_dma));
-+
-+	hisi_sas_write32(hisi_hba, IOST_BASE_ADDR_HI,
-+			 upper_32_bits(hisi_hba->iost_dma));
-+
-+	/* breakpoint */
-+	hisi_sas_write32(hisi_hba, IO_BROKEN_MSG_ADDR_LO,
-+			 lower_32_bits(hisi_hba->breakpoint_dma));
-+
-+	hisi_sas_write32(hisi_hba, IO_BROKEN_MSG_ADDR_HI,
-+			 upper_32_bits(hisi_hba->breakpoint_dma));
-+
-+	/* SATA broken msg */
-+	hisi_sas_write32(hisi_hba, IO_SATA_BROKEN_MSG_ADDR_LO,
-+			 lower_32_bits(hisi_hba->sata_breakpoint_dma));
-+
-+	hisi_sas_write32(hisi_hba, IO_SATA_BROKEN_MSG_ADDR_HI,
-+			 upper_32_bits(hisi_hba->sata_breakpoint_dma));
-+
-+	/* SATA initial fis */
-+	hisi_sas_write32(hisi_hba, SATA_INITI_D2H_STORE_ADDR_LO,
-+			 lower_32_bits(hisi_hba->initial_fis_dma));
-+
-+	hisi_sas_write32(hisi_hba, SATA_INITI_D2H_STORE_ADDR_HI,
-+			 upper_32_bits(hisi_hba->initial_fis_dma));
-+}
-+
-+static int hw_init_v3_hw(struct hisi_hba *hisi_hba)
-+{
-+	init_reg_v3_hw(hisi_hba);
-+
-+	return 0;
-+}
-+
-+static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
-+{
-+	int rc;
-+
-+	rc = hw_init_v3_hw(hisi_hba);
-+	if (rc)
-+		return rc;
-+
-+	return 0;
-+}
-+
- static const struct hisi_sas_hw hisi_sas_v3_hw = {
-+	.hw_init = hisi_sas_v3_init,
-+	.max_command_entries = HISI_SAS_COMMAND_ENTRIES_V3_HW,
-+	.complete_hdr_size = sizeof(struct hisi_sas_complete_v3_hdr),
- };
- 
- static struct Scsi_Host *
-@@ -175,6 +451,7 @@ static void hisi_sas_v3_remove(struct pci_dev *pdev)
- 	pci_disable_device(pdev);
+ static void hisi_sas_write32(struct hisi_hba *hisi_hba, u32 off, u32 val)
+ {
+ 	void __iomem *regs = hisi_hba->regs + off;
+@@ -448,6 +495,163 @@ static void sl_notify_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
  }
  
++/**
++ * The callpath to this function and upto writing the write
++ * queue pointer should be safe from interruption.
++ */
++static int
++get_free_slot_v3_hw(struct hisi_hba *hisi_hba, struct hisi_sas_dq *dq)
++{
++	struct device *dev = hisi_hba->dev;
++	int queue = dq->id;
++	u32 r, w;
 +
- enum {
- 	/* instances of the controller */
- 	hip08,
++	w = dq->wr_point;
++	r = hisi_sas_read32_relaxed(hisi_hba,
++				DLVRY_Q_0_RD_PTR + (queue * 0x14));
++	if (r == (w+1) % HISI_SAS_QUEUE_SLOTS) {
++		dev_warn(dev, "full queue=%d r=%d w=%d\n\n",
++				queue, r, w);
++		return -EAGAIN;
++	}
++
++	return 0;
++}
++
++static void start_delivery_v3_hw(struct hisi_sas_dq *dq)
++{
++	struct hisi_hba *hisi_hba = dq->hisi_hba;
++	int dlvry_queue = dq->slot_prep->dlvry_queue;
++	int dlvry_queue_slot = dq->slot_prep->dlvry_queue_slot;
++
++	dq->wr_point = ++dlvry_queue_slot % HISI_SAS_QUEUE_SLOTS;
++	hisi_sas_write32(hisi_hba, DLVRY_Q_0_WR_PTR + (dlvry_queue * 0x14),
++			 dq->wr_point);
++}
++
++static int prep_prd_sge_v3_hw(struct hisi_hba *hisi_hba,
++			      struct hisi_sas_slot *slot,
++			      struct hisi_sas_cmd_hdr *hdr,
++			      struct scatterlist *scatter,
++			      int n_elem)
++{
++	struct device *dev = hisi_hba->dev;
++	struct scatterlist *sg;
++	int i;
++
++	if (n_elem > HISI_SAS_SGE_PAGE_CNT) {
++		dev_err(dev, "prd err: n_elem(%d) > HISI_SAS_SGE_PAGE_CNT",
++			n_elem);
++		return -EINVAL;
++	}
++
++	slot->sge_page = dma_pool_alloc(hisi_hba->sge_page_pool, GFP_ATOMIC,
++					&slot->sge_page_dma);
++	if (!slot->sge_page)
++		return -ENOMEM;
++
++	for_each_sg(scatter, sg, n_elem, i) {
++		struct hisi_sas_sge *entry = &slot->sge_page->sge[i];
++
++		entry->addr = cpu_to_le64(sg_dma_address(sg));
++		entry->page_ctrl_0 = entry->page_ctrl_1 = 0;
++		entry->data_len = cpu_to_le32(sg_dma_len(sg));
++		entry->data_off = 0;
++	}
++
++	hdr->prd_table_addr = cpu_to_le64(slot->sge_page_dma);
++	hdr->sg_len = cpu_to_le32(n_elem << CMD_HDR_DATA_SGL_LEN_OFF);
++
++	return 0;
++}
++
++static int prep_ssp_v3_hw(struct hisi_hba *hisi_hba,
++			  struct hisi_sas_slot *slot, int is_tmf,
++			  struct hisi_sas_tmf_task *tmf)
++{
++	struct sas_task *task = slot->task;
++	struct hisi_sas_cmd_hdr *hdr = slot->cmd_hdr;
++	struct domain_device *device = task->dev;
++	struct hisi_sas_device *sas_dev = device->lldd_dev;
++	struct hisi_sas_port *port = slot->port;
++	struct sas_ssp_task *ssp_task = &task->ssp_task;
++	struct scsi_cmnd *scsi_cmnd = ssp_task->cmd;
++	int has_data = 0, rc, priority = is_tmf;
++	u8 *buf_cmd;
++	u32 dw1 = 0, dw2 = 0;
++
++	hdr->dw0 = cpu_to_le32((1 << CMD_HDR_RESP_REPORT_OFF) |
++			       (2 << CMD_HDR_TLR_CTRL_OFF) |
++			       (port->id << CMD_HDR_PORT_OFF) |
++			       (priority << CMD_HDR_PRIORITY_OFF) |
++			       (1 << CMD_HDR_CMD_OFF)); /* ssp */
++
++	dw1 = 1 << CMD_HDR_VDTL_OFF;
++	if (is_tmf) {
++		dw1 |= 2 << CMD_HDR_FRAME_TYPE_OFF;
++		dw1 |= DIR_NO_DATA << CMD_HDR_DIR_OFF;
++	} else {
++		dw1 |= 1 << CMD_HDR_FRAME_TYPE_OFF;
++		switch (scsi_cmnd->sc_data_direction) {
++		case DMA_TO_DEVICE:
++			has_data = 1;
++			dw1 |= DIR_TO_DEVICE << CMD_HDR_DIR_OFF;
++			break;
++		case DMA_FROM_DEVICE:
++			has_data = 1;
++			dw1 |= DIR_TO_INI << CMD_HDR_DIR_OFF;
++			break;
++		default:
++			dw1 &= ~CMD_HDR_DIR_MSK;
++		}
++	}
++
++	/* map itct entry */
++	dw1 |= sas_dev->device_id << CMD_HDR_DEV_ID_OFF;
++	hdr->dw1 = cpu_to_le32(dw1);
++
++	dw2 = (((sizeof(struct ssp_command_iu) + sizeof(struct ssp_frame_hdr)
++	      + 3) / 4) << CMD_HDR_CFL_OFF) |
++	      ((HISI_SAS_MAX_SSP_RESP_SZ / 4) << CMD_HDR_MRFL_OFF) |
++	      (2 << CMD_HDR_SG_MOD_OFF);
++	hdr->dw2 = cpu_to_le32(dw2);
++	hdr->transfer_tags = cpu_to_le32(slot->idx);
++
++	if (has_data) {
++		rc = prep_prd_sge_v3_hw(hisi_hba, slot, hdr, task->scatter,
++					slot->n_elem);
++		if (rc)
++			return rc;
++	}
++
++	hdr->data_transfer_len = cpu_to_le32(task->total_xfer_len);
++	hdr->cmd_table_addr = cpu_to_le64(slot->command_table_dma);
++	hdr->sts_buffer_addr = cpu_to_le64(slot->status_buffer_dma);
++
++	buf_cmd = slot->command_table + sizeof(struct ssp_frame_hdr);
++	memcpy(buf_cmd, ssp_task->LUN, 8);
++
++	if (!is_tmf) {
++		buf_cmd[9] = ssp_task->task_attr | (ssp_task->task_prio << 3);
++		memcpy(buf_cmd + 12, scsi_cmnd->cmnd, scsi_cmnd->cmd_len);
++	} else {
++		buf_cmd[10] = tmf->tmf;
++		switch (tmf->tmf) {
++		case TMF_ABORT_TASK:
++		case TMF_QUERY_TASK:
++			buf_cmd[12] =
++				(tmf->tag_of_task_to_be_managed >> 8) & 0xff;
++			buf_cmd[13] =
++				tmf->tag_of_task_to_be_managed & 0xff;
++			break;
++		default:
++			break;
++		}
++	}
++
++	return 0;
++}
++
+ static int phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
+ {
+ 	int i, res = 0;
+@@ -1020,6 +1224,10 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
+ 	.max_command_entries = HISI_SAS_COMMAND_ENTRIES_V3_HW,
+ 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v3_hdr),
+ 	.sl_notify = sl_notify_v3_hw,
++	.prep_ssp = prep_ssp_v3_hw,
++	.get_free_slot = get_free_slot_v3_hw,
++	.start_delivery = start_delivery_v3_hw,
++	.slot_complete = slot_complete_v3_hw,
+ 	.phys_init = phys_init_v3_hw,
+ };
+ 
 -- 
 1.9.1
