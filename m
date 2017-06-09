@@ -1,91 +1,157 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: Re: [RFC v2 2/2] scsi: add rate limit to scsi sense code uevent
-Date: Thu, 8 Jun 2017 22:42:37 +0000
-Message-ID: <F36FA0D9-0FB9-458A-979A-ADB74FED7A64@fb.com>
-References: <20170518181456.1955523-1-songliubraving@fb.com>
- <20170518181456.1955523-3-songliubraving@fb.com>
- <1496701335.4753.220.camel@localhost.localdomain>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] target: Fix kref->refcount underflow in
+ transport_cmd_finish_abort
+Date: Thu, 08 Jun 2017 22:29:16 -0700
+Message-ID: <1496986156.28997.18.camel@haakon3.risingtidesystems.com>
+References: <1496524144-25580-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:60623 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751475AbdFHWmu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2017 18:42:50 -0400
-In-Reply-To: <1496701335.4753.220.camel@localhost.localdomain>
-Content-Language: en-US
-Content-ID: <3B49F0E654C5E946BDA9FB4FA3B8EE97@namprd15.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1496524144-25580-1-git-send-email-nab@linux-iscsi.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Himanshu Madhani <himanshu.madhani@qlogic.com>, Sagi Grimberg <sagig@mellanox.com>, "Tran, Quinn" <Quinn.Tran@cavium.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "emilne@redhat.com" <emilne@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@fb.com>, "axboe@kernel.dk" <axboe@kernel.dk>, Benjamin Block <bblock@linux.vnet.ibm.com>
 
+(Adding Quinn CC')
 
-> On Jun 6, 2017, at 6:22 AM, Ewan D. Milne <emilne@redhat.com> wrote:
->=20
-> On Thu, 2017-05-18 at 11:14 -0700, Song Liu wrote:
->> This patch adds rate limits to SCSI sense code uevets. Currently,
->> the rate limit is hard-coded to 16 events per second.
->>=20
->> The code tracks nano second time of latest 16 events in a circular
->> buffer. When a new event arrives, the time is compared against the
->> latest time in the buffer. If the difference is smaller than one
->> second, the new event is dropped.
->>=20
->> Signed-off-by: Song Liu <songliubraving@fb.com>
->> ---
->> drivers/scsi/scsi_error.c  | 15 +++++++++++++++
->> drivers/scsi/scsi_scan.c   |  4 ++++
->> include/scsi/scsi_device.h | 12 +++++++++++-
->> 3 files changed, 30 insertions(+), 1 deletion(-)
->>=20
->> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
->> index a49c63a..91e6b0a 100644
->> --- a/drivers/scsi/scsi_error.c
->> +++ b/drivers/scsi/scsi_error.c
->> @@ -436,11 +436,26 @@ static void scsi_send_sense_uevent(struct scsi_dev=
-ice *sdev,
->> #ifdef CONFIG_SCSI_SENSE_UEVENT
->> 	struct scsi_event *evt;
->> 	unsigned char sb_len;
->> +	unsigned long flags;
->> +	u64 time_ns;
->>=20
->> 	if (!test_bit(sshdr->sense_key & 0xf,
->> 		      &sdev->sense_event_filter))
->> 		return;
->> 	evt =3D sdev_evt_alloc(SDEV_EVT_SCSI_SENSE, GFP_ATOMIC);
->> +
->> +	time_ns =3D ktime_to_ns(ktime_get());
->> +	spin_lock_irqsave(&sdev->latest_event_lock, flags);
->> +	if (time_ns - sdev->latest_event_times[sdev->latest_event_idx] <
->> +	    NSEC_PER_SEC) {
->> +		spin_unlock_irqrestore(&sdev->latest_event_lock, flags);
->> +		return;
->=20
-> You have an allocated evt here, so if you return here you will leak
-> kernel memory.
+Reviews please..?
 
-I will fix this in next version.=20
-
->=20
-> This code appears to be rate limiting per-sdev.  You have to remember
-> that on a large system, there could be thousands of these devices.
-> You could easily end up generating 10s or 100s of thousands of events
-> per second, in a very short amount of time under certain failure
-> conditions.
->=20
-> The udev event mechanism can realistically only process a few
-> hundred events per second before it starts getting behind, due to
-> the rule processing engine (the rules in userspace).
->=20
-> You also have to consider that if you clog up udev with a lot of
-> your events, you affect event processing for other events.
->=20
-
-Yeah, this is great point. Would Scsi_Host level rate limiting make
-sense for this type of cases? Or shall I add a global rate limit?
-
-Thanks,
-Song
+On Sat, 2017-06-03 at 21:09 +0000, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+> 
+> This patch fixes a se_cmd->cmd_kref underflow during CMD_T_ABORTED
+> when a fabric driver drops it's second reference from below the
+> target_core_tmr.c based callers of transport_cmd_finish_abort().
+> 
+> Recently with the conversion of kref to refcount_t, this bug was
+> manifesting itself as:
+> 
+> [705519.601034] refcount_t: underflow; use-after-free.
+> [705519.604034] INFO: NMI handler (kgdb_nmi_handler) took too long to run: 20116.512 msecs
+> [705539.719111] ------------[ cut here ]------------
+> [705539.719117] WARNING: CPU: 3 PID: 26510 at lib/refcount.c:184 refcount_sub_and_test+0x33/0x51
+> 
+> Since the original kref atomic_t based kref_put() didn't check for
+> underflow and only invoked the final callback when zero was reached,
+> this bug did not manifest in practice since all se_cmd memory is
+> using preallocated tags.
+> 
+> To address this, go ahead and propigate the existing return from
+> transport_put_cmd() up via transport_cmd_finish_abort(), and
+> change transport_cmd_finish_abort() + core_tmr_handle_tas_abort()
+> callers to only do their local target_put_sess_cmd() if necessary.
+> 
+> Reported-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> Cc: Mike Christie <mchristi@redhat.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>
+> Cc: Sagi Grimberg <sagig@mellanox.com>
+> Cc: stable@vger.kernel.org # 3.14+
+> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> ---
+>  drivers/target/target_core_internal.h  |  2 +-
+>  drivers/target/target_core_tmr.c       | 16 ++++++++--------
+>  drivers/target/target_core_transport.c |  9 ++++++---
+>  3 files changed, 15 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
+> index 9ab7090..0912de7 100644
+> --- a/drivers/target/target_core_internal.h
+> +++ b/drivers/target/target_core_internal.h
+> @@ -136,7 +136,7 @@ struct se_node_acl *core_tpg_add_initiator_node_acl(struct se_portal_group *tpg,
+>  void	release_se_kmem_caches(void);
+>  u32	scsi_get_new_index(scsi_index_t);
+>  void	transport_subsystem_check_init(void);
+> -void	transport_cmd_finish_abort(struct se_cmd *, int);
+> +int	transport_cmd_finish_abort(struct se_cmd *, int);
+>  unsigned char *transport_dump_cmd_direction(struct se_cmd *);
+>  void	transport_dump_dev_state(struct se_device *, char *, int *);
+>  void	transport_dump_dev_info(struct se_device *, struct se_lun *,
+> diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
+> index dce1e1b..13f47bf 100644
+> --- a/drivers/target/target_core_tmr.c
+> +++ b/drivers/target/target_core_tmr.c
+> @@ -75,7 +75,7 @@ void core_tmr_release_req(struct se_tmr_req *tmr)
+>  	kfree(tmr);
+>  }
+>  
+> -static void core_tmr_handle_tas_abort(struct se_cmd *cmd, int tas)
+> +static int core_tmr_handle_tas_abort(struct se_cmd *cmd, int tas)
+>  {
+>  	unsigned long flags;
+>  	bool remove = true, send_tas;
+> @@ -91,7 +91,7 @@ static void core_tmr_handle_tas_abort(struct se_cmd *cmd, int tas)
+>  		transport_send_task_abort(cmd);
+>  	}
+>  
+> -	transport_cmd_finish_abort(cmd, remove);
+> +	return transport_cmd_finish_abort(cmd, remove);
+>  }
+>  
+>  static int target_check_cdb_and_preempt(struct list_head *list,
+> @@ -184,8 +184,8 @@ void core_tmr_abort_task(
+>  		cancel_work_sync(&se_cmd->work);
+>  		transport_wait_for_tasks(se_cmd);
+>  
+> -		transport_cmd_finish_abort(se_cmd, true);
+> -		target_put_sess_cmd(se_cmd);
+> +		if (!transport_cmd_finish_abort(se_cmd, true))
+> +			target_put_sess_cmd(se_cmd);
+>  
+>  		printk("ABORT_TASK: Sending TMR_FUNCTION_COMPLETE for"
+>  				" ref_tag: %llu\n", ref_tag);
+> @@ -281,8 +281,8 @@ static void core_tmr_drain_tmr_list(
+>  		cancel_work_sync(&cmd->work);
+>  		transport_wait_for_tasks(cmd);
+>  
+> -		transport_cmd_finish_abort(cmd, 1);
+> -		target_put_sess_cmd(cmd);
+> +		if (!transport_cmd_finish_abort(cmd, 1))
+> +			target_put_sess_cmd(cmd);
+>  	}
+>  }
+>  
+> @@ -380,8 +380,8 @@ static void core_tmr_drain_state_list(
+>  		cancel_work_sync(&cmd->work);
+>  		transport_wait_for_tasks(cmd);
+>  
+> -		core_tmr_handle_tas_abort(cmd, tas);
+> -		target_put_sess_cmd(cmd);
+> +		if (!core_tmr_handle_tas_abort(cmd, tas))
+> +			target_put_sess_cmd(cmd);
+>  	}
+>  }
+>  
+> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+> index 6025935..f1b3a46 100644
+> --- a/drivers/target/target_core_transport.c
+> +++ b/drivers/target/target_core_transport.c
+> @@ -651,9 +651,10 @@ static void transport_lun_remove_cmd(struct se_cmd *cmd)
+>  		percpu_ref_put(&lun->lun_ref);
+>  }
+>  
+> -void transport_cmd_finish_abort(struct se_cmd *cmd, int remove)
+> +int transport_cmd_finish_abort(struct se_cmd *cmd, int remove)
+>  {
+>  	bool ack_kref = (cmd->se_cmd_flags & SCF_ACK_KREF);
+> +	int ret = 0;
+>  
+>  	if (cmd->se_cmd_flags & SCF_SE_LUN_CMD)
+>  		transport_lun_remove_cmd(cmd);
+> @@ -665,9 +666,11 @@ void transport_cmd_finish_abort(struct se_cmd *cmd, int remove)
+>  		cmd->se_tfo->aborted_task(cmd);
+>  
+>  	if (transport_cmd_check_stop_to_fabric(cmd))
+> -		return;
+> +		return 1;
+>  	if (remove && ack_kref)
+> -		transport_put_cmd(cmd);
+> +		ret = transport_put_cmd(cmd);
+> +
+> +	return ret;
+>  }
+>  
+>  static void target_complete_failure_work(struct work_struct *work)
