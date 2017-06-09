@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v5 20/23] scsi: hisi_sas: add get_wideport_bitmap_v3_hw()
-Date: Fri, 9 Jun 2017 22:16:33 +0800
-Message-ID: <1497017796-105067-21-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v5 09/23] scsi: hisi_sas: add skeleton v3 hw driver
+Date: Fri, 9 Jun 2017 22:16:22 +0800
+Message-ID: <1497017796-105067-10-git-send-email-john.garry@huawei.com>
 References: <1497017796-105067-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,49 +9,111 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1497017796-105067-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linuxarm@huawei.com, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@infradead.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+Cc: linuxarm@huawei.com, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@infradead.org, John Garry <john.garry@huawei.com>, Xiang Chen <chenxiang66@hisilicon.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+Add skeleton driver for v3 hw in hisi_sas_v3_hw.c
 
-Add code for interface get_wideport_bitmap.
+File hisi_sas_v3_hw.c will serve 2 purposes:
+- probing and initialisation of the controller based on pci device
+- hw layer for v3-based controllers
+
+The controller design is quite similar to v2 hw in hip07.
+
+However key differences include:
+-All v2 hw bugs are fixed (hopefully), so workarounds are not
+required
+-support for device deregistration
+-some interrupt modifications
+-configurable max device support
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ drivers/scsi/hisi_sas/Kconfig          | 10 +++++++-
+ drivers/scsi/hisi_sas/Makefile         |  1 +
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 47 ++++++++++++++++++++++++++++++++++
+ 3 files changed, 57 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 
+diff --git a/drivers/scsi/hisi_sas/Kconfig b/drivers/scsi/hisi_sas/Kconfig
+index 374a329..d42f29a 100644
+--- a/drivers/scsi/hisi_sas/Kconfig
++++ b/drivers/scsi/hisi_sas/Kconfig
+@@ -6,4 +6,12 @@ config SCSI_HISI_SAS
+ 	select BLK_DEV_INTEGRITY
+ 	depends on ATA
+ 	help
+-		This driver supports HiSilicon's SAS HBA
++		This driver supports HiSilicon's SAS HBA, including support based
++		on platform device
++
++config SCSI_HISI_SAS_PCI
++	tristate "HiSilicon SAS on PCI bus"
++	depends on SCSI_HISI_SAS
++	depends on PCI
++	help
++		This driver supports HiSilicon's SAS HBA based on PCI device
+diff --git a/drivers/scsi/hisi_sas/Makefile b/drivers/scsi/hisi_sas/Makefile
+index c6d3a1b..24623f2 100644
+--- a/drivers/scsi/hisi_sas/Makefile
++++ b/drivers/scsi/hisi_sas/Makefile
+@@ -1,2 +1,3 @@
+ obj-$(CONFIG_SCSI_HISI_SAS)		+= hisi_sas_main.o
+ obj-$(CONFIG_SCSI_HISI_SAS)		+= hisi_sas_v1_hw.o hisi_sas_v2_hw.o
++obj-$(CONFIG_SCSI_HISI_SAS_PCI)		+= hisi_sas_v3_hw.o
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index ef5c158..3cd4b9a 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+new file mode 100644
+index 0000000..cf72577
+--- /dev/null
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -629,6 +629,18 @@ static void sl_notify_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
- 	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
- }
- 
-+static int get_wideport_bitmap_v3_hw(struct hisi_hba *hisi_hba, int port_id)
+@@ -0,0 +1,47 @@
++/*
++ * Copyright (c) 2017 Hisilicon Limited.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ */
++
++#include "hisi_sas.h"
++#define DRV_NAME "hisi_sas_v3_hw"
++
++static int
++hisi_sas_v3_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 +{
-+	int i, bitmap = 0;
-+	u32 phy_port_num_ma = hisi_sas_read32(hisi_hba, PHY_PORT_NUM_MA);
-+
-+	for (i = 0; i < hisi_hba->n_phy; i++)
-+		if (((phy_port_num_ma >> (i * 4)) & 0xf) == port_id)
-+			bitmap |= 1 << i;
-+
-+	return bitmap;
++	return 0;
 +}
 +
- /**
-  * The callpath to this function and upto writing the write
-  * queue pointer should be safe from interruption.
-@@ -1550,6 +1562,7 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
- 	.hw_init = hisi_sas_v3_init,
- 	.setup_itct = setup_itct_v3_hw,
- 	.max_command_entries = HISI_SAS_COMMAND_ENTRIES_V3_HW,
-+	.get_wideport_bitmap = get_wideport_bitmap_v3_hw,
- 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v3_hdr),
- 	.free_device = free_device_v3_hw,
- 	.sl_notify = sl_notify_v3_hw,
++static void hisi_sas_v3_remove(struct pci_dev *pdev)
++{
++}
++
++enum {
++	/* instances of the controller */
++	hip08,
++};
++
++static const struct pci_device_id sas_v3_pci_table[] = {
++	{ PCI_VDEVICE(HUAWEI, 0xa230), hip08 },
++	{}
++};
++
++static struct pci_driver sas_v3_pci_driver = {
++	.name		= DRV_NAME,
++	.id_table	= sas_v3_pci_table,
++	.probe		= hisi_sas_v3_probe,
++	.remove		= hisi_sas_v3_remove,
++};
++
++module_pci_driver(sas_v3_pci_driver);
++
++MODULE_VERSION(DRV_VERSION);
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("John Garry <john.garry@huawei.com>");
++MODULE_DESCRIPTION("HISILICON SAS controller v3 hw driver based on pci device");
++MODULE_ALIAS("platform:" DRV_NAME);
 -- 
 1.9.1
