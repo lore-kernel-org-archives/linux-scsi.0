@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v5 01/23] scsi: hisi_sas: fix timeout check in hisi_sas_internal_task_abort()
-Date: Fri, 9 Jun 2017 22:16:14 +0800
-Message-ID: <1497017796-105067-2-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v5 02/23] scsi: hisi_sas: define hisi_sas_device.device_id as int
+Date: Fri, 9 Jun 2017 22:16:15 +0800
+Message-ID: <1497017796-105067-3-git-send-email-john.garry@huawei.com>
 References: <1497017796-105067-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,72 +9,92 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1497017796-105067-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linuxarm@huawei.com, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@infradead.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+Cc: linuxarm@huawei.com, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@infradead.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+Currently hisi_sas_device.device_id is a u64. This can create a
+problem in selecting the queue for a device, in that this code
+does a 64b division on device id. For some 32b systems, 64b division
+is slow and the lib reference must be explicitly included.
 
-We need to check for timeout before task status, or the task will be
-mistook as completed internal abort command.
-Also add protection for sas_task.task_state_flags in
-hisi_sas_tmf_timedout().
+The device id does not need to be 64b in size, so, as a solution,
+just make as an int.
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Also, struct hisi_sas_device elements are re-ordered to improve
+packing efficiency.
+
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 25 +++++++++++++++++--------
- 1 file changed, 17 insertions(+), 8 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas.h      |  8 ++++----
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 10 +++++-----
+ 2 files changed, 9 insertions(+), 9 deletions(-)
 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 4e28f32..b4e96fa9 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -107,15 +107,15 @@ struct hisi_sas_dq {
+ };
+ 
+ struct hisi_sas_device {
+-	enum sas_device_type	dev_type;
+ 	struct hisi_hba		*hisi_hba;
+ 	struct domain_device	*sas_device;
++	struct list_head	list;
+ 	u64 attached_phy;
+-	u64 device_id;
+ 	atomic64_t running_req;
+-	struct list_head	list;
+-	u8 dev_status;
++	enum sas_device_type	dev_type;
++	int device_id;
+ 	int sata_idx;
++	u8 dev_status;
+ };
+ 
+ struct hisi_sas_slot {
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index f720d3c..3605d28 100644
+index 3605d28..54e0cf2 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -691,8 +691,13 @@ static void hisi_sas_task_done(struct sas_task *task)
- static void hisi_sas_tmf_timedout(unsigned long data)
- {
- 	struct sas_task *task = (struct sas_task *)data;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&task->task_state_lock, flags);
-+	if (!(task->task_state_flags & SAS_TASK_STATE_DONE))
-+		task->task_state_flags |= SAS_TASK_STATE_ABORTED;
-+	spin_unlock_irqrestore(&task->task_state_lock, flags);
+@@ -209,7 +209,7 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_hba *hisi_hba,
  
--	task->task_state_flags |= SAS_TASK_STATE_ABORTED;
- 	complete(&task->slow_task->completion);
+ 	if (DEV_IS_GONE(sas_dev)) {
+ 		if (sas_dev)
+-			dev_info(dev, "task prep: device %llu not ready\n",
++			dev_info(dev, "task prep: device %d not ready\n",
+ 				 sas_dev->device_id);
+ 		else
+ 			dev_info(dev, "task prep: device %016llx not ready\n",
+@@ -627,9 +627,9 @@ static void hisi_sas_dev_gone(struct domain_device *device)
+ 	struct hisi_sas_device *sas_dev = device->lldd_dev;
+ 	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
+ 	struct device *dev = &hisi_hba->pdev->dev;
+-	u64 dev_id = sas_dev->device_id;
++	int dev_id = sas_dev->device_id;
+ 
+-	dev_info(dev, "found dev[%lld:%x] is gone\n",
++	dev_info(dev, "found dev[%d:%x] is gone\n",
+ 		 sas_dev->device_id, sas_dev->dev_type);
+ 
+ 	hisi_sas_internal_task_abort(hisi_hba, device,
+@@ -1082,7 +1082,7 @@ static int hisi_sas_lu_reset(struct domain_device *device, u8 *lun)
+ 	}
+ out:
+ 	if (rc != TMF_RESP_FUNC_COMPLETE)
+-		dev_err(dev, "lu_reset: for device[%llx]:rc= %d\n",
++		dev_err(dev, "lu_reset: for device[%d]:rc= %d\n",
+ 			     sas_dev->device_id, rc);
+ 	return rc;
+ }
+@@ -1129,7 +1129,7 @@ static int hisi_sas_query_task(struct sas_task *task)
  }
  
-@@ -1247,6 +1252,17 @@ static int hisi_sas_query_task(struct sas_task *task)
- 	wait_for_completion(&task->slow_task->completion);
- 	res = TMF_RESP_FUNC_FAILED;
- 
-+	/* Internal abort timed out */
-+	if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
-+		if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
-+			struct hisi_sas_slot *slot = task->lldd_task;
-+
-+			if (slot)
-+				slot->task = NULL;
-+			dev_err(dev, "internal task abort: timeout.\n");
-+		}
-+	}
-+
- 	if (task->task_status.resp == SAS_TASK_COMPLETE &&
- 		task->task_status.stat == TMF_RESP_FUNC_COMPLETE) {
- 		res = TMF_RESP_FUNC_COMPLETE;
-@@ -1259,13 +1275,6 @@ static int hisi_sas_query_task(struct sas_task *task)
- 		goto exit;
- 	}
- 
--	/* Internal abort timed out */
--	if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
--		if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
--			dev_err(dev, "internal task abort: timeout.\n");
--		}
--	}
--
- exit:
- 	dev_dbg(dev, "internal task abort: task to dev %016llx task=%p "
- 		"resp: 0x%x sts 0x%x\n",
+ static int
+-hisi_sas_internal_abort_task_exec(struct hisi_hba *hisi_hba, u64 device_id,
++hisi_sas_internal_abort_task_exec(struct hisi_hba *hisi_hba, int device_id,
+ 				  struct sas_task *task, int abort_flag,
+ 				  int task_tag)
+ {
 -- 
 1.9.1
