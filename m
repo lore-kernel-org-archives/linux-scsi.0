@@ -1,84 +1,60 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] iscsi-target: Fix delayed logout processing greater
- than SECONDS_FOR_LOGOUT_COMP
-Date: Thu, 08 Jun 2017 22:29:36 -0700
-Message-ID: <1496986176.28997.19.camel@haakon3.risingtidesystems.com>
-References: <1496525574-26784-1-git-send-email-nab@linux-iscsi.org>
+Subject: Re: [PATCH 0/3] target: Add TARGET_SCF_LOOKUP_LUN_FROM_TAG support
+Date: Thu, 08 Jun 2017 22:39:59 -0700
+Message-ID: <1496986799.28997.24.camel@haakon3.risingtidesystems.com>
+References: <1496527808-28789-1-git-send-email-nab@linux-iscsi.org>
+         <A01A1524-3760-4FFC-956F-2A82874B668D@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1496525574-26784-1-git-send-email-nab@linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <A01A1524-3760-4FFC-956F-2A82874B668D@cavium.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>, "Tran, Quinn" <Quinn.Tran@cavium.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Reviews pretty please..?
+Hi Himanshu & Quinn,
 
-On Sat, 2017-06-03 at 21:32 +0000, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Wed, 2017-06-07 at 05:02 +0000, Madhani, Himanshu wrote:
+> > On Jun 3, 2017, at 3:10 PM, Nicholas A. Bellinger <nab@linux-iscsi.org> wrote:
+> > 
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > 
+> > Hi Himanshu + Quinn,
+> > 
+> > Here is a small series to introduce proper percpu se_lun->lun_ref
+> > counting for TMR, and add common code in target_submit_tmr() to
+> > do tag lookup for unpacked_lun in order to drop the original
+> > driver specific lookup within __qlt_24xx_handle_abts().
+> > 
+> > It's rather straight-forward, so review and test as a v4.13 item.
+> > 
+> > Thanks!
+> > 
+> > Nicholas Bellinger (3):
+> >  target: Add support for TMR percpu reference counting
+> >  target: Add TARGET_SCF_LOOKUP_LUN_FROM_TAG support for ABORT_TASK
+> >  qla2xxx: Convert QLA_TGT_ABTS to TARGET_SCF_LOOKUP_LUN_FROM_TAG
+> > 
+> > drivers/scsi/qla2xxx/qla_target.c      | 39 ++++++-----------------
+> > drivers/scsi/qla2xxx/tcm_qla2xxx.c     |  4 ++-
+> > drivers/target/target_core_device.c    | 14 ++++++---
+> > drivers/target/target_core_transport.c | 56 ++++++++++++++++++++++++++++------
+> > include/target/target_core_base.h      |  3 +-
+> > 5 files changed, 71 insertions(+), 45 deletions(-)
+> > 
+> > -- 
+> > 1.9.1
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe target-devel" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> This patch fixes a BUG() in iscsit_close_session() that could be
-> triggered when iscsit_logout_post_handler() execution from within
-> tx thread context was not run for more than SECONDS_FOR_LOGOUT_COMP
-> (15 seconds), and the TCP connection didn't already close before
-> then forcing tx thread context to automatically exit.
+> Series looks good. 
 > 
-> This would manifest itself during explicit logout as:
+> Acked-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 > 
-> [33206.974254] 1 connection(s) still exist for iSCSI session to iqn.1993-08.org.debian:01:3f5523242179
-> [33206.980184] INFO: NMI handler (kgdb_nmi_handler) took too long to run: 2100.772 msecs
-> [33209.078643] ------------[ cut here ]------------
-> [33209.078646] kernel BUG at drivers/target/iscsi/iscsi_target.c:4346!
-> 
-> Normally when explicit logout attempt fails, the tx thread context
-> exits and iscsit_close_connection() from rx thread context does the
-> extra cleanup once it detects conn->conn_logout_remove has not been
-> cleared by the logout type specific post handlers.
-> 
-> To address this special case, if the logout post handler in tx thread
-> context detects conn->tx_thread_active has already been cleared, simply
-> return and exit in order for existing iscsit_close_connection()
-> logic from rx thread context do failed logout cleanup.
-> 
-> Reported-by: Bart Van Assche <bart.vanassche@sandisk.com>
-> Cc: Mike Christie <mchristi@redhat.com>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Sagi Grimberg <sagig@mellanox.com>
-> Cc: stable@vger.kernel.org # 3.14+
-> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> ---
->  drivers/target/iscsi/iscsi_target.c | 10 ++++++++--
->  1 file changed, 8 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-> index 0d8f815..c025451 100644
-> --- a/drivers/target/iscsi/iscsi_target.c
-> +++ b/drivers/target/iscsi/iscsi_target.c
-> @@ -4423,8 +4423,11 @@ static void iscsit_logout_post_handler_closesession(
->  	 * always sleep waiting for RX/TX thread shutdown to complete
->  	 * within iscsit_close_connection().
->  	 */
-> -	if (!conn->conn_transport->rdma_shutdown)
-> +	if (!conn->conn_transport->rdma_shutdown) {
->  		sleep = cmpxchg(&conn->tx_thread_active, true, false);
-> +		if (!sleep)
-> +			return;
-> +	}
->  
->  	atomic_set(&conn->conn_logout_remove, 0);
->  	complete(&conn->conn_logout_comp);
-> @@ -4440,8 +4443,11 @@ static void iscsit_logout_post_handler_samecid(
->  {
->  	int sleep = 1;
->  
-> -	if (!conn->conn_transport->rdma_shutdown)
-> +	if (!conn->conn_transport->rdma_shutdown) {
->  		sleep = cmpxchg(&conn->tx_thread_active, true, false);
-> +		if (!sleep)
-> +			return;
-> +	}
->  
->  	atomic_set(&conn->conn_logout_remove, 0);
->  	complete(&conn->conn_logout_comp);
+
+Thanks for the review! 
