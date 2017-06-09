@@ -1,96 +1,83 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 00/15] qla2xxx: Add Target Multiqueue support
-Date: Thu, 08 Jun 2017 23:34:50 -0700
-Message-ID: <1496990090.28997.47.camel@haakon3.risingtidesystems.com>
-References: <20170607214333.23110-1-himanshu.madhani@cavium.com>
+Subject: Re: [PATCH] iscsi-target: Reject immediate data underflow larger
+ than SCSI transfer length
+Date: Thu, 08 Jun 2017 23:55:02 -0700
+Message-ID: <1496991302.28997.66.camel@haakon3.risingtidesystems.com>
+References: <1496895685-18464-1-git-send-email-nab@linux-iscsi.org>
+         <1496936253.3028.1.camel@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20170607214333.23110-1-himanshu.madhani@cavium.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@cavium.com>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Quinn Tran <quinn.tran@cavium.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1496936253.3028.1.camel@wdc.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Cc: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "mchristi@redhat.com" <mchristi@redhat.com>, "roland@purestorage.com" <roland@purestorage.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Himanshu & Quinn,
-
-On Wed, 2017-06-07 at 14:43 -0700, Himanshu Madhani wrote:
-> Hi Nic,
+On Thu, 2017-06-08 at 15:37 +0000, Bart Van Assche wrote:
+> On Thu, 2017-06-08 at 04:21 +0000, Nicholas A. Bellinger wrote:
+> > +	/*
+> > +	 * Check for underflow case where both EDTL and immediate data payload
+> > +	 * exceeds what is presented by CDB's TRANSFER LENGTH, and what has
+> > +	 * already been set in target_cmd_size_check() as se_cmd->data_length.
+> > +	 *
+> > +	 * For this special case, fail the command and dump the immediate data
+> > +	 * payload.
+> > +	 */
+> > +	if (cmd->first_burst_len > cmd->se_cmd.data_length) {
+> > +		cmd->sense_reason = TCM_INVALID_CDB_FIELD;
+> > +		goto after_immediate_data;
+> > +	}
 > 
-> This patch series adds support for multiqueue for qla2xxx target mode driver.
+> A quote from the iSCSI RFC (https://tools.ietf.org/html/rfc5048):
 > 
-> I've also added patch ("qla2xxx: Include Exchange offload/Extended Login
-> into FW dump") which was dropped from earlier series for rework.
+>    If SPDTL < EDTL for a task, iSCSI Underflow MUST be signaled in the
+>    SCSI Response PDU as specified in [RFC3720].  The Residual Count MUST
+>    be set to the numerical value of (EDTL - SPDTL).
 > 
-> Please apply this series to target-pending for inclusion in 4.13 merge window.
+> Sorry but I don't think that sending TCM_INVALID_CDB_FIELD back to the
+> initiator is compliant with the iSCSI RFC.
 
-Bart's comments in patch #1 are reasonable to consider, but IMHO not a
-blocker to initial merge.
+Alas, the nuance of what this patch actually does was missed when you
+cut the context.
 
-That said, as-is this series doesn't apply (see below) to
-target-pending/for-next, presumably due to dependencies on what's in
-MKP's tree.
+First, a bit of history.  LIO has rejected underflow for all WRITEs for
+the first ~12.5 years of RFC-3720, and in the context of iscsi-target
+mode there has never been a single host environment that ever once
+cared.
 
-So I'm happy to accept a version that does apply.  ;)
+Since Roland's patch to allow underflow for control CDBs in v4.3+ opened
+this discussion for control CDBs with a WRITE payload in order to make
+MSFT/FCP cert for PERSISTENT_RESERVE_OUT happy, the question has become
+what control CDB WRITE underflow cases should we allow..?
 
-Checking patch drivers/scsi/qla2xxx/qla_def.h...
-Hunk #1 succeeded at 435 (offset -2 lines).
-Hunk #2 succeeded at 3296 (offset -2 lines).
-Hunk #3 succeeded at 4260 (offset -6 lines).
-Checking patch drivers/scsi/qla2xxx/qla_gbl.h...
-Hunk #1 succeeded at 833 (offset -1 lines).
-Checking patch drivers/scsi/qla2xxx/qla_inline.h...
-Hunk #1 succeeded at 262 (offset 12 lines).
-Checking patch drivers/scsi/qla2xxx/qla_isr.c...
-Hunk #2 succeeded at 2263 (offset -17 lines).
-Hunk #3 succeeded at 2627 (offset -13 lines).
-Hunk #4 succeeded at 2650 (offset -13 lines).
-Hunk #5 succeeded at 2759 (offset -13 lines).
-Checking patch drivers/scsi/qla2xxx/qla_os.c...
-Hunk #1 succeeded at 1637 (offset -12 lines).
-error: while searching for:
-		for (cnt = 1; cnt < req->num_outstanding_cmds; cnt++) {
-			sp = req->outstanding_cmds[cnt];
-			if (sp) {
-				/* Don't abort commands in adapter during EEH
-				 * recovery as it's not accessible/responding.
-				 */
-				if (GET_CMD_SP(sp) && !ha->flags.eeh_busy &&
-				    (sp->type == SRB_SCSI_CMD)) {
-					/* Get a reference to the sp and drop the lock.
-					 * The reference ensures this sp->done() call
-					 * - and not the call in qla2xxx_eh_abort() -
-					 * ends the SCSI command (with result 'res').
-					 */
-					sp_get(sp);
-					spin_unlock_irqrestore(&ha->hardware_lock, flags);
-					status = qla2xxx_eh_abort(GET_CMD_SP(sp));
-					spin_lock_irqsave(&ha->hardware_lock, flags);
-					/* Get rid of extra reference if immediate exit
-					 * from ql2xxx_eh_abort */
-					if (status == FAILED && (qla2x00_isp_reg_stat(ha)))
-						atomic_dec(&sp->ref_count);
-				}
-				req->outstanding_cmds[cnt] = NULL;
-				sp->done(sp, res);
-			}
-		}
-	}
+The point with this patch is when a host is sending a underflow with a
+iscsi immediate data payload that exceeds SCSI transfer length, it's a
+bogus request with a garbage payload.  It's a garbage payload because
+the SCSI CDB itself obviously doesn't want anything to do it.
 
-error: patch failed: drivers/scsi/qla2xxx/qla_os.c:1662
-error: drivers/scsi/qla2xxx/qla_os.c: patch does not apply
-Checking patch drivers/scsi/qla2xxx/qla_target.c...
-Hunk #2 succeeded at 2278 (offset -11 lines).
-Hunk #3 succeeded at 2317 (offset -11 lines).
-Hunk #4 succeeded at 2336 (offset -11 lines).
-Hunk #5 succeeded at 2881 (offset -12 lines).
-Hunk #6 succeeded at 2987 (offset -12 lines).
-Hunk #7 succeeded at 3675 (offset -6 lines).
-Hunk #8 succeeded at 3719 (offset -6 lines).
-Hunk #9 succeeded at 3754 (offset -6 lines).
-Hunk #10 succeeded at 4035 (offset -6 lines).
-Hunk #11 succeeded at 6622 (offset 27 lines).
-Checking patch drivers/scsi/qla2xxx/qla_target.h...
-Hunk #4 succeeded at 865 (offset 1 line).
-Hunk #5 succeeded at 1090 (offset 2 lines).
+I'm very dubious of any host environment who's trying to do this for any
+CDB, and expects achieve expected results.
+
+Of course, since v4.3+ normal overflow where SCSI transfer length
+matches the iscsi immediate data payload just works with or without this
+patch.
+
+So to that extent, I'm going to push this patch as a defensive fix for
+v4.3+, to let those imaginary iscsi host environments know they being
+very, very naughty.
+
+>  Please note that a fix that is
+> compliant with the iSCSI RFC is present in the following patch series: [PATCH
+> 00/33] SCSI target driver patches for kernel v4.13, 23 May 2017
+> (https://www.spinics.net/lists/target-devel/msg15370.html).
+
+So I might still consider this as a v4.13-rc item for control CDB
+underflow, but no way as stable material.
+
+Also, there is certainly no way I'm going to allow a patch to randomly
+enable underflow/overflow for all WRITE non control CDBs tree-wide
+across all fabric drivers, because 1) no host environments actually care
+about this, and 2) it's still dangerous to do for all fabrics without
+some serious auditing.
