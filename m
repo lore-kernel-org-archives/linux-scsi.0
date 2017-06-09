@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v5 09/23] scsi: hisi_sas: add skeleton v3 hw driver
-Date: Fri, 9 Jun 2017 22:16:22 +0800
-Message-ID: <1497017796-105067-10-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v5 05/23] scsi: hisi_sas: relocate sata_done_v2_hw()
+Date: Fri, 9 Jun 2017 22:16:18 +0800
+Message-ID: <1497017796-105067-6-git-send-email-john.garry@huawei.com>
 References: <1497017796-105067-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,111 +9,104 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1497017796-105067-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linuxarm@huawei.com, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@infradead.org, John Garry <john.garry@huawei.com>, Xiang Chen <chenxiang66@hisilicon.com>
+Cc: linuxarm@huawei.com, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@infradead.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Add skeleton driver for v3 hw in hisi_sas_v3_hw.c
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-File hisi_sas_v3_hw.c will serve 2 purposes:
-- probing and initialisation of the controller based on pci device
-- hw layer for v3-based controllers
+Relocate get_ata_protocol() to a common location, as future hw
+versions will require it.
+Also rename with "hisi_sas_" prefix for consistency.
 
-The controller design is quite similar to v2 hw in hip07.
-
-However key differences include:
--All v2 hw bugs are fixed (hopefully), so workarounds are not
-required
--support for device deregistration
--some interrupt modifications
--configurable max device support
-
-Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/Kconfig          | 10 +++++++-
- drivers/scsi/hisi_sas/Makefile         |  1 +
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 47 ++++++++++++++++++++++++++++++++++
- 3 files changed, 57 insertions(+), 1 deletion(-)
- create mode 100644 drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+ drivers/scsi/hisi_sas/hisi_sas.h       |  2 ++
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 15 +++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 18 ++----------------
+ 3 files changed, 19 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/Kconfig b/drivers/scsi/hisi_sas/Kconfig
-index 374a329..d42f29a 100644
---- a/drivers/scsi/hisi_sas/Kconfig
-+++ b/drivers/scsi/hisi_sas/Kconfig
-@@ -6,4 +6,12 @@ config SCSI_HISI_SAS
- 	select BLK_DEV_INTEGRITY
- 	depends on ATA
- 	help
--		This driver supports HiSilicon's SAS HBA
-+		This driver supports HiSilicon's SAS HBA, including support based
-+		on platform device
-+
-+config SCSI_HISI_SAS_PCI
-+	tristate "HiSilicon SAS on PCI bus"
-+	depends on SCSI_HISI_SAS
-+	depends on PCI
-+	help
-+		This driver supports HiSilicon's SAS HBA based on PCI device
-diff --git a/drivers/scsi/hisi_sas/Makefile b/drivers/scsi/hisi_sas/Makefile
-index c6d3a1b..24623f2 100644
---- a/drivers/scsi/hisi_sas/Makefile
-+++ b/drivers/scsi/hisi_sas/Makefile
-@@ -1,2 +1,3 @@
- obj-$(CONFIG_SCSI_HISI_SAS)		+= hisi_sas_main.o
- obj-$(CONFIG_SCSI_HISI_SAS)		+= hisi_sas_v1_hw.o hisi_sas_v2_hw.o
-+obj-$(CONFIG_SCSI_HISI_SAS_PCI)		+= hisi_sas_v3_hw.o
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-new file mode 100644
-index 0000000..cf72577
---- /dev/null
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -0,0 +1,47 @@
-+/*
-+ * Copyright (c) 2017 Hisilicon Limited.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ */
-+
-+#include "hisi_sas.h"
-+#define DRV_NAME "hisi_sas_v3_hw"
-+
-+static int
-+hisi_sas_v3_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index a50c699..1dcdf66 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -364,6 +364,8 @@ struct hisi_sas_command_table_ssp {
+ 
+ extern u8 hisi_sas_get_ata_protocol(u8 cmd, int direction);
+ extern struct hisi_sas_port *to_hisi_sas_port(struct asd_sas_port *sas_port);
++extern void hisi_sas_sata_done(struct sas_task *task,
++			    struct hisi_sas_slot *slot);
+ extern int hisi_sas_probe(struct platform_device *pdev,
+ 			  const struct hisi_sas_hw *ops);
+ extern int hisi_sas_remove(struct platform_device *pdev);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 08e33e8..a7ba73b9 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -82,6 +82,21 @@ u8 hisi_sas_get_ata_protocol(u8 cmd, int direction)
+ }
+ EXPORT_SYMBOL_GPL(hisi_sas_get_ata_protocol);
+ 
++void hisi_sas_sata_done(struct sas_task *task,
++			    struct hisi_sas_slot *slot)
 +{
-+	return 0;
++	struct task_status_struct *ts = &task->task_status;
++	struct ata_task_resp *resp = (struct ata_task_resp *)ts->buf;
++	struct dev_to_host_fis *d2h = slot->status_buffer +
++				      sizeof(struct hisi_sas_err_record);
++
++	resp->frame_len = sizeof(struct dev_to_host_fis);
++	memcpy(&resp->ending_fis[0], d2h, sizeof(struct dev_to_host_fis));
++
++	ts->buf_valid_size = sizeof(*resp);
 +}
++EXPORT_SYMBOL_GPL(hisi_sas_sata_done);
 +
-+static void hisi_sas_v3_remove(struct pci_dev *pdev)
-+{
-+}
-+
-+enum {
-+	/* instances of the controller */
-+	hip08,
-+};
-+
-+static const struct pci_device_id sas_v3_pci_table[] = {
-+	{ PCI_VDEVICE(HUAWEI, 0xa230), hip08 },
-+	{}
-+};
-+
-+static struct pci_driver sas_v3_pci_driver = {
-+	.name		= DRV_NAME,
-+	.id_table	= sas_v3_pci_table,
-+	.probe		= hisi_sas_v3_probe,
-+	.remove		= hisi_sas_v3_remove,
-+};
-+
-+module_pci_driver(sas_v3_pci_driver);
-+
-+MODULE_VERSION(DRV_VERSION);
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("John Garry <john.garry@huawei.com>");
-+MODULE_DESCRIPTION("HISILICON SAS controller v3 hw driver based on pci device");
-+MODULE_ALIAS("platform:" DRV_NAME);
+ static struct hisi_hba *dev_to_hisi_hba(struct domain_device *device)
+ {
+ 	return device->port->ha->lldd_ha;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index d9314c4..fdd7019 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -1683,20 +1683,6 @@ static int prep_ssp_v2_hw(struct hisi_hba *hisi_hba,
+ 	return 0;
+ }
+ 
+-static void sata_done_v2_hw(struct hisi_hba *hisi_hba, struct sas_task *task,
+-			    struct hisi_sas_slot *slot)
+-{
+-	struct task_status_struct *ts = &task->task_status;
+-	struct ata_task_resp *resp = (struct ata_task_resp *)ts->buf;
+-	struct dev_to_host_fis *d2h = slot->status_buffer +
+-				      sizeof(struct hisi_sas_err_record);
+-
+-	resp->frame_len = sizeof(struct dev_to_host_fis);
+-	memcpy(&resp->ending_fis[0], d2h, sizeof(struct dev_to_host_fis));
+-
+-	ts->buf_valid_size = sizeof(*resp);
+-}
+-
+ #define TRANS_TX_ERR	0
+ #define TRANS_RX_ERR	1
+ #define DMA_TX_ERR		2
+@@ -2189,7 +2175,7 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
+ 			break;
+ 		}
+ 		}
+-		sata_done_v2_hw(hisi_hba, task, slot);
++		hisi_sas_sata_done(task, slot);
+ 	}
+ 		break;
+ 	default:
+@@ -2317,7 +2303,7 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
+ 	case SAS_PROTOCOL_SATA | SAS_PROTOCOL_STP:
+ 	{
+ 		ts->stat = SAM_STAT_GOOD;
+-		sata_done_v2_hw(hisi_hba, task, slot);
++		hisi_sas_sata_done(task, slot);
+ 		break;
+ 	}
+ 	default:
 -- 
 1.9.1
