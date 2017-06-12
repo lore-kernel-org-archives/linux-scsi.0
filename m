@@ -1,80 +1,51 @@
-From: <armiksanaye@gmail.com>
-Subject: (unknown)
-Date: Mon, 12 Jun 2017 17:13:16 -0000
-Message-ID: <149728759655.29697.13049401531042692291@zaural.ru>
+From: Subhash Jadavani <subhashj@codeaurora.org>
+Subject: Re: [PATCH 1/3] scsi:ufs:add AHIT for hi3660 ufs
+Date: Mon, 12 Jun 2017 13:50:25 -0700
+Message-ID: <cb03a80c6e0621b25d9c41be4e34bf47@codeaurora.org>
+References: <20170610012045.33325-1-butao@hisilicon.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="069816.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ws244.zone31-163-140.zaural.ru ([31.163.140.244]:57312 "HELO
-        zaural.ru" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-        id S1753441AbdFLRN0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 12 Jun 2017 13:13:26 -0400
-Content-Disposition: attachment
-Subject: 
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170610012045.33325-1-butao@hisilicon.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: butao <butao@hisilicon.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, guodong.xu@linaro.org, gengjianfeng@hisilicon.com, kongfei@hisilicon.com, suzhuangluan@hisilicon.com, steven.yujianfeng@hisilicon.com, zangleigang@hisilicon.com, linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-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
-AAABAAEATwAAAEANAAAAAA==
+On 2017-06-09 18:20, butao wrote:
+> add Auto-Hibernate Idle Timer value for hi3660 ufs
+> 
+> Signed-off-by: Bu Tao <butao@hisilicon.com>
+> Signed-off-by: Geng Jianfeng <gengjianfeng@hisilicon.com>
+> Signed-off-by: Zang Leigang <zangleigang@hisilicon.com>
+> Signed-off-by: Yu Jianfeng <steven.yujianfeng@hisilicon.com>
+> ---
+>  drivers/scsi/ufs/ufshci.h | 3 +++
+>  1 file changed, 3 insertions(+)
+>  mode change 100644 => 100755 drivers/scsi/ufs/ufshci.h
+> 
+> diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+> old mode 100644
+> new mode 100755
+> index f60145d4a66e..5ab9dfe4280e
+> --- a/drivers/scsi/ufs/ufshci.h
+> +++ b/drivers/scsi/ufs/ufshci.h
+> @@ -151,6 +151,9 @@ enum {
+>  				CONTROLLER_FATAL_ERROR |\
+>  				SYSTEM_BUS_FATAL_ERROR)
+> 
+> +/* AHIT - Auto-Hibernate Idle Timer */
+> +#define UFS_AHIT_AH8ITV_MASK			0x3FF
+
+This should be added only when we would need it in the driver.
+
+> +
+>  /* HCS - Host Controller Status 30h */
+>  #define DEVICE_PRESENT				UFS_BIT(0)
+>  #define UTP_TRANSFER_REQ_LIST_READY		UFS_BIT(1)
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
