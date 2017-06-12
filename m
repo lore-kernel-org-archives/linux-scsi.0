@@ -1,34 +1,80 @@
-From: Chad Dupuis <chad.dupuis@cavium.com>
-Subject: Re: [PATCH 0/3] scsi: qedf: Fix a return value + some cleanups
-Date: Mon, 12 Jun 2017 10:03:30 -0400 (EDT)
-Message-ID: <alpine.OSX.2.00.1706121002340.964@n5127mncfb42q1.qlogic.org>
-References: <cover.1497160148.git.christophe.jaillet@wanadoo.fr>
+From: <armiksanaye@gmail.com>
+Subject: (unknown)
+Date: Mon, 12 Jun 2017 17:13:16 -0000
+Message-ID: <149728759655.29697.13049401531042692291@zaural.ru>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <cover.1497160148.git.christophe.jaillet@wanadoo.fr>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc: QLogic-Storage-Upstream@cavium.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: application/zip; name="069816.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ws244.zone31-163-140.zaural.ru ([31.163.140.244]:57312 "HELO
+        zaural.ru" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+        id S1753441AbdFLRN0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 12 Jun 2017 13:13:26 -0400
+Content-Disposition: attachment
+Subject: 
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-
-On Sun, 11 Jun 2017, 2:16am, Christophe JAILLET wrote:
-
-> This patch serie first fixes a case where an error code was missing.
-> The 2 other patches are just cleanups in the same area.
-> 
-> Christophe JAILLET (3):
->   scsi: qedf: Fix a return value in case of error in
->     'qedf_alloc_global_queues'
->   scsi: qedf: Use 'dma_zalloc_coherent' to reduce code verbosity.
->   scsi: qedf: Merge a few quoted strings split across lines
-> 
->  drivers/scsi/qedf/qedf_main.c | 38 +++++++++++++-------------------------
->  1 file changed, 13 insertions(+), 25 deletions(-)
-> 
-> 
-
-All are sensible small improvements.  Ack the series.
-
-series-acked-by: Chad Dupuis <chad.dupuis@cavium.com>
+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
+AAABAAEATwAAAEANAAAAAA==
