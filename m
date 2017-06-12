@@ -1,51 +1,129 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH 1/3] scsi:ufs:add AHIT for hi3660 ufs
-Date: Mon, 12 Jun 2017 13:50:25 -0700
-Message-ID: <cb03a80c6e0621b25d9c41be4e34bf47@codeaurora.org>
-References: <20170610012045.33325-1-butao@hisilicon.com>
+From: James Smart <james.smart@broadcom.com>
+Subject: Re: [ANNOUNCE]: Broadcom (Emulex) FC Target driver - efct
+Date: Mon, 12 Jun 2017 16:08:24 -0700
+Message-ID: <55205e7e-e1c6-5f09-8dd3-338492728dfe@broadcom.com>
+References: <ced2ff0a-05ee-b85e-b41a-f912cab9e267@gmail.com>
+ <1488485325.5580.9.camel@haakon3.risingtidesystems.com>
+ <20170305173528.00006b41@gmx.de>
+ <CAL1RGDVBvgzaQTRfWS14=S1M1DuzKGPYzAPWWeQyAASDQ=05Rw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170610012045.33325-1-butao@hisilicon.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: butao <butao@hisilicon.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, guodong.xu@linaro.org, gengjianfeng@hisilicon.com, kongfei@hisilicon.com, suzhuangluan@hisilicon.com, steven.yujianfeng@hisilicon.com, zangleigang@hisilicon.com, linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <CAL1RGDVBvgzaQTRfWS14=S1M1DuzKGPYzAPWWeQyAASDQ=05Rw@mail.gmail.com>
+Content-Language: en-US
+Sender: target-devel-owner@vger.kernel.org
+To: Roland Dreier <roland@purestorage.com>, Sebastian Herbszt <herbszt@gmx.de>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, jsmart2021@gmail.com, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 2017-06-09 18:20, butao wrote:
-> add Auto-Hibernate Idle Timer value for hi3660 ufs
-> 
-> Signed-off-by: Bu Tao <butao@hisilicon.com>
-> Signed-off-by: Geng Jianfeng <gengjianfeng@hisilicon.com>
-> Signed-off-by: Zang Leigang <zangleigang@hisilicon.com>
-> Signed-off-by: Yu Jianfeng <steven.yujianfeng@hisilicon.com>
-> ---
->  drivers/scsi/ufs/ufshci.h | 3 +++
->  1 file changed, 3 insertions(+)
->  mode change 100644 => 100755 drivers/scsi/ufs/ufshci.h
-> 
-> diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-> old mode 100644
-> new mode 100755
-> index f60145d4a66e..5ab9dfe4280e
-> --- a/drivers/scsi/ufs/ufshci.h
-> +++ b/drivers/scsi/ufs/ufshci.h
-> @@ -151,6 +151,9 @@ enum {
->  				CONTROLLER_FATAL_ERROR |\
->  				SYSTEM_BUS_FATAL_ERROR)
-> 
-> +/* AHIT - Auto-Hibernate Idle Timer */
-> +#define UFS_AHIT_AH8ITV_MASK			0x3FF
+On 5/16/2017 12:59 PM, Roland Dreier wrote:
+> On Sun, Mar 5, 2017 at 8:35 AM, Sebastian Herbszt <herbszt@gmx.de> wrote:
+>> Just like Hannes I do favour integration. I guess it could be
+>> comparable to qla2xxx + tcm_qla2xxx, lpfc + lpfc_scst and
+>> lpfc + tcm_lpfc. That approach might even help Bart with his
+>> target driver unification if he didn't give up on that topic.
+> Resurrecting this old topic - sorry for not seeing this go by initially.
+>
+> For context, I have a lot of experience debugging the qla2xxx target
+> code - we did a lot of work to get error/exception paths correct.
+> Basic FC target support is pretty straightforward but handling SAN log
+> in / log out events and other strange things that initiators do took a
+> lot of effort.
+>
+> Anyway, my feeling is that the integration of tcm_qla2xxx and qla2xxx
+> was overall a net negative.  Having the target driver grafted onto the
+> side of an already-complex driver that has a bunch of code not
+> relevant to the target (SCSI error handling, logging into and timing
+> out remote target ports, etc) made the code harder to debug and harder
+> to get right.
+>
+> Of course I'm in favor of making common code really common.  So
+> certainly we should have a common library of SLI-4 code that both the
+> initiator and target driver share.  And if there is more commonality,
+> that's great.  But any code similar to "if (initiator) ... else ..."
+> is really suspect to me - grepping for "qla_ini_mode_enabled" shows
+> great examples like
+>
+> ...
+>
+> Handling "dual mode" (both initiator and target on the same port at
+> the same time) is a design challenge, but I don't think the current
+> qla2xxx driver is an example of a maintainable way to do that.
+>
+> (I'm agnostic about what to do about SLI-3 - perhaps the cleanest
+> thing to do is split the driver between SLI-4 and SLI-3, and handle
+> the initiator and target drivers for those two cases as appropriate)
+>
+> I'd love to discuss this further and come up with a design that meets
+> the concerns about integration but also learns the lessons from
+> tcm_qla2xxx.
+>
+>   - R.
 
-This should be added only when we would need it in the driver.
 
-> +
->  /* HCS - Host Controller Status 30h */
->  #define DEVICE_PRESENT				UFS_BIT(0)
->  #define UTP_TRANSFER_REQ_LIST_READY		UFS_BIT(1)
+Thanks for the feedback.  I believe you echo many of our concerns as we 
+look at "merging them into one".  I agree with your statements on the 
+number of if-else roles and know that we made this even more complicated 
+by the driver doing fc-nvme initiator and fc-nvme target as well.  Your 
+small list of "mode_enabled" hits pales in comparison to a hit list in 
+the current driver if looking for SCSI initiator support 
+(LPFC_ENABLE_FCP), NVME initiator support (LPFC_ENABLE_NVME), or NVME 
+target support (phba->nvmet_support). And that's before adding SCSI 
+target support.   We're also concerned about the discovery engines as 
+not only are there lots of different paths for the different roles as 
+well as support for fcoe, but there are a lot of carefully managed 
+accommodations for various oem and switch environments. It's very 
+difficult to replicate and retest all these different configurations and 
+scenarios.
 
--- 
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+Here's what I'd like to propose for a direction:
+1) Create an initiator driver and a target driver.  For now, initiator 
+would support both SCSI and NVME initiator. Target would support SCSI 
+and NVME target.
+2) SLI3 support would be contained only within the initiator driver and 
+limited to SCSI (as it is today in lpfc).
+3) SLI4 support would be library-ized,so that the code can be shared 
+between the two drivers.  Library-izing SLI-4 means SLI-3 will also be 
+library-ized.
+4) Discovery support would be librarized so it can be shared. As part of 
+this effort we will minimally move generic functions from the library to 
+drivers/scsi/libfc (example: setting RPA payloads, etc).  At this time, 
+the drivers will not attempt to use libfc for discovery. There is too 
+much sensitive code tied to interlocks with adapter api design that are 
+visible in the discovery state machine. Use of libfc can be a future, 
+but for the short term, the goal is a single library for the broadcom 
+initiator/target drivers.
+5) lpfc will be refactored, addressing concerns that have been desired 
+for a while.
+
+
+To start this effort, I'd like a bcmlpfc directory to be made within the 
+drivers staging tree. The directory would be populated with the efct 
+driver and a copy of the existing lpfc driver.   Work can then commence 
+on refactoring lpfc and creating the libraries and integrating the 
+libraries into both drivers.  As lpfc is updated in the main tree, 
+patches would be posted to the staging version of lpfc to keep them on par.
+
+
+Questions:
+a) How best to deal with overlapping pci id's ?  E.g. if we do (1) and 
+we have an initiator and target driver, there is a lot of adapters that 
+are fully functional for target operation, but were sold as primarily an 
+initiator adapter. How could we manage target mode enablement without 
+code mod or hard pci id partitioning ?   I know individual pci 
+unbind/bind could work, but its been frowned upon as a long term option. 
+Same thing goes for module parameters to select which ports do what role.
+
+b) Assuming we have the lpfc copy in the bcmlpfc directory in the 
+staging tree: are there any issues with having a version of lpfc in the 
+main tree and another in the staging tree ?     For many reasons, I'd 
+like to keep the name lpfc on the initiator driver in the staging tree. 
+But is that possible ? I assume we would need to develop in the staging 
+tree as a new name and pci id space separate from the base driver, and 
+we can rename the staging driver to the lpfc name when it merges into 
+the main kernel and replaces the existing driver.
+
+Thoughts ? Nic ?   James ?  Martin ?
+
+-- james
