@@ -1,30 +1,19 @@
-From: <"Azim Hash"@correo.hlbm.gob.ec>
-Subject: Congratulation
-Date: Sat, 10 Jun 2017 23:34:55 -0700
-Message-ID: <20170610203507.9AF20EF5ED2__12028.2577154741$1497223050$gmane$org@correo.hlbm.gob.ec>
-Reply-To: azimpremjicharityfoundation@gmail.com
+From: Financial Services Pvt Ltd <jaka.lesmana@customs.go.id>
+Subject: Quick Loans
+Date: Mon, 12 Jun 2017 09:30:16 +0530
+Message-ID: <20170612040232.01B801BC856F__25745.2051890597$1497241638$gmane$org@mail.customs.go.id>
+Reply-To: payingfunds@3mail.ie
 Mime-Version: 1.0
 Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from correo.hlbm.gob.ec ([190.214.24.250]:32938 "EHLO
-        correo.hlbm.gob.ec" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751912AbdFKXRN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Jun 2017 19:17:13 -0400
+Received: from mail.customs.go.id ([202.61.126.135]:33309 "EHLO
+        mail.customs.go.id" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751987AbdFLE0t (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jun 2017 00:26:49 -0400
 Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <AzimHash@correo.hlbm.gob.ec>
+To: Recipients <jaka.lesmana@customs.go.id>
 
-Hello,
-
-I'm Azim Hashim Premji, an Indian business tycoon, investor, and philanthropist. I'm the chairman of Wipro Limited. I gave away 25 per cent of my personal wealth to charity. And I also pledged to give away the rest of 25% this year 2017.. I have decided to donate 750,000.00USD to you. If you are interested in my donation, do contact me for more info. I will also want you to be part of my Charity Foundation once you receive this Cash Donation if you don't mind..
-
-You can also read more about me via the link below
-
-http://en.wikipedia.org/wiki/Azim_Premji
-
-whatsapp:+91-886-718-2831
-
-CEO Wipro Limited
-Azim Hashim Premji
+Apply for a loan at 3% reply to this Email for more Info
