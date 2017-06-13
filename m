@@ -1,55 +1,31 @@
-From: Long Li <longli@exchange.microsoft.com>
-Subject: [PATCH] storvsc: use default I/O timeout handler for FC devices
-Date: Mon, 12 Jun 2017 17:23:37 -0700
-Message-ID: <1497313417-14815-1-git-send-email-longli@exchange.microsoft.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, KY Srinivasan <kys@microsoft.com>, Stephen Hemminger <sthemmin@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>
-Cc: Long Li <longli@microsoft.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v3 00/12] SCSI patches for kernel v4.13
+Date: Mon, 12 Jun 2017 21:04:12 -0400
+Message-ID: <yq1tw3kzoj7.fsf@oracle.com>
+References: <20170602212203.30401-1-bart.vanassche@sandisk.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:33120 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752508AbdFMBE0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jun 2017 21:04:26 -0400
+In-Reply-To: <20170602212203.30401-1-bart.vanassche@sandisk.com> (Bart Van
+        Assche's message of "Fri, 2 Jun 2017 14:21:51 -0700")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-From: Long Li <longli@microsoft.com>
 
-FC disks are usually setup in a multipath system, and they don't want to 
-unconditionaly reset I/O on timeout. I/O timeout is detected by multipath 
-as a good time to failover and recover.
+Bart,
 
-Signed-off-by: Long Li <longli@microsoft.com>
----
- drivers/scsi/storvsc_drv.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+> This patch series consists of the bug fixes and improvements I came up
+> with during the past two months. This patch series has been developed
+> on top of your 4.13/scsi-queue branch. Please consider these patches
+> for kernel v4.13.
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 8d955db..d60b5ea 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -486,6 +486,7 @@ struct hv_host_device {
- 	unsigned int port;
- 	unsigned char path;
- 	unsigned char target;
-+	bool is_fc;
- };
- 
- struct storvsc_scan_work {
-@@ -1495,6 +1496,11 @@ static int storvsc_host_reset_handler(struct scsi_cmnd *scmnd)
-  */
- static enum blk_eh_timer_return storvsc_eh_timed_out(struct scsi_cmnd *scmnd)
- {
-+	struct hv_host_device *host_dev = shost_priv(scmnd->device->host);
-+
-+	if (host_dev->is_fc)
-+		return BLK_EH_NOT_HANDLED;
-+
- 	return BLK_EH_RESET_TIMER;
- }
- 
-@@ -1738,6 +1744,7 @@ static int storvsc_probe(struct hv_device *device,
- 
- 	host_dev->port = host->host_no;
- 	host_dev->dev = device;
-+	host_dev->is_fc = is_fc;
- 
- 
- 	stor_device = kzalloc(sizeof(struct storvsc_device), GFP_KERNEL);
+Applied to 4.13/scsi-queue, thanks!
+
 -- 
-2.7.4
+Martin K. Petersen	Oracle Linux Engineering
