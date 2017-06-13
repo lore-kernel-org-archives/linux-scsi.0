@@ -1,23 +1,19 @@
 From: Colin King <colin.king@canonical.com>
-Subject: [PATCH][target-devel-next] tcmu: make array tcmu_attrib_attrs static const
-Date: Tue, 13 Jun 2017 14:24:17 +0100
-Message-ID: <20170613132417.20397-1-colin.king@canonical.com>
+Subject: [PATCH][V2][target-devel-next] tcmu: make array tcmu_attrib_attrs static const
+Date: Tue, 13 Jun 2017 14:29:09 +0100
+Message-ID: <20170613132909.28674-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:59826 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753311AbdFMNYT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Jun 2017 09:24:19 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: "Nicholas A . Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
 From: Colin Ian King <colin.king@canonical.com>
 
-The guid intel_dsm_guid does not need to be in global scope, so make
+The array tcmu_attrib_attrs does not need to be in global scope, so make
 it static.
 
 Cleans up sparse warning:
