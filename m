@@ -1,35 +1,40 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 6/6] sd: add support for TCG OPAL self encrypting disks
-Date: Tue, 13 Jun 2017 08:40:18 +0200
-Message-ID: <20170613064018.GA31330@lst.de>
-References: <20170604124225.27032-1-hch@lst.de> <20170604124225.27032-7-hch@lst.de> <yq1lgp6djr3.fsf@oracle.com> <20170606095802.GA20590@lst.de>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] storvsc: use default I/O timeout handler for FC devices
+Date: Tue, 13 Jun 2017 10:13:42 +0200
+Message-ID: <8b293fe7-7e14-2e56-5485-c56c9c3bf4ae@suse.de>
+References: <1497313417-14815-1-git-send-email-longli@exchange.microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170606095802.GA20590@lst.de>
-Sender: linux-block-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, Scott Bauer <scott.bauer@intel.com>, Jonathan Derrick <jonathan.derrick@intel.com>, Rafael Antognolli <rafael.antognolli@intel.com>, Robert Elliott <elliott@hpe.com>, linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:54283 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751753AbdFMINp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 13 Jun 2017 04:13:45 -0400
+In-Reply-To: <1497313417-14815-1-git-send-email-longli@exchange.microsoft.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Long Li <longli@exchange.microsoft.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, KY Srinivasan <kys@microsoft.com>, Stephen Hemminger <sthemmin@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>
+Cc: Long Li <longli@microsoft.com>
 
-On Tue, Jun 06, 2017 at 11:58:02AM +0200, Christoph Hellwig wrote:
-> On Mon, Jun 05, 2017 at 08:48:00PM -0400, Martin K. Petersen wrote:
-> > For WRITE SAME, scsi_report_opcode() is gated not only by
-> > sdev->no_report_opcodes but by sdev->no_write_same.
-> > 
-> > I'm concerned about firing off REPORT OPCODES to random devices without
-> > a sufficiently good heuristic. Doesn't look like SAT has anything to
-> > offer in this department, though. Maybe it's time to consider a
-> > vendor-specific Linux VPD page...
+On 06/13/2017 02:23 AM, Long Li wrote:
+> From: Long Li <longli@microsoft.com>
 > 
-> Eww.  Given that as far as I can tell only ATA devices implement
-> OPAL we could key it off that for now.  But that's only going to
-> defer the problem until support for other security protocols comes
-> along for real SCSI devices.
+> FC disks are usually setup in a multipath system, and they don't want to 
+> unconditionaly reset I/O on timeout. I/O timeout is detected by multipath 
+> as a good time to failover and recover.
 > 
-> But as we already set no_report_opcodes for all usb-storage and
-> quirked uas devices I think the worst offenders are already covered
-> anyway.
+> Signed-off-by: Long Li <longli@microsoft.com>
+> ---
 
-Martin, how do we want to move ahead on this patch?
+Looks good,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
