@@ -1,112 +1,38 @@
-From: Long Li <longli@microsoft.com>
-Subject: RE: [Possible Phish Fraud][PATCH] storvsc: use default I/O timeout
- handler for FC devices
-Date: Tue, 13 Jun 2017 19:16:13 +0000
-Message-ID: <MWHPR03MB313605606CD50FADB0D9AFBBCEC20@MWHPR03MB3136.namprd03.prod.outlook.com>
-References: <1497313417-14815-1-git-send-email-longli@exchange.microsoft.com>
- <1497368284.2804.5.camel@wdc.com>
+From: Dave Carroll <david.carroll@microsemi.com>
+Subject: RE: [PATCH] scsi: aacraid: fix leak of data from stack back to
+ userspace
+Date: Tue, 13 Jun 2017 21:06:02 +0000
+Message-ID: <423FD6710FB8FB4F8728F93591889F9A53045C92@avsrvexchmbx2.microsemi.net>
+References: <20170515145605.21461-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1497368284.2804.5.camel@wdc.com>
+In-Reply-To: <20170515145605.21461-1-colin.king@canonical.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, KY Srinivasan <kys@microsoft.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Stephen Hemminger <sthemmin@microsoft.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Haiyang Zhang <haiyangz@microsoft.com>
-Cc: "jthumshirn@suse.de" <jthumshirn@suse.de>
+To: Colin King <colin.king@canonical.com>, Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-
-
-> -----Original Message-----
-> From: Bart Van Assche [mailto:Bart.VanAssche@sandisk.com]
-> Sent: Tuesday, June 13, 2017 8:38 AM
-> To: linux-kernel@vger.kernel.org; KY Srinivasan <kys@microsoft.com>;
-> martin.petersen@oracle.com; linux-scsi@vger.kernel.org; Stephen Hemminger
-> <sthemmin@microsoft.com>; Long Li <longli@microsoft.com>;
-> jejb@linux.vnet.ibm.com; Haiyang Zhang <haiyangz@microsoft.com>
-> Cc: jthumshirn@suse.de; Long Li <longli@microsoft.com>
-> Subject: Re: [Possible Phish Fraud][PATCH] storvsc: use default I/O timeo=
-ut
-> handler for FC devices
->=20
-> On Mon, 2017-06-12 at 17:23 -0700, Long Li wrote:
-> > From: Long Li <longli@microsoft.com>
-> >
-> > FC disks are usually setup in a multipath system, and they don't want
-> > to unconditionaly reset I/O on timeout. I/O timeout is detected by
-> > multipath as a good time to failover and recover.
-> >
-> > Signed-off-by: Long Li <longli@microsoft.com>
-> > ---
-> >  drivers/scsi/storvsc_drv.c | 7 +++++++
-> >  1 file changed, 7 insertions(+)
-> >
-> > diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> > index 8d955db..d60b5ea 100644
-> > --- a/drivers/scsi/storvsc_drv.c
-> > +++ b/drivers/scsi/storvsc_drv.c
-> > @@ -486,6 +486,7 @@ struct hv_host_device {
-> >  	unsigned int port;
-> >  	unsigned char path;
-> >  	unsigned char target;
-> > +	bool is_fc;
-> >  };
-> >
-> >  struct storvsc_scan_work {
-> > @@ -1495,6 +1496,11 @@ static int storvsc_host_reset_handler(struct
-> scsi_cmnd *scmnd)
-> >   */
-> >  static enum blk_eh_timer_return storvsc_eh_timed_out(struct scsi_cmnd
-> > *scmnd)  {
-> > +	struct hv_host_device *host_dev =3D shost_priv(scmnd->device->host);
-> > +
-> > +	if (host_dev->is_fc)
-> > +		return BLK_EH_NOT_HANDLED;
-> > +
-> >  	return BLK_EH_RESET_TIMER;
-> >  }
-> >
-> > @@ -1738,6 +1744,7 @@ static int storvsc_probe(struct hv_device
-> > *device,
-> >
-> >  	host_dev->port =3D host->host_no;
-> >  	host_dev->dev =3D device;
-> > +	host_dev->is_fc =3D is_fc;
-> >
-> >
-> >  	stor_device =3D kzalloc(sizeof(struct storvsc_device), GFP_KERNEL);
->=20
-> Hello Long,
->=20
-> As far as I know there is no other SCSI driver nor block driver in the Li=
-nux kernel
-> tree that returns BLK_EH_RESET_TIMER unconditionally. Would a valid
-> alternative fix be to remove storvsc_eh_timed_out() entirely? If not, wha=
-t
-> would break if that function would be removed entirely?
-
-Storvsc handles virtualized devices for Hyper-V and Azure. The host decides=
- on how to handle I/O timeout, and makes decision based on how long I/O has=
- been in flight. This is why we use BLK_EH_RESET_TIMER and leave the I/O ti=
-meout handling to the host for most cases.
-
->=20
-> Additionally, for FC, shouldn't that timeout handler handle the "port blo=
-cked"
-> state? Shouldn't fc_eh_timed_out() be used for FC instead of just returni=
-ng
-> BLK_EH_NOT_HANDLED?
-
-I agree with you. Storvsc didn't expose rport state. But this has changed w=
-ith a recent commit daf0cd445a218314f9461d67d4f2b9c24cdd534b. I'll send a V=
-2 to address this.
-
-Thank you
-
-Long
-
->=20
-> Thanks,
->=20
-> Bart.
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBDb2xpbiBLaW5nIFttYWlsdG86
+Y29saW4ua2luZ0BjYW5vbmljYWwuY29tXQ0KPiBTZW50OiBNb25kYXksIE1heSAxNSwgMjAxNyA4
+OjU2IEFNDQo+IFRvOiBSYWdoYXZhIEFkaXR5YSBSZW51a3VudGEgPFJhZ2hhdmFBZGl0eWEuUmVu
+dWt1bnRhQG1pY3Jvc2VtaS5jb20+Ow0KPiBkbC1lc2MtQWFjcmFpZCBMaW51eCBEcml2ZXIgPGFh
+Y3JhaWRAbWljcm9zZW1pLmNvbT47IEphbWVzIEUgLiBKIC4gQm90dG9tbGV5DQo+IDxqZWpiQGxp
+bnV4LnZuZXQuaWJtLmNvbT47IE1hcnRpbiBLIC4gUGV0ZXJzZW4NCj4gPG1hcnRpbi5wZXRlcnNl
+bkBvcmFjbGUuY29tPjsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcNCj4gQ2M6IGtlcm5lbC1q
+YW5pdG9yc0B2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcNCj4g
+U3ViamVjdDogW1BBVENIXSBzY3NpOiBhYWNyYWlkOiBmaXggbGVhayBvZiBkYXRhIGZyb20gc3Rh
+Y2sgYmFjayB0byB1c2Vyc3BhY2UNCj4gDQo+IEZyb206IENvbGluIElhbiBLaW5nIDxjb2xpbi5r
+aW5nQGNhbm9uaWNhbC5jb20+DQo+IA0KPiBUaGUgZmllbGRzIHNlbnNlX2RhdGFfc2l6ZSBhbmQg
+c2Vuc2VfZGF0YSBhcmUgdW5pdGlhbGl6ZWQgZ2FyYmFnZSBmcm9tIHRoZQ0KPiBzdGFjayBhbmQg
+YXJlIGJlaW5nIGNvcGllZCBiYWNrIHRvIHVzZXJzcGFjZS4gIEZpeCB0aGlzIGxlYWsgb2Ygc3Rh
+Y2sgaW5mb3JtYXRpb24NCj4gYnkgZW5zdXJpbmcgdGhleSBhcmUgemVybydkLg0KPiANCj4gRGV0
+ZWN0ZWQgYnkgQ292ZXJpdHlTY2FuLCBDSUQjMTQzNTQ3MyAoIlVuaW5pdGlhbGl6ZWQgc2NhbGFy
+IHZhcmlhYmxlIikNCj4gDQo+IEZpeGVzOiA0MjM0MDBlNjRkMzc3ICgic2NzaTogYWFjcmFpZDog
+SW5jbHVkZSBIQkEgZGlyZWN0IGludGVyZmFjZSIpDQo+IFNpZ25lZC1vZmYtYnk6IENvbGluIElh
+biBLaW5nIDxjb2xpbi5raW5nQGNhbm9uaWNhbC5jb20+DQo+IC0tLQ0KPiAgZHJpdmVycy9zY3Np
+L2FhY3JhaWQvY29tbWN0cmwuYyB8IDIgKysNCj4gIDEgZmlsZSBjaGFuZ2VkLCAyIGluc2VydGlv
+bnMoKykNCj4gDQpBY2tlZC1ieTogRGF2ZSBDYXJyb2xsIDxkYXZpZC5jYXJyb2xsQG1pY3Jvc2Vt
+aS5jb20+DQo=
