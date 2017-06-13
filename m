@@ -1,36 +1,68 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 6/6] sd: add support for TCG OPAL self encrypting disks
-Date: Tue, 13 Jun 2017 11:19:20 -0400
-Message-ID: <yq17f0fykxz.fsf@oracle.com>
-References: <20170604124225.27032-1-hch@lst.de>
-        <20170604124225.27032-7-hch@lst.de> <yq1lgp6djr3.fsf@oracle.com>
-        <20170606095802.GA20590@lst.de> <20170613064018.GA31330@lst.de>
+Subject: Re: [ANNOUNCE]: Broadcom (Emulex) FC Target driver - efct
+Date: Tue, 13 Jun 2017 11:34:42 -0400
+Message-ID: <yq137b3yk8d.fsf@oracle.com>
+References: <ced2ff0a-05ee-b85e-b41a-f912cab9e267@gmail.com>
+        <1488485325.5580.9.camel@haakon3.risingtidesystems.com>
+        <20170305173528.00006b41@gmx.de>
+        <CAL1RGDVBvgzaQTRfWS14=S1M1DuzKGPYzAPWWeQyAASDQ=05Rw@mail.gmail.com>
+        <55205e7e-e1c6-5f09-8dd3-338492728dfe@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170613064018.GA31330@lst.de> (Christoph Hellwig's message of
-        "Tue, 13 Jun 2017 08:40:18 +0200")
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Tejun Heo <tj@kernel.org>, Scott Bauer <scott.bauer@intel.com>, Jonathan Derrick <jonathan.derrick@intel.com>, Rafael Antognolli <rafael.antognolli@intel.com>, Robert Elliott <elliott@hpe.com>, linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <55205e7e-e1c6-5f09-8dd3-338492728dfe@broadcom.com> (James
+        Smart's message of "Mon, 12 Jun 2017 16:08:24 -0700")
+Sender: target-devel-owner@vger.kernel.org
+To: James Smart <james.smart@broadcom.com>
+Cc: Roland Dreier <roland@purestorage.com>, Sebastian Herbszt <herbszt@gmx.de>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, jsmart2021@gmail.com, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Christoph,
+James,
 
->> But as we already set no_report_opcodes for all usb-storage and
->> quirked uas devices I think the worst offenders are already covered
->> anyway.
->
-> Martin, how do we want to move ahead on this patch?
+> To start this effort, I'd like a bcmlpfc directory to be made within
+> the drivers staging tree. The directory would be populated with the
+> efct driver and a copy of the existing lpfc driver.  Work can then
+> commence on refactoring lpfc and creating the libraries and
+> integrating the libraries into both drivers.  As lpfc is updated in
+> the main tree, patches would be posted to the staging version of lpfc
+> to keep them on par.
 
-I was suggesting the VPD because that may be easier for the SAS HBA
-vendors to accommodate for SATA passthrough. But we can cross that
-bridge when we get to it.
+Sounds good to me.
 
-For libata I'm fine with keying off a supports_opal:1 flag in
-scsi_device or something to that effect. I'd just like to reduce the
-risk of introducing more RSOC regressions.
+> a) How best to deal with overlapping pci id's ?  E.g. if we do (1) and
+> we have an initiator and target driver, there is a lot of adapters
+> that are fully functional for target operation, but were sold as
+> primarily an initiator adapter. How could we manage target mode
+> enablement without code mod or hard pci id partitioning ?  I know
+> individual pci unbind/bind could work, but its been frowned upon as a
+> long term option. Same thing goes for module parameters to select
+> which ports do what role.
+
+I don't have a problem with the binding approach. A bit easier for the
+sysadmin to script and manage compared to PCI ID-specific module
+parameters that may come with initramfs rebuilds or grub tweaks and
+reboots.
+
+I also think the binding approach eases that pain for systems that want,
+say, initiator for root fs on one port and target on the other. And
+gives you the flexibility to use the WWN or sysfs attributes other than
+the PCI ID to locate the ports whose affiliation you want to change.
+
+> b) Assuming we have the lpfc copy in the bcmlpfc directory in the
+> staging tree: are there any issues with having a version of lpfc in the
+> main tree and another in the staging tree ?     For many reasons, I'd
+> like to keep the name lpfc on the initiator driver in the staging
+> tree. But is that possible ? I assume we would need to develop in the
+> staging tree as a new name and pci id space separate from the base
+> driver, and we can rename the staging driver to the lpfc name when it
+> merges into the main kernel and replaces the existing driver.
+
+I'm with Christoph in terms of avoiding staging. It's better to do out
+of tree. And as far as naming is concerned, you have some flexibility in
+terms of string prefixes for printk's, module aliases, etc. And then a
+final tweak to get things shuffled into place before merging into
+mainline.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
