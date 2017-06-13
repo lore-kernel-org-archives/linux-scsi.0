@@ -1,68 +1,83 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [ANNOUNCE]: Broadcom (Emulex) FC Target driver - efct
-Date: Tue, 13 Jun 2017 11:34:42 -0400
-Message-ID: <yq137b3yk8d.fsf@oracle.com>
-References: <ced2ff0a-05ee-b85e-b41a-f912cab9e267@gmail.com>
-        <1488485325.5580.9.camel@haakon3.risingtidesystems.com>
-        <20170305173528.00006b41@gmx.de>
-        <CAL1RGDVBvgzaQTRfWS14=S1M1DuzKGPYzAPWWeQyAASDQ=05Rw@mail.gmail.com>
-        <55205e7e-e1c6-5f09-8dd3-338492728dfe@broadcom.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [Possible Phish Fraud][PATCH] storvsc: use default I/O timeout
+ handler for FC devices
+Date: Tue, 13 Jun 2017 15:38:06 +0000
+Message-ID: <1497368284.2804.5.camel@wdc.com>
+References: <1497313417-14815-1-git-send-email-longli@exchange.microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <55205e7e-e1c6-5f09-8dd3-338492728dfe@broadcom.com> (James
-        Smart's message of "Mon, 12 Jun 2017 16:08:24 -0700")
-Sender: target-devel-owner@vger.kernel.org
-To: James Smart <james.smart@broadcom.com>
-Cc: Roland Dreier <roland@purestorage.com>, Sebastian Herbszt <herbszt@gmx.de>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, jsmart2021@gmail.com, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1497313417-14815-1-git-send-email-longli@exchange.microsoft.com>
+Content-Language: en-US
+Content-ID: <9BBCA72B0E716848B9E338A33774AAB2@namprd04.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "kys@microsoft.com" <kys@microsoft.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "sthemmin@microsoft.com" <sthemmin@microsoft.com>, "longli@exchange.microsoft.com" <longli@exchange.microsoft.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "haiyangz@microsoft.com" <haiyangz@microsoft.com>
+Cc: "jthumshirn@suse.de" <jthumshirn@suse.de>, "longli@microsoft.com" <longli@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
+On Mon, 2017-06-12 at 17:23 -0700, Long Li wrote:
+> From: Long Li <longli@microsoft.com>
+>=20
+> FC disks are usually setup in a multipath system, and they don't want to=
+=20
+> unconditionaly reset I/O on timeout. I/O timeout is detected by multipath=
+=20
+> as a good time to failover and recover.
+>=20
+> Signed-off-by: Long Li <longli@microsoft.com>
+> ---
+>  drivers/scsi/storvsc_drv.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
+>=20
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index 8d955db..d60b5ea 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -486,6 +486,7 @@ struct hv_host_device {
+>  	unsigned int port;
+>  	unsigned char path;
+>  	unsigned char target;
+> +	bool is_fc;
+>  };
+> =20
+>  struct storvsc_scan_work {
+> @@ -1495,6 +1496,11 @@ static int storvsc_host_reset_handler(struct scsi_=
+cmnd *scmnd)
+>   */
+>  static enum blk_eh_timer_return storvsc_eh_timed_out(struct scsi_cmnd *s=
+cmnd)
+>  {
+> +	struct hv_host_device *host_dev =3D shost_priv(scmnd->device->host);
+> +
+> +	if (host_dev->is_fc)
+> +		return BLK_EH_NOT_HANDLED;
+> +
+>  	return BLK_EH_RESET_TIMER;
+>  }
+> =20
+> @@ -1738,6 +1744,7 @@ static int storvsc_probe(struct hv_device *device,
+> =20
+>  	host_dev->port =3D host->host_no;
+>  	host_dev->dev =3D device;
+> +	host_dev->is_fc =3D is_fc;
+> =20
+> =20
+>  	stor_device =3D kzalloc(sizeof(struct storvsc_device), GFP_KERNEL);
 
-James,
+Hello Long,
 
-> To start this effort, I'd like a bcmlpfc directory to be made within
-> the drivers staging tree. The directory would be populated with the
-> efct driver and a copy of the existing lpfc driver.  Work can then
-> commence on refactoring lpfc and creating the libraries and
-> integrating the libraries into both drivers.  As lpfc is updated in
-> the main tree, patches would be posted to the staging version of lpfc
-> to keep them on par.
+As far as I know there is no other SCSI driver nor block driver in the Linu=
+x
+kernel tree that returns BLK_EH_RESET_TIMER unconditionally. Would a valid
+alternative fix be to remove storvsc_eh_timed_out() entirely? If not, what
+would break if that function would be removed entirely?
 
-Sounds good to me.
+Additionally, for FC, shouldn't that timeout handler handle the "port block=
+ed"
+state? Shouldn't fc_eh_timed_out() be used for FC instead of just returning
+BLK_EH_NOT_HANDLED?
 
-> a) How best to deal with overlapping pci id's ?  E.g. if we do (1) and
-> we have an initiator and target driver, there is a lot of adapters
-> that are fully functional for target operation, but were sold as
-> primarily an initiator adapter. How could we manage target mode
-> enablement without code mod or hard pci id partitioning ?  I know
-> individual pci unbind/bind could work, but its been frowned upon as a
-> long term option. Same thing goes for module parameters to select
-> which ports do what role.
+Thanks,
 
-I don't have a problem with the binding approach. A bit easier for the
-sysadmin to script and manage compared to PCI ID-specific module
-parameters that may come with initramfs rebuilds or grub tweaks and
-reboots.
-
-I also think the binding approach eases that pain for systems that want,
-say, initiator for root fs on one port and target on the other. And
-gives you the flexibility to use the WWN or sysfs attributes other than
-the PCI ID to locate the ports whose affiliation you want to change.
-
-> b) Assuming we have the lpfc copy in the bcmlpfc directory in the
-> staging tree: are there any issues with having a version of lpfc in the
-> main tree and another in the staging tree ?     For many reasons, I'd
-> like to keep the name lpfc on the initiator driver in the staging
-> tree. But is that possible ? I assume we would need to develop in the
-> staging tree as a new name and pci id space separate from the base
-> driver, and we can rename the staging driver to the lpfc name when it
-> merges into the main kernel and replaces the existing driver.
-
-I'm with Christoph in terms of avoiding staging. It's better to do out
-of tree. And as far as naming is concerned, you have some flexibility in
-terms of string prefixes for printk's, module aliases, etc. And then a
-final tweak to get things shuffled into place before merging into
-mainline.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Bart.=
