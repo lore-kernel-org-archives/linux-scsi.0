@@ -1,74 +1,112 @@
-From: Robert LeBlanc <robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org>
-Subject: Re: [PATCH 0/7] Enable iSCSI offload drivers to use information from iface.
-Date: Tue, 13 Jun 2017 10:49:22 -0600
-Message-ID: <CAANLjFrJ2g8JfB-3bcVwVXxK41rB3aaSeP3ho7J5F0YLO=3sUw@mail.gmail.com>
-References: <20170606180717.5007-1-robert@leblancnet.us> <20170607162839.ludxvmddghx5ocn2@straylight.hirudinean.org>
- <CAANLjFomYCEmjfE7HLAsE7SgVqBKH8KSxYzFqxuV7t8as8+-ZQ@mail.gmail.com>
+From: Long Li <longli@microsoft.com>
+Subject: RE: [Possible Phish Fraud][PATCH] storvsc: use default I/O timeout
+ handler for FC devices
+Date: Tue, 13 Jun 2017 19:16:13 +0000
+Message-ID: <MWHPR03MB313605606CD50FADB0D9AFBBCEC20@MWHPR03MB3136.namprd03.prod.outlook.com>
+References: <1497313417-14815-1-git-send-email-longli@exchange.microsoft.com>
+ <1497368284.2804.5.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAANLjFomYCEmjfE7HLAsE7SgVqBKH8KSxYzFqxuV7t8as8+-ZQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Robert LeBlanc <robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org>, lduncan-IBi9RG/b67k@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Linux-Kernel@Vger. Kernel. Org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>, roid-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hal Rosenstock <hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, subbu.seetharaman-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, ketan.mukadam-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, jitendra.bhivare-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, QLogic-Storage-Upstream-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org, varun-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1497368284.2804.5.camel@wdc.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, KY Srinivasan <kys@microsoft.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Stephen Hemminger <sthemmin@microsoft.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Haiyang Zhang <haiyangz@microsoft.com>
+Cc: "jthumshirn@suse.de" <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jun 7, 2017 at 12:30 PM, Robert LeBlanc <robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org> wrote:
-> On Wed, Jun 7, 2017 at 10:28 AM, Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
->> On Tue, Jun 06, 2017 at 12:07:10PM -0600, Robert LeBlanc wrote:
->>> This patchset enables iSCSI offload drivers to have access to the iface
->>> information provided by iscsid. This allows users to have more control
->>> of how the driver connects to the iSCSI target. iSER is updated to use
->>> iface.ipaddress to set the source IP address if configured. This allows
->>> iSER to use multiple ports on the same network or in more complicated
->>> routed configurations.
->>>
->>> Since there is already a change to the function parameters, dst_addr
->>> is upgraded to sockaddr_storage so that it is more future proof and makes
->>> the size of the struct static and not dependent on checking the SA_FAMILY.
->>>
->>> This is dependent on updates to Open-iSCSI.
->>
->> Hi Robert,
->>
->> I don't think that passing the iface_rec structure directly from the
->> iscsid internals into a netlink message is a good way to go about this.
->> It's really big, there's an embedded list_head with user address
->> pointers that needs to be left out, and there are 32/64-bit layout
->> differences.
->>
->> Let me take a look at how you're proposing using this info for iSER, if
->> it makes sense I think we should come up with a better designed
->> structure for passing the information.
->>
->> Thanks,
->> Chris
->>
->
-> Chris,
->
-> Thank you for your feedback. I agree that the entire iface is probably
-> overkill, it was more of a proof of concept. We are only using the
-> ipaddress in the iface for iSER (in my patch), but I could see other
-> drivers benefiting from some of the other data in the iface (mac,
-> interface_name, vlan, etc) so I didn't want to be too restrictive so
-> that it wouldn't have to be extended later. I've not worked on
-> userspace/kernel interaction before so I need some guidance to make
-> the transition between userspace and kernel versions smoother.
->
-> This patchset works for what we need and it is very important for us
-> (and I'm sure others once the feature is available) and I'm happy to
-> put in the time to get it accepted upstream, I'm just new to kernel
-> development and need some guidance.
 
-Are there other comments/ideas/suggestions specifically from the
-iSCSI/iSER guys? I'd like to keep this patch moving.
 
-Thanks.
+> -----Original Message-----
+> From: Bart Van Assche [mailto:Bart.VanAssche@sandisk.com]
+> Sent: Tuesday, June 13, 2017 8:38 AM
+> To: linux-kernel@vger.kernel.org; KY Srinivasan <kys@microsoft.com>;
+> martin.petersen@oracle.com; linux-scsi@vger.kernel.org; Stephen Hemminger
+> <sthemmin@microsoft.com>; Long Li <longli@microsoft.com>;
+> jejb@linux.vnet.ibm.com; Haiyang Zhang <haiyangz@microsoft.com>
+> Cc: jthumshirn@suse.de; Long Li <longli@microsoft.com>
+> Subject: Re: [Possible Phish Fraud][PATCH] storvsc: use default I/O timeo=
+ut
+> handler for FC devices
+>=20
+> On Mon, 2017-06-12 at 17:23 -0700, Long Li wrote:
+> > From: Long Li <longli@microsoft.com>
+> >
+> > FC disks are usually setup in a multipath system, and they don't want
+> > to unconditionaly reset I/O on timeout. I/O timeout is detected by
+> > multipath as a good time to failover and recover.
+> >
+> > Signed-off-by: Long Li <longli@microsoft.com>
+> > ---
+> >  drivers/scsi/storvsc_drv.c | 7 +++++++
+> >  1 file changed, 7 insertions(+)
+> >
+> > diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> > index 8d955db..d60b5ea 100644
+> > --- a/drivers/scsi/storvsc_drv.c
+> > +++ b/drivers/scsi/storvsc_drv.c
+> > @@ -486,6 +486,7 @@ struct hv_host_device {
+> >  	unsigned int port;
+> >  	unsigned char path;
+> >  	unsigned char target;
+> > +	bool is_fc;
+> >  };
+> >
+> >  struct storvsc_scan_work {
+> > @@ -1495,6 +1496,11 @@ static int storvsc_host_reset_handler(struct
+> scsi_cmnd *scmnd)
+> >   */
+> >  static enum blk_eh_timer_return storvsc_eh_timed_out(struct scsi_cmnd
+> > *scmnd)  {
+> > +	struct hv_host_device *host_dev =3D shost_priv(scmnd->device->host);
+> > +
+> > +	if (host_dev->is_fc)
+> > +		return BLK_EH_NOT_HANDLED;
+> > +
+> >  	return BLK_EH_RESET_TIMER;
+> >  }
+> >
+> > @@ -1738,6 +1744,7 @@ static int storvsc_probe(struct hv_device
+> > *device,
+> >
+> >  	host_dev->port =3D host->host_no;
+> >  	host_dev->dev =3D device;
+> > +	host_dev->is_fc =3D is_fc;
+> >
+> >
+> >  	stor_device =3D kzalloc(sizeof(struct storvsc_device), GFP_KERNEL);
+>=20
+> Hello Long,
+>=20
+> As far as I know there is no other SCSI driver nor block driver in the Li=
+nux kernel
+> tree that returns BLK_EH_RESET_TIMER unconditionally. Would a valid
+> alternative fix be to remove storvsc_eh_timed_out() entirely? If not, wha=
+t
+> would break if that function would be removed entirely?
 
-----------------
-Robert LeBlanc
-PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Storvsc handles virtualized devices for Hyper-V and Azure. The host decides=
+ on how to handle I/O timeout, and makes decision based on how long I/O has=
+ been in flight. This is why we use BLK_EH_RESET_TIMER and leave the I/O ti=
+meout handling to the host for most cases.
+
+>=20
+> Additionally, for FC, shouldn't that timeout handler handle the "port blo=
+cked"
+> state? Shouldn't fc_eh_timed_out() be used for FC instead of just returni=
+ng
+> BLK_EH_NOT_HANDLED?
+
+I agree with you. Storvsc didn't expose rport state. But this has changed w=
+ith a recent commit daf0cd445a218314f9461d67d4f2b9c24cdd534b. I'll send a V=
+2 to address this.
+
+Thank you
+
+Long
+
+>=20
+> Thanks,
+>=20
+> Bart.
