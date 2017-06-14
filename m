@@ -1,69 +1,54 @@
-From: Long Li <longli@microsoft.com>
-Subject: RE: [PATCH v2] storvsc: use default I/O timeout handler for FC
- devices
-Date: Wed, 14 Jun 2017 19:19:58 +0000
-Message-ID: <MWHPR03MB3136B62CABFE986250B2547FCEC30@MWHPR03MB3136.namprd03.prod.outlook.com>
-References: <1497389645-8912-1-git-send-email-longli@exchange.microsoft.com>
- <5d983dac-69b6-ff89-d1ef-e0ea9b8136b1@suse.de>
+From: Sebastian Herbszt <herbszt@gmx.de>
+Subject: Re: [ANNOUNCE]: Broadcom (Emulex) FC Target driver - efct
+Date: Wed, 14 Jun 2017 22:02:56 +0200
+Message-ID: <20170614220256.00004dd7@gmx.de>
+References: <ced2ff0a-05ee-b85e-b41a-f912cab9e267@gmail.com>
+        <1488485325.5580.9.camel@haakon3.risingtidesystems.com>
+        <20170305173528.00006b41@gmx.de>
+        <CAL1RGDVBvgzaQTRfWS14=S1M1DuzKGPYzAPWWeQyAASDQ=05Rw@mail.gmail.com>
+        <55205e7e-e1c6-5f09-8dd3-338492728dfe@broadcom.com>
+        <9c8db0c0-01cf-9b52-d229-7706549c8a8a@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5d983dac-69b6-ff89-d1ef-e0ea9b8136b1@suse.de>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, KY Srinivasan <kys@microsoft.com>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Christoph Hellwig <hch@infradead.org>, Stephen Hemminger <sthemmin@microsoft.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <9c8db0c0-01cf-9b52-d229-7706549c8a8a@suse.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.com>
+Cc: James Smart <james.smart@broadcom.com>, Roland Dreier <roland@purestorage.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, jsmart2021@gmail.com, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Sebastian Herbszt <herbszt@gmx.de>
 List-Id: linux-scsi@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSm9oYW5uZXMgVGh1bXNo
-aXJuIFttYWlsdG86anRodW1zaGlybkBzdXNlLmRlXQ0KPiBTZW50OiBXZWRuZXNkYXksIEp1bmUg
-MTQsIDIwMTcgMToyNSBBTQ0KPiBUbzogTG9uZyBMaSA8bG9uZ2xpQG1pY3Jvc29mdC5jb20+OyBK
-YW1lcyBFLkouIEJvdHRvbWxleQ0KPiA8amVqYkBsaW51eC52bmV0LmlibS5jb20+OyBNYXJ0aW4g
-Sy4gUGV0ZXJzZW4gPG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tPjsNCj4gbGludXgtc2NzaUB2
-Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IEtZIFNyaW5pdmFz
-YW4NCj4gPGt5c0BtaWNyb3NvZnQuY29tPjsgQmFydCBWYW4gQXNzY2hlIDxCYXJ0LlZhbkFzc2No
-ZUBzYW5kaXNrLmNvbT47DQo+IENocmlzdG9waCBIZWxsd2lnIDxoY2hAaW5mcmFkZWFkLm9yZz47
-IFN0ZXBoZW4gSGVtbWluZ2VyDQo+IDxzdGhlbW1pbkBtaWNyb3NvZnQuY29tPg0KPiBDYzogTG9u
-ZyBMaSA8bG9uZ2xpQG1pY3Jvc29mdC5jb20+DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjJdIHN0
-b3J2c2M6IHVzZSBkZWZhdWx0IEkvTyB0aW1lb3V0IGhhbmRsZXIgZm9yIEZDIGRldmljZXMNCj4g
-DQo+IE9uIDA2LzEzLzIwMTcgMTE6MzQgUE0sIExvbmcgTGkgd3JvdGU6DQo+ID4gRnJvbTogTG9u
-ZyBMaSA8bG9uZ2xpQG1pY3Jvc29mdC5jb20+DQo+ID4NCj4gPiBGQyBkaXNrcyBpc3N1ZSBJL08g
-ZGlyZWN0bHkgdG8gdGhlIGhvc3Qgc3RvcmFnZSBwb3J0IGRyaXZlciwgdGhpcyBpcw0KPiA+IGRp
-ZmZpcmVudCB0byBWSEQgZGlza3Mgd2hlcmUgSS9PIGlzIHZpcnR1YWxpemVkIGFuZCB0aW1lb3V0
-IGlzIGhhbmRsZWQNCj4gPiBieSB0aGUgaG9zdCBWU1AgKFZpcnR1YWxpemF0aW9uIFNlcnZpY2Ug
-UHJvdmlkZXIpLg0KPiA+DQo+ID4gRkMgZGlza3MgYXJlIHVzdWFsbHkgc2V0dXAgaW4gYSBtdWx0
-aXBhdGggc3lzdGVtLCBhbmQgdGhleSBkb24ndCB3YW50DQo+ID4gdG8gcmVzZXQgdGltZXIgb24g
-SS9PIHRpbWVvdXQuIFRpbWVvdXQgaXMgZGV0ZWN0ZWQgYnkgbXVsdGlwYXRoIGFzIGENCj4gPiBn
-b29kIHRpbWUgdG8gZmFpbG92ZXIgYW5kIHJlY292ZXIuDQo+ID4NCj4gPiBQYXRjaCB2MiBpbmNs
-dWRlcyBzdWdnZXN0aW9ucyBmcm9tIEJhcnQgVmFuIEFzc2NoZQ0KPiA+IDxCYXJ0LlZhbkFzc2No
-ZUBzYW5kaXNrLmNvbT4NCj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6IExvbmcgTGkgPGxvbmdsaUBt
-aWNyb3NvZnQuY29tPg0KPiA+IC0tLQ0KPiA+ICBkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyB8
-IDQgKysrKw0KPiA+ICAxIGZpbGUgY2hhbmdlZCwgNCBpbnNlcnRpb25zKCspDQo+ID4NCj4gPiBk
-aWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgYi9kcml2ZXJzL3Njc2kvc3Rv
-cnZzY19kcnYuYw0KPiA+IGluZGV4IDhkOTU1ZGIuLjNjYzhkNjcgMTAwNjQ0DQo+ID4gLS0tIGEv
-ZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMNCj4gPiArKysgYi9kcml2ZXJzL3Njc2kvc3RvcnZz
-Y19kcnYuYw0KPiA+IEBAIC0xNDk1LDYgKzE0OTUsMTAgQEAgc3RhdGljIGludCBzdG9ydnNjX2hv
-c3RfcmVzZXRfaGFuZGxlcihzdHJ1Y3QNCj4gc2NzaV9jbW5kICpzY21uZCkNCj4gPiAgICovDQo+
-ID4gIHN0YXRpYyBlbnVtIGJsa19laF90aW1lcl9yZXR1cm4gc3RvcnZzY19laF90aW1lZF9vdXQo
-c3RydWN0IHNjc2lfY21uZA0KPiA+ICpzY21uZCkgIHsNCj4gPiArI2lmIElTX0VOQUJMRUQoQ09O
-RklHX1NDU0lfRkNfQVRUUlMpDQo+ID4gKwlpZiAoc2NtbmQtPmRldmljZS0+aG9zdC0+dHJhbnNw
-b3J0dCA9PSBmY190cmFuc3BvcnRfdGVtcGxhdGUpDQo+ID4gKwkJcmV0dXJuIGZjX2VoX3RpbWVk
-X291dChzY21uZCk7DQo+ID4gKyNlbmRpZg0KPiANCj4gQ2FuIHlvdSBwbGVhc2UgY2hhbmdlIHRo
-ZSAjaWYgSVNfRU5BQkxFRCgpIHRvDQo+IGlmKElTX0VOQUJMRUQoQ09ORklHX1NDU0lfRkNfQVRU
-UlMpDQo+IAkmJiBzY21uZC0+ZGV2aWNlLT5ob3N0LT50cmFuc3BvcnR0ID09IGZjX3RyYW5zcG9y
-dF90ZW1wbGF0ZSkNCj4gDQo+IFRoYXQgd2F5IHdlIGhhdmUgYmV0dGVyIGNvbXBpbGVyIGNvdmVy
-YWdlLg0KDQpUaGFuayB5b3UgZm9yIHBvaW50aW5nIHRoaXMgb3V0Lg0KDQpUaGUgY29kaW5nIHN0
-eWxlIGlzIGtlcHQgY29uc2lzdGVudCB3aXRoIHRoZSByZXN0IG9mIHRoZSBGQyByZWxhdGVkIGNv
-ZGUgaW4gc3RvcnZzYy4gRS5nLiB0aGUgZGVmaW5pdGlvbiBvZiBmY190cmFuc3BvcnRfdGVtcGxh
-dGUgKGFuZCBtYW55IG90aGVyIHBsYWNlcyk6DQoNCiNpZiBJU19FTkFCTEVEKENPTkZJR19TQ1NJ
-X0ZDX0FUVFJTKQ0Kc3RhdGljIHN0cnVjdCBzY3NpX3RyYW5zcG9ydF90ZW1wbGF0ZSAqZmNfdHJh
-bnNwb3J0X3RlbXBsYXRlOw0KI2VuZGlmDQoNCkkgc3VnZ2VzdCB3ZSBtYWtlIGFub3RoZXIgcGF0
-Y2ggdG8gZml4IHRoaXMgaW4gYWxsIHRoZSBwbGFjZXMuIFRoaXMgcGF0Y2ggaXMgbWFpbmx5IGZv
-ciBmaXhpbmcgRkMgdGltZW91dC4NCg0KTG9uZw0KDQo+IA0KPiBUaGFua3MsDQo+IAlKb2hhbm5l
-cw0KPiANCj4gLS0NCj4gSm9oYW5uZXMgVGh1bXNoaXJuICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgU3RvcmFnZQ0KPiBqdGh1bXNoaXJuQHN1c2UuZGUgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICs0OSA5MTEgNzQwNTMgNjg5DQo+IFNVU0UgTElOVVggR21i
-SCwgTWF4ZmVsZHN0ci4gNSwgOTA0MDkgTsO8cm5iZXJnDQo+IEdGOiBGZWxpeCBJbWVuZMO2cmZm
-ZXIsIEphbmUgU21pdGhhcmQsIEdyYWhhbSBOb3J0b24gSFJCIDIxMjg0IChBRyBOw7xybmJlcmcp
-DQo+IEtleSBmaW5nZXJwcmludCA9IEVDMzggOUNBQiBDMkM0IEYyNUQgODYwMCBEMEQwIDAzOTMg
-OTY5RCAyRDc2IDA4NTANCg==
+Hannes Reinecke wrote:
+> On 06/13/2017 01:08 AM, James Smart wrote:
+
+[snip]
+
+> > Questions:
+> > a) How best to deal with overlapping pci id's ?  E.g. if we do (1)
+> > and we have an initiator and target driver, there is a lot of
+> > adapters that are fully functional for target operation, but were
+> > sold as primarily an initiator adapter. How could we manage target
+> > mode enablement without code mod or hard pci id partitioning ?   I
+> > know individual pci unbind/bind could work, but its been frowned
+> > upon as a long term option. Same thing goes for module parameters
+> > to select which ports do what role. 
+> That indeed is a problem.
+> 
+> Ideally we should be able to set the required mode on a per-port base;
+> having it per PCI device might be too coarse. Unless you represent
+> each port as a PCI function; not sure if that's the case, though.
+
+It seems to be the case.
+At least a dual port FC HBA (SLI-3) has two PCI functions.
+
+> If we were to allow to set the mode on a per-port base we could easily
+> implement kernel parameters like fctarget=WWPN and/or
+> fcinitiator=WWPN; NVMe could be treated similarly.
+> And have a config option specifying if the default FC mode should be
+> initiator or target.
+
+The old lpfc+lpfc_scst combination and also qla2xxx+tcm_qla2xxx allow
+simultaneous initiator and target mode on the same port. I guess this
+won't be possible with a split driver.
+
+Sebastian
