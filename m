@@ -1,7 +1,7 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 03/15] qla2xxx: Enable Target Multi Queue
-Date: Tue, 13 Jun 2017 20:47:18 -0700
-Message-ID: <20170614034730.15428-4-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 06/15] qla2xxx: Add fw_started flags to qpair
+Date: Tue, 13 Jun 2017 20:47:21 -0700
+Message-ID: <20170614034730.15428-7-himanshu.madhani@cavium.com>
 References: <20170614034730.15428-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,514 +14,140 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-Enable Multi Queue for Target mode. At Initiator LUN scan time,
-each LUN is assign to a QPair. Each QPair is affinitize
-to certain CPU. When new cmd arrives from the wire,
-the lunid is used to search for qpair. The qpair's affinitized
-cpuid will be used to queue up the work element.
+Add fw_started flag to qpair to reduce cache thrash.
+This reduce access to qla_hw_data structure by each
+qpair.
 
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h    |   3 +-
- drivers/scsi/qla2xxx/qla_init.c   |   3 +
- drivers/scsi/qla2xxx/qla_inline.h |  28 +++++++
- drivers/scsi/qla2xxx/qla_isr.c    |  21 +++--
- drivers/scsi/qla2xxx/qla_os.c     |  56 +++++++++-----
- drivers/scsi/qla2xxx/qla_target.c | 157 ++++++++++++++++++++++++++++++++++++--
- drivers/scsi/qla2xxx/qla_target.h |  10 ++-
- 7 files changed, 240 insertions(+), 38 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h    | 21 +++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_init.c   |  4 ++--
+ drivers/scsi/qla2xxx/qla_isr.c    |  2 +-
+ drivers/scsi/qla2xxx/qla_target.c |  9 ++++-----
+ 4 files changed, 28 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 64109134e276..005ca2de3795 100644
+index 18b37c864250..0dec148a4580 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -3245,7 +3245,7 @@ struct req_que {
- struct qla_qpair {
- 	spinlock_t qp_lock;
- 	atomic_t ref_count;
--
-+	uint32_t lun_cnt;
- 	/*
- 	 * For qpair 0, qp_lock_ptr will point at hardware_lock due to
- 	 * legacy code. For other Qpair(s), it will point at qp_lock.
-@@ -3275,6 +3275,7 @@ struct qla_qpair {
- 	struct qla_hw_data *hw;
- 	struct work_struct q_work;
- 	struct list_head qp_list_elem; /* vha->qp_list */
-+	struct list_head hints_list;
- 	uint16_t cpuid;
+@@ -3262,6 +3262,7 @@ struct qla_qpair {
+ 	/* move vha->flags.difdix_supported here */
+ 	uint32_t difdix_supported:1;
+ 	uint32_t delete_in_progress:1;
++	uint32_t fw_started:1;
+ 
+ 	uint16_t id;			/* qp number used with FW */
+ 	uint16_t vp_idx;		/* vport ID */
+@@ -4183,6 +4184,26 @@ struct qla2_sgx {
+ 	srb_t			*sp;
  };
  
++#define QLA_FW_STARTED(_ha) {			\
++	int i;					\
++	_ha->flags.fw_started = 1;		\
++	_ha->base_qpair->fw_started = 1;	\
++	for (i = 0; i < _ha->max_qpairs; i++) {	\
++	if (_ha->queue_pair_map[i])	\
++	_ha->queue_pair_map[i]->fw_started = 1;	\
++	}					\
++}
++
++#define QLA_FW_STOPPED(_ha) {			\
++	int i;					\
++	_ha->flags.fw_started = 0;		\
++	_ha->base_qpair->fw_started = 0;	\
++	for (i = 0; i < _ha->max_qpairs; i++) {	\
++	if (_ha->queue_pair_map[i])	\
++	_ha->queue_pair_map[i]->fw_started = 0;	\
++	}					\
++}
++
+ /*
+  * Macros to help code, maintain, etc.
+  */
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 7d0847b3d190..fa5e6ab8e4a7 100644
+index dcc306121a3d..e6a1f9ca0e95 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -7623,6 +7623,7 @@ struct qla_qpair *qla2xxx_create_qpair(struct scsi_qla_host *vha, int qos,
- 		ha->queue_pair_map[qpair_id] = qpair;
- 		qpair->id = qpair_id;
- 		qpair->vp_idx = vp_idx;
-+		INIT_LIST_HEAD(&qpair->hints_list);
+@@ -3207,7 +3207,7 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
+ 	} else {
+ 		ql_dbg(ql_dbg_init, vha, 0x00d3,
+ 		    "Init Firmware -- success.\n");
+-		ha->flags.fw_started = 1;
++		QLA_FW_STARTED(ha);
+ 	}
  
- 		for (i = 0; i < ha->msix_count; i++) {
- 			msix = &ha->msix_entries[i];
-@@ -7666,6 +7667,8 @@ struct qla_qpair *qla2xxx_create_qpair(struct scsi_qla_host *vha, int qos,
- 		qpair->req = ha->req_q_map[req_id];
- 		qpair->rsp->req = qpair->req;
- 		qpair->rsp->qpair = qpair;
-+		/* init qpair to this cpu. Will adjust at run time. */
-+		qla_cpu_update(qpair, smp_processor_id());
+ 	return (rval);
+@@ -6841,7 +6841,7 @@ qla2x00_try_to_stop_firmware(scsi_qla_host_t *vha)
+ 		ret = qla2x00_stop_firmware(vha);
+ 	}
  
- 		if (IS_T10_PI_CAPABLE(ha) && ql2xenabledif) {
- 			if (ha->fw_attributes & BIT_4)
-diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla_inline.h
-index 99028d48c664..bd8cb796f64e 100644
---- a/drivers/scsi/qla2xxx/qla_inline.h
-+++ b/drivers/scsi/qla2xxx/qla_inline.h
-@@ -324,3 +324,31 @@ qla_is_exch_offld_enabled(struct scsi_qla_host *vha)
- 	else
- 		return false;
+-	ha->flags.fw_started = 0;
++	QLA_FW_STOPPED(ha);
+ 	ha->flags.fw_init_done = 0;
  }
-+
-+static inline void
-+qla_cpu_update(struct qla_qpair *qpair, uint16_t cpuid)
-+{
-+	qpair->cpuid = cpuid;
-+
-+	if (!list_empty(&qpair->hints_list)) {
-+		struct qla_qpair_hint *h;
-+
-+		list_for_each_entry(h, &qpair->hints_list, hint_elem)
-+			h->cpuid = qpair->cpuid;
-+	}
-+}
-+
-+static inline struct qla_qpair_hint *
-+qla_qpair_to_hint(struct qla_tgt *tgt, struct qla_qpair *qpair)
-+{
-+	struct qla_qpair_hint *h;
-+	u16 i;
-+
-+	for (i = 0; i < tgt->ha->max_qpairs + 1; i++) {
-+		h = &tgt->qphints[i];
-+		if (h->qpair == qpair)
-+			return h;
-+	}
-+
-+	return NULL;
-+}
+ 
 diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 1535a29a9d9f..9eb946cc8297 100644
+index 3c9f9aa7f2c2..40385bc1d1fa 100644
 --- a/drivers/scsi/qla2xxx/qla_isr.c
 +++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -9,6 +9,7 @@
+@@ -710,7 +710,7 @@ qla2x00_async_event(scsi_qla_host_t *vha, struct rsp_que *rsp, uint16_t *mb)
  
- #include <linux/delay.h>
- #include <linux/slab.h>
-+#include <linux/cpu.h>
- #include <linux/t10-pi.h>
- #include <scsi/scsi_tcq.h>
- #include <scsi/scsi_bsg_fc.h>
-@@ -2761,6 +2762,9 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
- 	if (!ha->flags.fw_started)
- 		return;
+ 		ha->isp_ops->fw_dump(vha, 1);
+ 		ha->flags.fw_init_done = 0;
+-		ha->flags.fw_started = 0;
++		QLA_FW_STOPPED(ha);
  
-+	if (rsp->qpair->cpuid != smp_processor_id())
-+		qla_cpu_update(rsp->qpair, smp_processor_id());
-+
- 	while (rsp->ring_ptr->signature != RESPONSE_PROCESSED) {
- 		pkt = (struct sts_entry_24xx *)rsp->ring_ptr;
- 
-@@ -3196,10 +3200,10 @@ struct qla_init_msix_entry {
- };
- 
- static const struct qla_init_msix_entry msix_entries[] = {
--	{ "qla2xxx (default)", qla24xx_msix_default },
--	{ "qla2xxx (rsp_q)", qla24xx_msix_rsp_q },
--	{ "qla2xxx (atio_q)", qla83xx_msix_atio_q },
--	{ "qla2xxx (qpair_multiq)", qla2xxx_msix_rsp_q },
-+	{ "default", qla24xx_msix_default },
-+	{ "rsp_q", qla24xx_msix_rsp_q },
-+	{ "atio_q", qla83xx_msix_atio_q },
-+	{ "qpair_multiq", qla2xxx_msix_rsp_q },
- };
- 
- static const struct qla_init_msix_entry qla82xx_msix_entries[] = {
-@@ -3279,7 +3283,7 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- 		qentry->handle = rsp;
- 		rsp->msix = qentry;
- 		scnprintf(qentry->name, sizeof(qentry->name),
--		    "%s", msix_entries[i].name);
-+		    "qla2xxx%lu_%s", vha->host_no, msix_entries[i].name);
- 		if (IS_P3P_TYPE(ha))
- 			ret = request_irq(qentry->vector,
- 				qla82xx_msix_entries[i].handler,
-@@ -3287,7 +3291,7 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- 		else
- 			ret = request_irq(qentry->vector,
- 				msix_entries[i].handler,
--				0, msix_entries[i].name, rsp);
-+				0, qentry->name, rsp);
- 		if (ret)
- 			goto msix_register_fail;
- 		qentry->have_irq = 1;
-@@ -3303,11 +3307,12 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- 		rsp->msix = qentry;
- 		qentry->handle = rsp;
- 		scnprintf(qentry->name, sizeof(qentry->name),
--		    "%s", msix_entries[QLA_ATIO_VECTOR].name);
-+		    "qla2xxx%lu_%s", vha->host_no,
-+		    msix_entries[QLA_ATIO_VECTOR].name);
- 		qentry->in_use = 1;
- 		ret = request_irq(qentry->vector,
- 			msix_entries[QLA_ATIO_VECTOR].handler,
--			0, msix_entries[QLA_ATIO_VECTOR].name, rsp);
-+			0, qentry->name, rsp);
- 		qentry->have_irq = 1;
- 	}
- 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 82bbb6432f77..3963602aef35 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -371,6 +371,23 @@ static int qla2x00_alloc_queues(struct qla_hw_data *ha, struct req_que *req,
- 		goto fail_rsp_map;
- 	}
- 
-+	ha->base_qpair = kzalloc(sizeof(struct qla_qpair), GFP_KERNEL);
-+	if (ha->base_qpair == NULL) {
-+		ql_log(ql_log_warn, vha, 0x00e0,
-+		    "Failed to allocate base queue pair memory.\n");
-+		goto fail_base_qpair;
-+	}
-+
-+	rsp->qpair = ha->base_qpair;
-+	rsp->req = req;
-+	ha->base_qpair->req = req;
-+	ha->base_qpair->rsp = rsp;
-+	ha->base_qpair->vha = vha;
-+	ha->base_qpair->qp_lock_ptr = &ha->hardware_lock;
-+	ha->base_qpair->msix = &ha->msix_entries[QLA_MSIX_RSP_Q];
-+	INIT_LIST_HEAD(&ha->base_qpair->hints_list);
-+	qla_cpu_update(rsp->qpair, smp_processor_id());
-+
- 	if (ql2xmqsupport && ha->max_qpairs) {
- 		ha->queue_pair_map = kcalloc(ha->max_qpairs, sizeof(struct qla_qpair *),
- 			GFP_KERNEL);
-@@ -379,23 +396,8 @@ static int qla2x00_alloc_queues(struct qla_hw_data *ha, struct req_que *req,
- 			    "Unable to allocate memory for queue pair ptrs.\n");
- 			goto fail_qpair_map;
- 		}
--		ha->base_qpair = kzalloc(sizeof(struct qla_qpair), GFP_KERNEL);
--		if (ha->base_qpair == NULL) {
--			ql_log(ql_log_warn, vha, 0x00e0,
--			    "Failed to allocate base queue pair memory.\n");
--			goto fail_base_qpair;
--		}
--		ha->base_qpair->req = req;
--		ha->base_qpair->rsp = rsp;
- 	}
- 
--	rsp->qpair = ha->base_qpair;
--	rsp->req = req;
--	ha->base_qpair->vha = vha;
--	ha->base_qpair->qp_lock_ptr = &ha->hardware_lock;
--	ha->queue_pair_map[0] = ha->base_qpair;
--	set_bit(0, ha->qpair_qid_map);
--
- 	/*
- 	 * Make sure we record at least the request and response queue zero in
- 	 * case we need to free them if part of the probe fails.
-@@ -2009,7 +2011,7 @@ qla83xx_iospace_config(struct qla_hw_data *ha)
- 		/* Read MSIX vector size of the board */
- 		pci_read_config_word(ha->pdev,
- 		    QLA_83XX_PCI_MSIX_CONTROL, &msix);
--		ha->msix_count = msix + 1;
-+		ha->msix_count = (msix & PCI_MSIX_FLAGS_QSIZE)  + 1;
- 		/*
- 		 * By default, driver uses at least two msix vectors
- 		 * (default & rspq)
-@@ -3125,12 +3127,26 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	    host->can_queue, base_vha->req,
- 	    base_vha->mgmt_svr_loop_id, host->sg_tablesize);
- 
--	if (ha->mqenable && qla_ini_mode_enabled(base_vha)) {
-+	if (ha->mqenable) {
-+		bool mq = false;
-+		bool startit = false;
- 		ha->wq = alloc_workqueue("qla2xxx_wq", WQ_MEM_RECLAIM, 1);
--		/* Create start of day qpairs for Block MQ */
--		if (shost_use_blk_mq(host)) {
-+
-+		if (QLA_TGT_MODE_ENABLED()) {
-+			mq = true;
-+			startit = false;
-+		}
-+
-+		if ((ql2x_ini_mode == QLA2XXX_INI_MODE_ENABLED) &&
-+		    shost_use_blk_mq(host)) {
-+			mq = true;
-+			startit = true;
-+		}
-+
-+		if (mq) {
-+			/* Create start of day qpairs for Block MQ */
- 			for (i = 0; i < ha->max_qpairs; i++)
--				qla2xxx_create_qpair(base_vha, 5,  0, true);
-+				qla2xxx_create_qpair(base_vha, 5, 0, startit);
- 		}
- 	}
- 
+ 		if (IS_FWI2_CAPABLE(ha)) {
+ 			if (mb[1] == 0 && mb[2] == 0) {
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index ffe3aaa53f80..8920b830722c 100644
+index cbe6ff9f663e..e25f1fae2c3d 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1515,6 +1515,10 @@ EXPORT_SYMBOL(qlt_stop_phase2);
- static void qlt_release(struct qla_tgt *tgt)
- {
- 	scsi_qla_host_t *vha = tgt->vha;
-+	void *node;
-+	u64 key = 0;
-+	u16 i;
-+	struct qla_qpair_hint *h;
+@@ -3086,7 +3086,7 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
+ 	else
+ 		vha->tgt_counters.core_qla_que_buf++;
  
- 	if ((vha->vha_tgt.qla_tgt != NULL) && !tgt->tgt_stop &&
- 	    !tgt->tgt_stopped)
-@@ -1523,6 +1527,24 @@ static void qlt_release(struct qla_tgt *tgt)
- 	if ((vha->vha_tgt.qla_tgt != NULL) && !tgt->tgt_stopped)
- 		qlt_stop_phase2(tgt);
- 
-+	for (i = 0; i < vha->hw->max_qpairs + 1; i++) {
-+		unsigned long flags;
-+
-+		h = &tgt->qphints[i];
-+		if (h->qpair) {
-+			spin_lock_irqsave(h->qpair->qp_lock_ptr, flags);
-+			list_del(&h->hint_elem);
-+			spin_unlock_irqrestore(h->qpair->qp_lock_ptr, flags);
-+			h->qpair = NULL;
-+		}
-+	}
-+	kfree(tgt->qphints);
-+
-+	btree_for_each_safe64(&tgt->lun_qpair_map, key, node)
-+		btree_remove64(&tgt->lun_qpair_map, key);
-+
-+	btree_destroy64(&tgt->lun_qpair_map);
-+
- 	vha->vha_tgt.qla_tgt = NULL;
- 
- 	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf00d,
-@@ -2354,9 +2376,8 @@ static int qlt_24xx_build_ctio_pkt(struct qla_qpair *qpair,
- 		 * the session and, so, the command.
- 		 */
- 		return -EAGAIN;
--	} else {
--		vha->req->outstanding_cmds[h] = (srb_t *)prm->cmd;
--	}
-+	} else
-+		qpair->req->outstanding_cmds[h] = (srb_t *)prm->cmd;
- 
- 	pkt->handle = MAKE_HANDLE(qpair->req->id, h);
- 	pkt->handle |= CTIO_COMPLETION_HANDLE_MARK;
-@@ -3976,8 +3997,6 @@ static void __qlt_do_work(struct qla_tgt_cmd *cmd)
- 	spin_lock_init(&cmd->cmd_lock);
- 	cdb = &atio->u.isp24.fcp_cmnd.cdb[0];
- 	cmd->se_cmd.tag = atio->u.isp24.exchange_addr;
--	cmd->unpacked_lun = scsilun_to_int(
--	    (struct scsi_lun *)&atio->u.isp24.fcp_cmnd.lun);
- 
- 	if (atio->u.isp24.fcp_cmnd.rddata &&
- 	    atio->u.isp24.fcp_cmnd.wrdata) {
-@@ -4040,6 +4059,85 @@ static void qlt_do_work(struct work_struct *work)
- 	__qlt_do_work(cmd);
- }
- 
-+static void qlt_assign_qpair(struct scsi_qla_host *vha,
-+	struct qla_tgt_cmd *cmd)
-+{
-+	struct qla_qpair *qpair, *qp;
-+	struct qla_tgt *tgt = vha->vha_tgt.qla_tgt;
-+	struct qla_qpair_hint *h;
-+
-+	if (vha->flags.qpairs_available) {
-+		h = btree_lookup64(&tgt->lun_qpair_map, cmd->unpacked_lun);
-+		if (unlikely(!h)) {
-+			/* spread lun to qpair ratio evently */
-+			int lcnt = 0, rc;
-+			struct scsi_qla_host *base_vha =
-+				pci_get_drvdata(vha->hw->pdev);
-+
-+			qpair = vha->hw->base_qpair;
-+			if (qpair->lun_cnt == 0) {
-+				qpair->lun_cnt++;
-+				h = qla_qpair_to_hint(tgt, qpair);
-+				BUG_ON(!h);
-+				rc = btree_insert64(&tgt->lun_qpair_map,
-+					cmd->unpacked_lun, h, GFP_ATOMIC);
-+				if (rc) {
-+					qpair->lun_cnt--;
-+					ql_log(ql_log_info, vha, 0xd037,
-+					    "Unable to insert lun %llx into lun_qpair_map\n",
-+					    cmd->unpacked_lun);
-+				}
-+				goto out;
-+			} else {
-+				lcnt = qpair->lun_cnt;
-+			}
-+
-+			h = NULL;
-+			list_for_each_entry(qp, &base_vha->qp_list,
-+			    qp_list_elem) {
-+				if (qp->lun_cnt == 0) {
-+					qp->lun_cnt++;
-+					h = qla_qpair_to_hint(tgt, qp);
-+					BUG_ON(!h);
-+					rc = btree_insert64(&tgt->lun_qpair_map,
-+					    cmd->unpacked_lun, h, GFP_ATOMIC);
-+					if (rc) {
-+						qp->lun_cnt--;
-+						ql_log(ql_log_info, vha, 0xd038,
-+							"Unable to insert lun %llx into lun_qpair_map\n",
-+							cmd->unpacked_lun);
-+					}
-+					qpair = qp;
-+					goto out;
-+				} else {
-+					if (qp->lun_cnt < lcnt) {
-+						lcnt = qp->lun_cnt;
-+						qpair = qp;
-+						continue;
-+					}
-+				}
-+			}
-+			BUG_ON(!qpair);
-+			qpair->lun_cnt++;
-+			h = qla_qpair_to_hint(tgt, qpair);
-+			BUG_ON(!h);
-+			rc = btree_insert64(&tgt->lun_qpair_map,
-+				cmd->unpacked_lun, h, GFP_ATOMIC);
-+			if (rc) {
-+				qpair->lun_cnt--;
-+				ql_log(ql_log_info, vha, 0xd039,
-+				   "Unable to insert lun %llx into lun_qpair_map\n",
-+				   cmd->unpacked_lun);
-+			}
-+		}
-+	} else {
-+		h = &tgt->qphints[0];
-+	}
-+out:
-+	cmd->qpair = h->qpair;
-+	cmd->se_cmd.cpuid = h->cpuid;
-+}
-+
- static struct qla_tgt_cmd *qlt_get_tag(scsi_qla_host_t *vha,
- 				       struct fc_port *sess,
- 				       struct atio_from_isp *atio)
-@@ -4069,8 +4167,9 @@ static struct qla_tgt_cmd *qlt_get_tag(scsi_qla_host_t *vha,
- 	cmd->jiffies_at_alloc = get_jiffies_64();
- 
- 	cmd->reset_count = vha->hw->chip_reset;
--	cmd->qpair = vha->hw->base_qpair;
--	cmd->se_cmd.cpuid = cmd->qpair->cpuid;
-+	cmd->unpacked_lun = scsilun_to_int(
-+	    (struct scsi_lun *)&atio->u.isp24.fcp_cmnd.lun);
-+	qlt_assign_qpair(vha, cmd);
- 
- 	return cmd;
- }
-@@ -4218,7 +4317,9 @@ static int qlt_handle_cmd_for_atio(struct scsi_qla_host *vha,
- 	spin_unlock_irqrestore(&vha->cmd_list_lock, flags);
- 
- 	INIT_WORK(&cmd->work, qlt_do_work);
--	if (ha->msix_count) {
-+	if (vha->flags.qpairs_available) {
-+		queue_work_on(cmd->se_cmd.cpuid, qla_tgt_wq, &cmd->work);
-+	} else if (ha->msix_count) {
- 		if (cmd->atio.u.isp24.fcp_cmnd.rddata)
- 			queue_work_on(smp_processor_id(), qla_tgt_wq,
- 			    &cmd->work);
-@@ -5950,6 +6051,8 @@ static void qlt_sess_work_fn(struct work_struct *work)
- int qlt_add_target(struct qla_hw_data *ha, struct scsi_qla_host *base_vha)
- {
- 	struct qla_tgt *tgt;
-+	int rc, i;
-+	struct qla_qpair_hint *h;
- 
- 	if (!QLA_TGT_MODE_ENABLED())
+-	if (!ha->flags.fw_started || cmd->reset_count != ha->chip_reset) {
++	if (!qpair->fw_started || cmd->reset_count != vha->hw->chip_reset) {
+ 		/*
+ 		 * Either the port is not online or this request was from
+ 		 * previous life, just abort the processing.
+@@ -3096,7 +3096,7 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
+ 		ql_dbg(ql_dbg_async, vha, 0xe101,
+ 			"RESET-RSP online/active/old-count/new-count = %d/%d/%d/%d.\n",
+ 			vha->flags.online, qla2x00_reset_active(vha),
+-			cmd->reset_count, ha->chip_reset);
++			cmd->reset_count, vha->hw->chip_reset);
+ 		spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
  		return 0;
-@@ -5972,9 +6075,47 @@ int qlt_add_target(struct qla_hw_data *ha, struct scsi_qla_host *base_vha)
- 		return -ENOMEM;
+ 	}
+@@ -3206,7 +3206,6 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
+ {
+ 	struct ctio7_to_24xx *pkt;
+ 	struct scsi_qla_host *vha = cmd->vha;
+-	struct qla_hw_data *ha = vha->hw;
+ 	struct qla_tgt *tgt = cmd->tgt;
+ 	struct qla_tgt_prm prm;
+ 	unsigned long flags = 0;
+@@ -3223,7 +3222,7 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
+ 	if (qlt_pci_map_calc_cnt(&prm) != 0)
+ 		return -EAGAIN;
+ 
+-	if (!ha->flags.fw_started || (cmd->reset_count != ha->chip_reset) ||
++	if (!qpair->fw_started || (cmd->reset_count != vha->hw->chip_reset) ||
+ 	    (cmd->sess && cmd->sess->deleted)) {
+ 		/*
+ 		 * Either the port is not online or this request was from
+@@ -3234,7 +3233,7 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
+ 		ql_dbg(ql_dbg_async, vha, 0xe102,
+ 			"RESET-XFR online/active/old-count/new-count = %d/%d/%d/%d.\n",
+ 			vha->flags.online, qla2x00_reset_active(vha),
+-			cmd->reset_count, ha->chip_reset);
++			cmd->reset_count, vha->hw->chip_reset);
+ 		return 0;
  	}
  
-+	tgt->qphints = kzalloc((ha->max_qpairs + 1) *
-+	    sizeof(struct qla_qpair_hint), GFP_KERNEL);
-+	if (!tgt->qphints) {
-+		kfree(tgt);
-+		ql_log(ql_log_warn, base_vha, 0x0197,
-+		    "Unable to allocate qpair hints.\n");
-+		return -ENOMEM;
-+	}
-+
- 	if (!(base_vha->host->hostt->supported_mode & MODE_TARGET))
- 		base_vha->host->hostt->supported_mode |= MODE_TARGET;
- 
-+	rc = btree_init64(&tgt->lun_qpair_map);
-+	if (rc) {
-+		kfree(tgt->qphints);
-+		kfree(tgt);
-+		ql_log(ql_log_info, base_vha, 0x0198,
-+			"Unable to initialize lun_qpair_map btree\n");
-+		return -EIO;
-+	}
-+	h = &tgt->qphints[0];
-+	h->qpair = ha->base_qpair;
-+	INIT_LIST_HEAD(&h->hint_elem);
-+	h->cpuid = ha->base_qpair->cpuid;
-+	list_add_tail(&h->hint_elem, &ha->base_qpair->hints_list);
-+
-+	for (i = 0; i < ha->max_qpairs; i++) {
-+		unsigned long flags;
-+
-+		struct qla_qpair *qpair = ha->queue_pair_map[i];
-+		h = &tgt->qphints[i + 1];
-+		INIT_LIST_HEAD(&h->hint_elem);
-+		if (qpair) {
-+			h->qpair = qpair;
-+			spin_lock_irqsave(qpair->qp_lock_ptr, flags);
-+			list_add_tail(&h->hint_elem, &qpair->hints_list);
-+			spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
-+			h->cpuid = qpair->cpuid;
-+		}
-+	}
-+
- 	tgt->ha = ha;
- 	tgt->vha = base_vha;
- 	init_waitqueue_head(&tgt->waitQ);
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index 9519eeca1997..22c783e3e38f 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -787,10 +787,18 @@ struct qla_port_24xx_data {
- 	uint16_t reserved;
- };
- 
-+struct qla_qpair_hint {
-+	struct list_head hint_elem;
-+	struct qla_qpair *qpair;
-+	u16 cpuid;
-+	uint8_t cmd_cnt;
-+};
-+
- struct qla_tgt {
- 	struct scsi_qla_host *vha;
- 	struct qla_hw_data *ha;
--
-+	struct btree_head64 lun_qpair_map;
-+	struct qla_qpair_hint *qphints;
- 	/*
- 	 * To sync between IRQ handlers and qlt_target_release(). Needed,
- 	 * because req_pkt() can drop/reaquire HW lock inside. Protected by
 -- 
 2.12.0
