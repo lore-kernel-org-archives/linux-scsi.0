@@ -1,123 +1,96 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v6 09/22] scsi: hisi_sas: add skeleton v3 hw driver
-Date: Wed, 14 Jun 2017 23:33:19 +0800
-Message-ID: <1497454412-91194-10-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v6 19/22] scsi: hisi_sas: add v3 code to send internal abort command
+Date: Wed, 14 Jun 2017 23:33:29 +0800
+Message-ID: <1497454412-91194-20-git-send-email-john.garry@huawei.com>
 References: <1497454412-91194-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([45.249.212.188]:7834 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752332AbdFNPED (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jun 2017 11:04:03 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1497454412-91194-1-git-send-email-john.garry@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, hch@infradead.org, John Garry <john.garry@huawei.com>, Xiang Chen <chenxiang66@hisilicon.com>
+Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, hch@infradead.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Add skeleton driver for v3 hw in hisi_sas_v3_hw.c
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-File hisi_sas_v3_hw.c will serve 2 purposes:
-- probing and initialisation of the controller based on pci device
-- hw layer for v3-based controllers
-
-The controller design is quite similar to v2 hw in hip07.
-
-However key differences include:
--All v2 hw bugs are fixed (hopefully), so workarounds are not
-required
--support for device deregistration
--some interrupt modifications
--configurable max device support
+Add code to prepare internal abort command.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/Kconfig          | 10 +++++++-
- drivers/scsi/hisi_sas/Makefile         |  1 +
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 47 ++++++++++++++++++++++++++++++++++
- 3 files changed, 57 insertions(+), 1 deletion(-)
- create mode 100644 drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 38 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/Kconfig b/drivers/scsi/hisi_sas/Kconfig
-index 374a329..d42f29a 100644
---- a/drivers/scsi/hisi_sas/Kconfig
-+++ b/drivers/scsi/hisi_sas/Kconfig
-@@ -6,4 +6,12 @@ config SCSI_HISI_SAS
- 	select BLK_DEV_INTEGRITY
- 	depends on ATA
- 	help
--		This driver supports HiSilicon's SAS HBA
-+		This driver supports HiSilicon's SAS HBA, including support based
-+		on platform device
-+
-+config SCSI_HISI_SAS_PCI
-+	tristate "HiSilicon SAS on PCI bus"
-+	depends on SCSI_HISI_SAS
-+	depends on PCI
-+	help
-+		This driver supports HiSilicon's SAS HBA based on PCI device
-diff --git a/drivers/scsi/hisi_sas/Makefile b/drivers/scsi/hisi_sas/Makefile
-index c6d3a1b..24623f2 100644
---- a/drivers/scsi/hisi_sas/Makefile
-+++ b/drivers/scsi/hisi_sas/Makefile
-@@ -1,2 +1,3 @@
- obj-$(CONFIG_SCSI_HISI_SAS)		+= hisi_sas_main.o
- obj-$(CONFIG_SCSI_HISI_SAS)		+= hisi_sas_v1_hw.o hisi_sas_v2_hw.o
-+obj-$(CONFIG_SCSI_HISI_SAS_PCI)		+= hisi_sas_v3_hw.o
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-new file mode 100644
-index 0000000..cf72577
---- /dev/null
+index b9ab24d..ef5c158 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -0,0 +1,47 @@
-+/*
-+ * Copyright (c) 2017 Hisilicon Limited.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ */
-+
-+#include "hisi_sas.h"
-+#define DRV_NAME "hisi_sas_v3_hw"
-+
-+static int
-+hisi_sas_v3_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+@@ -165,6 +165,10 @@
+ /* HW dma structures */
+ /* Delivery queue header */
+ /* dw0 */
++#define CMD_HDR_ABORT_FLAG_OFF		0
++#define CMD_HDR_ABORT_FLAG_MSK		(0x3 << CMD_HDR_ABORT_FLAG_OFF)
++#define CMD_HDR_ABORT_DEVICE_TYPE_OFF	2
++#define CMD_HDR_ABORT_DEVICE_TYPE_MSK	(0x1 << CMD_HDR_ABORT_DEVICE_TYPE_OFF)
+ #define CMD_HDR_RESP_REPORT_OFF		5
+ #define CMD_HDR_RESP_REPORT_MSK		(0x1 << CMD_HDR_RESP_REPORT_OFF)
+ #define CMD_HDR_TLR_CTRL_OFF		6
+@@ -204,6 +208,11 @@
+ #define CMD_HDR_DIF_SGL_LEN_MSK		(0xffff << CMD_HDR_DIF_SGL_LEN_OFF)
+ #define CMD_HDR_DATA_SGL_LEN_OFF	16
+ #define CMD_HDR_DATA_SGL_LEN_MSK	(0xffff << CMD_HDR_DATA_SGL_LEN_OFF)
++/* dw7 */
++#define CMD_HDR_ADDR_MODE_SEL_OFF		15
++#define CMD_HDR_ADDR_MODE_SEL_MSK		(1 << CMD_HDR_ADDR_MODE_SEL_OFF)
++#define CMD_HDR_ABORT_IPTT_OFF		16
++#define CMD_HDR_ABORT_IPTT_MSK		(0xffff << CMD_HDR_ABORT_IPTT_OFF)
+ 
+ /* Completion header */
+ /* dw0 */
+@@ -942,6 +951,34 @@ static int prep_ata_v3_hw(struct hisi_hba *hisi_hba,
+ 	return 0;
+ }
+ 
++static int prep_abort_v3_hw(struct hisi_hba *hisi_hba,
++		struct hisi_sas_slot *slot,
++		int device_id, int abort_flag, int tag_to_abort)
 +{
++	struct sas_task *task = slot->task;
++	struct domain_device *dev = task->dev;
++	struct hisi_sas_cmd_hdr *hdr = slot->cmd_hdr;
++	struct hisi_sas_port *port = slot->port;
++
++	/* dw0 */
++	hdr->dw0 = cpu_to_le32((5 << CMD_HDR_CMD_OFF) | /*abort*/
++			       (port->id << CMD_HDR_PORT_OFF) |
++				   ((dev_is_sata(dev) ? 1:0)
++					<< CMD_HDR_ABORT_DEVICE_TYPE_OFF) |
++					(abort_flag
++					 << CMD_HDR_ABORT_FLAG_OFF));
++
++	/* dw1 */
++	hdr->dw1 = cpu_to_le32(device_id
++			<< CMD_HDR_DEV_ID_OFF);
++
++	/* dw7 */
++	hdr->dw7 = cpu_to_le32(tag_to_abort << CMD_HDR_ABORT_IPTT_OFF);
++	hdr->transfer_tags = cpu_to_le32(slot->idx);
++
 +	return 0;
 +}
 +
-+static void hisi_sas_v3_remove(struct pci_dev *pdev)
-+{
-+}
-+
-+enum {
-+	/* instances of the controller */
-+	hip08,
-+};
-+
-+static const struct pci_device_id sas_v3_pci_table[] = {
-+	{ PCI_VDEVICE(HUAWEI, 0xa230), hip08 },
-+	{}
-+};
-+
-+static struct pci_driver sas_v3_pci_driver = {
-+	.name		= DRV_NAME,
-+	.id_table	= sas_v3_pci_table,
-+	.probe		= hisi_sas_v3_probe,
-+	.remove		= hisi_sas_v3_remove,
-+};
-+
-+module_pci_driver(sas_v3_pci_driver);
-+
-+MODULE_VERSION(DRV_VERSION);
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("John Garry <john.garry@huawei.com>");
-+MODULE_DESCRIPTION("HISILICON SAS controller v3 hw driver based on pci device");
-+MODULE_ALIAS("platform:" DRV_NAME);
+ static int phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
+ {
+ 	int i, res = 0;
+@@ -1519,6 +1556,7 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
+ 	.prep_ssp = prep_ssp_v3_hw,
+ 	.prep_smp = prep_smp_v3_hw,
+ 	.prep_stp = prep_ata_v3_hw,
++	.prep_abort = prep_abort_v3_hw,
+ 	.get_free_slot = get_free_slot_v3_hw,
+ 	.start_delivery = start_delivery_v3_hw,
+ 	.slot_complete = slot_complete_v3_hw,
 -- 
 1.9.1
