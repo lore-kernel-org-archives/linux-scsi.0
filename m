@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v6 11/22] scsi: hisi_sas: add v3 hw init
-Date: Wed, 14 Jun 2017 23:33:21 +0800
-Message-ID: <1497454412-91194-12-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v6 04/22] scsi: hisi_sas: relocate get_ata_protocol()
+Date: Wed, 14 Jun 2017 23:33:14 +0800
+Message-ID: <1497454412-91194-5-git-send-email-john.garry@huawei.com>
 References: <1497454412-91194-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,309 +14,204 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Add code to initialise v3 hardware.
+Relocate get_ata_protocol() to a common location, as future
+hw versions will require it.
+Also rename with "hisi_sas_" prefix for consistency.
 
-Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 277 +++++++++++++++++++++++++++++++++
- 1 file changed, 277 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas.h       |  7 ++++
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 59 ++++++++++++++++++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 67 +---------------------------------
+ 3 files changed, 68 insertions(+), 65 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index e9a9fb0..1a5eae6 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -11,7 +11,283 @@
- #include "hisi_sas.h"
- #define DRV_NAME "hisi_sas_v3_hw"
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 68ba7bd..a50c699 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -46,6 +46,12 @@
+ 	((type == SAS_EDGE_EXPANDER_DEVICE) || \
+ 	(type == SAS_FANOUT_EXPANDER_DEVICE))
  
-+/* global registers need init*/
-+#define DLVRY_QUEUE_ENABLE		0x0
-+#define IOST_BASE_ADDR_LO		0x8
-+#define IOST_BASE_ADDR_HI		0xc
-+#define ITCT_BASE_ADDR_LO		0x10
-+#define ITCT_BASE_ADDR_HI		0x14
-+#define IO_BROKEN_MSG_ADDR_LO		0x18
-+#define IO_BROKEN_MSG_ADDR_HI		0x1c
-+#define AXI_AHB_CLK_CFG			0x3c
-+#define AXI_USER1			0x48
-+#define AXI_USER2			0x4c
-+#define IO_SATA_BROKEN_MSG_ADDR_LO	0x58
-+#define IO_SATA_BROKEN_MSG_ADDR_HI	0x5c
-+#define SATA_INITI_D2H_STORE_ADDR_LO	0x60
-+#define SATA_INITI_D2H_STORE_ADDR_HI	0x64
-+#define CFG_MAX_TAG			0x68
-+#define HGC_SAS_TX_OPEN_FAIL_RETRY_CTRL	0x84
-+#define HGC_SAS_TXFAIL_RETRY_CTRL	0x88
-+#define HGC_GET_ITV_TIME		0x90
-+#define DEVICE_MSG_WORK_MODE		0x94
-+#define OPENA_WT_CONTI_TIME		0x9c
-+#define I_T_NEXUS_LOSS_TIME		0xa0
-+#define MAX_CON_TIME_LIMIT_TIME		0xa4
-+#define BUS_INACTIVE_LIMIT_TIME		0xa8
-+#define REJECT_TO_OPEN_LIMIT_TIME	0xac
-+#define CFG_AGING_TIME			0xbc
-+#define HGC_DFX_CFG2			0xc0
-+#define CFG_ABT_SET_QUERY_IPTT	0xd4
-+#define CFG_SET_ABORTED_IPTT_OFF	0
-+#define CFG_SET_ABORTED_IPTT_MSK	(0xfff << CFG_SET_ABORTED_IPTT_OFF)
-+#define CFG_1US_TIMER_TRSH		0xcc
-+#define INT_COAL_EN			0x19c
-+#define OQ_INT_COAL_TIME		0x1a0
-+#define OQ_INT_COAL_CNT			0x1a4
-+#define ENT_INT_COAL_TIME		0x1a8
-+#define ENT_INT_COAL_CNT		0x1ac
-+#define OQ_INT_SRC			0x1b0
-+#define OQ_INT_SRC_MSK			0x1b4
-+#define ENT_INT_SRC1			0x1b8
-+#define ENT_INT_SRC1_D2H_FIS_CH0_OFF	0
-+#define ENT_INT_SRC1_D2H_FIS_CH0_MSK	(0x1 << ENT_INT_SRC1_D2H_FIS_CH0_OFF)
-+#define ENT_INT_SRC1_D2H_FIS_CH1_OFF	8
-+#define ENT_INT_SRC1_D2H_FIS_CH1_MSK	(0x1 << ENT_INT_SRC1_D2H_FIS_CH1_OFF)
-+#define ENT_INT_SRC2			0x1bc
-+#define ENT_INT_SRC3			0x1c0
-+#define ENT_INT_SRC3_WP_DEPTH_OFF		8
-+#define ENT_INT_SRC3_IPTT_SLOT_NOMATCH_OFF	9
-+#define ENT_INT_SRC3_RP_DEPTH_OFF		10
-+#define ENT_INT_SRC3_AXI_OFF			11
-+#define ENT_INT_SRC3_FIFO_OFF			12
-+#define ENT_INT_SRC3_LM_OFF				14
-+#define ENT_INT_SRC3_ITC_INT_OFF	15
-+#define ENT_INT_SRC3_ITC_INT_MSK	(0x1 << ENT_INT_SRC3_ITC_INT_OFF)
-+#define ENT_INT_SRC3_ABT_OFF		16
-+#define ENT_INT_SRC_MSK1		0x1c4
-+#define ENT_INT_SRC_MSK2		0x1c8
-+#define ENT_INT_SRC_MSK3		0x1cc
-+#define CHNL_PHYUPDOWN_INT_MSK		0x1d0
-+#define CHNL_ENT_INT_MSK			0x1d4
-+#define HGC_COM_INT_MSK				0x1d8
-+#define SAS_ECC_INTR			0x1e8
-+#define SAS_ECC_INTR_MSK		0x1ec
-+#define HGC_ERR_STAT_EN			0x238
-+#define DLVRY_Q_0_BASE_ADDR_LO		0x260
-+#define DLVRY_Q_0_BASE_ADDR_HI		0x264
-+#define DLVRY_Q_0_DEPTH			0x268
-+#define DLVRY_Q_0_WR_PTR		0x26c
-+#define DLVRY_Q_0_RD_PTR		0x270
-+#define HYPER_STREAM_ID_EN_CFG		0xc80
-+#define OQ0_INT_SRC_MSK			0xc90
-+#define COMPL_Q_0_BASE_ADDR_LO		0x4e0
-+#define COMPL_Q_0_BASE_ADDR_HI		0x4e4
-+#define COMPL_Q_0_DEPTH			0x4e8
-+#define COMPL_Q_0_WR_PTR		0x4ec
-+#define COMPL_Q_0_RD_PTR		0x4f0
-+#define AWQOS_AWCACHE_CFG	0xc84
-+#define ARQOS_ARCACHE_CFG	0xc88
++#define HISI_SAS_SATA_PROTOCOL_NONDATA		0x1
++#define HISI_SAS_SATA_PROTOCOL_PIO			0x2
++#define HISI_SAS_SATA_PROTOCOL_DMA			0x4
++#define HISI_SAS_SATA_PROTOCOL_FPDMA		0x8
++#define HISI_SAS_SATA_PROTOCOL_ATAPI		0x10
 +
-+/* phy registers requiring init */
-+#define PORT_BASE			(0x2000)
-+#define PROG_PHY_LINK_RATE		(PORT_BASE + 0x8)
-+#define PHY_CTRL			(PORT_BASE + 0x14)
-+#define PHY_CTRL_RESET_OFF		0
-+#define PHY_CTRL_RESET_MSK		(0x1 << PHY_CTRL_RESET_OFF)
-+#define SL_CFG				(PORT_BASE + 0x84)
-+#define RXOP_CHECK_CFG_H		(PORT_BASE + 0xfc)
-+#define SAS_SSP_CON_TIMER_CFG		(PORT_BASE + 0x134)
-+#define SAS_SMP_CON_TIMER_CFG		(PORT_BASE + 0x138)
-+#define SAS_STP_CON_TIMER_CFG		(PORT_BASE + 0x13c)
-+#define CHL_INT0			(PORT_BASE + 0x1b4)
-+#define CHL_INT0_HOTPLUG_TOUT_OFF	0
-+#define CHL_INT0_HOTPLUG_TOUT_MSK	(0x1 << CHL_INT0_HOTPLUG_TOUT_OFF)
-+#define CHL_INT0_SL_RX_BCST_ACK_OFF	1
-+#define CHL_INT0_SL_RX_BCST_ACK_MSK	(0x1 << CHL_INT0_SL_RX_BCST_ACK_OFF)
-+#define CHL_INT0_SL_PHY_ENABLE_OFF	2
-+#define CHL_INT0_SL_PHY_ENABLE_MSK	(0x1 << CHL_INT0_SL_PHY_ENABLE_OFF)
-+#define CHL_INT0_NOT_RDY_OFF		4
-+#define CHL_INT0_NOT_RDY_MSK		(0x1 << CHL_INT0_NOT_RDY_OFF)
-+#define CHL_INT0_PHY_RDY_OFF		5
-+#define CHL_INT0_PHY_RDY_MSK		(0x1 << CHL_INT0_PHY_RDY_OFF)
-+#define CHL_INT1			(PORT_BASE + 0x1b8)
-+#define CHL_INT1_DMAC_TX_ECC_ERR_OFF	15
-+#define CHL_INT1_DMAC_TX_ECC_ERR_MSK	(0x1 << CHL_INT1_DMAC_TX_ECC_ERR_OFF)
-+#define CHL_INT1_DMAC_RX_ECC_ERR_OFF	17
-+#define CHL_INT1_DMAC_RX_ECC_ERR_MSK	(0x1 << CHL_INT1_DMAC_RX_ECC_ERR_OFF)
-+#define CHL_INT2			(PORT_BASE + 0x1bc)
-+#define CHL_INT0_MSK			(PORT_BASE + 0x1c0)
-+#define CHL_INT1_MSK			(PORT_BASE + 0x1c4)
-+#define CHL_INT2_MSK			(PORT_BASE + 0x1c8)
-+#define CHL_INT_COAL_EN			(PORT_BASE + 0x1d0)
-+#define PHY_CTRL_RDY_MSK		(PORT_BASE + 0x2b0)
-+#define PHYCTRL_NOT_RDY_MSK		(PORT_BASE + 0x2b4)
-+#define PHYCTRL_DWS_RESET_MSK		(PORT_BASE + 0x2b8)
-+#define PHYCTRL_PHY_ENA_MSK		(PORT_BASE + 0x2bc)
-+#define SL_RX_BCAST_CHK_MSK		(PORT_BASE + 0x2c0)
-+#define PHYCTRL_OOB_RESTART_MSK		(PORT_BASE + 0x2c4)
-+
-+struct hisi_sas_complete_v3_hdr {
-+	__le32 dw0;
-+	__le32 dw1;
-+	__le32 act;
-+	__le32 dw3;
-+};
-+
-+#define HISI_SAS_COMMAND_ENTRIES_V3_HW 4096
-+
-+static void hisi_sas_write32(struct hisi_hba *hisi_hba, u32 off, u32 val)
-+{
-+	void __iomem *regs = hisi_hba->regs + off;
-+
-+	writel(val, regs);
-+}
-+
-+static void hisi_sas_phy_write32(struct hisi_hba *hisi_hba, int phy_no,
-+				 u32 off, u32 val)
-+{
-+	void __iomem *regs = hisi_hba->regs + (0x400 * phy_no) + off;
-+
-+	writel(val, regs);
-+}
-+
-+static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
-+{
-+	int i;
-+
-+	/* Global registers init */
-+	hisi_sas_write32(hisi_hba, DLVRY_QUEUE_ENABLE,
-+			 (u32)((1ULL << hisi_hba->queue_count) - 1));
-+	hisi_sas_write32(hisi_hba, AXI_USER1, 0x0);
-+	hisi_sas_write32(hisi_hba, AXI_USER2, 0x40000060);
-+	hisi_sas_write32(hisi_hba, HGC_SAS_TXFAIL_RETRY_CTRL, 0x108);
-+	hisi_sas_write32(hisi_hba, CFG_1US_TIMER_TRSH, 0xd);
-+	hisi_sas_write32(hisi_hba, INT_COAL_EN, 0x1);
-+	hisi_sas_write32(hisi_hba, OQ_INT_COAL_TIME, 0x1);
-+	hisi_sas_write32(hisi_hba, OQ_INT_COAL_CNT, 0x1);
-+	hisi_sas_write32(hisi_hba, OQ_INT_SRC, 0xffff);
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC1, 0xffffffff);
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC2, 0xffffffff);
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC3, 0xffffffff);
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK1, 0xfefefefe);
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK2, 0xfefefefe);
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, 0xffffffff);
-+	hisi_sas_write32(hisi_hba, CHNL_PHYUPDOWN_INT_MSK, 0x0);
-+	hisi_sas_write32(hisi_hba, CHNL_ENT_INT_MSK, 0x0);
-+	hisi_sas_write32(hisi_hba, HGC_COM_INT_MSK, 0x0);
-+	hisi_sas_write32(hisi_hba, SAS_ECC_INTR_MSK, 0xfff00c30);
-+	hisi_sas_write32(hisi_hba, AWQOS_AWCACHE_CFG, 0xf0f0);
-+	hisi_sas_write32(hisi_hba, ARQOS_ARCACHE_CFG, 0xf0f0);
-+	for (i = 0; i < hisi_hba->queue_count; i++)
-+		hisi_sas_write32(hisi_hba, OQ0_INT_SRC_MSK+0x4*i, 0);
-+
-+	hisi_sas_write32(hisi_hba, AXI_AHB_CLK_CFG, 1);
-+	hisi_sas_write32(hisi_hba, HYPER_STREAM_ID_EN_CFG, 1);
-+	hisi_sas_write32(hisi_hba, CFG_MAX_TAG, 0xfff07fff);
-+
-+	for (i = 0; i < hisi_hba->n_phy; i++) {
-+		hisi_sas_phy_write32(hisi_hba, i, PROG_PHY_LINK_RATE, 0x801);
-+		hisi_sas_phy_write32(hisi_hba, i, CHL_INT0, 0xffffffff);
-+		hisi_sas_phy_write32(hisi_hba, i, CHL_INT1, 0xffffffff);
-+		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2, 0xffffffff);
-+		hisi_sas_phy_write32(hisi_hba, i, RXOP_CHECK_CFG_H, 0x1000);
-+		hisi_sas_phy_write32(hisi_hba, i, CHL_INT1_MSK, 0xffffffff);
-+		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2_MSK, 0x8ffffbff);
-+		hisi_sas_phy_write32(hisi_hba, i, SL_CFG, 0x83f801fc);
-+		hisi_sas_phy_write32(hisi_hba, i, PHY_CTRL_RDY_MSK, 0x0);
-+		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_NOT_RDY_MSK, 0x0);
-+		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_DWS_RESET_MSK, 0x0);
-+		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_PHY_ENA_MSK, 0x0);
-+		hisi_sas_phy_write32(hisi_hba, i, SL_RX_BCAST_CHK_MSK, 0x0);
-+		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_OOB_RESTART_MSK, 0x0);
-+		hisi_sas_phy_write32(hisi_hba, i, PHY_CTRL, 0x199b4fa);
-+		hisi_sas_phy_write32(hisi_hba, i, SAS_SSP_CON_TIMER_CFG,
-+				     0xa0064);
-+		hisi_sas_phy_write32(hisi_hba, i, SAS_STP_CON_TIMER_CFG,
-+				     0xa0064);
-+	}
-+	for (i = 0; i < hisi_hba->queue_count; i++) {
-+		/* Delivery queue */
-+		hisi_sas_write32(hisi_hba,
-+				 DLVRY_Q_0_BASE_ADDR_HI + (i * 0x14),
-+				 upper_32_bits(hisi_hba->cmd_hdr_dma[i]));
-+
-+		hisi_sas_write32(hisi_hba, DLVRY_Q_0_BASE_ADDR_LO + (i * 0x14),
-+				 lower_32_bits(hisi_hba->cmd_hdr_dma[i]));
-+
-+		hisi_sas_write32(hisi_hba, DLVRY_Q_0_DEPTH + (i * 0x14),
-+				 HISI_SAS_QUEUE_SLOTS);
-+
-+		/* Completion queue */
-+		hisi_sas_write32(hisi_hba, COMPL_Q_0_BASE_ADDR_HI + (i * 0x14),
-+				 upper_32_bits(hisi_hba->complete_hdr_dma[i]));
-+
-+		hisi_sas_write32(hisi_hba, COMPL_Q_0_BASE_ADDR_LO + (i * 0x14),
-+				 lower_32_bits(hisi_hba->complete_hdr_dma[i]));
-+
-+		hisi_sas_write32(hisi_hba, COMPL_Q_0_DEPTH + (i * 0x14),
-+				 HISI_SAS_QUEUE_SLOTS);
-+	}
-+
-+	/* itct */
-+	hisi_sas_write32(hisi_hba, ITCT_BASE_ADDR_LO,
-+			 lower_32_bits(hisi_hba->itct_dma));
-+
-+	hisi_sas_write32(hisi_hba, ITCT_BASE_ADDR_HI,
-+			 upper_32_bits(hisi_hba->itct_dma));
-+
-+	/* iost */
-+	hisi_sas_write32(hisi_hba, IOST_BASE_ADDR_LO,
-+			 lower_32_bits(hisi_hba->iost_dma));
-+
-+	hisi_sas_write32(hisi_hba, IOST_BASE_ADDR_HI,
-+			 upper_32_bits(hisi_hba->iost_dma));
-+
-+	/* breakpoint */
-+	hisi_sas_write32(hisi_hba, IO_BROKEN_MSG_ADDR_LO,
-+			 lower_32_bits(hisi_hba->breakpoint_dma));
-+
-+	hisi_sas_write32(hisi_hba, IO_BROKEN_MSG_ADDR_HI,
-+			 upper_32_bits(hisi_hba->breakpoint_dma));
-+
-+	/* SATA broken msg */
-+	hisi_sas_write32(hisi_hba, IO_SATA_BROKEN_MSG_ADDR_LO,
-+			 lower_32_bits(hisi_hba->sata_breakpoint_dma));
-+
-+	hisi_sas_write32(hisi_hba, IO_SATA_BROKEN_MSG_ADDR_HI,
-+			 upper_32_bits(hisi_hba->sata_breakpoint_dma));
-+
-+	/* SATA initial fis */
-+	hisi_sas_write32(hisi_hba, SATA_INITI_D2H_STORE_ADDR_LO,
-+			 lower_32_bits(hisi_hba->initial_fis_dma));
-+
-+	hisi_sas_write32(hisi_hba, SATA_INITI_D2H_STORE_ADDR_HI,
-+			 upper_32_bits(hisi_hba->initial_fis_dma));
-+}
-+
-+static int hw_init_v3_hw(struct hisi_hba *hisi_hba)
-+{
-+	init_reg_v3_hw(hisi_hba);
-+
-+	return 0;
-+}
-+
-+static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
-+{
-+	int rc;
-+
-+	rc = hw_init_v3_hw(hisi_hba);
-+	if (rc)
-+		return rc;
-+
-+	return 0;
-+}
-+
- static const struct hisi_sas_hw hisi_sas_v3_hw = {
-+	.hw_init = hisi_sas_v3_init,
-+	.max_command_entries = HISI_SAS_COMMAND_ENTRIES_V3_HW,
-+	.complete_hdr_size = sizeof(struct hisi_sas_complete_v3_hdr),
+ struct hisi_hba;
+ 
+ enum {
+@@ -356,6 +362,7 @@ struct hisi_sas_command_table_ssp {
+ 	struct hisi_sas_command_table_stp stp;
  };
  
- static struct Scsi_Host *
-@@ -175,6 +451,7 @@ static void hisi_sas_v3_remove(struct pci_dev *pdev)
- 	pci_disable_device(pdev);
++extern u8 hisi_sas_get_ata_protocol(u8 cmd, int direction);
+ extern struct hisi_sas_port *to_hisi_sas_port(struct asd_sas_port *sas_port);
+ extern int hisi_sas_probe(struct platform_device *pdev,
+ 			  const struct hisi_sas_hw *ops);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 4e78cbc..5b51d9a 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -23,6 +23,65 @@ static int hisi_sas_debug_issue_ssp_tmf(struct domain_device *device,
+ 			     int abort_flag, int tag);
+ static int hisi_sas_softreset_ata_disk(struct domain_device *device);
+ 
++u8 hisi_sas_get_ata_protocol(u8 cmd, int direction)
++{
++	switch (cmd) {
++	case ATA_CMD_FPDMA_WRITE:
++	case ATA_CMD_FPDMA_READ:
++	case ATA_CMD_FPDMA_RECV:
++	case ATA_CMD_FPDMA_SEND:
++	case ATA_CMD_NCQ_NON_DATA:
++	return HISI_SAS_SATA_PROTOCOL_FPDMA;
++
++	case ATA_CMD_DOWNLOAD_MICRO:
++	case ATA_CMD_ID_ATA:
++	case ATA_CMD_PMP_READ:
++	case ATA_CMD_READ_LOG_EXT:
++	case ATA_CMD_PIO_READ:
++	case ATA_CMD_PIO_READ_EXT:
++	case ATA_CMD_PMP_WRITE:
++	case ATA_CMD_WRITE_LOG_EXT:
++	case ATA_CMD_PIO_WRITE:
++	case ATA_CMD_PIO_WRITE_EXT:
++	return HISI_SAS_SATA_PROTOCOL_PIO;
++
++	case ATA_CMD_DSM:
++	case ATA_CMD_DOWNLOAD_MICRO_DMA:
++	case ATA_CMD_PMP_READ_DMA:
++	case ATA_CMD_PMP_WRITE_DMA:
++	case ATA_CMD_READ:
++	case ATA_CMD_READ_EXT:
++	case ATA_CMD_READ_LOG_DMA_EXT:
++	case ATA_CMD_READ_STREAM_DMA_EXT:
++	case ATA_CMD_TRUSTED_RCV_DMA:
++	case ATA_CMD_TRUSTED_SND_DMA:
++	case ATA_CMD_WRITE:
++	case ATA_CMD_WRITE_EXT:
++	case ATA_CMD_WRITE_FUA_EXT:
++	case ATA_CMD_WRITE_QUEUED:
++	case ATA_CMD_WRITE_LOG_DMA_EXT:
++	case ATA_CMD_WRITE_STREAM_DMA_EXT:
++	return HISI_SAS_SATA_PROTOCOL_DMA;
++
++	case ATA_CMD_CHK_POWER:
++	case ATA_CMD_DEV_RESET:
++	case ATA_CMD_EDD:
++	case ATA_CMD_FLUSH:
++	case ATA_CMD_FLUSH_EXT:
++	case ATA_CMD_VERIFY:
++	case ATA_CMD_VERIFY_EXT:
++	case ATA_CMD_SET_FEATURES:
++	case ATA_CMD_STANDBY:
++	case ATA_CMD_STANDBYNOW1:
++	return HISI_SAS_SATA_PROTOCOL_NONDATA;
++	default:
++		if (direction == DMA_NONE)
++			return HISI_SAS_SATA_PROTOCOL_NONDATA;
++		return HISI_SAS_SATA_PROTOCOL_PIO;
++	}
++}
++EXPORT_SYMBOL_GPL(hisi_sas_get_ata_protocol);
++
+ static struct hisi_hba *dev_to_hisi_hba(struct domain_device *device)
+ {
+ 	return device->port->ha->lldd_ha;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index 2607aac..d9314c4 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -554,12 +554,6 @@ enum {
+ #define DIR_TO_DEVICE 2
+ #define DIR_RESERVED 3
+ 
+-#define SATA_PROTOCOL_NONDATA		0x1
+-#define SATA_PROTOCOL_PIO		0x2
+-#define SATA_PROTOCOL_DMA		0x4
+-#define SATA_PROTOCOL_FPDMA		0x8
+-#define SATA_PROTOCOL_ATAPI		0x10
+-
+ #define ERR_ON_TX_PHASE(err_phase) (err_phase == 0x2 || \
+ 		err_phase == 0x4 || err_phase == 0x8 ||\
+ 		err_phase == 0x6 || err_phase == 0xa)
+@@ -2352,64 +2346,6 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
+ 	return sts;
  }
  
-+
- enum {
- 	/* instances of the controller */
- 	hip08,
+-static u8 get_ata_protocol(u8 cmd, int direction)
+-{
+-	switch (cmd) {
+-	case ATA_CMD_FPDMA_WRITE:
+-	case ATA_CMD_FPDMA_READ:
+-	case ATA_CMD_FPDMA_RECV:
+-	case ATA_CMD_FPDMA_SEND:
+-	case ATA_CMD_NCQ_NON_DATA:
+-	return SATA_PROTOCOL_FPDMA;
+-
+-	case ATA_CMD_DOWNLOAD_MICRO:
+-	case ATA_CMD_ID_ATA:
+-	case ATA_CMD_PMP_READ:
+-	case ATA_CMD_READ_LOG_EXT:
+-	case ATA_CMD_PIO_READ:
+-	case ATA_CMD_PIO_READ_EXT:
+-	case ATA_CMD_PMP_WRITE:
+-	case ATA_CMD_WRITE_LOG_EXT:
+-	case ATA_CMD_PIO_WRITE:
+-	case ATA_CMD_PIO_WRITE_EXT:
+-	return SATA_PROTOCOL_PIO;
+-
+-	case ATA_CMD_DSM:
+-	case ATA_CMD_DOWNLOAD_MICRO_DMA:
+-	case ATA_CMD_PMP_READ_DMA:
+-	case ATA_CMD_PMP_WRITE_DMA:
+-	case ATA_CMD_READ:
+-	case ATA_CMD_READ_EXT:
+-	case ATA_CMD_READ_LOG_DMA_EXT:
+-	case ATA_CMD_READ_STREAM_DMA_EXT:
+-	case ATA_CMD_TRUSTED_RCV_DMA:
+-	case ATA_CMD_TRUSTED_SND_DMA:
+-	case ATA_CMD_WRITE:
+-	case ATA_CMD_WRITE_EXT:
+-	case ATA_CMD_WRITE_FUA_EXT:
+-	case ATA_CMD_WRITE_QUEUED:
+-	case ATA_CMD_WRITE_LOG_DMA_EXT:
+-	case ATA_CMD_WRITE_STREAM_DMA_EXT:
+-	return SATA_PROTOCOL_DMA;
+-
+-	case ATA_CMD_CHK_POWER:
+-	case ATA_CMD_DEV_RESET:
+-	case ATA_CMD_EDD:
+-	case ATA_CMD_FLUSH:
+-	case ATA_CMD_FLUSH_EXT:
+-	case ATA_CMD_VERIFY:
+-	case ATA_CMD_VERIFY_EXT:
+-	case ATA_CMD_SET_FEATURES:
+-	case ATA_CMD_STANDBY:
+-	case ATA_CMD_STANDBYNOW1:
+-	return SATA_PROTOCOL_NONDATA;
+-	default:
+-		if (direction == DMA_NONE)
+-			return SATA_PROTOCOL_NONDATA;
+-		return SATA_PROTOCOL_PIO;
+-	}
+-}
+-
+ static int get_ncq_tag_v2_hw(struct sas_task *task, u32 *tag)
+ {
+ 	struct ata_queued_cmd *qc = task->uldd_task;
+@@ -2464,7 +2400,8 @@ static int prep_ata_v2_hw(struct hisi_hba *hisi_hba,
+ 			(task->ata_task.fis.control & ATA_SRST))
+ 		dw1 |= 1 << CMD_HDR_RESET_OFF;
+ 
+-	dw1 |= (get_ata_protocol(task->ata_task.fis.command, task->data_dir))
++	dw1 |= (hisi_sas_get_ata_protocol(
++		task->ata_task.fis.command, task->data_dir))
+ 		<< CMD_HDR_FRAME_TYPE_OFF;
+ 	dw1 |= sas_dev->device_id << CMD_HDR_DEV_ID_OFF;
+ 	hdr->dw1 = cpu_to_le32(dw1);
 -- 
 1.9.1
