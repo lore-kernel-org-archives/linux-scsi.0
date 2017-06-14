@@ -1,217 +1,188 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v6 04/22] scsi: hisi_sas: relocate get_ata_protocol()
-Date: Wed, 14 Jun 2017 23:33:14 +0800
-Message-ID: <1497454412-91194-5-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v6 08/22] scsi: hisi_sas: create hisi_sas_get_fw_info()
+Date: Wed, 14 Jun 2017 23:33:18 +0800
+Message-ID: <1497454412-91194-9-git-send-email-john.garry@huawei.com>
 References: <1497454412-91194-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([45.249.212.188]:7851 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752310AbdFNPER (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jun 2017 11:04:17 -0400
 In-Reply-To: <1497454412-91194-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, hch@infradead.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, hch@infradead.org, John Garry <john.garry@huawei.com>
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+Move the functionality to retrieve the fw info into
+a dedicated device type-agnostic function,
+hisi_sas_get_fw_info().
 
-Relocate get_ata_protocol() to a common location, as future
-hw versions will require it.
-Also rename with "hisi_sas_" prefix for consistency.
+The reasoning is that this function will be required
+for future pci-based platforms.
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Also add some debug logs for failure.
+
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  7 ++++
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 59 ++++++++++++++++++++++++++++++
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 67 +---------------------------------
- 3 files changed, 68 insertions(+), 65 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas.h      |   1 +
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 107 ++++++++++++++++++++++------------
+ 2 files changed, 71 insertions(+), 37 deletions(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 68ba7bd..a50c699 100644
+index 84cac98..c1f6669 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas.h
 +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -46,6 +46,12 @@
- 	((type == SAS_EDGE_EXPANDER_DEVICE) || \
- 	(type == SAS_FANOUT_EXPANDER_DEVICE))
- 
-+#define HISI_SAS_SATA_PROTOCOL_NONDATA		0x1
-+#define HISI_SAS_SATA_PROTOCOL_PIO			0x2
-+#define HISI_SAS_SATA_PROTOCOL_DMA			0x4
-+#define HISI_SAS_SATA_PROTOCOL_FPDMA		0x8
-+#define HISI_SAS_SATA_PROTOCOL_ATAPI		0x10
-+
- struct hisi_hba;
- 
- enum {
-@@ -356,6 +362,7 @@ struct hisi_sas_command_table_ssp {
- 	struct hisi_sas_command_table_stp stp;
- };
- 
-+extern u8 hisi_sas_get_ata_protocol(u8 cmd, int direction);
- extern struct hisi_sas_port *to_hisi_sas_port(struct asd_sas_port *sas_port);
+@@ -371,6 +371,7 @@ struct hisi_sas_command_table_ssp {
+ extern void hisi_sas_sata_done(struct sas_task *task,
+ 			    struct hisi_sas_slot *slot);
+ extern int hisi_sas_get_ncq_tag(struct sas_task *task, u32 *tag);
++extern int hisi_sas_get_fw_info(struct hisi_hba *hisi_hba);
  extern int hisi_sas_probe(struct platform_device *pdev,
  			  const struct hisi_sas_hw *ops);
+ extern int hisi_sas_remove(struct platform_device *pdev);
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 4e78cbc..5b51d9a 100644
+index 139df45..81c053c 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -23,6 +23,65 @@ static int hisi_sas_debug_issue_ssp_tmf(struct domain_device *device,
- 			     int abort_flag, int tag);
- static int hisi_sas_softreset_ata_disk(struct domain_device *device);
- 
-+u8 hisi_sas_get_ata_protocol(u8 cmd, int direction)
-+{
-+	switch (cmd) {
-+	case ATA_CMD_FPDMA_WRITE:
-+	case ATA_CMD_FPDMA_READ:
-+	case ATA_CMD_FPDMA_RECV:
-+	case ATA_CMD_FPDMA_SEND:
-+	case ATA_CMD_NCQ_NON_DATA:
-+	return HISI_SAS_SATA_PROTOCOL_FPDMA;
-+
-+	case ATA_CMD_DOWNLOAD_MICRO:
-+	case ATA_CMD_ID_ATA:
-+	case ATA_CMD_PMP_READ:
-+	case ATA_CMD_READ_LOG_EXT:
-+	case ATA_CMD_PIO_READ:
-+	case ATA_CMD_PIO_READ_EXT:
-+	case ATA_CMD_PMP_WRITE:
-+	case ATA_CMD_WRITE_LOG_EXT:
-+	case ATA_CMD_PIO_WRITE:
-+	case ATA_CMD_PIO_WRITE_EXT:
-+	return HISI_SAS_SATA_PROTOCOL_PIO;
-+
-+	case ATA_CMD_DSM:
-+	case ATA_CMD_DOWNLOAD_MICRO_DMA:
-+	case ATA_CMD_PMP_READ_DMA:
-+	case ATA_CMD_PMP_WRITE_DMA:
-+	case ATA_CMD_READ:
-+	case ATA_CMD_READ_EXT:
-+	case ATA_CMD_READ_LOG_DMA_EXT:
-+	case ATA_CMD_READ_STREAM_DMA_EXT:
-+	case ATA_CMD_TRUSTED_RCV_DMA:
-+	case ATA_CMD_TRUSTED_SND_DMA:
-+	case ATA_CMD_WRITE:
-+	case ATA_CMD_WRITE_EXT:
-+	case ATA_CMD_WRITE_FUA_EXT:
-+	case ATA_CMD_WRITE_QUEUED:
-+	case ATA_CMD_WRITE_LOG_DMA_EXT:
-+	case ATA_CMD_WRITE_STREAM_DMA_EXT:
-+	return HISI_SAS_SATA_PROTOCOL_DMA;
-+
-+	case ATA_CMD_CHK_POWER:
-+	case ATA_CMD_DEV_RESET:
-+	case ATA_CMD_EDD:
-+	case ATA_CMD_FLUSH:
-+	case ATA_CMD_FLUSH_EXT:
-+	case ATA_CMD_VERIFY:
-+	case ATA_CMD_VERIFY_EXT:
-+	case ATA_CMD_SET_FEATURES:
-+	case ATA_CMD_STANDBY:
-+	case ATA_CMD_STANDBYNOW1:
-+	return HISI_SAS_SATA_PROTOCOL_NONDATA;
-+	default:
-+		if (direction == DMA_NONE)
-+			return HISI_SAS_SATA_PROTOCOL_NONDATA;
-+		return HISI_SAS_SATA_PROTOCOL_PIO;
-+	}
-+}
-+EXPORT_SYMBOL_GPL(hisi_sas_get_ata_protocol);
-+
- static struct hisi_hba *dev_to_hisi_hba(struct domain_device *device)
- {
- 	return device->port->ha->lldd_ha;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 2607aac..d9314c4 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -554,12 +554,6 @@ enum {
- #define DIR_TO_DEVICE 2
- #define DIR_RESERVED 3
- 
--#define SATA_PROTOCOL_NONDATA		0x1
--#define SATA_PROTOCOL_PIO		0x2
--#define SATA_PROTOCOL_DMA		0x4
--#define SATA_PROTOCOL_FPDMA		0x8
--#define SATA_PROTOCOL_ATAPI		0x10
--
- #define ERR_ON_TX_PHASE(err_phase) (err_phase == 0x2 || \
- 		err_phase == 0x4 || err_phase == 0x8 ||\
- 		err_phase == 0x6 || err_phase == 0xa)
-@@ -2352,64 +2346,6 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
- 	return sts;
+@@ -1729,66 +1729,99 @@ static void hisi_sas_rst_work_handler(struct work_struct *work)
+ 	hisi_sas_controller_reset(hisi_hba);
  }
  
--static u8 get_ata_protocol(u8 cmd, int direction)
--{
--	switch (cmd) {
--	case ATA_CMD_FPDMA_WRITE:
--	case ATA_CMD_FPDMA_READ:
--	case ATA_CMD_FPDMA_RECV:
--	case ATA_CMD_FPDMA_SEND:
--	case ATA_CMD_NCQ_NON_DATA:
--	return SATA_PROTOCOL_FPDMA;
--
--	case ATA_CMD_DOWNLOAD_MICRO:
--	case ATA_CMD_ID_ATA:
--	case ATA_CMD_PMP_READ:
--	case ATA_CMD_READ_LOG_EXT:
--	case ATA_CMD_PIO_READ:
--	case ATA_CMD_PIO_READ_EXT:
--	case ATA_CMD_PMP_WRITE:
--	case ATA_CMD_WRITE_LOG_EXT:
--	case ATA_CMD_PIO_WRITE:
--	case ATA_CMD_PIO_WRITE_EXT:
--	return SATA_PROTOCOL_PIO;
--
--	case ATA_CMD_DSM:
--	case ATA_CMD_DOWNLOAD_MICRO_DMA:
--	case ATA_CMD_PMP_READ_DMA:
--	case ATA_CMD_PMP_WRITE_DMA:
--	case ATA_CMD_READ:
--	case ATA_CMD_READ_EXT:
--	case ATA_CMD_READ_LOG_DMA_EXT:
--	case ATA_CMD_READ_STREAM_DMA_EXT:
--	case ATA_CMD_TRUSTED_RCV_DMA:
--	case ATA_CMD_TRUSTED_SND_DMA:
--	case ATA_CMD_WRITE:
--	case ATA_CMD_WRITE_EXT:
--	case ATA_CMD_WRITE_FUA_EXT:
--	case ATA_CMD_WRITE_QUEUED:
--	case ATA_CMD_WRITE_LOG_DMA_EXT:
--	case ATA_CMD_WRITE_STREAM_DMA_EXT:
--	return SATA_PROTOCOL_DMA;
--
--	case ATA_CMD_CHK_POWER:
--	case ATA_CMD_DEV_RESET:
--	case ATA_CMD_EDD:
--	case ATA_CMD_FLUSH:
--	case ATA_CMD_FLUSH_EXT:
--	case ATA_CMD_VERIFY:
--	case ATA_CMD_VERIFY_EXT:
--	case ATA_CMD_SET_FEATURES:
--	case ATA_CMD_STANDBY:
--	case ATA_CMD_STANDBYNOW1:
--	return SATA_PROTOCOL_NONDATA;
--	default:
--		if (direction == DMA_NONE)
--			return SATA_PROTOCOL_NONDATA;
--		return SATA_PROTOCOL_PIO;
--	}
--}
--
- static int get_ncq_tag_v2_hw(struct sas_task *task, u32 *tag)
+-static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
+-					      const struct hisi_sas_hw *hw)
++int hisi_sas_get_fw_info(struct hisi_hba *hisi_hba)
  {
- 	struct ata_queued_cmd *qc = task->uldd_task;
-@@ -2464,7 +2400,8 @@ static int prep_ata_v2_hw(struct hisi_hba *hisi_hba,
- 			(task->ata_task.fis.control & ATA_SRST))
- 		dw1 |= 1 << CMD_HDR_RESET_OFF;
+-	struct resource *res;
+-	struct Scsi_Host *shost;
+-	struct hisi_hba *hisi_hba;
+-	struct device *dev = &pdev->dev;
+-	struct device_node *np = pdev->dev.of_node;
++	struct device *dev = hisi_hba->dev;
++	struct platform_device *pdev = hisi_hba->platform_dev;
++	struct device_node *np = pdev ? pdev->dev.of_node : NULL;
+ 	struct clk *refclk;
  
--	dw1 |= (get_ata_protocol(task->ata_task.fis.command, task->data_dir))
-+	dw1 |= (hisi_sas_get_ata_protocol(
-+		task->ata_task.fis.command, task->data_dir))
- 		<< CMD_HDR_FRAME_TYPE_OFF;
- 	dw1 |= sas_dev->device_id << CMD_HDR_DEV_ID_OFF;
- 	hdr->dw1 = cpu_to_le32(dw1);
+-	shost = scsi_host_alloc(&hisi_sas_sht, sizeof(*hisi_hba));
+-	if (!shost) {
+-		dev_err(dev, "scsi host alloc failed\n");
+-		return NULL;
+-	}
+-	hisi_hba = shost_priv(shost);
+-
+-	INIT_WORK(&hisi_hba->rst_work, hisi_sas_rst_work_handler);
+-	hisi_hba->hw = hw;
+-	hisi_hba->platform_dev = pdev;
+-	hisi_hba->dev = dev;
+-	hisi_hba->shost = shost;
+-	SHOST_TO_SAS_HA(shost) = &hisi_hba->sha;
+-
+-	init_timer(&hisi_hba->timer);
+-
+ 	if (device_property_read_u8_array(dev, "sas-addr", hisi_hba->sas_addr,
+-					  SAS_ADDR_SIZE))
+-		goto err_out;
++					  SAS_ADDR_SIZE)) {
++		dev_err(dev, "could not get property sas-addr\n");
++		return -ENOENT;
++	}
+ 
+ 	if (np) {
++		/*
++		 * These properties are only required for platform device-based
++		 * controller with DT firmware.
++		 */
+ 		hisi_hba->ctrl = syscon_regmap_lookup_by_phandle(np,
+ 					"hisilicon,sas-syscon");
+-		if (IS_ERR(hisi_hba->ctrl))
+-			goto err_out;
++		if (IS_ERR(hisi_hba->ctrl)) {
++			dev_err(dev, "could not get syscon\n");
++			return -ENOENT;
++		}
+ 
+ 		if (device_property_read_u32(dev, "ctrl-reset-reg",
+-					     &hisi_hba->ctrl_reset_reg))
+-			goto err_out;
++					     &hisi_hba->ctrl_reset_reg)) {
++			dev_err(dev,
++				"could not get property ctrl-reset-reg\n");
++			return -ENOENT;
++		}
+ 
+ 		if (device_property_read_u32(dev, "ctrl-reset-sts-reg",
+-					     &hisi_hba->ctrl_reset_sts_reg))
+-			goto err_out;
++					     &hisi_hba->ctrl_reset_sts_reg)) {
++			dev_err(dev,
++				"could not get property ctrl-reset-sts-reg\n");
++			return -ENOENT;
++		}
+ 
+ 		if (device_property_read_u32(dev, "ctrl-clock-ena-reg",
+-					     &hisi_hba->ctrl_clock_ena_reg))
+-			goto err_out;
++					     &hisi_hba->ctrl_clock_ena_reg)) {
++			dev_err(dev,
++				"could not get property ctrl-clock-ena-reg\n");
++			return -ENOENT;
++		}
+ 	}
+ 
+-	refclk = devm_clk_get(&pdev->dev, NULL);
++	refclk = devm_clk_get(dev, NULL);
+ 	if (IS_ERR(refclk))
+ 		dev_dbg(dev, "no ref clk property\n");
+ 	else
+ 		hisi_hba->refclk_frequency_mhz = clk_get_rate(refclk) / 1000000;
+ 
+-	if (device_property_read_u32(dev, "phy-count", &hisi_hba->n_phy))
+-		goto err_out;
++	if (device_property_read_u32(dev, "phy-count", &hisi_hba->n_phy)) {
++		dev_err(dev, "could not get property phy-count\n");
++		return -ENOENT;
++	}
+ 
+ 	if (device_property_read_u32(dev, "queue-count",
+-				     &hisi_hba->queue_count))
++				     &hisi_hba->queue_count)) {
++		dev_err(dev, "could not get property queue-count\n");
++		return -ENOENT;
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(hisi_sas_get_fw_info);
++
++static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
++					      const struct hisi_sas_hw *hw)
++{
++	struct resource *res;
++	struct Scsi_Host *shost;
++	struct hisi_hba *hisi_hba;
++	struct device *dev = &pdev->dev;
++
++	shost = scsi_host_alloc(&hisi_sas_sht, sizeof(*hisi_hba));
++	if (!shost) {
++		dev_err(dev, "scsi host alloc failed\n");
++		return NULL;
++	}
++	hisi_hba = shost_priv(shost);
++
++	INIT_WORK(&hisi_hba->rst_work, hisi_sas_rst_work_handler);
++	hisi_hba->hw = hw;
++	hisi_hba->dev = dev;
++	hisi_hba->platform_dev = pdev;
++	hisi_hba->shost = shost;
++	SHOST_TO_SAS_HA(shost) = &hisi_hba->sha;
++
++	init_timer(&hisi_hba->timer);
++
++	if (hisi_sas_get_fw_info(hisi_hba) < 0)
+ 		goto err_out;
+ 
+ 	if (dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64)) &&
 -- 
 1.9.1
