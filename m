@@ -1,269 +1,43 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 13/15] qla2xxx: Move target stat counters from vha to qpair.
-Date: Tue, 13 Jun 2017 20:47:28 -0700
-Message-ID: <20170614034730.15428-14-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 15/15] qla2xxx: Update driver version to 9.01.00.00-k
+Date: Tue, 13 Jun 2017 20:47:30 -0700
+Message-ID: <20170614034730.15428-16-himanshu.madhani@cavium.com>
 References: <20170614034730.15428-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0040.outbound.protection.outlook.com ([104.47.41.40]:1472
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+Received: from mail-co1nam03on0076.outbound.protection.outlook.com ([104.47.40.76]:34480
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754205AbdFNDsR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 13 Jun 2017 23:48:17 -0400
+        id S1754224AbdFNDs1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 13 Jun 2017 23:48:27 -0400
 In-Reply-To: <20170614034730.15428-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: martin.petersen@oracle.com, nab@linux-iscsi.org
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 
-From: Quinn Tran <quinn.tran@cavium.com>
-
-Move counters to qpair to reduce cache miss.
-
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h     | 27 +++++++++++----------
- drivers/scsi/qla2xxx/qla_dfs.c     | 48 +++++++++++++++++++++++++++++++-------
- drivers/scsi/qla2xxx/qla_iocb.c    |  2 +-
- drivers/scsi/qla2xxx/qla_target.c  | 13 +++++------
- drivers/scsi/qla2xxx/tcm_qla2xxx.c |  8 +++----
- 5 files changed, 63 insertions(+), 35 deletions(-)
+ drivers/scsi/qla2xxx/qla_version.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 17b13dd92511..e1af9db3691d 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -3183,6 +3183,18 @@ struct qla_tc_param {
- #define QLA_MAX_VPORTS_QLA24XX	128
- #define QLA_MAX_VPORTS_QLA25XX	256
- 
-+struct qla_tgt_counters {
-+	uint64_t qla_core_sbt_cmd;
-+	uint64_t core_qla_que_buf;
-+	uint64_t qla_core_ret_ctio;
-+	uint64_t core_qla_snd_status;
-+	uint64_t qla_core_ret_sta_ctio;
-+	uint64_t core_qla_free_cmd;
-+	uint64_t num_q_full_sent;
-+	uint64_t num_alloc_iocb_failed;
-+	uint64_t num_term_xchg_sent;
-+};
-+
- struct qla_qpair;
- 
- /* Response queue data structure */
-@@ -3285,6 +3297,7 @@ struct qla_qpair {
- 	struct list_head qp_list_elem; /* vha->qp_list */
- 	struct list_head hints_list;
- 	uint16_t cpuid;
-+	struct qla_tgt_counters tgt_counters;
- };
- 
- /* Place holder for FW buffer parameters */
-@@ -3964,18 +3977,6 @@ struct qla_hw_data {
- 	int	allow_cna_fw_dump;
- };
- 
--struct qla_tgt_counters {
--	uint64_t qla_core_sbt_cmd;
--	uint64_t core_qla_que_buf;
--	uint64_t qla_core_ret_ctio;
--	uint64_t core_qla_snd_status;
--	uint64_t qla_core_ret_sta_ctio;
--	uint64_t core_qla_free_cmd;
--	uint64_t num_q_full_sent;
--	uint64_t num_alloc_iocb_failed;
--	uint64_t num_term_xchg_sent;
--};
--
+diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
+index 45bc84e8e3bf..dcbb9bb05e99 100644
+--- a/drivers/scsi/qla2xxx/qla_version.h
++++ b/drivers/scsi/qla2xxx/qla_version.h
+@@ -7,9 +7,9 @@
  /*
-  * Qlogic scsi host structure
+  * Driver version
   */
-@@ -4140,10 +4141,8 @@ typedef struct scsi_qla_host {
- 	struct fc_host_statistics fc_host_stat;
- 	struct qla_statistics qla_stats;
- 	struct bidi_statistics bidi_stats;
--
- 	atomic_t	vref_count;
- 	struct qla8044_reset_template reset_tmplt;
--	struct qla_tgt_counters tgt_counters;
- 	uint16_t	bbcr;
- 	struct name_list_extended gnl;
- 	/* Count of active session/fcport */
-diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
-index 63d7374dce77..d231e7156134 100644
---- a/drivers/scsi/qla2xxx/qla_dfs.c
-+++ b/drivers/scsi/qla2xxx/qla_dfs.c
-@@ -164,26 +164,56 @@ static int
- qla_dfs_tgt_counters_show(struct seq_file *s, void *unused)
- {
- 	struct scsi_qla_host *vha = s->private;
-+	struct qla_qpair *qpair = vha->hw->base_qpair;
-+	uint64_t qla_core_sbt_cmd, core_qla_que_buf, qla_core_ret_ctio,
-+		core_qla_snd_status, qla_core_ret_sta_ctio, core_qla_free_cmd,
-+		num_q_full_sent, num_alloc_iocb_failed, num_term_xchg_sent;
-+	u16 i;
-+
-+	qla_core_sbt_cmd = qpair->tgt_counters.qla_core_sbt_cmd;
-+	core_qla_que_buf = qpair->tgt_counters.core_qla_que_buf;
-+	qla_core_ret_ctio = qpair->tgt_counters.qla_core_ret_ctio;
-+	core_qla_snd_status = qpair->tgt_counters.core_qla_snd_status;
-+	qla_core_ret_sta_ctio = qpair->tgt_counters.qla_core_ret_sta_ctio;
-+	core_qla_free_cmd = qpair->tgt_counters.core_qla_free_cmd;
-+	num_q_full_sent = qpair->tgt_counters.num_q_full_sent;
-+	num_alloc_iocb_failed = qpair->tgt_counters.num_alloc_iocb_failed;
-+	num_term_xchg_sent = qpair->tgt_counters.num_term_xchg_sent;
-+
-+	for (i = 0; i < vha->hw->max_qpairs; i++) {
-+		qpair = vha->hw->queue_pair_map[i];
-+		qla_core_sbt_cmd += qpair->tgt_counters.qla_core_sbt_cmd;
-+		core_qla_que_buf += qpair->tgt_counters.core_qla_que_buf;
-+		qla_core_ret_ctio += qpair->tgt_counters.qla_core_ret_ctio;
-+		core_qla_snd_status += qpair->tgt_counters.core_qla_snd_status;
-+		qla_core_ret_sta_ctio +=
-+		    qpair->tgt_counters.qla_core_ret_sta_ctio;
-+		core_qla_free_cmd += qpair->tgt_counters.core_qla_free_cmd;
-+		num_q_full_sent += qpair->tgt_counters.num_q_full_sent;
-+		num_alloc_iocb_failed +=
-+		    qpair->tgt_counters.num_alloc_iocb_failed;
-+		num_term_xchg_sent += qpair->tgt_counters.num_term_xchg_sent;
-+	}
+-#define QLA2XXX_VERSION      "9.00.00.00-k"
++#define QLA2XXX_VERSION      "9.01.00.00-k"
  
- 	seq_puts(s, "Target Counters\n");
- 	seq_printf(s, "qla_core_sbt_cmd = %lld\n",
--		vha->tgt_counters.qla_core_sbt_cmd);
-+		qla_core_sbt_cmd);
- 	seq_printf(s, "qla_core_ret_sta_ctio = %lld\n",
--		vha->tgt_counters.qla_core_ret_sta_ctio);
-+		qla_core_ret_sta_ctio);
- 	seq_printf(s, "qla_core_ret_ctio = %lld\n",
--		vha->tgt_counters.qla_core_ret_ctio);
-+		qla_core_ret_ctio);
- 	seq_printf(s, "core_qla_que_buf = %lld\n",
--		vha->tgt_counters.core_qla_que_buf);
-+		core_qla_que_buf);
- 	seq_printf(s, "core_qla_snd_status = %lld\n",
--		vha->tgt_counters.core_qla_snd_status);
-+		core_qla_snd_status);
- 	seq_printf(s, "core_qla_free_cmd = %lld\n",
--		vha->tgt_counters.core_qla_free_cmd);
-+		core_qla_free_cmd);
- 	seq_printf(s, "num alloc iocb failed = %lld\n",
--		vha->tgt_counters.num_alloc_iocb_failed);
-+		num_alloc_iocb_failed);
- 	seq_printf(s, "num term exchange sent = %lld\n",
--		vha->tgt_counters.num_term_xchg_sent);
-+		num_term_xchg_sent);
- 	seq_printf(s, "num Q full sent = %lld\n",
--		vha->tgt_counters.num_q_full_sent);
-+		num_q_full_sent);
- 
- 	/* DIF stats */
- 	seq_printf(s, "DIF Inp Bytes = %lld\n",
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 6c710313adce..ac49febbac76 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -2189,7 +2189,7 @@ __qla2x00_alloc_iocbs(struct qla_qpair *qpair, srb_t *sp)
- 	}
- 
- queuing_error:
--	vha->tgt_counters.num_alloc_iocb_failed++;
-+	qpair->tgt_counters.num_alloc_iocb_failed++;
- 	return pkt;
- }
- 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 48d82c67e223..8f75d27daae2 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -3078,9 +3078,9 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
- 	spin_lock_irqsave(qpair->qp_lock_ptr, flags);
- 
- 	if (xmit_type == QLA_TGT_XMIT_STATUS)
--		vha->tgt_counters.core_qla_snd_status++;
-+		qpair->tgt_counters.core_qla_snd_status++;
- 	else
--		vha->tgt_counters.core_qla_que_buf++;
-+		qpair->tgt_counters.core_qla_que_buf++;
- 
- 	if (!qpair->fw_started || cmd->reset_count != qpair->chip_reset) {
- 		/*
-@@ -3500,7 +3500,7 @@ static int __qlt_send_term_exchange(struct qla_qpair *qpair,
- 			ret = 1;
- 	}
- 
--	vha->tgt_counters.num_term_xchg_sent++;
-+	qpair->tgt_counters.num_term_xchg_sent++;
- 	pkt->entry_count = 1;
- 	pkt->handle = QLA_TGT_SKIP_HANDLE | CTIO_COMPLETION_HANDLE_MARK;
- 
-@@ -5103,7 +5103,7 @@ static int __qlt_send_busy(struct qla_qpair *qpair,
- 		return -ENOMEM;
- 	}
- 
--	vha->tgt_counters.num_q_full_sent++;
-+	qpair->tgt_counters.num_q_full_sent++;
- 	pkt->entry_count = 1;
- 	pkt->handle = QLA_TGT_SKIP_HANDLE | CTIO_COMPLETION_HANDLE_MARK;
- 
-@@ -5466,13 +5466,12 @@ static void qlt_24xx_atio_pkt(struct scsi_qla_host *vha,
- static void qlt_response_pkt(struct scsi_qla_host *vha,
- 	struct rsp_que *rsp, response_t *pkt)
- {
--	struct qla_hw_data *ha = vha->hw;
- 	struct qla_tgt *tgt = vha->vha_tgt.qla_tgt;
- 
- 	if (unlikely(tgt == NULL)) {
- 		ql_dbg(ql_dbg_tgt, vha, 0xe05d,
--		    "qla_target(%d): Response pkt %x received, but no "
--		    "tgt (ha %p)\n", vha->vp_idx, pkt->entry_type, ha);
-+		    "qla_target(%d): Response pkt %x received, but no tgt (ha %p)\n",
-+		    vha->vp_idx, pkt->entry_type, vha->hw);
- 		return;
- 	}
- 
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index 238abad4b481..5357c2031a1c 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -284,7 +284,7 @@ static void tcm_qla2xxx_complete_free(struct work_struct *work)
- 
- 	WARN_ON(cmd->trc_flags & TRC_CMD_FREE);
- 
--	cmd->vha->tgt_counters.qla_core_ret_sta_ctio++;
-+	cmd->qpair->tgt_counters.qla_core_ret_sta_ctio++;
- 	cmd->trc_flags |= TRC_CMD_FREE;
- 	transport_generic_free_cmd(&cmd->se_cmd, 0);
- }
-@@ -296,7 +296,7 @@ static void tcm_qla2xxx_complete_free(struct work_struct *work)
-  */
- static void tcm_qla2xxx_free_cmd(struct qla_tgt_cmd *cmd)
- {
--	cmd->vha->tgt_counters.core_qla_free_cmd++;
-+	cmd->qpair->tgt_counters.core_qla_free_cmd++;
- 	cmd->cmd_in_wq = 1;
- 
- 	WARN_ON(cmd->trc_flags & TRC_CMD_DONE);
-@@ -492,7 +492,7 @@ static int tcm_qla2xxx_handle_cmd(scsi_qla_host_t *vha, struct qla_tgt_cmd *cmd,
- 	}
- #endif
- 
--	cmd->vha->tgt_counters.qla_core_sbt_cmd++;
-+	cmd->qpair->tgt_counters.qla_core_sbt_cmd++;
- 	return target_submit_cmd(se_cmd, se_sess, cdb, &cmd->sense_buffer[0],
- 				cmd->unpacked_lun, data_length, fcp_task_attr,
- 				data_dir, flags);
-@@ -520,7 +520,7 @@ static void tcm_qla2xxx_handle_data_work(struct work_struct *work)
- 	}
- 	spin_unlock_irqrestore(&cmd->cmd_lock, flags);
- 
--	cmd->vha->tgt_counters.qla_core_ret_ctio++;
-+	cmd->qpair->tgt_counters.qla_core_ret_ctio++;
- 	if (!cmd->write_data_transferred) {
- 		/*
- 		 * Check if se_cmd has already been aborted via LUN_RESET, and
+ #define QLA_DRIVER_MAJOR_VER	9
+-#define QLA_DRIVER_MINOR_VER	0
++#define QLA_DRIVER_MINOR_VER	1
+ #define QLA_DRIVER_PATCH_VER	0
+ #define QLA_DRIVER_BETA_VER	0
 -- 
 2.12.0
