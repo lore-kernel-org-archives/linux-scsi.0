@@ -1,16 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 10/15] qla2xxx: Add debug logging routine for qpair
-Date: Tue, 13 Jun 2017 20:47:25 -0700
-Message-ID: <20170614034730.15428-11-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 14/15] qla2xxx: Include Exchange offload/Extended Login into FW dump
+Date: Tue, 13 Jun 2017 20:47:29 -0700
+Message-ID: <20170614034730.15428-15-himanshu.madhani@cavium.com>
 References: <20170614034730.15428-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0086.outbound.protection.outlook.com ([104.47.34.86]:22016
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-dm3nam03on0047.outbound.protection.outlook.com ([104.47.41.47]:38432
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754213AbdFNDsU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 13 Jun 2017 23:48:20 -0400
+        id S1754206AbdFNDsS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 13 Jun 2017 23:48:18 -0400
 In-Reply-To: <20170614034730.15428-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,301 +19,159 @@ Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org, target-devel@vger.k
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-For target main path io routines that uses qpair,
-create new logging & debugging routines to use
-qpair instead of reaching for scsi_qla_host to
-reduce cache thrash.
+Add missing memory dump of Exchange Offload and Extended
+login into FW dump.
 
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_dbg.c    | 101 ++++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_dbg.h    |   6 +++
- drivers/scsi/qla2xxx/qla_target.c |  28 +++++------
- drivers/scsi/qla2xxx/qla_target.h |   1 +
- 4 files changed, 122 insertions(+), 14 deletions(-)
+ drivers/scsi/qla2xxx/qla_dbg.c  | 49 +++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_dbg.h  | 11 +++++++++
+ drivers/scsi/qla2xxx/qla_init.c |  7 ++++++
+ drivers/scsi/qla2xxx/qla_os.c   |  3 ---
+ 4 files changed, 67 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 11e097e123bd..c0c90dcc7c7b 100644
+index c0c90dcc7c7b..f91ee717202d 100644
 --- a/drivers/scsi/qla2xxx/qla_dbg.c
 +++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -2713,3 +2713,104 @@ ql_dump_buffer(uint32_t level, scsi_qla_host_t *vha, int32_t id,
- 			       buf + cnt, min(16U, size - cnt), false);
- 	}
+@@ -498,6 +498,50 @@ qla25xx_copy_fce(struct qla_hw_data *ha, void *ptr, uint32_t **last_chain)
  }
-+
-+/*
-+ * This function is for formatting and logging log messages.
-+ * It is to be used when vha is available. It formats the message
-+ * and logs it to the messages file. All the messages will be logged
-+ * irrespective of value of ql2xextended_error_logging.
-+ * parameters:
-+ * level: The level of the log messages to be printed in the
-+ *        messages file.
-+ * vha:   Pointer to the scsi_qla_host_t
-+ * id:    This is a unique id for the level. It identifies the
-+ *        part of the code from where the message originated.
-+ * msg:   The message to be displayed.
-+ */
-+void
-+ql_log_qp(uint32_t level, struct qla_qpair *qpair, int32_t id,
-+    const char *fmt, ...)
+ 
+ static inline void *
++qla25xx_copy_exlogin(struct qla_hw_data *ha, void *ptr, uint32_t **last_chain)
 +{
-+	va_list va;
-+	struct va_format vaf;
-+	char pbuf[128];
++	struct qla2xxx_offld_chain *c = ptr;
 +
-+	if (level > ql_errlev)
-+		return;
++	if (!ha->exlogin_buf)
++		return ptr;
 +
-+	if (qpair != NULL) {
-+		const struct pci_dev *pdev = qpair->pdev;
-+		/* <module-name> <msg-id>:<host> Message */
-+		snprintf(pbuf, sizeof(pbuf), "%s [%s]-%04x: ",
-+			QL_MSGHDR, dev_name(&(pdev->dev)), id);
-+	} else {
-+		snprintf(pbuf, sizeof(pbuf), "%s [%s]-%04x: : ",
-+			QL_MSGHDR, "0000:00:00.0", id);
-+	}
-+	pbuf[sizeof(pbuf) - 1] = 0;
++	*last_chain = &c->type;
 +
-+	va_start(va, fmt);
++	c->type = cpu_to_be32(DUMP_CHAIN_EXLOGIN);
++	c->chain_size = cpu_to_be32(sizeof(struct qla2xxx_offld_chain) +
++	    ha->exlogin_size);
++	c->size = cpu_to_be32(ha->exlogin_size);
++	c->addr = cpu_to_be64(ha->exlogin_buf_dma);
 +
-+	vaf.fmt = fmt;
-+	vaf.va = &va;
++	ptr += sizeof(struct qla2xxx_offld_chain);
++	memcpy(ptr, ha->exlogin_buf, ha->exlogin_size);
 +
-+	switch (level) {
-+	case ql_log_fatal: /* FATAL LOG */
-+		pr_crit("%s%pV", pbuf, &vaf);
-+		break;
-+	case ql_log_warn:
-+		pr_err("%s%pV", pbuf, &vaf);
-+		break;
-+	case ql_log_info:
-+		pr_warn("%s%pV", pbuf, &vaf);
-+		break;
-+	default:
-+		pr_info("%s%pV", pbuf, &vaf);
-+		break;
-+	}
-+
-+	va_end(va);
++	return (char *)ptr + cpu_to_be32(c->size);
 +}
 +
-+/*
-+ * This function is for formatting and logging debug information.
-+ * It is to be used when vha is available. It formats the message
-+ * and logs it to the messages file.
-+ * parameters:
-+ * level: The level of the debug messages to be printed.
-+ *        If ql2xextended_error_logging value is correctly set,
-+ *        this message will appear in the messages file.
-+ * vha:   Pointer to the scsi_qla_host_t.
-+ * id:    This is a unique identifier for the level. It identifies the
-+ *        part of the code from where the message originated.
-+ * msg:   The message to be displayed.
-+ */
-+void
-+ql_dbg_qp(uint32_t level, struct qla_qpair *qpair, int32_t id,
-+    const char *fmt, ...)
++static inline void *
++qla81xx_copy_exchoffld(struct qla_hw_data *ha, void *ptr, uint32_t **last_chain)
 +{
-+	va_list va;
-+	struct va_format vaf;
++	struct qla2xxx_offld_chain *c = ptr;
 +
-+	if (!ql_mask_match(level))
-+		return;
++	if (!ha->exchoffld_buf)
++		return ptr;
 +
-+	va_start(va, fmt);
++	*last_chain = &c->type;
 +
-+	vaf.fmt = fmt;
-+	vaf.va = &va;
++	c->type = cpu_to_be32(DUMP_CHAIN_EXCHG);
++	c->chain_size = cpu_to_be32(sizeof(struct qla2xxx_offld_chain) +
++	    ha->exchoffld_size);
++	c->size = cpu_to_be32(ha->exchoffld_size);
++	c->addr = cpu_to_be64(ha->exchoffld_buf_dma);
 +
-+	if (qpair != NULL) {
-+		const struct pci_dev *pdev = qpair->pdev;
-+		/* <module-name> <pci-name> <msg-id>:<host> Message */
-+		pr_warn("%s [%s]-%04x: %pV",
-+		    QL_MSGHDR, dev_name(&(pdev->dev)), id + ql_dbg_offset,
-+		    &vaf);
-+	} else {
-+		pr_warn("%s [%s]-%04x: : %pV",
-+			QL_MSGHDR, "0000:00:00.0", id + ql_dbg_offset, &vaf);
-+	}
++	ptr += sizeof(struct qla2xxx_offld_chain);
++	memcpy(ptr, ha->exchoffld_buf, ha->exchoffld_size);
 +
-+	va_end(va);
-+
++	return (char *)ptr + cpu_to_be32(c->size);
 +}
++
++static inline void *
+ qla2xxx_copy_atioqueues(struct qla_hw_data *ha, void *ptr,
+ 	uint32_t **last_chain)
+ {
+@@ -1606,6 +1650,7 @@ qla25xx_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
+ 	nxt_chain = qla25xx_copy_fce(ha, nxt_chain, &last_chain);
+ 	nxt_chain = qla25xx_copy_mqueues(ha, nxt_chain, &last_chain);
+ 	nxt_chain = qla2xxx_copy_atioqueues(ha, nxt_chain, &last_chain);
++	nxt_chain = qla25xx_copy_exlogin(ha, nxt_chain, &last_chain);
+ 	if (last_chain) {
+ 		ha->fw_dump->version |= htonl(DUMP_CHAIN_VARIANT);
+ 		*last_chain |= htonl(DUMP_CHAIN_LAST);
+@@ -1932,6 +1977,8 @@ qla81xx_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
+ 	nxt_chain = qla25xx_copy_fce(ha, nxt_chain, &last_chain);
+ 	nxt_chain = qla25xx_copy_mqueues(ha, nxt_chain, &last_chain);
+ 	nxt_chain = qla2xxx_copy_atioqueues(ha, nxt_chain, &last_chain);
++	nxt_chain = qla25xx_copy_exlogin(ha, nxt_chain, &last_chain);
++	nxt_chain = qla81xx_copy_exchoffld(ha, nxt_chain, &last_chain);
+ 	if (last_chain) {
+ 		ha->fw_dump->version |= htonl(DUMP_CHAIN_VARIANT);
+ 		*last_chain |= htonl(DUMP_CHAIN_LAST);
+@@ -2443,6 +2490,8 @@ qla83xx_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
+ 	nxt_chain = qla25xx_copy_fce(ha, nxt_chain, &last_chain);
+ 	nxt_chain = qla25xx_copy_mqueues(ha, nxt_chain, &last_chain);
+ 	nxt_chain = qla2xxx_copy_atioqueues(ha, nxt_chain, &last_chain);
++	nxt_chain = qla25xx_copy_exlogin(ha, nxt_chain, &last_chain);
++	nxt_chain = qla81xx_copy_exchoffld(ha, nxt_chain, &last_chain);
+ 	if (last_chain) {
+ 		ha->fw_dump->version |= htonl(DUMP_CHAIN_VARIANT);
+ 		*last_chain |= htonl(DUMP_CHAIN_LAST);
 diff --git a/drivers/scsi/qla2xxx/qla_dbg.h b/drivers/scsi/qla2xxx/qla_dbg.h
-index c6bffe929fe7..f60138f66dce 100644
+index f60138f66dce..8877aa97d829 100644
 --- a/drivers/scsi/qla2xxx/qla_dbg.h
 +++ b/drivers/scsi/qla2xxx/qla_dbg.h
-@@ -313,12 +313,18 @@ void __attribute__((format (printf, 4, 5)))
- ql_dbg(uint32_t, scsi_qla_host_t *vha, int32_t, const char *fmt, ...);
- void __attribute__((format (printf, 4, 5)))
- ql_dbg_pci(uint32_t, struct pci_dev *pdev, int32_t, const char *fmt, ...);
-+void __attribute__((format (printf, 4, 5)))
-+ql_dbg_qp(uint32_t, struct qla_qpair *, int32_t, const char *fmt, ...);
+@@ -232,6 +232,15 @@ struct qla2xxx_fce_chain {
+ 	uint32_t eregs[8];
+ };
+ 
++/* used by exchange off load and extended login offload */
++struct qla2xxx_offld_chain {
++	uint32_t type;
++	uint32_t chain_size;
 +
- 
- void __attribute__((format (printf, 4, 5)))
- ql_log(uint32_t, scsi_qla_host_t *vha, int32_t, const char *fmt, ...);
- void __attribute__((format (printf, 4, 5)))
- ql_log_pci(uint32_t, struct pci_dev *pdev, int32_t, const char *fmt, ...);
- 
-+void __attribute__((format (printf, 4, 5)))
-+ql_log_qp(uint32_t, struct qla_qpair *, int32_t, const char *fmt, ...);
++	uint32_t size;
++	u64	 addr;
++};
 +
- /* Debug Levels */
- /* The 0x40000000 is the max value any debug level can have
-  * as ql2xextended_error_logging is of type signed int
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index f18a50867119..84be2b48246f 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -2263,7 +2263,7 @@ static int qlt_pci_map_calc_cnt(struct qla_tgt_prm *prm)
- 	return 0;
+ struct qla2xxx_mq_chain {
+ 	uint32_t type;
+ 	uint32_t chain_size;
+@@ -258,6 +267,8 @@ struct qla2xxx_mqueue_chain {
+ #define DUMP_CHAIN_FCE		0x7FFFFAF0
+ #define DUMP_CHAIN_MQ		0x7FFFFAF1
+ #define DUMP_CHAIN_QUEUE	0x7FFFFAF2
++#define DUMP_CHAIN_EXLOGIN	0x7FFFFAF3
++#define DUMP_CHAIN_EXCHG	0x7FFFFAF4
+ #define DUMP_CHAIN_LAST		0x80000000
  
- out_err:
--	ql_dbg(ql_dbg_tgt, prm->cmd->vha, 0xe04d,
-+	ql_dbg_qp(ql_dbg_tgt, prm->cmd->qpair, 0xe04d,
- 	    "qla_target(%d): PCI mapping failed: sg_cnt=%d",
- 	    0, prm->cmd->sg_cnt);
- 	return -1;
-@@ -2379,7 +2379,6 @@ static int qlt_24xx_build_ctio_pkt(struct qla_qpair *qpair,
- 	struct ctio7_to_24xx *pkt;
- 	struct atio_from_isp *atio = &prm->cmd->atio;
- 	uint16_t temp;
--	struct scsi_qla_host *vha = prm->cmd->vha;
+ struct qla2xxx_fw_dump {
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 48c0a58330d4..72d9ca138ffd 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2538,6 +2538,13 @@ qla2x00_alloc_fw_dump(scsi_qla_host_t *vha)
+ 	ha->chain_offset = dump_size;
+ 	dump_size += mq_size + fce_size;
  
- 	pkt = (struct ctio7_to_24xx *)qpair->req->ring_ptr;
- 	prm->pkt = pkt;
-@@ -2387,7 +2386,7 @@ static int qlt_24xx_build_ctio_pkt(struct qla_qpair *qpair,
++	if (ha->exchoffld_buf)
++		dump_size += sizeof(struct qla2xxx_offld_chain) +
++			ha->exchoffld_size;
++	if (ha->exlogin_buf)
++		dump_size += sizeof(struct qla2xxx_offld_chain) +
++			ha->exlogin_size;
++
+ allocate:
+ 	ha->fw_dump = vmalloc(dump_size);
+ 	if (!ha->fw_dump) {
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 88e115fcea60..f7c4f723c405 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -4176,9 +4176,6 @@ qla2x00_set_exchoffld_buffer(scsi_qla_host_t *vha)
+ 	if (!IS_EXCHG_OFFLD_CAPABLE(ha))
+ 		return QLA_SUCCESS;
  
- 	pkt->entry_type = CTIO_TYPE7;
- 	pkt->entry_count = (uint8_t)prm->req_cnt;
--	pkt->vp_index = vha->vp_idx;
-+	pkt->vp_index = prm->cmd->vp_idx;
- 
- 	h = qlt_make_handle(qpair);
- 	if (unlikely(h == QLA_TGT_NULL_HANDLE)) {
-@@ -2583,6 +2582,7 @@ static int qlt_pre_xmit_response(struct qla_tgt_cmd *cmd,
- 	uint32_t *full_req_cnt)
- {
- 	struct se_cmd *se_cmd = &cmd->se_cmd;
-+	struct qla_qpair *qpair = cmd->qpair;
- 
- 	prm->cmd = cmd;
- 	prm->tgt = cmd->tgt;
-@@ -2608,7 +2608,7 @@ static int qlt_pre_xmit_response(struct qla_tgt_cmd *cmd,
- 
- 	if (se_cmd->se_cmd_flags & SCF_UNDERFLOW_BIT) {
- 		prm->residual = se_cmd->residual_count;
--		ql_dbg(ql_dbg_io + ql_dbg_verbose, cmd->vha, 0x305c,
-+		ql_dbg_qp(ql_dbg_io + ql_dbg_verbose, qpair, 0x305c,
- 		    "Residual underflow: %d (tag %lld, op %x, bufflen %d, rq_result %x)\n",
- 		       prm->residual, se_cmd->tag,
- 		       se_cmd->t_task_cdb ? se_cmd->t_task_cdb[0] : 0,
-@@ -2616,7 +2616,7 @@ static int qlt_pre_xmit_response(struct qla_tgt_cmd *cmd,
- 		prm->rq_result |= SS_RESIDUAL_UNDER;
- 	} else if (se_cmd->se_cmd_flags & SCF_OVERFLOW_BIT) {
- 		prm->residual = se_cmd->residual_count;
--		ql_dbg(ql_dbg_io, cmd->vha, 0x305d,
-+		ql_dbg_qp(ql_dbg_io, qpair, 0x305d,
- 		    "Residual overflow: %d (tag %lld, op %x, bufflen %d, rq_result %x)\n",
- 		       prm->residual, se_cmd->tag, se_cmd->t_task_cdb ?
- 		       se_cmd->t_task_cdb[0] : 0, cmd->bufflen, prm->rq_result);
-@@ -2672,7 +2672,7 @@ static void qlt_24xx_init_ctio_to_isp(struct ctio7_to_24xx *ctio,
- 
- 		if (qlt_need_explicit_conf(prm->cmd, 1)) {
- 			if ((prm->rq_result & SS_SCSI_STATUS_BYTE) != 0) {
--				ql_dbg(ql_dbg_tgt, prm->cmd->vha, 0xe017,
-+				ql_dbg_qp(ql_dbg_tgt, prm->cmd->qpair, 0xe017,
- 				    "Skipping EXPLICIT_CONFORM and "
- 				    "CTIO7_FLAGS_CONFORM_REQ for FCP READ w/ "
- 				    "non GOOD status\n");
-@@ -2867,9 +2867,9 @@ qlt_build_ctio_crc2_pkt(struct qla_qpair *qpair, struct qla_tgt_prm *prm)
- 	prm->pkt = pkt;
- 	memset(pkt, 0, sizeof(*pkt));
- 
--	ql_dbg(ql_dbg_tgt, vha, 0xe071,
-+	ql_dbg_qp(ql_dbg_tgt, cmd->qpair, 0xe071,
- 		"qla_target(%d):%s: se_cmd[%p] CRC2 prot_op[0x%x] cmd prot sg:cnt[%p:%x] lba[%llu]\n",
--		vha->vp_idx, __func__, se_cmd, se_cmd->prot_op,
-+		cmd->vp_idx, __func__, se_cmd, se_cmd->prot_op,
- 		prm->prot_sg, prm->prot_seg_cnt, se_cmd->t_task_lba);
- 
- 	if ((se_cmd->prot_op == TARGET_PROT_DIN_INSERT) ||
-@@ -2932,7 +2932,7 @@ qlt_build_ctio_crc2_pkt(struct qla_qpair *qpair, struct qla_tgt_prm *prm)
- 	/* Update entry type to indicate Command Type CRC_2 IOCB */
- 	pkt->entry_type  = CTIO_CRC2;
- 	pkt->entry_count = 1;
--	pkt->vp_index = vha->vp_idx;
-+	pkt->vp_index = cmd->vp_idx;
- 
- 	h = qlt_make_handle(qpair);
- 	if (unlikely(h == QLA_TGT_NULL_HANDLE)) {
-@@ -3080,7 +3080,7 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
- 		return 0;
- 	}
- 
--	ql_dbg(ql_dbg_tgt, cmd->vha, 0xe018,
-+	ql_dbg_qp(ql_dbg_tgt, qpair, 0xe018,
- 	    "is_send_status=%d, cmd->bufflen=%d, cmd->sg_cnt=%d, cmd->dma_data_direction=%d se_cmd[%p] qp %d\n",
- 	    (xmit_type & QLA_TGT_XMIT_STATUS) ?
- 	    1 : 0, cmd->bufflen, cmd->sg_cnt, cmd->dma_data_direction,
-@@ -3106,7 +3106,7 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
- 		 */
- 		cmd->state = QLA_TGT_STATE_PROCESSED;
- 		qlt_abort_cmd_on_host_reset(cmd->vha, cmd);
--		ql_dbg(ql_dbg_async, vha, 0xe101,
-+		ql_dbg_qp(ql_dbg_async, qpair, 0xe101,
- 			"RESET-RSP online/active/old-count/new-count = %d/%d/%d/%d.\n",
- 			vha->flags.online, qla2x00_reset_active(vha),
- 			cmd->reset_count, qpair->chip_reset);
-@@ -3164,7 +3164,7 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
- 				(struct ctio7_to_24xx *)qlt_get_req_pkt(
- 				    qpair->req);
- 
--			ql_dbg(ql_dbg_tgt, vha, 0x305e,
-+			ql_dbg_qp(ql_dbg_tgt, qpair, 0x305e,
- 			    "Building additional status packet 0x%p.\n",
- 			    ctio);
- 
-@@ -3191,7 +3191,6 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
- 			 */
- 			qlt_24xx_init_ctio_to_isp((struct ctio7_to_24xx *)ctio,
- 			    &prm);
--			pr_debug("Status CTIO7: %p\n", ctio);
- 		}
- 	} else
- 		qlt_24xx_init_ctio_to_isp(pkt, &prm);
-@@ -3246,7 +3245,7 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
- 		 */
- 		cmd->state = QLA_TGT_STATE_NEED_DATA;
- 		qlt_abort_cmd_on_host_reset(cmd->vha, cmd);
--		ql_dbg(ql_dbg_async, vha, 0xe102,
-+		ql_dbg_qp(ql_dbg_async, qpair, 0xe102,
- 			"RESET-XFR online/active/old-count/new-count = %d/%d/%d/%d.\n",
- 			vha->flags.online, qla2x00_reset_active(vha),
- 			cmd->reset_count, qpair->chip_reset);
-@@ -4222,6 +4221,7 @@ static struct qla_tgt_cmd *qlt_get_tag(scsi_qla_host_t *vha,
- 	    (struct scsi_lun *)&atio->u.isp24.fcp_cmnd.lun);
- 	qlt_assign_qpair(vha, cmd);
- 	cmd->reset_count = vha->hw->base_qpair->chip_reset;
-+	cmd->vp_idx = vha->vp_idx;
- 
- 	return cmd;
- }
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index 30a389445de4..bb8f73a86b2b 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -908,6 +908,7 @@ struct qla_tgt_cmd {
- 	u64 unpacked_lun;
- 	enum dma_data_direction dma_data_direction;
- 
-+	uint16_t vp_idx;
- 	uint16_t loop_id;	/* to save extra sess dereferences */
- 	struct qla_tgt *tgt;	/* to save extra sess dereferences */
- 	struct scsi_qla_host *vha;
+-	ql_log(ql_log_info, vha, 0xd014,
+-	    "Exchange offload count: %d.\n", ql2xexlogins);
+-
+ 	max_cnt = 0;
+ 	rval = qla_get_exchoffld_status(vha, &size, &max_cnt);
+ 	if (rval != QLA_SUCCESS) {
 -- 
 2.12.0
