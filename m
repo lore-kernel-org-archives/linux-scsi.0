@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v6 17/22] scsi: hisi_sas: add v3 code to send ATA frame
-Date: Wed, 14 Jun 2017 23:33:27 +0800
-Message-ID: <1497454412-91194-18-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v6 10/22] scsi: hisi_sas: add initialisation for v3 pci-based controller
+Date: Wed, 14 Jun 2017 23:33:20 +0800
+Message-ID: <1497454412-91194-11-git-send-email-john.garry@huawei.com>
 References: <1497454412-91194-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,165 +9,297 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1497454412-91194-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, hch@infradead.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, hch@infradead.org, John Garry <john.garry@huawei.com>, Xiang Chen <chenxiang66@hisilicon.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+Add the code to initialise the controller which is based on pci
+device in hisi_sas_v3_hw.c
 
-Add code to prepare ATA frame for v3 hw
+The core controller routines are still in hisi_sas_main.c; some
+common initialisation functions are also exported from
+hisi_sas_main.c
+
+For pci-based controller, the device properties, like
+phy count and sas address are read from the firmware,
+same as platform device-based controller.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 106 +++++++++++++++++++++++++++++++++
- 1 file changed, 106 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas.h       |   6 ++
+ drivers/scsi/hisi_sas/hisi_sas_main.c  |  18 ++--
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 154 +++++++++++++++++++++++++++++++++
+ 3 files changed, 172 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 515f50c..30c103b 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -171,8 +171,11 @@
- #define CMD_HDR_CMD_OFF			29
- #define CMD_HDR_CMD_MSK			(0x7 << CMD_HDR_CMD_OFF)
- /* dw1 */
-+#define CMD_HDR_UNCON_CMD_OFF	3
- #define CMD_HDR_DIR_OFF			5
- #define CMD_HDR_DIR_MSK			(0x3 << CMD_HDR_DIR_OFF)
-+#define CMD_HDR_RESET_OFF		7
-+#define CMD_HDR_RESET_MSK		(0x1 << CMD_HDR_RESET_OFF)
- #define CMD_HDR_VDTL_OFF		10
- #define CMD_HDR_VDTL_MSK		(0x1 << CMD_HDR_VDTL_OFF)
- #define CMD_HDR_FRAME_TYPE_OFF		11
-@@ -182,6 +185,8 @@
- /* dw2 */
- #define CMD_HDR_CFL_OFF			0
- #define CMD_HDR_CFL_MSK			(0x1ff << CMD_HDR_CFL_OFF)
-+#define CMD_HDR_NCQ_TAG_OFF		10
-+#define CMD_HDR_NCQ_TAG_MSK		(0x1f << CMD_HDR_NCQ_TAG_OFF)
- #define CMD_HDR_MRFL_OFF		15
- #define CMD_HDR_MRFL_MSK		(0x1ff << CMD_HDR_MRFL_OFF)
- #define CMD_HDR_SG_MOD_OFF		24
-@@ -260,6 +265,11 @@ enum {
- #define DIR_TO_DEVICE 2
- #define DIR_RESERVED 3
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index c1f6669..e89f6ae 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -366,6 +366,12 @@ struct hisi_sas_command_table_ssp {
+ 	struct hisi_sas_command_table_stp stp;
+ };
  
-+#define CMD_IS_UNCONSTRAINT(cmd) \
-+	((cmd == ATA_CMD_READ_LOG_EXT) || \
-+	(cmd == ATA_CMD_READ_LOG_DMA_EXT) || \
-+	(cmd == ATA_CMD_DEV_RESET))
++extern struct scsi_transport_template *hisi_sas_stt;
++extern struct scsi_host_template *hisi_sas_sht;
 +
- static u32 hisi_sas_read32(struct hisi_hba *hisi_hba, u32 off)
++extern void hisi_sas_init_add(struct hisi_hba *hisi_hba);
++extern int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost);
++extern void hisi_sas_free(struct hisi_hba *hisi_hba);
+ extern u8 hisi_sas_get_ata_protocol(u8 cmd, int direction);
+ extern struct hisi_sas_port *to_hisi_sas_port(struct asd_sas_port *sas_port);
+ extern void hisi_sas_sata_done(struct sas_task *task,
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 81c053c..0a32211 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -1476,9 +1476,10 @@ void hisi_sas_rescan_topology(struct hisi_hba *hisi_hba, u32 old_state,
+ }
+ EXPORT_SYMBOL_GPL(hisi_sas_rescan_topology);
+ 
+-static struct scsi_transport_template *hisi_sas_stt;
++struct scsi_transport_template *hisi_sas_stt;
++EXPORT_SYMBOL_GPL(hisi_sas_stt);
+ 
+-static struct scsi_host_template hisi_sas_sht = {
++static struct scsi_host_template _hisi_sas_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+ 	.queuecommand		= sas_queuecommand,
+@@ -1498,6 +1499,8 @@ void hisi_sas_rescan_topology(struct hisi_hba *hisi_hba, u32 old_state,
+ 	.target_destroy		= sas_target_destroy,
+ 	.ioctl			= sas_ioctl,
+ };
++struct scsi_host_template *hisi_sas_sht = &_hisi_sas_sht;
++EXPORT_SYMBOL_GPL(hisi_sas_sht);
+ 
+ static struct sas_domain_function_template hisi_sas_transport_ops = {
+ 	.lldd_dev_found		= hisi_sas_dev_found,
+@@ -1545,7 +1548,7 @@ void hisi_sas_init_mem(struct hisi_hba *hisi_hba)
+ }
+ EXPORT_SYMBOL_GPL(hisi_sas_init_mem);
+ 
+-static int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
++int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
  {
- 	void __iomem *regs = hisi_hba->regs + off;
-@@ -725,6 +735,101 @@ static int prep_smp_v3_hw(struct hisi_hba *hisi_hba,
- 	return rc;
+ 	struct device *dev = hisi_hba->dev;
+ 	int i, s, max_command_entries = hisi_hba->hw->max_command_entries;
+@@ -1664,8 +1667,9 @@ static int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
+ err_out:
+ 	return -ENOMEM;
+ }
++EXPORT_SYMBOL_GPL(hisi_sas_alloc);
+ 
+-static void hisi_sas_free(struct hisi_hba *hisi_hba)
++void hisi_sas_free(struct hisi_hba *hisi_hba)
+ {
+ 	struct device *dev = hisi_hba->dev;
+ 	int i, s, max_command_entries = hisi_hba->hw->max_command_entries;
+@@ -1720,6 +1724,7 @@ static void hisi_sas_free(struct hisi_hba *hisi_hba)
+ 	if (hisi_hba->wq)
+ 		destroy_workqueue(hisi_hba->wq);
+ }
++EXPORT_SYMBOL_GPL(hisi_sas_free);
+ 
+ static void hisi_sas_rst_work_handler(struct work_struct *work)
+ {
+@@ -1805,7 +1810,7 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
+ 	struct hisi_hba *hisi_hba;
+ 	struct device *dev = &pdev->dev;
+ 
+-	shost = scsi_host_alloc(&hisi_sas_sht, sizeof(*hisi_hba));
++	shost = scsi_host_alloc(hisi_sas_sht, sizeof(*hisi_hba));
+ 	if (!shost) {
+ 		dev_err(dev, "scsi host alloc failed\n");
+ 		return NULL;
+@@ -1847,7 +1852,7 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
+ 	return NULL;
  }
  
-+static int get_ncq_tag_v3_hw(struct sas_task *task, u32 *tag)
-+{
-+	struct ata_queued_cmd *qc = task->uldd_task;
+-static void hisi_sas_init_add(struct hisi_hba *hisi_hba)
++void hisi_sas_init_add(struct hisi_hba *hisi_hba)
+ {
+ 	int i;
+ 
+@@ -1856,6 +1861,7 @@ static void hisi_sas_init_add(struct hisi_hba *hisi_hba)
+ 		       hisi_hba->sas_addr,
+ 		       SAS_ADDR_SIZE);
+ }
++EXPORT_SYMBOL_GPL(hisi_sas_init_add);
+ 
+ int hisi_sas_probe(struct platform_device *pdev,
+ 			 const struct hisi_sas_hw *hw)
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index cf72577..e9a9fb0 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -11,14 +11,168 @@
+ #include "hisi_sas.h"
+ #define DRV_NAME "hisi_sas_v3_hw"
+ 
++static const struct hisi_sas_hw hisi_sas_v3_hw = {
++};
 +
-+	if (qc) {
-+		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
-+			qc->tf.command == ATA_CMD_FPDMA_READ) {
-+			*tag = qc->tag;
-+			return 1;
++static struct Scsi_Host *
++hisi_sas_shost_alloc_pci(struct pci_dev *pdev)
++{
++	struct Scsi_Host *shost;
++	struct hisi_hba *hisi_hba;
++	struct device *dev = &pdev->dev;
++
++	shost = scsi_host_alloc(hisi_sas_sht, sizeof(*hisi_hba));
++	if (!shost)
++		goto err_out;
++	hisi_hba = shost_priv(shost);
++
++	hisi_hba->hw = &hisi_sas_v3_hw;
++	hisi_hba->pci_dev = pdev;
++	hisi_hba->dev = dev;
++	hisi_hba->shost = shost;
++	SHOST_TO_SAS_HA(shost) = &hisi_hba->sha;
++
++	init_timer(&hisi_hba->timer);
++
++	if (hisi_sas_get_fw_info(hisi_hba) < 0)
++		goto err_out;
++
++	if (hisi_sas_alloc(hisi_hba, shost)) {
++		hisi_sas_free(hisi_hba);
++		goto err_out;
++	}
++
++	return shost;
++err_out:
++	dev_err(dev, "shost alloc failed\n");
++	return NULL;
++}
++
+ static int
+ hisi_sas_v3_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
++	struct Scsi_Host *shost;
++	struct hisi_hba *hisi_hba;
++	struct device *dev = &pdev->dev;
++	struct asd_sas_phy **arr_phy;
++	struct asd_sas_port **arr_port;
++	struct sas_ha_struct *sha;
++	int rc, phy_nr, port_nr, i;
++
++	rc = pci_enable_device(pdev);
++	if (rc)
++		goto err_out;
++
++	pci_set_master(pdev);
++
++	rc = pci_request_regions(pdev, DRV_NAME);
++	if (rc)
++		goto err_out_disable_device;
++
++	if ((pci_set_dma_mask(pdev, DMA_BIT_MASK(64)) != 0) ||
++	    (pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64)) != 0)) {
++		if ((pci_set_dma_mask(pdev, DMA_BIT_MASK(32)) != 0) ||
++		   (pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32)) != 0)) {
++			dev_err(dev, "No usable DMA addressing method\n");
++			rc = -EIO;
++			goto err_out_regions;
 +		}
 +	}
-+	return 0;
-+}
 +
-+static int prep_ata_v3_hw(struct hisi_hba *hisi_hba,
-+			  struct hisi_sas_slot *slot)
-+{
-+	struct sas_task *task = slot->task;
-+	struct domain_device *device = task->dev;
-+	struct domain_device *parent_dev = device->parent;
-+	struct hisi_sas_device *sas_dev = device->lldd_dev;
-+	struct hisi_sas_cmd_hdr *hdr = slot->cmd_hdr;
-+	struct asd_sas_port *sas_port = device->port;
-+	struct hisi_sas_port *port = to_hisi_sas_port(sas_port);
-+	u8 *buf_cmd;
-+	int has_data = 0, rc = 0, hdr_tag = 0;
-+	u32 dw1 = 0, dw2 = 0;
-+
-+	hdr->dw0 = cpu_to_le32(port->id << CMD_HDR_PORT_OFF);
-+	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
-+		hdr->dw0 |= cpu_to_le32(3 << CMD_HDR_CMD_OFF);
-+	else
-+		hdr->dw0 |= cpu_to_le32(4 << CMD_HDR_CMD_OFF);
-+
-+	switch (task->data_dir) {
-+	case DMA_TO_DEVICE:
-+		has_data = 1;
-+		dw1 |= DIR_TO_DEVICE << CMD_HDR_DIR_OFF;
-+		break;
-+	case DMA_FROM_DEVICE:
-+		has_data = 1;
-+		dw1 |= DIR_TO_INI << CMD_HDR_DIR_OFF;
-+		break;
-+	default:
-+		dw1 &= ~CMD_HDR_DIR_MSK;
++	shost = hisi_sas_shost_alloc_pci(pdev);
++	if (!shost) {
++		rc = -ENOMEM;
++		goto err_out_regions;
 +	}
 +
-+	if ((task->ata_task.fis.command == ATA_CMD_DEV_RESET) &&
-+			(task->ata_task.fis.control & ATA_SRST))
-+		dw1 |= 1 << CMD_HDR_RESET_OFF;
++	sha = SHOST_TO_SAS_HA(shost);
++	hisi_hba = shost_priv(shost);
++	dev_set_drvdata(dev, sha);
 +
-+	dw1 |= (hisi_sas_get_ata_protocol(
-+		task->ata_task.fis.command, task->data_dir))
-+		<< CMD_HDR_FRAME_TYPE_OFF;
-+	dw1 |= sas_dev->device_id << CMD_HDR_DEV_ID_OFF;
-+
-+	if (CMD_IS_UNCONSTRAINT(task->ata_task.fis.command))
-+		dw1 |= 1 << CMD_HDR_UNCON_CMD_OFF;
-+
-+	hdr->dw1 = cpu_to_le32(dw1);
-+
-+	/* dw2 */
-+	if (task->ata_task.use_ncq && get_ncq_tag_v3_hw(task, &hdr_tag)) {
-+		task->ata_task.fis.sector_count |= (u8) (hdr_tag << 3);
-+		dw2 |= hdr_tag << CMD_HDR_NCQ_TAG_OFF;
++	hisi_hba->regs = pcim_iomap(pdev, 5, 0);
++	if (!hisi_hba->regs) {
++		dev_err(dev, "cannot map register.\n");
++		rc = -ENOMEM;
++		goto err_out_ha;
 +	}
 +
-+	dw2 |= (HISI_SAS_MAX_STP_RESP_SZ / 4) << CMD_HDR_CFL_OFF |
-+			2 << CMD_HDR_SG_MOD_OFF;
-+	hdr->dw2 = cpu_to_le32(dw2);
++	phy_nr = port_nr = hisi_hba->n_phy;
 +
-+	/* dw3 */
-+	hdr->transfer_tags = cpu_to_le32(slot->idx);
-+
-+	if (has_data) {
-+		rc = prep_prd_sge_v3_hw(hisi_hba, slot, hdr, task->scatter,
-+					slot->n_elem);
-+		if (rc)
-+			return rc;
++	arr_phy = devm_kcalloc(dev, phy_nr, sizeof(void *), GFP_KERNEL);
++	arr_port = devm_kcalloc(dev, port_nr, sizeof(void *), GFP_KERNEL);
++	if (!arr_phy || !arr_port) {
++		rc = -ENOMEM;
++		goto err_out_ha;
 +	}
 +
-+	hdr->data_transfer_len = cpu_to_le32(task->total_xfer_len);
-+	hdr->cmd_table_addr = cpu_to_le64(slot->command_table_dma);
-+	hdr->sts_buffer_addr = cpu_to_le64(slot->status_buffer_dma);
++	sha->sas_phy = arr_phy;
++	sha->sas_port = arr_port;
++	sha->core.shost = shost;
++	sha->lldd_ha = hisi_hba;
 +
-+	buf_cmd = slot->command_table;
++	shost->transportt = hisi_sas_stt;
++	shost->max_id = HISI_SAS_MAX_DEVICES;
++	shost->max_lun = ~0;
++	shost->max_channel = 1;
++	shost->max_cmd_len = 16;
++	shost->sg_tablesize = min_t(u16, SG_ALL, HISI_SAS_SGE_PAGE_CNT);
++	shost->can_queue = hisi_hba->hw->max_command_entries;
++	shost->cmd_per_lun = hisi_hba->hw->max_command_entries;
 +
-+	if (likely(!task->ata_task.device_control_reg_update))
-+		task->ata_task.fis.flags |= 0x80; /* C=1: update ATA cmd reg */
-+	/* fill in command FIS */
-+	memcpy(buf_cmd, &task->ata_task.fis, sizeof(struct host_to_dev_fis));
++	sha->sas_ha_name = DRV_NAME;
++	sha->dev = dev;
++	sha->lldd_module = THIS_MODULE;
++	sha->sas_addr = &hisi_hba->sas_addr[0];
++	sha->num_phys = hisi_hba->n_phy;
++	sha->core.shost = hisi_hba->shost;
 +
-+	return 0;
-+}
++	for (i = 0; i < hisi_hba->n_phy; i++) {
++		sha->sas_phy[i] = &hisi_hba->phy[i].sas_phy;
++		sha->sas_port[i] = &hisi_hba->port[i].sas_port;
++	}
 +
- static int phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
++	hisi_sas_init_add(hisi_hba);
++
++	rc = scsi_add_host(shost, dev);
++	if (rc)
++		goto err_out_ha;
++
++	rc = sas_register_ha(sha);
++	if (rc)
++		goto err_out_register_ha;
++
++	rc = hisi_hba->hw->hw_init(hisi_hba);
++	if (rc)
++		goto err_out_register_ha;
++
++	scsi_scan_host(shost);
++
+ 	return 0;
++
++err_out_register_ha:
++	scsi_remove_host(shost);
++err_out_ha:
++	kfree(shost);
++err_out_regions:
++	pci_release_regions(pdev);
++err_out_disable_device:
++	pci_disable_device(pdev);
++err_out:
++	return rc;
+ }
+ 
+ static void hisi_sas_v3_remove(struct pci_dev *pdev)
  {
- 	int i, res = 0;
-@@ -1299,6 +1404,7 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
- 	.sl_notify = sl_notify_v3_hw,
- 	.prep_ssp = prep_ssp_v3_hw,
- 	.prep_smp = prep_smp_v3_hw,
-+	.prep_stp = prep_ata_v3_hw,
- 	.get_free_slot = get_free_slot_v3_hw,
- 	.start_delivery = start_delivery_v3_hw,
- 	.slot_complete = slot_complete_v3_hw,
++	struct device *dev = &pdev->dev;
++	struct sas_ha_struct *sha = dev_get_drvdata(dev);
++	struct hisi_hba *hisi_hba = sha->lldd_ha;
++
++	sas_unregister_ha(sha);
++	sas_remove_host(sha->core.shost);
++
++	hisi_sas_free(hisi_hba);
++	pci_release_regions(pdev);
++	pci_disable_device(pdev);
+ }
+ 
+ enum {
 -- 
 1.9.1
