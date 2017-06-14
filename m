@@ -1,96 +1,61 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v6 19/22] scsi: hisi_sas: add v3 code to send internal abort command
-Date: Wed, 14 Jun 2017 23:33:29 +0800
-Message-ID: <1497454412-91194-20-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v6 20/22] scsi: hisi_sas: add get_wideport_bitmap_v3_hw()
+Date: Wed, 14 Jun 2017 23:33:30 +0800
+Message-ID: <1497454412-91194-21-git-send-email-john.garry@huawei.com>
 References: <1497454412-91194-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([45.249.212.189]:7421 "EHLO
+        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752310AbdFNPED (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jun 2017 11:04:03 -0400
 In-Reply-To: <1497454412-91194-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, hch@infradead.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Add code to prepare internal abort command.
+Add code for interface get_wideport_bitmap.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 38 ++++++++++++++++++++++++++++++++++
- 1 file changed, 38 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index b9ab24d..ef5c158 100644
+index ef5c158..3cd4b9a 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -165,6 +165,10 @@
- /* HW dma structures */
- /* Delivery queue header */
- /* dw0 */
-+#define CMD_HDR_ABORT_FLAG_OFF		0
-+#define CMD_HDR_ABORT_FLAG_MSK		(0x3 << CMD_HDR_ABORT_FLAG_OFF)
-+#define CMD_HDR_ABORT_DEVICE_TYPE_OFF	2
-+#define CMD_HDR_ABORT_DEVICE_TYPE_MSK	(0x1 << CMD_HDR_ABORT_DEVICE_TYPE_OFF)
- #define CMD_HDR_RESP_REPORT_OFF		5
- #define CMD_HDR_RESP_REPORT_MSK		(0x1 << CMD_HDR_RESP_REPORT_OFF)
- #define CMD_HDR_TLR_CTRL_OFF		6
-@@ -204,6 +208,11 @@
- #define CMD_HDR_DIF_SGL_LEN_MSK		(0xffff << CMD_HDR_DIF_SGL_LEN_OFF)
- #define CMD_HDR_DATA_SGL_LEN_OFF	16
- #define CMD_HDR_DATA_SGL_LEN_MSK	(0xffff << CMD_HDR_DATA_SGL_LEN_OFF)
-+/* dw7 */
-+#define CMD_HDR_ADDR_MODE_SEL_OFF		15
-+#define CMD_HDR_ADDR_MODE_SEL_MSK		(1 << CMD_HDR_ADDR_MODE_SEL_OFF)
-+#define CMD_HDR_ABORT_IPTT_OFF		16
-+#define CMD_HDR_ABORT_IPTT_MSK		(0xffff << CMD_HDR_ABORT_IPTT_OFF)
- 
- /* Completion header */
- /* dw0 */
-@@ -942,6 +951,34 @@ static int prep_ata_v3_hw(struct hisi_hba *hisi_hba,
- 	return 0;
+@@ -629,6 +629,18 @@ static void sl_notify_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
  }
  
-+static int prep_abort_v3_hw(struct hisi_hba *hisi_hba,
-+		struct hisi_sas_slot *slot,
-+		int device_id, int abort_flag, int tag_to_abort)
++static int get_wideport_bitmap_v3_hw(struct hisi_hba *hisi_hba, int port_id)
 +{
-+	struct sas_task *task = slot->task;
-+	struct domain_device *dev = task->dev;
-+	struct hisi_sas_cmd_hdr *hdr = slot->cmd_hdr;
-+	struct hisi_sas_port *port = slot->port;
++	int i, bitmap = 0;
++	u32 phy_port_num_ma = hisi_sas_read32(hisi_hba, PHY_PORT_NUM_MA);
 +
-+	/* dw0 */
-+	hdr->dw0 = cpu_to_le32((5 << CMD_HDR_CMD_OFF) | /*abort*/
-+			       (port->id << CMD_HDR_PORT_OFF) |
-+				   ((dev_is_sata(dev) ? 1:0)
-+					<< CMD_HDR_ABORT_DEVICE_TYPE_OFF) |
-+					(abort_flag
-+					 << CMD_HDR_ABORT_FLAG_OFF));
++	for (i = 0; i < hisi_hba->n_phy; i++)
++		if (((phy_port_num_ma >> (i * 4)) & 0xf) == port_id)
++			bitmap |= 1 << i;
 +
-+	/* dw1 */
-+	hdr->dw1 = cpu_to_le32(device_id
-+			<< CMD_HDR_DEV_ID_OFF);
-+
-+	/* dw7 */
-+	hdr->dw7 = cpu_to_le32(tag_to_abort << CMD_HDR_ABORT_IPTT_OFF);
-+	hdr->transfer_tags = cpu_to_le32(slot->idx);
-+
-+	return 0;
++	return bitmap;
 +}
 +
- static int phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
- {
- 	int i, res = 0;
-@@ -1519,6 +1556,7 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
- 	.prep_ssp = prep_ssp_v3_hw,
- 	.prep_smp = prep_smp_v3_hw,
- 	.prep_stp = prep_ata_v3_hw,
-+	.prep_abort = prep_abort_v3_hw,
- 	.get_free_slot = get_free_slot_v3_hw,
- 	.start_delivery = start_delivery_v3_hw,
- 	.slot_complete = slot_complete_v3_hw,
+ /**
+  * The callpath to this function and upto writing the write
+  * queue pointer should be safe from interruption.
+@@ -1550,6 +1562,7 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
+ 	.hw_init = hisi_sas_v3_init,
+ 	.setup_itct = setup_itct_v3_hw,
+ 	.max_command_entries = HISI_SAS_COMMAND_ENTRIES_V3_HW,
++	.get_wideport_bitmap = get_wideport_bitmap_v3_hw,
+ 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v3_hdr),
+ 	.free_device = free_device_v3_hw,
+ 	.sl_notify = sl_notify_v3_hw,
 -- 
 1.9.1
