@@ -1,512 +1,86 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 07/15] qla2xxx: move fields from qla_hw_data to qla_qpair
-Date: Tue, 13 Jun 2017 20:47:22 -0700
-Message-ID: <20170614034730.15428-8-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 08/15] qla2xxx: use shadow register for ISP27XX
+Date: Tue, 13 Jun 2017 20:47:23 -0700
+Message-ID: <20170614034730.15428-9-himanshu.madhani@cavium.com>
 References: <20170614034730.15428-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn3nam01on0060.outbound.protection.outlook.com ([104.47.33.60]:56739
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754129AbdFNDsL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 13 Jun 2017 23:48:11 -0400
 In-Reply-To: <20170614034730.15428-1-himanshu.madhani@cavium.com>
-Sender: target-devel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: martin.petersen@oracle.com, nab@linux-iscsi.org
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-- Move chip_reset, enable_class_2 fields from qla_hw_data to qla_qpair
- to reduce cache thrash for target MQ.
-- Optimizations to reduce unnecessary memory load for good path io.
+For ISP27XX, use shadow register to read FW provided
+REQQ's consumer index.  The shadow register is dma'ed
+by firmware.
 
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_attr.c   |  2 +-
- drivers/scsi/qla2xxx/qla_def.h    | 25 +++++++++++--
- drivers/scsi/qla2xxx/qla_init.c   | 14 ++++++--
- drivers/scsi/qla2xxx/qla_os.c     |  2 +-
- drivers/scsi/qla2xxx/qla_target.c | 75 +++++++++++++++++++--------------------
- drivers/scsi/qla2xxx/qla_target.h |  3 +-
- 6 files changed, 73 insertions(+), 48 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h    | 1 +
+ drivers/scsi/qla2xxx/qla_init.c   | 1 +
+ drivers/scsi/qla2xxx/qla_os.c     | 1 +
+ drivers/scsi/qla2xxx/qla_target.c | 3 ++-
+ 4 files changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index f0f16d313faf..6dd984203666 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -2289,7 +2289,7 @@ qla2x00_init_host_attr(scsi_qla_host_t *vha)
- 	fc_host_dev_loss_tmo(vha->host) = ha->port_down_retry_count;
- 	fc_host_node_name(vha->host) = wwn_to_u64(vha->node_name);
- 	fc_host_port_name(vha->host) = wwn_to_u64(vha->port_name);
--	fc_host_supported_classes(vha->host) = ha->tgt.enable_class_2 ?
-+	fc_host_supported_classes(vha->host) = ha->base_qpair->enable_class_2 ?
- 			(FC_COS_CLASS2|FC_COS_CLASS3) : FC_COS_CLASS3;
- 	fc_host_max_npiv_vports(vha->host) = ha->max_npiv_vports;
- 	fc_host_npiv_vports_inuse(vha->host) = ha->cur_vport_count;
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 0dec148a4580..dfa001357110 100644
+index dfa001357110..b3ba32773db4 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -3252,6 +3252,7 @@ struct qla_qpair {
- 	 */
- 	spinlock_t *qp_lock_ptr;
- 	struct scsi_qla_host *vha;
-+	u32 chip_reset;
- 
- 	/* distill these fields down to 'online=0/1'
- 	 * ha->flags.eeh_busy
-@@ -3263,6 +3264,8 @@ struct qla_qpair {
- 	uint32_t difdix_supported:1;
- 	uint32_t delete_in_progress:1;
+@@ -3266,6 +3266,7 @@ struct qla_qpair {
  	uint32_t fw_started:1;
-+	uint32_t enable_class_2:1;
-+	uint32_t enable_explicit_conf:1;
+ 	uint32_t enable_class_2:1;
+ 	uint32_t enable_explicit_conf:1;
++	uint32_t use_shadow_reg:1;
  
  	uint16_t id;			/* qp number used with FW */
  	uint16_t vp_idx;		/* vport ID */
-@@ -3296,8 +3299,6 @@ struct scsi_qlt_host {
- 
- struct qlt_hw_data {
- 	/* Protected by hw lock */
--	uint32_t enable_class_2:1;
--	uint32_t enable_explicit_conf:1;
- 	uint32_t node_name_set:1;
- 
- 	dma_addr_t atio_dma;	/* Physical address. */
-@@ -3954,7 +3955,6 @@ struct qla_hw_data {
- 	struct work_struct board_disable;
- 
- 	struct mr_data_fx00 mr;
--	uint32_t chip_reset;
- 
- 	struct qlt_hw_data tgt;
- 	int	allow_cna_fw_dump;
-@@ -4247,6 +4247,25 @@ struct qla2_sgx {
- #define QLA_QPAIR_MARK_NOT_BUSY(__qpair)		\
- 	atomic_dec(&__qpair->ref_count);		\
- 
-+
-+#define QLA_ENA_CONF(_ha) {\
-+    int i;\
-+    _ha->base_qpair->enable_explicit_conf = 1;	\
-+    for (i = 0; i < _ha->max_qpairs; i++) {	\
-+	if (_ha->queue_pair_map[i])		\
-+	    _ha->queue_pair_map[i]->enable_explicit_conf = 1; \
-+    }						\
-+}
-+
-+#define QLA_DIS_CONF(_ha) {\
-+    int i;\
-+    _ha->base_qpair->enable_explicit_conf = 0;	\
-+    for (i = 0; i < _ha->max_qpairs; i++) {	\
-+	if (_ha->queue_pair_map[i])		\
-+	    _ha->queue_pair_map[i]->enable_explicit_conf = 0; \
-+    }						\
-+}
-+
- /*
-  * qla2x00 local function return status codes
-  */
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index e6a1f9ca0e95..360abede3f6b 100644
+index 360abede3f6b..f586f4f7dc57 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -1322,7 +1322,7 @@ qla24xx_handle_plogi_done_event(struct scsi_qla_host *vha, struct event_arg *ea)
- 		ql_dbg(ql_dbg_disc, vha, 0x20ea,
- 		    "%s %d %8phC post gpdb\n",
- 		    __func__, __LINE__, ea->fcport->port_name);
--		ea->fcport->chip_reset = vha->hw->chip_reset;
-+		ea->fcport->chip_reset = vha->hw->base_qpair->chip_reset;
- 		ea->fcport->logout_on_delete = 1;
- 		qla24xx_post_gpdb_work(vha, ea->fcport, 0);
- 		break;
-@@ -5524,6 +5524,7 @@ qla2x00_abort_isp_cleanup(scsi_qla_host_t *vha)
- 	struct scsi_qla_host *vp;
- 	unsigned long flags;
- 	fc_port_t *fcport;
-+	u16 i;
+@@ -7614,6 +7614,7 @@ struct qla_qpair *qla2xxx_create_qpair(struct scsi_qla_host *vha, int qos,
+ 		qpair->vha = vha;
+ 		qpair->qp_lock_ptr = &qpair->qp_lock;
+ 		spin_lock_init(&qpair->qp_lock);
++		qpair->use_shadow_reg = IS_SHADOW_REG_CAPABLE(ha) ? 1 : 0;
  
- 	/* For ISP82XX, driver waits for completion of the commands.
- 	 * online flag should be set.
-@@ -5549,7 +5550,12 @@ qla2x00_abort_isp_cleanup(scsi_qla_host_t *vha)
- 	ha->current_topology = 0;
- 	ha->flags.fw_started = 0;
- 	ha->flags.fw_init_done = 0;
--	ha->chip_reset++;
-+	ha->base_qpair->chip_reset++;
-+	for (i = 0; i < ha->max_qpairs; i++) {
-+		if (ha->queue_pair_map[i])
-+			ha->queue_pair_map[i]->chip_reset =
-+				ha->base_qpair->chip_reset;
-+	}
- 
- 	atomic_set(&vha->loop_down_timer, LOOP_DOWN_TIME);
- 	if (atomic_read(&vha->loop_state) != LOOP_DOWN) {
-@@ -7624,6 +7630,10 @@ struct qla_qpair *qla2xxx_create_qpair(struct scsi_qla_host *vha, int qos,
- 		qpair->id = qpair_id;
- 		qpair->vp_idx = vp_idx;
- 		INIT_LIST_HEAD(&qpair->hints_list);
-+		qpair->chip_reset = ha->base_qpair->chip_reset;
-+		qpair->enable_class_2 = ha->base_qpair->enable_class_2;
-+		qpair->enable_explicit_conf =
-+		    ha->base_qpair->enable_explicit_conf;
- 
- 		for (i = 0; i < ha->msix_count; i++) {
- 			msix = &ha->msix_entries[i];
+ 		/* Assign available que pair id */
+ 		mutex_lock(&ha->mq_lock);
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 13e4d2428a9a..44be2c8237fd 100644
+index 44be2c8237fd..1d66954b7e5a 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -387,6 +387,7 @@ static int qla2x00_alloc_queues(struct qla_hw_data *ha, struct req_que *req,
+@@ -384,6 +384,7 @@ static int qla2x00_alloc_queues(struct qla_hw_data *ha, struct req_que *req,
+ 	ha->base_qpair->rsp = rsp;
+ 	ha->base_qpair->vha = vha;
+ 	ha->base_qpair->qp_lock_ptr = &ha->hardware_lock;
++	ha->base_qpair->use_shadow_reg = IS_SHADOW_REG_CAPABLE(ha) ? 1 : 0;
  	/* init qpair to this cpu. Will adjust at run time. */
  	ha->base_qpair->msix = &ha->msix_entries[QLA_MSIX_RSP_Q];
  	INIT_LIST_HEAD(&ha->base_qpair->hints_list);
-+	ha->base_qpair->enable_class_2 = ql2xenableclass2;
- 	qla_cpu_update(rsp->qpair, smp_processor_id());
- 
- 	if (ql2xmqsupport && ha->max_qpairs) {
-@@ -2708,7 +2709,6 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	ql_dbg_pci(ql_dbg_init, pdev, 0x000a,
- 	    "Memory allocated for ha=%p.\n", ha);
- 	ha->pdev = pdev;
--	ha->tgt.enable_class_2 = ql2xenableclass2;
- 	INIT_LIST_HEAD(&ha->tgt.q_full_list);
- 	spin_lock_init(&ha->tgt.q_full_lock);
- 	spin_lock_init(&ha->tgt.sess_lock);
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index e25f1fae2c3d..66bb4825339f 100644
+index 66bb4825339f..1d6cc24c0640 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -577,7 +577,7 @@ void qla2x00_async_nack_sp_done(void *s, int res)
+@@ -2288,7 +2288,8 @@ static int qlt_check_reserve_free_req(struct qla_qpair *qpair,
+ 	struct req_que *req = qpair->req;
  
- 	spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
- 	sp->fcport->flags &= ~FCF_ASYNC_SENT;
--	sp->fcport->chip_reset = vha->hw->chip_reset;
-+	sp->fcport->chip_reset = vha->hw->base_qpair->chip_reset;
+ 	if (req->cnt < (req_cnt + 2)) {
+-		cnt = (uint16_t)RD_REG_DWORD(req->req_q_out);
++		cnt = (uint16_t)(qpair->use_shadow_reg ? *req->out_ptr :
++		    RD_REG_DWORD_RELAXED(req->req_q_out));
  
- 	switch (sp->type) {
- 	case SRB_NACK_PLOGI:
-@@ -1032,7 +1032,7 @@ static void qlt_free_session_done(struct work_struct *work)
- 		sess->login_succ = 0;
- 	}
- 
--	if (sess->chip_reset != sess->vha->hw->chip_reset)
-+	if (sess->chip_reset != ha->base_qpair->chip_reset)
- 		qla2x00_clear_loop_id(sess);
- 
- 	if (sess->conflict) {
-@@ -1162,7 +1162,7 @@ static int qlt_reset(struct scsi_qla_host *vha, void *iocb, int mcmd)
- 
- static void qla24xx_chk_fcp_state(struct fc_port *sess)
- {
--	if (sess->chip_reset != sess->vha->hw->chip_reset) {
-+	if (sess->chip_reset != sess->vha->hw->base_qpair->chip_reset) {
- 		sess->logout_on_delete = 0;
- 		sess->logo_ack_needed = 0;
- 		sess->fw_login_state = DSC_LS_PORT_UNAVAIL;
-@@ -1917,7 +1917,7 @@ static int __qlt_24xx_handle_abts(struct scsi_qla_host *vha,
- 	cmd = container_of(se_cmd, struct qla_tgt_cmd, se_cmd);
- 	mcmd->sess = sess;
- 	memcpy(&mcmd->orig_iocb.abts, abts, sizeof(mcmd->orig_iocb.abts));
--	mcmd->reset_count = vha->hw->chip_reset;
-+	mcmd->reset_count = ha->base_qpair->chip_reset;
- 	mcmd->tmr_func = QLA_TGT_ABTS;
- 	mcmd->qpair = ha->base_qpair;
- 
-@@ -2146,7 +2146,7 @@ void qlt_xmit_tm_rsp(struct qla_tgt_mgmt_cmd *mcmd)
- 
- 	spin_lock_irqsave(qpair->qp_lock_ptr, flags);
- 
--	if (!vha->flags.online || mcmd->reset_count != ha->chip_reset) {
-+	if (!vha->flags.online || mcmd->reset_count != qpair->chip_reset) {
- 		/*
- 		 * Either the port is not online or this request was from
- 		 * previous life, just abort the processing.
-@@ -2154,7 +2154,7 @@ void qlt_xmit_tm_rsp(struct qla_tgt_mgmt_cmd *mcmd)
- 		ql_dbg(ql_dbg_async, vha, 0xe100,
- 			"RESET-TMR online/active/old-count/new-count = %d/%d/%d/%d.\n",
- 			vha->flags.online, qla2x00_reset_active(vha),
--			mcmd->reset_count, ha->chip_reset);
-+			mcmd->reset_count, qpair->chip_reset);
- 		ha->tgt.tgt_ops->free_mcmd(mcmd);
- 		spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
- 		return;
-@@ -2568,20 +2568,22 @@ static int qlt_pre_xmit_response(struct qla_tgt_cmd *cmd,
- 	struct qla_tgt_prm *prm, int xmit_type, uint8_t scsi_status,
- 	uint32_t *full_req_cnt)
- {
--	struct qla_tgt *tgt = cmd->tgt;
--	struct scsi_qla_host *vha = tgt->vha;
--	struct qla_hw_data *ha = vha->hw;
- 	struct se_cmd *se_cmd = &cmd->se_cmd;
- 
- 	prm->cmd = cmd;
--	prm->tgt = tgt;
-+	prm->tgt = cmd->tgt;
-+	prm->pkt = NULL;
- 	prm->rq_result = scsi_status;
- 	prm->sense_buffer = &cmd->sense_buffer[0];
- 	prm->sense_buffer_len = TRANSPORT_SENSE_BUFFER;
- 	prm->sg = NULL;
- 	prm->seg_cnt = -1;
- 	prm->req_cnt = 1;
-+	prm->residual = 0;
- 	prm->add_status_pkt = 0;
-+	prm->prot_sg = NULL;
-+	prm->prot_seg_cnt = 0;
-+	prm->tot_dsds = 0;
- 
- 	if ((xmit_type & QLA_TGT_XMIT_DATA) && qlt_has_data(cmd)) {
- 		if  (qlt_pci_map_calc_cnt(prm) != 0)
-@@ -2592,7 +2594,7 @@ static int qlt_pre_xmit_response(struct qla_tgt_cmd *cmd,
- 
- 	if (se_cmd->se_cmd_flags & SCF_UNDERFLOW_BIT) {
- 		prm->residual = se_cmd->residual_count;
--		ql_dbg(ql_dbg_io + ql_dbg_verbose, vha, 0x305c,
-+		ql_dbg(ql_dbg_io + ql_dbg_verbose, cmd->vha, 0x305c,
- 		    "Residual underflow: %d (tag %lld, op %x, bufflen %d, rq_result %x)\n",
- 		       prm->residual, se_cmd->tag,
- 		       se_cmd->t_task_cdb ? se_cmd->t_task_cdb[0] : 0,
-@@ -2600,7 +2602,7 @@ static int qlt_pre_xmit_response(struct qla_tgt_cmd *cmd,
- 		prm->rq_result |= SS_RESIDUAL_UNDER;
- 	} else if (se_cmd->se_cmd_flags & SCF_OVERFLOW_BIT) {
- 		prm->residual = se_cmd->residual_count;
--		ql_dbg(ql_dbg_io, vha, 0x305d,
-+		ql_dbg(ql_dbg_io, cmd->vha, 0x305d,
- 		    "Residual overflow: %d (tag %lld, op %x, bufflen %d, rq_result %x)\n",
- 		       prm->residual, se_cmd->tag, se_cmd->t_task_cdb ?
- 		       se_cmd->t_task_cdb[0] : 0, cmd->bufflen, prm->rq_result);
-@@ -2614,7 +2616,7 @@ static int qlt_pre_xmit_response(struct qla_tgt_cmd *cmd,
- 		 */
- 		if (qlt_has_data(cmd)) {
- 			if (QLA_TGT_SENSE_VALID(prm->sense_buffer) ||
--			    (IS_FWI2_CAPABLE(ha) &&
-+			    (IS_FWI2_CAPABLE(cmd->vha->hw) &&
- 			    (prm->rq_result != 0))) {
- 				prm->add_status_pkt = 1;
- 				(*full_req_cnt)++;
-@@ -2625,17 +2627,17 @@ static int qlt_pre_xmit_response(struct qla_tgt_cmd *cmd,
- 	return 0;
- }
- 
--static inline int qlt_need_explicit_conf(struct qla_hw_data *ha,
--	struct qla_tgt_cmd *cmd, int sending_sense)
-+static inline int qlt_need_explicit_conf(struct qla_tgt_cmd *cmd,
-+    int sending_sense)
- {
--	if (ha->tgt.enable_class_2)
-+	if (cmd->qpair->enable_class_2)
- 		return 0;
- 
- 	if (sending_sense)
- 		return cmd->conf_compl_supported;
- 	else
--		return ha->tgt.enable_explicit_conf &&
--		    cmd->conf_compl_supported;
-+		return cmd->qpair->enable_explicit_conf &&
-+                    cmd->conf_compl_supported;
- }
- 
- static void qlt_24xx_init_ctio_to_isp(struct ctio7_to_24xx *ctio,
-@@ -2644,7 +2646,7 @@ static void qlt_24xx_init_ctio_to_isp(struct ctio7_to_24xx *ctio,
- 	prm->sense_buffer_len = min_t(uint32_t, prm->sense_buffer_len,
- 	    (uint32_t)sizeof(ctio->u.status1.sense_data));
- 	ctio->u.status0.flags |= cpu_to_le16(CTIO7_FLAGS_SEND_STATUS);
--	if (qlt_need_explicit_conf(prm->tgt->ha, prm->cmd, 0)) {
-+	if (qlt_need_explicit_conf(prm->cmd, 0)) {
- 		ctio->u.status0.flags |= cpu_to_le16(
- 		    CTIO7_FLAGS_EXPLICIT_CONFORM |
- 		    CTIO7_FLAGS_CONFORM_REQ);
-@@ -2654,7 +2656,7 @@ static void qlt_24xx_init_ctio_to_isp(struct ctio7_to_24xx *ctio,
- 	if (QLA_TGT_SENSE_VALID(prm->sense_buffer)) {
- 		int i;
- 
--		if (qlt_need_explicit_conf(prm->tgt->ha, prm->cmd, 1)) {
-+		if (qlt_need_explicit_conf(prm->cmd, 1)) {
- 			if ((prm->rq_result & SS_SCSI_STATUS_BYTE) != 0) {
- 				ql_dbg(ql_dbg_tgt, prm->cmd->vha, 0xe017,
- 				    "Skipping EXPLICIT_CONFORM and "
-@@ -3047,7 +3049,6 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
- 	uint8_t scsi_status)
- {
- 	struct scsi_qla_host *vha = cmd->vha;
--	struct qla_hw_data *ha = vha->hw;
- 	struct qla_qpair *qpair = cmd->qpair;
- 	struct ctio7_to_24xx *pkt;
- 	struct qla_tgt_prm prm;
-@@ -3065,8 +3066,6 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
- 		return 0;
- 	}
- 
--	memset(&prm, 0, sizeof(prm));
--
- 	ql_dbg(ql_dbg_tgt, cmd->vha, 0xe018,
- 	    "is_send_status=%d, cmd->bufflen=%d, cmd->sg_cnt=%d, cmd->dma_data_direction=%d se_cmd[%p] qp %d\n",
- 	    (xmit_type & QLA_TGT_XMIT_STATUS) ?
-@@ -3086,7 +3085,7 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
- 	else
- 		vha->tgt_counters.core_qla_que_buf++;
- 
--	if (!qpair->fw_started || cmd->reset_count != vha->hw->chip_reset) {
-+	if (!qpair->fw_started || cmd->reset_count != qpair->chip_reset) {
- 		/*
- 		 * Either the port is not online or this request was from
- 		 * previous life, just abort the processing.
-@@ -3096,7 +3095,7 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
- 		ql_dbg(ql_dbg_async, vha, 0xe101,
- 			"RESET-RSP online/active/old-count/new-count = %d/%d/%d/%d.\n",
- 			vha->flags.online, qla2x00_reset_active(vha),
--			cmd->reset_count, vha->hw->chip_reset);
-+			cmd->reset_count, qpair->chip_reset);
- 		spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
- 		return 0;
- 	}
-@@ -3133,7 +3132,7 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
- 				    cpu_to_le32(prm.residual);
- 				pkt->u.status0.flags |= cpu_to_le16(
- 				    CTIO7_FLAGS_SEND_STATUS);
--				if (qlt_need_explicit_conf(ha, cmd, 0)) {
-+				if (qlt_need_explicit_conf(cmd, 0)) {
- 					pkt->u.status0.flags |=
- 					    cpu_to_le16(
- 						CTIO7_FLAGS_EXPLICIT_CONFORM |
-@@ -3222,7 +3221,7 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
- 	if (qlt_pci_map_calc_cnt(&prm) != 0)
- 		return -EAGAIN;
- 
--	if (!qpair->fw_started || (cmd->reset_count != vha->hw->chip_reset) ||
-+	if (!qpair->fw_started || (cmd->reset_count != qpair->chip_reset) ||
- 	    (cmd->sess && cmd->sess->deleted)) {
- 		/*
- 		 * Either the port is not online or this request was from
-@@ -3233,7 +3232,7 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
- 		ql_dbg(ql_dbg_async, vha, 0xe102,
- 			"RESET-XFR online/active/old-count/new-count = %d/%d/%d/%d.\n",
- 			vha->flags.online, qla2x00_reset_active(vha),
--			cmd->reset_count, vha->hw->chip_reset);
-+			cmd->reset_count, qpair->chip_reset);
- 		return 0;
- 	}
- 
-@@ -3979,7 +3978,6 @@ static void __qlt_do_work(struct qla_tgt_cmd *cmd)
- {
- 	scsi_qla_host_t *vha = cmd->vha;
- 	struct qla_hw_data *ha = vha->hw;
--	struct qla_tgt *tgt = vha->vha_tgt.qla_tgt;
- 	struct fc_port *sess = cmd->sess;
- 	struct atio_from_isp *atio = &cmd->atio;
- 	unsigned char *cdb;
-@@ -3990,8 +3988,6 @@ static void __qlt_do_work(struct qla_tgt_cmd *cmd)
- 
- 	cmd->cmd_in_wq = 0;
- 	cmd->trc_flags |= TRC_DO_WORK;
--	if (tgt->tgt_stop)
--		goto out_term;
- 
- 	if (cmd->aborted) {
- 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf082,
-@@ -4197,10 +4193,10 @@ static struct qla_tgt_cmd *qlt_get_tag(scsi_qla_host_t *vha,
- 	cmd->trc_flags = 0;
- 	cmd->jiffies_at_alloc = get_jiffies_64();
- 
--	cmd->reset_count = vha->hw->chip_reset;
- 	cmd->unpacked_lun = scsilun_to_int(
- 	    (struct scsi_lun *)&atio->u.isp24.fcp_cmnd.lun);
- 	qlt_assign_qpair(vha, cmd);
-+	cmd->reset_count = vha->hw->base_qpair->chip_reset;
- 
- 	return cmd;
- }
-@@ -4391,7 +4387,7 @@ static int qlt_issue_task_mgmt(struct fc_port *sess, u64 lun,
- 	}
- 	mcmd->tmr_func = fn;
- 	mcmd->flags = flags;
--	mcmd->reset_count = vha->hw->chip_reset;
-+	mcmd->reset_count = ha->base_qpair->chip_reset;
- 	mcmd->qpair = ha->base_qpair;
- 
- 	switch (fn) {
-@@ -4474,7 +4470,7 @@ static int __qlt_abort_task(struct scsi_qla_host *vha,
- 
- 	unpacked_lun =
- 	    scsilun_to_int((struct scsi_lun *)&a->u.isp24.fcp_cmnd.lun);
--	mcmd->reset_count = vha->hw->chip_reset;
-+	mcmd->reset_count = ha->base_qpair->chip_reset;
- 	mcmd->tmr_func = QLA_TGT_2G_ABORT_TASK;
- 	mcmd->qpair = ha->base_qpair;
- 
-@@ -5202,7 +5198,7 @@ qlt_alloc_qfull_cmd(struct scsi_qla_host *vha,
- 
- 	cmd->tgt = vha->vha_tgt.qla_tgt;
- 	cmd->vha = vha;
--	cmd->reset_count = vha->hw->chip_reset;
-+	cmd->reset_count = ha->base_qpair->chip_reset;
- 	cmd->q_full = 1;
- 	cmd->qpair = ha->base_qpair;
- 
-@@ -6644,7 +6640,7 @@ qlt_24xx_config_nvram_stage1(struct scsi_qla_host *vha, struct nvram_24xx *nv)
- 		return;
- 	}
- 
--	if (ha->tgt.enable_class_2) {
-+	if (ha->base_qpair->enable_class_2) {
- 		if (vha->flags.init_done)
- 			fc_host_supported_classes(vha->host) =
- 				FC_COS_CLASS2 | FC_COS_CLASS3;
-@@ -6748,7 +6744,7 @@ qlt_81xx_config_nvram_stage1(struct scsi_qla_host *vha, struct nvram_81xx *nv)
- 		return;
- 	}
- 
--	if (ha->tgt.enable_class_2) {
-+	if (ha->base_qpair->enable_class_2) {
- 		if (vha->flags.init_done)
- 			fc_host_supported_classes(vha->host) =
- 				FC_COS_CLASS2 | FC_COS_CLASS3;
-@@ -6872,7 +6868,8 @@ qlt_handle_abts_recv_work(struct work_struct *work)
- 	struct qla_hw_data *ha = vha->hw;
- 	unsigned long flags;
- 
--	if (qla2x00_reset_active(vha) || (op->chip_reset != ha->chip_reset))
-+	if (qla2x00_reset_active(vha) ||
-+	    (op->chip_reset != ha->base_qpair->chip_reset))
- 		return;
- 
- 	spin_lock_irqsave(&ha->tgt.atio_lock, flags);
-@@ -6904,7 +6901,7 @@ qlt_handle_abts_recv(struct scsi_qla_host *vha, struct rsp_que *rsp,
- 
- 	memcpy(&op->atio, pkt, sizeof(*pkt));
- 	op->vha = vha;
--	op->chip_reset = vha->hw->chip_reset;
-+	op->chip_reset = vha->hw->base_qpair->chip_reset;
- 	op->rsp = rsp;
- 	INIT_WORK(&op->work, qlt_handle_abts_recv_work);
- 	queue_work(qla_tgt_wq, &op->work);
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index 22c783e3e38f..5f497311d7b7 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -881,6 +881,7 @@ struct qla_tgt_cmd {
- 	struct se_cmd se_cmd;
- 	struct fc_port *sess;
- 	struct qla_qpair *qpair;
-+	uint32_t reset_count;
- 	int state;
- 	struct work_struct work;
- 	/* Sense buffer that will be mapped into outgoing status */
-@@ -906,7 +907,6 @@ struct qla_tgt_cmd {
- 	int offset;
- 	u64 unpacked_lun;
- 	enum dma_data_direction dma_data_direction;
--	uint32_t reset_count;
- 
- 	uint16_t loop_id;	/* to save extra sess dereferences */
- 	struct qla_tgt *tgt;	/* to save extra sess dereferences */
-@@ -980,7 +980,6 @@ struct qla_tgt_prm {
- 	int seg_cnt;
- 	int req_cnt;
- 	uint16_t rq_result;
--	uint16_t scsi_status;
- 	int sense_buffer_len;
- 	int residual;
- 	int add_status_pkt;
+ 		if  (req->ring_index < cnt)
+ 			req->cnt = cnt - req->ring_index;
 -- 
 2.12.0
