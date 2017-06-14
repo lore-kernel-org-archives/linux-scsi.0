@@ -1,117 +1,69 @@
-From: Robert LeBlanc <robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org>
-Subject: Re: [PATCH 0/7] Enable iSCSI offload drivers to use information from iface.
-Date: Wed, 14 Jun 2017 10:47:57 -0600
-Message-ID: <CAANLjFqSB=JuaLJ1Ax-L9B0m-6EW6Hk9ePXGY-pMCK0uKJ6h_Q@mail.gmail.com>
-References: <20170606180717.5007-1-robert@leblancnet.us> <20170607162839.ludxvmddghx5ocn2@straylight.hirudinean.org>
- <CAANLjFomYCEmjfE7HLAsE7SgVqBKH8KSxYzFqxuV7t8as8+-ZQ@mail.gmail.com>
- <CAANLjFrJ2g8JfB-3bcVwVXxK41rB3aaSeP3ho7J5F0YLO=3sUw@mail.gmail.com> <D566FD10.3ABC0%manish.rangankar@cavium.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Long Li <longli@microsoft.com>
+Subject: RE: [PATCH v2] storvsc: use default I/O timeout handler for FC
+ devices
+Date: Wed, 14 Jun 2017 19:19:58 +0000
+Message-ID: <MWHPR03MB3136B62CABFE986250B2547FCEC30@MWHPR03MB3136.namprd03.prod.outlook.com>
+References: <1497389645-8912-1-git-send-email-longli@exchange.microsoft.com>
+ <5d983dac-69b6-ff89-d1ef-e0ea9b8136b1@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <open-iscsi+bncBCE4FWGB4QCRBPWRQXFAKGQEHCMXEZA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <D566FD10.3ABC0%manish.rangankar-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: "Rangankar, Manish" <Manish.Rangankar-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
-Cc: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "lduncan-IBi9RG/b67k@public.gmane.org" <lduncan-IBi9RG/b67k@public.gmane.org>, "jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org" <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Linux-Kernel@Vger. Kernel. Org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org" <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>, "roid-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org" <roid-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hal Rosenstock <hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "subbu.seetharaman-dY08KVG/lbpWk0Htik3J/w@public.gmane.org" <subbu.seetharaman-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, "ketan.mukadam-dY08KVG/lbpWk0Htik3J/w@public.gmane.org" <ketan.mukadam-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, "jitendra.bhivare-dY08KVG/lbpWk0Htik3J/w@public.gmane.org" <jitendra.bhivare-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Dept-Eng
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5d983dac-69b6-ff89-d1ef-e0ea9b8136b1@suse.de>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, KY Srinivasan <kys@microsoft.com>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Christoph Hellwig <hch@infradead.org>, Stephen Hemminger <sthemmin@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jun 14, 2017 at 3:20 AM, Rangankar, Manish
-<Manish.Rangankar-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org> wrote:
->
-> On 13/06/17 10:19 PM, "Robert LeBlanc" <robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org> wrote:
->
->>On Wed, Jun 7, 2017 at 12:30 PM, Robert LeBlanc <robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org>
->>wrote:
->>> On Wed, Jun 7, 2017 at 10:28 AM, Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
->>>> On Tue, Jun 06, 2017 at 12:07:10PM -0600, Robert LeBlanc wrote:
->>>>> This patchset enables iSCSI offload drivers to have access to the
->>>>>iface
->>>>> information provided by iscsid. This allows users to have more control
->>>>> of how the driver connects to the iSCSI target. iSER is updated to use
->>>>> iface.ipaddress to set the source IP address if configured. This
->>>>>allows
->>>>> iSER to use multiple ports on the same network or in more complicated
->>>>> routed configurations.
->>>>>
->>>>> Since there is already a change to the function parameters, dst_addr
->>>>> is upgraded to sockaddr_storage so that it is more future proof and
->>>>>makes
->>>>> the size of the struct static and not dependent on checking the
->>>>>SA_FAMILY.
->>>>>
->>>>> This is dependent on updates to Open-iSCSI.
->>>>
->>>> Hi Robert,
->>>>
->>>> I don't think that passing the iface_rec structure directly from the
->>>> iscsid internals into a netlink message is a good way to go about this.
->>>> It's really big, there's an embedded list_head with user address
->>>> pointers that needs to be left out, and there are 32/64-bit layout
->>>> differences.
->>>>
->>>> Let me take a look at how you're proposing using this info for iSER, if
->>>> it makes sense I think we should come up with a better designed
->>>> structure for passing the information.
->>>>
->>>> Thanks,
->>>> Chris
->>>>
->>>
->>> Chris,
->>>
->>> Thank you for your feedback. I agree that the entire iface is probably
->>> overkill, it was more of a proof of concept. We are only using the
->>> ipaddress in the iface for iSER (in my patch), but I could see other
->>> drivers benefiting from some of the other data in the iface (mac,
->>> interface_name, vlan, etc) so I didn't want to be too restrictive so
->>> that it wouldn't have to be extended later. I've not worked on
->>> userspace/kernel interaction before so I need some guidance to make
->>> the transition between userspace and kernel versions smoother.
->>>
->>> This patchset works for what we need and it is very important for us
->>> (and I'm sure others once the feature is available) and I'm happy to
->>> put in the time to get it accepted upstream, I'm just new to kernel
->>> development and need some guidance.
->>
->>Are there other comments/ideas/suggestions specifically from the
->>iSCSI/iSER guys? I'd like to keep this patch moving.
->
-> Considering partial iSCSI offload solution (like bnx2i and qedi) point of
-> view, we liked the idea from Hannes to create TAP interface to associate
-> with each iSCSI offload interface, which will allow us to use userspace
-> tools for configuration. I haven't dig into its details yet, but at higher
-> level it looks like this will help us to move away from our dependency
-> over iscsiuio.
-
-I'm having a hard time wrapping my head around this idea. How can
-configuring a TAP (separate Ethernet device) affect the offload NIC. I
-don't see how you can bind to the right interface with the IP address
-or how that is passed to rdma_connect() using a TAP. Is TAP used
-instead of netlink for communicating between userspace and the kernel?
-Obviously by my questions, at the moment I'm not sure how to approach
-this at all and would be the wrong person to make this happen.
-
-If someone can explain how this would work and point to some code that
-does something like this (examples are good for me), I can try to
-create a patch with TAPs. As I mentioned before, this is important for
-us and I'm willing to put in the time to learn and code, but I'm
-really lost at this point.
-
-Thank you,
-
-----------------
-Robert LeBlanc
-PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSm9oYW5uZXMgVGh1bXNo
+aXJuIFttYWlsdG86anRodW1zaGlybkBzdXNlLmRlXQ0KPiBTZW50OiBXZWRuZXNkYXksIEp1bmUg
+MTQsIDIwMTcgMToyNSBBTQ0KPiBUbzogTG9uZyBMaSA8bG9uZ2xpQG1pY3Jvc29mdC5jb20+OyBK
+YW1lcyBFLkouIEJvdHRvbWxleQ0KPiA8amVqYkBsaW51eC52bmV0LmlibS5jb20+OyBNYXJ0aW4g
+Sy4gUGV0ZXJzZW4gPG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tPjsNCj4gbGludXgtc2NzaUB2
+Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IEtZIFNyaW5pdmFz
+YW4NCj4gPGt5c0BtaWNyb3NvZnQuY29tPjsgQmFydCBWYW4gQXNzY2hlIDxCYXJ0LlZhbkFzc2No
+ZUBzYW5kaXNrLmNvbT47DQo+IENocmlzdG9waCBIZWxsd2lnIDxoY2hAaW5mcmFkZWFkLm9yZz47
+IFN0ZXBoZW4gSGVtbWluZ2VyDQo+IDxzdGhlbW1pbkBtaWNyb3NvZnQuY29tPg0KPiBDYzogTG9u
+ZyBMaSA8bG9uZ2xpQG1pY3Jvc29mdC5jb20+DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjJdIHN0
+b3J2c2M6IHVzZSBkZWZhdWx0IEkvTyB0aW1lb3V0IGhhbmRsZXIgZm9yIEZDIGRldmljZXMNCj4g
+DQo+IE9uIDA2LzEzLzIwMTcgMTE6MzQgUE0sIExvbmcgTGkgd3JvdGU6DQo+ID4gRnJvbTogTG9u
+ZyBMaSA8bG9uZ2xpQG1pY3Jvc29mdC5jb20+DQo+ID4NCj4gPiBGQyBkaXNrcyBpc3N1ZSBJL08g
+ZGlyZWN0bHkgdG8gdGhlIGhvc3Qgc3RvcmFnZSBwb3J0IGRyaXZlciwgdGhpcyBpcw0KPiA+IGRp
+ZmZpcmVudCB0byBWSEQgZGlza3Mgd2hlcmUgSS9PIGlzIHZpcnR1YWxpemVkIGFuZCB0aW1lb3V0
+IGlzIGhhbmRsZWQNCj4gPiBieSB0aGUgaG9zdCBWU1AgKFZpcnR1YWxpemF0aW9uIFNlcnZpY2Ug
+UHJvdmlkZXIpLg0KPiA+DQo+ID4gRkMgZGlza3MgYXJlIHVzdWFsbHkgc2V0dXAgaW4gYSBtdWx0
+aXBhdGggc3lzdGVtLCBhbmQgdGhleSBkb24ndCB3YW50DQo+ID4gdG8gcmVzZXQgdGltZXIgb24g
+SS9PIHRpbWVvdXQuIFRpbWVvdXQgaXMgZGV0ZWN0ZWQgYnkgbXVsdGlwYXRoIGFzIGENCj4gPiBn
+b29kIHRpbWUgdG8gZmFpbG92ZXIgYW5kIHJlY292ZXIuDQo+ID4NCj4gPiBQYXRjaCB2MiBpbmNs
+dWRlcyBzdWdnZXN0aW9ucyBmcm9tIEJhcnQgVmFuIEFzc2NoZQ0KPiA+IDxCYXJ0LlZhbkFzc2No
+ZUBzYW5kaXNrLmNvbT4NCj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6IExvbmcgTGkgPGxvbmdsaUBt
+aWNyb3NvZnQuY29tPg0KPiA+IC0tLQ0KPiA+ICBkcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYyB8
+IDQgKysrKw0KPiA+ICAxIGZpbGUgY2hhbmdlZCwgNCBpbnNlcnRpb25zKCspDQo+ID4NCj4gPiBk
+aWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgYi9kcml2ZXJzL3Njc2kvc3Rv
+cnZzY19kcnYuYw0KPiA+IGluZGV4IDhkOTU1ZGIuLjNjYzhkNjcgMTAwNjQ0DQo+ID4gLS0tIGEv
+ZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMNCj4gPiArKysgYi9kcml2ZXJzL3Njc2kvc3RvcnZz
+Y19kcnYuYw0KPiA+IEBAIC0xNDk1LDYgKzE0OTUsMTAgQEAgc3RhdGljIGludCBzdG9ydnNjX2hv
+c3RfcmVzZXRfaGFuZGxlcihzdHJ1Y3QNCj4gc2NzaV9jbW5kICpzY21uZCkNCj4gPiAgICovDQo+
+ID4gIHN0YXRpYyBlbnVtIGJsa19laF90aW1lcl9yZXR1cm4gc3RvcnZzY19laF90aW1lZF9vdXQo
+c3RydWN0IHNjc2lfY21uZA0KPiA+ICpzY21uZCkgIHsNCj4gPiArI2lmIElTX0VOQUJMRUQoQ09O
+RklHX1NDU0lfRkNfQVRUUlMpDQo+ID4gKwlpZiAoc2NtbmQtPmRldmljZS0+aG9zdC0+dHJhbnNw
+b3J0dCA9PSBmY190cmFuc3BvcnRfdGVtcGxhdGUpDQo+ID4gKwkJcmV0dXJuIGZjX2VoX3RpbWVk
+X291dChzY21uZCk7DQo+ID4gKyNlbmRpZg0KPiANCj4gQ2FuIHlvdSBwbGVhc2UgY2hhbmdlIHRo
+ZSAjaWYgSVNfRU5BQkxFRCgpIHRvDQo+IGlmKElTX0VOQUJMRUQoQ09ORklHX1NDU0lfRkNfQVRU
+UlMpDQo+IAkmJiBzY21uZC0+ZGV2aWNlLT5ob3N0LT50cmFuc3BvcnR0ID09IGZjX3RyYW5zcG9y
+dF90ZW1wbGF0ZSkNCj4gDQo+IFRoYXQgd2F5IHdlIGhhdmUgYmV0dGVyIGNvbXBpbGVyIGNvdmVy
+YWdlLg0KDQpUaGFuayB5b3UgZm9yIHBvaW50aW5nIHRoaXMgb3V0Lg0KDQpUaGUgY29kaW5nIHN0
+eWxlIGlzIGtlcHQgY29uc2lzdGVudCB3aXRoIHRoZSByZXN0IG9mIHRoZSBGQyByZWxhdGVkIGNv
+ZGUgaW4gc3RvcnZzYy4gRS5nLiB0aGUgZGVmaW5pdGlvbiBvZiBmY190cmFuc3BvcnRfdGVtcGxh
+dGUgKGFuZCBtYW55IG90aGVyIHBsYWNlcyk6DQoNCiNpZiBJU19FTkFCTEVEKENPTkZJR19TQ1NJ
+X0ZDX0FUVFJTKQ0Kc3RhdGljIHN0cnVjdCBzY3NpX3RyYW5zcG9ydF90ZW1wbGF0ZSAqZmNfdHJh
+bnNwb3J0X3RlbXBsYXRlOw0KI2VuZGlmDQoNCkkgc3VnZ2VzdCB3ZSBtYWtlIGFub3RoZXIgcGF0
+Y2ggdG8gZml4IHRoaXMgaW4gYWxsIHRoZSBwbGFjZXMuIFRoaXMgcGF0Y2ggaXMgbWFpbmx5IGZv
+ciBmaXhpbmcgRkMgdGltZW91dC4NCg0KTG9uZw0KDQo+IA0KPiBUaGFua3MsDQo+IAlKb2hhbm5l
+cw0KPiANCj4gLS0NCj4gSm9oYW5uZXMgVGh1bXNoaXJuICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgU3RvcmFnZQ0KPiBqdGh1bXNoaXJuQHN1c2UuZGUgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICs0OSA5MTEgNzQwNTMgNjg5DQo+IFNVU0UgTElOVVggR21i
+SCwgTWF4ZmVsZHN0ci4gNSwgOTA0MDkgTsO8cm5iZXJnDQo+IEdGOiBGZWxpeCBJbWVuZMO2cmZm
+ZXIsIEphbmUgU21pdGhhcmQsIEdyYWhhbSBOb3J0b24gSFJCIDIxMjg0IChBRyBOw7xybmJlcmcp
+DQo+IEtleSBmaW5nZXJwcmludCA9IEVDMzggOUNBQiBDMkM0IEYyNUQgODYwMCBEMEQwIDAzOTMg
+OTY5RCAyRDc2IDA4NTANCg==
