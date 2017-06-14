@@ -1,60 +1,76 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2] storvsc: use default I/O timeout handler for FC
- devices
-Date: Wed, 14 Jun 2017 10:24:38 +0200
-Message-ID: <5d983dac-69b6-ff89-d1ef-e0ea9b8136b1@suse.de>
-References: <1497389645-8912-1-git-send-email-longli@exchange.microsoft.com>
+Subject: Re: [PATCH v2 1/2] libsas: Don't process sas events in static works
+Date: Wed, 14 Jun 2017 10:48:40 +0200
+Message-ID: <692abe7a-149f-c1bf-5f28-3e36cad81b5a@suse.de>
+References: <1497425597-18799-1-git-send-email-wangyijing@huawei.com>
+ <1497425597-18799-2-git-send-email-wangyijing@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1497389645-8912-1-git-send-email-longli@exchange.microsoft.com>
+In-Reply-To: <1497425597-18799-2-git-send-email-wangyijing@huawei.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Long Li <longli@exchange.microsoft.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, KY Srinivasan <kys@microsoft.com>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Christoph Hellwig <hch@infradead.org>, Stephen Hemminger <sthemmin@microsoft.com>
-Cc: Long Li <longli@microsoft.com>
+To: Yijing Wang <wangyijing@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: chenqilin2@huawei.com, hare@suse.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chenxiang66@hisilicon.com, huangdaode@hisilicon.com, wangkefeng.wang@huawei.com, zhaohongjiang@huawei.com, dingtianhong@huawei.com, guohanjun@huawei.com, yanaijie@huawei.com, hch@lst.de, dan.j.williams@intel.com, emilne@redhat.com, thenzl@redhat.com, wefu@redhat.com, charles.chenxin@huawei.com, chenweilong@huawei.com, Yousong He <heyousong@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 06/13/2017 11:34 PM, Long Li wrote:
-> From: Long Li <longli@microsoft.com>
+On 06/14/2017 09:33 AM, Yijing Wang wrote:
+> Now libsas hotplug work is static, LLDD driver queue
+> the hotplug work into shost->work_q. If LLDD driver
+> burst post lots hotplug events to libsas, the hotplug
+> events may pending in the workqueue like
 > 
-> FC disks issue I/O directly to the host storage port driver, this is
-> diffirent to VHD disks where I/O is virtualized and timeout is handled
-> by the host VSP (Virtualization Service Provider).
+> shost->work_q
+> new work[PORTE_BYTES_DMAED] --> |[PHYE_LOSS_OF_SIGNAL][PORTE_BYTES_DMAED] -> processing
+>                                 |<-------wait worker to process-------->|
+> In this case, a new PORTE_BYTES_DMAED event coming, libsas try to queue it
+> to shost->work_q, but this work is already pending, so it would be lost.
+> Finally, libsas delete the related sas port and sas devices, but LLDD driver
+> expect libsas add the sas port and devices(last sas event).
 > 
-> FC disks are usually setup in a multipath system, and they don't want to
-> reset timer on I/O timeout. Timeout is detected by multipath as a good 
-> time to failover and recover.
+> This patch remove the static defined hotplug work, and use dynamic work to
+> avoid missing hotplug events.
 > 
-> Patch v2 includes suggestions from Bart Van Assche
-> <Bart.VanAssche@sandisk.com>
-> 
-> Signed-off-by: Long Li <longli@microsoft.com>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Signed-off-by: Yousong He <heyousong@huawei.com>
+> Signed-off-by: Qilin Chen <chenqilin2@huawei.com>
 > ---
->  drivers/scsi/storvsc_drv.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 8d955db..3cc8d67 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -1495,6 +1495,10 @@ static int storvsc_host_reset_handler(struct scsi_cmnd *scmnd)
->   */
->  static enum blk_eh_timer_return storvsc_eh_timed_out(struct scsi_cmnd *scmnd)
+
+[...]
+
+>  static void notify_ha_event(struct sas_ha_struct *sas_ha, enum ha_event event)
 >  {
-> +#if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
-> +	if (scmnd->device->host->transportt == fc_transport_template)
-> +		return fc_eh_timed_out(scmnd);
-> +#endif
+> +	struct sas_ha_event *ev;
+> +
+>  	BUG_ON(event >= HA_NUM_EVENTS);
+>  
+> -	sas_queue_event(event, &sas_ha->pending,
+> -			&sas_ha->ha_events[event].work, sas_ha);
+> +	ev = kzalloc(sizeof(*ev), GFP_ATOMIC);
+> +	if (!ev)
+> +		return;
+GFP_ATOMIC allocations can fail and then no events will be queued *and* we
+don't report the error back to the caller.
 
-Can you please change the #if IS_ENABLED() to
-if(IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
-	&& scmnd->device->host->transportt == fc_transport_template)
 
-That way we have better compiler coverage.
 
-Thanks,
-	Johannes
+> index 64e9cdd..c227a8b 100644
+> --- a/drivers/scsi/libsas/sas_init.c
+> +++ b/drivers/scsi/libsas/sas_init.c
+> @@ -111,10 +111,6 @@ void sas_hash_addr(u8 *hashed, const u8 *sas_addr)
+>  
+>  void sas_hae_reset(struct work_struct *work)
+>  {
+> -	struct sas_ha_event *ev = to_sas_ha_event(work);
+> -	struct sas_ha_struct *ha = ev->ha;
+> -
+> -	clear_bit(HAE_RESET, &ha->pending);
+>  }
+
+I don't really get why you need a stubbed out sas_hae_reset(). Can't we
+just kill it if it doesn't have anything left to do?
+
 
 -- 
 Johannes Thumshirn                                          Storage
