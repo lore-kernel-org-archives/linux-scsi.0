@@ -1,188 +1,174 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v6 08/22] scsi: hisi_sas: create hisi_sas_get_fw_info()
-Date: Wed, 14 Jun 2017 23:33:18 +0800
-Message-ID: <1497454412-91194-9-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v6 18/22] scsi: hisi_sas: add v3 code for itct setup and free
+Date: Wed, 14 Jun 2017 23:33:28 +0800
+Message-ID: <1497454412-91194-19-git-send-email-john.garry@huawei.com>
 References: <1497454412-91194-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([45.249.212.188]:7851 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752310AbdFNPER (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jun 2017 11:04:17 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1497454412-91194-1-git-send-email-john.garry@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, hch@infradead.org, John Garry <john.garry@huawei.com>
+Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, hch@infradead.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Move the functionality to retrieve the fw info into
-a dedicated device type-agnostic function,
-hisi_sas_get_fw_info().
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-The reasoning is that this function will be required
-for future pci-based platforms.
-
-Also add some debug logs for failure.
+Add code to itct setup and free for v3 hw.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h      |   1 +
- drivers/scsi/hisi_sas/hisi_sas_main.c | 107 ++++++++++++++++++++++------------
- 2 files changed, 71 insertions(+), 37 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 114 +++++++++++++++++++++++++++++++++
+ 1 file changed, 114 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 84cac98..c1f6669 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -371,6 +371,7 @@ struct hisi_sas_command_table_ssp {
- extern void hisi_sas_sata_done(struct sas_task *task,
- 			    struct hisi_sas_slot *slot);
- extern int hisi_sas_get_ncq_tag(struct sas_task *task, u32 *tag);
-+extern int hisi_sas_get_fw_info(struct hisi_hba *hisi_hba);
- extern int hisi_sas_probe(struct platform_device *pdev,
- 			  const struct hisi_sas_hw *ops);
- extern int hisi_sas_remove(struct platform_device *pdev);
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 139df45..81c053c 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1729,66 +1729,99 @@ static void hisi_sas_rst_work_handler(struct work_struct *work)
- 	hisi_sas_controller_reset(hisi_hba);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 30c103b..b9ab24d 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -24,6 +24,11 @@
+ #define PHY_PORT_NUM_MA			0x28
+ #define PHY_CONN_RATE			0x30
+ #define AXI_AHB_CLK_CFG			0x3c
++#define ITCT_CLR			0x44
++#define ITCT_CLR_EN_OFF			16
++#define ITCT_CLR_EN_MSK			(0x1 << ITCT_CLR_EN_OFF)
++#define ITCT_DEV_OFF			0
++#define ITCT_DEV_MSK			(0x7ff << ITCT_DEV_OFF)
+ #define AXI_USER1			0x48
+ #define AXI_USER2			0x4c
+ #define IO_SATA_BROKEN_MSG_ADDR_LO	0x58
+@@ -226,6 +231,26 @@
+ #define CMPLT_HDR_IO_IN_TARGET_OFF	17
+ #define CMPLT_HDR_IO_IN_TARGET_MSK	(0x1 << CMPLT_HDR_IO_IN_TARGET_OFF)
+ 
++/* ITCT header */
++/* qw0 */
++#define ITCT_HDR_DEV_TYPE_OFF		0
++#define ITCT_HDR_DEV_TYPE_MSK		(0x3 << ITCT_HDR_DEV_TYPE_OFF)
++#define ITCT_HDR_VALID_OFF		2
++#define ITCT_HDR_VALID_MSK		(0x1 << ITCT_HDR_VALID_OFF)
++#define ITCT_HDR_MCR_OFF		5
++#define ITCT_HDR_MCR_MSK		(0xf << ITCT_HDR_MCR_OFF)
++#define ITCT_HDR_VLN_OFF		9
++#define ITCT_HDR_VLN_MSK		(0xf << ITCT_HDR_VLN_OFF)
++#define ITCT_HDR_SMP_TIMEOUT_OFF	16
++#define ITCT_HDR_AWT_CONTINUE_OFF	25
++#define ITCT_HDR_PORT_ID_OFF		28
++#define ITCT_HDR_PORT_ID_MSK		(0xf << ITCT_HDR_PORT_ID_OFF)
++/* qw2 */
++#define ITCT_HDR_INLT_OFF		0
++#define ITCT_HDR_INLT_MSK		(0xffffULL << ITCT_HDR_INLT_OFF)
++#define ITCT_HDR_RTOLT_OFF		48
++#define ITCT_HDR_RTOLT_MSK		(0xffffULL << ITCT_HDR_RTOLT_OFF)
++
+ struct hisi_sas_complete_v3_hdr {
+ 	__le32 dw0;
+ 	__le32 dw1;
+@@ -460,6 +485,93 @@ static void config_id_frame_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
+ 			__swab32(identify_buffer[5]));
  }
  
--static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
--					      const struct hisi_sas_hw *hw)
-+int hisi_sas_get_fw_info(struct hisi_hba *hisi_hba)
- {
--	struct resource *res;
--	struct Scsi_Host *shost;
--	struct hisi_hba *hisi_hba;
--	struct device *dev = &pdev->dev;
--	struct device_node *np = pdev->dev.of_node;
-+	struct device *dev = hisi_hba->dev;
-+	struct platform_device *pdev = hisi_hba->platform_dev;
-+	struct device_node *np = pdev ? pdev->dev.of_node : NULL;
- 	struct clk *refclk;
- 
--	shost = scsi_host_alloc(&hisi_sas_sht, sizeof(*hisi_hba));
--	if (!shost) {
--		dev_err(dev, "scsi host alloc failed\n");
--		return NULL;
--	}
--	hisi_hba = shost_priv(shost);
--
--	INIT_WORK(&hisi_hba->rst_work, hisi_sas_rst_work_handler);
--	hisi_hba->hw = hw;
--	hisi_hba->platform_dev = pdev;
--	hisi_hba->dev = dev;
--	hisi_hba->shost = shost;
--	SHOST_TO_SAS_HA(shost) = &hisi_hba->sha;
--
--	init_timer(&hisi_hba->timer);
--
- 	if (device_property_read_u8_array(dev, "sas-addr", hisi_hba->sas_addr,
--					  SAS_ADDR_SIZE))
--		goto err_out;
-+					  SAS_ADDR_SIZE)) {
-+		dev_err(dev, "could not get property sas-addr\n");
-+		return -ENOENT;
-+	}
- 
- 	if (np) {
-+		/*
-+		 * These properties are only required for platform device-based
-+		 * controller with DT firmware.
-+		 */
- 		hisi_hba->ctrl = syscon_regmap_lookup_by_phandle(np,
- 					"hisilicon,sas-syscon");
--		if (IS_ERR(hisi_hba->ctrl))
--			goto err_out;
-+		if (IS_ERR(hisi_hba->ctrl)) {
-+			dev_err(dev, "could not get syscon\n");
-+			return -ENOENT;
-+		}
- 
- 		if (device_property_read_u32(dev, "ctrl-reset-reg",
--					     &hisi_hba->ctrl_reset_reg))
--			goto err_out;
-+					     &hisi_hba->ctrl_reset_reg)) {
-+			dev_err(dev,
-+				"could not get property ctrl-reset-reg\n");
-+			return -ENOENT;
-+		}
- 
- 		if (device_property_read_u32(dev, "ctrl-reset-sts-reg",
--					     &hisi_hba->ctrl_reset_sts_reg))
--			goto err_out;
-+					     &hisi_hba->ctrl_reset_sts_reg)) {
-+			dev_err(dev,
-+				"could not get property ctrl-reset-sts-reg\n");
-+			return -ENOENT;
-+		}
- 
- 		if (device_property_read_u32(dev, "ctrl-clock-ena-reg",
--					     &hisi_hba->ctrl_clock_ena_reg))
--			goto err_out;
-+					     &hisi_hba->ctrl_clock_ena_reg)) {
-+			dev_err(dev,
-+				"could not get property ctrl-clock-ena-reg\n");
-+			return -ENOENT;
-+		}
- 	}
- 
--	refclk = devm_clk_get(&pdev->dev, NULL);
-+	refclk = devm_clk_get(dev, NULL);
- 	if (IS_ERR(refclk))
- 		dev_dbg(dev, "no ref clk property\n");
- 	else
- 		hisi_hba->refclk_frequency_mhz = clk_get_rate(refclk) / 1000000;
- 
--	if (device_property_read_u32(dev, "phy-count", &hisi_hba->n_phy))
--		goto err_out;
-+	if (device_property_read_u32(dev, "phy-count", &hisi_hba->n_phy)) {
-+		dev_err(dev, "could not get property phy-count\n");
-+		return -ENOENT;
-+	}
- 
- 	if (device_property_read_u32(dev, "queue-count",
--				     &hisi_hba->queue_count))
-+				     &hisi_hba->queue_count)) {
-+		dev_err(dev, "could not get property queue-count\n");
-+		return -ENOENT;
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(hisi_sas_get_fw_info);
-+
-+static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
-+					      const struct hisi_sas_hw *hw)
++static void setup_itct_v3_hw(struct hisi_hba *hisi_hba,
++			     struct hisi_sas_device *sas_dev)
 +{
-+	struct resource *res;
-+	struct Scsi_Host *shost;
-+	struct hisi_hba *hisi_hba;
-+	struct device *dev = &pdev->dev;
++	struct domain_device *device = sas_dev->sas_device;
++	struct device *dev = hisi_hba->dev;
++	u64 qw0, device_id = sas_dev->device_id;
++	struct hisi_sas_itct *itct = &hisi_hba->itct[device_id];
++	struct domain_device *parent_dev = device->parent;
++	struct asd_sas_port *sas_port = device->port;
++	struct hisi_sas_port *port = to_hisi_sas_port(sas_port);
 +
-+	shost = scsi_host_alloc(&hisi_sas_sht, sizeof(*hisi_hba));
-+	if (!shost) {
-+		dev_err(dev, "scsi host alloc failed\n");
-+		return NULL;
++	memset(itct, 0, sizeof(*itct));
++
++	/* qw0 */
++	qw0 = 0;
++	switch (sas_dev->dev_type) {
++	case SAS_END_DEVICE:
++	case SAS_EDGE_EXPANDER_DEVICE:
++	case SAS_FANOUT_EXPANDER_DEVICE:
++		qw0 = HISI_SAS_DEV_TYPE_SSP << ITCT_HDR_DEV_TYPE_OFF;
++		break;
++	case SAS_SATA_DEV:
++	case SAS_SATA_PENDING:
++		if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
++			qw0 = HISI_SAS_DEV_TYPE_STP << ITCT_HDR_DEV_TYPE_OFF;
++		else
++			qw0 = HISI_SAS_DEV_TYPE_SATA << ITCT_HDR_DEV_TYPE_OFF;
++		break;
++	default:
++		dev_warn(dev, "setup itct: unsupported dev type (%d)\n",
++			 sas_dev->dev_type);
 +	}
-+	hisi_hba = shost_priv(shost);
 +
-+	INIT_WORK(&hisi_hba->rst_work, hisi_sas_rst_work_handler);
-+	hisi_hba->hw = hw;
-+	hisi_hba->dev = dev;
-+	hisi_hba->platform_dev = pdev;
-+	hisi_hba->shost = shost;
-+	SHOST_TO_SAS_HA(shost) = &hisi_hba->sha;
++	qw0 |= ((1 << ITCT_HDR_VALID_OFF) |
++		(device->linkrate << ITCT_HDR_MCR_OFF) |
++		(1 << ITCT_HDR_VLN_OFF) |
++		(0xfa << ITCT_HDR_SMP_TIMEOUT_OFF) |
++		(1 << ITCT_HDR_AWT_CONTINUE_OFF) |
++		(port->id << ITCT_HDR_PORT_ID_OFF));
++	itct->qw0 = cpu_to_le64(qw0);
 +
-+	init_timer(&hisi_hba->timer);
++	/* qw1 */
++	memcpy(&itct->sas_addr, device->sas_addr, SAS_ADDR_SIZE);
++	itct->sas_addr = __swab64(itct->sas_addr);
 +
-+	if (hisi_sas_get_fw_info(hisi_hba) < 0)
- 		goto err_out;
++	/* qw2 */
++	if (!dev_is_sata(device))
++		itct->qw2 = cpu_to_le64((5000ULL << ITCT_HDR_INLT_OFF) |
++					(0x1ULL << ITCT_HDR_RTOLT_OFF));
++}
++
++static void free_device_v3_hw(struct hisi_hba *hisi_hba,
++			      struct hisi_sas_device *sas_dev)
++{
++	u64 dev_id = sas_dev->device_id;
++	struct device *dev = hisi_hba->dev;
++	struct hisi_sas_itct *itct = &hisi_hba->itct[dev_id];
++	u32 reg_val = hisi_sas_read32(hisi_hba, ENT_INT_SRC3);
++
++	/* clear the itct interrupt state */
++	if (ENT_INT_SRC3_ITC_INT_MSK & reg_val)
++		hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
++				 ENT_INT_SRC3_ITC_INT_MSK);
++
++	/* clear the itct table*/
++	reg_val = hisi_sas_read32(hisi_hba, ITCT_CLR);
++	reg_val |= ITCT_CLR_EN_MSK | (dev_id & ITCT_DEV_MSK);
++	hisi_sas_write32(hisi_hba, ITCT_CLR, reg_val);
++
++	udelay(10);
++	reg_val = hisi_sas_read32(hisi_hba, ENT_INT_SRC3);
++	if (ENT_INT_SRC3_ITC_INT_MSK & reg_val) {
++		dev_dbg(dev, "got clear ITCT done interrupt\n");
++
++		/* invalid the itct state*/
++		memset(itct, 0, sizeof(struct hisi_sas_itct));
++		hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
++				 ENT_INT_SRC3_ITC_INT_MSK);
++		hisi_hba->devices[dev_id].dev_type = SAS_PHY_UNUSED;
++		hisi_hba->devices[dev_id].dev_status = HISI_SAS_DEV_NORMAL;
++
++		/* clear the itct */
++		hisi_sas_write32(hisi_hba, ITCT_CLR, 0);
++		dev_dbg(dev, "clear ITCT ok\n");
++	}
++}
++
+ static int hw_init_v3_hw(struct hisi_hba *hisi_hba)
+ {
+ 	init_reg_v3_hw(hisi_hba);
+@@ -1399,8 +1511,10 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
  
- 	if (dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64)) &&
+ static const struct hisi_sas_hw hisi_sas_v3_hw = {
+ 	.hw_init = hisi_sas_v3_init,
++	.setup_itct = setup_itct_v3_hw,
+ 	.max_command_entries = HISI_SAS_COMMAND_ENTRIES_V3_HW,
+ 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v3_hdr),
++	.free_device = free_device_v3_hw,
+ 	.sl_notify = sl_notify_v3_hw,
+ 	.prep_ssp = prep_ssp_v3_hw,
+ 	.prep_smp = prep_smp_v3_hw,
 -- 
 1.9.1
