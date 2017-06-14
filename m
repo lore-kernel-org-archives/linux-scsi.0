@@ -1,170 +1,157 @@
-From: Hannes Reinecke <hare@suse.com>
-Subject: Re: [ANNOUNCE]: Broadcom (Emulex) FC Target driver - efct
-Date: Wed, 14 Jun 2017 13:40:14 +0200
-Message-ID: <9c8db0c0-01cf-9b52-d229-7706549c8a8a@suse.com>
-References: <ced2ff0a-05ee-b85e-b41a-f912cab9e267@gmail.com>
- <1488485325.5580.9.camel@haakon3.risingtidesystems.com>
- <20170305173528.00006b41@gmx.de>
- <CAL1RGDVBvgzaQTRfWS14=S1M1DuzKGPYzAPWWeQyAASDQ=05Rw@mail.gmail.com>
- <55205e7e-e1c6-5f09-8dd3-338492728dfe@broadcom.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.nue.novell.com ([195.135.221.5]:50899 "EHLO
-        smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751934AbdFNLkc (ORCPT
-        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-        Wed, 14 Jun 2017 07:40:32 -0400
-In-Reply-To: <55205e7e-e1c6-5f09-8dd3-338492728dfe@broadcom.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH] scsi: sas: scsi_queue_work can fail, so make callers aware
+Date: Wed, 14 Jun 2017 13:52:43 +0200
+Message-ID: <20170614115243.17776-1-jthumshirn@suse.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, wangyijing@huawei.com, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@broadcom.com>, Roland Dreier <roland@purestorage.com>, Sebastian Herbszt <herbszt@gmx.de>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, jsmart2021@gmail.com, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
 
-On 06/13/2017 01:08 AM, James Smart wrote:
-> On 5/16/2017 12:59 PM, Roland Dreier wrote:
->> On Sun, Mar 5, 2017 at 8:35 AM, Sebastian Herbszt <herbszt@gmx.de> wrote:
->>> Just like Hannes I do favour integration. I guess it could be
->>> comparable to qla2xxx + tcm_qla2xxx, lpfc + lpfc_scst and
->>> lpfc + tcm_lpfc. That approach might even help Bart with his
->>> target driver unification if he didn't give up on that topic.
->> Resurrecting this old topic - sorry for not seeing this go by initially.
->>
->> For context, I have a lot of experience debugging the qla2xxx target
->> code - we did a lot of work to get error/exception paths correct.
->> Basic FC target support is pretty straightforward but handling SAN log
->> in / log out events and other strange things that initiators do took a
->> lot of effort.
->>
->> Anyway, my feeling is that the integration of tcm_qla2xxx and qla2xxx
->> was overall a net negative.  Having the target driver grafted onto the
->> side of an already-complex driver that has a bunch of code not
->> relevant to the target (SCSI error handling, logging into and timing
->> out remote target ports, etc) made the code harder to debug and harder
->> to get right.
->>
->> Of course I'm in favor of making common code really common.  So
->> certainly we should have a common library of SLI-4 code that both the
->> initiator and target driver share.  And if there is more commonality,
->> that's great.  But any code similar to "if (initiator) ... else ..."
->> is really suspect to me - grepping for "qla_ini_mode_enabled" shows
->> great examples like
->>
->> ...
->>
->> Handling "dual mode" (both initiator and target on the same port at
->> the same time) is a design challenge, but I don't think the current
->> qla2xxx driver is an example of a maintainable way to do that.
->>
->> (I'm agnostic about what to do about SLI-3 - perhaps the cleanest
->> thing to do is split the driver between SLI-4 and SLI-3, and handle
->> the initiator and target drivers for those two cases as appropriate)
->>
->> I'd love to discuss this further and come up with a design that meets
->> the concerns about integration but also learns the lessons from
->> tcm_qla2xxx.
->>
->>   - R.
-> 
-> 
-> Thanks for the feedback.  I believe you echo many of our concerns as we
-> look at "merging them into one".  I agree with your statements on the
-> number of if-else roles and know that we made this even more complicated
-> by the driver doing fc-nvme initiator and fc-nvme target as well.  Your
-> small list of "mode_enabled" hits pales in comparison to a hit list in
-> the current driver if looking for SCSI initiator support
-> (LPFC_ENABLE_FCP), NVME initiator support (LPFC_ENABLE_NVME), or NVME
-> target support (phba->nvmet_support). And that's before adding SCSI
-> target support.   We're also concerned about the discovery engines as
-> not only are there lots of different paths for the different roles as
-> well as support for fcoe, but there are a lot of carefully managed
-> accommodations for various oem and switch environments. It's very
-> difficult to replicate and retest all these different configurations and
-> scenarios.
-> 
-> Here's what I'd like to propose for a direction:
-> 1) Create an initiator driver and a target driver.  For now, initiator
-> would support both SCSI and NVME initiator. Target would support SCSI
-> and NVME target.
-Well, _actually_ you only would need to move the NVMe target
-functionality into a new driver...
+libsas uses scsi_queue_work() to queue it's internal event
+notifications. scsi_queue_work() can return -EINVAL if the work queue
+doesn't exist and it does call queue_work() which can return false if
+the work is already queued.
 
-> 2) SLI3 support would be contained only within the initiator driver and
-> limited to SCSI (as it is today in lpfc).
-> 3) SLI4 support would be library-ized,so that the code can be shared
-> between the two drivers.  Library-izing SLI-4 means SLI-3 will also be
-> library-ized.
-> 4) Discovery support would be librarized so it can be shared. As part of
-> this effort we will minimally move generic functions from the library to
-> drivers/scsi/libfc (example: setting RPA payloads, etc).  At this time,
-> the drivers will not attempt to use libfc for discovery. There is too
-> much sensitive code tied to interlocks with adapter api design that are
-> visible in the discovery state machine. Use of libfc can be a future,
-> but for the short term, the goal is a single library for the broadcom
-> initiator/target drivers.
-> 5) lpfc will be refactored, addressing concerns that have been desired
-> for a while.
-> 
-That all sound reasonable.
+Make the SAS event code capable of returning errors up to the caller,
+which is handy when changing to dynamically allocated work in libsas
+as well, as discussed here: https://lkml.org/lkml/2017/6/14/121.
 
-> 
-> To start this effort, I'd like a bcmlpfc directory to be made within the
-> drivers staging tree. The directory would be populated with the efct
-> driver and a copy of the existing lpfc driver.   Work can then commence
-> on refactoring lpfc and creating the libraries and integrating the
-> libraries into both drivers.  As lpfc is updated in the main tree,
-> patches would be posted to the staging version of lpfc to keep them on par.
-> 
-Ok.
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/scsi/libsas/sas_event.c    | 36 ++++++++++++++++++++++--------------
+ drivers/scsi/libsas/sas_internal.h |  4 ++--
+ include/scsi/libsas.h              |  6 +++---
+ 3 files changed, 27 insertions(+), 19 deletions(-)
 
-> 
-> Questions:
-> a) How best to deal with overlapping pci id's ?  E.g. if we do (1) and
-> we have an initiator and target driver, there is a lot of adapters that
-> are fully functional for target operation, but were sold as primarily an
-> initiator adapter. How could we manage target mode enablement without
-> code mod or hard pci id partitioning ?   I know individual pci
-> unbind/bind could work, but its been frowned upon as a long term option.
-> Same thing goes for module parameters to select which ports do what role.
-> 
-That indeed is a problem.
-
-Ideally we should be able to set the required mode on a per-port base;
-having it per PCI device might be too coarse. Unless you represent each
-port as a PCI function; not sure if that's the case, though.
-If we were to allow to set the mode on a per-port base we could easily
-implement kernel parameters like fctarget=WWPN and/or fcinitiator=WWPN;
-NVMe could be treated similarly.
-And have a config option specifying if the default FC mode should be
-initiator or target.
-With that we could configure the ports during boot-up and would avoid
-the rebinding.
-
-> b) Assuming we have the lpfc copy in the bcmlpfc directory in the
-> staging tree: are there any issues with having a version of lpfc in the
-> main tree and another in the staging tree ?     For many reasons, I'd
-> like to keep the name lpfc on the initiator driver in the staging tree.
-> But is that possible ? I assume we would need to develop in the staging
-> tree as a new name and pci id space separate from the base driver, and
-> we can rename the staging driver to the lpfc name when it merges into
-> the main kernel and replaces the existing driver.
-> 
-Why not splitting the _existing_ lpfc driver along the above lines, and
-keep the new target mode driver in staging?
-That would be 'just' be a refactoring of the current lpfc driver, which
-would be fully in keeping with the existing rules.
-Hence I don't think that it would require to have the initiator driver
-in staging, too.
-And I do think that staging drivers can use library function from
-'mainline' drivers.
-
-Unless you want to go for a full split, and remove SLI-4 functionality
-from the existing lpfc driver.
-But then you'll be having a issue with driver renaming etc.
-Not sure if I would want to go that route.
-
-Cheers,
-
-Hannes
+diff --git a/drivers/scsi/libsas/sas_event.c b/drivers/scsi/libsas/sas_event.c
+index aadbd5314c5c..c0d0d979b76d 100644
+--- a/drivers/scsi/libsas/sas_event.c
++++ b/drivers/scsi/libsas/sas_event.c
+@@ -27,30 +27,38 @@
+ #include "sas_internal.h"
+ #include "sas_dump.h"
+ 
+-void sas_queue_work(struct sas_ha_struct *ha, struct sas_work *sw)
++int sas_queue_work(struct sas_ha_struct *ha, struct sas_work *sw)
+ {
++	int rc = 0;
++
+ 	if (!test_bit(SAS_HA_REGISTERED, &ha->state))
+-		return;
++		return 0;
+ 
+ 	if (test_bit(SAS_HA_DRAINING, &ha->state)) {
+ 		/* add it to the defer list, if not already pending */
+ 		if (list_empty(&sw->drain_node))
+ 			list_add(&sw->drain_node, &ha->defer_q);
+ 	} else
+-		scsi_queue_work(ha->core.shost, &sw->work);
++		rc = scsi_queue_work(ha->core.shost, &sw->work);
++
++	return rc;
+ }
+ 
+-static void sas_queue_event(int event, unsigned long *pending,
++static int sas_queue_event(int event, unsigned long *pending,
+ 			    struct sas_work *work,
+ 			    struct sas_ha_struct *ha)
+ {
++	int rc = 0;
++
+ 	if (!test_and_set_bit(event, pending)) {
+ 		unsigned long flags;
+ 
+ 		spin_lock_irqsave(&ha->lock, flags);
+-		sas_queue_work(ha, work);
++		rc = sas_queue_work(ha, work);
+ 		spin_unlock_irqrestore(&ha->lock, flags);
+ 	}
++
++	return rc;
+ }
+ 
+ 
+@@ -116,32 +124,32 @@ void sas_enable_revalidation(struct sas_ha_struct *ha)
+ 	mutex_unlock(&ha->disco_mutex);
+ }
+ 
+-static void notify_ha_event(struct sas_ha_struct *sas_ha, enum ha_event event)
++static int notify_ha_event(struct sas_ha_struct *sas_ha, enum ha_event event)
+ {
+ 	BUG_ON(event >= HA_NUM_EVENTS);
+ 
+-	sas_queue_event(event, &sas_ha->pending,
+-			&sas_ha->ha_events[event].work, sas_ha);
++	return sas_queue_event(event, &sas_ha->pending,
++			       &sas_ha->ha_events[event].work, sas_ha);
+ }
+ 
+-static void notify_port_event(struct asd_sas_phy *phy, enum port_event event)
++static int notify_port_event(struct asd_sas_phy *phy, enum port_event event)
+ {
+ 	struct sas_ha_struct *ha = phy->ha;
+ 
+ 	BUG_ON(event >= PORT_NUM_EVENTS);
+ 
+-	sas_queue_event(event, &phy->port_events_pending,
+-			&phy->port_events[event].work, ha);
++	return sas_queue_event(event, &phy->port_events_pending,
++			       &phy->port_events[event].work, ha);
+ }
+ 
+-void sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event)
++int sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event)
+ {
+ 	struct sas_ha_struct *ha = phy->ha;
+ 
+ 	BUG_ON(event >= PHY_NUM_EVENTS);
+ 
+-	sas_queue_event(event, &phy->phy_events_pending,
+-			&phy->phy_events[event].work, ha);
++	return sas_queue_event(event, &phy->phy_events_pending,
++			       &phy->phy_events[event].work, ha);
+ }
+ 
+ int sas_init_events(struct sas_ha_struct *sas_ha)
+diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
+index b306b7843d99..a216c957b639 100644
+--- a/drivers/scsi/libsas/sas_internal.h
++++ b/drivers/scsi/libsas/sas_internal.h
+@@ -76,7 +76,7 @@ void sas_porte_broadcast_rcvd(struct work_struct *work);
+ void sas_porte_link_reset_err(struct work_struct *work);
+ void sas_porte_timer_event(struct work_struct *work);
+ void sas_porte_hard_reset(struct work_struct *work);
+-void sas_queue_work(struct sas_ha_struct *ha, struct sas_work *sw);
++int sas_queue_work(struct sas_ha_struct *ha, struct sas_work *sw);
+ 
+ int sas_notify_lldd_dev_found(struct domain_device *);
+ void sas_notify_lldd_dev_gone(struct domain_device *);
+@@ -85,7 +85,7 @@ int sas_smp_phy_control(struct domain_device *dev, int phy_id,
+ 			enum phy_func phy_func, struct sas_phy_linkrates *);
+ int sas_smp_get_phy_events(struct sas_phy *phy);
+ 
+-void sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event);
++int sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event);
+ void sas_device_set_phy(struct domain_device *dev, struct sas_port *port);
+ struct domain_device *sas_find_dev_by_rphy(struct sas_rphy *rphy);
+ struct domain_device *sas_ex_to_ata(struct domain_device *ex_dev, int phy_id);
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index dd0f72c95abe..cfaeed256ab2 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -415,9 +415,9 @@ struct sas_ha_struct {
+ 				* their siblings when forming wide ports */
+ 
+ 	/* LLDD calls these to notify the class of an event. */
+-	void (*notify_ha_event)(struct sas_ha_struct *, enum ha_event);
+-	void (*notify_port_event)(struct asd_sas_phy *, enum port_event);
+-	void (*notify_phy_event)(struct asd_sas_phy *, enum phy_event);
++	int (*notify_ha_event)(struct sas_ha_struct *, enum ha_event);
++	int (*notify_port_event)(struct asd_sas_phy *, enum port_event);
++	int (*notify_phy_event)(struct asd_sas_phy *, enum phy_event);
+ 
+ 	void *lldd_ha;		  /* not touched by sas class code */
+ 
+-- 
+2.12.3
