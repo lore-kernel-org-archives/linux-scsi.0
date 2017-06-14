@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v6 22/22] scsi: hisi_sas: modify internal abort dev flow for v3 hw
-Date: Wed, 14 Jun 2017 23:33:32 +0800
-Message-ID: <1497454412-91194-23-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v6 02/22] scsi: hisi_sas: define hisi_sas_device.device_id as int
+Date: Wed, 14 Jun 2017 23:33:12 +0800
+Message-ID: <1497454412-91194-3-git-send-email-john.garry@huawei.com>
 References: <1497454412-91194-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,141 +9,92 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1497454412-91194-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, hch@infradead.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, hch@infradead.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+Currently hisi_sas_device.device_id is a u64. This can create a
+problem in selecting the queue for a device, in that this code
+does a 64b division on device id. For some 32b systems, 64b division
+is slow and the lib reference must be explicitly included.
 
-There is a change for abort dev for v3 hw: add registers to configure
-unaborted iptt for a device, and then inform this to logic.
+The device id does not need to be 64b in size, so, as a solution,
+just make as an int.
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Also, struct hisi_sas_device elements are re-ordered to improve
+packing efficiency.
+
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  2 ++
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 15 +++++++++++++++
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 28 ++++++++++++++++++++++++++++
- 3 files changed, 45 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas.h      |  8 ++++----
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 10 +++++-----
+ 2 files changed, 9 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index e89f6ae..4fc2308 100644
+index 4e28f32..b4e96fa9 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas.h
 +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -188,6 +188,8 @@ struct hisi_sas_hw {
- 	void (*free_device)(struct hisi_hba *hisi_hba,
- 			    struct hisi_sas_device *dev);
- 	int (*get_wideport_bitmap)(struct hisi_hba *hisi_hba, int port_id);
-+	void (*dereg_device)(struct hisi_hba *hisi_hba,
-+				struct domain_device *device);
- 	int (*soft_reset)(struct hisi_hba *hisi_hba);
- 	int max_command_entries;
- 	int complete_hdr_size;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 0a32211..0e2db9a 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -727,6 +727,13 @@ static void hisi_sas_release_tasks(struct hisi_hba *hisi_hba)
- 	}
- }
- 
-+static void hisi_sas_dereg_device(struct hisi_hba *hisi_hba,
-+				struct domain_device *device)
-+{
-+	if (hisi_hba->hw->dereg_device)
-+		hisi_hba->hw->dereg_device(hisi_hba, device);
-+}
-+
- static void hisi_sas_dev_gone(struct domain_device *device)
- {
- 	struct hisi_sas_device *sas_dev = device->lldd_dev;
-@@ -740,6 +747,8 @@ static void hisi_sas_dev_gone(struct domain_device *device)
- 	hisi_sas_internal_task_abort(hisi_hba, device,
- 				     HISI_SAS_INT_ABT_DEV, 0);
- 
-+	hisi_sas_dereg_device(hisi_hba, device);
-+
- 	hisi_hba->hw->free_device(hisi_hba, sas_dev);
- 	device->lldd_dev = NULL;
- 	memset(sas_dev, 0, sizeof(*sas_dev));
-@@ -1071,6 +1080,7 @@ static int hisi_sas_abort_task(struct sas_task *task)
- 		if (task->dev->dev_type == SAS_SATA_DEV) {
- 			hisi_sas_internal_task_abort(hisi_hba, device,
- 						     HISI_SAS_INT_ABT_DEV, 0);
-+			hisi_sas_dereg_device(hisi_hba, device);
- 			rc = hisi_sas_softreset_ata_disk(device);
- 		}
- 	} else if (task->lldd_task && task->task_proto & SAS_PROTOCOL_SMP) {
-@@ -1137,6 +1147,10 @@ static int hisi_sas_I_T_nexus_reset(struct domain_device *device)
- 		return TMF_RESP_FUNC_FAILED;
- 	sas_dev->dev_status = HISI_SAS_DEV_NORMAL;
- 
-+	hisi_sas_internal_task_abort(hisi_hba, device,
-+					HISI_SAS_INT_ABT_DEV, 0);
-+	hisi_sas_dereg_device(hisi_hba, device);
-+
- 	rc = hisi_sas_debug_I_T_nexus_reset(device);
- 
- 	if (rc == TMF_RESP_FUNC_COMPLETE) {
-@@ -1164,6 +1178,7 @@ static int hisi_sas_lu_reset(struct domain_device *device, u8 *lun)
- 						  HISI_SAS_INT_ABT_DEV, 0);
- 		if (rc == TMF_RESP_FUNC_FAILED)
- 			goto out;
-+		hisi_sas_dereg_device(hisi_hba, device);
- 
- 		phy = sas_get_local_phy(device);
- 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index cf1eb47..c998b81 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -50,6 +50,10 @@
- #define CFG_ABT_SET_QUERY_IPTT	0xd4
- #define CFG_SET_ABORTED_IPTT_OFF	0
- #define CFG_SET_ABORTED_IPTT_MSK	(0xfff << CFG_SET_ABORTED_IPTT_OFF)
-+#define CFG_SET_ABORTED_EN_OFF	12
-+#define CFG_ABT_SET_IPTT_DONE	0xd8
-+#define CFG_ABT_SET_IPTT_DONE_OFF	0
-+#define HGC_IOMB_PROC1_STATUS	0x104
- #define CFG_1US_TIMER_TRSH		0xcc
- #define CHNL_INT_STATUS			0x148
- #define INT_COAL_EN			0x19c
-@@ -583,6 +587,29 @@ static void free_device_v3_hw(struct hisi_hba *hisi_hba,
- 	}
- }
- 
-+static void dereg_device_v3_hw(struct hisi_hba *hisi_hba,
-+				struct domain_device *device)
-+{
-+	struct hisi_sas_slot *slot, *slot2;
-+	struct hisi_sas_device *sas_dev = device->lldd_dev;
-+	u32 cfg_abt_set_query_iptt;
-+
-+	cfg_abt_set_query_iptt = hisi_sas_read32(hisi_hba,
-+		CFG_ABT_SET_QUERY_IPTT);
-+	list_for_each_entry_safe(slot, slot2, &sas_dev->list, entry) {
-+		cfg_abt_set_query_iptt &= ~CFG_SET_ABORTED_IPTT_MSK;
-+		cfg_abt_set_query_iptt |= (1 << CFG_SET_ABORTED_EN_OFF) |
-+			(slot->idx << CFG_SET_ABORTED_IPTT_OFF);
-+		hisi_sas_write32(hisi_hba, CFG_ABT_SET_QUERY_IPTT,
-+			cfg_abt_set_query_iptt);
-+	}
-+	cfg_abt_set_query_iptt &= ~(1 << CFG_SET_ABORTED_EN_OFF);
-+	hisi_sas_write32(hisi_hba, CFG_ABT_SET_QUERY_IPTT,
-+		cfg_abt_set_query_iptt);
-+	hisi_sas_write32(hisi_hba, CFG_ABT_SET_IPTT_DONE,
-+					1 << CFG_ABT_SET_IPTT_DONE_OFF);
-+}
-+
- static int hw_init_v3_hw(struct hisi_hba *hisi_hba)
- {
- 	init_reg_v3_hw(hisi_hba);
-@@ -1613,6 +1640,7 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
- 	.phy_disable = disable_phy_v3_hw,
- 	.phy_hard_reset = phy_hard_reset_v3_hw,
- 	.phy_get_max_linkrate = phy_get_max_linkrate_v3_hw,
-+	.dereg_device = dereg_device_v3_hw,
+@@ -107,15 +107,15 @@ struct hisi_sas_dq {
  };
  
- static struct Scsi_Host *
+ struct hisi_sas_device {
+-	enum sas_device_type	dev_type;
+ 	struct hisi_hba		*hisi_hba;
+ 	struct domain_device	*sas_device;
++	struct list_head	list;
+ 	u64 attached_phy;
+-	u64 device_id;
+ 	atomic64_t running_req;
+-	struct list_head	list;
+-	u8 dev_status;
++	enum sas_device_type	dev_type;
++	int device_id;
+ 	int sata_idx;
++	u8 dev_status;
+ };
+ 
+ struct hisi_sas_slot {
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 3605d28..54e0cf2 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -209,7 +209,7 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_hba *hisi_hba,
+ 
+ 	if (DEV_IS_GONE(sas_dev)) {
+ 		if (sas_dev)
+-			dev_info(dev, "task prep: device %llu not ready\n",
++			dev_info(dev, "task prep: device %d not ready\n",
+ 				 sas_dev->device_id);
+ 		else
+ 			dev_info(dev, "task prep: device %016llx not ready\n",
+@@ -627,9 +627,9 @@ static void hisi_sas_dev_gone(struct domain_device *device)
+ 	struct hisi_sas_device *sas_dev = device->lldd_dev;
+ 	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
+ 	struct device *dev = &hisi_hba->pdev->dev;
+-	u64 dev_id = sas_dev->device_id;
++	int dev_id = sas_dev->device_id;
+ 
+-	dev_info(dev, "found dev[%lld:%x] is gone\n",
++	dev_info(dev, "found dev[%d:%x] is gone\n",
+ 		 sas_dev->device_id, sas_dev->dev_type);
+ 
+ 	hisi_sas_internal_task_abort(hisi_hba, device,
+@@ -1082,7 +1082,7 @@ static int hisi_sas_lu_reset(struct domain_device *device, u8 *lun)
+ 	}
+ out:
+ 	if (rc != TMF_RESP_FUNC_COMPLETE)
+-		dev_err(dev, "lu_reset: for device[%llx]:rc= %d\n",
++		dev_err(dev, "lu_reset: for device[%d]:rc= %d\n",
+ 			     sas_dev->device_id, rc);
+ 	return rc;
+ }
+@@ -1129,7 +1129,7 @@ static int hisi_sas_query_task(struct sas_task *task)
+ }
+ 
+ static int
+-hisi_sas_internal_abort_task_exec(struct hisi_hba *hisi_hba, u64 device_id,
++hisi_sas_internal_abort_task_exec(struct hisi_hba *hisi_hba, int device_id,
+ 				  struct sas_task *task, int abort_flag,
+ 				  int task_tag)
+ {
 -- 
 1.9.1
