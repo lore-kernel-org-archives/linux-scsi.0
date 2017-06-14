@@ -1,86 +1,155 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 08/15] qla2xxx: use shadow register for ISP27XX
-Date: Tue, 13 Jun 2017 20:47:23 -0700
-Message-ID: <20170614034730.15428-9-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 11/15] qla2xxx: Remove unused tgt_enable_64bit_addr flag
+Date: Tue, 13 Jun 2017 20:47:26 -0700
+Message-ID: <20170614034730.15428-12-himanshu.madhani@cavium.com>
 References: <20170614034730.15428-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0060.outbound.protection.outlook.com ([104.47.33.60]:56739
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754129AbdFNDsL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 13 Jun 2017 23:48:11 -0400
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <20170614034730.15428-1-himanshu.madhani@cavium.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: martin.petersen@oracle.com, nab@linux-iscsi.org
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-For ISP27XX, use shadow register to read FW provided
-REQQ's consumer index.  The shadow register is dma'ed
-by firmware.
+By default this flag is forced to true.  Remove this
+flag and unneccessary check for this flag.
 
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h    | 1 +
- drivers/scsi/qla2xxx/qla_init.c   | 1 +
- drivers/scsi/qla2xxx/qla_os.c     | 1 +
- drivers/scsi/qla2xxx/qla_target.c | 3 ++-
- 4 files changed, 5 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_target.c | 44 ++++++++++++---------------------------
+ drivers/scsi/qla2xxx/qla_target.h |  1 -
+ 2 files changed, 13 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index dfa001357110..b3ba32773db4 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -3266,6 +3266,7 @@ struct qla_qpair {
- 	uint32_t fw_started:1;
- 	uint32_t enable_class_2:1;
- 	uint32_t enable_explicit_conf:1;
-+	uint32_t use_shadow_reg:1;
- 
- 	uint16_t id;			/* qp number used with FW */
- 	uint16_t vp_idx;		/* vport ID */
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 360abede3f6b..f586f4f7dc57 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -7614,6 +7614,7 @@ struct qla_qpair *qla2xxx_create_qpair(struct scsi_qla_host *vha, int qos,
- 		qpair->vha = vha;
- 		qpair->qp_lock_ptr = &qpair->qp_lock;
- 		spin_lock_init(&qpair->qp_lock);
-+		qpair->use_shadow_reg = IS_SHADOW_REG_CAPABLE(ha) ? 1 : 0;
- 
- 		/* Assign available que pair id */
- 		mutex_lock(&ha->mq_lock);
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 44be2c8237fd..1d66954b7e5a 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -384,6 +384,7 @@ static int qla2x00_alloc_queues(struct qla_hw_data *ha, struct req_que *req,
- 	ha->base_qpair->rsp = rsp;
- 	ha->base_qpair->vha = vha;
- 	ha->base_qpair->qp_lock_ptr = &ha->hardware_lock;
-+	ha->base_qpair->use_shadow_reg = IS_SHADOW_REG_CAPABLE(ha) ? 1 : 0;
- 	/* init qpair to this cpu. Will adjust at run time. */
- 	ha->base_qpair->msix = &ha->msix_entries[QLA_MSIX_RSP_Q];
- 	INIT_LIST_HEAD(&ha->base_qpair->hints_list);
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 66bb4825339f..1d6cc24c0640 100644
+index 84be2b48246f..411c1799c6e3 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -2288,7 +2288,8 @@ static int qlt_check_reserve_free_req(struct qla_qpair *qpair,
- 	struct req_que *req = qpair->req;
+@@ -2420,12 +2420,10 @@ static int qlt_24xx_build_ctio_pkt(struct qla_qpair *qpair,
+  * ha->hardware_lock supposed to be held on entry. We have already made sure
+  * that there is sufficient amount of request entries to not drop it.
+  */
+-static void qlt_load_cont_data_segments(struct qla_tgt_prm *prm,
+-	struct scsi_qla_host *vha)
++static void qlt_load_cont_data_segments(struct qla_tgt_prm *prm)
+ {
+ 	int cnt;
+ 	uint32_t *dword_ptr;
+-	int enable_64bit_addressing = prm->tgt->tgt_enable_64bit_addr;
  
- 	if (req->cnt < (req_cnt + 2)) {
--		cnt = (uint16_t)RD_REG_DWORD(req->req_q_out);
-+		cnt = (uint16_t)(qpair->use_shadow_reg ? *req->out_ptr :
-+		    RD_REG_DWORD_RELAXED(req->req_q_out));
+ 	/* Build continuation packets */
+ 	while (prm->seg_cnt > 0) {
+@@ -2445,16 +2443,8 @@ static void qlt_load_cont_data_segments(struct qla_tgt_prm *prm,
+ 		cont_pkt64->entry_count = 1;
+ 		cont_pkt64->sys_define = 0;
  
- 		if  (req->ring_index < cnt)
- 			req->cnt = cnt - req->ring_index;
+-		if (enable_64bit_addressing) {
+-			cont_pkt64->entry_type = CONTINUE_A64_TYPE;
+-			dword_ptr =
+-			    (uint32_t *)&cont_pkt64->dseg_0_address;
+-		} else {
+-			cont_pkt64->entry_type = CONTINUE_TYPE;
+-			dword_ptr =
+-			    (uint32_t *)&((cont_entry_t *)
+-				cont_pkt64)->dseg_0_address;
+-		}
++		cont_pkt64->entry_type = CONTINUE_A64_TYPE;
++		dword_ptr = (uint32_t *)&cont_pkt64->dseg_0_address;
+ 
+ 		/* Load continuation entry data segments */
+ 		for (cnt = 0;
+@@ -2463,12 +2453,8 @@ static void qlt_load_cont_data_segments(struct qla_tgt_prm *prm,
+ 			*dword_ptr++ =
+ 			    cpu_to_le32(pci_dma_lo32
+ 				(sg_dma_address(prm->sg)));
+-			if (enable_64bit_addressing) {
+-				*dword_ptr++ =
+-				    cpu_to_le32(pci_dma_hi32
+-					(sg_dma_address
+-					(prm->sg)));
+-			}
++			*dword_ptr++ = cpu_to_le32(pci_dma_hi32
++			    (sg_dma_address(prm->sg)));
+ 			*dword_ptr++ = cpu_to_le32(sg_dma_len(prm->sg));
+ 
+ 			prm->sg = sg_next(prm->sg);
+@@ -2480,12 +2466,10 @@ static void qlt_load_cont_data_segments(struct qla_tgt_prm *prm,
+  * ha->hardware_lock supposed to be held on entry. We have already made sure
+  * that there is sufficient amount of request entries to not drop it.
+  */
+-static void qlt_load_data_segments(struct qla_tgt_prm *prm,
+-	struct scsi_qla_host *vha)
++static void qlt_load_data_segments(struct qla_tgt_prm *prm)
+ {
+ 	int cnt;
+ 	uint32_t *dword_ptr;
+-	int enable_64bit_addressing = prm->tgt->tgt_enable_64bit_addr;
+ 	struct ctio7_to_24xx *pkt24 = (struct ctio7_to_24xx *)prm->pkt;
+ 
+ 	pkt24->u.status0.transfer_length = cpu_to_le32(prm->cmd->bufflen);
+@@ -2512,17 +2496,16 @@ static void qlt_load_data_segments(struct qla_tgt_prm *prm,
+ 	    cnt++, prm->seg_cnt--) {
+ 		*dword_ptr++ =
+ 		    cpu_to_le32(pci_dma_lo32(sg_dma_address(prm->sg)));
+-		if (enable_64bit_addressing) {
+-			*dword_ptr++ =
+-			    cpu_to_le32(pci_dma_hi32(
+-				sg_dma_address(prm->sg)));
+-		}
++
++		*dword_ptr++ = cpu_to_le32(pci_dma_hi32(
++			sg_dma_address(prm->sg)));
++
+ 		*dword_ptr++ = cpu_to_le32(sg_dma_len(prm->sg));
+ 
+ 		prm->sg = sg_next(prm->sg);
+ 	}
+ 
+-	qlt_load_cont_data_segments(prm, vha);
++	qlt_load_cont_data_segments(prm);
+ }
+ 
+ static inline int qlt_has_data(struct qla_tgt_cmd *cmd)
+@@ -3136,7 +3119,7 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
+ 			CTIO7_FLAGS_STATUS_MODE_0);
+ 
+ 		if (cmd->se_cmd.prot_op == TARGET_PROT_NORMAL)
+-			qlt_load_data_segments(&prm, vha);
++			qlt_load_data_segments(&prm);
+ 
+ 		if (prm.add_status_pkt == 0) {
+ 			if (xmit_type & QLA_TGT_XMIT_STATUS) {
+@@ -3272,7 +3255,7 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
+ 	    CTIO7_FLAGS_STATUS_MODE_0);
+ 
+ 	if (cmd->se_cmd.prot_op == TARGET_PROT_NORMAL)
+-		qlt_load_data_segments(&prm, vha);
++		qlt_load_data_segments(&prm);
+ 
+ 	cmd->state = QLA_TGT_STATE_NEED_DATA;
+ 	cmd->cmd_sent_to_fw = 1;
+@@ -6185,7 +6168,6 @@ int qlt_add_target(struct qla_hw_data *ha, struct scsi_qla_host *base_vha)
+ 	ql_dbg(ql_dbg_tgt, base_vha, 0xe067,
+ 		"qla_target(%d): using 64 Bit PCI addressing",
+ 		base_vha->vp_idx);
+-	tgt->tgt_enable_64bit_addr = 1;
+ 	/* 3 is reserved */
+ 	tgt->sg_tablesize = QLA_TGT_MAX_SG_24XX(base_vha->req->length - 3);
+ 	tgt->datasegs_per_cmd = QLA_TGT_DATASEGS_PER_CMD_24XX;
+diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
+index bb8f73a86b2b..902685f85506 100644
+--- a/drivers/scsi/qla2xxx/qla_target.h
++++ b/drivers/scsi/qla2xxx/qla_target.h
+@@ -809,7 +809,6 @@ struct qla_tgt {
+ 	int datasegs_per_cmd, datasegs_per_cont, sg_tablesize;
+ 
+ 	/* Target's flags, serialized by pha->hardware_lock */
+-	unsigned int tgt_enable_64bit_addr:1; /* 64-bits PCI addr enabled */
+ 	unsigned int link_reinit_iocb_pending:1;
+ 
+ 	/*
 -- 
 2.12.0
