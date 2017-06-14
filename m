@@ -1,59 +1,47 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] scsi: sas: scsi_queue_work can fail, so make callers
- aware
-Date: Wed, 14 Jun 2017 15:05:10 +0200
-Message-ID: <70f96f2d-e47f-a187-36ca-68127290897b@suse.de>
-References: <20170614115243.17776-1-jthumshirn@suse.de>
- <1d42fe4e-f6fb-17f5-946f-a44637000372@huawei.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH v2 1/2] libsas: Don't process sas events in static works
+Date: Wed, 14 Jun 2017 14:08:16 +0100
+Message-ID: <00f4b3f1-ada0-d07d-2640-d902a437b24e@huawei.com>
+References: <1497425597-18799-1-git-send-email-wangyijing@huawei.com>
+ <1497425597-18799-2-git-send-email-wangyijing@huawei.com>
+ <692abe7a-149f-c1bf-5f28-3e36cad81b5a@suse.de> <5940FC1C.5050000@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1d42fe4e-f6fb-17f5-946f-a44637000372@huawei.com>
-Content-Language: en-US
+In-Reply-To: <5940FC1C.5050000@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, wangyijing@huawei.com, Linuxarm <linuxarm@huawei.com>
+To: wangyijing <wangyijing@huawei.com>, Johannes Thumshirn <jthumshirn@suse.de>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: chenqilin2@huawei.com, hare@suse.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chenxiang66@hisilicon.com, huangdaode@hisilicon.com, wangkefeng.wang@huawei.com, zhaohongjiang@huawei.com, dingtianhong@huawei.com, guohanjun@huawei.com, yanaijie@huawei.com, hch@lst.de, dan.j.williams@intel.com, emilne@redhat.com, thenzl@redhat.com, wefu@redhat.com, charles.chenxin@huawei.com, chenweilong@huawei.com, Yousong He <heyousong@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 06/14/2017 02:57 PM, John Garry wrote:
-> On 14/06/2017 12:52, Johannes Thumshirn wrote:
->> libsas uses scsi_queue_work() to queue it's internal event
->> notifications. scsi_queue_work() can return -EINVAL if the work queue
->> doesn't exist and it does call queue_work() which can return false if
->> the work is already queued.
->>
-> 
-> Hi Johannes,
-> 
-> When the queuing fails and we an report error, what is the caller, i.e.
-> the LLDD, supposed to do with this information?
-> 
-> I mean, the LLDD is just reporting an event, like a broadcast event, and
-> libsas could not handle it for some reason. The LLDD probably does not
-> know how to handle this, apart from printing an error or maybe even
-> disabling the originating PHY.
+On 14/06/2017 10:04, wangyijing wrote:
+>>>  static void notify_ha_event(struct sas_ha_struct *sas_ha, enum ha_event event)
+>>> >>  {
+>>> >> +	struct sas_ha_event *ev;
+>>> >> +
+>>> >>  	BUG_ON(event >= HA_NUM_EVENTS);
+>>> >>
+>>> >> -	sas_queue_event(event, &sas_ha->pending,
+>>> >> -			&sas_ha->ha_events[event].work, sas_ha);
+>>> >> +	ev = kzalloc(sizeof(*ev), GFP_ATOMIC);
+>>> >> +	if (!ev)
+>>> >> +		return;
+>> > GFP_ATOMIC allocations can fail and then no events will be queued *and* we
+>> > don't report the error back to the caller.
+>> >
+> Yes, it's really a problem, but I don't find a better solution, do you have some suggestion ?
+>
 
-This depends on the event and the LLDD I guess. If it's -EINVAL (a.k.a
-SCSI work queue not present) there's not much an LLDD can do about. If
-it's a plain false, we could for instance report that we re-queue an
-event or something similar.
+Dan raised an issue with this approach, regarding a malfunctioning PHY 
+which spews out events. I still don't think we're handling it safely. 
+Here's the suggestion:
+- each asd_sas_phy owns a finite-sized pool of events
+- when the event pool becomes exhausted, libsas stops queuing events 
+(obviously) and disables the PHY in the LLDD
+- upon attempting to re-enable the PHY from sysfs, libsas first checks 
+that the pool is still not exhausted
 
->> Make the SAS event code capable of returning errors up to the caller,
->> which is handy when changing to dynamically allocated work in libsas
->> as well, as discussed here: https://lkml.org/lkml/2017/6/14/121.
-> 
-> I will comment on this patchset separately.
+If you cannot find a good solution, then let us know and we can help.
 
-It's merrily a preparation patch for this libsas patchset and IFF we
-want to merge it that way.
-
-Should've made it clear in the log, sorry.
-
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+John
