@@ -1,103 +1,112 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v6 00/22] hisi_sas: hip08 support
-Date: Wed, 14 Jun 2017 23:33:10 +0800
-Message-ID: <1497454412-91194-1-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v6 05/22] scsi: hisi_sas: relocate sata_done_v2_hw()
+Date: Wed, 14 Jun 2017 23:33:15 +0800
+Message-ID: <1497454412-91194-6-git-send-email-john.garry@huawei.com>
+References: <1497454412-91194-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1497454412-91194-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, hch@infradead.org, John Garry <john.garry@huawei.com>
+Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, hch@infradead.org, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patchset adds support for the HiSilicon SAS controller
-in the hip08 chipset.
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-The key difference compared to earlier chipsets is that the
-controller is an integrated PCI endpoint in hip08.
-As such, the controller is a pci device (not a platform device,
-like v2 hw in hip07).
+Relocate get_ata_protocol() to a common location, as future hw
+versions will require it.
+Also rename with "hisi_sas_" prefix for consistency.
 
-The driver is refactored so it can support both platform and 
-pci device-based controllers.
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas.h       |  2 ++
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 15 +++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 18 ++----------------
+ 3 files changed, 19 insertions(+), 16 deletions(-)
 
-New hw layer file hisi_sas_v3_hw.c is added for v3 hw
-support, which also includes pci device proving and
-initialisation. 
-
-Common functionality is still in hisi_sas_main.c, along with
-platform device probing and initialization.
-
-As for the patches, (ignoring #1-3) the first few
-reorganise some functions from v2 hw.c into main.c, as they
-are required for v3 hw. Then support is added for pci
-device-based controller in subsequent patches.
-And then hip08 support is added in the final patches.
-
-Differences to v5 series:
-- Fixed erroneous spinlock flag reuse
-- Omit support ECC and AXI bus fatal error support
-
-Difference to v4 series:
--report SAS_DATA_UNDERRUN to libsas for underflow
-
-Differences to v3 series:
-- Addressed Christoph's comments, including:
- - remove msi disable in probe, and improve irq
-    registration and deregistration
- - remove hisi_sas_is_rw_cmd() to check underflow,
-    and use scsi_cmnd underflow field instead
-
-Differences to v2 series:
-- Add patch to change hisi_sas_device.device_id size
-- Add device dq pointer
-- Remove hisi_sas_v3_hw prototype in v3 driver
-- Add explicit comment in hisi_sas_get_fw_info()
-
-Differences to v1 series:
-- Addressed Arnd's comments, including:
- - read sas address from device node DSD under PCI host
-    bridge
- - add comment in fatal axi error patch commit log regarding
-    controller reset
- - eliminate hisi_sas_pci_init.c, and move functionality into
-    hisi_sas_v3_hw.c, eliminating one layer of indirection
-
-John Garry (5):
-  scsi: hisi_sas: define hisi_sas_device.device_id as int
-  scsi: hisi_sas: add pci_dev in hisi_hba struct
-  scsi: hisi_sas: create hisi_sas_get_fw_info()
-  scsi: hisi_sas: add skeleton v3 hw driver
-  scsi: hisi_sas: add initialisation for v3 pci-based controller
-
-Xiang Chen (17):
-  scsi: hisi_sas: fix timeout check in hisi_sas_internal_task_abort()
-  scsi: hisi_sas: optimise the usage of hisi_hba.lock
-  scsi: hisi_sas: relocate get_ata_protocol()
-  scsi: hisi_sas: relocate sata_done_v2_hw()
-  scsi: hisi_sas: relocate get_ncq_tag_v2_hw()
-  scsi: hisi_sas: add v3 hw init
-  scsi: hisi_sas: add v3 hw PHY init
-  scsi: hisi_sas: add phy up/down/bcast and channel ISR
-  scsi: hisi_sas: add v3 cq interrupt handler
-  scsi: hisi_sas: add v3 code to send SSP frame
-  scsi: hisi_sas: add v3 code to send SMP frame
-  scsi: hisi_sas: add v3 code to send ATA frame
-  scsi: hisi_sas: add v3 code for itct setup and free
-  scsi: hisi_sas: add v3 code to send internal abort command
-  scsi: hisi_sas: add get_wideport_bitmap_v3_hw()
-  scsi: hisi_sas: add v3 code to fill some more hw function pointers
-  scsi: hisi_sas: modify internal abort dev flow for v3 hw
-
- drivers/scsi/hisi_sas/Kconfig          |   10 +-
- drivers/scsi/hisi_sas/Makefile         |    1 +
- drivers/scsi/hisi_sas/hisi_sas.h       |   42 +-
- drivers/scsi/hisi_sas/hisi_sas_main.c  |  363 +++++--
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |   51 +-
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  179 +---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 1846 ++++++++++++++++++++++++++++++++
- 7 files changed, 2225 insertions(+), 267 deletions(-)
- create mode 100644 drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index a50c699..1dcdf66 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -364,6 +364,8 @@ struct hisi_sas_command_table_ssp {
+ 
+ extern u8 hisi_sas_get_ata_protocol(u8 cmd, int direction);
+ extern struct hisi_sas_port *to_hisi_sas_port(struct asd_sas_port *sas_port);
++extern void hisi_sas_sata_done(struct sas_task *task,
++			    struct hisi_sas_slot *slot);
+ extern int hisi_sas_probe(struct platform_device *pdev,
+ 			  const struct hisi_sas_hw *ops);
+ extern int hisi_sas_remove(struct platform_device *pdev);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 5b51d9a..ab133d4 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -82,6 +82,21 @@ u8 hisi_sas_get_ata_protocol(u8 cmd, int direction)
+ }
+ EXPORT_SYMBOL_GPL(hisi_sas_get_ata_protocol);
+ 
++void hisi_sas_sata_done(struct sas_task *task,
++			    struct hisi_sas_slot *slot)
++{
++	struct task_status_struct *ts = &task->task_status;
++	struct ata_task_resp *resp = (struct ata_task_resp *)ts->buf;
++	struct dev_to_host_fis *d2h = slot->status_buffer +
++				      sizeof(struct hisi_sas_err_record);
++
++	resp->frame_len = sizeof(struct dev_to_host_fis);
++	memcpy(&resp->ending_fis[0], d2h, sizeof(struct dev_to_host_fis));
++
++	ts->buf_valid_size = sizeof(*resp);
++}
++EXPORT_SYMBOL_GPL(hisi_sas_sata_done);
++
+ static struct hisi_hba *dev_to_hisi_hba(struct domain_device *device)
+ {
+ 	return device->port->ha->lldd_ha;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index d9314c4..fdd7019 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -1683,20 +1683,6 @@ static int prep_ssp_v2_hw(struct hisi_hba *hisi_hba,
+ 	return 0;
+ }
+ 
+-static void sata_done_v2_hw(struct hisi_hba *hisi_hba, struct sas_task *task,
+-			    struct hisi_sas_slot *slot)
+-{
+-	struct task_status_struct *ts = &task->task_status;
+-	struct ata_task_resp *resp = (struct ata_task_resp *)ts->buf;
+-	struct dev_to_host_fis *d2h = slot->status_buffer +
+-				      sizeof(struct hisi_sas_err_record);
+-
+-	resp->frame_len = sizeof(struct dev_to_host_fis);
+-	memcpy(&resp->ending_fis[0], d2h, sizeof(struct dev_to_host_fis));
+-
+-	ts->buf_valid_size = sizeof(*resp);
+-}
+-
+ #define TRANS_TX_ERR	0
+ #define TRANS_RX_ERR	1
+ #define DMA_TX_ERR		2
+@@ -2189,7 +2175,7 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
+ 			break;
+ 		}
+ 		}
+-		sata_done_v2_hw(hisi_hba, task, slot);
++		hisi_sas_sata_done(task, slot);
+ 	}
+ 		break;
+ 	default:
+@@ -2317,7 +2303,7 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
+ 	case SAS_PROTOCOL_SATA | SAS_PROTOCOL_STP:
+ 	{
+ 		ts->stat = SAM_STAT_GOOD;
+-		sata_done_v2_hw(hisi_hba, task, slot);
++		hisi_sas_sata_done(task, slot);
+ 		break;
+ 	}
+ 	default:
 -- 
 1.9.1
