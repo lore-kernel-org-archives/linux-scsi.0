@@ -1,8 +1,7 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 2/4] g_NCR5380: End PDMA transfer correctly on target
- disconnection
+Subject: [PATCH 4/4] g_NCR5380: Cleanup comments and whitespace
 Date: Thu, 15 Jun 2017 08:17:56 -0400 (EDT)
-Message-ID: <a54edeea6798ba482fec8201f9b7906940205437.1497528687.git.fthain@telegraphics.com.au>
+Message-ID: <54fac2a20d0e224f683b84f47b4165e7fbbff385.1497528687.git.fthain@telegraphics.com.au>
 References: <cover.1497528687.git.fthain@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1497528687.git.fthain@telegraphics.com.au>
@@ -11,122 +10,159 @@ To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <mart
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Ondrej Zary <linux@rainbow-software.org>
-
-When an IRQ arrives during PDMA transfer, pread() and pwrite() return
-without waiting for the 53C80 registers to be ready and this ends up
-messing up the chip state. This was observed with SONY CDU-55S which is
-slow enough to disconnect during 4096-byte reads.
-
-IRQ during PDMA is not an error so don't return -1. Instead, store the
-remaining byte count for use by NCR5380_dma_residual().
-
-[Modified to improve the BASR_END_DMA_TRANSFER error message rather
-than remove it -- F.T.]
-
-Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 ---
- drivers/scsi/g_NCR5380.c | 37 ++++++++++++++++++++++---------------
- 1 file changed, 22 insertions(+), 15 deletions(-)
+ drivers/scsi/g_NCR5380.c | 61 ++++++++++++++++++++++--------------------------
+ 1 file changed, 28 insertions(+), 33 deletions(-)
 
 diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-index 14ef4e8c4713..1e1cf7ca86fa 100644
+index 784913193ea5..e9a942d86865 100644
 --- a/drivers/scsi/g_NCR5380.c
 +++ b/drivers/scsi/g_NCR5380.c
-@@ -44,12 +44,13 @@
- 	int c400_ctl_status; \
- 	int c400_blk_cnt; \
- 	int c400_host_buf; \
--	int io_width
-+	int io_width; \
-+	int pdma_residual
- 
- #define NCR5380_dma_xfer_len            generic_NCR5380_dma_xfer_len
- #define NCR5380_dma_recv_setup          generic_NCR5380_pread
- #define NCR5380_dma_send_setup          generic_NCR5380_pwrite
--#define NCR5380_dma_residual            NCR5380_dma_residual_none
-+#define NCR5380_dma_residual            generic_NCR5380_dma_residual
- 
- #define NCR5380_intr                    generic_NCR5380_intr
- #define NCR5380_queue_command           generic_NCR5380_queue_command
-@@ -500,10 +501,8 @@ static inline int generic_NCR5380_pread(struct NCR5380_hostdata *hostdata,
- 	while (1) {
- 		if (NCR5380_read(hostdata->c400_blk_cnt) == 0)
- 			break;
--		if (NCR5380_read(hostdata->c400_ctl_status) & CSR_GATED_53C80_IRQ) {
--			printk(KERN_ERR "53C400r: Got 53C80_IRQ start=%d, blocks=%d\n", start, blocks);
--			return -1;
--		}
-+		if (NCR5380_read(hostdata->c400_ctl_status) & CSR_GATED_53C80_IRQ)
-+			goto out_wait;
- 		while (NCR5380_read(hostdata->c400_ctl_status) & CSR_HOST_BUF_NOT_RDY)
- 			; /* FIXME - no timeout */
- 
-@@ -542,13 +541,16 @@ static inline int generic_NCR5380_pread(struct NCR5380_hostdata *hostdata,
- 	if (!(NCR5380_read(hostdata->c400_ctl_status) & CSR_GATED_53C80_IRQ))
- 		printk("53C400r: no 53C80 gated irq after transfer");
- 
-+out_wait:
- 	/* wait for 53C80 registers to be available */
- 	while (!(NCR5380_read(hostdata->c400_ctl_status) & CSR_53C80_REG))
- 		;
- 
- 	if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_END_DMA_TRANSFER))
--		printk(KERN_ERR "53C400r: no end dma signal\n");
--		
-+		pr_err("%s: No end dma signal (%d/%d)\n", __func__, start, len);
-+
-+	hostdata->pdma_residual = len - start;
-+
- 	return 0;
- }
- 
-@@ -571,10 +573,8 @@ static inline int generic_NCR5380_pwrite(struct NCR5380_hostdata *hostdata,
- 	NCR5380_write(hostdata->c400_ctl_status, CSR_BASE);
- 	NCR5380_write(hostdata->c400_blk_cnt, blocks);
- 	while (1) {
--		if (NCR5380_read(hostdata->c400_ctl_status) & CSR_GATED_53C80_IRQ) {
--			printk(KERN_ERR "53C400w: Got 53C80_IRQ start=%d, blocks=%d\n", start, blocks);
--			return -1;
--		}
-+		if (NCR5380_read(hostdata->c400_ctl_status) & CSR_GATED_53C80_IRQ)
-+			goto out_wait;
- 
- 		if (NCR5380_read(hostdata->c400_blk_cnt) == 0)
- 			break;
-@@ -612,15 +612,17 @@ static inline int generic_NCR5380_pwrite(struct NCR5380_hostdata *hostdata,
- 		blocks--;
- 	}
- 
-+out_wait:
- 	/* wait for 53C80 registers to be available */
- 	while (!(NCR5380_read(hostdata->c400_ctl_status) & CSR_53C80_REG)) {
- 		udelay(4); /* DTC436 chip hangs without this */
- 		/* FIXME - no timeout */
- 	}
- 
--	if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_END_DMA_TRANSFER)) {
--		printk(KERN_ERR "53C400w: no end dma signal\n");
--	}
-+	if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_END_DMA_TRANSFER))
-+		pr_err("%s: No end dma signal (%d/%d)\n", __func__, start, len);
-+
-+	hostdata->pdma_residual = len - start;
- 
- 	while (!(NCR5380_read(TARGET_COMMAND_REG) & TCR_LAST_BYTE_SENT))
- 		; 	// TIMEOUT
-@@ -642,6 +644,11 @@ static int generic_NCR5380_dma_xfer_len(struct NCR5380_hostdata *hostdata,
- 	return min(transfersize, DMA_MAX_SIZE);
- }
- 
-+static int generic_NCR5380_dma_residual(struct NCR5380_hostdata *hostdata)
-+{
-+	return hostdata->pdma_residual;
-+}
-+
+@@ -1,17 +1,17 @@
  /*
-  *	Include the NCR5380 core code that we build our driver around	
+  * Generic Generic NCR5380 driver
+- *	
++ *
+  * Copyright 1993, Drew Eckhardt
+- *	Visionary Computing
+- *	(Unix and Linux consulting and custom programming)
+- *	drew@colorado.edu
+- *      +1 (303) 440-4894
++ * Visionary Computing
++ * (Unix and Linux consulting and custom programming)
++ * drew@colorado.edu
++ * +1 (303) 440-4894
+  *
+  * NCR53C400 extensions (c) 1994,1995,1996, Kevin Lentin
+- *    K.Lentin@cs.monash.edu.au
++ * K.Lentin@cs.monash.edu.au
+  *
+  * NCR53C400A extensions (c) 1996, Ingmar Baumgart
+- *    ingmar@gonzo.schwaben.de
++ * ingmar@gonzo.schwaben.de
+  *
+  * DTC3181E extensions (c) 1997, Ronald van Cuijlenborg
+  * ronald.van.cuijlenborg@tip.nl or nutty@dds.nl
+@@ -482,15 +482,14 @@ static void generic_NCR5380_release_resources(struct Scsi_Host *instance)
+ }
+ 
+ /**
+- *	generic_NCR5380_pread - pseudo DMA read
+- *	@hostdata: scsi host private data
+- *	@dst: buffer to read into
+- *	@len: buffer length
++ * generic_NCR5380_pread - pseudo DMA receive
++ * @hostdata: scsi host private data
++ * @dst: buffer to write into
++ * @len: transfer size
+  *
+- *	Perform a pseudo DMA mode read from an NCR53C400 or equivalent
+- *	controller
++ * Perform a pseudo DMA mode receive from a 53C400 or equivalent device.
   */
+- 
++
+ static inline int generic_NCR5380_pread(struct NCR5380_hostdata *hostdata,
+                                         unsigned char *dst, int len)
+ {
+@@ -509,10 +508,10 @@ static inline int generic_NCR5380_pread(struct NCR5380_hostdata *hostdata,
+ 
+ 		if (hostdata->io_port && hostdata->io_width == 2)
+ 			insw(hostdata->io_port + hostdata->c400_host_buf,
+-							dst + start, 64);
++			     dst + start, 64);
+ 		else if (hostdata->io_port)
+ 			insb(hostdata->io_port + hostdata->c400_host_buf,
+-							dst + start, 128);
++			     dst + start, 128);
+ 		else
+ 			memcpy_fromio(dst + start,
+ 				hostdata->io + NCR53C400_host_buffer, 128);
+@@ -556,13 +555,12 @@ static inline int generic_NCR5380_pread(struct NCR5380_hostdata *hostdata,
+ }
+ 
+ /**
+- *	generic_NCR5380_pwrite - pseudo DMA write
+- *	@hostdata: scsi host private data
+- *	@dst: buffer to read into
+- *	@len: buffer length
++ * generic_NCR5380_pwrite - pseudo DMA send
++ * @hostdata: scsi host private data
++ * @src: buffer to read from
++ * @len: transfer size
+  *
+- *	Perform a pseudo DMA mode read from an NCR53C400 or equivalent
+- *	controller
++ * Perform a pseudo DMA mode send to a 53C400 or equivalent device.
+  */
+ 
+ static inline int generic_NCR5380_pwrite(struct NCR5380_hostdata *hostdata,
+@@ -601,10 +599,10 @@ static inline int generic_NCR5380_pwrite(struct NCR5380_hostdata *hostdata,
+ 
+ 		if (hostdata->io_port && hostdata->io_width == 2)
+ 			outsw(hostdata->io_port + hostdata->c400_host_buf,
+-							src + start, 64);
++			      src + start, 64);
+ 		else if (hostdata->io_port)
+ 			outsb(hostdata->io_port + hostdata->c400_host_buf,
+-							src + start, 128);
++			      src + start, 128);
+ 		else
+ 			memcpy_toio(hostdata->io + NCR53C400_host_buffer,
+ 			            src + start, 128);
+@@ -650,10 +648,8 @@ static int generic_NCR5380_dma_residual(struct NCR5380_hostdata *hostdata)
+ 	return hostdata->pdma_residual;
+ }
+ 
+-/*
+- *	Include the NCR5380 core code that we build our driver around	
+- */
+- 
++/* Include the core driver code. */
++
+ #include "NCR5380.c"
+ 
+ static struct scsi_host_template driver_template = {
+@@ -673,11 +669,10 @@ static struct scsi_host_template driver_template = {
+ 	.max_sectors		= 128,
+ };
+ 
+-
+ static int generic_NCR5380_isa_match(struct device *pdev, unsigned int ndev)
+ {
+ 	int ret = generic_NCR5380_init_one(&driver_template, pdev, base[ndev],
+-					  irq[ndev], card[ndev]);
++	                                   irq[ndev], card[ndev]);
+ 	if (ret) {
+ 		if (base[ndev])
+ 			printk(KERN_WARNING "Card not found at address 0x%03x\n",
+@@ -689,7 +684,7 @@ static int generic_NCR5380_isa_match(struct device *pdev, unsigned int ndev)
+ }
+ 
+ static int generic_NCR5380_isa_remove(struct device *pdev,
+-				   unsigned int ndev)
++                                      unsigned int ndev)
+ {
+ 	generic_NCR5380_release_resources(dev_get_drvdata(pdev));
+ 	dev_set_drvdata(pdev, NULL);
+@@ -712,7 +707,7 @@ static struct pnp_device_id generic_NCR5380_pnp_ids[] = {
+ MODULE_DEVICE_TABLE(pnp, generic_NCR5380_pnp_ids);
+ 
+ static int generic_NCR5380_pnp_probe(struct pnp_dev *pdev,
+-			       const struct pnp_device_id *id)
++                                     const struct pnp_device_id *id)
+ {
+ 	int base, irq;
+ 
+@@ -723,7 +718,7 @@ static int generic_NCR5380_pnp_probe(struct pnp_dev *pdev,
+ 	irq = pnp_irq(pdev, 0);
+ 
+ 	return generic_NCR5380_init_one(&driver_template, &pdev->dev, base, irq,
+-				       id->driver_data);
++	                                id->driver_data);
+ }
+ 
+ static void generic_NCR5380_pnp_remove(struct pnp_dev *pdev)
 -- 
 2.13.0
