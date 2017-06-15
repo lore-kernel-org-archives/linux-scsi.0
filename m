@@ -1,54 +1,36 @@
-From: Sebastian Herbszt <herbszt@gmx.de>
-Subject: Re: [ANNOUNCE]: Broadcom (Emulex) FC Target driver - efct
-Date: Wed, 14 Jun 2017 22:02:56 +0200
-Message-ID: <20170614220256.00004dd7@gmx.de>
-References: <ced2ff0a-05ee-b85e-b41a-f912cab9e267@gmail.com>
-        <1488485325.5580.9.camel@haakon3.risingtidesystems.com>
-        <20170305173528.00006b41@gmx.de>
-        <CAL1RGDVBvgzaQTRfWS14=S1M1DuzKGPYzAPWWeQyAASDQ=05Rw@mail.gmail.com>
-        <55205e7e-e1c6-5f09-8dd3-338492728dfe@broadcom.com>
-        <9c8db0c0-01cf-9b52-d229-7706549c8a8a@suse.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: lixiubo@cmss.chinamobile.com
+Subject: [PATCH] tcmu: Fix module removal due to stuck unmap_thread thread again
+Date: Thu, 15 Jun 2017 15:05:31 +0800
+Message-ID: <1497510331-17918-1-git-send-email-lixiubo@cmss.chinamobile.com>
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <9c8db0c0-01cf-9b52-d229-7706549c8a8a@suse.com>
 Sender: target-devel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.com>
-Cc: James Smart <james.smart@broadcom.com>, Roland Dreier <roland@purestorage.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, jsmart2021@gmail.com, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Sebastian Herbszt <herbszt@gmx.de>
+To: nab@linux-iscsi.org, mchristi@redhat.com
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, Xiubo Li <lixiubo@cmss.chinamobile.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hannes Reinecke wrote:
-> On 06/13/2017 01:08 AM, James Smart wrote:
+From: Xiubo Li <lixiubo@cmss.chinamobile.com>
 
-[snip]
+Because the unmap code just after the schdule() returned may take
+a long time and if the kthread_stop() is fired just when in this
+routine, the module removal maybe stuck too.
 
-> > Questions:
-> > a) How best to deal with overlapping pci id's ?  E.g. if we do (1)
-> > and we have an initiator and target driver, there is a lot of
-> > adapters that are fully functional for target operation, but were
-> > sold as primarily an initiator adapter. How could we manage target
-> > mode enablement without code mod or hard pci id partitioning ?   I
-> > know individual pci unbind/bind could work, but its been frowned
-> > upon as a long term option. Same thing goes for module parameters
-> > to select which ports do what role. 
-> That indeed is a problem.
-> 
-> Ideally we should be able to set the required mode on a per-port base;
-> having it per PCI device might be too coarse. Unless you represent
-> each port as a PCI function; not sure if that's the case, though.
+Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
+---
+ drivers/target/target_core_user.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-It seems to be the case.
-At least a dual port FC HBA (SLI-3) has two PCI functions.
-
-> If we were to allow to set the mode on a per-port base we could easily
-> implement kernel parameters like fctarget=WWPN and/or
-> fcinitiator=WWPN; NVMe could be treated similarly.
-> And have a config option specifying if the default FC mode should be
-> initiator or target.
-
-The old lpfc+lpfc_scst combination and also qla2xxx+tcm_qla2xxx allow
-simultaneous initiator and target mode on the same port. I guess this
-won't be possible with a split driver.
-
-Sebastian
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index beb5f09..203bff1 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -1573,7 +1573,7 @@ static int unmap_thread_fn(void *data)
+ 	struct page *page;
+ 	int i;
+ 
+-	while (1) {
++	while (!kthread_should_stop()) {
+ 		DEFINE_WAIT(__wait);
+ 
+ 		prepare_to_wait(&unmap_wait, &__wait, TASK_INTERRUPTIBLE);
+-- 
+1.8.3.1
