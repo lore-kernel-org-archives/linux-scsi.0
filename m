@@ -1,43 +1,57 @@
-From: Manish Rangankar <manish.rangankar@cavium.com>
-Subject: [PATCH 2/2] qedi: Remove WARN_ON from clear task context.
-Date: Thu, 15 Jun 2017 00:10:40 -0700
-Message-ID: <20170615071040.18093-3-manish.rangankar@cavium.com>
-References: <20170615071040.18093-1-manish.rangankar@cavium.com>
+From: wangyijing <wangyijing@huawei.com>
+Subject: Re: [PATCH v2 1/2] libsas: Don't process sas events in static works
+Date: Thu, 15 Jun 2017 15:37:58 +0800
+Message-ID: <59423956.6070905@huawei.com>
+References: <1497425597-18799-1-git-send-email-wangyijing@huawei.com>
+ <1497425597-18799-2-git-send-email-wangyijing@huawei.com>
+ <692abe7a-149f-c1bf-5f28-3e36cad81b5a@suse.de> <5940FC1C.5050000@huawei.com>
+ <00f4b3f1-ada0-d07d-2640-d902a437b24e@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0055.outbound.protection.outlook.com ([104.47.41.55]:55164
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751761AbdFOHKx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 15 Jun 2017 03:10:53 -0400
-In-Reply-To: <20170615071040.18093-1-manish.rangankar@cavium.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <00f4b3f1-ada0-d07d-2640-d902a437b24e@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Garry <john.garry@huawei.com>, Johannes Thumshirn <jthumshirn@suse.de>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: chenqilin2@huawei.com, hare@suse.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chenxiang66@hisilicon.com, huangdaode@hisilicon.com, wangkefeng.wang@huawei.com, zhaohongjiang@huawei.com, dingtianhong@huawei.com, guohanjun@huawei.com, yanaijie@huawei.com, hch@lst.de, dan.j.williams@intel.com, emilne@redhat.com, thenzl@redhat.com, wefu@redhat.com, charles.chenxin@huawei.com, chenweilong@huawei.com, Yousong He <heyousong@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com
-Cc: linux-scsi@vger.kernel.org, QLogic-Storage-Upstream@cavium.com
 
-Signed-off-by: Manish Rangankar <manish.rangankar@cavium.com>
----
- drivers/scsi/qedi/qedi_main.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-index 09a2946..879d3b7 100644
---- a/drivers/scsi/qedi/qedi_main.c
-+++ b/drivers/scsi/qedi/qedi_main.c
-@@ -1499,11 +1499,9 @@ int qedi_get_task_idx(struct qedi_ctx *qedi)
- 
- void qedi_clear_task_idx(struct qedi_ctx *qedi, int idx)
- {
--	if (!test_and_clear_bit(idx, qedi->task_idx_map)) {
-+	if (!test_and_clear_bit(idx, qedi->task_idx_map))
- 		QEDI_ERR(&qedi->dbg_ctx,
- 			 "FW task context, already cleared, tid=0x%x\n", idx);
--		WARN_ON(1);
--	}
- }
- 
- void qedi_update_itt_map(struct qedi_ctx *qedi, u32 tid, u32 proto_itt,
--- 
-1.8.3.1
+
+在 2017/6/14 21:08, John Garry 写道:
+> On 14/06/2017 10:04, wangyijing wrote:
+>>>>  static void notify_ha_event(struct sas_ha_struct *sas_ha, enum ha_event event)
+>>>> >>  {
+>>>> >> +    struct sas_ha_event *ev;
+>>>> >> +
+>>>> >>      BUG_ON(event >= HA_NUM_EVENTS);
+>>>> >>
+>>>> >> -    sas_queue_event(event, &sas_ha->pending,
+>>>> >> -            &sas_ha->ha_events[event].work, sas_ha);
+>>>> >> +    ev = kzalloc(sizeof(*ev), GFP_ATOMIC);
+>>>> >> +    if (!ev)
+>>>> >> +        return;
+>>> > GFP_ATOMIC allocations can fail and then no events will be queued *and* we
+>>> > don't report the error back to the caller.
+>>> >
+>> Yes, it's really a problem, but I don't find a better solution, do you have some suggestion ?
+>>
+> 
+> Dan raised an issue with this approach, regarding a malfunctioning PHY which spews out events. I still don't think we're handling it safely. Here's the suggestion:
+> - each asd_sas_phy owns a finite-sized pool of events
+> - when the event pool becomes exhausted, libsas stops queuing events (obviously) and disables the PHY in the LLDD
+> - upon attempting to re-enable the PHY from sysfs, libsas first checks that the pool is still not exhausted
+> 
+> If you cannot find a good solution, then let us know and we can help.
+
+Hi John and Dan, what's event you found on malfunctioning PHY, if the event is PORTE_BROADCAST_RCVD, since
+every PORTE_BROADCAST_RCVD libsas always call sas_revalidate_domain(), what about keeping a broadcast waiting(not queued in workqueue)
+and discard others. If the event is other types, things may become knotty.
+
+
+> 
+> John
+> 
+> 
+> .
+> 
