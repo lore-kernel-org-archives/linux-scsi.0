@@ -1,36 +1,34 @@
-From: lixiubo@cmss.chinamobile.com
-Subject: [PATCH] tcmu: Fix module removal due to stuck unmap_thread thread again
-Date: Thu, 15 Jun 2017 15:05:31 +0800
-Message-ID: <1497510331-17918-1-git-send-email-lixiubo@cmss.chinamobile.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: nab@linux-iscsi.org, mchristi@redhat.com
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, Xiubo Li <lixiubo@cmss.chinamobile.com>
+From: Manish Rangankar <manish.rangankar@cavium.com>
+Subject: [PATCH 0/2] qedi: Remove unwanted warnings.
+Date: Thu, 15 Jun 2017 00:10:38 -0700
+Message-ID: <20170615071040.18093-1-manish.rangankar@cavium.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0048.outbound.protection.outlook.com ([104.47.36.48]:2337
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751829AbdFOHKo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 15 Jun 2017 03:10:44 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com
+Cc: linux-scsi@vger.kernel.org, QLogic-Storage-Upstream@cavium.com
 
-From: Xiubo Li <lixiubo@cmss.chinamobile.com>
+Martin,
 
-Because the unmap code just after the schdule() returned may take
-a long time and if the kthread_stop() is fired just when in this
-routine, the module removal maybe stuck too.
+Please consider below patches for next 'scsi-fixes' submission.
 
-Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
----
- drivers/target/target_core_user.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks,
+Manish
 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index beb5f09..203bff1 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -1573,7 +1573,7 @@ static int unmap_thread_fn(void *data)
- 	struct page *page;
- 	int i;
- 
--	while (1) {
-+	while (!kthread_should_stop()) {
- 		DEFINE_WAIT(__wait);
- 
- 		prepare_to_wait(&unmap_wait, &__wait, TASK_INTERRUPTIBLE);
+Manish Rangankar (2):
+  qedi: Remove WARN_ON for untracked cleanup.
+  qedi: Remove WARN_ON from clear task context.
+
+ drivers/scsi/qedi/qedi_fw.c   | 1 -
+ drivers/scsi/qedi/qedi_main.c | 4 +---
+ 2 files changed, 1 insertion(+), 4 deletions(-)
+
 -- 
 1.8.3.1
