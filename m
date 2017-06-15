@@ -1,42 +1,36 @@
-From: Minwoo Im <dn3108@gmail.com>
-Subject: [PATCH] scsi_proto.h: ATA_32 added for ata pass-thru(32).
-Date: Thu, 15 Jun 2017 20:29:24 +0900
-Message-ID: <1497526164-7432-1-git-send-email-dn3108@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:34021 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752381AbdFOL3c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Jun 2017 07:29:32 -0400
-Received: by mail-pf0-f196.google.com with SMTP id d5so1437483pfe.1
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Jun 2017 04:29:32 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: [PATCH 3/4] g_NCR5380: Limit sg_tablesize to avoid PDMA read overruns
+ on DTC436
+Date: Thu, 15 Jun 2017 08:17:56 -0400 (EDT)
+Message-ID: <9a3c7141589fc15bc8457523ba5912da2d26a93d.1497528687.git.fthain@telegraphics.com.au>
+References: <cover.1497528687.git.fthain@telegraphics.com.au>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1497528687.git.fthain@telegraphics.com.au>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ondrej Zary <linux@rainbow-software.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Minwoo Im <dn3108@gmail.com>
 
-SAT-4(SCSI/ATA Translation Standard) supports a ATA PASS-THROUGH(32)
-SCSI command. It uses 7Fh as a operation code which means
-variable-length CDB.
-It would be great if kernel supports an ata pass-thru(32) command.
-Prior to development of ata pass-through in libata level,
-the definition of it should be added first.
+Back-to-back DMA receive transfers can lose a byte due to a 5380
+flaw. This makes scatter-receive difficult or impossible on affected
+hardware, so limit the scatter/gather tablesize to 1.
 
-Signed-off-by: Minwoo Im <dn3108@gmail.com>
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 ---
- include/scsi/scsi_proto.h |    1 +
+ drivers/scsi/g_NCR5380.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
-index ce78ec8..1eb4efd 100644
---- a/include/scsi/scsi_proto.h
-+++ b/include/scsi/scsi_proto.h
-@@ -164,6 +164,7 @@
- #define WRITE_SAME_32	      0x0d
- 
- /* Values for T10/04-262r7 */
-+#define	ATA_32		      0x7F	/* 32-byte pass-thru */
- #define	ATA_16		      0x85	/* 16-byte pass-thru */
- #define	ATA_12		      0xa1	/* 12-byte pass-thru */
+diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
+index 1e1cf7ca86fa..784913193ea5 100644
+--- a/drivers/scsi/g_NCR5380.c
++++ b/drivers/scsi/g_NCR5380.c
+@@ -247,6 +247,7 @@ static int generic_NCR5380_init_one(struct scsi_host_template *tpnt,
+ 	case BOARD_DTC3181E:
+ 		ports = dtc_3181e_ports;
+ 		magic = ncr_53c400a_magic;
++		tpnt->sg_tablesize = 1;
+ 		break;
+ 	}
  
 -- 
-1.7.9.5
+2.13.0
