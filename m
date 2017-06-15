@@ -1,83 +1,42 @@
-From: wangyijing <wangyijing@huawei.com>
-Subject: Re: [PATCH v2 1/2] libsas: Don't process sas events in static works
-Date: Thu, 15 Jun 2017 16:21:53 +0800
-Message-ID: <594243A1.7050200@huawei.com>
-References: <1497425597-18799-1-git-send-email-wangyijing@huawei.com>
- <1497425597-18799-2-git-send-email-wangyijing@huawei.com>
- <692abe7a-149f-c1bf-5f28-3e36cad81b5a@suse.de> <5940FC1C.5050000@huawei.com>
- <00f4b3f1-ada0-d07d-2640-d902a437b24e@huawei.com>
- <59423956.6070905@huawei.com>
- <1f9d5190-97f2-f98e-c7c4-80e259346e91@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1f9d5190-97f2-f98e-c7c4-80e259346e91@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>, Johannes Thumshirn <jthumshirn@suse.de>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: chenqilin2@huawei.com, hare@suse.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chenxiang66@hisilicon.com, huangdaode@hisilicon.com, wangkefeng.wang@huawei.com, zhaohongjiang@huawei.com, dingtianhong@huawei.com, guohanjun@huawei.com, yanaijie@huawei.com, hch@lst.de, dan.j.williams@intel.com, emilne@redhat.com, thenzl@redhat.com, wefu@redhat.com, charles.chenxin@huawei.com, chenweilong@huawei.com, Yousong He <heyousong@huawei.com>
+From: Minwoo Im <dn3108@gmail.com>
+Subject: [PATCH] scsi_proto.h: ATA_32 added for ata pass-thru(32).
+Date: Thu, 15 Jun 2017 20:29:24 +0900
+Message-ID: <1497526164-7432-1-git-send-email-dn3108@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:34021 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752381AbdFOL3c (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Jun 2017 07:29:32 -0400
+Received: by mail-pf0-f196.google.com with SMTP id d5so1437483pfe.1
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Jun 2017 04:29:32 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Minwoo Im <dn3108@gmail.com>
 
+SAT-4(SCSI/ATA Translation Standard) supports a ATA PASS-THROUGH(32)
+SCSI command. It uses 7Fh as a operation code which means
+variable-length CDB.
+It would be great if kernel supports an ata pass-thru(32) command.
+Prior to development of ata pass-through in libata level,
+the definition of it should be added first.
 
+Signed-off-by: Minwoo Im <dn3108@gmail.com>
+---
+ include/scsi/scsi_proto.h |    1 +
+ 1 file changed, 1 insertion(+)
 
-在 2017/6/15 16:00, John Garry 写道:
-> On 15/06/2017 08:37, wangyijing wrote:
->>
->>
->> 在 2017/6/14 21:08, John Garry 写道:
->>> On 14/06/2017 10:04, wangyijing wrote:
->>>>>>  static void notify_ha_event(struct sas_ha_struct *sas_ha, enum ha_event event)
->>>>>>>>  {
->>>>>>>> +    struct sas_ha_event *ev;
->>>>>>>> +
->>>>>>>>      BUG_ON(event >= HA_NUM_EVENTS);
->>>>>>>>
->>>>>>>> -    sas_queue_event(event, &sas_ha->pending,
->>>>>>>> -            &sas_ha->ha_events[event].work, sas_ha);
->>>>>>>> +    ev = kzalloc(sizeof(*ev), GFP_ATOMIC);
->>>>>>>> +    if (!ev)
->>>>>>>> +        return;
->>>>>> GFP_ATOMIC allocations can fail and then no events will be queued *and* we
->>>>>> don't report the error back to the caller.
->>>>>>
->>>> Yes, it's really a problem, but I don't find a better solution, do you have some suggestion ?
->>>>
->>>
->>> Dan raised an issue with this approach, regarding a malfunctioning PHY which spews out events. I still don't think we're handling it safely. Here's the suggestion:
->>> - each asd_sas_phy owns a finite-sized pool of events
->>> - when the event pool becomes exhausted, libsas stops queuing events (obviously) and disables the PHY in the LLDD
->>> - upon attempting to re-enable the PHY from sysfs, libsas first checks that the pool is still not exhausted
->>>
->>> If you cannot find a good solution, then let us know and we can help.
->>
->> Hi John and Dan, what's event you found on malfunctioning PHY, if the event is PORTE_BROADCAST_RCVD, since
->> every PORTE_BROADCAST_RCVD libsas always call sas_revalidate_domain(), what about keeping a broadcast waiting(not queued in workqueue)
->> and discard others. If the event is other types, things may become knotty.
->>
-> 
-> As I mentioned in the v1 series discussion, I found a poorly connected expander PHY was spewing out PHY up and loss of signal events continuously. This is the sort of situation we should protect against. Current solution is ok, as it uses a static event per port/PHY/HA.
-> 
-> The point is that we cannot allow a PHY to continuously send events to libsas, which may lead to memory exhaustion.
-
-The current solution won't introduce memory exhaustion, but it's not ok, since the root of this issue is it may lost event which is normal.
-If we cannot identify the abnormal PHY, I think your mem pool idea is a candidate solution.
-
-> 
-> John
-> 
->>
->>>
->>> John
->>>
->>>
->>> .
->>>
->>
->>
->> .
->>
-> 
-> 
-> 
-> .
-> 
+diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
+index ce78ec8..1eb4efd 100644
+--- a/include/scsi/scsi_proto.h
++++ b/include/scsi/scsi_proto.h
+@@ -164,6 +164,7 @@
+ #define WRITE_SAME_32	      0x0d
+ 
+ /* Values for T10/04-262r7 */
++#define	ATA_32		      0x7F	/* 32-byte pass-thru */
+ #define	ATA_16		      0x85	/* 16-byte pass-thru */
+ #define	ATA_12		      0xa1	/* 12-byte pass-thru */
+ 
+-- 
+1.7.9.5
