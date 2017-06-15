@@ -1,64 +1,27 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 1/4] g_NCR5380: Fix PDMA transfer size
+Subject: [PATCH 0/4] g_NCR5380: PDMA fixes and cleanup
 Date: Thu, 15 Jun 2017 08:17:56 -0400 (EDT)
-Message-ID: <bc5ba922d74f8152be6b1e51f7734a5557a09f19.1497528687.git.fthain@telegraphics.com.au>
-References: <cover.1497528687.git.fthain@telegraphics.com.au>
+Message-ID: <cover.1497528687.git.fthain@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1497528687.git.fthain@telegraphics.com.au>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ondrej Zary <linux@rainbow-software.org>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Ondrej Zary <linux@rainbow-software.org>
+Ondrej, would you please test this patch series? One of your patches
+has been modified slightly and the two I wrote are untested.
 
-generic_NCR5380_dma_xfer_len() incorrectly uses cmd->transfersize
-which causes rescan-scsi-bus and CD-ROM access to hang the system.
-Use cmd->SCp.this_residual instead, like other NCR5380 drivers.
 
-Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
----
- drivers/scsi/g_NCR5380.c | 12 +++---------
- 1 file changed, 3 insertions(+), 9 deletions(-)
+Finn Thain (2):
+  g_NCR5380: Limit sg_tablesize to avoid PDMA read overruns on DTC436
+  g_NCR5380: Cleanup comments and whitespace
 
-diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-index 67c8dac321ad..14ef4e8c4713 100644
---- a/drivers/scsi/g_NCR5380.c
-+++ b/drivers/scsi/g_NCR5380.c
-@@ -76,6 +76,7 @@
- #define IRQ_AUTO 254
- 
- #define MAX_CARDS 8
-+#define DMA_MAX_SIZE 32768
- 
- /* old-style parameters for compatibility */
- static int ncr_irq = -1;
-@@ -629,23 +630,16 @@ static inline int generic_NCR5380_pwrite(struct NCR5380_hostdata *hostdata,
- static int generic_NCR5380_dma_xfer_len(struct NCR5380_hostdata *hostdata,
-                                         struct scsi_cmnd *cmd)
- {
--	int transfersize = cmd->transfersize;
-+	int transfersize = cmd->SCp.this_residual;
- 
- 	if (hostdata->flags & FLAG_NO_PSEUDO_DMA)
- 		return 0;
- 
--	/* Limit transfers to 32K, for xx400 & xx406
--	 * pseudoDMA that transfers in 128 bytes blocks.
--	 */
--	if (transfersize > 32 * 1024 && cmd->SCp.this_residual &&
--	    !(cmd->SCp.this_residual % transfersize))
--		transfersize = 32 * 1024;
--
- 	/* 53C400 datasheet: non-modulo-128-byte transfers should use PIO */
- 	if (transfersize % 128)
- 		transfersize = 0;
- 
--	return transfersize;
-+	return min(transfersize, DMA_MAX_SIZE);
- }
- 
- /*
+Ondrej Zary (2):
+  g_NCR5380: Fix PDMA transfer size
+  g_NCR5380: End PDMA transfer correctly on target disconnection
+
+ drivers/scsi/g_NCR5380.c | 111 +++++++++++++++++++++++------------------------
+ 1 file changed, 54 insertions(+), 57 deletions(-)
+
 -- 
 2.13.0
