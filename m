@@ -1,81 +1,78 @@
-From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
-Subject: Re: [PATCH v2 2/5] dt-bindings: scsi: ufs: add document for hi3660-ufs
-Date: Fri, 16 Jun 2017 23:51:29 +0200
-Message-ID: <CAK8P3a2aPorzpUzwL=dkUkYNCGkhQMDPOkKRW1-=Hf=yCdvTsQ@mail.gmail.com>
-References: <20170616065119.10704-1-butao@hisilicon.com> <20170616065119.10704-3-butao@hisilicon.com>
+From: Himanshu Madhani <himanshu.madhani@cavium.com>
+Subject: [PATCH 0/6] qla2xxx: Add NVMe FC Fabric support in driver
+Date: Fri, 16 Jun 2017 15:47:38 -0700
+Message-ID: <20170616224744.3681-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20170616065119.10704-3-butao-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bu Tao <butao-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>
-Cc: Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Wei Xu <xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>, Catalin Marinas <catalin.marinas-5wv7dgnIgG8@public.gmane.org>, Will Deacon <will.deacon-5wv7dgnIgG8@public.gmane.org>, vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Kevin Hilman <khilman-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Gregory CLEMENT <gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Masahiro Yamada <yamada.masahiro-uWyLwvC0a2jby3iVrkZq2A@public.gmane.org>, Riku Voipio <riku.voipio-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Thierry Reding <treding-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Krzysztof Kozlowski <krzk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Eric Anholt <eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ARM <linux-arm-kernel-IAPFreCvJWM@public.gmane.org>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn3nam01on0042.outbound.protection.outlook.com ([104.47.33.42]:41711
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750873AbdFPWrt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 16 Jun 2017 18:47:49 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: martin.petersen@oracle.com
+Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org, giridhar.malaval@cavium.com, darren.trapp@cavium.com
 
-On Fri, Jun 16, 2017 at 8:51 AM, Bu Tao <butao-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org> wrote:
-> add ufs node document for hi3660
->
-> Signed-off-by: Bu Tao <butao-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>
-> ---
->  .../devicetree/bindings/ufs/hi3660-ufs.txt         | 58 ++++++++++++++++++++++
->  1 file changed, 58 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/ufs/hi3660-ufs.txt
->
-> diff --git a/Documentation/devicetree/bindings/ufs/hi3660-ufs.txt b/Documentation/devicetree/bindings/ufs/hi3660-ufs.txt
-> new file mode 100644
-> index 000000000000..461afc8ef017
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ufs/hi3660-ufs.txt
-> @@ -0,0 +1,58 @@
-> +* Hisilicon Universal Flash Storage (UFS) Host Controller
-> +
-> +UFS nodes are defined to describe on-chip UFS hardware macro.
-> +Each UFS Host Controller should have its own node.
-> +
-> +Required properties:
-> +- compatible        : compatible list, contains one of the following -
-> +                       "hisilicon,hi3660-ufs" for hisi ufs host controller
-> +                        present on Hi3660 chipset.
-> +- reg               : should contain UFS register address space & UFS SYS CTRL register address,
-> +- interrupt-parent  : interrupt device
-> +- interrupts        : interrupt number
-> +- clocks               : List of phandle and clock specifier pairs
-> +- clock-names       : List of clock input name strings sorted in the same
-> +                     order as the clocks property. "clk_ref", "clk_phy" is optional
-> +- resets            : reset node register, one reset the clk and the other reset the controller
-> +- reset-names       : describe reset node register
-> +
-> +Optional properties for board device:
-> +- ufs-hi3660-use-rate-B                : specifies UFS rate-B
-> +- ufs-hi3660-broken-fastauto   : specifies no fastauto
-> +- ufs-hi3660-use-HS-GEAR3      : specifies UFS HS-GEAR3
-> +- ufs-hi3660-use-HS-GEAR2      : specifies UFS HS-GEAR2
-> +- ufs-hi3660-use-HS-GEAR1      : specifies UFS HS-GEAR1
-> +- ufs-hi3660-broken-clk-gate-bypass    : specifies no clk-gate
-> +- ufs-hi3660-use-one-line      : specifies UFS use one line work
-> +- reset-gpio                   : specifies to reset devices
+Hi Martin,
 
-Some of these sound rather generic and might apply to UFS implementations
-other than hi3660, so I'd suggest adding them to the base ufs binding with
-a generic name instead.
+This patch series adds NVMe FC fabric support for qla2xxx initiator mode driver.
 
-Any DT properties that might be useful across multiple implementations
-should be parsed in generic code that gets called by the individual drivers,
-and then the properties that are specific to the integration work done by
-hisilicon should be prefixed with "hisilicon,", but not normally with the
-SoC name: it is quite possible that another SoC will be derived from this
-chip and it should reuse the properties.
+This series depends on the target multiqueue series that was sent out on June 13,207. 
+(https://www.spinics.net/lists/linux-scsi/msg109827.html)
 
-(note: this is different from the value of the "compatible" property that
-is meant to be as specific as possible".
+There are couple of new files qla_nvme.c and qla_nvme.h created to add the changes needed
+for registration to NVMe FC transport template as well as error handling logic.
 
-Also, please clarify how your binding relates to the ufshcd binding
-in Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt: does
-hi3660 implement any registers that are shared with ufshcd, or does
-it use the same physical interface with a different register set?
+Patch 1 adds NVMe bits to various driver resources to help with NVMe remote port discovery
+and PRLI handling in the driver.
 
-       Arnd
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Patch 2 adds NVMe command handling in driver. 
+
+Patch 3 has bulk of NVMe changes which handles NVMe support based on module paramter which
+is used for firmware initialization and NVMe transport registration. All the logic to handle
+NVMe command and error handling is also included in qla_nvme.c file.
+
+Patch 4 and 5 are trivial changes for FDMI registration to send NVMe FC-4 type to switch
+management server.
+
+Please apply this series to for-next for inclusion in 4.13 merge window.
+
+Note: Patch 2 does not compile due to change which are part of patch 3. 
+      Please apply patch 1-6 to be able to get compilable driver. 
+
+Thanks,
+Himanshu 
+
+Duane Grigsby (5):
+  qla2xxx: Add FC-NVMe port discovery and PRLI handling
+  qla2xxx: Add FC-NVMe command handling
+  qla2xxx: Add FC-NVMe F/W initialization and transport registration
+  qla2xxx: Send FC4 type NVMe to the management server
+  qla2xxx: Use FC-NMVe FC4 type for FDMI registration
+
+Himanshu Madhani (1):
+  qla2xxx: Update Driver version to 10.00.00.00-k
+
+ drivers/scsi/qla2xxx/Makefile      |   2 +-
+ drivers/scsi/qla2xxx/qla_dbg.c     |   9 +-
+ drivers/scsi/qla2xxx/qla_def.h     |  52 ++-
+ drivers/scsi/qla2xxx/qla_fw.h      |  41 +-
+ drivers/scsi/qla2xxx/qla_gbl.h     |  34 +-
+ drivers/scsi/qla2xxx/qla_gs.c      | 134 ++++++-
+ drivers/scsi/qla2xxx/qla_init.c    | 187 ++++++++-
+ drivers/scsi/qla2xxx/qla_iocb.c    |  57 +++
+ drivers/scsi/qla2xxx/qla_isr.c     | 105 +++++
+ drivers/scsi/qla2xxx/qla_mbx.c     |  55 ++-
+ drivers/scsi/qla2xxx/qla_nvme.c    | 797 +++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_nvme.h    | 132 ++++++
+ drivers/scsi/qla2xxx/qla_os.c      |  60 ++-
+ drivers/scsi/qla2xxx/qla_target.c  |   4 +-
+ drivers/scsi/qla2xxx/qla_version.h |   6 +-
+ 15 files changed, 1628 insertions(+), 47 deletions(-)
+ create mode 100644 drivers/scsi/qla2xxx/qla_nvme.c
+ create mode 100644 drivers/scsi/qla2xxx/qla_nvme.h
+
+-- 
+2.12.0
