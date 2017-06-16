@@ -1,78 +1,83 @@
-From: Douglas Miller <dougmill@linux.vnet.ibm.com>
-Subject: Re: [RFC] enclosure: fix sysfs symlinks creation when using multipath
-Date: Fri, 16 Jun 2017 07:53:20 -0500
-Message-ID: <81c9d059-3f2c-4942-ff8d-657cb64bf792@linux.vnet.ibm.com>
-References: <1486476528-27580-2-git-send-email-mlombard@redhat.com>
- <12b5fa7f-3799-1223-db06-c233da3e7c33@linux.vnet.ibm.com>
- <f2ee7996-dd08-6716-f7fd-43ea94086876@redhat.com>
+From: Alice Ferrazzi <alicef@gentoo.org>
+Subject: [RFC] ubsan: signed integer overflow in scsi_partsize
+Date: Fri, 16 Jun 2017 22:29:32 +0900
+Message-ID: <20170616132932.GG20222@alitoo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:45528 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753480AbdFPMxa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 16 Jun 2017 08:53:30 -0400
-Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v5GCrT0k085368
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Jun 2017 08:53:29 -0400
-Received: from e38.co.us.ibm.com (e38.co.us.ibm.com [32.97.110.159])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2b4dgm5w0m-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Jun 2017 08:53:29 -0400
-Received: from localhost
-        by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <dougmill@linux.vnet.ibm.com>;
-        Fri, 16 Jun 2017 06:53:24 -0600
-In-Reply-To: <f2ee7996-dd08-6716-f7fd-43ea94086876@redhat.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="jt0yj30bxbg11sci"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Maurizio Lombardi <mlombard@redhat.com>, jejb@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org
 
-On 06/16/2017 07:48 AM, Maurizio Lombardi wrote:
->
-> Dne 16.6.2017 v 14:40 Douglas Miller napsal(a):
->> I'd like to add that we are seeing this problem with singlepath installations and need to get this fixed upstream as soon as possible. RHEL new product contains this fix and is working for us, but we need to be able to offer other distros as well. I am currently running this patch on a custom-built Ubuntu 16.04.2 kernel and it is fixing the problem there.
->>
->> What needs to be done to get this patch accepted?
->>
-> Note that James proposed a different patch to fix this bug.
->
-> diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
-> index 65fed71..ae89082 100644
-> --- a/drivers/misc/enclosure.c
-> +++ b/drivers/misc/enclosure.c
-> @@ -375,6 +375,7 @@ int enclosure_add_device(struct enclosure_device *edev, int component,
->   			 struct device *dev)
->   {
->   	struct enclosure_component *cdev;
-> +	int err;
->
->   	if (!edev || component >= edev->components)
->   		return -EINVAL;
-> @@ -384,12 +385,15 @@ int enclosure_add_device(struct enclosure_device *edev, int component,
->   	if (cdev->dev == dev)
->   		return -EEXIST;
->
-> -	if (cdev->dev)
-> +	if (cdev->dev) {
->   		enclosure_remove_links(cdev);
-> -
-> -	put_device(cdev->dev);
-> -	cdev->dev = get_device(dev);
-> -	return enclosure_add_links(cdev);
-> +		put_device(cdev->dev);
-> +		cdev->dev = NULL;
-> +	}
-> +	err = enclosure_add_links(cdev);
-> +	if (!err)
-> +		cdev->dev = get_device(dev);
-> +	return err;
->   }
->   EXPORT_SYMBOL_GPL(enclosure_add_device);
->
->
-I will test this out. Thanks.
+
+--jt0yj30bxbg11sci
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+A Gentoo user reported a USBAN signed integer overflow in scsicam.c
+Shall we change something?
+
+================================================================================
+kernel: UBSAN: Undefined behaviour in drivers/scsi/scsicam.c:173:29
+kernel: signed integer overflow:
+kernel: 62015235 * 63 cannot be represented in type 'int'
+kernel: CPU: 0 PID: 14131 Comm: fdisk Tainted: P           O
+4.9.25-gentoo #4
+...
+kernel: d6629cec d1f444f2 00000007 d6629d1c 0000003f d6629cfc d1fc8ffe
+d6629cfc
+kernel: d3037320 d6629d80 d1fc934b d28b15c0 d6629d20 0000002a d6629d48
+d3037320
+kernel: 0000002a 00003202 31303236 35333235 ecd1f900 ecd1f9a8 d6629d5c
+d189d121
+kernel: Call Trace:
+kernel: [<d1f444f2>] dump_stack+0x59/0x87
+kernel: [<d1fc8ffe>] ubsan_epilogue+0xe/0x40
+kernel: [<d1fc934b>] handle_overflow+0xbb/0xf0
+kernel: [<d189d121>] ? do_read_cache_page+0x71/0x570
+kernel: [<d19fd000>] ? blkdev_readpages+0x20/0x20
+kernel: [<d189d646>] ? read_cache_page+0x26/0x50
+kernel: [<d1fc93d2>] __ubsan_handle_mul_overflow+0x12/0x20
+kernel: [<d224bbf7>] scsi_partsize+0x217/0x2e0
+kernel: [<d224bd06>] scsicam_bios_param+0x46/0x380
+kernel: [<d2299604>] sd_getgeo+0x174/0x2d0
+kernel: [<d1f02c91>] blkdev_ioctl+0x251/0x12c0
+kernel: [<d19fd31c>] block_ioctl+0x4c/0xb0
+kernel: [<d19ab140>] do_vfs_ioctl+0xc0/0xdf0
+kernel: [<d19c7e13>] ? mntput+0x23/0x60
+kernel: [<d1987c99>] ? __fput+0x1e9/0x4e0
+kernel: [<d1987fd8>] ? ____fput+0x8/0x10
+kernel: [<d16d9520>] ? task_work_run+0x60/0xd0
+kernel: [<d19abe9e>] SyS_ioctl+0x2e/0x60
+kernel: [<d1602c0d>] do_fast_syscall_32+0x11d/0x550
+kernel: [<d19abe70>] ? do_vfs_ioctl+0xdf0/0xdf0
+kernel: [<d265940a>] sysenter_past_esp+0x47/0x75
+kernel:
+================================================================================
+
+Thanks,
+Alice
+
+--jt0yj30bxbg11sci
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEELk4IVkYcBYUTNvSWViGmsoY4eBoFAllD3S8ACgkQViGmsoY4
+eBphpBAApdHvrBg8ibwbLNX8NRO8D8Jxm7qB/DbJYEbxK7JLMMTT2cus9htvAcB8
+82hNP1UYE36Z58B2ZYFPng+LvJbmbL6KHOZJOSA2VKyZANXfk0D/F3OjJOEyxx+H
+sLZvne62UDBDKm+TE33IfqNMilyXLv5Xn/yH9psX8lKz6HFxpBI56ITeEzdSjQwB
+B+jmZT8Crt1Tk22nBjMtPZiQ/oDwY51iAi7qC6VulsAkMrZ/d6gyYM0eNez/Tnrx
+N8maQeOrT6B9H6CgzIcF5NVNsz0yrBhz3++OsLhRyfMuKIRCqc450Mr9s+Xu2Tqt
+8kR3HyaAjgyofKu10c7yYjMvex1lTNsrNCg+bR6tpMEUPp9JbcQ1yEOrbWby+6Hv
+6XNrPiMCsZwH8mRtBsAZF+54BpFz4SZK8bhuv587+gYEjcKVV/DtrN3UNB9ItDrZ
+FCIgdh7ZgxltjUs7EE0NH74vezxH5TlWTIebBXqh4O0IhoaqPNBWPRdcucYEl8CI
+4zSw8gkLDwG/2UVBqZdP7tOSiiIDYCfLpTrgTjpYy/+0KFSLY6OTZbv1+gPW/WaP
+LwzU3fws4cqiAIzpn4eHRmVvCnKnq3snu8+cIXssEHz4Pky5QhnaekNdStCU59Ar
+XZlS38v57v+cIhqQauFMjweytJ3bXiHqmo5KEJbEl3KB6OET7eo=
+=h2ZE
+-----END PGP SIGNATURE-----
+
+--jt0yj30bxbg11sci--
