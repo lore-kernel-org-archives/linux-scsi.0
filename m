@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 03/11] au1100fb: remove a bogus dma_free_nonconsistent call
-Date: Fri, 16 Jun 2017 09:17:08 +0200
-Message-ID: <20170616071716.17321-4-hch@lst.de>
+Subject: [PATCH 07/11] 53c700: switch to dma_alloc_attrs
+Date: Fri, 16 Jun 2017 09:17:12 +0200
+Message-ID: <20170616071716.17321-8-hch@lst.de>
 References: <20170616071716.17321-1-hch@lst.de>
 Return-path: <netdev-owner@vger.kernel.org>
 In-Reply-To: <20170616071716.17321-1-hch@lst.de>
@@ -10,29 +10,38 @@ To: linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, netdev@vger.kernel
 Cc: linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-au1100fb is using managed dma allocations, so it doesn't need to
-explicitly free the dma memory in the error path (and if it did
-it would have to use the managed version).
+Use dma_alloc_attrs directly instead of the dma_alloc_noncoherent wrapper.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/video/fbdev/au1100fb.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/scsi/53c700.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/video/fbdev/au1100fb.c b/drivers/video/fbdev/au1100fb.c
-index 35df2c1a8a63..8de42f617d16 100644
---- a/drivers/video/fbdev/au1100fb.c
-+++ b/drivers/video/fbdev/au1100fb.c
-@@ -532,10 +532,6 @@ static int au1100fb_drv_probe(struct platform_device *dev)
- 		clk_disable_unprepare(fbdev->lcdclk);
- 		clk_put(fbdev->lcdclk);
- 	}
--	if (fbdev->fb_mem) {
--		dma_free_noncoherent(&dev->dev, fbdev->fb_len, fbdev->fb_mem,
--				     fbdev->fb_phys);
--	}
- 	if (fbdev->info.cmap.len != 0) {
- 		fb_dealloc_cmap(&fbdev->info.cmap);
- 	}
+diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
+index 95e32a47face..4b3b08025ef6 100644
+--- a/drivers/scsi/53c700.c
++++ b/drivers/scsi/53c700.c
+@@ -296,8 +296,8 @@ NCR_700_detect(struct scsi_host_template *tpnt,
+ 	if(tpnt->sdev_attrs == NULL)
+ 		tpnt->sdev_attrs = NCR_700_dev_attrs;
+ 
+-	memory = dma_alloc_noncoherent(hostdata->dev, TOTAL_MEM_SIZE,
+-				       &pScript, GFP_KERNEL);
++	memory = dma_alloc_attrs(hostdata->dev, TOTAL_MEM_SIZE, &pScript,
++				 GFP_KERNEL, DMA_ATTR_NON_CONSISTENT);
+ 	if(memory == NULL) {
+ 		printk(KERN_ERR "53c700: Failed to allocate memory for driver, detaching\n");
+ 		return NULL;
+@@ -410,8 +410,8 @@ NCR_700_release(struct Scsi_Host *host)
+ 	struct NCR_700_Host_Parameters *hostdata = 
+ 		(struct NCR_700_Host_Parameters *)host->hostdata[0];
+ 
+-	dma_free_noncoherent(hostdata->dev, TOTAL_MEM_SIZE,
+-			       hostdata->script, hostdata->pScript);
++	dma_free_attrs(hostdata->dev, TOTAL_MEM_SIZE, hostdata->script,
++		       hostdata->pScript, DMA_ATTR_NON_CONSISTENT);
+ 	return 1;
+ }
+ 
 -- 
 2.11.0
