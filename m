@@ -1,50 +1,61 @@
-From: Bu Tao <butao-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>
-Subject: [PATCH v2 3/5] arm64: dts: Add ufs dts node
-Date: Fri, 16 Jun 2017 14:51:17 +0800
-Message-ID: <20170616065119.10704-4-butao@hisilicon.com>
+From: Bu Tao <butao@hisilicon.com>
+Subject: [PATCH v2 2/5] dt-bindings: scsi: ufs: add document for hi3660-ufs
+Date: Fri, 16 Jun 2017 14:51:16 +0800
+Message-ID: <20170616065119.10704-3-butao@hisilicon.com>
 References: <20170616065119.10704-1-butao@hisilicon.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20170616065119.10704-1-butao-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, catalin.marinas-5wv7dgnIgG8@public.gmane.org, will.deacon-5wv7dgnIgG8@public.gmane.org, vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, khilman-rdvid1DuHRBWk0Htik3J/w@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, yamada.masahiro-uWyLwvC0a2jby3iVrkZq2A@public.gmane.org, riku.voipio-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, treding-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, krzk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: guodong.xu-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, suzhuangluan-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, kongfei-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, butao-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170616065119.10704-1-butao@hisilicon.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com, catalin.marinas@arm.com, will.deacon@arm.com, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khilman@baylibre.com, arnd@arndb.de, gregory.clement@free-electrons.com, thomas.petazzoni@free-electrons.com, yamada.masahiro@socionext.com, riku.voipio@linaro.org, treding@nvidia.com, krzk@kernel.org, eric@anholt.net, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org
+Cc: guodong.xu@linaro.org, suzhuangluan@hisilicon.com, kongfei@hisilicon.com, butao@hisilicon.com
 List-Id: linux-scsi@vger.kernel.org
 
-arm64: dts: add ufs node for hi3660
+add ufs node document for hi3660
 
-Signed-off-by: Bu Tao <butao-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>
+Signed-off-by: Bu Tao <butao@hisilicon.com>
 ---
- arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts |  9 +++++++++
- arch/arm64/boot/dts/hisilicon/hi3660.dtsi         | 19 +++++++++++++++++++
- 2 files changed, 28 insertions(+)
+ .../devicetree/bindings/ufs/hi3660-ufs.txt         | 58 ++++++++++++++++++++++
+ 1 file changed, 58 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ufs/hi3660-ufs.txt
 
-diff --git a/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts b/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
-index 186251ffc6b2..5dbe642f3c66 100644
---- a/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
-+++ b/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
-@@ -32,3 +32,12 @@
- &uart5 {
- 	status = "okay";
- };
+diff --git a/Documentation/devicetree/bindings/ufs/hi3660-ufs.txt b/Documentation/devicetree/bindings/ufs/hi3660-ufs.txt
+new file mode 100644
+index 000000000000..461afc8ef017
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ufs/hi3660-ufs.txt
+@@ -0,0 +1,58 @@
++* Hisilicon Universal Flash Storage (UFS) Host Controller
 +
-+&ufs {
-+	ufs-hi3660-use-rate-B;
-+	ufs-hi3660-broken-fastauto;
-+	ufs-hi3660-use-HS-GEAR3;
-+	ufs-hi3660-broken-clk-gate-bypass;
-+	reset-gpio = <&gpio18 1 0>;
-+	status = "okay";
-+}
-diff --git a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-index 3983086bd67b..e688fdb0a939 100644
---- a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-+++ b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-@@ -141,6 +141,25 @@
- 		#size-cells = <2>;
- 		ranges;
- 
++UFS nodes are defined to describe on-chip UFS hardware macro.
++Each UFS Host Controller should have its own node.
++
++Required properties:
++- compatible        : compatible list, contains one of the following -
++			"hisilicon,hi3660-ufs" for hisi ufs host controller
++			 present on Hi3660 chipset.
++- reg               : should contain UFS register address space & UFS SYS CTRL register address,
++- interrupt-parent  : interrupt device
++- interrupts        : interrupt number
++- clocks	        : List of phandle and clock specifier pairs
++- clock-names       : List of clock input name strings sorted in the same
++		      order as the clocks property. "clk_ref", "clk_phy" is optional
++- resets            : reset node register, one reset the clk and the other reset the controller
++- reset-names       : describe reset node register
++
++Optional properties for board device:
++- ufs-hi3660-use-rate-B		: specifies UFS rate-B
++- ufs-hi3660-broken-fastauto	: specifies no fastauto
++- ufs-hi3660-use-HS-GEAR3	: specifies UFS HS-GEAR3
++- ufs-hi3660-use-HS-GEAR2	: specifies UFS HS-GEAR2
++- ufs-hi3660-use-HS-GEAR1	: specifies UFS HS-GEAR1
++- ufs-hi3660-broken-clk-gate-bypass	: specifies no clk-gate
++- ufs-hi3660-use-one-line	: specifies UFS use one line work
++- reset-gpio			: specifies to reset devices
++
++Example:
++
 +		ufs: ufs@ff3b0000 {
 +			compatible = "jedec,ufs-1.1", "hisilicon,hi3660-ufs";
 +			/* 0: HCI standard */
@@ -62,15 +73,16 @@ index 3983086bd67b..e688fdb0a939 100644
 +			resets = <&crg_rst 0x84 12>,
 +				<&crg_rst 0x84 7>;
 +			reset-names = "rst", "assert";
-+		};
++		}
 +
- 		fixed_uart5: fixed_19_2M {
- 			compatible = "fixed-clock";
- 			#clock-cells = <0>;
++		&ufs {
++		        ufs-hi3660-use-rate-B;
++		        ufs-hi3660-broken-fastauto;
++		        ufs-hi3660-use-HS-GEAR3;
++			ufs-hi3660-broken-clk-gate-bypass;
++			reset-gpio = <&gpio18 1 0>;
++			status = "okay";
++		}
++
 -- 
 2.11.GIT
-
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
