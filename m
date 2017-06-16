@@ -1,67 +1,76 @@
-From: Hannes Reinecke <hare@suse.com>
-Subject: Re: [ANNOUNCE]: Broadcom (Emulex) FC Target driver - efct
-Date: Fri, 16 Jun 2017 08:38:55 +0200
-Message-ID: <157527d8-c133-f2bc-4aab-34182f7e9374@suse.com>
-References: <ced2ff0a-05ee-b85e-b41a-f912cab9e267@gmail.com>
- <1488485325.5580.9.camel@haakon3.risingtidesystems.com>
- <20170305173528.00006b41@gmx.de>
- <CAL1RGDVBvgzaQTRfWS14=S1M1DuzKGPYzAPWWeQyAASDQ=05Rw@mail.gmail.com>
- <55205e7e-e1c6-5f09-8dd3-338492728dfe@broadcom.com>
- <9c8db0c0-01cf-9b52-d229-7706549c8a8a@suse.com>
- <20170614220256.00004dd7@gmx.de>
+From: Bu Tao <butao-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>
+Subject: [PATCH v2 3/5] arm64: dts: Add ufs dts node
+Date: Fri, 16 Jun 2017 14:51:17 +0800
+Message-ID: <20170616065119.10704-4-butao@hisilicon.com>
+References: <20170616065119.10704-1-butao@hisilicon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20170614220256.00004dd7@gmx.de>
-Content-Language: en-US
-Sender: target-devel-owner@vger.kernel.org
-To: Sebastian Herbszt <herbszt@gmx.de>
-Cc: James Smart <james.smart@broadcom.com>, Roland Dreier <roland@purestorage.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, jsmart2021@gmail.com, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20170616065119.10704-1-butao-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, catalin.marinas-5wv7dgnIgG8@public.gmane.org, will.deacon-5wv7dgnIgG8@public.gmane.org, vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, khilman-rdvid1DuHRBWk0Htik3J/w@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, yamada.masahiro-uWyLwvC0a2jby3iVrkZq2A@public.gmane.org, riku.voipio-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, treding-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, krzk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: guodong.xu-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, suzhuangluan-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, kongfei-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, butao-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 06/14/2017 10:02 PM, Sebastian Herbszt wrote:
-> Hannes Reinecke wrote:
->> On 06/13/2017 01:08 AM, James Smart wrote:
-> 
-> [snip]
-> 
->>> Questions:
->>> a) How best to deal with overlapping pci id's ?  E.g. if we do (1)
->>> and we have an initiator and target driver, there is a lot of
->>> adapters that are fully functional for target operation, but were
->>> sold as primarily an initiator adapter. How could we manage target
->>> mode enablement without code mod or hard pci id partitioning ?   I
->>> know individual pci unbind/bind could work, but its been frowned
->>> upon as a long term option. Same thing goes for module parameters
->>> to select which ports do what role. 
->> That indeed is a problem.
->>
->> Ideally we should be able to set the required mode on a per-port base;
->> having it per PCI device might be too coarse. Unless you represent
->> each port as a PCI function; not sure if that's the case, though.
-> 
-> It seems to be the case.
-> At least a dual port FC HBA (SLI-3) has two PCI functions.
-> 
->> If we were to allow to set the mode on a per-port base we could easily
->> implement kernel parameters like fctarget=WWPN and/or
->> fcinitiator=WWPN; NVMe could be treated similarly.
->> And have a config option specifying if the default FC mode should be
->> initiator or target.
-> 
-> The old lpfc+lpfc_scst combination and also qla2xxx+tcm_qla2xxx allow
-> simultaneous initiator and target mode on the same port. I guess this
-> won't be possible with a split driver.
-> 
-Which was kinda the point of this entire conversation ...
+arm64: dts: add ufs node for hi3660
 
-Cheers,
+Signed-off-by: Bu Tao <butao-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>
+---
+ arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts |  9 +++++++++
+ arch/arm64/boot/dts/hisilicon/hi3660.dtsi         | 19 +++++++++++++++++++
+ 2 files changed, 28 insertions(+)
 
-Hannes
+diff --git a/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts b/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
+index 186251ffc6b2..5dbe642f3c66 100644
+--- a/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
++++ b/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
+@@ -32,3 +32,12 @@
+ &uart5 {
+ 	status = "okay";
+ };
++
++&ufs {
++	ufs-hi3660-use-rate-B;
++	ufs-hi3660-broken-fastauto;
++	ufs-hi3660-use-HS-GEAR3;
++	ufs-hi3660-broken-clk-gate-bypass;
++	reset-gpio = <&gpio18 1 0>;
++	status = "okay";
++}
+diff --git a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
+index 3983086bd67b..e688fdb0a939 100644
+--- a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
++++ b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
+@@ -141,6 +141,25 @@
+ 		#size-cells = <2>;
+ 		ranges;
+ 
++		ufs: ufs@ff3b0000 {
++			compatible = "jedec,ufs-1.1", "hisilicon,hi3660-ufs";
++			/* 0: HCI standard */
++			/* 1: UFS SYS CTRL */
++			reg = <0x0 0xff3b0000 0x0 0x1000>,
++				<0x0 0xff3b1000 0x0 0x1000>;
++			interrupt-parent = <&gic>;
++			interrupts = <GIC_SPI 278 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&crg_ctrl HI3660_CLK_GATE_UFSIO_REF>,
++				<&crg_ctrl HI3660_CLK_GATE_UFSPHY_CFG>;
++			clock-names = "clk_ref", "clk_phy";
++			freq-table-hz = <0 0>, <0 0>;
++			/* offset: 0x84; bit: 12 */
++			/* offset: 0x84; bit: 7  */
++			resets = <&crg_rst 0x84 12>,
++				<&crg_rst 0x84 7>;
++			reset-names = "rst", "assert";
++		};
++
+ 		fixed_uart5: fixed_19_2M {
+ 			compatible = "fixed-clock";
+ 			#clock-cells = <0>;
 -- 
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.com			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+2.11.GIT
+
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
