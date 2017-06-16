@@ -1,18 +1,19 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 08/11] Fix crash doing IO with resets
-Date: Fri, 16 Jun 2017 10:02:06 +0200
-Message-ID: <9ef4c3d1-0b16-f3ed-d8b4-a1fff17705da@suse.de>
+Subject: Re: [PATCH 09/11] Fix crash in lpfc_sli_ringtxcmpl_put when nvmet
+ gets an abort request.
+Date: Fri, 16 Jun 2017 10:02:33 +0200
+Message-ID: <bca78487-f5a3-5626-87af-27da0c9ff157@suse.de>
 References: <20170616055651.9674-1-jsmart2021@gmail.com>
- <20170616055651.9674-9-jsmart2021@gmail.com>
+ <20170616055651.9674-10-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56589 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:56711 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752134AbdFPICI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 16 Jun 2017 04:02:08 -0400
-In-Reply-To: <20170616055651.9674-9-jsmart2021@gmail.com>
+        id S1752134AbdFPICg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 16 Jun 2017 04:02:36 -0400
+In-Reply-To: <20170616055651.9674-10-jsmart2021@gmail.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,68 +21,46 @@ To: James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
 Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
 On 06/16/2017 07:56 AM, James Smart wrote:
-> During every reset, IOCBs are allocated. So, at one point, number of
-> allocated IOCBs reaches maximum limit and lpfc_sli_next_iotag fails.
+> When running nvme detach-ns /dev/nvme0n1 -n 1 command,
+> the nvmet lpfc driver crashes with this stack dump:
 > 
-> Allocate IOCBs only during initialization. Reuse them after every reset
-> instead of allocating new set of IOCBs.
+> kernel BUG at /root/NVME/lpfc_8.4/lpfc_sli.c:1393!
+> invalid opcode: 0000 [#1] SMP
+> Workqueue: nvmet-fc-cpu0 nvmet_fc_do_work_on_cpu [nvmet_fc]
+>  lpfc_sli4_issue_wqe+0x357/0x440 [lpfc]
+>  lpfc_nvmet_xmt_fcp_abort+0x36b/0x5c0 [lpfc]
+>  nvmet_fc_abort_op+0x30/0x50 [nvmet_fc]
+>  nvmet_fc_do_work_on_cpu+0xd9/0x130 [nvmet_fc]
+>  process_one_work+0x14e/0x410
+>  worker_thread+0x116/0x490
+>  kthread+0xc7/0xe0
+>  ret_from_fork+0x3f/0x70
+> 
+> Crash is due to an uninitialized iocbq->vport pointer.
+> 
+> Explicitly set the iocbq->vport field to phba->pport in
+> lpfc_nvmet_sol_fcp_issue_abort as it does all abort iocbq
+> initialization in the routine.  Using phba->pport is ok because
+> target does not support NPIV instances.
 > 
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
 > ---
->  drivers/scsi/lpfc/lpfc_sli.c | 22 ++++++++--------------
->  1 file changed, 8 insertions(+), 14 deletions(-)
+>  drivers/scsi/lpfc/lpfc_nvmet.c | 1 +
+>  1 file changed, 1 insertion(+)
 > 
-> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-> index 8de70b9d79dd..e948ea05fd33 100644
-> --- a/drivers/scsi/lpfc/lpfc_sli.c
-> +++ b/drivers/scsi/lpfc/lpfc_sli.c
-> @@ -6927,18 +6927,6 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
->  		cnt = phba->cfg_iocb_cnt * 1024;
->  		/* We need 1 iocbq for every SGL, for IO processing */
->  		cnt += phba->sli4_hba.nvmet_xri_cnt;
-> -		/* Initialize and populate the iocb list per host */
-> -		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
-> -				"2821 initialize iocb list %d total %d\n",
-> -				phba->cfg_iocb_cnt, cnt);
-> -		rc = lpfc_init_iocb_list(phba, cnt);
-> -		if (rc) {
-> -			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-> -					"1413 Failed to init iocb list.\n");
-> -			goto out_destroy_queue;
-> -		}
-> -
-> -		lpfc_nvmet_create_targetport(phba);
->  	} else {
->  		/* update host scsi xri-sgl sizes and mappings */
->  		rc = lpfc_sli4_scsi_sgl_update(phba);
-> @@ -6959,18 +6947,24 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
->  		}
->  
->  		cnt = phba->cfg_iocb_cnt * 1024;
-> +	}
-> +
-> +	if (!phba->sli.iocbq_lookup) {
->  		/* Initialize and populate the iocb list per host */
->  		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
-> -				"2820 initialize iocb list %d total %d\n",
-> +				"2821 initialize iocb list %d total %d\n",
->  				phba->cfg_iocb_cnt, cnt);
->  		rc = lpfc_init_iocb_list(phba, cnt);
->  		if (rc) {
->  			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-> -					"6301 Failed to init iocb list.\n");
-> +					"1413 Failed to init iocb list.\n");
->  			goto out_destroy_queue;
->  		}
->  	}
->  
-> +	if (phba->nvmet_support)
-> +		lpfc_nvmet_create_targetport(phba);
-> +
->  	if (phba->nvmet_support && phba->cfg_nvmet_mrq) {
->  		/* Post initial buffers to all RQs created */
->  		for (i = 0; i < phba->cfg_nvmet_mrq; i++) {
+> diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+> index 5fb29735e236..7dc061a14f95 100644
+> --- a/drivers/scsi/lpfc/lpfc_nvmet.c
+> +++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+> @@ -2523,6 +2523,7 @@ lpfc_nvmet_sol_fcp_issue_abort(struct lpfc_hba *phba,
+>  	abts_wqeq->iocb_cmpl = 0;
+>  	abts_wqeq->iocb_flag |= LPFC_IO_NVME;
+>  	abts_wqeq->context2 = ctxp;
+> +	abts_wqeq->vport = phba->pport;
+>  	rc = lpfc_sli4_issue_wqe(phba, LPFC_FCP_RING, abts_wqeq);
+>  	spin_unlock_irqrestore(&phba->hbalock, flags);
+>  	if (rc == WQE_SUCCESS) {
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
