@@ -1,19 +1,18 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 09/11] Fix crash in lpfc_sli_ringtxcmpl_put when nvmet
- gets an abort request.
-Date: Fri, 16 Jun 2017 10:02:33 +0200
-Message-ID: <bca78487-f5a3-5626-87af-27da0c9ff157@suse.de>
+Subject: Re: [PATCH 10/11] Driver responds LS_RJT to Beacon Off ELS - Linux
+Date: Fri, 16 Jun 2017 10:03:06 +0200
+Message-ID: <d13fe1d0-d793-c5d2-0aba-918c30a3d2ee@suse.de>
 References: <20170616055651.9674-1-jsmart2021@gmail.com>
- <20170616055651.9674-10-jsmart2021@gmail.com>
+ <20170616055651.9674-11-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56711 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:56862 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752134AbdFPICg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 16 Jun 2017 04:02:36 -0400
-In-Reply-To: <20170616055651.9674-10-jsmart2021@gmail.com>
+        id S1752134AbdFPIDI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 16 Jun 2017 04:03:08 -0400
+In-Reply-To: <20170616055651.9674-11-jsmart2021@gmail.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -21,46 +20,57 @@ To: James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
 Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
 On 06/16/2017 07:56 AM, James Smart wrote:
-> When running nvme detach-ns /dev/nvme0n1 -n 1 command,
-> the nvmet lpfc driver crashes with this stack dump:
+> Beacon OFF from switch is rejected by driver.
 > 
-> kernel BUG at /root/NVME/lpfc_8.4/lpfc_sli.c:1393!
-> invalid opcode: 0000 [#1] SMP
-> Workqueue: nvmet-fc-cpu0 nvmet_fc_do_work_on_cpu [nvmet_fc]
->  lpfc_sli4_issue_wqe+0x357/0x440 [lpfc]
->  lpfc_nvmet_xmt_fcp_abort+0x36b/0x5c0 [lpfc]
->  nvmet_fc_abort_op+0x30/0x50 [nvmet_fc]
->  nvmet_fc_do_work_on_cpu+0xd9/0x130 [nvmet_fc]
->  process_one_work+0x14e/0x410
->  worker_thread+0x116/0x490
->  kthread+0xc7/0xe0
->  ret_from_fork+0x3f/0x70
+> Driver fails Beacon OFF if frequency is set to 0. As per fc-ls
+> spec, status, capability, frequency and duration fields are only
+> applicable for Beacon ON.
 > 
-> Crash is due to an uninitialized iocbq->vport pointer.
-> 
-> Explicitly set the iocbq->vport field to phba->pport in
-> lpfc_nvmet_sol_fcp_issue_abort as it does all abort iocbq
-> initialization in the routine.  Using phba->pport is ok because
-> target does not support NPIV instances.
+> Remove frequency and type checks. Reject Beacon ON if duration
+> is non zero.
 > 
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
 > ---
->  drivers/scsi/lpfc/lpfc_nvmet.c | 1 +
->  1 file changed, 1 insertion(+)
+>  drivers/scsi/lpfc/lpfc_els.c | 22 ++++------------------
+>  1 file changed, 4 insertions(+), 18 deletions(-)
 > 
-> diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-> index 5fb29735e236..7dc061a14f95 100644
-> --- a/drivers/scsi/lpfc/lpfc_nvmet.c
-> +++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-> @@ -2523,6 +2523,7 @@ lpfc_nvmet_sol_fcp_issue_abort(struct lpfc_hba *phba,
->  	abts_wqeq->iocb_cmpl = 0;
->  	abts_wqeq->iocb_flag |= LPFC_IO_NVME;
->  	abts_wqeq->context2 = ctxp;
-> +	abts_wqeq->vport = phba->pport;
->  	rc = lpfc_sli4_issue_wqe(phba, LPFC_FCP_RING, abts_wqeq);
->  	spin_unlock_irqrestore(&phba->hbalock, flags);
->  	if (rc == WQE_SUCCESS) {
+> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+> index 54de984d695f..6d1d6f691df4 100644
+> --- a/drivers/scsi/lpfc/lpfc_els.c
+> +++ b/drivers/scsi/lpfc/lpfc_els.c
+> @@ -5703,27 +5703,13 @@ lpfc_els_rcv_lcb(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
+>  		rjt_err = LSRJT_CMD_UNSUPPORTED;
+>  		goto rjt;
+>  	}
+> -	if (beacon->lcb_frequency == 0) {
+> +	if (beacon->lcb_sub_command != LPFC_LCB_ON &&
+> +	    beacon->lcb_sub_command != LPFC_LCB_OFF) {
+>  		rjt_err = LSRJT_CMD_UNSUPPORTED;
+>  		goto rjt;
+>  	}
+> -	if ((beacon->lcb_type != LPFC_LCB_GREEN) &&
+> -	    (beacon->lcb_type != LPFC_LCB_AMBER)) {
+> -		rjt_err = LSRJT_CMD_UNSUPPORTED;
+> -		goto rjt;
+> -	}
+> -	if ((beacon->lcb_sub_command != LPFC_LCB_ON) &&
+> -	    (beacon->lcb_sub_command != LPFC_LCB_OFF)) {
+> -		rjt_err = LSRJT_CMD_UNSUPPORTED;
+> -		goto rjt;
+> -	}
+> -	if ((beacon->lcb_sub_command == LPFC_LCB_ON) &&
+> -	    (beacon->lcb_type != LPFC_LCB_GREEN) &&
+> -	    (beacon->lcb_type != LPFC_LCB_AMBER)) {
+> -		rjt_err = LSRJT_CMD_UNSUPPORTED;
+> -		goto rjt;
+> -	}
+> -	if (be16_to_cpu(beacon->lcb_duration) != 0) {
+> +	if (beacon->lcb_sub_command == LPFC_LCB_ON &&
+> +	    be16_to_cpu(beacon->lcb_duration) != 0) {
+>  		rjt_err = LSRJT_CMD_UNSUPPORTED;
+>  		goto rjt;
+>  	}
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
