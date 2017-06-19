@@ -1,781 +1,194 @@
-From: Nilesh Javali <nilesh.javali@cavium.com>
-Subject: [PATCH 1/1] qedi: Add support for offload iSCSI Boot
-Date: Mon, 19 Jun 2017 06:44:29 -0700
-Message-ID: <20170619134429.17657-2-nilesh.javali@cavium.com>
-References: <20170619134429.17657-1-nilesh.javali@cavium.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Minwoo Im <dn3108@gmail.com>
+Subject: [PATCH] mpt3sas: Fix error "space prohibited before that ','"
+Date: Mon, 19 Jun 2017 23:00:53 +0900
+Message-ID: <1497880853-5393-1-git-send-email-dn3108@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0055.outbound.protection.outlook.com ([104.47.38.55]:10029
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750929AbdFSNoe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 19 Jun 2017 09:44:34 -0400
-In-Reply-To: <20170619134429.17657-1-nilesh.javali@cavium.com>
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:35110 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750733AbdFSOB1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Jun 2017 10:01:27 -0400
+Received: by mail-pg0-f65.google.com with SMTP id f127so16105457pgc.2
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Jun 2017 07:01:27 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com
-Cc: linux-scsi@vger.kernel.org, QLogic-Storage-Upstream@cavium.com
+To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, Minwoo Im <dn3108@gmail.com>
 
-This patch adds support for offload iSCSI boot (Boot from SAN
-over iSCSI offload).
+It will fix the following error from checkpatch.pl.
+ERROR: space prohibited before that ','
 
-The dependent qed patches for this support are,
-- qed: Support NVM-image reading API
-- qed: Share additional information with qedf
-
-Signed-off-by: Arun Easi <arun.easi@cavium.com>
-Signed-off-by: Andrew Vasquez <andrew.vasquez@cavium.com>
-Signed-off-by: Manish Rangankar <manish.rangankar@cavium.com>
-Signed-off-by: Nilesh Javali <nilesh.javali@cavium.com>
+Signed-off-by: Minwoo Im <dn3108@gmail.com>
 ---
- drivers/scsi/qedi/qedi.h               |  17 ++
- drivers/scsi/qedi/qedi_main.c          | 419 +++++++++++++++++++++++++++++++++
- drivers/scsi/qedi/qedi_nvm_iscsi_cfg.h | 210 +++++++++++++++++
- 3 files changed, 646 insertions(+)
- create mode 100644 drivers/scsi/qedi/qedi_nvm_iscsi_cfg.h
+ drivers/scsi/mpt3sas/mpt3sas_base.c         |   18 +++++++++---------
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c          |    2 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c        |    2 +-
+ drivers/scsi/mpt3sas/mpt3sas_transport.c    |    4 ++--
+ drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c |    6 +++---
+ 5 files changed, 16 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/qedi/qedi.h b/drivers/scsi/qedi/qedi.h
-index 32632c9..91d2f51 100644
---- a/drivers/scsi/qedi/qedi.h
-+++ b/drivers/scsi/qedi/qedi.h
-@@ -23,11 +23,17 @@
- #include <linux/qed/qed_iscsi_if.h>
- #include <linux/qed/qed_ll2_if.h>
- #include "qedi_version.h"
-+#include "qedi_nvm_iscsi_cfg.h"
- 
- #define QEDI_MODULE_NAME		"qedi"
- 
- struct qedi_endpoint;
- 
-+#ifndef GET_FIELD2
-+#define GET_FIELD2(value, name) \
-+	(((value) & (name ## _MASK)) >> (name ## _OFFSET))
-+#endif
-+
- /*
-  * PCI function probe defines
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 18039bb..45ef957 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -307,7 +307,7 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+  * Return nothing.
   */
-@@ -66,6 +72,11 @@
- #define QEDI_HW_DMA_BOUNDARY	0xfff
- #define QEDI_PATH_HANDLE	0xFE0000000UL
- 
-+enum qedi_nvm_tgts {
-+	QEDI_NVM_TGT_PRI,
-+	QEDI_NVM_TGT_SEC,
-+};
-+
- struct qedi_uio_ctrl {
- 	/* meta data */
- 	u32 uio_hsi_version;
-@@ -283,6 +294,8 @@ struct qedi_ctx {
- 	void *bdq_pbl_list;
- 	dma_addr_t bdq_pbl_list_dma;
- 	u8 bdq_pbl_list_num_entries;
-+	struct nvm_iscsi_cfg *iscsi_cfg;
-+	dma_addr_t nvm_buf_dma;
- 	void __iomem *bdq_primary_prod;
- 	void __iomem *bdq_secondary_prod;
- 	u16 bdq_prod_idx;
-@@ -337,6 +350,10 @@ struct qedi_ctx {
- 	bool use_fast_sge;
- 
- 	atomic_t num_offloads;
-+#define SYSFS_FLAG_FW_SEL_BOOT 2
-+#define IPV6_LEN	41
-+#define IPV4_LEN	17
-+	struct iscsi_boot_kset *boot_kset;
- };
- 
- struct qedi_work {
-diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-index 09a2946..f07ac1c 100644
---- a/drivers/scsi/qedi/qedi_main.c
-+++ b/drivers/scsi/qedi/qedi_main.c
-@@ -19,6 +19,7 @@
- #include <linux/mm.h>
- #include <linux/if_vlan.h>
- #include <linux/cpu.h>
-+#include <linux/iscsi_boot_sysfs.h>
- 
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_device.h>
-@@ -1143,6 +1144,30 @@ static int qedi_setup_int(struct qedi_ctx *qedi)
- 	return rc;
- }
- 
-+static void qedi_free_nvm_iscsi_cfg(struct qedi_ctx *qedi)
-+{
-+	if (qedi->iscsi_cfg)
-+		dma_free_coherent(&qedi->pdev->dev,
-+				  sizeof(struct nvm_iscsi_cfg),
-+				  qedi->iscsi_cfg, qedi->nvm_buf_dma);
-+}
-+
-+static int qedi_alloc_nvm_iscsi_cfg(struct qedi_ctx *qedi)
-+{
-+	qedi->iscsi_cfg = dma_zalloc_coherent(&qedi->pdev->dev,
-+					     sizeof(struct nvm_iscsi_cfg),
-+					     &qedi->nvm_buf_dma, GFP_KERNEL);
-+	if (!qedi->iscsi_cfg) {
-+		QEDI_ERR(&qedi->dbg_ctx, "Could not allocate NVM BUF.\n");
-+		return -ENOMEM;
-+	}
-+	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_INFO,
-+		  "NVM BUF addr=0x%p dma=0x%llx.\n", qedi->iscsi_cfg,
-+		  qedi->nvm_buf_dma);
-+
-+	return 0;
-+}
-+
- static void qedi_free_bdq(struct qedi_ctx *qedi)
+ void
+-mpt3sas_base_fault_info(struct MPT3SAS_ADAPTER *ioc , u16 fault_code)
++mpt3sas_base_fault_info(struct MPT3SAS_ADAPTER *ioc, u16 fault_code)
  {
- 	int i;
-@@ -1183,6 +1208,7 @@ static void qedi_free_global_queues(struct qedi_ctx *qedi)
- 		kfree(gl[i]);
- 	}
- 	qedi_free_bdq(qedi);
-+	qedi_free_nvm_iscsi_cfg(qedi);
- }
+ 	pr_err(MPT3SAS_FMT "fault_state(0x%04x)!\n",
+ 	    ioc->name, fault_code);
+@@ -334,7 +334,7 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
  
- static int qedi_alloc_bdq(struct qedi_ctx *qedi)
-@@ -1309,6 +1335,11 @@ static int qedi_alloc_global_queues(struct qedi_ctx *qedi)
- 	if (rc)
- 		goto mem_alloc_failure;
- 
-+	/* Allocate DMA coherent buffers for NVM_ISCSI_CFG */
-+	rc = qedi_alloc_nvm_iscsi_cfg(qedi);
-+	if (rc)
-+		goto mem_alloc_failure;
-+
- 	/* Allocate a CQ and an associated PBL for each MSI-X
- 	 * vector.
- 	 */
-@@ -1673,6 +1704,387 @@ void qedi_reset_host_mtu(struct qedi_ctx *qedi, u16 mtu)
- 	qedi_ops->ll2->start(qedi->cdev, &params);
- }
- 
-+/**
-+ * qedi_get_nvram_block: - Scan through the iSCSI NVRAM block (while accounting
-+ * for gaps) for the matching absolute-pf-id of the QEDI device.
-+ */
-+static struct nvm_iscsi_block *
-+qedi_get_nvram_block(struct qedi_ctx *qedi)
-+{
-+	int i;
-+	u8 pf;
-+	u32 flags;
-+	struct nvm_iscsi_block *block;
-+
-+	pf = qedi->dev_info.common.abs_pf_id;
-+	block = &qedi->iscsi_cfg->block[0];
-+	for (i = 0; i < NUM_OF_ISCSI_PF_SUPPORTED; i++, block++) {
-+		flags = ((block->id) & NVM_ISCSI_CFG_BLK_CTRL_FLAG_MASK) >>
-+			NVM_ISCSI_CFG_BLK_CTRL_FLAG_OFFSET;
-+		if (flags & (NVM_ISCSI_CFG_BLK_CTRL_FLAG_IS_NOT_EMPTY |
-+				NVM_ISCSI_CFG_BLK_CTRL_FLAG_PF_MAPPED) &&
-+			(pf == (block->id & NVM_ISCSI_CFG_BLK_MAPPED_PF_ID_MASK)
-+				>> NVM_ISCSI_CFG_BLK_MAPPED_PF_ID_OFFSET))
-+			return block;
-+	}
-+	return NULL;
-+}
-+
-+static ssize_t qedi_show_boot_eth_info(void *data, int type, char *buf)
-+{
-+	struct qedi_ctx *qedi = data;
-+	struct nvm_iscsi_initiator *initiator;
-+	char *str = buf;
-+	int rc = 1;
-+	u32 ipv6_en, dhcp_en, ip_len;
-+	struct nvm_iscsi_block *block;
-+	char *fmt, *ip, *sub, *gw;
-+
-+	block = qedi_get_nvram_block(qedi);
-+	if (!block)
-+		return 0;
-+
-+	initiator = &block->initiator;
-+	ipv6_en = block->generic.ctrl_flags &
-+		  NVM_ISCSI_CFG_GEN_IPV6_ENABLED;
-+	dhcp_en = block->generic.ctrl_flags &
-+		  NVM_ISCSI_CFG_GEN_DHCP_TCPIP_CONFIG_ENABLED;
-+	/* Static IP assignments. */
-+	fmt = ipv6_en ? "%pI6\n" : "%pI4\n";
-+	ip = ipv6_en ? initiator->ipv6.addr.byte : initiator->ipv4.addr.byte;
-+	ip_len = ipv6_en ? IPV6_LEN : IPV4_LEN;
-+	sub = ipv6_en ? initiator->ipv6.subnet_mask.byte :
-+	      initiator->ipv4.subnet_mask.byte;
-+	gw = ipv6_en ? initiator->ipv6.gateway.byte :
-+	     initiator->ipv4.gateway.byte;
-+	/* DHCP IP adjustments. */
-+	fmt = dhcp_en ? "%s\n" : fmt;
-+	if (dhcp_en) {
-+		ip = ipv6_en ? "0::0" : "0.0.0.0";
-+		sub = ip;
-+		gw = ip;
-+		ip_len = ipv6_en ? 5 : 8;
-+	}
-+
-+	switch (type) {
-+	case ISCSI_BOOT_ETH_IP_ADDR:
-+		rc = snprintf(str, ip_len, fmt, ip);
-+		break;
-+	case ISCSI_BOOT_ETH_SUBNET_MASK:
-+		rc = snprintf(str, ip_len, fmt, sub);
-+		break;
-+	case ISCSI_BOOT_ETH_GATEWAY:
-+		rc = snprintf(str, ip_len, fmt, gw);
-+		break;
-+	case ISCSI_BOOT_ETH_FLAGS:
-+		rc = snprintf(str, 3, "%hhd\n",
-+			      SYSFS_FLAG_FW_SEL_BOOT);
-+		break;
-+	case ISCSI_BOOT_ETH_INDEX:
-+		rc = snprintf(str, 3, "0\n");
-+		break;
-+	case ISCSI_BOOT_ETH_MAC:
-+		rc = sysfs_format_mac(str, qedi->mac, ETH_ALEN);
-+		break;
-+	case ISCSI_BOOT_ETH_VLAN:
-+		rc = snprintf(str, 12, "%d\n",
-+			      GET_FIELD2(initiator->generic_cont0,
-+					 NVM_ISCSI_CFG_INITIATOR_VLAN));
-+		break;
-+	case ISCSI_BOOT_ETH_ORIGIN:
-+		if (dhcp_en)
-+			rc = snprintf(str, 3, "3\n");
-+		break;
-+	default:
-+		rc = 0;
-+		break;
-+	}
-+
-+	return rc;
-+}
-+
-+static umode_t qedi_eth_get_attr_visibility(void *data, int type)
-+{
-+	int rc = 1;
-+
-+	switch (type) {
-+	case ISCSI_BOOT_ETH_FLAGS:
-+	case ISCSI_BOOT_ETH_MAC:
-+	case ISCSI_BOOT_ETH_INDEX:
-+	case ISCSI_BOOT_ETH_IP_ADDR:
-+	case ISCSI_BOOT_ETH_SUBNET_MASK:
-+	case ISCSI_BOOT_ETH_GATEWAY:
-+	case ISCSI_BOOT_ETH_ORIGIN:
-+	case ISCSI_BOOT_ETH_VLAN:
-+		rc = 0444;
-+		break;
-+	default:
-+		rc = 0;
-+		break;
-+	}
-+	return rc;
-+}
-+
-+static ssize_t qedi_show_boot_ini_info(void *data, int type, char *buf)
-+{
-+	struct qedi_ctx *qedi = data;
-+	struct nvm_iscsi_initiator *initiator;
-+	char *str = buf;
-+	int rc;
-+	struct nvm_iscsi_block *block;
-+
-+	block = qedi_get_nvram_block(qedi);
-+	if (!block)
-+		return 0;
-+
-+	initiator = &block->initiator;
-+
-+	switch (type) {
-+	case ISCSI_BOOT_INI_INITIATOR_NAME:
-+		rc = snprintf(str, NVM_ISCSI_CFG_ISCSI_NAME_MAX_LEN, "%s\n",
-+			      initiator->initiator_name.byte);
-+		break;
-+	default:
-+		rc = 0;
-+		break;
-+	}
-+	return rc;
-+}
-+
-+static umode_t qedi_ini_get_attr_visibility(void *data, int type)
-+{
-+	int rc;
-+
-+	switch (type) {
-+	case ISCSI_BOOT_INI_INITIATOR_NAME:
-+		rc = 0444;
-+		break;
-+	default:
-+		rc = 0;
-+		break;
-+	}
-+	return rc;
-+}
-+
-+static ssize_t
-+qedi_show_boot_tgt_info(struct qedi_ctx *qedi, int type,
-+			char *buf, enum qedi_nvm_tgts idx)
-+{
-+	char *str = buf;
-+	int rc = 1;
-+	u32 ctrl_flags, ipv6_en, chap_en, mchap_en, ip_len;
-+	struct nvm_iscsi_block *block;
-+	char *chap_name, *chap_secret;
-+	char *mchap_name, *mchap_secret;
-+
-+	block = qedi_get_nvram_block(qedi);
-+	if (!block)
-+		goto exit_show_tgt_info;
-+
-+	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_EVT,
-+		  "Port:%d, tgt_idx:%d\n",
-+		  GET_FIELD2(block->id, NVM_ISCSI_CFG_BLK_MAPPED_PF_ID), idx);
-+
-+	ctrl_flags = block->target[idx].ctrl_flags &
-+		     NVM_ISCSI_CFG_TARGET_ENABLED;
-+
-+	if (!ctrl_flags) {
-+		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_EVT,
-+			  "Target disabled\n");
-+		goto exit_show_tgt_info;
-+	}
-+
-+	ipv6_en = block->generic.ctrl_flags &
-+		  NVM_ISCSI_CFG_GEN_IPV6_ENABLED;
-+	ip_len = ipv6_en ? IPV6_LEN : IPV4_LEN;
-+	chap_en = block->generic.ctrl_flags &
-+		  NVM_ISCSI_CFG_GEN_CHAP_ENABLED;
-+	chap_name = chap_en ? block->initiator.chap_name.byte : NULL;
-+	chap_secret = chap_en ? block->initiator.chap_password.byte : NULL;
-+
-+	mchap_en = block->generic.ctrl_flags &
-+		  NVM_ISCSI_CFG_GEN_CHAP_MUTUAL_ENABLED;
-+	mchap_name = mchap_en ? block->target[idx].chap_name.byte : NULL;
-+	mchap_secret = mchap_en ? block->target[idx].chap_password.byte : NULL;
-+
-+	switch (type) {
-+	case ISCSI_BOOT_TGT_NAME:
-+		rc = snprintf(str, NVM_ISCSI_CFG_ISCSI_NAME_MAX_LEN, "%s\n",
-+			      block->target[idx].target_name.byte);
-+		break;
-+	case ISCSI_BOOT_TGT_IP_ADDR:
-+		if (ipv6_en)
-+			rc = snprintf(str, ip_len, "%pI6\n",
-+				      block->target[idx].ipv6_addr.byte);
-+		else
-+			rc = snprintf(str, ip_len, "%pI4\n",
-+				      block->target[idx].ipv4_addr.byte);
-+		break;
-+	case ISCSI_BOOT_TGT_PORT:
-+		rc = snprintf(str, 12, "%d\n",
-+			      GET_FIELD2(block->target[idx].generic_cont0,
-+					 NVM_ISCSI_CFG_TARGET_TCP_PORT));
-+		break;
-+	case ISCSI_BOOT_TGT_LUN:
-+		rc = snprintf(str, 22, "%.*d\n",
-+			      block->target[idx].lun.value[1],
-+			      block->target[idx].lun.value[0]);
-+		break;
-+	case ISCSI_BOOT_TGT_CHAP_NAME:
-+		rc = snprintf(str, NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN, "%s\n",
-+			      chap_name);
-+		break;
-+	case ISCSI_BOOT_TGT_CHAP_SECRET:
-+		rc = snprintf(str, NVM_ISCSI_CFG_CHAP_PWD_MAX_LEN, "%s\n",
-+			      chap_secret);
-+		break;
-+	case ISCSI_BOOT_TGT_REV_CHAP_NAME:
-+		rc = snprintf(str, NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN, "%s\n",
-+			      mchap_name);
-+		break;
-+	case ISCSI_BOOT_TGT_REV_CHAP_SECRET:
-+		rc = snprintf(str, NVM_ISCSI_CFG_CHAP_PWD_MAX_LEN, "%s\n",
-+			      mchap_secret);
-+		break;
-+	case ISCSI_BOOT_TGT_FLAGS:
-+		rc = snprintf(str, 3, "%hhd\n", SYSFS_FLAG_FW_SEL_BOOT);
-+		break;
-+	case ISCSI_BOOT_TGT_NIC_ASSOC:
-+		rc = snprintf(str, 3, "0\n");
-+		break;
-+	default:
-+		rc = 0;
-+		break;
-+	}
-+
-+exit_show_tgt_info:
-+	return rc;
-+}
-+
-+static ssize_t qedi_show_boot_tgt_pri_info(void *data, int type, char *buf)
-+{
-+	struct qedi_ctx *qedi = data;
-+
-+	return qedi_show_boot_tgt_info(qedi, type, buf, QEDI_NVM_TGT_PRI);
-+}
-+
-+static ssize_t qedi_show_boot_tgt_sec_info(void *data, int type, char *buf)
-+{
-+	struct qedi_ctx *qedi = data;
-+
-+	return qedi_show_boot_tgt_info(qedi, type, buf, QEDI_NVM_TGT_SEC);
-+}
-+
-+static umode_t qedi_tgt_get_attr_visibility(void *data, int type)
-+{
-+	int rc;
-+
-+	switch (type) {
-+	case ISCSI_BOOT_TGT_NAME:
-+	case ISCSI_BOOT_TGT_IP_ADDR:
-+	case ISCSI_BOOT_TGT_PORT:
-+	case ISCSI_BOOT_TGT_LUN:
-+	case ISCSI_BOOT_TGT_CHAP_NAME:
-+	case ISCSI_BOOT_TGT_CHAP_SECRET:
-+	case ISCSI_BOOT_TGT_REV_CHAP_NAME:
-+	case ISCSI_BOOT_TGT_REV_CHAP_SECRET:
-+	case ISCSI_BOOT_TGT_NIC_ASSOC:
-+	case ISCSI_BOOT_TGT_FLAGS:
-+		rc = 0444;
-+		break;
-+	default:
-+		rc = 0;
-+		break;
-+	}
-+	return rc;
-+}
-+
-+static void qedi_boot_release(void *data)
-+{
-+	struct qedi_ctx *qedi = data;
-+
-+	scsi_host_put(qedi->shost);
-+}
-+
-+static int qedi_get_boot_info(struct qedi_ctx *qedi)
-+{
-+	int ret = 1;
-+	u16 len;
-+
-+	len = sizeof(struct nvm_iscsi_cfg);
-+
-+	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_INFO,
-+		  "Get NVM iSCSI CFG image\n");
-+	ret = qedi_ops->common->nvm_get_image(qedi->cdev,
-+					      QED_NVM_IMAGE_ISCSI_CFG,
-+					      (char *)qedi->iscsi_cfg, len);
-+	if (ret)
-+		QEDI_ERR(&qedi->dbg_ctx,
-+			 "Could not get NVM image. ret = %d\n", ret);
-+
-+	return ret;
-+}
-+
-+static int qedi_setup_boot_info(struct qedi_ctx *qedi)
-+{
-+	struct iscsi_boot_kobj *boot_kobj;
-+
-+	if (qedi_get_boot_info(qedi))
-+		return -EPERM;
-+
-+	qedi->boot_kset = iscsi_boot_create_host_kset(qedi->shost->host_no);
-+	if (!qedi->boot_kset)
-+		goto kset_free;
-+
-+	if (!scsi_host_get(qedi->shost))
-+		goto kset_free;
-+
-+	boot_kobj = iscsi_boot_create_target(qedi->boot_kset, 0, qedi,
-+					     qedi_show_boot_tgt_pri_info,
-+					     qedi_tgt_get_attr_visibility,
-+					     qedi_boot_release);
-+	if (!boot_kobj)
-+		goto put_host;
-+
-+	if (!scsi_host_get(qedi->shost))
-+		goto kset_free;
-+
-+	boot_kobj = iscsi_boot_create_target(qedi->boot_kset, 1, qedi,
-+					     qedi_show_boot_tgt_sec_info,
-+					     qedi_tgt_get_attr_visibility,
-+					     qedi_boot_release);
-+	if (!boot_kobj)
-+		goto put_host;
-+
-+	if (!scsi_host_get(qedi->shost))
-+		goto kset_free;
-+
-+	boot_kobj = iscsi_boot_create_initiator(qedi->boot_kset, 0, qedi,
-+						qedi_show_boot_ini_info,
-+						qedi_ini_get_attr_visibility,
-+						qedi_boot_release);
-+	if (!boot_kobj)
-+		goto put_host;
-+
-+	if (!scsi_host_get(qedi->shost))
-+		goto kset_free;
-+
-+	boot_kobj = iscsi_boot_create_ethernet(qedi->boot_kset, 0, qedi,
-+					       qedi_show_boot_eth_info,
-+					       qedi_eth_get_attr_visibility,
-+					       qedi_boot_release);
-+	if (!boot_kobj)
-+		goto put_host;
-+
-+	return 0;
-+
-+put_host:
-+	scsi_host_put(qedi->shost);
-+kset_free:
-+	iscsi_boot_destroy_kset(qedi->boot_kset);
-+	return -ENOMEM;
-+}
-+
- static void __qedi_remove(struct pci_dev *pdev, int mode)
+ 	doorbell = readl(&ioc->chip->Doorbell);
+ 	if ((doorbell & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_FAULT)
+-		mpt3sas_base_fault_info(ioc , doorbell);
++		mpt3sas_base_fault_info(ioc, doorbell);
+ 	else {
+ 		writel(0xC0FFEE00, &ioc->chip->Doorbell);
+ 		pr_err(MPT3SAS_FMT "Firmware is halted due to command timeout\n",
+@@ -673,7 +673,7 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+  * Return nothing.
+  */
+ static void
+-_base_sas_log_info(struct MPT3SAS_ADAPTER *ioc , u32 log_info)
++_base_sas_log_info(struct MPT3SAS_ADAPTER *ioc, u32 log_info)
  {
- 	struct qedi_ctx *qedi = pci_get_drvdata(pdev);
-@@ -1726,6 +2138,9 @@ static void __qedi_remove(struct pci_dev *pdev, int mode)
- 			qedi->ll2_recv_thread = NULL;
- 		}
- 		qedi_ll2_free_skbs(qedi);
-+
-+		if (qedi->boot_kset)
-+			iscsi_boot_destroy_kset(qedi->boot_kset);
- 	}
- }
+ 	union loginfo_type {
+ 		u32	loginfo;
+@@ -749,7 +749,7 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
  
-@@ -1969,6 +2384,10 @@ static int __qedi_probe(struct pci_dev *pdev, int mode)
- 		/* F/w needs 1st task context memory entry for performance */
- 		set_bit(QEDI_RESERVE_TASK_ID, qedi->task_idx_map);
- 		atomic_set(&qedi->num_offloads, 0);
-+
-+		if (qedi_setup_boot_info(qedi))
-+			QEDI_ERR(&qedi->dbg_ctx,
-+				 "No iSCSI boot target configured\n");
+ 	if ((ioc_status & MPI2_IOCSTATUS_MASK) &&
+ 	    (ioc->logging_level & MPT_DEBUG_REPLY)) {
+-		_base_sas_ioc_info(ioc , mpi_reply,
++		_base_sas_ioc_info(ioc, mpi_reply,
+ 		   mpt3sas_base_get_msg_frame(ioc, smid));
  	}
  
- 	return 0;
-diff --git a/drivers/scsi/qedi/qedi_nvm_iscsi_cfg.h b/drivers/scsi/qedi/qedi_nvm_iscsi_cfg.h
-new file mode 100644
-index 0000000..df39b69
---- /dev/null
-+++ b/drivers/scsi/qedi/qedi_nvm_iscsi_cfg.h
-@@ -0,0 +1,210 @@
-+/*
-+ * QLogic iSCSI Offload Driver
-+ * Copyright (c) 2016 Cavium Inc.
-+ *
-+ * This software is available under the terms of the GNU General Public License
-+ * (GPL) Version 2, available from the file COPYING in the main directory of
-+ * this source tree.
-+ */
-+
-+#ifndef NVM_ISCSI_CFG_H
-+#define NVM_ISCSI_CFG_H
-+
-+#define NUM_OF_ISCSI_TARGET_PER_PF    4   /* Defined as per the
-+					   * ISCSI IBFT constraint
-+					   */
-+#define NUM_OF_ISCSI_PF_SUPPORTED     4   /* One PF per Port -
-+					   * assuming 4 port card
-+					   */
-+
-+#define NVM_ISCSI_CFG_DHCP_NAME_MAX_LEN  256
-+
-+union nvm_iscsi_dhcp_vendor_id {
-+	u32 value[NVM_ISCSI_CFG_DHCP_NAME_MAX_LEN / 4];
-+	u8  byte[NVM_ISCSI_CFG_DHCP_NAME_MAX_LEN];
-+};
-+
-+#define NVM_ISCSI_IPV4_ADDR_BYTE_LEN 4
-+union nvm_iscsi_ipv4_addr {
-+	u32 addr;
-+	u8  byte[NVM_ISCSI_IPV4_ADDR_BYTE_LEN];
-+};
-+
-+#define NVM_ISCSI_IPV6_ADDR_BYTE_LEN 16
-+union nvm_iscsi_ipv6_addr {
-+	u32 addr[4];
-+	u8  byte[NVM_ISCSI_IPV6_ADDR_BYTE_LEN];
-+};
-+
-+struct nvm_iscsi_initiator_ipv4 {
-+	union nvm_iscsi_ipv4_addr addr;				/* 0x0 */
-+	union nvm_iscsi_ipv4_addr subnet_mask;			/* 0x4 */
-+	union nvm_iscsi_ipv4_addr gateway;			/* 0x8 */
-+	union nvm_iscsi_ipv4_addr primary_dns;			/* 0xC */
-+	union nvm_iscsi_ipv4_addr secondary_dns;		/* 0x10 */
-+	union nvm_iscsi_ipv4_addr dhcp_addr;			/* 0x14 */
-+
-+	union nvm_iscsi_ipv4_addr isns_server;			/* 0x18 */
-+	union nvm_iscsi_ipv4_addr slp_server;			/* 0x1C */
-+	union nvm_iscsi_ipv4_addr primay_radius_server;		/* 0x20 */
-+	union nvm_iscsi_ipv4_addr secondary_radius_server;	/* 0x24 */
-+
-+	union nvm_iscsi_ipv4_addr rsvd[4];			/* 0x28 */
-+};
-+
-+struct nvm_iscsi_initiator_ipv6 {
-+	union nvm_iscsi_ipv6_addr addr;				/* 0x0 */
-+	union nvm_iscsi_ipv6_addr subnet_mask;			/* 0x10 */
-+	union nvm_iscsi_ipv6_addr gateway;			/* 0x20 */
-+	union nvm_iscsi_ipv6_addr primary_dns;			/* 0x30 */
-+	union nvm_iscsi_ipv6_addr secondary_dns;		/* 0x40 */
-+	union nvm_iscsi_ipv6_addr dhcp_addr;			/* 0x50 */
-+
-+	union nvm_iscsi_ipv6_addr isns_server;			/* 0x60 */
-+	union nvm_iscsi_ipv6_addr slp_server;			/* 0x70 */
-+	union nvm_iscsi_ipv6_addr primay_radius_server;		/* 0x80 */
-+	union nvm_iscsi_ipv6_addr secondary_radius_server;	/* 0x90 */
-+
-+	union nvm_iscsi_ipv6_addr rsvd[3];			/* 0xA0 */
-+
-+	u32   config;						/* 0xD0 */
-+#define NVM_ISCSI_CFG_INITIATOR_IPV6_SUBNET_MASK_PREFIX_MASK      0x000000FF
-+#define NVM_ISCSI_CFG_INITIATOR_IPV6_SUBNET_MASK_PREFIX_OFFSET    0
-+
-+	u32   rsvd_1[3];
-+};
-+
-+#define NVM_ISCSI_CFG_ISCSI_NAME_MAX_LEN  256
-+union nvm_iscsi_name {
-+	u32 value[NVM_ISCSI_CFG_ISCSI_NAME_MAX_LEN / 4];
-+	u8  byte[NVM_ISCSI_CFG_ISCSI_NAME_MAX_LEN];
-+};
-+
-+#define NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN  256
-+union nvm_iscsi_chap_name {
-+	u32 value[NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN / 4];
-+	u8  byte[NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN];
-+};
-+
-+#define NVM_ISCSI_CFG_CHAP_PWD_MAX_LEN  16 /* md5 need per RFC1996
-+					    * is 16 octets
-+					    */
-+union nvm_iscsi_chap_password {
-+	u32 value[NVM_ISCSI_CFG_CHAP_PWD_MAX_LEN / 4];
-+	u8 byte[NVM_ISCSI_CFG_CHAP_PWD_MAX_LEN];
-+};
-+
-+union nvm_iscsi_lun {
-+	u8  byte[8];
-+	u32 value[2];
-+};
-+
-+struct nvm_iscsi_generic {
-+	u32 ctrl_flags;						/* 0x0 */
-+#define NVM_ISCSI_CFG_GEN_CHAP_ENABLED                 BIT(0)
-+#define NVM_ISCSI_CFG_GEN_DHCP_TCPIP_CONFIG_ENABLED    BIT(1)
-+#define NVM_ISCSI_CFG_GEN_DHCP_ISCSI_CONFIG_ENABLED    BIT(2)
-+#define NVM_ISCSI_CFG_GEN_IPV6_ENABLED                 BIT(3)
-+#define NVM_ISCSI_CFG_GEN_IPV4_FALLBACK_ENABLED        BIT(4)
-+#define NVM_ISCSI_CFG_GEN_ISNS_WORLD_LOGIN             BIT(5)
-+#define NVM_ISCSI_CFG_GEN_ISNS_SELECTIVE_LOGIN         BIT(6)
-+#define NVM_ISCSI_CFG_GEN_ADDR_REDIRECT_ENABLED	       BIT(7)
-+#define NVM_ISCSI_CFG_GEN_CHAP_MUTUAL_ENABLED          BIT(8)
-+
-+	u32 timeout;						/* 0x4 */
-+#define NVM_ISCSI_CFG_GEN_DHCP_REQUEST_TIMEOUT_MASK       0x0000FFFF
-+#define NVM_ISCSI_CFG_GEN_DHCP_REQUEST_TIMEOUT_OFFSET     0
-+#define NVM_ISCSI_CFG_GEN_PORT_LOGIN_TIMEOUT_MASK         0xFFFF0000
-+#define NVM_ISCSI_CFG_GEN_PORT_LOGIN_TIMEOUT_OFFSET       16
-+
-+	union nvm_iscsi_dhcp_vendor_id  dhcp_vendor_id;		/* 0x8  */
-+	u32 rsvd[62];						/* 0x108 */
-+};
-+
-+struct nvm_iscsi_initiator {
-+	struct nvm_iscsi_initiator_ipv4 ipv4;			/* 0x0 */
-+	struct nvm_iscsi_initiator_ipv6 ipv6;			/* 0x38 */
-+
-+	union nvm_iscsi_name           initiator_name;		/* 0x118 */
-+	union nvm_iscsi_chap_name      chap_name;		/* 0x218 */
-+	union nvm_iscsi_chap_password  chap_password;		/* 0x318 */
-+
-+	u32 generic_cont0;					/* 0x398 */
-+#define NVM_ISCSI_CFG_INITIATOR_VLAN_MASK		0x0000FFFF
-+#define NVM_ISCSI_CFG_INITIATOR_VLAN_OFFSET		0
-+#define NVM_ISCSI_CFG_INITIATOR_IP_VERSION_MASK		0x00030000
-+#define NVM_ISCSI_CFG_INITIATOR_IP_VERSION_OFFSET	16
-+#define NVM_ISCSI_CFG_INITIATOR_IP_VERSION_4		1
-+#define NVM_ISCSI_CFG_INITIATOR_IP_VERSION_6		2
-+#define NVM_ISCSI_CFG_INITIATOR_IP_VERSION_4_AND_6	3
-+
-+	u32 ctrl_flags;
-+#define NVM_ISCSI_CFG_INITIATOR_IP_VERSION_PRIORITY_V6     BIT(0)
-+#define NVM_ISCSI_CFG_INITIATOR_VLAN_ENABLED               BIT(1)
-+
-+	u32 rsvd[116];						/* 0x32C */
-+};
-+
-+struct nvm_iscsi_target {
-+	u32 ctrl_flags;						/* 0x0 */
-+#define NVM_ISCSI_CFG_TARGET_ENABLED            BIT(0)
-+#define NVM_ISCSI_CFG_BOOT_TIME_LOGIN_STATUS    BIT(1)
-+
-+	u32 generic_cont0;					/* 0x4 */
-+#define NVM_ISCSI_CFG_TARGET_TCP_PORT_MASK      0x0000FFFF
-+#define NVM_ISCSI_CFG_TARGET_TCP_PORT_OFFSET    0
-+
-+	u32 ip_ver;
-+#define NVM_ISCSI_CFG_IPv4       4
-+#define NVM_ISCSI_CFG_IPv6       6
-+
-+	u32 rsvd_1[7];						/* 0x24 */
-+	union nvm_iscsi_ipv4_addr ipv4_addr;			/* 0x28 */
-+	union nvm_iscsi_ipv6_addr ipv6_addr;			/* 0x2C */
-+	union nvm_iscsi_lun lun;				/* 0x3C */
-+
-+	union nvm_iscsi_name           target_name;		/* 0x44 */
-+	union nvm_iscsi_chap_name      chap_name;		/* 0x144 */
-+	union nvm_iscsi_chap_password  chap_password;		/* 0x244 */
-+
-+	u32 rsvd_2[107];					/* 0x2C4 */
-+};
-+
-+struct nvm_iscsi_block {
-+	u32 id;							/* 0x0 */
-+#define NVM_ISCSI_CFG_BLK_MAPPED_PF_ID_MASK         0x0000000F
-+#define NVM_ISCSI_CFG_BLK_MAPPED_PF_ID_OFFSET       0
-+#define NVM_ISCSI_CFG_BLK_CTRL_FLAG_MASK            0x00000FF0
-+#define NVM_ISCSI_CFG_BLK_CTRL_FLAG_OFFSET          4
-+#define NVM_ISCSI_CFG_BLK_CTRL_FLAG_IS_NOT_EMPTY    BIT(0)
-+#define NVM_ISCSI_CFG_BLK_CTRL_FLAG_PF_MAPPED       BIT(1)
-+
-+	u32 rsvd_1[5];						/* 0x4 */
-+
-+	struct nvm_iscsi_generic     generic;			/* 0x18 */
-+	struct nvm_iscsi_initiator   initiator;			/* 0x218 */
-+	struct nvm_iscsi_target      target[NUM_OF_ISCSI_TARGET_PER_PF];
-+								/* 0x718 */
-+
-+	u32 rsvd_2[58];						/* 0x1718 */
-+	/* total size - 0x1800 - 6K block */
-+};
-+
-+struct nvm_iscsi_cfg {
-+	u32 id;							/* 0x0 */
-+#define NVM_ISCSI_CFG_BLK_VERSION_MINOR_MASK     0x000000FF
-+#define NVM_ISCSI_CFG_BLK_VERSION_MAJOR_MASK     0x0000FF00
-+#define NVM_ISCSI_CFG_BLK_SIGNATURE_MASK         0xFFFF0000
-+#define NVM_ISCSI_CFG_BLK_SIGNATURE              0x49430000 /* IC - Iscsi
-+							     * Config
-+							     */
-+
-+#define NVM_ISCSI_CFG_BLK_VERSION_MAJOR          0
-+#define NVM_ISCSI_CFG_BLK_VERSION_MINOR          10
-+#define NVM_ISCSI_CFG_BLK_VERSION ((NVM_ISCSI_CFG_BLK_VERSION_MAJOR << 8) | \
-+				   NVM_ISCSI_CFG_BLK_VERSION_MINOR)
-+
-+	struct nvm_iscsi_block	block[NUM_OF_ISCSI_PF_SUPPORTED]; /* 0x4 */
-+};
-+
-+#endif
+@@ -3586,7 +3586,7 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+ 	}
+ 	for (i = 0; i < ioc->chain_depth; i++) {
+ 		ioc->chain_lookup[i].chain_buffer = pci_pool_alloc(
+-		    ioc->chain_dma_pool , GFP_KERNEL,
++		    ioc->chain_dma_pool, GFP_KERNEL,
+ 		    &ioc->chain_lookup[i].chain_buffer_dma);
+ 		if (!ioc->chain_lookup[i].chain_buffer) {
+ 			ioc->chain_depth = i;
+@@ -3637,7 +3637,7 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+ 		    ioc->name);
+ 		goto out;
+ 	}
+-	ioc->sense = pci_pool_alloc(ioc->sense_dma_pool , GFP_KERNEL,
++	ioc->sense = pci_pool_alloc(ioc->sense_dma_pool, GFP_KERNEL,
+ 	    &ioc->sense_dma);
+ 	if (!ioc->sense) {
+ 		pr_err(MPT3SAS_FMT "sense pool: pci_pool_alloc failed\n",
+@@ -3661,7 +3661,7 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+ 		    ioc->name);
+ 		goto out;
+ 	}
+-	ioc->reply = pci_pool_alloc(ioc->reply_dma_pool , GFP_KERNEL,
++	ioc->reply = pci_pool_alloc(ioc->reply_dma_pool, GFP_KERNEL,
+ 	    &ioc->reply_dma);
+ 	if (!ioc->reply) {
+ 		pr_err(MPT3SAS_FMT "reply pool: pci_pool_alloc failed\n",
+@@ -3687,7 +3687,7 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+ 			ioc->name);
+ 		goto out;
+ 	}
+-	ioc->reply_free = pci_pool_alloc(ioc->reply_free_dma_pool , GFP_KERNEL,
++	ioc->reply_free = pci_pool_alloc(ioc->reply_free_dma_pool, GFP_KERNEL,
+ 	    &ioc->reply_free_dma);
+ 	if (!ioc->reply_free) {
+ 		pr_err(MPT3SAS_FMT "reply_free pool: pci_pool_alloc failed\n",
+@@ -3877,7 +3877,7 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+ 			doorbell = readl(&ioc->chip->Doorbell);
+ 			if ((doorbell & MPI2_IOC_STATE_MASK) ==
+ 			    MPI2_IOC_STATE_FAULT) {
+-				mpt3sas_base_fault_info(ioc , doorbell);
++				mpt3sas_base_fault_info(ioc, doorbell);
+ 				return -EFAULT;
+ 			}
+ 		} else if (int_status == 0xFFFFFFFF)
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index bdffb69..72af956 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -1074,7 +1074,7 @@ enum block_state {
+ 	dctlprintk(ioc, pr_info(MPT3SAS_FMT "%s: enter\n", ioc->name,
+ 	    __func__));
+ 
+-	memset(&karg, 0 , sizeof(karg));
++	memset(&karg, 0, sizeof(karg));
+ 	if (ioc->pfacts)
+ 		karg.port_number = ioc->pfacts[0].PortNumber;
+ 	karg.hw_rev = ioc->pdev->revision;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index a5d8726..57bbaef 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -4883,7 +4883,7 @@ static int _scsih_set_satl_pending(struct scsi_cmnd *scmd, bool pending)
+ 	}
+ 
+ 	if (scmd->result && (ioc->logging_level & MPT_DEBUG_REPLY))
+-		_scsih_scsi_ioc_info(ioc , scmd, mpi_reply, smid);
++		_scsih_scsi_ioc_info(ioc, scmd, mpi_reply, smid);
+ 
+  out:
+ 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+index e7a7a70..5400656 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+@@ -831,7 +831,7 @@ struct _sas_port *
+ 
+ 	for (i = 0; i < sas_node->num_phys; i++) {
+ 		if (sas_node->phy[i].remote_identify.sas_address == sas_address)
+-			memset(&sas_node->phy[i].remote_identify, 0 ,
++			memset(&sas_node->phy[i].remote_identify, 0,
+ 			    sizeof(struct sas_identify));
+ 	}
+ 
+@@ -1027,7 +1027,7 @@ struct _sas_port *
+ 		_transport_add_phy_to_an_existing_port(ioc, sas_node,
+ 		    mpt3sas_phy, mpt3sas_phy->remote_identify.sas_address);
+ 	} else
+-		memset(&mpt3sas_phy->remote_identify, 0 , sizeof(struct
++		memset(&mpt3sas_phy->remote_identify, 0, sizeof(struct
+ 		    sas_identify));
+ 
+ 	if (mpt3sas_phy->phy)
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c b/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c
+index b60fd7a..205be9d 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c
+@@ -251,7 +251,7 @@
+ 
+ 	/* check for the trigger condition */
+ 	event_trigger = ioc->diag_trigger_event.EventTriggerEntry;
+-	for (i = 0 , found_match = 0; i < ioc->diag_trigger_event.ValidEntries
++	for (i = 0, found_match = 0; i < ioc->diag_trigger_event.ValidEntries
+ 	    && !found_match; i++, event_trigger++) {
+ 		if (event_trigger->EventValue != event)
+ 			continue;
+@@ -331,7 +331,7 @@
+ 
+ 	/* check for the trigger condition */
+ 	scsi_trigger = ioc->diag_trigger_scsi.SCSITriggerEntry;
+-	for (i = 0 , found_match = 0; i < ioc->diag_trigger_scsi.ValidEntries
++	for (i = 0, found_match = 0; i < ioc->diag_trigger_scsi.ValidEntries
+ 	    && !found_match; i++, scsi_trigger++) {
+ 		if (scsi_trigger->SenseKey != sense_key)
+ 			continue;
+@@ -405,7 +405,7 @@
+ 
+ 	/* check for the trigger condition */
+ 	mpi_trigger = ioc->diag_trigger_mpi.MPITriggerEntry;
+-	for (i = 0 , found_match = 0; i < ioc->diag_trigger_mpi.ValidEntries
++	for (i = 0, found_match = 0; i < ioc->diag_trigger_mpi.ValidEntries
+ 	    && !found_match; i++, mpi_trigger++) {
+ 		if (mpi_trigger->IOCStatus != ioc_status)
+ 			continue;
 -- 
-1.8.3.1
+1.7.9.5
