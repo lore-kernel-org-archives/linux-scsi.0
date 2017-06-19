@@ -1,35 +1,35 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: mptsas crash on expander hot-remove
-Date: Mon, 19 Jun 2017 10:23:40 +0200
-Message-ID: <20170619082340.GC3752@linux-x5ow.site>
-References: <20170616235708.GA19825@hangar16.net>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [lkp-robot] [scsi]  ebc76736f2: fio.write_bw_MBps -4%
+        regression
+Date: Mon, 19 Jun 2017 10:41:53 +0200
+Message-ID: <20170619084153.GA14788@lst.de>
+References: <20170616082755.22832-1-hch@lst.de> <20170619060318.GC23108@yexl-desktop> <20170619070923.GA13129@lst.de> <20170619074943.GA20152@yexl-desktop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:45411 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753428AbdFSIXm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 19 Jun 2017 04:23:42 -0400
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170616235708.GA19825@hangar16.net>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20170619074943.GA20152@yexl-desktop>
+Sender: linux-block-owner@vger.kernel.org
+To: Ye Xiaolong <xiaolong.ye@intel.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, lkp@01.org, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Will Simoneau <simoneau@hangar16.net>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, tj@kernel.org
 
-On Fri, Jun 16, 2017 at 07:57:08PM -0400, Will Simoneau wrote:
-> Is this is a known / obvious issue, or should I try to bisect it?
+On Mon, Jun 19, 2017 at 03:49:43PM +0800, Ye Xiaolong wrote:
+> On 06/19, Christoph Hellwig wrote:
+> >On Mon, Jun 19, 2017 at 02:03:18PM +0800, kernel test robot wrote:
+> >> 
+> >> Greeting,
+> >> 
+> >> FYI, we noticed a -4% regression of fio.write_bw_MBps due to commit:
+> >
+> >What does cat /sys/block/<device>/queue/scheduler say for your test?
+> >Can you try with mq-deadline or bfq and see what the results are?
+> 
+> Could you tell me how to do it? via changing kernel config?
 
-This is a known issue with SAS (and FC) drivers, although no soulution exists
-to this point.
+BFQ doesn't seem to be enabled in the config, so it would have to be
+enabled.
 
-	Johannes
-
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+I've not seen a compile-time option for the MQ I/O scheduler (unlike
+the legacy one), so the way to change it would be to echo the name to
+/sys/block/<device>/queue/scheduler 
