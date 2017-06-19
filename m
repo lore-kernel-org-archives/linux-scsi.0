@@ -1,25 +1,25 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 1/6] qla2xxx: Add FC-NVMe port discovery and PRLI handling
-Date: Mon, 19 Jun 2017 10:09:11 +0200
-Message-ID: <20170619080910.GA3752@linux-x5ow.site>
+Subject: Re: [PATCH 2/6] qla2xxx: Add FC-NVMe command handling
+Date: Mon, 19 Jun 2017 10:20:33 +0200
+Message-ID: <20170619082033.GB3752@linux-x5ow.site>
 References: <20170616224744.3681-1-himanshu.madhani@cavium.com>
- <20170616224744.3681-2-himanshu.madhani@cavium.com>
+ <20170616224744.3681-3-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44085 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:45098 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751166AbdFSIJQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 19 Jun 2017 04:09:16 -0400
+        id S1753506AbdFSIUi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 19 Jun 2017 04:20:38 -0400
 Content-Disposition: inline
-In-Reply-To: <20170616224744.3681-2-himanshu.madhani@cavium.com>
+In-Reply-To: <20170616224744.3681-3-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Himanshu Madhani <himanshu.madhani@cavium.com>
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, giridhar.malaval@cavium.com, darren.trapp@cavium.com
 
-On Fri, Jun 16, 2017 at 03:47:39PM -0700, Himanshu Madhani wrote:
+On Fri, Jun 16, 2017 at 03:47:40PM -0700, Himanshu Madhani wrote:
 > From: Duane Grigsby <duane.grigsby@cavium.com>
 > 
 > Signed-off-by: Darren Trapp <darren.trapp@cavium.com>
@@ -31,17 +31,20 @@ On Fri, Jun 16, 2017 at 03:47:39PM -0700, Himanshu Madhani wrote:
 
 [...]
 
-> +
-> +	if ((fcport->fw_login_state == DSC_LS_PLOGI_PEND) ||
-> +	    (fcport->fw_login_state == DSC_LS_PLOGI_COMP) ||
-> +	    (fcport->fw_login_state == DSC_LS_PRLI_PEND))
-> +		return rval;
+> +static void
+> +qla24xx_nvme_iocb_entry(scsi_qla_host_t *vha, struct req_que *req, void *tsk)
+> +{
+> +	const char func[] = "NVME-IOCB";
+> +	fc_port_t *fcport;
+> +	srb_t *sp;
+> +	struct srb_iocb *iocb;
+> +	struct sts_entry_24xx *sts = (struct sts_entry_24xx *)tsk;
 
-Minor nit, superfluous parenthesis.
+No need to cast from void*
 
 
-Anyways,
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+
 
 -- 
 Johannes Thumshirn                                          Storage
