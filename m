@@ -1,125 +1,161 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/2] scsi: remove various unused blist flags
-Date: Mon, 19 Jun 2017 14:27:23 +0200
-Message-ID: <20170619122724.32720-1-hch@lst.de>
+Subject: [PATCH 2/2] scsi_dh_alua: remove synchronous STPG support
+Date: Mon, 19 Jun 2017 14:27:24 +0200
+Message-ID: <20170619122724.32720-2-hch@lst.de>
+References: <20170619122724.32720-1-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:35572 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:58111 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753942AbdFSM11 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Jun 2017 08:27:27 -0400
+        with ESMTP id S1753942AbdFSM13 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Jun 2017 08:27:29 -0400
+In-Reply-To: <20170619122724.32720-1-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: hare@suse.de
 
+Since 9c58b395 ("scsi: scsi_devinfo: remove synchronous ALUA for
+NETAPP devices") this code is unused.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/scsi_scan.c    | 25 ++-----------------------
- include/scsi/scsi_devinfo.h |  9 ---------
- 2 files changed, 2 insertions(+), 32 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 27 +++++----------------------
+ include/scsi/scsi_device.h                 |  1 -
+ 2 files changed, 5 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index e6de4eee97a3..3c4403210a1a 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -656,8 +656,6 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 		if (pass == 1) {
- 			if (BLIST_INQUIRY_36 & *bflags)
- 				next_inquiry_len = 36;
--			else if (BLIST_INQUIRY_58 & *bflags)
--				next_inquiry_len = 58;
- 			else if (sdev->inquiry_len)
- 				next_inquiry_len = sdev->inquiry_len;
- 			else
-@@ -927,15 +925,6 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index c01b47e5b55a..0962fd544401 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -57,7 +57,6 @@
+ /* device handler flags */
+ #define ALUA_OPTIMIZE_STPG		0x01
+ #define ALUA_RTPG_EXT_HDR_UNSUPP	0x02
+-#define ALUA_SYNC_STPG			0x04
+ /* State machine flags */
+ #define ALUA_PG_RUN_RTPG		0x10
+ #define ALUA_PG_RUN_STPG		0x20
+@@ -70,7 +69,6 @@ MODULE_PARM_DESC(optimize_stpg, "Allow use of a non-optimized path, rather than
+ static LIST_HEAD(port_group_list);
+ static DEFINE_SPINLOCK(port_group_lock);
+ static struct workqueue_struct *kaluad_wq;
+-static struct workqueue_struct *kaluad_sync_wq;
  
- 	sdev->use_10_for_rw = 1;
- 
--	if (*bflags & BLIST_MS_SKIP_PAGE_08)
--		sdev->skip_ms_page_8 = 1;
--
--	if (*bflags & BLIST_MS_SKIP_PAGE_3F)
--		sdev->skip_ms_page_3f = 1;
--
--	if (*bflags & BLIST_USE_10_BYTE_MS)
--		sdev->use_10_for_ms = 1;
--
- 	/* some devices don't like REPORT SUPPORTED OPERATION CODES
- 	 * and will simply timeout causing sd_mod init to take a very
- 	 * very long time */
-@@ -957,9 +946,6 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 		return SCSI_SCAN_NO_RESPONSE;
+ struct alua_port_group {
+ 	struct kref		kref;
+@@ -380,8 +378,6 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h,
  	}
  
--	if (*bflags & BLIST_MS_192_BYTES_FOR_3F)
--		sdev->use_192_bytes_for_3f = 1;
+ 	spin_lock_irqsave(&pg->lock, flags);
+-	if (sdev->synchronous_alua)
+-		pg->flags |= ALUA_SYNC_STPG;
+ 	if (pg_updated)
+ 		list_add_rcu(&h->node, &pg->dh_list);
+ 	spin_unlock_irqrestore(&pg->lock, flags);
+@@ -785,7 +781,6 @@ static void alua_rtpg_work(struct work_struct *work)
+ 	int err = SCSI_DH_OK;
+ 	struct alua_queue_data *qdata, *tmp;
+ 	unsigned long flags;
+-	struct workqueue_struct *alua_wq = kaluad_wq;
+ 
+ 	spin_lock_irqsave(&pg->lock, flags);
+ 	sdev = pg->rtpg_sdev;
+@@ -796,8 +791,6 @@ static void alua_rtpg_work(struct work_struct *work)
+ 		kref_put(&pg->kref, release_port_group);
+ 		return;
+ 	}
+-	if (pg->flags & ALUA_SYNC_STPG)
+-		alua_wq = kaluad_sync_wq;
+ 	pg->flags |= ALUA_PG_RUNNING;
+ 	if (pg->flags & ALUA_PG_RUN_RTPG) {
+ 		int state = pg->state;
+@@ -810,7 +803,7 @@ static void alua_rtpg_work(struct work_struct *work)
+ 				pg->flags &= ~ALUA_PG_RUNNING;
+ 				pg->flags |= ALUA_PG_RUN_RTPG;
+ 				spin_unlock_irqrestore(&pg->lock, flags);
+-				queue_delayed_work(alua_wq, &pg->rtpg_work,
++				queue_delayed_work(kaluad_wq, &pg->rtpg_work,
+ 						   pg->interval * HZ);
+ 				return;
+ 			}
+@@ -822,7 +815,7 @@ static void alua_rtpg_work(struct work_struct *work)
+ 			pg->flags &= ~ALUA_PG_RUNNING;
+ 			pg->flags |= ALUA_PG_RUN_RTPG;
+ 			spin_unlock_irqrestore(&pg->lock, flags);
+-			queue_delayed_work(alua_wq, &pg->rtpg_work,
++			queue_delayed_work(kaluad_wq, &pg->rtpg_work,
+ 					   pg->interval * HZ);
+ 			return;
+ 		}
+@@ -839,7 +832,7 @@ static void alua_rtpg_work(struct work_struct *work)
+ 			pg->interval = 0;
+ 			pg->flags &= ~ALUA_PG_RUNNING;
+ 			spin_unlock_irqrestore(&pg->lock, flags);
+-			queue_delayed_work(alua_wq, &pg->rtpg_work,
++			queue_delayed_work(kaluad_wq, &pg->rtpg_work,
+ 					   pg->interval * HZ);
+ 			return;
+ 		}
+@@ -874,8 +867,6 @@ static bool alua_rtpg_queue(struct alua_port_group *pg,
+ {
+ 	int start_queue = 0;
+ 	unsigned long flags;
+-	struct workqueue_struct *alua_wq = kaluad_wq;
 -
- 	if (*bflags & BLIST_NOT_LOCKABLE)
- 		sdev->lockable = 0;
+ 	if (WARN_ON_ONCE(!pg) || scsi_device_get(sdev))
+ 		return false;
  
-@@ -969,9 +955,6 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 	if (*bflags & BLIST_NO_DIF)
- 		sdev->no_dif = 1;
+@@ -900,12 +891,10 @@ static bool alua_rtpg_queue(struct alua_port_group *pg,
+ 		}
+ 	}
  
--	if (*bflags & BLIST_SYNC_ALUA)
--		sdev->synchronous_alua = 1;
--
- 	sdev->eh_timeout = SCSI_DEFAULT_EH_TIMEOUT;
+-	if (pg->flags & ALUA_SYNC_STPG)
+-		alua_wq = kaluad_sync_wq;
+ 	spin_unlock_irqrestore(&pg->lock, flags);
  
- 	if (*bflags & BLIST_TRY_VPD_PAGES)
-@@ -1109,7 +1092,7 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
- 	/*
- 	 * result contains valid SCSI INQUIRY data.
- 	 */
--	if (((result[0] >> 5) == 3) && !(bflags & BLIST_ATTACH_PQ3)) {
-+	if ((result[0] >> 5) == 3) {
- 		/*
- 		 * For a Peripheral qualifier 3 (011b), the SCSI
- 		 * spec says: The device server is not capable of
-@@ -1267,11 +1250,7 @@ static void scsi_sequential_lun_scan(struct scsi_target *starget,
- 	 */
- 	if (scsi_level < SCSI_3 && !(bflags & BLIST_LARGELUN))
- 		max_dev_lun = min(8U, max_dev_lun);
--
--	/*
--	 * Stop scanning at 255 unless BLIST_SCSI3LUN
--	 */
--	if (!(bflags & BLIST_SCSI3LUN))
-+	else
- 		max_dev_lun = min(256U, max_dev_lun);
+ 	if (start_queue) {
+-		if (queue_delayed_work(alua_wq, &pg->rtpg_work,
++		if (queue_delayed_work(kaluad_wq, &pg->rtpg_work,
+ 				msecs_to_jiffies(ALUA_RTPG_DELAY_MSECS)))
+ 			sdev = NULL;
+ 		else
+@@ -1166,16 +1155,11 @@ static int __init alua_init(void)
+ 		/* Temporary failure, bypass */
+ 		return SCSI_DH_DEV_TEMP_BUSY;
+ 	}
+-	kaluad_sync_wq = create_workqueue("kaluad_sync");
+-	if (!kaluad_sync_wq) {
+-		destroy_workqueue(kaluad_wq);
+-		return SCSI_DH_DEV_TEMP_BUSY;
+-	}
++
+ 	r = scsi_register_device_handler(&alua_dh);
+ 	if (r != 0) {
+ 		printk(KERN_ERR "%s: Failed to register scsi device handler",
+ 			ALUA_DH_NAME);
+-		destroy_workqueue(kaluad_sync_wq);
+ 		destroy_workqueue(kaluad_wq);
+ 	}
+ 	return r;
+@@ -1184,7 +1168,6 @@ static int __init alua_init(void)
+ static void __exit alua_exit(void)
+ {
+ 	scsi_unregister_device_handler(&alua_dh);
+-	destroy_workqueue(kaluad_sync_wq);
+ 	destroy_workqueue(kaluad_wq);
+ }
  
- 	/*
-diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
-index 9f750cb63b03..9592570e092a 100644
---- a/include/scsi/scsi_devinfo.h
-+++ b/include/scsi/scsi_devinfo.h
-@@ -15,12 +15,7 @@
- #define BLIST_ISROM     	0x100	/* Treat as (removable) CD-ROM */
- #define BLIST_LARGELUN		0x200	/* LUNs past 7 on a SCSI-2 device */
- #define BLIST_INQUIRY_36	0x400	/* override additional length field */
--#define BLIST_INQUIRY_58	0x800	/* ... for broken inquiry responses */
- #define BLIST_NOSTARTONADD	0x1000	/* do not do automatic start on add */
--#define BLIST_MS_SKIP_PAGE_08	0x2000	/* do not send ms page 0x08 */
--#define BLIST_MS_SKIP_PAGE_3F	0x4000	/* do not send ms page 0x3f */
--#define BLIST_USE_10_BYTE_MS	0x8000	/* use 10 byte ms before 6 byte ms */
--#define BLIST_MS_192_BYTES_FOR_3F	0x10000	/*  192 byte ms page 0x3f request */
- #define BLIST_REPORTLUN2	0x20000	/* try REPORT_LUNS even for SCSI-2 devs
-  					   (if HBA supports more than 8 LUNs) */
- #define BLIST_NOREPORTLUN	0x40000	/* don't try REPORT_LUNS scan (SCSI-3 devs) */
-@@ -29,14 +24,10 @@
- #define BLIST_SELECT_NO_ATN	0x200000 /* select without ATN */
- #define BLIST_RETRY_HWERROR	0x400000 /* retry HARDWARE_ERROR */
- #define BLIST_MAX_512		0x800000 /* maximum 512 sector cdb length */
--#define BLIST_ATTACH_PQ3	0x1000000 /* Scan: Attach to PQ3 devices */
- #define BLIST_NO_DIF		0x2000000 /* Disable T10 PI (DIF) */
- #define BLIST_SKIP_VPD_PAGES	0x4000000 /* Ignore SBC-3 VPD pages */
--#define BLIST_SCSI3LUN		0x8000000 /* Scan more than 256 LUNs
--					     for sequential scan */
- #define BLIST_TRY_VPD_PAGES	0x10000000 /* Attempt to read VPD pages */
- #define BLIST_NO_RSOC		0x20000000 /* don't try to issue RSOC */
- #define BLIST_MAX_1024		0x40000000 /* maximum 1024 sector cdb length */
--#define BLIST_SYNC_ALUA		0x80000000 /* Synchronous ALUA commands */
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index d13bc80825b1..d3fb98f72a03 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -181,7 +181,6 @@ struct scsi_device {
+ 	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
+ 	unsigned broken_fua:1;		/* Don't set FUA bit */
+ 	unsigned lun_in_cdb:1;		/* Store LUN bits in CDB[1] */
+-	unsigned synchronous_alua:1;	/* Synchronous ALUA commands */
  
- #endif
+ 	atomic_t disk_events_disable_depth; /* disable depth for disk events */
+ 
 -- 
 2.11.0
