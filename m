@@ -1,207 +1,122 @@
-From: Minwoo Im <dn3108@gmail.com>
-Subject: [PATCH] scsi/libata: Support variable-length cdb of ata pass-thru(32)-bug fixed.
-Date: Mon, 19 Jun 2017 22:22:26 +0900
-Message-ID: <1497878546-4346-1-git-send-email-dn3108@gmail.com>
-References: <1497697243-3724-1-git-send-email-dn3108@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:33511 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750903AbdFSNWj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Jun 2017 09:22:39 -0400
-In-Reply-To: <1497697243-3724-1-git-send-email-dn3108@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "wangqiang (AY)" <wangqiang62@huawei.com>
+Subject: iscsi deadlock while login and logout 2 iscsi nodes in tight loop
+ at unstable network environment
+Date: Mon, 19 Jun 2017 13:35:52 +0000
+Message-ID: <508A4C72ED914648BB0F1814399310DBB9FEC3@DGGEMM506-MBX.china.huawei.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: zh-CN
+Sender: linux-kernel-owner@vger.kernel.org
+To: "lduncan@suse.com" <lduncan@suse.com>, "cleech@redhat.com" <cleech@redhat.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Minwoo Im <dn3108@gmail.com>
 
-Bug fixed in libata-scsi.c from previous patch.
-Bit shifting of service action value in ata_scsi_var_len_cdb_xlat() was reversed.
-I have tested a ata pass-thru(32) command with sg_io and it worked well.
-I'm sorry for making a confusion.
+Hi all,
 
-Signed-off-by: Minwoo Im <dn3108@gmail.com>
----
- drivers/ata/libata-core.c |    2 +-
- drivers/ata/libata-scsi.c |   95 ++++++++++++++++++++++++++++++++++++++++++---
- include/scsi/scsi_proto.h |    1 +
- 3 files changed, 91 insertions(+), 7 deletions(-)
+In the upstream 4.12.0-rc5 kernel, I encounter a deadlock problem while login and logout 2 iscsi nodes in tight loop at unstable network environment, the iscsid will be D state.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index e157a0e..f1d3ba4 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -2587,7 +2587,7 @@ int ata_dev_configure(struct ata_device *dev)
- 		}
- 		ata_dev_config_sense_reporting(dev);
- 		ata_dev_config_zac(dev);
--		dev->cdb_len = 16;
-+		dev->cdb_len = 32;
- 	}
- 
- 	/* ATAPI-specific feature tests */
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 49ba983..39f23e0 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3127,7 +3127,7 @@ static struct ata_device *__ata_scsi_find_dev(struct ata_port *ap,
-  *	ata_scsi_pass_thru - convert ATA pass-thru CDB to taskfile
-  *	@qc: command structure to be initialized
-  *
-- *	Handles either 12 or 16-byte versions of the CDB.
-+ *	Handles either 12, 16, or 32-byte versions of the CDB.
-  *
-  *	RETURNS:
-  *	Zero on success, non-zero on failure.
-@@ -3140,13 +3140,36 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
- 	const u8 *cdb = scmd->cmnd;
- 	u16 fp;
- 
--	if ((tf->protocol = ata_scsi_map_proto(cdb[1])) == ATA_PROT_UNKNOWN) {
-+	/*
-+	 * if SCSI operation code in cdb[0] is ATA_12 or ATA_16,
-+	 * then cdb[1] will contain protocol of ATA PASS-THROUGH.
-+	 * otherwise, Its operation code shall be ATA_32(7Fh).
-+	 * in this case, cdb[10] will contain protocol of it.
-+	 * we call this command as a variable-length cdb.
-+	 */
-+	if (cdb[0] == ATA_12 || cdb[0] == ATA_16)
-+		tf->protocol = ata_scsi_map_proto(cdb[1]);
-+	else
-+		tf->protocol = ata_scsi_map_proto(cdb[10]);
-+
-+	if (tf->protocol == ATA_PROT_UNKNOWN) {
- 		fp = 1;
- 		goto invalid_fld;
- 	}
- 
--	if (ata_is_ncq(tf->protocol) && (cdb[2] & 0x3) == 0)
--		tf->protocol = ATA_PROT_NCQ_NODATA;
-+	/*
-+	 * if protocol has a NCQ property and transfer length is 0,
-+	 * then the protocol will be marked as a NCQ_NODATA.
-+	 * in case of ATA_12 and ATA_16, cdb[2] has a t_length field.
-+	 * otherwise, cdb[11] will have a t_length field.
-+	 */
-+	if (cdb[0] == ATA_12 || cdb[0] == ATA_16) {
-+		if (ata_is_ncq(tf->protocol) && (cdb[2] & 0x3) == 0)
-+			tf->protocol = ATA_PROT_NCQ_NODATA;
-+	} else {
-+		if (ata_is_ncq(tf->protocol) && (cdb[11] & 0x3) == 0)
-+			tf->protocol = ATA_PROT_NCQ_NODATA;
-+	}
- 
- 	/* enable LBA */
- 	tf->flags |= ATA_TFLAG_LBA;
-@@ -3181,7 +3204,7 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
- 		tf->lbah = cdb[12];
- 		tf->device = cdb[13];
- 		tf->command = cdb[14];
--	} else {
-+	} else if (cdb[0] == ATA_12) {
- 		/*
- 		 * 12-byte CDB - incapable of extended commands.
- 		 */
-@@ -3194,6 +3217,31 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
- 		tf->lbah = cdb[7];
- 		tf->device = cdb[8];
- 		tf->command = cdb[9];
-+	} else {
-+		/*
-+		 * 32-byte CDB - may contain extended command fields.
-+		 *
-+		 * If that is the case, copy the upper byte register values.
-+		 */
-+		if (cdb[10] & 0x01) {
-+			tf->hob_feature = cdb[20];
-+			tf->hob_nsect = cdb[22];
-+			tf->hob_lbal = cdb[16];
-+			tf->hob_lbam = cdb[15];
-+			tf->hob_lbah = cdb[14];
-+			tf->flags |= ATA_TFLAG_LBA48;
-+		} else
-+			tf->flags &= ~ATA_TFLAG_LBA48;
-+
-+		tf->feature = cdb[21];
-+		tf->nsect = cdb[23];
-+		tf->lbal = cdb[19];
-+		tf->lbam = cdb[18];
-+		tf->lbah = cdb[17];
-+		tf->device = cdb[24];
-+		tf->command = cdb[25];
-+		tf->auxiliary = (cdb[28] << 24) | (cdb[29] << 16)
-+			| (cdb[30] << 8) | cdb[31];
- 	}
- 
- 	/* For NCQ commands copy the tag value */
-@@ -4068,6 +4116,33 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
- }
- 
- /**
-+ *	ata_scsi_var_len_cdb_xlat - SATL Variable Length CDB to Handler
-+ *	@qc: Command to be translated
-+ *
-+ *	Translate a SCSI variable length CDB to specified commands.
-+ *	It checks a service action value in CDB to call corresponding handler.
-+ *
-+ *	RETURNS:
-+ *	Zero on success, non-zero on failure
-+ */
-+
-+static unsigned int ata_scsi_var_len_cdb_xlat(struct ata_queued_cmd *qc)
-+{
-+	struct scsi_cmnd *scmd = qc->scsicmd;
-+	const u8 *cdb = scmd->cmnd;
-+	const u16 sa = (cdb[8] << 8) | cdb[9];	/* service action */
-+
-+	// if service action represents a ata pass-thru(32) command,
-+	// then pass it to ata_scsi_pass_thru handler.
-+	if (sa == ATA_32)
-+		return ata_scsi_pass_thru(qc);
-+
-+unspprt_sa:
-+	/* unsupported service action */
-+	return 1;
-+}
-+
-+/**
-  *	ata_get_xlat_func - check if SCSI to ATA translation is possible
-  *	@dev: ATA device
-  *	@cmd: SCSI command opcode to consider
-@@ -4107,6 +4182,9 @@ static inline ata_xlat_func_t ata_get_xlat_func(struct ata_device *dev, u8 cmd)
- 	case ATA_16:
- 		return ata_scsi_pass_thru;
- 
-+	case VARIABLE_LENGTH_CMD:
-+		return ata_scsi_var_len_cdb_xlat;
-+
- 	case MODE_SELECT:
- 	case MODE_SELECT_10:
- 		return ata_scsi_mode_select_xlat;
-@@ -4385,7 +4463,12 @@ int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
- 		shost->max_id = 16;
- 		shost->max_lun = 1;
- 		shost->max_channel = 1;
--		shost->max_cmd_len = 16;
-+		/*
-+		 * SPC-3, SPC-4: Definition of CDB
-+		 * A CDB may have a fixed length of up to 16 bytes or
-+		 * variable length of between 12 and 260 bytes.
-+		 */
-+		shost->max_cmd_len = 260;
- 
- 		/* Schedule policy is determined by ->qc_defer()
- 		 * callback and it needs to see every deferred qc.
-diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
-index ce78ec8..8545e34 100644
---- a/include/scsi/scsi_proto.h
-+++ b/include/scsi/scsi_proto.h
-@@ -164,6 +164,7 @@
- #define WRITE_SAME_32	      0x0d
- 
- /* Values for T10/04-262r7 */
-+#define	ATA_32		      0x1ff0	/* 32-byte pass-thru, service action */
- #define	ATA_16		      0x85	/* 16-byte pass-thru */
- #define	ATA_12		      0xa1	/* 12-byte pass-thru */
- 
--- 
-1.7.9.5
+SysRq-w reported the following call stacks:
+[10660.667133] sysrq: SysRq : Show Blocked State
+[10660.671536]   task                        PC stack   pid father
+[10660.672137] iscsid          D    0 11415      1 0x00000000
+[10660.672139] Call Trace:
+[10660.672141]  __schedule+0x1d9/0x780
+[10660.672144]  schedule+0x36/0x80
+[10660.672146]  async_synchronize_cookie_domain+0xaa/0x150
+[10660.672149]  ? remove_wait_queue+0x60/0x60
+[10660.672151]  async_synchronize_full_domain+0x18/0x20
+[10660.672153]  sd_remove+0x4d/0xc0 [sd_mod]
+[10660.672156]  device_release_driver_internal+0x141/0x200
+[10660.672158]  device_release_driver+0x12/0x20
+[10660.672159]  bus_remove_device+0xfd/0x170
+[10660.672161]  device_del+0x1e8/0x330
+[10660.672164]  __scsi_remove_device+0xc6/0xd0
+[10660.672166]  scsi_remove_device+0x26/0x40
+[10660.672168]  scsi_remove_target+0x165/0x1b0
+[10660.672174]  __iscsi_unbind_session+0xbe/0x170 [scsi_transport_iscsi]
+[10660.672180]  iscsi_remove_session+0xd6/0x190 [scsi_transport_iscsi]
+[10660.672186]  iscsi_destroy_session+0x12/0x50 [scsi_transport_iscsi]
+[10660.672192]  iscsi_session_teardown+0xd5/0xf0 [libiscsi]
+[10660.672195]  iscsi_sw_tcp_session_destroy+0x48/0x70 [iscsi_tcp]
+[10660.672202]  iscsi_if_recv_msg+0xbb1/0x1390 [scsi_transport_iscsi]
+[10660.672205]  ? __kmalloc_node_track_caller+0x199/0x280
+[10660.672211]  iscsi_if_rx+0x8e/0x1f0 [scsi_transport_iscsi]
+[10660.672214]  netlink_unicast+0x181/0x240
+[10660.672216]  netlink_sendmsg+0x2c2/0x3b0
+[10660.672220]  sock_sendmsg+0x38/0x50
+[10660.672222]  ___sys_sendmsg+0x27a/0x290
+[10660.672224]  ? kernfs_refresh_inode+0xc8/0xe0
+[10660.672227]  ? _copy_to_user+0x26/0x40
+[10660.672230]  __sys_sendmsg+0x54/0x90
+[10660.672232]  SyS_sendmsg+0x12/0x20
+[10660.672234]  entry_SYSCALL_64_fastpath+0x1a/0xa5
+[10660.672325] kworker/u48:2   D    0 22364      2 0x00000000
+[10660.672332] Workqueue: scsi_wq_7 __iscsi_unbind_session [scsi_transport_iscsi]
+[10660.672333] Call Trace:
+[10660.672336]  __schedule+0x1d9/0x780
+[10660.672350]  ? set_next_entity+0x7c/0x7a0
+[10660.672353]  schedule+0x36/0x80
+[10660.672354]  schedule_timeout+0x249/0x300
+[10660.672356]  ? finish_task_switch+0xec/0x240
+[10660.672359]  wait_for_completion+0x121/0x180
+[10660.672361]  ? wake_up_q+0x80/0x80
+[10660.672364]  flush_workqueue+0x16d/0x490
+[10660.672366]  ? probe_sched_wakeup+0x1c/0x20
+[10660.672369]  drain_workqueue+0x5b/0x130
+[10660.672371]  destroy_workqueue+0x1a/0x200
+[10660.672373]  scsi_host_dev_release+0x6f/0x130
+[10660.672375]  device_release+0x32/0x90
+[10660.672377]  kobject_cleanup+0x63/0x170
+[10660.672379]  kobject_put+0x28/0x50
+[10660.672381]  put_device+0x17/0x20
+[10660.672383]  scsi_host_put+0x15/0x20
+[10660.672389]  iscsi_session_release+0x3d/0x80 [scsi_transport_iscsi]
+[10660.672390]  device_release+0x32/0x90
+[10660.672393]  kobject_cleanup+0x63/0x170
+[10660.672395]  kobject_put+0x28/0x50
+[10660.672396]  put_device+0x17/0x20
+[10660.672398]  scsi_target_dev_release+0x1f/0x30
+[10660.672400]  device_release+0x32/0x90
+[10660.672402]  kobject_cleanup+0x63/0x170
+[10660.672404]  kobject_put+0x28/0x50
+[10660.672406]  put_device+0x17/0x20
+[10660.672407]  scsi_target_destroy+0xc5/0xe0
+[10660.672409]  scsi_target_reap_ref_release+0x35/0x40
+[10660.672411]  scsi_target_reap+0x2e/0x40
+[10660.672413]  scsi_remove_target+0x197/0x1b0
+[10660.672419]  __iscsi_unbind_session+0xbe/0x170 [scsi_transport_iscsi]
+[10660.672421]  process_one_work+0x149/0x360
+[10660.672423]  worker_thread+0x4d/0x3c0
+[10660.672425]  kthread+0x109/0x140
+[10660.672427]  ? rescuer_thread+0x380/0x380
+[10660.672428]  ? kthread_park+0x60/0x60
+[10660.672430]  ret_from_fork+0x25/0x30
+
+sd_remove() waits for async_synchronize_cookie_domain which is defined in sd_probe() and relate to sd_probe_async(), but due to unstable network environment, the session which process sd_probe_async() became ISCSI_STATE_FAILED state, and IO corresponding to sd_probe_async() doesnt complete, iscsi_conn_failure() send event to iscsid and wait for respond to stop connection, iscsid cannot respond as the sd_remove() is waiting for completion of sd_probe_async(). Hence the deadlock.
+
+So, is any method to fix this deadlock?
+Any reply would be thankful.
+
+Execute the shell scripts below at the initiator side and wait for 5 ~ 20 minutes, the deadlock can be reproduced.(nodes need at least 10 luns respectively.)
+#!/bin/bash
+# discovery 2 nodes
+iscsiadm -m discovery -p IP_A -t st
+iscsiadm -m discovery -p IP_B -t st
+# set network loss rate (eth1 connected to the ipsan)
+tc qdisc add dev eth1 root netem loss 60%
+# loop test
+n=1
+while [ 1 ]
+do
+     echo "$(date) ==== test loop $n ===="
+     iscsiadm -m node -T iqn.xxxx::yyyy:IP_A --login
+     sleep 5
+     iscsiadm -m node -T iqn.xxxx::yyyy:IP_A --logout&
+     iscsiadm -m node -T iqn.xxxx::yyyz:IP_B --login&
+     sleep 10
+     iscsiadm -m node -u
+     n=$(($n + 1))
+     echo "$(date) ==== continue to test loop ===="
+done
