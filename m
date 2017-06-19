@@ -1,30 +1,36 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 6/6] qla2xxx: Update Driver version to 10.00.00.00-k
-Date: Mon, 19 Jun 2017 12:08:41 +0200
-Message-ID: <20170619100841.GD19417@linux-x5ow.site>
-References: <20170616224744.3681-1-himanshu.madhani@cavium.com>
- <20170616224744.3681-7-himanshu.madhani@cavium.com>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: [PATCH 03/11] au1100fb: remove a bogus dma_free_nonconsistent
+ call
+Date: Mon, 19 Jun 2017 13:15:04 +0200
+Message-ID: <8727942.IUH8e0tH8t@amdc3058>
+References: <20170616071716.17321-1-hch@lst.de>
+        <20170616071716.17321-4-hch@lst.de>
+        <CGME20170619111507epcas5p47fd18b90a02d827da256ff4ebbda8089@epcas5p4.samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56444 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753565AbdFSKIn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 19 Jun 2017 06:08:43 -0400
-Content-Disposition: inline
-In-Reply-To: <20170616224744.3681-7-himanshu.madhani@cavium.com>
+Received: from mailout1.samsung.com ([203.254.224.24]:43043 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753711AbdFSLPK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Jun 2017 07:15:10 -0400
+In-reply-to: <20170616071716.17321-4-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@cavium.com>
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, giridhar.malaval@cavium.com, darren.trapp@cavium.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, netdev@vger.kernel.org, linux-metag@vger.kernel.org, nios2-dev@lists.rocketboards.org, linux-fbdev@vger.kernel.org, alsa-devel@alsa-project.org, linux-kernel@vger.kernel.org
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+On Friday, June 16, 2017 09:17:08 AM Christoph Hellwig wrote:
+> au1100fb is using managed dma allocations, so it doesn't need to
+> explicitly free the dma memory in the error path (and if it did
+> it would have to use the managed version).
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
