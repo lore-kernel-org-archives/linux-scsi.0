@@ -1,31 +1,32 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 176951] boot fails unless acpi=off Acer Travelmate X-349
-Date: Mon, 19 Jun 2017 19:13:59 +0000
-Message-ID: <bug-176951-11613-f3aGg5akqy@https.bugzilla.kernel.org/>
-References: <bug-176951-11613@https.bugzilla.kernel.org/>
+From: James Smart <james.smart@broadcom.com>
+Subject: Re: [PATCH 1/6] qla2xxx: Add FC-NVMe port discovery and PRLI handling
+Date: Mon, 19 Jun 2017 13:26:45 -0700
+Message-ID: <9df75431-74d4-20a1-4a5c-464f09345812@broadcom.com>
+References: <20170616224744.3681-1-himanshu.madhani@cavium.com>
+ <20170616224744.3681-2-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:42488 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753211AbdFSTOC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 19 Jun 2017 15:14:02 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 98DF32847B
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Jun 2017 19:14:01 +0000 (UTC)
-In-Reply-To: <bug-176951-11613@https.bugzilla.kernel.org/>
+Received: from mail-qk0-f172.google.com ([209.85.220.172]:34507 "EHLO
+        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752439AbdFSU0t (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Jun 2017 16:26:49 -0400
+Received: by mail-qk0-f172.google.com with SMTP id d14so42769082qkb.1
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Jun 2017 13:26:48 -0700 (PDT)
+In-Reply-To: <20170616224744.3681-2-himanshu.madhani@cavium.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@kernel.org
+To: Himanshu Madhani <himanshu.madhani@cavium.com>, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, giridhar.malaval@cavium.com, darren.trapp@cavium.com
 
-https://bugzilla.kernel.org/show_bug.cgi?id=176951
+On 6/16/2017 3:47 PM, Himanshu Madhani wrote:
+>   
+>   /* FCP-4 types */
+>   #define FC4_TYPE_FCP_SCSI	0x08
+> +#define FC4_TYPE_NVME		0x28
+>   #define FC4_TYPE_OTHER		0x0
+>   #define FC4_TYPE_UNKNOWN	0xff
 
---- Comment #27 from mus.svz@gmail.com ---
-Can confirm, this seems to be fixed in 4.12-rc5 mainline (Arch Linux x64).
-Machine boots and works fine now, even in UEFI mode.
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+please use the types from include/uapi/scsi/fc/fc_fs.h
