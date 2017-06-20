@@ -1,39 +1,36 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 03/11] au1100fb: remove a bogus
-	dma_free_nonconsistent	call
-Date: Tue, 20 Jun 2017 11:10:45 +0200
-Message-ID: <20170620091045.GA10272@lst.de>
-References: <20170616071716.17321-1-hch@lst.de>
- <20170616071716.17321-4-hch@lst.de>
- <CGME20170619111507epcas5p47fd18b90a02d827da256ff4ebbda8089@epcas5p4.samsung.com>
- <8727942.IUH8e0tH8t@amdc3058>
+From: John Garry <john.garry@huawei.com>
+Subject: RE: [PATCH v6 00/22] hisi_sas: hip08 support
+Date: Tue, 20 Jun 2017 09:21:06 +0000
+Message-ID: <FF9EFDB6B8B51C49B6C1EFD8F01AB4DE363349B5@FRAEML521-MBS.china.huawei.com>
+References: <1497454412-91194-1-git-send-email-john.garry@huawei.com>
+ <yq1bmpjl9ju.fsf@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <alsa-devel-bounces@alsa-project.org>
-Content-Disposition: inline
-In-Reply-To: <8727942.IUH8e0tH8t@amdc3058>
-List-Unsubscribe: <http://mailman.alsa-project.org/mailman/options/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
-List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel/>
-List-Post: <mailto:alsa-devel@alsa-project.org>
-List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
-List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
-Errors-To: alsa-devel-bounces@alsa-project.org
-Sender: alsa-devel-bounces@alsa-project.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: linux-fbdev@vger.kernel.org, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, alsa-devel@alsa-project.org, Christoph Hellwig <hch@lst.de>, linux-serial@vger.kernel.org, nios2-dev@lists.rocketboards.org, linux-metag@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq1bmpjl9ju.fsf@oracle.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, "arnd@arndb.de" <arnd@arndb.de>, "hch@infradead.org" <hch@infradead.org>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Linuxarm <linuxarm@huawei.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jun 19, 2017 at 01:15:04PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> On Friday, June 16, 2017 09:17:08 AM Christoph Hellwig wrote:
-> > au1100fb is using managed dma allocations, so it doesn't need to
-> > explicitly free the dma memory in the error path (and if it did
-> > it would have to use the managed version).
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Thanks!
 
-Are you fine with picking this up through the new dma-mapping tree?
+-----Original Message-----
+From: Martin K. Petersen [mailto:martin.petersen@oracle.com] 
+Sent: 20 June 2017 02:42
+To: John Garry
+Cc: jejb@linux.vnet.ibm.com; martin.petersen@oracle.com; Linuxarm; linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; arnd@arndb.de; hch@infradead.org
+Subject: Re: [PATCH v6 00/22] hisi_sas: hip08 support
+
+
+John,
+
+> This patchset adds support for the HiSilicon SAS controller in the
+> hip08 chipset.
+
+Applied to 4.13/scsi-queue. Thanks!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
