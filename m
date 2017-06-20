@@ -1,48 +1,37 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [PATCH 03/11] au1100fb: remove a bogus
- dma_free_nonconsistent call
-Date: Tue, 20 Jun 2017 12:58:02 +0200
-Message-ID: <2219033.M9DERpzktn@amdc3058>
-References: <20170616071716.17321-1-hch@lst.de>
- <8727942.IUH8e0tH8t@amdc3058> <20170620091045.GA10272@lst.de>
- <CGME20170620105805epcas1p4ea41a72356c35f2a16197b970939fb65@epcas1p4.samsung.com>
+From: Maurizio Lombardi <mlombard@redhat.com>
+Subject: Re: enclosure: fix sysfs symlinks creation when using multipath
+Date: Tue, 20 Jun 2017 13:38:59 +0200
+Message-ID: <8d728c68-85f5-9bc2-6ce3-0c6dbc0a0c19@redhat.com>
+References: <1489690155.11068.10.camel@linux.vnet.ibm.com>
+ <1998341d-7f47-f73a-c5c5-4095b7fa9ef1@linux.vnet.ibm.com>
+ <33d61a4d-d199-16fd-82e3-bef506cc6435@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <alsa-devel-bounces@alsa-project.org>
-In-reply-to: <20170620091045.GA10272@lst.de>
-List-Unsubscribe: <http://mailman.alsa-project.org/mailman/options/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
-List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel/>
-List-Post: <mailto:alsa-devel@alsa-project.org>
-List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
-List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
-Errors-To: alsa-devel-bounces@alsa-project.org
-Sender: alsa-devel-bounces@alsa-project.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-fbdev@vger.kernel.org, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, alsa-devel@alsa-project.org, linux-kernel@vger.kernel.org, linux-serial@vger.kernel.org, nios2-dev@lists.rocketboards.org, linux-metag@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:40588 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751021AbdFTLjC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 20 Jun 2017 07:39:02 -0400
+In-Reply-To: <33d61a4d-d199-16fd-82e3-bef506cc6435@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Douglas Miller <dougmill@linux.vnet.ibm.com>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tuesday, June 20, 2017 11:10:45 AM Christoph Hellwig wrote:
-> On Mon, Jun 19, 2017 at 01:15:04PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > On Friday, June 16, 2017 09:17:08 AM Christoph Hellwig wrote:
-> > > au1100fb is using managed dma allocations, so it doesn't need to
-> > > explicitly free the dma memory in the error path (and if it did
-> > > it would have to use the managed version).
-> > > 
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > 
-> > Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+
+
+Dne 16.6.2017 v 18:08 Douglas Miller napsal(a):
+> Just to respond to James' question on the cause. What I observed was a race condition between udevd (ses_init()) and a worker thread (do_scan_async()),
+> where the worker thread is creating the directories that are the target of the symlinks being created by udevd.
+> Something was happening when udevd caught up with the worker thread (so the target directory did not exist) and it seemed the worker thread either got preempted or
+> else just could not stay ahead of udevd. This means that udevd started failing to create symlinks even though the worker thread eventually got them all created.
+> I did observe what appeared to be preemption, as the creation of directories stopped until udevd finished failing all the (rest of the) symlinks.
+> Although there may have been other explanations for what I saw.
 > 
-> Are you fine with picking this up through the new dma-mapping tree?
 
-Yes, this is why Ack-ed it.
+> I am able to pass my testing with this patch. I don't see an official submit of this patch, but will respond to it when I see one.
 
-If you prefer me to merge it through fbdev for 4.13 please let me know.
+Thanks Douglas for testing it, I will resubmit the patch if no one has any objections.
 
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
+Maurizio.
