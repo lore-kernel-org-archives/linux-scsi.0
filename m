@@ -1,36 +1,33 @@
 From: John Garry <john.garry@huawei.com>
-Subject: RE: [PATCH v6 00/22] hisi_sas: hip08 support
-Date: Tue, 20 Jun 2017 09:21:06 +0000
-Message-ID: <FF9EFDB6B8B51C49B6C1EFD8F01AB4DE363349B5@FRAEML521-MBS.china.huawei.com>
-References: <1497454412-91194-1-git-send-email-john.garry@huawei.com>
- <yq1bmpjl9ju.fsf@oracle.com>
+Subject: Re: mptsas crash on expander hot-remove
+Date: Tue, 20 Jun 2017 10:30:44 +0100
+Message-ID: <29cd97b8-be66-cb7a-28c6-d7ed97cf40f0@huawei.com>
+References: <20170616235708.GA19825@hangar16.net>
+ <20170619082340.GC3752@linux-x5ow.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1bmpjl9ju.fsf@oracle.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, "arnd@arndb.de" <arnd@arndb.de>, "hch@infradead.org" <hch@infradead.org>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Linuxarm <linuxarm@huawei.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([45.249.212.188]:8356 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751874AbdFTJbQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Jun 2017 05:31:16 -0400
+In-Reply-To: <20170619082340.GC3752@linux-x5ow.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>, Will Simoneau <simoneau@hangar16.net>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, tj@kernel.org, Dan Williams <dan.j.williams@intel.com>, Linuxarm <linuxarm@huawei.com>
 
-Thanks!
+On 19/06/2017 09:23, Johannes Thumshirn wrote:
+> On Fri, Jun 16, 2017 at 07:57:08PM -0400, Will Simoneau wrote:
+>> Is this is a known / obvious issue, or should I try to bisect it?
+>
 
------Original Message-----
-From: Martin K. Petersen [mailto:martin.petersen@oracle.com] 
-Sent: 20 June 2017 02:42
-To: John Garry
-Cc: jejb@linux.vnet.ibm.com; martin.petersen@oracle.com; Linuxarm; linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; arnd@arndb.de; hch@infradead.org
-Subject: Re: [PATCH v6 00/22] hisi_sas: hip08 support
+Out of curiousity, does this issue also occur when only the disk is 
+hot-removed from the expander?
 
-
-John,
-
-> This patchset adds support for the HiSilicon SAS controller in the
-> hip08 chipset.
-
-Applied to 4.13/scsi-queue. Thanks!
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+> This is a known issue with SAS (and FC) drivers, although no soulution exists
+> to this point.
+>
+> 	Johannes
+>
