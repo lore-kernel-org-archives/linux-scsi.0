@@ -1,33 +1,48 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: mptsas crash on expander hot-remove
-Date: Tue, 20 Jun 2017 10:30:44 +0100
-Message-ID: <29cd97b8-be66-cb7a-28c6-d7ed97cf40f0@huawei.com>
-References: <20170616235708.GA19825@hangar16.net>
- <20170619082340.GC3752@linux-x5ow.site>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: [PATCH 03/11] au1100fb: remove a bogus
+ dma_free_nonconsistent call
+Date: Tue, 20 Jun 2017 12:58:02 +0200
+Message-ID: <2219033.M9DERpzktn@amdc3058>
+References: <20170616071716.17321-1-hch@lst.de>
+ <8727942.IUH8e0tH8t@amdc3058> <20170620091045.GA10272@lst.de>
+ <CGME20170620105805epcas1p4ea41a72356c35f2a16197b970939fb65@epcas1p4.samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([45.249.212.188]:8356 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751874AbdFTJbQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Jun 2017 05:31:16 -0400
-In-Reply-To: <20170619082340.GC3752@linux-x5ow.site>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <alsa-devel-bounces@alsa-project.org>
+In-reply-to: <20170620091045.GA10272@lst.de>
+List-Unsubscribe: <http://mailman.alsa-project.org/mailman/options/alsa-devel>,
+ <mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
+List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel/>
+List-Post: <mailto:alsa-devel@alsa-project.org>
+List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
+List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
+ <mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
+Errors-To: alsa-devel-bounces@alsa-project.org
+Sender: alsa-devel-bounces@alsa-project.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-fbdev@vger.kernel.org, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, alsa-devel@alsa-project.org, linux-kernel@vger.kernel.org, linux-serial@vger.kernel.org, nios2-dev@lists.rocketboards.org, linux-metag@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, Will Simoneau <simoneau@hangar16.net>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, tj@kernel.org, Dan Williams <dan.j.williams@intel.com>, Linuxarm <linuxarm@huawei.com>
 
-On 19/06/2017 09:23, Johannes Thumshirn wrote:
-> On Fri, Jun 16, 2017 at 07:57:08PM -0400, Will Simoneau wrote:
->> Is this is a known / obvious issue, or should I try to bisect it?
->
+On Tuesday, June 20, 2017 11:10:45 AM Christoph Hellwig wrote:
+> On Mon, Jun 19, 2017 at 01:15:04PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> > On Friday, June 16, 2017 09:17:08 AM Christoph Hellwig wrote:
+> > > au1100fb is using managed dma allocations, so it doesn't need to
+> > > explicitly free the dma memory in the error path (and if it did
+> > > it would have to use the managed version).
+> > > 
+> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > 
+> > Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+> 
+> Are you fine with picking this up through the new dma-mapping tree?
 
-Out of curiousity, does this issue also occur when only the disk is 
-hot-removed from the expander?
+Yes, this is why Ack-ed it.
 
-> This is a known issue with SAS (and FC) drivers, although no soulution exists
-> to this point.
->
-> 	Johannes
->
+If you prefer me to merge it through fbdev for 4.13 please let me know.
+
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
