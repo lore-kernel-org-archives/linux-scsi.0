@@ -1,28 +1,41 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/2] qedi: Remove unwanted warnings.
-Date: Mon, 19 Jun 2017 21:54:31 -0400
-Message-ID: <yq1zid3jueg.fsf@oracle.com>
-References: <20170615071040.18093-1-manish.rangankar@cavium.com>
+From: Ye Xiaolong <xiaolong.ye@intel.com>
+Subject: Re: [lkp-robot] [scsi]  ebc76736f2: fio.write_bw_MBps -4% regression
+Date: Tue, 20 Jun 2017 10:16:36 +0800
+Message-ID: <20170620021636.GH14764@yexl-desktop>
+References: <20170616082755.22832-1-hch@lst.de>
+ <20170619060318.GC23108@yexl-desktop>
+ <20170619070923.GA13129@lst.de>
+ <20170619074943.GA20152@yexl-desktop>
+ <20170619084153.GA14788@lst.de>
+ <20170619085236.GB20152@yexl-desktop>
+ <20170619093913.GA15040@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:50723 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751014AbdFTByw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Jun 2017 21:54:52 -0400
-In-Reply-To: <20170615071040.18093-1-manish.rangankar@cavium.com> (Manish
-        Rangankar's message of "Thu, 15 Jun 2017 00:10:38 -0700")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170619093913.GA15040@lst.de>
+Sender: linux-block-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, lkp@01.org, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Manish Rangankar <manish.rangankar@cavium.com>
-Cc: martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com, linux-scsi@vger.kernel.org, QLogic-Storage-Upstream@cavium.com
 
+Hi, Christoph
 
-Manish,
+On 06/19, Christoph Hellwig wrote:
+>On Mon, Jun 19, 2017 at 04:52:36PM +0800, Ye Xiaolong wrote:
+>> >I've not seen a compile-time option for the MQ I/O scheduler (unlike
+>> >the legacy one), so the way to change it would be to echo the name to
+>> >/sys/block/<device>/queue/scheduler 
+>> 
+>> echo mq-deadline > /sys/block/<device>/queue/scheduler ?
+>> 
+>> I'll try and post the results once I get it.
+>
+>Thanks!
 
-> Please consider below patches for next 'scsi-fixes' submission.
+I've re-run the test and cat /sys/block/sda/queue/scheduler and
+/sys/block/sda/queue/scheduler, and both showed "[mq-deadline] kyber none",
+Does it mean they have already set as 'mq-deadline'?
 
-Applied to 4.12/scsi-fixes, thanks!
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Thanks,
+Xiaolong
