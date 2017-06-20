@@ -1,37 +1,39 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [lkp-robot] [scsi]  ebc76736f2: fio.write_bw_MBps -4%
-        regression
-Date: Tue, 20 Jun 2017 08:04:28 +0200
-Message-ID: <20170620060428.GA7051@lst.de>
-References: <20170616082755.22832-1-hch@lst.de> <20170619060318.GC23108@yexl-desktop> <20170619070923.GA13129@lst.de> <20170619074943.GA20152@yexl-desktop> <20170619084153.GA14788@lst.de> <20170619085236.GB20152@yexl-desktop> <20170619093913.GA15040@lst.de> <20170620021636.GH14764@yexl-desktop>
+Subject: Re: [PATCH 03/11] au1100fb: remove a bogus
+	dma_free_nonconsistent	call
+Date: Tue, 20 Jun 2017 11:10:45 +0200
+Message-ID: <20170620091045.GA10272@lst.de>
+References: <20170616071716.17321-1-hch@lst.de>
+ <20170616071716.17321-4-hch@lst.de>
+ <CGME20170619111507epcas5p47fd18b90a02d827da256ff4ebbda8089@epcas5p4.samsung.com>
+ <8727942.IUH8e0tH8t@amdc3058>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <alsa-devel-bounces@alsa-project.org>
 Content-Disposition: inline
-In-Reply-To: <20170620021636.GH14764@yexl-desktop>
-Sender: linux-block-owner@vger.kernel.org
-To: Ye Xiaolong <xiaolong.ye@intel.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, lkp@01.org, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org
+In-Reply-To: <8727942.IUH8e0tH8t@amdc3058>
+List-Unsubscribe: <http://mailman.alsa-project.org/mailman/options/alsa-devel>,
+ <mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
+List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel/>
+List-Post: <mailto:alsa-devel@alsa-project.org>
+List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
+List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
+ <mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
+Errors-To: alsa-devel-bounces@alsa-project.org
+Sender: alsa-devel-bounces@alsa-project.org
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: linux-fbdev@vger.kernel.org, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, alsa-devel@alsa-project.org, Christoph Hellwig <hch@lst.de>, linux-serial@vger.kernel.org, nios2-dev@lists.rocketboards.org, linux-metag@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jun 20, 2017 at 10:16:36AM +0800, Ye Xiaolong wrote:
-> Hi, Christoph
+On Mon, Jun 19, 2017 at 01:15:04PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> On Friday, June 16, 2017 09:17:08 AM Christoph Hellwig wrote:
+> > au1100fb is using managed dma allocations, so it doesn't need to
+> > explicitly free the dma memory in the error path (and if it did
+> > it would have to use the managed version).
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> On 06/19, Christoph Hellwig wrote:
-> >On Mon, Jun 19, 2017 at 04:52:36PM +0800, Ye Xiaolong wrote:
-> >> >I've not seen a compile-time option for the MQ I/O scheduler (unlike
-> >> >the legacy one), so the way to change it would be to echo the name to
-> >> >/sys/block/<device>/queue/scheduler 
-> >> 
-> >> echo mq-deadline > /sys/block/<device>/queue/scheduler ?
-> >> 
-> >> I'll try and post the results once I get it.
-> >
-> >Thanks!
-> 
-> I've re-run the test and cat /sys/block/sda/queue/scheduler and
-> /sys/block/sda/queue/scheduler, and both showed "[mq-deadline] kyber none",
-> Does it mean they have already set as 'mq-deadline'?
+> Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-Yes, it seems like you're already using mq-deadline, but bfq isn't even
-available.
+Are you fine with picking this up through the new dma-mapping tree?
