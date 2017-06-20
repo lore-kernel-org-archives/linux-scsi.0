@@ -1,41 +1,38 @@
-From: Ye Xiaolong <xiaolong.ye@intel.com>
-Subject: Re: [lkp-robot] [scsi]  ebc76736f2: fio.write_bw_MBps -4% regression
-Date: Tue, 20 Jun 2017 10:16:36 +0800
-Message-ID: <20170620021636.GH14764@yexl-desktop>
-References: <20170616082755.22832-1-hch@lst.de>
- <20170619060318.GC23108@yexl-desktop>
- <20170619070923.GA13129@lst.de>
- <20170619074943.GA20152@yexl-desktop>
- <20170619084153.GA14788@lst.de>
- <20170619085236.GB20152@yexl-desktop>
- <20170619093913.GA15040@lst.de>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH 1/6] qla2xxx: Add FC-NVMe port discovery and PRLI handling
+Date: Tue, 20 Jun 2017 04:27:03 +0000
+Message-ID: <B1E2622E-354A-40CE-B4BF-0CBAC2D1F204@cavium.com>
+References: <20170616224744.3681-1-himanshu.madhani@cavium.com>
+ <20170616224744.3681-2-himanshu.madhani@cavium.com>
+ <9df75431-74d4-20a1-4a5c-464f09345812@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170619093913.GA15040@lst.de>
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, lkp@01.org, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2nam01on0067.outbound.protection.outlook.com ([104.47.34.67]:31376
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750772AbdFTE1H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 20 Jun 2017 00:27:07 -0400
+In-Reply-To: <9df75431-74d4-20a1-4a5c-464f09345812@broadcom.com>
+Content-Language: en-US
+Content-ID: <999F2693E91F274793864FC89E4BBEEC@namprd07.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <james.smart@broadcom.com>
+Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "giridhar.malaval@cavium.com" <giridhar.malaval@cavium.com>, "Trapp, Darren" <Darren.Trapp@cavium.com>
 
-Hi, Christoph
 
-On 06/19, Christoph Hellwig wrote:
->On Mon, Jun 19, 2017 at 04:52:36PM +0800, Ye Xiaolong wrote:
->> >I've not seen a compile-time option for the MQ I/O scheduler (unlike
->> >the legacy one), so the way to change it would be to echo the name to
->> >/sys/block/<device>/queue/scheduler 
->> 
->> echo mq-deadline > /sys/block/<device>/queue/scheduler ?
->> 
->> I'll try and post the results once I get it.
->
->Thanks!
+> On Jun 19, 2017, at 1:26 PM, James Smart <james.smart@broadcom.com> wrote=
+:
+>=20
+> On 6/16/2017 3:47 PM, Himanshu Madhani wrote:
+>>    /* FCP-4 types */
+>>  #define FC4_TYPE_FCP_SCSI	0x08
+>> +#define FC4_TYPE_NVME		0x28
+>>  #define FC4_TYPE_OTHER		0x0
+>>  #define FC4_TYPE_UNKNOWN	0xff
+>=20
+> please use the types from include/uapi/scsi/fc/fc_fs.h
 
-I've re-run the test and cat /sys/block/sda/queue/scheduler and
-/sys/block/sda/queue/scheduler, and both showed "[mq-deadline] kyber none",
-Does it mean they have already set as 'mq-deadline'?
-
-Thanks,
-Xiaolong
+Sure.
