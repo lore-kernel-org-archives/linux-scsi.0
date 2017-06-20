@@ -1,37 +1,35 @@
-From: Maurizio Lombardi <mlombard@redhat.com>
-Subject: Re: enclosure: fix sysfs symlinks creation when using multipath
-Date: Tue, 20 Jun 2017 13:38:59 +0200
-Message-ID: <8d728c68-85f5-9bc2-6ce3-0c6dbc0a0c19@redhat.com>
-References: <1489690155.11068.10.camel@linux.vnet.ibm.com>
- <1998341d-7f47-f73a-c5c5-4095b7fa9ef1@linux.vnet.ibm.com>
- <33d61a4d-d199-16fd-82e3-bef506cc6435@linux.vnet.ibm.com>
+From: David Laight <David.Laight@ACULAB.COM>
+Subject: Re: remove dma_alloc_noncoherent
+Date: Tue, 20 Jun 2017 12:44:03 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD0026C08@AcuExch.aculab.com>
+References: <20170616071716.17321-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40588 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751021AbdFTLjC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 20 Jun 2017 07:39:02 -0400
-In-Reply-To: <33d61a4d-d199-16fd-82e3-bef506cc6435@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <alsa-devel-bounces@alsa-project.org>
+In-Reply-To: <20170616071716.17321-1-hch@lst.de>
+Content-Language: en-US
+List-Unsubscribe: <http://mailman.alsa-project.org/mailman/options/alsa-devel>,
+ <mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
+List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel/>
+List-Post: <mailto:alsa-devel@alsa-project.org>
+List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
+List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
+ <mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
+Errors-To: alsa-devel-bounces@alsa-project.org
+Sender: alsa-devel-bounces@alsa-project.org
+To: 'Christoph Hellwig' <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "linux-metag@vger.kernel.org" <linux-metag@vger.kernel.org>, "nios2-dev@lists.rocketboards.org" <nios2-dev@lists.rocketboards.org>, "linux-fbdev@vger.kernel.org" <linux-fbdev@vger.kernel.org>, "alsa-devel@alsa-project.org" <alsa-devel@alsa-project.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Miller <dougmill@linux.vnet.ibm.com>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
 
+From: Christoph Hellwig
+> Sent: 16 June 2017 08:17
+>
+> For many years we've had the dma_alloc_attrs API that is more flexible
+> than dma_alloc_noncoherent.  This series moves the remaining users over
+> to the attrs API.
 
+And most of the callers probably only want to specify 'noncoherent'.
+Grepping the source for other uses is easier if the wrapper is left.
 
-Dne 16.6.2017 v 18:08 Douglas Miller napsal(a):
-> Just to respond to James' question on the cause. What I observed was a race condition between udevd (ses_init()) and a worker thread (do_scan_async()),
-> where the worker thread is creating the directories that are the target of the symlinks being created by udevd.
-> Something was happening when udevd caught up with the worker thread (so the target directory did not exist) and it seemed the worker thread either got preempted or
-> else just could not stay ahead of udevd. This means that udevd started failing to create symlinks even though the worker thread eventually got them all created.
-> I did observe what appeared to be preemption, as the creation of directories stopped until udevd finished failing all the (rest of the) symlinks.
-> Although there may have been other explanations for what I saw.
-> 
-
-> I am able to pass my testing with this patch. I don't see an official submit of this patch, but will respond to it when I see one.
-
-Thanks Douglas for testing it, I will resubmit the patch if no one has any objections.
-
-Maurizio.
+	David
