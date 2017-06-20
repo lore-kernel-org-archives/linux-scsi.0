@@ -1,88 +1,124 @@
 From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH 2/6] qla2xxx: Add FC-NVMe command handling
-Date: Tue, 20 Jun 2017 04:29:30 +0000
-Message-ID: <587E2C5F-0373-434E-8EAA-8670C5513709@cavium.com>
+Subject: Re: [PATCH 3/6] qla2xxx: Add FC-NVMe F/W initialization and transport
+ registration
+Date: Tue, 20 Jun 2017 04:31:02 +0000
+Message-ID: <878789AD-4474-429E-A6BB-D2CBF8EB60C3@cavium.com>
 References: <20170616224744.3681-1-himanshu.madhani@cavium.com>
- <20170616224744.3681-3-himanshu.madhani@cavium.com>
- <add8f76c-e8f8-4462-12ad-ae405678549f@broadcom.com>
+ <20170616224744.3681-4-himanshu.madhani@cavium.com>
+ <41e7e61c-b91c-b9f9-79df-0f196970d971@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0042.outbound.protection.outlook.com ([104.47.40.42]:46496
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam02on0053.outbound.protection.outlook.com ([104.47.36.53]:52448
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750863AbdFTE3d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 20 Jun 2017 00:29:33 -0400
-In-Reply-To: <add8f76c-e8f8-4462-12ad-ae405678549f@broadcom.com>
+        id S1750925AbdFTEbF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 20 Jun 2017 00:31:05 -0400
+In-Reply-To: <41e7e61c-b91c-b9f9-79df-0f196970d971@broadcom.com>
 Content-Language: en-US
-Content-ID: <96C1BB1CA2004F4B82D2539C3D61B5E7@namprd07.prod.outlook.com>
+Content-ID: <90753BD648577E4A9CF18BE507DF3429@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@broadcom.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, "Trapp, Darren" <Darren.Trapp@cavium.com>
+Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "giridhar.malaval@cavium.com" <giridhar.malaval@cavium.com>, "Trapp, Darren" <Darren.Trapp@cavium.com>
 
-DQo+IE9uIEp1biAxOSwgMjAxNywgYXQgMjowMSBQTSwgSmFtZXMgU21hcnQgPGphbWVzLnNtYXJ0
-QGJyb2FkY29tLmNvbT4gd3JvdGU6DQo+IA0KPiBPbiA2LzE2LzIwMTcgMzo0NyBQTSwgSGltYW5z
-aHUgTWFkaGFuaSB3cm90ZToNCj4+IEBAIC02MTUsOCArNjIwLDI1IEBAIHN0cnVjdCBzdHNfZW50
-cnlfMjR4eCB7DQo+PiAgCXVpbnQzMl90IHJzcF9yZXNpZHVhbF9jb3VudDsJLyogRkNQIFJTUCBy
-ZXNpZHVhbCBjb3VudC4gKi8NCj4+ICAgIAl1aW50MzJfdCBzZW5zZV9sZW47CQkvKiBGQ1AgU0VO
-U0UgbGVuZ3RoLiAqLw0KPj4gLQl1aW50MzJfdCByc3BfZGF0YV9sZW47CQkvKiBGQ1AgcmVzcG9u
-c2UgZGF0YSBsZW5ndGguICovDQo+PiAtCXVpbnQ4X3QgZGF0YVsyOF07CQkvKiBGQ1AgcmVzcG9u
-c2Uvc2Vuc2UgaW5mb3JtYXRpb24uICovDQo+PiArDQo+PiArCXVuaW9uIHsNCj4+ICsJCXN0cnVj
-dCB7DQo+PiArCQkJdWludDMyX3QgcnNwX2RhdGFfbGVuOwkvKiBGQ1AgcmVzcG9uc2UgZGF0YSBs
-ZW5ndGggICovDQo+PiArCQkJdWludDhfdCBkYXRhWzI4XTsJLyogRkNQIHJzcC9zZW5zZSBpbmZv
-cm1hdGlvbiAqLw0KPj4gKwkJfTsNCj4+ICsJCXN0cnVjdCB7DQo+PiArCQkJLyogbnZtZSBlcnNw
-IGhkciAqLw0KPj4gKwkJCV9fdTgJc3RhdHVzX2NvZGU7DQo+PiArCQkJX191OAlyc3ZkMDsNCj4+
-ICsJCQlfX2JlMTYJaXVfbGVuOw0KPj4gKwkJCV9fYmUzMglyc247DQo+PiArCQkJX19iZTMyCXhm
-cmRfbGVuOw0KPj4gKwkJCV9fYmUzMglyc3ZkMTI7DQo+PiArCQkJdWludDhfdAljcWVbMTZdOw0K
-Pj4gKwkJfTsNCj4+ICsJCXVpbnQ4X3QgbnZtZV9lcnNwX2RhdGFbMzJdOw0KPj4gKwl9Ow0KPj4g
-Kw0KPiANCj4gcmF0aGVyIHRoYW4gZGVmaW5pbmcgYSBuZXcgc3RydWN0dXJlIGZvciBlcnNwIC0g
-Y2FuJ3QgeW91IHVzZSB0aGUgc3RydWN0IG52bWVfZmNfZXJzcF9pdSBkZWZpbml0aW9uIGZyb20g
-aW5jbHVkZS9saW51eC9udm1lLWZjLmggPw0KPiANCg0KU3VyZS4gd2lsbCByZW1vdmUgdGhpcw0K
-DQo+IA0KPiANCj4+ICAJLyoNCj4+ICAJICogSWYgRElGIEVycm9yIGlzIHNldCBpbiBjb21wX3N0
-YXR1cywgdGhlc2UgYWRkaXRpb25hbCBmaWVsZHMgYXJlDQo+PiAgCSAqIGRlZmluZWQ6DQo+PiBk
-aWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2lzci5jIGIvZHJpdmVycy9zY3Np
-L3FsYTJ4eHgvcWxhX2lzci5jDQo+PiBpbmRleCA0MDM4NWJjMWQxZmEuLjBkNjBmZDBkYTYwNCAx
-MDA2NDQNCj4+IC0tLSBhL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9pc3IuYw0KPj4gKysrIGIv
-ZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2lzci5jDQo+PiBAQCAtMTc5OSw2ICsxNzk5LDg2IEBA
-IHFsYTI0eHhfdG1faW9jYl9lbnRyeShzY3NpX3FsYV9ob3N0X3QgKnZoYSwgc3RydWN0IHJlcV9x
-dWUgKnJlcSwgdm9pZCAqdHNrKQ0KPj4gIAlzcC0+ZG9uZShzcCwgMCk7DQo+PiAgfQ0KPj4gICtz
-dGF0aWMgdm9pZA0KPj4gK3FsYTI0eHhfbnZtZV9pb2NiX2VudHJ5KHNjc2lfcWxhX2hvc3RfdCAq
-dmhhLCBzdHJ1Y3QgcmVxX3F1ZSAqcmVxLCB2b2lkICp0c2spDQo+PiArew0KPj4gKwljb25zdCBj
-aGFyIGZ1bmNbXSA9ICJOVk1FLUlPQ0IiOw0KPj4gKwlmY19wb3J0X3QgKmZjcG9ydDsNCj4+ICsJ
-c3JiX3QgKnNwOw0KPj4gKwlzdHJ1Y3Qgc3JiX2lvY2IgKmlvY2I7DQo+PiArCXN0cnVjdCBzdHNf
-ZW50cnlfMjR4eCAqc3RzID0gKHN0cnVjdCBzdHNfZW50cnlfMjR4eCAqKXRzazsNCj4+ICsJdWlu
-dDE2X3QgICAgICAgIHN0YXRlX2ZsYWdzOw0KPj4gKwlzdHJ1Y3QgbnZtZWZjX2ZjcF9yZXEgKmZk
-Ow0KPj4gKwlzdHJ1Y3Qgc3JiX2lvY2IgKm52bWU7DQo+PiArDQo+PiArCXNwID0gcWxhMngwMF9n
-ZXRfc3BfZnJvbV9oYW5kbGUodmhhLCBmdW5jLCByZXEsIHRzayk7DQo+PiArCWlmICghc3ApDQo+
-PiArCQlyZXR1cm47DQo+PiArDQo+PiArCWlvY2IgPSAmc3AtPnUuaW9jYl9jbWQ7DQo+PiArCWZj
-cG9ydCA9IHNwLT5mY3BvcnQ7DQo+PiArCWlvY2ItPnUubnZtZS5jb21wX3N0YXR1cyA9IGxlMTZf
-dG9fY3B1KHN0cy0+Y29tcF9zdGF0dXMpOw0KPj4gKwlzdGF0ZV9mbGFncyAgPSBsZTE2X3RvX2Nw
-dShzdHMtPnN0YXRlX2ZsYWdzKTsNCj4+ICsJZmQgPSBpb2NiLT51Lm52bWUuZGVzYzsNCj4+ICsJ
-bnZtZSA9ICZzcC0+dS5pb2NiX2NtZDsNCj4+ICsNCj4+ICsJaWYgKHVubGlrZWx5KG52bWUtPnUu
-bnZtZS5hZW5fb3ApKSB7DQo+PiArCQlhdG9taWNfZGVjKCZzcC0+dmhhLT5udm1lX2FjdGl2ZV9h
-ZW5fY250KTsNCj4+ICsJCS8qDQo+PiArCQkgKiBOZWVkZWQgcmlnaHQgbm93IHNpbmNlIHRoZSB0
-cmFuc3BvcnQgZG9lc24ndCBjbGVhbnVwDQo+PiArCQkgKiB1cCBBRU4ncyBJTydzIG9uIHJlbW90
-ZSBwb3J0IGRlbGV0ZS4NCj4+ICsJCSAqIHRoZXkgY291bGQgaGF2ZSBnb25lIGF3YXkgd2hpbGUg
-d2Ugc3RpbGwgaGF2ZSB0aGUgKmZkLg0KPj4gKwkJICovDQo+PiArCQlpZiAoIWF0b21pY19yZWFk
-KCZzcC0+ZmNwb3J0LT5udm1lX3JlZl9jb3VudCkpIHsNCj4+ICsJCQlzcC0+ZG9uZShzcCwgUUxB
-X0ZVTkNUSU9OX0ZBSUxFRCk7DQo+PiArCQkJcmV0dXJuOw0KPiANCj4gVGhlIG1pc3NpbmcgYWVu
-IGFib3J0IGhhcyBiZWVuIGNvcnJlY3RlZCBmb3Igc2V2ZXJhbCBtb250aHMuLiBTaG91bGQgYmUg
-bm8gbmVlZCBmb3IgaXQuDQo+IA0KQWNrLiBXaWxsIHJlbW92ZSBpdC4NCg0KPiANCj4+IEBAIC01
-OTk2LDYgKzU5OTgsMTggQEAgcWxhMngwMF90aW1lcihzY3NpX3FsYV9ob3N0X3QgKnZoYSkNCj4+
-ICAJaWYgKCFsaXN0X2VtcHR5KCZ2aGEtPndvcmtfbGlzdCkpDQo+PiAgCQlzdGFydF9kcGMrKzsN
-Cj4+ICArCS8qDQo+PiArCSAqIEZDLU5WTUUNCj4+ICsJICogc2VlIGlmIHRoZSBhY3RpdmUgQUVO
-IGNvdW50IGhhcyBjaGFuZ2VkIGZyb20gd2hhdCB3YXMgbGFzdCByZXBvcnRlZC4NCj4+ICsJICov
-DQo+PiArCWlmIChhdG9taWNfcmVhZCgmdmhhLT5udm1lX2FjdGl2ZV9hZW5fY250KSAhPSB2aGEt
-Pm52bWVfbGFzdF9ycHRkX2Flbikgew0KPj4gKwkJdmhhLT5udm1lX2xhc3RfcnB0ZF9hZW4gPQ0K
-Pj4gKwkJICAgIGF0b21pY19yZWFkKCZ2aGEtPm52bWVfYWN0aXZlX2Flbl9jbnQpOw0KPj4gKwkJ
-cWxfbG9nKHFsX2xvZ19pbmZvLCB2aGEsIDB4MzAwMiwNCj4+ICsJCSAgICAicmVwb3J0aW5nIG5l
-dyBhZW4gY291bnQgb2YgJWQgdG8gdGhlIGZ3IFRCRFxuIiwNCj4+ICsJCSAgICB2aGEtPm52bWVf
-bGFzdF9ycHRkX2Flbik7DQo+PiArCX0NCj4+ICsNCj4+ICAJLyogU2NoZWR1bGUgdGhlIERQQyBy
-b3V0aW5lIGlmIG5lZWRlZCAqLw0KPj4gIAlpZiAoKHRlc3RfYml0KElTUF9BQk9SVF9ORUVERUQs
-ICZ2aGEtPmRwY19mbGFncykgfHwNCj4+ICAJICAgIHRlc3RfYml0KExPT1BfUkVTWU5DX05FRURF
-RCwgJnZoYS0+ZHBjX2ZsYWdzKSB8fA0KPiANCj4gUTogd2h5IGRvZXMgbGxkZCBuZWVkIHRvIHRy
-YWNrIGFlbiB2cyBhbnkgb3RoZXIgdHlwZSBvZiBmY3Agb3BlcmF0aW9uID8NCg0KVGhlc2UgYXJl
-IGxvbmcgbGl2ZWQgZXhjaGFuZ2VzIGFuZCBhZmZlY3QgdGhlIGFkYXB0ZXLigJlzIGludGVycnVw
-dCBnZW5lcmF0aW9uIGxvZ2ljLg0KDQpUaGFua3MsDQotIEhpbWFuc2h1DQoNCg==
+
+> On Jun 19, 2017, at 2:22 PM, James Smart <james.smart@broadcom.com> wrote=
+:
+>=20
+> On 6/16/2017 3:47 PM, Himanshu Madhani wrote:
+>> From: Duane Grigsby <duane.grigsby@cavium.com>
+>>=20
+>> This code provides the interfaces to register remote and local ports
+>> of FC4 type 0x28 with the FC-NVMe transport and transports the
+>> requests (FC-NVMe FC link services and FC-NVMe commands IUs) to the
+>> fabric. It also provides the support for allocating h/w queues and
+>> aborting FC-NVMe FC requests.
+>>=20
+>> Signed-off-by: Darren Trapp <darren.trapp@cavium.com>
+>> Signed-off-by: Duane Grigsby <duane.grigsby@cavium.com>
+>> Signed-off-by: Anil Gurumurthy <anil.gurumurhty@cavium.com>
+>> Signed-off-by: Giridhar Malavali <giridhar.malavali@cavium.com>
+>> Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+>>=20
+>> +#if (IS_ENABLED(CONFIG_NVME_FC))
+>> +extern int nvme_fc_register_remoteport(struct nvme_fc_local_port *,
+>> +    struct nvme_fc_port_info *, struct nvme_fc_remote_port **);
+>> +extern int nvme_fc_register_localport(struct nvme_fc_port_info *,
+>> +    struct nvme_fc_port_template *, struct device *,
+>> +    struct nvme_fc_local_port **);
+>> +extern int nvme_fc_unregister_localport(struct nvme_fc_local_port *);
+>> +#endif
+>=20
+> There should be no need for these. They are in the include/linux/nvme-fc-=
+driver.h header.
+>=20
+
+Agree. Will remove it=20
+
+>=20
+>> +static void qla_nvme_sp_ls_done(void *ptr, int res)
+>> +{
+>> +	srb_t *sp =3D ptr;
+>> +	struct srb_iocb *nvme;
+>> +	struct nvmefc_ls_req   *fd;
+>> +	struct nvme_private *priv;
+>> +
+>> +	if (atomic_read(&sp->ref_count) =3D=3D 0) {
+>> +		ql_log(ql_log_warn, sp->fcport->vha, 0x2123,
+>> +		    "SP reference-count to ZERO on LS_done -- sp=3D%p.\n", sp);
+>> +		return;
+>> +	}
+>> +
+>> +	if (!atomic_dec_and_test(&sp->ref_count))
+>> +		return;
+>> +
+>> +	if (res)
+>> +		res =3D NVME_SC_FC_TRANSPORT_ERROR;
+>=20
+> LS request failures status should be -Exxx values, not nvme status codes =
+(which don't apply to LS's).
+> The api probably wasn't super clear on this.
+>=20
+
+Will fix up in v2.
+
+>> +
+>> +	nvme =3D &sp->u.iocb_cmd;
+>> +	fd =3D nvme->u.nvme.desc;
+>> +	priv =3D fd->private;
+>> +	priv->comp_status =3D res;
+>> +	schedule_work(&priv->ls_work);
+>> +	/* work schedule doesn't need the sp */
+>> +	qla2x00_rel_sp(sp);
+>> +}
+>> +
+>> +static void qla_nvme_sp_done(void *ptr, int res)
+>> +{
+>> +	srb_t *sp =3D ptr;
+>> +	struct srb_iocb *nvme;
+>> +	struct nvmefc_fcp_req *fd;
+>> +
+>> +	nvme =3D &sp->u.iocb_cmd;
+>> +	fd =3D nvme->u.nvme.desc;
+>> +
+>> +	if (!atomic_dec_and_test(&sp->ref_count))
+>> +		return;
+>> +
+>> +	if (!(sp->fcport->nvme_flag & NVME_FLAG_REGISTERED))
+>> +		goto rel;
+>> +
+>> +	if (unlikely((nvme->u.nvme.comp_status) || res))
+>> +		fd->status =3D NVME_SC_FC_TRANSPORT_ABORTED;
+>> +	else
+>> +		fd->status =3D 0;
+>=20
+> FCP req failures status should be -Exxx values, not nvme status codes. Th=
+is is clear in the api header.
+>=20
+
+Sure. Will fix this in v2.=20
+
+> -- james
+>=20
