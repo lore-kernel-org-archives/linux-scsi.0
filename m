@@ -1,35 +1,37 @@
-From: David Laight <David.Laight@ACULAB.COM>
-Subject: Re: remove dma_alloc_noncoherent
-Date: Tue, 20 Jun 2017 12:44:03 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD0026C08@AcuExch.aculab.com>
-References: <20170616071716.17321-1-hch@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <alsa-devel-bounces@alsa-project.org>
-In-Reply-To: <20170616071716.17321-1-hch@lst.de>
-Content-Language: en-US
-List-Unsubscribe: <http://mailman.alsa-project.org/mailman/options/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
-List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel/>
-List-Post: <mailto:alsa-devel@alsa-project.org>
-List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
-List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
-Errors-To: alsa-devel-bounces@alsa-project.org
-Sender: alsa-devel-bounces@alsa-project.org
-To: 'Christoph Hellwig' <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "linux-metag@vger.kernel.org" <linux-metag@vger.kernel.org>, "nios2-dev@lists.rocketboards.org" <nios2-dev@lists.rocketboards.org>, "linux-fbdev@vger.kernel.org" <linux-fbdev@vger.kernel.org>, "alsa-devel@alsa-project.org" <alsa-devel@alsa-project.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: Varun Prakash <varun@chelsio.com>
+Subject: [PATCH] scsi: csiostor: update module version
+Date: Tue, 20 Jun 2017 19:41:21 +0530
+Message-ID: <1497967881-4378-1-git-send-email-varun@chelsio.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stargate.chelsio.com ([12.32.117.8]:62290 "EHLO
+        stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752356AbdFTOLg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Jun 2017 10:11:36 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, indranil@chelsio.com, varun@chelsio.com, rajesh.kumar@chelsio.com
 
-From: Christoph Hellwig
-> Sent: 16 June 2017 08:17
->
-> For many years we've had the dma_alloc_attrs API that is more flexible
-> than dma_alloc_noncoherent.  This series moves the remaining users over
-> to the attrs API.
+Add -ko to the module version similar to module version of
+other Chelsio drivers.
 
-And most of the callers probably only want to specify 'noncoherent'.
-Grepping the source for other uses is easier if the wrapper is left.
+Signed-off-by: Varun Prakash <varun@chelsio.com>
+---
+ drivers/scsi/csiostor/csio_init.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-	David
+diff --git a/drivers/scsi/csiostor/csio_init.h b/drivers/scsi/csiostor/csio_init.h
+index 5cc5d31..96b31e5 100644
+--- a/drivers/scsi/csiostor/csio_init.h
++++ b/drivers/scsi/csiostor/csio_init.h
+@@ -50,7 +50,7 @@
+ #define CSIO_DRV_AUTHOR			"Chelsio Communications"
+ #define CSIO_DRV_LICENSE		"Dual BSD/GPL"
+ #define CSIO_DRV_DESC			"Chelsio FCoE driver"
+-#define CSIO_DRV_VERSION		"1.0.0"
++#define CSIO_DRV_VERSION		"1.0.0-ko"
+ 
+ extern struct fc_function_template csio_fc_transport_funcs;
+ extern struct fc_function_template csio_fc_transport_vport_funcs;
+-- 
+2.0.2
