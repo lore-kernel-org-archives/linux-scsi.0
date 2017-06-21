@@ -1,65 +1,67 @@
-From: Johan Hovold <johan@kernel.org>
-Subject: [PATCH RESEND] scsi: sun_esp: fix device reference leaks
-Date: Wed, 21 Jun 2017 11:35:09 +0200
-Message-ID: <20170621093509.GL6366@localhost>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>, "David S. Miller" <davem@davemloft.net>
+From: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH] qla2xxx: don't include <generated/utsrelease.h>
+Date: Wed, 21 Jun 2017 13:40:05 +0200
+Message-ID: <20170621114005.29800-1-johannes@sipsolutions.net>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:42586 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750927AbdFULkL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 21 Jun 2017 07:40:11 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
 
-Make sure to drop the reference to the dma device taken by
-of_find_device_by_node() on probe errors and on driver unbind.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Fixes: 334ae614772b ("sparc: Kill SBUS DVMA layer.")
-Signed-off-by: Johan Hovold <johan@kernel.org>
+There's no need to use the static UTS_RELEASE string, since
+utsname()->release contains the same.
+
+This avoids rebuilding this file for every change of the
+release string.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
 
-No comment to this one for over a month so resending. Also added David
-Miller on CC.
-
-Johan
-
-
- drivers/scsi/sun_esp.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/sun_esp.c b/drivers/scsi/sun_esp.c
-index 7b6d4c2087d7..747ee64a78e1 100644
---- a/drivers/scsi/sun_esp.c
-+++ b/drivers/scsi/sun_esp.c
-@@ -566,6 +566,7 @@ static int esp_sbus_probe(struct platform_device *op)
- 	struct device_node *dp = op->dev.of_node;
- 	struct platform_device *dma_of = NULL;
- 	int hme = 0;
-+	int ret;
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 7443e4efa3ae..9195e00261f6 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -25,7 +25,6 @@
  
- 	if (dp->parent &&
- 	    (!strcmp(dp->parent->name, "espdma") ||
-@@ -580,7 +581,11 @@ static int esp_sbus_probe(struct platform_device *op)
- 	if (!dma_of)
- 		return -ENODEV;
- 
--	return esp_sbus_probe_one(op, dma_of, hme);
-+	ret = esp_sbus_probe_one(op, dma_of, hme);
-+	if (ret)
-+		put_device(&dma_of->dev);
-+
-+	return ret;
+ #include <linux/module.h>
+ #include <linux/moduleparam.h>
+-#include <generated/utsrelease.h>
+ #include <linux/utsname.h>
+ #include <linux/vmalloc.h>
+ #include <linux/init.h>
+@@ -1870,9 +1869,9 @@ static ssize_t tcm_qla2xxx_wwn_version_show(struct config_item *item,
+ 		char *page)
+ {
+ 	return sprintf(page,
+-	    "TCM QLOGIC QLA2XXX NPIV capable fabric module %s on %s/%s on "
+-	    UTS_RELEASE"\n", QLA2XXX_VERSION, utsname()->sysname,
+-	    utsname()->machine);
++	    "TCM QLOGIC QLA2XXX NPIV capable fabric module %s on %s/%s on %s\n",
++	    QLA2XXX_VERSION, utsname()->sysname,
++	    utsname()->machine, utsname()->release);
  }
  
- static int esp_sbus_remove(struct platform_device *op)
-@@ -613,6 +618,8 @@ static int esp_sbus_remove(struct platform_device *op)
+ CONFIGFS_ATTR_RO(tcm_qla2xxx_wwn_, version);
+@@ -1976,9 +1975,9 @@ static int tcm_qla2xxx_register_configfs(void)
+ {
+ 	int ret;
  
- 	dev_set_drvdata(&op->dev, NULL);
+-	pr_debug("TCM QLOGIC QLA2XXX fabric module %s on %s/%s on "
+-	    UTS_RELEASE"\n", QLA2XXX_VERSION, utsname()->sysname,
+-	    utsname()->machine);
++	pr_debug("TCM QLOGIC QLA2XXX fabric module %s on %s/%s on %s\n",
++	    QLA2XXX_VERSION, utsname()->sysname,
++	    utsname()->machine, utsname()->release);
  
-+	put_device(&dma_of->dev);
-+
- 	return 0;
- }
- 
+ 	ret = target_register_template(&tcm_qla2xxx_ops);
+ 	if (ret)
 -- 
-2.13.0
+2.11.0
