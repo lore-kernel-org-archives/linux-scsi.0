@@ -1,47 +1,34 @@
-From: "Madhani, Himanshu" <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 6/6] qla2xxx: Update Driver version to 10.00.00.00-k
-Date: Wed, 21 Jun 2017 13:48:46 -0700
-Message-ID: <20170621204846.21663-7-himanshu.madhani@cavium.com>
-References: <20170621204846.21663-1-himanshu.madhani@cavium.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 151661] Adaptec 3405 3805 prints "AAC: Host adapter dead -1"
+ every 10 seconds but works fine anyway
+Date: Wed, 21 Jun 2017 22:43:54 +0000
+Message-ID: <bug-151661-11613-FvMIZ5dwhx@https.bugzilla.kernel.org/>
+References: <bug-151661-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0064.outbound.protection.outlook.com ([104.47.33.64]:13907
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751884AbdFUUtK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 21 Jun 2017 16:49:10 -0400
-In-Reply-To: <20170621204846.21663-1-himanshu.madhani@cavium.com>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:52840 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752020AbdFUWoH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 21 Jun 2017 18:44:07 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 2FC2E2846D
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 22:44:06 +0000 (UTC)
+In-Reply-To: <bug-151661-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com
-Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org, darren.trapp@cavium.com, giridhar.malavali@cavium.com, linux-nvme@lists.infradead.org
+To: linux-scsi@kernel.org
 
-From: Himanshu Madhani <himanshu.madhani@cavium.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=151661
 
-Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-Reviewed-by: James Smart <james.smart@broadcom.com>
----
- drivers/scsi/qla2xxx/qla_version.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+--- Comment #20 from Stuart Naifeh (scnaifeh@hotmail.com) ---
+As of June 21, 2017, I am still seeing this in Debian Stretch running kernel
+4.10.0-rc6.  I have an IBM ServeRaid 8s, which is a rebranded Adaptec 4805.  I
+see the message repeat about every second, so it really fills up syslog
+quickly.
 
-diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
-index dcbb9bb05e99..005a378f7fab 100644
---- a/drivers/scsi/qla2xxx/qla_version.h
-+++ b/drivers/scsi/qla2xxx/qla_version.h
-@@ -7,9 +7,9 @@
- /*
-  * Driver version
-  */
--#define QLA2XXX_VERSION      "9.01.00.00-k"
-+#define QLA2XXX_VERSION      "10.00.00.00-k"
- 
--#define QLA_DRIVER_MAJOR_VER	9
--#define QLA_DRIVER_MINOR_VER	1
-+#define QLA_DRIVER_MAJOR_VER	10
-+#define QLA_DRIVER_MINOR_VER	0
- #define QLA_DRIVER_PATCH_VER	0
- #define QLA_DRIVER_BETA_VER	0
 -- 
-2.12.0
+You are receiving this mail because:
+You are watching the assignee of the bug.
