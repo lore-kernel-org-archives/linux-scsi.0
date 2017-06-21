@@ -1,44 +1,65 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 4/6] qla2xxx: Send FC4 type NVMe to the management server
-Date: Wed, 21 Jun 2017 09:07:04 +0200
-Message-ID: <20170621070704.GA4131@linux-x5ow.site>
-References: <20170616224744.3681-1-himanshu.madhani@cavium.com>
- <20170616224744.3681-5-himanshu.madhani@cavium.com>
- <20170619100641.GB19417@linux-x5ow.site>
- <032AF3DB-A17D-418E-A505-724D51CB7391@cavium.com>
+From: Johan Hovold <johan@kernel.org>
+Subject: [PATCH RESEND] scsi: sun_esp: fix device reference leaks
+Date: Wed, 21 Jun 2017 11:35:09 +0200
+Message-ID: <20170621093509.GL6366@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36444 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751149AbdFUHHG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 21 Jun 2017 03:07:06 -0400
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <032AF3DB-A17D-418E-A505-724D51CB7391@cavium.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>, "David S. Miller" <davem@davemloft.net>
 List-Id: linux-scsi@vger.kernel.org
-To: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, "Trapp, Darren" <Darren.Trapp@cavium.com>
 
-On Tue, Jun 20, 2017 at 10:13:04PM +0000, Madhani, Himanshu wrote:
-> Somehow in the actual code this does not look like issue. (i.e. correct indentation is seen) 
-> i am not sure why in patch view its showing one space off.
+Make sure to drop the reference to the dma device taken by
+of_find_device_by_node() on probe errors and on driver unbind.
 
-Strange. I guess we'll have to live with it then.
+Fixes: 334ae614772b ("sparc: Kill SBUS DVMA layer.")
+Signed-off-by: Johan Hovold <johan@kernel.org>
+---
 
-Ah and I think you forgot to Cc the linux-nvme [1] list on your submission. It
-would be good to have it on linux-nvme as well as on linux-scsi so Sagi,
-Christoph and Keith see it as well.
+No comment to this one for over a month so resending. Also added David
+Miller on CC.
 
-Byte,
-	Johannes
+Johan
 
-[1] linux-nvme@lists.infradead.org
+
+ drivers/scsi/sun_esp.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/sun_esp.c b/drivers/scsi/sun_esp.c
+index 7b6d4c2087d7..747ee64a78e1 100644
+--- a/drivers/scsi/sun_esp.c
++++ b/drivers/scsi/sun_esp.c
+@@ -566,6 +566,7 @@ static int esp_sbus_probe(struct platform_device *op)
+ 	struct device_node *dp = op->dev.of_node;
+ 	struct platform_device *dma_of = NULL;
+ 	int hme = 0;
++	int ret;
+ 
+ 	if (dp->parent &&
+ 	    (!strcmp(dp->parent->name, "espdma") ||
+@@ -580,7 +581,11 @@ static int esp_sbus_probe(struct platform_device *op)
+ 	if (!dma_of)
+ 		return -ENODEV;
+ 
+-	return esp_sbus_probe_one(op, dma_of, hme);
++	ret = esp_sbus_probe_one(op, dma_of, hme);
++	if (ret)
++		put_device(&dma_of->dev);
++
++	return ret;
+ }
+ 
+ static int esp_sbus_remove(struct platform_device *op)
+@@ -613,6 +618,8 @@ static int esp_sbus_remove(struct platform_device *op)
+ 
+ 	dev_set_drvdata(&op->dev, NULL);
+ 
++	put_device(&dma_of->dev);
++
+ 	return 0;
+ }
+ 
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+2.13.0
