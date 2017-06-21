@@ -1,90 +1,48 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH] lpfc: Fix nvme io stoppage after link bounce
-Date: Wed, 21 Jun 2017 10:37:58 -0700
-Message-ID: <20170621173758.28058-1-jsmart2021@gmail.com>
+Subject: [PATCH] lpfc: fix refcount error on node list
+Date: Wed, 21 Jun 2017 10:51:23 -0700
+Message-ID: <20170621175123.28190-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:34011 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752150AbdFURiK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jun 2017 13:38:10 -0400
-Received: by mail-wr0-f195.google.com with SMTP id k67so255921wrc.1
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 10:38:10 -0700 (PDT)
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:33693 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751114AbdFURvc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jun 2017 13:51:32 -0400
+Received: by mail-qk0-f193.google.com with SMTP id p21so4548699qke.0
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 10:51:32 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Smart <jsmart2021@gmail.com>, James Smart <james.smart@broadcom.com>
 
-On link down, transport is calling driver to abort outstanding ios.
-Driver erroneously rejects the abort if the port indicates it isn't
-logged in - which will be the case after the link down. Thus, the
-io can't clean up. This prevents reconnection at the transport level.
+A change in remote port removal introduced a spurious put which
+can cause a premature structure teardown. The affects were most
+notable when the driver attempted to unload as a null pointer
+would be hit.
 
-Fix by allowing abort to proceed.
+Fix by removing the unnecessary put.
 
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_nvme.c | 35 +----------------------------------
- 1 file changed, 1 insertion(+), 34 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c | 7 -------
+ 1 file changed, 7 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 8206aa5493e3..0a0a1b92d01d 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -1427,7 +1427,6 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
- 	struct lpfc_nvme_lport *lport;
- 	struct lpfc_vport *vport;
- 	struct lpfc_hba *phba;
--	struct lpfc_nodelist *ndlp;
- 	struct lpfc_nvme_rport *rport;
- 	struct lpfc_nvme_buf *lpfc_nbuf;
- 	struct lpfc_iocbq *abts_buf;
-@@ -1449,38 +1448,6 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
- 			 pnvme_rport->port_id,
- 			 pnvme_fcreq);
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 7e73fdc154f7..491aa95eb0f6 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -2805,13 +2805,6 @@ lpfc_cleanup(struct lpfc_vport *vport)
+ 			lpfc_disc_state_machine(vport, ndlp, NULL,
+ 					NLP_EVT_DEVICE_RECOVERY);
  
--	/*
--	 * Catch race where our node has transitioned, but the
--	 * transport is still transitioning.
--	 */
--	ndlp = rport->ndlp;
--	if (!ndlp || !NLP_CHK_NODE_ACT(ndlp)) {
--		lpfc_printf_vlog(vport, KERN_ERR, LOG_NODE | LOG_NVME_ABTS,
--				 "6054 rport %p, ndlp %p, DID x%06x ndlp "
--				 " not ready.\n",
--				 rport, ndlp, pnvme_rport->port_id);
--
--		ndlp = lpfc_findnode_did(vport, pnvme_rport->port_id);
--		if (!ndlp) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_ABTS,
--					 "6055 Could not find node for "
--					 "DID %x\n",
--					 pnvme_rport->port_id);
--			return;
+-		if (ndlp->nlp_fc4_type & NLP_FC4_NVME) {
+-			/* Remove the NVME transport reference now and
+-			 * continue to remove the node.
+-			 */
+-			lpfc_nlp_put(ndlp);
 -		}
--	}
 -
--	/* The remote node has to be ready to send an abort. */
--	if ((ndlp->nlp_state != NLP_STE_MAPPED_NODE) &&
--	    (ndlp->nlp_type & NLP_NVME_TARGET)) {
--		lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_ABTS,
--				 "6048 rport %p, DID x%06x not ready for "
--				 "IO. State x%x, Type x%x\n",
--				 rport, pnvme_rport->port_id,
--				 ndlp->nlp_state, ndlp->nlp_type);
--		return;
--	}
--
- 	/* If the hba is getting reset, this flag is set.  It is
- 	 * cleared when the reset is complete and rings reestablished.
- 	 */
-@@ -1541,7 +1508,7 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
- 
- 	lpfc_nvmeio_data(phba, "NVME FCP ABORT: xri x%x idx %d to %06x\n",
- 			 nvmereq_wqe->sli4_xritag,
--			 nvmereq_wqe->hba_wqidx, ndlp->nlp_DID);
-+			 nvmereq_wqe->hba_wqidx, pnvme_rport->port_id);
- 
- 	/* Outstanding abort is in progress */
- 	if (nvmereq_wqe->iocb_flag & LPFC_DRIVER_ABORTED) {
+ 		lpfc_disc_state_machine(vport, ndlp, NULL,
+ 					     NLP_EVT_DEVICE_RM);
+ 	}
 -- 
 2.11.0
