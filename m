@@ -1,34 +1,83 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH 4/6] qla2xxx: Send FC4 type NVMe to the management server
-Date: Wed, 21 Jun 2017 14:05:31 +0000
-Message-ID: <AAEE6C89-5401-4800-AFDC-CB679EA978CA@cavium.com>
-References: <20170616224744.3681-1-himanshu.madhani@cavium.com>
- <20170616224744.3681-5-himanshu.madhani@cavium.com>
- <20170619100641.GB19417@linux-x5ow.site>
- <032AF3DB-A17D-418E-A505-724D51CB7391@cavium.com>
- <20170621070704.GA4131@linux-x5ow.site>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: [PATCH] virtio_scsi: let host do exception handling
+Date: Wed, 21 Jun 2017 16:35:46 +0200
+Message-ID: <20170621143546.5826-1-pbonzini@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0082.outbound.protection.outlook.com ([104.47.37.82]:24208
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752139AbdFUOFd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 21 Jun 2017 10:05:33 -0400
-In-Reply-To: <20170621070704.GA4131@linux-x5ow.site>
-Content-Language: en-US
-Content-ID: <8E1A34CA61C8604293A5CB2D5C68EA4C@namprd07.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Douglas Miller <dougmill@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, "Trapp, Darren" <Darren.Trapp@cavium.com>
 
-DQo+IE9uIEp1biAyMSwgMjAxNywgYXQgMTI6MDcgQU0sIEpvaGFubmVzIFRodW1zaGlybiA8anRo
-dW1zaGlybkBzdXNlLmRlPiB3cm90ZToNCj4gDQo+IEFoIGFuZCBJIHRoaW5rIHlvdSBmb3Jnb3Qg
-dG8gQ2MgdGhlIGxpbnV4LW52bWUgWzFdIGxpc3Qgb24geW91ciBzdWJtaXNzaW9uLiBJdA0KPiB3
-b3VsZCBiZSBnb29kIHRvIGhhdmUgaXQgb24gbGludXgtbnZtZSBhcyB3ZWxsIGFzIG9uIGxpbnV4
-LXNjc2kgc28gU2FnaSwNCj4gQ2hyaXN0b3BoIGFuZCBLZWl0aCBzZWUgaXQgYXMgd2VsbC4NCg0K
-U291bmRzIGdvb2QuIEnigJlsbCBjYyBsaW51eC1udm1lIG9uIHYyIG9mIHRoZSBzZXJpZXMgdGhh
-dCBpIGFtIGdvaW5nIHRvIHNlbmQgb3V0IA0KaW4gZmV3IGhvdXJzIHRvZGF5LiANCg0KVGhhbmtz
-LA0KLSBIaW1hbnNodQ0KDQo=
+virtio_scsi tries to do exception handling after the default
+30 seconds timeout expires.  However, it's better to let the host
+control the timeout, otherwise with a heavy I/O load it is
+likely that an abort will also timeout.  This leads to fatal
+errors like filesystems going offline.
+
+Disable the 'sd' timeout and allow the host to do exception
+handling, following the precedent of the storvsc driver.
+
+Hannes has a proposal to introduce timeouts in virtio, but
+this provides an immediate solution for stable kernels too.
+
+Reported-by: Douglas Miller <dougmill@linux.vnet.ibm.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi@vger.kernel.org
+Cc: stable@vger.kernel.org
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+---
+ drivers/scsi/virtio_scsi.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index f8dbfeee6c63..55d344ea6869 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -796,6 +796,16 @@ static int virtscsi_map_queues(struct Scsi_Host *shost)
+ 	return blk_mq_virtio_map_queues(&shost->tag_set, vscsi->vdev, 2);
+ }
+ 
++/*
++ * The host guarantees to respond to each command, although I/O latencies might
++ * be higher than on bare meta.  Reset the timer unconditionally to give the
++ * host a chance to perform EH.
++ */
++static enum blk_eh_timer_return virtscsi_eh_timed_out(struct scsi_cmnd *scmnd)
++{
++	return BLK_EH_RESET_TIMER;
++}
++
+ static struct scsi_host_template virtscsi_host_template_single = {
+ 	.module = THIS_MODULE,
+ 	.name = "Virtio SCSI HBA",
+@@ -806,6 +816,7 @@ static struct scsi_host_template virtscsi_host_template_single = {
+ 	.change_queue_depth = virtscsi_change_queue_depth,
+ 	.eh_abort_handler = virtscsi_abort,
+ 	.eh_device_reset_handler = virtscsi_device_reset,
++	.eh_timed_out = virtscsi_eh_timed_out,
+ 	.slave_alloc = virtscsi_device_alloc,
+ 
+ 	.can_queue = 1024,
+@@ -826,6 +837,7 @@ static struct scsi_host_template virtscsi_host_template_multi = {
+ 	.change_queue_depth = virtscsi_change_queue_depth,
+ 	.eh_abort_handler = virtscsi_abort,
+ 	.eh_device_reset_handler = virtscsi_device_reset,
++	.eh_timed_out = virtscsi_eh_timed_out,
+ 
+ 	.can_queue = 1024,
+ 	.dma_boundary = UINT_MAX,
+-- 
+2.13.0
