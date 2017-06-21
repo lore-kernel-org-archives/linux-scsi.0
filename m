@@ -1,83 +1,21 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH] virtio_scsi: let host do exception handling
-Date: Wed, 21 Jun 2017 16:35:46 +0200
-Message-ID: <20170621143546.5826-1-pbonzini@redhat.com>
+From: "CELINE" <vendce@bolaget.fr>
+Subject: let me know
+Date: Wed, 21 Jun 2017 14:58:16 +0100
+Message-ID: <201706211358.v5LDf0X6028516__7108.68818355284$1498062739$gmane$org@www.brfliseberg.se>
+Reply-To: celineroullier200@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Douglas Miller <dougmill@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from www.brfliseberg.se ([213.242.162.1]:45640 "EHLO
+        www.brfliseberg.se" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751919AbdFUQcK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jun 2017 12:32:10 -0400
+Content-Description: Mail message body
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Recipients <vendce@bolaget.fr>
 
-virtio_scsi tries to do exception handling after the default
-30 seconds timeout expires.  However, it's better to let the host
-control the timeout, otherwise with a heavy I/O load it is
-likely that an abort will also timeout.  This leads to fatal
-errors like filesystems going offline.
-
-Disable the 'sd' timeout and allow the host to do exception
-handling, following the precedent of the storvsc driver.
-
-Hannes has a proposal to introduce timeouts in virtio, but
-this provides an immediate solution for stable kernels too.
-
-Reported-by: Douglas Miller <dougmill@linux.vnet.ibm.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: linux-scsi@vger.kernel.org
-Cc: stable@vger.kernel.org
-Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
----
- drivers/scsi/virtio_scsi.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
-
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index f8dbfeee6c63..55d344ea6869 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -796,6 +796,16 @@ static int virtscsi_map_queues(struct Scsi_Host *shost)
- 	return blk_mq_virtio_map_queues(&shost->tag_set, vscsi->vdev, 2);
- }
- 
-+/*
-+ * The host guarantees to respond to each command, although I/O latencies might
-+ * be higher than on bare meta.  Reset the timer unconditionally to give the
-+ * host a chance to perform EH.
-+ */
-+static enum blk_eh_timer_return virtscsi_eh_timed_out(struct scsi_cmnd *scmnd)
-+{
-+	return BLK_EH_RESET_TIMER;
-+}
-+
- static struct scsi_host_template virtscsi_host_template_single = {
- 	.module = THIS_MODULE,
- 	.name = "Virtio SCSI HBA",
-@@ -806,6 +816,7 @@ static struct scsi_host_template virtscsi_host_template_single = {
- 	.change_queue_depth = virtscsi_change_queue_depth,
- 	.eh_abort_handler = virtscsi_abort,
- 	.eh_device_reset_handler = virtscsi_device_reset,
-+	.eh_timed_out = virtscsi_eh_timed_out,
- 	.slave_alloc = virtscsi_device_alloc,
- 
- 	.can_queue = 1024,
-@@ -826,6 +837,7 @@ static struct scsi_host_template virtscsi_host_template_multi = {
- 	.change_queue_depth = virtscsi_change_queue_depth,
- 	.eh_abort_handler = virtscsi_abort,
- 	.eh_device_reset_handler = virtscsi_device_reset,
-+	.eh_timed_out = virtscsi_eh_timed_out,
- 
- 	.can_queue = 1024,
- 	.dma_boundary = UINT_MAX,
--- 
-2.13.0
+Hello, important charity foundation proposal to discuss with you, if you are interested please reply urgently for details. 
+with love,
+CELINE
