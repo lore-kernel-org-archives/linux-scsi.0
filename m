@@ -1,42 +1,60 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
 Subject: Re: [PATCH] qla2xxx: don't include <generated/utsrelease.h>
-Date: Wed, 21 Jun 2017 13:43:27 +0200
-Message-ID: <20170621114327.GD6482@linux-x5ow.site>
+Date: Wed, 21 Jun 2017 13:29:33 +0000
+Message-ID: <1498051773.3295.1.camel@wdc.com>
 References: <20170621114005.29800-1-johannes@sipsolutions.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:43862 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751149AbdFULn3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 21 Jun 2017 07:43:29 -0400
-Content-Disposition: inline
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:20823 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752247AbdFUN3l (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jun 2017 09:29:41 -0400
 In-Reply-To: <20170621114005.29800-1-johannes@sipsolutions.net>
+Content-Language: en-US
+Content-ID: <1D51552AF824D44F9510E26393D7B71C@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-scsi@vger.kernel.org, Johannes Berg <johannes.berg@intel.com>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Cc: "johannes.berg@intel.com" <johannes.berg@intel.com>
 
-On Wed, Jun 21, 2017 at 01:40:05PM +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> There's no need to use the static UTS_RELEASE string, since
-> utsname()->release contains the same.
-> 
-> This avoids rebuilding this file for every change of the
-> release string.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
-
-Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+T24gV2VkLCAyMDE3LTA2LTIxIGF0IDEzOjQwICswMjAwLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0K
+PiBGcm9tOiBKb2hhbm5lcyBCZXJnIDxqb2hhbm5lcy5iZXJnQGludGVsLmNvbT4NCj4gDQo+IFRo
+ZXJlJ3Mgbm8gbmVlZCB0byB1c2UgdGhlIHN0YXRpYyBVVFNfUkVMRUFTRSBzdHJpbmcsIHNpbmNl
+DQo+IHV0c25hbWUoKS0+cmVsZWFzZSBjb250YWlucyB0aGUgc2FtZS4NCj4gDQo+IFRoaXMgYXZv
+aWRzIHJlYnVpbGRpbmcgdGhpcyBmaWxlIGZvciBldmVyeSBjaGFuZ2Ugb2YgdGhlDQo+IHJlbGVh
+c2Ugc3RyaW5nLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogSm9oYW5uZXMgQmVyZyA8am9oYW5uZXMu
+YmVyZ0BpbnRlbC5jb20+DQo+IC0tLQ0KPiAgZHJpdmVycy9zY3NpL3FsYTJ4eHgvdGNtX3FsYTJ4
+eHguYyB8IDEzICsrKysrKy0tLS0tLS0NCj4gIDEgZmlsZSBjaGFuZ2VkLCA2IGluc2VydGlvbnMo
+KyksIDcgZGVsZXRpb25zKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3FsYTJ4
+eHgvdGNtX3FsYTJ4eHguYyBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3RjbV9xbGEyeHh4LmMNCj4g
+aW5kZXggNzQ0M2U0ZWZhM2FlLi45MTk1ZTAwMjYxZjYgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMv
+c2NzaS9xbGEyeHh4L3RjbV9xbGEyeHh4LmMNCj4gKysrIGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgv
+dGNtX3FsYTJ4eHguYw0KPiBAQCAtMjUsNyArMjUsNiBAQA0KPiAgDQo+ICAjaW5jbHVkZSA8bGlu
+dXgvbW9kdWxlLmg+DQo+ICAjaW5jbHVkZSA8bGludXgvbW9kdWxlcGFyYW0uaD4NCj4gLSNpbmNs
+dWRlIDxnZW5lcmF0ZWQvdXRzcmVsZWFzZS5oPg0KPiAgI2luY2x1ZGUgPGxpbnV4L3V0c25hbWUu
+aD4NCj4gICNpbmNsdWRlIDxsaW51eC92bWFsbG9jLmg+DQo+ICAjaW5jbHVkZSA8bGludXgvaW5p
+dC5oPg0KPiBAQCAtMTg3MCw5ICsxODY5LDkgQEAgc3RhdGljIHNzaXplX3QgdGNtX3FsYTJ4eHhf
+d3duX3ZlcnNpb25fc2hvdyhzdHJ1Y3QgY29uZmlnX2l0ZW0gKml0ZW0sDQo+ICAJCWNoYXIgKnBh
+Z2UpDQo+ICB7DQo+ICAJcmV0dXJuIHNwcmludGYocGFnZSwNCj4gLQkgICAgIlRDTSBRTE9HSUMg
+UUxBMlhYWCBOUElWIGNhcGFibGUgZmFicmljIG1vZHVsZSAlcyBvbiAlcy8lcyBvbiAiDQo+IC0J
+ICAgIFVUU19SRUxFQVNFIlxuIiwgUUxBMlhYWF9WRVJTSU9OLCB1dHNuYW1lKCktPnN5c25hbWUs
+DQo+IC0JICAgIHV0c25hbWUoKS0+bWFjaGluZSk7DQo+ICsJICAgICJUQ00gUUxPR0lDIFFMQTJY
+WFggTlBJViBjYXBhYmxlIGZhYnJpYyBtb2R1bGUgJXMgb24gJXMvJXMgb24gJXNcbiIsDQo+ICsJ
+ICAgIFFMQTJYWFhfVkVSU0lPTiwgdXRzbmFtZSgpLT5zeXNuYW1lLA0KPiArCSAgICB1dHNuYW1l
+KCktPm1hY2hpbmUsIHV0c25hbWUoKS0+cmVsZWFzZSk7DQo+ICB9DQo+ICANCj4gIENPTkZJR0ZT
+X0FUVFJfUk8odGNtX3FsYTJ4eHhfd3duXywgdmVyc2lvbik7DQo+IEBAIC0xOTc2LDkgKzE5NzUs
+OSBAQCBzdGF0aWMgaW50IHRjbV9xbGEyeHh4X3JlZ2lzdGVyX2NvbmZpZ2ZzKHZvaWQpDQo+ICB7
+DQo+ICAJaW50IHJldDsNCj4gIA0KPiAtCXByX2RlYnVnKCJUQ00gUUxPR0lDIFFMQTJYWFggZmFi
+cmljIG1vZHVsZSAlcyBvbiAlcy8lcyBvbiAiDQo+IC0JICAgIFVUU19SRUxFQVNFIlxuIiwgUUxB
+MlhYWF9WRVJTSU9OLCB1dHNuYW1lKCktPnN5c25hbWUsDQo+IC0JICAgIHV0c25hbWUoKS0+bWFj
+aGluZSk7DQo+ICsJcHJfZGVidWcoIlRDTSBRTE9HSUMgUUxBMlhYWCBmYWJyaWMgbW9kdWxlICVz
+IG9uICVzLyVzIG9uICVzXG4iLA0KPiArCSAgICBRTEEyWFhYX1ZFUlNJT04sIHV0c25hbWUoKS0+
+c3lzbmFtZSwNCj4gKwkgICAgdXRzbmFtZSgpLT5tYWNoaW5lLCB1dHNuYW1lKCktPnJlbGVhc2Up
+Ow0KPiAgDQo+ICAJcmV0ID0gdGFyZ2V0X3JlZ2lzdGVyX3RlbXBsYXRlKCZ0Y21fcWxhMnh4eF9v
+cHMpOw0KPiAgCWlmIChyZXQpDQoNCkhlbGxvIEpvaGFubmVzLA0KDQpBbHRob3VnaCB0aGlzIHBh
+dGNoIGxvb2tzIGZpbmUgdG8gbWUsIEkgdGhpbmsgcmVtb3ZpbmcgdGhlIFVUUyByZWxlYXNlIGlu
+Zm9ybWF0aW9uDQpmcm9tIHRoZSBvdXRwdXQgZW50aXJlbHkgd291bGQgYmUgZXZlbiBiZXR0ZXIu
+IEkgdGhpbmsgaW5jbHVkaW5nIHRoYXQgaW5mb3JtYXRpb24NCmluIHRoZSBvdXRwdXQgb25seSBt
+YWRlIHNlbnNlIGJlZm9yZSBMSU8gd2VudCB1cHN0cmVhbS4NCg0KQmFydC4=
