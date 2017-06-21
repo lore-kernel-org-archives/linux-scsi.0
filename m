@@ -1,25 +1,90 @@
-From: Marcelo Dantas Teixeira <marcelo.dantas@tre-rn.jus.br>
-Subject: 1,650,000,00 Euros
-Date: Wed, 21 Jun 2017 11:49:43 -0300 (BRT)
-Message-ID: <1271582877.659678.1498056583664.JavaMail.zimbra__10688.1513297141$1498064350$gmane$org@tre-rn.jus.br>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+From: James Smart <jsmart2021@gmail.com>
+Subject: [PATCH] lpfc: Fix nvme io stoppage after link bounce
+Date: Wed, 21 Jun 2017 10:37:58 -0700
+Message-ID: <20170621173758.28058-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dexter.tse.jus.br ([187.4.152.191]:44841 "EHLO
-        dexter.tse.jus.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752579AbdFUQ65 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jun 2017 12:58:57 -0400
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:34011 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752150AbdFURiK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jun 2017 13:38:10 -0400
+Received: by mail-wr0-f195.google.com with SMTP id k67so255921wrc.1
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 10:38:10 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James Smart <jsmart2021@gmail.com>, James Smart <james.smart@broadcom.com>
 
+On link down, transport is calling driver to abort outstanding ios.
+Driver erroneously rejects the abort if the port indicates it isn't
+logged in - which will be the case after the link down. Thus, the
+io can't clean up. This prevents reconnection at the transport level.
 
+Fix by allowing abort to proceed.
 
-E-postvarsling! 
+Signed-off-by: James Smart <james.smart@broadcom.com>
+---
+ drivers/scsi/lpfc/lpfc_nvme.c | 35 +----------------------------------
+ 1 file changed, 1 insertion(+), 34 deletions(-)
 
-E-posten ble valgt og har 1,650,000,00 Euro som ble registrert og forsikret på ditt navn. 
-
-Hvis du vil ha mer informasjon om penger, kontakt: onuwu17@qq.com
-
-MFG
-Marcelo Dontas Teixeira
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index 8206aa5493e3..0a0a1b92d01d 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -1427,7 +1427,6 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
+ 	struct lpfc_nvme_lport *lport;
+ 	struct lpfc_vport *vport;
+ 	struct lpfc_hba *phba;
+-	struct lpfc_nodelist *ndlp;
+ 	struct lpfc_nvme_rport *rport;
+ 	struct lpfc_nvme_buf *lpfc_nbuf;
+ 	struct lpfc_iocbq *abts_buf;
+@@ -1449,38 +1448,6 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
+ 			 pnvme_rport->port_id,
+ 			 pnvme_fcreq);
+ 
+-	/*
+-	 * Catch race where our node has transitioned, but the
+-	 * transport is still transitioning.
+-	 */
+-	ndlp = rport->ndlp;
+-	if (!ndlp || !NLP_CHK_NODE_ACT(ndlp)) {
+-		lpfc_printf_vlog(vport, KERN_ERR, LOG_NODE | LOG_NVME_ABTS,
+-				 "6054 rport %p, ndlp %p, DID x%06x ndlp "
+-				 " not ready.\n",
+-				 rport, ndlp, pnvme_rport->port_id);
+-
+-		ndlp = lpfc_findnode_did(vport, pnvme_rport->port_id);
+-		if (!ndlp) {
+-			lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_ABTS,
+-					 "6055 Could not find node for "
+-					 "DID %x\n",
+-					 pnvme_rport->port_id);
+-			return;
+-		}
+-	}
+-
+-	/* The remote node has to be ready to send an abort. */
+-	if ((ndlp->nlp_state != NLP_STE_MAPPED_NODE) &&
+-	    (ndlp->nlp_type & NLP_NVME_TARGET)) {
+-		lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_ABTS,
+-				 "6048 rport %p, DID x%06x not ready for "
+-				 "IO. State x%x, Type x%x\n",
+-				 rport, pnvme_rport->port_id,
+-				 ndlp->nlp_state, ndlp->nlp_type);
+-		return;
+-	}
+-
+ 	/* If the hba is getting reset, this flag is set.  It is
+ 	 * cleared when the reset is complete and rings reestablished.
+ 	 */
+@@ -1541,7 +1508,7 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
+ 
+ 	lpfc_nvmeio_data(phba, "NVME FCP ABORT: xri x%x idx %d to %06x\n",
+ 			 nvmereq_wqe->sli4_xritag,
+-			 nvmereq_wqe->hba_wqidx, ndlp->nlp_DID);
++			 nvmereq_wqe->hba_wqidx, pnvme_rport->port_id);
+ 
+ 	/* Outstanding abort is in progress */
+ 	if (nvmereq_wqe->iocb_flag & LPFC_DRIVER_ABORTED) {
+-- 
+2.11.0
