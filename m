@@ -1,34 +1,23 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 151661] Adaptec 3405 3805 prints "AAC: Host adapter dead -1"
- every 10 seconds but works fine anyway
-Date: Wed, 21 Jun 2017 22:43:54 +0000
-Message-ID: <bug-151661-11613-FvMIZ5dwhx@https.bugzilla.kernel.org/>
-References: <bug-151661-11613@https.bugzilla.kernel.org/>
+From: =?utf-8?q?Bernhard_St=C3=B6ckl?= <sunrisefundingltd@gmail.com>
+Subject: =?utf-8?q?AW=3A?=  Wir geben =?utf-8?q?j=C3=A4hrlich?= Darlehen
+ =?utf-8?q?f=C3=BCr?= 2% Zinsen aus
+Date: Thu, 22 Jun 2017 00:51:41 +0200
+Message-ID: <1b2-594af880-a9-75f20f80__10476.4293916107$1498086160$gmane$org@186293666>
+Reply-To: sunrisefunding@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:52840 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752020AbdFUWoH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 21 Jun 2017 18:44:07 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 2FC2E2846D
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 22:44:06 +0000 (UTC)
-In-Reply-To: <bug-151661-11613@https.bugzilla.kernel.org/>
+Received: from purin.rz.uni-konstanz.de ([134.34.240.45]:55636 "EHLO
+        purin.rz.uni-konstanz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751940AbdFUXCX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jun 2017 19:02:23 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=151661
 
---- Comment #20 from Stuart Naifeh (scnaifeh@hotmail.com) ---
-As of June 21, 2017, I am still seeing this in Debian Stretch running kernel
-4.10.0-rc6.  I have an IBM ServeRaid 8s, which is a rebranded Adaptec 4805.  I
-see the message repeat about every second, so it really fills up syslog
-quickly.
+Wir vergeben Kredite mit einem Zinssatz von jährlich 2%.
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Die Bearbeitung des Antrags erfolgt rasch, wir verlangen keine Gebühren, was sie beantragen werden wir annehmen. Wir bewilligen Kredite von bis zu 40 Millionen Euro und von mindestens 15.000 Euro. Sie können einen geschäftlichen oder privaten Kredit beantrage, wobei Sie bei Geschäftskrediten eine Zahlungsfrist von einem Jahr erhalten.
+
+Anfragen bitte per Mail an: sunrisefunding01@hotmail.com 
