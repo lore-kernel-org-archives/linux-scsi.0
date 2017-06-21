@@ -1,68 +1,47 @@
 From: "Madhani, Himanshu" <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 5/6] qla2xxx: Use FC-NMVe FC4 type for FDMI registration
-Date: Wed, 21 Jun 2017 13:48:45 -0700
-Message-ID: <20170621204846.21663-6-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 6/6] qla2xxx: Update Driver version to 10.00.00.00-k
+Date: Wed, 21 Jun 2017 13:48:46 -0700
+Message-ID: <20170621204846.21663-7-himanshu.madhani@cavium.com>
 References: <20170621204846.21663-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0083.outbound.protection.outlook.com ([104.47.42.83]:51648
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-bn3nam01on0064.outbound.protection.outlook.com ([104.47.33.64]:13907
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751689AbdFUUtG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 21 Jun 2017 16:49:06 -0400
+        id S1751884AbdFUUtK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 21 Jun 2017 16:49:10 -0400
 In-Reply-To: <20170621204846.21663-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org, darren.trapp@cavium.com, giridhar.malavali@cavium.com, linux-nvme@lists.infradead.org
 
-From: Duane Grigsby <duane.grigsby@cavium.com>
+From: Himanshu Madhani <himanshu.madhani@cavium.com>
 
-Signed-off-by: Duane Grigsby <duane.grigsby@cavium.com>
-Signed-off-by: Darren Trapp <darren.trapp@cavium.com>
-Signed-off-by: Anil Gurumurthy <anil.gurumurhty@cavium.com>
-Signed-off-by: Giridhar Malavali <giridhar.malavali@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 Reviewed-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/qla2xxx/qla_gs.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ drivers/scsi/qla2xxx/qla_version.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index c91478529b51..b323a7c71eda 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -2166,6 +2166,13 @@ qla2x00_fdmiv2_rpa(scsi_qla_host_t *vha)
- 	    eiter->a.fc4_types[2],
- 	    eiter->a.fc4_types[1]);
+diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
+index dcbb9bb05e99..005a378f7fab 100644
+--- a/drivers/scsi/qla2xxx/qla_version.h
++++ b/drivers/scsi/qla2xxx/qla_version.h
+@@ -7,9 +7,9 @@
+ /*
+  * Driver version
+  */
+-#define QLA2XXX_VERSION      "9.01.00.00-k"
++#define QLA2XXX_VERSION      "10.00.00.00-k"
  
-+	if (vha->flags.nvme_enabled) {
-+		eiter->a.fc4_types[6] = 1;	/* NVMe type 28h */
-+		ql_dbg(ql_dbg_disc, vha, 0x211f,
-+		    "NVME FC4 Type = %02x 0x0 0x0 0x0 0x0 0x0.\n",
-+		    eiter->a.fc4_types[6]);
-+	}
-+
- 	/* Supported speed. */
- 	eiter = entries + size;
- 	eiter->type = cpu_to_be16(FDMI_PORT_SUPPORT_SPEED);
-@@ -2363,6 +2370,15 @@ qla2x00_fdmiv2_rpa(scsi_qla_host_t *vha)
- 	    "Port Active FC4 Type = %02x %02x.\n",
- 	    eiter->a.port_fc4_type[2], eiter->a.port_fc4_type[1]);
- 
-+	if (vha->flags.nvme_enabled) {
-+		eiter->a.port_fc4_type[4] = 0;
-+		eiter->a.port_fc4_type[5] = 0;
-+		eiter->a.port_fc4_type[6] = 1;	/* NVMe type 28h */
-+		ql_dbg(ql_dbg_disc, vha, 0x2120,
-+		    "NVME Port Active FC4 Type = %02x 0x0 0x0 0x0 0x0 0x0.\n",
-+		    eiter->a.port_fc4_type[6]);
-+	}
-+
- 	/* Port State */
- 	eiter = entries + size;
- 	eiter->type = cpu_to_be16(FDMI_PORT_STATE);
+-#define QLA_DRIVER_MAJOR_VER	9
+-#define QLA_DRIVER_MINOR_VER	1
++#define QLA_DRIVER_MAJOR_VER	10
++#define QLA_DRIVER_MINOR_VER	0
+ #define QLA_DRIVER_PATCH_VER	0
+ #define QLA_DRIVER_BETA_VER	0
 -- 
 2.12.0
