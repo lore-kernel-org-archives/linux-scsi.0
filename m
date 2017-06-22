@@ -1,203 +1,65 @@
-From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH 17/17] cxlflash: Update TMF command processing
-Date: Wed, 21 Jun 2017 21:16:54 -0500
-Message-ID: <1498097814-9301-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-References: <1498097563-8680-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v2 1/6] qla2xxx: Add FC-NVMe port discovery and PRLI
+ handling
+Date: Thu, 22 Jun 2017 08:28:08 +0200
+Message-ID: <346a274f-ca3a-90d3-a29e-5b244f983ba9@suse.de>
+References: <20170621204846.21663-1-himanshu.madhani@cavium.com>
+ <20170621204846.21663-2-himanshu.madhani@cavium.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:53095 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751934AbdFVCRC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 21 Jun 2017 22:17:02 -0400
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v5M2EhlC131417
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 22:17:01 -0400
-Received: from e31.co.us.ibm.com (e31.co.us.ibm.com [32.97.110.149])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2b7ts7kdj6-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 22:17:01 -0400
-Received: from localhost
-        by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
-        Wed, 21 Jun 2017 20:17:00 -0600
-In-Reply-To: <1498097563-8680-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Received: from mx2.suse.de ([195.135.220.15]:50375 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751064AbdFVG2K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 22 Jun 2017 02:28:10 -0400
+In-Reply-To: <20170621204846.21663-2-himanshu.madhani@cavium.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
+To: "Madhani, Himanshu" <himanshu.madhani@cavium.com>, martin.petersen@oracle.com
+Cc: darren.trapp@cavium.com, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, giridhar.malavali@cavium.com
 
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+On 06/21/2017 10:48 PM, Madhani, Himanshu wrote:
+> From: Duane Grigsby <duane.grigsby@cavium.com>
+> 
+> Added logic to change the login process into an optional PRIL
+> step for FC-NVMe ports as a separate operation, such that we can
+> change type to 0x28 (NVMe).
+> 
+> Currently, the driver performs the PLOGI/PRLI together as one
+> operation, but if the discovered port is an NVMe port then we
+> first issue the PLOGI and then we issue the PRLI. Also, the
+> fabric discovery logic was changed to mark each discovered FC
+> NVMe port, so that we can register them with the FC-NVMe transport
+> later.
+> 
+> Signed-off-by: Darren Trapp <darren.trapp@cavium.com>
+> Signed-off-by: Duane Grigsby <duane.grigsby@cavium.com>
+> Signed-off-by: Anil Gurumurthy <anil.gurumurhty@cavium.com>
+> Signed-off-by: Giridhar Malavali <giridhar.malavali@cavium.com>
+> Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+> ---
+>  drivers/scsi/qla2xxx/qla_dbg.c    |   9 +-
+>  drivers/scsi/qla2xxx/qla_def.h    |  30 ++++++-
+>  drivers/scsi/qla2xxx/qla_fw.h     |  13 ++-
+>  drivers/scsi/qla2xxx/qla_gbl.h    |   1 +
+>  drivers/scsi/qla2xxx/qla_init.c   | 168 ++++++++++++++++++++++++++++++++++++--
+>  drivers/scsi/qla2xxx/qla_iocb.c   |  21 +++++
+>  drivers/scsi/qla2xxx/qla_mbx.c    |  33 +++++---
+>  drivers/scsi/qla2xxx/qla_os.c     |   4 +
+>  drivers/scsi/qla2xxx/qla_target.c |   4 +-
+>  9 files changed, 256 insertions(+), 27 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Currently, the SCSI command presented to the device reset handler is used
-to send TMFs to the AFU for a device reset. This behavior is incorrect as
-the command presented is an actual command and not a special notification.
-As such, it should only be used for reference and not be acted upon.
+Cheers,
 
-Additionally, the existing TMF transmission routine does not account for
-actual errors from the hardware, only reflecting failure when a timeout
-occurs. This can lead to a condition where the device reset handler is
-presented with a false 'success'.
-
-Update send_tmf() to dynamically allocate a private command for sending
-the TMF command and properly reflect failure when the completed command
-indicates an error or was aborted. Detect TMF commands during response
-processing and avoid scsi_done() for these types of commands. Lastly,
-update comments in the TMF processing paths to describe the new behavior.
-
-Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
-Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
----
- drivers/scsi/cxlflash/main.c | 65 ++++++++++++++++++++++++++++++--------------
- 1 file changed, 44 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 4338982..7a787b6 100644
---- a/drivers/scsi/cxlflash/main.c
-+++ b/drivers/scsi/cxlflash/main.c
-@@ -155,9 +155,10 @@ static void process_cmd_err(struct afu_cmd *cmd, struct scsi_cmnd *scp)
-  * cmd_complete() - command completion handler
-  * @cmd:	AFU command that has completed.
-  *
-- * Prepares and submits command that has either completed or timed out to
-- * the SCSI stack. Checks AFU command back into command pool for non-internal
-- * (cmd->scp populated) commands.
-+ * For SCSI commands this routine prepares and submits commands that have
-+ * either completed or timed out to the SCSI stack. For internal commands
-+ * (TMF or AFU), this routine simply notifies the originator that the
-+ * command has completed.
-  */
- static void cmd_complete(struct afu_cmd *cmd)
- {
-@@ -167,7 +168,6 @@ static void cmd_complete(struct afu_cmd *cmd)
- 	struct cxlflash_cfg *cfg = afu->parent;
- 	struct device *dev = &cfg->dev->dev;
- 	struct hwq *hwq = get_hwq(afu, cmd->hwq_index);
--	bool cmd_is_tmf;
- 
- 	spin_lock_irqsave(&hwq->hsq_slock, lock_flags);
- 	list_del(&cmd->list);
-@@ -180,19 +180,14 @@ static void cmd_complete(struct afu_cmd *cmd)
- 		else
- 			scp->result = (DID_OK << 16);
- 
--		cmd_is_tmf = cmd->cmd_tmf;
--
- 		dev_dbg_ratelimited(dev, "%s:scp=%p result=%08x ioasc=%08x\n",
- 				    __func__, scp, scp->result, cmd->sa.ioasc);
--
- 		scp->scsi_done(scp);
--
--		if (cmd_is_tmf) {
--			spin_lock_irqsave(&cfg->tmf_slock, lock_flags);
--			cfg->tmf_active = false;
--			wake_up_all_locked(&cfg->tmf_waitq);
--			spin_unlock_irqrestore(&cfg->tmf_slock, lock_flags);
--		}
-+	} else if (cmd->cmd_tmf) {
-+		spin_lock_irqsave(&cfg->tmf_slock, lock_flags);
-+		cfg->tmf_active = false;
-+		wake_up_all_locked(&cfg->tmf_waitq);
-+		spin_unlock_irqrestore(&cfg->tmf_slock, lock_flags);
- 	} else
- 		complete(&cmd->cevent);
- }
-@@ -206,8 +201,10 @@ static void cmd_complete(struct afu_cmd *cmd)
-  */
- static void flush_pending_cmds(struct hwq *hwq)
- {
-+	struct cxlflash_cfg *cfg = hwq->afu->parent;
- 	struct afu_cmd *cmd, *tmp;
- 	struct scsi_cmnd *scp;
-+	ulong lock_flags;
- 
- 	list_for_each_entry_safe(cmd, tmp, &hwq->pending_cmds, list) {
- 		/* Bypass command when on a doneq, cmd_complete() will handle */
-@@ -222,7 +219,15 @@ static void flush_pending_cmds(struct hwq *hwq)
- 			scp->scsi_done(scp);
- 		} else {
- 			cmd->cmd_aborted = true;
--			complete(&cmd->cevent);
-+
-+			if (cmd->cmd_tmf) {
-+				spin_lock_irqsave(&cfg->tmf_slock, lock_flags);
-+				cfg->tmf_active = false;
-+				wake_up_all_locked(&cfg->tmf_waitq);
-+				spin_unlock_irqrestore(&cfg->tmf_slock,
-+						       lock_flags);
-+			} else
-+				complete(&cmd->cevent);
- 		}
- 	}
- }
-@@ -455,24 +460,35 @@ static u32 cmd_to_target_hwq(struct Scsi_Host *host, struct scsi_cmnd *scp,
- /**
-  * send_tmf() - sends a Task Management Function (TMF)
-  * @afu:	AFU to checkout from.
-- * @scp:	SCSI command from stack.
-+ * @scp:	SCSI command from stack describing target.
-  * @tmfcmd:	TMF command to send.
-  *
-  * Return:
-- *	0 on success, SCSI_MLQUEUE_HOST_BUSY on failure
-+ *	0 on success, SCSI_MLQUEUE_HOST_BUSY or -errno on failure
-  */
- static int send_tmf(struct afu *afu, struct scsi_cmnd *scp, u64 tmfcmd)
- {
- 	struct Scsi_Host *host = scp->device->host;
- 	struct cxlflash_cfg *cfg = shost_priv(host);
--	struct afu_cmd *cmd = sc_to_afucz(scp);
-+	struct afu_cmd *cmd = NULL;
- 	struct device *dev = &cfg->dev->dev;
- 	int hwq_index = cmd_to_target_hwq(host, scp, afu);
- 	struct hwq *hwq = get_hwq(afu, hwq_index);
-+	char *buf = NULL;
- 	ulong lock_flags;
- 	int rc = 0;
- 	ulong to;
- 
-+	buf = kzalloc(sizeof(*cmd) + __alignof__(*cmd) - 1, GFP_KERNEL);
-+	if (unlikely(!buf)) {
-+		dev_err(dev, "%s: no memory for command\n", __func__);
-+		rc = -ENOMEM;
-+		goto out;
-+	}
-+
-+	cmd = (struct afu_cmd *)PTR_ALIGN(buf, __alignof__(*cmd));
-+	INIT_LIST_HEAD(&cmd->queue);
-+
- 	/* When Task Management Function is active do not send another */
- 	spin_lock_irqsave(&cfg->tmf_slock, lock_flags);
- 	if (cfg->tmf_active)
-@@ -482,7 +498,6 @@ static int send_tmf(struct afu *afu, struct scsi_cmnd *scp, u64 tmfcmd)
- 	cfg->tmf_active = true;
- 	spin_unlock_irqrestore(&cfg->tmf_slock, lock_flags);
- 
--	cmd->scp = scp;
- 	cmd->parent = afu;
- 	cmd->cmd_tmf = true;
- 	cmd->hwq_index = hwq_index;
-@@ -511,12 +526,20 @@ static int send_tmf(struct afu *afu, struct scsi_cmnd *scp, u64 tmfcmd)
- 						       cfg->tmf_slock,
- 						       to);
- 	if (!to) {
--		cfg->tmf_active = false;
- 		dev_err(dev, "%s: TMF timed out\n", __func__);
--		rc = -1;
-+		rc = -ETIMEDOUT;
-+	} else if (cmd->cmd_aborted) {
-+		dev_err(dev, "%s: TMF aborted\n", __func__);
-+		rc = -EAGAIN;
-+	} else if (cmd->sa.ioasc) {
-+		dev_err(dev, "%s: TMF failed ioasc=%08x\n",
-+			__func__, cmd->sa.ioasc);
-+		rc = -EIO;
- 	}
-+	cfg->tmf_active = false;
- 	spin_unlock_irqrestore(&cfg->tmf_slock, lock_flags);
- out:
-+	kfree(buf);
- 	return rc;
- }
- 
+Hannes
 -- 
-2.1.0
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
