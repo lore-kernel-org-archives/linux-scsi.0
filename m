@@ -1,42 +1,37 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: hptiop: make function hptiop_iop_request_callback_itl static
-Date: Thu, 22 Jun 2017 16:52:19 +0100
-Message-ID: <20170622155219.22871-1-colin.king@canonical.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] lpfc: Fix nvme io stoppage after link bounce
+Date: Thu, 22 Jun 2017 20:50:35 +0200
+Message-ID: <20170622185035.GA3284@linux-x5ow.site>
+References: <20170621173758.28058-1-jsmart2021@gmail.com>
+ <20170622074142.GB5670@linux-x5ow.site>
+ <7f10cbae-a88e-f5a8-d54d-a22a543438e0@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: HighPoint Linux Team <linux@highpoint-tech.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:53497 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751221AbdFVSuj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 22 Jun 2017 14:50:39 -0400
+Content-Disposition: inline
+In-Reply-To: <7f10cbae-a88e-f5a8-d54d-a22a543438e0@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <jsmart2021@gmail.com>
+Cc: linux-scsi@vger.kernel.org, James Smart <james.smart@broadcom.com>
 
-From: Colin Ian King <colin.king@canonical.com>
+On Thu, Jun 22, 2017 at 08:52:14AM -0700, James Smart wrote:
+> well, the primary reason is the code that was removed was bogus to begin
+> with. Abort of an io/exchange, if its active, needs to occur on the link
+> regardless of the ndlp state. This it simply needed to occur. As not checks
+> on ndlp state are needed, there is no race.
 
-The function hptiop_iop_request_callback_itl does not need to be in
-global scope, so make it static.
+Thanks for the explanation
 
-Cleans up sparse warning:
-"symbol 'hptiop_iop_request_callback_itl' was not declared. Should it
- be static?"
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/hptiop.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
-index db17ad15b0c1..7226226f7383 100644
---- a/drivers/scsi/hptiop.c
-+++ b/drivers/scsi/hptiop.c
-@@ -800,7 +800,7 @@ static void hptiop_host_request_callback_itl(struct hptiop_hba *hba, u32 _tag)
- 	hptiop_finish_scsi_req(hba, tag, req);
- }
- 
--void hptiop_iop_request_callback_itl(struct hptiop_hba *hba, u32 tag)
-+static void hptiop_iop_request_callback_itl(struct hptiop_hba *hba, u32 tag)
- {
- 	struct hpt_iop_request_header __iomem *req;
- 	struct hpt_iop_request_ioctl_command __iomem *p;
 -- 
-2.11.0
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
