@@ -1,60 +1,69 @@
-From: Varun Prakash <varun@chelsio.com>
-Subject: [PATCH] scsi: cxgb4i: assign rxqs in round robin mode
-Date: Thu, 22 Jun 2017 15:47:49 +0530
-Message-ID: <1498126669-5654-1-git-send-email-varun@chelsio.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([12.32.117.8]:41310 "EHLO
-        stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753135AbdFVKSJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Jun 2017 06:18:09 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v2 2/5] dt-bindings: scsi: ufs: add document for hi3660-ufs
+Date: Thu, 22 Jun 2017 13:51:28 +0200
+Message-ID: <CAK8P3a2z7VbPb95Ltj=Duh1v_Yqxedb_g=ADNPWOrpEz1dCTuw@mail.gmail.com>
+References: <20170616065119.10704-1-butao@hisilicon.com> <20170616065119.10704-3-butao@hisilicon.com>
+ <CAK8P3a2aPorzpUzwL=dkUkYNCGkhQMDPOkKRW1-=Hf=yCdvTsQ@mail.gmail.com> <0f79aeea-53e3-6bea-ffa6-0e057f2ff83b@huawei.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <0f79aeea-53e3-6bea-ffa6-0e057f2ff83b@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bu Tao <butao@huawei.com>
+Cc: Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Wei Xu <xuwei5@hisilicon.com>, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Kevin Hilman <khilman@baylibre.com>, Gregory CLEMENT <gregory.clement@free-electrons.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Masahiro Yamada <yamada.masahiro@socionext.com>, Riku Voipio <riku.voipio@linaro.org>, Thierry Reding <treding@nvidia.com>, Krzysztof Kozlowski <krzk@kernel.org>, Eric Anholt <eric@anholt.net>, devicetree@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>Linux
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, indranil@chelsio.com, varun@chelsio.com
 
-Assign rxq to TCP connections in round robin mode
-to use all available rxqs.
+On Thu, Jun 22, 2017 at 1:44 PM, Bu Tao <butao@huawei.com> wrote:
+> =E5=9C=A8 2017/6/17 5:51, Arnd Bergmann =E5=86=99=E9=81=93:
+>> On Fri, Jun 16, 2017 at 8:51 AM, Bu Tao <butao@hisilicon.com> wrote:
+>>> +Optional properties for board device:
+>>> +- ufs-hi3660-use-rate-B                : specifies UFS rate-B
+>>> +- ufs-hi3660-broken-fastauto   : specifies no fastauto
+>>> +- ufs-hi3660-use-HS-GEAR3      : specifies UFS HS-GEAR3
+>>> +- ufs-hi3660-use-HS-GEAR2      : specifies UFS HS-GEAR2
+>>> +- ufs-hi3660-use-HS-GEAR1      : specifies UFS HS-GEAR1
+>>> +- ufs-hi3660-broken-clk-gate-bypass    : specifies no clk-gate
+>>> +- ufs-hi3660-use-one-line      : specifies UFS use one line work
+>>> +- reset-gpio                   : specifies to reset devices
+>>
+>>
+>> Some of these sound rather generic and might apply to UFS implementation=
+s
+>> other than hi3660, so I'd suggest adding them to the base ufs binding wi=
+th
+>> a generic name instead.
+>>
+>> Any DT properties that might be useful across multiple implementations
+>> should be parsed in generic code that gets called by the individual
+>> drivers,
+>> and then the properties that are specific to the integration work done b=
+y
+>> hisilicon should be prefixed with "hisilicon,", but not normally with th=
+e
+>> SoC name: it is quite possible that another SoC will be derived from thi=
+s
+>> chip and it should reuse the properties.
+>
+>
+> I do not know wheher other SoC need to use the optional properties as
+> abover. So here the name of the optional properties has "hi3660".
 
-Signed-off-by: Varun Prakash <varun@chelsio.com>
----
- drivers/scsi/cxgbi/cxgb4i/cxgb4i.c | 5 ++++-
- drivers/scsi/cxgbi/libcxgbi.h      | 1 +
- 2 files changed, 5 insertions(+), 1 deletion(-)
+They should not have "hi3660" in their names either way, independent
+of where they are used.
 
-diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-index 0aae094..fa99471 100644
---- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-+++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-@@ -1606,6 +1606,7 @@ static int init_act_open(struct cxgbi_sock *csk)
- 	struct neighbour *n = NULL;
- 	void *daddr;
- 	unsigned int step;
-+	unsigned int rxq_idx;
- 	unsigned int size, size6;
- 	unsigned int linkspeed;
- 	unsigned int rcv_winf, snd_winf;
-@@ -1684,7 +1685,9 @@ static int init_act_open(struct cxgbi_sock *csk)
- 	step = lldi->ntxq / lldi->nchan;
- 	csk->txq_idx = cxgb4_port_idx(ndev) * step;
- 	step = lldi->nrxq / lldi->nchan;
--	csk->rss_qid = lldi->rxq_ids[cxgb4_port_idx(ndev) * step];
-+	rxq_idx = (cxgb4_port_idx(ndev) * step) + (cdev->rxq_idx_cntr % step);
-+	cdev->rxq_idx_cntr++;
-+	csk->rss_qid = lldi->rxq_ids[rxq_idx];
- 	linkspeed = ((struct port_info *)netdev_priv(ndev))->link_cfg.speed;
- 	csk->snd_win = cxgb4i_snd_win;
- 	csk->rcv_win = cxgb4i_rcv_win;
-diff --git a/drivers/scsi/cxgbi/libcxgbi.h b/drivers/scsi/cxgbi/libcxgbi.h
-index 37f07aa..31a5816 100644
---- a/drivers/scsi/cxgbi/libcxgbi.h
-+++ b/drivers/scsi/cxgbi/libcxgbi.h
-@@ -477,6 +477,7 @@ struct cxgbi_device {
- 	unsigned int skb_rx_extra;	/* for msg coalesced mode */
- 	unsigned int tx_max_size;
- 	unsigned int rx_max_size;
-+	unsigned int rxq_idx_cntr;
- 	struct cxgbi_ports_map pmap;
- 
- 	void (*dev_ddp_cleanup)(struct cxgbi_device *);
--- 
-2.0.2
+>> (note: this is different from the value of the "compatible" property tha=
+t
+>> is meant to be as specific as possible".
+>>
+>> Also, please clarify how your binding relates to the ufshcd binding
+>> in Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt: does
+>> hi3660 implement any registers that are shared with ufshcd, or does
+>> it use the same physical interface with a different register set?
+>
+> No, only show how to use the dt-binding for hi3660 SoC
+
+My question was about the hardware: does hi3660 implement ufshcd
+or not?
+
+      Arnd
