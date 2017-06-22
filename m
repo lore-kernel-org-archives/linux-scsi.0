@@ -1,360 +1,187 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH 09/17] cxlflash: Create character device to provide host management interface
-Date: Wed, 21 Jun 2017 21:15:18 -0500
-Message-ID: <1498097718-9006-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH 10/17] cxlflash: Separate AFU internal command handling from AFU sync specifics
+Date: Wed, 21 Jun 2017 21:15:31 -0500
+Message-ID: <1498097731-9043-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1498097563-8680-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:40803 "EHLO
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:49865 "EHLO
         mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751140AbdFVCP2 (ORCPT
+        by vger.kernel.org with ESMTP id S1752340AbdFVCPs (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 21 Jun 2017 22:15:28 -0400
-Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v5M2En3b034875
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 22:15:27 -0400
+        Wed, 21 Jun 2017 22:15:48 -0400
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v5M2EXUq123861
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 22:15:47 -0400
 Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2b7w13m1tw-1
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2b7rm6ar57-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 22:15:27 -0400
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 22:15:47 -0400
 Received: from localhost
         by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
-        Wed, 21 Jun 2017 20:15:26 -0600
+        Wed, 21 Jun 2017 20:15:46 -0600
 In-Reply-To: <1498097563-8680-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 Cc: linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
-The cxlflash driver currently lacks host management interface. Future
-devices supported by cxlflash will provide a variety of host-wide
-management functions. Examples include LUN provisioning, hardware debug
-support, and firmware download.
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
 
-In order to provide a way to manage the device, a character device will
-be created during probe of each adapter. This device will support a set of
-ioctls defined in the SISLite specification from which administrators can
-manage the adapter.
+To date the only supported internal AFU command is AFU sync. The logic
+to send an internal AFU command is embedded in the specific AFU sync
+handler and would need to be duplicated for new internal AFU commands.
 
+In order to support new internal AFU commands, separate code that is
+common for AFU internal commands into a generic transmission routine
+and support passing back command status through an IOASA structure.
+The first user of this new routine is the existing AFU sync command.
+As a cleanup, use a descriptive name for the AFU sync command instead
+of a magic number.
+
+Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/common.h |   6 +-
- drivers/scsi/cxlflash/main.c   | 207 ++++++++++++++++++++++++++++++++++++++++-
- drivers/scsi/cxlflash/main.h   |   1 +
- 3 files changed, 212 insertions(+), 2 deletions(-)
+ drivers/scsi/cxlflash/main.c    | 79 ++++++++++++++++++++++++++---------------
+ drivers/scsi/cxlflash/sislite.h |  2 ++
+ 2 files changed, 53 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
-index 11a5b0a..cbc0eb7 100644
---- a/drivers/scsi/cxlflash/common.h
-+++ b/drivers/scsi/cxlflash/common.h
-@@ -16,6 +16,7 @@
- #define _CXLFLASH_COMMON_H
- 
- #include <linux/async.h>
-+#include <linux/cdev.h>
- #include <linux/irq_poll.h>
- #include <linux/list.h>
- #include <linux/rwsem.h>
-@@ -86,7 +87,8 @@ enum cxlflash_init_state {
- 	INIT_STATE_NONE,
- 	INIT_STATE_PCI,
- 	INIT_STATE_AFU,
--	INIT_STATE_SCSI
-+	INIT_STATE_SCSI,
-+	INIT_STATE_CDEV
- };
- 
- enum cxlflash_state {
-@@ -116,6 +118,8 @@ struct cxlflash_cfg {
- 	struct pci_device_id *dev_id;
- 	struct Scsi_Host *host;
- 	int num_fc_ports;
-+	struct cdev cdev;
-+	struct device *chardev;
- 
- 	ulong cxlflash_regs_pci;
- 
 diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index ceb247b..0656dd2 100644
+index 0656dd2..7732dfc 100644
 --- a/drivers/scsi/cxlflash/main.c
 +++ b/drivers/scsi/cxlflash/main.c
-@@ -34,6 +34,10 @@ MODULE_AUTHOR("Manoj N. Kumar <manoj@linux.vnet.ibm.com>");
- MODULE_AUTHOR("Matthew R. Ochs <mrochs@linux.vnet.ibm.com>");
- MODULE_LICENSE("GPL");
- 
-+static struct class *cxlflash_class;
-+static u32 cxlflash_major;
-+static DECLARE_BITMAP(cxlflash_minor, CXLFLASH_MAX_ADAPTERS);
-+
- /**
-  * process_cmd_err() - command error handler
-  * @cmd:	AFU command that experienced the error.
-@@ -863,6 +867,47 @@ static void notify_shutdown(struct cxlflash_cfg *cfg, bool wait)
+@@ -2212,28 +2212,22 @@ static void cxlflash_schedule_async_reset(struct cxlflash_cfg *cfg)
  }
  
  /**
-+ * cxlflash_get_minor() - gets the first available minor number
-+ *
-+ * Return: Unique minor number that can be used to create the character device.
-+ */
-+static int cxlflash_get_minor(void)
-+{
-+	int minor;
-+	long bit;
-+
-+	bit = find_first_zero_bit(cxlflash_minor, CXLFLASH_MAX_ADAPTERS);
-+	if (bit >= CXLFLASH_MAX_ADAPTERS)
-+		return -1;
-+
-+	minor = bit & MINORMASK;
-+	set_bit(minor, cxlflash_minor);
-+	return minor;
-+}
-+
-+/**
-+ * cxlflash_put_minor() - releases the minor number
-+ * @minor:	Minor number that is no longer needed.
-+ */
-+static void cxlflash_put_minor(int minor)
-+{
-+	clear_bit(minor, cxlflash_minor);
-+}
-+
-+/**
-+ * cxlflash_release_chrdev() - release the character device for the host
-+ * @cfg:	Internal structure associated with the host.
-+ */
-+static void cxlflash_release_chrdev(struct cxlflash_cfg *cfg)
-+{
-+	put_device(cfg->chardev);
-+	device_unregister(cfg->chardev);
-+	cfg->chardev = NULL;
-+	cdev_del(&cfg->cdev);
-+	cxlflash_put_minor(MINOR(cfg->cdev.dev));
-+}
-+
-+/**
-  * cxlflash_remove() - PCI entry point to tear down host
-  * @pdev:	PCI device associated with the host.
+- * cxlflash_afu_sync() - builds and sends an AFU sync command
++ * send_afu_cmd() - builds and sends an internal AFU command
+  * @afu:	AFU associated with the host.
+- * @ctx_hndl_u:	Identifies context requesting sync.
+- * @res_hndl_u:	Identifies resource requesting sync.
+- * @mode:	Type of sync to issue (lightweight, heavyweight, global).
++ * @rcb:	Pre-populated IOARCB describing command to send.
   *
-@@ -897,6 +942,8 @@ static void cxlflash_remove(struct pci_dev *pdev)
- 	cxlflash_stop_term_user_contexts(cfg);
- 
- 	switch (cfg->init_state) {
-+	case INIT_STATE_CDEV:
-+		cxlflash_release_chrdev(cfg);
- 	case INIT_STATE_SCSI:
- 		cxlflash_term_local_luns(cfg);
- 		scsi_remove_host(cfg->host);
-@@ -3120,6 +3167,86 @@ static void cxlflash_worker_thread(struct work_struct *work)
- }
- 
- /**
-+ * cxlflash_chr_open() - character device open handler
-+ * @inode:	Device inode associated with this character device.
-+ * @file:	File pointer for this device.
-+ *
-+ * Only users with admin privileges are allowed to open the character device.
-+ *
-+ * Return: 0 on success, -errno on failure
-+ */
-+static int cxlflash_chr_open(struct inode *inode, struct file *file)
-+{
-+	struct cxlflash_cfg *cfg;
-+
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EACCES;
-+
-+	cfg = container_of(inode->i_cdev, struct cxlflash_cfg, cdev);
-+	file->private_data = cfg;
-+
-+	return 0;
-+}
-+
-+/*
-+ * Character device file operations
-+ */
-+static const struct file_operations cxlflash_chr_fops = {
-+	.owner          = THIS_MODULE,
-+	.open           = cxlflash_chr_open,
-+};
-+
-+/**
-+ * init_chrdev() - initialize the character device for the host
-+ * @cfg:	Internal structure associated with the host.
-+ *
-+ * Return: 0 on success, -errno on failure
-+ */
-+static int init_chrdev(struct cxlflash_cfg *cfg)
-+{
-+	struct device *dev = &cfg->dev->dev;
-+	struct device *char_dev;
-+	dev_t devno;
-+	int minor;
-+	int rc = 0;
-+
-+	minor = cxlflash_get_minor();
-+	if (unlikely(minor < 0)) {
-+		dev_err(dev, "%s: Exhausted allowed adapters\n", __func__);
-+		rc = -ENOSPC;
-+		goto out;
-+	}
-+
-+	devno = MKDEV(cxlflash_major, minor);
-+	cdev_init(&cfg->cdev, &cxlflash_chr_fops);
-+
-+	rc = cdev_add(&cfg->cdev, devno, 1);
-+	if (rc) {
-+		dev_err(dev, "%s: cdev_add failed rc=%d\n", __func__, rc);
-+		goto err1;
-+	}
-+
-+	char_dev = device_create(cxlflash_class, NULL, devno,
-+				 NULL, "cxlflash%d", minor);
-+	if (IS_ERR(char_dev)) {
-+		rc = PTR_ERR(char_dev);
-+		dev_err(dev, "%s: device_create failed rc=%d\n",
-+			__func__, rc);
-+		goto err2;
-+	}
-+
-+	cfg->chardev = char_dev;
-+out:
-+	dev_dbg(dev, "%s: returning rc=%d\n", __func__, rc);
-+	return rc;
-+err2:
-+	cdev_del(&cfg->cdev);
-+err1:
-+	cxlflash_put_minor(minor);
-+	goto out;
-+}
-+
-+/**
-  * cxlflash_probe() - PCI entry point to add host
-  * @pdev:	PCI device associated with the host.
-  * @dev_id:	PCI device id associated with device.
-@@ -3229,6 +3356,13 @@ static int cxlflash_probe(struct pci_dev *pdev,
- 	}
- 	cfg->init_state = INIT_STATE_SCSI;
- 
-+	rc = init_chrdev(cfg);
-+	if (rc) {
-+		dev_err(dev, "%s: init_chrdev failed rc=%d\n", __func__, rc);
-+		goto out_remove;
-+	}
-+	cfg->init_state = INIT_STATE_CDEV;
-+
- 	if (wq_has_sleeper(&cfg->reset_waitq)) {
- 		cfg->state = STATE_PROBED;
- 		wake_up_all(&cfg->reset_waitq);
-@@ -3331,6 +3465,63 @@ static void cxlflash_pci_resume(struct pci_dev *pdev)
- 	scsi_unblock_requests(cfg->host);
- }
- 
-+/**
-+ * cxlflash_devnode() - provides devtmpfs for devices in the cxlflash class
-+ * @dev:	Character device.
-+ * @mode:	Mode that can be used to verify access.
-+ *
-+ * Return: Allocated string describing the devtmpfs structure.
-+ */
-+static char *cxlflash_devnode(struct device *dev, umode_t *mode)
-+{
-+	return kasprintf(GFP_KERNEL, "cxlflash/%s", dev_name(dev));
-+}
-+
-+/**
-+ * cxlflash_class_init() - create character device class
-+ *
-+ * Return: 0 on success, -errno on failure
-+ */
-+static int cxlflash_class_init(void)
-+{
-+	dev_t devno;
-+	int rc = 0;
-+
-+	rc = alloc_chrdev_region(&devno, 0, CXLFLASH_MAX_ADAPTERS, "cxlflash");
-+	if (unlikely(rc)) {
-+		pr_err("%s: alloc_chrdev_region failed rc=%d\n", __func__, rc);
-+		goto out;
-+	}
-+
-+	cxlflash_major = MAJOR(devno);
-+
-+	cxlflash_class = class_create(THIS_MODULE, "cxlflash");
-+	if (IS_ERR(cxlflash_class)) {
-+		rc = PTR_ERR(cxlflash_class);
-+		pr_err("%s: class_create failed rc=%d\n", __func__, rc);
-+		goto err;
-+	}
-+
-+	cxlflash_class->devnode = cxlflash_devnode;
-+out:
-+	pr_debug("%s: returning rc=%d\n", __func__, rc);
-+	return rc;
-+err:
-+	unregister_chrdev_region(devno, CXLFLASH_MAX_ADAPTERS);
-+	goto out;
-+}
-+
-+/**
-+ * cxlflash_class_exit() - destroy character device class
-+ */
-+static void cxlflash_class_exit(void)
-+{
-+	dev_t devno = MKDEV(cxlflash_major, 0);
-+
-+	class_destroy(cxlflash_class);
-+	unregister_chrdev_region(devno, CXLFLASH_MAX_ADAPTERS);
-+}
-+
- static const struct pci_error_handlers cxlflash_err_handler = {
- 	.error_detected = cxlflash_pci_error_detected,
- 	.slot_reset = cxlflash_pci_slot_reset,
-@@ -3356,10 +3547,23 @@ static struct pci_driver cxlflash_driver = {
+- * The AFU can only take 1 sync command at a time. This routine enforces this
+- * limitation by using a mutex to provide exclusive access to the AFU during
+- * the sync. This design point requires calling threads to not be on interrupt
+- * context due to the possibility of sleeping during concurrent sync operations.
++ * The AFU can only take one internal AFU command at a time. This limitation is
++ * enforced by using a mutex to provide exclusive access to the AFU during the
++ * operation. This design point requires calling threads to not be on interrupt
++ * context due to the possibility of sleeping during concurrent AFU operations.
+  *
+- * AFU sync operations are only necessary and allowed when the device is
+- * operating normally. When not operating normally, sync requests can occur as
+- * part of cleaning up resources associated with an adapter prior to removal.
+- * In this scenario, these requests are simply ignored (safe due to the AFU
+- * going away).
++ * The command status is optionally passed back to the caller when the caller
++ * populates the IOASA field of the IOARCB with a pointer to an IOASA structure.
+  *
+  * Return:
+  *	0 on success, -errno on failure
   */
- static int __init init_cxlflash(void)
+-int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
+-		      res_hndl_t res_hndl_u, u8 mode)
++static int send_afu_cmd(struct afu *afu, struct sisl_ioarcb *rcb)
  {
-+	int rc;
-+
- 	check_sizes();
- 	cxlflash_list_init();
-+	rc = cxlflash_class_init();
-+	if (unlikely(rc))
-+		goto out;
+ 	struct cxlflash_cfg *cfg = afu->parent;
+ 	struct device *dev = &cfg->dev->dev;
+@@ -2263,25 +2257,15 @@ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
  
--	return pci_register_driver(&cxlflash_driver);
-+	rc = pci_register_driver(&cxlflash_driver);
-+	if (unlikely(rc))
-+		goto err;
-+out:
-+	pr_debug("%s: returning rc=%d\n", __func__, rc);
-+	return rc;
-+err:
-+	cxlflash_class_exit();
-+	goto out;
+ retry:
+ 	memset(cmd, 0, sizeof(*cmd));
++	memcpy(&cmd->rcb, rcb, sizeof(*rcb));
+ 	INIT_LIST_HEAD(&cmd->queue);
+ 	init_completion(&cmd->cevent);
+ 	cmd->parent = afu;
+ 	cmd->hwq_index = hwq->index;
+-
+-	dev_dbg(dev, "%s: afu=%p cmd=%p ctx=%d nretry=%d\n",
+-		__func__, afu, cmd, ctx_hndl_u, nretry);
+-
+-	cmd->rcb.req_flags = SISL_REQ_FLAGS_AFU_CMD;
+ 	cmd->rcb.ctx_id = hwq->ctx_hndl;
+-	cmd->rcb.msi = SISL_MSI_RRQ_UPDATED;
+-	cmd->rcb.timeout = MC_AFU_SYNC_TIMEOUT;
+-
+-	cmd->rcb.cdb[0] = 0xC0;	/* AFU Sync */
+-	cmd->rcb.cdb[1] = mode;
+ 
+-	/* The cdb is aligned, no unaligned accessors required */
+-	*((__be16 *)&cmd->rcb.cdb[2]) = cpu_to_be16(ctx_hndl_u);
+-	*((__be32 *)&cmd->rcb.cdb[4]) = cpu_to_be32(res_hndl_u);
++	dev_dbg(dev, "%s: afu=%p cmd=%p type=%02x nretry=%d\n",
++		__func__, afu, cmd, cmd->rcb.cdb[0], nretry);
+ 
+ 	rc = afu->send_cmd(afu, cmd);
+ 	if (unlikely(rc)) {
+@@ -2306,6 +2290,8 @@ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
+ 		break;
+ 	}
+ 
++	if (rcb->ioasa)
++		*rcb->ioasa = cmd->sa;
+ out:
+ 	atomic_dec(&afu->cmds_active);
+ 	mutex_unlock(&sync_active);
+@@ -2315,6 +2301,43 @@ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
  }
  
  /**
-@@ -3371,6 +3575,7 @@ static void __exit exit_cxlflash(void)
- 	cxlflash_free_errpage();
- 
- 	pci_unregister_driver(&cxlflash_driver);
-+	cxlflash_class_exit();
- }
- 
- module_init(init_cxlflash);
-diff --git a/drivers/scsi/cxlflash/main.h b/drivers/scsi/cxlflash/main.h
-index 49657f1..44c86c2 100644
---- a/drivers/scsi/cxlflash/main.h
-+++ b/drivers/scsi/cxlflash/main.h
-@@ -22,6 +22,7 @@
- 
- #define CXLFLASH_NAME		"cxlflash"
- #define CXLFLASH_ADAPTER_NAME	"IBM POWER CXL Flash Adapter"
-+#define CXLFLASH_MAX_ADAPTERS	32
- 
- #define PCI_DEVICE_ID_IBM_CORSA		0x04F0
- #define PCI_DEVICE_ID_IBM_FLASH_GT	0x0600
++ * cxlflash_afu_sync() - builds and sends an AFU sync command
++ * @afu:	AFU associated with the host.
++ * @ctx:	Identifies context requesting sync.
++ * @res:	Identifies resource requesting sync.
++ * @mode:	Type of sync to issue (lightweight, heavyweight, global).
++ *
++ * AFU sync operations are only necessary and allowed when the device is
++ * operating normally. When not operating normally, sync requests can occur as
++ * part of cleaning up resources associated with an adapter prior to removal.
++ * In this scenario, these requests are simply ignored (safe due to the AFU
++ * going away).
++ *
++ * Return:
++ *	0 on success, -errno on failure
++ */
++int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx, res_hndl_t res, u8 mode)
++{
++	struct cxlflash_cfg *cfg = afu->parent;
++	struct device *dev = &cfg->dev->dev;
++	struct sisl_ioarcb rcb = { 0 };
++
++	dev_dbg(dev, "%s: afu=%p ctx=%u res=%u mode=%u\n",
++		__func__, afu, ctx, res, mode);
++
++	rcb.req_flags = SISL_REQ_FLAGS_AFU_CMD;
++	rcb.msi = SISL_MSI_RRQ_UPDATED;
++	rcb.timeout = MC_AFU_SYNC_TIMEOUT;
++
++	rcb.cdb[0] = SISL_AFU_CMD_SYNC;
++	rcb.cdb[1] = mode;
++	put_unaligned_be16(ctx, &rcb.cdb[2]);
++	put_unaligned_be32(res, &rcb.cdb[4]);
++
++	return send_afu_cmd(afu, &rcb);
++}
++
++/**
+  * cxlflash_eh_abort_handler() - abort a SCSI command
+  * @scp:	SCSI command to abort.
+  *
+diff --git a/drivers/scsi/cxlflash/sislite.h b/drivers/scsi/cxlflash/sislite.h
+index a768360..483710a 100644
+--- a/drivers/scsi/cxlflash/sislite.h
++++ b/drivers/scsi/cxlflash/sislite.h
+@@ -72,6 +72,8 @@ struct sisl_ioarcb {
+ 	u16 timeout;		/* in units specified by req_flags */
+ 	u32 rsvd1;
+ 	u8 cdb[16];		/* must be in big endian */
++#define SISL_AFU_CMD_SYNC		0xC0	/* AFU sync command */
++
+ 	union {
+ 		u64 reserved;			/* Reserved for IOARRIN mode */
+ 		struct sisl_ioasa *ioasa;	/* IOASA EA for SQ Mode */
 -- 
 2.1.0
