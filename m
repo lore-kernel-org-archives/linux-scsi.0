@@ -1,40 +1,69 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2 3/6] qla2xxx: Add FC-NVMe F/W initialization and
- transport registration
-Date: Thu, 22 Jun 2017 20:53:05 +0200
-Message-ID: <20170622185305.GB3284@linux-x5ow.site>
-References: <20170621204846.21663-1-himanshu.madhani@cavium.com>
- <20170621204846.21663-4-himanshu.madhani@cavium.com>
- <20170622094649.GD5670@linux-x5ow.site>
- <2d07d1fd-545b-0308-8a2b-5cfb59cbcf2b@broadcom.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 4.12-rc6
+Date: Thu, 22 Jun 2017 12:08:16 -0700
+Message-ID: <1498158496.2750.9.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53966 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752669AbdFVSxM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 22 Jun 2017 14:53:12 -0400
-Content-Disposition: inline
-In-Reply-To: <2d07d1fd-545b-0308-8a2b-5cfb59cbcf2b@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@broadcom.com>
-Cc: "Madhani, Himanshu" <himanshu.madhani@cavium.com>, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, darren.trapp@cavium.com, giridhar.malavali@cavium.com, linux-nvme@lists.infradead.org
 
-On Thu, Jun 22, 2017 at 10:48:46AM -0700, James Smart wrote:
-> He can't move it. the fcport->nvme_remote_port pointer is set by the
-> nvme_fc_register_remoteport() routine (if return status is 0).
+Two fixes to remove spurious WARN_ONs from the new(ish) qedi driver. 
+ The driver already prints a warning message, there's no need to panic
+users by printing something that looks like an oops as well.
 
-Gah, that's kind of wired. Literly _all_ of the Kernel's register_xxx()
-funtions have a semantic that after the registration is done the object can be
-used and thus assigning private pointer afterwards is an error. Damn I didn't
-realize this in the nmve-fc review.
+The patch is available here:
 
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Manish Rangankar (2):
+      scsi: qedi: Remove WARN_ON from clear task context.
+      scsi: qedi: Remove WARN_ON for untracked cleanup.
+
+And the diffstat:
+
+ drivers/scsi/qedi/qedi_fw.c   | 1 -
+ drivers/scsi/qedi/qedi_main.c | 4 +---
+ 2 files changed, 1 insertion(+), 4 deletions(-)
+
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
+index 8bc7ee1a8ca8..507512cc478b 100644
+--- a/drivers/scsi/qedi/qedi_fw.c
++++ b/drivers/scsi/qedi/qedi_fw.c
+@@ -870,7 +870,6 @@ static void qedi_process_cmd_cleanup_resp(struct qedi_ctx *qedi,
+ 		QEDI_ERR(&qedi->dbg_ctx,
+ 			 "Delayed or untracked cleanup response, itt=0x%x, tid=0x%x, cid=0x%x, task=%p\n",
+ 			 protoitt, cqe->itid, qedi_conn->iscsi_conn_id, task);
+-		WARN_ON(1);
+ 	}
+ }
+ 
+diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
+index 09a294634bc7..879d3b7462f9 100644
+--- a/drivers/scsi/qedi/qedi_main.c
++++ b/drivers/scsi/qedi/qedi_main.c
+@@ -1499,11 +1499,9 @@ int qedi_get_task_idx(struct qedi_ctx *qedi)
+ 
+ void qedi_clear_task_idx(struct qedi_ctx *qedi, int idx)
+ {
+-	if (!test_and_clear_bit(idx, qedi->task_idx_map)) {
++	if (!test_and_clear_bit(idx, qedi->task_idx_map))
+ 		QEDI_ERR(&qedi->dbg_ctx,
+ 			 "FW task context, already cleared, tid=0x%x\n", idx);
+-		WARN_ON(1);
+-	}
+ }
+ 
+ void qedi_update_itt_map(struct qedi_ctx *qedi, u32 tid, u32 proto_itt,
