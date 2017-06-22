@@ -1,25 +1,25 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH 13/17] cxlflash: Support LUN provisioning
-Date: Wed, 21 Jun 2017 21:16:13 -0500
-Message-ID: <1498097773-9151-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH 14/17] cxlflash: Support AFU debug
+Date: Wed, 21 Jun 2017 21:16:22 -0500
+Message-ID: <1498097782-9187-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1498097563-8680-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:58296 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752360AbdFVCQX (ORCPT
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:51390 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752380AbdFVCQa (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 21 Jun 2017 22:16:23 -0400
-Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v5M2EYI5044261
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 22:16:23 -0400
-Received: from e12.ny.us.ibm.com (e12.ny.us.ibm.com [129.33.205.202])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2b7uxfyhvh-1
+        Wed, 21 Jun 2017 22:16:30 -0400
+Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v5M2EXMI075398
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 22:16:30 -0400
+Received: from e11.ny.us.ibm.com (e11.ny.us.ibm.com [129.33.205.201])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2b7r1ncxp2-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 22:16:22 -0400
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 22:16:29 -0400
 Received: from localhost
-        by e12.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e11.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
-        Wed, 21 Jun 2017 22:16:21 -0400
+        Wed, 21 Jun 2017 22:16:29 -0400
 In-Reply-To: <1498097563-8680-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -28,169 +28,145 @@ Cc: linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donn
 
 From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
 
-Adopt the SISLite AFU LUN provisioning capability to allow future CXL
-Flash adapters the ability to better manage storage. Update the SISLite
-header with the changes necessary to support LUN provision operations
-and create a host ioctl interface for user LUN management software. Also
+Adopt the SISLite AFU debug capability to allow future CXL Flash
+adapters the ability to better debug AFU issues. Update the SISLite
+header with the changes necessary to support AFU debug operations
+and create a host ioctl interface for user debug software. Also
 update the cxlflash documentation to describe this new host ioctl.
 
 Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 ---
- Documentation/powerpc/cxlflash.txt |  31 +++++++++++
- drivers/scsi/cxlflash/common.h     |   5 ++
- drivers/scsi/cxlflash/main.c       | 107 ++++++++++++++++++++++++++++++++++++-
- drivers/scsi/cxlflash/main.h       |   5 ++
- drivers/scsi/cxlflash/sislite.h    |  22 +++++++-
- include/uapi/scsi/cxlflash_ioctl.h |  31 +++++++++--
- 6 files changed, 192 insertions(+), 9 deletions(-)
+ Documentation/powerpc/cxlflash.txt | 14 ++++++
+ drivers/scsi/cxlflash/common.h     |  5 ++
+ drivers/scsi/cxlflash/main.c       | 96 ++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/cxlflash/main.h       |  1 +
+ drivers/scsi/cxlflash/sislite.h    |  2 +
+ include/uapi/scsi/cxlflash_ioctl.h | 37 +++++++++++++--
+ 6 files changed, 152 insertions(+), 3 deletions(-)
 
 diff --git a/Documentation/powerpc/cxlflash.txt b/Documentation/powerpc/cxlflash.txt
-index ee67021..2d6297b 100644
+index 2d6297b..a64bdaa 100644
 --- a/Documentation/powerpc/cxlflash.txt
 +++ b/Documentation/powerpc/cxlflash.txt
-@@ -382,3 +382,34 @@ CXL Flash Driver Host IOCTLs
+@@ -413,3 +413,17 @@ HT_CXLFLASH_LUN_PROVISION
  
-     The structure definitions for these IOCTLs are available in:
-     uapi/scsi/cxlflash_ioctl.h
+     With this information, the number of available LUNs and capacity can be
+     can be calculated.
 +
-+HT_CXLFLASH_LUN_PROVISION
-+-------------------------
-+    This ioctl is used to create and delete persistent LUNs on cxlflash
-+    devices that lack an external LUN management interface. It is only
-+    valid when used with AFUs that support the LUN provision capability.
++HT_CXLFLASH_AFU_DEBUG
++---------------------
++    This ioctl is used to debug AFUs by supporting a command pass-through
++    interface. It is only valid when used with AFUs that support the AFU
++    debug capability.
 +
-+    When sufficient space is available, LUNs can be created by specifying
-+    the target port to host the LUN and a desired size in 4K blocks. Upon
-+    success, the LUN ID and WWID of the created LUN will be returned and
-+    the SCSI bus can be scanned to detect the change in LUN topology. Note
-+    that partial allocations are not supported. Should a creation fail due
-+    to a space issue, the target port can be queried for its current LUN
-+    geometry.
-+
-+    To remove a LUN, the device must first be disassociated from the Linux
-+    SCSI subsystem. The LUN deletion can then be initiated by specifying a
-+    target port and LUN ID. Upon success, the LUN geometry associated with
-+    the port will be updated to reflect new number of provisioned LUNs and
-+    available capacity.
-+
-+    To query the LUN geometry of a port, the target port is specified and
-+    upon success, the following information is presented:
-+
-+        - Maximum number of provisioned LUNs allowed for the port
-+        - Current number of provisioned LUNs for the port
-+        - Maximum total capacity of provisioned LUNs for the port (4K blocks)
-+        - Current total capacity of provisioned LUNs for the port (4K blocks)
-+
-+    With this information, the number of available LUNs and capacity can be
-+    can be calculated.
++    With exception of buffer management, AFU debug commands are opaque to
++    cxlflash and treated as pass-through. For debug commands that do require
++    data transfer, the user supplies an adequately sized data buffer and must
++    specify the data transfer direction with respect to the host. There is a
++    maximum transfer size of 256K imposed. Note that partial read completions
++    are not supported - when errors are experienced with a host read data
++    transfer, the data buffer is not copied back to the user.
 diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
-index c96526e..5810724 100644
+index 5810724..a91151c 100644
 --- a/drivers/scsi/cxlflash/common.h
 +++ b/drivers/scsi/cxlflash/common.h
 @@ -262,6 +262,11 @@ static inline bool afu_has_cap(struct afu *afu, u64 cap)
  	return afu_cap & cap;
  }
  
-+static inline bool afu_is_lun_provision(struct afu *afu)
++static inline bool afu_is_afu_debug(struct afu *afu)
 +{
-+	return afu_has_cap(afu, SISL_INTVER_CAP_LUN_PROVISION);
++	return afu_has_cap(afu, SISL_INTVER_CAP_AFU_DEBUG);
 +}
 +
- static inline bool afu_is_sq_cmd_mode(struct afu *afu)
+ static inline bool afu_is_lun_provision(struct afu *afu)
  {
- 	return afu_has_cap(afu, SISL_INTVER_CAP_SQ_CMD_MODE);
+ 	return afu_has_cap(afu, SISL_INTVER_CAP_LUN_PROVISION);
 diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index be468ed1..1279293 100644
+index 1279293..d3ad52e 100644
 --- a/drivers/scsi/cxlflash/main.c
 +++ b/drivers/scsi/cxlflash/main.c
-@@ -3227,14 +3227,105 @@ static int cxlflash_chr_open(struct inode *inode, struct file *file)
- static char *decode_hioctl(int cmd)
- {
- 	switch (cmd) {
--	default:
--		return "UNKNOWN";
-+	case HT_CXLFLASH_LUN_PROVISION:
-+		return __stringify_1(HT_CXLFLASH_LUN_PROVISION);
- 	}
- 
- 	return "UNKNOWN";
+@@ -3326,6 +3326,99 @@ static int cxlflash_lun_provision(struct cxlflash_cfg *cfg,
  }
  
  /**
-+ * cxlflash_lun_provision() - host LUN provisioning handler
++ * cxlflash_afu_debug() - host AFU debug handler
 + * @cfg:	Internal structure associated with the host.
 + * @arg:	Kernel copy of userspace ioctl data structure.
 + *
++ * For debug requests requiring a data buffer, always provide an aligned
++ * (cache line) buffer to the AFU to appease any alignment requirements.
++ *
 + * Return: 0 on success, -errno on failure
 + */
-+static int cxlflash_lun_provision(struct cxlflash_cfg *cfg,
-+				  struct ht_cxlflash_lun_provision *lunprov)
++static int cxlflash_afu_debug(struct cxlflash_cfg *cfg,
++			      struct ht_cxlflash_afu_debug *afu_dbg)
 +{
 +	struct afu *afu = cfg->afu;
 +	struct device *dev = &cfg->dev->dev;
 +	struct sisl_ioarcb rcb;
 +	struct sisl_ioasa asa;
-+	__be64 __iomem *fc_port_regs;
-+	u16 port = lunprov->port;
-+	u16 scmd = lunprov->hdr.subcmd;
-+	u16 type;
-+	u64 reg;
-+	u64 size;
-+	u64 lun_id;
++	char *buf = NULL;
++	char *kbuf = NULL;
++	void __user *ubuf = (__force void __user *)afu_dbg->data_ea;
++	u16 req_flags = SISL_REQ_FLAGS_AFU_CMD;
++	u32 ulen = afu_dbg->data_len;
++	bool is_write = afu_dbg->hdr.flags & HT_CXLFLASH_HOST_WRITE;
 +	int rc = 0;
 +
-+	if (!afu_is_lun_provision(afu)) {
++	if (!afu_is_afu_debug(afu)) {
 +		rc = -ENOTSUPP;
 +		goto out;
 +	}
 +
-+	if (port >= cfg->num_fc_ports) {
-+		rc = -EINVAL;
-+		goto out;
-+	}
++	if (ulen) {
++		req_flags |= SISL_REQ_FLAGS_SUP_UNDERRUN;
 +
-+	switch (scmd) {
-+	case HT_CXLFLASH_LUN_PROVISION_SUBCMD_CREATE_LUN:
-+		type = SISL_AFU_LUN_PROVISION_CREATE;
-+		size = lunprov->size;
-+		lun_id = 0;
-+		break;
-+	case HT_CXLFLASH_LUN_PROVISION_SUBCMD_DELETE_LUN:
-+		type = SISL_AFU_LUN_PROVISION_DELETE;
-+		size = 0;
-+		lun_id = lunprov->lun_id;
-+		break;
-+	case HT_CXLFLASH_LUN_PROVISION_SUBCMD_QUERY_PORT:
-+		fc_port_regs = get_fc_port_regs(cfg, port);
++		if (ulen > HT_CXLFLASH_AFU_DEBUG_MAX_DATA_LEN) {
++			rc = -EINVAL;
++			goto out;
++		}
 +
-+		reg = readq_be(&fc_port_regs[FC_MAX_NUM_LUNS / 8]);
-+		lunprov->max_num_luns = reg;
-+		reg = readq_be(&fc_port_regs[FC_CUR_NUM_LUNS / 8]);
-+		lunprov->cur_num_luns = reg;
-+		reg = readq_be(&fc_port_regs[FC_MAX_CAP_PORT / 8]);
-+		lunprov->max_cap_port = reg;
-+		reg = readq_be(&fc_port_regs[FC_CUR_CAP_PORT / 8]);
-+		lunprov->cur_cap_port = reg;
++		if (unlikely(!access_ok(is_write ? VERIFY_READ : VERIFY_WRITE,
++					ubuf, ulen))) {
++			rc = -EFAULT;
++			goto out;
++		}
 +
-+		goto out;
-+	default:
-+		rc = -EINVAL;
-+		goto out;
++		buf = kmalloc(ulen + cache_line_size() - 1, GFP_KERNEL);
++		if (unlikely(!buf)) {
++			rc = -ENOMEM;
++			goto out;
++		}
++
++		kbuf = PTR_ALIGN(buf, cache_line_size());
++
++		if (is_write) {
++			req_flags |= SISL_REQ_FLAGS_HOST_WRITE;
++
++			rc = copy_from_user(kbuf, ubuf, ulen);
++			if (unlikely(rc))
++				goto out;
++		}
 +	}
 +
 +	memset(&rcb, 0, sizeof(rcb));
 +	memset(&asa, 0, sizeof(asa));
-+	rcb.req_flags = SISL_REQ_FLAGS_AFU_CMD;
-+	rcb.lun_id = lun_id;
++
++	rcb.req_flags = req_flags;
 +	rcb.msi = SISL_MSI_RRQ_UPDATED;
-+	rcb.timeout = MC_LUN_PROV_TIMEOUT;
++	rcb.timeout = MC_AFU_DEBUG_TIMEOUT;
 +	rcb.ioasa = &asa;
 +
-+	rcb.cdb[0] = SISL_AFU_CMD_LUN_PROVISION;
-+	rcb.cdb[1] = type;
-+	rcb.cdb[2] = port;
-+	put_unaligned_be64(size, &rcb.cdb[8]);
++	if (ulen) {
++		rcb.data_len = ulen;
++		rcb.data_ea = (uintptr_t)kbuf;
++	}
++
++	rcb.cdb[0] = SISL_AFU_CMD_DEBUG;
++	memcpy(&rcb.cdb[4], afu_dbg->afu_subcmd,
++	       HT_CXLFLASH_AFU_DEBUG_SUBCMD_LEN);
 +
 +	rc = send_afu_cmd(afu, &rcb);
 +	if (rc) {
@@ -199,11 +175,10 @@ index be468ed1..1279293 100644
 +		goto out;
 +	}
 +
-+	if (scmd == HT_CXLFLASH_LUN_PROVISION_SUBCMD_CREATE_LUN) {
-+		lunprov->lun_id = (u64)asa.lunid_hi << 32 | asa.lunid_lo;
-+		memcpy(lunprov->wwid, asa.wwid, sizeof(lunprov->wwid));
-+	}
++	if (ulen && !is_write)
++		rc = copy_to_user(ubuf, kbuf, ulen);
 +out:
++	kfree(buf);
 +	dev_dbg(dev, "%s: returning rc=%d\n", __func__, rc);
 +	return rc;
 +}
@@ -212,165 +187,140 @@ index be468ed1..1279293 100644
   * cxlflash_chr_ioctl() - character device IOCTL handler
   * @file:	File pointer for this device.
   * @cmd:	IOCTL command.
-@@ -3270,6 +3361,8 @@ static long cxlflash_chr_ioctl(struct file *file, unsigned int cmd,
- 		size_t size;
- 		hioctl ioctl;
+@@ -3363,6 +3456,8 @@ static long cxlflash_chr_ioctl(struct file *file, unsigned int cmd,
  	} ioctl_tbl[] = {	/* NOTE: order matters here */
-+	{ sizeof(struct ht_cxlflash_lun_provision),
-+		(hioctl)cxlflash_lun_provision },
+ 	{ sizeof(struct ht_cxlflash_lun_provision),
+ 		(hioctl)cxlflash_lun_provision },
++	{ sizeof(struct ht_cxlflash_afu_debug),
++		(hioctl)cxlflash_afu_debug },
  	};
  
  	/* Hold read semaphore so we can drain if needed */
-@@ -3279,6 +3372,16 @@ static long cxlflash_chr_ioctl(struct file *file, unsigned int cmd,
- 		__func__, cmd, idx, sizeof(ioctl_tbl));
+@@ -3373,6 +3468,7 @@ static long cxlflash_chr_ioctl(struct file *file, unsigned int cmd,
  
  	switch (cmd) {
-+	case HT_CXLFLASH_LUN_PROVISION:
-+		known_ioctl = true;
-+		idx = _IOC_NR(HT_CXLFLASH_LUN_PROVISION) - _IOC_NR(cmd);
-+		size = ioctl_tbl[idx].size;
-+		do_ioctl = ioctl_tbl[idx].ioctl;
-+
-+		if (likely(do_ioctl))
-+			break;
-+
-+		/* fall through */
- 	default:
- 		rc = -EINVAL;
- 		goto out;
+ 	case HT_CXLFLASH_LUN_PROVISION:
++	case HT_CXLFLASH_AFU_DEBUG:
+ 		known_ioctl = true;
+ 		idx = _IOC_NR(HT_CXLFLASH_LUN_PROVISION) - _IOC_NR(cmd);
+ 		size = ioctl_tbl[idx].size;
 diff --git a/drivers/scsi/cxlflash/main.h b/drivers/scsi/cxlflash/main.h
-index 44c86c2..6ae8a11 100644
+index 6ae8a11..880e348 100644
 --- a/drivers/scsi/cxlflash/main.h
 +++ b/drivers/scsi/cxlflash/main.h
-@@ -41,6 +41,10 @@
- /* FC defines */
- #define FC_MTIP_CMDCONFIG 0x010
- #define FC_MTIP_STATUS 0x018
-+#define FC_MAX_NUM_LUNS 0x080 /* Max LUNs host can provision for port */
-+#define FC_CUR_NUM_LUNS 0x088 /* Cur number LUNs provisioned for port */
-+#define FC_MAX_CAP_PORT 0x090 /* Max capacity all LUNs for port (4K blocks) */
-+#define FC_CUR_CAP_PORT 0x098 /* Cur capacity all LUNs for port (4K blocks) */
- 
- #define FC_PNAME 0x300
- #define FC_CONFIG 0x320
-@@ -63,6 +67,7 @@
- 
+@@ -68,6 +68,7 @@
  /* AFU command timeout values */
  #define MC_AFU_SYNC_TIMEOUT	5	/* 5 secs */
-+#define MC_LUN_PROV_TIMEOUT	5	/* 5 secs */
+ #define MC_LUN_PROV_TIMEOUT	5	/* 5 secs */
++#define MC_AFU_DEBUG_TIMEOUT	5	/* 5 secs */
  
  /* AFU command room retry limit */
  #define MC_ROOM_RETRY_CNT	10
 diff --git a/drivers/scsi/cxlflash/sislite.h b/drivers/scsi/cxlflash/sislite.h
-index 483710a..c216fee 100644
+index c216fee..d671fae 100644
 --- a/drivers/scsi/cxlflash/sislite.h
 +++ b/drivers/scsi/cxlflash/sislite.h
-@@ -73,6 +73,10 @@ struct sisl_ioarcb {
- 	u32 rsvd1;
+@@ -74,6 +74,7 @@ struct sisl_ioarcb {
  	u8 cdb[16];		/* must be in big endian */
  #define SISL_AFU_CMD_SYNC		0xC0	/* AFU sync command */
-+#define SISL_AFU_CMD_LUN_PROVISION	0xD0	/* AFU LUN provision command */
-+
-+#define SISL_AFU_LUN_PROVISION_CREATE	0x00	/* LUN provision create type */
-+#define SISL_AFU_LUN_PROVISION_DELETE	0x01	/* LUN provision delete type */
+ #define SISL_AFU_CMD_LUN_PROVISION	0xD0	/* AFU LUN provision command */
++#define SISL_AFU_CMD_DEBUG		0xE0	/* AFU debug command */
  
- 	union {
- 		u64 reserved;			/* Reserved for IOARRIN mode */
-@@ -158,6 +162,7 @@ struct sisl_rc {
- };
- 
- #define SISL_SENSE_DATA_LEN     20	/* Sense data length         */
-+#define SISL_WWID_DATA_LEN	16	/* WWID data length          */
- 
- /*
-  * IOASA: 64 bytes & must follow IOARCB, min 16 byte alignment required,
-@@ -169,7 +174,12 @@ struct sisl_ioasa {
- 		u32 ioasc;
- #define SISL_IOASC_GOOD_COMPLETION        0x00000000U
- 	};
--	u32 resid;
-+
-+	union {
-+		u32 resid;
-+		u32 lunid_hi;
-+	};
-+
- 	u8 port;
- 	u8 afu_extra;
- 	/* when afu_rc=0x04, 0x14, 0x31 (_xxx_DMA_ERR):
-@@ -192,7 +202,14 @@ struct sisl_ioasa {
- 
- 	u8 scsi_extra;
- 	u8 fc_extra;
--	u8 sense_data[SISL_SENSE_DATA_LEN];
-+
-+	union {
-+		u8 sense_data[SISL_SENSE_DATA_LEN];
-+		struct {
-+			u32 lunid_lo;
-+			u8 wwid[SISL_WWID_DATA_LEN];
-+		};
-+	};
- 
- 	/* These fields are defined by the SISlite architecture for the
- 	 * host to use as they see fit for their implementation.
-@@ -394,6 +411,7 @@ struct sisl_global_regs {
- #define SISL_INTVER_CAP_SQ_CMD_MODE		0x400000000000ULL
+ #define SISL_AFU_LUN_PROVISION_CREATE	0x00	/* LUN provision create type */
+ #define SISL_AFU_LUN_PROVISION_DELETE	0x01	/* LUN provision delete type */
+@@ -412,6 +413,7 @@ struct sisl_global_regs {
  #define SISL_INTVER_CAP_RESERVED_CMD_MODE_A	0x200000000000ULL
  #define SISL_INTVER_CAP_RESERVED_CMD_MODE_B	0x100000000000ULL
-+#define SISL_INTVER_CAP_LUN_PROVISION		0x080000000000ULL
+ #define SISL_INTVER_CAP_LUN_PROVISION		0x080000000000ULL
++#define SISL_INTVER_CAP_AFU_DEBUG		0x040000000000ULL
  };
  
  #define CXLFLASH_NUM_FC_PORTS_PER_BANK	2	/* fixed # of ports per bank */
 diff --git a/include/uapi/scsi/cxlflash_ioctl.h b/include/uapi/scsi/cxlflash_ioctl.h
-index 87e1f63..ad79c34 100644
+index ad79c34..48d107e 100644
 --- a/include/uapi/scsi/cxlflash_ioctl.h
 +++ b/include/uapi/scsi/cxlflash_ioctl.h
-@@ -202,14 +202,34 @@ union cxlflash_ioctls {
- #define HT_CXLFLASH_VERSION_0  0
+@@ -18,6 +18,11 @@
+ #include <linux/types.h>
  
- struct ht_cxlflash_hdr {
--	__u16 version;                  /* Version data */
--	__u16 subcmd;                   /* Sub-command */
--	__u16 rsvd[2];                  /* Reserved for future use */
--	__u64 flags;                    /* Input flags */
--	__u64 return_flags;             /* Returned flags */
-+	__u16 version;		/* Version data */
-+	__u16 subcmd;		/* Sub-command */
-+	__u16 rsvd[2];		/* Reserved for future use */
-+	__u64 flags;		/* Input flags */
-+	__u64 return_flags;	/* Returned flags */
-+};
+ /*
++ * Structure and definitions for all CXL Flash ioctls
++ */
++#define CXLFLASH_WWID_LEN		16
 +
-+#define HT_CXLFLASH_LUN_PROVISION_SUBCMD_CREATE_LUN	0x0001
-+#define HT_CXLFLASH_LUN_PROVISION_SUBCMD_DELETE_LUN	0x0002
-+#define HT_CXLFLASH_LUN_PROVISION_SUBCMD_QUERY_PORT	0x0003
-+#define HT_CXLFLASH_LUN_PROVISION_WWID_LEN		16
-+
-+struct ht_cxlflash_lun_provision {
-+	struct ht_cxlflash_hdr hdr; /* Common fields */
-+	__u16 port;		    /* Target port for provision request */
-+	__u16 reserved16[3];	    /* Reserved for future use */
-+	__u64 size;		    /* Size of LUN (4K blocks) */
-+	__u64 lun_id;		    /* SCSI LUN ID */
-+	__u8 wwid[HT_CXLFLASH_LUN_PROVISION_WWID_LEN]; /* Page83 WWID, NAA-6 */
-+	__u64 max_num_luns;	    /* Maximum number of LUNs provisioned */
-+	__u64 cur_num_luns;	    /* Current number of LUNs provisioned */
-+	__u64 max_cap_port;	    /* Total capacity for port (4K blocks) */
-+	__u64 cur_cap_port;	    /* Current capacity for port (4K blocks) */
-+	__u64 reserved[8];	    /* Reserved for future use */
++/*
+  * Structure and flag definitions CXL Flash superpipe ioctls
+  */
+ 
+@@ -151,7 +156,7 @@ struct dk_cxlflash_recover_afu {
+ 	__u64 reserved[8];		/* Reserved for future use */
  };
  
+-#define DK_CXLFLASH_MANAGE_LUN_WWID_LEN			16
++#define DK_CXLFLASH_MANAGE_LUN_WWID_LEN			CXLFLASH_WWID_LEN
+ #define DK_CXLFLASH_MANAGE_LUN_ENABLE_SUPERPIPE		0x8000000000000000ULL
+ #define DK_CXLFLASH_MANAGE_LUN_DISABLE_SUPERPIPE	0x4000000000000000ULL
+ #define DK_CXLFLASH_MANAGE_LUN_ALL_PORTS_ACCESSIBLE	0x2000000000000000ULL
+@@ -209,10 +214,20 @@ struct ht_cxlflash_hdr {
+ 	__u64 return_flags;	/* Returned flags */
+ };
+ 
++/*
++ * Input flag definitions available to all host ioctls
++ *
++ * These are grown from the bottom-up with the intention that ioctl-specific
++ * input flag definitions would grow from the top-down, allowing the two sets
++ * to co-exist. While not required/enforced at this time, this provides future
++ * flexibility.
++ */
++#define HT_CXLFLASH_HOST_READ				0x0000000000000000ULL
++#define HT_CXLFLASH_HOST_WRITE				0x0000000000000001ULL
++
+ #define HT_CXLFLASH_LUN_PROVISION_SUBCMD_CREATE_LUN	0x0001
+ #define HT_CXLFLASH_LUN_PROVISION_SUBCMD_DELETE_LUN	0x0002
+ #define HT_CXLFLASH_LUN_PROVISION_SUBCMD_QUERY_PORT	0x0003
+-#define HT_CXLFLASH_LUN_PROVISION_WWID_LEN		16
+ 
+ struct ht_cxlflash_lun_provision {
+ 	struct ht_cxlflash_hdr hdr; /* Common fields */
+@@ -220,7 +235,7 @@ struct ht_cxlflash_lun_provision {
+ 	__u16 reserved16[3];	    /* Reserved for future use */
+ 	__u64 size;		    /* Size of LUN (4K blocks) */
+ 	__u64 lun_id;		    /* SCSI LUN ID */
+-	__u8 wwid[HT_CXLFLASH_LUN_PROVISION_WWID_LEN]; /* Page83 WWID, NAA-6 */
++	__u8 wwid[CXLFLASH_WWID_LEN];/* Page83 WWID, NAA-6 */
+ 	__u64 max_num_luns;	    /* Maximum number of LUNs provisioned */
+ 	__u64 cur_num_luns;	    /* Current number of LUNs provisioned */
+ 	__u64 max_cap_port;	    /* Total capacity for port (4K blocks) */
+@@ -228,8 +243,23 @@ struct ht_cxlflash_lun_provision {
+ 	__u64 reserved[8];	    /* Reserved for future use */
+ };
+ 
++#define	HT_CXLFLASH_AFU_DEBUG_MAX_DATA_LEN		262144	/* 256K */
++#define HT_CXLFLASH_AFU_DEBUG_SUBCMD_LEN		12
++struct ht_cxlflash_afu_debug {
++	struct ht_cxlflash_hdr hdr; /* Common fields */
++	__u8 reserved8[4];	    /* Reserved for future use */
++	__u8 afu_subcmd[HT_CXLFLASH_AFU_DEBUG_SUBCMD_LEN]; /* AFU subcommand,
++							    * (pass through)
++							    */
++	__u64 data_ea;		    /* Data buffer effective address */
++	__u32 data_len;		    /* Data buffer length */
++	__u32 reserved32;	    /* Reserved for future use */
++	__u64 reserved[8];	    /* Reserved for future use */
++};
++
  union cxlflash_ht_ioctls {
-+	struct ht_cxlflash_lun_provision lun_provision;
+ 	struct ht_cxlflash_lun_provision lun_provision;
++	struct ht_cxlflash_afu_debug afu_debug;
  };
  
  #define MAX_HT_CXLFLASH_IOCTL_SZ	(sizeof(union cxlflash_ht_ioctls))
-@@ -218,6 +238,7 @@ union cxlflash_ht_ioctls {
-  * CXL Flash host ioctls start at the top of the reserved CXL_MAGIC
+@@ -239,6 +269,7 @@ union cxlflash_ht_ioctls {
   * region (0xBF) and grow downwards.
   */
-+#define HT_CXLFLASH_LUN_PROVISION CXL_IOWR(0xBF, ht_cxlflash_lun_provision)
+ #define HT_CXLFLASH_LUN_PROVISION CXL_IOWR(0xBF, ht_cxlflash_lun_provision)
++#define HT_CXLFLASH_AFU_DEBUG	  CXL_IOWR(0xBE, ht_cxlflash_afu_debug)
  
  
  #endif /* ifndef _CXLFLASH_IOCTL_H */
