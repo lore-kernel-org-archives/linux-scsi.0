@@ -1,148 +1,360 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH 08/17] cxlflash: Add scsi command abort handler
-Date: Wed, 21 Jun 2017 21:15:06 -0500
-Message-ID: <1498097706-8970-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH 09/17] cxlflash: Create character device to provide host management interface
+Date: Wed, 21 Jun 2017 21:15:18 -0500
+Message-ID: <1498097718-9006-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1498097563-8680-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:37955 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751140AbdFVCPQ (ORCPT
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:40803 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751140AbdFVCP2 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 21 Jun 2017 22:15:16 -0400
-Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v5M2EZnI140538
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 22:15:15 -0400
-Received: from e37.co.us.ibm.com (e37.co.us.ibm.com [32.97.110.158])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2b7t205yd6-1
+        Wed, 21 Jun 2017 22:15:28 -0400
+Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v5M2En3b034875
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 22:15:27 -0400
+Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2b7w13m1tw-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 22:15:15 -0400
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 22:15:27 -0400
 Received: from localhost
-        by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
-        Wed, 21 Jun 2017 20:15:14 -0600
+        Wed, 21 Jun 2017 20:15:26 -0600
 In-Reply-To: <1498097563-8680-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 Cc: linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
-To date, CXL flash devices do not support a single command abort operation.
-Instead, the SISLite specification provides a context reset operation to
-cleanup all pending commands for a given context.
+The cxlflash driver currently lacks host management interface. Future
+devices supported by cxlflash will provide a variety of host-wide
+management functions. Examples include LUN provisioning, hardware debug
+support, and firmware download.
 
-When a context reset is successful, it is guaranteed that the AFU has
-aborted all currently pending I/O. This sequence is less invasive than a
-device or host reset and can be executed to support scsi command abort
-requests. Add eh_abort_handler callback support to process command timeouts
-and abort requests.
+In order to provide a way to manage the device, a character device will
+be created during probe of each adapter. This device will support a set of
+ioctls defined in the SISLite specification from which administrators can
+manage the adapter.
 
 Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/main.c | 61 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 61 insertions(+)
+ drivers/scsi/cxlflash/common.h |   6 +-
+ drivers/scsi/cxlflash/main.c   | 207 ++++++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/cxlflash/main.h   |   1 +
+ 3 files changed, 212 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
+index 11a5b0a..cbc0eb7 100644
+--- a/drivers/scsi/cxlflash/common.h
++++ b/drivers/scsi/cxlflash/common.h
+@@ -16,6 +16,7 @@
+ #define _CXLFLASH_COMMON_H
+ 
+ #include <linux/async.h>
++#include <linux/cdev.h>
+ #include <linux/irq_poll.h>
+ #include <linux/list.h>
+ #include <linux/rwsem.h>
+@@ -86,7 +87,8 @@ enum cxlflash_init_state {
+ 	INIT_STATE_NONE,
+ 	INIT_STATE_PCI,
+ 	INIT_STATE_AFU,
+-	INIT_STATE_SCSI
++	INIT_STATE_SCSI,
++	INIT_STATE_CDEV
+ };
+ 
+ enum cxlflash_state {
+@@ -116,6 +118,8 @@ struct cxlflash_cfg {
+ 	struct pci_device_id *dev_id;
+ 	struct Scsi_Host *host;
+ 	int num_fc_ports;
++	struct cdev cdev;
++	struct device *chardev;
+ 
+ 	ulong cxlflash_regs_pci;
+ 
 diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 0a3de42..ceb247b 100644
+index ceb247b..0656dd2 100644
 --- a/drivers/scsi/cxlflash/main.c
 +++ b/drivers/scsi/cxlflash/main.c
-@@ -228,6 +228,10 @@ static void flush_pending_cmds(struct hwq *hwq)
-  * @hwq:	Hardware queue owning the context to be reset.
-  * @reset_reg:	MMIO register to perform reset.
-  *
-+ * When the reset is successful, the SISLite specification guarantees that
-+ * the AFU has aborted all currently pending I/O. Accordingly, these commands
-+ * must be flushed.
-+ *
-  * Return: 0 on success, -errno on failure
-  */
- static int context_reset(struct hwq *hwq, __be64 __iomem *reset_reg)
-@@ -237,9 +241,12 @@ static int context_reset(struct hwq *hwq, __be64 __iomem *reset_reg)
- 	int rc = -ETIMEDOUT;
- 	int nretry = 0;
- 	u64 val = 0x1;
-+	ulong lock_flags;
+@@ -34,6 +34,10 @@ MODULE_AUTHOR("Manoj N. Kumar <manoj@linux.vnet.ibm.com>");
+ MODULE_AUTHOR("Matthew R. Ochs <mrochs@linux.vnet.ibm.com>");
+ MODULE_LICENSE("GPL");
  
- 	dev_dbg(dev, "%s: hwq=%p\n", __func__, hwq);
- 
-+	spin_lock_irqsave(&hwq->hsq_slock, lock_flags);
++static struct class *cxlflash_class;
++static u32 cxlflash_major;
++static DECLARE_BITMAP(cxlflash_minor, CXLFLASH_MAX_ADAPTERS);
 +
- 	writeq_be(val, reset_reg);
- 	do {
- 		val = readq_be(reset_reg);
-@@ -252,6 +259,11 @@ static int context_reset(struct hwq *hwq, __be64 __iomem *reset_reg)
- 		udelay(1 << nretry);
- 	} while (nretry++ < MC_ROOM_RETRY_CNT);
- 
-+	if (!rc)
-+		flush_pending_cmds(hwq);
-+
-+	spin_unlock_irqrestore(&hwq->hsq_slock, lock_flags);
-+
- 	dev_dbg(dev, "%s: returning rc=%d, val=%016llx nretry=%d\n",
- 		__func__, rc, val, nretry);
- 	return rc;
-@@ -2256,6 +2268,54 @@ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
+ /**
+  * process_cmd_err() - command error handler
+  * @cmd:	AFU command that experienced the error.
+@@ -863,6 +867,47 @@ static void notify_shutdown(struct cxlflash_cfg *cfg, bool wait)
  }
  
  /**
-+ * cxlflash_eh_abort_handler() - abort a SCSI command
-+ * @scp:	SCSI command to abort.
++ * cxlflash_get_minor() - gets the first available minor number
 + *
-+ * CXL Flash devices do not support a single command abort. Reset the context
-+ * as per SISLite specification. Flush any pending commands in the hardware
-+ * queue before the reset.
-+ *
-+ * Return: SUCCESS/FAILED as defined in scsi/scsi.h
++ * Return: Unique minor number that can be used to create the character device.
 + */
-+static int cxlflash_eh_abort_handler(struct scsi_cmnd *scp)
++static int cxlflash_get_minor(void)
 +{
-+	int rc = FAILED;
-+	struct Scsi_Host *host = scp->device->host;
-+	struct cxlflash_cfg *cfg = shost_priv(host);
-+	struct afu_cmd *cmd = sc_to_afuc(scp);
-+	struct device *dev = &cfg->dev->dev;
-+	struct afu *afu = cfg->afu;
-+	struct hwq *hwq = get_hwq(afu, cmd->hwq_index);
++	int minor;
++	long bit;
 +
-+	dev_dbg(dev, "%s: (scp=%p) %d/%d/%d/%llu "
-+		"cdb=(%08x-%08x-%08x-%08x)\n", __func__, scp, host->host_no,
-+		scp->device->channel, scp->device->id, scp->device->lun,
-+		get_unaligned_be32(&((u32 *)scp->cmnd)[0]),
-+		get_unaligned_be32(&((u32 *)scp->cmnd)[1]),
-+		get_unaligned_be32(&((u32 *)scp->cmnd)[2]),
-+		get_unaligned_be32(&((u32 *)scp->cmnd)[3]));
++	bit = find_first_zero_bit(cxlflash_minor, CXLFLASH_MAX_ADAPTERS);
++	if (bit >= CXLFLASH_MAX_ADAPTERS)
++		return -1;
 +
-+	/* When the state is not normal, another reset/reload is in progress.
-+	 * Return failed and the mid-layer will invoke host reset handler.
-+	 */
-+	if (cfg->state != STATE_NORMAL) {
-+		dev_dbg(dev, "%s: Invalid state for abort, state=%d\n",
-+			__func__, cfg->state);
-+		goto out;
-+	}
-+
-+	rc = afu->context_reset(hwq);
-+	if (unlikely(rc))
-+		goto out;
-+
-+	rc = SUCCESS;
-+
-+out:
-+	dev_dbg(dev, "%s: returning rc=%d\n", __func__, rc);
-+	return rc;
++	minor = bit & MINORMASK;
++	set_bit(minor, cxlflash_minor);
++	return minor;
 +}
 +
 +/**
-  * cxlflash_eh_device_reset_handler() - reset a single LUN
-  * @scp:	SCSI command to send.
++ * cxlflash_put_minor() - releases the minor number
++ * @minor:	Minor number that is no longer needed.
++ */
++static void cxlflash_put_minor(int minor)
++{
++	clear_bit(minor, cxlflash_minor);
++}
++
++/**
++ * cxlflash_release_chrdev() - release the character device for the host
++ * @cfg:	Internal structure associated with the host.
++ */
++static void cxlflash_release_chrdev(struct cxlflash_cfg *cfg)
++{
++	put_device(cfg->chardev);
++	device_unregister(cfg->chardev);
++	cfg->chardev = NULL;
++	cdev_del(&cfg->cdev);
++	cxlflash_put_minor(MINOR(cfg->cdev.dev));
++}
++
++/**
+  * cxlflash_remove() - PCI entry point to tear down host
+  * @pdev:	PCI device associated with the host.
   *
-@@ -2969,6 +3029,7 @@ static struct scsi_host_template driver_template = {
- 	.ioctl = cxlflash_ioctl,
- 	.proc_name = CXLFLASH_NAME,
- 	.queuecommand = cxlflash_queuecommand,
-+	.eh_abort_handler = cxlflash_eh_abort_handler,
- 	.eh_device_reset_handler = cxlflash_eh_device_reset_handler,
- 	.eh_host_reset_handler = cxlflash_eh_host_reset_handler,
- 	.change_queue_depth = cxlflash_change_queue_depth,
+@@ -897,6 +942,8 @@ static void cxlflash_remove(struct pci_dev *pdev)
+ 	cxlflash_stop_term_user_contexts(cfg);
+ 
+ 	switch (cfg->init_state) {
++	case INIT_STATE_CDEV:
++		cxlflash_release_chrdev(cfg);
+ 	case INIT_STATE_SCSI:
+ 		cxlflash_term_local_luns(cfg);
+ 		scsi_remove_host(cfg->host);
+@@ -3120,6 +3167,86 @@ static void cxlflash_worker_thread(struct work_struct *work)
+ }
+ 
+ /**
++ * cxlflash_chr_open() - character device open handler
++ * @inode:	Device inode associated with this character device.
++ * @file:	File pointer for this device.
++ *
++ * Only users with admin privileges are allowed to open the character device.
++ *
++ * Return: 0 on success, -errno on failure
++ */
++static int cxlflash_chr_open(struct inode *inode, struct file *file)
++{
++	struct cxlflash_cfg *cfg;
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -EACCES;
++
++	cfg = container_of(inode->i_cdev, struct cxlflash_cfg, cdev);
++	file->private_data = cfg;
++
++	return 0;
++}
++
++/*
++ * Character device file operations
++ */
++static const struct file_operations cxlflash_chr_fops = {
++	.owner          = THIS_MODULE,
++	.open           = cxlflash_chr_open,
++};
++
++/**
++ * init_chrdev() - initialize the character device for the host
++ * @cfg:	Internal structure associated with the host.
++ *
++ * Return: 0 on success, -errno on failure
++ */
++static int init_chrdev(struct cxlflash_cfg *cfg)
++{
++	struct device *dev = &cfg->dev->dev;
++	struct device *char_dev;
++	dev_t devno;
++	int minor;
++	int rc = 0;
++
++	minor = cxlflash_get_minor();
++	if (unlikely(minor < 0)) {
++		dev_err(dev, "%s: Exhausted allowed adapters\n", __func__);
++		rc = -ENOSPC;
++		goto out;
++	}
++
++	devno = MKDEV(cxlflash_major, minor);
++	cdev_init(&cfg->cdev, &cxlflash_chr_fops);
++
++	rc = cdev_add(&cfg->cdev, devno, 1);
++	if (rc) {
++		dev_err(dev, "%s: cdev_add failed rc=%d\n", __func__, rc);
++		goto err1;
++	}
++
++	char_dev = device_create(cxlflash_class, NULL, devno,
++				 NULL, "cxlflash%d", minor);
++	if (IS_ERR(char_dev)) {
++		rc = PTR_ERR(char_dev);
++		dev_err(dev, "%s: device_create failed rc=%d\n",
++			__func__, rc);
++		goto err2;
++	}
++
++	cfg->chardev = char_dev;
++out:
++	dev_dbg(dev, "%s: returning rc=%d\n", __func__, rc);
++	return rc;
++err2:
++	cdev_del(&cfg->cdev);
++err1:
++	cxlflash_put_minor(minor);
++	goto out;
++}
++
++/**
+  * cxlflash_probe() - PCI entry point to add host
+  * @pdev:	PCI device associated with the host.
+  * @dev_id:	PCI device id associated with device.
+@@ -3229,6 +3356,13 @@ static int cxlflash_probe(struct pci_dev *pdev,
+ 	}
+ 	cfg->init_state = INIT_STATE_SCSI;
+ 
++	rc = init_chrdev(cfg);
++	if (rc) {
++		dev_err(dev, "%s: init_chrdev failed rc=%d\n", __func__, rc);
++		goto out_remove;
++	}
++	cfg->init_state = INIT_STATE_CDEV;
++
+ 	if (wq_has_sleeper(&cfg->reset_waitq)) {
+ 		cfg->state = STATE_PROBED;
+ 		wake_up_all(&cfg->reset_waitq);
+@@ -3331,6 +3465,63 @@ static void cxlflash_pci_resume(struct pci_dev *pdev)
+ 	scsi_unblock_requests(cfg->host);
+ }
+ 
++/**
++ * cxlflash_devnode() - provides devtmpfs for devices in the cxlflash class
++ * @dev:	Character device.
++ * @mode:	Mode that can be used to verify access.
++ *
++ * Return: Allocated string describing the devtmpfs structure.
++ */
++static char *cxlflash_devnode(struct device *dev, umode_t *mode)
++{
++	return kasprintf(GFP_KERNEL, "cxlflash/%s", dev_name(dev));
++}
++
++/**
++ * cxlflash_class_init() - create character device class
++ *
++ * Return: 0 on success, -errno on failure
++ */
++static int cxlflash_class_init(void)
++{
++	dev_t devno;
++	int rc = 0;
++
++	rc = alloc_chrdev_region(&devno, 0, CXLFLASH_MAX_ADAPTERS, "cxlflash");
++	if (unlikely(rc)) {
++		pr_err("%s: alloc_chrdev_region failed rc=%d\n", __func__, rc);
++		goto out;
++	}
++
++	cxlflash_major = MAJOR(devno);
++
++	cxlflash_class = class_create(THIS_MODULE, "cxlflash");
++	if (IS_ERR(cxlflash_class)) {
++		rc = PTR_ERR(cxlflash_class);
++		pr_err("%s: class_create failed rc=%d\n", __func__, rc);
++		goto err;
++	}
++
++	cxlflash_class->devnode = cxlflash_devnode;
++out:
++	pr_debug("%s: returning rc=%d\n", __func__, rc);
++	return rc;
++err:
++	unregister_chrdev_region(devno, CXLFLASH_MAX_ADAPTERS);
++	goto out;
++}
++
++/**
++ * cxlflash_class_exit() - destroy character device class
++ */
++static void cxlflash_class_exit(void)
++{
++	dev_t devno = MKDEV(cxlflash_major, 0);
++
++	class_destroy(cxlflash_class);
++	unregister_chrdev_region(devno, CXLFLASH_MAX_ADAPTERS);
++}
++
+ static const struct pci_error_handlers cxlflash_err_handler = {
+ 	.error_detected = cxlflash_pci_error_detected,
+ 	.slot_reset = cxlflash_pci_slot_reset,
+@@ -3356,10 +3547,23 @@ static struct pci_driver cxlflash_driver = {
+  */
+ static int __init init_cxlflash(void)
+ {
++	int rc;
++
+ 	check_sizes();
+ 	cxlflash_list_init();
++	rc = cxlflash_class_init();
++	if (unlikely(rc))
++		goto out;
+ 
+-	return pci_register_driver(&cxlflash_driver);
++	rc = pci_register_driver(&cxlflash_driver);
++	if (unlikely(rc))
++		goto err;
++out:
++	pr_debug("%s: returning rc=%d\n", __func__, rc);
++	return rc;
++err:
++	cxlflash_class_exit();
++	goto out;
+ }
+ 
+ /**
+@@ -3371,6 +3575,7 @@ static void __exit exit_cxlflash(void)
+ 	cxlflash_free_errpage();
+ 
+ 	pci_unregister_driver(&cxlflash_driver);
++	cxlflash_class_exit();
+ }
+ 
+ module_init(init_cxlflash);
+diff --git a/drivers/scsi/cxlflash/main.h b/drivers/scsi/cxlflash/main.h
+index 49657f1..44c86c2 100644
+--- a/drivers/scsi/cxlflash/main.h
++++ b/drivers/scsi/cxlflash/main.h
+@@ -22,6 +22,7 @@
+ 
+ #define CXLFLASH_NAME		"cxlflash"
+ #define CXLFLASH_ADAPTER_NAME	"IBM POWER CXL Flash Adapter"
++#define CXLFLASH_MAX_ADAPTERS	32
+ 
+ #define PCI_DEVICE_ID_IBM_CORSA		0x04F0
+ #define PCI_DEVICE_ID_IBM_FLASH_GT	0x0600
 -- 
 2.1.0
