@@ -1,66 +1,62 @@
-From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+From: Bu Tao <butao@huawei.com>
 Subject: Re: [PATCH v2 2/5] dt-bindings: scsi: ufs: add document for hi3660-ufs
-Date: Thu, 22 Jun 2017 14:15:54 +0200
-Message-ID: <CAK8P3a1MRx5zRp5-7iDY32+6PGsyHFaOom-bkWmftpLUS=8gBA@mail.gmail.com>
-References: <20170616065119.10704-1-butao@hisilicon.com> <20170616065119.10704-3-butao@hisilicon.com>
+Date: Thu, 22 Jun 2017 20:23:33 +0800
+Message-ID: <f63c5e13-74d2-280c-af80-22ee55d71282@huawei.com>
+References: <20170616065119.10704-1-butao@hisilicon.com>
+ <20170616065119.10704-3-butao@hisilicon.com>
  <CAK8P3a2aPorzpUzwL=dkUkYNCGkhQMDPOkKRW1-=Hf=yCdvTsQ@mail.gmail.com>
- <0f79aeea-53e3-6bea-ffa6-0e057f2ff83b@huawei.com> <CAK8P3a2z7VbPb95Ltj=Duh1v_Yqxedb_g=ADNPWOrpEz1dCTuw@mail.gmail.com>
+ <0f79aeea-53e3-6bea-ffa6-0e057f2ff83b@huawei.com>
+ <CAK8P3a2z7VbPb95Ltj=Duh1v_Yqxedb_g=ADNPWOrpEz1dCTuw@mail.gmail.com>
  <24438c4d-21c8-6302-acd4-4f0e223232ce@huawei.com>
+ <CAK8P3a1MRx5zRp5-7iDY32+6PGsyHFaOom-bkWmftpLUS=8gBA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <24438c4d-21c8-6302-acd4-4f0e223232ce-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bu Tao <butao-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Wei Xu <xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>, Catalin Marinas <catalin.marinas-5wv7dgnIgG8@public.gmane.org>, Will Deacon <will.deacon-5wv7dgnIgG8@public.gmane.org>, Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Kevin Hilman <khilman-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Gregory CLEMENT <gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Masahiro Yamada <yamada.masahiro-uWyLwvC0a2jby3iVrkZq2A@public.gmane.org>, Riku Voipio <riku.voipio-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Thierry Reding <treding-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Krzysztof Kozlowski <krzk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Eric Anholt <eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>Linux
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Transfer-Encoding: base64
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <CAK8P3a1MRx5zRp5-7iDY32+6PGsyHFaOom-bkWmftpLUS=8gBA@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Mark Rutland <mark.rutland@arm.com>, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Eric Anholt <eric@anholt.net>, Krzysztof Kozlowski <krzk@kernel.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Kevin Hilman <khilman@baylibre.com>, Wei Xu <xuwei5@hisilicon.com>, Thierry Reding <treding@nvidia.com>, devicetree@vger.kernel.org, suzhuangluan@hisilicon.com, kongfei@hisilicon.com, Rob Herring <robh+dt@kernel.org>, Gregory CLEMENT <gregory.clement@free-electrons.com>, Linux ARM <linux-arm-kernel@lists.infradead.org>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Guodong Xu <guodong.xu@linaro.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Masahiro Yamada <yamada.masahiro@socionext.com>, Riku Voipio <riku.voipio@linaro.org>Linux
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jun 22, 2017 at 1:58 PM, Bu Tao <butao-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
-> =E5=9C=A8 2017/6/22 19:51, Arnd Bergmann =E5=86=99=E9=81=93:
->> On Thu, Jun 22, 2017 at 1:44 PM, Bu Tao <butao-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
->>> =E5=9C=A8 2017/6/17 5:51, Arnd Bergmann =E5=86=99=E9=81=93:
->>>> On Fri, Jun 16, 2017 at 8:51 AM, Bu Tao <butao-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org> wrote:
->>>
->>> I do not know wheher other SoC need to use the optional properties as
->>> abover. So here the name of the optional properties has "hi3660".
->>
->>
->> They should not have "hi3660" in their names either way, independent
->> of where they are used.
->
->
-> Oh, change the "hi3660" to "hisilicon"?
-> e.g. ufs-hi3660-use-rate-B  -->  ufs-hisilicon-use-rate-B
-
-No, just 'use-rate-B', no prefix for this.
-
->>>> (note: this is different from the value of the "compatible" property
->>>> that
->>>> is meant to be as specific as possible".
->>>>
->>>> Also, please clarify how your binding relates to the ufshcd binding
->>>> in Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt: does
->>>> hi3660 implement any registers that are shared with ufshcd, or does
->>>> it use the same physical interface with a different register set?
->>>
->>>
->>> No, only show how to use the dt-binding for hi3660 SoC
->>
->>
->> My question was about the hardware: does hi3660 implement ufshcd
->> or not?
->
->
-> YES
-
-Ok, then the properties should be documented as optional in the
-Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt file for anything
-that has a proper interpretation in the context of the generic ufshcd
-driver.
-
-      Arnd
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+CgrlnKggMjAxNy82LzIyIDIwOjE1LCBBcm5kIEJlcmdtYW5uIOWGmemBkzoKPiBPbiBUaHUsIEp1
+biAyMiwgMjAxNyBhdCAxOjU4IFBNLCBCdSBUYW8gPGJ1dGFvQGh1YXdlaS5jb20+IHdyb3RlOgo+
+PiDlnKggMjAxNy82LzIyIDE5OjUxLCBBcm5kIEJlcmdtYW5uIOWGmemBkzoKPj4+IE9uIFRodSwg
+SnVuIDIyLCAyMDE3IGF0IDE6NDQgUE0sIEJ1IFRhbyA8YnV0YW9AaHVhd2VpLmNvbT4gd3JvdGU6
+Cj4+Pj4g5ZyoIDIwMTcvNi8xNyA1OjUxLCBBcm5kIEJlcmdtYW5uIOWGmemBkzoKPj4+Pj4gT24g
+RnJpLCBKdW4gMTYsIDIwMTcgYXQgODo1MSBBTSwgQnUgVGFvIDxidXRhb0BoaXNpbGljb24uY29t
+PiB3cm90ZToKPj4+Pgo+Pj4+IEkgZG8gbm90IGtub3cgd2hlaGVyIG90aGVyIFNvQyBuZWVkIHRv
+IHVzZSB0aGUgb3B0aW9uYWwgcHJvcGVydGllcyBhcwo+Pj4+IGFib3Zlci4gU28gaGVyZSB0aGUg
+bmFtZSBvZiB0aGUgb3B0aW9uYWwgcHJvcGVydGllcyBoYXMgImhpMzY2MCIuCj4+Pgo+Pj4KPj4+
+IFRoZXkgc2hvdWxkIG5vdCBoYXZlICJoaTM2NjAiIGluIHRoZWlyIG5hbWVzIGVpdGhlciB3YXks
+IGluZGVwZW5kZW50Cj4+PiBvZiB3aGVyZSB0aGV5IGFyZSB1c2VkLgo+Pgo+Pgo+PiBPaCwgY2hh
+bmdlIHRoZSAiaGkzNjYwIiB0byAiaGlzaWxpY29uIj8KPj4gZS5nLiB1ZnMtaGkzNjYwLXVzZS1y
+YXRlLUIgIC0tPiAgdWZzLWhpc2lsaWNvbi11c2UtcmF0ZS1CCj4KPiBObywganVzdCAndXNlLXJh
+dGUtQicsIG5vIHByZWZpeCBmb3IgdGhpcy4KPgo+Pj4+PiAobm90ZTogdGhpcyBpcyBkaWZmZXJl
+bnQgZnJvbSB0aGUgdmFsdWUgb2YgdGhlICJjb21wYXRpYmxlIiBwcm9wZXJ0eQo+Pj4+PiB0aGF0
+Cj4+Pj4+IGlzIG1lYW50IHRvIGJlIGFzIHNwZWNpZmljIGFzIHBvc3NpYmxlIi4KPj4+Pj4KPj4+
+Pj4gQWxzbywgcGxlYXNlIGNsYXJpZnkgaG93IHlvdXIgYmluZGluZyByZWxhdGVzIHRvIHRoZSB1
+ZnNoY2QgYmluZGluZwo+Pj4+PiBpbiBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3Mv
+dWZzL3Vmc2hjZC1wbHRmcm0udHh0OiBkb2VzCj4+Pj4+IGhpMzY2MCBpbXBsZW1lbnQgYW55IHJl
+Z2lzdGVycyB0aGF0IGFyZSBzaGFyZWQgd2l0aCB1ZnNoY2QsIG9yIGRvZXMKPj4+Pj4gaXQgdXNl
+IHRoZSBzYW1lIHBoeXNpY2FsIGludGVyZmFjZSB3aXRoIGEgZGlmZmVyZW50IHJlZ2lzdGVyIHNl
+dD8KPj4+Pgo+Pj4+Cj4+Pj4gTm8sIG9ubHkgc2hvdyBob3cgdG8gdXNlIHRoZSBkdC1iaW5kaW5n
+IGZvciBoaTM2NjAgU29DCj4+Pgo+Pj4KPj4+IE15IHF1ZXN0aW9uIHdhcyBhYm91dCB0aGUgaGFy
+ZHdhcmU6IGRvZXMgaGkzNjYwIGltcGxlbWVudCB1ZnNoY2QKPj4+IG9yIG5vdD8KPj4KPj4KPj4g
+WUVTCj4KPiBPaywgdGhlbiB0aGUgcHJvcGVydGllcyBzaG91bGQgYmUgZG9jdW1lbnRlZCBhcyBv
+cHRpb25hbCBpbiB0aGUKPiBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvdWZzL3Vm
+c2hjZC1wbHRmcm0udHh0IGZpbGUgZm9yIGFueXRoaW5nCj4gdGhhdCBoYXMgYSBwcm9wZXIgaW50
+ZXJwcmV0YXRpb24gaW4gdGhlIGNvbnRleHQgb2YgdGhlIGdlbmVyaWMgdWZzaGNkCj4gZHJpdmVy
+Lgo+Cj4gICAgICAgQXJuZAo+CgpPSyBJIHdpbGwgbW9kaWZ5IHRoaXMgYW5kIHVwZGF0ZSB0aGUg
+cGF0Y2ggc29vbi4KCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3Rz
+LmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5m
+by9saW51eC1hcm0ta2VybmVsCg==
