@@ -1,31 +1,42 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2 5/6] qla2xxx: Use FC-NMVe FC4 type for FDMI
- registration
-Date: Thu, 22 Jun 2017 11:52:37 +0200
-Message-ID: <20170622095237.GF5670@linux-x5ow.site>
-References: <20170621204846.21663-1-himanshu.madhani@cavium.com>
- <20170621204846.21663-6-himanshu.madhani@cavium.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37378 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751818AbdFVJwi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 22 Jun 2017 05:52:38 -0400
-Content-Disposition: inline
-In-Reply-To: <20170621204846.21663-6-himanshu.madhani@cavium.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Yadan Fan <ydfan@suse.com>
+Subject: [PATCH 2/2] smartpqi: limit transfer length to 1MB
+Date: Thu, 22 Jun 2017 17:58:45 +0800
+Message-ID: <20170622095845.4235-2-ydfan@suse.com>
+References: <20170622095845.4235-1-ydfan@suse.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170622095845.4235-1-ydfan@suse.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: don.brace@microsemi.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ydfan@suse.com
 List-Id: linux-scsi@vger.kernel.org
-To: "Madhani, Himanshu" <himanshu.madhani@cavium.com>
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, darren.trapp@cavium.com, giridhar.malavali@cavium.com, linux-nvme@lists.infradead.org
 
+The smartpqi firmware will bypass the cache for any request larger
+than 1MB, so we should cap the request size to avoid any
+performance degradation on SLE12-SP2
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+This degradation is caused from d2be537c3ba3568acd79cd178327b842e60d035e,
+which changed max_sectors_kb to 1280k, but the hardware is able to
+work fine with it, so the true fix should be from smartpqi driver.
+
+Reference: bsc#1025461
+
+Signed-off-by: Yadan Fan <ydfan@suse.com>
+---
+ drivers/scsi/smartpqi/smartpqi.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
+index b673825f46b5..9513357bd472 100644
+--- a/drivers/scsi/smartpqi/smartpqi.h
++++ b/drivers/scsi/smartpqi/smartpqi.h
+@@ -630,7 +630,7 @@ struct pqi_encryption_info {
+ };
+ 
+ #define PQI_MAX_OUTSTANDING_REQUESTS	((u32)~0)
+-#define PQI_MAX_TRANSFER_SIZE		(4 * 1024U * 1024U)
++#define PQI_MAX_TRANSFER_SIZE		(1024U * 1024U)
+ 
+ #define RAID_MAP_MAX_ENTRIES		1024
+ 
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+2.12.3
