@@ -1,25 +1,25 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH 10/17] cxlflash: Separate AFU internal command handling from AFU sync specifics
-Date: Wed, 21 Jun 2017 21:15:31 -0500
-Message-ID: <1498097731-9043-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH 11/17] cxlflash: Introduce host ioctl support
+Date: Wed, 21 Jun 2017 21:15:42 -0500
+Message-ID: <1498097742-9079-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1498097563-8680-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:49865 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752340AbdFVCPs (ORCPT
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:60675 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752355AbdFVCQD (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 21 Jun 2017 22:15:48 -0400
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v5M2EXUq123861
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 22:15:47 -0400
-Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2b7rm6ar57-1
+        Wed, 21 Jun 2017 22:16:03 -0400
+Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v5M2EXRT001404
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 22:16:02 -0400
+Received: from e17.ny.us.ibm.com (e17.ny.us.ibm.com [129.33.205.207])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2b7p1m3738-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 22:15:47 -0400
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 22:16:02 -0400
 Received: from localhost
-        by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
-        Wed, 21 Jun 2017 20:15:46 -0600
+        Wed, 21 Jun 2017 22:16:01 -0400
 In-Reply-To: <1498097563-8680-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -28,160 +28,265 @@ Cc: linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donn
 
 From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
 
-To date the only supported internal AFU command is AFU sync. The logic
-to send an internal AFU command is embedded in the specific AFU sync
-handler and would need to be duplicated for new internal AFU commands.
-
-In order to support new internal AFU commands, separate code that is
-common for AFU internal commands into a generic transmission routine
-and support passing back command status through an IOASA structure.
-The first user of this new routine is the existing AFU sync command.
-As a cleanup, use a descriptive name for the AFU sync command instead
-of a magic number.
+As staging for supporting various host management functions, add a host
+ioctl infrastructure to filter ioctl commands and perform operations that
+are common for all host ioctls. Also update the cxlflash documentation to
+create a new section for documenting host ioctls.
 
 Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/main.c    | 79 ++++++++++++++++++++++++++---------------
- drivers/scsi/cxlflash/sislite.h |  2 ++
- 2 files changed, 53 insertions(+), 28 deletions(-)
+ Documentation/ioctl/ioctl-number.txt |   2 +-
+ Documentation/powerpc/cxlflash.txt   |  19 +++++-
+ drivers/scsi/cxlflash/main.c         | 121 ++++++++++++++++++++++++++++++++++-
+ include/uapi/scsi/cxlflash_ioctl.h   |  31 ++++++++-
+ 4 files changed, 168 insertions(+), 5 deletions(-)
 
+diff --git a/Documentation/ioctl/ioctl-number.txt b/Documentation/ioctl/ioctl-number.txt
+index 08244be..6b6cc4c 100644
+--- a/Documentation/ioctl/ioctl-number.txt
++++ b/Documentation/ioctl/ioctl-number.txt
+@@ -324,7 +324,7 @@ Code  Seq#(hex)	Include File		Comments
+ 0xB5	00-0F	uapi/linux/rpmsg.h	<mailto:linux-remoteproc@vger.kernel.org>
+ 0xC0	00-0F	linux/usb/iowarrior.h
+ 0xCA	00-0F	uapi/misc/cxl.h
+-0xCA	80-8F	uapi/scsi/cxlflash_ioctl.h
++0xCA	80-BF	uapi/scsi/cxlflash_ioctl.h
+ 0xCB	00-1F	CBM serial IEC bus	in development:
+ 					<mailto:michael.klein@puffin.lb.shuttle.de>
+ 0xCD	01	linux/reiserfs_fs.h
+diff --git a/Documentation/powerpc/cxlflash.txt b/Documentation/powerpc/cxlflash.txt
+index f9036cb..ee67021 100644
+--- a/Documentation/powerpc/cxlflash.txt
++++ b/Documentation/powerpc/cxlflash.txt
+@@ -124,8 +124,8 @@ Block library API
+     http://github.com/open-power/capiflash
+ 
+ 
+-CXL Flash Driver IOCTLs
+-=======================
++CXL Flash Driver LUN IOCTLs
++===========================
+ 
+     Users, such as the block library, that wish to interface with a flash
+     device (LUN) via user space access need to use the services provided
+@@ -367,3 +367,18 @@ DK_CXLFLASH_MANAGE_LUN
+     exclusive user space access (superpipe). In case a LUN is visible
+     across multiple ports and adapters, this ioctl is used to uniquely
+     identify each LUN by its World Wide Node Name (WWNN).
++
++
++CXL Flash Driver Host IOCTLs
++============================
++
++    Each host adapter instance that is supported by the cxlflash driver
++    has a special character device associated with it to enable a set of
++    host management function. These character devices are hosted in a
++    class dedicated for cxlflash and can be accessed via /dev/cxlflash/*.
++
++    Applications can be written to perform various functions using the
++    host ioctl APIs below.
++
++    The structure definitions for these IOCTLs are available in:
++    uapi/scsi/cxlflash_ioctl.h
 diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 0656dd2..7732dfc 100644
+index 7732dfc..be468ed1 100644
 --- a/drivers/scsi/cxlflash/main.c
 +++ b/drivers/scsi/cxlflash/main.c
-@@ -2212,28 +2212,22 @@ static void cxlflash_schedule_async_reset(struct cxlflash_cfg *cfg)
- }
- 
- /**
-- * cxlflash_afu_sync() - builds and sends an AFU sync command
-+ * send_afu_cmd() - builds and sends an internal AFU command
-  * @afu:	AFU associated with the host.
-- * @ctx_hndl_u:	Identifies context requesting sync.
-- * @res_hndl_u:	Identifies resource requesting sync.
-- * @mode:	Type of sync to issue (lightweight, heavyweight, global).
-+ * @rcb:	Pre-populated IOARCB describing command to send.
-  *
-- * The AFU can only take 1 sync command at a time. This routine enforces this
-- * limitation by using a mutex to provide exclusive access to the AFU during
-- * the sync. This design point requires calling threads to not be on interrupt
-- * context due to the possibility of sleeping during concurrent sync operations.
-+ * The AFU can only take one internal AFU command at a time. This limitation is
-+ * enforced by using a mutex to provide exclusive access to the AFU during the
-+ * operation. This design point requires calling threads to not be on interrupt
-+ * context due to the possibility of sleeping during concurrent AFU operations.
-  *
-- * AFU sync operations are only necessary and allowed when the device is
-- * operating normally. When not operating normally, sync requests can occur as
-- * part of cleaning up resources associated with an adapter prior to removal.
-- * In this scenario, these requests are simply ignored (safe due to the AFU
-- * going away).
-+ * The command status is optionally passed back to the caller when the caller
-+ * populates the IOASA field of the IOARCB with a pointer to an IOASA structure.
-  *
-  * Return:
-  *	0 on success, -errno on failure
-  */
--int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
--		      res_hndl_t res_hndl_u, u8 mode)
-+static int send_afu_cmd(struct afu *afu, struct sisl_ioarcb *rcb)
+@@ -2693,7 +2693,14 @@ static ssize_t lun_mode_store(struct device *dev,
+ static ssize_t ioctl_version_show(struct device *dev,
+ 				  struct device_attribute *attr, char *buf)
  {
- 	struct cxlflash_cfg *cfg = afu->parent;
- 	struct device *dev = &cfg->dev->dev;
-@@ -2263,25 +2257,15 @@ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
- 
- retry:
- 	memset(cmd, 0, sizeof(*cmd));
-+	memcpy(&cmd->rcb, rcb, sizeof(*rcb));
- 	INIT_LIST_HEAD(&cmd->queue);
- 	init_completion(&cmd->cevent);
- 	cmd->parent = afu;
- 	cmd->hwq_index = hwq->index;
--
--	dev_dbg(dev, "%s: afu=%p cmd=%p ctx=%d nretry=%d\n",
--		__func__, afu, cmd, ctx_hndl_u, nretry);
--
--	cmd->rcb.req_flags = SISL_REQ_FLAGS_AFU_CMD;
- 	cmd->rcb.ctx_id = hwq->ctx_hndl;
--	cmd->rcb.msi = SISL_MSI_RRQ_UPDATED;
--	cmd->rcb.timeout = MC_AFU_SYNC_TIMEOUT;
--
--	cmd->rcb.cdb[0] = 0xC0;	/* AFU Sync */
--	cmd->rcb.cdb[1] = mode;
- 
--	/* The cdb is aligned, no unaligned accessors required */
--	*((__be16 *)&cmd->rcb.cdb[2]) = cpu_to_be16(ctx_hndl_u);
--	*((__be32 *)&cmd->rcb.cdb[4]) = cpu_to_be32(res_hndl_u);
-+	dev_dbg(dev, "%s: afu=%p cmd=%p type=%02x nretry=%d\n",
-+		__func__, afu, cmd, cmd->rcb.cdb[0], nretry);
- 
- 	rc = afu->send_cmd(afu, cmd);
- 	if (unlikely(rc)) {
-@@ -2306,6 +2290,8 @@ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
- 		break;
- 	}
- 
-+	if (rcb->ioasa)
-+		*rcb->ioasa = cmd->sa;
- out:
- 	atomic_dec(&afu->cmds_active);
- 	mutex_unlock(&sync_active);
-@@ -2315,6 +2301,43 @@ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
+-	return scnprintf(buf, PAGE_SIZE, "%u\n", DK_CXLFLASH_VERSION_0);
++	ssize_t bytes = 0;
++
++	bytes = scnprintf(buf, PAGE_SIZE,
++			  "disk: %u\n", DK_CXLFLASH_VERSION_0);
++	bytes += scnprintf(buf + bytes, PAGE_SIZE - bytes,
++			   "host: %u\n", HT_CXLFLASH_VERSION_0);
++
++	return bytes;
  }
  
  /**
-+ * cxlflash_afu_sync() - builds and sends an AFU sync command
-+ * @afu:	AFU associated with the host.
-+ * @ctx:	Identifies context requesting sync.
-+ * @res:	Identifies resource requesting sync.
-+ * @mode:	Type of sync to issue (lightweight, heavyweight, global).
+@@ -3211,12 +3218,124 @@ static int cxlflash_chr_open(struct inode *inode, struct file *file)
+ 	return 0;
+ }
+ 
++/**
++ * decode_hioctl() - translates encoded host ioctl to easily identifiable string
++ * @cmd:        The host ioctl command to decode.
 + *
-+ * AFU sync operations are only necessary and allowed when the device is
-+ * operating normally. When not operating normally, sync requests can occur as
-+ * part of cleaning up resources associated with an adapter prior to removal.
-+ * In this scenario, these requests are simply ignored (safe due to the AFU
-+ * going away).
-+ *
-+ * Return:
-+ *	0 on success, -errno on failure
++ * Return: A string identifying the decoded host ioctl.
 + */
-+int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx, res_hndl_t res, u8 mode)
++static char *decode_hioctl(int cmd)
 +{
-+	struct cxlflash_cfg *cfg = afu->parent;
-+	struct device *dev = &cfg->dev->dev;
-+	struct sisl_ioarcb rcb = { 0 };
++	switch (cmd) {
++	default:
++		return "UNKNOWN";
++	}
 +
-+	dev_dbg(dev, "%s: afu=%p ctx=%u res=%u mode=%u\n",
-+		__func__, afu, ctx, res, mode);
-+
-+	rcb.req_flags = SISL_REQ_FLAGS_AFU_CMD;
-+	rcb.msi = SISL_MSI_RRQ_UPDATED;
-+	rcb.timeout = MC_AFU_SYNC_TIMEOUT;
-+
-+	rcb.cdb[0] = SISL_AFU_CMD_SYNC;
-+	rcb.cdb[1] = mode;
-+	put_unaligned_be16(ctx, &rcb.cdb[2]);
-+	put_unaligned_be32(res, &rcb.cdb[4]);
-+
-+	return send_afu_cmd(afu, &rcb);
++	return "UNKNOWN";
 +}
 +
 +/**
-  * cxlflash_eh_abort_handler() - abort a SCSI command
-  * @scp:	SCSI command to abort.
-  *
-diff --git a/drivers/scsi/cxlflash/sislite.h b/drivers/scsi/cxlflash/sislite.h
-index a768360..483710a 100644
---- a/drivers/scsi/cxlflash/sislite.h
-+++ b/drivers/scsi/cxlflash/sislite.h
-@@ -72,6 +72,8 @@ struct sisl_ioarcb {
- 	u16 timeout;		/* in units specified by req_flags */
- 	u32 rsvd1;
- 	u8 cdb[16];		/* must be in big endian */
-+#define SISL_AFU_CMD_SYNC		0xC0	/* AFU sync command */
++ * cxlflash_chr_ioctl() - character device IOCTL handler
++ * @file:	File pointer for this device.
++ * @cmd:	IOCTL command.
++ * @arg:	Userspace ioctl data structure.
++ *
++ * A read/write semaphore is used to implement a 'drain' of currently
++ * running ioctls. The read semaphore is taken at the beginning of each
++ * ioctl thread and released upon concluding execution. Additionally the
++ * semaphore should be released and then reacquired in any ioctl execution
++ * path which will wait for an event to occur that is outside the scope of
++ * the ioctl (i.e. an adapter reset). To drain the ioctls currently running,
++ * a thread simply needs to acquire the write semaphore.
++ *
++ * Return: 0 on success, -errno on failure
++ */
++static long cxlflash_chr_ioctl(struct file *file, unsigned int cmd,
++			       unsigned long arg)
++{
++	typedef int (*hioctl) (struct cxlflash_cfg *, void *);
 +
- 	union {
- 		u64 reserved;			/* Reserved for IOARRIN mode */
- 		struct sisl_ioasa *ioasa;	/* IOASA EA for SQ Mode */
++	struct cxlflash_cfg *cfg = file->private_data;
++	struct device *dev = &cfg->dev->dev;
++	char buf[sizeof(union cxlflash_ht_ioctls)];
++	void __user *uarg = (void __user *)arg;
++	struct ht_cxlflash_hdr *hdr;
++	size_t size = 0;
++	bool known_ioctl = false;
++	int idx = 0;
++	int rc = 0;
++	hioctl do_ioctl = NULL;
++
++	static const struct {
++		size_t size;
++		hioctl ioctl;
++	} ioctl_tbl[] = {	/* NOTE: order matters here */
++	};
++
++	/* Hold read semaphore so we can drain if needed */
++	down_read(&cfg->ioctl_rwsem);
++
++	dev_dbg(dev, "%s: cmd=%u idx=%d tbl_size=%lu\n",
++		__func__, cmd, idx, sizeof(ioctl_tbl));
++
++	switch (cmd) {
++	default:
++		rc = -EINVAL;
++		goto out;
++	}
++
++	if (unlikely(copy_from_user(&buf, uarg, size))) {
++		dev_err(dev, "%s: copy_from_user() fail "
++			"size=%lu cmd=%d (%s) uarg=%p\n",
++			__func__, size, cmd, decode_hioctl(cmd), uarg);
++		rc = -EFAULT;
++		goto out;
++	}
++
++	hdr = (struct ht_cxlflash_hdr *)&buf;
++	if (hdr->version != HT_CXLFLASH_VERSION_0) {
++		dev_dbg(dev, "%s: Version %u not supported for %s\n",
++			__func__, hdr->version, decode_hioctl(cmd));
++		rc = -EINVAL;
++		goto out;
++	}
++
++	if (hdr->rsvd[0] || hdr->rsvd[1] || hdr->return_flags) {
++		dev_dbg(dev, "%s: Reserved/rflags populated\n", __func__);
++		rc = -EINVAL;
++		goto out;
++	}
++
++	rc = do_ioctl(cfg, (void *)&buf);
++	if (likely(!rc))
++		if (unlikely(copy_to_user(uarg, &buf, size))) {
++			dev_err(dev, "%s: copy_to_user() fail "
++				"size=%lu cmd=%d (%s) uarg=%p\n",
++				__func__, size, cmd, decode_hioctl(cmd), uarg);
++			rc = -EFAULT;
++		}
++
++	/* fall through to exit */
++
++out:
++	up_read(&cfg->ioctl_rwsem);
++	if (unlikely(rc && known_ioctl))
++		dev_err(dev, "%s: ioctl %s (%08X) returned rc=%d\n",
++			__func__, decode_hioctl(cmd), cmd, rc);
++	else
++		dev_dbg(dev, "%s: ioctl %s (%08X) returned rc=%d\n",
++			__func__, decode_hioctl(cmd), cmd, rc);
++	return rc;
++}
++
+ /*
+  * Character device file operations
+  */
+ static const struct file_operations cxlflash_chr_fops = {
+ 	.owner          = THIS_MODULE,
+ 	.open           = cxlflash_chr_open,
++	.unlocked_ioctl	= cxlflash_chr_ioctl,
++	.compat_ioctl	= cxlflash_chr_ioctl,
+ };
+ 
+ /**
+diff --git a/include/uapi/scsi/cxlflash_ioctl.h b/include/uapi/scsi/cxlflash_ioctl.h
+index e9fdc12..87e1f63 100644
+--- a/include/uapi/scsi/cxlflash_ioctl.h
++++ b/include/uapi/scsi/cxlflash_ioctl.h
+@@ -31,7 +31,7 @@ struct dk_cxlflash_hdr {
+ };
+ 
+ /*
+- * Return flag definitions available to all ioctls
++ * Return flag definitions available to all superpipe ioctls
+  *
+  * Similar to the input flags, these are grown from the bottom-up with the
+  * intention that ioctl-specific return flag definitions would grow from the
+@@ -180,6 +180,10 @@ union cxlflash_ioctls {
+ #define CXL_MAGIC 0xCA
+ #define CXL_IOWR(_n, _s)	_IOWR(CXL_MAGIC, _n, struct _s)
+ 
++/*
++ * CXL Flash superpipe ioctls start at base of the reserved CXL_MAGIC
++ * region (0x80) and grow upwards.
++ */
+ #define DK_CXLFLASH_ATTACH		CXL_IOWR(0x80, dk_cxlflash_attach)
+ #define DK_CXLFLASH_USER_DIRECT		CXL_IOWR(0x81, dk_cxlflash_udirect)
+ #define DK_CXLFLASH_RELEASE		CXL_IOWR(0x82, dk_cxlflash_release)
+@@ -191,4 +195,29 @@ union cxlflash_ioctls {
+ #define DK_CXLFLASH_VLUN_RESIZE		CXL_IOWR(0x88, dk_cxlflash_resize)
+ #define DK_CXLFLASH_VLUN_CLONE		CXL_IOWR(0x89, dk_cxlflash_clone)
+ 
++/*
++ * Structure and flag definitions CXL Flash host ioctls
++ */
++
++#define HT_CXLFLASH_VERSION_0  0
++
++struct ht_cxlflash_hdr {
++	__u16 version;                  /* Version data */
++	__u16 subcmd;                   /* Sub-command */
++	__u16 rsvd[2];                  /* Reserved for future use */
++	__u64 flags;                    /* Input flags */
++	__u64 return_flags;             /* Returned flags */
++};
++
++union cxlflash_ht_ioctls {
++};
++
++#define MAX_HT_CXLFLASH_IOCTL_SZ	(sizeof(union cxlflash_ht_ioctls))
++
++/*
++ * CXL Flash host ioctls start at the top of the reserved CXL_MAGIC
++ * region (0xBF) and grow downwards.
++ */
++
++
+ #endif /* ifndef _CXLFLASH_IOCTL_H */
 -- 
 2.1.0
