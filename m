@@ -1,109 +1,179 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH 06/17] cxlflash: Track pending scsi commands in each hardware queue
-Date: Wed, 21 Jun 2017 21:14:43 -0500
-Message-ID: <1498097683-8898-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH 07/17] cxlflash: Flush pending commands in cleanup path
+Date: Wed, 21 Jun 2017 21:14:56 -0500
+Message-ID: <1498097696-8934-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1498097563-8680-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:47964 "EHLO
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:37401 "EHLO
         mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751140AbdFVCPB (ORCPT
+        by vger.kernel.org with ESMTP id S1751140AbdFVCPF (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 21 Jun 2017 22:15:01 -0400
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v5M2Ehgi131388
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 22:15:00 -0400
-Received: from e37.co.us.ibm.com (e37.co.us.ibm.com [32.97.110.158])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2b7ts7kbdw-1
+        Wed, 21 Jun 2017 22:15:05 -0400
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v5M2EZjY140591
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 22:15:05 -0400
+Received: from e31.co.us.ibm.com (e31.co.us.ibm.com [32.97.110.149])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2b7t205y6f-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 22:15:00 -0400
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2017 22:15:04 -0400
 Received: from localhost
-        by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
-        Wed, 21 Jun 2017 20:14:59 -0600
+        Wed, 21 Jun 2017 20:15:04 -0600
 In-Reply-To: <1498097563-8680-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 Cc: linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
-Currently, there is no book keeping of the pending scsi commands in the
-cxlflash driver. This lack of tracking in-flight requests is too
-restrictive and requires a heavy-hammer reset each time an adapter error is
-encountered. Additionally, it does not allow for commands to be properly
-retried.
+When the AFU is reset in an error path, pending scsi commands can be
+silently dropped without completion or a formal abort. This puts the onus
+on the cxlflash driver to notify mid-layer and indicating that the command
+can be retried.
 
-In order to avoid this problem and to better handle error path command
-cleanup, introduce a linked list for each hardware queue that tracks
-pending commands.
+Once the card has been quiesced, the hardware send queue lock is acquired
+to prevent any data movement while the pending commands are processed.
 
 Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/common.h | 2 ++
- drivers/scsi/cxlflash/main.c   | 9 +++++++++
- 2 files changed, 11 insertions(+)
+ drivers/scsi/cxlflash/common.h |  5 +++-
+ drivers/scsi/cxlflash/main.c   | 57 +++++++++++++++++++++++++++++++++++++++---
+ 2 files changed, 57 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
-index e9b6108..3eaa3be 100644
+index 3eaa3be..11a5b0a 100644
 --- a/drivers/scsi/cxlflash/common.h
 +++ b/drivers/scsi/cxlflash/common.h
-@@ -158,6 +158,7 @@ struct afu_cmd {
+@@ -157,7 +157,9 @@ struct afu_cmd {
+ 	struct list_head queue;
  	u32 hwq_index;
  
- 	u8 cmd_tmf:1;
-+	struct list_head list;	/* Pending commands link */
+-	u8 cmd_tmf:1;
++	u8 cmd_tmf:1,
++	   cmd_aborted:1;
++
+ 	struct list_head list;	/* Pending commands link */
  
  	/* As per the SISLITE spec the IOARCB EA has to be 16-byte aligned.
- 	 * However for performance reasons the IOARCB/IOASA should be
-@@ -193,6 +194,7 @@ struct hwq {
- 	struct sisl_ctrl_map __iomem *ctrl_map;		/* MC control map */
- 	ctx_hndl_t ctx_hndl;	/* master's context handle */
- 	u32 index;		/* Index of this hwq */
-+	struct list_head pending_cmds;	/* Commands pending completion */
+@@ -176,6 +178,7 @@ static inline struct afu_cmd *sc_to_afucz(struct scsi_cmnd *sc)
+ 	struct afu_cmd *afuc = sc_to_afuc(sc);
  
- 	atomic_t hsq_credits;
- 	spinlock_t hsq_slock;	/* Hardware send queue lock */
+ 	memset(afuc, 0, sizeof(*afuc));
++	INIT_LIST_HEAD(&afuc->queue);
+ 	return afuc;
+ }
+ 
 diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 20c2c5e..1446fab 100644
+index 1446fab..0a3de42 100644
 --- a/drivers/scsi/cxlflash/main.c
 +++ b/drivers/scsi/cxlflash/main.c
-@@ -162,8 +162,13 @@ static void cmd_complete(struct afu_cmd *cmd)
- 	struct afu *afu = cmd->parent;
- 	struct cxlflash_cfg *cfg = afu->parent;
- 	struct device *dev = &cfg->dev->dev;
-+	struct hwq *hwq = get_hwq(afu, cmd->hwq_index);
- 	bool cmd_is_tmf;
+@@ -194,6 +194,36 @@ static void cmd_complete(struct afu_cmd *cmd)
+ }
  
-+	spin_lock_irqsave(&hwq->hsq_slock, lock_flags);
-+	list_del(&cmd->list);
-+	spin_unlock_irqrestore(&hwq->hsq_slock, lock_flags);
+ /**
++ * flush_pending_cmds() - flush all pending commands on this hardware queue
++ * @hwq:	Hardware queue to flush.
++ *
++ * The hardware send queue lock associated with this hardware queue must be
++ * held when calling this routine.
++ */
++static void flush_pending_cmds(struct hwq *hwq)
++{
++	struct afu_cmd *cmd, *tmp;
++	struct scsi_cmnd *scp;
 +
- 	if (cmd->scp) {
- 		scp = cmd->scp;
- 		if (unlikely(cmd->sa.ioasc))
-@@ -279,6 +284,7 @@ static int send_cmd_ioarrin(struct afu *afu, struct afu_cmd *cmd)
- 		hwq->room = room - 1;
++	list_for_each_entry_safe(cmd, tmp, &hwq->pending_cmds, list) {
++		/* Bypass command when on a doneq, cmd_complete() will handle */
++		if (!list_empty(&cmd->queue))
++			continue;
++
++		list_del(&cmd->list);
++
++		if (cmd->scp) {
++			scp = cmd->scp;
++			scp->result = (DID_IMM_RETRY << 16);
++			scp->scsi_done(scp);
++		} else {
++			cmd->cmd_aborted = true;
++			complete(&cmd->cevent);
++		}
++	}
++}
++
++/**
+  * context_reset() - reset context via specified register
+  * @hwq:	Hardware queue owning the context to be reset.
+  * @reset_reg:	MMIO register to perform reset.
+@@ -357,6 +387,9 @@ static int wait_resp(struct afu *afu, struct afu_cmd *cmd)
+ 	if (!timeout)
+ 		rc = -ETIMEDOUT;
+ 
++	if (cmd->cmd_aborted)
++		rc = -EAGAIN;
++
+ 	if (unlikely(cmd->sa.ioasc != 0)) {
+ 		dev_err(dev, "%s: cmd %02x failed, ioasc=%08x\n",
+ 			__func__, cmd->rcb.cdb[0], cmd->sa.ioasc);
+@@ -702,6 +735,7 @@ static void term_mc(struct cxlflash_cfg *cfg, u32 index)
+ 	struct afu *afu = cfg->afu;
+ 	struct device *dev = &cfg->dev->dev;
+ 	struct hwq *hwq;
++	ulong lock_flags;
+ 
+ 	if (!afu) {
+ 		dev_err(dev, "%s: returning with NULL afu\n", __func__);
+@@ -719,6 +753,10 @@ static void term_mc(struct cxlflash_cfg *cfg, u32 index)
+ 	if (index != PRIMARY_HWQ)
+ 		WARN_ON(cxl_release_context(hwq->ctx));
+ 	hwq->ctx = NULL;
++
++	spin_lock_irqsave(&hwq->hsq_slock, lock_flags);
++	flush_pending_cmds(hwq);
++	spin_unlock_irqrestore(&hwq->hsq_slock, lock_flags);
+ }
+ 
+ /**
+@@ -2155,7 +2193,7 @@ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
+ 
+ 	mutex_lock(&sync_active);
+ 	atomic_inc(&afu->cmds_active);
+-	buf = kzalloc(sizeof(*cmd) + __alignof__(*cmd) - 1, GFP_KERNEL);
++	buf = kmalloc(sizeof(*cmd) + __alignof__(*cmd) - 1, GFP_KERNEL);
+ 	if (unlikely(!buf)) {
+ 		dev_err(dev, "%s: no memory for command\n", __func__);
+ 		rc = -ENOMEM;
+@@ -2165,6 +2203,8 @@ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
+ 	cmd = (struct afu_cmd *)PTR_ALIGN(buf, __alignof__(*cmd));
+ 
+ retry:
++	memset(cmd, 0, sizeof(*cmd));
++	INIT_LIST_HEAD(&cmd->queue);
+ 	init_completion(&cmd->cevent);
+ 	cmd->parent = afu;
+ 	cmd->hwq_index = hwq->index;
+@@ -2191,11 +2231,20 @@ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
  	}
  
-+	list_add(&cmd->list, &hwq->pending_cmds);
- 	writeq_be((u64)&cmd->rcb, &hwq->host_map->ioarrin);
+ 	rc = wait_resp(afu, cmd);
+-	if (rc == -ETIMEDOUT) {
++	switch (rc) {
++	case -ETIMEDOUT:
+ 		rc = afu->context_reset(hwq);
+-		if (!rc && ++nretry < 2)
++		if (rc) {
++			cxlflash_schedule_async_reset(cfg);
++			break;
++		}
++		/* fall through to retry */
++	case -EAGAIN:
++		if (++nretry < 2)
+ 			goto retry;
+-		cxlflash_schedule_async_reset(cfg);
++		/* fall through to exit */
++	default:
++		break;
+ 	}
+ 
  out:
- 	spin_unlock_irqrestore(&hwq->hsq_slock, lock_flags);
-@@ -319,6 +325,8 @@ static int send_cmd_sq(struct afu *afu, struct afu_cmd *cmd)
- 		hwq->hsq_curr++;
- 	else
- 		hwq->hsq_curr = hwq->hsq_start;
-+
-+	list_add(&cmd->list, &hwq->pending_cmds);
- 	writeq_be((u64)hwq->hsq_curr, &hwq->host_map->sq_tail);
- 
- 	spin_unlock_irqrestore(&hwq->hsq_slock, lock_flags);
-@@ -1840,6 +1848,7 @@ static int init_mc(struct cxlflash_cfg *cfg, u32 index)
- 
- 	hwq->afu = cfg->afu;
- 	hwq->index = index;
-+	INIT_LIST_HEAD(&hwq->pending_cmds);
- 
- 	if (index == PRIMARY_HWQ)
- 		ctx = cxl_get_context(cfg->dev);
 -- 
 2.1.0
