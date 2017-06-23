@@ -1,48 +1,62 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 07/35] uas: move eh_bus_reset_handler to eh_device_reset_handler
-Date: Fri, 23 Jun 2017 15:02:27 +0200
-Message-ID: <1498222975-71858-8-git-send-email-hare@suse.de>
+Subject: [PATCH 02/35] mptfc: Do not call fc_block_scsi_eh() on host reset
+Date: Fri, 23 Jun 2017 15:02:22 +0200
+Message-ID: <1498222975-71858-3-git-send-email-hare@suse.de>
 References: <1498222975-71858-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:32834 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:60953 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751620AbdFWNDZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 23 Jun 2017 09:03:25 -0400
+        id S1751230AbdFWNDY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 23 Jun 2017 09:03:24 -0400
 In-Reply-To: <1498222975-71858-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-The bus_reset handler is really a device reset, so move it
-to eh_device_reset_handler().
+When we're resetting the host any remote port states will
+be reset anyway, so it's pointless to wait for dev_loss_tmo
+during host reset.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/usb/storage/uas.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/message/fusion/mptfc.c | 10 +---------
+ 1 file changed, 1 insertion(+), 9 deletions(-)
 
-diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index 5ef014b..cfb1e3b 100644
---- a/drivers/usb/storage/uas.c
-+++ b/drivers/usb/storage/uas.c
-@@ -737,7 +737,7 @@ static int uas_eh_abort_handler(struct scsi_cmnd *cmnd)
- 	return FAILED;
+diff --git a/drivers/message/fusion/mptfc.c b/drivers/message/fusion/mptfc.c
+index d065062..6d461ca 100644
+--- a/drivers/message/fusion/mptfc.c
++++ b/drivers/message/fusion/mptfc.c
+@@ -104,7 +104,6 @@
+ static int mptfc_abort(struct scsi_cmnd *SCpnt);
+ static int mptfc_dev_reset(struct scsi_cmnd *SCpnt);
+ static int mptfc_bus_reset(struct scsi_cmnd *SCpnt);
+-static int mptfc_host_reset(struct scsi_cmnd *SCpnt);
+ 
+ static struct scsi_host_template mptfc_driver_template = {
+ 	.module				= THIS_MODULE,
+@@ -123,7 +122,7 @@
+ 	.eh_abort_handler		= mptfc_abort,
+ 	.eh_device_reset_handler	= mptfc_dev_reset,
+ 	.eh_bus_reset_handler		= mptfc_bus_reset,
+-	.eh_host_reset_handler		= mptfc_host_reset,
++	.eh_host_reset_handler		= mptscsih_host_reset,
+ 	.bios_param			= mptscsih_bios_param,
+ 	.can_queue			= MPT_FC_CAN_QUEUE,
+ 	.this_id			= -1,
+@@ -254,13 +253,6 @@
+ 	    mptfc_block_error_handler(SCpnt, mptscsih_bus_reset, __func__);
  }
  
--static int uas_eh_bus_reset_handler(struct scsi_cmnd *cmnd)
-+static int uas_eh_device_reset_handler(struct scsi_cmnd *cmnd)
+-static int
+-mptfc_host_reset(struct scsi_cmnd *SCpnt)
+-{
+-	return
+-	    mptfc_block_error_handler(SCpnt, mptscsih_host_reset, __func__);
+-}
+-
+ static void
+ mptfc_set_rport_loss_tmo(struct fc_rport *rport, uint32_t timeout)
  {
- 	struct scsi_device *sdev = cmnd->device;
- 	struct uas_dev_info *devinfo = sdev->hostdata;
-@@ -848,7 +848,7 @@ static int uas_slave_configure(struct scsi_device *sdev)
- 	.slave_alloc = uas_slave_alloc,
- 	.slave_configure = uas_slave_configure,
- 	.eh_abort_handler = uas_eh_abort_handler,
--	.eh_bus_reset_handler = uas_eh_bus_reset_handler,
-+	.eh_device_reset_handler = uas_eh_device_reset_handler,
- 	.this_id = -1,
- 	.sg_tablesize = SG_NONE,
- 	.skip_settle_delay = 1,
 -- 
 1.8.5.6
