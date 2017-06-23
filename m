@@ -1,42 +1,42 @@
 From: Yadan Fan <ydfan@suse.com>
-Subject: Re: [PATCH 1/2] hpsa: limit transfer length to 1MB
-Date: Fri, 23 Jun 2017 17:12:54 +0800
-Message-ID: <75d55466-a883-3335-ad96-9baff4b907cd@suse.com>
-References: <20170622095845.4235-1-ydfan@suse.com>
- <20170622100657.GG5670@linux-x5ow.site>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Subject: [PATCH v2 1/2] hpsa: limit transfer length to 1MB
+Date: Fri, 23 Jun 2017 17:40:05 +0800
+Message-ID: <20170623094006.16807-1-ydfan@suse.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170622100657.GG5670@linux-x5ow.site>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: don.brace@microsemi.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: don.brace@microsemi.com, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Yadan Fan <ydfan@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Johannes,
+The hpsa firmware will bypass the cache for any request larger
+than 1MB, so we should cap the request size to avoid any
+performance degradation in kernels later than v4.3
 
+This degradation is caused from d2be537c3ba3568acd79cd178327b842e60d035e,
+which changed max_sectors_kb to 1280k, but the hardware is able to
+work fine with it, so the true fix should be from hpsa driver.
 
-On 2017年06月22日 18:06, Johannes Thumshirn wrote:
-> On Thu, Jun 22, 2017 at 05:58:44PM +0800, Yadan Fan wrote:
->> The hpsa firmware will bypass the cache for any request larger
->> than 1MB, so we should cap the request size to avoid any
->> performance degradation in SLE12-SP2.
-> Upstream doesn't care too much about SLES.
->
->> References: bsc#1025461
-> and our internal Bugzilla IDs
->
->
-> How about:
-> The hpsa firmware will bypass the cache for any requests larger than 1MB, so
-> we shoould cap the request size to avoid any performance regressions in
-> kernels later than 4.3
->
-> The same applies for Patch 2/2
+Signed-off-by: Yadan Fan <ydfan@suse.com>
+---
 
-Yes, I agree so, I will resend the modified patches.
+Changes: 
+ Reduced SUSE distribution info and internal bug id reference.
 
-Thanks,
-Yadan
+ drivers/scsi/hpsa.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 73daace478cb..b4c0bbea680c 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -952,7 +952,7 @@ static struct scsi_host_template hpsa_driver_template = {
+ #endif
+ 	.sdev_attrs = hpsa_sdev_attrs,
+ 	.shost_attrs = hpsa_shost_attrs,
+-	.max_sectors = 8192,
++	.max_sectors = 1024,
+ 	.no_write_same = 1,
+ };
+ 
+-- 
+2.12.3
