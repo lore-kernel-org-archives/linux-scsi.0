@@ -1,8 +1,8 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
 Subject: Re: [PATCH] scsi/libata: Support variable-length cdb of ata
  pass-thru(32).
-Date: Fri, 23 Jun 2017 17:02:50 +0000
-Message-ID: <1498237368.2735.6.camel@wdc.com>
+Date: Fri, 23 Jun 2017 17:15:37 +0000
+Message-ID: <1498238136.2735.8.camel@wdc.com>
 References: <1497697243-3724-1-git-send-email-dn3108@gmail.com>
          <1498071149.2746.26.camel@wdc.com>
          <CAKv8XUU-k0dFjHAu9G2rM+is4AZw9BKfsFDh1zG0zwq=GzSVkg@mail.gmail.com>
@@ -12,49 +12,59 @@ Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <CAKv8XUU-k0dFjHAu9G2rM+is4AZw9BKfsFDh1zG0zwq=GzSVkg@mail.gmail.com>
 Content-Language: en-US
-Content-ID: <08A317FD51793B429AFAAE7DAE3E8C89@namprd04.prod.outlook.com>
+Content-ID: <AAD3BEA6C8878E49AFF58AF9BE8D4351@namprd04.prod.outlook.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "tj@kernel.org" <tj@kernel.org>, "dn3108@gmail.com" <dn3108@gmail.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 On Sat, 2017-06-24 at 01:50 +0900, Minwoo Im wrote:
-> On Thu, Jun 22, 2017 at 3:52 AM, Bart Van Assche <Bart.VanAssche@wdc.com>=
- wrote:
-> > > @@ -4385,7 +4463,12 @@ int ata_scsi_add_hosts(struct ata_host *host, =
-struct scsi_host_template *sht)
-> > >               shost->max_id =3D 16;
-> > >               shost->max_lun =3D 1;
-> > >               shost->max_channel =3D 1;
-> > > -             shost->max_cmd_len =3D 16;
-> > > +             /*
-> > > +              * SPC-3, SPC-4: Definition of CDB
-> > > +              * A CDB may have a fixed length of up to 16 bytes or
-> > > +              * variable length of between 12 and 260 bytes.
-> > > +              */
-> > > +             shost->max_cmd_len =3D 260;
-> >=20
-> > Does ATA pass-through really support 260-byte CDBs or is the maximum CD=
-B length
-> > that is supported by ATA_32 perhaps 32 bytes?
->=20
-> Here's my opinion about your question.
-> In perspective of SCSI host, I guess the max cmd len should be 260 bytes.
-> Because SPC says that, in case of variable-length command, it could be
-> from 12 to 260 bytes.
-> That's why I have applied 260 value to max_cmd_len of scsi host.
-> Please feel free to give any opinions about it.
+> - *     Handles either 12 or 16-byte versions of the CDB.
+> + *     Handles either 12 16, or 32-byte versions of the CDB.
 
-Hello Minwoo,
+Please insert a comma between "12" and "16" to avoid that this comment
+gets confusing.
 
-Table 172 in document sat4r06.pdf shows that the CDB of the ATA PASS-THROUG=
-H (32)
-command is exactly 32 bytes long. My conclusion from analyzing __ata_scsi_q=
-ueuecmd()
-is that the current version of that function does not support CDBs of more =
-than
-16 bytes. Since your patch adds support for a single command with 32-byte C=
-DB I
-am convinced that max_cmd_len should be set to 32 in ata_scsi_add_hosts().
+> +       if ((tf->protocol =3D ata_scsi_map_proto(cdb[1 + cdb_offset]))
+> +                       =3D=3D ATA_PROT_UNKNOWN) {
+
+Have you verified this patch with checkpatch? The recommended style is
+*not* to use assignments in the expression that controls an if-statement
+and also if a comparison expression has to be split to keep the comparison
+operator at the end of the first line.
+
+> -               shost->max_cmd_len =3D 16;
+> +               /*
+> +                * SPC says that CDB may have a fixed length of up to 16 =
+bytes
+> +                * or variable length of between 12 and 260 bytes.
+> +                */
+> +               shost->max_cmd_len =3D 260;
+
+As mentioned before, I think a maximum CDB length of 260 is overkill.
+
+>  /* Values for T10/04-262r7 */
+> +#define        ATA_32                0x1ff0    /* 32-byte pass-thru,
+> service action */
+>  #define        ATA_16                0x85      /* 16-byte pass-thru */
+>  #define        ATA_12                0xa1      /* 12-byte pass-thru */
+
+Defining ATA_32 just above ATA_12 and ATA_16 is misleading because
+the latter two are CDB opcodes while the former is a service action
+code. Please move the definition of the ATA_32 service action code
+one line up such that it appears at the end of the list of already
+defined service codes, namely this list:
+
+/* values for variable length command */
+#define XDREAD_32	      0x03
+#define XDWRITE_32	      0x04
+#define XPWRITE_32	      0x06
+#define XDWRITEREAD_32	      0x07
+#define READ_32		      0x09
+#define VERIFY_32	      0x0a
+#define WRITE_32	      0x0b
+#define WRITE_SAME_32	      0x0d
+
+Thanks,
 
 Bart.=
