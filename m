@@ -1,35 +1,32 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 34/35] scsi: Move eh_device_reset_handler() to use
- scsi_device as argument
-Date: Fri, 23 Jun 2017 18:44:29 +0000
-Message-ID: <1498243468.2735.17.camel@wdc.com>
-References: <1498222975-71858-1-git-send-email-hare@suse.de>
-         <1498222975-71858-35-git-send-email-hare@suse.de>
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: Re: [PATCH 0/4] g_NCR5380: PDMA fixes and cleanup
+Date: Fri, 23 Jun 2017 22:13:59 +0200
+Message-ID: <201706232214.00362.linux@rainbow-software.org>
+References: <cover.1497528687.git.fthain@telegraphics.com.au> <alpine.LNX.2.00.1706231101230.2417@nippy.intranet> <alpine.LNX.2.00.1706232058220.10492@nippy.intranet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:30371 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754327AbdFWSoc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jun 2017 14:44:32 -0400
-In-Reply-To: <1498222975-71858-35-git-send-email-hare@suse.de>
-Content-Language: en-US
-Content-ID: <6050EDDA4D918F4C9F44175394261193@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <alpine.LNX.2.00.1706232058220.10492@nippy.intranet>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>
 
-On Fri, 2017-06-23 at 15:02 +0200, Hannes Reinecke wrote:
-> When resetting a device we shouldn't depend on an existing SCSI
-> device, so use 'struct scsi_device' as argument for
-> eh_device_reset_handler().
+On Friday 23 June 2017 13:01:53 Finn Thain wrote:
+> On Fri, 23 Jun 2017, I wrote:
+> > Does this patch help? It should be applied on top of this series of 4.
+>
+> Sorry, I sent the wrong diff. Please try this patch instead.
 
-Did you perhaps mean "existing SCSI command"?
+Thanks, much better now: both HDD and CD-ROM seem to work on DTC and non-DTC 
+chips. I get many of these messages with CD-ROM:
+[  912.397076] generic_NCR5380_pread: No end dma signal (4096/4096)
+[  913.141225] generic_NCR5380_pread: No end dma signal (4096/4096)
 
-Also for this patch, I'm not familiar enough with all the SCSI LLDs that
-have been modified to do an in-depth review. But since I agree with the
-direction of this patch:
+Maybe just remove this error message as in my original patch?
 
-Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>=
+-- 
+Ondrej Zary
