@@ -1,37 +1,91 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 29/35] bnx2fc: remove obsolete bnx2fc_eh_host_reset() definition
-Date: Fri, 23 Jun 2017 15:02:49 +0200
-Message-ID: <1498222975-71858-30-git-send-email-hare@suse.de>
+Subject: [PATCH 18/35] qlogicfas: move bus_reset to host_reset
+Date: Fri, 23 Jun 2017 15:02:38 +0200
+Message-ID: <1498222975-71858-19-git-send-email-hare@suse.de>
 References: <1498222975-71858-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:32839 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:32878 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751620AbdFWND3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 23 Jun 2017 09:03:29 -0400
+        id S1754212AbdFWNDa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 23 Jun 2017 09:03:30 -0400
 In-Reply-To: <1498222975-71858-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-Never used anywhere.
+From: Hannes Reinecke <hare@suse.com>
+
+The bus reset handler is really a host reset.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc.h | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/pcmcia/qlogic_stub.c | 4 ++--
+ drivers/scsi/qlogicfas.c          | 2 +-
+ drivers/scsi/qlogicfas408.c       | 2 +-
+ drivers/scsi/qlogicfas408.h       | 2 +-
+ 4 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
-index 1f424e4..9c5adee 100644
---- a/drivers/scsi/bnx2fc/bnx2fc.h
-+++ b/drivers/scsi/bnx2fc/bnx2fc.h
-@@ -538,7 +538,6 @@ void bnx2fc_init_task(struct bnx2fc_cmd *io_req,
- void bnx2fc_add_2_sq(struct bnx2fc_rport *tgt, u16 xid);
- void bnx2fc_ring_doorbell(struct bnx2fc_rport *tgt);
- int bnx2fc_eh_abort(struct scsi_cmnd *sc_cmd);
--int bnx2fc_eh_host_reset(struct scsi_cmnd *sc_cmd);
- int bnx2fc_eh_target_reset(struct scsi_cmnd *sc_cmd);
- int bnx2fc_eh_device_reset(struct scsi_cmnd *sc_cmd);
- void bnx2fc_rport_event_handler(struct fc_lport *lport,
+diff --git a/drivers/scsi/pcmcia/qlogic_stub.c b/drivers/scsi/pcmcia/qlogic_stub.c
+index c670dc7..0556054 100644
+--- a/drivers/scsi/pcmcia/qlogic_stub.c
++++ b/drivers/scsi/pcmcia/qlogic_stub.c
+@@ -67,7 +67,7 @@
+ 	.info			= qlogicfas408_info,
+ 	.queuecommand		= qlogicfas408_queuecommand,
+ 	.eh_abort_handler	= qlogicfas408_abort,
+-	.eh_bus_reset_handler	= qlogicfas408_bus_reset,
++	.eh_host_reset_handler	= qlogicfas408_host_reset,
+ 	.bios_param		= qlogicfas408_biosparam,
+ 	.can_queue		= 1,
+ 	.this_id		= -1,
+@@ -264,7 +264,7 @@ static int qlogic_resume(struct pcmcia_device *link)
+ 		outb(0x04, link->resource[0]->start + 0xd);
+ 	}
+ 	/* Ugggglllyyyy!!! */
+-	qlogicfas408_bus_reset(NULL);
++	qlogicfas408_host_reset(NULL);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/scsi/qlogicfas.c b/drivers/scsi/qlogicfas.c
+index 840823b..95431d6 100644
+--- a/drivers/scsi/qlogicfas.c
++++ b/drivers/scsi/qlogicfas.c
+@@ -188,7 +188,7 @@ static int qlogicfas_release(struct Scsi_Host *shost)
+ 	.info			= qlogicfas408_info,
+ 	.queuecommand		= qlogicfas408_queuecommand,
+ 	.eh_abort_handler	= qlogicfas408_abort,
+-	.eh_bus_reset_handler	= qlogicfas408_bus_reset,
++	.eh_host_reset_handler	= qlogicfas408_host_reset,
+ 	.bios_param		= qlogicfas408_biosparam,
+ 	.can_queue		= 1,
+ 	.this_id		= -1,
+diff --git a/drivers/scsi/qlogicfas408.c b/drivers/scsi/qlogicfas408.c
+index c3a9151..ae880e8 100644
+--- a/drivers/scsi/qlogicfas408.c
++++ b/drivers/scsi/qlogicfas408.c
+@@ -607,7 +607,7 @@ static void __exit qlogicfas408_exit(void)
+ EXPORT_SYMBOL(qlogicfas408_info);
+ EXPORT_SYMBOL(qlogicfas408_queuecommand);
+ EXPORT_SYMBOL(qlogicfas408_abort);
+-EXPORT_SYMBOL(qlogicfas408_bus_reset);
++EXPORT_SYMBOL(qlogicfas408_host_reset);
+ EXPORT_SYMBOL(qlogicfas408_biosparam);
+ EXPORT_SYMBOL(qlogicfas408_ihandl);
+ EXPORT_SYMBOL(qlogicfas408_get_chip_type);
+diff --git a/drivers/scsi/qlogicfas408.h b/drivers/scsi/qlogicfas408.h
+index 2f6c0a1..dd7c813 100644
+--- a/drivers/scsi/qlogicfas408.h
++++ b/drivers/scsi/qlogicfas408.h
+@@ -108,7 +108,7 @@ int qlogicfas408_biosparam(struct scsi_device * disk,
+ 			   struct block_device *dev,
+ 			   sector_t capacity, int ip[]);
+ int qlogicfas408_abort(struct scsi_cmnd * cmd);
+-int qlogicfas408_bus_reset(struct scsi_cmnd * cmd);
++int qlogicfas408_host_reset(struct Scsi_Host *host);
+ const char *qlogicfas408_info(struct Scsi_Host *host);
+ int qlogicfas408_get_chip_type(int qbase, int int_type);
+ void qlogicfas408_setup(int qbase, int id, int int_type);
 -- 
 1.8.5.6
