@@ -1,56 +1,68 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 23/35] qedf: drop bus reset handler
-Date: Fri, 23 Jun 2017 15:02:43 +0200
-Message-ID: <1498222975-71858-24-git-send-email-hare@suse.de>
+Subject: [PATCH 21/35] zfcp: open-code fc_block_scsi_eh() for host reset
+Date: Fri, 23 Jun 2017 15:02:41 +0200
+Message-ID: <1498222975-71858-22-git-send-email-hare@suse.de>
 References: <1498222975-71858-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:32834 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:32837 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754217AbdFWNDb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 23 Jun 2017 09:03:31 -0400
+        id S1752066AbdFWNDa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 23 Jun 2017 09:03:30 -0400
 In-Reply-To: <1498222975-71858-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-qedf has a host reset handler, but as the bus reset handler is
-a stub always returning SUCCESS the host reset is never invoked.
-So drop the bus reset handler.
+When issuing a host reset we should be waiting for all
+ports to become unblocked; just waiting for one might
+be resulting in host reset to return too early.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/qedf/qedf_main.c | 11 -----------
- 1 file changed, 11 deletions(-)
+ drivers/s390/scsi/zfcp_scsi.c | 27 +++++++++++++++++++++++----
+ 1 file changed, 23 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 321ac3b..b06ef7c 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -629,16 +629,6 @@ static int qedf_eh_device_reset(struct scsi_cmnd *sc_cmd)
- 	return qedf_initiate_tmf(sc_cmd, FCP_TMF_LUN_RESET);
- }
+diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
+index 0678cf7..3d18659 100644
+--- a/drivers/s390/scsi/zfcp_scsi.c
++++ b/drivers/s390/scsi/zfcp_scsi.c
+@@ -311,13 +311,32 @@ static int zfcp_scsi_eh_target_reset_handler(struct scsi_cmnd *scpnt)
  
--static int qedf_eh_bus_reset(struct scsi_cmnd *sc_cmd)
--{
--	QEDF_ERR(NULL, "BUS RESET Issued...\n");
--	/*
--	 * Essentially a no-op but return SUCCESS to prevent
--	 * unnecessary escalation to the host reset handler.
--	 */
--	return SUCCESS;
--}
--
- void qedf_wait_for_upload(struct qedf_ctx *qedf)
+ static int zfcp_scsi_eh_host_reset_handler(struct scsi_cmnd *scpnt)
  {
- 	while (1) {
-@@ -716,7 +706,6 @@ static int qedf_slave_configure(struct scsi_device *sdev)
- 	.eh_abort_handler	= qedf_eh_abort,
- 	.eh_device_reset_handler = qedf_eh_device_reset, /* lun reset */
- 	.eh_target_reset_handler = qedf_eh_target_reset, /* target reset */
--	.eh_bus_reset_handler = qedf_eh_bus_reset,
- 	.eh_host_reset_handler  = qedf_eh_host_reset,
- 	.slave_configure	= qedf_slave_configure,
- 	.dma_boundary = QED_HW_DMA_BOUNDARY,
+-	struct zfcp_scsi_dev *zfcp_sdev = sdev_to_zfcp(scpnt->device);
+-	struct zfcp_adapter *adapter = zfcp_sdev->port->adapter;
+-	int ret;
++	struct Scsi_Host *host = scpnt->device->host;
++	struct zfcp_adapter *adapter = (struct zfcp_adapter *)host->hostdata[0];
++	int ret = 0;
++	unsigned long flags;
++	struct zfcp_port *port;
+ 
+ 	zfcp_erp_adapter_reopen(adapter, 0, "schrh_1");
+ 	zfcp_erp_wait(adapter);
+-	ret = fc_block_scsi_eh(scpnt);
++retry_rport_blocked:
++	spin_lock_irqsave(host->host_lock, flags);
++	list_for_each_entry(port, &adapter->port_list, list) {
++		struct fc_rport *rport = port->rport;
++
++		if (rport->port_state == FC_PORTSTATE_BLOCKED) {
++			if (rport->flags & FC_RPORT_FAST_FAIL_TIMEDOUT)
++				ret = FAST_IO_FAIL;
++			else
++				ret = NEEDS_RETRY;
++			break;
++		}
++	}
++	spin_unlock_irqrestore(host->host_lock, flags);
++	if (ret == NEEDS_RETRY) {
++		msleep(1000);
++		goto retry_rport_blocked;
++	}
+ 	if (ret)
+ 		return ret;
+ 
 -- 
 1.8.5.6
