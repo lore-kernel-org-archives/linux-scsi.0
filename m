@@ -1,38 +1,40 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] scsi: aacraid: Don't copy uninitialized stack memory to
- userspace
-Date: Fri, 23 Jun 2017 16:11:46 +0200
-Message-ID: <20170623141145.GF13014@linux-x5ow.site>
-References: <20170623140422.30320-1-seth.forshee@canonical.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [PATCH] scsi: hisi_sas: silence a static checker warning
+Date: Fri, 23 Jun 2017 18:15:44 +0300
+Message-ID: <20170623151544.57jlfbl5apofl6hj@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:30408 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754019AbdFWPQE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jun 2017 11:16:04 -0400
 Content-Disposition: inline
-In-Reply-To: <20170623140422.30320-1-seth.forshee@canonical.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: John Garry <john.garry@huawei.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On Fri, Jun 23, 2017 at 09:04:22AM -0500, Seth Forshee wrote:
-> Both aac_send_raw_srb() and aac_get_hba_info() may copy stack
-> allocated structs to userspace without initializing all members
-> of these structs. Clear out this memory to prevent information
-> leaks.
-> 
-> Fixes: 423400e64d377 ("scsi: aacraid: Include HBA direct interface")
-> Fixes: c799d519bf088 ("scsi: aacraid: Retrieve HBA host information ioctl")
-> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
-> ---
+phy->phy_type is a u64.  We only ever use the first two bits so it's a
+bit over kill perhaps.  Anyway, let's declare the flags as ULL as well
+because that lets us do things like "phy->phy_type &= ~PORT_TYPE_SAS;".
+In the current code, static checkers complain that that would
+unintentionally clear the high 32 bits as well.
 
-Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 4fc23087a939..b23245aeab74 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -56,8 +56,8 @@
+ struct hisi_hba;
+ 
+ enum {
+-	PORT_TYPE_SAS = (1U << 1),
+-	PORT_TYPE_SATA = (1U << 0),
++	PORT_TYPE_SAS = (1ULL << 1),
++	PORT_TYPE_SATA = (1ULL << 0),
+ };
+ 
+ enum dev_status {
