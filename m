@@ -1,39 +1,42 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] bnx2i: missing error code in bnx2i_ep_connect()
-Date: Fri, 23 Jun 2017 09:13:36 +0200
-Message-ID: <20170623071336.GC13014@linux-x5ow.site>
-References: <20170623070200.GA7922@elgon.mountain>
+From: Yadan Fan <ydfan@suse.com>
+Subject: Re: [PATCH 1/2] hpsa: limit transfer length to 1MB
+Date: Fri, 23 Jun 2017 17:12:54 +0800
+Message-ID: <75d55466-a883-3335-ad96-9baff4b907cd@suse.com>
+References: <20170622095845.4235-1-ydfan@suse.com>
+ <20170622100657.GG5670@linux-x5ow.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58720 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751149AbdFWHNo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 23 Jun 2017 03:13:44 -0400
-Content-Disposition: inline
-In-Reply-To: <20170623070200.GA7922@elgon.mountain>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170622100657.GG5670@linux-x5ow.site>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: don.brace@microsemi.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: QLogic-Storage-Upstream@qlogic.com, Michael Chan <mchan@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On Fri, Jun 23, 2017 at 10:02:00AM +0300, Dan Carpenter wrote:
-> If bnx2i_map_ep_dbell_regs() then we accidentally return NULL instead
-> of an error pointer.  It results in a NULL dereference in
-> iscsi_if_ep_connect().
-> 
-> Fixes: cf4e6363859d ("[SCSI] bnx2i: Add bnx2i iSCSI driver.")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
+Hi Johannes,
 
-Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+On 2017å¹´06æœˆ22æ—¥ 18:06, Johannes Thumshirn wrote:
+> On Thu, Jun 22, 2017 at 05:58:44PM +0800, Yadan Fan wrote:
+>> The hpsa firmware will bypass the cache for any request larger
+>> than 1MB, so we should cap the request size to avoid any
+>> performance degradation in SLE12-SP2.
+> Upstream doesn't care too much about SLES.
+>
+>> References: bsc#1025461
+> and our internal Bugzilla IDs
+>
+>
+> How about:
+> The hpsa firmware will bypass the cache for any requests larger than 1MB, so
+> we shoould cap the request size to avoid any performance regressions in
+> kernels later than 4.3
+>
+> The same applies for Patch 2/2
+
+Yes, I agree so, I will resend the modified patches.
+
+Thanks,
+Yadan
