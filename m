@@ -1,198 +1,176 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
 Subject: Re: [PATCH v2 3/6] qla2xxx: Add FC-NVMe F/W initialization and
  transport registration
-Date: Fri, 23 Jun 2017 03:16:09 +0000
-Message-ID: <42181B8C-0E6A-436B-9201-E4C42D581B50@cavium.com>
+Date: Fri, 23 Jun 2017 08:28:51 +0200
+Message-ID: <20170623062850.GA13014@linux-x5ow.site>
 References: <20170621204846.21663-1-himanshu.madhani@cavium.com>
  <20170621204846.21663-4-himanshu.madhani@cavium.com>
  <20170622094649.GD5670@linux-x5ow.site>
+ <42181B8C-0E6A-436B-9201-E4C42D581B50@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0059.outbound.protection.outlook.com ([104.47.38.59]:35104
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+Received: from mx2.suse.de ([195.135.220.15]:56679 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753925AbdFWDQP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 22 Jun 2017 23:16:15 -0400
-In-Reply-To: <20170622094649.GD5670@linux-x5ow.site>
-Content-Language: en-US
-Content-ID: <C8C33D6C632752408E53A991DEEC6794@namprd07.prod.outlook.com>
+        id S1754502AbdFWG3B (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 23 Jun 2017 02:29:01 -0400
+Content-Disposition: inline
+In-Reply-To: <42181B8C-0E6A-436B-9201-E4C42D581B50@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
+To: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, "Trapp, Darren" <Darren.Trapp@cavium.com>, "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
 
-SGkgSm9oYW5uZXMsIA0KDQo+IE9uIEp1biAyMiwgMjAxNywgYXQgMjo0NiBBTSwgSm9oYW5uZXMg
-VGh1bXNoaXJuIDxqdGh1bXNoaXJuQHN1c2UuZGU+IHdyb3RlOg0KPiANCj4gT24gV2VkLCBKdW4g
-MjEsIDIwMTcgYXQgMDE6NDg6NDNQTSAtMDcwMCwgTWFkaGFuaSwgSGltYW5zaHUgd3JvdGU6DQo+
-IFsuLi5dDQo+PiArCXdhaXRfcXVldWVfaGVhZF90IG52bWVfbHNfd2FpdFE7DQo+IA0KPiBDYW4g
-eW91IHBsZWFzZSBsb3dlci1jYXNlIHRoZSAnUScgaW4gd2FpdFEgSUZGIHlvdSBoYXZlIHRvIHJl
-LXNlbmQgdGhlIHNlcmllcz8NCg0Kc3VyZS4NCg0KPiANCj4gWy4uLl0NCj4+ICsJd2FpdF9xdWV1
-ZV9oZWFkX3QgbnZtZV93YWl0UTsNCj4gDQo+IERpdHRvDQo+IA0KQWNrDQoNCj4gWy4uLl0NCj4+
-ICsJd2FpdF9xdWV1ZV9oZWFkX3QgbnZtZV93YWl0UTsNCj4gDQo+IEFuZCBoZXJlIGFzIHdlbGwu
-DQoNCkFjaw0KDQo+IA0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9n
-YmwuaCBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9nYmwuaA0KPj4gaW5kZXggNmZiZWUxMWMx
-YTE4Li5jNmFmNDVmN2Q1ZDYgMTAwNjQ0DQo+PiAtLS0gYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9x
-bGFfZ2JsLmgNCj4+ICsrKyBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9nYmwuaA0KPj4gQEAg
-LTEwLDYgKzEwLDE2IEBADQo+PiAjaW5jbHVkZSA8bGludXgvaW50ZXJydXB0Lmg+DQo+PiANCj4+
-IC8qDQo+PiArICogR2xvYmFsIGZ1bmN0aW9ucyBwcm90b3R5cGUgaW4gcWxhX252bWUuYyBzb3Vy
-Y2UgZmlsZS4NCj4+ICsgKi8NCj4+ICtleHRlcm4gdm9pZCBxbGFfbnZtZV9yZWdpc3Rlcl9oYmEo
-c2NzaV9xbGFfaG9zdF90ICopOw0KPj4gK2V4dGVybiBpbnQgIHFsYV9udm1lX3JlZ2lzdGVyX3Jl
-bW90ZShzY3NpX3FsYV9ob3N0X3QgKiwgZmNfcG9ydF90ICopOw0KPj4gK2V4dGVybiB2b2lkIHFs
-YV9udm1lX2RlbGV0ZShzY3NpX3FsYV9ob3N0X3QgKik7DQo+PiArZXh0ZXJuIHZvaWQgcWxhX252
-bWVfYWJvcnQoc3RydWN0IHFsYV9od19kYXRhICosIHNyYl90ICpzcCk7DQo+PiArZXh0ZXJuIHZv
-aWQgcWxhMjR4eF9udm1lX2xzNF9pb2NiKHNjc2lfcWxhX2hvc3RfdCAqLCBzdHJ1Y3QgcHRfbHM0
-X3JlcXVlc3QgKiwNCj4+ICsgICAgc3RydWN0IHJlcV9xdWUgKik7DQo+IA0KPiBZb3UncmUgc3Rp
-bGwgbm90IGNvbnZpbmNlZCBvZiB0aGUgaWRlYSBvZiBoZWFkZXJzLCBoZWggOy0pDQo+IEVzcGVj
-aWFsbHkgYXMgeW91IGhhdmUgYSBxbGFfbnZtZS5oLg0KPiANCj4gW+KApl0NCj4gDQoNCmlmIHRo
-aXMgaXMgbm90ICptdXN0KiBp4oCZbGwgbGlrZSB0byBwb3N0IHBhdGNoIGZvciB0aGlzIHdpdGgg
-b3RoZXIgcGF0Y2hlcyB0aGF0IEkgYW0gZ29pbmcgdG8gcXVldWUgdXAgZHVyaW5nIHJjMSBwaGFz
-ZS4gDQoNCj4+ICsJSU5JVF9XT1JLKCZmY3BvcnQtPm52bWVfZGVsX3dvcmssIHFsYV9udm1lX3Vu
-cmVnaXN0ZXJfcmVtb3RlX3BvcnQpOw0KPj4gKwlycG9ydCA9IGt6YWxsb2Moc2l6ZW9mKCpycG9y
-dCksIEdGUF9LRVJORUwpOw0KPj4gKwlpZiAoIXJwb3J0KSB7DQo+PiArCQlxbF9sb2cocWxfbG9n
-X3dhcm4sIHZoYSwgMHgyMTAxLA0KPj4gKwkJICAgICIlczogdW5hYmxlIHRvIGFsbG9jIG1lbW9y
-eVxuIiwgX19mdW5jX18pOw0KPiANCj4ga3phbGxvYygpIHdpbGwgd2FybiB5b3UgYWJvdXQgYSBm
-YWlsZWQgYWxsb2NhdGlvbiwgbm8gbmVlZCB0byBkb3VibGUgaXQuDQo+IFNlZSBhbHNvOg0KPiBo
-dHRwOi8vZXZlbnRzLmxpbnV4Zm91bmRhdGlvbi5vcmcvc2l0ZXMvZXZlbnRzL2ZpbGVzL3NsaWRl
-cy9MQ0oxNi1SZWZhY3Rvcl9TdHJpbmdzLVdTYW5nXzAucGRmDQo+IA0KPiBb4oCmXQ0KDQpBY2su
-IA0KDQo+PiArCXJldCA9IG52bWVfZmNfcmVnaXN0ZXJfcmVtb3RlcG9ydCh2aGEtPm52bWVfbG9j
-YWxfcG9ydCwgJnJwb3J0LT5yZXEsDQo+PiArCSAgICAmZmNwb3J0LT5udm1lX3JlbW90ZV9wb3J0
-KTsNCj4+ICsJaWYgKHJldCkgew0KPj4gKwkJcWxfbG9nKHFsX2xvZ193YXJuLCB2aGEsIDB4MjEy
-ZSwNCj4+ICsJCSAgICAiRmFpbGVkIHRvIHJlZ2lzdGVyIHJlbW90ZSBwb3J0LiBUcmFuc3BvcnQg
-cmV0dXJuZWQgJWRcbiIsDQo+PiArCQkgICAgcmV0KTsNCj4+ICsJCXJldHVybiByZXQ7DQo+PiAr
-CX0NCj4+ICsNCj4+ICsJZmNwb3J0LT5udm1lX3JlbW90ZV9wb3J0LT5wcml2YXRlID0gZmNwb3J0
-Ow0KPiANCj4gSSB0aGluayBJIGFscmVhZHkgc2FpZCB0aGF0IGluIHRoZSBsYXN0IHJldmlldywg
-YnV0IGNhbiB5b3UgcGxlYXNlIG1vdmUgdGhlIA0KPiBmY3BvcnQtPm52bWVfcmVtb3RlX3BvcnQt
-PnByaXZhdGUgPSBmY3BvcnQ7DQo+IGFzc2luZ21lbnQgX2Fib3ZlXyB0aGUgbnZtZV9mY19yZWdp
-c3Rlcl9yZW1vdGVwb3J0KCkgY2FsbC4NCj4gDQoNCkkgc2F3IHlvdXIgcmVzcG9uc2UgdG8gSmFt
-ZXMgdGhhdCB0aGlzIGlzIG9rYXkgZm9yIEZDIE5WTWUgY29kZS4NCg0KPiBbLi4uXQ0KPiANCj4+
-ICsJdmhhID0gKHN0cnVjdCBzY3NpX3FsYV9ob3N0ICopbHBvcnQtPnByaXZhdGU7DQo+IA0KPiBO
-byBuZWVkIHRvIGNhc3QgZnJvbSB2b2lkICoNCj4+ICsJcWxfbG9nKHFsX2xvZ19pbmZvLCB2aGEs
-IDB4MjEwNCwNCj4+ICsJICAgICIlczogaGFuZGxlICVwLCBpZHggPSVkLCBxc2l6ZSAlZFxuIiwN
-Cj4+ICsJICAgIF9fZnVuY19fLCBoYW5kbGUsIHFpZHgsIHFzaXplKTsNCj4gDQo+IEJ0dywgc29t
-ZXRpbWUgaW4gdGhlIGZ1dHVyZSB5b3UgY291bGQgY2hhbmdlIHlvdXIgcWxfbG9nKCkgdGhpbmdp
-ZXMgdG8gdGhlDQo+IGtlcm5lbCdzIGR5bmRlYnVnIGZhY2lsaXR5Lg0KPiANCj4gW+KApl0NCg0K
-VGhhbmtzIGZvciB0aGUgc3VnZ2VzdGlvbnMuIEnigJlsbCBicmluZyBpdCB1cCB0byB0ZWFtIGFu
-ZCB3ZSBjYW4gc2xvd2x5IGNvbnZlcnQgdGhlc2UgdG8ga2VybmVs4oCZcw0KZHluYW1pYyBkZWJ1
-Z2dpbmcgZmFjaWxpdHkuIA0KDQoNCj4+ICsJcnZhbCA9IGhhLT5pc3Bfb3BzLT5hYm9ydF9jb21t
-YW5kKHNwKTsNCj4+ICsJaWYgKHJ2YWwgIT0gUUxBX1NVQ0NFU1MpDQo+PiArCQlxbF9sb2cocWxf
-bG9nX3dhcm4sIGZjcG9ydC0+dmhhLCAweDIxMjUsDQo+PiArCQkgICAgIiVzOiBmYWlsZWQgdG8g
-YWJvcnQgTFMgY29tbWFuZCBmb3IgU1A6JXAgcnZhbD0leFxuIiwNCj4+ICsJCSAgICBfX2Z1bmNf
-Xywgc3AsIHJ2YWwpOw0KPj4gKw0KPj4gKwlxbF9kYmcocWxfZGJnX2lvLCBmY3BvcnQtPnZoYSwg
-MHgyMTJiLA0KPj4gKwkgICAgIiVzOiBhYm9ydGVkIHNwOiVwIG9uIGZjcG9ydDolcFxuIiwgX19m
-dW5jX18sIHNwLCBmY3BvcnQpOw0KPiANCj4gSWYgeW91IGluc2luc3QgaW4gaGF2aW5nIHRoZXNl
-IHR3byBtZXNzYWdlcyAoImZhaWxlZCB0byBhYm9ydCIgYW5kICJhYm9ydGVkIikNCj4gY2FuIHlv
-dSBhdCBsZWFzdCBmb2xkIGl0IGludG8gb25lIHByaW50IHN0YXRlbWVudC4NCj4gDQoNCknigJls
-bCBzZW5kIGZvbGxvdyB1cCBwYXRjaCBmb3IgdGhpcyBjbGVhbnVwLCBpZiBpdHMgb2theSB3aXRo
-IHlvdT8gDQoNCj4+ICsJcnZhbCA9IGhhLT5pc3Bfb3BzLT5hYm9ydF9jb21tYW5kKHNwKTsNCj4+
-ICsJaWYgKCFydmFsKQ0KPj4gKwkJcWxfbG9nKHFsX2xvZ193YXJuLCBmY3BvcnQtPnZoYSwgMHgy
-MTI3LA0KPj4gKwkJICAgICIlczogZmFpbGVkIHRvIGFib3J0IGNvbW1hbmQgZm9yIFNQOiVwIHJ2
-YWw9JXhcbiIsDQo+PiArCQkgICAgX19mdW5jX18sIHNwLCBydmFsKTsNCj4+ICsNCj4+ICsJcWxf
-ZGJnKHFsX2RiZ19pbywgZmNwb3J0LT52aGEsIDB4MjEyNiwNCj4+ICsJICAgICIlczogYWJvcnRl
-ZCBzcDolcCBvbiBmY3BvcnQ6JXBcbiIsIF9fZnVuY19fLCBzcCwgZmNwb3J0KTsNCj4gDQo+IERp
-dHRvLg0KPiANCg0KQWdyZWUuIFdpbGwgZm9sZCB0aGlzIGludG8gY2xlYW51cCBwYXRjaC4gDQoN
-Cj4gWy4uLl0NCj4gDQo+IA0KPj4gKwkvKiBTZXR1cCBxcGFpciBwb2ludGVycyAqLw0KPj4gKwly
-ZXEgPSBxcGFpci0+cmVxOw0KPj4gKwl0b3RfZHNkcyA9IGZkLT5zZ19jbnQ7DQo+PiArDQo+PiAr
-CS8qIEFjcXVpcmUgcXBhaXIgc3BlY2lmaWMgbG9jayAqLw0KPj4gKwlzcGluX2xvY2tfaXJxc2F2
-ZSgmcXBhaXItPnFwX2xvY2ssIGZsYWdzKTsNCj4+ICsNCj4+ICsJLyogQ2hlY2sgZm9yIHJvb20g
-aW4gb3V0c3RhbmRpbmcgY29tbWFuZCBsaXN0LiAqLw0KPj4gKwloYW5kbGUgPSByZXEtPmN1cnJl
-bnRfb3V0c3RhbmRpbmdfY21kOw0KPiANCj4gSSd2ZSBqdXN0IHNlZW4gdGhpcyBpbiBxbGEyeHh4
-X3N0YXJ0X3Njc2lfbXEoKSBhbmQNCj4gcWxhMnh4eF9kaWZfc3RhcnRfc2NzaV9tcSgpIGFuZCB3
-YXMgYWJvdXQgdG8gc2VuZCB5b3UgYW4gUkZDIHBhdGNoLiBCdXQNCj4gaGVyZSBpdCBpcyBmb3Ig
-Y29tcGxldGVuZXNzIGluIHRoZSBudm1lIHZlcnNpb24gYXMgd2VsbDoNCj4gDQo+IFlvdSBzYXZl
-IGEgcG9pbnRlciB0byB0aGUgcmVxX3F1ZSBmcm9tIHlvdSBxcGFpciBhbmQgX2FmdGVyd2FyZHNf
-IHlvdSBncmFiDQo+IHRoZSBxcF9sb2NrLiBXaGF0IHByZXZlbnRzIHNvbWVvbmUgZnJvbSBjaGFu
-Z2luZyB0aGUgcmVxdWVzdCBpbnRlcm5hbHMNCj4gdW5kZXJuZWF0aCB5b3U/DQo+IA0KPiBMaWtl
-IHRoaXM6DQo+IA0KPiBDUFUwICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIENQVTENCj4g
-cmVxID0gcXBhaXItPnJlcTsNCj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBxbGEy
-eHh4X2RlbGV0ZV9xcGFpcih2aGEsIHFwYWlyKTsNCj4gICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICBgLT4gcmV0ID0gcWxhMjV4eF9kZWxldGVfcmVxX3F1ZSh2aGEsIHFwYWlyLT5yZXEp
-Ow0KPiBzcGluX2xvY2tfaXJxc2F2ZSgmcXBhaXItPnFwX2xvY2ssIGZsYWdzKTsNCj4gaGFuZGxl
-ID0gcmVxLT5jdXJyZW50X291dHN0YW5kaW5nX2NtZDsNCj4gDQo+IE9oIGFuZCBidHcsIG5laXRo
-ZXIgcWxhMnh4eF9kZWxldGVfcXBhaXIoKSBub3IgcWxhMjV4eF9kZWxldGVfcmVxX3F1ZSgpIGdy
-YWINCj4gdGhlIHFwX2xvY2suDQo+IA0KPiBJIHRoaW5rIHRoaXMgaXMgc29tZXRoaW5nIHdvcmsg
-cmUtdGhpbmtpbmcuIE1heWJlIHlvdSBjYW4gaWRlbnRpZnkgdGhlIGJsb2Nrcw0KPiBhY2Nlc3Np
-bmcgc3RydWN0IG1lbWJlcnMgd2hpY2ggbmVlZCB0byBiZSB0b3VjaGVkIHVuZGVyIGEgbG9jayBh
-bmQgZXh0cmFjdA0KPiB0aGVtIGludG8gYSBoZWxwZXIgZnVuY3Rpb24gd2ljaCBjYWxscyBsb2Nr
-ZGVwX2Fzc2VydF9oZWxkKCkuIE5vIG11c3QganVzdCBhbmQNCj4gaWRlYS4NCj4gDQoNClRoaXMg
-aXMgdmVyeSB2YWxpZCBwb2ludCB5b3UgYnJvdWdodCB1cCBhbmQgdGhhbmtzIGZvciB0aGUgZGV0
-YWlsIHJldmlldyBjb21tZW50LiANCmZyb20geW91ciBwYXRjaCBzdWJtaXR0ZWQgdGhpcyBtb3Ju
-aW5nLCBJ4oCZbGwgbGlrZSB0byBoYXZlIG91ciB0ZXN0IHRlYW0gcnVuIHRocm91Z2ggDQpyZWdy
-ZXNzaW9uIHRlc3Rpbmcgd2l0aCB0aGVzZSBjaGFuZ2VzIGFuZCB3ZSBjYW4gaW5jb3Jwb3JhdGUg
-dGhhdCBpbnRvIE5WTWUgYXMgd2VsbA0KYW5kIHNlbmQgYSBmb2xsb3cgdXAgcGF0Y2ggdG8gY29y
-cmVjdCB0aGlzLiBXb3VsZCB5b3UgYmUgb2theSB3aXRoIHRoYXQ/IA0KDQo+IFsuLi5dDQo+PiAr
-DQo+PiArCS8qIExvYWQgZGF0YSBzZWdtZW50cyAqLw0KPj4gKwlmb3JfZWFjaF9zZyhzZ2wsIHNn
-LCB0b3RfZHNkcywgaSkgew0KPiANCj4gRG8geW91IHJlYWxseSBuZWVkIHRoZSB3aG9sZSBsb29w
-IHVuZGVyIGEgc3Bpbl9sb2NrX2lycXNhdmUoKT8gSWYgdGhlIHNnbGlzdA0KPiBoYXMgYSBsb3Qg
-b2YgZW50cmllcyAoaS5lLiBiZWNhc3VlIHdlIGNvdWxkbid0IGNsdXN0ZXIgaXQpIHdlJ3JlIGlu
-IHJpc2sgdG8NCj4gdHJpZ2dlciBhIE5NSSB3YXRjaGRvZyBzb2Z0LWxvY2t1cCBXQVJOX09OKCku
-IFlvdSBuZWVkIHRvIGdyYWIgdGhlIGxvY2sgd2hlbg0KPiBhY2Nlc3NpbmcgcmVxJ3MgbWVtYmVy
-cyBidXQgdGhlIHJlc3Qgb2YgdGhlIGxvb3A/IFRoaXMgYXBwbGllcyB0bw0KPiBxbGEyNHh4X2J1
-aWxkX3Njc2lfaW9jYnMoKSBmb3IgU0NTSSBhcyB3ZWxsLg0KPiANCg0KU2luY2UgdGhlc2UgY2hh
-bmdlcyB3b3VsZCBuZWVkIHVzIHRvIGRvIHJlZ3Jlc3Npb24gdGVzdGluZywgSSB3b3VsZCBsaWtl
-IHRvIHNlbmQgYSBmb2xsb3cgdXAgDQpwYXRjaCB0byBjb3JyZWN0IHRoZW0gYXMgYSBzZXBhcmF0
-ZSBwYXRjaC4NCg0KPiBbLi4uXQ0KPiANCj4+ICsJc3RydWN0IHFsYV9xcGFpciAqcXBhaXIgPSAo
-c3RydWN0IHFsYV9xcGFpciAqKWh3X3F1ZXVlX2hhbmRsZTsNCj4gDQo+IFZvaWQgcG9pbnRlciBj
-YXN0LiBTb21lb25lIHJlYWxseSBzaG91bGQgd3JpdGUgYSBjb2NjaW5lbGxlIHNjcmlwdCB0byBn
-ZXQgcmlkDQo+IG9mIGVtLg0KPiANCg0KV2lsbCBzZW5kIGEgZm9sbG93IHVwIHBhdGNoIGZvciBj
-bGVhbnVwDQoNCj4gWy4uLl0NCj4gDQo+PiArCS8qIEFsbG9jIFNSQiBzdHJ1Y3R1cmUgKi8NCj4+
-ICsJc3AgPSBxbGEyeHh4X2dldF9xcGFpcl9zcChxcGFpciwgZmNwb3J0LCBHRlBfQVRPTUlDKTsN
-Cj4+ICsJaWYgKCFzcCkNCj4+ICsJCXJldHVybiAtRUlPOw0KPiANCj4gX19ibGtfbXFfcnVuX2h3
-X3F1ZXVlKCkNCj4gYC0+IGJsa19tcV9zY2hlZF9kaXNwYXRjaF9yZXF1ZXN0cygpDQo+ICAgIGAt
-PiBibGtfbXFfZGlzcGF0Y2hfcnFfbGlzdCgpDQo+ICAgICAgICBgLT4gbnZtZV9mY19xdWV1ZV9y
-cSgpDQo+ICAgICAgICAgICAgYC0+IG52bWVfZmNfc3RhcnRfZmNwX29wKCkgDQo+ICAgICAgICAg
-ICAgICAgIGAtPiBxbGFfbnZtZV9wb3N0X2NtZCgpDQo+IGlzbid0IGNhbGxlZCBmcm9tIGFuIElS
-USBjb250ZXh0IGFuZCBxbGEyeHh4X2dldF9xcGFpcl9zcCgpIGludGVybmFsbHkNCj4gdXNlcyBt
-ZW1wb29sX2FsbG9jKCkuIEZyb20gbWVtcG9vbF9hbGxvYygpJ3MgZG9jdW1lbnRhdGlvbjoNCj4g
-DQo+ICJOb3RlIHRoYXQgZHVlIHRvIHByZWFsbG9jYXRpb24sIHRoaXMgZnVuY3Rpb24gKm5ldmVy
-KiBmYWlscyB3aGVuIGNhbGxlZCBmcm9tDQo+IHByb2Nlc3MgY29udGV4dHMuIChpdCBtaWdodCBm
-YWlsIGlmIGNhbGxlZCBmcm9tIGFuIElSUSBjb250ZXh0LikiDQo+IG1tL21lbXBvb2wuYzozMDYN
-Cj4gDQoNCg0KV2lsbCBpbnZlc3RpZ2F0ZSBhbmQgd29yayBvbiBmaXhpbmcgdGhpcy4gDQoNCj4g
-Wy4uLl0NCj4gDQo+PiArCWZjcG9ydCA9IChmY19wb3J0X3QgKilycG9ydC0+cHJpdmF0ZTsNCj4g
-Vm9pZCBjYXN0Lg0KPiANCj4gWy4uLl0NCj4+ICsJcnZhbCA9IGhhLT5pc3Bfb3BzLT5hYm9ydF9j
-b21tYW5kKHNwKTsNCj4+ICsJaWYgKCFydmFsKSB7DQo+PiArCQlpZiAoIXFsYV9udm1lX3dhaXRf
-b25fY29tbWFuZChzcCkpDQo+IA0KPiAgICAgICAgaWYgKCFydmFsICYmICFxbGFfbnZtZV93YWl0
-X29uX2NvbW1hbmQoc3ApKQ0KPiANCkFjay4gV2lsbCBmb2xkIGl0IGludG8gY2xlYW51cCBwYXRj
-aCBpZiB5b3UgYXJlIG9rYXk/IA0KDQo+IFsuLi5dDQo+IA0KPj4gKwkJZm9yIChjbnQgPSAxOyBj
-bnQgPCByZXEtPm51bV9vdXRzdGFuZGluZ19jbWRzOyBjbnQrKykgew0KPj4gKwkJCXNwID0gcmVx
-LT5vdXRzdGFuZGluZ19jbWRzW2NudF07DQo+PiArCQkJaWYgKChzcCkgJiYgKChzcC0+dHlwZSA9
-PSBTUkJfTlZNRV9DTUQpIHx8DQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgIF4gcGFyZW50
-aGVzaXMNCj4+ICsJCQkgICAgKHNwLT50eXBlID09IFNSQl9OVk1FX0xTKSkgJiYNCj4+ICsJCQkJ
-KHNwLT5mY3BvcnQgPT0gZmNwb3J0KSkgew0KPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgXiBwYXJlbnRoZXNpcw0KPiANCj4gWy4uLl0NCj4gDQo+PiBkaWZmIC0tZ2l0IGEvZHJpdmVy
-cy9zY3NpL3FsYTJ4eHgvcWxhX252bWUuaCBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9udm1l
-LmgNCj4gWy4uLl0NCj4gDQo+IHZvaWQgcWxhX252bWVfcmVnaXN0ZXJfaGJhKHNjc2lfcWxhX2hv
-c3RfdCAqKTsNCj4gaW50ICBxbGFfbnZtZV9yZWdpc3Rlcl9yZW1vdGUoc2NzaV9xbGFfaG9zdF90
-ICosIGZjX3BvcnRfdCAqKTsNCj4gdm9pZCBxbGFfbnZtZV9kZWxldGUoc2NzaV9xbGFfaG9zdF90
-ICopOw0KPiB2b2lkIHFsYV9udm1lX2Fib3J0KHN0cnVjdCBxbGFfaHdfZGF0YSAqLCBzcmJfdCAq
-c3ApOw0KPiB2b2lkIHFsYTI0eHhfbnZtZV9sczRfaW9jYihzY3NpX3FsYV9ob3N0X3QgKiwgc3Ry
-dWN0IHB0X2xzNF9yZXF1ZXN0ICosIHN0cnVjdCByZXFfcXVlICopOw0KPiANCg0KSeKAmWxsIGhh
-dmUgdGhpcyBhcyBhIGZvbGxvdyB1cCBwYXRjaC4gDQoNCj4gWy4uLl0NCj4gDQo+PiArI2lmIChJ
-U19FTkFCTEVEKENPTkZJR19OVk1FX0ZDKSkNCj4+ICtpbnQgcWwyeG52bWVlbmFibGUgPSAxOw0K
-Pj4gKyNlbHNlDQo+PiAraW50IHFsMnhudm1lZW5hYmxlOw0KPj4gKyNlbmRpZg0KPj4gK21vZHVs
-ZV9wYXJhbShxbDJ4bnZtZWVuYWJsZSwgaW50LCAwNjQ0KTsNCj4+ICtNT0RVTEVfUEFSTV9ERVND
-KHFsMnhudm1lZW5hYmxlLA0KPj4gKyAgICAiRW5hYmxlcyBOVk1FIHN1cHBvcnQuICINCj4+ICsg
-ICAgIjAgLSBubyBOVk1lLiAgRGVmYXVsdCBpcyBZIik7DQo+IA0KPiBEZWZhdWx0IGlzIFkgSUZG
-IENPTkZJR19OVk1FX0ZDIGlzIGVuYWJsZWQuIElzIGl0IHBvc3NpYmxlIHRvIGd1YXJkIHRoZSB3
-aG9sZSBtb2R1bGUNCj4gcGFyYW5ldGVyIHdpdGggSVNfRU5BQkxFRChDT05GSUdfTlZNRV9GQyk/
-IE5vdCBzdXJlIGlmIHRoaXMgd291bGQgYnJlYWsgaWYNCj4gQ09ORklHX05WTUVfRkM9biBhbmQg
-c29tZW9uZSBkb2VzIHFsYTJ4eHgucWwyeG52bWVlbmFibGU9Ti4NCj4gDQo+IFsuLi5dDQo+IA0K
-Pj4gLQlpZiAoc3AtPnR5cGUgIT0gU1JCX05WTUVfQ01EKSB7DQo+PiArCWlmICgoc3AtPnR5cGUg
-IT0gU1JCX05WTUVfQ01EKSAmJiAoc3AtPnR5cGUgIT0gU1JCX05WTUVfTFMpKSB7DQo+IA0KPiBo
-dHRwOi8vZW4uY3BwcmVmZXJlbmNlLmNvbS93L2MvbGFuZ3VhZ2Uvb3BlcmF0b3JfcHJlY2VkZW5j
-ZQ0KPiANCg0KSWYgeW91IGFncmVlIGnigJlsbCBsaWtlIHRvIHRha2UgdGhlc2UgY29tbWVudHMg
-Zm9yIGNsZWFudXAgc2VyaWVzIHRoYXQgaeKAmWxsIHN1Ym1pdCBhcyBhIGZvbGxvdyB1cCANCnNl
-cmllcy4gDQoNCj4+ICsJCQkJCWlmICgoc3AtPnR5cGUgPT0gU1JCX05WTUVfQ01EKSB8fA0KPj4g
-KwkJCQkJICAgIChzcC0+dHlwZSA9PSBTUkJfTlZNRV9MUykpIHsNCj4gDQo+IF5eDQo+IA0KPiBU
-aGFua3MsDQo+IAlKb2hhbm5lcw0KPiANCj4gLS0gDQo+IEpvaGFubmVzIFRodW1zaGlybiAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFN0b3JhZ2UNCj4ganRodW1zaGly
-bkBzdXNlLmRlICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICArNDkgOTExIDc0MDUzIDY4
-OQ0KPiBTVVNFIExJTlVYIEdtYkgsIE1heGZlbGRzdHIuIDUsIDkwNDA5IE7DvHJuYmVyZw0KPiBH
-RjogRmVsaXggSW1lbmTDtnJmZmVyLCBKYW5lIFNtaXRoYXJkLCBHcmFoYW0gTm9ydG9uDQo+IEhS
-QiAyMTI4NCAoQUcgTsO8cm5iZXJnKQ0KPiBLZXkgZmluZ2VycHJpbnQgPSBFQzM4IDlDQUIgQzJD
-NCBGMjVEIDg2MDAgRDBEMCAwMzkzIDk2OUQgMkQ3NiAwODUwDQoNClRoYW5rcyBmb3IgdGhlc2Ug
-ZGV0YWlscyByZXZpZXcgb2YgdGhpcyBzZXJpZXMgYW5kIHZhbHVhYmxlIGlucHV0LiANCg0KSeKA
-mWxsIHNlbmQgZm9sbG93IHVwIHNlcmllcyBzaG9ydGx5LiBMZXQgbWUga25vdyBpZiB0aGlzIHNl
-cmllcyBpcyBva2F5IGFzIGlzIGFuZA0KYSBmb2xsb3cgdXAgcGF0Y2hlcyB0byBhZGRyZXNzIGNv
-bmNlcm5zIGJ5IHlvdSBhcmUgb2theS4NCg0KVGhhbmtzLA0KLUhpbWFuc2h1IA==
+On Fri, Jun 23, 2017 at 03:16:09AM +0000, Madhani, Himanshu wrote:
+> if this is not *must* i’ll like to post patch for this with other patches that I am going to queue up during rc1 phase. 
+
+Ok.
+
+[...]
+
+> I saw your response to James that this is okay for FC NVMe code.
+> 
+> > [...]
+> > 
+> >> +	vha = (struct scsi_qla_host *)lport->private;
+> > 
+> > No need to cast from void *
+> >> +	ql_log(ql_log_info, vha, 0x2104,
+> >> +	    "%s: handle %p, idx =%d, qsize %d\n",
+> >> +	    __func__, handle, qidx, qsize);
+> > 
+> > Btw, sometime in the future you could change your ql_log() thingies to the
+> > kernel's dyndebug facility.
+> > 
+> > […]
+> 
+> Thanks for the suggestions. I’ll bring it up to team and we can slowly convert these to kernel’s
+> dynamic debugging facility. 
+
+Thanks a lot.
+> 
+> 
+> >> +	rval = ha->isp_ops->abort_command(sp);
+> >> +	if (rval != QLA_SUCCESS)
+> >> +		ql_log(ql_log_warn, fcport->vha, 0x2125,
+> >> +		    "%s: failed to abort LS command for SP:%p rval=%x\n",
+> >> +		    __func__, sp, rval);
+> >> +
+> >> +	ql_dbg(ql_dbg_io, fcport->vha, 0x212b,
+> >> +	    "%s: aborted sp:%p on fcport:%p\n", __func__, sp, fcport);
+> > 
+> > If you insinst in having these two messages ("failed to abort" and "aborted")
+> > can you at least fold it into one print statement.
+> > 
+> 
+> I’ll send follow up patch for this cleanup, if its okay with you? 
+
+OK
+
+[...]
+> > I've just seen this in qla2xxx_start_scsi_mq() and
+> > qla2xxx_dif_start_scsi_mq() and was about to send you an RFC patch. But
+> > here it is for completeness in the nvme version as well:
+> > 
+> > You save a pointer to the req_que from you qpair and _afterwards_ you grab
+> > the qp_lock. What prevents someone from changing the request internals
+> > underneath you?
+> > 
+> > Like this:
+> > 
+> > CPU0                               CPU1
+> > req = qpair->req;
+> >                                 qla2xxx_delete_qpair(vha, qpair);
+> >                                 `-> ret = qla25xx_delete_req_que(vha, qpair->req);
+> > spin_lock_irqsave(&qpair->qp_lock, flags);
+> > handle = req->current_outstanding_cmd;
+> > 
+> > Oh and btw, neither qla2xxx_delete_qpair() nor qla25xx_delete_req_que() grab
+> > the qp_lock.
+> > 
+> > I think this is something work re-thinking. Maybe you can identify the blocks
+> > accessing struct members which need to be touched under a lock and extract
+> > them into a helper function wich calls lockdep_assert_held(). No must just and
+> > idea.
+> > 
+> 
+> This is very valid point you brought up and thanks for the detail review comment. 
+> from your patch submitted this morning, I’ll like to have our test team run through 
+> regression testing with these changes and we can incorporate that into NVMe as well
+> and send a follow up patch to correct this. Would you be okay with that? 
+
+That patch has a bug and I'll need to respin it, but I'll be sending you a v2
+today.
+
+> 
+> > [...]
+> >> +
+> >> +	/* Load data segments */
+> >> +	for_each_sg(sgl, sg, tot_dsds, i) {
+> > 
+> > Do you really need the whole loop under a spin_lock_irqsave()? If the sglist
+> > has a lot of entries (i.e. becasue we couldn't cluster it) we're in risk to
+> > trigger a NMI watchdog soft-lockup WARN_ON(). You need to grab the lock when
+> > accessing req's members but the rest of the loop? This applies to
+> > qla24xx_build_scsi_iocbs() for SCSI as well.
+> > 
+> 
+> Since these changes would need us to do regression testing, I would like to send a follow up 
+> patch to correct them as a separate patch.
+
+Sure.
+
+> 
+> > [...]
+> > 
+> >> +	struct qla_qpair *qpair = (struct qla_qpair *)hw_queue_handle;
+> > 
+> > Void pointer cast. Someone really should write a coccinelle script to get rid
+> > of em.
+> > 
+> 
+> Will send a follow up patch for cleanup
+> 
+> > [...]
+> > 
+> >> +	/* Alloc SRB structure */
+> >> +	sp = qla2xxx_get_qpair_sp(qpair, fcport, GFP_ATOMIC);
+> >> +	if (!sp)
+> >> +		return -EIO;
+> > 
+> > __blk_mq_run_hw_queue()
+> > `-> blk_mq_sched_dispatch_requests()
+> >    `-> blk_mq_dispatch_rq_list()
+> >        `-> nvme_fc_queue_rq()
+> >            `-> nvme_fc_start_fcp_op() 
+> >                `-> qla_nvme_post_cmd()
+> > isn't called from an IRQ context and qla2xxx_get_qpair_sp() internally
+> > uses mempool_alloc(). From mempool_alloc()'s documentation:
+> > 
+> > "Note that due to preallocation, this function *never* fails when called from
+> > process contexts. (it might fail if called from an IRQ context.)"
+> > mm/mempool.c:306
+> > 
+> 
+> 
+> Will investigate and work on fixing this. 
+
+
+I think I did a mistake here, qla2xxx_get_qpair_sp() can fail for other
+reasons than OOM. My bad, sorry.
+
+> Thanks for these details review of this series and valuable input. 
+> 
+> I’ll send follow up series shortly. Let me know if this series is okay as is and
+> a follow up patches to address concerns by you are okay.
+
+Thanks a lot,
+	Johannes
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
