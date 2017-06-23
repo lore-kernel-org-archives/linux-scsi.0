@@ -1,91 +1,39 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH v2] qla2xxx: Protect access to qpair members with qpair->qp_lock
-Date: Fri, 23 Jun 2017 09:10:11 +0200
-Message-ID: <20170623071011.21184-1-jthumshirn@suse.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, qla2xxx-upstream@qlogic.com, Himanshu Madhani <himanshu.madhani@cavium.com>, Hannes Reinecke <hare@suse.de>, John Garry <john.garry@huawei.com>, Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] bnx2i: missing error code in bnx2i_ep_connect()
+Date: Fri, 23 Jun 2017 09:13:36 +0200
+Message-ID: <20170623071336.GC13014@linux-x5ow.site>
+References: <20170623070200.GA7922@elgon.mountain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:58720 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751149AbdFWHNo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 23 Jun 2017 03:13:44 -0400
+Content-Disposition: inline
+In-Reply-To: <20170623070200.GA7922@elgon.mountain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: QLogic-Storage-Upstream@qlogic.com, Michael Chan <mchan@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-In qla2xx_start_scsi_mq() and qla2xx_dif_start_scsi_mq() we grab the
-qpair->qp_lock but do access members of the qpair before having the lock.
-Re-order the locking sequence to have all read and write access to qpair
-members under the qpair->qp_lock.
+On Fri, Jun 23, 2017 at 10:02:00AM +0300, Dan Carpenter wrote:
+> If bnx2i_map_ep_dbell_regs() then we accidentally return NULL instead
+> of an error pointer.  It results in a NULL dereference in
+> iscsi_if_ep_connect().
+> 
+> Fixes: cf4e6363859d ("[SCSI] bnx2i: Add bnx2i iSCSI driver.")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
 
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/qla2xxx/qla_iocb.c | 23 +++++++++++++----------
- 1 file changed, 13 insertions(+), 10 deletions(-)
+Looks good,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
-Changes to v1:
-* Use __qla2x00_marker() instead of qla2x00_marker which is fit to be called
-  with the qp_lock held (John)
-* Don't protect qpair->online and qpair->difdix_supported as it's not
-  needed (Hannes)
-
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 8404f17f3c6c..c64036ddd365 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -1770,6 +1770,9 @@ qla2xxx_start_scsi_mq(srb_t *sp)
- 	struct qla_hw_data *ha = vha->hw;
- 	struct qla_qpair *qpair = sp->qpair;
- 
-+	/* Acquire qpair specific lock */
-+	spin_lock_irqsave(&qpair->qp_lock, flags);
-+
- 	/* Setup qpair pointers */
- 	rsp = qpair->rsp;
- 	req = qpair->req;
-@@ -1779,15 +1782,14 @@ qla2xxx_start_scsi_mq(srb_t *sp)
- 
- 	/* Send marker if required */
- 	if (vha->marker_needed != 0) {
--		if (qla2x00_marker(vha, req, rsp, 0, 0, MK_SYNC_ALL) !=
--		    QLA_SUCCESS)
-+		if (__qla2x00_marker(vha, req, rsp, 0, 0, MK_SYNC_ALL) !=
-+		    QLA_SUCCESS) {
-+			spin_unlock_irqrestore(&qpair->qp_lock, flags);
- 			return QLA_FUNCTION_FAILED;
-+		}
- 		vha->marker_needed = 0;
- 	}
- 
--	/* Acquire qpair specific lock */
--	spin_lock_irqsave(&qpair->qp_lock, flags);
--
- 	/* Check for room in outstanding command list. */
- 	handle = req->current_outstanding_cmd;
- 	for (index = 1; index < req->num_outstanding_cmds; index++) {
-@@ -1942,6 +1944,8 @@ qla2xxx_dif_start_scsi_mq(srb_t *sp)
- 			return qla2xxx_start_scsi_mq(sp);
- 	}
- 
-+	spin_lock_irqsave(&qpair->qp_lock, flags);
-+
- 	/* Setup qpair pointers */
- 	rsp = qpair->rsp;
- 	req = qpair->req;
-@@ -1951,15 +1955,14 @@ qla2xxx_dif_start_scsi_mq(srb_t *sp)
- 
- 	/* Send marker if required */
- 	if (vha->marker_needed != 0) {
--		if (qla2x00_marker(vha, req, rsp, 0, 0, MK_SYNC_ALL) !=
--		    QLA_SUCCESS)
-+		if (__qla2x00_marker(vha, req, rsp, 0, 0, MK_SYNC_ALL) !=
-+		    QLA_SUCCESS) {
-+			spin_unlock_irqrestore(&qpair->qp_lock, flags);
- 			return QLA_FUNCTION_FAILED;
-+		}
- 		vha->marker_needed = 0;
- 	}
- 
--	/* Acquire ring specific lock */
--	spin_lock_irqsave(&qpair->qp_lock, flags);
--
- 	/* Check for room in outstanding command list. */
- 	handle = req->current_outstanding_cmd;
- 	for (index = 1; index < req->num_outstanding_cmds; index++) {
 -- 
-2.12.3
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
