@@ -1,91 +1,214 @@
-From: Subhash Jadavani <subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Subject: Re: [PATCH v2 2/5] dt-bindings: scsi: ufs: add document for
- hi3660-ufs
-Date: Thu, 22 Jun 2017 18:05:40 -0700
-Message-ID: <5c4c0a7b844055b32b8463fcee04401e@codeaurora.org>
-References: <20170616065119.10704-1-butao@hisilicon.com>
- <20170616065119.10704-3-butao@hisilicon.com>
- <CAK8P3a2aPorzpUzwL=dkUkYNCGkhQMDPOkKRW1-=Hf=yCdvTsQ@mail.gmail.com>
- <0f79aeea-53e3-6bea-ffa6-0e057f2ff83b@huawei.com>
- <CAK8P3a2z7VbPb95Ltj=Duh1v_Yqxedb_g=ADNPWOrpEz1dCTuw@mail.gmail.com>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [PATCH 0/4] g_NCR5380: PDMA fixes and cleanup
+Date: Fri, 23 Jun 2017 11:06:59 +1000 (AEST)
+Message-ID: <alpine.LNX.2.00.1706231101230.2417@nippy.intranet>
+References: <cover.1497528687.git.fthain@telegraphics.com.au> <201706222311.38121.linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAK8P3a2z7VbPb95Ltj=Duh1v_Yqxedb_g=ADNPWOrpEz1dCTuw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
-Cc: Bu Tao <butao-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Wei Xu <xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>, Catalin Marinas <catalin.marinas-5wv7dgnIgG8@public.gmane.org>, Will Deacon <will.deacon-5wv7dgnIgG8@public.gmane.org>, Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Kevin Hilman <khilman-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Gregory CLEMENT <gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Masahiro Yamada <yamada.masahiro-uWyLwvC0a2jby3iVrkZq2A@public.gmane.org>, Riku Voipio <riku.voipio-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Thierry Reding <treding-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Krzysztof Kozlowski <krzk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Eric Anholt <eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-fy+rA21nqHI@public.gmane.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <201706222311.38121.linux@rainbow-software.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 2017-06-22 04:51, Arnd Bergmann wrote:
-> On Thu, Jun 22, 2017 at 1:44 PM, Bu Tao <butao-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
->> 在 2017/6/17 5:51, Arnd Bergmann 写道:
->>> On Fri, Jun 16, 2017 at 8:51 AM, Bu Tao <butao-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org> wrote:
->>>> +Optional properties for board device:
->>>> +- ufs-hi3660-use-rate-B                : specifies UFS rate-B
->>>> +- ufs-hi3660-broken-fastauto   : specifies no fastauto
->>>> +- ufs-hi3660-use-HS-GEAR3      : specifies UFS HS-GEAR3
->>>> +- ufs-hi3660-use-HS-GEAR2      : specifies UFS HS-GEAR2
->>>> +- ufs-hi3660-use-HS-GEAR1      : specifies UFS HS-GEAR1
->>>> +- ufs-hi3660-broken-clk-gate-bypass    : specifies no clk-gate
->>>> +- ufs-hi3660-use-one-line      : specifies UFS use one line work
->>>> +- reset-gpio                   : specifies to reset devices
->>> 
->>> 
->>> Some of these sound rather generic and might apply to UFS 
->>> implementations
->>> other than hi3660, so I'd suggest adding them to the base ufs binding 
->>> with
->>> a generic name instead.
->>> 
->>> Any DT properties that might be useful across multiple 
->>> implementations
->>> should be parsed in generic code that gets called by the individual
->>> drivers,
->>> and then the properties that are specific to the integration work 
->>> done by
->>> hisilicon should be prefixed with "hisilicon,", but not normally with 
->>> the
->>> SoC name: it is quite possible that another SoC will be derived from 
->>> this
->>> chip and it should reuse the properties.
->> 
->> 
->> I do not know wheher other SoC need to use the optional properties as
->> abover. So here the name of the optional properties has "hi3660".
-> 
-> They should not have "hi3660" in their names either way, independent
-> of where they are used.
 
+On Thu, 22 Jun 2017, Ondrej Zary wrote:
 
-Yes, i agree with Arnd that SoCs might also need these so please make 
-these properties generic (put them under 
-Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt) and also move 
-their parsing code in generic driver (ufshcd.c or ufshcd-pltfrm.c).
+> Works only with HDD on non-DTC chips. CD-ROM hangs. DTC hangs even with 
+> HDD. The PDMA code really needs to be fixed.
+> 
 
-> 
->>> (note: this is different from the value of the "compatible" property 
->>> that
->>> is meant to be as specific as possible".
->>> 
->>> Also, please clarify how your binding relates to the ufshcd binding
->>> in Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt: does
->>> hi3660 implement any registers that are shared with ufshcd, or does
->>> it use the same physical interface with a different register set?
->> 
->> No, only show how to use the dt-binding for hi3660 SoC
-> 
-> My question was about the hardware: does hi3660 implement ufshcd
-> or not?
-> 
->       Arnd
+Does this patch help? It should be applied on top of this series of 4.
 
--- 
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
+index 4c31cb316a38..95ae8edbecbc 100644
+--- a/drivers/scsi/g_NCR5380.c
++++ b/drivers/scsi/g_NCR5380.c
+@@ -481,6 +481,30 @@ static void generic_NCR5380_release_resources(struct Scsi_Host *instance)
+ 		release_mem_region(base, region_size);
+ }
+ 
++/* wait_for_53c80_access - wait for 53C80 registers to become accessible
++ * @hostdata: scsi host private data
++ *
++ * The registers within the 53C80 logic block are inaccessible until
++ * bit 7 in the 53C400 control status register gets asserted.
++ */
++
++static int wait_for_53c80_access(struct NCR5380_hostdata *hostdata)
++{
++	int count = 10000;
++
++	do {
++		udelay(4); /* DTC436 chip hangs without this */
++		if (NCR5380_read(hostdata->c400_ctl_status) & CSR_53C80_REG)
++			return 0;
++	} while (--count > 0);
++
++	scmd_printk(KERN_ERR, hostdata->connected,
++	            "53c80 registers not accessible, device will be reset\n");
++	NCR5380_write(hostdata->c400_ctl_status, CSR_RESET);
++	NCR5380_write(hostdata->c400_ctl_status, CSR_BASE);
++	return -1;
++}
++
+ /**
+  * generic_NCR5380_pread - pseudo DMA receive
+  * @hostdata: scsi host private data
+@@ -493,33 +517,19 @@ static void generic_NCR5380_release_resources(struct Scsi_Host *instance)
+ static inline int generic_NCR5380_pread(struct NCR5380_hostdata *hostdata,
+                                         unsigned char *dst, int len)
+ {
+-	int start, retries;
+-	u8 csr, basr;
++	int result;
++	int start;
+ 
+ 	NCR5380_write(hostdata->c400_ctl_status, CSR_BASE | CSR_TRANS_DIR);
+ 	NCR5380_write(hostdata->c400_blk_cnt, len / 128);
+ 
+ 	for (start = 0; start < len; start += 128) {
+-		retries = 10000;
+-		while (1) {	/* monitor IRQ while waiting for host buffer */
+-			csr = NCR5380_read(hostdata->c400_ctl_status);
+-			if (!(csr & CSR_HOST_BUF_NOT_RDY))
+-				break;
+-			if (csr & CSR_GATED_53C80_IRQ) {
+-				basr = NCR5380_read(BUS_AND_STATUS_REG);
+-				if (!(basr & BASR_PHASE_MATCH) ||
+-				    (basr & BASR_BUSY_ERROR)) {
+-					printk("basr=0x%02x csr=0x%02x at start=%d\n", basr, csr, start);
+-					goto out_wait;
+-				}
+-			}
+-			if (retries-- < 1) {
+-				shost_printk(KERN_ERR, hostdata->host, "53C400r: host buffer not ready in time\n");
+-				NCR5380_write(hostdata->c400_ctl_status, CSR_RESET);
+-				NCR5380_write(hostdata->c400_ctl_status, CSR_BASE);
+-				goto out_wait;
+-			}
+-		}
++		if (NCR5380_poll_politely2(hostdata, hostdata->c400_ctl_status,
++		                           CSR_HOST_BUF_NOT_RDY, 0,
++		                           hostdata->c400_ctl_status,
++		                           CSR_GATED_53C80_IRQ,
++		                           CSR_GATED_53C80_IRQ, HZ / 64) < 0)
++			break;
+ 
+ 		if (hostdata->io_port && hostdata->io_width == 2)
+ 			insw(hostdata->io_port + hostdata->c400_host_buf,
+@@ -532,24 +542,14 @@ static inline int generic_NCR5380_pread(struct NCR5380_hostdata *hostdata,
+ 				hostdata->io + NCR53C400_host_buffer, 128);
+ 	}
+ 
+-out_wait:
+-	/* wait for 53C80 registers to be available */
+-	retries = 10000;
+-	while (!(NCR5380_read(hostdata->c400_ctl_status) & CSR_53C80_REG)) {
+-		if (retries-- < 1) {
+-			shost_printk(KERN_ERR, hostdata->host, "53C400r: 53C80 registers not ready in time\n");
+-			NCR5380_write(hostdata->c400_ctl_status, CSR_RESET);
+-			NCR5380_write(hostdata->c400_ctl_status, CSR_BASE);
+-			break;
+-		}
+-	}
++	result = wait_for_53c80_access(hostdata);
+ 
+ 	if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_END_DMA_TRANSFER))
+ 		pr_err("%s: No end dma signal (%d/%d)\n", __func__, start, len);
+ 
+-	hostdata->pdma_residual = len - start;
++	hostdata->pdma_residual = NCR5380_read(hostdata->c400_blk_cnt) * 128;
+ 
+-	return 0;
++	return result;
+ }
+ 
+ /**
+@@ -564,41 +564,19 @@ static inline int generic_NCR5380_pread(struct NCR5380_hostdata *hostdata,
+ static inline int generic_NCR5380_pwrite(struct NCR5380_hostdata *hostdata,
+                                          unsigned char *src, int len)
+ {
+-	int start, retries;
+-	u8 csr, basr;
++	int result;
++	int start;
+ 
+ 	NCR5380_write(hostdata->c400_ctl_status, CSR_BASE);
+ 	NCR5380_write(hostdata->c400_blk_cnt, len / 128);
+ 
+ 	for (start = 0; start < len; start += 128) {
+-		retries = 10000;
+-		while (1) {	/* monitor IRQ while waiting for host buffer */
+-			csr = NCR5380_read(hostdata->c400_ctl_status);
+-			if (!(csr & CSR_HOST_BUF_NOT_RDY))
+-				break;
+-			if (csr & CSR_GATED_53C80_IRQ) {
+-				basr = NCR5380_read(BUS_AND_STATUS_REG);
+-				if (!(basr & BASR_PHASE_MATCH) ||
+-				    (basr & BASR_BUSY_ERROR)) {
+-					printk("w basr=0x%02x csr=0x%02x at start=%d\n", basr, csr, start);
+-					/* the previous block was not written properly */
+-					start -= 2 * 128;
+-					if (start < 0)
+-						start = 0;
+-					goto out_wait;
+-				}
+-			}
+-			if (retries-- < 1) {
+-				shost_printk(KERN_ERR, hostdata->host, "53C400w: host buffer not ready in time\n");
+-				NCR5380_write(hostdata->c400_ctl_status, CSR_RESET);
+-				NCR5380_write(hostdata->c400_ctl_status, CSR_BASE);
+-				/* the previous block was not written properly */
+-				start -= 2 * 128;
+-				if (start < 0)
+-					start = 0;
+-				goto out_wait;
+-			}
+-		}
++		if (NCR5380_poll_politely2(hostdata, hostdata->c400_ctl_status,
++		                           CSR_HOST_BUF_NOT_RDY, 0,
++		                           hostdata->c400_ctl_status,
++		                           CSR_GATED_53C80_IRQ,
++		                           CSR_GATED_53C80_IRQ, HZ / 64) < 0)
++			break;
+ 
+ 		if (hostdata->io_port && hostdata->io_width == 2)
+ 			outsw(hostdata->io_port + hostdata->c400_host_buf,
+@@ -611,24 +589,12 @@ static inline int generic_NCR5380_pwrite(struct NCR5380_hostdata *hostdata,
+ 			            src + start, 128);
+ 	}
+ 
+-out_wait:
+-	/* wait for 53C80 registers to be available */
+-	udelay(4); /* DTC436 chip hangs without this */
+-	retries = 10000;
+-	while (!(NCR5380_read(hostdata->c400_ctl_status) & CSR_53C80_REG)) {
+-		udelay(4); /* DTC436 chip hangs without this */
+-		if (retries-- < 1) {
+-			shost_printk(KERN_ERR, hostdata->host, "53C400w: 53C80 registers not ready in time, start=%d, len=%d\n", start, len);
+-			NCR5380_write(hostdata->c400_ctl_status, CSR_RESET);
+-			NCR5380_write(hostdata->c400_ctl_status, CSR_BASE);
+-			break;
+-		}
+-	}
++	result = wait_for_53c80_access(hostdata);
+ 
+ 	if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_END_DMA_TRANSFER))
+ 		pr_err("%s: No end dma signal (%d/%d)\n", __func__, start, len);
+ 
+-	hostdata->pdma_residual = len - start;
++	hostdata->pdma_residual = NCR5380_read(hostdata->c400_blk_cnt) * 128;
+ 
+ 	if (hostdata->pdma_residual == 0 &&
+ 	    NCR5380_poll_politely(hostdata, TARGET_COMMAND_REG,
+@@ -637,7 +603,7 @@ static inline int generic_NCR5380_pwrite(struct NCR5380_hostdata *hostdata,
+ 		scmd_printk(KERN_ERR, hostdata->connected,
+ 		            "%s: Last Byte Sent timeout\n", __func__);
+ 
+-	return 0;
++	return result;
+ }
+ 
+ static int generic_NCR5380_dma_xfer_len(struct NCR5380_hostdata *hostdata,
