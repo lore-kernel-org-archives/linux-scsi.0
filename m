@@ -1,230 +1,78 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 22/35] scsi: Use Scsi_Host as argument for
- eh_host_reset_handler
-Date: Fri, 23 Jun 2017 16:32:05 +0000
-Message-ID: <1498235523.2735.2.camel@wdc.com>
-References: <1498222975-71858-1-git-send-email-hare@suse.de>
-         <1498222975-71858-23-git-send-email-hare@suse.de>
+From: Julia Lawall <julia.lawall@lip6.fr>
+Subject: Re: [PATCH] qla2xxx: Protect access to qpair members with qpair->qp_lock
+ (fwd)
+Date: Fri, 23 Jun 2017 12:34:18 -0400 (EDT)
+Message-ID: <alpine.DEB.2.20.1706231233150.2989@hadrien>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:9390 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752927AbdFWQdm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jun 2017 12:33:42 -0400
-In-Reply-To: <1498222975-71858-23-git-send-email-hare@suse.de>
-Content-Language: en-US
-Content-ID: <A47138AC6732824896E5EF6273838535@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, qla2xxx-upstream@qlogic.com, Himanshu Madhani <himanshu.madhani@cavium.com>, Johannes Thumshirn <jthumshirn@suse.de>Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>qla2xxx-upstream@qlogic.comHimanshu Madhani <himanshu.madhani@cavium.com>Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, 2017-06-23 at 15:02 +0200, Hannes Reinecke wrote:
-> diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
-> index 227dd2c..187bfaf 100644
-> --- a/drivers/scsi/eata.c
-> +++ b/drivers/scsi/eata.c
-> @@ -507,7 +507,7 @@
->  static int eata2x_release(struct Scsi_Host *);
->  static int eata2x_queuecommand(struct Scsi_Host *, struct scsi_cmnd *);
->  static int eata2x_eh_abort(struct scsi_cmnd *);
-> -static int eata2x_eh_host_reset(struct scsi_cmnd *);
-> +static int eata2x_eh_host_reset(struct Scsi_Host *);
->  static int eata2x_bios_param(struct scsi_device *, struct block_device *=
-,
->  			     sector_t, int *);
->  static int eata2x_slave_configure(struct scsi_device *);
-> @@ -1896,21 +1896,16 @@ static int eata2x_eh_abort(struct scsi_cmnd *SCar=
-g)
->  	panic("%s: abort, mbox %d, invalid cp_stat.\n", ha->board_name, i);
->  }
-> =20
-> -static int eata2x_eh_host_reset(struct scsi_cmnd *SCarg)
-> +static int eata2x_eh_host_reset(struct Scsi_Host *shost)
->  {
->  	unsigned int i, time, k, c, limit =3D 0;
-> -	int arg_done =3D 0;
->  	struct scsi_cmnd *SCpnt;
-> -	struct Scsi_Host *shost =3D SCarg->device->host;
->  	struct hostdata *ha =3D (struct hostdata *)shost->hostdata;
-> =20
-> -	scmd_printk(KERN_INFO, SCarg, "reset, enter.\n");
-> +	shost_printk(KERN_INFO, shost, "reset, enter.\n");
-> =20
->  	spin_lock_irq(shost->host_lock);
-> =20
-> -	if (SCarg->host_scribble =3D=3D NULL)
-> -		printk("%s: reset, inactive.\n", ha->board_name);
-> -
->  	if (ha->in_reset) {
->  		printk("%s: reset, exit, already in reset.\n", ha->board_name);
->  		spin_unlock_irq(shost->host_lock);
-> @@ -1967,9 +1962,6 @@ static int eata2x_eh_host_reset(struct scsi_cmnd *S=
-Carg)
->  		if (SCpnt->scsi_done =3D=3D NULL)
->  			panic("%s: reset, mbox %d, SCpnt->scsi_done =3D=3D NULL.\n",
->  			      ha->board_name, i);
-> -
-> -		if (SCpnt =3D=3D SCarg)
-> -			arg_done =3D 1;
->  	}
-> =20
->  	if (do_dma(shost->io_port, 0, RESET_PIO)) {
+Please check on whether an unlock is neeed before line 1965.
 
-Please isolate the "arg_done" removal into a separate patch.
+julia
 
-> @@ -865,23 +858,6 @@ static int __ips_eh_reset(struct scsi_cmnd *SC)
->  	if (!ha->active)
->  		return (FAILED);
-> =20
-> -	/* See if the command is on the copp queue */
-> -	item =3D ha->copp_waitlist.head;
-> -	while ((item) && (item->scsi_cmd !=3D SC))
-> -		item =3D item->next;
-> -
-> -	if (item) {
-> -		/* Found it */
-> -		ips_removeq_copp(&ha->copp_waitlist, item);
-> -		return (SUCCESS);
-> -	}
-> -
-> -	/* See if the command is on the wait queue */
-> -	if (ips_removeq_wait(&ha->scb_waitlist, SC)) {
-> -		/* command not sent yet */
-> -		return (SUCCESS);
-> -	}
-> -
->  	/* An explanation for the casual observer:                             =
- */
->  	/* Part of the function of a RAID controller is automatic error        =
- */
->  	/* detection and recovery.  As such, the only problem that physically  =
- */
+---------- Forwarded message ----------
+Date: Fri, 23 Jun 2017 15:23:00 +0800
+From: kbuild test robot <fengguang.wu@intel.com>
+To: kbuild@01.org
+Cc: Julia Lawall <julia.lawall@lip6.fr>
+Subject: Re: [PATCH] qla2xxx: Protect access to qpair members with
+    qpair->qp_lock
 
-Shouldn't this change be isolated into a separate patch too?
+CC: kbuild-all@01.org
+In-Reply-To: <20170622134325.26931-1-jthumshirn@suse.de>
 
-> diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-> index 3c63c29..906570a 100644
-> --- a/drivers/scsi/megaraid.c
-> +++ b/drivers/scsi/megaraid.c
-> @@ -1887,13 +1887,13 @@ static DEF_SCSI_QCMD(megaraid_queue)
-> =20
-> =20
->  static int
-> -megaraid_reset(struct scsi_cmnd *cmd)
-> +megaraid_reset(struct Scsi_Host *shost)
->  {
->  	adapter_t	*adapter;
->  	megacmd_t	mc;
->  	int		rval;
-> =20
-> -	adapter =3D (adapter_t *)cmd->device->host->hostdata;
-> +	adapter =3D (adapter_t *)shost->hostdata;
-> =20
->  #if MEGA_HAVE_CLUSTERING
->  	mc.cmd =3D MEGA_CLUSTER_CMD;
-> @@ -1909,7 +1909,7 @@ static DEF_SCSI_QCMD(megaraid_queue)
-> =20
->  	spin_lock_irq(&adapter->lock);
-> =20
-> -	rval =3D  megaraid_abort_and_reset(adapter, cmd, SCB_RESET);
-> +	rval =3D  megaraid_abort_and_reset(adapter, NULL, SCB_RESET);
-> =20
->  	/*
->  	 * This is required here to complete any completed requests
-> @@ -1948,7 +1948,7 @@ static DEF_SCSI_QCMD(megaraid_queue)
-> =20
->  		scb =3D list_entry(pos, scb_t, list);
-> =20
-> -		if (scb->cmd =3D=3D cmd) { /* Found command */
-> +		if (!cmd || scb->cmd =3D=3D cmd) { /* Found command */
-> =20
->  			scb->state |=3D aor;
-> =20
-> @@ -1977,7 +1977,7 @@ static DEF_SCSI_QCMD(megaraid_queue)
->  					"%s-[%x], driver owner\n",
->  					(aor=3D=3DSCB_ABORT) ? "ABORTING":"RESET",
->  					scb->idx);
-> -
-> +				cmd =3D scb->cmd;
->  				mega_free_scb(adapter, scb);
+Hi Johannes,
 
-This looks weird. Assigning scb->cmd to cmd will cause megaraid_abort_and_r=
-eset()
-to abort or reset the first command on pending_list if the cmd argument is =
-NULL.
-If the cmd argument is NULL, shouldn't all commands on pending_list be abor=
-ted or
-reset?
+[auto build test WARNING on scsi/for-next]
+[also build test WARNING on v4.12-rc6 next-20170622]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
 
-> -static int megasas_reset_bus_host(struct scsi_cmnd *scmd)
-> +static int megasas_reset_bus_host(struct Scsi_Host *shost)
->  {
->  	int ret;
->  	struct megasas_instance *instance;
-> =20
-> -	instance =3D (struct megasas_instance *)scmd->device->host->hostdata;
-> +	instance =3D (struct megasas_instance *)shost->hostdata;
-> =20
-> -	scmd_printk(KERN_INFO, scmd,
-> +	shost_printk(KERN_INFO, shost,
->  		"Controller reset is requested due to IO timeout\n"
-> -		"SCSI command pointer: (%p)\t SCSI host state: %d\t"
-> +		"SCSI host state: %d\t"
->  		" SCSI host busy: %d\t FW outstanding: %d\n",
-> -		scmd, scmd->device->host->shost_state,
-> -		atomic_read((atomic_t *)&scmd->device->host->host_busy),
-> +		shost->shost_state,
-> +		atomic_read((atomic_t *)&shost->host_busy),
->  		atomic_read(&instance->fw_outstanding));
+url:    https://github.com/0day-ci/linux/commits/Johannes-Thumshirn/qla2xxx-Protect-access-to-qpair-members-with-qpair-qp_lock/20170623-123844
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+:::::: branch date: 3 hours ago
+:::::: commit date: 3 hours ago
 
-Since host_busy already has type atomic_t and since you have to touch this
-code anyway, how about leaving out the (atomic_t *) cast?
+>> drivers/scsi/qla2xxx/qla_iocb.c:1965:3-9: preceding lock on line 1952
 
-> --- a/drivers/scsi/qla1280.c
-> +++ b/drivers/scsi/qla1280.c
-> @@ -1047,13 +1047,28 @@ static void qla1280_mailbox_timeout(unsigned long=
- __data)
->   *     Reset the specified adapter (both channels)
->   ***********************************************************************=
-***/
->  static int
-> -qla1280_eh_adapter_reset(struct scsi_cmnd *cmd)
-> +qla1280_eh_adapter_reset(struct Scsi_Host *shost)
->  {
->  	int rc;
-> +	struct scsi_qla_host *ha =3D (struct scsi_qla_host *)shost->hostdata;
-> =20
-> -	spin_lock_irq(cmd->device->host->host_lock);
-> -	rc =3D qla1280_error_action(cmd, ADAPTER_RESET);
-> -	spin_unlock_irq(cmd->device->host->host_lock);
-> +	spin_lock_irq(shost->host_lock);
-> +	if (qla1280_verbose) {
-> +		printk(KERN_INFO
-> +		       "scsi(%ld): Issued ADAPTER RESET\n",
-> +		       ha->host_no);
-> +		printk(KERN_INFO "scsi(%ld): I/O processing will "
-> +		       "continue automatically\n", ha->host_no);
-> +	}
-> +	ha->flags.reset_active =3D 1;
-> +
-> +	if (qla1280_abort_isp(ha) !=3D 0) {	/* it's dead */
-> +		rc =3D FAILED;
-> +	}
-> +
-> +	ha->flags.reset_active =3D 0;
-> +
-> +	spin_unlock_irq(shost->host_lock);
-> =20
->  	return rc;
->  }
+git remote add linux-review https://github.com/0day-ci/linux
+git remote update linux-review
+git checkout 4a35d720268dbe9ac016957a3c4fc644398d68ba
+vim +1965 drivers/scsi/qla2xxx/qla_iocb.c
 
-This change introduces some code duplication. Have you considered to isolat=
-e
-the ADAPTER_RESET code from qla1280_error_action() into a new function in a
-separate patch such that that new function can be called here instead of
-duplicating the ADAPTER_RESET code?
+d74595278 Michael Hernandez  2016-12-12  1946  	/* Only process protection or >16 cdb in this routine */
+d74595278 Michael Hernandez  2016-12-12  1947  	if (scsi_get_prot_op(cmd) == SCSI_PROT_NORMAL) {
+d74595278 Michael Hernandez  2016-12-12  1948  		if (cmd->cmd_len <= 16)
+d74595278 Michael Hernandez  2016-12-12  1949  			return qla2xxx_start_scsi_mq(sp);
+d74595278 Michael Hernandez  2016-12-12  1950  	}
+d74595278 Michael Hernandez  2016-12-12  1951
+4a35d7202 Johannes Thumshirn 2017-06-22 @1952  	spin_lock_irqsave(&qpair->qp_lock, flags);
+4a35d7202 Johannes Thumshirn 2017-06-22  1953
+d74595278 Michael Hernandez  2016-12-12  1954  	/* Setup qpair pointers */
+d74595278 Michael Hernandez  2016-12-12  1955  	rsp = qpair->rsp;
+d74595278 Michael Hernandez  2016-12-12  1956  	req = qpair->req;
+d74595278 Michael Hernandez  2016-12-12  1957
+d74595278 Michael Hernandez  2016-12-12  1958  	/* So we know we haven't pci_map'ed anything yet */
+d74595278 Michael Hernandez  2016-12-12  1959  	tot_dsds = 0;
+d74595278 Michael Hernandez  2016-12-12  1960
+d74595278 Michael Hernandez  2016-12-12  1961  	/* Send marker if required */
+d74595278 Michael Hernandez  2016-12-12  1962  	if (vha->marker_needed != 0) {
+d74595278 Michael Hernandez  2016-12-12  1963  		if (qla2x00_marker(vha, req, rsp, 0, 0, MK_SYNC_ALL) !=
+d74595278 Michael Hernandez  2016-12-12  1964  		    QLA_SUCCESS)
+d74595278 Michael Hernandez  2016-12-12 @1965  			return QLA_FUNCTION_FAILED;
+d74595278 Michael Hernandez  2016-12-12  1966  		vha->marker_needed = 0;
+d74595278 Michael Hernandez  2016-12-12  1967  	}
+d74595278 Michael Hernandez  2016-12-12  1968
 
-Bart.=
+:::::: The code at line 1965 was first introduced by commit
+:::::: d74595278f4ab192af66d9e60a9087464638beee scsi: qla2xxx: Add multiple queue pair functionality.
+
+:::::: TO: Michael Hernandez <michael.hernandez@cavium.com>
+:::::: CC: Martin K. Petersen <martin.petersen@oracle.com>
+
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
