@@ -1,27 +1,28 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2 1/2] hpsa: limit transfer length to 1MB
-Date: Fri, 23 Jun 2017 15:01:31 +0200
-Message-ID: <20170623130131.GD13014@linux-x5ow.site>
+Subject: Re: [PATCH v2 2/2] smartpqi: limit transfer length to 1MB
+Date: Fri, 23 Jun 2017 15:01:41 +0200
+Message-ID: <20170623130141.GE13014@linux-x5ow.site>
 References: <20170623094006.16807-1-ydfan@suse.com>
+ <20170623094006.16807-2-ydfan@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170623094006.16807-1-ydfan@suse.com>
+In-Reply-To: <20170623094006.16807-2-ydfan@suse.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Yadan Fan <ydfan@suse.com>
 Cc: don.brace@microsemi.com, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jun 23, 2017 at 05:40:05PM +0800, Yadan Fan wrote:
-> The hpsa firmware will bypass the cache for any request larger
+On Fri, Jun 23, 2017 at 05:40:06PM +0800, Yadan Fan wrote:
+> The smartpqi firmware will bypass the cache for any request larger
 > than 1MB, so we should cap the request size to avoid any
 > performance degradation in kernels later than v4.3
 > 
 > This degradation is caused from d2be537c3ba3568acd79cd178327b842e60d035e,
 > which changed max_sectors_kb to 1280k, but the hardware is able to
-> work fine with it, so the true fix should be from hpsa driver.
+> work fine with it, so the true fix should be from smartpqi driver.
 > 
 > Signed-off-by: Yadan Fan <ydfan@suse.com>
 > ---
