@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 31/35] zfcp: do not rely on scsi command for debugging message
-Date: Fri, 23 Jun 2017 15:02:51 +0200
-Message-ID: <1498222975-71858-32-git-send-email-hare@suse.de>
+Subject: [PATCH 23/35] qedf: drop bus reset handler
+Date: Fri, 23 Jun 2017 15:02:43 +0200
+Message-ID: <1498222975-71858-24-git-send-email-hare@suse.de>
 References: <1498222975-71858-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:32860 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:32834 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754223AbdFWNDb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1754217AbdFWNDb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Fri, 23 Jun 2017 09:03:31 -0400
 In-Reply-To: <1498222975-71858-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,145 +14,43 @@ List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-When generating debugging messages the code should not rely on
-a scsi command to be present.
+qedf has a host reset handler, but as the bus reset handler is
+a stub always returning SUCCESS the host reset is never invoked.
+So drop the bus reset handler.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/s390/scsi/zfcp_dbf.c  | 28 ++++++++++++++--------------
- drivers/s390/scsi/zfcp_dbf.h  | 10 +++++++---
- drivers/s390/scsi/zfcp_ext.h  |  4 ++--
- drivers/s390/scsi/zfcp_scsi.c |  9 ++++++---
- 4 files changed, 29 insertions(+), 22 deletions(-)
+ drivers/scsi/qedf/qedf_main.c | 11 -----------
+ 1 file changed, 11 deletions(-)
 
-diff --git a/drivers/s390/scsi/zfcp_dbf.c b/drivers/s390/scsi/zfcp_dbf.c
-index d5bf36e..f825a30 100644
---- a/drivers/s390/scsi/zfcp_dbf.c
-+++ b/drivers/s390/scsi/zfcp_dbf.c
-@@ -535,11 +535,10 @@ void zfcp_dbf_san_in_els(char *tag, struct zfcp_fsf_req *fsf)
-  * @sc: pointer to struct scsi_cmnd
-  * @fsf: pointer to struct zfcp_fsf_req
-  */
--void zfcp_dbf_scsi(char *tag, int level, struct scsi_cmnd *sc,
--		   struct zfcp_fsf_req *fsf)
-+void zfcp_dbf_scsi(struct zfcp_adapter *adapter, char *tag, int level,
-+		   int scsi_id, u64 scsi_lun,
-+		   struct scsi_cmnd *sc, struct zfcp_fsf_req *fsf)
- {
--	struct zfcp_adapter *adapter =
--		(struct zfcp_adapter *) sc->device->host->hostdata[0];
- 	struct zfcp_dbf *dbf = adapter->dbf;
- 	struct zfcp_dbf_scsi *rec = &dbf->scsi_buf;
- 	struct fcp_resp_with_ext *fcp_rsp;
-@@ -551,17 +550,18 @@ void zfcp_dbf_scsi(char *tag, int level, struct scsi_cmnd *sc,
- 
- 	memcpy(rec->tag, tag, ZFCP_DBF_TAG_LEN);
- 	rec->id = ZFCP_DBF_SCSI_CMND;
--	rec->scsi_result = sc->result;
--	rec->scsi_retries = sc->retries;
--	rec->scsi_allowed = sc->allowed;
--	rec->scsi_id = sc->device->id;
-+	rec->scsi_id = scsi_id;
- 	/* struct zfcp_dbf_scsi needs to be updated to handle 64bit LUNs */
--	rec->scsi_lun = (u32)sc->device->lun;
--	rec->host_scribble = (unsigned long)sc->host_scribble;
--
--	memcpy(rec->scsi_opcode, sc->cmnd,
--	       min((int)sc->cmd_len, ZFCP_DBF_SCSI_OPCODE));
--
-+	rec->scsi_lun = (u32)scsi_lun;
-+	if (sc) {
-+		rec->scsi_result = sc->result;
-+		rec->scsi_retries = sc->retries;
-+		rec->scsi_allowed = sc->allowed;
-+		rec->host_scribble = (unsigned long)sc->host_scribble;
-+
-+		memcpy(rec->scsi_opcode, sc->cmnd,
-+		       min((int)sc->cmd_len, ZFCP_DBF_SCSI_OPCODE));
-+	}
- 	if (fsf) {
- 		rec->fsf_req_id = fsf->req_id;
- 		fcp_rsp = (struct fcp_resp_with_ext *)
-diff --git a/drivers/s390/scsi/zfcp_dbf.h b/drivers/s390/scsi/zfcp_dbf.h
-index db186d4..09a9524 100644
---- a/drivers/s390/scsi/zfcp_dbf.h
-+++ b/drivers/s390/scsi/zfcp_dbf.h
-@@ -352,7 +352,8 @@ void _zfcp_dbf_scsi(char *tag, int level, struct scsi_cmnd *scmd,
- 					scmd->device->host->hostdata[0];
- 
- 	if (debug_level_enabled(adapter->dbf->scsi, level))
--		zfcp_dbf_scsi(tag, level, scmd, req);
-+		zfcp_dbf_scsi(adapter, tag, level, scmd->device->id,
-+			      scmd->device->lun, scmd, req);
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index 321ac3b..b06ef7c 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -629,16 +629,6 @@ static int qedf_eh_device_reset(struct scsi_cmnd *sc_cmd)
+ 	return qedf_initiate_tmf(sc_cmd, FCP_TMF_LUN_RESET);
  }
  
- /**
-@@ -401,17 +402,20 @@ void zfcp_dbf_scsi_abort(char *tag, struct scsi_cmnd *scmd,
-  * @flag: indicates type of reset (Target Reset, Logical Unit Reset)
-  */
- static inline
--void zfcp_dbf_scsi_devreset(char *tag, struct scsi_cmnd *scmnd, u8 flag)
-+void zfcp_dbf_scsi_devreset(struct zfcp_adapter *adapter, char *tag,
-+			    int id, u64 lun, u8 flag)
+-static int qedf_eh_bus_reset(struct scsi_cmnd *sc_cmd)
+-{
+-	QEDF_ERR(NULL, "BUS RESET Issued...\n");
+-	/*
+-	 * Essentially a no-op but return SUCCESS to prevent
+-	 * unnecessary escalation to the host reset handler.
+-	 */
+-	return SUCCESS;
+-}
+-
+ void qedf_wait_for_upload(struct qedf_ctx *qedf)
  {
- 	char tmp_tag[ZFCP_DBF_TAG_LEN];
- 
-+	if (!debug_level_enabled(adapter->dbf->scsi, 1))
-+		return;
- 	if (flag == FCP_TMF_TGT_RESET)
- 		memcpy(tmp_tag, "tr_", 3);
- 	else
- 		memcpy(tmp_tag, "lr_", 3);
- 
- 	memcpy(&tmp_tag[3], tag, 4);
--	_zfcp_dbf_scsi(tmp_tag, 1, scmnd, NULL);
-+	zfcp_dbf_scsi(adapter, tmp_tag, 1, id, lun, NULL, NULL);
- }
- 
- /**
-diff --git a/drivers/s390/scsi/zfcp_ext.h b/drivers/s390/scsi/zfcp_ext.h
-index 9afdbc3..57f1d4a 100644
---- a/drivers/s390/scsi/zfcp_ext.h
-+++ b/drivers/s390/scsi/zfcp_ext.h
-@@ -47,8 +47,8 @@ extern void zfcp_dbf_rec_run_lvl(int level, char *tag,
- extern void zfcp_dbf_san_req(char *, struct zfcp_fsf_req *, u32);
- extern void zfcp_dbf_san_res(char *, struct zfcp_fsf_req *);
- extern void zfcp_dbf_san_in_els(char *, struct zfcp_fsf_req *);
--extern void zfcp_dbf_scsi(char *, int, struct scsi_cmnd *,
--			  struct zfcp_fsf_req *);
-+extern void zfcp_dbf_scsi(struct zfcp_adapter *, char *, int, int,
-+			  u64, struct scsi_cmnd *, struct zfcp_fsf_req *);
- 
- /* zfcp_erp.c */
- extern void zfcp_erp_set_adapter_status(struct zfcp_adapter *, u32);
-diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-index e3160fc..5fada93 100644
---- a/drivers/s390/scsi/zfcp_scsi.c
-+++ b/drivers/s390/scsi/zfcp_scsi.c
-@@ -280,7 +280,8 @@ static int zfcp_task_mgmt_function(struct scsi_cmnd *scpnt, u8 tm_flags)
- 
- 		if (!(atomic_read(&adapter->status) &
- 		      ZFCP_STATUS_COMMON_RUNNING)) {
--			zfcp_dbf_scsi_devreset("nres", scpnt, tm_flags);
-+			zfcp_dbf_scsi_devreset(adapter, "nres", sdev->id,
-+					       sdev->lun, tm_flags);
- 			return SUCCESS;
- 		}
- 	}
-@@ -290,10 +291,12 @@ static int zfcp_task_mgmt_function(struct scsi_cmnd *scpnt, u8 tm_flags)
- 	wait_for_completion(&fsf_req->completion);
- 
- 	if (fsf_req->status & ZFCP_STATUS_FSFREQ_TMFUNCFAILED) {
--		zfcp_dbf_scsi_devreset("fail", scpnt, tm_flags);
-+		zfcp_dbf_scsi_devreset(adapter, "fail", sdev->id,
-+				       sdev->lun, tm_flags);
- 		retval = FAILED;
- 	} else {
--		zfcp_dbf_scsi_devreset("okay", scpnt, tm_flags);
-+		zfcp_dbf_scsi_devreset(adapter, "okay", sdev->id,
-+				       sdev->lun, tm_flags);
- 		zfcp_scsi_forget_cmnds(zfcp_sdev, tm_flags);
- 	}
- 
+ 	while (1) {
+@@ -716,7 +706,6 @@ static int qedf_slave_configure(struct scsi_device *sdev)
+ 	.eh_abort_handler	= qedf_eh_abort,
+ 	.eh_device_reset_handler = qedf_eh_device_reset, /* lun reset */
+ 	.eh_target_reset_handler = qedf_eh_target_reset, /* target reset */
+-	.eh_bus_reset_handler = qedf_eh_bus_reset,
+ 	.eh_host_reset_handler  = qedf_eh_host_reset,
+ 	.slave_configure	= qedf_slave_configure,
+ 	.dma_boundary = QED_HW_DMA_BOUNDARY,
 -- 
 1.8.5.6
