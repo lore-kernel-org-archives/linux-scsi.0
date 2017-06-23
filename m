@@ -1,34 +1,91 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCH] bnx2i: missing error code in bnx2i_ep_connect()
-Date: Fri, 23 Jun 2017 10:02:00 +0300
-Message-ID: <20170623070200.GA7922@elgon.mountain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: kernel-janitors-owner@vger.kernel.org
-To: QLogic-Storage-Upstream@qlogic.com, Michael Chan <mchan@broadcom.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH v2] qla2xxx: Protect access to qpair members with qpair->qp_lock
+Date: Fri, 23 Jun 2017 09:10:11 +0200
+Message-ID: <20170623071011.21184-1-jthumshirn@suse.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, qla2xxx-upstream@qlogic.com, Himanshu Madhani <himanshu.madhani@cavium.com>, Hannes Reinecke <hare@suse.de>, John Garry <john.garry@huawei.com>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-If bnx2i_map_ep_dbell_regs() then we accidentally return NULL instead
-of an error pointer.  It results in a NULL dereference in
-iscsi_if_ep_connect().
+In qla2xx_start_scsi_mq() and qla2xx_dif_start_scsi_mq() we grab the
+qpair->qp_lock but do access members of the qpair before having the lock.
+Re-order the locking sequence to have all read and write access to qpair
+members under the qpair->qp_lock.
 
-Fixes: cf4e6363859d ("[SCSI] bnx2i: Add bnx2i iSCSI driver.")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/scsi/qla2xxx/qla_iocb.c | 23 +++++++++++++----------
+ 1 file changed, 13 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index f32a66f89d25..03c104b47f31 100644
---- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -1909,7 +1909,8 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
+Changes to v1:
+* Use __qla2x00_marker() instead of qla2x00_marker which is fit to be called
+  with the qp_lock held (John)
+* Don't protect qpair->online and qpair->difdix_supported as it's not
+  needed (Hannes)
+
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index 8404f17f3c6c..c64036ddd365 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -1770,6 +1770,9 @@ qla2xxx_start_scsi_mq(srb_t *sp)
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct qla_qpair *qpair = sp->qpair;
  
- 	bnx2i_ep_active_list_add(hba, bnx2i_ep);
++	/* Acquire qpair specific lock */
++	spin_lock_irqsave(&qpair->qp_lock, flags);
++
+ 	/* Setup qpair pointers */
+ 	rsp = qpair->rsp;
+ 	req = qpair->req;
+@@ -1779,15 +1782,14 @@ qla2xxx_start_scsi_mq(srb_t *sp)
  
--	if (bnx2i_map_ep_dbell_regs(bnx2i_ep))
-+	rc = bnx2i_map_ep_dbell_regs(bnx2i_ep);
-+	if (rc)
- 		goto del_active_ep;
+ 	/* Send marker if required */
+ 	if (vha->marker_needed != 0) {
+-		if (qla2x00_marker(vha, req, rsp, 0, 0, MK_SYNC_ALL) !=
+-		    QLA_SUCCESS)
++		if (__qla2x00_marker(vha, req, rsp, 0, 0, MK_SYNC_ALL) !=
++		    QLA_SUCCESS) {
++			spin_unlock_irqrestore(&qpair->qp_lock, flags);
+ 			return QLA_FUNCTION_FAILED;
++		}
+ 		vha->marker_needed = 0;
+ 	}
  
- 	mutex_unlock(&hba->net_dev_lock);
+-	/* Acquire qpair specific lock */
+-	spin_lock_irqsave(&qpair->qp_lock, flags);
+-
+ 	/* Check for room in outstanding command list. */
+ 	handle = req->current_outstanding_cmd;
+ 	for (index = 1; index < req->num_outstanding_cmds; index++) {
+@@ -1942,6 +1944,8 @@ qla2xxx_dif_start_scsi_mq(srb_t *sp)
+ 			return qla2xxx_start_scsi_mq(sp);
+ 	}
+ 
++	spin_lock_irqsave(&qpair->qp_lock, flags);
++
+ 	/* Setup qpair pointers */
+ 	rsp = qpair->rsp;
+ 	req = qpair->req;
+@@ -1951,15 +1955,14 @@ qla2xxx_dif_start_scsi_mq(srb_t *sp)
+ 
+ 	/* Send marker if required */
+ 	if (vha->marker_needed != 0) {
+-		if (qla2x00_marker(vha, req, rsp, 0, 0, MK_SYNC_ALL) !=
+-		    QLA_SUCCESS)
++		if (__qla2x00_marker(vha, req, rsp, 0, 0, MK_SYNC_ALL) !=
++		    QLA_SUCCESS) {
++			spin_unlock_irqrestore(&qpair->qp_lock, flags);
+ 			return QLA_FUNCTION_FAILED;
++		}
+ 		vha->marker_needed = 0;
+ 	}
+ 
+-	/* Acquire ring specific lock */
+-	spin_lock_irqsave(&qpair->qp_lock, flags);
+-
+ 	/* Check for room in outstanding command list. */
+ 	handle = req->current_outstanding_cmd;
+ 	for (index = 1; index < req->num_outstanding_cmds; index++) {
+-- 
+2.12.3
