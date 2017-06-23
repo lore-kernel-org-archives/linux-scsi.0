@@ -1,67 +1,85 @@
-From: Willy Tarreau <w@1wt.eu>
-Subject: Re: Qlogic driver fix in backports induces target code regression.
-Date: Fri, 23 Jun 2017 20:16:47 +0200
-Message-ID: <20170623181647.GB25094@1wt.eu>
-References: <201706231745.v5NHjHVs031535@wind.enjellic.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH 33/35] scsi: Use scsi_target as argument for
+ eh_target_reset_handler()
+Date: Fri, 23 Jun 2017 18:34:25 +0000
+Message-ID: <1498242864.2735.15.camel@wdc.com>
+References: <1498222975-71858-1-git-send-email-hare@suse.de>
+         <1498222975-71858-34-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wtarreau.pck.nerim.net ([62.212.114.60]:53453 "EHLO 1wt.eu"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754237AbdFWSRF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 23 Jun 2017 14:17:05 -0400
-Content-Disposition: inline
-In-Reply-To: <201706231745.v5NHjHVs031535@wind.enjellic.com>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:39202 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754327AbdFWSe1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jun 2017 14:34:27 -0400
+In-Reply-To: <1498222975-71858-34-git-send-email-hare@suse.de>
+Content-Language: en-US
+Content-ID: <F9349940BEEE374E999A3D1C099CC350@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: greg@enjellic.com
-Cc: ben@decadent.org.uk, Quinn.Tran@cavium.com, Giridhar.Malavali@cavium.com, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net
+To: "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>
 
-Hi,
+On Fri, 2017-06-23 at 15:02 +0200, Hannes Reinecke wrote:
+> -static int zfcp_scsi_eh_target_reset_handler(struct scsi_cmnd *scpnt)
+> +/*
+> + * Note: We need to select a LUN as the storage array doesn't
+> + * necessarily supports LUN 0 and might refuse the target reset.
+> + */
+> +static int zfcp_scsi_eh_target_reset_handler(struct scsi_target *starget=
+)
 
-On Fri, Jun 23, 2017 at 12:45:17PM -0500, Dr. Greg Wettstein wrote:
-> Hi, I hope the week is ending well for everyone.
-> 
-> We just tracked this issue down and I wanted to bring it to the
-> attention of Willy and Ben in particular, since it is has a high
-> probability of negatively affecting storage consumers of the LTS
-> kernel series.
-> 
-> The following fix from the mainline kernel has been actively
-> backported to the LTS kernel series:
-> 
-> Commit ef86cb2 ("qla2xxx: Mark port lost when we receive an RSCN for it.")
-> 
-> This fix to the qla2xxx driver core provokes a regression in the
-> target code which will probabilistically hang a kernel which is
-> processing remote fibre-channel port deletion events.
-> 
-> The following commit from the mainline kernel fixes this:
-> 
-> Commit ba9f6f6 ("qla2xxx: Fix hardware lock/unlock issue causing kernel panic.)
-> 
-> This latter fix, while being tagged for 3.18+, does not appear as if
-> it is being picked up for backporting.
-> 
-> So a situation arises where target users will get hit by this
-> regression when they transition past the patch release which has the
-> first 'fix' in it.  We just got done checking 3.10.106 and 3.16.44 and
-> this situation is present in these most terminal LTS releases.
+A minor comment: I assume that "supports" should have been "support"?
 
-Indeed, regarding 3.10 it was merged in 3.10.85.
+> -static int pmcraid_eh_target_reset_handler(struct scsi_cmnd *scmd)
+> +static int pmcraid_eh_target_reset_handler(struct scsi_target *starget)
+>  {
+> -	scmd_printk(KERN_INFO, scmd,
+> +	struct Scsi_Host *shost =3D dev_to_shost(&starget->dev);
+> +	struct scsi_device *scsi_dev =3D NULL, *tmp;
+> +
+> +	shost_for_each_device(tmp, shost) {
+> +		if ((tmp->channel =3D=3D starget->channel) &&
+> +		    (tmp->id =3D=3D starget->id)) {
+> +			scsi_dev =3D tmp;
+> +			break;
+> +		}
+> +	}
+> +	if (!scsi_dev)
+> +		return FAILED;
+> +	sdev_printk(KERN_INFO, scsi_dev,
+>  		    "Doing target reset due to an I/O command timeout.\n");
+> -	return pmcraid_reset_device(scmd->device,
+> +	return pmcraid_reset_device(scsi_dev,
+>  				    PMCRAID_INTERNAL_TIMEOUT,
+>  				    RESET_DEVICE_TARGET);
+>  }
 
-> We are in the process of validating application of the second 'fix' to
-> the LTS series but a review of the patch doesn't suggest the potential
-> for negative effects.  The same cannot be said for not having the
-> fix.. :-)
-> 
-> Hopefully this is useful information.
+Is this sdev_printk() statement really useful? If any kernel messages are
+reported due to a reset, shouldn't that be done by the SCSI core instead of
+by a SCSI LLD?
 
-Sure it is. Given that the regression was introduced two years ago in
-our stable kernels, I guess there's no rush to revert the faulty fix
-and that we'll wait for your feedback on testing the second fix above.
-Please keep us informed about your progress and whether we need to
-backport this patch.
+>  void qedf_wait_for_upload(struct qedf_ctx *qedf)
+> diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mb=
+x.c
+> index f02a2ba..443bb29 100644
+> --- a/drivers/scsi/qla2xxx/qla_mbx.c
+> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
+> @@ -1337,7 +1337,6 @@ static int is_rom_cmd(uint16_t cmd)
+>  	struct req_que *req;
+>  	struct rsp_que *rsp;
+> =20
+> -	l =3D l;
+>  	vha =3D fcport->vha;
+> =20
+>  	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x103e,
 
-thanks!
-Willy
+That's a real gem ...
+
+Although I'm not familiar enough with all the drivers that are modified by
+this patch to do an in-depth review, as far as I can see the changes in thi=
+s
+patch look fine to me. Hence:
+
+Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>=
