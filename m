@@ -1,68 +1,51 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 21/35] zfcp: open-code fc_block_scsi_eh() for host reset
-Date: Fri, 23 Jun 2017 15:02:41 +0200
-Message-ID: <1498222975-71858-22-git-send-email-hare@suse.de>
+Subject: [PATCH 15/35] qlogicpti: move bus reset to host reset
+Date: Fri, 23 Jun 2017 15:02:35 +0200
+Message-ID: <1498222975-71858-16-git-send-email-hare@suse.de>
 References: <1498222975-71858-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:32837 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:32868 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752066AbdFWNDa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 23 Jun 2017 09:03:30 -0400
+        id S1754104AbdFWND3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 23 Jun 2017 09:03:29 -0400
 In-Reply-To: <1498222975-71858-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-When issuing a host reset we should be waiting for all
-ports to become unblocked; just waiting for one might
-be resulting in host reset to return too early.
+The bus reset function really is a host reset, so move it to
+eh_host_reset_handler().
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/s390/scsi/zfcp_scsi.c | 27 +++++++++++++++++++++++----
- 1 file changed, 23 insertions(+), 4 deletions(-)
+ drivers/scsi/qlogicpti.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-index 0678cf7..3d18659 100644
---- a/drivers/s390/scsi/zfcp_scsi.c
-+++ b/drivers/s390/scsi/zfcp_scsi.c
-@@ -311,13 +311,32 @@ static int zfcp_scsi_eh_target_reset_handler(struct scsi_cmnd *scpnt)
+diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
+index 69bfc0a..274ee1cc 100644
+--- a/drivers/scsi/qlogicpti.c
++++ b/drivers/scsi/qlogicpti.c
+@@ -1250,10 +1250,9 @@ static int qlogicpti_abort(struct scsi_cmnd *Cmnd)
+ 	return return_status;
+ }
  
- static int zfcp_scsi_eh_host_reset_handler(struct scsi_cmnd *scpnt)
+-static int qlogicpti_reset(struct scsi_cmnd *Cmnd)
++static int qlogicpti_reset(struct Scsi_Host *host)
  {
--	struct zfcp_scsi_dev *zfcp_sdev = sdev_to_zfcp(scpnt->device);
--	struct zfcp_adapter *adapter = zfcp_sdev->port->adapter;
--	int ret;
-+	struct Scsi_Host *host = scpnt->device->host;
-+	struct zfcp_adapter *adapter = (struct zfcp_adapter *)host->hostdata[0];
-+	int ret = 0;
-+	unsigned long flags;
-+	struct zfcp_port *port;
+ 	u_short param[6];
+-	struct Scsi_Host *host = Cmnd->device->host;
+ 	struct qlogicpti *qpti = (struct qlogicpti *) host->hostdata;
+ 	int return_status = SUCCESS;
  
- 	zfcp_erp_adapter_reopen(adapter, 0, "schrh_1");
- 	zfcp_erp_wait(adapter);
--	ret = fc_block_scsi_eh(scpnt);
-+retry_rport_blocked:
-+	spin_lock_irqsave(host->host_lock, flags);
-+	list_for_each_entry(port, &adapter->port_list, list) {
-+		struct fc_rport *rport = port->rport;
-+
-+		if (rport->port_state == FC_PORTSTATE_BLOCKED) {
-+			if (rport->flags & FC_RPORT_FAST_FAIL_TIMEDOUT)
-+				ret = FAST_IO_FAIL;
-+			else
-+				ret = NEEDS_RETRY;
-+			break;
-+		}
-+	}
-+	spin_unlock_irqrestore(host->host_lock, flags);
-+	if (ret == NEEDS_RETRY) {
-+		msleep(1000);
-+		goto retry_rport_blocked;
-+	}
- 	if (ret)
- 		return ret;
- 
+@@ -1283,7 +1282,7 @@ static int qlogicpti_reset(struct scsi_cmnd *Cmnd)
+ 	.queuecommand		= qlogicpti_queuecommand,
+ 	.slave_configure	= qlogicpti_slave_configure,
+ 	.eh_abort_handler	= qlogicpti_abort,
+-	.eh_bus_reset_handler	= qlogicpti_reset,
++	.eh_host_reset_handler	= qlogicpti_reset,
+ 	.can_queue		= QLOGICPTI_REQ_QUEUE_LEN,
+ 	.this_id		= 7,
+ 	.sg_tablesize		= QLOGICPTI_MAX_SG(QLOGICPTI_REQ_QUEUE_LEN),
 -- 
 1.8.5.6
