@@ -1,67 +1,43 @@
-From: "Dr. Greg Wettstein" <greg@wind.enjellic.com>
-Subject: Qlogic driver fix in backports induces target code regression.
-Date: Fri, 23 Jun 2017 12:45:17 -0500
-Message-ID: <201706231745.v5NHjHVs031535@wind.enjellic.com>
-Reply-To: greg@enjellic.com
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH] scsi/libata: Support variable-length cdb of ata
+ pass-thru(32).
+Date: Fri, 23 Jun 2017 18:13:12 +0000
+Message-ID: <1498241591.2735.13.camel@wdc.com>
+References: <1497697243-3724-1-git-send-email-dn3108@gmail.com>
+         <1498071149.2746.26.camel@wdc.com>
+         <CAKv8XUU-k0dFjHAu9G2rM+is4AZw9BKfsFDh1zG0zwq=GzSVkg@mail.gmail.com>
+         <1498238136.2735.8.camel@wdc.com>
+         <CAKv8XUWxJUxaWzJmJeSuOj7i7tv4_3w=iYmnNyxxGYXwnMwy4g@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wind.enjellic.com ([76.10.64.91]:38703 "EHLO wind.enjellic.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753786AbdFWSLB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 23 Jun 2017 14:11:01 -0400
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:14807 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754448AbdFWSNQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jun 2017 14:13:16 -0400
+In-Reply-To: <CAKv8XUWxJUxaWzJmJeSuOj7i7tv4_3w=iYmnNyxxGYXwnMwy4g@mail.gmail.com>
+Content-Language: en-US
+Content-ID: <7B10F4D819327446B1A27A37E5522D9F@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: w@1wt.eu, ben@decadent.org.uk
-Cc: Quinn.Tran@cavium.com, Giridhar.Malavali@cavium.com, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net
+To: "dn3108@gmail.com" <dn3108@gmail.com>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "tj@kernel.org" <tj@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hi, I hope the week is ending well for everyone.
+On Sat, 2017-06-24 at 02:59 +0900, Minwoo Im wrote:
+> I completely agree with you. ATA_32 was moved to variable length command =
+list.
 
-We just tracked this issue down and I wanted to bring it to the
-attention of Willy and Ben in particular, since it is has a high
-probability of negatively affecting storage consumers of the LTS
-kernel series.
+Thanks for having addressed all my comments. Since as far as I'm familiar
+with SCSI / ATA translation this patch looks fine to me, feel free to add
 
-The following fix from the mainline kernel has been actively
-backported to the LTS kernel series:
+Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
 
-Commit ef86cb2 ("qla2xxx: Mark port lost when we receive an RSCN for it.")
+Please note the following:
+- You will have to repost this patch with a proper description and as a
+  separate e-mail. See also
+  https://www.kernel.org/doc/Documentation/process/5.Posting.rst
+- The maintainer for the libata subsystem is Tejun Heo so you will need his
+  approval before this patch can be merged.
 
-This fix to the qla2xxx driver core provokes a regression in the
-target code which will probabilistically hang a kernel which is
-processing remote fibre-channel port deletion events.
-
-The following commit from the mainline kernel fixes this:
-
-Commit ba9f6f6 ("qla2xxx: Fix hardware lock/unlock issue causing kernel panic.)
-
-This latter fix, while being tagged for 3.18+, does not appear as if
-it is being picked up for backporting.
-
-So a situation arises where target users will get hit by this
-regression when they transition past the patch release which has the
-first 'fix' in it.  We just got done checking 3.10.106 and 3.16.44 and
-this situation is present in these most terminal LTS releases.
-
-We are in the process of validating application of the second 'fix' to
-the LTS series but a review of the patch doesn't suggest the potential
-for negative effects.  The same cannot be said for not having the
-fix.. :-)
-
-Hopefully this is useful information.
-
-Have a good weekend.
-
-As always,
-Dr. G.W. Wettstein, Ph.D.   Enjellic Systems Development, LLC.
-4206 N. 19th Ave.           Specializing in information infra-structure
-Fargo, ND  58102            development.
-PH: 701-281-1686
-FAX: 701-281-3949           EMAIL: greg@enjellic.com
-------------------------------------------------------------------------------
-"You and Uncle Pete drank the whole thing?  That was a $250.00 bottle
- of whisky.
-
- Yeah, it was good."
-                                -- Rick Engen
-                                   Resurrection.
-
--- 
+Bart.=
