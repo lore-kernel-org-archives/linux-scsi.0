@@ -1,42 +1,42 @@
-From: Zang Leigang <zangleigang@hisilicon.com>
-Subject: [PATCH] scsi: ufs: check link active or not after switch to HS mode
-Date: Sat, 24 Jun 2017 19:44:05 +0800
-Message-ID: <20170624114405.18475-1-zangleigang@hisilicon.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([45.249.212.187]:8794 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751272AbdFXLov (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 24 Jun 2017 07:44:51 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Christos Gkekas <chris.gekas@gmail.com>
+Subject: [PATCH] scsi: qedi: Remove comparison of u16 idx with zero.
+Date: Sat, 24 Jun 2017 17:24:45 +0100
+Message-ID: <1498321485-21677-1-git-send-email-chris.gekas@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: QLogic-Storage-Upstream@cavium.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Christos Gkekas <chris.gekas@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org
 
-Some device can successfully link and switch to HS mode. But failed
-to do more. ufshcd_verify_dev_init can help to find this earlier.
+Variable idx is defined as u16 thus statement (idx < 0) is
+always false and should be removed.
 
-Signed-off-by: Zang Leigang <zangleigang@hisilicon.com>
+Signed-off-by: Christos Gkekas <chris.gekas@gmail.com>
+---
+ drivers/scsi/qedi/qedi_fw.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index ffe8d8608818..eb03388fc4bd 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6373,6 +6373,14 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 					__func__, ret);
- 			goto out;
- 		}
-+
-+		/*
-+		 * Some device lost link after switch to HS mode. Check if
-+		 * connect is established here.
-+		 */
-+		ret = ufshcd_verify_dev_init(hba);
-+		if (ret)
-+			goto out;
- 	}
+diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
+index e937490..19254bd 100644
+--- a/drivers/scsi/qedi/qedi_fw.c
++++ b/drivers/scsi/qedi/qedi_fw.c
+@@ -333,7 +333,7 @@ static void qedi_get_rq_bdq_buf(struct qedi_ctx *qedi,
  
- 	/* set the state as operational after switching to desired gear */
+ 	/* Obtain buffer address from rqe_opaque */
+ 	idx = cqe->rqe_opaque.lo;
+-	if ((idx < 0) || (idx > (QEDI_BDQ_NUM - 1))) {
++	if (idx > (QEDI_BDQ_NUM - 1)) {
+ 		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_CONN,
+ 			  "wrong idx %d returned by FW, dropping the unsolicited pkt\n",
+ 			  idx);
+@@ -370,7 +370,7 @@ static void qedi_put_rq_bdq_buf(struct qedi_ctx *qedi,
+ 
+ 	/* Obtain buffer address from rqe_opaque */
+ 	idx = cqe->rqe_opaque.lo;
+-	if ((idx < 0) || (idx > (QEDI_BDQ_NUM - 1))) {
++	if (idx > (QEDI_BDQ_NUM - 1)) {
+ 		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_CONN,
+ 			  "wrong idx %d returned by FW, dropping the unsolicited pkt\n",
+ 			  idx);
 -- 
-2.13.0
+2.7.4
