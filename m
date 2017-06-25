@@ -1,42 +1,49 @@
-From: Christos Gkekas <chris.gekas@gmail.com>
-Subject: [PATCH] scsi: qedi: Remove comparison of u16 idx with zero.
-Date: Sat, 24 Jun 2017 17:24:45 +0100
-Message-ID: <1498321485-21677-1-git-send-email-chris.gekas@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: QLogic-Storage-Upstream@cavium.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Christos Gkekas <chris.gekas@gmail.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [GIT PULL] target fixes for v4.12-rc7
+Date: Sat, 24 Jun 2017 21:38:07 -0700
+Message-ID: <1498365487.28997.90.camel@haakon3.risingtidesystems.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:37699 "EHLO
+        linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750975AbdFYEiJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Jun 2017 00:38:09 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-Variable idx is defined as u16 thus statement (idx < 0) is
-always false and should be removed.
+Hi Linus,
 
-Signed-off-by: Christos Gkekas <chris.gekas@gmail.com>
----
- drivers/scsi/qedi/qedi_fw.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Here are the target-pending fixes for v4.12-rc7 that have been queued up
+for the last 2 weeks.  Please go ahead and pull from:
 
-diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
-index e937490..19254bd 100644
---- a/drivers/scsi/qedi/qedi_fw.c
-+++ b/drivers/scsi/qedi/qedi_fw.c
-@@ -333,7 +333,7 @@ static void qedi_get_rq_bdq_buf(struct qedi_ctx *qedi,
- 
- 	/* Obtain buffer address from rqe_opaque */
- 	idx = cqe->rqe_opaque.lo;
--	if ((idx < 0) || (idx > (QEDI_BDQ_NUM - 1))) {
-+	if (idx > (QEDI_BDQ_NUM - 1)) {
- 		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_CONN,
- 			  "wrong idx %d returned by FW, dropping the unsolicited pkt\n",
- 			  idx);
-@@ -370,7 +370,7 @@ static void qedi_put_rq_bdq_buf(struct qedi_ctx *qedi,
- 
- 	/* Obtain buffer address from rqe_opaque */
- 	idx = cqe->rqe_opaque.lo;
--	if ((idx < 0) || (idx > (QEDI_BDQ_NUM - 1))) {
-+	if (idx > (QEDI_BDQ_NUM - 1)) {
- 		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_CONN,
- 			  "wrong idx %d returned by FW, dropping the unsolicited pkt\n",
- 			  idx);
--- 
-2.7.4
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
+
+This includes:
+
+- Fix a TMR related kref underflow detected by the recent refcount_t 
+  conversion in upstream.
+- Fix a iscsi-target corner case during explicit connection logout 
+  timeout failure.
+- Address last fallout in iscsi-target immediate data handling from
+  v4.4 target-core now allowing control CDB payload underflow.
+
+Thank you,
+
+--nab
+
+Nicholas Bellinger (3):
+  target: Fix kref->refcount underflow in transport_cmd_finish_abort
+  iscsi-target: Fix delayed logout processing greater than
+    SECONDS_FOR_LOGOUT_COMP
+  iscsi-target: Reject immediate data underflow larger than SCSI
+    transfer length
+
+ drivers/target/iscsi/iscsi_target.c    | 22 ++++++++++++++++++++--
+ drivers/target/target_core_internal.h  |  2 +-
+ drivers/target/target_core_tmr.c       | 16 ++++++++--------
+ drivers/target/target_core_transport.c |  9 ++++++---
+ 4 files changed, 35 insertions(+), 14 deletions(-)
