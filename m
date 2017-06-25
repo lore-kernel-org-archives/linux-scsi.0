@@ -1,142 +1,166 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: [PATCH v2 0/5] g_NCR5380: PDMA fixes and cleanup
-Date: Sun, 25 Jun 2017 11:26:23 +0200
-Message-ID: <201706251126.23739.linux@rainbow-software.org>
-References: <cover.1498285948.git.fthain@telegraphics.com.au>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 196191] New: NULL pointer dereference at
+ beiscsi_process_cq+0x6f6
+Date: Sun, 25 Jun 2017 18:30:26 +0000
+Message-ID: <bug-196191-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-1b.atlantis.sk ([80.94.52.26]:57156 "EHLO
-        smtp-1b.atlantis.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751321AbdFYJ0j (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Jun 2017 05:26:39 -0400
-In-Reply-To: <cover.1498285948.git.fthain@telegraphics.com.au>
-Content-Disposition: inline
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:33114 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751244AbdFYSae (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 25 Jun 2017 14:30:34 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 6265A2861F
+        for <linux-scsi@vger.kernel.org>; Sun, 25 Jun 2017 18:30:33 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>
+To: linux-scsi@kernel.org
 
-On Saturday 24 June 2017 08:37:36 Finn Thain wrote:
-> Ondrej, would you please test this new series?
->
-> Changed since v1:
-> - PDMA transfer residual is calculated earlier.
-> - End of DMA flag check is now polled (if there is any residual).
->
->
-> Finn Thain (2):
->   g_NCR5380: Limit sg_tablesize to avoid PDMA read overruns on DTC436
->   g_NCR5380: Cleanup comments and whitespace
->
-> Ondrej Zary (3):
->   g_NCR5380: Fix PDMA transfer size
->   g_NCR5380: End PDMA transfer correctly on target disconnection
->   g_NCR5380: Re-work PDMA loops
->
->  drivers/scsi/g_NCR5380.c | 231
-> ++++++++++++++++++++++------------------------- 1 file changed, 107
-> insertions(+), 124 deletions(-)
+https://bugzilla.kernel.org/show_bug.cgi?id=196191
 
-It mostly works, but there are some problems:
+            Bug ID: 196191
+           Summary: NULL pointer dereference at beiscsi_process_cq+0x6f6
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 4.9.30-2~bpo8+1 (Debian)
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: Other
+          Assignee: scsi_drivers-other@kernel-bugs.osdl.org
+          Reporter: wferi@niif.hu
+        Regression: No
 
-It's not reliable - we continue the data transfer after poll_politely2
-returns zero but we don't know if it returned because of host buffer
-being ready of because of an IRQ. So if a device disconnects during write,
-we continue to fill the buffer and only then find out that wait for
-53c80 registers timed out. Then PDMA gets disabled:
-[ 3458.774251] sd 2:0:1:0: [sdb] tag#0 53c80 registers not accessible, device will be reset
-[ 3458.774251] sd 2:0:1:0: [sdb] tag#0 switching to slow handshake
+An iSCSI-booted server occasionally halts with following console log during
+bootup:
 
-We can just reset and continue with a new PDMA transfer. Found no problems
-with reads. But when this happens during a write, we might have lost some
-data buffers that we need to transfer again. The chip's PDMA block counter
-does not seem to be very helpful here - testing shows that either one buffer
-is missing in the file or is duplicated.
+    [  OK  ] Reached target Network is Online.
+             Starting LSB: Starts and stops the iSCSI initiator s...ault
+targets...
+    [  214.044354] iscsi: registered transport (tcp)
+    [  214.316086] iscsi: registered transport (iser)
+    [  217.293303] hb: link status definitely up for interface enp5s0f5, 200
+Mbps full duplex
+    [  217.709239] cloud: link status definitely up for interface enp5s0f7,
+10000 Mbps full duplex
+    [  218.438152] BUG: unable to handle kernel NULL pointer dereference at    
+      (null)
+    [  218.463932] IP: [<ffffffffc05c5256>] beiscsi_process_cq+0x6f6/0xa00
+[be2iscsi]
+    [  218.487703] PGD 0 [  218.493722] 
+    [  218.498607] Oops: 0000 [#1] SMP
+    [  218.508917] Modules linked in: ib_iser rdma_cm iw_cm ib_cm ib_core
+iscsi_tcp libiscsi_tcp bonding ext4 crc16 jbd2 crc32c_generic fscrypto ecb
+mbcache intel_rapl sb_edac edac_core x86_pkg_temp_thermal intel_powerclamp
+coretemp kvm_intel kvm irqbypass crct10dif_pclmul crc32_pclmul
+ghash_clmulni_intel intel_cstate joydev iTCO_wdt iTCO_vendor_support evdev
+intel_uncore mgag200 ttm drm_kms_helper pcspkr mei_me intel_rapl_perf drm
+lpc_ich i2c_algo_bit mei mfd_core shpchp wmi ac button acpi_pad
+acpi_power_meter ip6t_REJECT nf_reject_ipv6 nf_log_ipv6 nf_conntrack_ipv6
+nf_defrag_ipv6 ip6table_filter ipmi_watchdog ip6_tables ipt_REJECT
+nf_reject_ipv4 nf_conntrack_ipv4 nf_defrag_ipv4 xt_tcpudp nf_log_ipv4
+nf_log_common xt_LOG xt_limit xt_recent xt_multiport xt_conntrack ipmi_si
+nf_conntrack ipmi_poweroff iptable_filter ipmi_devintf ip_tables
+ipmi_msghandler x_tables configfs autofs4 xfs libcrc32c dm_service_time
+dm_multipath dm_mod sg sd_mod hid_generic usbhid hid be2iscsi crc32c_intel
+libiscsi ehci_pci aesni_intel aes_x86_64 scsi_transport_iscsi glue_helper
+ehci_hcd iscsi_boot_sysfs lrw gf128mul ablk_helper i2c_i801 cryptd usbcore
+i2c_smbus usb_common scsi_mod be2net
+    [  218.847642] CPU: 0 PID: 0 Comm: swapper/0 Not tainted
+4.9.0-0.bpo.3-amd64 #1 Debian 4.9.30-2~bpo8+1
+    [  218.877399] Hardware name: FUJITSU PRIMERGY BX924 S4/D3143-B1, BIOS
+V4.6.5.4 R1.13.0 for D3143-B1x 07/16/2015
+    [  218.910016] task: ffffffffb640e540 task.stack: ffffffffb6400000
+    [  218.929476] RIP: 0010:[<ffffffffc05c5256>]  [<ffffffffc05c5256>]
+beiscsi_process_cq+0x6f6/0xa00 [be2iscsi]
+    [  218.961249] RSP: 0000:ffff95bfbfa03e48  EFLAGS: 00010297
+    [  218.978707] RAX: ffff95bfb5100e00 RBX: 0000000000000001 RCX:
+0000000000000005
+    [  219.002171] RDX: 0000000000000001 RSI: 0000000000000000 RDI:
+ffff95bfb532d504
+    [  219.025636] RBP: 0000000000000001 R08: 0000000003fb0001 R09:
+0000000000011bcd
+    [  219.049097] R10: 00000000594e5a87 R11: ffff95bfb551fd18 R12:
+ffff95bfb2822208
+    [  219.072562] R13: 0000000000000005 R14: ffff95bfb2818810 R15:
+ffff95bfb2557d40
+    [  219.096026] FS:  0000000000000000(0000) GS:ffff95bfbfa00000(0000)
+knlGS:0000000000000000
+    [  219.122634] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+    [  219.141521] CR2: 0000000000000000 CR3: 00000017c5a07000 CR4:
+00000000001406f0
+    [  219.164986] Stack:
+    [  219.171579]  0000000080202f00 0000000ab86fc200 ffff95bfb2818d70
+ffff95bfb87000e2
+    [  219.195943]  ffff95bfb532d504 ffff95bfb5100e00 ffff95bfb551fd18
+01ff95bf00011bcd
+    [  219.220310]  00000000000000fe 0000000000000000 ffff95bf00008100
+ffff95bfb86fa018
+    [  219.244675] Call Trace:
+    [  219.252699]  <IRQ> [  219.259008]  [<ffffffffc05c5628>] ?
+be_iopoll+0xc8/0x170 [be2iscsi]
+    [  219.279627]  [<ffffffffb5b58d64>] ? irq_poll_softirq+0xa4/0xd0
+    [  219.298813]  [<ffffffffb5e0a2e6>] ? __do_softirq+0x106/0x292
+    [  219.317430]  [<ffffffffb587dbe8>] ? irq_exit+0x98/0xa0
+    [  219.334317]  [<ffffffffb5e0a02f>] ? do_IRQ+0x4f/0xd0
+    [  219.334317]  [<ffffffffb5e0a02f>] ? do_IRQ+0x4f/0xd0
+    [  219.350635]  [<ffffffffb5e08142>] ? common_interrupt+0x82/0x82
+    [  219.369810]  <EOI> [  219.376123]  [<ffffffffb5ccce93>] ?
+cpuidle_enter_state+0x113/0x260
+    [  219.396741]  [<ffffffffb58bc09e>] ? cpu_startup_entry+0x17e/0x260
+    [  219.416785]  [<ffffffffb6549f84>] ? start_kernel+0x46d/0x48d
+    [  219.435392]  [<ffffffffb6549120>] ? early_idt_handler_array+0x120/0x120
+    [  219.457141]  [<ffffffffb65495b9>] ? x86_64_start_kernel+0x152/0x176
+    [  219.477745] Code: 00 0f b6 44 24 50 c6 06 22 88 56 01 88 46 02 44 89 c8
+0f c8 89 46 1c 0f b6 44 24 40 41 8d 44 01 ff 0f c8 89 46 20 eb ac 48 8b 30 <f6>
+06 3f 0f 85 bb 00 00 00 49 8b 3b e9 74 ff ff ff 41 f6 86 10 
+    [  219.540521] RIP  [<ffffffffc05c5256>] beiscsi_process_cq+0x6f6/0xa00
+[be2iscsi]
+    [  219.564571]  RSP <ffff95bfbfa03e48>
+    [  219.576023] CR2: 0000000000000000
+    [  219.586917] ---[ end trace f9ec7ddab1cda260 ]---
+    [  219.722293] Kernel panic - not syncing: Fatal exception in interrupt
+    [  219.743253] Kernel Offset: 0x34800000 from 0xffffffff81000000
+(relocation range: 0xffffffff80000000-0xffffffffbfffffff)
+    [  219.898801] ---[ end Kernel panic - not syncing: Fatal exception in
+interrupt
 
-That's why my code had separate host buffer ready and IRQ checks. Host
-buffer first - if it's ready, transfer the data. If not, check for IRQ - 
-if it was an error, rollback 2 buffers (the same if the host buffer is not
-ready in time).
+This is what gdb has to say about the address:
 
+    (gdb) list *(beiscsi_process_cq+0x6f6)
+    0xa286 is in beiscsi_process_cq (./drivers/scsi/be2iscsi/be_main.c:1356).
+    1351        
+    1352                spin_lock_bh(&session->back_lock);
+    1353                switch (type) {
+    1354                case HWH_TYPE_IO:
+    1355                case HWH_TYPE_IO_RD:
+    1356                        if ((task->hdr->opcode & ISCSI_OPCODE_MASK) ==
+    1357                             ISCSI_OP_NOOP_OUT)
+    1358                                be_complete_nopin_resp(beiscsi_conn,
+task, &csol_cqe);
+    1359                        else
+    1360                                be_complete_io(beiscsi_conn, task,
+&csol_cqe);
 
+and a disassembly around 0x6f6=1782:
 
-There's also a performance regression on DTC436 - the sg_tablesize limit
-affects performance badly.
-Before:
-# hdparm -t --direct /dev/sdb
+    1354                case HWH_TYPE_IO:
+    1355                case HWH_TYPE_IO_RD:
+    1356                        if ((task->hdr->opcode & ISCSI_OPCODE_MASK) ==
+       0x000000000000a283 <+1779>:      mov    (%rax),%rsi
+       0x000000000000a286 <+1782>:      testb  $0x3f,(%rsi)
+       0x000000000000a289 <+1785>:      jne    0xa34a <beiscsi_process_cq+1978>
+       0x000000000000a28f <+1791>:      mov    (%r11),%rdi
+       0x000000000000a292 <+1794>:      jmpq   0xa20b <beiscsi_process_cq+1659>
 
-/dev/sdb:
- Timing O_DIRECT disk reads:   4 MB in  3.21 seconds =   1.25 MB/sec
-
-Now:
-# hdparm -t --direct /dev/sdb
-
-/dev/sdb:
- Timing O_DIRECT disk reads:   4 MB in  4.89 seconds = 837.69 kB/sec
-
-We should limit the transfer size instead:
---- a/drivers/scsi/g_NCR5380.c
-+++ b/drivers/scsi/g_NCR5380.c
-@@ -45,7 +45,8 @@
-        int c400_blk_cnt; \
-        int c400_host_buf; \
-        int io_width; \
--       int pdma_residual
-+       int pdma_residual; \
-+       int board;
-
- #define NCR5380_dma_xfer_len            generic_NCR5380_dma_xfer_len
- #define NCR5380_dma_recv_setup          generic_NCR5380_pread
-@@ -247,7 +248,6 @@ static int generic_NCR5380_init_one(struct scsi_host_template *tpnt,
-        case BOARD_DTC3181E:
-                ports = dtc_3181e_ports;
-                magic = ncr_53c400a_magic;
--               tpnt->sg_tablesize = 1;
-                break;
-        }
-
-@@ -317,6 +317,7 @@ static int generic_NCR5380_init_one(struct scsi_host_template *tpnt,
-        }
-        hostdata = shost_priv(instance);
-
-+       hostdata->board = board;
-        hostdata->io = iomem;
-        hostdata->region_size = region_size;
-
-@@ -625,6 +626,9 @@ static int generic_NCR5380_dma_xfer_len(struct NCR5380_hostdata *hostdata,
-        /* 53C400 datasheet: non-modulo-128-byte transfers should use PIO */
-        if (transfersize % 128)
-                transfersize = 0;
-+       /* Limit transfers to 512B to prevent random write corruption on DTC */
-+       if (hostdata->board == BOARD_DTC3181E && transfersize > 512)
-+               transfersize = 512;
-
-        return min(transfersize, DMA_MAX_SIZE);
- }
-
-
-No data corruption and no performance regression:
-# hdparm -t --direct /dev/sdb
-
-/dev/sdb:
- Timing O_DIRECT disk reads:   4 MB in  3.25 seconds =   1.23 MB/sec
-
-As the data corruption affects only writes, we could keep transfersize
-unlimited for reads:
-+       /* Limit write transfers to 512B to prevent random corruption on DTC */
-+       if (hostdata->board == BOARD_DTC3181E &&
-+           cmd->sc_data_direction == DMA_TO_DEVICE && transfersize > 512)
-+               transfersize = 512;
-
-So we can get some performance gain at least for reads:
-# hdparm -t --direct /dev/sdb
-
-/dev/sdb:
- Timing O_DIRECT disk reads:   6 MB in  4.17 seconds =   1.44 MB/sec
-
+I guess `task->hdr` is NULL at this point.
 
 -- 
-Ondrej Zary
+You are receiving this mail because:
+You are watching the assignee of the bug.
