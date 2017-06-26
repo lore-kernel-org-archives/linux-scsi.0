@@ -1,68 +1,57 @@
 From: "Dupuis, Chad" <chad.dupuis@cavium.com>
-Subject: [PATCH 4/7] bnx2fc: Adjust bnx2fc_npiv_create_vports for WWNNs from NVRAM that are zero.
-Date: Mon, 26 Jun 2017 08:59:35 -0700
-Message-ID: <20170626155938.2091-5-chad.dupuis@cavium.com>
+Subject: [PATCH 5/7] bnx2fc: If IO is still in cleanup then do not return to SCSI layer.
+Date: Mon, 26 Jun 2017 08:59:36 -0700
+Message-ID: <20170626155938.2091-6-chad.dupuis@cavium.com>
 References: <20170626155938.2091-1-chad.dupuis@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0064.outbound.protection.outlook.com ([104.47.32.64]:22198
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-bn3nam01on0055.outbound.protection.outlook.com ([104.47.33.55]:28710
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751739AbdFZP7w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 26 Jun 2017 11:59:52 -0400
+        id S1751592AbdFZP7y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 26 Jun 2017 11:59:54 -0400
 In-Reply-To: <20170626155938.2091-1-chad.dupuis@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, QLogic-Storage-Upstream@cavium.com
 
-Some vports addresses stored in NVRAM may have zero for the WWNN.  Adjust
-the WWNN that we'll use to be the same as the WWPN.
+In eh_abort, driver is calling scsi->done() for a IO for which cleanup is
+pending. As the IO is outstanding with the firmware, it may do DMA
+associated with the IO. This may lead to heap corruption.
+
+Do not complete the IO for which cleanup is still pending. Return failure
+from eh_abort and let the SCSI-ml retry the IO.
 
 Signed-off-by: Chad Dupuis <chad.dupuis@cavium.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 17 ++++++++++++++++-
- 1 file changed, 16 insertions(+), 1 deletion(-)
+ drivers/scsi/bnx2fc/bnx2fc_io.c | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index d9f9c56..31aeb02 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -2139,6 +2139,9 @@ static uint bnx2fc_npiv_create_vports(struct fc_lport *lport,
- {
- 	struct fc_vport_identifiers vpid;
- 	uint i, created = 0;
-+	u64 wwnn = 0;
-+	char wwpn_str[32];
-+	char wwnn_str[32];
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+index 6e8b9be..5b6153f 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -1167,16 +1167,11 @@ int bnx2fc_eh_abort(struct scsi_cmnd *sc_cmd)
+ 		printk(KERN_ERR PFX "eh_abort: io_req (xid = 0x%x) "
+ 				"not on active_q\n", io_req->xid);
+ 		/*
+-		 * This condition can happen only due to the FW bug,
+-		 * where we do not receive cleanup response from
+-		 * the FW. Handle this case gracefully by erroring
+-		 * back the IO request to SCSI-ml
++		 * The IO is still with the FW.
++		 * Return failure and let SCSI-ml retry eh_abort.
+ 		 */
+-		bnx2fc_scsi_done(io_req, DID_ABORT);
+-
+-		kref_put(&io_req->refcount, bnx2fc_cmd_release);
+ 		spin_unlock_bh(&tgt->tgt_lock);
+-		return SUCCESS;
++		return FAILED;
+ 	}
  
- 	if (npiv_tbl->count > MAX_NPIV_ENTRIES) {
- 		BNX2FC_HBA_DBG(lport, "Exceeded count max of npiv table\n");
-@@ -2157,11 +2160,23 @@ static uint bnx2fc_npiv_create_vports(struct fc_lport *lport,
- 	vpid.disable = false;
- 
- 	for (i = 0; i < npiv_tbl->count; i++) {
--		vpid.node_name = wwn_to_u64(npiv_tbl->wwnn[i]);
-+		wwnn = wwn_to_u64(npiv_tbl->wwnn[i]);
-+		if (wwnn == 0) {
-+			/*
-+			 * If we get a 0 element from for the WWNN then assume
-+			 * the WWNN should be the same as the physical port.
-+			 */
-+			wwnn = lport->wwnn;
-+		}
-+		vpid.node_name = wwnn;
- 		vpid.port_name = wwn_to_u64(npiv_tbl->wwpn[i]);
- 		scnprintf(vpid.symbolic_name, sizeof(vpid.symbolic_name),
- 		    "NPIV[%u]:%016llx-%016llx",
- 		    created, vpid.port_name, vpid.node_name);
-+		fcoe_wwn_to_str(vpid.node_name, wwnn_str, sizeof(wwnn_str));
-+		fcoe_wwn_to_str(vpid.port_name, wwpn_str, sizeof(wwpn_str));
-+		BNX2FC_HBA_DBG(lport, "Creating vport %s:%s.\n", wwnn_str,
-+		    wwpn_str);
- 		if (fc_vport_create(lport->host, 0, &vpid))
- 			created++;
- 		else
+ 	/*
 -- 
 1.8.5.6
