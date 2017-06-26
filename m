@@ -1,35 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: hisi_sas: redefine hisi_sas_phy.phy_type as u32
-Date: Mon, 26 Jun 2017 13:41:33 -0400
-Message-ID: <yq1shim4pf6.fsf@oracle.com>
-References: <1498472848-174945-1-git-send-email-john.garry@huawei.com>
+Subject: Re: [PATCH] scsi: hpsa: fix spelling mistake: "encrypytion" -> "encryption"
+Date: Mon, 26 Jun 2017 13:42:16 -0400
+Message-ID: <yq1o9ta4pdz.fsf@oracle.com>
+References: <20170626133110.23590-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:25287 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751101AbdFZRls (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2017 13:41:48 -0400
-In-Reply-To: <1498472848-174945-1-git-send-email-john.garry@huawei.com> (John
-        Garry's message of "Mon, 26 Jun 2017 18:27:28 +0800")
+Received: from aserp1040.oracle.com ([141.146.126.69]:50280 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751101AbdFZRm2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2017 13:42:28 -0400
+In-Reply-To: <20170626133110.23590-1-colin.king@canonical.com> (Colin King's
+        message of "Mon, 26 Jun 2017 14:31:10 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dan.carpenter@oracle.com
+To: Colin King <colin.king@canonical.com>
+Cc: Don Brace <don.brace@microsemi.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-John,
+Colin,
 
-> Element phy_type is a bitmask and it only ever has 2 bits possibly
-> set, and it is overkill to define as a u64, so redefine as a u32.
->
-> This change resolves static code check complaint that "phy->phy_type
-> &= ~PORT_TYPE_SAS;" would unintentionally clear the high 32 bits as
-> well.
->
-> Structure hisi_sas_phy is also reordered to ensure packing efficiency.
+> Trivial fix to spelling mistake in dev_info message
 
-Applied to 4.13/scsi-queue, thanks!
+Applied to 4.13/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
