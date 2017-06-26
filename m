@@ -1,24 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH resend] scsi: fc: drop residual tsk_mgmt_response and it_nexus_response
-Date: Mon, 26 Jun 2017 13:02:59 -0400
-Message-ID: <yq18tke7kcc.fsf@oracle.com>
-References: <1498013310-29253-1-git-send-email-wangkefeng.wang@huawei.com>
+Subject: Re: [PATCH] qla2xxx: don't include <generated/utsrelease.h>
+Date: Mon, 26 Jun 2017 13:06:41 -0400
+Message-ID: <yq14lv27k66.fsf@oracle.com>
+References: <20170621114005.29800-1-johannes@sipsolutions.net>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1498013310-29253-1-git-send-email-wangkefeng.wang@huawei.com>
-        (Kefeng Wang's message of "Wed, 21 Jun 2017 10:48:30 +0800")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kefeng Wang <wangkefeng.wang@huawei.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:31264 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751101AbdFZRGr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2017 13:06:47 -0400
+In-Reply-To: <20170621114005.29800-1-johannes@sipsolutions.net> (Johannes
+        Berg's message of "Wed, 21 Jun 2017 13:40:05 +0200")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-scsi@vger.kernel.org, Johannes Berg <johannes.berg@intel.com>
 
 
-Kefeng,
+Johannes,
 
-> After commit 556e26a70b64 ("scsi: remove tsk_mgmt_response and
-> it_nexus_response transport methods"), the target driver support was
-> removed totally. Drop the residua.
+> There's no need to use the static UTS_RELEASE string, since
+> utsname()->release contains the same.
+>
+> This avoids rebuilding this file for every change of the
+> release string.
 
 Applied to 4.13/scsi-queue, thanks!
 
