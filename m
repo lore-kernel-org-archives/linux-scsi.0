@@ -1,44 +1,59 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] Remove the definition of VLC_SA_RECEIVE_CREDENTIAL
-Date: Mon, 26 Jun 2017 09:10:31 +0200
-Message-ID: <20170626071031.GA4732@linux-x5ow.site>
-References: <20170623173239.16901-1-bart.vanassche@wdc.com>
+From: "Rangankar, Manish" <Manish.Rangankar@cavium.com>
+Subject: Re: [PATCH] scsi: qedi: Remove comparison of u16 idx with zero.
+Date: Mon, 26 Jun 2017 07:17:19 +0000
+Message-ID: <D576B27D.3B0C5%manish.rangankar@cavium.com>
+References: <1498321485-21677-1-git-send-email-chris.gekas@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37842 "EHLO mx1.suse.de"
+Received: from mail-cys01nam02on0069.outbound.protection.outlook.com ([104.47.37.69]:28896
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751252AbdFZHKd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 26 Jun 2017 03:10:33 -0400
-Content-Disposition: inline
-In-Reply-To: <20170623173239.16901-1-bart.vanassche@wdc.com>
+        id S1751354AbdFZHRX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 26 Jun 2017 03:17:23 -0400
+In-Reply-To: <1498321485-21677-1-git-send-email-chris.gekas@gmail.com>
+Content-Language: en-US
+Content-ID: <D096191747850E428AB7537344E1EA7C@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>
+To: Christos Gkekas <chris.gekas@gmail.com>, Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@cavium.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Fri, Jun 23, 2017 at 10:32:39AM -0700, Bart Van Assche wrote:
-> The symbolic name VLC_SA_RECEIVE_CREDENTIAL is not used anywhere
-> in the kernel. Additionally, since SPC 5 the RECEIVE CREDENTIAL
-> command is obsolete. The VLC_SA_RECEIVE_CREDENTIAL definition is
-> misleading since it occurs outside the list of other variable
-> length CDB service action codes (READ_32, WRITE_32, ...). Hence
-> remove this definition.
-> 
-> References: commit e9ccc998b70f ("[SCSI] Add missing SPC-4 CDB and MAINTENANCE_[IN,OUT] service action definitions")
-> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Hannes Reinecke <hare@suse.com>
-> Cc: Johannes Thumshirn <jthumshirn@suse.de>
-> ---
 
-Thanks Bart,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+
+On 24/06/17 9:54 PM, "Christos Gkekas" <chris.gekas@gmail.com> wrote:
+
+>Variable idx is defined as u16 thus statement (idx < 0) is
+>always false and should be removed.
+>
+>Signed-off-by: Christos Gkekas <chris.gekas@gmail.com>
+>---
+> drivers/scsi/qedi/qedi_fw.c | 4 ++--
+> 1 file changed, 2 insertions(+), 2 deletions(-)
+>
+>diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
+>index e937490..19254bd 100644
+>--- a/drivers/scsi/qedi/qedi_fw.c
+>+++ b/drivers/scsi/qedi/qedi_fw.c
+>@@ -333,7 +333,7 @@ static void qedi_get_rq_bdq_buf(struct qedi_ctx *qedi,
+>=20
+> 	/* Obtain buffer address from rqe_opaque */
+> 	idx =3D cqe->rqe_opaque.lo;
+>-	if ((idx < 0) || (idx > (QEDI_BDQ_NUM - 1))) {
+>+	if (idx > (QEDI_BDQ_NUM - 1)) {
+> 		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_CONN,
+> 			  "wrong idx %d returned by FW, dropping the unsolicited pkt\n",
+> 			  idx);
+>@@ -370,7 +370,7 @@ static void qedi_put_rq_bdq_buf(struct qedi_ctx *qedi,
+>=20
+> 	/* Obtain buffer address from rqe_opaque */
+> 	idx =3D cqe->rqe_opaque.lo;
+>-	if ((idx < 0) || (idx > (QEDI_BDQ_NUM - 1))) {
+>+	if (idx > (QEDI_BDQ_NUM - 1)) {
+> 		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_CONN,
+> 			  "wrong idx %d returned by FW, dropping the unsolicited pkt\n",
+> 			  idx);
+>--=20
+>2.7.4
+
+Acked-by: Manish Rangankar <Manish.Rangankar@cavium.com>
