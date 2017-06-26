@@ -1,109 +1,57 @@
 From: "Dupuis, Chad" <chad.dupuis@cavium.com>
-Subject: [PATCH 1/7] bnx2fc: Add filters to the non-offload FCoE receive path.
-Date: Mon, 26 Jun 2017 08:59:32 -0700
-Message-ID: <20170626155938.2091-2-chad.dupuis@cavium.com>
+Subject: [PATCH 2/7] bnx2fc: Check for connection offload before sending RRQ.
+Date: Mon, 26 Jun 2017 08:59:33 -0700
+Message-ID: <20170626155938.2091-3-chad.dupuis@cavium.com>
 References: <20170626155938.2091-1-chad.dupuis@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0078.outbound.protection.outlook.com ([104.47.41.78]:57771
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam01on0077.outbound.protection.outlook.com ([104.47.34.77]:30504
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751592AbdFZP7s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 26 Jun 2017 11:59:48 -0400
+        id S1751592AbdFZP7n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 26 Jun 2017 11:59:43 -0400
 In-Reply-To: <20170626155938.2091-1-chad.dupuis@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, QLogic-Storage-Upstream@cavium.com
 
-Add the following filters to bnx2fc_recv_frame():
-
-1. Filter out invalid packets
-    - eth->dest_mac[3] matches FC frame's D_ID
-2. Filter out packets that are not from our connected target
-    - In FIP_ST_ENABLED mode
-    - eth->src_mac matches fcoe_ctlr->dest_addr
-3. Filter out packets where if d_id of the packet doesn't belong to
-   the device when one is already assigned a port_id, only then this
-   packet is dropped
+If the connection is not offloaded then the backpointers from the tgt
+pointer are undefined.
 
 Signed-off-by: Chad Dupuis <chad.dupuis@cavium.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 35 ++++++++++++++++++++++++++++++++++-
- 1 file changed, 34 insertions(+), 1 deletion(-)
+ drivers/scsi/bnx2fc/bnx2fc_els.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index b025ee5..2025510 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -522,10 +522,12 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
- 	struct fcoe_crc_eof crc_eof;
- 	struct fc_frame *fp;
- 	struct fc_lport *vn_port;
--	struct fcoe_port *port;
-+	struct fcoe_port *port, *phys_port;
- 	u8 *mac = NULL;
- 	u8 *dest_mac = NULL;
- 	struct fcoe_hdr *hp;
-+	struct bnx2fc_interface *interface;
-+	struct fcoe_ctlr *ctlr;
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_els.c b/drivers/scsi/bnx2fc/bnx2fc_els.c
+index 68ca518..fee12c3 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_els.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_els.c
+@@ -61,13 +61,20 @@ int bnx2fc_send_rrq(struct bnx2fc_cmd *aborted_io_req)
  
- 	fr = fcoe_dev_from_skb(skb);
- 	lport = fr->fr_dev;
-@@ -561,8 +563,19 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
- 		return;
- 	}
+ 	struct fc_els_rrq rrq;
+ 	struct bnx2fc_rport *tgt = aborted_io_req->tgt;
+-	struct fc_lport *lport = tgt->rdata->local_port;
++	struct fc_lport *lport = NULL;
+ 	struct bnx2fc_els_cb_arg *cb_arg = NULL;
+-	u32 sid = tgt->sid;
+-	u32 r_a_tov = lport->r_a_tov;
++	u32 sid = 0;
++	u32 r_a_tov = 0;
+ 	unsigned long start = jiffies;
+ 	int rc;
  
-+	phys_port = lport_priv(lport);
-+	interface = phys_port->priv;
-+	ctlr = bnx2fc_to_ctlr(interface);
++	if (!test_bit(BNX2FC_FLAG_SESSION_READY, &tgt->flags))
++		return -EINVAL;
 +
- 	fh = fc_frame_header_get(fp);
- 
-+	if (ntoh24(&dest_mac[3]) != ntoh24(fh->fh_d_id)) {
-+		BNX2FC_HBA_DBG(lport, "FC frame d_id mismatch with MAC %pM.\n",
-+		    dest_mac);
-+		kfree_skb(skb);
-+		return;
-+	}
++	lport = tgt->rdata->local_port;
++	sid = tgt->sid;
++	r_a_tov = lport->r_a_tov;
 +
- 	vn_port = fc_vport_id_lookup(lport, ntoh24(fh->fh_d_id));
- 	if (vn_port) {
- 		port = lport_priv(vn_port);
-@@ -572,6 +585,14 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
- 			return;
- 		}
- 	}
-+	if (ctlr->state) {
-+		if (!ether_addr_equal(mac, ctlr->dest_addr)) {
-+			BNX2FC_HBA_DBG(lport, "Wrong source address: mac:%pM dest_addr:%pM.\n",
-+			    mac, ctlr->dest_addr);
-+			kfree_skb(skb);
-+			return;
-+		}
-+	}
- 	if (fh->fh_r_ctl == FC_RCTL_DD_SOL_DATA &&
- 	    fh->fh_type == FC_TYPE_FCP) {
- 		/* Drop FCP data. We dont this in L2 path */
-@@ -597,6 +618,18 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
- 		return;
- 	}
- 
-+	/*
-+	 * If the destination ID from the frame header does not match what we
-+	 * have on record for lport and the search for a NPIV port came up
-+	 * empty then this is not addressed to our port so simply drop it.
-+	 */
-+	if (lport->port_id != ntoh24(fh->fh_d_id) && !vn_port) {
-+		BNX2FC_HBA_DBG(lport, "Dropping frame due to destination mismatch: lport->port_id=%x fh->d_id=%x.\n",
-+		    lport->port_id, ntoh24(fh->fh_d_id));
-+		kfree_skb(skb);
-+		return;
-+	}
-+
- 	stats = per_cpu_ptr(lport->stats, smp_processor_id());
- 	stats->RxFrames++;
- 	stats->RxWords += fr_len / FCOE_WORD_TO_BYTE;
+ 	BNX2FC_ELS_DBG("Sending RRQ orig_xid = 0x%x\n",
+ 		   aborted_io_req->xid);
+ 	memset(&rrq, 0, sizeof(rrq));
 -- 
 1.8.5.6
