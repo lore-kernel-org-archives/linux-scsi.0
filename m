@@ -1,26 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] sd: add support for TCG OPAL self encrypting disks
-Date: Mon, 26 Jun 2017 12:43:27 -0400
-Message-ID: <yq1tw327l8w.fsf@oracle.com>
-References: <20170619122646.32666-1-hch@lst.de>
-        <20170619122646.32666-2-hch@lst.de> <20170626111047.GA16273@lst.de>
+Subject: Re: [PATCH 1/2] scsi: remove various unused blist flags
+Date: Mon, 26 Jun 2017 12:43:45 -0400
+Message-ID: <yq1podq7l8e.fsf@oracle.com>
+References: <20170619122724.32720-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170626111047.GA16273@lst.de> (Christoph Hellwig's message of
-        "Mon, 26 Jun 2017 13:10:47 +0200")
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Tejun Heo <tj@kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, Scott Bauer <scott.bauer@intel.com>, Jonathan Derrick <jonathan.derrick@intel.com>, Rafael Antognolli <rafael.antognolli@intel.com>, Robert Elliott <elliott@hpe.com>, linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:42052 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751552AbdFZQnw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2017 12:43:52 -0400
+In-Reply-To: <20170619122724.32720-1-hch@lst.de> (Christoph Hellwig's message
+        of "Mon, 19 Jun 2017 14:27:23 +0200")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, hare@suse.de
 
 
 Christoph,
 
-> ping?
-
-Looks good to me. I'll queue it up for 4.13 as soon as Linus has pulled
-in the ata bits.
+Applied to 4.13/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
