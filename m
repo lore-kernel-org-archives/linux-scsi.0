@@ -1,48 +1,109 @@
 From: "Dupuis, Chad" <chad.dupuis@cavium.com>
-Subject: [PATCH 0/7] bnx2fc: Update driver to version 2.11.8.
-Date: Mon, 26 Jun 2017 08:59:31 -0700
-Message-ID: <20170626155938.2091-1-chad.dupuis@cavium.com>
+Subject: [PATCH 1/7] bnx2fc: Add filters to the non-offload FCoE receive path.
+Date: Mon, 26 Jun 2017 08:59:32 -0700
+Message-ID: <20170626155938.2091-2-chad.dupuis@cavium.com>
+References: <20170626155938.2091-1-chad.dupuis@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0082.outbound.protection.outlook.com ([104.47.37.82]:11313
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+Received: from mail-dm3nam03on0078.outbound.protection.outlook.com ([104.47.41.78]:57771
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751427AbdFZP7m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 26 Jun 2017 11:59:42 -0400
+        id S1751592AbdFZP7s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 26 Jun 2017 11:59:48 -0400
+In-Reply-To: <20170626155938.2091-1-chad.dupuis@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, QLogic-Storage-Upstream@cavium.com
 
-Hi Martin,
+Add the following filters to bnx2fc_recv_frame():
 
-Please apply the following patches at your earliest convenience.
+1. Filter out invalid packets
+    - eth->dest_mac[3] matches FC frame's D_ID
+2. Filter out packets that are not from our connected target
+    - In FIP_ST_ENABLED mode
+    - eth->src_mac matches fcoe_ctlr->dest_addr
+3. Filter out packets where if d_id of the packet doesn't belong to
+   the device when one is already assigned a port_id, only then this
+   packet is dropped
 
-Thanks,
-Chad
+Signed-off-by: Chad Dupuis <chad.dupuis@cavium.com>
+---
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 35 ++++++++++++++++++++++++++++++++++-
+ 1 file changed, 34 insertions(+), 1 deletion(-)
 
-Dupuis, Chad (7):
-  bnx2fc: Add filters to the non-offload FCoE receive path.
-  bnx2fc: Check for connection offload before sending RRQ.
-  bnx2fc: Update copyright for 2017.
-  bnx2fc: Adjust bnx2fc_npiv_create_vports for WWNNs from NVRAM that are
-    zero.
-  bnx2fc: If IO is still in cleanup then do not return to SCSI layer.
-  bnx2fc: Make rport_terminate_io callback a NOOP.
-  bnx2fc: Update version number to 2.11.8.
-
- drivers/scsi/bnx2fc/57xx_hsi_bnx2fc.h  |  3 +-
- drivers/scsi/bnx2fc/bnx2fc.h           |  5 +--
- drivers/scsi/bnx2fc/bnx2fc_constants.h |  3 +-
- drivers/scsi/bnx2fc/bnx2fc_debug.c     |  3 +-
- drivers/scsi/bnx2fc/bnx2fc_debug.h     |  3 +-
- drivers/scsi/bnx2fc/bnx2fc_els.c       | 16 ++++++---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c      | 62 +++++++++++++++++++++++++++++++---
- drivers/scsi/bnx2fc/bnx2fc_hwi.c       |  3 +-
- drivers/scsi/bnx2fc/bnx2fc_io.c        | 14 +++-----
- drivers/scsi/bnx2fc/bnx2fc_tgt.c       |  3 +-
- 10 files changed, 90 insertions(+), 25 deletions(-)
-
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index b025ee5..2025510 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -522,10 +522,12 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
+ 	struct fcoe_crc_eof crc_eof;
+ 	struct fc_frame *fp;
+ 	struct fc_lport *vn_port;
+-	struct fcoe_port *port;
++	struct fcoe_port *port, *phys_port;
+ 	u8 *mac = NULL;
+ 	u8 *dest_mac = NULL;
+ 	struct fcoe_hdr *hp;
++	struct bnx2fc_interface *interface;
++	struct fcoe_ctlr *ctlr;
+ 
+ 	fr = fcoe_dev_from_skb(skb);
+ 	lport = fr->fr_dev;
+@@ -561,8 +563,19 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
+ 		return;
+ 	}
+ 
++	phys_port = lport_priv(lport);
++	interface = phys_port->priv;
++	ctlr = bnx2fc_to_ctlr(interface);
++
+ 	fh = fc_frame_header_get(fp);
+ 
++	if (ntoh24(&dest_mac[3]) != ntoh24(fh->fh_d_id)) {
++		BNX2FC_HBA_DBG(lport, "FC frame d_id mismatch with MAC %pM.\n",
++		    dest_mac);
++		kfree_skb(skb);
++		return;
++	}
++
+ 	vn_port = fc_vport_id_lookup(lport, ntoh24(fh->fh_d_id));
+ 	if (vn_port) {
+ 		port = lport_priv(vn_port);
+@@ -572,6 +585,14 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
+ 			return;
+ 		}
+ 	}
++	if (ctlr->state) {
++		if (!ether_addr_equal(mac, ctlr->dest_addr)) {
++			BNX2FC_HBA_DBG(lport, "Wrong source address: mac:%pM dest_addr:%pM.\n",
++			    mac, ctlr->dest_addr);
++			kfree_skb(skb);
++			return;
++		}
++	}
+ 	if (fh->fh_r_ctl == FC_RCTL_DD_SOL_DATA &&
+ 	    fh->fh_type == FC_TYPE_FCP) {
+ 		/* Drop FCP data. We dont this in L2 path */
+@@ -597,6 +618,18 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
+ 		return;
+ 	}
+ 
++	/*
++	 * If the destination ID from the frame header does not match what we
++	 * have on record for lport and the search for a NPIV port came up
++	 * empty then this is not addressed to our port so simply drop it.
++	 */
++	if (lport->port_id != ntoh24(fh->fh_d_id) && !vn_port) {
++		BNX2FC_HBA_DBG(lport, "Dropping frame due to destination mismatch: lport->port_id=%x fh->d_id=%x.\n",
++		    lport->port_id, ntoh24(fh->fh_d_id));
++		kfree_skb(skb);
++		return;
++	}
++
+ 	stats = per_cpu_ptr(lport->stats, smp_processor_id());
+ 	stats->RxFrames++;
+ 	stats->RxWords += fr_len / FCOE_WORD_TO_BYTE;
 -- 
 1.8.5.6
