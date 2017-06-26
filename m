@@ -1,41 +1,55 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: hpsa: fix spelling mistake: "encrypytion" -> "encryption"
-Date: Mon, 26 Jun 2017 14:31:10 +0100
-Message-ID: <20170626133110.23590-1-colin.king@canonical.com>
+From: Douglas Miller <dougmill@linux.vnet.ibm.com>
+Subject: Re: enclosure: fix sysfs symlinks creation when using multipath
+Date: Mon, 26 Jun 2017 09:22:06 -0500
+Message-ID: <b41625e3-0903-83d9-3828-b598550be96c@linux.vnet.ibm.com>
+References: <1489690155.11068.10.camel@linux.vnet.ibm.com>
+ <1998341d-7f47-f73a-c5c5-4095b7fa9ef1@linux.vnet.ibm.com>
+ <33d61a4d-d199-16fd-82e3-bef506cc6435@linux.vnet.ibm.com>
+ <8d728c68-85f5-9bc2-6ce3-0c6dbc0a0c19@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:38834 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751441AbdFZNbQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2017 09:31:16 -0400
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:44179 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751101AbdFZOWM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 26 Jun 2017 10:22:12 -0400
+Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v5QEIiaJ091887
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2017 10:22:12 -0400
+Received: from e35.co.us.ibm.com (e35.co.us.ibm.com [32.97.110.153])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2bb3fm9kgn-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2017 10:22:11 -0400
+Received: from localhost
+        by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <dougmill@linux.vnet.ibm.com>;
+        Mon, 26 Jun 2017 08:22:10 -0600
+In-Reply-To: <8d728c68-85f5-9bc2-6ce3-0c6dbc0a0c19@redhat.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Maurizio Lombardi <mlombard@redhat.com>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+On 06/20/2017 06:38 AM, Maurizio Lombardi wrote:
+>
+> Dne 16.6.2017 v 18:08 Douglas Miller napsal(a):
+>> Just to respond to James' question on the cause. What I observed was a race condition between udevd (ses_init()) and a worker thread (do_scan_async()),
+>> where the worker thread is creating the directories that are the target of the symlinks being created by udevd.
+>> Something was happening when udevd caught up with the worker thread (so the target directory did not exist) and it seemed the worker thread either got preempted or
+>> else just could not stay ahead of udevd. This means that udevd started failing to create symlinks even though the worker thread eventually got them all created.
+>> I did observe what appeared to be preemption, as the creation of directories stopped until udevd finished failing all the (rest of the) symlinks.
+>> Although there may have been other explanations for what I saw.
+>>
+>> I am able to pass my testing with this patch. I don't see an official submit of this patch, but will respond to it when I see one.
+> Thanks Douglas for testing it, I will resubmit the patch if no one has any objections.
+>
+> Maurizio.
+>
+I did not see any additional comments, and no objections. Is it time to 
+submit the new patch?
 
-Trivial fix to spelling mistake in dev_info message
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/hpsa.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 9934947073e6..8914eab84337 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -3127,7 +3127,7 @@ static void hpsa_debug_map_buff(struct ctlr_info *h, int rc,
- 			le16_to_cpu(map_buff->layout_map_count));
- 	dev_info(&h->pdev->dev, "flags = 0x%x\n",
- 			le16_to_cpu(map_buff->flags));
--	dev_info(&h->pdev->dev, "encrypytion = %s\n",
-+	dev_info(&h->pdev->dev, "encryption = %s\n",
- 			le16_to_cpu(map_buff->flags) &
- 			RAID_MAP_FLAG_ENCRYPT_ON ?  "ON" : "OFF");
- 	dev_info(&h->pdev->dev, "dekindex = %u\n",
--- 
-2.11.0
+Thanks,
+Doug
