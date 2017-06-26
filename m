@@ -1,35 +1,49 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] scsi: default to scsi-mq
-Date: Mon, 26 Jun 2017 11:48:11 +0200
-Message-ID: <20170626094811.GC13981@lst.de>
-References: <20170616082755.22832-1-hch@lst.de> <1498143933.6002.18.camel@suse.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH] scsi: hisi_sas: redefine hisi_sas_phy.phy_type as u32
+Date: Mon, 26 Jun 2017 18:27:28 +0800
+Message-ID: <1498472848-174945-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:37442 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751423AbdFZJsR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 26 Jun 2017 05:48:17 -0400
-Content-Disposition: inline
-In-Reply-To: <1498143933.6002.18.camel@suse.com>
+Received: from szxga01-in.huawei.com ([45.249.212.187]:8797 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751372AbdFZJ5b (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2017 05:57:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Wilck <mwilck@suse.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dan.carpenter@oracle.com, John Garry <john.garry@huawei.com>
 
-On Thu, Jun 22, 2017 at 05:05:33PM +0200, Martin Wilck wrote:
-> Hello Christoph,
-> 
-> On Fri, 2017-06-16 at 10:27 +0200, Christoph Hellwig wrote:
-> > Remove the SCSI_MQ_DEFAULT config option and default to the blk-mq
-> > I/O
-> > path now that we had plenty of testing, and have I/O schedulers for
-> > blk-mq.  The module option to disable the blk-mq path is kept around
-> > for now.
-> 
-> Could you explain why you remove the option entirely rather than just
-> changing the default? Some distributions may wish to keep the ability
-> to choose the compiled-in default.
+Element phy_type is a bitmask and it only ever has 2
+bits possibly set, and it is overkill to define as a u64,
+so redefine as a u32.
 
-Because the legacy code will go away, and I want people to prepare for
-that.
+This change resolves static code check complaint that
+"phy->phy_type &= ~PORT_TYPE_SAS;" would
+unintentionally clear the high 32 bits as well.
+
+Structure hisi_sas_phy is also reordered to ensure
+packing efficiency.
+
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 4fc2308..22dd48b 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -85,11 +85,11 @@ struct hisi_sas_phy {
+ 	struct work_struct	phyup_ws;
+ 	u64		port_id; /* from hw */
+ 	u64		dev_sas_addr;
+-	u64		phy_type;
+ 	u64		frame_rcvd_size;
+ 	u8		frame_rcvd[32];
+ 	u8		phy_attached;
+ 	u8		reserved[3];
++	u32		phy_type;
+ 	enum sas_linkrate	minimum_linkrate;
+ 	enum sas_linkrate	maximum_linkrate;
+ };
+-- 
+1.9.1
