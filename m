@@ -1,29 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: csiostor: update module version
-Date: Mon, 26 Jun 2017 13:00:38 -0400
-Message-ID: <yq1d19q7kg9.fsf@oracle.com>
-References: <1497967881-4378-1-git-send-email-varun@chelsio.com>
+Subject: Re: [PATCH resend] scsi: fc: drop residual tsk_mgmt_response and it_nexus_response
+Date: Mon, 26 Jun 2017 13:02:59 -0400
+Message-ID: <yq18tke7kcc.fsf@oracle.com>
+References: <1498013310-29253-1-git-send-email-wangkefeng.wang@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:16769 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751101AbdFZRAo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2017 13:00:44 -0400
-In-Reply-To: <1497967881-4378-1-git-send-email-varun@chelsio.com> (Varun
-        Prakash's message of "Tue, 20 Jun 2017 19:41:21 +0530")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1498013310-29253-1-git-send-email-wangkefeng.wang@huawei.com>
+        (Kefeng Wang's message of "Wed, 21 Jun 2017 10:48:30 +0800")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kefeng Wang <wangkefeng.wang@huawei.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Varun Prakash <varun@chelsio.com>
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, indranil@chelsio.com, rajesh.kumar@chelsio.com
 
 
-Varun,
+Kefeng,
 
-> Add -ko to the module version similar to module version of other
-> Chelsio drivers.
+> After commit 556e26a70b64 ("scsi: remove tsk_mgmt_response and
+> it_nexus_response transport methods"), the target driver support was
+> removed totally. Drop the residua.
 
-Applied to 4.13/scsi-queue.
+Applied to 4.13/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
