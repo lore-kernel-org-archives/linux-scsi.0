@@ -1,26 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: fix typos and grammar in comments of scsi_transport_fc.c
-Date: Mon, 26 Jun 2017 13:23:55 -0400
-Message-ID: <yq1mv8u64t0.fsf@oracle.com>
-References: <1498076679-8892-1-git-send-email-tyreld@linux.vnet.ibm.com>
+Subject: Re: [PATCH] scsi: cxgb4i: assign rxqs in round robin mode
+Date: Mon, 26 Jun 2017 13:29:15 -0400
+Message-ID: <yq1inji64k4.fsf@oracle.com>
+References: <1498126669-5654-1-git-send-email-varun@chelsio.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:42140 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:45746 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750763AbdFZRYS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2017 13:24:18 -0400
-In-Reply-To: <1498076679-8892-1-git-send-email-tyreld@linux.vnet.ibm.com>
-        (Tyrel Datwyler's message of "Wed, 21 Jun 2017 16:24:39 -0400")
+        with ESMTP id S1751101AbdFZR3Z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2017 13:29:25 -0400
+In-Reply-To: <1498126669-5654-1-git-send-email-varun@chelsio.com> (Varun
+        Prakash's message of "Thu, 22 Jun 2017 15:47:49 +0530")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Cc: james.bottomley@hansenpartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, jsmart2021@gmail.com
+To: Varun Prakash <varun@chelsio.com>
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, indranil@chelsio.com
 
 
-Tyrel,
+Varun,
 
-Applied to 4.13/scsi-queue.
+> Assign rxq to TCP connections in round robin mode to use all available
+> rxqs.
+
+Applied to 4.13/scsi-queue. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
