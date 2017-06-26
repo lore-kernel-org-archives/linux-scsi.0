@@ -1,38 +1,41 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] scsi: default to scsi-mq
-Date: Mon, 26 Jun 2017 12:13:41 +0000
-Message-ID: <1498479220.8799.0.camel@wdc.com>
-References: <20170616082755.22832-1-hch@lst.de>
-         <1498143933.6002.18.camel@suse.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: hpsa: fix spelling mistake: "encrypytion" -> "encryption"
+Date: Mon, 26 Jun 2017 14:31:10 +0100
+Message-ID: <20170626133110.23590-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:31160 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752139AbdFZMNt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2017 08:13:49 -0400
-In-Reply-To: <1498143933.6002.18.camel@suse.com>
-Content-Language: en-US
-Content-ID: <2E5774F34D17104BB669C7CAB9F6F65C@namprd04.prod.outlook.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:38834 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751441AbdFZNbQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2017 09:31:16 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "mwilck@suse.com" <mwilck@suse.com>
+To: Don Brace <don.brace@microsemi.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-On Thu, 2017-06-22 at 17:05 +0200, Martin Wilck wrote:
-> On Fri, 2017-06-16 at 10:27 +0200, Christoph Hellwig wrote:
-> > Remove the SCSI_MQ_DEFAULT config option and default to the blk-mq
-> > I/O
-> > path now that we had plenty of testing, and have I/O schedulers for
-> > blk-mq.  The module option to disable the blk-mq path is kept around
-> > for now.
->=20
-> Could you explain why you remove the option entirely rather than just
-> changing the default? Some distributions may wish to keep the ability
-> to choose the compiled-in default.
+From: Colin Ian King <colin.king@canonical.com>
 
-Hello Martin,
+Trivial fix to spelling mistake in dev_info message
 
-Would it work for you to keep this patch as a distro-private patch?
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/hpsa.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Bart.=
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 9934947073e6..8914eab84337 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -3127,7 +3127,7 @@ static void hpsa_debug_map_buff(struct ctlr_info *h, int rc,
+ 			le16_to_cpu(map_buff->layout_map_count));
+ 	dev_info(&h->pdev->dev, "flags = 0x%x\n",
+ 			le16_to_cpu(map_buff->flags));
+-	dev_info(&h->pdev->dev, "encrypytion = %s\n",
++	dev_info(&h->pdev->dev, "encryption = %s\n",
+ 			le16_to_cpu(map_buff->flags) &
+ 			RAID_MAP_FLAG_ENCRYPT_ON ?  "ON" : "OFF");
+ 	dev_info(&h->pdev->dev, "dekindex = %u\n",
+-- 
+2.11.0
