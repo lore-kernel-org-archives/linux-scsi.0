@@ -1,29 +1,26 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: qedi: Remove comparison of u16 idx with zero.
-Date: Mon, 26 Jun 2017 13:43:57 -0400
-Message-ID: <yq1k23y4pb6.fsf@oracle.com>
-References: <1498321485-21677-1-git-send-email-chris.gekas@gmail.com>
+From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 06/11] sigwd93: switch to dma_alloc_attrs
+Date: Mon, 26 Jun 2017 14:20:51 -0400
+Message-ID: <yq1inji3918.fsf@oracle.com>
+References: <20170616071716.17321-1-hch@lst.de>
+        <20170616071716.17321-7-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:26663 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751427AbdFZRoG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2017 13:44:06 -0400
-In-Reply-To: <1498321485-21677-1-git-send-email-chris.gekas@gmail.com>
-        (Christos Gkekas's message of "Sat, 24 Jun 2017 17:24:45 +0100")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-metag-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20170616071716.17321-7-hch-jcswGhMUV9g@public.gmane.org> (Christoph Hellwig's message
+        of "Fri, 16 Jun 2017 09:17:11 +0200")
+Sender: linux-metag-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-serial-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-metag-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, nios2-dev-g9ZBwUv/Ih/yUk5EbOjzuce+I+R0W71w@public.gmane.org, linux-fbdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christos Gkekas <chris.gekas@gmail.com>
-Cc: QLogic-Storage-Upstream@cavium.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-Christos,
+Christoph,
 
-> Variable idx is defined as u16 thus statement (idx < 0) is always
-> false and should be removed.
+> Use dma_alloc_attrs directly instead of the dma_alloc_noncoherent
+> wrapper.
 
-Applied to 4.13/scsi-queue, thanks!
+Fixed driver name typo and applied to 4.13/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
