@@ -1,83 +1,83 @@
-From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 3/5] block: convert blkcg_gq.refcnt from atomic_t to refcount_t
-Date: Tue, 27 Jun 2017 14:39:58 +0300
-Message-ID: <1498563601-10949-4-git-send-email-elena.reshetova@intel.com>
-References: <1498563601-10949-1-git-send-email-elena.reshetova@intel.com>
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1498563601-10949-1-git-send-email-elena.reshetova@intel.com>
-Sender: linux-block-owner@vger.kernel.org
-To: axboe@kernel.dk
-Cc: james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-btrfs@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, keescook@chromium.org, fujita.tomonori@lab.ntt.co.jp, mingo@redhat.com, clm@fb.com, jbacik@fb.com, dsterba@suse.com, Elena Reshetova <elena.reshetova@intel.com>, Hans Liljestrand <ishkamiel@gmail.com>, David Windsor <dwindsor@gmail.com>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [PATCH v3 0/4] g_NCR5380: PDMA fixes and cleanup
+Date: Tue, 27 Jun 2017 22:42:29 +1000 (AEST)
+Message-ID: <alpine.LNX.2.00.1706272205340.25239@nippy.intranet>
+References: <cover.1498461406.git.fthain@telegraphics.com.au> <201706262127.03911.linux@rainbow-software.org> <201706270828.40336.linux@rainbow-software.org>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:47240 "EHLO
+        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751632AbdF0Mma (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jun 2017 08:42:30 -0400
+In-Reply-To: <201706270828.40336.linux@rainbow-software.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>
 
-refcount_t type and corresponding API should be
-used instead of atomic_t when the variable is used as
-a reference counter. This allows to avoid accidental
-refcounter overflows that might lead to use-after-free
-situations.
+On Tue, 27 Jun 2017, Ondrej Zary wrote:
 
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: David Windsor <dwindsor@gmail.com>
----
- block/blk-cgroup.c         | 2 +-
- include/linux/blk-cgroup.h | 9 ++++-----
- 2 files changed, 5 insertions(+), 6 deletions(-)
+> BTW. I've probably found the DTC write corruption. Added the following 
+> check (13 is host buffer index register) -
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 0480892..3762908 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -107,7 +107,7 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
- 	blkg->q = q;
- 	INIT_LIST_HEAD(&blkg->q_node);
- 	blkg->blkcg = blkcg;
--	atomic_set(&blkg->refcnt, 1);
-+	refcount_set(&blkg->refcnt, 1);
- 
- 	/* root blkg uses @q->root_rl, init rl only for !root blkgs */
- 	if (blkcg != &blkcg_root) {
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index 01b62e7..e54f048 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -19,6 +19,7 @@
- #include <linux/radix-tree.h>
- #include <linux/blkdev.h>
- #include <linux/atomic.h>
-+#include <linux/refcount.h>
- 
- /* percpu_counter batch for blkg_[rw]stats, per-cpu drift doesn't matter */
- #define BLKG_STAT_CPU_BATCH	(INT_MAX / 2)
-@@ -122,7 +123,7 @@ struct blkcg_gq {
- 	struct request_list		rl;
- 
- 	/* reference count */
--	atomic_t			refcnt;
-+	refcount_t			refcnt;
- 
- 	/* is this blkg online? protected by both blkcg and q locks */
- 	bool				online;
-@@ -354,8 +355,7 @@ static inline int blkg_path(struct blkcg_gq *blkg, char *buf, int buflen)
-  */
- static inline void blkg_get(struct blkcg_gq *blkg)
- {
--	WARN_ON_ONCE(atomic_read(&blkg->refcnt) <= 0);
--	atomic_inc(&blkg->refcnt);
-+	refcount_inc(&blkg->refcnt);
- }
- 
- void __blkg_release_rcu(struct rcu_head *rcu);
-@@ -366,8 +366,7 @@ void __blkg_release_rcu(struct rcu_head *rcu);
-  */
- static inline void blkg_put(struct blkcg_gq *blkg)
- {
--	WARN_ON_ONCE(atomic_read(&blkg->refcnt) <= 0);
--	if (atomic_dec_and_test(&blkg->refcnt))
-+	if (refcount_dec_and_test(&blkg->refcnt))
- 		call_rcu(&blkg->rcu_head, __blkg_release_rcu);
- }
- 
+That register is not mentioned in my 53c400 datasheet.
+
+> and it triggers sometimes: the value is 1 instead of 0. As we use only 
+> 16-bit writes, I don't see how the value could ever be odd. Looks like a 
+> bug in the chip. The index register corrupts during the transfer, not 
+> after IRQ or timeout. The same check at beginning of pwrite() did not 
+> trigger.
+> 
+
+Are you reading this register at the right moment? Have you tried waiting 
+for it to reach zero, as in,
+
+	if (NCR5380_poll_politely(hostdata, 13, 0xff, 0, HZ / 64) < 0)
+		/* printk, reset etc */;
+
+Even if this is a reliable way to detect a short transfer, it would be 
+nice to know the root cause. But I'm being unrealistic: the DTC436 vendor 
+never responded to my requests for technical documentation.
+
+> The index register is not writable so we must(?) reset the PDMA engine 
+> to recover. However, this quick attempt to fix does not work, maybe we 
+> should reload the block count and continue?
+> 
+
+I don't know if it is possible to recover. If the last byte never reached 
+the scsi bus, then once you reset the 53c400 core, you need the driver to 
+perform a single-byte PIO transfer after the short PDMA transfer. This 
+would require that you set the residual appropriately (though in my 
+experience that may not be sufficient).
+
+It may be better to simply limit the transfer to 512 bytes instead of 
+attempting to recover based on an undocumented (?) register, etc. Seems 
+like a bit of a hack.
+
+> --- a/drivers/scsi/g_NCR5380.c
+> +++ b/drivers/scsi/g_NCR5380.c
+> @@ -595,7 +603,13 @@ static inline int generic_NCR5380_pwrite(struct 
+> NCR5380_hostdata *hostdata,
+>                                 goto out_wait;
+>                         }
+>                 }
+> -
+> +               idx = NCR5380_read(13);
+> +               if (idx != 0) {
+> +                       printk("host idx=%d, start=%d\n", idx, start);
+> +                       NCR5380_write(hostdata->c400_ctl_status, CSR_RESET);
+> +                       NCR5380_write(hostdata->c400_ctl_status, CSR_BASE);
+> +                       goto out_wait;
+> +               }
+>                 if (hostdata->io_port && hostdata->io_width == 2)
+>                         outsw(hostdata->io_port + hostdata->c400_host_buf,
+>                                                         src + start, 64);
+> 
+
+I find it hard to reason about this code. For example, out_wait is to be 
+removed. Let's get the preceding patches working and signed-off. Please go 
+ahead and use a 512 B transfer for DTC436 testing if that will help get 
+this patch series over the line.
+
 -- 
-2.7.4
