@@ -1,11 +1,11 @@
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 2/5] block: convert blk_queue_tag.refcnt from atomic_t to refcount_t
-Date: Tue, 27 Jun 2017 14:39:57 +0300
-Message-ID: <1498563601-10949-3-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 4/5] block: convert io_context.active_ref from atomic_t to refcount_t
+Date: Tue, 27 Jun 2017 14:39:59 +0300
+Message-ID: <1498563601-10949-5-git-send-email-elena.reshetova@intel.com>
 References: <1498563601-10949-1-git-send-email-elena.reshetova@intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <1498563601-10949-1-git-send-email-elena.reshetova@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
 To: axboe@kernel.dk
 Cc: james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-btrfs@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, keescook@chromium.org, fujita.tomonori@lab.ntt.co.jp, mingo@redhat.com, clm@fb.com, jbacik@fb.com, dsterba@suse.com, Elena Reshetova <elena.reshetova@intel.com>, Hans Liljestrand <ishkamiel@gmail.com>, David Windsor <dwindsor@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
@@ -21,70 +21,100 @@ Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
 Signed-off-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: David Windsor <dwindsor@gmail.com>
 ---
- block/blk-tag.c        | 8 ++++----
- include/linux/blkdev.h | 3 ++-
- 2 files changed, 6 insertions(+), 5 deletions(-)
+ block/bfq-iosched.c       | 2 +-
+ block/blk-ioc.c           | 4 ++--
+ block/cfq-iosched.c       | 4 ++--
+ include/linux/iocontext.h | 6 +++---
+ 4 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/block/blk-tag.c b/block/blk-tag.c
-index 07cc329..d83555e 100644
---- a/block/blk-tag.c
-+++ b/block/blk-tag.c
-@@ -35,7 +35,7 @@ EXPORT_SYMBOL(blk_queue_find_tag);
-  */
- void blk_free_tags(struct blk_queue_tag *bqt)
- {
--	if (atomic_dec_and_test(&bqt->refcnt)) {
-+	if (refcount_dec_and_test(&bqt->refcnt)) {
- 		BUG_ON(find_first_bit(bqt->tag_map, bqt->max_depth) <
- 							bqt->max_depth);
+diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+index ed93da2..3a525ab 100644
+--- a/block/bfq-iosched.c
++++ b/block/bfq-iosched.c
+@@ -3988,7 +3988,7 @@ static void bfq_update_idle_window(struct bfq_data *bfqd,
  
-@@ -130,7 +130,7 @@ static struct blk_queue_tag *__blk_queue_init_tags(struct request_queue *q,
- 	if (init_tag_map(q, tags, depth))
- 		goto fail;
+ 	enable_idle = bfq_bfqq_idle_window(bfqq);
  
--	atomic_set(&tags->refcnt, 1);
-+	refcount_set(&tags->refcnt, 1);
- 	tags->alloc_policy = alloc_policy;
- 	tags->next_tag = 0;
- 	return tags;
-@@ -180,7 +180,7 @@ int blk_queue_init_tags(struct request_queue *q, int depth,
- 		queue_flag_set(QUEUE_FLAG_QUEUED, q);
- 		return 0;
- 	} else
--		atomic_inc(&tags->refcnt);
-+		refcount_inc(&tags->refcnt);
+-	if (atomic_read(&bic->icq.ioc->active_ref) == 0 ||
++	if (refcount_read(&bic->icq.ioc->active_ref) == 0 ||
+ 	    bfqd->bfq_slice_idle == 0 ||
+ 		(bfqd->hw_tag && BFQQ_SEEKY(bfqq) &&
+ 			bfqq->wr_coeff == 1))
+diff --git a/block/blk-ioc.c b/block/blk-ioc.c
+index 63898d2..69704d2 100644
+--- a/block/blk-ioc.c
++++ b/block/blk-ioc.c
+@@ -176,7 +176,7 @@ void put_io_context_active(struct io_context *ioc)
+ 	unsigned long flags;
+ 	struct io_cq *icq;
  
- 	/*
- 	 * assign it, all done
-@@ -225,7 +225,7 @@ int blk_queue_resize_tags(struct request_queue *q, int new_depth)
- 	 * Currently cannot replace a shared tag map with a new
- 	 * one, so error out if this is the case
+-	if (!atomic_dec_and_test(&ioc->active_ref)) {
++	if (!refcount_dec_and_test(&ioc->active_ref)) {
+ 		put_io_context(ioc);
+ 		return;
+ 	}
+@@ -275,7 +275,7 @@ int create_task_io_context(struct task_struct *task, gfp_t gfp_flags, int node)
+ 	/* initialize */
+ 	atomic_long_set(&ioc->refcount, 1);
+ 	atomic_set(&ioc->nr_tasks, 1);
+-	atomic_set(&ioc->active_ref, 1);
++	refcount_set(&ioc->active_ref, 1);
+ 	spin_lock_init(&ioc->lock);
+ 	INIT_RADIX_TREE(&ioc->icq_tree, GFP_ATOMIC | __GFP_HIGH);
+ 	INIT_HLIST_HEAD(&ioc->icq_list);
+diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
+index b7e9c7f..07c416a 100644
+--- a/block/cfq-iosched.c
++++ b/block/cfq-iosched.c
+@@ -2973,7 +2973,7 @@ static void cfq_arm_slice_timer(struct cfq_data *cfqd)
+ 	 * task has exited, don't wait
  	 */
--	if (atomic_read(&bqt->refcnt) != 1)
-+	if (refcount_read(&bqt->refcnt) != 1)
- 		return -EBUSY;
+ 	cic = cfqd->active_cic;
+-	if (!cic || !atomic_read(&cic->icq.ioc->active_ref))
++	if (!cic || !refcount_read(&cic->icq.ioc->active_ref))
+ 		return;
  
  	/*
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 1ddd36b..3efc8cf 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -26,6 +26,7 @@
- #include <linux/percpu-refcount.h>
- #include <linux/scatterlist.h>
- #include <linux/blkzoned.h>
-+#include <linux/refcount.h>
+@@ -3965,7 +3965,7 @@ cfq_update_idle_window(struct cfq_data *cfqd, struct cfq_queue *cfqq,
  
- struct module;
- struct scsi_ioctl_command;
-@@ -293,7 +294,7 @@ struct blk_queue_tag {
- 	unsigned long *tag_map;		/* bit map of free/busy tags */
- 	int max_depth;			/* what we will send to device */
- 	int real_max_depth;		/* what the array can hold */
--	atomic_t refcnt;		/* map can be shared */
-+	refcount_t refcnt;		/* map can be shared */
- 	int alloc_policy;		/* tag allocation policy */
- 	int next_tag;			/* next tag */
- };
+ 	if (cfqq->next_rq && req_noidle(cfqq->next_rq))
+ 		enable_idle = 0;
+-	else if (!atomic_read(&cic->icq.ioc->active_ref) ||
++	else if (!refcount_read(&cic->icq.ioc->active_ref) ||
+ 		 !cfqd->cfq_slice_idle ||
+ 		 (!cfq_cfqq_deep(cfqq) && CFQQ_SEEKY(cfqq)))
+ 		enable_idle = 0;
+diff --git a/include/linux/iocontext.h b/include/linux/iocontext.h
+index df38db2..e47b907 100644
+--- a/include/linux/iocontext.h
++++ b/include/linux/iocontext.h
+@@ -3,6 +3,7 @@
+ 
+ #include <linux/radix-tree.h>
+ #include <linux/rcupdate.h>
++#include <linux/refcount.h>
+ #include <linux/workqueue.h>
+ 
+ enum {
+@@ -96,7 +97,7 @@ struct io_cq {
+  */
+ struct io_context {
+ 	atomic_long_t refcount;
+-	atomic_t active_ref;
++	refcount_t active_ref;
+ 	atomic_t nr_tasks;
+ 
+ 	/* all the fields below are protected by this lock */
+@@ -128,9 +129,8 @@ struct io_context {
+ static inline void get_io_context_active(struct io_context *ioc)
+ {
+ 	WARN_ON_ONCE(atomic_long_read(&ioc->refcount) <= 0);
+-	WARN_ON_ONCE(atomic_read(&ioc->active_ref) <= 0);
+ 	atomic_long_inc(&ioc->refcount);
+-	atomic_inc(&ioc->active_ref);
++	refcount_inc(&ioc->active_ref);
+ }
+ 
+ static inline void ioc_task_link(struct io_context *ioc)
 -- 
 2.7.4
