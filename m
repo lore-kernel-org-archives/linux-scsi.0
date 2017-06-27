@@ -1,51 +1,30 @@
-From: "Javali, Nilesh" <Nilesh.Javali@cavium.com>
-Subject: Re: [PATCH 1/1] qedi: Add support for offload iSCSI Boot
-Date: Tue, 27 Jun 2017 10:08:52 +0000
-Message-ID: <D5782BCE.57E03%nilesh.javali@cavium.com>
-References: <20170619134429.17657-1-nilesh.javali@cavium.com>
- <20170619134429.17657-2-nilesh.javali@cavium.com>
- <yq1h8z27kix.fsf@oracle.com>
+From: Andrei Borzenkov <arvidjaar@gmail.com>
+Subject: Permanently change thin provisioning method from user space?
+Date: Tue, 27 Jun 2017 14:02:35 +0300
+Message-ID: <CAA91j0VCH06Xfk2Hx6ooDnd4+9+Sv1Z+2TY7MmQmgKLoiB0=+A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0078.outbound.protection.outlook.com ([104.47.33.78]:42912
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751632AbdF0KIy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 27 Jun 2017 06:08:54 -0400
-In-Reply-To: <yq1h8z27kix.fsf@oracle.com>
-Content-Language: en-US
-Content-ID: <208527A9ACC2C34A9B83371FBB11D1F9@namprd07.prod.outlook.com>
+Received: from mail-qt0-f177.google.com ([209.85.216.177]:35267 "EHLO
+        mail-qt0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752112AbdF0LCh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jun 2017 07:02:37 -0400
+Received: by mail-qt0-f177.google.com with SMTP id f92so21190818qtb.2
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Jun 2017 04:02:36 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "lduncan@suse.com" <lduncan@suse.com>, "cleech@redhat.com" <cleech@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@cavium.com>
+To: linux-scsi@vger.kernel.org
 
+I'm facing storage system that while generally advertising support for
+WRITE_SAME_16 with UNMAP in reality fails this request depending on
+exact volume configuration. This configuration is done on storage side
+and may happen after host initially discovered LUN.
 
+I though about simply overriding kernel auto-detect with UNMAP using
+sysfs scsi_disk/.../provisioning_mode attribute, but it appears kernel
+may re-evaluate it in some cases, so changes do not stick. Is it
+possible to permanently restrict it per-device (or per-vendor/device)?
 
-On 26/06/17, 10:29 PM, "Martin K. Petersen" <martin.petersen@oracle.com>
-wrote:
+TIA
 
->
->Nilesh,
->
->> This patch adds support for offload iSCSI boot (Boot from SAN
->> over iSCSI offload).
->>
->> The dependent qed patches for this support are,
->> - qed: Support NVM-image reading API
->> - qed: Share additional information with qedf
->
->You had tagged this for 4.12/scsi-fixes but the above patches are not
->present in 4.12. So I presume this would be a candidate for a second
->stage 4.13 merge?
-Yes.
-
->
->Patch looks OK to me, but please resubmit with a slightly more verbose
->description of the changes and how they work.
-Done. Resubmitted the patch.
-
-Thanks,
-Nilesh
+-andrei
