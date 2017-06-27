@@ -1,224 +1,139 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: [PATCH v3 0/4] g_NCR5380: PDMA fixes and cleanup
-Date: Tue, 27 Jun 2017 20:44:42 +0200
-Message-ID: <201706272044.42894.linux@rainbow-software.org>
-References: <cover.1498461406.git.fthain@telegraphics.com.au> <201706262127.03911.linux@rainbow-software.org> <alpine.LNX.2.00.1706270957390.1990@nippy.intranet>
-Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-1b.atlantis.sk ([80.94.52.26]:58266 "EHLO
-        smtp-1b.atlantis.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752311AbdF0SpA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jun 2017 14:45:00 -0400
-In-Reply-To: <alpine.LNX.2.00.1706270957390.1990@nippy.intranet>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: [PATCH RESEND] scsi: Add STARGET_CREATED_REMOVE state to scsi_target_state
+Date: Tue, 27 Jun 2017 14:55:58 -0400
+Message-ID: <1498589758-31473-1-git-send-email-emilne@redhat.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>
 
-On Tuesday 27 June 2017 03:49:16 Finn Thain wrote:
-> On Mon, 26 Jun 2017, Ondrej Zary wrote:
-> > No apparent change in behavior, the first write test resulted in:
-> > [  842.830802] sd 2:0:1:0: [sdb] tag#0 53c80 registers not accessible,
-> > device will be reset [  842.830802] sd 2:0:1:0: [sdb] tag#0 switching to
-> > slow handshake
-> >
-> > Checking for IRQ after poll_politely2 does not seem right because we can
-> > miss the buffer ready signal.
->
-> How so? As long as there's no gated IRQ, we poll for buffer readiness
-> until timeout. And when there is a gated IRQ, we break both the polling
-> loop and the transfer loop immediately. Your code and mine are basically
-> in agreement here.
+From: "Ewan D. Milne" <emilne@redhat.com>
 
-Yes, it stops transfer when an IRQ arrives. But the host buffer could be ready
-at the same time. The IRQ can be an "end-of-DMA" IRQ (IIRC DTC chips assert
-this earlier than 53C400). Or just a disconnect that occured right now but the
-chip already read a buffer full of data.
+The addition of the STARGET_REMOVE state had the side effect of
+introducing a race condition that can cause a crash.
 
-> > According to my tests, buffer ready signal is most important - if there
-> > is any data to read/write, do the transfer. If not, only then check why
-> > - maybe we got an IRQ (that terminated PDMA). Or no IRQ, sometimes the
-> > wait for buffer ready times out - we need to terminate PDMA manually
-> > then (reset).
-> >
-> > Then 53C80 registers should become ready.
->
-> You seem to be saying that we should ignore the IRQ signal if the buffers
-> have become ready. Maybe so. Can we try simply resetting the block
-> counter? (I could imagine that the 53c400 core might leave the 53c80
-> registers inaccessible unless we keep accessing the buffers in the 53c400
-> core until the transfer is done.)
+scsi_target_reap_ref_release() checks the starget->state to
+see if it still in STARGET_CREATED, and if so, skips calling
+transport_remove_device() and device_del(), because the starget->state
+is only set to STARGET_RUNNING after scsi_target_add() has called
+device_add() and transport_add_device().
 
-We can't reset the block counter because 0 means 256 blocks to transfer (page
-13 in datasheet).
-Yes, the 53C80 registers seem to become available only when the PDMA transfer
-ends by either:
-1. transferring all blocks (block counter decrementing to zero)
-2. IRQ
-3. reset
+However, if an rport loss occurs while a target is being scanned,
+it can happen that scsi_remove_target() will be called while the
+starget is still in the STARGET_CREATED state.  In this case, the
+starget->state will be set to STARGET_REMOVE, and as a result,
+scsi_target_reap_ref_release() will take the wrong path.  The end
+result is a panic:
 
-> BTW, with regard to your patch, note that this construct is race prone:
->
-> while (1) {	/* monitor IRQ while waiting for host buffer */
-> 	csr = NCR5380_read(hostdata->c400_ctl_status);
-> 	if (!(csr & CSR_HOST_BUF_NOT_RDY))
-> 		break;
-> 	if (csr & CSR_GATED_53C80_IRQ) {
-> 		basr = NCR5380_read(BUS_AND_STATUS_REG);
-> 		if (!(basr & BASR_PHASE_MATCH) ||
-> 			   (basr & BASR_BUSY_ERROR)) {
-> 			printk("basr=0x%02x csr=0x%02x at start=%d\n", basr, csr, start);
-> 			goto out_wait;
-> 		}
-> 	}
-> 	if (retries-- < 1) {
-> 		shost_printk(KERN_ERR, hostdata->host, "53C400r: host buffer not ready in
-> time\n"); NCR5380_write(hostdata->c400_ctl_status, CSR_RESET);
-> 		NCR5380_write(hostdata->c400_ctl_status, CSR_BASE);
-> 		goto out_wait;
-> 	}
-> }
->
-> This code can "goto out_wait" when !(csr & CSR_HOST_BUF_NOT_RDY). It
-> depends on timing. This would seem to be contrary to your stated aim.
->
-> Moreover, this code can also "break" when (csr & CSR_GATED_53C80_IRQ).
-> That depends on timing too. But this may be an improvement on my code if
-> it allows the 53c80 registers to become accessible, by allowing the block
-> counter to be decremented.
+[ 1255.356653] Oops: 0000 [#1] SMP
+[ 1255.360154] Modules linked in: x86_pkg_temp_thermal kvm_intel kvm irqbypass crc32c_intel ghash_clmulni_i
+[ 1255.393234] CPU: 5 PID: 149 Comm: kworker/u96:4 Tainted: G        W       4.11.0+ #8
+[ 1255.401879] Hardware name: Dell Inc. PowerEdge R320/08VT7V, BIOS 2.0.22 11/19/2013
+[ 1255.410327] Workqueue: scsi_wq_6 fc_scsi_scan_rport [scsi_transport_fc]
+[ 1255.417720] task: ffff88060ca8c8c0 task.stack: ffffc900048a8000
+[ 1255.424331] RIP: 0010:kernfs_find_ns+0x13/0xc0
+[ 1255.429287] RSP: 0018:ffffc900048abbf0 EFLAGS: 00010246
+[ 1255.435123] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
+[ 1255.443083] RDX: 0000000000000000 RSI: ffffffff8188d659 RDI: 0000000000000000
+[ 1255.451043] RBP: ffffc900048abc10 R08: 0000000000000000 R09: 0000012433fe0025
+[ 1255.459005] R10: 0000000025e5a4b5 R11: 0000000025e5a4b5 R12: ffffffff8188d659
+[ 1255.466972] R13: 0000000000000000 R14: ffff8805f55e5088 R15: 0000000000000000
+[ 1255.474931] FS:  0000000000000000(0000) GS:ffff880616b40000(0000) knlGS:0000000000000000
+[ 1255.483959] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 1255.490370] CR2: 0000000000000068 CR3: 0000000001c09000 CR4: 00000000000406e0
+[ 1255.498332] Call Trace:
+[ 1255.501058]  kernfs_find_and_get_ns+0x31/0x60
+[ 1255.505916]  sysfs_unmerge_group+0x1d/0x60
+[ 1255.510498]  dpm_sysfs_remove+0x22/0x60
+[ 1255.514783]  device_del+0xf4/0x2e0
+[ 1255.518577]  ? device_remove_file+0x19/0x20
+[ 1255.523241]  attribute_container_class_device_del+0x1a/0x20
+[ 1255.529457]  transport_remove_classdev+0x4e/0x60
+[ 1255.534607]  ? transport_add_class_device+0x40/0x40
+[ 1255.540046]  attribute_container_device_trigger+0xb0/0xc0
+[ 1255.546069]  transport_remove_device+0x15/0x20
+[ 1255.551025]  scsi_target_reap_ref_release+0x25/0x40
+[ 1255.556467]  scsi_target_reap+0x2e/0x40
+[ 1255.560744]  __scsi_scan_target+0xaa/0x5b0
+[ 1255.565312]  scsi_scan_target+0xec/0x100
+[ 1255.569689]  fc_scsi_scan_rport+0xb1/0xc0 [scsi_transport_fc]
+[ 1255.576099]  process_one_work+0x14b/0x390
+[ 1255.580569]  worker_thread+0x4b/0x390
+[ 1255.584651]  kthread+0x109/0x140
+[ 1255.588251]  ? rescuer_thread+0x330/0x330
+[ 1255.592730]  ? kthread_park+0x60/0x60
+[ 1255.596815]  ret_from_fork+0x29/0x40
+[ 1255.600801] Code: 24 08 48 83 42 40 01 5b 41 5c 5d c3 66 66 66 2e 0f 1f 84 00 00 00 00 00 66 66 66 66 90
+[ 1255.621876] RIP: kernfs_find_ns+0x13/0xc0 RSP: ffffc900048abbf0
+[ 1255.628479] CR2: 0000000000000068
+[ 1255.632756] ---[ end trace 34a69ba0477d036f ]---
 
-Yes, it continue the transfer even if the IRQ is asserted - as long as the
-buffer is ready. That's intended.
+Fix this by adding another scsi_target state STARGET_CREATED_REMOVE
+to distinguish this case.
 
-> The uncertainty here was one of the reasons I reworked this code.
+Fixes: f05795d3d771 ("scsi: Add intermediate STARGET_REMOVE state to scsi_target_state")
+Reported-by: David Jeffery <djeffery@redhat.com>
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+Cc: stable@vger.kernel.org
+---
+ drivers/scsi/scsi_scan.c   | 5 +++--
+ drivers/scsi/scsi_sysfs.c  | 8 ++++++--
+ include/scsi/scsi_device.h | 1 +
+ 3 files changed, 10 insertions(+), 4 deletions(-)
 
-My version reads CSR only once per loop but that probably does not help at all
-as the HW state could change anytime. The chip's design seems to be very
-race-prone.
-
-> > This is a log from writing 230 MB file using my code with some debug
-> > prints, on a NCR53C400. No 53C80 timeouts, only disconnects and some
-> > host buffer timeouts (maybe the drive sometimes just slows down without
-> > disconnecting?)
-> >
-> > [ 3378.503828] basr=0x10 csr=0xd5 at start=512
-> > [ 3461.257973] w basr=0x10 csr=0x95 at start=3840
-> > [ 3461.838225] w basr=0x10 csr=0x95 at start=3840
-> > [ 3462.683446] w basr=0x10 csr=0x95 at start=3840
-> > [ 3463.416911] w basr=0x10 csr=0x95 at start=3840
-> > [ 3465.117804] scsi host2: 53C400w: host buffer not ready in time
-> > [ 3465.276375] w basr=0x10 csr=0x95 at start=3328
-> > [ 3466.457701] w basr=0x10 csr=0x95 at start=1792
-> > [ 3467.019643] scsi host2: 53C400w: host buffer not ready in time
-> > [ 3467.619058] scsi host2: 53C400w: host buffer not ready in time
-> > [ 3467.799619] w basr=0x10 csr=0x95 at start=3840
-> > [ 3552.123501] w basr=0x10 csr=0x95 at start=2304
-> > [ 3552.771223] w basr=0x10 csr=0x95 at start=1280
-> > [ 3554.556451] w basr=0x10 csr=0x95 at start=2816
-> > [ 3555.229646] w basr=0x10 csr=0x95 at start=1792
-> > [ 3555.630632] scsi host2: 53C400w: host buffer not ready in time
-> > [ 3555.774560] w basr=0x10 csr=0x95 at start=768
-> > [ 3625.541608] w basr=0x10 csr=0x95 at start=3328
-> > [ 3640.099861] w basr=0x10 csr=0x95 at start=1792
-> > [ 3641.442671] w basr=0x10 csr=0x95 at start=2816
-> > [ 3641.865469] w basr=0x10 csr=0x95 at start=768
-> > [ 3642.939223] w basr=0x10 csr=0x95 at start=1280
-> > [ 3643.356858] w basr=0x10 csr=0x95 at start=3328
-> > [ 3643.701636] w basr=0x10 csr=0x95 at start=3840
-> > [ 3645.153405] w basr=0x10 csr=0x95 at start=2304
-> > [ 3646.135642] w basr=0x10 csr=0x95 at start=1280
-> > [ 3647.007321] w basr=0x10 csr=0x95 at start=2816
-> > [ 3648.065874] w basr=0x10 csr=0x95 at start=3328
-> > [ 3650.071961] w basr=0x10 csr=0x95 at start=1280
-> > [ 3650.827630] w basr=0x10 csr=0x95 at start=1792
-> > [ 3651.827011] w basr=0x10 csr=0x95 at start=2816
-> > [ 3652.559984] w basr=0x10 csr=0x95 at start=2816
-> > [ 3653.203566] w basr=0x10 csr=0x95 at start=3328
-> > [ 3653.594376] w basr=0x10 csr=0x95 at start=1280
-> > [ 3653.903437] w basr=0x10 csr=0x95 at start=3840
-> > [ 3654.305753] w basr=0x10 csr=0x95 at start=1792
-> > [ 3654.676009] w basr=0x10 csr=0x95 at start=2304
-> > [ 3655.367686] w basr=0x10 csr=0x95 at start=2816
-> > [ 3655.733854] w basr=0x10 csr=0x95 at start=768
-> > [ 3656.075023] w basr=0x10 csr=0x95 at start=3328
-> > [ 3656.493046] w basr=0x10 csr=0x95 at start=2816
-> > [ 3657.208089] w basr=0x10 csr=0x95 at start=1280
-> > [ 3657.537223] w basr=0x10 csr=0x95 at start=1280
-> >
-> > And this is from reading the file back:
-> > [ 3799.053067] basr=0x10 csr=0xd5 at start=512
-> > [ 3801.056337] basr=0x10 csr=0xd5 at start=3584
-> > [ 3976.323836] scsi host2: 53C400r: host buffer not ready in time
-> > [ 3976.404699] basr=0x10 csr=0xd5 at start=512
-> > [ 3977.800647] basr=0x10 csr=0xd5 at start=512
-> > [ 3979.240611] scsi host2: 53C400r: host buffer not ready in time
-> > [ 3979.320698] basr=0x10 csr=0xd5 at start=512
-> > [ 3980.040220] scsi host2: 53C400r: host buffer not ready in time
-> > [ 3980.096401] basr=0x10 csr=0xd5 at start=512
-> > [ 3980.394854] scsi host2: 53C400r: host buffer not ready in time
->
-> The register values look normal (?)
->
-> Anyway, there are only a few material differences between your code and
-> this patch series.
->
-> 1) Your code does not break the transfer loop for any Gated IRQ, but only
->    for a phase error IRQ. My version responds to any Gated IRQ, as per the
->    algorithm in the datasheet. Your code seems to assume that the 53c80
->    registers are accessible whenever gated IRQ is set, which seems
->    unlikely.
-
-BASR seems to be always readable. Nothing in the datasheet about that but I
-needed it to determine the IRQ type and it works.
-
-> 2) My code fails the transfer when the 53c80 registers don't become
->    accessible, which is why you see a fallback to PIO (slow handshake).
->
-> 3) We use different timeouts.
->
-> 4) In my code, the race condition applies only after the timeout has
->    already expired, so it's inconsequential.
->
-> Please apply the patch below (on top of this series) so we can perhaps
-> narrow this down a bit.
-
-It breaks immediately bacause 0 means 256 blocks:
-
-[  658.359022] sd 2:0:1:0: [sdb] 479350 512-byte logical blocks: (245 MB/234 MiB)
-[  658.367683] sd 2:0:1:0: [sdb] Write Protect is off
-[  658.371668] sd 2:0:1:0: [sdb] Mode Sense: 8b 00 00 08
-[  658.377314] sd 2:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-[  658.444177]  sdb: sdb1
-[  658.478658] sd 2:0:1:0: [sdb] Attached SCSI disk
-[  659.382887] sd 2:0:1:0: [sdb] tag#0 generic_NCR5380_pread: End of DMA timeout (0)
-[  659.420862] sd 2:0:1:0: [sdb] tag#0 generic_NCR5380_pread: End of DMA timeout (0)
-[  659.513015] sd 2:0:1:0: [sdb] tag#0 generic_NCR5380_pread: End of DMA timeout (0)
-[  659.550943] sd 2:0:1:0: [sdb] tag#0 generic_NCR5380_pread: End of DMA timeout (0)
-[  659.588817] sd 2:0:1:0: [sdb] tag#0 generic_NCR5380_pread: End of DMA timeout (0)
-[  659.627071] sd 2:0:1:0: [sdb] tag#0 generic_NCR5380_pread: End of DMA timeout (0)
-[  659.664872] sd 2:0:1:0: [sdb] tag#0 generic_NCR5380_pread: End of DMA timeout (0)
-[  659.702776] sd 2:0:1:0: [sdb] tag#0 generic_NCR5380_pread: End of DMA timeout (0)
-[  659.758947] sd 2:0:1:0: [sdb] tag#1 generic_NCR5380_pread: End of DMA timeout (0)
-[  659.796598] sd 2:0:1:0: [sdb] tag#1 generic_NCR5380_pread: End of DMA timeout (0)
-[  659.834615] sd 2:0:1:0: [sdb] tag#1 generic_NCR5380_pread: End of DMA timeout (0)
-[  659.872358] sd 2:0:1:0: [sdb] tag#1 generic_NCR5380_pread: End of DMA timeout (0)
-[  659.910164] sd 2:0:1:0: [sdb] tag#1 generic_NCR5380_pread: End of DMA timeout (0)
-[  659.947651] sd 2:0:1:0: [sdb] tag#1 generic_NCR5380_pread: End of DMA timeout (0)
-[  659.985239] sd 2:0:1:0: [sdb] tag#1 generic_NCR5380_pread: End of DMA timeout (0)
-[  660.022676] sd 2:0:1:0: [sdb] tag#1 generic_NCR5380_pread: End of DMA timeout (0)
-[  660.060230] sd 2:0:1:0: [sdb] tag#1 generic_NCR5380_pread: End of DMA timeout (0)
-[  660.098229] sd 2:0:1:0: [sdb] tag#1 generic_NCR5380_pread: End of DMA timeout (0)
-[  660.135808] sd 2:0:1:0: [sdb] tag#1 generic_NCR5380_pread: End of DMA timeout (0)
-[  660.173513] sd 2:0:1:0: [sdb] tag#1 generic_NCR5380_pread: End of DMA timeout (0)
-[  660.210801] sd 2:0:1:0: [sdb] tag#1 generic_NCR5380_pread: End of DMA timeout (0)
-[  660.248064] sd 2:0:1:0: [sdb] tag#1 generic_NCR5380_pread: End of DMA timeout (0)
-[  660.285459] sd 2:0:1:0: [sdb] tag#1 generic_NCR5380_pread: End of DMA timeout (0)
-...
-I was able to mount the filesystem, haven't tried anything else.
-
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 3c44032..3832ba5 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -385,11 +385,12 @@ static void scsi_target_reap_ref_release(struct kref *kref)
+ 		= container_of(kref, struct scsi_target, reap_ref);
+ 
+ 	/*
+-	 * if we get here and the target is still in the CREATED state that
++	 * if we get here and the target is still in a CREATED state that
+ 	 * means it was allocated but never made visible (because a scan
+ 	 * turned up no LUNs), so don't call device_del() on it.
+ 	 */
+-	if (starget->state != STARGET_CREATED) {
++	if ((starget->state != STARGET_CREATED) &&
++	    (starget->state != STARGET_CREATED_REMOVE)) {
+ 		transport_remove_device(&starget->dev);
+ 		device_del(&starget->dev);
+ 	}
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index ce470f6..d6984df 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1394,11 +1394,15 @@ void scsi_remove_target(struct device *dev)
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	list_for_each_entry(starget, &shost->__targets, siblings) {
+ 		if (starget->state == STARGET_DEL ||
+-		    starget->state == STARGET_REMOVE)
++		    starget->state == STARGET_REMOVE ||
++		    starget->state == STARGET_CREATED_REMOVE)
+ 			continue;
+ 		if (starget->dev.parent == dev || &starget->dev == dev) {
+ 			kref_get(&starget->reap_ref);
+-			starget->state = STARGET_REMOVE;
++			if (starget->state == STARGET_CREATED)
++				starget->state = STARGET_CREATED_REMOVE;
++			else
++				starget->state = STARGET_REMOVE;
+ 			spin_unlock_irqrestore(shost->host_lock, flags);
+ 			__scsi_remove_target(starget);
+ 			scsi_target_reap(starget);
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index d3fb98f..b41ee9d 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -248,6 +248,7 @@ enum scsi_target_state {
+ 	STARGET_CREATED = 1,
+ 	STARGET_RUNNING,
+ 	STARGET_REMOVE,
++	STARGET_CREATED_REMOVE,
+ 	STARGET_DEL,
+ };
+ 
 -- 
-Ondrej Zary
+2.1.0
