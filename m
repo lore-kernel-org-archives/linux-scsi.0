@@ -1,11 +1,11 @@
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 5/5] block: convert bsg_device.ref_count from atomic_t to refcount_t
-Date: Tue, 27 Jun 2017 14:40:00 +0300
-Message-ID: <1498563601-10949-6-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 3/5] block: convert blkcg_gq.refcnt from atomic_t to refcount_t
+Date: Tue, 27 Jun 2017 14:39:58 +0300
+Message-ID: <1498563601-10949-4-git-send-email-elena.reshetova@intel.com>
 References: <1498563601-10949-1-git-send-email-elena.reshetova@intel.com>
-Return-path: <linux-btrfs-owner@vger.kernel.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <1498563601-10949-1-git-send-email-elena.reshetova@intel.com>
-Sender: linux-btrfs-owner@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
 To: axboe@kernel.dk
 Cc: james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-btrfs@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, keescook@chromium.org, fujita.tomonori@lab.ntt.co.jp, mingo@redhat.com, clm@fb.com, jbacik@fb.com, dsterba@suse.com, Elena Reshetova <elena.reshetova@intel.com>, Hans Liljestrand <ishkamiel@gmail.com>, David Windsor <dwindsor@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
@@ -21,57 +21,63 @@ Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
 Signed-off-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: David Windsor <dwindsor@gmail.com>
 ---
- block/bsg.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ block/blk-cgroup.c         | 2 +-
+ include/linux/blk-cgroup.h | 9 ++++-----
+ 2 files changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/block/bsg.c b/block/bsg.c
-index 6fd0854..f35e721 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -21,6 +21,7 @@
- #include <linux/idr.h>
- #include <linux/bsg.h>
- #include <linux/slab.h>
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 0480892..3762908 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -107,7 +107,7 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
+ 	blkg->q = q;
+ 	INIT_LIST_HEAD(&blkg->q_node);
+ 	blkg->blkcg = blkcg;
+-	atomic_set(&blkg->refcnt, 1);
++	refcount_set(&blkg->refcnt, 1);
+ 
+ 	/* root blkg uses @q->root_rl, init rl only for !root blkgs */
+ 	if (blkcg != &blkcg_root) {
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index 01b62e7..e54f048 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -19,6 +19,7 @@
+ #include <linux/radix-tree.h>
+ #include <linux/blkdev.h>
+ #include <linux/atomic.h>
 +#include <linux/refcount.h>
  
- #include <scsi/scsi.h>
- #include <scsi/scsi_ioctl.h>
-@@ -38,7 +39,7 @@ struct bsg_device {
- 	struct list_head busy_list;
- 	struct list_head done_list;
- 	struct hlist_node dev_list;
--	atomic_t ref_count;
-+	refcount_t ref_count;
- 	int queued_cmds;
- 	int done_cmds;
- 	wait_queue_head_t wq_done;
-@@ -711,7 +712,7 @@ static int bsg_put_device(struct bsg_device *bd)
+ /* percpu_counter batch for blkg_[rw]stats, per-cpu drift doesn't matter */
+ #define BLKG_STAT_CPU_BATCH	(INT_MAX / 2)
+@@ -122,7 +123,7 @@ struct blkcg_gq {
+ 	struct request_list		rl;
  
- 	mutex_lock(&bsg_mutex);
+ 	/* reference count */
+-	atomic_t			refcnt;
++	refcount_t			refcnt;
  
--	do_free = atomic_dec_and_test(&bd->ref_count);
-+	do_free = refcount_dec_and_test(&bd->ref_count);
- 	if (!do_free) {
- 		mutex_unlock(&bsg_mutex);
- 		goto out;
-@@ -763,7 +764,7 @@ static struct bsg_device *bsg_add_device(struct inode *inode,
+ 	/* is this blkg online? protected by both blkcg and q locks */
+ 	bool				online;
+@@ -354,8 +355,7 @@ static inline int blkg_path(struct blkcg_gq *blkg, char *buf, int buflen)
+  */
+ static inline void blkg_get(struct blkcg_gq *blkg)
+ {
+-	WARN_ON_ONCE(atomic_read(&blkg->refcnt) <= 0);
+-	atomic_inc(&blkg->refcnt);
++	refcount_inc(&blkg->refcnt);
+ }
  
- 	bsg_set_block(bd, file);
+ void __blkg_release_rcu(struct rcu_head *rcu);
+@@ -366,8 +366,7 @@ void __blkg_release_rcu(struct rcu_head *rcu);
+  */
+ static inline void blkg_put(struct blkcg_gq *blkg)
+ {
+-	WARN_ON_ONCE(atomic_read(&blkg->refcnt) <= 0);
+-	if (atomic_dec_and_test(&blkg->refcnt))
++	if (refcount_dec_and_test(&blkg->refcnt))
+ 		call_rcu(&blkg->rcu_head, __blkg_release_rcu);
+ }
  
--	atomic_set(&bd->ref_count, 1);
-+	refcount_set(&bd->ref_count, 1);
- 	mutex_lock(&bsg_mutex);
- 	hlist_add_head(&bd->dev_list, bsg_dev_idx_hash(iminor(inode)));
- 
-@@ -783,7 +784,7 @@ static struct bsg_device *__bsg_get_device(int minor, struct request_queue *q)
- 
- 	hlist_for_each_entry(bd, bsg_dev_idx_hash(minor), dev_list) {
- 		if (bd->queue == q) {
--			atomic_inc(&bd->ref_count);
-+			refcount_inc(&bd->ref_count);
- 			goto found;
- 		}
- 	}
 -- 
 2.7.4
-
