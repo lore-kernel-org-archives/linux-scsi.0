@@ -1,22 +1,22 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 10/35] bfa: move bus reset to target reset
-Date: Wed, 28 Jun 2017 01:57:49 +0200
-Message-ID: <20170627235749.GK13988@lst.de>
-References: <1498222975-71858-1-git-send-email-hare@suse.de> <1498222975-71858-11-git-send-email-hare@suse.de>
+Subject: Re: [PATCH 11/35] hptiop: Simplify reset handling
+Date: Wed, 28 Jun 2017 01:59:03 +0200
+Message-ID: <20170627235903.GL13988@lst.de>
+References: <1498222975-71858-1-git-send-email-hare@suse.de> <1498222975-71858-12-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:46527 "EHLO newverein.lst.de"
+Received: from verein.lst.de ([213.95.11.211]:46533 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753975AbdF0X5u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 27 Jun 2017 19:57:50 -0400
+        id S1753978AbdF0X7F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 27 Jun 2017 19:59:05 -0400
 Content-Disposition: inline
-In-Reply-To: <1498222975-71858-11-git-send-email-hare@suse.de>
+In-Reply-To: <1498222975-71858-12-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-Looks good,
+Looks fine,
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
