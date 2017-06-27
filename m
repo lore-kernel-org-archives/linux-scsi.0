@@ -1,104 +1,108 @@
 From: Satish Kharat <satishkh@cisco.com>
-Subject: [PATCH 1/1] fnic:added timestamp reporting in fnic debug stats
-Date: Mon, 26 Jun 2017 17:48:08 -0700
-Message-ID: <1498524488-32453-1-git-send-email-satishkh@cisco.com>
+Subject: [PATCH 1/1] fnic:correct speed display and add support for 25,40 and 100G
+Date: Mon, 26 Jun 2017 17:48:44 -0700
+Message-ID: <1498524524-32498-1-git-send-email-satishkh@cisco.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcdn-iport-3.cisco.com ([173.37.86.74]:9920 "EHLO
-        rcdn-iport-3.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751480AbdF0A5w (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2017 20:57:52 -0400
+Received: from rcdn-iport-1.cisco.com ([173.37.86.72]:35677 "EHLO
+        rcdn-iport-1.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751453AbdF0A63 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2017 20:58:29 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: satishkh@cisco.com, Sesidhar Baddela <sebaddel@cisco.com>
 
-Added the timestamps for
-1. current timestamp
-2. last fnic stats read timestamp
-3. last fnic stats reset timestamp
-and the deltas since last stats read and last reset in fnic stats.
-fnic stats uses debugfs
+Setting speed based on the vinc device parameter read during
+linkup. Also adding support to display 25,40 and 100G
 
-Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
 Signed-off-by: Satish Kharat <satishkh@cisco.com>
+Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
 ---
- drivers/scsi/fnic/fnic_debugfs.c |  1 +
- drivers/scsi/fnic/fnic_stats.h   |  7 +++++++
- drivers/scsi/fnic/fnic_trace.c   | 24 ++++++++++++++++++++++++
- 3 files changed, 32 insertions(+)
+ drivers/scsi/fnic/fnic_fcs.c  | 24 ++++++++++++++++++++++++
+ drivers/scsi/fnic/fnic_io.h   |  9 +++++++++
+ drivers/scsi/fnic/fnic_main.c | 14 ++++++++++++--
+ 3 files changed, 45 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/fnic/fnic_debugfs.c b/drivers/scsi/fnic/fnic_debugfs.c
-index d6498fa..5e3d909 100644
---- a/drivers/scsi/fnic/fnic_debugfs.c
-+++ b/drivers/scsi/fnic/fnic_debugfs.c
-@@ -632,6 +632,7 @@ static ssize_t fnic_reset_stats_write(struct file *file,
- 			sizeof(struct io_path_stats) - sizeof(u64));
- 		memset(fw_stats_p+1, 0,
- 			sizeof(struct fw_stats) - sizeof(u64));
-+		getnstimeofday(&stats->stats_timestamps.last_reset_time);
- 	}
+diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
+index 245dcd9..d212eb5 100644
+--- a/drivers/scsi/fnic/fnic_fcs.c
++++ b/drivers/scsi/fnic/fnic_fcs.c
+@@ -65,6 +65,30 @@ void fnic_handle_link(struct work_struct *work)
+ 	fnic->link_status = vnic_dev_link_status(fnic->vdev);
+ 	fnic->link_down_cnt = vnic_dev_link_down_cnt(fnic->vdev);
  
- 	(*ppos)++;
-diff --git a/drivers/scsi/fnic/fnic_stats.h b/drivers/scsi/fnic/fnic_stats.h
-index 88c73cc..e007fee 100644
---- a/drivers/scsi/fnic/fnic_stats.h
-+++ b/drivers/scsi/fnic/fnic_stats.h
-@@ -16,6 +16,12 @@
-  */
- #ifndef _FNIC_STATS_H_
- #define _FNIC_STATS_H_
++	switch (vnic_dev_port_speed(fnic->vdev)) {
++	case DCEM_PORTSPEED_10G:
++		fc_host_speed(fnic->lport->host)   = FC_PORTSPEED_10GBIT;
++		fnic->lport->link_supported_speeds = FC_PORTSPEED_10GBIT;
++		break;
++	case DCEM_PORTSPEED_25G:
++		fc_host_speed(fnic->lport->host)   = FC_PORTSPEED_25GBIT;
++		fnic->lport->link_supported_speeds = FC_PORTSPEED_25GBIT;
++		break;
++	case DCEM_PORTSPEED_40G:
++	case DCEM_PORTSPEED_4x10G:
++		fc_host_speed(fnic->lport->host)   = FC_PORTSPEED_40GBIT;
++		fnic->lport->link_supported_speeds = FC_PORTSPEED_40GBIT;
++		break;
++	case DCEM_PORTSPEED_100G:
++		fc_host_speed(fnic->lport->host)   = FC_PORTSPEED_100GBIT;
++		fnic->lport->link_supported_speeds = FC_PORTSPEED_100GBIT;
++		break;
++	default:
++		fc_host_speed(fnic->lport->host)   = FC_PORTSPEED_UNKNOWN;
++		fnic->lport->link_supported_speeds = FC_PORTSPEED_UNKNOWN;
++		break;
++	}
 +
-+struct stats_timestamps {
-+	struct timespec last_reset_time;
-+	struct timespec last_read_time;
-+};
-+
- struct io_path_stats {
- 	atomic64_t active_ios;
- 	atomic64_t max_active_ios;
-@@ -110,6 +116,7 @@ struct misc_stats {
+ 	if (old_link_status == fnic->link_status) {
+ 		if (!fnic->link_status) {
+ 			/* DOWN -> DOWN */
+diff --git a/drivers/scsi/fnic/fnic_io.h b/drivers/scsi/fnic/fnic_io.h
+index c35b8f1..e0bc659 100644
+--- a/drivers/scsi/fnic/fnic_io.h
++++ b/drivers/scsi/fnic/fnic_io.h
+@@ -66,4 +66,13 @@ struct fnic_io_req {
+ 	struct completion *dr_done; /* completion for device reset */
  };
  
- struct fnic_stats {
-+	struct stats_timestamps stats_timestamps;
- 	struct io_path_stats io_stats;
- 	struct abort_stats abts_stats;
- 	struct terminate_stats term_stats;
-diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
-index b5ac538..4826f59 100644
---- a/drivers/scsi/fnic/fnic_trace.c
-+++ b/drivers/scsi/fnic/fnic_trace.c
-@@ -219,7 +219,31 @@ int fnic_get_stats_data(struct stats_debug_info *debug,
- 	int buf_size = debug->buf_size;
- 	struct timespec val1, val2;
++enum fnic_port_speeds {
++	DCEM_PORTSPEED_NONE = 0,
++	DCEM_PORTSPEED_1G    = 1000,
++	DCEM_PORTSPEED_10G   = 10000,
++	DCEM_PORTSPEED_40G   = 40000,
++	DCEM_PORTSPEED_4x10G = 41000,
++	DCEM_PORTSPEED_25G   = 25000,
++	DCEM_PORTSPEED_100G  = 100000,
++};
+ #endif /* _FNIC_IO_H_ */
+diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
+index ba58b79..aacadbf 100644
+--- a/drivers/scsi/fnic/fnic_main.c
++++ b/drivers/scsi/fnic/fnic_main.c
+@@ -176,11 +176,21 @@ static void fnic_get_host_speed(struct Scsi_Host *shost)
  
-+	getnstimeofday(&val1);
- 	len = snprintf(debug->debug_buffer + len, buf_size - len,
-+		"------------------------------------------\n"
-+		 "\t\tTime\n"
-+		"------------------------------------------\n");
-+
-+	len += snprintf(debug->debug_buffer + len, buf_size - len,
-+		"Current time :          [%ld:%ld]\n"
-+		"Last stats reset time:  [%ld:%ld]\n"
-+		"Last stats read time:   [%ld:%ld]\n"
-+		"delta since last reset: [%ld:%ld]\n"
-+		"delta since last read:  [%ld:%ld]\n",
-+	val1.tv_sec, val1.tv_nsec,
-+	stats->stats_timestamps.last_reset_time.tv_sec,
-+	stats->stats_timestamps.last_reset_time.tv_nsec,
-+	stats->stats_timestamps.last_read_time.tv_sec,
-+	stats->stats_timestamps.last_read_time.tv_nsec,
-+	timespec_sub(val1, stats->stats_timestamps.last_reset_time).tv_sec,
-+	timespec_sub(val1, stats->stats_timestamps.last_reset_time).tv_nsec,
-+	timespec_sub(val1, stats->stats_timestamps.last_read_time).tv_sec,
-+	timespec_sub(val1, stats->stats_timestamps.last_read_time).tv_nsec);
-+
-+	stats->stats_timestamps.last_read_time = val1;
-+
-+	len += snprintf(debug->debug_buffer + len, buf_size - len,
- 		  "------------------------------------------\n"
- 		  "\t\tIO Statistics\n"
- 		  "------------------------------------------\n");
+ 	/* Add in other values as they get defined in fw */
+ 	switch (port_speed) {
+-	case 10000:
++	case DCEM_PORTSPEED_10G:
+ 		fc_host_speed(shost) = FC_PORTSPEED_10GBIT;
+ 		break;
++	case DCEM_PORTSPEED_25G:
++		fc_host_speed(shost) = FC_PORTSPEED_25GBIT;
++		break;
++	case DCEM_PORTSPEED_40G:
++	case DCEM_PORTSPEED_4x10G:
++		fc_host_speed(shost) = FC_PORTSPEED_40GBIT;
++		break;
++	case DCEM_PORTSPEED_100G:
++		fc_host_speed(shost) = FC_PORTSPEED_100GBIT;
++		break;
+ 	default:
+-		fc_host_speed(shost) = FC_PORTSPEED_10GBIT;
++		fc_host_speed(shost) = FC_PORTSPEED_UNKNOWN;
+ 		break;
+ 	}
+ }
 -- 
 2.7.4
