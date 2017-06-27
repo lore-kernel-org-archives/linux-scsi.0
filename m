@@ -1,163 +1,41 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: [PATCH RESEND] scsi: Add STARGET_CREATED_REMOVE state to
- scsi_target_state
-Date: Tue, 27 Jun 2017 17:26:50 -0400
-Message-ID: <daadffe0-e355-e2e0-fdce-ec288540fb37@redhat.com>
-References: <1498589758-31473-1-git-send-email-emilne@redhat.com>
+From: Kees Cook <keescook@chromium.org>
+Subject: Re: [PATCH 0/5] v3 block subsystem refcounter conversions
+Date: Tue, 27 Jun 2017 15:13:31 -0700
+Message-ID: <CAGXu5jJeTAoy1mh1qy0reP_H=u8D86AN=Aj7G6k2cafz76+8NA@mail.gmail.com>
+References: <1498563601-10949-1-git-send-email-elena.reshetova@intel.com> <cbbb6a1f-3203-9523-f47b-227fd646fd29@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f170.google.com ([209.85.216.170]:33715 "EHLO
-        mail-qt0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753795AbdF0V0x (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jun 2017 17:26:53 -0400
-Received: by mail-qt0-f170.google.com with SMTP id r30so35681880qtc.0
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Jun 2017 14:26:53 -0700 (PDT)
-In-Reply-To: <1498589758-31473-1-git-send-email-emilne@redhat.com>
-Content-Language: en-US
+Received: from mail-it0-f44.google.com ([209.85.214.44]:38396 "EHLO
+        mail-it0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752905AbdF0WNd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jun 2017 18:13:33 -0400
+Received: by mail-it0-f44.google.com with SMTP id b205so23842841itg.1
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Jun 2017 15:13:33 -0700 (PDT)
+In-Reply-To: <cbbb6a1f-3203-9523-f47b-227fd646fd29@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org
-Cc: stable@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Elena Reshetova <elena.reshetova@intel.com>, James Bottomley <james.bottomley@hansenpartnership.com>, LKML <linux-kernel@vger.kernel.org>, linux-block@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>, Greg KH <gregkh@linuxfoundation.org>, fujita.tomonori@lab.ntt.co.jp, Ingo Molnar <mingo@redhat.com>, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.com>
 
+On Tue, Jun 27, 2017 at 6:26 AM, Jens Axboe <axboe@kernel.dk> wrote:
+> On 06/27/2017 05:39 AM, Elena Reshetova wrote:
+>> Changes in v3:
+>> No changes in patches apart from trivial rebases, but now by
+>> default refcount_t = atomic_t and uses all atomic standard operations
+>> unless CONFIG_REFCOUNT_FULL is enabled. This is a compromize for the
+>> systems that are critical on performance and cannot accept even
+>> slight delay on the refcounter operations.
+>
+> Is that true in 4.12-rc, or is that true in a later release once
+> Linus has pulled those changes in? If the latter, please resend
+> this when those changes are in, thanks.
 
+It's in -next currently ("locking/refcount: Create unchecked atomic_t
+implementation")
 
-On 06/27/2017 02:55 PM, Ewan D. Milne wrote:
-> From: "Ewan D. Milne" <emilne@redhat.com>
-> 
-> The addition of the STARGET_REMOVE state had the side effect of
-> introducing a race condition that can cause a crash.
-> 
-> scsi_target_reap_ref_release() checks the starget->state to
-> see if it still in STARGET_CREATED, and if so, skips calling
-> transport_remove_device() and device_del(), because the starget->state
-> is only set to STARGET_RUNNING after scsi_target_add() has called
-> device_add() and transport_add_device().
-> 
-> However, if an rport loss occurs while a target is being scanned,
-> it can happen that scsi_remove_target() will be called while the
-> starget is still in the STARGET_CREATED state.  In this case, the
-> starget->state will be set to STARGET_REMOVE, and as a result,
-> scsi_target_reap_ref_release() will take the wrong path.  The end
-> result is a panic:
-> 
-> [ 1255.356653] Oops: 0000 [#1] SMP
-> [ 1255.360154] Modules linked in: x86_pkg_temp_thermal kvm_intel kvm irqbypass crc32c_intel ghash_clmulni_i
-> [ 1255.393234] CPU: 5 PID: 149 Comm: kworker/u96:4 Tainted: G        W       4.11.0+ #8
-> [ 1255.401879] Hardware name: Dell Inc. PowerEdge R320/08VT7V, BIOS 2.0.22 11/19/2013
-> [ 1255.410327] Workqueue: scsi_wq_6 fc_scsi_scan_rport [scsi_transport_fc]
-> [ 1255.417720] task: ffff88060ca8c8c0 task.stack: ffffc900048a8000
-> [ 1255.424331] RIP: 0010:kernfs_find_ns+0x13/0xc0
-> [ 1255.429287] RSP: 0018:ffffc900048abbf0 EFLAGS: 00010246
-> [ 1255.435123] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
-> [ 1255.443083] RDX: 0000000000000000 RSI: ffffffff8188d659 RDI: 0000000000000000
-> [ 1255.451043] RBP: ffffc900048abc10 R08: 0000000000000000 R09: 0000012433fe0025
-> [ 1255.459005] R10: 0000000025e5a4b5 R11: 0000000025e5a4b5 R12: ffffffff8188d659
-> [ 1255.466972] R13: 0000000000000000 R14: ffff8805f55e5088 R15: 0000000000000000
-> [ 1255.474931] FS:  0000000000000000(0000) GS:ffff880616b40000(0000) knlGS:0000000000000000
-> [ 1255.483959] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [ 1255.490370] CR2: 0000000000000068 CR3: 0000000001c09000 CR4: 00000000000406e0
-> [ 1255.498332] Call Trace:
-> [ 1255.501058]  kernfs_find_and_get_ns+0x31/0x60
-> [ 1255.505916]  sysfs_unmerge_group+0x1d/0x60
-> [ 1255.510498]  dpm_sysfs_remove+0x22/0x60
-> [ 1255.514783]  device_del+0xf4/0x2e0
-> [ 1255.518577]  ? device_remove_file+0x19/0x20
-> [ 1255.523241]  attribute_container_class_device_del+0x1a/0x20
-> [ 1255.529457]  transport_remove_classdev+0x4e/0x60
-> [ 1255.534607]  ? transport_add_class_device+0x40/0x40
-> [ 1255.540046]  attribute_container_device_trigger+0xb0/0xc0
-> [ 1255.546069]  transport_remove_device+0x15/0x20
-> [ 1255.551025]  scsi_target_reap_ref_release+0x25/0x40
-> [ 1255.556467]  scsi_target_reap+0x2e/0x40
-> [ 1255.560744]  __scsi_scan_target+0xaa/0x5b0
-> [ 1255.565312]  scsi_scan_target+0xec/0x100
-> [ 1255.569689]  fc_scsi_scan_rport+0xb1/0xc0 [scsi_transport_fc]
-> [ 1255.576099]  process_one_work+0x14b/0x390
-> [ 1255.580569]  worker_thread+0x4b/0x390
-> [ 1255.584651]  kthread+0x109/0x140
-> [ 1255.588251]  ? rescuer_thread+0x330/0x330
-> [ 1255.592730]  ? kthread_park+0x60/0x60
-> [ 1255.596815]  ret_from_fork+0x29/0x40
-> [ 1255.600801] Code: 24 08 48 83 42 40 01 5b 41 5c 5d c3 66 66 66 2e 0f 1f 84 00 00 00 00 00 66 66 66 66 90
-> [ 1255.621876] RIP: kernfs_find_ns+0x13/0xc0 RSP: ffffc900048abbf0
-> [ 1255.628479] CR2: 0000000000000068
-> [ 1255.632756] ---[ end trace 34a69ba0477d036f ]---
-> 
-> Fix this by adding another scsi_target state STARGET_CREATED_REMOVE
-> to distinguish this case.
-> 
-> Fixes: f05795d3d771 ("scsi: Add intermediate STARGET_REMOVE state to scsi_target_state")
-> Reported-by: David Jeffery <djeffery@redhat.com>
-> Signed-off-by: Ewan D. Milne <emilne@redhat.com>
-> Cc: stable@vger.kernel.org
-> ---
->   drivers/scsi/scsi_scan.c   | 5 +++--
->   drivers/scsi/scsi_sysfs.c  | 8 ++++++--
->   include/scsi/scsi_device.h | 1 +
->   3 files changed, 10 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 3c44032..3832ba5 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -385,11 +385,12 @@ static void scsi_target_reap_ref_release(struct kref *kref)
->   		= container_of(kref, struct scsi_target, reap_ref);
->   
->   	/*
-> -	 * if we get here and the target is still in the CREATED state that
-> +	 * if we get here and the target is still in a CREATED state that
->   	 * means it was allocated but never made visible (because a scan
->   	 * turned up no LUNs), so don't call device_del() on it.
->   	 */
-> -	if (starget->state != STARGET_CREATED) {
-> +	if ((starget->state != STARGET_CREATED) &&
-> +	    (starget->state != STARGET_CREATED_REMOVE)) {
->   		transport_remove_device(&starget->dev);
->   		device_del(&starget->dev);
->   	}
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index ce470f6..d6984df 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -1394,11 +1394,15 @@ void scsi_remove_target(struct device *dev)
->   	spin_lock_irqsave(shost->host_lock, flags);
->   	list_for_each_entry(starget, &shost->__targets, siblings) {
->   		if (starget->state == STARGET_DEL ||
-> -		    starget->state == STARGET_REMOVE)
-> +		    starget->state == STARGET_REMOVE ||
-> +		    starget->state == STARGET_CREATED_REMOVE)
->   			continue;
->   		if (starget->dev.parent == dev || &starget->dev == dev) {
->   			kref_get(&starget->reap_ref);
-> -			starget->state = STARGET_REMOVE;
-> +			if (starget->state == STARGET_CREATED)
-> +				starget->state = STARGET_CREATED_REMOVE;
-> +			else
-> +				starget->state = STARGET_REMOVE;
->   			spin_unlock_irqrestore(shost->host_lock, flags);
->   			__scsi_remove_target(starget);
->   			scsi_target_reap(starget);
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index d3fb98f..b41ee9d 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -248,6 +248,7 @@ enum scsi_target_state {
->   	STARGET_CREATED = 1,
->   	STARGET_RUNNING,
->   	STARGET_REMOVE,
-> +	STARGET_CREATED_REMOVE,
->   	STARGET_DEL,
->   };
->   
-> 
+-Kees
 
-This patch (similar patch modified for RHEL) has been tested and 
-validated here for multiple customers.
-
-Reviewed-by: Laurence Oberman <loberman@redhat.com>
-Tested-by:   Laurence Oberman <loberman@redhat.com>
-
-Thanks
-Laurence
+-- 
+Kees Cook
+Pixel Security
