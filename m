@@ -1,61 +1,54 @@
 From: Mike Christie <mchristi@redhat.com>
-Subject: Re: [PATCH 4/5] target: user: Fix sense data handling
-Date: Wed, 28 Jun 2017 12:44:28 -0500
-Message-ID: <5eb219c5-c4a7-ea75-ff31-d732e10c72ae@redhat.com>
+Subject: Re: [PATCH 5/5] target: core: Fix failed command sense data handling
+Date: Wed, 28 Jun 2017 12:45:43 -0500
+Message-ID: <0b946201-4472-19d8-a471-b07a37a11f1b@redhat.com>
 References: <20170628055900.22889-1-damien.lemoal@wdc.com>
- <20170628055900.22889-5-damien.lemoal@wdc.com>
+ <20170628055900.22889-6-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47378 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751521AbdF1Roc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2017 13:44:32 -0400
-In-Reply-To: <20170628055900.22889-5-damien.lemoal@wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20170628055900.22889-6-damien.lemoal@wdc.com>
+Sender: target-devel-owner@vger.kernel.org
 To: Damien Le Moal <damien.lemoal@wdc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, "Nicholas A . Bellinger" <nab@linux-iscsi.org>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>
+List-Id: linux-scsi@vger.kernel.org
 
-On 06/28/2017 12:58 AM, Damien Le Moal wrote:
-> If the user request handler completed the request with a CHECK CONDITION
-> status, tcmu_handle_completion() copies the command entry sense data
-> into the session request structure sense data. However, the sense data
-> length indicated by the field scsi_sense_length is not set and equal to
-> 0, resulting in the copy being a no-op and failure to propagate the
-> sense data back to the initiator. To fix this, properly set the session
-> command sense data length and also set the session command
-> SCF_TRANSPORT_TASK_SENSE flag to indicate that the command has valid
-> sense data.
+On 06/28/2017 12:59 AM, Damien Le Moal wrote:
+> For a target device without a transport->transport_complete method
+> defined (e.g. target_core_user), target_complete_cmd() will always
+> result in a failed command completion being processed through target
+> failure completion work even when the command failure comes from the
+> target processing and has valid sense data (and hence does not require
+> sense data emulation as done in the failure work processing). To ensure
+> that the failed command sense data is propagated as indicated by the
+> target, make sure that the normal "ok" work completion path is used by
+> moving the command SCF_TRANSPORT_TASK_SENSE flag test out of the
+> transport_complete defined conditional.
 > 
 > Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 > ---
->  drivers/target/target_core_user.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+>  drivers/target/target_core_transport.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-> index beb5f09..7426b4c 100644
-> --- a/drivers/target/target_core_user.c
-> +++ b/drivers/target/target_core_user.c
-> @@ -831,7 +831,9 @@ static void tcmu_handle_completion(struct tcmu_cmd *cmd, struct tcmu_cmd_entry *
->  		entry->rsp.scsi_status = SAM_STAT_CHECK_CONDITION;
->  	} else if (entry->rsp.scsi_status == SAM_STAT_CHECK_CONDITION) {
->  		memcpy(se_cmd->sense_buffer, entry->rsp.sense_buffer,
-> -			       se_cmd->scsi_sense_length);
-> +		       TRANSPORT_SENSE_BUFFER);
-> +		se_cmd->scsi_sense_length = TRANSPORT_SENSE_BUFFER;
-> +		se_cmd->se_cmd_flags |= SCF_TRANSPORT_TASK_SENSE;
->  	} else if (se_cmd->se_cmd_flags & SCF_BIDI) {
->  		/* Get Data-In buffer before clean up */
->  		gather_data_area(udev, cmd, true);
+> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+> index f1b3a46..a18e4db 100644
+> --- a/drivers/target/target_core_transport.c
+> +++ b/drivers/target/target_core_transport.c
+> @@ -719,10 +719,11 @@ void target_complete_cmd(struct se_cmd *cmd, u8 scsi_status)
+>  		dev->transport->transport_complete(cmd,
+>  				cmd->t_data_sg,
+>  				transport_get_sense_buffer(cmd));
+> -		if (cmd->se_cmd_flags & SCF_TRANSPORT_TASK_SENSE)
+> -			success = 1;
+>  	}
+>  
+> +	if (cmd->se_cmd_flags & SCF_TRANSPORT_TASK_SENSE)
+> +		success = 1;
+> +
+>  	/*
+>  	 * Check for case where an explicit ABORT_TASK has been received
+>  	 * and transport_wait_for_tasks() will be waiting for completion..
 > 
-
-I have a patch similar to this and 5/5 in my set:
-
-https://www.spinics.net/lists/target-devel/msg15430.html
-
-If yours gets merged first then I will build my set over them, so patch
-looks ok to me.
 
 Reviewed-by: Mike Christie <mchristi@redhat.com>
