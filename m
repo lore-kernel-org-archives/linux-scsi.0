@@ -1,37 +1,40 @@
-From: Frans Klaver <fransklaver@gmail.com>
-Subject: Re: [PATCH] scsi: hisi_sas: optimise DMA slot memory
-Date: Wed, 28 Jun 2017 17:06:11 +0200
-Message-ID: <CAH6sp9Ms3owydSN8hgSCiLXmOG5ke5yPdRxWbPjTVCS__n3RDA@mail.gmail.com>
-References: <1498663554-51272-1-git-send-email-john.garry@huawei.com>
+From: Chad Dupuis <chad.dupuis@cavium.com>
+Subject: Re: [PATCH 19/28] qedf: drop bus reset handler
+Date: Wed, 28 Jun 2017 11:05:21 -0400 (EDT)
+Message-ID: <alpine.OSX.2.00.1706281102250.1017@n5106mn2lfm2r1.qlogic.org>
+References: <1498638316-44420-1-git-send-email-hare@suse.de> <1498638316-44420-20-git-send-email-hare@suse.de> <20170628135858.GI1268@lst.de> <alpine.OSX.2.00.1706281003560.920@n5127mncfb42q1.qlogic.org> <20170628143716.GB2359@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ua0-f174.google.com ([209.85.217.174]:36083 "EHLO
-        mail-ua0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752554AbdF1PGN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jun 2017 11:06:13 -0400
-In-Reply-To: <1498663554-51272-1-git-send-email-john.garry@huawei.com>
+Received: from mail-by2nam01on0063.outbound.protection.outlook.com ([104.47.34.63]:12864
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751580AbdF1PFn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 11:05:43 -0400
+In-Reply-To: <20170628143716.GB2359@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linuxarm@huawei.com, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Xiaofei Tan <tanxiaofei@huawei.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Wed, Jun 28, 2017 at 5:25 PM, John Garry <john.garry@huawei.com> wrote:
-> From: Xiaofei Tan <tanxiaofei@huawei.com>
->
-> Currently we allocate 3 sets of DMA memories from separate
-> pools for each slot. This is inefficient in terms of memory usage
-> (buffers are less than 1 page in size, so we lose due to alignment),
-> and also time spend in doing 3 allocations + de-allocations per slot,
-> instead of 1.
->
-> To optimise, combine the 3 DMA buffers into a single buffer from a
-> single pool.
->
-> Signed-off-by: John Garry <john.garry@huawei.com>
-> Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 
-I'm not sure how strictly this is done, but typically the author signs
-off first.
+On Wed, 28 Jun 2017, 10:37am, Christoph Hellwig wrote:
 
-Frans
+> 
+> sg_reset / SG_SCSI_RESET are designed to escalatae to to the bigger
+> hammers if the method isn't implemented or doesn't succeed.
+> 
+> Use the -N / --no-esc option to disable that.  I wish that behavior had
+> been the default from the beginning, but we can't fix that anymore.
+> 
+
+Yeah, for a sg_reset prespective that would be the better behavior.  I 
+removed the bus_reset handler and used the --no-esc parameter which causes 
+sg_reset to behave more reasonably:
+
+# sg_reset -b --no-esc /dev/sdj
+sg_reset: reset (for value=0x102) may not be available
+
+Given this I don't have an objection to this patch.
+
+Tested-by: Chad Dupuis <chad.dupuis@cavium.com>
