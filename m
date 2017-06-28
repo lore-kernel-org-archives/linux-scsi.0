@@ -1,57 +1,52 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
 Subject: Re: [PATCH] qla2xxx: Fix compile warning
-Date: Wed, 28 Jun 2017 15:12:08 -0700
-Message-ID: <1498687928.2769.20.camel@HansenPartnership.com>
+Date: Wed, 28 Jun 2017 23:03:49 +0000
+Message-ID: <2F4E3F66-176F-4357-8340-2E03A0FC9501@cavium.com>
 References: <20170628220026.5706-1-himanshu.madhani@cavium.com>
+ <1498687928.2769.20.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:53100 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751804AbdF1WML (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2017 18:12:11 -0400
-In-Reply-To: <20170628220026.5706-1-himanshu.madhani@cavium.com>
+Received: from mail-by2nam01on0088.outbound.protection.outlook.com ([104.47.34.88]:43840
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751626AbdF1XDw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 19:03:52 -0400
+In-Reply-To: <1498687928.2769.20.camel@HansenPartnership.com>
+Content-Language: en-US
+Content-ID: <B514D461E733F348836B93BC53C5A6E1@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@cavium.com>, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Wed, 2017-06-28 at 15:00 -0700, Himanshu Madhani wrote:
-> Fixes following warning
-> 
-> drivers/scsi/qla2xxx/qla_nvme.c: In function 'qla2x00_start_nvme_mq':
-> include/uapi/linux/byteorder/big_endian.h:32:26: warning: large
-> integer
-> implicitly truncated to unsigned type [-Woverflow]
->  #define __cpu_to_le32(x) ((__force __le32)__swab32((x)))
-> 
-> Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
-> ---
->  drivers/scsi/qla2xxx/qla_nvme.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_nvme.c
-> b/drivers/scsi/qla2xxx/qla_nvme.c
-> index 1da8fa8f641d..14e25e32e622 100644
-> --- a/drivers/scsi/qla2xxx/qla_nvme.c
-> +++ b/drivers/scsi/qla2xxx/qla_nvme.c
-> @@ -441,7 +441,7 @@ static int qla2x00_start_nvme_mq(srb_t *sp)
->  				req->ring_ptr++;
->  			}
->  			cont_pkt = (cont_a64_entry_t *)req-
-> >ring_ptr;
-> -			cont_pkt->entry_type =
-> cpu_to_le32(CONTINUE_A64_TYPE);
-> +			cont_pkt->entry_type = CONTINUE_A64_TYPE;
-> 
-
-Well the code is definitely buggy, because it will load 0 on a BE
-system.  However, are you sure this is the right fix?  I thought the
-qlogic engine did groups of 32 bit words, which is why the pre-nvme
-code loads this field as:
-
-	*((uint32_t *)(&cont_pkt->entry_type)) = cpu_to_le32(CONTINUE_TYPE);
-
-James
+DQo+IE9uIEp1biAyOCwgMjAxNywgYXQgMzoxMiBQTSwgSmFtZXMgQm90dG9tbGV5IDxKYW1lcy5C
+b3R0b21sZXlASGFuc2VuUGFydG5lcnNoaXAuY29tPiB3cm90ZToNCj4gDQo+IE9uIFdlZCwgMjAx
+Ny0wNi0yOCBhdCAxNTowMCAtMDcwMCwgSGltYW5zaHUgTWFkaGFuaSB3cm90ZToNCj4+IEZpeGVz
+IGZvbGxvd2luZyB3YXJuaW5nDQo+PiANCj4+IGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9udm1l
+LmM6IEluIGZ1bmN0aW9uICdxbGEyeDAwX3N0YXJ0X252bWVfbXEnOg0KPj4gaW5jbHVkZS91YXBp
+L2xpbnV4L2J5dGVvcmRlci9iaWdfZW5kaWFuLmg6MzI6MjY6IHdhcm5pbmc6IGxhcmdlDQo+PiBp
+bnRlZ2VyDQo+PiBpbXBsaWNpdGx5IHRydW5jYXRlZCB0byB1bnNpZ25lZCB0eXBlIFstV292ZXJm
+bG93XQ0KPj4gICNkZWZpbmUgX19jcHVfdG9fbGUzMih4KSAoKF9fZm9yY2UgX19sZTMyKV9fc3dh
+YjMyKCh4KSkpDQo+PiANCj4+IFNpZ25lZC1vZmYtYnk6IEhpbWFuc2h1IE1hZGhhbmkgPGhpbWFu
+c2h1Lm1hZGhhbmlAY2F2aXVtLmNvbT4NCj4+IC0tLQ0KPj4gIGRyaXZlcnMvc2NzaS9xbGEyeHh4
+L3FsYV9udm1lLmMgfCAyICstDQo+PiAgMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAx
+IGRlbGV0aW9uKC0pDQo+PiANCj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9x
+bGFfbnZtZS5jDQo+PiBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9udm1lLmMNCj4+IGluZGV4
+IDFkYThmYThmNjQxZC4uMTRlMjVlMzJlNjIyIDEwMDY0NA0KPj4gLS0tIGEvZHJpdmVycy9zY3Np
+L3FsYTJ4eHgvcWxhX252bWUuYw0KPj4gKysrIGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX252
+bWUuYw0KPj4gQEAgLTQ0MSw3ICs0NDEsNyBAQCBzdGF0aWMgaW50IHFsYTJ4MDBfc3RhcnRfbnZt
+ZV9tcShzcmJfdCAqc3ApDQo+PiAgCQkJCXJlcS0+cmluZ19wdHIrKzsNCj4+ICAJCQl9DQo+PiAg
+CQkJY29udF9wa3QgPSAoY29udF9hNjRfZW50cnlfdCAqKXJlcS0NCj4+PiByaW5nX3B0cjsNCj4+
+IC0JCQljb250X3BrdC0+ZW50cnlfdHlwZSA9DQo+PiBjcHVfdG9fbGUzMihDT05USU5VRV9BNjRf
+VFlQRSk7DQo+PiArCQkJY29udF9wa3QtPmVudHJ5X3R5cGUgPSBDT05USU5VRV9BNjRfVFlQRTsN
+Cj4+ICANCj4gDQo+IFdlbGwgdGhlIGNvZGUgaXMgZGVmaW5pdGVseSBidWdneSwgYmVjYXVzZSBp
+dCB3aWxsIGxvYWQgMCBvbiBhIEJFDQo+IHN5c3RlbS4gIEhvd2V2ZXIsIGFyZSB5b3Ugc3VyZSB0
+aGlzIGlzIHRoZSByaWdodCBmaXg/ICBJIHRob3VnaHQgdGhlDQo+IHFsb2dpYyBlbmdpbmUgZGlk
+IGdyb3VwcyBvZiAzMiBiaXQgd29yZHMsIHdoaWNoIGlzIHdoeSB0aGUgcHJlLW52bWUNCj4gY29k
+ZSBsb2FkcyB0aGlzIGZpZWxkIGFzOg0KPiANCj4gCSooKHVpbnQzMl90ICopKCZjb250X3BrdC0+
+ZW50cnlfdHlwZSkpID0gY3B1X3RvX2xlMzIoQ09OVElOVUVfVFlQRSk7DQo+IA0KPiBKYW1lcw0K
+DQpBZ3JlZS4gSSBuZWVkIHRvIGdvIGJhY2sgYW5kIGNoZWNrIHdoaWNoIHdvdWxkIGJlIHJpZ2h0
+IGZpeC4gDQoNCk9uY2UgaeKAmXZlIGNvbmZpcm1lZCBpdCB3b3JrcyBvbiBib3RoIHBsYXRmb3Jt
+LCBJ4oCZbGwgc2VuZCBvdXQgbmV3IHBhdGNoLg0KDQpUaGFua3MsDQotIEhpbWFuc2h1DQoNCg==
