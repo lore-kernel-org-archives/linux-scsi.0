@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 28/28] NCR5380: Clear all unissued commands on host reset
-Date: Wed, 28 Jun 2017 10:25:16 +0200
-Message-ID: <1498638316-44420-29-git-send-email-hare@suse.de>
+Subject: [PATCH 11/28] scsi: drop bus reset for wd33c93-compatible boards
+Date: Wed, 28 Jun 2017 10:24:59 +0200
+Message-ID: <1498638316-44420-12-git-send-email-hare@suse.de>
 References: <1498638316-44420-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53070 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:53021 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751652AbdF1IbS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1751776AbdF1IbS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Wed, 28 Jun 2017 04:31:18 -0400
 In-Reply-To: <1498638316-44420-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,41 +14,212 @@ List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-When doing a host reset we should be clearing all outstanding
-commands, not just the command triggering the reset.
+The bus reset function is just a wrapper calling host reset
+under the host lock. So move taking of the host lock into
+the host reset function and drop bus reset.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/NCR5380.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/scsi/a2091.c   | 17 -----------------
+ drivers/scsi/a3000.c   | 17 -----------------
+ drivers/scsi/gvp11.c   | 18 ------------------
+ drivers/scsi/mvme147.c | 16 ----------------
+ drivers/scsi/sgiwd93.c | 15 ---------------
+ drivers/scsi/wd33c93.c |  2 ++
+ 6 files changed, 2 insertions(+), 83 deletions(-)
 
-diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index 8a08122..429cb00 100644
---- a/drivers/scsi/NCR5380.c
-+++ b/drivers/scsi/NCR5380.c
-@@ -2313,7 +2313,7 @@ static int NCR5380_host_reset(struct scsi_cmnd *cmd)
- 	spin_lock_irqsave(&hostdata->lock, flags);
- 
- #if (NDEBUG & NDEBUG_ANY)
--	scmd_printk(KERN_INFO, cmd, __func__);
-+	shost_printk(KERN_INFO, instance, __func__);
- #endif
- 	NCR5380_dprint(NDEBUG_ANY, instance);
- 	NCR5380_dprint_phase(NDEBUG_ANY, instance);
-@@ -2331,10 +2331,13 @@ static int NCR5380_host_reset(struct scsi_cmnd *cmd)
- 	 * commands!
- 	 */
- 
--	if (list_del_cmd(&hostdata->unissued, cmd)) {
-+	list_for_each_entry(ncmd, &hostdata->unissued, list) {
-+		struct scsi_cmnd *cmd = NCR5380_to_scmd(ncmd);
-+
- 		cmd->result = DID_RESET << 16;
- 		cmd->scsi_done(cmd);
+diff --git a/drivers/scsi/a2091.c b/drivers/scsi/a2091.c
+index 9176bfb..61aadc7 100644
+--- a/drivers/scsi/a2091.c
++++ b/drivers/scsi/a2091.c
+@@ -147,22 +147,6 @@ static void dma_stop(struct Scsi_Host *instance, struct scsi_cmnd *SCpnt,
  	}
-+	INIT_LIST_HEAD(&hostdata->unissued);
+ }
  
- 	if (hostdata->selecting) {
- 		hostdata->selecting->result = DID_RESET << 16;
+-static int a2091_bus_reset(struct scsi_cmnd *cmd)
+-{
+-	struct Scsi_Host *instance = cmd->device->host;
+-
+-	/* FIXME perform bus-specific reset */
+-
+-	/* FIXME 2: kill this function, and let midlayer fall back
+-	   to the same action, calling wd33c93_host_reset() */
+-
+-	spin_lock_irq(instance->host_lock);
+-	wd33c93_host_reset(cmd);
+-	spin_unlock_irq(instance->host_lock);
+-
+-	return SUCCESS;
+-}
+-
+ static struct scsi_host_template a2091_scsi_template = {
+ 	.module			= THIS_MODULE,
+ 	.name			= "Commodore A2091/A590 SCSI",
+@@ -171,7 +155,6 @@ static int a2091_bus_reset(struct scsi_cmnd *cmd)
+ 	.proc_name		= "A2901",
+ 	.queuecommand		= wd33c93_queuecommand,
+ 	.eh_abort_handler	= wd33c93_abort,
+-	.eh_bus_reset_handler	= a2091_bus_reset,
+ 	.eh_host_reset_handler	= wd33c93_host_reset,
+ 	.can_queue		= CAN_QUEUE,
+ 	.this_id		= 7,
+diff --git a/drivers/scsi/a3000.c b/drivers/scsi/a3000.c
+index e6375b4..2427a85 100644
+--- a/drivers/scsi/a3000.c
++++ b/drivers/scsi/a3000.c
+@@ -162,22 +162,6 @@ static void dma_stop(struct Scsi_Host *instance, struct scsi_cmnd *SCpnt,
+ 	}
+ }
+ 
+-static int a3000_bus_reset(struct scsi_cmnd *cmd)
+-{
+-	struct Scsi_Host *instance = cmd->device->host;
+-
+-	/* FIXME perform bus-specific reset */
+-
+-	/* FIXME 2: kill this entire function, which should
+-	   cause mid-layer to call wd33c93_host_reset anyway? */
+-
+-	spin_lock_irq(instance->host_lock);
+-	wd33c93_host_reset(cmd);
+-	spin_unlock_irq(instance->host_lock);
+-
+-	return SUCCESS;
+-}
+-
+ static struct scsi_host_template amiga_a3000_scsi_template = {
+ 	.module			= THIS_MODULE,
+ 	.name			= "Amiga 3000 built-in SCSI",
+@@ -186,7 +170,6 @@ static int a3000_bus_reset(struct scsi_cmnd *cmd)
+ 	.proc_name		= "A3000",
+ 	.queuecommand		= wd33c93_queuecommand,
+ 	.eh_abort_handler	= wd33c93_abort,
+-	.eh_bus_reset_handler	= a3000_bus_reset,
+ 	.eh_host_reset_handler	= wd33c93_host_reset,
+ 	.can_queue		= CAN_QUEUE,
+ 	.this_id		= 7,
+diff --git a/drivers/scsi/gvp11.c b/drivers/scsi/gvp11.c
+index 3b6f83f..a27fc49 100644
+--- a/drivers/scsi/gvp11.c
++++ b/drivers/scsi/gvp11.c
+@@ -171,23 +171,6 @@ static void dma_stop(struct Scsi_Host *instance, struct scsi_cmnd *SCpnt,
+ 	}
+ }
+ 
+-static int gvp11_bus_reset(struct scsi_cmnd *cmd)
+-{
+-	struct Scsi_Host *instance = cmd->device->host;
+-
+-	/* FIXME perform bus-specific reset */
+-
+-	/* FIXME 2: shouldn't we no-op this function (return
+-	   FAILED), and fall back to host reset function,
+-	   wd33c93_host_reset ? */
+-
+-	spin_lock_irq(instance->host_lock);
+-	wd33c93_host_reset(cmd);
+-	spin_unlock_irq(instance->host_lock);
+-
+-	return SUCCESS;
+-}
+-
+ static struct scsi_host_template gvp11_scsi_template = {
+ 	.module			= THIS_MODULE,
+ 	.name			= "GVP Series II SCSI",
+@@ -196,7 +179,6 @@ static int gvp11_bus_reset(struct scsi_cmnd *cmd)
+ 	.proc_name		= "GVP11",
+ 	.queuecommand		= wd33c93_queuecommand,
+ 	.eh_abort_handler	= wd33c93_abort,
+-	.eh_bus_reset_handler	= gvp11_bus_reset,
+ 	.eh_host_reset_handler	= wd33c93_host_reset,
+ 	.can_queue		= CAN_QUEUE,
+ 	.this_id		= 7,
+diff --git a/drivers/scsi/mvme147.c b/drivers/scsi/mvme147.c
+index e7f6661..4f51570 100644
+--- a/drivers/scsi/mvme147.c
++++ b/drivers/scsi/mvme147.c
+@@ -121,21 +121,6 @@ int mvme147_detect(struct scsi_host_template *tpnt)
+ 	return 0;
+ }
+ 
+-static int mvme147_bus_reset(struct scsi_cmnd *cmd)
+-{
+-	/* FIXME perform bus-specific reset */
+-
+-	/* FIXME 2: kill this function, and let midlayer fallback to
+-	   the same result, calling wd33c93_host_reset() */
+-
+-	spin_lock_irq(cmd->device->host->host_lock);
+-	wd33c93_host_reset(cmd);
+-	spin_unlock_irq(cmd->device->host->host_lock);
+-
+-	return SUCCESS;
+-}
+-
+-
+ static struct scsi_host_template driver_template = {
+ 	.proc_name		= "MVME147",
+ 	.name			= "MVME147 built-in SCSI",
+@@ -143,7 +128,6 @@ static int mvme147_bus_reset(struct scsi_cmnd *cmd)
+ 	.release		= mvme147_release,
+ 	.queuecommand		= wd33c93_queuecommand,
+ 	.eh_abort_handler	= wd33c93_abort,
+-	.eh_bus_reset_handler	= mvme147_bus_reset,
+ 	.eh_host_reset_handler	= wd33c93_host_reset,
+ 	.can_queue		= CAN_QUEUE,
+ 	.this_id		= 7,
+diff --git a/drivers/scsi/sgiwd93.c b/drivers/scsi/sgiwd93.c
+index 80cfa93..5ed696d 100644
+--- a/drivers/scsi/sgiwd93.c
++++ b/drivers/scsi/sgiwd93.c
+@@ -192,20 +192,6 @@ static inline void init_hpc_chain(struct ip22_hostdata *hdata)
+ 	hcp->desc.pnext = hdata->dma;
+ }
+ 
+-static int sgiwd93_bus_reset(struct scsi_cmnd *cmd)
+-{
+-	/* FIXME perform bus-specific reset */
+-
+-	/* FIXME 2: kill this function, and let midlayer fallback
+-	   to the same result, calling wd33c93_host_reset() */
+-
+-	spin_lock_irq(cmd->device->host->host_lock);
+-	wd33c93_host_reset(cmd);
+-	spin_unlock_irq(cmd->device->host->host_lock);
+-
+-	return SUCCESS;
+-}
+-
+ /*
+  * Kludge alert - the SCSI code calls the abort and reset method with int
+  * arguments not with pointers.  So this is going to blow up beautyfully
+@@ -217,7 +203,6 @@ static int sgiwd93_bus_reset(struct scsi_cmnd *cmd)
+ 	.name			= "SGI WD93",
+ 	.queuecommand		= wd33c93_queuecommand,
+ 	.eh_abort_handler	= wd33c93_abort,
+-	.eh_bus_reset_handler	= sgiwd93_bus_reset,
+ 	.eh_host_reset_handler	= wd33c93_host_reset,
+ 	.can_queue		= 16,
+ 	.this_id		= 7,
+diff --git a/drivers/scsi/wd33c93.c b/drivers/scsi/wd33c93.c
+index 9e09da4..74be04f 100644
+--- a/drivers/scsi/wd33c93.c
++++ b/drivers/scsi/wd33c93.c
+@@ -1578,6 +1578,7 @@
+ 	int i;
+ 
+ 	instance = SCpnt->device->host;
++	spin_lock_irq(instance->host_lock);
+ 	hostdata = (struct WD33C93_hostdata *) instance->hostdata;
+ 
+ 	printk("scsi%d: reset. ", instance->host_no);
+@@ -1603,6 +1604,7 @@
+ 	reset_wd33c93(instance);
+ 	SCpnt->result = DID_RESET << 16;
+ 	enable_irq(instance->irq);
++	spin_unlock_irq(instance->host_lock);
+ 	return SUCCESS;
+ }
+ 
 -- 
 1.8.5.6
