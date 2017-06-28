@@ -1,130 +1,61 @@
-From: Kashyap Desai <kashyap.desai@broadcom.com>
-Subject: RE: [PATCH 13/47] megaraid: pass in NULL scb for host reset
-Date: Wed, 28 Jun 2017 23:10:16 +0530
-Message-ID: <5443ed26d0465a0a277ccf90fdeb1e73@mail.gmail.com>
-References: <1498638793-44672-1-git-send-email-hare@suse.de>
- <1498638793-44672-14-git-send-email-hare@suse.de> <f5b7e09b259b22452afe1da669712af6@mail.gmail.com>
- <ce2005d3-420c-3920-dadc-b9d1d36c8ecc@suse.de>
+From: Mike Christie <mchristi@redhat.com>
+Subject: Re: [PATCH 4/5] target: user: Fix sense data handling
+Date: Wed, 28 Jun 2017 12:44:28 -0500
+Message-ID: <5eb219c5-c4a7-ea75-ff31-d732e10c72ae@redhat.com>
+References: <20170628055900.22889-1-damien.lemoal@wdc.com>
+ <20170628055900.22889-5-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f181.google.com ([209.85.192.181]:36199 "EHLO
-        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751528AbdF1RkS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jun 2017 13:40:18 -0400
-Received: by mail-pf0-f181.google.com with SMTP id q86so36882151pfl.3
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Jun 2017 10:40:18 -0700 (PDT)
-In-Reply-To: <ce2005d3-420c-3920-dadc-b9d1d36c8ecc@suse.de>
+Received: from mx1.redhat.com ([209.132.183.28]:47378 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751521AbdF1Roc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 13:44:32 -0400
+In-Reply-To: <20170628055900.22889-5-damien.lemoal@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Sumit Saxena <sumit.saxena@broadcom.com>, Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+To: Damien Le Moal <damien.lemoal@wdc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, "Nicholas A . Bellinger" <nab@linux-iscsi.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Hannes Reinecke
-> Sent: Wednesday, June 28, 2017 9:00 PM
-> To: Sumit Saxena; Christoph Hellwig
-> Cc: Martin K. Petersen; James Bottomley; linux-scsi@vger.kernel.org;
-> Hannes
-> Reinecke
-> Subject: Re: [PATCH 13/47] megaraid: pass in NULL scb for host reset
->
-> On 06/28/2017 03:41 PM, Sumit Saxena wrote:
-> >> -----Original Message-----
-> >> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> >> owner@vger.kernel.org] On Behalf Of Hannes Reinecke
-> >> Sent: Wednesday, June 28, 2017 2:03 PM
-> >> To: Christoph Hellwig
-> >> Cc: Martin K. Petersen; James Bottomley; linux-scsi@vger.kernel.org;
-> > Hannes
-> >> Reinecke; Hannes Reinecke
-> >> Subject: [PATCH 13/47] megaraid: pass in NULL scb for host reset
-> >>
-> >> When calling a host reset we shouldn't rely on the command triggering
-> >> the reset, so allow megaraid_abort_and_reset() to be called with a NUL=
-L
-> scb.
-> >> And drop the pointless 'bus_reset' and 'target_reset' handlers, which
-> > just call
-> >> the same function as host_reset.
-> >
-> > If this patch address any functional issue, then we should consider
-> > this.
-> > If it's code optimization, can we ignore this as this is being very
-> > old driver and no more maintained by Broadcom/LSI ?
-> >
-> Sadly, ignoring is not an option.
-> I'm planning to update the calling convention for SCSI EH, to resolve the
-> long-
-> standing problem with sg_reset ioctls.
-> sg_reset ioctl will allocate an out-of-band SCSI command, which does no
-> longer
-> work with the new command allocation scheme in multiqueue.
-> So it's not possible to just 'ignore' it, as then SCSI EH will cease to
-> function with
-> that driver.
+On 06/28/2017 12:58 AM, Damien Le Moal wrote:
+> If the user request handler completed the request with a CHECK CONDITION
+> status, tcmu_handle_completion() copies the command entry sense data
+> into the session request structure sense data. However, the sense data
+> length indicated by the field scsi_sense_length is not set and equal to
+> 0, resulting in the copy being a no-op and failure to propagate the
+> sense data back to the initiator. To fix this, properly set the session
+> command sense data length and also set the session command
+> SCF_TRANSPORT_TASK_SENSE flag to indicate that the command has valid
+> sense data.
+> 
+> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+> ---
+>  drivers/target/target_core_user.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+> index beb5f09..7426b4c 100644
+> --- a/drivers/target/target_core_user.c
+> +++ b/drivers/target/target_core_user.c
+> @@ -831,7 +831,9 @@ static void tcmu_handle_completion(struct tcmu_cmd *cmd, struct tcmu_cmd_entry *
+>  		entry->rsp.scsi_status = SAM_STAT_CHECK_CONDITION;
+>  	} else if (entry->rsp.scsi_status == SAM_STAT_CHECK_CONDITION) {
+>  		memcpy(se_cmd->sense_buffer, entry->rsp.sense_buffer,
+> -			       se_cmd->scsi_sense_length);
+> +		       TRANSPORT_SENSE_BUFFER);
+> +		se_cmd->scsi_sense_length = TRANSPORT_SENSE_BUFFER;
+> +		se_cmd->se_cmd_flags |= SCF_TRANSPORT_TASK_SENSE;
+>  	} else if (se_cmd->se_cmd_flags & SCF_BIDI) {
+>  		/* Get Data-In buffer before clean up */
+>  		gather_data_area(udev, cmd, true);
+> 
 
-Hannes - We are in process of sending megaraid and 3ware driver removal as
-LSI/Broadcom  stopped supporting those products.
-I agree we should review this closely, but lack of test coverage and end of
-life cycle of product is requesting us to know the rational.
-For now, let's consider NACK for this patch. We will be removing old
-megaraid (mbox) driver and 3Ware drivers soon.
+I have a patch similar to this and 5/5 in my set:
 
->
-> Sorry.
->
-> >>
-> >> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> >> ---
-> >> drivers/scsi/megaraid.c | 42
-> >> ++++++++++++++++--------------------------
-> >> 1 file changed, 16 insertions(+), 26 deletions(-)
-> >>
-> >> diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c index
-> >> 3c63c29..7e504d3 100644
-> >> --- a/drivers/scsi/megaraid.c
-> >> +++ b/drivers/scsi/megaraid.c
-> >> @@ -1909,7 +1909,7 @@ static DEF_SCSI_QCMD(megaraid_queue)
-> >>
-> >> 	spin_lock_irq(&adapter->lock);
-> >>
-> >> -	rval =3D  megaraid_abort_and_reset(adapter, cmd, SCB_RESET);
-> >> +	rval =3D  megaraid_abort_and_reset(adapter, NULL, SCB_RESET);
-> >
-> > If cmd=3DNULL is passed, it will crash inside function
-> > megaraid_abort_and_reset() while dereferencing "cmd" pointer.
-> > Below is the code of function  megaraid_abort_and_reset() where it
-> > will
-> > crash-
-> >
-> > static int
-> > megaraid_abort_and_reset(adapter_t *adapter, Scsi_Cmnd *cmd, int aor)
-> > {
-> > 	struct list_head	*pos, *next;
-> > 	scb_t			*scb;
-> >
-> > 	dev_warn(&adapter->dev->dev, "%s cmd=3D%x <c=3D%d t=3D%d l=3D%d>\n",
-> > 	     (aor =3D=3D SCB_ABORT)? "ABORTING":"RESET",
-> > 	     cmd->cmnd[0],
-> > cmd->device->channel,>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>it should
-> > cmd->device->crash
-> > here
-> > 	     cmd->device->id, (u32)cmd->device->lun);
-> >
-> > Please correct if I am missing something here.Ah, correct. Will be
-> > fixing it up.
->
-> Cheers,
->
-> Hannes
-> --
-> Dr. Hannes Reinecke		   Teamlead Storage & Networking
-> hare@suse.de			               +49 911 74053 688
-> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-> GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton HRB=
- 21284
-> (AG
-> N=C3=BCrnberg)
+https://www.spinics.net/lists/target-devel/msg15430.html
+
+If yours gets merged first then I will build my set over them, so patch
+looks ok to me.
+
+Reviewed-by: Mike Christie <mchristi@redhat.com>
