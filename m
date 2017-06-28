@@ -1,52 +1,47 @@
-From: Dave Carroll <david.carroll@microsemi.com>
-Subject: RE: [PATCH 04/47] aacraid: use aac_tmf_callback for reset fib
-Date: Wed, 28 Jun 2017 19:42:45 +0000
-Message-ID: <423FD6710FB8FB4F8728F93591889F9A5304EDBF@avsrvexchmbx2.microsemi.net>
-References: <1498638793-44672-1-git-send-email-hare@suse.de>
- <1498638793-44672-5-git-send-email-hare@suse.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v2 1/6] qla2xxx: Add FC-NVMe port discovery and PRLI
+ handling
+Date: Wed, 28 Jun 2017 14:15:45 -0700
+Message-ID: <1498684545.2769.17.camel@HansenPartnership.com>
+References: <20170621204846.21663-1-himanshu.madhani@cavium.com>
+         <20170621204846.21663-2-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0066.outbound.protection.outlook.com ([104.47.40.66]:65376
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751515AbdF1Tmz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2017 15:42:55 -0400
-In-Reply-To: <1498638793-44672-5-git-send-email-hare@suse.de>
-Content-Language: en-US
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:52616 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751545AbdF1VPt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 17:15:49 -0400
+In-Reply-To: <20170621204846.21663-2-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.com>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>
+To: "Madhani, Himanshu" <himanshu.madhani@cavium.com>, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, darren.trapp@cavium.com, giridhar.malavali@cavium.com, linux-nvme@lists.infradead.org
 
->=20
->=20
-> When sending a reset fib we shouldn't rely on the scsi command, but rathe=
-r set
-> the TMF status in the map_info->reset_state variable.
-> That allows us to send a TMF independent on a scsi command.
->=20
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> ---
-<snip>
->  /*
->   *     aac_eh_dev_reset        - Device reset command handling
->   *     @scsi_cmd:      SCSI command block causing the reset
-> +921,19 @@ static int aac_eh_dev_reset(struct scsi_cmnd *cmd)
-<snip>
->=20
->         /* Wait up to 15 seconds for completion */
->         for (count =3D 0; count < 15; ++count) {
-> -               if (cmd->SCp.sent_command) {
-> -                       ret =3D SUCCESS;
-> +               if (info->reset_state =3D=3D 0) {
+On Wed, 2017-06-21 at 13:48 -0700, Madhani, Himanshu wrote:
+> From: Duane Grigsby <duane.grigsby@cavium.com>
+> 
+> Added logic to change the login process into an optional PRIL
+> step for FC-NVMe ports as a separate operation, such that we can
+> change type to 0x28 (NVMe).
+> 
+> Currently, the driver performs the PLOGI/PRLI together as one
+> operation, but if the discovered port is an NVMe port then we
+> first issue the PLOGI and then we issue the PRLI. Also, the
+> fabric discovery logic was changed to mark each discovered FC
+> NVMe port, so that we can register them with the FC-NVMe transport
+> later.
+> 
+> Signed-off-by: Darren Trapp <darren.trapp@cavium.com>
+> Signed-off-by: Duane Grigsby <duane.grigsby@cavium.com>
+> Signed-off-by: Anil Gurumurthy <anil.gurumurhty@cavium.com>
 
-Should this be <=3D 0, as in target reset? Otherwise it will always be succ=
-ess ...
+I just got a whole load of bounces from this: you've misspelled Anil's
+email address (h and t transposed).  It looks like a generic cut and
+paste, so could you fix it for next time?
 
--Dave
+Thanks,
 
-> +                       ret =3D info->reset_state =3D=3D 0 ? SUCCESS : FA=
-ILED;
->                         break;
+James
