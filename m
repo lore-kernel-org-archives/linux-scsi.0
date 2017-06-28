@@ -1,63 +1,76 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 02/28] mptfc: Do not call fc_block_scsi_eh() on host reset
-Date: Wed, 28 Jun 2017 10:24:50 +0200
-Message-ID: <1498638316-44420-3-git-send-email-hare@suse.de>
+Subject: [PATCH 20/28] nsp32: drop bus reset
+Date: Wed, 28 Jun 2017 10:25:08 +0200
+Message-ID: <1498638316-44420-21-git-send-email-hare@suse.de>
 References: <1498638316-44420-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52884 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:53036 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751553AbdF1IbB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2017 04:31:01 -0400
+        id S1751642AbdF1IbP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 04:31:15 -0400
 In-Reply-To: <1498638316-44420-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-When we're resetting the host any remote port states will
-be reset anyway, so it's pointless to wait for dev_loss_tmo
-during host reset.
+From: Hannes Reinecke <hare@suse.com>
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+bus reset is essentially identical to host reset, and will always
+return SUCCESS, thus disabling the use of host reset.
+So drop bus reset in favour of host reset.
+
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/message/fusion/mptfc.c | 10 +---------
- 1 file changed, 1 insertion(+), 9 deletions(-)
+ drivers/scsi/nsp32.c | 22 +---------------------
+ 1 file changed, 1 insertion(+), 21 deletions(-)
 
-diff --git a/drivers/message/fusion/mptfc.c b/drivers/message/fusion/mptfc.c
-index d065062..6d461ca 100644
---- a/drivers/message/fusion/mptfc.c
-+++ b/drivers/message/fusion/mptfc.c
-@@ -104,7 +104,6 @@
- static int mptfc_abort(struct scsi_cmnd *SCpnt);
- static int mptfc_dev_reset(struct scsi_cmnd *SCpnt);
- static int mptfc_bus_reset(struct scsi_cmnd *SCpnt);
--static int mptfc_host_reset(struct scsi_cmnd *SCpnt);
+diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
+index 53c8477..107e191 100644
+--- a/drivers/scsi/nsp32.c
++++ b/drivers/scsi/nsp32.c
+@@ -201,7 +201,6 @@
  
- static struct scsi_host_template mptfc_driver_template = {
- 	.module				= THIS_MODULE,
-@@ -123,7 +122,7 @@
- 	.eh_abort_handler		= mptfc_abort,
- 	.eh_device_reset_handler	= mptfc_dev_reset,
- 	.eh_bus_reset_handler		= mptfc_bus_reset,
--	.eh_host_reset_handler		= mptfc_host_reset,
-+	.eh_host_reset_handler		= mptscsih_host_reset,
- 	.bios_param			= mptscsih_bios_param,
- 	.can_queue			= MPT_FC_CAN_QUEUE,
- 	.this_id			= -1,
-@@ -254,13 +253,6 @@
- 	    mptfc_block_error_handler(SCpnt, mptscsih_bus_reset, __func__);
+ /* SCSI error handler */
+ static int         nsp32_eh_abort     (struct scsi_cmnd *);
+-static int         nsp32_eh_bus_reset (struct scsi_cmnd *);
+ static int         nsp32_eh_host_reset(struct scsi_cmnd *);
+ 
+ /* generate SCSI message */
+@@ -276,8 +275,7 @@
+ 	.max_sectors			= 128,
+ 	.this_id			= NSP32_HOST_SCSIID,
+ 	.use_clustering			= DISABLE_CLUSTERING,
+-	.eh_abort_handler       	= nsp32_eh_abort,
+-	.eh_bus_reset_handler		= nsp32_eh_bus_reset,
++	.eh_abort_handler		= nsp32_eh_abort,
+ 	.eh_host_reset_handler		= nsp32_eh_host_reset,
+ /*	.highmem_io			= 1, */
+ };
+@@ -2845,24 +2843,6 @@ static int nsp32_eh_abort(struct scsi_cmnd *SCpnt)
+ 	return SUCCESS;
  }
  
--static int
--mptfc_host_reset(struct scsi_cmnd *SCpnt)
+-static int nsp32_eh_bus_reset(struct scsi_cmnd *SCpnt)
 -{
--	return
--	    mptfc_block_error_handler(SCpnt, mptscsih_host_reset, __func__);
+-	nsp32_hw_data *data = (nsp32_hw_data *)SCpnt->device->host->hostdata;
+-	unsigned int   base = SCpnt->device->host->io_port;
+-
+-	spin_lock_irq(SCpnt->device->host->host_lock);
+-
+-	nsp32_msg(KERN_INFO, "Bus Reset");	
+-	nsp32_dbg(NSP32_DEBUG_BUSRESET, "SCpnt=0x%x", SCpnt);
+-
+-	nsp32_write2(base, IRQ_CONTROL, IRQ_CONTROL_ALL_IRQ_MASK);
+-	nsp32_do_bus_reset(data);
+-	nsp32_write2(base, IRQ_CONTROL, 0);
+-
+-	spin_unlock_irq(SCpnt->device->host->host_lock);
+-	return SUCCESS;	/* SCSI bus reset is succeeded at any time. */
 -}
 -
- static void
- mptfc_set_rport_loss_tmo(struct fc_rport *rport, uint32_t timeout)
+ static void nsp32_do_bus_reset(nsp32_hw_data *data)
  {
+ 	unsigned int   base = data->BaseAddress;
 -- 
 1.8.5.6
