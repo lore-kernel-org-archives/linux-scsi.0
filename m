@@ -1,19 +1,19 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 16/28] qlogicfas: move bus_reset to host_reset
-Date: Wed, 28 Jun 2017 10:56:43 +0200
-Message-ID: <20170628085643.GR4185@linux-x5ow.site>
+Subject: Re: [PATCH 17/28] imm: drop duplicate bus_reset handler
+Date: Wed, 28 Jun 2017 10:58:27 +0200
+Message-ID: <20170628085827.GS4185@linux-x5ow.site>
 References: <1498638316-44420-1-git-send-email-hare@suse.de>
- <1498638316-44420-17-git-send-email-hare@suse.de>
+ <1498638316-44420-18-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58444 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:58889 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751491AbdF1I4p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2017 04:56:45 -0400
+        id S1751516AbdF1I63 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 04:58:29 -0400
 Content-Disposition: inline
-In-Reply-To: <1498638316-44420-17-git-send-email-hare@suse.de>
+In-Reply-To: <1498638316-44420-18-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
