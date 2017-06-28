@@ -1,90 +1,128 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 41/47] xen-scsifront: add scsi device as argument to scsifront_do_request()
-Date: Wed, 28 Jun 2017 10:33:07 +0200
-Message-ID: <1498638793-44672-42-git-send-email-hare@suse.de>
+Subject: [PATCH 45/47] snic: use dedicated device reset command
+Date: Wed, 28 Jun 2017 10:33:11 +0200
+Message-ID: <1498638793-44672-46-git-send-email-hare@suse.de>
 References: <1498638793-44672-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53814 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:53825 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751855AbdF1Ide (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2017 04:33:34 -0400
+        id S1751900AbdF1Idf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 04:33:35 -0400
 In-Reply-To: <1498638793-44672-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Add scsi device as argument to scsifront_do_request() so that it
-will be possible to call it with a NULL command pointer.
+Use a dedicated command to send a device reset instead of relying
+on using the command which triggered the device failure.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/xen-scsifront.c | 32 ++++++++++++++++++--------------
- 1 file changed, 18 insertions(+), 14 deletions(-)
+ drivers/scsi/snic/snic_scsi.c | 52 ++++++++++++++++++++-----------------------
+ 1 file changed, 24 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
-index 36f59a1..04af950 100644
---- a/drivers/scsi/xen-scsifront.c
-+++ b/drivers/scsi/xen-scsifront.c
-@@ -175,7 +175,8 @@ static void scsifront_put_rqid(struct vscsifrnt_info *info, uint32_t id)
- 		scsifront_wake_up(info);
- }
- 
--static int scsifront_do_request(struct vscsifrnt_info *info,
-+static int scsifront_do_request(struct scsi_device *sdev,
-+				struct vscsifrnt_info *info,
- 				struct vscsifrnt_shadow *shadow)
+diff --git a/drivers/scsi/snic/snic_scsi.c b/drivers/scsi/snic/snic_scsi.c
+index ec11293..f50d274 100644
+--- a/drivers/scsi/snic/snic_scsi.c
++++ b/drivers/scsi/snic/snic_scsi.c
+@@ -2136,57 +2136,53 @@
+ int
+ snic_device_reset(struct scsi_cmnd *sc)
  {
- 	struct vscsiif_front_ring *ring = &(info->ring);
-@@ -202,17 +203,20 @@ static int scsifront_do_request(struct vscsifrnt_info *info,
- 	ring_req->ref_rqid    = shadow->ref_rqid;
- 	ring_req->nr_segments = shadow->nr_segments;
+-	struct Scsi_Host *shost = sc->device->host;
++	struct scsi_device *sdev = sc->device;
++	struct Scsi_Host *shost = sdev->host;
+ 	struct snic *snic = shost_priv(shost);
+ 	struct snic_req_info *rqi = NULL;
+-	int tag = snic_cmd_tag(sc);
+ 	int start_time = jiffies;
+ 	int ret = FAILED;
+ 	int dr_supp = 0;
  
--	ring_req->id      = sc->device->id;
--	ring_req->lun     = sc->device->lun;
--	ring_req->channel = sc->device->channel;
--	ring_req->cmd_len = sc->cmd_len;
+-	SNIC_SCSI_DBG(shost, "dev_reset:sc %p :0x%x :req = %p :tag = %d\n",
+-		      sc, sc->cmnd[0], sc->request,
+-		      snic_cmd_tag(sc));
+-	dr_supp = snic_dev_reset_supported(sc->device);
++	SNIC_SCSI_DBG(shost, "dev_reset\n");
++	dr_supp = snic_dev_reset_supported(sdev);
+ 	if (!dr_supp) {
+ 		/* device reset op is not supported */
+ 		SNIC_HOST_INFO(shost, "LUN Reset Op not supported.\n");
+-		snic_unlink_and_release_req(snic, sc, SNIC_DEV_RST_NOTSUP);
 -
--	BUG_ON(sc->cmd_len > VSCSIIF_MAX_COMMAND_SIZE);
--
--	memcpy(ring_req->cmnd, sc->cmnd, sc->cmd_len);
--
--	ring_req->sc_data_direction   = (uint8_t)sc->sc_data_direction;
--	ring_req->timeout_per_command = sc->request->timeout / HZ;
-+	ring_req->id      = sdev->id;
-+	ring_req->lun     = sdev->lun;
-+	ring_req->channel = sdev->channel;
-+	if (sc) {
-+		ring_req->cmd_len = sc->cmd_len;
-+		BUG_ON(sc->cmd_len > VSCSIIF_MAX_COMMAND_SIZE);
-+		memcpy(ring_req->cmnd, sc->cmnd, sc->cmd_len);
-+		ring_req->sc_data_direction   = (uint8_t)sc->sc_data_direction;
-+		ring_req->timeout_per_command = sc->request->timeout / HZ;
-+	} else {
-+		ring_req->cmd_len = VSCSIIF_MAX_COMMAND_SIZE;
-+		memset(ring_req->cmnd, 0, VSCSIIF_MAX_COMMAND_SIZE);
-+		ring_req->sc_data_direction = DMA_NONE;
-+	}
- 
- 	for (i = 0; i < (shadow->nr_segments & ~VSCSIIF_SG_GRANT); i++)
- 		ring_req->seg[i] = shadow->seg[i];
-@@ -556,7 +560,7 @@ static int scsifront_queuecommand(struct Scsi_Host *shost,
- 		return 0;
+ 		goto dev_rst_end;
  	}
  
--	if (scsifront_do_request(info, shadow)) {
-+	if (scsifront_do_request(sc->device, info, shadow)) {
- 		scsifront_gnttab_done(info, shadow);
- 		goto busy;
+ 	if (unlikely(snic_get_state(snic) != SNIC_ONLINE)) {
+-		snic_unlink_and_release_req(snic, sc, 0);
+ 		SNIC_HOST_ERR(shost, "Devrst: Parent Devs are not online.\n");
+ 
+ 		goto dev_rst_end;
  	}
-@@ -601,7 +605,7 @@ static int scsifront_action_handler(struct scsi_cmnd *sc, uint8_t act)
- 		if (scsifront_enter(info))
- 			goto fail;
  
--		if (!scsifront_do_request(info, shadow))
-+		if (!scsifront_do_request(sc->device, info, shadow))
- 			break;
+-	/* There is no tag when lun reset is issue through ioctl. */
+-	if (unlikely(tag <= SNIC_NO_TAG)) {
+-		SNIC_HOST_INFO(snic->shost,
+-			       "Devrst: LUN Reset Recvd thru IOCTL.\n");
+-
+-		rqi = snic_req_init(snic, 0);
+-		if (!rqi)
+-			goto dev_rst_end;
+-
+-		memset(scsi_cmd_priv(sc), 0,
+-			sizeof(struct snic_internal_io_state));
+-		CMD_SP(sc) = (char *)rqi;
+-		CMD_FLAGS(sc) = SNIC_NO_FLAGS;
++	rqi = snic_req_init(snic, 0);
++	if (!rqi)
++		goto dev_rst_end;
  
- 		scsifront_return(info);
+-		/* Add special tag for dr coming from user spc */
+-		rqi->tm_tag = SNIC_TAG_IOCTL_DEV_RST;
+-		rqi->sc = sc;
++	/* The last tag is reserved for device reset */
++	sc = scsi_host_find_tag(snic->shost, snic->tmf_tag_id);
++	if (!sc || CMD_SP(sc)) {
++		SNIC_HOST_ERR(snic->shost,
++			      "Devrst: TMF busy\n");
++		goto dev_rst_end;
+ 	}
++	memset(scsi_cmd_priv(sc), 0,
++	       sizeof(struct snic_internal_io_state));
++	CMD_SP(sc) = (char *)rqi;
++	CMD_FLAGS(sc) = SNIC_NO_FLAGS;
++
++	/* Add special tag for dr coming from user spc */
++	rqi->tm_tag = SNIC_TAG_IOCTL_DEV_RST;
++	rqi->sc = sc;
+ 
+ 	ret = snic_send_dr_and_wait(snic, sc);
+ 	if (ret) {
+ 		SNIC_HOST_ERR(snic->shost,
+ 			      "Devrst: IO w/ Tag %x Failed w/ err = %d\n",
+-			      tag, ret);
++			      snic_cmd_tag(sc), ret);
+ 
+ 		snic_unlink_and_release_req(snic, sc, 0);
+ 
+@@ -2196,7 +2192,7 @@
+ 	ret = snic_dr_finish(snic, sc);
+ 
+ dev_rst_end:
+-	SNIC_TRC(snic->shost->host_no, tag, (ulong) sc,
++	SNIC_TRC(snic->shost->host_no, snic_cmd_tag(sc), (ulong) sc,
+ 		 jiffies_to_msecs(jiffies - start_time),
+ 		 0, SNIC_TRC_CMD(sc), SNIC_TRC_CMD_STATE_FLAGS(sc));
+ 
+@@ -2347,7 +2343,7 @@
+ 		schedule_timeout(msecs_to_jiffies(1));
+ 
+ 	sc = scsi_host_find_tag(shost, snic->tmf_tag_id);
+-	if (!sc) {
++	if (!sc || CMD_SP(sc)) {
+ 		SNIC_HOST_ERR(shost,
+ 			      "reset:Host Reset Failed to allocate sc.\n");
+ 		spin_lock_irqsave(&snic->snic_lock, flags);
 -- 
 1.8.5.6
