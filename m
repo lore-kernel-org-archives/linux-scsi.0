@@ -1,117 +1,57 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 08/28] bfa: move bus reset to target reset
-Date: Wed, 28 Jun 2017 10:24:56 +0200
-Message-ID: <1498638316-44420-9-git-send-email-hare@suse.de>
+Subject: [PATCH 09/28] hptiop: Simplify reset handling
+Date: Wed, 28 Jun 2017 10:24:57 +0200
+Message-ID: <1498638316-44420-10-git-send-email-hare@suse.de>
 References: <1498638316-44420-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52979 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:52980 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751647AbdF1IbG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2017 04:31:06 -0400
+        id S1751650AbdF1IbF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 04:31:05 -0400
 In-Reply-To: <1498638316-44420-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-The bus reset handler is just calling target reset on all targets,
-which is exactly what SCSI EH will be doing anyway.
-So move the bus reset function to target reset and drop the loop.
+The Highpoint driver only has one reset function, and that is
+a host reset. So stop pretending we're doing anything else.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/bfa/bfad_im.c | 37 +++++++++++++++----------------------
- 1 file changed, 15 insertions(+), 22 deletions(-)
+ drivers/scsi/hptiop.c | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
-index 7eb0eef..24e657a 100644
---- a/drivers/scsi/bfa/bfad_im.c
-+++ b/drivers/scsi/bfa/bfad_im.c
-@@ -373,32 +373,28 @@ static void bfad_im_fc_rport_add(struct bfad_im_port_s  *im_port,
- }
+diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
+index 7226226..2fad7f0 100644
+--- a/drivers/scsi/hptiop.c
++++ b/drivers/scsi/hptiop.c
+@@ -1106,12 +1106,10 @@ static int hptiop_reset_hba(struct hptiop_hba *hba)
  
- /*
-- * Scsi_Host template entry, resets the bus and abort all commands.
-+ * Scsi_Host template entry, resets the target and abort all commands.
-  */
- static int
--bfad_im_reset_bus_handler(struct scsi_cmnd *cmnd)
-+bfad_im_reset_target_handler(struct scsi_cmnd *cmnd)
+ static int hptiop_reset(struct scsi_cmnd *scp)
  {
- 	struct Scsi_Host *shost = cmnd->device->host;
-+	struct scsi_target *starget = scsi_target(cmnd->device);
- 	struct bfad_im_port_s *im_port =
- 				(struct bfad_im_port_s *) shost->hostdata[0];
- 	struct bfad_s         *bfad = im_port->bfad;
- 	struct bfad_itnim_s   *itnim;
- 	unsigned long   flags;
--	u32        i, rc, err_cnt = 0;
-+	u32        rc, rtn = FAILED;
- 	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(wq);
- 	enum bfi_tskim_status task_status;
+-	struct Scsi_Host * host = scp->device->host;
+-	struct hptiop_hba * hba = (struct hptiop_hba *)host->hostdata;
++	struct hptiop_hba * hba = (struct hptiop_hba *)scp->device->host->hostdata;
  
- 	spin_lock_irqsave(&bfad->bfad_lock, flags);
--	for (i = 0; i < MAX_FCP_TARGET; i++) {
--		itnim = bfad_get_itnim(im_port, i);
--		if (itnim) {
--			cmnd->SCp.ptr = (char *)&wq;
--			rc = bfad_im_target_reset_send(bfad, cmnd, itnim);
--			if (rc != BFA_STATUS_OK) {
--				err_cnt++;
--				continue;
--			}
--
-+	itnim = bfad_get_itnim(im_port, starget->id);
-+	if (itnim) {
-+		cmnd->SCp.ptr = (char *)&wq;
-+		rc = bfad_im_target_reset_send(bfad, cmnd, itnim);
-+		if (rc == BFA_STATUS_OK) {
- 			/* wait target reset to complete */
- 			spin_unlock_irqrestore(&bfad->bfad_lock, flags);
- 			wait_event(wq, test_bit(IO_DONE_BIT,
-@@ -406,20 +402,17 @@ static void bfad_im_fc_rport_add(struct bfad_im_port_s  *im_port,
- 			spin_lock_irqsave(&bfad->bfad_lock, flags);
+-	printk(KERN_WARNING "hptiop_reset(%d/%d/%d) scp=%p\n",
+-			scp->device->host->host_no, scp->device->channel,
+-			scp->device->id, scp);
++	printk(KERN_WARNING "hptiop_reset(%d/%d/%d)\n",
++	       scp->device->host->host_no, -1, -1);
  
- 			task_status = cmnd->SCp.Status >> 1;
--			if (task_status != BFI_TSKIM_STS_OK) {
-+			if (task_status != BFI_TSKIM_STS_OK)
- 				BFA_LOG(KERN_ERR, bfad, bfa_log_level,
- 					"target reset failure,"
- 					" status: %d\n", task_status);
--				err_cnt++;
--			}
-+			else
-+				rtn = SUCCESS;
- 		}
- 	}
- 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
- 
--	if (err_cnt)
--		return FAILED;
--
--	return SUCCESS;
-+	return rtn;
+ 	return hptiop_reset_hba(hba)? FAILED : SUCCESS;
  }
- 
- /*
-@@ -816,7 +809,7 @@ struct scsi_host_template bfad_im_scsi_host_template = {
- 	.eh_timed_out = fc_eh_timed_out,
- 	.eh_abort_handler = bfad_im_abort_handler,
- 	.eh_device_reset_handler = bfad_im_reset_lun_handler,
--	.eh_bus_reset_handler = bfad_im_reset_bus_handler,
-+	.eh_target_reset_handler = bfad_im_reset_target_handler,
- 
- 	.slave_alloc = bfad_im_slave_alloc,
- 	.slave_configure = bfad_im_slave_configure,
-@@ -839,7 +832,7 @@ struct scsi_host_template bfad_im_vport_template = {
- 	.eh_timed_out = fc_eh_timed_out,
- 	.eh_abort_handler = bfad_im_abort_handler,
- 	.eh_device_reset_handler = bfad_im_reset_lun_handler,
--	.eh_bus_reset_handler = bfad_im_reset_bus_handler,
-+	.eh_target_reset_handler = bfad_im_reset_target_handler,
- 
- 	.slave_alloc = bfad_im_slave_alloc,
- 	.slave_configure = bfad_im_slave_configure,
+@@ -1179,8 +1177,7 @@ static int hptiop_slave_config(struct scsi_device *sdev)
+ 	.module                     = THIS_MODULE,
+ 	.name                       = driver_name,
+ 	.queuecommand               = hptiop_queuecommand,
+-	.eh_device_reset_handler    = hptiop_reset,
+-	.eh_bus_reset_handler       = hptiop_reset,
++	.eh_host_reset_handler      = hptiop_reset,
+ 	.info                       = hptiop_info,
+ 	.emulated                   = 0,
+ 	.use_clustering             = ENABLE_CLUSTERING,
 -- 
 1.8.5.6
