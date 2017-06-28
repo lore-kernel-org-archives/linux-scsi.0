@@ -1,31 +1,34 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/1] fnic: Zero io_cmpl_skip on fw reset completion
-Date: Tue, 27 Jun 2017 21:42:26 -0400
-Message-ID: <yq1y3scyjjx.fsf@oracle.com>
-References: <1498524383-32398-1-git-send-email-satishkh@cisco.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH v2] qla2xxx: Protect access to qpair members with
+ qpair->qp_lock
+Date: Wed, 28 Jun 2017 01:44:31 +0000
+Message-ID: <E582614F-2B53-44BF-8E2E-000E27D510AB@cavium.com>
+References: <20170623071011.21184-1-jthumshirn@suse.de>
+ <yq1bmp8zylp.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:27797 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752010AbdF1Bmc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jun 2017 21:42:32 -0400
-In-Reply-To: <1498524383-32398-1-git-send-email-satishkh@cisco.com> (Satish
-        Kharat's message of "Mon, 26 Jun 2017 17:46:23 -0700")
+Received: from mail-dm3nam03on0052.outbound.protection.outlook.com ([104.47.41.52]:4960
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752694AbdF1Boe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 27 Jun 2017 21:44:34 -0400
+In-Reply-To: <yq1bmp8zylp.fsf@oracle.com>
+Content-Language: en-US
+Content-ID: <411C0DB3FF271B4085E344B736582C05@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Satish Kharat <satishkh@cisco.com>
-Cc: linux-scsi@vger.kernel.org, Sesidhar Baddela <sebaddel@cisco.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>, Hannes Reinecke <hare@suse.de>, John Garry <john.garry@huawei.com>
 
-
-Satish,
-
-> io_cmpl_skip keep track of number of completions to skip when stats
-> are reset. If a fw_reset happens immediately after stats reset it
-> could put it out of sync so need to reset io_cmpl_skip when fw reset
-> is completed.
-
-Applied patches 1-4 to 4.13/scsi-queue. Thank you!
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+SGkgTWFydGluLA0KDQpPbiA2LzI3LzE3LCA2OjMyIFBNLCAiTWFydGluIEsuIFBldGVyc2VuIiA8
+bWFydGluLnBldGVyc2VuQG9yYWNsZS5jb20+IHdyb3RlOg0KDQogICAgDQogICAgPiBJbiBxbGEy
+eHhfc3RhcnRfc2NzaV9tcSgpIGFuZCBxbGEyeHhfZGlmX3N0YXJ0X3Njc2lfbXEoKSB3ZSBncmFi
+IHRoZQ0KICAgID4gcXBhaXItPnFwX2xvY2sgYnV0IGRvIGFjY2VzcyBtZW1iZXJzIG9mIHRoZSBx
+cGFpciBiZWZvcmUgaGF2aW5nIHRoZSBsb2NrLg0KICAgID4gUmUtb3JkZXIgdGhlIGxvY2tpbmcg
+c2VxdWVuY2UgdG8gaGF2ZSBhbGwgcmVhZCBhbmQgd3JpdGUgYWNjZXNzIHRvIHFwYWlyDQogICAg
+PiBtZW1iZXJzIHVuZGVyIHRoZSBxcGFpci0+cXBfbG9jay4NCiAgICANCiAgICBDYXZpdW0gZm9s
+a3MsIHBsZWFzZSByZXZpZXchDQoNCkkgYW0gdGVzdGluZyBpdCBpbnRlcm5hbGx5LCB3aWxsIHVw
+ZGF0ZSBieSB0b21vcnJvdy4gDQogICAgDQogICAgLS0gDQogICAgTWFydGluIEsuIFBldGVyc2Vu
+CU9yYWNsZSBMaW51eCBFbmdpbmVlcmluZw0KICAgIA0KVGhhbmtzLA0KSGltYW5zaHUNCg0KDQo=
