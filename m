@@ -1,39 +1,226 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 05/47] aacraid: enable sending of TMFs from aac_hba_send()
-Date: Wed, 28 Jun 2017 10:32:31 +0200
-Message-ID: <1498638793-44672-6-git-send-email-hare@suse.de>
+Subject: [PATCH 04/47] aacraid: use aac_tmf_callback for reset fib
+Date: Wed, 28 Jun 2017 10:32:30 +0200
+Message-ID: <1498638793-44672-5-git-send-email-hare@suse.de>
 References: <1498638793-44672-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53768 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:53652 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751523AbdF1IdR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2017 04:33:17 -0400
+        id S1751509AbdF1IdQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 04:33:16 -0400
 In-Reply-To: <1498638793-44672-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-aac_hba_send() will return FAILED for any non-SCSI command requests,
-failing any TMFs. This patch updates the check to allow TMFs.
+When sending a reset fib we shouldn't rely on the scsi command,
+but rather set the TMF status in the map_info->reset_state variable.
+That allows us to send a TMF independent on a scsi command.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/aacraid/commsup.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/aacraid/linit.c | 96 ++++++++++++++++++++++++++++++++------------
+ 1 file changed, 71 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index 1c617cc..348f0ea 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -770,7 +770,7 @@ int aac_hba_send(u8 command, struct fib *fibptr, fib_callback callback,
- 		/* bit1 of request_id must be 0 */
- 		hbacmd->request_id =
- 			cpu_to_le32((((u32)(fibptr - dev->fibs)) << 2) + 1);
--	} else
-+	} else if (command != HBA_IU_TYPE_SCSI_TM_REQ)
- 		return -EINVAL;
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 57b2077..9b284a0 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -814,8 +814,8 @@ static int aac_eh_abort(struct scsi_cmnd* cmd)
+ 	return ret;
+ }
+ 
+-static u8 aac_eh_tmf_lun_reset_fib(struct aac_dev *aac, struct fib *fib,
+-				   int bus, int cid, u64 tmf_lun)
++static u8 aac_eh_tmf_lun_reset_fib(struct aac_hba_map_info *info,
++				   struct fib *fib, u64 tmf_lun)
+ {
+ 	struct aac_hba_tm_req *tmf;
+ 	u64 address;
+@@ -824,7 +824,7 @@ static u8 aac_eh_tmf_lun_reset_fib(struct aac_dev *aac, struct fib *fib,
+ 	tmf = (struct aac_hba_tm_req *)fib->hw_fib_va;
+ 	memset(tmf, 0, sizeof(*tmf));
+ 	tmf->tmf = HBA_TMF_LUN_RESET;
+-	tmf->it_nexus = aac->hba_map[bus][cid].rmw_nexus;
++	tmf->it_nexus = info->rmw_nexus;
+ 	int_to_scsilun(tmf_lun, (struct scsi_lun *)tmf->lun);
+ 
+ 	address = (u64)fib->hw_error_pa;
+@@ -838,8 +838,8 @@ static u8 aac_eh_tmf_lun_reset_fib(struct aac_dev *aac, struct fib *fib,
+ 	return HBA_IU_TYPE_SCSI_TM_REQ;
+ }
+ 
+-static u8 aac_eh_tmf_hard_reset_fib(struct aac_dev *aac, struct fib *fib,
+-				    int bus, int cid)
++static u8 aac_eh_tmf_hard_reset_fib(struct aac_hba_map_info *info,
++				    struct fib *fib)
+ {
+ 	struct aac_hba_reset_req *rst;
+ 	u64 address;
+@@ -847,8 +847,7 @@ static u8 aac_eh_tmf_hard_reset_fib(struct aac_dev *aac, struct fib *fib,
+ 	/* already tried, start a hard reset now */
+ 	rst = (struct aac_hba_reset_req *)fib->hw_fib_va;
+ 	memset(rst, 0, sizeof(*rst));
+-	/* reset_type is already zero... */
+-	rst->it_nexus = aac->hba_map[bus][cid].rmw_nexus;
++	rst->it_nexus = info->rmw_nexus;
+ 
+ 	address = (u64)fib->hw_error_pa;
+ 	rst->error_ptr_hi = cpu_to_le32((u32)(address >> 32));
+@@ -860,6 +859,33 @@ static u8 aac_eh_tmf_hard_reset_fib(struct aac_dev *aac, struct fib *fib,
+        return HBA_IU_TYPE_SATA_REQ;
+ }
+ 
++void aac_tmf_callback(void *context, struct fib *fibptr)
++{
++	struct aac_hba_resp *err =
++		&((struct aac_native_hba *)fibptr->hw_fib_va)->resp.err;
++	struct aac_hba_map_info *info = context;
++	int res;
++
++	switch (err->service_response) {
++	case HBA_RESP_SVCRES_TMF_REJECTED:
++		res = -1;
++		break;
++	case HBA_RESP_SVCRES_TMF_LUN_INVALID:
++		res = 0;
++		break;
++	case HBA_RESP_SVCRES_TMF_COMPLETE:
++	case HBA_RESP_SVCRES_TMF_SUCCEEDED:
++		res = 0;
++		break;
++	default:
++		res = -2;
++		break;
++	}
++	aac_fib_complete(fibptr);
++
++	info->reset_state = res;
++}
++
+ /*
+  *	aac_eh_dev_reset	- Device reset command handling
+  *	@scsi_cmd:	SCSI command block causing the reset
+@@ -870,6 +896,7 @@ static int aac_eh_dev_reset(struct scsi_cmnd *cmd)
+ 	struct scsi_device * dev = cmd->device;
+ 	struct Scsi_Host * host = dev->host;
+ 	struct aac_dev * aac = (struct aac_dev *)host->hostdata;
++	struct aac_hba_map_info *info;
+ 	int count;
+ 	u32 bus, cid;
+ 	struct fib *fib;
+@@ -879,8 +906,12 @@ static int aac_eh_dev_reset(struct scsi_cmnd *cmd)
+ 
+ 	bus = aac_logical_to_phys(scmd_channel(cmd));
+ 	cid = scmd_id(cmd);
++	info = &aac->hba_map[bus][cid];
+ 	if (bus >= AAC_MAX_BUSES || cid >= AAC_MAX_TARGETS ||
+-	    aac->hba_map[bus][cid].devtype != AAC_DEVTYPE_NATIVE_RAW)
++	    info->devtype != AAC_DEVTYPE_NATIVE_RAW)
++		return FAILED;
++
++	if (info->reset_state > 0)
+ 		return FAILED;
+ 
+ 	pr_err("%s: Host adapter reset request. SCSI hang ?\n",
+@@ -890,21 +921,19 @@ static int aac_eh_dev_reset(struct scsi_cmnd *cmd)
+ 	if (!fib)
+ 		return ret;
+ 
+-
+ 	/* start a HBA_TMF_LUN_RESET TMF request */
+-	command = aac_eh_tmf_lun_reset_fib(aac, fib, bus, cid,
+-					   cmd->device->lun);
++	command = aac_eh_tmf_lun_reset_fib(info, fib, dev->lun);
+ 
+-	cmd->SCp.sent_command = 0;
++	info->reset_state = 1;
+ 
+ 	status = aac_hba_send(command, fib,
+-			      (fib_callback) aac_hba_callback,
+-			      (void *) cmd);
++			      (fib_callback) aac_tmf_callback,
++			      (void *) info);
+ 
+ 	/* Wait up to 15 seconds for completion */
+ 	for (count = 0; count < 15; ++count) {
+-		if (cmd->SCp.sent_command) {
+-			ret = SUCCESS;
++		if (info->reset_state == 0) {
++			ret = info->reset_state == 0 ? SUCCESS : FAILED;
+ 			break;
+ 		}
+ 		msleep(1000);
+@@ -923,6 +952,7 @@ static int aac_eh_target_reset(struct scsi_cmnd *cmd)
+ 	struct scsi_device * dev = cmd->device;
+ 	struct Scsi_Host * host = dev->host;
+ 	struct aac_dev * aac = (struct aac_dev *)host->hostdata;
++	struct aac_hba_map_info *info;
+ 	int count;
+ 	u32 bus, cid;
+ 	int ret = FAILED;
+@@ -932,8 +962,9 @@ static int aac_eh_target_reset(struct scsi_cmnd *cmd)
+ 
+ 	bus = aac_logical_to_phys(scmd_channel(cmd));
+ 	cid = scmd_id(cmd);
++	info = &aac->hba_map[bus][cid];
+ 	if (bus >= AAC_MAX_BUSES || cid >= AAC_MAX_TARGETS ||
+-	    aac->hba_map[bus][cid].devtype != AAC_DEVTYPE_NATIVE_RAW)
++	    info->devtype != AAC_DEVTYPE_NATIVE_RAW)
+ 		return FAILED;
+ 
+ 	pr_err("%s: Host adapter reset request. SCSI hang ?\n",
+@@ -945,18 +976,18 @@ static int aac_eh_target_reset(struct scsi_cmnd *cmd)
  
  
+ 	/* already tried, start a hard reset now */
+-	command = aac_eh_tmf_hard_reset_fib(aac, fib, bus, cid);
++	command = aac_eh_tmf_hard_reset_fib(info, fib);
+ 
+-	cmd->SCp.sent_command = 0;
++	info->reset_state = 2;
+ 
+ 	status = aac_hba_send(command, fib,
+-			      (fib_callback) aac_hba_callback,
+-			      (void *) cmd);
++			      (fib_callback) aac_tmf_callback,
++			      (void *) info);
+ 
+ 	/* Wait up to 15 seconds for completion */
+ 	for (count = 0; count < 15; ++count) {
+-		if (cmd->SCp.sent_command) {
+-			ret = SUCCESS;
++		if (info->reset_state <= 0) {
++			ret = info->reset_state == 0 ? SUCCESS : FAILED;
+ 			break;
+ 		}
+ 		msleep(1000);
+@@ -1044,8 +1075,23 @@ int aac_eh_host_reset(struct scsi_cmnd *cmd)
+ 	 && aac_check_reset
+ 	 && (aac_check_reset != -1 || !is_ignore_reset)) {
+ 		/* Bypass wait for command quiesce */
+-		aac_reset_adapter(aac, 2, IOP_HWSOFT_RESET);
+-		ret = SUCCESS;
++		if (aac_reset_adapter(aac, 2, IOP_HWSOFT_RESET) == 0)
++			ret = SUCCESS;
++	}
++	/*
++	 * Reset EH state
++	 */
++	if (ret == SUCCESS) {
++		int bus, cid;
++		struct aac_hba_map_info *info;
++
++		for (bus = 0; bus < AAC_MAX_BUSES; bus++) {
++			for (cid = 0; cid < AAC_MAX_TARGETS; cid++) {
++				info = &aac->hba_map[bus][cid];
++				if (info->devtype == AAC_DEVTYPE_NATIVE_RAW)
++					info->reset_state = 0;
++			}
++		}
+ 	}
+ 	return ret;
+ }
 -- 
 1.8.5.6
