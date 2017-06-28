@@ -1,63 +1,55 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v4 4/5] g_NCR5380: Limit PDMA send to 512 B to avoid random
- corruption on DTC3181E
-Date: Wed, 28 Jun 2017 00:04:37 -0400 (EDT)
-Message-ID: <10c24e9d9aee2b4cf004dcdf5eed92ef2c0bb994.1498622056.git.fthain@telegraphics.com.au>
-References: <cover.1498622056.git.fthain@telegraphics.com.au>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1498622056.git.fthain@telegraphics.com.au>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ondrej Zary <linux@rainbow-software.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>
+From: Andrei Borzenkov <arvidjaar@gmail.com>
+Subject: Re: Permanently change thin provisioning method from user space?
+Date: Wed, 28 Jun 2017 07:06:27 +0300
+Message-ID: <7958058d-a649-e149-bf6e-efe2b0b5432f@gmail.com>
+References: <CAA91j0VCH06Xfk2Hx6ooDnd4+9+Sv1Z+2TY7MmQmgKLoiB0=+A@mail.gmail.com>
+ <1498597291.10198.21.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-lf0-f44.google.com ([209.85.215.44]:33253 "EHLO
+        mail-lf0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751137AbdF1EGa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jun 2017 00:06:30 -0400
+Received: by mail-lf0-f44.google.com with SMTP id m77so27785797lfe.0
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Jun 2017 21:06:30 -0700 (PDT)
+In-Reply-To: <1498597291.10198.21.camel@localhost.localdomain>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: emilne@redhat.com
+Cc: linux-scsi@vger.kernel.org
 
-From: Ondrej Zary <linux@rainbow-software.org>
+28.06.2017 00:01, Ewan D. Milne пишет:
+> On Tue, 2017-06-27 at 14:02 +0300, Andrei Borzenkov wrote:
+>> I'm facing storage system that while generally advertising support for
+>> WRITE_SAME_16 with UNMAP in reality fails this request depending on
+>> exact volume configuration. This configuration is done on storage side
+>> and may happen after host initially discovered LUN.
+>>
+>> I though about simply overriding kernel auto-detect with UNMAP using
+>> sysfs scsi_disk/.../provisioning_mode attribute, but it appears kernel
+>> may re-evaluate it in some cases, so changes do not stick. Is it
+>> possible to permanently restrict it per-device (or per-vendor/device)?
+>>
+>> TIA
+>>
+>> -andrei
+> 
+> sd_fops->revalidate_disk() will cause the properties that cause the
+> provisioning_mode to be evaluated to be re-read, and sd_config_discard()
+> to set the determined mode.  We might want to re-think this, since the
+> user overrode what was probed earlier.  However, we might also want to
+> automatically handle the storage capabilities changing, so I'm not sure.
+> 
 
-The corruption is always the same: one byte missing at the beginning of
-a 128 B block. It happens only with slow Quantum LPS 240 drive, not with
-faster IBM DORS-32160. It's not clear what causes this. Documentation
-for the DTC436 chip has not been made available. Hence this workaround.
+Will revalidate_disk() emit "change" event? If yes, it can be handled by
+udev rule (although small race window probably will still exist).
 
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
----
- drivers/scsi/g_NCR5380.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+> I think we should figure out how best to handle devices/arrays that aren't
+> correctly handling WRITE SAME(16) w/UNMAP,
 
-diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-index 9f18082415c4..b1e0a08e49c1 100644
---- a/drivers/scsi/g_NCR5380.c
-+++ b/drivers/scsi/g_NCR5380.c
-@@ -45,7 +45,8 @@
- 	int c400_blk_cnt; \
- 	int c400_host_buf; \
- 	int io_width; \
--	int pdma_residual
-+	int pdma_residual; \
-+	int board
- 
- #define NCR5380_dma_xfer_len            generic_NCR5380_dma_xfer_len
- #define NCR5380_dma_recv_setup          generic_NCR5380_pread
-@@ -316,6 +317,7 @@ static int generic_NCR5380_init_one(struct scsi_host_template *tpnt,
- 	}
- 	hostdata = shost_priv(instance);
- 
-+	hostdata->board = board;
- 	hostdata->io = iomem;
- 	hostdata->region_size = region_size;
- 
-@@ -644,7 +646,12 @@ static int generic_NCR5380_dma_xfer_len(struct NCR5380_hostdata *hostdata,
- 
- 	/* 53C400 datasheet: non-modulo-128-byte transfers should use PIO */
- 	if (transfersize % 128)
--		transfersize = 0;
-+		return 0;
-+
-+	/* Limit PDMA send to 512 B to avoid random corruption on DTC3181E */
-+	if (hostdata->board == BOARD_DTC3181E &&
-+	    cmd->sc_data_direction == DMA_TO_DEVICE)
-+		transfersize = min(cmd->SCp.this_residual, 512);
- 
- 	return min(transfersize, DMA_MAX_SIZE);
- }
--- 
-2.13.0
+
+In this case it caused total multipath outage because it tried DISCARD
+on every path and failed all of them in turn.
