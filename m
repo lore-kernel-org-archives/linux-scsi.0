@@ -1,51 +1,209 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 06/47] aacraid: add fib flag to mark scsi command callback
-Date: Wed, 28 Jun 2017 10:32:32 +0200
-Message-ID: <1498638793-44672-7-git-send-email-hare@suse.de>
+Subject: [PATCH 03/47] aacraid: split off device, target, and bus reset
+Date: Wed, 28 Jun 2017 10:32:29 +0200
+Message-ID: <1498638793-44672-4-git-send-email-hare@suse.de>
 References: <1498638793-44672-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53767 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:53648 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751522AbdF1IdR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2017 04:33:17 -0400
+        id S1751505AbdF1IdQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 04:33:16 -0400
 In-Reply-To: <1498638793-44672-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-To correctly identify which fib has a scsi command callback this
-patch implements a flag FIB_CONTEXT_FLAG_SCSI_CMD.
+Split off device, target, and bus reset functionality into
+individual functions.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/aacraid/aacraid.h | 1 +
- drivers/scsi/aacraid/commsup.c | 1 +
- 2 files changed, 2 insertions(+)
+ drivers/scsi/aacraid/linit.c | 141 +++++++++++++++++++++++++++++++------------
+ 1 file changed, 102 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index d31a9bc..6981299 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -1723,6 +1723,7 @@ struct aac_dev
- #define FIB_CONTEXT_FLAG_FASTRESP		(0x00000008)
- #define FIB_CONTEXT_FLAG_NATIVE_HBA		(0x00000010)
- #define FIB_CONTEXT_FLAG_NATIVE_HBA_TMF	(0x00000020)
-+#define FIB_CONTEXT_FLAG_SCSI_CMD	(0x00000040)
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index bf21006..57b2077 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -861,68 +861,129 @@ static u8 aac_eh_tmf_hard_reset_fib(struct aac_dev *aac, struct fib *fib,
+ }
  
  /*
-  *	Define the command values
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index 348f0ea..dfe8e70 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -770,6 +770,7 @@ int aac_hba_send(u8 command, struct fib *fibptr, fib_callback callback,
- 		/* bit1 of request_id must be 0 */
- 		hbacmd->request_id =
- 			cpu_to_le32((((u32)(fibptr - dev->fibs)) << 2) + 1);
-+		fibptr->flags |= FIB_CONTEXT_FLAG_SCSI_CMD;
- 	} else if (command != HBA_IU_TYPE_SCSI_TM_REQ)
- 		return -EINVAL;
+- *	aac_eh_reset	- Reset command handling
++ *	aac_eh_dev_reset	- Device reset command handling
+  *	@scsi_cmd:	SCSI command block causing the reset
+  *
+  */
+-static int aac_eh_reset(struct scsi_cmnd* cmd)
++static int aac_eh_dev_reset(struct scsi_cmnd *cmd)
+ {
+ 	struct scsi_device * dev = cmd->device;
+ 	struct Scsi_Host * host = dev->host;
+ 	struct aac_dev * aac = (struct aac_dev *)host->hostdata;
+ 	int count;
+ 	u32 bus, cid;
++	struct fib *fib;
+ 	int ret = FAILED;
+-	int status = 0;
+-
++	int status;
++	u8 command;
  
+ 	bus = aac_logical_to_phys(scmd_channel(cmd));
+ 	cid = scmd_id(cmd);
+-	if (bus < AAC_MAX_BUSES && cid < AAC_MAX_TARGETS &&
+-		aac->hba_map[bus][cid].devtype == AAC_DEVTYPE_NATIVE_RAW) {
+-		struct fib *fib;
+-		int status;
+-		u8 command;
++	if (bus >= AAC_MAX_BUSES || cid >= AAC_MAX_TARGETS ||
++	    aac->hba_map[bus][cid].devtype != AAC_DEVTYPE_NATIVE_RAW)
++		return FAILED;
+ 
+-		pr_err("%s: Host adapter reset request. SCSI hang ?\n",
+-			AAC_DRIVERNAME);
++	pr_err("%s: Host adapter reset request. SCSI hang ?\n",
++	       AAC_DRIVERNAME);
+ 
+-		fib = aac_fib_alloc(aac);
+-		if (!fib)
+-			return ret;
++	fib = aac_fib_alloc(aac);
++	if (!fib)
++		return ret;
+ 
+ 
+-		if (aac->hba_map[bus][cid].reset_state == 0) {
+-			/* start a HBA_TMF_LUN_RESET TMF request */
+-			command = aac_eh_tmf_lun_reset_fib(aac, fib,
+-							   bus, cid,
+-							   cmd->device->lun);
+-			aac->hba_map[bus][cid].reset_state++;
+-		} else if (aac->hba_map[bus][cid].reset_state >= 1) {
+-			/* already tried, start a hard reset now */
+-			command = aac_eh_tmf_hard_reset_fib(aac, fib, bus, cid);
+-			aac->hba_map[bus][cid].reset_state = 0;
++	/* start a HBA_TMF_LUN_RESET TMF request */
++	command = aac_eh_tmf_lun_reset_fib(aac, fib, bus, cid,
++					   cmd->device->lun);
++
++	cmd->SCp.sent_command = 0;
++
++	status = aac_hba_send(command, fib,
++			      (fib_callback) aac_hba_callback,
++			      (void *) cmd);
++
++	/* Wait up to 15 seconds for completion */
++	for (count = 0; count < 15; ++count) {
++		if (cmd->SCp.sent_command) {
++			ret = SUCCESS;
++			break;
+ 		}
+-		cmd->SCp.sent_command = 0;
++		msleep(1000);
++	}
+ 
+-		status = aac_hba_send(command, fib,
+-				  (fib_callback) aac_hba_callback,
+-				  (void *) cmd);
++	return ret;
++}
+ 
+-		/* Wait up to 15 seconds for completion */
+-		for (count = 0; count < 15; ++count) {
+-			if (cmd->SCp.sent_command) {
+-				ret = SUCCESS;
+-				break;
+-			}
+-			msleep(1000);
++/*
++ *	aac_eh_target_reset	- Target reset command handling
++ *	@scsi_cmd:	SCSI command block causing the reset
++ *
++ */
++static int aac_eh_target_reset(struct scsi_cmnd *cmd)
++{
++	struct scsi_device * dev = cmd->device;
++	struct Scsi_Host * host = dev->host;
++	struct aac_dev * aac = (struct aac_dev *)host->hostdata;
++	int count;
++	u32 bus, cid;
++	int ret = FAILED;
++	struct fib *fib;
++	int status;
++	u8 command;
++
++	bus = aac_logical_to_phys(scmd_channel(cmd));
++	cid = scmd_id(cmd);
++	if (bus >= AAC_MAX_BUSES || cid >= AAC_MAX_TARGETS ||
++	    aac->hba_map[bus][cid].devtype != AAC_DEVTYPE_NATIVE_RAW)
++		return FAILED;
++
++	pr_err("%s: Host adapter reset request. SCSI hang ?\n",
++	       AAC_DRIVERNAME);
++
++	fib = aac_fib_alloc(aac);
++	if (!fib)
++		return ret;
++
++
++	/* already tried, start a hard reset now */
++	command = aac_eh_tmf_hard_reset_fib(aac, fib, bus, cid);
++
++	cmd->SCp.sent_command = 0;
++
++	status = aac_hba_send(command, fib,
++			      (fib_callback) aac_hba_callback,
++			      (void *) cmd);
++
++	/* Wait up to 15 seconds for completion */
++	for (count = 0; count < 15; ++count) {
++		if (cmd->SCp.sent_command) {
++			ret = SUCCESS;
++			break;
+ 		}
++		msleep(1000);
++	}
+ 
+-		if (ret == SUCCESS)
+-			return ret;
++	return ret;
++}
++
++/*
++ *	aac_eh_bus_reset	- Bus reset command handling
++ *	@scsi_cmd:	SCSI command block causing the reset
++ *
++ */
++static int aac_eh_bus_reset(struct scsi_cmnd* cmd)
++{
++	struct scsi_device * dev = cmd->device;
++	struct Scsi_Host * host = dev->host;
++	struct aac_dev * aac = (struct aac_dev *)host->hostdata;
++	int count;
++	u32 bus, cid;
++	int status = 0;
+ 
+-	} else {
+ 
++	bus = aac_logical_to_phys(scmd_channel(cmd));
++	cid = scmd_id(cmd);
++	if (bus >= AAC_MAX_BUSES || cid >= AAC_MAX_TARGETS ||
++	    aac->hba_map[bus][cid].devtype != AAC_DEVTYPE_NATIVE_RAW) {
+ 		/* Mark the assoc. FIB to not complete, eh handler does this */
+ 		for (count = 0;
+ 			count < (host->can_queue + AAC_NUM_MGT_FIB);
+@@ -1409,7 +1470,9 @@ ssize_t aac_get_serial_number(struct device *device, char *buf)
+ 	.change_queue_depth		= aac_change_queue_depth,
+ 	.sdev_attrs			= aac_dev_attrs,
+ 	.eh_abort_handler		= aac_eh_abort,
+-	.eh_bus_reset_handler		= aac_eh_reset,
++	.eh_device_reset_handler	= aac_eh_dev_reset,
++	.eh_target_reset_handler	= aac_eh_target_reset,
++	.eh_bus_reset_handler		= aac_eh_bus_reset,
+ 	.eh_host_reset_handler		= aac_eh_host_reset,
+ 	.can_queue			= AAC_NUM_IO_FIB,
+ 	.this_id			= MAXIMUM_NUM_CONTAINERS,
 -- 
 1.8.5.6
