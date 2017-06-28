@@ -1,19 +1,19 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 12/28] rtsx: drop bus reset function
-Date: Wed, 28 Jun 2017 10:47:33 +0200
-Message-ID: <20170628084733.GN4185@linux-x5ow.site>
+Subject: Re: [PATCH 13/28] qlogicpti: move bus reset to host reset
+Date: Wed, 28 Jun 2017 10:54:44 +0200
+Message-ID: <20170628085444.GO4185@linux-x5ow.site>
 References: <1498638316-44420-1-git-send-email-hare@suse.de>
- <1498638316-44420-13-git-send-email-hare@suse.de>
+ <1498638316-44420-14-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:57787 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:58300 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750829AbdF1Irf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2017 04:47:35 -0400
+        id S1751495AbdF1Iyq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 04:54:46 -0400
 Content-Disposition: inline
-In-Reply-To: <1498638316-44420-13-git-send-email-hare@suse.de>
+In-Reply-To: <1498638316-44420-14-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
