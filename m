@@ -1,277 +1,158 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 22/47] bnx2fc: Do not rely on a scsi command when issueing lun or target reset
-Date: Wed, 28 Jun 2017 10:32:48 +0200
-Message-ID: <1498638793-44672-23-git-send-email-hare@suse.de>
+Subject: [PATCH 23/47] zfcp: do not rely on scsi command for debugging message
+Date: Wed, 28 Jun 2017 10:32:49 +0200
+Message-ID: <1498638793-44672-24-git-send-email-hare@suse.de>
 References: <1498638793-44672-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53827 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:53829 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751615AbdF1IdV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2017 04:33:21 -0400
+        id S1751681AbdF1IdW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 04:33:22 -0400
 In-Reply-To: <1498638793-44672-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-When a LUN or target reset is issued we should not rely on a scsi
-command to be present; this isn't very reliable and is going away
-with the next patch anyway.
+When generating debugging messages the code should not rely on
+a scsi command to be present.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc.h     |  1 +
- drivers/scsi/bnx2fc/bnx2fc_hwi.c | 14 ++++---
- drivers/scsi/bnx2fc/bnx2fc_io.c  | 89 +++++++++++++++++++---------------------
- 3 files changed, 52 insertions(+), 52 deletions(-)
+ drivers/s390/scsi/zfcp_dbf.c  | 28 ++++++++++++++--------------
+ drivers/s390/scsi/zfcp_dbf.h  | 10 +++++++---
+ drivers/s390/scsi/zfcp_ext.h  |  4 ++--
+ drivers/s390/scsi/zfcp_scsi.c |  9 ++++++---
+ 4 files changed, 29 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
-index 901a316..b9c101f 100644
---- a/drivers/scsi/bnx2fc/bnx2fc.h
-+++ b/drivers/scsi/bnx2fc/bnx2fc.h
-@@ -386,6 +386,7 @@ struct bnx2fc_rport {
- };
- 
- struct bnx2fc_mp_req {
-+	u64 tm_lun;
- 	u8 tm_flags;
- 
- 	u32 req_len;
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-index 913c750..e3d39dc 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-@@ -1691,7 +1691,8 @@ void bnx2fc_init_task(struct bnx2fc_cmd *io_req,
- 	struct fcoe_cached_sge_ctx *cached_sge;
- 	struct fcoe_ext_mul_sges_ctx *sgl;
- 	int dev_type = tgt->dev_type;
--	u64 *fcp_cmnd;
-+	struct fcp_cmnd *fcp_cmnd;
-+	u64 *raw_fcp_cmnd;
- 	u64 tmp_fcp_cmnd[4];
- 	u32 context_id;
- 	int cnt, i;
-@@ -1760,16 +1761,19 @@ void bnx2fc_init_task(struct bnx2fc_cmd *io_req,
- 	task->txwr_rxrd.union_ctx.tx_seq.ctx.seq_cnt = 1;
- 
- 	/* Fill FCP_CMND IU */
--	fcp_cmnd = (u64 *)
-+	fcp_cmnd = (struct fcp_cmnd *)&tmp_fcp_cmnd;
-+	bnx2fc_build_fcp_cmnd(io_req, fcp_cmnd);
-+	int_to_scsilun(sc_cmd->device->lun, &fcp_cmnd->fc_lun);
-+	memcpy(fcp_cmnd->fc_cdb, sc_cmd->cmnd, sc_cmd->cmd_len);
-+	raw_fcp_cmnd = (u64 *)
- 		    task->txwr_rxrd.union_ctx.fcp_cmd.opaque;
--	bnx2fc_build_fcp_cmnd(io_req, (struct fcp_cmnd *)&tmp_fcp_cmnd);
- 
- 	/* swap fcp_cmnd */
- 	cnt = sizeof(struct fcp_cmnd) / sizeof(u64);
- 
- 	for (i = 0; i < cnt; i++) {
--		*fcp_cmnd = cpu_to_be64(tmp_fcp_cmnd[i]);
--		fcp_cmnd++;
-+		*raw_fcp_cmnd = cpu_to_be64(tmp_fcp_cmnd[i]);
-+		raw_fcp_cmnd++;
- 	}
- 
- 	/* Rx Write Tx Read */
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
-index 266a92e..3be742a 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_io.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
-@@ -658,10 +658,9 @@ int bnx2fc_init_mp_req(struct bnx2fc_cmd *io_req)
- 	return SUCCESS;
- }
- 
--static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
-+static int bnx2fc_initiate_tmf(struct fc_lport *lport, struct fc_rport *rport,
-+			       u64 tm_lun, u8 tm_flags)
- {
--	struct fc_lport *lport;
--	struct fc_rport *rport;
- 	struct fc_rport_libfc_priv *rp;
- 	struct fcoe_port *port;
- 	struct bnx2fc_interface *interface;
-@@ -670,7 +669,6 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
- 	struct bnx2fc_mp_req *tm_req;
- 	struct fcoe_task_ctx_entry *task;
- 	struct fcoe_task_ctx_entry *task_page;
--	struct Scsi_Host *host = sc_cmd->device->host;
- 	struct fc_frame_header *fc_hdr;
- 	struct fcp_cmnd *fcp_cmnd;
- 	int task_idx, index;
-@@ -679,8 +677,6 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
- 	u32 sid, did;
- 	unsigned long start = jiffies;
- 
--	lport = shost_priv(host);
--	rport = starget_to_rport(scsi_target(sc_cmd->device));
- 	port = lport_priv(lport);
- 	interface = port->priv;
- 
-@@ -720,7 +716,7 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
- 		goto retry_tmf;
- 	}
- 	/* Initialize rest of io_req fields */
--	io_req->sc_cmd = sc_cmd;
-+	io_req->sc_cmd = NULL;
- 	io_req->port = port;
- 	io_req->tgt = tgt;
- 
-@@ -738,11 +734,13 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
- 	/* Set TM flags */
- 	io_req->io_req_flags = 0;
- 	tm_req->tm_flags = tm_flags;
-+	tm_req->tm_lun = tm_lun;
- 
- 	/* Fill FCP_CMND */
- 	bnx2fc_build_fcp_cmnd(io_req, (struct fcp_cmnd *)tm_req->req_buf);
- 	fcp_cmnd = (struct fcp_cmnd *)tm_req->req_buf;
--	memset(fcp_cmnd->fc_cdb, 0,  sc_cmd->cmd_len);
-+	int_to_scsilun(tm_lun, &fcp_cmnd->fc_lun);
-+	memset(fcp_cmnd->fc_cdb, 0,  BNX2FC_MAX_CMD_LEN);
- 	fcp_cmnd->fc_dl = 0;
- 
- 	/* Fill FC header */
-@@ -765,8 +763,6 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
- 	task = &(task_page[index]);
- 	bnx2fc_init_mp_task(io_req, task);
- 
--	sc_cmd->SCp.ptr = (char *)io_req;
--
- 	/* Obtain free SQ entry */
- 	spin_lock_bh(&tgt->tgt_lock);
- 	bnx2fc_add_2_sq(tgt, xid);
-@@ -1064,7 +1060,10 @@ int bnx2fc_initiate_cleanup(struct bnx2fc_cmd *io_req)
+diff --git a/drivers/s390/scsi/zfcp_dbf.c b/drivers/s390/scsi/zfcp_dbf.c
+index d5bf36e..f825a30 100644
+--- a/drivers/s390/scsi/zfcp_dbf.c
++++ b/drivers/s390/scsi/zfcp_dbf.c
+@@ -535,11 +535,10 @@ void zfcp_dbf_san_in_els(char *tag, struct zfcp_fsf_req *fsf)
+  * @sc: pointer to struct scsi_cmnd
+  * @fsf: pointer to struct zfcp_fsf_req
   */
- int bnx2fc_eh_target_reset(struct scsi_cmnd *sc_cmd)
+-void zfcp_dbf_scsi(char *tag, int level, struct scsi_cmnd *sc,
+-		   struct zfcp_fsf_req *fsf)
++void zfcp_dbf_scsi(struct zfcp_adapter *adapter, char *tag, int level,
++		   int scsi_id, u64 scsi_lun,
++		   struct scsi_cmnd *sc, struct zfcp_fsf_req *fsf)
  {
--	return bnx2fc_initiate_tmf(sc_cmd, FCP_TMF_TGT_RESET);
-+	struct fc_rport *rport = starget_to_rport(scsi_target(sc_cmd->device));
-+	struct fc_lport *lport = shost_priv(rport_to_shost(rport));
+-	struct zfcp_adapter *adapter =
+-		(struct zfcp_adapter *) sc->device->host->hostdata[0];
+ 	struct zfcp_dbf *dbf = adapter->dbf;
+ 	struct zfcp_dbf_scsi *rec = &dbf->scsi_buf;
+ 	struct fcp_resp_with_ext *fcp_rsp;
+@@ -551,17 +550,18 @@ void zfcp_dbf_scsi(char *tag, int level, struct scsi_cmnd *sc,
+ 
+ 	memcpy(rec->tag, tag, ZFCP_DBF_TAG_LEN);
+ 	rec->id = ZFCP_DBF_SCSI_CMND;
+-	rec->scsi_result = sc->result;
+-	rec->scsi_retries = sc->retries;
+-	rec->scsi_allowed = sc->allowed;
+-	rec->scsi_id = sc->device->id;
++	rec->scsi_id = scsi_id;
+ 	/* struct zfcp_dbf_scsi needs to be updated to handle 64bit LUNs */
+-	rec->scsi_lun = (u32)sc->device->lun;
+-	rec->host_scribble = (unsigned long)sc->host_scribble;
+-
+-	memcpy(rec->scsi_opcode, sc->cmnd,
+-	       min((int)sc->cmd_len, ZFCP_DBF_SCSI_OPCODE));
+-
++	rec->scsi_lun = (u32)scsi_lun;
++	if (sc) {
++		rec->scsi_result = sc->result;
++		rec->scsi_retries = sc->retries;
++		rec->scsi_allowed = sc->allowed;
++		rec->host_scribble = (unsigned long)sc->host_scribble;
 +
-+	return bnx2fc_initiate_tmf(lport, rport, 0, FCP_TMF_TGT_RESET);
++		memcpy(rec->scsi_opcode, sc->cmnd,
++		       min((int)sc->cmd_len, ZFCP_DBF_SCSI_OPCODE));
++	}
+ 	if (fsf) {
+ 		rec->fsf_req_id = fsf->req_id;
+ 		fcp_rsp = (struct fcp_resp_with_ext *)
+diff --git a/drivers/s390/scsi/zfcp_dbf.h b/drivers/s390/scsi/zfcp_dbf.h
+index db186d4..09a9524 100644
+--- a/drivers/s390/scsi/zfcp_dbf.h
++++ b/drivers/s390/scsi/zfcp_dbf.h
+@@ -352,7 +352,8 @@ void _zfcp_dbf_scsi(char *tag, int level, struct scsi_cmnd *scmd,
+ 					scmd->device->host->hostdata[0];
+ 
+ 	if (debug_level_enabled(adapter->dbf->scsi, level))
+-		zfcp_dbf_scsi(tag, level, scmd, req);
++		zfcp_dbf_scsi(adapter, tag, level, scmd->device->id,
++			      scmd->device->lun, scmd, req);
  }
  
  /**
-@@ -1077,7 +1076,11 @@ int bnx2fc_eh_target_reset(struct scsi_cmnd *sc_cmd)
+@@ -401,17 +402,20 @@ void zfcp_dbf_scsi_abort(char *tag, struct scsi_cmnd *scmd,
+  * @flag: indicates type of reset (Target Reset, Logical Unit Reset)
   */
- int bnx2fc_eh_device_reset(struct scsi_cmnd *sc_cmd)
+ static inline
+-void zfcp_dbf_scsi_devreset(char *tag, struct scsi_cmnd *scmnd, u8 flag)
++void zfcp_dbf_scsi_devreset(struct zfcp_adapter *adapter, char *tag,
++			    int id, u64 lun, u8 flag)
  {
--	return bnx2fc_initiate_tmf(sc_cmd, FCP_TMF_LUN_RESET);
-+	struct fc_rport *rport = starget_to_rport(scsi_target(sc_cmd->device));
-+	struct fc_lport *lport = shost_priv(rport_to_shost(rport));
-+
-+	return bnx2fc_initiate_tmf(lport, rport, sc_cmd->device->lun,
-+				   FCP_TMF_LUN_RESET);
+ 	char tmp_tag[ZFCP_DBF_TAG_LEN];
+ 
++	if (!debug_level_enabled(adapter->dbf->scsi, 1))
++		return;
+ 	if (flag == FCP_TMF_TGT_RESET)
+ 		memcpy(tmp_tag, "tr_", 3);
+ 	else
+ 		memcpy(tmp_tag, "lr_", 3);
+ 
+ 	memcpy(&tmp_tag[3], tag, 4);
+-	_zfcp_dbf_scsi(tmp_tag, 1, scmnd, NULL);
++	zfcp_dbf_scsi(adapter, tmp_tag, 1, id, lun, NULL, NULL);
  }
  
- static int bnx2fc_abts_cleanup(struct bnx2fc_cmd *io_req)
-@@ -1394,10 +1397,9 @@ void bnx2fc_process_abts_compl(struct bnx2fc_cmd *io_req,
+ /**
+diff --git a/drivers/s390/scsi/zfcp_ext.h b/drivers/s390/scsi/zfcp_ext.h
+index 9afdbc3..57f1d4a 100644
+--- a/drivers/s390/scsi/zfcp_ext.h
++++ b/drivers/s390/scsi/zfcp_ext.h
+@@ -47,8 +47,8 @@ extern void zfcp_dbf_rec_run_lvl(int level, char *tag,
+ extern void zfcp_dbf_san_req(char *, struct zfcp_fsf_req *, u32);
+ extern void zfcp_dbf_san_res(char *, struct zfcp_fsf_req *);
+ extern void zfcp_dbf_san_in_els(char *, struct zfcp_fsf_req *);
+-extern void zfcp_dbf_scsi(char *, int, struct scsi_cmnd *,
+-			  struct zfcp_fsf_req *);
++extern void zfcp_dbf_scsi(struct zfcp_adapter *, char *, int, int,
++			  u64, struct scsi_cmnd *, struct zfcp_fsf_req *);
  
- static void bnx2fc_lun_reset_cmpl(struct bnx2fc_cmd *io_req)
- {
--	struct scsi_cmnd *sc_cmd = io_req->sc_cmd;
- 	struct bnx2fc_rport *tgt = io_req->tgt;
- 	struct bnx2fc_cmd *cmd, *tmp;
--	u64 tm_lun = sc_cmd->device->lun;
-+	struct bnx2fc_mp_req *tm_req = &io_req->mp_req;
- 	u64 lun;
- 	int rc = 0;
+ /* zfcp_erp.c */
+ extern void zfcp_erp_set_adapter_status(struct zfcp_adapter *, u32);
+diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
+index e3160fc..5fada93 100644
+--- a/drivers/s390/scsi/zfcp_scsi.c
++++ b/drivers/s390/scsi/zfcp_scsi.c
+@@ -280,7 +280,8 @@ static int zfcp_task_mgmt_function(struct scsi_cmnd *scpnt, u8 tm_flags)
  
-@@ -1409,8 +1411,10 @@ static void bnx2fc_lun_reset_cmpl(struct bnx2fc_cmd *io_req)
- 	 */
- 	list_for_each_entry_safe(cmd, tmp, &tgt->active_cmd_queue, link) {
- 		BNX2FC_TGT_DBG(tgt, "LUN RST cmpl: scan for pending IOs\n");
-+		if (!cmd->sc_cmd)
-+			continue;
- 		lun = cmd->sc_cmd->device->lun;
--		if (lun == tm_lun) {
-+		if (lun == tm_req->tm_lun) {
- 			/* Initiate ABTS on this cmd */
- 			if (!test_and_set_bit(BNX2FC_FLAG_ISSUE_ABTS,
- 					      &cmd->req_flags)) {
-@@ -1513,32 +1517,32 @@ void bnx2fc_process_tm_compl(struct bnx2fc_cmd *io_req,
- 		printk(KERN_ERR PFX "tmf's fc_hdr r_ctl = 0x%x\n",
- 			fc_hdr->fh_r_ctl);
- 	}
--	if (!sc_cmd->SCp.ptr) {
--		printk(KERN_ERR PFX "tm_compl: SCp.ptr is NULL\n");
--		return;
--	}
--	switch (io_req->fcp_status) {
--	case FC_GOOD:
--		if (io_req->cdb_status == 0) {
--			/* Good IO completion */
--			sc_cmd->result = DID_OK << 16;
--		} else {
--			/* Transport status is good, SCSI status not good */
--			sc_cmd->result = (DID_OK << 16) | io_req->cdb_status;
-+	if (sc_cmd && sc_cmd->SCp.ptr) {
-+		switch (io_req->fcp_status) {
-+		case FC_GOOD:
-+			if (io_req->cdb_status == 0) {
-+				/* Good IO completion */
-+				sc_cmd->result = DID_OK << 16;
-+			} else {
-+				/* Transport status is good, SCSI status not good */
-+				sc_cmd->result = (DID_OK << 16) | io_req->cdb_status;
-+			}
-+			if (io_req->fcp_resid)
-+				scsi_set_resid(sc_cmd, io_req->fcp_resid);
-+			break;
-+
-+		default:
-+			BNX2FC_IO_DBG(io_req, "process_tm_compl: fcp_status = %d\n",
-+				      io_req->fcp_status);
-+			break;
+ 		if (!(atomic_read(&adapter->status) &
+ 		      ZFCP_STATUS_COMMON_RUNNING)) {
+-			zfcp_dbf_scsi_devreset("nres", scpnt, tm_flags);
++			zfcp_dbf_scsi_devreset(adapter, "nres", sdev->id,
++					       sdev->lun, tm_flags);
+ 			return SUCCESS;
  		}
--		if (io_req->fcp_resid)
--			scsi_set_resid(sc_cmd, io_req->fcp_resid);
--		break;
+ 	}
+@@ -290,10 +291,12 @@ static int zfcp_task_mgmt_function(struct scsi_cmnd *scpnt, u8 tm_flags)
+ 	wait_for_completion(&fsf_req->completion);
  
--	default:
--		BNX2FC_IO_DBG(io_req, "process_tm_compl: fcp_status = %d\n",
--			   io_req->fcp_status);
--		break;
--	}
--
--	sc_cmd = io_req->sc_cmd;
--	io_req->sc_cmd = NULL;
-+		sc_cmd = io_req->sc_cmd;
-+		io_req->sc_cmd = NULL;
- 
-+		sc_cmd->SCp.ptr = NULL;
-+		sc_cmd->scsi_done(sc_cmd);
-+	}
- 	/* check if the io_req exists in tgt's tmf_q */
- 	if (io_req->on_tmf_queue) {
- 
-@@ -1550,9 +1554,6 @@ void bnx2fc_process_tm_compl(struct bnx2fc_cmd *io_req,
- 		return;
+ 	if (fsf_req->status & ZFCP_STATUS_FSFREQ_TMFUNCFAILED) {
+-		zfcp_dbf_scsi_devreset("fail", scpnt, tm_flags);
++		zfcp_dbf_scsi_devreset(adapter, "fail", sdev->id,
++				       sdev->lun, tm_flags);
+ 		retval = FAILED;
+ 	} else {
+-		zfcp_dbf_scsi_devreset("okay", scpnt, tm_flags);
++		zfcp_dbf_scsi_devreset(adapter, "okay", sdev->id,
++				       sdev->lun, tm_flags);
+ 		zfcp_scsi_forget_cmnds(zfcp_sdev, tm_flags);
  	}
  
--	sc_cmd->SCp.ptr = NULL;
--	sc_cmd->scsi_done(sc_cmd);
--
- 	kref_put(&io_req->refcount, bnx2fc_cmd_release);
- 	if (io_req->wait_for_comp) {
- 		BNX2FC_IO_DBG(io_req, "tm_compl - wake up the waiter\n");
-@@ -1670,15 +1671,9 @@ static void bnx2fc_unmap_sg_list(struct bnx2fc_cmd *io_req)
- void bnx2fc_build_fcp_cmnd(struct bnx2fc_cmd *io_req,
- 				  struct fcp_cmnd *fcp_cmnd)
- {
--	struct scsi_cmnd *sc_cmd = io_req->sc_cmd;
--
- 	memset(fcp_cmnd, 0, sizeof(struct fcp_cmnd));
- 
--	int_to_scsilun(sc_cmd->device->lun, &fcp_cmnd->fc_lun);
--
- 	fcp_cmnd->fc_dl = htonl(io_req->data_xfer_len);
--	memcpy(fcp_cmnd->fc_cdb, sc_cmd->cmnd, sc_cmd->cmd_len);
--
- 	fcp_cmnd->fc_cmdref = 0;
- 	fcp_cmnd->fc_pri_ta = 0;
- 	fcp_cmnd->fc_tm_flags = io_req->mp_req.tm_flags;
 -- 
 1.8.5.6
