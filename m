@@ -1,60 +1,31 @@
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: Re: [PATCH 0/5] target: Zoned block device support and bug fixes
-Date: Wed, 28 Jun 2017 09:34:51 -0500
-Message-ID: <50923919-9768-1910-ec1e-393e872c2987@linux.vnet.ibm.com>
-References: <20170628055900.22889-1-damien.lemoal@wdc.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 19/28] qedf: drop bus reset handler
+Date: Wed, 28 Jun 2017 16:37:16 +0200
+Message-ID: <20170628143716.GB2359@lst.de>
+References: <1498638316-44420-1-git-send-email-hare@suse.de> <1498638316-44420-20-git-send-email-hare@suse.de> <20170628135858.GI1268@lst.de> <alpine.OSX.2.00.1706281003560.920@n5127mncfb42q1.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20170628055900.22889-1-damien.lemoal@wdc.com>
-Content-Language: en-US
-Sender: target-devel-owner@vger.kernel.org
-To: Damien Le Moal <damien.lemoal@wdc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, "Nicholas A . Bellinger" <nab@linux-iscsi.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:49787 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751513AbdF1OhR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 10:37:17 -0400
+Content-Disposition: inline
+In-Reply-To: <alpine.OSX.2.00.1706281003560.920@n5127mncfb42q1.qlogic.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Chad Dupuis <chad.dupuis@cavium.com>
+Cc: Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
+On Wed, Jun 28, 2017 at 10:07:50AM -0400, Chad Dupuis wrote:
+> The test case this was meant to fix as using the sg_reset utility with the 
+> -b option which forces a bus reset with NPIV ports attached.  What we were 
+> finding is that some of the devices attached to the vport were being 
+> brought offline after 5 seconds as escalating to the host reset handler in 
+> this case was taking too long.
 
-> This series introduce zoned block device support for the pscsi backstore and
-> also fixes several problems with sense data handling for failed requests.
->
-> The first patch is only a cleanup, so not really necessary but nice to have I
-> think.
->
-> Patch 2 and 3 introduce support for host managed zoned block device type (14h)
-> in the SCSI passthrough backstore and fixes sense data handling for commands
-> failed by the backstore device. With these fixes, a host zoned block device
-> exported with the iscsi or loopback transport pass libzbc ZBC specification
-> conformance tests.
->
-> Finally, patch 4 and 5 fix sense data hadling with the user backstore code. A
-> prototype ZBC emulation tcmu-runner handler was used to test these fixes and
-> result in the emulated handler passing libzbc ZBC specification conformance
-> tests.
->
-> (Note: the ZBC emulation tcmu-runner handler will be submitted to the
-> tcmu-runner project on github)
->
-> Please consider these patches for inclusion with kernel 4.13.
->
-> Damien Le Moal (5):
->    target: Use macro for WRITE_VERIFY_xx operation codes
->    target: pscsi: Introduce TYPE_ZBC support
->    target: pscsi: Fix sense data handling
->    target: user: Fix sense data handling
->    target: core: Fix failed command sense data handling
->
->   drivers/target/target_core_device.c    |  4 ++--
->   drivers/target/target_core_pscsi.c     | 20 +++++++++++++-------
->   drivers/target/target_core_transport.c |  5 +++--
->   drivers/target/target_core_user.c      |  4 +++-
->   include/scsi/scsi_proto.h              |  1 +
->   5 files changed, 22 insertions(+), 12 deletions(-)
+sg_reset / SG_SCSI_RESET are designed to escalatae to to the bigger
+hammers if the method isn't implemented or doesn't succeed.
 
-Hi Damien,
-
-You should take a look at the first two patches in this series to address your sense data handling.
-
-https://www.spinics.net/lists/target-devel/msg15430.html
-
--Bryant
+Use the -N / --no-esc option to disable that.  I wish that behavior had
+been the default from the beginning, but we can't fix that anymore.
