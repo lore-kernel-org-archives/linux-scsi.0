@@ -1,29 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] qla2xxx: Protect access to qpair members with qpair->qp_lock
-Date: Tue, 27 Jun 2017 21:32:02 -0400
-Message-ID: <yq1bmp8zylp.fsf@oracle.com>
-References: <20170623071011.21184-1-jthumshirn@suse.de>
+Subject: Re: [PATCH] scsi: ufs: set host_byte to DID_REQUEUE when ocs = OCS_ABORTED
+Date: Tue, 27 Jun 2017 21:34:28 -0400
+Message-ID: <yq17ezwzyhn.fsf@oracle.com>
+References: <20170624102722.4050-1-zangleigang@hisilicon.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:50100 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753261AbdF1BcT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jun 2017 21:32:19 -0400
-In-Reply-To: <20170623071011.21184-1-jthumshirn@suse.de> (Johannes Thumshirn's
-        message of "Fri, 23 Jun 2017 09:10:11 +0200")
+Received: from userp1040.oracle.com ([156.151.31.81]:26020 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752694AbdF1Bfk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jun 2017 21:35:40 -0400
+In-Reply-To: <20170624102722.4050-1-zangleigang@hisilicon.com> (Zang Leigang's
+        message of "Sat, 24 Jun 2017 18:27:22 +0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, qla2xxx-upstream@qlogic.com, Himanshu Madhani <himanshu.madhani@cavium.com>, Hannes Reinecke <hare@suse.de>, John Garry <john.garry@huawei.com>
+To: Subhash Jadavani <subhashj@codeaurora.org>
+Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Zang Leigang <zangleigang@hisilicon.com>
 
 
-> In qla2xx_start_scsi_mq() and qla2xx_dif_start_scsi_mq() we grab the
-> qpair->qp_lock but do access members of the qpair before having the lock.
-> Re-order the locking sequence to have all read and write access to qpair
-> members under the qpair->qp_lock.
+> Host set ocs to OCS_ABORTED when clear a doorbell in err handler.
+> Then scsi_decide_disposition return SUCCESS. This may cause some
+> filesystem panic because a FAILED REQUESET. Requeue and complete is
+> better.
 
-Cavium folks, please review!
+Subhash: Please review the three ufs patches from Zang.
+
+https://patchwork.kernel.org/patch/9807763/
+https://patchwork.kernel.org/patch/9807759/
+https://patchwork.kernel.org/patch/9807755/
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
