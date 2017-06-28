@@ -1,20 +1,19 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 07/28] libsas: move bus_reset_handler() to
- target_reset_handler()
-Date: Wed, 28 Jun 2017 10:41:53 +0200
-Message-ID: <20170628084153.GI4185@linux-x5ow.site>
+Subject: Re: [PATCH 08/28] bfa: move bus reset to target reset
+Date: Wed, 28 Jun 2017 10:44:50 +0200
+Message-ID: <20170628084450.GJ4185@linux-x5ow.site>
 References: <1498638316-44420-1-git-send-email-hare@suse.de>
- <1498638316-44420-8-git-send-email-hare@suse.de>
+ <1498638316-44420-9-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56592 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:57244 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751491AbdF1Ilz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2017 04:41:55 -0400
+        id S1751493AbdF1Iow (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 04:44:52 -0400
 Content-Disposition: inline
-In-Reply-To: <1498638316-44420-8-git-send-email-hare@suse.de>
+In-Reply-To: <1498638316-44420-9-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
