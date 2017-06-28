@@ -1,76 +1,40 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 20/28] nsp32: drop bus reset
-Date: Wed, 28 Jun 2017 10:25:08 +0200
-Message-ID: <1498638316-44420-21-git-send-email-hare@suse.de>
+Subject: [PATCH 04/28] fc_fcp: do not call fc_block_scsi_eh() from host reset
+Date: Wed, 28 Jun 2017 10:24:52 +0200
+Message-ID: <1498638316-44420-5-git-send-email-hare@suse.de>
 References: <1498638316-44420-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53036 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:52899 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751642AbdF1IbP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2017 04:31:15 -0400
+        id S1751556AbdF1IbB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 04:31:01 -0400
 In-Reply-To: <1498638316-44420-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-From: Hannes Reinecke <hare@suse.com>
-
-bus reset is essentially identical to host reset, and will always
-return SUCCESS, thus disabling the use of host reset.
-So drop bus reset in favour of host reset.
+When calling host reset we're resetting all ports anyway, so
+there is no point in waiting for the ports to become unblocked.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/nsp32.c | 22 +---------------------
- 1 file changed, 1 insertion(+), 21 deletions(-)
+ drivers/scsi/libfc/fc_fcp.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
-index 53c8477..107e191 100644
---- a/drivers/scsi/nsp32.c
-+++ b/drivers/scsi/nsp32.c
-@@ -201,7 +201,6 @@
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index 234352da..772c35a 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -2222,8 +2222,6 @@ int fc_eh_host_reset(struct scsi_cmnd *sc_cmd)
  
- /* SCSI error handler */
- static int         nsp32_eh_abort     (struct scsi_cmnd *);
--static int         nsp32_eh_bus_reset (struct scsi_cmnd *);
- static int         nsp32_eh_host_reset(struct scsi_cmnd *);
+ 	FC_SCSI_DBG(lport, "Resetting host\n");
  
- /* generate SCSI message */
-@@ -276,8 +275,7 @@
- 	.max_sectors			= 128,
- 	.this_id			= NSP32_HOST_SCSIID,
- 	.use_clustering			= DISABLE_CLUSTERING,
--	.eh_abort_handler       	= nsp32_eh_abort,
--	.eh_bus_reset_handler		= nsp32_eh_bus_reset,
-+	.eh_abort_handler		= nsp32_eh_abort,
- 	.eh_host_reset_handler		= nsp32_eh_host_reset,
- /*	.highmem_io			= 1, */
- };
-@@ -2845,24 +2843,6 @@ static int nsp32_eh_abort(struct scsi_cmnd *SCpnt)
- 	return SUCCESS;
- }
- 
--static int nsp32_eh_bus_reset(struct scsi_cmnd *SCpnt)
--{
--	nsp32_hw_data *data = (nsp32_hw_data *)SCpnt->device->host->hostdata;
--	unsigned int   base = SCpnt->device->host->io_port;
+-	fc_block_scsi_eh(sc_cmd);
 -
--	spin_lock_irq(SCpnt->device->host->host_lock);
--
--	nsp32_msg(KERN_INFO, "Bus Reset");	
--	nsp32_dbg(NSP32_DEBUG_BUSRESET, "SCpnt=0x%x", SCpnt);
--
--	nsp32_write2(base, IRQ_CONTROL, IRQ_CONTROL_ALL_IRQ_MASK);
--	nsp32_do_bus_reset(data);
--	nsp32_write2(base, IRQ_CONTROL, 0);
--
--	spin_unlock_irq(SCpnt->device->host->host_lock);
--	return SUCCESS;	/* SCSI bus reset is succeeded at any time. */
--}
--
- static void nsp32_do_bus_reset(nsp32_hw_data *data)
- {
- 	unsigned int   base = data->BaseAddress;
+ 	fc_lport_reset(lport);
+ 	wait_tmo = jiffies + FC_HOST_RESET_TIMEOUT;
+ 	while (!fc_fcp_lport_queue_ready(lport) && time_before(jiffies,
 -- 
 1.8.5.6
