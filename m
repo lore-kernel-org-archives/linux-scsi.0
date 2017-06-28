@@ -1,19 +1,19 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 01/28] scsi: fix comment in scsi_device_set_state()
-Date: Wed, 28 Jun 2017 10:36:16 +0200
-Message-ID: <20170628083615.GC4185@linux-x5ow.site>
+Subject: Re: [PATCH 02/28] mptfc: Do not call fc_block_scsi_eh() on host reset
+Date: Wed, 28 Jun 2017 10:36:41 +0200
+Message-ID: <20170628083641.GD4185@linux-x5ow.site>
 References: <1498638316-44420-1-git-send-email-hare@suse.de>
- <1498638316-44420-2-git-send-email-hare@suse.de>
+ <1498638316-44420-3-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54747 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:54891 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751509AbdF1IgR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2017 04:36:17 -0400
+        id S1751492AbdF1Ign (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 04:36:43 -0400
 Content-Disposition: inline
-In-Reply-To: <1498638316-44420-2-git-send-email-hare@suse.de>
+In-Reply-To: <1498638316-44420-3-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
