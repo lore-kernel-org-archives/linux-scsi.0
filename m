@@ -1,48 +1,60 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: [PATCH RESEND] scsi: Add STARGET_CREATED_REMOVE state to
- scsi_target_state
-Date: Wed, 28 Jun 2017 10:23:02 -0400
-Message-ID: <1498659782.10198.29.camel@localhost.localdomain>
-References: <1498589758-31473-1-git-send-email-emilne@redhat.com>
-         <20170628073815.GA4185@linux-x5ow.site>
-Reply-To: emilne@redhat.com
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: Re: [PATCH 0/5] target: Zoned block device support and bug fixes
+Date: Wed, 28 Jun 2017 09:34:51 -0500
+Message-ID: <50923919-9768-1910-ec1e-393e872c2987@linux.vnet.ibm.com>
+References: <20170628055900.22889-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40084 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752037AbdF1OXE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2017 10:23:04 -0400
-In-Reply-To: <20170628073815.GA4185@linux-x5ow.site>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20170628055900.22889-1-damien.lemoal@wdc.com>
+Content-Language: en-US
+Sender: target-devel-owner@vger.kernel.org
+To: Damien Le Moal <damien.lemoal@wdc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, "Nicholas A . Bellinger" <nab@linux-iscsi.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: linux-scsi@vger.kernel.org
 
-[ removed cc: stable from discussion ]
 
-On Wed, 2017-06-28 at 09:38 +0200, Johannes Thumshirn wrote:
-> 
-> Looks good,
-> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-> 
-> Although we've been tampering with the target removal code for quite some
-> time now, so I really have the gut feeling we haven't really fixed the
-> root cause yet.
-> 
-> I once tried building a regression test for this (with qemu hot plugging UAS
-> devices) but that didn't really go far. Maybe we should add a scsi_target
-> to scsi_debug and add some methods to toggle remove it again. Just to have
-> a sensible unit test for that code path.
-> 
-> Byte,
-> 	Johannes
-> 
+> This series introduce zoned block device support for the pscsi backstore and
+> also fixes several problems with sense data handling for failed requests.
+>
+> The first patch is only a cleanup, so not really necessary but nice to have I
+> think.
+>
+> Patch 2 and 3 introduce support for host managed zoned block device type (14h)
+> in the SCSI passthrough backstore and fixes sense data handling for commands
+> failed by the backstore device. With these fixes, a host zoned block device
+> exported with the iscsi or loopback transport pass libzbc ZBC specification
+> conformance tests.
+>
+> Finally, patch 4 and 5 fix sense data hadling with the user backstore code. A
+> prototype ZBC emulation tcmu-runner handler was used to test these fixes and
+> result in the emulated handler passing libzbc ZBC specification conformance
+> tests.
+>
+> (Note: the ZBC emulation tcmu-runner handler will be submitted to the
+> tcmu-runner project on github)
+>
+> Please consider these patches for inclusion with kernel 4.13.
+>
+> Damien Le Moal (5):
+>    target: Use macro for WRITE_VERIFY_xx operation codes
+>    target: pscsi: Introduce TYPE_ZBC support
+>    target: pscsi: Fix sense data handling
+>    target: user: Fix sense data handling
+>    target: core: Fix failed command sense data handling
+>
+>   drivers/target/target_core_device.c    |  4 ++--
+>   drivers/target/target_core_pscsi.c     | 20 +++++++++++++-------
+>   drivers/target/target_core_transport.c |  5 +++--
+>   drivers/target/target_core_user.c      |  4 +++-
+>   include/scsi/scsi_proto.h              |  1 +
+>   5 files changed, 22 insertions(+), 12 deletions(-)
 
-This specific crash is being encountered on systems connected to flaky
-SANs, where the target rport repeatedly goes away.  I was able to
-reproduce it by inserting a delay before the "Scan LUN 0" comment in
-__scsi_scan_target() with a message, and disabling the FC switch port.
+Hi Damien,
 
--Ewan
+You should take a look at the first two patches in this series to address your sense data handling.
+
+https://www.spinics.net/lists/target-devel/msg15430.html
+
+-Bryant
