@@ -1,28 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/7] bnx2fc: Update driver to version 2.11.8.
-Date: Tue, 27 Jun 2017 21:42:01 -0400
-Message-ID: <yq137akzy52.fsf@oracle.com>
-References: <20170626155938.2091-1-chad.dupuis@cavium.com>
+Subject: Re: [PATCH 1/1] fnic: Zero io_cmpl_skip on fw reset completion
+Date: Tue, 27 Jun 2017 21:42:26 -0400
+Message-ID: <yq1y3scyjjx.fsf@oracle.com>
+References: <1498524383-32398-1-git-send-email-satishkh@cisco.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:16959 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752010AbdF1BmL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jun 2017 21:42:11 -0400
-In-Reply-To: <20170626155938.2091-1-chad.dupuis@cavium.com> (Chad Dupuis's
-        message of "Mon, 26 Jun 2017 08:59:31 -0700")
+Received: from userp1040.oracle.com ([156.151.31.81]:27797 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752010AbdF1Bmc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jun 2017 21:42:32 -0400
+In-Reply-To: <1498524383-32398-1-git-send-email-satishkh@cisco.com> (Satish
+        Kharat's message of "Mon, 26 Jun 2017 17:46:23 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Dupuis, Chad" <chad.dupuis@cavium.com>
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, QLogic-Storage-Upstream@cavium.com
+To: Satish Kharat <satishkh@cisco.com>
+Cc: linux-scsi@vger.kernel.org, Sesidhar Baddela <sebaddel@cisco.com>
 
 
-Chad,
+Satish,
 
-> Please apply the following patches at your earliest convenience.
+> io_cmpl_skip keep track of number of completions to skip when stats
+> are reset. If a fw_reset happens immediately after stats reset it
+> could put it out of sync so need to reset io_cmpl_skip when fw reset
+> is completed.
 
-Applied to 4.13/scsi-queue, thanks!
+Applied patches 1-4 to 4.13/scsi-queue. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
