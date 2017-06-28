@@ -1,31 +1,569 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 19/28] qedf: drop bus reset handler
-Date: Wed, 28 Jun 2017 16:37:16 +0200
-Message-ID: <20170628143716.GB2359@lst.de>
-References: <1498638316-44420-1-git-send-email-hare@suse.de> <1498638316-44420-20-git-send-email-hare@suse.de> <20170628135858.GI1268@lst.de> <alpine.OSX.2.00.1706281003560.920@n5127mncfb42q1.qlogic.org>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH] scsi: hisi_sas: optimise DMA slot memory
+Date: Wed, 28 Jun 2017 23:25:54 +0800
+Message-ID: <1498663554-51272-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:49787 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751513AbdF1OhR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2017 10:37:17 -0400
-Content-Disposition: inline
-In-Reply-To: <alpine.OSX.2.00.1706281003560.920@n5127mncfb42q1.qlogic.org>
+Received: from szxga01-in.huawei.com ([45.249.212.187]:9247 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751571AbdF1Oz6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jun 2017 10:55:58 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chad Dupuis <chad.dupuis@cavium.com>
-Cc: Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
 
-On Wed, Jun 28, 2017 at 10:07:50AM -0400, Chad Dupuis wrote:
-> The test case this was meant to fix as using the sg_reset utility with the 
-> -b option which forces a bus reset with NPIV ports attached.  What we were 
-> finding is that some of the devices attached to the vport were being 
-> brought offline after 5 seconds as escalating to the host reset handler in 
-> this case was taking too long.
+From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-sg_reset / SG_SCSI_RESET are designed to escalatae to to the bigger
-hammers if the method isn't implemented or doesn't succeed.
+Currently we allocate 3 sets of DMA memories from separate
+pools for each slot. This is inefficient in terms of memory usage
+(buffers are less than 1 page in size, so we lose due to alignment),
+and also time spend in doing 3 allocations + de-allocations per slot,
+instead of 1.
 
-Use the -N / --no-esc option to disable that.  I wish that behavior had
-been the default from the beginning, but we can't fix that anymore.
+To optimise, combine the 3 DMA buffers into a single buffer from a
+single pool.
+
+Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
+
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 22dd48b..b78a4b8 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -34,10 +34,24 @@
+ #define HISI_SAS_MAX_DEVICES HISI_SAS_MAX_ITCT_ENTRIES
+ #define HISI_SAS_RESET_BIT	0
+ 
+-#define HISI_SAS_STATUS_BUF_SZ \
+-		(sizeof(struct hisi_sas_err_record) + 1024)
+-#define HISI_SAS_COMMAND_TABLE_SZ \
+-		(((sizeof(union hisi_sas_command_table)+3)/4)*4)
++#define HISI_SAS_STATUS_BUF_SZ (sizeof(struct hisi_sas_status_buffer))
++#define HISI_SAS_COMMAND_TABLE_SZ (sizeof(union hisi_sas_command_table))
++
++#define HISI_SAS_STATUS_BUF_ADDR(buf) \
++	(buf + offsetof(struct hisi_sas_slot_buf_table, status_buffer))
++#define HISI_SAS_STATUS_BUF_ADDR_MEM(slot) HISI_SAS_STATUS_BUF_ADDR(slot->buf)
++#define HISI_SAS_STATUS_BUF_ADDR_DMA(slot) \
++	HISI_SAS_STATUS_BUF_ADDR(slot->buf_dma)
++
++#define HISI_SAS_CMD_HDR_ADDR(buf) \
++	(buf + offsetof(struct hisi_sas_slot_buf_table, command_header))
++#define HISI_SAS_CMD_HDR_ADDR_MEM(slot) HISI_SAS_CMD_HDR_ADDR(slot->buf)
++#define HISI_SAS_CMD_HDR_ADDR_DMA(slot) HISI_SAS_CMD_HDR_ADDR(slot->buf_dma)
++
++#define HISI_SAS_SGE_ADDR(buf) \
++	(buf + offsetof(struct hisi_sas_slot_buf_table, sge_page))
++#define HISI_SAS_SGE_ADDR_MEM(slot) HISI_SAS_SGE_ADDR(slot->buf)
++#define HISI_SAS_SGE_ADDR_DMA(slot) HISI_SAS_SGE_ADDR(slot->buf_dma)
+ 
+ #define HISI_SAS_MAX_SSP_RESP_SZ (sizeof(struct ssp_frame_hdr) + 1024)
+ #define HISI_SAS_MAX_SMP_RESP_SZ 1028
+@@ -139,14 +153,10 @@ struct hisi_sas_slot {
+ 	int	cmplt_queue_slot;
+ 	int	idx;
+ 	int	abort;
++	void	*buf;
++	dma_addr_t buf_dma;
+ 	void	*cmd_hdr;
+ 	dma_addr_t cmd_hdr_dma;
+-	void	*status_buffer;
+-	dma_addr_t status_buffer_dma;
+-	void *command_table;
+-	dma_addr_t command_table_dma;
+-	struct hisi_sas_sge_page *sge_page;
+-	dma_addr_t sge_page_dma;
+ 	struct work_struct abort_slot;
+ 	struct timer_list internal_abort_timer;
+ };
+@@ -232,10 +242,8 @@ struct hisi_hba {
+ 
+ 	int	queue_count;
+ 
+-	struct dma_pool *sge_page_pool;
++	struct dma_pool *buffer_pool;
+ 	struct hisi_sas_device	devices[HISI_SAS_MAX_DEVICES];
+-	struct dma_pool *command_table_pool;
+-	struct dma_pool *status_buffer_pool;
+ 	struct hisi_sas_cmd_hdr	*cmd_hdr[HISI_SAS_MAX_QUEUES];
+ 	dma_addr_t cmd_hdr_dma[HISI_SAS_MAX_QUEUES];
+ 	void *complete_hdr[HISI_SAS_MAX_QUEUES];
+@@ -347,7 +355,7 @@ struct hisi_sas_command_table_stp {
+ #define HISI_SAS_SGE_PAGE_CNT SG_CHUNK_SIZE
+ struct hisi_sas_sge_page {
+ 	struct hisi_sas_sge sge[HISI_SAS_SGE_PAGE_CNT];
+-};
++}  __aligned(16);
+ 
+ struct hisi_sas_command_table_ssp {
+ 	struct ssp_frame_hdr hdr;
+@@ -366,6 +374,17 @@ struct hisi_sas_command_table_ssp {
+ 	struct hisi_sas_command_table_ssp ssp;
+ 	struct hisi_sas_command_table_smp smp;
+ 	struct hisi_sas_command_table_stp stp;
++}  __aligned(16);
++
++struct hisi_sas_status_buffer {
++	struct hisi_sas_err_record err;
++	u8	iu[1024];
++}  __aligned(16);
++
++struct hisi_sas_slot_buf_table {
++	struct hisi_sas_status_buffer status_buffer;
++	union hisi_sas_command_table command_header;
++	struct hisi_sas_sge_page sge_page;
+ };
+ 
+ extern struct scsi_transport_template *hisi_sas_stt;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index e2f8d92..c875910 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -87,8 +87,10 @@ void hisi_sas_sata_done(struct sas_task *task,
+ {
+ 	struct task_status_struct *ts = &task->task_status;
+ 	struct ata_task_resp *resp = (struct ata_task_resp *)ts->buf;
+-	struct dev_to_host_fis *d2h = slot->status_buffer +
+-				      sizeof(struct hisi_sas_err_record);
++	struct hisi_sas_status_buffer *status_buf =
++			HISI_SAS_STATUS_BUF_ADDR_MEM(slot);
++	u8 *iu = &status_buf->iu[0];
++	struct dev_to_host_fis *d2h =  (struct dev_to_host_fis *)iu;
+ 
+ 	resp->frame_len = sizeof(struct dev_to_host_fis);
+ 	memcpy(&resp->ending_fis[0], d2h, sizeof(struct dev_to_host_fis));
+@@ -183,17 +185,9 @@ void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
+ 			atomic64_dec(&sas_dev->running_req);
+ 	}
+ 
+-	if (slot->command_table)
+-		dma_pool_free(hisi_hba->command_table_pool,
+-			      slot->command_table, slot->command_table_dma);
++	if (slot->buf)
++		dma_pool_free(hisi_hba->buffer_pool, slot->buf, slot->buf_dma);
+ 
+-	if (slot->status_buffer)
+-		dma_pool_free(hisi_hba->status_buffer_pool,
+-			      slot->status_buffer, slot->status_buffer_dma);
+-
+-	if (slot->sge_page)
+-		dma_pool_free(hisi_hba->sge_page_pool, slot->sge_page,
+-			      slot->sge_page_dma);
+ 
+ 	list_del_init(&slot->entry);
+ 	slot->task = NULL;
+@@ -362,24 +356,15 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_sas_dq
+ 	task->lldd_task = slot;
+ 	INIT_WORK(&slot->abort_slot, hisi_sas_slot_abort);
+ 
+-	slot->status_buffer = dma_pool_alloc(hisi_hba->status_buffer_pool,
+-					     GFP_ATOMIC,
+-					     &slot->status_buffer_dma);
+-	if (!slot->status_buffer) {
++	slot->buf = dma_pool_alloc(hisi_hba->buffer_pool,
++				   GFP_ATOMIC, &slot->buf_dma);
++	if (!slot->buf) {
+ 		rc = -ENOMEM;
+ 		goto err_out_slot_buf;
+ 	}
+-	memset(slot->status_buffer, 0, HISI_SAS_STATUS_BUF_SZ);
+-
+-	slot->command_table = dma_pool_alloc(hisi_hba->command_table_pool,
+-					     GFP_ATOMIC,
+-					     &slot->command_table_dma);
+-	if (!slot->command_table) {
+-		rc = -ENOMEM;
+-		goto err_out_status_buf;
+-	}
+-	memset(slot->command_table, 0, HISI_SAS_COMMAND_TABLE_SZ);
+ 	memset(slot->cmd_hdr, 0, sizeof(struct hisi_sas_cmd_hdr));
++	memset(HISI_SAS_CMD_HDR_ADDR_MEM(slot), 0, HISI_SAS_COMMAND_TABLE_SZ);
++	memset(HISI_SAS_STATUS_BUF_ADDR_MEM(slot), 0, HISI_SAS_STATUS_BUF_SZ);
+ 
+ 	switch (task->task_proto) {
+ 	case SAS_PROTOCOL_SMP:
+@@ -402,9 +387,7 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_sas_dq
+ 
+ 	if (rc) {
+ 		dev_err(dev, "task prep: rc = 0x%x\n", rc);
+-		if (slot->sge_page)
+-			goto err_out_sge;
+-		goto err_out_command_table;
++		goto err_out_buf;
+ 	}
+ 
+ 	list_add_tail(&slot->entry, &sas_dev->list);
+@@ -419,15 +402,9 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_sas_dq
+ 
+ 	return 0;
+ 
+-err_out_sge:
+-	dma_pool_free(hisi_hba->sge_page_pool, slot->sge_page,
+-		slot->sge_page_dma);
+-err_out_command_table:
+-	dma_pool_free(hisi_hba->command_table_pool, slot->command_table,
+-		slot->command_table_dma);
+-err_out_status_buf:
+-	dma_pool_free(hisi_hba->status_buffer_pool, slot->status_buffer,
+-		slot->status_buffer_dma);
++err_out_buf:
++	dma_pool_free(hisi_hba->buffer_pool, slot->buf,
++		slot->buf_dma);
+ err_out_slot_buf:
+ 	/* Nothing to be done */
+ err_out_tag:
+@@ -1608,16 +1585,9 @@ int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
+ 			goto err_out;
+ 	}
+ 
+-	s = HISI_SAS_STATUS_BUF_SZ;
+-	hisi_hba->status_buffer_pool = dma_pool_create("status_buffer",
+-						       dev, s, 16, 0);
+-	if (!hisi_hba->status_buffer_pool)
+-		goto err_out;
+-
+-	s = HISI_SAS_COMMAND_TABLE_SZ;
+-	hisi_hba->command_table_pool = dma_pool_create("command_table",
+-						       dev, s, 16, 0);
+-	if (!hisi_hba->command_table_pool)
++	s = sizeof(struct hisi_sas_slot_buf_table);
++	hisi_hba->buffer_pool = dma_pool_create("dma_buffer", dev, s, 16, 0);
++	if (!hisi_hba->buffer_pool)
+ 		goto err_out;
+ 
+ 	s = HISI_SAS_MAX_ITCT_ENTRIES * sizeof(struct hisi_sas_itct);
+@@ -1652,11 +1622,6 @@ int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost)
+ 	if (!hisi_hba->slot_index_tags)
+ 		goto err_out;
+ 
+-	hisi_hba->sge_page_pool = dma_pool_create("status_sge", dev,
+-				sizeof(struct hisi_sas_sge_page), 16, 0);
+-	if (!hisi_hba->sge_page_pool)
+-		goto err_out;
+-
+ 	s = sizeof(struct hisi_sas_initial_fis) * HISI_SAS_MAX_PHYS;
+ 	hisi_hba->initial_fis = dma_alloc_coherent(dev, s,
+ 				&hisi_hba->initial_fis_dma, GFP_KERNEL);
+@@ -1703,9 +1668,7 @@ void hisi_sas_free(struct hisi_hba *hisi_hba)
+ 					  hisi_hba->complete_hdr_dma[i]);
+ 	}
+ 
+-	dma_pool_destroy(hisi_hba->status_buffer_pool);
+-	dma_pool_destroy(hisi_hba->command_table_pool);
+-	dma_pool_destroy(hisi_hba->sge_page_pool);
++	dma_pool_destroy(hisi_hba->buffer_pool);
+ 
+ 	s = HISI_SAS_MAX_ITCT_ENTRIES * sizeof(struct hisi_sas_itct);
+ 	if (hisi_hba->itct)
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+index afa87d4..b160a55 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+@@ -939,6 +939,7 @@ static int prep_prd_sge_v1_hw(struct hisi_hba *hisi_hba,
+ 			      struct scatterlist *scatter,
+ 			      int n_elem)
+ {
++	struct hisi_sas_sge_page *sge_page = HISI_SAS_SGE_ADDR_MEM(slot);
+ 	struct device *dev = hisi_hba->dev;
+ 	struct scatterlist *sg;
+ 	int i;
+@@ -949,13 +950,8 @@ static int prep_prd_sge_v1_hw(struct hisi_hba *hisi_hba,
+ 		return -EINVAL;
+ 	}
+ 
+-	slot->sge_page = dma_pool_alloc(hisi_hba->sge_page_pool, GFP_ATOMIC,
+-					&slot->sge_page_dma);
+-	if (!slot->sge_page)
+-		return -ENOMEM;
+-
+ 	for_each_sg(scatter, sg, n_elem, i) {
+-		struct hisi_sas_sge *entry = &slot->sge_page->sge[i];
++		struct hisi_sas_sge *entry = &sge_page->sge[i];
+ 
+ 		entry->addr = cpu_to_le64(sg_dma_address(sg));
+ 		entry->page_ctrl_0 = entry->page_ctrl_1 = 0;
+@@ -963,7 +959,7 @@ static int prep_prd_sge_v1_hw(struct hisi_hba *hisi_hba,
+ 		entry->data_off = 0;
+ 	}
+ 
+-	hdr->prd_table_addr = cpu_to_le64(slot->sge_page_dma);
++	hdr->prd_table_addr = cpu_to_le64(HISI_SAS_SGE_ADDR_DMA(slot));
+ 
+ 	hdr->sg_len = cpu_to_le32(n_elem << CMD_HDR_DATA_SGL_LEN_OFF);
+ 
+@@ -1026,7 +1022,7 @@ static int prep_smp_v1_hw(struct hisi_hba *hisi_hba,
+ 	hdr->transfer_tags = cpu_to_le32(slot->idx << CMD_HDR_IPTT_OFF);
+ 
+ 	hdr->cmd_table_addr = cpu_to_le64(req_dma_addr);
+-	hdr->sts_buffer_addr = cpu_to_le64(slot->status_buffer_dma);
++	hdr->sts_buffer_addr = cpu_to_le64(HISI_SAS_STATUS_BUF_ADDR_DMA(slot));
+ 
+ 	return 0;
+ 
+@@ -1107,10 +1103,11 @@ static int prep_ssp_v1_hw(struct hisi_hba *hisi_hba,
+ 	}
+ 
+ 	hdr->data_transfer_len = cpu_to_le32(task->total_xfer_len);
+-	hdr->cmd_table_addr = cpu_to_le64(slot->command_table_dma);
+-	hdr->sts_buffer_addr = cpu_to_le64(slot->status_buffer_dma);
++	hdr->cmd_table_addr = cpu_to_le64(HISI_SAS_CMD_HDR_ADDR_DMA(slot));
++	hdr->sts_buffer_addr = cpu_to_le64(HISI_SAS_STATUS_BUF_ADDR_DMA(slot));
+ 
+-	buf_cmd = slot->command_table + sizeof(struct ssp_frame_hdr);
++	buf_cmd = HISI_SAS_CMD_HDR_ADDR_MEM(slot) +
++		sizeof(struct ssp_frame_hdr);
+ 	if (task->ssp_task.enable_first_burst) {
+ 		fburst = (1 << 7);
+ 		dw2 |= 1 << CMD_HDR_FIRST_BURST_OFF;
+@@ -1147,7 +1144,8 @@ static void slot_err_v1_hw(struct hisi_hba *hisi_hba,
+ 			   struct hisi_sas_slot *slot)
+ {
+ 	struct task_status_struct *ts = &task->task_status;
+-	struct hisi_sas_err_record_v1 *err_record = slot->status_buffer;
++	struct hisi_sas_err_record_v1 *err_record =
++			HISI_SAS_STATUS_BUF_ADDR_MEM(slot);
+ 	struct device *dev = hisi_hba->dev;
+ 
+ 	switch (task->task_proto) {
+@@ -1364,8 +1362,11 @@ static int slot_complete_v1_hw(struct hisi_hba *hisi_hba,
+ 	switch (task->task_proto) {
+ 	case SAS_PROTOCOL_SSP:
+ 	{
+-		struct ssp_response_iu *iu = slot->status_buffer +
+-			sizeof(struct hisi_sas_err_record);
++		struct hisi_sas_status_buffer *status_buffer =
++				HISI_SAS_STATUS_BUF_ADDR_MEM(slot);
++		struct ssp_response_iu *iu = (struct ssp_response_iu *)
++				&status_buffer->iu[0];
++
+ 		sas_ssp_task_response(dev, task, iu);
+ 		break;
+ 	}
+@@ -1382,7 +1383,7 @@ static int slot_complete_v1_hw(struct hisi_hba *hisi_hba,
+ 		dma_unmap_sg(dev, &task->smp_task.smp_req, 1,
+ 			     DMA_TO_DEVICE);
+ 		memcpy(to + sg_resp->offset,
+-		       slot->status_buffer +
++		       HISI_SAS_STATUS_BUF_ADDR_MEM(slot) +
+ 		       sizeof(struct hisi_sas_err_record),
+ 		       sg_dma_len(sg_resp));
+ 		kunmap_atomic(to);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index 341a0bf..ae04223 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -1492,6 +1492,7 @@ static int prep_prd_sge_v2_hw(struct hisi_hba *hisi_hba,
+ 			      struct scatterlist *scatter,
+ 			      int n_elem)
+ {
++	struct hisi_sas_sge_page *sge_page = HISI_SAS_SGE_ADDR_MEM(slot);
+ 	struct device *dev = hisi_hba->dev;
+ 	struct scatterlist *sg;
+ 	int i;
+@@ -1502,13 +1503,8 @@ static int prep_prd_sge_v2_hw(struct hisi_hba *hisi_hba,
+ 		return -EINVAL;
+ 	}
+ 
+-	slot->sge_page = dma_pool_alloc(hisi_hba->sge_page_pool, GFP_ATOMIC,
+-					&slot->sge_page_dma);
+-	if (!slot->sge_page)
+-		return -ENOMEM;
+-
+ 	for_each_sg(scatter, sg, n_elem, i) {
+-		struct hisi_sas_sge *entry = &slot->sge_page->sge[i];
++		struct hisi_sas_sge *entry = &sge_page->sge[i];
+ 
+ 		entry->addr = cpu_to_le64(sg_dma_address(sg));
+ 		entry->page_ctrl_0 = entry->page_ctrl_1 = 0;
+@@ -1516,7 +1512,7 @@ static int prep_prd_sge_v2_hw(struct hisi_hba *hisi_hba,
+ 		entry->data_off = 0;
+ 	}
+ 
+-	hdr->prd_table_addr = cpu_to_le64(slot->sge_page_dma);
++	hdr->prd_table_addr = cpu_to_le64(HISI_SAS_SGE_ADDR_DMA(slot));
+ 
+ 	hdr->sg_len = cpu_to_le32(n_elem << CMD_HDR_DATA_SGL_LEN_OFF);
+ 
+@@ -1580,7 +1576,7 @@ static int prep_smp_v2_hw(struct hisi_hba *hisi_hba,
+ 	hdr->transfer_tags = cpu_to_le32(slot->idx << CMD_HDR_IPTT_OFF);
+ 
+ 	hdr->cmd_table_addr = cpu_to_le64(req_dma_addr);
+-	hdr->sts_buffer_addr = cpu_to_le64(slot->status_buffer_dma);
++	hdr->sts_buffer_addr = cpu_to_le64(HISI_SAS_STATUS_BUF_ADDR_DMA(slot));
+ 
+ 	return 0;
+ 
+@@ -1654,10 +1650,11 @@ static int prep_ssp_v2_hw(struct hisi_hba *hisi_hba,
+ 	}
+ 
+ 	hdr->data_transfer_len = cpu_to_le32(task->total_xfer_len);
+-	hdr->cmd_table_addr = cpu_to_le64(slot->command_table_dma);
+-	hdr->sts_buffer_addr = cpu_to_le64(slot->status_buffer_dma);
++	hdr->cmd_table_addr = cpu_to_le64(HISI_SAS_CMD_HDR_ADDR_DMA(slot));
++	hdr->sts_buffer_addr = cpu_to_le64(HISI_SAS_STATUS_BUF_ADDR_DMA(slot));
+ 
+-	buf_cmd = slot->command_table + sizeof(struct ssp_frame_hdr);
++	buf_cmd = HISI_SAS_CMD_HDR_ADDR_MEM(slot) +
++		sizeof(struct ssp_frame_hdr);
+ 
+ 	memcpy(buf_cmd, &task->ssp_task.LUN, 8);
+ 	if (!is_tmf) {
+@@ -1884,7 +1881,8 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
+ 			   int err_phase)
+ {
+ 	struct task_status_struct *ts = &task->task_status;
+-	struct hisi_sas_err_record_v2 *err_record = slot->status_buffer;
++	struct hisi_sas_err_record_v2 *err_record =
++			HISI_SAS_STATUS_BUF_ADDR_MEM(slot);
+ 	u32 trans_tx_fail_type = cpu_to_le32(err_record->trans_tx_fail_type);
+ 	u32 trans_rx_fail_type = cpu_to_le32(err_record->trans_rx_fail_type);
+ 	u16 dma_tx_err_type = cpu_to_le16(err_record->dma_tx_err_type);
+@@ -2273,8 +2271,10 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
+ 	switch (task->task_proto) {
+ 	case SAS_PROTOCOL_SSP:
+ 	{
+-		struct ssp_response_iu *iu = slot->status_buffer +
+-			sizeof(struct hisi_sas_err_record);
++		struct hisi_sas_status_buffer *status_buffer =
++				HISI_SAS_STATUS_BUF_ADDR_MEM(slot);
++		struct ssp_response_iu *iu = (struct ssp_response_iu *)
++				&status_buffer->iu[0];
+ 
+ 		sas_ssp_task_response(dev, task, iu);
+ 		break;
+@@ -2292,7 +2292,7 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
+ 		dma_unmap_sg(dev, &task->smp_task.smp_req, 1,
+ 			     DMA_TO_DEVICE);
+ 		memcpy(to + sg_resp->offset,
+-		       slot->status_buffer +
++		       HISI_SAS_STATUS_BUF_ADDR_MEM(slot) +
+ 		       sizeof(struct hisi_sas_err_record),
+ 		       sg_dma_len(sg_resp));
+ 		kunmap_atomic(to);
+@@ -2398,12 +2398,11 @@ static int prep_ata_v2_hw(struct hisi_hba *hisi_hba,
+ 			return rc;
+ 	}
+ 
+-
+ 	hdr->data_transfer_len = cpu_to_le32(task->total_xfer_len);
+-	hdr->cmd_table_addr = cpu_to_le64(slot->command_table_dma);
+-	hdr->sts_buffer_addr = cpu_to_le64(slot->status_buffer_dma);
++	hdr->cmd_table_addr = cpu_to_le64(HISI_SAS_CMD_HDR_ADDR_DMA(slot));
++	hdr->sts_buffer_addr = cpu_to_le64(HISI_SAS_STATUS_BUF_ADDR_DMA(slot));
+ 
+-	buf_cmd = slot->command_table;
++	buf_cmd = HISI_SAS_CMD_HDR_ADDR_MEM(slot);
+ 
+ 	if (likely(!task->ata_task.device_control_reg_update))
+ 		task->ata_task.fis.flags |= 0x80; /* C=1: update ATA cmd reg */
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index c998b81..0c7ab57 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -743,6 +743,7 @@ static int prep_prd_sge_v3_hw(struct hisi_hba *hisi_hba,
+ 			      struct scatterlist *scatter,
+ 			      int n_elem)
+ {
++	struct hisi_sas_sge_page *sge_page = HISI_SAS_SGE_ADDR_MEM(slot);
+ 	struct device *dev = hisi_hba->dev;
+ 	struct scatterlist *sg;
+ 	int i;
+@@ -753,13 +754,8 @@ static int prep_prd_sge_v3_hw(struct hisi_hba *hisi_hba,
+ 		return -EINVAL;
+ 	}
+ 
+-	slot->sge_page = dma_pool_alloc(hisi_hba->sge_page_pool, GFP_ATOMIC,
+-					&slot->sge_page_dma);
+-	if (!slot->sge_page)
+-		return -ENOMEM;
+-
+ 	for_each_sg(scatter, sg, n_elem, i) {
+-		struct hisi_sas_sge *entry = &slot->sge_page->sge[i];
++		struct hisi_sas_sge *entry = &sge_page->sge[i];
+ 
+ 		entry->addr = cpu_to_le64(sg_dma_address(sg));
+ 		entry->page_ctrl_0 = entry->page_ctrl_1 = 0;
+@@ -767,7 +763,8 @@ static int prep_prd_sge_v3_hw(struct hisi_hba *hisi_hba,
+ 		entry->data_off = 0;
+ 	}
+ 
+-	hdr->prd_table_addr = cpu_to_le64(slot->sge_page_dma);
++	hdr->prd_table_addr = cpu_to_le64(HISI_SAS_SGE_ADDR_DMA(slot));
++
+ 	hdr->sg_len = cpu_to_le32(n_elem << CMD_HDR_DATA_SGL_LEN_OFF);
+ 
+ 	return 0;
+@@ -833,12 +830,13 @@ static int prep_ssp_v3_hw(struct hisi_hba *hisi_hba,
+ 	}
+ 
+ 	hdr->data_transfer_len = cpu_to_le32(task->total_xfer_len);
+-	hdr->cmd_table_addr = cpu_to_le64(slot->command_table_dma);
+-	hdr->sts_buffer_addr = cpu_to_le64(slot->status_buffer_dma);
++	hdr->cmd_table_addr = cpu_to_le64(HISI_SAS_CMD_HDR_ADDR_DMA(slot));
++	hdr->sts_buffer_addr = cpu_to_le64(HISI_SAS_STATUS_BUF_ADDR_DMA(slot));
+ 
+-	buf_cmd = slot->command_table + sizeof(struct ssp_frame_hdr);
+-	memcpy(buf_cmd, ssp_task->LUN, 8);
++	buf_cmd = HISI_SAS_CMD_HDR_ADDR_MEM(slot) +
++		sizeof(struct ssp_frame_hdr);
+ 
++	memcpy(buf_cmd, &task->ssp_task.LUN, 8);
+ 	if (!is_tmf) {
+ 		buf_cmd[9] = ssp_task->task_attr | (ssp_task->task_prio << 3);
+ 		memcpy(buf_cmd + 12, scsi_cmnd->cmnd, scsi_cmnd->cmd_len);
+@@ -917,7 +915,7 @@ static int prep_smp_v3_hw(struct hisi_hba *hisi_hba,
+ 	hdr->transfer_tags = cpu_to_le32(slot->idx << CMD_HDR_IPTT_OFF);
+ 
+ 	hdr->cmd_table_addr = cpu_to_le64(req_dma_addr);
+-	hdr->sts_buffer_addr = cpu_to_le64(slot->status_buffer_dma);
++	hdr->sts_buffer_addr = cpu_to_le64(HISI_SAS_STATUS_BUF_ADDR_DMA(slot));
+ 
+ 	return 0;
+ 
+@@ -1012,10 +1010,10 @@ static int prep_ata_v3_hw(struct hisi_hba *hisi_hba,
+ 	}
+ 
+ 	hdr->data_transfer_len = cpu_to_le32(task->total_xfer_len);
+-	hdr->cmd_table_addr = cpu_to_le64(slot->command_table_dma);
+-	hdr->sts_buffer_addr = cpu_to_le64(slot->status_buffer_dma);
++	hdr->cmd_table_addr = cpu_to_le64(HISI_SAS_CMD_HDR_ADDR_DMA(slot));
++	hdr->sts_buffer_addr = cpu_to_le64(HISI_SAS_STATUS_BUF_ADDR_DMA(slot));
+ 
+-	buf_cmd = slot->command_table;
++	buf_cmd = HISI_SAS_CMD_HDR_ADDR_MEM(slot);
+ 
+ 	if (likely(!task->ata_task.device_control_reg_update))
+ 		task->ata_task.fis.flags |= 0x80; /* C=1: update ATA cmd reg */
+@@ -1283,7 +1281,8 @@ static irqreturn_t int_chnl_int_v3_hw(int irq_no, void *p)
+ 			hisi_hba->complete_hdr[slot->cmplt_queue];
+ 	struct hisi_sas_complete_v3_hdr *complete_hdr =
+ 			&complete_queue[slot->cmplt_queue_slot];
+-	struct hisi_sas_err_record_v3 *record =	slot->status_buffer;
++	struct hisi_sas_err_record_v3 *record =
++			HISI_SAS_STATUS_BUF_ADDR_MEM(slot);
+ 	u32 dma_rx_err_type = record->dma_rx_err_type;
+ 	u32 trans_tx_fail_type = record->trans_tx_fail_type;
+ 
+@@ -1402,7 +1401,8 @@ static irqreturn_t int_chnl_int_v3_hw(int irq_no, void *p)
+ 
+ 	switch (task->task_proto) {
+ 	case SAS_PROTOCOL_SSP: {
+-		struct ssp_response_iu *iu = slot->status_buffer +
++		struct ssp_response_iu *iu =
++			HISI_SAS_STATUS_BUF_ADDR_MEM(slot) +
+ 			sizeof(struct hisi_sas_err_record);
+ 
+ 		sas_ssp_task_response(dev, task, iu);
+@@ -1420,7 +1420,7 @@ static irqreturn_t int_chnl_int_v3_hw(int irq_no, void *p)
+ 		dma_unmap_sg(dev, &task->smp_task.smp_req, 1,
+ 			     DMA_TO_DEVICE);
+ 		memcpy(to + sg_resp->offset,
+-		       slot->status_buffer +
++			HISI_SAS_STATUS_BUF_ADDR_MEM(slot) +
+ 		       sizeof(struct hisi_sas_err_record),
+ 		       sg_dma_len(sg_resp));
+ 		kunmap_atomic(to);
+-- 
+1.9.1
