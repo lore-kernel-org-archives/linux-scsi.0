@@ -1,137 +1,51 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 01/47] aacraid: split off functions to generate reset FIB
-Date: Wed, 28 Jun 2017 10:32:27 +0200
-Message-ID: <1498638793-44672-2-git-send-email-hare@suse.de>
+Subject: [PATCH 06/47] aacraid: add fib flag to mark scsi command callback
+Date: Wed, 28 Jun 2017 10:32:32 +0200
+Message-ID: <1498638793-44672-7-git-send-email-hare@suse.de>
 References: <1498638793-44672-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53637 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:53767 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751493AbdF1IdQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2017 04:33:16 -0400
+        id S1751522AbdF1IdR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 04:33:17 -0400
 In-Reply-To: <1498638793-44672-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Split off reset FIB generation into separate functions.
+To correctly identify which fib has a scsi command callback this
+patch implements a flag FIB_CONTEXT_FLAG_SCSI_CMD.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/aacraid/linit.c | 83 ++++++++++++++++++++++++++------------------
- 1 file changed, 50 insertions(+), 33 deletions(-)
+ drivers/scsi/aacraid/aacraid.h | 1 +
+ drivers/scsi/aacraid/commsup.c | 1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 0f277df..9a8a27f 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -814,6 +814,52 @@ static int aac_eh_abort(struct scsi_cmnd* cmd)
- 	return ret;
- }
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index d31a9bc..6981299 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -1723,6 +1723,7 @@ struct aac_dev
+ #define FIB_CONTEXT_FLAG_FASTRESP		(0x00000008)
+ #define FIB_CONTEXT_FLAG_NATIVE_HBA		(0x00000010)
+ #define FIB_CONTEXT_FLAG_NATIVE_HBA_TMF	(0x00000020)
++#define FIB_CONTEXT_FLAG_SCSI_CMD	(0x00000040)
  
-+static u8 aac_eh_tmf_lun_reset_fib(struct aac_dev *aac, struct fib *fib,
-+				   int bus, int cid, u64 tmf_lun)
-+{
-+	struct aac_hba_tm_req *tmf;
-+	u64 address;
-+
-+	/* start a HBA_TMF_LUN_RESET TMF request */
-+	tmf = (struct aac_hba_tm_req *)fib->hw_fib_va;
-+	memset(tmf, 0, sizeof(*tmf));
-+	tmf->tmf = HBA_TMF_LUN_RESET;
-+	tmf->it_nexus = aac->hba_map[bus][cid].rmw_nexus;
-+	int_to_scsilun(tmf_lun, (struct scsi_lun *)tmf->lun);
-+
-+	address = (u64)fib->hw_error_pa;
-+	tmf->error_ptr_hi = cpu_to_le32
-+		((u32)(address >> 32));
-+	tmf->error_ptr_lo = cpu_to_le32
-+		((u32)(address & 0xffffffff));
-+	tmf->error_length = cpu_to_le32(FW_ERROR_BUFFER_SIZE);
-+	fib->hbacmd_size = sizeof(*tmf);
-+
-+	return HBA_IU_TYPE_SCSI_TM_REQ;
-+}
-+
-+static u8 aac_eh_tmf_hard_reset_fib(struct aac_dev *aac, struct fib *fib,
-+				    int bus, int cid)
-+{
-+	struct aac_hba_reset_req *rst;
-+	u64 address;
-+
-+	/* already tried, start a hard reset now */
-+	rst = (struct aac_hba_reset_req *)fib->hw_fib_va;
-+	memset(rst, 0, sizeof(*rst));
-+	/* reset_type is already zero... */
-+	rst->it_nexus = aac->hba_map[bus][cid].rmw_nexus;
-+
-+	address = (u64)fib->hw_error_pa;
-+	rst->error_ptr_hi = cpu_to_le32((u32)(address >> 32));
-+	rst->error_ptr_lo = cpu_to_le32
-+		((u32)(address & 0xffffffff));
-+	rst->error_length = cpu_to_le32(FW_ERROR_BUFFER_SIZE);
-+	fib->hbacmd_size = sizeof(*rst);
-+
-+       return HBA_IU_TYPE_SATA_REQ;
-+}
-+
  /*
-  *	aac_eh_reset	- Reset command handling
-  *	@scsi_cmd:	SCSI command block causing the reset
-@@ -840,7 +886,6 @@ static int aac_eh_reset(struct scsi_cmnd* cmd)
- 		aac->hba_map[bus][cid].devtype == AAC_DEVTYPE_NATIVE_RAW) {
- 		struct fib *fib;
- 		int status;
--		u64 address;
- 		u8 command;
+  *	Define the command values
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index 348f0ea..dfe8e70 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -770,6 +770,7 @@ int aac_hba_send(u8 command, struct fib *fibptr, fib_callback callback,
+ 		/* bit1 of request_id must be 0 */
+ 		hbacmd->request_id =
+ 			cpu_to_le32((((u32)(fibptr - dev->fibs)) << 2) + 1);
++		fibptr->flags |= FIB_CONTEXT_FLAG_SCSI_CMD;
+ 	} else if (command != HBA_IU_TYPE_SCSI_TM_REQ)
+ 		return -EINVAL;
  
- 		pr_err("%s: Host adapter reset request. SCSI hang ?\n",
-@@ -852,42 +897,14 @@ static int aac_eh_reset(struct scsi_cmnd* cmd)
- 
- 
- 		if (aac->hba_map[bus][cid].reset_state == 0) {
--			struct aac_hba_tm_req *tmf;
--
- 			/* start a HBA_TMF_LUN_RESET TMF request */
--			tmf = (struct aac_hba_tm_req *)fib->hw_fib_va;
--			memset(tmf, 0, sizeof(*tmf));
--			tmf->tmf = HBA_TMF_LUN_RESET;
--			tmf->it_nexus = aac->hba_map[bus][cid].rmw_nexus;
--			tmf->lun[1] = cmd->device->lun;
--
--			address = (u64)fib->hw_error_pa;
--			tmf->error_ptr_hi = cpu_to_le32
--					((u32)(address >> 32));
--			tmf->error_ptr_lo = cpu_to_le32
--					((u32)(address & 0xffffffff));
--			tmf->error_length = cpu_to_le32(FW_ERROR_BUFFER_SIZE);
--			fib->hbacmd_size = sizeof(*tmf);
--
--			command = HBA_IU_TYPE_SCSI_TM_REQ;
-+			command = aac_eh_tmf_lun_reset_fib(aac, fib,
-+							   bus, cid,
-+							   cmd->device->lun);
- 			aac->hba_map[bus][cid].reset_state++;
- 		} else if (aac->hba_map[bus][cid].reset_state >= 1) {
--			struct aac_hba_reset_req *rst;
--
- 			/* already tried, start a hard reset now */
--			rst = (struct aac_hba_reset_req *)fib->hw_fib_va;
--			memset(rst, 0, sizeof(*rst));
--			/* reset_type is already zero... */
--			rst->it_nexus = aac->hba_map[bus][cid].rmw_nexus;
--
--			address = (u64)fib->hw_error_pa;
--			rst->error_ptr_hi = cpu_to_le32((u32)(address >> 32));
--			rst->error_ptr_lo = cpu_to_le32
--				((u32)(address & 0xffffffff));
--			rst->error_length = cpu_to_le32(FW_ERROR_BUFFER_SIZE);
--			fib->hbacmd_size = sizeof(*rst);
--
--			command = HBA_IU_TYPE_SATA_REQ;
-+			command = aac_eh_tmf_hard_reset_fib(aac, fib, bus, cid);
- 			aac->hba_map[bus][cid].reset_state = 0;
- 		}
- 		cmd->SCp.sent_command = 0;
 -- 
 1.8.5.6
