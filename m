@@ -1,62 +1,50 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH RESEND] scsi: Add STARGET_CREATED_REMOVE state to
- scsi_target_state
-Date: Wed, 28 Jun 2017 09:38:15 +0200
-Message-ID: <20170628073815.GA4185@linux-x5ow.site>
-References: <1498589758-31473-1-git-send-email-emilne@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 03/28] ibmvfc: Do not call fc_block_scsi_eh() on host reset
+Date: Wed, 28 Jun 2017 10:24:51 +0200
+Message-ID: <1498638316-44420-4-git-send-email-hare@suse.de>
+References: <1498638316-44420-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47676 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:52879 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751048AbdF1HiU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2017 03:38:20 -0400
-Content-Disposition: inline
-In-Reply-To: <1498589758-31473-1-git-send-email-emilne@redhat.com>
+        id S1751515AbdF1IbB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 04:31:01 -0400
+In-Reply-To: <1498638316-44420-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ewan D. Milne" <emilne@redhat.com>
-Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-On Tue, Jun 27, 2017 at 02:55:58PM -0400, Ewan Milne wrote:
-> From: "Ewan D. Milne" <emilne@redhat.com>
-> 
-> The addition of the STARGET_REMOVE state had the side effect of
-> introducing a race condition that can cause a crash.
-> 
-> scsi_target_reap_ref_release() checks the starget->state to
-> see if it still in STARGET_CREATED, and if so, skips calling
-> transport_remove_device() and device_del(), because the starget->state
-> is only set to STARGET_RUNNING after scsi_target_add() has called
-> device_add() and transport_add_device().
-> 
-> However, if an rport loss occurs while a target is being scanned,
-> it can happen that scsi_remove_target() will be called while the
-> starget is still in the STARGET_CREATED state.  In this case, the
-> starget->state will be set to STARGET_REMOVE, and as a result,
-> scsi_target_reap_ref_release() will take the wrong path.  The end
-> result is a panic:
+When we're resetting the host any remote port states will
+be reset anyway, so it's pointless to wait for dev_loss_tmo
+during host reset.
 
-Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/ibmvscsi/ibmvfc.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-Although we've been tampering with the target removal code for quite some
-time now, so I really have the gut feeling we haven't really fixed the
-root cause yet.
-
-I once tried building a regression test for this (with qemu hot plugging UAS
-devices) but that didn't really go far. Maybe we should add a scsi_target
-to scsi_debug and add some methods to toggle remove it again. Just to have
-a sensible unit test for that code path.
-
-Byte,
-	Johannes
-
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index 26cd3c2..bb033ce 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -2528,16 +2528,12 @@ static int ibmvfc_eh_target_reset_handler(struct scsi_cmnd *cmd)
+  **/
+ static int ibmvfc_eh_host_reset_handler(struct scsi_cmnd *cmd)
+ {
+-	int rc, block_rc;
++	int rc;
+ 	struct ibmvfc_host *vhost = shost_priv(cmd->device->host);
+ 
+-	block_rc = fc_block_scsi_eh(cmd);
+ 	dev_err(vhost->dev, "Resetting connection due to error recovery\n");
+ 	rc = ibmvfc_issue_fc_host_lip(vhost->host);
+ 
+-	if (block_rc == FAST_IO_FAIL)
+-		return FAST_IO_FAIL;
+-
+ 	return rc ? FAILED : SUCCESS;
+ }
+ 
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+1.8.5.6
