@@ -1,59 +1,63 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 27/28] eata: remove 'arg_done' from eata2x_eh_host_reset()
-Date: Wed, 28 Jun 2017 10:25:15 +0200
-Message-ID: <1498638316-44420-28-git-send-email-hare@suse.de>
+Subject: [PATCH 02/28] mptfc: Do not call fc_block_scsi_eh() on host reset
+Date: Wed, 28 Jun 2017 10:24:50 +0200
+Message-ID: <1498638316-44420-3-git-send-email-hare@suse.de>
 References: <1498638316-44420-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53048 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:52884 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751723AbdF1IbO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2017 04:31:14 -0400
+        id S1751553AbdF1IbB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 04:31:01 -0400
 In-Reply-To: <1498638316-44420-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Just displaying some different information; drop it.
+When we're resetting the host any remote port states will
+be reset anyway, so it's pointless to wait for dev_loss_tmo
+during host reset.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/eata.c | 9 +--------
- 1 file changed, 1 insertion(+), 8 deletions(-)
+ drivers/message/fusion/mptfc.c | 10 +---------
+ 1 file changed, 1 insertion(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
-index 227dd2c..6501c33 100644
---- a/drivers/scsi/eata.c
-+++ b/drivers/scsi/eata.c
-@@ -1899,7 +1899,6 @@ static int eata2x_eh_abort(struct scsi_cmnd *SCarg)
- static int eata2x_eh_host_reset(struct scsi_cmnd *SCarg)
- {
- 	unsigned int i, time, k, c, limit = 0;
--	int arg_done = 0;
- 	struct scsi_cmnd *SCpnt;
- 	struct Scsi_Host *shost = SCarg->device->host;
- 	struct hostdata *ha = (struct hostdata *)shost->hostdata;
-@@ -1967,9 +1966,6 @@ static int eata2x_eh_host_reset(struct scsi_cmnd *SCarg)
- 		if (SCpnt->scsi_done == NULL)
- 			panic("%s: reset, mbox %d, SCpnt->scsi_done == NULL.\n",
- 			      ha->board_name, i);
+diff --git a/drivers/message/fusion/mptfc.c b/drivers/message/fusion/mptfc.c
+index d065062..6d461ca 100644
+--- a/drivers/message/fusion/mptfc.c
++++ b/drivers/message/fusion/mptfc.c
+@@ -104,7 +104,6 @@
+ static int mptfc_abort(struct scsi_cmnd *SCpnt);
+ static int mptfc_dev_reset(struct scsi_cmnd *SCpnt);
+ static int mptfc_bus_reset(struct scsi_cmnd *SCpnt);
+-static int mptfc_host_reset(struct scsi_cmnd *SCpnt);
+ 
+ static struct scsi_host_template mptfc_driver_template = {
+ 	.module				= THIS_MODULE,
+@@ -123,7 +122,7 @@
+ 	.eh_abort_handler		= mptfc_abort,
+ 	.eh_device_reset_handler	= mptfc_dev_reset,
+ 	.eh_bus_reset_handler		= mptfc_bus_reset,
+-	.eh_host_reset_handler		= mptfc_host_reset,
++	.eh_host_reset_handler		= mptscsih_host_reset,
+ 	.bios_param			= mptscsih_bios_param,
+ 	.can_queue			= MPT_FC_CAN_QUEUE,
+ 	.this_id			= -1,
+@@ -254,13 +253,6 @@
+ 	    mptfc_block_error_handler(SCpnt, mptscsih_bus_reset, __func__);
+ }
+ 
+-static int
+-mptfc_host_reset(struct scsi_cmnd *SCpnt)
+-{
+-	return
+-	    mptfc_block_error_handler(SCpnt, mptscsih_host_reset, __func__);
+-}
 -
--		if (SCpnt == SCarg)
--			arg_done = 1;
- 	}
- 
- 	if (do_dma(shost->io_port, 0, RESET_PIO)) {
-@@ -2037,10 +2033,7 @@ static int eata2x_eh_host_reset(struct scsi_cmnd *SCarg)
- 	ha->in_reset = 0;
- 	do_trace = 0;
- 
--	if (arg_done)
--		printk("%s: reset, exit, done.\n", ha->board_name);
--	else
--		printk("%s: reset, exit.\n", ha->board_name);
-+	printk("%s: reset, exit.\n", ha->board_name);
- 
- 	spin_unlock_irq(shost->host_lock);
- 	return SUCCESS;
+ static void
+ mptfc_set_rport_loss_tmo(struct fc_rport *rport, uint32_t timeout)
+ {
 -- 
 1.8.5.6
