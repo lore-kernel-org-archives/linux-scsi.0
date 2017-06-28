@@ -1,338 +1,192 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 47/47] scsi: Do not allocate scsi command in scsi_ioctl_reset()
-Date: Wed, 28 Jun 2017 10:33:13 +0200
-Message-ID: <1498638793-44672-48-git-send-email-hare@suse.de>
+Subject: [PATCH 44/47] csiostor: use separate TMF command
+Date: Wed, 28 Jun 2017 10:33:10 +0200
+Message-ID: <1498638793-44672-45-git-send-email-hare@suse.de>
 References: <1498638793-44672-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53804 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:53829 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751942AbdF1Idk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2017 04:33:40 -0400
+        id S1751584AbdF1Idl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 04:33:41 -0400
 In-Reply-To: <1498638793-44672-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-As we now have moved the error handler functions to not rely on
-a scsi command we can drop the out-of-band scsi command allocation
-from scsi_ioctl_reset().
+Set one command aside as a TMF command, and use this command to
+send the TMF. This avoids having to rely on the passed-in scsi
+command when resetting the device.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/scsi_error.c | 124 +++++++++++++++++++---------------------------
- 1 file changed, 50 insertions(+), 74 deletions(-)
+ drivers/scsi/csiostor/csio_hw.h   |  2 ++
+ drivers/scsi/csiostor/csio_init.c |  2 +-
+ drivers/scsi/csiostor/csio_scsi.c | 44 ++++++++++++++++++++++++++-------------
+ 3 files changed, 32 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 4a7fe97f..ab178e8 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -728,16 +728,22 @@ static void scsi_eh_done(struct scsi_cmnd *scmd)
- 		complete(eh_action);
- }
+diff --git a/drivers/scsi/csiostor/csio_hw.h b/drivers/scsi/csiostor/csio_hw.h
+index 9acb895..18b2afb 100644
+--- a/drivers/scsi/csiostor/csio_hw.h
++++ b/drivers/scsi/csiostor/csio_hw.h
+@@ -68,6 +68,8 @@
  
-+static void __scsi_report_device_reset(struct scsi_device *sdev)
-+{
-+	sdev->was_reset = 1;
-+	sdev->expecting_cc_ua = 1;
-+}
+ #define CSIO_MAX_LUN		0xFFFF
+ #define CSIO_MAX_QUEUE		2048
++#define CSIO_TMF_TAG		(CSIO_MAX_QUEUE - 1)
 +
- /**
-  * scsi_try_host_reset - ask host adapter to reset itself
-- * @scmd:	SCSI cmd to send host reset.
-+ * @host:	SCSI host to be reset.
-  */
--static int scsi_try_host_reset(struct scsi_cmnd *scmd)
-+static int scsi_try_host_reset(struct Scsi_Host *host)
- {
- 	unsigned long flags;
- 	int rtn;
--	struct Scsi_Host *host = scmd->device->host;
- 	struct scsi_host_template *hostt = host->hostt;
-+	struct scsi_device *sdev;
+ #define CSIO_MAX_CMD_PER_LUN	32
+ #define CSIO_MAX_DDP_BUF_SIZE	(1024 * 1024)
+ #define CSIO_MAX_SECTOR_SIZE	128
+diff --git a/drivers/scsi/csiostor/csio_init.c b/drivers/scsi/csiostor/csio_init.c
+index ea0c310..4fd03cf 100644
+--- a/drivers/scsi/csiostor/csio_init.c
++++ b/drivers/scsi/csiostor/csio_init.c
+@@ -628,7 +628,7 @@ struct csio_lnode *
+ 	/* Link common lnode to this lnode */
+ 	ln->dev_num = (shost->host_no << 16);
  
- 	SCSI_LOG_ERROR_RECOVERY(3,
- 		shost_printk(KERN_INFO, host, "Snd Host RST\n"));
-@@ -751,7 +757,8 @@ static int scsi_try_host_reset(struct scsi_cmnd *scmd)
- 		if (!hostt->skip_settle_delay)
- 			ssleep(HOST_RESET_SETTLE_TIME);
- 		spin_lock_irqsave(host->host_lock, flags);
--		scsi_report_bus_reset(host, scmd_channel(scmd));
-+		__shost_for_each_device(sdev, host)
-+			__scsi_report_device_reset(sdev);
- 		spin_unlock_irqrestore(host->host_lock, flags);
- 	}
+-	shost->can_queue = CSIO_MAX_QUEUE;
++	shost->can_queue = CSIO_MAX_QUEUE - 1;
+ 	shost->this_id = -1;
+ 	shost->unique_id = shost->host_no;
+ 	shost->max_cmd_len = 16; /* Max CDB length supported */
+diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
+index 93b6891..133f683 100644
+--- a/drivers/scsi/csiostor/csio_scsi.c
++++ b/drivers/scsi/csiostor/csio_scsi.c
+@@ -2055,17 +2055,20 @@ static DEVICE_ATTR(dbg_level, S_IRUGO | S_IWUSR, csio_show_dbg_level,
  
-@@ -760,43 +767,38 @@ static int scsi_try_host_reset(struct scsi_cmnd *scmd)
- 
- /**
-  * scsi_try_bus_reset - ask host to perform a bus reset
-- * @scmd:	SCSI cmd to send bus reset.
-+ * @host:	SCSI host to send bus reset.
-+ * @channel:	bus number to be reset.
-  */
--static int scsi_try_bus_reset(struct scsi_cmnd *scmd)
-+static int scsi_try_bus_reset(struct Scsi_Host *host, int channel)
- {
- 	unsigned long flags;
- 	int rtn;
--	struct Scsi_Host *host = scmd->device->host;
- 	struct scsi_host_template *hostt = host->hostt;
- 
--	SCSI_LOG_ERROR_RECOVERY(3, scmd_printk(KERN_INFO, scmd,
-+	SCSI_LOG_ERROR_RECOVERY(3, shost_printk(KERN_INFO, host,
- 		"%s: Snd Bus RST\n", __func__));
- 
- 	if (!hostt->eh_bus_reset_handler)
- 		return FAILED;
- 
--	rtn = hostt->eh_bus_reset_handler(host, scmd_channel(scmd));
-+	rtn = hostt->eh_bus_reset_handler(host, channel);
- 
- 	if (rtn == SUCCESS) {
- 		if (!hostt->skip_settle_delay)
- 			ssleep(BUS_RESET_SETTLE_TIME);
- 		spin_lock_irqsave(host->host_lock, flags);
--		scsi_report_bus_reset(host, scmd_channel(scmd));
-+		scsi_report_bus_reset(host, channel);
- 		spin_unlock_irqrestore(host->host_lock, flags);
- 	}
- 
- 	return rtn;
+ 	/* Wake up the TM handler thread */
+ 	csio_scsi_cmnd(req) = NULL;
++	cmnd->host_scribble = NULL;
  }
  
--static void __scsi_report_device_reset(struct scsi_device *sdev, void *data)
--{
--	sdev->was_reset = 1;
--	sdev->expecting_cc_ua = 1;
--}
--
- /**
-  * scsi_try_target_reset - Ask host to perform a target reset
-- * @scmd:	SCSI cmd used to send a target reset
-+ * @shost:	SCSI Host
-+ * @starget:	SCSI target to be reset
-  *
-  * Notes:
-  *    There is no timeout for this operation.  if this operation is
-@@ -804,13 +806,13 @@ static void __scsi_report_device_reset(struct scsi_device *sdev, void *data)
-  *    timer on it, and set the host back to a consistent state prior to
-  *    returning.
-  */
--static int scsi_try_target_reset(struct scsi_cmnd *scmd)
-+static int scsi_try_target_reset(struct Scsi_Host *host,
-+				 struct scsi_target *starget)
+ static int
+ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
  {
+-	struct csio_lnode *ln = shost_priv(cmnd->device->host);
++	struct scsi_device *sdev = cmnd->device;
++	struct csio_lnode *ln = shost_priv(sdev->host);
+ 	struct csio_hw *hw = csio_lnode_to_hw(ln);
+ 	struct csio_scsim *scsim = csio_hw_to_scsim(hw);
+-	struct csio_rnode *rn = (struct csio_rnode *)(cmnd->device->hostdata);
++	struct csio_rnode *rn = (struct csio_rnode *)(sdev->hostdata);
+ 	struct csio_ioreq *ioreq = NULL;
+ 	struct csio_scsi_qset *sqset;
++	struct scsi_cmnd *tmf_cmnd;
  	unsigned long flags;
- 	int rtn;
--	struct Scsi_Host *host = scmd->device->host;
-+	struct scsi_device *sdev;
- 	struct scsi_host_template *hostt = host->hostt;
--	struct scsi_target *starget = scsi_target(scmd->device);
+ 	int retval;
+ 	int count, ret;
+@@ -2076,13 +2079,13 @@ static DEVICE_ATTR(dbg_level, S_IRUGO | S_IWUSR, csio_show_dbg_level,
+ 		goto fail;
  
- 	if (!hostt->eh_target_reset_handler)
- 		return FAILED;
-@@ -818,8 +820,11 @@ static int scsi_try_target_reset(struct scsi_cmnd *scmd)
- 	rtn = hostt->eh_target_reset_handler(starget);
- 	if (rtn == SUCCESS) {
- 		spin_lock_irqsave(host->host_lock, flags);
--		__starget_for_each_device(starget, NULL,
--					  __scsi_report_device_reset);
-+		__shost_for_each_device(sdev, host) {
-+			if ((sdev->channel == starget->channel) &&
-+			    (sdev->id == starget->id))
-+				__scsi_report_device_reset(sdev);
-+		}
- 		spin_unlock_irqrestore(host->host_lock, flags);
+ 	csio_dbg(hw, "Request to reset LUN:%llu (ssni:0x%x tgtid:%d)\n",
+-		      cmnd->device->lun, rn->flowid, rn->scsi_id);
++		      sdev->lun, rn->flowid, rn->scsi_id);
+ 
+ 	if (!csio_is_lnode_ready(ln)) {
+ 		csio_err(hw,
+ 			 "LUN reset cannot be issued on non-ready"
+ 			 " local node vnpi:0x%x (LUN:%llu)\n",
+-			 ln->vnp_flowid, cmnd->device->lun);
++			 ln->vnp_flowid, sdev->lun);
+ 		goto fail;
  	}
  
-@@ -836,17 +841,17 @@ static int scsi_try_target_reset(struct scsi_cmnd *scmd)
-  *    timer on it, and set the host back to a consistent state prior to
-  *    returning.
-  */
--static int scsi_try_bus_device_reset(struct scsi_cmnd *scmd)
-+static int scsi_try_bus_device_reset(struct scsi_device *sdev)
- {
- 	int rtn;
--	struct scsi_host_template *hostt = scmd->device->host->hostt;
-+	struct scsi_host_template *hostt = sdev->host->hostt;
- 
- 	if (!hostt->eh_device_reset_handler)
- 		return FAILED;
- 
--	rtn = hostt->eh_device_reset_handler(scmd->device);
-+	rtn = hostt->eh_device_reset_handler(sdev);
- 	if (rtn == SUCCESS)
--		__scsi_report_device_reset(scmd->device, NULL);
-+		__scsi_report_device_reset(sdev);
- 	return rtn;
- }
- 
-@@ -878,11 +883,15 @@ static int scsi_try_to_abort_cmd(struct scsi_host_template *hostt,
- 
- static void scsi_abort_eh_cmnd(struct scsi_cmnd *scmd)
- {
--	if (scsi_try_to_abort_cmd(scmd->device->host->hostt, scmd) != SUCCESS)
--		if (scsi_try_bus_device_reset(scmd) != SUCCESS)
--			if (scsi_try_target_reset(scmd) != SUCCESS)
--				if (scsi_try_bus_reset(scmd) != SUCCESS)
--					scsi_try_host_reset(scmd);
-+	struct Scsi_Host *host = scmd->device->host;
-+	struct scsi_target *starget = scsi_target(scmd->device);
-+	int channel = scmd->device->channel;
+@@ -2102,7 +2105,15 @@ static DEVICE_ATTR(dbg_level, S_IRUGO | S_IWUSR, csio_show_dbg_level,
+ 		csio_err(hw,
+ 			 "LUN reset cannot be issued on non-ready"
+ 			 " remote node ssni:0x%x (LUN:%llu)\n",
+-			 rn->flowid, cmnd->device->lun);
++			 rn->flowid, sdev->lun);
++		goto fail;
++	}
 +
-+	if (scsi_try_to_abort_cmd(host->hostt, scmd) != SUCCESS)
-+		if (scsi_try_bus_device_reset(scmd->device) != SUCCESS)
-+			if (scsi_try_target_reset(host, starget) != SUCCESS)
-+				if (scsi_try_bus_reset(host, channel) != SUCCESS)
-+					scsi_try_host_reset(host);
- }
- 
- /**
-@@ -1430,7 +1439,7 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
- 		SCSI_LOG_ERROR_RECOVERY(3,
- 			sdev_printk(KERN_INFO, sdev,
- 				     "%s: Sending BDR\n", current->comm));
--		rtn = scsi_try_bus_device_reset(bdr_scmd);
-+		rtn = scsi_try_bus_device_reset(sdev);
- 		if (rtn == SUCCESS || rtn == FAST_IO_FAIL) {
- 			if (!scsi_device_online(sdev) ||
- 			    rtn == FAST_IO_FAIL ||
-@@ -1495,7 +1504,7 @@ static int scsi_eh_target_reset(struct Scsi_Host *shost,
- 			shost_printk(KERN_INFO, shost,
- 				     "%s: Sending target reset to target %d\n",
- 				     current->comm, id));
--		rtn = scsi_try_target_reset(scmd);
-+		rtn = scsi_try_target_reset(shost, scsi_target(scmd->device));
- 		if (rtn != SUCCESS && rtn != FAST_IO_FAIL)
- 			SCSI_LOG_ERROR_RECOVERY(3,
- 				shost_printk(KERN_INFO, shost,
-@@ -1570,7 +1579,7 @@ static int scsi_eh_bus_reset(struct Scsi_Host *shost,
- 			shost_printk(KERN_INFO, shost,
- 				     "%s: Sending BRST chan: %d\n",
- 				     current->comm, channel));
--		rtn = scsi_try_bus_reset(chan_scmd);
-+		rtn = scsi_try_bus_reset(shost, channel);
- 		if (rtn == SUCCESS || rtn == FAST_IO_FAIL) {
- 			list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
- 				if (channel == scmd_channel(scmd)) {
-@@ -1608,15 +1617,12 @@ static int scsi_eh_host_reset(struct Scsi_Host *shost,
- 	int rtn;
- 
- 	if (!list_empty(work_q)) {
--		scmd = list_entry(work_q->next,
--				  struct scsi_cmnd, eh_entry);
--
- 		SCSI_LOG_ERROR_RECOVERY(3,
- 			shost_printk(KERN_INFO, shost,
- 				     "%s: Sending HRST\n",
- 				     current->comm));
- 
--		rtn = scsi_try_host_reset(scmd);
-+		rtn = scsi_try_host_reset(shost);
- 		if (rtn == SUCCESS) {
- 			list_splice_init(work_q, &check_list);
- 		} else if (rtn == FAST_IO_FAIL) {
-@@ -2221,7 +2227,7 @@ void scsi_report_bus_reset(struct Scsi_Host *shost, int channel)
- 
- 	__shost_for_each_device(sdev, shost) {
- 		if (channel == sdev_channel(sdev))
--			__scsi_report_device_reset(sdev, NULL);
-+			__scsi_report_device_reset(sdev);
++	tmf_cmnd = scsi_host_find_tag(sdev->host, CSIO_TMF_TAG);
++	if (!tmf_cmnd || tmf_cmnd->host_scribble) {
++		csio_err(hw,
++			 "LUN reset TMF already busy (LUN:%llu)\n",
++			 sdev->lun);
+ 		goto fail;
  	}
- }
- EXPORT_SYMBOL(scsi_report_bus_reset);
-@@ -2255,16 +2261,11 @@ void scsi_report_device_reset(struct Scsi_Host *shost, int channel, int target)
- 	__shost_for_each_device(sdev, shost) {
- 		if (channel == sdev_channel(sdev) &&
- 		    target == sdev_id(sdev))
--			__scsi_report_device_reset(sdev, NULL);
-+			__scsi_report_device_reset(sdev);
+ 
+@@ -2122,11 +2133,12 @@ static DEVICE_ATTR(dbg_level, S_IRUGO | S_IWUSR, csio_show_dbg_level,
+ 	ioreq->iq_idx		= sqset->iq_idx;
+ 	ioreq->eq_idx		= sqset->eq_idx;
+ 
+-	csio_scsi_cmnd(ioreq)	= cmnd;
+-	cmnd->host_scribble	= (unsigned char *)ioreq;
+-	cmnd->SCp.Status	= 0;
++	csio_scsi_cmnd(ioreq)	= tmf_cmnd;
++	tmf_cmnd->host_scribble	= (unsigned char *)ioreq;
++	tmf_cmnd->SCp.Status	= 0;
++	tmf_cmnd->device	= sdev;
+ 
+-	cmnd->SCp.Message	= FCP_TMF_LUN_RESET;
++	tmf_cmnd->SCp.Message	= FCP_TMF_LUN_RESET;
+ 	ioreq->tmo		= CSIO_SCSI_LUNRST_TMO_MS / 1000;
+ 
+ 	/*
+@@ -2143,7 +2155,7 @@ static DEVICE_ATTR(dbg_level, S_IRUGO | S_IWUSR, csio_show_dbg_level,
+ 	sld.level = CSIO_LEV_LUN;
+ 	sld.lnode = ioreq->lnode;
+ 	sld.rnode = ioreq->rnode;
+-	sld.oslun = cmnd->device->lun;
++	sld.oslun = sdev->lun;
+ 
+ 	spin_lock_irqsave(&hw->lock, flags);
+ 	/* Kick off TM SM on the ioreq */
+@@ -2153,6 +2165,7 @@ static DEVICE_ATTR(dbg_level, S_IRUGO | S_IWUSR, csio_show_dbg_level,
+ 	if (retval != 0) {
+ 		csio_err(hw, "Failed to issue LUN reset, req:%p, status:%d\n",
+ 			    ioreq, retval);
++		tmf_cmnd->host_scribble = NULL;
+ 		goto fail_ret_ioreq;
  	}
- }
- EXPORT_SYMBOL(scsi_report_device_reset);
  
--static void
--scsi_reset_provider_done_command(struct scsi_cmnd *scmd)
--{
--}
--
- /**
-  * scsi_ioctl_reset: explicitly reset a host/bus/target/device
-  * @dev:	scsi_device to operate on
-@@ -2273,9 +2274,7 @@ void scsi_report_device_reset(struct Scsi_Host *shost, int channel, int target)
- int
- scsi_ioctl_reset(struct scsi_device *dev, int __user *arg)
- {
--	struct scsi_cmnd *scmd;
- 	struct Scsi_Host *shost = dev->host;
--	struct request *rq;
- 	unsigned long flags;
- 	int error = 0, rtn, val;
+@@ -2166,20 +2179,21 @@ static DEVICE_ATTR(dbg_level, S_IRUGO | S_IWUSR, csio_show_dbg_level,
+ 	/* LUN reset timed-out */
+ 	if (((struct scsi_cmnd *)csio_scsi_cmnd(ioreq)) == cmnd) {
+ 		csio_err(hw, "LUN reset (%d:%llu) timed out\n",
+-			 cmnd->device->id, cmnd->device->lun);
++			 sdev->id, sdev->lun);
  
-@@ -2290,24 +2289,6 @@ void scsi_report_device_reset(struct Scsi_Host *shost, int channel, int target)
- 		return -EIO;
+ 		spin_lock_irq(&hw->lock);
+ 		csio_scsi_drvcleanup(ioreq);
+ 		list_del_init(&ioreq->sm.sm_list);
+ 		spin_unlock_irq(&hw->lock);
  
- 	error = -EIO;
--	rq = kzalloc(sizeof(struct request) + sizeof(struct scsi_cmnd) +
--			shost->hostt->cmd_size, GFP_KERNEL);
--	if (!rq)
--		goto out_put_autopm_host;
--	blk_rq_init(NULL, rq);
--
--	scmd = (struct scsi_cmnd *)(rq + 1);
--	scsi_init_command(dev, scmd);
--	scmd->request = rq;
--	scmd->cmnd = scsi_req(rq)->cmd;
--
--	scmd->scsi_done		= scsi_reset_provider_done_command;
--	memset(&scmd->sdb, 0, sizeof(scmd->sdb));
--
--	scmd->cmd_len			= 0;
--
--	scmd->sc_data_direction		= DMA_BIDIRECTIONAL;
--
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	shost->tmf_in_progress = 1;
- 	spin_unlock_irqrestore(shost->host_lock, flags);
-@@ -2317,22 +2298,22 @@ void scsi_report_device_reset(struct Scsi_Host *shost, int channel, int target)
- 		rtn = SUCCESS;
- 		break;
- 	case SG_SCSI_RESET_DEVICE:
--		rtn = scsi_try_bus_device_reset(scmd);
-+		rtn = scsi_try_bus_device_reset(dev);
- 		if (rtn == SUCCESS || (val & SG_SCSI_RESET_NO_ESCALATE))
- 			break;
- 		/* FALLTHROUGH */
- 	case SG_SCSI_RESET_TARGET:
--		rtn = scsi_try_target_reset(scmd);
-+		rtn = scsi_try_target_reset(shost, scsi_target(dev));
- 		if (rtn == SUCCESS || (val & SG_SCSI_RESET_NO_ESCALATE))
- 			break;
- 		/* FALLTHROUGH */
- 	case SG_SCSI_RESET_BUS:
--		rtn = scsi_try_bus_reset(scmd);
-+		rtn = scsi_try_bus_reset(shost, dev->channel);
- 		if (rtn == SUCCESS || (val & SG_SCSI_RESET_NO_ESCALATE))
- 			break;
- 		/* FALLTHROUGH */
- 	case SG_SCSI_RESET_HOST:
--		rtn = scsi_try_host_reset(scmd);
-+		rtn = scsi_try_host_reset(shost);
- 		if (rtn == SUCCESS)
- 			break;
- 	default:
-@@ -2357,11 +2338,6 @@ void scsi_report_device_reset(struct Scsi_Host *shost, int channel, int target)
++		tmf_cmnd->host_scribble = NULL;
+ 		goto fail_ret_ioreq;
+ 	}
  
- 	wake_up(&shost->host_wait);
- 	scsi_run_host_queues(shost);
--
--	scsi_put_command(scmd);
--	kfree(rq);
--
--out_put_autopm_host:
- 	scsi_autopm_put_host(shost);
- 	return error;
- }
+ 	/* LUN reset returned, check cached status */
+-	if (cmnd->SCp.Status != FW_SUCCESS) {
++	if (tmf_cmnd->SCp.Status != FW_SUCCESS) {
+ 		csio_err(hw, "LUN reset failed (%d:%llu), status: %d\n",
+-			 cmnd->device->id, cmnd->device->lun, cmnd->SCp.Status);
++			 sdev->id, sdev->lun, tmf_cmnd->SCp.Status);
+ 		goto fail;
+ 	}
+ 
+@@ -2199,7 +2213,7 @@ static DEVICE_ATTR(dbg_level, S_IRUGO | S_IWUSR, csio_show_dbg_level,
+ 	if (retval != 0) {
+ 		csio_err(hw,
+ 			 "Attempt to abort I/Os during LUN reset of %llu"
+-			 " returned %d\n", cmnd->device->lun, retval);
++			 " returned %d\n", sdev->lun, retval);
+ 		/* Return I/Os back to active_q */
+ 		spin_lock_irq(&hw->lock);
+ 		list_splice_tail_init(&local_q, &scsim->active_q);
+@@ -2210,7 +2224,7 @@ static DEVICE_ATTR(dbg_level, S_IRUGO | S_IWUSR, csio_show_dbg_level,
+ 	CSIO_INC_STATS(rn, n_lun_rst);
+ 
+ 	csio_info(hw, "LUN reset occurred (%d:%llu)\n",
+-		  cmnd->device->id, cmnd->device->lun);
++		  sdev->id, sdev->lun);
+ 
+ 	return SUCCESS;
+ 
 -- 
 1.8.5.6
