@@ -1,19 +1,19 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 08/47] sym53c8xx_2: split off bus reset from host reset
-Date: Wed, 28 Jun 2017 11:25:16 +0200
-Message-ID: <20170628092516.GH4185@linux-x5ow.site>
+Subject: Re: [PATCH 10/47] ips: Do not try to abort command from host reset
+Date: Wed, 28 Jun 2017 11:31:59 +0200
+Message-ID: <20170628093159.GI4185@linux-x5ow.site>
 References: <1498638793-44672-1-git-send-email-hare@suse.de>
- <1498638793-44672-9-git-send-email-hare@suse.de>
+ <1498638793-44672-11-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33905 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:35544 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751261AbdF1JZS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2017 05:25:18 -0400
+        id S1751575AbdF1JcL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 05:32:11 -0400
 Content-Disposition: inline
-In-Reply-To: <1498638793-44672-9-git-send-email-hare@suse.de>
+In-Reply-To: <1498638793-44672-11-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
