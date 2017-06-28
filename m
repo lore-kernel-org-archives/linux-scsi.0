@@ -1,52 +1,59 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH] qla2xxx: Fix compile warning
-Date: Wed, 28 Jun 2017 23:03:49 +0000
-Message-ID: <2F4E3F66-176F-4357-8340-2E03A0FC9501@cavium.com>
-References: <20170628220026.5706-1-himanshu.madhani@cavium.com>
- <1498687928.2769.20.camel@HansenPartnership.com>
+From: Subhash Jadavani <subhashj@codeaurora.org>
+Subject: Re: [PATCH] scsi: ufs: set host_byte to DID_REQUEUE when ocs =
+ OCS_ABORTED
+Date: Wed, 28 Jun 2017 16:42:36 -0700
+Message-ID: <7bb81ce8005715d416539754246b2989@codeaurora.org>
+References: <20170624102722.4050-1-zangleigang@hisilicon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0088.outbound.protection.outlook.com ([104.47.34.88]:43840
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751626AbdF1XDw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2017 19:03:52 -0400
-In-Reply-To: <1498687928.2769.20.camel@HansenPartnership.com>
-Content-Language: en-US
-Content-ID: <B514D461E733F348836B93BC53C5A6E1@namprd07.prod.outlook.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:34002 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751518AbdF1Xmi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jun 2017 19:42:38 -0400
+In-Reply-To: <20170624102722.4050-1-zangleigang@hisilicon.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Zang Leigang <zangleigang@hisilicon.com>
+Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org
 
-DQo+IE9uIEp1biAyOCwgMjAxNywgYXQgMzoxMiBQTSwgSmFtZXMgQm90dG9tbGV5IDxKYW1lcy5C
-b3R0b21sZXlASGFuc2VuUGFydG5lcnNoaXAuY29tPiB3cm90ZToNCj4gDQo+IE9uIFdlZCwgMjAx
-Ny0wNi0yOCBhdCAxNTowMCAtMDcwMCwgSGltYW5zaHUgTWFkaGFuaSB3cm90ZToNCj4+IEZpeGVz
-IGZvbGxvd2luZyB3YXJuaW5nDQo+PiANCj4+IGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9udm1l
-LmM6IEluIGZ1bmN0aW9uICdxbGEyeDAwX3N0YXJ0X252bWVfbXEnOg0KPj4gaW5jbHVkZS91YXBp
-L2xpbnV4L2J5dGVvcmRlci9iaWdfZW5kaWFuLmg6MzI6MjY6IHdhcm5pbmc6IGxhcmdlDQo+PiBp
-bnRlZ2VyDQo+PiBpbXBsaWNpdGx5IHRydW5jYXRlZCB0byB1bnNpZ25lZCB0eXBlIFstV292ZXJm
-bG93XQ0KPj4gICNkZWZpbmUgX19jcHVfdG9fbGUzMih4KSAoKF9fZm9yY2UgX19sZTMyKV9fc3dh
-YjMyKCh4KSkpDQo+PiANCj4+IFNpZ25lZC1vZmYtYnk6IEhpbWFuc2h1IE1hZGhhbmkgPGhpbWFu
-c2h1Lm1hZGhhbmlAY2F2aXVtLmNvbT4NCj4+IC0tLQ0KPj4gIGRyaXZlcnMvc2NzaS9xbGEyeHh4
-L3FsYV9udm1lLmMgfCAyICstDQo+PiAgMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAx
-IGRlbGV0aW9uKC0pDQo+PiANCj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9x
-bGFfbnZtZS5jDQo+PiBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9udm1lLmMNCj4+IGluZGV4
-IDFkYThmYThmNjQxZC4uMTRlMjVlMzJlNjIyIDEwMDY0NA0KPj4gLS0tIGEvZHJpdmVycy9zY3Np
-L3FsYTJ4eHgvcWxhX252bWUuYw0KPj4gKysrIGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX252
-bWUuYw0KPj4gQEAgLTQ0MSw3ICs0NDEsNyBAQCBzdGF0aWMgaW50IHFsYTJ4MDBfc3RhcnRfbnZt
-ZV9tcShzcmJfdCAqc3ApDQo+PiAgCQkJCXJlcS0+cmluZ19wdHIrKzsNCj4+ICAJCQl9DQo+PiAg
-CQkJY29udF9wa3QgPSAoY29udF9hNjRfZW50cnlfdCAqKXJlcS0NCj4+PiByaW5nX3B0cjsNCj4+
-IC0JCQljb250X3BrdC0+ZW50cnlfdHlwZSA9DQo+PiBjcHVfdG9fbGUzMihDT05USU5VRV9BNjRf
-VFlQRSk7DQo+PiArCQkJY29udF9wa3QtPmVudHJ5X3R5cGUgPSBDT05USU5VRV9BNjRfVFlQRTsN
-Cj4+ICANCj4gDQo+IFdlbGwgdGhlIGNvZGUgaXMgZGVmaW5pdGVseSBidWdneSwgYmVjYXVzZSBp
-dCB3aWxsIGxvYWQgMCBvbiBhIEJFDQo+IHN5c3RlbS4gIEhvd2V2ZXIsIGFyZSB5b3Ugc3VyZSB0
-aGlzIGlzIHRoZSByaWdodCBmaXg/ICBJIHRob3VnaHQgdGhlDQo+IHFsb2dpYyBlbmdpbmUgZGlk
-IGdyb3VwcyBvZiAzMiBiaXQgd29yZHMsIHdoaWNoIGlzIHdoeSB0aGUgcHJlLW52bWUNCj4gY29k
-ZSBsb2FkcyB0aGlzIGZpZWxkIGFzOg0KPiANCj4gCSooKHVpbnQzMl90ICopKCZjb250X3BrdC0+
-ZW50cnlfdHlwZSkpID0gY3B1X3RvX2xlMzIoQ09OVElOVUVfVFlQRSk7DQo+IA0KPiBKYW1lcw0K
-DQpBZ3JlZS4gSSBuZWVkIHRvIGdvIGJhY2sgYW5kIGNoZWNrIHdoaWNoIHdvdWxkIGJlIHJpZ2h0
-IGZpeC4gDQoNCk9uY2UgaeKAmXZlIGNvbmZpcm1lZCBpdCB3b3JrcyBvbiBib3RoIHBsYXRmb3Jt
-LCBJ4oCZbGwgc2VuZCBvdXQgbmV3IHBhdGNoLg0KDQpUaGFua3MsDQotIEhpbWFuc2h1DQoNCg==
+On 2017-06-24 03:27, Zang Leigang wrote:
+> Host set ocs to OCS_ABORTED when clear a doorbell in err handler.
+
+OCS field is valid after host controller has cleared the corresponding 
+doorbell (UTRLDBR) bit to zero. And here HW would be clearing the 
+doorbell bit, not the SW. So I am not sure what do you mean in sentence 
+above? Can you please elaborate more on this?
+
+> Then scsi_decide_disposition return SUCCESS. This may cause some
+> filesystem panic because a FAILED REQUESET. Requeue and complete is
+> better.
+
+Why do you think retrying this HW aborted request will succeed next 
+time? Are we going to fix some request parameters before retrying? If 
+not, it will most likely fail again.
+
+
+> 
+> Signed-off-by: Zang Leigang <zangleigang@hisilicon.com>
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index ffe8d8608818..e050dcea1bea 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -4545,8 +4545,6 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba,
+> struct ufshcd_lrb *lrbp)
+>  		}
+>  		break;
+>  	case OCS_ABORTED:
+> -		result |= DID_ABORT << 16;
+> -		break;
+>  	case OCS_INVALID_COMMAND_STATUS:
+>  		result |= DID_REQUEUE << 16;
+>  		break;
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
