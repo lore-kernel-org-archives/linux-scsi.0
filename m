@@ -1,20 +1,19 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 12/47] qla1280: separate out host reset function from
- qla1280_error_action()
-Date: Wed, 28 Jun 2017 11:39:01 +0200
-Message-ID: <20170628093901.GK4185@linux-x5ow.site>
+Subject: Re: [PATCH 13/47] megaraid: pass in NULL scb for host reset
+Date: Wed, 28 Jun 2017 11:39:32 +0200
+Message-ID: <20170628093932.GL4185@linux-x5ow.site>
 References: <1498638793-44672-1-git-send-email-hare@suse.de>
- <1498638793-44672-13-git-send-email-hare@suse.de>
+ <1498638793-44672-14-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35996 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:36035 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751557AbdF1JjC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2017 05:39:02 -0400
+        id S1751489AbdF1Jje (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 05:39:34 -0400
 Content-Disposition: inline
-In-Reply-To: <1498638793-44672-13-git-send-email-hare@suse.de>
+In-Reply-To: <1498638793-44672-14-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
