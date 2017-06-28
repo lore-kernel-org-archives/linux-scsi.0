@@ -1,19 +1,19 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 07/47] aacraid: complete all commands during bus reset
-Date: Wed, 28 Jun 2017 11:19:23 +0200
-Message-ID: <20170628091923.GF4185@linux-x5ow.site>
+Subject: Re: [PATCH 08/47] sym53c8xx_2: split off bus reset from host reset
+Date: Wed, 28 Jun 2017 11:19:57 +0200
+Message-ID: <20170628091957.GG4185@linux-x5ow.site>
 References: <1498638793-44672-1-git-send-email-hare@suse.de>
- <1498638793-44672-8-git-send-email-hare@suse.de>
+ <1498638793-44672-9-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33251 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:33297 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750829AbdF1JTZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2017 05:19:25 -0400
+        id S1751690AbdF1JT7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 05:19:59 -0400
 Content-Disposition: inline
-In-Reply-To: <1498638793-44672-8-git-send-email-hare@suse.de>
+In-Reply-To: <1498638793-44672-9-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
