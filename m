@@ -1,82 +1,108 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 10/28] fdomain: move bus reset to host reset
-Date: Wed, 28 Jun 2017 10:24:58 +0200
-Message-ID: <1498638316-44420-11-git-send-email-hare@suse.de>
+Subject: [PATCH 16/28] qlogicfas: move bus_reset to host_reset
+Date: Wed, 28 Jun 2017 10:25:04 +0200
+Message-ID: <1498638316-44420-17-git-send-email-hare@suse.de>
 References: <1498638316-44420-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53010 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:53009 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751656AbdF1IbH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1751657AbdF1IbH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Wed, 28 Jun 2017 04:31:07 -0400
 In-Reply-To: <1498638316-44420-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-The bus reset function really is a host reset, so move it to
-eh_host_reset_handler().
+From: Hannes Reinecke <hare@suse.com>
+
+The bus reset handler is really a host reset.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/fdomain.c             | 6 +++---
- drivers/scsi/fdomain.h             | 2 +-
- drivers/scsi/pcmcia/fdomain_stub.c | 2 +-
- 3 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/pcmcia/qlogic_stub.c | 4 ++--
+ drivers/scsi/qlogicfas.c          | 2 +-
+ drivers/scsi/qlogicfas408.c       | 6 +++---
+ drivers/scsi/qlogicfas408.h       | 2 +-
+ 4 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/fdomain.c b/drivers/scsi/fdomain.c
-index b87ab38..ebbe5a3 100644
---- a/drivers/scsi/fdomain.c
-+++ b/drivers/scsi/fdomain.c
-@@ -933,7 +933,7 @@ struct Scsi_Host *__fdomain_16x0_detect(struct scsi_host_template *tpnt )
-       }
-    }
- 
--   fdomain_16x0_bus_reset(NULL);
-+   fdomain_16x0_host_reset(NULL);
- 
-    if (fdomain_test_loopback()) {
-       printk(KERN_ERR  "scsi: <fdomain> Detection failed (loopback test failed at port base 0x%x)\n", port_base);
-@@ -1568,7 +1568,7 @@ static int fdomain_16x0_abort(struct scsi_cmnd *SCpnt)
-    return SUCCESS;
- }
- 
--int fdomain_16x0_bus_reset(struct scsi_cmnd *SCpnt)
-+int fdomain_16x0_host_reset(struct scsi_cmnd *SCpnt)
- {
-    unsigned long flags;
- 
-@@ -1758,7 +1758,7 @@ struct scsi_host_template fdomain_driver_template = {
- 	.info			= fdomain_16x0_info,
- 	.queuecommand		= fdomain_16x0_queue,
- 	.eh_abort_handler	= fdomain_16x0_abort,
--	.eh_bus_reset_handler	= fdomain_16x0_bus_reset,
-+	.eh_host_reset_handler	= fdomain_16x0_host_reset,
- 	.bios_param		= fdomain_16x0_biosparam,
- 	.release		= fdomain_16x0_release,
+diff --git a/drivers/scsi/pcmcia/qlogic_stub.c b/drivers/scsi/pcmcia/qlogic_stub.c
+index c670dc7..0556054 100644
+--- a/drivers/scsi/pcmcia/qlogic_stub.c
++++ b/drivers/scsi/pcmcia/qlogic_stub.c
+@@ -67,7 +67,7 @@
+ 	.info			= qlogicfas408_info,
+ 	.queuecommand		= qlogicfas408_queuecommand,
+ 	.eh_abort_handler	= qlogicfas408_abort,
+-	.eh_bus_reset_handler	= qlogicfas408_bus_reset,
++	.eh_host_reset_handler	= qlogicfas408_host_reset,
+ 	.bios_param		= qlogicfas408_biosparam,
  	.can_queue		= 1,
-diff --git a/drivers/scsi/fdomain.h b/drivers/scsi/fdomain.h
-index 47021d9..5cbe86b 100644
---- a/drivers/scsi/fdomain.h
-+++ b/drivers/scsi/fdomain.h
-@@ -21,4 +21,4 @@
- extern struct scsi_host_template fdomain_driver_template;
- extern int fdomain_setup(char *str);
- extern struct Scsi_Host *__fdomain_16x0_detect(struct  scsi_host_template *tpnt );
--extern int fdomain_16x0_bus_reset(struct scsi_cmnd *SCpnt);
-+extern int fdomain_16x0_host_reset(struct scsi_cmnd *SCpnt);
-diff --git a/drivers/scsi/pcmcia/fdomain_stub.c b/drivers/scsi/pcmcia/fdomain_stub.c
-index 714b248..953a792 100644
---- a/drivers/scsi/pcmcia/fdomain_stub.c
-+++ b/drivers/scsi/pcmcia/fdomain_stub.c
-@@ -173,7 +173,7 @@ static void fdomain_release(struct pcmcia_device *link)
- 
- static int fdomain_resume(struct pcmcia_device *link)
- {
--	fdomain_16x0_bus_reset(NULL);
-+	fdomain_16x0_host_reset(NULL);
+ 	.this_id		= -1,
+@@ -264,7 +264,7 @@ static int qlogic_resume(struct pcmcia_device *link)
+ 		outb(0x04, link->resource[0]->start + 0xd);
+ 	}
+ 	/* Ugggglllyyyy!!! */
+-	qlogicfas408_bus_reset(NULL);
++	qlogicfas408_host_reset(NULL);
  
  	return 0;
  }
+diff --git a/drivers/scsi/qlogicfas.c b/drivers/scsi/qlogicfas.c
+index 840823b..95431d6 100644
+--- a/drivers/scsi/qlogicfas.c
++++ b/drivers/scsi/qlogicfas.c
+@@ -188,7 +188,7 @@ static int qlogicfas_release(struct Scsi_Host *shost)
+ 	.info			= qlogicfas408_info,
+ 	.queuecommand		= qlogicfas408_queuecommand,
+ 	.eh_abort_handler	= qlogicfas408_abort,
+-	.eh_bus_reset_handler	= qlogicfas408_bus_reset,
++	.eh_host_reset_handler	= qlogicfas408_host_reset,
+ 	.bios_param		= qlogicfas408_biosparam,
+ 	.can_queue		= 1,
+ 	.this_id		= -1,
+diff --git a/drivers/scsi/qlogicfas408.c b/drivers/scsi/qlogicfas408.c
+index c3a9151..8b471a9 100644
+--- a/drivers/scsi/qlogicfas408.c
++++ b/drivers/scsi/qlogicfas408.c
+@@ -496,13 +496,13 @@ int qlogicfas408_abort(struct scsi_cmnd *cmd)
+ 	return SUCCESS;
+ }
+ 
+-/* 
++/*
+  *	Reset SCSI bus
+  *	FIXME: This function is invoked with cmd = NULL directly by
+  *	the PCMCIA qlogic_stub code. This wants fixing
+  */
+ 
+-int qlogicfas408_bus_reset(struct scsi_cmnd *cmd)
++int qlogicfas408_host_reset(struct scsi_cmnd *cmd)
+ {
+ 	struct qlogicfas408_priv *priv = get_priv_by_cmd(cmd);
+ 	unsigned long flags;
+@@ -607,7 +607,7 @@ static void __exit qlogicfas408_exit(void)
+ EXPORT_SYMBOL(qlogicfas408_info);
+ EXPORT_SYMBOL(qlogicfas408_queuecommand);
+ EXPORT_SYMBOL(qlogicfas408_abort);
+-EXPORT_SYMBOL(qlogicfas408_bus_reset);
++EXPORT_SYMBOL(qlogicfas408_host_reset);
+ EXPORT_SYMBOL(qlogicfas408_biosparam);
+ EXPORT_SYMBOL(qlogicfas408_ihandl);
+ EXPORT_SYMBOL(qlogicfas408_get_chip_type);
+diff --git a/drivers/scsi/qlogicfas408.h b/drivers/scsi/qlogicfas408.h
+index 2f6c0a1..f6b1216 100644
+--- a/drivers/scsi/qlogicfas408.h
++++ b/drivers/scsi/qlogicfas408.h
+@@ -108,7 +108,7 @@ int qlogicfas408_biosparam(struct scsi_device * disk,
+ 			   struct block_device *dev,
+ 			   sector_t capacity, int ip[]);
+ int qlogicfas408_abort(struct scsi_cmnd * cmd);
+-int qlogicfas408_bus_reset(struct scsi_cmnd * cmd);
++extern int qlogicfas408_host_reset(struct scsi_cmnd *cmd);
+ const char *qlogicfas408_info(struct Scsi_Host *host);
+ int qlogicfas408_get_chip_type(int qbase, int int_type);
+ void qlogicfas408_setup(int qbase, int id, int int_type);
 -- 
 1.8.5.6
