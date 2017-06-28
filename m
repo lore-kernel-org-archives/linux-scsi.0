@@ -1,19 +1,19 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 18/28] ppa: drop duplicate bus_reset handler
-Date: Wed, 28 Jun 2017 10:58:53 +0200
-Message-ID: <20170628085853.GT4185@linux-x5ow.site>
+Subject: Re: [PATCH 20/28] nsp32: drop bus reset
+Date: Wed, 28 Jun 2017 10:59:32 +0200
+Message-ID: <20170628085932.GU4185@linux-x5ow.site>
 References: <1498638316-44420-1-git-send-email-hare@suse.de>
- <1498638316-44420-19-git-send-email-hare@suse.de>
+ <1498638316-44420-21-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59481 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:59657 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751453AbdF1I6z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2017 04:58:55 -0400
+        id S1751610AbdF1I7e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 04:59:34 -0400
 Content-Disposition: inline
-In-Reply-To: <1498638316-44420-19-git-send-email-hare@suse.de>
+In-Reply-To: <1498638316-44420-21-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
