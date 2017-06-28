@@ -1,8 +1,8 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v4 2/5] g_NCR5380: End PDMA transfer correctly on target
- disconnection
+Subject: [PATCH v4 4/5] g_NCR5380: Limit PDMA send to 512 B to avoid random
+ corruption on DTC3181E
 Date: Wed, 28 Jun 2017 00:04:37 -0400 (EDT)
-Message-ID: <f5a7de775fa7f813595975de9638007123d0c26b.1498622056.git.fthain@telegraphics.com.au>
+Message-ID: <10c24e9d9aee2b4cf004dcdf5eed92ef2c0bb994.1498622056.git.fthain@telegraphics.com.au>
 References: <cover.1498622056.git.fthain@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1498622056.git.fthain@telegraphics.com.au>
@@ -13,132 +13,51 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Ondrej Zary <linux@rainbow-software.org>
 
-When an IRQ arrives during PDMA transfer, pread() and pwrite() return
-without waiting for the 53C80 registers to be ready and this ends up
-messing up the chip state. This was observed with SONY CDU-55S which is
-slow enough to disconnect during 4096-byte reads.
+The corruption is always the same: one byte missing at the beginning of
+a 128 B block. It happens only with slow Quantum LPS 240 drive, not with
+faster IBM DORS-32160. It's not clear what causes this. Documentation
+for the DTC436 chip has not been made available. Hence this workaround.
 
-IRQ during PDMA is not an error so don't return -1. Instead, store the
-remaining byte count for use by NCR5380_dma_residual().
-
-[Poll for the BASR_END_DMA_TRANSFER condition rather than remove the
-error message -- F.T.]
-
-Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 ---
- drivers/scsi/g_NCR5380.c | 48 +++++++++++++++++++++++++++++++-----------------
- 1 file changed, 31 insertions(+), 17 deletions(-)
+ drivers/scsi/g_NCR5380.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-index 14ef4e8c4713..911a4300ea51 100644
+index 9f18082415c4..b1e0a08e49c1 100644
 --- a/drivers/scsi/g_NCR5380.c
 +++ b/drivers/scsi/g_NCR5380.c
-@@ -44,12 +44,13 @@
- 	int c400_ctl_status; \
+@@ -45,7 +45,8 @@
  	int c400_blk_cnt; \
  	int c400_host_buf; \
--	int io_width
-+	int io_width; \
-+	int pdma_residual
+ 	int io_width; \
+-	int pdma_residual
++	int pdma_residual; \
++	int board
  
  #define NCR5380_dma_xfer_len            generic_NCR5380_dma_xfer_len
  #define NCR5380_dma_recv_setup          generic_NCR5380_pread
- #define NCR5380_dma_send_setup          generic_NCR5380_pwrite
--#define NCR5380_dma_residual            NCR5380_dma_residual_none
-+#define NCR5380_dma_residual            generic_NCR5380_dma_residual
- 
- #define NCR5380_intr                    generic_NCR5380_intr
- #define NCR5380_queue_command           generic_NCR5380_queue_command
-@@ -500,10 +501,8 @@ static inline int generic_NCR5380_pread(struct NCR5380_hostdata *hostdata,
- 	while (1) {
- 		if (NCR5380_read(hostdata->c400_blk_cnt) == 0)
- 			break;
--		if (NCR5380_read(hostdata->c400_ctl_status) & CSR_GATED_53C80_IRQ) {
--			printk(KERN_ERR "53C400r: Got 53C80_IRQ start=%d, blocks=%d\n", start, blocks);
--			return -1;
--		}
-+		if (NCR5380_read(hostdata->c400_ctl_status) & CSR_GATED_53C80_IRQ)
-+			goto out_wait;
- 		while (NCR5380_read(hostdata->c400_ctl_status) & CSR_HOST_BUF_NOT_RDY)
- 			; /* FIXME - no timeout */
- 
-@@ -542,13 +541,19 @@ static inline int generic_NCR5380_pread(struct NCR5380_hostdata *hostdata,
- 	if (!(NCR5380_read(hostdata->c400_ctl_status) & CSR_GATED_53C80_IRQ))
- 		printk("53C400r: no 53C80 gated irq after transfer");
- 
-+out_wait:
-+	hostdata->pdma_residual = len - start;
-+
- 	/* wait for 53C80 registers to be available */
- 	while (!(NCR5380_read(hostdata->c400_ctl_status) & CSR_53C80_REG))
- 		;
- 
--	if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_END_DMA_TRANSFER))
--		printk(KERN_ERR "53C400r: no end dma signal\n");
--		
-+	if (NCR5380_poll_politely(hostdata, BUS_AND_STATUS_REG,
-+	                          BASR_END_DMA_TRANSFER, BASR_END_DMA_TRANSFER,
-+	                          HZ / 64) < 0)
-+		scmd_printk(KERN_ERR, hostdata->connected, "%s: End of DMA timeout (%d)\n",
-+		            __func__, hostdata->pdma_residual);
-+
- 	return 0;
- }
- 
-@@ -571,10 +576,8 @@ static inline int generic_NCR5380_pwrite(struct NCR5380_hostdata *hostdata,
- 	NCR5380_write(hostdata->c400_ctl_status, CSR_BASE);
- 	NCR5380_write(hostdata->c400_blk_cnt, blocks);
- 	while (1) {
--		if (NCR5380_read(hostdata->c400_ctl_status) & CSR_GATED_53C80_IRQ) {
--			printk(KERN_ERR "53C400w: Got 53C80_IRQ start=%d, blocks=%d\n", start, blocks);
--			return -1;
--		}
-+		if (NCR5380_read(hostdata->c400_ctl_status) & CSR_GATED_53C80_IRQ)
-+			goto out_wait;
- 
- 		if (NCR5380_read(hostdata->c400_blk_cnt) == 0)
- 			break;
-@@ -612,18 +615,24 @@ static inline int generic_NCR5380_pwrite(struct NCR5380_hostdata *hostdata,
- 		blocks--;
+@@ -316,6 +317,7 @@ static int generic_NCR5380_init_one(struct scsi_host_template *tpnt,
  	}
+ 	hostdata = shost_priv(instance);
  
-+out_wait:
-+	hostdata->pdma_residual = len - start;
-+
- 	/* wait for 53C80 registers to be available */
- 	while (!(NCR5380_read(hostdata->c400_ctl_status) & CSR_53C80_REG)) {
- 		udelay(4); /* DTC436 chip hangs without this */
- 		/* FIXME - no timeout */
- 	}
++	hostdata->board = board;
+ 	hostdata->io = iomem;
+ 	hostdata->region_size = region_size;
  
--	if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_END_DMA_TRANSFER)) {
--		printk(KERN_ERR "53C400w: no end dma signal\n");
--	}
--
- 	while (!(NCR5380_read(TARGET_COMMAND_REG) & TCR_LAST_BYTE_SENT))
- 		; 	// TIMEOUT
-+
-+	if (NCR5380_poll_politely(hostdata, BUS_AND_STATUS_REG,
-+	                          BASR_END_DMA_TRANSFER, BASR_END_DMA_TRANSFER,
-+	                          HZ / 64) < 0)
-+		scmd_printk(KERN_ERR, hostdata->connected, "%s: End of DMA timeout (%d)\n",
-+		            __func__, hostdata->pdma_residual);
-+
- 	return 0;
- }
+@@ -644,7 +646,12 @@ static int generic_NCR5380_dma_xfer_len(struct NCR5380_hostdata *hostdata,
  
-@@ -642,6 +651,11 @@ static int generic_NCR5380_dma_xfer_len(struct NCR5380_hostdata *hostdata,
+ 	/* 53C400 datasheet: non-modulo-128-byte transfers should use PIO */
+ 	if (transfersize % 128)
+-		transfersize = 0;
++		return 0;
++
++	/* Limit PDMA send to 512 B to avoid random corruption on DTC3181E */
++	if (hostdata->board == BOARD_DTC3181E &&
++	    cmd->sc_data_direction == DMA_TO_DEVICE)
++		transfersize = min(cmd->SCp.this_residual, 512);
+ 
  	return min(transfersize, DMA_MAX_SIZE);
  }
- 
-+static int generic_NCR5380_dma_residual(struct NCR5380_hostdata *hostdata)
-+{
-+	return hostdata->pdma_residual;
-+}
-+
- /*
-  *	Include the NCR5380 core code that we build our driver around	
-  */
 -- 
 2.13.0
