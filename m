@@ -1,31 +1,27 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] sd: add support for TCG OPAL self encrypting disks
-Date: Wed, 28 Jun 2017 14:33:55 -0400
-Message-ID: <20170628183355.GA27833@htj.duckdns.org>
-References: <20170619122646.32666-1-hch@lst.de>
- <20170619122646.32666-2-hch@lst.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 13/47] megaraid: pass in NULL scb for host reset
+Date: Wed, 28 Jun 2017 20:40:38 +0200
+Message-ID: <20170628184038.GA12922@lst.de>
+References: <1498638793-44672-1-git-send-email-hare@suse.de> <1498638793-44672-14-git-send-email-hare@suse.de> <f5b7e09b259b22452afe1da669712af6@mail.gmail.com> <ce2005d3-420c-3920-dadc-b9d1d36c8ecc@suse.de> <5443ed26d0465a0a277ccf90fdeb1e73@mail.gmail.com> <CAHtARFFTFMaUsVZ_KuYGr3hFcTuD5sf=h2+1RM6aj8yfpwsCWQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:50939 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751541AbdF1Skk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 14:40:40 -0400
 Content-Disposition: inline
-In-Reply-To: <20170619122646.32666-2-hch@lst.de>
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Scott Bauer <scott.bauer@intel.com>, Jonathan Derrick <jonathan.derrick@intel.com>, Rafael Antognolli <rafael.antognolli@intel.com>, Robert Elliott <elliott@hpe.com>, linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <CAHtARFFTFMaUsVZ_KuYGr3hFcTuD5sf=h2+1RM6aj8yfpwsCWQ@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: adam radford <aradford@gmail.com>
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>, Hannes Reinecke <hare@suse.de>, Sumit Saxena <sumit.saxena@broadcom.com>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.com>
 
-On Mon, Jun 19, 2017 at 02:26:46PM +0200, Christoph Hellwig wrote:
-> Just wire up the generic TCG OPAL infrastructure to the SCSI disk driver
-> and the Security In/Out commands.
-> 
-> Note that I don't know of any actual SCSI disks that do support TCG OPAL,
-> but this is required to support ATA disks through libata.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Wed, Jun 28, 2017 at 11:38:22AM -0700, adam radford wrote:
+> LSI/Broadcom isn't the maintainer of the 3ware drivers.  See 'MAINTAINERS'.
+>   Your attempts
+> to remove them may get a NACK from the Maintainer since I believe there are
+> still users of these controllers.
 
-Applied to libata/for-4.13 w/ Martin's ack added.
-
-Thanks.
-
--- 
-tejun
+Same for the legacy megaraid driver, but we can just mark that as
+orphan for now.
