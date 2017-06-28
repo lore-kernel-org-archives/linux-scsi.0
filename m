@@ -1,115 +1,42 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH v2] qla2xxx: Protect access to qpair members with
- qpair->qp_lock
-Date: Wed, 28 Jun 2017 16:33:16 +0000
-Message-ID: <7686A840-575D-4760-8D83-372394F59041@cavium.com>
-References: <20170623071011.21184-1-jthumshirn@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: [PATCH 0/3] cxlflash: Minor fix and EH refactoring
+Date: Wed, 28 Jun 2017 12:12:09 -0500
+Message-ID: <1498669929-39684-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0067.outbound.protection.outlook.com ([104.47.38.67]:55962
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752536AbdF1QdS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Jun 2017 12:33:18 -0400
-In-Reply-To: <20170623071011.21184-1-jthumshirn@suse.de>
-Content-Language: en-US
-Content-ID: <499A949F5D27CD49B9CF1CA9822BD42A@namprd07.prod.outlook.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:38987 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751492AbdF1RMb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 13:12:31 -0400
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v5SH9Ktj123304
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Jun 2017 13:12:31 -0400
+Received: from e19.ny.us.ibm.com (e19.ny.us.ibm.com [129.33.205.209])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2bcfq6jndr-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Jun 2017 13:12:30 -0400
+Received: from localhost
+        by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+        Wed, 28 Jun 2017 13:12:29 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>, Hannes Reinecke <hare@suse.de>, John Garry <john.garry@huawei.com>
+To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Hannes Reinecke <hare@suse.com>
+Cc: Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
 
+This small series fixes a recently injected double free and also includes
+two patches to refactor the host and reset handlers to ease the burden of
+making this driver compatible with an updated SCSI EH framework.
 
-> On Jun 23, 2017, at 12:10 AM, Johannes Thumshirn <jthumshirn@suse.de> wro=
-te:
->=20
-> In qla2xx_start_scsi_mq() and qla2xx_dif_start_scsi_mq() we grab the
-> qpair->qp_lock but do access members of the qpair before having the lock.
-> Re-order the locking sequence to have all read and write access to qpair
-> members under the qpair->qp_lock.
->=20
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> ---
-> drivers/scsi/qla2xxx/qla_iocb.c | 23 +++++++++++++----------
-> 1 file changed, 13 insertions(+), 10 deletions(-)
->=20
-> Changes to v1:
-> * Use __qla2x00_marker() instead of qla2x00_marker which is fit to be cal=
-led
->  with the qp_lock held (John)
-> * Don't protect qpair->online and qpair->difdix_supported as it's not
->  needed (Hannes)
->=20
-> diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_i=
-ocb.c
-> index 8404f17f3c6c..c64036ddd365 100644
-> --- a/drivers/scsi/qla2xxx/qla_iocb.c
-> +++ b/drivers/scsi/qla2xxx/qla_iocb.c
-> @@ -1770,6 +1770,9 @@ qla2xxx_start_scsi_mq(srb_t *sp)
-> 	struct qla_hw_data *ha =3D vha->hw;
-> 	struct qla_qpair *qpair =3D sp->qpair;
->=20
-> +	/* Acquire qpair specific lock */
-> +	spin_lock_irqsave(&qpair->qp_lock, flags);
-> +
-> 	/* Setup qpair pointers */
-> 	rsp =3D qpair->rsp;
-> 	req =3D qpair->req;
-> @@ -1779,15 +1782,14 @@ qla2xxx_start_scsi_mq(srb_t *sp)
->=20
-> 	/* Send marker if required */
-> 	if (vha->marker_needed !=3D 0) {
-> -		if (qla2x00_marker(vha, req, rsp, 0, 0, MK_SYNC_ALL) !=3D
-> -		    QLA_SUCCESS)
-> +		if (__qla2x00_marker(vha, req, rsp, 0, 0, MK_SYNC_ALL) !=3D
-> +		    QLA_SUCCESS) {
-> +			spin_unlock_irqrestore(&qpair->qp_lock, flags);
-> 			return QLA_FUNCTION_FAILED;
-> +		}
-> 		vha->marker_needed =3D 0;
-> 	}
->=20
-> -	/* Acquire qpair specific lock */
-> -	spin_lock_irqsave(&qpair->qp_lock, flags);
-> -
-> 	/* Check for room in outstanding command list. */
-> 	handle =3D req->current_outstanding_cmd;
-> 	for (index =3D 1; index < req->num_outstanding_cmds; index++) {
-> @@ -1942,6 +1944,8 @@ qla2xxx_dif_start_scsi_mq(srb_t *sp)
-> 			return qla2xxx_start_scsi_mq(sp);
-> 	}
->=20
-> +	spin_lock_irqsave(&qpair->qp_lock, flags);
-> +
-> 	/* Setup qpair pointers */
-> 	rsp =3D qpair->rsp;
-> 	req =3D qpair->req;
-> @@ -1951,15 +1955,14 @@ qla2xxx_dif_start_scsi_mq(srb_t *sp)
->=20
-> 	/* Send marker if required */
-> 	if (vha->marker_needed !=3D 0) {
-> -		if (qla2x00_marker(vha, req, rsp, 0, 0, MK_SYNC_ALL) !=3D
-> -		    QLA_SUCCESS)
-> +		if (__qla2x00_marker(vha, req, rsp, 0, 0, MK_SYNC_ALL) !=3D
-> +		    QLA_SUCCESS) {
-> +			spin_unlock_irqrestore(&qpair->qp_lock, flags);
-> 			return QLA_FUNCTION_FAILED;
-> +		}
-> 		vha->marker_needed =3D 0;
-> 	}
->=20
-> -	/* Acquire ring specific lock */
-> -	spin_lock_irqsave(&qpair->qp_lock, flags);
-> -
-> 	/* Check for room in outstanding command list. */
-> 	handle =3D req->current_outstanding_cmd;
-> 	for (index =3D 1; index < req->num_outstanding_cmds; index++) {
-> --=20
-> 2.12.3
->=20
+This series is intended for 4.13 and is bisectable.
 
-Looks Good.=20
+Matthew R. Ochs (3):
+  cxlflash: Avoid double free of character device
+  cxlflash: Update send_tmf() parameters
+  cxlflash: Update debug prints in reset handlers
 
-Acked-By: Himanshu Madhani <himanshu.madhani@cavium.com>
+ drivers/scsi/cxlflash/main.c | 44 +++++++++++++++-----------------------------
+ 1 file changed, 15 insertions(+), 29 deletions(-)
+
+-- 
+2.1.0
