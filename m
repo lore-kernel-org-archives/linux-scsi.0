@@ -1,72 +1,44 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: [PATCH v4 0/5] g_NCR5380: PDMA fixes and cleanup
-Date: Wed, 28 Jun 2017 23:28:06 +0200
-Message-ID: <201706282328.06806.linux@rainbow-software.org>
-References: <cover.1498622056.git.fthain@telegraphics.com.au>
+From: Himanshu Madhani <himanshu.madhani@cavium.com>
+Subject: [PATCH] qla2xxx: Fix compile warning
+Date: Wed, 28 Jun 2017 15:00:26 -0700
+Message-ID: <20170628220026.5706-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-1b.atlantis.sk ([80.94.52.26]:39193 "EHLO
-        smtp-1b.atlantis.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751545AbdF1V22 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jun 2017 17:28:28 -0400
-In-Reply-To: <cover.1498622056.git.fthain@telegraphics.com.au>
-Content-Disposition: inline
+Received: from mail-sn1nam01on0067.outbound.protection.outlook.com ([104.47.32.67]:20485
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751566AbdF1WAn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Jun 2017 18:00:43 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>
+To: martin.petersen@oracle.com
+Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-On Wednesday 28 June 2017 06:04:36 Finn Thain wrote:
-> Ondrej, would you please test this new series?
->
-> Changed since v1:
-> - PDMA transfer residual is calculated earlier.
-> - End of DMA flag check is now polled (if there is any residual).
->
-> Changed since v2:
-> - Bail out of transfer loops when Gated IRQ gets asserted.
-> - Make udelay conditional on board type.
-> - Drop sg_tablesize patch due to performance regression.
->
-> Changed since v3:
-> - Add Ondrej's workaround for corrupt WRITE commands on DTC boards.
-> - Reset the 53c400 logic after any short PDMA transfer.
-> - Don't fail the transfer if the 53c400 logic got a reset.
->
->
-> Finn Thain (1):
->   g_NCR5380: Cleanup comments and whitespace
->
-> Ondrej Zary (4):
->   g_NCR5380: Fix PDMA transfer size
->   g_NCR5380: End PDMA transfer correctly on target disconnection
->   g_NCR5380: Limit PDMA send to 512 B to avoid random corruption on
->     DTC3181E
->   g_NCR5380: Re-work PDMA loops
->
->  drivers/scsi/g_NCR5380.c | 239
-> ++++++++++++++++++++++++----------------------- 1 file changed, 120
-> insertions(+), 119 deletions(-)
+Fixes following warning
 
-Now read seems to work on non-DTC chips.
-Writes continue in PDMA after disconnect but there's a corruption - one 128 B 
-block missing on disconnect.
+drivers/scsi/qla2xxx/qla_nvme.c: In function 'qla2x00_start_nvme_mq':
+include/uapi/linux/byteorder/big_endian.h:32:26: warning: large integer
+implicitly truncated to unsigned type [-Woverflow]
+ #define __cpu_to_le32(x) ((__force __le32)__swab32((x)))
 
+Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+---
+ drivers/scsi/qla2xxx/qla_nvme.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-On DTC, the log is spammed with errors like this:
-sd 2:0:1:0: [sdb] tag#0 generic_NCR5380_pread: End of DMA timeout (0)
-
-They're cause by read corruption on DTC:
-pread() is breaking at start=3968 because of an end-of-DMA IRQ (BASR=0x98) but 
-pdma_residual is set to zero (block counter is zero because the data was read 
-into the buffer but we did not read it from there). So we lose one buffer of 
-data on each 4 KB read.
-The PDMA is then reset which probably means BASR_END_DMA_TRANSFER will not be 
-asserted.
-
-
+diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
+index 1da8fa8f641d..14e25e32e622 100644
+--- a/drivers/scsi/qla2xxx/qla_nvme.c
++++ b/drivers/scsi/qla2xxx/qla_nvme.c
+@@ -441,7 +441,7 @@ static int qla2x00_start_nvme_mq(srb_t *sp)
+ 				req->ring_ptr++;
+ 			}
+ 			cont_pkt = (cont_a64_entry_t *)req->ring_ptr;
+-			cont_pkt->entry_type = cpu_to_le32(CONTINUE_A64_TYPE);
++			cont_pkt->entry_type = CONTINUE_A64_TYPE;
+ 
+ 			cur_dsd = (uint32_t *)cont_pkt->dseg_0_address;
+ 			avail_dsds = 5;
 -- 
-Ondrej Zary
+2.13.1.452.g97e2ff464
