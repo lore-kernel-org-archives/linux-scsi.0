@@ -1,71 +1,164 @@
-From: Zang Leigang <zangleigang@hisilicon.com>
-Subject: Re: [PATCH] scsi: ufs: check link active or not after switch to HS
- mode
-Date: Thu, 29 Jun 2017 11:04:50 +0800
-Message-ID: <20170629030450.GA46969@kirin.host.huawei.com>
-References: <20170624114405.18475-1-zangleigang@hisilicon.com>
- <0c41133960c09f1aac4c0abeb38afbfd@codeaurora.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+Subject: [PATCH] aic7xxx: fix firmware build with O=path
+Date: Wed, 28 Jun 2017 21:17:16 -0700
+Message-ID: <20170629041716.26865-1-jakub.kicinski@netronome.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([45.249.212.188]:9318 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751596AbdF2DFj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jun 2017 23:05:39 -0400
-Content-Disposition: inline
-In-Reply-To: <0c41133960c09f1aac4c0abeb38afbfd@codeaurora.org>
+Received: from mail-pg0-f42.google.com ([74.125.83.42]:36620 "EHLO
+        mail-pg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751420AbdF2ESS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Jun 2017 00:18:18 -0400
+Received: by mail-pg0-f42.google.com with SMTP id u62so41529295pgb.3
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Jun 2017 21:18:17 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Subhash Jadavani <subhashj@codeaurora.org>
-Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, oss-drivers@netronome.com, Jakub Kicinski <jakub.kicinski@netronome.com>
 
-On Wed, Jun 28, 2017 at 04:48:21PM -0700, Subhash Jadavani wrote:
-> On 2017-06-24 04:44, Zang Leigang wrote:
-> >Some device can successfully link and switch to HS mode. But failed
-> >to do more. ufshcd_verify_dev_init can help to find this earlier.
-> >
-> >Signed-off-by: Zang Leigang <zangleigang@hisilicon.com>
-> >
-> >diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> >index ffe8d8608818..eb03388fc4bd 100644
-> >--- a/drivers/scsi/ufs/ufshcd.c
-> >+++ b/drivers/scsi/ufs/ufshcd.c
-> >@@ -6373,6 +6373,14 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
-> > 					__func__, ret);
-> > 			goto out;
-> > 		}
-> >+
-> >+		/*
-> >+		 * Some device lost link after switch to HS mode. Check if
-> >+		 * connect is established here.
-> >+		 */
-> 
-> I have never across such failures. If this issue is limited to
-> certain device vendors then I don't think if we want to do send NOP
-> unconditionally for all the devices.
-> We should probably add quirk for these failed devices and send NOP
-> only for such devices.
+Building firmware with O=path was apparently broken in aic7 for ever.
+Message of the previous commit to the Makefile (from 2008) mentions
+this unfortunate state of affairs already.  Fix this, mostly to make
+randconfig builds more reliable.
 
-I have double checked this issue, it's already fixed. This patch doesn't need
-any more. Thanks.
-> 
-> 
-> >+		ret = ufshcd_verify_dev_init(hba);
-> >+		if (ret)
-> >+			goto out;
-> > 	}
-> >
-> > 	/* set the state as operational after switching to desired gear */
-> 
-> -- 
-> The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-> a Linux Foundation Collaborative Project
+Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+---
+ drivers/scsi/aic7xxx/Makefile        | 12 ++++----
+ drivers/scsi/aic7xxx/aicasm/Makefile | 53 ++++++++++++++++++++----------------
+ 2 files changed, 35 insertions(+), 30 deletions(-)
 
+diff --git a/drivers/scsi/aic7xxx/Makefile b/drivers/scsi/aic7xxx/Makefile
+index 741d81861d17..07b60a780c06 100644
+--- a/drivers/scsi/aic7xxx/Makefile
++++ b/drivers/scsi/aic7xxx/Makefile
+@@ -55,9 +55,9 @@ aicasm-7xxx-opts-$(CONFIG_AIC7XXX_REG_PRETTY_PRINT) := \
+ 
+ ifeq ($(CONFIG_AIC7XXX_BUILD_FIRMWARE),y)
+ $(obj)/aic7xxx_seq.h: $(src)/aic7xxx.seq $(src)/aic7xxx.reg $(obj)/aicasm/aicasm
+-	$(obj)/aicasm/aicasm -I$(src) -r $(obj)/aic7xxx_reg.h \
++	$(obj)/aicasm/aicasm -I$(srctree)/$(src) -r $(obj)/aic7xxx_reg.h \
+ 			      $(aicasm-7xxx-opts-y) -o $(obj)/aic7xxx_seq.h \
+-			      $(src)/aic7xxx.seq
++			      $(srctree)/$(src)/aic7xxx.seq
+ 
+ $(aic7xxx-gen-y): $(obj)/aic7xxx_seq.h
+ else
+@@ -72,14 +72,14 @@ aicasm-79xx-opts-$(CONFIG_AIC79XX_REG_PRETTY_PRINT) := \
+ 
+ ifeq ($(CONFIG_AIC79XX_BUILD_FIRMWARE),y)
+ $(obj)/aic79xx_seq.h: $(src)/aic79xx.seq $(src)/aic79xx.reg $(obj)/aicasm/aicasm
+-	$(obj)/aicasm/aicasm -I$(src) -r $(obj)/aic79xx_reg.h \
++	$(obj)/aicasm/aicasm -I$(srctree)/$(src) -r $(obj)/aic79xx_reg.h \
+ 			      $(aicasm-79xx-opts-y) -o $(obj)/aic79xx_seq.h \
+-			      $(src)/aic79xx.seq
++			      $(srctree)/$(src)/aic79xx.seq
+ 
+ $(aic79xx-gen-y): $(obj)/aic79xx_seq.h
+ else
+ $(obj)/aic79xx_reg_print.c: $(src)/aic79xx_reg_print.c_shipped
+ endif
+ 
+-$(obj)/aicasm/aicasm: $(src)/aicasm/*.[chyl]
+-	$(MAKE) -C $(src)/aicasm
++$(obj)/aicasm/aicasm: $(srctree)/$(src)/aicasm/*.[chyl]
++	$(MAKE) -C $(srctree)/$(src)/aicasm OUTDIR=$(shell pwd)/$(obj)/aicasm/
+diff --git a/drivers/scsi/aic7xxx/aicasm/Makefile b/drivers/scsi/aic7xxx/aicasm/Makefile
+index b98c5c1056c3..45e2d49c1fff 100644
+--- a/drivers/scsi/aic7xxx/aicasm/Makefile
++++ b/drivers/scsi/aic7xxx/aicasm/Makefile
+@@ -1,19 +1,21 @@
+ PROG=	aicasm
+ 
++OUTDIR ?= ./
++
+ .SUFFIXES= .l .y .c .h
+ 
+ CSRCS=	aicasm.c aicasm_symbol.c
+ YSRCS=	aicasm_gram.y aicasm_macro_gram.y
+ LSRCS=	aicasm_scan.l aicasm_macro_scan.l
+ 
+-GENHDRS=	aicdb.h $(YSRCS:.y=.h)
+-GENSRCS=	$(YSRCS:.y=.c) $(LSRCS:.l=.c)
++GENHDRS=	$(addprefix ${OUTDIR}/,aicdb.h $(YSRCS:.y=.h))
++GENSRCS=	$(addprefix ${OUTDIR}/,$(YSRCS:.y=.c) $(LSRCS:.l=.c))
+ 
+ SRCS=	${CSRCS} ${GENSRCS}
+ LIBS=	-ldb
+ clean-files:= ${GENSRCS} ${GENHDRS} $(YSRCS:.y=.output) $(PROG)
+ # Override default kernel CFLAGS.  This is a userland app.
+-AICASM_CFLAGS:= -I/usr/include -I.
++AICASM_CFLAGS:= -I/usr/include -I. -I$(OUTDIR)
+ LEX= flex
+ YACC= bison
+ YFLAGS= -d
+@@ -32,22 +34,25 @@ YFLAGS+= -t -v
+ LFLAGS= -d
+ endif
+ 
+-$(PROG):  ${GENHDRS} $(SRCS)
+-	$(AICASM_CC) $(AICASM_CFLAGS) $(SRCS) -o $(PROG) $(LIBS)
++$(PROG):  $(OUTDIR) ${GENHDRS} $(SRCS)
++	$(AICASM_CC) $(AICASM_CFLAGS) $(SRCS) -o $(OUTDIR)/$(PROG) $(LIBS)
++
++$(OUTDIR):
++	mkdir -p $(OUTDIR)
+ 
+-aicdb.h:
++$(OUTDIR)/aicdb.h:
+ 	@if [ -e "/usr/include/db4/db_185.h" ]; then		\
+-		echo "#include <db4/db_185.h>" > aicdb.h;	\
++		echo "#include <db4/db_185.h>" > $@;	\
+ 	 elif [ -e "/usr/include/db3/db_185.h" ]; then		\
+-		echo "#include <db3/db_185.h>" > aicdb.h;	\
++		echo "#include <db3/db_185.h>" > $@;	\
+ 	 elif [ -e "/usr/include/db2/db_185.h" ]; then		\
+-		echo "#include <db2/db_185.h>" > aicdb.h;	\
++		echo "#include <db2/db_185.h>" > $@;	\
+ 	 elif [ -e "/usr/include/db1/db_185.h" ]; then		\
+-		echo "#include <db1/db_185.h>" > aicdb.h;	\
++		echo "#include <db1/db_185.h>" > $@;	\
+ 	 elif [ -e "/usr/include/db/db_185.h" ]; then		\
+-		echo "#include <db/db_185.h>" > aicdb.h;	\
++		echo "#include <db/db_185.h>" > $@;	\
+ 	 elif [ -e "/usr/include/db_185.h" ]; then		\
+-		echo "#include <db_185.h>" > aicdb.h;		\
++		echo "#include <db_185.h>" > $@;		\
+ 	 else							\
+ 		echo "*** Install db development libraries";	\
+ 	 fi
+@@ -58,23 +63,23 @@ $(PROG):  ${GENHDRS} $(SRCS)
+ # Create a dependency chain in generated files
+ # to avoid concurrent invocations of the single
+ # rule that builds them all.
+-aicasm_gram.c: aicasm_gram.h
+-aicasm_gram.c aicasm_gram.h: aicasm_gram.y
++$(OUTDIR)/aicasm_gram.c: $(OUTDIR)/aicasm_gram.h
++$(OUTDIR)/aicasm_gram.c $(OUTDIR)/aicasm_gram.h: aicasm_gram.y
+ 	$(YACC) $(YFLAGS) -b $(<:.y=) $<
+-	mv $(<:.y=).tab.c $(<:.y=.c)
+-	mv $(<:.y=).tab.h $(<:.y=.h)
++	mv $(<:.y=).tab.c $(OUTDIR)/$(<:.y=.c)
++	mv $(<:.y=).tab.h $(OUTDIR)/$(<:.y=.h)
+ 
+ # Create a dependency chain in generated files
+ # to avoid concurrent invocations of the single
+ # rule that builds them all.
+-aicasm_macro_gram.c: aicasm_macro_gram.h
+-aicasm_macro_gram.c aicasm_macro_gram.h: aicasm_macro_gram.y
++$(OUTDIR)/aicasm_macro_gram.c: $(OUTDIR)/aicasm_macro_gram.h
++$(OUTDIR)/aicasm_macro_gram.c $(OUTDIR)/aicasm_macro_gram.h: aicasm_macro_gram.y
+ 	$(YACC) $(YFLAGS) -b $(<:.y=) -p mm $<
+-	mv $(<:.y=).tab.c $(<:.y=.c)
+-	mv $(<:.y=).tab.h $(<:.y=.h)
++	mv $(<:.y=).tab.c $(OUTDIR)/$(<:.y=.c)
++	mv $(<:.y=).tab.h $(OUTDIR)/$(<:.y=.h)
+ 
+-aicasm_scan.c: aicasm_scan.l
+-	$(LEX) $(LFLAGS) -o$@ $<
++$(OUTDIR)/aicasm_scan.c: aicasm_scan.l
++	$(LEX) $(LFLAGS) -o $@ $<
+ 
+-aicasm_macro_scan.c: aicasm_macro_scan.l
+-	$(LEX) $(LFLAGS) -Pmm -o$@ $<
++$(OUTDIR)/aicasm_macro_scan.c: aicasm_macro_scan.l
++	$(LEX) $(LFLAGS) -Pmm -o $@ $<
 -- 
-Thanks,
-Zang Leigang
-
-________________________________________________________________________________
-本邮件及其附件含有华为公司的保密信息，仅限于发送给上面地址中列出的个人或群组。禁止任何其他人以任何形式使用（包括但不限于全部或部分地泄露、复制、或散发）本邮件中的信息。如果您错收了本邮件，请您立即电话或邮件通知发件人并删除本邮件！
-This e-mail and its attachments contain confidential information from HUAWEI, which is intended only for the person or entity whose address is listed above. Any use of the information contained herein in any way (including, but not limited to, total or partial disclosure, reproduction, or dissemination) by persons other than the intended recipient(s) is prohibited. If you receive this e-mail in error, please notify the sender by phone or email immediately and delete it!
+2.11.0
