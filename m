@@ -1,90 +1,171 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: [PATCH v5 0/6] g_NCR5380: PDMA fixes and cleanup
-Date: Thu, 29 Jun 2017 20:30:45 +0200
-Message-ID: <201706292030.46340.linux@rainbow-software.org>
-References: <cover.1498713600.git.fthain@telegraphics.com.au>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Subject: RE: [PATCH 01/47] aacraid: split off functions to generate reset FIB
+Date: Thu, 29 Jun 2017 19:59:44 +0000
+Message-ID: <4D8E82A446BF54499747901DBDEB737A81C2CC20@avsrvexchmbx2.microsemi.net>
+References: <1498638793-44672-1-git-send-email-hare@suse.de>
+ <1498638793-44672-2-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-1b.atlantis.sk ([80.94.52.26]:58697 "EHLO
-        smtp-1b.atlantis.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753157AbdF2Sa7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Jun 2017 14:30:59 -0400
-In-Reply-To: <cover.1498713600.git.fthain@telegraphics.com.au>
-Content-Disposition: inline
+Received: from mail-sn1nam01on0041.outbound.protection.outlook.com ([104.47.32.41]:47472
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751532AbdF2T7v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 29 Jun 2017 15:59:51 -0400
+In-Reply-To: <1498638793-44672-2-git-send-email-hare@suse.de>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>
+To: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.com>
 
-On Thursday 29 June 2017 07:24:18 Finn Thain wrote:
-> Ondrej, would you please test this new series?
->
-> Changed since v1:
-> - PDMA transfer residual is calculated earlier.
-> - End of DMA flag check is now polled (if there is any residual).
->
-> Changed since v2:
-> - Bail out of transfer loops when Gated IRQ gets asserted.
-> - Make udelay conditional on board type.
-> - Drop sg_tablesize patch due to performance regression.
->
-> Changed since v3:
-> - Add Ondrej's workaround for corrupt WRITE commands on DTC boards.
-> - Reset the 53c400 logic after any short PDMA transfer.
-> - Don't fail the transfer if the 53c400 logic got a reset.
->
-> Changed since v4:
-> - Bail out of transfer loops when Gated IRQ gets asserted. (Again.)
-> - Always call wait_for_53c80_registers() at end of transfer.
-> - Drain chip buffers after PDMA receive is interrupted.
-> - Rework residual calculation.
-> - Add new patch to correct DMA terminology.
->
->
-> Finn Thain (2):
->   g_NCR5380: Cleanup comments and whitespace
->   g_NCR5380: Use unambiguous terminology for PDMA send and receive
->
-> Ondrej Zary (4):
->   g_NCR5380: Fix PDMA transfer size
->   g_NCR5380: End PDMA transfer correctly on target disconnection
->   g_NCR5380: Limit PDMA send to 512 B to avoid data corruption on
->     DTC3181E
->   g_NCR5380: Re-work PDMA loops
->
->  drivers/scsi/g_NCR5380.c | 260
-> +++++++++++++++++++++++++---------------------- 1 file changed, 139
-> insertions(+), 121 deletions(-)
 
-This fixes the DTC read corruption, although I don't like the repeated
-ctl_status register reads:
---- a/drivers/scsi/g_NCR5380.c
-+++ b/drivers/scsi/g_NCR5380.c
-@@ -533,7 +533,7 @@ static inline int generic_NCR5380_precv(struct NCR5380_hostdata *hostdata,
- 			break;
 
- 		if (NCR5380_read(hostdata->c400_ctl_status) &
--		    CSR_HOST_BUF_NOT_RDY)
-+		    CSR_GATED_53C80_IRQ && (NCR5380_read(hostdata->c400_ctl_status) & CSR_HOST_BUF_NOT_RDY))
- 			break;
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Hannes Reinecke
+> Sent: Wednesday, June 28, 2017 1:32 AM
+> To: Christoph Hellwig <hch@lst.de>
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>; James Bottomley
+> <james.bottomley@hansenpartnership.com>; linux-scsi@vger.kernel.org;
+> Hannes Reinecke <hare@suse.de>; Hannes Reinecke <hare@suse.com>
+> Subject: [PATCH 01/47] aacraid: split off functions to generate reset FIB
+>=20
+> EXTERNAL EMAIL
+>=20
+>=20
+> Split off reset FIB generation into separate functions.
+>=20
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> ---
+>  drivers/scsi/aacraid/linit.c | 83 ++++++++++++++++++++++++++------------=
+--
+> ----
+>  1 file changed, 50 insertions(+), 33 deletions(-)
+>=20
+> diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+> index 0f277df..9a8a27f 100644
+> --- a/drivers/scsi/aacraid/linit.c
+> +++ b/drivers/scsi/aacraid/linit.c
+> @@ -814,6 +814,52 @@ static int aac_eh_abort(struct scsi_cmnd* cmd)
+>         return ret;
+>  }
+>=20
+> +static u8 aac_eh_tmf_lun_reset_fib(struct aac_dev *aac, struct fib *fib,
+> +                                  int bus, int cid, u64 tmf_lun)
+> +{
+> +       struct aac_hba_tm_req *tmf;
+> +       u64 address;
+> +
+> +       /* start a HBA_TMF_LUN_RESET TMF request */
+> +       tmf =3D (struct aac_hba_tm_req *)fib->hw_fib_va;
+> +       memset(tmf, 0, sizeof(*tmf));
+> +       tmf->tmf =3D HBA_TMF_LUN_RESET;
+> +       tmf->it_nexus =3D aac->hba_map[bus][cid].rmw_nexus;
+> +       int_to_scsilun(tmf_lun, (struct scsi_lun *)tmf->lun);
+> +
+> +       address =3D (u64)fib->hw_error_pa;
+> +       tmf->error_ptr_hi =3D cpu_to_le32
+> +               ((u32)(address >> 32));
+> +       tmf->error_ptr_lo =3D cpu_to_le32
+> +               ((u32)(address & 0xffffffff));
+> +       tmf->error_length =3D cpu_to_le32(FW_ERROR_BUFFER_SIZE);
+> +       fib->hbacmd_size =3D sizeof(*tmf);
+> +
+> +       return HBA_IU_TYPE_SCSI_TM_REQ;
+> +}
+> +
+> +static u8 aac_eh_tmf_hard_reset_fib(struct aac_dev *aac, struct fib *fib=
+,
+> +                                   int bus, int cid)
+> +{
+> +       struct aac_hba_reset_req *rst;
+> +       u64 address;
+> +
+> +       /* already tried, start a hard reset now */
+> +       rst =3D (struct aac_hba_reset_req *)fib->hw_fib_va;
+> +       memset(rst, 0, sizeof(*rst));
+> +       /* reset_type is already zero... */
+> +       rst->it_nexus =3D aac->hba_map[bus][cid].rmw_nexus;
+> +
+> +       address =3D (u64)fib->hw_error_pa;
+> +       rst->error_ptr_hi =3D cpu_to_le32((u32)(address >> 32));
+> +       rst->error_ptr_lo =3D cpu_to_le32
+> +               ((u32)(address & 0xffffffff));
+> +       rst->error_length =3D cpu_to_le32(FW_ERROR_BUFFER_SIZE);
+> +       fib->hbacmd_size =3D sizeof(*rst);
+> +
+> +       return HBA_IU_TYPE_SATA_REQ;
+> +}
+> +
+>  /*
+>   *     aac_eh_reset    - Reset command handling
+>   *     @scsi_cmd:      SCSI command block causing the reset
+> @@ -840,7 +886,6 @@ static int aac_eh_reset(struct scsi_cmnd* cmd)
+>                 aac->hba_map[bus][cid].devtype =3D=3D AAC_DEVTYPE_NATIVE_=
+RAW) {
+>                 struct fib *fib;
+>                 int status;
+> -               u64 address;
+>                 u8 command;
+>=20
+>                 pr_err("%s: Host adapter reset request. SCSI hang ?\n",
+> @@ -852,42 +897,14 @@ static int aac_eh_reset(struct scsi_cmnd* cmd)
+>=20
+>=20
+>                 if (aac->hba_map[bus][cid].reset_state =3D=3D 0) {
+> -                       struct aac_hba_tm_req *tmf;
+> -
+>                         /* start a HBA_TMF_LUN_RESET TMF request */
+> -                       tmf =3D (struct aac_hba_tm_req *)fib->hw_fib_va;
+> -                       memset(tmf, 0, sizeof(*tmf));
+> -                       tmf->tmf =3D HBA_TMF_LUN_RESET;
+> -                       tmf->it_nexus =3D aac->hba_map[bus][cid].rmw_nexu=
+s;
+> -                       tmf->lun[1] =3D cmd->device->lun;
+> -
+> -                       address =3D (u64)fib->hw_error_pa;
+> -                       tmf->error_ptr_hi =3D cpu_to_le32
+> -                                       ((u32)(address >> 32));
+> -                       tmf->error_ptr_lo =3D cpu_to_le32
+> -                                       ((u32)(address & 0xffffffff));
+> -                       tmf->error_length =3D cpu_to_le32(FW_ERROR_BUFFER=
+_SIZE);
+> -                       fib->hbacmd_size =3D sizeof(*tmf);
+> -
+> -                       command =3D HBA_IU_TYPE_SCSI_TM_REQ;
+> +                       command =3D aac_eh_tmf_lun_reset_fib(aac, fib,
+> +                                                          bus, cid,
+> +                                                          cmd->device->l=
+un);
+>                         aac->hba_map[bus][cid].reset_state++;
+>                 } else if (aac->hba_map[bus][cid].reset_state >=3D 1) {
+> -                       struct aac_hba_reset_req *rst;
+> -
+>                         /* already tried, start a hard reset now */
+> -                       rst =3D (struct aac_hba_reset_req *)fib->hw_fib_v=
+a;
+> -                       memset(rst, 0, sizeof(*rst));
+> -                       /* reset_type is already zero... */
+> -                       rst->it_nexus =3D aac->hba_map[bus][cid].rmw_nexu=
+s;
+> -
+> -                       address =3D (u64)fib->hw_error_pa;
+> -                       rst->error_ptr_hi =3D cpu_to_le32((u32)(address >=
+> 32));
+> -                       rst->error_ptr_lo =3D cpu_to_le32
+> -                               ((u32)(address & 0xffffffff));
+> -                       rst->error_length =3D cpu_to_le32(FW_ERROR_BUFFER=
+_SIZE);
+> -                       fib->hbacmd_size =3D sizeof(*rst);
+> -
+> -                       command =3D HBA_IU_TYPE_SATA_REQ;
+> +                       command =3D aac_eh_tmf_hard_reset_fib(aac, fib, b=
+us, cid);
+>                         aac->hba_map[bus][cid].reset_state =3D 0;
+>                 }
+>                 cmd->SCp.sent_command =3D 0;
 
-                if (hostdata->io_port && hostdata->io_width == 2)
-@@ -546,10 +546,6 @@ static inline int generic_NCR5380_precv(struct NCR5380_hostdata *hostdata,
- 			memcpy_fromio(dst + start,
- 				hostdata->io + NCR53C400_host_buffer, 128);
- 		start += 128;
--
--		if (NCR5380_read(hostdata->c400_ctl_status) &
--		    CSR_GATED_53C80_IRQ)
--			break;
- 	}
- 
- 	residual = len - start;
-
-Writes seem to work correctly.
-
--- 
-Ondrej Zary
+Reviewed-by: Raghava Aditya Renukunta  <RaghavaAditya.Renukunta@microsemi.c=
+om>
