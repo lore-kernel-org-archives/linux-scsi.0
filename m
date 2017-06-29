@@ -1,73 +1,78 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: Re: [PATCH 4/5] target: user: Fix sense data handling
-Date: Thu, 29 Jun 2017 11:26:04 +0900
-Message-ID: <c5209f54-2e21-879f-4c7d-1e65f87aad98@wdc.com>
-References: <20170628055900.22889-1-damien.lemoal@wdc.com>
- <20170628055900.22889-5-damien.lemoal@wdc.com>
- <5eb219c5-c4a7-ea75-ff31-d732e10c72ae@redhat.com>
+From: Zang Leigang <zangleigang@hisilicon.com>
+Subject: Re: [PATCH] scsi: ufs: set host_byte to DID_REQUEUE when ocs =
+ OCS_ABORTED
+Date: Thu, 29 Jun 2017 10:25:30 +0800
+Message-ID: <20170629022441.GA43315@kirin.host.huawei.com>
+References: <20170624102722.4050-1-zangleigang@hisilicon.com>
+ <7bb81ce8005715d416539754246b2989@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <5eb219c5-c4a7-ea75-ff31-d732e10c72ae@redhat.com>
-Content-Language: en-US
-Sender: target-devel-owner@vger.kernel.org
-To: Mike Christie <mchristi@redhat.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, "Nicholas A . Bellinger" <nab@linux-iscsi.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([45.249.212.188]:9316 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751614AbdF2C0Z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jun 2017 22:26:25 -0400
+Content-Disposition: inline
+In-Reply-To: <7bb81ce8005715d416539754246b2989@codeaurora.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Subhash Jadavani <subhashj@codeaurora.org>
+Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org
 
-
-On 6/29/17 02:44, Mike Christie wrote:
-> On 06/28/2017 12:58 AM, Damien Le Moal wrote:
->> If the user request handler completed the request with a CHECK CONDITION
->> status, tcmu_handle_completion() copies the command entry sense data
->> into the session request structure sense data. However, the sense data
->> length indicated by the field scsi_sense_length is not set and equal to
->> 0, resulting in the copy being a no-op and failure to propagate the
->> sense data back to the initiator. To fix this, properly set the session
->> command sense data length and also set the session command
->> SCF_TRANSPORT_TASK_SENSE flag to indicate that the command has valid
->> sense data.
->>
->> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
->> ---
->>  drivers/target/target_core_user.c | 4 +++-
->>  1 file changed, 3 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
->> index beb5f09..7426b4c 100644
->> --- a/drivers/target/target_core_user.c
->> +++ b/drivers/target/target_core_user.c
->> @@ -831,7 +831,9 @@ static void tcmu_handle_completion(struct tcmu_cmd *cmd, struct tcmu_cmd_entry *
->>  		entry->rsp.scsi_status = SAM_STAT_CHECK_CONDITION;
->>  	} else if (entry->rsp.scsi_status == SAM_STAT_CHECK_CONDITION) {
->>  		memcpy(se_cmd->sense_buffer, entry->rsp.sense_buffer,
->> -			       se_cmd->scsi_sense_length);
->> +		       TRANSPORT_SENSE_BUFFER);
->> +		se_cmd->scsi_sense_length = TRANSPORT_SENSE_BUFFER;
->> +		se_cmd->se_cmd_flags |= SCF_TRANSPORT_TASK_SENSE;
->>  	} else if (se_cmd->se_cmd_flags & SCF_BIDI) {
->>  		/* Get Data-In buffer before clean up */
->>  		gather_data_area(udev, cmd, true);
->>
+On Wed, Jun 28, 2017 at 04:42:36PM -0700, Subhash Jadavani wrote:
+> On 2017-06-24 03:27, Zang Leigang wrote:
+> >Host set ocs to OCS_ABORTED when clear a doorbell in err handler.
 > 
-> I have a patch similar to this and 5/5 in my set:
+> OCS field is valid after host controller has cleared the
+> corresponding doorbell (UTRLDBR) bit to zero. And here HW would be
+> clearing the doorbell bit, not the SW. So I am not sure what do you
+> mean in sentence above? Can you please elaborate more on this?
 > 
-> https://www.spinics.net/lists/target-devel/msg15430.html
+Err handler clear PENDING transfer requests with ufshcd_clear_cmd,
+and host set these requests's ocs to 6(OCS_ABORTED). I think it's
+better to let these request retry, because an err handler may fix
+the err condition.
 > 
-> If yours gets merged first then I will build my set over them, so patch
-> looks ok to me.
+> >Then scsi_decide_disposition return SUCCESS. This may cause some
+> >filesystem panic because a FAILED REQUESET. Requeue and complete is
+> >better.
 > 
-> Reviewed-by: Mike Christie <mchristi@redhat.com>
-
-Mike,
-
-Thank you for the review. I checked your series and it looks like it
-addressing all the sense data handling problems I detected. I will
-retest with your patch set applied.
-
-Thanks !
+> Why do you think retrying this HW aborted request will succeed next
+> time? Are we going to fix some request parameters before retrying?
+> If not, it will most likely fail again.
+> 
+HW aborted request commonly comes from err handler with "ufshcd_clear_cmd",
+In fact, I never seen that host aborted a request on host's own initiative.
+If err handler successfully re-link and fix the host or device, retry will
+most likely success.
+> 
+> >
+> >Signed-off-by: Zang Leigang <zangleigang@hisilicon.com>
+> >
+> >diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> >index ffe8d8608818..e050dcea1bea 100644
+> >--- a/drivers/scsi/ufs/ufshcd.c
+> >+++ b/drivers/scsi/ufs/ufshcd.c
+> >@@ -4545,8 +4545,6 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba,
+> >struct ufshcd_lrb *lrbp)
+> > 		}
+> > 		break;
+> > 	case OCS_ABORTED:
+> >-		result |= DID_ABORT << 16;
+> >-		break;
+> > 	case OCS_INVALID_COMMAND_STATUS:
+> > 		result |= DID_REQUEUE << 16;
+> > 		break;
+> 
+> -- 
+> The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+> a Linux Foundation Collaborative Project
 
 -- 
-Damien Le Moal,
-Western Digital
+Thanks,
+Zang Leigang
+
+________________________________________________________________________________
+本邮件及其附件含有华为公司的保密信息，仅限于发送给上面地址中列出的个人或群组。禁止任何其他人以任何形式使用（包括但不限于全部或部分地泄露、复制、或散发）本邮件中的信息。如果您错收了本邮件，请您立即电话或邮件通知发件人并删除本邮件！
+This e-mail and its attachments contain confidential information from HUAWEI, which is intended only for the person or entity whose address is listed above. Any use of the information contained herein in any way (including, but not limited to, total or partial disclosure, reproduction, or dissemination) by persons other than the intended recipient(s) is prohibited. If you receive this e-mail in error, please notify the sender by phone or email immediately and delete it!
