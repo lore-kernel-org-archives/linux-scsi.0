@@ -1,32 +1,57 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 1/5] scsi: bnx2i: convert to workqueue
-Date: Thu, 29 Jun 2017 15:57:56 +0200
-Message-ID: <20170629135756.GP3808@linux-x5ow.site>
-References: <20170410171254.30367-1-bigeasy@linutronix.de>
- <20170410171254.30367-2-bigeasy@linutronix.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH 00/13]mpt3sas driver NVMe support:
+Date: Thu, 29 Jun 2017 19:49:01 +0530
+Message-ID: <1498745954-7907-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48015 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753158AbdF2N56 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 29 Jun 2017 09:57:58 -0400
-Content-Disposition: inline
-In-Reply-To: <20170410171254.30367-2-bigeasy@linutronix.de>
+Received: from mail-wr0-f182.google.com ([209.85.128.182]:33987 "EHLO
+        mail-wr0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753249AbdF2OUd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Jun 2017 10:20:33 -0400
+Received: by mail-wr0-f182.google.com with SMTP id 77so190396024wrb.1
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Jun 2017 07:20:32 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, rt@linutronix.de, Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>, Chad Dupuis <chad.dupuis@qlogic.com>, QLogic-Storage-Upstream@qlogic.com, Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, Andrew Morton <akpm@linux-foundation.org>
+To: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, krishnaraddi.mankani@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com
 
-So here we are again,
-Tested-by: Johannes Thumshirn <jthumshirn@suse.de>
+Ventura Series controller are Tri-mode. The controller and
+firmware are capable of supporting NVMe devices and
+PCIe switches to be connected with the controller. This
+patch set adds driver level support for NVMe devices and
+PCIe switches.
 
-FCoE will follow as soon as my setup can speak FCoE again.
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Suganath Prabu S (13):
+  mpt3sas: Add nvme device support in slave alloc, target alloc and
+    probe
+  mpt3sas: SGL to PRP Translation for I/Os to NVMe  devices
+  mpt3sas: Added support for nvme encapsulated request message.
+  mpt3sas: Handle NVMe PCIe device related events generated            
+    from firmware.
+  mpt3sas: Set NVMe device queue depth as 128
+  mpt3sas: API 's to support NVMe drive addition to SML
+  mpt3sas: API's to remove nvme drive from sml
+  mpt3sas: scan and add nvme device after controller reset
+  mpt3as: Add-Task-management-debug-info-for-NVMe-drives.
+  mpt3sas: NVMe drive support for BTDHMAPPING ioctl command and log
+    info
+  mpt3sas: Fix nvme drives checking for tlr.
+  mpt3sas: Update MPI Header
+  mpt3sas: Update mpt3sas driver version.
+
+ drivers/scsi/mpt3sas/mpi/mpi2.h          |   43 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h     |  647 ++++++++++-
+ drivers/scsi/mpt3sas/mpi/mpi2_init.h     |   11 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_ioc.h      |  331 ++++++-
+ drivers/scsi/mpt3sas/mpi/mpi2_pci.h      |  142 +++
+ drivers/scsi/mpt3sas/mpi/mpi2_tool.h     |   14 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.c      |  709 +++++++++++-
+ drivers/scsi/mpt3sas/mpt3sas_base.h      |  176 +++-
+ drivers/scsi/mpt3sas/mpt3sas_config.c    |  100 ++
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c       |  170 +++-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 1871 ++++++++++++++++++++++++++++--
+ drivers/scsi/mpt3sas/mpt3sas_warpdrive.c |    2 +-
+ 12 files changed, 4081 insertions(+), 135 deletions(-)
+ create mode 100644 drivers/scsi/mpt3sas/mpi/mpi2_pci.h
+
+Thanks,
+Suganath Prabu S
