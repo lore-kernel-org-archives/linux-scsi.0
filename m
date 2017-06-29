@@ -1,19 +1,19 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: RE: [PATCH 01/47] aacraid: split off functions to generate reset FIB
-Date: Thu, 29 Jun 2017 19:59:44 +0000
-Message-ID: <4D8E82A446BF54499747901DBDEB737A81C2CC20@avsrvexchmbx2.microsemi.net>
+Subject: RE: [PATCH 02/47] aacraid: split off host reset
+Date: Thu, 29 Jun 2017 20:00:14 +0000
+Message-ID: <4D8E82A446BF54499747901DBDEB737A81C2CC3C@avsrvexchmbx2.microsemi.net>
 References: <1498638793-44672-1-git-send-email-hare@suse.de>
- <1498638793-44672-2-git-send-email-hare@suse.de>
+ <1498638793-44672-3-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="Windows-1252"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0041.outbound.protection.outlook.com ([104.47.32.41]:47472
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0044.outbound.protection.outlook.com ([104.47.37.44]:27975
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751532AbdF2T7v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 29 Jun 2017 15:59:51 -0400
-In-Reply-To: <1498638793-44672-2-git-send-email-hare@suse.de>
+        id S1751605AbdF2UAW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 29 Jun 2017 16:00:22 -0400
+In-Reply-To: <1498638793-44672-3-git-send-email-hare@suse.de>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -30,142 +30,94 @@ Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bo
 > Cc: Martin K. Petersen <martin.petersen@oracle.com>; James Bottomley
 > <james.bottomley@hansenpartnership.com>; linux-scsi@vger.kernel.org;
 > Hannes Reinecke <hare@suse.de>; Hannes Reinecke <hare@suse.com>
-> Subject: [PATCH 01/47] aacraid: split off functions to generate reset FIB
+> Subject: [PATCH 02/47] aacraid: split off host reset
 >=20
 > EXTERNAL EMAIL
 >=20
 >=20
-> Split off reset FIB generation into separate functions.
+> Split off the host reset parts of aac_eh_reset() into a separate
+> host reset function.
 >=20
 > Signed-off-by: Hannes Reinecke <hare@suse.com>
 > ---
->  drivers/scsi/aacraid/linit.c | 83 ++++++++++++++++++++++++++------------=
---
-> ----
->  1 file changed, 50 insertions(+), 33 deletions(-)
+>  drivers/scsi/aacraid/linit.c | 33 ++++++++++++++++++++++-----------
+>  1 file changed, 22 insertions(+), 11 deletions(-)
 >=20
 > diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-> index 0f277df..9a8a27f 100644
+> index 9a8a27f..bf21006 100644
 > --- a/drivers/scsi/aacraid/linit.c
 > +++ b/drivers/scsi/aacraid/linit.c
-> @@ -814,6 +814,52 @@ static int aac_eh_abort(struct scsi_cmnd* cmd)
+> @@ -874,10 +874,6 @@ static int aac_eh_reset(struct scsi_cmnd* cmd)
+>         u32 bus, cid;
+>         int ret =3D FAILED;
+>         int status =3D 0;
+> -       __le32 supported_options2 =3D 0;
+> -       bool is_mu_reset;
+> -       bool is_ignore_reset;
+> -       bool is_doorbell_reset;
+>=20
+>=20
+>         bus =3D aac_logical_to_phys(scmd_channel(cmd));
+> @@ -923,7 +919,7 @@ static int aac_eh_reset(struct scsi_cmnd* cmd)
+>                 }
+>=20
+>                 if (ret =3D=3D SUCCESS)
+> -                       goto out;
+> +                       return ret;
+>=20
+>         } else {
+>=20
+> @@ -952,8 +948,24 @@ static int aac_eh_reset(struct scsi_cmnd* cmd)
+>                 dev_err(&aac->pdev->dev, "Adapter health - %d\n", status)=
+;
+>=20
+>         count =3D get_num_of_incomplete_fibs(aac);
+> -       if (count =3D=3D 0)
+> -               return SUCCESS;
+> +       return (count =3D=3D 0) ? SUCCESS : FAILED;
+> +}
+> +
+> +/*
+> + *     aac_eh_host_reset       - Host reset command handling
+> + *     @scsi_cmd:      SCSI command block causing the reset
+> + *
+> + */
+> +int aac_eh_host_reset(struct scsi_cmnd *cmd)
+> +{
+> +       struct scsi_device * dev =3D cmd->device;
+> +       struct Scsi_Host * host =3D dev->host;
+> +       struct aac_dev * aac =3D (struct aac_dev *)host->hostdata;
+> +       int ret =3D FAILED;
+> +       __le32 supported_options2 =3D 0;
+> +       bool is_mu_reset;
+> +       bool is_ignore_reset;
+> +       bool is_doorbell_reset;
+>=20
+>         /*
+>          * Check if reset is supported by the firmware
+> @@ -972,10 +984,8 @@ static int aac_eh_reset(struct scsi_cmnd* cmd)
+>          && (aac_check_reset !=3D -1 || !is_ignore_reset)) {
+>                 /* Bypass wait for command quiesce */
+>                 aac_reset_adapter(aac, 2, IOP_HWSOFT_RESET);
+> +               ret =3D SUCCESS;
+>         }
+> -       ret =3D SUCCESS;
+> -
+> -out:
 >         return ret;
 >  }
 >=20
-> +static u8 aac_eh_tmf_lun_reset_fib(struct aac_dev *aac, struct fib *fib,
-> +                                  int bus, int cid, u64 tmf_lun)
-> +{
-> +       struct aac_hba_tm_req *tmf;
-> +       u64 address;
-> +
-> +       /* start a HBA_TMF_LUN_RESET TMF request */
-> +       tmf =3D (struct aac_hba_tm_req *)fib->hw_fib_va;
-> +       memset(tmf, 0, sizeof(*tmf));
-> +       tmf->tmf =3D HBA_TMF_LUN_RESET;
-> +       tmf->it_nexus =3D aac->hba_map[bus][cid].rmw_nexus;
-> +       int_to_scsilun(tmf_lun, (struct scsi_lun *)tmf->lun);
-> +
-> +       address =3D (u64)fib->hw_error_pa;
-> +       tmf->error_ptr_hi =3D cpu_to_le32
-> +               ((u32)(address >> 32));
-> +       tmf->error_ptr_lo =3D cpu_to_le32
-> +               ((u32)(address & 0xffffffff));
-> +       tmf->error_length =3D cpu_to_le32(FW_ERROR_BUFFER_SIZE);
-> +       fib->hbacmd_size =3D sizeof(*tmf);
-> +
-> +       return HBA_IU_TYPE_SCSI_TM_REQ;
-> +}
-> +
-> +static u8 aac_eh_tmf_hard_reset_fib(struct aac_dev *aac, struct fib *fib=
-,
-> +                                   int bus, int cid)
-> +{
-> +       struct aac_hba_reset_req *rst;
-> +       u64 address;
-> +
-> +       /* already tried, start a hard reset now */
-> +       rst =3D (struct aac_hba_reset_req *)fib->hw_fib_va;
-> +       memset(rst, 0, sizeof(*rst));
-> +       /* reset_type is already zero... */
-> +       rst->it_nexus =3D aac->hba_map[bus][cid].rmw_nexus;
-> +
-> +       address =3D (u64)fib->hw_error_pa;
-> +       rst->error_ptr_hi =3D cpu_to_le32((u32)(address >> 32));
-> +       rst->error_ptr_lo =3D cpu_to_le32
-> +               ((u32)(address & 0xffffffff));
-> +       rst->error_length =3D cpu_to_le32(FW_ERROR_BUFFER_SIZE);
-> +       fib->hbacmd_size =3D sizeof(*rst);
-> +
-> +       return HBA_IU_TYPE_SATA_REQ;
-> +}
-> +
->  /*
->   *     aac_eh_reset    - Reset command handling
->   *     @scsi_cmd:      SCSI command block causing the reset
-> @@ -840,7 +886,6 @@ static int aac_eh_reset(struct scsi_cmnd* cmd)
->                 aac->hba_map[bus][cid].devtype =3D=3D AAC_DEVTYPE_NATIVE_=
-RAW) {
->                 struct fib *fib;
->                 int status;
-> -               u64 address;
->                 u8 command;
->=20
->                 pr_err("%s: Host adapter reset request. SCSI hang ?\n",
-> @@ -852,42 +897,14 @@ static int aac_eh_reset(struct scsi_cmnd* cmd)
->=20
->=20
->                 if (aac->hba_map[bus][cid].reset_state =3D=3D 0) {
-> -                       struct aac_hba_tm_req *tmf;
-> -
->                         /* start a HBA_TMF_LUN_RESET TMF request */
-> -                       tmf =3D (struct aac_hba_tm_req *)fib->hw_fib_va;
-> -                       memset(tmf, 0, sizeof(*tmf));
-> -                       tmf->tmf =3D HBA_TMF_LUN_RESET;
-> -                       tmf->it_nexus =3D aac->hba_map[bus][cid].rmw_nexu=
-s;
-> -                       tmf->lun[1] =3D cmd->device->lun;
-> -
-> -                       address =3D (u64)fib->hw_error_pa;
-> -                       tmf->error_ptr_hi =3D cpu_to_le32
-> -                                       ((u32)(address >> 32));
-> -                       tmf->error_ptr_lo =3D cpu_to_le32
-> -                                       ((u32)(address & 0xffffffff));
-> -                       tmf->error_length =3D cpu_to_le32(FW_ERROR_BUFFER=
-_SIZE);
-> -                       fib->hbacmd_size =3D sizeof(*tmf);
-> -
-> -                       command =3D HBA_IU_TYPE_SCSI_TM_REQ;
-> +                       command =3D aac_eh_tmf_lun_reset_fib(aac, fib,
-> +                                                          bus, cid,
-> +                                                          cmd->device->l=
-un);
->                         aac->hba_map[bus][cid].reset_state++;
->                 } else if (aac->hba_map[bus][cid].reset_state >=3D 1) {
-> -                       struct aac_hba_reset_req *rst;
-> -
->                         /* already tried, start a hard reset now */
-> -                       rst =3D (struct aac_hba_reset_req *)fib->hw_fib_v=
-a;
-> -                       memset(rst, 0, sizeof(*rst));
-> -                       /* reset_type is already zero... */
-> -                       rst->it_nexus =3D aac->hba_map[bus][cid].rmw_nexu=
-s;
-> -
-> -                       address =3D (u64)fib->hw_error_pa;
-> -                       rst->error_ptr_hi =3D cpu_to_le32((u32)(address >=
-> 32));
-> -                       rst->error_ptr_lo =3D cpu_to_le32
-> -                               ((u32)(address & 0xffffffff));
-> -                       rst->error_length =3D cpu_to_le32(FW_ERROR_BUFFER=
-_SIZE);
-> -                       fib->hbacmd_size =3D sizeof(*rst);
-> -
-> -                       command =3D HBA_IU_TYPE_SATA_REQ;
-> +                       command =3D aac_eh_tmf_hard_reset_fib(aac, fib, b=
-us, cid);
->                         aac->hba_map[bus][cid].reset_state =3D 0;
->                 }
->                 cmd->SCp.sent_command =3D 0;
+> @@ -1399,7 +1409,8 @@ ssize_t aac_get_serial_number(struct device
+> *device, char *buf)
+>         .change_queue_depth             =3D aac_change_queue_depth,
+>         .sdev_attrs                     =3D aac_dev_attrs,
+>         .eh_abort_handler               =3D aac_eh_abort,
+> -       .eh_host_reset_handler          =3D aac_eh_reset,
+> +       .eh_bus_reset_handler           =3D aac_eh_reset,
+> +       .eh_host_reset_handler          =3D aac_eh_host_reset,
+>         .can_queue                      =3D AAC_NUM_IO_FIB,
+>         .this_id                        =3D MAXIMUM_NUM_CONTAINERS,
+>         .sg_tablesize                   =3D 16,
 
 Reviewed-by: Raghava Aditya Renukunta  <RaghavaAditya.Renukunta@microsemi.c=
 om>
