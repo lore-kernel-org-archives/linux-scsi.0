@@ -1,58 +1,70 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH] scsi: ufs: check link active or not after switch to HS
- mode
-Date: Wed, 28 Jun 2017 16:48:21 -0700
-Message-ID: <0c41133960c09f1aac4c0abeb38afbfd@codeaurora.org>
-References: <20170624114405.18475-1-zangleigang@hisilicon.com>
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: Re: [PATCH 0/5] target: Zoned block device support and bug fixes
+Date: Thu, 29 Jun 2017 11:24:07 +0900
+Message-ID: <79237e32-be75-2b39-5676-e4cef60b225b@wdc.com>
+References: <20170628055900.22889-1-damien.lemoal@wdc.com>
+ <50923919-9768-1910-ec1e-393e872c2987@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35412 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751544AbdF1XsX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jun 2017 19:48:23 -0400
-In-Reply-To: <20170624114405.18475-1-zangleigang@hisilicon.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <50923919-9768-1910-ec1e-393e872c2987@linux.vnet.ibm.com>
+Content-Language: en-US
+Sender: target-devel-owner@vger.kernel.org
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, "Nicholas A . Bellinger" <nab@linux-iscsi.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Zang Leigang <zangleigang@hisilicon.com>
-Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org
 
-On 2017-06-24 04:44, Zang Leigang wrote:
-> Some device can successfully link and switch to HS mode. But failed
-> to do more. ufshcd_verify_dev_init can help to find this earlier.
+
+
+On 6/28/17 23:34, Bryant G. Ly wrote:
 > 
-> Signed-off-by: Zang Leigang <zangleigang@hisilicon.com>
+>> This series introduce zoned block device support for the pscsi backstore and
+>> also fixes several problems with sense data handling for failed requests.
+>>
+>> The first patch is only a cleanup, so not really necessary but nice to have I
+>> think.
+>>
+>> Patch 2 and 3 introduce support for host managed zoned block device type (14h)
+>> in the SCSI passthrough backstore and fixes sense data handling for commands
+>> failed by the backstore device. With these fixes, a host zoned block device
+>> exported with the iscsi or loopback transport pass libzbc ZBC specification
+>> conformance tests.
+>>
+>> Finally, patch 4 and 5 fix sense data hadling with the user backstore code. A
+>> prototype ZBC emulation tcmu-runner handler was used to test these fixes and
+>> result in the emulated handler passing libzbc ZBC specification conformance
+>> tests.
+>>
+>> (Note: the ZBC emulation tcmu-runner handler will be submitted to the
+>> tcmu-runner project on github)
+>>
+>> Please consider these patches for inclusion with kernel 4.13.
+>>
+>> Damien Le Moal (5):
+>>    target: Use macro for WRITE_VERIFY_xx operation codes
+>>    target: pscsi: Introduce TYPE_ZBC support
+>>    target: pscsi: Fix sense data handling
+>>    target: user: Fix sense data handling
+>>    target: core: Fix failed command sense data handling
+>>
+>>   drivers/target/target_core_device.c    |  4 ++--
+>>   drivers/target/target_core_pscsi.c     | 20 +++++++++++++-------
+>>   drivers/target/target_core_transport.c |  5 +++--
+>>   drivers/target/target_core_user.c      |  4 +++-
+>>   include/scsi/scsi_proto.h              |  1 +
+>>   5 files changed, 22 insertions(+), 12 deletions(-)
 > 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index ffe8d8608818..eb03388fc4bd 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -6373,6 +6373,14 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
->  					__func__, ret);
->  			goto out;
->  		}
-> +
-> +		/*
-> +		 * Some device lost link after switch to HS mode. Check if
-> +		 * connect is established here.
-> +		 */
-
-I have never across such failures. If this issue is limited to certain 
-device vendors then I don't think if we want to do send NOP 
-unconditionally for all the devices.
-We should probably add quirk for these failed devices and send NOP only 
-for such devices.
-
-
-> +		ret = ufshcd_verify_dev_init(hba);
-> +		if (ret)
-> +			goto out;
->  	}
+> Hi Damien,
 > 
->  	/* set the state as operational after switching to desired gear */
+> You should take a look at the first two patches in this series to address your sense data handling.
+> 
+> https://www.spinics.net/lists/target-devel/msg15430.html
+
+Bryant,
+
+Thank you for the pointer. I missed that.
 
 -- 
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+Damien Le Moal,
+Western Digital
