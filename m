@@ -1,69 +1,62 @@
 From: Zang Leigang <zangleigang@hisilicon.com>
-Subject: Re: [PATCH] scsi: ufs: set host_byte to DID_REQUEUE when ocs =
- OCS_ABORTED
-Date: Thu, 29 Jun 2017 10:25:30 +0800
-Message-ID: <20170629022441.GA43315@kirin.host.huawei.com>
-References: <20170624102722.4050-1-zangleigang@hisilicon.com>
- <7bb81ce8005715d416539754246b2989@codeaurora.org>
+Subject: Re: [PATCH] scsi: ufs: check link active or not after switch to HS
+ mode
+Date: Thu, 29 Jun 2017 11:04:50 +0800
+Message-ID: <20170629030450.GA46969@kirin.host.huawei.com>
+References: <20170624114405.18475-1-zangleigang@hisilicon.com>
+ <0c41133960c09f1aac4c0abeb38afbfd@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([45.249.212.188]:9316 "EHLO
+Received: from szxga02-in.huawei.com ([45.249.212.188]:9318 "EHLO
         szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751614AbdF2C0Z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jun 2017 22:26:25 -0400
+        with ESMTP id S1751596AbdF2DFj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jun 2017 23:05:39 -0400
 Content-Disposition: inline
-In-Reply-To: <7bb81ce8005715d416539754246b2989@codeaurora.org>
+In-Reply-To: <0c41133960c09f1aac4c0abeb38afbfd@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Subhash Jadavani <subhashj@codeaurora.org>
 Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org
 
-On Wed, Jun 28, 2017 at 04:42:36PM -0700, Subhash Jadavani wrote:
-> On 2017-06-24 03:27, Zang Leigang wrote:
-> >Host set ocs to OCS_ABORTED when clear a doorbell in err handler.
-> 
-> OCS field is valid after host controller has cleared the
-> corresponding doorbell (UTRLDBR) bit to zero. And here HW would be
-> clearing the doorbell bit, not the SW. So I am not sure what do you
-> mean in sentence above? Can you please elaborate more on this?
-> 
-Err handler clear PENDING transfer requests with ufshcd_clear_cmd,
-and host set these requests's ocs to 6(OCS_ABORTED). I think it's
-better to let these request retry, because an err handler may fix
-the err condition.
-> 
-> >Then scsi_decide_disposition return SUCCESS. This may cause some
-> >filesystem panic because a FAILED REQUESET. Requeue and complete is
-> >better.
-> 
-> Why do you think retrying this HW aborted request will succeed next
-> time? Are we going to fix some request parameters before retrying?
-> If not, it will most likely fail again.
-> 
-HW aborted request commonly comes from err handler with "ufshcd_clear_cmd",
-In fact, I never seen that host aborted a request on host's own initiative.
-If err handler successfully re-link and fix the host or device, retry will
-most likely success.
-> 
+On Wed, Jun 28, 2017 at 04:48:21PM -0700, Subhash Jadavani wrote:
+> On 2017-06-24 04:44, Zang Leigang wrote:
+> >Some device can successfully link and switch to HS mode. But failed
+> >to do more. ufshcd_verify_dev_init can help to find this earlier.
 > >
 > >Signed-off-by: Zang Leigang <zangleigang@hisilicon.com>
 > >
 > >diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> >index ffe8d8608818..e050dcea1bea 100644
+> >index ffe8d8608818..eb03388fc4bd 100644
 > >--- a/drivers/scsi/ufs/ufshcd.c
 > >+++ b/drivers/scsi/ufs/ufshcd.c
-> >@@ -4545,8 +4545,6 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba,
-> >struct ufshcd_lrb *lrbp)
+> >@@ -6373,6 +6373,14 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+> > 					__func__, ret);
+> > 			goto out;
 > > 		}
-> > 		break;
-> > 	case OCS_ABORTED:
-> >-		result |= DID_ABORT << 16;
-> >-		break;
-> > 	case OCS_INVALID_COMMAND_STATUS:
-> > 		result |= DID_REQUEUE << 16;
-> > 		break;
+> >+
+> >+		/*
+> >+		 * Some device lost link after switch to HS mode. Check if
+> >+		 * connect is established here.
+> >+		 */
+> 
+> I have never across such failures. If this issue is limited to
+> certain device vendors then I don't think if we want to do send NOP
+> unconditionally for all the devices.
+> We should probably add quirk for these failed devices and send NOP
+> only for such devices.
+
+I have double checked this issue, it's already fixed. This patch doesn't need
+any more. Thanks.
+> 
+> 
+> >+		ret = ufshcd_verify_dev_init(hba);
+> >+		if (ret)
+> >+			goto out;
+> > 	}
+> >
+> > 	/* set the state as operational after switching to desired gear */
 > 
 > -- 
 > The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
