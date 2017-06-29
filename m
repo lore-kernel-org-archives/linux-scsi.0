@@ -1,164 +1,68 @@
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-Subject: [PATCH] aic7xxx: fix firmware build with O=path
-Date: Wed, 28 Jun 2017 21:17:16 -0700
-Message-ID: <20170629041716.26865-1-jakub.kicinski@netronome.com>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: [PATCH v5 1/6] g_NCR5380: Fix PDMA transfer size
+Date: Thu, 29 Jun 2017 01:24:18 -0400 (EDT)
+Message-ID: <e6f1d6a2f8a14518c593a0990e03e96ac4de8291.1498713600.git.fthain@telegraphics.com.au>
+References: <cover.1498713600.git.fthain@telegraphics.com.au>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f42.google.com ([74.125.83.42]:36620 "EHLO
-        mail-pg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751420AbdF2ESS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Jun 2017 00:18:18 -0400
-Received: by mail-pg0-f42.google.com with SMTP id u62so41529295pgb.3
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Jun 2017 21:18:17 -0700 (PDT)
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:42398 "EHLO
+        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751567AbdF2FYT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Jun 2017 01:24:19 -0400
+In-Reply-To: <cover.1498713600.git.fthain@telegraphics.com.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, oss-drivers@netronome.com, Jakub Kicinski <jakub.kicinski@netronome.com>
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ondrej Zary <linux@rainbow-software.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>
 
-Building firmware with O=path was apparently broken in aic7 for ever.
-Message of the previous commit to the Makefile (from 2008) mentions
-this unfortunate state of affairs already.  Fix this, mostly to make
-randconfig builds more reliable.
+From: Ondrej Zary <linux@rainbow-software.org>
 
-Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+generic_NCR5380_dma_xfer_len() incorrectly uses cmd->transfersize
+which causes rescan-scsi-bus and CD-ROM access to hang the system.
+Use cmd->SCp.this_residual instead, like other NCR5380 drivers.
+
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 ---
- drivers/scsi/aic7xxx/Makefile        | 12 ++++----
- drivers/scsi/aic7xxx/aicasm/Makefile | 53 ++++++++++++++++++++----------------
- 2 files changed, 35 insertions(+), 30 deletions(-)
+ drivers/scsi/g_NCR5380.c | 12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/aic7xxx/Makefile b/drivers/scsi/aic7xxx/Makefile
-index 741d81861d17..07b60a780c06 100644
---- a/drivers/scsi/aic7xxx/Makefile
-+++ b/drivers/scsi/aic7xxx/Makefile
-@@ -55,9 +55,9 @@ aicasm-7xxx-opts-$(CONFIG_AIC7XXX_REG_PRETTY_PRINT) := \
+diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
+index 67c8dac321ad..14ef4e8c4713 100644
+--- a/drivers/scsi/g_NCR5380.c
++++ b/drivers/scsi/g_NCR5380.c
+@@ -76,6 +76,7 @@
+ #define IRQ_AUTO 254
  
- ifeq ($(CONFIG_AIC7XXX_BUILD_FIRMWARE),y)
- $(obj)/aic7xxx_seq.h: $(src)/aic7xxx.seq $(src)/aic7xxx.reg $(obj)/aicasm/aicasm
--	$(obj)/aicasm/aicasm -I$(src) -r $(obj)/aic7xxx_reg.h \
-+	$(obj)/aicasm/aicasm -I$(srctree)/$(src) -r $(obj)/aic7xxx_reg.h \
- 			      $(aicasm-7xxx-opts-y) -o $(obj)/aic7xxx_seq.h \
--			      $(src)/aic7xxx.seq
-+			      $(srctree)/$(src)/aic7xxx.seq
+ #define MAX_CARDS 8
++#define DMA_MAX_SIZE 32768
  
- $(aic7xxx-gen-y): $(obj)/aic7xxx_seq.h
- else
-@@ -72,14 +72,14 @@ aicasm-79xx-opts-$(CONFIG_AIC79XX_REG_PRETTY_PRINT) := \
+ /* old-style parameters for compatibility */
+ static int ncr_irq = -1;
+@@ -629,23 +630,16 @@ static inline int generic_NCR5380_pwrite(struct NCR5380_hostdata *hostdata,
+ static int generic_NCR5380_dma_xfer_len(struct NCR5380_hostdata *hostdata,
+                                         struct scsi_cmnd *cmd)
+ {
+-	int transfersize = cmd->transfersize;
++	int transfersize = cmd->SCp.this_residual;
  
- ifeq ($(CONFIG_AIC79XX_BUILD_FIRMWARE),y)
- $(obj)/aic79xx_seq.h: $(src)/aic79xx.seq $(src)/aic79xx.reg $(obj)/aicasm/aicasm
--	$(obj)/aicasm/aicasm -I$(src) -r $(obj)/aic79xx_reg.h \
-+	$(obj)/aicasm/aicasm -I$(srctree)/$(src) -r $(obj)/aic79xx_reg.h \
- 			      $(aicasm-79xx-opts-y) -o $(obj)/aic79xx_seq.h \
--			      $(src)/aic79xx.seq
-+			      $(srctree)/$(src)/aic79xx.seq
+ 	if (hostdata->flags & FLAG_NO_PSEUDO_DMA)
+ 		return 0;
  
- $(aic79xx-gen-y): $(obj)/aic79xx_seq.h
- else
- $(obj)/aic79xx_reg_print.c: $(src)/aic79xx_reg_print.c_shipped
- endif
+-	/* Limit transfers to 32K, for xx400 & xx406
+-	 * pseudoDMA that transfers in 128 bytes blocks.
+-	 */
+-	if (transfersize > 32 * 1024 && cmd->SCp.this_residual &&
+-	    !(cmd->SCp.this_residual % transfersize))
+-		transfersize = 32 * 1024;
+-
+ 	/* 53C400 datasheet: non-modulo-128-byte transfers should use PIO */
+ 	if (transfersize % 128)
+ 		transfersize = 0;
  
--$(obj)/aicasm/aicasm: $(src)/aicasm/*.[chyl]
--	$(MAKE) -C $(src)/aicasm
-+$(obj)/aicasm/aicasm: $(srctree)/$(src)/aicasm/*.[chyl]
-+	$(MAKE) -C $(srctree)/$(src)/aicasm OUTDIR=$(shell pwd)/$(obj)/aicasm/
-diff --git a/drivers/scsi/aic7xxx/aicasm/Makefile b/drivers/scsi/aic7xxx/aicasm/Makefile
-index b98c5c1056c3..45e2d49c1fff 100644
---- a/drivers/scsi/aic7xxx/aicasm/Makefile
-+++ b/drivers/scsi/aic7xxx/aicasm/Makefile
-@@ -1,19 +1,21 @@
- PROG=	aicasm
+-	return transfersize;
++	return min(transfersize, DMA_MAX_SIZE);
+ }
  
-+OUTDIR ?= ./
-+
- .SUFFIXES= .l .y .c .h
- 
- CSRCS=	aicasm.c aicasm_symbol.c
- YSRCS=	aicasm_gram.y aicasm_macro_gram.y
- LSRCS=	aicasm_scan.l aicasm_macro_scan.l
- 
--GENHDRS=	aicdb.h $(YSRCS:.y=.h)
--GENSRCS=	$(YSRCS:.y=.c) $(LSRCS:.l=.c)
-+GENHDRS=	$(addprefix ${OUTDIR}/,aicdb.h $(YSRCS:.y=.h))
-+GENSRCS=	$(addprefix ${OUTDIR}/,$(YSRCS:.y=.c) $(LSRCS:.l=.c))
- 
- SRCS=	${CSRCS} ${GENSRCS}
- LIBS=	-ldb
- clean-files:= ${GENSRCS} ${GENHDRS} $(YSRCS:.y=.output) $(PROG)
- # Override default kernel CFLAGS.  This is a userland app.
--AICASM_CFLAGS:= -I/usr/include -I.
-+AICASM_CFLAGS:= -I/usr/include -I. -I$(OUTDIR)
- LEX= flex
- YACC= bison
- YFLAGS= -d
-@@ -32,22 +34,25 @@ YFLAGS+= -t -v
- LFLAGS= -d
- endif
- 
--$(PROG):  ${GENHDRS} $(SRCS)
--	$(AICASM_CC) $(AICASM_CFLAGS) $(SRCS) -o $(PROG) $(LIBS)
-+$(PROG):  $(OUTDIR) ${GENHDRS} $(SRCS)
-+	$(AICASM_CC) $(AICASM_CFLAGS) $(SRCS) -o $(OUTDIR)/$(PROG) $(LIBS)
-+
-+$(OUTDIR):
-+	mkdir -p $(OUTDIR)
- 
--aicdb.h:
-+$(OUTDIR)/aicdb.h:
- 	@if [ -e "/usr/include/db4/db_185.h" ]; then		\
--		echo "#include <db4/db_185.h>" > aicdb.h;	\
-+		echo "#include <db4/db_185.h>" > $@;	\
- 	 elif [ -e "/usr/include/db3/db_185.h" ]; then		\
--		echo "#include <db3/db_185.h>" > aicdb.h;	\
-+		echo "#include <db3/db_185.h>" > $@;	\
- 	 elif [ -e "/usr/include/db2/db_185.h" ]; then		\
--		echo "#include <db2/db_185.h>" > aicdb.h;	\
-+		echo "#include <db2/db_185.h>" > $@;	\
- 	 elif [ -e "/usr/include/db1/db_185.h" ]; then		\
--		echo "#include <db1/db_185.h>" > aicdb.h;	\
-+		echo "#include <db1/db_185.h>" > $@;	\
- 	 elif [ -e "/usr/include/db/db_185.h" ]; then		\
--		echo "#include <db/db_185.h>" > aicdb.h;	\
-+		echo "#include <db/db_185.h>" > $@;	\
- 	 elif [ -e "/usr/include/db_185.h" ]; then		\
--		echo "#include <db_185.h>" > aicdb.h;		\
-+		echo "#include <db_185.h>" > $@;		\
- 	 else							\
- 		echo "*** Install db development libraries";	\
- 	 fi
-@@ -58,23 +63,23 @@ $(PROG):  ${GENHDRS} $(SRCS)
- # Create a dependency chain in generated files
- # to avoid concurrent invocations of the single
- # rule that builds them all.
--aicasm_gram.c: aicasm_gram.h
--aicasm_gram.c aicasm_gram.h: aicasm_gram.y
-+$(OUTDIR)/aicasm_gram.c: $(OUTDIR)/aicasm_gram.h
-+$(OUTDIR)/aicasm_gram.c $(OUTDIR)/aicasm_gram.h: aicasm_gram.y
- 	$(YACC) $(YFLAGS) -b $(<:.y=) $<
--	mv $(<:.y=).tab.c $(<:.y=.c)
--	mv $(<:.y=).tab.h $(<:.y=.h)
-+	mv $(<:.y=).tab.c $(OUTDIR)/$(<:.y=.c)
-+	mv $(<:.y=).tab.h $(OUTDIR)/$(<:.y=.h)
- 
- # Create a dependency chain in generated files
- # to avoid concurrent invocations of the single
- # rule that builds them all.
--aicasm_macro_gram.c: aicasm_macro_gram.h
--aicasm_macro_gram.c aicasm_macro_gram.h: aicasm_macro_gram.y
-+$(OUTDIR)/aicasm_macro_gram.c: $(OUTDIR)/aicasm_macro_gram.h
-+$(OUTDIR)/aicasm_macro_gram.c $(OUTDIR)/aicasm_macro_gram.h: aicasm_macro_gram.y
- 	$(YACC) $(YFLAGS) -b $(<:.y=) -p mm $<
--	mv $(<:.y=).tab.c $(<:.y=.c)
--	mv $(<:.y=).tab.h $(<:.y=.h)
-+	mv $(<:.y=).tab.c $(OUTDIR)/$(<:.y=.c)
-+	mv $(<:.y=).tab.h $(OUTDIR)/$(<:.y=.h)
- 
--aicasm_scan.c: aicasm_scan.l
--	$(LEX) $(LFLAGS) -o$@ $<
-+$(OUTDIR)/aicasm_scan.c: aicasm_scan.l
-+	$(LEX) $(LFLAGS) -o $@ $<
- 
--aicasm_macro_scan.c: aicasm_macro_scan.l
--	$(LEX) $(LFLAGS) -Pmm -o$@ $<
-+$(OUTDIR)/aicasm_macro_scan.c: aicasm_macro_scan.l
-+	$(LEX) $(LFLAGS) -Pmm -o $@ $<
+ /*
 -- 
-2.11.0
+2.13.0
