@@ -1,65 +1,91 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH v4 0/5] g_NCR5380: PDMA fixes and cleanup
-Date: Thu, 29 Jun 2017 15:27:01 +1000 (AEST)
-Message-ID: <alpine.LNX.2.00.1706290827440.19937@nippy.intranet>
-References: <cover.1498622056.git.fthain@telegraphics.com.au> <201706282328.06806.linux@rainbow-software.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 13/47] megaraid: pass in NULL scb for host reset
+Date: Thu, 29 Jun 2017 07:53:13 +0200
+Message-ID: <30c84194-89ca-70ca-0bf9-9b101a91b988@suse.de>
+References: <1498638793-44672-1-git-send-email-hare@suse.de>
+ <1498638793-44672-14-git-send-email-hare@suse.de>
+ <f5b7e09b259b22452afe1da669712af6@mail.gmail.com>
+ <ce2005d3-420c-3920-dadc-b9d1d36c8ecc@suse.de>
+ <5443ed26d0465a0a277ccf90fdeb1e73@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:42502 "EHLO
-        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751601AbdF2F07 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Jun 2017 01:26:59 -0400
-In-Reply-To: <201706282328.06806.linux@rainbow-software.org>
+Received: from mx2.suse.de ([195.135.220.15]:56272 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751631AbdF2FxQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 29 Jun 2017 01:53:16 -0400
+In-Reply-To: <5443ed26d0465a0a277ccf90fdeb1e73@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>
+To: Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Christoph Hellwig <hch@lst.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Wed, 28 Jun 2017, Ondrej Zary wrote:
-
+On 06/28/2017 07:40 PM, Kashyap Desai wrote:
+>> -----Original Message-----
+>> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+>> owner@vger.kernel.org] On Behalf Of Hannes Reinecke
+>> Sent: Wednesday, June 28, 2017 9:00 PM
+>> To: Sumit Saxena; Christoph Hellwig
+>> Cc: Martin K. Petersen; James Bottomley; linux-scsi@vger.kernel.org;
+>> Hannes
+>> Reinecke
+>> Subject: Re: [PATCH 13/47] megaraid: pass in NULL scb for host reset
+>>
+>> On 06/28/2017 03:41 PM, Sumit Saxena wrote:
+>>>> -----Original Message-----
+>>>> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+>>>> owner@vger.kernel.org] On Behalf Of Hannes Reinecke
+>>>> Sent: Wednesday, June 28, 2017 2:03 PM
+>>>> To: Christoph Hellwig
+>>>> Cc: Martin K. Petersen; James Bottomley; linux-scsi@vger.kernel.org;
+>>> Hannes
+>>>> Reinecke; Hannes Reinecke
+>>>> Subject: [PATCH 13/47] megaraid: pass in NULL scb for host reset
+>>>>
+>>>> When calling a host reset we shouldn't rely on the command triggering
+>>>> the reset, so allow megaraid_abort_and_reset() to be called with a NULL
+>> scb.
+>>>> And drop the pointless 'bus_reset' and 'target_reset' handlers, which
+>>> just call
+>>>> the same function as host_reset.
+>>>
+>>> If this patch address any functional issue, then we should consider
+>>> this.
+>>> If it's code optimization, can we ignore this as this is being very
+>>> old driver and no more maintained by Broadcom/LSI ?
+>>>
+>> Sadly, ignoring is not an option.
+>> I'm planning to update the calling convention for SCSI EH, to resolve the
+>> long-
+>> standing problem with sg_reset ioctls.
+>> sg_reset ioctl will allocate an out-of-band SCSI command, which does no
+>> longer
+>> work with the new command allocation scheme in multiqueue.
+>> So it's not possible to just 'ignore' it, as then SCSI EH will cease to
+>> function with
+>> that driver.
 > 
-> Now read seems to work on non-DTC chips. Writes continue in PDMA after 
-> disconnect but there's a corruption - one 128 B block missing on 
-> disconnect.
+> Hannes - We are in process of sending megaraid and 3ware driver removal as
+> LSI/Broadcom  stopped supporting those products.
+> I agree we should review this closely, but lack of test coverage and end of
+> life cycle of product is requesting us to know the rational.
+> For now, let's consider NACK for this patch. We will be removing old
+> megaraid (mbox) driver and 3Ware drivers soon.
 > 
-> On DTC, the log is spammed with errors like this:
-> sd 2:0:1:0: [sdb] tag#0 generic_NCR5380_pread: End of DMA timeout (0)
-> 
-> They're cause by read corruption on DTC: pread() is breaking at 
-> start=3968 because of an end-of-DMA IRQ (BASR=0x98) but pdma_residual is 
-> set to zero (block counter is zero because the data was read into the 
-> buffer but we did not read it from there). So we lose one buffer of data 
-> on each 4 KB read.
->
+Hmm.
+Can't we do the removal now?
+There is not a lot of testing involved with _that_, surely?
 
-But the algorithm in the datasheet never reads from the buffer after the 
-block counter reaches zero. (Of course, the only datasheet we have is for 
-a 53c400 device not a DTC436 so all bets are off.)
+I'd be happy to do a patch if you like ...
 
-Anyway, the corrupted data that you describe is telling. I think you're 
-right, we have to drain the buffer even when Gated IRQ has been asserted 
-(or find a better way to calculate the residual).
+Cheers,
 
-I can see a theoretical problem with the code I sent. If the 53c80 raises 
-IRQ during the outsb() or insb(), we could still end up with start == end, 
-which could mess up both the residual and the handling for an incomplete 
-transfer.
-
-> The PDMA is then reset which probably means BASR_END_DMA_TRANSFER will 
-> not be asserted.
-> 
-
-But the BASR_END_DMA_TRANSFER flag is latched, and resetting the 53c400 
-logic should not affect 53c80 registers (assuming they are accessible). So 
-the reset does not explain the log messages.
-
-Maybe your BASR=0x98 observations do not co-incide with the log messages. 
-Or maybe we need to wait for registers to become accessible after the 
-reset.
-
-I've attempted to address all these issues in v5.
-
-Thanks.
-
+Hannes
 -- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
