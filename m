@@ -1,104 +1,48 @@
-From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: RE: [PATCH 07/47] aacraid: complete all commands during bus reset
-Date: Thu, 29 Jun 2017 20:07:46 +0000
-Message-ID: <4D8E82A446BF54499747901DBDEB737A81C2CCCA@avsrvexchmbx2.microsemi.net>
-References: <1498638793-44672-1-git-send-email-hare@suse.de>
- <1498638793-44672-8-git-send-email-hare@suse.de>
+From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Subject: Re: [PATCH] scsi: ibmvscsi: constify dev_pm_ops structures.
+Date: Thu, 29 Jun 2017 15:38:30 -0700
+Message-ID: <a71efdaf-78d0-9a36-c358-3c2719dbcdec@linux.vnet.ibm.com>
+References: <ff2eee2670f773454efdece4f455bb367fff3baa.1498722090.git.arvind.yadav.cs@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0082.outbound.protection.outlook.com ([104.47.32.82]:65344
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751612AbdF2UIQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 29 Jun 2017 16:08:16 -0400
-In-Reply-To: <1498638793-44672-8-git-send-email-hare@suse.de>
-Content-Language: en-US
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:45854 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751532AbdF2Wil (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 29 Jun 2017 18:38:41 -0400
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v5TMceG8143368
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Jun 2017 18:38:40 -0400
+Received: from e16.ny.us.ibm.com (e16.ny.us.ibm.com [129.33.205.206])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2bd40jgb37-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Jun 2017 18:38:40 -0400
+Received: from localhost
+        by e16.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <tyreld@linux.vnet.ibm.com>;
+        Thu, 29 Jun 2017 18:38:39 -0400
+In-Reply-To: <ff2eee2670f773454efdece4f455bb367fff3baa.1498722090.git.arvind.yadav.cs@gmail.com>
+Content-Language: en-GB
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.com>
+To: Arvind Yadav <arvind.yadav.cs@gmail.com>, tyreld@linux.vnet.ibm.com, benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org
 
+On 06/29/2017 12:43 AM, Arvind Yadav wrote:
+> dev_pm_ops are not supposed to change at runtime. All functions
+> working with dev_pm_ops provided by <linux/device.h> work with const
+> dev_pm_ops. So mark the non-const structs as const.
+> 
+> File size before:
+>    text	   data	    bss	    dec	    hex	filename
+>   17956	   1456	      8	  19420	   4bdc	drivers/scsi/ibmvscsi/ibmvscsi.o
+> 
+> File size After adding 'const':
+>    text	   data	    bss	    dec	    hex	filename
+>   18164	   1264	      8	  19436	   4bec	drivers/scsi/ibmvscsi/ibmvscsi.o
+> 
+> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 
-
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Hannes Reinecke
-> Sent: Wednesday, June 28, 2017 1:33 AM
-> To: Christoph Hellwig <hch@lst.de>
-> Cc: Martin K. Petersen <martin.petersen@oracle.com>; James Bottomley
-> <james.bottomley@hansenpartnership.com>; linux-scsi@vger.kernel.org;
-> Hannes Reinecke <hare@suse.de>; Hannes Reinecke <hare@suse.com>
-> Subject: [PATCH 07/47] aacraid: complete all commands during bus reset
->=20
-> EXTERNAL EMAIL
->=20
->=20
-> When issuing a bus reset we should complete all commands, not
-> just the command triggering the reset.
->=20
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> ---
->  drivers/scsi/aacraid/linit.c | 34 ++++++++++++++++++++--------------
->  1 file changed, 20 insertions(+), 14 deletions(-)
->=20
-> diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-> index 9b284a0..c26130e 100644
-> --- a/drivers/scsi/aacraid/linit.c
-> +++ b/drivers/scsi/aacraid/linit.c
-> @@ -1007,23 +1007,29 @@ static int aac_eh_bus_reset(struct scsi_cmnd*
-> cmd)
->         struct Scsi_Host * host =3D dev->host;
->         struct aac_dev * aac =3D (struct aac_dev *)host->hostdata;
->         int count;
-> -       u32 bus, cid;
-> +       u32 cmd_bus;
->         int status =3D 0;
->=20
->=20
-> -       bus =3D aac_logical_to_phys(scmd_channel(cmd));
-> -       cid =3D scmd_id(cmd);
-> -       if (bus >=3D AAC_MAX_BUSES || cid >=3D AAC_MAX_TARGETS ||
-> -           aac->hba_map[bus][cid].devtype !=3D AAC_DEVTYPE_NATIVE_RAW) {
-> -               /* Mark the assoc. FIB to not complete, eh handler does t=
-his */
-> -               for (count =3D 0;
-> -                       count < (host->can_queue + AAC_NUM_MGT_FIB);
-> -                       ++count) {
-> -                       struct fib *fib =3D &aac->fibs[count];
-> -
-> -                       if (fib->hw_fib_va->header.XferState &&
-> -                               (fib->flags & FIB_CONTEXT_FLAG) &&
-> -                               (fib->callback_data =3D=3D cmd)) {
-> +       cmd_bus =3D aac_logical_to_phys(scmd_channel(cmd));
-> +       /* Mark the assoc. FIB to not complete, eh handler does this */
-> +       for (count =3D 0; count < (host->can_queue + AAC_NUM_MGT_FIB);
-> ++count) {
-> +               struct fib *fib =3D &aac->fibs[count];
-> +
-> +               if (fib->hw_fib_va->header.XferState &&
-> +                   (fib->flags & FIB_CONTEXT_FLAG) &&
-> +                   (fib->flags & FIB_CONTEXT_FLAG_SCSI_CMD)) {
-> +                       struct aac_hba_map_info *info;
-> +                       u32 bus, cid;
-> +
-> +                       cmd =3D (struct scsi_cmnd *)fib->callback_data;
-> +                       bus =3D aac_logical_to_phys(scmd_channel(cmd));
-> +                       if (bus !=3D cmd_bus)
-> +                               continue;
-> +                       cid =3D scmd_id(cmd);
-> +                       info =3D &aac->hba_map[bus][cid];
-> +                       if (bus >=3D AAC_MAX_BUSES || cid >=3D AAC_MAX_TA=
-RGETS ||
-> +                           info->devtype !=3D AAC_DEVTYPE_NATIVE_RAW) {
->                                 fib->flags |=3D FIB_CONTEXT_FLAG_TIMED_OU=
-T;
->                                 cmd->SCp.phase =3D AAC_OWNER_ERROR_HANDLE=
-R;
->                         }
-> --
-> 1.8.5.6
-
-Reviewed-by: Raghava Aditya Renukunta  <RaghavaAditya.Renukunta@microsemi.c=
-om>
+Acked-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
