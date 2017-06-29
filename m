@@ -1,287 +1,279 @@
 From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH 08/13] mpt3sas: scan and add nvme device after controller reset
-Date: Thu, 29 Jun 2017 19:49:09 +0530
-Message-ID: <1498745954-7907-9-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH 03/13] mpt3sas: Added support for nvme encapsulated request message.
+Date: Thu, 29 Jun 2017 19:49:04 +0530
+Message-ID: <1498745954-7907-4-git-send-email-suganath-prabu.subramani@broadcom.com>
 References: <1498745954-7907-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wm0-f43.google.com ([74.125.82.43]:37986 "EHLO
+        mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753417AbdF2OUz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Jun 2017 10:20:55 -0400
+Received: by mail-wm0-f43.google.com with SMTP id b184so16417035wme.1
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Jun 2017 07:20:54 -0700 (PDT)
 In-Reply-To: <1498745954-7907-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, krishnaraddi.mankani@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com
-List-Id: linux-scsi@vger.kernel.org
 
-After Controller reset, Scan and add nvme device back to the topology.
+* Mpt3sas driver uses the NVMe Encapsulated Request message to
+send an NVMe command to an NVMe device attached to the IOC.
+
+* Normal I/O commands like reads and writes are passed to the
+controller as SCSI commands and the controller has the ability
+to translate the commands to NVMe equivalent.
+
+* This encapsulated NVMe command is used by applications to send
+direct NVMe commands to NVMe drives or for handling unmap where
+the translation at controller/firmware level is having
+performance issues.
 
 Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
 Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c |  196 +++++++++++++++++++++++++++++++++-
- 1 files changed, 191 insertions(+), 5 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c |   56 +++++++++++++++++++++++-
+ drivers/scsi/mpt3sas/mpt3sas_base.h |    1 +
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c  |   81 ++++++++++++++++++++++++++++++++++-
+ 3 files changed, 136 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 68aa102..7100ee8 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -4867,6 +4867,7 @@ _scsih_scsi_ioc_info(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
- 	char *desc_scsi_state = ioc->tmp_string;
- 	u32 log_info = le32_to_cpu(mpi_reply->IOCLogInfo);
- 	struct _sas_device *sas_device = NULL;
-+	struct _pcie_device *pcie_device = NULL;
- 	struct scsi_target *starget = scmd->device->sdev_target;
- 	struct MPT3SAS_TARGET *priv_target = starget->hostdata;
- 	char *device_str = NULL;
-@@ -4999,6 +5000,28 @@ _scsih_scsi_ioc_info(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
- 	if (priv_target->flags & MPT_TARGET_FLAGS_VOLUME) {
- 		pr_warn(MPT3SAS_FMT "\t%s wwid(0x%016llx)\n", ioc->name,
- 		    device_str, (unsigned long long)priv_target->sas_address);
-+	} else if (priv_target->flags & MPT_TARGET_FLAGS_PCIE_DEVICE) {
-+		pcie_device = mpt3sas_get_pdev_from_target(ioc, priv_target);
-+		if (pcie_device) {
-+			pr_info(MPT3SAS_FMT "\twwid(0x%016llx), port(%d)\n",
-+			    ioc->name,
-+			    (unsigned long long)pcie_device->wwid,
-+			    pcie_device->port_num);
-+			if (pcie_device->enclosure_handle != 0)
-+				pr_info(MPT3SAS_FMT
-+				    "\tenclosure logical id(0x%016llx), "
-+				    "slot(%d)\n", ioc->name,
-+				    (unsigned long long)
-+				    pcie_device->enclosure_logical_id,
-+				    pcie_device->slot);
-+			if (pcie_device->connector_name[0])
-+				pr_info(MPT3SAS_FMT
-+				    "\tenclosure level(0x%04x),"
-+				    "connector name( %s)\n",
-+				    ioc->name, pcie_device->enclosure_level,
-+				    pcie_device->connector_name);
-+			pcie_device_put(pcie_device);
-+		}
- 	} else {
- 		sas_device = mpt3sas_get_sdev_from_target(ioc, priv_target);
- 		if (sas_device) {
-@@ -5045,11 +5068,10 @@ _scsih_scsi_ioc_info(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
- 		struct sense_info data;
- 		_scsih_normalize_sense(scmd->sense_buffer, &data);
- 		pr_warn(MPT3SAS_FMT
--			"\t[sense_key,asc,ascq]: [0x%02x,0x%02x,0x%02x], count(%d)\n",
--			ioc->name, data.skey,
--		    data.asc, data.ascq, le32_to_cpu(mpi_reply->SenseCount));
-+		  "\t[sense_key,asc,ascq]: [0x%02x,0x%02x,0x%02x], count(%d)\n",
-+		  ioc->name, data.skey,
-+		  data.asc, data.ascq, le32_to_cpu(mpi_reply->SenseCount));
- 	}
--
- 	if (scsi_state & MPI2_SCSI_STATE_RESPONSE_INFO_VALID) {
- 		response_info = le32_to_cpu(mpi_reply->ResponseInfo);
- 		response_bytes = (u8 *)&response_info;
-@@ -6931,7 +6953,7 @@ _scsih_pcie_add_device(struct MPT3SAS_ADAPTER *ioc, u16 handle)
- 	    pcie_device_pg0.AccessStatus))
- 		return 0;
- 
--	if (!(_scsih_is_nvme_device(pcie_device_pg0.DeviceInfo)))
-+	if (!(_scsih_is_nvme_device(le32_to_cpu(pcie_device_pg0.DeviceInfo))))
- 		return 0;
- 
- 	pcie_device = mpt3sas_get_pdev_by_wwid(ioc, wwid);
-@@ -8510,6 +8532,130 @@ _scsih_search_responding_sas_devices(struct MPT3SAS_ADAPTER *ioc)
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index b67212c..a64cfce 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -557,6 +557,11 @@ _base_sas_ioc_info(struct MPT3SAS_ADAPTER *ioc, MPI2DefaultReply_t *mpi_reply,
+ 		frame_sz = sizeof(Mpi2SmpPassthroughRequest_t) + ioc->sge_size;
+ 		func_str = "smp_passthru";
+ 		break;
++	case MPI2_FUNCTION_NVME_ENCAPSULATED:
++		frame_sz = sizeof(Mpi26NVMeEncapsulatedRequest_t) +
++		    ioc->sge_size;
++		func_str = "nvme_encapsulated";
++		break;
+ 	default:
+ 		frame_sz = 32;
+ 		func_str = "unknown";
+@@ -985,7 +990,9 @@ _base_interrupt(int irq, void *bus_id)
+ 		if (request_desript_type ==
+ 		    MPI25_RPY_DESCRIPT_FLAGS_FAST_PATH_SCSI_IO_SUCCESS ||
+ 		    request_desript_type ==
+-		    MPI2_RPY_DESCRIPT_FLAGS_SCSI_IO_SUCCESS) {
++		    MPI2_RPY_DESCRIPT_FLAGS_SCSI_IO_SUCCESS ||
++		    request_desript_type ==
++		    MPI26_RPY_DESCRIPT_FLAGS_PCIE_ENCAPSULATED_SUCCESS) {
+ 			cb_idx = _base_get_cb_idx(ioc, smid);
+ 			if ((likely(cb_idx < MPT_MAX_CALLBACKS)) &&
+ 			    (likely(mpt_callbacks[cb_idx] != NULL))) {
+@@ -3079,6 +3086,30 @@ _base_put_smid_hi_priority(struct MPT3SAS_ADAPTER *ioc, u16 smid,
  }
  
  /**
-+ * _scsih_mark_responding_pcie_device - mark a pcie_device as responding
++ * _base_put_smid_nvme_encap - send NVMe encapsulated request to
++ *  firmware
 + * @ioc: per adapter object
-+ * @pcie_device_pg0: PCIe Device page 0
-+ *
-+ * After host reset, find out whether devices are still responding.
-+ * Used in _scsih_remove_unresponding_devices.
++ * @smid: system request message index
 + *
 + * Return nothing.
 + */
 +static void
-+_scsih_mark_responding_pcie_device(struct MPT3SAS_ADAPTER *ioc,
-+	Mpi26PCIeDevicePage0_t *pcie_device_pg0)
++_base_put_smid_nvme_encap(struct MPT3SAS_ADAPTER *ioc, u16 smid)
 +{
-+	struct MPT3SAS_TARGET *sas_target_priv_data = NULL;
-+	struct scsi_target *starget;
-+	struct _pcie_device *pcie_device;
-+	unsigned long flags;
++	Mpi2RequestDescriptorUnion_t descriptor;
++	u64 *request = (u64 *)&descriptor;
 +
-+	spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+	list_for_each_entry(pcie_device, &ioc->pcie_device_list, list) {
-+		if ((pcie_device->wwid == pcie_device_pg0->WWID) &&
-+		    (pcie_device->slot == pcie_device_pg0->Slot)) {
-+			pcie_device->responding = 1;
-+			starget = pcie_device->starget;
-+			if (starget && starget->hostdata) {
-+				sas_target_priv_data = starget->hostdata;
-+				sas_target_priv_data->tm_busy = 0;
-+				sas_target_priv_data->deleted = 0;
-+			} else
-+				sas_target_priv_data = NULL;
-+			if (starget) {
-+				starget_printk(KERN_INFO, starget,
-+				    "handle(0x%04x), wwid(0x%016llx) ",
-+				    pcie_device->handle,
-+				    (unsigned long long)pcie_device->wwid);
-+				if (pcie_device->enclosure_handle != 0)
-+					starget_printk(KERN_INFO, starget,
-+					    "enclosure logical id(0x%016llx), "
-+					    "slot(%d)\n",
-+					    (unsigned long long)
-+					    pcie_device->enclosure_logical_id,
-+					    pcie_device->slot);
-+			}
++	descriptor.Default.RequestFlags =
++		MPI26_REQ_DESCRIPT_FLAGS_PCIE_ENCAPSULATED;
++	descriptor.Default.MSIxIndex =  _base_get_msix_index(ioc);
++	descriptor.Default.SMID = cpu_to_le16(smid);
++	descriptor.Default.LMID = 0;
++	descriptor.Default.DescriptorTypeDependent = 0;
++	_base_writeq(*request, &ioc->chip->RequestDescriptorPostLow,
++	    &ioc->scsi_lookup_lock);
++}
 +
-+			if (((le32_to_cpu(pcie_device_pg0->Flags)) &
-+			    MPI26_PCIEDEV0_FLAGS_ENCL_LEVEL_VALID) &&
-+			    (ioc->hba_mpi_version_belonged != MPI2_VERSION)) {
-+				pcie_device->enclosure_level =
-+				    pcie_device_pg0->EnclosureLevel;
-+				memcpy(&pcie_device->connector_name[0],
-+				    &pcie_device_pg0->ConnectorName[0], 4);
-+			} else {
-+				pcie_device->enclosure_level = 0;
-+				pcie_device->connector_name[0] = '\0';
-+			}
++/**
+  * _base_put_smid_default - Default, primarily used for config pages
+  * @ioc: per adapter object
+  * @smid: system request message index
+@@ -3169,6 +3200,27 @@ _base_put_smid_hi_priority_atomic(struct MPT3SAS_ADAPTER *ioc, u16 smid,
+ }
+ 
+ /**
++ * _base_put_smid_nvme_encap_atomic - send NVMe encapsulated request to
++ *   firmware using Atomic Request Descriptor
++ * @ioc: per adapter object
++ * @smid: system request message index
++ *
++ * Return nothing.
++ */
++static void
++_base_put_smid_nvme_encap_atomic(struct MPT3SAS_ADAPTER *ioc, u16 smid)
++{
++	Mpi26AtomicRequestDescriptor_t descriptor;
++	u32 *request = (u32 *)&descriptor;
 +
-+			if (pcie_device->handle == pcie_device_pg0->DevHandle)
-+				goto out;
-+			pr_info(KERN_INFO "\thandle changed from(0x%04x)!!!\n",
-+			    pcie_device->handle);
-+			pcie_device->handle = pcie_device_pg0->DevHandle;
-+			if (sas_target_priv_data)
-+				sas_target_priv_data->handle =
-+				    pcie_device_pg0->DevHandle;
++	descriptor.RequestFlags = MPI26_REQ_DESCRIPT_FLAGS_PCIE_ENCAPSULATED;
++	descriptor.MSIxIndex = _base_get_msix_index(ioc);
++	descriptor.SMID = cpu_to_le16(smid);
++
++	writel(cpu_to_le32(*request), &ioc->chip->AtomicRequestDescriptorPost);
++}
++
++/**
+  * _base_put_smid_default - Default, primarily used for config pages
+  * use Atomic Request Descriptor
+  * @ioc: per adapter object
+@@ -6001,11 +6053,13 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
+ 		ioc->put_smid_scsi_io = &_base_put_smid_scsi_io_atomic;
+ 		ioc->put_smid_fast_path = &_base_put_smid_fast_path_atomic;
+ 		ioc->put_smid_hi_priority = &_base_put_smid_hi_priority_atomic;
++		ioc->put_smid_nvme_encap = &_base_put_smid_nvme_encap_atomic;
+ 	} else {
+ 		ioc->put_smid_default = &_base_put_smid_default;
+ 		ioc->put_smid_scsi_io = &_base_put_smid_scsi_io;
+ 		ioc->put_smid_fast_path = &_base_put_smid_fast_path;
+ 		ioc->put_smid_hi_priority = &_base_put_smid_hi_priority;
++		ioc->put_smid_nvme_encap = &_base_put_smid_nvme_encap;
+ 	}
+ 
+ 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index cebdd8e..26239ec 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -1310,6 +1310,7 @@ struct MPT3SAS_ADAPTER {
+ 	PUT_SMID_IO_FP_HIP put_smid_fast_path;
+ 	PUT_SMID_IO_FP_HIP put_smid_hi_priority;
+ 	PUT_SMID_DEFAULT put_smid_default;
++	PUT_SMID_DEFAULT put_smid_nvme_encap;
+ 
+ };
+ 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index 0c18831..35e5c30 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -272,6 +272,7 @@ mpt3sas_ctl_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+ {
+ 	MPI2DefaultReply_t *mpi_reply;
+ 	Mpi2SCSIIOReply_t *scsiio_reply;
++	Mpi26NVMeEncapsulatedErrorReply_t *nvme_error_reply;
+ 	const void *sense_data;
+ 	u32 sz;
+ 
+@@ -298,6 +299,18 @@ mpt3sas_ctl_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+ 				memcpy(ioc->ctl_cmds.sense, sense_data, sz);
+ 			}
+ 		}
++		/*
++		 * Get Error Response data for NVMe device. The ctl_cmds.sense
++		 * buffer is used to store the Error Response data.
++		 */
++		if (mpi_reply->Function == MPI2_FUNCTION_NVME_ENCAPSULATED) {
++			nvme_error_reply =
++			    (Mpi26NVMeEncapsulatedErrorReply_t *)mpi_reply;
++			sz = min_t(u32, NVME_ERROR_RESPONSE_SIZE,
++			    le32_to_cpu(nvme_error_reply->ErrorResponseCount));
++			sense_data = mpt3sas_base_get_sense_buffer(ioc, smid);
++			memcpy(ioc->ctl_cmds.sense, sense_data, sz);
++		}
+ 	}
+ 
+ 	_ctl_display_some_debug(ioc, smid, "ctl_done", mpi_reply);
+@@ -641,6 +654,7 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
+ {
+ 	MPI2RequestHeader_t *mpi_request = NULL, *request;
+ 	MPI2DefaultReply_t *mpi_reply;
++	Mpi26NVMeEncapsulatedRequest_t *nvme_encap_request = NULL;
+ 	u32 ioc_state;
+ 	u16 smid;
+ 	unsigned long timeout;
+@@ -742,7 +756,8 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
+ 	if (mpi_request->Function == MPI2_FUNCTION_SCSI_IO_REQUEST ||
+ 	    mpi_request->Function == MPI2_FUNCTION_RAID_SCSI_IO_PASSTHROUGH ||
+ 	    mpi_request->Function == MPI2_FUNCTION_SCSI_TASK_MGMT ||
+-	    mpi_request->Function == MPI2_FUNCTION_SATA_PASSTHROUGH) {
++	    mpi_request->Function == MPI2_FUNCTION_SATA_PASSTHROUGH ||
++	    mpi_request->Function == MPI2_FUNCTION_NVME_ENCAPSULATED) {
+ 
+ 		device_handle = le16_to_cpu(mpi_request->FunctionDependent1);
+ 		if (!device_handle || (device_handle >
+@@ -793,6 +808,38 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
+ 
+ 	init_completion(&ioc->ctl_cmds.done);
+ 	switch (mpi_request->Function) {
++	case MPI2_FUNCTION_NVME_ENCAPSULATED:
++	{
++		nvme_encap_request = (Mpi26NVMeEncapsulatedRequest_t *)request;
++		/*
++		 * Get the Physical Address of the sense buffer.
++		 * Save the user's Error Response buffer address and use that
++		 *   field to hold the sense buffer address.
++		 * Clear the internal sense buffer, which will potentially hold
++		 *   the Completion Queue Entry on return, or 0 if no Entry.
++		 * Build the PRPs and set direction bits.
++		 * Send the request.
++		 */
++		ioc->ctl_cmds.nvme_error_response =
++		    (u64 *)nvme_encap_request->ErrorResponseBaseAddress;
++		nvme_encap_request->ErrorResponseBaseAddress = ioc->sense_dma &
++		    0xFFFFFFFF00000000;
++		nvme_encap_request->ErrorResponseBaseAddress |=
++		    (U64)mpt3sas_base_get_sense_buffer_dma(ioc, smid);
++		memset(ioc->ctl_cmds.sense, 0, NVME_ERROR_RESPONSE_SIZE);
++		ioc->build_nvme_prp(ioc, smid, nvme_encap_request,
++		    data_out_dma, data_out_sz, data_in_dma, data_in_sz);
++		if (test_bit(device_handle, ioc->device_remove_in_progress)) {
++			dtmprintk(ioc, pr_info(MPT3SAS_FMT "handle(0x%04x) :"
++			    "ioctl failed due to device removal in progress\n",
++			    ioc->name, device_handle));
++			mpt3sas_base_free_smid(ioc, smid);
++			ret = -EINVAL;
++			goto out;
++		}
++		ioc->put_smid_nvme_encap(ioc, smid);
++		break;
++	}
+ 	case MPI2_FUNCTION_SCSI_IO_REQUEST:
+ 	case MPI2_FUNCTION_RAID_SCSI_IO_PASSTHROUGH:
+ 	{
+@@ -1022,6 +1069,38 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
+ 		}
+ 	}
+ 
++	/*
++	 * Copy out the NVMe Error Response to user. The Error Response buffer
++	 * is given by the user, but a sense buffer is used to get that data
++	 * from the IOC. The user's ErrorResponseBaseAddress is saved in the
++	 * 'nvme_error_response' field before the command because that field is
++	 * set to a sense buffer. When the command is complete, that field is
++	 * set back to its original user value, and the Error Response data
++	 * from the IOC is copied to that user address. Also note that 'sense'
++	 * buffers are not defined for NVMe commands. Sense terminalogy is only
++	 * used here so that the same IOCTL structure and sense buffers can be
++	 * used for NVMe.
++	 */
++	if (karg.max_sense_bytes && (mpi_request->Function ==
++	    MPI2_FUNCTION_NVME_ENCAPSULATED)) {
++		if (ioc->ctl_cmds.nvme_error_response == NULL) {
++			pr_info(MPT3SAS_FMT "NVMe Error Response buffer "
++			    "is NULL; Response data will not be returned.\n",
++			    ioc->name);
++			goto out;
++		}
++
++		sz = min_t(u32, karg.max_sense_bytes,
++		    NVME_ERROR_RESPONSE_SIZE);
++		if (copy_to_user(ioc->ctl_cmds.nvme_error_response,
++		    ioc->ctl_cmds.sense, sz)) {
++			pr_err("failure at %s:%d/%s()!\n", __FILE__,
++				__LINE__, __func__);
++			ret = -ENODATA;
 +			goto out;
 +		}
 +	}
 +
-+ out:
-+	spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-+}
-+
-+/**
-+ * _scsih_search_responding_pcie_devices -
-+ * @ioc: per adapter object
-+ *
-+ * After host reset, find out whether devices are still responding.
-+ * If not remove.
-+ *
-+ * Return nothing.
-+ */
-+static void
-+_scsih_search_responding_pcie_devices(struct MPT3SAS_ADAPTER *ioc)
-+{
-+	Mpi26PCIeDevicePage0_t pcie_device_pg0;
-+	Mpi2ConfigReply_t mpi_reply;
-+	u16 ioc_status;
-+	u16 handle;
-+	u32 device_info;
-+
-+	pr_info(MPT3SAS_FMT "search for end-devices: start\n", ioc->name);
-+
-+	if (list_empty(&ioc->pcie_device_list))
-+		goto out;
-+
-+	handle = 0xFFFF;
-+	while (!(mpt3sas_config_get_pcie_device_pg0(ioc, &mpi_reply,
-+		&pcie_device_pg0, MPI26_PCIE_DEVICE_PGAD_FORM_GET_NEXT_HANDLE,
-+		handle))) {
-+		ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
-+		    MPI2_IOCSTATUS_MASK;
-+		if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
-+			pr_info(MPT3SAS_FMT "\tbreak from %s: "
-+			    "ioc_status(0x%04x), loginfo(0x%08x)\n", ioc->name,
-+			    __func__, ioc_status,
-+			    le32_to_cpu(mpi_reply.IOCLogInfo));
-+			break;
-+		}
-+		handle = le16_to_cpu(pcie_device_pg0.DevHandle);
-+		device_info = le32_to_cpu(pcie_device_pg0.DeviceInfo);
-+		if (!(_scsih_is_nvme_device(device_info)))
-+			continue;
-+		pcie_device_pg0.WWID = le64_to_cpu(pcie_device_pg0.WWID),
-+		pcie_device_pg0.Slot = le16_to_cpu(pcie_device_pg0.Slot);
-+		pcie_device_pg0.Flags = le32_to_cpu(pcie_device_pg0.Flags);
-+		pcie_device_pg0.DevHandle = handle;
-+		_scsih_mark_responding_pcie_device(ioc, &pcie_device_pg0);
-+	}
-+out:
-+	pr_info(MPT3SAS_FMT "search for PCIe end-devices: complete\n",
-+	    ioc->name);
-+}
-+
-+/**
-  * _scsih_mark_responding_raid_device - mark a raid_device as responding
-  * @ioc: per adapter object
-  * @wwid: world wide identifier for raid volume
-@@ -8861,6 +9007,7 @@ _scsih_scan_for_devices_after_reset(struct MPT3SAS_ADAPTER *ioc)
- {
- 	Mpi2ExpanderPage0_t expander_pg0;
- 	Mpi2SasDevicePage0_t sas_device_pg0;
-+	Mpi26PCIeDevicePage0_t pcie_device_pg0;
- 	Mpi2RaidVolPage1_t volume_pg1;
- 	Mpi2RaidVolPage0_t volume_pg0;
- 	Mpi2RaidPhysDiskPage0_t pd_pg0;
-@@ -8871,6 +9018,7 @@ _scsih_scan_for_devices_after_reset(struct MPT3SAS_ADAPTER *ioc)
- 	u16 handle, parent_handle;
- 	u64 sas_address;
- 	struct _sas_device *sas_device;
-+	struct _pcie_device *pcie_device;
- 	struct _sas_node *expander_device;
- 	static struct _raid_device *raid_device;
- 	u8 retry_count;
-@@ -9096,7 +9244,44 @@ _scsih_scan_for_devices_after_reset(struct MPT3SAS_ADAPTER *ioc)
- 	}
- 	pr_info(MPT3SAS_FMT "\tscan devices: end devices complete\n",
- 	    ioc->name);
-+	pr_info(MPT3SAS_FMT "\tscan devices: pcie end devices start\n",
-+	    ioc->name);
- 
-+	/* pcie devices */
-+	handle = 0xFFFF;
-+	while (!(mpt3sas_config_get_pcie_device_pg0(ioc, &mpi_reply,
-+		&pcie_device_pg0, MPI26_PCIE_DEVICE_PGAD_FORM_GET_NEXT_HANDLE,
-+		handle))) {
-+		ioc_status = le16_to_cpu(mpi_reply.IOCStatus)
-+				& MPI2_IOCSTATUS_MASK;
-+		if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
-+			pr_info(MPT3SAS_FMT "\tbreak from pcie end device"
-+				" scan: ioc_status(0x%04x), loginfo(0x%08x)\n",
-+				ioc->name, ioc_status,
-+				le32_to_cpu(mpi_reply.IOCLogInfo));
-+			break;
-+		}
-+		handle = le16_to_cpu(pcie_device_pg0.DevHandle);
-+		if (!(_scsih_is_nvme_device(
-+			le32_to_cpu(pcie_device_pg0.DeviceInfo))))
-+			continue;
-+		pcie_device = mpt3sas_get_pdev_by_wwid(ioc,
-+				le64_to_cpu(pcie_device_pg0.WWID));
-+		if (pcie_device) {
-+			pcie_device_put(pcie_device);
-+			continue;
-+		}
-+		retry_count = 0;
-+		parent_handle = le16_to_cpu(pcie_device_pg0.ParentDevHandle);
-+		_scsih_pcie_add_device(ioc, handle);
-+
-+		pr_info(MPT3SAS_FMT "\tAFTER adding pcie end device: "
-+			"handle (0x%04x), wwid(0x%016llx)\n", ioc->name,
-+			handle,
-+			(unsigned long long) le64_to_cpu(pcie_device_pg0.WWID));
-+	}
-+	pr_info(MPT3SAS_FMT "\tpcie devices: pcie end devices complete\n",
-+		ioc->name);
- 	pr_info(MPT3SAS_FMT "scan devices: complete\n", ioc->name);
- }
- /**
-@@ -9146,6 +9331,7 @@ mpt3sas_scsih_reset_handler(struct MPT3SAS_ADAPTER *ioc, int reset_phase)
- 		    !ioc->sas_hba.num_phys)) {
- 			_scsih_prep_device_scan(ioc);
- 			_scsih_search_responding_sas_devices(ioc);
-+			_scsih_search_responding_pcie_devices(ioc);
- 			_scsih_search_responding_raid_devices(ioc);
- 			_scsih_search_responding_expanders(ioc);
- 			_scsih_error_recovery_delete_devices(ioc);
+  issue_host_reset:
+ 	if (issue_reset) {
+ 		ret = -ENODATA;
 -- 
 1.7.1
