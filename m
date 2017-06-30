@@ -1,75 +1,28 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 7/7] aacraid: complete all commands during bus reset
-Date: Fri, 30 Jun 2017 19:18:12 +0200
-Message-ID: <1498843092-76285-8-git-send-email-hare@suse.de>
-References: <1498843092-76285-1-git-send-email-hare@suse.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 1/2] Drop legacy megaraid controller
+Date: Fri, 30 Jun 2017 19:33:47 +0200
+Message-ID: <20170630173347.GA11420@lst.de>
+References: <1498820754-51032-1-git-send-email-hare@suse.de> <1498820754-51032-2-git-send-email-hare@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59990 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751810AbdF3RTn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 30 Jun 2017 13:19:43 -0400
-In-Reply-To: <1498843092-76285-1-git-send-email-hare@suse.de>
+Received: from verein.lst.de ([213.95.11.211]:32888 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751657AbdF3Rdt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 30 Jun 2017 13:33:49 -0400
+Content-Disposition: inline
+In-Reply-To: <1498820754-51032-2-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-When issuing a bus reset we should complete all commands, not
-just the command triggering the reset.
+On Fri, Jun 30, 2017 at 01:05:53PM +0200, Hannes Reinecke wrote:
+> The hardware is ancient, and support for most cards has been moved
+> to megaraid_mbox. So drop it.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
-Reviewed-by: Raghava Aditya Renukunta  <RaghavaAditya.Renukunta@microsemi.com>
----
- drivers/scsi/aacraid/linit.c | 34 ++++++++++++++++++++--------------
- 1 file changed, 20 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index e5d2d91..a8dedc3 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -1010,23 +1010,29 @@ static int aac_eh_bus_reset(struct scsi_cmnd* cmd)
- 	struct Scsi_Host * host = dev->host;
- 	struct aac_dev * aac = (struct aac_dev *)host->hostdata;
- 	int count;
--	u32 bus, cid;
-+	u32 cmd_bus;
- 	int status = 0;
- 
- 
--	bus = aac_logical_to_phys(scmd_channel(cmd));
--	cid = scmd_id(cmd);
--	if (bus >= AAC_MAX_BUSES || cid >= AAC_MAX_TARGETS ||
--	    aac->hba_map[bus][cid].devtype != AAC_DEVTYPE_NATIVE_RAW) {
--		/* Mark the assoc. FIB to not complete, eh handler does this */
--		for (count = 0;
--			count < (host->can_queue + AAC_NUM_MGT_FIB);
--			++count) {
--			struct fib *fib = &aac->fibs[count];
--
--			if (fib->hw_fib_va->header.XferState &&
--				(fib->flags & FIB_CONTEXT_FLAG) &&
--				(fib->callback_data == cmd)) {
-+	cmd_bus = aac_logical_to_phys(scmd_channel(cmd));
-+	/* Mark the assoc. FIB to not complete, eh handler does this */
-+	for (count = 0; count < (host->can_queue + AAC_NUM_MGT_FIB); ++count) {
-+		struct fib *fib = &aac->fibs[count];
-+
-+		if (fib->hw_fib_va->header.XferState &&
-+		    (fib->flags & FIB_CONTEXT_FLAG) &&
-+		    (fib->flags & FIB_CONTEXT_FLAG_SCSI_CMD)) {
-+			struct aac_hba_map_info *info;
-+			u32 bus, cid;
-+
-+			cmd = (struct scsi_cmnd *)fib->callback_data;
-+			bus = aac_logical_to_phys(scmd_channel(cmd));
-+			if (bus != cmd_bus)
-+				continue;
-+			cid = scmd_id(cmd);
-+			info = &aac->hba_map[bus][cid];
-+			if (bus >= AAC_MAX_BUSES || cid >= AAC_MAX_TARGETS ||
-+			    info->devtype != AAC_DEVTYPE_NATIVE_RAW) {
- 				fib->flags |= FIB_CONTEXT_FLAG_TIMED_OUT;
- 				cmd->SCp.phase = AAC_OWNER_ERROR_HANDLER;
- 			}
--- 
-1.8.5.6
+This seems to drop support for the PCI_DEVICE_ID_AMI_MEGARAID
+and PCI_DEVICE_ID_AMI_MEGARAID2 cards.  Do we have any suggestions
+this code is so broken to not care anymore? Is there any reason why
+they can't just work with the megaraid_mbox driver?
