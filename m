@@ -1,54 +1,166 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 15/15] megaraid_sas: driver version upgrade
-Date: Fri, 30 Jun 2017 15:41:31 +0200
-Message-ID: <d9eb5ba0-78d7-4b63-fc7e-061560794c31@suse.de>
-References: <1498811409-11157-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <1498811409-11157-16-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH][scsi-next] scsi: qla2xxx: fix a bunch of typos and spelling mistakes
+Date: Fri, 30 Jun 2017 14:47:41 +0100
+Message-ID: <20170630134741.13965-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38443 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751690AbdF3Nld (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 30 Jun 2017 09:41:33 -0400
-In-Reply-To: <1498811409-11157-16-git-send-email-shivasharan.srikanteshwara@broadcom.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: qla2xxx-upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, hch@lst.de
 
-On 06/30/2017 10:30 AM, Shivasharan S wrote:
-> Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-> ---
->  drivers/scsi/megaraid/megaraid_sas.h | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-> index 6d9f111..a6722c9 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas.h
-> +++ b/drivers/scsi/megaraid/megaraid_sas.h
-> @@ -35,8 +35,8 @@
->  /*
->   * MegaRAID SAS Driver meta data
->   */
-> -#define MEGASAS_VERSION				"07.701.17.00-rc1"
-> -#define MEGASAS_RELDATE				"March 2, 2017"
-> +#define MEGASAS_VERSION				"07.702.06.00-rc1"
-> +#define MEGASAS_RELDATE				"June 21, 2017"
->  
->  /*
->   * Device IDs
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+From: Colin Ian King <colin.king@canonical.com>
 
-Cheers,
+Fix the following typos/spelling mistakes:
 
-Hannes
+"attribure" -> "attribute"
+"suppored" -> "supported"
+"Symobilic" -> "Symbolic"
+"iteself" -> "itself"
+"reqeust" -> "request"
+"nvme_wait_on_comand" -> "nvme_wait_on_command"
+"bount" -> "bound"
+"captrue_mask" -> "capture_mask"
+"tempelate" -> "template"
+
+..and also unwrap a line to fix a checkpatch warning.
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/qla2xxx/qla_attr.c | 2 +-
+ drivers/scsi/qla2xxx/qla_bsg.c  | 2 +-
+ drivers/scsi/qla2xxx/qla_init.c | 2 +-
+ drivers/scsi/qla2xxx/qla_isr.c  | 3 +--
+ drivers/scsi/qla2xxx/qla_mbx.c  | 2 +-
+ drivers/scsi/qla2xxx/qla_nvme.c | 4 ++--
+ drivers/scsi/qla2xxx/qla_nx.c   | 4 ++--
+ drivers/scsi/qla2xxx/qla_nx2.c  | 2 +-
+ 8 files changed, 10 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 6dd984203666..08a1feb3a195 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -929,7 +929,7 @@ qla2x00_alloc_sysfs_attr(scsi_qla_host_t *vha)
+ 			    iter->name, ret);
+ 		else
+ 			ql_dbg(ql_dbg_init, vha, 0x00f4,
+-			    "Successfully created sysfs %s binary attribure.\n",
++			    "Successfully created sysfs %s binary attribute.\n",
+ 			    iter->name);
+ 	}
+ }
+diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
+index e093795a0371..2ea0ef93f5cb 100644
+--- a/drivers/scsi/qla2xxx/qla_bsg.c
++++ b/drivers/scsi/qla2xxx/qla_bsg.c
+@@ -293,7 +293,7 @@ qla2x00_process_els(struct bsg_job *bsg_job)
+ 	if (bsg_job->request_payload.sg_cnt > 1 ||
+ 		bsg_job->reply_payload.sg_cnt > 1) {
+ 		ql_dbg(ql_dbg_user, vha, 0x7002,
+-		    "Multiple SG's are not suppored for ELS requests, "
++		    "Multiple SG's are not supported for ELS requests, "
+ 		    "request_sg_cnt=%x reply_sg_cnt=%x.\n",
+ 		    bsg_job->request_payload.sg_cnt,
+ 		    bsg_job->reply_payload.sg_cnt);
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 8a5f5ef069ae..072ad1aa5505 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -4660,7 +4660,7 @@ qla2x00_configure_fabric(scsi_qla_host_t *vha)
+ 			} else if (qla2x00_rsnn_nn(vha)) {
+ 				/* EMPTY */
+ 				ql_dbg(ql_dbg_disc, vha, 0x209b,
+-				    "Register Symobilic Node Name failed.\n");
++				    "Register Symbolic Node Name failed.\n");
+ 				if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
+ 					break;
+ 			}
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 011faa1dc618..6c6e624a5aa6 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -432,8 +432,7 @@ qla83xx_handle_8200_aen(scsi_qla_host_t *vha, uint16_t *mb)
+ 			    "Register: 0x%x%x.\n", mb[7], mb[3]);
+ 			if (err_level == ERR_LEVEL_NON_FATAL) {
+ 				ql_log(ql_log_warn, vha, 0x5063,
+-				    "Not a fatal error, f/w has recovered "
+-				    "iteself.\n");
++				    "Not a fatal error, f/w has recovered itself.\n");
+ 			} else if (err_level == ERR_LEVEL_RECOVERABLE_FATAL) {
+ 				ql_log(ql_log_fatal, vha, 0x5064,
+ 				    "Recoverable Fatal error: Chip reset "
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 0764b6172ed1..7c6d1a404011 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -3893,7 +3893,7 @@ qla24xx_control_vp(scsi_qla_host_t *vha, int cmd)
+ 		rval = QLA_FUNCTION_FAILED;
+ 	} else if (vce->comp_status != cpu_to_le16(CS_COMPLETE)) {
+ 		ql_dbg(ql_dbg_mbx, vha, 0x10c5,
+-		    "Failed to complet IOCB -- completion status (%x).\n",
++		    "Failed to complete IOCB -- completion status (%x).\n",
+ 		    le16_to_cpu(vce->comp_status));
+ 		rval = QLA_FUNCTION_FAILED;
+ 	} else {
+diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
+index 1da8fa8f641d..53e58e9daba8 100644
+--- a/drivers/scsi/qla2xxx/qla_nvme.c
++++ b/drivers/scsi/qla2xxx/qla_nvme.c
+@@ -489,7 +489,7 @@ static int qla_nvme_post_cmd(struct nvme_fc_local_port *lport,
+ 	struct nvme_private *priv;
+ 
+ 	if (!fd) {
+-		ql_log(ql_log_warn, NULL, 0x2134, "NO NVMe FCP reqeust\n");
++		ql_log(ql_log_warn, NULL, 0x2134, "NO NVMe FCP request\n");
+ 		return rval;
+ 	}
+ 
+@@ -626,7 +626,7 @@ void qla_nvme_abort(struct qla_hw_data *ha, srb_t *sp)
+ 	if (!rval) {
+ 		if (!qla_nvme_wait_on_command(sp))
+ 			ql_log(ql_log_warn, NULL, 0x2112,
+-			    "nvme_wait_on_comand timed out waiting on sp=%p\n",
++			    "nvme_wait_on_command timed out waiting on sp=%p\n",
+ 			    sp);
+ 	}
+ }
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index 0a1723cc08cf..a77c33987703 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -782,7 +782,7 @@ qla82xx_pci_mem_write_direct(struct qla_hw_data *ha,
+ 		(qla82xx_pci_is_same_window(ha, off + size - 1) == 0)) {
+ 		write_unlock_irqrestore(&ha->hw_lock, flags);
+ 		ql_log(ql_log_fatal, vha, 0xb009,
+-		    "%s out of bount memory "
++		    "%s out of bound memory "
+ 		    "access, offset is 0x%llx.\n",
+ 		    QLA2XXX_DRIVER_NAME, off);
+ 		return -1;
+@@ -4250,7 +4250,7 @@ qla82xx_md_collect(scsi_qla_host_t *vha)
+ 
+ 		ql_dbg(ql_dbg_p3p, vha, 0xb040,
+ 		    "[%s]: data ptr[%d]: %p, entry_hdr: %p\n"
+-		    "entry_type: 0x%x, captrue_mask: 0x%x\n",
++		    "entry_type: 0x%x, capture_mask: 0x%x\n",
+ 		    __func__, i, data_ptr, entry_hdr,
+ 		    entry_hdr->entry_type,
+ 		    entry_hdr->d_ctrl.entry_capture_mask);
+diff --git a/drivers/scsi/qla2xxx/qla_nx2.c b/drivers/scsi/qla2xxx/qla_nx2.c
+index dc1ec9b61027..0aa9c38bf347 100644
+--- a/drivers/scsi/qla2xxx/qla_nx2.c
++++ b/drivers/scsi/qla2xxx/qla_nx2.c
+@@ -1572,7 +1572,7 @@ qla8044_read_reset_template(struct scsi_qla_host *vha)
+ 	/* Copy rest of the template */
+ 	if (qla8044_read_flash_data(vha, p_buff, addr, tmplt_hdr_def_size)) {
+ 		ql_log(ql_log_fatal, vha, 0xb0bd,
+-		    "%s: Failed to read reset tempelate\n", __func__);
++		    "%s: Failed to read reset template\n", __func__);
+ 		goto exit_read_template_error;
+ 	}
+ 
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+2.11.0
