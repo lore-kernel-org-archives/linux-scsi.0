@@ -1,108 +1,67 @@
-From: Mike Christie <mchristi@redhat.com>
-Subject: Re: [PATCH v4 0/5] tcmu: Add Type of reconfig into netlink
-Date: Fri, 30 Jun 2017 11:58:02 -0500
-Message-ID: <497e60b0-5ade-b266-af5b-e47a013369b9@redhat.com>
-References: <1496759332-35216-1-git-send-email-bryantly@linux.vnet.ibm.com>
- <1496988706.28997.40.camel@haakon3.risingtidesystems.com>
- <593DAFE8.80705@redhat.com> <593E3822.5030408@redhat.com>
- <1498807891.24896.48.camel@haakon3.risingtidesystems.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH 1/2] scsi: qla2xxx: remove incorrect byte swap
+Date: Fri, 30 Jun 2017 17:00:12 +0000
+Message-ID: <F97DB636-CF5B-4612-9127-FD9D38AE5BF4@cavium.com>
+References: <20170630161056.30630-1-arnd@arndb.de>
+ <1498840917.8086.3.camel@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60612 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751792AbdF3Q6E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 30 Jun 2017 12:58:04 -0400
-In-Reply-To: <1498807891.24896.48.camel@haakon3.risingtidesystems.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1498840917.8086.3.camel@linux.vnet.ibm.com>
+Content-Language: en-US
+Content-ID: <73BDC75D6C4B57439802F6A536091980@namprd07.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Trapp, Darren" <Darren.Trapp@cavium.com>, "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>, "Grigsby, Duane" <Duane.Grigsby@cavium.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Bryant G. Ly" <bgly@us.ibm.com>
-
-On 06/30/2017 02:31 AM, Nicholas A. Bellinger wrote:
-> Hey MNC,
-> 
-> On Mon, 2017-06-12 at 01:43 -0500, Mike Christie wrote:
->> On 06/11/2017 04:02 PM, Mike Christie wrote:
->>> On 06/09/2017 01:11 AM, Nicholas A. Bellinger wrote:
->>>> Hi Bryant & Co,
->>>>
->>>> On Tue, 2017-06-06 at 09:28 -0500, Bryant G. Ly wrote:
->>>>> From: "Bryant G. Ly" <bgly@us.ibm.com>
->>>>>
->>>>> This patch consists of adding a netlink to allow for reconfiguration
->>>>> of a device in tcmu.
->>>>>
->>>>> It also changes and adds some attributes that are reconfigurable:
->>>>> write_cache, device size, and device path.
->>>>>
->>>>> V2 - Fixes kfree in tcmu: Make dev_config configurable
->>>>> V3 - Fixes spelling error
->>>>> V4 - change strcpy to strlcpy for tcmu_dev_path_store and move
->>>>>      tcmu_reconfig_type into target_core_user.h
->>>>>
->>>>>
->>>>> Bryant G. Ly (5):
->>>>>   tcmu: Support emulate_write_cache
->>>>>   tcmu: Add netlink for device reconfiguration
->>>>>   tcmu: Make dev_size configurable via userspace
->>>>>   tcmu: Make dev_config configurable
->>>>>   tcmu: Add Type of reconfig into netlink
->>>>>
->>>>>  drivers/target/target_core_user.c     | 152 ++++++++++++++++++++++++++++++++--
->>>>>  include/uapi/linux/target_core_user.h |   9 ++
->>>>>  2 files changed, 155 insertions(+), 6 deletions(-)
->>>>>
->>>>
->>>> AFAICT, it looks like all of the review comments have been addressed in
->>>> -v4.
->>>>
->>>> Applied to target-pending/for-next, with MNC's (pseudo) Reviewed-by's
->>>> added for #3-#5.
->>>>
->>>> Please let me know if anything else needs to be changed.
->>>>
->>>
->>> The patches look ok. Thanks. Could you just merge the attached patch
->>> into "[PATCH v4 5/5] tcmu: Add Type of reconfig into netlink" or into
->>> the patchset after it? It just makes some of the names a little less
->>> generic and only returns the reconfig attr for reconfig commands.
->>>
->>
->> Actually Nick, do not merge the last patch. I have a lot more fixes/changes.
->>
->> Bryant, could you test and adapt your userspace patches for the attached
->> patch build over Nicks for-next branch.
->>
->> Basically, the patch just has use pass the value being reconfigured with
->> the netlink event. Along the way, it fixes a couple bugs.
->>
->> Nick, when we have tested the patch, then I can submit as a formal
->> patchset, or you can fold into the existing patches or whatever you prefer.
->>
-> 
-> Looking at merging your -v4 patches series here next:
-> 
-> [PATCH V4 00/10] target/tcmu: make tcmu netlink ops sync
-> http://www.spinics.net/lists/target-devel/msg15706.html
-> 
-> Do you still want me to drop the patch from Bryant below as mentioned
-> earlier..?
-
-Hey,
-
-First, sorry for the mess of comments/patches in various threads.
-
-No need to drop it. The first patch:
-
-[PATCH 01/10] tcmu: reconfigure netlink attr changes
-
-in the thread you referenced above just fixes the stuff that needed to
-be fixed.
 
 
-> 
-> tcmu: Add Type of reconfig into netlink
-> https://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git/commit/?h=for-next&id=28d44b983000754677155e46f6bdafc7b4d84213
-> 
+> On Jun 30, 2017, at 9:41 AM, James Bottomley <jejb@linux.vnet.ibm.com> wr=
+ote:
+>=20
+> On Fri, 2017-06-30 at 18:10 +0200, Arnd Bergmann wrote:
+>> cont_pkt->entry_type is an 8-bit field, so doing a 32-bit byteswap
+>> on it will store incorrect data:
+>>=20
+>> drivers/scsi/qla2xxx/qla_nvme.c: In function 'qla2x00_start_nvme_mq':
+>> include/uapi/linux/byteorder/big_endian.h:32:26: error: large integer
+>> implicitly truncated to unsigned type [-Werror=3Doverflow]
+>> drivers/scsi/qla2xxx/qla_nvme.c:444:27: note: in expansion of macro
+>> 'cpu_to_le32'
+>>     cont_pkt->entry_type =3D cpu_to_le32(CONTINUE_A64_TYPE);
+>>=20
+>> This removes the erroneous cpu_to_le32().
+>>=20
+>> Fixes: e84067d74301 ("scsi: qla2xxx: Add FC-NVMe F/W initialization
+>> and transport registration")
+>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>> ---
+>>  drivers/scsi/qla2xxx/qla_nvme.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>=20
+>> diff --git a/drivers/scsi/qla2xxx/qla_nvme.c
+>> b/drivers/scsi/qla2xxx/qla_nvme.c
+>> index 1da8fa8f641d..14e25e32e622 100644
+>> --- a/drivers/scsi/qla2xxx/qla_nvme.c
+>> +++ b/drivers/scsi/qla2xxx/qla_nvme.c
+>> @@ -441,7 +441,7 @@ static int qla2x00_start_nvme_mq(srb_t *sp)
+>>  				req->ring_ptr++;
+>>  			}
+>>  			cont_pkt =3D (cont_a64_entry_t *)req-
+>>> ring_ptr;
+>> -			cont_pkt->entry_type =3D
+>> cpu_to_le32(CONTINUE_A64_TYPE);
+>> +			cont_pkt->entry_type =3D CONTINUE_A64_TYPE;
+>> =20
+>=20
+> We already have a patch proposed for this, but I think it may be wrong
+> (it's the same as yours, so yours may be wrong too) see the handling in
+> qla_iocb.c
+>=20
+> James
+
+I will send patch which has correct usage in qla_iocb.c shortly.=20
+
+Thanks,
+- Himanshu
