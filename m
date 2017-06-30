@@ -1,46 +1,45 @@
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH 00/15] megaraid_sas: Updates for scsi-next
-Date: Fri, 30 Jun 2017 01:29:54 -0700
-Message-ID: <1498811409-11157-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH 01/15] megaraid_sas: mismatch of allocated MFI frame size and length exposed in MFI MPT pass through command
+Date: Fri, 30 Jun 2017 01:29:55 -0700
+Message-ID: <1498811409-11157-2-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+References: <1498811409-11157-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f46.google.com ([74.125.83.46]:35914 "EHLO
-        mail-pg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751579AbdF3Iap (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Jun 2017 04:30:45 -0400
-Received: by mail-pg0-f46.google.com with SMTP id u62so60415234pgb.3
-        for <linux-scsi@vger.kernel.org>; Fri, 30 Jun 2017 01:30:45 -0700 (PDT)
+Received: from mail-pf0-f181.google.com ([209.85.192.181]:36170 "EHLO
+        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751589AbdF3Iat (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Jun 2017 04:30:49 -0400
+Received: by mail-pf0-f181.google.com with SMTP id q86so63617860pfl.3
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Jun 2017 01:30:48 -0700 (PDT)
+In-Reply-To: <1498811409-11157-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, hch@lst.de, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, hch@lst.de, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, stable@vger.kernel.org
 
-Shivasharan S (15):
-  megaraid_sas: mismatch of allocated MFI frame size and length exposed
-    in MFI MPT pass through command
-  megaraid_sas: set minimum value of resetwaittime to be 1 secs
-  megaraid_sas: Use synchronize_irq in target reset case
-  megaraid_sas: Call megasas_complete_cmd_dpc_fusion every 1 second
-    while there are pending commands
-  megaraid_sas: Do not re-fire shutdown DCMD after OCR
-  megaraid_sas: Fix endianness issues in DCMD handling
-  megaraid_sas: Check valid aen class range to avoid kernel panic
-  megaraid_sas: Use SMID for Task abort case only
-  megaraid_sas: use vmalloc for crash dump buffers and driver's local
-    RAID map
-  megaraid_sas: Return pended IOCTLs with cmd_status
-    MFI_STAT_WRONG_STATE in case adapter is dead
-  megaraid_sas: Set device queue_depth same as HBA can_queue value in
-    scsi-mq mode
-  megaraid_sas: replace internal FALSE/TRUE definitions with false/true
-  megaraid_sas: modified few prints in OCR and IOC INIT path
-  megaraid_sas: call megasas_dump_frame with correct IO frame size
-  megaraid_sas: driver version upgrade
+ Fix - Driver allocated 256 byte MFI frames bytes but while sending MFI
+ frame (embedded inside chain frame of MPT frame) to firmware, driver
+ sets the length as 4k. This results in DMA read error messages during
+ boot.
 
- drivers/scsi/megaraid/megaraid_sas.h        |   5 +-
- drivers/scsi/megaraid/megaraid_sas_base.c   |  44 ++++++--
- drivers/scsi/megaraid/megaraid_sas_fp.c     |  40 +++----
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 161 +++++++++++++++++-----------
- 4 files changed, 149 insertions(+), 101 deletions(-)
+Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Cc: stable@vger.kernel.org
+---
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index f990ab4d..f717fbc 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -3283,7 +3283,7 @@ build_mpt_mfi_pass_thru(struct megasas_instance *instance,
+ 	mpi25_ieee_chain->Flags = IEEE_SGE_FLAGS_CHAIN_ELEMENT |
+ 		MPI2_IEEE_SGE_FLAGS_IOCPLBNTA_ADDR;
+ 
+-	mpi25_ieee_chain->Length = cpu_to_le32(instance->max_chain_frame_sz);
++	mpi25_ieee_chain->Length = cpu_to_le32(instance->mfi_frame_size);
+ }
+ 
+ /**
 -- 
 2.8.3
