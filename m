@@ -1,45 +1,131 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 1/2] scsi: qla2xxx: remove incorrect byte swap
-Date: Fri, 30 Jun 2017 18:10:39 +0200
-Message-ID: <20170630161056.30630-1-arnd@arndb.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:60857 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751792AbdF3QLg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Jun 2017 12:11:36 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH 2/2] scsi: qla2xxx: avoid unused-function warning
+Date: Fri, 30 Jun 2017 18:10:40 +0200
+Message-ID: <20170630161056.30630-2-arnd@arndb.de>
+References: <20170630161056.30630-1-arnd@arndb.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170630161056.30630-1-arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
 To: qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Himanshu Madhani <himanshu.madhani@cavium.com>, Darren Trapp <darren.trapp@cavium.com>, Giridhar Malavali <giridhar.malavali@cavium.com>, Duane Grigsby <duane.grigsby@cavium.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, Quinn Tran <quinn.tran@cavium.com>, Himanshu Madhani <himanshu.madhani@cavium.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Darren Trapp <darren.trapp@cavium.com>, Anil Gurumurthy <anil.gurumurhty@cavium.com>, Duane Grigsby <duane.grigsby@cavium.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-cont_pkt->entry_type is an 8-bit field, so doing a 32-bit byteswap
-on it will store incorrect data:
+When NVMe support is disabled, we get a couple of harmless warnings:
 
-drivers/scsi/qla2xxx/qla_nvme.c: In function 'qla2x00_start_nvme_mq':
-include/uapi/linux/byteorder/big_endian.h:32:26: error: large integer implicitly truncated to unsigned type [-Werror=overflow]
-drivers/scsi/qla2xxx/qla_nvme.c:444:27: note: in expansion of macro 'cpu_to_le32'
-    cont_pkt->entry_type = cpu_to_le32(CONTINUE_A64_TYPE);
+drivers/scsi/qla2xxx/qla_nvme.c:667:13: error: 'qla_nvme_unregister_remote_port' defined but not used [-Werror=unused-function]
+drivers/scsi/qla2xxx/qla_nvme.c:634:13: error: 'qla_nvme_abort_all' defined but not used [-Werror=unused-function]
+drivers/scsi/qla2xxx/qla_nvme.c:604:12: error: 'qla_nvme_wait_on_rport_del' defined but not used [-Werror=unused-function]
 
-This removes the erroneous cpu_to_le32().
+This replaces the preprocessor checks in the code with equivalent
+compiler conditionals, which lets gcc drop the unused functions
+without warning, and is nicer to read.
 
 Fixes: e84067d74301 ("scsi: qla2xxx: Add FC-NVMe F/W initialization and transport registration")
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/scsi/qla2xxx/qla_nvme.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/Kconfig    |  1 +
+ drivers/scsi/qla2xxx/qla_nvme.c | 20 ++++++++++++--------
+ 2 files changed, 13 insertions(+), 8 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/Kconfig b/drivers/scsi/qla2xxx/Kconfig
+index de952935b5d2..036cc3f217b1 100644
+--- a/drivers/scsi/qla2xxx/Kconfig
++++ b/drivers/scsi/qla2xxx/Kconfig
+@@ -2,6 +2,7 @@ config SCSI_QLA_FC
+ 	tristate "QLogic QLA2XXX Fibre Channel Support"
+ 	depends on PCI && SCSI
+ 	depends on SCSI_FC_ATTRS
++	depends on NVME_FC || !NVME_FC
+ 	select FW_LOADER
+ 	select BTREE
+ 	---help---
 diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
-index 1da8fa8f641d..14e25e32e622 100644
+index 14e25e32e622..9c18d754ac33 100644
 --- a/drivers/scsi/qla2xxx/qla_nvme.c
 +++ b/drivers/scsi/qla2xxx/qla_nvme.c
-@@ -441,7 +441,7 @@ static int qla2x00_start_nvme_mq(srb_t *sp)
- 				req->ring_ptr++;
- 			}
- 			cont_pkt = (cont_a64_entry_t *)req->ring_ptr;
--			cont_pkt->entry_type = cpu_to_le32(CONTINUE_A64_TYPE);
-+			cont_pkt->entry_type = CONTINUE_A64_TYPE;
+@@ -17,10 +17,12 @@ static void qla_nvme_unregister_remote_port(struct work_struct *);
  
- 			cur_dsd = (uint32_t *)cont_pkt->dseg_0_address;
- 			avail_dsds = 5;
+ int qla_nvme_register_remote(scsi_qla_host_t *vha, fc_port_t *fcport)
+ {
+-#if (IS_ENABLED(CONFIG_NVME_FC))
+ 	struct nvme_rport *rport;
+ 	int ret;
+ 
++	if (!IS_ENABLED(CONFIG_NVME_FC))
++		return 0;
++
+ 	if (fcport->nvme_flag & NVME_FLAG_REGISTERED)
+ 		return 0;
+ 
+@@ -78,7 +80,6 @@ int qla_nvme_register_remote(scsi_qla_host_t *vha, fc_port_t *fcport)
+ 	init_waitqueue_head(&fcport->nvme_waitQ);
+ 	rport->fcport = fcport;
+ 	list_add_tail(&rport->list, &vha->nvme_rport_list);
+-#endif
+ 	return 0;
+ }
+ 
+@@ -666,11 +667,13 @@ static void qla_nvme_abort_all(fc_port_t *fcport)
+ 
+ static void qla_nvme_unregister_remote_port(struct work_struct *work)
+ {
+-#if (IS_ENABLED(CONFIG_NVME_FC))
+ 	struct fc_port *fcport = container_of(work, struct fc_port,
+ 	    nvme_del_work);
+ 	struct nvme_rport *rport, *trport;
+ 
++	if (!IS_ENABLED(CONFIG_NVME_FC))
++		return;
++
+ 	list_for_each_entry_safe(rport, trport,
+ 	    &fcport->vha->nvme_rport_list, list) {
+ 		if (rport->fcport == fcport) {
+@@ -680,16 +683,17 @@ static void qla_nvme_unregister_remote_port(struct work_struct *work)
+ 			    fcport->nvme_remote_port);
+ 		}
+ 	}
+-#endif
+ }
+ 
+ void qla_nvme_delete(scsi_qla_host_t *vha)
+ {
+-#if (IS_ENABLED(CONFIG_NVME_FC))
+ 	struct nvme_rport *rport, *trport;
+ 	fc_port_t *fcport;
+ 	int nv_ret;
+ 
++	if (!IS_ENABLED(CONFIG_NVME_FC))
++		return;
++
+ 	list_for_each_entry_safe(rport, trport, &vha->nvme_rport_list, list) {
+ 		fcport = rport->fcport;
+ 
+@@ -711,17 +715,18 @@ void qla_nvme_delete(scsi_qla_host_t *vha)
+ 			ql_log(ql_log_info, vha, 0x2115,
+ 			    "Unregister of localport failed\n");
+ 	}
+-#endif
+ }
+ 
+ void qla_nvme_register_hba(scsi_qla_host_t *vha)
+ {
+-#if (IS_ENABLED(CONFIG_NVME_FC))
+ 	struct nvme_fc_port_template *tmpl;
+ 	struct qla_hw_data *ha;
+ 	struct nvme_fc_port_info pinfo;
+ 	int ret;
+ 
++	if (!IS_ENABLED(CONFIG_NVME_FC))
++		return;
++
+ 	ha = vha->hw;
+ 	tmpl = &qla_nvme_fc_transport;
+ 
+@@ -752,5 +757,4 @@ void qla_nvme_register_hba(scsi_qla_host_t *vha)
+ 	atomic_set(&vha->nvme_ref_count, 1);
+ 	vha->nvme_local_port->private = vha;
+ 	init_waitqueue_head(&vha->nvme_waitQ);
+-#endif
+ }
 -- 
 2.9.0
