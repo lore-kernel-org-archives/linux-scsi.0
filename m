@@ -1,31 +1,38 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 2/2] scsi: qla2xxx: avoid unused-function warning
-Date: Sat, 01 Jul 2017 17:15:33 -0400
-Message-ID: <yq1lgo7voy2.fsf@oracle.com>
-References: <20170630161056.30630-1-arnd@arndb.de>
-        <20170630161056.30630-2-arnd@arndb.de>
+Subject: Re: [PATCH v2] qla2xxx: Fix NVMe entry_type for iocb packet on BE system
+Date: Sat, 01 Jul 2017 17:22:46 -0400
+Message-ID: <yq1h8yvvom1.fsf@oracle.com>
+References: <20170701023253.8362-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170630161056.30630-2-arnd@arndb.de> (Arnd Bergmann's message
-        of "Fri, 30 Jun 2017 18:10:40 +0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Quinn Tran <quinn.tran@cavium.com>, Himanshu Madhani <himanshu.madhani@cavium.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Darren Trapp <darren.trapp@cavium.com>, Anil Gurumurthy <anil.gurumurhty@cavium.com>, Duane Grigsby <duane.grigsby@cavium.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:30892 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752006AbdGAVWz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Jul 2017 17:22:55 -0400
+In-Reply-To: <20170701023253.8362-1-himanshu.madhani@cavium.com> (Himanshu
+        Madhani's message of "Fri, 30 Jun 2017 19:32:53 -0700")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Himanshu Madhani <himanshu.madhani@cavium.com>
+Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
 
-Arnd,
+Himanshu,
 
-> When NVMe support is disabled, we get a couple of harmless warnings:
+> This patch fixes incorrect assignment for entry_type field for Continuation
+> Type iocb packet on BE system. This was caught by -Woverflow warning on BE
+> system compilation.
 >
-> drivers/scsi/qla2xxx/qla_nvme.c:667:13: error: 'qla_nvme_unregister_remote_port' defined but not used [-Werror=unused-function]
-> drivers/scsi/qla2xxx/qla_nvme.c:634:13: error: 'qla_nvme_abort_all' defined but not used [-Werror=unused-function]
-> drivers/scsi/qla2xxx/qla_nvme.c:604:12: error: 'qla_nvme_wait_on_rport_del' defined but not used [-Werror=unused-function]
+> For Continuation Type iocb driver needs to write complete 32 bit value to
+> initialize other field members in stucture to 0.
 >
-> This replaces the preprocessor checks in the code with equivalent
-> compiler conditionals, which lets gcc drop the unused functions
-> without warning, and is nicer to read.
+> Following warning is seen on BE system compile: 
+>
+> drivers/scsi/qla2xxx/qla_nvme.c: In function 'qla2x00_start_nvme_mq':
+> include/uapi/linux/byteorder/big_endian.h:32:26: warning: large integer
+> implicitly truncated to unsigned type [-Woverflow]
+>  #define __cpu_to_le32(x) ((__force __le32)__swab32((x)))
 
 Applied to 4.13/scsi-queue.
 
