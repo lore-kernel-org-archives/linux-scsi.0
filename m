@@ -1,103 +1,63 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: [PATCH v6 0/6] g_NCR5380: PDMA fixes and cleanup
-Date: Sat, 1 Jul 2017 23:49:03 +0200
-Message-ID: <201707012349.04652.linux@rainbow-software.org>
-References: <cover.1498876618.git.fthain@telegraphics.com.au>
+From: Mike Christie <mchristi@redhat.com>
+Subject: Re: [PATCH] tcmu: Fix flushing cmd entry dcache page
+Date: Sat, 1 Jul 2017 18:31:05 -0500
+Message-ID: <595830B9.9070505@redhat.com>
+References: <1498810456-10609-1-git-send-email-lixiubo@cmss.chinamobile.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1498876618.git.fthain@telegraphics.com.au>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1498810456-10609-1-git-send-email-lixiubo@cmss.chinamobile.com>
+Sender: target-devel-owner@vger.kernel.org
+To: lixiubo@cmss.chinamobile.com, nab@linux-iscsi.org
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Saturday 01 July 2017 04:40:53 Finn Thain wrote:
-> Ondrej, would you please test this new series?
->
-> Changed since v1:
-> - PDMA transfer residual is calculated earlier.
-> - End of DMA flag check is now polled (if there is any residual).
->
-> Changed since v2:
-> - Bail out of transfer loops when Gated IRQ gets asserted.
-> - Make udelay conditional on board type.
-> - Drop sg_tablesize patch due to performance regression.
->
-> Changed since v3:
-> - Add Ondrej's workaround for corrupt WRITE commands on DTC boards.
-> - Reset the 53c400 logic after any short PDMA transfer.
-> - Don't fail the transfer if the 53c400 logic got a reset.
->
-> Changed since v4:
-> - Bail out of transfer loops when Gated IRQ gets asserted. (Again.)
-> - Always call wait_for_53c80_registers() at end of transfer.
-> - Drain chip buffers after PDMA receive is interrupted.
-> - Rework residual calculation.
-> - Add new patch to correct DMA terminology.
->
-> Changed since v5:
-> - Rework residual calculation to account for on-chip buffer swap.
-> - Attempt to retain the disconnect/IRQ detection in the DTC436 workaround.
-> - Move all DTC436 workarounds to final patch.
->
->
-> Finn Thain (2):
->   g_NCR5380: Cleanup comments and whitespace
->   g_NCR5380: Use unambiguous terminology for PDMA send and receive
->
-> Ondrej Zary (4):
->   g_NCR5380: Fix PDMA transfer size
->   g_NCR5380: End PDMA transfer correctly on target disconnection
->   g_NCR5380: Re-work PDMA loops
->   g_NCR5380: Various DTC436 workarounds
->
->  drivers/scsi/g_NCR5380.c | 273
-> ++++++++++++++++++++++++++--------------------- 1 file changed, 151
-> insertions(+), 122 deletions(-)
+On 06/30/2017 03:14 AM, lixiubo@cmss.chinamobile.com wrote:
+> From: Xiubo Li <lixiubo@cmss.chinamobile.com>
+> 
+> When feeding the tcmu's cmd ring, we need to flush the dcache page
+> for the cmd entry to make sure these kernel stores are visible to
+> user space mappings of that page.
+> 
+> For the none PAD cmd entry, this will be flushed at the end of the
+> tcmu_queue_cmd_ring().
+> 
+> Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
+> ---
+>  drivers/target/target_core_user.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+> index 203bff1..930800c 100644
+> --- a/drivers/target/target_core_user.c
+> +++ b/drivers/target/target_core_user.c
+> @@ -699,21 +699,21 @@ static inline size_t tcmu_cmd_get_cmd_size(struct tcmu_cmd *tcmu_cmd,
+>  		size_t pad_size = head_to_end(cmd_head, udev->cmdr_size);
+>  
+>  		entry = (void *) mb + CMDR_OFF + cmd_head;
+> -		tcmu_flush_dcache_range(entry, sizeof(*entry));
+>  		tcmu_hdr_set_op(&entry->hdr.len_op, TCMU_OP_PAD);
+>  		tcmu_hdr_set_len(&entry->hdr.len_op, pad_size);
+>  		entry->hdr.cmd_id = 0; /* not used for PAD */
+>  		entry->hdr.kflags = 0;
+>  		entry->hdr.uflags = 0;
+> +		tcmu_flush_dcache_range(entry, sizeof(*entry));
+>  
+>  		UPDATE_HEAD(mb->cmd_head, pad_size, udev->cmdr_size);
+> +		tcmu_flush_dcache_range(mb, sizeof(*mb));
+>  
+>  		cmd_head = mb->cmd_head % udev->cmdr_size; /* UAM */
+>  		WARN_ON(cmd_head != 0);
+>  	}
+>  
+>  	entry = (void *) mb + CMDR_OFF + cmd_head;
+> -	tcmu_flush_dcache_range(entry, sizeof(*entry));
+>  	tcmu_hdr_set_op(&entry->hdr.len_op, TCMU_OP_CMD);
+>  	entry->hdr.cmd_id = tcmu_cmd->cmd_id;
+>  	entry->hdr.kflags = 0;
+> 
 
-The write corruption is still present - "start" must be rolled back in both
-IRQ and timeout cases. And 128 B is not enough , 256 is OK (why did it work
-last time?). We just wrote a buffer to the chip but the chip is writing the
-previous one to the drive - so if a problem arises, both buffers are lost.
+Looks ok to me.
 
-This fixes the corruption (although the "start > 0" check seems wrong now):
---- a/drivers/scsi/g_NCR5380.c
-+++ b/drivers/scsi/g_NCR5380.c
-@@ -598,23 +598,17 @@ static inline int generic_NCR5380_psend(struct NCR5380_hostdata *hostdata,
- 		                           CSR_HOST_BUF_NOT_RDY, 0,
- 		                           hostdata->c400_ctl_status,
- 		                           CSR_GATED_53C80_IRQ,
--		                           CSR_GATED_53C80_IRQ, HZ / 64) < 0)
--                       break;
--
--		if (NCR5380_read(hostdata->c400_ctl_status) &
--		    CSR_HOST_BUF_NOT_RDY) {
-+		                           CSR_GATED_53C80_IRQ, HZ / 64) < 0 ||
-+		    (NCR5380_read(hostdata->c400_ctl_status) &
-+		     (CSR_HOST_BUF_NOT_RDY | CSR_GATED_53C80_IRQ))) {
- 			/* The chip has done a 128 B buffer swap but the first
- 			 * buffer still has not reached the SCSI bus.
- 			 */
- 			if (start > 0)
--				start -= 128;
-+				start -= 256;
- 			break;
- 		}
- 
--		if (NCR5380_read(hostdata->c400_ctl_status) &
--		    CSR_GATED_53C80_IRQ)
--			break;
--
- 		if (hostdata->io_port && hostdata->io_width == 2)
- 			outsw(hostdata->io_port + hostdata->c400_host_buf,
- 			      src + start, 64);
-
-
-DTC seems to work too.
-
--- 
-Ondrej Zary
+Reviewed-by: Mike Christie <mchristi@redhat.com>
