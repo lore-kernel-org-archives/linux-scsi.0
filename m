@@ -1,35 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH RESEND] scsi: Add STARGET_CREATED_REMOVE state to scsi_target_state
-Date: Sat, 01 Jul 2017 16:55:46 -0400
-Message-ID: <yq1k23rx4fh.fsf@oracle.com>
-References: <1498589758-31473-1-git-send-email-emilne@redhat.com>
+Subject: Re: [PATCH 0/3] cxlflash: Minor fix and EH refactoring
+Date: Sat, 01 Jul 2017 17:02:44 -0400
+Message-ID: <yq1fuefx43v.fsf@oracle.com>
+References: <1498669929-39684-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45801 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751978AbdGAUzv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Jul 2017 16:55:51 -0400
-In-Reply-To: <1498589758-31473-1-git-send-email-emilne@redhat.com> (Ewan
-        D. Milne's message of "Tue, 27 Jun 2017 14:55:58 -0400")
+Received: from userp1040.oracle.com ([156.151.31.81]:26702 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751996AbdGAVDG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Jul 2017 17:03:06 -0400
+In-Reply-To: <1498669929-39684-1-git-send-email-mrochs@linux.vnet.ibm.com>
+        (Matthew R. Ochs's message of "Wed, 28 Jun 2017 12:12:09 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ewan D. Milne" <emilne@redhat.com>
-Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Hannes Reinecke <hare@suse.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org
 
 
-Ewan,
+Matthew,
 
-> The addition of the STARGET_REMOVE state had the side effect of
-> introducing a race condition that can cause a crash.
->
-> scsi_target_reap_ref_release() checks the starget->state to
-> see if it still in STARGET_CREATED, and if so, skips calling
-> transport_remove_device() and device_del(), because the starget->state
-> is only set to STARGET_RUNNING after scsi_target_add() has called
-> device_add() and transport_add_device().
+> This small series fixes a recently injected double free and also
+> includes two patches to refactor the host and reset handlers to ease
+> the burden of making this driver compatible with an updated SCSI EH
+> framework.
 
-Applied to 4.13/scsi-queue.
+Applied to 4.13/scsi-queue. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
