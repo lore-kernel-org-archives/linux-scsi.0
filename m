@@ -1,25 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] qla2xxx: Protect access to qpair members with qpair->qp_lock
-Date: Sat, 01 Jul 2017 16:50:19 -0400
-Message-ID: <yq1wp7rx4ok.fsf@oracle.com>
-References: <20170623071011.21184-1-jthumshirn@suse.de>
+Subject: Re: [PATCH] scsi: ufs: flush eh_work when eh_work scheduled.
+Date: Sat, 01 Jul 2017 16:51:45 -0400
+Message-ID: <yq1shifx4m6.fsf@oracle.com>
+References: <20170624111432.11852-1-zangleigang@hisilicon.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170623071011.21184-1-jthumshirn@suse.de> (Johannes Thumshirn's
-        message of "Fri, 23 Jun 2017 09:10:11 +0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, qla2xxx-upstream@qlogic.com, Himanshu Madhani <himanshu.madhani@cavium.com>, Hannes Reinecke <hare@suse.de>, John Garry <john.garry@huawei.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:45505 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751978AbdGAUwy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Jul 2017 16:52:54 -0400
+In-Reply-To: <20170624111432.11852-1-zangleigang@hisilicon.com> (Zang
+        Leigang's message of "Sat, 24 Jun 2017 19:14:32 +0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Zang Leigang <zangleigang@hisilicon.com>
+Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
 
-Johannes,
+Zang,
 
-> In qla2xx_start_scsi_mq() and qla2xx_dif_start_scsi_mq() we grab the
-> qpair->qp_lock but do access members of the qpair before having the lock.
-> Re-order the locking sequence to have all read and write access to qpair
-> members under the qpair->qp_lock.
+> Forget a condition: eh_work scheduled but do not start to work.
 
 Applied to 4.13/scsi-queue.
 
