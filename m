@@ -1,7 +1,7 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v6 1/6] g_NCR5380: Fix PDMA transfer size
+Subject: [PATCH v6 3/6] g_NCR5380: Cleanup comments and whitespace
 Date: Fri, 30 Jun 2017 22:40:53 -0400 (EDT)
-Message-ID: <e6f1d6a2f8a14518c593a0990e03e96ac4de8291.1498876618.git.fthain@telegraphics.com.au>
+Message-ID: <49e9e34ade20bfddf7e76c8b8b0027035f30a131.1498876618.git.fthain@telegraphics.com.au>
 References: <cover.1498876618.git.fthain@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1498876618.git.fthain@telegraphics.com.au>
@@ -10,55 +10,159 @@ To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <mart
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Ondrej Zary <linux@rainbow-software.org>
-
-generic_NCR5380_dma_xfer_len() incorrectly uses cmd->transfersize
-which causes rescan-scsi-bus and CD-ROM access to hang the system.
-Use cmd->SCp.this_residual instead, like other NCR5380 drivers.
-
-Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 ---
- drivers/scsi/g_NCR5380.c | 12 +++---------
- 1 file changed, 3 insertions(+), 9 deletions(-)
+ drivers/scsi/g_NCR5380.c | 61 ++++++++++++++++++++++--------------------------
+ 1 file changed, 28 insertions(+), 33 deletions(-)
 
 diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-index 67c8dac321ad..14ef4e8c4713 100644
+index 911a4300ea51..dedaed2d16e4 100644
 --- a/drivers/scsi/g_NCR5380.c
 +++ b/drivers/scsi/g_NCR5380.c
-@@ -76,6 +76,7 @@
- #define IRQ_AUTO 254
- 
- #define MAX_CARDS 8
-+#define DMA_MAX_SIZE 32768
- 
- /* old-style parameters for compatibility */
- static int ncr_irq = -1;
-@@ -629,23 +630,16 @@ static inline int generic_NCR5380_pwrite(struct NCR5380_hostdata *hostdata,
- static int generic_NCR5380_dma_xfer_len(struct NCR5380_hostdata *hostdata,
-                                         struct scsi_cmnd *cmd)
- {
--	int transfersize = cmd->transfersize;
-+	int transfersize = cmd->SCp.this_residual;
- 
- 	if (hostdata->flags & FLAG_NO_PSEUDO_DMA)
- 		return 0;
- 
--	/* Limit transfers to 32K, for xx400 & xx406
--	 * pseudoDMA that transfers in 128 bytes blocks.
--	 */
--	if (transfersize > 32 * 1024 && cmd->SCp.this_residual &&
--	    !(cmd->SCp.this_residual % transfersize))
--		transfersize = 32 * 1024;
--
- 	/* 53C400 datasheet: non-modulo-128-byte transfers should use PIO */
- 	if (transfersize % 128)
- 		transfersize = 0;
- 
--	return transfersize;
-+	return min(transfersize, DMA_MAX_SIZE);
+@@ -1,17 +1,17 @@
+ /*
+  * Generic Generic NCR5380 driver
+- *	
++ *
+  * Copyright 1993, Drew Eckhardt
+- *	Visionary Computing
+- *	(Unix and Linux consulting and custom programming)
+- *	drew@colorado.edu
+- *      +1 (303) 440-4894
++ * Visionary Computing
++ * (Unix and Linux consulting and custom programming)
++ * drew@colorado.edu
++ * +1 (303) 440-4894
+  *
+  * NCR53C400 extensions (c) 1994,1995,1996, Kevin Lentin
+- *    K.Lentin@cs.monash.edu.au
++ * K.Lentin@cs.monash.edu.au
+  *
+  * NCR53C400A extensions (c) 1996, Ingmar Baumgart
+- *    ingmar@gonzo.schwaben.de
++ * ingmar@gonzo.schwaben.de
+  *
+  * DTC3181E extensions (c) 1997, Ronald van Cuijlenborg
+  * ronald.van.cuijlenborg@tip.nl or nutty@dds.nl
+@@ -481,15 +481,14 @@ static void generic_NCR5380_release_resources(struct Scsi_Host *instance)
  }
  
- /*
+ /**
+- *	generic_NCR5380_pread - pseudo DMA read
+- *	@hostdata: scsi host private data
+- *	@dst: buffer to read into
+- *	@len: buffer length
++ * generic_NCR5380_pread - pseudo DMA read
++ * @hostdata: scsi host private data
++ * @dst: buffer to write into
++ * @len: transfer size
+  *
+- *	Perform a pseudo DMA mode read from an NCR53C400 or equivalent
+- *	controller
++ * Perform a pseudo DMA mode receive from a 53C400 or equivalent device.
+  */
+- 
++
+ static inline int generic_NCR5380_pread(struct NCR5380_hostdata *hostdata,
+                                         unsigned char *dst, int len)
+ {
+@@ -508,10 +507,10 @@ static inline int generic_NCR5380_pread(struct NCR5380_hostdata *hostdata,
+ 
+ 		if (hostdata->io_port && hostdata->io_width == 2)
+ 			insw(hostdata->io_port + hostdata->c400_host_buf,
+-							dst + start, 64);
++			     dst + start, 64);
+ 		else if (hostdata->io_port)
+ 			insb(hostdata->io_port + hostdata->c400_host_buf,
+-							dst + start, 128);
++			     dst + start, 128);
+ 		else
+ 			memcpy_fromio(dst + start,
+ 				hostdata->io + NCR53C400_host_buffer, 128);
+@@ -558,13 +557,12 @@ static inline int generic_NCR5380_pread(struct NCR5380_hostdata *hostdata,
+ }
+ 
+ /**
+- *	generic_NCR5380_pwrite - pseudo DMA write
+- *	@hostdata: scsi host private data
+- *	@dst: buffer to read into
+- *	@len: buffer length
++ * generic_NCR5380_pwrite - pseudo DMA write
++ * @hostdata: scsi host private data
++ * @src: buffer to read from
++ * @len: transfer size
+  *
+- *	Perform a pseudo DMA mode read from an NCR53C400 or equivalent
+- *	controller
++ * Perform a pseudo DMA mode send to a 53C400 or equivalent device.
+  */
+ 
+ static inline int generic_NCR5380_pwrite(struct NCR5380_hostdata *hostdata,
+@@ -603,10 +601,10 @@ static inline int generic_NCR5380_pwrite(struct NCR5380_hostdata *hostdata,
+ 
+ 		if (hostdata->io_port && hostdata->io_width == 2)
+ 			outsw(hostdata->io_port + hostdata->c400_host_buf,
+-							src + start, 64);
++			      src + start, 64);
+ 		else if (hostdata->io_port)
+ 			outsb(hostdata->io_port + hostdata->c400_host_buf,
+-							src + start, 128);
++			      src + start, 128);
+ 		else
+ 			memcpy_toio(hostdata->io + NCR53C400_host_buffer,
+ 			            src + start, 128);
+@@ -656,10 +654,8 @@ static int generic_NCR5380_dma_residual(struct NCR5380_hostdata *hostdata)
+ 	return hostdata->pdma_residual;
+ }
+ 
+-/*
+- *	Include the NCR5380 core code that we build our driver around	
+- */
+- 
++/* Include the core driver code. */
++
+ #include "NCR5380.c"
+ 
+ static struct scsi_host_template driver_template = {
+@@ -679,11 +675,10 @@ static struct scsi_host_template driver_template = {
+ 	.max_sectors		= 128,
+ };
+ 
+-
+ static int generic_NCR5380_isa_match(struct device *pdev, unsigned int ndev)
+ {
+ 	int ret = generic_NCR5380_init_one(&driver_template, pdev, base[ndev],
+-					  irq[ndev], card[ndev]);
++	                                   irq[ndev], card[ndev]);
+ 	if (ret) {
+ 		if (base[ndev])
+ 			printk(KERN_WARNING "Card not found at address 0x%03x\n",
+@@ -695,7 +690,7 @@ static int generic_NCR5380_isa_match(struct device *pdev, unsigned int ndev)
+ }
+ 
+ static int generic_NCR5380_isa_remove(struct device *pdev,
+-				   unsigned int ndev)
++                                      unsigned int ndev)
+ {
+ 	generic_NCR5380_release_resources(dev_get_drvdata(pdev));
+ 	dev_set_drvdata(pdev, NULL);
+@@ -718,7 +713,7 @@ static struct pnp_device_id generic_NCR5380_pnp_ids[] = {
+ MODULE_DEVICE_TABLE(pnp, generic_NCR5380_pnp_ids);
+ 
+ static int generic_NCR5380_pnp_probe(struct pnp_dev *pdev,
+-			       const struct pnp_device_id *id)
++                                     const struct pnp_device_id *id)
+ {
+ 	int base, irq;
+ 
+@@ -729,7 +724,7 @@ static int generic_NCR5380_pnp_probe(struct pnp_dev *pdev,
+ 	irq = pnp_irq(pdev, 0);
+ 
+ 	return generic_NCR5380_init_one(&driver_template, &pdev->dev, base, irq,
+-				       id->driver_data);
++	                                id->driver_data);
+ }
+ 
+ static void generic_NCR5380_pnp_remove(struct pnp_dev *pdev)
 -- 
 2.13.0
