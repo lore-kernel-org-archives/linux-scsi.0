@@ -1,34 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH][scsi-next] scsi: qla2xxx: fix a bunch of typos and spelling mistakes
-Date: Sat, 01 Jul 2017 17:12:56 -0400
-Message-ID: <yq1podjvp2f.fsf@oracle.com>
-References: <20170630134741.13965-1-colin.king@canonical.com>
+Subject: Re: [PATCH 2/2] scsi: qla2xxx: avoid unused-function warning
+Date: Sat, 01 Jul 2017 17:15:33 -0400
+Message-ID: <yq1lgo7voy2.fsf@oracle.com>
+References: <20170630161056.30630-1-arnd@arndb.de>
+        <20170630161056.30630-2-arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170630134741.13965-1-colin.king@canonical.com> (Colin King's
-        message of "Fri, 30 Jun 2017 14:47:41 +0100")
+In-Reply-To: <20170630161056.30630-2-arnd@arndb.de> (Arnd Bergmann's message
+        of "Fri, 30 Jun 2017 18:10:40 +0200")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: qla2xxx-upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Quinn Tran <quinn.tran@cavium.com>, Himanshu Madhani <himanshu.madhani@cavium.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Darren Trapp <darren.trapp@cavium.com>, Anil Gurumurthy <anil.gurumurhty@cavium.com>, Duane Grigsby <duane.grigsby@cavium.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Colin,
+Arnd,
 
-> Fix the following typos/spelling mistakes:
+> When NVMe support is disabled, we get a couple of harmless warnings:
 >
-> "attribure" -> "attribute"
-> "suppored" -> "supported"
-> "Symobilic" -> "Symbolic"
-> "iteself" -> "itself"
-> "reqeust" -> "request"
-> "nvme_wait_on_comand" -> "nvme_wait_on_command"
-> "bount" -> "bound"
-> "captrue_mask" -> "capture_mask"
-> "tempelate" -> "template"
+> drivers/scsi/qla2xxx/qla_nvme.c:667:13: error: 'qla_nvme_unregister_remote_port' defined but not used [-Werror=unused-function]
+> drivers/scsi/qla2xxx/qla_nvme.c:634:13: error: 'qla_nvme_abort_all' defined but not used [-Werror=unused-function]
+> drivers/scsi/qla2xxx/qla_nvme.c:604:12: error: 'qla_nvme_wait_on_rport_del' defined but not used [-Werror=unused-function]
 >
-> ..and also unwrap a line to fix a checkpatch warning.
+> This replaces the preprocessor checks in the code with equivalent
+> compiler conditionals, which lets gcc drop the unused functions
+> without warning, and is nicer to read.
 
 Applied to 4.13/scsi-queue.
 
