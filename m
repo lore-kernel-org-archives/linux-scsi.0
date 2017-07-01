@@ -1,26 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: ibmvfc: constify dev_pm_ops structures.
-Date: Sat, 01 Jul 2017 17:05:40 -0400
-Message-ID: <yq17ezrx3yz.fsf@oracle.com>
-References: <c0ec5db7e2c3313cb7b417e76330520fd2b6136c.1498722828.git.arvind.yadav.cs@gmail.com>
+Subject: Re: [PATCH v2] scsi: hisi_sas: optimise DMA slot memory
+Date: Sat, 01 Jul 2017 17:07:22 -0400
+Message-ID: <yq137afx3w5.fsf@oracle.com>
+References: <1498741334-171060-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <c0ec5db7e2c3313cb7b417e76330520fd2b6136c.1498722828.git.arvind.yadav.cs@gmail.com>
-        (Arvind Yadav's message of "Thu, 29 Jun 2017 13:24:41 +0530")
+In-Reply-To: <1498741334-171060-1-git-send-email-john.garry@huawei.com> (John
+        Garry's message of "Thu, 29 Jun 2017 21:02:14 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Cc: tyreld@linux.vnet.ibm.com, benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org
+To: John Garry <john.garry@huawei.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Xiaofei Tan <tanxiaofei@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Arvind,
+John,
 
-> dev_pm_ops are not supposed to change at runtime. All functions
-> working with dev_pm_ops provided by <linux/device.h> work with const
-> dev_pm_ops. So mark the non-const structs as const.
+> Currently we allocate 3 sets of DMA memories from separate
+> pools for each slot. This is inefficient in terms of memory usage
+> (buffers are less than 1 page in size, so we lose due to alignment),
+> and also time spent in doing 3 allocations + de-allocations per slot,
+> instead of 1.
+>
+> To optimise, combine the 3 DMA buffers into a single buffer from a
+> single pool.
 
-Applied to 4.13/scsi-queue. Thanks!
+Applied to 4.13/scsi-queue. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
