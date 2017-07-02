@@ -1,136 +1,51 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: [PATCH v6 0/6] g_NCR5380: PDMA fixes and cleanup
-Date: Sun, 2 Jul 2017 16:51:36 +0200
-Message-ID: <201707021651.37016.linux@rainbow-software.org>
-References: <cover.1498876618.git.fthain@telegraphics.com.au> <201707012349.04652.linux@rainbow-software.org> <alpine.LNX.2.00.1707021008110.2389@nippy.intranet>
-Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="ansi_x3.4-1968"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1707021008110.2389@nippy.intranet>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>
+From: Vincent Legoll <vincent.legoll@gmail.com>
+Subject: [PATCH] Make "SCSI Transports" a menuconfig to ease disabling it all
+Date: Sun,  2 Jul 2017 17:53:55 +0200
+Message-ID: <1499010835-6858-1-git-send-email-vincent.legoll@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:33462 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751682AbdGBPyI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Jul 2017 11:54:08 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc: Vincent Legoll <vincent.legoll@gmail.com>
 
-On Sunday 02 July 2017 05:11:27 Finn Thain wrote:
-> On Sat, 1 Jul 2017, Ondrej Zary wrote:
-> > The write corruption is still present - "start" must be rolled back in
-> > both IRQ and timeout cases.
->
-> Your original algorithm aborts the transfer for a timeout. Same with mine.
+No need to get into the submenu to disable all SCSI Transports-related
+config entries
 
-I do "start -= 2 * 128" even after timeout.
+Signed-off-by: Vincent Legoll <vincent.legoll@gmail.com>
+---
+ drivers/scsi/Kconfig | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-> The bug must be a elsewhere.
->
-> > And 128 B is not enough , 256 is OK (why did it work last time?).
->
-> When I get contradictory results it usually means I booted the wrong build
-> or built the wrong branch.
-
-I've just retested PATCHv5, it really misses 128 bytes and works if I
-add "residual += 128;".
-
-> Actually, I think that adding 128 to the residual is correct in some
-> sitations, and 256 is correct in other situations.
->
-> > We just wrote a buffer to the chip but the chip is writing the previous
-> > one to the drive - so if a problem arises, both buffers are lost.
->
-> I see. I guess we have to take buffer swaps into account.
->
-> > This fixes the corruption (although the "start > 0" check seems wrong
-> > now): --- a/drivers/scsi/g_NCR5380.c
-> > +++ b/drivers/scsi/g_NCR5380.c
-> > @@ -598,23 +598,17 @@ static inline int generic_NCR5380_psend(struct
-> > NCR5380_hostdata *hostdata, CSR_HOST_BUF_NOT_RDY, 0,
-> >  		                           hostdata->c400_ctl_status,
-> >  		                           CSR_GATED_53C80_IRQ,
-> > -		                           CSR_GATED_53C80_IRQ, HZ / 64) < 0)
-> > -                       break;
-> > -
-> > -		if (NCR5380_read(hostdata->c400_ctl_status) &
-> > -		    CSR_HOST_BUF_NOT_RDY) {
-> > +		                           CSR_GATED_53C80_IRQ, HZ / 64) < 0 ||
-> > +		    (NCR5380_read(hostdata->c400_ctl_status) &
-> > +		     (CSR_HOST_BUF_NOT_RDY | CSR_GATED_53C80_IRQ))) {
->
-> You could add a printk to the timeout branch. If it executes, something is
-> seriously wrong. E.g.
->
-> -	break;
-> +	{ pr_err("send timeout %02x, %d/%d\n",
-> NCR5380_read(hostdata->c400_ctl_status), start, len); break; }
-
-Yes, timeouts do happen:
-[ 9671.909223] send timeout 14, 3840/4096
-[ 9672.978079] send timeout 14, 2816/4096
-[ 9675.323751] send timeout 14, 1280/4096
-
-> >  			/* The chip has done a 128 B buffer swap but the first
-> >  			 * buffer still has not reached the SCSI bus.
-> >  			 */
-> >  			if (start > 0)
-> > -				start -= 128;
-> > +				start -= 256;
-> >  			break;
-> >  		}
->
-> BTW, that change carries the risk of 'start' going negative and the
-> residual exceeding the length of the original transfer.
->
-> But I agree with you that there's a problem with the residual.
->
-> If I understand correctly, the 53c400 can't do a buffer swap until the
-> disk acknowledges each of the 128 bytes from the buffer. But I guess the
-> first buffer is special because the disk will not see the first byte of
-> the transfer until after the first buffer swap.
->
-> And it appears that the last buffer is also special: we have to wait for
-> CSR_HOST_BUF_NOT_RDY even after start == len otherwise we may not detect a
-> failure and fix the residual. So I think the datasheet is right; we have
-> to iterate until the block counter goes to zero.
->
-> I think it is safe to say that when CSR_HOST_BUF_NOT_RDY, 'start' is
-> between 128 and 256 B ahead of the disk. Otherwise, the host buffer is
-> empty and 'start' is no more than 128 B ahead of the disk.
->
-> > -		if (NCR5380_read(hostdata->c400_ctl_status) &
-> > -		    CSR_GATED_53C80_IRQ)
-> > -			break;
-> > -
-> >  		if (hostdata->io_port && hostdata->io_width == 2)
-> >  			outsw(hostdata->io_port + hostdata->c400_host_buf,
-> >  			      src + start, 64);
-> >
-> >
-> > DTC seems to work too.
->
-> OK. Thanks for testing. Please try the patch below on top of v6.
-
-It misses 256B blocks. It's caused by the timeouts, this patch fixes it:
-
---- a/drivers/scsi/g_NCR5380.c
-+++ b/drivers/scsi/g_NCR5380.c
-@@ -598,11 +598,9 @@ static inline int generic_NCR5380_psend(struct NCR5380_hostdata *hostdata,
- 		                           CSR_HOST_BUF_NOT_RDY, 0,
- 		                           hostdata->c400_ctl_status,
- 		                           CSR_GATED_53C80_IRQ,
--		                           CSR_GATED_53C80_IRQ, HZ / 64) < 0)
--			break;
--
--		if (NCR5380_read(hostdata->c400_ctl_status) &
--		    CSR_HOST_BUF_NOT_RDY) {
-+		                           CSR_GATED_53C80_IRQ, HZ / 64) < 0 ||
-+		    (NCR5380_read(hostdata->c400_ctl_status) &
-+		     CSR_HOST_BUF_NOT_RDY)) {
- 			/* Both 128 B buffers are in use */
- 			if (start >= 128)
- 				start -= 128;
-
-
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 3c52867..53c97cc 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -251,9 +251,12 @@ config SCSI_SCAN_ASYNC
+ 	  Note that this setting also affects whether resuming from
+ 	  system suspend will be performed asynchronously.
+ 
+-menu "SCSI Transports"
++menuconfig SCSI_TRANSPORTS
++	tristate "SCSI Transports"
+ 	depends on SCSI
+ 
++if SCSI_TRANSPORTS
++
+ config SCSI_SPI_ATTRS
+ 	tristate "Parallel SCSI (SPI) Transport Attributes"
+ 	depends on SCSI
+@@ -297,7 +300,7 @@ config SCSI_SRP_ATTRS
+ 	  If you wish to export transport-specific information about
+ 	  each attached SRP device to sysfs, say Y.
+ 
+-endmenu
++endif # SCSI_TRANSPORTS
+ 
+ menuconfig SCSI_LOWLEVEL
+ 	bool "SCSI low-level drivers"
 -- 
-Ondrej Zary
+2.7.4
