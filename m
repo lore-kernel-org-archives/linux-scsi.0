@@ -1,8 +1,7 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v7 4/6] g_NCR5380: Use unambiguous terminology for PDMA send
- and receive
-Date: Mon,  3 Jul 2017 03:59:06 -0400 (EDT)
-Message-ID: <f6d642cba9f7da76ff4e97e890488dbd681fb489.1499067144.git.fthain@telegraphics.com.au>
+Subject: [PATCH v7 1/6] g_NCR5380: Fix PDMA transfer size
+Date: Mon,  3 Jul 2017 03:59:05 -0400 (EDT)
+Message-ID: <5864cf385f764f3fda84175311744cb9a89fe0cd.1499067144.git.fthain@telegraphics.com.au>
 References: <cover.1499067144.git.fthain@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1499067144.git.fthain@telegraphics.com.au>
@@ -11,66 +10,55 @@ To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <mart
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The word "read" may be used to mean "DMA read operation" or
-"SCSI READ command", though a READ command implies writing to memory.
+From: Ondrej Zary <linux@rainbow-software.org>
 
+generic_NCR5380_dma_xfer_len() incorrectly uses cmd->transfersize
+which causes rescan-scsi-bus and CD-ROM access to hang the system.
+Use cmd->SCp.this_residual instead, like other NCR5380 drivers.
+
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 ---
- drivers/scsi/g_NCR5380.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/scsi/g_NCR5380.c | 12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-index dedaed2d16e4..33e1a480c903 100644
+index 67c8dac321ad..14ef4e8c4713 100644
 --- a/drivers/scsi/g_NCR5380.c
 +++ b/drivers/scsi/g_NCR5380.c
-@@ -48,8 +48,8 @@
- 	int pdma_residual
+@@ -76,6 +76,7 @@
+ #define IRQ_AUTO 254
  
- #define NCR5380_dma_xfer_len            generic_NCR5380_dma_xfer_len
--#define NCR5380_dma_recv_setup          generic_NCR5380_pread
--#define NCR5380_dma_send_setup          generic_NCR5380_pwrite
-+#define NCR5380_dma_recv_setup          generic_NCR5380_precv
-+#define NCR5380_dma_send_setup          generic_NCR5380_psend
- #define NCR5380_dma_residual            generic_NCR5380_dma_residual
+ #define MAX_CARDS 8
++#define DMA_MAX_SIZE 32768
  
- #define NCR5380_intr                    generic_NCR5380_intr
-@@ -481,7 +481,7 @@ static void generic_NCR5380_release_resources(struct Scsi_Host *instance)
+ /* old-style parameters for compatibility */
+ static int ncr_irq = -1;
+@@ -629,23 +630,16 @@ static inline int generic_NCR5380_pwrite(struct NCR5380_hostdata *hostdata,
+ static int generic_NCR5380_dma_xfer_len(struct NCR5380_hostdata *hostdata,
+                                         struct scsi_cmnd *cmd)
+ {
+-	int transfersize = cmd->transfersize;
++	int transfersize = cmd->SCp.this_residual;
+ 
+ 	if (hostdata->flags & FLAG_NO_PSEUDO_DMA)
+ 		return 0;
+ 
+-	/* Limit transfers to 32K, for xx400 & xx406
+-	 * pseudoDMA that transfers in 128 bytes blocks.
+-	 */
+-	if (transfersize > 32 * 1024 && cmd->SCp.this_residual &&
+-	    !(cmd->SCp.this_residual % transfersize))
+-		transfersize = 32 * 1024;
+-
+ 	/* 53C400 datasheet: non-modulo-128-byte transfers should use PIO */
+ 	if (transfersize % 128)
+ 		transfersize = 0;
+ 
+-	return transfersize;
++	return min(transfersize, DMA_MAX_SIZE);
  }
  
- /**
-- * generic_NCR5380_pread - pseudo DMA read
-+ * generic_NCR5380_precv - pseudo DMA receive
-  * @hostdata: scsi host private data
-  * @dst: buffer to write into
-  * @len: transfer size
-@@ -489,7 +489,7 @@ static void generic_NCR5380_release_resources(struct Scsi_Host *instance)
-  * Perform a pseudo DMA mode receive from a 53C400 or equivalent device.
-  */
- 
--static inline int generic_NCR5380_pread(struct NCR5380_hostdata *hostdata,
-+static inline int generic_NCR5380_precv(struct NCR5380_hostdata *hostdata,
-                                         unsigned char *dst, int len)
- {
- 	int blocks = len / 128;
-@@ -557,7 +557,7 @@ static inline int generic_NCR5380_pread(struct NCR5380_hostdata *hostdata,
- }
- 
- /**
-- * generic_NCR5380_pwrite - pseudo DMA write
-+ * generic_NCR5380_psend - pseudo DMA send
-  * @hostdata: scsi host private data
-  * @src: buffer to read from
-  * @len: transfer size
-@@ -565,8 +565,8 @@ static inline int generic_NCR5380_pread(struct NCR5380_hostdata *hostdata,
-  * Perform a pseudo DMA mode send to a 53C400 or equivalent device.
-  */
- 
--static inline int generic_NCR5380_pwrite(struct NCR5380_hostdata *hostdata,
--                                         unsigned char *src, int len)
-+static inline int generic_NCR5380_psend(struct NCR5380_hostdata *hostdata,
-+                                        unsigned char *src, int len)
- {
- 	int blocks = len / 128;
- 	int start = 0;
+ /*
 -- 
 2.13.0
