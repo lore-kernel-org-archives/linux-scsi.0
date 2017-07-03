@@ -1,66 +1,63 @@
-From: Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: RE: [PATCH 1/2] Drop legacy megaraid controller
-Date: Mon, 3 Jul 2017 13:20:35 +0530
-Message-ID: <0f96d4aca1a7d4c56a70607012a26a68@mail.gmail.com>
-References: <1498820754-51032-1-git-send-email-hare@suse.de>
- <1498820754-51032-2-git-send-email-hare@suse.de> <20170630173347.GA11420@lst.de>
- <281a2a28-ff8d-8c65-6d53-ee393ca08e24@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: [PATCH v7 0/6] g_NCR5380: PDMA fixes and cleanup
+Date: Mon,  3 Jul 2017 03:59:05 -0400 (EDT)
+Message-ID: <cover.1499067144.git.fthain@telegraphics.com.au>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:35720 "EHLO
-        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752644AbdGCHui (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Jul 2017 03:50:38 -0400
-Received: by mail-oi0-f51.google.com with SMTP id 191so48541844oii.2
-        for <linux-scsi@vger.kernel.org>; Mon, 03 Jul 2017 00:50:38 -0700 (PDT)
-In-Reply-To: <281a2a28-ff8d-8c65-6d53-ee393ca08e24@suse.de>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:58168 "EHLO
+        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752329AbdGCH7I (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Jul 2017 03:59:08 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Kashyap Desai <kashyap.desai@broadcom.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ondrej Zary <linux@rainbow-software.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>
 
->-----Original Message-----
->From: Hannes Reinecke [mailto:hare@suse.de]
->Sent: Friday, June 30, 2017 11:46 PM
->To: Christoph Hellwig
->Cc: Martin K. Petersen; James Bottomley; Kashyap Desai; Sumit Saxena;
->linux-
->scsi@vger.kernel.org; Hannes Reinecke
->Subject: Re: [PATCH 1/2] Drop legacy megaraid controller
->
->On 06/30/2017 07:33 PM, Christoph Hellwig wrote:
->> On Fri, Jun 30, 2017 at 01:05:53PM +0200, Hannes Reinecke wrote:
->>> The hardware is ancient, and support for most cards has been moved to
->>> megaraid_mbox. So drop it.
->>
->>
->> This seems to drop support for the PCI_DEVICE_ID_AMI_MEGARAID and
->> PCI_DEVICE_ID_AMI_MEGARAID2 cards.  Do we have any suggestions this
->> code is so broken to not care anymore? Is there any reason why they
->> can't just work with the megaraid_mbox driver?
->>
->Hmm. Probably no good reason at all.
->I'll check which version I have here.
+Ondrej, would you please test this new series?
 
-Hannes,
-We are willing to keep only megaraid_sas driver and intent is rest of
-megaraid* drivers
-(it includes megaraid, megaraid_mm, megaraid_mbox) should be removed.
-Broadcom(LSI) has stopped supporting hardware associated with these old
-drivers.
+Changed since v1:
+- PDMA transfer residual is calculated earlier.
+- End of DMA flag check is now polled (if there is any residual).
 
-Thanks,
-Sumit
->
->Cheers,
->
->Hannes
->--
->Dr. Hannes Reinecke		   Teamlead Storage & Networking
->hare@suse.de			               +49 911 74053 688
->SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
->GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton HRB =
-21284
->(AG N=C3=BCrnberg)
+Changed since v2:
+- Bail out of transfer loops when Gated IRQ gets asserted.
+- Make udelay conditional on board type.
+- Drop sg_tablesize patch due to performance regression.
+
+Changed since v3:
+- Add Ondrej's workaround for corrupt WRITE commands on DTC boards.
+- Reset the 53c400 logic after any short PDMA transfer.
+- Don't fail the transfer if the 53c400 logic got a reset.
+
+Changed since v4:
+- Bail out of transfer loops when Gated IRQ gets asserted. (Again.)
+- Always call wait_for_53c80_registers() at end of transfer.
+- Drain chip buffers after PDMA receive is interrupted.
+- Rework residual calculation.
+- Add new patch to correct DMA terminology.
+
+Changed since v5:
+- Rework residual calculation to account for on-chip buffer swap.
+- Attempt to retain the disconnect/IRQ detection in the DTC436 workaround.
+- Move all DTC436 workarounds to final patch.
+
+Changed since v6:
+- Fix residual calculation for the buffer timeout case.
+- Iterate after sending final 128 bytes to check for buffer timeout.
+- Don't log the residual value when it is known to be zero.
+
+
+Finn Thain (2):
+  g_NCR5380: Cleanup comments and whitespace
+  g_NCR5380: Use unambiguous terminology for PDMA send and receive
+
+Ondrej Zary (4):
+  g_NCR5380: Fix PDMA transfer size
+  g_NCR5380: End PDMA transfer correctly on target disconnection
+  g_NCR5380: Re-work PDMA loops
+  g_NCR5380: Two DTC436 PDMA workarounds
+
+ drivers/scsi/g_NCR5380.c | 277 ++++++++++++++++++++++++++---------------------
+ 1 file changed, 155 insertions(+), 122 deletions(-)
+
+-- 
+2.13.0
