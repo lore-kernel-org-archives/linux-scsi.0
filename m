@@ -1,22 +1,21 @@
 From: Shivasharan Srikanteshwara
         <shivasharan.srikanteshwara@broadcom.com>
-Subject: RE: [PATCH 04/15] megaraid_sas: Call megasas_complete_cmd_dpc_fusion
- every 1 second while there are pending commands
-Date: Tue, 4 Jul 2017 12:35:14 +0530
-Message-ID: <1299ef3826363cdc5e14ab2b98f7337f@mail.gmail.com>
+Subject: RE: [PATCH 05/15] megaraid_sas: Do not re-fire shutdown DCMD after OCR
+Date: Tue, 4 Jul 2017 12:38:53 +0530
+Message-ID: <471fa32287b0704baab2a321f68f0d5e@mail.gmail.com>
 References: <1498811409-11157-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <1498811409-11157-5-git-send-email-shivasharan.srikanteshwara@broadcom.com> <3db566c3-6641-90a5-4b41-18c8c78ac953@suse.de>
+ <1498811409-11157-6-git-send-email-shivasharan.srikanteshwara@broadcom.com> <71419144-2ee6-dfc3-d735-7b31c987c4ad@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f175.google.com ([209.85.220.175]:35762 "EHLO
-        mail-qk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751614AbdGDHFQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jul 2017 03:05:16 -0400
-Received: by mail-qk0-f175.google.com with SMTP id 16so161962033qkg.2
-        for <linux-scsi@vger.kernel.org>; Tue, 04 Jul 2017 00:05:16 -0700 (PDT)
-In-Reply-To: <3db566c3-6641-90a5-4b41-18c8c78ac953@suse.de>
+Received: from mail-qk0-f180.google.com ([209.85.220.180]:36195 "EHLO
+        mail-qk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750921AbdGDHIz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jul 2017 03:08:55 -0400
+Received: by mail-qk0-f180.google.com with SMTP id p21so161996109qke.3
+        for <linux-scsi@vger.kernel.org>; Tue, 04 Jul 2017 00:08:55 -0700 (PDT)
+In-Reply-To: <71419144-2ee6-dfc3-d735-7b31c987c4ad@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
@@ -24,53 +23,69 @@ Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, Kash
 
 > -----Original Message-----
 > From: Hannes Reinecke [mailto:hare@suse.de]
-> Sent: Friday, June 30, 2017 6:55 PM
+> Sent: Friday, June 30, 2017 7:00 PM
 > To: Shivasharan S; linux-scsi@vger.kernel.org
 > Cc: martin.petersen@oracle.com; thenzl@redhat.com;
 > jejb@linux.vnet.ibm.com; kashyap.desai@broadcom.com;
 > sumit.saxena@broadcom.com; hare@suse.com; hch@lst.de
-> Subject: Re: [PATCH 04/15] megaraid_sas: Call
-> megasas_complete_cmd_dpc_fusion every 1 second while there are pending
-> commands
+> Subject: Re: [PATCH 05/15] megaraid_sas: Do not re-fire shutdown DCMD
+> after
+> OCR
 >
 > On 06/30/2017 10:29 AM, Shivasharan S wrote:
 > > Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 > > Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 > > ---
-> >  drivers/scsi/megaraid/megaraid_sas_fusion.c | 3 +--
-> >  1 file changed, 1 insertion(+), 2 deletions(-)
+> >  drivers/scsi/megaraid/megaraid_sas_fusion.c | 9 +++++++++
+> >  1 file changed, 9 insertions(+)
 > >
 > > diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
 > > b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> > index 5018a3f..0f13c58 100644
+> > index 0f13c58..a308e14 100644
 > > --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
 > > +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> > @@ -3552,6 +3552,7 @@ int megasas_wait_for_outstanding_fusion(struct
-> megasas_instance *instance,
-> >  			}
-> >  		}
+> > @@ -3618,6 +3618,15 @@ void megasas_refire_mgmt_cmd(struct
+> > megasas_instance *instance)
 > >
-> > +		megasas_complete_cmd_dpc_fusion((unsigned long)instance);
-> >  		outstanding =3D atomic_read(&instance->fw_outstanding);
-> >  		if (!outstanding)
-> >  			goto out;
-> > @@ -3560,8 +3561,6 @@ int megasas_wait_for_outstanding_fusion(struct
-> megasas_instance *instance,
-> >  			dev_notice(&instance->pdev->dev, "[%2d]waiting for
-> %d "
-> >  			       "commands to complete for scsi%d\n", i,
-> >  			       outstanding, instance->host->host_no);
-> > -			megasas_complete_cmd_dpc_fusion(
-> > -				(unsigned long)instance);
-> >  		}
-> >  		msleep(1000);
-> >  	}
+> >  		if (!smid)
+> >  			continue;
+> > +
+> > +		/* Do not refire shutdown command */
+> > +		if (le32_to_cpu(cmd_mfi->frame->dcmd.opcode) =3D=3D
+> > +			MR_DCMD_CTRL_SHUTDOWN) {
+> > +			cmd_mfi->frame->dcmd.cmd_status =3D MFI_STAT_OK;
+> > +			megasas_complete_cmd(instance, cmd_mfi, DID_OK);
+> > +			continue;
+> > +		}
+> > +
+> >  		req_desc =3D megasas_get_request_descriptor
+> >  					(instance, smid - 1);
+> >  		refire_cmd =3D req_desc && ((cmd_mfi->frame->dcmd.opcode !=3D
 > >
-> Please add a changelog why this is necessary.
+> Please, no.
+> You already have a selector further down whether to refire the command,
+> pending on the DRV_DCMD_SKIP_REFIRE flag.
+> If you always set this flag for the shutdown command you wouldn't need to
+> touch this at all.
+> And if you particularly dislike that solution convert the 'refire_cmd =3D=
+'
+> statement into a proper switch and blank it out from there.
 >
 
-Sure Hannes. I will update the commit description with the details
-and send out v2 of the series.
+Hi Hannes,
+The management commands that get skipped further down in this function
+are internally generated by the driver itself so we don=E2=80=99t need to c=
+omplete
+it
+back to the application.
+In case of shutdown DCMD, it=E2=80=99s an IOCTL command(issued by applicati=
+on)
+so we need to return status back to application.
+Combining handling of both the cases or using DRV_DCMD_SKIP_REFIRE
+will not be as straightforward.
+
+Thanks,
+Shivasharan
 
 > Cheers,
 >
