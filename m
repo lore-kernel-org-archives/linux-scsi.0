@@ -1,21 +1,22 @@
 From: Shivasharan Srikanteshwara
         <shivasharan.srikanteshwara@broadcom.com>
-Subject: RE: [PATCH 05/15] megaraid_sas: Do not re-fire shutdown DCMD after OCR
-Date: Tue, 4 Jul 2017 12:38:53 +0530
-Message-ID: <471fa32287b0704baab2a321f68f0d5e@mail.gmail.com>
+Subject: RE: [PATCH 11/15] megaraid_sas: Set device queue_depth same as HBA
+ can_queue value in scsi-mq mode
+Date: Tue, 4 Jul 2017 12:52:21 +0530
+Message-ID: <a84688d6248fd1ddb6cb7f001a941936@mail.gmail.com>
 References: <1498811409-11157-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <1498811409-11157-6-git-send-email-shivasharan.srikanteshwara@broadcom.com> <71419144-2ee6-dfc3-d735-7b31c987c4ad@suse.de>
+ <1498811409-11157-12-git-send-email-shivasharan.srikanteshwara@broadcom.com> <40da55a6-77c5-340d-17cd-fae3c6f4c097@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f180.google.com ([209.85.220.180]:36195 "EHLO
-        mail-qk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750921AbdGDHIz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jul 2017 03:08:55 -0400
-Received: by mail-qk0-f180.google.com with SMTP id p21so161996109qke.3
-        for <linux-scsi@vger.kernel.org>; Tue, 04 Jul 2017 00:08:55 -0700 (PDT)
-In-Reply-To: <71419144-2ee6-dfc3-d735-7b31c987c4ad@suse.de>
+Received: from mail-qk0-f173.google.com ([209.85.220.173]:35837 "EHLO
+        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752135AbdGDHWX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jul 2017 03:22:23 -0400
+Received: by mail-qk0-f173.google.com with SMTP id 16so162228663qkg.2
+        for <linux-scsi@vger.kernel.org>; Tue, 04 Jul 2017 00:22:22 -0700 (PDT)
+In-Reply-To: <40da55a6-77c5-340d-17cd-fae3c6f4c097@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
@@ -23,66 +24,71 @@ Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, Kash
 
 > -----Original Message-----
 > From: Hannes Reinecke [mailto:hare@suse.de]
-> Sent: Friday, June 30, 2017 7:00 PM
+> Sent: Friday, June 30, 2017 7:10 PM
 > To: Shivasharan S; linux-scsi@vger.kernel.org
 > Cc: martin.petersen@oracle.com; thenzl@redhat.com;
 > jejb@linux.vnet.ibm.com; kashyap.desai@broadcom.com;
 > sumit.saxena@broadcom.com; hare@suse.com; hch@lst.de
-> Subject: Re: [PATCH 05/15] megaraid_sas: Do not re-fire shutdown DCMD
-> after
-> OCR
+> Subject: Re: [PATCH 11/15] megaraid_sas: Set device queue_depth same as
+> HBA
+> can_queue value in scsi-mq mode
 >
-> On 06/30/2017 10:29 AM, Shivasharan S wrote:
+> On 06/30/2017 10:30 AM, Shivasharan S wrote:
+> > Currently driver sets default queue_depth for VDs at 256 and JBODs
+> > based on interface type, ie., for SAS JBOD QD will be 64, for SATA JBOD
+> > QD will
+> be 32.
+> > During performance runs with scsi-mq enabled, we are seeing better
+> > results by setting QD same as HBA queue_depth.
+> >
 > > Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 > > Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 > > ---
-> >  drivers/scsi/megaraid/megaraid_sas_fusion.c | 9 +++++++++
-> >  1 file changed, 9 insertions(+)
+> >  drivers/scsi/megaraid/megaraid_sas_base.c | 6 +++++-
+> >  1 file changed, 5 insertions(+), 1 deletion(-)
 > >
-> > diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> > b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> > index 0f13c58..a308e14 100644
-> > --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> > +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> > @@ -3618,6 +3618,15 @@ void megasas_refire_mgmt_cmd(struct
-> > megasas_instance *instance)
+> > diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
+> > b/drivers/scsi/megaraid/megaraid_sas_base.c
+> > index 0230929..c200f1a 100644
+> > --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> > +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> > @@ -1891,7 +1891,8 @@ static void
+> megasas_set_static_target_properties(struct scsi_device *sdev,
+> >  	if (instance->nvme_page_size && max_io_size_kb)
+> >  		megasas_set_nvme_device_properties(sdev, (max_io_size_kb
+> << 10));
 > >
-> >  		if (!smid)
-> >  			continue;
+> > -	scsi_change_queue_depth(sdev, device_qd);
+> > +	if (!shost_use_blk_mq(sdev->host))
+> > +		scsi_change_queue_depth(sdev, device_qd);
+> >
+> >  }
+> >
+> > @@ -5914,6 +5915,9 @@ static int megasas_io_attach(struct
+> megasas_instance *instance)
+> >  	host->max_lun =3D MEGASAS_MAX_LUN;
+> >  	host->max_cmd_len =3D 16;
+> >
+> > +	if (shost_use_blk_mq(host))
+> > +		host->cmd_per_lun =3D host->can_queue;
 > > +
-> > +		/* Do not refire shutdown command */
-> > +		if (le32_to_cpu(cmd_mfi->frame->dcmd.opcode) =3D=3D
-> > +			MR_DCMD_CTRL_SHUTDOWN) {
-> > +			cmd_mfi->frame->dcmd.cmd_status =3D MFI_STAT_OK;
-> > +			megasas_complete_cmd(instance, cmd_mfi, DID_OK);
-> > +			continue;
-> > +		}
-> > +
-> >  		req_desc =3D megasas_get_request_descriptor
-> >  					(instance, smid - 1);
-> >  		refire_cmd =3D req_desc && ((cmd_mfi->frame->dcmd.opcode !=3D
+> >  	/*
+> >  	 * Notify the mid-layer about the new controller
+> >  	 */
 > >
-> Please, no.
-> You already have a selector further down whether to refire the command,
-> pending on the DRV_DCMD_SKIP_REFIRE flag.
-> If you always set this flag for the shutdown command you wouldn't need to
-> touch this at all.
-> And if you particularly dislike that solution convert the 'refire_cmd =3D=
-'
-> statement into a proper switch and blank it out from there.
+> Is this bit really necessary? It will be adjusted by the above hunk, woul=
+d
+> it not?
 >
 
-Hi Hannes,
-The management commands that get skipped further down in this function
-are internally generated by the driver itself so we don=E2=80=99t need to c=
-omplete
-it
-back to the application.
-In case of shutdown DCMD, it=E2=80=99s an IOCTL command(issued by applicati=
-on)
-so we need to return status back to application.
-Combining handling of both the cases or using DRV_DCMD_SKIP_REFIRE
-will not be as straightforward.
+The default cmd_per_lun is now set to 256 (MEGASAS_DEFAULT_CMD_PER_LUN).
+In the above snip, we are changing cmd_per_lun to be equal to HBA
+queue_depth for multiqueue enabled case.
+So any scsi_device getting configured with scsi-mq enabled will have
+queue_depth
+set to cmd_per_lun value.
+The hunk in megasas_set_static_target_properties is to update
+the queue_depth for non-mq case only based on value provided by firmware.
 
 Thanks,
 Shivasharan
