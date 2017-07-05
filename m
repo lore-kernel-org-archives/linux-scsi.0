@@ -1,50 +1,55 @@
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH v2 00/15] megaraid_sas: Updates for scsi-next
-Date: Wed,  5 Jul 2017 05:00:14 -0700
-Message-ID: <1499256029-16319-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH v2 03/15] megaraid_sas: Use synchronize_irq in target reset case
+Date: Wed,  5 Jul 2017 05:00:17 -0700
+Message-ID: <1499256029-16319-4-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+References: <1499256029-16319-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f45.google.com ([74.125.83.45]:36240 "EHLO
-        mail-pg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751637AbdGEMBK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jul 2017 08:01:10 -0400
-Received: by mail-pg0-f45.google.com with SMTP id u62so123302000pgb.3
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Jul 2017 05:01:10 -0700 (PDT)
+Received: from mail-pg0-f51.google.com ([74.125.83.51]:36287 "EHLO
+        mail-pg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751637AbdGEMBY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jul 2017 08:01:24 -0400
+Received: by mail-pg0-f51.google.com with SMTP id u62so123304226pgb.3
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Jul 2017 05:01:19 -0700 (PDT)
+In-Reply-To: <1499256029-16319-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, hch@lst.de, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-Changes from v1:
-- Patch 4: Updated patch description
-- Patch 9: Cleanup ld_drv_map in case ld_map allocation fails
+Similar to task abort case, use synchronize_irq API in target reset case.
+Also, remove redundant call to megasas_complete_cmd_dpc_fusion
+after calling megasas_sync_irqs in task abort case.
 
-Shivasharan S (15):
-  megaraid_sas: mismatch of allocated MFI frame size and length exposed
-    in MFI MPT pass through command
-  megaraid_sas: set minimum value of resetwaittime to be 1 secs
-  megaraid_sas: Use synchronize_irq in target reset case
-  megaraid_sas: Call megasas_complete_cmd_dpc_fusion every 1 second
-    while there are pending commands
-  megaraid_sas: Do not re-fire shutdown DCMD after OCR
-  megaraid_sas: Fix endianness issues in DCMD handling
-  megaraid_sas: Check valid aen class range to avoid kernel panic
-  megaraid_sas: Use SMID for Task abort case only
-  megaraid_sas: use vmalloc for crash dump buffers and driver's local
-    RAID map
-  megaraid_sas: Return pended IOCTLs with cmd_status
-    MFI_STAT_WRONG_STATE in case adapter is dead
-  megaraid_sas: Set device queue_depth same as HBA can_queue value in
-    scsi-mq mode
-  megaraid_sas: replace internal FALSE/TRUE definitions with false/true
-  megaraid_sas: modified few prints in OCR and IOC INIT path
-  megaraid_sas: call megasas_dump_frame with correct IO frame size
-  megaraid_sas: driver version upgrade
+Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
- drivers/scsi/megaraid/megaraid_sas.h        |   5 +-
- drivers/scsi/megaraid/megaraid_sas_base.c   |  45 +++++--
- drivers/scsi/megaraid/megaraid_sas_fp.c     |  40 +++----
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 174 ++++++++++++++++++----------
- 4 files changed, 163 insertions(+), 101 deletions(-)
-
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index f717fbc..5018a3f 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -3826,8 +3826,6 @@ static int megasas_track_scsiio(struct megasas_instance *instance,
+ 		else {
+ 			instance->instancet->disable_intr(instance);
+ 			megasas_sync_irqs((unsigned long)instance);
+-			megasas_complete_cmd_dpc_fusion
+-					((unsigned long)instance);
+ 			instance->instancet->enable_intr(instance);
+ 			if (scsi_lookup->scmd == NULL)
+ 				break;
+@@ -3839,9 +3837,7 @@ static int megasas_track_scsiio(struct megasas_instance *instance,
+ 		if ((channel == 0xFFFFFFFF) && (id == 0xFFFFFFFF))
+ 			break;
+ 		instance->instancet->disable_intr(instance);
+-		msleep(1000);
+-		megasas_complete_cmd_dpc_fusion
+-				((unsigned long)instance);
++		megasas_sync_irqs((unsigned long)instance);
+ 		rc = megasas_track_scsiio(instance, id, channel);
+ 		instance->instancet->enable_intr(instance);
+ 
 -- 
-2.8.3
+1.8.3.1
