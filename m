@@ -1,238 +1,60 @@
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH v2 09/15] megaraid_sas: use vmalloc for crash dump buffers and driver's local RAID map
-Date: Wed,  5 Jul 2017 05:00:23 -0700
-Message-ID: <1499256029-16319-10-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH v2 08/15] megaraid_sas: Use SMID for Task abort case only
+Date: Wed,  5 Jul 2017 05:00:22 -0700
+Message-ID: <1499256029-16319-9-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1499256029-16319-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f53.google.com ([74.125.83.53]:34582 "EHLO
-        mail-pg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752093AbdGEMBl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jul 2017 08:01:41 -0400
-Received: by mail-pg0-f53.google.com with SMTP id t186so123954305pgb.1
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Jul 2017 05:01:41 -0700 (PDT)
+Received: from mail-pg0-f48.google.com ([74.125.83.48]:33198 "EHLO
+        mail-pg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752093AbdGEMBj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jul 2017 08:01:39 -0400
+Received: by mail-pg0-f48.google.com with SMTP id k14so47717120pgr.0
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Jul 2017 05:01:37 -0700 (PDT)
 In-Reply-To: <1499256029-16319-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, hch@lst.de, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
+Fix - In TM code, smid_task is valid only in case of task aborts.
+
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/megaraid/megaraid_sas.h        |   1 -
- drivers/scsi/megaraid/megaraid_sas_base.c   |  12 ++-
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 121 ++++++++++++++++++----------
- 3 files changed, 88 insertions(+), 46 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 2b209bb..6d9f111 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -2115,7 +2115,6 @@ struct megasas_instance {
- 	u32 *crash_dump_buf;
- 	dma_addr_t crash_dump_h;
- 	void *crash_buf[MAX_CRASH_DUMP_SIZE];
--	u32 crash_buf_pages;
- 	unsigned int    fw_crash_buffer_size;
- 	unsigned int    fw_crash_state;
- 	unsigned int    fw_crash_buffer_offset;
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index e490272..c63ef88 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -49,6 +49,7 @@
- #include <linux/blkdev.h>
- #include <linux/mutex.h>
- #include <linux/poll.h>
-+#include <linux/vmalloc.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
-@@ -6672,9 +6673,14 @@ static void megasas_detach_one(struct pci_dev *pdev)
- 						  fusion->max_map_sz,
- 						  fusion->ld_map[i],
- 						  fusion->ld_map_phys[i]);
--			if (fusion->ld_drv_map[i])
--				free_pages((ulong)fusion->ld_drv_map[i],
--					fusion->drv_map_pages);
-+			if (fusion->ld_drv_map[i]) {
-+				if (is_vmalloc_addr(fusion->ld_drv_map[i]))
-+					vfree(fusion->ld_drv_map[i]);
-+				else
-+					free_pages((ulong)fusion->ld_drv_map[i],
-+						   fusion->drv_map_pages);
-+			}
-+
- 			if (fusion->pd_seq_sync[i])
- 				dma_free_coherent(&instance->pdev->dev,
- 					pd_seq_map_sz,
 diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index c239762..ff4a3a8 100644
+index a308e14..c239762 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -1257,6 +1257,80 @@ static int megasas_create_sg_sense_fusion(struct megasas_instance *instance)
- }
+@@ -3754,7 +3754,7 @@ static int megasas_track_scsiio(struct megasas_instance *instance,
+ 	struct megasas_cmd_fusion *cmd_fusion;
+ 	struct megasas_cmd *cmd_mfi;
+ 	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc;
+-	struct fusion_context *fusion;
++	struct fusion_context *fusion = NULL;
+ 	struct megasas_cmd_fusion *scsi_lookup;
+ 	int rc;
+ 	struct MPI2_SCSI_TASK_MANAGE_REPLY *mpi_reply;
+@@ -3781,8 +3781,6 @@ static int megasas_track_scsiio(struct megasas_instance *instance,
+ 	cmd_fusion->request_desc = req_desc;
+ 	req_desc->Words = 0;
  
- /**
-+ * megasas_allocate_raid_maps -	Allocate memory for RAID maps
-+ * @instance:				Adapter soft state
-+ *
-+ * return:				if success: return 0
-+ *					failed:  return -ENOMEM
-+ */
-+static inline int megasas_allocate_raid_maps(struct megasas_instance *instance)
-+{
-+	struct fusion_context *fusion;
-+	int i = 0;
-+
-+	fusion = instance->ctrl_context;
-+
-+	fusion->drv_map_pages = get_order(fusion->drv_map_sz);
-+
-+	for (i = 0; i < 2; i++) {
-+		fusion->ld_map[i] = NULL;
-+
-+		fusion->ld_drv_map[i] = (void *)
-+			__get_free_pages(__GFP_ZERO | GFP_KERNEL,
-+					 fusion->drv_map_pages);
-+
-+		if (!fusion->ld_drv_map[i]) {
-+			fusion->ld_drv_map[i] = vzalloc(fusion->drv_map_sz);
-+
-+			if (!fusion->ld_drv_map[i]) {
-+				dev_err(&instance->pdev->dev,
-+					"Could not allocate memory for local map"
-+					" size requested: %d\n",
-+					fusion->drv_map_sz);
-+				goto ld_drv_map_alloc_fail;
-+			}
-+		}
-+	}
-+
-+	for (i = 0; i < 2; i++) {
-+		fusion->ld_map[i] = dma_alloc_coherent(&instance->pdev->dev,
-+						       fusion->max_map_sz,
-+						       &fusion->ld_map_phys[i],
-+						       GFP_KERNEL);
-+		if (!fusion->ld_map[i]) {
-+			dev_err(&instance->pdev->dev,
-+				"Could not allocate memory for map info %s:%d\n",
-+				__func__, __LINE__);
-+			goto ld_map_alloc_fail;
-+		}
-+	}
-+
-+	return 0;
-+
-+ld_map_alloc_fail:
-+	for (i = 0; i < 2; i++) {
-+		if (fusion->ld_map[i])
-+			dma_free_coherent(&instance->pdev->dev,
-+					  fusion->max_map_sz,
-+					  fusion->ld_map[i],
-+					  fusion->ld_map_phys[i]);
-+	}
-+
-+ld_drv_map_alloc_fail:
-+	for (i = 0; i < 2; i++) {
-+		if (fusion->ld_drv_map[i]) {
-+			if (is_vmalloc_addr(fusion->ld_drv_map[i]))
-+				vfree(fusion->ld_drv_map[i]);
-+			else
-+				free_pages((ulong)fusion->ld_drv_map[i],
-+					   fusion->drv_map_pages);
-+		}
-+	}
-+
-+	return -ENOMEM;
-+}
-+
-+/**
-  * megasas_init_adapter_fusion -	Initializes the FW
-  * @instance:		Adapter soft state
-  *
-@@ -1375,45 +1449,14 @@ static int megasas_create_sg_sense_fusion(struct megasas_instance *instance)
- 	instance->r1_ldio_hint_default =  MR_R1_LDIO_PIGGYBACK_DEFAULT;
- 	fusion->fast_path_io = 0;
- 
--	fusion->drv_map_pages = get_order(fusion->drv_map_sz);
--	for (i = 0; i < 2; i++) {
--		fusion->ld_map[i] = NULL;
--		fusion->ld_drv_map[i] = (void *)__get_free_pages(GFP_KERNEL,
--			fusion->drv_map_pages);
--		if (!fusion->ld_drv_map[i]) {
--			dev_err(&instance->pdev->dev, "Could not allocate "
--				"memory for local map info for %d pages\n",
--				fusion->drv_map_pages);
--			if (i == 1)
--				free_pages((ulong)fusion->ld_drv_map[0],
--					fusion->drv_map_pages);
--			goto fail_ioc_init;
--		}
--		memset(fusion->ld_drv_map[i], 0,
--			((1 << PAGE_SHIFT) << fusion->drv_map_pages));
--	}
+-	scsi_lookup = fusion->cmd_list[smid_task - 1];
 -
--	for (i = 0; i < 2; i++) {
--		fusion->ld_map[i] = dma_alloc_coherent(&instance->pdev->dev,
--						       fusion->max_map_sz,
--						       &fusion->ld_map_phys[i],
--						       GFP_KERNEL);
--		if (!fusion->ld_map[i]) {
--			dev_err(&instance->pdev->dev, "Could not allocate memory "
--			       "for map info\n");
--			goto fail_map_info;
--		}
--	}
-+	if (megasas_allocate_raid_maps(instance))
-+		goto fail_ioc_init;
- 
- 	if (!megasas_get_map_info(instance))
- 		megasas_sync_map_info(instance);
- 
- 	return 0;
- 
--fail_map_info:
--	if (i == 1)
--		dma_free_coherent(&instance->pdev->dev, fusion->max_map_sz,
--				  fusion->ld_map[0], fusion->ld_map_phys[0]);
- fail_ioc_init:
- 	megasas_free_cmds_fusion(instance);
- fail_alloc_cmds:
-@@ -3365,17 +3408,13 @@ irqreturn_t megasas_isr_fusion(int irq, void *devp)
- {
- 	unsigned int i;
- 
--	instance->crash_buf_pages = get_order(CRASH_DMA_BUF_SIZE);
- 	for (i = 0; i < MAX_CRASH_DUMP_SIZE; i++) {
--		instance->crash_buf[i] = (void	*)__get_free_pages(GFP_KERNEL,
--				instance->crash_buf_pages);
-+		instance->crash_buf[i] = vzalloc(CRASH_DMA_BUF_SIZE);
- 		if (!instance->crash_buf[i]) {
- 			dev_info(&instance->pdev->dev, "Firmware crash dump "
- 				"memory allocation failed at index %d\n", i);
+ 	mr_request = (struct MR_TASK_MANAGE_REQUEST *) cmd_fusion->io_request;
+ 	memset(mr_request, 0, sizeof(struct MR_TASK_MANAGE_REQUEST));
+ 	mpi_request = (struct MPI2_SCSI_TASK_MANAGE_REQUEST *) &mr_request->TmRequest;
+@@ -3829,6 +3827,8 @@ static int megasas_track_scsiio(struct megasas_instance *instance,
+ 	rc = SUCCESS;
+ 	switch (type) {
+ 	case MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK:
++		scsi_lookup = fusion->cmd_list[smid_task - 1];
++
+ 		if (scsi_lookup->scmd == NULL)
  			break;
- 		}
--		memset(instance->crash_buf[i], 0,
--			((1 << PAGE_SHIFT) << instance->crash_buf_pages));
- 	}
- 	instance->drv_buf_alloc = i;
- }
-@@ -3387,12 +3426,10 @@ irqreturn_t megasas_isr_fusion(int irq, void *devp)
- void
- megasas_free_host_crash_buffer(struct megasas_instance *instance)
- {
--	unsigned int i
--;
-+	unsigned int i;
- 	for (i = 0; i < instance->drv_buf_alloc; i++) {
- 		if (instance->crash_buf[i])
--			free_pages((ulong)instance->crash_buf[i],
--					instance->crash_buf_pages);
-+			vfree(instance->crash_buf[i]);
- 	}
- 	instance->drv_buf_index = 0;
- 	instance->drv_buf_alloc = 0;
+ 		else {
 -- 
 1.8.3.1
