@@ -1,45 +1,47 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: Nero 4 Linux applications broken in 4.12
-Date: Wed, 5 Jul 2017 15:49:54 +0200
-Message-ID: <20170705134954.GI4076@linux-x5ow.site>
-References: <9c58bac7-ddf4-3e47-b729-76e595804836@googlemail.com>
- <20170705084447.GD4076@linux-x5ow.site>
- <20170705084810.GE4076@linux-x5ow.site>
- <d92e31ed-db7f-aa4b-5dfd-3f6df4a49ea9@googlemail.com>
- <20170705115235.GF4076@linux-x5ow.site>
- <3790b5ad-c02f-6406-173b-f2a0563f642b@googlemail.com>
- <20170705120927.GG4076@linux-x5ow.site>
- <8834e9d2-3018-ee8f-b40e-ccd8aecc367c@googlemail.com>
- <20170705124229.GH4076@linux-x5ow.site>
- <f44717d2-81bf-98b6-1f70-9b2a2f016c25@googlemail.com>
+From: Chad Dupuis <chad.dupuis@cavium.com>
+Subject: Re: [PATCH][V2] scsi: qedf: fix spelling mistake: "offlading" ->
+ "offloading"
+Date: Wed, 5 Jul 2017 11:41:22 -0400 (EDT)
+Message-ID: <alpine.OSX.2.00.1707051140560.1058@n7013co5221kk4.qlogic.org>
+References: <20170703192139.24314-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52324 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751833AbdGENuI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 5 Jul 2017 09:50:08 -0400
-Content-Disposition: inline
-In-Reply-To: <f44717d2-81bf-98b6-1f70-9b2a2f016c25@googlemail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170703192139.24314-1-colin.king@canonical.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: QLogic-Storage-Upstream@cavium.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chris Clayton <chris2553@googlemail.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Wed, Jul 05, 2017 at 02:45:06PM +0100, Chris Clayton wrote:
-> With your patch applied to 4.12.0, all three of the nero applications can now detect my drives again.
+
+On Mon, 3 Jul 2017, 3:21pm, Colin King wrote:
+
+> From: Colin Ian King <colin.king@canonical.com>
 > 
-> Excellent work! Thank you.
+> Trivial fix to spelling mistake in QEDF_INFO message and 
+> remove duplicated "since" (thanks to Tyrel Datwyler for spotting
+> the latter issue).
 > 
-> Tested-by: Chris Clayton <chris2553@googlemail.com>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/scsi/qedf/qedf_main.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+> index b58bba4604e8..7786c97e033f 100644
+> --- a/drivers/scsi/qedf/qedf_main.c
+> +++ b/drivers/scsi/qedf/qedf_main.c
+> @@ -1227,7 +1227,7 @@ static void qedf_rport_event_handler(struct fc_lport *lport,
+>  
+>  		if (rdata->spp_type != FC_TYPE_FCP) {
+>  			QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_DISC,
+> -			    "Not offlading since since spp type isn't FCP\n");
+> +			    "Not offloading since spp type isn't FCP\n");
+>  			break;
+>  		}
+>  		if (!(rdata->ids.roles & FC_RPORT_ROLE_FCP_TARGET)) {
+> 
 
-Thanks for confirmation.
+Thanks.
 
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Acked-by: Chad Dupuis <chad.dupuis@cavium.com>
