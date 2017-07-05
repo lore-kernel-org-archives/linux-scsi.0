@@ -1,125 +1,121 @@
-From: Shivasharan Srikanteshwara
-        <shivasharan.srikanteshwara@broadcom.com>
-Subject: RE: [PATCH 05/15] megaraid_sas: Do not re-fire shutdown DCMD after OCR
-Date: Wed, 5 Jul 2017 16:03:38 +0530
-Message-ID: <35a7235b7ad57d9f485d1e63fa8eb7b0@mail.gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 05/15] megaraid_sas: Do not re-fire shutdown DCMD after
+ OCR
+Date: Wed, 5 Jul 2017 12:34:23 +0200
+Message-ID: <8185f687-32b4-b353-1199-c46c9c59c175@suse.de>
 References: <1498811409-11157-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
  <1498811409-11157-6-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <71419144-2ee6-dfc3-d735-7b31c987c4ad@suse.de> 471fa32287b0704baab2a321f68f0d5e@mail.gmail.com
+ <71419144-2ee6-dfc3-d735-7b31c987c4ad@suse.de>
+ <35a7235b7ad57d9f485d1e63fa8eb7b0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f171.google.com ([209.85.216.171]:33229 "EHLO
-        mail-qt0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751743AbdGEKdq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jul 2017 06:33:46 -0400
-Received: by mail-qt0-f171.google.com with SMTP id r30so182434057qtc.0
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Jul 2017 03:33:46 -0700 (PDT)
-In-Reply-To: 471fa32287b0704baab2a321f68f0d5e@mail.gmail.com
+Received: from mx2.suse.de ([195.135.220.15]:53351 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752732AbdGEKe0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 5 Jul 2017 06:34:26 -0400
+In-Reply-To: <35a7235b7ad57d9f485d1e63fa8eb7b0@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
+To: Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, hare@suse.com, hch@lst.de
 
-> -----Original Message-----
-> From: Shivasharan Srikanteshwara
-> [mailto:shivasharan.srikanteshwara@broadcom.com]
-> Sent: Tuesday, July 04, 2017 12:39 PM
-> To: 'Hannes Reinecke'; 'linux-scsi@vger.kernel.org'
-> Cc: 'martin.petersen@oracle.com'; 'thenzl@redhat.com';
-> 'jejb@linux.vnet.ibm.com'; Kashyap Desai; Sumit Saxena; 'hare@suse.com';
-> 'hch@lst.de'
-> Subject: RE: [PATCH 05/15] megaraid_sas: Do not re-fire shutdown DCMD
-> after
-> OCR
->
-> > -----Original Message-----
-> > From: Hannes Reinecke [mailto:hare@suse.de]
-> > Sent: Friday, June 30, 2017 7:00 PM
-> > To: Shivasharan S; linux-scsi@vger.kernel.org
-> > Cc: martin.petersen@oracle.com; thenzl@redhat.com;
-> > jejb@linux.vnet.ibm.com; kashyap.desai@broadcom.com;
-> > sumit.saxena@broadcom.com; hare@suse.com; hch@lst.de
-> > Subject: Re: [PATCH 05/15] megaraid_sas: Do not re-fire shutdown DCMD
-> > after OCR
-> >
-> > On 06/30/2017 10:29 AM, Shivasharan S wrote:
-> > > Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
-> > > Signed-off-by: Shivasharan S
-> > > <shivasharan.srikanteshwara@broadcom.com>
-> > > ---
-> > >  drivers/scsi/megaraid/megaraid_sas_fusion.c | 9 +++++++++
-> > >  1 file changed, 9 insertions(+)
-> > >
-> > > diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> > > b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> > > index 0f13c58..a308e14 100644
-> > > --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> > > +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> > > @@ -3618,6 +3618,15 @@ void megasas_refire_mgmt_cmd(struct
-> > > megasas_instance *instance)
-> > >
-> > >  		if (!smid)
-> > >  			continue;
-> > > +
-> > > +		/* Do not refire shutdown command */
-> > > +		if (le32_to_cpu(cmd_mfi->frame->dcmd.opcode) =3D=3D
-> > > +			MR_DCMD_CTRL_SHUTDOWN) {
-> > > +			cmd_mfi->frame->dcmd.cmd_status =3D MFI_STAT_OK;
-> > > +			megasas_complete_cmd(instance, cmd_mfi, DID_OK);
-> > > +			continue;
-> > > +		}
-> > > +
-> > >  		req_desc =3D megasas_get_request_descriptor
-> > >  					(instance, smid - 1);
-> > >  		refire_cmd =3D req_desc && ((cmd_mfi->frame->dcmd.opcode !=3D
-> > >
-> > Please, no.
-> > You already have a selector further down whether to refire the
-> > command, pending on the DRV_DCMD_SKIP_REFIRE flag.
-> > If you always set this flag for the shutdown command you wouldn't need
-> > to touch this at all.
-> > And if you particularly dislike that solution convert the 'refire_cmd =
-=3D'
-> > statement into a proper switch and blank it out from there.
-> >
->
+On 07/05/2017 12:33 PM, Shivasharan Srikanteshwara wrote:
+>> -----Original Message-----
+>> From: Shivasharan Srikanteshwara
+>> [mailto:shivasharan.srikanteshwara@broadcom.com]
+>> Sent: Tuesday, July 04, 2017 12:39 PM
+>> To: 'Hannes Reinecke'; 'linux-scsi@vger.kernel.org'
+>> Cc: 'martin.petersen@oracle.com'; 'thenzl@redhat.com';
+>> 'jejb@linux.vnet.ibm.com'; Kashyap Desai; Sumit Saxena; 'hare@suse.com';
+>> 'hch@lst.de'
+>> Subject: RE: [PATCH 05/15] megaraid_sas: Do not re-fire shutdown DCMD
+>> after
+>> OCR
+>>
+>>> -----Original Message-----
+>>> From: Hannes Reinecke [mailto:hare@suse.de]
+>>> Sent: Friday, June 30, 2017 7:00 PM
+>>> To: Shivasharan S; linux-scsi@vger.kernel.org
+>>> Cc: martin.petersen@oracle.com; thenzl@redhat.com;
+>>> jejb@linux.vnet.ibm.com; kashyap.desai@broadcom.com;
+>>> sumit.saxena@broadcom.com; hare@suse.com; hch@lst.de
+>>> Subject: Re: [PATCH 05/15] megaraid_sas: Do not re-fire shutdown DCMD
+>>> after OCR
+>>>
+>>> On 06/30/2017 10:29 AM, Shivasharan S wrote:
+>>>> Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+>>>> Signed-off-by: Shivasharan S
+>>>> <shivasharan.srikanteshwara@broadcom.com>
+>>>> ---
+>>>>  drivers/scsi/megaraid/megaraid_sas_fusion.c | 9 +++++++++
+>>>>  1 file changed, 9 insertions(+)
+>>>>
+>>>> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>>>> b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>>>> index 0f13c58..a308e14 100644
+>>>> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>>>> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>>>> @@ -3618,6 +3618,15 @@ void megasas_refire_mgmt_cmd(struct
+>>>> megasas_instance *instance)
+>>>>
+>>>>  		if (!smid)
+>>>>  			continue;
+>>>> +
+>>>> +		/* Do not refire shutdown command */
+>>>> +		if (le32_to_cpu(cmd_mfi->frame->dcmd.opcode) ==
+>>>> +			MR_DCMD_CTRL_SHUTDOWN) {
+>>>> +			cmd_mfi->frame->dcmd.cmd_status = MFI_STAT_OK;
+>>>> +			megasas_complete_cmd(instance, cmd_mfi, DID_OK);
+>>>> +			continue;
+>>>> +		}
+>>>> +
+>>>>  		req_desc = megasas_get_request_descriptor
+>>>>  					(instance, smid - 1);
+>>>>  		refire_cmd = req_desc && ((cmd_mfi->frame->dcmd.opcode !=
+>>>>
+>>> Please, no.
+>>> You already have a selector further down whether to refire the
+>>> command, pending on the DRV_DCMD_SKIP_REFIRE flag.
+>>> If you always set this flag for the shutdown command you wouldn't need
+>>> to touch this at all.
+>>> And if you particularly dislike that solution convert the 'refire_cmd ='
+>>> statement into a proper switch and blank it out from there.
+>>>
+>>
+>> Hi Hannes,
+>> The management commands that get skipped further down in this function are
+>> internally generated by the driver itself so we don’t need to complete it
+>> back to
+>> the application.
+>> In case of shutdown DCMD, it’s an IOCTL command(issued by application) so
+>> we
+>> need to return status back to application.
+>> Combining handling of both the cases or using DRV_DCMD_SKIP_REFIRE will
+>> not
+>> be as straightforward.
+>>
+>> Thanks,
+>> Shivasharan
+>>
 > Hi Hannes,
-> The management commands that get skipped further down in this function ar=
-e
-> internally generated by the driver itself so we don=E2=80=99t need to com=
-plete it
-> back to
-> the application.
-> In case of shutdown DCMD, it=E2=80=99s an IOCTL command(issued by applica=
-tion) so
-> we
-> need to return status back to application.
-> Combining handling of both the cases or using DRV_DCMD_SKIP_REFIRE will
-> not
-> be as straightforward.
->
-> Thanks,
-> Shivasharan
->
-Hi Hannes,
-We will implement the switch case approach during our next submission as
-this
-the current code is well tested internally and want to avoid regressions.
-Are you ok if we keep it this way for now?
+> We will implement the switch case approach during our next submission as
+> this
+> the current code is well tested internally and want to avoid regressions.
+> Are you ok if we keep it this way for now?
+> 
+Yes, sure.
 
-Thanks,
-Shivasharan
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-> > Cheers,
-> >
-> > Hannes
-> > --
-> > Dr. Hannes Reinecke		   Teamlead Storage & Networking
-> > hare@suse.de			               +49 911 74053 688
-> > SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-> > GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton H=
-RB
-> > 21284 (AG
-> > N=C3=BCrnberg)
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
