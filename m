@@ -1,55 +1,40 @@
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH v2 11/15] megaraid_sas: Set device queue_depth same as HBA can_queue value in scsi-mq mode
-Date: Wed,  5 Jul 2017 05:00:25 -0700
-Message-ID: <1499256029-16319-12-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH v2 14/15] megaraid_sas: call megasas_dump_frame with correct IO frame size
+Date: Wed,  5 Jul 2017 05:00:28 -0700
+Message-ID: <1499256029-16319-15-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1499256029-16319-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f177.google.com ([209.85.192.177]:33299 "EHLO
-        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752819AbdGEMBy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jul 2017 08:01:54 -0400
-Received: by mail-pf0-f177.google.com with SMTP id e7so128786045pfk.0
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Jul 2017 05:01:54 -0700 (PDT)
+Received: from mail-pg0-f43.google.com ([74.125.83.43]:34660 "EHLO
+        mail-pg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752819AbdGEMCE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jul 2017 08:02:04 -0400
+Received: by mail-pg0-f43.google.com with SMTP id t186so123958113pgb.1
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Jul 2017 05:02:04 -0700 (PDT)
 In-Reply-To: <1499256029-16319-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, hch@lst.de, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-Currently driver sets default queue_depth for VDs at 256 and JBODs based on interface type,
-ie., for SAS JBOD QD will be 64, for SATA JBOD QD will be 32.
-During performance runs with scsi-mq enabled, we are seeing better results by
-setting QD same as HBA queue_depth.
-
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 1d5ca5e..c13b605 100644
+index c13b605..d760023 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -1891,7 +1891,8 @@ static void megasas_set_static_target_properties(struct scsi_device *sdev,
- 	if (instance->nvme_page_size && max_io_size_kb)
- 		megasas_set_nvme_device_properties(sdev, (max_io_size_kb << 10));
- 
--	scsi_change_queue_depth(sdev, device_qd);
-+	if (!shost_use_blk_mq(sdev->host))
-+		scsi_change_queue_depth(sdev, device_qd);
- 
- }
- 
-@@ -5915,6 +5916,9 @@ static int megasas_io_attach(struct megasas_instance *instance)
- 	host->max_lun = MEGASAS_MAX_LUN;
- 	host->max_cmd_len = 16;
- 
-+	if (shost_use_blk_mq(host))
-+		host->cmd_per_lun = host->can_queue;
-+
- 	/*
- 	 * Notify the mid-layer about the new controller
- 	 */
+@@ -2796,7 +2796,7 @@ static int megasas_reset_bus_host(struct scsi_cmnd *scmd)
+ 		cmd = (struct megasas_cmd_fusion *)scmd->SCp.ptr;
+ 		if (cmd)
+ 			megasas_dump_frame(cmd->io_request,
+-				sizeof(struct MPI2_RAID_SCSI_IO_REQUEST));
++				MEGA_MPI2_RAID_DEFAULT_IO_FRAME_SIZE);
+ 		ret = megasas_reset_fusion(scmd->device->host,
+ 				SCSIIO_TIMEOUT_OCR);
+ 	} else
 -- 
 1.8.3.1
