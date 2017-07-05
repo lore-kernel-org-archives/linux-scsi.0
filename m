@@ -1,97 +1,50 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: Nero 4 Linux applications broken in 4.12
-Date: Wed, 5 Jul 2017 13:52:35 +0200
-Message-ID: <20170705115235.GF4076@linux-x5ow.site>
-References: <460fefb4-d002-6989-0c90-63ea0e209fc3@googlemail.com>
- <20170705073928.GA4076@linux-x5ow.site>
- <9c58bac7-ddf4-3e47-b729-76e595804836@googlemail.com>
- <20170705084447.GD4076@linux-x5ow.site>
- <20170705084810.GE4076@linux-x5ow.site>
- <d92e31ed-db7f-aa4b-5dfd-3f6df4a49ea9@googlemail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH v2 00/15] megaraid_sas: Updates for scsi-next
+Date: Wed,  5 Jul 2017 05:00:14 -0700
+Message-ID: <1499256029-16319-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33865 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751637AbdGELwi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 5 Jul 2017 07:52:38 -0400
-Content-Disposition: inline
-In-Reply-To: <d92e31ed-db7f-aa4b-5dfd-3f6df4a49ea9@googlemail.com>
+Received: from mail-pg0-f45.google.com ([74.125.83.45]:36240 "EHLO
+        mail-pg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751637AbdGEMBK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jul 2017 08:01:10 -0400
+Received: by mail-pg0-f45.google.com with SMTP id u62so123302000pgb.3
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Jul 2017 05:01:10 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chris Clayton <chris2553@googlemail.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, hch@lst.de, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-On Wed, Jul 05, 2017 at 10:06:49AM +0100, Chris Clayton wrote:
-> I'll do this  and send dmesg(?) output as soon as I've got scsi_logging_level installed.
+Changes from v1:
+- Patch 4: Updated patch description
+- Patch 9: Cleanup ld_drv_map in case ld_map allocation fails
 
-Hi Chris,
+Shivasharan S (15):
+  megaraid_sas: mismatch of allocated MFI frame size and length exposed
+    in MFI MPT pass through command
+  megaraid_sas: set minimum value of resetwaittime to be 1 secs
+  megaraid_sas: Use synchronize_irq in target reset case
+  megaraid_sas: Call megasas_complete_cmd_dpc_fusion every 1 second
+    while there are pending commands
+  megaraid_sas: Do not re-fire shutdown DCMD after OCR
+  megaraid_sas: Fix endianness issues in DCMD handling
+  megaraid_sas: Check valid aen class range to avoid kernel panic
+  megaraid_sas: Use SMID for Task abort case only
+  megaraid_sas: use vmalloc for crash dump buffers and driver's local
+    RAID map
+  megaraid_sas: Return pended IOCTLs with cmd_status
+    MFI_STAT_WRONG_STATE in case adapter is dead
+  megaraid_sas: Set device queue_depth same as HBA can_queue value in
+    scsi-mq mode
+  megaraid_sas: replace internal FALSE/TRUE definitions with false/true
+  megaraid_sas: modified few prints in OCR and IOC INIT path
+  megaraid_sas: call megasas_dump_frame with correct IO frame size
+  megaraid_sas: driver version upgrade
 
-does this reproducer work (i.e. output FAIL) for you?
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
-#include <unistd.h>
-
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-
-#include <scsi/sg.h>
-
-int main(int argc, char **argv)
-{
-	int fd;
-	int rc;
-	int rsz = 131072;
-	int tout = 10800000;
-	char buf[42] = { 0 };
-
-	if (argc != 2) {
-		printf("usage: %s /dev/sgX\n", argv[0]);
-		return 1;
-	}
-
-	fd = open(argv[1], O_RDWR);
-	if (fd < 0) {
-		perror("open");
-		return 1;
-	}
-
-	rc = ioctl(fd, SG_SET_RESERVED_SIZE, &rsz);
-	if (rc < 0) {
-		perror("ioctl SG_SET_RESERVED_SIZE");
-		goto out_close;
-	}
-
-	rc = ioctl(fd, SG_SET_TIMEOUT, &tout);
-	if (rc < 0) {
-		perror("ioctl SG_SET_TIMEOUT");
-		goto out_close;
-	}
-
-	buf[4] = 'H';
-	rc = write(fd, &buf, sizeof(buf));
-	if (rc < 0) {
-		perror("write");
-		if (errno == EINVAL)
-			printf("FAIL\n");
-		goto out_close;
-	}
-
-	printf("PASS\n");
-
-out_close:
-	close(fd);
-}
+ drivers/scsi/megaraid/megaraid_sas.h        |   5 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c   |  45 +++++--
+ drivers/scsi/megaraid/megaraid_sas_fp.c     |  40 +++----
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 174 ++++++++++++++++++----------
+ 4 files changed, 163 insertions(+), 101 deletions(-)
 
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+2.8.3
