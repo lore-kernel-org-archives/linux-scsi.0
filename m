@@ -1,43 +1,64 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: device support in hpsa, was: Re: OOPS from cciss_ioctl in
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: device support in hpasa, was: Re: OOPS from cciss_ioctl in
  4.12+git
-Date: Fri, 7 Jul 2017 14:20:13 -0400
-Message-ID: <1e3a19fa-1dab-b360-7dbb-bc6c007f6ddd@redhat.com>
+Date: Fri, 7 Jul 2017 19:15:58 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D19533CD866@avsrvexchmbx2.microsemi.net>
 References: <alpine.LRH.2.20.1707051555130.20086@math.ut.ee>
  <20170705225134.GA31786@infradead.org>
  <alpine.LRH.2.20.1707061236010.6514@math.ut.ee>
  <20170707150042.GA15445@infradead.org>
  <799cf0d6-658d-4124-1ba0-3962671e3f1e@kernel.dk>
- <1bc9895b-bfcb-9ff5-c046-277b0d67a94e@redhat.com>
- <20170707180857.GA19790@infradead.org>
+ <248a8eed-84b2-ddbf-793b-76cfdf9f6f21@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f181.google.com ([209.85.216.181]:33215 "EHLO
-        mail-qt0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750938AbdGGSUS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jul 2017 14:20:18 -0400
-Received: by mail-qt0-f181.google.com with SMTP id r30so33712785qtc.0
-        for <linux-scsi@vger.kernel.org>; Fri, 07 Jul 2017 11:20:18 -0700 (PDT)
-In-Reply-To: <20170707180857.GA19790@infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <248a8eed-84b2-ddbf-793b-76cfdf9f6f21@suse.de>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, Meelis Roos <mroos@linux.ee>
+Cc: Linux Kernel list <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Scott Benesh <scott.benesh@microsemi.com>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Meelis Roos <mroos@linux.ee>, Linux Kernel list <linux-kernel@vger.kernel.org>, linux-block@vger.kernel.org, Don Brace <don.brace@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-
-
-On 07/07/2017 02:08 PM, Christoph Hellwig wrote:
-> On Fri, Jul 07, 2017 at 11:42:38AM -0400, Laurence Oberman wrote:
->> What happens when  hpsa_allow_any=1 with the Smart Array 64xx
->> It should probe.
-> 
-> But only if it has a HP vendor ID as far as I can tell.  We'd
-> still need to add the compaq ids so that these controllers get
-> probed.  But maybe it's time to add them and flip the hpsa_allow_any
-> default (maybe conditionally on a config option?) and mark cciss
-> deprecated.
-> 
-Agreed, I vote yes.
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBIYW5uZXMgUmVpbmVja2UgW21h
+aWx0bzpoYXJlQHN1c2UuZGVdDQo+IFNlbnQ6IEZyaWRheSwgSnVseSAwNywgMjAxNyAxMTowNSBB
+TQ0KPiBUbzogSmVucyBBeGJvZSA8YXhib2VAa2VybmVsLmRrPjsgQ2hyaXN0b3BoIEhlbGx3aWcN
+Cj4gPGhjaEBpbmZyYWRlYWQub3JnPjsgTWVlbGlzIFJvb3MgPG1yb29zQGxpbnV4LmVlPg0KPiBD
+YzogTGludXggS2VybmVsIGxpc3QgPGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc+OyBsaW51
+eC0NCj4gYmxvY2tAdmdlci5rZXJuZWwub3JnOyBEb24gQnJhY2UgPGRvbi5icmFjZUBtaWNyb3Nl
+bWkuY29tPjsgU2NvdHQNCj4gQmVuZXNoIDxzY290dC5iZW5lc2hAbWljcm9zZW1pLmNvbT47IFNj
+b3R0IFRlZWwNCj4gPHNjb3R0LnRlZWxAbWljcm9zZW1pLmNvbT47IEtldmluIEJhcm5ldHQNCj4g
+PGtldmluLmJhcm5ldHRAbWljcm9zZW1pLmNvbT47IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3Jn
+DQo+IFN1YmplY3Q6IFJlOiBkZXZpY2Ugc3VwcG9ydCBpbiBocGFzYSwgd2FzOiBSZTogT09QUyBm
+cm9tIGNjaXNzX2lvY3RsIGluDQo+IDQuMTIrZ2l0DQo+IA0KPiBFWFRFUk5BTCBFTUFJTA0KPiAN
+Cj4gDQo+IE9uIDA3LzA3LzIwMTcgMDU6MDMgUE0sIEplbnMgQXhib2Ugd3JvdGU6DQo+ID4gT24g
+MDcvMDcvMjAxNyAwOTowMCBBTSwgQ2hyaXN0b3BoIEhlbGx3aWcgd3JvdGU6DQo+ID4+IE9uIFRo
+dSwgSnVsIDA2LCAyMDE3IGF0IDEyOjU1OjA0UE0gKzAzMDAsIE1lZWxpcyBSb29zIHdyb3RlOg0K
+PiA+Pj4+IEFsc28gd2UncmUgdHJ5aW5nIHRvIG1vdmUgcGVvcGxlIGF3YXkgZnJvbSB0aGUgY2Np
+c3MgZHJpdmVyLCBjYW4geW91DQo+ID4+Pj4gY2hlY2sgaWYgdGhlIGhwc2EgU0NTSSBkcml2ZXIg
+d29ya3MgZm9yIHlvdSBhcyB3ZWxsPw0KPiA+Pj4NCj4gPj4+IEkgaGF2ZSBvbGRlciBhZGFwdGVy
+Og0KPiA+Pj4NCj4gPj4+IENvbXBhcSBDb21wdXRlciBDb3Jwb3JhdGlvbiBTbWFydCBBcnJheSA2
+NHh4IFswZTExOjAwNDZdIChyZXYgMDEpDQo+ID4+Pg0KPiA+Pj4gVGhhdCBkb2VzIG5vdCBzZWVt
+IHRvIGJlIHN1cHBvcnRlZCBieSBocHNhIEFGQUlDUy4NCj4gPj4NCj4gPj4gTG9va3MgbGlrZS4g
+IEFsdGhvdWdoIGhwc2EgaGFzIHN1cHBvcnQgZm9yIHZhcmlvdXMgU0E1IGNvbnRyb2xsZXJzDQo+
+ID4+IGl0IHNlZW1zIGxpa2UgaXQgZGVjaWRlZCB0byBza2lwIGFsbCBDb21wYXEgYnJhbmRlZCBj
+b250cm9sbGVycy4NCj4gPj4NCj4gPj4gQXMgZmFyIGFzIEkgY2FuIHRlbGwgd2UgY291bGQgc2lt
+cGx5IGFkZCBzdXBwb3J0IGZvciB0aG9zZSB0bw0KPiA+PiBocHNhLiAgQ2NpbmcgaHBzYSBmb2xr
+cyB0byBmaWd1cmUgb3V0IGlmIHRoYXQncyB0aGUgY2FzZS4NCj4gPg0KPiA+IFByZXR0eSBzdXJl
+IEhhbm5lcyBoYWQgYSBwYXRjaCBoZSB0ZXN0ZWQgZm9yIHRoYXQsIGhlIHRhbGtlZCBhYm91dA0K
+PiA+IHRoYXQgYmFjayBhdCBMU0ZNTSBlYXJsaWVyIHRoaXMgeWVhci4gSGFubmVzPw0KPiA+DQo+
+IE9oLCBJIGRvLg0KPiBocHNhIGlzIHdvcmtpbmcgaGFwcGlseSBvbiBTTEVTIGZvciBfYWxsXyBT
+bWFydEFycmF5IGNvbnRyb2xsZXJzLg0KPiBZb3UgbmVlZCB0byBlbmFibGUgJ2hwc2FfYWxsb3df
+YW55PTEnLCB0aG91Z2guDQo+IEJ1dCBJJ20gcGVyZmVjdGx5IGhhcHB5IHdpdGggbWFraW5nIHRo
+YXQgdGhlIGRlZmF1bHQgYW5kIGRyb3AgY2Npc3MNCj4gY29tcGxldGVseS4NCj4gDQo+IENoZWVy
+cywNCj4gDQo+IEhhbm5lcw0KPiAtLQ0KPiBEci4gSGFubmVzIFJlaW5lY2tlICAgICAgICAgICAg
+ICAgIFRlYW1sZWFkIFN0b3JhZ2UgJiBOZXR3b3JraW5nDQo+IGhhcmVAc3VzZS5kZSAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgKzQ5IDkxMSA3NDA1MyA2ODgNCj4gU1VTRSBMSU5V
+WCBHbWJILCBNYXhmZWxkc3RyLiA1LCA5MDQwOSBOw7xybmJlcmcNCj4gR0Y6IEYuIEltZW5kw7Zy
+ZmZlciwgSi4gU21pdGhhcmQsIEouIEd1aWxkLCBELiBVcG1hbnl1LCBHLiBOb3J0b24NCj4gSFJC
+IDIxMjg0IChBRyBOw7xybmJlcmcpDQoNClRoZSA2NDAwIGNvbnRyb2xsZXJzIGFyZSBxdWl0ZSBv
+bGQgYW5kIGFyZSBubyBsb25nZXIgdGVzdGVkLiANClNvLCBpdCB3b3VsZCBiZSBuaWNlIHRvIGRl
+cHJlY2F0ZSB0aGUgY2Npc3MgZHJpdmVyLCBidXQgd2Ugd291bGQgbm90IHN1cHBvcnQgdGhvc2Ug
+Zm9ybWVybHkgY2Npc3MgZGV2aWNlcyB3aXRoIGhwc2EuDQpJIGRvIG5vdCByZWNhbGwgc2VlaW5n
+IGEgY2Npc3NfaW9jdGwgaXNzdWUsIHdoYXQgd2FzIHRoZSBpc3N1ZT8NCg0KVGhhbmtzLA0KRG9u
+IEJyYWNlDQpFU0MgLSBTbWFydCBTdG9yYWdlDQpNaWNyb3NlbWkgQ29ycG9yYXRpb24NCg0KDQo=
