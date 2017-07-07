@@ -1,57 +1,93 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: device support in hpasa, was: Re: OOPS from cciss_ioctl in
- 4.12+git
-Date: Fri, 7 Jul 2017 18:05:16 +0200
-Message-ID: <248a8eed-84b2-ddbf-793b-76cfdf9f6f21@suse.de>
-References: <alpine.LRH.2.20.1707051555130.20086@math.ut.ee>
- <20170705225134.GA31786@infradead.org>
- <alpine.LRH.2.20.1707061236010.6514@math.ut.ee>
- <20170707150042.GA15445@infradead.org>
- <799cf0d6-658d-4124-1ba0-3962671e3f1e@kernel.dk>
+From: Mike Christie <mchristi@redhat.com>
+Subject: Re: [PATCH 4/5] target: user: Fix sense data handling
+Date: Fri, 7 Jul 2017 12:19:31 -0500
+Message-ID: <d8aeae04-50d2-59ec-b640-a944538d6846@redhat.com>
+References: <20170628055900.22889-1-damien.lemoal@wdc.com>
+ <20170628055900.22889-5-damien.lemoal@wdc.com>
+ <5eb219c5-c4a7-ea75-ff31-d732e10c72ae@redhat.com>
+ <1499403018.30628.27.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <799cf0d6-658d-4124-1ba0-3962671e3f1e@kernel.dk>
-Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, Meelis Roos <mroos@linux.ee>
-Cc: Linux Kernel list <linux-kernel@vger.kernel.org>, linux-block@vger.kernel.org, Don Brace <don.brace@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, linux-scsi@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:41778 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750726AbdGGRTe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 7 Jul 2017 13:19:34 -0400
+In-Reply-To: <1499403018.30628.27.camel@haakon3.risingtidesystems.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Damien Le Moal <damien.lemoal@wdc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>
 
-On 07/07/2017 05:03 PM, Jens Axboe wrote:
-> On 07/07/2017 09:00 AM, Christoph Hellwig wrote:
->> On Thu, Jul 06, 2017 at 12:55:04PM +0300, Meelis Roos wrote:
->>>> Also we're trying to move people away from the cciss driver, can you
->>>> check if the hpsa SCSI driver works for you as well?
->>>
->>> I have older adapter:
->>>
->>> Compaq Computer Corporation Smart Array 64xx [0e11:0046] (rev 01)
->>>
->>> That does not seem to be supported by hpsa AFAICS.
->>
->> Looks like.  Although hpsa has support for various SA5 controllers
->> it seems like it decided to skip all Compaq branded controllers.
->>
->> As far as I can tell we could simply add support for those to
->> hpsa.  Ccing hpsa folks to figure out if that's the case.
+On 07/06/2017 11:50 PM, Nicholas A. Bellinger wrote:
+> Hey MNC & Co,
 > 
-> Pretty sure Hannes had a patch he tested for that, he talked about
-> that back at LSFMM earlier this year. Hannes?
+> On Wed, 2017-06-28 at 12:44 -0500, Mike Christie wrote:
+>> On 06/28/2017 12:58 AM, Damien Le Moal wrote:
+>>> If the user request handler completed the request with a CHECK CONDITION
+>>> status, tcmu_handle_completion() copies the command entry sense data
+>>> into the session request structure sense data. However, the sense data
+>>> length indicated by the field scsi_sense_length is not set and equal to
+>>> 0, resulting in the copy being a no-op and failure to propagate the
+>>> sense data back to the initiator. To fix this, properly set the session
+>>> command sense data length and also set the session command
+>>> SCF_TRANSPORT_TASK_SENSE flag to indicate that the command has valid
+>>> sense data.
+>>>
+>>> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+>>> ---
+>>>  drivers/target/target_core_user.c | 4 +++-
+>>>  1 file changed, 3 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+>>> index beb5f09..7426b4c 100644
+>>> --- a/drivers/target/target_core_user.c
+>>> +++ b/drivers/target/target_core_user.c
+>>> @@ -831,7 +831,9 @@ static void tcmu_handle_completion(struct tcmu_cmd *cmd, struct tcmu_cmd_entry *
+>>>  		entry->rsp.scsi_status = SAM_STAT_CHECK_CONDITION;
+>>>  	} else if (entry->rsp.scsi_status == SAM_STAT_CHECK_CONDITION) {
+>>>  		memcpy(se_cmd->sense_buffer, entry->rsp.sense_buffer,
+>>> -			       se_cmd->scsi_sense_length);
+>>> +		       TRANSPORT_SENSE_BUFFER);
+>>> +		se_cmd->scsi_sense_length = TRANSPORT_SENSE_BUFFER;
+>>> +		se_cmd->se_cmd_flags |= SCF_TRANSPORT_TASK_SENSE;
+>>>  	} else if (se_cmd->se_cmd_flags & SCF_BIDI) {
+>>>  		/* Get Data-In buffer before clean up */
+>>>  		gather_data_area(udev, cmd, true);
+>>>
+>>
+>> I have a patch similar to this and 5/5 in my set:
+>>
+>> https://www.spinics.net/lists/target-devel/msg15430.html
+>>
+>> If yours gets merged first then I will build my set over them, so patch
+>> looks ok to me.
+>>
+>> Reviewed-by: Mike Christie <mchristi@redhat.com>
 > 
-Oh, I do.
-hpsa is working happily on SLES for _all_ SmartArray controllers.
-You need to enable 'hpsa_allow_any=1', though.
-But I'm perfectly happy with making that the default and drop cciss
-completely.
+> The RFC patches above from May 31st weren't merged because I thought you
+> where going to send out a second series..
 
-Cheers,
+I am/was. Sorry for the confusion. Above, I meant if Daemien's patches
+gets merged before I can repost. I have been having troubles testing the
+usb patch and was not sure how long it would take me.
 
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+I should have just broken out 1 - 6 like you just did for me below.
+
+> 
+> https://www.spinics.net/lists/target-devel/msg15505.html
+> 
+> Since that hasn't been the case, I'll go ahead and merge the bugfixes in
+> patches #1-6 for v4.13 now.  :)
+
+Thanks.
+
+> 
+> Please resend patches #7-13 as post v4.13 items at your earliest
+> convenience.
+> 
+> Apologies for the confusion.
+> 
+
+It was my fault :)
