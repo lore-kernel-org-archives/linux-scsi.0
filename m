@@ -1,64 +1,259 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: RE: device support in hpasa, was: Re: OOPS from cciss_ioctl in
- 4.12+git
-Date: Fri, 7 Jul 2017 19:15:58 +0000
-Message-ID: <4993A297653ECB4581FA5C3C31323D19533CD866@avsrvexchmbx2.microsemi.net>
-References: <alpine.LRH.2.20.1707051555130.20086@math.ut.ee>
- <20170705225134.GA31786@infradead.org>
- <alpine.LRH.2.20.1707061236010.6514@math.ut.ee>
- <20170707150042.GA15445@infradead.org>
- <799cf0d6-658d-4124-1ba0-3962671e3f1e@kernel.dk>
- <248a8eed-84b2-ddbf-793b-76cfdf9f6f21@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <248a8eed-84b2-ddbf-793b-76cfdf9f6f21@suse.de>
-Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, Meelis Roos <mroos@linux.ee>
-Cc: Linux Kernel list <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Scott Benesh <scott.benesh@microsemi.com>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH] iscsi-target: Add login_keys_workaround attribute for non RFC initiators
+Date: Fri,  7 Jul 2017 22:24:45 +0000
+Message-ID: <1499466285-9907-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Robert LeBlanc <robert@leblancnet.us>, Arun Easi <arun.easi@cavium.com>
 List-Id: linux-scsi@vger.kernel.org
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBIYW5uZXMgUmVpbmVja2UgW21h
-aWx0bzpoYXJlQHN1c2UuZGVdDQo+IFNlbnQ6IEZyaWRheSwgSnVseSAwNywgMjAxNyAxMTowNSBB
-TQ0KPiBUbzogSmVucyBBeGJvZSA8YXhib2VAa2VybmVsLmRrPjsgQ2hyaXN0b3BoIEhlbGx3aWcN
-Cj4gPGhjaEBpbmZyYWRlYWQub3JnPjsgTWVlbGlzIFJvb3MgPG1yb29zQGxpbnV4LmVlPg0KPiBD
-YzogTGludXggS2VybmVsIGxpc3QgPGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc+OyBsaW51
-eC0NCj4gYmxvY2tAdmdlci5rZXJuZWwub3JnOyBEb24gQnJhY2UgPGRvbi5icmFjZUBtaWNyb3Nl
-bWkuY29tPjsgU2NvdHQNCj4gQmVuZXNoIDxzY290dC5iZW5lc2hAbWljcm9zZW1pLmNvbT47IFNj
-b3R0IFRlZWwNCj4gPHNjb3R0LnRlZWxAbWljcm9zZW1pLmNvbT47IEtldmluIEJhcm5ldHQNCj4g
-PGtldmluLmJhcm5ldHRAbWljcm9zZW1pLmNvbT47IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3Jn
-DQo+IFN1YmplY3Q6IFJlOiBkZXZpY2Ugc3VwcG9ydCBpbiBocGFzYSwgd2FzOiBSZTogT09QUyBm
-cm9tIGNjaXNzX2lvY3RsIGluDQo+IDQuMTIrZ2l0DQo+IA0KPiBFWFRFUk5BTCBFTUFJTA0KPiAN
-Cj4gDQo+IE9uIDA3LzA3LzIwMTcgMDU6MDMgUE0sIEplbnMgQXhib2Ugd3JvdGU6DQo+ID4gT24g
-MDcvMDcvMjAxNyAwOTowMCBBTSwgQ2hyaXN0b3BoIEhlbGx3aWcgd3JvdGU6DQo+ID4+IE9uIFRo
-dSwgSnVsIDA2LCAyMDE3IGF0IDEyOjU1OjA0UE0gKzAzMDAsIE1lZWxpcyBSb29zIHdyb3RlOg0K
-PiA+Pj4+IEFsc28gd2UncmUgdHJ5aW5nIHRvIG1vdmUgcGVvcGxlIGF3YXkgZnJvbSB0aGUgY2Np
-c3MgZHJpdmVyLCBjYW4geW91DQo+ID4+Pj4gY2hlY2sgaWYgdGhlIGhwc2EgU0NTSSBkcml2ZXIg
-d29ya3MgZm9yIHlvdSBhcyB3ZWxsPw0KPiA+Pj4NCj4gPj4+IEkgaGF2ZSBvbGRlciBhZGFwdGVy
-Og0KPiA+Pj4NCj4gPj4+IENvbXBhcSBDb21wdXRlciBDb3Jwb3JhdGlvbiBTbWFydCBBcnJheSA2
-NHh4IFswZTExOjAwNDZdIChyZXYgMDEpDQo+ID4+Pg0KPiA+Pj4gVGhhdCBkb2VzIG5vdCBzZWVt
-IHRvIGJlIHN1cHBvcnRlZCBieSBocHNhIEFGQUlDUy4NCj4gPj4NCj4gPj4gTG9va3MgbGlrZS4g
-IEFsdGhvdWdoIGhwc2EgaGFzIHN1cHBvcnQgZm9yIHZhcmlvdXMgU0E1IGNvbnRyb2xsZXJzDQo+
-ID4+IGl0IHNlZW1zIGxpa2UgaXQgZGVjaWRlZCB0byBza2lwIGFsbCBDb21wYXEgYnJhbmRlZCBj
-b250cm9sbGVycy4NCj4gPj4NCj4gPj4gQXMgZmFyIGFzIEkgY2FuIHRlbGwgd2UgY291bGQgc2lt
-cGx5IGFkZCBzdXBwb3J0IGZvciB0aG9zZSB0bw0KPiA+PiBocHNhLiAgQ2NpbmcgaHBzYSBmb2xr
-cyB0byBmaWd1cmUgb3V0IGlmIHRoYXQncyB0aGUgY2FzZS4NCj4gPg0KPiA+IFByZXR0eSBzdXJl
-IEhhbm5lcyBoYWQgYSBwYXRjaCBoZSB0ZXN0ZWQgZm9yIHRoYXQsIGhlIHRhbGtlZCBhYm91dA0K
-PiA+IHRoYXQgYmFjayBhdCBMU0ZNTSBlYXJsaWVyIHRoaXMgeWVhci4gSGFubmVzPw0KPiA+DQo+
-IE9oLCBJIGRvLg0KPiBocHNhIGlzIHdvcmtpbmcgaGFwcGlseSBvbiBTTEVTIGZvciBfYWxsXyBT
-bWFydEFycmF5IGNvbnRyb2xsZXJzLg0KPiBZb3UgbmVlZCB0byBlbmFibGUgJ2hwc2FfYWxsb3df
-YW55PTEnLCB0aG91Z2guDQo+IEJ1dCBJJ20gcGVyZmVjdGx5IGhhcHB5IHdpdGggbWFraW5nIHRo
-YXQgdGhlIGRlZmF1bHQgYW5kIGRyb3AgY2Npc3MNCj4gY29tcGxldGVseS4NCj4gDQo+IENoZWVy
-cywNCj4gDQo+IEhhbm5lcw0KPiAtLQ0KPiBEci4gSGFubmVzIFJlaW5lY2tlICAgICAgICAgICAg
-ICAgIFRlYW1sZWFkIFN0b3JhZ2UgJiBOZXR3b3JraW5nDQo+IGhhcmVAc3VzZS5kZSAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgKzQ5IDkxMSA3NDA1MyA2ODgNCj4gU1VTRSBMSU5V
-WCBHbWJILCBNYXhmZWxkc3RyLiA1LCA5MDQwOSBOw7xybmJlcmcNCj4gR0Y6IEYuIEltZW5kw7Zy
-ZmZlciwgSi4gU21pdGhhcmQsIEouIEd1aWxkLCBELiBVcG1hbnl1LCBHLiBOb3J0b24NCj4gSFJC
-IDIxMjg0IChBRyBOw7xybmJlcmcpDQoNClRoZSA2NDAwIGNvbnRyb2xsZXJzIGFyZSBxdWl0ZSBv
-bGQgYW5kIGFyZSBubyBsb25nZXIgdGVzdGVkLiANClNvLCBpdCB3b3VsZCBiZSBuaWNlIHRvIGRl
-cHJlY2F0ZSB0aGUgY2Npc3MgZHJpdmVyLCBidXQgd2Ugd291bGQgbm90IHN1cHBvcnQgdGhvc2Ug
-Zm9ybWVybHkgY2Npc3MgZGV2aWNlcyB3aXRoIGhwc2EuDQpJIGRvIG5vdCByZWNhbGwgc2VlaW5n
-IGEgY2Npc3NfaW9jdGwgaXNzdWUsIHdoYXQgd2FzIHRoZSBpc3N1ZT8NCg0KVGhhbmtzLA0KRG9u
-IEJyYWNlDQpFU0MgLSBTbWFydCBTdG9yYWdlDQpNaWNyb3NlbWkgQ29ycG9yYXRpb24NCg0KDQo=
+From: Nicholas Bellinger <nab@linux-iscsi.org>
+
+This patch re-introduces part of a long standing login workaround that
+was recently dropped by:
+
+  commit 1c99de981f30b3e7868b8d20ce5479fa1c0fea46
+  Author: Nicholas Bellinger <nab@linux-iscsi.org>
+  Date:   Sun Apr 2 13:36:44 2017 -0700
+
+      iscsi-target: Drop work-around for legacy GlobalSAN initiator
+
+Namely, the workaround for FirstBurstLength ended up being required by
+Mellanox Flexboot PXE boot ROMs as reported by Robert.
+
+So this patch re-adds the work-around for FirstBurstLength within
+iscsi_check_proposer_for_optional_reply(), and makes the key optional
+to respond when the initiator does not propose, nor respond to it.
+
+Also as requested by Arun, this patch introduces a new TPG attribute
+named 'login_keys_workaround' that controls the use of both the
+FirstBurstLength workaround, as well as the two other existing
+workarounds for gPXE iSCSI boot client.
+
+By default, the workaround is enabled with login_keys_workaround=1,
+since Mellanox FlexBoot requires it, and Arun has verified the Qlogic
+MSFT initiator already proposes FirstBurstLength, so it's uneffected
+by this re-adding this part of the original work-around.
+
+Reported-by: Robert LeBlanc <robert@leblancnet.us>
+Cc: Robert LeBlanc <robert@leblancnet.us>
+Cc: Arun Easi <arun.easi@cavium.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/iscsi/iscsi_target_configfs.c   |  2 ++
+ drivers/target/iscsi/iscsi_target_nego.c       |  6 ++--
+ drivers/target/iscsi/iscsi_target_parameters.c | 41 ++++++++++++++++++--------
+ drivers/target/iscsi/iscsi_target_parameters.h |  2 +-
+ drivers/target/iscsi/iscsi_target_tpg.c        | 19 ++++++++++++
+ drivers/target/iscsi/iscsi_target_tpg.h        |  1 +
+ include/target/iscsi/iscsi_target_core.h       |  9 ++++++
+ 7 files changed, 64 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
+index 535a8e0..0dd4c45 100644
+--- a/drivers/target/iscsi/iscsi_target_configfs.c
++++ b/drivers/target/iscsi/iscsi_target_configfs.c
+@@ -781,6 +781,7 @@ static int lio_target_init_nodeacl(struct se_node_acl *se_nacl,
+ DEF_TPG_ATTRIB(t10_pi);
+ DEF_TPG_ATTRIB(fabric_prot_type);
+ DEF_TPG_ATTRIB(tpg_enabled_sendtargets);
++DEF_TPG_ATTRIB(login_keys_workaround);
+ 
+ static struct configfs_attribute *lio_target_tpg_attrib_attrs[] = {
+ 	&iscsi_tpg_attrib_attr_authentication,
+@@ -796,6 +797,7 @@ static int lio_target_init_nodeacl(struct se_node_acl *se_nacl,
+ 	&iscsi_tpg_attrib_attr_t10_pi,
+ 	&iscsi_tpg_attrib_attr_fabric_prot_type,
+ 	&iscsi_tpg_attrib_attr_tpg_enabled_sendtargets,
++	&iscsi_tpg_attrib_attr_login_keys_workaround,
+ 	NULL,
+ };
+ 
+diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
+index 96df63f..7a6751f 100644
+--- a/drivers/target/iscsi/iscsi_target_nego.c
++++ b/drivers/target/iscsi/iscsi_target_nego.c
+@@ -864,7 +864,8 @@ static int iscsi_target_handle_csg_zero(
+ 			SENDER_TARGET,
+ 			login->rsp_buf,
+ 			&login->rsp_length,
+-			conn->param_list);
++			conn->param_list,
++			conn->tpg->tpg_attrib.login_keys_workaround);
+ 	if (ret < 0)
+ 		return -1;
+ 
+@@ -934,7 +935,8 @@ static int iscsi_target_handle_csg_one(struct iscsi_conn *conn, struct iscsi_log
+ 			SENDER_TARGET,
+ 			login->rsp_buf,
+ 			&login->rsp_length,
+-			conn->param_list);
++			conn->param_list,
++			conn->tpg->tpg_attrib.login_keys_workaround);
+ 	if (ret < 0) {
+ 		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_INITIATOR_ERR,
+ 				ISCSI_LOGIN_STATUS_INIT_ERR);
+diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
+index fce6276..caab104 100644
+--- a/drivers/target/iscsi/iscsi_target_parameters.c
++++ b/drivers/target/iscsi/iscsi_target_parameters.c
+@@ -765,7 +765,8 @@ static int iscsi_check_for_auth_key(char *key)
+ 	return 0;
+ }
+ 
+-static void iscsi_check_proposer_for_optional_reply(struct iscsi_param *param)
++static void iscsi_check_proposer_for_optional_reply(struct iscsi_param *param,
++						    bool keys_workaround)
+ {
+ 	if (IS_TYPE_BOOL_AND(param)) {
+ 		if (!strcmp(param->value, NO))
+@@ -773,19 +774,31 @@ static void iscsi_check_proposer_for_optional_reply(struct iscsi_param *param)
+ 	} else if (IS_TYPE_BOOL_OR(param)) {
+ 		if (!strcmp(param->value, YES))
+ 			SET_PSTATE_REPLY_OPTIONAL(param);
+-		 /*
+-		  * Required for gPXE iSCSI boot client
+-		  */
+-		if (!strcmp(param->name, IMMEDIATEDATA))
+-			SET_PSTATE_REPLY_OPTIONAL(param);
++
++		if (keys_workaround) {
++			/*
++			 * Required for gPXE iSCSI boot client
++			 */
++			if (!strcmp(param->name, IMMEDIATEDATA))
++				SET_PSTATE_REPLY_OPTIONAL(param);
++		}
+ 	} else if (IS_TYPE_NUMBER(param)) {
+ 		if (!strcmp(param->name, MAXRECVDATASEGMENTLENGTH))
+ 			SET_PSTATE_REPLY_OPTIONAL(param);
+-		/*
+-		 * Required for gPXE iSCSI boot client
+-		 */
+-		if (!strcmp(param->name, MAXCONNECTIONS))
+-			SET_PSTATE_REPLY_OPTIONAL(param);
++
++		if (keys_workaround) {
++			/*
++			 * Required for Mellanox Flexboot PXE boot ROM
++			 */
++			if (!strcmp(param->name, FIRSTBURSTLENGTH))
++				SET_PSTATE_REPLY_OPTIONAL(param);
++
++			/*
++			 * Required for gPXE iSCSI boot client
++			 */
++			if (!strcmp(param->name, MAXCONNECTIONS))
++				SET_PSTATE_REPLY_OPTIONAL(param);
++		}
+ 	} else if (IS_PHASE_DECLARATIVE(param))
+ 		SET_PSTATE_REPLY_OPTIONAL(param);
+ }
+@@ -1422,7 +1435,8 @@ int iscsi_encode_text_output(
+ 	u8 sender,
+ 	char *textbuf,
+ 	u32 *length,
+-	struct iscsi_param_list *param_list)
++	struct iscsi_param_list *param_list,
++	bool keys_workaround)
+ {
+ 	char *output_buf = NULL;
+ 	struct iscsi_extra_response *er;
+@@ -1458,7 +1472,8 @@ int iscsi_encode_text_output(
+ 			*length += 1;
+ 			output_buf = textbuf + *length;
+ 			SET_PSTATE_PROPOSER(param);
+-			iscsi_check_proposer_for_optional_reply(param);
++			iscsi_check_proposer_for_optional_reply(param,
++							        keys_workaround);
+ 			pr_debug("Sending key: %s=%s\n",
+ 				param->name, param->value);
+ 		}
+diff --git a/drivers/target/iscsi/iscsi_target_parameters.h b/drivers/target/iscsi/iscsi_target_parameters.h
+index 9962ccf..c47b73f 100644
+--- a/drivers/target/iscsi/iscsi_target_parameters.h
++++ b/drivers/target/iscsi/iscsi_target_parameters.h
+@@ -46,7 +46,7 @@ extern int iscsi_copy_param_list(struct iscsi_param_list **,
+ extern int iscsi_update_param_value(struct iscsi_param *, char *);
+ extern int iscsi_decode_text_input(u8, u8, char *, u32, struct iscsi_conn *);
+ extern int iscsi_encode_text_output(u8, u8, char *, u32 *,
+-			struct iscsi_param_list *);
++			struct iscsi_param_list *, bool);
+ extern int iscsi_check_negotiated_keys(struct iscsi_param_list *);
+ extern void iscsi_set_connection_parameters(struct iscsi_conn_ops *,
+ 			struct iscsi_param_list *);
+diff --git a/drivers/target/iscsi/iscsi_target_tpg.c b/drivers/target/iscsi/iscsi_target_tpg.c
+index abaabba..594d07a 100644
+--- a/drivers/target/iscsi/iscsi_target_tpg.c
++++ b/drivers/target/iscsi/iscsi_target_tpg.c
+@@ -227,6 +227,7 @@ static void iscsit_set_default_tpg_attribs(struct iscsi_portal_group *tpg)
+ 	a->t10_pi = TA_DEFAULT_T10_PI;
+ 	a->fabric_prot_type = TA_DEFAULT_FABRIC_PROT_TYPE;
+ 	a->tpg_enabled_sendtargets = TA_DEFAULT_TPG_ENABLED_SENDTARGETS;
++	a->login_keys_workaround = TA_DEFAULT_LOGIN_KEYS_WORKAROUND;
+ }
+ 
+ int iscsit_tpg_add_portal_group(struct iscsi_tiqn *tiqn, struct iscsi_portal_group *tpg)
+@@ -895,3 +896,21 @@ int iscsit_ta_tpg_enabled_sendtargets(
+ 
+ 	return 0;
+ }
++
++int iscsit_ta_login_keys_workaround(
++	struct iscsi_portal_group *tpg,
++	u32 flag)
++{
++	struct iscsi_tpg_attrib *a = &tpg->tpg_attrib;
++
++	if ((flag != 0) && (flag != 1)) {
++		pr_err("Illegal value %d\n", flag);
++		return -EINVAL;
++	}
++
++	a->login_keys_workaround = flag;
++	pr_debug("iSCSI_TPG[%hu] - TPG enabled bit for login keys workaround: %s ",
++		tpg->tpgt, (a->login_keys_workaround) ? "ON" : "OFF");
++
++	return 0;
++}
+diff --git a/drivers/target/iscsi/iscsi_target_tpg.h b/drivers/target/iscsi/iscsi_target_tpg.h
+index ceba298..59fd3ca 100644
+--- a/drivers/target/iscsi/iscsi_target_tpg.h
++++ b/drivers/target/iscsi/iscsi_target_tpg.h
+@@ -48,5 +48,6 @@ extern int iscsit_tpg_del_network_portal(struct iscsi_portal_group *,
+ extern int iscsit_ta_t10_pi(struct iscsi_portal_group *, u32);
+ extern int iscsit_ta_fabric_prot_type(struct iscsi_portal_group *, u32);
+ extern int iscsit_ta_tpg_enabled_sendtargets(struct iscsi_portal_group *, u32);
++extern int iscsit_ta_login_keys_workaround(struct iscsi_portal_group *, u32);
+ 
+ #endif /* ISCSI_TARGET_TPG_H */
+diff --git a/include/target/iscsi/iscsi_target_core.h b/include/target/iscsi/iscsi_target_core.h
+index 7948fc6..0ca1fb0 100644
+--- a/include/target/iscsi/iscsi_target_core.h
++++ b/include/target/iscsi/iscsi_target_core.h
+@@ -66,6 +66,14 @@
+ #define TA_DEFAULT_FABRIC_PROT_TYPE	0
+ /* TPG status needs to be enabled to return sendtargets discovery endpoint info */
+ #define TA_DEFAULT_TPG_ENABLED_SENDTARGETS 1
++/*
++ * Used to control the sending of keys with optional to respond state bit,
++ * as a workaround for non RFC compliant initiators,that do not propose,
++ * nor respond to specific keys required for login to complete.
++ *
++ * See iscsi_check_proposer_for_optional_reply() for more details.
++ */
++#define TA_DEFAULT_LOGIN_KEYS_WORKAROUND 1
+ 
+ #define ISCSI_IOV_DATA_BUFFER		5
+ 
+@@ -768,6 +776,7 @@ struct iscsi_tpg_attrib {
+ 	u8			t10_pi;
+ 	u32			fabric_prot_type;
+ 	u32			tpg_enabled_sendtargets;
++	u32			login_keys_workaround;
+ 	struct iscsi_portal_group *tpg;
+ };
+ 
+-- 
+1.9.1
