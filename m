@@ -1,60 +1,30 @@
-From: Chris Clayton <chris2553@googlemail.com>
-Subject: Re: [PATCH v2] scsi: sg: fix SG_DXFER_FROM_DEV transfers
-Date: Fri, 7 Jul 2017 18:59:42 +0100
-Message-ID: <be54d68a-628a-6ca6-15fc-1da469118090@googlemail.com>
-References: <20170707085638.18939-1-jthumshirn@suse.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: device support in hpsa, was: Re: OOPS from cciss_ioctl in
+ 4.12+git
+Date: Fri, 7 Jul 2017 11:08:57 -0700
+Message-ID: <20170707180857.GA19790@infradead.org>
+References: <alpine.LRH.2.20.1707051555130.20086@math.ut.ee>
+ <20170705225134.GA31786@infradead.org>
+ <alpine.LRH.2.20.1707061236010.6514@math.ut.ee>
+ <20170707150042.GA15445@infradead.org>
+ <799cf0d6-658d-4124-1ba0-3962671e3f1e@kernel.dk>
+ <1bc9895b-bfcb-9ff5-c046-277b0d67a94e@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170707085638.18939-1-jthumshirn@suse.de>
-Content-Language: en-GB
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Douglas Gilbert <dgilbert@interlog.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1bc9895b-bfcb-9ff5-c046-277b0d67a94e@redhat.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Laurence Oberman <loberman@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Meelis Roos <mroos@linux.ee>, Linux Kernel list <linux-kernel@vger.kernel.org>, linux-block@vger.kernel.org, Don Brace <don.brace@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
+On Fri, Jul 07, 2017 at 11:42:38AM -0400, Laurence Oberman wrote:
+> What happens when  hpsa_allow_any=1 with the Smart Array 64xx
+> It should probe.
 
-
-On 07/07/17 09:56, Johannes Thumshirn wrote:
-> SG_DXFER_FROM_DEV transfers do not necessarily have a dxferp as we set
-> it to NULL for the old sg_io read/write interface, but must have a length
-> bigger than 0. This fixes a regression introduced by commit 28676d869bbb
-> ("scsi: sg: check for valid direction before starting the request")
-> 
-
-I've tested this new patch and the Nero applications can still find the optical drives on my laptop.
-
-Tested-by: Chris Clayton <chris2553@googlemail.com>
-
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> Fixes: 28676d869bbb ("scsi: sg: check for valid direction before starting the request")
-> Reported-by: Chris Clayton <chris2553@googlemail.com>
-> Tested-by: Chris Clayton <chris2553@googlemail.com>
-> Cc: Douglas Gilbert <dgilbert@interlog.com>
-> Reviewed-by: Hannes Reinecke <hare@suse.com>
-> ---
-> Changes to v1:
-> * Fix breakage of the sg_io v3 interface, verified using sg_inq
-> 
->  drivers/scsi/sg.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> index 21225d62b0c1..1e82d4128a84 100644
-> --- a/drivers/scsi/sg.c
-> +++ b/drivers/scsi/sg.c
-> @@ -758,8 +758,11 @@ static bool sg_is_valid_dxfer(sg_io_hdr_t *hp)
->  		if (hp->dxferp || hp->dxfer_len > 0)
->  			return false;
->  		return true;
-> -	case SG_DXFER_TO_DEV:
->  	case SG_DXFER_FROM_DEV:
-> +		if (hp->dxfer_len < 0)
-> +			return false;
-> +		return true;
-> +	case SG_DXFER_TO_DEV:
->  	case SG_DXFER_TO_FROM_DEV:
->  		if (!hp->dxferp || hp->dxfer_len == 0)
->  			return false;
-> 
+But only if it has a HP vendor ID as far as I can tell.  We'd
+still need to add the compaq ids so that these controllers get
+probed.  But maybe it's time to add them and flip the hpsa_allow_any
+default (maybe conditionally on a config option?) and mark cciss
+deprecated.
