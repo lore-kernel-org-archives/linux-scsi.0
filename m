@@ -1,74 +1,35 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 4/5] target: user: Fix sense data handling
-Date: Thu, 06 Jul 2017 21:50:18 -0700
-Message-ID: <1499403018.30628.27.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCH 1/5] target: Use macro for WRITE_VERIFY_xx operation
+ codes
+Date: Thu, 06 Jul 2017 22:00:19 -0700
+Message-ID: <1499403619.30628.30.camel@haakon3.risingtidesystems.com>
 References: <20170628055900.22889-1-damien.lemoal@wdc.com>
-         <20170628055900.22889-5-damien.lemoal@wdc.com>
-         <5eb219c5-c4a7-ea75-ff31-d732e10c72ae@redhat.com>
+         <20170628055900.22889-2-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <5eb219c5-c4a7-ea75-ff31-d732e10c72ae@redhat.com>
+In-Reply-To: <20170628055900.22889-2-damien.lemoal@wdc.com>
 Sender: target-devel-owner@vger.kernel.org
-To: Mike Christie <mchristi@redhat.com>
-Cc: Damien Le Moal <damien.lemoal@wdc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>
+To: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hey MNC & Co,
+Hi Damien,
 
-On Wed, 2017-06-28 at 12:44 -0500, Mike Christie wrote:
-> On 06/28/2017 12:58 AM, Damien Le Moal wrote:
-> > If the user request handler completed the request with a CHECK CONDITION
-> > status, tcmu_handle_completion() copies the command entry sense data
-> > into the session request structure sense data. However, the sense data
-> > length indicated by the field scsi_sense_length is not set and equal to
-> > 0, resulting in the copy being a no-op and failure to propagate the
-> > sense data back to the initiator. To fix this, properly set the session
-> > command sense data length and also set the session command
-> > SCF_TRANSPORT_TASK_SENSE flag to indicate that the command has valid
-> > sense data.
-> > 
-> > Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-> > ---
-> >  drivers/target/target_core_user.c | 4 +++-
-> >  1 file changed, 3 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-> > index beb5f09..7426b4c 100644
-> > --- a/drivers/target/target_core_user.c
-> > +++ b/drivers/target/target_core_user.c
-> > @@ -831,7 +831,9 @@ static void tcmu_handle_completion(struct tcmu_cmd *cmd, struct tcmu_cmd_entry *
-> >  		entry->rsp.scsi_status = SAM_STAT_CHECK_CONDITION;
-> >  	} else if (entry->rsp.scsi_status == SAM_STAT_CHECK_CONDITION) {
-> >  		memcpy(se_cmd->sense_buffer, entry->rsp.sense_buffer,
-> > -			       se_cmd->scsi_sense_length);
-> > +		       TRANSPORT_SENSE_BUFFER);
-> > +		se_cmd->scsi_sense_length = TRANSPORT_SENSE_BUFFER;
-> > +		se_cmd->se_cmd_flags |= SCF_TRANSPORT_TASK_SENSE;
-> >  	} else if (se_cmd->se_cmd_flags & SCF_BIDI) {
-> >  		/* Get Data-In buffer before clean up */
-> >  		gather_data_area(udev, cmd, true);
-> > 
+On Wed, 2017-06-28 at 14:58 +0900, Damien Le Moal wrote:
+> Add WRITE_VERIFY_32 definition to scsi prototypes and use this macro
+> definition isntead of the hard coded value. Same for the already defined
+> WRITE_VERIFY_16 command code.
 > 
-> I have a patch similar to this and 5/5 in my set:
-> 
-> https://www.spinics.net/lists/target-devel/msg15430.html
-> 
-> If yours gets merged first then I will build my set over them, so patch
-> looks ok to me.
-> 
-> Reviewed-by: Mike Christie <mchristi@redhat.com>
+> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+> ---
+>  drivers/target/target_core_device.c | 4 ++--
+>  include/scsi/scsi_proto.h           | 1 +
+>  2 files changed, 3 insertions(+), 2 deletions(-)
 
-The RFC patches above from May 31st weren't merged because I thought you
-where going to send out a second series..
+Note the WRITE_VERIFY_16 macro usage has already been changed by
+commit 500073bb23 in target-pending/for-next.
 
-https://www.spinics.net/lists/target-devel/msg15505.html
-
-Since that hasn't been the case, I'll go ahead and merge the bugfixes in
-patches #1-6 for v4.13 now.  :)
-
-Please resend patches #7-13 as post v4.13 items at your earliest
-convenience.
-
-Apologies for the confusion.
+So applied to target-pending/for-next for the WRITE_VERIFY_32 specific
+bits.
