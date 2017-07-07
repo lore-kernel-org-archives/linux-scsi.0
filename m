@@ -1,39 +1,63 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: Re: [PATCH 4/5] target: user: Fix sense data handling
-Date: Fri, 7 Jul 2017 15:18:33 +0900
-Message-ID: <764410e4-380a-6360-1545-3c01d7e3b3d8@wdc.com>
-References: <20170628055900.22889-1-damien.lemoal@wdc.com>
- <20170628055900.22889-5-damien.lemoal@wdc.com>
- <5eb219c5-c4a7-ea75-ff31-d732e10c72ae@redhat.com>
- <1499403018.30628.27.camel@haakon3.risingtidesystems.com>
- <f878e24a-55eb-a8a6-48f6-78ad36954932@wdc.com>
- <1499407500.30628.45.camel@haakon3.risingtidesystems.com>
- <1499407616.30628.46.camel@haakon3.risingtidesystems.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] scsi: sg: fix SG_DXFER_FROM_DEV transfers
+Date: Fri, 7 Jul 2017 09:57:15 +0200
+Message-ID: <20170707075715.GD3854@linux-x5ow.site>
+References: <20170705134934.1703-1-jthumshirn@suse.de>
+ <54abb58b-3fe6-8e64-91aa-182fbef93467@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1499407616.30628.46.camel@haakon3.risingtidesystems.com>
-Content-Language: en-US
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Mike Christie <mchristi@redhat.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bart.vanassche@sandisk.com>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <54abb58b-3fe6-8e64-91aa-182fbef93467@interlog.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Douglas Gilbert <dgilbert@interlog.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Chris Clayton <chris2553@googlemail.com>
 List-Id: linux-scsi@vger.kernel.org
 
+On Thu, Jul 06, 2017 at 02:47:22PM -0400, Douglas Gilbert wrote:
+> Can you check your patch with one of the utilities from sg3_utils
+> such as sg_inq which will use SG_DXFER_FROM_DEV with the newer
+> interface?
 
+Correct, this patch broke sg_inq. I'll send a corrected v2.
 
-On 7/7/17 15:06, Nicholas A. Bellinger wrote:
->>> My apologies. I have been busy with other things and could not get to that.
->>>
+> BTW I'm not sure why dxferp is set to NULL for SG_DXFER_FROM_DEV
+> transfers; perhaps some magic done by the block layer. Maybe a
+> comment in the code (e.g. on line 654) would help.
+
+This is due to:
+
+commit fad7f01e61bf737fe8a3740d803f000db57ecac6
+Author: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Date:   Tue Sep 2 16:20:20 2008 +0900
+
+    sg: set dxferp to NULL for READ with the older SG interface
+    
+    With the older SG interface, we don't know a user-space address to
+    trasfer data when executing a SCSI command. So we can't pass a
+    user-space address to blk_rq_map_user.
+    
+    This patch fixes sg to pass a NULL user-space address to
+    blk_rq_map_user so that it just sets up a request and bios with page
+    frames propely without data transfer.
+    
+    Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+    Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
+
 > 
-> Oh btw, I was talking to MNC wrt to his original patch series, and not
-> yours.  :)
+> Also sg_is_valid_dxfer() is only called once and is more complex
+> than it looks; so perhaps it could be inlined back in
+> sg_common_write().
 
-Yes, I realized that after sending. Tired Friday afternoon here in
-Japan. My brain is slowing down for the weekend :)
-
-Cheers.
+The compiler will inline it anyways (at least the one I checked with) and
+inlining it into sg_common_write() won't make the code more readable IMHO. But
+ultimately it's your driver so if you insist I'll do.
 
 -- 
-Damien Le Moal,
-Western Digital
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
