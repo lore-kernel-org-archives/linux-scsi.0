@@ -1,259 +1,97 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] iscsi-target: Add login_keys_workaround attribute for non RFC initiators
-Date: Fri,  7 Jul 2017 22:24:45 +0000
-Message-ID: <1499466285-9907-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Robert LeBlanc <robert@leblancnet.us>, Arun Easi <arun.easi@cavium.com>
+Subject: Re: [PATCH v2 00/15] qla2xxx: Add Target Multiqueue support
+Date: Fri, 07 Jul 2017 18:48:03 -0700
+Message-ID: <1499478483.11042.8.camel@haakon3.risingtidesystems.com>
+References: <20170614034730.15428-1-himanshu.madhani@cavium.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20170614034730.15428-1-himanshu.madhani@cavium.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Himanshu Madhani <himanshu.madhani@cavium.com>
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+Hey guys,
 
-This patch re-introduces part of a long standing login workaround that
-was recently dropped by:
+Apologies for missing this earlier.  Comments below.
 
-  commit 1c99de981f30b3e7868b8d20ce5479fa1c0fea46
-  Author: Nicholas Bellinger <nab@linux-iscsi.org>
-  Date:   Sun Apr 2 13:36:44 2017 -0700
+On Tue, 2017-06-13 at 20:47 -0700, Himanshu Madhani wrote:
+> Hi Martin, Nic,
+> 
+> This patch series adds support for multiqueue for qla2xxx target mode driver.
+> 
+> This series depends on the seris applied to Martin's scsi/for-next branch
+> (https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/log/?h=for-next)
+> 
+> I've also added followig patch ("qla2xxx: Include Exchange offload/Extended
+> Login into FW dump") which was dropped from earlier series for rework.
+> 
+> I am planning to send series for FC-NVME support as well which depends on this
+> series, so I would like this series to be applied to scsi tree instead of
+> target-pending for only this submission, as both series touches common code
+> in qla2xxx driver. 
+> 
+> Please apply this series to for-next for inclusion in 4.13 merge window.
+> 
+> Note: Comment from Bart for patch#1 will be addresed as new patch after our 
+>       FC-NVME series is posted. 
+> 
+> Changes from v1 --> v2
+> 
+> o Fixed 0-day kernel compile failure
+> 
+> Thanks,
+> Himanshu 
+> 
+> Himanshu Madhani (1):
+>   qla2xxx: Update driver version to 9.01.00.00-k
+> 
+> Quinn Tran (13):
+>   qla2xxx: Combine Active command arrays.
+>   qla2xxx: Preparation for Target MQ.
+>   qla2xxx: Enable Target Multi Queue
+>   qla2xxx: Add debug knob for user control workload
+>   qla2xxx: Add fw_started flags to qpair
+>   qla2xxx: move fields from qla_hw_data to qla_qpair
+>   qla2xxx: use shadow register for ISP27XX
+>   qla2xxx: Add function call to qpair for door bell
+>   qla2xxx: Add debug logging routine for qpair
+>   qla2xxx: Remove unused tgt_enable_64bit_addr flag
+>   qla2xxx: Remove datasegs_per_cmd and datasegs_per_cont field
+>   qla2xxx: Move target stat counters from vha to qpair.
+>   qla2xxx: Include Exchange offload/Extended Login into FW dump
+> 
+> Sawan Chandak (1):
+>   qla2xxx: Fix mailbox failure while deleting Queue pairs
+> 
+>  drivers/scsi/qla2xxx/qla_attr.c    |    4 +-
+>  drivers/scsi/qla2xxx/qla_dbg.c     |  150 ++++++
+>  drivers/scsi/qla2xxx/qla_dbg.h     |   17 +
+>  drivers/scsi/qla2xxx/qla_def.h     |  119 ++++-
+>  drivers/scsi/qla2xxx/qla_dfs.c     |  137 ++++-
+>  drivers/scsi/qla2xxx/qla_gbl.h     |   19 +-
+>  drivers/scsi/qla2xxx/qla_init.c    |   53 +-
+>  drivers/scsi/qla2xxx/qla_inline.h  |   44 ++
+>  drivers/scsi/qla2xxx/qla_iocb.c    |   32 +-
+>  drivers/scsi/qla2xxx/qla_isr.c     |   93 +++-
+>  drivers/scsi/qla2xxx/qla_mid.c     |   44 +-
+>  drivers/scsi/qla2xxx/qla_os.c      |  156 ++++--
+>  drivers/scsi/qla2xxx/qla_target.c  | 1028 +++++++++++++++++++++---------------
+>  drivers/scsi/qla2xxx/qla_target.h  |   50 +-
+>  drivers/scsi/qla2xxx/qla_version.h |    4 +-
+>  drivers/scsi/qla2xxx/tcm_qla2xxx.c |    8 +-
+>  16 files changed, 1348 insertions(+), 610 deletions(-)
+> 
 
-      iscsi-target: Drop work-around for legacy GlobalSAN initiator
+If it hasn't already been merged to MKP's tree, then:
 
-Namely, the workaround for FirstBurstLength ended up being required by
-Mellanox Flexboot PXE boot ROMs as reported by Robert.
+Acked-by: Nicholas Bellinger <nab@linux-iscsi.org>
 
-So this patch re-adds the work-around for FirstBurstLength within
-iscsi_check_proposer_for_optional_reply(), and makes the key optional
-to respond when the initiator does not propose, nor respond to it.
+Btw, I don't think my missing ACK should hold up qla2xxx patches from
+being merged in the future, especially ones that are exposing new
+qla2xxx specific functionality.
 
-Also as requested by Arun, this patch introduces a new TPG attribute
-named 'login_keys_workaround' that controls the use of both the
-FirstBurstLength workaround, as well as the two other existing
-workarounds for gPXE iSCSI boot client.
-
-By default, the workaround is enabled with login_keys_workaround=1,
-since Mellanox FlexBoot requires it, and Arun has verified the Qlogic
-MSFT initiator already proposes FirstBurstLength, so it's uneffected
-by this re-adding this part of the original work-around.
-
-Reported-by: Robert LeBlanc <robert@leblancnet.us>
-Cc: Robert LeBlanc <robert@leblancnet.us>
-Cc: Arun Easi <arun.easi@cavium.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/iscsi/iscsi_target_configfs.c   |  2 ++
- drivers/target/iscsi/iscsi_target_nego.c       |  6 ++--
- drivers/target/iscsi/iscsi_target_parameters.c | 41 ++++++++++++++++++--------
- drivers/target/iscsi/iscsi_target_parameters.h |  2 +-
- drivers/target/iscsi/iscsi_target_tpg.c        | 19 ++++++++++++
- drivers/target/iscsi/iscsi_target_tpg.h        |  1 +
- include/target/iscsi/iscsi_target_core.h       |  9 ++++++
- 7 files changed, 64 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
-index 535a8e0..0dd4c45 100644
---- a/drivers/target/iscsi/iscsi_target_configfs.c
-+++ b/drivers/target/iscsi/iscsi_target_configfs.c
-@@ -781,6 +781,7 @@ static int lio_target_init_nodeacl(struct se_node_acl *se_nacl,
- DEF_TPG_ATTRIB(t10_pi);
- DEF_TPG_ATTRIB(fabric_prot_type);
- DEF_TPG_ATTRIB(tpg_enabled_sendtargets);
-+DEF_TPG_ATTRIB(login_keys_workaround);
- 
- static struct configfs_attribute *lio_target_tpg_attrib_attrs[] = {
- 	&iscsi_tpg_attrib_attr_authentication,
-@@ -796,6 +797,7 @@ static int lio_target_init_nodeacl(struct se_node_acl *se_nacl,
- 	&iscsi_tpg_attrib_attr_t10_pi,
- 	&iscsi_tpg_attrib_attr_fabric_prot_type,
- 	&iscsi_tpg_attrib_attr_tpg_enabled_sendtargets,
-+	&iscsi_tpg_attrib_attr_login_keys_workaround,
- 	NULL,
- };
- 
-diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
-index 96df63f..7a6751f 100644
---- a/drivers/target/iscsi/iscsi_target_nego.c
-+++ b/drivers/target/iscsi/iscsi_target_nego.c
-@@ -864,7 +864,8 @@ static int iscsi_target_handle_csg_zero(
- 			SENDER_TARGET,
- 			login->rsp_buf,
- 			&login->rsp_length,
--			conn->param_list);
-+			conn->param_list,
-+			conn->tpg->tpg_attrib.login_keys_workaround);
- 	if (ret < 0)
- 		return -1;
- 
-@@ -934,7 +935,8 @@ static int iscsi_target_handle_csg_one(struct iscsi_conn *conn, struct iscsi_log
- 			SENDER_TARGET,
- 			login->rsp_buf,
- 			&login->rsp_length,
--			conn->param_list);
-+			conn->param_list,
-+			conn->tpg->tpg_attrib.login_keys_workaround);
- 	if (ret < 0) {
- 		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_INITIATOR_ERR,
- 				ISCSI_LOGIN_STATUS_INIT_ERR);
-diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
-index fce6276..caab104 100644
---- a/drivers/target/iscsi/iscsi_target_parameters.c
-+++ b/drivers/target/iscsi/iscsi_target_parameters.c
-@@ -765,7 +765,8 @@ static int iscsi_check_for_auth_key(char *key)
- 	return 0;
- }
- 
--static void iscsi_check_proposer_for_optional_reply(struct iscsi_param *param)
-+static void iscsi_check_proposer_for_optional_reply(struct iscsi_param *param,
-+						    bool keys_workaround)
- {
- 	if (IS_TYPE_BOOL_AND(param)) {
- 		if (!strcmp(param->value, NO))
-@@ -773,19 +774,31 @@ static void iscsi_check_proposer_for_optional_reply(struct iscsi_param *param)
- 	} else if (IS_TYPE_BOOL_OR(param)) {
- 		if (!strcmp(param->value, YES))
- 			SET_PSTATE_REPLY_OPTIONAL(param);
--		 /*
--		  * Required for gPXE iSCSI boot client
--		  */
--		if (!strcmp(param->name, IMMEDIATEDATA))
--			SET_PSTATE_REPLY_OPTIONAL(param);
-+
-+		if (keys_workaround) {
-+			/*
-+			 * Required for gPXE iSCSI boot client
-+			 */
-+			if (!strcmp(param->name, IMMEDIATEDATA))
-+				SET_PSTATE_REPLY_OPTIONAL(param);
-+		}
- 	} else if (IS_TYPE_NUMBER(param)) {
- 		if (!strcmp(param->name, MAXRECVDATASEGMENTLENGTH))
- 			SET_PSTATE_REPLY_OPTIONAL(param);
--		/*
--		 * Required for gPXE iSCSI boot client
--		 */
--		if (!strcmp(param->name, MAXCONNECTIONS))
--			SET_PSTATE_REPLY_OPTIONAL(param);
-+
-+		if (keys_workaround) {
-+			/*
-+			 * Required for Mellanox Flexboot PXE boot ROM
-+			 */
-+			if (!strcmp(param->name, FIRSTBURSTLENGTH))
-+				SET_PSTATE_REPLY_OPTIONAL(param);
-+
-+			/*
-+			 * Required for gPXE iSCSI boot client
-+			 */
-+			if (!strcmp(param->name, MAXCONNECTIONS))
-+				SET_PSTATE_REPLY_OPTIONAL(param);
-+		}
- 	} else if (IS_PHASE_DECLARATIVE(param))
- 		SET_PSTATE_REPLY_OPTIONAL(param);
- }
-@@ -1422,7 +1435,8 @@ int iscsi_encode_text_output(
- 	u8 sender,
- 	char *textbuf,
- 	u32 *length,
--	struct iscsi_param_list *param_list)
-+	struct iscsi_param_list *param_list,
-+	bool keys_workaround)
- {
- 	char *output_buf = NULL;
- 	struct iscsi_extra_response *er;
-@@ -1458,7 +1472,8 @@ int iscsi_encode_text_output(
- 			*length += 1;
- 			output_buf = textbuf + *length;
- 			SET_PSTATE_PROPOSER(param);
--			iscsi_check_proposer_for_optional_reply(param);
-+			iscsi_check_proposer_for_optional_reply(param,
-+							        keys_workaround);
- 			pr_debug("Sending key: %s=%s\n",
- 				param->name, param->value);
- 		}
-diff --git a/drivers/target/iscsi/iscsi_target_parameters.h b/drivers/target/iscsi/iscsi_target_parameters.h
-index 9962ccf..c47b73f 100644
---- a/drivers/target/iscsi/iscsi_target_parameters.h
-+++ b/drivers/target/iscsi/iscsi_target_parameters.h
-@@ -46,7 +46,7 @@ extern int iscsi_copy_param_list(struct iscsi_param_list **,
- extern int iscsi_update_param_value(struct iscsi_param *, char *);
- extern int iscsi_decode_text_input(u8, u8, char *, u32, struct iscsi_conn *);
- extern int iscsi_encode_text_output(u8, u8, char *, u32 *,
--			struct iscsi_param_list *);
-+			struct iscsi_param_list *, bool);
- extern int iscsi_check_negotiated_keys(struct iscsi_param_list *);
- extern void iscsi_set_connection_parameters(struct iscsi_conn_ops *,
- 			struct iscsi_param_list *);
-diff --git a/drivers/target/iscsi/iscsi_target_tpg.c b/drivers/target/iscsi/iscsi_target_tpg.c
-index abaabba..594d07a 100644
---- a/drivers/target/iscsi/iscsi_target_tpg.c
-+++ b/drivers/target/iscsi/iscsi_target_tpg.c
-@@ -227,6 +227,7 @@ static void iscsit_set_default_tpg_attribs(struct iscsi_portal_group *tpg)
- 	a->t10_pi = TA_DEFAULT_T10_PI;
- 	a->fabric_prot_type = TA_DEFAULT_FABRIC_PROT_TYPE;
- 	a->tpg_enabled_sendtargets = TA_DEFAULT_TPG_ENABLED_SENDTARGETS;
-+	a->login_keys_workaround = TA_DEFAULT_LOGIN_KEYS_WORKAROUND;
- }
- 
- int iscsit_tpg_add_portal_group(struct iscsi_tiqn *tiqn, struct iscsi_portal_group *tpg)
-@@ -895,3 +896,21 @@ int iscsit_ta_tpg_enabled_sendtargets(
- 
- 	return 0;
- }
-+
-+int iscsit_ta_login_keys_workaround(
-+	struct iscsi_portal_group *tpg,
-+	u32 flag)
-+{
-+	struct iscsi_tpg_attrib *a = &tpg->tpg_attrib;
-+
-+	if ((flag != 0) && (flag != 1)) {
-+		pr_err("Illegal value %d\n", flag);
-+		return -EINVAL;
-+	}
-+
-+	a->login_keys_workaround = flag;
-+	pr_debug("iSCSI_TPG[%hu] - TPG enabled bit for login keys workaround: %s ",
-+		tpg->tpgt, (a->login_keys_workaround) ? "ON" : "OFF");
-+
-+	return 0;
-+}
-diff --git a/drivers/target/iscsi/iscsi_target_tpg.h b/drivers/target/iscsi/iscsi_target_tpg.h
-index ceba298..59fd3ca 100644
---- a/drivers/target/iscsi/iscsi_target_tpg.h
-+++ b/drivers/target/iscsi/iscsi_target_tpg.h
-@@ -48,5 +48,6 @@ extern int iscsit_tpg_del_network_portal(struct iscsi_portal_group *,
- extern int iscsit_ta_t10_pi(struct iscsi_portal_group *, u32);
- extern int iscsit_ta_fabric_prot_type(struct iscsi_portal_group *, u32);
- extern int iscsit_ta_tpg_enabled_sendtargets(struct iscsi_portal_group *, u32);
-+extern int iscsit_ta_login_keys_workaround(struct iscsi_portal_group *, u32);
- 
- #endif /* ISCSI_TARGET_TPG_H */
-diff --git a/include/target/iscsi/iscsi_target_core.h b/include/target/iscsi/iscsi_target_core.h
-index 7948fc6..0ca1fb0 100644
---- a/include/target/iscsi/iscsi_target_core.h
-+++ b/include/target/iscsi/iscsi_target_core.h
-@@ -66,6 +66,14 @@
- #define TA_DEFAULT_FABRIC_PROT_TYPE	0
- /* TPG status needs to be enabled to return sendtargets discovery endpoint info */
- #define TA_DEFAULT_TPG_ENABLED_SENDTARGETS 1
-+/*
-+ * Used to control the sending of keys with optional to respond state bit,
-+ * as a workaround for non RFC compliant initiators,that do not propose,
-+ * nor respond to specific keys required for login to complete.
-+ *
-+ * See iscsi_check_proposer_for_optional_reply() for more details.
-+ */
-+#define TA_DEFAULT_LOGIN_KEYS_WORKAROUND 1
- 
- #define ISCSI_IOV_DATA_BUFFER		5
- 
-@@ -768,6 +776,7 @@ struct iscsi_tpg_attrib {
- 	u8			t10_pi;
- 	u32			fabric_prot_type;
- 	u32			tpg_enabled_sendtargets;
-+	u32			login_keys_workaround;
- 	struct iscsi_portal_group *tpg;
- };
- 
--- 
-1.9.1
+The only ones that would really need my ACK are ones specific to
+interaction with target-core.
