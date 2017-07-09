@@ -1,97 +1,58 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH v2 00/15] qla2xxx: Add Target Multiqueue support
-Date: Fri, 07 Jul 2017 18:48:03 -0700
-Message-ID: <1499478483.11042.8.camel@haakon3.risingtidesystems.com>
-References: <20170614034730.15428-1-himanshu.madhani@cavium.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [ANNOUNCE] Alpine Linux Persistence and Storage Summit
+Date: Sun, 9 Jul 2017 21:39:52 +0200
+Message-ID: <20170709193952.viobk2ijrmuc2gzk@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20170614034730.15428-1-himanshu.madhani@cavium.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@cavium.com>
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:59025 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752149AbdGITj6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Jul 2017 15:39:58 -0400
+Received: from 77.117.185.176.wireless.dyn.drei.com ([77.117.185.176] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1dUI3h-0006D8-Q7
+        for linux-scsi@vger.kernel.org; Sun, 09 Jul 2017 19:39:58 +0000
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hey guys,
+We proudly announce the Alpine Linux Persistence and Storage Summit
+(ALPSS), which will be held from September 27-29 at the Lizumerhuette
+[1][2] in Austria 
 
-Apologies for missing this earlier.  Comments below.
+The goal of this conference is to discuss the hot topics in Linux storage
+and file systems, such as persistent memory, NVMe, multi-pathing, raw or
+open channel flash and I/O scheduling in a cool and relaxed setting with
+spectacular views in the Austrian alps.
 
-On Tue, 2017-06-13 at 20:47 -0700, Himanshu Madhani wrote:
-> Hi Martin, Nic,
-> 
-> This patch series adds support for multiqueue for qla2xxx target mode driver.
-> 
-> This series depends on the seris applied to Martin's scsi/for-next branch
-> (https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/log/?h=for-next)
-> 
-> I've also added followig patch ("qla2xxx: Include Exchange offload/Extended
-> Login into FW dump") which was dropped from earlier series for rework.
-> 
-> I am planning to send series for FC-NVME support as well which depends on this
-> series, so I would like this series to be applied to scsi tree instead of
-> target-pending for only this submission, as both series touches common code
-> in qla2xxx driver. 
-> 
-> Please apply this series to for-next for inclusion in 4.13 merge window.
-> 
-> Note: Comment from Bart for patch#1 will be addresed as new patch after our 
->       FC-NVME series is posted. 
-> 
-> Changes from v1 --> v2
-> 
-> o Fixed 0-day kernel compile failure
-> 
-> Thanks,
-> Himanshu 
-> 
-> Himanshu Madhani (1):
->   qla2xxx: Update driver version to 9.01.00.00-k
-> 
-> Quinn Tran (13):
->   qla2xxx: Combine Active command arrays.
->   qla2xxx: Preparation for Target MQ.
->   qla2xxx: Enable Target Multi Queue
->   qla2xxx: Add debug knob for user control workload
->   qla2xxx: Add fw_started flags to qpair
->   qla2xxx: move fields from qla_hw_data to qla_qpair
->   qla2xxx: use shadow register for ISP27XX
->   qla2xxx: Add function call to qpair for door bell
->   qla2xxx: Add debug logging routine for qpair
->   qla2xxx: Remove unused tgt_enable_64bit_addr flag
->   qla2xxx: Remove datasegs_per_cmd and datasegs_per_cont field
->   qla2xxx: Move target stat counters from vha to qpair.
->   qla2xxx: Include Exchange offload/Extended Login into FW dump
-> 
-> Sawan Chandak (1):
->   qla2xxx: Fix mailbox failure while deleting Queue pairs
-> 
->  drivers/scsi/qla2xxx/qla_attr.c    |    4 +-
->  drivers/scsi/qla2xxx/qla_dbg.c     |  150 ++++++
->  drivers/scsi/qla2xxx/qla_dbg.h     |   17 +
->  drivers/scsi/qla2xxx/qla_def.h     |  119 ++++-
->  drivers/scsi/qla2xxx/qla_dfs.c     |  137 ++++-
->  drivers/scsi/qla2xxx/qla_gbl.h     |   19 +-
->  drivers/scsi/qla2xxx/qla_init.c    |   53 +-
->  drivers/scsi/qla2xxx/qla_inline.h  |   44 ++
->  drivers/scsi/qla2xxx/qla_iocb.c    |   32 +-
->  drivers/scsi/qla2xxx/qla_isr.c     |   93 +++-
->  drivers/scsi/qla2xxx/qla_mid.c     |   44 +-
->  drivers/scsi/qla2xxx/qla_os.c      |  156 ++++--
->  drivers/scsi/qla2xxx/qla_target.c  | 1028 +++++++++++++++++++++---------------
->  drivers/scsi/qla2xxx/qla_target.h  |   50 +-
->  drivers/scsi/qla2xxx/qla_version.h |    4 +-
->  drivers/scsi/qla2xxx/tcm_qla2xxx.c |    8 +-
->  16 files changed, 1348 insertions(+), 610 deletions(-)
-> 
+We plan to have a small selection of short and to the point talks, and
+lots of room for discussion in small groups, as well as ample downtime
+to enjoy the surrounding.
 
-If it hasn't already been merged to MKP's tree, then:
+Attendance is free except for the accommodation and food at the lodge [3],
+but the number of seats is strictly limited.  If you are interested in
+attending please reserve a seat by mailing your favorite topic(s) to:
 
-Acked-by: Nicholas Bellinger <nab@linux-iscsi.org>
+	alpss-pc@lists.infradead.org
 
-Btw, I don't think my missing ACK should hold up qla2xxx patches from
-being merged in the future, especially ones that are exposing new
-qla2xxx specific functionality.
+If you are interested in giving a short and crisp talk please also send
+an abstract to the same address.
 
-The only ones that would really need my ACK are ones specific to
-interaction with target-core.
+Note: The Lizumerhuette is an Alpine Society lodge in a high alpine
+environment.  A hike of approximately 2 hours is required to the lodge,
+and no other accommodations are available within walking distance.
+
+Thank you on behalf of the program committee:
+
+    Stephen Bates
+    Sagi Grimberg
+    Christoph Hellwig
+    Johannes Thumshirn
+    Richard Weinberger
+
+[1] http://www.tyrol.com/things-to-do/sports/hiking/refuge-huts/a-lizumer-hut
+[2] https://www.glungezer.at/l-i-z-u-m-e-r-h-%C3%BC-t-t-e/
+[3] approx. EUR 40-60 per person and night, depending on the room
+    category
