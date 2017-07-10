@@ -1,101 +1,82 @@
 From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
-Subject: [PATCH v2 3/4] scsi: scsi_dh_alua: do not print RTPG state if it remains unavailable/standby
-Date: Mon, 10 Jul 2017 19:47:36 -0300
-Message-ID: <1499726857-7875-4-git-send-email-mauricfo@linux.vnet.ibm.com>
+Subject: [PATCH v2 4/4] scsi: scsi_dh_alua: add sdev_dbg() to track alua_rtpg_work()
+Date: Mon, 10 Jul 2017 19:47:37 -0300
+Message-ID: <1499726857-7875-5-git-send-email-mauricfo@linux.vnet.ibm.com>
 References: <1499726857-7875-1-git-send-email-mauricfo@linux.vnet.ibm.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:58658 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755035AbdGJWsG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 10 Jul 2017 18:48:06 -0400
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6AMasdt145016
+        for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2017 18:48:00 -0400
+Received: from e24smtp05.br.ibm.com (e24smtp05.br.ibm.com [32.104.18.26])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2bmbr5xq1s-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2017 18:48:00 -0400
+Received: from localhost
+        by e24smtp05.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <mauricfo@linux.vnet.ibm.com>;
+        Mon, 10 Jul 2017 19:47:58 -0300
 In-Reply-To: <1499726857-7875-1-git-send-email-mauricfo@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: hare@suse.de, bart.vanassche@sandisk.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
-Path checkers will check paths of a port group in unavailable/standby
-state more frequently (as they are 'failed') - possibly for a long or
-indefinite period of time, and/or for a large number of paths.
-
-That might flood the kernel log with scsi_dh_alua RTPG state messages,
-due to the recheck scheduled in alua_check_sense() to update PG state.
-
-So, do not to print such message if unavailable/standby state remains
-(i.e., the PG did not transition to/from such states). All other cases
-continue to be printed.
+Insert sdev_dbg() calls in the function path which may queue
+alua_rtpg_work() past initialization, for debugging purposes:
+- alua_activate()
+- alua_check_sense()
+- alua_rtpg_queue()
 
 Signed-off-by: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
-
 ---
-v2:
-- changed v1's alua_state_remains() into alua_rtpg_print_check(),
-  which includes in the states (not) to print for (deduplicates code).
-- added support for Standby state too (requested in patch 1 of this set)
-  (Bart Van Assche <Bart.VanAssche@sandisk.com>)
-- remove superfluous parentheses in return statement.
-  (Bart Van Assche <Bart.VanAssche@sandisk.com>)
-- remove likely() hint
-  (Bart Van Assche <Bart.VanAssche@sandisk.com>)
-
- drivers/scsi/device_handler/scsi_dh_alua.c | 35 ++++++++++++++++++++++++++----
- 1 file changed, 31 insertions(+), 4 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 937341ddb767..e0bf0827a980 100644
+index e0bf0827a980..5bf0d55f6eb1 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -572,6 +572,30 @@ static void alua_rtpg_print_supported(struct scsi_device *sdev,
- }
- 
- /*
-+ * alua_rtpg_print_check - Whether to print RTPG state information
-+ * 			   on particular state transitions.
-+ * @old_state: the old state value.
-+ * @new_state: the new state value.
-+ */
-+static bool alua_rtpg_print_check(int old_state, int new_state)
-+{
-+	/*
-+	 * Do not print RTPG state information in case
-+	 * state remains either unavailable or standby.
-+	 *
-+	 * Print it for everything else.
-+	 */
+@@ -422,6 +422,10 @@ static char print_alua_state(unsigned char state)
+ static int alua_check_sense(struct scsi_device *sdev,
+ 			    struct scsi_sense_hdr *sense_hdr)
+ {
++	sdev_dbg(sdev, "%s: %s(): Sense Key: 0x%x, ASC: 0x%x, ASCQ: 0x%x\n",
++		 ALUA_DH_NAME, __func__, sense_hdr->sense_key,
++		 sense_hdr->asc, sense_hdr->ascq);
 +
-+	switch (old_state) {
-+	case SCSI_ACCESS_STATE_UNAVAILABLE:
-+	case SCSI_ACCESS_STATE_STANDBY:
-+		return old_state != new_state;
-+	default:
-+		return 1;
-+	}
-+}
+ 	switch (sense_hdr->sense_key) {
+ 	case NOT_READY:
+ 		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0a) {
+@@ -987,10 +991,13 @@ static bool alua_rtpg_queue(struct alua_port_group *pg,
+ 	spin_unlock_irqrestore(&pg->lock, flags);
+ 
+ 	if (start_queue) {
 +
-+/*
-  * alua_rtpg - Evaluate REPORT TARGET GROUP STATES
-  * @sdev: the device to be evaluated.
-  *
-@@ -706,6 +730,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 				if ((tmp_pg == pg) ||
- 				    !(tmp_pg->flags & ALUA_PG_RUNNING)) {
- 					struct alua_dh_data *h;
-+					int tmp_pg_state_orig = tmp_pg->state;
+ 		if (queue_delayed_work(alua_wq, &pg->rtpg_work,
+-				msecs_to_jiffies(ALUA_RTPG_DELAY_MSECS)))
++				msecs_to_jiffies(ALUA_RTPG_DELAY_MSECS))) {
++			sdev_dbg(sdev, "%s: %s(): port group %02x\n",
++				 ALUA_DH_NAME, __func__, pg->group_id);
+ 			sdev = NULL;
+-		else
++		} else
+ 			kref_put(&pg->kref, release_port_group);
+ 	}
+ 	if (sdev)
+@@ -1100,6 +1107,9 @@ static int alua_activate(struct scsi_device *sdev,
+ 	rcu_read_unlock();
+ 	mutex_unlock(&h->init_mutex);
  
- 					tmp_pg->state = desc[0] & 0x0f;
- 					tmp_pg->pref = desc[0] >> 7;
-@@ -718,10 +743,12 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 					}
- 					rcu_read_unlock();
- 
--					if (tmp_pg == pg)
--						alua_rtpg_print_supported(sdev, tmp_pg, desc[1]);
--					else
--						alua_rtpg_print(sdev, tmp_pg);
-+					if (alua_rtpg_print_check(tmp_pg_state_orig, tmp_pg->state)) {
-+						if (tmp_pg == pg)
-+							alua_rtpg_print_supported(sdev, tmp_pg, desc[1]);
-+						else
-+							alua_rtpg_print(sdev, tmp_pg);
-+					}
- 				}
- 				spin_unlock_irqrestore(&tmp_pg->lock, flags);
- 			}
++	sdev_dbg(sdev, "%s: %s(): port group %02x, fn: %pf()\n",
++		 ALUA_DH_NAME, __func__, pg->group_id, fn);
++
+ 	if (alua_rtpg_queue(pg, sdev, qdata, true))
+ 		fn = NULL;
+ 	else
 -- 
 1.8.3.1
