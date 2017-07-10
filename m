@@ -1,41 +1,30 @@
-From: Meelis Roos <mroos@linux.ee>
-Subject: Re: device support in hpsa, was: Re: OOPS from cciss_ioctl in
- 4.12+git
-Date: Mon, 10 Jul 2017 17:08:18 +0300 (EEST)
-Message-ID: <alpine.LRH.2.20.1707101523470.5280@math.ut.ee>
-References: <alpine.LRH.2.20.1707051555130.20086@math.ut.ee> <20170705225134.GA31786@infradead.org> <alpine.LRH.2.20.1707061236010.6514@math.ut.ee> <20170707150042.GA15445@infradead.org> <799cf0d6-658d-4124-1ba0-3962671e3f1e@kernel.dk>
- <1bc9895b-bfcb-9ff5-c046-277b0d67a94e@redhat.com> <20170707180857.GA19790@infradead.org>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH v2 07/15] megaraid_sas: Check valid aen class range to
+ avoid kernel panic
+Date: Mon, 10 Jul 2017 16:08:45 +0200
+Message-ID: <75e30ecd-5ec8-d582-b9ed-25d7a37a9a61@redhat.com>
+References: <1499256029-16319-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+ <1499256029-16319-8-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170707180857.GA19790@infradead.org>
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Laurence Oberman <loberman@redhat.com>, Jens Axboe <axboe@kernel.dk>, Linux Kernel list <linux-kernel@vger.kernel.org>, linux-block@vger.kernel.org, Don Brace <don.brace@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:59270 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932221AbdGJOIt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 10 Jul 2017 10:08:49 -0400
+In-Reply-To: <1499256029-16319-8-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Content-Language: en-MW
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, hch@lst.de
 
-> On Fri, Jul 07, 2017 at 11:42:38AM -0400, Laurence Oberman wrote:
-> > What happens when  hpsa_allow_any=1 with the Smart Array 64xx
-> > It should probe.
-> 
-> But only if it has a HP vendor ID as far as I can tell.  We'd
-> still need to add the compaq ids so that these controllers get
-> probed.  But maybe it's time to add them and flip the hpsa_allow_any
-> default (maybe conditionally on a config option?) and mark cciss
-> deprecated.
+On 5.7.2017 14:00, Shivasharan S wrote:
+> Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+> Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+> Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-I added hpsa_allow_any=1, did not help.
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
-Added a wildcard Compaq entry with RAID class, like the one for HP, 
-still no go:
-
-[    5.199125] hpsa 0000:00:04.0: unrecognized board ID: 0x40800e11, ignoring.
-[    5.282517] hpsa 0000:00:04.0: Board ID not found
-
-Added specific PCI ID and subdevice ID quad and I still get the same 
-messages and the adapter is ignored.
-
-What am I doing wrong?
-
--- 
-Meelis Roos (mroos@linux.ee)
+tomash
