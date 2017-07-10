@@ -1,147 +1,195 @@
 From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
-Subject: [PATCH v2 1/4] scsi: scsi_dh_alua: allow I/O in target port unavailable and standby states
-Date: Mon, 10 Jul 2017 19:47:34 -0300
-Message-ID: <1499726857-7875-2-git-send-email-mauricfo@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 0/4] scsi_dh_alua: fix stuck I/O after
+ unavailable/standby states
+Date: Mon, 10 Jul 2017 19:53:55 -0300
+Message-ID: <aa41e2b9-119d-710a-c3d5-43b748f41a88@linux.vnet.ibm.com>
 References: <1499726857-7875-1-git-send-email-mauricfo@linux.vnet.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:54240 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1754951AbdGJWrv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 10 Jul 2017 18:47:51 -0400
-Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6AMYRcq060025
-        for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2017 18:47:50 -0400
-Received: from e24smtp04.br.ibm.com (e24smtp04.br.ibm.com [32.104.18.25])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2bm48ysbpn-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2017 18:47:49 -0400
-Received: from localhost
-        by e24smtp04.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <mauricfo@linux.vnet.ibm.com>;
-        Mon, 10 Jul 2017 19:47:48 -0300
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1499726857-7875-1-git-send-email-mauricfo@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: hare@suse.de, bart.vanassche@sandisk.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-According to SPC-4 (5.15.2.4.5 Unavailable state), the unavailable
-state may (or may not) transition to other states (e.g., microcode
-downloading or hardware error, which may be temporary or permanent).
+On 07/10/2017 07:47 PM, Mauricio Faria de Oliveira wrote:
+> This patchset addresses that problem, and adds a few improvements
+> to the logging of PG state changes.
 
-But, scsi_dh_alua currently fails I/O requests early on once that
-state occurs (in alua_prep_fn()) preventing path checkers in such
-function path to actually check if I/O still fails or now works.
+Here are some kernel log snippets with the patchset, if that helps.
 
-And that prevents a path activation (alua_activate()) which could
-update the PG state if it eventually recovered to an active state,
-thus resume I/O. (This is also the case with the standby state.)
+The 2 port groups temporarily gone into unavailable state, and
+recovered to active states later on, when I/O has been restored.
 
-This might cause device-mapper multipath to fail all paths to some
-storage system that moves the controllers to the unavailable state
-for firmware upgrades, and never recover regardless of the storage
-system doing upgrades one controller at a time and get them online.
+The devices, port groups, and relative port IDs:
+2 LUNs, 2 targets per LUN, 2 hosts (8 paths total).
 
-Then I/O requests are blocked indefinitely due to queue_if_no_path
-but the underlying individual paths are fully operational, and can
-be verified as such through other function paths (e.g., SG_IO):
+[  294.482107] scsi 4:0:0:0: alua: device 
+naa.60050764008100dac000000000000104 port group 1 rel port 881
+[  294.642063] scsi 4:0:0:1: alua: device 
+naa.60050764008100dac000000000000105 port group 0 rel port 881
+[  294.812140] scsi 4:0:1:0: alua: device 
+naa.60050764008100dac000000000000104 port group 0 rel port 81
+[  295.002027] scsi 4:0:1:1: alua: device 
+naa.60050764008100dac000000000000105 port group 1 rel port 81
+[  296.952092] scsi 5:0:0:0: alua: device 
+naa.60050764008100dac000000000000104 port group 1 rel port 881
+[  297.162043] scsi 5:0:0:1: alua: device 
+naa.60050764008100dac000000000000105 port group 0 rel port 881
+[  297.312130] scsi 5:0:1:0: alua: device 
+naa.60050764008100dac000000000000104 port group 0 rel port 81
+[  297.512006] scsi 5:0:1:1: alua: device 
+naa.60050764008100dac000000000000105 port group 1 rel port 81
 
-    # multipath -l
-    mpatha (360050764008100dac000000000000100) dm-0 IBM,2145
-    size=40G features='2 queue_if_no_path retain_attached_hw_handler'
-    hwhandler='1 alua' wp=rw
-    |-+- policy='service-time 0' prio=0 status=enabled
-    | |- 1:0:1:0 sdf 8:80  failed undef running
-    | `- 2:0:1:0 sdn 8:208 failed undef running
-    `-+- policy='service-time 0' prio=0 status=enabled
-      |- 1:0:0:0 sdb 8:16  failed undef running
-      `- 2:0:0:0 sdj 8:144 failed undef running
+First, mpatha goes down:
 
-    # strace -e read \
-        sg_dd blk_sgio=0 \
-        if=/dev/sdj of=/dev/null bs=512 count=1 iflag=direct \
-        2>&1 | grep 512
-    read(3, 0x3fff7ba80000, 512) = -1 EIO (Input/output error)
+mpatha (360050764008100dac000000000000104) dm-6 IBM     ,2145
+size=40G features='1 queue_if_no_path' hwhandler='1 alua' wp=rw
+|-+- policy='round-robin 0' prio=0 status=active
+| |- 4:0:1:0 sde 8:64  active undef unknown
+| `- 5:0:1:0 sdi 8:128 active undef unknown
+`-+- policy='round-robin 0' prio=0 status=enabled
+   |- 4:0:0:0 sdc 8:32  active undef unknown
+   `- 5:0:0:0 sdg 8:96  active undef unknown
 
-    # strace -e ioctl \
-        sg_dd blk_sgio=1 \
-        if=/dev/sdj of=/dev/null bs=512 count=1 iflag=direct \
-        2>&1 | grep 512
-    ioctl(3, SG_IO, {'S', SG_DXFER_FROM_DEV, cmd[10]=[28, 00, 00, 00,
-    00, 00, 00, 00, 01, 00], <...>) = 0
+[258929.940734] device-mapper: multipath: Failing path 8:64.
+[258929.940751] device-mapper: multipath: Failing path 8:128.
 
-So, allow I/O to paths of PGs in unavailable/standby state, so path
-checkers can actually check them.
+[258929.940777] sd 4:0:0:0: alua: alua_activate(): port group 01, fn: 
+pg_init_done [dm_multipath]()
+[258929.940784] sd 5:0:0:0: alua: alua_activate(): port group 01, fn: 
+pg_init_done [dm_multipath]()
 
-Also, schedule a recheck when unavailable/standby state is detected
-(in alua_check_sense()) to update pg->state, and quiet further SCSI
-error messages (in alua_prep_fn()).
+[258929.941575] sd 5:0:1:0: alua: alua_check_sense(): Sense Key: 0x2, 
+ASC: 0x4, ASCQ: 0xc
+[258929.941578] sd 5:0:1:0: [sdi] tag#1 FAILED Result: hostbyte=DID_OK 
+driverbyte=DRIVER_SENSE
+[258929.941874] sd 5:0:1:0: [sdi] tag#1 Sense Key : Not Ready [current]
+[258929.941928] sd 5:0:1:0: [sdi] tag#1 Add. Sense: Logical unit not 
+accessible, target port in unavailable state
 
-Once a path checker eventually detects a working/active state again,
-the PG state is normally updated on path activation (alua_activate(),
-as it schedules a recheck), thus I/O requests are no longer failed.
+[258929.942096] sd 4:0:1:0: alua: alua_check_sense(): Sense Key: 0x2, 
+ASC: 0x4, ASCQ: 0xc
+[258929.942104] sd 4:0:1:0: [sde] tag#2 FAILED Result: hostbyte=DID_OK 
+driverbyte=DRIVER_SENSE
+[258929.942300] sd 4:0:1:0: [sde] tag#2 Sense Key : Not Ready [current]
+[258929.942354] sd 4:0:1:0: [sde] tag#2 Add. Sense: Logical unit not 
+accessible, target port in unavailable state
 
-Signed-off-by: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
-Reported-by: Naresh Bannoth <nbannoth@in.ibm.com>
+[258929.956347] sd 4:0:1:0: alua: port group 00 state U non-preferred 
+supports tolusna
+[258929.956389] sd 4:0:1:0: alua: port group 01 state U non-preferred
 
----
-v2:
-- also add support for standby state to alua_check_sense(), alua_prep_fn()
-  (Bart Van Assche <Bart.VanAssche@sandisk.com>)
+[258930.036355] sd 5:0:0:0: alua: alua_check_sense(): Sense Key: 0x2, 
+ASC: 0x4, ASCQ: 0xc
+[258930.036360] sd 5:0:0:0: alua: alua_rtpg_queue(): port group 01
+[258930.036365] device-mapper: multipath: Failing path 8:96.
 
- drivers/scsi/device_handler/scsi_dh_alua.c | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
+[258930.036444] sd 4:0:0:0: alua: alua_check_sense(): Sense Key: 0x2, 
+ASC: 0x4, ASCQ: 0xc
+[258930.036506] device-mapper: multipath: Failing path 8:32.
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index c01b47e5b55a..a1cf3d6aa853 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -431,6 +431,26 @@ static int alua_check_sense(struct scsi_device *sdev,
- 			alua_check(sdev, false);
- 			return NEEDS_RETRY;
- 		}
-+		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0b) {
-+			/*
-+			 * LUN Not Accessible - target port in standby state.
-+			 *
-+			 * Do not retry, so failover to another target port occur.
-+			 * Schedule a recheck to update state for other functions.
-+			 */
-+			alua_check(sdev, true);
-+			return SUCCESS;
-+		}
-+		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0c) {
-+			/*
-+			 * LUN Not Accessible - target port in unavailable state.
-+			 *
-+			 * Do not retry, so failover to another target port occur.
-+			 * Schedule a recheck to update state for other functions.
-+			 */
-+			alua_check(sdev, true);
-+			return SUCCESS;
-+		}
- 		break;
- 	case UNIT_ATTENTION:
- 		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00) {
-@@ -1057,6 +1077,8 @@ static void alua_check(struct scsi_device *sdev, bool force)
-  *
-  * Fail I/O to all paths not in state
-  * active/optimized or active/non-optimized.
-+ * Allow I/O to paths in state unavailable/standby
-+ * so path checkers can actually check them.
-  */
- static int alua_prep_fn(struct scsi_device *sdev, struct request *req)
- {
-@@ -1072,6 +1094,9 @@ static int alua_prep_fn(struct scsi_device *sdev, struct request *req)
- 	rcu_read_unlock();
- 	if (state == SCSI_ACCESS_STATE_TRANSITIONING)
- 		ret = BLKPREP_DEFER;
-+	else if (state == SCSI_ACCESS_STATE_UNAVAILABLE ||
-+		 state == SCSI_ACCESS_STATE_STANDBY)
-+		req->rq_flags |= RQF_QUIET;
- 	else if (state != SCSI_ACCESS_STATE_OPTIMAL &&
- 		 state != SCSI_ACCESS_STATE_ACTIVE &&
- 		 state != SCSI_ACCESS_STATE_LBA) {
+Then, mpathb goes down:
+
+mpathb (360050764008100dac000000000000105) dm-7 IBM     ,2145
+size=40G features='1 queue_if_no_path' hwhandler='1 alua' wp=rw
+|-+- policy='round-robin 0' prio=0 status=active
+| |- 4:0:0:1 sdd 8:48  active undef unknown
+| `- 5:0:0:1 sdh 8:112 active undef unknown
+`-+- policy='round-robin 0' prio=0 status=enabled
+   |- 4:0:1:1 sdf 8:80  active undef unknown
+   `- 5:0:1:1 sdj 8:144 active undef unknown
+
+
+[258930.162558] sd 4:0:0:1: alua: alua_check_sense(): Sense Key: 0x2, 
+ASC: 0x4, ASCQ: 0xc
+[258930.162568] sd 4:0:0:1: alua: alua_rtpg_queue(): port group 00
+
+[258930.162572] sd 4:0:0:1: [sdd] tag#9 FAILED Result: hostbyte=DID_OK 
+driverbyte=DRIVER_SENSE
+[258930.162731] sd 4:0:0:1: [sdd] tag#9 Sense Key : Not Ready [current]
+[258930.162762] sd 4:0:0:1: [sdd] tag#9 Add. Sense: Logical unit not 
+accessible, target port in unavailable state
+[258930.162860] device-mapper: multipath: Failing path 8:48.
+
+[258930.162979] sd 5:0:0:1: [sdh] tag#1 FAILED Result: hostbyte=DID_OK 
+driverbyte=DRIVER_SENSE
+[258930.162980] sd 5:0:0:1: [sdh] tag#1 Sense Key : Not Ready [current]
+[258930.162982] sd 5:0:0:1: [sdh] tag#1 Add. Sense: Logical unit not 
+accessible, target port in unavailable state
+[258930.162992] device-mapper: multipath: Failing path 8:112.
+
+[258930.163025] sd 4:0:1:1: alua: alua_activate(): port group 01, fn: 
+pg_init_done [dm_multipath]()
+[258930.163029] sd 4:0:1:1: alua: alua_rtpg_queue(): port group 01
+[258930.163048] sd 5:0:1:1: alua: alua_activate(): port group 01, fn: 
+pg_init_done [dm_multipath]()
+
+[258930.176323] sd 4:0:0:1: alua: port group 00 state U non-preferred 
+supports tolusna
+[258930.176325] sd 4:0:1:1: alua: port group 01 state U non-preferred 
+supports tolusna
+
+[258930.186390] device-mapper: multipath: Failing path 8:144.
+[258930.186417] device-mapper: multipath: Failing path 8:80.
+
+
+Later, mpathb comes back up.
+
+[259299.514519] device-mapper: multipath: Reinstating path 8:48.
+[259299.514776] sd 4:0:0:1: alua: alua_activate(): port group 00, fn: 
+pg_init_done [dm_multipath]()
+[259299.514781] sd 4:0:0:1: alua: alua_rtpg_queue(): port group 00
+
+[259299.536115] sd 4:0:0:1: alua: port group 01 state N non-preferred
+[259299.536243] sd 4:0:0:1: alua: port group 00 state A non-preferred 
+supports tolusna
+
+[259300.516079] device-mapper: multipath: Reinstating path 8:112.
+[259300.516225] sd 5:0:0:1: alua: alua_activate(): port group 00, fn: 
+pg_init_done [dm_multipath]()
+[259300.516228] sd 5:0:0:1: alua: alua_rtpg_queue(): port group 00
+[259300.536119] sd 5:0:0:1: alua: port group 01 state N non-preferred
+[259300.536245] sd 5:0:0:1: alua: port group 00 state A non-preferred 
+supports tolusna
+
+[259301.516823] device-mapper: multipath: Reinstating path 8:80.
+[259301.517727] device-mapper: multipath: Reinstating path 8:144.
+
+And, mpatha comes back up:
+
+[262860.847102] device-mapper: multipath: Reinstating path 8:32.
+[262860.847357] sd 4:0:0:0: alua: alua_activate(): port group 01, fn: 
+pg_init_done [dm_multipath]()
+[262860.847363] sd 4:0:0:0: alua: alua_rtpg_queue(): port group 01
+
+[262860.847717] device-mapper: multipath: Reinstating path 8:96.
+[262860.864217] sd 4:0:0:0: alua: port group 00 state A non-preferred
+[262860.864335] sd 4:0:0:0: alua: port group 01 state N non-preferred 
+supports tolusna
+
+[262860.864563] sd 5:0:0:0: alua: alua_activate(): port group 01, fn: 
+pg_init_done [dm_multipath]()
+[262860.884215] sd 4:0:0:0: alua: port group 00 state A non-preferred
+[262860.884328] sd 4:0:0:0: alua: port group 01 state N non-preferred 
+supports tolusna
+
+[262861.848315] device-mapper: multipath: Reinstating path 8:64.
+[262861.849003] device-mapper: multipath: Reinstating path 8:128.
+[262862.270417] sd 4:0:1:0: alua: alua_activate(): port group 00, fn: 
+pg_init_done [dm_multipath]()
+[262862.270419] sd 4:0:1:0: alua: alua_rtpg_queue(): port group 00
+[262862.270422] sd 5:0:1:0: alua: alua_activate(): port group 00, fn: 
+pg_init_done [dm_multipath]()
+[262862.284250] sd 4:0:1:0: alua: port group 00 state A non-preferred 
+supports tolusna
+[262862.284401] sd 4:0:1:0: alua: port group 01 state N non-preferred
+
+cheers,
+
 -- 
-1.8.3.1
+Mauricio Faria de Oliveira
+IBM Linux Technology Center
