@@ -1,32 +1,24 @@
 From: Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v3 3/7] libsas: Use new workqueue to run sas event
-Date: Mon, 10 Jul 2017 15:06:05 +0800
-Message-ID: <1499670369-44143-4-git-send-email-wangyijing@huawei.com>
+Subject: [PATCH v3 5/7] libsas: add a new workqueue to run probe/destruct discovery event
+Date: Mon, 10 Jul 2017 15:06:07 +0800
+Message-ID: <1499670369-44143-6-git-send-email-wangyijing@huawei.com>
 References: <1499670369-44143-1-git-send-email-wangyijing@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([45.249.212.188]:9813 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752707AbdGJHCZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Jul 2017 03:02:25 -0400
 In-Reply-To: <1499670369-44143-1-git-send-email-wangyijing@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: chenqilin2@huawei.com, hare@suse.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chenxiang66@hisilicon.com, huangdaode@hisilicon.com, wangkefeng.wang@huawei.com, zhaohongjiang@huawei.com, dingtianhong@huawei.com, guohanjun@huawei.com, yanaijie@huawei.com, hch@lst.de, dan.j.williams@intel.com, emilne@redhat.com, thenzl@redhat.com, wefu@redhat.com, charles.chenxin@huawei.com, chenweilong@huawei.com, john.garry@huawei.com, Yijing Wang <wangyijing@huawei.com>, Johannes Thumshirn <jthumshirn@suse.de>
-List-Id: linux-scsi@vger.kernel.org
 
-Now all libsas works are queued to scsi host workqueue,
-include sas event work post by LLDD and sas discovery
-work, and a sas hotplug flow may be divided into several
-works, e.g libsas receive a PORTE_BYTES_DMAED event,
-now we process it as following steps:
-sas_form_port  --- run in work in shot workq
-	sas_discover_domain  --- run in another work in shost workq
-		...
-		sas_probe_devices  --- run in new work in shost workq
-We found during hot-add a device, libsas may need run several
-works in same workqueue to add device in system, the process is
-not atomic, it may interrupt by other sas event works, like
-PHYE_LOSS_OF_SIGNAL. Finally, we would found lots unexpected
-errors. This patch is preparation of execute libsas sas event
-in sync.
+Sometimes, we want sync libsas probe or destruct in sas discovery work,
+like when libsas revalidate domain. We need to split probe and destruct
+work from the scsi host workqueue.
 
 Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 CC: John Garry <john.garry@huawei.com>
@@ -36,74 +28,70 @@ CC: Christoph Hellwig <hch@lst.de>
 CC: Tomas Henzl <thenzl@redhat.com>
 CC: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/libsas/sas_event.c | 4 ++--
- drivers/scsi/libsas/sas_init.c  | 7 +++++++
- include/scsi/libsas.h           | 1 +
- 3 files changed, 10 insertions(+), 2 deletions(-)
+ drivers/scsi/libsas/sas_discover.c | 13 ++++++++++++-
+ drivers/scsi/libsas/sas_init.c     |  8 ++++++++
+ include/scsi/libsas.h              |  1 +
+ 3 files changed, 21 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/libsas/sas_event.c b/drivers/scsi/libsas/sas_event.c
-index a1370bd..a72a089 100644
---- a/drivers/scsi/libsas/sas_event.c
-+++ b/drivers/scsi/libsas/sas_event.c
-@@ -46,7 +46,7 @@ int sas_queue_work(struct sas_ha_struct *ha, struct sas_work *sw)
- 		if (list_empty(&sw->drain_node))
- 			list_add(&sw->drain_node, &ha->defer_q);
- 	} else
--		rc = scsi_queue_work(ha->core.shost, &sw->work);
-+		rc = queue_work(ha->event_q, &sw->work);
- 
- 	return rc;
+diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+index 5d4a3a8..a25d648 100644
+--- a/drivers/scsi/libsas/sas_discover.c
++++ b/drivers/scsi/libsas/sas_discover.c
+@@ -559,7 +559,18 @@ static void sas_chain_work(struct sas_ha_struct *ha, struct sas_work *sw)
+ 	 * not racing against draining
+ 	 */
+ 	sas_port_get(port);
+-	ret = scsi_queue_work(ha->core.shost, &sw->work);
++	/*
++	 * discovery event probe and destruct would be called in other
++	 * discovery event like discover domain and revalidate domain
++	 * events, in some cases, we need to sync execute probe and destruct
++	 * events, so run probe and destruct discover events except in a new
++	 * workqueue.
++	 */
++	if (ev->type == DISCE_PROBE || ev->type == DISCE_DESTRUCT)
++		ret = queue_work(ha->disc_q, &sw->work);
++	else
++		ret = scsi_queue_work(ha->core.shost, &sw->work);
++
+ 	if (ret != 1)
+ 		sas_port_put(port);
  }
-@@ -69,7 +69,7 @@ void __sas_drain_work(struct sas_ha_struct *ha)
- {
- 	int ret;
- 	unsigned long flags;
--	struct workqueue_struct *wq = ha->core.shost->work_q;
-+	struct workqueue_struct *wq = ha->event_q;
- 	struct sas_work *sw, *_sw;
- 
- 	set_bit(SAS_HA_DRAINING, &ha->state);
 diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-index c227a8b..2f3b736 100644
+index 2f3b736..df1d78b 100644
 --- a/drivers/scsi/libsas/sas_init.c
 +++ b/drivers/scsi/libsas/sas_init.c
-@@ -115,6 +115,7 @@ void sas_hae_reset(struct work_struct *work)
- 
- int sas_register_ha(struct sas_ha_struct *sas_ha)
- {
-+	char name[64];
- 	int error = 0;
- 
- 	mutex_init(&sas_ha->disco_mutex);
-@@ -146,6 +147,11 @@ int sas_register_ha(struct sas_ha_struct *sas_ha)
+@@ -152,6 +152,13 @@ int sas_register_ha(struct sas_ha_struct *sas_ha)
+ 	if (!sas_ha->event_q)
  		goto Undo_ports;
- 	}
  
-+	snprintf(name, 64, "%s_event_q", dev_name(sas_ha->dev));
-+	sas_ha->event_q = create_singlethread_workqueue(name);
-+	if (!sas_ha->event_q)
++	snprintf(name, 64, "%s_disc_q", dev_name(sas_ha->dev));
++	sas_ha->disc_q = create_singlethread_workqueue(name);
++	if(!sas_ha->disc_q) {
++		destroy_workqueue(sas_ha->event_q);
 +		goto Undo_ports;
++	}
 +
  	INIT_LIST_HEAD(&sas_ha->eh_done_q);
  	INIT_LIST_HEAD(&sas_ha->eh_ata_q);
  
-@@ -180,6 +186,7 @@ int sas_unregister_ha(struct sas_ha_struct *sas_ha)
- 	mutex_lock(&sas_ha->drain_mutex);
+@@ -187,6 +194,7 @@ int sas_unregister_ha(struct sas_ha_struct *sas_ha)
  	__sas_drain_work(sas_ha);
  	mutex_unlock(&sas_ha->drain_mutex);
-+	destroy_workqueue(sas_ha->event_q);
+ 	destroy_workqueue(sas_ha->event_q);
++	destroy_workqueue(sas_ha->disc_q);
  
  	return 0;
  }
 diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 628f48b..a01ca42 100644
+index c2ef05e..4bcb9fe 100644
 --- a/include/scsi/libsas.h
 +++ b/include/scsi/libsas.h
-@@ -402,6 +402,7 @@ struct sas_ha_struct {
- 	char *sas_ha_name;
+@@ -406,6 +406,7 @@ struct sas_ha_struct {
  	struct device *dev;	  /* should be set */
  	struct module *lldd_module; /* should be set */
-+	struct workqueue_struct *event_q;
+ 	struct workqueue_struct *event_q;
++	struct workqueue_struct *disc_q;
  
  	u8 *sas_addr;		  /* must be set */
  	u8 hashed_sas_addr[HASHED_SAS_ADDR_SIZE];
