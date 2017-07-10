@@ -1,79 +1,90 @@
-From: <alters@usg.edu>
-Subject: (unknown)
-Date: Mon, 10 Jul 2017 10:06:17 -0000
-Message-ID: <149968117756.19501.3307850946738680490@zaural.ru>
+From: Douglas Miller <dougmill@linux.vnet.ibm.com>
+Subject: Re: [PATCH] ses: do not add a device to an enclosure if
+ enclosure_add_links() fails.
+Date: Mon, 10 Jul 2017 08:27:28 -0500
+Message-ID: <7d12dd37-74b9-5593-bfcc-3a375baacf65@linux.vnet.ibm.com>
+References: <1498557207-12364-1-git-send-email-mlombard@redhat.com>
+ <bdbe2093-8abc-b48d-7a23-0734fadf33ac@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="809297937.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ws124.244.50.zone94.zaural.ru ([94.50.244.124]:43887 "HELO
-        zaural.ru" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-        id S1752295AbdGJKGW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 10 Jul 2017 06:06:22 -0400
-Content-Disposition: attachment
-Subject: 
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:57496 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1753943AbdGJN1d (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 10 Jul 2017 09:27:33 -0400
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6ADOPO7014148
+        for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2017 09:27:32 -0400
+Received: from e14.ny.us.ibm.com (e14.ny.us.ibm.com [129.33.205.204])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2bjvs2wt52-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2017 09:27:32 -0400
+Received: from localhost
+        by e14.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <dougmill@linux.vnet.ibm.com>;
+        Mon, 10 Jul 2017 09:27:32 -0400
+In-Reply-To: <bdbe2093-8abc-b48d-7a23-0734fadf33ac@linux.vnet.ibm.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Maurizio Lombardi <mlombard@redhat.com>, linux-scsi@vger.kernel.org
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 
-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
+On 06/27/2017 07:50 AM, Douglas Miller wrote:
+> On 06/27/2017 04:53 AM, Maurizio Lombardi wrote:
+>> The enclosure_add_device() function should fail if it can't
+>> create the relevant sysfs links.
+>>
+>> Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+>> ---
+>>   drivers/misc/enclosure.c | 14 ++++++++++----
+>>   1 file changed, 10 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
+>> index d3fe3ea..eb29113 100644
+>> --- a/drivers/misc/enclosure.c
+>> +++ b/drivers/misc/enclosure.c
+>> @@ -375,6 +375,7 @@ int enclosure_add_device(struct enclosure_device 
+>> *edev, int component,
+>>                struct device *dev)
+>>   {
+>>       struct enclosure_component *cdev;
+>> +    int err;
+>>
+>>       if (!edev || component >= edev->components)
+>>           return -EINVAL;
+>> @@ -384,12 +385,17 @@ int enclosure_add_device(struct 
+>> enclosure_device *edev, int component,
+>>       if (cdev->dev == dev)
+>>           return -EEXIST;
+>>
+>> -    if (cdev->dev)
+>> +    if (cdev->dev) {
+>>           enclosure_remove_links(cdev);
+>> -
+>> -    put_device(cdev->dev);
+>> +        put_device(cdev->dev);
+>> +    }
+>>       cdev->dev = get_device(dev);
+>> -    return enclosure_add_links(cdev);
+>> +    err = enclosure_add_links(cdev);
+>> +    if (err) {
+>> +        put_device(cdev->dev);
+>> +        cdev->dev = NULL;
+>> +    }
+>> +    return err;
+>>   }
+>>   EXPORT_SYMBOL_GPL(enclosure_add_device);
+>>
+> Tested-by: Douglas Miller <dougmill@linux.vnet.ibm.com>
+>
+> This fixes a problem where udevd (insmod ses) races with/overtakes 
+> do_scan_async(), which creates the directory target of the symlink, 
+> resulting in missing enclosure symlinks. This patch relaxes the 
+> symlink creation allowing for delayed addition to enclosure and 
+> creation of symlinks after do_scan_async() has created the target 
+> directory.
+>
+Has there been any progress with getting this patch accepted?
