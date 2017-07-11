@@ -1,155 +1,274 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 1/4] scsi: scsi_dh_alua: allow I/O in target port
- unavailable and standby states
-Date: Tue, 11 Jul 2017 11:18:28 +0200
-Message-ID: <b6e97d03-0e1b-df2a-70e2-3247833f3aac@suse.de>
-References: <1499726857-7875-1-git-send-email-mauricfo@linux.vnet.ibm.com>
- <1499726857-7875-2-git-send-email-mauricfo@linux.vnet.ibm.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] iscsi-target: Add login_keys_workaround attribute for
+ non RFC initiators
+Date: Tue, 11 Jul 2017 02:19:49 -0700
+Message-ID: <1499764789.28145.53.camel@haakon3.daterainc.com>
+References: <1499466285-9907-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1499726857-7875-2-git-send-email-mauricfo@linux.vnet.ibm.com>
-Content-Language: en-US
+In-Reply-To: <1499466285-9907-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: bart.vanassche@sandisk.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Robert LeBlanc <robert@leblancnet.us>, Arun Easi <arun.easi@cavium.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 07/11/2017 12:47 AM, Mauricio Faria de Oliveira wrote:
-> According to SPC-4 (5.15.2.4.5 Unavailable state), the unavailable
-> state may (or may not) transition to other states (e.g., microcode
-> downloading or hardware error, which may be temporary or permanent).
+Hey Robert,
+
+Any chance to test this with your Flexboot PXE setup..?
+
+Please give this a spin ASAP to verify it addresses the regression you
+reported earlier, wrt FirstBurstLength not being proposed nor responded
+to using Flexboot PXE.
+
+Thank you.
+
+On Fri, 2017-07-07 at 22:24 +0000, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
 > 
-> But, scsi_dh_alua currently fails I/O requests early on once that
-> state occurs (in alua_prep_fn()) preventing path checkers in such
-> function path to actually check if I/O still fails or now works.
+> This patch re-introduces part of a long standing login workaround that
+> was recently dropped by:
 > 
-> And that prevents a path activation (alua_activate()) which could
-> update the PG state if it eventually recovered to an active state,
-> thus resume I/O. (This is also the case with the standby state.)
+>   commit 1c99de981f30b3e7868b8d20ce5479fa1c0fea46
+>   Author: Nicholas Bellinger <nab@linux-iscsi.org>
+>   Date:   Sun Apr 2 13:36:44 2017 -0700
 > 
-> This might cause device-mapper multipath to fail all paths to some
-> storage system that moves the controllers to the unavailable state
-> for firmware upgrades, and never recover regardless of the storage
-> system doing upgrades one controller at a time and get them online.
+>       iscsi-target: Drop work-around for legacy GlobalSAN initiator
 > 
-> Then I/O requests are blocked indefinitely due to queue_if_no_path
-> but the underlying individual paths are fully operational, and can
-> be verified as such through other function paths (e.g., SG_IO):
+> Namely, the workaround for FirstBurstLength ended up being required by
+> Mellanox Flexboot PXE boot ROMs as reported by Robert.
 > 
->     # multipath -l
->     mpatha (360050764008100dac000000000000100) dm-0 IBM,2145
->     size=40G features='2 queue_if_no_path retain_attached_hw_handler'
->     hwhandler='1 alua' wp=rw
->     |-+- policy='service-time 0' prio=0 status=enabled
->     | |- 1:0:1:0 sdf 8:80  failed undef running
->     | `- 2:0:1:0 sdn 8:208 failed undef running
->     `-+- policy='service-time 0' prio=0 status=enabled
->       |- 1:0:0:0 sdb 8:16  failed undef running
->       `- 2:0:0:0 sdj 8:144 failed undef running
+> So this patch re-adds the work-around for FirstBurstLength within
+> iscsi_check_proposer_for_optional_reply(), and makes the key optional
+> to respond when the initiator does not propose, nor respond to it.
 > 
->     # strace -e read \
->         sg_dd blk_sgio=0 \
->         if=/dev/sdj of=/dev/null bs=512 count=1 iflag=direct \
->         2>&1 | grep 512
->     read(3, 0x3fff7ba80000, 512) = -1 EIO (Input/output error)
+> Also as requested by Arun, this patch introduces a new TPG attribute
+> named 'login_keys_workaround' that controls the use of both the
+> FirstBurstLength workaround, as well as the two other existing
+> workarounds for gPXE iSCSI boot client.
 > 
->     # strace -e ioctl \
->         sg_dd blk_sgio=1 \
->         if=/dev/sdj of=/dev/null bs=512 count=1 iflag=direct \
->         2>&1 | grep 512
->     ioctl(3, SG_IO, {'S', SG_DXFER_FROM_DEV, cmd[10]=[28, 00, 00, 00,
->     00, 00, 00, 00, 01, 00], <...>) = 0
+> By default, the workaround is enabled with login_keys_workaround=1,
+> since Mellanox FlexBoot requires it, and Arun has verified the Qlogic
+> MSFT initiator already proposes FirstBurstLength, so it's uneffected
+> by this re-adding this part of the original work-around.
 > 
-> So, allow I/O to paths of PGs in unavailable/standby state, so path
-> checkers can actually check them.
-> 
-> Also, schedule a recheck when unavailable/standby state is detected
-> (in alua_check_sense()) to update pg->state, and quiet further SCSI
-> error messages (in alua_prep_fn()).
-> 
-> Once a path checker eventually detects a working/active state again,
-> the PG state is normally updated on path activation (alua_activate(),
-> as it schedules a recheck), thus I/O requests are no longer failed.
-> 
-> Signed-off-by: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
-> Reported-by: Naresh Bannoth <nbannoth@in.ibm.com>
-> 
+> Reported-by: Robert LeBlanc <robert@leblancnet.us>
+> Cc: Robert LeBlanc <robert@leblancnet.us>
+> Cc: Arun Easi <arun.easi@cavium.com>
+> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 > ---
-> v2:
-> - also add support for standby state to alua_check_sense(), alua_prep_fn()
->   (Bart Van Assche <Bart.VanAssche@sandisk.com>)
+>  drivers/target/iscsi/iscsi_target_configfs.c   |  2 ++
+>  drivers/target/iscsi/iscsi_target_nego.c       |  6 ++--
+>  drivers/target/iscsi/iscsi_target_parameters.c | 41 ++++++++++++++++++--------
+>  drivers/target/iscsi/iscsi_target_parameters.h |  2 +-
+>  drivers/target/iscsi/iscsi_target_tpg.c        | 19 ++++++++++++
+>  drivers/target/iscsi/iscsi_target_tpg.h        |  1 +
+>  include/target/iscsi/iscsi_target_core.h       |  9 ++++++
+>  7 files changed, 64 insertions(+), 16 deletions(-)
 > 
->  drivers/scsi/device_handler/scsi_dh_alua.c | 25 +++++++++++++++++++++++++
->  1 file changed, 25 insertions(+)
-> 
-> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-> index c01b47e5b55a..a1cf3d6aa853 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-> @@ -431,6 +431,26 @@ static int alua_check_sense(struct scsi_device *sdev,
->  			alua_check(sdev, false);
->  			return NEEDS_RETRY;
->  		}
-> +		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0b) {
-> +			/*
-> +			 * LUN Not Accessible - target port in standby state.
-> +			 *
-> +			 * Do not retry, so failover to another target port occur.
-> +			 * Schedule a recheck to update state for other functions.
-> +			 */
-> +			alua_check(sdev, true);
-> +			return SUCCESS;
-> +		}
-> +		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0c) {
-> +			/*
-> +			 * LUN Not Accessible - target port in unavailable state.
-> +			 *
-> +			 * Do not retry, so failover to another target port occur.
-> +			 * Schedule a recheck to update state for other functions.
-> +			 */
-> +			alua_check(sdev, true);
-> +			return SUCCESS;
-> +		}
->  		break;
->  	case UNIT_ATTENTION:
->  		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00) {
-> @@ -1057,6 +1077,8 @@ static void alua_check(struct scsi_device *sdev, bool force)
->   *
->   * Fail I/O to all paths not in state
->   * active/optimized or active/non-optimized.
-> + * Allow I/O to paths in state unavailable/standby
-> + * so path checkers can actually check them.
->   */
->  static int alua_prep_fn(struct scsi_device *sdev, struct request *req)
+> diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
+> index 535a8e0..0dd4c45 100644
+> --- a/drivers/target/iscsi/iscsi_target_configfs.c
+> +++ b/drivers/target/iscsi/iscsi_target_configfs.c
+> @@ -781,6 +781,7 @@ static int lio_target_init_nodeacl(struct se_node_acl *se_nacl,
+>  DEF_TPG_ATTRIB(t10_pi);
+>  DEF_TPG_ATTRIB(fabric_prot_type);
+>  DEF_TPG_ATTRIB(tpg_enabled_sendtargets);
+> +DEF_TPG_ATTRIB(login_keys_workaround);
+>  
+>  static struct configfs_attribute *lio_target_tpg_attrib_attrs[] = {
+>  	&iscsi_tpg_attrib_attr_authentication,
+> @@ -796,6 +797,7 @@ static int lio_target_init_nodeacl(struct se_node_acl *se_nacl,
+>  	&iscsi_tpg_attrib_attr_t10_pi,
+>  	&iscsi_tpg_attrib_attr_fabric_prot_type,
+>  	&iscsi_tpg_attrib_attr_tpg_enabled_sendtargets,
+> +	&iscsi_tpg_attrib_attr_login_keys_workaround,
+>  	NULL,
+>  };
+>  
+> diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
+> index 96df63f..7a6751f 100644
+> --- a/drivers/target/iscsi/iscsi_target_nego.c
+> +++ b/drivers/target/iscsi/iscsi_target_nego.c
+> @@ -864,7 +864,8 @@ static int iscsi_target_handle_csg_zero(
+>  			SENDER_TARGET,
+>  			login->rsp_buf,
+>  			&login->rsp_length,
+> -			conn->param_list);
+> +			conn->param_list,
+> +			conn->tpg->tpg_attrib.login_keys_workaround);
+>  	if (ret < 0)
+>  		return -1;
+>  
+> @@ -934,7 +935,8 @@ static int iscsi_target_handle_csg_one(struct iscsi_conn *conn, struct iscsi_log
+>  			SENDER_TARGET,
+>  			login->rsp_buf,
+>  			&login->rsp_length,
+> -			conn->param_list);
+> +			conn->param_list,
+> +			conn->tpg->tpg_attrib.login_keys_workaround);
+>  	if (ret < 0) {
+>  		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_INITIATOR_ERR,
+>  				ISCSI_LOGIN_STATUS_INIT_ERR);
+> diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
+> index fce6276..caab104 100644
+> --- a/drivers/target/iscsi/iscsi_target_parameters.c
+> +++ b/drivers/target/iscsi/iscsi_target_parameters.c
+> @@ -765,7 +765,8 @@ static int iscsi_check_for_auth_key(char *key)
+>  	return 0;
+>  }
+>  
+> -static void iscsi_check_proposer_for_optional_reply(struct iscsi_param *param)
+> +static void iscsi_check_proposer_for_optional_reply(struct iscsi_param *param,
+> +						    bool keys_workaround)
 >  {
-> @@ -1072,6 +1094,9 @@ static int alua_prep_fn(struct scsi_device *sdev, struct request *req)
->  	rcu_read_unlock();
->  	if (state == SCSI_ACCESS_STATE_TRANSITIONING)
->  		ret = BLKPREP_DEFER;
-> +	else if (state == SCSI_ACCESS_STATE_UNAVAILABLE ||
-> +		 state == SCSI_ACCESS_STATE_STANDBY)
-> +		req->rq_flags |= RQF_QUIET;
->  	else if (state != SCSI_ACCESS_STATE_OPTIMAL &&
->  		 state != SCSI_ACCESS_STATE_ACTIVE &&
->  		 state != SCSI_ACCESS_STATE_LBA) {
-> 
-NACK.
-
-The whole _point_ of having device handlers is to _avoid_ I/O errors
-during booting.
-
-And the ALUA checker is prepared to handle this situation properly.
-The directio checker of course doesn't know about this, but then no-one
-expected the directio checker to work with ALUA.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+>  	if (IS_TYPE_BOOL_AND(param)) {
+>  		if (!strcmp(param->value, NO))
+> @@ -773,19 +774,31 @@ static void iscsi_check_proposer_for_optional_reply(struct iscsi_param *param)
+>  	} else if (IS_TYPE_BOOL_OR(param)) {
+>  		if (!strcmp(param->value, YES))
+>  			SET_PSTATE_REPLY_OPTIONAL(param);
+> -		 /*
+> -		  * Required for gPXE iSCSI boot client
+> -		  */
+> -		if (!strcmp(param->name, IMMEDIATEDATA))
+> -			SET_PSTATE_REPLY_OPTIONAL(param);
+> +
+> +		if (keys_workaround) {
+> +			/*
+> +			 * Required for gPXE iSCSI boot client
+> +			 */
+> +			if (!strcmp(param->name, IMMEDIATEDATA))
+> +				SET_PSTATE_REPLY_OPTIONAL(param);
+> +		}
+>  	} else if (IS_TYPE_NUMBER(param)) {
+>  		if (!strcmp(param->name, MAXRECVDATASEGMENTLENGTH))
+>  			SET_PSTATE_REPLY_OPTIONAL(param);
+> -		/*
+> -		 * Required for gPXE iSCSI boot client
+> -		 */
+> -		if (!strcmp(param->name, MAXCONNECTIONS))
+> -			SET_PSTATE_REPLY_OPTIONAL(param);
+> +
+> +		if (keys_workaround) {
+> +			/*
+> +			 * Required for Mellanox Flexboot PXE boot ROM
+> +			 */
+> +			if (!strcmp(param->name, FIRSTBURSTLENGTH))
+> +				SET_PSTATE_REPLY_OPTIONAL(param);
+> +
+> +			/*
+> +			 * Required for gPXE iSCSI boot client
+> +			 */
+> +			if (!strcmp(param->name, MAXCONNECTIONS))
+> +				SET_PSTATE_REPLY_OPTIONAL(param);
+> +		}
+>  	} else if (IS_PHASE_DECLARATIVE(param))
+>  		SET_PSTATE_REPLY_OPTIONAL(param);
+>  }
+> @@ -1422,7 +1435,8 @@ int iscsi_encode_text_output(
+>  	u8 sender,
+>  	char *textbuf,
+>  	u32 *length,
+> -	struct iscsi_param_list *param_list)
+> +	struct iscsi_param_list *param_list,
+> +	bool keys_workaround)
+>  {
+>  	char *output_buf = NULL;
+>  	struct iscsi_extra_response *er;
+> @@ -1458,7 +1472,8 @@ int iscsi_encode_text_output(
+>  			*length += 1;
+>  			output_buf = textbuf + *length;
+>  			SET_PSTATE_PROPOSER(param);
+> -			iscsi_check_proposer_for_optional_reply(param);
+> +			iscsi_check_proposer_for_optional_reply(param,
+> +							        keys_workaround);
+>  			pr_debug("Sending key: %s=%s\n",
+>  				param->name, param->value);
+>  		}
+> diff --git a/drivers/target/iscsi/iscsi_target_parameters.h b/drivers/target/iscsi/iscsi_target_parameters.h
+> index 9962ccf..c47b73f 100644
+> --- a/drivers/target/iscsi/iscsi_target_parameters.h
+> +++ b/drivers/target/iscsi/iscsi_target_parameters.h
+> @@ -46,7 +46,7 @@ extern int iscsi_copy_param_list(struct iscsi_param_list **,
+>  extern int iscsi_update_param_value(struct iscsi_param *, char *);
+>  extern int iscsi_decode_text_input(u8, u8, char *, u32, struct iscsi_conn *);
+>  extern int iscsi_encode_text_output(u8, u8, char *, u32 *,
+> -			struct iscsi_param_list *);
+> +			struct iscsi_param_list *, bool);
+>  extern int iscsi_check_negotiated_keys(struct iscsi_param_list *);
+>  extern void iscsi_set_connection_parameters(struct iscsi_conn_ops *,
+>  			struct iscsi_param_list *);
+> diff --git a/drivers/target/iscsi/iscsi_target_tpg.c b/drivers/target/iscsi/iscsi_target_tpg.c
+> index abaabba..594d07a 100644
+> --- a/drivers/target/iscsi/iscsi_target_tpg.c
+> +++ b/drivers/target/iscsi/iscsi_target_tpg.c
+> @@ -227,6 +227,7 @@ static void iscsit_set_default_tpg_attribs(struct iscsi_portal_group *tpg)
+>  	a->t10_pi = TA_DEFAULT_T10_PI;
+>  	a->fabric_prot_type = TA_DEFAULT_FABRIC_PROT_TYPE;
+>  	a->tpg_enabled_sendtargets = TA_DEFAULT_TPG_ENABLED_SENDTARGETS;
+> +	a->login_keys_workaround = TA_DEFAULT_LOGIN_KEYS_WORKAROUND;
+>  }
+>  
+>  int iscsit_tpg_add_portal_group(struct iscsi_tiqn *tiqn, struct iscsi_portal_group *tpg)
+> @@ -895,3 +896,21 @@ int iscsit_ta_tpg_enabled_sendtargets(
+>  
+>  	return 0;
+>  }
+> +
+> +int iscsit_ta_login_keys_workaround(
+> +	struct iscsi_portal_group *tpg,
+> +	u32 flag)
+> +{
+> +	struct iscsi_tpg_attrib *a = &tpg->tpg_attrib;
+> +
+> +	if ((flag != 0) && (flag != 1)) {
+> +		pr_err("Illegal value %d\n", flag);
+> +		return -EINVAL;
+> +	}
+> +
+> +	a->login_keys_workaround = flag;
+> +	pr_debug("iSCSI_TPG[%hu] - TPG enabled bit for login keys workaround: %s ",
+> +		tpg->tpgt, (a->login_keys_workaround) ? "ON" : "OFF");
+> +
+> +	return 0;
+> +}
+> diff --git a/drivers/target/iscsi/iscsi_target_tpg.h b/drivers/target/iscsi/iscsi_target_tpg.h
+> index ceba298..59fd3ca 100644
+> --- a/drivers/target/iscsi/iscsi_target_tpg.h
+> +++ b/drivers/target/iscsi/iscsi_target_tpg.h
+> @@ -48,5 +48,6 @@ extern int iscsit_tpg_del_network_portal(struct iscsi_portal_group *,
+>  extern int iscsit_ta_t10_pi(struct iscsi_portal_group *, u32);
+>  extern int iscsit_ta_fabric_prot_type(struct iscsi_portal_group *, u32);
+>  extern int iscsit_ta_tpg_enabled_sendtargets(struct iscsi_portal_group *, u32);
+> +extern int iscsit_ta_login_keys_workaround(struct iscsi_portal_group *, u32);
+>  
+>  #endif /* ISCSI_TARGET_TPG_H */
+> diff --git a/include/target/iscsi/iscsi_target_core.h b/include/target/iscsi/iscsi_target_core.h
+> index 7948fc6..0ca1fb0 100644
+> --- a/include/target/iscsi/iscsi_target_core.h
+> +++ b/include/target/iscsi/iscsi_target_core.h
+> @@ -66,6 +66,14 @@
+>  #define TA_DEFAULT_FABRIC_PROT_TYPE	0
+>  /* TPG status needs to be enabled to return sendtargets discovery endpoint info */
+>  #define TA_DEFAULT_TPG_ENABLED_SENDTARGETS 1
+> +/*
+> + * Used to control the sending of keys with optional to respond state bit,
+> + * as a workaround for non RFC compliant initiators,that do not propose,
+> + * nor respond to specific keys required for login to complete.
+> + *
+> + * See iscsi_check_proposer_for_optional_reply() for more details.
+> + */
+> +#define TA_DEFAULT_LOGIN_KEYS_WORKAROUND 1
+>  
+>  #define ISCSI_IOV_DATA_BUFFER		5
+>  
+> @@ -768,6 +776,7 @@ struct iscsi_tpg_attrib {
+>  	u8			t10_pi;
+>  	u32			fabric_prot_type;
+>  	u32			tpg_enabled_sendtargets;
+> +	u32			login_keys_workaround;
+>  	struct iscsi_portal_group *tpg;
+>  };
+>  
