@@ -1,154 +1,114 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] hpsa: add support for legacy boards
-Date: Tue, 11 Jul 2017 08:49:04 +0200
-Message-ID: <1499755744-79217-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60097 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753397AbdGKGtM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 11 Jul 2017 02:49:12 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] iscsi-target: Reject immediate data underflow larger
+ than SCSI transfer length
+Date: Tue, 11 Jul 2017 00:22:41 -0700
+Message-ID: <1499757761.28145.45.camel@haakon3.daterainc.com>
+References: <1496895685-18464-1-git-send-email-nab@linux-iscsi.org>
+         <1496936253.3028.1.camel@wdc.com>
+         <1496991302.28997.66.camel@haakon3.risingtidesystems.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1496991302.28997.66.camel@haakon3.risingtidesystems.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Cc: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "mchristi@redhat.com" <mchristi@redhat.com>, "roland@purestorage.com" <roland@purestorage.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Don Brace <don.brace@microsemi.com>, Meelis Roos <mroos@linux.ee>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Add support for legacy boards, ensuring to enable the driver for
-those boards only when 'hpsa_allow_any' is set.
+Hi Bart,
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/hpsa.c | 35 +++++++++++++++++++++++++++++++++--
- drivers/scsi/hpsa.h | 44 ++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 77 insertions(+), 2 deletions(-)
+On Thu, 2017-06-08 at 23:55 -0700, Nicholas A. Bellinger wrote:
+> On Thu, 2017-06-08 at 15:37 +0000, Bart Van Assche wrote:
+> > On Thu, 2017-06-08 at 04:21 +0000, Nicholas A. Bellinger wrote:
+> > > +	/*
+> > > +	 * Check for underflow case where both EDTL and immediate data payload
+> > > +	 * exceeds what is presented by CDB's TRANSFER LENGTH, and what has
+> > > +	 * already been set in target_cmd_size_check() as se_cmd->data_length.
+> > > +	 *
+> > > +	 * For this special case, fail the command and dump the immediate data
+> > > +	 * payload.
+> > > +	 */
+> > > +	if (cmd->first_burst_len > cmd->se_cmd.data_length) {
+> > > +		cmd->sense_reason = TCM_INVALID_CDB_FIELD;
+> > > +		goto after_immediate_data;
+> > > +	}
+> > 
+> > A quote from the iSCSI RFC (https://tools.ietf.org/html/rfc5048):
+> > 
+> >    If SPDTL < EDTL for a task, iSCSI Underflow MUST be signaled in the
+> >    SCSI Response PDU as specified in [RFC3720].  The Residual Count MUST
+> >    be set to the numerical value of (EDTL - SPDTL).
+> > 
+> > Sorry but I don't think that sending TCM_INVALID_CDB_FIELD back to the
+> > initiator is compliant with the iSCSI RFC.
+> 
+> Alas, the nuance of what this patch actually does was missed when you
+> cut the context.
+> 
+> First, a bit of history.  LIO has rejected underflow for all WRITEs for
+> the first ~12.5 years of RFC-3720, and in the context of iscsi-target
+> mode there has never been a single host environment that ever once
+> cared.
+> 
+> Since Roland's patch to allow underflow for control CDBs in v4.3+ opened
+> this discussion for control CDBs with a WRITE payload in order to make
+> MSFT/FCP cert for PERSISTENT_RESERVE_OUT happy, the question has become
+> what control CDB WRITE underflow cases should we allow..?
+> 
+> The point with this patch is when a host is sending a underflow with a
+> iscsi immediate data payload that exceeds SCSI transfer length, it's a
+> bogus request with a garbage payload.  It's a garbage payload because
+> the SCSI CDB itself obviously doesn't want anything to do it.
+> 
+> I'm very dubious of any host environment who's trying to do this for any
+> CDB, and expects achieve expected results.
+> 
+> Of course, since v4.3+ normal overflow where SCSI transfer length
+> matches the iscsi immediate data payload just works with or without this
+> patch.
+> 
+> So to that extent, I'm going to push this patch as a defensive fix for
+> v4.3+, to let those imaginary iscsi host environments know they being
+> very, very naughty.
+> 
+> >  Please note that a fix that is
+> > compliant with the iSCSI RFC is present in the following patch series: [PATCH
+> > 00/33] SCSI target driver patches for kernel v4.13, 23 May 2017
+> > (https://www.spinics.net/lists/target-devel/msg15370.html).
+> 
+> So I might still consider this as a v4.13-rc item for control CDB
+> underflow, but no way as stable material.
+> 
+> Also, there is certainly no way I'm going to allow a patch to randomly
+> enable underflow/overflow for all WRITE non control CDBs tree-wide
+> across all fabric drivers, because 1) no host environments actually care
+> about this, and 2) it's still dangerous to do for all fabrics without
+> some serious auditing.
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 8914eab..2cf6ccc 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -148,6 +148,8 @@
- 	{PCI_VENDOR_ID_HP, 0x333f, 0x103c, 0x333f},
- 	{PCI_VENDOR_ID_HP,     PCI_ANY_ID,	PCI_ANY_ID, PCI_ANY_ID,
- 		PCI_CLASS_STORAGE_RAID << 8, 0xffff << 8, 0},
-+	{PCI_VENDOR_ID_COMPAQ,     PCI_ANY_ID,	PCI_ANY_ID, PCI_ANY_ID,
-+		PCI_CLASS_STORAGE_RAID << 8, 0xffff << 8, 0},
- 	{0,}
- };
- 
-@@ -158,6 +160,26 @@
-  *  access = Address of the struct of function pointers
-  */
- static struct board_type products[] = {
-+	{0x40700E11, "Smart Array 5300", &SA5A_access},
-+	{0x40800E11, "Smart Array 5i", &SA5B_access},
-+	{0x40820E11, "Smart Array 532", &SA5B_access},
-+	{0x40830E11, "Smart Array 5312", &SA5B_access},
-+	{0x409A0E11, "Smart Array 641", &SA5A_access},
-+	{0x409B0E11, "Smart Array 642", &SA5A_access},
-+	{0x409C0E11, "Smart Array 6400", &SA5A_access},
-+	{0x409D0E11, "Smart Array 6400 EM", &SA5A_access},
-+	{0x40910E11, "Smart Array 6i", &SA5A_access},
-+	{0x3225103C, "Smart Array P600", &SA5A_access},
-+	{0x3223103C, "Smart Array P800", &SA5A_access},
-+	{0x3234103C, "Smart Array P400", &SA5A_access},
-+	{0x3235103C, "Smart Array P400i", &SA5A_access},
-+	{0x3211103C, "Smart Array E200i", &SA5A_access},
-+	{0x3212103C, "Smart Array E200", &SA5A_access},
-+	{0x3213103C, "Smart Array E200i", &SA5A_access},
-+	{0x3214103C, "Smart Array E200i", &SA5A_access},
-+	{0x3215103C, "Smart Array E200i", &SA5A_access},
-+	{0x3237103C, "Smart Array E500", &SA5A_access},
-+	{0x323D103C, "Smart Array P700m", &SA5A_access},
- 	{0x3241103C, "Smart Array P212", &SA5_access},
- 	{0x3243103C, "Smart Array P410", &SA5_access},
- 	{0x3245103C, "Smart Array P410i", &SA5_access},
-@@ -7243,8 +7265,17 @@ static int hpsa_lookup_board_id(struct pci_dev *pdev, u32 *board_id)
- 		    subsystem_vendor_id;
- 
- 	for (i = 0; i < ARRAY_SIZE(products); i++)
--		if (*board_id == products[i].board_id)
--			return i;
-+		if (*board_id == products[i].board_id) {
-+			if (products[i].access != &SA5A_access &&
-+			    products[i].access != &SA5B_access)
-+				return i;
-+			if (hpsa_allow_any) {
-+				dev_warn(&pdev->dev,
-+					 "unsupported board ID: 0x%08x\n",
-+					 *board_id);
-+				return i;
-+			}
-+		}
- 
- 	if ((subsystem_vendor_id != PCI_VENDOR_ID_HP &&
- 		subsystem_vendor_id != PCI_VENDOR_ID_COMPAQ) ||
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index 1c49741..e700d2b 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -447,6 +447,25 @@ static void SA5_intr_mask(struct ctlr_info *h, unsigned long val)
- 	}
- }
- 
-+/*
-+ *  This card is the opposite of the other cards.
-+ *   0 turns interrupts on...
-+ *   0x04 turns them off...
-+ */
-+static void SA5B_intr_mask(struct ctlr_info *h, unsigned long val)
-+{
-+	if (val) { /* Turn interrupts on */
-+		h->interrupts_enabled = 1;
-+		writel(0, h->vaddr + SA5_REPLY_INTR_MASK_OFFSET);
-+		(void) readl(h->vaddr + SA5_REPLY_INTR_MASK_OFFSET);
-+	} else { /* Turn them off */
-+		h->interrupts_enabled = 0;
-+		writel(SA5B_INTR_OFF,
-+		       h->vaddr + SA5_REPLY_INTR_MASK_OFFSET);
-+		(void) readl(h->vaddr + SA5_REPLY_INTR_MASK_OFFSET);
-+	}
-+}
-+
- static void SA5_performant_intr_mask(struct ctlr_info *h, unsigned long val)
- {
- 	if (val) { /* turn on interrupts */
-@@ -549,6 +568,16 @@ static bool SA5_ioaccel_mode1_intr_pending(struct ctlr_info *h)
- 		true : false;
- }
- 
-+/*
-+ *      Returns true if an interrupt is pending..
-+ */
-+static bool SA5B_intr_pending(struct ctlr_info *h)
-+{
-+	unsigned long register_value  =
-+		readl(h->vaddr + SA5_INTR_STATUS);
-+	return (register_value & SA5B_INTR_PENDING);
-+}
-+
- #define IOACCEL_MODE1_REPLY_QUEUE_INDEX  0x1A0
- #define IOACCEL_MODE1_PRODUCER_INDEX     0x1B8
- #define IOACCEL_MODE1_CONSUMER_INDEX     0x1BC
-@@ -587,6 +616,21 @@ static unsigned long SA5_ioaccel_mode1_completed(struct ctlr_info *h, u8 q)
- 	.command_completed = SA5_completed,
- };
- 
-+/* Duplicate entry of the above to mark unsupported boards */
-+static struct access_method SA5A_access = {
-+	.submit_command = SA5_submit_command,
-+	.set_intr_mask = SA5_intr_mask,
-+	.intr_pending = SA5_intr_pending,
-+	.command_completed = SA5_completed,
-+};
-+
-+static struct access_method SA5B_access = {
-+	.submit_command = SA5_submit_command,
-+	.set_intr_mask = SA5B_intr_mask,
-+	.intr_pending = SA5B_intr_pending,
-+	.command_completed = SA5_completed,
-+};
-+
- static struct access_method SA5_ioaccel_mode1_access = {
- 	.submit_command = SA5_submit_command,
- 	.set_intr_mask = SA5_performant_intr_mask,
--- 
-1.8.5.6
+After further consideration, I've decided against allowing iscsi-target
+underflow with a immediate data payload larger than SCSI transfer
+length.
+
+Any host environment that attempts to send an underflow with a immediate
+data payload larger than SCSI transfer length, expects the target to
+automatically truncate immediate data, and still return GOOD status is
+completely bogus.  Any host that attempts this is buggy, and needs to be
+fixed.
+
+This is because for the last ~12 years of RFC-3720:
+
+  - There has never been a host environment in the wild that exhibits 
+    this behavior.
+  - There has never been a conformance suite which expects this 
+    behavior.
+
+So rejecting this case as already done in commit abb85a9b51 is the
+correct approach for >= v4.3.y.
+
+Of course, the typical underflow scenario which Roland's v4.3.y commit
+enabled, underflow where immediate data matches the SCSI transfer length
+is supported for control CDBs.
+
+That said, thanks for high-lighting this particular corner case, so it
+could be fixed in >= v4.3.y.
