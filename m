@@ -1,42 +1,56 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] scsi: qla2xxx: Off by one in qlt_ctio_to_cmd()
-Date: Tue, 11 Jul 2017 02:14:12 -0700
-Message-ID: <1499764452.28145.49.camel@haakon3.daterainc.com>
-References: <20170710084739.tjj7juaex7cb7xs5@mwanda>
+From: Damien Le Moal <Damien.LeMoal@wdc.com>
+Subject: Re: [PATCH] tcmu: Fix possible overflow for memcpy address in iovec
+Date: Tue, 11 Jul 2017 09:17:16 +0000
+Message-ID: <1499764634.16582.1.camel@wdc.com>
+References: <1499758843-14159-1-git-send-email-lixiubo@cmss.chinamobile.com>
+         <c77ef933-1d47-b885-e3be-4a8b39b5e9fe@cmss.chinamobile.com>
+         <1499762465.28145.48.camel@haakon3.daterainc.com>
+         <f6d78118-ae7a-219e-005c-820d80b02477@wdc.com>
+         <45bc0296-7b3a-c2d5-8e3b-c7b60ff6e2bb@cmss.chinamobile.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:44769 "EHLO
-        linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752386AbdGKJON (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Jul 2017 05:14:13 -0400
-In-Reply-To: <20170710084739.tjj7juaex7cb7xs5@mwanda>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <45bc0296-7b3a-c2d5-8e3b-c7b60ff6e2bb@cmss.chinamobile.com>
+Content-Language: en-US
+Content-ID: <23CC8263351368408C67E887E8001C1A@namprd04.prod.outlook.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "lixiubo@cmss.chinamobile.com" <lixiubo@cmss.chinamobile.com>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "mchristi@redhat.com" <mchristi@redhat.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "bryantly@linux.vnet.ibm.com" <bryantly@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On Mon, 2017-07-10 at 11:47 +0300, Dan Carpenter wrote:
-> There are "req->num_outstanding_cmds" elements in the
-> req->outstanding_cmds[] array so the > here should be >=.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-> index 6e4794367e0b..ecd1a95511f9 100644
-> --- a/drivers/scsi/qla2xxx/qla_target.c
-> +++ b/drivers/scsi/qla2xxx/qla_target.c
-> @@ -3728,7 +3728,7 @@ static struct qla_tgt_cmd *qlt_ctio_to_cmd(struct scsi_qla_host *vha,
->  	h &= QLA_CMD_HANDLE_MASK;
->  
->  	if (h != QLA_TGT_NULL_HANDLE) {
-> -		if (unlikely(h > req->num_outstanding_cmds)) {
-> +		if (unlikely(h >= req->num_outstanding_cmds)) {
->  			ql_dbg(ql_dbg_tgt, vha, 0xe052,
->  			    "qla_target(%d): Wrong handle %x received\n",
->  			    vha->vp_idx, handle);
-
-Nice catch.
-
-Reviewed-by: Nicholas Bellinger <nab@linux-iscsi.org>
+WGl1Ym8sDQoNCk9uIFR1ZSwgMjAxNy0wNy0xMSBhdCAxNzowNCArMDgwMCwgWGl1Ym8gTGkgd3Jv
+dGU6DQo+ID4gPiA+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvdGFyZ2V0L3RhcmdldF9jb3JlX3Vz
+ZXIuYw0KPiA+ID4gPiA+IGIvZHJpdmVycy90YXJnZXQvdGFyZ2V0X2NvcmVfdXNlci5jDQo+ID4g
+PiA+ID4gaW5kZXggOTMwODAwYy4uODZhODQ1YSAxMDA2NDQNCj4gPiA+ID4gPiAtLS0gYS9kcml2
+ZXJzL3RhcmdldC90YXJnZXRfY29yZV91c2VyLmMNCj4gPiA+ID4gPiArKysgYi9kcml2ZXJzL3Rh
+cmdldC90YXJnZXRfY29yZV91c2VyLmMNCj4gPiA+ID4gPiBAQCAtNDM3LDcgKzQzNyw3IEBAIHN0
+YXRpYyBpbnQgc2NhdHRlcl9kYXRhX2FyZWEoc3RydWN0IHRjbXVfZGV2DQo+ID4gPiA+ID4gKnVk
+ZXYsDQo+ID4gPiA+ID4gwqDCoMKgCQkJdG9fb2Zmc2V0ID0gZ2V0X2Jsb2NrX29mZnNldF91c2Vy
+KHVkZXYsDQo+ID4gPiA+ID4gZGJpLA0KPiA+ID4gPiA+IMKgwqDCoAkJCQkJYmxvY2tfcmVtYWlu
+aW5nKTsNCj4gPiA+ID4gPiDCoMKgwqAJCQlvZmZzZXQgPSBEQVRBX0JMT0NLX1NJWkUgLQ0KPiA+
+ID4gPiA+IGJsb2NrX3JlbWFpbmluZzsNCj4gPiA+ID4gPiAtCQkJdG8gPSAodm9pZCAqKSh1bnNp
+Z25lZCBsb25nKXRvICsgb2Zmc2V0Ow0KPiA+ID4gPiA+ICsJCQl0byA9ICh2b2lkICopKCh1bnNp
+Z25lZCBsb25nKXRvICsgb2Zmc2V0KTsNCj4gPiA+ID4gPiDCoMKgwqANCj4gPiA+ID4gPiDCoMKg
+wqAJCQlpZiAoKmlvdl9jbnQgIT0gMCAmJg0KPiA+ID4gPiA+IMKgwqDCoAkJCcKgwqDCoMKgdG9f
+b2Zmc2V0ID09IGlvdl90YWlsKHVkZXYsICppb3YpKSB7DQo+ID4gPiA+ID4gQEAgLTUxMCw3ICs1
+MTAsNyBAQCBzdGF0aWMgdm9pZCBnYXRoZXJfZGF0YV9hcmVhKHN0cnVjdCB0Y211X2Rldg0KPiA+
+ID4gPiA+ICp1ZGV2LCBzdHJ1Y3QgdGNtdV9jbWQgKmNtZCwNCj4gPiA+ID4gPiDCoMKgwqAJCQlj
+b3B5X2J5dGVzID0gbWluX3Qoc2l6ZV90LCBzZ19yZW1haW5pbmcsDQo+ID4gPiA+ID4gwqDCoMKg
+CQkJCQlibG9ja19yZW1haW5pbmcpOw0KPiA+ID4gPiA+IMKgwqDCoAkJCW9mZnNldCA9IERBVEFf
+QkxPQ0tfU0laRSAtDQo+ID4gPiA+ID4gYmxvY2tfcmVtYWluaW5nOw0KPiA+ID4gPiA+IC0JCQlm
+cm9tID0gKHZvaWQgKikodW5zaWduZWQgbG9uZylmcm9tICsNCj4gPiA+ID4gPiBvZmZzZXQ7DQo+
+ID4gPiA+ID4gKwkJCWZyb20gPSAodm9pZCAqKSgodW5zaWduZWQgbG9uZylmcm9tICsNCj4gPiA+
+ID4gPiBvZmZzZXQpOw0KPiA+ID4gPiA+IMKgwqDCoAkJCXRjbXVfZmx1c2hfZGNhY2hlX3Jhbmdl
+KGZyb20sDQo+ID4gPiA+ID4gY29weV9ieXRlcyk7DQo+ID4gPiA+ID4gwqDCoMKgCQkJbWVtY3B5
+KHRvICsgc2ctPmxlbmd0aCAtIHNnX3JlbWFpbmluZywNCj4gPiA+ID4gPiBmcm9tLA0KPiA+ID4g
+PiA+IMKgwqDCoAkJCQkJY29weV9ieXRlcyk7DQo+ID4gDQo+ID4gSSB3YXMganVzdCBsb29raW5n
+IGF0IHRoaXMgcGF0Y2ggYW5kIGFib3V0IHRvIHRyeSB0byBzZWUgaWYgaXQgZml4ZXMgbXkNCj4g
+PiBwcm9ibGVtLi4uIEl0IGNhbm5vdCBodXJ0LiBUcnlpbmcuLi4NCj4gDQo+IEhpIERhbWllbiwN
+Cj4gDQo+IFBsZWFzZSB0ZXN0IGFub3RoZXIgcGF0Y2gsIEkgdGhpbmsgdGhhdCBvbmUgbWF5YmUg
+Zml4IHRoaXMuDQoNCnZvaWQgKiBwb2ludGVyIGFyaXRobWV0aWMgaXMgT0sgYW5kIGVxdWl2YWxl
+bnQgdG8gdW5zaWduZWQgbG9uZy4gU28gSSBkbyBub3QNCnRoaW5rIHRoaXMgYWN0dWFsbHkgZml4
+ZXMgYW55dGhpbmcgYW5kIGNvdWxkIGJlIHJld3JpdHRlbiBtb3JlIHNpbXBseSBhcw0KDQp0byAr
+PSBvZmZzZXQ7DQoNCmFuZCANCg0KZnJvbSArPSBvZmZzZXQuDQoNCkFuZCB0aGF0IGNvbXBpbGVz
+IHdpdGhvdXQgYSB3YXJuaW5nIGFuZCB0aGVyZSBhcmUgbm8gY29tcGxhaW50cyBmcm9tIHNwYXJz
+ZS4NCg0KQ2hlZXJzLg0KDQoNCi0tIA0KRGFtaWVuIExlIE1vYWwNCldlc3Rlcm4gRGlnaXRhbA==
