@@ -1,36 +1,31 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] scsi: default to scsi-mq
-Date: Tue, 11 Jul 2017 13:32:51 +0000
-Message-ID: <1499779970.3345.1.camel@wdc.com>
-References: <20170616082755.22832-1-hch@lst.de>
-         <1499701840.3555.7.camel@wdc.com>
-         <e3c07504-8538-f2f3-003a-01b72e0c07c6@huawei.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH v2 10/15] megaraid_sas: Return pended IOCTLs with
+ cmd_status MFI_STAT_WRONG_STATE in case adapter is dead
+Date: Tue, 11 Jul 2017 15:42:37 +0200
+Message-ID: <892809f1-e284-b0f0-8334-af84f86d2c34@redhat.com>
+References: <1499256029-16319-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+ <1499256029-16319-11-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:17138 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755413AbdGKNcy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Jul 2017 09:32:54 -0400
-In-Reply-To: <e3c07504-8538-f2f3-003a-01b72e0c07c6@huawei.com>
-Content-Language: en-US
-Content-ID: <3C3DFDAAE2EB7F4FB52324DEB5C3325C@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1499256029-16319-11-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Content-Language: en-MW
+Sender: stable-owner@vger.kernel.org
+To: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, hch@lst.de, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "john.garry@huawei.com" <john.garry@huawei.com>, "linuxarm@huawei.com" <linuxarm@huawei.com>
 
-T24gVHVlLCAyMDE3LTA3LTExIGF0IDExOjIyICswMTAwLCBKb2huIEdhcnJ5IHdyb3RlOg0KPiBP
-biAxMC8wNy8yMDE3IDE2OjUwLCBCYXJ0IFZhbiBBc3NjaGUgd3JvdGU6DQo+ID4gU2luY2UgYSBm
-aXggZm9yIHRoZSBwZXJmb3JtYW5jZSByZWdyZXNzaW9uIHRyaWdnZXJlZCBieSB0aGlzIHBhdGNo
-IHdpbGwgYmUgdXBzdHJlYW0NCj4gPiBzb29uIChzZWUgYWxzbyBodHRwczovL2dpdC5rZXJuZWwu
-b3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9heGJvZS9saW51eC1ibG9jay5naXQvY29tbWl0
-Lz9oPWZvci1saW51cyZpZD0zMjgyNWM0NWZmOGY0Y2NlOTM3YWI4NWIwMzBkYzY5M2NlYjFhYTBh
-KToNCj4gPiANCj4gDQo+IEZZSSwgb24gbGludXgtbmV4dCAyMDE3MDcxMSAod2hpY2ggbm93IGlu
-Y2x1ZGVzIHRoZSBhYm92ZSBwYXRjaCBCYXJ0IA0KPiBtZW50aW9uZWQpIHdlIHNlZSBhIGxhcmdl
-IHBlcmZvcm1hbmNlIHJlZ3Jlc3Npb24gb24gaGlzaV9zYXMgKExMREQgZG9lcyANCj4gbm90IGNv
-bmZpZyBzaG9zdCBmb3IgbXEpLg0KPiANCj4gZmlvIHJlYWQgbW9kZSBpb3BzIGdvZXMgZnJvbSB+
-ODMzSyAoc2NzaV9tb2QudXNlX2Jsa19tcT1uIG9uIGNtZGxpbmUpIHRvIA0KPiB+MzIwSw0KDQpI
-ZWxsbyBKb2huLA0KDQpUaGFua3MgZm9yIHRoZSBmZWVkYmFjay4gSXMgdGhlIGtlcm5lbCBjb25m
-aWcgd2l0aCB3aGljaCB0aGVzZSBtZWFzdXJlbWVudHMNCndlcmUgcGVyZm9ybWVkIGF2YWlsYWJs
-ZSBzb21ld2hlcmU/DQoNCkJhcnQu
+On 5.7.2017 14:00, Shivasharan S wrote:
+> Fix - After a kill adapter, since the cmd_status is not set the
+> IOCTLs will be hung in driver resulting in application hang.
+> Set cmd_status MFI_STAT_WRONG_STATE when completing pended IOCTLs.
+>
+> Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+> Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+> Cc: stable@vger.kernel.org
+> Reviewed-by: Hannes Reinecke <hare@suse.com>
+
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+
+tomash
