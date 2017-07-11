@@ -1,58 +1,35 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] iscsi-target: Add login_keys_workaround attribute for non
- RFC initiators
-Date: Tue, 11 Jul 2017 23:38:37 +0000
-Message-ID: <1499816315.2586.51.camel@wdc.com>
-References: <1499466285-9907-1-git-send-email-nab@linux-iscsi.org>
+Subject: Re: [PATCH v2 01/15] qla2xxx: Combine Active command arrays.
+Date: Tue, 11 Jul 2017 23:43:40 +0000
+Message-ID: <1499816619.2586.53.camel@wdc.com>
+References: <20170614034730.15428-1-himanshu.madhani@cavium.com>
+         <20170614034730.15428-2-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1499466285-9907-1-git-send-email-nab@linux-iscsi.org>
+In-Reply-To: <20170614034730.15428-2-himanshu.madhani@cavium.com>
 Content-Language: en-US
-Content-ID: <43669E5FC4CBF2418B2F701BDCF08D8F@namprd04.prod.outlook.com>
+Content-ID: <E0A532A81582484599A630D30CE0D2B5@namprd04.prod.outlook.com>
 Sender: target-devel-owner@vger.kernel.org
-To: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "robert@leblancnet.us" <robert@leblancnet.us>, "arun.easi@cavium.com" <arun.easi@cavium.com>
+To: "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2017-07-07 at 22:24 +0000, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
->=20
-> This patch re-introduces part of a long standing login workaround that
-> was recently dropped by:
->=20
->   commit 1c99de981f30b3e7868b8d20ce5479fa1c0fea46
->   Author: Nicholas Bellinger <nab@linux-iscsi.org>
->   Date:   Sun Apr 2 13:36:44 2017 -0700
->=20
->       iscsi-target: Drop work-around for legacy GlobalSAN initiator
->=20
-> Namely, the workaround for FirstBurstLength ended up being required by
-> Mellanox Flexboot PXE boot ROMs as reported by Robert.
->=20
-> So this patch re-adds the work-around for FirstBurstLength within
-> iscsi_check_proposer_for_optional_reply(), and makes the key optional
-> to respond when the initiator does not propose, nor respond to it.
->=20
-> Also as requested by Arun, this patch introduces a new TPG attribute
-> named 'login_keys_workaround' that controls the use of both the
-> FirstBurstLength workaround, as well as the two other existing
-> workarounds for gPXE iSCSI boot client.
->=20
-> By default, the workaround is enabled with login_keys_workaround=3D1,
-> since Mellanox FlexBoot requires it, and Arun has verified the Qlogic
-> MSFT initiator already proposes FirstBurstLength, so it's uneffected
-> by this re-adding this part of the original work-around.
+On Tue, 2017-06-13 at 20:47 -0700, Himanshu Madhani wrote:
+>  typedef struct srb {
+> +	/*
+> +	 * Do not move cmd_type field, it needs to
+> +	 * line up with qla_tgt_cmd->cmd_type
+> +	 */
+> +	uint8_t cmd_type;
+> +	uint8_t pad[3];
 
-Hello Nick,
+Hello Himanshu,
 
-The new configfs attribute ("login_keys_workaround") may confuse users - fo=
-r
-someone who has not followed this e-mail thread it can take a long time
-before they figure out that they need to set this configfs attribute. Have
-you considered to let the iSCSI target driver figure out whether or not tha=
-t
-variable has to be set, e.g. by looking up the initiator IQN in a list?
+Had I understood correctly that you had promised to rework the command
+array merging such that a union is used instead of requiring certain
+fields to be present at certain offsets (see also
+https://www.spinics.net/lists/target-devel/msg15591.html)?
 
 Bart.=
