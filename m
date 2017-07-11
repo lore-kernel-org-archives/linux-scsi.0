@@ -1,68 +1,70 @@
-From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2 1/4] scsi: scsi_dh_alua: allow I/O in target port
- unavailable and standby states
-Date: Tue, 11 Jul 2017 12:32:15 -0300
-Message-ID: <224d8cd3-478c-2440-3479-0119885575cf@linux.vnet.ibm.com>
-References: <1499726857-7875-1-git-send-email-mauricfo@linux.vnet.ibm.com>
- <1499726857-7875-2-git-send-email-mauricfo@linux.vnet.ibm.com>
- <b6e97d03-0e1b-df2a-70e2-3247833f3aac@suse.de>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH v3 1/7] libsas: Use static sas event pool to appease sas
+ event lost
+Date: Tue, 11 Jul 2017 16:37:25 +0100
+Message-ID: <e45b90d1-9547-3845-9114-b794277d6c72@huawei.com>
+References: <1499670369-44143-1-git-send-email-wangyijing@huawei.com>
+ <1499670369-44143-2-git-send-email-wangyijing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:57959 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S932748AbdGKPcc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 11 Jul 2017 11:32:32 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6BFT6lZ062658
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Jul 2017 11:32:31 -0400
-Received: from e24smtp01.br.ibm.com (e24smtp01.br.ibm.com [32.104.18.85])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2bn0mst4nq-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Jul 2017 11:32:31 -0400
-Received: from localhost
-        by e24smtp01.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <mauricfo@linux.vnet.ibm.com>;
-        Tue, 11 Jul 2017 12:32:29 -0300
-In-Reply-To: <b6e97d03-0e1b-df2a-70e2-3247833f3aac@suse.de>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1499670369-44143-2-git-send-email-wangyijing@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Yijing Wang <wangyijing@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: chenqilin2@huawei.com, hare@suse.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chenxiang66@hisilicon.com, huangdaode@hisilicon.com, wangkefeng.wang@huawei.com, zhaohongjiang@huawei.com, dingtianhong@huawei.com, guohanjun@huawei.com, yanaijie@huawei.com, hch@lst.de, dan.j.williams@intel.com, emilne@redhat.com, thenzl@redhat.com, wefu@redhat.com, charles.chenxin@huawei.com, chenweilong@huawei.com, Johannes Thumshirn <jthumshirn@suse.de>, Linuxarm <linuxarm@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, bart.vanassche@sandisk.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 07/11/2017 06:18 AM, Hannes Reinecke wrote:
-> NACK.
-> 
-> The whole_point_  of having device handlers is to_avoid_  I/O errors
-> during booting.
-> 
-> And the ALUA checker is prepared to handle this situation properly.
-> The directio checker of course doesn't know about this, but then no-one
-> expected the directio checker to work with ALUA.
+On 10/07/2017 08:06, Yijing Wang wrote:
+> Now libsas hotplug work is static, every sas event type has its own
+> static work, LLDD driver queue the hotplug work into shost->work_q.
+> If LLDD driver burst post lots hotplug events to libsas, the hotplug
+> events may pending in the workqueue like
+>
+> shost->work_q
+> new work[PORTE_BYTES_DMAED] --> |[PHYE_LOSS_OF_SIGNAL][PORTE_BYTES_DMAED] -> processing
+>                                 |<-------wait worker to process-------->|
+> In this case, a new PORTE_BYTES_DMAED event coming, libsas try to queue it
+> to shost->work_q, but this work is already pending, so it would be lost.
+> Finally, libsas delete the related sas port and sas devices, but LLDD driver
+> expect libsas add the sas port and devices(last sas event).
+>
+> This patch and use static sas event work pool to appease this issue, since
+> it's static work pool, it won't make memory exhaust.
+>
 
-I lacked that more holistic understanding. Thanks for explaining.
+[ ... ]
 
-Now, for the sake of logging/debugging...
+>
+> +#define	PORT_POOL_SIZE	(PORT_NUM_EVENTS * 5)
+> +#define	PHY_POOL_SIZE	(PHY_NUM_EVENTS * 5)
+> +
+>  /* The phy pretty much is controlled by the LLDD.
+>   * The class only reads those fields.
+>   */
+>  struct asd_sas_phy {
+>  /* private: */
+> -	struct asd_sas_event   port_events[PORT_NUM_EVENTS];
+> -	struct asd_sas_event   phy_events[PHY_NUM_EVENTS];
+> -
+> -	unsigned long port_events_pending;
+> -	unsigned long phy_events_pending;
+> +	struct asd_sas_event   port_events[PORT_POOL_SIZE];
+> +	struct asd_sas_event   phy_events[PHY_POOL_SIZE];
+>
+>  	int error;
 
-Any problem with patches 2 and 4?
+Hi Yijing,
 
-Also, it seems the Unavailable/Standby states would not be logged
-without a recheck from alua_check_sense(), since the only callers
-of alua_rtpg_queue() are alua_activate() and alua_check[_sense]()
-[the call from alua_check_vpd() is only in the initialization path].
+So now we are creating a static pool of events per PHY/port, instead of 
+having 1 static work struct per event per PHY/port. So, for sure, this 
+avoids the dynamic event issue of system memory exhaustion which we 
+discussed in v1+v2 series. And it seems to possibly remove issue of 
+losing SAS events.
 
-Isn't there a point in scheduling a recheck once those conditions
-are found in alua_check_sense() to get them logged? - since valid
-path checkers won't go through that function.
+But how did you determine the pool size for a PHY/port? It would seem to 
+be 5 * #phy events or #port events (which is also 5, I figure by 
+coincidence). How does this deal with flutter of >25 events?
 
-(and it occurred to me that the state-change check of patch 3 can
-be done there, simpler.)
-
-cheers,
-
--- 
-Mauricio Faria de Oliveira
-IBM Linux Technology Center
+Thanks,
+John
