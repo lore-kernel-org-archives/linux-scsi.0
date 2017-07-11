@@ -1,90 +1,103 @@
-From: Xiubo Li <lixiubo@cmss.chinamobile.com>
-Subject: Re: [PATCH] tcmu: Fix possible overflow for memcpy address in iovec
-Date: Tue, 11 Jul 2017 17:21:49 +0800
-Message-ID: <f2b64f57-19c5-7915-9195-570c4652d3ec@cmss.chinamobile.com>
-References: <1499758843-14159-1-git-send-email-lixiubo@cmss.chinamobile.com>
- <c77ef933-1d47-b885-e3be-4a8b39b5e9fe@cmss.chinamobile.com>
- <1499762465.28145.48.camel@haakon3.daterainc.com>
- <f6d78118-ae7a-219e-005c-820d80b02477@wdc.com>
- <45bc0296-7b3a-c2d5-8e3b-c7b60ff6e2bb@cmss.chinamobile.com>
- <1499764634.16582.1.camel@wdc.com>
+From: Damien Le Moal <Damien.LeMoal@wdc.com>
+Subject: Re: [PATCH] tcmu: Fix possbile memory leak when recalculating the cmd
+ base size
+Date: Tue, 11 Jul 2017 09:24:00 +0000
+Message-ID: <1499765039.16582.3.camel@wdc.com>
+References: <1499760357-15120-1-git-send-email-lixiubo@cmss.chinamobile.com>
+         <8284220f-3ec6-06db-8e09-127f997a774c@cmss.chinamobile.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmccmta3.chinamobile.com ([221.176.66.81]:58483 "EHLO
-        cmccmta3.chinamobile.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752299AbdGKJVz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Jul 2017 05:21:55 -0400
-In-Reply-To: <1499764634.16582.1.camel@wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <8284220f-3ec6-06db-8e09-127f997a774c@cmss.chinamobile.com>
+Content-Language: en-US
+Content-ID: <93DA012443F89049A370B4DD66DF7977@namprd04.prod.outlook.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "mchristi@redhat.com" <mchristi@redhat.com>, "lixiubo@cmss.chinamobile.com" <lixiubo@cmss.chinamobile.com>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "bryantly@linux.vnet.ibm.com" <bryantly@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Damien Le Moal <Damien.LeMoal@wdc.com>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "mchristi@redhat.com" <mchristi@redhat.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "bryantly@linux.vnet.ibm.com" <bryantly@linux.vnet.ibm.com>
 
-
-
-On 2017年07月11日 17:17, Damien Le Moal wrote:
-> Xiubo,
->
-> On Tue, 2017-07-11 at 17:04 +0800, Xiubo Li wrote:
->>>>>> diff --git a/drivers/target/target_core_user.c
->>>>>> b/drivers/target/target_core_user.c
->>>>>> index 930800c..86a845a 100644
->>>>>> --- a/drivers/target/target_core_user.c
->>>>>> +++ b/drivers/target/target_core_user.c
->>>>>> @@ -437,7 +437,7 @@ static int scatter_data_area(struct tcmu_dev
->>>>>> *udev,
->>>>>>     			to_offset = get_block_offset_user(udev,
->>>>>> dbi,
->>>>>>     					block_remaining);
->>>>>>     			offset = DATA_BLOCK_SIZE -
->>>>>> block_remaining;
->>>>>> -			to = (void *)(unsigned long)to + offset;
->>>>>> +			to = (void *)((unsigned long)to + offset);
->>>>>>     
->>>>>>     			if (*iov_cnt != 0 &&
->>>>>>     			    to_offset == iov_tail(udev, *iov)) {
->>>>>> @@ -510,7 +510,7 @@ static void gather_data_area(struct tcmu_dev
->>>>>> *udev, struct tcmu_cmd *cmd,
->>>>>>     			copy_bytes = min_t(size_t, sg_remaining,
->>>>>>     					block_remaining);
->>>>>>     			offset = DATA_BLOCK_SIZE -
->>>>>> block_remaining;
->>>>>> -			from = (void *)(unsigned long)from +
->>>>>> offset;
->>>>>> +			from = (void *)((unsigned long)from +
->>>>>> offset);
->>>>>>     			tcmu_flush_dcache_range(from,
->>>>>> copy_bytes);
->>>>>>     			memcpy(to + sg->length - sg_remaining,
->>>>>> from,
->>>>>>     					copy_bytes);
->>> I was just looking at this patch and about to try to see if it fixes my
->>> problem... It cannot hurt. Trying...
->> Hi Damien,
->>
->> Please test another patch, I think that one maybe fix this.
-> void * pointer arithmetic is OK and equivalent to unsigned long. So I do not
-> think this actually fixes anything and could be rewritten more simply as
-
-Yes, it is. So I just discard this one.
-I meant to sent the second patch(tcmu: Fix possbile memory leak when 
-recalculating the cmd base size) but just for mistake by handy this one.
-
-Actually (void *) == (char *) from the GUN C manual.
-
-Thanks,
-BRs
-
-
-> to += offset;
-> and
->
-> from += offset.
->
-> And that compiles without a warning and there are no complaints from sparse.
->
-> Cheers.
->
->
+WGl1Ym8sDQoNCldlbGwgZG9uZSAhIFRoaXMgZml4ZWQgbXkgcHJvYmxlbS4gVGhlIFpCQyB0ZXN0
+IHN1aXRlIG5vdyBwYXNzZXMgYWxsIHRlc3RzIG9uDQpteSB0YXJnZXQgd2l0aG91dCBjcmFzaGlu
+ZyB0aGUga2VybmVsLg0KDQpQbGVhc2Ugc2VlIHNvbWUgY29tbWVudHMvbml0cGlja3MgYmVsb3cu
+DQoNCk90aGVyd2lzZSwgcGxlYXNlIGZlZWwgZnJlZSB0byBhZGQgbXkgInRlc3RlZC1ieSINCg0K
+DQpPbiBUdWUsIDIwMTctMDctMTEgYXQgMTc6MDYgKzA4MDAsIFhpdWJvIExpIHdyb3RlOg0KPiBP
+biAyMDE35bm0MDfmnIgxMeaXpSAxNjowNSwgbGl4aXVib0BjbXNzLmNoaW5hbW9iaWxlLmNvbSB3
+cm90ZToNCj4gPiBGcm9tOiBYaXVibyBMaSA8bGl4aXVib0BjbXNzLmNoaW5hbW9iaWxlLmNvbT4N
+Cj4gPiANCj4gPiBGb3IgYWxsIHRoZSBlbnRyaWVzIGFsbG9jYXRlZCBmcm9tIHRoZSByaW5nIGNt
+ZCBhcmVhLCB0aGUgbWVtb3J5DQo+ID4gaXMgc29tZXRoaW5nIGxpa2UgdGhlIHN0YWNrLCB3aGlj
+aCB3aWxsIHJlc2VydmUgdGhlIG9sZCBkYXRhLCBzbw0KPiA+IHRoZSBlbnRyeS0+cmVxLmlvdl9i
+aWRpX2NudCBtYXliZSBub25lIHplcm8uDQo+ID4gDQo+ID4gVG8gZml4IHRoaXMsIGp1c3QgbWVt
+c2V0IGFsbCB0aGUgZW50cnkgbWVtb3J5IGJlZm9yZSB1c2luZyBpdCwgYW5kDQo+ID4gYWxzbyB0
+byBiZSBtb3JlIHJlYWRhYmxlIHdlIGFkanVzdCB0aGUgYmlkaSBjb2RlLg0KPiA+IA0KPiA+IEZp
+eGVkOiBmZTI1Y2MzNDc5NSh0Y211OiBSZWNhbGN1bGF0ZSB0aGUgdGNtdV9jbWQgc2l6ZSB0byBz
+YXZlIGNtZCBhcmVhDQo+ID4gCQltZW1vcmllcykNCj4gPiBSZXBvcnRlZC1ieTogQnJ5YW50IEcu
+IEx5IDxicnlhbnRseUBsaW51eC52bmV0LmlibS5jb20+DQo+ID4gU2lnbmVkLW9mZi1ieTogWGl1
+Ym8gTGkgPGxpeGl1Ym9AY21zcy5jaGluYW1vYmlsZS5jb20+DQo+ID4gLS0tDQo+ID4gwqAgZHJp
+dmVycy90YXJnZXQvdGFyZ2V0X2NvcmVfdXNlci5jIHwgNSArKystLQ0KPiA+IMKgIDEgZmlsZSBj
+aGFuZ2VkLCAzIGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pDQo+ID4gDQo+ID4gZGlmZiAt
+LWdpdCBhL2RyaXZlcnMvdGFyZ2V0L3RhcmdldF9jb3JlX3VzZXIuYw0KPiA+IGIvZHJpdmVycy90
+YXJnZXQvdGFyZ2V0X2NvcmVfdXNlci5jDQo+ID4gaW5kZXggMmYxZmE5Mi4uYmU2MmM4NiAxMDA2
+NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3RhcmdldC90YXJnZXRfY29yZV91c2VyLmMNCj4gPiArKysg
+Yi9kcml2ZXJzL3RhcmdldC90YXJnZXRfY29yZV91c2VyLmMNCj4gPiBAQCAtODQwLDYgKzg0MCw3
+IEBAIHN0YXRpYyBpbmxpbmUgc2l6ZV90IHRjbXVfY21kX2dldF9jbWRfc2l6ZShzdHJ1Y3QNCj4g
+PiB0Y211X2NtZCAqdGNtdV9jbWQsDQo+ID4gwqDCoAl9DQo+ID4gwqDCoA0KPiA+IMKgwqAJZW50
+cnkgPSAodm9pZCAqKSBtYiArIENNRFJfT0ZGICsgY21kX2hlYWQ7DQo+ID4gKwltZW1zZXQoZW50
+cnksIDAsIGNvbW1hbmRfc2l6ZSk7DQo+ID4gwqDCoAl0Y211X2hkcl9zZXRfb3AoJmVudHJ5LT5o
+ZHIubGVuX29wLCBUQ01VX09QX0NNRCk7DQo+ID4gwqDCoAllbnRyeS0+aGRyLmNtZF9pZCA9IHRj
+bXVfY21kLT5jbWRfaWQ7DQo+ID4gwqDCoAllbnRyeS0+aGRyLmtmbGFncyA9IDA7DQoNClRoZSBh
+ZGRlZCBtZW1zZXQgYWxsb3dzIHJlbW92aW5nIHRoZSAwIGFzc2lnbm1lbnQgaGVyZSwgYW5kIHRo
+ZSBvbmUgdGhhdA0KZm9sbG93cyB0aGlzIG9uZSB0b28uDQoNCj4gPiBAQCAtODY1LDggKzg2Niw4
+IEBAIHN0YXRpYyBpbmxpbmUgc2l6ZV90IHRjbXVfY21kX2dldF9jbWRfc2l6ZShzdHJ1Y3QNCj4g
+PiB0Y211X2NtZCAqdGNtdV9jbWQsDQo+ID4gwqDCoAllbnRyeS0+cmVxLmlvdl9kaWZfY250ID0g
+MDsNCj4gPiDCoMKgDQo+ID4gwqDCoAkvKiBIYW5kbGUgQklESSBjb21tYW5kcyAqLw0KPiA+ICsJ
+aW92X2NudCA9IDA7DQo+ID4gwqDCoAlpZiAoc2VfY21kLT5zZV9jbWRfZmxhZ3MgJiBTQ0ZfQklE
+SSkgew0KPiA+IC0JCWlvdl9jbnQgPSAwOw0KPiA+IMKgwqAJCWlvdisrOw0KPiA+IMKgwqAJCXJl
+dCA9IHNjYXR0ZXJfZGF0YV9hcmVhKHVkZXYsIHRjbXVfY21kLA0KPiA+IMKgwqAJCQkJCXNlX2Nt
+ZC0+dF9iaWRpX2RhdGFfc2csDQo+ID4gQEAgLTg3OSw4ICs4ODAsOCBAQCBzdGF0aWMgaW5saW5l
+IHNpemVfdCB0Y211X2NtZF9nZXRfY21kX3NpemUoc3RydWN0DQo+ID4gdGNtdV9jbWQgKnRjbXVf
+Y21kLA0KPiA+IMKgwqAJCQlwcl9lcnIoInRjbXU6IGFsbG9jIGFuZCBzY2F0dGVyIGJpZGkgZGF0
+YQ0KPiA+IGZhaWxlZFxuIik7DQo+ID4gwqDCoAkJCXJldHVybiBUQ01fTE9HSUNBTF9VTklUX0NP
+TU1VTklDQVRJT05fRkFJTFVSRTsNCj4gPiDCoMKgCQl9DQo+ID4gLQkJZW50cnktPnJlcS5pb3Zf
+YmlkaV9jbnQgPSBpb3ZfY250Ow0KPiA+IMKgwqAJfQ0KPiA+ICsJZW50cnktPnJlcS5pb3ZfYmlk
+aV9jbnQgPSBpb3ZfY250Ow0KPiA+IMKgwqANCj4gPiDCoMKgCS8qDQo+ID4gwqDCoAnCoCogUmVj
+YWxhdWxhdGUgdGhlIGNvbW1hbmQncyBiYXNlIHNpemUgYW5kIHNpemUgYWNjb3JkaW5nDQoNCkZv
+ciByZWZlcmVuY2UsIGhlcmUgaXMgdGhlIGFjdHVhbCBwYXRjaCBJIHVzZWQgZm9yIHRlc3Rpbmc6
+DQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3RhcmdldC90YXJnZXRfY29yZV91c2VyLmMNCmIvZHJp
+dmVycy90YXJnZXQvdGFyZ2V0X2NvcmVfdXNlci5jDQppbmRleCAyZjFmYTkyLi4zYjI1ZWYzIDEw
+MDY0NA0KLS0tIGEvZHJpdmVycy90YXJnZXQvdGFyZ2V0X2NvcmVfdXNlci5jDQorKysgYi9kcml2
+ZXJzL3RhcmdldC90YXJnZXRfY29yZV91c2VyLmMNCkBAIC01NjMsNyArNTYzLDcgQEAgc3RhdGlj
+IGludCBzY2F0dGVyX2RhdGFfYXJlYShzdHJ1Y3QgdGNtdV9kZXYgKnVkZXYsDQrCoAkJCXRvX29m
+ZnNldCA9IGdldF9ibG9ja19vZmZzZXRfdXNlcih1ZGV2LCBkYmksDQrCoAkJCQkJYmxvY2tfcmVt
+YWluaW5nKTsNCsKgCQkJb2Zmc2V0ID0gREFUQV9CTE9DS19TSVpFIC0gYmxvY2tfcmVtYWluaW5n
+Ow0KLQkJCXRvID0gKHZvaWQgKikodW5zaWduZWQgbG9uZyl0byArIG9mZnNldDsNCisJCQl0byAr
+PSBvZmZzZXQ7DQrCoA0KwqAJCQlpZiAoKmlvdl9jbnQgIT0gMCAmJg0KwqAJCQnCoMKgwqDCoHRv
+X29mZnNldCA9PSBpb3ZfdGFpbCh1ZGV2LCAqaW92KSkgew0KQEAgLTYzNiw3ICs2MzYsNyBAQCBz
+dGF0aWMgdm9pZCBnYXRoZXJfZGF0YV9hcmVhKHN0cnVjdCB0Y211X2RldiAqdWRldiwgc3RydWN0
+DQp0Y211X2NtZCAqY21kLA0KwqAJCQljb3B5X2J5dGVzID0gbWluX3Qoc2l6ZV90LCBzZ19yZW1h
+aW5pbmcsDQrCoAkJCQkJYmxvY2tfcmVtYWluaW5nKTsNCsKgCQkJb2Zmc2V0ID0gREFUQV9CTE9D
+S19TSVpFIC0gYmxvY2tfcmVtYWluaW5nOw0KLQkJCWZyb20gPSAodm9pZCAqKSh1bnNpZ25lZCBs
+b25nKWZyb20gKyBvZmZzZXQ7DQorCQkJZnJvbSArPSBvZmZzZXQ7DQrCoAkJCXRjbXVfZmx1c2hf
+ZGNhY2hlX3JhbmdlKGZyb20sIGNvcHlfYnl0ZXMpOw0KwqAJCQltZW1jcHkodG8gKyBzZy0+bGVu
+Z3RoIC0gc2dfcmVtYWluaW5nLCBmcm9tLA0KwqAJCQkJCWNvcHlfYnl0ZXMpOw0KQEAgLTg0MCwx
+MCArODQwLDkgQEAgdGNtdV9xdWV1ZV9jbWRfcmluZyhzdHJ1Y3QgdGNtdV9jbWQgKnRjbXVfY21k
+KQ0KwqAJfQ0KwqANCsKgCWVudHJ5ID0gKHZvaWQgKikgbWIgKyBDTURSX09GRiArIGNtZF9oZWFk
+Ow0KKwltZW1zZXQoZW50cnksIDAsIGNvbW1hbmRfc2l6ZSk7DQrCoAl0Y211X2hkcl9zZXRfb3Ao
+JmVudHJ5LT5oZHIubGVuX29wLCBUQ01VX09QX0NNRCk7DQrCoAllbnRyeS0+aGRyLmNtZF9pZCA9
+IHRjbXVfY21kLT5jbWRfaWQ7DQotCWVudHJ5LT5oZHIua2ZsYWdzID0gMDsNCi0JZW50cnktPmhk
+ci51ZmxhZ3MgPSAwOw0KwqANCsKgCS8qIEhhbmRsZSBhbGxvY2F0aW5nIHNwYWNlIGZyb20gdGhl
+IGRhdGEgYXJlYSAqLw0KwqAJdGNtdV9jbWRfcmVzZXRfZGJpX2N1cih0Y211X2NtZCk7DQpAQCAt
+ODYyLDExICs4NjEsMTAgQEAgdGNtdV9xdWV1ZV9jbWRfcmluZyhzdHJ1Y3QgdGNtdV9jbWQgKnRj
+bXVfY21kKQ0KwqAJCXJldHVybiBUQ01fTE9HSUNBTF9VTklUX0NPTU1VTklDQVRJT05fRkFJTFVS
+RTsNCsKgCX0NCsKgCWVudHJ5LT5yZXEuaW92X2NudCA9IGlvdl9jbnQ7DQotCWVudHJ5LT5yZXEu
+aW92X2RpZl9jbnQgPSAwOw0KwqANCsKgCS8qIEhhbmRsZSBCSURJIGNvbW1hbmRzICovDQorCWlv
+dl9jbnQgPSAwOw0KwqAJaWYgKHNlX2NtZC0+c2VfY21kX2ZsYWdzICYgU0NGX0JJREkpIHsNCi0J
+CWlvdl9jbnQgPSAwOw0KwqAJCWlvdisrOw0KwqAJCXJldCA9IHNjYXR0ZXJfZGF0YV9hcmVhKHVk
+ZXYsIHRjbXVfY21kLA0KwqAJCQkJCXNlX2NtZC0+dF9iaWRpX2RhdGFfc2csDQpAQCAtODc5LDgg
+Kzg3Nyw4IEBAIHRjbXVfcXVldWVfY21kX3Jpbmcoc3RydWN0IHRjbXVfY21kICp0Y211X2NtZCkN
+CsKgCQkJcHJfZXJyKCJ0Y211OiBhbGxvYyBhbmQgc2NhdHRlciBiaWRpIGRhdGEgZmFpbGVkXG4i
+KTsNCsKgCQkJcmV0dXJuIFRDTV9MT0dJQ0FMX1VOSVRfQ09NTVVOSUNBVElPTl9GQUlMVVJFOw0K
+wqAJCX0NCi0JCWVudHJ5LT5yZXEuaW92X2JpZGlfY250ID0gaW92X2NudDsNCsKgCX0NCisJZW50
+cnktPnJlcS5pb3ZfYmlkaV9jbnQgPSBpb3ZfY250Ow0KwqANCsKgCS8qDQrCoAnCoCogUmVjYWxh
+dWxhdGUgdGhlIGNvbW1hbmQncyBiYXNlIHNpemUgYW5kIHNpemUgYWNjb3JkaW5nDQotLcKgDQoN
+CkJlc3QgcmVnYXJkcy4NCg0KLS0gDQpEYW1pZW4gTGUgTW9hbA0KV2VzdGVybiBEaWdpdGFs
