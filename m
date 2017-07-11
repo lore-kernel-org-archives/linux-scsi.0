@@ -1,65 +1,68 @@
-From: Meelis Roos <mroos@linux.ee>
-Subject: Re: [PATCH] hpsa: add support for legacy boards
-Date: Tue, 11 Jul 2017 17:25:33 +0300 (EEST)
-Message-ID: <alpine.LRH.2.20.1707111547060.31569@math.ut.ee>
-References: <1499755744-79217-1-git-send-email-hare@suse.de>
+From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 1/4] scsi: scsi_dh_alua: allow I/O in target port
+ unavailable and standby states
+Date: Tue, 11 Jul 2017 12:32:15 -0300
+Message-ID: <224d8cd3-478c-2440-3479-0119885575cf@linux.vnet.ibm.com>
+References: <1499726857-7875-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+ <1499726857-7875-2-git-send-email-mauricfo@linux.vnet.ibm.com>
+ <b6e97d03-0e1b-df2a-70e2-3247833f3aac@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.it.da.ut.ee ([193.40.5.67]:47932 "EHLO smtp2.it.da.ut.ee"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932893AbdGKOZi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 11 Jul 2017 10:25:38 -0400
-In-Reply-To: <1499755744-79217-1-git-send-email-hare@suse.de>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:57959 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S932748AbdGKPcc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 11 Jul 2017 11:32:32 -0400
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6BFT6lZ062658
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Jul 2017 11:32:31 -0400
+Received: from e24smtp01.br.ibm.com (e24smtp01.br.ibm.com [32.104.18.85])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2bn0mst4nq-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Jul 2017 11:32:31 -0400
+Received: from localhost
+        by e24smtp01.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <mauricfo@linux.vnet.ibm.com>;
+        Tue, 11 Jul 2017 12:32:29 -0300
+In-Reply-To: <b6e97d03-0e1b-df2a-70e2-3247833f3aac@suse.de>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Don Brace <don.brace@microsemi.com>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, bart.vanassche@sandisk.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> Add support for legacy boards, ensuring to enable the driver for
-> those boards only when 'hpsa_allow_any' is set.
+On 07/11/2017 06:18 AM, Hannes Reinecke wrote:
+> NACK.
+> 
+> The whole_point_  of having device handlers is to_avoid_  I/O errors
+> during booting.
+> 
+> And the ALUA checker is prepared to handle this situation properly.
+> The directio checker of course doesn't know about this, but then no-one
+> expected the directio checker to work with ALUA.
 
-Applied this patch, made sure I had compiled in hpsa and not cciss to 
-avoid any variables from initramfs, and still I get this:
+I lacked that more holistic understanding. Thanks for explaining.
 
-[    4.015080] hpsa 0000:00:04.0: unrecognized board ID: 0x40800e11, ignoring.
-[    4.098473] hpsa 0000:00:04.0: Board ID not found
+Now, for the sake of logging/debugging...
 
-Boot command line was "root=/dev/sda1 console=ttyS0,9600 ro hpsa_allow_any=1" - 
-seems correct.
+Any problem with patches 2 and 4?
 
-By looking at the code, I should see "unsupported board ID:" and it 
-should work, but I see "unrecognized board ID:" and it does not work.
+Also, it seems the Unavailable/Standby states would not be logged
+without a recheck from alua_check_sense(), since the only callers
+of alua_rtpg_queue() are alua_activate() and alua_check[_sense]()
+[the call from alua_check_vpd() is only in the initialization path].
 
-Hmm, trying hpsa.hpsa_allow_any=1. Much better:
+Isn't there a point in scheduling a recheck once those conditions
+are found in alua_check_sense() to get them logged? - since valid
+path checkers won't go through that function.
 
-[    3.891531] hpsa 0000:00:04.0: unsupported board ID: 0x40800e11
-[    3.962367] hpsa 0000:00:04.0: unsupported board ID: 0x40800e11
-[    4.033493] hpsa 0000:00:04.0: Controller reports max supported commands of 0 Using 16 instead. Ensure that firmware is up to date.
-[    4.175134] hpsa 0000:00:04.0: Physical aborts not supported
-[    4.242931] hpsa 0000:00:04.0: Logical aborts not supported
-[    4.309594] hpsa 0000:00:04.0: HP SSD Smart Path aborts not supported
-[    4.460889] hpsa 0000:00:04.0: Controller reports max supported commands of 0 Using 16 instead. Ensure that firmware is up to date.
-[    4.584679] scsi host0: hpsa
-[    4.587842] hpsa 0000:00:04.0: report luns requested format 2, got 0
-[    4.613215] hpsa 0000:00:04.0: scsi 0:0:0:0: masked Direct-Access     COMPAQ   BD03685A24       PHYS DRV SSDSmartPathCap- En- Exp=0
-[    4.613219] hpsa 0000:00:04.0: C0:B1:T0:L0 Volume status is not available through vital product data pages.
-[    4.613224] hpsa 0000:00:04.0: scsi 0:1:0:0: offline Direct-Access     COMPAQ   LOGICAL VOLUME   RAID-1(+0) SSDSmartPathCap- En- Exp=1
-[    4.613229] hpsa 0000:00:04.0: scsi 0:3:0:0: added RAID              COMPAQ   Smart Array 5i   controller SSDSmartPathCap- En- Exp=1
-[    6.187725] scsi 0:3:0:0: RAID              COMPAQ   Smart Array 5i   2.62 PQ: 0 ANSI: 0
-[...]
-[    6.726872] VFS: Cannot open root device "sda1" or unknown-block(0,0): error -6
-[    6.814364] Please append a correct "root=" boot option; here are the available partitions:
-[    6.914403] Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0)
+(and it occurred to me that the state-change check of patch 3 can
+be done there, simpler.)
 
-Controller is detected, there is something behind it but no sda is 
-detected and no bootup.
-
-What next?
-
-And, for readability, we should use something like "Using unsupported 
-board ID", not plain "unsupported board ID" - the last one leaves 
-assumption that it will not work, although it should.
+cheers,
 
 -- 
-Meelis Roos (mroos@linux.ee)
+Mauricio Faria de Oliveira
+IBM Linux Technology Center
