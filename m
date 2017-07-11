@@ -1,47 +1,98 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH v3 2/7] libsas: remove unused port_gone_completion
-Date: Tue, 11 Jul 2017 16:54:59 +0100
-Message-ID: <e76b392c-8fd7-9907-9a10-87b8c5b737dc@huawei.com>
-References: <1499670369-44143-1-git-send-email-wangyijing@huawei.com>
- <1499670369-44143-3-git-send-email-wangyijing@huawei.com>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: Re: [PATCHv2] tcmu: Fix possbile memory leak when recalculating the
+ cmd base size
+Date: Tue, 11 Jul 2017 10:55:52 -0500
+Message-ID: <4371be17-d3c7-5492-8cea-e983a2cbab17@linux.vnet.ibm.com>
+References: <1499767183-17980-1-git-send-email-lixiubo@cmss.chinamobile.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([45.249.212.187]:9738 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755639AbdGKPzg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Jul 2017 11:55:36 -0400
-In-Reply-To: <1499670369-44143-3-git-send-email-wangyijing@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1499767183-17980-1-git-send-email-lixiubo@cmss.chinamobile.com>
+Content-Language: en-US
+Sender: target-devel-owner@vger.kernel.org
+To: lixiubo@cmss.chinamobile.com, nab@linux-iscsi.org, mchristi@redhat.com
+Cc: damien.lemoal@wdc.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Yijing Wang <wangyijing@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: chenqilin2@huawei.com, hare@suse.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chenxiang66@hisilicon.com, huangdaode@hisilicon.com, wangkefeng.wang@huawei.com, zhaohongjiang@huawei.com, dingtianhong@huawei.com, guohanjun@huawei.com, yanaijie@huawei.com, hch@lst.de, dan.j.williams@intel.com, emilne@redhat.com, thenzl@redhat.com, wefu@redhat.com, charles.chenxin@huawei.com, chenweilong@huawei.com, Linuxarm <linuxarm@huawei.com>
 
-On 10/07/2017 08:06, Yijing Wang wrote:
-> No one uses the port_gone_completion in struct asd_sas_port,
-> clean it out.
 
-This seems like a reasonable tidy-up patch which could be taken in 
-isolation, having no dependency on the rest of the series.
-
+> From: Xiubo Li <lixiubo@cmss.chinamobile.com>
 >
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> For all the entries allocated from the ring cmd area, the memory is
+> something like the stack memory, which will always reserve the old
+> data, so the entry->req.iov_bidi_cnt maybe none zero.
+>
+> On some environments, the crash could be reporduce very easy and some
+> not. The following is the crash core trace:
+>
+> [  240.143969] CPU: 0 PID: 1285 Comm: iscsi_trx Not tainted
+> 4.12.0-rc1+ #3
+> [  240.150607] Hardware name: ASUS All Series/H87-PRO, BIOS 2104
+> 10/28/2014
+> [  240.157331] task: ffff8807de4f5800 task.stack:
+> ffffc900047dc000
+> [  240.163270] RIP: 0010:memcpy_erms+0x6/0x10
+> [  240.167377] RSP: 0018:ffffc900047dfc68 EFLAGS: 00010202
+> [  240.172621] RAX: ffffc9065db85540 RBX: ffff8807f7980000 RCX:
+> 0000000000000010
+> [  240.179771] RDX: 0000000000000010 RSI: ffff8807de574fe0 RDI:
+> ffffc9065db85540
+> [  240.186930] RBP: ffffc900047dfd30 R08: ffff8807de41b000 R09:
+> 0000000000000000
+> [  240.194088] R10: 0000000000000040 R11: ffff8807e9b726f0 R12:
+> 00000006565726b0
+> [  240.201246] R13: ffffc90007612ea0 R14: 000000065657d540 R15:
+> 0000000000000000
+> [  240.208397] FS:  0000000000000000(0000)
+> GS:ffff88081fa00000(0000)
+> knlGS:0000000000000000
+> [  240.216510] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [  240.222280] CR2: ffffc9065db85540 CR3: 0000000001c0f000 CR4:
+> 00000000001406f0
+> [  240.229430] Call Trace:
+> [  240.231887]  ? tcmu_queue_cmd+0x83c/0xa80
+> [  240.235916]  ? target_check_reservation+0xcd/0x6f0
+> [  240.240725]  __target_execute_cmd+0x27/0xa0
+> [  240.244918]  target_execute_cmd+0x232/0x2c0
+> [  240.249124]  ? __local_bh_enable_ip+0x64/0xa0
+> [  240.253499]  iscsit_execute_cmd+0x20d/0x270
+> [  240.257693]  iscsit_sequence_cmd+0x110/0x190
+> [  240.261985]  iscsit_get_rx_pdu+0x360/0xc80
+> [  240.267565]  ? iscsi_target_rx_thread+0x54/0xd0
+> [  240.273571]  iscsi_target_rx_thread+0x9a/0xd0
+> [  240.279413]  kthread+0x113/0x150
+> [  240.284120]  ? iscsi_target_tx_thread+0x1e0/0x1e0
+> [  240.290297]  ? kthread_create_on_node+0x40/0x40
+> [  240.296297]  ret_from_fork+0x2e/0x40
+> [  240.301332] Code: 90 90 90 90 90 eb 1e 0f 1f 00 48 89 f8 48
+> 89 d1 48
+> c1 e9 03 83 e2 07 f3 48 a5 89 d1 f3 a4 c3 66 0f 1f 44 00 00 48
+> 89 f8 48
+> 89 d1 <f3> a4 c3 0f 1f 80 00 00 00 00 48 89 f8 48 83 fa 20 72 7e
+> 40 38
+> [  240.321751] RIP: memcpy_erms+0x6/0x10 RSP: ffffc900047dfc68
+> [  240.328838] CR2: ffffc9065db85540
+> [  240.333667] ---[ end trace b7e5354cfb54d08b ]---
+>
+> To fix this, just memset all the entry memory before using it, and
+> also to be more readable we adjust the bidi code.
+>
+> Fixed: fe25cc34795(tcmu: Recalculate the tcmu_cmd size to save cmd area
+> 		memories)
+> Reported-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+> Tested-by: Damien Le Moal <damien.lemoal@wdc.com>
+> Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
 > ---
->  include/scsi/libsas.h | 2 --
->  1 file changed, 2 deletions(-)
+>   drivers/target/target_core_user.c | 12 +++++-------
+>   1 file changed, 5 insertions(+), 7 deletions(-)
 >
-> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-> index c41328d..628f48b 100644
-> --- a/include/scsi/libsas.h
-> +++ b/include/scsi/libsas.h
-> @@ -263,8 +263,6 @@ struct sas_discovery {
->  /* The port struct is Class:RW, driver:RO */
->  struct asd_sas_port {
->  /* private: */
-> -	struct completion port_gone_completion;
-> -
->  	struct sas_discovery disc;
->  	struct domain_device *port_dev;
->  	spinlock_t dev_list_lock;
->
+> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+> index 2f1fa92..3b25ef3 100644
+> --- a/drivers/target/target_core_user.c
+> +++ b/drivers/target/target_core_user.c
+
+Nice! This has fixed our long standing issue with not being able to boot with the global data area support on power.
+
+Tested-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+
+-Bryant
