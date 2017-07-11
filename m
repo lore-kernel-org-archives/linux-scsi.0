@@ -1,139 +1,90 @@
-From: lixiubo@cmss.chinamobile.com
-Subject: [PATCHv2] tcmu: Fix possbile memory leak when recalculating the cmd base size
-Date: Tue, 11 Jul 2017 17:59:43 +0800
-Message-ID: <1499767183-17980-1-git-send-email-lixiubo@cmss.chinamobile.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: nab@linux-iscsi.org, mchristi@redhat.com
-Cc: bryantly@linux.vnet.ibm.com, damien.lemoal@wdc.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, Xiubo Li <lixiubo@cmss.chinamobile.com>
+From: =?UTF-8?B?5p2O5pil?= <pickup112@gmail.com>
+Subject: Re: tgtd CPU 100% problem
+Date: Tue, 11 Jul 2017 18:04:14 +0800
+Message-ID: <CAGpjB9JXqEGfOO-DyFmoC6N_=dPOGhubM+-eZM=ZJ41DY44ytQ@mail.gmail.com>
+References: <CAGpjB9JaSU45qi-_-fz7sF5sd=aEbLuNy6LL5fE2Md6zxqcgQQ@mail.gmail.com>
+ <304976c9-88eb-7f4d-572c-5bd932208d52@grimberg.me>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qk0-f176.google.com ([209.85.220.176]:35580 "EHLO
+        mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752167AbdGKKEQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Jul 2017 06:04:16 -0400
+In-Reply-To: <304976c9-88eb-7f4d-572c-5bd932208d52@grimberg.me>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sagi Grimberg <sagi@grimberg.me>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-From: Xiubo Li <lixiubo@cmss.chinamobile.com>
+Thanks very much for reply.
+I think it may be better to  assert failed to exit problem than run
+the endless loop after receivered DEVICE_REMOVAL event.
+Or we can sleep 5 ms to check if the conn->h.state is STATE_FULL.
 
-For all the entries allocated from the ring cmd area, the memory is
-something like the stack memory, which will always reserve the old
-data, so the entry->req.iov_bidi_cnt maybe none zero.
+2017-07-11 16:29 GMT+08:00 Sagi Grimberg <sagi@grimberg.me>:
+>
+>
+> On 11/07/17 10:51, =E6=9D=8E=E6=98=A5 wrote:
+>>
+>> We have meet a problem of tgtd CPU 100%.
+>>
+>> the infinband network card was negotiate as eth mode by mistake,
+>> after we change it to ib mode and restart opensmd for correct
+>> State=EF=BC=88Active=EF=BC=89
+>> the tgtd using 100% of CPU. and when we connect to it using tgtadm,
+>> tgtadm hang forever.
+>>
+>> # how to repeat
+>>
+>> * tgtd export a disk throught port 3260 of iser
+>> * iscsiadm login a target from tgt through infiniband
+>>
+>> * connectx_port_config set the mellanox infiniband to eth mode
+>> * connectx_port_config set the mellanox infiniband to ib mode
+>> * /etc/init.d/opensmd restart
+>> * tgtadm connect to tgt will hang
+>>
+>> # error messge
+>>
+>> ```
+>> Jul  1 21:32:37 shadow tgtd: iser_handle_rdmacm(1628) Unsupported
+>> event:11, RDMA_CM_EVENT_DEVICE_REMOVAL - ignored
+>> Jul  1 21:32:37 shadow tgtd: iser_handle_rdmacm(1628) Unsupported
+>> event:11, RDMA_CM_EVENT_DEVICE_REMOVAL - ignored
+>>
+>> Jul  1 21:32:39 shadow tgtd: iser_handle_async_event(3174) dev:mlx4_0
+>> HCA evt: local catastrophic error
+>
+>
+> iser code in tgtd does not know how to correctly handle RDMA device
+> removal events (and it never did).
+>
+> The event is generated from the port configuration step while
+> tgt-iser is bound to it. Once the device is removed the device
+> handle tgt-iser has is essentially unusable, which explains
+> the qp creation failures below.
+>
+> Handling DEVICE_REMOVAL event handling is a new feature request.
+>
+>> Jul  1 21:46:56 shadow tgtd: iser_cm_connect_request(1471)
+>> conn:0x1380bf0 cm_id:0x1380950 rdma_create_qp failed, Cannot allocate
+>> memory
+>> Jul  1 21:46:56 shadow tgtd: iser_cm_connect_request(1520)
+>> cm_id:0x1380950 rdma_reject failed, Bad file descriptor
+>> Jul  1 21:46:56 shadow tgtd: iser_cm_connect_request(1471)
+>> conn:0x1380bf0 cm_id:0x1380950 rdma_create_qp failed, Cannot allocate
+>> memory
+>
+>
+> And also tgt-iser cannot even reject the (re)connect request.
+>
+>> Jul  1 21:46:56 shadow tgtd: iser_cm_connect_request(1520)
+>> cm_id:0x1380950 rdma_reject failed, Bad file descriptor
+>> ``
 
-On some environments, the crash could be reporduce very easy and some
-not. The following is the crash core trace:
 
-[  240.143969] CPU: 0 PID: 1285 Comm: iscsi_trx Not tainted
-4.12.0-rc1+ #3
-[  240.150607] Hardware name: ASUS All Series/H87-PRO, BIOS 2104
-10/28/2014
-[  240.157331] task: ffff8807de4f5800 task.stack:
-ffffc900047dc000
-[  240.163270] RIP: 0010:memcpy_erms+0x6/0x10
-[  240.167377] RSP: 0018:ffffc900047dfc68 EFLAGS: 00010202
-[  240.172621] RAX: ffffc9065db85540 RBX: ffff8807f7980000 RCX:
-0000000000000010
-[  240.179771] RDX: 0000000000000010 RSI: ffff8807de574fe0 RDI:
-ffffc9065db85540
-[  240.186930] RBP: ffffc900047dfd30 R08: ffff8807de41b000 R09:
-0000000000000000
-[  240.194088] R10: 0000000000000040 R11: ffff8807e9b726f0 R12:
-00000006565726b0
-[  240.201246] R13: ffffc90007612ea0 R14: 000000065657d540 R15:
-0000000000000000
-[  240.208397] FS:  0000000000000000(0000)
-GS:ffff88081fa00000(0000)
-knlGS:0000000000000000
-[  240.216510] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  240.222280] CR2: ffffc9065db85540 CR3: 0000000001c0f000 CR4:
-00000000001406f0
-[  240.229430] Call Trace:
-[  240.231887]  ? tcmu_queue_cmd+0x83c/0xa80
-[  240.235916]  ? target_check_reservation+0xcd/0x6f0
-[  240.240725]  __target_execute_cmd+0x27/0xa0
-[  240.244918]  target_execute_cmd+0x232/0x2c0
-[  240.249124]  ? __local_bh_enable_ip+0x64/0xa0
-[  240.253499]  iscsit_execute_cmd+0x20d/0x270
-[  240.257693]  iscsit_sequence_cmd+0x110/0x190
-[  240.261985]  iscsit_get_rx_pdu+0x360/0xc80
-[  240.267565]  ? iscsi_target_rx_thread+0x54/0xd0
-[  240.273571]  iscsi_target_rx_thread+0x9a/0xd0
-[  240.279413]  kthread+0x113/0x150
-[  240.284120]  ? iscsi_target_tx_thread+0x1e0/0x1e0
-[  240.290297]  ? kthread_create_on_node+0x40/0x40
-[  240.296297]  ret_from_fork+0x2e/0x40
-[  240.301332] Code: 90 90 90 90 90 eb 1e 0f 1f 00 48 89 f8 48
-89 d1 48
-c1 e9 03 83 e2 07 f3 48 a5 89 d1 f3 a4 c3 66 0f 1f 44 00 00 48
-89 f8 48
-89 d1 <f3> a4 c3 0f 1f 80 00 00 00 00 48 89 f8 48 83 fa 20 72 7e
-40 38
-[  240.321751] RIP: memcpy_erms+0x6/0x10 RSP: ffffc900047dfc68
-[  240.328838] CR2: ffffc9065db85540
-[  240.333667] ---[ end trace b7e5354cfb54d08b ]---
 
-To fix this, just memset all the entry memory before using it, and
-also to be more readable we adjust the bidi code.
-
-Fixed: fe25cc34795(tcmu: Recalculate the tcmu_cmd size to save cmd area
-		memories)
-Reported-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-Tested-by: Damien Le Moal <damien.lemoal@wdc.com>
-Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
----
- drivers/target/target_core_user.c | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 2f1fa92..3b25ef3 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -563,7 +563,7 @@ static int scatter_data_area(struct tcmu_dev *udev,
- 			to_offset = get_block_offset_user(udev, dbi,
- 					block_remaining);
- 			offset = DATA_BLOCK_SIZE - block_remaining;
--			to = (void *)(unsigned long)to + offset;
-+			to += offset;
- 
- 			if (*iov_cnt != 0 &&
- 			    to_offset == iov_tail(udev, *iov)) {
-@@ -636,7 +636,7 @@ static void gather_data_area(struct tcmu_dev *udev, struct tcmu_cmd *cmd,
- 			copy_bytes = min_t(size_t, sg_remaining,
- 					block_remaining);
- 			offset = DATA_BLOCK_SIZE - block_remaining;
--			from = (void *)(unsigned long)from + offset;
-+			from += offset;
- 			tcmu_flush_dcache_range(from, copy_bytes);
- 			memcpy(to + sg->length - sg_remaining, from,
- 					copy_bytes);
-@@ -840,10 +840,9 @@ static inline size_t tcmu_cmd_get_cmd_size(struct tcmu_cmd *tcmu_cmd,
- 	}
- 
- 	entry = (void *) mb + CMDR_OFF + cmd_head;
-+	memset(entry, 0, command_size);
- 	tcmu_hdr_set_op(&entry->hdr.len_op, TCMU_OP_CMD);
- 	entry->hdr.cmd_id = tcmu_cmd->cmd_id;
--	entry->hdr.kflags = 0;
--	entry->hdr.uflags = 0;
- 
- 	/* Handle allocating space from the data area */
- 	tcmu_cmd_reset_dbi_cur(tcmu_cmd);
-@@ -862,11 +861,10 @@ static inline size_t tcmu_cmd_get_cmd_size(struct tcmu_cmd *tcmu_cmd,
- 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 	}
- 	entry->req.iov_cnt = iov_cnt;
--	entry->req.iov_dif_cnt = 0;
- 
- 	/* Handle BIDI commands */
-+	iov_cnt = 0;
- 	if (se_cmd->se_cmd_flags & SCF_BIDI) {
--		iov_cnt = 0;
- 		iov++;
- 		ret = scatter_data_area(udev, tcmu_cmd,
- 					se_cmd->t_bidi_data_sg,
-@@ -879,8 +877,8 @@ static inline size_t tcmu_cmd_get_cmd_size(struct tcmu_cmd *tcmu_cmd,
- 			pr_err("tcmu: alloc and scatter bidi data failed\n");
- 			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 		}
--		entry->req.iov_bidi_cnt = iov_cnt;
- 	}
-+	entry->req.iov_bidi_cnt = iov_cnt;
- 
- 	/*
- 	 * Recalaulate the command's base size and size according
--- 
-1.8.3.1
+--=20
+pickup.lichun =E6=9D=8E=E6=98=A5
