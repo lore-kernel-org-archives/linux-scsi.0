@@ -1,64 +1,47 @@
-From: Kashyap Desai <kashyap.desai@broadcom.com>
-Subject: RE: [PATCH v2 11/15] megaraid_sas: Set device queue_depth same as HBA
- can_queue value in scsi-mq mode
-Date: Tue, 11 Jul 2017 21:17:31 +0530
-Message-ID: <3adb43de25a7531af4d083cd1af8c5b5@mail.gmail.com>
-References: <1499256029-16319-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <1499256029-16319-12-git-send-email-shivasharan.srikanteshwara@broadcom.com> <20170711135828.GA12013@lst.de>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH v3 2/7] libsas: remove unused port_gone_completion
+Date: Tue, 11 Jul 2017 16:54:59 +0100
+Message-ID: <e76b392c-8fd7-9907-9a10-87b8c5b737dc@huawei.com>
+References: <1499670369-44143-1-git-send-email-wangyijing@huawei.com>
+ <1499670369-44143-3-git-send-email-wangyijing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f45.google.com ([74.125.83.45]:36338 "EHLO
-        mail-pg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932784AbdGKPrd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Jul 2017 11:47:33 -0400
-Received: by mail-pg0-f45.google.com with SMTP id u62so1633591pgb.3
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Jul 2017 08:47:33 -0700 (PDT)
-In-Reply-To: <20170711135828.GA12013@lst.de>
+Received: from szxga01-in.huawei.com ([45.249.212.187]:9738 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755639AbdGKPzg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Jul 2017 11:55:36 -0400
+In-Reply-To: <1499670369-44143-3-git-send-email-wangyijing@huawei.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>
-Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, Sumit Saxena <sumit.saxena@broadcom.com>, hare@suse.com
+To: Yijing Wang <wangyijing@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: chenqilin2@huawei.com, hare@suse.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chenxiang66@hisilicon.com, huangdaode@hisilicon.com, wangkefeng.wang@huawei.com, zhaohongjiang@huawei.com, dingtianhong@huawei.com, guohanjun@huawei.com, yanaijie@huawei.com, hch@lst.de, dan.j.williams@intel.com, emilne@redhat.com, thenzl@redhat.com, wefu@redhat.com, charles.chenxin@huawei.com, chenweilong@huawei.com, Linuxarm <linuxarm@huawei.com>
 
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@lst.de]
-> Sent: Tuesday, July 11, 2017 7:28 PM
-> To: Shivasharan S
-> Cc: linux-scsi@vger.kernel.org; martin.petersen@oracle.com;
-> thenzl@redhat.com; jejb@linux.vnet.ibm.com;
-> kashyap.desai@broadcom.com; sumit.saxena@broadcom.com;
-> hare@suse.com; hch@lst.de
-> Subject: Re: [PATCH v2 11/15] megaraid_sas: Set device queue_depth same
-as
-> HBA can_queue value in scsi-mq mode
+On 10/07/2017 08:06, Yijing Wang wrote:
+> No one uses the port_gone_completion in struct asd_sas_port,
+> clean it out.
+
+This seems like a reasonable tidy-up patch which could be taken in 
+isolation, having no dependency on the rest of the series.
+
 >
-> On Wed, Jul 05, 2017 at 05:00:25AM -0700, Shivasharan S wrote:
-> > Currently driver sets default queue_depth for VDs at 256 and JBODs
-> > based on interface type, ie., for SAS JBOD QD will be 64, for SATA
-JBOD QD
-> will be 32.
-> > During performance runs with scsi-mq enabled, we are seeing better
-> > results by setting QD same as HBA queue_depth.
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  include/scsi/libsas.h | 2 --
+>  1 file changed, 2 deletions(-)
 >
-> Please no scsi-mq specifics.  just do this unconditionally.
-
-Chris -  Intent for mq specific check is mainly because of sequential work
-load for HDD is having penalty due to mq scheduler issue.
-We did this exercise prior to mq-deadline support.
-
-Making generic change for non-mq and mq was good, but we may see some user
-may not like to see regression.
-E.a In case of, QD = 32 for SATA PD file system creation may be faster
-compare to large QD. There may be a soft merger at block layer due to
-queue depth throttling. Eventually, FS creation goes fast due to IO
-merges, but same will not be true if we change queue depth logic (means,
-increase device queue depth to HBA QD.)
-
-We have choice to completely remove this patch and ask users to do sysfs
-settings in case of scsi-mq performance issue for HDD sequential work
-load.
-Having this patch, we want to provide better QD settings as default from
-driver.
-
-
-Thanks, Kashyap
+> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+> index c41328d..628f48b 100644
+> --- a/include/scsi/libsas.h
+> +++ b/include/scsi/libsas.h
+> @@ -263,8 +263,6 @@ struct sas_discovery {
+>  /* The port struct is Class:RW, driver:RO */
+>  struct asd_sas_port {
+>  /* private: */
+> -	struct completion port_gone_completion;
+> -
+>  	struct sas_discovery disc;
+>  	struct domain_device *port_dev;
+>  	spinlock_t dev_list_lock;
+>
