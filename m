@@ -1,114 +1,45 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] iscsi-target: Reject immediate data underflow larger
- than SCSI transfer length
-Date: Tue, 11 Jul 2017 00:22:41 -0700
-Message-ID: <1499757761.28145.45.camel@haakon3.daterainc.com>
-References: <1496895685-18464-1-git-send-email-nab@linux-iscsi.org>
-         <1496936253.3028.1.camel@wdc.com>
-         <1496991302.28997.66.camel@haakon3.risingtidesystems.com>
+From: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Subject: Re: [PATCH 00/13]mpt3sas driver NVMe support:
+Date: Tue, 11 Jul 2017 13:05:29 +0530
+Message-ID: <CA+RiK66_A+h8b5Brq_y-iq5anEx5ajPx4HhDouJrsSJLn6rt=Q@mail.gmail.com>
+References: <1498745954-7907-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <20170629143156.GR3808@linux-x5ow.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1496991302.28997.66.camel@haakon3.risingtidesystems.com>
+In-Reply-To: <20170629143156.GR3808@linux-x5ow.site>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "mchristi@redhat.com" <mchristi@redhat.com>, "roland@purestorage.com" <roland@purestorage.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: JBottomley@parallels.com, jejb@kernel.org, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Sathya Prakash <Sathya.Prakash@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Krishnaraddi Mankani <krishnaraddi.mankani@broadcom.com>, linux-kernel@vger.kernel.org, Chaitra Basappa <chaitra.basappa@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Bart,
+Is there any update on this ?
+Will include  linux-nvme@lists.infradead.org in next version of this
+patch submission, if there is any change suggestion.
 
-On Thu, 2017-06-08 at 23:55 -0700, Nicholas A. Bellinger wrote:
-> On Thu, 2017-06-08 at 15:37 +0000, Bart Van Assche wrote:
-> > On Thu, 2017-06-08 at 04:21 +0000, Nicholas A. Bellinger wrote:
-> > > +	/*
-> > > +	 * Check for underflow case where both EDTL and immediate data payload
-> > > +	 * exceeds what is presented by CDB's TRANSFER LENGTH, and what has
-> > > +	 * already been set in target_cmd_size_check() as se_cmd->data_length.
-> > > +	 *
-> > > +	 * For this special case, fail the command and dump the immediate data
-> > > +	 * payload.
-> > > +	 */
-> > > +	if (cmd->first_burst_len > cmd->se_cmd.data_length) {
-> > > +		cmd->sense_reason = TCM_INVALID_CDB_FIELD;
-> > > +		goto after_immediate_data;
-> > > +	}
-> > 
-> > A quote from the iSCSI RFC (https://tools.ietf.org/html/rfc5048):
-> > 
-> >    If SPDTL < EDTL for a task, iSCSI Underflow MUST be signaled in the
-> >    SCSI Response PDU as specified in [RFC3720].  The Residual Count MUST
-> >    be set to the numerical value of (EDTL - SPDTL).
-> > 
-> > Sorry but I don't think that sending TCM_INVALID_CDB_FIELD back to the
-> > initiator is compliant with the iSCSI RFC.
-> 
-> Alas, the nuance of what this patch actually does was missed when you
-> cut the context.
-> 
-> First, a bit of history.  LIO has rejected underflow for all WRITEs for
-> the first ~12.5 years of RFC-3720, and in the context of iscsi-target
-> mode there has never been a single host environment that ever once
-> cared.
-> 
-> Since Roland's patch to allow underflow for control CDBs in v4.3+ opened
-> this discussion for control CDBs with a WRITE payload in order to make
-> MSFT/FCP cert for PERSISTENT_RESERVE_OUT happy, the question has become
-> what control CDB WRITE underflow cases should we allow..?
-> 
-> The point with this patch is when a host is sending a underflow with a
-> iscsi immediate data payload that exceeds SCSI transfer length, it's a
-> bogus request with a garbage payload.  It's a garbage payload because
-> the SCSI CDB itself obviously doesn't want anything to do it.
-> 
-> I'm very dubious of any host environment who's trying to do this for any
-> CDB, and expects achieve expected results.
-> 
-> Of course, since v4.3+ normal overflow where SCSI transfer length
-> matches the iscsi immediate data payload just works with or without this
-> patch.
-> 
-> So to that extent, I'm going to push this patch as a defensive fix for
-> v4.3+, to let those imaginary iscsi host environments know they being
-> very, very naughty.
-> 
-> >  Please note that a fix that is
-> > compliant with the iSCSI RFC is present in the following patch series: [PATCH
-> > 00/33] SCSI target driver patches for kernel v4.13, 23 May 2017
-> > (https://www.spinics.net/lists/target-devel/msg15370.html).
-> 
-> So I might still consider this as a v4.13-rc item for control CDB
-> underflow, but no way as stable material.
-> 
-> Also, there is certainly no way I'm going to allow a patch to randomly
-> enable underflow/overflow for all WRITE non control CDBs tree-wide
-> across all fabric drivers, because 1) no host environments actually care
-> about this, and 2) it's still dangerous to do for all fabrics without
-> some serious auditing.
+Thanks,
+Suganath Prabu S
 
-After further consideration, I've decided against allowing iscsi-target
-underflow with a immediate data payload larger than SCSI transfer
-length.
-
-Any host environment that attempts to send an underflow with a immediate
-data payload larger than SCSI transfer length, expects the target to
-automatically truncate immediate data, and still return GOOD status is
-completely bogus.  Any host that attempts this is buggy, and needs to be
-fixed.
-
-This is because for the last ~12 years of RFC-3720:
-
-  - There has never been a host environment in the wild that exhibits 
-    this behavior.
-  - There has never been a conformance suite which expects this 
-    behavior.
-
-So rejecting this case as already done in commit abb85a9b51 is the
-correct approach for >= v4.3.y.
-
-Of course, the typical underflow scenario which Roland's v4.3.y commit
-enabled, underflow where immediate data matches the SCSI transfer length
-is supported for control CDBs.
-
-That said, thanks for high-lighting this particular corner case, so it
-could be fixed in >= v4.3.y.
+On Thu, Jun 29, 2017 at 8:01 PM, Johannes Thumshirn <jthumshirn@suse.de> wr=
+ote:
+> On Thu, Jun 29, 2017 at 07:49:01PM +0530, Suganath Prabu S wrote:
+>> Ventura Series controller are Tri-mode. The controller and
+>> firmware are capable of supporting NVMe devices and
+>> PCIe switches to be connected with the controller. This
+>> patch set adds driver level support for NVMe devices and
+>> PCIe switches.
+>
+> Hi Suganath,
+> Can you please also Cc linux-nvme@lists.infradead.org for NVMe related to=
+pics.
+>
+> Thanks,
+>         Johannes
+> --
+> Johannes Thumshirn                                          Storage
+> jthumshirn@suse.de                                +49 911 74053 689
+> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+> GF: Felix Imend=C3=B6rffer, Jane Smithard, Graham Norton
+> HRB 21284 (AG N=C3=BCrnberg)
+> Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
