@@ -1,58 +1,48 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 2/6] SCSI: use blk_mq_run_hw_queues() in scsi_kick_queue()
-Date: Tue, 11 Jul 2017 19:57:53 +0000
-Message-ID: <1499803071.2586.29.camel@wdc.com>
-References: <20170711182103.11461-1-ming.lei@redhat.com>
-         <20170711182103.11461-3-ming.lei@redhat.com>
+From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 1/4] scsi: scsi_dh_alua: allow I/O in target port
+ unavailable and standby states
+Date: Tue, 11 Jul 2017 18:01:31 -0300
+Message-ID: <b8aca0c2-04a0-3573-34a1-3511831965d6@linux.vnet.ibm.com>
+References: <1499726857-7875-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+ <1499726857-7875-2-git-send-email-mauricfo@linux.vnet.ibm.com>
+ <b6e97d03-0e1b-df2a-70e2-3247833f3aac@suse.de>
+ <224d8cd3-478c-2440-3479-0119885575cf@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170711182103.11461-3-ming.lei@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:60870 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S933156AbdGKVBs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 11 Jul 2017 17:01:48 -0400
+Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6BKwttZ005216
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Jul 2017 17:01:48 -0400
+Received: from e24smtp04.br.ibm.com (e24smtp04.br.ibm.com [32.104.18.25])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2bn0mxfak0-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Jul 2017 17:01:47 -0400
+Received: from localhost
+        by e24smtp04.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <mauricfo@linux.vnet.ibm.com>;
+        Tue, 11 Jul 2017 18:01:44 -0300
+In-Reply-To: <224d8cd3-478c-2440-3479-0119885575cf@linux.vnet.ibm.com>
 Content-Language: en-US
-Content-ID: <C43945FFDBFA264FAE199AAC4CBD3E66@namprd04.prod.outlook.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "sagi@grimberg.me" <sagi@grimberg.me>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, bart.vanassche@sandisk.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 2017-07-12 at 02:20 +0800, Ming Lei wrote:
-> Now SCSI won't stop queue, and not necessary to use
-> blk_mq_start_hw_queues(), so switch to blk_mq_run_hw_queues()
-> instead.
->=20
-> Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: linux-scsi@vger.kernel.org
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> ---
->  drivers/scsi/scsi_lib.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index f6097b89d5d3..91d890356b78 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -333,7 +333,7 @@ void scsi_device_unbusy(struct scsi_device *sdev)
->  static void scsi_kick_queue(struct request_queue *q)
->  {
->  	if (q->mq_ops)
-> -		blk_mq_start_hw_queues(q);
-> +		blk_mq_run_hw_queues(q, false);
->  	else
->  		blk_run_queue(q);
->  }
+On 07/11/2017 12:32 PM, Mauricio Faria de Oliveira wrote:
+> Also, it seems the Unavailable/Standby states would not be logged
+> without a recheck from alua_check_sense(), since the only callers
+> of alua_rtpg_queue() are alua_activate() and alua_check[_sense]()
 
-Hello Ming,
+Well, actually it does get logged if when activating/switching path
+groups but shouldn't be the case with only a single path group.
 
-Now that we have separate flags to represent the "stopped" and "quiesced"
-states, wouldn't it be better not to modify scsi_kick_queue() but instead t=
-o
-stop a SCSI hardware queue again if scsi_queue_rq() returns BLK_STS_RESOURC=
-E?
-See also commits 36e3cf273977 ("scsi: Avoid that SCSI queues get stuck") an=
-d
-commit 52d7f1b5c2f3 ("blk-mq: Avoid that requeueing starts stopped queues")=
-.
 
-Bart.=
+-- 
+Mauricio Faria de Oliveira
+IBM Linux Technology Center
