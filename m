@@ -1,44 +1,30 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] iscsi-target: Reject immediate data underflow larger than
- SCSI transfer length
-Date: Tue, 11 Jul 2017 16:17:05 +0000
-Message-ID: <1499789824.2586.16.camel@wdc.com>
-References: <1496895685-18464-1-git-send-email-nab@linux-iscsi.org>
-         <1496936253.3028.1.camel@wdc.com>
-         <1496991302.28997.66.camel@haakon3.risingtidesystems.com>
-         <1499757761.28145.45.camel@haakon3.daterainc.com>
+From: Keith Busch <keith.busch@intel.com>
+Subject: Re: [PATCH 02/13] mpt3sas: SGL to PRP Translation for I/Os to NVMe
+ devices
+Date: Tue, 11 Jul 2017 12:24:33 -0400
+Message-ID: <20170711162433.GC4604@localhost.localdomain>
+References: <1499763313-7214-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <1499763313-7214-3-git-send-email-suganath-prabu.subramani@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:7293 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932731AbdGKQRJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Jul 2017 12:17:09 -0400
-In-Reply-To: <1499757761.28145.45.camel@haakon3.daterainc.com>
-Content-Language: en-US
-Content-ID: <BF10908A7BF1A94DB9098439EAF0747E@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1499763313-7214-3-git-send-email-suganath-prabu.subramani@broadcom.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+Cc: "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "jejb@kernel.org" <jejb@kernel.org>, "hch@infradead.org" <hch@infradead.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Sathya.Prakash@broadcom.com" <Sathya.Prakash@broadcom.com>, "kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, "sreekanth.reddy@broadcom.com" <sreekanth.reddy@broadcom.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "mchristi@redhat.com" <mchristi@redhat.com>, "roland@purestorage.com" <roland@purestorage.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hare@suse.de" <hare@suse.de>
 
-On Tue, 2017-07-11 at 00:22 -0700, Nicholas A. Bellinger wrote:
-> So rejecting this case as already done in commit abb85a9b51 is the
-> correct approach for >=3D v4.3.y.
+On Tue, Jul 11, 2017 at 01:55:02AM -0700, Suganath Prabu S wrote:
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+> index 60fa7b6..cebdd8e 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+> @@ -54,6 +54,7 @@
+>  #include "mpi/mpi2_raid.h"
+>  #include "mpi/mpi2_tool.h"
+>  #include "mpi/mpi2_sas.h"
+> +#include "mpi/mpi2_pci.h"
 
-Hello Nic,
-
-I hope that you agree that the current target_cmd_size_check() implementati=
-on
-is complicated and ugly. Patch 30/33 of the patch series I referred to in m=
-y
-e-mail removes a significant number of lines of code from that function. So
-my patch series not only makes target_cmd_size_check() easier to maintain a=
-nd
-to verify but it makes that function also faster. Hence please reconsider t=
-he
-approach from my patch series. For patch 30/33, see also
-https://www.spinics.net/lists/target-devel/msg15384.html.
-
-Bart.=
+Could you ajust your patch order for this series so each can compile? Here
+in patch 2 you're including a header that's not defined until patch 12.
