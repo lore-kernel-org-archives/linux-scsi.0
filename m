@@ -1,7 +1,7 @@
 From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH 04/13] mpt3sas: Handle NVMe PCIe device related events generated from firmware.
-Date: Tue, 11 Jul 2017 14:25:04 +0530
-Message-ID: <1499763313-7214-5-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH 03/13] mpt3sas: Added support for nvme encapsulated request message.
+Date: Tue, 11 Jul 2017 14:25:03 +0530
+Message-ID: <1499763313-7214-4-git-send-email-suganath-prabu.subramani@broadcom.com>
 References: <1499763313-7214-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1499763313-7214-1-git-send-email-suganath-prabu.subramani@broadcom.com>
@@ -10,626 +10,264 @@ To: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com, linux-nvme@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-* The controller firmware sends separate events for NVMe devices and
-PCIe switches similar to existing SAS events.
+* Mpt3sas driver uses the NVMe Encapsulated Request message to
+send an NVMe command to an NVMe device attached to the IOC.
 
-* NVMe device detection, addition and removal are reported by the
-firmware through PCIe Topology Change list events.
+* Normal I/O commands like reads and writes are passed to the
+controller as SCSI commands and the controller has the ability
+to translate the commands to NVMe equivalent.
 
-* The PCIe device state change events are sent when the firmware
-detects any abnormal conditions with a NVMe device or switch.
-
-* The enumeration event are sent when the firmware starts PCIe device
-enumeration and stops.
-
-* This patch has the code change to handle the events and add/remove
-NVMe devices in driver's inventory.
+* This encapsulated NVMe command is used by applications to send
+direct NVMe commands to NVMe drives or for handling unmap where
+the translation at controller/firmware level is having
+performance issues.
 
 Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
 Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c  |   30 ++-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c |  468 +++++++++++++++++++++++++++++++++-
- 2 files changed, 492 insertions(+), 6 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c |   56 +++++++++++++++++++++++-
+ drivers/scsi/mpt3sas/mpt3sas_base.h |    1 +
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c  |   81 ++++++++++++++++++++++++++++++++++-
+ 3 files changed, 136 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index a64cfce..09fecd0 100644
+index b67212c..a64cfce 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -663,6 +663,26 @@ _base_display_event_data(struct MPT3SAS_ADAPTER *ioc,
- 	case MPI2_EVENT_ACTIVE_CABLE_EXCEPTION:
- 		desc = "Active cable exception";
+@@ -557,6 +557,11 @@ _base_sas_ioc_info(struct MPT3SAS_ADAPTER *ioc, MPI2DefaultReply_t *mpi_reply,
+ 		frame_sz = sizeof(Mpi2SmpPassthroughRequest_t) + ioc->sge_size;
+ 		func_str = "smp_passthru";
  		break;
-+	case MPI2_EVENT_PCIE_DEVICE_STATUS_CHANGE:
-+		desc = "PCIE Device Status Change";
++	case MPI2_FUNCTION_NVME_ENCAPSULATED:
++		frame_sz = sizeof(Mpi26NVMeEncapsulatedRequest_t) +
++		    ioc->sge_size;
++		func_str = "nvme_encapsulated";
 +		break;
-+	case MPI2_EVENT_PCIE_ENUMERATION:
-+	{
-+		Mpi26EventDataPCIeEnumeration_t *event_data =
-+			(Mpi26EventDataPCIeEnumeration_t *)mpi_reply->EventData;
-+		pr_info(MPT3SAS_FMT "PCIE Enumeration: (%s)", ioc->name,
-+			   (event_data->ReasonCode ==
-+				MPI26_EVENT_PCIE_ENUM_RC_STARTED) ?
-+				"start" : "stop");
-+		if (event_data->EnumerationStatus)
-+			pr_info("enumeration_status(0x%08x)",
-+				   le32_to_cpu(event_data->EnumerationStatus));
-+		pr_info("\n");
-+		return;
-+	}
-+	case MPI2_EVENT_PCIE_TOPOLOGY_CHANGE_LIST:
-+		desc = "PCIE Topology Change List";
-+		break;
+ 	default:
+ 		frame_sz = 32;
+ 		func_str = "unknown";
+@@ -985,7 +990,9 @@ _base_interrupt(int irq, void *bus_id)
+ 		if (request_desript_type ==
+ 		    MPI25_RPY_DESCRIPT_FLAGS_FAST_PATH_SCSI_IO_SUCCESS ||
+ 		    request_desript_type ==
+-		    MPI2_RPY_DESCRIPT_FLAGS_SCSI_IO_SUCCESS) {
++		    MPI2_RPY_DESCRIPT_FLAGS_SCSI_IO_SUCCESS ||
++		    request_desript_type ==
++		    MPI26_RPY_DESCRIPT_FLAGS_PCIE_ENCAPSULATED_SUCCESS) {
+ 			cb_idx = _base_get_cb_idx(ioc, smid);
+ 			if ((likely(cb_idx < MPT_MAX_CALLBACKS)) &&
+ 			    (likely(mpt_callbacks[cb_idx] != NULL))) {
+@@ -3079,6 +3086,30 @@ _base_put_smid_hi_priority(struct MPT3SAS_ADAPTER *ioc, u16 smid,
+ }
+ 
+ /**
++ * _base_put_smid_nvme_encap - send NVMe encapsulated request to
++ *  firmware
++ * @ioc: per adapter object
++ * @smid: system request message index
++ *
++ * Return nothing.
++ */
++static void
++_base_put_smid_nvme_encap(struct MPT3SAS_ADAPTER *ioc, u16 smid)
++{
++	Mpi2RequestDescriptorUnion_t descriptor;
++	u64 *request = (u64 *)&descriptor;
++
++	descriptor.Default.RequestFlags =
++		MPI26_REQ_DESCRIPT_FLAGS_PCIE_ENCAPSULATED;
++	descriptor.Default.MSIxIndex =  _base_get_msix_index(ioc);
++	descriptor.Default.SMID = cpu_to_le16(smid);
++	descriptor.Default.LMID = 0;
++	descriptor.Default.DescriptorTypeDependent = 0;
++	_base_writeq(*request, &ioc->chip->RequestDescriptorPostLow,
++	    &ioc->scsi_lookup_lock);
++}
++
++/**
+  * _base_put_smid_default - Default, primarily used for config pages
+  * @ioc: per adapter object
+  * @smid: system request message index
+@@ -3169,6 +3200,27 @@ _base_put_smid_hi_priority_atomic(struct MPT3SAS_ADAPTER *ioc, u16 smid,
+ }
+ 
+ /**
++ * _base_put_smid_nvme_encap_atomic - send NVMe encapsulated request to
++ *   firmware using Atomic Request Descriptor
++ * @ioc: per adapter object
++ * @smid: system request message index
++ *
++ * Return nothing.
++ */
++static void
++_base_put_smid_nvme_encap_atomic(struct MPT3SAS_ADAPTER *ioc, u16 smid)
++{
++	Mpi26AtomicRequestDescriptor_t descriptor;
++	u32 *request = (u32 *)&descriptor;
++
++	descriptor.RequestFlags = MPI26_REQ_DESCRIPT_FLAGS_PCIE_ENCAPSULATED;
++	descriptor.MSIxIndex = _base_get_msix_index(ioc);
++	descriptor.SMID = cpu_to_le16(smid);
++
++	writel(cpu_to_le32(*request), &ioc->chip->AtomicRequestDescriptorPost);
++}
++
++/**
+  * _base_put_smid_default - Default, primarily used for config pages
+  * use Atomic Request Descriptor
+  * @ioc: per adapter object
+@@ -6001,11 +6053,13 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
+ 		ioc->put_smid_scsi_io = &_base_put_smid_scsi_io_atomic;
+ 		ioc->put_smid_fast_path = &_base_put_smid_fast_path_atomic;
+ 		ioc->put_smid_hi_priority = &_base_put_smid_hi_priority_atomic;
++		ioc->put_smid_nvme_encap = &_base_put_smid_nvme_encap_atomic;
+ 	} else {
+ 		ioc->put_smid_default = &_base_put_smid_default;
+ 		ioc->put_smid_scsi_io = &_base_put_smid_scsi_io;
+ 		ioc->put_smid_fast_path = &_base_put_smid_fast_path;
+ 		ioc->put_smid_hi_priority = &_base_put_smid_hi_priority;
++		ioc->put_smid_nvme_encap = &_base_put_smid_nvme_encap;
  	}
  
- 	if (!desc)
-@@ -6187,8 +6207,16 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
- 	_base_unmask_events(ioc, MPI2_EVENT_IR_OPERATION_STATUS);
- 	_base_unmask_events(ioc, MPI2_EVENT_LOG_ENTRY_ADDED);
- 	_base_unmask_events(ioc, MPI2_EVENT_TEMP_THRESHOLD);
--	if (ioc->hba_mpi_version_belonged == MPI26_VERSION)
-+	if (ioc->hba_mpi_version_belonged == MPI26_VERSION) {
- 		_base_unmask_events(ioc, MPI2_EVENT_ACTIVE_CABLE_EXCEPTION);
-+		if (ioc->is_gen35_ioc) {
-+			_base_unmask_events(ioc,
-+				MPI2_EVENT_PCIE_DEVICE_STATUS_CHANGE);
-+			_base_unmask_events(ioc, MPI2_EVENT_PCIE_ENUMERATION);
-+			_base_unmask_events(ioc,
-+				MPI2_EVENT_PCIE_TOPOLOGY_CHANGE_LIST);
-+		}
-+	}
  
- 	r = _base_make_ioc_operational(ioc);
- 	if (r)
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 45b8d94..2a6a8e6 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -3132,8 +3132,6 @@ _scsih_block_io_device(struct MPT3SAS_ADAPTER *ioc, u16 handle)
- 	struct _sas_device *sas_device;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index cebdd8e..26239ec 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -1310,6 +1310,7 @@ struct MPT3SAS_ADAPTER {
+ 	PUT_SMID_IO_FP_HIP put_smid_fast_path;
+ 	PUT_SMID_IO_FP_HIP put_smid_hi_priority;
+ 	PUT_SMID_DEFAULT put_smid_default;
++	PUT_SMID_DEFAULT put_smid_nvme_encap;
  
- 	sas_device = mpt3sas_get_sdev_by_handle(ioc, handle);
--	if (!sas_device)
--		return;
+ };
  
- 	shost_for_each_device(sdev, ioc->shost) {
- 		sas_device_priv_data = sdev->hostdata;
-@@ -3143,7 +3141,7 @@ _scsih_block_io_device(struct MPT3SAS_ADAPTER *ioc, u16 handle)
- 			continue;
- 		if (sas_device_priv_data->block)
- 			continue;
--		if (sas_device->pend_sas_rphy_add)
-+		if (sas_device && sas_device->pend_sas_rphy_add)
- 			continue;
- 		if (sas_device_priv_data->ignore_delay_remove) {
- 			sdev_printk(KERN_INFO, sdev,
-@@ -3154,7 +3152,8 @@ _scsih_block_io_device(struct MPT3SAS_ADAPTER *ioc, u16 handle)
- 		_scsih_internal_device_block(sdev, sas_device_priv_data);
- 	}
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index 0c18831..35e5c30 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -272,6 +272,7 @@ mpt3sas_ctl_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+ {
+ 	MPI2DefaultReply_t *mpi_reply;
+ 	Mpi2SCSIIOReply_t *scsiio_reply;
++	Mpi26NVMeEncapsulatedErrorReply_t *nvme_error_reply;
+ 	const void *sense_data;
+ 	u32 sz;
  
--	sas_device_put(sas_device);
-+	if (sas_device)
-+		sas_device_put(sas_device);
- }
- 
- /**
-@@ -3238,6 +3237,33 @@ _scsih_block_io_to_children_attached_directly(struct MPT3SAS_ADAPTER *ioc,
- }
- 
- /**
-+ * _scsih_block_io_to_pcie_children_attached_directly
-+ * @ioc: per adapter object
-+ * @event_data: topology change event data
-+ *
-+ * This routine set sdev state to SDEV_BLOCK for all devices
-+ * direct attached during device pull/reconnect.
-+ */
-+static void
-+_scsih_block_io_to_pcie_children_attached_directly(struct MPT3SAS_ADAPTER *ioc,
-+		Mpi26EventDataPCIeTopologyChangeList_t *event_data)
-+{
-+	int i;
-+	u16 handle;
-+	u16 reason_code;
-+
-+	for (i = 0; i < event_data->NumEntries; i++) {
-+		handle =
-+			le16_to_cpu(event_data->PortEntry[i].AttachedDevHandle);
-+		if (!handle)
-+			continue;
-+		reason_code = event_data->PortEntry[i].PortStatus;
-+		if (reason_code ==
-+				MPI26_EVENT_PCIE_TOPO_PS_DELAY_NOT_RESPONDING)
-+			_scsih_block_io_device(ioc, handle);
-+	}
-+}
-+/**
-  * _scsih_tm_tr_send - send task management request
-  * @ioc: per adapter object
-  * @handle: device handle
-@@ -3856,6 +3882,81 @@ _scsih_check_topo_delete_events(struct MPT3SAS_ADAPTER *ioc,
- }
- 
- /**
-+ * _scsih_check_pcie_topo_remove_events - sanity check on topo
-+ * events
-+ * @ioc: per adapter object
-+ * @event_data: the event data payload
-+ *
-+ * This handles the case where driver receives multiple switch
-+ * or device add and delete events in a single shot.  When there
-+ * is a delete event the routine will void any pending add
-+ * events waiting in the event queue.
-+ *
-+ * Return nothing.
-+ */
-+static void
-+_scsih_check_pcie_topo_remove_events(struct MPT3SAS_ADAPTER *ioc,
-+	Mpi26EventDataPCIeTopologyChangeList_t *event_data)
-+{
-+	struct fw_event_work *fw_event;
-+	Mpi26EventDataPCIeTopologyChangeList_t *local_event_data;
-+	unsigned long flags;
-+	int i, reason_code;
-+	u16 handle, switch_handle;
-+
-+	for (i = 0; i < event_data->NumEntries; i++) {
-+		handle =
-+			le16_to_cpu(event_data->PortEntry[i].AttachedDevHandle);
-+		if (!handle)
-+			continue;
-+		reason_code = event_data->PortEntry[i].PortStatus;
-+		if (reason_code == MPI26_EVENT_PCIE_TOPO_PS_NOT_RESPONDING)
-+			_scsih_tm_tr_send(ioc, handle);
-+	}
-+
-+	switch_handle = le16_to_cpu(event_data->SwitchDevHandle);
-+	if (!switch_handle) {
-+		_scsih_block_io_to_pcie_children_attached_directly(
-+							ioc, event_data);
-+		return;
-+	}
-+    /* TODO We are not supporting cascaded PCIe Switch removal yet*/
-+	if ((event_data->SwitchStatus
-+		== MPI26_EVENT_PCIE_TOPO_SS_DELAY_NOT_RESPONDING) ||
-+		(event_data->SwitchStatus ==
-+					MPI26_EVENT_PCIE_TOPO_SS_RESPONDING))
-+		_scsih_block_io_to_pcie_children_attached_directly(
-+							ioc, event_data);
-+
-+	if (event_data->SwitchStatus != MPI2_EVENT_SAS_TOPO_ES_NOT_RESPONDING)
-+		return;
-+
-+	/* mark ignore flag for pending events */
-+	spin_lock_irqsave(&ioc->fw_event_lock, flags);
-+	list_for_each_entry(fw_event, &ioc->fw_event_list, list) {
-+		if (fw_event->event != MPI2_EVENT_PCIE_TOPOLOGY_CHANGE_LIST ||
-+			fw_event->ignore)
-+			continue;
-+		local_event_data =
-+			(Mpi26EventDataPCIeTopologyChangeList_t *)
-+			fw_event->event_data;
-+		if (local_event_data->SwitchStatus ==
-+		    MPI2_EVENT_SAS_TOPO_ES_ADDED ||
-+		    local_event_data->SwitchStatus ==
-+		    MPI2_EVENT_SAS_TOPO_ES_RESPONDING) {
-+			if (le16_to_cpu(local_event_data->SwitchDevHandle) ==
-+				switch_handle) {
-+				dewtprintk(ioc, pr_info(MPT3SAS_FMT
-+					"setting ignoring flag for switch event\n",
-+					ioc->name));
-+				fw_event->ignore = 1;
-+			}
-+		}
-+	}
-+	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
-+}
-+
-+/**
-  * _scsih_set_volume_delete_flag - setting volume delete flag
-  * @ioc: per adapter object
-  * @handle: device handle
-@@ -6155,7 +6256,319 @@ out:
- 		sas_device_put(sas_device);
- 
- 	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
-+}
-+
-+
-+/**
-+ * _scsih_pcie_topology_change_event_debug - debug for topology
-+ * event
-+ * @ioc: per adapter object
-+ * @event_data: event data payload
-+ * Context: user.
-+ */
-+static void
-+_scsih_pcie_topology_change_event_debug(struct MPT3SAS_ADAPTER *ioc,
-+	Mpi26EventDataPCIeTopologyChangeList_t *event_data)
-+{
-+	int i;
-+	u16 handle;
-+	u16 reason_code;
-+	u8 port_number;
-+	char *status_str = NULL;
-+	u8 link_rate, prev_link_rate;
- 
-+	switch (event_data->SwitchStatus) {
-+	case MPI26_EVENT_PCIE_TOPO_SS_ADDED:
-+		status_str = "add";
-+		break;
-+	case MPI26_EVENT_PCIE_TOPO_SS_NOT_RESPONDING:
-+		status_str = "remove";
-+		break;
-+	case MPI26_EVENT_PCIE_TOPO_SS_RESPONDING:
-+	case 0:
-+		status_str =  "responding";
-+		break;
-+	case MPI26_EVENT_PCIE_TOPO_SS_DELAY_NOT_RESPONDING:
-+		status_str = "remove delay";
-+		break;
-+	default:
-+		status_str = "unknown status";
-+		break;
-+	}
-+	pr_info(MPT3SAS_FMT "pcie topology change: (%s)\n",
-+		ioc->name, status_str);
-+	pr_info("\tswitch_handle(0x%04x), enclosure_handle(0x%04x)"
-+		"start_port(%02d), count(%d)\n",
-+		le16_to_cpu(event_data->SwitchDevHandle),
-+		le16_to_cpu(event_data->EnclosureHandle),
-+		event_data->StartPortNum, event_data->NumEntries);
-+	for (i = 0; i < event_data->NumEntries; i++) {
-+		handle =
-+			le16_to_cpu(event_data->PortEntry[i].AttachedDevHandle);
-+		if (!handle)
-+			continue;
-+		port_number = event_data->StartPortNum + i;
-+		reason_code = event_data->PortEntry[i].PortStatus;
-+		switch (reason_code) {
-+		case MPI26_EVENT_PCIE_TOPO_PS_DEV_ADDED:
-+			status_str = "target add";
-+			break;
-+		case MPI26_EVENT_PCIE_TOPO_PS_NOT_RESPONDING:
-+			status_str = "target remove";
-+			break;
-+		case MPI26_EVENT_PCIE_TOPO_PS_DELAY_NOT_RESPONDING:
-+			status_str = "delay target remove";
-+			break;
-+		case MPI26_EVENT_PCIE_TOPO_PS_PORT_CHANGED:
-+			status_str = "link rate change";
-+			break;
-+		case MPI26_EVENT_PCIE_TOPO_PS_NO_CHANGE:
-+			status_str = "target responding";
-+			break;
-+		default:
-+			status_str = "unknown";
-+			break;
-+		}
-+		link_rate = event_data->PortEntry[i].CurrentPortInfo &
-+			MPI26_EVENT_PCIE_TOPO_PI_RATE_MASK;
-+		prev_link_rate = event_data->PortEntry[i].PreviousPortInfo &
-+			MPI26_EVENT_PCIE_TOPO_PI_RATE_MASK;
-+		pr_info("\tport(%02d), attached_handle(0x%04x): %s:"
-+			" link rate: new(0x%02x), old(0x%02x)\n", port_number,
-+			handle, status_str, link_rate, prev_link_rate);
-+	}
-+}
-+
-+/**
-+ * _scsih_pcie_topology_change_event - handle PCIe topology
-+ *  changes
-+ * @ioc: per adapter object
-+ * @fw_event: The fw_event_work object
-+ * Context: user.
-+ *
-+ */
-+static int
-+_scsih_pcie_topology_change_event(struct MPT3SAS_ADAPTER *ioc,
-+	struct fw_event_work *fw_event)
-+{
-+	int i;
-+	u16 handle;
-+	u16 reason_code;
-+	u8 link_rate, prev_link_rate;
-+	unsigned long flags;
-+	int rc;
-+	int requeue_event;
-+	Mpi26EventDataPCIeTopologyChangeList_t *event_data =
-+		(Mpi26EventDataPCIeTopologyChangeList_t *) fw_event->event_data;
-+	struct _pcie_device *pcie_device;
-+
-+	if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK)
-+		_scsih_pcie_topology_change_event_debug(ioc, event_data);
-+
-+	if (ioc->shost_recovery || ioc->remove_host ||
-+		ioc->pci_error_recovery)
-+		return 0;
-+
-+	if (fw_event->ignore) {
-+		dewtprintk(ioc, pr_info(MPT3SAS_FMT "ignoring switch event\n",
-+			ioc->name));
-+		return 0;
-+	}
-+
-+	/* handle siblings events */
-+	for (i = 0; i < event_data->NumEntries; i++) {
-+		if (fw_event->ignore) {
-+			dewtprintk(ioc, pr_info(MPT3SAS_FMT
-+				"ignoring switch event\n", ioc->name));
-+			return 0;
-+		}
-+		if (ioc->remove_host || ioc->pci_error_recovery)
-+			return 0;
-+		reason_code = event_data->PortEntry[i].PortStatus;
-+		handle =
-+			le16_to_cpu(event_data->PortEntry[i].AttachedDevHandle);
-+		if (!handle)
-+			continue;
-+
-+		link_rate = event_data->PortEntry[i].CurrentPortInfo
-+			& MPI26_EVENT_PCIE_TOPO_PI_RATE_MASK;
-+		prev_link_rate = event_data->PortEntry[i].PreviousPortInfo
-+			& MPI26_EVENT_PCIE_TOPO_PI_RATE_MASK;
-+
-+		switch (reason_code) {
-+		case MPI26_EVENT_PCIE_TOPO_PS_PORT_CHANGED:
-+			if (ioc->shost_recovery)
-+				break;
-+			if (link_rate == prev_link_rate)
-+				break;
-+			if (link_rate < MPI26_EVENT_PCIE_TOPO_PI_RATE_2_5)
-+				break;
-+
-+			_scsih_pcie_check_device(ioc, handle);
-+
-+			/* This code after this point handles the test case
-+			 * where a device has been added, however its returning
-+			 * BUSY for sometime.  Then before the Device Missing
-+			 * Delay expires and the device becomes READY, the
-+			 * device is removed and added back.
-+			 */
-+			spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+			pcie_device = __mpt3sas_get_pdev_by_handle(ioc, handle);
-+			spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-+
-+			if (pcie_device) {
-+				pcie_device_put(pcie_device);
-+				break;
-+			}
-+
-+			if (!test_bit(handle, ioc->pend_os_device_add))
-+				break;
-+
-+			dewtprintk(ioc, pr_info(MPT3SAS_FMT
-+				"handle(0x%04x) device not found: convert "
-+				"event to a device add\n", ioc->name, handle));
-+			event_data->PortEntry[i].PortStatus &= 0xF0;
-+			event_data->PortEntry[i].PortStatus |=
-+				MPI26_EVENT_PCIE_TOPO_PS_DEV_ADDED;
-+		case MPI26_EVENT_PCIE_TOPO_PS_DEV_ADDED:
-+			if (ioc->shost_recovery)
-+				break;
-+			if (link_rate < MPI26_EVENT_PCIE_TOPO_PI_RATE_2_5)
-+				break;
-+
-+			rc = _scsih_pcie_add_device(ioc, handle);
-+			if (!rc) {
-+				/* mark entry vacant */
-+				/* TODO This needs to be reviewed and fixed,
-+				 * we dont have an entry
-+				 * to make an event void like vacant
-+				 */
-+				event_data->PortEntry[i].PortStatus |=
-+					MPI26_EVENT_PCIE_TOPO_PS_NO_CHANGE;
-+			}
-+			break;
-+		case MPI26_EVENT_PCIE_TOPO_PS_NOT_RESPONDING:
-+			_scsih_pcie_device_remove_by_handle(ioc, handle);
-+			break;
-+		}
-+	}
-+	return requeue_event;
-+}
-+
-+/**
-+ * _scsih_pcie_device_status_change_event_debug - debug for
-+ * device event
-+ * @event_data: event data payload
-+ * Context: user.
-+ *
-+ * Return nothing.
-+ */
-+static void
-+_scsih_pcie_device_status_change_event_debug(struct MPT3SAS_ADAPTER *ioc,
-+	Mpi26EventDataPCIeDeviceStatusChange_t *event_data)
-+{
-+	char *reason_str = NULL;
-+
-+	switch (event_data->ReasonCode) {
-+	case MPI26_EVENT_PCIDEV_STAT_RC_SMART_DATA:
-+		reason_str = "smart data";
-+		break;
-+	case MPI26_EVENT_PCIDEV_STAT_RC_UNSUPPORTED:
-+		reason_str = "unsupported device discovered";
-+		break;
-+	case MPI26_EVENT_PCIDEV_STAT_RC_INTERNAL_DEVICE_RESET:
-+		reason_str = "internal device reset";
-+		break;
-+	case MPI26_EVENT_PCIDEV_STAT_RC_TASK_ABORT_INTERNAL:
-+		reason_str = "internal task abort";
-+		break;
-+	case MPI26_EVENT_PCIDEV_STAT_RC_ABORT_TASK_SET_INTERNAL:
-+		reason_str = "internal task abort set";
-+		break;
-+	case MPI26_EVENT_PCIDEV_STAT_RC_CLEAR_TASK_SET_INTERNAL:
-+		reason_str = "internal clear task set";
-+		break;
-+	case MPI26_EVENT_PCIDEV_STAT_RC_QUERY_TASK_INTERNAL:
-+		reason_str = "internal query task";
-+		break;
-+	case MPI26_EVENT_PCIDEV_STAT_RC_DEV_INIT_FAILURE:
-+		reason_str = "device init failure";
-+		break;
-+	case MPI26_EVENT_PCIDEV_STAT_RC_CMP_INTERNAL_DEV_RESET:
-+		reason_str = "internal device reset complete";
-+		break;
-+	case MPI26_EVENT_PCIDEV_STAT_RC_CMP_TASK_ABORT_INTERNAL:
-+		reason_str = "internal task abort complete";
-+		break;
-+	case MPI26_EVENT_PCIDEV_STAT_RC_ASYNC_NOTIFICATION:
-+		reason_str = "internal async notification";
-+		break;
-+	default:
-+		reason_str = "unknown reason";
-+		break;
-+	}
-+
-+	pr_info(MPT3SAS_FMT "PCIE device status change: (%s)\n"
-+		"\thandle(0x%04x), WWID(0x%016llx), tag(%d)",
-+		ioc->name, reason_str, le16_to_cpu(event_data->DevHandle),
-+		(unsigned long long)le64_to_cpu(event_data->WWID),
-+		le16_to_cpu(event_data->TaskTag));
-+	if (event_data->ReasonCode == MPI26_EVENT_PCIDEV_STAT_RC_SMART_DATA)
-+		pr_info(MPT3SAS_FMT ", ASC(0x%x), ASCQ(0x%x)\n", ioc->name,
-+			event_data->ASC, event_data->ASCQ);
-+	pr_info("\n");
-+}
-+
-+/**
-+ * _scsih_pcie_device_status_change_event - handle device status
-+ * change
-+ * @ioc: per adapter object
-+ * @fw_event: The fw_event_work object
-+ * Context: user.
-+ *
-+ * Return nothing.
-+ */
-+static void
-+_scsih_pcie_device_status_change_event(struct MPT3SAS_ADAPTER *ioc,
-+	struct fw_event_work *fw_event)
-+{
-+	struct MPT3SAS_TARGET *target_priv_data;
-+	struct _pcie_device *pcie_device;
-+	u64 wwid;
-+	unsigned long flags;
-+	Mpi26EventDataPCIeDeviceStatusChange_t *event_data =
-+		(Mpi26EventDataPCIeDeviceStatusChange_t *)fw_event->event_data;
-+	if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK)
-+		_scsih_pcie_device_status_change_event_debug(ioc,
-+			event_data);
-+
-+	if (event_data->ReasonCode !=
-+		MPI26_EVENT_PCIDEV_STAT_RC_INTERNAL_DEVICE_RESET &&
-+		event_data->ReasonCode !=
-+		MPI26_EVENT_PCIDEV_STAT_RC_CMP_INTERNAL_DEV_RESET)
-+		return;
-+
-+	spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+	wwid = le64_to_cpu(event_data->WWID);
-+	pcie_device = __mpt3sas_get_pdev_by_wwid(ioc, wwid);
-+
-+	if (!pcie_device || !pcie_device->starget)
-+		goto out;
-+
-+	target_priv_data = pcie_device->starget->hostdata;
-+	if (!target_priv_data)
-+		goto out;
-+
-+	if (event_data->ReasonCode ==
-+		MPI26_EVENT_PCIDEV_STAT_RC_INTERNAL_DEVICE_RESET)
-+		target_priv_data->tm_busy = 1;
-+	else
-+		target_priv_data->tm_busy = 0;
-+out:
-+	if (pcie_device)
-+		pcie_device_put(pcie_device);
-+
-+	spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
- }
- 
- /**
-@@ -6409,6 +6822,34 @@ _scsih_sas_discovery_event(struct MPT3SAS_ADAPTER *ioc,
- }
- 
- /**
-+ * _scsih_pcie_enumeration_event - handle enumeration events
-+ * @ioc: per adapter object
-+ * @fw_event: The fw_event_work object
-+ * Context: user.
-+ *
-+ * Return nothing.
-+ */
-+static void
-+_scsih_pcie_enumeration_event(struct MPT3SAS_ADAPTER *ioc,
-+	struct fw_event_work *fw_event)
-+{
-+	Mpi26EventDataPCIeEnumeration_t *event_data =
-+		(Mpi26EventDataPCIeEnumeration_t *)fw_event->event_data;
-+
-+	if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK) {
-+		pr_info(MPT3SAS_FMT "pcie enumeration event: (%s) Flag 0x%02x",
-+			ioc->name,
-+			((event_data->ReasonCode ==
-+			MPI26_EVENT_PCIE_ENUM_RC_STARTED) ?
-+			"started" : "completed"), event_data->Flags);
-+	if (event_data->EnumerationStatus)
-+		pr_info("enumeration_status(0x%08x)",
-+		    le32_to_cpu(event_data->EnumerationStatus));
-+	pr_info("\n");
-+	}
-+}
-+
-+/**
-  * _scsih_ir_fastpath - turn on fastpath for IR physdisk
-  * @ioc: per adapter object
-  * @handle: device handle for physical disk
-@@ -7976,7 +8417,7 @@ _mpt3sas_fw_work(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work *fw_event)
- 				goto out;
- 			ssleep(1);
+@@ -298,6 +299,18 @@ mpt3sas_ctl_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+ 				memcpy(ioc->ctl_cmds.sense, sense_data, sz);
+ 			}
  		}
--		_scsih_remove_unresponding_sas_devices(ioc);
-+		_scsih_remove_unresponding_devices(ioc);
- 		_scsih_scan_for_devices_after_reset(ioc);
- 		break;
- 	case MPT3SAS_PORT_ENABLE_COMPLETE:
-@@ -8019,6 +8460,16 @@ _mpt3sas_fw_work(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work *fw_event)
- 	case MPI2_EVENT_IR_OPERATION_STATUS:
- 		_scsih_sas_ir_operation_status_event(ioc, fw_event);
- 		break;
-+	case MPI2_EVENT_PCIE_DEVICE_STATUS_CHANGE:
-+		_scsih_pcie_device_status_change_event(ioc, fw_event);
-+		break;
-+	case MPI2_EVENT_PCIE_ENUMERATION:
-+		_scsih_pcie_enumeration_event(ioc, fw_event);
-+		break;
-+	case MPI2_EVENT_PCIE_TOPOLOGY_CHANGE_LIST:
-+		_scsih_pcie_topology_change_event(ioc, fw_event);
-+			return;
-+	break;
++		/*
++		 * Get Error Response data for NVMe device. The ctl_cmds.sense
++		 * buffer is used to store the Error Response data.
++		 */
++		if (mpi_reply->Function == MPI2_FUNCTION_NVME_ENCAPSULATED) {
++			nvme_error_reply =
++			    (Mpi26NVMeEncapsulatedErrorReply_t *)mpi_reply;
++			sz = min_t(u32, NVME_ERROR_RESPONSE_SIZE,
++			    le32_to_cpu(nvme_error_reply->ErrorResponseCount));
++			sense_data = mpt3sas_base_get_sense_buffer(ioc, smid);
++			memcpy(ioc->ctl_cmds.sense, sense_data, sz);
++		}
  	}
- out:
- 	fw_event_work_put(fw_event);
-@@ -8109,6 +8560,11 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
- 		    (Mpi2EventDataSasTopologyChangeList_t *)
- 		    mpi_reply->EventData);
- 		break;
-+	case MPI2_EVENT_PCIE_TOPOLOGY_CHANGE_LIST:
-+	_scsih_check_pcie_topo_remove_events(ioc,
-+		    (Mpi26EventDataPCIeTopologyChangeList_t *)
-+		    mpi_reply->EventData);
-+		break;
- 	case MPI2_EVENT_IR_CONFIGURATION_CHANGE_LIST:
- 		_scsih_check_ir_config_unhide_events(ioc,
- 		    (Mpi2EventDataIrConfigChangeList_t *)
-@@ -8171,6 +8627,8 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
- 	case MPI2_EVENT_SAS_DISCOVERY:
- 	case MPI2_EVENT_SAS_ENCL_DEVICE_STATUS_CHANGE:
- 	case MPI2_EVENT_IR_PHYSICAL_DISK:
-+	case MPI2_EVENT_PCIE_ENUMERATION:
-+	case MPI2_EVENT_PCIE_DEVICE_STATUS_CHANGE:
- 		break;
  
- 	case MPI2_EVENT_TEMP_THRESHOLD:
+ 	_ctl_display_some_debug(ioc, smid, "ctl_done", mpi_reply);
+@@ -641,6 +654,7 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
+ {
+ 	MPI2RequestHeader_t *mpi_request = NULL, *request;
+ 	MPI2DefaultReply_t *mpi_reply;
++	Mpi26NVMeEncapsulatedRequest_t *nvme_encap_request = NULL;
+ 	u32 ioc_state;
+ 	u16 smid;
+ 	unsigned long timeout;
+@@ -742,7 +756,8 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
+ 	if (mpi_request->Function == MPI2_FUNCTION_SCSI_IO_REQUEST ||
+ 	    mpi_request->Function == MPI2_FUNCTION_RAID_SCSI_IO_PASSTHROUGH ||
+ 	    mpi_request->Function == MPI2_FUNCTION_SCSI_TASK_MGMT ||
+-	    mpi_request->Function == MPI2_FUNCTION_SATA_PASSTHROUGH) {
++	    mpi_request->Function == MPI2_FUNCTION_SATA_PASSTHROUGH ||
++	    mpi_request->Function == MPI2_FUNCTION_NVME_ENCAPSULATED) {
+ 
+ 		device_handle = le16_to_cpu(mpi_request->FunctionDependent1);
+ 		if (!device_handle || (device_handle >
+@@ -793,6 +808,38 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
+ 
+ 	init_completion(&ioc->ctl_cmds.done);
+ 	switch (mpi_request->Function) {
++	case MPI2_FUNCTION_NVME_ENCAPSULATED:
++	{
++		nvme_encap_request = (Mpi26NVMeEncapsulatedRequest_t *)request;
++		/*
++		 * Get the Physical Address of the sense buffer.
++		 * Save the user's Error Response buffer address and use that
++		 *   field to hold the sense buffer address.
++		 * Clear the internal sense buffer, which will potentially hold
++		 *   the Completion Queue Entry on return, or 0 if no Entry.
++		 * Build the PRPs and set direction bits.
++		 * Send the request.
++		 */
++		ioc->ctl_cmds.nvme_error_response =
++		    (u64 *)nvme_encap_request->ErrorResponseBaseAddress;
++		nvme_encap_request->ErrorResponseBaseAddress = ioc->sense_dma &
++		    0xFFFFFFFF00000000;
++		nvme_encap_request->ErrorResponseBaseAddress |=
++		    (U64)mpt3sas_base_get_sense_buffer_dma(ioc, smid);
++		memset(ioc->ctl_cmds.sense, 0, NVME_ERROR_RESPONSE_SIZE);
++		ioc->build_nvme_prp(ioc, smid, nvme_encap_request,
++		    data_out_dma, data_out_sz, data_in_dma, data_in_sz);
++		if (test_bit(device_handle, ioc->device_remove_in_progress)) {
++			dtmprintk(ioc, pr_info(MPT3SAS_FMT "handle(0x%04x) :"
++			    "ioctl failed due to device removal in progress\n",
++			    ioc->name, device_handle));
++			mpt3sas_base_free_smid(ioc, smid);
++			ret = -EINVAL;
++			goto out;
++		}
++		ioc->put_smid_nvme_encap(ioc, smid);
++		break;
++	}
+ 	case MPI2_FUNCTION_SCSI_IO_REQUEST:
+ 	case MPI2_FUNCTION_RAID_SCSI_IO_PASSTHROUGH:
+ 	{
+@@ -1022,6 +1069,38 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
+ 		}
+ 	}
+ 
++	/*
++	 * Copy out the NVMe Error Response to user. The Error Response buffer
++	 * is given by the user, but a sense buffer is used to get that data
++	 * from the IOC. The user's ErrorResponseBaseAddress is saved in the
++	 * 'nvme_error_response' field before the command because that field is
++	 * set to a sense buffer. When the command is complete, that field is
++	 * set back to its original user value, and the Error Response data
++	 * from the IOC is copied to that user address. Also note that 'sense'
++	 * buffers are not defined for NVMe commands. Sense terminalogy is only
++	 * used here so that the same IOCTL structure and sense buffers can be
++	 * used for NVMe.
++	 */
++	if (karg.max_sense_bytes && (mpi_request->Function ==
++	    MPI2_FUNCTION_NVME_ENCAPSULATED)) {
++		if (ioc->ctl_cmds.nvme_error_response == NULL) {
++			pr_info(MPT3SAS_FMT "NVMe Error Response buffer "
++			    "is NULL; Response data will not be returned.\n",
++			    ioc->name);
++			goto out;
++		}
++
++		sz = min_t(u32, karg.max_sense_bytes,
++		    NVME_ERROR_RESPONSE_SIZE);
++		if (copy_to_user(ioc->ctl_cmds.nvme_error_response,
++		    ioc->ctl_cmds.sense, sz)) {
++			pr_err("failure at %s:%d/%s()!\n", __FILE__,
++				__LINE__, __func__);
++			ret = -ENODATA;
++			goto out;
++		}
++	}
++
+  issue_host_reset:
+ 	if (issue_reset) {
+ 		ret = -ENODATA;
 -- 
 1.7.1
