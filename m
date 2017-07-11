@@ -1,88 +1,37 @@
-From: Mike Christie <mchristi@redhat.com>
-Subject: Re: [PATCHv2] tcmu: Fix possbile memory leak when recalculating the
- cmd base size
-Date: Tue, 11 Jul 2017 12:21:55 -0500
-Message-ID: <59650933.6070409@redhat.com>
-References: <1499767183-17980-1-git-send-email-lixiubo@cmss.chinamobile.com>
+From: "Elliott, Robert (Persistent Memory)" <elliott@hpe.com>
+Subject: RE: [PATCH 05/13] mpt3sas: Set NVMe device queue depth as 128
+Date: Tue, 11 Jul 2017 17:23:33 +0000
+Message-ID: <AT5PR84MB00821C8CD515212788107EA0ABAE0@AT5PR84MB0082.NAMPRD84.PROD.OUTLOOK.COM>
+References: <1499763313-7214-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <1499763313-7214-6-git-send-email-suganath-prabu.subramani@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1499767183-17980-1-git-send-email-lixiubo@cmss.chinamobile.com>
-Sender: target-devel-owner@vger.kernel.org
-To: lixiubo@cmss.chinamobile.com, nab@linux-iscsi.org
-Cc: bryantly@linux.vnet.ibm.com, damien.lemoal@wdc.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1499763313-7214-6-git-send-email-suganath-prabu.subramani@broadcom.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "jejb@kernel.org" <jejb@kernel.org>, "hch@infradead.org" <hch@infradead.org>
+Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Sathya.Prakash@broadcom.com" <Sathya.Prakash@broadcom.com>, "kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, "sreekanth.reddy@broadcom.com" <sreekanth.reddy@broadcom.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 07/11/2017 04:59 AM, lixiubo@cmss.chinamobile.com wrote:
-> From: Xiubo Li <lixiubo@cmss.chinamobile.com>
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+> @@ -115,7 +115,7 @@
 > 
-> For all the entries allocated from the ring cmd area, the memory is
-> something like the stack memory, which will always reserve the old
-> data, so the entry->req.iov_bidi_cnt maybe none zero.
-> 
-> On some environments, the crash could be reporduce very easy and some
-> not. The following is the crash core trace:
-> 
-> [  240.143969] CPU: 0 PID: 1285 Comm: iscsi_trx Not tainted
-> 4.12.0-rc1+ #3
-> [  240.150607] Hardware name: ASUS All Series/H87-PRO, BIOS 2104
-> 10/28/2014
-> [  240.157331] task: ffff8807de4f5800 task.stack:
-> ffffc900047dc000
-> [  240.163270] RIP: 0010:memcpy_erms+0x6/0x10
-> [  240.167377] RSP: 0018:ffffc900047dfc68 EFLAGS: 00010202
-> [  240.172621] RAX: ffffc9065db85540 RBX: ffff8807f7980000 RCX:
-> 0000000000000010
-> [  240.179771] RDX: 0000000000000010 RSI: ffff8807de574fe0 RDI:
-> ffffc9065db85540
-> [  240.186930] RBP: ffffc900047dfd30 R08: ffff8807de41b000 R09:
-> 0000000000000000
-> [  240.194088] R10: 0000000000000040 R11: ffff8807e9b726f0 R12:
-> 00000006565726b0
-> [  240.201246] R13: ffffc90007612ea0 R14: 000000065657d540 R15:
-> 0000000000000000
-> [  240.208397] FS:  0000000000000000(0000)
-> GS:ffff88081fa00000(0000)
-> knlGS:0000000000000000
-> [  240.216510] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [  240.222280] CR2: ffffc9065db85540 CR3: 0000000001c0f000 CR4:
-> 00000000001406f0
-> [  240.229430] Call Trace:
-> [  240.231887]  ? tcmu_queue_cmd+0x83c/0xa80
-> [  240.235916]  ? target_check_reservation+0xcd/0x6f0
-> [  240.240725]  __target_execute_cmd+0x27/0xa0
-> [  240.244918]  target_execute_cmd+0x232/0x2c0
-> [  240.249124]  ? __local_bh_enable_ip+0x64/0xa0
-> [  240.253499]  iscsit_execute_cmd+0x20d/0x270
-> [  240.257693]  iscsit_sequence_cmd+0x110/0x190
-> [  240.261985]  iscsit_get_rx_pdu+0x360/0xc80
-> [  240.267565]  ? iscsi_target_rx_thread+0x54/0xd0
-> [  240.273571]  iscsi_target_rx_thread+0x9a/0xd0
-> [  240.279413]  kthread+0x113/0x150
-> [  240.284120]  ? iscsi_target_tx_thread+0x1e0/0x1e0
-> [  240.290297]  ? kthread_create_on_node+0x40/0x40
-> [  240.296297]  ret_from_fork+0x2e/0x40
-> [  240.301332] Code: 90 90 90 90 90 eb 1e 0f 1f 00 48 89 f8 48
-> 89 d1 48
-> c1 e9 03 83 e2 07 f3 48 a5 89 d1 f3 a4 c3 66 0f 1f 44 00 00 48
-> 89 f8 48
-> 89 d1 <f3> a4 c3 0f 1f 80 00 00 00 00 48 89 f8 48 83 fa 20 72 7e
-> 40 38
-> [  240.321751] RIP: memcpy_erms+0x6/0x10 RSP: ffffc900047dfc68
-> [  240.328838] CR2: ffffc9065db85540
-> [  240.333667] ---[ end trace b7e5354cfb54d08b ]---
-> 
-> To fix this, just memset all the entry memory before using it, and
-> also to be more readable we adjust the bidi code.
-> 
-> Fixed: fe25cc34795(tcmu: Recalculate the tcmu_cmd size to save cmd area
-> 		memories)
-> Reported-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-> Tested-by: Damien Le Moal <damien.lemoal@wdc.com>
-> Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
-> ---
+>  #define MPT3SAS_RAID_MAX_SECTORS	8192
+>  #define MPT3SAS_HOST_PAGE_SIZE_4K	12
+> -
+> +#define MPT3SAS_NVME_QUEUE_DEPTH	128
+...
+> +		/*TODO-right Queue Depth?*/
+> +		qdepth = MPT3SAS_NVME_QUEUE_DEPTH;
+> +		ds = "NVMe";
 
-Nice. Thanks.
+The native NVMe driver is getting a modparam to set that value (rather than
+using a #define of 1024) in this patch:
+	http://lists.infradead.org/pipermail/linux-nvme/2017-July/011734.html
 
-Reviewed-by: Mike Christie <mchristi@redhat.com>
+Perhaps this driver should do the same.
+
+---
+Robert Elliott, HPE Persistent Memory
