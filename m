@@ -1,29 +1,39 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] tcmu: clean up the code and with one small fix
-Date: Tue, 11 Jul 2017 10:49:33 -0700
-Message-ID: <1499795373.19338.1.camel@haakon3.daterainc.com>
-References: <1499767601-18328-1-git-send-email-lixiubo@cmss.chinamobile.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1499767601-18328-1-git-send-email-lixiubo@cmss.chinamobile.com>
-Sender: target-devel-owner@vger.kernel.org
-To: lixiubo@cmss.chinamobile.com
-Cc: mchristi@redhat.com, bryantly@linux.vnet.ibm.com, damien.lemoal@wdc.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH 2/6] SCSI: use blk_mq_run_hw_queues() in scsi_kick_queue()
+Date: Wed, 12 Jul 2017 02:20:59 +0800
+Message-ID: <20170711182103.11461-3-ming.lei@redhat.com>
+References: <20170711182103.11461-1-ming.lei@redhat.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170711182103.11461-1-ming.lei@redhat.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Sagi Grimberg <sagi@grimberg.me>, Ming Lei <ming.lei@redhat.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2017-07-11 at 18:06 +0800, lixiubo@cmss.chinamobile.com wrote:
-> From: Xiubo Li <lixiubo@cmss.chinamobile.com>
-> 
-> Remove useless blank line and code and at the same time add one error
-> path to catch the errors.
-> 
-> Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
-> ---
->  drivers/target/target_core_user.c | 24 +++++++++++-------------
->  1 file changed, 11 insertions(+), 13 deletions(-)
+Now SCSI won't stop queue, and not necessary to use
+blk_mq_start_hw_queues(), so switch to blk_mq_run_hw_queues()
+instead.
 
-Applied.
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ drivers/scsi/scsi_lib.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks Xiubo.
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index f6097b89d5d3..91d890356b78 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -333,7 +333,7 @@ void scsi_device_unbusy(struct scsi_device *sdev)
+ static void scsi_kick_queue(struct request_queue *q)
+ {
+ 	if (q->mq_ops)
+-		blk_mq_start_hw_queues(q);
++		blk_mq_run_hw_queues(q, false);
+ 	else
+ 		blk_run_queue(q);
+ }
+-- 
+2.9.4
