@@ -1,61 +1,61 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH 2/6] SCSI: use blk_mq_run_hw_queues() in scsi_kick_queue()
-Date: Wed, 12 Jul 2017 11:15:04 +0800
-Message-ID: <20170712031503.GG13036@ming.t460p>
-References: <20170711182103.11461-1-ming.lei@redhat.com>
- <20170711182103.11461-3-ming.lei@redhat.com>
- <1499803071.2586.29.camel@wdc.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH v2 01/15] qla2xxx: Combine Active command arrays.
+Date: Wed, 12 Jul 2017 04:41:06 +0000
+Message-ID: <E92CB6CC-9E42-441B-B64E-387437F52526@cavium.com>
+References: <20170614034730.15428-1-himanshu.madhani@cavium.com>
+ <20170614034730.15428-2-himanshu.madhani@cavium.com>
+ <1499816619.2586.53.camel@wdc.com>
+ <1499819962.30046.8.camel@haakon3.daterainc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1499803071.2586.29.camel@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "sagi@grimberg.me" <sagi@grimberg.me>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bl2nam02on0062.outbound.protection.outlook.com ([104.47.38.62]:4224
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750705AbdGLElL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 12 Jul 2017 00:41:11 -0400
+In-Reply-To: <1499819962.30046.8.camel@haakon3.daterainc.com>
+Content-Language: en-US
+Content-ID: <134918B8B031E34DB7C163AF1FB9ED6F@namprd07.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>
 
-On Tue, Jul 11, 2017 at 07:57:53PM +0000, Bart Van Assche wrote:
-> On Wed, 2017-07-12 at 02:20 +0800, Ming Lei wrote:
-> > Now SCSI won't stop queue, and not necessary to use
-> > blk_mq_start_hw_queues(), so switch to blk_mq_run_hw_queues()
-> > instead.
-> > 
-> > Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-> > Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> > Cc: linux-scsi@vger.kernel.org
-> > Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> > ---
-> >  drivers/scsi/scsi_lib.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> > index f6097b89d5d3..91d890356b78 100644
-> > --- a/drivers/scsi/scsi_lib.c
-> > +++ b/drivers/scsi/scsi_lib.c
-> > @@ -333,7 +333,7 @@ void scsi_device_unbusy(struct scsi_device *sdev)
-> >  static void scsi_kick_queue(struct request_queue *q)
-> >  {
-> >  	if (q->mq_ops)
-> > -		blk_mq_start_hw_queues(q);
-> > +		blk_mq_run_hw_queues(q, false);
-> >  	else
-> >  		blk_run_queue(q);
-> >  }
-> 
-> Hello Ming,
-> 
-> Now that we have separate flags to represent the "stopped" and "quiesced"
-> states, wouldn't it be better not to modify scsi_kick_queue() but instead to
-> stop a SCSI hardware queue again if scsi_queue_rq() returns BLK_STS_RESOURCE?
-> See also commits 36e3cf273977 ("scsi: Avoid that SCSI queues get stuck") and
-> commit 52d7f1b5c2f3 ("blk-mq: Avoid that requeueing starts stopped queues").
+Hi Bart,
 
-As you can see in the following patches, all stop/start queue APIs will
-be removed, and the 'stopped' state will become a internal state.
+> On Jul 11, 2017, at 5:39 PM, Nicholas A. Bellinger <nab@linux-iscsi.org> =
+wrote:
+>=20
+> On Tue, 2017-07-11 at 23:43 +0000, Bart Van Assche wrote:
+>> On Tue, 2017-06-13 at 20:47 -0700, Himanshu Madhani wrote:
+>>> typedef struct srb {
+>>> +	/*
+>>> +	 * Do not move cmd_type field, it needs to
+>>> +	 * line up with qla_tgt_cmd->cmd_type
+>>> +	 */
+>>> +	uint8_t cmd_type;
+>>> +	uint8_t pad[3];
+>>=20
+>> Hello Himanshu,
+>>=20
+>> Had I understood correctly that you had promised to rework the command
+>> array merging such that a union is used instead of requiring certain
+>> fields to be present at certain offsets (see also
+>> https://www.spinics.net/lists/target-devel/msg15591.html)?
+>>=20
+>=20
+> Yeah, as discussed previously it was not a blocker for merge.
+>=20
 
-It doesn't make sense to clear 'stopped' for scsi anymore, since the
-queue won't be stopped actually. So we need this change.
+I had mentioned in my v2 submission cover letter that we will submit new pa=
+tch to
+address your review comment.=20
 
--- 
-Ming
+Since we are in merge window right now i have not posted this patch. As soo=
+n as 4.13.0-rc1 is out,
+i will submit patch addressing your review comment.=20
+
+Thanks,
+- Himanshu
