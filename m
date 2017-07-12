@@ -1,74 +1,32 @@
-From: Mike Christie <mchristi@redhat.com>
-Subject: Re: [PATCH] tcmu: Fix possible to/from address overflow when doing
- the memcpy
-Date: Wed, 12 Jul 2017 12:36:30 -0500
-Message-ID: <59665E1E.5040900@redhat.com>
-References: <1499845877-18931-1-git-send-email-lixiubo@cmss.chinamobile.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v1 1/1] qedi: Add support for Boot from SAN over iSCSI offload
+Date: Wed, 12 Jul 2017 17:06:11 -0400
+Message-ID: <yq1zic9l60s.fsf@oracle.com>
+References: <20170627092656.24117-1-nilesh.javali@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59532 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750738AbdGLRgd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 12 Jul 2017 13:36:33 -0400
-In-Reply-To: <1499845877-18931-1-git-send-email-lixiubo@cmss.chinamobile.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:34918 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752363AbdGLVGZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2017 17:06:25 -0400
+In-Reply-To: <20170627092656.24117-1-nilesh.javali@cavium.com> (Nilesh
+        Javali's message of "Tue, 27 Jun 2017 02:26:56 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: lixiubo@cmss.chinamobile.com, nab@linux-iscsi.org
-Cc: bryantly@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+To: Nilesh Javali <nilesh.javali@cavium.com>
+Cc: martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com, linux-scsi@vger.kernel.org, QLogic-Storage-Upstream@cavium.com
 
-On 07/12/2017 02:51 AM, lixiubo@cmss.chinamobile.com wrote:
-> From: Xiubo Li <lixiubo@cmss.chinamobile.com>
-> 
-> For most case the sg->length equals to PAGE_SIZE, so this bug won't
-> be triggered. Otherwise this will crash the kernel, for example when
-> all segments' sg->length equal to 1K.
-> 
-> Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
-> ---
->  drivers/target/target_core_user.c | 11 +++++------
->  1 file changed, 5 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-> index 8bf0823..9030c2a 100644
-> --- a/drivers/target/target_core_user.c
-> +++ b/drivers/target/target_core_user.c
-> @@ -590,8 +590,6 @@ static int scatter_data_area(struct tcmu_dev *udev,
->  					block_remaining);
->  			to_offset = get_block_offset_user(udev, dbi,
->  					block_remaining);
-> -			offset = DATA_BLOCK_SIZE - block_remaining;
-> -			to += offset;
->  
->  			if (*iov_cnt != 0 &&
->  			    to_offset == iov_tail(*iov)) {
-> @@ -602,8 +600,10 @@ static int scatter_data_area(struct tcmu_dev *udev,
->  				(*iov)->iov_len = copy_bytes;
->  			}
->  			if (copy_data) {
-> -				memcpy(to, from + sg->length - sg_remaining,
-> -					copy_bytes);
-> +				offset = DATA_BLOCK_SIZE - block_remaining;
-> +				memcpy(to + offset,
-> +				       from + sg->length - sg_remaining,
-> +				       copy_bytes);
->  				tcmu_flush_dcache_range(to, copy_bytes);
->  			}
->  			sg_remaining -= copy_bytes;
-> @@ -664,9 +664,8 @@ static void gather_data_area(struct tcmu_dev *udev, struct tcmu_cmd *cmd,
->  			copy_bytes = min_t(size_t, sg_remaining,
->  					block_remaining);
->  			offset = DATA_BLOCK_SIZE - block_remaining;
-> -			from += offset;
->  			tcmu_flush_dcache_range(from, copy_bytes);
-> -			memcpy(to + sg->length - sg_remaining, from,
-> +			memcpy(to + sg->length - sg_remaining, from + offset,
->  					copy_bytes);
->  
->  			sg_remaining -= copy_bytes;
-> 
 
-Nice.
+Nilesh,
 
-Reviewed-by: Mike Christie <mchristi@redhat.com>
+> This patch adds support for Boot from SAN over iSCSI offload.
+> The iSCSI boot information in the NVRAM is populated under
+> /sys/firmware/iscsi_bootX/ using qed NVM-image reading API and
+> further exported to open-iscsi to perform iSCSI login enabling
+> boot over offload iSCSI interface in a Boot from SAN environment.
+
+Applied to 4.13/scsi-fixes. Thank you!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
