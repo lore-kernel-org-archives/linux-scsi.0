@@ -1,388 +1,152 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [RFC v3 1/2] scsi: generate uevent for SCSI sense code
-Date: Wed, 12 Jul 2017 15:35:34 -0700
-Message-ID: <20170712223535.2609814-2-songliubraving@fb.com>
-References: <20170712223535.2609814-1-songliubraving@fb.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:53270 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752986AbdGLWgD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 12 Jul 2017 18:36:03 -0400
-Received: from pps.filterd (m0044008.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6CMZtrP002925
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2017 15:36:02 -0700
-Received: from mail.thefacebook.com ([199.201.64.23])
-        by mx0a-00082601.pphosted.com with ESMTP id 2bnrge8x31-7
-        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Jul 2017 15:36:02 -0700
-Received: from facebook.com (2401:db00:2120:20f2:face:0:9:0)    by
- mx-out.facebook.com (10.102.107.97) with ESMTP id
- 6f23d180675211e7b0b10002c99331b0-c65ce150 for <linux-scsi@vger.kernel.org>;
-        Wed, 12 Jul 2017 15:35:41 -0700
-In-Reply-To: <20170712223535.2609814-1-songliubraving@fb.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Khazhismel Kumykov <khazhy@google.com>
+Subject: [PATCH] libiscsi: Fix use-after-free race during iscsi_session_teardown
+Date: Wed, 12 Jul 2017 16:06:07 -0700
+Message-ID: <20170712230607.137389-1-khazhy@google.com>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="001a114f34a05a3bea055426e2f6"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: lduncan@suse.com, cleech@redhat.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, open-iscsi@googlegroups.com, Khazhismel Kumykov <khazhy@google.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: hare@suse.de, James.Bottomley@HansenPartnership.com, axboe@fb.com, axboe@kernel.dk, bblock@linux.vnet.ibm.com, emilne@redhat.com, Song Liu <songliubraving@fb.com>
 
-This patch adds capability for SCSI layer to generate uevent for SCSI
-sense code. The feature is gated by CONFIG_SCSI_SENSE_UEVENT.
+--001a114f34a05a3bea055426e2f6
 
-We can configure which sense keys generate uevent for each device
-through sysfs entry sense_event_filter, which is a bitmap of
-"sense keys to generate uevent" For example, the following enables
-uevent for MEDIUM_ERROR (0x03) and HARDWARE_ERROR (0x04) on scsi
-drive sdc:
+Session attributes exposed through sysfs were freed before the device
+was destroyed, resulting in a potential use-after-free. Free these
+attributes after removing the device.
 
-    echo 0x000c > /sys/block/sdc/device/sense_event_filter
-
-Here is an example output captured by udevadm:
-
-KERNEL[587.353177] change   /devices/pci0000:00/XXXXXXXXXX
-ACTION=change
-CDB=\x88\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08\x00\x00
-DEVPATH=/devices/pci0000:00/0000:00:01.0/0000:01:00.0/host6/XXXXXX
-DEVTYPE=scsi_device
-DRIVER=sd
-MODALIAS=scsi:t-0x00
-SDEV_SENSE=1
-SENSE_BUFFER=\x72\x03\x11\x14\x00\x00\x00\x34\x00\x0a\x80 ....
-SENSE_CODE=3/11/14
-SEQNUM=4796
-SUBSYSTEM=scsi
-
-Signed-off-by: Song Liu <songliubraving@fb.com>
+Signed-off-by: Khazhismel Kumykov <khazhy@google.com>
 ---
- drivers/scsi/Kconfig       | 14 +++++++++++
- drivers/scsi/scsi_error.c  | 43 ++++++++++++++++++++++++++++++++++
- drivers/scsi/scsi_lib.c    | 58 +++++++++++++++++++++++++++++++++++++++++++++-
- drivers/scsi/scsi_sysfs.c  | 51 ++++++++++++++++++++++++++++++++++++++++
- include/scsi/scsi_common.h |  6 +++++
- include/scsi/scsi_device.h | 27 ++++++++++++++++++++-
- 6 files changed, 197 insertions(+), 2 deletions(-)
+ drivers/scsi/libiscsi.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index d384f4f..0fb672b 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -226,6 +226,20 @@ config SCSI_LOGGING
- 	  there should be no noticeable performance impact as long as you have
- 	  logging turned off.
- 
-+config SCSI_SENSE_UEVENT
-+	bool "SCSI sense code logging"
-+	depends on SCSI
-+	default n
-+	---help---
-+	  This turns on uevent for SCSI sense code.
-+
-+	  You can configure which sense keys generate uevent for each device
-+	  through sysfs entry sense_event_filter. For example, the following
-+	  enables uevent for MEDIUM_ERROR (0x03) and HARDWARE_ERROR (0x04)
-+	  on scsi drive sdc:
-+
-+	  echo 0x000c > /sys/block/sdc/device/sense_event_filter
-+
- config SCSI_SCAN_ASYNC
- 	bool "Asynchronous SCSI scanning"
- 	depends on SCSI
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index ac31964..b8ef869 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -426,6 +426,48 @@ static void scsi_report_sense(struct scsi_device *sdev,
- 	}
- }
- 
-+/*
-+ * generate uevent when receiving sense code from device
-+ */
-+static void scsi_send_sense_uevent(struct scsi_device *sdev,
-+				   struct scsi_cmnd *scmd,
-+				   struct scsi_sense_hdr *sshdr)
-+{
-+#ifdef CONFIG_SCSI_SENSE_UEVENT
-+	struct scsi_event *evt;
-+	unsigned char sb_len;
-+
-+	if (!test_bit(sshdr->sense_key & 0xf,
-+		      &sdev->sense_event_filter))
-+		return;
-+	evt = sdev_evt_alloc(SDEV_EVT_SCSI_SENSE, GFP_ATOMIC);
-+	if (!evt)
-+		return;
-+
-+	evt->sense_evt_data.cmnd = kzalloc(scmd->cmd_len, GFP_ATOMIC);
-+	if (!evt->sense_evt_data.cmnd)
-+		goto alloc_cmd_fail;
-+
-+	sb_len = scsi_sense_data_length(scmd->sense_buffer);
-+
-+	evt->sense_evt_data.sense_buffer = kzalloc(sb_len, GFP_ATOMIC);
-+	if (!evt->sense_evt_data.sense_buffer)
-+		goto alloc_sense_fail;
-+
-+	evt->sense_evt_data.cmd_len = scmd->cmd_len;
-+	evt->sense_evt_data.sb_len = sb_len;
-+	memcpy(evt->sense_evt_data.cmnd, scmd->cmnd, scmd->cmd_len);
-+	memcpy(evt->sense_evt_data.sense_buffer, scmd->sense_buffer, sb_len);
-+
-+	sdev_evt_send(sdev, evt);
-+	return;
-+alloc_sense_fail:
-+	kfree(evt->sense_evt_data.cmnd);
-+alloc_cmd_fail:
-+	kfree(evt);
-+#endif
-+}
-+
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 42381adf0769..f9199bebaec7 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -2851,9 +2851,6 @@ EXPORT_SYMBOL_GPL(iscsi_session_setup);
  /**
-  * scsi_check_sense - Examine scsi cmd sense
-  * @scmd:	Cmd to have sense checked.
-@@ -446,6 +488,7 @@ int scsi_check_sense(struct scsi_cmnd *scmd)
- 		return FAILED;	/* no valid sense data */
- 
- 	scsi_report_sense(sdev, &sshdr);
-+	scsi_send_sense_uevent(sdev, scmd, &sshdr);
- 
- 	if (scsi_sense_is_deferred(&sshdr))
- 		return NEEDS_RETRY;
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 41c19c7..67cc0fb 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2677,7 +2677,15 @@ EXPORT_SYMBOL(scsi_device_set_state);
- static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
+  * iscsi_session_teardown - destroy session, host, and cls_session
+  * @cls_session: iscsi session
+- *
+- * The driver must have called iscsi_remove_session before
+- * calling this.
+  */
+ void iscsi_session_teardown(struct iscsi_cls_session *cls_session)
  {
- 	int idx = 0;
--	char *envp[3];
-+	char *envp[5];	/* SDEV_EVT_SCSI_SENSE needs most entries (4) */
-+#ifdef CONFIG_SCSI_SENSE_UEVENT
-+	char *buf = NULL;
-+	int i;
-+	int buf_size;
-+	int offset;
-+	struct scsi_sense_hdr sshdr;
-+#endif
-+
+@@ -2863,6 +2860,8 @@ void iscsi_session_teardown(struct iscsi_cls_session *cls_session)
  
- 	switch (evt->evt_type) {
- 	case SDEV_EVT_MEDIA_CHANGE:
-@@ -2702,6 +2710,49 @@ static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
- 	case SDEV_EVT_ALUA_STATE_CHANGE_REPORTED:
- 		envp[idx++] = "SDEV_UA=ASYMMETRIC_ACCESS_STATE_CHANGED";
- 		break;
-+#ifdef CONFIG_SCSI_SENSE_UEVENT
-+	case SDEV_EVT_SCSI_SENSE:
-+		/*
-+		 * buf is used to store 3 strings: SENSE_CODE, CDB and
-+		 * SENSE_BUFFER. 4 bytes are needed for each byte in cdb
-+		 * and sense buffer. So the total size required is:
-+		 *
-+		 *   19 (SENSE_CODE=X/XX/XX\0) + 5 (CDB=\0) +
-+		 *       14 (SENSE_BUFFER=\0) + 4 * (cdb_len + sb_len);
-+		 */
-+		buf_size = (evt->sense_evt_data.cmd_len +
-+			    evt->sense_evt_data.sb_len) * 4 + 38;
-+		buf = kzalloc(buf_size, GFP_KERNEL);
-+		if (!buf)
-+			break;
-+		offset = 0;
-+
-+		envp[idx++] = "SDEV_SENSE=1";
-+		envp[idx++] = buf;
-+		scsi_normalize_sense(evt->sense_evt_data.sense_buffer,
-+				     evt->sense_evt_data.sb_len, &sshdr);
-+		offset += snprintf(buf + offset, buf_size - offset,
-+				   "SENSE_CODE=%1x/%02x/%02x",
-+				   sshdr.sense_key, sshdr.asc, sshdr.ascq);
-+		offset++;
-+
-+		envp[idx++] = buf + offset;
-+		offset += snprintf(buf + offset, buf_size - offset, "CDB=");
-+		for (i = 0; i < evt->sense_evt_data.cmd_len; i++)
-+			offset += snprintf(
-+				buf + offset, buf_size - offset,
-+				"\\x%02x", evt->sense_evt_data.cmnd[i]);
-+
-+		offset++;
-+		envp[idx++] = buf + offset;
-+		offset += snprintf(buf + offset, buf_size - offset,
-+				   "SENSE_BUFFER=");
-+		for (i = 0; i < evt->sense_evt_data.sb_len; i++)
-+			offset += snprintf(
-+				buf + offset, buf_size - offset,
-+				"\\x%02x", evt->sense_evt_data.sense_buffer[i]);
-+		break;
-+#endif
- 	default:
- 		/* do nothing */
- 		break;
-@@ -2710,6 +2761,10 @@ static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
- 	envp[idx++] = NULL;
+ 	iscsi_pool_free(&session->cmdpool);
  
- 	kobject_uevent_env(&sdev->sdev_gendev.kobj, KOBJ_CHANGE, envp);
++	iscsi_remove_session(session);
 +
-+#ifdef CONFIG_SCSI_SENSE_UEVENT
-+	kfree(buf);
-+#endif
+ 	kfree(session->password);
+ 	kfree(session->password_in);
+ 	kfree(session->username);
+@@ -2877,7 +2876,8 @@ void iscsi_session_teardown(struct iscsi_cls_session *cls_session)
+ 	kfree(session->portal_type);
+ 	kfree(session->discovery_parent_type);
+ 
+-	iscsi_destroy_session(cls_session);
++	iscsi_free_session(cls_session);
++
+ 	iscsi_host_dec_session_cnt(shost);
+ 	module_put(owner);
  }
- 
- /**
-@@ -2806,6 +2861,7 @@ struct scsi_event *sdev_evt_alloc(enum scsi_device_event evt_type,
- 	case SDEV_EVT_MODE_PARAMETER_CHANGE_REPORTED:
- 	case SDEV_EVT_LUN_CHANGE_REPORTED:
- 	case SDEV_EVT_ALUA_STATE_CHANGE_REPORTED:
-+	case SDEV_EVT_SCSI_SENSE:
- 	default:
- 		/* do nothing */
- 		break;
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index d6984df..937609c 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1074,6 +1074,54 @@ static DEVICE_ATTR(queue_ramp_up_period, S_IRUGO | S_IWUSR,
- 		   sdev_show_queue_ramp_up_period,
- 		   sdev_store_queue_ramp_up_period);
- 
-+#ifdef CONFIG_SCSI_SENSE_UEVENT
-+
-+/*
-+ * SCSI sense key could be 0x00 - 0x0f,
-+ */
-+#define SCSI_SENSE_EVENT_FILTER_MASK	0xffff
-+
-+static ssize_t
-+sdev_show_sense_event_filter(struct device *dev,
-+			     struct device_attribute *attr,
-+			     char *buf)
-+{
-+	struct scsi_device *sdev;
-+
-+	sdev = to_scsi_device(dev);
-+	return snprintf(buf, 20, "0x%04lx\n",
-+			(sdev->sense_event_filter &
-+			 SCSI_SENSE_EVENT_FILTER_MASK));
-+}
-+
-+static ssize_t
-+sdev_store_sense_event_filter(struct device *dev,
-+			      struct device_attribute *attr,
-+			      const char *buf, size_t count)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	unsigned long filter;
-+	int i;
-+
-+	if (kstrtoul(buf, 0, &filter))
-+		return -EINVAL;
-+
-+	if ((filter & 0xffff) != filter)
-+		return -EINVAL;
-+
-+	for (i = 0; i < 16; i++)
-+		if (filter & SCSI_SENSE_EVENT_FILTER_MASK  & (1 << i))
-+			set_bit(i, &sdev->sense_event_filter);
-+		else
-+			clear_bit(i, &sdev->sense_event_filter);
-+	return count;
-+}
-+
-+static DEVICE_ATTR(sense_event_filter, 0644,
-+		   sdev_show_sense_event_filter,
-+		   sdev_store_sense_event_filter);
-+#endif
-+
- static umode_t scsi_sdev_attr_is_visible(struct kobject *kobj,
- 					 struct attribute *attr, int i)
- {
-@@ -1144,6 +1192,9 @@ static struct attribute *scsi_sdev_attrs[] = {
- 	&dev_attr_preferred_path.attr,
- #endif
- 	&dev_attr_queue_ramp_up_period.attr,
-+#ifdef CONFIG_SCSI_SENSE_UEVENT
-+	&dev_attr_sense_event_filter.attr,
-+#endif
- 	REF_EVT(media_change),
- 	REF_EVT(inquiry_change_reported),
- 	REF_EVT(capacity_change_reported),
-diff --git a/include/scsi/scsi_common.h b/include/scsi/scsi_common.h
-index 20bf7ea..832ff62 100644
---- a/include/scsi/scsi_common.h
-+++ b/include/scsi/scsi_common.h
-@@ -24,6 +24,12 @@ scsi_command_size(const unsigned char *cmnd)
- 		scsi_varlen_cdb_length(cmnd) : COMMAND_SIZE(cmnd[0]);
- }
- 
-+static inline unsigned char
-+scsi_sense_data_length(const unsigned char *sense_buffer)
-+{
-+	return sense_buffer[7] + 8;
-+}
-+
- /* Returns a human-readable name for the device */
- extern const char *scsi_device_type(unsigned type);
- 
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index b41ee9d..aa1ac28 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -64,13 +64,24 @@ enum scsi_device_event {
- 	SDEV_EVT_MODE_PARAMETER_CHANGE_REPORTED,	/* 2A 01  UA reported */
- 	SDEV_EVT_LUN_CHANGE_REPORTED,			/* 3F 0E  UA reported */
- 	SDEV_EVT_ALUA_STATE_CHANGE_REPORTED,		/* 2A 06  UA reported */
-+	SDEV_EVT_SCSI_SENSE,
- 
- 	SDEV_EVT_FIRST		= SDEV_EVT_MEDIA_CHANGE,
--	SDEV_EVT_LAST		= SDEV_EVT_ALUA_STATE_CHANGE_REPORTED,
-+	SDEV_EVT_LAST		= SDEV_EVT_SCSI_SENSE,
- 
- 	SDEV_EVT_MAXBITS	= SDEV_EVT_LAST + 1
- };
- 
-+#ifdef CONFIG_SCSI_SENSE_UEVENT
-+/* data for for SDEV_EVT_SCSI_SENSE */
-+struct scsi_sense_uevent_data {
-+	unsigned char		cmd_len;
-+	unsigned char		*cmnd;
-+	unsigned char		sb_len;
-+	unsigned char		*sense_buffer;
-+};
-+#endif
-+
- struct scsi_event {
- 	enum scsi_device_event	evt_type;
- 	struct list_head	node;
-@@ -78,6 +89,11 @@ struct scsi_event {
- 	/* put union of data structures, for non-simple event types,
- 	 * here
- 	 */
-+	union {
-+#ifdef CONFIG_SCSI_SENSE_UEVENT
-+		struct scsi_sense_uevent_data sense_evt_data;
-+#endif
-+	};
- };
- 
- struct scsi_device {
-@@ -196,6 +212,15 @@ struct scsi_device {
- 	atomic_t iodone_cnt;
- 	atomic_t ioerr_cnt;
- 
-+#ifdef CONFIG_SCSI_SENSE_UEVENT
-+	/*
-+	 * filter of sense code uevent
-+	 * setting bit X (0x00 - 0x0e) of sense_event_filter enables
-+	 * uevent for sense key X
-+	 */
-+	unsigned long		sense_event_filter;
-+#endif
-+
- 	struct device		sdev_gendev,
- 				sdev_dev;
- 
 -- 
-2.9.3
+2.13.2.932.g7449e964c-goog
+
+
+--001a114f34a05a3bea055426e2f6
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+MIIS5wYJKoZIhvcNAQcCoIIS2DCCEtQCAQExDzANBglghkgBZQMEAgEFADALBgkqhkiG9w0BBwGg
+ghBNMIIEXDCCA0SgAwIBAgIOSBtqDm4P/739RPqw/wcwDQYJKoZIhvcNAQELBQAwZDELMAkGA1UE
+BhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExOjA4BgNVBAMTMUdsb2JhbFNpZ24gUGVy
+c29uYWxTaWduIFBhcnRuZXJzIENBIC0gU0hBMjU2IC0gRzIwHhcNMTYwNjE1MDAwMDAwWhcNMjEw
+NjE1MDAwMDAwWjBMMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTEiMCAG
+A1UEAxMZR2xvYmFsU2lnbiBIViBTL01JTUUgQ0EgMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
+AQoCggEBALR23lKtjlZW/17kthzYcMHHKFgywfc4vLIjfq42NmMWbXkNUabIgS8KX4PnIFsTlD6F
+GO2fqnsTygvYPFBSMX4OCFtJXoikP2CQlEvO7WooyE94tqmqD+w0YtyP2IB5j4KvOIeNv1Gbnnes
+BIUWLFxs1ERvYDhmk+OrvW7Vd8ZfpRJj71Rb+QQsUpkyTySaqALXnyztTDp1L5d1bABJN/bJbEU3
+Hf5FLrANmognIu+Npty6GrA6p3yKELzTsilOFmYNWg7L838NS2JbFOndl+ce89gM36CW7vyhszi6
+6LqqzJL8MsmkP53GGhf11YMP9EkmawYouMDP/PwQYhIiUO0CAwEAAaOCASIwggEeMA4GA1UdDwEB
+/wQEAwIBBjAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwQwEgYDVR0TAQH/BAgwBgEB/wIB
+ADAdBgNVHQ4EFgQUyzgSsMeZwHiSjLMhleb0JmLA4D8wHwYDVR0jBBgwFoAUJiSSix/TRK+xsBtt
+r+500ox4AAMwSwYDVR0fBEQwQjBAoD6gPIY6aHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9ncy9n
+c3BlcnNvbmFsc2lnbnB0bnJzc2hhMmcyLmNybDBMBgNVHSAERTBDMEEGCSsGAQQBoDIBKDA0MDIG
+CCsGAQUFBwIBFiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzANBgkqhkiG
+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
+BQUHMAKGNGh0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzaHZzbWltZWNhMS5j
+cnQwHQYDVR0OBBYEFHzUvJSIM43gV3UoAu3dP07Q/FuLMB8GA1UdIwQYMBaAFMs4ErDHmcB4koyz
+IZXm9CZiwOA/MEwGA1UdIARFMEMwQQYJKwYBBAGgMgEoMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8v
+d3d3Lmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMDsGA1UdHwQ0MDIwMKAuoCyGKmh0dHA6Ly9j
+cmwuZ2xvYmFsc2lnbi5jb20vZ3NodnNtaW1lY2ExLmNybDAOBgNVHQ8BAf8EBAMCBaAwHQYDVR0l
+BBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMEMA0GCSqGSIb3DQEBCwUAA4IBAQBg7Qbu4VpOAskP0s9y
+RdGLVhfSJiiB7v2bmQ2jQ3vNdjRMlQB+7VWpI/6GI2j/pEhuDgvy7S7JMOH3081bu4ACwNndLDNq
+ngSmEAf8InveMEHDpmxWXEVdMjpuqXVWICW6d3MJITMTxWF7egIcY7xL8Qx3JSOlGtBn02mxVGU6
+1ETqDl9Nd8QYc0HsHWwBnxjThl53LaZrUMtIKQLz5DDHgsf0zn4G42iguJ+2NdctVvvIcoDRnO/H
+sNtG3VNV0qa7qzr4/AozF3LuboWTB7f5gfDi3W8USCZrSqlUzy8lb82NwVsBES7UItW8dQlf/hp+
+Cd++WeP4c6uf70pQOdNkMYICXjCCAloCAQEwXDBMMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xv
+YmFsU2lnbiBudi1zYTEiMCAGA1UEAxMZR2xvYmFsU2lnbiBIViBTL01JTUUgQ0EgMQIMP55JyaS9
+Y5gDDRLjMA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEiBCCoaKNoPzpD1BzuYPahBpha
+zMI5NBpfB2faWlXLJpsE/zAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEP
+Fw0xNzA3MTIyMzA3NDZaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZIAWUDBAEqMAsGCWCGSAFlAwQB
+FjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEKMAsGCSqGSIb3DQEBBzALBglg
+hkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAGqCpNmAEroJ95XKwn88m08J8RSFhfXUGI5QifMGp
+6kZwJArYK30SPGssicNINIbddA2xhabNsO6NDIxHg5pLvzweCo2eXljK6j5ZdJHm8XqoQSnHaRE+
+kuaGX8QUc0auRzss3zPNCQxBkpvhRwqL9ZLb7mxBTn3AxGmRoxNJsGuBpYkTiInF+zO0pa72JJLF
+aFcS4rmL1qO+yaHVSZJsjpeNyNdfCuw37RnrVEPDeLLXcj/IODiPd7GoTdDw6oGn952/t7QSyu/C
+JEhQ1gAnBZhQTh0rqVC+2YLpc/Ru2AfMQTWvaOyct/dVoZ2NclPNteP8w0j3aEH1xuvWny2/9Q==
+--001a114f34a05a3bea055426e2f6--
