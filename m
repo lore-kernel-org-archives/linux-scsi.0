@@ -1,54 +1,39 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v3 0/7] Enhance libsas hotplug feature
-Date: Wed, 12 Jul 2017 13:56:22 +0200
-Message-ID: <20170712115622.GC4115@linux-x5ow.site>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH v3 6/7] libsas: add wait-complete support to sync
+ discovery event
+Date: Wed, 12 Jul 2017 14:51:59 +0100
+Message-ID: <afd1b55c-c5d2-237d-7727-31f7305decaa@huawei.com>
 References: <1499670369-44143-1-git-send-email-wangyijing@huawei.com>
- <153868d4-9aa6-21b5-81f3-868668218cb2@huawei.com>
+ <1499670369-44143-7-git-send-email-wangyijing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <153868d4-9aa6-21b5-81f3-868668218cb2@huawei.com>
+In-Reply-To: <1499670369-44143-7-git-send-email-wangyijing@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: Yijing Wang <wangyijing@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, chenqilin2@huawei.com, hare@suse.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chenxiang66@hisilicon.com, huangdaode@hisilicon.com, wangkefeng.wang@huawei.com, zhaohongjiang@huawei.com, dingtianhong@huawei.com, guohanjun@huawei.com, yanaijie@huawei.com, hch@lst.de, dan.j.williams@intel.com, emilne@redhat.com, thenzl@redhat.com, wefu@redhat.com, charles.chenxin@huawei.com, chenweilong@huawei.com, Linuxarm <linuxarm@huawei.com>
+To: Yijing Wang <wangyijing@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: chenqilin2@huawei.com, hare@suse.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chenxiang66@hisilicon.com, huangdaode@hisilicon.com, wangkefeng.wang@huawei.com, zhaohongjiang@huawei.com, dingtianhong@huawei.com, guohanjun@huawei.com, yanaijie@huawei.com, hch@lst.de, dan.j.williams@intel.com, emilne@redhat.com, thenzl@redhat.com, wefu@redhat.com, charles.chenxin@huawei.com, chenweilong@huawei.com, Johannes Thumshirn <jthumshirn@suse.de>, Linuxarm <linuxarm@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jul 12, 2017 at 10:59:27AM +0100, John Garry wrote:
-> After:
-> ...
-> root@(none)$ echo 0 > ./phy-0:7/sas_phy/phy-0:7/enable
-> root@(none)$ [  446.193336] hisi_sas_v2_hw HISI0162:01: found dev[8:1] is
-> gone
-> [  446.249205] hisi_sas_v2_hw HISI0162:01: found dev[7:1] is gone
-> [  446.325201] hisi_sas_v2_hw HISI0162:01: found dev[6:1] is gone
-> [  446.373189] hisi_sas_v2_hw HISI0162:01: found dev[5:1] is gone
-> [  446.421187] hisi_sas_v2_hw HISI0162:01: found dev[4:1] is gone
-> [  446.457232] hisi_sas_v2_hw HISI0162:01: found dev[3:1] is gone
-> [  446.477151] sd 0:0:1:0: [sdb] Synchronizing SCSI cache
-> [  446.482373] sd 0:0:1:0: [sdb] Synchronize Cache(10) failed: Result:
-> hostbyte=0x04 driverbyte=0x00
-> [  446.491238] sd 0:0:1:0: [sdb] Stopping disk
-> [  446.495419] sd 0:0:1:0: [sdb] Start/Stop Unit failed: Result:
-> hostbyte=0x04 driverbyte=0x00
-> [  446.525227] hisi_sas_v2_hw HISI0162:01: found dev[2:5] is gone
-> [  446.569249] hisi_sas_v2_hw HISI0162:01: found dev[1:1] is gone
-> [  446.576872] hisi_sas_v2_hw HISI0162:01: found dev[0:2] is gone
-> 
-> root@(none)$
-> 
-> So much nicer. BTW, /dev/sdb is a SATA disk, the rest are SAS.
+On 10/07/2017 08:06, Yijing Wang wrote:
+>
+>  static void sas_chain_event(int event, unsigned long *pending,
+> @@ -592,9 +596,9 @@ int sas_discover_event(struct asd_sas_port *port, enum discover_event ev)
+>  {
+>  	struct sas_discovery *disc;
+>
+> +	disc = &port->disc;
+>  	if (!port)
+>  		return 0;
+> -	disc = &port->disc;
+>
+>  	BUG_ON(ev >= DISC_NUM_EVENTS);
+>
+> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+> index 570b2cb..9d26c28 1
 
-This is awesome. I hope I have some time reviewing the patches themselfes
-soon.
+I was just looking through the code and I noticed this, above. Is there 
+a specific reason to move the NULL check, or was it modified accidentally?
 
-	Johannes
-
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+I mean, if port is NULL I don't think we would get as far as checking it 
+as we would have already de-referenced it.
