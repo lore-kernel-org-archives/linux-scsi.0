@@ -1,35 +1,53 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH v2 01/15] qla2xxx: Combine Active command arrays.
-Date: Tue, 11 Jul 2017 23:43:40 +0000
-Message-ID: <1499816619.2586.53.camel@wdc.com>
-References: <20170614034730.15428-1-himanshu.madhani@cavium.com>
-         <20170614034730.15428-2-himanshu.madhani@cavium.com>
+From: Keith Busch <keith.busch@intel.com>
+Subject: Re: [PATCH 02/13] mpt3sas: SGL to PRP Translation for I/Os to NVMe
+ devices
+Date: Tue, 11 Jul 2017 20:04:02 -0400
+Message-ID: <20170712000402.GA27718@localhost.localdomain>
+References: <1499763313-7214-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <1499763313-7214-3-git-send-email-suganath-prabu.subramani@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20170614034730.15428-2-himanshu.madhani@cavium.com>
-Content-Language: en-US
-Content-ID: <E0A532A81582484599A630D30CE0D2B5@namprd04.prod.outlook.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1499763313-7214-3-git-send-email-suganath-prabu.subramani@broadcom.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+Cc: "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "jejb@kernel.org" <jejb@kernel.org>, "hch@infradead.org" <hch@infradead.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Sathya.Prakash@broadcom.com" <Sathya.Prakash@broadcom.com>, "kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, "sreekanth.reddy@broadcom.com" <sreekanth.reddy@broadcom.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2017-06-13 at 20:47 -0700, Himanshu Madhani wrote:
->  typedef struct srb {
-> +	/*
-> +	 * Do not move cmd_type field, it needs to
-> +	 * line up with qla_tgt_cmd->cmd_type
-> +	 */
-> +	uint8_t cmd_type;
-> +	uint8_t pad[3];
+On Tue, Jul 11, 2017 at 01:55:02AM -0700, Suganath Prabu S wrote:
+> +/**
+> + * _base_check_pcie_native_sgl - This function is called for PCIe end devices to
+> + * determine if the driver needs to build a native SGL.  If so, that native
+> + * SGL is built in the special contiguous buffers allocated especially for
+> + * PCIe SGL creation.  If the driver will not build a native SGL, return
+> + * TRUE and a normal IEEE SGL will be built.  Currently this routine
+> + * supports NVMe.
+> + * @ioc: per adapter object
+> + * @mpi_request: mf request pointer
+> + * @smid: system request message index
+> + * @scmd: scsi command
+> + * @pcie_device: points to the PCIe device's info
+> + *
+> + * Returns 0 if native SGL was built, 1 if no SGL was built
+> + */
+> +static int
+> +_base_check_pcie_native_sgl(struct MPT3SAS_ADAPTER *ioc,
+> +	Mpi25SCSIIORequest_t *mpi_request, u16 smid, struct scsi_cmnd *scmd,
+> +	struct _pcie_device *pcie_device)
+> +{
 
-Hello Himanshu,
+<snip>
 
-Had I understood correctly that you had promised to rework the command
-array merging such that a union is used instead of requiring certain
-fields to be present at certain offsets (see also
-https://www.spinics.net/lists/target-devel/msg15591.html)?
+> +	/* Return 0, indicating we built a native SGL. */
+> +	return 1;
+> +}
 
-Bart.=
+This function doesn't return 0 ever. Not sure why it's here.
+
+Curious about your device, though, if a nvme native SGL can *not* be
+built, does the HBA firmware then buffer it in its local memory before
+sending/receiving to/from the host?
+
+And if a native SGL can be built, does the NVMe target DMA directly
+to/from host memory, giving a performance boost?
