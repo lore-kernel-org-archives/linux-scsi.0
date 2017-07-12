@@ -1,25 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: hisi_sas: make several const arrays static
-Date: Wed, 12 Jul 2017 17:23:43 -0400
-Message-ID: <yq11spll57k.fsf@oracle.com>
-References: <20170711121144.15840-1-colin.king@canonical.com>
+Subject: Re: [PATCH] scsi: libfc: pass an error pointer to fc_disc_error()
+Date: Wed, 12 Jul 2017 17:25:42 -0400
+Message-ID: <yq1wp7djqjt.fsf@oracle.com>
+References: <20170712073022.e24r3iad7jqxarn6@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170711121144.15840-1-colin.king@canonical.com> (Colin King's
-        message of "Tue, 11 Jul 2017 13:11:44 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: John Garry <john.garry@huawei.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <20170712073022.e24r3iad7jqxarn6@mwanda> (Dan Carpenter's message
+        of "Wed, 12 Jul 2017 10:30:22 +0300")
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Johannes Thumshirn <jth@kernel.org>, Robert Love <rml@tech9.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Colin,
+Dan,
 
-> Don't populate various tables on the stack but make them static const.
-> Makes the object code smaller by over 280 bytes:
+> This patch is basically to silence a static checker warning.
+>
+>     drivers/scsi/libfc/fc_disc.c:326 fc_disc_error()
+>     warn: passing a valid pointer to 'PTR_ERR'
+>
+> It doesn't affect runtime because it treats -ENOMEM and a valid pointer
+> the same.  But the documentation says we should be passing an error
+> pointer.
 
-Applied to 4.13/scsi-fixes.
+Applied to 4.13/scsi-fixes. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
