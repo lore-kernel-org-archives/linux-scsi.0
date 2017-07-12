@@ -1,106 +1,39 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH v3 5/7] libsas: add a new workqueue to run probe/destruct
- discovery event
-Date: Wed, 12 Jul 2017 17:50:36 +0100
-Message-ID: <b1c7f058-c450-beb3-a909-8129e7042f87@huawei.com>
-References: <1499670369-44143-1-git-send-email-wangyijing@huawei.com>
- <1499670369-44143-6-git-send-email-wangyijing@huawei.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: CPU lock-ups with 4.12.0+ kernels related to usb_storage
+Date: Wed, 12 Jul 2017 18:52:00 +0200
+Message-ID: <20170712165200.GA29145@lst.de>
+References: <2b6dc4b0-71c8-28cb-383d-c01a9e896c7a@internode.on.net> <Pine.LNX.4.44L0.1707121152211.2118-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1499670369-44143-6-git-send-email-wangyijing@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Yijing Wang <wangyijing@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: chenqilin2@huawei.com, hare@suse.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chenxiang66@hisilicon.com, huangdaode@hisilicon.com, wangkefeng.wang@huawei.com, zhaohongjiang@huawei.com, dingtianhong@huawei.com, guohanjun@huawei.com, yanaijie@huawei.com, hch@lst.de, dan.j.williams@intel.com, emilne@redhat.com, thenzl@redhat.com, wefu@redhat.com, charles.chenxin@huawei.com, chenweilong@huawei.com, Johannes Thumshirn <jthumshirn@suse.de>, Linuxarm <linuxarm@huawei.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:58207 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753723AbdGLQwC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 12 Jul 2017 12:52:02 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.1707121152211.2118-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Arthur Marsh <arthur.marsh@internode.on.net>, Christoph Hellwig <hch@lst.de>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
 
-On 10/07/2017 08:06, Yijing Wang wrote:
-> Sometimes, we want sync libsas probe or destruct in sas discovery work,
-> like when libsas revalidate domain. We need to split probe and destruct
-> work from the scsi host workqueue.
->
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> CC: John Garry <john.garry@huawei.com>
-> CC: Johannes Thumshirn <jthumshirn@suse.de>
-> CC: Ewan Milne <emilne@redhat.com>
-> CC: Christoph Hellwig <hch@lst.de>
-> CC: Tomas Henzl <thenzl@redhat.com>
-> CC: Dan Williams <dan.j.williams@intel.com>
-> ---
->  drivers/scsi/libsas/sas_discover.c | 13 ++++++++++++-
->  drivers/scsi/libsas/sas_init.c     |  8 ++++++++
->  include/scsi/libsas.h              |  1 +
->  3 files changed, 21 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-> index 5d4a3a8..a25d648 100644
-> --- a/drivers/scsi/libsas/sas_discover.c
-> +++ b/drivers/scsi/libsas/sas_discover.c
-> @@ -559,7 +559,18 @@ static void sas_chain_work(struct sas_ha_struct *ha, struct sas_work *sw)
->  	 * not racing against draining
->  	 */
->  	sas_port_get(port);
-> -	ret = scsi_queue_work(ha->core.shost, &sw->work);
-> +	/*
-> +	 * discovery event probe and destruct would be called in other
-> +	 * discovery event like discover domain and revalidate domain
-> +	 * events, in some cases, we need to sync execute probe and destruct
-> +	 * events, so run probe and destruct discover events except in a new
-> +	 * workqueue.
+On Wed, Jul 12, 2017 at 12:10:02PM -0400, Alan Stern wrote:
+> This is pretty conclusive.  The problem comes about because
+> usb_stor_control_thread() calls scsi_mq_done() while holding
+> shost->host_lock, and then scsi_eh_scmd_add() tries to acquire that
+> same lock.
+> 
+> I don't know why this didn't show up in earlier kernels.  I guess some
+> element of the call chain listed above must be new in 4.12.
+> 
+> Christoph, what's the best way to fix this?  Should usb-storage release
+> the host lock before issuing the ->scsi_done callback?  If so, does
+> that change need to be applied to any kernels before 4.12?
 
-Can we just use ha->disc_q for all discovery events for simplicity? 
-Would this solve the disco mutex you try to solve in patch 7/7?
+4.12 switched to blk-mq by default, and while the old code used
+a softirq for completions, which is always a difference context
+the blk-mq code might execute in the same context it's called in.
 
-> +	 */
-> +	if (ev->type == DISCE_PROBE || ev->type == DISCE_DESTRUCT)
-> +		ret = queue_work(ha->disc_q, &sw->work);
-> +	else
-> +		ret = scsi_queue_work(ha->core.shost, &sw->work);
-> +
->  	if (ret != 1)
-
-Uhh, we are mixing bool and int here... but we're forced to by 
-scsi_queue_work()
-
->  		sas_port_put(port);
->  }
-> diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-> index 2f3b736..df1d78b 100644
-> --- a/drivers/scsi/libsas/sas_init.c
-> +++ b/drivers/scsi/libsas/sas_init.c
-> @@ -152,6 +152,13 @@ int sas_register_ha(struct sas_ha_struct *sas_ha)
->  	if (!sas_ha->event_q)
->  		goto Undo_ports;
->
-> +	snprintf(name, 64, "%s_disc_q", dev_name(sas_ha->dev));
-> +	sas_ha->disc_q = create_singlethread_workqueue(name);
-> +	if(!sas_ha->disc_q) {
-> +		destroy_workqueue(sas_ha->event_q);
-> +		goto Undo_ports;
-> +	}
-> +
->  	INIT_LIST_HEAD(&sas_ha->eh_done_q);
->  	INIT_LIST_HEAD(&sas_ha->eh_ata_q);
->
-> @@ -187,6 +194,7 @@ int sas_unregister_ha(struct sas_ha_struct *sas_ha)
->  	__sas_drain_work(sas_ha);
->  	mutex_unlock(&sas_ha->drain_mutex);
->  	destroy_workqueue(sas_ha->event_q);
-> +	destroy_workqueue(sas_ha->disc_q);
->
->  	return 0;
->  }
-> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-> index c2ef05e..4bcb9fe 100644
-> --- a/include/scsi/libsas.h
-> +++ b/include/scsi/libsas.h
-> @@ -406,6 +406,7 @@ struct sas_ha_struct {
->  	struct device *dev;	  /* should be set */
->  	struct module *lldd_module; /* should be set */
->  	struct workqueue_struct *event_q;
-> +	struct workqueue_struct *disc_q;
->
->  	u8 *sas_addr;		  /* must be set */
->  	u8 hashed_sas_addr[HASHED_SAS_ADDR_SIZE];
->
+So yes, for that we'd need to drop host_lock.  But I wonder how
+many more of these are lingering somewhere and if we can find
+another workaround.
