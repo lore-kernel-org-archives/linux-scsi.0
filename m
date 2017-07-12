@@ -1,32 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] cxlflash: return -EFAULT if copy_from_user() fails
-Date: Wed, 12 Jul 2017 17:07:28 -0400
-Message-ID: <yq1vamxl5yn.fsf@oracle.com>
-References: <20170630080106.yxyckztimezvpzrt@mwanda>
+Subject: Re: [PATCH] scsi: isci: fix typo in function names
+Date: Wed, 12 Jul 2017 17:10:32 -0400
+Message-ID: <yq1r2xll5tj.fsf@oracle.com>
+References: <20170703101727.12600-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:35429 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752363AbdGLVHe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2017 17:07:34 -0400
-In-Reply-To: <20170630080106.yxyckztimezvpzrt@mwanda> (Dan Carpenter's message
-        of "Fri, 30 Jun 2017 11:01:06 +0300")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170703101727.12600-1-colin.king@canonical.com> (Colin King's
+        message of "Mon, 3 Jul 2017 11:17:27 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: Intel SCU Linux support <intel-linux-scu@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
 
-Dan,
+Colin,
 
-> The copy_from/to_user() functions return the number of bytes remaining
-> to be copied but we had intended to return -EFAULT here.
+> There are a couple of typos in function names and spelling of request
+> where the letters u and e are swapped:
 >
-> Fixes: bc88ac47d5cb ("scsi: cxlflash: Support AFU debug")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> scu_ssp_reqeust_construct_task_context
+> scu_sata_reqeust_construct_task_context
+>
+> Fix the spelling of request.
 
-Applied to 4.13/scsi-fixes, thanks!
+Applied to 4.13/scsi-fixes.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
