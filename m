@@ -1,51 +1,64 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCH] scsi: qedi: Fix return code in qedi_ep_connect()
-Date: Wed, 12 Jul 2017 10:31:21 +0300
-Message-ID: <20170712073121.yznfz6g5cvlrsvze@mwanda>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: lixiubo@cmss.chinamobile.com
+Subject: [PATCH] tcmu: Fix possible to/from address overflow when doing the memcpy
+Date: Wed, 12 Jul 2017 15:51:17 +0800
+Message-ID: <1499845877-18931-1-git-send-email-lixiubo@cmss.chinamobile.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:26304 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933181AbdGLHbi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2017 03:31:38 -0400
-Content-Disposition: inline
+Received: from cmccmta3.chinamobile.com ([221.176.66.81]:58498 "EHLO
+        cmccmta3.chinamobile.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756753AbdGLHvY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2017 03:51:24 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: QLogic-Storage-Upstream@cavium.com, Manish Rangankar <manish.rangankar@cavium.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: nab@linux-iscsi.org, mchristi@redhat.com
+Cc: bryantly@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, Xiubo Li <lixiubo@cmss.chinamobile.com>
 
-We shouldn't be writing over the "ret" variable.  It means we return
-ERR_PTR(0) which is NULL and it results in a NULL dereference in the
-caller.
+From: Xiubo Li <lixiubo@cmss.chinamobile.com>
 
-Fixes: ace7f46ba5fd ("scsi: qedi: Add QLogic FastLinQ offload iSCSI driver framework.")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+For most case the sg->length equals to PAGE_SIZE, so this bug won't
+be triggered. Otherwise this will crash the kernel, for example when
+all segments' sg->length equal to 1K.
 
-diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
-index 80edd28b635f..37da9a8b43b1 100644
---- a/drivers/scsi/qedi/qedi_iscsi.c
-+++ b/drivers/scsi/qedi/qedi_iscsi.c
-@@ -824,7 +824,7 @@ qedi_ep_connect(struct Scsi_Host *shost, struct sockaddr *dst_addr,
- 	u32 iscsi_cid = QEDI_CID_RESERVED;
- 	u16 len = 0;
- 	char *buf = NULL;
--	int ret;
-+	int ret, tmp;
+Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
+---
+ drivers/target/target_core_user.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index 8bf0823..9030c2a 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -590,8 +590,6 @@ static int scatter_data_area(struct tcmu_dev *udev,
+ 					block_remaining);
+ 			to_offset = get_block_offset_user(udev, dbi,
+ 					block_remaining);
+-			offset = DATA_BLOCK_SIZE - block_remaining;
+-			to += offset;
  
- 	if (!shost) {
- 		ret = -ENXIO;
-@@ -940,10 +940,10 @@ qedi_ep_connect(struct Scsi_Host *shost, struct sockaddr *dst_addr,
+ 			if (*iov_cnt != 0 &&
+ 			    to_offset == iov_tail(*iov)) {
+@@ -602,8 +600,10 @@ static int scatter_data_area(struct tcmu_dev *udev,
+ 				(*iov)->iov_len = copy_bytes;
+ 			}
+ 			if (copy_data) {
+-				memcpy(to, from + sg->length - sg_remaining,
+-					copy_bytes);
++				offset = DATA_BLOCK_SIZE - block_remaining;
++				memcpy(to + offset,
++				       from + sg->length - sg_remaining,
++				       copy_bytes);
+ 				tcmu_flush_dcache_range(to, copy_bytes);
+ 			}
+ 			sg_remaining -= copy_bytes;
+@@ -664,9 +664,8 @@ static void gather_data_area(struct tcmu_dev *udev, struct tcmu_cmd *cmd,
+ 			copy_bytes = min_t(size_t, sg_remaining,
+ 					block_remaining);
+ 			offset = DATA_BLOCK_SIZE - block_remaining;
+-			from += offset;
+ 			tcmu_flush_dcache_range(from, copy_bytes);
+-			memcpy(to + sg->length - sg_remaining, from,
++			memcpy(to + sg->length - sg_remaining, from + offset,
+ 					copy_bytes);
  
- ep_rel_conn:
- 	qedi->ep_tbl[iscsi_cid] = NULL;
--	ret = qedi_ops->release_conn(qedi->cdev, qedi_ep->handle);
--	if (ret)
-+	tmp = qedi_ops->release_conn(qedi->cdev, qedi_ep->handle);
-+	if (tmp)
- 		QEDI_WARN(&qedi->dbg_ctx, "release_conn returned %d\n",
--			  ret);
-+			  tmp);
- ep_free_sq:
- 	qedi_free_sq(qedi, qedi_ep);
- ep_conn_exit:
+ 			sg_remaining -= copy_bytes;
+-- 
+1.8.3.1
