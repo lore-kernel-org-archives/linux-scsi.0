@@ -1,53 +1,72 @@
-From: Keith Busch <keith.busch@intel.com>
-Subject: Re: [PATCH 02/13] mpt3sas: SGL to PRP Translation for I/Os to NVMe
- devices
-Date: Tue, 11 Jul 2017 20:04:02 -0400
-Message-ID: <20170712000402.GA27718@localhost.localdomain>
-References: <1499763313-7214-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <1499763313-7214-3-git-send-email-suganath-prabu.subramani@broadcom.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] iscsi-target: Add login_keys_workaround attribute for
+ non RFC initiators
+Date: Tue, 11 Jul 2017 17:32:54 -0700
+Message-ID: <1499819574.30046.6.camel@haakon3.daterainc.com>
+References: <1499466285-9907-1-git-send-email-nab@linux-iscsi.org>
+         <1499816315.2586.51.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1499763313-7214-3-git-send-email-suganath-prabu.subramani@broadcom.com>
+In-Reply-To: <1499816315.2586.51.camel@wdc.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Cc: "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "jejb@kernel.org" <jejb@kernel.org>, "hch@infradead.org" <hch@infradead.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Sathya.Prakash@broadcom.com" <Sathya.Prakash@broadcom.com>, "kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, "sreekanth.reddy@broadcom.com" <sreekanth.reddy@broadcom.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "robert@leblancnet.us" <robert@leblancnet.us>, "arun.easi@cavium.com" <arun.easi@cavium.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jul 11, 2017 at 01:55:02AM -0700, Suganath Prabu S wrote:
-> +/**
-> + * _base_check_pcie_native_sgl - This function is called for PCIe end devices to
-> + * determine if the driver needs to build a native SGL.  If so, that native
-> + * SGL is built in the special contiguous buffers allocated especially for
-> + * PCIe SGL creation.  If the driver will not build a native SGL, return
-> + * TRUE and a normal IEEE SGL will be built.  Currently this routine
-> + * supports NVMe.
-> + * @ioc: per adapter object
-> + * @mpi_request: mf request pointer
-> + * @smid: system request message index
-> + * @scmd: scsi command
-> + * @pcie_device: points to the PCIe device's info
-> + *
-> + * Returns 0 if native SGL was built, 1 if no SGL was built
-> + */
-> +static int
-> +_base_check_pcie_native_sgl(struct MPT3SAS_ADAPTER *ioc,
-> +	Mpi25SCSIIORequest_t *mpi_request, u16 smid, struct scsi_cmnd *scmd,
-> +	struct _pcie_device *pcie_device)
-> +{
+On Tue, 2017-07-11 at 23:38 +0000, Bart Van Assche wrote:
+> On Fri, 2017-07-07 at 22:24 +0000, Nicholas A. Bellinger wrote:
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > 
+> > This patch re-introduces part of a long standing login workaround that
+> > was recently dropped by:
+> > 
+> >   commit 1c99de981f30b3e7868b8d20ce5479fa1c0fea46
+> >   Author: Nicholas Bellinger <nab@linux-iscsi.org>
+> >   Date:   Sun Apr 2 13:36:44 2017 -0700
+> > 
+> >       iscsi-target: Drop work-around for legacy GlobalSAN initiator
+> > 
+> > Namely, the workaround for FirstBurstLength ended up being required by
+> > Mellanox Flexboot PXE boot ROMs as reported by Robert.
+> > 
+> > So this patch re-adds the work-around for FirstBurstLength within
+> > iscsi_check_proposer_for_optional_reply(), and makes the key optional
+> > to respond when the initiator does not propose, nor respond to it.
+> > 
+> > Also as requested by Arun, this patch introduces a new TPG attribute
+> > named 'login_keys_workaround' that controls the use of both the
+> > FirstBurstLength workaround, as well as the two other existing
+> > workarounds for gPXE iSCSI boot client.
+> > 
+> > By default, the workaround is enabled with login_keys_workaround=1,
+> > since Mellanox FlexBoot requires it, and Arun has verified the Qlogic
+> > MSFT initiator already proposes FirstBurstLength, so it's uneffected
+> > by this re-adding this part of the original work-around.
+> 
+> Hello Nick,
+> 
+> The new configfs attribute ("login_keys_workaround") may confuse users - for
+> someone who has not followed this e-mail thread it can take a long time
+> before they figure out that they need to set this configfs attribute.
 
-<snip>
+It's enabled by default, so there is nothing a user has to explicitly
+change in order all hosts to 'just work'.
 
-> +	/* Return 0, indicating we built a native SGL. */
-> +	return 1;
-> +}
+The only reason the attribute was added was by request of Arun, so if
+some future initiator doesn't proposed the keys controlled by the
+work-around, and still attempts to respond they can at least get
+something working w/o code change.
 
-This function doesn't return 0 ever. Not sure why it's here.
+>  Have
+> you considered to let the iSCSI target driver figure out whether or not that
+> variable has to be set, e.g. by looking up the initiator IQN in a list?
+> 
 
-Curious about your device, though, if a nvme native SGL can *not* be
-built, does the HBA firmware then buffer it in its local memory before
-sending/receiving to/from the host?
+Given InitiatorName is end user configurable, trying to do a workaround
+based on IQN regexs is error prone, at best.
 
-And if a native SGL can be built, does the NVMe target DMA directly
-to/from host memory, giving a performance boost?
+Also, since the FirstBurstLength work-around this patch re-adds had
+already been in place for the better part of 8 years, the risk of
+interopt issues is almost non existent.
