@@ -1,41 +1,51 @@
 From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCH] scsi: libfc: pass an error pointer to fc_disc_error()
-Date: Wed, 12 Jul 2017 10:30:22 +0300
-Message-ID: <20170712073022.e24r3iad7jqxarn6@mwanda>
+Subject: [PATCH] scsi: qedi: Fix return code in qedi_ep_connect()
+Date: Wed, 12 Jul 2017 10:31:21 +0300
+Message-ID: <20170712073121.yznfz6g5cvlrsvze@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:26073 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:26304 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933187AbdGLHbG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2017 03:31:06 -0400
+        with ESMTP id S933181AbdGLHbi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jul 2017 03:31:38 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jth@kernel.org>, Robert Love <rml@tech9.net>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: QLogic-Storage-Upstream@cavium.com, Manish Rangankar <manish.rangankar@cavium.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-This patch is basically to silence a static checker warning.
+We shouldn't be writing over the "ret" variable.  It means we return
+ERR_PTR(0) which is NULL and it results in a NULL dereference in the
+caller.
 
-    drivers/scsi/libfc/fc_disc.c:326 fc_disc_error()
-    warn: passing a valid pointer to 'PTR_ERR'
-
-It doesn't affect runtime because it treats -ENOMEM and a valid pointer
-the same.  But the documentation says we should be passing an error
-pointer.
-
+Fixes: ace7f46ba5fd ("scsi: qedi: Add QLogic FastLinQ offload iSCSI driver framework.")
 Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
-index fd501f8dbb11..8660f923ace0 100644
---- a/drivers/scsi/libfc/fc_disc.c
-+++ b/drivers/scsi/libfc/fc_disc.c
-@@ -573,7 +573,7 @@ static void fc_disc_gpn_ft_resp(struct fc_seq *sp, struct fc_frame *fp,
- 		event = DISC_EV_FAILED;
- 	}
- 	if (error)
--		fc_disc_error(disc, fp);
-+		fc_disc_error(disc, ERR_PTR(error));
- 	else if (event != DISC_EV_NONE)
- 		fc_disc_done(disc, event);
- 	fc_frame_free(fp);
+diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
+index 80edd28b635f..37da9a8b43b1 100644
+--- a/drivers/scsi/qedi/qedi_iscsi.c
++++ b/drivers/scsi/qedi/qedi_iscsi.c
+@@ -824,7 +824,7 @@ qedi_ep_connect(struct Scsi_Host *shost, struct sockaddr *dst_addr,
+ 	u32 iscsi_cid = QEDI_CID_RESERVED;
+ 	u16 len = 0;
+ 	char *buf = NULL;
+-	int ret;
++	int ret, tmp;
+ 
+ 	if (!shost) {
+ 		ret = -ENXIO;
+@@ -940,10 +940,10 @@ qedi_ep_connect(struct Scsi_Host *shost, struct sockaddr *dst_addr,
+ 
+ ep_rel_conn:
+ 	qedi->ep_tbl[iscsi_cid] = NULL;
+-	ret = qedi_ops->release_conn(qedi->cdev, qedi_ep->handle);
+-	if (ret)
++	tmp = qedi_ops->release_conn(qedi->cdev, qedi_ep->handle);
++	if (tmp)
+ 		QEDI_WARN(&qedi->dbg_ctx, "release_conn returned %d\n",
+-			  ret);
++			  tmp);
+ ep_free_sq:
+ 	qedi_free_sq(qedi, qedi_ep);
+ ep_conn_exit:
