@@ -1,34 +1,69 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] scsi: libfc: pass an error pointer to fc_disc_error()
-Date: Wed, 12 Jul 2017 09:54:14 +0200
-Message-ID: <20170712075414.GB4115@linux-x5ow.site>
-References: <20170712073022.e24r3iad7jqxarn6@mwanda>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH v3 1/7] libsas: Use static sas event pool to appease sas
+ event lost
+Date: Wed, 12 Jul 2017 09:17:59 +0100
+Message-ID: <0af2bdd0-90ce-6b04-bbf3-9b8ffbb34b38@huawei.com>
+References: <1499670369-44143-1-git-send-email-wangyijing@huawei.com>
+ <1499670369-44143-2-git-send-email-wangyijing@huawei.com>
+ <e45b90d1-9547-3845-9114-b794277d6c72@huawei.com>
+ <5965840B.2000909@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170712073022.e24r3iad7jqxarn6@mwanda>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Johannes Thumshirn <jth@kernel.org>, Robert Love <rml@tech9.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5965840B.2000909@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: wangyijing <wangyijing@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: chenqilin2@huawei.com, hare@suse.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chenxiang66@hisilicon.com, huangdaode@hisilicon.com, wangkefeng.wang@huawei.com, zhaohongjiang@huawei.com, dingtianhong@huawei.com, guohanjun@huawei.com, yanaijie@huawei.com, hch@lst.de, dan.j.williams@intel.com, emilne@redhat.com, thenzl@redhat.com, wefu@redhat.com, charles.chenxin@huawei.com, chenweilong@huawei.com, Johannes Thumshirn <jthumshirn@suse.de>, Linuxarm <linuxarm@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jul 12, 2017 at 10:30:22AM +0300, Dan Carpenter wrote:
-> This patch is basically to silence a static checker warning.
-> 
->     drivers/scsi/libfc/fc_disc.c:326 fc_disc_error()
->     warn: passing a valid pointer to 'PTR_ERR'
-> 
-> It doesn't affect runtime because it treats -ENOMEM and a valid pointer
-> the same.  But the documentation says we should be passing an error
-> pointer.
+On 12/07/2017 03:06, wangyijing wrote:
+>>> -    unsigned long port_events_pending;
+>>> -    unsigned long phy_events_pending;
+>>> +    struct asd_sas_event   port_events[PORT_POOL_SIZE];
+>>> +    struct asd_sas_event   phy_events[PHY_POOL_SIZE];
+>>>
+>>>      int error;
+>>
+>> Hi Yijing,
+>>
+>> So now we are creating a static pool of events per PHY/port, instead of having 1 static work struct per event per PHY/port. So, for sure, this avoids the dynamic event issue of system memory exhaustion which we discussed in v1+v2 series. And it seems to possibly remove issue of losing SAS events.
+>>
+>> But how did you determine the pool size for a PHY/port? It would seem to be 5 * #phy events or #port events (which is also 5, I figure by coincidence). How does this deal with flutter of >25 events?
+>
+> There is no special meaning for the pool size, if flutter of > 25 events, notify sas events will return error, and the further step work is depending on LLDD drivers.
+> I hope libsas could do more work in this case, but now it seems a little difficult, this patch may be a interim fix, until we find a perfect solution.
 
-Acked-by: Johannes Thumshirn <jth@kernel.org>
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+The principal of having a fixed-sized pool is ok, even though the pool 
+size needs more consideration.
+
+However my issue is how to handle pool exhaustion. For a start, relaying 
+info to the LLDD that the event notification failed is probably not the 
+way to go. I only now noticed "scsi: sas: scsi_queue_work can fail, so 
+make callers aware" made it into the kernel; as I mentioned in response 
+to this patch, the LLDD does not know how to handle this (and no LLDDs 
+do actually handle this).
+
+I would say it is better to shut down the PHY from libsas (As Dan 
+mentioned in the v1 series) when the pool exhausts, under the assumption 
+that the PHY has gone into some erroneous state. The user can later 
+re-enable the PHY from sysfs, if required.
+
+Much appreciated,
+John
+
+>
+> Thanks!
+> Yijing.
+>
+>>
+>> Thanks,
+>> John
+>>
+>>
+>> .
+>>
+>
+>
+> .
+>
