@@ -1,95 +1,37 @@
-From: lixiubo@cmss.chinamobile.com
-Subject: [PATCH] tcmu: clean up the scatter helper
-Date: Thu, 13 Jul 2017 14:33:50 +0800
-Message-ID: <1499927630-19785-1-git-send-email-lixiubo@cmss.chinamobile.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [RFC v3 1/2] scsi: generate uevent for SCSI sense code
+Date: Thu, 13 Jul 2017 08:39:57 +0200
+Message-ID: <20170713063957.GA5212@linux-x5ow.site>
+References: <20170712223535.2609814-1-songliubraving@fb.com>
+ <20170712223535.2609814-2-songliubraving@fb.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmccmta3.chinamobile.com ([221.176.66.81]:19281 "EHLO
-        cmccmta3.chinamobile.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750748AbdGMGd5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Jul 2017 02:33:57 -0400
+Received: from mx2.suse.de ([195.135.220.15]:48200 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750748AbdGMGkC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 13 Jul 2017 02:40:02 -0400
+Content-Disposition: inline
+In-Reply-To: <20170712223535.2609814-2-songliubraving@fb.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: nab@linux-iscsi.org, mchristi@redhat.com
-Cc: bryantly@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, Xiubo Li <lixiubo@cmss.chinamobile.com>
+To: Song Liu <songliubraving@fb.com>
+Cc: linux-scsi@vger.kernel.org, hare@suse.de, James.Bottomley@HansenPartnership.com, axboe@fb.com, axboe@kernel.dk, bblock@linux.vnet.ibm.com, emilne@redhat.com
 
-From: Xiubo Li <lixiubo@cmss.chinamobile.com>
+On Wed, Jul 12, 2017 at 03:35:34PM -0700, Song Liu wrote:
+> +	if (!test_bit(sshdr->sense_key & 0xf,
+> +		      &sdev->sense_event_filter))
 
-Add some comments to make the scatter code to be more readable.
+While being technically correct, this looks a bit kludgy. Please pass
+in the whole sense_key without masking it.
 
-Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
----
- drivers/target/target_core_user.c | 30 +++++++++++++++++++++++++-----
- 1 file changed, 25 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 9030c2a..4f529ed3 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -532,8 +532,7 @@ static inline size_t head_to_end(size_t head, size_t size)
- 	return size - head;
- }
- 
--static inline void new_iov(struct iovec **iov, int *iov_cnt,
--			   struct tcmu_dev *udev)
-+static inline void new_iov(struct iovec **iov, int *iov_cnt)
- {
- 	struct iovec *iovec;
- 
-@@ -586,19 +585,38 @@ static int scatter_data_area(struct tcmu_dev *udev,
- 				to = kmap_atomic(page);
- 			}
- 
--			copy_bytes = min_t(size_t, sg_remaining,
--					block_remaining);
-+			/*
-+			 * Covert to virtual offset of the ring data area.
-+			 */
- 			to_offset = get_block_offset_user(udev, dbi,
- 					block_remaining);
- 
-+			/*
-+			 * The following code will gather and map the blocks
-+			 * to the same iovec when the blocks are all next to
-+			 * each other.
-+			 */
-+			copy_bytes = min_t(size_t, sg_remaining,
-+					block_remaining);
- 			if (*iov_cnt != 0 &&
- 			    to_offset == iov_tail(*iov)) {
-+				/*
-+				 * Will append to the current iovec, because
-+				 * the current block page is next to the
-+				 * previous one.
-+				 */
- 				(*iov)->iov_len += copy_bytes;
- 			} else {
--				new_iov(iov, iov_cnt, udev);
-+				/*
-+				 * Will allocate a new iovec because we are
-+				 * first time here or the current block page
-+				 * is not next to the previous one.
-+				 */
-+				new_iov(iov, iov_cnt);
- 				(*iov)->iov_base = (void __user *)to_offset;
- 				(*iov)->iov_len = copy_bytes;
- 			}
-+
- 			if (copy_data) {
- 				offset = DATA_BLOCK_SIZE - block_remaining;
- 				memcpy(to + offset,
-@@ -606,11 +624,13 @@ static int scatter_data_area(struct tcmu_dev *udev,
- 				       copy_bytes);
- 				tcmu_flush_dcache_range(to, copy_bytes);
- 			}
-+
- 			sg_remaining -= copy_bytes;
- 			block_remaining -= copy_bytes;
- 		}
- 		kunmap_atomic(from - sg->offset);
- 	}
-+
- 	if (to)
- 		kunmap_atomic(to);
- 
+Byte,
+	Johannes
 -- 
-1.8.3.1
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
