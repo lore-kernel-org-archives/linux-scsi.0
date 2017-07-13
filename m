@@ -1,175 +1,183 @@
-From: "'Khazhismel Kumykov' via open-iscsi" <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Subject: [PATCH] libiscsi: Remove iscsi_destroy_session
-Date: Wed, 12 Jul 2017 16:38:12 -0700
-Message-ID: <20170712233812.49572-1-khazhy@google.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: wangyijing <wangyijing@huawei.com>
+Subject: Re: [PATCH v3 0/7] Enhance libsas hotplug feature
+Date: Thu, 13 Jul 2017 09:27:39 +0800
+Message-ID: <5966CC8B.3090205@huawei.com>
+References: <1499670369-44143-1-git-send-email-wangyijing@huawei.com>
+ <153868d4-9aa6-21b5-81f3-868668218cb2@huawei.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="001a114f6b2823f08e055427502e"
-Return-path: <open-iscsi+bncBC4KT6XCR4NRB5HFTLFQKGQEDJIAPTY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: lduncan-IBi9RG/b67k@public.gmane.org, cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Khazhismel Kumykov <khazhy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <153868d4-9aa6-21b5-81f3-868668218cb2@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Garry <john.garry@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: chenqilin2@huawei.com, hare@suse.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chenxiang66@hisilicon.com, huangdaode@hisilicon.com, wangkefeng.wang@huawei.com, zhaohongjiang@huawei.com, dingtianhong@huawei.com, guohanjun@huawei.com, yanaijie@huawei.com, hch@lst.de, dan.j.williams@intel.com, emilne@redhat.com, thenzl@redhat.com, wefu@redhat.com, charles.chenxin@huawei.com, chenweilong@huawei.com, Linuxarm <linuxarm@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
---001a114f6b2823f08e055427502e
-Content-Type: text/plain; charset="UTF-8"
 
-iscsi_session_teardown was the only user of this function. Function
-currently is just short for iscsi_remove_session + iscsi_free_session.
 
-Signed-off-by: Khazhismel Kumykov <khazhy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
- with "libiscsi: Fix use after free race during iscsi_session_teardown" removing the
- last user.
+在 2017/7/12 17:59, John Garry 写道:
+> On 10/07/2017 08:06, Yijing Wang wrote:
+>> This patchset is based Johannes's patch
+>> "scsi: sas: scsi_queue_work can fail, so make callers aware"
+>>
+>> Now the libsas hotplug has some issues, Dan Williams report
+>> a similar bug here before
+>> https://www.mail-archive.com/linux-scsi@vger.kernel.org/msg39187.html
+>>
+>> The issues we have found
+>> 1. if LLDD burst reports lots of phy-up/phy-down sas events, some events
+>>    may lost because a same sas events is pending now, finally libsas topo
+>>    may different the hardware.
+>> 2. receive a phy down sas event, libsas call sas_deform_port to remove
+>>    devices, it would first delete the sas port, then put a destruction
+>>    discovery event in a new work, and queue it at the tail of workqueue,
+>>    once the sas port be deleted, its children device will be deleted too,
+>>    when the destruction work start, it will found the target device has
+>>    been removed, and report a sysfs warnning.
+>> 3. since a hotplug process will be devided into several works, if a phy up
+>>    sas event insert into phydown works, like
+>>    destruction work  ---> PORTE_BYTES_DMAED (sas_form_port) ---->PHYE_LOSS_OF_SIGNAL
+>>    the hot remove flow would broken by PORTE_BYTES_DMAED event, it's not
+>>    we expected, and issues would occur.
+>>
+>> The first patch fix the sas events lost, and the second one introudce wait-complete
+>> to fix the hotplug order issues.
+>>
+> 
+> I quickly tested this for basic hotplug.
+> 
+> Before:
+> root@(none)$ echo 0 > ./phy-0:6/sas_phy/phy-0:6/enable
+> root@(none)$ echo 0 > ./phy-0:5/sas_phy/phy-0:5/enable
+> root@(none)$ echo 0 > ./phy-0:4/sas_phy/phy-0:4/enable
+> root@(none)$ echo 0 > ./phy-0:3/sas_phy/phy-0:3/enable
+> root@(none)$ echo 0 > ./phy-0:3/sas_phy/phy-0:2/enable
+> root@(none)$ echo 0 > ./phy-0:2/sas_phy/phy-0:2/enable
+> root@(none)$ echo 0 > ./phy-0:1/sas_phy/phy-0:1/enable
+> root@(none)$ echo 0 > ./phy-0:0/sas_phy/phy-0:0/enable
+> root@(none)$ echo 0 > ./phy-0:7/sas_phy/phy-0:7/enable
+> root@(none)$ [  102.570694] sysfs group 'power' not found for kobject '0:0:7:0'
+> [  102.577250] ------------[ cut here ]------------
+> [  102.581861] WARNING: CPU: 3 PID: 1740 at fs/sysfs/group.c:237 sysfs_remove_group+0x8c/0x94
+> [  102.590110] Modules linked in:
+> [  102.593154] CPU: 3 PID: 1740 Comm: kworker/u128:2 Not tainted 4.12.0-rc1-00032-g3ab81fc #1907
+> [  102.601664] Hardware name: Huawei Taishan 2280 /D05, BIOS Hisilicon D05 UEFI Nemo 1.7 RC3 06/23/2017
+> [  102.610784] Workqueue: scsi_wq_0 sas_destruct_devices
+> [  102.615822] task: ffff8017d4793400 task.stack: ffff8017b7e70000
+> [  102.621728] PC is at sysfs_remove_group+0x8c/0x94
+> [  102.626419] LR is at sysfs_remove_group+0x8c/0x94
+> [  102.631109] pc : [<ffff000008267c44>] lr : [<ffff000008267c44>] pstate: 60000045
+> [  102.638490] sp : ffff8017b7e73b80
+> [  102.641791] x29: ffff8017b7e73b80 x28: ffff8017db010800
+> [  102.647091] x27: ffff000008e27000 x26: ffff8017d43e6600
+> [  102.652390] x25: ffff8017b8280000 x24: 0000000000000003
+> [  102.657689] x23: ffff8017b78864b0 x22: ffff8017b784c988
+> [  102.662988] x21: ffff8017b7886410 x20: ffff000008ee9dd0
+> [  102.668288] x19: 0000000000000000 x18: ffff000008a1b678
+> [  102.673587] x17: 000000000000000e x16: 0000000000000007
+> [  102.678886] x15: 0000000000000000 x14: 00000000000000a3
+> [  102.684185] x13: 0000000000000033 x12: 0000000000000028
+> [  102.689484] x11: ffff000008f3be58 x10: 0000000000000000
+> [  102.694783] x9 : 000000000000043c x8 : 6f6b20726f662064
+> [  102.700082] x7 : ffff000008e29e08 x6 : ffff8017fbe34c50
+> [  102.705382] x5 : 0000000000000000 x4 : 0000000000000000
+> [  102.710681] x3 : ffffffffffffffff x2 : ffff000008e427e0
+> [  102.715980] x1 : 0000000000000000 x0 : 0000000000000033
+> [  102.721279] ---[ end trace c216cc1451d5f7ec ]---
+> [  102.725882] Call trace:
+> [  102.728316] Exception stack(0xffff8017b7e739b0 to 0xffff8017b7e73ae0)
+> [  102.734742] 39a0:                                   0000000000000000 0001000000000000
+> [  102.742557] 39c0: ffff8017b7e73b80 ffff000008267c44 ffff000008bfa050 0000000000000000
+> [  102.750372] 39e0: ffff8017b78864b0 0000000000000003 ffff8017b8280000 ffff8017d43e6600
+> [  102.758188] 3a00: ffff000008e27000 ffff8017db010800 ffff8017d4793400 0000000000000000
+> [  102.766003] 3a20: ffff8017b7e73b80 ffff8017b7e73b80 ffff8017b7e73b40 00000000ffffffc8
+> [  102.773818] 3a40: ffff8017b7e73a70 ffff00000810c12c 0000000000000033 0000000000000000
+> [  102.781633] 3a60: ffff000008e427e0 ffffffffffffffff 0000000000000000 0000000000000000
+> [  102.789449] 3a80: ffff8017fbe34c50 ffff000008e29e08 6f6b20726f662064 000000000000043c
+> [  102.797264] 3aa0: 0000000000000000 ffff000008f3be58 0000000000000028 0000000000000033
+> [  102.805079] 3ac0: 00000000000000a3 0000000000000000 0000000000000007 000000000000000e
+> [  102.812895] [<ffff000008267c44>] sysfs_remove_group+0x8c/0x94
+> [  102.818628] [<ffff00000855b14c>] dpm_sysfs_remove+0x58/0x68
+> [  102.824188] [<ffff00000854e0e8>] device_del+0xf8/0x2d0
+> [  102.829312] [<ffff00000854e2d4>] device_unregister+0x14/0x2c
+> [  102.834959] [<ffff00000837e6e0>] bsg_unregister_queue+0x60/0x98
+> [  102.840866] [<ffff000008593cd4>] __scsi_remove_device+0xa0/0xbc
+> 
+> <snip>
+> 
+> [  151.331854] 3bc0: ffff0000081f21ac 0000ffff803370c0
+> [  151.336718] [<ffff000008267c44>] sysfs_remove_group+0x8c/0x94
+> [  151.342449] [<ffff00000855b14c>] dpm_sysfs_remove+0x58/0x68
+> [  151.348008] [<ffff00000854e0e8>] device_del+0xf8/0x2d0
+> [  151.353133] [<ffff000008597278>] sas_rphy_remove+0x54/0x80
+> [  151.358604] [<ffff0000085972b8>] sas_rphy_delete+0x14/0x28
+> [  151.364076] [<ffff00000859b304>] sas_destruct_devices+0x64/0x98
+> [  151.369982] [<ffff0000080d8194>] process_one_work+0x12c/0x28c
+> [  151.375714] [<ffff0000080d834c>] worker_thread+0x58/0x3b8
+> [  151.381100] [<ffff0000080ddee4>] kthread+0x100/0x12c
+> [  151.386050] [<ffff0000080836c0>] ret_from_fork+0x10/0x50
+> [  151.391360] hisi_sas_v2_hw HISI0162:01: found dev[0:2] is gone
+> 
+> root@(none)$
+> 
+> So the console locks for ~50 seconds with WARN garbage.
+> 
+> After:
+> ...
+> root@(none)$ echo 0 > ./phy-0:7/sas_phy/phy-0:7/enable
+> root@(none)$ [  446.193336] hisi_sas_v2_hw HISI0162:01: found dev[8:1] is gone
+> [  446.249205] hisi_sas_v2_hw HISI0162:01: found dev[7:1] is gone
+> [  446.325201] hisi_sas_v2_hw HISI0162:01: found dev[6:1] is gone
+> [  446.373189] hisi_sas_v2_hw HISI0162:01: found dev[5:1] is gone
+> [  446.421187] hisi_sas_v2_hw HISI0162:01: found dev[4:1] is gone
+> [  446.457232] hisi_sas_v2_hw HISI0162:01: found dev[3:1] is gone
+> [  446.477151] sd 0:0:1:0: [sdb] Synchronizing SCSI cache
+> [  446.482373] sd 0:0:1:0: [sdb] Synchronize Cache(10) failed: Result: hostbyte=0x04 driverbyte=0x00
+> [  446.491238] sd 0:0:1:0: [sdb] Stopping disk
+> [  446.495419] sd 0:0:1:0: [sdb] Start/Stop Unit failed: Result: hostbyte=0x04 driverbyte=0x00
+> [  446.525227] hisi_sas_v2_hw HISI0162:01: found dev[2:5] is gone
+> [  446.569249] hisi_sas_v2_hw HISI0162:01: found dev[1:1] is gone
+> [  446.576872] hisi_sas_v2_hw HISI0162:01: found dev[0:2] is gone
+> 
+> root@(none)$
+> 
+> So much nicer. BTW, /dev/sdb is a SATA disk, the rest are SAS.
 
- drivers/scsi/scsi_transport_iscsi.c | 16 ----------------
- include/scsi/scsi_transport_iscsi.h |  1 -
- 2 files changed, 17 deletions(-)
+I will check the calltrace, I tested in my local branch, the result is fine.
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index a424eaeafeb0..924ac408d8a9 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -2210,22 +2210,6 @@ void iscsi_free_session(struct iscsi_cls_session *session)
- }
- EXPORT_SYMBOL_GPL(iscsi_free_session);
- 
--/**
-- * iscsi_destroy_session - destroy iscsi session
-- * @session: iscsi_session
-- *
-- * Can be called by a LLD or iscsi_transport. There must not be
-- * any running connections.
-- */
--int iscsi_destroy_session(struct iscsi_cls_session *session)
--{
--	iscsi_remove_session(session);
--	ISCSI_DBG_TRANS_SESSION(session, "Completing session destruction\n");
--	iscsi_free_session(session);
--	return 0;
--}
--EXPORT_SYMBOL_GPL(iscsi_destroy_session);
--
- /**
-  * iscsi_create_conn - create iscsi class connection
-  * @session: iscsi cls session
-diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-index 6183d20a01fb..b266d2a3bcb1 100644
---- a/include/scsi/scsi_transport_iscsi.h
-+++ b/include/scsi/scsi_transport_iscsi.h
-@@ -434,7 +434,6 @@ extern struct iscsi_cls_session *iscsi_create_session(struct Scsi_Host *shost,
- 						unsigned int target_id);
- extern void iscsi_remove_session(struct iscsi_cls_session *session);
- extern void iscsi_free_session(struct iscsi_cls_session *session);
--extern int iscsi_destroy_session(struct iscsi_cls_session *session);
- extern struct iscsi_cls_conn *iscsi_create_conn(struct iscsi_cls_session *sess,
- 						int dd_size, uint32_t cid);
- extern int iscsi_destroy_conn(struct iscsi_cls_conn *conn);
--- 
-2.13.2.932.g7449e964c-goog
+Thanks!
+Yijing.
 
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
 
---001a114f6b2823f08e055427502e
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-MIIS5wYJKoZIhvcNAQcCoIIS2DCCEtQCAQExDzANBglghkgBZQMEAgEFADALBgkqhkiG9w0BBwGg
-ghBNMIIEXDCCA0SgAwIBAgIOSBtqDm4P/739RPqw/wcwDQYJKoZIhvcNAQELBQAwZDELMAkGA1UE
-BhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExOjA4BgNVBAMTMUdsb2JhbFNpZ24gUGVy
-c29uYWxTaWduIFBhcnRuZXJzIENBIC0gU0hBMjU2IC0gRzIwHhcNMTYwNjE1MDAwMDAwWhcNMjEw
-NjE1MDAwMDAwWjBMMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTEiMCAG
-A1UEAxMZR2xvYmFsU2lnbiBIViBTL01JTUUgQ0EgMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
-AQoCggEBALR23lKtjlZW/17kthzYcMHHKFgywfc4vLIjfq42NmMWbXkNUabIgS8KX4PnIFsTlD6F
-GO2fqnsTygvYPFBSMX4OCFtJXoikP2CQlEvO7WooyE94tqmqD+w0YtyP2IB5j4KvOIeNv1Gbnnes
-BIUWLFxs1ERvYDhmk+OrvW7Vd8ZfpRJj71Rb+QQsUpkyTySaqALXnyztTDp1L5d1bABJN/bJbEU3
-Hf5FLrANmognIu+Npty6GrA6p3yKELzTsilOFmYNWg7L838NS2JbFOndl+ce89gM36CW7vyhszi6
-6LqqzJL8MsmkP53GGhf11YMP9EkmawYouMDP/PwQYhIiUO0CAwEAAaOCASIwggEeMA4GA1UdDwEB
-/wQEAwIBBjAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwQwEgYDVR0TAQH/BAgwBgEB/wIB
-ADAdBgNVHQ4EFgQUyzgSsMeZwHiSjLMhleb0JmLA4D8wHwYDVR0jBBgwFoAUJiSSix/TRK+xsBtt
-r+500ox4AAMwSwYDVR0fBEQwQjBAoD6gPIY6aHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9ncy9n
-c3BlcnNvbmFsc2lnbnB0bnJzc2hhMmcyLmNybDBMBgNVHSAERTBDMEEGCSsGAQQBoDIBKDA0MDIG
-CCsGAQUFBwIBFiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzANBgkqhkiG
-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
-BQUHMAKGNGh0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzaHZzbWltZWNhMS5j
-cnQwHQYDVR0OBBYEFHzUvJSIM43gV3UoAu3dP07Q/FuLMB8GA1UdIwQYMBaAFMs4ErDHmcB4koyz
-IZXm9CZiwOA/MEwGA1UdIARFMEMwQQYJKwYBBAGgMgEoMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8v
-d3d3Lmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMDsGA1UdHwQ0MDIwMKAuoCyGKmh0dHA6Ly9j
-cmwuZ2xvYmFsc2lnbi5jb20vZ3NodnNtaW1lY2ExLmNybDAOBgNVHQ8BAf8EBAMCBaAwHQYDVR0l
-BBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMEMA0GCSqGSIb3DQEBCwUAA4IBAQBg7Qbu4VpOAskP0s9y
-RdGLVhfSJiiB7v2bmQ2jQ3vNdjRMlQB+7VWpI/6GI2j/pEhuDgvy7S7JMOH3081bu4ACwNndLDNq
-ngSmEAf8InveMEHDpmxWXEVdMjpuqXVWICW6d3MJITMTxWF7egIcY7xL8Qx3JSOlGtBn02mxVGU6
-1ETqDl9Nd8QYc0HsHWwBnxjThl53LaZrUMtIKQLz5DDHgsf0zn4G42iguJ+2NdctVvvIcoDRnO/H
-sNtG3VNV0qa7qzr4/AozF3LuboWTB7f5gfDi3W8USCZrSqlUzy8lb82NwVsBES7UItW8dQlf/hp+
-Cd++WeP4c6uf70pQOdNkMYICXjCCAloCAQEwXDBMMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xv
-YmFsU2lnbiBudi1zYTEiMCAGA1UEAxMZR2xvYmFsU2lnbiBIViBTL01JTUUgQ0EgMQIMP55JyaS9
-Y5gDDRLjMA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEiBCBZwJE2d2/hVVdreUtkeEsm
-SJHHbpUX4zedxBTG6JnGJTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEP
-Fw0xNzA3MTIyMzM4MjhaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZIAWUDBAEqMAsGCWCGSAFlAwQB
-FjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEKMAsGCSqGSIb3DQEBBzALBglg
-hkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAgjvkDVK1fdnseXxNVcEEEa+JDkvjn5mb1Z9+hcEz
-TLgpBk4HGrCRTWuAELrLoYomr+1DvePo5QoV6RPOdmTkIL9SmWsaNXU2FkJ/vdXoZCEkjkLApFQI
-IgT2uMcP3eJ45ZdHYNgBXW5k0IKAuzhE+1IWN17HHfJYGqceB/HHd0w17fNyIdbxgogDTKYzGSbR
-eL+dubsekHedcgw7yJls0G9ViBP3s/0xwfj2LZZcAUdOwB/iCAqRTIQ3FE35VNbNhICfP6adp1AW
-HQzw8dfIe5VTclDg1/Q0KdO9+pEmzk3Q3Sdo4TuJH+RAO78YYuiqwFVX0dvBX0opD5EkubbseQ==
---001a114f6b2823f08e055427502e--
+> 
+> John
+> 
+>> v2->v3: some code improvements suggested by Johannes and John,
+>>         split v2 patch 2 into several small pathes.
+>> v1->v2: some code improvements suggested by John Garry
+>>
+>> Yijing Wang (7):
+>>   libsas: Use static sas event pool to appease sas event lost
+>>   libsas: remove unused port_gone_completion
+>>   libsas: Use new workqueue to run sas event
+>>   libsas: add sas event wait-complete support
+>>   libsas: add a new workqueue to run probe/destruct discovery event
+>>   libsas: add wait-complete support to sync discovery event
+>>   libsas: release disco mutex during waiting in sas_ex_discover_end_dev
+>>
+>>  drivers/scsi/libsas/sas_discover.c |  58 +++++++---
+>>  drivers/scsi/libsas/sas_event.c    | 212 ++++++++++++++++++++++++++++++++-----
+>>  drivers/scsi/libsas/sas_expander.c |  22 +++-
+>>  drivers/scsi/libsas/sas_init.c     |  21 ++--
+>>  drivers/scsi/libsas/sas_internal.h |  64 +++++++++++
+>>  drivers/scsi/libsas/sas_phy.c      |  48 +++------
+>>  drivers/scsi/libsas/sas_port.c     |  22 ++--
+>>  include/scsi/libsas.h              |  27 +++--
+>>  8 files changed, 373 insertions(+), 101 deletions(-)
+>>
+> 
+> 
+> 
+> .
+> 
