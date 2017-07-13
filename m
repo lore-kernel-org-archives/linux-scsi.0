@@ -1,7 +1,7 @@
 From: wangyijing <wangyijing@huawei.com>
 Subject: Re: [PATCH v3 0/7] Enhance libsas hotplug feature
-Date: Thu, 13 Jul 2017 09:27:39 +0800
-Message-ID: <5966CC8B.3090205@huawei.com>
+Date: Thu, 13 Jul 2017 09:37:43 +0800
+Message-ID: <5966CEE7.4060506@huawei.com>
 References: <1499670369-44143-1-git-send-email-wangyijing@huawei.com>
  <153868d4-9aa6-21b5-81f3-868668218cb2@huawei.com>
 Mime-Version: 1.0
@@ -144,7 +144,7 @@ List-Id: linux-scsi@vger.kernel.org
 > 
 > So much nicer. BTW, /dev/sdb is a SATA disk, the rest are SAS.
 
-I will check the calltrace, I tested in my local branch, the result is fine.
+Oh, I take a mistake ? The result you tested the hotplug which applied this patchset is fine ?
 
 Thanks!
 Yijing.
