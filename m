@@ -1,70 +1,86 @@
-From: Khazhismel Kumykov <khazhy@google.com>
-Subject: [Patch v2 1/2] libiscsi: Fix use-after-free race during iscsi_session_teardown
-Date: Thu, 13 Jul 2017 09:11:21 -0700
-Message-ID: <20170713161122.89375-1-khazhy@google.com>
+From: "'Khazhismel Kumykov' via open-iscsi" <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Subject: [Patch v2 2/2] libiscsi: Remove iscsi_destroy_session
+Date: Thu, 13 Jul 2017 09:11:22 -0700
+Message-ID: <20170713161122.89375-2-khazhy@google.com>
+References: <20170713161122.89375-1-khazhy@google.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Mime-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="94eb2c184d7818a9da05543530dc"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f42.google.com ([74.125.83.42]:34346 "EHLO
-        mail-pg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752541AbdGMQLl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Jul 2017 12:11:41 -0400
-Received: by mail-pg0-f42.google.com with SMTP id t186so32002364pgb.1
-        for <linux-scsi@vger.kernel.org>; Thu, 13 Jul 2017 09:11:40 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+	boundary="f403045ec6886a4ae80554353011"
+Return-path: <open-iscsi+bncBC4KT6XCR4NRBQVXT3FQKGQEXVE6W3A-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <20170713161122.89375-1-khazhy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: lduncan-IBi9RG/b67k@public.gmane.org, cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Khazhismel Kumykov <khazhy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: lduncan@suse.com, cleech@redhat.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, open-iscsi@googlegroups.com, Khazhismel Kumykov <khazhy@google.com>
 
---94eb2c184d7818a9da05543530dc
+--f403045ec6886a4ae80554353011
+Content-Type: text/plain; charset="UTF-8"
 
-Session attributes exposed through sysfs were freed before the device
-was destroyed, resulting in a potential use-after-free. Free these
-attributes after removing the device.
+iscsi_session_teardown was the only user of this function. Function
+currently is just short for iscsi_remove_session + iscsi_free_session.
 
-Signed-off-by: Khazhismel Kumykov <khazhy@google.com>
+Signed-off-by: Khazhismel Kumykov <khazhy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- drivers/scsi/libiscsi.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/scsi_transport_iscsi.c | 16 ----------------
+ include/scsi/scsi_transport_iscsi.h |  1 -
+ 2 files changed, 17 deletions(-)
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 42381adf0769..8696a51a5a0c 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -2851,9 +2851,6 @@ EXPORT_SYMBOL_GPL(iscsi_session_setup);
- /**
-  * iscsi_session_teardown - destroy session, host, and cls_session
-  * @cls_session: iscsi session
-- *
-- * The driver must have called iscsi_remove_session before
-- * calling this.
-  */
- void iscsi_session_teardown(struct iscsi_cls_session *cls_session)
- {
-@@ -2863,6 +2860,8 @@ void iscsi_session_teardown(struct iscsi_cls_session *cls_session)
- 
- 	iscsi_pool_free(&session->cmdpool);
- 
-+	iscsi_remove_session(cls_session);
-+
- 	kfree(session->password);
- 	kfree(session->password_in);
- 	kfree(session->username);
-@@ -2877,7 +2876,8 @@ void iscsi_session_teardown(struct iscsi_cls_session *cls_session)
- 	kfree(session->portal_type);
- 	kfree(session->discovery_parent_type);
- 
--	iscsi_destroy_session(cls_session);
-+	iscsi_free_session(cls_session);
-+
- 	iscsi_host_dec_session_cnt(shost);
- 	module_put(owner);
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index a424eaeafeb0..924ac408d8a9 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -2210,22 +2210,6 @@ void iscsi_free_session(struct iscsi_cls_session *session)
  }
+ EXPORT_SYMBOL_GPL(iscsi_free_session);
+ 
+-/**
+- * iscsi_destroy_session - destroy iscsi session
+- * @session: iscsi_session
+- *
+- * Can be called by a LLD or iscsi_transport. There must not be
+- * any running connections.
+- */
+-int iscsi_destroy_session(struct iscsi_cls_session *session)
+-{
+-	iscsi_remove_session(session);
+-	ISCSI_DBG_TRANS_SESSION(session, "Completing session destruction\n");
+-	iscsi_free_session(session);
+-	return 0;
+-}
+-EXPORT_SYMBOL_GPL(iscsi_destroy_session);
+-
+ /**
+  * iscsi_create_conn - create iscsi class connection
+  * @session: iscsi cls session
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index 6183d20a01fb..b266d2a3bcb1 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -434,7 +434,6 @@ extern struct iscsi_cls_session *iscsi_create_session(struct Scsi_Host *shost,
+ 						unsigned int target_id);
+ extern void iscsi_remove_session(struct iscsi_cls_session *session);
+ extern void iscsi_free_session(struct iscsi_cls_session *session);
+-extern int iscsi_destroy_session(struct iscsi_cls_session *session);
+ extern struct iscsi_cls_conn *iscsi_create_conn(struct iscsi_cls_session *sess,
+ 						int dd_size, uint32_t cid);
+ extern int iscsi_destroy_conn(struct iscsi_cls_conn *conn);
 -- 
 2.13.2.932.g7449e964c-goog
 
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
 
---94eb2c184d7818a9da05543530dc
+--f403045ec6886a4ae80554353011
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -146,13 +162,13 @@ ngSmEAf8InveMEHDpmxWXEVdMjpuqXVWICW6d3MJITMTxWF7egIcY7xL8Qx3JSOlGtBn02mxVGU6
 sNtG3VNV0qa7qzr4/AozF3LuboWTB7f5gfDi3W8USCZrSqlUzy8lb82NwVsBES7UItW8dQlf/hp+
 Cd++WeP4c6uf70pQOdNkMYICXjCCAloCAQEwXDBMMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xv
 YmFsU2lnbiBudi1zYTEiMCAGA1UEAxMZR2xvYmFsU2lnbiBIViBTL01JTUUgQ0EgMQIMP55JyaS9
-Y5gDDRLjMA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEiBCASl+rrtshq2yk8fPYiMSNc
-Jja2eLTMd8o8kGhA4Pz5STAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEP
-Fw0xNzA3MTMxNjExNDBaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZIAWUDBAEqMAsGCWCGSAFlAwQB
+Y5gDDRLjMA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEiBCAgW7snypdGMOftXwGvoj5m
+DoNKGrvtbMJ9wJVRFFY2/jAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEP
+Fw0xNzA3MTMxNjExNDVaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZIAWUDBAEqMAsGCWCGSAFlAwQB
 FjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEKMAsGCSqGSIb3DQEBBzALBglg
-hkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAcrvvibC3Ss6e698uirO9c2rvlddM/T0BgNg7pBHY
-7ttKorSzrC0YgvK912TmlW6mrRRgOHJTkaVrBpNPijbjwvPmXz6HeNTe4RE3+zhJ4Ql51hhjDuKv
-NyWyV8KefYJlYbvqM+eJ7fs2zNKvlSQh/PQiltiy1NK++kBZdyogbV0RiIKkkgIZOs77xgcgxy8c
-Kd9zLQ9OjD+cTBIQSDC7CuXksq2pTe/58K/N5dvgI0qGe4Iru3UWlPZ17+Kdf7XhFsaNC1NW9KM2
-TU9zX65YjsrjKMvW7JqWMoM6A40+dso1HRgW703kBG4WNyw426tWUX96Lpk4X02M/ovjeMteUQ==
---94eb2c184d7818a9da05543530dc--
+hkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEARQhxBG2zYEO4CbzmjZRZKQasSMkheqTD5YwuayR6
+blkSoE20d+8TQmN+t7OlYICgWrJgQ9ivSHyexmao2tvjIfHYeWRatO928LlnoDsREUAa9yAa3fMI
+dMfb3zXQgFeNZXcakYHAOmiBXLfdV/abfgm8d2ax4mEnZLA18SvLllsKz19+1/J48BT+Ixq+V5xi
+J0imBHpG9LecggaMQYcwGjPrO1C41YOx1+jffje7GUKQGYZZygN8xoPQuOo2DV/OQS3FhbkCFKVj
+2l7o9BlY2FDWYsOvtonVtDv3BS5+nM0gf9Ey6A1nBUqGxwQdhqLR1WEt5E7Vz0i+4lJgm34eOw==
+--f403045ec6886a4ae80554353011--
