@@ -1,71 +1,100 @@
-From: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-Subject: [PATCH] scsi: qedf: Limit number of CQs
-Date: Thu, 13 Jul 2017 18:19:21 +0200
-Message-ID: <20170713165951.61190508094@solo.franken.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: QLogic-Storage-Upstream@cavium.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: CPU lock-ups with 4.12.0+ kernels related to usb_storage
+Date: Thu, 13 Jul 2017 13:00:29 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1707131258190.1571-100000@iolanthe.rowland.org>
+References: <20170712165200.GA29145@lst.de>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:51432 "HELO
+        iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1751114AbdGMRAb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Jul 2017 13:00:31 -0400
+In-Reply-To: <20170712165200.GA29145@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Arthur Marsh <arthur.marsh@internode.on.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
 
-From: Thomas Bogendoerfer <tbogendoerfer@suse.de>
+On Wed, 12 Jul 2017, Christoph Hellwig wrote:
 
-FCOE offloading on qedf devices fails with:
+> On Wed, Jul 12, 2017 at 12:10:02PM -0400, Alan Stern wrote:
+> > This is pretty conclusive.  The problem comes about because
+> > usb_stor_control_thread() calls scsi_mq_done() while holding
+> > shost->host_lock, and then scsi_eh_scmd_add() tries to acquire that
+> > same lock.
+> > 
+> > I don't know why this didn't show up in earlier kernels.  I guess some
+> > element of the call chain listed above must be new in 4.12.
+> > 
+> > Christoph, what's the best way to fix this?  Should usb-storage release
+> > the host lock before issuing the ->scsi_done callback?  If so, does
+> > that change need to be applied to any kernels before 4.12?
+> 
+> 4.12 switched to blk-mq by default, and while the old code used
+> a softirq for completions, which is always a difference context
+> the blk-mq code might execute in the same context it's called in.
+> 
+> So yes, for that we'd need to drop host_lock.  But I wonder how
+> many more of these are lingering somewhere and if we can find
+> another workaround.
 
-[qed_sp_fcoe_func_start:150(sp-0-3b:00.02)]Cannot satisfy CQ amount. CQs
-		 requested 8, CQs available 6. Aborting function start
-[qed_fcoe_start:821()]Failed to start fcoe
-[__qedf_probe:3041]:6: Cannot start FCoE function.
+All right.  In the meantime, changing usb-storage won't hurt.
+Arthur, can you test the patch below?
 
-The reason is a newly introduced check in the qed main part. This change
-also provides the information about how many CQs are available, so we
-simply limit the number of requested CQs.
+Alan Stern
 
-Fixes: 3c5da9427802 qed: Share additional information with qedf
-Signed-off-by: Thomas Bogendoerfer <tbogendoerfer@suse.de>
----
- drivers/scsi/qedf/qedf_main.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index b58bba4604e8..5778218734fa 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -2765,6 +2765,8 @@ static int qedf_set_fcoe_pf_param(struct qedf_ctx *qedf)
- 	 */
- 	qedf->num_queues = min((unsigned int)QEDF_MAX_NUM_CQS,
- 	    num_online_cpus());
-+	/* limit to acutal available CQs */
-+	qedf->num_queues = min(qedf->num_queues, qedf->dev_info.num_cqs);
+
+Index: usb-4.x/drivers/usb/storage/usb.c
+===================================================================
+--- usb-4.x.orig/drivers/usb/storage/usb.c
++++ usb-4.x/drivers/usb/storage/usb.c
+@@ -315,6 +315,7 @@ static int usb_stor_control_thread(void
+ {
+ 	struct us_data *us = (struct us_data *)__us;
+ 	struct Scsi_Host *host = us_to_host(us);
++	struct scsi_cmnd *srb;
  
- 	QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_DISC, "Number of CQs is %d.\n",
- 		   qedf->num_queues);
-@@ -2962,6 +2964,13 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 		goto err1;
- 	}
+ 	for (;;) {
+ 		usb_stor_dbg(us, "*** thread sleeping\n");
+@@ -330,6 +331,7 @@ static int usb_stor_control_thread(void
+ 		scsi_lock(host);
  
-+	/* Learn information crucial for qedf to progress */
-+	rc = qed_ops->fill_dev_info(qedf->cdev, &qedf->dev_info);
-+	if (rc) {
-+		QEDF_ERR(&(qedf->dbg_ctx), "Failed to dev info.\n");
-+		goto err1;
-+	}
+ 		/* When we are called with no command pending, we're done */
++		srb = us->srb;
+ 		if (us->srb == NULL) {
+ 			scsi_unlock(host);
+ 			mutex_unlock(&us->dev_mutex);
+@@ -398,14 +400,11 @@ static int usb_stor_control_thread(void
+ 		/* lock access to the state */
+ 		scsi_lock(host);
+ 
+-		/* indicate that the command is done */
+-		if (us->srb->result != DID_ABORT << 16) {
+-			usb_stor_dbg(us, "scsi cmd done, result=0x%x\n",
+-				     us->srb->result);
+-			us->srb->scsi_done(us->srb);
+-		} else {
++		/* was the command aborted? */
++		if (us->srb->result == DID_ABORT << 16) {
+ SkipForAbort:
+ 			usb_stor_dbg(us, "scsi command aborted\n");
++			srb = NULL;	/* Don't call srb->scsi_done() */
+ 		}
+ 
+ 		/*
+@@ -429,6 +428,13 @@ SkipForAbort:
+ 
+ 		/* unlock the device pointers */
+ 		mutex_unlock(&us->dev_mutex);
 +
- 	/* queue allocation code should come here
- 	 * order should be
- 	 * 	slowpath_start
-@@ -2977,13 +2986,6 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 	}
- 	qed_ops->common->update_pf_params(qedf->cdev, &qedf->pf_params);
++		/* now that the locks are released, notify the SCSI core */
++		if (srb) {
++			usb_stor_dbg(us, "scsi cmd done, result=0x%x\n",
++					srb->result);
++			srb->scsi_done(srb);
++		}
+ 	} /* for (;;) */
  
--	/* Learn information crucial for qedf to progress */
--	rc = qed_ops->fill_dev_info(qedf->cdev, &qedf->dev_info);
--	if (rc) {
--		QEDF_ERR(&(qedf->dbg_ctx), "Failed to dev info.\n");
--		goto err1;
--	}
--
- 	/* Record BDQ producer doorbell addresses */
- 	qedf->bdq_primary_prod = qedf->dev_info.primary_dbq_rq_addr;
- 	qedf->bdq_secondary_prod = qedf->dev_info.secondary_bdq_rq_addr;
--- 
-2.12.3
+ 	/* Wait until we are told to stop */
