@@ -1,119 +1,158 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH v3 7/7] libsas: release disco mutex during waiting in
- sas_ex_discover_end_dev
-Date: Thu, 13 Jul 2017 17:10:50 +0100
-Message-ID: <5dc7927b-27ac-ed09-9718-6cbe3ab53e19@huawei.com>
-References: <1499670369-44143-1-git-send-email-wangyijing@huawei.com>
- <1499670369-44143-8-git-send-email-wangyijing@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1499670369-44143-8-git-send-email-wangyijing@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Yijing Wang <wangyijing@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: chenqilin2@huawei.com, hare@suse.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chenxiang66@hisilicon.com, huangdaode@hisilicon.com, wangkefeng.wang@huawei.com, zhaohongjiang@huawei.com, dingtianhong@huawei.com, guohanjun@huawei.com, yanaijie@huawei.com, hch@lst.de, dan.j.williams@intel.com, emilne@redhat.com, thenzl@redhat.com, wefu@redhat.com, charles.chenxin@huawei.com, chenweilong@huawei.com, Johannes Thumshirn <jthumshirn@suse.de>, Linuxarm <linuxarm@huawei.com>
+From: Khazhismel Kumykov <khazhy@google.com>
+Subject: [Patch v2 1/2] libiscsi: Fix use-after-free race during iscsi_session_teardown
+Date: Thu, 13 Jul 2017 09:11:21 -0700
+Message-ID: <20170713161122.89375-1-khazhy@google.com>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="94eb2c184d7818a9da05543530dc"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pg0-f42.google.com ([74.125.83.42]:34346 "EHLO
+        mail-pg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752541AbdGMQLl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Jul 2017 12:11:41 -0400
+Received: by mail-pg0-f42.google.com with SMTP id t186so32002364pgb.1
+        for <linux-scsi@vger.kernel.org>; Thu, 13 Jul 2017 09:11:40 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: lduncan@suse.com, cleech@redhat.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, open-iscsi@googlegroups.com, Khazhismel Kumykov <khazhy@google.com>
 
-On 10/07/2017 08:06, Yijing Wang wrote:
-> Disco mutex was introudced to prevent domain rediscovery competing
-> with ata error handling(87c8331). If we have already hold the lock
-> in sas_revalidate_domain and sync executing probe, deadlock caused,
-> because, sas_probe_sata() also need hold disco_mutex. Since disco mutex
-> use to prevent revalidata domain happen during ata error handler,
-> it should be safe to release disco mutex when sync probe, because
-> no new revalidate domain event would be process until the sync return,
-> and the current sas revalidate domain finish.
->
+--94eb2c184d7818a9da05543530dc
 
-So with your changes we have a chain of synchronised events, running in 
-separate queues. In theory it sounds ok.
+Session attributes exposed through sysfs were freed before the device
+was destroyed, resulting in a potential use-after-free. Free these
+attributes after removing the device.
 
-Then, as you said in the commit message, sas_revalidate_domain() holds 
-the disco mutex while *all* these chained events occur; so we will 
-continue to hold the mutex until we have revalidated the domain, meaning 
-until we have finished destroying or probing new devices.
+Signed-off-by: Khazhismel Kumykov <khazhy@google.com>
+---
+ drivers/scsi/libiscsi.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-But in the domain revalidation when you discover a new ATA device, 
-function sas_probe_sata() wants to grab the disco mutex and you just 
-temporarily release it, even though adding a new ATA device kicks in EH. 
-This defeats the principal of using a mutex at all, which is (according 
-to 87c8331 commit message) to mutually exclude the domain re-discovery 
-(which has not actually finished) and the ATA EH (and device destruction).
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 42381adf0769..8696a51a5a0c 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -2851,9 +2851,6 @@ EXPORT_SYMBOL_GPL(iscsi_session_setup);
+ /**
+  * iscsi_session_teardown - destroy session, host, and cls_session
+  * @cls_session: iscsi session
+- *
+- * The driver must have called iscsi_remove_session before
+- * calling this.
+  */
+ void iscsi_session_teardown(struct iscsi_cls_session *cls_session)
+ {
+@@ -2863,6 +2860,8 @@ void iscsi_session_teardown(struct iscsi_cls_session *cls_session)
+ 
+ 	iscsi_pool_free(&session->cmdpool);
+ 
++	iscsi_remove_session(cls_session);
++
+ 	kfree(session->password);
+ 	kfree(session->password_in);
+ 	kfree(session->username);
+@@ -2877,7 +2876,8 @@ void iscsi_session_teardown(struct iscsi_cls_session *cls_session)
+ 	kfree(session->portal_type);
+ 	kfree(session->discovery_parent_type);
+ 
+-	iscsi_destroy_session(cls_session);
++	iscsi_free_session(cls_session);
++
+ 	iscsi_host_dec_session_cnt(shost);
+ 	module_put(owner);
+ }
+-- 
+2.13.2.932.g7449e964c-goog
 
-Anyway, since we are synchronising this series of events (broadcast 
-event, domain rediscovery, and device destruction), surely it should be 
-possible to include the ATA EH as well, so we can actually get rid of 
-the disco mutex finally, right?
 
-Note: I think that there is a problem which you have not seen. Consider 
-removing a ATA disk with IO active conncted to an expander:
-- LLDD sends brodcast event
-- sas_revalidate_domain(), which grabs disco mutex
-- revalidate finds dev is gone
-- destruct device, which calls sas_rphy_delete
-	- this waits on command queue to drain
-- commands time out and EH thread kicks in
-	- sas_ata_strategy_handler() called
-	- domain revalidation disable attempted
-		- try to grab disco mutex = Deadlock.
+--94eb2c184d7818a9da05543530dc
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
-Thanks,
-John
-
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> CC: John Garry <john.garry@huawei.com>
-> CC: Johannes Thumshirn <jthumshirn@suse.de>
-> CC: Ewan Milne <emilne@redhat.com>
-> CC: Christoph Hellwig <hch@lst.de>
-> CC: Tomas Henzl <thenzl@redhat.com>
-> CC: Dan Williams <dan.j.williams@intel.com>
-> ---
->  drivers/scsi/libsas/sas_expander.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
->
-> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-> index 9d26c28..077024e 100644
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -776,6 +776,7 @@ static struct domain_device *sas_ex_discover_end_dev(
->  	struct ex_phy *phy = &parent_ex->ex_phy[phy_id];
->  	struct domain_device *child = NULL;
->  	struct sas_rphy *rphy;
-> +	bool prev_lock;
->  	int res;
->
->  	if (phy->attached_sata_host || phy->attached_sata_ps)
-> @@ -803,6 +804,7 @@ static struct domain_device *sas_ex_discover_end_dev(
->  	sas_ex_get_linkrate(parent, child, phy);
->  	sas_device_set_phy(child, phy->port);
->
-> +	prev_lock = mutex_is_locked(&child->port->ha->disco_mutex);
->  #ifdef CONFIG_SCSI_SAS_ATA
->  	if ((phy->attached_tproto & SAS_PROTOCOL_STP) || phy->attached_sata_dev) {
->  		res = sas_get_ata_info(child, phy);
-> @@ -832,7 +834,11 @@ static struct domain_device *sas_ex_discover_end_dev(
->  				    SAS_ADDR(parent->sas_addr), phy_id, res);
->  			goto out_list_del;
->  		}
-> +		if (prev_lock)
-> +			mutex_unlock(&child->port->ha->disco_mutex);
->  		sas_disc_wait_completion(child->port, DISCE_PROBE);
-> +		if (prev_lock)
-> +			mutex_lock(&child->port->ha->disco_mutex);
->
->  	} else
->  #endif
-> @@ -861,7 +867,11 @@ static struct domain_device *sas_ex_discover_end_dev(
->  				    SAS_ADDR(parent->sas_addr), phy_id, res);
->  			goto out_list_del;
->  		}
-> +		if (prev_lock)
-> +			mutex_unlock(&child->port->ha->disco_mutex);
->  		sas_disc_wait_completion(child->port, DISCE_PROBE);
-> +		if (prev_lock)
-> +			mutex_lock(&child->port->ha->disco_mutex);
->  	} else {
->  		SAS_DPRINTK("target proto 0x%x at %016llx:0x%x not handled\n",
->  			    phy->attached_tproto, SAS_ADDR(parent->sas_addr),
->
+MIIS5wYJKoZIhvcNAQcCoIIS2DCCEtQCAQExDzANBglghkgBZQMEAgEFADALBgkqhkiG9w0BBwGg
+ghBNMIIEXDCCA0SgAwIBAgIOSBtqDm4P/739RPqw/wcwDQYJKoZIhvcNAQELBQAwZDELMAkGA1UE
+BhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExOjA4BgNVBAMTMUdsb2JhbFNpZ24gUGVy
+c29uYWxTaWduIFBhcnRuZXJzIENBIC0gU0hBMjU2IC0gRzIwHhcNMTYwNjE1MDAwMDAwWhcNMjEw
+NjE1MDAwMDAwWjBMMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTEiMCAG
+A1UEAxMZR2xvYmFsU2lnbiBIViBTL01JTUUgQ0EgMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
+AQoCggEBALR23lKtjlZW/17kthzYcMHHKFgywfc4vLIjfq42NmMWbXkNUabIgS8KX4PnIFsTlD6F
+GO2fqnsTygvYPFBSMX4OCFtJXoikP2CQlEvO7WooyE94tqmqD+w0YtyP2IB5j4KvOIeNv1Gbnnes
+BIUWLFxs1ERvYDhmk+OrvW7Vd8ZfpRJj71Rb+QQsUpkyTySaqALXnyztTDp1L5d1bABJN/bJbEU3
+Hf5FLrANmognIu+Npty6GrA6p3yKELzTsilOFmYNWg7L838NS2JbFOndl+ce89gM36CW7vyhszi6
+6LqqzJL8MsmkP53GGhf11YMP9EkmawYouMDP/PwQYhIiUO0CAwEAAaOCASIwggEeMA4GA1UdDwEB
+/wQEAwIBBjAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwQwEgYDVR0TAQH/BAgwBgEB/wIB
+ADAdBgNVHQ4EFgQUyzgSsMeZwHiSjLMhleb0JmLA4D8wHwYDVR0jBBgwFoAUJiSSix/TRK+xsBtt
+r+500ox4AAMwSwYDVR0fBEQwQjBAoD6gPIY6aHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9ncy9n
+c3BlcnNvbmFsc2lnbnB0bnJzc2hhMmcyLmNybDBMBgNVHSAERTBDMEEGCSsGAQQBoDIBKDA0MDIG
+CCsGAQUFBwIBFiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzANBgkqhkiG
+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
+BQUHMAKGNGh0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzaHZzbWltZWNhMS5j
+cnQwHQYDVR0OBBYEFHzUvJSIM43gV3UoAu3dP07Q/FuLMB8GA1UdIwQYMBaAFMs4ErDHmcB4koyz
+IZXm9CZiwOA/MEwGA1UdIARFMEMwQQYJKwYBBAGgMgEoMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8v
+d3d3Lmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMDsGA1UdHwQ0MDIwMKAuoCyGKmh0dHA6Ly9j
+cmwuZ2xvYmFsc2lnbi5jb20vZ3NodnNtaW1lY2ExLmNybDAOBgNVHQ8BAf8EBAMCBaAwHQYDVR0l
+BBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMEMA0GCSqGSIb3DQEBCwUAA4IBAQBg7Qbu4VpOAskP0s9y
+RdGLVhfSJiiB7v2bmQ2jQ3vNdjRMlQB+7VWpI/6GI2j/pEhuDgvy7S7JMOH3081bu4ACwNndLDNq
+ngSmEAf8InveMEHDpmxWXEVdMjpuqXVWICW6d3MJITMTxWF7egIcY7xL8Qx3JSOlGtBn02mxVGU6
+1ETqDl9Nd8QYc0HsHWwBnxjThl53LaZrUMtIKQLz5DDHgsf0zn4G42iguJ+2NdctVvvIcoDRnO/H
+sNtG3VNV0qa7qzr4/AozF3LuboWTB7f5gfDi3W8USCZrSqlUzy8lb82NwVsBES7UItW8dQlf/hp+
+Cd++WeP4c6uf70pQOdNkMYICXjCCAloCAQEwXDBMMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xv
+YmFsU2lnbiBudi1zYTEiMCAGA1UEAxMZR2xvYmFsU2lnbiBIViBTL01JTUUgQ0EgMQIMP55JyaS9
+Y5gDDRLjMA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEiBCASl+rrtshq2yk8fPYiMSNc
+Jja2eLTMd8o8kGhA4Pz5STAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEP
+Fw0xNzA3MTMxNjExNDBaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZIAWUDBAEqMAsGCWCGSAFlAwQB
+FjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEKMAsGCSqGSIb3DQEBBzALBglg
+hkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAcrvvibC3Ss6e698uirO9c2rvlddM/T0BgNg7pBHY
+7ttKorSzrC0YgvK912TmlW6mrRRgOHJTkaVrBpNPijbjwvPmXz6HeNTe4RE3+zhJ4Ql51hhjDuKv
+NyWyV8KefYJlYbvqM+eJ7fs2zNKvlSQh/PQiltiy1NK++kBZdyogbV0RiIKkkgIZOs77xgcgxy8c
+Kd9zLQ9OjD+cTBIQSDC7CuXksq2pTe/58K/N5dvgI0qGe4Iru3UWlPZ17+Kdf7XhFsaNC1NW9KM2
+TU9zX65YjsrjKMvW7JqWMoM6A40+dso1HRgW703kBG4WNyw426tWUX96Lpk4X02M/ovjeMteUQ==
+--94eb2c184d7818a9da05543530dc--
