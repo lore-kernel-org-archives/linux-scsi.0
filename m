@@ -1,48 +1,64 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [for-4.14 RFC PATCH 1/2] dm rq: avoid deadlock if
-	dm-mq is	stacked on old .request_fn device(s)
-Date: Fri, 14 Jul 2017 09:22:50 +0200
-Message-ID: <20170714072250.GC17046@lst.de>
-References: <20170713211217.52361-1-snitzer@redhat.com>
-	<20170713211217.52361-2-snitzer@redhat.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [bug report] scsi: sg: fix SG_DXFER_FROM_DEV transfers
+Date: Fri, 14 Jul 2017 10:46:03 +0300
+Message-ID: <20170714074603.7mi6jshrz6zfru4b@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:32188 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750917AbdGNHqP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Jul 2017 03:46:15 -0400
 Content-Disposition: inline
-In-Reply-To: <20170713211217.52361-2-snitzer@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: linux-block@vger.kernel.org, dm-devel@redhat.com, hch@lst.de, linux-scsi@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jthumshirn@suse.de
+Cc: linux-scsi@vger.kernel.org
 
-The problem here is the following:
+Hello Johannes Thumshirn,
 
-blk_finish_request must always be called with the queue lock held,
-it even has an assert.
+The patch 68c59fcea1f2: "scsi: sg: fix SG_DXFER_FROM_DEV transfers"
+from Jul 7, 2017, leads to the following static checker warning:
 
-Without blk-mq used by dm-rq, dm uses the block softirq to execute the
-completion, which means we always have a different execution context and
-can take the queue lock again without issuesi.
+	drivers/scsi/sg.c:762 sg_is_valid_dxfer()
+	warn: unsigned 'hp->dxfer_len' is never less than zero.
 
-With blk-mq used by dm-rq, the the dm .complete handler that is the rough
-equivalent of the softirq handler is called either directly if were are
-on the same CPU, or using a IPI (hardirq) if not.  If this handler gets
-called from a legacy request function it will be called with the
-queue_lock held, but if it's called from a blk-mq driver or actually
-uses the IPI no lock will be held.
+drivers/scsi/sg.c
+   754  static bool sg_is_valid_dxfer(sg_io_hdr_t *hp)
+   755  {
+   756          switch (hp->dxfer_direction) {
+   757          case SG_DXFER_NONE:
+   758                  if (hp->dxferp || hp->dxfer_len > 0)
+   759                          return false;
+   760                  return true;
+   761          case SG_DXFER_FROM_DEV:
+   762                  if (hp->dxfer_len < 0)
+                            ^^^^^^^^^^^^^^^^^
+Not possible.
 
-When I did my blk-mq only for dm-mpath WIP patch my solution to that
-was that I removed the ->complete handler entirely and just ran the
-whole dm completion from the original hardirq context.  With that change
-I know that for blk-mq we'll never hold the queue_lock (and the blk-mq
-request free path doesn't care), and for legacy we always hold it,
-so __blk_put_request can always be used.
+   763                          return false;
+   764                  return true;
+   765          case SG_DXFER_TO_DEV:
+   766          case SG_DXFER_TO_FROM_DEV:
+   767                  if (!hp->dxferp || hp->dxfer_len == 0)
+   768                          return false;
+   769                  return true;
+   770          case SG_DXFER_UNKNOWN:
+   771                  if ((!hp->dxferp && hp->dxfer_len) ||
+   772                      (hp->dxferp && hp->dxfer_len == 0))
+   773                          return false;
+   774                  return true;
+   775          default:
+   776                  return false;
+   777          }
+   778  }
+
+Btw, I was looking up the type of hp->dxfer_len and I noticed that the
+documentation for hp->resid is wrong.  It says:
+
+	int resid;                  /* [o] dxfer_len - actual_transferred */
+
+My guess is that resid stands for Response ID but I'm not positive.
+
+regards,
+dan carpenter
