@@ -1,58 +1,63 @@
-From: Guenter Roeck <linux@roeck-us.net>
-Subject: Re: [PATCH 15/22] hwmon: applesmc: fix format string overflow
-Date: Fri, 14 Jul 2017 07:06:54 -0700
-Message-ID: <f2e1e06c-3dc3-a3cd-9e93-c9e197ff4cc4@roeck-us.net>
-References: <20170714120720.906842-1-arnd@arndb.de>
- <20170714120720.906842-16-arnd@arndb.de>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [for-4.14 RFC PATCH 1/2] dm rq: avoid deadlock if dm-mq is
+ stacked on old .request_fn device(s)
+Date: Fri, 14 Jul 2017 10:19:29 -0400
+Message-ID: <20170714141929.GB18245@redhat.com>
+References: <20170713211217.52361-1-snitzer@redhat.com>
+ <20170713211217.52361-2-snitzer@redhat.com>
+ <20170714072250.GC17046@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170714120720.906842-16-arnd@arndb.de>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org, Henrik Rydberg <rydberg@bitmath.org>, Jean Delvare <jdelvare@suse.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, akpm@linux-foundation.org, netdev@vger.kernel.org, "David S . Miller" <davem@davemloft.net>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, x86@kernel.org, linux-hwmon@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:43464 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753968AbdGNOTd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 14 Jul 2017 10:19:33 -0400
+Content-Disposition: inline
+In-Reply-To: <20170714072250.GC17046@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: dm-devel@redhat.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 07/14/2017 05:07 AM, Arnd Bergmann wrote:
-> gcc-7 warns that the key might exceed five bytes for lage index
-> values:
-> 
-> drivers/hwmon/applesmc.c: In function 'applesmc_show_fan_position':
-> drivers/hwmon/applesmc.c:906:18: error: '%d' directive writing between 1 and 5 bytes into a region of size 4 [-Werror=format-overflow=]
-> sprintf(newkey, FAN_ID_FMT, to_index(attr));
->                  ^~~~~~~
-> drivers/hwmon/applesmc.c:906:18: note: directive argument in the range [0, 65535]
-> drivers/hwmon/applesmc.c:906:2: note: 'sprintf' output between 5 and 9 bytes into a destination of size 5
-> 
-> As the key is required to be four characters plus trailing zero,
-> we know that the index has to be small here. I'm using snprintf()
-> to avoid the warning. This would truncate the string instead of
-> overflowing.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+On Fri, Jul 14 2017 at  3:22am -0400,
+Christoph Hellwig <hch@lst.de> wrote:
 
-I submitted a more comprehensive patch a couple of days ago. There are other similar
-sprintf() calls in the driver which gcc doesn't report.
-
-Guenter
-
-> ---
->   drivers/hwmon/applesmc.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+> The problem here is the following:
 > 
-> diff --git a/drivers/hwmon/applesmc.c b/drivers/hwmon/applesmc.c
-> index 0af7fd311979..515163b9a89f 100644
-> --- a/drivers/hwmon/applesmc.c
-> +++ b/drivers/hwmon/applesmc.c
-> @@ -903,7 +903,7 @@ static ssize_t applesmc_show_fan_position(struct device *dev,
->   	char newkey[5];
->   	u8 buffer[17];
->   
-> -	sprintf(newkey, FAN_ID_FMT, to_index(attr));
-> +	snprintf(newkey, sizeof(newkey), FAN_ID_FMT, to_index(attr));
->   
->   	ret = applesmc_read_key(newkey, buffer, 16);
->   	buffer[16] = 0;
+> blk_finish_request must always be called with the queue lock held,
+> it even has an assert.
 > 
+> Without blk-mq used by dm-rq, dm uses the block softirq to execute the
+> completion, which means we always have a different execution context and
+> can take the queue lock again without issuesi.
+> 
+> With blk-mq used by dm-rq, the the dm .complete handler that is the rough
+> equivalent of the softirq handler is called either directly if were are
+> on the same CPU, or using a IPI (hardirq) if not.  If this handler gets
+> called from a legacy request function it will be called with the
+> queue_lock held, but if it's called from a blk-mq driver or actually
+> uses the IPI no lock will be held.
+
+Yeap, very well explained!  I found exactly that yesterday when I
+developed this patch.  I stopped short of getting into those details in
+my header though, but as you know it comes down to dm_complete_request's
+blk-mq-vs-not branching (blk_mq_complete_request vs blk_complete_request).
+
+> When I did my blk-mq only for dm-mpath WIP patch my solution to that
+> was that I removed the ->complete handler entirely and just ran the
+> whole dm completion from the original hardirq context.  With that change
+> I know that for blk-mq we'll never hold the queue_lock (and the blk-mq
+> request free path doesn't care), and for legacy we always hold it,
+> so __blk_put_request can always be used.
+
+Do you see a benefit to extracting that portion of your WIP patch
+(removing the ->complete handler entirely)?
+
+Or leave well enough alone and just continue to disable dm-mq's ability
+to stack on .request_fn paths?
+
+Given SCSI's switch to scsi-mq by default I cannot see value in propping
+up stacking on the old .request_fn devices.
+
+But interested to get your thoughts, thanks.
