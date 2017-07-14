@@ -1,204 +1,79 @@
 From: wangyijing <wangyijing@huawei.com>
-Subject: Re: [PATCH v3 4/7] libsas: add sas event wait-complete support
-Date: Fri, 14 Jul 2017 15:46:18 +0800
-Message-ID: <596876CA.2080001@huawei.com>
+Subject: Re: [PATCH v3 0/7] Enhance libsas hotplug feature
+Date: Fri, 14 Jul 2017 16:19:12 +0800
+Message-ID: <59687E80.1080807@huawei.com>
 References: <1499670369-44143-1-git-send-email-wangyijing@huawei.com>
- <1499670369-44143-5-git-send-email-wangyijing@huawei.com>
- <b2939814-ebbe-866a-b067-e94d7e814647@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <b2939814-ebbe-866a-b067-e94d7e814647@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: chenqilin2@huawei.com, hare@suse.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chenxiang66@hisilicon.com, huangdaode@hisilicon.com, wangkefeng.wang@huawei.com, zhaohongjiang@huawei.com, dingtianhong@huawei.com, guohanjun@huawei.com, yanaijie@huawei.com, hch@lst.de, dan.j.williams@intel.com, emilne@redhat.com, thenzl@redhat.com, wefu@redhat.com, charles.chenxin@huawei.com, chenweilong@huawei.com, john.garry@huawei.com, Johannes Thumshirn <jthumshirn@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga04-in.huawei.com ([45.249.212.190]:2994 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750853AbdGNIUc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Jul 2017 04:20:32 -0400
+In-Reply-To: <1499670369-44143-1-git-send-email-wangyijing@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: chenqilin2@huawei.com, hare@suse.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chenxiang66@hisilicon.com, huangdaode@hisilicon.com, wangkefeng.wang@huawei.com, zhaohongjiang@huawei.com, dingtianhong@huawei.com, guohanjun@huawei.com, yanaijie@huawei.com, hch@lst.de, dan.j.williams@intel.com, emilne@redhat.com, thenzl@redhat.com, wefu@redhat.com, charles.chenxin@huawei.com, chenweilong@huawei.com, john.garry@huawei.com
+
+Hi, I'm sorry to say that I have to stop the libsas hotplug improvement work, I will resign from
+Huawei, so I have no time and hardware to continue to work at this issue. John is very familiar with
+this work, and provide a lot of good suggestions. So if John like, I am glad he could join to work
+at this issues, And my colleague Jason Yan could also provide helps.
 
 
+Thanks!
+Yijing.
 
-在 2017/7/14 14:51, Hannes Reinecke 写道:
-> On 07/10/2017 09:06 AM, Yijing Wang wrote:
->> Introduce wait-complete for libsas sas event processing,
->> execute sas port create/destruct in sync.
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> CC: John Garry <john.garry@huawei.com>
->> CC: Johannes Thumshirn <jthumshirn@suse.de>
->> CC: Ewan Milne <emilne@redhat.com>
->> CC: Christoph Hellwig <hch@lst.de>
->> CC: Tomas Henzl <thenzl@redhat.com>
->> CC: Dan Williams <dan.j.williams@intel.com>
->> ---
->>  drivers/scsi/libsas/sas_discover.c | 41 ++++++++++++++++++++++++++++----------
->>  drivers/scsi/libsas/sas_internal.h | 34 +++++++++++++++++++++++++++++++
->>  drivers/scsi/libsas/sas_port.c     |  4 ++++
->>  include/scsi/libsas.h              |  5 ++++-
->>  4 files changed, 72 insertions(+), 12 deletions(-)
->>
->> diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
->> index 60de662..5d4a3a8 100644
->> --- a/drivers/scsi/libsas/sas_discover.c
->> +++ b/drivers/scsi/libsas/sas_discover.c
->> @@ -525,16 +525,43 @@ static void sas_revalidate_domain(struct work_struct *work)
->>  	mutex_unlock(&ha->disco_mutex);
->>  }
->>  
->> +static const work_func_t sas_event_fns[DISC_NUM_EVENTS] = {
->> +	[DISCE_DISCOVER_DOMAIN] = sas_discover_domain,
->> +	[DISCE_REVALIDATE_DOMAIN] = sas_revalidate_domain,
->> +	[DISCE_PROBE] = sas_probe_devices,
->> +	[DISCE_SUSPEND] = sas_suspend_devices,
->> +	[DISCE_RESUME] = sas_resume_devices,
->> +	[DISCE_DESTRUCT] = sas_destruct_devices,
->> +};
->> +
->> +/* a simple wrapper for sas discover event funtions */
->> +static void sas_discover_common_fn(struct work_struct *work)
->> +{
->> +	struct sas_discovery_event *ev = to_sas_discovery_event(work);
->> +	struct asd_sas_port *port = ev->port;
->> +
->> +	sas_event_fns[ev->type](work);
->> +	sas_port_put(port);
->> +}
->> +
->> +
->>  /* ---------- Events ---------- */
->>  
->>  static void sas_chain_work(struct sas_ha_struct *ha, struct sas_work *sw)
->>  {
->> +	int ret;
->> +	struct sas_discovery_event *ev = to_sas_discovery_event(&sw->work);
->> +	struct asd_sas_port *port = ev->port;
->> +
->>  	/* chained work is not subject to SA_HA_DRAINING or
->>  	 * SAS_HA_REGISTERED, because it is either submitted in the
->>  	 * workqueue, or known to be submitted from a context that is
->>  	 * not racing against draining
->>  	 */
->> -	scsi_queue_work(ha->core.shost, &sw->work);
->> +	sas_port_get(port);
->> +	ret = scsi_queue_work(ha->core.shost, &sw->work);
->> +	if (ret != 1)
->> +		sas_port_put(port);
->>  }
->>  
->>  static void sas_chain_event(int event, unsigned long *pending,
->> @@ -575,18 +602,10 @@ void sas_init_disc(struct sas_discovery *disc, struct asd_sas_port *port)
->>  {
->>  	int i;
->>  
->> -	static const work_func_t sas_event_fns[DISC_NUM_EVENTS] = {
->> -		[DISCE_DISCOVER_DOMAIN] = sas_discover_domain,
->> -		[DISCE_REVALIDATE_DOMAIN] = sas_revalidate_domain,
->> -		[DISCE_PROBE] = sas_probe_devices,
->> -		[DISCE_SUSPEND] = sas_suspend_devices,
->> -		[DISCE_RESUME] = sas_resume_devices,
->> -		[DISCE_DESTRUCT] = sas_destruct_devices,
->> -	};
->> -
->>  	disc->pending = 0;
->>  	for (i = 0; i < DISC_NUM_EVENTS; i++) {
->> -		INIT_SAS_WORK(&disc->disc_work[i].work, sas_event_fns[i]);
->> +		INIT_SAS_WORK(&disc->disc_work[i].work, sas_discover_common_fn);
->>  		disc->disc_work[i].port = port;
->> +		disc->disc_work[i].type = i;
->>  	}
->>  }
->> diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
->> index f03ce64..890b5d26 100644
->> --- a/drivers/scsi/libsas/sas_internal.h
->> +++ b/drivers/scsi/libsas/sas_internal.h
->> @@ -100,6 +100,40 @@ void sas_free_device(struct kref *kref);
->>  extern const work_func_t sas_phy_event_fns[PHY_NUM_EVENTS];
->>  extern const work_func_t sas_port_event_fns[PORT_NUM_EVENTS];
->>  
->> +static void sas_complete_event(struct kref *kref)
->> +{
->> +	struct asd_sas_port *port = container_of(kref, struct asd_sas_port, ref);
->> +
->> +	complete_all(&port->completion);
->> +}
->> +
->> +static inline void sas_port_put(struct asd_sas_port *port)
->> +{
->> +	if (port->is_sync)
->> +		kref_put(&port->ref, sas_complete_event);
->> +}
->> +
->> +static inline void sas_port_wait_init(struct asd_sas_port *port)
->> +{
->> +	init_completion(&port->completion);
->> +	kref_init(&port->ref);
->> +	port->is_sync = true;
->> +}
->> +
->> +static inline void sas_port_wait_completion(
->> +		struct asd_sas_port *port)
->> +{
->> +	sas_port_put(port);
->> +	wait_for_completion(&port->completion);
->> +	port->is_sync = false;
->> +}
->> +
->> +static inline void sas_port_get(struct asd_sas_port *port)
->> +{
->> +	if (port && port->is_sync)
->> +		kref_get(&port->ref);
->> +}
->> +
->>  #ifdef CONFIG_SCSI_SAS_HOST_SMP
->>  extern int sas_smp_host_handler(struct Scsi_Host *shost, struct request *req,
->>  				struct request *rsp);
->> diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
->> index 9326628..d589adb 100644
->> --- a/drivers/scsi/libsas/sas_port.c
->> +++ b/drivers/scsi/libsas/sas_port.c
->> @@ -191,7 +191,9 @@ static void sas_form_port(struct asd_sas_phy *phy)
->>  	if (si->dft->lldd_port_formed)
->>  		si->dft->lldd_port_formed(phy);
->>  
->> +	sas_port_wait_init(port);
->>  	sas_discover_event(phy->port, DISCE_DISCOVER_DOMAIN);
->> +	sas_port_wait_completion(port);
->>  }
->>  
->>  /**
->> @@ -218,7 +220,9 @@ void sas_deform_port(struct asd_sas_phy *phy, int gone)
->>  		dev->pathways--;
->>  
->>  	if (port->num_phys == 1) {
->> +		sas_port_wait_init(port);
->>  		sas_unregister_domain_devices(port, gone);
->> +		sas_port_wait_completion(port);
->>  		sas_port_delete(port->port);
->>  		port->port = NULL;
->>  	} else {
-> 
-> I would rather use the standard on-stack completion here;
-> like this:
-> 
-> 	DECLARE_COMPLETION_ONSTACK(complete);
-> 	port->completion = &complete;
-> 	sas_unregister_domain_devices(port, gone);
-> 	wait_for_completion(&complete);
-> 	sas_port_delete(port->port);
-> 
-> which would simplify the above helpers to:
-> 
-> static inline void sas_port_put(struct asd_sas_port *port)
-> {
-> 	if (port->completion)
-> 		kref_put(&port->ref, sas_complete_event);
-> }
-> 
-> and you could do away with the 'is_sync' helper.
 
-It looks better, thanks!
-
+在 2017/7/10 15:06, Yijing Wang 写道:
+> This patchset is based Johannes's patch
+> "scsi: sas: scsi_queue_work can fail, so make callers aware"
 > 
-> Cheers,
+> Now the libsas hotplug has some issues, Dan Williams report
+> a similar bug here before
+> https://www.mail-archive.com/linux-scsi@vger.kernel.org/msg39187.html
 > 
-> Hannes
+> The issues we have found
+> 1. if LLDD burst reports lots of phy-up/phy-down sas events, some events
+>    may lost because a same sas events is pending now, finally libsas topo
+>    may different the hardware.
+> 2. receive a phy down sas event, libsas call sas_deform_port to remove
+>    devices, it would first delete the sas port, then put a destruction
+>    discovery event in a new work, and queue it at the tail of workqueue,
+>    once the sas port be deleted, its children device will be deleted too,
+>    when the destruction work start, it will found the target device has
+>    been removed, and report a sysfs warnning.
+> 3. since a hotplug process will be devided into several works, if a phy up
+>    sas event insert into phydown works, like
+>    destruction work  ---> PORTE_BYTES_DMAED (sas_form_port) ---->PHYE_LOSS_OF_SIGNAL
+>    the hot remove flow would broken by PORTE_BYTES_DMAED event, it's not
+>    we expected, and issues would occur.
+> 
+> The first patch fix the sas events lost, and the second one introudce wait-complete
+> to fix the hotplug order issues.
+> 
+> v2->v3: some code improvements suggested by Johannes and John,
+> 	    split v2 patch 2 into several small pathes.
+> v1->v2: some code improvements suggested by John Garry
+> 
+> Yijing Wang (7):
+>   libsas: Use static sas event pool to appease sas event lost
+>   libsas: remove unused port_gone_completion
+>   libsas: Use new workqueue to run sas event
+>   libsas: add sas event wait-complete support
+>   libsas: add a new workqueue to run probe/destruct discovery event
+>   libsas: add wait-complete support to sync discovery event
+>   libsas: release disco mutex during waiting in sas_ex_discover_end_dev
+> 
+>  drivers/scsi/libsas/sas_discover.c |  58 +++++++---
+>  drivers/scsi/libsas/sas_event.c    | 212 ++++++++++++++++++++++++++++++++-----
+>  drivers/scsi/libsas/sas_expander.c |  22 +++-
+>  drivers/scsi/libsas/sas_init.c     |  21 ++--
+>  drivers/scsi/libsas/sas_internal.h |  64 +++++++++++
+>  drivers/scsi/libsas/sas_phy.c      |  48 +++------
+>  drivers/scsi/libsas/sas_port.c     |  22 ++--
+>  include/scsi/libsas.h              |  27 +++--
+>  8 files changed, 373 insertions(+), 101 deletions(-)
 > 
