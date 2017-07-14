@@ -1,15 +1,15 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 6/7] libsas: add wait-complete support to sync
- discovery event
-Date: Fri, 14 Jul 2017 08:53:03 +0200
-Message-ID: <83107087-fdc2-c05c-2ab9-24594180e303@suse.de>
+Subject: Re: [PATCH v3 7/7] libsas: release disco mutex during waiting in
+ sas_ex_discover_end_dev
+Date: Fri, 14 Jul 2017 08:55:52 +0200
+Message-ID: <fbaafcf1-9be8-4db6-728a-f6432b4c8e76@suse.de>
 References: <1499670369-44143-1-git-send-email-wangyijing@huawei.com>
- <1499670369-44143-7-git-send-email-wangyijing@huawei.com>
+ <1499670369-44143-8-git-send-email-wangyijing@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1499670369-44143-7-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1499670369-44143-8-git-send-email-wangyijing@huawei.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 To: Yijing Wang <wangyijing@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
@@ -17,8 +17,14 @@ Cc: chenqilin2@huawei.com, hare@suse.com, linux-scsi@vger.kernel.org, linux-kern
 List-Id: linux-scsi@vger.kernel.org
 
 On 07/10/2017 09:06 AM, Yijing Wang wrote:
-> Introduce a sync flag to tag discovery event whether need to
-> sync execute, per-event wait-complete ensure sync.
+> Disco mutex was introudced to prevent domain rediscovery competing
+> with ata error handling(87c8331). If we have already hold the lock
+> in sas_revalidate_domain and sync executing probe, deadlock caused,
+> because, sas_probe_sata() also need hold disco_mutex. Since disco mutex
+> use to prevent revalidata domain happen during ata error handler,
+> it should be safe to release disco mutex when sync probe, because
+> no new revalidate domain event would be process until the sync return,
+> and the current sas revalidate domain finish.
 > 
 > Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 > CC: John Garry <john.garry@huawei.com>
@@ -28,163 +34,58 @@ On 07/10/2017 09:06 AM, Yijing Wang wrote:
 > CC: Tomas Henzl <thenzl@redhat.com>
 > CC: Dan Williams <dan.j.williams@intel.com>
 > ---
->  drivers/scsi/libsas/sas_discover.c |  8 ++++++--
->  drivers/scsi/libsas/sas_expander.c | 12 +++++++++++-
->  drivers/scsi/libsas/sas_internal.h | 27 +++++++++++++++++++++++++++
->  include/scsi/libsas.h              |  2 ++
->  4 files changed, 46 insertions(+), 3 deletions(-)
+>  drivers/scsi/libsas/sas_expander.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
 > 
-> diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-> index a25d648..d68f8dd 100644
-> --- a/drivers/scsi/libsas/sas_discover.c
-> +++ b/drivers/scsi/libsas/sas_discover.c
-> @@ -378,6 +378,7 @@ void sas_unregister_dev(struct asd_sas_port *port, struct domain_device *dev)
->  		list_del_init(&dev->disco_list_node);
->  		sas_rphy_free(dev->rphy);
->  		sas_unregister_common_dev(port, dev);
-> +		sas_disc_cancel_sync(&port->disc.disc_work[DISCE_DESTRUCT]);
->  		return;
->  	}
->  
-> @@ -541,6 +542,7 @@ static void sas_discover_common_fn(struct work_struct *work)
->  	struct asd_sas_port *port = ev->port;
->  
->  	sas_event_fns[ev->type](work);
-> +	sas_disc_wakeup(ev);
->  	sas_port_put(port);
->  }
->  
-> @@ -571,8 +573,10 @@ static void sas_chain_work(struct sas_ha_struct *ha, struct sas_work *sw)
->  	else
->  		ret = scsi_queue_work(ha->core.shost, &sw->work);
->  
-> -	if (ret != 1)
-> +	if (ret != 1) {
->  		sas_port_put(port);
-> +		sas_disc_cancel_sync(ev);
-> +	}
->  }
->  
->  static void sas_chain_event(int event, unsigned long *pending,
-> @@ -592,9 +596,9 @@ int sas_discover_event(struct asd_sas_port *port, enum discover_event ev)
->  {
->  	struct sas_discovery *disc;
->  
-> +	disc = &port->disc;
->  	if (!port)
->  		return 0;
-> -	disc = &port->disc;
->  
->  	BUG_ON(ev >= DISC_NUM_EVENTS);
->  
 > diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-> index 570b2cb..9d26c28 100644
+> index 9d26c28..077024e 100644
 > --- a/drivers/scsi/libsas/sas_expander.c
 > +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -822,14 +822,18 @@ static struct domain_device *sas_ex_discover_end_dev(
+> @@ -776,6 +776,7 @@ static struct domain_device *sas_ex_discover_end_dev(
+>  	struct ex_phy *phy = &parent_ex->ex_phy[phy_id];
+>  	struct domain_device *child = NULL;
+>  	struct sas_rphy *rphy;
+> +	bool prev_lock;
+>  	int res;
 >  
->  		list_add_tail(&child->disco_list_node, &parent->port->disco_list);
+>  	if (phy->attached_sata_host || phy->attached_sata_ps)
+> @@ -803,6 +804,7 @@ static struct domain_device *sas_ex_discover_end_dev(
+>  	sas_ex_get_linkrate(parent, child, phy);
+>  	sas_device_set_phy(child, phy->port);
 >  
-> +		sas_disc_wait_init(child->port, DISCE_PROBE);
->  		res = sas_discover_sata(child);
->  		if (res) {
-> +			sas_disc_cancel_sync(&child->port->disc.disc_work[DISCE_PROBE]);
->  			SAS_DPRINTK("sas_discover_sata() for device %16llx at "
->  				    "%016llx:0x%x returned 0x%x\n",
->  				    SAS_ADDR(child->sas_addr),
+> +	prev_lock = mutex_is_locked(&child->port->ha->disco_mutex);
+>  #ifdef CONFIG_SCSI_SAS_ATA
+>  	if ((phy->attached_tproto & SAS_PROTOCOL_STP) || phy->attached_sata_dev) {
+>  		res = sas_get_ata_info(child, phy);
+> @@ -832,7 +834,11 @@ static struct domain_device *sas_ex_discover_end_dev(
 >  				    SAS_ADDR(parent->sas_addr), phy_id, res);
 >  			goto out_list_del;
 >  		}
-> +		sas_disc_wait_completion(child->port, DISCE_PROBE);
-> +
+> +		if (prev_lock)
+> +			mutex_unlock(&child->port->ha->disco_mutex);
+>  		sas_disc_wait_completion(child->port, DISCE_PROBE);
+> +		if (prev_lock)
+> +			mutex_lock(&child->port->ha->disco_mutex);
+>  
 >  	} else
 >  #endif
->  	  if (phy->attached_tproto & SAS_PROTOCOL_SSP) {
-> @@ -847,14 +851,17 @@ static struct domain_device *sas_ex_discover_end_dev(
->  
->  		list_add_tail(&child->disco_list_node, &parent->port->disco_list);
->  
-> +		sas_disc_wait_init(child->port, DISCE_PROBE);
->  		res = sas_discover_end_dev(child);
->  		if (res) {
-> +			sas_disc_cancel_sync(&child->port->disc.disc_work[DISCE_PROBE]);
->  			SAS_DPRINTK("sas_discover_end_dev() for device %16llx "
->  				    "at %016llx:0x%x returned 0x%x\n",
->  				    SAS_ADDR(child->sas_addr),
+> @@ -861,7 +867,11 @@ static struct domain_device *sas_ex_discover_end_dev(
 >  				    SAS_ADDR(parent->sas_addr), phy_id, res);
 >  			goto out_list_del;
 >  		}
-> +		sas_disc_wait_completion(child->port, DISCE_PROBE);
+> +		if (prev_lock)
+> +			mutex_unlock(&child->port->ha->disco_mutex);
+>  		sas_disc_wait_completion(child->port, DISCE_PROBE);
+> +		if (prev_lock)
+> +			mutex_lock(&child->port->ha->disco_mutex);
 >  	} else {
 >  		SAS_DPRINTK("target proto 0x%x at %016llx:0x%x not handled\n",
 >  			    phy->attached_tproto, SAS_ADDR(parent->sas_addr),
-> @@ -1890,8 +1897,11 @@ static void sas_unregister_devs_sas_addr(struct domain_device *parent,
->  				if (child->dev_type == SAS_EDGE_EXPANDER_DEVICE ||
->  				    child->dev_type == SAS_FANOUT_EXPANDER_DEVICE)
->  					sas_unregister_ex_tree(parent->port, child);
-> -				else
-> +				else {
-> +					sas_disc_wait_init(parent->port, DISCE_DESTRUCT);
->  					sas_unregister_dev(parent->port, child);
-> +					sas_disc_wait_completion(parent->port, DISCE_DESTRUCT);
-> +				}
->  				found = child;
->  				break;
->  			}
-> diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-> index 890b5d26..09a9b10 100644
-> --- a/drivers/scsi/libsas/sas_internal.h
-> +++ b/drivers/scsi/libsas/sas_internal.h
-> @@ -134,6 +134,33 @@ static inline void sas_port_get(struct asd_sas_port *port)
->  		kref_get(&port->ref);
->  }
->  
-> +static inline void sas_disc_cancel_sync(struct sas_discovery_event *event)
-> +{
-> +	event->is_sync = false;
-> +}
-> +
-> +static inline void sas_disc_wakeup(struct sas_discovery_event *event)
-> +{
-> +	if (event->is_sync)
-> +		complete(&event->completion);
-> +}
-> +
-> +static inline void sas_disc_wait_init(struct asd_sas_port *port,
-> +		enum discover_event event)
-> +{
-> +	port->disc.disc_work[event].is_sync = true;
-> +	init_completion(&port->disc.disc_work[event].completion);
-> +}
-> +
-> +static inline void sas_disc_wait_completion(struct asd_sas_port *port,
-> +		enum discover_event event)
-> +{
-> +	if (port->disc.disc_work[event].is_sync) {
-> +		wait_for_completion(&port->disc.disc_work[event].completion);
-> +		port->disc.disc_work[event].is_sync = false;
-> +	}
-> +}
-> +
->  #ifdef CONFIG_SCSI_SAS_HOST_SMP
->  extern int sas_smp_host_handler(struct Scsi_Host *shost, struct request *req,
->  				struct request *rsp);
-> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-> index 4bcb9fe..21e9fb140 100644
-> --- a/include/scsi/libsas.h
-> +++ b/include/scsi/libsas.h
-> @@ -243,6 +243,8 @@ struct sas_discovery_event {
->  	struct sas_work work;
->  	struct asd_sas_port *port;
->  	enum discover_event	type;
-> +	bool is_sync;
-> +	struct completion completion;
->  };
->  
->  static inline struct sas_discovery_event *to_sas_discovery_event(struct work_struct *work)
 > 
-Some comments as the earlier patch: please use DECLARE_COMPETION_ONSTACK
-here.
+I would rather have an analysis if this really cannot happen; 'should
+not' is rather vague. But seeing that it _is_ quite complex:
+
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
 
