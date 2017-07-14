@@ -1,51 +1,55 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [for-4.14 RFC PATCH 1/2] dm rq: avoid deadlock if dm-mq is
- stacked on old .request_fn device(s)
-Date: Fri, 14 Jul 2017 17:15:39 -0400
-Message-ID: <20170714211539.GB19238@redhat.com>
-References: <20170713211217.52361-1-snitzer@redhat.com>
- <20170713211217.52361-2-snitzer@redhat.com>
- <20170714072250.GC17046@lst.de>
- <20170714141929.GB18245@redhat.com>
- <1500052673.10198.174.camel@localhost.localdomain>
+From: "Burla, Satananda" <Satananda.Burla@cavium.com>
+Subject: Re: [PATCH 13/22] liquidio: fix possible eeprom format string
+ overflow
+Date: Fri, 14 Jul 2017 15:40:09 -0700
+Message-ID: <20170714224009.2537mysgwab272xp@caviumnetworks.com>
+References: <20170714120720.906842-1-arnd@arndb.de>
+ <20170714120720.906842-14-arnd@arndb.de>
+ <20170714.090408.1884235496293241466.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2nam01on0073.outbound.protection.outlook.com ([104.47.34.73]:9545
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751004AbdGNWka (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 14 Jul 2017 18:40:30 -0400
 Content-Disposition: inline
-In-Reply-To: <1500052673.10198.174.camel@localhost.localdomain>
-Sender: linux-block-owner@vger.kernel.org
-To: "Ewan D. Milne" <emilne@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <20170714.090408.1884235496293241466.davem@davemloft.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+Cc: "arnd@arndb.de" <arnd@arndb.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Chickles, Derek" <Derek.Chickles@cavium.com>, "Manlunas, Felix" <Felix.Manlunas@cavium.com>, "Vatsavayi, Raghu" <Raghu.Vatsavayi@cavium.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>, "linux@roeck-us.net" <linux@roeck-us.net>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>, "Chang, Weilin" <Weilin.Chang@cavium.com>, Kanneganti,
 
-On Fri, Jul 14 2017 at  1:17pm -0400,
-Ewan D. Milne <emilne@redhat.com> wrote:
-
-> On Fri, 2017-07-14 at 10:19 -0400, Mike Snitzer wrote:
-> > 
-> > Do you see a benefit to extracting that portion of your WIP patch
-> > (removing the ->complete handler entirely)?
-> > 
-> > Or leave well enough alone and just continue to disable dm-mq's ability
-> > to stack on .request_fn paths?
-> > 
-> > Given SCSI's switch to scsi-mq by default I cannot see value in propping
-> > up stacking on the old .request_fn devices.
+The 07/14/2017 09:04, David Miller wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
+> Date: Fri, 14 Jul 2017 14:07:05 +0200
 > 
-> So, the dm_mod.use_blk_mq flag is global, right?  I guess the question
-> is whether all of the block device types used on a system under DM are
-> supported under MQ.  If that is the case then we would be OK.
+> > gcc reports that the temporary buffer for computing the
+> > string length may be too small here:
+> >
+> > drivers/net/ethernet/cavium/liquidio/lio_ethtool.c: In function
+> 'lio_get_eeprom_len':
+> > /drivers/net/ethernet/cavium/liquidio/lio_ethtool.c:345:21: error: 'sprintf'
+> may write a terminating nul past the end of the destination [-Werror=
+> format-overflow=]
+> >   len = sprintf(buf, "boardname:%s serialnum:%s maj:%lld min:%lld\n",
+> >                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> > drivers/net/ethernet/cavium/liquidio/lio_ethtool.c:345:6: note: 'sprintf'
+> output between 35 and 167 bytes into a destination of size 128
+> >   len = sprintf(buf, "boardname:%s serialnum:%s maj:%lld min:%lld\n",
+> >
+> > This extends it to 192 bytes, which is certainly enough. As far
+> > as I could tell, there are no other constraints that require a specific
+> > maximum size.
+> >
+> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> 
+> Applied.
+I had raised a bug for this earlier and attached a patch as well. 
 
-I didn't quite understand Ewan's question so we talked in person.  His
-concern was whether other DM targets needed to be worried about blk-mq
-vs not.  I clarified that DM multipath is the only target that is
-request-based and that it is fine with stacking on scsi-mq.  And all the
-bio-based targets obviously stack just fine on scsi-mq devices.
+http://cabugzilla1.caveonetworks.com/octeon_bugzilla/show_bug.cgi?id=26421
 
-> The other question is whether there are negative performance
-> consequences in any (corner?) cases with MQ that would result in it
-> being preferable to run in non-MQ mode (e.g. tag space with lpfc, did
-> we ever resolve that?) but the right approach there is to put the effort
-> into the MQ path going forward, as has been the case.
 
-Yeap.
+-- 
+Regards
+Satanand
