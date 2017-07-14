@@ -1,85 +1,91 @@
-From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Subject: Re: [PATCH] scsi: default to scsi-mq
-Date: Fri, 14 Jul 2017 17:56:41 +0800
-Message-ID: <20170714175641.00001cb0@huawei.com>
-References: <20170616082755.22832-1-hch@lst.de>
-        <1499701840.3555.7.camel@wdc.com>
-        <e3c07504-8538-f2f3-003a-01b72e0c07c6@huawei.com>
-        <1499779970.3345.1.camel@wdc.com>
-        <4cf7ed21-7cf4-a91a-8beb-ba5f92e4eaaf@huawei.com>
-        <1499788012.2586.12.camel@wdc.com>
-        <9c0db5bd-a623-c73e-9f44-a4cfad97e2c8@huawei.com>
-        <581a258d-3da8-5b01-f528-0ce11b74b65e@huawei.com>
-        <1499869093.8204.2.camel@wdc.com>
-        <20170712235401.00004402@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([45.249.212.187]:9772 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751419AbdGNJ5T (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Jul 2017 05:57:19 -0400
-In-Reply-To: <20170712235401.00004402@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 00/22] gcc-7 -Wformat-* warnings
+Date: Fri, 14 Jul 2017 14:06:52 +0200
+Message-ID: <20170714120720.906842-1-arnd@arndb.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Guenter Roeck <linux@roeck-us.net>, akpm@linux-foundation.org, netdev@vger.kernel.org, "David S . Miller" <davem@davemloft.net>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, x86@kernel.org, Arnd Bergmann <arnd@arndb.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "john.garry@huawei.com" <john.garry@huawei.com>, "linuxarm@huawei.com" <linuxarm@huawei.com>
 
-On Wed, 12 Jul 2017 23:54:01 +0800
-Jonathan Cameron <Jonathan.Cameron@huawei.com> wrote:
+This series addresses all warnings that gcc-7 introduces for
+-Wformat-overflow= and turns off the -Wformat-truncation by default
+(they remain enabled with "make W=1").
 
-> On Wed, 12 Jul 2017 14:18:14 +0000
-> Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
-> 
-> > On Wed, 2017-07-12 at 09:26 +0100, John Garry wrote:  
-> > > > > What block driver controls the block device for which the performance
-> > > > > regression
-> > > > > has been observed? How many hardware queues were created by that block
-> > > > > driver
-> > > > > (see also /sys/block/*/mq/...)?    
-> > > 
-> > > Just confirming that we have only 1 queue:
-> > > /sys/block/sdc/mq/0 as example    
-> > 
-> > Hello John,
-> > 
-> > Can you also check the I/O scheduler that has been selected?
-> > 
-> > Thanks,
-> > 
-> > Bart.  
-> Hi Bart,
-> 
-> Original numbers were with deadline-mq (not deliberately specified - so the
-> default for this setup)  To flesh them out a bit I've
-> run the equivalent test with all the options on today's linux next.
-> 
-> iodepth=2048, 4k blocks read only 6 disks 6 processes.
-> 
-> SMMU disabled for now due to ongoing work to reduce it's impact.
-> 
-> none : 716k IOPS
-> mq-deadline : 305k IOPS
-> kyber: 321k IOPS
-> 
-> noop, scsi_mq disable using the kernel commandline option: 937k IOPS
-> 
-> Thanks,
-> 
-> Jonathan
-> 
+The -Wformat-overflow patches take varying approaches:
 
-Hi Bart,
+- When the final use of the buffer is not limited and we print
+  into an intermediate variable on the stack, I generally make
+  the temporary buffer slightly larger to accomodate all
+  theoretically possible values. Usually the code is already
+  correct for all expected values, but gcc doesn't see that.
 
-Just wondering if you had any thoughts on how we can proceed with tracking
-down this regression?
+- In some cases, we use a fixed-length buffer as the %s input
+  for an sprintf to another buffer of the same length. Here
+  I could make the first buffer slightly smaller so that gcc
+  can prove the copies to be correct.
 
-I'm not familiar enough with the multiqueue code to really know where
-to start.
+- In cases where the output buffer is required to have a fixed
+  length, I use snprintf() instead of sprintf(). This turns
+  the overflow warning into a truncation warning that is then
+  ignored. Here it would be much nicer to have a way to tell
+  the compiler what the maximum expected length is, but I
+  couldn't figure out a way to actually shut up the truncation
+  warning completely. Any ideas would be welcome.
 
-If there are any other tests that would be of use, let us know.
+Please review and apply as needed.
 
-Thanks for your help on this!
+      Arnd
 
-Jonathan
+Arnd Bergmann (22):
+  kbuild: disable -Wformat-truncation warnings by default
+  scsi: megaraid: fix format-overflow warning
+  scsi: mpt3sas: fix format overflow warning
+  scsi: fusion: fix string overflow warning
+  scsi: gdth: avoid buffer overflow warning
+  scsi: fnic: fix format string overflow warning
+  scsi: gdth: increase the procfs event buffer size
+  isdn: divert: fix sprintf buffer overflow warning
+  net: niu: fix format string overflow warning:
+  bnx2x: fix format overflow warning
+  net: thunder_bgx: avoid format string overflow warning
+  vmxnet3: avoid format strint overflow warning
+  liquidio: fix possible eeprom format string overflow
+  [media] usbvision-i2c: fix format overflow warning
+  hwmon: applesmc: fix format string overflow
+  x86: intel-mid: fix a format string overflow warning
+  platform/x86: alienware-wmi: fix format string overflow warning
+  gpio: acpi: fix string overflow for large pin numbers
+  block: DAC960: shut up format-overflow warning
+  sound: pci: avoid string overflow warnings
+  fscache: fix fscache_objlist_show format processing
+  IB/mlx4: fix sprintf format warning
+
+ .../intel-mid/device_libs/platform_max7315.c       |  6 ++++--
+ drivers/block/DAC960.c                             | 12 +++++++----
+ drivers/gpio/gpiolib-acpi.c                        |  2 +-
+ drivers/hwmon/applesmc.c                           |  2 +-
+ drivers/infiniband/hw/mlx4/sysfs.c                 |  2 +-
+ drivers/isdn/divert/isdn_divert.c                  | 25 +++++++++++-----------
+ drivers/media/usb/usbvision/usbvision-i2c.c        |  4 ++--
+ drivers/message/fusion/mptbase.c                   |  2 +-
+ .../net/ethernet/broadcom/bnx2x/bnx2x_ethtool.c    |  3 ++-
+ drivers/net/ethernet/cavium/liquidio/lio_ethtool.c |  2 +-
+ drivers/net/ethernet/cavium/thunder/thunder_bgx.c  |  2 +-
+ drivers/net/ethernet/sun/niu.c                     |  4 ++--
+ drivers/net/vmxnet3/vmxnet3_int.h                  |  2 +-
+ drivers/platform/x86/alienware-wmi.c               |  2 +-
+ drivers/scsi/fnic/fnic.h                           |  2 +-
+ drivers/scsi/gdth.c                                |  2 +-
+ drivers/scsi/gdth_proc.c                           |  2 +-
+ drivers/scsi/megaraid.c                            |  6 ++++--
+ drivers/scsi/mpt3sas/mpt3sas_base.h                |  2 +-
+ fs/fscache/object-list.c                           |  3 ++-
+ scripts/Makefile.extrawarn                         |  3 +++
+ sound/pci/mixart/mixart.h                          |  4 ++--
+ sound/pci/pcxhr/pcxhr.h                            |  4 ++--
+ sound/pci/rme9652/hdspm.c                          |  2 +-
+ 24 files changed, 57 insertions(+), 43 deletions(-)
+
+-- 
+2.9.0
