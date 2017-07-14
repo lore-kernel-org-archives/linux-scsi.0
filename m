@@ -1,89 +1,51 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH v3 4/7] libsas: add sas event wait-complete support
-Date: Fri, 14 Jul 2017 09:42:43 +0100
-Message-ID: <230b428c-c5b2-e14c-dbbd-2ebf3f295fe5@huawei.com>
-References: <1499670369-44143-1-git-send-email-wangyijing@huawei.com>
- <1499670369-44143-5-git-send-email-wangyijing@huawei.com>
- <b2939814-ebbe-866a-b067-e94d7e814647@suse.de>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [bug report] scsi: sg: fix SG_DXFER_FROM_DEV transfers
+Date: Fri, 14 Jul 2017 11:01:11 +0200
+Message-ID: <20170714090111.GA8497@linux-x5ow.site>
+References: <20170714074603.7mi6jshrz6zfru4b@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([45.249.212.187]:9771 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750799AbdGNInT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Jul 2017 04:43:19 -0400
-In-Reply-To: <b2939814-ebbe-866a-b067-e94d7e814647@suse.de>
+Received: from mx2.suse.de ([195.135.220.15]:51378 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750853AbdGNJBN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 14 Jul 2017 05:01:13 -0400
+Content-Disposition: inline
+In-Reply-To: <20170714074603.7mi6jshrz6zfru4b@mwanda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Yijing Wang <wangyijing@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: chenqilin2@huawei.com, hare@suse.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chenxiang66@hisilicon.com, huangdaode@hisilicon.com, wangkefeng.wang@huawei.com, zhaohongjiang@huawei.com, dingtianhong@huawei.com, guohanjun@huawei.com, yanaijie@huawei.com, hch@lst.de, dan.j.williams@intel.com, emilne@redhat.com, thenzl@redhat.com, wefu@redhat.com, charles.chenxin@huawei.com, chenweilong@huawei.com, Johannes Thumshirn <jthumshirn@suse.de>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
-On 14/07/2017 07:51, Hannes Reinecke wrote:
->>  #ifdef CONFIG_SCSI_SAS_HOST_SMP
->> >  extern int sas_smp_host_handler(struct Scsi_Host *shost, struct request *req,
->> >  				struct request *rsp);
->> > diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
->> > index 9326628..d589adb 100644
->> > --- a/drivers/scsi/libsas/sas_port.c
->> > +++ b/drivers/scsi/libsas/sas_port.c
->> > @@ -191,7 +191,9 @@ static void sas_form_port(struct asd_sas_phy *phy)
->> >  	if (si->dft->lldd_port_formed)
->> >  		si->dft->lldd_port_formed(phy);
->> >
->> > +	sas_port_wait_init(port);
->> >  	sas_discover_event(phy->port, DISCE_DISCOVER_DOMAIN);
->> > +	sas_port_wait_completion(port);
->> >  }
->> >
->> >  /**
->> > @@ -218,7 +220,9 @@ void sas_deform_port(struct asd_sas_phy *phy, int gone)
->> >  		dev->pathways--;
->> >
+On Fri, Jul 14, 2017 at 10:46:03AM +0300, Dan Carpenter wrote:
+>    761          case SG_DXFER_FROM_DEV:
+>    762                  if (hp->dxfer_len < 0)
+>                             ^^^^^^^^^^^^^^^^^
+> Not possible.
 
-Hannes thanks for checking.
+Yup and thanks to:
+647         else
+648                 hp->dxfer_direction = (mxsize > 0) ? SG_DXFER_FROM_DEV : SG_DXFER_NONE;
+649         hp->dxfer_len = mxsize;
 
->> >  	if (port->num_phys == 1) {
->> > +		sas_port_wait_init(port);
->> >  		sas_unregister_domain_devices(port, gone);
->> > +		sas_port_wait_completion(port);
->> >  		sas_port_delete(port->port);
->> >  		port->port = NULL;
->> >  	} else {
-> I would rather use the standard on-stack completion here;
-> like this:
->
-> 	DECLARE_COMPLETION_ONSTACK(complete);
-> 	port->completion = &complete;
-> 	sas_unregister_domain_devices(port, gone);
-> 	wait_for_completion(&complete);
-> 	sas_port_delete(port->port);
->
-> which would simplify the above helpers to:
->
-> static inline void sas_port_put(struct asd_sas_port *port)
-> {
-> 	if (port->completion)
-> 		kref_put(&port->ref, sas_complete_event);
-> }
->
-> and you could do away with the 'is_sync' helper.
->
+I should've noticed that earlier.
+Care to send a patch or want me to do?
 
-I did wonder if we could avoid using completion altogether and just 
-flush the respective queue which the work item is being processed in. 
-But, due to the intricacy of SCSI/ATA EH, and since we still use shost 
-workqueue for the libsas hotplug processing, maybe it best to keep it 
-straightforward and keep using completions.
+> 
+> Btw, I was looking up the type of hp->dxfer_len and I noticed that the
+> documentation for hp->resid is wrong.  It says:
+> 
+> 	int resid;                  /* [o] dxfer_len - actual_transferred */
+> 
+> My guess is that resid stands for Response ID but I'm not positive.
 
-Anyway, The idea to declare the completion on the stack seems sound. 
-And, for patch 6/7, I don't think the is_sync element is even required 
-without any change to declaration of completion in struct 
-sas_discovery_event.
+Nope, it's the residual length. It's set by scsi_req::resid_len
 
-John
-
-> Cheers,
->
-> Hannes
-> --
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
