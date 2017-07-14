@@ -1,67 +1,51 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 18/22] gpio: acpi: fix string overflow for large pin numbers
-Date: Fri, 14 Jul 2017 21:59:50 +0200
-Message-ID: <CAK8P3a1tozFc7Rmmv04dovtieHcLpg1VHaeZpW_NKFw4w-fZug@mail.gmail.com>
-References: <20170714120720.906842-1-arnd@arndb.de> <20170714120720.906842-19-arnd@arndb.de>
- <1500036740.29303.7.camel@linux.intel.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [for-4.14 RFC PATCH 1/2] dm rq: avoid deadlock if dm-mq is
+ stacked on old .request_fn device(s)
+Date: Fri, 14 Jul 2017 17:15:39 -0400
+Message-ID: <20170714211539.GB19238@redhat.com>
+References: <20170713211217.52361-1-snitzer@redhat.com>
+ <20170713211217.52361-2-snitzer@redhat.com>
+ <20170714072250.GC17046@lst.de>
+ <20170714141929.GB18245@redhat.com>
+ <1500052673.10198.174.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-gpio-owner@vger.kernel.org>
-In-Reply-To: <1500036740.29303.7.camel@linux.intel.com>
-Sender: linux-gpio-owner@vger.kernel.org
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>, Linus Walleij <linus.walleij@linaro.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Guenter Roeck <linux@roeck-us.net>, Andrew Morton <akpm@linux-foundation.org>, Networking <netdev@vger.kernel.org>, "David S . Miller" <davem@davemloft.net>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, the arch/x86 maintainers <x86@kernel.org>, Hans de Goede <hdegoede@redhat.com>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Wei Yongjun <weiyongjun1@huawei.com>, linux-gpio@vger.kernel.org, ACPI
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1500052673.10198.174.camel@localhost.localdomain>
+Sender: linux-block-owner@vger.kernel.org
+To: "Ewan D. Milne" <emilne@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jul 14, 2017 at 2:52 PM, Andy Shevchenko
-<andriy.shevchenko@linux.intel.com> wrote:
-> On Fri, 2017-07-14 at 14:07 +0200, Arnd Bergmann wrote:
->> gcc-7 notices that the pin_table is an array of 16-bit numbers,
->> but we assume it can be printed as a two-character hexadecimal
->> string:
->>
->> drivers/gpio/gpiolib-acpi.c: In function
->> 'acpi_gpiochip_request_interrupt':
->> drivers/gpio/gpiolib-acpi.c:206:24: warning: '%02X' directive writing
->> between 2 and 4 bytes into a region of size 3 [-Wformat-overflow=]
->>    sprintf(ev_name, "_%c%02X",
->>                         ^~~~
->> drivers/gpio/gpiolib-acpi.c:206:20: note: directive argument in the
->> range [0, 65535]
->>    sprintf(ev_name, "_%c%02X",
->>                     ^~~~~~~~~
->> drivers/gpio/gpiolib-acpi.c:206:3: note: 'sprintf' output between 5
->> and 7 bytes into a destination of size 5
->>    sprintf(ev_name, "_%c%02X",
->>    ^~~~~~~~~~~~~~~~~~~~~~~~~~~
->>     agpio->triggering == ACPI_EDGE_SENSITIVE ? 'E' : 'L',
->>     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->>     pin);
->>     ~~~~
->
->
-> This is obviously a false positive warning.
->
-> Here we have
-> int pin = u16 pin_table[0] <= 255 (implying >= 0).
->
-> I see few options how to make it more clear
-> 1) your proposal;
-> 2) use "%02hhX" instead;
-> 3) use if (ret >= 0 && ret <= 255) condition.
->
-> I would choose one of the 2-3.
->
-> In case gcc will complain about 3), file a bug to gcc crazy warning.
+On Fri, Jul 14 2017 at  1:17pm -0400,
+Ewan D. Milne <emilne@redhat.com> wrote:
 
-Makes sense. I didn't remember the syntax for 2) and couldn't find
-it in the man page when I first looked. This seems like a good solution
-here.
+> On Fri, 2017-07-14 at 10:19 -0400, Mike Snitzer wrote:
+> > 
+> > Do you see a benefit to extracting that portion of your WIP patch
+> > (removing the ->complete handler entirely)?
+> > 
+> > Or leave well enough alone and just continue to disable dm-mq's ability
+> > to stack on .request_fn paths?
+> > 
+> > Given SCSI's switch to scsi-mq by default I cannot see value in propping
+> > up stacking on the old .request_fn devices.
+> 
+> So, the dm_mod.use_blk_mq flag is global, right?  I guess the question
+> is whether all of the block device types used on a system under DM are
+> supported under MQ.  If that is the case then we would be OK.
 
-I'm pretty sure I tried 3) a few times when the warning first showed
-up last year, but couldn't get that to work. Filing a gcc bug also seems
-like a good idea, but I should first see if it's already fixed. The version
-I use for testing at the moment is from late April, and others may
-have complained about that already.
+I didn't quite understand Ewan's question so we talked in person.  His
+concern was whether other DM targets needed to be worried about blk-mq
+vs not.  I clarified that DM multipath is the only target that is
+request-based and that it is fine with stacking on scsi-mq.  And all the
+bio-based targets obviously stack just fine on scsi-mq devices.
 
-      Arnd
+> The other question is whether there are negative performance
+> consequences in any (corner?) cases with MQ that would result in it
+> being preferable to run in non-MQ mode (e.g. tag space with lpfc, did
+> we ever resolve that?) but the right approach there is to put the effort
+> into the MQ path going forward, as has been the case.
+
+Yeap.
