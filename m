@@ -1,53 +1,41 @@
-From: Vecu Bosseur <vecu.bosseur@gmail.com>
-Subject: BUG Needs Broader Audience (Bisect Successfull, Bugzilla #196343) :
- CDROM-related bug introduced in 4.11 merge window makes kernel freeze instead
- of doing read retires.
-Date: Sat, 15 Jul 2017 08:34:58 +0200
-Message-ID: <CACivvv0tuu0QoLc+jg24gn+Ld+8zEve=w8j584MU0Dgr-xnyuA@mail.gmail.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [for-4.14 RFC PATCH 0/2] dm rq: eliminate historic blk-mq and
+        .request_fn queue stacking restrictions
+Date: Sat, 15 Jul 2017 10:44:12 +0200
+Message-ID: <20170715084412.GB23189@lst.de>
+References: <20170713211217.52361-1-snitzer@redhat.com> <20170714071257.GB17046@lst.de> <20170714140206.GA18245@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux <linux@vger.kernel.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170714140206.GA18245@redhat.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi all,
+On Fri, Jul 14, 2017 at 10:02:06AM -0400, Mike Snitzer wrote:
+> On Fri, Jul 14 2017 at  3:12am -0400,
+> Christoph Hellwig <hch@lst.de> wrote:
+> 
+> > Btw, we might want to expedite this to 4.13, a 4.13 now defaults
+> > to blk-mq for scsi, and this patch would make sure that dm keeps
+> > on just working with that switch.
+> 
+> Don't think we need to rush anything in response to that change in
+> SCSI's default.  old .request_fn DM multipath works happily ontop of
+> blk-mq devices (so long as all paths are blk-mq).
 
-I happened to stumble into some (Linux kernel) bug a few days ago and
-hopefully managed to collect evidences of its cause, bissection for
-instance.
+You're right.  In that case I think we should just skip this series
+and I'll dust of the patch to just kill the non-mq support for 3.14
+if the switch of scsi to default to mq works out for 3.13.
 
-I was really in need to share my report with the Community, but
-pitifully failed to spot the right mailing lists involved. That's why
-some of you might consider this message bothersome.
+> It is just blk-mq DM multipath ontop of old .request_fn paths that is
+> disallowed in current upstream code.
+> 
+> But again, I really don't see why we should even want/need to support
+> that mode... hence my question raised in this RFC.
 
-For the rest, the people who really care about this bug, please,
-follow this pointer :
-
-https://bugzilla.kernel.org/show_bug.cgi?id=196343
-
-For eager people, offending commit is :
-
-commit 82ed4db499b8598f16f8871261bff088d6b0597f
-Author: Christoph Hellwig <hch@lst.de>
-Date:   Fri Jan 27 09:46:29 2017 +0100
-
-    block: split scsi_request out of struct request
-
-    And require all drivers that want to support BLOCK_PC to allocate it
-    as the first thing of their private data.  To support this the legacy
-    IDE and BSG code is switched to set cmd_size on their queues to let
-    the block layer allocate the additional space.
-
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Jens Axboe <axboe@fb.com>
-
-
-
-And, not as an option, you the specialists, please tell me which the
-right mailing lists are to post such a bug report.
-
-Thanks in advance for any kind of comment.
-
-Yours Sincerely,
-Valentin
+I think this mode makes sense in the long run - to get rid of the
+legacy request code in dm.  But as long as we keep both modes arounds
+the use for it seems a big questionable indeed.
