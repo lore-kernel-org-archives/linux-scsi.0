@@ -1,41 +1,66 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [for-4.14 RFC PATCH 0/2] dm rq: eliminate historic blk-mq and
-        .request_fn queue stacking restrictions
-Date: Sat, 15 Jul 2017 10:44:12 +0200
-Message-ID: <20170715084412.GB23189@lst.de>
-References: <20170713211217.52361-1-snitzer@redhat.com> <20170714071257.GB17046@lst.de> <20170714140206.GA18245@redhat.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] final round of SCSI updates for the 4.12+ merge window
+Date: Sat, 15 Jul 2017 22:56:22 -0700
+Message-ID: <1500184582.2733.3.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170714140206.GA18245@redhat.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:49578 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751229AbdGPF40 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 16 Jul 2017 01:56:26 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Fri, Jul 14, 2017 at 10:02:06AM -0400, Mike Snitzer wrote:
-> On Fri, Jul 14 2017 at  3:12am -0400,
-> Christoph Hellwig <hch@lst.de> wrote:
-> 
-> > Btw, we might want to expedite this to 4.13, a 4.13 now defaults
-> > to blk-mq for scsi, and this patch would make sure that dm keeps
-> > on just working with that switch.
-> 
-> Don't think we need to rush anything in response to that change in
-> SCSI's default.  old .request_fn DM multipath works happily ontop of
-> blk-mq devices (so long as all paths are blk-mq).
+This is actually just a small set of mainly bug fixes for the original
+merge window code plus a few trivial updates and qedi boot from SAN
+support feature patch.
 
-You're right.  In that case I think we should just skip this series
-and I'll dust of the patch to just kill the non-mq support for 3.14
-if the switch of scsi to default to mq works out for 3.13.
+The patch is available here:
 
-> It is just blk-mq DM multipath ontop of old .request_fn paths that is
-> disallowed in current upstream code.
-> 
-> But again, I really don't see why we should even want/need to support
-> that mode... hence my question raised in this RFC.
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-I think this mode makes sense in the long run - to get rid of the
-legacy request code in dm.  But as long as we keep both modes arounds
-the use for it seems a big questionable indeed.
+The short changelog is:
+
+Colin Ian King (4):
+      scsi: hisi_sas: make several const arrays static
+      scsi: qedf: fix spelling mistake: "offlading" -> "offloading"
+      scsi: qedi: fix another spelling mistake: "alloction" -> "allocation"
+      scsi: isci: fix typo in function names
+
+Dan Carpenter (3):
+      scsi: libfc: pass an error pointer to fc_disc_error()
+      scsi: qla2xxx: Off by one in qlt_ctio_to_cmd()
+      scsi: cxlflash: return -EFAULT if copy_from_user() fails
+
+Johannes Thumshirn (1):
+      scsi: sg: fix SG_DXFER_FROM_DEV transfers
+
+Nilesh Javali (1):
+      scsi: qedi: Add support for Boot from SAN over iSCSI offload
+
+Paolo Bonzini (1):
+      scsi: virtio_scsi: always read VPD pages for multiqueue too
+
+And the diffstat:
+
+ drivers/scsi/cxlflash/main.c           |  11 +-
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  10 +-
+ drivers/scsi/isci/request.c            |  14 +-
+ drivers/scsi/libfc/fc_disc.c           |   2 +-
+ drivers/scsi/qedf/qedf_main.c          |   2 +-
+ drivers/scsi/qedi/qedi.h               |  17 ++
+ drivers/scsi/qedi/qedi_fw.c            |   2 +-
+ drivers/scsi/qedi/qedi_main.c          | 419 +++++++++++++++++++++++++++++++++
+ drivers/scsi/qedi/qedi_nvm_iscsi_cfg.h | 210 +++++++++++++++++
+ drivers/scsi/qla2xxx/qla_target.c      |   2 +-
+ drivers/scsi/sg.c                      |   5 +-
+ drivers/scsi/virtio_scsi.c             |   1 +
+ 12 files changed, 674 insertions(+), 21 deletions(-)
+ create mode 100644 drivers/scsi/qedi/qedi_nvm_iscsi_cfg.h
+
+James
