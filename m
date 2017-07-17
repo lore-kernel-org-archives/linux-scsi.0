@@ -1,44 +1,28 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH] scsi: sg: fix static checker warning in sg_is_valid_dxfer
-Date: Mon, 17 Jul 2017 15:11:42 +0200
-Message-ID: <20170717131142.14069-1-jthumshirn@suse.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Colin Ian King <colin.king@canonical.com>, Dan Carpenter <dan.carpenter@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>, Douglas Gilbert <dgilbert@interlog.com>
+From: Uba Jesuobo <"www."@orion.ocn.ne.jp>
+Subject: Dear Friend
+Date: Mon, 17 Jul 2017 22:21:09 +0900 (JST)
+Message-ID: <1516399003.34506488.1500297669367.JavaMail.root@orion.ocn.ne.jp>
+Reply-To: Uba Jesuobo <ubajesuobo@yahoo.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-2022-JP
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mbkd0309.ocn.ad.jp ([153.149.236.10]:47733 "EHLO
+        mbkd0309.ocn.ad.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751281AbdGQNXE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Jul 2017 09:23:04 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-dxfer_len is an unsigned int and we always assign a value > 0 to it, so it
-doesn't make any sense to check if it is < 0. We can't really check dxferp as
-well as we have both NULL and not NULL cases in the possible call paths.
+Dear friend,
+I'm sorry but happy to inform you about my success in getting those  funds under the cooperation of a new partner from Vietnam though i  tried my best to involve you in the business but God decided the whole  situations. Presently I'm in Vietnam for investment projects with my own share of the total sum. 
 
-So just return true for SG_DXFER_FROM_DEV transfer in sg_is_valid_dxfer().
+Meanwhile,i didn't forget your past efforts  and attempts to assist me in transferring those funds despite that it  failed us some how.
 
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Reported-by: Colin Ian King <colin.king@canonical.com>
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Douglas Gilbert <dgilbert@interlog.com>
----
- drivers/scsi/sg.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+Now contact my secretary in Burkina faso her name is Ms.Lilian sambi  on her e-mail address  sambi.lilian@yandex.com  ask her to send you the total of $1,000,000.00 which i kept for your compensation for all the past  efforts and attempts to assist me in this matter. 
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 1e82d4128a84..4fe606b000b4 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -759,8 +759,11 @@ static bool sg_is_valid_dxfer(sg_io_hdr_t *hp)
- 			return false;
- 		return true;
- 	case SG_DXFER_FROM_DEV:
--		if (hp->dxfer_len < 0)
--			return false;
-+		/*
-+		 * for SG_DXFER_FROM_DEV we always set dxfer_len to > 0. dxferp
-+		 * can either be NULL or != NULL so there's no point in checking
-+		 * it either. So just return true.
-+		 */
- 		return true;
- 	case SG_DXFER_TO_DEV:
- 	case SG_DXFER_TO_FROM_DEV:
--- 
-2.12.3
+I appreciated  your efforts at that time very much. so feel free and get in touched  with my secretary Lilian sambi and instruct her where to send the amount  to you. 
+
+Please do let me know immediately you receive it so that we  can share the joy after all the sufferings at that time.in the moment, I’m very busy here because of the investment projects  which I and the new partner are having at hand, finally, remember that I  had forwarded instruction to the secretary on your behalf to receive  that money, so feel free to get in touch with Ms.Lilian sambi. she  will send the amount to you without any delay.
+Regards,
+Uba Jesuobo
