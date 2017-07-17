@@ -1,66 +1,36 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] final round of SCSI updates for the 4.12+ merge window
-Date: Sat, 15 Jul 2017 22:56:22 -0700
-Message-ID: <1500184582.2733.3.camel@HansenPartnership.com>
+From: David Laight <David.Laight@ACULAB.COM>
+Subject: RE: [PATCH 04/22] scsi: fusion: fix string overflow warning
+Date: Mon, 17 Jul 2017 09:17:38 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD003A6C7@AcuExch.aculab.com>
+References: <20170714120720.906842-1-arnd@arndb.de>
+ <20170714120720.906842-5-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:49578 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751229AbdGPF40 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 16 Jul 2017 01:56:26 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170714120720.906842-5-arnd@arndb.de>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: 'Arnd Bergmann' <arnd@arndb.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Guenter Roeck <linux@roeck-us.net>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "David S . Miller" <davem@davemloft.net>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>, Helge Deller <deller@gmx.de>, "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-This is actually just a small set of mainly bug fixes for the original
-merge window code plus a few trivial updates and qedi boot from SAN
-support feature patch.
+From: Arnd Bergmann
+> Sent: 14 July 2017 13:07
+> gcc points out a theorerical string overflow:
+> 
+> drivers/message/fusion/mptbase.c: In function 'mpt_detach':
+> drivers/message/fusion/mptbase.c:2103:17: error: '%s' directive writing up to 31 bytes into a region
+> of size 28 [-Werror=format-overflow=]
+> sprintf(pname, MPT_PROCFS_MPTBASEDIR "/%s/summary", ioc->name);
+>                ^~~~~
+> drivers/message/fusion/mptbase.c:2103:2: note: 'sprintf' output between 13 and 44 bytes into a
+> destination of size 32
+> 
+> We can simply double the size of the local buffer here to be on the
+> safe side.
 
-The patch is available here:
+I think I'd change it to snprintf() as well.
+Saves any worries if ioc->name isn't '\0' terminated.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-
-The short changelog is:
-
-Colin Ian King (4):
-      scsi: hisi_sas: make several const arrays static
-      scsi: qedf: fix spelling mistake: "offlading" -> "offloading"
-      scsi: qedi: fix another spelling mistake: "alloction" -> "allocation"
-      scsi: isci: fix typo in function names
-
-Dan Carpenter (3):
-      scsi: libfc: pass an error pointer to fc_disc_error()
-      scsi: qla2xxx: Off by one in qlt_ctio_to_cmd()
-      scsi: cxlflash: return -EFAULT if copy_from_user() fails
-
-Johannes Thumshirn (1):
-      scsi: sg: fix SG_DXFER_FROM_DEV transfers
-
-Nilesh Javali (1):
-      scsi: qedi: Add support for Boot from SAN over iSCSI offload
-
-Paolo Bonzini (1):
-      scsi: virtio_scsi: always read VPD pages for multiqueue too
-
-And the diffstat:
-
- drivers/scsi/cxlflash/main.c           |  11 +-
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  10 +-
- drivers/scsi/isci/request.c            |  14 +-
- drivers/scsi/libfc/fc_disc.c           |   2 +-
- drivers/scsi/qedf/qedf_main.c          |   2 +-
- drivers/scsi/qedi/qedi.h               |  17 ++
- drivers/scsi/qedi/qedi_fw.c            |   2 +-
- drivers/scsi/qedi/qedi_main.c          | 419 +++++++++++++++++++++++++++++++++
- drivers/scsi/qedi/qedi_nvm_iscsi_cfg.h | 210 +++++++++++++++++
- drivers/scsi/qla2xxx/qla_target.c      |   2 +-
- drivers/scsi/sg.c                      |   5 +-
- drivers/scsi/virtio_scsi.c             |   1 +
- 12 files changed, 674 insertions(+), 21 deletions(-)
- create mode 100644 drivers/scsi/qedi/qedi_nvm_iscsi_cfg.h
-
-James
+	David
