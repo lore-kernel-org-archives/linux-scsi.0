@@ -1,30 +1,37 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: sg: fix static checker warning in sg_is_valid_dxfer
-Date: Mon, 17 Jul 2017 23:04:14 -0400
-Message-ID: <yq1fudufntd.fsf@oracle.com>
-References: <20170717131142.14069-1-jthumshirn@suse.de>
+From: "Wayne Roland" <wayneroland360@gmail.com>
+Subject: Re: Hello ...
+Date: Mon, 17 Jul 2017 15:53:33 -0700
+Message-ID: <20170717232245.7ABCD2A1DCA@mail.pfur.ru>
+Reply-To: wayneroland856@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170717131142.14069-1-jthumshirn@suse.de> (Johannes Thumshirn's
-        message of "Mon, 17 Jul 2017 15:11:42 +0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Colin Ian King <colin.king@canonical.com>, Dan Carpenter <dan.carpenter@oracle.com>, Douglas Gilbert <dgilbert@interlog.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from [193.232.218.87] ([193.232.218.87]:37981 "HELO mail.pfur.ru"
+        rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+        id S1750730AbdGRFad (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 18 Jul 2017 01:30:33 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by mail.pfur.ru (Postfix) with ESMTP id 6F25928583B
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Jul 2017 03:35:16 +0400 (MSK)
+Received: from mail.pfur.ru ([127.0.0.1])
+        by localhost (hosting.rudn.ru [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id IV6RVJjgpICX for <linux-scsi@vger.kernel.org>;
+        Tue, 18 Jul 2017 03:35:16 +0400 (MSK)
+Content-Description: Mail message body
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Recipients <wayneroland360@gmail.com>
 
+Attn: Sir/Madam,
 
-Johannes,
+Greetings to you. I Got your contact details through a Database. I have an important business discussion I wish to share with you which I believe will interest you, because it is in connection with your last name “”, and you are going to benefit from it. I am a bank officer here in United Kingdom (UK). I am writing you in regards to an opportunity in my bank which will be of an immense benefit to both of us. It is about someone from your country which is the reason I contacted you.
 
-> dxfer_len is an unsigned int and we always assign a value > 0 to it,
-> so it doesn't make any sense to check if it is < 0. We can't really
-> check dxferp as well as we have both NULL and not NULL cases in the
-> possible call paths.
->
-> So just return true for SG_DXFER_FROM_DEV transfer in
-> sg_is_valid_dxfer().
+I know you would like me to explain in detail my purpose for contacting you.
 
-Applied to 4.13/scsi-fixes. Thank you!
+I will reply you with details as soon as I receive your acknowledgement.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+I look forward with eager anticipation to hearing from you.contact me through my private Email Address:( wayneroland856@yahoo.com ) for more details.
+
+Best Regards,
+Wayne Roland.
