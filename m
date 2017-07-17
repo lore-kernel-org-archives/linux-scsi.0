@@ -1,63 +1,59 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] [v2] scsi: fusion: fix string overflow warning
-Date: Mon, 17 Jul 2017 14:00:00 +0200
-Message-ID: <20170717120017.1269276-1-arnd@arndb.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:50881 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751280AbdGQMAd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Jul 2017 08:00:33 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Hans Verkuil <hverkuil@xs4all.nl>
+Subject: Re: [PATCH 14/22] [media] usbvision-i2c: fix format overflow warning
+Date: Mon, 17 Jul 2017 14:53:01 +0200
+Message-ID: <f44cbc53-8c95-9fad-04d4-1fbf3708191c@xs4all.nl>
+References: <20170714120720.906842-1-arnd@arndb.de>
+ <20170714120720.906842-15-arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170714120720.906842-15-arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org, Mauro Carvalho Chehab <mchehab@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Guenter Roeck <linux@roeck-us.net>, akpm@linux-foundation.org, netdev@vger.kernel.org, "David S . Miller" <davem@davemloft.net>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, x86@kernel.org, Sakari Ailus <sakari.ailus@linux.intel.com>, linux-media@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: David Laight <David.Laight@aculab.com>, Arnd Bergmann <arnd@arndb.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bhaktipriya Shridhar <bhaktipriya96@gmail.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-gcc points out a theorerical string overflow:
+On 14/07/17 14:07, Arnd Bergmann wrote:
+> gcc-7 notices that we copy a fixed length string into another
+> string of the same size, with additional characters:
+> 
+> drivers/media/usb/usbvision/usbvision-i2c.c: In function 'usbvision_i2c_register':
+> drivers/media/usb/usbvision/usbvision-i2c.c:190:36: error: '%d' directive writing between 1 and 11 bytes into a region of size between 0 and 47 [-Werror=format-overflow=]
+>   sprintf(usbvision->i2c_adap.name, "%s-%d-%s", i2c_adap_template.name,
+>                                     ^~~~~~~~~~
+> drivers/media/usb/usbvision/usbvision-i2c.c:190:2: note: 'sprintf' output between 4 and 76 bytes into a destination of size 48
+> 
+> We know this is fine as the template name is always "usbvision", so
+> we can easily avoid the warning by using this as the format string
+> directly.
 
-drivers/message/fusion/mptbase.c: In function 'mpt_detach':
-drivers/message/fusion/mptbase.c:2103:17: error: '%s' directive writing up to 31 bytes into a region of size 28 [-Werror=format-overflow=]
-sprintf(pname, MPT_PROCFS_MPTBASEDIR "/%s/summary", ioc->name);
-               ^~~~~
-drivers/message/fusion/mptbase.c:2103:2: note: 'sprintf' output between 13 and 44 bytes into a destination of size 32
+Hmm, how about replacing sprintf by snprintf? That feels a lot safer (this is very
+old code, it's not surprising it is still using sprintf).
 
-We can simply double the size of the local buffer here to be on the
-safe side, and using snprintf() instead of sprintf() protects us
-if ioc->name was not terminated properly.
+Regards,
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
-v2: also use snprintf
----
- drivers/message/fusion/mptbase.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+	Hans
 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 62cff5afc6bd..84eab28665f3 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -2079,7 +2079,7 @@ void
- mpt_detach(struct pci_dev *pdev)
- {
- 	MPT_ADAPTER 	*ioc = pci_get_drvdata(pdev);
--	char pname[32];
-+	char pname[64];
- 	u8 cb_idx;
- 	unsigned long flags;
- 	struct workqueue_struct *wq;
-@@ -2100,11 +2100,11 @@ mpt_detach(struct pci_dev *pdev)
- 	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
- 	destroy_workqueue(wq);
- 
--	sprintf(pname, MPT_PROCFS_MPTBASEDIR "/%s/summary", ioc->name);
-+	snprintf(pname, sizeof(pname), MPT_PROCFS_MPTBASEDIR "/%s/summary", ioc->name);
- 	remove_proc_entry(pname, NULL);
--	sprintf(pname, MPT_PROCFS_MPTBASEDIR "/%s/info", ioc->name);
-+	snprintf(pname, sizeof(pname), MPT_PROCFS_MPTBASEDIR "/%s/info", ioc->name);
- 	remove_proc_entry(pname, NULL);
--	sprintf(pname, MPT_PROCFS_MPTBASEDIR "/%s", ioc->name);
-+	snprintf(pname, sizeof(pname), MPT_PROCFS_MPTBASEDIR "/%s", ioc->name);
- 	remove_proc_entry(pname, NULL);
- 
- 	/* call per device driver remove entry point */
--- 
-2.9.0
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/media/usb/usbvision/usbvision-i2c.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/media/usb/usbvision/usbvision-i2c.c b/drivers/media/usb/usbvision/usbvision-i2c.c
+> index fdf6b6e285da..aae9f69884da 100644
+> --- a/drivers/media/usb/usbvision/usbvision-i2c.c
+> +++ b/drivers/media/usb/usbvision/usbvision-i2c.c
+> @@ -187,8 +187,8 @@ int usbvision_i2c_register(struct usb_usbvision *usbvision)
+>  
+>  	usbvision->i2c_adap = i2c_adap_template;
+>  
+> -	sprintf(usbvision->i2c_adap.name, "%s-%d-%s", i2c_adap_template.name,
+> -		usbvision->dev->bus->busnum, usbvision->dev->devpath);
+> +	sprintf(usbvision->i2c_adap.name, "usbvision-%d-%s",
+> +		 usbvision->dev->bus->busnum, usbvision->dev->devpath);
+>  	PDEBUG(DBG_I2C, "Adaptername: %s", usbvision->i2c_adap.name);
+>  	usbvision->i2c_adap.dev.parent = &usbvision->dev->dev;
+>  
+> 
