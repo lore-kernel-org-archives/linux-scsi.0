@@ -1,37 +1,53 @@
-From: "Wayne Roland" <wayneroland360@gmail.com>
-Subject: Re: Hello ...
-Date: Mon, 17 Jul 2017 15:53:33 -0700
-Message-ID: <20170717232245.7ABCD2A1DCA@mail.pfur.ru>
-Reply-To: wayneroland856@yahoo.com
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [REGRESSION] 28676d869bbb (scsi: sg: check for valid direction
+ before starting the request) breaks mtx tape library control
+Date: Tue, 18 Jul 2017 09:37:47 +0200
+Message-ID: <20170718073747.GD4875@linux-x5ow.site>
+References: <ufafudubmkd.fsf@epithumia.math.uh.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [193.232.218.87] ([193.232.218.87]:37981 "HELO mail.pfur.ru"
-        rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-        id S1750730AbdGRFad (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 18 Jul 2017 01:30:33 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by mail.pfur.ru (Postfix) with ESMTP id 6F25928583B
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Jul 2017 03:35:16 +0400 (MSK)
-Received: from mail.pfur.ru ([127.0.0.1])
-        by localhost (hosting.rudn.ru [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id IV6RVJjgpICX for <linux-scsi@vger.kernel.org>;
-        Tue, 18 Jul 2017 03:35:16 +0400 (MSK)
-Content-Description: Mail message body
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <ufafudubmkd.fsf@epithumia.math.uh.edu>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jason L Tibbitts III <tibbs@math.uh.edu>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dvyukov@google.com, hare@suse.com, hch@lst.de, martin.petersen@oracle.com
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <wayneroland360@gmail.com>
 
-Attn: Sir/Madam,
+On Mon, Jul 17, 2017 at 07:44:50PM -0500, Jason L Tibbitts III wrote:
+> and confirmed that clean unpatched 4.12 shows the problem, while
+> reverting just that patch fixes the issue.  Unfortunately I don't know
+> enough to actually fix this, but I can easily test patches.
 
-Greetings to you. I Got your contact details through a Database. I have an important business discussion I wish to share with you which I believe will interest you, because it is in connection with your last name ‚Äú‚Äù, and you are going to benefit from it. I am a bank officer here in United Kingdom (UK). I am writing you in regards to an opportunity in my bank which will be of an immense benefit to both of us. It is about someone from your country which is the reason I contacted you.
+This is fixed with:
+commit 68c59fcea1f2c6a54c62aa896cc623c1b5bc9b47
+Author: Johannes Thumshirn <jthumshirn@suse.de>
+Date:   Fri Jul 7 10:56:38 2017 +0200
 
-I know you would like me to explain in detail my purpose for contacting you.
+    scsi: sg: fix SG_DXFER_FROM_DEV transfers
+    
+    SG_DXFER_FROM_DEV transfers do not necessarily have a dxferp as we set
+    it to NULL for the old sg_io read/write interface, but must have a
+    length bigger than 0. This fixes a regression introduced by commit
+    28676d869bbb ("scsi: sg: check for valid direction before starting the
+    request")
+    
+    Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+    Fixes: 28676d869bbb ("scsi: sg: check for valid direction before starting the request")
+    Reported-by: Chris Clayton <chris2553@googlemail.com>
+    Tested-by: Chris Clayton <chris2553@googlemail.com>
+    Cc: Douglas Gilbert <dgilbert@interlog.com>
+    Reviewed-by: Hannes Reinecke <hare@suse.com>
+    Tested-by: Chris Clayton <chris2553@googlemail.com>
+    Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+    Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-I will reply you with details as soon as I receive your acknowledgement.
 
-I look forward with eager anticipation to hearing from you.contact me through my private Email Address:( wayneroland856@yahoo.com ) for more details.
-
-Best Regards,
-Wayne Roland.
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N¸rnberg
+GF: Felix Imendˆrffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N¸rnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
