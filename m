@@ -1,84 +1,75 @@
-From: Arthur Marsh <arthur.marsh-CkBdp7X+a1oIQCUVoCVjmQ@public.gmane.org>
-Subject: Re: CPU lock-ups with 4.12.0+ kernels related to usb_storage
-Date: Tue, 18 Jul 2017 05:45:39 +0930
-Message-ID: <d289b9b5-7fb9-f61f-67fb-e4de656a5092@internode.on.net>
-References: <Pine.LNX.4.44L0.1707131258190.1571-100000@iolanthe.rowland.org>
- <02c6c52e-d520-6d84-81e7-0b49dfae0ec9@internode.on.net>
+From: Jason L Tibbitts III <tibbs@math.uh.edu>
+Subject: [REGRESSION] 28676d869bbb (scsi: sg: check for valid direction before starting the request) breaks mtx tape library control
+Date: Mon, 17 Jul 2017 19:44:50 -0500
+Message-ID: <ufafudubmkd.fsf@epithumia.math.uh.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <02c6c52e-d520-6d84-81e7-0b49dfae0ec9-CkBdp7X+a1oIQCUVoCVjmQ@public.gmane.org>
-Content-Language: en-AU
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, jthumshirn@suse.de, dvyukov@google.com, hare@suse.comjthumshirn@suse.de, hch@lst.de, martin.petersen@oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
-Arthur Marsh wrote on 14/07/17 04:18:
-> 
-> 
-> Alan Stern wrote on 14/07/17 02:30:
-> 
->> All right.  In the meantime, changing usb-storage won't hurt.
->> Arthur, can you test the patch below?
->>
->> Alan Stern
->>
->>
->>
->> Index: usb-4.x/drivers/usb/storage/usb.c
->> ===================================================================
->> --- usb-4.x.orig/drivers/usb/storage/usb.c
->> +++ usb-4.x/drivers/usb/storage/usb.c
->> @@ -315,6 +315,7 @@ static int usb_stor_control_thread(void
->>   {
->>       struct us_data *us = (struct us_data *)__us;
->>       struct Scsi_Host *host = us_to_host(us);
->> +    struct scsi_cmnd *srb;
->>       for (;;) {
->>           usb_stor_dbg(us, "*** thread sleeping\n");
->> @@ -330,6 +331,7 @@ static int usb_stor_control_thread(void
->>           scsi_lock(host);
->>           /* When we are called with no command pending, we're done */
->> +        srb = us->srb;
->>           if (us->srb == NULL) {
->>               scsi_unlock(host);
->>               mutex_unlock(&us->dev_mutex);
->> @@ -398,14 +400,11 @@ static int usb_stor_control_thread(void
->>           /* lock access to the state */
->>           scsi_lock(host);
->> -        /* indicate that the command is done */
->> -        if (us->srb->result != DID_ABORT << 16) {
->> -            usb_stor_dbg(us, "scsi cmd done, result=0x%x\n",
->> -                     us->srb->result);
->> -            us->srb->scsi_done(us->srb);
->> -        } else {
->> +        /* was the command aborted? */
->> +        if (us->srb->result == DID_ABORT << 16) {
->>   SkipForAbort:
->>               usb_stor_dbg(us, "scsi command aborted\n");
->> +            srb = NULL;    /* Don't call srb->scsi_done() */
->>           }
->>           /*
->> @@ -429,6 +428,13 @@ SkipForAbort:
->>           /* unlock the device pointers */
->>           mutex_unlock(&us->dev_mutex);
->> +
->> +        /* now that the locks are released, notify the SCSI core */
->> +        if (srb) {
->> +            usb_stor_dbg(us, "scsi cmd done, result=0x%x\n",
->> +                    srb->result);
->> +            srb->scsi_done(srb);
->> +        }
->>       } /* for (;;) */
->>       /* Wait until we are told to stop */
+After updating my tape backup server to 4.12 I found that mtx had issues
+controlling the tape library.  Good behavior:
 
-Hi, just to confirm no further lock-ups occurred in the last 4 days with 
-this patch applied.
+[root@backup2 ~]# mtx -f /dev/sg7 next 0
+Unloading drive 0 into Storage Element 4...done
+Loading media from Storage Element 5 into drive 0...done
 
-Arthur.
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Bad behavior:
+
+[root@backup2 ~]# mtx -f /dev/sg7 next 0
+Unloading drive 0 into Storage Element 46...mtx: Request Sense: Long
+Report=yes
+mtx: Request Sense: Valid Residual=no
+mtx: Request Sense: Error Code=0 (Unknown?!)
+mtx: Request Sense: Sense Key=No Sense
+mtx: Request Sense: FileMark=no
+mtx: Request Sense: EOM=no
+mtx: Request Sense: ILI=no
+mtx: Request Sense: Additional Sense Code = 00
+mtx: Request Sense: Additional Sense Qualifier = 00
+mtx: Request Sense: BPV=no
+mtx: Request Sense: Error in CDB=no
+mtx: Request Sense: SKSV=no
+MOVE MEDIUM from Element Address 1 to 1046 Failed
+
+This was seen on a machine running Fedora 25 as well as an Ubuntu
+machine.  Relevant tickets:
+  https://bugzilla.redhat.com/show_bug.cgi?id=1471302
+  http://bugzilla.kernel.org/show_bug.cgi?id=196375
+  https://bugs.launchpad.net/bugs/1704512
+
+mtx in all cases is 1.3.12; in the Fedora case that's
+mtx-1.3.12-14.fc24.x86_64.  I see this with an Overland Neo T48s library
+but the Ubuntu user had a Dell ML6000 and we both have completely
+different HBAs and cabling (LSI3008 SAS and qla2462 FC).
+
+I bisected this down to:
+
+commit 28676d869bbb5257b5f14c0c95ad3af3a7019dd5
+Author: Johannes Thumshirn <jthumshirn@suse.de>
+Date:   Fri Apr 7 09:34:15 2017 +0200
+
+    scsi: sg: check for valid direction before starting the request
+    
+    Check for a valid direction before starting the request, otherwise we
+    risk running into an assertion in the scsi midlayer checking for valid
+    requests.
+    
+    [mkp: fixed typo]
+    
+    Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+    Link: http://www.spinics.net/lists/linux-scsi/msg104400.html
+    Reported-by: Dmitry Vyukov <dvyukov@google.com>
+    Signed-off-by: Hannes Reinecke <hare@suse.com>
+    Tested-by: Johannes Thumshirn <jthumshirn@suse.de>
+    Reviewed-by: Christoph Hellwig <hch@lst.de>
+    Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+and confirmed that clean unpatched 4.12 shows the problem, while
+reverting just that patch fixes the issue.  Unfortunately I don't know
+enough to actually fix this, but I can easily test patches.
+
+ - J<
