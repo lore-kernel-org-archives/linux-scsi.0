@@ -1,42 +1,67 @@
-From: Jason L Tibbitts III <tibbs@math.uh.edu>
-Subject: Re: [REGRESSION] 28676d869bbb (scsi: sg: check for valid direction before starting the request) breaks mtx tape library control
-Date: Tue, 18 Jul 2017 12:33:59 -0500
-Message-ID: <ufak235abug.fsf@epithumia.math.uh.edu>
-References: <ufafudubmkd.fsf@epithumia.math.uh.edu>
-        <20170718073747.GD4875@linux-x5ow.site>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Rob Herring <robh@kernel.org>
+Subject: [PATCH] scsi: Convert to using %pOF instead of full_name
+Date: Tue, 18 Jul 2017 16:43:28 -0500
+Message-ID: <20170718214339.7774-48-robh@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170718073747.GD4875@linux-x5ow.site> (Johannes Thumshirn's
-        message of "Tue, 18 Jul 2017 09:37:47 +0200")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dvyukov@google.com, hare@suse.com, hch@lst.de, martin.petersen@oracle.com
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-I have verified that building a clean v4.12 with
-68c59fcea1f2c6a54c62aa896cc623c1b5bc9b47 cherry picked on top still
-shows the problem:
+Now that we have a custom printf format specifier, convert users of
+full_name to use %pOF instead. This is preparation to remove storing
+of the full path string for each node.
 
-[root@backup2 ~]# mtx -f /dev/sg7 next 0
-Unloading drive 0 into Storage Element 45...mtx: Request Sense: Long
-Report=yes
-mtx: Request Sense: Valid Residual=no
-mtx: Request Sense: Error Code=0 (Unknown?!)
-mtx: Request Sense: Sense Key=No Sense
-mtx: Request Sense: FileMark=no
-mtx: Request Sense: EOM=no
-mtx: Request Sense: ILI=no
-mtx: Request Sense: Additional Sense Code = 00
-mtx: Request Sense: Additional Sense Qualifier = 00
-mtx: Request Sense: BPV=no
-mtx: Request Sense: Error in CDB=no
-mtx: Request Sense: SKSV=no
-MOVE MEDIUM from Element Address 1 to 1045 Failed
+Signed-off-by: Rob Herring <robh@kernel.org>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+---
+ drivers/scsi/mac53c94.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
 
-Nothing appears to be logged; is there any kind of debugging information
-I can collect which might help to track this down?  I'm not particularly
-good at this but I am pretty sure that I'm building everything properly
-and am actually booting the patched kernel.
+diff --git a/drivers/scsi/mac53c94.c b/drivers/scsi/mac53c94.c
+index a6682c508c4c..8c4d3003b68b 100644
+--- a/drivers/scsi/mac53c94.c
++++ b/drivers/scsi/mac53c94.c
+@@ -448,15 +448,14 @@ static int mac53c94_probe(struct macio_dev *mdev, const struct of_device_id *mat
+ 		ioremap(macio_resource_start(mdev, 1), 0x1000);
+ 	state->dmaintr = macio_irq(mdev, 1);
+ 	if (state->regs == NULL || state->dma == NULL) {
+-		printk(KERN_ERR "mac53c94: ioremap failed for %s\n",
+-		       node->full_name);
++		printk(KERN_ERR "mac53c94: ioremap failed for %pOF\n", node);
+ 		goto out_free;
+ 	}
 
- - J<
+ 	clkprop = of_get_property(node, "clock-frequency", &proplen);
+        	if (clkprop == NULL || proplen != sizeof(int)) {
+-       		printk(KERN_ERR "%s: can't get clock frequency, "
+-       		       "assuming 25MHz\n", node->full_name);
++       		printk(KERN_ERR "%pOF: can't get clock frequency, "
++       		       "assuming 25MHz\n", node);
+        		state->clk_freq = 25000000;
+        	} else
+        		state->clk_freq = *(int *)clkprop;
+@@ -469,7 +468,7 @@ static int mac53c94_probe(struct macio_dev *mdev, const struct of_device_id *mat
+        				sizeof(struct dbdma_cmd), GFP_KERNEL);
+        	if (dma_cmd_space == 0) {
+        		printk(KERN_ERR "mac53c94: couldn't allocate dma "
+-       		       "command space for %s\n", node->full_name);
++       		       "command space for %pOF\n", node);
+ 		rc = -ENOMEM;
+        		goto out_free;
+        	}
+@@ -481,8 +480,8 @@ static int mac53c94_probe(struct macio_dev *mdev, const struct of_device_id *mat
+ 	mac53c94_init(state);
+
+ 	if (request_irq(state->intr, do_mac53c94_interrupt, 0, "53C94",state)) {
+-		printk(KERN_ERR "mac53C94: can't get irq %d for %s\n",
+-		       state->intr, node->full_name);
++		printk(KERN_ERR "mac53C94: can't get irq %d for %pOF\n",
++		       state->intr, node);
+ 		goto out_free_dma;
+ 	}
+
+--
+2.11.0
