@@ -1,37 +1,37 @@
-From: "Wayne Roland" <wayneroland360@gmail.com>
-Subject: Re: Hello ...
-Date: Mon, 17 Jul 2017 22:21:17 -0700
-Message-ID: <20170718062826.DD1A72A1A3F@mail.pfur.ru>
-Reply-To: wayneroland856@yahoo.com
+From: Prabu Thangamuthu <Prabu.T@synopsys.com>
+Subject: [PATCH 1/1] scsi: ufs: changing maintainer
+Date: Tue, 18 Jul 2017 09:15:58 +0000
+Message-ID: <705D14B1C7978B40A723277C067CEDE2010A73580C@IN01WEMBXB.internal.synopsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [193.232.218.87] ([193.232.218.87]:52508 "HELO mail.pfur.ru"
-        rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-        id S1751203AbdGRHxW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 18 Jul 2017 03:53:22 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by mail.pfur.ru (Postfix) with ESMTP id 78896287786
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Jul 2017 11:49:18 +0400 (MSK)
-Received: from mail.pfur.ru ([127.0.0.1])
-        by localhost (hosting.rudn.ru [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 1EYtMoKl-6L5 for <linux-scsi@vger.kernel.org>;
-        Tue, 18 Jul 2017 11:49:18 +0400 (MSK)
-Content-Description: Mail message body
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "Greg Kroah-Hartman (gregkh@linuxfoundation.org)" <gregkh@linuxfoundation.org>, "davem@davemloft.net" <davem@davemloft.net>, Mauro Carvalho Chehab <mchehab@kernel.org>, Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Manjunath M Bettegowda <Manjunath.MB@synopsys.com>, Carlos Palminha <CARLOS.PALMINHA@synopsys.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <wayneroland360@gmail.com>
 
-Attn: Sir/Madam,
+As per internal decision, Joao Pinto will be maintainer for DWC UFS driver.
 
-Greetings to you. I Got your contact details through a Database. I have an important business discussion I wish to share with you which I believe will interest you, because it is in connection with your last name “”, and you are going to benefit from it. I am a bank officer here in United Kingdom (UK). I am writing you in regards to an opportunity in my bank which will be of an immense benefit to both of us. It is about someone from your country which is the reason I contacted you.
+Signed-off-by: Prabu Thangamuthu <prabut@synopsys.com>
+---
+ MAINTAINERS |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-I know you would like me to explain in detail my purpose for contacting you.
-
-I will reply you with details as soon as I receive your acknowledgement.
-
-I look forward with eager anticipation to hearing from you.contact me through my private Email Address:( wayneroland856@yahoo.com ) for more details.
-
-Best Regards,
-Wayne Roland.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 8a99f6b..2122e93 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -13548,8 +13548,7 @@ F:	Documentation/scsi/ufs.txt
+ F:	drivers/scsi/ufs/
+ 
+ UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER DWC HOOKS
+-M:	Manjunath M Bettegowda <manjumb@synopsys.com>
+-M:	Prabu Thangamuthu <prabut@synopsys.com>
++M:	Joao Pinto <jpinto@synopsys.com>
+ L:	linux-scsi@vger.kernel.org
+ S:	Supported
+ F:	drivers/scsi/ufs/*dwc*
+-- 
+1.7.9.5
