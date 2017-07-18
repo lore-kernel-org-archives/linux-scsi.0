@@ -1,44 +1,44 @@
-From: Shivasharan Srikanteshwara
-        <shivasharan.srikanteshwara@broadcom.com>
-Subject: RE: [PATCH v2 08/15] megaraid_sas: Use SMID for Task abort case only
-Date: Tue, 18 Jul 2017 16:36:15 +0530
-Message-ID: <ec668eb4a7e9b4093db80c84aa44ba19@mail.gmail.com>
-References: <1499256029-16319-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <1499256029-16319-9-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+From: Romain Perier <romain.perier-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
+Subject: Re: [PATCH v10 00/15] Replace PCI pool by DMA pool API
+Date: Tue, 18 Jul 2017 13:47:50 +0200
+Message-ID: <4848adf5-4e1a-f1df-f004-607f3655f375@collabora.com>
+References: <20170706081310.30964-1-romain.perier@collabora.com>
+ <1499635828.68875.4.camel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f182.google.com ([209.85.220.182]:36000 "EHLO
-        mail-qk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751462AbdGRLGR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Jul 2017 07:06:17 -0400
-Received: by mail-qk0-f182.google.com with SMTP id d136so13067391qkg.3
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Jul 2017 04:06:17 -0700 (PDT)
-In-Reply-To: <1499256029-16319-9-git-send-email-shivasharan.srikanteshwara@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1499635828.68875.4.camel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Language: en-US
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Sean Hefty <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hal Rosenstock <hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, jeffrey.t.kirsher-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, stas.yakovlev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Felipe Balbi <balbi-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, hare@suse.com, hch@lst.de
 
-> -----Original Message-----
-> From: Shivasharan S [mailto:shivasharan.srikanteshwara@broadcom.com]
-> Sent: Wednesday, July 05, 2017 5:30 PM
-> To: linux-scsi@vger.kernel.org
-> Cc: martin.petersen@oracle.com; thenzl@redhat.com;
-> jejb@linux.vnet.ibm.com; kashyap.desai@broadcom.com;
-> sumit.saxena@broadcom.com; hare@suse.com; hch@lst.de; Shivasharan S
-> Subject: [PATCH v2 08/15] megaraid_sas: Use SMID for Task abort case
-only
->
-> Fix - In TM code, smid_task is valid only in case of task aborts.
->
-> Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
-> Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-> Reviewed-by: Hannes Reinecke <hare@suse.com>
+Hello,
 
-Hi Tomas,
-Looks like this one patch got missed during your review.
-Can you please review if the changes in this patch are fine?
 
-Thanks,
-Shivasharan
+Le 09/07/2017 à 23:30, Doug Ledford a écrit :
+> On Thu, 2017-07-06 at 10:12 +0200, Romain Perier wrote:
+>> The current PCI pool API are simple macro functions direct expanded
+>> to
+>> the appropriate dma pool functions. The prototypes are almost the
+>> same
+>> and semantically, they are very similar. I propose to use the DMA
+>> pool
+>> API directly and get rid of the old API.
+>>
+>> This set of patches, replaces the old API by the dma pool API
+>> and remove the defines.
+> Is someone planning on merging this series?  If not, I'll send through
+> the patches I've personally tested (3, 5, and 6).
+
+Not sure, I just know that Greg has merged patches for usb gadget.
+
+Regards,
+Romain
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
