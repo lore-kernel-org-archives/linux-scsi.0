@@ -1,44 +1,71 @@
-From: Romain Perier <romain.perier-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
-Subject: Re: [PATCH v10 00/15] Replace PCI pool by DMA pool API
-Date: Tue, 18 Jul 2017 13:47:50 +0200
-Message-ID: <4848adf5-4e1a-f1df-f004-607f3655f375@collabora.com>
-References: <20170706081310.30964-1-romain.perier@collabora.com>
- <1499635828.68875.4.camel@redhat.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH v2 08/15] megaraid_sas: Use SMID for Task abort case only
+Date: Tue, 18 Jul 2017 13:51:51 +0200
+Message-ID: <abd41eed-c2eb-5e91-03ea-c7c780fc9cb9@redhat.com>
+References: <1499256029-16319-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+ <1499256029-16319-9-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1499635828.68875.4.camel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Content-Language: en-US
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Sean Hefty <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hal Rosenstock <hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, jeffrey.t.kirsher-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, stas.yakovlev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Felipe Balbi <balbi-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:46078 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751374AbdGRLvz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 18 Jul 2017 07:51:55 -0400
+In-Reply-To: <1499256029-16319-9-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Content-Language: en-MW
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, hch@lst.de
 
-Hello,
+On 5.7.2017 14:00, Shivasharan S wrote:
+> Fix - In TM code, smid_task is valid only in case of task aborts.
+>
+> Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+> Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+> Reviewed-by: Hannes Reinecke <hare@suse.com>
+> ---
+>  drivers/scsi/megaraid/megaraid_sas_fusion.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> index a308e14..c239762 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> @@ -3754,7 +3754,7 @@ static int megasas_track_scsiio(struct megasas_instance *instance,
+>  	struct megasas_cmd_fusion *cmd_fusion;
+>  	struct megasas_cmd *cmd_mfi;
+>  	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc;
+> -	struct fusion_context *fusion;
+> +	struct fusion_context *fusion = NULL;
+
+This^ change seems to be needless,
+but not important.
+
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+
+tomash
 
 
-Le 09/07/2017 à 23:30, Doug Ledford a écrit :
-> On Thu, 2017-07-06 at 10:12 +0200, Romain Perier wrote:
->> The current PCI pool API are simple macro functions direct expanded
->> to
->> the appropriate dma pool functions. The prototypes are almost the
->> same
->> and semantically, they are very similar. I propose to use the DMA
->> pool
->> API directly and get rid of the old API.
->>
->> This set of patches, replaces the old API by the dma pool API
->> and remove the defines.
-> Is someone planning on merging this series?  If not, I'll send through
-> the patches I've personally tested (3, 5, and 6).
-
-Not sure, I just know that Greg has merged patches for usb gadget.
-
-Regards,
-Romain
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  	struct megasas_cmd_fusion *scsi_lookup;
+>  	int rc;
+>  	struct MPI2_SCSI_TASK_MANAGE_REPLY *mpi_reply;
+> @@ -3781,8 +3781,6 @@ static int megasas_track_scsiio(struct megasas_instance *instance,
+>  	cmd_fusion->request_desc = req_desc;
+>  	req_desc->Words = 0;
+>  
+> -	scsi_lookup = fusion->cmd_list[smid_task - 1];
+> -
+>  	mr_request = (struct MR_TASK_MANAGE_REQUEST *) cmd_fusion->io_request;
+>  	memset(mr_request, 0, sizeof(struct MR_TASK_MANAGE_REQUEST));
+>  	mpi_request = (struct MPI2_SCSI_TASK_MANAGE_REQUEST *) &mr_request->TmRequest;
+> @@ -3829,6 +3827,8 @@ static int megasas_track_scsiio(struct megasas_instance *instance,
+>  	rc = SUCCESS;
+>  	switch (type) {
+>  	case MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK:
+> +		scsi_lookup = fusion->cmd_list[smid_task - 1];
+> +
+>  		if (scsi_lookup->scmd == NULL)
+>  			break;
+>  		else {
