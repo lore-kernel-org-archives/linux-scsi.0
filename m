@@ -1,48 +1,63 @@
-From: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Subject: Re: [PATCH 05/13] mpt3sas: Set NVMe device queue depth as 128
-Date: Wed, 19 Jul 2017 12:50:00 +0530
-Message-ID: <CA+RiK67TcoYYSw=Mz6KY96A=LdV9oz205Sx3jksGVp66y03mGg@mail.gmail.com>
-References: <1499763313-7214-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <1499763313-7214-6-git-send-email-suganath-prabu.subramani@broadcom.com> <AT5PR84MB00821C8CD515212788107EA0ABAE0@AT5PR84MB0082.NAMPRD84.PROD.OUTLOOK.COM>
+From: Jason L Tibbitts III <tibbs@math.uh.edu>
+Subject: Re: [REGRESSION] 28676d869bbb (scsi: sg: check for valid direction before starting the request) breaks mtx tape library control
+Date: Wed, 19 Jul 2017 03:13:34 -0500
+Message-ID: <ufazic0974h.fsf@epithumia.math.uh.edu>
+References: <ufafudubmkd.fsf@epithumia.math.uh.edu>
+        <20170718073747.GD4875@linux-x5ow.site>
+        <ufak235abug.fsf@epithumia.math.uh.edu>
+        <20170719070335.GC4151@linux-x5ow.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <AT5PR84MB00821C8CD515212788107EA0ABAE0@AT5PR84MB0082.NAMPRD84.PROD.OUTLOOK.COM>
+In-Reply-To: <20170719070335.GC4151@linux-x5ow.site> (Johannes Thumshirn's
+        message of "Wed, 19 Jul 2017 09:03:35 +0200")
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Elliott, Robert (Persistent Memory)" <elliott@hpe.com>
-Cc: "JBottomley@Parallels.com" <JBottomley@parallels.com>, "jejb@kernel.org" <jejb@kernel.org>, "hch@infradead.org" <hch@infradead.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Sathya.Prakash@broadcom.com" <Sathya.Prakash@broadcom.com>, "kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, "sreekanth.reddy@broadcom.com" <sreekanth.reddy@broadcom.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dvyukov@google.com, hare@suse.com, hch@lst.de, martin.petersen@oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Elliott,
-We are maintaining NVMe drives as scsi device in mpt3sas driver.
-There are lot of firmware/hardware level dependencies and after lot of
-discussions we arrived this value (128).
-So, we prefer not to provide module parameter to change this at least for now.
+>>>>> "JT" == Johannes Thumshirn <jthumshirn@suse.de> writes:
 
-Thanks,
-Suganath Prabu S
+JT> Can you please apply this debugging patch, so I can see what's going
+JT> on.
 
-On Tue, Jul 11, 2017 at 10:53 PM, Elliott, Robert (Persistent Memory)
-<elliott@hpe.com> wrote:
->> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
->> @@ -115,7 +115,7 @@
->>
->>  #define MPT3SAS_RAID_MAX_SECTORS     8192
->>  #define MPT3SAS_HOST_PAGE_SIZE_4K    12
->> -
->> +#define MPT3SAS_NVME_QUEUE_DEPTH     128
-> ...
->> +             /*TODO-right Queue Depth?*/
->> +             qdepth = MPT3SAS_NVME_QUEUE_DEPTH;
->> +             ds = "NVMe";
->
-> The native NVMe driver is getting a modparam to set that value (rather than
-> using a #define of 1024) in this patch:
->         http://lists.infradead.org/pipermail/linux-nvme/2017-July/011734.html
->
-> Perhaps this driver should do the same.
->
-> ---
-> Robert Elliott, HPE Persistent Memory
->
->
+Sure, no problem.
+
+I generally run "mtx -f /dev/sg7 status" first just to make sure the
+library is there; this has always worked as expected.  With the debug
+patch applied, this is sent to the console:
+[   33.933422] sg_is_valid_dxfer: dxfer_direction: -3, dxfer_len: 56
+[   33.940526] sg_is_valid_dxfer: dxfer_direction: -3, dxfer_len: 136
+[   33.982429] sg_is_valid_dxfer: dxfer_direction: -3, dxfer_len: 4240
+[   34.569986] sg_is_valid_dxfer: dxfer_direction: -3, dxfer_len: 4240
+[   34.623898] sg_is_valid_dxfer: dxfer_direction: -3, dxfer_len: 4240
+
+Then running "mtx -f /dev/sg7 next 0" gives this as stdout/err:
+
+Unloading drive 0 into Storage Element 46...mtx: Request Sense: Long
+Report=yes
+mtx: Request Sense: Valid Residual=no
+mtx: Request Sense: Error Code=0 (Unknown?!)
+mtx: Request Sense: Sense Key=No Sense
+mtx: Request Sense: FileMark=no
+mtx: Request Sense: EOM=no
+mtx: Request Sense: ILI=no
+mtx: Request Sense: Additional Sense Code = 00
+mtx: Request Sense: Additional Sense Qualifier = 00
+mtx: Request Sense: BPV=no
+mtx: Request Sense: Error in CDB=no
+mtx: Request Sense: SKSV=no
+MOVE MEDIUM from Element Address 1 to 1046 Failed
+
+And this to the console:
+[   45.552524] sg_is_valid_dxfer: dxfer_direction: -3, dxfer_len: 56
+[   45.559626] sg_is_valid_dxfer: dxfer_direction: -3, dxfer_len: 136
+[   45.603544] sg_is_valid_dxfer: dxfer_direction: -3, dxfer_len: 4240
+[   46.204614] sg_is_valid_dxfer: dxfer_direction: -3, dxfer_len: 4240
+[   46.258463] sg_is_valid_dxfer: dxfer_direction: -3, dxfer_len: 4240
+[   46.304530] sg_is_valid_dxfer: dxfer_direction: -2, dxfer_len: 0
+
+Would you also want to see the output from that patch applied to a
+functioning kernel?
+
+ - J<
