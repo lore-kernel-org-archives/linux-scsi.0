@@ -1,67 +1,33 @@
-From: Rob Herring <robh@kernel.org>
-Subject: [PATCH] scsi: Convert to using %pOF instead of full_name
-Date: Tue, 18 Jul 2017 16:43:28 -0500
-Message-ID: <20170718214339.7774-48-robh@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+Subject: Re: [PATCH] aic7xxx: fix firmware build with O=path
+Date: Tue, 18 Jul 2017 18:35:36 -0700
+Message-ID: <20170718183536.35e00175@cakuba.netronome.com>
+References: <20170629041716.26865-1-jakub.kicinski@netronome.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pg0-f51.google.com ([74.125.83.51]:34721 "EHLO
+        mail-pg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751997AbdGSBfj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Jul 2017 21:35:39 -0400
+Received: by mail-pg0-f51.google.com with SMTP id 123so21960621pgj.1
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Jul 2017 18:35:39 -0700 (PDT)
+In-Reply-To: <20170629041716.26865-1-jakub.kicinski@netronome.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, oss-drivers@netronome.com
 
-Now that we have a custom printf format specifier, convert users of
-full_name to use %pOF instead. This is preparation to remove storing
-of the full path string for each node.
+On Wed, 28 Jun 2017 21:17:16 -0700, Jakub Kicinski wrote:
+> Building firmware with O=path was apparently broken in aic7 for ever.
+> Message of the previous commit to the Makefile (from 2008) mentions
+> this unfortunate state of affairs already.  Fix this, mostly to make
+> randconfig builds more reliable.
+> 
+> Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
 
-Signed-off-by: Rob Herring <robh@kernel.org>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
----
- drivers/scsi/mac53c94.c | 13 ++++++-------
- 1 file changed, 6 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/scsi/mac53c94.c b/drivers/scsi/mac53c94.c
-index a6682c508c4c..8c4d3003b68b 100644
---- a/drivers/scsi/mac53c94.c
-+++ b/drivers/scsi/mac53c94.c
-@@ -448,15 +448,14 @@ static int mac53c94_probe(struct macio_dev *mdev, const struct of_device_id *mat
- 		ioremap(macio_resource_start(mdev, 1), 0x1000);
- 	state->dmaintr = macio_irq(mdev, 1);
- 	if (state->regs == NULL || state->dma == NULL) {
--		printk(KERN_ERR "mac53c94: ioremap failed for %s\n",
--		       node->full_name);
-+		printk(KERN_ERR "mac53c94: ioremap failed for %pOF\n", node);
- 		goto out_free;
- 	}
-
- 	clkprop = of_get_property(node, "clock-frequency", &proplen);
-        	if (clkprop == NULL || proplen != sizeof(int)) {
--       		printk(KERN_ERR "%s: can't get clock frequency, "
--       		       "assuming 25MHz\n", node->full_name);
-+       		printk(KERN_ERR "%pOF: can't get clock frequency, "
-+       		       "assuming 25MHz\n", node);
-        		state->clk_freq = 25000000;
-        	} else
-        		state->clk_freq = *(int *)clkprop;
-@@ -469,7 +468,7 @@ static int mac53c94_probe(struct macio_dev *mdev, const struct of_device_id *mat
-        				sizeof(struct dbdma_cmd), GFP_KERNEL);
-        	if (dma_cmd_space == 0) {
-        		printk(KERN_ERR "mac53c94: couldn't allocate dma "
--       		       "command space for %s\n", node->full_name);
-+       		       "command space for %pOF\n", node);
- 		rc = -ENOMEM;
-        		goto out_free;
-        	}
-@@ -481,8 +480,8 @@ static int mac53c94_probe(struct macio_dev *mdev, const struct of_device_id *mat
- 	mac53c94_init(state);
-
- 	if (request_irq(state->intr, do_mac53c94_interrupt, 0, "53C94",state)) {
--		printk(KERN_ERR "mac53C94: can't get irq %d for %s\n",
--		       state->intr, node->full_name);
-+		printk(KERN_ERR "mac53C94: can't get irq %d for %pOF\n",
-+		       state->intr, node);
- 		goto out_free_dma;
- 	}
-
---
-2.11.0
+I just noticed this patch got marked as "Deferred, archived" in
+patchwork.  I'm not entirely sure by whom and why?  Could someone
+explain what is the issue?  I would really appreciate if we could 
+merge this patch and have this driver not break builds randomly...
