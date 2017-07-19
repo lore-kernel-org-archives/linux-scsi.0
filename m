@@ -1,119 +1,51 @@
-From: Shivasharan Srikanteshwara
-        <shivasharan.srikanteshwara@broadcom.com>
-Subject: RE: [PATCH v2 11/15] megaraid_sas: Set device queue_depth same as HBA
- can_queue value in scsi-mq mode
-Date: Wed, 19 Jul 2017 14:12:59 +0530
-Message-ID: <1fb5bf7342826f0cf84841930c7c4b11@mail.gmail.com>
-References: <1499256029-16319-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <1499256029-16319-12-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <20170711135828.GA12013@lst.de> <3adb43de25a7531af4d083cd1af8c5b5@mail.gmail.com>
- 13ff9692d698c5b05f32310259506735@mail.gmail.com
+From: Nilesh Javali <nilesh.javali@cavium.com>
+Subject: [PATCH] qedi: Add ISCSI_BOOT_SYSFS to Kconfig
+Date: Wed, 19 Jul 2017 02:07:55 -0700
+Message-ID: <20170719090755.27946-1-nilesh.javali@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f171.google.com ([209.85.220.171]:34668 "EHLO
-        mail-qk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752190AbdGSInC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Jul 2017 04:43:02 -0400
-Received: by mail-qk0-f171.google.com with SMTP id t2so33814527qkc.1
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Jul 2017 01:43:02 -0700 (PDT)
-In-Reply-To: 13ff9692d698c5b05f32310259506735@mail.gmail.com
+Received: from mail-sn1nam02on0058.outbound.protection.outlook.com ([104.47.36.58]:23376
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752582AbdGSJH6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 19 Jul 2017 05:07:58 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, Sumit Saxena <sumit.saxena@broadcom.com>, hare@suse.com, Kashyap Desai <kashyap.desai@broadcom.com>
+To: martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com
+Cc: linux-scsi@vger.kernel.org, QLogic-Storage-Upstream@cavium.com
 
-> -----Original Message-----
-> From: Shivasharan Srikanteshwara
-> [mailto:shivasharan.srikanteshwara@broadcom.com]
-> Sent: Wednesday, July 12, 2017 1:51 PM
-> To: Kashyap Desai; 'Christoph Hellwig'
-> Cc: 'linux-scsi@vger.kernel.org'; 'martin.petersen@oracle.com';
-> 'thenzl@redhat.com'; 'jejb@linux.vnet.ibm.com'; Sumit Saxena;
-> 'hare@suse.com'
-> Subject: RE: [PATCH v2 11/15] megaraid_sas: Set device queue_depth same as
-> HBA can_queue value in scsi-mq mode
->
-> > -----Original Message-----
-> > From: Kashyap Desai [mailto:kashyap.desai@broadcom.com]
-> > Sent: Tuesday, July 11, 2017 9:18 PM
-> > To: Christoph Hellwig; Shivasharan Srikanteshwara
-> > Cc: linux-scsi@vger.kernel.org; martin.petersen@oracle.com;
-> > thenzl@redhat.com; jejb@linux.vnet.ibm.com; Sumit Saxena; hare@suse.com
-> > Subject: RE: [PATCH v2 11/15] megaraid_sas: Set device queue_depth same
-> > as
-> > HBA can_queue value in scsi-mq mode
-> >
-> > > -----Original Message-----
-> > > From: Christoph Hellwig [mailto:hch@lst.de]
-> > > Sent: Tuesday, July 11, 2017 7:28 PM
-> > > To: Shivasharan S
-> > > Cc: linux-scsi@vger.kernel.org; martin.petersen@oracle.com;
-> > > thenzl@redhat.com; jejb@linux.vnet.ibm.com;
-> > > kashyap.desai@broadcom.com; sumit.saxena@broadcom.com;
-> > hare@suse.com;
-> > > hch@lst.de
-> > > Subject: Re: [PATCH v2 11/15] megaraid_sas: Set device queue_depth
-> > > same
-> > as
-> > > HBA can_queue value in scsi-mq mode
-> > >
-> > > On Wed, Jul 05, 2017 at 05:00:25AM -0700, Shivasharan S wrote:
-> > > > Currently driver sets default queue_depth for VDs at 256 and JBODs
-> > > > based on interface type, ie., for SAS JBOD QD will be 64, for SATA
-> > JBOD QD
-> > > will be 32.
-> > > > During performance runs with scsi-mq enabled, we are seeing better
-> > > > results by setting QD same as HBA queue_depth.
-> > >
-> > > Please no scsi-mq specifics.  just do this unconditionally.
-> >
-> > Chris -  Intent for mq specific check is mainly because of sequential
-> > work load
-> > for HDD is having penalty due to mq scheduler issue.
-> > We did this exercise prior to mq-deadline support.
-> >
-> > Making generic change for non-mq and mq was good, but we may see some
-> > user may not like to see regression.
-> > E.a In case of, QD = 32 for SATA PD file system creation may be faster
-> compare
-> > to large QD. There may be a soft merger at block layer due to queue
-> > depth
-> > throttling. Eventually, FS creation goes fast due to IO merges, but same
-> > will
-> not
-> > be true if we change queue depth logic (means, increase device queue
-> > depth
-> to
-> > HBA QD.)
-> >
-> > We have choice to completely remove this patch and ask users to do sysfs
-> > settings in case of scsi-mq performance issue for HDD sequential work
-> > load.
-> > Having this patch, we want to provide better QD settings as default from
-> driver.
-> >
-> >
-> > Thanks, Kashyap
->
-> Hi Christoph,
-> As Kashyap mentioned, the performance issues seen were specific to scsi-mq
-> enabled case when running sequential workloads with HDDs.
-> Making this generic might result in regressions in some scenarios for
-> non-mq.
-> That was the idea behind making the change specific to scsi-mq only.
->
-> Let us know if you are ok with having this as is or we could remove
-> this patch completely and have users manually tune queue depth settings if
-> they
-> are seeing performance issues with scsi-mq enabled.
->
-> Thanks,
-> Shivasharan
+qedi uses iscsi_boot_sysfs to export the targets used
+for boot to sysfs. Select the config option to make sure
+the module is built.
 
-Hi Christoph,
-Can you please let us know your thoughts on this patch?
-Are we good to keep the changes as is?
+This addresses the compile time issue,
+    drivers/scsi/qedi/qedi_main.o: In function `qedi_remove':
+    qedi_main.c:(.text+0x3bbd): undefined reference to `iscsi_boot_destroy_kset'
+    drivers/scsi/qedi/qedi_main.o: In function `__qedi_probe.constprop.0':
+    qedi_main.c:(.text+0x577a): undefined reference to `iscsi_boot_create_target'
+    qedi_main.c:(.text+0x5807): undefined reference to `iscsi_boot_create_target'
+    qedi_main.c:(.text+0x587f): undefined reference to `iscsi_boot_create_initiator'
+    qedi_main.c:(.text+0x58f3): undefined reference to `iscsi_boot_create_ethernet'
+    qedi_main.c:(.text+0x5927): undefined reference to `iscsi_boot_destroy_kset'
+    qedi_main.c:(.text+0x5d7b): undefined reference to `iscsi_boot_create_host_kset'
 
-Thanks,
-Shivasharan
+Signed-off-by: Nilesh Javali <nilesh.javali@cavium.com>
+---
+ drivers/scsi/qedi/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/scsi/qedi/Kconfig b/drivers/scsi/qedi/Kconfig
+index 2133145..6f3773f 100644
+--- a/drivers/scsi/qedi/Kconfig
++++ b/drivers/scsi/qedi/Kconfig
+@@ -5,6 +5,7 @@ config QEDI
+ 	select SCSI_ISCSI_ATTRS
+ 	select QED_LL2
+ 	select QED_ISCSI
++    select ISCSI_BOOT_SYSFS
+ 	---help---
+ 	This driver supports iSCSI offload for the QLogic FastLinQ
+ 	41000 Series Converged Network Adapters.
+-- 
+1.8.3.1
