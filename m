@@ -1,164 +1,73 @@
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-Subject: [PATCH] aic7xxx: fix firmware build with O=path
-Date: Tue, 18 Jul 2017 18:58:34 -0700
-Message-ID: <20170719015834.19397-1-jakub.kicinski@netronome.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f48.google.com ([74.125.83.48]:36254 "EHLO
-        mail-pg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751906AbdGSCAP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Jul 2017 22:00:15 -0400
-Received: by mail-pg0-f48.google.com with SMTP id u5so22104639pgq.3
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Jul 2017 19:00:15 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [REGRESSION] 28676d869bbb (scsi: sg: check for valid direction
+ before starting the request) breaks mtx tape library control
+Date: Wed, 19 Jul 2017 09:03:35 +0200
+Message-ID: <20170719070335.GC4151@linux-x5ow.site>
+References: <ufafudubmkd.fsf@epithumia.math.uh.edu>
+ <20170718073747.GD4875@linux-x5ow.site>
+ <ufak235abug.fsf@epithumia.math.uh.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <ufak235abug.fsf@epithumia.math.uh.edu>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jason L Tibbitts III <tibbs@math.uh.edu>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dvyukov@google.com, hare@suse.com, hch@lst.de, martin.petersen@oracle.com
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Jakub Kicinski <jakub.kicinski@netronome.com>
 
-Building firmware with O=path was apparently broken in aic7 for ever.
-Message of the previous commit to the Makefile (from 2008) mentions
-this unfortunate state of affairs already.  Fix this, mostly to make
-randconfig builds more reliable.
+On Tue, Jul 18, 2017 at 12:33:59PM -0500, Jason L Tibbitts III wrote:
+> I have verified that building a clean v4.12 with
+> 68c59fcea1f2c6a54c62aa896cc623c1b5bc9b47 cherry picked on top still
+> shows the problem:
+> 
+> [root@backup2 ~]# mtx -f /dev/sg7 next 0
+> Unloading drive 0 into Storage Element 45...mtx: Request Sense: Long
+> Report=yes
+> mtx: Request Sense: Valid Residual=no
+> mtx: Request Sense: Error Code=0 (Unknown?!)
+> mtx: Request Sense: Sense Key=No Sense
+> mtx: Request Sense: FileMark=no
+> mtx: Request Sense: EOM=no
+> mtx: Request Sense: ILI=no
+> mtx: Request Sense: Additional Sense Code = 00
+> mtx: Request Sense: Additional Sense Qualifier = 00
+> mtx: Request Sense: BPV=no
+> mtx: Request Sense: Error in CDB=no
+> mtx: Request Sense: SKSV=no
+> MOVE MEDIUM from Element Address 1 to 1045 Failed
+> 
+> Nothing appears to be logged; is there any kind of debugging information
+> I can collect which might help to track this down?  I'm not particularly
+> good at this but I am pretty sure that I'm building everything properly
+> and am actually booting the patched kernel.
 
-Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
----
- drivers/scsi/aic7xxx/Makefile        | 12 ++++----
- drivers/scsi/aic7xxx/aicasm/Makefile | 53 ++++++++++++++++++++----------------
- 2 files changed, 35 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/scsi/aic7xxx/Makefile b/drivers/scsi/aic7xxx/Makefile
-index 741d81861d17..07b60a780c06 100644
---- a/drivers/scsi/aic7xxx/Makefile
-+++ b/drivers/scsi/aic7xxx/Makefile
-@@ -55,9 +55,9 @@ aicasm-7xxx-opts-$(CONFIG_AIC7XXX_REG_PRETTY_PRINT) := \
+Can you please apply this debugging patch, so I can see what's going on.
+
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 1e82d4128a84..2505fa0b2062 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -753,6 +753,10 @@ sg_new_write(Sg_fd *sfp, struct file *file, const char __user *buf,
  
- ifeq ($(CONFIG_AIC7XXX_BUILD_FIRMWARE),y)
- $(obj)/aic7xxx_seq.h: $(src)/aic7xxx.seq $(src)/aic7xxx.reg $(obj)/aicasm/aicasm
--	$(obj)/aicasm/aicasm -I$(src) -r $(obj)/aic7xxx_reg.h \
-+	$(obj)/aicasm/aicasm -I$(srctree)/$(src) -r $(obj)/aic7xxx_reg.h \
- 			      $(aicasm-7xxx-opts-y) -o $(obj)/aic7xxx_seq.h \
--			      $(src)/aic7xxx.seq
-+			      $(srctree)/$(src)/aic7xxx.seq
- 
- $(aic7xxx-gen-y): $(obj)/aic7xxx_seq.h
- else
-@@ -72,14 +72,14 @@ aicasm-79xx-opts-$(CONFIG_AIC79XX_REG_PRETTY_PRINT) := \
- 
- ifeq ($(CONFIG_AIC79XX_BUILD_FIRMWARE),y)
- $(obj)/aic79xx_seq.h: $(src)/aic79xx.seq $(src)/aic79xx.reg $(obj)/aicasm/aicasm
--	$(obj)/aicasm/aicasm -I$(src) -r $(obj)/aic79xx_reg.h \
-+	$(obj)/aicasm/aicasm -I$(srctree)/$(src) -r $(obj)/aic79xx_reg.h \
- 			      $(aicasm-79xx-opts-y) -o $(obj)/aic79xx_seq.h \
--			      $(src)/aic79xx.seq
-+			      $(srctree)/$(src)/aic79xx.seq
- 
- $(aic79xx-gen-y): $(obj)/aic79xx_seq.h
- else
- $(obj)/aic79xx_reg_print.c: $(src)/aic79xx_reg_print.c_shipped
- endif
- 
--$(obj)/aicasm/aicasm: $(src)/aicasm/*.[chyl]
--	$(MAKE) -C $(src)/aicasm
-+$(obj)/aicasm/aicasm: $(srctree)/$(src)/aicasm/*.[chyl]
-+	$(MAKE) -C $(srctree)/$(src)/aicasm OUTDIR=$(shell pwd)/$(obj)/aicasm/
-diff --git a/drivers/scsi/aic7xxx/aicasm/Makefile b/drivers/scsi/aic7xxx/aicasm/Makefile
-index b98c5c1056c3..45e2d49c1fff 100644
---- a/drivers/scsi/aic7xxx/aicasm/Makefile
-+++ b/drivers/scsi/aic7xxx/aicasm/Makefile
-@@ -1,19 +1,21 @@
- PROG=	aicasm
- 
-+OUTDIR ?= ./
+ static bool sg_is_valid_dxfer(sg_io_hdr_t *hp)
+ {
 +
- .SUFFIXES= .l .y .c .h
- 
- CSRCS=	aicasm.c aicasm_symbol.c
- YSRCS=	aicasm_gram.y aicasm_macro_gram.y
- LSRCS=	aicasm_scan.l aicasm_macro_scan.l
- 
--GENHDRS=	aicdb.h $(YSRCS:.y=.h)
--GENSRCS=	$(YSRCS:.y=.c) $(LSRCS:.l=.c)
-+GENHDRS=	$(addprefix ${OUTDIR}/,aicdb.h $(YSRCS:.y=.h))
-+GENSRCS=	$(addprefix ${OUTDIR}/,$(YSRCS:.y=.c) $(LSRCS:.l=.c))
- 
- SRCS=	${CSRCS} ${GENSRCS}
- LIBS=	-ldb
- clean-files:= ${GENSRCS} ${GENHDRS} $(YSRCS:.y=.output) $(PROG)
- # Override default kernel CFLAGS.  This is a userland app.
--AICASM_CFLAGS:= -I/usr/include -I.
-+AICASM_CFLAGS:= -I/usr/include -I. -I$(OUTDIR)
- LEX= flex
- YACC= bison
- YFLAGS= -d
-@@ -32,22 +34,25 @@ YFLAGS+= -t -v
- LFLAGS= -d
- endif
- 
--$(PROG):  ${GENHDRS} $(SRCS)
--	$(AICASM_CC) $(AICASM_CFLAGS) $(SRCS) -o $(PROG) $(LIBS)
-+$(PROG):  $(OUTDIR) ${GENHDRS} $(SRCS)
-+	$(AICASM_CC) $(AICASM_CFLAGS) $(SRCS) -o $(OUTDIR)/$(PROG) $(LIBS)
++	pr_info("%s: dxfer_direction: %d, dxfer_len: %d\n",
++		__func__, hp->dxfer_direction, hp->dxfer_len);
 +
-+$(OUTDIR):
-+	mkdir -p $(OUTDIR)
- 
--aicdb.h:
-+$(OUTDIR)/aicdb.h:
- 	@if [ -e "/usr/include/db4/db_185.h" ]; then		\
--		echo "#include <db4/db_185.h>" > aicdb.h;	\
-+		echo "#include <db4/db_185.h>" > $@;	\
- 	 elif [ -e "/usr/include/db3/db_185.h" ]; then		\
--		echo "#include <db3/db_185.h>" > aicdb.h;	\
-+		echo "#include <db3/db_185.h>" > $@;	\
- 	 elif [ -e "/usr/include/db2/db_185.h" ]; then		\
--		echo "#include <db2/db_185.h>" > aicdb.h;	\
-+		echo "#include <db2/db_185.h>" > $@;	\
- 	 elif [ -e "/usr/include/db1/db_185.h" ]; then		\
--		echo "#include <db1/db_185.h>" > aicdb.h;	\
-+		echo "#include <db1/db_185.h>" > $@;	\
- 	 elif [ -e "/usr/include/db/db_185.h" ]; then		\
--		echo "#include <db/db_185.h>" > aicdb.h;	\
-+		echo "#include <db/db_185.h>" > $@;	\
- 	 elif [ -e "/usr/include/db_185.h" ]; then		\
--		echo "#include <db_185.h>" > aicdb.h;		\
-+		echo "#include <db_185.h>" > $@;		\
- 	 else							\
- 		echo "*** Install db development libraries";	\
- 	 fi
-@@ -58,23 +63,23 @@ $(PROG):  ${GENHDRS} $(SRCS)
- # Create a dependency chain in generated files
- # to avoid concurrent invocations of the single
- # rule that builds them all.
--aicasm_gram.c: aicasm_gram.h
--aicasm_gram.c aicasm_gram.h: aicasm_gram.y
-+$(OUTDIR)/aicasm_gram.c: $(OUTDIR)/aicasm_gram.h
-+$(OUTDIR)/aicasm_gram.c $(OUTDIR)/aicasm_gram.h: aicasm_gram.y
- 	$(YACC) $(YFLAGS) -b $(<:.y=) $<
--	mv $(<:.y=).tab.c $(<:.y=.c)
--	mv $(<:.y=).tab.h $(<:.y=.h)
-+	mv $(<:.y=).tab.c $(OUTDIR)/$(<:.y=.c)
-+	mv $(<:.y=).tab.h $(OUTDIR)/$(<:.y=.h)
- 
- # Create a dependency chain in generated files
- # to avoid concurrent invocations of the single
- # rule that builds them all.
--aicasm_macro_gram.c: aicasm_macro_gram.h
--aicasm_macro_gram.c aicasm_macro_gram.h: aicasm_macro_gram.y
-+$(OUTDIR)/aicasm_macro_gram.c: $(OUTDIR)/aicasm_macro_gram.h
-+$(OUTDIR)/aicasm_macro_gram.c $(OUTDIR)/aicasm_macro_gram.h: aicasm_macro_gram.y
- 	$(YACC) $(YFLAGS) -b $(<:.y=) -p mm $<
--	mv $(<:.y=).tab.c $(<:.y=.c)
--	mv $(<:.y=).tab.h $(<:.y=.h)
-+	mv $(<:.y=).tab.c $(OUTDIR)/$(<:.y=.c)
-+	mv $(<:.y=).tab.h $(OUTDIR)/$(<:.y=.h)
- 
--aicasm_scan.c: aicasm_scan.l
--	$(LEX) $(LFLAGS) -o$@ $<
-+$(OUTDIR)/aicasm_scan.c: aicasm_scan.l
-+	$(LEX) $(LFLAGS) -o $@ $<
- 
--aicasm_macro_scan.c: aicasm_macro_scan.l
--	$(LEX) $(LFLAGS) -Pmm -o$@ $<
-+$(OUTDIR)/aicasm_macro_scan.c: aicasm_macro_scan.l
-+	$(LEX) $(LFLAGS) -Pmm -o $@ $<
+ 	switch (hp->dxfer_direction) {
+ 	case SG_DXFER_NONE:
+ 		if (hp->dxferp || hp->dxfer_len > 0)
+
+Thanks,
+	Johannes
 -- 
-2.11.0
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
