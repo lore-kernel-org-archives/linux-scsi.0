@@ -1,73 +1,48 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [REGRESSION] 28676d869bbb (scsi: sg: check for valid direction
- before starting the request) breaks mtx tape library control
-Date: Wed, 19 Jul 2017 09:03:35 +0200
-Message-ID: <20170719070335.GC4151@linux-x5ow.site>
-References: <ufafudubmkd.fsf@epithumia.math.uh.edu>
- <20170718073747.GD4875@linux-x5ow.site>
- <ufak235abug.fsf@epithumia.math.uh.edu>
+From: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Subject: Re: [PATCH 05/13] mpt3sas: Set NVMe device queue depth as 128
+Date: Wed, 19 Jul 2017 12:50:00 +0530
+Message-ID: <CA+RiK67TcoYYSw=Mz6KY96A=LdV9oz205Sx3jksGVp66y03mGg@mail.gmail.com>
+References: <1499763313-7214-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <1499763313-7214-6-git-send-email-suganath-prabu.subramani@broadcom.com> <AT5PR84MB00821C8CD515212788107EA0ABAE0@AT5PR84MB0082.NAMPRD84.PROD.OUTLOOK.COM>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <ufak235abug.fsf@epithumia.math.uh.edu>
+In-Reply-To: <AT5PR84MB00821C8CD515212788107EA0ABAE0@AT5PR84MB0082.NAMPRD84.PROD.OUTLOOK.COM>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jason L Tibbitts III <tibbs@math.uh.edu>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dvyukov@google.com, hare@suse.com, hch@lst.de, martin.petersen@oracle.com
+To: "Elliott, Robert (Persistent Memory)" <elliott@hpe.com>
+Cc: "JBottomley@Parallels.com" <JBottomley@parallels.com>, "jejb@kernel.org" <jejb@kernel.org>, "hch@infradead.org" <hch@infradead.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Sathya.Prakash@broadcom.com" <Sathya.Prakash@broadcom.com>, "kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, "sreekanth.reddy@broadcom.com" <sreekanth.reddy@broadcom.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jul 18, 2017 at 12:33:59PM -0500, Jason L Tibbitts III wrote:
-> I have verified that building a clean v4.12 with
-> 68c59fcea1f2c6a54c62aa896cc623c1b5bc9b47 cherry picked on top still
-> shows the problem:
-> 
-> [root@backup2 ~]# mtx -f /dev/sg7 next 0
-> Unloading drive 0 into Storage Element 45...mtx: Request Sense: Long
-> Report=yes
-> mtx: Request Sense: Valid Residual=no
-> mtx: Request Sense: Error Code=0 (Unknown?!)
-> mtx: Request Sense: Sense Key=No Sense
-> mtx: Request Sense: FileMark=no
-> mtx: Request Sense: EOM=no
-> mtx: Request Sense: ILI=no
-> mtx: Request Sense: Additional Sense Code = 00
-> mtx: Request Sense: Additional Sense Qualifier = 00
-> mtx: Request Sense: BPV=no
-> mtx: Request Sense: Error in CDB=no
-> mtx: Request Sense: SKSV=no
-> MOVE MEDIUM from Element Address 1 to 1045 Failed
-> 
-> Nothing appears to be logged; is there any kind of debugging information
-> I can collect which might help to track this down?  I'm not particularly
-> good at this but I am pretty sure that I'm building everything properly
-> and am actually booting the patched kernel.
-
-
-Can you please apply this debugging patch, so I can see what's going on.
-
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 1e82d4128a84..2505fa0b2062 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -753,6 +753,10 @@ sg_new_write(Sg_fd *sfp, struct file *file, const char __user *buf,
- 
- static bool sg_is_valid_dxfer(sg_io_hdr_t *hp)
- {
-+
-+	pr_info("%s: dxfer_direction: %d, dxfer_len: %d\n",
-+		__func__, hp->dxfer_direction, hp->dxfer_len);
-+
- 	switch (hp->dxfer_direction) {
- 	case SG_DXFER_NONE:
- 		if (hp->dxferp || hp->dxfer_len > 0)
+Hi Elliott,
+We are maintaining NVMe drives as scsi device in mpt3sas driver.
+There are lot of firmware/hardware level dependencies and after lot of
+discussions we arrived this value (128).
+So, we prefer not to provide module parameter to change this at least for now.
 
 Thanks,
-	Johannes
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Suganath Prabu S
+
+On Tue, Jul 11, 2017 at 10:53 PM, Elliott, Robert (Persistent Memory)
+<elliott@hpe.com> wrote:
+>> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+>> @@ -115,7 +115,7 @@
+>>
+>>  #define MPT3SAS_RAID_MAX_SECTORS     8192
+>>  #define MPT3SAS_HOST_PAGE_SIZE_4K    12
+>> -
+>> +#define MPT3SAS_NVME_QUEUE_DEPTH     128
+> ...
+>> +             /*TODO-right Queue Depth?*/
+>> +             qdepth = MPT3SAS_NVME_QUEUE_DEPTH;
+>> +             ds = "NVMe";
+>
+> The native NVMe driver is getting a modparam to set that value (rather than
+> using a #define of 1024) in this patch:
+>         http://lists.infradead.org/pipermail/linux-nvme/2017-July/011734.html
+>
+> Perhaps this driver should do the same.
+>
+> ---
+> Robert Elliott, HPE Persistent Memory
+>
+>
