@@ -1,145 +1,121 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: [PATCH] SCSI: remove DRIVER_ATTR() usage
-Date: Wed, 19 Jul 2017 14:50:06 +0200
-Message-ID: <20170719125006.GA17776@kroah.com>
+From: Himanshu Madhani <himanshu.madhani@cavium.com>
+Subject: [PATCH 6/7] qla2xxx: Fix remoteport disconnect for FC-NVMe
+Date: Wed, 19 Jul 2017 11:51:50 -0700
+Message-ID: <20170719185151.8564-7-himanshu.madhani@cavium.com>
+References: <20170719185151.8564-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, Willem Riede <osst@riede.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam01on0066.outbound.protection.outlook.com ([104.47.32.66]:33401
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753631AbdGSSwI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 19 Jul 2017 14:52:08 -0400
+In-Reply-To: <20170719185151.8564-1-himanshu.madhani@cavium.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
-It's better to use the DRIVER_ATTR_RW() and DRIVER_ATTR_RO() macros to
-explicitly show that this is a read/write or read/only sysfs file.  So
-convert the remaining SCSI drivers that use the old style to use the
-newer macros.
-
-Bonus is that this removes some checkpatch.pl warnings :)
-
-This is part of a series to drop DRIVER_ATTR() from the tree entirely.
-
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: Sumit Saxena <sumit.saxena@broadcom.com>
-Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Cc: Willem Riede <osst@riede.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
+Signed-off-by: Duane Grigsby <duane.grigsby@cavium.com>
+Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/aic94xx/aic94xx_init.c       |    4 +--
- drivers/scsi/megaraid/megaraid_sas_base.c |   36 ++++++++++--------------------
- drivers/scsi/osst.c                       |    4 +--
- 3 files changed, 16 insertions(+), 28 deletions(-)
+ drivers/scsi/qla2xxx/qla_isr.c  | 37 +++++++++++++++++++++++++++++++------
+ drivers/scsi/qla2xxx/qla_nvme.c | 11 ++++++++---
+ 2 files changed, 39 insertions(+), 9 deletions(-)
 
---- a/drivers/scsi/aic94xx/aic94xx_init.c
-+++ b/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -956,11 +956,11 @@ static int asd_scan_finished(struct Scsi
- 	return 1;
- }
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 317fe6026856..c14fab35fc36 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1856,17 +1856,42 @@ qla24xx_nvme_iocb_entry(scsi_qla_host_t *vha, struct req_que *req, void *tsk)
+ 	fd->transferred_length = fd->payload_length -
+ 	    le32_to_cpu(sts->residual_len);
  
--static ssize_t asd_version_show(struct device_driver *driver, char *buf)
-+static ssize_t version_show(struct device_driver *driver, char *buf)
- {
- 	return snprintf(buf, PAGE_SIZE, "%s\n", ASD_DRIVER_VERSION);
- }
--static DRIVER_ATTR(version, S_IRUGO, asd_version_show, NULL);
-+static DRIVER_ATTR_RO(version);
- 
- static int asd_create_driver_attrs(struct device_driver *driver)
- {
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -7323,49 +7323,39 @@ static struct pci_driver megasas_pci_dri
- /*
-  * Sysfs driver attributes
-  */
--static ssize_t megasas_sysfs_show_version(struct device_driver *dd, char *buf)
-+static ssize_t version_show(struct device_driver *dd, char *buf)
- {
- 	return snprintf(buf, strlen(MEGASAS_VERSION) + 2, "%s\n",
- 			MEGASAS_VERSION);
- }
-+static DRIVER_ATTR_RO(version);
- 
--static DRIVER_ATTR(version, S_IRUGO, megasas_sysfs_show_version, NULL);
--
--static ssize_t
--megasas_sysfs_show_release_date(struct device_driver *dd, char *buf)
-+static ssize_t release_date_show(struct device_driver *dd, char *buf)
- {
- 	return snprintf(buf, strlen(MEGASAS_RELDATE) + 2, "%s\n",
- 		MEGASAS_RELDATE);
- }
-+static DRIVER_ATTR_RO(release_date);
- 
--static DRIVER_ATTR(release_date, S_IRUGO, megasas_sysfs_show_release_date, NULL);
--
--static ssize_t
--megasas_sysfs_show_support_poll_for_event(struct device_driver *dd, char *buf)
-+static ssize_t support_poll_for_event_show(struct device_driver *dd, char *buf)
- {
- 	return sprintf(buf, "%u\n", support_poll_for_event);
- }
-+static DRIVER_ATTR_RO(support_poll_for_event);
- 
--static DRIVER_ATTR(support_poll_for_event, S_IRUGO,
--			megasas_sysfs_show_support_poll_for_event, NULL);
--
-- static ssize_t
--megasas_sysfs_show_support_device_change(struct device_driver *dd, char *buf)
-+static ssize_t support_device_change_show(struct device_driver *dd, char *buf)
- {
- 	return sprintf(buf, "%u\n", support_device_change);
- }
-+static DRIVER_ATTR_RO(support_device_change);
- 
--static DRIVER_ATTR(support_device_change, S_IRUGO,
--			megasas_sysfs_show_support_device_change, NULL);
--
--static ssize_t
--megasas_sysfs_show_dbg_lvl(struct device_driver *dd, char *buf)
-+static ssize_t dbg_lvl_show(struct device_driver *dd, char *buf)
- {
- 	return sprintf(buf, "%u\n", megasas_dbg_lvl);
- }
- 
--static ssize_t
--megasas_sysfs_set_dbg_lvl(struct device_driver *dd, const char *buf, size_t count)
-+static ssize_t dbg_lvl_store(struct device_driver *dd, const char *buf,
-+			     size_t count)
- {
- 	int retval = count;
- 
-@@ -7375,9 +7365,7 @@ megasas_sysfs_set_dbg_lvl(struct device_
++	/*
++	 * If transport error then Failure (HBA rejects request)
++	 * otherwise transport will handle.
++	 */
+ 	if (sts->entry_status) {
+ 		ql_log(ql_log_warn, fcport->vha, 0x5038,
+ 		    "NVME-%s error - hdl=%x entry-status(%x).\n",
+ 		    sp->name, sp->handle, sts->entry_status);
+ 		ret = QLA_FUNCTION_FAILED;
+-	} else if (sts->comp_status != cpu_to_le16(CS_COMPLETE)) {
+-		ql_log(ql_log_warn, fcport->vha, 0x5039,
+-		    "NVME-%s error - hdl=%x completion status(%x) resid=%x  ox_id=%x\n",
+-		    sp->name, sp->handle, sts->comp_status,
+-		    le32_to_cpu(sts->residual_len), sts->ox_id);
+-		ret = QLA_FUNCTION_FAILED;
++	} else  {
++		switch (le16_to_cpu(sts->comp_status)) {
++			case CS_COMPLETE:
++				ret = 0;
++			break;
++
++			case CS_ABORTED:
++			case CS_RESET:
++			case CS_PORT_UNAVAILABLE:
++			case CS_PORT_LOGGED_OUT:
++			case CS_PORT_BUSY:
++				ql_log(ql_log_warn, fcport->vha, 0x5060,
++				"NVME-%s ERR Handling - hdl=%x completion status(%x) resid=%x  ox_id=%x\n",
++				sp->name, sp->handle, sts->comp_status,
++				le32_to_cpu(sts->residual_len), sts->ox_id);
++				fd->transferred_length = fd->payload_length;
++				ret = QLA_ABORTED;
++			break;
++
++			default:
++				ql_log(ql_log_warn, fcport->vha, 0x5060,
++				"NVME-%s error - hdl=%x completion status(%x) resid=%x  ox_id=%x\n",
++				sp->name, sp->handle, sts->comp_status,
++				le32_to_cpu(sts->residual_len), sts->ox_id);
++				ret = QLA_FUNCTION_FAILED;
++				break;
++		}
  	}
- 	return retval;
+ 	sp->done(sp, ret);
  }
--
--static DRIVER_ATTR(dbg_lvl, S_IRUGO|S_IWUSR, megasas_sysfs_show_dbg_lvl,
--		megasas_sysfs_set_dbg_lvl);
-+static DRIVER_ATTR_RW(dbg_lvl);
+diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
+index ccafcdb228e8..da32a06f17a0 100644
+--- a/drivers/scsi/qla2xxx/qla_nvme.c
++++ b/drivers/scsi/qla2xxx/qla_nvme.c
+@@ -180,13 +180,13 @@ static void qla_nvme_sp_done(void *ptr, int res)
+ 	if (!(sp->fcport->nvme_flag & NVME_FLAG_REGISTERED))
+ 		goto rel;
  
- static inline void megasas_remove_scsi_device(struct scsi_device *sdev)
- {
---- a/drivers/scsi/osst.c
-+++ b/drivers/scsi/osst.c
-@@ -5667,12 +5667,12 @@ static	struct	osst_support_data support_
-  * sysfs support for osst driver parameter information
-  */
+-	if (unlikely(nvme->u.nvme.comp_status || res))
+-		fd->status = -EINVAL;
++	if (unlikely(res == QLA_FUNCTION_FAILED))
++		fd->status = NVME_SC_FC_TRANSPORT_ERROR;
+ 	else
+ 		fd->status = 0;
  
--static ssize_t osst_version_show(struct device_driver *ddd, char *buf)
-+static ssize_t version_show(struct device_driver *ddd, char *buf)
- {
- 	return snprintf(buf, PAGE_SIZE, "%s\n", osst_version);
+ 	fd->rcv_rsplen = nvme->u.nvme.rsp_pyld_len;
+-	if (res == QLA_FUNCTION_FAILED) {
++	if (res) {
+ 		INIT_WORK(&nvme->rq_work, qla_nvme_io_work);
+ 		queue_work(sp->fcport->vha->nvme_io_wq, &nvme->rq_work);
+ 		return;
+@@ -653,13 +653,18 @@ static void qla_nvme_unregister_remote_port(struct work_struct *work)
+ 	if (!IS_ENABLED(CONFIG_NVME_FC))
+ 		return;
+ 
++	ql_log(ql_log_warn, NULL, 0x2112,
++	    "%s: unregister remoteport on %p\n",__func__, fcport);
++
+ 	list_for_each_entry_safe(rport, trport,
+ 	    &fcport->vha->nvme_rport_list, list) {
+ 		if (rport->fcport == fcport) {
+ 			ql_log(ql_log_info, fcport->vha, 0x2113,
+ 			    "%s: fcport=%p\n", __func__, fcport);
++			init_completion(&fcport->nvme_del_done);
+ 			nvme_fc_unregister_remoteport(
+ 			    fcport->nvme_remote_port);
++			qla_nvme_wait_on_rport_del(fcport);
+ 		}
+ 	}
  }
- 
--static DRIVER_ATTR(version, S_IRUGO, osst_version_show, NULL);
-+static DRIVER_ATTR_RO(version);
- 
- static int osst_create_sysfs_files(struct device_driver *sysfs)
- {
+-- 
+2.12.0
