@@ -1,197 +1,135 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 5/7] qla2xxx: Simpify unregistration of FC-NVMe local/remote ports
-Date: Wed, 19 Jul 2017 11:51:49 -0700
-Message-ID: <20170719185151.8564-6-himanshu.madhani@cavium.com>
+Subject: [PATCH 3/7] qla2xxx: Add command completion wq for error path
+Date: Wed, 19 Jul 2017 11:51:47 -0700
+Message-ID: <20170719185151.8564-4-himanshu.madhani@cavium.com>
 References: <20170719185151.8564-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0087.outbound.protection.outlook.com ([104.47.36.87]:13820
+Received: from mail-sn1nam02on0057.outbound.protection.outlook.com ([104.47.36.57]:23506
         "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754034AbdGSSwS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 19 Jul 2017 14:52:18 -0400
+        id S1754965AbdGSSwT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 19 Jul 2017 14:52:19 -0400
 In-Reply-To: <20170719185151.8564-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-Simplified waiting for unregister local/remote FC-NVMe ports
-to complete cleanup.
+From: Duane Grigsby <duane.grigsby@cavium.com>
+
+When NVMe commands encounter error NVMe FC transport needs to
+teardown the connection. This patch adds worker thread to process
+these IO errors.
 
 Signed-off-by: Duane Grigsby <duane.grigsby@cavium.com>
-Signed-off-by: Darren Trapp <darren.trapp@cavium.com>
-Signed-off-by: Anil Gurumurthy <anil.gurumurthy@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h  |  5 ++--
- drivers/scsi/qla2xxx/qla_nvme.c | 59 +++++++----------------------------------
- 2 files changed, 12 insertions(+), 52 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h  |  2 ++
+ drivers/scsi/qla2xxx/qla_nvme.c | 20 +++++++++++++++++++-
+ drivers/scsi/qla2xxx/qla_os.c   | 10 +++++++++-
+ 3 files changed, 30 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 015908f99e76..caee4a2b4002 100644
+index 1635e98867aa..799d25564ed6 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2304,7 +2304,7 @@ typedef struct fc_port {
+@@ -430,6 +430,7 @@ struct srb_iocb {
+ 		} nvme;
+ 	} u;
  
- 	struct work_struct nvme_del_work;
- 	atomic_t nvme_ref_count;
--	wait_queue_head_t nvme_waitq;
-+	struct completion nvme_del_done;
- 	uint32_t nvme_prli_service_param;
- #define NVME_PRLI_SP_CONF       BIT_7
- #define NVME_PRLI_SP_INITIATOR  BIT_5
-@@ -4135,8 +4135,7 @@ typedef struct scsi_qla_host {
- 	uint8_t		fabric_node_name[WWN_SIZE];
- 
- 	struct		nvme_fc_local_port *nvme_local_port;
--	atomic_t	nvme_ref_count;
--	wait_queue_head_t nvme_waitq;
-+	struct completion nvme_del_done;
++	struct work_struct rq_work;
+ 	struct timer_list timer;
+ 	void (*timeout)(void *);
+ };
+@@ -4132,6 +4133,7 @@ typedef struct scsi_qla_host {
+ 	atomic_t	nvme_ref_count;
+ 	wait_queue_head_t nvme_waitq;
  	struct list_head nvme_rport_list;
- 	struct workqueue_struct *nvme_io_wq;
++	struct workqueue_struct *nvme_io_wq;
  	atomic_t 	nvme_active_aen_cnt;
+ 	uint16_t	nvme_last_rptd_aen;
+ 
 diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
-index 4cb5bd20065a..ccafcdb228e8 100644
+index 11494f2f90b5..7543f533edfb 100644
 --- a/drivers/scsi/qla2xxx/qla_nvme.c
 +++ b/drivers/scsi/qla2xxx/qla_nvme.c
-@@ -75,8 +75,6 @@ int qla_nvme_register_remote(struct scsi_qla_host *vha, struct fc_port *fcport)
+@@ -156,6 +156,17 @@ static void qla_nvme_sp_ls_done(void *ptr, int res)
+ 	qla2x00_rel_sp(sp);
+ }
  
- 	fcport->nvme_remote_port->private = fcport;
- 	fcport->nvme_flag |= NVME_FLAG_REGISTERED;
--	atomic_set(&fcport->nvme_ref_count, 1);
--	init_waitqueue_head(&fcport->nvme_waitq);
- 	rport->fcport = fcport;
- 	list_add_tail(&rport->list, &vha->nvme_rport_list);
- 	return 0;
-@@ -250,7 +248,6 @@ static int qla_nvme_ls_req(struct nvme_fc_local_port *lport,
- 	sp->name = "nvme_ls";
- 	sp->done = qla_nvme_sp_ls_done;
- 	atomic_set(&sp->ref_count, 1);
--	init_waitqueue_head(&sp->nvme_ls_waitq);
++static void qla_nvme_io_work(struct work_struct *work)
++{
++	srb_t *sp;
++	struct srb_iocb *nvme = container_of(work, struct srb_iocb, rq_work);
++	struct nvmefc_fcp_req *fd = nvme->u.nvme.desc;
++	sp = container_of(nvme, srb_t, u.iocb_cmd);
++
++	fd->done(fd);
++	qla2xxx_rel_qpair_sp(sp->qpair, sp);
++}
++
+ static void qla_nvme_sp_done(void *ptr, int res)
+ {
+ 	srb_t *sp = ptr;
+@@ -177,7 +188,13 @@ static void qla_nvme_sp_done(void *ptr, int res)
+ 		fd->status = 0;
+ 
+ 	fd->rcv_rsplen = nvme->u.nvme.rsp_pyld_len;
+-	fd->done(fd);
++	if (res == QLA_FUNCTION_FAILED) {
++		INIT_WORK(&nvme->rq_work, qla_nvme_io_work);
++		queue_work(sp->fcport->vha->nvme_io_wq, &nvme->rq_work);
++		return;
++	} else {
++		fd->done(fd);
++	}
+ rel:
+ 	qla2xxx_rel_qpair_sp(sp->qpair, sp);
+ }
+@@ -514,6 +531,7 @@ static int qla_nvme_post_cmd(struct nvme_fc_local_port *lport,
+ 	sp->done = qla_nvme_sp_done;
+ 	sp->qpair = qpair;
  	nvme = &sp->u.iocb_cmd;
- 	priv->sp = sp;
- 	priv->fd = fd;
-@@ -558,12 +555,10 @@ static void qla_nvme_localport_delete(struct nvme_fc_local_port *lport)
- {
- 	struct scsi_qla_host *vha = lport->private;
++	INIT_WORK(&nvme->rq_work, qla_nvme_io_work);
+ 	nvme->u.nvme.desc = fd;
  
--	atomic_dec(&vha->nvme_ref_count);
--	wake_up_all(&vha->nvme_waitq);
+ 	rval = qla2x00_start_nvme_mq(sp);
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 635ce75c630b..3329512b4b35 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -2751,7 +2751,6 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	spin_lock_init(&ha->tgt.sess_lock);
+ 	spin_lock_init(&ha->tgt.atio_lock);
+ 
 -
- 	ql_log(ql_log_info, vha, 0x210f,
- 	    "localport delete of %p completed.\n", vha->nvme_local_port);
- 	vha->nvme_local_port = NULL;
-+	complete(&vha->nvme_del_done);
- }
+ 	/* Clear our data area */
+ 	ha->bars = bars;
+ 	ha->mem_only = mem_only;
+@@ -3286,6 +3285,13 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	base_vha->flags.init_done = 1;
+ 	base_vha->flags.online = 1;
+ 	ha->prev_minidump_failed = 0;
++	atomic_set(&base_vha->nvme_active_aen_cnt, 0);
++	base_vha->nvme_io_wq = alloc_workqueue("qlnvme-io-wq", 0, 0);
++	if (!base_vha->nvme_io_wq) {
++		ql_log(ql_log_fatal, base_vha, 0x000b,
++		    "Unable to allocate workqueue for nvme_io_wq\n");
++		goto disable_device;
++	}
  
- static void qla_nvme_remoteport_delete(struct nvme_fc_remote_port *rport)
-@@ -574,8 +569,6 @@ static void qla_nvme_remoteport_delete(struct nvme_fc_remote_port *rport)
- 	fcport = rport->private;
- 	fcport->nvme_remote_port = NULL;
- 	fcport->nvme_flag &= ~NVME_FLAG_REGISTERED;
--	atomic_dec(&fcport->nvme_ref_count);
--	wake_up_all(&fcport->nvme_waitq);
+ 	ql_dbg(ql_dbg_init, base_vha, 0x00f2,
+ 	    "Init done and hba is online.\n");
+@@ -3559,6 +3565,8 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 	set_bit(UNLOADING, &base_vha->dpc_flags);
  
- 	list_for_each_entry_safe(r_port, trport,
- 	    &fcport->vha->nvme_rport_list, list) {
-@@ -585,6 +578,7 @@ static void qla_nvme_remoteport_delete(struct nvme_fc_remote_port *rport)
- 		}
- 	}
- 	kfree(r_port);
-+	complete(&fcport->nvme_del_done);
+ 	qla_nvme_delete(base_vha);
++	if (base_vha->nvme_io_wq)
++		destroy_workqueue(base_vha->nvme_io_wq);
  
- 	ql_log(ql_log_info, fcport->vha, 0x2110,
- 	    "remoteport_delete of %p completed.\n", fcport);
-@@ -627,12 +621,11 @@ static int qla_nvme_wait_on_command(srb_t *sp)
- static int qla_nvme_wait_on_rport_del(fc_port_t *fcport)
- {
- 	int ret = QLA_SUCCESS;
-+	int timeout;
- 
--	wait_event_timeout(fcport->nvme_waitq,
--	    atomic_read(&fcport->nvme_ref_count),
--	    NVME_ABORT_POLLING_PERIOD*HZ);
--
--	if (atomic_read(&fcport->nvme_ref_count)) {
-+	timeout = wait_for_completion_timeout(&fcport->nvme_del_done,
-+	    msecs_to_jiffies(2000));
-+	if (!timeout) {
- 		ret = QLA_FUNCTION_FAILED;
- 		ql_log(ql_log_info, fcport->vha, 0x2111,
- 		    "timed out waiting for fcport=%p to delete\n", fcport);
-@@ -651,39 +644,6 @@ void qla_nvme_abort(struct qla_hw_data *ha, struct srb *sp)
- 		    "nvme_wait_on_comand timed out waiting on sp=%p\n", sp);
- }
- 
--static void qla_nvme_abort_all(fc_port_t *fcport)
--{
--	int que, cnt;
--	unsigned long flags;
--	srb_t *sp;
--	struct qla_hw_data *ha = fcport->vha->hw;
--	struct req_que *req;
--
--	spin_lock_irqsave(&ha->hardware_lock, flags);
--	for (que = 0; que < ha->max_req_queues; que++) {
--		req = ha->req_q_map[que];
--		if (!req)
--			continue;
--		if (!req->outstanding_cmds)
--			continue;
--		for (cnt = 1; cnt < req->num_outstanding_cmds; cnt++) {
--			sp = req->outstanding_cmds[cnt];
--			if ((sp) && ((sp->type == SRB_NVME_CMD) ||
--			    (sp->type == SRB_NVME_LS)) &&
--				(sp->fcport == fcport)) {
--				atomic_inc(&sp->ref_count);
--				spin_unlock_irqrestore(&ha->hardware_lock,
--				    flags);
--				qla_nvme_abort(ha, sp);
--				spin_lock_irqsave(&ha->hardware_lock, flags);
--				req->outstanding_cmds[cnt] = NULL;
--				sp->done(sp, 1);
--			}
--		}
--	}
--	spin_unlock_irqrestore(&ha->hardware_lock, flags);
--}
--
- static void qla_nvme_unregister_remote_port(struct work_struct *work)
- {
- 	struct fc_port *fcport = container_of(work, struct fc_port,
-@@ -719,12 +679,13 @@ void qla_nvme_delete(struct scsi_qla_host *vha)
- 		ql_log(ql_log_info, fcport->vha, 0x2114, "%s: fcport=%p\n",
- 		    __func__, fcport);
- 
-+		init_completion(&fcport->nvme_del_done);
- 		nvme_fc_unregister_remoteport(fcport->nvme_remote_port);
- 		qla_nvme_wait_on_rport_del(fcport);
--		qla_nvme_abort_all(fcport);
- 	}
- 
- 	if (vha->nvme_local_port) {
-+		init_completion(&vha->nvme_del_done);
- 		nv_ret = nvme_fc_unregister_localport(vha->nvme_local_port);
- 		if (nv_ret == 0)
- 			ql_log(ql_log_info, vha, 0x2116,
-@@ -733,6 +694,8 @@ void qla_nvme_delete(struct scsi_qla_host *vha)
- 		else
- 			ql_log(ql_log_info, vha, 0x2115,
- 			    "Unregister of localport failed\n");
-+		wait_for_completion_timeout(&vha->nvme_del_done,
-+		    msecs_to_jiffies(5000));
- 	}
- }
- 
-@@ -773,7 +736,5 @@ void qla_nvme_register_hba(struct scsi_qla_host *vha)
- 		    "register_localport failed: ret=%x\n", ret);
- 		return;
- 	}
--	atomic_set(&vha->nvme_ref_count, 1);
- 	vha->nvme_local_port->private = vha;
--	init_waitqueue_head(&vha->nvme_waitq);
- }
+ 	dma_free_coherent(&ha->pdev->dev,
+ 		base_vha->gnl.size, base_vha->gnl.l, base_vha->gnl.ldma);
 -- 
 2.12.0
