@@ -1,63 +1,55 @@
-From: Jason L Tibbitts III <tibbs@math.uh.edu>
-Subject: Re: [REGRESSION] 28676d869bbb (scsi: sg: check for valid direction before starting the request) breaks mtx tape library control
-Date: Wed, 19 Jul 2017 03:13:34 -0500
-Message-ID: <ufazic0974h.fsf@epithumia.math.uh.edu>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [REGRESSION] 28676d869bbb (scsi: sg: check for valid direction
+ before starting the request) breaks mtx tape library control
+Date: Wed, 19 Jul 2017 10:36:54 +0200
+Message-ID: <20170719083654.GE4151@linux-x5ow.site>
 References: <ufafudubmkd.fsf@epithumia.math.uh.edu>
-        <20170718073747.GD4875@linux-x5ow.site>
-        <ufak235abug.fsf@epithumia.math.uh.edu>
-        <20170719070335.GC4151@linux-x5ow.site>
+ <20170718073747.GD4875@linux-x5ow.site>
+ <ufak235abug.fsf@epithumia.math.uh.edu>
+ <20170719070335.GC4151@linux-x5ow.site>
+ <ufazic0974h.fsf@epithumia.math.uh.edu>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170719070335.GC4151@linux-x5ow.site> (Johannes Thumshirn's
-        message of "Wed, 19 Jul 2017 09:03:35 +0200")
+Content-Disposition: inline
+In-Reply-To: <ufazic0974h.fsf@epithumia.math.uh.edu>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
+To: Jason L Tibbitts III <tibbs@math.uh.edu>, Doug Gilbert <dgilbert@interlog.com>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dvyukov@google.com, hare@suse.com, hch@lst.de, martin.petersen@oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "JT" == Johannes Thumshirn <jthumshirn@suse.de> writes:
+On Wed, Jul 19, 2017 at 03:13:34AM -0500, Jason L Tibbitts III wrote:
+> [   46.304530] sg_is_valid_dxfer: dxfer_direction: -2, dxfer_len: 0
 
-JT> Can you please apply this debugging patch, so I can see what's going
-JT> on.
+Ahh now I see the -2 (SG_DXFER_TO_DEV) is the crucial point here. It is 0 in
+your case.
 
-Sure, no problem.
+This would "fix" it but I'm not generally sure it is _the_ solution:
 
-I generally run "mtx -f /dev/sg7 status" first just to make sure the
-library is there; this has always worked as expected.  With the debug
-patch applied, this is sent to the console:
-[   33.933422] sg_is_valid_dxfer: dxfer_direction: -3, dxfer_len: 56
-[   33.940526] sg_is_valid_dxfer: dxfer_direction: -3, dxfer_len: 136
-[   33.982429] sg_is_valid_dxfer: dxfer_direction: -3, dxfer_len: 4240
-[   34.569986] sg_is_valid_dxfer: dxfer_direction: -3, dxfer_len: 4240
-[   34.623898] sg_is_valid_dxfer: dxfer_direction: -3, dxfer_len: 4240
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 1e82d4128a84..b421ec81d775 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -764,7 +764,7 @@ static bool sg_is_valid_dxfer(sg_io_hdr_t *hp)
+ 		return true;
+ 	case SG_DXFER_TO_DEV:
+ 	case SG_DXFER_TO_FROM_DEV:
+-		if (!hp->dxferp || hp->dxfer_len == 0)
++		if (!hp->dxferp)
+ 			return false;
+ 		return true;
+ 	case SG_DXFER_UNKNOWN:
 
-Then running "mtx -f /dev/sg7 next 0" gives this as stdout/err:
+Doug, what are the rules for SG_DXFER_TO_{FROM_}DEV? Apparently we can't
+be sure len > 0, can we rely on dxferp being present?
 
-Unloading drive 0 into Storage Element 46...mtx: Request Sense: Long
-Report=yes
-mtx: Request Sense: Valid Residual=no
-mtx: Request Sense: Error Code=0 (Unknown?!)
-mtx: Request Sense: Sense Key=No Sense
-mtx: Request Sense: FileMark=no
-mtx: Request Sense: EOM=no
-mtx: Request Sense: ILI=no
-mtx: Request Sense: Additional Sense Code = 00
-mtx: Request Sense: Additional Sense Qualifier = 00
-mtx: Request Sense: BPV=no
-mtx: Request Sense: Error in CDB=no
-mtx: Request Sense: SKSV=no
-MOVE MEDIUM from Element Address 1 to 1046 Failed
-
-And this to the console:
-[   45.552524] sg_is_valid_dxfer: dxfer_direction: -3, dxfer_len: 56
-[   45.559626] sg_is_valid_dxfer: dxfer_direction: -3, dxfer_len: 136
-[   45.603544] sg_is_valid_dxfer: dxfer_direction: -3, dxfer_len: 4240
-[   46.204614] sg_is_valid_dxfer: dxfer_direction: -3, dxfer_len: 4240
-[   46.258463] sg_is_valid_dxfer: dxfer_direction: -3, dxfer_len: 4240
-[   46.304530] sg_is_valid_dxfer: dxfer_direction: -2, dxfer_len: 0
-
-Would you also want to see the output from that patch applied to a
-functioning kernel?
-
- - J<
+Thanks,
+	Johannes
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
