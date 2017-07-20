@@ -1,80 +1,26 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [PATCH] scsi: mpt3sas_scsih: remove unnecessary statics
-Date: Wed, 19 Jul 2017 17:07:43 -0700
-Message-ID: <1500509263.3701.39.camel@linux.vnet.ibm.com>
-References: <20170719220636.GA8136@embeddedgus>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH] SCSI: remove DRIVER_ATTR() usage
+Date: Thu, 20 Jul 2017 02:20:02 +0000
+Message-ID: <1500517200.4629.0.camel@wdc.com>
+References: <20170719125006.GA17776@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170719220636.GA8136@embeddedgus>
+In-Reply-To: <20170719125006.GA17776@kroah.com>
+Content-Language: en-US
+Content-ID: <6183273B35ABEF4B968E12F7787EE9C3@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "osst@riede.org" <osst@riede.org>, "sumit.saxena@broadcom.com" <sumit.saxena@broadcom.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "shivasharan.srikanteshwara@broadcom.com" <shivasharan.srikanteshwara@broadcom.com>, "kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2017-07-19 at 17:06 -0500, Gustavo A. R. Silva wrote:
-> Remove unnecessary static on local variables raid_device.
-> Such variables are initialized before being used, on
-> every execution path throughout the functions. The
-> static has no benefit and, removing it reduces the
-> object file size.
-> 
-> This issue was detected using Coccinelle and the following semantic
-> patch:
-> 
-> @bad exists@
-> position p;
-> identifier x;
-> type T;
-> @@
-> 
-> static T x@p;
-> ...
-> x = <+...x...+>
-> 
-> @@
-> identifier x;
-> expression e;
-> type T;
-> position p != bad.p;
-> @@
-> 
-> -static
->  T x@p;
->  ... when != x
->      when strict
-> ?x = e;
-> 
-> In the following log you can see a significant difference in the
-> object file size. This log is the output of the size command, before
-> and after the code change:
-> 
-> before:
->    text    data     bss     dec     hex filename
->  126304   30384    1280  157968   26910
-> drivers/scsi/mpt3sas/mpt3sas_scsih.o
-> 
-> after:
->    text    data     bss     dec     hex filename
->  126292   30240    1152  157684   267f4
-> drivers/scsi/mpt3sas/mpt3sas_scsih.o
-
-I've got to say I'm deeply uneasy about using a data/bss size reduction
-as the benchmark for saying something shouldn't be declared static.  In
-this particular case the reduction is minimal, so it probably doesn't
-matter; however, if the reduction were more significant, changing from
-static to dynamic (i.e. on stack) allocation would increase the risk
-that we'd blow the kernel stack.  Indeed one reason you might find
-static declarations in functions is precisely to avoid blowing the
-stack, so we wouldn't want to reverse them.
-
-Other reasons for having static allocations instead of dynamic ones is
-that you need to DMA to/from the structure (you can't DMA to stack) or
-because you want to preserve values across function invocations.
-
-There are definite reasons why statics in functions are a bad idea:
-they prevent recursion and trip up code analysis, but in none of the
-above cases would the fix be to remove the static qualifier.
-
-James
+T24gV2VkLCAyMDE3LTA3LTE5IGF0IDE0OjUwICswMjAwLCBHcmVnIEtIIHdyb3RlOg0KPiBGcm9t
+OiBHcmVnIEtyb2FoLUhhcnRtYW4gPGdyZWdraEBsaW51eGZvdW5kYXRpb24ub3JnPg0KPiANCj4g
+SXQncyBiZXR0ZXIgdG8gdXNlIHRoZSBEUklWRVJfQVRUUl9SVygpIGFuZCBEUklWRVJfQVRUUl9S
+TygpIG1hY3JvcyB0bw0KPiBleHBsaWNpdGx5IHNob3cgdGhhdCB0aGlzIGlzIGEgcmVhZC93cml0
+ZSBvciByZWFkL29ubHkgc3lzZnMgZmlsZS4gIFNvDQo+IGNvbnZlcnQgdGhlIHJlbWFpbmluZyBT
+Q1NJIGRyaXZlcnMgdGhhdCB1c2UgdGhlIG9sZCBzdHlsZSB0byB1c2UgdGhlDQo+IG5ld2VyIG1h
+Y3Jvcy4NCj4gDQo+IEJvbnVzIGlzIHRoYXQgdGhpcyByZW1vdmVzIHNvbWUgY2hlY2twYXRjaC5w
+bCB3YXJuaW5ncyA6KQ0KDQpSZXZpZXdlZC1ieTogQmFydCBWYW4gQXNzY2hlIDxiYXJ0LnZhbmFz
+c2NoZUB3ZGMuY29tPg==
