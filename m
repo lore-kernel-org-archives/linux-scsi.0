@@ -1,90 +1,45 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [BUG] lockdep splat with cpu_hotplug_lock
-Date: Thu, 20 Jul 2017 16:48:46 -0700
-Message-ID: <1500594526.3568.44.camel@HansenPartnership.com>
-References: <20170720193501.4f09499f@gandalf.local.home>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: Potentially invalid memory accesses
+ drivers/message/fusion/mptbase.c
+Date: Thu, 20 Jul 2017 23:53:36 +0000
+Message-ID: <1500594815.3181.6.camel@wdc.com>
+References: <57b678ad0883a4eb902e47910a360c5c@cs.utah.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170720193501.4f09499f@gandalf.local.home>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Steven Rostedt <rostedt@goodmis.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>, QLogic-Storage-Upstream@qlogic.com, martin.petersen@oracle.com
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:16754 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964948AbdGTXy0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2017 19:54:26 -0400
+In-Reply-To: <57b678ad0883a4eb902e47910a360c5c@cs.utah.edu>
+Content-Language: en-US
+Content-ID: <42E0403BE1BA314E8E542819DD7B2197@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "DL-MPTFusionLinux@lsi.com" <DL-MPTFusionLinux@lsi.com>, "shaobo@cs.utah.edu" <shaobo@cs.utah.edu>, "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>
+Cc: "kashyap.desai@lsi.com" <kashyap.desai@lsi.com>
 
-[redirecting to linux-scsi]
-On Thu, 2017-07-20 at 19:35 -0400, Steven Rostedt wrote:
-> My tests triggered this splat on 4.13-rc1:
-> 
-> Loading iSCSI transport class v2.0-870.
-> QLogic NetXtreme II iSCSI Driver bnx2i v2.7.10.1 (Jul 16, 2014)
-> iscsi: registered transport (bnx2i)
-> 
-> ============================================
-> WARNING: possible recursive locking detected
-> 4.13.0-rc1-test+ #2 Not tainted
-> --------------------------------------------
-> swapper/0/1 is trying to acquire lock:
->  (cpu_hotplug_lock.rw_sem){++++++}, at: [<ffffffffb505329e>]
-> __cpuhp_setup_state+0x28/0x59
-> 
-> but task is already holding lock:
->  (cpu_hotplug_lock.rw_sem){++++++}, at: [<ffffffffb64d54e9>]
-> bnx2i_mod_init+0x134/0x209
-> 
-> other info that might help us debug this:
->  Possible unsafe locking scenario:
-> 
->        CPU0
->        ----
->   lock(cpu_hotplug_lock.rw_sem);
->   lock(cpu_hotplug_lock.rw_sem);
-> 
->  *** DEADLOCK ***
-> 
->  May be due to missing lock nesting notation
-> 
-> 1 lock held by swapper/0/1:
->  #0:  (cpu_hotplug_lock.rw_sem){++++++}, at: [<ffffffffb64d54e9>]
-> bnx2i_mod_init+0x134/0x209
-> 
-> stack backtrace:
-> CPU: 2 PID: 1 Comm: swapper/0 Not tainted 4.13.0-rc1-test+ #2
-> Hardware name: MSI MS-7823/CSM-H87M-G43 (MS-7823), BIOS V1.6
-> 02/22/2014
-> Call Trace:
->  dump_stack+0x68/0x92
->  __lock_acquire+0x84b/0xebb
->  ? __lock_is_held+0x47/0x7a
->  ? mark_held_locks+0x5e/0x74
->  ? _raw_spin_unlock_irqrestore+0x40/0x47
->  lock_acquire+0x108/0x19c
->  ? lock_acquire+0x108/0x19c
->  ? __cpuhp_setup_state+0x28/0x59
->  cpus_read_lock+0x2f/0x5f
->  ? __cpuhp_setup_state+0x28/0x59
->  __cpuhp_setup_state+0x28/0x59
->  ? bnx2i_percpu_thread_create+0x79/0x79
->  bnx2i_mod_init+0x17a/0x209
->  ? iscsi_transport_init+0x1c1/0x1c1
->  ? set_debug_rodata+0x17/0x17
->  do_one_initcall+0x90/0x131
->  ? set_debug_rodata+0x17/0x17
->  kernel_init_freeable+0x1e5/0x26d
->  ? rest_init+0xd8/0xd8
->  kernel_init+0xe/0xfa
->  ret_from_fork+0x27/0x40
-> ahci 0000:00:1f.2: version 3.0
-> ahci 0000:00:1f.2: AHCI 0001.0300 32 slots 6 ports 6 Gbps 0x3 impl
-> SATA mode
-> ahci 0000:00:1f.2: flags: 64bit ncq led clo pio slum part ems apst
-> scsi host0: ahci
-> 
-> I'd let the powers that be figure it out.
+On Thu, 2017-07-20 at 17:28 -0600, Shaobo wrote:
+> My name is Shaobo He and I am a graduate student at University of Utah.=20
+> I am using a static analysis tool to search for null pointer=20
+> dereferences and came across a couple of potentially invalid memory=20
+> accesses in the file drivers/message/fusion/mptbase.c: in function=20
+> `mpt_turbo_reply`, variable `mf` is initialized to NULL. If the case=20
+> `MPI_CONTEXT_REPLY_TYPE_SCSI_TARGET` is taken, then `mf` is not updated=20
+> to a non-NULL value and then may get dereferenced in function=20
+> `mpt_free_msg_frame`. However, there are a couple of conditions that can=
+=20
+> make the error path infeasible. I was wondering if you could confirm=20
+> this.
 
-It sounds like it's an annotation issue not an actual problem.  I've
-added the correct list, so hopefully our usual enthusiasts can take a
-look.
+Hello Shaobo,
 
-James
+Which static analysis tool are you using? Is it less or more powerful than
+Coverity? If it is not more powerful, are you aware that a full Coverity
+scan of the Linux kernel source code is already available at
+https://scan.coverity.com/projects/linux? The issue you reported was first
+detected by Coverity on February 24th, 2006 (more than ten years ago). In
+the aforementioned database Coverity assigned ID 100124 to that issue.
+
+Bart.=
