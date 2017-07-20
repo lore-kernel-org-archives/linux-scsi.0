@@ -1,27 +1,26 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 1/7] qla2xxx: Cleanup NVMe code.
-Date: Thu, 20 Jul 2017 08:44:02 +0200
-Message-ID: <20170720064402.GC5240@linux-x5ow.site>
+Subject: Re: [PATCH 2/7] qla2xxx: Move function prototype to correct header
+Date: Thu, 20 Jul 2017 08:49:06 +0200
+Message-ID: <20170720064906.GD5240@linux-x5ow.site>
 References: <20170719185151.8564-1-himanshu.madhani@cavium.com>
- <20170719185151.8564-2-himanshu.madhani@cavium.com>
+ <20170719185151.8564-3-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33663 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:34283 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932982AbdGTGoM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 20 Jul 2017 02:44:12 -0400
+        id S1750743AbdGTGtH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 20 Jul 2017 02:49:07 -0400
 Content-Disposition: inline
-In-Reply-To: <20170719185151.8564-2-himanshu.madhani@cavium.com>
+In-Reply-To: <20170719185151.8564-3-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Himanshu Madhani <himanshu.madhani@cavium.com>
 Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
-With an updated changelog,
+Thanks Himanshu,
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-
 -- 
 Johannes Thumshirn                                          Storage
 jthumshirn@suse.de                                +49 911 74053 689
