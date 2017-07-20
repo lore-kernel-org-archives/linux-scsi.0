@@ -1,93 +1,80 @@
-From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH] scsi: Add helper functions to set target ID
-Date: Thu, 20 Jul 2017 02:44:27 -0700
-Message-ID: <150054386781.12890.7252889519285948439.stgit@rslab209.pmc-sierra.bc.ca>
+From: James Bottomley <jejb@linux.vnet.ibm.com>
+Subject: Re: [PATCH] scsi: mpt3sas_scsih: remove unnecessary statics
+Date: Wed, 19 Jul 2017 17:07:43 -0700
+Message-ID: <1500509263.3701.39.camel@linux.vnet.ibm.com>
+References: <20170719220636.GA8136@embeddedgus>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0049.outbound.protection.outlook.com ([104.47.32.49]:48283
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932320AbdGSX1y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 19 Jul 2017 19:27:54 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170719220636.GA8136@embeddedgus>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com
-Cc: Gana.Sridaran@microsemi.com, David.Carroll@mcirosemi.com
 
-This patch adds 3 helper functions to set the initial target id, expander
-id and port id numbers.
+On Wed, 2017-07-19 at 17:06 -0500, Gustavo A. R. Silva wrote:
+> Remove unnecessary static on local variables raid_device.
+> Such variables are initialized before being used, on
+> every execution path throughout the functions. The
+> static has no benefit and, removing it reduces the
+> object file size.
+> 
+> This issue was detected using Coccinelle and the following semantic
+> patch:
+> 
+> @bad exists@
+> position p;
+> identifier x;
+> type T;
+> @@
+> 
+> static T x@p;
+> ...
+> x = <+...x...+>
+> 
+> @@
+> identifier x;
+> expression e;
+> type T;
+> position p != bad.p;
+> @@
+> 
+> -static
+>  T x@p;
+>  ... when != x
+>      when strict
+> ?x = e;
+> 
+> In the following log you can see a significant difference in the
+> object file size. This log is the output of the size command, before
+> and after the code change:
+> 
+> before:
+>    text    data     bss     dec     hex filename
+>  126304   30384    1280  157968   26910
+> drivers/scsi/mpt3sas/mpt3sas_scsih.o
+> 
+> after:
+>    text    data     bss     dec     hex filename
+>  126292   30240    1152  157684   267f4
+> drivers/scsi/mpt3sas/mpt3sas_scsih.o
 
-The ARC/HBA1000 product line  exposes RAID drives on bus number 0 and
-sas transport HBA drives use bus 0 as well. We wanted to differentiate
-between the RAID and HBA targets when the adapter in mixed mode (both RAID
-and HBA are exposed). Since the number of RAID drives we support is
-limited to 64 we wanted to block the first 64 targets and then add the
-sas enabled HBA drives from target id 64.
+I've got to say I'm deeply uneasy about using a data/bss size reduction
+as the benchmark for saying something shouldn't be declared static.  In
+this particular case the reduction is minimal, so it probably doesn't
+matter; however, if the reduction were more significant, changing from
+static to dynamic (i.e. on stack) allocation would increase the risk
+that we'd blow the kernel stack.  Indeed one reason you might find
+static declarations in functions is precisely to avoid blowing the
+stack, so we wouldn't want to reverse them.
 
-Unfortunately the current sas transport implementation does not allow
-changing of the next_target_id value (used by rphy to add drives), since
-it is not exposed directly to the driver.
+Other reasons for having static allocations instead of dynamic ones is
+that you need to DMA to/from the structure (you can't DMA to stack) or
+because you want to preserve values across function invocations.
 
-One way around this is to add helper functions to explicitly set the
-next_target_id and others.
+There are definite reasons why statics in functions are a bad idea:
+they prevent recursion and trip up code analysis, but in none of the
+above cases would the fix be to remove the static qualifier.
 
-I still have to submit the sas transport aacraid support patches, but
-I wanted to send this out to get comments and any other changes if
-required.
-
-Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
----
- 0 files changed
-
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index 5006a656e16a..a6ef5520cb66 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -294,6 +294,31 @@ static void sas_bsg_remove(struct Scsi_Host *shost, struct sas_rphy *rphy)
- 	bsg_unregister_queue(q);
- }
- 
-+void sas_set_initial_target_id(struct Scsi_Host *shost, u32 target_id)
-+{
-+	struct sas_host_attrs *sas_host = to_sas_host_attrs(shost);
-+
-+	sas_host->next_target_id = target_id;
-+}
-+EXPORT_SYMBOL(sas_set_initial_target_id);
-+
-+void sas_set_initial_expander_id(struct Scsi_Host *shost, u32 expander_id)
-+{
-+	struct sas_host_attrs *sas_host = to_sas_host_attrs(shost);
-+
-+	sas_host->next_expander_id = expander_id;
-+}
-+EXPORT_SYMBOL(sas_set_initial_expander_id);
-+
-+void sas_set_initial_port_id(struct Scsi_Host *shost, u32 port_id)
-+{
-+	struct sas_host_attrs *sas_host = to_sas_host_attrs(shost);
-+
-+	sas_host->next_port_id = port_id;
-+}
-+EXPORT_SYMBOL(sas_set_initial_port_id);
-+
-+
- /*
-  * SAS host attributes
-  */
-diff --git a/include/scsi/scsi_transport_sas.h b/include/scsi/scsi_transport_sas.h
-index 73d870918939..6917eee7bc24 100644
---- a/include/scsi/scsi_transport_sas.h
-+++ b/include/scsi/scsi_transport_sas.h
-@@ -179,6 +179,9 @@ struct sas_function_template {
- 	int (*smp_handler)(struct Scsi_Host *, struct sas_rphy *, struct request *);
- };
- 
-+void sas_set_initial_target_id(struct Scsi_Host *shost, u32 target_id);
-+void sas_set_initial_expander_id(struct Scsi_Host *shost, u32 expander_id);
-+void sas_set_initial_port_id(struct Scsi_Host *shost, u32 port_id);
- 
- void sas_remove_children(struct device *);
- extern void sas_remove_host(struct Scsi_Host *);
+James
