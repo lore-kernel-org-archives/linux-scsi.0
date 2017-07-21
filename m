@@ -1,40 +1,92 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] scsi: qedi: select CONFIG_ISCSI_BOOT_SYSFS
-Date: Fri, 21 Jul 2017 18:11:25 +0200
-Message-ID: <20170721161139.3330251-1-arnd@arndb.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: QLogic-Storage-Upstream@cavium.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Saurav Kashyap <saurav.kashyap@cavium.com>, Manish Rangankar <manish.rangankar@cavium.com>, Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH 5/7] qla2xxx: Simpify unregistration of FC-NVMe
+ local/remote ports
+Date: Fri, 21 Jul 2017 16:25:40 +0000
+Message-ID: <6C9E765B-533C-487E-A8B1-D9151D6F52C5@cavium.com>
+References: <20170719185151.8564-1-himanshu.madhani@cavium.com>
+ <20170719185151.8564-6-himanshu.madhani@cavium.com>
+ <20170720070308.GF5240@linux-x5ow.site>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam01on0045.outbound.protection.outlook.com ([104.47.32.45]:41408
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752098AbdGUQZq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 21 Jul 2017 12:25:46 -0400
+In-Reply-To: <20170720070308.GF5240@linux-x5ow.site>
+Content-Language: en-US
+Content-ID: <5437A936B996E24AA521963D9A1C8686@namprd07.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Without the base library support, we get a link failure
+Hi Johannes,=20
 
-drivers/scsi/qedi/qedi_main.o: In function `__qedi_probe.constprop.0':
-qedi_main.c:(.text+0x2d8e): undefined reference to `iscsi_boot_create_target'
-qedi_main.c:(.text+0x2dee): undefined reference to `iscsi_boot_create_initiator'
-qedi_main.c:(.text+0x2e1c): undefined reference to `iscsi_boot_create_ethernet'
+> On Jul 20, 2017, at 12:03 AM, Johannes Thumshirn <jthumshirn@suse.de> wro=
+te:
+>=20
+> On Wed, Jul 19, 2017 at 11:51:49AM -0700, Himanshu Madhani wrote:
+>> -static void qla_nvme_abort_all(fc_port_t *fcport)
+>> -{
+>> -	int que, cnt;
+>> -	unsigned long flags;
+>> -	srb_t *sp;
+>> -	struct qla_hw_data *ha =3D fcport->vha->hw;
+>> -	struct req_que *req;
+>> -
+>> -	spin_lock_irqsave(&ha->hardware_lock, flags);
+>> -	for (que =3D 0; que < ha->max_req_queues; que++) {
+>> -		req =3D ha->req_q_map[que];
+>> -		if (!req)
+>> -			continue;
+>> -		if (!req->outstanding_cmds)
+>> -			continue;
+>> -		for (cnt =3D 1; cnt < req->num_outstanding_cmds; cnt++) {
+>> -			sp =3D req->outstanding_cmds[cnt];
+>> -			if ((sp) && ((sp->type =3D=3D SRB_NVME_CMD) ||
+>> -			    (sp->type =3D=3D SRB_NVME_LS)) &&
+>> -				(sp->fcport =3D=3D fcport)) {
+>> -				atomic_inc(&sp->ref_count);
+>> -				spin_unlock_irqrestore(&ha->hardware_lock,
+>> -				    flags);
+>> -				qla_nvme_abort(ha, sp);
+>> -				spin_lock_irqsave(&ha->hardware_lock, flags);
+>> -				req->outstanding_cmds[cnt] =3D NULL;
+>> -				sp->done(sp, 1);
+>> -			}
+>> -		}
+>> -	}
+>> -	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+>> -}
+>> -
+>> static void qla_nvme_unregister_remote_port(struct work_struct *work)
+>> {
+>> 	struct fc_port *fcport =3D container_of(work, struct fc_port,
+>> @@ -719,12 +679,13 @@ void qla_nvme_delete(struct scsi_qla_host *vha)
+>> 		ql_log(ql_log_info, fcport->vha, 0x2114, "%s: fcport=3D%p\n",
+>> 		    __func__, fcport);
+>>=20
+>> +		init_completion(&fcport->nvme_del_done);
+>> 		nvme_fc_unregister_remoteport(fcport->nvme_remote_port);
+>> 		qla_nvme_wait_on_rport_del(fcport);
+>> -		qla_nvme_abort_all(fcport);
+>=20
+> What changed the need to abort all outstanding commands?
+>=20
 
-This selects the Kconfig symbol like the other two users of that
-module do.
+FC NVMe transport now handles _abort_ so we do not need to call qla_nvme_ab=
+ort_all()
 
-Fixes: c57ec8fb7c02 ("scsi: qedi: Add support for Boot from SAN over iSCSI offload")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/scsi/qedi/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+> --=20
+> Johannes Thumshirn                                          Storage
+> jthumshirn@suse.de                                +49 911 74053 689
+> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+> GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
+> HRB 21284 (AG N=FCrnberg)
+> Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
 
-diff --git a/drivers/scsi/qedi/Kconfig b/drivers/scsi/qedi/Kconfig
-index 21331453db7b..8deb8723c4dd 100644
---- a/drivers/scsi/qedi/Kconfig
-+++ b/drivers/scsi/qedi/Kconfig
-@@ -2,6 +2,7 @@ config QEDI
- 	tristate "QLogic QEDI 25/40/100Gb iSCSI Initiator Driver Support"
- 	depends on PCI && SCSI && UIO
- 	depends on QED
-+	select ISCSI_BOOT_SYSFS
- 	select SCSI_ISCSI_ATTRS
- 	select QED_LL2
- 	select QED_ISCSI
--- 
-2.9.0
+Thanks,
+- Himanshu
