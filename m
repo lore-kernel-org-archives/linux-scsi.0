@@ -1,65 +1,30 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [REGRESSION] 28676d869bbb (scsi: sg: check for valid direction
- before starting the request) breaks mtx tape library control
-Date: Fri, 21 Jul 2017 18:43:43 +0200
-Message-ID: <20170721164343.GA4086@linux-x5ow.site>
-References: <ufafudubmkd.fsf@epithumia.math.uh.edu>
- <20170718073747.GD4875@linux-x5ow.site>
- <ufak235abug.fsf@epithumia.math.uh.edu>
- <20170719070335.GC4151@linux-x5ow.site>
- <ufazic0974h.fsf@epithumia.math.uh.edu>
- <20170719083654.GE4151@linux-x5ow.site>
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+Subject: Re: [PATCH] aic7xxx: fix firmware build with O=path
+Date: Fri, 21 Jul 2017 11:51:52 -0700
+Message-ID: <20170721115152.352ce0c9@cakuba.netronome.com>
+References: <20170719015834.19397-1-jakub.kicinski@netronome.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170719083654.GE4151@linux-x5ow.site>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jason L Tibbitts III <tibbs@math.uh.edu>, Doug Gilbert <dgilbert@interlog.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dvyukov@google.com, hare@suse.com, hch@lst.de, martin.petersen@oracle.com, jth@kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pf0-f180.google.com ([209.85.192.180]:34438 "EHLO
+        mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751504AbdGUSvz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Jul 2017 14:51:55 -0400
+Received: by mail-pf0-f180.google.com with SMTP id q85so27055883pfq.1
+        for <linux-scsi@vger.kernel.org>; Fri, 21 Jul 2017 11:51:55 -0700 (PDT)
+In-Reply-To: <20170719015834.19397-1-jakub.kicinski@netronome.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
-Doug,
-
-On Wed, Jul 19, 2017 at 10:36:54AM +0200, Johannes Thumshirn wrote:
-> On Wed, Jul 19, 2017 at 03:13:34AM -0500, Jason L Tibbitts III wrote:
-> > [   46.304530] sg_is_valid_dxfer: dxfer_direction: -2, dxfer_len: 0
+On Tue, 18 Jul 2017 18:58:34 -0700, Jakub Kicinski wrote:
+> Building firmware with O=path was apparently broken in aic7 for ever.
+> Message of the previous commit to the Makefile (from 2008) mentions
+> this unfortunate state of affairs already.  Fix this, mostly to make
+> randconfig builds more reliable.
 > 
-> Ahh now I see the -2 (SG_DXFER_TO_DEV) is the crucial point here. It is 0 in
-> your case.
-> 
-> This would "fix" it but I'm not generally sure it is _the_ solution:
-> 
-> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> index 1e82d4128a84..b421ec81d775 100644
-> --- a/drivers/scsi/sg.c
-> +++ b/drivers/scsi/sg.c
-> @@ -764,7 +764,7 @@ static bool sg_is_valid_dxfer(sg_io_hdr_t *hp)
->  		return true;
->  	case SG_DXFER_TO_DEV:
->  	case SG_DXFER_TO_FROM_DEV:
-> -		if (!hp->dxferp || hp->dxfer_len == 0)
-> +		if (!hp->dxferp)
->  			return false;
->  		return true;
->  	case SG_DXFER_UNKNOWN:
-> 
-> Doug, what are the rules for SG_DXFER_TO_{FROM_}DEV? Apparently we can't
-> be sure len > 0, can we rely on dxferp being present?
+> Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
 
-Any comments on this?
-
-Jason, can you try the above? If it works and Doug doesn't respond, I'm
-inclined yo submit this band aid.
-
-Thanks,
-	Johannes
-
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Gentle ping :)  Hannes, are you still maintaining aic7xxx?
