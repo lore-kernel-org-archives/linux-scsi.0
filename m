@@ -1,51 +1,49 @@
-From: Jason L Tibbitts III <tibbs@math.uh.edu>
-Subject: Re: [REGRESSION] 28676d869bbb (scsi: sg: check for valid direction before starting the request) breaks mtx tape library control
-Date: Fri, 21 Jul 2017 14:23:16 -0500
-Message-ID: <ufa7ez18uhn.fsf@epithumia.math.uh.edu>
-References: <ufafudubmkd.fsf@epithumia.math.uh.edu>
-        <20170718073747.GD4875@linux-x5ow.site>
-        <ufak235abug.fsf@epithumia.math.uh.edu>
-        <20170719070335.GC4151@linux-x5ow.site>
-        <ufazic0974h.fsf@epithumia.math.uh.edu>
-        <20170719083654.GE4151@linux-x5ow.site>
-        <20170721164343.GA4086@linux-x5ow.site>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170721164343.GA4086@linux-x5ow.site> (Johannes Thumshirn's
-        message of "Fri, 21 Jul 2017 18:43:43 +0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Doug Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dvyukov@google.com, hare@suse.com, hch@lst.de, martin.petersen@oracle.com, jth@kernel.org
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH, RESEND] scsi: lpfc: fix linking against modular NVMe support
+Date: Fri, 21 Jul 2017 22:53:46 +0200
+Message-ID: <20170721205401.3374331-1-arnd@arndb.de>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, stable@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Finn Thain <fthain@telegraphics.com.au>, Johannes Thumshirn <jthumshirn@suse.de>, James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "JT" == Johannes Thumshirn <jthumshirn@suse.de> writes:
+When LPFC is built-in but NVMe is a loadable module, we fail to
+link the kernel:
 
-JT> Jason, can you try the above? If it works and Doug doesn't respond,
-JT> I'm inclined yo submit this band aid.
+drivers/scsi/built-in.o: In function `lpfc_nvme_create_localport':
+(.text+0x156a82): undefined reference to `nvme_fc_register_localport'
+drivers/scsi/built-in.o: In function `lpfc_nvme_destroy_localport':
+(.text+0x156eaa): undefined reference to `nvme_fc_unregister_remoteport'
 
-Unfortunately it doesn't appear to work for me.  Maybe I'm building the
-wrong thing, though.  I checked out 4.12, cherry picked
-68c59fcea1f2c6a54c62aa896cc623c1b5bc9b47 and then applied your one liner
-on top of that.  There appears to be no change in behavior:
+We can avoid this either by forcing lpfc to be a module, or by disabling
+NVMe support in this case. This implements the former.
 
-[root@backup2 ~]# mtx -f /dev/sg7 next 0
-Unloading drive 0 into Storage Element 47...mtx: Request Sense: Long
-Report=yes
-mtx: Request Sense: Valid Residual=no
-mtx: Request Sense: Error Code=0 (Unknown?!)
-mtx: Request Sense: Sense Key=No Sense
-mtx: Request Sense: FileMark=no
-mtx: Request Sense: EOM=no
-mtx: Request Sense: ILI=no
-mtx: Request Sense: Additional Sense Code = 00
-mtx: Request Sense: Additional Sense Qualifier = 00
-mtx: Request Sense: BPV=no
-mtx: Request Sense: Error in CDB=no
-mtx: Request Sense: SKSV=no
-MOVE MEDIUM from Element Address 1 to 1047 Failed
+Fixes: 7d7080335f8d ("scsi: lpfc: Finalize Kconfig options for nvme")
+Cc: stable@vger.kernel.org
+Link: https://patchwork.kernel.org/patch/9636569/
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+I originally sent the patch in March 2013, the day after the broken
+patch made it into Linux-next. Unfortunately there was some
+misunderstanding about it (James Smart thought the broken patch
+was the correct version), and my fix never got merged.
+---
+ drivers/scsi/Kconfig | 2 ++
+ 1 file changed, 2 insertions(+)
 
-I can also apply the debugging patch and try again if that would give
-you more useful information.
-
- - J<
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index d384f4f86c26..f4538d7a3016 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -1230,6 +1230,8 @@ config SCSI_LPFC
+ 	tristate "Emulex LightPulse Fibre Channel Support"
+ 	depends on PCI && SCSI
+ 	depends on SCSI_FC_ATTRS
++	depends on NVME_TARGET_FC || NVME_TARGET_FC=n
++	depends on NVME_FC || NVME_FC=n
+ 	select CRC_T10DIF
+ 	---help---
+           This lpfc driver supports the Emulex LightPulse
+-- 
+2.9.0
