@@ -1,299 +1,198 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 3/6] qla2xxx: Added change to enable ZIO for FC-NVMe devices
-Date: Fri, 21 Jul 2017 09:32:25 -0700
-Message-ID: <20170721163228.32339-4-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 4/6] qla2xxx: Simpify unregistration of FC-NVMe local/remote ports
+Date: Fri, 21 Jul 2017 09:32:26 -0700
+Message-ID: <20170721163228.32339-5-himanshu.madhani@cavium.com>
 References: <20170721163228.32339-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0076.outbound.protection.outlook.com ([104.47.41.76]:53206
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+Received: from mail-bn3nam01on0069.outbound.protection.outlook.com ([104.47.33.69]:25872
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754465AbdGUQci (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 21 Jul 2017 12:32:38 -0400
+        id S1754487AbdGUQck (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 21 Jul 2017 12:32:40 -0400
 In-Reply-To: <20170721163228.32339-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Duane Grigsby <duane.grigsby@cavium.com>
-
-Add support to the driver to set the exchange threshold value for
-the number of outstanding AENs.
+Simplified waiting for unregister local/remote FC-NVMe ports
+to complete cleanup.
 
 Signed-off-by: Duane Grigsby <duane.grigsby@cavium.com>
 Signed-off-by: Darren Trapp <darren.trapp@cavium.com>
 Signed-off-by: Anil Gurumurthy <anil.gurumurthy@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_dbg.c  |  2 +-
- drivers/scsi/qla2xxx/qla_def.h  |  5 +++
- drivers/scsi/qla2xxx/qla_gbl.h  |  3 ++
- drivers/scsi/qla2xxx/qla_isr.c  |  2 +-
- drivers/scsi/qla2xxx/qla_mbx.c  | 71 +++++++++++++++++++++++++++++++++--------
- drivers/scsi/qla2xxx/qla_nvme.c | 14 ++++++--
- drivers/scsi/qla2xxx/qla_os.c   | 25 ++++++++++++---
- 7 files changed, 99 insertions(+), 23 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h  |  6 ++---
+ drivers/scsi/qla2xxx/qla_nvme.c | 59 +++++++----------------------------------
+ 2 files changed, 12 insertions(+), 53 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 26751d34bcf2..7b74973d5788 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -14,7 +14,7 @@
-  * | Module Init and Probe        |       0x0193       | 0x0146         |
-  * |                              |                    | 0x015b-0x0160	|
-  * |                              |                    | 0x016e		|
-- * | Mailbox commands             |       0x1199       | 0x1193		|
-+ * | Mailbox commands             |       0x1205       | 0x11a2-0x11ff	|
-  * | Device Discovery             |       0x2134       | 0x210e-0x2116  |
-  * |				  | 		       | 0x211a         |
-  * |                              |                    | 0x211c-0x2128  |
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 1635e98867aa..5ceb50161d89 100644
+index 5ceb50161d89..b3e3982a9db0 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -977,6 +977,7 @@ struct mbx_cmd_32 {
- #define MBC_ABORT_TARGET		0x17	/* Abort target (ID). */
- #define MBC_RESET			0x18	/* Reset. */
- #define MBC_GET_ADAPTER_LOOP_ID		0x20	/* Get loop id of ISP2200. */
-+#define MBC_GET_SET_ZIO_THRESHOLD	0x21	/* Get/SET ZIO THRESHOLD. */
- #define MBC_GET_RETRY_COUNT		0x22	/* Get f/w retry cnt/delay. */
- #define MBC_DISABLE_VI			0x24	/* Disable VI operation. */
- #define MBC_ENABLE_VI			0x25	/* Enable VI operation. */
-@@ -4017,6 +4018,9 @@ struct qla_hw_data {
+@@ -2302,8 +2302,7 @@ typedef struct fc_port {
+ 	unsigned int login_succ:1;
  
- 	struct qlt_hw_data tgt;
- 	int	allow_cna_fw_dump;
-+
-+	atomic_t        nvme_active_aen_cnt;
-+	uint16_t        nvme_last_rptd_aen;             /* Last recorded aen count */
- };
+ 	struct work_struct nvme_del_work;
+-	atomic_t nvme_ref_count;
+-	wait_queue_head_t nvme_waitq;
++	struct completion nvme_del_done;
+ 	uint32_t nvme_prli_service_param;
+ #define NVME_PRLI_SP_CONF       BIT_7
+ #define NVME_PRLI_SP_INITIATOR  BIT_5
+@@ -4134,8 +4133,7 @@ typedef struct scsi_qla_host {
+ 	uint8_t		fabric_node_name[WWN_SIZE];
  
- /*
-@@ -4089,6 +4093,7 @@ typedef struct scsi_qla_host {
- #define FX00_CRITEMP_RECOVERY	25
- #define FX00_HOST_INFO_RESEND	26
- #define QPAIR_ONLINE_CHECK_NEEDED	27
-+#define SET_ZIO_THRESHOLD_NEEDED	28
- 
- 	unsigned long	pci_flags;
- #define PFLG_DISCONNECTED	0	/* PCI device removed */
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index 659cdf592678..97dcabc790c9 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -484,6 +484,9 @@ int qla24xx_gidlist_wait(struct scsi_qla_host *, void *, dma_addr_t,
- int __qla24xx_parse_gpdb(struct scsi_qla_host *, fc_port_t *,
- 	struct port_database_24xx *);
- 
-+extern int qla27xx_get_zio_threshold(scsi_qla_host_t *, uint16_t *);
-+extern int qla27xx_set_zio_threshold(scsi_qla_host_t *, uint16_t);
-+
- /*
-  * Global Function Prototypes in qla_isr.c source file.
-  */
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 9127eee67478..317fe6026856 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1823,7 +1823,7 @@ qla24xx_nvme_iocb_entry(scsi_qla_host_t *vha, struct req_que *req, void *tsk)
- 	nvme = &sp->u.iocb_cmd;
- 
- 	if (unlikely(nvme->u.nvme.aen_op))
--		atomic_dec(&sp->vha->nvme_active_aen_cnt);
-+		atomic_dec(&sp->vha->hw->nvme_active_aen_cnt);
- 
- 	/*
- 	 * State flags: Bit 6 and 0.
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 7c6d1a404011..28728c49d8df 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -947,20 +947,12 @@ qla2x00_get_fw_version(scsi_qla_host_t *vha)
- 			    "%s: Firmware supports Exchange Offload 0x%x\n",
- 			    __func__, ha->fw_attributes_h);
- 
--		/* bit 26 of fw_attributes */
--		if ((ha->fw_attributes_h & 0x400) && ql2xnvmeenable) {
--			struct init_cb_24xx *icb;
--
--			icb = (struct init_cb_24xx *)ha->init_cb;
--			/*
--			 * fw supports nvme and driver load
--			 * parameter requested nvme
--			 */
-+		/*
-+		 * FW supports nvme and driver load parameter requested nvme.
-+		 * BIT 26 of fw_attributes indicates NVMe support.
-+		 */
-+		if ((ha->fw_attributes_h & 0x400) && ql2xnvmeenable)
- 			vha->flags.nvme_enabled = 1;
--			icb->firmware_options_2 &= cpu_to_le32(~0xf);
--			ha->zio_mode = 0;
--			ha->zio_timer = 0;
--		}
- 
- 	}
- 
-@@ -6085,3 +6077,56 @@ int qla24xx_gidlist_wait(struct scsi_qla_host *vha,
- done:
- 	return rval;
- }
-+
-+int qla27xx_set_zio_threshold(scsi_qla_host_t *vha, uint16_t value)
-+{
-+	int rval;
-+	mbx_cmd_t	mc;
-+	mbx_cmd_t	*mcp = &mc;
-+
-+	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1200,
-+	    "Entered %s\n", __func__);
-+
-+	memset(mcp->mb, 0 , sizeof(mcp->mb));
-+	mcp->mb[0] = MBC_GET_SET_ZIO_THRESHOLD;
-+	mcp->mb[1] = cpu_to_le16(1);
-+	mcp->mb[2] = cpu_to_le16(value);
-+	mcp->out_mb = MBX_2 | MBX_1 | MBX_0;
-+	mcp->in_mb = MBX_2 | MBX_0;
-+	mcp->tov = MBX_TOV_SECONDS;
-+	mcp->flags = 0;
-+
-+	rval = qla2x00_mailbox_command(vha, mcp);
-+
-+	ql_dbg(ql_dbg_mbx, vha, 0x1201, "%s %x\n",
-+	    (rval != QLA_SUCCESS) ? "Failed"  : "Done", rval);
-+
-+	return rval;
-+}
-+
-+int qla27xx_get_zio_threshold(scsi_qla_host_t *vha, uint16_t *value)
-+{
-+	int rval;
-+	mbx_cmd_t	mc;
-+	mbx_cmd_t	*mcp = &mc;
-+
-+	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1203,
-+	    "Entered %s\n", __func__);
-+
-+	memset(mcp->mb, 0, sizeof(mcp->mb));
-+	mcp->mb[0] = MBC_GET_SET_ZIO_THRESHOLD;
-+	mcp->mb[1] = cpu_to_le16(0);
-+	mcp->out_mb = MBX_1 | MBX_0;
-+	mcp->in_mb = MBX_2 | MBX_0;
-+	mcp->tov = MBX_TOV_SECONDS;
-+	mcp->flags = 0;
-+
-+	rval = qla2x00_mailbox_command(vha, mcp);
-+	if (rval == QLA_SUCCESS)
-+		*value = mc.mb[2];
-+
-+	ql_dbg(ql_dbg_mbx, vha, 0x1205, "%s %x\n",
-+	    (rval != QLA_SUCCESS) ? "Failed" : "Done", rval);
-+
-+	return rval;
-+}
+ 	struct		nvme_fc_local_port *nvme_local_port;
+-	atomic_t	nvme_ref_count;
+-	wait_queue_head_t nvme_waitq;
++	struct completion nvme_del_done;
+ 	struct list_head nvme_rport_list;
+ 	atomic_t 	nvme_active_aen_cnt;
+ 	uint16_t	nvme_last_rptd_aen;
 diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
-index 11494f2f90b5..eecbe8bc4890 100644
+index eecbe8bc4890..6c5eebbbda4c 100644
 --- a/drivers/scsi/qla2xxx/qla_nvme.c
 +++ b/drivers/scsi/qla2xxx/qla_nvme.c
-@@ -305,6 +305,7 @@ static int qla2x00_start_nvme_mq(srb_t *sp)
- 	uint16_t	avail_dsds;
- 	uint32_t	*cur_dsd;
- 	struct req_que *req = NULL;
-+	struct rsp_que *rsp = NULL;
- 	struct scsi_qla_host *vha = sp->fcport->vha;
- 	struct qla_hw_data *ha = vha->hw;
- 	struct qla_qpair *qpair = sp->qpair;
-@@ -313,13 +314,15 @@ static int qla2x00_start_nvme_mq(srb_t *sp)
- 	struct nvmefc_fcp_req *fd = nvme->u.nvme.desc;
- 	uint32_t        rval = QLA_SUCCESS;
+@@ -75,8 +75,6 @@ int qla_nvme_register_remote(struct scsi_qla_host *vha, struct fc_port *fcport)
  
--	/* Setup qpair pointers */
--	req = qpair->req;
- 	tot_dsds = fd->sg_cnt;
+ 	fcport->nvme_remote_port->private = fcport;
+ 	fcport->nvme_flag |= NVME_FLAG_REGISTERED;
+-	atomic_set(&fcport->nvme_ref_count, 1);
+-	init_waitqueue_head(&fcport->nvme_waitq);
+ 	rport->fcport = fcport;
+ 	list_add_tail(&rport->list, &vha->nvme_rport_list);
+ 	return 0;
+@@ -233,7 +231,6 @@ static int qla_nvme_ls_req(struct nvme_fc_local_port *lport,
+ 	sp->name = "nvme_ls";
+ 	sp->done = qla_nvme_sp_ls_done;
+ 	atomic_set(&sp->ref_count, 1);
+-	init_waitqueue_head(&sp->nvme_ls_waitq);
+ 	nvme = &sp->u.iocb_cmd;
+ 	priv->sp = sp;
+ 	priv->fd = fd;
+@@ -540,12 +537,10 @@ static void qla_nvme_localport_delete(struct nvme_fc_local_port *lport)
+ {
+ 	struct scsi_qla_host *vha = lport->private;
  
- 	/* Acquire qpair specific lock */
- 	spin_lock_irqsave(&qpair->qp_lock, flags);
+-	atomic_dec(&vha->nvme_ref_count);
+-	wake_up_all(&vha->nvme_waitq);
+-
+ 	ql_log(ql_log_info, vha, 0x210f,
+ 	    "localport delete of %p completed.\n", vha->nvme_local_port);
+ 	vha->nvme_local_port = NULL;
++	complete(&vha->nvme_del_done);
+ }
  
-+	/* Setup qpair pointers */
-+	req = qpair->req;
-+	rsp = qpair->rsp;
-+
- 	/* Check for room in outstanding command list. */
- 	handle = req->current_outstanding_cmd;
- 	for (index = 1; index < req->num_outstanding_cmds; index++) {
-@@ -354,7 +357,7 @@ static int qla2x00_start_nvme_mq(srb_t *sp)
- 		struct nvme_fc_cmd_iu *cmd = fd->cmdaddr;
- 		if (cmd->sqe.common.opcode == nvme_admin_async_event) {
- 			nvme->u.nvme.aen_op = 1;
--			atomic_inc(&vha->nvme_active_aen_cnt);
-+			atomic_inc(&vha->hw->nvme_active_aen_cnt);
+ static void qla_nvme_remoteport_delete(struct nvme_fc_remote_port *rport)
+@@ -556,8 +551,6 @@ static void qla_nvme_remoteport_delete(struct nvme_fc_remote_port *rport)
+ 	fcport = rport->private;
+ 	fcport->nvme_remote_port = NULL;
+ 	fcport->nvme_flag &= ~NVME_FLAG_REGISTERED;
+-	atomic_dec(&fcport->nvme_ref_count);
+-	wake_up_all(&fcport->nvme_waitq);
+ 
+ 	list_for_each_entry_safe(r_port, trport,
+ 	    &fcport->vha->nvme_rport_list, list) {
+@@ -567,6 +560,7 @@ static void qla_nvme_remoteport_delete(struct nvme_fc_remote_port *rport)
  		}
  	}
+ 	kfree(r_port);
++	complete(&fcport->nvme_del_done);
  
-@@ -467,6 +470,11 @@ static int qla2x00_start_nvme_mq(srb_t *sp)
- 	/* Set chip new ring index. */
- 	WRT_REG_DWORD(req->req_q_in, req->ring_index);
+ 	ql_log(ql_log_info, fcport->vha, 0x2110,
+ 	    "remoteport_delete of %p completed.\n", fcport);
+@@ -609,12 +603,11 @@ static int qla_nvme_wait_on_command(srb_t *sp)
+ static int qla_nvme_wait_on_rport_del(fc_port_t *fcport)
+ {
+ 	int ret = QLA_SUCCESS;
++	int timeout;
  
-+	/* Manage unprocessed RIO/ZIO commands in response queue. */
-+	if (vha->flags.process_response_queue &&
-+	    rsp->ring_ptr->signature != RESPONSE_PROCESSED)
-+		qla24xx_process_response_queue(vha, rsp);
-+
- queuing_error:
- 	spin_unlock_irqrestore(&qpair->qp_lock, flags);
- 	return rval;
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 635ce75c630b..d9a115577dc8 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -2751,6 +2751,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	spin_lock_init(&ha->tgt.sess_lock);
- 	spin_lock_init(&ha->tgt.atio_lock);
+-	wait_event_timeout(fcport->nvme_waitq,
+-	    atomic_read(&fcport->nvme_ref_count),
+-	    NVME_ABORT_POLLING_PERIOD*HZ);
+-
+-	if (atomic_read(&fcport->nvme_ref_count)) {
++	timeout = wait_for_completion_timeout(&fcport->nvme_del_done,
++	    msecs_to_jiffies(2000));
++	if (!timeout) {
+ 		ret = QLA_FUNCTION_FAILED;
+ 		ql_log(ql_log_info, fcport->vha, 0x2111,
+ 		    "timed out waiting for fcport=%p to delete\n", fcport);
+@@ -633,39 +626,6 @@ void qla_nvme_abort(struct qla_hw_data *ha, struct srb *sp)
+ 		    "nvme_wait_on_comand timed out waiting on sp=%p\n", sp);
+ }
  
-+	atomic_set(&ha->nvme_active_aen_cnt, 0);
+-static void qla_nvme_abort_all(fc_port_t *fcport)
+-{
+-	int que, cnt;
+-	unsigned long flags;
+-	srb_t *sp;
+-	struct qla_hw_data *ha = fcport->vha->hw;
+-	struct req_que *req;
+-
+-	spin_lock_irqsave(&ha->hardware_lock, flags);
+-	for (que = 0; que < ha->max_req_queues; que++) {
+-		req = ha->req_q_map[que];
+-		if (!req)
+-			continue;
+-		if (!req->outstanding_cmds)
+-			continue;
+-		for (cnt = 1; cnt < req->num_outstanding_cmds; cnt++) {
+-			sp = req->outstanding_cmds[cnt];
+-			if ((sp) && ((sp->type == SRB_NVME_CMD) ||
+-			    (sp->type == SRB_NVME_LS)) &&
+-				(sp->fcport == fcport)) {
+-				atomic_inc(&sp->ref_count);
+-				spin_unlock_irqrestore(&ha->hardware_lock,
+-				    flags);
+-				qla_nvme_abort(ha, sp);
+-				spin_lock_irqsave(&ha->hardware_lock, flags);
+-				req->outstanding_cmds[cnt] = NULL;
+-				sp->done(sp, 1);
+-			}
+-		}
+-	}
+-	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+-}
+-
+ static void qla_nvme_unregister_remote_port(struct work_struct *work)
+ {
+ 	struct fc_port *fcport = container_of(work, struct fc_port,
+@@ -701,12 +661,13 @@ void qla_nvme_delete(struct scsi_qla_host *vha)
+ 		ql_log(ql_log_info, fcport->vha, 0x2114, "%s: fcport=%p\n",
+ 		    __func__, fcport);
  
- 	/* Clear our data area */
- 	ha->bars = bars;
-@@ -5828,6 +5829,17 @@ qla2x00_do_dpc(void *data)
- 			mutex_unlock(&ha->mq_lock);
- 		}
- 
-+		if (test_and_clear_bit(SET_ZIO_THRESHOLD_NEEDED, &base_vha->dpc_flags)) {
-+			ql_log(ql_log_info, base_vha, 0xffffff,
-+				"nvme: SET ZIO Activity exchange threshold to %d.\n",
-+						ha->nvme_last_rptd_aen);
-+			if (qla27xx_set_zio_threshold(base_vha, ha->nvme_last_rptd_aen)) {
-+				ql_log(ql_log_info, base_vha, 0xffffff,
-+					"nvme: Unable to SET ZIO Activity exchange threshold to %d.\n",
-+						ha->nvme_last_rptd_aen);
-+			}
-+		}
-+
- 		if (!IS_QLAFX00(ha))
- 			qla2x00_do_dpc_all_vps(base_vha);
- 
-@@ -6025,12 +6037,15 @@ qla2x00_timer(scsi_qla_host_t *vha)
- 	 * FC-NVME
- 	 * see if the active AEN count has changed from what was last reported.
- 	 */
--	if (atomic_read(&vha->nvme_active_aen_cnt) != vha->nvme_last_rptd_aen) {
--		vha->nvme_last_rptd_aen =
--		    atomic_read(&vha->nvme_active_aen_cnt);
-+	if (!vha->vp_idx &&
-+		atomic_read(&ha->nvme_active_aen_cnt) != ha->nvme_last_rptd_aen &&
-+		ha->zio_mode == QLA_ZIO_MODE_6) {
- 		ql_log(ql_log_info, vha, 0x3002,
--		    "reporting new aen count of %d to the fw\n",
--		    vha->nvme_last_rptd_aen);
-+			"nvme: Sched: Set ZIO exchange threshold to %d.\n",
-+			ha->nvme_last_rptd_aen);
-+		ha->nvme_last_rptd_aen = atomic_read(&ha->nvme_active_aen_cnt);
-+		set_bit(SET_ZIO_THRESHOLD_NEEDED, &vha->dpc_flags);
-+		start_dpc++;
++		init_completion(&fcport->nvme_del_done);
+ 		nvme_fc_unregister_remoteport(fcport->nvme_remote_port);
+ 		qla_nvme_wait_on_rport_del(fcport);
+-		qla_nvme_abort_all(fcport);
  	}
  
- 	/* Schedule the DPC routine if needed */
+ 	if (vha->nvme_local_port) {
++		init_completion(&vha->nvme_del_done);
+ 		nv_ret = nvme_fc_unregister_localport(vha->nvme_local_port);
+ 		if (nv_ret == 0)
+ 			ql_log(ql_log_info, vha, 0x2116,
+@@ -715,6 +676,8 @@ void qla_nvme_delete(struct scsi_qla_host *vha)
+ 		else
+ 			ql_log(ql_log_info, vha, 0x2115,
+ 			    "Unregister of localport failed\n");
++		wait_for_completion_timeout(&vha->nvme_del_done,
++		    msecs_to_jiffies(5000));
+ 	}
+ }
+ 
+@@ -755,7 +718,5 @@ void qla_nvme_register_hba(struct scsi_qla_host *vha)
+ 		    "register_localport failed: ret=%x\n", ret);
+ 		return;
+ 	}
+-	atomic_set(&vha->nvme_ref_count, 1);
+ 	vha->nvme_local_port->private = vha;
+-	init_waitqueue_head(&vha->nvme_waitq);
+ }
 -- 
 2.12.0
