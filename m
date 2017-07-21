@@ -1,63 +1,96 @@
-From: Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: [BUG] lockdep splat with cpu_hotplug_lock
-Date: Fri, 21 Jul 2017 11:42:05 +0200 (CEST)
-Message-ID: <alpine.DEB.2.20.1707211141170.2077@nanos>
-References: <20170720193501.4f09499f@gandalf.local.home> <1500594526.3568.44.camel@HansenPartnership.com>
-Mime-Version: 1.0
-Content-Type: multipart/mixed; BOUNDARY="8323329-1824905611-1500630127=:2077"
+From: shuwang@redhat.com
+Subject: [PATCH] scsi: megaraid_sas: fix memleak in megasas_alloc_cmdlist_fusion
+Date: Fri, 21 Jul 2017 18:54:09 +0800
+Message-ID: <1500634449-10837-1-git-send-email-shuwang@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1500594526.3568.44.camel@HansenPartnership.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Steven Rostedt <rostedt@goodmis.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, QLogic-Storage-Upstream@qlogic.com, martin.petersen@oracle.com
+To: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chuhu@redhat.com, liwang@redhat.com, Shu Wang <shuwang@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+From: Shu Wang <shuwang@redhat.com>
 
---8323329-1824905611-1500630127=:2077
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Found this issue by kmemleak, a few kb mem was leaked in
+megasas_alloc_cmdlist_fusion when kzalloc failed for one
+megasas_cmd_fusion allocation.
 
-On Thu, 20 Jul 2017, James Bottomley wrote:
-> [redirecting to linux-scsi]
-> On Thu, 2017-07-20 at 19:35 -0400, Steven Rostedt wrote:
-> > My tests triggered this splat on 4.13-rc1:
-> > 
-> > Loading iSCSI transport class v2.0-870.
-> > QLogic NetXtreme II iSCSI Driver bnx2i v2.7.10.1 (Jul 16, 2014)
-> > iscsi: registered transport (bnx2i)
-> > 
-> > ============================================
-> > WARNING: possible recursive locking detected
-> > 4.13.0-rc1-test+ #2 Not tainted
-> > --------------------------------------------
-> > swapper/0/1 is trying to acquire lock:
-> >  (cpu_hotplug_lock.rw_sem){++++++}, at: [<ffffffffb505329e>]
-> > __cpuhp_setup_state+0x28/0x59
-> > 
-> > but task is already holding lock:
-> >  (cpu_hotplug_lock.rw_sem){++++++}, at: [<ffffffffb64d54e9>]
-> > bnx2i_mod_init+0x134/0x209
-> > 
-> > other info that might help us debug this:
-> >  Possible unsafe locking scenario:
-> > 
-> >        CPU0
-> >        ----
-> >   lock(cpu_hotplug_lock.rw_sem);
-> >   lock(cpu_hotplug_lock.rw_sem);
-> 
-> It sounds like it's an annotation issue not an actual problem.  I've
-> added the correct list, so hopefully our usual enthusiasts can take a
-> look.
+unreferenced object 0xffff88045dbd2000 (size 8192):
+  comm "systemd-udevd", pid 323, jiffies 4294671759 (age 49.008s)
+  backtrace:
+    [<ffffffff8176166a>] kmemleak_alloc+0x4a/0xa0
+    [<ffffffff812186a8>] __kmalloc+0xe8/0x220
+    [<ffffffffc0060594>] megasas_alloc_cmdlist_fusion+0x34/0xe0 [megaraid_sas]
+(gdb) list *megasas_alloc_cmdlist_fusion+0x34
+0xd5c4 is in megasas_alloc_cmdlist_fusion
+               (drivers/scsi/megaraid/megaraid_sas_fusion.c:443).
+    [<ffffffffc0060ca5>] megasas_alloc_cmds_fusion+0x25/0x410 [megaraid_sas]
+    [<ffffffffc0061edf>] megasas_init_adapter_fusion+0x21f/0x640 [megaraid_sas]
+    [<ffffffffc005df17>] megasas_init_fw+0x357/0xd30 [megaraid_sas]
+    [<ffffffffc005ef26>] megasas_probe_one.part.33+0x636/0x1100 [megaraid_sas]
+    [<ffffffffc005fa36>] megasas_probe_one+0x46/0xc0 [megaraid_sas]
+    [<ffffffff813d2ca5>] local_pci_probe+0x45/0xa0
+    [<ffffffff813d4222>] pci_device_probe+0x192/0x1b0
+    [<ffffffff814e3658>] driver_probe_device+0x2a8/0x460
+    [<ffffffff814e38ed>] __driver_attach+0xdd/0xe0
+    [<ffffffff814e124c>] bus_for_each_dev+0x6c/0xc0
+    [<ffffffff814e2dde>] driver_attach+0x1e/0x20
+    [<ffffffff814e2775>] bus_add_driver+0x45/0x270
+    [<ffffffff814e4400>] driver_register+0x60/0xe0
+unreferenced object 0xffff880454ce3600 (size 192):
+  backtrace:
+    [<ffffffff8176166a>] kmemleak_alloc+0x4a/0xa0
+    [<ffffffff8121801a>] kmem_cache_alloc_trace+0xca/0x1d0
+    [<ffffffffc00605d7>] megasas_alloc_cmdlist_fusion+0x77/0xe0 [megaraid_sas]
+(gdb) list *megasas_alloc_cmdlist_fusion+0x77
+0xd607 is in megasas_alloc_cmdlist_fusion
+                (drivers/scsi/megaraid/megaraid_sas_fusion.c:450).
+    [<ffffffffc0060ca5>] megasas_alloc_cmds_fusion+0x25/0x410 [megaraid_sas]
+    [<ffffffffc0061edf>] megasas_init_adapter_fusion+0x21f/0x640 [megaraid_sas]
+    [<ffffffffc005df17>] megasas_init_fw+0x357/0xd30 [megaraid_sas]
+    [<ffffffffc005ef26>] megasas_probe_one.part.33+0x636/0x1100 [megaraid_sas]
+    [<ffffffffc005fa36>] megasas_probe_one+0x46/0xc0 [megaraid_sas]
+    [<ffffffff813d2ca5>] local_pci_probe+0x45/0xa0
+    [<ffffffff813d4222>] pci_device_probe+0x192/0x1b0
+    [<ffffffff814e3658>] driver_probe_device+0x2a8/0x460
+    [<ffffffff814e38ed>] __driver_attach+0xdd/0xe0
+    [<ffffffff814e124c>] bus_for_each_dev+0x6c/0xc0
+    [<ffffffff814e2dde>] driver_attach+0x1e/0x20
+    [<ffffffff814e2775>] bus_add_driver+0x45/0x270
+    [<ffffffff814e4400>] driver_register+0x60/0xe0
 
-Nope. It's a recursive locking/\ of cpuhotplug lock. I'll have a look on
-monday.
+Signed-off-by: Shu Wang <shuwang@redhat.com>
+---
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-Thanks,
-
-	tglx
-
-
---8323329-1824905611-1500630127=:2077--
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index f990ab4d..9855106 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -425,7 +425,7 @@ static int megasas_create_sg_sense_fusion(struct megasas_instance *instance)
+ int
+ megasas_alloc_cmdlist_fusion(struct megasas_instance *instance)
+ {
+-	u32 max_mpt_cmd, i;
++	u32 max_mpt_cmd, i, j;
+ 	struct fusion_context *fusion;
+ 
+ 	fusion = instance->ctrl_context;
+@@ -450,11 +450,15 @@ megasas_alloc_cmdlist_fusion(struct megasas_instance *instance)
+ 		fusion->cmd_list[i] = kzalloc(sizeof(struct megasas_cmd_fusion),
+ 					      GFP_KERNEL);
+ 		if (!fusion->cmd_list[i]) {
++			for (j = 0; j < i; j++)
++				kfree(fusion->cmd_list[j]);
++			kfree(fusion->cmd_list);
+ 			dev_err(&instance->pdev->dev,
+ 				"Failed from %s %d\n",  __func__, __LINE__);
+ 			return -ENOMEM;
+ 		}
+ 	}
++
+ 	return 0;
+ }
+ int
+-- 
+2.5.0
