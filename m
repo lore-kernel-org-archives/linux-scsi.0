@@ -1,45 +1,63 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: Potentially invalid memory accesses
- drivers/message/fusion/mptbase.c
-Date: Thu, 20 Jul 2017 23:53:36 +0000
-Message-ID: <1500594815.3181.6.camel@wdc.com>
-References: <57b678ad0883a4eb902e47910a360c5c@cs.utah.edu>
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [BUG] lockdep splat with cpu_hotplug_lock
+Date: Fri, 21 Jul 2017 11:42:05 +0200 (CEST)
+Message-ID: <alpine.DEB.2.20.1707211141170.2077@nanos>
+References: <20170720193501.4f09499f@gandalf.local.home> <1500594526.3568.44.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:16754 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964948AbdGTXy0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jul 2017 19:54:26 -0400
-In-Reply-To: <57b678ad0883a4eb902e47910a360c5c@cs.utah.edu>
-Content-Language: en-US
-Content-ID: <42E0403BE1BA314E8E542819DD7B2197@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/mixed; BOUNDARY="8323329-1824905611-1500630127=:2077"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1500594526.3568.44.camel@HansenPartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Steven Rostedt <rostedt@goodmis.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, QLogic-Storage-Upstream@qlogic.com, martin.petersen@oracle.com
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "DL-MPTFusionLinux@lsi.com" <DL-MPTFusionLinux@lsi.com>, "shaobo@cs.utah.edu" <shaobo@cs.utah.edu>, "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>
-Cc: "kashyap.desai@lsi.com" <kashyap.desai@lsi.com>
 
-On Thu, 2017-07-20 at 17:28 -0600, Shaobo wrote:
-> My name is Shaobo He and I am a graduate student at University of Utah.=20
-> I am using a static analysis tool to search for null pointer=20
-> dereferences and came across a couple of potentially invalid memory=20
-> accesses in the file drivers/message/fusion/mptbase.c: in function=20
-> `mpt_turbo_reply`, variable `mf` is initialized to NULL. If the case=20
-> `MPI_CONTEXT_REPLY_TYPE_SCSI_TARGET` is taken, then `mf` is not updated=20
-> to a non-NULL value and then may get dereferenced in function=20
-> `mpt_free_msg_frame`. However, there are a couple of conditions that can=
-=20
-> make the error path infeasible. I was wondering if you could confirm=20
-> this.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Hello Shaobo,
+--8323329-1824905611-1500630127=:2077
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 
-Which static analysis tool are you using? Is it less or more powerful than
-Coverity? If it is not more powerful, are you aware that a full Coverity
-scan of the Linux kernel source code is already available at
-https://scan.coverity.com/projects/linux? The issue you reported was first
-detected by Coverity on February 24th, 2006 (more than ten years ago). In
-the aforementioned database Coverity assigned ID 100124 to that issue.
+On Thu, 20 Jul 2017, James Bottomley wrote:
+> [redirecting to linux-scsi]
+> On Thu, 2017-07-20 at 19:35 -0400, Steven Rostedt wrote:
+> > My tests triggered this splat on 4.13-rc1:
+> > 
+> > Loading iSCSI transport class v2.0-870.
+> > QLogic NetXtreme II iSCSI Driver bnx2i v2.7.10.1 (Jul 16, 2014)
+> > iscsi: registered transport (bnx2i)
+> > 
+> > ============================================
+> > WARNING: possible recursive locking detected
+> > 4.13.0-rc1-test+ #2 Not tainted
+> > --------------------------------------------
+> > swapper/0/1 is trying to acquire lock:
+> >  (cpu_hotplug_lock.rw_sem){++++++}, at: [<ffffffffb505329e>]
+> > __cpuhp_setup_state+0x28/0x59
+> > 
+> > but task is already holding lock:
+> >  (cpu_hotplug_lock.rw_sem){++++++}, at: [<ffffffffb64d54e9>]
+> > bnx2i_mod_init+0x134/0x209
+> > 
+> > other info that might help us debug this:
+> >  Possible unsafe locking scenario:
+> > 
+> >        CPU0
+> >        ----
+> >   lock(cpu_hotplug_lock.rw_sem);
+> >   lock(cpu_hotplug_lock.rw_sem);
+> 
+> It sounds like it's an annotation issue not an actual problem.  I've
+> added the correct list, so hopefully our usual enthusiasts can take a
+> look.
 
-Bart.=
+Nope. It's a recursive locking/\ of cpuhotplug lock. I'll have a look on
+monday.
+
+Thanks,
+
+	tglx
+
+
+--8323329-1824905611-1500630127=:2077--
