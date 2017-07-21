@@ -1,116 +1,154 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 5/6] qla2xxx: Fix remoteport disconnect for FC-NVMe
-Date: Fri, 21 Jul 2017 09:32:27 -0700
-Message-ID: <20170721163228.32339-6-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 2/6] qla2xxx: Move function prototype to correct header
+Date: Fri, 21 Jul 2017 09:32:24 -0700
+Message-ID: <20170721163228.32339-3-himanshu.madhani@cavium.com>
 References: <20170721163228.32339-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0069.outbound.protection.outlook.com ([104.47.33.69]:25872
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam03on0051.outbound.protection.outlook.com ([104.47.42.51]:24663
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754518AbdGUQco (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 21 Jul 2017 12:32:44 -0400
+        id S1754493AbdGUQci (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 21 Jul 2017 12:32:38 -0400
 In-Reply-To: <20170721163228.32339-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-Signed-off-by: Duane Grigsby <duane.grigsby@cavium.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/qla2xxx/qla_isr.c  | 37 +++++++++++++++++++++++++++++++------
- drivers/scsi/qla2xxx/qla_nvme.c |  9 +++++++--
- 2 files changed, 38 insertions(+), 8 deletions(-)
+ drivers/scsi/qla2xxx/qla_gbl.h  | 11 -----------
+ drivers/scsi/qla2xxx/qla_isr.c  |  4 ++--
+ drivers/scsi/qla2xxx/qla_nvme.c |  9 ++++-----
+ drivers/scsi/qla2xxx/qla_nvme.h | 17 +++++++++++++++++
+ 4 files changed, 23 insertions(+), 18 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index cadb6e3baacc..659cdf592678 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -10,17 +10,6 @@
+ #include <linux/interrupt.h>
+ 
+ /*
+- * Global functions prototype in qla_nvme.c source file.
+- */
+-extern void qla_nvme_register_hba(scsi_qla_host_t *);
+-extern int  qla_nvme_register_remote(scsi_qla_host_t *, fc_port_t *);
+-extern void qla_nvme_delete(scsi_qla_host_t *);
+-extern void qla_nvme_abort(struct qla_hw_data *, srb_t *sp);
+-extern void qla24xx_nvme_ls4_iocb(scsi_qla_host_t *, struct pt_ls4_request *,
+-    struct req_que *);
+-extern void qla24xx_async_gffid_sp_done(void *, int);
+-
+-/*
+  * Global Function Prototypes in qla_init.c source file.
+  */
+ extern int qla2x00_initialize_adapter(scsi_qla_host_t *);
 diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 317fe6026856..c14fab35fc36 100644
+index 7b3b702ef622..9127eee67478 100644
 --- a/drivers/scsi/qla2xxx/qla_isr.c
 +++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1856,17 +1856,42 @@ qla24xx_nvme_iocb_entry(scsi_qla_host_t *vha, struct req_que *req, void *tsk)
- 	fd->transferred_length = fd->payload_length -
- 	    le32_to_cpu(sts->residual_len);
- 
-+	/*
-+	 * If transport error then Failure (HBA rejects request)
-+	 * otherwise transport will handle.
-+	 */
- 	if (sts->entry_status) {
- 		ql_log(ql_log_warn, fcport->vha, 0x5038,
- 		    "NVME-%s error - hdl=%x entry-status(%x).\n",
- 		    sp->name, sp->handle, sts->entry_status);
- 		ret = QLA_FUNCTION_FAILED;
--	} else if (sts->comp_status != cpu_to_le16(CS_COMPLETE)) {
--		ql_log(ql_log_warn, fcport->vha, 0x5039,
--		    "NVME-%s error - hdl=%x completion status(%x) resid=%x  ox_id=%x\n",
--		    sp->name, sp->handle, sts->comp_status,
--		    le32_to_cpu(sts->residual_len), sts->ox_id);
--		ret = QLA_FUNCTION_FAILED;
-+	} else  {
-+		switch (le16_to_cpu(sts->comp_status)) {
-+			case CS_COMPLETE:
-+				ret = 0;
-+			break;
-+
-+			case CS_ABORTED:
-+			case CS_RESET:
-+			case CS_PORT_UNAVAILABLE:
-+			case CS_PORT_LOGGED_OUT:
-+			case CS_PORT_BUSY:
-+				ql_log(ql_log_warn, fcport->vha, 0x5060,
-+				"NVME-%s ERR Handling - hdl=%x completion status(%x) resid=%x  ox_id=%x\n",
-+				sp->name, sp->handle, sts->comp_status,
-+				le32_to_cpu(sts->residual_len), sts->ox_id);
-+				fd->transferred_length = fd->payload_length;
-+				ret = QLA_ABORTED;
-+			break;
-+
-+			default:
-+				ql_log(ql_log_warn, fcport->vha, 0x5060,
-+				"NVME-%s error - hdl=%x completion status(%x) resid=%x  ox_id=%x\n",
-+				sp->name, sp->handle, sts->comp_status,
-+				le32_to_cpu(sts->residual_len), sts->ox_id);
-+				ret = QLA_FUNCTION_FAILED;
-+				break;
-+		}
- 	}
- 	sp->done(sp, ret);
+@@ -2827,8 +2827,8 @@ qla24xx_abort_iocb_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 	sp->done(sp, 0);
  }
+ 
+-void qla24xx_nvme_ls4_iocb(scsi_qla_host_t *vha, struct pt_ls4_request *pkt,
+-    struct req_que *req)
++void qla24xx_nvme_ls4_iocb(struct scsi_qla_host *vha,
++    struct pt_ls4_request *pkt, struct req_que *req)
+ {
+ 	srb_t *sp;
+ 	const char func[] = "LS4_IOCB";
 diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
-index 6c5eebbbda4c..97a7b222b549 100644
+index 3c58d1b71e6e..11494f2f90b5 100644
 --- a/drivers/scsi/qla2xxx/qla_nvme.c
 +++ b/drivers/scsi/qla2xxx/qla_nvme.c
-@@ -169,8 +169,8 @@ static void qla_nvme_sp_done(void *ptr, int res)
- 	if (!(sp->fcport->nvme_flag & NVME_FLAG_REGISTERED))
- 		goto rel;
+@@ -5,7 +5,6 @@
+  * See LICENSE.qla2xxx for copyright and licensing details.
+  */
+ #include "qla_nvme.h"
+-#include "qla_def.h"
+ #include <linux/scatterlist.h>
+ #include <linux/delay.h>
+ #include <linux/nvme.h>
+@@ -15,7 +14,7 @@ static struct nvme_fc_port_template qla_nvme_fc_transport;
  
--	if (unlikely(nvme->u.nvme.comp_status || res))
--		fd->status = -EINVAL;
-+	if (unlikely(res == QLA_FUNCTION_FAILED))
-+		fd->status = NVME_SC_FC_TRANSPORT_ERROR;
- 	else
- 		fd->status = 0;
+ static void qla_nvme_unregister_remote_port(struct work_struct *);
  
-@@ -635,13 +635,18 @@ static void qla_nvme_unregister_remote_port(struct work_struct *work)
- 	if (!IS_ENABLED(CONFIG_NVME_FC))
- 		return;
+-int qla_nvme_register_remote(scsi_qla_host_t *vha, fc_port_t *fcport)
++int qla_nvme_register_remote(struct scsi_qla_host *vha, struct fc_port *fcport)
+ {
+ 	struct nvme_rport *rport;
+ 	int ret;
+@@ -616,7 +615,7 @@ static int qla_nvme_wait_on_rport_del(fc_port_t *fcport)
+ 	return ret;
+ }
  
-+	ql_log(ql_log_warn, NULL, 0x2112,
-+	    "%s: unregister remoteport on %p\n",__func__, fcport);
-+
- 	list_for_each_entry_safe(rport, trport,
- 	    &fcport->vha->nvme_rport_list, list) {
- 		if (rport->fcport == fcport) {
- 			ql_log(ql_log_info, fcport->vha, 0x2113,
- 			    "%s: fcport=%p\n", __func__, fcport);
-+			init_completion(&fcport->nvme_del_done);
- 			nvme_fc_unregister_remoteport(
- 			    fcport->nvme_remote_port);
-+			qla_nvme_wait_on_rport_del(fcport);
- 		}
+-void qla_nvme_abort(struct qla_hw_data *ha, srb_t *sp)
++void qla_nvme_abort(struct qla_hw_data *ha, struct srb *sp)
+ {
+ 	int rval;
+ 
+@@ -679,7 +678,7 @@ static void qla_nvme_unregister_remote_port(struct work_struct *work)
  	}
  }
+ 
+-void qla_nvme_delete(scsi_qla_host_t *vha)
++void qla_nvme_delete(struct scsi_qla_host *vha)
+ {
+ 	struct nvme_rport *rport, *trport;
+ 	fc_port_t *fcport;
+@@ -711,7 +710,7 @@ void qla_nvme_delete(scsi_qla_host_t *vha)
+ 	}
+ }
+ 
+-void qla_nvme_register_hba(scsi_qla_host_t *vha)
++void qla_nvme_register_hba(struct scsi_qla_host *vha)
+ {
+ 	struct nvme_fc_port_template *tmpl;
+ 	struct qla_hw_data *ha;
+diff --git a/drivers/scsi/qla2xxx/qla_nvme.h b/drivers/scsi/qla2xxx/qla_nvme.h
+index dfe56f207b28..7f05fa1c77db 100644
+--- a/drivers/scsi/qla2xxx/qla_nvme.h
++++ b/drivers/scsi/qla2xxx/qla_nvme.h
+@@ -12,12 +12,18 @@
+ #include <uapi/scsi/fc/fc_els.h>
+ #include <linux/nvme-fc-driver.h>
+ 
++#include "qla_def.h"
++
+ #define NVME_ATIO_CMD_OFF 32
+ #define NVME_FIRST_PACKET_CMDLEN (64 - NVME_ATIO_CMD_OFF)
+ #define Q2T_NVME_NUM_TAGS 2048
+ #define QLA_MAX_FC_SEGMENTS 64
+ 
++struct scsi_qla_host;
++struct qla_hw_data;
++struct req_que;
+ struct srb;
++
+ struct nvme_private {
+ 	struct srb	*sp;
+ 	struct nvmefc_ls_req *fd;
+@@ -129,4 +135,15 @@ struct pt_ls4_rx_unsol {
+ 	uint32_t desc_len;
+ 	uint32_t payload[3];
+ };
++
++/*
++ * Global functions prototype in qla_nvme.c source file.
++ */
++void qla_nvme_register_hba(struct scsi_qla_host *);
++int  qla_nvme_register_remote(struct scsi_qla_host *, struct fc_port *);
++void qla_nvme_delete(struct scsi_qla_host *);
++void qla_nvme_abort(struct qla_hw_data *, struct srb *sp);
++void qla24xx_nvme_ls4_iocb(struct scsi_qla_host *, struct pt_ls4_request *,
++    struct req_que *);
++void qla24xx_async_gffid_sp_done(void *, int);
+ #endif
 -- 
 2.12.0
