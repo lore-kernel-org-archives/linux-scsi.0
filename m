@@ -1,34 +1,36 @@
-From: Yagmur Oymak <yagmur.oymak@gmail.com>
-Subject: 4.12 NULL pointer dereference in kmem_cache_free on USB storage
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: 4.12 NULL pointer dereference in kmem_cache_free on USB storage
  removal
-Date: Sat, 22 Jul 2017 11:58:16 +0300
-Message-ID: <726b4c5d-610d-4d74-28e3-bfbc4fad06e0@gmail.com>
+Date: Sun, 23 Jul 2017 03:08:22 +0000
+Message-ID: <1500779301.3155.1.camel@wdc.com>
+References: <726b4c5d-610d-4d74-28e3-bfbc4fad06e0@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:35825 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752127AbdGVI6Z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Jul 2017 04:58:25 -0400
-Received: by mail-wr0-f193.google.com with SMTP id c24so10145153wra.2
-        for <linux-scsi@vger.kernel.org>; Sat, 22 Jul 2017 01:58:24 -0700 (PDT)
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:38821 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752080AbdGWDJK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Jul 2017 23:09:10 -0400
+In-Reply-To: <726b4c5d-610d-4d74-28e3-bfbc4fad06e0@gmail.com>
 Content-Language: en-US
+Content-ID: <23CD1309BB4AF643878C0445806B24D1@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org
+To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "yagmur.oymak@gmail.com" <yagmur.oymak@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-Hello,
-
-This problem was reported in the linux-kernel list, here:
-https://lkml.org/lkml/2017/7/13/710, and it is said that commit
-8e6882545d8c ("scsi: Avoid
-that scsi_exit_rq() triggers a use-after-free") fixes it. It indeed
-fixes it as the problem does not exist on 4.13-rc1 (which includes the
-commit) and on 4.12.x if the patch is applied. However, none of the 4.12
-releases since that discussion includes the patch, so the problem is
-still there. Can that be included in the next stable release?
-
-Thanks,
-Yagmur Oymak
+T24gU2F0LCAyMDE3LTA3LTIyIGF0IDExOjU4ICswMzAwLCBZYWdtdXIgT3ltYWsgd3JvdGU6DQo+
+IFRoaXMgcHJvYmxlbSB3YXMgcmVwb3J0ZWQgaW4gdGhlIGxpbnV4LWtlcm5lbCBsaXN0LCBoZXJl
+Og0KPiBodHRwczovL2xrbWwub3JnL2xrbWwvMjAxNy83LzEzLzcxMCwgYW5kIGl0IGlzIHNhaWQg
+dGhhdCBjb21taXQNCj4gOGU2ODgyNTQ1ZDhjICgic2NzaTogQXZvaWQNCj4gdGhhdCBzY3NpX2V4
+aXRfcnEoKSB0cmlnZ2VycyBhIHVzZS1hZnRlci1mcmVlIikgZml4ZXMgaXQuIEl0IGluZGVlZA0K
+PiBmaXhlcyBpdCBhcyB0aGUgcHJvYmxlbSBkb2VzIG5vdCBleGlzdCBvbiA0LjEzLXJjMSAod2hp
+Y2ggaW5jbHVkZXMgdGhlDQo+IGNvbW1pdCkgYW5kIG9uIDQuMTIueCBpZiB0aGUgcGF0Y2ggaXMg
+YXBwbGllZC4gSG93ZXZlciwgbm9uZSBvZiB0aGUgNC4xMg0KPiByZWxlYXNlcyBzaW5jZSB0aGF0
+IGRpc2N1c3Npb24gaW5jbHVkZXMgdGhlIHBhdGNoLCBzbyB0aGUgcHJvYmxlbSBpcw0KPiBzdGls
+bCB0aGVyZS4gQ2FuIHRoYXQgYmUgaW5jbHVkZWQgaW4gdGhlIG5leHQgc3RhYmxlIHJlbGVhc2U/
+DQoNCigrR3JlZykNCg0KSGkgR3JlZywNCg0KSXQgc2VlbXMgdG8gbWUgbGlrZSB0aGF0IGNvbW1p
+dCBoYXMgbm90IGJlZW4gaW5jbHVkZWQgaW4ga2VybmVsIHY0LjEyLjM/DQpXaWxsIGl0IGJlIGlu
+Y2x1ZGVkIGluIGEgbGF0ZXIgc3RhYmxlIHY0LjEyLngga2VybmVsPw0KDQpUaGFua3MsDQoNCkJh
+cnQu
