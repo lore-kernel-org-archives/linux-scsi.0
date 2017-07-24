@@ -1,31 +1,31 @@
 From: Steffen Maier <maier@linux.vnet.ibm.com>
-Subject: Re: [PATCH 15/47] scsi_transport_fc: Use fc_rport as argument for
- fc_block_scsi_eh
-Date: Mon, 24 Jul 2017 18:34:06 +0200
-Message-ID: <2e811ad2-4dd2-f010-9794-2d00f0f49778@linux.vnet.ibm.com>
+Subject: Re: [PATCH 14/47] scsi: Use Scsi_Host as argument for
+ eh_host_reset_handler
+Date: Mon, 24 Jul 2017 18:55:05 +0200
+Message-ID: <7a7c361d-8d3a-6c76-1831-c86abd6177aa@linux.vnet.ibm.com>
 References: <1498638793-44672-1-git-send-email-hare@suse.de>
- <1498638793-44672-16-git-send-email-hare@suse.de>
+ <1498638793-44672-15-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:47586 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752492AbdGXQeN (ORCPT
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:37833 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753582AbdGXQzO (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 24 Jul 2017 12:34:13 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6OGT5B7063235
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2017 12:34:12 -0400
-Received: from e06smtp10.uk.ibm.com (e06smtp10.uk.ibm.com [195.75.94.106])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2bwegfs9qp-1
+        Mon, 24 Jul 2017 12:55:14 -0400
+Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6OGrlNu055818
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2017 12:55:13 -0400
+Received: from e06smtp14.uk.ibm.com (e06smtp14.uk.ibm.com [195.75.94.110])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2bwh96agsv-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2017 12:34:12 -0400
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2017 12:55:12 -0400
 Received: from localhost
-        by e06smtp10.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e06smtp14.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-scsi@vger.kernel.org> from <maier@linux.vnet.ibm.com>;
-        Mon, 24 Jul 2017 17:34:10 +0100
-In-Reply-To: <1498638793-44672-16-git-send-email-hare@suse.de>
+        Mon, 24 Jul 2017 17:55:10 +0100
+In-Reply-To: <1498638793-44672-15-git-send-email-hare@suse.de>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -34,110 +34,161 @@ Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bo
 
 
 On 06/28/2017 10:32 AM, Hannes Reinecke wrote:
-> fc_block_scsi_eh() works on a remote port, so we should be using
-> that as an argument, and not the scsi command.
-
-> diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-> index d7d4a63..e3160fc 100644
-> --- a/drivers/s390/scsi/zfcp_scsi.c
-> +++ b/drivers/s390/scsi/zfcp_scsi.c
-> @@ -150,6 +150,7 @@ static int zfcp_scsi_eh_abort_handler(struct scsi_cmnd *scpnt)
->   	struct zfcp_adapter *adapter =
->   		(struct zfcp_adapter *) scsi_host->hostdata[0];
->   	struct zfcp_fsf_req *old_req, *abrt_req;
-> +	struct fc_rport *rport = starget_to_rport(scsi_target(scpnt->device));
->   	unsigned long flags;
->   	unsigned long old_reqid = (unsigned long) scpnt->host_scribble;
->   	int retval = SUCCESS, ret;
-> @@ -176,7 +177,7 @@ static int zfcp_scsi_eh_abort_handler(struct scsi_cmnd *scpnt)
->   			break;
+> Issuing a host reset should not rely on any commands.
+> So use Scsi_Host as argument for eh_host_reset_handler.
 > 
->   		zfcp_erp_wait(adapter);
-> -		ret = fc_block_scsi_eh(scpnt);
-> +		ret = fc_block_scsi_eh(rport);
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>   Documentation/scsi/scsi_eh.txt                  |  2 +-
+>   Documentation/scsi/scsi_mid_low_api.txt         |  4 +--
 
-I think for abort handlers some original fc_block_scsi_eh with scsi_cmnd 
-as argument would be perfectly valid as this really has the scope of a 
-particular single command.
+>   drivers/s390/scsi/zfcp_scsi.c                   |  3 +-
 
-Do you really want to touch all abort handlers just because of this?
+>   drivers/scsi/scsi_debug.c                       | 16 +++++-----
+>   drivers/scsi/scsi_error.c                       |  2 +-
 
-In my zfcp decoupling I had created a new fc_block_rport for 
-TMFs/host_reset and kept using the old fc_block_scsi_eh (which does the 
-argument lifting and simply delegates to the new fc_block_rport) for the 
-abort handler.
-Admittedly, of course, I also did so because I did not touch all other 
-users/callers of the old function with the scsi_cmnd argument.
-
->   		if (ret) {
->   			zfcp_dbf_scsi_abort("abrt_bl", scpnt, NULL);
->   			return ret;
-> @@ -262,6 +263,7 @@ static int zfcp_task_mgmt_function(struct scsi_cmnd *scpnt, u8 tm_flags)
->   {
->   	struct zfcp_scsi_dev *zfcp_sdev = sdev_to_zfcp(scpnt->device);
->   	struct zfcp_adapter *adapter = zfcp_sdev->port->adapter;
-> +	struct fc_port *rport = zfcp_sdev->port->rport;
-
-port->rport could be NULL
-
-[async zfcp_scsi_rport_block()]
-
->   	struct zfcp_fsf_req *fsf_req = NULL;
->   	int retval = SUCCESS, ret;
->   	int retry = 3;
-> @@ -272,7 +274,7 @@ static int zfcp_task_mgmt_function(struct scsi_cmnd *scpnt, u8 tm_flags)
->   			break;
+>   include/scsi/scsi_host.h                        |  2 +-
+>   81 files changed, 290 insertions(+), 380 deletions(-)
 > 
->   		zfcp_erp_wait(adapter);
-> -		ret = fc_block_scsi_eh(scpnt);
-> +		ret = fc_block_scsi_eh(rport);
->   		if (ret)
->   			return ret;
+> diff --git a/Documentation/scsi/scsi_eh.txt b/Documentation/scsi/scsi_eh.txt
+> index 11e447b..78cd6b9 100644
+> --- a/Documentation/scsi/scsi_eh.txt
+> +++ b/Documentation/scsi/scsi_eh.txt
+> @@ -208,7 +208,7 @@ considered to fail always.
+>   int (* eh_abort_handler)(struct scsi_cmnd *);
+>   int (* eh_device_reset_handler)(struct scsi_cmnd *);
+>   int (* eh_bus_reset_handler)(struct scsi_cmnd *);
+> -int (* eh_host_reset_handler)(struct scsi_cmnd *);
+> +int (* eh_host_reset_handler)(struct Scsi_Host *);
 > 
-
-> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-> index 6dd0922..f83e512 100644
-> --- a/drivers/scsi/scsi_transport_fc.c
-> +++ b/drivers/scsi/scsi_transport_fc.c
-> @@ -3273,7 +3273,7 @@ struct fc_rport *
+>    Higher-severity actions are taken only when lower-severity actions
+>   cannot recover some of failed scmds.  Also, note that failure of the
+> diff --git a/Documentation/scsi/scsi_mid_low_api.txt b/Documentation/scsi/scsi_mid_low_api.txt
+> index 6338400..ad517d5 100644
+> --- a/Documentation/scsi/scsi_mid_low_api.txt
+> +++ b/Documentation/scsi/scsi_mid_low_api.txt
+> @@ -891,7 +891,7 @@ Details:
 > 
 >   /**
->    * fc_block_scsi_eh - Block SCSI eh thread for blocked fc_rport
-> - * @cmnd: SCSI command that scsi_eh is trying to recover
-> + * @rport: remote port to be checked
+>    *      eh_host_reset_handler - reset host (host bus adapter)
+> - *      @scp: SCSI host that contains this device should be reset
+> + *      @shost: SCSI host that should be reset
 >    *
->    * This routine can be called from a FC LLD scsi_eh callback. It
->    * blocks the scsi_eh thread until the fc_rport leaves the
-> @@ -3285,10 +3285,9 @@ struct fc_rport *
->    *	    FAST_IO_FAIL if the fast_io_fail_tmo fired, this should be
->    *	    passed back to scsi_eh.
->    */
-> -int fc_block_scsi_eh(struct scsi_cmnd *cmnd)
-> +int fc_block_scsi_eh(struct fc_rport *rport)
+>    *      Returns SUCCESS if command aborted else FAILED
+>    *
+> @@ -908,7 +908,7 @@ Details:
+>    *
+>    *      Optionally defined in: LLD
+>    **/
+> -     int eh_host_reset_handler(struct scsi_cmnd * scp)
+> +     int eh_host_reset_handler(struct Scsi_Host * shost)
+> 
+> 
+>   /**
+
+
+
+> diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
+> index 3d18659..d7d4a63 100644
+> --- a/drivers/s390/scsi/zfcp_scsi.c
+> +++ b/drivers/s390/scsi/zfcp_scsi.c
+> @@ -309,9 +309,8 @@ static int zfcp_scsi_eh_target_reset_handler(struct scsi_cmnd *scpnt)
+>   	return zfcp_task_mgmt_function(scpnt, FCP_TMF_TGT_RESET);
+>   }
+> 
+> -static int zfcp_scsi_eh_host_reset_handler(struct scsi_cmnd *scpnt)
+> +static int zfcp_scsi_eh_host_reset_handler(struct Scsi_Host *host)
 >   {
-> -	struct Scsi_Host *shost = cmnd->device->host;
-> -	struct fc_rport *rport = starget_to_rport(scsi_target(cmnd->device));
-> +	struct Scsi_Host *shost = rport_to_shost(rport);
+> -	struct Scsi_Host *host = scpnt->device->host;
+>   	struct zfcp_adapter *adapter = (struct zfcp_adapter *)host->hostdata[0];
+>   	int ret = 0;
 >   	unsigned long flags;
-> 
->   	spin_lock_irqsave(shost->host_lock, flags);
-> diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
-> index e308cd5..5b26943 100644
-> --- a/include/scsi/scsi_transport_fc.h
-> +++ b/include/scsi/scsi_transport_fc.h
-> @@ -804,7 +804,7 @@ void fc_host_post_vendor_event(struct Scsi_Host *shost, u32 event_number,
->   struct fc_vport *fc_vport_create(struct Scsi_Host *shost, int channel,
->   		struct fc_vport_identifiers *);
->   int fc_vport_terminate(struct fc_vport *vport);
-> -int fc_block_scsi_eh(struct scsi_cmnd *cmnd);
-> +int fc_block_scsi_eh(struct fc_rport *rport);
->   enum blk_eh_timer_return fc_eh_timed_out(struct scsi_cmnd *scmd);
-> 
->   static inline struct Scsi_Host *fc_bsg_to_shost(struct bsg_job *job)
-> 
 
-Aside from above thoughts, the coding of the argument change seems good.
 
+
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index dc095a2..ebf525b 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -3878,27 +3878,27 @@ static int scsi_debug_bus_reset(struct scsi_cmnd * SCpnt)
+>   	return SUCCESS;
+>   }
+> 
+> -static int scsi_debug_host_reset(struct scsi_cmnd * SCpnt)
+> +static int scsi_debug_host_reset(struct Scsi_Host * shost)
+>   {
+>   	struct sdebug_host_info * sdbg_host;
+>   	struct sdebug_dev_info *devip;
+>   	int k = 0;
+> 
+>   	++num_host_resets;
+> -	if ((SCpnt->device) && (SDEBUG_OPT_ALL_NOISE & sdebug_opts))
+> -		sdev_printk(KERN_INFO, SCpnt->device, "%s\n", __func__);
+> -        spin_lock(&sdebug_host_list_lock);
+> -        list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
+> +	if (SDEBUG_OPT_ALL_NOISE & sdebug_opts)
+> +		shost_printk(KERN_INFO, shost, "%s\n", __func__);
+> +	spin_lock(&sdebug_host_list_lock);
+> +	list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
+>   		list_for_each_entry(devip, &sdbg_host->dev_info_list,
+>   				    dev_list) {
+>   			set_bit(SDEBUG_UA_BUS_RESET, devip->uas_bm);
+>   			++k;
+>   		}
+> -        }
+> -        spin_unlock(&sdebug_host_list_lock);
+> +	}
+> +	spin_unlock(&sdebug_host_list_lock);
+>   	stop_all_queued();
+>   	if (SDEBUG_OPT_RESET_NOISE & sdebug_opts)
+> -		sdev_printk(KERN_INFO, SCpnt->device,
+> +		shost_printk(KERN_INFO, shost,
+>   			    "%s: %d device(s) found\n", __func__, k);
+>   	return SUCCESS;
+>   }
+
+Mechanically, the change looks good.
+
+However, is it correct that it's been looping over all its shosts and 
+doing something even for those that do not match SCpnt or now shost?
+I thought it should only reset on the scope but it seems to call 
+stop_all_queued(void) which might reset all shosts?
+But then again the loop seems about unit attentions so the loop may be 
+correct.
+Anyway, this is not related to your change.
+
+The other quoted parts incl. zfcp look good to me.
+
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index ac31964..808167f 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -745,7 +745,7 @@ static int scsi_try_host_reset(struct scsi_cmnd *scmd)
+>   	if (!hostt->eh_host_reset_handler)
+>   		return FAILED;
+> 
+> -	rtn = hostt->eh_host_reset_handler(scmd);
+> +	rtn = hostt->eh_host_reset_handler(host);
+> 
+>   	if (rtn == SUCCESS) {
+>   		if (!hostt->skip_settle_delay)
+
+
+
+> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+> index afb0481..b85f8a5 100644
+> --- a/include/scsi/scsi_host.h
+> +++ b/include/scsi/scsi_host.h
+> @@ -148,7 +148,7 @@ struct scsi_host_template {
+>   	int (* eh_device_reset_handler)(struct scsi_cmnd *);
+>   	int (* eh_target_reset_handler)(struct scsi_cmnd *);
+>   	int (* eh_bus_reset_handler)(struct scsi_cmnd *);
+> -	int (* eh_host_reset_handler)(struct scsi_cmnd *);
+> +	int (* eh_host_reset_handler)(struct Scsi_Host *);
+> 
+>   	/*
+>   	 * Before the mid layer attempts to scan for a new device where none
+> 
 
 -- 
 Mit freundlichen Grüßen / Kind regards
