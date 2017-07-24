@@ -1,194 +1,183 @@
 From: Steffen Maier <maier@linux.vnet.ibm.com>
-Subject: Re: [PATCH 14/47] scsi: Use Scsi_Host as argument for
- eh_host_reset_handler
-Date: Mon, 24 Jul 2017 18:55:05 +0200
-Message-ID: <7a7c361d-8d3a-6c76-1831-c86abd6177aa@linux.vnet.ibm.com>
+Subject: Re: [PATCH 24/47] zfcp: use scsi device as argument for
+ zfcp_task_mgmt_function()
+Date: Mon, 24 Jul 2017 19:15:13 +0200
+Message-ID: <10b400c6-aa86-05d4-e3c7-d9676eaa409c@linux.vnet.ibm.com>
 References: <1498638793-44672-1-git-send-email-hare@suse.de>
- <1498638793-44672-15-git-send-email-hare@suse.de>
+ <1498638793-44672-25-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:37833 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753582AbdGXQzO (ORCPT
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:34580 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1754741AbdGXRPW (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 24 Jul 2017 12:55:14 -0400
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6OGrlNu055818
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2017 12:55:13 -0400
-Received: from e06smtp14.uk.ibm.com (e06smtp14.uk.ibm.com [195.75.94.110])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2bwh96agsv-1
+        Mon, 24 Jul 2017 13:15:22 -0400
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6OHDX8D031592
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2017 13:15:22 -0400
+Received: from e06smtp13.uk.ibm.com (e06smtp13.uk.ibm.com [195.75.94.109])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2bwegftvt7-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2017 12:55:12 -0400
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2017 13:15:19 -0400
 Received: from localhost
-        by e06smtp14.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e06smtp13.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-scsi@vger.kernel.org> from <maier@linux.vnet.ibm.com>;
-        Mon, 24 Jul 2017 17:55:10 +0100
-In-Reply-To: <1498638793-44672-15-git-send-email-hare@suse.de>
+        Mon, 24 Jul 2017 18:15:17 +0100
+In-Reply-To: <1498638793-44672-25-git-send-email-hare@suse.de>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+
 
 
 On 06/28/2017 10:32 AM, Hannes Reinecke wrote:
-> Issuing a host reset should not rely on any commands.
-> So use Scsi_Host as argument for eh_host_reset_handler.
+> zfcp_task_mgmt_function() is only used for lun and device reset,
+> so it should be using the scsi device as an argument, not the
+> scsi command.
 > 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
 > ---
->   Documentation/scsi/scsi_eh.txt                  |  2 +-
->   Documentation/scsi/scsi_mid_low_api.txt         |  4 +--
-
->   drivers/s390/scsi/zfcp_scsi.c                   |  3 +-
-
->   drivers/scsi/scsi_debug.c                       | 16 +++++-----
->   drivers/scsi/scsi_error.c                       |  2 +-
-
->   include/scsi/scsi_host.h                        |  2 +-
->   81 files changed, 290 insertions(+), 380 deletions(-)
+>   drivers/s390/scsi/zfcp_ext.h  |  2 +-
+>   drivers/s390/scsi/zfcp_fc.h   |  9 +--------
+>   drivers/s390/scsi/zfcp_fsf.c  | 21 +++++++++++----------
+>   drivers/s390/scsi/zfcp_scsi.c | 12 ++++++------
+>   4 files changed, 19 insertions(+), 25 deletions(-)
 > 
-> diff --git a/Documentation/scsi/scsi_eh.txt b/Documentation/scsi/scsi_eh.txt
-> index 11e447b..78cd6b9 100644
-> --- a/Documentation/scsi/scsi_eh.txt
-> +++ b/Documentation/scsi/scsi_eh.txt
-> @@ -208,7 +208,7 @@ considered to fail always.
->   int (* eh_abort_handler)(struct scsi_cmnd *);
->   int (* eh_device_reset_handler)(struct scsi_cmnd *);
->   int (* eh_bus_reset_handler)(struct scsi_cmnd *);
-> -int (* eh_host_reset_handler)(struct scsi_cmnd *);
-> +int (* eh_host_reset_handler)(struct Scsi_Host *);
+> diff --git a/drivers/s390/scsi/zfcp_ext.h b/drivers/s390/scsi/zfcp_ext.h
+> index 57f1d4a..64d4db7 100644
+> --- a/drivers/s390/scsi/zfcp_ext.h
+> +++ b/drivers/s390/scsi/zfcp_ext.h
+> @@ -117,7 +117,7 @@ extern int zfcp_fsf_send_els(struct zfcp_adapter *, u32,
+>   			     struct zfcp_fsf_ct_els *, unsigned int);
+>   extern int zfcp_fsf_fcp_cmnd(struct scsi_cmnd *);
+>   extern void zfcp_fsf_req_free(struct zfcp_fsf_req *);
+> -extern struct zfcp_fsf_req *zfcp_fsf_fcp_task_mgmt(struct scsi_cmnd *, u8);
+> +extern struct zfcp_fsf_req *zfcp_fsf_fcp_task_mgmt(struct scsi_device *, u8);
+>   extern struct zfcp_fsf_req *zfcp_fsf_abort_fcp_cmnd(struct scsi_cmnd *);
+>   extern void zfcp_fsf_reqid_check(struct zfcp_qdio *, int);
 > 
->    Higher-severity actions are taken only when lower-severity actions
->   cannot recover some of failed scmds.  Also, note that failure of the
-> diff --git a/Documentation/scsi/scsi_mid_low_api.txt b/Documentation/scsi/scsi_mid_low_api.txt
-> index 6338400..ad517d5 100644
-> --- a/Documentation/scsi/scsi_mid_low_api.txt
-> +++ b/Documentation/scsi/scsi_mid_low_api.txt
-> @@ -891,7 +891,7 @@ Details:
+> diff --git a/drivers/s390/scsi/zfcp_fc.h b/drivers/s390/scsi/zfcp_fc.h
+> index df2b541..f08eaf9 100644
+> --- a/drivers/s390/scsi/zfcp_fc.h
+> +++ b/drivers/s390/scsi/zfcp_fc.h
+> @@ -206,19 +206,12 @@ struct zfcp_fc_wka_ports {
+>    * zfcp_fc_scsi_to_fcp - setup FCP command with data from scsi_cmnd
+>    * @fcp: fcp_cmnd to setup
+>    * @scsi: scsi_cmnd where to get LUN, task attributes/flags and CDB
+> - * @tm: task management flags to setup task management command
+>    */
+>   static inline
+> -void zfcp_fc_scsi_to_fcp(struct fcp_cmnd *fcp, struct scsi_cmnd *scsi,
+> -			 u8 tm_flags)
+> +void zfcp_fc_scsi_to_fcp(struct fcp_cmnd *fcp, struct scsi_cmnd *scsi)
+>   {
+>   	int_to_scsilun(scsi->device->lun, (struct scsi_lun *) &fcp->fc_lun);
 > 
->   /**
->    *      eh_host_reset_handler - reset host (host bus adapter)
-> - *      @scp: SCSI host that contains this device should be reset
-> + *      @shost: SCSI host that should be reset
->    *
->    *      Returns SUCCESS if command aborted else FAILED
->    *
-> @@ -908,7 +908,7 @@ Details:
->    *
->    *      Optionally defined in: LLD
->    **/
-> -     int eh_host_reset_handler(struct scsi_cmnd * scp)
-> +     int eh_host_reset_handler(struct Scsi_Host * shost)
+> -	if (unlikely(tm_flags)) {
+> -		fcp->fc_tm_flags = tm_flags;
+> -		return;
+> -	}
+> -
+>   	fcp->fc_pri_ta = FCP_PTA_SIMPLE;
 > 
-> 
->   /**
+>   	if (scsi->sc_data_direction == DMA_FROM_DEVICE)
+
+When I wrote my zfcp decoupling patch series I did a lot of git history 
+research in order to double check if my changes are OK.
+
+Here, I figured that I'd like to separately revert commit 2443c8b23aea 
+("[SCSI] zfcp: Merge FCP task management setup with regular FCP command 
+setup"), because this introduced a dependency on the unsuitable SCSI 
+command for scsi_eh / TMF. Even though it was one of the first commits I 
+posted upstream as newbie zfcp maintainer... little did I know.
+
+> diff --git a/drivers/s390/scsi/zfcp_fsf.c b/drivers/s390/scsi/zfcp_fsf.c
+> index 27ff38f..c4bd3d4 100644
+> --- a/drivers/s390/scsi/zfcp_fsf.c
+> +++ b/drivers/s390/scsi/zfcp_fsf.c
+> @@ -2036,10 +2036,9 @@ static void zfcp_fsf_req_trace(struct zfcp_fsf_req *req, struct scsi_cmnd *scsi)
+
+> -static void zfcp_fsf_fcp_handler_common(struct zfcp_fsf_req *req)
+> +static void zfcp_fsf_fcp_handler_common(struct zfcp_fsf_req *req,
+> +					struct scsi_device *sdev)
 
 
+> @@ -2120,7 +2119,7 @@ static void zfcp_fsf_fcp_cmnd_handler(struct zfcp_fsf_req *req)
+
+> -	zfcp_fsf_fcp_handler_common(req);
+> +	zfcp_fsf_fcp_handler_common(req, scpnt->device);
+
+> @@ -2296,8 +2295,9 @@ static void zfcp_fsf_fcp_task_mgmt_handler(struct zfcp_fsf_req *req)
+>   {
+
+> +	struct scsi_device *sdev = req->data;
+> 
+> -	zfcp_fsf_fcp_handler_common(req);
+> +	zfcp_fsf_fcp_handler_common(req, sdev);
+
+Moving the resolving of req->data into the callers of 
+zfcp_fsf_fcp_handler_common() I did the same way in my own patch series.
+
+> @@ -2313,12 +2313,12 @@ static void zfcp_fsf_fcp_task_mgmt_handler(struct zfcp_fsf_req *req)
+
+> -struct zfcp_fsf_req *zfcp_fsf_fcp_task_mgmt(struct scsi_cmnd *scmnd,
+> +struct zfcp_fsf_req *zfcp_fsf_fcp_task_mgmt(struct scsi_device *sdev,
+>   					    u8 tm_flags)
+
+> @@ -2338,7 +2338,7 @@ struct zfcp_fsf_req *zfcp_fsf_fcp_task_mgmt(struct scsi_cmnd *scmnd,
+
+> -	req->data = scmnd;
+> +	req->data = sdev;
 
 > diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-> index 3d18659..d7d4a63 100644
+> index 5fada93..dd7bea0 100644
 > --- a/drivers/s390/scsi/zfcp_scsi.c
 > +++ b/drivers/s390/scsi/zfcp_scsi.c
-> @@ -309,9 +309,8 @@ static int zfcp_scsi_eh_target_reset_handler(struct scsi_cmnd *scpnt)
->   	return zfcp_task_mgmt_function(scpnt, FCP_TMF_TGT_RESET);
->   }
-> 
-> -static int zfcp_scsi_eh_host_reset_handler(struct scsi_cmnd *scpnt)
-> +static int zfcp_scsi_eh_host_reset_handler(struct Scsi_Host *host)
+> @@ -259,17 +259,17 @@ static void zfcp_scsi_forget_cmnds(struct zfcp_scsi_dev *zsdev, u8 tm_flags)
+
+> -static int zfcp_task_mgmt_function(struct scsi_cmnd *scpnt, u8 tm_flags)
+> +static int zfcp_task_mgmt_function(struct scsi_device *sdev, u8 tm_flags)
 >   {
-> -	struct Scsi_Host *host = scpnt->device->host;
->   	struct zfcp_adapter *adapter = (struct zfcp_adapter *)host->hostdata[0];
->   	int ret = 0;
->   	unsigned long flags;
+> -	struct zfcp_scsi_dev *zfcp_sdev = sdev_to_zfcp(scpnt->device);
+> +	struct zfcp_scsi_dev *zfcp_sdev = sdev_to_zfcp(sdev);
+>   	struct zfcp_adapter *adapter = zfcp_sdev->port->adapter;
+> -	struct fc_port *rport = zfcp_sdev->port->rport;
 
+This smells very odd: fc_port instead of fc_*r*port.
+Looks like this was introduced buggy in "[PATCH 15/47] 
+scsi_transport_fc: Use fc_rport as argument for fc_block_scsi_eh" and 
+should be avoided for bisectability.
 
+> +	struct fc_rport *rport = zfcp_sdev->port->rport;
 
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index dc095a2..ebf525b 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -3878,27 +3878,27 @@ static int scsi_debug_bus_reset(struct scsi_cmnd * SCpnt)
->   	return SUCCESS;
->   }
-> 
-> -static int scsi_debug_host_reset(struct scsi_cmnd * SCpnt)
-> +static int scsi_debug_host_reset(struct Scsi_Host * shost)
+> -		fsf_req = zfcp_fsf_fcp_task_mgmt(scpnt, tm_flags);
+> +		fsf_req = zfcp_fsf_fcp_task_mgmt(sdev, tm_flags);
+
+>   static int zfcp_scsi_eh_device_reset_handler(struct scsi_cmnd *scpnt)
 >   {
->   	struct sdebug_host_info * sdbg_host;
->   	struct sdebug_dev_info *devip;
->   	int k = 0;
+> -	return zfcp_task_mgmt_function(scpnt, FCP_TMF_LUN_RESET);
+> +	return zfcp_task_mgmt_function(scpnt->device, FCP_TMF_LUN_RESET);
+>   }
 > 
->   	++num_host_resets;
-> -	if ((SCpnt->device) && (SDEBUG_OPT_ALL_NOISE & sdebug_opts))
-> -		sdev_printk(KERN_INFO, SCpnt->device, "%s\n", __func__);
-> -        spin_lock(&sdebug_host_list_lock);
-> -        list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
-> +	if (SDEBUG_OPT_ALL_NOISE & sdebug_opts)
-> +		shost_printk(KERN_INFO, shost, "%s\n", __func__);
-> +	spin_lock(&sdebug_host_list_lock);
-> +	list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
->   		list_for_each_entry(devip, &sdbg_host->dev_info_list,
->   				    dev_list) {
->   			set_bit(SDEBUG_UA_BUS_RESET, devip->uas_bm);
->   			++k;
->   		}
-> -        }
-> -        spin_unlock(&sdebug_host_list_lock);
-> +	}
-> +	spin_unlock(&sdebug_host_list_lock);
->   	stop_all_queued();
->   	if (SDEBUG_OPT_RESET_NOISE & sdebug_opts)
-> -		sdev_printk(KERN_INFO, SCpnt->device,
-> +		shost_printk(KERN_INFO, shost,
->   			    "%s: %d device(s) found\n", __func__, k);
->   	return SUCCESS;
+>   static int zfcp_scsi_eh_target_reset_handler(struct scsi_cmnd *scpnt)
+>   {
+> -	return zfcp_task_mgmt_function(scpnt, FCP_TMF_TGT_RESET);
+> +	return zfcp_task_mgmt_function(scpnt->device, FCP_TMF_TGT_RESET);
 >   }
 
-Mechanically, the change looks good.
+Won't the target_reset_handler eventually have scsi_target as argument 
+and thus we will not have any particular scsi_device to pass anymore 
+later in the patch set?
 
-However, is it correct that it's been looping over all its shosts and 
-doing something even for those that do not match SCpnt or now shost?
-I thought it should only reset on the scope but it seems to call 
-stop_all_queued(void) which might reset all shosts?
-But then again the loop seems about unit attentions so the loop may be 
-correct.
-Anyway, this is not related to your change.
-
-The other quoted parts incl. zfcp look good to me.
-
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index ac31964..808167f 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -745,7 +745,7 @@ static int scsi_try_host_reset(struct scsi_cmnd *scmd)
->   	if (!hostt->eh_host_reset_handler)
->   		return FAILED;
-> 
-> -	rtn = hostt->eh_host_reset_handler(scmd);
-> +	rtn = hostt->eh_host_reset_handler(host);
-> 
->   	if (rtn == SUCCESS) {
->   		if (!hostt->skip_settle_delay)
-
-
-
-> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-> index afb0481..b85f8a5 100644
-> --- a/include/scsi/scsi_host.h
-> +++ b/include/scsi/scsi_host.h
-> @@ -148,7 +148,7 @@ struct scsi_host_template {
->   	int (* eh_device_reset_handler)(struct scsi_cmnd *);
->   	int (* eh_target_reset_handler)(struct scsi_cmnd *);
->   	int (* eh_bus_reset_handler)(struct scsi_cmnd *);
-> -	int (* eh_host_reset_handler)(struct scsi_cmnd *);
-> +	int (* eh_host_reset_handler)(struct Scsi_Host *);
-> 
->   	/*
->   	 * Before the mid layer attempts to scan for a new device where none
-> 
+In my patch series, I replaced scsi_cmnd with a mandatory zfcp_port and 
+an optional(!) scsi_device for the TMF call chains in zfcp.
+I thought scsi_device must be optional because it only exists for LUN 
+reset but not for target reset.
+Does this make sense?
 
 -- 
 Mit freundlichen Grüßen / Kind regards
