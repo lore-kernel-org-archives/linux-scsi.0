@@ -1,72 +1,50 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 26/28] visorhba: sanitze private device data allocation
-Date: Mon, 24 Jul 2017 11:28:27 +0200
-Message-ID: <a19603b2-4c41-87be-535b-bd7b9914f906@suse.de>
-References: <1498638316-44420-1-git-send-email-hare@suse.de>
- <1498638316-44420-27-git-send-email-hare@suse.de>
- <CY4PR07MB3176109C5BDB7B51AD3BB73FF0A60@CY4PR07MB3176.namprd07.prod.outlook.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Subject: [PATCH] scsi_transport_fc: return -EBUSY for deleted vport
+Date: Mon, 24 Jul 2017 12:09:36 +0200
+Message-ID: <1500890976-7992-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37171 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:41598 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752579AbdGXJ2a (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
-        Mon, 24 Jul 2017 05:28:30 -0400
-In-Reply-To: <CY4PR07MB3176109C5BDB7B51AD3BB73FF0A60@CY4PR07MB3176.namprd07.prod.outlook.com>
-Content-Language: en-US
+        id S1752262AbdGXKJn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 24 Jul 2017 06:09:43 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Kershner, David A" <David.Kershner@unisys.com>
-Cc: "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James Smart <james.smart@broadcom.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-On 07/19/2017 07:45 PM, Kershner, David A wrote:
-> 
-> 
->> -----Original Message-----
->> From: Hannes Reinecke [mailto:hare@suse.de]
->> Sent: Wednesday, June 28, 2017 4:25 AM
->> To: Christoph Hellwig <hch@lst.de>
->> Subject: [PATCH 26/28] visorhba: sanitze private device data allocation
->>
->> There's no need to keep the private data for a device in a separate
->> list; better to store it in ->hostdata and do away with the additional
->> list.
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.com>
->> Cc: David Kershner <david.kershner@unisys.com>
-> 
-> I'm not sure what the process for this patch was to get into the upstream, do
-> you know the forecast for it? I.e. when it will be available in Linus's tree? 
-> 
-> We have several more changes that I would like to make to this driver and
-> to simplify them, I would like to put them on top of this change, would you
-> mind if I submitted it to GregKH for the staging branch if it is going to take
-> some time?
-> 
-> Sorry for the newbie questions.
-> 
-typically the maintainer (that'll be you :-) does a review, and replies
-with something like:
+When trying to delete a vport via 'vport_delete' sysfs attribute
+we should be checking if the port is already in state VPORT_DELETING;
+if so there's no need to do anything.
 
-Patch is okay;
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/scsi_transport_fc.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-Reviewed-by: David Kershner <XXX@YYY.com>
-
-Then the subsystem maintainer (ie Martin Petersen) will be picking it
-up, and queueing it in his subsystem tree for eventual merge with linux
-upstream.
-
-The first step has been completed, so we're waiting for Martin to pick
-it up. It might be some time, though; depending on the merge window and
-his overall workload.
-
-Cheers,
-
-Hannes
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 6dd0922..ec9837e 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -1286,7 +1286,7 @@ static FC_DEVICE_ATTR(vport, symbolic_name, S_IRUGO | S_IWUSR,
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+-	if (vport->flags & (FC_VPORT_DEL | FC_VPORT_CREATING)) {
++	if (vport->flags & (FC_VPORT_DEL | FC_VPORT_CREATING | FC_VPORT_DELETING)) {
+ 		spin_unlock_irqrestore(shost->host_lock, flags);
+ 		return -EBUSY;
+ 	}
+@@ -2430,8 +2430,10 @@ void fc_release_transport(struct scsi_transport_template *t)
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 
+ 	/* Remove any vports */
+-	list_for_each_entry_safe(vport, next_vport, &fc_host->vports, peers)
++	list_for_each_entry_safe(vport, next_vport, &fc_host->vports, peers) {
++		vport->flags |= FC_VPORT_DELETING;
+ 		fc_queue_work(shost, &vport->vport_delete_work);
++	}
+ 
+ 	/* Remove any remote ports */
+ 	list_for_each_entry_safe(rport, next_rport,
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+1.8.5.6
