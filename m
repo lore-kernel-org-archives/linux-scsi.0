@@ -1,90 +1,63 @@
 From: Thomas Gleixner <tglx@linutronix.de>
-Subject: [patch 1/5] scsi/bnx2fc: Plug CPU hotplug race
-Date: Mon, 24 Jul 2017 12:52:56 +0200
-Message-ID: <20170724105341.304148039@linutronix.de>
+Subject: [patch 2/5] scsi/bnx2fc: Prevent recursive cpuhotplug locking
+Date: Mon, 24 Jul 2017 12:52:57 +0200
+Message-ID: <20170724105341.384083666@linutronix.de>
 References: <20170724105255.715647116@linutronix.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-15
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=scsi-bnx2fc--Plug-CPU-hotplug-race.patch
+Content-Disposition: inline;
+ filename=scsi-bnx2fc--Prevent-recursive-cpuhotplug-locking.patch
 Sender: linux-kernel-owner@vger.kernel.org
 To: LKML <linux-kernel@vger.kernel.org>
-Cc: QLogic-Storage-Upstream@qlogic.com, martin.petersen@oracle.com, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: QLogic-Storage-Upstream@qlogic.com, martin.petersen@oracle.com, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, kernel test robot <fengguang.wu@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-bnx2fc_process_new_cqes() has protection against CPU hotplug, which relies
-on the per cpu thread pointer. This protection is racy because it happens
-only partially with the per cpu fp_work_lock held.
+The BNX2FC module init/exit code installs/removes the hotplug callbacks with
+the cpu hotplug lock held. This worked with the old CPU locking
+implementation which allowed recursive locking, but with the new percpu
+rwsem based mechanism this is not longer allowed.
 
-If the CPU is unplugged after the lock is dropped, the wakeup code can
-dereference a NULL pointer or access freed and potentially reused memory.
+Use the _cpuslocked() variants to fix this.
 
-Restructure the code so the thread check and wakeup happens with the
-fp_work_lock held.
-
+Reported-by: kernel test robot <fengguang.wu@intel.com>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- drivers/scsi/bnx2fc/bnx2fc_hwi.c |   45 +++++++++++++++++++--------------------
- 1 file changed, 23 insertions(+), 22 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
 
---- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-@@ -1008,6 +1008,28 @@ static struct bnx2fc_work *bnx2fc_alloc_
- 	return work;
- }
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -2766,15 +2766,16 @@ static int __init bnx2fc_mod_init(void)
+ 	for_each_online_cpu(cpu)
+ 		bnx2fc_percpu_thread_create(cpu);
  
-+/* Pending work request completion */
-+static void bnx2fc_pending_work(struct bnx2fc_rport *tgt, unsigned int wqe)
-+{
-+	unsigned int cpu = wqe % num_possible_cpus();
-+	struct bnx2fc_percpu_s *fps;
-+	struct bnx2fc_work *work;
-+
-+	fps = &per_cpu(bnx2fc_percpu, cpu);
-+	spin_lock_bh(&fps->fp_work_lock);
-+	if (fps->iothread) {
-+		work = bnx2fc_alloc_work(tgt, wqe);
-+		if (work) {
-+			list_add_tail(&work->list, &fps->work_list);
-+			wake_up_process(fps->iothread);
-+			spin_unlock_bh(&fps->fp_work_lock);
-+			return;
-+		}
-+	}
-+	spin_unlock_bh(&fps->fp_work_lock);
-+	bnx2fc_process_cq_compl(tgt, wqe);
-+}
-+
- int bnx2fc_process_new_cqes(struct bnx2fc_rport *tgt)
- {
- 	struct fcoe_cqe *cq;
-@@ -1042,28 +1064,7 @@ int bnx2fc_process_new_cqes(struct bnx2f
- 			/* Unsolicited event notification */
- 			bnx2fc_process_unsol_compl(tgt, wqe);
- 		} else {
--			/* Pending work request completion */
--			struct bnx2fc_work *work = NULL;
--			struct bnx2fc_percpu_s *fps = NULL;
--			unsigned int cpu = wqe % num_possible_cpus();
--
--			fps = &per_cpu(bnx2fc_percpu, cpu);
--			spin_lock_bh(&fps->fp_work_lock);
--			if (unlikely(!fps->iothread))
--				goto unlock;
--
--			work = bnx2fc_alloc_work(tgt, wqe);
--			if (work)
--				list_add_tail(&work->list,
--					      &fps->work_list);
--unlock:
--			spin_unlock_bh(&fps->fp_work_lock);
--
--			/* Pending work request completion */
--			if (fps->iothread && work)
--				wake_up_process(fps->iothread);
--			else
--				bnx2fc_process_cq_compl(tgt, wqe);
-+			bnx2fc_pending_work(tgt, wqe);
- 			num_free_sqes++;
- 		}
- 		cqe++;
+-	rc = cpuhp_setup_state_nocalls(CPUHP_AP_ONLINE_DYN,
+-				       "scsi/bnx2fc:online",
+-				       bnx2fc_cpu_online, NULL);
++	rc = cpuhp_setup_state_nocalls_cpuslocked(CPUHP_AP_ONLINE_DYN,
++						  "scsi/bnx2fc:online",
++						  bnx2fc_cpu_online, NULL);
+ 	if (rc < 0)
+ 		goto stop_threads;
+ 	bnx2fc_online_state = rc;
+ 
+-	cpuhp_setup_state_nocalls(CPUHP_SCSI_BNX2FC_DEAD, "scsi/bnx2fc:dead",
+-				  NULL, bnx2fc_cpu_dead);
++	cpuhp_setup_state_nocalls_cpuslocked(CPUHP_SCSI_BNX2FC_DEAD,
++					     "scsi/bnx2fc:dead",
++					     NULL, bnx2fc_cpu_dead);
+ 	put_online_cpus();
+ 
+ 	cnic_register_driver(CNIC_ULP_FCOE, &bnx2fc_cnic_cb);
+@@ -2850,8 +2851,8 @@ static void __exit bnx2fc_mod_exit(void)
+ 		bnx2fc_percpu_thread_destroy(cpu);
+ 	}
+ 
+-	cpuhp_remove_state_nocalls(bnx2fc_online_state);
+-	cpuhp_remove_state_nocalls(CPUHP_SCSI_BNX2FC_DEAD);
++	cpuhp_remove_state_nocalls_cpuslocked(bnx2fc_online_state);
++	cpuhp_remove_state_nocalls_cpuslocked(CPUHP_SCSI_BNX2FC_DEAD);
+ 
+ 	put_online_cpus();
+ 
