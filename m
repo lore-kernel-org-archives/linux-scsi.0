@@ -1,121 +1,150 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Please help me with kernel hung
-Date: Mon, 24 Jul 2017 10:27:33 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1707241024420.1739-100000@iolanthe.rowland.org>
-References: <CABXGCsMF-pjcy+apEKRVtRjUS=G1Hh7ZXhryaH6eScp5AF5kCg@mail.gmail.com>
+From: Steffen Maier <maier@linux.vnet.ibm.com>
+Subject: Re: [PATCH 09/47] zfcp: open-code fc_block_scsi_eh() for host reset
+Date: Mon, 24 Jul 2017 18:18:15 +0200
+Message-ID: <a7950ea7-380c-bb01-7f31-5c555217ad2d@linux.vnet.ibm.com>
+References: <1498638793-44672-1-git-send-email-hare@suse.de>
+ <1498638793-44672-10-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:60166 "HELO
-        iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S1756066AbdGXO1e (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2017 10:27:34 -0400
-In-Reply-To: <CABXGCsMF-pjcy+apEKRVtRjUS=G1Hh7ZXhryaH6eScp5AF5kCg@mail.gmail.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:39335 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752513AbdGXQSW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 24 Jul 2017 12:18:22 -0400
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6OGE2A5095020
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2017 12:18:22 -0400
+Received: from e06smtp15.uk.ibm.com (e06smtp15.uk.ibm.com [195.75.94.111])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2bwftgweyf-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2017 12:18:22 -0400
+Received: from localhost
+        by e06smtp15.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <maier@linux.vnet.ibm.com>;
+        Mon, 24 Jul 2017 17:18:19 +0100
+In-Reply-To: <1498638793-44672-10-git-send-email-hare@suse.de>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?UTF-8?B?0JzQuNGF0LDQuNC7INCT0LDQstGA0LjQu9C+0LI=?= <mikhail.v.gavrilov@gmail.com>
-Cc: linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Benjamin Block <bblock@linux.vnet.ibm.com>
 
-On Mon, 24 Jul 2017, Михаил Гаврилов wrote:
+Hi Hannes,
 
-> Hi guys. I hope what I wrote to appropriate mailing list. Can anybody
-> look in hung issue below:
+unfortunately I only realized now by accident that there's stuff to 
+review. Would be nice to send it also explicitly to driver maintainers 
+in addition to the list.
+
+Since you've asked for this multiple times, I happened to just now code 
+a patch series of 6 patches in order to decouple zfcp from scsi_cmnd for 
+device, target, and host reset.
+
+While I provide some review comments below, I think it might be clearer 
+and easier to review if you would rebase your series on top of my 
+decoupling.
+
+Let me know how urgent you'd like to see my code. I planned to send it 
+as RFC soon anyway. However, it hasn't seen any function testing yet. If 
+you don't care, let me know and I can send it.
+
+On 06/28/2017 10:32 AM, Hannes Reinecke wrote:
+> When issuing a host reset we should be waiting for all
+> ports to become unblocked; just waiting for one might
+> be resulting in host reset to return too early.
 > 
-> [  246.751384] kernel: INFO: task scsi_eh_6:388 blocked for more than
-> 120 seconds.
-> [  246.752085] kernel:       Not tainted 4.13.0-0.rc1.git4.1.fc27.x86_64 #1
-> [  246.752187] kernel: "echo 0 >
-> /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> [  246.752312] kernel: scsi_eh_6       D13432   388      2 0x00000080
-> [  246.752332] kernel: Call Trace:
-> [  246.752357] kernel:  __schedule+0x2dc/0xbb0
-> [  246.752385] kernel:  schedule+0x3d/0x90
-> [  246.752396] kernel:  schedule_preempt_disabled+0x15/0x20
-> [  246.752406] kernel:  __mutex_lock+0x2f4/0xa00
-> [  246.752422] kernel:  ? device_reset+0x24/0x50 [usb_storage]
-> [  246.752460] kernel:  ? scsi_error_handler+0x96/0x620
-> [  246.752470] kernel:  mutex_lock_nested+0x1b/0x20
-> [  246.752478] kernel:  ? mutex_lock_nested+0x1b/0x20
-> [  246.752489] kernel:  device_reset+0x24/0x50 [usb_storage]
-> [  246.752502] kernel:  scsi_eh_ready_devs+0x37a/0xe10
-> [  246.752523] kernel:  ? trace_hardirqs_on_caller+0xf4/0x190
-> [  246.752538] kernel:  ? scsi_error_handler+0x5/0x620
-> [  246.752546] kernel:  ? scsi_error_handler+0x96/0x620
-> [  246.752555] kernel:  scsi_error_handler+0x505/0x620
-> [  246.752589] kernel:  kthread+0x133/0x150
-> [  246.752598] kernel:  ? scsi_eh_get_sense+0x250/0x250
-> [  246.752607] kernel:  ? kthread_create_on_node+0x70/0x70
-> [  246.752621] kernel:  ? kthread_create_on_node+0x70/0x70
-> [  246.752632] kernel:  ret_from_fork+0x2a/0x40
-> [  246.752672] kernel: INFO: task usb-storage:390 blocked for more
-> than 120 seconds.
-> [  246.752782] kernel:       Not tainted 4.13.0-0.rc1.git4.1.fc27.x86_64 #1
-> [  246.752879] kernel: "echo 0 >
-> /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> [  246.753056] kernel: usb-storage     D13584   390      2 0x00000080
-> [  246.753082] kernel: Call Trace:
-> [  246.753114] kernel:  __schedule+0x2dc/0xbb0
-> [  246.753162] kernel:  ? wait_for_completion+0x117/0x1a0
-> [  246.753177] kernel:  schedule+0x3d/0x90
-> [  246.753197] kernel:  schedule_timeout+0x29d/0x510
-> [  246.753241] kernel:  ? mark_held_locks+0x5f/0x90
-> [  246.753259] kernel:  ? _raw_spin_unlock_irq+0x2c/0x40
-> [  246.753277] kernel:  ? wait_for_completion+0x117/0x1a0
-> [  246.753310] kernel:  ? wait_for_completion+0x117/0x1a0
-> [  246.753326] kernel:  wait_for_completion+0x136/0x1a0
-> [  246.753339] kernel:  ? wait_for_completion+0x136/0x1a0
-> [  246.753358] kernel:  ? wake_up_q+0x80/0x80
-> [  246.753401] kernel:  usb_sg_wait+0x119/0x180
-> [  246.753441] kernel:  usb_stor_bulk_transfer_sglist.part.1+0x70/0xd0
-> [usb_storage]
-> [  246.753477] kernel:  usb_stor_bulk_srb+0x4e/0x80 [usb_storage]
-> [  246.753506] kernel:  usb_stor_Bulk_transport+0x187/0x430 [usb_storage]
-> [  246.753554] kernel:  usb_stor_invoke_transport+0x3e/0x540 [usb_storage]
-> [  246.753596] kernel:  ? mark_held_locks+0x5f/0x90
-> [  246.753613] kernel:  ? _raw_spin_unlock_irq+0x2c/0x40
-> [  246.753664] kernel:  usb_stor_transparent_scsi_command+0xe/0x10 [usb_storage]
-> [  246.753685] kernel:  usb_stor_control_thread+0x1fb/0x280 [usb_storage]
-> [  246.753731] kernel:  kthread+0x133/0x150
-> [  246.753751] kernel:  ? fill_inquiry_response+0x20/0x20 [usb_storage]
-> [  246.753766] kernel:  ? kthread_create_on_node+0x70/0x70
-> [  246.753796] kernel:  ret_from_fork+0x2a/0x40
-> [  246.753878] kernel:
->                        Showing all locks held in the system:
-> [  246.753903] kernel: 2 locks held by kworker/6:1/63:
-> [  246.753926] kernel:  #0:
-> ("events_freezable_power_efficient"){.+.+.+}, at: [<ffffffff910d2830>]
-> process_one_work+0x1d0/0x6a0
-> [  246.754031] kernel:  #1:  ((&(&ev->dwork)->work)){+.+.+.}, at:
-> [<ffffffff910d2830>] process_one_work+0x1d0/0x6a0
-> [  246.754085] kernel: 1 lock held by khungtaskd/65:
-> [  246.754095] kernel:  #0:  (tasklist_lock){.+.+..}, at:
-> [<ffffffff911149bd>] debug_show_all_locks+0x3d/0x1a0
-> [  246.754156] kernel: 1 lock held by scsi_eh_6/388:
-> [  246.754166] kernel:  #0:  (&us_interface_key[i]){+.+...}, at:
-> [<ffffffffc0369b34>] device_reset+0x24/0x50 [usb_storage]
-> [  246.754222] kernel: 1 lock held by usb-storage/390:
-> [  246.754232] kernel:  #0:  (&us_interface_key[i]){+.+...}, at:
-> [<ffffffffc036c79d>] usb_stor_control_thread+0x7d/0x280 [usb_storage]
-> [  246.754290] kernel: 1 lock held by lvm/519:
-> [  246.754300] kernel:  #0:  (&ev->block_mutex){+.+...}, at:
-> [<ffffffff91491073>] disk_block_events+0x33/0x90
-> [  246.754357] kernel: 1 lock held by systemd-udevd/543:
-> [  246.754366] kernel:  #0:  (&bdev->bd_mutex){+.+.+.}, at:
-> [<ffffffff91319963>] __blkdev_put+0x43/0x200
-> [  246.754427] kernel:
-> [  246.754436] kernel: =============================================
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> ---
+>   drivers/s390/scsi/zfcp_scsi.c | 27 +++++++++++++++++++++++----
+>   1 file changed, 23 insertions(+), 4 deletions(-)
 > 
+> diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
+> index 0678cf7..3d18659 100644
+> --- a/drivers/s390/scsi/zfcp_scsi.c
+> +++ b/drivers/s390/scsi/zfcp_scsi.c
+> @@ -311,13 +311,32 @@ static int zfcp_scsi_eh_target_reset_handler(struct scsi_cmnd *scpnt)
 > 
-> This occured after update kernel to 4.13.0-0.rc1.git4.1 then next
-> reboot. After pressing reset button and follow reboot problem not
-> reproduced. But sometime kernel may hangs silently.
+>   static int zfcp_scsi_eh_host_reset_handler(struct scsi_cmnd *scpnt)
+>   {
+> -	struct zfcp_scsi_dev *zfcp_sdev = sdev_to_zfcp(scpnt->device);
+> -	struct zfcp_adapter *adapter = zfcp_sdev->port->adapter;
+> -	int ret;
+> +	struct Scsi_Host *host = scpnt->device->host;
+> +	struct zfcp_adapter *adapter = (struct zfcp_adapter *)host->hostdata[0];
+> +	int ret = 0;
+> +	unsigned long flags;
+> +	struct zfcp_port *port;
 > 
-> If I'm wrong with the mailing list, tell me please appropriate mailing list.
+>   	zfcp_erp_adapter_reopen(adapter, 0, "schrh_1");
+>   	zfcp_erp_wait(adapter);
+> -	ret = fc_block_scsi_eh(scpnt);
+> +retry_rport_blocked:
+> +	spin_lock_irqsave(host->host_lock, flags);
 
-These are the right mailing lists.
+missing read_lock(&adapter->port_list_lock);
 
-We need more information to tell what is going wrong.  Can you post the
-full dmesg log?
+Hm, well, I have to think about lock ordering, because my patch has the 
+port_list as outer loop and inside it calls fc_block_scsi_eh (also 
+modified with fc_rport as argument).
+If there's any other location taking both locks we better get them in 
+the same order.
 
-Alan Stern
+> +	list_for_each_entry(port, &adapter->port_list, list) {
+> +		struct fc_rport *rport = port->rport;
+
+port->rport can be NULL, so need to check
+
+> +
+> +		if (rport->port_state == FC_PORTSTATE_BLOCKED) {
+> +			if (rport->flags & FC_RPORT_FAST_FAIL_TIMEDOUT)
+> +				ret = FAST_IO_FAIL;
+
+Hm, doesn't this get lost if a next iteration hits ret=NEEDS_RETRY?
+
+I was pondering in my own patch version what to return of just a subset 
+of ports ran into fast_io_fail. And for now I thought just fast_io_fail 
+would be good to let I/O bubble up for path failover, even if this would 
+include of rport which meanwhile unblocked properly and would not need 
+bubbling up pending requests because they could service them with a 
+simple retry.
+
+> +			else
+> +				ret = NEEDS_RETRY;
+> +			break;
+> +		}
+
+Why do you open code fc_block_scsi_eh() instead of calling it with 
+port->rport (if it's !=NULL)?
+
+Typically all rports would be blocked after adapter recovery, until they 
+become unblocked (via zfcp's async rport_work). So we can wait for each 
+in turn which should still only wait in summary for the last one to 
+unblock. E.g. if the first rport takes longest we wait for it, and the 
+rest of the loop will be fast since the others happen to be unblocked 
+(or fast_io_fail) already?
+
+> +	}
+
+missing read_unlock(&adapter->port_list_lock);
+
+> +	spin_unlock_irqrestore(host->host_lock, flags);
+> +	if (ret == NEEDS_RETRY) {
+> +		msleep(1000);
+> +		goto retry_rport_blocked;
+> +	}
+>   	if (ret)
+>   		return ret;
+> 
+
+-- 
+Mit freundlichen Grüßen / Kind regards
+Steffen Maier
+
+Linux on z Systems Development
+
+IBM Deutschland Research & Development GmbH
+Vorsitzende des Aufsichtsrats: Martina Koederitz
+Geschaeftsfuehrung: Dirk Wittkopp
+Sitz der Gesellschaft: Boeblingen
+Registergericht: Amtsgericht Stuttgart, HRB 243294
