@@ -1,66 +1,48 @@
-From: "Javali, Nilesh" <Nilesh.Javali@cavium.com>
-Subject: Re: [PATCH] scsi: qedi: select CONFIG_ISCSI_BOOT_SYSFS
-Date: Mon, 24 Jul 2017 06:44:13 +0000
-Message-ID: <D59B92EF.5A232%nilesh.javali@cavium.com>
-References: <20170721161139.3330251-1-arnd@arndb.de>
+From: Hannes Reinecke <hare@suse.com>
+Subject: Re: [PATCH] aic7xxx: fix firmware build with O=path
+Date: Mon, 24 Jul 2017 09:00:41 +0200
+Message-ID: <5cf07bda-1bb8-4c71-58ad-d1af492b6c71@suse.com>
+References: <20170719015834.19397-1-jakub.kicinski@netronome.com>
+ <20170721115152.352ce0c9@cakuba.netronome.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0069.outbound.protection.outlook.com ([104.47.36.69]:38887
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750998AbdGXGoR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 24 Jul 2017 02:44:17 -0400
-In-Reply-To: <20170721161139.3330251-1-arnd@arndb.de>
+Received: from smtp.nue.novell.com ([195.135.221.5]:35169 "EHLO
+        smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751793AbdGXHge (ORCPT
+        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
+        Mon, 24 Jul 2017 03:36:34 -0400
+In-Reply-To: <20170721115152.352ce0c9@cakuba.netronome.com>
 Content-Language: en-US
-Content-ID: <F04897D43C2C044AB85EE5E2D3BA9CF5@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>, Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@cavium.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "Kashyap, Saurav" <Saurav.Kashyap@cavium.com>, "Rangankar, Manish" <Manish.Rangankar@cavium.com>, Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Jakub Kicinski <jakub.kicinski@netronome.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
+On 07/21/2017 08:51 PM, Jakub Kicinski wrote:
+> On Tue, 18 Jul 2017 18:58:34 -0700, Jakub Kicinski wrote:
+>> Building firmware with O=path was apparently broken in aic7 for ever.
+>> Message of the previous commit to the Makefile (from 2008) mentions
+>> this unfortunate state of affairs already.  Fix this, mostly to make
+>> randconfig builds more reliable.
+>>
+>> Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+> 
+> Gentle ping :)  Hannes, are you still maintaining aic7xxx?
+> 
+Yes, I do.
 
-On 21/07/17, 9:41 PM, "Arnd Bergmann" <arnd@arndb.de> wrote:
+Patch looks reasonable; Kconfig is still black magic to me, though :-)
 
->Without the base library support, we get a link failure
->
->drivers/scsi/qedi/qedi_main.o: In function `__qedi_probe.constprop.0':
->qedi_main.c:(.text+0x2d8e): undefined reference to
->`iscsi_boot_create_target'
->qedi_main.c:(.text+0x2dee): undefined reference to
->`iscsi_boot_create_initiator'
->qedi_main.c:(.text+0x2e1c): undefined reference to
->`iscsi_boot_create_ethernet'
->
->This selects the Kconfig symbol like the other two users of that
->module do.
->
->Fixes: c57ec8fb7c02 ("scsi: qedi: Add support for Boot from SAN over
->iSCSI offload")
->Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->---
-> drivers/scsi/qedi/Kconfig | 1 +
-> 1 file changed, 1 insertion(+)
->
->diff --git a/drivers/scsi/qedi/Kconfig b/drivers/scsi/qedi/Kconfig
->index 21331453db7b..8deb8723c4dd 100644
->--- a/drivers/scsi/qedi/Kconfig
->+++ b/drivers/scsi/qedi/Kconfig
->@@ -2,6 +2,7 @@ config QEDI
-> 	tristate "QLogic QEDI 25/40/100Gb iSCSI Initiator Driver Support"
-> 	depends on PCI && SCSI && UIO
-> 	depends on QED
->+	select ISCSI_BOOT_SYSFS
-> 	select SCSI_ISCSI_ATTRS
-> 	select QED_LL2
-> 	select QED_ISCSI
->--=20
->2.9.0
->
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-NACK. The fix already posted to address this issue,
-http://marc.info/?l=3Dlinux-scsi&m=3D150045528332067&w=3D2
+Cheers,
 
-Thanks,
-Nilesh
+Hannes
+-- 
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.com			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
