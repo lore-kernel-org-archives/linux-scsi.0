@@ -1,309 +1,120 @@
-From: Steffen Maier <maier@linux.vnet.ibm.com>
-Subject: Re: [PATCH 32/47] scsi: Use scsi_target as argument for
- eh_target_reset_handler()
-Date: Mon, 24 Jul 2017 20:10:19 +0200
-Message-ID: <e459fe23-44e8-1149-82b0-2eb794de65d0@linux.vnet.ibm.com>
-References: <1498638793-44672-1-git-send-email-hare@suse.de>
- <1498638793-44672-33-git-send-email-hare@suse.de>
+From: Robert LeBlanc <robert@leblancnet.us>
+Subject: Re: [PATCH 0/7] Enable iSCSI offload drivers to use information from iface.
+Date: Mon, 24 Jul 2017 12:32:22 -0600
+Message-ID: <CAANLjFra69rJAsOUqdD46-u07YRHjBDKHvdfzR4_FL_8h=HK6g@mail.gmail.com>
+References: <20170606180717.5007-1-robert@leblancnet.us> <20170607162839.ludxvmddghx5ocn2@straylight.hirudinean.org>
+ <CAANLjFomYCEmjfE7HLAsE7SgVqBKH8KSxYzFqxuV7t8as8+-ZQ@mail.gmail.com>
+ <CAANLjFrJ2g8JfB-3bcVwVXxK41rB3aaSeP3ho7J5F0YLO=3sUw@mail.gmail.com>
+ <D566FD10.3ABC0%manish.rangankar@cavium.com> <CAANLjFqSB=JuaLJ1Ax-L9B0m-6EW6Hk9ePXGY-pMCK0uKJ6h_Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:42219 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754323AbdGXSK0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 24 Jul 2017 14:10:26 -0400
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6OI9sf5096451
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2017 14:10:26 -0400
-Received: from e06smtp10.uk.ibm.com (e06smtp10.uk.ibm.com [195.75.94.106])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2bwfk2jgg2-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2017 14:10:26 -0400
-Received: from localhost
-        by e06smtp10.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <maier@linux.vnet.ibm.com>;
-        Mon, 24 Jul 2017 19:10:23 +0100
-In-Reply-To: <1498638793-44672-33-git-send-email-hare@suse.de>
-Content-Language: en-US
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:34847 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755198AbdGXScY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2017 14:32:24 -0400
+Received: by mail-oi0-f65.google.com with SMTP id q70so4899143oic.2
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2017 11:32:23 -0700 (PDT)
+In-Reply-To: <CAANLjFqSB=JuaLJ1Ax-L9B0m-6EW6Hk9ePXGY-pMCK0uKJ6h_Q@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+To: "Rangankar, Manish" <Manish.Rangankar@cavium.com>
+Cc: Chris Leech <cleech@redhat.com>, "lduncan@suse.com" <lduncan@suse.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>, "ogerlitz@mellanox.com" <ogerlitz@mellanox.com>, Sagi Grimberg <sagi@grimberg.me>, "roid@mellanox.com" <roid@mellanox.com>, Doug Ledford <dledford@redhat.com>, "Hefty, Sean" <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, linux-rdma <linux-rdma@vger.kernel.org>, "subbu.seetharaman@broadcom.com" <subbu.seetharaman@broadcom.com>, "ketan.mukadam@broadcom.com" <ketan.mukadam@broadcom.com>
 
+On Wed, Jun 14, 2017 at 10:47 AM, Robert LeBlanc <robert@leblancnet.us> wrote:
+> On Wed, Jun 14, 2017 at 3:20 AM, Rangankar, Manish
+> <Manish.Rangankar@cavium.com> wrote:
+>>
+>> On 13/06/17 10:19 PM, "Robert LeBlanc" <robert@leblancnet.us> wrote:
+>>
+>>>On Wed, Jun 7, 2017 at 12:30 PM, Robert LeBlanc <robert@leblancnet.us>
+>>>wrote:
+>>>> On Wed, Jun 7, 2017 at 10:28 AM, Chris Leech <cleech@redhat.com> wrote:
+>>>>> On Tue, Jun 06, 2017 at 12:07:10PM -0600, Robert LeBlanc wrote:
+>>>>>> This patchset enables iSCSI offload drivers to have access to the
+>>>>>>iface
+>>>>>> information provided by iscsid. This allows users to have more control
+>>>>>> of how the driver connects to the iSCSI target. iSER is updated to use
+>>>>>> iface.ipaddress to set the source IP address if configured. This
+>>>>>>allows
+>>>>>> iSER to use multiple ports on the same network or in more complicated
+>>>>>> routed configurations.
+>>>>>>
+>>>>>> Since there is already a change to the function parameters, dst_addr
+>>>>>> is upgraded to sockaddr_storage so that it is more future proof and
+>>>>>>makes
+>>>>>> the size of the struct static and not dependent on checking the
+>>>>>>SA_FAMILY.
+>>>>>>
+>>>>>> This is dependent on updates to Open-iSCSI.
+>>>>>
+>>>>> Hi Robert,
+>>>>>
+>>>>> I don't think that passing the iface_rec structure directly from the
+>>>>> iscsid internals into a netlink message is a good way to go about this.
+>>>>> It's really big, there's an embedded list_head with user address
+>>>>> pointers that needs to be left out, and there are 32/64-bit layout
+>>>>> differences.
+>>>>>
+>>>>> Let me take a look at how you're proposing using this info for iSER, if
+>>>>> it makes sense I think we should come up with a better designed
+>>>>> structure for passing the information.
+>>>>>
+>>>>> Thanks,
+>>>>> Chris
+>>>>>
+>>>>
+>>>> Chris,
+>>>>
+>>>> Thank you for your feedback. I agree that the entire iface is probably
+>>>> overkill, it was more of a proof of concept. We are only using the
+>>>> ipaddress in the iface for iSER (in my patch), but I could see other
+>>>> drivers benefiting from some of the other data in the iface (mac,
+>>>> interface_name, vlan, etc) so I didn't want to be too restrictive so
+>>>> that it wouldn't have to be extended later. I've not worked on
+>>>> userspace/kernel interaction before so I need some guidance to make
+>>>> the transition between userspace and kernel versions smoother.
+>>>>
+>>>> This patchset works for what we need and it is very important for us
+>>>> (and I'm sure others once the feature is available) and I'm happy to
+>>>> put in the time to get it accepted upstream, I'm just new to kernel
+>>>> development and need some guidance.
+>>>
+>>>Are there other comments/ideas/suggestions specifically from the
+>>>iSCSI/iSER guys? I'd like to keep this patch moving.
+>>
+>> Considering partial iSCSI offload solution (like bnx2i and qedi) point of
+>> view, we liked the idea from Hannes to create TAP interface to associate
+>> with each iSCSI offload interface, which will allow us to use userspace
+>> tools for configuration. I haven't dig into its details yet, but at higher
+>> level it looks like this will help us to move away from our dependency
+>> over iscsiuio.
+>
+> I'm having a hard time wrapping my head around this idea. How can
+> configuring a TAP (separate Ethernet device) affect the offload NIC. I
+> don't see how you can bind to the right interface with the IP address
+> or how that is passed to rdma_connect() using a TAP. Is TAP used
+> instead of netlink for communicating between userspace and the kernel?
+> Obviously by my questions, at the moment I'm not sure how to approach
+> this at all and would be the wrong person to make this happen.
+>
+> If someone can explain how this would work and point to some code that
+> does something like this (examples are good for me), I can try to
+> create a patch with TAPs. As I mentioned before, this is important for
+> us and I'm willing to put in the time to learn and code, but I'm
+> really lost at this point.
+>
+> Thank you,
+>
+> ----------------
+> Robert LeBlanc
+> PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
 
-On 06/28/2017 10:32 AM, Hannes Reinecke wrote:
-> The target reset function should only depend on the scsi target,
-> not the scsi command.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> ---
+Can we get some more discussion/enlightenment on this? It would be
+really nice to have this in 4.14 and time is getting short.
 
->   drivers/s390/scsi/zfcp_scsi.c               | 20 ++++++++++--
+Thanks.
 
->   drivers/scsi/scsi_debug.c                   | 21 ++++---------
->   drivers/scsi/scsi_error.c                   |  5 +--
-
->   include/scsi/scsi_host.h                    |  2 +-
-
->   33 files changed, 214 insertions(+), 174 deletions(-)
-
-> diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-> index dd7bea0..92a3902 100644
-> --- a/drivers/s390/scsi/zfcp_scsi.c
-> +++ b/drivers/s390/scsi/zfcp_scsi.c
-> @@ -309,9 +309,25 @@ static int zfcp_scsi_eh_device_reset_handler(struct scsi_cmnd *scpnt)
->   	return zfcp_task_mgmt_function(scpnt->device, FCP_TMF_LUN_RESET);
->   }
-> 
-> -static int zfcp_scsi_eh_target_reset_handler(struct scsi_cmnd *scpnt)
-> +/*
-> + * Note: We need to select a LUN as the storage array doesn't
-> + * necessarily supports LUN 0 and might refuse the target reset.
-> + */
-
-Do you have any real experience with targets regarding this?
-
-Did you even try this and it failed?
-If so, how did it fail?
-
-It seems other drivers hardcode LUN 0 for target reset [see below].
-
-At least you made a similar loop to search for a suitable "victim" 
-scsi_device with some other driver changes below, so zfcp is not the 
-only one.
-
-In fact, this is one of my open questions in my own patch set:
-Is the TMF flag in the FCP_CMND IU sufficient or does the transmission 
-path require a valid FCP_LUN also in the same IU even for a target reset.
-
-> +static int zfcp_scsi_eh_target_reset_handler(struct scsi_target *starget)
->   {
-> -	return zfcp_task_mgmt_function(scpnt->device, FCP_TMF_TGT_RESET);
-> +	struct fc_rport *rport = starget_to_rport(starget);
-> +	struct Scsi_Host *shost = rport_to_shost(rport);
-> +	struct scsi_device *sdev = NULL, *tmp_sdev;
-> +
-
-In "[PATCH 09/47] zfcp: open-code fc_block_scsi_eh() for host reset" you 
-introduced a shost lock, but here you did not?
-
-Does the midlayer already hold an shost lock when calling any of these 
-eh callbacks?
-
-Not sure if that's the corresponding part of 
-Documentation/scsi/scsi_eh.txt (but even if, I don't understand who's 
-supposed to have the shost lock):
-> [2-1-2] Flow of scmds through EH
->  2. EH starts
->     ACTION: move all scmds to EH's local eh_work_q.  shost->eh_cmd_q
-> 	    is cleared.
->     LOCKING: shost->host_lock (not strictly necessary, just for
->              consistency)
-> [2-2-3] Things to consider
->  - For consistency, when accessing/modifying shost data structure,
->    grab shost->host_lock.
-
-
-> +	shost_for_each_device(tmp_sdev, shost) {
-> +		if (tmp_sdev->id == starget->id) {
-> +			sdev = tmp_sdev;
-> +			break;
-> +		}
-> +	}
-> +	if (!sdev)
-> +		return FAILED;
-> +	return zfcp_task_mgmt_function(sdev, FCP_TMF_TGT_RESET);
->   }
-
-Ah, this "solves" the problem of needing a scsi_device even though we 
-only get scsi_target as scope argument.
-
-> diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-> index 107c0f6..573bd43 100644
-> --- a/drivers/scsi/lpfc/lpfc_scsi.c
-> +++ b/drivers/scsi/lpfc/lpfc_scsi.c
-> @@ -5226,16 +5226,16 @@ void lpfc_poll_timeout(unsigned long ptr)
->    *  0x2002 - Success
->    **/
->   static int
-> -lpfc_target_reset_handler(struct scsi_cmnd *cmnd)
-> +lpfc_target_reset_handler(struct scsi_target *starget)
->   {
-> -	struct Scsi_Host  *shost = cmnd->device->host;
-> +	struct fc_rport *rport = starget_to_rport(starget);
-> +	struct Scsi_Host  *shost = rport_to_shost(rport);
->   	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
->   	struct lpfc_rport_data *rdata;
->   	struct lpfc_nodelist *pnode;
-> -	unsigned tgt_id = cmnd->device->id;
-> -	uint64_t lun_id = cmnd->device->lun;
-> +	unsigned tgt_id = starget->id;
-> +	uint64_t lun_id = 0;
-
-
-
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> index f990ab4d..db40ddf 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-
-> @@ -4038,42 +4040,43 @@ int megasas_reset_target_fusion(struct scsi_cmnd *scmd)
-
-> +	shost_for_each_device(sdev, shost) {
-> +		if (!sdev->hostdata)
-> +			continue;
-> +		mr_device_priv_data = sdev->hostdata;
-> +		if (mr_device_priv_data->is_tm_capable) {
-> +			devhandle = megasas_get_tm_devhandle(sdev);
-> +			break;
-> +		}
-> +	}
-> +
-
-> -	devhandle = megasas_get_tm_devhandle(scmd->device);
-
->   	ret = megasas_issue_tm(instance, devhandle,
-> -			scmd->device->channel, scmd->device->id, 0,
-> +			starget->channel, starget->id, 0,
->   			MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET);
-
-The called function seems to internally have hardcoded LUN 0:
-
-static int
-megasas_issue_tm(struct megasas_instance *instance, u16 device_handle,
-	uint channel, uint id, u16 smid_task, u8 type)
-{
-...
-	mpi_request->LUN[1] = 0;
-
-> -static int pmcraid_eh_target_reset_handler(struct scsi_cmnd *scmd)
-> +static int pmcraid_eh_target_reset_handler(struct scsi_target *starget)
->   {
-> -	scmd_printk(KERN_INFO, scmd,
-> +	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
-> +	struct scsi_device *scsi_dev = NULL, *tmp;
-> +
-> +	shost_for_each_device(tmp, shost) {
-> +		if ((tmp->channel == starget->channel) &&
-> +		    (tmp->id == starget->id)) {
-> +			scsi_dev = tmp;
-> +			break;
-> +		}
-> +	}
-> +	if (!scsi_dev)
-> +		return FAILED;
-> +	sdev_printk(KERN_INFO, scsi_dev,
->   		    "Doing target reset due to an I/O command timeout.\n");
-> -	return pmcraid_reset_device(scmd->device,
-> +	return pmcraid_reset_device(scsi_dev,
->   				    PMCRAID_INTERNAL_TIMEOUT,
->   				    RESET_DEVICE_TARGET);
->   }
-
-
-
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index 1e89598..37e511f 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -3809,39 +3809,30 @@ static int scsi_debug_device_reset(struct scsi_cmnd * SCpnt)
->   	return SUCCESS;
->   }
-> 
-> -static int scsi_debug_target_reset(struct scsi_cmnd *SCpnt)
-> +static int scsi_debug_target_reset(struct scsi_target *starget)
->   {
-> +	struct Scsi_Host *hp = dev_to_shost(&starget->dev);
-
-> -	if (!hp)
-> -		goto lie;
-
-Does dev_to_shost(&starget->dev) in this particular case always return 
-!=NULL?
-I would hope that starget always has an shost as some ancestor in driver 
-core.
-
-Other than that question, the scsi_debug change looks good.
-
-(Although I don't understand how this function actually triggers the 
-forgetting of pending requests on the scope in addition to setting the 
-unit attention bit, but then again I'm not familiar with scsi_debug 
-internals.)
-
-> +		starget_printk(KERN_INFO, starget, "%s\n", __func__);
->   	sdbg_host = *(struct sdebug_host_info **)shost_priv(hp);
->   	if (sdbg_host) {
->   		list_for_each_entry(devip,
->   				    &sdbg_host->dev_info_list,
->   				    dev_list)
-> -			if (devip->target == sdp->id) {
-> +			if (devip->target == starget->id) {
->   				set_bit(SDEBUG_UA_BUS_RESET, devip->uas_bm);
->   				++k;
->   			}
->   	}
->   	if (SDEBUG_OPT_RESET_NOISE & sdebug_opts)
-> -		sdev_printk(KERN_INFO, sdp,
-> +		starget_printk(KERN_INFO, starget,
->   			    "%s: %d device(s) found in target\n", __func__, k);
-> -lie:
-> +
->   	return SUCCESS;
->   }
-> 
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 9dd51ed..368a961 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -810,14 +810,15 @@ static int scsi_try_target_reset(struct scsi_cmnd *scmd)
->   	int rtn;
->   	struct Scsi_Host *host = scmd->device->host;
->   	struct scsi_host_template *hostt = host->hostt;
-> +	struct scsi_target *starget = scsi_target(scmd->device);
-> 
->   	if (!hostt->eh_target_reset_handler)
->   		return FAILED;
-> 
-> -	rtn = hostt->eh_target_reset_handler(scmd);
-> +	rtn = hostt->eh_target_reset_handler(starget);
->   	if (rtn == SUCCESS) {
->   		spin_lock_irqsave(host->host_lock, flags);
-> -		__starget_for_each_device(scsi_target(scmd->device), NULL,
-> +		__starget_for_each_device(starget, NULL,
->   					  __scsi_report_device_reset);
->   		spin_unlock_irqrestore(host->host_lock, flags);
->   	}
-
-looks good
-
-> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-> index 0c5ce78..33bc523 100644
-> --- a/include/scsi/scsi_host.h
-> +++ b/include/scsi/scsi_host.h
-> @@ -146,7 +146,7 @@ struct scsi_host_template {
->   	 */
->   	int (* eh_abort_handler)(struct scsi_cmnd *);
->   	int (* eh_device_reset_handler)(struct scsi_cmnd *);
-> -	int (* eh_target_reset_handler)(struct scsi_cmnd *);
-> +	int (* eh_target_reset_handler)(struct scsi_target *);
->   	int (* eh_bus_reset_handler)(struct Scsi_Host *, int);
->   	int (* eh_host_reset_handler)(struct Scsi_Host *);
-> 
-
-looks good
-
-
-
--- 
-Mit freundlichen Grüßen / Kind regards
-Steffen Maier
-
-Linux on z Systems Development
-
-IBM Deutschland Research & Development GmbH
-Vorsitzende des Aufsichtsrats: Martina Koederitz
-Geschaeftsfuehrung: Dirk Wittkopp
-Sitz der Gesellschaft: Boeblingen
-Registergericht: Amtsgericht Stuttgart, HRB 243294
+----------------
+Robert LeBlanc
+PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
