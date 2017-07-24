@@ -1,63 +1,176 @@
 From: Thomas Gleixner <tglx@linutronix.de>
-Subject: [patch 2/5] scsi/bnx2fc: Prevent recursive cpuhotplug locking
-Date: Mon, 24 Jul 2017 12:52:57 +0200
-Message-ID: <20170724105341.384083666@linutronix.de>
+Subject: [patch 4/5] scsi/bnx2fc: Simplify CPU hotplug code
+Date: Mon, 24 Jul 2017 12:52:59 +0200
+Message-ID: <20170724105341.547838549@linutronix.de>
 References: <20170724105255.715647116@linutronix.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-15
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from Galois.linutronix.de ([146.0.238.70]:35100 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753402AbdGXKzR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2017 06:55:17 -0400
 Content-Disposition: inline;
- filename=scsi-bnx2fc--Prevent-recursive-cpuhotplug-locking.patch
-Sender: linux-kernel-owner@vger.kernel.org
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: QLogic-Storage-Upstream@qlogic.com, martin.petersen@oracle.com, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, kernel test robot <fengguang.wu@intel.com>
+ filename=scsi-bnx2fc--Simplify-CPU-hotplug-code.patch
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: QLogic-Storage-Upstream@qlogic.com, martin.petersen@oracle.com, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-The BNX2FC module init/exit code installs/removes the hotplug callbacks with
-the cpu hotplug lock held. This worked with the old CPU locking
-implementation which allowed recursive locking, but with the new percpu
-rwsem based mechanism this is not longer allowed.
+The CPU hotplug related code of this driver can be simplified by:
 
-Use the _cpuslocked() variants to fix this.
+1) Consolidating the callbacks into a single state. The CPU thread can be
+   torn down on the CPU which goes offline. There is no point in delaying
+   that to the CPU dead state
 
-Reported-by: kernel test robot <fengguang.wu@intel.com>
+2) Let the core code invoke the online/offline callbacks and remove the
+   extra for_each_online_cpu() loops.
+
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   69 ++++++++------------------------------
+ include/linux/cpuhotplug.h        |    1 
+ 2 files changed, 15 insertions(+), 55 deletions(-)
 
 --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
 +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -2766,15 +2766,16 @@ static int __init bnx2fc_mod_init(void)
- 	for_each_online_cpu(cpu)
- 		bnx2fc_percpu_thread_create(cpu);
+@@ -2624,12 +2624,11 @@ static struct fcoe_transport bnx2fc_tran
+ };
  
--	rc = cpuhp_setup_state_nocalls(CPUHP_AP_ONLINE_DYN,
--				       "scsi/bnx2fc:online",
--				       bnx2fc_cpu_online, NULL);
-+	rc = cpuhp_setup_state_nocalls_cpuslocked(CPUHP_AP_ONLINE_DYN,
-+						  "scsi/bnx2fc:online",
-+						  bnx2fc_cpu_online, NULL);
- 	if (rc < 0)
- 		goto stop_threads;
- 	bnx2fc_online_state = rc;
+ /**
+- * bnx2fc_percpu_thread_create - Create a receive thread for an
+- *				 online CPU
++ * bnx2fc_cpu_online - Create a receive thread for an  online CPU
+  *
+  * @cpu: cpu index for the online cpu
+  */
+-static void bnx2fc_percpu_thread_create(unsigned int cpu)
++static int bnx2fc_cpu_online(unsigned int cpu)
+ {
+ 	struct bnx2fc_percpu_s *p;
+ 	struct task_struct *thread;
+@@ -2639,15 +2638,17 @@ static void bnx2fc_percpu_thread_create(
+ 	thread = kthread_create_on_node(bnx2fc_percpu_io_thread,
+ 					(void *)p, cpu_to_node(cpu),
+ 					"bnx2fc_thread/%d", cpu);
++	if (IS_ERR(thread))
++		return PTR_ERR(thread);
++
+ 	/* bind thread to the cpu */
+-	if (likely(!IS_ERR(thread))) {
+-		kthread_bind(thread, cpu);
+-		p->iothread = thread;
+-		wake_up_process(thread);
+-	}
++	kthread_bind(thread, cpu);
++	p->iothread = thread;
++	wake_up_process(thread);
++	return 0;
+ }
  
--	cpuhp_setup_state_nocalls(CPUHP_SCSI_BNX2FC_DEAD, "scsi/bnx2fc:dead",
--				  NULL, bnx2fc_cpu_dead);
-+	cpuhp_setup_state_nocalls_cpuslocked(CPUHP_SCSI_BNX2FC_DEAD,
-+					     "scsi/bnx2fc:dead",
-+					     NULL, bnx2fc_cpu_dead);
- 	put_online_cpus();
+-static void bnx2fc_percpu_thread_destroy(unsigned int cpu)
++static int bnx2fc_cpu_offline(unsigned int cpu)
+ {
+ 	struct bnx2fc_percpu_s *p;
+ 	struct task_struct *thread;
+@@ -2661,7 +2662,6 @@ static void bnx2fc_percpu_thread_destroy
+ 	thread = p->iothread;
+ 	p->iothread = NULL;
  
- 	cnic_register_driver(CNIC_ULP_FCOE, &bnx2fc_cnic_cb);
-@@ -2850,8 +2851,8 @@ static void __exit bnx2fc_mod_exit(void)
- 		bnx2fc_percpu_thread_destroy(cpu);
+-
+ 	/* Free all work in the list */
+ 	list_for_each_entry_safe(work, tmp, &p->work_list, list) {
+ 		list_del_init(&work->list);
+@@ -2673,20 +2673,6 @@ static void bnx2fc_percpu_thread_destroy
+ 
+ 	if (thread)
+ 		kthread_stop(thread);
+-}
+-
+-
+-static int bnx2fc_cpu_online(unsigned int cpu)
+-{
+-	printk(PFX "CPU %x online: Create Rx thread\n", cpu);
+-	bnx2fc_percpu_thread_create(cpu);
+-	return 0;
+-}
+-
+-static int bnx2fc_cpu_dead(unsigned int cpu)
+-{
+-	printk(PFX "CPU %x offline: Remove Rx thread\n", cpu);
+-	bnx2fc_percpu_thread_destroy(cpu);
+ 	return 0;
+ }
+ 
+@@ -2761,31 +2747,16 @@ static int __init bnx2fc_mod_init(void)
+ 		spin_lock_init(&p->fp_work_lock);
  	}
  
--	cpuhp_remove_state_nocalls(bnx2fc_online_state);
--	cpuhp_remove_state_nocalls(CPUHP_SCSI_BNX2FC_DEAD);
-+	cpuhp_remove_state_nocalls_cpuslocked(bnx2fc_online_state);
-+	cpuhp_remove_state_nocalls_cpuslocked(CPUHP_SCSI_BNX2FC_DEAD);
+-	get_online_cpus();
+-
+-	for_each_online_cpu(cpu)
+-		bnx2fc_percpu_thread_create(cpu);
+-
+-	rc = cpuhp_setup_state_nocalls_cpuslocked(CPUHP_AP_ONLINE_DYN,
+-						  "scsi/bnx2fc:online",
+-						  bnx2fc_cpu_online, NULL);
++	rc = cpuhp_setup_state(CPUHP_AP_ONLINE_DYN, "scsi/bnx2fc:online",
++			       bnx2fc_cpu_online, bnx2fc_cpu_offline);
+ 	if (rc < 0)
+-		goto stop_threads;
++		goto stop_thread;
+ 	bnx2fc_online_state = rc;
  
- 	put_online_cpus();
+-	cpuhp_setup_state_nocalls_cpuslocked(CPUHP_SCSI_BNX2FC_DEAD,
+-					     "scsi/bnx2fc:dead",
+-					     NULL, bnx2fc_cpu_dead);
+-	put_online_cpus();
+-
+ 	cnic_register_driver(CNIC_ULP_FCOE, &bnx2fc_cnic_cb);
+-
+ 	return 0;
  
+-stop_threads:
+-	for_each_online_cpu(cpu)
+-		bnx2fc_percpu_thread_destroy(cpu);
+-	put_online_cpus();
++stop_thread:
+ 	kthread_stop(l2_thread);
+ free_wq:
+ 	destroy_workqueue(bnx2fc_wq);
+@@ -2804,7 +2775,6 @@ static void __exit bnx2fc_mod_exit(void)
+ 	struct fcoe_percpu_s *bg;
+ 	struct task_struct *l2_thread;
+ 	struct sk_buff *skb;
+-	unsigned int cpu = 0;
+ 
+ 	/*
+ 	 * NOTE: Since cnic calls register_driver routine rtnl_lock,
+@@ -2845,16 +2815,7 @@ static void __exit bnx2fc_mod_exit(void)
+ 	if (l2_thread)
+ 		kthread_stop(l2_thread);
+ 
+-	get_online_cpus();
+-	/* Destroy per cpu threads */
+-	for_each_online_cpu(cpu) {
+-		bnx2fc_percpu_thread_destroy(cpu);
+-	}
+-
+-	cpuhp_remove_state_nocalls_cpuslocked(bnx2fc_online_state);
+-	cpuhp_remove_state_nocalls_cpuslocked(CPUHP_SCSI_BNX2FC_DEAD);
+-
+-	put_online_cpus();
++	cpuhp_remove_state(bnx2fc_online_state);
+ 
+ 	destroy_workqueue(bnx2fc_wq);
+ 	/*
+--- a/include/linux/cpuhotplug.h
++++ b/include/linux/cpuhotplug.h
+@@ -39,7 +39,6 @@ enum cpuhp_state {
+ 	CPUHP_PCI_XGENE_DEAD,
+ 	CPUHP_IOMMU_INTEL_DEAD,
+ 	CPUHP_LUSTRE_CFS_DEAD,
+-	CPUHP_SCSI_BNX2FC_DEAD,
+ 	CPUHP_SCSI_BNX2I_DEAD,
+ 	CPUHP_WORKQUEUE_PREP,
+ 	CPUHP_POWER_NUMA_PREPARE,
