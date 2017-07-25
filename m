@@ -1,112 +1,209 @@
-From: Steffen Maier <maier@linux.vnet.ibm.com>
-Subject: [RFC 9/9] zfcp: decouple our scsi_eh callbacks from scsi_cmnd
-Date: Tue, 25 Jul 2017 16:14:27 +0200
-Message-ID: <20170725141427.35258-10-maier@linux.vnet.ibm.com>
-References: <20170725141427.35258-1-maier@linux.vnet.ibm.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 32/47] scsi: Use scsi_target as argument for
+ eh_target_reset_handler()
+Date: Tue, 25 Jul 2017 16:19:38 +0200
+Message-ID: <ea13f9c2-7e68-fb29-3957-bbb3eb2cd091@suse.de>
+References: <1498638793-44672-1-git-send-email-hare@suse.de>
+ <1498638793-44672-33-git-send-email-hare@suse.de>
+ <e459fe23-44e8-1149-82b0-2eb794de65d0@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:38200 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752385AbdGYOPO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Jul 2017 10:15:14 -0400
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6PEEs8B145520
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Jul 2017 10:15:13 -0400
-Received: from e06smtp13.uk.ibm.com (e06smtp13.uk.ibm.com [195.75.94.109])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2bx6c2c1wn-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Jul 2017 10:15:13 -0400
-Received: from localhost
-        by e06smtp13.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <maier@linux.vnet.ibm.com>;
-        Tue, 25 Jul 2017 15:15:11 +0100
-In-Reply-To: <20170725141427.35258-1-maier@linux.vnet.ibm.com>
+Received: from mx2.suse.de ([195.135.220.15]:60330 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751812AbdGYOTo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Jul 2017 10:19:44 -0400
+In-Reply-To: <e459fe23-44e8-1149-82b0-2eb794de65d0@linux.vnet.ibm.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Cc: linux-s390@vger.kernel.org, Steffen Maier <maier@linux.vnet.ibm.com>, Benjamin Block <bblock@linux.vnet.ibm.com>
+To: Steffen Maier <maier@linux.vnet.ibm.com>, Christoph Hellwig <hch@lst.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-zfcp_scsi_eh_device_reset_handler() now only depends on scsi_device.
-zfcp_scsi_eh_target_reset_handler() now only depends on scsi_target.
-zfcp_scsi_eh_host_reset_handler() now only depends on Scsi_Host.
-All derive other objects from these intended callback arguments.
+On 07/24/2017 08:10 PM, Steffen Maier wrote:
+> 
+> On 06/28/2017 10:32 AM, Hannes Reinecke wrote:
+>> The target reset function should only depend on the scsi target,
+>> not the scsi command.
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.com>
+>> ---
+> 
+>>   drivers/s390/scsi/zfcp_scsi.c               | 20 ++++++++++--
+> 
+>>   drivers/scsi/scsi_debug.c                   | 21 ++++---------
+>>   drivers/scsi/scsi_error.c                   |  5 +--
+> 
+>>   include/scsi/scsi_host.h                    |  2 +-
+> 
+>>   33 files changed, 214 insertions(+), 174 deletions(-)
+> 
+>> diff --git a/drivers/s390/scsi/zfcp_scsi.c
+>> b/drivers/s390/scsi/zfcp_scsi.c
+>> index dd7bea0..92a3902 100644
+>> --- a/drivers/s390/scsi/zfcp_scsi.c
+>> +++ b/drivers/s390/scsi/zfcp_scsi.c
+>> @@ -309,9 +309,25 @@ static int
+>> zfcp_scsi_eh_device_reset_handler(struct scsi_cmnd *scpnt)
+>>       return zfcp_task_mgmt_function(scpnt->device, FCP_TMF_LUN_RESET);
+>>   }
+>>
+>> -static int zfcp_scsi_eh_target_reset_handler(struct scsi_cmnd *scpnt)
+>> +/*
+>> + * Note: We need to select a LUN as the storage array doesn't
+>> + * necessarily supports LUN 0 and might refuse the target reset.
+>> + */
+> 
+> Do you have any real experience with targets regarding this?
+> 
+> Did you even try this and it failed?
+> If so, how did it fail?
+> 
+Hehe.
 
-Actually change the signature of zfcp_task_mgmt_function() used by
-zfcp_scsi_eh_device_reset_handler() & zfcp_scsi_eh_target_reset_handler().
-Since it was prepared in a previous patch, we only need to delete
-some local auto variables which are now the intended arguments.
+Actually, it was _you_ (well, not you personally, but the zfcp
+maintainer at that time) who insisted on _not_ having to rely on LUN 0,
+as that LUN might not be available on non-NPIV setups.
+In the same vein he argued that we should be using the WLUN here.
 
-Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
----
- drivers/s390/scsi/zfcp_scsi.c | 40 ++++++++++++++++++++++++++++++++--------
- 1 file changed, 32 insertions(+), 8 deletions(-)
+> It seems other drivers hardcode LUN 0 for target reset [see below].
+> 
+> At least you made a similar loop to search for a suitable "victim"
+> scsi_device with some other driver changes below, so zfcp is not the
+> only one.
+> 
+> In fact, this is one of my open questions in my own patch set:
+> Is the TMF flag in the FCP_CMND IU sufficient or does the transmission
+> path require a valid FCP_LUN also in the same IU even for a target reset.
+> 
+Technically, you need an IT nexus for the target reset.
+As the SCSI target is somewhat under-represented in the linux SCSI stack
+typically it's easier to use a scsi device for this, and derive the IT
+nexus from there.
+And target reset is a tad tricky anyway; it got deprecated with later
+SCSI releases (SPC-3?), so chances is that it doesn't do anything.
 
-diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-index 11cf33ea8c14..4cb38cfd46e3 100644
---- a/drivers/s390/scsi/zfcp_scsi.c
-+++ b/drivers/s390/scsi/zfcp_scsi.c
-@@ -266,11 +266,17 @@ static void zfcp_scsi_forget_cmnds(struct zfcp_port *port,
- 	write_unlock_irqrestore(&adapter->abort_lock, flags);
- }
- 
--static int zfcp_task_mgmt_function(struct scsi_cmnd *scpnt, u8 tm_flags)
-+/**
-+ * zfcp_task_mgmt_function() - Synchronously send a task management function.
-+ * @port: Pointer to zfcp port indicating scope.
-+ * @sdev: Pointer to SCSI device as scope, or %NULL if scope is only port.
-+ * @tm_flags: Task management flags,
-+ *            here we only handle %FCP_TMF_TGT_RESET or %FCP_TMF_LUN_RESET.
-+ */
-+static int zfcp_task_mgmt_function(struct zfcp_port *port,
-+				   struct scsi_device *sdev, u8 tm_flags)
- {
--	struct scsi_device *sdev = scpnt->device;
--	struct zfcp_scsi_dev *zfcp_sdev = sdev_to_zfcp(sdev);
--	struct zfcp_port *port = zfcp_sdev->port;
-+	struct zfcp_scsi_dev *zfcp_sdev = sdev ? sdev_to_zfcp(sdev) : NULL;
- 	struct zfcp_adapter *adapter = port->adapter;
- 	unsigned int scsi_id = port->starget_id;
- 	u64 scsi_lun = ZFCP_DBF_INVALID_LUN;
-@@ -325,18 +331,36 @@ static int zfcp_task_mgmt_function(struct scsi_cmnd *scpnt, u8 tm_flags)
- 
- static int zfcp_scsi_eh_device_reset_handler(struct scsi_cmnd *scpnt)
- {
--	return zfcp_task_mgmt_function(scpnt, FCP_TMF_LUN_RESET);
-+	struct scsi_device *sdev = scpnt->device;
-+	struct zfcp_scsi_dev *zfcp_sdev = sdev_to_zfcp(sdev);
-+	struct zfcp_port *port = zfcp_sdev->port;
-+
-+	return zfcp_task_mgmt_function(port, sdev, FCP_TMF_LUN_RESET);
- }
- 
- static int zfcp_scsi_eh_target_reset_handler(struct scsi_cmnd *scpnt)
- {
--	return zfcp_task_mgmt_function(scpnt, FCP_TMF_TGT_RESET);
-+	struct scsi_target *starget = scsi_target(scpnt->device);
-+	struct fc_rport *rport = starget_to_rport(starget);
-+	struct zfcp_adapter *adapter =
-+		(struct zfcp_adapter *)rport_to_shost(rport)->hostdata[0];
-+	struct zfcp_port *port = zfcp_get_port_by_wwpn(adapter,
-+						       rport->port_name);
-+	if (!port) {
-+		zfcp_dbf_scsi_devreset("nopt", adapter, FCP_TMF_TGT_RESET,
-+				       NULL, port->starget_id,
-+				       ZFCP_DBF_INVALID_LUN);
-+		return 0;
-+	}
-+
-+	return zfcp_task_mgmt_function(port, NULL, FCP_TMF_TGT_RESET);
- }
- 
- static int zfcp_scsi_eh_host_reset_handler(struct scsi_cmnd *scpnt)
- {
--	struct zfcp_scsi_dev *zfcp_sdev = sdev_to_zfcp(scpnt->device);
--	struct zfcp_adapter *adapter = zfcp_sdev->port->adapter;
-+	struct Scsi_Host *shost = scpnt->device->host;
-+	struct zfcp_adapter *adapter =
-+		(struct zfcp_adapter *)shost->hostdata[0];
- 	struct zfcp_port *port;
- 	int ret = SUCCESS;
- 
+(You could do yourself a favour and enquire with your friendly array
+vendors if _they_ support target reset; I have a strong feeling that
+they don't. In which case you might as well drop it completely, and
+target reset doing an IT nexus reset.)
+
+>> +static int zfcp_scsi_eh_target_reset_handler(struct scsi_target
+>> *starget)
+>>   {
+>> -    return zfcp_task_mgmt_function(scpnt->device, FCP_TMF_TGT_RESET);
+>> +    struct fc_rport *rport = starget_to_rport(starget);
+>> +    struct Scsi_Host *shost = rport_to_shost(rport);
+>> +    struct scsi_device *sdev = NULL, *tmp_sdev;
+>> +
+> 
+> In "[PATCH 09/47] zfcp: open-code fc_block_scsi_eh() for host reset" you
+> introduced a shost lock, but here you did not?
+> 
+> Does the midlayer already hold an shost lock when calling any of these
+> eh callbacks?
+> 
+Yes.
+
+> Not sure if that's the corresponding part of
+> Documentation/scsi/scsi_eh.txt (but even if, I don't understand who's
+> supposed to have the shost lock):
+>> [2-1-2] Flow of scmds through EH
+>>  2. EH starts
+>>     ACTION: move all scmds to EH's local eh_work_q.  shost->eh_cmd_q
+>>         is cleared.
+>>     LOCKING: shost->host_lock (not strictly necessary, just for
+>>              consistency)
+>> [2-2-3] Things to consider
+>>  - For consistency, when accessing/modifying shost data structure,
+>>    grab shost->host_lock.
+> 
+> 
+>> +    shost_for_each_device(tmp_sdev, shost) {
+>> +        if (tmp_sdev->id == starget->id) {
+>> +            sdev = tmp_sdev;
+>> +            break;
+>> +        }
+>> +    }
+>> +    if (!sdev)
+>> +        return FAILED;
+>> +    return zfcp_task_mgmt_function(sdev, FCP_TMF_TGT_RESET);
+>>   }
+> 
+> Ah, this "solves" the problem of needing a scsi_device even though we
+> only get scsi_target as scope argument.
+> 
+>> diff --git a/drivers/scsi/lpfc/lpfc_scsi.c
+>> b/drivers/scsi/lpfc/lpfc_scsi.c
+>> index 107c0f6..573bd43 100644
+>> --- a/drivers/scsi/lpfc/lpfc_scsi.c
+>> +++ b/drivers/scsi/lpfc/lpfc_scsi.c
+>> @@ -5226,16 +5226,16 @@ void lpfc_poll_timeout(unsigned long ptr)
+>>    *  0x2002 - Success
+>>    **/
+>>   static int
+>> -lpfc_target_reset_handler(struct scsi_cmnd *cmnd)
+>> +lpfc_target_reset_handler(struct scsi_target *starget)
+>>   {
+>> -    struct Scsi_Host  *shost = cmnd->device->host;
+>> +    struct fc_rport *rport = starget_to_rport(starget);
+>> +    struct Scsi_Host  *shost = rport_to_shost(rport);
+>>       struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
+>>       struct lpfc_rport_data *rdata;
+>>       struct lpfc_nodelist *pnode;
+>> -    unsigned tgt_id = cmnd->device->id;
+>> -    uint64_t lun_id = cmnd->device->lun;
+>> +    unsigned tgt_id = starget->id;
+>> +    uint64_t lun_id = 0;
+> 
+> 
+> 
+>> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>> b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>> index f990ab4d..db40ddf 100644
+>> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> 
+>> @@ -4038,42 +4040,43 @@ int megasas_reset_target_fusion(struct
+>> scsi_cmnd *scmd)
+> 
+>> +    shost_for_each_device(sdev, shost) {
+>> +        if (!sdev->hostdata)
+>> +            continue;
+>> +        mr_device_priv_data = sdev->hostdata;
+>> +        if (mr_device_priv_data->is_tm_capable) {
+>> +            devhandle = megasas_get_tm_devhandle(sdev);
+>> +            break;
+>> +        }
+>> +    }
+>> +
+> 
+>> -    devhandle = megasas_get_tm_devhandle(scmd->device);
+> 
+>>       ret = megasas_issue_tm(instance, devhandle,
+>> -            scmd->device->channel, scmd->device->id, 0,
+>> +            starget->channel, starget->id, 0,
+>>               MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET);
+> 
+> The called function seems to internally have hardcoded LUN 0:
+> 
+> static int
+> megasas_issue_tm(struct megasas_instance *instance, u16 device_handle,
+>     uint channel, uint id, u16 smid_task, u8 type)
+> {
+> ...
+>     mpi_request->LUN[1] = 0;
+> 
+Indeed. But that's megaraid_sas specific; other drivers have different
+requirements here.
+
+Cheers,
+
+Hannes
 -- 
-2.11.2
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
