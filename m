@@ -1,30 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: megaraid_sas: fix memleak in megasas_alloc_cmdlist_fusion
-Date: Mon, 24 Jul 2017 22:05:13 -0400
-Message-ID: <yq1r2x51dba.fsf@oracle.com>
-References: <1500634449-10837-1-git-send-email-shuwang@redhat.com>
+Subject: Re: [PATCH] aic7xxx: fix firmware build with O=path
+Date: Mon, 24 Jul 2017 22:07:17 -0400
+Message-ID: <yq1mv7t1d7u.fsf@oracle.com>
+References: <20170719015834.19397-1-jakub.kicinski@netronome.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:27851 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753098AbdGYCFf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2017 22:05:35 -0400
-In-Reply-To: <1500634449-10837-1-git-send-email-shuwang@redhat.com>
-        (shuwang@redhat.com's message of "Fri, 21 Jul 2017 18:54:09 +0800")
+Received: from userp1040.oracle.com ([156.151.31.81]:38807 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753098AbdGYCH1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2017 22:07:27 -0400
+In-Reply-To: <20170719015834.19397-1-jakub.kicinski@netronome.com> (Jakub
+        Kicinski's message of "Tue, 18 Jul 2017 18:58:34 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: shuwang@redhat.com
-Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chuhu@redhat.com, liwang@redhat.com
+To: Jakub Kicinski <jakub.kicinski@netronome.com>
+Cc: Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
 
-shuwang@redhat.com,
+Jakub,
 
-> Found this issue by kmemleak, a few kb mem was leaked in
-> megasas_alloc_cmdlist_fusion when kzalloc failed for one
-> megasas_cmd_fusion allocation.
+> Building firmware with O=path was apparently broken in aic7 for ever.
+> Message of the previous commit to the Makefile (from 2008) mentions
+> this unfortunate state of affairs already.  Fix this, mostly to make
+> randconfig builds more reliable.
 
-Applied to 4.13/scsi-fixes. Thanks!
+Applied to 4.13/scsi-fixes. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
