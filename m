@@ -1,47 +1,57 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Please help me with kernel hung
-Date: Tue, 25 Jul 2017 17:07:32 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1707251706490.1605-100000@iolanthe.rowland.org>
-References: <CABXGCsP=Lgw+pB4Hktqq-dt-eg+rBLuyZ7ECjZhPFaMNdXDDNg@mail.gmail.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH 2/2] scsi: aacraid: Off by one NUL terminator
+Date: Tue, 25 Jul 2017 21:19:10 +0000
+Message-ID: <1501017548.8931.9.camel@wdc.com>
+References: <20170725195110.uwrzzkzvrbfqv7ld@mwanda>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:43176 "HELO
-        iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S1752269AbdGYVHd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jul 2017 17:07:33 -0400
-In-Reply-To: <CABXGCsP=Lgw+pB4Hktqq-dt-eg+rBLuyZ7ECjZhPFaMNdXDDNg@mail.gmail.com>
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:14631 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750970AbdGYVUB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jul 2017 17:20:01 -0400
+In-Reply-To: <20170725195110.uwrzzkzvrbfqv7ld@mwanda>
+Content-Language: en-US
+Content-ID: <A97B2DB533A45041A738AF274F72BB03@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?UTF-8?B?0JzQuNGF0LDQuNC7INCT0LDQstGA0LjQu9C+0LI=?= <mikhail.v.gavrilov@gmail.com>
-Cc: linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+To: "aacraid@microsemi.com" <aacraid@microsemi.com>, "Mahesh.Rajashekhara@pmcs.com" <Mahesh.Rajashekhara@pmcs.com>, "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 
-On Wed, 26 Jul 2017, Михаил Гаврилов wrote:
+On Tue, 2017-07-25 at 22:51 +0300, Dan Carpenter wrote:
+> We're putting a NUL terminator one character beyond the end of the
+> struct and that's obviously wrong.  On the other hand, I'm not positive
+> this is the correct fix.  This change was added deliberately and was
+> mentioned in the changlog of commit b836439faf04 ("aacraid: 4KB sector
+> support").  The relevant section is "Also fix up a name truncation
+> problem".  Can someone review this code and figure out the right thing
+> to do?
+>=20
+> Fixes: b836439faf04 ("aacraid: 4KB sector support")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>=20
+> diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.=
+c
+> index 4591113c49de..22c7461f65c9 100644
+> --- a/drivers/scsi/aacraid/aachba.c
+> +++ b/drivers/scsi/aacraid/aachba.c
+> @@ -549,7 +549,7 @@ static void get_container_name_callback(void *context=
+, struct fib * fibptr)
+>  	if ((le32_to_cpu(get_name_reply->status) =3D=3D CT_OK)
+>  	 && (get_name_reply->data[0] !=3D '\0')) {
+>  		char *sp =3D get_name_reply->data;
+> -		sp[sizeof(((struct aac_get_name_resp *)NULL)->data)] =3D '\0';
+> +		sp[sizeof(((struct aac_get_name_resp *)NULL)->data) - 1] =3D '\0';
+>  		while (*sp =3D=3D ' ')
+>  			++sp;
+>  		if (*sp) {
 
-> On 25 July 2017 at 02:12, Alan Stern <stern@rowland.harvard.edu> wrote:
-> > This is enough for now.  The problem is that a USB transfer is started
-> > but never stopped, which indicates a problem with the host controller.
-> >
-> > In this case you're using an xHCI host controller.  Unfortunately the
-> > xHCI maintainer is on vacation, so he won't be able to help for a
-> > while.
-> >
-> > In the meantime, you could try doing a git bisection to find which
-> > commit caused the problem to occur.
-> >
-> > Alan Stern
-> >
-> 
-> Sorry, I am afraid I can't bisect because i don't know how triggering
-> this issue again.
-> It means that I already several times rebooted after this and machine not hung.
-> 
-> But still occurs another problem that reproducible more successful
-> when I run KVM virtual machine and run inside kernel compilation then
-> host hung without any records in journalctl log. It's really annoying
-> because I don't know who is culprit here. Can here helps bisect?
+Hello Dan,
 
-I don't know.  Try it and see.
+If others agree with the approach of this patch, please use FIELD_SIZEOF()
+instead of leaving it open-coded.
 
-Alan Stern
+Thanks,
+
+Bart.=
