@@ -1,7 +1,7 @@
 From: kbuild test robot <fengguang.wu@intel.com>
 Subject: [PATCH] scsi: megaraid: fix ifnullfree.cocci warnings
 Date: Tue, 25 Jul 2017 23:40:05 +0800
-Message-ID: <20170725154005.GA50458@lkp-hsx03.lkp.intel.com>
+Message-ID: <20170725154005.GA50666@lkp-hsx03.lkp.intel.com>
 References: <201707252301.SY4YDAmp%fengguang.wu@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -13,9 +13,7 @@ To: Romain Perier <romain.perier@collabora.com>
 Cc: kbuild-all@01.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Peter Senna Tschudin <peter.senna@collabora.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-drivers/scsi/megaraid/megaraid_mbox.c:1256:2-18: WARNING: NULL check before freeing functions like kfree, debugfs_remove, debugfs_remove_recursive or usb_free_urb is not needed. Maybe consider reorganizing relevant code to avoid passing NULL values.
-drivers/scsi/megaraid/megaraid_mbox.c:1265:2-18: WARNING: NULL check before freeing functions like kfree, debugfs_remove, debugfs_remove_recursive or usb_free_urb is not needed. Maybe consider reorganizing relevant code to avoid passing NULL values.
-drivers/scsi/megaraid/megaraid_mbox.c:1274:2-18: WARNING: NULL check before freeing functions like kfree, debugfs_remove, debugfs_remove_recursive or usb_free_urb is not needed. Maybe consider reorganizing relevant code to avoid passing NULL values.
+drivers/scsi/megaraid/megaraid_mm.c:1020:2-18: WARNING: NULL check before freeing functions like kfree, debugfs_remove, debugfs_remove_recursive or usb_free_urb is not needed. Maybe consider reorganizing relevant code to avoid passing NULL values.
 
  NULL check before some freeing functions is not needed.
 
@@ -30,38 +28,18 @@ CC: Romain Perier <romain.perier@collabora.com>
 Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
 ---
 
- megaraid_mbox.c |    9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+ megaraid_mm.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
---- a/drivers/scsi/megaraid/megaraid_mbox.c
-+++ b/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -1252,8 +1252,7 @@ megaraid_mbox_teardown_dma_pools(adapter
- 		dma_pool_free(raid_dev->sg_pool_handle, sg_pci_blk[i].vaddr,
- 			sg_pci_blk[i].dma_addr);
- 	}
--	if (raid_dev->sg_pool_handle)
--		dma_pool_destroy(raid_dev->sg_pool_handle);
-+	dma_pool_destroy(raid_dev->sg_pool_handle);
+--- a/drivers/scsi/megaraid/megaraid_mm.c
++++ b/drivers/scsi/megaraid/megaraid_mm.c
+@@ -1016,8 +1016,7 @@ memalloc_error:
+ 	kfree(adapter->kioc_list);
+ 	kfree(adapter->mbox_list);
  
+-	if (adapter->pthru_dma_pool)
+-		dma_pool_destroy(adapter->pthru_dma_pool);
++	dma_pool_destroy(adapter->pthru_dma_pool);
  
- 	epthru_pci_blk = raid_dev->epthru_pool;
-@@ -1261,8 +1260,7 @@ megaraid_mbox_teardown_dma_pools(adapter
- 		dma_pool_free(raid_dev->epthru_pool_handle,
- 			epthru_pci_blk[i].vaddr, epthru_pci_blk[i].dma_addr);
- 	}
--	if (raid_dev->epthru_pool_handle)
--		dma_pool_destroy(raid_dev->epthru_pool_handle);
-+	dma_pool_destroy(raid_dev->epthru_pool_handle);
+ 	kfree(adapter);
  
- 
- 	mbox_pci_blk = raid_dev->mbox_pool;
-@@ -1270,8 +1268,7 @@ megaraid_mbox_teardown_dma_pools(adapter
- 		dma_pool_free(raid_dev->mbox_pool_handle,
- 			mbox_pci_blk[i].vaddr, mbox_pci_blk[i].dma_addr);
- 	}
--	if (raid_dev->mbox_pool_handle)
--		dma_pool_destroy(raid_dev->mbox_pool_handle);
-+	dma_pool_destroy(raid_dev->mbox_pool_handle);
- 
- 	return;
- }
