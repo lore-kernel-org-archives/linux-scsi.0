@@ -1,62 +1,44 @@
-From: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Subject: Re: [PATCH v2 00/13] mpt3sas driver NVMe support:
-Date: Tue, 25 Jul 2017 10:50:04 +0530
-Message-ID: <CA+RiK66Mkm53D-Gf5YyqQx6Zt9eiGWcqX2F9yvJUrSgPQ_dZYQ@mail.gmail.com>
-References: <1500038560-11231-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [REGRESSION] 28676d869bbb (scsi: sg: check for valid direction
+ before starting the request) breaks mtx tape library control
+Date: Tue, 25 Jul 2017 09:18:52 +0200
+Message-ID: <20170725071852.GA3750@linux-x5ow.site>
+References: <ufafudubmkd.fsf@epithumia.math.uh.edu>
+ <20170718073747.GD4875@linux-x5ow.site>
+ <ufak235abug.fsf@epithumia.math.uh.edu>
+ <20170719070335.GC4151@linux-x5ow.site>
+ <ufazic0974h.fsf@epithumia.math.uh.edu>
+ <20170719083654.GE4151@linux-x5ow.site>
+ <20170721164343.GA4086@linux-x5ow.site>
+ <ufa7ez18uhn.fsf@epithumia.math.uh.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1500038560-11231-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@kernel.org, Christoph Hellwig <hch@infradead.org>, linux-nvme@lists.infradead.org
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Sathya Prakash <Sathya.Prakash@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, linux-kernel@vger.kernel.org, Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, Chaitra Basappa <chaitra.basappa@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:39012 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750757AbdGYHSz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Jul 2017 03:18:55 -0400
+Content-Disposition: inline
+In-Reply-To: <ufa7ez18uhn.fsf@epithumia.math.uh.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jason L Tibbitts III <tibbs@math.uh.edu>
+Cc: Doug Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dvyukov@google.com, hare@suse.com, hch@lst.de, martin.petersen@oracle.com
 
-Is there any update on these patches ?
+On Fri, Jul 21, 2017 at 02:23:16PM -0500, Jason L Tibbitts III wrote:
+> I can also apply the debugging patch and try again if that would give
+> you more useful information.
 
-Thanks,
-Suganath Prabu S
+Yes please (on top of the snippet I've sent you last).
 
-On Fri, Jul 14, 2017 at 6:52 PM, Suganath Prabu S
-<suganath-prabu.subramani@broadcom.com> wrote:
-> Ventura Series controller are Tri-mode. The controller and
-> firmware are capable of supporting NVMe devices and
-> PCIe switches to be connected with the controller. This
-> patch set adds driver level support for NVMe devices and
-> PCIe switches.
->
-> Suganath Prabu S (13):
->   mpt3sas: Update MPI Header
->   mpt3sas: Add nvme device support in slave alloc, target alloc and
->     probe
->   mpt3sas: SGL to PRP Translation for I/Os to NVMe  devices
->   mpt3sas: Added support for nvme encapsulated request message.
->   mpt3sas: API 's to support NVMe drive addition to SML
->   mpt3sas: API's to remove nvme drive from sml
->   mpt3sas: Handle NVMe PCIe device related events generated
->        from firmware.
->   mpt3sas: Set NVMe device queue depth as 128
->   mpt3sas: scan and add nvme device after controller reset
->   mpt3as: Add-Task-management-debug-info-for-NVMe-drives.
->   mpt3sas: NVMe drive support for BTDHMAPPING ioctl command and log
->     info
->   mpt3sas: Fix nvme drives checking for tlr.
->   mpt3sas: Update mpt3sas driver version.
->
->  drivers/scsi/mpt3sas/mpi/mpi2.h          |   43 +-
->  drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h     |  647 ++++++++++-
->  drivers/scsi/mpt3sas/mpi/mpi2_init.h     |   11 +-
->  drivers/scsi/mpt3sas/mpi/mpi2_ioc.h      |  331 ++++++-
->  drivers/scsi/mpt3sas/mpi/mpi2_pci.h      |  142 +++
->  drivers/scsi/mpt3sas/mpi/mpi2_tool.h     |   14 +-
->  drivers/scsi/mpt3sas/mpt3sas_base.c      |  710 +++++++++++-
->  drivers/scsi/mpt3sas/mpt3sas_base.h      |  171 +++-
->  drivers/scsi/mpt3sas/mpt3sas_config.c    |  100 ++
->  drivers/scsi/mpt3sas/mpt3sas_ctl.c       |  158 ++-
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 1874 ++++++++++++++++++++++++++++--
->  drivers/scsi/mpt3sas/mpt3sas_warpdrive.c |    2 +-
->  12 files changed, 4063 insertions(+), 140 deletions(-)
->  create mode 100644 drivers/scsi/mpt3sas/mpi/mpi2_pci.h
->
-> Thanks,
-> Suganath Prabu S
+Thanks a lot,
+	Johannes
+
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
