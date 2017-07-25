@@ -1,211 +1,160 @@
 From: Steffen Maier <maier@linux.vnet.ibm.com>
-Subject: [RFC 2/9] zfcp: decouple TMF response handler from scsi_cmnd
-Date: Tue, 25 Jul 2017 16:14:20 +0200
-Message-ID: <20170725141427.35258-3-maier@linux.vnet.ibm.com>
+Subject: [RFC 5/9] zfcp: decouple SCSI setup of TMF from scsi_cmnd
+Date: Tue, 25 Jul 2017 16:14:23 +0200
+Message-ID: <20170725141427.35258-6-maier@linux.vnet.ibm.com>
 References: <20170725141427.35258-1-maier@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:38483 "EHLO
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:43799 "EHLO
         mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752326AbdGYOOw (ORCPT
+        by vger.kernel.org with ESMTP id S1752349AbdGYOPB (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Jul 2017 10:14:52 -0400
-Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6PECvqQ068002
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Jul 2017 10:14:52 -0400
-Received: from e06smtp12.uk.ibm.com (e06smtp12.uk.ibm.com [195.75.94.108])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2bx4wdr6xv-1
+        Tue, 25 Jul 2017 10:15:01 -0400
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6PEBd1o029567
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Jul 2017 10:15:00 -0400
+Received: from e06smtp14.uk.ibm.com (e06smtp14.uk.ibm.com [195.75.94.110])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2bx4na0v8q-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Jul 2017 10:14:51 -0400
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Jul 2017 10:14:59 -0400
 Received: from localhost
-        by e06smtp12.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e06smtp14.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-scsi@vger.kernel.org> from <maier@linux.vnet.ibm.com>;
-        Tue, 25 Jul 2017 15:14:49 +0100
+        Tue, 25 Jul 2017 15:14:57 +0100
 In-Reply-To: <20170725141427.35258-1-maier@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 Cc: linux-s390@vger.kernel.org, Steffen Maier <maier@linux.vnet.ibm.com>, Benjamin Block <bblock@linux.vnet.ibm.com>
 
-Do not get scsi_device via req->data any more, but pass an optional(!)
-scsi_device to zfcp_fsf_fcp_handler_common(). The latter must now guard
-any access to scsi_device as it can be NULL.
+Actually change the signature of zfcp_fsf_fcp_task_mgmt().
+Since it was prepared in the previous patch, we only need to delete
+some local auto variables which are now the intended arguments.
 
-Since we always have at least a zfcp port as scope, pass this as mandatory
-argument to zfcp_fsf_fcp_handler_common() because we cannot get it through
-scsi_device => zfcp_scsi_dev => port any more.
+Refactor zfcp_scsi_forget_cmnds() to now take a mandatory zfcp_port
+and an optional zfcp_scsi_dev, which can be NULL for target reset,
+instead of a mandatory zfcp_scsi_dev.
 
-Hence, the callers of zfcp_fsf_fcp_handler_common() must resolve req->data.
-
-TMF handling now has different context data in fsf_req->data
-depending on the TMF scope in fcp_cmnd->fc_tm_flags:
-* scsi_device if FCP_TMF_LUN_RESET,
-* zfcp_port if FCP_TMF_TGT_RESET.
+Prepare zfcp_fsf_fcp_task_mgmt's caller zfcp_task_mgmt_function()
+to have its function body only depend on a mandatory zfcp_port
+and an optional scsi_device, which can be NULL for target reset.
 
 Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
 ---
- drivers/s390/scsi/zfcp_fsf.c | 72 ++++++++++++++++++++++++++++----------------
- 1 file changed, 46 insertions(+), 26 deletions(-)
+ drivers/s390/scsi/zfcp_ext.h  |  4 +++-
+ drivers/s390/scsi/zfcp_fsf.c  | 15 ++++++++-------
+ drivers/s390/scsi/zfcp_scsi.c | 28 +++++++++++++++++++---------
+ 3 files changed, 30 insertions(+), 17 deletions(-)
 
+diff --git a/drivers/s390/scsi/zfcp_ext.h b/drivers/s390/scsi/zfcp_ext.h
+index f3101bc5d1bc..26772b0c1c39 100644
+--- a/drivers/s390/scsi/zfcp_ext.h
++++ b/drivers/s390/scsi/zfcp_ext.h
+@@ -118,7 +118,9 @@ extern int zfcp_fsf_send_els(struct zfcp_adapter *, u32,
+ 			     struct zfcp_fsf_ct_els *, unsigned int);
+ extern int zfcp_fsf_fcp_cmnd(struct scsi_cmnd *);
+ extern void zfcp_fsf_req_free(struct zfcp_fsf_req *);
+-extern struct zfcp_fsf_req *zfcp_fsf_fcp_task_mgmt(struct scsi_cmnd *, u8);
++extern struct zfcp_fsf_req *zfcp_fsf_fcp_task_mgmt(struct zfcp_port *port,
++						   struct scsi_device *sdev,
++						   u8 tm_flags);
+ extern struct zfcp_fsf_req *zfcp_fsf_abort_fcp_cmnd(struct scsi_cmnd *);
+ extern void zfcp_fsf_reqid_check(struct zfcp_qdio *, int);
+ 
 diff --git a/drivers/s390/scsi/zfcp_fsf.c b/drivers/s390/scsi/zfcp_fsf.c
-index 69d1dc3ec79d..8b2b2ea552d6 100644
+index 2dc7d2a6f6ea..7cc2d7ee1f56 100644
 --- a/drivers/s390/scsi/zfcp_fsf.c
 +++ b/drivers/s390/scsi/zfcp_fsf.c
-@@ -2035,27 +2035,30 @@ static void zfcp_fsf_req_trace(struct zfcp_fsf_req *req, struct scsi_cmnd *scsi)
- 			    sizeof(blktrc));
+@@ -2329,19 +2329,20 @@ static void zfcp_fsf_fcp_task_mgmt_handler(struct zfcp_fsf_req *req)
  }
  
--static void zfcp_fsf_fcp_handler_common(struct zfcp_fsf_req *req)
-+/**
-+ * zfcp_fsf_fcp_handler_common() - FCP response handler common to I/O and TMF.
-+ * @req: Pointer to FSF request.
-+ * @port: Pointer to zfcp port.
-+ * @sdev: Pointer to SCSI device, or %NULL with Target Reset TMF.
-+ */
-+static void zfcp_fsf_fcp_handler_common(struct zfcp_fsf_req *req,
-+					struct zfcp_port *port,
-+					struct scsi_device *sdev)
+ /**
+- * zfcp_fsf_fcp_task_mgmt - send SCSI task management command
+- * @scmnd: SCSI command to send the task management command for
+- * @tm_flags: unsigned byte for task management flags
+- * Returns: on success pointer to struct fsf_req, NULL otherwise
++ * zfcp_fsf_fcp_task_mgmt() - Send SCSI task management command (TMF).
++ * @port: Pointer to zfcp port as scope for TMF.
++ * @sdev: Pointer to scsi device if LUN Reset TMF, or %NULL.
++ * @tm_flags: Unsigned byte for task management flags.
++ *
++ * Return: On success pointer to struct fsf_req, %NULL otherwise.
+  */
+-struct zfcp_fsf_req *zfcp_fsf_fcp_task_mgmt(struct scsi_cmnd *scmnd,
++struct zfcp_fsf_req *zfcp_fsf_fcp_task_mgmt(struct zfcp_port *port,
++					    struct scsi_device *sdev,
+ 					    u8 tm_flags)
  {
--	struct scsi_cmnd *scmnd = req->data;
+ 	struct zfcp_fsf_req *req = NULL;
+ 	struct fcp_cmnd *fcp_cmnd;
 -	struct scsi_device *sdev = scmnd->device;
--	struct zfcp_scsi_dev *zfcp_sdev;
- 	struct fsf_qtcb_header *header = &req->qtcb->header;
+ 	struct zfcp_scsi_dev *zfcp_sdev = sdev_to_zfcp(sdev);
+-	struct zfcp_port *port = zfcp_sdev->port;
+ 	struct zfcp_qdio *qdio = port->adapter->qdio;
  
- 	if (unlikely(req->status & ZFCP_STATUS_FSFREQ_ERROR))
- 		return;
+ 	if (unlikely(!(atomic_read(&port->status) &
+diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
+index cd0f811452b7..05c823ccb959 100644
+--- a/drivers/s390/scsi/zfcp_scsi.c
++++ b/drivers/s390/scsi/zfcp_scsi.c
+@@ -234,12 +234,20 @@ static void zfcp_scsi_forget_cmnd(struct zfcp_fsf_req *old_req, void *data)
+ 	old_req->data = NULL;
+ }
  
--	zfcp_sdev = sdev_to_zfcp(sdev);
--
- 	switch (header->fsf_status) {
- 	case FSF_HANDLE_MISMATCH:
- 	case FSF_PORT_HANDLE_NOT_VALID:
--		zfcp_erp_adapter_reopen(zfcp_sdev->port->adapter, 0, "fssfch1");
-+		zfcp_erp_adapter_reopen(req->adapter, 0, "fssfch1");
- 		req->status |= ZFCP_STATUS_FSFREQ_ERROR;
- 		break;
- 	case FSF_FCPLUN_NOT_VALID:
- 	case FSF_LUN_HANDLE_NOT_VALID:
--		zfcp_erp_port_reopen(zfcp_sdev->port, 0, "fssfch2");
-+		zfcp_erp_port_reopen(port, 0, "fssfch2");
- 		req->status |= ZFCP_STATUS_FSFREQ_ERROR;
- 		break;
- 	case FSF_SERVICE_CLASS_NOT_SUPPORTED:
-@@ -2066,10 +2069,10 @@ static void zfcp_fsf_fcp_handler_common(struct zfcp_fsf_req *req)
- 			"Incorrect direction %d, LUN 0x%016Lx on port "
- 			"0x%016Lx closed\n",
- 			req->qtcb->bottom.io.data_direction,
--			(unsigned long long)zfcp_scsi_dev_lun(sdev),
--			(unsigned long long)zfcp_sdev->port->wwpn);
--		zfcp_erp_adapter_shutdown(zfcp_sdev->port->adapter, 0,
--					  "fssfch3");
-+			sdev ? (unsigned long long)zfcp_scsi_dev_lun(sdev) :
-+			ZFCP_DBF_INVALID_LUN,
-+			(unsigned long long)port->wwpn);
-+		zfcp_erp_adapter_shutdown(req->adapter, 0, "fssfch3");
- 		req->status |= ZFCP_STATUS_FSFREQ_ERROR;
- 		break;
- 	case FSF_CMND_LENGTH_NOT_VALID:
-@@ -2077,29 +2080,32 @@ static void zfcp_fsf_fcp_handler_common(struct zfcp_fsf_req *req)
- 			"Incorrect CDB length %d, LUN 0x%016Lx on "
- 			"port 0x%016Lx closed\n",
- 			req->qtcb->bottom.io.fcp_cmnd_length,
--			(unsigned long long)zfcp_scsi_dev_lun(sdev),
--			(unsigned long long)zfcp_sdev->port->wwpn);
--		zfcp_erp_adapter_shutdown(zfcp_sdev->port->adapter, 0,
--					  "fssfch4");
-+			sdev ? (unsigned long long)zfcp_scsi_dev_lun(sdev) :
-+			ZFCP_DBF_INVALID_LUN,
-+			(unsigned long long)port->wwpn);
-+		zfcp_erp_adapter_shutdown(req->adapter, 0, "fssfch4");
- 		req->status |= ZFCP_STATUS_FSFREQ_ERROR;
- 		break;
- 	case FSF_PORT_BOXED:
--		zfcp_erp_set_port_status(zfcp_sdev->port,
-+		zfcp_erp_set_port_status(port,
- 					 ZFCP_STATUS_COMMON_ACCESS_BOXED);
--		zfcp_erp_port_reopen(zfcp_sdev->port,
-+		zfcp_erp_port_reopen(port,
- 				     ZFCP_STATUS_COMMON_ERP_FAILED, "fssfch5");
- 		req->status |= ZFCP_STATUS_FSFREQ_ERROR;
- 		break;
- 	case FSF_LUN_BOXED:
--		zfcp_erp_set_lun_status(sdev, ZFCP_STATUS_COMMON_ACCESS_BOXED);
--		zfcp_erp_lun_reopen(sdev, ZFCP_STATUS_COMMON_ERP_FAILED,
--				    "fssfch6");
-+		if (sdev) {
-+			zfcp_erp_set_lun_status(
-+				sdev, ZFCP_STATUS_COMMON_ACCESS_BOXED);
-+			zfcp_erp_lun_reopen(sdev, ZFCP_STATUS_COMMON_ERP_FAILED,
-+					    "fssfch6");
-+		}
- 		req->status |= ZFCP_STATUS_FSFREQ_ERROR;
- 		break;
- 	case FSF_ADAPTER_STATUS_AVAILABLE:
- 		if (header->fsf_status_qual.word[0] ==
- 		    FSF_SQ_INVOKE_LINK_TEST_PROCEDURE)
--			zfcp_fc_test_link(zfcp_sdev->port);
-+			zfcp_fc_test_link(port);
- 		req->status |= ZFCP_STATUS_FSFREQ_ERROR;
- 		break;
- 	}
-@@ -2108,6 +2114,7 @@ static void zfcp_fsf_fcp_handler_common(struct zfcp_fsf_req *req)
- static void zfcp_fsf_fcp_cmnd_handler(struct zfcp_fsf_req *req)
+-static void zfcp_scsi_forget_cmnds(struct zfcp_scsi_dev *zsdev, u8 tm_flags)
++/**
++ * zfcp_scsi_forget_cmnds() - Forget pending SCSI requests on given scope.
++ * @port: Pointer to zfcp port indicating scope.
++ * @zsdev: Pointer to zfcp scsi dev as scope, or %NULL if scope is only port.
++ * @tm_flags: Task management flags,
++ *            here we only handle %FCP_TMF_TGT_RESET or %FCP_TMF_LUN_RESET.
++ */
++static void zfcp_scsi_forget_cmnds(struct zfcp_port *port,
++				   struct zfcp_scsi_dev *zsdev, u8 tm_flags)
  {
- 	struct scsi_cmnd *scpnt;
-+	struct scsi_device *sdev;
- 	struct fcp_resp_with_ext *fcp_rsp;
+-	struct zfcp_adapter *adapter = zsdev->port->adapter;
++	struct zfcp_adapter *adapter = port->adapter;
+ 	struct zfcp_scsi_req_filter filter = {
+ 		.tmf_scope = FCP_TMF_TGT_RESET,
+-		.port_handle = zsdev->port->handle,
++		.port_handle = port->handle,
+ 	};
  	unsigned long flags;
  
-@@ -2119,7 +2126,8 @@ static void zfcp_fsf_fcp_cmnd_handler(struct zfcp_fsf_req *req)
- 		return;
- 	}
+@@ -260,19 +268,21 @@ static void zfcp_scsi_forget_cmnds(struct zfcp_scsi_dev *zsdev, u8 tm_flags)
  
--	zfcp_fsf_fcp_handler_common(req);
-+	sdev = scpnt->device;
-+	zfcp_fsf_fcp_handler_common(req, sdev_to_zfcp(sdev)->port, sdev);
- 
- 	if (unlikely(req->status & ZFCP_STATUS_FSFREQ_ERROR)) {
- 		set_host_byte(scpnt, DID_TRANSPORT_DISRUPTED);
-@@ -2296,10 +2304,21 @@ int zfcp_fsf_fcp_cmnd(struct scsi_cmnd *scsi_cmnd)
- 
- static void zfcp_fsf_fcp_task_mgmt_handler(struct zfcp_fsf_req *req)
+ static int zfcp_task_mgmt_function(struct scsi_cmnd *scpnt, u8 tm_flags)
  {
-+	struct fcp_cmnd *fcp_cmnd;
-+	struct zfcp_port *port;
-+	struct scsi_device *sdev;
- 	struct fcp_resp_with_ext *fcp_rsp;
- 	struct fcp_resp_rsp_info *rsp_info;
+-	struct zfcp_scsi_dev *zfcp_sdev = sdev_to_zfcp(scpnt->device);
+-	struct zfcp_adapter *adapter = zfcp_sdev->port->adapter;
+-	unsigned int scsi_id = zfcp_sdev->port->starget_id;
++	struct scsi_device *sdev = scpnt->device;
++	struct zfcp_scsi_dev *zfcp_sdev = sdev_to_zfcp(sdev);
++	struct zfcp_port *port = zfcp_sdev->port;
++	struct zfcp_adapter *adapter = port->adapter;
++	unsigned int scsi_id = port->starget_id;
+ 	u64 scsi_lun = ZFCP_DBF_INVALID_LUN;
+ 	struct zfcp_fsf_req *fsf_req = NULL;
+ 	int retval = SUCCESS, ret;
+ 	int retry = 3;
  
--	zfcp_fsf_fcp_handler_common(req);
-+	fcp_cmnd = &req->qtcb->bottom.io.fcp_cmnd.iu;
-+	if (fcp_cmnd->fc_tm_flags & FCP_TMF_LUN_RESET) {
-+		sdev = req->data;
-+		port = sdev_to_zfcp(sdev)->port;
-+	} else {
-+		sdev = NULL;
-+		port = req->data;
-+	}
-+	zfcp_fsf_fcp_handler_common(req, port, sdev);
+ 	if (tm_flags == FCP_TMF_LUN_RESET)
+-		scsi_lun = scpnt->device->lun;
++		scsi_lun = sdev->lun;
  
- 	fcp_rsp = &req->qtcb->bottom.io.fcp_rsp.iu;
- 	rsp_info = (struct fcp_resp_rsp_info *) &fcp_rsp[1];
-@@ -2340,7 +2359,9 @@ struct zfcp_fsf_req *zfcp_fsf_fcp_task_mgmt(struct scsi_cmnd *scmnd,
- 		goto out;
+ 	while (retry--) {
+-		fsf_req = zfcp_fsf_fcp_task_mgmt(scpnt, tm_flags);
++		fsf_req = zfcp_fsf_fcp_task_mgmt(port, sdev, tm_flags);
+ 		if (fsf_req)
+ 			break;
+ 
+@@ -306,7 +316,7 @@ static int zfcp_task_mgmt_function(struct scsi_cmnd *scpnt, u8 tm_flags)
+ 	} else {
+ 		zfcp_dbf_scsi_devreset("okay", adapter, tm_flags, fsf_req,
+ 				       scsi_id, scsi_lun);
+-		zfcp_scsi_forget_cmnds(zfcp_sdev, tm_flags);
++		zfcp_scsi_forget_cmnds(port, zfcp_sdev, tm_flags);
  	}
  
--	req->data = scmnd;
-+	fcp_cmnd = &req->qtcb->bottom.io.fcp_cmnd.iu;
-+	req->data = (fcp_cmnd->fc_tm_flags & FCP_TMF_LUN_RESET) ?
-+		scmnd->device : (void *)sdev_to_zfcp(scmnd->device)->port;
- 	req->handler = zfcp_fsf_fcp_task_mgmt_handler;
- 	req->qtcb->header.lun_handle = zfcp_sdev->lun_handle;
- 	req->qtcb->header.port_handle = zfcp_sdev->port->handle;
-@@ -2350,7 +2371,6 @@ struct zfcp_fsf_req *zfcp_fsf_fcp_task_mgmt(struct scsi_cmnd *scmnd,
- 
- 	zfcp_qdio_set_sbale_last(qdio, &req->qdio_req);
- 
--	fcp_cmnd = &req->qtcb->bottom.io.fcp_cmnd.iu;
- 	zfcp_fc_scsi_to_fcp(fcp_cmnd, scmnd, tm_flags);
- 
- 	zfcp_fsf_start_timer(req, ZFCP_SCSI_ER_TIMEOUT);
+ 	zfcp_fsf_req_free(fsf_req);
 -- 
 2.11.2
