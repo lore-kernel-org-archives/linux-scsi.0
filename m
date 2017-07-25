@@ -1,44 +1,29 @@
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-Subject: Re: [PATCH] aic7xxx: fix firmware build with O=path
-Date: Mon, 24 Jul 2017 14:14:13 -0700
-Message-ID: <20170724141413.151dc05d@cakuba.netronome.com>
-References: <20170719015834.19397-1-jakub.kicinski@netronome.com>
-        <20170721115152.352ce0c9@cakuba.netronome.com>
-        <5cf07bda-1bb8-4c71-58ad-d1af492b6c71@suse.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 1/1] scsi: ufs: changing maintainer
+Date: Mon, 24 Jul 2017 21:48:46 -0400
+Message-ID: <yq1bmo92sn5.fsf@oracle.com>
+References: <705D14B1C7978B40A723277C067CEDE2010A73580C@IN01WEMBXB.internal.synopsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f50.google.com ([74.125.83.50]:38521 "EHLO
-        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932727AbdGXVOV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2017 17:14:21 -0400
-Received: by mail-pg0-f50.google.com with SMTP id s4so61997808pgr.5
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2017 14:14:21 -0700 (PDT)
-In-Reply-To: <5cf07bda-1bb8-4c71-58ad-d1af492b6c71@suse.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:34104 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756518AbdGYBsz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jul 2017 21:48:55 -0400
+In-Reply-To: <705D14B1C7978B40A723277C067CEDE2010A73580C@IN01WEMBXB.internal.synopsys.com>
+        (Prabu Thangamuthu's message of "Tue, 18 Jul 2017 09:15:58 +0000")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+To: Prabu Thangamuthu <Prabu.T@synopsys.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "Greg Kroah-Hartman (gregkh@linuxfoundation.org)" <gregkh@linuxfoundation.org>, "davem@davemloft.net" <davem@davemloft.net>, Mauro Carvalho Chehab <mchehab@kernel.org>, Joao Pinto <Joao.Pinto@synopsys.com>, Manjunath M Bettegowda <Manjunath.MB@synopsys.com>, Carlos Palminha <CARLOS.PALMINHA@synopsys.com>
 
-On Mon, 24 Jul 2017 09:00:41 +0200, Hannes Reinecke wrote:
-> On 07/21/2017 08:51 PM, Jakub Kicinski wrote:
-> > On Tue, 18 Jul 2017 18:58:34 -0700, Jakub Kicinski wrote:  
-> >> Building firmware with O=path was apparently broken in aic7 for ever.
-> >> Message of the previous commit to the Makefile (from 2008) mentions
-> >> this unfortunate state of affairs already.  Fix this, mostly to make
-> >> randconfig builds more reliable.
-> >>
-> >> Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>  
-> > 
-> > Gentle ping :)  Hannes, are you still maintaining aic7xxx?
-> >   
-> Yes, I do.
-> 
-> Patch looks reasonable; Kconfig is still black magic to me, though :-)
 
-To me as well, but is seems to work fine in my tests :)
+Prabu,
 
-> Reviewed-by: Hannes Reinecke <hare@suse.com>
+> As per internal decision, Joao Pinto will be maintainer for DWC UFS
+> driver.
 
-Thanks!
+Applied to 4.14/scsi-queue. Thanks!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
