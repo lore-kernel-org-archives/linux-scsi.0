@@ -1,38 +1,95 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2 6/6] qla2xxx: Refactor usage of Active command arrays
-Date: Tue, 25 Jul 2017 10:19:44 +0200
-Message-ID: <20170725081944.GF3750@linux-x5ow.site>
-References: <20170721163228.32339-1-himanshu.madhani@cavium.com>
- <20170721163228.32339-7-himanshu.madhani@cavium.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50001 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750757AbdGYITq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Jul 2017 04:19:46 -0400
-Content-Disposition: inline
-In-Reply-To: <20170721163228.32339-7-himanshu.madhani@cavium.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+Subject: [PATCH v2] scsi: qedf: Limit number of CQs
+Date: Tue, 25 Jul 2017 11:19:21 +0200
+Message-ID: <20170725092243.7E0CD50870B@solo.franken.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: QLogic-Storage-Upstream@cavium.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chad.dupuis@cavium.com
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@cavium.com>
-Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
-On Fri, Jul 21, 2017 at 09:32:28AM -0700, Himanshu Madhani wrote:
-> +typedef enum {
-> +	TYPE_SRB,
-> +	TYPE_TGT_CMD,
-> +} cmd_type_t;
+From: Thomas Bogendoerfer <tbogendoerfer@suse.de>
 
-Minor Nitpick if you have to re-send, please no typedefs.
+FCOE offloading failed with:
 
-Anyways,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+[qed_sp_fcoe_func_start:150(sp-0-3b:00.02)]Cannot satisfy CQ amount. CQs
+		 requested 8, CQs available 6. Aborting function start
+[qed_fcoe_start:821()]Failed to start fcoe
+[__qedf_probe:3041]:6: Cannot start FCoE function.
+
+The reason is a newly introduced check in the qed main part. This change
+also provides the information about how many CQs are available, so we
+simply limit the number of requested CQs..
+
+Fixes: 3c5da9427802 ("qed: Share additional information with qedf")
+Signed-off-by: Thomas Bogendoerfer <tbogendoerfer@suse.de>
+---
+
+Changes in v2:
+- integrated suggested change from Chad Dupuis
+
+ drivers/scsi/qedf/qedf.h      |  3 ++-
+ drivers/scsi/qedf/qedf_main.c | 20 +++++++++-----------
+ 2 files changed, 11 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/scsi/qedf/qedf.h b/drivers/scsi/qedf/qedf.h
+index 4d038926a455..351f06dfc5a0 100644
+--- a/drivers/scsi/qedf/qedf.h
++++ b/drivers/scsi/qedf/qedf.h
+@@ -528,7 +528,8 @@ struct fip_vlan {
+ #define QEDF_WRITE                    (1 << 0)
+ #define MAX_FIBRE_LUNS			0xffffffff
+ 
+-#define QEDF_MAX_NUM_CQS		8
++#define MIN_NUM_CPUS_MSIX(x)	min_t(u32, x->dev_info.num_cqs, \
++					num_online_cpus())
+ 
+ /*
+  * PCI function probe defines
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index 7786c97e033f..1d13c9ca517d 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -2760,11 +2760,9 @@ static int qedf_set_fcoe_pf_param(struct qedf_ctx *qedf)
+ 	 * we allocation is the minimum off:
+ 	 *
+ 	 * Number of CPUs
+-	 * Number of MSI-X vectors
+-	 * Max number allocated in hardware (QEDF_MAX_NUM_CQS)
++	 * Number allocated by qed for our PCI function
+ 	 */
+-	qedf->num_queues = min((unsigned int)QEDF_MAX_NUM_CQS,
+-	    num_online_cpus());
++	qedf->num_queues = MIN_NUM_CPUS_MSIX(qedf);
+ 
+ 	QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_DISC, "Number of CQs is %d.\n",
+ 		   qedf->num_queues);
+@@ -2962,6 +2960,13 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
+ 		goto err1;
+ 	}
+ 
++	/* Learn information crucial for qedf to progress */
++	rc = qed_ops->fill_dev_info(qedf->cdev, &qedf->dev_info);
++	if (rc) {
++		QEDF_ERR(&(qedf->dbg_ctx), "Failed to dev info.\n");
++		goto err1;
++	}
++
+ 	/* queue allocation code should come here
+ 	 * order should be
+ 	 * 	slowpath_start
+@@ -2977,13 +2982,6 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
+ 	}
+ 	qed_ops->common->update_pf_params(qedf->cdev, &qedf->pf_params);
+ 
+-	/* Learn information crucial for qedf to progress */
+-	rc = qed_ops->fill_dev_info(qedf->cdev, &qedf->dev_info);
+-	if (rc) {
+-		QEDF_ERR(&(qedf->dbg_ctx), "Failed to dev info.\n");
+-		goto err1;
+-	}
+-
+ 	/* Record BDQ producer doorbell addresses */
+ 	qedf->bdq_primary_prod = qedf->dev_info.primary_dbq_rq_addr;
+ 	qedf->bdq_secondary_prod = qedf->dev_info.secondary_bdq_rq_addr;
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+2.12.3
