@@ -1,55 +1,147 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [PATCH] scsi: megaraid: fix ifnullfree.cocci warnings
-Date: Tue, 25 Jul 2017 08:48:45 -0700
-Message-ID: <1500997725.3689.14.camel@linux.vnet.ibm.com>
-References: <201707252301.SY4YDAmp%fengguang.wu@intel.com>
-         <20170725154005.GA50912@lkp-hsx03.lkp.intel.com>
+From: "Potomski, MichalX" <michalx.potomski@intel.com>
+Subject: RE: [PATCH v2] scsi: ufs: Implement Auto-Hibern8 setup
+Date: Tue, 25 Jul 2017 16:54:24 +0000
+Message-ID: <C8BF859FC3044844854B2CBA1ED115C1F99AFB@HASMSX111.ger.corp.intel.com>
+References: <20170725094514.19192-1-michalx.potomski@intel.com>
+ <1500996626.3031.1.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:56186 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752707AbdGYPup (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Jul 2017 11:50:45 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6PFoeWD107457
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Jul 2017 11:50:45 -0400
-Received: from e17.ny.us.ibm.com (e17.ny.us.ibm.com [129.33.205.207])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2bx87st89j-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Jul 2017 11:49:43 -0400
-Received: from localhost
-        by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
-        Tue, 25 Jul 2017 11:48:53 -0400
-In-Reply-To: <20170725154005.GA50912@lkp-hsx03.lkp.intel.com>
+Received: from mga03.intel.com ([134.134.136.65]:45830 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750732AbdGYQy3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Jul 2017 12:54:29 -0400
+In-Reply-To: <1500996626.3031.1.camel@wdc.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kbuild test robot <fengguang.wu@intel.com>, Romain Perier <romain.perier@collabora.com>
-Cc: kbuild-all@01.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Peter Senna Tschudin <peter.senna@collabora.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "Mielczarek, SzymonX" <szymonx.mielczarek@intel.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>
 
-On Tue, 2017-07-25 at 23:40 +0800, kbuild test robot wrote:
-> drivers/scsi/megaraid/megaraid_sas_fusion.c:608:2-18: WARNING: NULL
-> check before freeing functions like kfree, debugfs_remove,
-> debugfs_remove_recursive or usb_free_urb is not needed. Maybe
-> consider reorganizing relevant code to avoid passing NULL values.
-> drivers/scsi/megaraid/megaraid_sas_fusion.c:629:2-18: WARNING: NULL
-> check before freeing functions like kfree, debugfs_remove,
-> debugfs_remove_recursive or usb_free_urb is not needed. Maybe
-> consider reorganizing relevant code to avoid passing NULL values.
+> On Tue, 2017-07-25 at 11:45 +0200, Michal Potomski wrote:
+> > Since Auto-Hibern8 feature has to be enabled by the user
+> > proper API has been given via SysFS.
+> >
+> > We expose this API to user-space, since we don't know
+> > in driver, what kind of additional Power Management rules
+> > user wants to use. Due to that we want to expose API, to
+> > let user or high level S/W decide, whether it wants to
+> > use Auto-Hibern8 feature for Power Saving and give him
+> > "slider" to decide between performance and power efficiency.
+> > This is important because different platforms using
+> > the same UFS host and/or device might want different
+> > options on this one, e.g. High-End Desktop PC might
+> > want to have this feature disabled, while Mobile or
+> > Server platforms might want to have this feature enabled,
+> > but levels will vary depending on what's to be acheived.
+> >
+> > As this feature is meant to be transparent for driver,
+> > we'd like to let user decide whether he wants this enabled
+> > or not.
 > 
->  NULL check before some freeing functions is not needed.
+> Less than ten minutes after v1 of this patch was posted version v2 was
+> posted. What is the difference between v1 and v2? Second and later versions
+> of a patch or patch series are expected to include a changelog.
+> 
+V1 had some minor style issues, which were present in version that wasn't
+targeted to be sent, hence the quick V2 post, which was the corrected one.
 
-Hey, guys, we yelled at Markus Elfring for sending hundreds of patches
-like this.  The reason then was too much code churn for too little
-value: the if() might be unnecessary but it really doesn't cost very
-much in terms of execution time, so the code churn disadvantage greatly
- outweighs any benefits.
+Proper changelog will be included in future versions.
+> Since I'm not familiar with the Auto-Hibern8 feature: what impact does it
+> have on command processing? Does it e.g. cause SCSI or TMF commands that
+> are
+> sent to the UFS device to be ignored, to fail or to time out?
+> 
+Actually behavior should be transparent for all of the higher layers, since this
+shall be fully controlled by UFS Host, which will put UFS Device to Hibern8 state,
+when it has no ongoing commands to it for set up time. If there will be any command
+UFS Host should order the Device to exit Hibern8 mode and proceed normally.
 
-The reason hasn't changed, so please stop this otherwise you're going
-to turn the very valuable 0day test infrastructure into a thousand
-patch spambot.
+Bottom line is that in model case, it shouldn't cause any of errors mentioned by you.
+There is possible throughput degradation in case, if transfers are sporadic in terms
+of timer, which we did set up, though. According to specification it also shouldn't affect
+Hibern8 states triggered by Power Management, nor any other functionality.
 
-James
+I will alter commit message in V3, to cover this question.
+> > +static ssize_t ufshcd_auto_hibern8_show(struct device *dev,
+> > +		struct device_attribute *attr, char *buf)
+> > +{
+> > +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> > +	u32 val;
+> > +	unsigned long timer;
+> > +	u8 scale;
+> > +	char *unit;
+> > +
+> > +	val = ufshcd_read_auto_hibern8_state(hba);
+> > +	timer = val & UFSHCI_AHIBERN8_TIMER_MASK;
+> > +	scale =	(val & UFSHCI_AHIBERN8_SCALE_MASK)
+> > +			>> UFSHCI_AHIBERN8_SCALE_OFFSET;
+> > +
+> > +	unit = scale >= UFSHCI_AHIBERN8_SCALE_1MS ? "ms" : "us";
+> > +
+> > +	for (scale %= UFSHCI_AHIBERN8_SCALE_1MS; scale > 0; --scale)
+> > +		timer *= UFS_AHIBERN8_SCALE_STEP_MAGNITUDE;
+> > +
+> > +	return snprintf(buf, PAGE_SIZE, "%ld %s\n", timer, unit);
+> > +}
+> 
+> From Documentation/filesystems/sysfs.txt: "All new sysfs attributes must be
+> documented in Documentation/ABI. See also Documentation/ABI/README for
+> more
+> information." Please add proper documentation of the attributes added by this
+> patch when you resubmit this patch.
+> 
+> Regarding this attribute: units should be documented in Documentation/ABI/*/*
+> instead of specifying these in the attribute itself. In other words, the
+> "ms" / "us" suffix should be left out.
+> 
+Will be fixed in V3
+> > @@ -7693,16 +7766,34 @@ static void
+> ufshcd_add_spm_lvl_sysfs_nodes(struct ufs_hba *hba)
+> >  		dev_err(hba->dev, "Failed to create sysfs for spm_lvl\n");
+> >  }
+> >
+> > +static void ufshcd_add_ahibern8_sysfs_node(struct ufs_hba *hba)
+> > +{
+> > +	if (!(hba->capabilities & MASK_AUTO_HIBERN8_SUPPORT))
+> > +		return;
+> > +
+> > +	hba->ahibern8_attr.show = ufshcd_auto_hibern8_show;
+> > +	hba->ahibern8_attr.store = ufshcd_auto_hibern8_store;
+> > +	sysfs_attr_init(&hba->ahibern8_attr.attr);
+> > +	hba->ahibern8_attr.attr.name = "ufs_auto_hibern8";
+> > +	hba->ahibern8_attr.attr.mode = 0600;
+> > +	if (device_create_file(hba->dev, &hba->ahibern8_attr))
+> > +		dev_err(hba->dev, "Failed to create sysfs for
+> ufs_auto_hibern8\n");
+> > +}
+> 
+> Please use a static variable at file scope and DRIVER_ATTR_RW() to initialize
+> the sysfs attributes instead of initializing the sysfs attributes explicitly.
+> 
+> Additionally, please set sdev_attrs in struct scsi_host_template instead of
+> calling device_create_file() explicitly. The above device_create_file() call
+> occurs after a UFS device has been made visible in sysfs and hence will cause
+> trouble (race condition) if a udev rule tries to set this attribute from inside
+> a rule that is triggered by device creation.
+> 
+> I am aware the above code follows the style that is used for other UFS sysfs
+> attributes. If you would have the time to convert the code for creating the
+> existing UFS sysfs attributes that would be great.
+> 
+Will be added to V3 and sent as patch set.
+> Thanks,
+> 
+> Bart.
+Cheers,
+Michal
+--------------------------------------------------------------------
+
+Intel Technology Poland sp. z o.o.
+ul. Slowackiego 173 | 80-298 Gdansk | Sad Rejonowy Gdansk Polnoc | VII Wydzial Gospodarczy Krajowego Rejestru Sadowego - KRS 101882 | NIP 957-07-52-316 | Kapital zakladowy 200.000 PLN.
+
+Ta wiadomosc wraz z zalacznikami jest przeznaczona dla okreslonego adresata i moze zawierac informacje poufne. W razie przypadkowego otrzymania tej wiadomosci, prosimy o powiadomienie nadawcy oraz trwale jej usuniecie; jakiekolwiek
+przegladanie lub rozpowszechnianie jest zabronione.
+This e-mail and any attachments may contain confidential material for the sole use of the intended recipient(s). If you are not the intended recipient, please contact the sender and delete all copies; any review or distribution by
+others is strictly prohibited.
