@@ -1,57 +1,90 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 2/2] scsi: aacraid: Off by one NUL terminator
-Date: Tue, 25 Jul 2017 21:19:10 +0000
-Message-ID: <1501017548.8931.9.camel@wdc.com>
-References: <20170725195110.uwrzzkzvrbfqv7ld@mwanda>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 4.13-rc2
+Date: Tue, 25 Jul 2017 16:23:53 -0700
+Message-ID: <1501025033.3689.47.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:14631 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750970AbdGYVUB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jul 2017 17:20:01 -0400
-In-Reply-To: <20170725195110.uwrzzkzvrbfqv7ld@mwanda>
-Content-Language: en-US
-Content-ID: <A97B2DB533A45041A738AF274F72BB03@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "aacraid@microsemi.com" <aacraid@microsemi.com>, "Mahesh.Rajashekhara@pmcs.com" <Mahesh.Rajashekhara@pmcs.com>, "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 
-On Tue, 2017-07-25 at 22:51 +0300, Dan Carpenter wrote:
-> We're putting a NUL terminator one character beyond the end of the
-> struct and that's obviously wrong.  On the other hand, I'm not positive
-> this is the correct fix.  This change was added deliberately and was
-> mentioned in the changlog of commit b836439faf04 ("aacraid: 4KB sector
-> support").  The relevant section is "Also fix up a name truncation
-> problem".  Can someone review this code and figure out the right thing
-> to do?
->=20
-> Fixes: b836439faf04 ("aacraid: 4KB sector support")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->=20
-> diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.=
-c
-> index 4591113c49de..22c7461f65c9 100644
-> --- a/drivers/scsi/aacraid/aachba.c
-> +++ b/drivers/scsi/aacraid/aachba.c
-> @@ -549,7 +549,7 @@ static void get_container_name_callback(void *context=
-, struct fib * fibptr)
->  	if ((le32_to_cpu(get_name_reply->status) =3D=3D CT_OK)
->  	 && (get_name_reply->data[0] !=3D '\0')) {
->  		char *sp =3D get_name_reply->data;
-> -		sp[sizeof(((struct aac_get_name_resp *)NULL)->data)] =3D '\0';
-> +		sp[sizeof(((struct aac_get_name_resp *)NULL)->data) - 1] =3D '\0';
->  		while (*sp =3D=3D ' ')
->  			++sp;
->  		if (*sp) {
+Three small fixes.  The transfer size fixes are actually correcting
+some performance drops on the hpsa and smartpqi cards.  The cards
+actually have an internal cache for request speed up but bypass it for
+transfers > 1MB.  Since 4.3 the efficiency of our merges has rendered
+the cache mostly unused, so limit transfers to under 1MB to recover the
+cache boost.
 
-Hello Dan,
+The patch is available here:
 
-If others agree with the approach of this patch, please use FIELD_SIZEOF()
-instead of leaving it open-coded.
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Thanks,
+The short changelog is:
 
-Bart.=
+Johannes Thumshirn (1):
+      scsi: sg: fix static checker warning in sg_is_valid_dxfer
+
+Yadan Fan (2):
+      scsi: smartpqi: limit transfer length to 1MB
+      scsi: hpsa: limit transfer length to 1MB
+
+And the diffstat:
+
+ drivers/scsi/hpsa.c              | 2 +-
+ drivers/scsi/sg.c                | 7 +++++--
+ drivers/scsi/smartpqi/smartpqi.h | 2 +-
+ 3 files changed, 7 insertions(+), 4 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 8914eab84337..4f7cdb28bd38 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -938,7 +938,7 @@ static struct scsi_host_template hpsa_driver_template = {
+ #endif
+ 	.sdev_attrs = hpsa_sdev_attrs,
+ 	.shost_attrs = hpsa_shost_attrs,
+-	.max_sectors = 8192,
++	.max_sectors = 1024,
+ 	.no_write_same = 1,
+ };
+ 
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 1e82d4128a84..4fe606b000b4 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -759,8 +759,11 @@ static bool sg_is_valid_dxfer(sg_io_hdr_t *hp)
+ 			return false;
+ 		return true;
+ 	case SG_DXFER_FROM_DEV:
+-		if (hp->dxfer_len < 0)
+-			return false;
++		/*
++		 * for SG_DXFER_FROM_DEV we always set dxfer_len to > 0. dxferp
++		 * can either be NULL or != NULL so there's no point in checking
++		 * it either. So just return true.
++		 */
+ 		return true;
+ 	case SG_DXFER_TO_DEV:
+ 	case SG_DXFER_TO_FROM_DEV:
+diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
+index 07ec8a8877de..e164ffade38a 100644
+--- a/drivers/scsi/smartpqi/smartpqi.h
++++ b/drivers/scsi/smartpqi/smartpqi.h
+@@ -690,7 +690,7 @@ struct pqi_config_table_heartbeat {
+ 
+ #define PQI_MAX_OUTSTANDING_REQUESTS		((u32)~0)
+ #define PQI_MAX_OUTSTANDING_REQUESTS_KDUMP	32
+-#define PQI_MAX_TRANSFER_SIZE			(4 * 1024U * 1024U)
++#define PQI_MAX_TRANSFER_SIZE			(1024U * 1024U)
+ #define PQI_MAX_TRANSFER_SIZE_KDUMP		(512 * 1024U)
+ 
+ #define RAID_MAP_MAX_ENTRIES		1024
