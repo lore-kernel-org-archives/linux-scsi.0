@@ -1,39 +1,84 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCH 2/2] scsi: aacraid: Off by one NUL terminator
-Date: Tue, 25 Jul 2017 22:51:10 +0300
-Message-ID: <20170725195110.uwrzzkzvrbfqv7ld@mwanda>
-References: <20170725194955.dd4g6msevoesty4t@mwanda>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 4.12 042/196] scsi: virtio_scsi: let host do exception handling
+Date: Tue, 25 Jul 2017 12:20:41 -0700
+Message-ID: <20170725192048.698195861@linuxfoundation.org>
+References: <20170725192046.422343510@linuxfoundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170725194955.dd4g6msevoesty4t@mwanda>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170725192046.422343510@linuxfoundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Douglas Miller <dougmill@linux.vnet.ibm.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, Paolo Bonzini <pbonzini@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-We're putting a NUL terminator one character beyond the end of the
-struct and that's obviously wrong.  On the other hand, I'm not positive
-this is the correct fix.  This change was added deliberately and was
-mentioned in the changlog of commit b836439faf04 ("aacraid: 4KB sector
-support").  The relevant section is "Also fix up a name truncation
-problem".  Can someone review this code and figure out the right thing
-to do?
+4.12-stable review patch.  If anyone has any objections, please let me know.
 
-Fixes: b836439faf04 ("aacraid: 4KB sector support")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+------------------
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 4591113c49de..22c7461f65c9 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -549,7 +549,7 @@ static void get_container_name_callback(void *context, struct fib * fibptr)
- 	if ((le32_to_cpu(get_name_reply->status) == CT_OK)
- 	 && (get_name_reply->data[0] != '\0')) {
- 		char *sp = get_name_reply->data;
--		sp[sizeof(((struct aac_get_name_resp *)NULL)->data)] = '\0';
-+		sp[sizeof(((struct aac_get_name_resp *)NULL)->data) - 1] = '\0';
- 		while (*sp == ' ')
- 			++sp;
- 		if (*sp) {
+From: Paolo Bonzini <pbonzini@redhat.com>
+
+commit e72c9a2a67a6400c8ef3d01d4c461dbbbfa0e1f0 upstream.
+
+virtio_scsi tries to do exception handling after the default 30 seconds
+timeout expires.  However, it's better to let the host control the
+timeout, otherwise with a heavy I/O load it is likely that an abort will
+also timeout.  This leads to fatal errors like filesystems going
+offline.
+
+Disable the 'sd' timeout and allow the host to do exception handling,
+following the precedent of the storvsc driver.
+
+Hannes has a proposal to introduce timeouts in virtio, but this provides
+an immediate solution for stable kernels too.
+
+[mkp: fixed typo]
+
+Reported-by: Douglas Miller <dougmill@linux.vnet.ibm.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+---
+ drivers/scsi/virtio_scsi.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -796,6 +796,16 @@ static int virtscsi_map_queues(struct Sc
+ 	return blk_mq_virtio_map_queues(&shost->tag_set, vscsi->vdev, 2);
+ }
+ 
++/*
++ * The host guarantees to respond to each command, although I/O
++ * latencies might be higher than on bare metal.  Reset the timer
++ * unconditionally to give the host a chance to perform EH.
++ */
++static enum blk_eh_timer_return virtscsi_eh_timed_out(struct scsi_cmnd *scmnd)
++{
++	return BLK_EH_RESET_TIMER;
++}
++
+ static struct scsi_host_template virtscsi_host_template_single = {
+ 	.module = THIS_MODULE,
+ 	.name = "Virtio SCSI HBA",
+@@ -806,6 +816,7 @@ static struct scsi_host_template virtscs
+ 	.change_queue_depth = virtscsi_change_queue_depth,
+ 	.eh_abort_handler = virtscsi_abort,
+ 	.eh_device_reset_handler = virtscsi_device_reset,
++	.eh_timed_out = virtscsi_eh_timed_out,
+ 	.slave_alloc = virtscsi_device_alloc,
+ 
+ 	.can_queue = 1024,
+@@ -826,6 +837,7 @@ static struct scsi_host_template virtscs
+ 	.change_queue_depth = virtscsi_change_queue_depth,
+ 	.eh_abort_handler = virtscsi_abort,
+ 	.eh_device_reset_handler = virtscsi_device_reset,
++	.eh_timed_out = virtscsi_eh_timed_out,
+ 
+ 	.can_queue = 1024,
+ 	.dma_boundary = UINT_MAX,
