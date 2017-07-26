@@ -1,28 +1,40 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH, RESEND] scsi: lpfc: fix linking against modular NVMe support
-Date: Wed, 26 Jul 2017 11:17:09 +0200
-Message-ID: <CAK8P3a0qkM73U4kubU9457grAiUJDPBVw-YzR10-Y-wqwqZQ_Q@mail.gmail.com>
-References: <20170721205401.3374331-1-arnd@arndb.de> <20170726090820.GH4039@linux-x5ow.site>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH, RESEND] scsi: lpfc: fix linking against modular NVMe
+ support
+Date: Wed, 26 Jul 2017 11:18:30 +0200
+Message-ID: <20170726091830.GI4039@linux-x5ow.site>
+References: <20170721205401.3374331-1-arnd@arndb.de>
+ <20170726090820.GH4039@linux-x5ow.site>
  <CAK8P3a2EnPuTNU0O5va+Xz3nCthhpz3Po1z7SOVRiAUV_2+OhA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <CAK8P3a2EnPuTNU0O5va+Xz3nCthhpz3Po1z7SOVRiAUV_2+OhA@mail.gmail.com>
 Sender: stable-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
+To: Arnd Bergmann <arnd@arndb.de>
 Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "# 3.4.x" <stable@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Finn Thain <fthain@telegraphics.com.au>, James Smart <jsmart2021@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jul 26, 2017 at 11:16 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Wed, Jul 26, 2017 at 11:08 AM, Johannes Thumshirn <jthumshirn@suse.de> wrote:
->> On Fri, Jul 21, 2017 at 10:53:46PM +0200, Arnd Bergmann wrote:
->>> I originally sent the patch in March 2013, the day after the broken
->>                                        ^ 2017?
->
-> Oops. Let me resend that.
+On Wed, Jul 26, 2017 at 11:16:10AM +0200, Arnd Bergmann wrote:
+> We use this construct in many places these days. A few years ago I added
+> a comment whenever I added an instance, but most others don't so I treat
+> it as an idiom now.
+> 
+> "depends on X" means that if X=m, the current symbol can only be "m" or
+> "n", while "X=y" means it can have any value.
+> 
+> So for "depends on X || X=n", the current symbol cannot be "y" when "X=m",
+> but otherwise can have any of the three possibilities. This is exactly what
+> we need here.
 
-Ah, it was only below the "---" line, so I'll skip the resending
-unless you want me
-to add a comment in the Kconfig file.
+Obvious o.O
 
-       Arnd
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
