@@ -1,35 +1,57 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH, RESEND] scsi: lpfc: fix linking against modular NVMe
- support
-Date: Wed, 26 Jul 2017 11:19:13 +0200
-Message-ID: <20170726091913.GJ4039@linux-x5ow.site>
-References: <20170721205401.3374331-1-arnd@arndb.de>
- <20170726090820.GH4039@linux-x5ow.site>
- <CAK8P3a2EnPuTNU0O5va+Xz3nCthhpz3Po1z7SOVRiAUV_2+OhA@mail.gmail.com>
- <CAK8P3a0qkM73U4kubU9457grAiUJDPBVw-YzR10-Y-wqwqZQ_Q@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 196493] New: When LUN assignments on the target was changed,
+ event must be triggered
+Date: Wed, 26 Jul 2017 09:31:08 +0000
+Message-ID: <bug-196493-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAK8P3a0qkM73U4kubU9457grAiUJDPBVw-YzR10-Y-wqwqZQ_Q@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "# 3.4.x" <stable@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Finn Thain <fthain@telegraphics.com.au>, James Smart <jsmart2021@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:51522 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751047AbdGZJbW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 26 Jul 2017 05:31:22 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id F37A42873D
+        for <linux-scsi@vger.kernel.org>; Wed, 26 Jul 2017 09:31:21 +0000 (UTC)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@kernel.org
 
-On Wed, Jul 26, 2017 at 11:17:09AM +0200, Arnd Bergmann wrote:
-> Ah, it was only below the "---" line, so I'll skip the resending
-> unless you want me
-> to add a comment in the Kconfig file.
+https://bugzilla.kernel.org/show_bug.cgi?id=196493
 
-Nah no need, really.
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+            Bug ID: 196493
+           Summary: When LUN assignments on the target was changed, event
+                    must be triggered
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 3.13â€¦4.4 and probably all other
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: SCSI
+          Assignee: linux-scsi@vger.kernel.org
+          Reporter: ds@vo-ix.ru
+        Regression: No
+
+1. The (e.g. SAN) device is unmapped and then the same LUN is reused by other
+WWN, but no actions taken on linux-side.
+2. Kernel receives indication and claims "Kernel: [15671249.097583] sd
+8:0:15:9: Warning! Received an indication that the LUN assignments on this
+target have changed. The Linux SCSI layer does not automatically remap LUN
+assignments."
+3. Observe no further actions at kernel-side. ioctl (requested via blockdev)
+returns parameters of unmapped LUN.
+
+Expect at least to cock the trigger on respective device (like mapped to sysfs
+"/sys/block/sd*/device/evt_lun_change_reported") and thus provide the mechanism
+to inform device mapper. In perspective, the feature of auto-invalidation and
+rescan on changed path.
 
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+You are receiving this mail because:
+You are the assignee for the bug.
