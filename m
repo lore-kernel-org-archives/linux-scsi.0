@@ -1,90 +1,61 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 4.13-rc2
-Date: Tue, 25 Jul 2017 16:23:53 -0700
-Message-ID: <1501025033.3689.47.camel@HansenPartnership.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [RFC 1/9] zfcp: drop unsuitable scsi_cmnd usage from SCSI traces
+ for scsi_eh / TMF
+Date: Wed, 26 Jul 2017 07:50:10 +0200
+Message-ID: <2abd0ddc-3562-aef9-b63d-b5070dca38df@suse.de>
+References: <20170725141427.35258-1-maier@linux.vnet.ibm.com>
+ <20170725141427.35258-2-maier@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:49684 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750747AbdGZFuM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 26 Jul 2017 01:50:12 -0400
+In-Reply-To: <20170725141427.35258-2-maier@linux.vnet.ibm.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Steffen Maier <maier@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
+Cc: linux-s390@vger.kernel.org, Benjamin Block <bblock@linux.vnet.ibm.com>
 
-Three small fixes.  The transfer size fixes are actually correcting
-some performance drops on the hpsa and smartpqi cards.  The cards
-actually have an internal cache for request speed up but bypass it for
-transfers > 1MB.  Since 4.3 the efficiency of our merges has rendered
-the cache mostly unused, so limit transfers to under 1MB to recover the
-cache boost.
+On 07/25/2017 04:14 PM, Steffen Maier wrote:
+> The SCSI command pointer passed to scsi_eh callbacks is just one arbitrary
+> command of potentially many that are in the eh queue to be processed.
+> The command is only used to indirectly pass the TMF scope in terms of
+> SCSI ID/target and SCSI LUN for LUN reset.
+> 
+> Hence, zfcp had filled in SCSI trace record fields which do not really
+> belong to the TMF. This was confusing.
+> 
+> Therefore, refactor the TMF tracing to work without SCSI command
+> and instead pass explicit arguments for SCSI ID and SCSI LUN.
+> As context we now need a pointer to zfcp_adapter.
+> To make it even clearer, we set all bits to 1 for the fields, which do
+> not belong to the TMF, to indicate that these fields are invalid.
+> 
+> The old zfcp_dbf_scsi() became zfcp_dbf_scsi_common() to now handle both
+> SCSI commands and TMFs. The old argument scsi_cmnd is now optional and
+> can be NULL with TMFs. Two new arguments scsi_id and scsi_lun are
+> optional and only used if scsi_cmnd is NULL, i.e. with TMFs.
+> 
+> Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
+> ---
+>  drivers/s390/scsi/zfcp_dbf.c  | 51 ++++++++++++++++++++++++++++---------------
+>  drivers/s390/scsi/zfcp_dbf.h  | 26 +++++++++++++++-------
+>  drivers/s390/scsi/zfcp_ext.h  |  8 ++++---
+>  drivers/s390/scsi/zfcp_scsi.c | 20 ++++++++++++-----
+>  4 files changed, 71 insertions(+), 34 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-The patch is available here:
+Cheers,
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-
-The short changelog is:
-
-Johannes Thumshirn (1):
-      scsi: sg: fix static checker warning in sg_is_valid_dxfer
-
-Yadan Fan (2):
-      scsi: smartpqi: limit transfer length to 1MB
-      scsi: hpsa: limit transfer length to 1MB
-
-And the diffstat:
-
- drivers/scsi/hpsa.c              | 2 +-
- drivers/scsi/sg.c                | 7 +++++--
- drivers/scsi/smartpqi/smartpqi.h | 2 +-
- 3 files changed, 7 insertions(+), 4 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 8914eab84337..4f7cdb28bd38 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -938,7 +938,7 @@ static struct scsi_host_template hpsa_driver_template = {
- #endif
- 	.sdev_attrs = hpsa_sdev_attrs,
- 	.shost_attrs = hpsa_shost_attrs,
--	.max_sectors = 8192,
-+	.max_sectors = 1024,
- 	.no_write_same = 1,
- };
- 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 1e82d4128a84..4fe606b000b4 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -759,8 +759,11 @@ static bool sg_is_valid_dxfer(sg_io_hdr_t *hp)
- 			return false;
- 		return true;
- 	case SG_DXFER_FROM_DEV:
--		if (hp->dxfer_len < 0)
--			return false;
-+		/*
-+		 * for SG_DXFER_FROM_DEV we always set dxfer_len to > 0. dxferp
-+		 * can either be NULL or != NULL so there's no point in checking
-+		 * it either. So just return true.
-+		 */
- 		return true;
- 	case SG_DXFER_TO_DEV:
- 	case SG_DXFER_TO_FROM_DEV:
-diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-index 07ec8a8877de..e164ffade38a 100644
---- a/drivers/scsi/smartpqi/smartpqi.h
-+++ b/drivers/scsi/smartpqi/smartpqi.h
-@@ -690,7 +690,7 @@ struct pqi_config_table_heartbeat {
- 
- #define PQI_MAX_OUTSTANDING_REQUESTS		((u32)~0)
- #define PQI_MAX_OUTSTANDING_REQUESTS_KDUMP	32
--#define PQI_MAX_TRANSFER_SIZE			(4 * 1024U * 1024U)
-+#define PQI_MAX_TRANSFER_SIZE			(1024U * 1024U)
- #define PQI_MAX_TRANSFER_SIZE_KDUMP		(512 * 1024U)
- 
- #define RAID_MAP_MAX_ENTRIES		1024
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
