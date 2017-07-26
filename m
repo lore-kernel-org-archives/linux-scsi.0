@@ -1,152 +1,82 @@
-From: Michal Potomski <michalx.potomski@intel.com>
-Subject: [RESEND][PATCH v3 2/2] scsi: ufs: Implement Auto-Hibern8 setup
-Date: Wed, 26 Jul 2017 16:55:03 +0200
-Message-ID: <20170726145503.15339-3-michalx.potomski@intel.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [RESEND][PATCH v3 1/2] scsi: ufs: Use DEVICE_ATTR_RW macros and
+ sdev_attrs structure
+Date: Wed, 26 Jul 2017 15:17:14 +0000
+Message-ID: <1501082233.2671.2.camel@wdc.com>
 References: <20170726145503.15339-1-michalx.potomski@intel.com>
+         <20170726145503.15339-2-michalx.potomski@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:21949 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751823AbdGZOyA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 26 Jul 2017 10:54:00 -0400
-In-Reply-To: <20170726145503.15339-1-michalx.potomski@intel.com>
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:22585 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750918AbdGZPSD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jul 2017 11:18:03 -0400
+In-Reply-To: <20170726145503.15339-2-michalx.potomski@intel.com>
+Content-Language: en-US
+Content-ID: <6C1E70141179834EBC1A02235C36EE7E@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: vinholikatti@gmail.com, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, subhashj@codeaurora.org, szymonx.mielczarek@intel.com
+To: "michalx.potomski@intel.com" <michalx.potomski@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "szymonx.mielczarek@intel.com" <szymonx.mielczarek@intel.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>
 
-RnJvbTogTWljaGHFgiBQb3RvbXNraSA8bWljaGFseC5wb3RvbXNraUBpbnRlbC5jb20+CgpTaW5j
-ZSBBdXRvLUhpYmVybjggZmVhdHVyZSBoYXMgdG8gYmUgZW5hYmxlZCBieSB0aGUgdXNlcgpwcm9w
-ZXIgQVBJIGhhcyBiZWVuIGdpdmVuIHZpYSBTeXNGUy4KCldlIGV4cG9zZSB0aGlzIEFQSSB0byB1
-c2VyLXNwYWNlLCBzaW5jZSB3ZSBkb24ndCBrbm93CmluIGRyaXZlciwgd2hhdCBraW5kIG9mIGFk
-ZGl0aW9uYWwgUG93ZXIgTWFuYWdlbWVudCBydWxlcwp1c2VyIHdhbnRzIHRvIHVzZS4gRHVlIHRv
-IHRoYXQgd2Ugd2FudCB0byBleHBvc2UgQVBJLCB0bwpsZXQgdXNlciBvciBoaWdoIGxldmVsIFMv
-VyBkZWNpZGUsIHdoZXRoZXIgaXQgd2FudHMgdG8KdXNlIEF1dG8tSGliZXJuOCBmZWF0dXJlIGZv
-ciBQb3dlciBTYXZpbmcgYW5kIGdpdmUgaGltCiJzbGlkZXIiIHRvIGRlY2lkZSBiZXR3ZWVuIHBl
-cmZvcm1hbmNlIGFuZCBwb3dlciBlZmZpY2llbmN5LgpUaGlzIGlzIGltcG9ydGFudCBiZWNhdXNl
-IGRpZmZlcmVudCBwbGF0Zm9ybXMgdXNpbmcKdGhlIHNhbWUgVUZTIGhvc3QgYW5kL29yIGRldmlj
-ZSBtaWdodCB3YW50IGRpZmZlcmVudApvcHRpb25zIG9uIHRoaXMgb25lLCBlLmcuIEhpZ2gtRW5k
-IERlc2t0b3AgUEMgbWlnaHQKd2FudCB0byBoYXZlIHRoaXMgZmVhdHVyZSBkaXNhYmxlZCwgd2hp
-bGUgTW9iaWxlIG9yClNlcnZlciBwbGF0Zm9ybXMgbWlnaHQgd2FudCB0byBoYXZlIHRoaXMgZmVh
-dHVyZSBlbmFibGVkLApidXQgbGV2ZWxzIHdpbGwgdmFyeSBkZXBlbmRpbmcgb24gd2hhdCdzIHRv
-IGJlIGFjaGVpdmVkLgoKU2V0dGluZyB1cCB0aGlzIGZlYXR1cmUgc2hvdWxkIGJlIGZ1bGx5IHRy
-YW5zcGFyZW50IHRvCmRyaXZlciwgc2luY2UgYWxsIHN0YXRlcyBjaGFuZ2luZyBjb21pbmcgZnJv
-bSBzZXR1cApvZiB0aGlzIGZlYXR1cmUgc2hhbGwgYmUgaGFuZGxlZCBieSBVRlMgSG9zdCwgd2l0
-aG91dCBhbnkKaW50ZXJhY3Rpb25zIGZyb20gZHJpdmVyLiBPbmx5IG9ic2VydmFibGUgc2lkZSBl
-ZmZlY3RzCndpbGwgYmUgdGhyb3VnaHRwdXQgbG9zcyBmb3IgdHJhbnNmZXJzIHNwb3JhZGljIGlu
-IHRlcm1zCm9mIHNldCB1cCB0aW1lci4KClNpZ25lZC1vZmYtYnk6IE1pY2hhxYIgUG90b21za2kg
-PG1pY2hhbHgucG90b21za2lAaW50ZWwuY29tPgotLS0KIERvY3VtZW50YXRpb24vQUJJL3Rlc3Rp
-bmcvc3lzZnMtZHJpdmVyLXNjc2ktdWZzIHwgIDggKysrCiBkcml2ZXJzL3Njc2kvdWZzL3Vmc2hj
-ZC5jICAgICAgICAgICAgICAgICAgICAgICB8IDc4ICsrKysrKysrKysrKysrKysrKysrKysrKysK
-IGRyaXZlcnMvc2NzaS91ZnMvdWZzaGNpLmggICAgICAgICAgICAgICAgICAgICAgIHwgMjMgKysr
-KysrLS0KIDMgZmlsZXMgY2hhbmdlZCwgMTA1IGluc2VydGlvbnMoKyksIDQgZGVsZXRpb25zKC0p
-CiBjcmVhdGUgbW9kZSAxMDA2NDQgRG9jdW1lbnRhdGlvbi9BQkkvdGVzdGluZy9zeXNmcy1kcml2
-ZXItc2NzaS11ZnMKCmRpZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9uL0FCSS90ZXN0aW5nL3N5c2Zz
-LWRyaXZlci1zY3NpLXVmcyBiL0RvY3VtZW50YXRpb24vQUJJL3Rlc3Rpbmcvc3lzZnMtZHJpdmVy
-LXNjc2ktdWZzCm5ldyBmaWxlIG1vZGUgMTAwNjQ0CmluZGV4IDAwMDAwMDAwMDAwMC4uZGI1MDAx
-OTdmNmE5Ci0tLSAvZGV2L251bGwKKysrIGIvRG9jdW1lbnRhdGlvbi9BQkkvdGVzdGluZy9zeXNm
-cy1kcml2ZXItc2NzaS11ZnMKQEAgLTAsMCArMSw4IEBACitXaGF0OgkJL3N5cy9idXMvcGNpL2Rl
-dmljZXMvPGJ1cz46PHZpZD46PHBpZD4uPG4+L2F1dG9faGliZXJuOAorRGF0ZToJCUp1bHkgMjAx
-NworQ29udGFjdDoJbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcKK0Rlc2NyaXB0aW9uOgorCQlU
-aGlzIGF0dHJpYml1dGUgcHJvdmlkZXMgaW5mb3JtYXRpb24gb24gY3VycmVudCBzZXR0aW5nIG9m
-CisJCUF1dG8tSGliZXJuOCBVRlMgSG9zdCBmZWF0dXJlIChyZWFkIDx1bml0OiBtaWNyb3NlY29u
-ZHM+KQorCQlhbmQgYWJpbGl0eSB0byBzZXQgdGhlIGZlYXR1cmUgb24gLSBieSB3cml0aW5nIGRl
-c2lyZWQKKwkJdGltZW91dCB2YWx1ZSA8dW5pdDogbWljcm9zZWNvbmRzPiwgb3Igb2ZmIChieSB3
-cml0aW5nICcwJykuCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jIGIvZHJp
-dmVycy9zY3NpL3Vmcy91ZnNoY2QuYwppbmRleCA1ZTBmZWU2YWIwZGIuLjhjNmFlMTMyYmRhNCAx
-MDA2NDQKLS0tIGEvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYworKysgYi9kcml2ZXJzL3Njc2kv
-dWZzL3Vmc2hjZC5jCkBAIC05MzEsNiArOTMxLDMxIEBAIHN0YXRpYyBpbnQgdWZzaGNkX3NjYWxl
-X2Nsa3Moc3RydWN0IHVmc19oYmEgKmhiYSwgYm9vbCBzY2FsZV91cCkKIH0KIAogLyoqCisgKiB1
-ZnNoY2RfcmVhZF9hdXRvX2hpYmVybjhfc3RhdGUgLSBSZWFkcyBob3N0cyBhdXRvLWhpYmVybjgg
-ZmVhdHVyZSBzdGF0ZQorICogQGhiYTogcGVyIGFkYXB0ZXIgaW5zdGFuY2UKKyAqLwordTMyIHVm
-c2hjZF9yZWFkX2F1dG9faGliZXJuOF9zdGF0ZShzdHJ1Y3QgdWZzX2hiYSAqaGJhKQoreworCXJl
-dHVybiB1ZnNoY2RfcmVhZGwoaGJhLCBSRUdfQVVUT19ISUJFUk44X0lETEVfVElNRVIpOworfQor
-CisvKioKKyAqIHVmc2hjZF9zZXR1cF9hdXRvX2hpYmVybjggLSBTZXRzIHVwIGhvc3RzIGF1dG8t
-aGliZXJuOCBmZWF0dXJlCisgKiBAaGJhOiBwZXIgYWRhcHRlciBpbnN0YW5jZQorICogQHNjYWxl
-OiB0aW1lciBzY2FsZSAoMS8xMC8xMDB1cy8xLzEwLzEwMG1zKQorICogQHRpbWVyX3ZhbDogdmFs
-dWUgdG8gYmUgbXVsdGlwbGVkIHdpdGggc2NhbGUgKGlkbGUgdGltZW91dCkKKyAqLwordm9pZCB1
-ZnNoY2Rfc2V0dXBfYXV0b19oaWJlcm44KHN0cnVjdCB1ZnNfaGJhICpoYmEsIHU4IHNjYWxlLCB1
-MTYgdGltZXJfdmFsKQoreworCXUzMiB2YWwgPSAoc2NhbGUgPDwgVUZTSENJX0FISUJFUk44X1ND
-QUxFX09GRlNFVCkKKwkJCSYgVUZTSENJX0FISUJFUk44X1NDQUxFX01BU0s7CisKKwl2YWwgfD0g
-dGltZXJfdmFsICYgVUZTSENJX0FISUJFUk44X1RJTUVSX01BU0s7CisKKwl1ZnNoY2Rfd3JpdGVs
-KGhiYSwgdmFsLCBSRUdfQVVUT19ISUJFUk44X0lETEVfVElNRVIpOworfQorCisvKioKICAqIHVm
-c2hjZF9pc19kZXZmcmVxX3NjYWxpbmdfcmVxdWlyZWQgLSBjaGVjayBpZiBzY2FsaW5nIGlzIHJl
-cXVpcmVkIG9yIG5vdAogICogQGhiYTogcGVyIGFkYXB0ZXIgaW5zdGFuY2UKICAqIEBzY2FsZV91
-cDogVHJ1ZSBpZiBzY2FsaW5nIHVwIGFuZCBmYWxzZSBpZiBzY2FsaW5nIGRvd24KQEAgLTY1ODMs
-MTIgKzY2MDgsNjUgQEAgc3RhdGljIHNzaXplX3Qgc3BtX2x2bF9zdG9yZShzdHJ1Y3QgZGV2aWNl
-ICpkZXYsCiAJcmV0dXJuIHVmc2hjZF9wbV9sdmxfc3RvcmUoZGV2LCBhdHRyLCBidWYsIGNvdW50
-LCBmYWxzZSk7CiB9CiAKKyNkZWZpbmUgVUZTX0FISUJFUk44X1NDQUxFX1NURVBfTUFHTklUVURF
-CTEwCisKK3N0YXRpYyBzc2l6ZV90IGF1dG9faGliZXJuOF9zaG93KHN0cnVjdCBkZXZpY2UgKmRl
-diwKKwkJc3RydWN0IGRldmljZV9hdHRyaWJ1dGUgKmF0dHIsIGNoYXIgKmJ1ZikKK3sKKwlzdHJ1
-Y3QgdWZzX2hiYSAqaGJhID0gZGV2X2dldF9kcnZkYXRhKGRldik7CisJdTMyIHZhbDsKKwl1bnNp
-Z25lZCBsb25nIHRpbWVyOworCXU4IHNjYWxlOworCisJaWYgKCEoaGJhLT5jYXBhYmlsaXRpZXMg
-JiBNQVNLX0FVVE9fSElCRVJOOF9TVVBQT1JUKSkKKwkJcmV0dXJuIC1FT1BOT1RTVVBQOworCisJ
-dmFsID0gdWZzaGNkX3JlYWRfYXV0b19oaWJlcm44X3N0YXRlKGhiYSk7CisJdGltZXIgPSB2YWwg
-JiBVRlNIQ0lfQUhJQkVSTjhfVElNRVJfTUFTSzsKKwlzY2FsZSA9CSh2YWwgJiBVRlNIQ0lfQUhJ
-QkVSTjhfU0NBTEVfTUFTSykKKwkJCT4+IFVGU0hDSV9BSElCRVJOOF9TQ0FMRV9PRkZTRVQ7CisK
-Kwlmb3IgKDsgc2NhbGUgPiAwOyAtLXNjYWxlKQorCQl0aW1lciAqPSBVRlNfQUhJQkVSTjhfU0NB
-TEVfU1RFUF9NQUdOSVRVREU7CisKKwlyZXR1cm4gc25wcmludGYoYnVmLCBQQUdFX1NJWkUsICIl
-bGRcbiIsIHRpbWVyKTsKK30KKworc3RhdGljIHNzaXplX3QgYXV0b19oaWJlcm44X3N0b3JlKHN0
-cnVjdCBkZXZpY2UgKmRldiwKKwkJc3RydWN0IGRldmljZV9hdHRyaWJ1dGUgKmF0dHIsIGNvbnN0
-IGNoYXIgKmJ1Ziwgc2l6ZV90IGNvdW50KQoreworCXN0cnVjdCB1ZnNfaGJhICpoYmEgPSBkZXZf
-Z2V0X2RydmRhdGEoZGV2KTsKKwl1bnNpZ25lZCBsb25nIHRpbWVyOworCXU4IHNjYWxlID0gVUZT
-SENJX0FISUJFUk44X1NDQUxFXzFVUzsKKworCWlmICghKGhiYS0+Y2FwYWJpbGl0aWVzICYgTUFT
-S19BVVRPX0hJQkVSTjhfU1VQUE9SVCkpCisJCXJldHVybiAtRU9QTk9UU1VQUDsKKworCWlmIChr
-c3RydG91bChidWYsIDAsICZ0aW1lcikpCisJCXJldHVybiAtRUlOVkFMOworCisJd2hpbGUgKHRp
-bWVyID4gVUZTSENJX0FISUJFUk44X1RJTUVSX01BU0sgJiYKKwkgICAgICAgc2NhbGUgPCBVRlNI
-Q0lfQUhJQkVSTjhfU0NBTEVfTUFYKSB7CisJCXRpbWVyIC89IFVGU19BSElCRVJOOF9TQ0FMRV9T
-VEVQX01BR05JVFVERTsKKwkJKytzY2FsZTsKKwl9CisKKwlpZiAoc2NhbGUgPj0gVUZTSENJX0FI
-SUJFUk44X1NDQUxFX01BWCkKKwkJcmV0dXJuIC1FSU5WQUw7CisKKwl1ZnNoY2Rfc2V0dXBfYXV0
-b19oaWJlcm44KGhiYSwgc2NhbGUsICh1MTYpIHRpbWVyKTsKKworCXJldHVybiBjb3VudDsKK30K
-Kwogc3RhdGljIERFVklDRV9BVFRSX1JXKHJwbV9sdmwpOwogc3RhdGljIERFVklDRV9BVFRSX1JX
-KHNwbV9sdmwpOworc3RhdGljIERFVklDRV9BVFRSX1JXKGF1dG9faGliZXJuOCk7CiAKIHN0YXRp
-YyBzdHJ1Y3QgZGV2aWNlX2F0dHJpYnV0ZSAqdWZzaGNkX2Rldl9hdHRyc1tdID0gewogCSZkZXZf
-YXR0cl9ycG1fbHZsLAogCSZkZXZfYXR0cl9zcG1fbHZsLAorCSZkZXZfYXR0cl9hdXRvX2hpYmVy
-bjgsCiAJTlVMTCwKIH07CiAKZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNpLmgg
-Yi9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjaS5oCmluZGV4IGY2MDE0NWQ0YTY2ZS4uM2JmODgyNjMx
-OGIwIDEwMDY0NAotLS0gYS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjaS5oCisrKyBiL2RyaXZlcnMv
-c2NzaS91ZnMvdWZzaGNpLmgKQEAgLTQ4LDcgKzQ4LDcgQEAgZW51bSB7CiAJUkVHX1VGU19WRVJT
-SU9OCQkJCT0gMHgwOCwKIAlSRUdfQ09OVFJPTExFUl9ERVZfSUQJCQk9IDB4MTAsCiAJUkVHX0NP
-TlRST0xMRVJfUFJPRF9JRAkJCT0gMHgxNCwKLQlSRUdfQVVUT19ISUJFUk5BVEVfSURMRV9USU1F
-UgkJPSAweDE4LAorCVJFR19BVVRPX0hJQkVSTjhfSURMRV9USU1FUgkJPSAweDE4LAogCVJFR19J
-TlRFUlJVUFRfU1RBVFVTCQkJPSAweDIwLAogCVJFR19JTlRFUlJVUFRfRU5BQkxFCQkJPSAweDI0
-LAogCVJFR19DT05UUk9MTEVSX1NUQVRVUwkJCT0gMHgzMCwKQEAgLTg2LDYgKzg2LDcgQEAgZW51
-bSB7CiBlbnVtIHsKIAlNQVNLX1RSQU5TRkVSX1JFUVVFU1RTX1NMT1RTCQk9IDB4MDAwMDAwMUYs
-CiAJTUFTS19UQVNLX01BTkFHRU1FTlRfUkVRVUVTVF9TTE9UUwk9IDB4MDAwNzAwMDAsCisJTUFT
-S19BVVRPX0hJQkVSTjhfU1VQUE9SVAkJPSAweDAwODAwMDAwLAogCU1BU0tfNjRfQUREUkVTU0lO
-R19TVVBQT1JUCQk9IDB4MDEwMDAwMDAsCiAJTUFTS19PVVRfT0ZfT1JERVJfREFUQV9ERUxJVkVS
-WV9TVVBQT1JUCT0gMHgwMjAwMDAwMCwKIAlNQVNLX1VJQ19ETUVfVEVTVF9NT0RFX1NVUFBPUlQJ
-CT0gMHgwNDAwMDAwMCwKQEAgLTEzNiw5ICsxMzcsOSBAQCBlbnVtIHsKICNkZWZpbmUgQ09OVFJP
-TExFUl9GQVRBTF9FUlJPUgkJCVVGU19CSVQoMTYpCiAjZGVmaW5lIFNZU1RFTV9CVVNfRkFUQUxf
-RVJST1IJCQlVRlNfQklUKDE3KQogCi0jZGVmaW5lIFVGU0hDRF9VSUNfUFdSX01BU0sJKFVJQ19I
-SUJFUk5BVEVfRU5URVIgfFwKLQkJCQlVSUNfSElCRVJOQVRFX0VYSVQgfFwKLQkJCQlVSUNfUE9X
-RVJfTU9ERSkKKyNkZWZpbmUgVUZTSENEX1VIU19NQVNLCQkoVUlDX0hJQkVSTkFURV9FWElUIHwg
-VUlDX0hJQkVSTkFURV9FTlRFUikKKworI2RlZmluZSBVRlNIQ0RfVUlDX1BXUl9NQVNLCShVRlNI
-Q0RfVUhTX01BU0sgfCBVSUNfUE9XRVJfTU9ERSkKIAogI2RlZmluZSBVRlNIQ0RfVUlDX01BU0sJ
-CShVSUNfQ09NTUFORF9DT01QTCB8IFVGU0hDRF9VSUNfUFdSX01BU0spCiAKQEAgLTQyOCw0ICs0
-MjksMTggQEAgc3RydWN0IHV0cF90YXNrX3JlcV9kZXNjIHsKIAlfX2xlMzIgdGFza19yc3BfdXBp
-dVtUQVNLX1JTUF9VUElVX1NJWkVfRFdPUkRTXTsKIH07CiAKK2VudW0geworCVVGU0hDSV9BSElC
-RVJOOF9TQ0FMRV8xVVMJPSAwLAorCVVGU0hDSV9BSElCRVJOOF9TQ0FMRV8xMFVTCT0gMSwKKwlV
-RlNIQ0lfQUhJQkVSTjhfU0NBTEVfMTAwVVMJPSAyLAorCVVGU0hDSV9BSElCRVJOOF9TQ0FMRV8x
-TVMJPSAzLAorCVVGU0hDSV9BSElCRVJOOF9TQ0FMRV8xME1TCT0gNCwKKwlVRlNIQ0lfQUhJQkVS
-TjhfU0NBTEVfMTAwTVMJPSA1LAorCVVGU0hDSV9BSElCRVJOOF9TQ0FMRV9NQVgsCit9OworCisj
-ZGVmaW5lIFVGU0hDSV9BSElCRVJOOF9USU1FUl9NQVNLCQkweDAzZmYKKyNkZWZpbmUgVUZTSENJ
-X0FISUJFUk44X1NDQUxFX01BU0sJCTB4MUMwMAorI2RlZmluZSBVRlNIQ0lfQUhJQkVSTjhfU0NB
-TEVfT0ZGU0VUCQkxMAorCiAjZW5kaWYgLyogRW5kIG9mIEhlYWRlciAqLwotLSAKMi4xMy4wLjY3
-LmcxMGM3OGExCgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLQoKSW50ZWwgVGVjaG5vbG9neSBQb2xhbmQgc3AuIHogby5v
-Lgp1bC4gU2xvd2Fja2llZ28gMTczIHwgODAtMjk4IEdkYW5zayB8IFNhZCBSZWpvbm93eSBHZGFu
-c2sgUG9sbm9jIHwgVklJIFd5ZHppYWwgR29zcG9kYXJjenkgS3Jham93ZWdvIFJlamVzdHJ1IFNh
-ZG93ZWdvIC0gS1JTIDEwMTg4MiB8IE5JUCA5NTctMDctNTItMzE2IHwgS2FwaXRhbCB6YWtsYWRv
-d3kgMjAwLjAwMCBQTE4uCgpUYSB3aWFkb21vc2Mgd3JheiB6IHphbGFjem5pa2FtaSBqZXN0IHBy
-emV6bmFjem9uYSBkbGEgb2tyZXNsb25lZ28gYWRyZXNhdGEgaSBtb3plIHphd2llcmFjIGluZm9y
-bWFjamUgcG91Zm5lLiBXIHJhemllIHByenlwYWRrb3dlZ28gb3RyenltYW5pYSB0ZWogd2lhZG9t
-b3NjaSwgcHJvc2lteSBvIHBvd2lhZG9taWVuaWUgbmFkYXdjeSBvcmF6IHRyd2FsZSBqZWogdXN1
-bmllY2llOyBqYWtpZWtvbHdpZWsKcHJ6ZWdsYWRhbmllIGx1YiByb3pwb3dzemVjaG5pYW5pZSBq
-ZXN0IHphYnJvbmlvbmUuClRoaXMgZS1tYWlsIGFuZCBhbnkgYXR0YWNobWVudHMgbWF5IGNvbnRh
-aW4gY29uZmlkZW50aWFsIG1hdGVyaWFsIGZvciB0aGUgc29sZSB1c2Ugb2YgdGhlIGludGVuZGVk
-IHJlY2lwaWVudChzKS4gSWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVkIHJlY2lwaWVudCwgcGxl
-YXNlIGNvbnRhY3QgdGhlIHNlbmRlciBhbmQgZGVsZXRlIGFsbCBjb3BpZXM7IGFueSByZXZpZXcg
-b3IgZGlzdHJpYnV0aW9uIGJ5Cm90aGVycyBpcyBzdHJpY3RseSBwcm9oaWJpdGVkLgo=
+On Wed, 2017-07-26 at 16:55 +0200, Michal Potomski wrote:
+> Previous implementation was obsolete and needed to be updated.
+> Additionally device_create_file() call occurs after a UFS device
+> has been made visible in sysfs and hence will cause trouble
+> (race condition) if a udev rule tries to set this attribute
+> from inside a rule that is triggered by device creation.
+
+Hello Michal,
+
+Thank you for having done this work!
+
+> +static ssize_t rpm_lvl_show(struct device *dev,
+> +		struct device_attribute *attr, char *buf)
+> +{
+> +	struct ufs_hba *hba =3D dev_get_drvdata(dev);
+> +	int curr_len;
+> +	u8 lvl;
+> +
+> +	curr_len =3D snprintf(buf, PAGE_SIZE,
+> +			    "\nCurrent Runtime PM level [%d] =3D> dev_state [%s] link_state [=
+%s]\n",
+> +			    hba->rpm_lvl,
+> +			    ufschd_ufs_dev_pwr_mode_to_string(
+> +				ufs_pm_lvl_states[hba->rpm_lvl].dev_state),
+> +			    ufschd_uic_link_state_to_string(
+> +				ufs_pm_lvl_states[hba->rpm_lvl].link_state));
+> +
+> +	curr_len +=3D snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
+> +			     "\nAll available Runtime PM levels info:\n");
+> +	for (lvl =3D UFS_PM_LVL_0; lvl < UFS_PM_LVL_MAX; lvl++)
+> +		curr_len +=3D snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
+> +				     "\tRuntime PM level [%d] =3D> dev_state [%s] link_state [%s]\n"=
+,
+> +				    lvl,
+> +				    ufschd_ufs_dev_pwr_mode_to_string(
+> +					ufs_pm_lvl_states[lvl].dev_state),
+> +				    ufschd_uic_link_state_to_string(
+> +					ufs_pm_lvl_states[lvl].link_state));
+> +
+> +	return curr_len;
+> +}
+
+I am aware that this code is existing code that has been moved up. But are
+the UFS contributors aware that this kind of output violates the sysfs rule=
+s?
+Please consider either to move this attribute to debugfs (the one value per
+file rule only applies to sysfs and configfs) or to split it into multiple
+sysfs attributes if that is possible without breaking existing user space
+applications. A quote from
+https://www.kernel.org/doc/Documentation/filesystems/sysfs.txt: "Attributes
+should be ASCII text files, preferably with only one value per file. It is
+noted that it may not be efficient to contain only one value per file, so i=
+t
+is socially acceptable to express an array of values of the same type."
+
+Anyway, since this patch is an improvement compared to the current code bas=
+e:
+
+Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
