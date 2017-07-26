@@ -1,57 +1,50 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 196493] New: When LUN assignments on the target was changed,
- event must be triggered
-Date: Wed, 26 Jul 2017 09:31:08 +0000
-Message-ID: <bug-196493-11613@https.bugzilla.kernel.org/>
+From: Michal Potomski <michalx.potomski@intel.com>
+Subject: [RESEND][PATCH v3 0/2] UFS SysFS attributes
+Date: Wed, 26 Jul 2017 16:55:01 +0200
+Message-ID: <20170726145503.15339-1-michalx.potomski@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:51522 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751047AbdGZJbW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 26 Jul 2017 05:31:22 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id F37A42873D
-        for <linux-scsi@vger.kernel.org>; Wed, 26 Jul 2017 09:31:21 +0000 (UTC)
+Received: from mga09.intel.com ([134.134.136.24]:21949 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751753AbdGZOx4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 26 Jul 2017 10:53:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: vinholikatti@gmail.com, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, subhashj@codeaurora.org, szymonx.mielczarek@intel.com
 
-https://bugzilla.kernel.org/show_bug.cgi?id=196493
-
-            Bug ID: 196493
-           Summary: When LUN assignments on the target was changed, event
-                    must be triggered
-           Product: IO/Storage
-           Version: 2.5
-    Kernel Version: 3.13…4.4 and probably all other
-          Hardware: All
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: SCSI
-          Assignee: linux-scsi@vger.kernel.org
-          Reporter: ds@vo-ix.ru
-        Regression: No
-
-1. The (e.g. SAN) device is unmapped and then the same LUN is reused by other
-WWN, but no actions taken on linux-side.
-2. Kernel receives indication and claims "Kernel: [15671249.097583] sd
-8:0:15:9: Warning! Received an indication that the LUN assignments on this
-target have changed. The Linux SCSI layer does not automatically remap LUN
-assignments."
-3. Observe no further actions at kernel-side. ioctl (requested via blockdev)
-returns parameters of unmapped LUN.
-
-Expect at least to cock the trigger on respective device (like mapped to sysfs
-"/sys/block/sd*/device/evt_lun_change_reported") and thus provide the mechanism
-to inform device mapper. In perspective, the feature of auto-invalidation and
-rescan on changed path.
-
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+RnJvbTogTWljaGHFgiBQb3RvbXNraSA8bWljaGFseC5wb3RvbXNraUBpbnRlbC5jb20+CgpUaGlz
+IHBhdGNoc2V0IGltcGxlbWVudHMgbmV3IFN5c0ZTIGF0dHJpYnV0ZSB0byBoYW5kbGUKQXV0by1I
+aWJlcm44IGZlYXR1cmUgYW5kIGFkZGl0aW9uYWxseSByZXdyaXRlcyBwcmVzZW50CmF0dHJpYnV0
+ZXMgdG8gYWRoZXJlIHRvIG5ldyBzdGFuZGFyZC4KCkNoYW5nZXMgaW4gVjM6CiAtIHJld3JpdGUg
+bmV3IGFuZCBwcmVzZW50IGF0dHJpYnV0ZXMgdG8gYWRoZXJlIHRvCiAgIERFVklDRV9BVFRSX1JX
+L1JPIGFuZCBzZGV2X2F0dHIgaG9zdCB0ZW1wbGF0ZSBtZW1iZXIKICAgcG9saWN5CiAtIHJlYWQv
+d3JpdGUgZnJvbS90byBhdXRvLWhpYmVybjggYXR0cmlidXRlIHdpbGwgcmV0dXJuCiAgIC1FT1BO
+T1RTVVBQLCB3aGVuIGhvc3QgaGFzIG5vIHN1Y2ggY2FwYWJpbGl0eSwgaW50ZWFkCiAgIG9mIGF0
+dHJpYnV0ZSBub3QgYmVpbmcgY3JlYXRlZAoKQ2hhbmdlcyBpbiBWMjoKIC0gbWlub3IgZm9ybWF0
+dGluZy9zdHlsZSBjaGFuZ2VzCgoKTWljaGHFgiBQb3RvbXNraSAoMik6CiAgc2NzaTogdWZzOiBV
+c2UgREVWSUNFX0FUVFJfUlcgbWFjcm9zIGFuZCBzZGV2X2F0dHJzIHN0cnVjdHVyZQogIHNjc2k6
+IHVmczogSW1wbGVtZW50IEF1dG8tSGliZXJuOCBzZXR1cAoKIERvY3VtZW50YXRpb24vQUJJL3Rl
+c3Rpbmcvc3lzZnMtZHJpdmVyLXNjc2ktdWZzIHwgICA4ICsKIGRyaXZlcnMvc2NzaS91ZnMvdWZz
+aGNkLmMgICAgICAgICAgICAgICAgICAgICAgIHwgMzEwICsrKysrKysrKysrKysrLS0tLS0tLS0t
+LQogZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2kuaCAgICAgICAgICAgICAgICAgICAgICAgfCAgMjMg
+Ky0KIDMgZmlsZXMgY2hhbmdlZCwgMjA4IGluc2VydGlvbnMoKyksIDEzMyBkZWxldGlvbnMoLSkK
+IGNyZWF0ZSBtb2RlIDEwMDY0NCBEb2N1bWVudGF0aW9uL0FCSS90ZXN0aW5nL3N5c2ZzLWRyaXZl
+ci1zY3NpLXVmcwoKLS0gCjIuMTMuMC42Ny5nMTBjNzhhMQoKLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCkludGVsIFRl
+Y2hub2xvZ3kgUG9sYW5kIHNwLiB6IG8uby4KdWwuIFNsb3dhY2tpZWdvIDE3MyB8IDgwLTI5OCBH
+ZGFuc2sgfCBTYWQgUmVqb25vd3kgR2RhbnNrIFBvbG5vYyB8IFZJSSBXeWR6aWFsIEdvc3BvZGFy
+Y3p5IEtyYWpvd2VnbyBSZWplc3RydSBTYWRvd2VnbyAtIEtSUyAxMDE4ODIgfCBOSVAgOTU3LTA3
+LTUyLTMxNiB8IEthcGl0YWwgemFrbGFkb3d5IDIwMC4wMDAgUExOLgoKVGEgd2lhZG9tb3NjIHdy
+YXogeiB6YWxhY3puaWthbWkgamVzdCBwcnplem5hY3pvbmEgZGxhIG9rcmVzbG9uZWdvIGFkcmVz
+YXRhIGkgbW96ZSB6YXdpZXJhYyBpbmZvcm1hY2plIHBvdWZuZS4gVyByYXppZSBwcnp5cGFka293
+ZWdvIG90cnp5bWFuaWEgdGVqIHdpYWRvbW9zY2ksIHByb3NpbXkgbyBwb3dpYWRvbWllbmllIG5h
+ZGF3Y3kgb3JheiB0cndhbGUgamVqIHVzdW5pZWNpZTsgamFraWVrb2x3aWVrCnByemVnbGFkYW5p
+ZSBsdWIgcm96cG93c3plY2huaWFuaWUgamVzdCB6YWJyb25pb25lLgpUaGlzIGUtbWFpbCBhbmQg
+YW55IGF0dGFjaG1lbnRzIG1heSBjb250YWluIGNvbmZpZGVudGlhbCBtYXRlcmlhbCBmb3IgdGhl
+IHNvbGUgdXNlIG9mIHRoZSBpbnRlbmRlZCByZWNpcGllbnQocykuIElmIHlvdSBhcmUgbm90IHRo
+ZSBpbnRlbmRlZCByZWNpcGllbnQsIHBsZWFzZSBjb250YWN0IHRoZSBzZW5kZXIgYW5kIGRlbGV0
+ZSBhbGwgY29waWVzOyBhbnkgcmV2aWV3IG9yIGRpc3RyaWJ1dGlvbiBieQpvdGhlcnMgaXMgc3Ry
+aWN0bHkgcHJvaGliaXRlZC4K
