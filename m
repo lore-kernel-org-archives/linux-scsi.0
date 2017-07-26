@@ -1,82 +1,62 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [RESEND][PATCH v3 1/2] scsi: ufs: Use DEVICE_ATTR_RW macros and
- sdev_attrs structure
-Date: Wed, 26 Jul 2017 15:17:14 +0000
-Message-ID: <1501082233.2671.2.camel@wdc.com>
-References: <20170726145503.15339-1-michalx.potomski@intel.com>
-         <20170726145503.15339-2-michalx.potomski@intel.com>
+Subject: Re: [PATCH v2] scsi: ufs: Implement Auto-Hibern8 setup
+Date: Wed, 26 Jul 2017 15:25:34 +0000
+Message-ID: <1501082732.2671.5.camel@wdc.com>
+References: <20170725094514.19192-1-michalx.potomski@intel.com>
+         <1500996626.3031.1.camel@wdc.com>
+         <C8BF859FC3044844854B2CBA1ED115C1F99AFB@HASMSX111.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:22585 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750918AbdGZPSD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jul 2017 11:18:03 -0400
-In-Reply-To: <20170726145503.15339-2-michalx.potomski@intel.com>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:38475 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751451AbdGZP0V (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jul 2017 11:26:21 -0400
+In-Reply-To: <C8BF859FC3044844854B2CBA1ED115C1F99AFB@HASMSX111.ger.corp.intel.com>
 Content-Language: en-US
-Content-ID: <6C1E70141179834EBC1A02235C36EE7E@namprd04.prod.outlook.com>
+Content-ID: <D3C7B2998F170E4CB77B162CA095F39E@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "michalx.potomski@intel.com" <michalx.potomski@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "szymonx.mielczarek@intel.com" <szymonx.mielczarek@intel.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>
 
-On Wed, 2017-07-26 at 16:55 +0200, Michal Potomski wrote:
-> Previous implementation was obsolete and needed to be updated.
-> Additionally device_create_file() call occurs after a UFS device
-> has been made visible in sysfs and hence will cause trouble
-> (race condition) if a udev rule tries to set this attribute
-> from inside a rule that is triggered by device creation.
+On Tue, 2017-07-25 at 16:54 +0000, Potomski, MichalX wrote:
+> On Tue, 2017-07-25 at 15:30 +0000, Bart Van Assche wrote:
+> > Since I'm not familiar with the Auto-Hibern8 feature: what impact does =
+it
+> > have on command processing? Does it e.g. cause SCSI or TMF commands tha=
+t
+> > are
+> > sent to the UFS device to be ignored, to fail or to time out?
+>=20
+> Actually behavior should be transparent for all of the higher layers, sin=
+ce this
+> shall be fully controlled by UFS Host, which will put UFS Device to Hiber=
+n8 state,
+> when it has no ongoing commands to it for set up time. If there will be a=
+ny command
+> UFS Host should order the Device to exit Hibern8 mode and proceed normall=
+y.
+>=20
+> Bottom line is that in model case, it shouldn't cause any of errors menti=
+oned by you.
+> There is possible throughput degradation in case, if transfers are sporad=
+ic in terms
+> of timer, which we did set up, though. According to specification it also=
+ shouldn't affect
+> Hibern8 states triggered by Power Management, nor any other functionality=
+.
 
 Hello Michal,
 
-Thank you for having done this work!
+SCSI requests can not only be initiated by user space but also by the kerne=
+l
+itself. Are SCSI UFS devices controlled by the SCSI disk (sd) driver? Will
+SCSI requests submitted by sd_check_events() to a hibernated UFS device tim=
+e
+out and activate the SCSI error handler?
 
-> +static ssize_t rpm_lvl_show(struct device *dev,
-> +		struct device_attribute *attr, char *buf)
-> +{
-> +	struct ufs_hba *hba =3D dev_get_drvdata(dev);
-> +	int curr_len;
-> +	u8 lvl;
-> +
-> +	curr_len =3D snprintf(buf, PAGE_SIZE,
-> +			    "\nCurrent Runtime PM level [%d] =3D> dev_state [%s] link_state [=
-%s]\n",
-> +			    hba->rpm_lvl,
-> +			    ufschd_ufs_dev_pwr_mode_to_string(
-> +				ufs_pm_lvl_states[hba->rpm_lvl].dev_state),
-> +			    ufschd_uic_link_state_to_string(
-> +				ufs_pm_lvl_states[hba->rpm_lvl].link_state));
-> +
-> +	curr_len +=3D snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
-> +			     "\nAll available Runtime PM levels info:\n");
-> +	for (lvl =3D UFS_PM_LVL_0; lvl < UFS_PM_LVL_MAX; lvl++)
-> +		curr_len +=3D snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
-> +				     "\tRuntime PM level [%d] =3D> dev_state [%s] link_state [%s]\n"=
-,
-> +				    lvl,
-> +				    ufschd_ufs_dev_pwr_mode_to_string(
-> +					ufs_pm_lvl_states[lvl].dev_state),
-> +				    ufschd_uic_link_state_to_string(
-> +					ufs_pm_lvl_states[lvl].link_state));
-> +
-> +	return curr_len;
-> +}
+Thanks,
 
-I am aware that this code is existing code that has been moved up. But are
-the UFS contributors aware that this kind of output violates the sysfs rule=
-s?
-Please consider either to move this attribute to debugfs (the one value per
-file rule only applies to sysfs and configfs) or to split it into multiple
-sysfs attributes if that is possible without breaking existing user space
-applications. A quote from
-https://www.kernel.org/doc/Documentation/filesystems/sysfs.txt: "Attributes
-should be ASCII text files, preferably with only one value per file. It is
-noted that it may not be efficient to contain only one value per file, so i=
-t
-is socially acceptable to express an array of values of the same type."
-
-Anyway, since this patch is an improvement compared to the current code bas=
-e:
-
-Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
+Bart.=
