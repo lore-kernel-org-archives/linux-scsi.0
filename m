@@ -1,62 +1,99 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
 Subject: Re: [REGRESSION] 28676d869bbb (scsi: sg: check for valid direction
  before starting the request) breaks mtx tape library control
-Date: Wed, 26 Jul 2017 09:22:25 +0200
-Message-ID: <20170726072225.GB4039@linux-x5ow.site>
+Date: Wed, 26 Jul 2017 09:39:34 +0200
+Message-ID: <20170726073934.GC4039@linux-x5ow.site>
 References: <ufafudubmkd.fsf@epithumia.math.uh.edu>
  <20170718073747.GD4875@linux-x5ow.site>
  <ufak235abug.fsf@epithumia.math.uh.edu>
  <20170719070335.GC4151@linux-x5ow.site>
  <ufazic0974h.fsf@epithumia.math.uh.edu>
  <20170719083654.GE4151@linux-x5ow.site>
- <5520d33f-06a0-f880-94f9-c014c11c1bc5@interlog.com>
+ <20170721164343.GA4086@linux-x5ow.site>
+ <ufa7ez18uhn.fsf@epithumia.math.uh.edu>
+ <20170725071852.GA3750@linux-x5ow.site>
+ <ufa1sp474sc.fsf@epithumia.math.uh.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <5520d33f-06a0-f880-94f9-c014c11c1bc5@interlog.com>
+In-Reply-To: <ufa1sp474sc.fsf@epithumia.math.uh.edu>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: Jason L Tibbitts III <tibbs@math.uh.edu>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dvyukov@google.com, hare@suse.com, hch@lst.de, martin.petersen@oracle.com
+To: Jason L Tibbitts III <tibbs@math.uh.edu>
+Cc: Doug Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dvyukov@google.com, hare@suse.com, hch@lst.de, martin.petersen@oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jul 25, 2017 at 03:09:00PM -0400, Douglas Gilbert wrote:
-> _TO_ is toward the device (i.e. WRITE) and what T10 call "data-out".
-> _FROM_ is from the device (e.g. INQUIRY) and what T10 call "data-in".
-> 
-> _TO_FROM_ is basically _FROM_ (and has nothing to do with bidi).
-> _TO_FROM_ is very old and is meant to try and detect "short reads"
-> by prefilling the indirect buffer (by reading from dxferp) before
-> it is overwritten by the _FROM_ (and then writing to dxferp). It
-> is from the time when not all LLDs or HBAs provided an indication
-> of a "short read". Today users have the 'sg_io_hdr_t::resid' for
-> that purpose. Whether the sg driver in lk 4.12 still does that
-> I haven't checked.
-> 
-> The only limit that should be placed on dxfer_len is something like
-> <= 2**28 (256M) in my opinion. Big enough that the kernel would
-> reject it and small enough to catch negative values placed in an
-> unsigned.
+On Tue, Jul 25, 2017 at 01:25:07PM -0500, Jason L Tibbitts III wrote:
+> >>>>> "JT" == Johannes Thumshirn <jthumshirn@suse.de> writes:
+> ioctl(3, SG_IO, {interface_id='S', dxfer_direction=SG_DXFER_TO_DEV, cmd_len=12, cmdp="\xa5\x00\x00\x00\x00\x01\x03\xe9\x00\x00\x00\x00", mx_sb_len=20, iovec_count=0, dxfer_len=0, timeout=300000, flags=0, dxferp=NULL, status=0, masked_status=0, msg_status=0, sb_len_wr=0, sbp="", host_status=0, driver_status=0, resid=0, duration=0, info=0}) = -1 EINVAL (Invalid argument)
 
-OK. I'll give it a shot, thanks.
+[...]
+ 	case SG_DXFER_TO_DEV:
+  	case SG_DXFER_TO_FROM_DEV:
+ 		if (!hp->dxferp)
+  			return false;
+  		return true;
 
-> 
-> 
-> The overall problem is that sg_is_valid_dxfer() introduced in lk 4.12
-> is doing more sanity checks than were done before. My policy was
-> to ignore ("don't care") combinations of dxfer_direction, dxferp and
-> dxfer_len that were harmless. Anyway those three variables are
-> incomplete since the SCSI command and the device also dictate the
-> length of the data-in transfer.
+So here we go, dxfer_direction is SG_DXFER_TO_DEV, dxfer_len is 0 and dxferp
+is NULL. We bail out because dxferp is NULL here.
 
-The problem with these don't care combinations was, that user-space could then
-easily crash the kernel. This is the reason I introduced sg_is_valid_dxfer().
-It's sole purpuse was to avoid more CVEs, but unfortunately it turned into
-quite some regressions.
+I only looked at sg_write() and not sg_new_write() which is called by the
+SG_IO path not the fops->write() path.
 
-Thanks,
-	Johannes
+It's probably best to just check for dxfer_len <= 2^28 to be valid as Doug
+suggested:
+
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 4fe606b000b4..d7ff71e0c85c 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -751,35 +751,6 @@ sg_new_write(Sg_fd *sfp, struct file *file, const char __user *buf,
+ 	return count;
+ }
+ 
+-static bool sg_is_valid_dxfer(sg_io_hdr_t *hp)
+-{
+-	switch (hp->dxfer_direction) {
+-	case SG_DXFER_NONE:
+-		if (hp->dxferp || hp->dxfer_len > 0)
+-			return false;
+-		return true;
+-	case SG_DXFER_FROM_DEV:
+-		/*
+-		 * for SG_DXFER_FROM_DEV we always set dxfer_len to > 0. dxferp
+-		 * can either be NULL or != NULL so there's no point in checking
+-		 * it either. So just return true.
+-		 */
+-		return true;
+-	case SG_DXFER_TO_DEV:
+-	case SG_DXFER_TO_FROM_DEV:
+-		if (!hp->dxferp || hp->dxfer_len == 0)
+-			return false;
+-		return true;
+-	case SG_DXFER_UNKNOWN:
+-		if ((!hp->dxferp && hp->dxfer_len) ||
+-		    (hp->dxferp && hp->dxfer_len == 0))
+-			return false;
+-		return true;
+-	default:
+-		return false;
+-	}
+-}
+-
+ static int
+ sg_common_write(Sg_fd * sfp, Sg_request * srp,
+ 		unsigned char *cmnd, int timeout, int blocking)
+@@ -800,7 +771,7 @@ sg_common_write(Sg_fd * sfp, Sg_request * srp,
+ 			"sg_common_write:  scsi opcode=0x%02x, cmd_size=%d\n",
+ 			(int) cmnd[0], (int) hp->cmd_len));
+ 
+-	if (!sg_is_valid_dxfer(hp))
++	if (hp->dxfer_len >= SZ_256M)
+ 		return -EINVAL;
+ 
+ 	k = sg_start_req(srp, cmnd);
+
 -- 
 Johannes Thumshirn                                          Storage
 jthumshirn@suse.de                                +49 911 74053 689
