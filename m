@@ -1,62 +1,24 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH v2] scsi: ufs: Implement Auto-Hibern8 setup
-Date: Wed, 26 Jul 2017 15:25:34 +0000
-Message-ID: <1501082732.2671.5.camel@wdc.com>
-References: <20170725094514.19192-1-michalx.potomski@intel.com>
-         <1500996626.3031.1.camel@wdc.com>
-         <C8BF859FC3044844854B2CBA1ED115C1F99AFB@HASMSX111.ger.corp.intel.com>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: Re: CPU lock-ups with 4.12.0+ kernels related to usb_storage
+Date: Wed, 26 Jul 2017 17:47:17 +0200
+Message-ID: <20170726154716.GA5722@lst.de>
+References: <20170712165200.GA29145@lst.de> <Pine.LNX.4.44L0.1707131258190.1571-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:38475 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751451AbdGZP0V (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jul 2017 11:26:21 -0400
-In-Reply-To: <C8BF859FC3044844854B2CBA1ED115C1F99AFB@HASMSX111.ger.corp.intel.com>
-Content-Language: en-US
-Content-ID: <D3C7B2998F170E4CB77B162CA095F39E@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.1707131258190.1571-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Arthur Marsh <arthur.marsh-CkBdp7X+a1oIQCUVoCVjmQ@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "michalx.potomski@intel.com" <michalx.potomski@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "subhashj@codeaurora.org" <subhashj@codeaurora.org>, "szymonx.mielczarek@intel.com" <szymonx.mielczarek@intel.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>
 
-On Tue, 2017-07-25 at 16:54 +0000, Potomski, MichalX wrote:
-> On Tue, 2017-07-25 at 15:30 +0000, Bart Van Assche wrote:
-> > Since I'm not familiar with the Auto-Hibern8 feature: what impact does =
-it
-> > have on command processing? Does it e.g. cause SCSI or TMF commands tha=
-t
-> > are
-> > sent to the UFS device to be ignored, to fail or to time out?
->=20
-> Actually behavior should be transparent for all of the higher layers, sin=
-ce this
-> shall be fully controlled by UFS Host, which will put UFS Device to Hiber=
-n8 state,
-> when it has no ongoing commands to it for set up time. If there will be a=
-ny command
-> UFS Host should order the Device to exit Hibern8 mode and proceed normall=
-y.
->=20
-> Bottom line is that in model case, it shouldn't cause any of errors menti=
-oned by you.
-> There is possible throughput degradation in case, if transfers are sporad=
-ic in terms
-> of timer, which we did set up, though. According to specification it also=
- shouldn't affect
-> Hibern8 states triggered by Power Management, nor any other functionality=
-.
+On Thu, Jul 13, 2017 at 01:00:29PM -0400, Alan Stern wrote:
+> All right.  In the meantime, changing usb-storage won't hurt.
+> Arthur, can you test the patch below?
 
-Hello Michal,
-
-SCSI requests can not only be initiated by user space but also by the kerne=
-l
-itself. Are SCSI UFS devices controlled by the SCSI disk (sd) driver? Will
-SCSI requests submitted by sd_check_events() to a hibernated UFS device tim=
-e
-out and activate the SCSI error handler?
-
-Thanks,
-
-Bart.=
+Do you plan to send this fix to Greg for 4.13-rc?
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
