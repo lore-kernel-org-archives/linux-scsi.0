@@ -1,48 +1,23 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] lpfc: fix "integer constant too large" error on 32bit archs
-Date: Thu, 27 Jul 2017 08:57:19 -0400
-Message-ID: <yq1eft2vxzk.fsf@oracle.com>
-References: <1501158782-29604-1-git-send-email-mlombard@redhat.com>
+From: Jason L Tibbitts III <tibbs@math.uh.edu>
+Subject: Re: [PATCH] scsi: sg: only check for dxfer_len greater than 256M
+Date: Thu, 27 Jul 2017 08:05:18 -0500
+Message-ID: <ufavame114h.fsf@epithumia.math.uh.edu>
+References: <20170727071126.4717-1-jthumshirn@suse.de>
+        <yq1mv7qvy8j.fsf@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45361 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751466AbdG0M53 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jul 2017 08:57:29 -0400
-In-Reply-To: <1501158782-29604-1-git-send-email-mlombard@redhat.com> (Maurizio
-        Lombardi's message of "Thu, 27 Jul 2017 14:33:02 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq1mv7qvy8j.fsf@oracle.com> (Martin K. Petersen's message of
+        "Thu, 27 Jul 2017 08:51:56 -0400")
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>, Doug Gilbert <dgilbert@interlog.com>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Maurizio Lombardi <mlombard@redhat.com>
-Cc: james.smart@broadcom.com, dick.kennedy@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
+>>>>> "MKP" == Martin K Petersen <martin.petersen@oracle.com> writes:
 
-Maurizio,
+MKP> Applied to 4.13/scsi-fixes. Thanks!
 
-> cc1: warnings being treated as errors
-> drivers/scsi/lpfc/lpfc_init.c: In function 'lpfc_get_wwpn':
-> drivers/scsi/lpfc/lpfc_init.c:3253: error: integer constant is too large for 'long' type
->
-> Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
-> ---
->  drivers/scsi/lpfc/lpfc_init.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-> index 491aa95..e992dc1 100644
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -3710,8 +3710,8 @@
->  	if (phba->sli_rev == LPFC_SLI_REV4)
->  		return be64_to_cpu(wwn);
->  	else
-> -		return (((wwn & 0xffffffff00000000) >> 32) |
-> -			((wwn & 0x00000000ffffffff) << 32));
-> +		return (((wwn & 0xffffffff00000000ULL) >> 32) |
-> +			((wwn & 0x00000000ffffffffULL) << 32));
+My thanks as well to everyone who helped in getting this fixed.
 
-rol64()?
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+ - J<
