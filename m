@@ -1,40 +1,33 @@
-From: Maurizio Lombardi <mlombard@redhat.com>
-Subject: [PATCH] lpfc: fix "integer constant too large" error on 32bit archs
-Date: Thu, 27 Jul 2017 14:33:02 +0200
-Message-ID: <1501158782-29604-1-git-send-email-mlombard@redhat.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v2 0/6] qla2xxx: Bug fixes for driver
+Date: Thu, 27 Jul 2017 08:49:17 -0400
+Message-ID: <yq1r2x2vycy.fsf@oracle.com>
+References: <20170721163228.32339-1-himanshu.madhani@cavium.com>
+        <yq1eft2y72u.fsf@oracle.com>
+        <F77B89F7-6CF4-480B-BD64-FEEBC31B4969@cavium.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:4371 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750981AbdG0MdF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 27 Jul 2017 08:33:05 -0400
+Received: from aserp1040.oracle.com ([141.146.126.69]:40771 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751042AbdG0Mt1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jul 2017 08:49:27 -0400
+In-Reply-To: <F77B89F7-6CF4-480B-BD64-FEEBC31B4969@cavium.com> (Himanshu
+        Madhani's message of "Thu, 27 Jul 2017 03:59:12 +0000")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.smart@broadcom.com
-Cc: dick.kennedy@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+To: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-cc1: warnings being treated as errors
-drivers/scsi/lpfc/lpfc_init.c: In function 'lpfc_get_wwpn':
-drivers/scsi/lpfc/lpfc_init.c:3253: error: integer constant is too large for 'long' type
 
-Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
----
- drivers/scsi/lpfc/lpfc_init.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Himanshu,
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 491aa95..e992dc1 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -3710,8 +3710,8 @@
- 	if (phba->sli_rev == LPFC_SLI_REV4)
- 		return be64_to_cpu(wwn);
- 	else
--		return (((wwn & 0xffffffff00000000) >> 32) |
--			((wwn & 0x00000000ffffffff) << 32));
-+		return (((wwn & 0xffffffff00000000ULL) >> 32) |
-+			((wwn & 0x00000000ffffffffULL) << 32));
- 
- }
- 
+> I am okay with 4.14 for the whole series 
+
+Applied patches 1-5 to 4.14/scsi-queue. Please address Bart's and
+Johannes' nitpicks on patch 6.
+
+Thank you!
+
 -- 
-Maurizio Lombardi
+Martin K. Petersen	Oracle Linux Engineering
