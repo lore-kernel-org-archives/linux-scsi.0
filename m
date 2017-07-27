@@ -1,33 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] scsi: qedf: Limit number of CQs
-Date: Wed, 26 Jul 2017 22:02:36 -0400
-Message-ID: <yq160eey6v7.fsf@oracle.com>
-References: <20170725092243.7E0CD50870B@solo.franken.de>
+Subject: Re: [PATCH 1/2] scsi: aacraid: reading out of bounds
+Date: Wed, 26 Jul 2017 22:10:06 -0400
+Message-ID: <yq11sp2y6ip.fsf@oracle.com>
+References: <20170725194955.dd4g6msevoesty4t@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170725092243.7E0CD50870B@solo.franken.de> (Thomas
-        Bogendoerfer's message of "Tue, 25 Jul 2017 11:19:21 +0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-Cc: QLogic-Storage-Upstream@cavium.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chad.dupuis@cavium.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:49299 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751365AbdG0CKS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jul 2017 22:10:18 -0400
+In-Reply-To: <20170725194955.dd4g6msevoesty4t@mwanda> (Dan Carpenter's message
+        of "Tue, 25 Jul 2017 22:49:55 +0300")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
 
-Thomas,
+Dan,
 
-> FCOE offloading failed with:
->
-> [qed_sp_fcoe_func_start:150(sp-0-3b:00.02)]Cannot satisfy CQ amount. CQs
-> 		 requested 8, CQs available 6. Aborting function start
-> [qed_fcoe_start:821()]Failed to start fcoe
-> [__qedf_probe:3041]:6: Cannot start FCoE function.
->
-> The reason is a newly introduced check in the qed main part. This
-> change also provides the information about how many CQs are available,
-> so we simply limit the number of requested CQs..
+> "qd.id" comes directly from the copy_from_user() on the line before so
+> we should verify that it's within bounds.
 
-Applied to 4.13/scsi-fixes. Thank you!
+Applied to 4.13/scsi-fixes. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
