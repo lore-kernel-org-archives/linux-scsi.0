@@ -1,78 +1,45 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH] scsi: sg: only check for dxfer_len greater than 256M
-Date: Thu, 27 Jul 2017 09:11:26 +0200
-Message-ID: <20170727071126.4717-1-jthumshirn@suse.de>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Jason L Tibbitts III <tibbs@math.uh.edu>, Doug Gilbert <dgilbert@interlog.com>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] scsi: sg: only check for dxfer_len greater than 256M
+Date: Thu, 27 Jul 2017 10:43:09 +0200
+Message-ID: <4d4d2fa1-a603-a097-95ac-59e98cba795a@suse.de>
+References: <20170727071126.4717-1-jthumshirn@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170727071126.4717-1-jthumshirn@suse.de>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Jason L Tibbitts III <tibbs@math.uh.edu>, Doug Gilbert <dgilbert@interlog.com>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Don't make any assumptions on the sg_io_hdr_t::dxfer_direction or the
-sg_io_hdr_t::dxferp in order to determine if it is a valid request. The
-only way we can check for bad requests is by checking if the length exceeds
-256M.
+On 07/27/2017 09:11 AM, Johannes Thumshirn wrote:
+> Don't make any assumptions on the sg_io_hdr_t::dxfer_direction or the
+> sg_io_hdr_t::dxferp in order to determine if it is a valid request. The
+> only way we can check for bad requests is by checking if the length exceeds
+> 256M.
+> 
+> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+> Fixes: 28676d869bbb (scsi: sg: check for valid direction before starting the
+> request)
+> Reported-by: Jason L Tibbitts III <tibbs@math.uh.edu>
+> Tested-by: Jason L Tibbitts III <tibbs@math.uh.edu>
+> Suggested-by: Doug Gilbert <dgilbert@interlog.com>
+> Cc: Doug Gilbert <dgilbert@interlog.com>
+> Cc: <stable@vger.kernel.org>
+> ---
+>  drivers/scsi/sg.c | 31 +------------------------------
+>  1 file changed, 1 insertion(+), 30 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Fixes: 28676d869bbb (scsi: sg: check for valid direction before starting the
-request)
-Reported-by: Jason L Tibbitts III <tibbs@math.uh.edu>
-Tested-by: Jason L Tibbitts III <tibbs@math.uh.edu>
-Suggested-by: Doug Gilbert <dgilbert@interlog.com>
-Cc: Doug Gilbert <dgilbert@interlog.com>
-Cc: <stable@vger.kernel.org>
----
- drivers/scsi/sg.c | 31 +------------------------------
- 1 file changed, 1 insertion(+), 30 deletions(-)
+Cheers,
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 4fe606b000b4..d7ff71e0c85c 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -751,35 +751,6 @@ sg_new_write(Sg_fd *sfp, struct file *file, const char __user *buf,
- 	return count;
- }
- 
--static bool sg_is_valid_dxfer(sg_io_hdr_t *hp)
--{
--	switch (hp->dxfer_direction) {
--	case SG_DXFER_NONE:
--		if (hp->dxferp || hp->dxfer_len > 0)
--			return false;
--		return true;
--	case SG_DXFER_FROM_DEV:
--		/*
--		 * for SG_DXFER_FROM_DEV we always set dxfer_len to > 0. dxferp
--		 * can either be NULL or != NULL so there's no point in checking
--		 * it either. So just return true.
--		 */
--		return true;
--	case SG_DXFER_TO_DEV:
--	case SG_DXFER_TO_FROM_DEV:
--		if (!hp->dxferp || hp->dxfer_len == 0)
--			return false;
--		return true;
--	case SG_DXFER_UNKNOWN:
--		if ((!hp->dxferp && hp->dxfer_len) ||
--		    (hp->dxferp && hp->dxfer_len == 0))
--			return false;
--		return true;
--	default:
--		return false;
--	}
--}
--
- static int
- sg_common_write(Sg_fd * sfp, Sg_request * srp,
- 		unsigned char *cmnd, int timeout, int blocking)
-@@ -800,7 +771,7 @@ sg_common_write(Sg_fd * sfp, Sg_request * srp,
- 			"sg_common_write:  scsi opcode=0x%02x, cmd_size=%d\n",
- 			(int) cmnd[0], (int) hp->cmd_len));
- 
--	if (!sg_is_valid_dxfer(hp))
-+	if (hp->dxfer_len >= SZ_256M)
- 		return -EINVAL;
- 
- 	k = sg_start_req(srp, cmnd);
+Hannes
 -- 
-2.12.3
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
