@@ -1,84 +1,43 @@
-From: Jason L Tibbitts III <tibbs@math.uh.edu>
-Subject: Re: [REGRESSION] 28676d869bbb (scsi: sg: check for valid direction before starting the request) breaks mtx tape library control
-Date: Wed, 26 Jul 2017 15:19:31 -0500
-Message-ID: <ufapocn2bos.fsf@epithumia.math.uh.edu>
-References: <ufafudubmkd.fsf@epithumia.math.uh.edu>
-        <20170718073747.GD4875@linux-x5ow.site>
-        <ufak235abug.fsf@epithumia.math.uh.edu>
-        <20170719070335.GC4151@linux-x5ow.site>
-        <ufazic0974h.fsf@epithumia.math.uh.edu>
-        <20170719083654.GE4151@linux-x5ow.site>
-        <20170721164343.GA4086@linux-x5ow.site>
-        <ufa7ez18uhn.fsf@epithumia.math.uh.edu>
-        <20170725071852.GA3750@linux-x5ow.site>
-        <ufa1sp474sc.fsf@epithumia.math.uh.edu>
-        <20170726073934.GC4039@linux-x5ow.site>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v2 0/6] qla2xxx: Bug fixes for driver
+Date: Wed, 26 Jul 2017 21:58:01 -0400
+Message-ID: <yq1eft2y72u.fsf@oracle.com>
+References: <20170721163228.32339-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170726073934.GC4039@linux-x5ow.site> (Johannes Thumshirn's
-        message of "Wed, 26 Jul 2017 09:39:34 +0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Doug Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dvyukov@google.com, hare@suse.com, hch@lst.de, martin.petersen@oracle.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:46501 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751413AbdG0B6L (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jul 2017 21:58:11 -0400
+In-Reply-To: <20170721163228.32339-1-himanshu.madhani@cavium.com> (Himanshu
+        Madhani's message of "Fri, 21 Jul 2017 09:32:22 -0700")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Himanshu Madhani <himanshu.madhani@cavium.com>
+Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
->>>>> "JT" == Johannes Thumshirn <jthumshirn@suse.de> writes:
 
-JT> It's probably best to just check for dxfer_len <= 2^28 to be valid
-JT> as Doug suggested:
+Himanshu,
 
-I can verify that patch on top of git head (as of a few hours ago) does
-function properly.
+> This series addresses review comments for previously submitted series for
+> target multiqueue and FC-NVMe support in 4.13.0-rc1
+>
+> Patches 1,2 addresses review comments by Johannes for FC-NVMe series
+> (https://www.spinics.net/lists/linux-scsi/msg110077.html)
+> (https://www.spinics.net/lists/linux-scsi/msg109985.html)
+>
+> Patch 3 adds ZIO support for FC-NVMe
+>
+> Patch 4 simplifies unregistration of local/remote FC-NVMe ports.
+>
+> Patch 5 fixes handling of remote-port disconnect for FC-NVMe.
+>
+> Patch 6 addresses review comments by Bart for Target Multiqueue series.
+> (https://www.spinics.net/lists/target-devel/msg15563.html)
 
-It didn't apply directly on top of 4.12 but even I can handle fixing
-that up.  The result (just deleting the function and changing the call
-to a check for hp->dxfer_len >= SZ_256M) works fine and is at the end.
+It seems to me like patch 5 is the only bug fix candidate for 4.13 and
+the rest of these should go into 4.14?
 
-So thanks.  If this goes in, please CC to stable.
-
- - J<
-
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 82c33a6..aa6f1de 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -751,29 +751,6 @@ sg_new_write(Sg_fd *sfp, struct file *file, const char __user *buf,
- 	return count;
- }
- 
--static bool sg_is_valid_dxfer(sg_io_hdr_t *hp)
--{
--	switch (hp->dxfer_direction) {
--	case SG_DXFER_NONE:
--		if (hp->dxferp || hp->dxfer_len > 0)
--			return false;
--		return true;
--	case SG_DXFER_TO_DEV:
--	case SG_DXFER_FROM_DEV:
--	case SG_DXFER_TO_FROM_DEV:
--		if (!hp->dxferp || hp->dxfer_len == 0)
--			return false;
--		return true;
--	case SG_DXFER_UNKNOWN:
--		if ((!hp->dxferp && hp->dxfer_len) ||
--		    (hp->dxferp && hp->dxfer_len == 0))
--			return false;
--		return true;
--	default:
--		return false;
--	}
--}
--
- static int
- sg_common_write(Sg_fd * sfp, Sg_request * srp,
- 		unsigned char *cmnd, int timeout, int blocking)
-@@ -794,7 +771,7 @@ sg_common_write(Sg_fd * sfp, Sg_request * srp,
- 			"sg_common_write:  scsi opcode=0x%02x, cmd_size=%d\n",
- 			(int) cmnd[0], (int) hp->cmd_len));
- 
--	if (!sg_is_valid_dxfer(hp))
-+	if (hp->dxfer_len >= SZ_256M)
- 		return -EINVAL;
- 
- 	k = sg_start_req(srp, cmnd);
+-- 
+Martin K. Petersen	Oracle Linux Engineering
