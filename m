@@ -1,59 +1,78 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH v2 0/6] qla2xxx: Bug fixes for driver
-Date: Thu, 27 Jul 2017 03:59:12 +0000
-Message-ID: <F77B89F7-6CF4-480B-BD64-FEEBC31B4969@cavium.com>
-References: <20170721163228.32339-1-himanshu.madhani@cavium.com>
- <yq1eft2y72u.fsf@oracle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0053.outbound.protection.outlook.com ([104.47.33.53]:12275
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751465AbdG0D7P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 26 Jul 2017 23:59:15 -0400
-In-Reply-To: <yq1eft2y72u.fsf@oracle.com>
-Content-Language: en-US
-Content-ID: <5A5B26DF8AB7CF40A39FB6FEDBFF7029@namprd07.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH] scsi: sg: only check for dxfer_len greater than 256M
+Date: Thu, 27 Jul 2017 09:11:26 +0200
+Message-ID: <20170727071126.4717-1-jthumshirn@suse.de>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Jason L Tibbitts III <tibbs@math.uh.edu>, Doug Gilbert <dgilbert@interlog.com>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hi Martin,=20
+Don't make any assumptions on the sg_io_hdr_t::dxfer_direction or the
+sg_io_hdr_t::dxferp in order to determine if it is a valid request. The
+only way we can check for bad requests is by checking if the length exceeds
+256M.
 
-> On Jul 26, 2017, at 6:58 PM, Martin K. Petersen <martin.petersen@oracle.c=
-om> wrote:
->=20
->=20
-> Himanshu,
->=20
->> This series addresses review comments for previously submitted series fo=
-r
->> target multiqueue and FC-NVMe support in 4.13.0-rc1
->>=20
->> Patches 1,2 addresses review comments by Johannes for FC-NVMe series
->> (https://www.spinics.net/lists/linux-scsi/msg110077.html)
->> (https://www.spinics.net/lists/linux-scsi/msg109985.html)
->>=20
->> Patch 3 adds ZIO support for FC-NVMe
->>=20
->> Patch 4 simplifies unregistration of local/remote FC-NVMe ports.
->>=20
->> Patch 5 fixes handling of remote-port disconnect for FC-NVMe.
->>=20
->> Patch 6 addresses review comments by Bart for Target Multiqueue series.
->> (https://www.spinics.net/lists/target-devel/msg15563.html)
->=20
-> It seems to me like patch 5 is the only bug fix candidate for 4.13 and
-> the rest of these should go into 4.14?
->=20
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+Fixes: 28676d869bbb (scsi: sg: check for valid direction before starting the
+request)
+Reported-by: Jason L Tibbitts III <tibbs@math.uh.edu>
+Tested-by: Jason L Tibbitts III <tibbs@math.uh.edu>
+Suggested-by: Doug Gilbert <dgilbert@interlog.com>
+Cc: Doug Gilbert <dgilbert@interlog.com>
+Cc: <stable@vger.kernel.org>
+---
+ drivers/scsi/sg.c | 31 +------------------------------
+ 1 file changed, 1 insertion(+), 30 deletions(-)
 
-I am okay with 4.14 for the whole series=20
-
-> --=20
-> Martin K. Petersen	Oracle Linux Engineering
-
-Thanks,
-- Himanshu
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 4fe606b000b4..d7ff71e0c85c 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -751,35 +751,6 @@ sg_new_write(Sg_fd *sfp, struct file *file, const char __user *buf,
+ 	return count;
+ }
+ 
+-static bool sg_is_valid_dxfer(sg_io_hdr_t *hp)
+-{
+-	switch (hp->dxfer_direction) {
+-	case SG_DXFER_NONE:
+-		if (hp->dxferp || hp->dxfer_len > 0)
+-			return false;
+-		return true;
+-	case SG_DXFER_FROM_DEV:
+-		/*
+-		 * for SG_DXFER_FROM_DEV we always set dxfer_len to > 0. dxferp
+-		 * can either be NULL or != NULL so there's no point in checking
+-		 * it either. So just return true.
+-		 */
+-		return true;
+-	case SG_DXFER_TO_DEV:
+-	case SG_DXFER_TO_FROM_DEV:
+-		if (!hp->dxferp || hp->dxfer_len == 0)
+-			return false;
+-		return true;
+-	case SG_DXFER_UNKNOWN:
+-		if ((!hp->dxferp && hp->dxfer_len) ||
+-		    (hp->dxferp && hp->dxfer_len == 0))
+-			return false;
+-		return true;
+-	default:
+-		return false;
+-	}
+-}
+-
+ static int
+ sg_common_write(Sg_fd * sfp, Sg_request * srp,
+ 		unsigned char *cmnd, int timeout, int blocking)
+@@ -800,7 +771,7 @@ sg_common_write(Sg_fd * sfp, Sg_request * srp,
+ 			"sg_common_write:  scsi opcode=0x%02x, cmd_size=%d\n",
+ 			(int) cmnd[0], (int) hp->cmd_len));
+ 
+-	if (!sg_is_valid_dxfer(hp))
++	if (hp->dxfer_len >= SZ_256M)
+ 		return -EINVAL;
+ 
+ 	k = sg_start_req(srp, cmnd);
+-- 
+2.12.3
