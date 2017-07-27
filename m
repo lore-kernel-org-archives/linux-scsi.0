@@ -1,43 +1,36 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 0/6] qla2xxx: Bug fixes for driver
-Date: Wed, 26 Jul 2017 21:58:01 -0400
-Message-ID: <yq1eft2y72u.fsf@oracle.com>
-References: <20170721163228.32339-1-himanshu.madhani@cavium.com>
+Subject: Re: [patch 0/5] scsi/bnx2*: Plug hotplug race, correct locking and simplify hotplug code
+Date: Wed, 26 Jul 2017 21:58:38 -0400
+Message-ID: <yq1a83qy71t.fsf@oracle.com>
+References: <20170724105255.715647116@linutronix.de>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:46501 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751413AbdG0B6L (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jul 2017 21:58:11 -0400
-In-Reply-To: <20170721163228.32339-1-himanshu.madhani@cavium.com> (Himanshu
-        Madhani's message of "Fri, 21 Jul 2017 09:32:22 -0700")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170724105255.715647116@linutronix.de> (Thomas Gleixner's
+        message of "Mon, 24 Jul 2017 12:52:55 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: LKML <linux-kernel@vger.kernel.org>, QLogic-Storage-Upstream@qlogic.com, martin.petersen@oracle.com, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@cavium.com>
-Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
 
-Himanshu,
+Thomas,
 
-> This series addresses review comments for previously submitted series for
-> target multiqueue and FC-NVMe support in 4.13.0-rc1
+> The conversion of the cpu hotplug locking to a percpu rwsem does not
+> longer allow recursive locking of the hotplug lock.
 >
-> Patches 1,2 addresses review comments by Johannes for FC-NVMe series
-> (https://www.spinics.net/lists/linux-scsi/msg110077.html)
-> (https://www.spinics.net/lists/linux-scsi/msg109985.html)
+> The BNX2I and BNX2FC drivers install/remove hotplug states with the
+> hotplug lock held. The install/removal code acquired the hotplug lock
+> as well.
 >
-> Patch 3 adds ZIO support for FC-NVMe
+> While looking into this, I noticed an interesting hotplug race in the
+> BNX2FC driver, which could result in dereferencing a NULL pointer or
+> freed and potentially reused memory.
 >
-> Patch 4 simplifies unregistration of local/remote FC-NVMe ports.
->
-> Patch 5 fixes handling of remote-port disconnect for FC-NVMe.
->
-> Patch 6 addresses review comments by Bart for Target Multiqueue series.
-> (https://www.spinics.net/lists/target-devel/msg15563.html)
+> The following series addresses these problems and as a final step on
+> top it simplifies the hotplug code in both drivers.
 
-It seems to me like patch 5 is the only bug fix candidate for 4.13 and
-the rest of these should go into 4.14?
+Applied to 4.13/scsi-fixes. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
