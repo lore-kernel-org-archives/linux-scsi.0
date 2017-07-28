@@ -1,226 +1,164 @@
 From: Benjamin Block <bblock@linux.vnet.ibm.com>
-Subject: [PATCH 11/22] zfcp: trace HBA FSF response by default on dismiss or timedout late response
-Date: Fri, 28 Jul 2017 12:30:57 +0200
-Message-ID: <60739efdea18075898da660b66b1f5886d44d860.1501085249.git.bblock@linux.vnet.ibm.com>
+Subject: [PATCH 15/22] zfcp: use common code fcp_cmnd and fcp_resp with union in fsf_qtcb_bottom_io
+Date: Fri, 28 Jul 2017 12:31:01 +0200
+Message-ID: <a8ebb2d5f6436063a6cc2560b676957178c3cae1.1501085249.git.bblock@linux.vnet.ibm.com>
 References: <cover.1501085249.git.bblock@linux.vnet.ibm.com>
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:35925 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751937AbdG1KbQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 28 Jul 2017 06:31:16 -0400
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6SATF3v124565
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 06:31:15 -0400
+Received: from e06smtp10.uk.ibm.com (e06smtp10.uk.ibm.com [195.75.94.106])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2byuv9t6rm-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 06:31:15 -0400
+Received: from localhost
+        by e06smtp10.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <bblock@linux.vnet.ibm.com>;
+        Fri, 28 Jul 2017 11:31:13 +0100
+Received: from d06av25.portsmouth.uk.ibm.com (d06av25.portsmouth.uk.ibm.com [9.149.105.61])
+        by b06cxnps4074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v6SAVBmJ39190720
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 10:31:11 GMT
+Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 6E79611C08E
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 11:28:23 +0100 (BST)
+Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 5177011C092
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 11:28:23 +0100 (BST)
+Received: from bblock-ThinkPad-W530 (unknown [9.152.212.213])
+        by d06av25.portsmouth.uk.ibm.com (Postfix) with ESMTP
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 11:28:23 +0100 (BST)
 In-Reply-To: <cover.1501085249.git.bblock@linux.vnet.ibm.com>
 In-Reply-To: <cover.1501085249.git.bblock@linux.vnet.ibm.com>
 References: <cover.1501085249.git.bblock@linux.vnet.ibm.com>
-Sender: stable-owner@vger.kernel.org
-To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Steffen Maier <maier@linux.vnet.ibm.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, stable@vger.kernel.org, Benjamin Block <bblock@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Steffen Maier <maier@linux.vnet.ibm.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Benjamin Block <bblock@linux.vnet.ibm.com>
 
 From: Steffen Maier <maier@linux.vnet.ibm.com>
 
-At the default trace level, we only trace unsuccessful events including
-FSF responses.
+This eases crash dump analysis by automatically dissecting these
+protocol headers at least somewhat rather than getting a string
+interpretation of large unstructured character array buffer fields.
 
-zfcp_dbf_hba_fsf_response() only used protocol status and FSF status to
-decide on an unsuccessful response. However, this is only one of multiple
-possible sources determining a failed struct zfcp_fsf_req.
+Also, we can get rid of some unnecessary and error-prone type casts.
 
-An FSF request can also "fail" if its response runs into an ERP timeout
-or if it gets dismissed because a higher level recovery was triggered
-[trace tags "erscf_1" or "erscf_2" in zfcp_erp_strategy_check_fsfreq()].
-FSF requests with ERP timeout are:
-FSF_QTCB_EXCHANGE_CONFIG_DATA, FSF_QTCB_EXCHANGE_PORT_DATA,
-FSF_QTCB_OPEN_PORT_WITH_DID or FSF_QTCB_CLOSE_PORT or
-FSF_QTCB_CLOSE_PHYSICAL_PORT for target ports,
-FSF_QTCB_OPEN_LUN, FSF_QTCB_CLOSE_LUN.
-One example is slow queue processing which can cause follow-on errors,
-e.g. FSF_PORT_ALREADY_OPEN after FSF_QTCB_OPEN_PORT_WITH_DID timed out.
-In order to see the root cause, we need to see late responses even if the
-channel presented them successfully with FSF_PROT_GOOD and FSF_GOOD.
-Example trace records formatted with zfcpdbf from the s390-tools package:
-
-Timestamp      : ...
-Area           : REC
-Subarea        : 00
-Level          : 1
-Exception      : -
-CPU ID         : ..
-Caller         : ...
-Record ID      : 1
-Tag            : fcegpf1
-LUN            : 0xffffffffffffffff
-WWPN           : 0x<WWPN>
-D_ID           : 0x00<D_ID>
-Adapter status : 0x5400050b
-Port status    : 0x41200000
-LUN status     : 0x00000000
-Ready count    : 0x00000001
-Running count  : 0x...
-ERP want       : 0x02				ZFCP_ERP_ACTION_REOPEN_PORT
-ERP need       : 0x02				ZFCP_ERP_ACTION_REOPEN_PORT
-|
-Timestamp      : ...				30 seconds later
-Area           : REC
-Subarea        : 00
-Level          : 1
-Exception      : -
-CPU ID         : ..
-Caller         : ...
-Record ID      : 2
-Tag            : erscf_2
-LUN            : 0xffffffffffffffff
-WWPN           : 0x<WWPN>
-D_ID           : 0x00<D_ID>
-Adapter status : 0x5400050b
-Port status    : 0x41200000
-LUN status     : 0x00000000
-Request ID     : 0x<request_ID>
-ERP status     : 0x10000000			ZFCP_STATUS_ERP_TIMEDOUT
-ERP step       : 0x0800				ZFCP_ERP_STEP_PORT_OPENING
-ERP action     : 0x02				ZFCP_ERP_ACTION_REOPEN_PORT
-ERP count      : 0x00
-|
-Timestamp      : ...				later than previous record
-Area           : HBA
-Subarea        : 00
-Level          : 5	> default level		=> 3	<= default level
-Exception      : -
-CPU ID         : 00
-Caller         : ...
-Record ID      : 1
-Tag            : fs_qtcb			=> fs_rerr
-Request ID     : 0x<request_ID>
-Request status : 0x00001010			ZFCP_STATUS_FSFREQ_DISMISSED
-						| ZFCP_STATUS_FSFREQ_CLEANUP
-FSF cmnd       : 0x00000005
-FSF sequence no: 0x...
-FSF issued     : ...				> 30 seconds ago
-FSF stat       : 0x00000000			FSF_GOOD
-FSF stat qual  : 00000000 00000000 00000000 00000000
-Prot stat      : 0x00000001			FSF_PROT_GOOD
-Prot stat qual : 00000000 00000000 00000000 00000000
-Port handle    : 0x...
-LUN handle     : 0x00000000
-QTCB log length: ...
-QTCB log info  : ...
-
-In case of problems detecting that new responses are waiting on the input
-queue, we sooner or later trigger adapter recovery due to an FSF request
-timeout (trace tag "fsrth_1").
-FSF requests with FSF request timeout are:
-typically FSF_QTCB_ABORT_FCP_CMND; but theoretically also
-FSF_QTCB_EXCHANGE_CONFIG_DATA or FSF_QTCB_EXCHANGE_PORT_DATA via sysfs,
-FSF_QTCB_OPEN_PORT_WITH_DID or FSF_QTCB_CLOSE_PORT for WKA ports,
-FSF_QTCB_FCP_CMND for task management function (LUN / target reset).
-One or more pending requests can meanwhile have FSF_PROT_GOOD and FSF_GOOD
-because the channel filled in the response via DMA into the request's QTCB.
-
-In a theroretical case, inject code can create an erroneous FSF request
-on purpose. If data router is enabled, it uses deferred error reporting.
-A READ SCSI command can succeed with FSF_PROT_GOOD, FSF_GOOD, and
-SAM_STAT_GOOD. But on writing the read data to host memory via DMA,
-it can still fail, e.g. if an intentionally wrong scatter list does not
-provide enough space. Rather than getting an unsuccessful response,
-we get a QDIO activate check which in turn triggers adapter recovery.
-One or more pending requests can meanwhile have FSF_PROT_GOOD and FSF_GOOD
-because the channel filled in the response via DMA into the request's QTCB.
-Example trace records formatted with zfcpdbf from the s390-tools package:
-
-Timestamp      : ...
-Area           : HBA
-Subarea        : 00
-Level          : 6	> default level		=> 3	<= default level
-Exception      : -
-CPU ID         : ..
-Caller         : ...
-Record ID      : 1
-Tag            : fs_norm			=> fs_rerr
-Request ID     : 0x<request_ID2>
-Request status : 0x00001010			ZFCP_STATUS_FSFREQ_DISMISSED
-						| ZFCP_STATUS_FSFREQ_CLEANUP
-FSF cmnd       : 0x00000001
-FSF sequence no: 0x...
-FSF issued     : ...
-FSF stat       : 0x00000000			FSF_GOOD
-FSF stat qual  : 00000000 00000000 00000000 00000000
-Prot stat      : 0x00000001			FSF_PROT_GOOD
-Prot stat qual : ........ ........ 00000000 00000000
-Port handle    : 0x...
-LUN handle     : 0x...
-|
-Timestamp      : ...
-Area           : SCSI
-Subarea        : 00
-Level          : 3
-Exception      : -
-CPU ID         : ..
-Caller         : ...
-Record ID      : 1
-Tag            : rsl_err
-Request ID     : 0x<request_ID2>
-SCSI ID        : 0x...
-SCSI LUN       : 0x...
-SCSI result    : 0x000e0000			DID_TRANSPORT_DISRUPTED
-SCSI retries   : 0x00
-SCSI allowed   : 0x05
-SCSI scribble  : 0x<request_ID2>
-SCSI opcode    : 28...				Read(10)
-FCP rsp inf cod: 0x00
-FCP rsp IU     : 00000000 00000000 00000000 00000000
-                                         ^^	SAM_STAT_GOOD
-                 00000000 00000000
-
-Only with luck in both above cases, we could see a follow-on trace record
-of an unsuccesful event following a successful but late FSF response with
-FSF_PROT_GOOD and FSF_GOOD. Typically this was the case for I/O requests
-resulting in a SCSI trace record "rsl_err" with DID_TRANSPORT_DISRUPTED
-[On ZFCP_STATUS_FSFREQ_DISMISSED, zfcp_fsf_protstatus_eval() sets
-ZFCP_STATUS_FSFREQ_ERROR seen by the request handler functions as failure].
-However, the reason for this follow-on trace was invisible because the
-corresponding HBA trace record was missing at the default trace level
-(by default hidden records with tags "fs_norm", "fs_qtcb", or "fs_open").
-
-On adapter recovery, after we had shut down the QDIO queues, we perform
-unsuccessful pseudo completions with flag ZFCP_STATUS_FSFREQ_DISMISSED
-for each pending FSF request in zfcp_fsf_req_dismiss_all().
-In order to find the root cause, we need to see all pseudo responses even
-if the channel presented them successfully with FSF_PROT_GOOD and FSF_GOOD.
-
-Therefore, check zfcp_fsf_req.status for ZFCP_STATUS_FSFREQ_DISMISSED
-or ZFCP_STATUS_FSFREQ_ERROR and trace with a new tag "fs_rerr".
-
-It does not matter that there are numerous places which set
-ZFCP_STATUS_FSFREQ_ERROR after the location where we trace an FSF response
-early. These cases are based on protocol status != FSF_PROT_GOOD or
-== FSF_PROT_FSF_STATUS_PRESENTED and are thus already traced by default
-as trace tag "fs_perr" or "fs_ferr" respectively.
-
-NB: The trace record with tag "fssrh_1" for status read buffers on dismiss
-all remains. zfcp_fsf_req_complete() handles this and returns early.
-All other FSF request types are handled separately and as described above.
+This change is possible since v2.6.33 commit 4318e08c84e4
+("[SCSI] zfcp: Update FCP protocol related code").
 
 Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
-Fixes: 8a36e4532ea1 ("[SCSI] zfcp: enhancement of zfcp debug features")
-Fixes: 2e261af84cdb ("[SCSI] zfcp: Only collect FSF/HBA debug data for matching trace levels")
-Cc: <stable@vger.kernel.org> #2.6.38+
 Reviewed-by: Benjamin Block <bblock@linux.vnet.ibm.com>
 Signed-off-by: Benjamin Block <bblock@linux.vnet.ibm.com>
 ---
- drivers/s390/scsi/zfcp_dbf.h | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/s390/scsi/zfcp_dbf.c |  3 +--
+ drivers/s390/scsi/zfcp_dbf.h |  2 +-
+ drivers/s390/scsi/zfcp_fsf.c | 10 ++++++----
+ drivers/s390/scsi/zfcp_fsf.h | 12 +++++++++---
+ 4 files changed, 17 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/s390/scsi/zfcp_dbf.c b/drivers/s390/scsi/zfcp_dbf.c
+index 34367d172961..225e60d5d3fc 100644
+--- a/drivers/s390/scsi/zfcp_dbf.c
++++ b/drivers/s390/scsi/zfcp_dbf.c
+@@ -573,8 +573,7 @@ void zfcp_dbf_scsi(char *tag, int level, struct scsi_cmnd *sc,
+ 	if (fsf) {
+ 		rec->fsf_req_id = fsf->req_id;
+ 		rec->pl_len = FCP_RESP_WITH_EXT;
+-		fcp_rsp = (struct fcp_resp_with_ext *)
+-				&(fsf->qtcb->bottom.io.fcp_rsp);
++		fcp_rsp = &(fsf->qtcb->bottom.io.fcp_rsp.iu);
+ 		/* mandatory parts of FCP_RSP IU in this SCSI record */
+ 		memcpy(&rec->fcp_rsp, fcp_rsp, FCP_RESP_WITH_EXT);
+ 		if (fcp_rsp->resp.fr_flags & FCP_RSP_LEN_VAL) {
 diff --git a/drivers/s390/scsi/zfcp_dbf.h b/drivers/s390/scsi/zfcp_dbf.h
-index 776d1ac125ff..8e7f8e6037d2 100644
+index b60667c145fd..33ccf15b63e0 100644
 --- a/drivers/s390/scsi/zfcp_dbf.h
 +++ b/drivers/s390/scsi/zfcp_dbf.h
-@@ -323,7 +323,11 @@ void zfcp_dbf_hba_fsf_response(struct zfcp_fsf_req *req)
- {
- 	struct fsf_qtcb *qtcb = req->qtcb;
+@@ -301,7 +301,7 @@ bool zfcp_dbf_hba_fsf_resp_suppress(struct zfcp_fsf_req *req)
  
--	if ((qtcb->prefix.prot_status != FSF_PROT_GOOD) &&
-+	if (unlikely(req->status & (ZFCP_STATUS_FSFREQ_DISMISSED |
-+				    ZFCP_STATUS_FSFREQ_ERROR))) {
-+		zfcp_dbf_hba_fsf_resp("fs_rerr", 3, req);
-+
-+	} else if ((qtcb->prefix.prot_status != FSF_PROT_GOOD) &&
- 	    (qtcb->prefix.prot_status != FSF_PROT_FSF_STATUS_PRESENTED)) {
- 		zfcp_dbf_hba_fsf_resp("fs_perr", 1, req);
+ 	if (qtcb->prefix.qtcb_type != FSF_IO_COMMAND)
+ 		return false; /* not an FCP response */
+-	fcp_rsp = (struct fcp_resp *)&qtcb->bottom.io.fcp_rsp;
++	fcp_rsp = &qtcb->bottom.io.fcp_rsp.iu.resp;
+ 	rsp_flags = fcp_rsp->fr_flags;
+ 	fr_status = fcp_rsp->fr_status;
+ 	return (fsf_stat == FSF_FCP_RSP_AVAILABLE) &&
+diff --git a/drivers/s390/scsi/zfcp_fsf.c b/drivers/s390/scsi/zfcp_fsf.c
+index 9f73b8fc7f3b..6ddaee5f3701 100644
+--- a/drivers/s390/scsi/zfcp_fsf.c
++++ b/drivers/s390/scsi/zfcp_fsf.c
+@@ -2143,7 +2143,8 @@ static void zfcp_fsf_fcp_cmnd_handler(struct zfcp_fsf_req *req)
+ 		zfcp_scsi_dif_sense_error(scpnt, 0x3);
+ 		goto skip_fsfstatus;
+ 	}
+-	fcp_rsp = (struct fcp_resp_with_ext *) &req->qtcb->bottom.io.fcp_rsp;
++	BUILD_BUG_ON(sizeof(struct fcp_resp_with_ext) > FSF_FCP_RSP_SIZE);
++	fcp_rsp = &req->qtcb->bottom.io.fcp_rsp.iu;
+ 	zfcp_fc_eval_fcp_rsp(fcp_rsp, scpnt);
+ 
+ skip_fsfstatus:
+@@ -2256,7 +2257,8 @@ int zfcp_fsf_fcp_cmnd(struct scsi_cmnd *scsi_cmnd)
+ 	if (zfcp_fsf_set_data_dir(scsi_cmnd, &io->data_direction))
+ 		goto failed_scsi_cmnd;
+ 
+-	fcp_cmnd = (struct fcp_cmnd *) &req->qtcb->bottom.io.fcp_cmnd;
++	BUILD_BUG_ON(sizeof(struct fcp_cmnd) > FSF_FCP_CMND_SIZE);
++	fcp_cmnd = &req->qtcb->bottom.io.fcp_cmnd.iu;
+ 	zfcp_fc_scsi_to_fcp(fcp_cmnd, scsi_cmnd, 0);
+ 
+ 	if ((scsi_get_prot_op(scsi_cmnd) != SCSI_PROT_NORMAL) &&
+@@ -2301,7 +2303,7 @@ static void zfcp_fsf_fcp_task_mgmt_handler(struct zfcp_fsf_req *req)
+ 
+ 	zfcp_fsf_fcp_handler_common(req);
+ 
+-	fcp_rsp = (struct fcp_resp_with_ext *) &req->qtcb->bottom.io.fcp_rsp;
++	fcp_rsp = &req->qtcb->bottom.io.fcp_rsp.iu;
+ 	rsp_info = (struct fcp_resp_rsp_info *) &fcp_rsp[1];
+ 
+ 	if ((rsp_info->rsp_code != FCP_TMF_CMPL) ||
+@@ -2350,7 +2352,7 @@ struct zfcp_fsf_req *zfcp_fsf_fcp_task_mgmt(struct scsi_cmnd *scmnd,
+ 
+ 	zfcp_qdio_set_sbale_last(qdio, &req->qdio_req);
+ 
+-	fcp_cmnd = (struct fcp_cmnd *) &req->qtcb->bottom.io.fcp_cmnd;
++	fcp_cmnd = &req->qtcb->bottom.io.fcp_cmnd.iu;
+ 	zfcp_fc_scsi_to_fcp(fcp_cmnd, scmnd, tm_flags);
+ 
+ 	zfcp_fsf_start_timer(req, ZFCP_SCSI_ER_TIMEOUT);
+diff --git a/drivers/s390/scsi/zfcp_fsf.h b/drivers/s390/scsi/zfcp_fsf.h
+index ea3c76ac0de1..88feba5bfda4 100644
+--- a/drivers/s390/scsi/zfcp_fsf.h
++++ b/drivers/s390/scsi/zfcp_fsf.h
+@@ -3,7 +3,7 @@
+  *
+  * Interface to the FSF support functions.
+  *
+- * Copyright IBM Corp. 2002, 2016
++ * Copyright IBM Corp. 2002, 2017
+  */
+ 
+ #ifndef FSF_H
+@@ -312,8 +312,14 @@ struct fsf_qtcb_bottom_io {
+ 	u32 data_block_length;
+ 	u32 prot_data_length;
+ 	u8  res2[4];
+-	u8  fcp_cmnd[FSF_FCP_CMND_SIZE];
+-	u8  fcp_rsp[FSF_FCP_RSP_SIZE];
++	union {
++		u8		byte[FSF_FCP_CMND_SIZE];
++		struct fcp_cmnd iu;
++	}   fcp_cmnd;
++	union {
++		u8			 byte[FSF_FCP_RSP_SIZE];
++		struct fcp_resp_with_ext iu;
++	}   fcp_rsp;
+ 	u8  res3[64];
+ } __attribute__ ((packed));
  
 -- 
 2.11.2
