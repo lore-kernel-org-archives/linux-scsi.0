@@ -1,97 +1,77 @@
 From: Benjamin Block <bblock@linux.vnet.ibm.com>
-Subject: [PATCH 06/22] zfcp: add handling for FCP_RESID_OVER to the fcp ingress path
-Date: Fri, 28 Jul 2017 12:30:52 +0200
-Message-ID: <e495448e1ca77a94af2581962be77d332758d656.1501085249.git.bblock@linux.vnet.ibm.com>
+Subject: [PATCH 03/22] zfcp: Remove unneeded linux/miscdevice.h include
+Date: Fri, 28 Jul 2017 12:30:49 +0200
+Message-ID: <c4922afd6accd970bfadf89f438aa01fd979c3cb.1501085249.git.bblock@linux.vnet.ibm.com>
 References: <cover.1501085249.git.bblock@linux.vnet.ibm.com>
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:36914 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751671AbdG1KbM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 28 Jul 2017 06:31:12 -0400
+Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6SASvK0015468
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 06:31:12 -0400
+Received: from e06smtp15.uk.ibm.com (e06smtp15.uk.ibm.com [195.75.94.111])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2byyg8344q-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 06:31:11 -0400
+Received: from localhost
+        by e06smtp15.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <bblock@linux.vnet.ibm.com>;
+        Fri, 28 Jul 2017 11:31:10 +0100
+Received: from d06av24.portsmouth.uk.ibm.com (d06av24.portsmouth.uk.ibm.com [9.149.105.60])
+        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v6SAV96314942678
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 10:31:09 GMT
+Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 57B12420B8
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 11:28:18 +0100 (BST)
+Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 3AD2C420BC
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 11:28:18 +0100 (BST)
+Received: from bblock-ThinkPad-W530 (unknown [9.152.212.213])
+        by d06av24.portsmouth.uk.ibm.com (Postfix) with ESMTP
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 11:28:18 +0100 (BST)
 In-Reply-To: <cover.1501085249.git.bblock@linux.vnet.ibm.com>
 In-Reply-To: <cover.1501085249.git.bblock@linux.vnet.ibm.com>
 References: <cover.1501085249.git.bblock@linux.vnet.ibm.com>
-Sender: stable-owner@vger.kernel.org
-To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Benjamin Block <bblock@linux.vnet.ibm.com>, Steffen Maier <maier@linux.vnet.ibm.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, stable@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Corentin Labbe <clabbe.montjoie@gmail.com>, Steffen Maier <maier@linux.vnet.ibm.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Benjamin Block <bblock@linux.vnet.ibm.com>
 
-Up until now zfcp would just ignore the FCP_RESID_OVER flag in the FCP
-response IU. When this flag is set, it is possible, in regards to the
-FCP standard, that the storage-server processes the command normally, up
-to the point where data is missing and simply ignores those.
+From: Corentin Labbe <clabbe.montjoie@gmail.com>
 
-In this case no CHECK CONDITION would be set, and because we ignored the
-FCP_RESID_OVER flag we resulted in at least a data loss or even
--corruption as a follow-up error, depending on how the
-applications/layers on top behave. To prevent this, we now set the
-host-byte of the corresponding scsi_cmnd to DID_ERROR.
+drivers/s390/scsi/zfcp_aux.c does not contain any miscdevice so the
+inclusion of linux/miscdevice.h is unnecessary.
 
-Other storage-behaviors, where the same condition results in a CHECK
-CONDITION set in the answer, don't need to be changed as they are
-handled in the mid-layer already.
+[maier@linux.vnet.ibm.com: just for the records, this is in fact a
+ minor missing code cleanup of the following older "feature"
+ which also dropped the only former use of a misc device in zfcp:
+ commit 663e0890e31c ("[SCSI] zfcp: remove access control tables
+				    interface")
+ commit b5dc3c4800cc ("[SCSI] zfcp: remove access control tables
+				    interface (keep sysfs files)")
+ commit 1b33ef23946a ("zfcp: remove access control tables interface
+			     (port leftovers)")]
 
-Following is an example trace record decoded with zfcpdbf from the
-s390-tools package. We forcefully injected a fc_dl which is one byte too
-small:
-
-Timestamp      : ...
-Area           : SCSI
-Subarea        : 00
-Level          : 3
-Exception      : -
-CPU ID         : ..
-Caller         : 0x...
-Record ID      : 1
-Tag            : rsl_err
-Request ID     : 0x...
-SCSI ID        : 0x...
-SCSI LUN       : 0x...
-SCSI result    : 0x00070000
-                     ^^DID_ERROR
-SCSI retries   : 0x..
-SCSI allowed   : 0x..
-SCSI scribble  : 0x...
-SCSI opcode    : 2a000000 00000000 08000000 00000000
-FCP rsp inf cod: 0x00
-FCP rsp IU     : 00000000 00000000 00000400 00000001
-                                       ^^fr_flags==FCP_RESID_OVER
-                                         ^^fr_status==SAM_STAT_GOOD
-                                            ^^^^^^^^fr_resid
-                 00000000 00000000
-
-As of now, we don't actively handle to possibility that a response IU
-has both flags - FCP_RESID_OVER and FCP_RESID_UNDER - set at once.
-
-Reported-by: Luke M. Hopkins <lmhopkin@us.ibm.com>
-Reviewed-by: Steffen Maier <maier@linux.vnet.ibm.com>
-Fixes: 553448f6c483 ("[SCSI] zfcp: Message cleanup")
-Fixes: ea127f975424 ("[PATCH] s390 (7/7): zfcp host adapter.") (tglx/history.git)
-Cc: <stable@vger.kernel.org> #2.6.33+
+Signed-off-by: Corentin Labbe <clabbe.montjoie@gmail.com>
 Signed-off-by: Benjamin Block <bblock@linux.vnet.ibm.com>
 ---
- drivers/s390/scsi/zfcp_fc.h | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/s390/scsi/zfcp_aux.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/s390/scsi/zfcp_fc.h b/drivers/s390/scsi/zfcp_fc.h
-index df2b541c8287..a2275825186f 100644
---- a/drivers/s390/scsi/zfcp_fc.h
-+++ b/drivers/s390/scsi/zfcp_fc.h
-@@ -4,7 +4,7 @@
-  * Fibre Channel related definitions and inline functions for the zfcp
-  * device driver
-  *
-- * Copyright IBM Corp. 2009
-+ * Copyright IBM Corp. 2009, 2017
-  */
+diff --git a/drivers/s390/scsi/zfcp_aux.c b/drivers/s390/scsi/zfcp_aux.c
+index bcc8f3dfd4c4..82ac331d9125 100644
+--- a/drivers/s390/scsi/zfcp_aux.c
++++ b/drivers/s390/scsi/zfcp_aux.c
+@@ -29,7 +29,6 @@
+ #define KMSG_COMPONENT "zfcp"
+ #define pr_fmt(fmt) KMSG_COMPONENT ": " fmt
  
- #ifndef ZFCP_FC_H
-@@ -279,6 +279,10 @@ void zfcp_fc_eval_fcp_rsp(struct fcp_resp_with_ext *fcp_rsp,
- 		     !(rsp_flags & FCP_SNS_LEN_VAL) &&
- 		     fcp_rsp->resp.fr_status == SAM_STAT_GOOD)
- 			set_host_byte(scsi, DID_ERROR);
-+	} else if (unlikely(rsp_flags & FCP_RESID_OVER)) {
-+		/* FCP_DL was not sufficient for SCSI data length */
-+		if (fcp_rsp->resp.fr_status == SAM_STAT_GOOD)
-+			set_host_byte(scsi, DID_ERROR);
- 	}
- }
- 
+-#include <linux/miscdevice.h>
+ #include <linux/seq_file.h>
+ #include <linux/slab.h>
+ #include <linux/module.h>
 -- 
 2.11.2
