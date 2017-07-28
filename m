@@ -1,97 +1,160 @@
 From: Benjamin Block <bblock@linux.vnet.ibm.com>
-Subject: [PATCH 01/22] zfcp: replace zfcp_qdio_sbale_count by sg_nents
-Date: Fri, 28 Jul 2017 12:30:47 +0200
-Message-ID: <40f8ed99ea59fb87b9a434867527c2a3ec290d4f.1501085249.git.bblock@linux.vnet.ibm.com>
+Subject: [PATCH 07/22] zfcp: fix capping of unsuccessful GPN_FT SAN response trace records
+Date: Fri, 28 Jul 2017 12:30:53 +0200
+Message-ID: <708412e859d5cf78f0ff17d0b71b7e8d8c341ac9.1501085249.git.bblock@linux.vnet.ibm.com>
 References: <cover.1501085249.git.bblock@linux.vnet.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:49380 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751898AbdG1KbO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 28 Jul 2017 06:31:14 -0400
-Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6SASt9l055972
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 06:31:14 -0400
-Received: from e06smtp10.uk.ibm.com (e06smtp10.uk.ibm.com [195.75.94.106])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2bywagyb4a-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 06:31:14 -0400
-Received: from localhost
-        by e06smtp10.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <bblock@linux.vnet.ibm.com>;
-        Fri, 28 Jul 2017 11:31:12 +0100
-Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
-        by b06cxnps4074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v6SAV9T338010882
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 10:31:09 GMT
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id ECFD9A40A3
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 11:28:13 +0100 (BST)
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id D00ECA40A5
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 11:28:13 +0100 (BST)
-Received: from bblock-ThinkPad-W530 (unknown [9.152.212.213])
-        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 11:28:13 +0100 (BST)
+Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <cover.1501085249.git.bblock@linux.vnet.ibm.com>
 In-Reply-To: <cover.1501085249.git.bblock@linux.vnet.ibm.com>
 References: <cover.1501085249.git.bblock@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: stable-owner@vger.kernel.org
 To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: LABBE Corentin <clabbe.montjoie@gmail.com>, Steffen Maier <maier@linux.vnet.ibm.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Benjamin Block <bblock@linux.vnet.ibm.com>
+Cc: Steffen Maier <maier@linux.vnet.ibm.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, stable@vger.kernel.org, Benjamin Block <bblock@linux.vnet.ibm.com>
+List-Id: linux-scsi@vger.kernel.org
 
-From: LABBE Corentin <clabbe.montjoie@gmail.com>
+From: Steffen Maier <maier@linux.vnet.ibm.com>
 
-The zfcp_qdio_sbale_count function do the same work than sg_nents().
-So replace it by sg_nents() for removing duplicate code.
+v4.9 commit aceeffbb59bb ("zfcp: trace full payload of all SAN records
+(req,resp,iels)") fixed trace data loss of 2.6.38 commit 2c55b750a884
+("[SCSI] zfcp: Redesign of the debug tracing for SAN records.")
+necessary for problem determination, e.g. to see the
+currently active zone set during automatic port scan.
 
-Signed-off-by: LABBE Corentin <clabbe.montjoie@gmail.com>
+While it already saves space by not dumping any empty residual entries
+of the large successful GPN_FT response (4 pages), there are seldom cases
+where the GPN_FT response is unsuccessful and likely does not have
+FC_NS_FID_LAST set in fp_flags so we did not cap the trace record.
+We typically see such case for an initiator WWPN, which is not in any zone.
+
+Cap unsuccessful responses to at least the actual basic CT_IU response
+plus whatever fits the SAN trace record built-in "payload" buffer
+just in case there's trailing information
+of which we would at least see the existence and its beginning.
+
+In order not to erroneously cap successful responses, we need to swap
+calling the trace function and setting the CT / ELS status to success (0).
+
+Example trace record pair formatted with zfcpdbf:
+
+Timestamp      : ...
+Area           : SAN
+Subarea        : 00
+Level          : 1
+Exception      : -
+CPU ID         : ..
+Caller         : 0x...
+Record ID      : 1
+Tag            : fssct_1
+Request ID     : 0x<request_id>
+Destination ID : 0x00fffffc
+SAN req short  : 01000000 fc020000 01720ffc 00000000
+                 00000008
+SAN req length : 20
+|
+Timestamp      : ...
+Area           : SAN
+Subarea        : 00
+Level          : 1
+Exception      : -
+CPU ID         : ..
+Caller         : 0x...
+Record ID      : 2
+Tag            : fsscth2
+Request ID     : 0x<request_id>
+Destination ID : 0x00fffffc
+SAN resp short : 01000000 fc020000 80010000 00090700
+                 00000000 00000000 00000000 00000000 [trailing info]
+                 00000000 00000000 00000000 00000000 [trailing info]
+SAN resp length: 16384
+San resp info  : 01000000 fc020000 80010000 00090700
+                 00000000 00000000 00000000 00000000 [trailing info]
+                 00000000 00000000 00000000 00000000 [trailing info]
+                 00000000 00000000 00000000 00000000 [trailing info]
+                 00000000 00000000 00000000 00000000 [trailing info]
+                 00000000 00000000 00000000 00000000 [trailing info]
+                 00000000 00000000 00000000 00000000 [trailing info]
+                 00000000 00000000 00000000 00000000 [trailing info]
+                 00000000 00000000 00000000 00000000 [trailing info]
+                 00000000 00000000 00000000 00000000 [trailing info]
+                 00000000 00000000 00000000 00000000 [trailing info]
+                 00000000 00000000 00000000 00000000 [trailing info]
+                 00000000 00000000 00000000 00000000 [trailing info]
+                 00000000 00000000 00000000 00000000 [trailing info]
+                 00000000 00000000 00000000 00000000 [trailing info]
+                 00000000 00000000 00000000 00000000 [trailing info]
+
+The fix saves all but one of the previously associated 64 PAYload trace
+record chunks of size 256 bytes each.
+
 Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
+Fixes: aceeffbb59bb ("zfcp: trace full payload of all SAN records (req,resp,iels)")
+Fixes: 2c55b750a884 ("[SCSI] zfcp: Redesign of the debug tracing for SAN records.")
+Cc: <stable@vger.kernel.org> #2.6.38+
+Reviewed-by: Benjamin Block <bblock@linux.vnet.ibm.com>
 Signed-off-by: Benjamin Block <bblock@linux.vnet.ibm.com>
 ---
- drivers/s390/scsi/zfcp_fsf.c  |  3 +--
- drivers/s390/scsi/zfcp_qdio.h | 15 ---------------
- 2 files changed, 1 insertion(+), 17 deletions(-)
+ drivers/s390/scsi/zfcp_dbf.c | 10 +++++++++-
+ drivers/s390/scsi/zfcp_fsf.c |  4 ++--
+ 2 files changed, 11 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/s390/scsi/zfcp_dbf.c b/drivers/s390/scsi/zfcp_dbf.c
+index d5bf36ec8a75..31d62ea5fdcd 100644
+--- a/drivers/s390/scsi/zfcp_dbf.c
++++ b/drivers/s390/scsi/zfcp_dbf.c
+@@ -3,7 +3,7 @@
+  *
+  * Debug traces for zfcp.
+  *
+- * Copyright IBM Corp. 2002, 2016
++ * Copyright IBM Corp. 2002, 2017
+  */
+ 
+ #define KMSG_COMPONENT "zfcp"
+@@ -447,6 +447,7 @@ static u16 zfcp_dbf_san_res_cap_len_if_gpn_ft(char *tag,
+ 	struct fc_ct_hdr *reqh = sg_virt(ct_els->req);
+ 	struct fc_ns_gid_ft *reqn = (struct fc_ns_gid_ft *)(reqh + 1);
+ 	struct scatterlist *resp_entry = ct_els->resp;
++	struct fc_ct_hdr *resph;
+ 	struct fc_gpn_ft_resp *acc;
+ 	int max_entries, x, last = 0;
+ 
+@@ -473,6 +474,13 @@ static u16 zfcp_dbf_san_res_cap_len_if_gpn_ft(char *tag,
+ 		return len; /* not GPN_FT response so do not cap */
+ 
+ 	acc = sg_virt(resp_entry);
++
++	/* cap all but accept CT responses to at least the CT header */
++	resph = (struct fc_ct_hdr *)acc;
++	if ((ct_els->status) ||
++	    (resph->ct_cmd != cpu_to_be16(FC_FS_ACC)))
++		return max(FC_CT_HDR_LEN, ZFCP_DBF_SAN_MAX_PAYLOAD);
++
+ 	max_entries = (reqh->ct_mr_size * 4 / sizeof(struct fc_gpn_ft_resp))
+ 		+ 1 /* zfcp_fc_scan_ports: bytes correct, entries off-by-one
+ 		     * to account for header as 1st pseudo "entry" */;
 diff --git a/drivers/s390/scsi/zfcp_fsf.c b/drivers/s390/scsi/zfcp_fsf.c
-index 27ff38f839fc..3b69ec5e69ed 100644
+index e894ec92076c..c10b4b9f1574 100644
 --- a/drivers/s390/scsi/zfcp_fsf.c
 +++ b/drivers/s390/scsi/zfcp_fsf.c
-@@ -991,8 +991,7 @@ static int zfcp_fsf_setup_ct_els_sbals(struct zfcp_fsf_req *req,
- 		qtcb->bottom.support.resp_buf_length =
- 			zfcp_qdio_real_bytes(sg_resp);
+@@ -928,8 +928,8 @@ static void zfcp_fsf_send_ct_handler(struct zfcp_fsf_req *req)
  
--		zfcp_qdio_set_data_div(qdio, &req->qdio_req,
--					zfcp_qdio_sbale_count(sg_req));
-+		zfcp_qdio_set_data_div(qdio, &req->qdio_req, sg_nents(sg_req));
- 		zfcp_qdio_set_sbale_last(qdio, &req->qdio_req);
- 		zfcp_qdio_set_scount(qdio, &req->qdio_req);
- 		return 0;
-diff --git a/drivers/s390/scsi/zfcp_qdio.h b/drivers/s390/scsi/zfcp_qdio.h
-index 497cd379b0d1..85cdb82127e8 100644
---- a/drivers/s390/scsi/zfcp_qdio.h
-+++ b/drivers/s390/scsi/zfcp_qdio.h
-@@ -225,21 +225,6 @@ void zfcp_qdio_set_data_div(struct zfcp_qdio *qdio,
- }
+ 	switch (header->fsf_status) {
+         case FSF_GOOD:
+-		zfcp_dbf_san_res("fsscth2", req);
+ 		ct->status = 0;
++		zfcp_dbf_san_res("fsscth2", req);
+ 		break;
+         case FSF_SERVICE_CLASS_NOT_SUPPORTED:
+ 		zfcp_fsf_class_not_supp(req);
+@@ -1108,8 +1108,8 @@ static void zfcp_fsf_send_els_handler(struct zfcp_fsf_req *req)
  
- /**
-- * zfcp_qdio_sbale_count - count sbale used
-- * @sg: pointer to struct scatterlist
-- */
--static inline
--unsigned int zfcp_qdio_sbale_count(struct scatterlist *sg)
--{
--	unsigned int count = 0;
--
--	for (; sg; sg = sg_next(sg))
--		count++;
--
--	return count;
--}
--
--/**
-  * zfcp_qdio_real_bytes - count bytes used
-  * @sg: pointer to struct scatterlist
-  */
+ 	switch (header->fsf_status) {
+ 	case FSF_GOOD:
+-		zfcp_dbf_san_res("fsselh1", req);
+ 		send_els->status = 0;
++		zfcp_dbf_san_res("fsselh1", req);
+ 		break;
+ 	case FSF_SERVICE_CLASS_NOT_SUPPORTED:
+ 		zfcp_fsf_class_not_supp(req);
 -- 
 2.11.2
