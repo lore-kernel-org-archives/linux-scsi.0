@@ -1,95 +1,97 @@
 From: Benjamin Block <bblock@linux.vnet.ibm.com>
-Subject: [PATCH 20/22] zfcp: clean up a member of struct zfcp_qdio that was assigned but never used
-Date: Fri, 28 Jul 2017 12:31:06 +0200
-Message-ID: <7f893474194435f0fe38553e6825611b179ddaf6.1501085249.git.bblock@linux.vnet.ibm.com>
+Subject: [PATCH 01/22] zfcp: replace zfcp_qdio_sbale_count by sg_nents
+Date: Fri, 28 Jul 2017 12:30:47 +0200
+Message-ID: <40f8ed99ea59fb87b9a434867527c2a3ec290d4f.1501085249.git.bblock@linux.vnet.ibm.com>
 References: <cover.1501085249.git.bblock@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:54492 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751943AbdG1KbS (ORCPT
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:49380 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751898AbdG1KbO (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 28 Jul 2017 06:31:18 -0400
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6SASbpZ094792
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 06:31:18 -0400
+        Fri, 28 Jul 2017 06:31:14 -0400
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6SASt9l055972
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 06:31:14 -0400
 Received: from e06smtp10.uk.ibm.com (e06smtp10.uk.ibm.com [195.75.94.106])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2byw11r66v-1
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2bywagyb4a-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 06:31:17 -0400
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 06:31:14 -0400
 Received: from localhost
         by e06smtp10.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-scsi@vger.kernel.org> from <bblock@linux.vnet.ibm.com>;
-        Fri, 28 Jul 2017 11:31:14 +0100
-Received: from d06av26.portsmouth.uk.ibm.com (d06av26.portsmouth.uk.ibm.com [9.149.105.62])
-        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v6SAVAYH65142874
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 10:31:11 GMT
-Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id E0BFAAE0A2
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 11:27:28 +0100 (BST)
-Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id C7905AE0A0
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 11:27:28 +0100 (BST)
+        Fri, 28 Jul 2017 11:31:12 +0100
+Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
+        by b06cxnps4074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v6SAV9T338010882
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 10:31:09 GMT
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id ECFD9A40A3
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 11:28:13 +0100 (BST)
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id D00ECA40A5
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 11:28:13 +0100 (BST)
 Received: from bblock-ThinkPad-W530 (unknown [9.152.212.213])
-        by d06av26.portsmouth.uk.ibm.com (Postfix) with ESMTP
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 11:27:28 +0100 (BST)
+        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 11:28:13 +0100 (BST)
 In-Reply-To: <cover.1501085249.git.bblock@linux.vnet.ibm.com>
 In-Reply-To: <cover.1501085249.git.bblock@linux.vnet.ibm.com>
 References: <cover.1501085249.git.bblock@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Martin Peschke <mpeschke@linux.vnet.ibm.com>, Steffen Maier <maier@linux.vnet.ibm.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Benjamin Block <bblock@linux.vnet.ibm.com>
+Cc: LABBE Corentin <clabbe.montjoie@gmail.com>, Steffen Maier <maier@linux.vnet.ibm.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Benjamin Block <bblock@linux.vnet.ibm.com>
 
-From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
+From: LABBE Corentin <clabbe.montjoie@gmail.com>
 
-v2.6.38 commit a54ca0f62f95 ("[SCSI] zfcp: Redesign of the debug tracing
-for HBA records.")
-dropped trace information previously introduced with
-v2.6.27 commit c3baa9a26c5a ("[SCSI] zfcp: Add information about interrupt
-to trace.")
-but kept and needlessly assigned a now no longer used struct field.
+The zfcp_qdio_sbale_count function do the same work than sg_nents().
+So replace it by sg_nents() for removing duplicate code.
 
-Signed-off-by: Martin Peschke <mpeschke@linux.vnet.ibm.com>
-[maier@linux.vnet.ibm.com: reword, added git history]
+Signed-off-by: LABBE Corentin <clabbe.montjoie@gmail.com>
 Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
-Reviewed-by: Benjamin Block <bblock@linux.vnet.ibm.com>
 Signed-off-by: Benjamin Block <bblock@linux.vnet.ibm.com>
 ---
- drivers/s390/scsi/zfcp_fsf.c  | 1 -
- drivers/s390/scsi/zfcp_qdio.h | 2 --
- 2 files changed, 3 deletions(-)
+ drivers/s390/scsi/zfcp_fsf.c  |  3 +--
+ drivers/s390/scsi/zfcp_qdio.h | 15 ---------------
+ 2 files changed, 1 insertion(+), 17 deletions(-)
 
 diff --git a/drivers/s390/scsi/zfcp_fsf.c b/drivers/s390/scsi/zfcp_fsf.c
-index eefb474a9e42..69d1dc3ec79d 100644
+index 27ff38f839fc..3b69ec5e69ed 100644
 --- a/drivers/s390/scsi/zfcp_fsf.c
 +++ b/drivers/s390/scsi/zfcp_fsf.c
-@@ -2394,7 +2394,6 @@ void zfcp_fsf_reqid_check(struct zfcp_qdio *qdio, int sbal_idx)
- 			      req_id, dev_name(&adapter->ccw_device->dev));
- 		}
+@@ -991,8 +991,7 @@ static int zfcp_fsf_setup_ct_els_sbals(struct zfcp_fsf_req *req,
+ 		qtcb->bottom.support.resp_buf_length =
+ 			zfcp_qdio_real_bytes(sg_resp);
  
--		fsf_req->qdio_req.sbal_response = sbal_idx;
- 		zfcp_fsf_req_complete(fsf_req);
- 
- 		if (likely(sbale->eflags & SBAL_EFLAGS_LAST_ENTRY))
+-		zfcp_qdio_set_data_div(qdio, &req->qdio_req,
+-					zfcp_qdio_sbale_count(sg_req));
++		zfcp_qdio_set_data_div(qdio, &req->qdio_req, sg_nents(sg_req));
+ 		zfcp_qdio_set_sbale_last(qdio, &req->qdio_req);
+ 		zfcp_qdio_set_scount(qdio, &req->qdio_req);
+ 		return 0;
 diff --git a/drivers/s390/scsi/zfcp_qdio.h b/drivers/s390/scsi/zfcp_qdio.h
-index 85cdb82127e8..7f647a90c750 100644
+index 497cd379b0d1..85cdb82127e8 100644
 --- a/drivers/s390/scsi/zfcp_qdio.h
 +++ b/drivers/s390/scsi/zfcp_qdio.h
-@@ -54,7 +54,6 @@ struct zfcp_qdio {
-  * @sbal_last: last sbal for this request
-  * @sbal_limit: last possible sbal for this request
-  * @sbale_curr: current sbale at creation of this request
-- * @sbal_response: sbal used in interrupt
-  * @qdio_outb_usage: usage of outbound queue
-  */
- struct zfcp_qdio_req {
-@@ -64,7 +63,6 @@ struct zfcp_qdio_req {
- 	u8	sbal_last;
- 	u8	sbal_limit;
- 	u8	sbale_curr;
--	u8	sbal_response;
- 	u16	qdio_outb_usage;
- };
+@@ -225,21 +225,6 @@ void zfcp_qdio_set_data_div(struct zfcp_qdio *qdio,
+ }
  
+ /**
+- * zfcp_qdio_sbale_count - count sbale used
+- * @sg: pointer to struct scatterlist
+- */
+-static inline
+-unsigned int zfcp_qdio_sbale_count(struct scatterlist *sg)
+-{
+-	unsigned int count = 0;
+-
+-	for (; sg; sg = sg_next(sg))
+-		count++;
+-
+-	return count;
+-}
+-
+-/**
+  * zfcp_qdio_real_bytes - count bytes used
+  * @sg: pointer to struct scatterlist
+  */
 -- 
 2.11.2
