@@ -1,33 +1,97 @@
 From: Benjamin Block <bblock@linux.vnet.ibm.com>
-Subject: [PATCH] MAINTAINERS: Add myself to S390 ZFCP DRIVER as a co-maintainer
-Date: Fri, 28 Jul 2017 12:29:43 +0200
-Message-ID: <20170728102943.23974-1-bblock@linux.vnet.ibm.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH 06/22] zfcp: add handling for FCP_RESID_OVER to the fcp ingress path
+Date: Fri, 28 Jul 2017 12:30:52 +0200
+Message-ID: <e495448e1ca77a94af2581962be77d332758d656.1501085249.git.bblock@linux.vnet.ibm.com>
+References: <cover.1501085249.git.bblock@linux.vnet.ibm.com>
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <cover.1501085249.git.bblock@linux.vnet.ibm.com>
+In-Reply-To: <cover.1501085249.git.bblock@linux.vnet.ibm.com>
+References: <cover.1501085249.git.bblock@linux.vnet.ibm.com>
+Sender: stable-owner@vger.kernel.org
 To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Benjamin Block <bblock@linux.vnet.ibm.com>, Steffen Maier <maier@linux.vnet.ibm.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Benjamin Block <bblock@linux.vnet.ibm.com>, Steffen Maier <maier@linux.vnet.ibm.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-I have been working with Steffen on zFCP for quite a while now and we
-decided adding me as a co-maintainer might be a good thing.
+Up until now zfcp would just ignore the FCP_RESID_OVER flag in the FCP
+response IU. When this flag is set, it is possible, in regards to the
+FCP standard, that the storage-server processes the command normally, up
+to the point where data is missing and simply ignores those.
 
-Acked-by: Steffen Maier <maier@linux.vnet.ibm.com>
+In this case no CHECK CONDITION would be set, and because we ignored the
+FCP_RESID_OVER flag we resulted in at least a data loss or even
+-corruption as a follow-up error, depending on how the
+applications/layers on top behave. To prevent this, we now set the
+host-byte of the corresponding scsi_cmnd to DID_ERROR.
+
+Other storage-behaviors, where the same condition results in a CHECK
+CONDITION set in the answer, don't need to be changed as they are
+handled in the mid-layer already.
+
+Following is an example trace record decoded with zfcpdbf from the
+s390-tools package. We forcefully injected a fc_dl which is one byte too
+small:
+
+Timestamp      : ...
+Area           : SCSI
+Subarea        : 00
+Level          : 3
+Exception      : -
+CPU ID         : ..
+Caller         : 0x...
+Record ID      : 1
+Tag            : rsl_err
+Request ID     : 0x...
+SCSI ID        : 0x...
+SCSI LUN       : 0x...
+SCSI result    : 0x00070000
+                     ^^DID_ERROR
+SCSI retries   : 0x..
+SCSI allowed   : 0x..
+SCSI scribble  : 0x...
+SCSI opcode    : 2a000000 00000000 08000000 00000000
+FCP rsp inf cod: 0x00
+FCP rsp IU     : 00000000 00000000 00000400 00000001
+                                       ^^fr_flags==FCP_RESID_OVER
+                                         ^^fr_status==SAM_STAT_GOOD
+                                            ^^^^^^^^fr_resid
+                 00000000 00000000
+
+As of now, we don't actively handle to possibility that a response IU
+has both flags - FCP_RESID_OVER and FCP_RESID_UNDER - set at once.
+
+Reported-by: Luke M. Hopkins <lmhopkin@us.ibm.com>
+Reviewed-by: Steffen Maier <maier@linux.vnet.ibm.com>
+Fixes: 553448f6c483 ("[SCSI] zfcp: Message cleanup")
+Fixes: ea127f975424 ("[PATCH] s390 (7/7): zfcp host adapter.") (tglx/history.git)
+Cc: <stable@vger.kernel.org> #2.6.33+
 Signed-off-by: Benjamin Block <bblock@linux.vnet.ibm.com>
 ---
- MAINTAINERS | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/s390/scsi/zfcp_fc.h | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index f6ec1be48609..2c1a52d1376c 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -11342,6 +11342,7 @@ F:	drivers/s390/crypto/
+diff --git a/drivers/s390/scsi/zfcp_fc.h b/drivers/s390/scsi/zfcp_fc.h
+index df2b541c8287..a2275825186f 100644
+--- a/drivers/s390/scsi/zfcp_fc.h
++++ b/drivers/s390/scsi/zfcp_fc.h
+@@ -4,7 +4,7 @@
+  * Fibre Channel related definitions and inline functions for the zfcp
+  * device driver
+  *
+- * Copyright IBM Corp. 2009
++ * Copyright IBM Corp. 2009, 2017
+  */
  
- S390 ZFCP DRIVER
- M:	Steffen Maier <maier@linux.vnet.ibm.com>
-+M:	Benjamin Block <bblock@linux.vnet.ibm.com>
- L:	linux-s390@vger.kernel.org
- W:	http://www.ibm.com/developerworks/linux/linux390/
- S:	Supported
+ #ifndef ZFCP_FC_H
+@@ -279,6 +279,10 @@ void zfcp_fc_eval_fcp_rsp(struct fcp_resp_with_ext *fcp_rsp,
+ 		     !(rsp_flags & FCP_SNS_LEN_VAL) &&
+ 		     fcp_rsp->resp.fr_status == SAM_STAT_GOOD)
+ 			set_host_byte(scsi, DID_ERROR);
++	} else if (unlikely(rsp_flags & FCP_RESID_OVER)) {
++		/* FCP_DL was not sufficient for SCSI data length */
++		if (fcp_rsp->resp.fr_status == SAM_STAT_GOOD)
++			set_host_byte(scsi, DID_ERROR);
+ 	}
+ }
+ 
 -- 
 2.11.2
