@@ -1,46 +1,67 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH] megaraid_sas: move command counter to correct place
-Date: Fri, 28 Jul 2017 16:03:59 +0200
-Message-ID: <20170728140359.15424-1-thenzl@redhat.com>
+From: <gdahl@bigsandyisd.net>
+Subject: (unknown)
+Date: Fri, 28 Jul 2017 16:02:21 -0000
+Message-ID: <150125774188.2158.5190425273395221663@mediaworksit.net>
+Mime-Version: 1.0
+Content-Type: application/zip; name="EMAIL_01908678_linux-scsi.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36083 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751673AbdG1OEC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 28 Jul 2017 10:04:02 -0400
+Received: from [111.176.187.19] ([111.176.187.19]:42988 "HELO mediaworksit.net"
+        rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+        id S1752129AbdG1QCb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 28 Jul 2017 12:02:31 -0400
+Subject: 
+Content-Disposition: attachment
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: sumit.saxena@broadcom.com, kashyap.desai@broadcom.com
 
-the eh reset function returns success when fw_outstanding equals zero,
-that means that the counter shouldn't be decremented
-when the driver still owns the command
-
-
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
----
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index f990ab4d45..c615aadb2b 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -3046,7 +3046,6 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex)
- 			}
- 			//Fall thru and complete IO
- 		case MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST: /* LD-IO Path */
--			atomic_dec(&instance->fw_outstanding);
- 			if (cmd_fusion->r1_alt_dev_handle == MR_DEVHANDLE_INVALID) {
- 				map_cmd_status(fusion, scmd_local, status,
- 					       extStatus, le32_to_cpu(data_length),
-@@ -3060,6 +3059,7 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex)
- 				scmd_local->scsi_done(scmd_local);
- 			} else	/* Optimal VD - R1 FP command completion. */
- 				megasas_complete_r1_command(instance, cmd_fusion);
-+			atomic_dec(&instance->fw_outstanding);
- 			break;
- 		case MEGASAS_MPI2_FUNCTION_PASSTHRU_IO_REQUEST: /*MFI command */
- 			cmd_mfi = instance->cmd_list[cmd_fusion->sync_cmd_idx];
--- 
-2.9.4
+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
+BgAAAAABAAEAWwAAAFIKAAAAAA==
