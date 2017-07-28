@@ -1,75 +1,147 @@
 From: Benjamin Block <bblock@linux.vnet.ibm.com>
-Subject: [PATCH 02/22] zfcp: use setup_timer instead of init_timer
-Date: Fri, 28 Jul 2017 12:30:48 +0200
-Message-ID: <d820492c73697e8a187735b03e14e54657333208.1501085249.git.bblock@linux.vnet.ibm.com>
+Subject: [PATCH 08/22] zfcp: fix passing fsf_req to SCSI trace on TMF to correlate with HBA
+Date: Fri, 28 Jul 2017 12:30:54 +0200
+Message-ID: <a561572d75fc07cdfd92dc1820ab8d71656b0223.1501085249.git.bblock@linux.vnet.ibm.com>
 References: <cover.1501085249.git.bblock@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:36969 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751674AbdG1KbO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 28 Jul 2017 06:31:14 -0400
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6SASxaf015644
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 06:31:13 -0400
-Received: from e06smtp14.uk.ibm.com (e06smtp14.uk.ibm.com [195.75.94.110])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2byyg8345y-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 06:31:13 -0400
-Received: from localhost
-        by e06smtp14.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <bblock@linux.vnet.ibm.com>;
-        Fri, 28 Jul 2017 11:31:11 +0100
-Received: from d06av25.portsmouth.uk.ibm.com (d06av25.portsmouth.uk.ibm.com [9.149.105.61])
-        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v6SAV9uE37486838
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 10:31:09 GMT
-Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 1EB0711C096
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 11:28:21 +0100 (BST)
-Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 01A3311C094
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 11:28:21 +0100 (BST)
-Received: from bblock-ThinkPad-W530 (unknown [9.152.212.213])
-        by d06av25.portsmouth.uk.ibm.com (Postfix) with ESMTP
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Jul 2017 11:28:20 +0100 (BST)
+Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <cover.1501085249.git.bblock@linux.vnet.ibm.com>
 In-Reply-To: <cover.1501085249.git.bblock@linux.vnet.ibm.com>
 References: <cover.1501085249.git.bblock@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: stable-owner@vger.kernel.org
 To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: =?UTF-8?q?Luk=C3=A1=C5=A1=20Koren=C4=8Dik?= <xkorenc1@fi.muni.cz>, Steffen Maier <maier@linux.vnet.ibm.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Jiri Slaby <jslaby@suse.cz>, Benjamin Block <bblock@linux.vnet.ibm.com>
+Cc: Steffen Maier <maier@linux.vnet.ibm.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, stable@vger.kernel.org, Benjamin Block <bblock@linux.vnet.ibm.com>
+List-Id: linux-scsi@vger.kernel.org
 
-From: Lukáš Korenčik <xkorenc1@fi.muni.cz>
+From: Steffen Maier <maier@linux.vnet.ibm.com>
 
-Use initialization with setup_timer function instead of using
-init_timer function and data fields. It improves readability.
+Without this fix we get SCSI trace records on task management functions
+which cannot be correlated to HBA trace records because all fields
+related to the FSF request are empty (zero).
+Also, the FCP_RSP_IU is missing as well as any sense data if available.
 
-Signed-off-by: Lukáš Korenčik <xkorenc1@fi.muni.cz>
-Signed-off-by: Jiri Slaby <jslaby@suse.cz>
+This was caused by v2.6.14 commit 8a36e4532ea1 ("[SCSI] zfcp: enhancement
+of zfcp debug features") introducing trace records for TMFs but
+hard coding NULL for a possibly existing TMF FSF request.
+The scsi_cmnd scribble is also zero or unrelated for the TMF request
+so it also could not lookup a suitable FSF request from there.
+
+A broken example trace record formatted with zfcpdbf from the s390-tools
+package:
+
+Timestamp      : ...
+Area           : SCSI
+Subarea        : 00
+Level          : 1
+Exception      : -
+CPU ID         : ..
+Caller         : 0x...
+Record ID      : 1
+Tag            : lr_fail
+Request ID     : 0x0000000000000000
+                   ^^^^^^^^^^^^^^^^ no correlation to HBA record
+SCSI ID        : 0x<scsitarget>
+SCSI LUN       : 0x<scsilun>
+SCSI result    : 0x000e0000
+SCSI retries   : 0x00
+SCSI allowed   : 0x05
+SCSI scribble  : 0x0000000000000000
+SCSI opcode    : 2a000017 3bb80000 08000000 00000000
+FCP rsp inf cod: 0x00
+                   ^^ no TMF response
+FCP rsp IU     : 00000000 00000000 00000000 00000000
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                 00000000 00000000
+                 ^^^^^^^^^^^^^^^^^ no interesting FCP_RSP_IU
+Sense len      : ...
+^^^^^^^^^^^^^^^^^^^^ no sense data length
+Sense info     : ...
+^^^^^^^^^^^^^^^^^^^^ no sense data content, even if present
+
+There are some true cases where we really do not have an FSF request:
+"rsl_fai" from zfcp_dbf_scsi_fail_send() called for early
+returns / completions in zfcp_scsi_queuecommand(),
+"abrt_or", "abrt_bl", "abrt_ru", "abrt_ar" from
+zfcp_scsi_eh_abort_handler() where we did not get as far,
+"lr_nres", "tr_nres" from zfcp_task_mgmt_function() where we're
+successful and do not need to do anything because adapter stopped.
+For these cases it's correct to pass NULL for fsf_req to _zfcp_dbf_scsi().
+
+Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
+Fixes: 8a36e4532ea1 ("[SCSI] zfcp: enhancement of zfcp debug features")
+Cc: <stable@vger.kernel.org> #2.6.38+
+Reviewed-by: Benjamin Block <bblock@linux.vnet.ibm.com>
 Signed-off-by: Benjamin Block <bblock@linux.vnet.ibm.com>
 ---
- drivers/s390/scsi/zfcp_erp.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/s390/scsi/zfcp_dbf.h  | 7 ++++---
+ drivers/s390/scsi/zfcp_scsi.c | 8 ++++----
+ 2 files changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/s390/scsi/zfcp_erp.c b/drivers/s390/scsi/zfcp_erp.c
-index 7ccfce559034..37408f5f81ce 100644
---- a/drivers/s390/scsi/zfcp_erp.c
-+++ b/drivers/s390/scsi/zfcp_erp.c
-@@ -572,9 +572,8 @@ static void zfcp_erp_memwait_handler(unsigned long data)
+diff --git a/drivers/s390/scsi/zfcp_dbf.h b/drivers/s390/scsi/zfcp_dbf.h
+index db186d44cfaf..776d1ac125ff 100644
+--- a/drivers/s390/scsi/zfcp_dbf.h
++++ b/drivers/s390/scsi/zfcp_dbf.h
+@@ -2,7 +2,7 @@
+  * zfcp device driver
+  * debug feature declarations
+  *
+- * Copyright IBM Corp. 2008, 2016
++ * Copyright IBM Corp. 2008, 2017
+  */
  
- static void zfcp_erp_strategy_memwait(struct zfcp_erp_action *erp_action)
+ #ifndef ZFCP_DBF_H
+@@ -401,7 +401,8 @@ void zfcp_dbf_scsi_abort(char *tag, struct scsi_cmnd *scmd,
+  * @flag: indicates type of reset (Target Reset, Logical Unit Reset)
+  */
+ static inline
+-void zfcp_dbf_scsi_devreset(char *tag, struct scsi_cmnd *scmnd, u8 flag)
++void zfcp_dbf_scsi_devreset(char *tag, struct scsi_cmnd *scmnd, u8 flag,
++			    struct zfcp_fsf_req *fsf_req)
  {
--	init_timer(&erp_action->timer);
--	erp_action->timer.function = zfcp_erp_memwait_handler;
--	erp_action->timer.data = (unsigned long) erp_action;
-+	setup_timer(&erp_action->timer, zfcp_erp_memwait_handler,
-+		    (unsigned long) erp_action);
- 	erp_action->timer.expires = jiffies + HZ;
- 	add_timer(&erp_action->timer);
+ 	char tmp_tag[ZFCP_DBF_TAG_LEN];
+ 
+@@ -411,7 +412,7 @@ void zfcp_dbf_scsi_devreset(char *tag, struct scsi_cmnd *scmnd, u8 flag)
+ 		memcpy(tmp_tag, "lr_", 3);
+ 
+ 	memcpy(&tmp_tag[3], tag, 4);
+-	_zfcp_dbf_scsi(tmp_tag, 1, scmnd, NULL);
++	_zfcp_dbf_scsi(tmp_tag, 1, scmnd, fsf_req);
  }
+ 
+ /**
+diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
+index d99da4e1e27a..4c9ac55d053d 100644
+--- a/drivers/s390/scsi/zfcp_scsi.c
++++ b/drivers/s390/scsi/zfcp_scsi.c
+@@ -3,7 +3,7 @@
+  *
+  * Interface to Linux SCSI midlayer.
+  *
+- * Copyright IBM Corp. 2002, 2016
++ * Copyright IBM Corp. 2002, 2017
+  */
+ 
+ #define KMSG_COMPONENT "zfcp"
+@@ -278,7 +278,7 @@ static int zfcp_task_mgmt_function(struct scsi_cmnd *scpnt, u8 tm_flags)
+ 
+ 		if (!(atomic_read(&adapter->status) &
+ 		      ZFCP_STATUS_COMMON_RUNNING)) {
+-			zfcp_dbf_scsi_devreset("nres", scpnt, tm_flags);
++			zfcp_dbf_scsi_devreset("nres", scpnt, tm_flags, NULL);
+ 			return SUCCESS;
+ 		}
+ 	}
+@@ -288,10 +288,10 @@ static int zfcp_task_mgmt_function(struct scsi_cmnd *scpnt, u8 tm_flags)
+ 	wait_for_completion(&fsf_req->completion);
+ 
+ 	if (fsf_req->status & ZFCP_STATUS_FSFREQ_TMFUNCFAILED) {
+-		zfcp_dbf_scsi_devreset("fail", scpnt, tm_flags);
++		zfcp_dbf_scsi_devreset("fail", scpnt, tm_flags, fsf_req);
+ 		retval = FAILED;
+ 	} else {
+-		zfcp_dbf_scsi_devreset("okay", scpnt, tm_flags);
++		zfcp_dbf_scsi_devreset("okay", scpnt, tm_flags, fsf_req);
+ 		zfcp_scsi_forget_cmnds(zfcp_sdev, tm_flags);
+ 	}
+ 
 -- 
 2.11.2
