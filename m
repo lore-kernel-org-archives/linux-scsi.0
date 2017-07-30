@@ -1,7 +1,7 @@
 From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Subject: [PATCH 18/29] scsi: dmx3191d: constify pci_device_id.
-Date: Sun, 30 Jul 2017 14:10:34 +0530
-Message-ID: <1501404036-9005-8-git-send-email-arvind.yadav.cs@gmail.com>
+Subject: [PATCH 19/29] scsi: megaraid: constify pci_device_id.
+Date: Sun, 30 Jul 2017 14:10:35 +0530
+Message-ID: <1501404036-9005-9-git-send-email-arvind.yadav.cs@gmail.com>
 References: <1501404036-9005-1-git-send-email-arvind.yadav.cs@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1501404036-9005-1-git-send-email-arvind.yadav.cs@gmail.com>
@@ -16,21 +16,21 @@ const pci_device_id. So mark the non-const structs as const.
 
 Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/scsi/dmx3191d.c | 2 +-
+ drivers/scsi/megaraid.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/dmx3191d.c b/drivers/scsi/dmx3191d.c
-index 6af3394..805ae59 100644
---- a/drivers/scsi/dmx3191d.c
-+++ b/drivers/scsi/dmx3191d.c
-@@ -139,7 +139,7 @@ static void dmx3191d_remove_one(struct pci_dev *pdev)
- 	pci_disable_device(pdev);
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index 3c63c29..17012c8 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -4652,7 +4652,7 @@ megaraid_shutdown(struct pci_dev *pdev)
+ 	__megaraid_shutdown(adapter);
  }
  
--static struct pci_device_id dmx3191d_pci_tbl[] = {
-+static const struct pci_device_id dmx3191d_pci_tbl[] = {
- 	{PCI_VENDOR_ID_DOMEX, PCI_DEVICE_ID_DOMEX_DMX3191D,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 4},
- 	{ }
+-static struct pci_device_id megaraid_pci_tbl[] = {
++static const struct pci_device_id megaraid_pci_tbl[] = {
+ 	{PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_AMI_MEGARAID,
+ 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+ 	{PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_AMI_MEGARAID2,
 -- 
 2.7.4
