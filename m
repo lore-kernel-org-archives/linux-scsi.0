@@ -1,7 +1,7 @@
 From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Subject: [PATCH 22/29] scsi: pmcraid: constify pci_device_id.
-Date: Sun, 30 Jul 2017 14:13:48 +0530
-Message-ID: <1501404235-9105-2-git-send-email-arvind.yadav.cs@gmail.com>
+Subject: [PATCH 23/29] scsi: fnic: constify pci_device_id.
+Date: Sun, 30 Jul 2017 14:13:49 +0530
+Message-ID: <1501404235-9105-3-git-send-email-arvind.yadav.cs@gmail.com>
 References: <1501404235-9105-1-git-send-email-arvind.yadav.cs@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1501404235-9105-1-git-send-email-arvind.yadav.cs@gmail.com>
@@ -16,21 +16,21 @@ const pci_device_id. So mark the non-const structs as const.
 
 Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/scsi/pmcraid.c | 2 +-
+ drivers/scsi/fnic/fnic_main.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index 1cc814f..1a9e153 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -126,7 +126,7 @@ static struct pmcraid_chip_details pmcraid_chip_cfg[] = {
- /*
-  * PCI device ids supported by pmcraid driver
-  */
--static struct pci_device_id pmcraid_pci_table[] = {
-+static const struct pci_device_id pmcraid_pci_table[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_PMC, PCI_DEVICE_ID_PMC_MAXRAID),
- 	  0, 0, (kernel_ulong_t)&pmcraid_chip_cfg[0]
- 	},
+diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
+index aacadbf..b3ab344 100644
+--- a/drivers/scsi/fnic/fnic_main.c
++++ b/drivers/scsi/fnic/fnic_main.c
+@@ -53,7 +53,7 @@ LIST_HEAD(fnic_list);
+ DEFINE_SPINLOCK(fnic_list_lock);
+ 
+ /* Supported devices by fnic module */
+-static struct pci_device_id fnic_id_table[] = {
++static const struct pci_device_id fnic_id_table[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_CISCO, PCI_DEVICE_ID_CISCO_FNIC) },
+ 	{ 0, }
+ };
 -- 
 2.7.4
