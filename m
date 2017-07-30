@@ -1,7 +1,7 @@
 From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Subject: [PATCH 26/29] scsi: a100u2w: constify pci_device_id.
-Date: Sun, 30 Jul 2017 14:13:52 +0530
-Message-ID: <1501404235-9105-6-git-send-email-arvind.yadav.cs@gmail.com>
+Subject: [PATCH 27/29] scsi: advansys: constify pci_device_id.
+Date: Sun, 30 Jul 2017 14:13:53 +0530
+Message-ID: <1501404235-9105-7-git-send-email-arvind.yadav.cs@gmail.com>
 References: <1501404235-9105-1-git-send-email-arvind.yadav.cs@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1501404235-9105-1-git-send-email-arvind.yadav.cs@gmail.com>
@@ -16,21 +16,21 @@ const pci_device_id. So mark the non-const structs as const.
 
 Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/scsi/a100u2w.c | 2 +-
+ drivers/scsi/advansys.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/a100u2w.c b/drivers/scsi/a100u2w.c
-index 8086bd0..80c39fd 100644
---- a/drivers/scsi/a100u2w.c
-+++ b/drivers/scsi/a100u2w.c
-@@ -1209,7 +1209,7 @@ static void inia100_remove_one(struct pci_dev *pdev)
- 	scsi_host_put(shost);
- } 
- 
--static struct pci_device_id inia100_pci_tbl[] = {
-+static const struct pci_device_id inia100_pci_tbl[] = {
- 	{PCI_VENDOR_ID_INIT, 0x1060, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
- 	{0,}
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index 24e57e7..350070f 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -11714,7 +11714,7 @@ static struct eisa_driver advansys_eisa_driver = {
  };
+ 
+ /* PCI Devices supported by this driver */
+-static struct pci_device_id advansys_pci_tbl[] = {
++static const struct pci_device_id advansys_pci_tbl[] = {
+ 	{PCI_VENDOR_ID_ASP, PCI_DEVICE_ID_ASP_1200A,
+ 	 PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+ 	{PCI_VENDOR_ID_ASP, PCI_DEVICE_ID_ASP_ABP940,
 -- 
 2.7.4
