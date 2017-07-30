@@ -1,7 +1,7 @@
 From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Subject: [PATCH 07/29] scsi: 3w-9xxx: constify pci_device_id.
-Date: Sun, 30 Jul 2017 14:07:16 +0530
-Message-ID: <1501403839-8876-8-git-send-email-arvind.yadav.cs@gmail.com>
+Subject: [PATCH 09/29] scsi: arcmsr: constify pci_device_id.
+Date: Sun, 30 Jul 2017 14:07:18 +0530
+Message-ID: <1501403839-8876-10-git-send-email-arvind.yadav.cs@gmail.com>
 References: <1501403839-8876-1-git-send-email-arvind.yadav.cs@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1501403839-8876-1-git-send-email-arvind.yadav.cs@gmail.com>
@@ -16,21 +16,21 @@ const pci_device_id. So mark the non-const structs as const.
 
 Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/scsi/3w-9xxx.c | 2 +-
+ drivers/scsi/arcmsr/arcmsr_hba.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
-index 00e7968..27fa387 100644
---- a/drivers/scsi/3w-9xxx.c
-+++ b/drivers/scsi/3w-9xxx.c
-@@ -2274,7 +2274,7 @@ static int twa_resume(struct pci_dev *pdev)
- #endif
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index af032c4..392fb07 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -141,7 +141,7 @@ static struct scsi_host_template arcmsr_scsi_host_template = {
+ 	.no_write_same		= 1,
+ };
  
- /* PCI Devices supported by this driver */
--static struct pci_device_id twa_pci_tbl[] = {
-+static const struct pci_device_id twa_pci_tbl[] = {
- 	{ PCI_VENDOR_ID_3WARE, PCI_DEVICE_ID_3WARE_9000,
- 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
- 	{ PCI_VENDOR_ID_3WARE, PCI_DEVICE_ID_3WARE_9550SX,
+-static struct pci_device_id arcmsr_device_id_table[] = {
++static const struct pci_device_id arcmsr_device_id_table[] = {
+ 	{PCI_DEVICE(PCI_VENDOR_ID_ARECA, PCI_DEVICE_ID_ARECA_1110),
+ 		.driver_data = ACB_ADAPTER_TYPE_A},
+ 	{PCI_DEVICE(PCI_VENDOR_ID_ARECA, PCI_DEVICE_ID_ARECA_1120),
 -- 
 2.7.4
