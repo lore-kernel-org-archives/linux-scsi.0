@@ -1,7 +1,7 @@
 From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Subject: [PATCH 13/29] scsi: fdomain: constify pci_device_id.
-Date: Sun, 30 Jul 2017 14:10:29 +0530
-Message-ID: <1501404036-9005-3-git-send-email-arvind.yadav.cs@gmail.com>
+Subject: [PATCH 15/29] scsi: sym53c8xx_2: constify pci_device_id.
+Date: Sun, 30 Jul 2017 14:10:31 +0530
+Message-ID: <1501404036-9005-5-git-send-email-arvind.yadav.cs@gmail.com>
 References: <1501404036-9005-1-git-send-email-arvind.yadav.cs@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1501404036-9005-1-git-send-email-arvind.yadav.cs@gmail.com>
@@ -16,21 +16,21 @@ const pci_device_id. So mark the non-const structs as const.
 
 Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/scsi/fdomain.c | 2 +-
+ drivers/scsi/sym53c8xx_2/sym_glue.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/fdomain.c b/drivers/scsi/fdomain.c
-index b87ab38..d46cbe8 100644
---- a/drivers/scsi/fdomain.c
-+++ b/drivers/scsi/fdomain.c
-@@ -1770,7 +1770,7 @@ struct scsi_host_template fdomain_driver_template = {
- #ifndef PCMCIA
- #if defined(CONFIG_PCI) && defined(MODULE)
+diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
+index d32e3ba..6934265 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
+@@ -2000,7 +2000,7 @@ static struct spi_function_template sym2_transport_functions = {
+ 	.get_signalling	= sym2_get_signalling,
+ };
  
--static struct pci_device_id fdomain_pci_tbl[] = {
-+static const struct pci_device_id fdomain_pci_tbl[] = {
- 	{ PCI_VENDOR_ID_FD, PCI_DEVICE_ID_FD_36C70,
+-static struct pci_device_id sym2_id_table[] = {
++static const struct pci_device_id sym2_id_table[] = {
+ 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_NCR_53C810,
  	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL },
- 	{ }
+ 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_NCR_53C820,
 -- 
 2.7.4
