@@ -1,7 +1,7 @@
 From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Subject: [PATCH 25/29] scsi: megaraid: constify pci_device_id.
-Date: Sun, 30 Jul 2017 14:13:51 +0530
-Message-ID: <1501404235-9105-5-git-send-email-arvind.yadav.cs@gmail.com>
+Subject: [PATCH 26/29] scsi: a100u2w: constify pci_device_id.
+Date: Sun, 30 Jul 2017 14:13:52 +0530
+Message-ID: <1501404235-9105-6-git-send-email-arvind.yadav.cs@gmail.com>
 References: <1501404235-9105-1-git-send-email-arvind.yadav.cs@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1501404235-9105-1-git-send-email-arvind.yadav.cs@gmail.com>
@@ -16,21 +16,21 @@ const pci_device_id. So mark the non-const structs as const.
 
 Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-
+ drivers/scsi/a100u2w.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 316c3df..ed2acda 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -124,7 +124,7 @@ static int megasas_get_target_prop(struct megasas_instance *instance,
- /*
-  * PCI ID table for all supported controllers
-  */
--static struct pci_device_id megasas_pci_table[] = {
-+static const struct pci_device_id megasas_pci_table[] = {
+diff --git a/drivers/scsi/a100u2w.c b/drivers/scsi/a100u2w.c
+index 8086bd0..80c39fd 100644
+--- a/drivers/scsi/a100u2w.c
++++ b/drivers/scsi/a100u2w.c
+@@ -1209,7 +1209,7 @@ static void inia100_remove_one(struct pci_dev *pdev)
+ 	scsi_host_put(shost);
+ } 
  
- 	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_SAS1064R)},
- 	/* xscale IOP */
+-static struct pci_device_id inia100_pci_tbl[] = {
++static const struct pci_device_id inia100_pci_tbl[] = {
+ 	{PCI_VENDOR_ID_INIT, 0x1060, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+ 	{0,}
+ };
 -- 
 2.7.4
