@@ -1,40 +1,42 @@
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Subject: [PATCH 29/29] scsi: 3w-xxxx: constify pci_device_id.
-Date: Sun, 30 Jul 2017 14:13:55 +0530
-Message-ID: <1501404235-9105-9-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1501404235-9105-1-git-send-email-arvind.yadav.cs@gmail.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCHv2] tcmu: Add fifo type waiter list support to avoid
+ starvation
+Date: Sun, 30 Jul 2017 15:10:45 -0700
+Message-ID: <1501452645.1499.21.camel@haakon3.daterainc.com>
+References: <1499843767-17420-1-git-send-email-lixiubo@cmss.chinamobile.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:35275 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754170AbdG3Iot (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Jul 2017 04:44:49 -0400
-In-Reply-To: <1501404235-9105-1-git-send-email-arvind.yadav.cs@gmail.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:32944 "EHLO
+        linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750913AbdG3WKq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Jul 2017 18:10:46 -0400
+In-Reply-To: <1499843767-17420-1-git-send-email-lixiubo@cmss.chinamobile.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, mdr@sgi.com, hare@suse.com, aacraid@adaptec.com, matthew@wil.cx, fthain@telegraphics.com.au, schmitzmic@gmail.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, gotom@debian.or.jp, mrochs@linux.vnet.ibm.com, QLogic-Storage-Upstream@cavium.com, jinpu.wang@profitbricks.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: lixiubo@cmss.chinamobile.com
+Cc: mchristi@redhat.com, bryantly@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 
-pci_device_id are not supposed to change at runtime. All functions
-working with pci_device_id provided by <linux/pci.h> work with
-const pci_device_id. So mark the non-const structs as const.
+Hi Xiubo,
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
- drivers/scsi/3w-xxxx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Apologies for the delayed response.  Comments below.
 
-diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
-index 33261b6..e0b079d 100644
---- a/drivers/scsi/3w-xxxx.c
-+++ b/drivers/scsi/3w-xxxx.c
-@@ -2384,7 +2384,7 @@ static void tw_remove(struct pci_dev *pdev)
- } /* End tw_remove() */
- 
- /* PCI Devices supported by this driver */
--static struct pci_device_id tw_pci_tbl[] = {
-+static const struct pci_device_id tw_pci_tbl[] = {
- 	{ PCI_VENDOR_ID_3WARE, PCI_DEVICE_ID_3WARE_1000,
- 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
- 	{ PCI_VENDOR_ID_3WARE, PCI_DEVICE_ID_3WARE_7000,
--- 
-2.7.4
+On Wed, 2017-07-12 at 15:16 +0800, lixiubo@cmss.chinamobile.com wrote:
+> From: Xiubo Li <lixiubo@cmss.chinamobile.com>
+> 
+> The fifo type waiter list will hold the udevs who are waiting for the
+> blocks from the data global pool. The unmap thread will try to feed the
+> first udevs in waiter list, if the global free blocks available are
+> not enough, it will stop traversing the list and abort waking up the
+> others.
+> 
+> Signed-off-by: Xiubo Li <lixiubo@cmss.chinamobile.com>
+> ---
+>  drivers/target/target_core_user.c | 104 ++++++++++++++++++++++++++++++++------
+>  1 file changed, 88 insertions(+), 16 deletions(-)
+> 
+
+Applied to target-pending/for-next.
+
+Thanks Xiubo + MNC.
