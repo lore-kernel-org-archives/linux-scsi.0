@@ -1,7 +1,7 @@
 From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Subject: [PATCH 09/29] scsi: arcmsr: constify pci_device_id.
-Date: Sun, 30 Jul 2017 14:07:18 +0530
-Message-ID: <1501403839-8876-10-git-send-email-arvind.yadav.cs@gmail.com>
+Subject: [PATCH 10/29] scsi: dpt_i2o: constify pci_device_id.
+Date: Sun, 30 Jul 2017 14:07:19 +0530
+Message-ID: <1501403839-8876-11-git-send-email-arvind.yadav.cs@gmail.com>
 References: <1501403839-8876-1-git-send-email-arvind.yadav.cs@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1501403839-8876-1-git-send-email-arvind.yadav.cs@gmail.com>
@@ -16,21 +16,21 @@ const pci_device_id. So mark the non-const structs as const.
 
 Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/scsi/arcmsr/arcmsr_hba.c | 2 +-
+ drivers/scsi/dpt_i2o.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index af032c4..392fb07 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -141,7 +141,7 @@ static struct scsi_host_template arcmsr_scsi_host_template = {
- 	.no_write_same		= 1,
- };
+diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+index 256dd67..ba90cc4 100644
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -181,7 +181,7 @@ static u8 adpt_read_blink_led(adpt_hba* host)
+  */
  
--static struct pci_device_id arcmsr_device_id_table[] = {
-+static const struct pci_device_id arcmsr_device_id_table[] = {
- 	{PCI_DEVICE(PCI_VENDOR_ID_ARECA, PCI_DEVICE_ID_ARECA_1110),
- 		.driver_data = ACB_ADAPTER_TYPE_A},
- 	{PCI_DEVICE(PCI_VENDOR_ID_ARECA, PCI_DEVICE_ID_ARECA_1120),
+ #ifdef MODULE
+-static struct pci_device_id dptids[] = {
++static const struct pci_device_id dptids[] = {
+ 	{ PCI_DPT_VENDOR_ID, PCI_DPT_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID,},
+ 	{ PCI_DPT_VENDOR_ID, PCI_DPT_RAPTOR_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID,},
+ 	{ 0, }
 -- 
 2.7.4
