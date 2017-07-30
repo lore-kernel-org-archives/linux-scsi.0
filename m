@@ -1,7 +1,7 @@
 From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Subject: [PATCH 15/29] scsi: sym53c8xx_2: constify pci_device_id.
-Date: Sun, 30 Jul 2017 14:10:31 +0530
-Message-ID: <1501404036-9005-5-git-send-email-arvind.yadav.cs@gmail.com>
+Subject: [PATCH 16/29] scsi: esas2r: constify pci_device_id.
+Date: Sun, 30 Jul 2017 14:10:32 +0530
+Message-ID: <1501404036-9005-6-git-send-email-arvind.yadav.cs@gmail.com>
 References: <1501404036-9005-1-git-send-email-arvind.yadav.cs@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1501404036-9005-1-git-send-email-arvind.yadav.cs@gmail.com>
@@ -16,21 +16,21 @@ const pci_device_id. So mark the non-const structs as const.
 
 Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/scsi/sym53c8xx_2/sym_glue.c | 2 +-
+ drivers/scsi/esas2r/esas2r_main.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
-index d32e3ba..6934265 100644
---- a/drivers/scsi/sym53c8xx_2/sym_glue.c
-+++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
-@@ -2000,7 +2000,7 @@ static struct spi_function_template sym2_transport_functions = {
- 	.get_signalling	= sym2_get_signalling,
- };
+diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
+index f2e9d8a..81f226b 100644
+--- a/drivers/scsi/esas2r/esas2r_main.c
++++ b/drivers/scsi/esas2r/esas2r_main.c
+@@ -309,7 +309,7 @@ MODULE_PARM_DESC(interrupt_mode,
+ 		 "Defines the interrupt mode to use.  0 for legacy"
+ 		 ", 1 for MSI.  Default is MSI (1).");
  
--static struct pci_device_id sym2_id_table[] = {
-+static const struct pci_device_id sym2_id_table[] = {
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_NCR_53C810,
- 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL },
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_NCR_53C820,
+-static struct pci_device_id
++static const struct pci_device_id
+ 	esas2r_pci_table[] = {
+ 	{ ATTO_VENDOR_ID, 0x0049,	  ATTO_VENDOR_ID, 0x0049,
+ 	  0,
 -- 
 2.7.4
