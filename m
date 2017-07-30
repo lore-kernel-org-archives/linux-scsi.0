@@ -1,7 +1,7 @@
 From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Subject: [PATCH 05/29] scsi: qla4xxx: constify pci_device_id.
-Date: Sun, 30 Jul 2017 14:07:14 +0530
-Message-ID: <1501403839-8876-6-git-send-email-arvind.yadav.cs@gmail.com>
+Subject: [PATCH 06/29] scsi: mvsas: constify pci_device_id.
+Date: Sun, 30 Jul 2017 14:07:15 +0530
+Message-ID: <1501403839-8876-7-git-send-email-arvind.yadav.cs@gmail.com>
 References: <1501403839-8876-1-git-send-email-arvind.yadav.cs@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1501403839-8876-1-git-send-email-arvind.yadav.cs@gmail.com>
@@ -16,21 +16,21 @@ const pci_device_id. So mark the non-const structs as const.
 
 Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/scsi/qla4xxx/ql4_os.c | 2 +-
+ drivers/scsi/mvsas/mv_init.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 64c6fa5..41e1027 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -9793,7 +9793,7 @@ static const struct pci_error_handlers qla4xxx_err_handler = {
- 	.resume = qla4xxx_pci_resume,
- };
+diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+index 4e047b5..552c5a0 100644
+--- a/drivers/scsi/mvsas/mv_init.c
++++ b/drivers/scsi/mvsas/mv_init.c
+@@ -659,7 +659,7 @@ static void mvs_pci_remove(struct pci_dev *pdev)
+ 	return;
+ }
  
--static struct pci_device_id qla4xxx_pci_tbl[] = {
-+static const struct pci_device_id qla4xxx_pci_tbl[] = {
+-static struct pci_device_id mvs_pci_table[] = {
++static const struct pci_device_id mvs_pci_table[] = {
+ 	{ PCI_VDEVICE(MARVELL, 0x6320), chip_6320 },
+ 	{ PCI_VDEVICE(MARVELL, 0x6340), chip_6440 },
  	{
- 		.vendor		= PCI_VENDOR_ID_QLOGIC,
- 		.device		= PCI_DEVICE_ID_QLOGIC_ISP4010,
 -- 
 2.7.4
