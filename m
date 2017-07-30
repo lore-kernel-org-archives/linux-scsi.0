@@ -1,7 +1,7 @@
 From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Subject: [PATCH 10/29] scsi: dpt_i2o: constify pci_device_id.
-Date: Sun, 30 Jul 2017 14:07:19 +0530
-Message-ID: <1501403839-8876-11-git-send-email-arvind.yadav.cs@gmail.com>
+Subject: [PATCH 08/29] scsi: ipr: constify pci_device_id.
+Date: Sun, 30 Jul 2017 14:07:17 +0530
+Message-ID: <1501403839-8876-9-git-send-email-arvind.yadav.cs@gmail.com>
 References: <1501403839-8876-1-git-send-email-arvind.yadav.cs@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1501403839-8876-1-git-send-email-arvind.yadav.cs@gmail.com>
@@ -16,21 +16,21 @@ const pci_device_id. So mark the non-const structs as const.
 
 Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/scsi/dpt_i2o.c | 2 +-
+ drivers/scsi/ipr.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
-index 256dd67..ba90cc4 100644
---- a/drivers/scsi/dpt_i2o.c
-+++ b/drivers/scsi/dpt_i2o.c
-@@ -181,7 +181,7 @@ static u8 adpt_read_blink_led(adpt_hba* host)
-  */
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index b0c68d2..edc7030 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -10644,7 +10644,7 @@ static void ipr_shutdown(struct pci_dev *pdev)
+ 	}
+ }
  
- #ifdef MODULE
--static struct pci_device_id dptids[] = {
-+static const struct pci_device_id dptids[] = {
- 	{ PCI_DPT_VENDOR_ID, PCI_DPT_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID,},
- 	{ PCI_DPT_VENDOR_ID, PCI_DPT_RAPTOR_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID,},
- 	{ 0, }
+-static struct pci_device_id ipr_pci_table[] = {
++static const struct pci_device_id ipr_pci_table[] = {
+ 	{ PCI_VENDOR_ID_MYLEX, PCI_DEVICE_ID_IBM_GEMSTONE,
+ 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_5702, 0, 0, 0 },
+ 	{ PCI_VENDOR_ID_MYLEX, PCI_DEVICE_ID_IBM_GEMSTONE,
 -- 
 2.7.4
