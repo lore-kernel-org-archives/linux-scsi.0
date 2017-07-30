@@ -1,7 +1,7 @@
 From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Subject: [PATCH 12/29] scsi: hptiop: constify pci_device_id.
-Date: Sun, 30 Jul 2017 14:10:28 +0530
-Message-ID: <1501404036-9005-2-git-send-email-arvind.yadav.cs@gmail.com>
+Subject: [PATCH 14/29] scsi: snic: constify pci_device_id.
+Date: Sun, 30 Jul 2017 14:10:30 +0530
+Message-ID: <1501404036-9005-4-git-send-email-arvind.yadav.cs@gmail.com>
 References: <1501404036-9005-1-git-send-email-arvind.yadav.cs@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1501404036-9005-1-git-send-email-arvind.yadav.cs@gmail.com>
@@ -16,21 +16,21 @@ const pci_device_id. So mark the non-const structs as const.
 
 Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/scsi/hptiop.c | 2 +-
+ drivers/scsi/snic/snic_main.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
-index 7226226..31415b8 100644
---- a/drivers/scsi/hptiop.c
-+++ b/drivers/scsi/hptiop.c
-@@ -1647,7 +1647,7 @@ static struct hptiop_adapter_ops hptiop_mvfrey_ops = {
- 	.host_phy_flag     = cpu_to_le64(1),
- };
+diff --git a/drivers/scsi/snic/snic_main.c b/drivers/scsi/snic/snic_main.c
+index 7cf70aa..74031e4 100644
+--- a/drivers/scsi/snic/snic_main.c
++++ b/drivers/scsi/snic/snic_main.c
+@@ -35,7 +35,7 @@
+ #define PCI_DEVICE_ID_CISCO_SNIC	0x0046
  
--static struct pci_device_id hptiop_id_table[] = {
-+static const struct pci_device_id hptiop_id_table[] = {
- 	{ PCI_VDEVICE(TTI, 0x3220), (kernel_ulong_t)&hptiop_itl_ops },
- 	{ PCI_VDEVICE(TTI, 0x3320), (kernel_ulong_t)&hptiop_itl_ops },
- 	{ PCI_VDEVICE(TTI, 0x3410), (kernel_ulong_t)&hptiop_itl_ops },
+ /* Supported devices by snic module */
+-static struct pci_device_id snic_id_table[] = {
++static const struct pci_device_id snic_id_table[] = {
+ 	{PCI_DEVICE(0x1137, PCI_DEVICE_ID_CISCO_SNIC) },
+ 	{ 0, }	/* end of table */
+ };
 -- 
 2.7.4
