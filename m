@@ -1,7 +1,7 @@
 From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Subject: [PATCH 20/29] scsi: cxlflash: constify pci_device_id.
-Date: Sun, 30 Jul 2017 14:10:36 +0530
-Message-ID: <1501404036-9005-10-git-send-email-arvind.yadav.cs@gmail.com>
+Subject: [PATCH 17/29] scsi: qla2xxx: constify pci_device_id.
+Date: Sun, 30 Jul 2017 14:10:33 +0530
+Message-ID: <1501404036-9005-7-git-send-email-arvind.yadav.cs@gmail.com>
 References: <1501404036-9005-1-git-send-email-arvind.yadav.cs@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1501404036-9005-1-git-send-email-arvind.yadav.cs@gmail.com>
@@ -16,21 +16,21 @@ const pci_device_id. So mark the non-const structs as const.
 
 Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/scsi/cxlflash/main.c | 2 +-
+ drivers/scsi/qla2xxx/qla_os.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 077f62e..88bd551 100644
---- a/drivers/scsi/cxlflash/main.c
-+++ b/drivers/scsi/cxlflash/main.c
-@@ -3155,7 +3155,7 @@ static struct dev_dependent_vals dev_briard_vals = { CXLFLASH_MAX_SECTORS,
- /*
-  * PCI device binding table
-  */
--static struct pci_device_id cxlflash_pci_table[] = {
-+static const struct pci_device_id cxlflash_pci_table[] = {
- 	{PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CORSA,
- 	 PCI_ANY_ID, PCI_ANY_ID, 0, 0, (kernel_ulong_t)&dev_corsa_vals},
- 	{PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_FLASH_GT,
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index df57655..2ee8e86 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -6494,7 +6494,7 @@ static const struct pci_error_handlers qla2xxx_err_handler = {
+ 	.resume = qla2xxx_pci_resume,
+ };
+ 
+-static struct pci_device_id qla2xxx_pci_tbl[] = {
++static const struct pci_device_id qla2xxx_pci_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP2100) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP2200) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP2300) },
 -- 
 2.7.4
