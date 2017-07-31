@@ -1,26 +1,24 @@
-From: "WESTERN UNION ASIA" <mdupont@vip.cybercity.dk>
-Subject: C O N G R A T U L A T I O N S
-Date: Mon, 31 Jul 2017 18:00:12 +0800
-Message-ID: <E1dc7VC-0004JE-NX__11257.3862927549$1501496354$gmane$org@filter01asd2.se.isp-net.nl>
-Reply-To: wuhmcustomeragt.melissamubarak@outlook.com
+From: BarclaysHomeFinance <cmendoza@century21.com.ve>
+Subject: Loan offer
+Date: Mon, 31 Jul 2017 10:08:41 -0430 (VET)
+Message-ID: <862589005.73322.1501511921287.JavaMail.zimbra@century21.com.ve>
+Reply-To: BarclaysHomeFinance <bhf@bhflc.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from filter01asd2-vif2-tele2.se.isp-net.nl ([82.215.18.102]:36851
-        "EHLO filter01asd2-vif2-tele2.se.isp-net.nl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750987AbdGaKSu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 31 Jul 2017 06:18:50 -0400
-Content-Description: Mail message body
+Received: from ns2.serverht.net ([131.255.104.11]:38730 "EHLO
+        correo.htsoluciones.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752443AbdGaPIV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Jul 2017 11:08:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <mdupont@vip.cybercity.dk>
 
-If You Are Still Using This E-mail :
 
-- YOU WON $500,000.00 USD -
 
-For More Details,  Contact -
-Name:  MELISSA BINTI MUBARAK
-E-mail: westernunion.melissamubarak@gmail.com
+Hello,
+
+BarclaysHomeFinance is offering loan at a low interest rate of 2.5%.do You need a loan of any kind ? if yes email now for more info
+
+best regards,
+Taylor Anderson
