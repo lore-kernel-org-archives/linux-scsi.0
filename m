@@ -1,7 +1,7 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH 08/14] blk-mq: introduce BLK_MQ_F_SHARED_DEPTH
-Date: Tue,  1 Aug 2017 00:51:05 +0800
-Message-ID: <20170731165111.11536-10-ming.lei@redhat.com>
+Subject: [PATCH 09/14] blk-mq-sched: cleanup blk_mq_sched_dispatch_requests()
+Date: Tue,  1 Aug 2017 00:51:06 +0800
+Message-ID: <20170731165111.11536-11-ming.lei@redhat.com>
 References: <20170731165111.11536-1-ming.lei@redhat.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170731165111.11536-1-ming.lei@redhat.com>
@@ -10,99 +10,91 @@ To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <h
 Cc: Bart Van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-SCSI devices often provides one per-requeest_queue depth via
-q->queue_depth(.cmd_per_lun), which is a global limit on all
-hw queues. After the pending I/O submitted to one rquest queue
-reaches this limit, BLK_STS_RESOURCE will be returned to all
-dispatch path. That means when one hw queue is stuck, actually
-all hctxs are stuck too.
+This patch split blk_mq_sched_dispatch_requests()
+into two parts:
 
-This flag is introduced for improving blk-mq IO scheduling
-on this kind of device.
+1) the 1st part is for checking if queue is busy, and
+handle the busy situation
+
+2) the 2nd part is moved to __blk_mq_sched_dispatch_requests()
+which focuses on dispatch from sw queue or scheduler queue.
 
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- block/blk-mq-debugfs.c |  1 +
- block/blk-mq-sched.c   |  2 +-
- block/blk-mq.c         | 25 ++++++++++++++++++++++---
- include/linux/blk-mq.h |  1 +
- 4 files changed, 25 insertions(+), 4 deletions(-)
+ block/blk-mq-sched.c | 42 +++++++++++++++++++++++++-----------------
+ 1 file changed, 25 insertions(+), 17 deletions(-)
 
-diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
-index 9ebc2945f991..c4f70b453c76 100644
---- a/block/blk-mq-debugfs.c
-+++ b/block/blk-mq-debugfs.c
-@@ -209,6 +209,7 @@ static const char *const hctx_flag_name[] = {
- 	HCTX_FLAG_NAME(SG_MERGE),
- 	HCTX_FLAG_NAME(BLOCKING),
- 	HCTX_FLAG_NAME(NO_SCHED),
-+	HCTX_FLAG_NAME(SHARED_DEPTH),
- };
- #undef HCTX_FLAG_NAME
- 
 diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-index 3eb524ccb7aa..cc0687a4d0ab 100644
+index cc0687a4d0ab..07ff53187617 100644
 --- a/block/blk-mq-sched.c
 +++ b/block/blk-mq-sched.c
-@@ -144,7 +144,7 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
+@@ -89,16 +89,37 @@ static bool blk_mq_sched_restart_hctx(struct blk_mq_hw_ctx *hctx)
+ 	return false;
+ }
+ 
+-void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
++static void __blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
+ {
+ 	struct request_queue *q = hctx->queue;
+ 	struct elevator_queue *e = q->elevator;
+ 	const bool has_sched_dispatch = e && e->type->ops.mq.dispatch_request;
+-	bool can_go = true;
+-	LIST_HEAD(rq_list);
+ 	struct request *(*dispatch_fn)(struct blk_mq_hw_ctx *) =
+ 		has_sched_dispatch ? e->type->ops.mq.dispatch_request :
+ 			blk_mq_dispatch_rq_from_ctxs;
++	LIST_HEAD(rq_list);
++
++	if (!has_sched_dispatch && !(hctx->flags & BLK_MQ_F_SHARED_DEPTH)) {
++		blk_mq_flush_busy_ctxs(hctx, &rq_list);
++		blk_mq_dispatch_rq_list(q, &rq_list);
++		return;
++	}
++
++	do {
++		struct request *rq;
++
++		rq = dispatch_fn(hctx);
++		if (!rq)
++			break;
++		list_add(&rq->queuelist, &rq_list);
++	} while (blk_mq_dispatch_rq_list(q, &rq_list));
++}
++
++void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
++{
++	struct request_queue *q = hctx->queue;
++	bool can_go = true;
++	LIST_HEAD(rq_list);
+ 
+ 	/* RCU or SRCU read lock is needed before checking quiesced flag */
+ 	if (unlikely(blk_mq_hctx_stopped(hctx) || blk_queue_quiesced(q)))
+@@ -144,25 +165,12 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
  	if (!can_go || test_bit(BLK_MQ_S_BUSY, &hctx->state))
  		return;
  
--	if (!has_sched_dispatch && !q->queue_depth) {
-+	if (!has_sched_dispatch && !(hctx->flags & BLK_MQ_F_SHARED_DEPTH)) {
- 		blk_mq_flush_busy_ctxs(hctx, &rq_list);
- 		blk_mq_dispatch_rq_list(q, &rq_list);
- 		return;
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 7df68d31bc23..db635ef06a72 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -2647,12 +2647,31 @@ int blk_mq_update_nr_requests(struct request_queue *q, unsigned int nr)
- int blk_mq_update_sched_queue_depth(struct request_queue *q)
- {
- 	unsigned nr;
-+	struct blk_mq_hw_ctx *hctx;
-+	unsigned int i;
-+	int ret = 0;
- 
--	if (!q->mq_ops || !q->elevator)
--		return 0;
-+	if (!q->mq_ops)
-+		return ret;
-+
-+	blk_mq_freeze_queue(q);
-+	/*
-+	 * if there is q->queue_depth, all hw queues share
-+	 * this queue depth limit
-+	 */
-+	if (q->queue_depth) {
-+		queue_for_each_hw_ctx(q, hctx, i)
-+			hctx->flags |= BLK_MQ_F_SHARED_DEPTH;
-+	}
-+
-+	if (!q->elevator)
-+		goto exit;
- 
- 	nr = blk_mq_sched_queue_depth(q);
--	return __blk_mq_update_nr_requests(q, true, nr);
-+	ret = __blk_mq_update_nr_requests(q, true, nr);
-+ exit:
-+	blk_mq_unfreeze_queue(q);
-+	return ret;
+-	if (!has_sched_dispatch && !(hctx->flags & BLK_MQ_F_SHARED_DEPTH)) {
+-		blk_mq_flush_busy_ctxs(hctx, &rq_list);
+-		blk_mq_dispatch_rq_list(q, &rq_list);
+-		return;
+-	}
+-
+ 	/*
+ 	 * We want to dispatch from the scheduler if we had no work left
+ 	 * on the dispatch list, OR if we did have work but weren't able
+ 	 * to make progress.
+ 	 */
+-	do {
+-		struct request *rq;
+-
+-		rq = dispatch_fn(hctx);
+-		if (!rq)
+-			break;
+-		list_add(&rq->queuelist, &rq_list);
+-	} while (blk_mq_dispatch_rq_list(q, &rq_list));
++	__blk_mq_sched_dispatch_requests(hctx);
  }
  
- static void __blk_mq_update_nr_hw_queues(struct blk_mq_tag_set *set,
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index 6d44b242b495..14f2ad3af31f 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -164,6 +164,7 @@ enum {
- 	BLK_MQ_F_SG_MERGE	= 1 << 2,
- 	BLK_MQ_F_BLOCKING	= 1 << 5,
- 	BLK_MQ_F_NO_SCHED	= 1 << 6,
-+	BLK_MQ_F_SHARED_DEPTH	= 1 << 7,
- 	BLK_MQ_F_ALLOC_POLICY_START_BIT = 8,
- 	BLK_MQ_F_ALLOC_POLICY_BITS = 1,
- 
+ bool blk_mq_sched_try_merge(struct request_queue *q, struct bio *bio,
 -- 
 2.9.4
