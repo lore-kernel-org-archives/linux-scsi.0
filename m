@@ -1,7 +1,7 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH 02/14] blk-mq: rename flush_busy_ctx_data as ctx_iter_data
-Date: Tue,  1 Aug 2017 00:50:59 +0800
-Message-ID: <20170731165111.11536-4-ming.lei@redhat.com>
+Subject: [PATCH 03/14] blk-mq: introduce blk_mq_dispatch_rq_from_ctxs()
+Date: Tue,  1 Aug 2017 00:51:00 +0800
+Message-ID: <20170731165111.11536-5-ming.lei@redhat.com>
 References: <20170731165111.11536-1-ming.lei@redhat.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170731165111.11536-1-ming.lei@redhat.com>
@@ -10,43 +10,97 @@ To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <h
 Cc: Bart Van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The following patch need to reuse this data structure,
-so rename as one generic name.
+This function is introduced for picking up request
+from sw queue so that we can dispatch in scheduler's way.
+
+More importantly, for some SCSI devices, driver
+tags are host wide, and the number is quite big,
+but each lun has very limited queue depth. This
+function is introduced for avoiding to take too
+many requests from sw queue when queue is busy,
+and only try to dispatch request when queue
+isn't busy.
 
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- block/blk-mq.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ block/blk-mq.c | 38 +++++++++++++++++++++++++++++++++++++-
+ block/blk-mq.h |  1 +
+ 2 files changed, 38 insertions(+), 1 deletion(-)
 
 diff --git a/block/blk-mq.c b/block/blk-mq.c
-index b70a4ad78b63..94818f78c099 100644
+index 94818f78c099..86b8fdcb8434 100644
 --- a/block/blk-mq.c
 +++ b/block/blk-mq.c
-@@ -808,14 +808,14 @@ static void blk_mq_timeout_work(struct work_struct *work)
- 	blk_queue_exit(q);
- }
+@@ -810,7 +810,11 @@ static void blk_mq_timeout_work(struct work_struct *work)
  
--struct flush_busy_ctx_data {
-+struct ctx_iter_data {
+ struct ctx_iter_data {
  	struct blk_mq_hw_ctx *hctx;
- 	struct list_head *list;
+-	struct list_head *list;
++
++	union {
++		struct list_head *list;
++		struct request *rq;
++	};
  };
  
  static bool flush_busy_ctx(struct sbitmap *sb, unsigned int bitnr, void *data)
- {
--	struct flush_busy_ctx_data *flush_data = data;
-+	struct ctx_iter_data *flush_data = data;
- 	struct blk_mq_hw_ctx *hctx = flush_data->hctx;
- 	struct blk_mq_ctx *ctx = hctx->ctxs[bitnr];
+@@ -826,6 +830,26 @@ static bool flush_busy_ctx(struct sbitmap *sb, unsigned int bitnr, void *data)
+ 	return true;
+ }
  
-@@ -832,7 +832,7 @@ static bool flush_busy_ctx(struct sbitmap *sb, unsigned int bitnr, void *data)
-  */
- void blk_mq_flush_busy_ctxs(struct blk_mq_hw_ctx *hctx, struct list_head *list)
- {
--	struct flush_busy_ctx_data data = {
++static bool dispatch_rq_from_ctx(struct sbitmap *sb, unsigned int bitnr, void *data)
++{
++	struct ctx_iter_data *dispatch_data = data;
++	struct blk_mq_hw_ctx *hctx = dispatch_data->hctx;
++	struct blk_mq_ctx *ctx = hctx->ctxs[bitnr];
++	bool empty = true;
++
++	spin_lock(&ctx->lock);
++	if (unlikely(!list_empty(&ctx->rq_list))) {
++		dispatch_data->rq = list_entry_rq(ctx->rq_list.next);
++		list_del_init(&dispatch_data->rq->queuelist);
++		empty = list_empty(&ctx->rq_list);
++	}
++	spin_unlock(&ctx->lock);
++	if (empty)
++		sbitmap_clear_bit(sb, bitnr);
++
++	return !dispatch_data->rq;
++}
++
+ /*
+  * Process software queues that have been marked busy, splicing them
+  * to the for-dispatch
+@@ -841,6 +865,18 @@ void blk_mq_flush_busy_ctxs(struct blk_mq_hw_ctx *hctx, struct list_head *list)
+ }
+ EXPORT_SYMBOL_GPL(blk_mq_flush_busy_ctxs);
+ 
++struct request *blk_mq_dispatch_rq_from_ctxs(struct blk_mq_hw_ctx *hctx)
++{
 +	struct ctx_iter_data data = {
- 		.hctx = hctx,
- 		.list = list,
- 	};
++		.hctx = hctx,
++		.rq   = NULL,
++	};
++
++	sbitmap_for_each_set(&hctx->ctx_map, dispatch_rq_from_ctx, &data);
++
++	return data.rq;
++}
++
+ static inline unsigned int queued_to_index(unsigned int queued)
+ {
+ 	if (!queued)
+diff --git a/block/blk-mq.h b/block/blk-mq.h
+index 60b01c0309bc..0c398f29dc4b 100644
+--- a/block/blk-mq.h
++++ b/block/blk-mq.h
+@@ -35,6 +35,7 @@ void blk_mq_flush_busy_ctxs(struct blk_mq_hw_ctx *hctx, struct list_head *list);
+ bool blk_mq_hctx_has_pending(struct blk_mq_hw_ctx *hctx);
+ bool blk_mq_get_driver_tag(struct request *rq, struct blk_mq_hw_ctx **hctx,
+ 				bool wait);
++struct request *blk_mq_dispatch_rq_from_ctxs(struct blk_mq_hw_ctx *hctx);
+ 
+ /*
+  * Internal helpers for allocating/freeing the request map
 -- 
 2.9.4
