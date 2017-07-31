@@ -1,131 +1,75 @@
-From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 1/1] qla2xxx: Fix system crash while triggering FW dump
-Date: Mon, 31 Jul 2017 14:45:10 -0700
-Message-ID: <20170731214510.7653-1-himanshu.madhani@cavium.com>
+From: Steven Rostedt <rostedt@goodmis.org>
+Subject: Re: [patch 3/5] scsi/bnx2i: Prevent recursive cpuhotplug locking
+Date: Mon, 31 Jul 2017 18:09:08 -0400
+Message-ID: <20170731180908.290381d7@gandalf.local.home>
+References: <20170724105255.715647116@linutronix.de>
+        <20170724105341.468351363@linutronix.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0063.outbound.protection.outlook.com ([104.47.33.63]:61152
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751059AbdGaVpX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 31 Jul 2017 17:45:23 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170724105341.468351363@linutronix.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: LKML <linux-kernel@vger.kernel.org>, QLogic-Storage-Upstream@qlogic.com, martin.petersen@oracle.com, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Michael Hernandez <michael.hernandez@cavium.com>
+On Mon, 24 Jul 2017 12:52:58 +0200
+Thomas Gleixner <tglx@linutronix.de> wrote:
 
-This patch fixes system hang/crash while firmware dump is attempted with
-Block MQ enabled in qla2xxx driver. Fix is to remove check in fw dump
-template entries for existing request and response queues so that full
-buffer size is calculated during template size calculation.
+> The BNX2I module init/exit code installs/removes the hotplug callbacks with
+> the cpu hotplug lock held. This worked with the old CPU locking
+> implementation which allowed recursive locking, but with the new percpu
+> rwsem based mechanism this is not longer allowed.
+> 
+> Use the _cpuslocked() variants to fix this.
+> 
+> Reported-by: Steven Rostedt <rostedt@goodmis.org>
 
-Following stack trace is seen during firmware dump capture process
+Tested-by: Steven Rostedt (VMware) <rostedt@goodmis.org>
 
-[  694.390588] qla2xxx [0000:81:00.0]-5003:11: ISP System Error - mbx1=4b1fh mbx2=10h mbx3=2ah mbx7=0h.
-[  694.402336] BUG: unable to handle kernel paging request at ffffc90008c7b000
-[  694.402372] IP: memcpy_erms+0x6/0x10
-[  694.402386] PGD 105f01a067
-[  694.402386] PUD 85f89c067
-[  694.402398] PMD 10490cb067
-[  694.402409] PTE 0
-[  694.402421]
-[  694.402437] Oops: 0002 [#1] PREEMPT SMP
-[  694.402452] Modules linked in: netconsole configfs qla2xxx scsi_transport_fc
-nvme_fc nvme_fabrics bnep bluetooth rfkill xt_tcpudp unix_diag xt_multiport
-ip6table_filter ip6_tables iptable_filter ip_tables x_tables af_packet
-iscsi_ibft iscsi_boot_sysfs xfs libcrc32c ipmi_ssif sb_edac edac_core
-x86_pkg_temp_thermal intel_powerclamp coretemp kvm_intel kvm irqbypass igb
-crct10dif_pclmul crc32_pclmul ghash_clmulni_intel pcbc aesni_intel iTCO_wdt
-aes_x86_64 crypto_simd ptp iTCO_vendor_support glue_helper cryptd lpc_ich joydev
-i2c_i801 pcspkr ioatdma mei_me pps_core tpm_tis mei mfd_core acpi_power_meter
-tpm_tis_core ipmi_si ipmi_devintf tpm ipmi_msghandler shpchp wmi dca button
-acpi_pad btrfs xor uas usb_storage hid_generic usbhid raid6_pq crc32c_intel ast
-i2c_algo_bit drm_kms_helper syscopyarea sysfillrect
-[  694.402692]  sysimgblt fb_sys_fops xhci_pci ttm ehci_pci sr_mod xhci_hcd
-cdrom ehci_hcd drm usbcore sg
-[  694.402730] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.10.0-1-default+ #19
-[  694.402753] Hardware name: Supermicro X10DRi/X10DRi, BIOS 1.1a 10/16/2015
-[  694.402776] task: ffffffff81c0e4c0 task.stack: ffffffff81c00000
-[  694.402798] RIP: 0010:memcpy_erms+0x6/0x10
-[  694.402813] RSP: 0018:ffff88085fc03cd0 EFLAGS: 00210006
-[  694.402832] RAX: ffffc90008c7ae0c RBX: 0000000000000004 RCX: 000000000001fe0c
-[  694.402856] RDX: 0000000000020000 RSI: ffff8810332c01f4 RDI: ffffc90008c7b000
-[  694.402879] RBP: ffff88085fc03d18 R08: 0000000000020000 R09: 0000000000279e0a
-[  694.402903] R10: 0000000000000000 R11: f000000000000000 R12: ffff88085fc03d80
-[  694.402927] R13: ffffc90008a01000 R14: ffffc90008a056d4 R15: ffff881052ef17e0
-[  694.402951] FS:  0000000000000000(0000) GS:ffff88085fc00000(0000) knlGS:0000000000000000
-[  694.402977] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  694.403012] CR2: ffffc90008c7b000 CR3: 0000000001c09000 CR4: 00000000001406f0
-[  694.403036] Call Trace:
-[  694.403047]  <IRQ>
-[  694.403072]  ? qla27xx_fwdt_entry_t263+0x18e/0x380 [qla2xxx]
-[  694.403099]  qla27xx_walk_template+0x9d/0x1a0 [qla2xxx]
-[  694.403124]  qla27xx_fwdump+0x1f3/0x272 [qla2xxx]
-[  694.403149]  qla2x00_async_event+0xb08/0x1a50 [qla2xxx]
-[  694.403169]  ? enqueue_task_fair+0xa2/0x9d0
+(makes the lockdep splat go away)
 
-Signed-off-by: Mike Hernandez <michael.hernandez@cavium.com>
-Signed-off-by: Joe Carnuccio <joe.carnuccio@cavium.com>
-Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
----
-Hi Martin, 
+-- Steve
 
-Please apply this patch to 4.13.0-rc4. Without this patch our capabilty
-to collect and analyze firmware dump in a customer enviorment will be
-greatly affected. 
-
-Thanks,
-Himanshu
----
- drivers/scsi/qla2xxx/qla_tmpl.c | 12 ------------
- 1 file changed, 12 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_tmpl.c
-index 33142610882f..b18646d6057f 100644
---- a/drivers/scsi/qla2xxx/qla_tmpl.c
-+++ b/drivers/scsi/qla2xxx/qla_tmpl.c
-@@ -401,9 +401,6 @@ qla27xx_fwdt_entry_t263(struct scsi_qla_host *vha,
- 		for (i = 0; i < vha->hw->max_req_queues; i++) {
- 			struct req_que *req = vha->hw->req_q_map[i];
- 
--			if (!test_bit(i, vha->hw->req_qid_map))
--				continue;
--
- 			if (req || !buf) {
- 				length = req ?
- 				    req->length : REQUEST_ENTRY_CNT_24XX;
-@@ -418,9 +415,6 @@ qla27xx_fwdt_entry_t263(struct scsi_qla_host *vha,
- 		for (i = 0; i < vha->hw->max_rsp_queues; i++) {
- 			struct rsp_que *rsp = vha->hw->rsp_q_map[i];
- 
--			if (!test_bit(i, vha->hw->rsp_qid_map))
--				continue;
--
- 			if (rsp || !buf) {
- 				length = rsp ?
- 				    rsp->length : RESPONSE_ENTRY_CNT_MQ;
-@@ -660,9 +654,6 @@ qla27xx_fwdt_entry_t274(struct scsi_qla_host *vha,
- 		for (i = 0; i < vha->hw->max_req_queues; i++) {
- 			struct req_que *req = vha->hw->req_q_map[i];
- 
--			if (!test_bit(i, vha->hw->req_qid_map))
--				continue;
--
- 			if (req || !buf) {
- 				qla27xx_insert16(i, buf, len);
- 				qla27xx_insert16(1, buf, len);
-@@ -675,9 +666,6 @@ qla27xx_fwdt_entry_t274(struct scsi_qla_host *vha,
- 		for (i = 0; i < vha->hw->max_rsp_queues; i++) {
- 			struct rsp_que *rsp = vha->hw->rsp_q_map[i];
- 
--			if (!test_bit(i, vha->hw->rsp_qid_map))
--				continue;
--
- 			if (rsp || !buf) {
- 				qla27xx_insert16(i, buf, len);
- 				qla27xx_insert16(1, buf, len);
--- 
-2.12.0
+> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> ---
+>  drivers/scsi/bnx2i/bnx2i_init.c |   15 ++++++++-------
+>  1 file changed, 8 insertions(+), 7 deletions(-)
+> 
+> --- a/drivers/scsi/bnx2i/bnx2i_init.c
+> +++ b/drivers/scsi/bnx2i/bnx2i_init.c
+> @@ -516,15 +516,16 @@ static int __init bnx2i_mod_init(void)
+>  	for_each_online_cpu(cpu)
+>  		bnx2i_percpu_thread_create(cpu);
+>  
+> -	err = cpuhp_setup_state_nocalls(CPUHP_AP_ONLINE_DYN,
+> -				       "scsi/bnx2i:online",
+> -				       bnx2i_cpu_online, NULL);
+> +	err = cpuhp_setup_state_nocalls_cpuslocked(CPUHP_AP_ONLINE_DYN,
+> +						   "scsi/bnx2i:online",
+> +						   bnx2i_cpu_online, NULL);
+>  	if (err < 0)
+>  		goto remove_threads;
+>  	bnx2i_online_state = err;
+>  
+> -	cpuhp_setup_state_nocalls(CPUHP_SCSI_BNX2I_DEAD, "scsi/bnx2i:dead",
+> -				  NULL, bnx2i_cpu_dead);
+> +	cpuhp_setup_state_nocalls_cpuslocked(CPUHP_SCSI_BNX2I_DEAD,
+> +					     "scsi/bnx2i:dead",
+> +					     NULL, bnx2i_cpu_dead);
+>  	put_online_cpus();
+>  	return 0;
+>  
+> @@ -574,8 +575,8 @@ static void __exit bnx2i_mod_exit(void)
+>  	for_each_online_cpu(cpu)
+>  		bnx2i_percpu_thread_destroy(cpu);
+>  
+> -	cpuhp_remove_state_nocalls(bnx2i_online_state);
+> -	cpuhp_remove_state_nocalls(CPUHP_SCSI_BNX2I_DEAD);
+> +	cpuhp_remove_state_nocalls_cpuslocked(bnx2i_online_state);
+> +	cpuhp_remove_state_nocalls_cpuslocked(CPUHP_SCSI_BNX2I_DEAD);
+>  	put_online_cpus();
+>  
+>  	iscsi_unregister_transport(&bnx2i_iscsi_transport);
+> 
