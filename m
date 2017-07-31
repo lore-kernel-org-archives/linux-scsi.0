@@ -1,7 +1,7 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH 00/14] blk-mq-sched: fix SCSI-MQ performance regression
-Date: Tue,  1 Aug 2017 00:50:57 +0800
-Message-ID: <20170731165111.11536-2-ming.lei@redhat.com>
+Subject: [PATCH 01/14] blk-mq-sched: fix scheduler bad performance
+Date: Tue,  1 Aug 2017 00:50:58 +0800
+Message-ID: <20170731165111.11536-3-ming.lei@redhat.com>
 References: <20170731165111.11536-1-ming.lei@redhat.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170731165111.11536-1-ming.lei@redhat.com>
@@ -10,77 +10,49 @@ To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <h
 Cc: Bart Van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-In Red Hat internal storage test wrt. blk-mq scheduler, we
-found that its performance is quite bad, especially
-about sequential I/O on some multi-queue SCSI devcies.
+When hw queue is busy, we shouldn't take requests from
+scheduler queue any more, otherwise IO merge will be
+difficult to do.
 
-Turns out one big issue causes the performance regression: requests
-are still dequeued from sw queue/scheduler queue even when ldd's
-queue is busy, so I/O merge becomes quite difficult to do, and
-sequential IO degrades a lot.
+This patch fixes the awful IO performance on some
+SCSI devices(lpfc, qla2xxx, ...) when mq-deadline/kyber
+is used by not taking requests if hw queue is busy.
 
-The 1st five patches improve this situation, and brings back
-some performance loss.
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ block/blk-mq-sched.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-But looks they are still not enough. Finally it is caused by
-the shared queue depth among all hw queues. For SCSI devices,
-.cmd_per_lun defines the max number of pending I/O on one
-request queue, which is per-request_queue depth. So during
-dispatch, if one hctx is too busy to move on, all hctxs can't
-dispatch too because of the per-request_queue depth.
-
-Patch 6 ~ 14 use per-request_queue dispatch list to avoid
-to dequeue requests from sw/scheduler queue when lld queue
-is busy.
-
-With this changes, SCSI-MQ performance is brought back
-against block legacy path, follows the test result on lpfc:
-
-- fio(libaio, bs:4k, dio, queue_depth:64, 20 jobs)
-
-
-                   |v4.13-rc3       | v4.13-rc3   | patched v4.13-rc3
-                   |legacy deadline | mq-none     | mq-none
----------------------------------------------------------------------
-read        "iops" | 401749.4001    | 346237.5025 | 387536.4427
-randread    "iops" | 25175.07121    | 21688.64067 | 25578.50374
-write       "iops" | 376168.7578    | 335262.0475 | 370132.4735
-reandwrite  "iops" | 25235.46163    | 24982.63819 | 23934.95610
-
-                   |v4.13-rc3       | v4.13-rc3   | patched v4.13-rc3
-                   |legacy deadline | mq-deadline | mq-deadline
-------------------------------------------------------------------------------
-read        "iops" | 401749.4001    | 35592.48901 | 401681.1137
-randread    "iops" | 25175.07121    | 30029.52618 | 21446.68731
-write       "iops" | 376168.7578    | 27340.56777 | 377356.7286
-randwrite   "iops" | 25235.46163    | 24395.02969 | 24885.66152
-
-Ming Lei (14):
-  blk-mq-sched: fix scheduler bad performance
-  blk-mq: rename flush_busy_ctx_data as ctx_iter_data
-  blk-mq: introduce blk_mq_dispatch_rq_from_ctxs()
-  blk-mq-sched: improve dispatching from sw queue
-  blk-mq-sched: don't dequeue request until all in ->dispatch are
-    flushed
-  blk-mq-sched: introduce blk_mq_sched_queue_depth()
-  blk-mq-sched: use q->queue_depth as hint for q->nr_requests
-  blk-mq: introduce BLK_MQ_F_SHARED_DEPTH
-  blk-mq-sched: cleanup blk_mq_sched_dispatch_requests()
-  blk-mq-sched: introduce helpers for query, change busy state
-  blk-mq: introduce helpers for operating ->dispatch list
-  blk-mq: introduce pointers to dispatch lock & list
-  blk-mq: pass 'request_queue *' to several helpers of operating BUSY
-  blk-mq-sched: improve IO scheduling on SCSI devcie
-
- block/blk-mq-debugfs.c |  11 ++---
- block/blk-mq-sched.c   |  70 +++++++++++++++--------------
- block/blk-mq-sched.h   |  23 ++++++++++
- block/blk-mq.c         | 117 +++++++++++++++++++++++++++++++++++++++++++------
- block/blk-mq.h         |  72 ++++++++++++++++++++++++++++++
- block/blk-settings.c   |   2 +
- include/linux/blk-mq.h |   5 +++
- include/linux/blkdev.h |   5 +++
- 8 files changed, 255 insertions(+), 50 deletions(-)
-
+diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
+index 4ab69435708c..47a25333a136 100644
+--- a/block/blk-mq-sched.c
++++ b/block/blk-mq-sched.c
+@@ -94,7 +94,7 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
+ 	struct request_queue *q = hctx->queue;
+ 	struct elevator_queue *e = q->elevator;
+ 	const bool has_sched_dispatch = e && e->type->ops.mq.dispatch_request;
+-	bool did_work = false;
++	bool can_go = true;
+ 	LIST_HEAD(rq_list);
+ 
+ 	/* RCU or SRCU read lock is needed before checking quiesced flag */
+@@ -125,7 +125,7 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
+ 	 */
+ 	if (!list_empty(&rq_list)) {
+ 		blk_mq_sched_mark_restart_hctx(hctx);
+-		did_work = blk_mq_dispatch_rq_list(q, &rq_list);
++		can_go = blk_mq_dispatch_rq_list(q, &rq_list);
+ 	} else if (!has_sched_dispatch) {
+ 		blk_mq_flush_busy_ctxs(hctx, &rq_list);
+ 		blk_mq_dispatch_rq_list(q, &rq_list);
+@@ -136,7 +136,7 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
+ 	 * on the dispatch list, OR if we did have work but weren't able
+ 	 * to make progress.
+ 	 */
+-	if (!did_work && has_sched_dispatch) {
++	if (can_go && has_sched_dispatch) {
+ 		do {
+ 			struct request *rq;
+ 
 -- 
 2.9.4
