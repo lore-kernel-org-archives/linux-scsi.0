@@ -1,7 +1,7 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH 01/14] blk-mq-sched: fix scheduler bad performance
-Date: Tue,  1 Aug 2017 00:50:58 +0800
-Message-ID: <20170731165111.11536-3-ming.lei@redhat.com>
+Subject: [PATCH 02/14] blk-mq: rename flush_busy_ctx_data as ctx_iter_data
+Date: Tue,  1 Aug 2017 00:50:59 +0800
+Message-ID: <20170731165111.11536-4-ming.lei@redhat.com>
 References: <20170731165111.11536-1-ming.lei@redhat.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170731165111.11536-1-ming.lei@redhat.com>
@@ -10,49 +10,43 @@ To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <h
 Cc: Bart Van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-When hw queue is busy, we shouldn't take requests from
-scheduler queue any more, otherwise IO merge will be
-difficult to do.
-
-This patch fixes the awful IO performance on some
-SCSI devices(lpfc, qla2xxx, ...) when mq-deadline/kyber
-is used by not taking requests if hw queue is busy.
+The following patch need to reuse this data structure,
+so rename as one generic name.
 
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- block/blk-mq-sched.c | 6 +++---
+ block/blk-mq.c | 6 +++---
  1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-index 4ab69435708c..47a25333a136 100644
---- a/block/blk-mq-sched.c
-+++ b/block/blk-mq-sched.c
-@@ -94,7 +94,7 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
- 	struct request_queue *q = hctx->queue;
- 	struct elevator_queue *e = q->elevator;
- 	const bool has_sched_dispatch = e && e->type->ops.mq.dispatch_request;
--	bool did_work = false;
-+	bool can_go = true;
- 	LIST_HEAD(rq_list);
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index b70a4ad78b63..94818f78c099 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -808,14 +808,14 @@ static void blk_mq_timeout_work(struct work_struct *work)
+ 	blk_queue_exit(q);
+ }
  
- 	/* RCU or SRCU read lock is needed before checking quiesced flag */
-@@ -125,7 +125,7 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
- 	 */
- 	if (!list_empty(&rq_list)) {
- 		blk_mq_sched_mark_restart_hctx(hctx);
--		did_work = blk_mq_dispatch_rq_list(q, &rq_list);
-+		can_go = blk_mq_dispatch_rq_list(q, &rq_list);
- 	} else if (!has_sched_dispatch) {
- 		blk_mq_flush_busy_ctxs(hctx, &rq_list);
- 		blk_mq_dispatch_rq_list(q, &rq_list);
-@@ -136,7 +136,7 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
- 	 * on the dispatch list, OR if we did have work but weren't able
- 	 * to make progress.
- 	 */
--	if (!did_work && has_sched_dispatch) {
-+	if (can_go && has_sched_dispatch) {
- 		do {
- 			struct request *rq;
+-struct flush_busy_ctx_data {
++struct ctx_iter_data {
+ 	struct blk_mq_hw_ctx *hctx;
+ 	struct list_head *list;
+ };
  
+ static bool flush_busy_ctx(struct sbitmap *sb, unsigned int bitnr, void *data)
+ {
+-	struct flush_busy_ctx_data *flush_data = data;
++	struct ctx_iter_data *flush_data = data;
+ 	struct blk_mq_hw_ctx *hctx = flush_data->hctx;
+ 	struct blk_mq_ctx *ctx = hctx->ctxs[bitnr];
+ 
+@@ -832,7 +832,7 @@ static bool flush_busy_ctx(struct sbitmap *sb, unsigned int bitnr, void *data)
+  */
+ void blk_mq_flush_busy_ctxs(struct blk_mq_hw_ctx *hctx, struct list_head *list)
+ {
+-	struct flush_busy_ctx_data data = {
++	struct ctx_iter_data data = {
+ 		.hctx = hctx,
+ 		.list = list,
+ 	};
 -- 
 2.9.4
