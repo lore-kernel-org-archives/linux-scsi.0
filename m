@@ -1,64 +1,84 @@
-From: Varun Prakash <varun@chelsio.com>
-Subject: [PATCH] scsi: csiostor: fail probe if fw does not support FCoE
-Date: Mon, 31 Jul 2017 22:02:55 +0530
-Message-ID: <1501518775-8889-1-git-send-email-varun@chelsio.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([12.32.117.8]:7892 "EHLO
-        stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752473AbdGaQdE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Jul 2017 12:33:04 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH 00/14] blk-mq-sched: fix SCSI-MQ performance regression
+Date: Tue,  1 Aug 2017 00:50:56 +0800
+Message-ID: <20170731165111.11536-1-ming.lei@redhat.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, indranil@chelsio.com, varun@chelsio.com, rajesh.kumar@chelsio.com
 
-Fail probe if FCoE capability is not enabled in the
-firmware.
+In Red Hat internal storage test wrt. blk-mq scheduler, we
+found that its performance is quite bad, especially
+about sequential I/O on some multi-queue SCSI devcies.
 
-Signed-off-by: Varun Prakash <varun@chelsio.com>
----
- drivers/scsi/csiostor/csio_hw.c   |  4 +++-
- drivers/scsi/csiostor/csio_init.c | 12 ++++++++----
- 2 files changed, 11 insertions(+), 5 deletions(-)
+Turns out one big issue causes the performance regression: requests
+are still dequeued from sw queue/scheduler queue even when ldd's
+queue is busy, so I/O merge becomes quite difficult to do, and
+sequential IO degrades a lot.
 
-diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio_hw.c
-index 2029ad2..5be0086 100644
---- a/drivers/scsi/csiostor/csio_hw.c
-+++ b/drivers/scsi/csiostor/csio_hw.c
-@@ -3845,8 +3845,10 @@ csio_hw_start(struct csio_hw *hw)
- 
- 	if (csio_is_hw_ready(hw))
- 		return 0;
--	else
-+	else if (csio_match_state(hw, csio_hws_uninit))
- 		return -EINVAL;
-+	else
-+		return -ENODEV;
- }
- 
- int
-diff --git a/drivers/scsi/csiostor/csio_init.c b/drivers/scsi/csiostor/csio_init.c
-index ea0c310..dcd0741 100644
---- a/drivers/scsi/csiostor/csio_init.c
-+++ b/drivers/scsi/csiostor/csio_init.c
-@@ -969,10 +969,14 @@ static int csio_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- 	pci_set_drvdata(pdev, hw);
- 
--	if (csio_hw_start(hw) != 0) {
--		dev_err(&pdev->dev,
--			"Failed to start FW, continuing in debug mode.\n");
--		return 0;
-+	rv = csio_hw_start(hw);
-+	if (rv) {
-+		if (rv == -EINVAL) {
-+			dev_err(&pdev->dev,
-+				"Failed to start FW, continuing in debug mode.\n");
-+			return 0;
-+		}
-+		goto err_lnode_exit;
- 	}
- 
- 	sprintf(hw->fwrev_str, "%u.%u.%u.%u\n",
+The 1st five patches improve this situation, and brings back
+some performance loss.
+
+But looks they are still not enough. Finally it is caused by
+the shared queue depth among all hw queues. For SCSI devices,
+.cmd_per_lun defines the max number of pending I/O on one
+request queue, which is per-request_queue depth. So during
+dispatch, if one hctx is too busy to move on, all hctxs can't
+dispatch too because of the per-request_queue depth.
+
+Patch 6 ~ 14 use per-request_queue dispatch list to avoid
+to dequeue requests from sw/scheduler queue when lld queue
+is busy.
+
+With this changes, SCSI-MQ performance is brought back
+against block legacy path, follows the test result on lpfc:
+
+- fio(libaio, bs:4k, dio, queue_depth:64, 20 jobs)
+
+
+                   |v4.13-rc3       | v4.13-rc3   | patched v4.13-rc3
+                   |legacy deadline | mq-none     | mq-none
+---------------------------------------------------------------------
+read        "iops" | 401749.4001    | 346237.5025 | 387536.4427
+randread    "iops" | 25175.07121    | 21688.64067 | 25578.50374
+write       "iops" | 376168.7578    | 335262.0475 | 370132.4735
+reandwrite  "iops" | 25235.46163    | 24982.63819 | 23934.95610
+
+                   |v4.13-rc3       | v4.13-rc3   | patched v4.13-rc3
+                   |legacy deadline | mq-deadline | mq-deadline
+------------------------------------------------------------------------------
+read        "iops" | 401749.4001    | 35592.48901 | 401681.1137
+randread    "iops" | 25175.07121    | 30029.52618 | 21446.68731
+write       "iops" | 376168.7578    | 27340.56777 | 377356.7286
+randwrite   "iops" | 25235.46163    | 24395.02969 | 24885.66152
+
+Ming Lei (14):
+  blk-mq-sched: fix scheduler bad performance
+  blk-mq: rename flush_busy_ctx_data as ctx_iter_data
+  blk-mq: introduce blk_mq_dispatch_rq_from_ctxs()
+  blk-mq-sched: improve dispatching from sw queue
+  blk-mq-sched: don't dequeue request until all in ->dispatch are
+    flushed
+  blk-mq-sched: introduce blk_mq_sched_queue_depth()
+  blk-mq-sched: use q->queue_depth as hint for q->nr_requests
+  blk-mq: introduce BLK_MQ_F_SHARED_DEPTH
+  blk-mq-sched: cleanup blk_mq_sched_dispatch_requests()
+  blk-mq-sched: introduce helpers for query, change busy state
+  blk-mq: introduce helpers for operating ->dispatch list
+  blk-mq: introduce pointers to dispatch lock & list
+  blk-mq: pass 'request_queue *' to several helpers of operating BUSY
+  blk-mq-sched: improve IO scheduling on SCSI devcie
+
+ block/blk-mq-debugfs.c |  11 ++---
+ block/blk-mq-sched.c   |  70 +++++++++++++++--------------
+ block/blk-mq-sched.h   |  23 ++++++++++
+ block/blk-mq.c         | 117 +++++++++++++++++++++++++++++++++++++++++++------
+ block/blk-mq.h         |  72 ++++++++++++++++++++++++++++++
+ block/blk-settings.c   |   2 +
+ include/linux/blk-mq.h |   5 +++
+ include/linux/blkdev.h |   5 +++
+ 8 files changed, 255 insertions(+), 50 deletions(-)
+
 -- 
-2.0.2
+2.9.4
