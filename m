@@ -1,145 +1,108 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH 07/14] blk-mq-sched: use q->queue_depth as hint for q->nr_requests
-Date: Tue,  1 Aug 2017 00:51:04 +0800
-Message-ID: <20170731165111.11536-9-ming.lei@redhat.com>
+Subject: [PATCH 08/14] blk-mq: introduce BLK_MQ_F_SHARED_DEPTH
+Date: Tue,  1 Aug 2017 00:51:05 +0800
+Message-ID: <20170731165111.11536-10-ming.lei@redhat.com>
 References: <20170731165111.11536-1-ming.lei@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52364 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750953AbdGaQwk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 31 Jul 2017 12:52:40 -0400
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170731165111.11536-1-ming.lei@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
 To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 Cc: Bart Van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Ming Lei <ming.lei@redhat.com>
+List-Id: linux-scsi@vger.kernel.org
 
-SCSI sets q->queue_depth from shost->cmd_per_lun, and
-q->queue_depth is per request_queue and more related to
-scheduler queue compared with hw queue depth, which can be
-shared by queues, such as TAG_SHARED.
+SCSI devices often provides one per-requeest_queue depth via
+q->queue_depth(.cmd_per_lun), which is a global limit on all
+hw queues. After the pending I/O submitted to one rquest queue
+reaches this limit, BLK_STS_RESOURCE will be returned to all
+dispatch path. That means when one hw queue is stuck, actually
+all hctxs are stuck too.
 
-This patch trys to use q->queue_depth as hint for computing
-q->nr_requests, which should be more effective than
-current way.
+This flag is introduced for improving blk-mq IO scheduling
+on this kind of device.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- block/blk-mq-sched.h | 18 +++++++++++++++---
- block/blk-mq.c       | 27 +++++++++++++++++++++++++--
- block/blk-mq.h       |  1 +
- block/blk-settings.c |  2 ++
- 4 files changed, 43 insertions(+), 5 deletions(-)
+ block/blk-mq-debugfs.c |  1 +
+ block/blk-mq-sched.c   |  2 +-
+ block/blk-mq.c         | 25 ++++++++++++++++++++++---
+ include/linux/blk-mq.h |  1 +
+ 4 files changed, 25 insertions(+), 4 deletions(-)
 
-diff --git a/block/blk-mq-sched.h b/block/blk-mq-sched.h
-index 1d47f3fda1d0..bb772e680e01 100644
---- a/block/blk-mq-sched.h
-+++ b/block/blk-mq-sched.h
-@@ -99,12 +99,24 @@ static inline bool blk_mq_sched_needs_restart(struct blk_mq_hw_ctx *hctx)
- static inline unsigned blk_mq_sched_queue_depth(struct request_queue *q)
- {
- 	/*
--	 * Default to double of smaller one between hw queue_depth and 128,
-+	 * q->queue_depth is more close to scheduler queue, so use it
-+	 * as hint for computing scheduler queue depth if it is valid
-+	 */
-+	unsigned q_depth = q->queue_depth ?: q->tag_set->queue_depth;
-+
-+	/*
-+	 * Default to double of smaller one between queue depth and 128,
- 	 * since we don't split into sync/async like the old code did.
- 	 * Additionally, this is a per-hw queue depth.
- 	 */
--	return 2 * min_t(unsigned int, q->tag_set->queue_depth,
--				   BLKDEV_MAX_RQ);
-+	q_depth = 2 * min_t(unsigned int, q_depth, BLKDEV_MAX_RQ);
-+
-+	/*
-+	 * when queue depth of driver is too small, we set queue depth
-+	 * of scheduler queue as 32 so that small queue device still
-+	 * can benefit from IO merging.
-+	 */
-+	return max_t(unsigned, q_depth, 32);
- }
+diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
+index 9ebc2945f991..c4f70b453c76 100644
+--- a/block/blk-mq-debugfs.c
++++ b/block/blk-mq-debugfs.c
+@@ -209,6 +209,7 @@ static const char *const hctx_flag_name[] = {
+ 	HCTX_FLAG_NAME(SG_MERGE),
+ 	HCTX_FLAG_NAME(BLOCKING),
+ 	HCTX_FLAG_NAME(NO_SCHED),
++	HCTX_FLAG_NAME(SHARED_DEPTH),
+ };
+ #undef HCTX_FLAG_NAME
  
- #endif
+diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
+index 3eb524ccb7aa..cc0687a4d0ab 100644
+--- a/block/blk-mq-sched.c
++++ b/block/blk-mq-sched.c
+@@ -144,7 +144,7 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
+ 	if (!can_go || test_bit(BLK_MQ_S_BUSY, &hctx->state))
+ 		return;
+ 
+-	if (!has_sched_dispatch && !q->queue_depth) {
++	if (!has_sched_dispatch && !(hctx->flags & BLK_MQ_F_SHARED_DEPTH)) {
+ 		blk_mq_flush_busy_ctxs(hctx, &rq_list);
+ 		blk_mq_dispatch_rq_list(q, &rq_list);
+ 		return;
 diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 86b8fdcb8434..7df68d31bc23 100644
+index 7df68d31bc23..db635ef06a72 100644
 --- a/block/blk-mq.c
 +++ b/block/blk-mq.c
-@@ -2593,7 +2593,9 @@ void blk_mq_free_tag_set(struct blk_mq_tag_set *set)
- }
- EXPORT_SYMBOL(blk_mq_free_tag_set);
- 
--int blk_mq_update_nr_requests(struct request_queue *q, unsigned int nr)
-+static int __blk_mq_update_nr_requests(struct request_queue *q,
-+				       bool sched_only,
-+				       unsigned int nr)
+@@ -2647,12 +2647,31 @@ int blk_mq_update_nr_requests(struct request_queue *q, unsigned int nr)
+ int blk_mq_update_sched_queue_depth(struct request_queue *q)
  {
- 	struct blk_mq_tag_set *set = q->tag_set;
- 	struct blk_mq_hw_ctx *hctx;
-@@ -2612,7 +2614,7 @@ int blk_mq_update_nr_requests(struct request_queue *q, unsigned int nr)
- 		 * If we're using an MQ scheduler, just update the scheduler
- 		 * queue depth. This is similar to what the old code would do.
- 		 */
--		if (!hctx->sched_tags) {
-+		if (!sched_only && !hctx->sched_tags) {
- 			ret = blk_mq_tag_update_depth(hctx, &hctx->tags,
- 							min(nr, set->queue_depth),
- 							false);
-@@ -2632,6 +2634,27 @@ int blk_mq_update_nr_requests(struct request_queue *q, unsigned int nr)
- 	return ret;
+ 	unsigned nr;
++	struct blk_mq_hw_ctx *hctx;
++	unsigned int i;
++	int ret = 0;
+ 
+-	if (!q->mq_ops || !q->elevator)
+-		return 0;
++	if (!q->mq_ops)
++		return ret;
++
++	blk_mq_freeze_queue(q);
++	/*
++	 * if there is q->queue_depth, all hw queues share
++	 * this queue depth limit
++	 */
++	if (q->queue_depth) {
++		queue_for_each_hw_ctx(q, hctx, i)
++			hctx->flags |= BLK_MQ_F_SHARED_DEPTH;
++	}
++
++	if (!q->elevator)
++		goto exit;
+ 
+ 	nr = blk_mq_sched_queue_depth(q);
+-	return __blk_mq_update_nr_requests(q, true, nr);
++	ret = __blk_mq_update_nr_requests(q, true, nr);
++ exit:
++	blk_mq_unfreeze_queue(q);
++	return ret;
  }
  
-+int blk_mq_update_nr_requests(struct request_queue *q, unsigned int nr)
-+{
-+	return __blk_mq_update_nr_requests(q, false, nr);
-+}
-+
-+/*
-+ * When drivers update q->queue_depth, this API is called so that
-+ * we can use this queue depth as hint for adjusting scheduler
-+ * queue depth.
-+ */
-+int blk_mq_update_sched_queue_depth(struct request_queue *q)
-+{
-+	unsigned nr;
-+
-+	if (!q->mq_ops || !q->elevator)
-+		return 0;
-+
-+	nr = blk_mq_sched_queue_depth(q);
-+	return __blk_mq_update_nr_requests(q, true, nr);
-+}
-+
  static void __blk_mq_update_nr_hw_queues(struct blk_mq_tag_set *set,
- 							int nr_hw_queues)
- {
-diff --git a/block/blk-mq.h b/block/blk-mq.h
-index 0c398f29dc4b..44d3aaa03d7c 100644
---- a/block/blk-mq.h
-+++ b/block/blk-mq.h
-@@ -36,6 +36,7 @@ bool blk_mq_hctx_has_pending(struct blk_mq_hw_ctx *hctx);
- bool blk_mq_get_driver_tag(struct request *rq, struct blk_mq_hw_ctx **hctx,
- 				bool wait);
- struct request *blk_mq_dispatch_rq_from_ctxs(struct blk_mq_hw_ctx *hctx);
-+int blk_mq_update_sched_queue_depth(struct request_queue *q);
- 
- /*
-  * Internal helpers for allocating/freeing the request map
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index be1f115b538b..94a349601545 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -877,6 +877,8 @@ void blk_set_queue_depth(struct request_queue *q, unsigned int depth)
- {
- 	q->queue_depth = depth;
- 	wbt_set_queue_depth(q->rq_wb, depth);
-+
-+	WARN_ON(blk_mq_update_sched_queue_depth(q));
- }
- EXPORT_SYMBOL(blk_set_queue_depth);
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index 6d44b242b495..14f2ad3af31f 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -164,6 +164,7 @@ enum {
+ 	BLK_MQ_F_SG_MERGE	= 1 << 2,
+ 	BLK_MQ_F_BLOCKING	= 1 << 5,
+ 	BLK_MQ_F_NO_SCHED	= 1 << 6,
++	BLK_MQ_F_SHARED_DEPTH	= 1 << 7,
+ 	BLK_MQ_F_ALLOC_POLICY_START_BIT = 8,
+ 	BLK_MQ_F_ALLOC_POLICY_BITS = 1,
  
 -- 
 2.9.4
