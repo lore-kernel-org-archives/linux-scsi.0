@@ -1,172 +1,159 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH 11/14] blk-mq: introduce helpers for operating ->dispatch list
-Date: Tue,  1 Aug 2017 00:51:08 +0800
-Message-ID: <20170731165111.11536-13-ming.lei@redhat.com>
+Subject: [PATCH 12/14] blk-mq: introduce pointers to dispatch lock & list
+Date: Tue,  1 Aug 2017 00:51:09 +0800
+Message-ID: <20170731165111.11536-14-ming.lei@redhat.com>
 References: <20170731165111.11536-1-ming.lei@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60794 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53610 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751102AbdGaQxQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 31 Jul 2017 12:53:16 -0400
+        id S1751438AbdGaQxX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 31 Jul 2017 12:53:23 -0400
 In-Reply-To: <20170731165111.11536-1-ming.lei@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 Cc: Bart Van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Ming Lei <ming.lei@redhat.com>
 
+Prepare to support per-request-queue dispatch list,
+so introduce dispatch lock and list for avoiding to
+do runtime check.
+
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- block/blk-mq-sched.c | 19 +++----------------
- block/blk-mq.c       | 18 +++++++++++-------
- block/blk-mq.h       | 44 ++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 58 insertions(+), 23 deletions(-)
+ block/blk-mq-debugfs.c | 10 +++++-----
+ block/blk-mq.c         |  7 +++++--
+ block/blk-mq.h         | 26 +++++++++++++-------------
+ include/linux/blk-mq.h |  3 +++
+ 4 files changed, 26 insertions(+), 20 deletions(-)
 
-diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-index 112270961af0..8ff74efe4172 100644
---- a/block/blk-mq-sched.c
-+++ b/block/blk-mq-sched.c
-@@ -131,19 +131,8 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
- 	 * If we have previous entries on our dispatch list, grab them first for
- 	 * more fair dispatch.
- 	 */
--	if (!list_empty_careful(&hctx->dispatch)) {
--		spin_lock(&hctx->lock);
--		if (!list_empty(&hctx->dispatch)) {
--			list_splice_init(&hctx->dispatch, &rq_list);
--
--			/*
--			 * BUSY won't be cleared until all requests
--			 * in hctx->dispatch are dispatched successfully
--			 */
--			blk_mq_hctx_set_busy(hctx);
--		}
--		spin_unlock(&hctx->lock);
--	}
-+	if (blk_mq_has_dispatch_rqs(hctx))
-+		blk_mq_take_list_from_dispatch(hctx, &rq_list);
+diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
+index c4f70b453c76..4f8cddb8505f 100644
+--- a/block/blk-mq-debugfs.c
++++ b/block/blk-mq-debugfs.c
+@@ -370,23 +370,23 @@ static void *hctx_dispatch_start(struct seq_file *m, loff_t *pos)
+ {
+ 	struct blk_mq_hw_ctx *hctx = m->private;
  
- 	/*
- 	 * Only ask the scheduler for requests, if we didn't have residual
-@@ -296,9 +285,7 @@ static bool blk_mq_sched_bypass_insert(struct blk_mq_hw_ctx *hctx,
- 	 * If we already have a real request tag, send directly to
- 	 * the dispatch list.
- 	 */
+-	spin_lock(&hctx->lock);
+-	return seq_list_start(&hctx->dispatch, *pos);
++	spin_lock(hctx->dispatch_lock);
++	return seq_list_start(hctx->dispatch_list, *pos);
+ }
+ 
+ static void *hctx_dispatch_next(struct seq_file *m, void *v, loff_t *pos)
+ {
+ 	struct blk_mq_hw_ctx *hctx = m->private;
+ 
+-	return seq_list_next(v, &hctx->dispatch, pos);
++	return seq_list_next(v, hctx->dispatch_list, pos);
+ }
+ 
+ static void hctx_dispatch_stop(struct seq_file *m, void *v)
+-	__releases(&hctx->lock)
++	__releases(hctx->dispatch_lock)
+ {
+ 	struct blk_mq_hw_ctx *hctx = m->private;
+ 
+-	spin_unlock(&hctx->lock);
++	spin_unlock(hctx->dispatch_lock);
+ }
+ 
+ static const struct seq_operations hctx_dispatch_seq_ops = {
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 785145f60c1d..9b8b3a740d18 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -1925,8 +1925,11 @@ static void blk_mq_exit_hw_queues(struct request_queue *q,
+ static void blk_mq_init_dispatch(struct request_queue *q,
+ 		struct blk_mq_hw_ctx *hctx)
+ {
+-	spin_lock_init(&hctx->lock);
+-	INIT_LIST_HEAD(&hctx->dispatch);
++	hctx->dispatch_lock = &hctx->lock;
++	hctx->dispatch_list = &hctx->dispatch;
++
++	spin_lock_init(hctx->dispatch_lock);
++	INIT_LIST_HEAD(hctx->dispatch_list);
+ }
+ 
+ static int blk_mq_init_hctx(struct request_queue *q,
+diff --git a/block/blk-mq.h b/block/blk-mq.h
+index 2ed355881996..d9795cbba1bb 100644
+--- a/block/blk-mq.h
++++ b/block/blk-mq.h
+@@ -152,38 +152,38 @@ static inline void blk_mq_hctx_clear_busy(struct blk_mq_hw_ctx *hctx)
+ 
+ static inline bool blk_mq_has_dispatch_rqs(struct blk_mq_hw_ctx *hctx)
+ {
+-	return !list_empty_careful(&hctx->dispatch);
++	return !list_empty_careful(hctx->dispatch_list);
+ }
+ 
+ static inline void blk_mq_add_rq_to_dispatch(struct blk_mq_hw_ctx *hctx,
+ 		struct request *rq)
+ {
 -	spin_lock(&hctx->lock);
 -	list_add(&rq->queuelist, &hctx->dispatch);
 -	spin_unlock(&hctx->lock);
-+	blk_mq_add_rq_to_dispatch(hctx, rq);
- 	return true;
++	spin_lock(hctx->dispatch_lock);
++	list_add(&rq->queuelist, hctx->dispatch_list);
++	spin_unlock(hctx->dispatch_lock);
  }
  
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index db635ef06a72..785145f60c1d 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -63,7 +63,7 @@ static int blk_mq_poll_stats_bkt(const struct request *rq)
- bool blk_mq_hctx_has_pending(struct blk_mq_hw_ctx *hctx)
+ static inline void blk_mq_add_list_to_dispatch(struct blk_mq_hw_ctx *hctx,
+ 		struct list_head *list)
  {
- 	return sbitmap_any_bit_set(&hctx->ctx_map) ||
--			!list_empty_careful(&hctx->dispatch) ||
-+			blk_mq_has_dispatch_rqs(hctx) ||
- 			blk_mq_sched_has_work(hctx);
- }
- 
-@@ -1097,9 +1097,7 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list)
- 		rq = list_first_entry(list, struct request, queuelist);
- 		blk_mq_put_driver_tag(rq);
- 
--		spin_lock(&hctx->lock);
--		list_splice_init(list, &hctx->dispatch);
--		spin_unlock(&hctx->lock);
-+		blk_mq_add_list_to_dispatch(hctx, list);
- 
- 		/*
- 		 * If SCHED_RESTART was set by the caller of this function and
-@@ -1874,9 +1872,7 @@ static int blk_mq_hctx_notify_dead(unsigned int cpu, struct hlist_node *node)
- 	if (list_empty(&tmp))
- 		return 0;
- 
 -	spin_lock(&hctx->lock);
--	list_splice_tail_init(&tmp, &hctx->dispatch);
+-	list_splice_init(list, &hctx->dispatch);
 -	spin_unlock(&hctx->lock);
-+	blk_mq_add_list_to_dispatch_tail(hctx, &tmp);
- 
- 	blk_mq_run_hw_queue(hctx, true);
- 	return 0;
-@@ -1926,6 +1922,13 @@ static void blk_mq_exit_hw_queues(struct request_queue *q,
- 	}
++	spin_lock(hctx->dispatch_lock);
++	list_splice_init(list, hctx->dispatch_list);
++	spin_unlock(hctx->dispatch_lock);
  }
  
-+static void blk_mq_init_dispatch(struct request_queue *q,
-+		struct blk_mq_hw_ctx *hctx)
-+{
-+	spin_lock_init(&hctx->lock);
-+	INIT_LIST_HEAD(&hctx->dispatch);
-+}
-+
- static int blk_mq_init_hctx(struct request_queue *q,
- 		struct blk_mq_tag_set *set,
- 		struct blk_mq_hw_ctx *hctx, unsigned hctx_idx)
-@@ -1939,6 +1942,7 @@ static int blk_mq_init_hctx(struct request_queue *q,
- 	INIT_DELAYED_WORK(&hctx->run_work, blk_mq_run_work_fn);
- 	spin_lock_init(&hctx->lock);
- 	INIT_LIST_HEAD(&hctx->dispatch);
-+	blk_mq_init_dispatch(q, hctx);
- 	hctx->queue = q;
- 	hctx->flags = set->flags & ~BLK_MQ_F_TAG_SHARED;
- 
-diff --git a/block/blk-mq.h b/block/blk-mq.h
-index d9f875093613..2ed355881996 100644
---- a/block/blk-mq.h
-+++ b/block/blk-mq.h
-@@ -150,4 +150,48 @@ static inline void blk_mq_hctx_clear_busy(struct blk_mq_hw_ctx *hctx)
- 	clear_bit(BLK_MQ_S_BUSY, &hctx->state);
+ static inline void blk_mq_add_list_to_dispatch_tail(struct blk_mq_hw_ctx *hctx,
+ 						    struct list_head *list)
+ {
+-	spin_lock(&hctx->lock);
+-	list_splice_tail_init(list, &hctx->dispatch);
+-	spin_unlock(&hctx->lock);
++	spin_lock(hctx->dispatch_lock);
++	list_splice_tail_init(list, hctx->dispatch_list);
++	spin_unlock(hctx->dispatch_lock);
  }
  
-+static inline bool blk_mq_has_dispatch_rqs(struct blk_mq_hw_ctx *hctx)
-+{
-+	return !list_empty_careful(&hctx->dispatch);
-+}
-+
-+static inline void blk_mq_add_rq_to_dispatch(struct blk_mq_hw_ctx *hctx,
-+		struct request *rq)
-+{
-+	spin_lock(&hctx->lock);
-+	list_add(&rq->queuelist, &hctx->dispatch);
-+	spin_unlock(&hctx->lock);
-+}
-+
-+static inline void blk_mq_add_list_to_dispatch(struct blk_mq_hw_ctx *hctx,
-+		struct list_head *list)
-+{
-+	spin_lock(&hctx->lock);
-+	list_splice_init(list, &hctx->dispatch);
-+	spin_unlock(&hctx->lock);
-+}
-+
-+static inline void blk_mq_add_list_to_dispatch_tail(struct blk_mq_hw_ctx *hctx,
-+						    struct list_head *list)
-+{
-+	spin_lock(&hctx->lock);
-+	list_splice_tail_init(list, &hctx->dispatch);
-+	spin_unlock(&hctx->lock);
-+}
-+
-+static inline void blk_mq_take_list_from_dispatch(struct blk_mq_hw_ctx *hctx,
-+		struct list_head *list)
-+{
-+	spin_lock(&hctx->lock);
-+	list_splice_init(&hctx->dispatch, list);
-+
-+	/*
-+	 * BUSY won't be cleared until all requests
-+	 * in hctx->dispatch are dispatched successfully
-+	 */
-+	if (!list_empty(list))
-+		blk_mq_hctx_set_busy(hctx);
-+	spin_unlock(&hctx->lock);
-+}
-+
+ static inline void blk_mq_take_list_from_dispatch(struct blk_mq_hw_ctx *hctx,
+ 		struct list_head *list)
+ {
+-	spin_lock(&hctx->lock);
+-	list_splice_init(&hctx->dispatch, list);
++	spin_lock(hctx->dispatch_lock);
++	list_splice_init(hctx->dispatch_list, list);
+ 
+ 	/*
+ 	 * BUSY won't be cleared until all requests
+@@ -191,7 +191,7 @@ static inline void blk_mq_take_list_from_dispatch(struct blk_mq_hw_ctx *hctx,
+ 	 */
+ 	if (!list_empty(list))
+ 		blk_mq_hctx_set_busy(hctx);
+-	spin_unlock(&hctx->lock);
++	spin_unlock(hctx->dispatch_lock);
+ }
+ 
  #endif
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index 14f2ad3af31f..016f16c48f72 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -22,6 +22,9 @@ struct blk_mq_hw_ctx {
+ 
+ 	unsigned long		flags;		/* BLK_MQ_F_* flags */
+ 
++	spinlock_t		*dispatch_lock;
++	struct list_head	*dispatch_list;
++
+ 	void			*sched_data;
+ 	struct request_queue	*queue;
+ 	struct blk_flush_queue	*fq;
 -- 
 2.9.4
