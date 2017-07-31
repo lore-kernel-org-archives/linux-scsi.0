@@ -1,115 +1,131 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH 14/14] blk-mq-sched: improve IO scheduling on SCSI devcie
-Date: Tue,  1 Aug 2017 00:51:11 +0800
-Message-ID: <20170731165111.11536-16-ming.lei@redhat.com>
-References: <20170731165111.11536-1-ming.lei@redhat.com>
+From: Himanshu Madhani <himanshu.madhani@cavium.com>
+Subject: [PATCH 1/1] qla2xxx: Fix system crash while triggering FW dump
+Date: Mon, 31 Jul 2017 14:45:10 -0700
+Message-ID: <20170731214510.7653-1-himanshu.madhani@cavium.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36492 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750949AbdGaQxl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 31 Jul 2017 12:53:41 -0400
-In-Reply-To: <20170731165111.11536-1-ming.lei@redhat.com>
+Received: from mail-bn3nam01on0063.outbound.protection.outlook.com ([104.47.33.63]:61152
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751059AbdGaVpX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 31 Jul 2017 17:45:23 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Ming Lei <ming.lei@redhat.com>
+To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-SCSI device often has per-request_queue queue depth
-(.cmd_per_lun), which is applied among all hw queues
-actually, and this patchset calls this as shared
-queue depth.
+From: Michael Hernandez <michael.hernandez@cavium.com>
 
-One theory of scheduler is that we shouldn't dequeue
-request from sw/scheduler queue and dispatch it to
-driver when the low level queue is busy.
+This patch fixes system hang/crash while firmware dump is attempted with
+Block MQ enabled in qla2xxx driver. Fix is to remove check in fw dump
+template entries for existing request and response queues so that full
+buffer size is calculated during template size calculation.
 
-For SCSI device, queue being busy depends on the
-per-request_queue limit, so we should hold all
-hw queues if the request queue is busy.
+Following stack trace is seen during firmware dump capture process
 
-This patch introduces per-request_queue dispatch
-list for this purpose, and only when all requests
-in this list are dispatched out successfully, we
-can restart to dequeue request from sw/scheduler
-queue and dispath it to lld.
+[  694.390588] qla2xxx [0000:81:00.0]-5003:11: ISP System Error - mbx1=4b1fh mbx2=10h mbx3=2ah mbx7=0h.
+[  694.402336] BUG: unable to handle kernel paging request at ffffc90008c7b000
+[  694.402372] IP: memcpy_erms+0x6/0x10
+[  694.402386] PGD 105f01a067
+[  694.402386] PUD 85f89c067
+[  694.402398] PMD 10490cb067
+[  694.402409] PTE 0
+[  694.402421]
+[  694.402437] Oops: 0002 [#1] PREEMPT SMP
+[  694.402452] Modules linked in: netconsole configfs qla2xxx scsi_transport_fc
+nvme_fc nvme_fabrics bnep bluetooth rfkill xt_tcpudp unix_diag xt_multiport
+ip6table_filter ip6_tables iptable_filter ip_tables x_tables af_packet
+iscsi_ibft iscsi_boot_sysfs xfs libcrc32c ipmi_ssif sb_edac edac_core
+x86_pkg_temp_thermal intel_powerclamp coretemp kvm_intel kvm irqbypass igb
+crct10dif_pclmul crc32_pclmul ghash_clmulni_intel pcbc aesni_intel iTCO_wdt
+aes_x86_64 crypto_simd ptp iTCO_vendor_support glue_helper cryptd lpc_ich joydev
+i2c_i801 pcspkr ioatdma mei_me pps_core tpm_tis mei mfd_core acpi_power_meter
+tpm_tis_core ipmi_si ipmi_devintf tpm ipmi_msghandler shpchp wmi dca button
+acpi_pad btrfs xor uas usb_storage hid_generic usbhid raid6_pq crc32c_intel ast
+i2c_algo_bit drm_kms_helper syscopyarea sysfillrect
+[  694.402692]  sysimgblt fb_sys_fops xhci_pci ttm ehci_pci sr_mod xhci_hcd
+cdrom ehci_hcd drm usbcore sg
+[  694.402730] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.10.0-1-default+ #19
+[  694.402753] Hardware name: Supermicro X10DRi/X10DRi, BIOS 1.1a 10/16/2015
+[  694.402776] task: ffffffff81c0e4c0 task.stack: ffffffff81c00000
+[  694.402798] RIP: 0010:memcpy_erms+0x6/0x10
+[  694.402813] RSP: 0018:ffff88085fc03cd0 EFLAGS: 00210006
+[  694.402832] RAX: ffffc90008c7ae0c RBX: 0000000000000004 RCX: 000000000001fe0c
+[  694.402856] RDX: 0000000000020000 RSI: ffff8810332c01f4 RDI: ffffc90008c7b000
+[  694.402879] RBP: ffff88085fc03d18 R08: 0000000000020000 R09: 0000000000279e0a
+[  694.402903] R10: 0000000000000000 R11: f000000000000000 R12: ffff88085fc03d80
+[  694.402927] R13: ffffc90008a01000 R14: ffffc90008a056d4 R15: ffff881052ef17e0
+[  694.402951] FS:  0000000000000000(0000) GS:ffff88085fc00000(0000) knlGS:0000000000000000
+[  694.402977] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  694.403012] CR2: ffffc90008c7b000 CR3: 0000000001c09000 CR4: 00000000001406f0
+[  694.403036] Call Trace:
+[  694.403047]  <IRQ>
+[  694.403072]  ? qla27xx_fwdt_entry_t263+0x18e/0x380 [qla2xxx]
+[  694.403099]  qla27xx_walk_template+0x9d/0x1a0 [qla2xxx]
+[  694.403124]  qla27xx_fwdump+0x1f3/0x272 [qla2xxx]
+[  694.403149]  qla2x00_async_event+0xb08/0x1a50 [qla2xxx]
+[  694.403169]  ? enqueue_task_fair+0xa2/0x9d0
 
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
+Signed-off-by: Mike Hernandez <michael.hernandez@cavium.com>
+Signed-off-by: Joe Carnuccio <joe.carnuccio@cavium.com>
+Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- block/blk-mq.c         |  8 +++++++-
- block/blk-mq.h         | 14 +++++++++++---
- include/linux/blkdev.h |  5 +++++
- 3 files changed, 23 insertions(+), 4 deletions(-)
+Hi Martin, 
 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 9b8b3a740d18..6d02901d798e 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -2667,8 +2667,14 @@ int blk_mq_update_sched_queue_depth(struct request_queue *q)
- 	 * this queue depth limit
- 	 */
- 	if (q->queue_depth) {
--		queue_for_each_hw_ctx(q, hctx, i)
-+		queue_for_each_hw_ctx(q, hctx, i) {
- 			hctx->flags |= BLK_MQ_F_SHARED_DEPTH;
-+			hctx->dispatch_lock = &q->__mq_dispatch_lock;
-+			hctx->dispatch_list = &q->__mq_dispatch_list;
-+
-+			spin_lock_init(hctx->dispatch_lock);
-+			INIT_LIST_HEAD(hctx->dispatch_list);
-+		}
- 	}
+Please apply this patch to 4.13.0-rc4. Without this patch our capabilty
+to collect and analyze firmware dump in a customer enviorment will be
+greatly affected. 
+
+Thanks,
+Himanshu
+---
+ drivers/scsi/qla2xxx/qla_tmpl.c | 12 ------------
+ 1 file changed, 12 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_tmpl.c
+index 33142610882f..b18646d6057f 100644
+--- a/drivers/scsi/qla2xxx/qla_tmpl.c
++++ b/drivers/scsi/qla2xxx/qla_tmpl.c
+@@ -401,9 +401,6 @@ qla27xx_fwdt_entry_t263(struct scsi_qla_host *vha,
+ 		for (i = 0; i < vha->hw->max_req_queues; i++) {
+ 			struct req_que *req = vha->hw->req_q_map[i];
  
- 	if (!q->elevator)
-diff --git a/block/blk-mq.h b/block/blk-mq.h
-index a8788058da56..4853d422836f 100644
---- a/block/blk-mq.h
-+++ b/block/blk-mq.h
-@@ -138,19 +138,27 @@ static inline bool blk_mq_hw_queue_mapped(struct blk_mq_hw_ctx *hctx)
- static inline bool blk_mq_hctx_is_busy(struct request_queue *q,
- 		struct blk_mq_hw_ctx *hctx)
- {
--	return test_bit(BLK_MQ_S_BUSY, &hctx->state);
-+	if (!(hctx->flags & BLK_MQ_F_SHARED_DEPTH))
-+		return test_bit(BLK_MQ_S_BUSY, &hctx->state);
-+	return q->mq_dispatch_busy;
- }
+-			if (!test_bit(i, vha->hw->req_qid_map))
+-				continue;
+-
+ 			if (req || !buf) {
+ 				length = req ?
+ 				    req->length : REQUEST_ENTRY_CNT_24XX;
+@@ -418,9 +415,6 @@ qla27xx_fwdt_entry_t263(struct scsi_qla_host *vha,
+ 		for (i = 0; i < vha->hw->max_rsp_queues; i++) {
+ 			struct rsp_que *rsp = vha->hw->rsp_q_map[i];
  
- static inline void blk_mq_hctx_set_busy(struct request_queue *q,
- 		struct blk_mq_hw_ctx *hctx)
- {
--	set_bit(BLK_MQ_S_BUSY, &hctx->state);
-+	if (!(hctx->flags & BLK_MQ_F_SHARED_DEPTH))
-+		set_bit(BLK_MQ_S_BUSY, &hctx->state);
-+	else
-+		q->mq_dispatch_busy = 1;
- }
+-			if (!test_bit(i, vha->hw->rsp_qid_map))
+-				continue;
+-
+ 			if (rsp || !buf) {
+ 				length = rsp ?
+ 				    rsp->length : RESPONSE_ENTRY_CNT_MQ;
+@@ -660,9 +654,6 @@ qla27xx_fwdt_entry_t274(struct scsi_qla_host *vha,
+ 		for (i = 0; i < vha->hw->max_req_queues; i++) {
+ 			struct req_que *req = vha->hw->req_q_map[i];
  
- static inline void blk_mq_hctx_clear_busy(struct request_queue *q,
- 		struct blk_mq_hw_ctx *hctx)
- {
--	clear_bit(BLK_MQ_S_BUSY, &hctx->state);
-+	if (!(hctx->flags & BLK_MQ_F_SHARED_DEPTH))
-+		clear_bit(BLK_MQ_S_BUSY, &hctx->state);
-+	else
-+		q->mq_dispatch_busy = 0;
- }
+-			if (!test_bit(i, vha->hw->req_qid_map))
+-				continue;
+-
+ 			if (req || !buf) {
+ 				qla27xx_insert16(i, buf, len);
+ 				qla27xx_insert16(1, buf, len);
+@@ -675,9 +666,6 @@ qla27xx_fwdt_entry_t274(struct scsi_qla_host *vha,
+ 		for (i = 0; i < vha->hw->max_rsp_queues; i++) {
+ 			struct rsp_que *rsp = vha->hw->rsp_q_map[i];
  
- static inline bool blk_mq_has_dispatch_rqs(struct blk_mq_hw_ctx *hctx)
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 25f6a0cb27d3..bc0e607710f2 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -395,6 +395,11 @@ struct request_queue {
- 
- 	atomic_t		shared_hctx_restart;
- 
-+	/* blk-mq dispatch list and lock for shared queue depth case */
-+	struct list_head	__mq_dispatch_list;
-+	spinlock_t		__mq_dispatch_lock;
-+	unsigned int		mq_dispatch_busy;
-+
- 	struct blk_queue_stats	*stats;
- 	struct rq_wb		*rq_wb;
- 
+-			if (!test_bit(i, vha->hw->rsp_qid_map))
+-				continue;
+-
+ 			if (rsp || !buf) {
+ 				qla27xx_insert16(i, buf, len);
+ 				qla27xx_insert16(1, buf, len);
 -- 
-2.9.4
+2.12.0
