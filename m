@@ -1,43 +1,31 @@
-From: casimire kere <kerecasmire111@gmail.com>
-Subject: URGENT REPLY FOR MORE DETAILS.
-Date: Mon, 31 Jul 2017 09:23:24 +0100
-Message-ID: <CADyBO0UxVU+WvDh1amo+RpKvFk=8x72ypbt4xP62zjs--DZuKA__24386.019484564$1501489423$gmane$org@mail.gmail.com>
-Reply-To: casimirekere11@gmail.com
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Subject: Re: [PATCH 00/29] constify scsi pci_device_id.
+Date: Mon, 31 Jul 2017 14:23:11 +0530
+Message-ID: <6b6ba203-1352-26ed-8d7e-c14e7bb25d32@gmail.com>
+References: <1501403839-8876-1-git-send-email-arvind.yadav.cs@gmail.com>
+ <20170731075647.GB4316@linux-x5ow.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ua0-f195.google.com ([209.85.217.195]:38708 "EHLO
-        mail-ua0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751918AbdGaIX1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Jul 2017 04:23:27 -0400
-Received: by mail-ua0-f195.google.com with SMTP id x24so23076978uah.5
-        for <linux-scsi@vger.kernel.org>; Mon, 31 Jul 2017 01:23:27 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170731075647.GB4316@linux-x5ow.site>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, mdr@sgi.com, hare@suse.com, aacraid@adaptec.com, matthew@wil.cx, fthain@telegraphics.com.au, schmitzmic@gmail.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, gotom@debian.or.jp, mrochs@linux.vnet.ibm.com, yokota@netlab.is.tsukuba.ac.jp, QLogic-Storage-Upstream@cavium.com, jinpu.wang@profitbricks.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Compliment of the day,
 
-I am Mr.Kere Casmire I Have a Business Proposal of $5.3 million For You.
-I am aware of the unsafe nature of the internet,
-and was compelled to use this medium due to the nature of this project.
 
-I have access to very vital information that can be used to transfer
-this huge amount of money.
-
-which may culminate into the investment of the said funds into your
-company or any lucrative venture in your country.
-
-If you will like to assist me as a partner then indicate your interest,
-after which we shall both discuss the modalities and the sharing percentage.
-
-Upon receipt of your reply on your expression of Interest I will give
-you full details,
-on how the business will be executed I am open for negotiation.
-
-Thanks for your anticipated cooperation.
-
-Note you might receive this message in your inbox or spam or junk folder,
-depends on your web host or server network.
-
-Regards,
-Mr.Kere Casmire
+On Monday 31 July 2017 01:26 PM, Johannes Thumshirn wrote:
+> On Sun, Jul 30, 2017 at 02:07:09PM +0530, Arvind Yadav wrote:
+>> pci_device_id are not supposed to change at runtime. All functions
+>> working with pci_device_id provided by <linux/pci.h> work with
+>> const pci_device_id. So mark the non-const structs as const.
+> Can't this go all in one patch instead of replicating the same patch 29
+> times?
+Yes, We can add all of them in single patch. But other maintainer wants
+single single patch. thats why I have send 29 patch. :(
+> Thanks,
+> 	Johannes
+>
+~arvind
