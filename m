@@ -1,98 +1,115 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH 13/14] blk-mq: pass 'request_queue *' to several helpers of operating BUSY
-Date: Tue,  1 Aug 2017 00:51:10 +0800
-Message-ID: <20170731165111.11536-15-ming.lei@redhat.com>
+Subject: [PATCH 14/14] blk-mq-sched: improve IO scheduling on SCSI devcie
+Date: Tue,  1 Aug 2017 00:51:11 +0800
+Message-ID: <20170731165111.11536-16-ming.lei@redhat.com>
 References: <20170731165111.11536-1-ming.lei@redhat.com>
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:36492 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750949AbdGaQxl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 31 Jul 2017 12:53:41 -0400
 In-Reply-To: <20170731165111.11536-1-ming.lei@redhat.com>
-Sender: linux-block-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 Cc: Bart Van Assche <bart.vanassche@sandisk.com>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Ming Lei <ming.lei@redhat.com>
-List-Id: linux-scsi@vger.kernel.org
 
-We need to support per-request_queue dispatch list for avoiding
-early dispatch in case of shared queue depth.
+SCSI device often has per-request_queue queue depth
+(.cmd_per_lun), which is applied among all hw queues
+actually, and this patchset calls this as shared
+queue depth.
+
+One theory of scheduler is that we shouldn't dequeue
+request from sw/scheduler queue and dispatch it to
+driver when the low level queue is busy.
+
+For SCSI device, queue being busy depends on the
+per-request_queue limit, so we should hold all
+hw queues if the request queue is busy.
+
+This patch introduces per-request_queue dispatch
+list for this purpose, and only when all requests
+in this list are dispatched out successfully, we
+can restart to dequeue request from sw/scheduler
+queue and dispath it to lld.
 
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- block/blk-mq-sched.c |  6 +++---
- block/blk-mq.h       | 15 +++++++++------
- 2 files changed, 12 insertions(+), 9 deletions(-)
+ block/blk-mq.c         |  8 +++++++-
+ block/blk-mq.h         | 14 +++++++++++---
+ include/linux/blkdev.h |  5 +++++
+ 3 files changed, 23 insertions(+), 4 deletions(-)
 
-diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-index 8ff74efe4172..37702786c6d1 100644
---- a/block/blk-mq-sched.c
-+++ b/block/blk-mq-sched.c
-@@ -132,7 +132,7 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
- 	 * more fair dispatch.
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 9b8b3a740d18..6d02901d798e 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -2667,8 +2667,14 @@ int blk_mq_update_sched_queue_depth(struct request_queue *q)
+ 	 * this queue depth limit
  	 */
- 	if (blk_mq_has_dispatch_rqs(hctx))
--		blk_mq_take_list_from_dispatch(hctx, &rq_list);
-+		blk_mq_take_list_from_dispatch(q, hctx, &rq_list);
- 
- 	/*
- 	 * Only ask the scheduler for requests, if we didn't have residual
-@@ -147,11 +147,11 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
- 		blk_mq_sched_mark_restart_hctx(hctx);
- 		can_go = blk_mq_dispatch_rq_list(q, &rq_list);
- 		if (can_go)
--			blk_mq_hctx_clear_busy(hctx);
-+			blk_mq_hctx_clear_busy(q, hctx);
+ 	if (q->queue_depth) {
+-		queue_for_each_hw_ctx(q, hctx, i)
++		queue_for_each_hw_ctx(q, hctx, i) {
+ 			hctx->flags |= BLK_MQ_F_SHARED_DEPTH;
++			hctx->dispatch_lock = &q->__mq_dispatch_lock;
++			hctx->dispatch_list = &q->__mq_dispatch_list;
++
++			spin_lock_init(hctx->dispatch_lock);
++			INIT_LIST_HEAD(hctx->dispatch_list);
++		}
  	}
  
- 	/* can't go until ->dispatch is flushed */
--	if (!can_go || blk_mq_hctx_is_busy(hctx))
-+	if (!can_go || blk_mq_hctx_is_busy(q, hctx))
- 		return;
- 
- 	/*
+ 	if (!q->elevator)
 diff --git a/block/blk-mq.h b/block/blk-mq.h
-index d9795cbba1bb..a8788058da56 100644
+index a8788058da56..4853d422836f 100644
 --- a/block/blk-mq.h
 +++ b/block/blk-mq.h
-@@ -135,17 +135,20 @@ static inline bool blk_mq_hw_queue_mapped(struct blk_mq_hw_ctx *hctx)
- 	return hctx->nr_ctx && hctx->tags;
+@@ -138,19 +138,27 @@ static inline bool blk_mq_hw_queue_mapped(struct blk_mq_hw_ctx *hctx)
+ static inline bool blk_mq_hctx_is_busy(struct request_queue *q,
+ 		struct blk_mq_hw_ctx *hctx)
+ {
+-	return test_bit(BLK_MQ_S_BUSY, &hctx->state);
++	if (!(hctx->flags & BLK_MQ_F_SHARED_DEPTH))
++		return test_bit(BLK_MQ_S_BUSY, &hctx->state);
++	return q->mq_dispatch_busy;
  }
  
--static inline bool blk_mq_hctx_is_busy(struct blk_mq_hw_ctx *hctx)
-+static inline bool blk_mq_hctx_is_busy(struct request_queue *q,
-+		struct blk_mq_hw_ctx *hctx)
+ static inline void blk_mq_hctx_set_busy(struct request_queue *q,
+ 		struct blk_mq_hw_ctx *hctx)
  {
- 	return test_bit(BLK_MQ_S_BUSY, &hctx->state);
+-	set_bit(BLK_MQ_S_BUSY, &hctx->state);
++	if (!(hctx->flags & BLK_MQ_F_SHARED_DEPTH))
++		set_bit(BLK_MQ_S_BUSY, &hctx->state);
++	else
++		q->mq_dispatch_busy = 1;
  }
  
--static inline void blk_mq_hctx_set_busy(struct blk_mq_hw_ctx *hctx)
-+static inline void blk_mq_hctx_set_busy(struct request_queue *q,
-+		struct blk_mq_hw_ctx *hctx)
+ static inline void blk_mq_hctx_clear_busy(struct request_queue *q,
+ 		struct blk_mq_hw_ctx *hctx)
  {
- 	set_bit(BLK_MQ_S_BUSY, &hctx->state);
+-	clear_bit(BLK_MQ_S_BUSY, &hctx->state);
++	if (!(hctx->flags & BLK_MQ_F_SHARED_DEPTH))
++		clear_bit(BLK_MQ_S_BUSY, &hctx->state);
++	else
++		q->mq_dispatch_busy = 0;
  }
  
--static inline void blk_mq_hctx_clear_busy(struct blk_mq_hw_ctx *hctx)
-+static inline void blk_mq_hctx_clear_busy(struct request_queue *q,
-+		struct blk_mq_hw_ctx *hctx)
- {
- 	clear_bit(BLK_MQ_S_BUSY, &hctx->state);
- }
-@@ -179,8 +182,8 @@ static inline void blk_mq_add_list_to_dispatch_tail(struct blk_mq_hw_ctx *hctx,
- 	spin_unlock(hctx->dispatch_lock);
- }
+ static inline bool blk_mq_has_dispatch_rqs(struct blk_mq_hw_ctx *hctx)
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 25f6a0cb27d3..bc0e607710f2 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -395,6 +395,11 @@ struct request_queue {
  
--static inline void blk_mq_take_list_from_dispatch(struct blk_mq_hw_ctx *hctx,
--		struct list_head *list)
-+static inline void blk_mq_take_list_from_dispatch(struct request_queue *q,
-+		struct blk_mq_hw_ctx *hctx, struct list_head *list)
- {
- 	spin_lock(hctx->dispatch_lock);
- 	list_splice_init(hctx->dispatch_list, list);
-@@ -190,7 +193,7 @@ static inline void blk_mq_take_list_from_dispatch(struct blk_mq_hw_ctx *hctx,
- 	 * in hctx->dispatch are dispatched successfully
- 	 */
- 	if (!list_empty(list))
--		blk_mq_hctx_set_busy(hctx);
-+		blk_mq_hctx_set_busy(q, hctx);
- 	spin_unlock(hctx->dispatch_lock);
- }
+ 	atomic_t		shared_hctx_restart;
+ 
++	/* blk-mq dispatch list and lock for shared queue depth case */
++	struct list_head	__mq_dispatch_list;
++	spinlock_t		__mq_dispatch_lock;
++	unsigned int		mq_dispatch_busy;
++
+ 	struct blk_queue_stats	*stats;
+ 	struct rq_wb		*rq_wb;
  
 -- 
 2.9.4
