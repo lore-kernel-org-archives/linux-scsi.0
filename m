@@ -1,111 +1,49 @@
-From: Shivasharan Srikanteshwara
-        <shivasharan.srikanteshwara@broadcom.com>
-Subject: RE: [PATCH v2 11/15] megaraid_sas: Set device queue_depth same as HBA
- can_queue value in scsi-mq mode
-Date: Tue, 1 Aug 2017 18:53:30 +0530
-Message-ID: <30f27c86aeb5299bb2c990be5ef693ef@mail.gmail.com>
-References: <1499256029-16319-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <1499256029-16319-12-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <20170711135828.GA12013@lst.de> <3adb43de25a7531af4d083cd1af8c5b5@mail.gmail.com>
- <1fb5bf7342826f0cf84841930c7c4b11@mail.gmail.com> <20170720074736.GB22218@lst.de>
- 5bfb3bbc3e6d9b3a5c9afb749c075a40@mail.gmail.com
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH 2/2] sd_zbc: Disable zone locking with scsi-mq enabled
+Date: Tue, 1 Aug 2017 13:46:08 +0000
+Message-ID: <1501595166.2800.1.camel@wdc.com>
+References: <20170801093917.4131-1-damien.lemoal@wdc.com>
+         <20170801093917.4131-3-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f182.google.com ([209.85.216.182]:37690 "EHLO
-        mail-qt0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751769AbdHANXc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2017 09:23:32 -0400
-Received: by mail-qt0-f182.google.com with SMTP id 16so8766894qtz.4
-        for <linux-scsi@vger.kernel.org>; Tue, 01 Aug 2017 06:23:32 -0700 (PDT)
-In-Reply-To: 5bfb3bbc3e6d9b3a5c9afb749c075a40@mail.gmail.com
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:17178 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751784AbdHANq5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2017 09:46:57 -0400
+In-Reply-To: <20170801093917.4131-3-damien.lemoal@wdc.com>
+Content-Language: en-US
+Content-ID: <7FDE5DCEEBE11645B750FA9082F98BD5@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, Sumit Saxena <sumit.saxena@broadcom.com>, hare@suse.com, Kashyap Desai <kashyap.desai@broadcom.com>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "hch@lst.de" <hch@lst.de>, "hare@suse.de" <hare@suse.de>
 
-> -----Original Message-----
-> From: Shivasharan Srikanteshwara
-> [mailto:shivasharan.srikanteshwara@broadcom.com]
-> Sent: Monday, July 24, 2017 4:59 PM
-> To: 'Christoph Hellwig'
-> Cc: 'linux-scsi@vger.kernel.org'; 'martin.petersen@oracle.com';
-> 'thenzl@redhat.com'; 'jejb@linux.vnet.ibm.com'; Sumit Saxena;
-> 'hare@suse.com'; Kashyap Desai
-> Subject: RE: [PATCH v2 11/15] megaraid_sas: Set device queue_depth same
-as
-> HBA can_queue value in scsi-mq mode
->
-> > -----Original Message-----
-> > From: Christoph Hellwig [mailto:hch@lst.de]
-> > Sent: Thursday, July 20, 2017 1:18 PM
-> > To: Shivasharan Srikanteshwara
-> > Cc: Christoph Hellwig; linux-scsi@vger.kernel.org;
-> > martin.petersen@oracle.com; thenzl@redhat.com;
-> > jejb@linux.vnet.ibm.com; Sumit Saxena; hare@suse.com; Kashyap Desai
-> > Subject: Re: [PATCH v2 11/15] megaraid_sas: Set device queue_depth
-> > same as HBA can_queue value in scsi-mq mode
-> >
-> > I still don't understand why you don't want to do the same for the
-non-mq
-> path.
->
-> Hi Christoph,
->
-> Sorry for delay in response.
->
-> MQ case -
-> If there is any block layer requeue happens, we see performance drop. So
-we
-> avoid re-queue increasing Device QD = HBA QD. Performance drop due to
-block
-> layer re-queue is more in case of HDD (sequential IO converted into
-random IO).
->
-> Non-MQ case.
-> If we increase Device QD = HBA QD for no-mq case, we see performance
-drop
-> for certain profiles.
-> For example SATA SSD, previous driver in non-mq set Device QD=32. In
-this case,
-> if we have more outstanding IO per device (more than 32), block layer
-attempts
-> soft merge and eventually end user experience higher performance due to
-block
-> layer attempting soft merge.  Same is not correct in MQ case, as IO
-scheduler in
-> MQ adds overhead if at all there is any throttling or staging due to
-device QD.
->
-> Below is example of single SATA SSD, Sequential Read, BS=4K, IO depth =
-256
->
-> MQ enable, Device QD = 32 achieves 137K IOPS MQ enable, Device QD = 916
-> (HBA QD) achieves 145K IOPS
->
-> MQ disable, Device QD = 32 achieves 237K IOPS MQ disable, Device QD =
-916
-> (HBA QD) achieves 145K IOPS
->
-> Ideally we want to keep same QD settings in non-MQ mode, but trying to
-avoid
-> as we may face some regression from end user as explained.
->
-> Thanks,
-> Shivasharan
-
-Hi Christoph,
-Can you please let us know your thoughts on this?
-We understand that the settings should ideally be uniform across non-mq
-and mq cases.
-But based on the test results above, for non-mq case we are seeing some
-difference in performance for certain IO profiles when compared to earlier
-releases after increasing queue depth. Same is not the case when mq is
-enabled.
-
-Based on these results, we would like to keep this patch as is for this
-phase.
-We will run the further tests on this and will update for the next phase.
-
-Thanks,
-Shivasharan
+T24gVHVlLCAyMDE3LTA4LTAxIGF0IDE4OjM5ICswOTAwLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToN
+Cj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9zZF96YmMuYyBiL2RyaXZlcnMvc2NzaS9zZF96
+YmMuYw0KPiBpbmRleCA5Njg1NWRmOWY0OWQuLjc4ZmI1MWEzN2U4NiAxMDA2NDQNCj4gLS0tIGEv
+ZHJpdmVycy9zY3NpL3NkX3piYy5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS9zZF96YmMuYw0KPiBA
+QCAtNTI4LDE1ICs1MjgsMjAgQEAgc3RhdGljIGludCBzZF96YmNfY2hlY2tfem9uZV9zaXplKHN0
+cnVjdCBzY3NpX2Rpc2sgKnNka3ApDQo+ICANCj4gIHN0YXRpYyBpbnQgc2RfemJjX3NldHVwKHN0
+cnVjdCBzY3NpX2Rpc2sgKnNka3ApDQo+ICB7DQo+ICsJc3RydWN0IHJlcXVlc3RfcXVldWUgKnEg
+PSBzZGtwLT5kaXNrLT5xdWV1ZTsNCj4gIA0KPiAgCS8qIGNodW5rX3NlY3RvcnMgaW5kaWNhdGVz
+IHRoZSB6b25lIHNpemUgKi8NCj4gLQlibGtfcXVldWVfY2h1bmtfc2VjdG9ycyhzZGtwLT5kaXNr
+LT5xdWV1ZSwNCj4gKwlibGtfcXVldWVfY2h1bmtfc2VjdG9ycyhxLA0KPiAgCQkJbG9naWNhbF90
+b19zZWN0b3JzKHNka3AtPmRldmljZSwgc2RrcC0+em9uZV9ibG9ja3MpKTsNCj4gIAlzZGtwLT56
+b25lX3NoaWZ0ID0gaWxvZzIoc2RrcC0+em9uZV9ibG9ja3MpOw0KPiAgCXNka3AtPm5yX3pvbmVz
+ID0gc2RrcC0+Y2FwYWNpdHkgPj4gc2RrcC0+em9uZV9zaGlmdDsNCj4gIAlpZiAoc2RrcC0+Y2Fw
+YWNpdHkgJiAoc2RrcC0+em9uZV9ibG9ja3MgLSAxKSkNCj4gIAkJc2RrcC0+bnJfem9uZXMrKzsN
+Cj4gIA0KPiArCS8qIERvIG5vdCB1c2Ugem9uZSBsb2NraW5nIGluIG1xIGNhc2UgKi8NCj4gKwlp
+ZiAocS0+bXFfb3BzKQ0KPiArCQlyZXR1cm4gMDsNCj4gKw0KPiAgCWlmICghc2RrcC0+em9uZXNf
+d2xvY2spIHsNCj4gIAkJc2RrcC0+em9uZXNfd2xvY2sgPSBrY2FsbG9jKEJJVFNfVE9fTE9OR1Mo
+c2RrcC0+bnJfem9uZXMpLA0KPiAgCQkJCQkgICAgc2l6ZW9mKHVuc2lnbmVkIGxvbmcpLA0KDQpI
+ZWxsbyBEYW1pZW4sDQoNCkFyZSB5b3UgYXdhcmUgdGhhdCB0aGUgYmxrLXNxIC8gc2NzaS1zcSBj
+b2RlIHdpbGwgYmUgcmVtb3ZlZCBvbmNlIGFsbCBibG9jaw0KZHJpdmVycyBoYXZlIGJlZW4gY29u
+dmVydGVkPyBBcmUgeW91IGF3YXJlIHRoYXQgd2UgZG9uJ3Qgd2FudCBhbnkgZGlmZmVyZW5jZXMN
+CmluIGJlaGF2aW9yIGxpa2UgdGhlIGFib3ZlIGJldHdlZW4gdGhlIHNpbmdsZSBxdWV1ZSBhbmQg
+bXVsdGlxdWV1ZSBwYXRocz8gQ2FuDQp5b3UgY2hlY2sgd2hldGhlciB0aGUgcGF0Y2ggc2VyaWVz
+IE1pbmcgTGVpIHBvc3RlZCBlYXJsaWVyIHRoaXMgd2VlayBzb2x2ZXMNCnRoZSBmcmVxdWVudCBy
+ZXF1ZXVlaW5nPyBTZWUgYWxzbyAiW1BBVENIIDAwLzE0XSBibGstbXEtc2NoZWQ6IGZpeCBTQ1NJ
+LU1RDQpwZXJmb3JtYW5jZSByZWdyZXNzaW9uIiAoaHR0cDovL21hcmMuaW5mby8/bD1saW51eC1i
+bG9jayZtPTE1MDE1MTk4OTkxNTc3NikuDQoNClRoYW5rcywNCg0KQmFydC4=
