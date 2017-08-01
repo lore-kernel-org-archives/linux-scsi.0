@@ -1,63 +1,50 @@
-From: <jha@billund.dk>
-Subject: (unknown)
-Date: Tue, 01 Aug 2017 12:35:18 -0000
-Message-ID: <150159091808.7190.5358716158169573980@hinet.net>
-Mime-Version: 1.0
-Content-Type: application/zip; name="EMAIL_79916_linux-scsi.zip"
-Content-Transfer-Encoding: base64
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] st: fix blk_get_queue usage
+Date: Tue,  1 Aug 2017 14:42:54 +0200
+Message-ID: <1501591374-11229-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 118-169-224-48.dynamic-ip.hinet.net ([118.169.224.48]:52701
-        "HELO hinet.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with SMTP id S1751769AbdHAMg2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2017 08:36:28 -0400
-Content-Disposition: attachment
-Subject: 
+Received: from mx2.suse.de ([195.135.220.15]:57272 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751008AbdHAMm6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 1 Aug 2017 08:42:58 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Bodo Stroesser <bstroesser@ts.fujitsu.com>, Hannes Reinecke <hare@suse.com>
 
-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
+From: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+
+If blk_queue_get() in st_probe fails, disk->queue must not
+be set to SDp->request_queue, as that would result in
+put_disk() dropping a not taken reference.
+
+Thus, disk->queue should be set only after a successful
+blk_queue_get().
+
+Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+Acked-by: Shirish Pargaonkar <spargaonkar@suse.com>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/st.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index 1ea34d6..f1bcaf6 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -4300,11 +4300,11 @@ static int st_probe(struct device *dev)
+ 	kref_init(&tpnt->kref);
+ 	tpnt->disk = disk;
+ 	disk->private_data = &tpnt->driver;
+-	disk->queue = SDp->request_queue;
+ 	/* SCSI tape doesn't register this gendisk via add_disk().  Manually
+ 	 * take queue reference that release_disk() expects. */
+-	if (!blk_get_queue(disk->queue))
++	if (!blk_get_queue(SDp->request_queue))
+ 		goto out_put_disk;
++	disk->queue = SDp->request_queue;
+ 	tpnt->driver = &st_template;
+ 
+ 	tpnt->device = SDp;
+-- 
+1.8.5.6
