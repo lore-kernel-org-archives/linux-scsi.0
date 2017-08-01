@@ -1,63 +1,148 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 04/14] blk-mq-sched: improve dispatching from sw queue
-Date: Tue, 1 Aug 2017 15:11:42 +0000
-Message-ID: <1501600301.2475.1.camel@wdc.com>
-References: <20170731165111.11536-1-ming.lei@redhat.com>
-         <20170731165111.11536-6-ming.lei@redhat.com>
-         <1501544074.2466.29.camel@wdc.com> <20170801101718.GB31452@ming.t460p>
-         <20170801105013.GD31452@ming.t460p>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH] ipr: Fix scsi-mq lockdep issue
+Date: Tue, 1 Aug 2017 10:21:30 -0500
+Message-ID: <6d2bbcc8-3f4b-9b41-45b2-160f4817e439@linux.vnet.ibm.com>
+References: <87a83qfosu.fsf@concordia.ellerman.id.au>
+ <073ed79c-11ce-e86c-a905-91fd28675d47@kernel.dk>
+ <1501166846.2516.1.camel@wdc.com>
+ <5b85a365-faa1-3987-9b6b-270399c30686@kernel.dk>
+ <87lgn9dqx3.fsf@concordia.ellerman.id.au>
+ <92379297-9667-ae52-b05c-6c8a0ce4751c@kernel.dk>
+ <OF186C0C54.7E077412-ON8625816B.0053C88E-8625816B.00540312@notes.na.collabserv.com>
+ <5dcfe3ac-50c7-86a6-e571-fe5a1c1dc316@linux.vnet.ibm.com>
+ <87379c6cfh.fsf@concordia.ellerman.id.au>
+ <87a83ju6av.fsf@concordia.ellerman.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:32449 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751680AbdHAPMb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2017 11:12:31 -0400
-In-Reply-To: <20170801105013.GD31452@ming.t460p>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <87a83ju6av.fsf@concordia.ellerman.id.au>
 Content-Language: en-US
-Content-ID: <5AD808312C254D4F894AD54BA845D3E1@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Michael Ellerman <mpe@ellerman.id.au>, Jens Axboe <axboe@kernel.dk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Wendy Xiong <wenxiong@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "ming.lei@redhat.com" <ming.lei@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-On Tue, 2017-08-01 at 18:50 +0800, Ming Lei wrote:
-> On Tue, Aug 01, 2017 at 06:17:18PM +0800, Ming Lei wrote:
-> > How can we get the accurate 'number of requests in progress' efficientl=
-y?
+Fixes the following lockdep warning that can occur when scsi-mq is enabled
+with ipr due to ipr calling scsi_unblock_requests from irq context. The fix
+is to move the call to scsi_unblock_requests to ipr's existing workqueue.
 
-Hello Ming,
+stack backtrace:
+CPU: 28 PID: 0 Comm: swapper/28 Not tainted 4.13.0-rc2-gcc6x-gf74c89b #1
+Call Trace:
+[c000001fffe97550] [c000000000b50818] dump_stack+0xe8/0x160 (unreliable)
+[c000001fffe97590] [c0000000001586d0] print_usage_bug+0x2d0/0x390
+[c000001fffe97640] [c000000000158f34] mark_lock+0x7a4/0x8e0
+[c000001fffe976f0] [c00000000015a000] __lock_acquire+0x6a0/0x1a70
+[c000001fffe97860] [c00000000015befc] lock_acquire+0xec/0x2e0
+[c000001fffe97930] [c000000000b71514] _raw_spin_lock+0x44/0x70
+[c000001fffe97960] [c0000000005b60f4] blk_mq_sched_dispatch_requests+0xa4/0x2a0
+[c000001fffe979c0] [c0000000005acac0] __blk_mq_run_hw_queue+0x100/0x2c0
+[c000001fffe97a00] [c0000000005ad478] __blk_mq_delay_run_hw_queue+0x118/0x130
+[c000001fffe97a40] [c0000000005ad61c] blk_mq_start_hw_queues+0x6c/0xa0
+[c000001fffe97a80] [c000000000797aac] scsi_kick_queue+0x2c/0x60
+[c000001fffe97aa0] [c000000000797cf0] scsi_run_queue+0x210/0x360
+[c000001fffe97b10] [c00000000079b888] scsi_run_host_queues+0x48/0x80
+[c000001fffe97b40] [c0000000007b6090] ipr_ioa_bringdown_done+0x70/0x1e0
+[c000001fffe97bc0] [c0000000007bc860] ipr_reset_ioa_job+0x80/0xf0
+[c000001fffe97bf0] [c0000000007b4d50] ipr_reset_timer_done+0xd0/0x100
+[c000001fffe97c30] [c0000000001937bc] call_timer_fn+0xdc/0x4b0
+[c000001fffe97cf0] [c000000000193d08] expire_timers+0x178/0x330
+[c000001fffe97d60] [c0000000001940c8] run_timer_softirq+0xb8/0x120
+[c000001fffe97de0] [c000000000b726a8] __do_softirq+0x168/0x6d8
+[c000001fffe97ef0] [c0000000000df2c8] irq_exit+0x108/0x150
+[c000001fffe97f10] [c000000000017bf4] __do_irq+0x2a4/0x4a0
+[c000001fffe97f90] [c00000000002da50] call_do_irq+0x14/0x24
+[c0000007fad93aa0] [c000000000017e8c] do_IRQ+0x9c/0x140
+[c0000007fad93af0] [c000000000008b98] hardware_interrupt_common+0x138/0x140
 
-How about counting the number of bits that have been set in the tag set?
-I am aware that these bits can be set and/or cleared concurrently with the
-dispatch code but that count is probably a good starting point.
+Reported-by: Michael Ellerman <mpe@ellerman.id.au>
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
 
-> > From my test data of mq-deadline on lpfc, the performance is good,
-> > please see it in cover letter.
->=20
-> Forget to mention, ctx->list is one per-cpu list and the lock is percpu
-> lock, so changing to this way shouldn't be a performance issue.
-
-Sorry but I don't consider this reply as sufficient. The latency of IB HCA'=
-s
-is significantly lower than that of any FC hardware I ran performance
-measurements on myself. It's not because this patch series improves perform=
-ance
-for lpfc that that guarantees that there won't be a performance regression =
-for
-ib_srp, ib_iser or any other low-latency initiator driver for which q->dept=
-h
-!=3D 0.
-
-Additionally, patch 03/14 most likely introduces a fairness problem. Should=
-n't
-blk_mq_dispatch_rq_from_ctxs() dequeue requests from the per-CPU queues in =
-a
-round-robin fashion instead of always starting at the first per-CPU queue i=
-n
-hctx->ctx_map?
-
-Thanks,
-
-Bart.
+Index: linux-2.6.git/drivers/scsi/ipr.c
+===================================================================
+--- linux-2.6.git.orig/drivers/scsi/ipr.c
++++ linux-2.6.git/drivers/scsi/ipr.c
+@@ -3351,6 +3351,16 @@ static void ipr_worker_thread(struct wor
+ 		return;
+ 	}
+ 
++	if (ioa_cfg->scsi_unblock) {
++		ioa_cfg->scsi_unblock = 0;
++		ioa_cfg->scsi_blocked = 0;
++		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
++		scsi_unblock_requests(ioa_cfg->host);
++		spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
++		if (ioa_cfg->scsi_blocked)
++			scsi_block_requests(ioa_cfg->host);
++	}
++
+ 	if (!ioa_cfg->scan_enabled) {
+ 		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+ 		return;
+@@ -7211,9 +7221,8 @@ static int ipr_ioa_bringdown_done(struct
+ 	ENTER;
+ 	if (!ioa_cfg->hrrq[IPR_INIT_HRRQ].removing_ioa) {
+ 		ipr_trace;
+-		spin_unlock_irq(ioa_cfg->host->host_lock);
+-		scsi_unblock_requests(ioa_cfg->host);
+-		spin_lock_irq(ioa_cfg->host->host_lock);
++		ioa_cfg->scsi_unblock = 1;
++		schedule_work(&ioa_cfg->work_q);
+ 	}
+ 
+ 	ioa_cfg->in_reset_reload = 0;
+@@ -7287,13 +7296,7 @@ static int ipr_ioa_reset_done(struct ipr
+ 	list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_free_q);
+ 	wake_up_all(&ioa_cfg->reset_wait_q);
+ 
+-	spin_unlock(ioa_cfg->host->host_lock);
+-	scsi_unblock_requests(ioa_cfg->host);
+-	spin_lock(ioa_cfg->host->host_lock);
+-
+-	if (!ioa_cfg->hrrq[IPR_INIT_HRRQ].allow_cmds)
+-		scsi_block_requests(ioa_cfg->host);
+-
++	ioa_cfg->scsi_unblock = 1;
+ 	schedule_work(&ioa_cfg->work_q);
+ 	LEAVE;
+ 	return IPR_RC_JOB_RETURN;
+@@ -9249,8 +9252,11 @@ static void _ipr_initiate_ioa_reset(stru
+ 		spin_unlock(&ioa_cfg->hrrq[i]._lock);
+ 	}
+ 	wmb();
+-	if (!ioa_cfg->hrrq[IPR_INIT_HRRQ].removing_ioa)
++	if (!ioa_cfg->hrrq[IPR_INIT_HRRQ].removing_ioa) {
++		ioa_cfg->scsi_unblock = 0;
++		ioa_cfg->scsi_blocked = 1;
+ 		scsi_block_requests(ioa_cfg->host);
++	}
+ 
+ 	ipr_cmd = ipr_get_free_ipr_cmnd(ioa_cfg);
+ 	ioa_cfg->reset_cmd = ipr_cmd;
+@@ -9306,9 +9312,8 @@ static void ipr_initiate_ioa_reset(struc
+ 			wake_up_all(&ioa_cfg->reset_wait_q);
+ 
+ 			if (!ioa_cfg->hrrq[IPR_INIT_HRRQ].removing_ioa) {
+-				spin_unlock_irq(ioa_cfg->host->host_lock);
+-				scsi_unblock_requests(ioa_cfg->host);
+-				spin_lock_irq(ioa_cfg->host->host_lock);
++				ioa_cfg->scsi_unblock = 1;
++				schedule_work(&ioa_cfg->work_q);
+ 			}
+ 			return;
+ 		} else {
+Index: linux-2.6.git/drivers/scsi/ipr.h
+===================================================================
+--- linux-2.6.git.orig/drivers/scsi/ipr.h
++++ linux-2.6.git/drivers/scsi/ipr.h
+@@ -1488,6 +1488,8 @@ struct ipr_ioa_cfg {
+ 	u8 cfg_locked:1;
+ 	u8 clear_isr:1;
+ 	u8 probe_done:1;
++	u8 scsi_unblock:1;
++	u8 scsi_blocked:1;
+ 
+ 	u8 revid;
+ 
