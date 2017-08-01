@@ -1,411 +1,149 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 1/2] nvmet_fc: add defer_req callback for deferment of cmd buffer return
-Date: Tue,  1 Aug 2017 15:12:39 -0700
-Message-ID: <20170801221240.31723-2-jsmart2021@gmail.com>
+Subject: [PATCH 2/2] lpfc: support nvmet_fc defer_rcv callback
+Date: Tue,  1 Aug 2017 15:12:40 -0700
+Message-ID: <20170801221240.31723-3-jsmart2021@gmail.com>
 References: <20170801221240.31723-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:36671 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752022AbdHAWN4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2017 18:13:56 -0400
-Received: by mail-wr0-f195.google.com with SMTP id y67so2401948wrb.3
-        for <linux-scsi@vger.kernel.org>; Tue, 01 Aug 2017 15:13:56 -0700 (PDT)
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:37994 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752250AbdHAWN6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2017 18:13:58 -0400
+Received: by mail-wr0-f193.google.com with SMTP id g32so2393400wrd.5
+        for <linux-scsi@vger.kernel.org>; Tue, 01 Aug 2017 15:13:57 -0700 (PDT)
 In-Reply-To: <20170801221240.31723-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-nvme@lists.infradead.org
-Cc: linux-scsi@vger.kernel.org, James Smart <jsmart2021@gmail.com>, James Smart <james.smart@broadcom.com>
+Cc: linux-scsi@vger.kernel.org, James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-At queue creation, the transport allocates a local job struct
-(struct nvmet_fc_fcp_iod) for each possible element of the queue.
-When a new CMD is received from the wire, a jobs struct is allocated
-from the queue and then used for the duration of the command.
-The job struct contains buffer space for the wire command iu. Thus,
-upon allocation of the job struct, the cmd iu buffer is copied to
-the job struct and the LLDD may immediately free/reuse the CMD IU
-buffer passed in the call.
+Currently, calls to nvmet_fc_rcv_fcp_req() always copied the
+FC-NVME cmd iu to a temporary buffer before returning, allowing
+the driver to immediately repost the buffer to the hardware.
 
-However, in some circumstances, due to the packetized nature of FC
-and the api of the FC LLDD which may issue a hw command to send the
-wire response, but the LLDD may not get the hw completion for the
-command and upcall the nvmet_fc layer before a new command may be
-asynchronously received on the wire. In other words, its possible
-for the initiator to get the response from the wire, thus believe a
-command slot free, and send a new command iu. The new command iu
-may be received by the LLDD and passed to the transport before the
-LLDD had serviced the hw completion and made the teardown calls for
-the original job struct. As such, there is no available job struct
-available for the new io. E.g. it appears like the host sent more
-queue elements than the queue size. It didn't based on it's
-understanding.
+To address timing conditions on queue element structures vs async
+command reception, the nvmet_fc transport occasionally may need to
+hold on to the command iu buffer for a short period. In these cases,
+the nvmet_fc_rcv_fcp_req() will return a special return code
+(-EOVERFLOW). In these cases, the LLDD must delay until the new
+defer_rcv lldd callback is called before recycling the buffer back
+to the hw.
 
-Rather than treat this as a hard connection failure queue the new
-request until the job struct does free up. As the buffer isn't
-copied as there's no job struct, a special return value must be
-returned to the LLDD to signify to hold off on recycling the cmd
-iu buffer.  And later, when a job struct is allocated and the
-buffer copied, a new LLDD callback is introduced to notify the
-LLDD and allow it to recycle it's command iu buffer.
+This patch adds support for the new nvmet_fc transport defer_rcv
+callback and recognition of the new error code when passing commands
+to the transport.
 
+This patch is intended to enter the kernel through the nvme block
+tree which pulls in the nvmet_fc api change at the same time. It is
+not to be merged via the scsi trees without the latest nvme support
+in it.
+
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/nvme/target/fc.c       | 212 +++++++++++++++++++++++++++++++++++------
- include/linux/nvme-fc-driver.h |   7 ++
- 2 files changed, 191 insertions(+), 28 deletions(-)
+ drivers/scsi/lpfc/lpfc_attr.c    |  4 +++-
+ drivers/scsi/lpfc/lpfc_debugfs.c |  5 ++++-
+ drivers/scsi/lpfc/lpfc_nvmet.c   | 30 ++++++++++++++++++++++++++++++
+ drivers/scsi/lpfc/lpfc_nvmet.h   |  1 +
+ 4 files changed, 38 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/nvme/target/fc.c b/drivers/nvme/target/fc.c
-index 49948a412dcc..3d16870367d0 100644
---- a/drivers/nvme/target/fc.c
-+++ b/drivers/nvme/target/fc.c
-@@ -114,6 +114,11 @@ struct nvmet_fc_tgtport {
- 	u32				max_sg_cnt;
- };
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index 4ed48ed38e79..7ee1a94c0b33 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -205,8 +205,10 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+ 				atomic_read(&tgtp->xmt_ls_rsp_error));
  
-+struct nvmet_fc_defer_fcp_req {
-+	struct list_head		req_list;
-+	struct nvmefc_tgt_fcp_req	*fcp_req;
-+};
-+
- struct nvmet_fc_tgt_queue {
- 	bool				ninetypercent;
- 	u16				qid;
-@@ -132,6 +137,8 @@ struct nvmet_fc_tgt_queue {
- 	struct nvmet_fc_tgt_assoc	*assoc;
- 	struct nvmet_fc_fcp_iod		*fod;		/* array of fcp_iods */
- 	struct list_head		fod_list;
-+	struct list_head		pending_cmd_list;
-+	struct list_head		avail_defer_list;
- 	struct workqueue_struct		*work_q;
- 	struct kref			ref;
- } __aligned(sizeof(unsigned long long));
-@@ -223,6 +230,8 @@ static void nvmet_fc_tgt_q_put(struct nvmet_fc_tgt_queue *queue);
- static int nvmet_fc_tgt_q_get(struct nvmet_fc_tgt_queue *queue);
- static void nvmet_fc_tgtport_put(struct nvmet_fc_tgtport *tgtport);
- static int nvmet_fc_tgtport_get(struct nvmet_fc_tgtport *tgtport);
-+static void nvmet_fc_handle_fcp_rqst(struct nvmet_fc_tgtport *tgtport,
-+					struct nvmet_fc_fcp_iod *fod);
+ 		len += snprintf(buf+len, PAGE_SIZE-len,
+-				"FCP: Rcv %08x Release %08x Drop %08x\n",
++				"FCP: Rcv %08x Defer %08x Release %08x "
++				"Drop %08x\n",
+ 				atomic_read(&tgtp->rcv_fcp_cmd_in),
++				atomic_read(&tgtp->rcv_fcp_cmd_defer),
+ 				atomic_read(&tgtp->xmt_fcp_release),
+ 				atomic_read(&tgtp->rcv_fcp_cmd_drop));
  
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index 5cc8b0f7d885..744f3f395b64 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -782,8 +782,11 @@ lpfc_debugfs_nvmestat_data(struct lpfc_vport *vport, char *buf, int size)
+ 				atomic_read(&tgtp->xmt_ls_rsp_error));
  
- /* *********************** FC-NVME DMA Handling **************************** */
-@@ -463,9 +472,9 @@ static struct nvmet_fc_fcp_iod *
- nvmet_fc_alloc_fcp_iod(struct nvmet_fc_tgt_queue *queue)
- {
- 	static struct nvmet_fc_fcp_iod *fod;
--	unsigned long flags;
+ 		len += snprintf(buf + len, size - len,
+-				"FCP: Rcv %08x Drop %08x\n",
++				"FCP: Rcv %08x Defer %08x Release %08x "
++				"Drop %08x\n",
+ 				atomic_read(&tgtp->rcv_fcp_cmd_in),
++				atomic_read(&tgtp->rcv_fcp_cmd_defer),
++				atomic_read(&tgtp->xmt_fcp_release),
+ 				atomic_read(&tgtp->rcv_fcp_cmd_drop));
  
--	spin_lock_irqsave(&queue->qlock, flags);
-+	/* Caller must hold queue->qlock */
-+
- 	fod = list_first_entry_or_null(&queue->fod_list,
- 					struct nvmet_fc_fcp_iod, fcp_list);
- 	if (fod) {
-@@ -477,17 +486,37 @@ nvmet_fc_alloc_fcp_iod(struct nvmet_fc_tgt_queue *queue)
- 		 * will "inherit" that reference.
- 		 */
- 	}
--	spin_unlock_irqrestore(&queue->qlock, flags);
- 	return fod;
+ 		if (atomic_read(&tgtp->rcv_fcp_cmd_in) !=
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index fbeec344c6cc..a5dc1b83064a 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -841,12 +841,31 @@ lpfc_nvmet_xmt_fcp_release(struct nvmet_fc_target_port *tgtport,
+ 	lpfc_nvmet_ctxbuf_post(phba, ctxp->ctxbuf);
  }
  
- 
- static void
-+nvmet_fc_queue_fcp_req(struct nvmet_fc_tgtport *tgtport,
-+		       struct nvmet_fc_tgt_queue *queue,
-+		       struct nvmefc_tgt_fcp_req *fcpreq)
++static void
++lpfc_nvmet_defer_rcv(struct nvmet_fc_target_port *tgtport,
++		     struct nvmefc_tgt_fcp_req *rsp)
 +{
-+	struct nvmet_fc_fcp_iod *fod = fcpreq->nvmet_fc_private;
++	struct lpfc_nvmet_tgtport *tgtp;
++	struct lpfc_nvmet_rcv_ctx *ctxp =
++		container_of(rsp, struct lpfc_nvmet_rcv_ctx, ctx.fcp_req);
++	struct rqb_dmabuf *nvmebuf = ctxp->rqb_buffer;
++	struct lpfc_hba *phba = ctxp->phba;
 +
-+	/*
-+	 * put all admin cmds on hw queue id 0. All io commands go to
-+	 * the respective hw queue based on a modulo basis
-+	 */
-+	fcpreq->hwqid = queue->qid ?
-+			((queue->qid - 1) % tgtport->ops->max_hw_queues) : 0;
++	lpfc_nvmeio_data(phba, "NVMET DEFERRCV: xri x%x sz %d CPU %02x\n",
++			 ctxp->oxid, ctxp->size, smp_processor_id());
 +
-+	if (tgtport->ops->target_features & NVMET_FCTGTFEAT_CMD_IN_ISR)
-+		queue_work_on(queue->cpu, queue->work_q, &fod->work);
-+	else
-+		nvmet_fc_handle_fcp_rqst(tgtport, fod);
++	tgtp = (struct lpfc_nvmet_tgtport *)phba->targetport->private;
++	atomic_inc(&tgtp->rcv_fcp_cmd_defer);
++	lpfc_rq_buf_free(phba, &nvmebuf->hbuf); /* repost */
 +}
 +
-+static void
- nvmet_fc_free_fcp_iod(struct nvmet_fc_tgt_queue *queue,
- 			struct nvmet_fc_fcp_iod *fod)
- {
- 	struct nvmefc_tgt_fcp_req *fcpreq = fod->fcpreq;
- 	struct nvmet_fc_tgtport *tgtport = fod->tgtport;
-+	struct nvmet_fc_defer_fcp_req *deferfcp;
- 	unsigned long flags;
+ static struct nvmet_fc_target_template lpfc_tgttemplate = {
+ 	.targetport_delete = lpfc_nvmet_targetport_delete,
+ 	.xmt_ls_rsp     = lpfc_nvmet_xmt_ls_rsp,
+ 	.fcp_op         = lpfc_nvmet_xmt_fcp_op,
+ 	.fcp_abort      = lpfc_nvmet_xmt_fcp_abort,
+ 	.fcp_req_release = lpfc_nvmet_xmt_fcp_release,
++	.defer_rcv	= lpfc_nvmet_defer_rcv,
  
- 	fc_dma_sync_single_for_cpu(tgtport->dev, fod->rspdma,
-@@ -495,21 +524,56 @@ nvmet_fc_free_fcp_iod(struct nvmet_fc_tgt_queue *queue,
+ 	.max_hw_queues  = 1,
+ 	.max_sgl_segments = LPFC_NVMET_DEFAULT_SEGS,
+@@ -1504,6 +1523,17 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
+ 		return;
+ 	}
  
- 	fcpreq->nvmet_fc_private = NULL;
- 
--	spin_lock_irqsave(&queue->qlock, flags);
--	list_add_tail(&fod->fcp_list, &fod->queue->fod_list);
- 	fod->active = false;
- 	fod->abort = false;
- 	fod->aborted = false;
- 	fod->writedataactive = false;
- 	fod->fcpreq = NULL;
-+
-+	tgtport->ops->fcp_req_release(&tgtport->fc_target_port, fcpreq);
-+
-+	spin_lock_irqsave(&queue->qlock, flags);
-+	deferfcp = list_first_entry_or_null(&queue->pending_cmd_list,
-+				struct nvmet_fc_defer_fcp_req, req_list);
-+	if (!deferfcp) {
-+		list_add_tail(&fod->fcp_list, &fod->queue->fod_list);
-+		spin_unlock_irqrestore(&queue->qlock, flags);
-+
-+		/* Release reference taken at queue lookup and fod allocation */
-+		nvmet_fc_tgt_q_put(queue);
++	/* Processing of FCP command is deferred */
++	if (rc == -EOVERFLOW) {
++		lpfc_nvmeio_data(phba,
++				 "NVMET RCV BUSY: xri x%x sz %d from %06x\n",
++				 oxid, size, sid);
++		/* defer reposting rcv buffer till .defer_rcv callback */
++		ctxp->rqb_buffer = (void *)nvmebuf;
++		atomic_inc(&tgtp->rcv_fcp_cmd_out);
 +		return;
 +	}
 +
-+	/* Re-use the fod for the next pending cmd that was deferred */
-+	list_del(&deferfcp->req_list);
-+
-+	fcpreq = deferfcp->fcp_req;
-+
-+	/* deferfcp can be reused for another IO at a later date */
-+	list_add_tail(&deferfcp->req_list, &queue->avail_defer_list);
-+
- 	spin_unlock_irqrestore(&queue->qlock, flags);
+ 	atomic_inc(&tgtp->rcv_fcp_cmd_drop);
+ 	lpfc_printf_log(phba, KERN_ERR, LOG_NVME_IOERR,
+ 			"6159 FCP Drop IO x%x: err x%x: x%x x%x x%x\n",
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.h b/drivers/scsi/lpfc/lpfc_nvmet.h
+index e675ef17be08..48a76788b003 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.h
++++ b/drivers/scsi/lpfc/lpfc_nvmet.h
+@@ -49,6 +49,7 @@ struct lpfc_nvmet_tgtport {
+ 	atomic_t rcv_fcp_cmd_in;
+ 	atomic_t rcv_fcp_cmd_out;
+ 	atomic_t rcv_fcp_cmd_drop;
++	atomic_t rcv_fcp_cmd_defer;
+ 	atomic_t xmt_fcp_release;
  
-+	/* Save NVME CMD IO in fod */
-+	memcpy(&fod->cmdiubuf, fcpreq->rspaddr, fcpreq->rsplen);
-+
-+	/* Setup new fcpreq to be processed */
-+	fcpreq->rspaddr = NULL;
-+	fcpreq->rsplen  = 0;
-+	fcpreq->nvmet_fc_private = fod;
-+	fod->fcpreq = fcpreq;
-+	fod->active = true;
-+
-+	/* inform LLDD IO is now being processed */
-+	tgtport->ops->defer_rcv(&tgtport->fc_target_port, fcpreq);
-+
-+	/* Submit deferred IO for processing */
-+	nvmet_fc_queue_fcp_req(tgtport, queue, fcpreq);
-+
- 	/*
--	 * release the reference taken at queue lookup and fod allocation
-+	 * Leave the queue lookup get reference taken when
-+	 * fod was originally allocated.
- 	 */
--	nvmet_fc_tgt_q_put(queue);
--
--	tgtport->ops->fcp_req_release(&tgtport->fc_target_port, fcpreq);
- }
- 
- static int
-@@ -569,6 +633,8 @@ nvmet_fc_alloc_target_queue(struct nvmet_fc_tgt_assoc *assoc,
- 	queue->port = assoc->tgtport->port;
- 	queue->cpu = nvmet_fc_queue_to_cpu(assoc->tgtport, qid);
- 	INIT_LIST_HEAD(&queue->fod_list);
-+	INIT_LIST_HEAD(&queue->avail_defer_list);
-+	INIT_LIST_HEAD(&queue->pending_cmd_list);
- 	atomic_set(&queue->connected, 0);
- 	atomic_set(&queue->sqtail, 0);
- 	atomic_set(&queue->rsn, 1);
-@@ -638,6 +704,7 @@ nvmet_fc_delete_target_queue(struct nvmet_fc_tgt_queue *queue)
- {
- 	struct nvmet_fc_tgtport *tgtport = queue->assoc->tgtport;
- 	struct nvmet_fc_fcp_iod *fod = queue->fod;
-+	struct nvmet_fc_defer_fcp_req *deferfcp;
- 	unsigned long flags;
- 	int i, writedataactive;
- 	bool disconnect;
-@@ -666,6 +733,35 @@ nvmet_fc_delete_target_queue(struct nvmet_fc_tgt_queue *queue)
- 			}
- 		}
- 	}
-+
-+	/* Cleanup defer'ed IOs in queue */
-+	list_for_each_entry(deferfcp, &queue->avail_defer_list, req_list) {
-+		list_del(&deferfcp->req_list);
-+		kfree(deferfcp);
-+	}
-+
-+	for (;;) {
-+		deferfcp = list_first_entry_or_null(&queue->pending_cmd_list,
-+				struct nvmet_fc_defer_fcp_req, req_list);
-+		if (!deferfcp)
-+			break;
-+
-+		list_del(&deferfcp->req_list);
-+		spin_unlock_irqrestore(&queue->qlock, flags);
-+
-+		tgtport->ops->defer_rcv(&tgtport->fc_target_port,
-+				deferfcp->fcp_req);
-+
-+		tgtport->ops->fcp_abort(&tgtport->fc_target_port,
-+				deferfcp->fcp_req);
-+
-+		tgtport->ops->fcp_req_release(&tgtport->fc_target_port,
-+				deferfcp->fcp_req);
-+
-+		kfree(deferfcp);
-+
-+		spin_lock_irqsave(&queue->qlock, flags);
-+	}
- 	spin_unlock_irqrestore(&queue->qlock, flags);
- 
- 	flush_workqueue(queue->work_q);
-@@ -2144,11 +2240,38 @@ nvmet_fc_handle_fcp_rqst_work(struct work_struct *work)
-  * Pass a FC-NVME FCP CMD IU received from the FC link to the nvmet-fc
-  * layer for processing.
-  *
-- * The nvmet-fc layer will copy cmd payload to an internal structure for
-- * processing.  As such, upon completion of the routine, the LLDD may
-- * immediately free/reuse the CMD IU buffer passed in the call.
-+ * The nvmet_fc layer allocates a local job structure (struct
-+ * nvmet_fc_fcp_iod) from the queue for the io and copies the
-+ * CMD IU buffer to the job structure. As such, on a successful
-+ * completion (returns 0), the LLDD may immediately free/reuse
-+ * the CMD IU buffer passed in the call.
-+ *
-+ * However, in some circumstances, due to the packetized nature of FC
-+ * and the api of the FC LLDD which may issue a hw command to send the
-+ * response, but the LLDD may not get the hw completion for that command
-+ * and upcall the nvmet_fc layer before a new command may be
-+ * asynchronously received - its possible for a command to be received
-+ * before the LLDD and nvmet_fc have recycled the job structure. It gives
-+ * the appearance of more commands received than fits in the sq.
-+ * To alleviate this scenario, a temporary queue is maintained in the
-+ * transport for pending LLDD requests waiting for a queue job structure.
-+ * In these "overrun" cases, a temporary queue element is allocated
-+ * the LLDD request and CMD iu buffer information remembered, and the
-+ * routine returns a -EOVERFLOW status. Subsequently, when a queue job
-+ * structure is freed, it is immediately reallocated for anything on the
-+ * pending request list. The LLDDs defer_rcv() callback is called,
-+ * informing the LLDD that it may reuse the CMD IU buffer, and the io
-+ * is then started normally with the transport.
-  *
-- * If this routine returns error, the lldd should abort the exchange.
-+ * The LLDD, when receiving an -EOVERFLOW completion status, is to treat
-+ * the completion as successful but must not reuse the CMD IU buffer
-+ * until the LLDD's defer_rcv() callback has been called for the
-+ * corresponding struct nvmefc_tgt_fcp_req pointer.
-+ *
-+ * If there is any other condition in which an error occurs, the
-+ * transport will return a non-zero status indicating the error.
-+ * In all cases other than -EOVERFLOW, the transport has not accepted the
-+ * request and the LLDD should abort the exchange.
-  *
-  * @target_port: pointer to the (registered) target port the FCP CMD IU
-  *              was received on.
-@@ -2166,6 +2289,8 @@ nvmet_fc_rcv_fcp_req(struct nvmet_fc_target_port *target_port,
- 	struct nvme_fc_cmd_iu *cmdiu = cmdiubuf;
- 	struct nvmet_fc_tgt_queue *queue;
- 	struct nvmet_fc_fcp_iod *fod;
-+	struct nvmet_fc_defer_fcp_req *deferfcp;
-+	unsigned long flags;
- 
- 	/* validate iu, so the connection id can be used to find the queue */
- 	if ((cmdiubuf_len != sizeof(*cmdiu)) ||
-@@ -2186,29 +2311,60 @@ nvmet_fc_rcv_fcp_req(struct nvmet_fc_target_port *target_port,
- 	 * when the fod is freed.
- 	 */
- 
-+	spin_lock_irqsave(&queue->qlock, flags);
-+
- 	fod = nvmet_fc_alloc_fcp_iod(queue);
--	if (!fod) {
-+	if (fod) {
-+		spin_unlock_irqrestore(&queue->qlock, flags);
-+
-+		fcpreq->nvmet_fc_private = fod;
-+		fod->fcpreq = fcpreq;
-+
-+		memcpy(&fod->cmdiubuf, cmdiubuf, cmdiubuf_len);
-+
-+		nvmet_fc_queue_fcp_req(tgtport, queue, fcpreq);
-+
-+		return 0;
-+	}
-+
-+	if (!tgtport->ops->defer_rcv) {
-+		spin_unlock_irqrestore(&queue->qlock, flags);
- 		/* release the queue lookup reference */
- 		nvmet_fc_tgt_q_put(queue);
- 		return -ENOENT;
- 	}
- 
--	fcpreq->nvmet_fc_private = fod;
--	fod->fcpreq = fcpreq;
--	/*
--	 * put all admin cmds on hw queue id 0. All io commands go to
--	 * the respective hw queue based on a modulo basis
--	 */
--	fcpreq->hwqid = queue->qid ?
--			((queue->qid - 1) % tgtport->ops->max_hw_queues) : 0;
--	memcpy(&fod->cmdiubuf, cmdiubuf, cmdiubuf_len);
-+	deferfcp = list_first_entry_or_null(&queue->avail_defer_list,
-+			struct nvmet_fc_defer_fcp_req, req_list);
-+	if (deferfcp) {
-+		/* Just re-use one that was previously allocated */
-+		list_del(&deferfcp->req_list);
-+	} else {
-+		spin_unlock_irqrestore(&queue->qlock, flags);
- 
--	if (tgtport->ops->target_features & NVMET_FCTGTFEAT_CMD_IN_ISR)
--		queue_work_on(queue->cpu, queue->work_q, &fod->work);
--	else
--		nvmet_fc_handle_fcp_rqst(tgtport, fod);
-+		/* Now we need to dynamically allocate one */
-+		deferfcp = kmalloc(sizeof(*deferfcp), GFP_KERNEL);
-+		if (!deferfcp) {
-+			/* release the queue lookup reference */
-+			nvmet_fc_tgt_q_put(queue);
-+			return -ENOMEM;
-+		}
-+		spin_lock_irqsave(&queue->qlock, flags);
-+	}
- 
--	return 0;
-+	/* For now, use rspaddr / rsplen to save payload information */
-+	fcpreq->rspaddr = cmdiubuf;
-+	fcpreq->rsplen  = cmdiubuf_len;
-+	deferfcp->fcp_req = fcpreq;
-+
-+	/* defer processing till a fod becomes available */
-+	list_add_tail(&deferfcp->req_list, &queue->pending_cmd_list);
-+
-+	/* NOTE: the queue lookup reference is still valid */
-+
-+	spin_unlock_irqrestore(&queue->qlock, flags);
-+
-+	return -EOVERFLOW;
- }
- EXPORT_SYMBOL_GPL(nvmet_fc_rcv_fcp_req);
- 
-diff --git a/include/linux/nvme-fc-driver.h b/include/linux/nvme-fc-driver.h
-index c659953236d3..9c5cb4480806 100644
---- a/include/linux/nvme-fc-driver.h
-+++ b/include/linux/nvme-fc-driver.h
-@@ -346,6 +346,11 @@ struct nvme_fc_remote_port {
-  *       indicating an FC transport Aborted status.
-  *       Entrypoint is Mandatory.
-  *
-+ * @defer_rcv:  Called by the transport to signal the LLLD that it has
-+ *       begun processing of a previously received NVME CMD IU. The LLDD
-+ *       is now free to re-use the rcv buffer associated with the
-+ *       nvmefc_tgt_fcp_req.
-+ *
-  * @max_hw_queues:  indicates the maximum number of hw queues the LLDD
-  *       supports for cpu affinitization.
-  *       Value is Mandatory. Must be at least 1.
-@@ -846,6 +851,8 @@ struct nvmet_fc_target_template {
- 				struct nvmefc_tgt_fcp_req *fcpreq);
- 	void (*fcp_req_release)(struct nvmet_fc_target_port *tgtport,
- 				struct nvmefc_tgt_fcp_req *fcpreq);
-+	void (*defer_rcv)(struct nvmet_fc_target_port *tgtport,
-+				struct nvmefc_tgt_fcp_req *fcpreq);
- 
- 	u32	max_hw_queues;
- 	u16	max_sgl_segments;
+ 	/* Stats counters - lpfc_nvmet_xmt_fcp_op */
 -- 
 2.13.1
