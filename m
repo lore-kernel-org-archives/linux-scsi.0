@@ -1,127 +1,63 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH 04/14] blk-mq-sched: improve dispatching from sw queue
-Date: Tue, 1 Aug 2017 18:50:15 +0800
-Message-ID: <20170801105013.GD31452@ming.t460p>
-References: <20170731165111.11536-1-ming.lei@redhat.com>
- <20170731165111.11536-6-ming.lei@redhat.com>
- <1501544074.2466.29.camel@wdc.com>
- <20170801101718.GB31452@ming.t460p>
+From: <jha@billund.dk>
+Subject: (unknown)
+Date: Tue, 01 Aug 2017 12:35:18 -0000
+Message-ID: <150159091808.7190.5358716158169573980@hinet.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: application/zip; name="EMAIL_79916_linux-scsi.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38462 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751631AbdHAKue (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 1 Aug 2017 06:50:34 -0400
-Content-Disposition: inline
-In-Reply-To: <20170801101718.GB31452@ming.t460p>
+Received: from 118-169-224-48.dynamic-ip.hinet.net ([118.169.224.48]:52701
+        "HELO hinet.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with SMTP id S1751769AbdHAMg2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2017 08:36:28 -0400
+Content-Disposition: attachment
+Subject: 
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+To: linux-scsi@vger.kernel.org
 
-On Tue, Aug 01, 2017 at 06:17:18PM +0800, Ming Lei wrote:
-> On Mon, Jul 31, 2017 at 11:34:35PM +0000, Bart Van Assche wrote:
-> > On Tue, 2017-08-01 at 00:51 +0800, Ming Lei wrote:
-> > > SCSI devices use host-wide tagset, and the shared
-> > > driver tag space is often quite big. Meantime
-> > > there is also queue depth for each lun(.cmd_per_lun),
-> > > which is often small.
-> > > 
-> > > So lots of requests may stay in sw queue, and we
-> > > always flush all belonging to same hw queue and
-> > > dispatch them all to driver, unfortunately it is
-> > > easy to cause queue busy becasue of the small
-> > > per-lun queue depth. Once these requests are flushed
-> > > out, they have to stay in hctx->dispatch, and no bio
-> > > merge can participate into these requests, and
-> > > sequential IO performance is hurted.
-> > > 
-> > > This patch improves dispatching from sw queue when
-> > > there is per-request-queue queue depth by taking
-> > > request one by one from sw queue, just like the way
-> > > of IO scheduler.
-> > > 
-> > > Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> > > ---
-> > >  block/blk-mq-sched.c | 25 +++++++++++++++----------
-> > >  1 file changed, 15 insertions(+), 10 deletions(-)
-> > > 
-> > > diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-> > > index 47a25333a136..3510c01cb17b 100644
-> > > --- a/block/blk-mq-sched.c
-> > > +++ b/block/blk-mq-sched.c
-> > > @@ -96,6 +96,9 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
-> > >  	const bool has_sched_dispatch = e && e->type->ops.mq.dispatch_request;
-> > >  	bool can_go = true;
-> > >  	LIST_HEAD(rq_list);
-> > > +	struct request *(*dispatch_fn)(struct blk_mq_hw_ctx *) =
-> > > +		has_sched_dispatch ? e->type->ops.mq.dispatch_request :
-> > > +			blk_mq_dispatch_rq_from_ctxs;
-> > >  
-> > >  	/* RCU or SRCU read lock is needed before checking quiesced flag */
-> > >  	if (unlikely(blk_mq_hctx_stopped(hctx) || blk_queue_quiesced(q)))
-> > > @@ -126,26 +129,28 @@ void blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
-> > >  	if (!list_empty(&rq_list)) {
-> > >  		blk_mq_sched_mark_restart_hctx(hctx);
-> > >  		can_go = blk_mq_dispatch_rq_list(q, &rq_list);
-> > > -	} else if (!has_sched_dispatch) {
-> > > +	} else if (!has_sched_dispatch && !q->queue_depth) {
-> > >  		blk_mq_flush_busy_ctxs(hctx, &rq_list);
-> > >  		blk_mq_dispatch_rq_list(q, &rq_list);
-> > > +		can_go = false;
-> > >  	}
-> > >  
-> > > +	if (!can_go)
-> > > +		return;
-> > > +
-> > >  	/*
-> > >  	 * We want to dispatch from the scheduler if we had no work left
-> > >  	 * on the dispatch list, OR if we did have work but weren't able
-> > >  	 * to make progress.
-> > >  	 */
-> > > -	if (can_go && has_sched_dispatch) {
-> > > -		do {
-> > > -			struct request *rq;
-> > > +	do {
-> > > +		struct request *rq;
-> > >  
-> > > -			rq = e->type->ops.mq.dispatch_request(hctx);
-> > > -			if (!rq)
-> > > -				break;
-> > > -			list_add(&rq->queuelist, &rq_list);
-> > > -		} while (blk_mq_dispatch_rq_list(q, &rq_list));
-> > > -	}
-> > > +		rq = dispatch_fn(hctx);
-> > > +		if (!rq)
-> > > +			break;
-> > > +		list_add(&rq->queuelist, &rq_list);
-> > > +	} while (blk_mq_dispatch_rq_list(q, &rq_list));
-> > >  }
-> > 
-> > Hello Ming,
-> > 
-> > Although I like the idea behind this patch, I'm afraid that this patch will
-> > cause a performance regression for high-performance SCSI LLD drivers, e.g.
-> > ib_srp. Have you considered to rework this patch as follows:
-> > * Remove the code under "else if (!has_sched_dispatch && !q->queue_depth) {".
-> 
-> This will affect devices such as NVMe in which busy isn't triggered
-> basically, so better to not do this.
-> 
-> > * Modify all blk_mq_dispatch_rq_list() functions such that these dispatch up
-> >   to cmd_per_lun - (number of requests in progress) at once.
-> 
-> How can we get the accurate 'number of requests in progress' efficiently?
-> 
-> And we have done it in this way for blk-mq scheduler already, so it
-> shouldn't be a problem.
-> 
-> From my test data of mq-deadline on lpfc, the performance is good,
-> please see it in cover letter.
-
-Forget to mention, ctx->list is one per-cpu list and the lock is percpu
-lock, so changing to this way shouldn't be a performance issue.
-
--- 
-Ming
+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
