@@ -1,71 +1,73 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH 1/2] block: Zoned block device single-threaded submission
-Date: Tue,  1 Aug 2017 18:39:16 +0900
-Message-ID: <20170801093917.4131-2-damien.lemoal@wdc.com>
-References: <20170801093917.4131-1-damien.lemoal@wdc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:62518 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751729AbdHAJkx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2017 05:40:53 -0400
-In-Reply-To: <20170801093917.4131-1-damien.lemoal@wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH 03/14] blk-mq: introduce blk_mq_dispatch_rq_from_ctxs()
+Date: Tue, 1 Aug 2017 18:07:27 +0800
+Message-ID: <20170801100725.GA31452@ming.t460p>
+References: <20170731165111.11536-1-ming.lei@redhat.com>
+ <20170731165111.11536-5-ming.lei@redhat.com>
+ <1501542577.2466.26.camel@wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1501542577.2466.26.camel@wdc.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>
-Cc: Hannes Reinecke <hare@suse.de>, Bart Van Assche <Bart.VanAssche@wdc.com>, Christoph Hellwig <hch@lst.de>
 
-From: Hannes Reinecke <hare@suse.de>
+On Mon, Jul 31, 2017 at 11:09:38PM +0000, Bart Van Assche wrote:
+> On Tue, 2017-08-01 at 00:51 +0800, Ming Lei wrote:
+> > @@ -810,7 +810,11 @@ static void blk_mq_timeout_work(struct work_struct *work)
+> >  
+> >  struct ctx_iter_data {
+> >  	struct blk_mq_hw_ctx *hctx;
+> > -	struct list_head *list;
+> > +
+> > +	union {
+> > +		struct list_head *list;
+> > +		struct request *rq;
+> > +	};
+> >  };
+> 
+> Hello Ming,
+> 
+> Please introduce a new data structure for dispatch_rq_from_ctx() /
+> blk_mq_dispatch_rq_from_ctxs() instead of introducing a union in struct
+> ctx_iter_data. That will avoid that .list can be used in a context where
+> a struct request * pointer has been stored in the structure and vice versa.
 
-The scsi_request_fn() dispatch function internally unlocks the request
-queue before submitting a request to the underlying LLD. This can
-potentially lead to write request reordering if the context executing
-scsi_request_fn() is preempted before the request is submitted to the
-LLD and another context start the same function execution.
+Looks there isn't such usage now, or we can just both 'list' and 'rq' in
+this data structure if there is.
 
-This is not a problem for regular disks but leads to write I/O errors
-on host managed zoned block devices and reduce the effectivness of
-sequential write optimizations for host aware disks.
-(Note: the zone write lock in place in the scsi command init code will
-prevent multiple writes from being issued simultaneously to the same
-zone to avoid HBA level reordering issues, but this locking mechanism
-is ineffective to prevent reordering at this level)
+>  
+> >  static bool flush_busy_ctx(struct sbitmap *sb, unsigned int bitnr, void *data)
+> > @@ -826,6 +830,26 @@ static bool flush_busy_ctx(struct sbitmap *sb, unsigned int bitnr, void *data)
+> >  	return true;
+> >  }
+> >  
+> > +static bool dispatch_rq_from_ctx(struct sbitmap *sb, unsigned int bitnr, void *data)
+> > +{
+> > +	struct ctx_iter_data *dispatch_data = data;
+> > +	struct blk_mq_hw_ctx *hctx = dispatch_data->hctx;
+> > +	struct blk_mq_ctx *ctx = hctx->ctxs[bitnr];
+> > +	bool empty = true;
+> > +
+> > +	spin_lock(&ctx->lock);
+> > +	if (unlikely(!list_empty(&ctx->rq_list))) {
+> > +		dispatch_data->rq = list_entry_rq(ctx->rq_list.next);
+> > +		list_del_init(&dispatch_data->rq->queuelist);
+> > +		empty = list_empty(&ctx->rq_list);
+> > +	}
+> > +	spin_unlock(&ctx->lock);
+> > +	if (empty)
+> > +		sbitmap_clear_bit(sb, bitnr);
+> 
+> This sbitmap_clear_bit() occurs without holding blk_mq_ctx.lock. Sorry but
+> I don't think this is safe. Please either remove this sbitmap_clear_bit() call
+> or make sure that it happens with blk_mq_ctx.lock held.
 
-Prevent this from happening by limiting the number of context that can
-simultaneously execute the queue request_fn() function to a single
-thread.
+Good catch, sbitmap_clear_bit() should have been done with holding
+ctx->lock, otherwise a new pending bit may be cleared.
 
-A similar patch was originally proposed by Hannes Reinecke in a first
-set of patches implementing ZBC support but ultimately not included in
-the final support implementation. See commit 92f5e2a295
-"block: add flag for single-threaded submission" in the tree
-https://git.kernel.org/pub/scm/linux/kernel/git/hare/scsi-devel.git/log/?h=zac.v3
-
-Authorship thus goes to Hannes.
-
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
----
- block/blk-core.c | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/block/blk-core.c b/block/blk-core.c
-index dbecbf4a64e0..cf590cbddcfd 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -371,7 +371,14 @@ inline void __blk_run_queue_uncond(struct request_queue *q)
- 	 * running such a request function concurrently. Keep track of the
- 	 * number of active request_fn invocations such that blk_drain_queue()
- 	 * can wait until all these request_fn calls have finished.
-+	 *
-+	 * For zoned block devices, do not allow multiple threads to
-+	 * dequeue requests as this can lead to write request reordering
-+	 * during the time the queue is unlocked.
- 	 */
-+	if (blk_queue_is_zoned(q) && q->request_fn_active)
-+		return;
-+
- 	q->request_fn_active++;
- 	q->request_fn(q);
- 	q->request_fn_active--;
 -- 
-2.13.3
+Ming
