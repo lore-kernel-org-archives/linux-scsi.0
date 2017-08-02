@@ -1,15 +1,15 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 06/21] lpfc: convert info messages to standard messages
-Date: Wed,  2 Aug 2017 16:36:33 -0700
-Message-ID: <20170802233648.4573-7-jsmart2021@gmail.com>
+Subject: [PATCH 07/21] lpfc: Correct return error codes to align with nvme_fc transport
+Date: Wed,  2 Aug 2017 16:36:34 -0700
+Message-ID: <20170802233648.4573-8-jsmart2021@gmail.com>
 References: <20170802233648.4573-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:35614 "EHLO
-        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751959AbdHBXh7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Aug 2017 19:37:59 -0400
-Received: by mail-qk0-f193.google.com with SMTP id a77so6098444qkb.2
-        for <linux-scsi@vger.kernel.org>; Wed, 02 Aug 2017 16:37:59 -0700 (PDT)
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:35055 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751964AbdHBXiB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Aug 2017 19:38:01 -0400
+Received: by mail-qt0-f194.google.com with SMTP id t37so6144452qtg.2
+        for <linux-scsi@vger.kernel.org>; Wed, 02 Aug 2017 16:38:01 -0700 (PDT)
 In-Reply-To: <20170802233648.4573-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,36 +18,157 @@ Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.
 
 From: Dick Kennedy <dick.kennedy@broadcom.com>
 
-Transitioned some informational discovery messages to now always
-be displayed when log_verbose is set.
+Modify driver return error codes to align with host nvme transport.
+
+Driver isn't returning Exxx error codes to properly reflect out of
+resource or connectivity conditions (-EBUSY), yet there were hard
+error conditions returning -EBUSY.
+
+Fix to return:
+temporary failures or temporary resource availability: -EBUSY
+Connectivity issues: -ENODEV
+all others are treated as hard errors and return an -Exxx value
+that indicates the type of error.
+
+Also, lpfc_sli4_issue_wqe() was modified to not translate error
+from -Exxx to WQE state.  This allows lpfc_nvme_fcp_io_submit()
+routine to just return whatever -E value was returned from other
+routines.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_ct.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_nvme.c |  9 ++++-----
+ drivers/scsi/lpfc/lpfc_sli.c  | 23 ++++++++++++++---------
+ 2 files changed, 18 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index 9c0c1463057d..33417681f5d4 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -955,7 +955,7 @@ lpfc_cmpl_ct_cmd_gft_id(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		CTrsp = (struct lpfc_sli_ct_request *)outp->virt;
- 		fc4_data_0 = be32_to_cpu(CTrsp->un.gft_acc.fc4_types[0]);
- 		fc4_data_1 = be32_to_cpu(CTrsp->un.gft_acc.fc4_types[1]);
--		lpfc_printf_vlog(vport, KERN_ERR, LOG_DISCOVERY,
-+		lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
- 				 "3062 DID x%06x GFT Wd0 x%08x Wd1 x%08x\n",
- 				 did, fc4_data_0, fc4_data_1);
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index 2f50df6a3dca..87e0743c4ace 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -364,7 +364,7 @@ lpfc_nvme_gen_req(struct lpfc_vport *vport, struct lpfc_dmabuf *bmp,
+ 			 genwqe->sli4_xritag, genwqe->iotag, ndlp->nlp_DID);
  
-@@ -969,7 +969,7 @@ lpfc_cmpl_ct_cmd_gft_id(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 				ndlp->nlp_fc4_type |= NLP_FC4_FCP;
- 			if (fc4_data_1 &  LPFC_FC4_TYPE_BITMASK)
- 				ndlp->nlp_fc4_type |= NLP_FC4_NVME;
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_DISCOVERY,
-+			lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
- 					 "3064 Setting ndlp %p, DID x%06x with "
- 					 "FC4 x%08x, Data: x%08x x%08x\n",
- 					 ndlp, did, ndlp->nlp_fc4_type,
+ 	rc = lpfc_sli4_issue_wqe(phba, LPFC_ELS_RING, genwqe);
+-	if (rc == WQE_ERROR) {
++	if (rc) {
+ 		lpfc_printf_vlog(vport, KERN_ERR, LOG_ELS,
+ 				 "6045 Issue GEN REQ WQE to NPORT x%x "
+ 				 "Data: x%x x%x\n",
+@@ -1270,7 +1270,7 @@ lpfc_nvme_fcp_io_submit(struct nvme_fc_local_port *pnvme_lport,
+ 	 * not exceed the programmed depth.
+ 	 */
+ 	if (atomic_read(&ndlp->cmd_pending) >= ndlp->cmd_qdepth) {
+-		ret = -EAGAIN;
++		ret = -EBUSY;
+ 		goto out_fail;
+ 	}
+ 
+@@ -1279,7 +1279,7 @@ lpfc_nvme_fcp_io_submit(struct nvme_fc_local_port *pnvme_lport,
+ 		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_IOERR,
+ 				 "6065 driver's buffer pool is empty, "
+ 				 "IO failed\n");
+-		ret = -ENOMEM;
++		ret = -EBUSY;
+ 		goto out_fail;
+ 	}
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+@@ -1332,7 +1332,6 @@ lpfc_nvme_fcp_io_submit(struct nvme_fc_local_port *pnvme_lport,
+ 				 "sid: x%x did: x%x oxid: x%x\n",
+ 				 ret, vport->fc_myDID, ndlp->nlp_DID,
+ 				 lpfc_ncmd->cur_iocbq.sli4_xritag);
+-		ret = -EBUSY;
+ 		goto out_free_nvme_buf;
+ 	}
+ 
+@@ -1576,7 +1575,7 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
+ 	abts_buf->wqe_cmpl = lpfc_nvme_abort_fcreq_cmpl;
+ 	ret_val = lpfc_sli4_issue_wqe(phba, LPFC_FCP_RING, abts_buf);
+ 	spin_unlock_irqrestore(&phba->hbalock, flags);
+-	if (ret_val == IOCB_ERROR) {
++	if (ret_val) {
+ 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_ABTS,
+ 				 "6137 Failed abts issue_wqe with status x%x "
+ 				 "for nvme_fcreq %p.\n",
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 0615bf9def23..8476e3d249b0 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -106,7 +106,7 @@ lpfc_get_iocb_from_iocbq(struct lpfc_iocbq *iocbq)
+  * -ENOMEM.
+  * The caller is expected to hold the hbalock when calling this routine.
+  **/
+-static uint32_t
++static int
+ lpfc_sli4_wq_put(struct lpfc_queue *q, union lpfc_wqe *wqe)
+ {
+ 	union lpfc_wqe *temp_wqe;
+@@ -123,7 +123,7 @@ lpfc_sli4_wq_put(struct lpfc_queue *q, union lpfc_wqe *wqe)
+ 	idx = ((q->host_index + 1) % q->entry_count);
+ 	if (idx == q->hba_index) {
+ 		q->WQ_overflow++;
+-		return -ENOMEM;
++		return -EBUSY;
+ 	}
+ 	q->WQ_posted++;
+ 	/* set consumption flag every once in a while */
+@@ -10741,7 +10741,7 @@ lpfc_sli4_abort_nvme_io(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 	abtsiocbp->vport = vport;
+ 	abtsiocbp->wqe_cmpl = lpfc_nvme_abort_fcreq_cmpl;
+ 	retval = lpfc_sli4_issue_wqe(phba, LPFC_FCP_RING, abtsiocbp);
+-	if (retval == IOCB_ERROR) {
++	if (retval) {
+ 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME,
+ 				 "6147 Failed abts issue_wqe with status x%x "
+ 				 "for oxid x%x\n",
+@@ -18891,6 +18891,7 @@ lpfc_sli4_issue_wqe(struct lpfc_hba *phba, uint32_t ring_number,
+ 	struct lpfc_sglq *sglq;
+ 	struct lpfc_sli_ring *pring;
+ 	unsigned long iflags;
++	uint32_t ret = 0;
+ 
+ 	/* NVME_LS and NVME_LS ABTS requests. */
+ 	if (pwqe->iocb_flag & LPFC_IO_NVME_LS) {
+@@ -18909,10 +18910,12 @@ lpfc_sli4_issue_wqe(struct lpfc_hba *phba, uint32_t ring_number,
+ 		}
+ 		bf_set(wqe_xri_tag, &pwqe->wqe.xmit_bls_rsp.wqe_com,
+ 		       pwqe->sli4_xritag);
+-		if (lpfc_sli4_wq_put(phba->sli4_hba.nvmels_wq, wqe)) {
++		ret = lpfc_sli4_wq_put(phba->sli4_hba.nvmels_wq, wqe);
++		if (ret) {
+ 			spin_unlock_irqrestore(&pring->ring_lock, iflags);
+-			return WQE_ERROR;
++			return ret;
+ 		}
++
+ 		lpfc_sli_ringtxcmpl_put(phba, pring, pwqe);
+ 		spin_unlock_irqrestore(&pring->ring_lock, iflags);
+ 		return 0;
+@@ -18927,9 +18930,10 @@ lpfc_sli4_issue_wqe(struct lpfc_hba *phba, uint32_t ring_number,
+ 		wq = phba->sli4_hba.nvme_wq[pwqe->hba_wqidx];
+ 		bf_set(wqe_cqid, &wqe->generic.wqe_com,
+ 		      phba->sli4_hba.nvme_cq[pwqe->hba_wqidx]->queue_id);
+-		if (lpfc_sli4_wq_put(wq, wqe)) {
++		ret = lpfc_sli4_wq_put(wq, wqe);
++		if (ret) {
+ 			spin_unlock_irqrestore(&pring->ring_lock, iflags);
+-			return WQE_ERROR;
++			return ret;
+ 		}
+ 		lpfc_sli_ringtxcmpl_put(phba, pring, pwqe);
+ 		spin_unlock_irqrestore(&pring->ring_lock, iflags);
+@@ -18953,9 +18957,10 @@ lpfc_sli4_issue_wqe(struct lpfc_hba *phba, uint32_t ring_number,
+ 		wq = phba->sli4_hba.nvme_wq[pwqe->hba_wqidx];
+ 		bf_set(wqe_cqid, &wqe->generic.wqe_com,
+ 		      phba->sli4_hba.nvme_cq[pwqe->hba_wqidx]->queue_id);
+-		if (lpfc_sli4_wq_put(wq, wqe)) {
++		ret = lpfc_sli4_wq_put(wq, wqe);
++		if (ret) {
+ 			spin_unlock_irqrestore(&pring->ring_lock, iflags);
+-			return WQE_ERROR;
++			return ret;
+ 		}
+ 		lpfc_sli_ringtxcmpl_put(phba, pring, pwqe);
+ 		spin_unlock_irqrestore(&pring->ring_lock, iflags);
 -- 
 2.13.1
