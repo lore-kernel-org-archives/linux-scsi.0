@@ -1,15 +1,15 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 11/21] lpfc: Fix NVME PRLI handling during RSCN
-Date: Wed,  2 Aug 2017 16:36:38 -0700
-Message-ID: <20170802233648.4573-12-jsmart2021@gmail.com>
+Subject: [PATCH 08/21] lpfc: Fix handling of FCP and NVME FC4 types in Pt2Pt topology
+Date: Wed,  2 Aug 2017 16:36:35 -0700
+Message-ID: <20170802233648.4573-9-jsmart2021@gmail.com>
 References: <20170802233648.4573-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:38456 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751965AbdHBXiI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Aug 2017 19:38:08 -0400
-Received: by mail-qt0-f196.google.com with SMTP id p3so6126505qtg.5
-        for <linux-scsi@vger.kernel.org>; Wed, 02 Aug 2017 16:38:08 -0700 (PDT)
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:34497 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751809AbdHBXiC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Aug 2017 19:38:02 -0400
+Received: by mail-qk0-f193.google.com with SMTP id q66so6121122qki.1
+        for <linux-scsi@vger.kernel.org>; Wed, 02 Aug 2017 16:38:02 -0700 (PDT)
 In-Reply-To: <20170802233648.4573-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,40 +18,124 @@ Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.
 
 From: Dick Kennedy <dick.kennedy@broadcom.com>
 
-A race condition was found whereby the initiator would receive
-the RSCN for a new NVME device before it had a chance to register
-its FC4 support with the fabric. Thus, when queried by the initiator,
-it would see that the target supported FC-NVME.
+After link bounce in a NVME Pt2Pt config, the driver managed to
+map the same nport twice, resulting in multiple device nodes for the
+same namespace.
 
-Corrected by making the assumption that the target always supports
-FC-NVME thus a PRLI is sent. It's ok for the target to reject it.
+In Pt2Pt, the driver must send PRLI's for both (scsi) FCP and NVME
+rather than using fabric aids. The driver was inconsistent on handling
+various PRLI completions, especially rejects, which had reject codes
+cross the different protocol PRLI completions.
+
+Fixed to perform the following:
+if nvmet mode (fc port can only be a nvme target) - rejects all
+unsolicitly FCP PRLI's. Never issues a FCP PRLI.
+
+The multiple protocol PRLI's are sent simultaneously. However, driver
+will now only state transition after both PRLI's are complete. New
+flags were added to aid tracking the responses from the different PRLI's.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/scsi/lpfc/lpfc_disc.h      |  1 +
+ drivers/scsi/lpfc/lpfc_els.c       | 30 ++++++++++++++++++++++++++++++
+ drivers/scsi/lpfc/lpfc_nportdisc.c |  9 +++++++++
+ 3 files changed, 40 insertions(+)
 
+diff --git a/drivers/scsi/lpfc/lpfc_disc.h b/drivers/scsi/lpfc/lpfc_disc.h
+index 094c97b9e5f7..f9a566eaef04 100644
+--- a/drivers/scsi/lpfc/lpfc_disc.h
++++ b/drivers/scsi/lpfc/lpfc_disc.h
+@@ -159,6 +159,7 @@ struct lpfc_node_rrq {
+ #define NLP_RNID_SND       0x00000400	/* sent RNID request for this entry */
+ #define NLP_ELS_SND_MASK   0x000007e0	/* sent ELS request for this entry */
+ #define NLP_NVMET_RECOV    0x00001000   /* NVMET auditing node for recovery. */
++#define NLP_FCP_PRLI_RJT   0x00002000   /* Rport does not support FCP PRLI. */
+ #define NLP_DEFER_RM       0x00010000	/* Remove this ndlp if no longer used */
+ #define NLP_DELAY_TMO      0x00020000	/* delay timeout is running for node */
+ #define NLP_NPR_2B_DISC    0x00040000	/* node is included in num_disc_nodes */
 diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index fe0dd42b75af..9a8808abe61f 100644
+index 9e9aa8bb7001..6962e22087c8 100644
 --- a/drivers/scsi/lpfc/lpfc_els.c
 +++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -2177,6 +2177,16 @@ lpfc_issue_els_prli(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	uint16_t cmdsize;
- 	u32 local_nlp_type, elscmd;
+@@ -1966,6 +1966,7 @@ int
+ lpfc_issue_els_plogi(struct lpfc_vport *vport, uint32_t did, uint8_t retry)
+ {
+ 	struct lpfc_hba  *phba = vport->phba;
++	struct Scsi_Host *shost;
+ 	struct serv_parm *sp;
+ 	struct lpfc_nodelist *ndlp;
+ 	struct lpfc_iocbq *elsiocb;
+@@ -1984,6 +1985,11 @@ lpfc_issue_els_plogi(struct lpfc_vport *vport, uint32_t did, uint8_t retry)
+ 	if (!elsiocb)
+ 		return 1;
  
-+	/*
-+	 * If we are in RSCN mode, the FC4 types supported from a
-+	 * previous GFT_ID command may not be accurate. So, if we
-+	 * are a NVME Initiator, always look for the possibility of
-+	 * the remote NPort beng a NVME Target.
-+	 */
-+	if (phba->sli_rev == LPFC_SLI_REV4 &&
-+	    vport->fc_flag & FC_RSCN_MODE &&
-+	    vport->nvmei_support)
-+		ndlp->nlp_fc4_type |= NLP_FC4_NVME;
- 	local_nlp_type = ndlp->nlp_fc4_type;
++	shost = lpfc_shost_from_vport(vport);
++	spin_lock_irq(shost->host_lock);
++	ndlp->nlp_flag &= ~NLP_FCP_PRLI_RJT;
++	spin_unlock_irq(shost->host_lock);
++
+ 	pcmd = (uint8_t *) (((struct lpfc_dmabuf *) elsiocb->context2)->virt);
  
-  send_next_prli:
+ 	/* For PLOGI request, remainder of payload is service parameters */
+@@ -3442,6 +3448,23 @@ lpfc_els_retry(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 				goto out_retry;
+ 			}
+ 			break;
++		case LSRJT_CMD_UNSUPPORTED:
++			/* lpfc nvmet returns this type of LS_RJT when it
++			 * receives an FCP PRLI because lpfc nvmet only
++			 * support NVME.  ELS request is terminated for FCP4
++			 * on this rport.
++			 */
++			if (stat.un.b.lsRjtRsnCodeExp ==
++			    LSEXP_REQ_UNSUPPORTED) {
++				if (cmd == ELS_CMD_PRLI) {
++					spin_lock_irq(shost->host_lock);
++					ndlp->nlp_flag |= NLP_FCP_PRLI_RJT;
++					spin_unlock_irq(shost->host_lock);
++					retry = 0;
++					goto out_retry;
++				}
++			}
++			break;
+ 		}
+ 		break;
+ 
+@@ -8013,6 +8036,13 @@ lpfc_els_unsol_buffer(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 			rjt_exp = LSEXP_NOTHING_MORE;
+ 			break;
+ 		}
++
++		/* NVMET accepts NVME PRLI only.  Reject FCP PRLI */
++		if (cmd == ELS_CMD_PRLI && phba->nvmet_support) {
++			rjt_err = LSRJT_CMD_UNSUPPORTED;
++			rjt_exp = LSEXP_REQ_UNSUPPORTED;
++			break;
++		}
+ 		lpfc_disc_state_machine(vport, ndlp, elsiocb, NLP_EVT_RCV_PRLI);
+ 		break;
+ 	case ELS_CMD_LIRR:
+diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+index a4488d6339c1..f3ad7cac355d 100644
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -1895,6 +1895,15 @@ lpfc_cmpl_prli_prli_issue(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 			goto out;
+ 		}
+ 
++		/* When the rport rejected the FCP PRLI as unsupported.
++		 * This should only happen in Pt2Pt so an NVME PRLI
++		 * should be outstanding still.
++		 */
++		if (npr && ndlp->nlp_flag & NLP_FCP_PRLI_RJT) {
++			ndlp->nlp_fc4_type &= ~NLP_FC4_FCP;
++			goto out_err;
++		}
++
+ 		/* The LS Req had some error.  Don't let this be a
+ 		 * target.
+ 		 */
 -- 
 2.13.1
