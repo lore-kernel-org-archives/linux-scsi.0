@@ -1,36 +1,48 @@
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Subject: [PATCH 3/3] scsi: mptsas: constify pci_device_id.
-Date: Wed,  2 Aug 2017 22:59:05 +0530
-Message-ID: <1501694945-18061-4-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1501694945-18061-1-git-send-email-arvind.yadav.cs@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1501694945-18061-1-git-send-email-arvind.yadav.cs@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com
-Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: James Smart <jsmart2021@gmail.com>
+Subject: [PATCH 01/21] lpfc: Fix opps when ExpressLane is enabled
+Date: Wed,  2 Aug 2017 16:36:28 -0700
+Message-ID: <20170802233648.4573-2-jsmart2021@gmail.com>
+References: <20170802233648.4573-1-jsmart2021@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:34540 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751168AbdHBXhv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Aug 2017 19:37:51 -0400
+Received: by mail-qt0-f194.google.com with SMTP id i19so6160788qte.1
+        for <linux-scsi@vger.kernel.org>; Wed, 02 Aug 2017 16:37:51 -0700 (PDT)
+In-Reply-To: <20170802233648.4573-1-jsmart2021@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-pci_device_id are not supposed to change at runtime. All functions
-working with pci_device_id provided by <linux/pci.h> work with
-const pci_device_id. So mark the non-const structs as const.
+From: Dick Kennedy <dick.kennedy@broadcom.com>
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Null pointer dereference in lpfc_sli4_fof_intr_handler
+
+The driver does not set up cq->assoc_qp for sli4_hba->oas_cq
+
+Initialize cq->assoc_qp before accessing it
+
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/message/fusion/mptsas.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_sli.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index f6308ad..8604573 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -5358,7 +5358,7 @@ static void mptsas_remove(struct pci_dev *pdev)
- 	mptscsih_remove(pdev);
- }
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index e948ea05fd33..0615bf9def23 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -13557,6 +13557,9 @@ lpfc_sli4_fof_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe)
+ 	/* Save EQ associated with this CQ */
+ 	cq->assoc_qp = phba->sli4_hba.fof_eq;
  
--static struct pci_device_id mptsas_pci_table[] = {
-+static const struct pci_device_id mptsas_pci_table[] = {
- 	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1064,
- 		PCI_ANY_ID, PCI_ANY_ID },
- 	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1068,
++	/* Save EQ associated with this CQ */
++	cq->assoc_qp = phba->sli4_hba.fof_eq;
++
+ 	/* Process all the entries to the OAS CQ */
+ 	while ((cqe = lpfc_sli4_cq_get(cq))) {
+ 		workposted |= lpfc_sli4_fp_handle_cqe(phba, cq, cqe);
 -- 
-2.7.4
+2.13.1
