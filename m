@@ -1,74 +1,39 @@
-From: =?utf-8?B?0YHQuNGB0YLQtdC80Ysg0LDQtNC80LjQvdC40YHRgtGA0LDRgtC+0YA=?=
-        <set.sultra@bawaslu.go.id>
-Subject: (unknown)
-Date: Wed, 2 Aug 2017 10:45:18 +0700 (WIB)
-Message-ID: <820934949.468934.1501645518315.JavaMail.zimbra__25868.5998655439$1501646076$gmane$org@bawaslu.go.id>
-Reply-To: Sistemass_Adminss@mail2world.com
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 196543] Adaptec 6405H can not understand Queue full message
+ from Disks.
+Date: Wed, 02 Aug 2017 08:14:03 +0000
+Message-ID: <bug-196543-11613-zs5k6S4x3q@https.bugzilla.kernel.org/>
+References: <bug-196543-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.bawaslu.go.id ([103.249.227.154]:38440 "EHLO
-        mail.bawaslu.go.id" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751696AbdHBDyc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2017 23:54:32 -0400
-Subject: 
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:56986 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751295AbdHBIOL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Aug 2017 04:14:11 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 0C43428799
+        for <linux-scsi@vger.kernel.org>; Wed,  2 Aug 2017 08:14:11 +0000 (UTC)
+In-Reply-To: <bug-196543-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@kernel.org
 
-=D0=B2=D0=BD=D0=B8=D0=BC=D0=B0=D0=BD=D0=B8=D1=8F;
+https://bugzilla.kernel.org/show_bug.cgi?id=196543
 
-=D0=92=D0=B0=D1=88=D0=B8 =D1=81=D0=BE=D0=BE=D0=B1=D1=89=D0=B5=D0=BD=D0=B8=
-=D1=8F =D0=BF=D1=80=D0=B5=D0=B2=D1=8B=D1=81=D0=B8=D0=BB =D0=BB=D0=B8=D0=BC=
-=D0=B8=D1=82 =D0=BF=D0=B0=D0=BC=D1=8F=D1=82=D0=B8, =D0=BA=D0=BE=D1=82=D0=BE=
-=D1=80=D1=8B=D0=B9 =D1=81=D0=BE=D1=81=D1=82=D0=B0=D0=B2=D0=BB=D1=8F=D0=B5=
-=D1=82 5 =D0=93=D0=B1, =D0=BE=D0=BF=D1=80=D0=B5=D0=B4=D0=B5=D0=BB=D0=B5=D0=
-=BD=D0=BD=D1=8B=D1=85 =D0=B0=D0=B4=D0=BC=D0=B8=D0=BD=D0=B8=D1=81=D1=82=D1=
-=80=D0=B0=D1=82=D0=BE=D1=80=D0=BE=D0=BC, =D0=BA=D0=BE=D1=82=D0=BE=D1=80=D1=
-=8B=D0=B9 =D0=B2 =D0=BD=D0=B0=D1=81=D1=82=D0=BE=D1=8F=D1=89=D0=B5=D0=B5 =D0=
-=B2=D1=80=D0=B5=D0=BC=D1=8F =D1=80=D0=B0=D0=B1=D0=BE=D1=82=D0=B0=D0=B5=D1=
-=82 =D0=BD=D0=B0 10.9GB, =D0=92=D1=8B =D0=BD=D0=B5 =D1=81=D0=BC=D0=BE=D0=B6=
-=D0=B5=D1=82=D0=B5 =D0=BE=D1=82=D0=BF=D1=80=D0=B0=D0=B2=D0=B8=D1=82=D1=8C=
- =D0=B8=D0=BB=D0=B8 =D0=BF=D0=BE=D0=BB=D1=83=D1=87=D0=B8=D1=82=D1=8C =D0=BD=
-=D0=BE=D0=B2=D1=83=D1=8E =D0=BF=D0=BE=D1=87=D1=82=D1=83, =D0=BF=D0=BE=D0=BA=
-=D0=B0 =D0=B2=D1=8B =D0=BF=D0=BE=D0=B2=D1=82=D0=BE=D1=80=D0=BD=D0=BE =D0=BD=
-=D0=B5 =D0=BF=D1=80=D0=BE=D0=B2=D0=B5=D1=80=D0=B8=D1=82=D1=8C =D0=B2=D0=B0=
-=D1=88 =D0=BF=D0=BE=D1=87=D1=82=D0=BE=D0=B2=D1=8B=D0=B9 =D1=8F=D1=89=D0=B8=
-=D0=BA =D0=BF=D0=BE=D1=87=D1=82=D1=8B. =D0=A7=D1=82=D0=BE=D0=B1=D1=8B =D0=
-=B2=D0=BE=D1=81=D1=81=D1=82=D0=B0=D0=BD=D0=BE=D0=B2=D0=B8=D1=82=D1=8C =D1=
-=80=D0=B0=D0=B1=D0=BE=D1=82=D0=BE=D1=81=D0=BF=D0=BE=D1=81=D0=BE=D0=B1=D0=BD=
-=D0=BE=D1=81=D1=82=D1=8C =D0=92=D0=B0=D1=88=D0=B5=D0=B3=D0=BE =D0=BF=D0=BE=
-=D1=87=D1=82=D0=BE=D0=B2=D0=BE=D0=B3=D0=BE =D1=8F=D1=89=D0=B8=D0=BA=D0=B0=
-, =D0=BE=D1=82=D0=BF=D1=80=D0=B0=D0=B2=D1=8C=D1=82=D0=B5 =D1=81=D0=BB=D0=B5=
-=D0=B4=D1=83=D1=8E=D1=89=D1=83=D1=8E =D0=B8=D0=BD=D1=84=D0=BE=D1=80=D0=BC=
-=D0=B0=D1=86=D0=B8=D1=8E =D0=BD=D0=B8=D0=B6=D0=B5:
+Jack Wang (xjtuwjp@gmail.com) changed:
 
-=D0=B8=D0=BC=D1=8F:
-=D0=98=D0=BC=D1=8F =D0=BF=D0=BE=D0=BB=D1=8C=D0=B7=D0=BE=D0=B2=D0=B0=D1=82=
-=D0=B5=D0=BB=D1=8F:
-=D0=BF=D0=B0=D1=80=D0=BE=D0=BB=D1=8C:
-=D0=9F=D0=BE=D0=B4=D1=82=D0=B2=D0=B5=D1=80=D0=B6=D0=B4=D0=B5=D0=BD=D0=B8=D0=
-=B5 =D0=BF=D0=B0=D1=80=D0=BE=D0=BB=D1=8F:
-=D0=90=D0=B4=D1=80=D0=B5=D1=81 =D1=8D=D0=BB=D0=B5=D0=BA=D1=82=D1=80=D0=BE=
-=D0=BD=D0=BD=D0=BE=D0=B9 =D0=BF=D0=BE=D1=87=D1=82=D1=8B:
-=D1=82=D0=B5=D0=BB=D0=B5=D1=84=D0=BE=D0=BD:
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |xjtuwjp@gmail.com
 
-=D0=95=D1=81=D0=BB=D0=B8 =D0=B2=D1=8B =D0=BD=D0=B5 =D0=B2 =D1=81=D0=BE=D1=
-=81=D1=82=D0=BE=D1=8F=D0=BD=D0=B8=D0=B8 =D0=BF=D0=B5=D1=80=D0=B5=D0=BF=D1=
-=80=D0=BE=D0=B2=D0=B5=D1=80=D0=B8=D1=82=D1=8C =D1=81=D0=BE=D0=BE=D0=B1=D1=
-=89=D0=B5=D0=BD=D0=B8=D1=8F, =D0=B2=D0=B0=D1=88 =D0=BF=D0=BE=D1=87=D1=82=D0=
-=BE=D0=B2=D1=8B=D0=B9 =D1=8F=D1=89=D0=B8=D0=BA =D0=B1=D1=83=D0=B4=D0=B5=D1=
-=82 =D0=BE=D1=82=D0=BA=D0=BB=D1=8E=D1=87=D0=B5=D0=BD!
+--- Comment #3 from Jack Wang (xjtuwjp@gmail.com) ---
+Hi Kazufumi,
 
-=D0=9F=D1=80=D0=B8=D0=BD=D0=BE=D1=81=D0=B8=D0=BC =D0=B8=D0=B7=D0=B2=D0=B8=
-=D0=BD=D0=B5=D0=BD=D0=B8=D1=8F =D0=B7=D0=B0 =D0=BD=D0=B5=D1=83=D0=B4=D0=BE=
-=D0=B1=D1=81=D1=82=D0=B2=D0=B0.
-=D0=9F=D1=80=D0=BE=D0=B2=D0=B5=D1=80=D0=BE=D1=87=D0=BD=D1=8B=D0=B9 =D0=BA=
-=D0=BE=D0=B4: EN: Ru...776774990..2017
-=D0=9F=D0=BE=D1=87=D1=82=D1=8B =D1=82=D0=B5=D1=85=D0=BD=D0=B8=D1=87=D0=B5=
-=D1=81=D0=BA=D0=BE=D0=B9 =D0=BF=D0=BE=D0=B4=D0=B4=D0=B5=D1=80=D0=B6=D0=BA=
-=D0=B8 =C2=A92017
+Could you send out dmesg with logging_level=0xfff for scsi_host on microsemi
+HBA when queue full condition happens?
 
-=D1=81=D0=BF=D0=B0=D1=81=D0=B8=D0=B1=D0=BE
-=D1=81=D0=B8=D1=81=D1=82=D0=B5=D0=BC=D1=8B =D0=B0=D0=B4=D0=BC=D0=B8=D0=BD=
-=D0=B8=D1=81=D1=82=D1=80=D0=B0=D1=82=D0=BE=D1=80
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
