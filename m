@@ -1,15 +1,15 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 15/21] lpfc: Fix relative offset error on large nvmet target ios
-Date: Wed,  2 Aug 2017 16:36:42 -0700
-Message-ID: <20170802233648.4573-16-jsmart2021@gmail.com>
+Subject: [PATCH 12/21] lpfc: Correct issues with FAWWN and FDISCs
+Date: Wed,  2 Aug 2017 16:36:39 -0700
+Message-ID: <20170802233648.4573-13-jsmart2021@gmail.com>
 References: <20170802233648.4573-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:34539 "EHLO
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:34522 "EHLO
         mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751945AbdHBXiO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Aug 2017 19:38:14 -0400
-Received: by mail-qk0-f194.google.com with SMTP id q66so6121485qki.1
-        for <linux-scsi@vger.kernel.org>; Wed, 02 Aug 2017 16:38:14 -0700 (PDT)
+        with ESMTP id S1751987AbdHBXiK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Aug 2017 19:38:10 -0400
+Received: by mail-qk0-f194.google.com with SMTP id q66so6121336qki.1
+        for <linux-scsi@vger.kernel.org>; Wed, 02 Aug 2017 16:38:09 -0700 (PDT)
 In-Reply-To: <20170802233648.4573-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,63 +18,30 @@ Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.
 
 From: Dick Kennedy <dick.kennedy@broadcom.com>
 
-if the nvmet_fc transport breaks an io into multiple sequences,
-the driver will improperly set the relative offset on the 2nd through
-N sequences.
+When using fabric-assigned WWNs, the switch doesn't like copy of
+the FLOGI payload, which includes valid VVL bits, to be used as
+the FDISC paylaod.
 
-Correct by properly formatting the hw cmd so the relative offset is
-picked up from the hw cmd.
+Rather than wait for corrected switch firmware, ensure the VVL bits
+are marked invalid on FDISCs.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_nvmet.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index cd6c93a17760..40fa5dd72bfa 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -559,7 +559,7 @@ lpfc_nvmet_xmt_fcp_op_cmp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdwqe,
- 		/* lpfc_nvmet_xmt_fcp_release() will recycle the context */
- 	} else {
- 		ctxp->entry_cnt++;
--		start_clean = offsetof(struct lpfc_iocbq, wqe);
-+		start_clean = offsetof(struct lpfc_iocbq, iocb_flag);
- 		memset(((char *)cmdwqe) + start_clean, 0,
- 		       (sizeof(struct lpfc_iocbq) - start_clean));
- #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
-@@ -1024,7 +1024,6 @@ lpfc_nvmet_setup_io_context(struct lpfc_hba *phba)
- 		/* Word 7 */
- 		bf_set(wqe_ct, &wqe->generic.wqe_com, SLI4_CT_RPI);
- 		bf_set(wqe_class, &wqe->generic.wqe_com, CLASS3);
--		bf_set(wqe_pu, &wqe->generic.wqe_com, 1);
- 		/* Word 10 */
- 		bf_set(wqe_nvme, &wqe->fcp_tsend.wqe_com, 1);
- 		bf_set(wqe_ebde_cnt, &wqe->generic.wqe_com, 0);
-@@ -1974,6 +1973,7 @@ lpfc_nvmet_prep_fcp_wqe(struct lpfc_hba *phba,
- 		       nvmewqe->sli4_xritag);
- 
- 		/* Word 7 */
-+		bf_set(wqe_pu, &wqe->fcp_tsend.wqe_com, 1);
- 		bf_set(wqe_cmnd, &wqe->fcp_tsend.wqe_com, CMD_FCP_TSEND64_WQE);
- 
- 		/* Word 8 */
-@@ -2082,6 +2082,7 @@ lpfc_nvmet_prep_fcp_wqe(struct lpfc_hba *phba,
- 		       nvmewqe->sli4_xritag);
- 
- 		/* Word 7 */
-+		bf_set(wqe_pu, &wqe->fcp_treceive.wqe_com, 1);
- 		bf_set(wqe_ar, &wqe->fcp_treceive.wqe_com, 0);
- 		bf_set(wqe_cmnd, &wqe->fcp_treceive.wqe_com,
- 		       CMD_FCP_TRECEIVE64_WQE);
-@@ -2165,6 +2166,7 @@ lpfc_nvmet_prep_fcp_wqe(struct lpfc_hba *phba,
- 		       nvmewqe->sli4_xritag);
- 
- 		/* Word 7 */
-+		bf_set(wqe_pu, &wqe->fcp_trsp.wqe_com, 0);
- 		bf_set(wqe_ag, &wqe->fcp_trsp.wqe_com, 1);
- 		bf_set(wqe_cmnd, &wqe->fcp_trsp.wqe_com, CMD_FCP_TRSP64_WQE);
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 9a8808abe61f..f97d578ea6bd 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -8868,6 +8868,7 @@ lpfc_issue_els_fdisc(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 	pcmd += sizeof(uint32_t); /* Node Name */
+ 	pcmd += sizeof(uint32_t); /* Node Name */
+ 	memcpy(pcmd, &vport->fc_nodename, 8);
++	sp->cmn.valid_vendor_ver_level = 0;
+ 	memset(sp->un.vendorVersion, 0, sizeof(sp->un.vendorVersion));
+ 	lpfc_set_disctmo(vport);
  
 -- 
 2.13.1
