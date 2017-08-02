@@ -1,78 +1,62 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 00/13] mpt3sas driver NVMe support:
-Date: Wed, 2 Aug 2017 10:14:40 +0200
-Message-ID: <e679a449-90c3-d2e1-2b31-1387cf414e09@suse.de>
-References: <1500038560-11231-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 1/2] nvmet_fc: add defer_req callback for deferment of
+ cmd buffer return
+Date: Wed, 2 Aug 2017 10:16:17 +0200
+Message-ID: <20170802081617.GD4256@linux-x5ow.site>
+References: <20170801221240.31723-1-jsmart2021@gmail.com>
+ <20170801221240.31723-2-jsmart2021@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1500038560-11231-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, jejb@kernel.org, hch@infradead.org
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, linux-kernel@vger.kernel.org, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com, linux-nvme@lists.infradead.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:48662 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751192AbdHBIQW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 2 Aug 2017 04:16:22 -0400
+Content-Disposition: inline
+In-Reply-To: <20170801221240.31723-2-jsmart2021@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <jsmart2021@gmail.com>
+Cc: linux-nvme@lists.infradead.org, James Smart <james.smart@broadcom.com>, linux-scsi@vger.kernel.org
 
-On 07/14/2017 03:22 PM, Suganath Prabu S wrote:
-> Ventura Series controller are Tri-mode. The controller and
-> firmware are capable of supporting NVMe devices and
-> PCIe switches to be connected with the controller. This
-> patch set adds driver level support for NVMe devices and
-> PCIe switches.
-> 
-> Suganath Prabu S (13):
->   mpt3sas: Update MPI Header
->   mpt3sas: Add nvme device support in slave alloc, target alloc and
->     probe
->   mpt3sas: SGL to PRP Translation for I/Os to NVMe  devices
->   mpt3sas: Added support for nvme encapsulated request message.
->   mpt3sas: API 's to support NVMe drive addition to SML
->   mpt3sas: API's to remove nvme drive from sml
->   mpt3sas: Handle NVMe PCIe device related events generated            
->        from firmware.
->   mpt3sas: Set NVMe device queue depth as 128
->   mpt3sas: scan and add nvme device after controller reset
->   mpt3as: Add-Task-management-debug-info-for-NVMe-drives.
->   mpt3sas: NVMe drive support for BTDHMAPPING ioctl command and log
->     info
->   mpt3sas: Fix nvme drives checking for tlr.
->   mpt3sas: Update mpt3sas driver version.
-> 
->  drivers/scsi/mpt3sas/mpi/mpi2.h          |   43 +-
->  drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h     |  647 ++++++++++-
->  drivers/scsi/mpt3sas/mpi/mpi2_init.h     |   11 +-
->  drivers/scsi/mpt3sas/mpi/mpi2_ioc.h      |  331 ++++++-
->  drivers/scsi/mpt3sas/mpi/mpi2_pci.h      |  142 +++
->  drivers/scsi/mpt3sas/mpi/mpi2_tool.h     |   14 +-
->  drivers/scsi/mpt3sas/mpt3sas_base.c      |  710 +++++++++++-
->  drivers/scsi/mpt3sas/mpt3sas_base.h      |  171 +++-
->  drivers/scsi/mpt3sas/mpt3sas_config.c    |  100 ++
->  drivers/scsi/mpt3sas/mpt3sas_ctl.c       |  158 ++-
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 1874 ++++++++++++++++++++++++++++--
->  drivers/scsi/mpt3sas/mpt3sas_warpdrive.c |    2 +-
->  12 files changed, 4063 insertions(+), 140 deletions(-)
->  create mode 100644 drivers/scsi/mpt3sas/mpi/mpi2_pci.h
-> 
-I'm not happy with this approach.
-NVMe devices should _not_ appear as SCSI devices; this will just confuse
-matters _and_ will be incompatible with 'normal' NVMe devices.
+On Tue, Aug 01, 2017 at 03:12:39PM -0700, James Smart wrote:
+> @@ -463,9 +472,9 @@ static struct nvmet_fc_fcp_iod *
+>  nvmet_fc_alloc_fcp_iod(struct nvmet_fc_tgt_queue *queue)
+>  {
+>  	static struct nvmet_fc_fcp_iod *fod;
+> -	unsigned long flags;
+>  
+> -	spin_lock_irqsave(&queue->qlock, flags);
+> +	/* Caller must hold queue->qlock */
++       lockped_assert_held(&queue->qlock); 
+So we can check if the caller really holds the queue lock.
 
-Rather I would like to see the driver to hook into the existing NVMe
-framework (which essentially means to treat the mpt3sas as a weird
-NVMe-over-Fabrics HBA), and expose the NVMe devices like any other NVMe HBA.
+> +
+>  	fod = list_first_entry_or_null(&queue->fod_list,
+>  					struct nvmet_fc_fcp_iod, fcp_list);
+>  	if (fod) {
 
-I'm sorry that you'll have to redo your patchset (again), but this is
-the only way I see how this patchset can be brought forward.
+[...]
 
-I'd be happy to discuss implementation details with you.
+> +	for (;;) {
+> +		deferfcp = list_first_entry_or_null(&queue->pending_cmd_list,
+> +				struct nvmet_fc_defer_fcp_req, req_list);
+> +		if (!deferfcp)
+> +			break;
 
-Cheers,
+        while ((deferfcp = list_first_entry_or_null(&queue->pending_cmd_list,
+				struct nvmet_fc_defer_fcp_req,
+				req_list)) != NULL) {
+?
 
-Hannes
+Other than that,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 NÃ¼rnberg
-GF: F. ImendÃ¶rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG NÃ¼rnberg)
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
