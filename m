@@ -1,15 +1,15 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 13/21] lpfc: Limit amount of work processed in IRQ
-Date: Wed,  2 Aug 2017 16:36:40 -0700
-Message-ID: <20170802233648.4573-14-jsmart2021@gmail.com>
+Subject: [PATCH 15/21] lpfc: Fix relative offset error on large nvmet target ios
+Date: Wed,  2 Aug 2017 16:36:42 -0700
+Message-ID: <20170802233648.4573-16-jsmart2021@gmail.com>
 References: <20170802233648.4573-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:37922 "EHLO
-        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751945AbdHBXiL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Aug 2017 19:38:11 -0400
-Received: by mail-qk0-f193.google.com with SMTP id m84so6091461qki.5
-        for <linux-scsi@vger.kernel.org>; Wed, 02 Aug 2017 16:38:11 -0700 (PDT)
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:34539 "EHLO
+        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751945AbdHBXiO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Aug 2017 19:38:14 -0400
+Received: by mail-qk0-f194.google.com with SMTP id q66so6121485qki.1
+        for <linux-scsi@vger.kernel.org>; Wed, 02 Aug 2017 16:38:14 -0700 (PDT)
 In-Reply-To: <20170802233648.4573-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,151 +18,63 @@ Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.
 
 From: Dick Kennedy <dick.kennedy@broadcom.com>
 
-Various oops being seen on being in the ISR too long and cpu
-lockups, when under heavy load.
+if the nvmet_fc transport breaks an io into multiple sequences,
+the driver will improperly set the relative offset on the 2nd through
+N sequences.
 
-The amount of work being posted off of completion queues kept
-the ISR running almost all the time
-
-Correct the issue by limiting the amount of work per itteration.
+Correct by properly formatting the hw cmd so the relative offset is
+picked up from the hw cmd.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_sli.c  | 31 +++++++++++++++++++------------
- drivers/scsi/lpfc/lpfc_sli4.h |  1 +
- 2 files changed, 20 insertions(+), 12 deletions(-)
+ drivers/scsi/lpfc/lpfc_nvmet.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 8476e3d249b0..4a6f432a494e 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -80,8 +80,8 @@ static int lpfc_sli4_fp_handle_cqe(struct lpfc_hba *, struct lpfc_queue *,
- 				    struct lpfc_cqe *);
- static int lpfc_sli4_post_sgl_list(struct lpfc_hba *, struct list_head *,
- 				       int);
--static void lpfc_sli4_hba_handle_eqe(struct lpfc_hba *, struct lpfc_eqe *,
--			uint32_t);
-+static int lpfc_sli4_hba_handle_eqe(struct lpfc_hba *phba,
-+				    struct lpfc_eqe *eqe, uint32_t qidx);
- static bool lpfc_sli4_mbox_completions_pending(struct lpfc_hba *phba);
- static bool lpfc_sli4_process_missed_mbox_completions(struct lpfc_hba *phba);
- static int lpfc_sli4_abort_nvme_io(struct lpfc_hba *phba,
-@@ -13010,7 +13010,7 @@ lpfc_sli4_sp_handle_cqe(struct lpfc_hba *phba, struct lpfc_queue *cq,
-  * completion queue, and then return.
-  *
-  **/
--static void
-+static int
- lpfc_sli4_sp_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe,
- 	struct lpfc_queue *speq)
- {
-@@ -13034,7 +13034,7 @@ lpfc_sli4_sp_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe,
- 			lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
- 					"0365 Slow-path CQ identifier "
- 					"(%d) does not exist\n", cqid);
--		return;
-+		return 0;
- 	}
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index cd6c93a17760..40fa5dd72bfa 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -559,7 +559,7 @@ lpfc_nvmet_xmt_fcp_op_cmp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdwqe,
+ 		/* lpfc_nvmet_xmt_fcp_release() will recycle the context */
+ 	} else {
+ 		ctxp->entry_cnt++;
+-		start_clean = offsetof(struct lpfc_iocbq, wqe);
++		start_clean = offsetof(struct lpfc_iocbq, iocb_flag);
+ 		memset(((char *)cmdwqe) + start_clean, 0,
+ 		       (sizeof(struct lpfc_iocbq) - start_clean));
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+@@ -1024,7 +1024,6 @@ lpfc_nvmet_setup_io_context(struct lpfc_hba *phba)
+ 		/* Word 7 */
+ 		bf_set(wqe_ct, &wqe->generic.wqe_com, SLI4_CT_RPI);
+ 		bf_set(wqe_class, &wqe->generic.wqe_com, CLASS3);
+-		bf_set(wqe_pu, &wqe->generic.wqe_com, 1);
+ 		/* Word 10 */
+ 		bf_set(wqe_nvme, &wqe->fcp_tsend.wqe_com, 1);
+ 		bf_set(wqe_ebde_cnt, &wqe->generic.wqe_com, 0);
+@@ -1974,6 +1973,7 @@ lpfc_nvmet_prep_fcp_wqe(struct lpfc_hba *phba,
+ 		       nvmewqe->sli4_xritag);
  
- 	/* Save EQ associated with this CQ */
-@@ -13071,7 +13071,7 @@ lpfc_sli4_sp_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe,
- 		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
- 				"0370 Invalid completion queue type (%d)\n",
- 				cq->type);
--		return;
-+		return 0;
- 	}
+ 		/* Word 7 */
++		bf_set(wqe_pu, &wqe->fcp_tsend.wqe_com, 1);
+ 		bf_set(wqe_cmnd, &wqe->fcp_tsend.wqe_com, CMD_FCP_TSEND64_WQE);
  
- 	/* Catch the no cq entry condition, log an error */
-@@ -13086,6 +13086,8 @@ lpfc_sli4_sp_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe,
- 	/* wake up worker thread if there are works to be done */
- 	if (workposted)
- 		lpfc_worker_wake_up(phba);
-+
-+	return ecount;
- }
+ 		/* Word 8 */
+@@ -2082,6 +2082,7 @@ lpfc_nvmet_prep_fcp_wqe(struct lpfc_hba *phba,
+ 		       nvmewqe->sli4_xritag);
  
- /**
-@@ -13393,7 +13395,7 @@ lpfc_sli4_fp_handle_cqe(struct lpfc_hba *phba, struct lpfc_queue *cq,
-  * queue and process all the entries on the completion queue, rearm the
-  * completion queue, and then return.
-  **/
--static void
-+static int
- lpfc_sli4_hba_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe,
- 			uint32_t qidx)
- {
-@@ -13409,7 +13411,7 @@ lpfc_sli4_hba_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe,
- 				"event: majorcode=x%x, minorcode=x%x\n",
- 				bf_get_le32(lpfc_eqe_major_code, eqe),
- 				bf_get_le32(lpfc_eqe_minor_code, eqe));
--		return;
-+		return 0;
- 	}
+ 		/* Word 7 */
++		bf_set(wqe_pu, &wqe->fcp_treceive.wqe_com, 1);
+ 		bf_set(wqe_ar, &wqe->fcp_treceive.wqe_com, 0);
+ 		bf_set(wqe_cmnd, &wqe->fcp_treceive.wqe_com,
+ 		       CMD_FCP_TRECEIVE64_WQE);
+@@ -2165,6 +2166,7 @@ lpfc_nvmet_prep_fcp_wqe(struct lpfc_hba *phba,
+ 		       nvmewqe->sli4_xritag);
  
- 	/* Get the reference to the corresponding CQ */
-@@ -13446,8 +13448,9 @@ lpfc_sli4_hba_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe,
+ 		/* Word 7 */
++		bf_set(wqe_pu, &wqe->fcp_trsp.wqe_com, 0);
+ 		bf_set(wqe_ag, &wqe->fcp_trsp.wqe_com, 1);
+ 		bf_set(wqe_cmnd, &wqe->fcp_trsp.wqe_com, CMD_FCP_TRSP64_WQE);
  
- 	/* Otherwise this is a Slow path event */
- 	if (cq == NULL) {
--		lpfc_sli4_sp_handle_eqe(phba, eqe, phba->sli4_hba.hba_eq[qidx]);
--		return;
-+		ecount = lpfc_sli4_sp_handle_eqe(phba, eqe,
-+						 phba->sli4_hba.hba_eq[qidx]);
-+		return ecount;
- 	}
- 
- process_cq:
-@@ -13456,7 +13459,7 @@ lpfc_sli4_hba_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe,
- 				"0368 Miss-matched fast-path completion "
- 				"queue identifier: eqcqid=%d, fcpcqid=%d\n",
- 				cqid, cq->queue_id);
--		return;
-+		return 0;
- 	}
- 
- 	/* Save EQ associated with this CQ */
-@@ -13486,6 +13489,8 @@ lpfc_sli4_hba_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe,
- 	/* wake up worker thread if there are works to be done */
- 	if (workposted)
- 		lpfc_worker_wake_up(phba);
-+
-+	return ecount;
- }
- 
- static void
-@@ -13709,6 +13714,7 @@ lpfc_sli4_hba_intr_handler(int irq, void *dev_id)
- 	struct lpfc_eqe *eqe;
- 	unsigned long iflag;
- 	int ecount = 0;
-+	int ccount = 0;
- 	int hba_eqidx;
- 
- 	/* Get the driver's phba structure from the dev_id */
-@@ -13760,8 +13766,9 @@ lpfc_sli4_hba_intr_handler(int irq, void *dev_id)
- 		if (eqe == NULL)
- 			break;
- 
--		lpfc_sli4_hba_handle_eqe(phba, eqe, hba_eqidx);
--		if (!(++ecount % fpeq->entry_repost))
-+		ccount += lpfc_sli4_hba_handle_eqe(phba, eqe, hba_eqidx);
-+		if (!(++ecount % fpeq->entry_repost) ||
-+		    ccount > LPFC_MAX_ISR_CQE)
- 			break;
- 		fpeq->EQ_processed++;
- 	}
-diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
-index 7a1d74e9e877..540454b03587 100644
---- a/drivers/scsi/lpfc/lpfc_sli4.h
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h
-@@ -158,6 +158,7 @@ struct lpfc_queue {
- #define LPFC_MQ_REPOST		8
- #define LPFC_CQ_REPOST		64
- #define LPFC_RQ_REPOST		64
-+#define LPFC_MAX_ISR_CQE	64
- #define LPFC_RELEASE_NOTIFICATION_INTERVAL	32  /* For WQs */
- 	uint32_t queue_id;	/* Queue ID assigned by the hardware */
- 	uint32_t assoc_qid;     /* Queue ID associated with, for CQ/WQ/MQ */
 -- 
 2.13.1
