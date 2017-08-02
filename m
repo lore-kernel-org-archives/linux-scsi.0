@@ -1,15 +1,15 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 05/21] lpfc: Fix oops when NVME Target is discovered in a nonNVME environment
-Date: Wed,  2 Aug 2017 16:36:32 -0700
-Message-ID: <20170802233648.4573-6-jsmart2021@gmail.com>
+Subject: [PATCH 06/21] lpfc: convert info messages to standard messages
+Date: Wed,  2 Aug 2017 16:36:33 -0700
+Message-ID: <20170802233648.4573-7-jsmart2021@gmail.com>
 References: <20170802233648.4573-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:37508 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751959AbdHBXh5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Aug 2017 19:37:57 -0400
-Received: by mail-qt0-f196.google.com with SMTP id d10so6133206qtb.4
-        for <linux-scsi@vger.kernel.org>; Wed, 02 Aug 2017 16:37:57 -0700 (PDT)
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:35614 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751959AbdHBXh7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Aug 2017 19:37:59 -0400
+Received: by mail-qk0-f193.google.com with SMTP id a77so6098444qkb.2
+        for <linux-scsi@vger.kernel.org>; Wed, 02 Aug 2017 16:37:59 -0700 (PDT)
 In-Reply-To: <20170802233648.4573-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,32 +18,36 @@ Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.
 
 From: Dick Kennedy <dick.kennedy@broadcom.com>
 
-lpfc oops when it discovers a NVME target but is configured for SCSI
-only operation. Oops is in lpfc_nvme_register_port+0x33/0x300.
-
-The localport is not valid so it should not have been referenced.
-
-Added validity check for localport
+Transitioned some informational discovery messages to now always
+be displayed when log_verbose is set.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_nvme.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/lpfc/lpfc_ct.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 0a0a1b92d01d..2f50df6a3dca 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -2296,6 +2296,9 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 			 ndlp->nlp_DID, ndlp->nlp_type);
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index 9c0c1463057d..33417681f5d4 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -955,7 +955,7 @@ lpfc_cmpl_ct_cmd_gft_id(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 		CTrsp = (struct lpfc_sli_ct_request *)outp->virt;
+ 		fc4_data_0 = be32_to_cpu(CTrsp->un.gft_acc.fc4_types[0]);
+ 		fc4_data_1 = be32_to_cpu(CTrsp->un.gft_acc.fc4_types[1]);
+-		lpfc_printf_vlog(vport, KERN_ERR, LOG_DISCOVERY,
++		lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
+ 				 "3062 DID x%06x GFT Wd0 x%08x Wd1 x%08x\n",
+ 				 did, fc4_data_0, fc4_data_1);
  
- 	localport = vport->localport;
-+	if (!localport)
-+		return 0;
-+
- 	lport = (struct lpfc_nvme_lport *)localport->private;
- 
- 	/* NVME rports are not preserved across devloss.
+@@ -969,7 +969,7 @@ lpfc_cmpl_ct_cmd_gft_id(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 				ndlp->nlp_fc4_type |= NLP_FC4_FCP;
+ 			if (fc4_data_1 &  LPFC_FC4_TYPE_BITMASK)
+ 				ndlp->nlp_fc4_type |= NLP_FC4_NVME;
+-			lpfc_printf_vlog(vport, KERN_ERR, LOG_DISCOVERY,
++			lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
+ 					 "3064 Setting ndlp %p, DID x%06x with "
+ 					 "FC4 x%08x, Data: x%08x x%08x\n",
+ 					 ndlp, did, ndlp->nlp_fc4_type,
 -- 
 2.13.1
