@@ -1,28 +1,74 @@
-From: "Singer Valve" <jmarcos@luc.edu>
-Subject: Re: Extremely important and Urgent
-Date: Tue, 01 Aug 2017 20:46:09 -0700
-Message-ID: <DM5PR05MB2939C9020B9E379B591B9F24B1B00@DM5PR05MB2939.namprd05.prod.outlook.com>
-Reply-To: E.Chabrelie@qq.com
+From: =?utf-8?B?0YHQuNGB0YLQtdC80Ysg0LDQtNC80LjQvdC40YHRgtGA0LDRgtC+0YA=?=
+        <set.sultra@bawaslu.go.id>
+Subject: (unknown)
+Date: Wed, 2 Aug 2017 10:45:18 +0700 (WIB)
+Message-ID: <820934949.468934.1501645518315.JavaMail.zimbra__25868.5998655439$1501646076$gmane$org@bawaslu.go.id>
+Reply-To: Sistemass_Adminss@mail2world.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02hn0201.outbound.protection.outlook.com ([104.47.38.201]:32937
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751868AbdHBDqB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 1 Aug 2017 23:46:01 -0400
-Content-Description: Mail message body
+Received: from mail.bawaslu.go.id ([103.249.227.154]:38440 "EHLO
+        mail.bawaslu.go.id" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751696AbdHBDyc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2017 23:54:32 -0400
+Subject: 
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <jmarcos@luc.edu>
 
-I am getting in touch with you regarding an extremely important and urgent =
-matter.
+=D0=B2=D0=BD=D0=B8=D0=BC=D0=B0=D0=BD=D0=B8=D1=8F;
 
-If you would oblige me the opportunity, I shall provide you with details up=
-on your response.
+=D0=92=D0=B0=D1=88=D0=B8 =D1=81=D0=BE=D0=BE=D0=B1=D1=89=D0=B5=D0=BD=D0=B8=
+=D1=8F =D0=BF=D1=80=D0=B5=D0=B2=D1=8B=D1=81=D0=B8=D0=BB =D0=BB=D0=B8=D0=BC=
+=D0=B8=D1=82 =D0=BF=D0=B0=D0=BC=D1=8F=D1=82=D0=B8, =D0=BA=D0=BE=D1=82=D0=BE=
+=D1=80=D1=8B=D0=B9 =D1=81=D0=BE=D1=81=D1=82=D0=B0=D0=B2=D0=BB=D1=8F=D0=B5=
+=D1=82 5 =D0=93=D0=B1, =D0=BE=D0=BF=D1=80=D0=B5=D0=B4=D0=B5=D0=BB=D0=B5=D0=
+=BD=D0=BD=D1=8B=D1=85 =D0=B0=D0=B4=D0=BC=D0=B8=D0=BD=D0=B8=D1=81=D1=82=D1=
+=80=D0=B0=D1=82=D0=BE=D1=80=D0=BE=D0=BC, =D0=BA=D0=BE=D1=82=D0=BE=D1=80=D1=
+=8B=D0=B9 =D0=B2 =D0=BD=D0=B0=D1=81=D1=82=D0=BE=D1=8F=D1=89=D0=B5=D0=B5 =D0=
+=B2=D1=80=D0=B5=D0=BC=D1=8F =D1=80=D0=B0=D0=B1=D0=BE=D1=82=D0=B0=D0=B5=D1=
+=82 =D0=BD=D0=B0 10.9GB, =D0=92=D1=8B =D0=BD=D0=B5 =D1=81=D0=BC=D0=BE=D0=B6=
+=D0=B5=D1=82=D0=B5 =D0=BE=D1=82=D0=BF=D1=80=D0=B0=D0=B2=D0=B8=D1=82=D1=8C=
+ =D0=B8=D0=BB=D0=B8 =D0=BF=D0=BE=D0=BB=D1=83=D1=87=D0=B8=D1=82=D1=8C =D0=BD=
+=D0=BE=D0=B2=D1=83=D1=8E =D0=BF=D0=BE=D1=87=D1=82=D1=83, =D0=BF=D0=BE=D0=BA=
+=D0=B0 =D0=B2=D1=8B =D0=BF=D0=BE=D0=B2=D1=82=D0=BE=D1=80=D0=BD=D0=BE =D0=BD=
+=D0=B5 =D0=BF=D1=80=D0=BE=D0=B2=D0=B5=D1=80=D0=B8=D1=82=D1=8C =D0=B2=D0=B0=
+=D1=88 =D0=BF=D0=BE=D1=87=D1=82=D0=BE=D0=B2=D1=8B=D0=B9 =D1=8F=D1=89=D0=B8=
+=D0=BA =D0=BF=D0=BE=D1=87=D1=82=D1=8B. =D0=A7=D1=82=D0=BE=D0=B1=D1=8B =D0=
+=B2=D0=BE=D1=81=D1=81=D1=82=D0=B0=D0=BD=D0=BE=D0=B2=D0=B8=D1=82=D1=8C =D1=
+=80=D0=B0=D0=B1=D0=BE=D1=82=D0=BE=D1=81=D0=BF=D0=BE=D1=81=D0=BE=D0=B1=D0=BD=
+=D0=BE=D1=81=D1=82=D1=8C =D0=92=D0=B0=D1=88=D0=B5=D0=B3=D0=BE =D0=BF=D0=BE=
+=D1=87=D1=82=D0=BE=D0=B2=D0=BE=D0=B3=D0=BE =D1=8F=D1=89=D0=B8=D0=BA=D0=B0=
+, =D0=BE=D1=82=D0=BF=D1=80=D0=B0=D0=B2=D1=8C=D1=82=D0=B5 =D1=81=D0=BB=D0=B5=
+=D0=B4=D1=83=D1=8E=D1=89=D1=83=D1=8E =D0=B8=D0=BD=D1=84=D0=BE=D1=80=D0=BC=
+=D0=B0=D1=86=D0=B8=D1=8E =D0=BD=D0=B8=D0=B6=D0=B5:
 
-Faithfully, =
+=D0=B8=D0=BC=D1=8F:
+=D0=98=D0=BC=D1=8F =D0=BF=D0=BE=D0=BB=D1=8C=D0=B7=D0=BE=D0=B2=D0=B0=D1=82=
+=D0=B5=D0=BB=D1=8F:
+=D0=BF=D0=B0=D1=80=D0=BE=D0=BB=D1=8C:
+=D0=9F=D0=BE=D0=B4=D1=82=D0=B2=D0=B5=D1=80=D0=B6=D0=B4=D0=B5=D0=BD=D0=B8=D0=
+=B5 =D0=BF=D0=B0=D1=80=D0=BE=D0=BB=D1=8F:
+=D0=90=D0=B4=D1=80=D0=B5=D1=81 =D1=8D=D0=BB=D0=B5=D0=BA=D1=82=D1=80=D0=BE=
+=D0=BD=D0=BD=D0=BE=D0=B9 =D0=BF=D0=BE=D1=87=D1=82=D1=8B:
+=D1=82=D0=B5=D0=BB=D0=B5=D1=84=D0=BE=D0=BD:
 
-Ms. Singer Valve
+=D0=95=D1=81=D0=BB=D0=B8 =D0=B2=D1=8B =D0=BD=D0=B5 =D0=B2 =D1=81=D0=BE=D1=
+=81=D1=82=D0=BE=D1=8F=D0=BD=D0=B8=D0=B8 =D0=BF=D0=B5=D1=80=D0=B5=D0=BF=D1=
+=80=D0=BE=D0=B2=D0=B5=D1=80=D0=B8=D1=82=D1=8C =D1=81=D0=BE=D0=BE=D0=B1=D1=
+=89=D0=B5=D0=BD=D0=B8=D1=8F, =D0=B2=D0=B0=D1=88 =D0=BF=D0=BE=D1=87=D1=82=D0=
+=BE=D0=B2=D1=8B=D0=B9 =D1=8F=D1=89=D0=B8=D0=BA =D0=B1=D1=83=D0=B4=D0=B5=D1=
+=82 =D0=BE=D1=82=D0=BA=D0=BB=D1=8E=D1=87=D0=B5=D0=BD!
+
+=D0=9F=D1=80=D0=B8=D0=BD=D0=BE=D1=81=D0=B8=D0=BC =D0=B8=D0=B7=D0=B2=D0=B8=
+=D0=BD=D0=B5=D0=BD=D0=B8=D1=8F =D0=B7=D0=B0 =D0=BD=D0=B5=D1=83=D0=B4=D0=BE=
+=D0=B1=D1=81=D1=82=D0=B2=D0=B0.
+=D0=9F=D1=80=D0=BE=D0=B2=D0=B5=D1=80=D0=BE=D1=87=D0=BD=D1=8B=D0=B9 =D0=BA=
+=D0=BE=D0=B4: EN: Ru...776774990..2017
+=D0=9F=D0=BE=D1=87=D1=82=D1=8B =D1=82=D0=B5=D1=85=D0=BD=D0=B8=D1=87=D0=B5=
+=D1=81=D0=BA=D0=BE=D0=B9 =D0=BF=D0=BE=D0=B4=D0=B4=D0=B5=D1=80=D0=B6=D0=BA=
+=D0=B8 =C2=A92017
+
+=D1=81=D0=BF=D0=B0=D1=81=D0=B8=D0=B1=D0=BE
+=D1=81=D0=B8=D1=81=D1=82=D0=B5=D0=BC=D1=8B =D0=B0=D0=B4=D0=BC=D0=B8=D0=BD=
+=D0=B8=D1=81=D1=82=D1=80=D0=B0=D1=82=D0=BE=D1=80
