@@ -1,39 +1,78 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 196543] Adaptec 6405H can not understand Queue full message
- from Disks.
-Date: Wed, 02 Aug 2017 08:14:03 +0000
-Message-ID: <bug-196543-11613-zs5k6S4x3q@https.bugzilla.kernel.org/>
-References: <bug-196543-11613@https.bugzilla.kernel.org/>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v2 00/13] mpt3sas driver NVMe support:
+Date: Wed, 2 Aug 2017 10:14:40 +0200
+Message-ID: <e679a449-90c3-d2e1-2b31-1387cf414e09@suse.de>
+References: <1500038560-11231-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:56986 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751295AbdHBIOL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Aug 2017 04:14:11 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 0C43428799
-        for <linux-scsi@vger.kernel.org>; Wed,  2 Aug 2017 08:14:11 +0000 (UTC)
-In-Reply-To: <bug-196543-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1500038560-11231-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, jejb@kernel.org, hch@infradead.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, linux-kernel@vger.kernel.org, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com, linux-nvme@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=196543
+On 07/14/2017 03:22 PM, Suganath Prabu S wrote:
+> Ventura Series controller are Tri-mode. The controller and
+> firmware are capable of supporting NVMe devices and
+> PCIe switches to be connected with the controller. This
+> patch set adds driver level support for NVMe devices and
+> PCIe switches.
+> 
+> Suganath Prabu S (13):
+>   mpt3sas: Update MPI Header
+>   mpt3sas: Add nvme device support in slave alloc, target alloc and
+>     probe
+>   mpt3sas: SGL to PRP Translation for I/Os to NVMe  devices
+>   mpt3sas: Added support for nvme encapsulated request message.
+>   mpt3sas: API 's to support NVMe drive addition to SML
+>   mpt3sas: API's to remove nvme drive from sml
+>   mpt3sas: Handle NVMe PCIe device related events generated            
+>        from firmware.
+>   mpt3sas: Set NVMe device queue depth as 128
+>   mpt3sas: scan and add nvme device after controller reset
+>   mpt3as: Add-Task-management-debug-info-for-NVMe-drives.
+>   mpt3sas: NVMe drive support for BTDHMAPPING ioctl command and log
+>     info
+>   mpt3sas: Fix nvme drives checking for tlr.
+>   mpt3sas: Update mpt3sas driver version.
+> 
+>  drivers/scsi/mpt3sas/mpi/mpi2.h          |   43 +-
+>  drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h     |  647 ++++++++++-
+>  drivers/scsi/mpt3sas/mpi/mpi2_init.h     |   11 +-
+>  drivers/scsi/mpt3sas/mpi/mpi2_ioc.h      |  331 ++++++-
+>  drivers/scsi/mpt3sas/mpi/mpi2_pci.h      |  142 +++
+>  drivers/scsi/mpt3sas/mpi/mpi2_tool.h     |   14 +-
+>  drivers/scsi/mpt3sas/mpt3sas_base.c      |  710 +++++++++++-
+>  drivers/scsi/mpt3sas/mpt3sas_base.h      |  171 +++-
+>  drivers/scsi/mpt3sas/mpt3sas_config.c    |  100 ++
+>  drivers/scsi/mpt3sas/mpt3sas_ctl.c       |  158 ++-
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 1874 ++++++++++++++++++++++++++++--
+>  drivers/scsi/mpt3sas/mpt3sas_warpdrive.c |    2 +-
+>  12 files changed, 4063 insertions(+), 140 deletions(-)
+>  create mode 100644 drivers/scsi/mpt3sas/mpi/mpi2_pci.h
+> 
+I'm not happy with this approach.
+NVMe devices should _not_ appear as SCSI devices; this will just confuse
+matters _and_ will be incompatible with 'normal' NVMe devices.
 
-Jack Wang (xjtuwjp@gmail.com) changed:
+Rather I would like to see the driver to hook into the existing NVMe
+framework (which essentially means to treat the mpt3sas as a weird
+NVMe-over-Fabrics HBA), and expose the NVMe devices like any other NVMe HBA.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |xjtuwjp@gmail.com
+I'm sorry that you'll have to redo your patchset (again), but this is
+the only way I see how this patchset can be brought forward.
 
---- Comment #3 from Jack Wang (xjtuwjp@gmail.com) ---
-Hi Kazufumi,
+I'd be happy to discuss implementation details with you.
 
-Could you send out dmesg with logging_level=0xfff for scsi_host on microsemi
-HBA when queue full condition happens?
+Cheers,
 
+Hannes
 -- 
-You are receiving this mail because:
-You are the assignee for the bug.
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
