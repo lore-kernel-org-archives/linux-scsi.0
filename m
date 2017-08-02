@@ -1,15 +1,15 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 04/21] lpfc: Fix rediscovery on switch blade pull
-Date: Wed,  2 Aug 2017 16:36:31 -0700
-Message-ID: <20170802233648.4573-5-jsmart2021@gmail.com>
+Subject: [PATCH 05/21] lpfc: Fix oops when NVME Target is discovered in a nonNVME environment
+Date: Wed,  2 Aug 2017 16:36:32 -0700
+Message-ID: <20170802233648.4573-6-jsmart2021@gmail.com>
 References: <20170802233648.4573-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:35040 "EHLO
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:37508 "EHLO
         mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751953AbdHBXh4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Aug 2017 19:37:56 -0400
-Received: by mail-qt0-f196.google.com with SMTP id t37so6144354qtg.2
-        for <linux-scsi@vger.kernel.org>; Wed, 02 Aug 2017 16:37:55 -0700 (PDT)
+        with ESMTP id S1751959AbdHBXh5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Aug 2017 19:37:57 -0400
+Received: by mail-qt0-f196.google.com with SMTP id d10so6133206qtb.4
+        for <linux-scsi@vger.kernel.org>; Wed, 02 Aug 2017 16:37:57 -0700 (PDT)
 In-Reply-To: <20170802233648.4573-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,47 +18,32 @@ Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.
 
 From: Dick Kennedy <dick.kennedy@broadcom.com>
 
-When the switch blade is pulled out then plugged back in, the driver
-does not issue a PLOGI to the target
+lpfc oops when it discovers a NVME target but is configured for SCSI
+only operation. Oops is in lpfc_nvme_register_port+0x33/0x300.
 
-When the switch blade is pulled out, it does not reset the link. The
-driver ends up issuing a LOGO to the target, and finally sees devloss.
-Since the driver believes that a LOGO is outstanding, it does not
-issue a PLOGI to the target upon link up
+The localport is not valid so it should not have been referenced.
 
-Correct by placing the ndlp in UNUSED state When devloss happens in
-LOGO_ISSUE state.
+Added validity check for localport
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_nportdisc.c | 13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
+ drivers/scsi/lpfc/lpfc_nvme.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index 95b2b43ac37d..a4488d6339c1 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -2192,12 +2192,15 @@ lpfc_device_rm_logo_issue(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 			  void *arg, uint32_t evt)
- {
- 	/*
--	 * Take no action.  If a LOGO is outstanding, then possibly DevLoss has
--	 * timed out and is calling for Device Remove.  In this case, the LOGO
--	 * must be allowed to complete in state LOGO_ISSUE so that the rpi
--	 * and other NLP flags are correctly cleaned up.
-+	 * DevLoss has timed out and is calling for Device Remove.
-+	 * In this case, abort the LOGO and cleanup the ndlp
- 	 */
--	return ndlp->nlp_state;
-+
-+	lpfc_unreg_rpi(vport, ndlp);
-+	/* software abort outstanding PLOGI */
-+	lpfc_els_abort(vport->phba, ndlp);
-+	lpfc_drop_node(vport, ndlp);
-+	return NLP_STE_FREED_NODE;
- }
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index 0a0a1b92d01d..2f50df6a3dca 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -2296,6 +2296,9 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 			 ndlp->nlp_DID, ndlp->nlp_type);
  
- static uint32_t
+ 	localport = vport->localport;
++	if (!localport)
++		return 0;
++
+ 	lport = (struct lpfc_nvme_lport *)localport->private;
+ 
+ 	/* NVME rports are not preserved across devloss.
 -- 
 2.13.1
