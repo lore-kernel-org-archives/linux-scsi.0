@@ -1,61 +1,51 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH 05/14] blk-mq-sched: don't dequeue request until all in
- ->dispatch are flushed
-Date: Wed, 2 Aug 2017 11:01:34 +0800
-Message-ID: <20170802030128.GA7267@ming.t460p>
-References: <20170731165111.11536-1-ming.lei@redhat.com>
- <20170731165111.11536-7-ming.lei@redhat.com>
- <1501544540.2466.31.camel@wdc.com>
- <20170801104433.GC31452@ming.t460p>
- <1501604045.2475.8.camel@wdc.com>
+From: Xiubo Li <lixiubo@cmss.chinamobile.com>
+Subject: Re: [PATCH] tcmu: Oops in unmap_thread_fn()
+Date: Wed, 2 Aug 2017 11:25:35 +0800
+Message-ID: <28f668c4-2a61-8685-8797-8ae7470cb274@cmss.chinamobile.com>
+References: <20170801200917.brigs5x47eujfx7a@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1501604045.2475.8.camel@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20170801200917.brigs5x47eujfx7a@mwanda>
+Sender: target-devel-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Aug 01, 2017 at 04:14:07PM +0000, Bart Van Assche wrote:
-> On Tue, 2017-08-01 at 18:44 +0800, Ming Lei wrote:
-> > On Mon, Jul 31, 2017 at 11:42:21PM +0000, Bart Van Assche wrote:
-> > > Since setting, clearing and testing of BLK_MQ_S_BUSY can happen concurrently
-> > > and since clearing and testing happens without any locks held I'm afraid this
-> > > patch introduces the following race conditions:
-> > > [ ... ]
-> > > * Checking BLK_MQ_S_BUSY after requests have been removed from the dispatch list
-> > >   but before that bit is cleared, resulting in test_bit(BLK_MQ_S_BUSY, &hctx->state)
-> > >   reporting that the BLK_MQ_S_BUSY
-> > > has been set although there are no requests
-> > >   on the dispatch list.
-> > 
-> > That won't be a problem, because dispatch will be started in the
-> > context in which dispatch list is flushed, since the BUSY bit
-> > is cleared after blk_mq_dispatch_rq_list() returns. So no I/O
-> > hang.
-> 
-> Hello Ming,
-> 
-> Please consider changing the name of the BLK_MQ_S_BUSY constant. That bit
-> is used to serialize dispatching requests from the hctx dispatch list but
-> that's not clear from the name of that constant.
 
-Actually what we want to do is to stop taking request from sw/scheduler
-queue when ->dispatch aren't flushed completely, I think BUSY isn't
-a bad name for this case, or how about DISPATCH_BUSY? or
-FLUSHING_DISPATCH?
+On 2017年08月02日 04:09, Dan Carpenter wrote:
+> Calling list_del() on the iterator pointer in list_for_each_entry() will
+> cause an oops.  We need to user the _safe() version for that.
+>
+> Fixes: c73d02f63c16 ("tcmu: Add fifo type waiter list support to avoid starvation")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>
+> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+> index 9258b7dd2c30..fd9fcea68d23 100644
+> --- a/drivers/target/target_core_user.c
+> +++ b/drivers/target/target_core_user.c
+> @@ -1985,7 +1985,7 @@ static struct target_backend_ops tcmu_ops = {
+>   
+>   static int unmap_thread_fn(void *data)
+>   {
+> -	struct tcmu_dev *udev;
+> +	struct tcmu_dev *udev, *tmp;
+>   	loff_t off;
+>   	uint32_t start, end, block;
+>   	static uint32_t free_blocks;
+> @@ -2056,7 +2056,7 @@ static int unmap_thread_fn(void *data)
+>   		 * for the global data pool blocks.
+>   		 */
+>   		mutex_lock(&root_udev_waiter_mutex);
+> -		list_for_each_entry(udev, &root_udev_waiter, waiter) {
+> +		list_for_each_entry_safe(udev, tmp, &root_udev_waiter, waiter) {
+>   			mutex_lock(&udev->cmdr_lock);
+>   			if (udev->waiting_blocks < free_blocks) {
+>   				mutex_unlock(&udev->cmdr_lock);
+Good catch and it looks nice for me.
 
-After thinking about the handling further, we can set the
-BUSY bit just when adding requests to ->dispatch, and clear the
-bit after returning from blk_mq_dispatch_rq_list() when the
-current local list(from ->dispatch) is flushed completely and
-->dispatch is empty. This way can minimize the race window, and
-still safe, because we always move on to dispatch either new
-request is added to ->dispatch or ->dispatch is flushed completely.
+Thanks,
 
-But anyway comment should be added for clarifying the fact.
-
--- 
-Ming
+BRs
+Xiubo
