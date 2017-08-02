@@ -1,7 +1,7 @@
 From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Subject: [PATCH 2/3] scsi: mptfc: constify pci_device_id.
-Date: Wed,  2 Aug 2017 22:59:04 +0530
-Message-ID: <1501694945-18061-3-git-send-email-arvind.yadav.cs@gmail.com>
+Subject: [PATCH 3/3] scsi: mptsas: constify pci_device_id.
+Date: Wed,  2 Aug 2017 22:59:05 +0530
+Message-ID: <1501694945-18061-4-git-send-email-arvind.yadav.cs@gmail.com>
 References: <1501694945-18061-1-git-send-email-arvind.yadav.cs@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1501694945-18061-1-git-send-email-arvind.yadav.cs@gmail.com>
@@ -16,21 +16,21 @@ const pci_device_id. So mark the non-const structs as const.
 
 Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/message/fusion/mptfc.c | 2 +-
+ drivers/message/fusion/mptsas.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/message/fusion/mptfc.c b/drivers/message/fusion/mptfc.c
-index d065062..82cb864 100644
---- a/drivers/message/fusion/mptfc.c
-+++ b/drivers/message/fusion/mptfc.c
-@@ -138,7 +138,7 @@ static struct scsi_host_template mptfc_driver_template = {
-  * Supported hardware
-  */
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+index f6308ad..8604573 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -5358,7 +5358,7 @@ static void mptsas_remove(struct pci_dev *pdev)
+ 	mptscsih_remove(pdev);
+ }
  
--static struct pci_device_id mptfc_pci_table[] = {
-+static const struct pci_device_id mptfc_pci_table[] = {
- 	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC909,
+-static struct pci_device_id mptsas_pci_table[] = {
++static const struct pci_device_id mptsas_pci_table[] = {
+ 	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1064,
  		PCI_ANY_ID, PCI_ANY_ID },
- 	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC919,
+ 	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1068,
 -- 
 2.7.4
