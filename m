@@ -1,41 +1,66 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 18/21] lpfc: remove console log clutter
-Date: Wed,  2 Aug 2017 16:36:45 -0700
-Message-ID: <20170802233648.4573-19-jsmart2021@gmail.com>
+Subject: [PATCH 17/21] lpfc: Fix bad sgl reposting after 2nd adapter reset
+Date: Wed,  2 Aug 2017 16:36:44 -0700
+Message-ID: <20170802233648.4573-18-jsmart2021@gmail.com>
 References: <20170802233648.4573-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:38491 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751987AbdHBXiU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Aug 2017 19:38:20 -0400
-Received: by mail-qt0-f193.google.com with SMTP id p3so6126799qtg.5
-        for <linux-scsi@vger.kernel.org>; Wed, 02 Aug 2017 16:38:19 -0700 (PDT)
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:34547 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751945AbdHBXiS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Aug 2017 19:38:18 -0400
+Received: by mail-qk0-f196.google.com with SMTP id q66so6121547qki.1
+        for <linux-scsi@vger.kernel.org>; Wed, 02 Aug 2017 16:38:18 -0700 (PDT)
 In-Reply-To: <20170802233648.4573-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: James Smart <jsmart2021@gmail.com>, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
+Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-Change hw queue binding messages to info - not error.
+From: Dick Kennedy <dick.kennedy@broadcom.com>
+
+Fix bad sgl reposting after 2nd adapter reset
+
+port issue was fixed, the hbacmd reset would take
+more than 8 minutes to complete.
+
+There were conflicting NVME SGL posting/reposting responsibilities
+between lpfc_online()/lpfc_sli4_hba_setup() and
+lpfc_nvme_create_localport().  The lpfc_online() causes a REPOST
+on existing NVME SGLs which is not released during the fc port reset.
+However, lpfc_nvme_create_localport() wants to allocate new NVME
+buffers and post them. Both cancelled out each other which had a side
+effect of hosing the mailbox handling that was used to remove the sgl
+lists - causing multiple 60s mbx timeouts.
+
+Fix by preserving all SGL lists over the fc port reset.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_nvme.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_nvme.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 8e7cdbd5d7d3..d3c171a72ae0 100644
+index 87e0743c4ace..8e7cdbd5d7d3 100644
 --- a/drivers/scsi/lpfc/lpfc_nvme.c
 +++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -110,7 +110,7 @@ lpfc_nvme_create_queue(struct nvme_fc_local_port *pnvme_lport,
- 		qhandle->index = qidx;
+@@ -2181,8 +2181,15 @@ lpfc_nvme_create_localport(struct lpfc_vport *vport)
+ 		vport->localport = localport;
+ 		lport->vport = vport;
+ 		vport->nvmei_support = 1;
+-		len  = lpfc_new_nvme_buf(vport, phba->sli4_hba.nvme_xri_max);
+-		vport->phba->total_nvme_bufs += len;
++
++		/* Don't post more new bufs if repost already recovered
++		 * the nvme sgls.
++		 */
++		if (phba->sli4_hba.nvme_xri_cnt == 0) {
++			len  = lpfc_new_nvme_buf(vport,
++						 phba->sli4_hba.nvme_xri_max);
++			vport->phba->total_nvme_bufs += len;
++		}
  	}
  
--	lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME,
-+	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME,
- 			 "6073 Binding %s HdwQueue %d  (cpu %d) to "
- 			 "io_channel %d qhandle %p\n", str,
- 			 qidx, qhandle->cpu_id, qhandle->index, qhandle);
+ 	return ret;
 -- 
 2.13.1
