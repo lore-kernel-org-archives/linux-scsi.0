@@ -1,40 +1,67 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] scsi: sg: Prevent potential double frees in sg driver
-Date: Thu, 3 Aug 2017 12:51:05 -0700
-Message-ID: <20170803195105.GB26674@kroah.com>
-References: <20170803190248.51537-1-ndesaulniers@google.com>
- <20170803192354.GA1598@kroah.com>
- <CAKwvOdmkCtmceK8prnZJn6QQ9oReN2EUMSukWLS=NmgF_GagiQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAKwvOdmkCtmceK8prnZJn6QQ9oReN2EUMSukWLS=NmgF_GagiQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nick Desaulniers <ndesaulniers@google.com>
-Cc: hare@suse.de, jthumshirn@suse.de, hch@lst.de, Mark Salyzyn <salyzyn@google.com>, Robb Glasser <rglasser@google.com>, Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Bart Van Assche <bart.vanassche@wdc.com>
+Subject: [PATCH] scsi-mq: Always unprepare before requeuing a request
+Date: Thu,  3 Aug 2017 14:40:14 -0700
+Message-ID: <20170803214014.20332-1-bart.vanassche@wdc.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:17482 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751736AbdHCVlB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Aug 2017 17:41:01 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Damien Le Moal <damien.lemoal@wdc.com>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org
 
-On Thu, Aug 03, 2017 at 12:34:51PM -0700, Nick Desaulniers wrote:
-> > Why no one on the to: line?
-> 
-> I usually cc everyone from get_maintainer.pl. Should I be using
-> --to= then explicitly for named folks, and --cc= for lists?
+One of the two scsi-mq functions that requeue a request unprepares
+a request before requeueing (scsi_io_completion()) but the other
+function not (__scsi_queue_insert()). Make sure that a request is
+unprepared before requeuing it.
 
-That's usually a good idea, many email clients throw away stuff if there
-is nothing on the "To:" line.
+Fixes: commit d285203cf647 ("scsi: add support for a blk-mq based I/O path.")
+Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: <stable@vger.kernel.org>
+---
+ drivers/scsi/scsi_lib.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-> > And do you want this in the stable kernel trees?
-> 
-> Looks like I can follow up on option #2 once this patch has
-> been reviewed+merged by maintainers.  I'll note to use
-> option #1 next time, unless you suggest I send a v2? I can
-> do so if this patch has a v2+.
-
-If you have to resend it, then add it, otherwise please remember when it
-hits Linus's tree to send the git commit id to stable@vger and the
-developers there can handle it.
-
-thanks,
-
-greg k-h
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 4a2f705cdb14..c7514f3b444a 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -44,6 +44,8 @@ static struct kmem_cache *scsi_sense_cache;
+ static struct kmem_cache *scsi_sense_isadma_cache;
+ static DEFINE_MUTEX(scsi_sense_cache_mutex);
+ 
++static void scsi_mq_uninit_cmd(struct scsi_cmnd *cmd);
++
+ static inline struct kmem_cache *
+ scsi_select_sense_cache(bool unchecked_isa_dma)
+ {
+@@ -140,6 +142,12 @@ static void scsi_mq_requeue_cmd(struct scsi_cmnd *cmd)
+ {
+ 	struct scsi_device *sdev = cmd->device;
+ 
++	if (cmd->request->rq_flags & RQF_DONTPREP) {
++		cmd->request->rq_flags &= ~RQF_DONTPREP;
++		scsi_mq_uninit_cmd(cmd);
++	} else {
++		WARN_ON_ONCE(true);
++	}
+ 	blk_mq_requeue_request(cmd->request, true);
+ 	put_device(&sdev->sdev_gendev);
+ }
+@@ -995,8 +1003,6 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 		 * A new command will be prepared and issued.
+ 		 */
+ 		if (q->mq_ops) {
+-			cmd->request->rq_flags &= ~RQF_DONTPREP;
+-			scsi_mq_uninit_cmd(cmd);
+ 			scsi_mq_requeue_cmd(cmd);
+ 		} else {
+ 			scsi_release_buffers(cmd);
+-- 
+2.13.3
