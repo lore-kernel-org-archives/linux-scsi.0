@@ -1,15 +1,15 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 04/13] mpt3sas: Added support for nvme encapsulated
- request message.
-Date: Thu, 3 Aug 2017 08:33:13 +0200
-Message-ID: <75dcdeda-5f3c-cef0-9957-4588ac9624cc@suse.de>
+Subject: Re: [PATCH v2 05/13] mpt3sas: API 's to support NVMe drive addition
+ to SML
+Date: Thu, 3 Aug 2017 08:35:11 +0200
+Message-ID: <55bb3055-9216-7b9d-32c5-25d29046e11d@suse.de>
 References: <1500038560-11231-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <1500038560-11231-5-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <1500038560-11231-6-git-send-email-suganath-prabu.subramani@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1500038560-11231-5-git-send-email-suganath-prabu.subramani@broadcom.com>
+In-Reply-To: <1500038560-11231-6-git-send-email-suganath-prabu.subramani@broadcom.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 To: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, jejb@kernel.org, hch@infradead.org
@@ -17,25 +17,27 @@ Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broad
 List-Id: linux-scsi@vger.kernel.org
 
 On 07/14/2017 03:22 PM, Suganath Prabu S wrote:
-> * Mpt3sas driver uses the NVMe Encapsulated Request message to
-> send an NVMe command to an NVMe device attached to the IOC.
+> Below Functions are added in various paths to support NVMe
+> drive addition.
 > 
-> * Normal I/O commands like reads and writes are passed to the
-> controller as SCSI commands and the controller has the ability
-> to translate the commands to NVMe equivalent.
+> _scsih_pcie_add_device
+> _scsih_pcie_device_add
+> _scsih_pcie_device_init_add
+> _scsih_check_pcie_access_status
+> _scsih_pcie_check_device
 > 
-> * This encapsulated NVMe command is used by applications to send
-> direct NVMe commands to NVMe drives or for handling unmap where
-> the translation at controller/firmware level is having
-> performance issues.
+> mpt3sas_get_pdev_by_handle
+> 
+> mpt3sas_config_get_pcie_device_pg0
+> mpt3sas_config_get_pcie_device_pg2
 > 
 > Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
 > Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 > ---
->  drivers/scsi/mpt3sas/mpt3sas_base.c |   56 ++++++++++++++++++++++++++++-
->  drivers/scsi/mpt3sas/mpt3sas_base.h |    1 +
->  drivers/scsi/mpt3sas/mpt3sas_ctl.c  |   69 ++++++++++++++++++++++++++++++++---
->  3 files changed, 119 insertions(+), 7 deletions(-)
+>  drivers/scsi/mpt3sas/mpt3sas_base.h   |   10 +
+>  drivers/scsi/mpt3sas/mpt3sas_config.c |  100 +++++++
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c  |  473 ++++++++++++++++++++++++++++++++-
+>  3 files changed, 575 insertions(+), 8 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
