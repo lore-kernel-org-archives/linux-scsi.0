@@ -1,15 +1,15 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 02/13] mpt3sas: Add nvme device support in slave alloc,
- target alloc and probe
-Date: Thu, 3 Aug 2017 08:27:13 +0200
-Message-ID: <5fb13656-0f40-fdc4-8612-ec1bf04cf696@suse.de>
+Subject: Re: [PATCH v2 04/13] mpt3sas: Added support for nvme encapsulated
+ request message.
+Date: Thu, 3 Aug 2017 08:33:13 +0200
+Message-ID: <75dcdeda-5f3c-cef0-9957-4588ac9624cc@suse.de>
 References: <1500038560-11231-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <1500038560-11231-3-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <1500038560-11231-5-git-send-email-suganath-prabu.subramani@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1500038560-11231-3-git-send-email-suganath-prabu.subramani@broadcom.com>
+In-Reply-To: <1500038560-11231-5-git-send-email-suganath-prabu.subramani@broadcom.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 To: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, jejb@kernel.org, hch@infradead.org
@@ -17,35 +17,27 @@ Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broad
 List-Id: linux-scsi@vger.kernel.org
 
 On 07/14/2017 03:22 PM, Suganath Prabu S wrote:
-> 1) Added support for probing pcie device and adding NVMe drives to
-> SML and driver's internal list pcie_device_list.
+> * Mpt3sas driver uses the NVMe Encapsulated Request message to
+> send an NVMe command to an NVMe device attached to the IOC.
 > 
-> 2) Added support for determing NVMe as boot device.
+> * Normal I/O commands like reads and writes are passed to the
+> controller as SCSI commands and the controller has the ability
+> to translate the commands to NVMe equivalent.
 > 
-> 3) Added nvme device support for call back functions scan_finished
-> target_alloc,slave_alloc,target destroy and slave destroy.
-> 
->  a) During scan, pcie devices are probed and added to SML to drivers
-> internal list.
-> 
->  b) target_alloc & slave alloc API's allocates resources for
-> (MPT3SAS_TARGET & MPT3SAS_DEVICE) private datas and holds
-> information like handle, target_id etc.
-> 
->  c) slave_destroy & target_destroy are called when driver unregisters
-> or removes device. Also frees allocated resources and info.
+> * This encapsulated NVMe command is used by applications to send
+> direct NVMe commands to NVMe drives or for handling unmap where
+> the translation at controller/firmware level is having
+> performance issues.
 > 
 > Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
 > Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 > ---
->  drivers/scsi/mpt3sas/mpt3sas_base.h  |  110 ++++++++-
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c |  431 +++++++++++++++++++++++++++++++---
->  2 files changed, 507 insertions(+), 34 deletions(-)
+>  drivers/scsi/mpt3sas/mpt3sas_base.c |   56 ++++++++++++++++++++++++++++-
+>  drivers/scsi/mpt3sas/mpt3sas_base.h |    1 +
+>  drivers/scsi/mpt3sas/mpt3sas_ctl.c  |   69 ++++++++++++++++++++++++++++++++---
+>  3 files changed, 119 insertions(+), 7 deletions(-)
 > 
-Have you considered using 'scan_start()/scan_finished()' SCSI midlayer
-callbacks here?
-Seeing that you are enumerating the devices internally already that
-should give you better control about the scanning process.
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
 
