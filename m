@@ -1,71 +1,50 @@
 From: =?UTF-8?q?Micha=C5=82=20Miros=C5=82aw?= <mirq-linux@rere.qmqm.pl>
-Subject: [PATCH v2 1/5] aic7xxx: remove empty function
-Date: Fri, 04 Aug 2017 01:28:07 +0200
-Message-ID: <14906cad961fe7ccb19276b1d1c5d332af7c8ef9.1501802727.git.mirq-linux@rere.qmqm.pl>
+Subject: [PATCH v2 3/5] aic7xxx: remove rules for shipped files
+Date: Fri, 04 Aug 2017 01:28:09 +0200
+Message-ID: <759ba18717a785f8875b74efe01ba26920d55006.1501802727.git.mirq-linux@rere.qmqm.pl>
 References: <cover.1501802726.git.mirq-linux@rere.qmqm.pl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rere.qmqm.pl ([91.227.64.183]:35118 "EHLO rere.qmqm.pl"
+Received: from rere.qmqm.pl ([91.227.64.183]:35142 "EHLO rere.qmqm.pl"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751754AbdHCX2J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 3 Aug 2017 19:28:09 -0400
+        id S1751940AbdHCX2L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 3 Aug 2017 19:28:11 -0400
 In-Reply-To: <cover.1501802726.git.mirq-linux@rere.qmqm.pl>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org
 
-
-ahc_platform_dump_card_state() does nothing. Remove it.
+There are Kbuild rules for that already.
 
 Signed-off-by: Michał Mirosław <mirq-linux@rere.qmqm.pl>
 ---
- drivers/scsi/aic7xxx/aic7xxx_core.c | 1 -
- drivers/scsi/aic7xxx/aic7xxx_osm.c  | 5 -----
- drivers/scsi/aic7xxx/aic7xxx_osm.h  | 1 -
- 3 files changed, 7 deletions(-)
+ drivers/scsi/aic7xxx/Makefile | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
-index 64ab9eaec428..381846164003 100644
---- a/drivers/scsi/aic7xxx/aic7xxx_core.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
-@@ -7340,7 +7340,6 @@ ahc_dump_card_state(struct ahc_softc *ahc)
- 		printk("\n");
- 	}
+diff --git a/drivers/scsi/aic7xxx/Makefile b/drivers/scsi/aic7xxx/Makefile
+index b03ba0df7a83..1a5509d40f8a 100644
+--- a/drivers/scsi/aic7xxx/Makefile
++++ b/drivers/scsi/aic7xxx/Makefile
+@@ -61,8 +61,6 @@ $(obj)/aic7xxx_seq.h: $(src)/aic7xxx.seq $(src)/aic7xxx.reg $(obj)/aicasm/aicasm
  
--	ahc_platform_dump_card_state(ahc);
- 	printk("\n<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>\n");
- 	ahc_outb(ahc, SCBPTR, saved_scbptr);
- 	if (paused == 0)
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-index fc6a83188c1e..acd687f4554e 100644
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-@@ -2329,11 +2329,6 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
- 	return (retval);
- }
+ $(aic7xxx-gen-y): $(objtree)/$(obj)/aic7xxx_seq.h
+ 	@true
+-else
+-$(obj)/aic7xxx_reg_print.c: $(src)/aic7xxx_reg_print.c_shipped
+ endif
  
--void
--ahc_platform_dump_card_state(struct ahc_softc *ahc)
--{
--}
--
- static void ahc_linux_set_width(struct scsi_target *starget, int width)
- {
- 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.h b/drivers/scsi/aic7xxx/aic7xxx_osm.h
-index 54c702864103..f8489078f003 100644
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.h
-+++ b/drivers/scsi/aic7xxx/aic7xxx_osm.h
-@@ -688,7 +688,6 @@ void	ahc_done(struct ahc_softc*, struct scb*);
- void	ahc_send_async(struct ahc_softc *, char channel,
- 		       u_int target, u_int lun, ac_code);
- void	ahc_print_path(struct ahc_softc *, struct scb *);
--void	ahc_platform_dump_card_state(struct ahc_softc *ahc);
+ aic79xx-gen-$(CONFIG_AIC79XX_BUILD_FIRMWARE)	:= $(obj)/aic79xx_reg.h
+@@ -79,8 +77,6 @@ $(obj)/aic79xx_seq.h: $(src)/aic79xx.seq $(src)/aic79xx.reg $(obj)/aicasm/aicasm
  
- #ifdef CONFIG_PCI
- #define AHC_PCI_CONFIG 1
+ $(aic79xx-gen-y): $(objtree)/$(obj)/aic79xx_seq.h
+ 	@true
+-else
+-$(obj)/aic79xx_reg_print.c: $(src)/aic79xx_reg_print.c_shipped
+ endif
+ 
+ $(obj)/aicasm/aicasm: $(srctree)/$(src)/aicasm/*.[chyl]
 -- 
 2.11.0
