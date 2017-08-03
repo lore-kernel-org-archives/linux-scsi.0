@@ -1,15 +1,14 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 11/13] mpt3sas: NVMe drive support for BTDHMAPPING
- ioctl command and log info
-Date: Thu, 3 Aug 2017 08:44:03 +0200
-Message-ID: <f51a7368-1204-9dcc-a516-9552f5bddd4f@suse.de>
+Subject: Re: [PATCH v2 12/13] mpt3sas: Fix nvme drives checking for tlr.
+Date: Thu, 3 Aug 2017 08:44:44 +0200
+Message-ID: <c5bfb7b9-49bc-a503-9674-591a9bcaa6fa@suse.de>
 References: <1500038560-11231-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <1500038560-11231-12-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <1500038560-11231-13-git-send-email-suganath-prabu.subramani@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1500038560-11231-12-git-send-email-suganath-prabu.subramani@broadcom.com>
+In-Reply-To: <1500038560-11231-13-git-send-email-suganath-prabu.subramani@broadcom.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 To: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, jejb@kernel.org, hch@infradead.org
@@ -17,15 +16,13 @@ Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broad
 List-Id: linux-scsi@vger.kernel.org
 
 On 07/14/2017 03:22 PM, Suganath Prabu S wrote:
-> * Added debug prints for pcie devices in ioctl debug path. Which
-> will be helpful for debugging.
-> * Added PCIe device support for ioctl BTDHMAPPING ioctl.
+> Check for NVMe drives before enabling or checking tlr.
 > 
 > Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
 > Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 > ---
->  drivers/scsi/mpt3sas/mpt3sas_ctl.c |   88 +++++++++++++++++++++++------------
->  1 files changed, 58 insertions(+), 30 deletions(-)
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c |   22 ++++++++++++++++------
+>  1 files changed, 16 insertions(+), 6 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
