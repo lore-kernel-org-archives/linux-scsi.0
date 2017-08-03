@@ -1,14 +1,14 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 12/13] mpt3sas: Fix nvme drives checking for tlr.
-Date: Thu, 3 Aug 2017 08:44:44 +0200
-Message-ID: <c5bfb7b9-49bc-a503-9674-591a9bcaa6fa@suse.de>
+Subject: Re: [PATCH v2 13/13] mpt3sas: Update mpt3sas driver version.
+Date: Thu, 3 Aug 2017 08:45:01 +0200
+Message-ID: <9d885102-815d-b68c-52df-a408af927d91@suse.de>
 References: <1500038560-11231-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <1500038560-11231-13-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <1500038560-11231-14-git-send-email-suganath-prabu.subramani@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1500038560-11231-13-git-send-email-suganath-prabu.subramani@broadcom.com>
+In-Reply-To: <1500038560-11231-14-git-send-email-suganath-prabu.subramani@broadcom.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 To: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, jejb@kernel.org, hch@infradead.org
@@ -16,13 +16,30 @@ Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broad
 List-Id: linux-scsi@vger.kernel.org
 
 On 07/14/2017 03:22 PM, Suganath Prabu S wrote:
-> Check for NVMe drives before enabling or checking tlr.
+> Updated mpt3sas driver version to 15.101.00.00
 > 
 > Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
 > Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 > ---
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c |   22 ++++++++++++++++------
->  1 files changed, 16 insertions(+), 6 deletions(-)
+>  drivers/scsi/mpt3sas/mpt3sas_base.h |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+> index b7855c8..b705199 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+> @@ -74,9 +74,9 @@
+>  #define MPT3SAS_DRIVER_NAME		"mpt3sas"
+>  #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
+>  #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
+> -#define MPT3SAS_DRIVER_VERSION		"15.100.00.00"
+> +#define MPT3SAS_DRIVER_VERSION		"15.101.00.00"
+>  #define MPT3SAS_MAJOR_VERSION		15
+> -#define MPT3SAS_MINOR_VERSION		100
+> +#define MPT3SAS_MINOR_VERSION		101
+>  #define MPT3SAS_BUILD_VERSION		0
+>  #define MPT3SAS_RELEASE_VERSION	00
+>  
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
