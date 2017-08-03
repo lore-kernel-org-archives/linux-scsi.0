@@ -1,14 +1,15 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 06/13] mpt3sas: API's to remove nvme drive from sml
-Date: Thu, 3 Aug 2017 08:36:23 +0200
-Message-ID: <d037976e-5e7d-aecd-772c-1d1244406089@suse.de>
+Subject: Re: [PATCH v2 07/13] mpt3sas: Handle NVMe PCIe device related events
+ generated from firmware.
+Date: Thu, 3 Aug 2017 08:38:05 +0200
+Message-ID: <62d621e7-2adc-05b1-e914-dcda52b41553@suse.de>
 References: <1500038560-11231-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <1500038560-11231-7-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <1500038560-11231-8-git-send-email-suganath-prabu.subramani@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1500038560-11231-7-git-send-email-suganath-prabu.subramani@broadcom.com>
+In-Reply-To: <1500038560-11231-8-git-send-email-suganath-prabu.subramani@broadcom.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 To: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, jejb@kernel.org, hch@infradead.org
@@ -16,15 +17,27 @@ Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broad
 List-Id: linux-scsi@vger.kernel.org
 
 On 07/14/2017 03:22 PM, Suganath Prabu S wrote:
-> Below API's are included in nvme drive remove path.
-> _scsih_pcie_device_remove_by_handle
-> _scsih_pcie_device_remove_from_sml
+> * The controller firmware sends separate events for NVMe devices and
+> PCIe switches similar to existing SAS events.
+> 
+> * NVMe device detection, addition and removal are reported by the
+> firmware through PCIe Topology Change list events.
+> 
+> * The PCIe device state change events are sent when the firmware
+> detects any abnormal conditions with a NVMe device or switch.
+> 
+> * The enumeration event are sent when the firmware starts PCIe device
+> enumeration and stops.
+> 
+> * This patch has the code change to handle the events and add/remove
+> NVMe devices in driver's inventory.
 > 
 > Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
 > Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 > ---
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c |  148 +++++++++++++++++++++++++++++++++-
->  1 files changed, 145 insertions(+), 3 deletions(-)
+>  drivers/scsi/mpt3sas/mpt3sas_base.c  |   30 ++-
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c |  471 +++++++++++++++++++++++++++++++++-
+>  2 files changed, 495 insertions(+), 6 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
