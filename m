@@ -1,44 +1,48 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 4/5] aic7xxx: regenerate firmware files
-Date: Fri, 4 Aug 2017 10:44:58 +0200
-Message-ID: <2aa8e151-f7e2-646a-cd96-124c6eb17d6f@suse.de>
-References: <cover.1501802726.git.mirq-linux@rere.qmqm.pl>
- <082db9a483cb081834005fc18c2b333cb6cf3b0b.1501802727.git.mirq-linux@rere.qmqm.pl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Subject: [PATCH] scsi_devinfo: fixup string compare
+Date: Fri,  4 Aug 2017 11:40:25 +0200
+Message-ID: <1501839625-93492-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38863 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:43407 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751291AbdHDIpA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 4 Aug 2017 04:45:00 -0400
-In-Reply-To: <082db9a483cb081834005fc18c2b333cb6cf3b0b.1501802727.git.mirq-linux@rere.qmqm.pl>
-Content-Language: en-US
+        id S1751963AbdHDJk2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 4 Aug 2017 05:40:28 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?UTF-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirq-linux@rere.qmqm.pl>, Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-On 08/04/2017 01:28 AM, Michał Mirosław wrote:
-> Regenerate firmware files to make cleaner base for following fix.
-> This removes some unused definitions and reorders some #defines, but
-> the code remains the same.
-> 
-> Signed-off-by: Michał Mirosław <mirq-linux@rere.qmqm.pl>
-> ---
->  drivers/scsi/aic7xxx/aic79xx_reg.h_shipped       | 1267 ++++------------------
->  drivers/scsi/aic7xxx/aic79xx_reg_print.c_shipped |   34 +-
->  drivers/scsi/aic7xxx/aic7xxx_reg.h_shipped       |   44 +-
->  3 files changed, 235 insertions(+), 1110 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+When checking the model and vendor string we need to use the
+minimum value of either string, otherwise we'll miss out on
+wildcard matches.
+Without this patch certain Hitachi arrays will not be presenting
+VPD pages correctly.
 
-Cheers,
+Fixes: 5e7ff2c ("SCSI: fix new bug in scsi_dev_info_list string matching")
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/scsi_devinfo.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-Hannes
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index 28fea83..f8a302f 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -456,11 +456,13 @@ static struct scsi_dev_info_list *scsi_dev_info_list_find(const char *vendor,
+ 			/*
+ 			 * Behave like the older version of get_device_flags.
+ 			 */
+-			if (memcmp(devinfo->vendor, vskip, vmax) ||
++			if (memcmp(devinfo->vendor, vskip,
++				   min(vmax, strlen(devinfo->vendor))) ||
+ 					(vmax < sizeof(devinfo->vendor) &&
+ 						devinfo->vendor[vmax]))
+ 				continue;
+-			if (memcmp(devinfo->model, mskip, mmax) ||
++			if (memcmp(devinfo->model, mskip,
++				   min(mmax, strlen(devinfo->model))) ||
+ 					(mmax < sizeof(devinfo->model) &&
+ 						devinfo->model[mmax]))
+ 				continue;
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+1.8.5.6
