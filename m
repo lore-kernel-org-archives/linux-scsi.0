@@ -1,152 +1,73 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 3/5] scsi/esp_scsi: Clean up control flow and dead code
-Date: Fri,  4 Aug 2017 01:43:19 -0400 (EDT)
-Message-ID: <79722d1de96f1d0314aba1291465ac0751e7d008.1501825111.git.fthain@telegraphics.com.au>
-References: <cover.1501825111.git.fthain@telegraphics.com.au>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1501825111.git.fthain@telegraphics.com.au>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Thomas Bogendoerfer <tsbogend@alpha.franken.de>, David Miller <davem@davemloft.net>, Hannes Reinecke <hare@suse.com>, Meelis Roos <mroos@linux.ee>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] scsi_dh_alua: suppress errors from unsupported devices
+Date: Fri,  4 Aug 2017 08:37:40 +0200
+Message-ID: <1501828660-89497-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:56101 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751261AbdHDGhq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 4 Aug 2017 02:37:46 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-This patch improves readability. There are no functional changes.
+ALUA is only relevant for disk-like devices, so we shouldn't
+be printing out warning messages for other device types.
 
-Since this touches on a questionable ESP_INTR_DC conditional, add some
-commentary to help others who may (as I did) find themselves chasing an
-"Invalid Command" error after the device flags this condition.
-
-This cleanup also eliminates a warning from "make W=1":
-drivers/scsi/esp_scsi.c: In function 'esp_finish_select':
-drivers/scsi/esp_scsi.c:1233:5: warning: variable 'orig_select_state' set but not used [-Wunused-but-set-variable]
-  u8 orig_select_state;
-
-Tested-by: Stan Johnson <userm57@yahoo.com>
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/esp_scsi.c | 40 ++++++++++++++--------------------------
- drivers/scsi/esp_scsi.h |  1 -
- 2 files changed, 14 insertions(+), 27 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 2 ++
+ drivers/scsi/scsi_dh.c                     | 5 +++--
+ drivers/scsi/scsi_sysfs.c                  | 7 +------
+ 3 files changed, 6 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-index 71cb05b1c3eb..93fef2b3d357 100644
---- a/drivers/scsi/esp_scsi.c
-+++ b/drivers/scsi/esp_scsi.c
-@@ -597,14 +597,12 @@ static int esp_alloc_lun_tag(struct esp_cmd_entry *ent,
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 0962fd5..c3aea06 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -1100,6 +1100,8 @@ static int alua_bus_attach(struct scsi_device *sdev)
+ 	err = alua_initialize(sdev, h);
+ 	if (err == SCSI_DH_NOMEM)
+ 		ret = -ENOMEM;
++	if (err == SCSI_DH_DEV_UNSUPP)
++		ret = -ENODEV;
+ 	if (err != SCSI_DH_OK && err != SCSI_DH_DEV_OFFLINED)
+ 		goto failed;
  
- 		lp->non_tagged_cmd = ent;
- 		return 0;
--	} else {
--		/* Tagged command, see if blocked by a
--		 * non-tagged one.
+diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
+index 84addee..16e780d 100644
+--- a/drivers/scsi/scsi_dh.c
++++ b/drivers/scsi/scsi_dh.c
+@@ -133,8 +133,9 @@ static int scsi_dh_handler_attach(struct scsi_device *sdev,
+ 
+ 	error = scsi_dh->attach(sdev);
+ 	if (error) {
+-		sdev_printk(KERN_ERR, sdev, "%s: Attach failed (%d)\n",
+-			    scsi_dh->name, error);
++		if (error != -ENODEV)
++			sdev_printk(KERN_ERR, sdev, "%s: Attach failed (%d)\n",
++				    scsi_dh->name, error);
+ 		module_put(scsi_dh->module);
+ 	} else
+ 		sdev->handler = scsi_dh;
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index d6984df..5e8ace2 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1222,12 +1222,7 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+ 	scsi_autopm_get_device(sdev);
+ 
+ 	error = scsi_dh_add_device(sdev);
+-	if (error)
+-		/*
+-		 * device_handler is optional, so any error can be ignored
 -		 */
--		if (lp->non_tagged_cmd || lp->hold)
--			return -EBUSY;
- 	}
+-		sdev_printk(KERN_INFO, sdev,
+-				"failed to add device handler: %d\n", error);
++	/* device_handler is optional, so any error can be ignored */
  
-+	/* Tagged command. Check that it isn't blocked by a non-tagged one. */
-+	if (lp->non_tagged_cmd || lp->hold)
-+		return -EBUSY;
-+
- 	BUG_ON(lp->tagged_cmds[ent->orig_tag[1]]);
- 
- 	lp->tagged_cmds[ent->orig_tag[1]] = ent;
-@@ -1210,12 +1208,6 @@ static int esp_reconnect(struct esp *esp)
- 
- 	esp->active_cmd = ent;
- 
--	if (ent->flags & ESP_CMD_FLAG_ABORT) {
--		esp->msg_out[0] = ABORT_TASK_SET;
--		esp->msg_out_len = 1;
--		scsi_esp_cmd(esp, ESP_CMD_SATN);
--	}
--
- 	esp_event(esp, ESP_EVENT_CHECK_PHASE);
- 	esp_restore_pointers(esp, ent);
- 	esp->flags |= ESP_FLAG_QUICKIRQ_CHECK;
-@@ -1230,9 +1222,6 @@ static int esp_finish_select(struct esp *esp)
- {
- 	struct esp_cmd_entry *ent;
- 	struct scsi_cmnd *cmd;
--	u8 orig_select_state;
--
--	orig_select_state = esp->select_state;
- 
- 	/* No longer selecting.  */
- 	esp->select_state = ESP_SELECT_NONE;
-@@ -1745,7 +1734,6 @@ static int esp_process_event(struct esp *esp)
- 			return 0;
- 		}
- 		goto again;
--		break;
- 
- 	case ESP_EVENT_DATA_IN:
- 		write = 1;
-@@ -1956,12 +1944,14 @@ static int esp_process_event(struct esp *esp)
- 		} else {
- 			if (esp->msg_out_len > 1)
- 				esp->ops->dma_invalidate(esp);
--		}
- 
--		if (!(esp->ireg & ESP_INTR_DC)) {
--			if (esp->rev != FASHME)
-+			/* XXX if the chip went into disconnected mode,
-+			 * we can't run the phase state machine anyway.
-+			 */
-+			if (!(esp->ireg & ESP_INTR_DC))
- 				scsi_esp_cmd(esp, ESP_CMD_NULL);
- 		}
-+
- 		esp_event(esp, ESP_EVENT_CHECK_PHASE);
- 		goto again;
- 	case ESP_EVENT_MSGIN:
-@@ -2022,7 +2012,6 @@ static int esp_process_event(struct esp *esp)
- 		}
- 		esp_schedule_reset(esp);
- 		return 0;
--		break;
- 
- 	case ESP_EVENT_RESET:
- 		scsi_esp_cmd(esp, ESP_CMD_RS);
-@@ -2033,7 +2022,6 @@ static int esp_process_event(struct esp *esp)
- 			     "Unexpected event %x, resetting\n", esp->event);
- 		esp_schedule_reset(esp);
- 		return 0;
--		break;
- 	}
- 	return 1;
- }
-@@ -2170,14 +2158,14 @@ static void __esp_interrupt(struct esp *esp)
- 
- 		esp_schedule_reset(esp);
- 	} else {
--		if (!(esp->ireg & ESP_INTR_RSEL)) {
--			/* Some combination of FDONE, BSERV, DC.  */
--			if (esp->select_state != ESP_SELECT_NONE)
--				intr_done = esp_finish_select(esp);
--		} else if (esp->ireg & ESP_INTR_RSEL) {
-+		if (esp->ireg & ESP_INTR_RSEL) {
- 			if (esp->active_cmd)
- 				(void) esp_finish_select(esp);
- 			intr_done = esp_reconnect(esp);
-+		} else {
-+			/* Some combination of FDONE, BSERV, DC. */
-+			if (esp->select_state != ESP_SELECT_NONE)
-+				intr_done = esp_finish_select(esp);
- 		}
- 	}
- 	while (!intr_done)
-diff --git a/drivers/scsi/esp_scsi.h b/drivers/scsi/esp_scsi.h
-index 84dcbe4a6268..7e8932ae91f8 100644
---- a/drivers/scsi/esp_scsi.h
-+++ b/drivers/scsi/esp_scsi.h
-@@ -281,7 +281,6 @@ struct esp_cmd_entry {
- 
- 	u8			flags;
- #define ESP_CMD_FLAG_WRITE	0x01 /* DMA is a write */
--#define ESP_CMD_FLAG_ABORT	0x02 /* being aborted */
- #define ESP_CMD_FLAG_AUTOSENSE	0x04 /* Doing automatic REQUEST_SENSE */
- #define ESP_CMD_FLAG_RESIDUAL	0x08 /* AM53c974 BLAST residual */
- 
+ 	error = device_add(&sdev->sdev_gendev);
+ 	if (error) {
 -- 
-2.13.0
+1.8.5.6
