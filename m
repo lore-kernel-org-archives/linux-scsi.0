@@ -1,7 +1,7 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 4/5] scsi/esp_scsi: Avoid sending ABORT TASK SET messages
-Date: Fri,  4 Aug 2017 01:43:20 -0400 (EDT)
-Message-ID: <f26c6ea398b39550a2a930ae99a9c976c50303de.1501825111.git.fthain@telegraphics.com.au>
+Subject: [PATCH 3/5] scsi/esp_scsi: Clean up control flow and dead code
+Date: Fri,  4 Aug 2017 01:43:19 -0400 (EDT)
+Message-ID: <79722d1de96f1d0314aba1291465ac0751e7d008.1501825111.git.fthain@telegraphics.com.au>
 References: <cover.1501825111.git.fthain@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1501825111.git.fthain@telegraphics.com.au>
@@ -10,129 +10,143 @@ To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <mart
 Cc: Thomas Bogendoerfer <tsbogend@alpha.franken.de>, David Miller <davem@davemloft.net>, Hannes Reinecke <hare@suse.com>, Meelis Roos <mroos@linux.ee>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-If an LLD aborts a task set, it should complete the affected commands
-with the appropriate result code. In a couple of cases esp_scsi doesn't
-do so.
+This patch improves readability. There are no functional changes.
 
-When the initiator receives an unhandled message, just respond by sending
-a MESSAGE REJECT instead of ABORT TASK SET, and thus avoid the issue.
+Since this touches on a questionable ESP_INTR_DC conditional, add some
+commentary to help others who may (as I did) find themselves chasing an
+"Invalid Command" error after the device flags this condition.
 
-OTOH, a MESSAGE REJECT sent by a target can be taken as an indication
-that the initiator messed up somehow. It isn't always possible to abort
-correctly, so just fall back on a SCSI bus reset, which will complete the
-affected commands with the appropriate result code.
-
-For example, certain Apple (Sony) CD-ROM drives, when the non-existent
-LUN 1 is scanned, can't handle the INQUIRY command. The problem is not
-detected until the initiator gets a MESSAGE REJECT. Whenever esp_scsi
-sees that message, it raises ATN and sends ABORT TASK SET -- but
-neglects to complete the failed scmd.
-
-The target then goes into DATA OUT phase (probably bogus), while the ESP
-device goes into disconnected mode (surprising, given the bus phase).
-The next Transfer Information command from esp_scsi then causes
-an Invalid Command interrupt because that command is not valid when in
-disconnected mode:
-
-mac_esp: using PDMA for controller 0
-mac_esp mac_esp.0: esp0: regs[50f10000:(null)] irq[19]
-mac_esp mac_esp.0: esp0: is a ESP236, 16 MHz (ccf=4), SCSI ID 7
-scsi host0: esp
-scsi 0:0:0:0: Direct-Access     SEAGATE  ST318416N        0010 PQ: 0 ANSI: 3
-scsi target0:0:0: Beginning Domain Validation
-scsi target0:0:0: asynchronous
-scsi target0:0:0: Domain Validation skipping write tests
-scsi target0:0:0: Ending Domain Validation
-scsi 0:0:3:0: CD-ROM            SONY     CD-ROM CDU-8003A 1.9a PQ: 0 ANSI: 2 CCS
-scsi target0:0:3: Beginning Domain Validation
-scsi target0:0:3: FAST-5 SCSI 2.0 MB/s ST (500 ns, offset 15)
-scsi target0:0:3: Domain Validation skipping write tests
-scsi target0:0:3: Ending Domain Validation
-scsi host0: unexpected IREG 40
-scsi host0: Dumping command log
-scsi host0: ent[2] CMD val[c2] sreg[90] seqreg[cc] sreg2[00] ireg[20] ss[01] event[0c]
-scsi host0: ent[3] CMD val[00] sreg[91] seqreg[04] sreg2[00] ireg[18] ss[00] event[0c]
-scsi host0: ent[4] EVENT val[0d] sreg[91] seqreg[04] sreg2[00] ireg[18] ss[00] event[0c]
-scsi host0: ent[5] EVENT val[03] sreg[91] seqreg[04] sreg2[00] ireg[18] ss[00] event[0d]
-scsi host0: ent[6] CMD val[90] sreg[91] seqreg[04] sreg2[00] ireg[18] ss[00] event[03]
-scsi host0: ent[7] EVENT val[05] sreg[91] seqreg[04] sreg2[00] ireg[18] ss[00] event[03]
-scsi host0: ent[8] EVENT val[0d] sreg[93] seqreg[cc] sreg2[00] ireg[10] ss[00] event[05]
-scsi host0: ent[9] CMD val[01] sreg[93] seqreg[cc] sreg2[00] ireg[10] ss[00] event[0d]
-scsi host0: ent[10] CMD val[11] sreg[93] seqreg[cc] sreg2[00] ireg[10] ss[00] event[0d]
-scsi host0: ent[11] EVENT val[0b] sreg[93] seqreg[cc] sreg2[00] ireg[10] ss[00] event[0d]
-scsi host0: ent[12] CMD val[12] sreg[97] seqreg[cc] sreg2[00] ireg[08] ss[00] event[0b]
-scsi host0: ent[13] EVENT val[0c] sreg[97] seqreg[cc] sreg2[00] ireg[08] ss[00] event[0b]
-scsi host0: ent[14] CMD val[44] sreg[90] seqreg[cc] sreg2[00] ireg[20] ss[00] event[0c]
-scsi host0: ent[15] CMD val[01] sreg[90] seqreg[cc] sreg2[00] ireg[20] ss[01] event[0c]
-scsi host0: ent[16] CMD val[c2] sreg[90] seqreg[cc] sreg2[00] ireg[20] ss[01] event[0c]
-scsi host0: ent[17] CMD val[00] sreg[87] seqreg[02] sreg2[00] ireg[18] ss[00] event[0c]
-scsi host0: ent[18] EVENT val[0d] sreg[87] seqreg[02] sreg2[00] ireg[18] ss[00] event[0c]
-scsi host0: ent[19] EVENT val[06] sreg[87] seqreg[02] sreg2[00] ireg[18] ss[00] event[0d]
-scsi host0: ent[20] CMD val[01] sreg[87] seqreg[02] sreg2[00] ireg[18] ss[00] event[06]
-scsi host0: ent[21] CMD val[10] sreg[87] seqreg[02] sreg2[00] ireg[18] ss[00] event[06]
-scsi host0: ent[22] CMD val[1a] sreg[87] seqreg[ca] sreg2[00] ireg[08] ss[00] event[06]
-scsi host0: ent[23] CMD val[12] sreg[87] seqreg[ca] sreg2[00] ireg[08] ss[00] event[06]
-scsi host0: ent[24] EVENT val[0d] sreg[87] seqreg[ca] sreg2[00] ireg[08] ss[00] event[06]
-scsi host0: ent[25] EVENT val[09] sreg[86] seqreg[ca] sreg2[00] ireg[10] ss[00] event[0d]
-scsi host0: ent[26] CMD val[01] sreg[86] seqreg[ca] sreg2[00] ireg[10] ss[00] event[09]
-scsi host0: ent[27] CMD val[10] sreg[86] seqreg[ca] sreg2[00] ireg[10] ss[00] event[09]
-scsi host0: ent[28] EVENT val[0a] sreg[86] seqreg[ca] sreg2[00] ireg[10] ss[00] event[09]
-scsi host0: ent[29] EVENT val[0d] sreg[80] seqreg[ca] sreg2[00] ireg[20] ss[00] event[0a]
-scsi host0: ent[30] EVENT val[04] sreg[80] seqreg[ca] sreg2[00] ireg[20] ss[00] event[0d]
-scsi host0: ent[31] CMD val[01] sreg[80] seqreg[ca] sreg2[00] ireg[20] ss[00] event[04]
-scsi host0: ent[0] CMD val[90] sreg[80] seqreg[ca] sreg2[00] ireg[20] ss[00] event[04]
-scsi host0: ent[1] EVENT val[05] sreg[80] seqreg[ca] sreg2[00] ireg[20] ss[00] event[04]
-scsi target0:0:3: FAST-5 SCSI 2.0 MB/s ST (500 ns, offset 15)
-scsi target0:0:0: asynchronous
-sr 0:0:3:0: [sr0] scsi-1 drive
-cdrom: Uniform CD-ROM driver Revision: 3.20
-sd 0:0:0:0: Attached scsi generic sg0 type 0
-sr 0:0:3:0: Attached scsi generic sg1 type 5
-
-This patch resolves this issue because the bus reset causes the INQUIRY
-command to fail earlier, and return the appropriate result code.
+This cleanup also eliminates a warning from "make W=1":
+drivers/scsi/esp_scsi.c: In function 'esp_finish_select':
+drivers/scsi/esp_scsi.c:1233:5: warning: variable 'orig_select_state' set but not used [-Wunused-but-set-variable]
+  u8 orig_select_state;
 
 Tested-by: Stan Johnson <userm57@yahoo.com>
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 ---
- drivers/scsi/esp_scsi.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+ drivers/scsi/esp_scsi.c | 40 ++++++++++++++--------------------------
+ drivers/scsi/esp_scsi.h |  1 -
+ 2 files changed, 14 insertions(+), 27 deletions(-)
 
 diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-index 93fef2b3d357..4d1e08a87274 100644
+index 71cb05b1c3eb..93fef2b3d357 100644
 --- a/drivers/scsi/esp_scsi.c
 +++ b/drivers/scsi/esp_scsi.c
-@@ -1485,9 +1485,8 @@ static void esp_msgin_reject(struct esp *esp)
- 		return;
+@@ -597,14 +597,12 @@ static int esp_alloc_lun_tag(struct esp_cmd_entry *ent,
+ 
+ 		lp->non_tagged_cmd = ent;
+ 		return 0;
+-	} else {
+-		/* Tagged command, see if blocked by a
+-		 * non-tagged one.
+-		 */
+-		if (lp->non_tagged_cmd || lp->hold)
+-			return -EBUSY;
  	}
  
--	esp->msg_out[0] = ABORT_TASK_SET;
--	esp->msg_out_len = 1;
--	scsi_esp_cmd(esp, ESP_CMD_SATN);
-+	shost_printk(KERN_INFO, esp->host, "Unexpected MESSAGE REJECT\n");
-+	esp_schedule_reset(esp);
- }
- 
- static void esp_msgin_sdtr(struct esp *esp, struct esp_target_data *tp)
-@@ -1610,7 +1609,7 @@ static void esp_msgin_extended(struct esp *esp)
- 	shost_printk(KERN_INFO, esp->host,
- 		     "Unexpected extended msg type %x\n", esp->msg_in[2]);
- 
--	esp->msg_out[0] = ABORT_TASK_SET;
-+	esp->msg_out[0] = MESSAGE_REJECT;
- 	esp->msg_out_len = 1;
- 	scsi_esp_cmd(esp, ESP_CMD_SATN);
- }
-@@ -1988,6 +1987,10 @@ static int esp_process_event(struct esp *esp)
- 
- 			scsi_esp_cmd(esp, ESP_CMD_MOK);
- 
-+			/* Check whether a bus reset is to be done next */
-+			if (esp->event == ESP_EVENT_RESET)
-+				return 0;
++	/* Tagged command. Check that it isn't blocked by a non-tagged one. */
++	if (lp->non_tagged_cmd || lp->hold)
++		return -EBUSY;
 +
- 			if (esp->event != ESP_EVENT_FREE_BUS)
- 				esp_event(esp, ESP_EVENT_CHECK_PHASE);
+ 	BUG_ON(lp->tagged_cmds[ent->orig_tag[1]]);
+ 
+ 	lp->tagged_cmds[ent->orig_tag[1]] = ent;
+@@ -1210,12 +1208,6 @@ static int esp_reconnect(struct esp *esp)
+ 
+ 	esp->active_cmd = ent;
+ 
+-	if (ent->flags & ESP_CMD_FLAG_ABORT) {
+-		esp->msg_out[0] = ABORT_TASK_SET;
+-		esp->msg_out_len = 1;
+-		scsi_esp_cmd(esp, ESP_CMD_SATN);
+-	}
+-
+ 	esp_event(esp, ESP_EVENT_CHECK_PHASE);
+ 	esp_restore_pointers(esp, ent);
+ 	esp->flags |= ESP_FLAG_QUICKIRQ_CHECK;
+@@ -1230,9 +1222,6 @@ static int esp_finish_select(struct esp *esp)
+ {
+ 	struct esp_cmd_entry *ent;
+ 	struct scsi_cmnd *cmd;
+-	u8 orig_select_state;
+-
+-	orig_select_state = esp->select_state;
+ 
+ 	/* No longer selecting.  */
+ 	esp->select_state = ESP_SELECT_NONE;
+@@ -1745,7 +1734,6 @@ static int esp_process_event(struct esp *esp)
+ 			return 0;
+ 		}
+ 		goto again;
+-		break;
+ 
+ 	case ESP_EVENT_DATA_IN:
+ 		write = 1;
+@@ -1956,12 +1944,14 @@ static int esp_process_event(struct esp *esp)
  		} else {
+ 			if (esp->msg_out_len > 1)
+ 				esp->ops->dma_invalidate(esp);
+-		}
+ 
+-		if (!(esp->ireg & ESP_INTR_DC)) {
+-			if (esp->rev != FASHME)
++			/* XXX if the chip went into disconnected mode,
++			 * we can't run the phase state machine anyway.
++			 */
++			if (!(esp->ireg & ESP_INTR_DC))
+ 				scsi_esp_cmd(esp, ESP_CMD_NULL);
+ 		}
++
+ 		esp_event(esp, ESP_EVENT_CHECK_PHASE);
+ 		goto again;
+ 	case ESP_EVENT_MSGIN:
+@@ -2022,7 +2012,6 @@ static int esp_process_event(struct esp *esp)
+ 		}
+ 		esp_schedule_reset(esp);
+ 		return 0;
+-		break;
+ 
+ 	case ESP_EVENT_RESET:
+ 		scsi_esp_cmd(esp, ESP_CMD_RS);
+@@ -2033,7 +2022,6 @@ static int esp_process_event(struct esp *esp)
+ 			     "Unexpected event %x, resetting\n", esp->event);
+ 		esp_schedule_reset(esp);
+ 		return 0;
+-		break;
+ 	}
+ 	return 1;
+ }
+@@ -2170,14 +2158,14 @@ static void __esp_interrupt(struct esp *esp)
+ 
+ 		esp_schedule_reset(esp);
+ 	} else {
+-		if (!(esp->ireg & ESP_INTR_RSEL)) {
+-			/* Some combination of FDONE, BSERV, DC.  */
+-			if (esp->select_state != ESP_SELECT_NONE)
+-				intr_done = esp_finish_select(esp);
+-		} else if (esp->ireg & ESP_INTR_RSEL) {
++		if (esp->ireg & ESP_INTR_RSEL) {
+ 			if (esp->active_cmd)
+ 				(void) esp_finish_select(esp);
+ 			intr_done = esp_reconnect(esp);
++		} else {
++			/* Some combination of FDONE, BSERV, DC. */
++			if (esp->select_state != ESP_SELECT_NONE)
++				intr_done = esp_finish_select(esp);
+ 		}
+ 	}
+ 	while (!intr_done)
+diff --git a/drivers/scsi/esp_scsi.h b/drivers/scsi/esp_scsi.h
+index 84dcbe4a6268..7e8932ae91f8 100644
+--- a/drivers/scsi/esp_scsi.h
++++ b/drivers/scsi/esp_scsi.h
+@@ -281,7 +281,6 @@ struct esp_cmd_entry {
+ 
+ 	u8			flags;
+ #define ESP_CMD_FLAG_WRITE	0x01 /* DMA is a write */
+-#define ESP_CMD_FLAG_ABORT	0x02 /* being aborted */
+ #define ESP_CMD_FLAG_AUTOSENSE	0x04 /* Doing automatic REQUEST_SENSE */
+ #define ESP_CMD_FLAG_RESIDUAL	0x08 /* AM53c974 BLAST residual */
+ 
 -- 
 2.13.0
