@@ -1,71 +1,116 @@
-From: Meelis Roos <mroos@linux.ee>
-Subject: Re: [PATCH] hpsa: disable volume status check for older controller
-Date: Fri, 4 Aug 2017 19:26:57 +0300 (EEST)
-Message-ID: <alpine.LRH.2.20.1708041923430.29380@math.ut.ee>
-References: <1501686356-56888-1-git-send-email-hare@suse.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] scsi_devinfo: fixup string compare
+Date: Fri, 4 Aug 2017 18:28:46 +0200
+Message-ID: <c656a810-dbcc-4f1a-5d59-128496af531f@suse.de>
+References: <1501839625-93492-1-git-send-email-hare@suse.de>
+ <1501860744.2757.3.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.it.da.ut.ee ([193.40.5.67]:58102 "EHLO smtp2.it.da.ut.ee"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752350AbdHDQ1B (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 4 Aug 2017 12:27:01 -0400
-In-Reply-To: <1501686356-56888-1-git-send-email-hare@suse.de>
+Received: from mx2.suse.de ([195.135.220.15]:33748 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752547AbdHDQ2u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 4 Aug 2017 12:28:50 -0400
+In-Reply-To: <1501860744.2757.3.camel@wdc.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Don Brace <don.brace@microsemi.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>
 
-> Older Controller might not support volume status, so disable
-> it if 'hpsa_allow_any' is present.
+On 08/04/2017 05:32 PM, Bart Van Assche wrote:
+> On Fri, 2017-08-04 at 11:40 +0200, Hannes Reinecke wrote:
+>> When checking the model and vendor string we need to use the
+>> minimum value of either string, otherwise we'll miss out on
+>> wildcard matches.
+>> Without this patch certain Hitachi arrays will not be presenting
+>> VPD pages correctly.
+>>
+>> Fixes: 5e7ff2c ("SCSI: fix new bug in scsi_dev_info_list string matching")
+>> Signed-off-by: Hannes Reinecke <hare@suse.com>
+>> ---
+>>  drivers/scsi/scsi_devinfo.c | 6 ++++--
+>>  1 file changed, 4 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+>> index 28fea83..f8a302f 100644
+>> --- a/drivers/scsi/scsi_devinfo.c
+>> +++ b/drivers/scsi/scsi_devinfo.c
+>> @@ -456,11 +456,13 @@ static struct scsi_dev_info_list *scsi_dev_info_list_find(const char *vendor,
+>>  			/*
+>>  			 * Behave like the older version of get_device_flags.
+>>  			 */
+>> -			if (memcmp(devinfo->vendor, vskip, vmax) ||
+>> +			if (memcmp(devinfo->vendor, vskip,
+>> +				   min(vmax, strlen(devinfo->vendor))) ||
+>>  					(vmax < sizeof(devinfo->vendor) &&
+>>  						devinfo->vendor[vmax]))
+>>  				continue;
+>> -			if (memcmp(devinfo->model, mskip, mmax) ||
+>> +			if (memcmp(devinfo->model, mskip,
+>> +				   min(mmax, strlen(devinfo->model))) ||
+>>  					(mmax < sizeof(devinfo->model) &&
+>>  						devinfo->model[mmax]))
+>>  				continue;
+> 
+> Hello Hannes,
+> 
+> Will this reintroduce the bug mentioned in commit b704f70ce200? The description
+> of that commit is as follows:
+> 
+> =========================================================================
+> 
+>     SCSI: fix bug in scsi_dev_info_list matching
+>     
+>     The "compatible" matching algorithm used for looking up old-style
+>     blacklist entries in a scsi_dev_info_list is buggy.  The core of the
+>     algorithm looks like this:
+>     
+>                     if (memcmp(devinfo->vendor, vendor,
+>                                 min(max, strlen(devinfo->vendor))))
+>                             /* not a match */
+>     
+>     where max is the length of the device's vendor string after leading
+>     spaces have been removed but trailing spaces have not.  Because of the
+>     min() computation, either entry could be a proper substring of the
+>     other and the code would still think that they match.
+>     
+>     In the case originally reported, the device's vendor and product
+>     strings were "Inateck " and "                ".  These matched against
+>     the following entry in the global device list:
+>     
+>             {"", "Scanner", "1.80", BLIST_NOLUN}
+>     
+>     because "" is a substring of "Inateck " and "" (the result of removing
+>     leading spaces from the device's product string) is a substring of
+>     "Scanner".  The mistaken match prevented the system from scanning and
+>     finding the device's second Logical Unit.
+>     
+>     This patch fixes the problem by making two changes.  First, the code
+>     for leading-space removal is hoisted out of the loop.  (This means it
+>     will sometimes run unnecessarily, but since a large percentage of all
+>     lookups involve the "compatible" entries in global device list, this
+>     should be an overall improvement.)  Second and more importantly, the
+>     patch removes trailing spaces and adds a check to verify that the two
+>     resulting strings are exactly the same length.  This prevents matches
+>     where one entry is a proper substring of the other.
+> 
+Well, maybe; however, the current logic fails to match the entry
 
-It makes my DL380G4 boot with hpsa.hpsa_allow_any=1 and it seems to 
-work. Howevere, there are multiole verbose dmesg entries about failing 
-things:
+	{"HITACHI", "OPEN-", "*", BLIST_REPORTLUN2},
 
-    0.267224] HP HPSA Driver (v 3.4.18-0)
-[    0.267351] hpsa 0000:04:03.0: unsupported board ID: 0x40910e11
-[    0.267494] hpsa 0000:04:03.0: unsupported board ID: 0x40910e11
-[    0.267695] hpsa 0000:04:03.0: PCI IRQ 51 -> rerouted to legacy IRQ 19
-[    0.267889] hpsa 0000:04:03.0: Physical aborts not supported
-[    0.268036] hpsa 0000:04:03.0: Logical aborts not supported
-[    0.268163] hpsa 0000:04:03.0: HP SSD Smart Path aborts not supported
-[    0.448240] scsi host0: hpsa
-[    0.452228] hpsa 0000:04:03.0: report luns requested format 2, got 0
-[    0.453950] hpsa 0000:04:03.0: hpsa0: hpsa_update_device_info: can't get device id for host 0:C0:T0:L0       Direct-Access           MAN3735MC       
-[    0.454312] hpsa 0000:04:03.0: SCSI status: LUN:0000000000000000 CDB:26000000000015000801000000000000
-[    0.454525] hpsa 0000:04:03.0: SCSI Status = 02, Sense key = 0x05, ASC = 0x3a, ASCQ = 0x00
-[    0.458100] hpsa 0000:04:03.0: hpsa0: hpsa_update_device_info: can't get device id for host 0:C0:T-1:L-1     Direct-Access           MAP3735NC       
-[    0.458453] hpsa 0000:04:03.0: SCSI status: LUN:0000000000000000 CDB:26000100000015000801000000000000
-[    0.458668] hpsa 0000:04:03.0: SCSI Status = 02, Sense key = 0x05, ASC = 0x3a, ASCQ = 0x00
-[    0.485980] hpsa 0000:04:03.0: C0:T-1:L-1 Volume status not available, assuming online.
-[    0.486807] hpsa 0000:04:03.0: scsi 0:0:0:0: masked Direct-Access     FUJITSU  MAN3735MC        PHYS DRV SSDSmartPathCap- En- Exp=0
-[    0.487020] hpsa 0000:04:03.0: scsi 0:0:1:0: masked Direct-Access     FUJITSU  MAP3735NC        PHYS DRV SSDSmartPathCap- En- Exp=0
-[    0.487229] hpsa 0000:04:03.0: scsi 0:1:0:0: added Direct-Access     HP       LOGICAL VOLUME   RAID-1(+0) SSDSmartPathCap- En- Exp=1
-[    0.487440] hpsa 0000:04:03.0: scsi 0:3:0:0: added RAID              HP       SA6i             controller SSDSmartPathCap- En- Exp=1
-[    0.487997] scsi 0:1:0:0: Direct-Access     HP       LOGICAL VOLUME   2.84 PQ: 0 ANSI: 4
-[    0.488989] scsi 0:3:0:0: RAID              HP       SA6i             2.84 PQ: 0 ANSI: 0
-[    0.489390] hpsa 0000:0b:04.0: unsupported board ID: 0x409c0e11
-[    0.489532] hpsa 0000:0b:04.0: unsupported board ID: 0x409c0e11
-[    0.489870] hpsa 0000:0b:04.0: Physical aborts not supported
-[    0.489995] hpsa 0000:0b:04.0: Logical aborts not supported
-[    0.490118] hpsa 0000:0b:04.0: HP SSD Smart Path aborts not supported
-[    0.628221] scsi host1: hpsa
-[    0.632143] hpsa 0000:0b:04.0: report luns requested format 2, got 0
-[    0.633498] hpsa 0000:0b:04.0: scsi 1:3:0:0: added RAID              HP       SA6400           controller SSDSmartPathCap- En- Exp=1
-[    0.634246] scsi 1:0:0:0: RAID              HP       SA6400           2.84 PQ: 0 ANSI: 0
-[    0.634882] i8042: PNP: PS/2 Controller [PNP0303:KBD,PNP0f0e:PS2M] at 0x60,0x64 irq 1,12
-[    0.635581] sd 0:1:0:0: [sda] 430622325 512-byte logical blocks: (220 GB/205 GiB)
-[    0.635974] sd 0:1:0:0: [sda] Write Protect is off
-[    0.636118] sd 0:1:0:0: [sda] Mode Sense: 5b 00 00 08
-[    0.636337] sd 0:1:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+against the 'real' name, which is "HITACHI" "OPEN-V".
+And for some reason we have far more customer using Hitachi arrays than
+using scanner of dubious provenance with no Vendor (which is the real
+bug if you ask me...)
 
-Among these, the following show up red in dmesg:
+Cheers,
 
-report luns requested format 2, got 0
-hpsa0: hpsa_update_device_info: can't get device id for host 0:C0:T0:L0       Direct-Access           MAN3735MC
-hpsa0: hpsa_update_device_info: can't get device id for host 0:C0:T-1:L-1     Direct-Access           MAP3735NC
-report luns requested format 2, got 0
-
+Hannes
 -- 
-Meelis Roos (mroos@linux.ee)
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
