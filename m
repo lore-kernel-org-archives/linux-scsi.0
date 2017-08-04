@@ -1,73 +1,51 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] scsi_dh_alua: suppress errors from unsupported devices
-Date: Fri,  4 Aug 2017 08:37:40 +0200
-Message-ID: <1501828660-89497-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56101 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751261AbdHDGhq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 4 Aug 2017 02:37:46 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Vivek Gautam <vivek.gautam-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Subject: [PATCH 0/5] qcom-ufs: phy/hcd: Refactor phy initialization code
+Date: Fri,  4 Aug 2017 12:18:47 +0530
+Message-ID: <1501829332-5183-1-git-send-email-vivek.gautam@codeaurora.org>
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: kishon-l0cyMroinI0@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: linux-arm-msm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, bjorn.andersson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Vivek Gautam <vivek.gautam-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-ALUA is only relevant for disk-like devices, so we shouldn't
-be printing out warning messages for other device types.
+Refactoring the qcom-ufs phy and host controller code to move
+further towards the generic phy usage. Right now the qcom-ufs exports
+a bunch of APIs that are used by the host controller to initialize
+the phy.
+With this patch series, we populate the phy_init() which was a no-op
+earlier. The host controller then calls the phy_init() at the designated
+place rather than doing it invariably in ufs_hcd_init().
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/device_handler/scsi_dh_alua.c | 2 ++
- drivers/scsi/scsi_dh.c                     | 5 +++--
- drivers/scsi/scsi_sysfs.c                  | 7 +------
- 3 files changed, 6 insertions(+), 8 deletions(-)
+As part of this series, we introduce phy modes for ufs phy.
+The M-PHY has two data rates defined for each generations (Gears) -
+Rate A and Rate B. These can serve as the two modes of ufs HS phy.
+Host controller can direct the phy to set the respective configurations
+based on the phy modes.
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 0962fd5..c3aea06 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -1100,6 +1100,8 @@ static int alua_bus_attach(struct scsi_device *sdev)
- 	err = alua_initialize(sdev, h);
- 	if (err == SCSI_DH_NOMEM)
- 		ret = -ENOMEM;
-+	if (err == SCSI_DH_DEV_UNSUPP)
-+		ret = -ENODEV;
- 	if (err != SCSI_DH_OK && err != SCSI_DH_DEV_OFFLINED)
- 		goto failed;
- 
-diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
-index 84addee..16e780d 100644
---- a/drivers/scsi/scsi_dh.c
-+++ b/drivers/scsi/scsi_dh.c
-@@ -133,8 +133,9 @@ static int scsi_dh_handler_attach(struct scsi_device *sdev,
- 
- 	error = scsi_dh->attach(sdev);
- 	if (error) {
--		sdev_printk(KERN_ERR, sdev, "%s: Attach failed (%d)\n",
--			    scsi_dh->name, error);
-+		if (error != -ENODEV)
-+			sdev_printk(KERN_ERR, sdev, "%s: Attach failed (%d)\n",
-+				    scsi_dh->name, error);
- 		module_put(scsi_dh->module);
- 	} else
- 		sdev->handler = scsi_dh;
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index d6984df..5e8ace2 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1222,12 +1222,7 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 	scsi_autopm_get_device(sdev);
- 
- 	error = scsi_dh_add_device(sdev);
--	if (error)
--		/*
--		 * device_handler is optional, so any error can be ignored
--		 */
--		sdev_printk(KERN_INFO, sdev,
--				"failed to add device handler: %d\n", error);
-+	/* device_handler is optional, so any error can be ignored */
- 
- 	error = device_add(&sdev->sdev_gendev);
- 	if (error) {
+The patch-series has been tested with necessary dt patches on db820c.
+
+Vivek Gautam (5):
+  dt-bindings: phy: Add PHY_TYPE_UFS definition
+  phy: Add UFS PHY modes
+  phy: qcom-ufs: Add support to set phy mode
+  scsi/ufs: qcom: Set phy mode based on the controllers HS MODE
+  ufs/phy: qcom: Refactor to use phy_init call
+
+ drivers/phy/qualcomm/phy-qcom-ufs-i.h        |  4 +--
+ drivers/phy/qualcomm/phy-qcom-ufs-qmp-14nm.c | 23 ++++++++++++++--
+ drivers/phy/qualcomm/phy-qcom-ufs-qmp-20nm.c | 23 ++++++++++++++--
+ drivers/phy/qualcomm/phy-qcom-ufs.c          | 38 +++++++--------------------
+ drivers/scsi/ufs/ufs-qcom.c                  | 39 ++++++++++++----------------
+ include/dt-bindings/phy/phy.h                |  1 +
+ include/linux/phy/phy-qcom-ufs.h             |  3 ---
+ include/linux/phy/phy.h                      |  2 ++
+ 8 files changed, 74 insertions(+), 59 deletions(-)
+
 -- 
-1.8.5.6
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation
+
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
