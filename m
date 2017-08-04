@@ -1,97 +1,71 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH 2/2] sd_zbc: Write unlock zones from sd_uninit_cmnd()
-Date: Fri,  4 Aug 2017 16:52:37 +0900
-Message-ID: <20170804075237.2089-3-damien.lemoal@wdc.com>
+Subject: [PATCH 1/2] block: Zoned block device single-threaded submission
+Date: Fri,  4 Aug 2017 16:52:36 +0900
+Message-ID: <20170804075237.2089-2-damien.lemoal@wdc.com>
 References: <20170804075237.2089-1-damien.lemoal@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:26841 "EHLO
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:19626 "EHLO
         esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751283AbdHDHyh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Aug 2017 03:54:37 -0400
+        with ESMTP id S1751283AbdHDHym (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Aug 2017 03:54:42 -0400
 In-Reply-To: <20170804075237.2089-1-damien.lemoal@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>
 Cc: Hannes Reinecke <hare@suse.de>, Bart Van Assche <Bart.VanAssche@wdc.com>, Christoph Hellwig <hch@lst.de>
 
-Releasing the write lock of a zone when the write commnand that
-acquired the lock completes can cause deadlocks with scsi-mq due to
-potential queue reordering if the lock owning request is requeued and
-not executed.
+From: Hannes Reinecke <hare@suse.de>
 
-Since sd_uninit_cmnd() is always called when a request is requeued,
-call sd_zbc_write_unlock_zone() from that function for write requests
-that acquired a zone lock. Acquisition of a zone lock by a write command
-is indicated using the new command flag SCMD_ZONE_WRITE_LOCK.
+The scsi_request_fn() dispatch function internally unlocks the request
+queue before submitting a request to the underlying LLD. This can
+potentially lead to write request reordering if the context executing
+scsi_request_fn() is preempted before the request is submitted to the
+LLD and another context start the same function execution.
 
+This is not a problem for regular disks but leads to write I/O errors
+on host managed zoned block devices and reduce the effectivness of
+sequential write optimizations for host aware disks.
+(Note: the zone write lock in place in the scsi command init code will
+prevent multiple writes from being issued simultaneously to the same
+zone to avoid HBA level reordering issues, but this locking mechanism
+is ineffective to prevent reordering at the dispatch level)
+
+Prevent this from happening by limiting the number of context that can
+simultaneously execute the queue request_fn() function to a single
+thread.
+
+A similar patch was originally proposed by Hannes Reinecke in a first
+set of patches implementing ZBC support but ultimately not included in
+the final support implementation. See commit 92f5e2a295
+"block: add flag for single-threaded submission" in the tree
+https://git.kernel.org/pub/scm/linux/kernel/git/hare/scsi-devel.git/log/?h=zac.v3
+
+Authorship thus goes to Hannes.
+
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 ---
- drivers/scsi/sd.c        | 3 +++
- drivers/scsi/sd_zbc.c    | 9 +++++----
- include/scsi/scsi_cmnd.h | 1 +
- 3 files changed, 9 insertions(+), 4 deletions(-)
+ block/blk-core.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index bea36adeee17..e2647f2d4430 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1277,6 +1277,9 @@ static void sd_uninit_command(struct scsi_cmnd *SCpnt)
- {
- 	struct request *rq = SCpnt->request;
- 
-+	if (SCpnt->flags & SCMD_ZONE_WRITE_LOCK)
-+		sd_zbc_write_unlock_zone(SCpnt);
+diff --git a/block/blk-core.c b/block/blk-core.c
+index dbecbf4a64e0..cf590cbddcfd 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -371,7 +371,14 @@ inline void __blk_run_queue_uncond(struct request_queue *q)
+ 	 * running such a request function concurrently. Keep track of the
+ 	 * number of active request_fn invocations such that blk_drain_queue()
+ 	 * can wait until all these request_fn calls have finished.
++	 *
++	 * For zoned block devices, do not allow multiple threads to
++	 * dequeue requests as this can lead to write request reordering
++	 * during the time the queue is unlocked.
+ 	 */
++	if (blk_queue_is_zoned(q) && q->request_fn_active)
++		return;
 +
- 	if (rq->rq_flags & RQF_SPECIAL_PAYLOAD)
- 		__free_page(rq->special_vec.bv_page);
- 
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 96855df9f49d..6423ae70477e 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -294,6 +294,9 @@ int sd_zbc_write_lock_zone(struct scsi_cmnd *cmd)
- 	    test_and_set_bit(zno, sdkp->zones_wlock))
- 		return BLKPREP_DEFER;
- 
-+	WARN_ON(cmd->flags & SCMD_ZONE_WRITE_LOCK);
-+	cmd->flags |= SCMD_ZONE_WRITE_LOCK;
-+
- 	return BLKPREP_OK;
- }
- 
-@@ -302,9 +305,10 @@ void sd_zbc_write_unlock_zone(struct scsi_cmnd *cmd)
- 	struct request *rq = cmd->request;
- 	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
- 
--	if (sdkp->zones_wlock) {
-+	if (sdkp->zones_wlock && cmd->flags & SCMD_ZONE_WRITE_LOCK) {
- 		unsigned int zno = sd_zbc_zone_no(sdkp, blk_rq_pos(rq));
- 		WARN_ON_ONCE(!test_bit(zno, sdkp->zones_wlock));
-+		cmd->flags &= ~SCMD_ZONE_WRITE_LOCK;
- 		clear_bit_unlock(zno, sdkp->zones_wlock);
- 		smp_mb__after_atomic();
- 	}
-@@ -335,9 +339,6 @@ void sd_zbc_complete(struct scsi_cmnd *cmd,
- 	case REQ_OP_WRITE_ZEROES:
- 	case REQ_OP_WRITE_SAME:
- 
--		/* Unlock the zone */
--		sd_zbc_write_unlock_zone(cmd);
--
- 		if (result &&
- 		    sshdr->sense_key == ILLEGAL_REQUEST &&
- 		    sshdr->asc == 0x21)
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index a1266d318c85..6af198d8120b 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -57,6 +57,7 @@ struct scsi_pointer {
- /* for scmd->flags */
- #define SCMD_TAGGED		(1 << 0)
- #define SCMD_UNCHECKED_ISA_DMA	(1 << 1)
-+#define SCMD_ZONE_WRITE_LOCK	(1 << 2)
- 
- struct scsi_cmnd {
- 	struct scsi_request req;
+ 	q->request_fn_active++;
+ 	q->request_fn(q);
+ 	q->request_fn_active--;
 -- 
 2.13.3
