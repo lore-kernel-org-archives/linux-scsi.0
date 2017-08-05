@@ -1,50 +1,74 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v2 00/13] mpt3sas driver NVMe support:
-Date: Sat, 05 Aug 2017 07:42:09 -0700
-Message-ID: <1501944129.3649.9.camel@HansenPartnership.com>
-References: <1500038560-11231-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-         <e679a449-90c3-d2e1-2b31-1387cf414e09@suse.de>
-         <20170805135353.GA7526@infradead.org>
+From: "Richard W.M. Jones" <rjones@redhat.com>
+Subject: Re: Increased memory usage with scsi-mq
+Date: Sat, 5 Aug 2017 16:51:03 +0100
+Message-ID: <20170805155103.GE20914@redhat.com>
+References: <20170804210035.GA10017@redhat.com>
+ <20170805084436.GA14264@lst.de>
+ <20170805092704.GD20914@redhat.com>
+ <20170805133954.GA17694@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170805135353.GA7526@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <20170805133954.GA17694@lst.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>
-Cc: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, linux-kernel@vger.kernel.org, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com, linux-nvme@lists.infradead.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, pbonzini@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, 2017-08-05 at 06:53 -0700, Christoph Hellwig wrote:
-> On Wed, Aug 02, 2017 at 10:14:40AM +0200, Hannes Reinecke wrote:
-> > 
-> > I'm not happy with this approach.
-> > NVMe devices should _not_ appear as SCSI devices; this will just
-> > confuse matters _and_ will be incompatible with 'normal' NVMe
-> > devices.
-> > 
-> > Rather I would like to see the driver to hook into the existing
-> > NVMe framework (which essentially means to treat the mpt3sas as a
-> > weird NVMe-over-Fabrics HBA), and expose the NVMe devices like any
-> > other NVMe HBA.
+On Sat, Aug 05, 2017 at 03:39:54PM +0200, Christoph Hellwig wrote:
+> For now can you apply this testing patch to the guest kernel?
 > 
-> That doesn't make any sense.  The devices behind the mpt adapter
-> don't look like NVMe devices at all for the hosts - there are no NVMe
-> commands or queues involved at all, they hide behind the same
-> somewhat leaky scsi abstraction as other devices behind the mpt
-> controller.
+> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+> index 9be211d68b15..0cbe2c882e1c 100644
+> --- a/drivers/scsi/virtio_scsi.c
+> +++ b/drivers/scsi/virtio_scsi.c
+> @@ -818,7 +818,7 @@ static struct scsi_host_template virtscsi_host_template_single = {
+>  	.eh_timed_out = virtscsi_eh_timed_out,
+>  	.slave_alloc = virtscsi_device_alloc,
+>  
+> -	.can_queue = 1024,
+> +	.can_queue = 64,
+>  	.dma_boundary = UINT_MAX,
+>  	.use_clustering = ENABLE_CLUSTERING,
+>  	.target_alloc = virtscsi_target_alloc,
+> @@ -839,7 +839,7 @@ static struct scsi_host_template virtscsi_host_template_multi = {
+>  	.eh_timed_out = virtscsi_eh_timed_out,
+>  	.slave_alloc = virtscsi_device_alloc,
+>  
+> -	.can_queue = 1024,
+> +	.can_queue = 64,
+>  	.dma_boundary = UINT_MAX,
+>  	.use_clustering = ENABLE_CLUSTERING,
+>  	.target_alloc = virtscsi_target_alloc,
+> @@ -983,7 +983,7 @@ static int virtscsi_probe(struct virtio_device *vdev)
+>  	shost->max_id = num_targets;
+>  	shost->max_channel = 0;
+>  	shost->max_cmd_len = VIRTIO_SCSI_CDB_SIZE;
+> -	shost->nr_hw_queues = num_queues;
+> +	shost->nr_hw_queues = 1;
+>  
+>  #ifdef CONFIG_BLK_DEV_INTEGRITY
+>  	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_T10_PI)) {
 
-You might think about what we did for SAS: split the generic handler
-into two pieces, libsas for driving the devices, which mpt didn't need
-because of the fat firmware and the SAS transport class so mpt could at
-least show the same sysfs files as everything else for SAS devices.
+Yes, that's an improvement, although it's still a little way off the
+density possible the old way:
 
-Fortunately for NVMe it's very simple at the moment its just a couple
-of host files and wwid on the devices.
+  With scsi-mq enabled:   175 disks
+* With this patch:        319 disks *
+  With scsi-mq disabled: 1755 disks
 
-James
+Also only the first two hunks are necessary.  The kernel behaves
+exactly the same way with or without the third hunk (ie. num_queues
+must already be 1).
 
+Can I infer from this that qemu needs a way to specify the can_queue
+setting to the virtio-scsi driver in the guest kernel?
 
-> The only additional leak is that the controller now supports NVMe-
-> like PRPs in additions to its existing two SGL formats.
-> 
+Rich.
+
+-- 
+Richard Jones, Virtualization Group, Red Hat http://people.redhat.com/~rjones
+Read my programming and virtualization blog: http://rwmj.wordpress.com
+libguestfs lets you edit virtual machines.  Supports shell scripting,
+bindings from many languages.  http://libguestfs.org
