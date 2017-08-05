@@ -1,18 +1,23 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] scsi: sg: Prevent potential double frees in sg driver
-Date: Sat, 5 Aug 2017 13:37:47 +0200
-Message-ID: <20170805113747.GE16313@lst.de>
-References: <20170803190248.51537-1-ndesaulniers@google.com>
+Subject: Re: [PATCH 3/4] scsi: add Mylex RAID controller
+Date: Sat, 5 Aug 2017 13:39:32 +0200
+Message-ID: <20170805113932.GF16313@lst.de>
+References: <1501683208-5240-1-git-send-email-hare@suse.de> <1501683208-5240-4-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170803190248.51537-1-ndesaulniers@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nick Desaulniers <ndesaulniers@google.com>
-Cc: hare@suse.de, jthumshirn@suse.de, hch@lst.de, salyzyn@google.com, gregkh@linuxfoundation.org, Robb Glasser <rglasser@google.com>, Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <1501683208-5240-4-git-send-email-hare@suse.de>
+Sender: linux-block-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jth@kernel.org>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This looks correct and safe to me, but I wonder if anyone relies
-on multi-threaded /dev/sg write usage, which would be completely
-serialized with this.
+Can you use normal linux style for the code instead of copy and
+pasting the weird naming and capitalization from the DAC960 driver?
+
+Also please use the driver name as prefix for the functions.
+
+Maybe myraid instead of mylex?
+
+I'll take a more detailed look at the actual driver in a bit.
