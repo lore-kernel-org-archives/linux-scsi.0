@@ -1,15 +1,15 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v2 14/20] lpfc: Fix relative offset error on large nvmet target ios
-Date: Fri,  4 Aug 2017 17:47:25 -0700
-Message-ID: <20170805004731.1335-15-jsmart2021@gmail.com>
+Subject: [PATCH v2 09/20] lpfc: Fix crash in lpfc nvmet when fc port is reset
+Date: Fri,  4 Aug 2017 17:47:20 -0700
+Message-ID: <20170805004731.1335-10-jsmart2021@gmail.com>
 References: <20170805004731.1335-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:34936 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752671AbdHEAsG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Aug 2017 20:48:06 -0400
-Received: by mail-pg0-f65.google.com with SMTP id l64so3110323pge.2
-        for <linux-scsi@vger.kernel.org>; Fri, 04 Aug 2017 17:48:06 -0700 (PDT)
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:33195 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752595AbdHEAr5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Aug 2017 20:47:57 -0400
+Received: by mail-pg0-f68.google.com with SMTP id u185so3142543pgb.0
+        for <linux-scsi@vger.kernel.org>; Fri, 04 Aug 2017 17:47:56 -0700 (PDT)
 In-Reply-To: <20170805004731.1335-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,63 +18,62 @@ Cc: jsmart2021@gmail.com, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart 
 
 From: Dick Kennedy <dick.kennedy@broadcom.com>
 
-if the nvmet_fc transport breaks an io into multiple sequences,
-the driver will improperly set the relative offset on the 2nd through
-N sequences.
+in adapter reset tests, an oops was seen with a NULL pointer in
+lpfc_free_rq_buffer+0x20/0x60
 
-Correct by properly formatting the hw cmd so the relative offset is
-picked up from the hw cmd.
+The driver is failing to properly repost the nvmet sgl list when
+recovering from the reset. Thus the driver eventually trys to
+walk an errant buffer list.
+
+Corrected the sgl buffer recovery as well as strengthening the
+initialization of the bufferlist.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_nvmet.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index cd6c93a17760..40fa5dd72bfa 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -559,7 +559,7 @@ lpfc_nvmet_xmt_fcp_op_cmp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdwqe,
- 		/* lpfc_nvmet_xmt_fcp_release() will recycle the context */
- 	} else {
- 		ctxp->entry_cnt++;
--		start_clean = offsetof(struct lpfc_iocbq, wqe);
-+		start_clean = offsetof(struct lpfc_iocbq, iocb_flag);
- 		memset(((char *)cmdwqe) + start_clean, 0,
- 		       (sizeof(struct lpfc_iocbq) - start_clean));
- #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
-@@ -1024,7 +1024,6 @@ lpfc_nvmet_setup_io_context(struct lpfc_hba *phba)
- 		/* Word 7 */
- 		bf_set(wqe_ct, &wqe->generic.wqe_com, SLI4_CT_RPI);
- 		bf_set(wqe_class, &wqe->generic.wqe_com, CLASS3);
--		bf_set(wqe_pu, &wqe->generic.wqe_com, 1);
- 		/* Word 10 */
- 		bf_set(wqe_nvme, &wqe->fcp_tsend.wqe_com, 1);
- 		bf_set(wqe_ebde_cnt, &wqe->generic.wqe_com, 0);
-@@ -1974,6 +1973,7 @@ lpfc_nvmet_prep_fcp_wqe(struct lpfc_hba *phba,
- 		       nvmewqe->sli4_xritag);
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 491aa95eb0f6..5f32a7fe169d 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -3226,6 +3226,13 @@ lpfc_offline(struct lpfc_hba *phba)
  
- 		/* Word 7 */
-+		bf_set(wqe_pu, &wqe->fcp_tsend.wqe_com, 1);
- 		bf_set(wqe_cmnd, &wqe->fcp_tsend.wqe_com, CMD_FCP_TSEND64_WQE);
+ 	/* stop port and all timers associated with this hba */
+ 	lpfc_stop_port(phba);
++
++	/* Tear down the local and target port registrations.  The
++	 * nvme transports need to cleanup.
++	 */
++	lpfc_nvmet_destroy_targetport(phba);
++	lpfc_nvme_destroy_localport(phba->pport);
++
+ 	vports = lpfc_create_vport_work_array(phba);
+ 	if (vports != NULL)
+ 		for (i = 0; i <= phba->max_vports && vports[i] != NULL; i++)
+@@ -6516,6 +6523,12 @@ lpfc_free_nvmet_sgl_list(struct lpfc_hba *phba)
+ 		lpfc_nvmet_buf_free(phba, sglq_entry->virt, sglq_entry->phys);
+ 		kfree(sglq_entry);
+ 	}
++
++	/* Update the nvmet_xri_cnt to reflect no current sgls.
++	 * The next initialization cycle sets the count and allocates
++	 * the sgls over again.
++	 */
++	phba->sli4_hba.nvmet_xri_cnt = 0;
+ }
  
- 		/* Word 8 */
-@@ -2082,6 +2082,7 @@ lpfc_nvmet_prep_fcp_wqe(struct lpfc_hba *phba,
- 		       nvmewqe->sli4_xritag);
+ /**
+@@ -8301,6 +8314,9 @@ lpfc_sli4_queue_create(struct lpfc_hba *phba)
+ 				goto out_error;
+ 			}
  
- 		/* Word 7 */
-+		bf_set(wqe_pu, &wqe->fcp_treceive.wqe_com, 1);
- 		bf_set(wqe_ar, &wqe->fcp_treceive.wqe_com, 0);
- 		bf_set(wqe_cmnd, &wqe->fcp_treceive.wqe_com,
- 		       CMD_FCP_TRECEIVE64_WQE);
-@@ -2165,6 +2166,7 @@ lpfc_nvmet_prep_fcp_wqe(struct lpfc_hba *phba,
- 		       nvmewqe->sli4_xritag);
- 
- 		/* Word 7 */
-+		bf_set(wqe_pu, &wqe->fcp_trsp.wqe_com, 0);
- 		bf_set(wqe_ag, &wqe->fcp_trsp.wqe_com, 1);
- 		bf_set(wqe_cmnd, &wqe->fcp_trsp.wqe_com, CMD_FCP_TRSP64_WQE);
- 
++			/* Put list in known state in case driver load fails. */
++			INIT_LIST_HEAD(&qdesc->rqbp->rqb_buffer_list);
++
+ 			/* Create NVMET Receive Queue for data */
+ 			qdesc = lpfc_sli4_queue_alloc(phba,
+ 						      phba->sli4_hba.rq_esize,
 -- 
 2.13.1
