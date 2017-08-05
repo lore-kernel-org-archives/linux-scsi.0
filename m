@@ -1,18 +1,18 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] scsi-mq: Always unprepare before requeuing a request
-Date: Sat, 5 Aug 2017 13:36:30 +0200
-Message-ID: <20170805113630.GD16313@lst.de>
-References: <20170803214014.20332-1-bart.vanassche@wdc.com>
+Subject: Re: [PATCH] scsi: sg: Prevent potential double frees in sg driver
+Date: Sat, 5 Aug 2017 13:37:47 +0200
+Message-ID: <20170805113747.GE16313@lst.de>
+References: <20170803190248.51537-1-ndesaulniers@google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170803214014.20332-1-bart.vanassche@wdc.com>
-Sender: stable-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Damien Le Moal <damien.lemoal@wdc.com>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org
+In-Reply-To: <20170803190248.51537-1-ndesaulniers@google.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Nick Desaulniers <ndesaulniers@google.com>
+Cc: hare@suse.de, jthumshirn@suse.de, hch@lst.de, salyzyn@google.com, gregkh@linuxfoundation.org, Robb Glasser <rglasser@google.com>, Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Looks fine,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+This looks correct and safe to me, but I wonder if anyone relies
+on multi-threaded /dev/sg write usage, which would be completely
+serialized with this.
