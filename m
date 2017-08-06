@@ -1,43 +1,27 @@
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH] scsi: mpt3sas: Fix memory allocation failure test in 'mpt3sas_base_attach()'
-Date: Mon,  7 Aug 2017 00:51:29 +0200
-Message-ID: <20170806225134.27079-1-christophe.jaillet@wanadoo.fr>
-References: <cover.1502058761.git.christophe.jaillet@wanadoo.fr>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1502058761.git.christophe.jaillet@wanadoo.fr>
-Sender: linux-kernel-owner@vger.kernel.org
-To: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] tcmu: Oops in unmap_thread_fn()
+Date: Sun, 06 Aug 2017 16:27:53 -0700
+Message-ID: <1502062073.22966.45.camel@haakon3.daterainc.com>
+References: <20170801200917.brigs5x47eujfx7a@mwanda>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <20170801200917.brigs5x47eujfx7a@mwanda>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Xiubo Li <lixiubo@cmss.chinamobile.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-In the lines above this test, 8 'kzalloc' are performed, but only 7 results
-are tested.
+On Tue, 2017-08-01 at 23:09 +0300, Dan Carpenter wrote:
+> Calling list_del() on the iterator pointer in list_for_each_entry() will
+> cause an oops.  We need to user the _safe() version for that.
+> 
+> Fixes: c73d02f63c16 ("tcmu: Add fifo type waiter list support to avoid starvation")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
 
-Add the missing one (i.e. '!ioc->port_enable_cmds.reply').
+Applied to target-pending/for-next.
 
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Thanks DanC.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 1a5b6e40fb5c..8a44636ab0b5 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -5494,10 +5494,10 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
- 	ioc->ctl_cmds.status = MPT3_CMD_NOT_USED;
- 	mutex_init(&ioc->ctl_cmds.mutex);
- 
--	if (!ioc->base_cmds.reply || !ioc->transport_cmds.reply ||
--	    !ioc->scsih_cmds.reply || !ioc->tm_cmds.reply ||
--	    !ioc->config_cmds.reply || !ioc->ctl_cmds.reply ||
--	    !ioc->ctl_cmds.sense) {
-+	if (!ioc->base_cmds.reply || !ioc->port_enable_cmds.reply ||
-+	    !ioc->transport_cmds.reply || !ioc->scsih_cmds.reply ||
-+	    !ioc->tm_cmds.reply || !ioc->config_cmds.reply ||
-+	    !ioc->ctl_cmds.reply || !ioc->ctl_cmds.sense) {
- 		r = -ENOMEM;
- 		goto out_free_resources;
- 	}
--- 
-2.11.0
