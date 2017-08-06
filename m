@@ -1,31 +1,43 @@
 From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH 0/3] power: supply: charger-manager: 1 fix and 2 minor clean-ups
-Date: Mon,  7 Aug 2017 00:51:28 +0200
-Message-ID: <cover.1502058761.git.christophe.jaillet__37942.6181469627$1502059908$gmane$org@wanadoo.fr>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp07.smtpout.orange.fr ([80.12.242.129]:45190 "EHLO
-        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751352AbdHFWvg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Aug 2017 18:51:36 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH] scsi: mpt3sas: Fix memory allocation failure test in 'mpt3sas_base_attach()'
+Date: Mon,  7 Aug 2017 00:51:29 +0200
+Message-ID: <20170806225134.27079-1-christophe.jaillet@wanadoo.fr>
+References: <cover.1502058761.git.christophe.jaillet@wanadoo.fr>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1502058761.git.christophe.jaillet@wanadoo.fr>
+Sender: linux-kernel-owner@vger.kernel.org
 To: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+List-Id: linux-scsi@vger.kernel.org
 
-This patch series improves 'charger_manager_probe()'. The first patch is
-about a missing memory allocation failure test.
-The 2 others are just things spotted in this function:
-   - a comment that is no more up to date
-   - a style issue (which saves 1 line)
+In the lines above this test, 8 'kzalloc' are performed, but only 7 results
+are tested.
 
-Christophe JAILLET (3):
-  power: supply: charger-manager: Fix a NULL pointer dereference in
-    'charger_manager_probe()'
-  power: supply: charger-manager: Fix a comment
-  power: supply: charger-manager: Slighly simplify code
+Add the missing one (i.e. '!ioc->port_enable_cmds.reply').
 
- drivers/power/supply/charger-manager.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 1a5b6e40fb5c..8a44636ab0b5 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -5494,10 +5494,10 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
+ 	ioc->ctl_cmds.status = MPT3_CMD_NOT_USED;
+ 	mutex_init(&ioc->ctl_cmds.mutex);
+ 
+-	if (!ioc->base_cmds.reply || !ioc->transport_cmds.reply ||
+-	    !ioc->scsih_cmds.reply || !ioc->tm_cmds.reply ||
+-	    !ioc->config_cmds.reply || !ioc->ctl_cmds.reply ||
+-	    !ioc->ctl_cmds.sense) {
++	if (!ioc->base_cmds.reply || !ioc->port_enable_cmds.reply ||
++	    !ioc->transport_cmds.reply || !ioc->scsih_cmds.reply ||
++	    !ioc->tm_cmds.reply || !ioc->config_cmds.reply ||
++	    !ioc->ctl_cmds.reply || !ioc->ctl_cmds.sense) {
+ 		r = -ENOMEM;
+ 		goto out_free_resources;
+ 	}
 -- 
 2.11.0
