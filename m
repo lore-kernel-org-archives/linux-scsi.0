@@ -1,57 +1,31 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v06 04/36] uapi scsi/scsi_netlink_fc.h: use __u16, __u32
- and __u64 from linux/types.h
-Date: Sun, 06 Aug 2017 15:09:21 -0700
-Message-ID: <1502057361.2673.21.camel@HansenPartnership.com>
-References: <20170806164428.2273-1-mikko.rapeli@iki.fi>
-         <20170806164428.2273-5-mikko.rapeli@iki.fi>
-         <1502043773.2673.9.camel@HansenPartnership.com>
-         <20170806204224.GE28459@lakka.kapsi.fi>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH 0/3] power: supply: charger-manager: 1 fix and 2 minor clean-ups
+Date: Mon,  7 Aug 2017 00:51:28 +0200
+Message-ID: <cover.1502058761.git.christophe.jaillet__37942.6181469627$1502059908$gmane$org@wanadoo.fr>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:37384 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751345AbdHFWKL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Aug 2017 18:10:11 -0400
-In-Reply-To: <20170806204224.GE28459@lakka.kapsi.fi>
+Received: from smtp07.smtpout.orange.fr ([80.12.242.129]:45190 "EHLO
+        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751352AbdHFWvg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Aug 2017 18:51:36 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mikko Rapeli <mikko.rapeli@iki.fi>
-Cc: linux-kernel@vger.kernel.org, linux-api@vger.kernel.org, linux-scsi@vger.kernel.org
+To: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 
-On Sun, 2017-08-06 at 23:42 +0300, Mikko Rapeli wrote:
-> Hi,
-> 
-> On Sun, Aug 06, 2017 at 11:22:53AM -0700, James Bottomley wrote:
-> > 
-> > On Sun, 2017-08-06 at 18:43 +0200, Mikko Rapeli wrote:
-> > > 
-> > > Fixes userspace compilation errors like:
-> > > 
-> > > scsi/scsi_netlink_fc.h:60:2: error: expected specifier-qualifier-
-> > > list  before ‘uint64_t’
-> > 
-> > Rather than patching the kernel, why not #include <stdint.h> in
-> > your userspace programme?
-> 
-> The userspace program is actually a test which checks that uapi
-> headers compile alone because several headers are not compiling at
-> all and/or require special tricks. The test is available here:
-> 
-> http://marc.info/?l=linux-kernel&m=150203944104544&w=2
+This patch series improves 'charger_manager_probe()'. The first patch is
+about a missing memory allocation failure test.
+The 2 others are just things spotted in this function:
+   - a comment that is no more up to date
+   - a style issue (which saves 1 line)
 
-But you don't seem to be detecting or fixing an existing problem.
- These types are width unambiguous and all current consumers of these
-headers include stdint.h so you're churning the kernel for a problem
-which doesn't currently exist for any consumer of this header.
+Christophe JAILLET (3):
+  power: supply: charger-manager: Fix a NULL pointer dereference in
+    'charger_manager_probe()'
+  power: supply: charger-manager: Fix a comment
+  power: supply: charger-manager: Slighly simplify code
 
-I can agree not adding any more external uint<x>_t types for newly
-exported headers so new consumers don't depend on an external standard
-is reasonable, so checkpatch should warn if someone tries to add them;
-I just don't see the benefit of going over the whole kernel changing
-stuff that has worked fine for years.  Now if you can tell me there's
-an actual bug somewhere, that's different ...
+ drivers/power/supply/charger-manager.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-James
+-- 
+2.11.0
