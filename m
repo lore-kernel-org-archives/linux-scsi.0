@@ -1,120 +1,57 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] iscsi-target: Fix iscsi_np reset hung task during parallel delete
-Date: Sun,  6 Aug 2017 21:51:38 +0000
-Message-ID: <1502056298-2279-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v06 04/36] uapi scsi/scsi_netlink_fc.h: use __u16, __u32
+ and __u64 from linux/types.h
+Date: Sun, 06 Aug 2017 15:09:21 -0700
+Message-ID: <1502057361.2673.21.camel@HansenPartnership.com>
+References: <20170806164428.2273-1-mikko.rapeli@iki.fi>
+         <20170806164428.2273-5-mikko.rapeli@iki.fi>
+         <1502043773.2673.9.camel@HansenPartnership.com>
+         <20170806204224.GE28459@lakka.kapsi.fi>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:37384 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751345AbdHFWKL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Aug 2017 18:10:11 -0400
+In-Reply-To: <20170806204224.GE28459@lakka.kapsi.fi>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mikko Rapeli <mikko.rapeli@iki.fi>
+Cc: linux-kernel@vger.kernel.org, linux-api@vger.kernel.org, linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Sun, 2017-08-06 at 23:42 +0300, Mikko Rapeli wrote:
+> Hi,
+> 
+> On Sun, Aug 06, 2017 at 11:22:53AM -0700, James Bottomley wrote:
+> > 
+> > On Sun, 2017-08-06 at 18:43 +0200, Mikko Rapeli wrote:
+> > > 
+> > > Fixes userspace compilation errors like:
+> > > 
+> > > scsi/scsi_netlink_fc.h:60:2: error: expected specifier-qualifier-
+> > > list  before ‘uint64_t’
+> > 
+> > Rather than patching the kernel, why not #include <stdint.h> in
+> > your userspace programme?
+> 
+> The userspace program is actually a test which checks that uapi
+> headers compile alone because several headers are not compiling at
+> all and/or require special tricks. The test is available here:
+> 
+> http://marc.info/?l=linux-kernel&m=150203944104544&w=2
 
-This patch fixes a bug associated with iscsit_reset_np_thread()
-that can occur during parallel configfs rmdir of a single iscsi_np
-used across multiple iscsi-target instances, that would result in
-hung task(s) similar to below where configfs rmdir process context
-was blocked indefinately waiting for iscsi_np->np_restart_comp
-to finish:
+But you don't seem to be detecting or fixing an existing problem.
+ These types are width unambiguous and all current consumers of these
+headers include stdint.h so you're churning the kernel for a problem
+which doesn't currently exist for any consumer of this header.
 
-[ 6726.112076] INFO: task dcp_proxy_node_:15550 blocked for more than 120 seconds.
-[ 6726.119440]       Tainted: G        W  O     4.1.26-3321 #2
-[ 6726.125045] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[ 6726.132927] dcp_proxy_node_ D ffff8803f202bc88     0 15550      1 0x00000000
-[ 6726.140058]  ffff8803f202bc88 ffff88085c64d960 ffff88083b3b1ad0 ffff88087fffeb08
-[ 6726.147593]  ffff8803f202c000 7fffffffffffffff ffff88083f459c28 ffff88083b3b1ad0
-[ 6726.155132]  ffff88035373c100 ffff8803f202bca8 ffffffff8168ced2 ffff8803f202bcb8
-[ 6726.162667] Call Trace:
-[ 6726.165150]  [<ffffffff8168ced2>] schedule+0x32/0x80
-[ 6726.170156]  [<ffffffff8168f5b4>] schedule_timeout+0x214/0x290
-[ 6726.176030]  [<ffffffff810caef2>] ? __send_signal+0x52/0x4a0
-[ 6726.181728]  [<ffffffff8168d7d6>] wait_for_completion+0x96/0x100
-[ 6726.187774]  [<ffffffff810e7c80>] ? wake_up_state+0x10/0x10
-[ 6726.193395]  [<ffffffffa035d6e2>] iscsit_reset_np_thread+0x62/0xe0 [iscsi_target_mod]
-[ 6726.201278]  [<ffffffffa0355d86>] iscsit_tpg_disable_portal_group+0x96/0x190 [iscsi_target_mod]
-[ 6726.210033]  [<ffffffffa0363f7f>] lio_target_tpg_store_enable+0x4f/0xc0 [iscsi_target_mod]
-[ 6726.218351]  [<ffffffff81260c5a>] configfs_write_file+0xaa/0x110
-[ 6726.224392]  [<ffffffff811ea364>] vfs_write+0xa4/0x1b0
-[ 6726.229576]  [<ffffffff811eb111>] SyS_write+0x41/0xb0
-[ 6726.234659]  [<ffffffff8169042e>] system_call_fastpath+0x12/0x71
+I can agree not adding any more external uint<x>_t types for newly
+exported headers so new consumers don't depend on an external standard
+is reasonable, so checkpatch should warn if someone tries to add them;
+I just don't see the benefit of going over the whole kernel changing
+stuff that has worked fine for years.  Now if you can tell me there's
+an actual bug somewhere, that's different ...
 
-It would happen because each iscsit_reset_np_thread() sets state
-to ISCSI_NP_THREAD_RESET, sends SIGINT, and then blocks waiting
-for completion on iscsi_np->np_restart_comp.
-
-However, if iscsi_np was active processing a login request and
-more than a single iscsit_reset_np_thread() caller to the same
-iscsi_np was blocked on iscsi_np->np_restart_comp, iscsi_np
-kthread process context in __iscsi_target_login_thread() would
-flush pending signals and only perform a single completion of
-np->np_restart_comp before going back to sleep within transport
-specific iscsit_transport->iscsi_accept_np code.
-
-To address this bug, add a iscsi_np->np_reset_count and update
-__iscsi_target_login_thread() to keep completing np->np_restart_comp
-until ->np_reset_count has reached zero.
-
-Reported-by: Gary Guo <ghg@datera.io>
-Tested-by: Gary Guo <ghg@datera.io>
-Cc: Mike Christie <mchristi@redhat.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/iscsi/iscsi_target.c       | 1 +
- drivers/target/iscsi/iscsi_target_login.c | 7 +++++--
- include/target/iscsi/iscsi_target_core.h  | 1 +
- 3 files changed, 7 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 12803de..5001261 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -418,6 +418,7 @@ int iscsit_reset_np_thread(
- 		return 0;
- 	}
- 	np->np_thread_state = ISCSI_NP_THREAD_RESET;
-+	atomic_inc(&np->np_reset_count);
- 
- 	if (np->np_thread) {
- 		spin_unlock_bh(&np->np_thread_lock);
-diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
-index e9bdc8b..dc13afb 100644
---- a/drivers/target/iscsi/iscsi_target_login.c
-+++ b/drivers/target/iscsi/iscsi_target_login.c
-@@ -1243,9 +1243,11 @@ static int __iscsi_target_login_thread(struct iscsi_np *np)
- 	flush_signals(current);
- 
- 	spin_lock_bh(&np->np_thread_lock);
--	if (np->np_thread_state == ISCSI_NP_THREAD_RESET) {
-+	if (atomic_dec_if_positive(&np->np_reset_count) >= 0) {
- 		np->np_thread_state = ISCSI_NP_THREAD_ACTIVE;
-+		spin_unlock_bh(&np->np_thread_lock);
- 		complete(&np->np_restart_comp);
-+		return 1;
- 	} else if (np->np_thread_state == ISCSI_NP_THREAD_SHUTDOWN) {
- 		spin_unlock_bh(&np->np_thread_lock);
- 		goto exit;
-@@ -1278,7 +1280,8 @@ static int __iscsi_target_login_thread(struct iscsi_np *np)
- 		goto exit;
- 	} else if (rc < 0) {
- 		spin_lock_bh(&np->np_thread_lock);
--		if (np->np_thread_state == ISCSI_NP_THREAD_RESET) {
-+		if (atomic_dec_if_positive(&np->np_reset_count) >= 0) {
-+			np->np_thread_state = ISCSI_NP_THREAD_ACTIVE;
- 			spin_unlock_bh(&np->np_thread_lock);
- 			complete(&np->np_restart_comp);
- 			iscsit_put_transport(conn->conn_transport);
-diff --git a/include/target/iscsi/iscsi_target_core.h b/include/target/iscsi/iscsi_target_core.h
-index 0ca1fb0..fb87d32 100644
---- a/include/target/iscsi/iscsi_target_core.h
-+++ b/include/target/iscsi/iscsi_target_core.h
-@@ -786,6 +786,7 @@ struct iscsi_np {
- 	int			np_sock_type;
- 	enum np_thread_state_table np_thread_state;
- 	bool                    enabled;
-+	atomic_t		np_reset_count;
- 	enum iscsi_timer_flags_table np_login_timer_flags;
- 	u32			np_exports;
- 	enum np_flags_table	np_flags;
--- 
-1.9.1
+James
