@@ -1,30 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/1] qla2xxx: Fix system crash while triggering FW dump
-Date: Mon, 07 Aug 2017 13:38:48 -0400
-Message-ID: <yq1h8xj9t1z.fsf@oracle.com>
-References: <20170731214510.7653-1-himanshu.madhani@cavium.com>
+Subject: Re: [PATCH] st: fix blk_get_queue usage
+Date: Mon, 07 Aug 2017 13:40:20 -0400
+Message-ID: <yq1d1879szf.fsf@oracle.com>
+References: <1501591374-11229-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:34731 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:36108 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751505AbdHGRiy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Aug 2017 13:38:54 -0400
-In-Reply-To: <20170731214510.7653-1-himanshu.madhani@cavium.com> (Himanshu
-        Madhani's message of "Mon, 31 Jul 2017 14:45:10 -0700")
+        with ESMTP id S1751775AbdHGRkr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Aug 2017 13:40:47 -0400
+In-Reply-To: <1501591374-11229-1-git-send-email-hare@suse.de> (Hannes
+        Reinecke's message of "Tue, 1 Aug 2017 14:42:54 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@cavium.com>
-Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Kai =?utf-8?Q?M?= =?utf-8?Q?=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Bodo Stroesser <bstroesser@ts.fujitsu.com>, Hannes Reinecke <hare@suse.com>
 
 
-Himanshu,
+Hannes,
 
-> Please apply this patch to 4.13.0-rc4. Without this patch our
-> capabilty to collect and analyze firmware dump in a customer
-> enviorment will be greatly affected.
+> If blk_queue_get() in st_probe fails, disk->queue must not be set to
+> SDp->request_queue, as that would result in put_disk() dropping a not
+> taken reference.
+>
+> Thus, disk->queue should be set only after a successful
+> blk_queue_get().
 
-Applied to 4.13/scsi-fixes. Thanks!
+Applied to 4.13/scsi-fixes. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
