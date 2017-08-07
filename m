@@ -1,25 +1,25 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2 02/20] lpfc: Fix loop mode target discovery
-Date: Mon, 7 Aug 2017 09:55:06 +0200
-Message-ID: <20170807075506.GF3978@linux-x5ow.site>
+Subject: Re: [PATCH v2 03/20] lpfc: Fix rediscovery on switch blade pull
+Date: Mon, 7 Aug 2017 09:56:17 +0200
+Message-ID: <20170807075617.GG3978@linux-x5ow.site>
 References: <20170805004731.1335-1-jsmart2021@gmail.com>
- <20170805004731.1335-3-jsmart2021@gmail.com>
+ <20170805004731.1335-4-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37575 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:37737 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752097AbdHGHzH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 7 Aug 2017 03:55:07 -0400
+        id S1752014AbdHGH4S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 7 Aug 2017 03:56:18 -0400
 Content-Disposition: inline
-In-Reply-To: <20170805004731.1335-3-jsmart2021@gmail.com>
+In-Reply-To: <20170805004731.1335-4-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <jsmart2021@gmail.com>
 Cc: linux-scsi@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-Looks good,
+
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 -- 
 Johannes Thumshirn                                          Storage
