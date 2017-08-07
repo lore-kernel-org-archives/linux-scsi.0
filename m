@@ -1,45 +1,27 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2 15/20] lpfc: Fix nvme target failure after 2nd adapter
+Subject: Re: [PATCH v2 16/20] lpfc: Fix bad sgl reposting after 2nd adapter
  reset
-Date: Mon, 7 Aug 2017 11:05:53 +0200
-Message-ID: <20170807090553.GR3978@linux-x5ow.site>
+Date: Mon, 7 Aug 2017 11:06:16 +0200
+Message-ID: <20170807090616.GS3978@linux-x5ow.site>
 References: <20170805004731.1335-1-jsmart2021@gmail.com>
- <20170805004731.1335-16-jsmart2021@gmail.com>
+ <20170805004731.1335-17-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44000 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:44016 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752487AbdHGJFz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 7 Aug 2017 05:05:55 -0400
+        id S1752487AbdHGJGS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 7 Aug 2017 05:06:18 -0400
 Content-Disposition: inline
-In-Reply-To: <20170805004731.1335-16-jsmart2021@gmail.com>
+In-Reply-To: <20170805004731.1335-17-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <jsmart2021@gmail.com>
 Cc: linux-scsi@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-On Fri, Aug 04, 2017 at 05:47:26PM -0700, James Smart wrote:
-> +
-> +		/* Reestablish the local initiator port.
-> +		 * The offline process destroyed the previous lport.
-> +		 */
-> +		if (phba->cfg_enable_fc4_type & LPFC_ENABLE_NVME) {
-> +			if (!phba->nvmet_support) {
 
-
-	if (phba->cfg_enable_fc4_type & LPFC_ENABLE_NVME &&
-			!phba->nvmet_support) {
-		error = lpfc_nvme_create_localport(phba->pport);
-		if (error)
-			lpfc_printf_log(phba, KERN_ERR,
-					LOG_INIT,
-					"6132 NVME restore reg "
-					"failed on nvmei error "
-					"x%x\n", error);
-
-
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 -- 
 Johannes Thumshirn                                          Storage
 jthumshirn@suse.de                                +49 911 74053 689
