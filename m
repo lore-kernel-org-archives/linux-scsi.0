@@ -1,45 +1,78 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2 12/20] lpfc: Limit amount of work processed in IRQ
-Date: Mon, 7 Aug 2017 10:43:54 +0200
-Message-ID: <20170807084354.GO3978@linux-x5ow.site>
-References: <20170805004731.1335-1-jsmart2021@gmail.com>
- <20170805004731.1335-13-jsmart2021@gmail.com>
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: Re: [PATCH] scsi: mpt3sas: Fix memory allocation failure test in
+ 'mpt3sas_base_attach()'
+Date: Mon, 7 Aug 2017 10:45:35 +0200
+Message-ID: <625e7538-3834-0c9b-55bf-9aa460ded9bb@wanadoo.fr>
+References: <cover.1502058761.git.christophe.jaillet@wanadoo.fr>
+ <20170806225134.27079-1-christophe.jaillet@wanadoo.fr>
+ <5988240C.1050702@bfs.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42464 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752528AbdHGIn4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 7 Aug 2017 04:43:56 -0400
-Content-Disposition: inline
-In-Reply-To: <20170805004731.1335-13-jsmart2021@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5988240C.1050702@bfs.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: wharms@bfs.de
+Cc: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <jsmart2021@gmail.com>
-Cc: linux-scsi@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-On Fri, Aug 04, 2017 at 05:47:23PM -0700, James Smart wrote:
-> From: Dick Kennedy <dick.kennedy@broadcom.com>
-> 
-> Various oops being seen on being in the ISR too long and cpu
-> lockups, when under heavy load.
-> 
-> The amount of work being posted off of completion queues kept
-> the ISR running almost all the time
-> 
-> Correct the issue by limiting the amount of work per itteration.
+Le 07/08/2017 Ã  10:25, walter harms a Ã©crit :
+>
+> Am 07.08.2017 00:51, schrieb Christophe JAILLET:
+>> In the lines above this test, 8 'kzalloc' are performed, but only 7 results
+>> are tested.
+>>
+>> Add the missing one (i.e. '!ioc->port_enable_cmds.reply').
+>>
+>> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+>> ---
+>>   drivers/scsi/mpt3sas/mpt3sas_base.c | 8 ++++----
+>>   1 file changed, 4 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+>> index 1a5b6e40fb5c..8a44636ab0b5 100644
+>> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+>> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+>> @@ -5494,10 +5494,10 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
+>>   	ioc->ctl_cmds.status = MPT3_CMD_NOT_USED;
+>>   	mutex_init(&ioc->ctl_cmds.mutex);
+>>   
+>> -	if (!ioc->base_cmds.reply || !ioc->transport_cmds.reply ||
+>> -	    !ioc->scsih_cmds.reply || !ioc->tm_cmds.reply ||
+>> -	    !ioc->config_cmds.reply || !ioc->ctl_cmds.reply ||
+>> -	    !ioc->ctl_cmds.sense) {
+>> +	if (!ioc->base_cmds.reply || !ioc->port_enable_cmds.reply ||
+>> +	    !ioc->transport_cmds.reply || !ioc->scsih_cmds.reply ||
+>> +	    !ioc->tm_cmds.reply || !ioc->config_cmds.reply ||
+>> +	    !ioc->ctl_cmds.reply || !ioc->ctl_cmds.sense) {
+>>   		r = -ENOMEM;
+>>   		goto out_free_resources;
+>>   	}
+>
+> obviously it is better to follow the pattern "malloc() , check".
+Agreed, but it is also more verbose. Leavig it as-is, is IMHO, good enough.
 
-Have you considered using the IRQ poll mechanism for this? It deferres the
-heavy lifing into the Soft-IRQ layer and this could help you a lot here. IIRC
-I've sent James the "Slides" from my LSF/MM session which have the function
-protoypes on 'em. See 'lib/irq_poll.c' or the be2iscsi driver for further
-details.
+> Even the programmer lost track.
+>
+> Bonus points if you malloc the buffers in one step.
+Most of the allocation are 'kzalloc(ioc->reply_sz, GFP_KERNEL);', so a 
+kcalloc could be used instead.
+However, the 'kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_KERNEL);' breaks this 
+logic and allocating all at once would lead to spaghetti code for no reason.
 
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Moreover, I don't have any idea how big can be 'ioc->reply_sz', even if 
+I guess it should be small.
+So allocating all at once, could fail where several steps would work.
+
+So I won't play for the bonus points :).
+
+Best regards.
+CJ
+
+> just my 2 cents,
+>
+> re,
+>   wh
+>
+>
+>
