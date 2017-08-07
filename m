@@ -1,48 +1,51 @@
-From: James Smart <jsmart2021@gmail.com>
-Subject: Re: [PATCH v2 12/20] lpfc: Limit amount of work processed in IRQ
-Date: Mon, 7 Aug 2017 13:50:59 -0700
-Message-ID: <389dd23c-6cc4-8498-5980-9fdd0610b516@gmail.com>
-References: <20170805004731.1335-1-jsmart2021@gmail.com>
- <20170805004731.1335-13-jsmart2021@gmail.com>
- <20170807084354.GO3978@linux-x5ow.site>
+From: Helge Deller <deller@gmx.de>
+Subject: Re: Undefined behaviour in drivers/scsi/sym53c8xx_2/sym_hipd.c:762:24
+Date: Tue, 8 Aug 2017 00:20:21 +0200
+Message-ID: <bf3cee29-26cb-6e4c-9ef2-a84459d41dec@gmx.de>
+References: <d030f03a-0ccf-324b-32d6-002dfb408c16@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:33148 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751662AbdHGUvE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Aug 2017 16:51:04 -0400
-Received: by mail-qk0-f195.google.com with SMTP id d145so1605630qkc.0
-        for <linux-scsi@vger.kernel.org>; Mon, 07 Aug 2017 13:51:04 -0700 (PDT)
-In-Reply-To: <20170807084354.GO3978@linux-x5ow.site>
+Return-path: <linux-parisc-owner@vger.kernel.org>
+In-Reply-To: <d030f03a-0ccf-324b-32d6-002dfb408c16@gmx.de>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-parisc-owner@vger.kernel.org
+To: Linux SCSI List <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-parisc <linux-parisc@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: linux-scsi@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-On 8/7/2017 1:43 AM, Johannes Thumshirn wrote:
-> On Fri, Aug 04, 2017 at 05:47:23PM -0700, James Smart wrote:
->> From: Dick Kennedy <dick.kennedy@broadcom.com>
->>
->> Various oops being seen on being in the ISR too long and cpu
->> lockups, when under heavy load.
->>
->> The amount of work being posted off of completion queues kept
->> the ISR running almost all the time
->>
->> Correct the issue by limiting the amount of work per itteration.
+On 05.08.2017 00:12, Helge Deller wrote:
+> On the parisc platform I noticed the UBSAN warning below.
+> Maybe nr_divisor isn't correctly initialized ?
 > 
-> Have you considered using the IRQ poll mechanism for this? It deferres the
-> heavy lifing into the Soft-IRQ layer and this could help you a lot here. IIRC
-> I've sent James the "Slides" from my LSF/MM session which have the function
-> protoypes on 'em. See 'lib/irq_poll.c' or the be2iscsi driver for further
-> details.
+> [   18.625415] ================================================================================
+> [   18.726489] UBSAN: Undefined behaviour in ./drivers/scsi/sym53c8xx_2/sym_hipd.c:762:24
+> [   18.864911] index -1903078336 is out of range for type 'u32 [7]'
+> [   18.936779] CPU: 0 PID: 1 Comm: swapper Not tainted 4.13.0-rc3-32bit+ #427
+> [   19.019138] Backtrace:
+> [   19.047353]  [<10191eb4>] show_stack+0x3c/0x50
+> [   19.100577]  [<10ce82fc>] dump_stack+0x28/0x38
+> [   19.153826]  [<10771b3c>] ubsan_epilogue+0x1c/0x60
+> [   19.211229]  [<107722ec>] __ubsan_handle_out_of_bounds+0x68/0x80
+> [   19.283194]  [<10924074>] sym_hcb_attach+0xc2c/0x3204
+> [   19.343724]  [<107aaa38>] sba_dma_supported+0x4c/0x208
+> [   19.405291]  [<10911984>] sym2_probe+0xd64/0x122c
+> [   19.461661]  [<10501c64>] kernfs_add_one+0x328/0x354
 
-We considered it, so far declined it - preferring the behavior of the 
-dynamic hw coalescing we have. That said, we're already considering the 
-softirq approach, which shouldn't be that large of a delta. However, 
-we've chosen to delay that change while we harden the overall stability.
+I did some more debugging.
 
--- james
+The offending line is:
+	period = (11 * div_10M[np->clock_divn - 1]) / (4 * np->clock_khz);
+with those values
+	np->clock_divn = 7
+	np->clock_khz  = 160000
+	div_10M[6] = 80000000
+period gets calculated as: 
+	period = 1375
+which is correct.
+
+I have no clue why UBSAN reports an error here.
+There is no overflow in index for div_10M array, neither is there
+a u32 overflow.
+Ideas?
+
+Helge
