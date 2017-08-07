@@ -1,30 +1,24 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] megaraid_sas: move command counter to correct place
-Date: Mon, 07 Aug 2017 13:20:03 -0400
-Message-ID: <yq1y3qv9tx8.fsf@oracle.com>
-References: <20170728140359.15424-1-thenzl@redhat.com>
+From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Subject: Re: nvmf question - synchronization between target/initiator
+ regarding partitions
+Date: Mon, 7 Aug 2017 14:29:47 -0300
+Message-ID: <4c199e9e-ed58-5a5b-cedc-2d3c3bc1464c@linux.vnet.ibm.com>
+References: <82c4d1d8-ffa9-fa99-df58-05e2945eafdc@linux.vnet.ibm.com>
+ <c382184a-1621-c6b2-2a20-bd16498be998@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23217 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751505AbdHGRUP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Aug 2017 13:20:15 -0400
-In-Reply-To: <20170728140359.15424-1-thenzl@redhat.com> (Tomas Henzl's message
-        of "Fri, 28 Jul 2017 16:03:59 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <c382184a-1621-c6b2-2a20-bd16498be998@suse.de>
+Content-Language: en-US
+Sender: linux-block-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-block@vger.kernel.org
+Cc: Mauricio pIO <mauricfo@linux.vnet.ibm.com>, Brian J King <bjking1@us.ibm.com>, Murali N Iyer <mniyer@us.ibm.com>, vnarasimhan@in.ibm.com
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: linux-scsi@vger.kernel.org, sumit.saxena@broadcom.com, kashyap.desai@broadcom.com
+
+Thanks for your feedback Hannes, agreed!
+
+Cheers,
 
 
-Tomas,
-
-> the eh reset function returns success when fw_outstanding equals zero,
-> that means that the counter shouldn't be decremented
-> when the driver still owns the command
-
-Kashyap? Sumit?
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Guilherme
