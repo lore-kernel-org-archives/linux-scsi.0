@@ -1,78 +1,44 @@
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: Re: [PATCH] scsi: mpt3sas: Fix memory allocation failure test in
- 'mpt3sas_base_attach()'
-Date: Mon, 7 Aug 2017 10:45:35 +0200
-Message-ID: <625e7538-3834-0c9b-55bf-9aa460ded9bb@wanadoo.fr>
-References: <cover.1502058761.git.christophe.jaillet@wanadoo.fr>
- <20170806225134.27079-1-christophe.jaillet@wanadoo.fr>
- <5988240C.1050702@bfs.de>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH v2 13/20] lpfc: Fix MRQ > 1 context list handling
+Date: Mon, 7 Aug 2017 11:02:09 +0200
+Message-ID: <20170807090209.GP3978@linux-x5ow.site>
+References: <20170805004731.1335-1-jsmart2021@gmail.com>
+ <20170805004731.1335-14-jsmart2021@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5988240C.1050702@bfs.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: wharms@bfs.de
-Cc: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:43813 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752299AbdHGJCN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 7 Aug 2017 05:02:13 -0400
+Content-Disposition: inline
+In-Reply-To: <20170805004731.1335-14-jsmart2021@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <jsmart2021@gmail.com>
+Cc: linux-scsi@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-Le 07/08/2017 Ã  10:25, walter harms a Ã©crit :
->
-> Am 07.08.2017 00:51, schrieb Christophe JAILLET:
->> In the lines above this test, 8 'kzalloc' are performed, but only 7 results
->> are tested.
->>
->> Add the missing one (i.e. '!ioc->port_enable_cmds.reply').
->>
->> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
->> ---
->>   drivers/scsi/mpt3sas/mpt3sas_base.c | 8 ++++----
->>   1 file changed, 4 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
->> index 1a5b6e40fb5c..8a44636ab0b5 100644
->> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
->> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
->> @@ -5494,10 +5494,10 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
->>   	ioc->ctl_cmds.status = MPT3_CMD_NOT_USED;
->>   	mutex_init(&ioc->ctl_cmds.mutex);
->>   
->> -	if (!ioc->base_cmds.reply || !ioc->transport_cmds.reply ||
->> -	    !ioc->scsih_cmds.reply || !ioc->tm_cmds.reply ||
->> -	    !ioc->config_cmds.reply || !ioc->ctl_cmds.reply ||
->> -	    !ioc->ctl_cmds.sense) {
->> +	if (!ioc->base_cmds.reply || !ioc->port_enable_cmds.reply ||
->> +	    !ioc->transport_cmds.reply || !ioc->scsih_cmds.reply ||
->> +	    !ioc->tm_cmds.reply || !ioc->config_cmds.reply ||
->> +	    !ioc->ctl_cmds.reply || !ioc->ctl_cmds.sense) {
->>   		r = -ENOMEM;
->>   		goto out_free_resources;
->>   	}
->
-> obviously it is better to follow the pattern "malloc() , check".
-Agreed, but it is also more verbose. Leavig it as-is, is IMHO, good enough.
+On Fri, Aug 04, 2017 at 05:47:24PM -0700, James Smart wrote:
+> +				tgtp = (struct lpfc_nvmet_tgtport *)
+> +					phba->targetport->private;
 
-> Even the programmer lost track.
->
-> Bonus points if you malloc the buffers in one step.
-Most of the allocation are 'kzalloc(ioc->reply_sz, GFP_KERNEL);', so a 
-kcalloc could be used instead.
-However, the 'kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_KERNEL);' breaks this 
-logic and allocating all at once would lead to spaghetti code for no reason.
+Please don't case void pointers.
 
-Moreover, I don't have any idea how big can be 'ioc->reply_sz', even if 
-I guess it should be small.
-So allocating all at once, could fail where several steps would work.
+[...]
 
-So I won't play for the bonus points :).
+> +			list_splice(&get_infop->nvmet_ctx_list,
+> +				    &current_infop->nvmet_ctx_list);
+> +			INIT_LIST_HEAD(&get_infop->nvmet_ctx_list);
 
-Best regards.
-CJ
+			list_splice_init(&get_infop->nvmet_ctx_list,
+					 &current_infop->nvmet_ctx_list);
 
-> just my 2 cents,
->
-> re,
->   wh
->
->
->
+
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
