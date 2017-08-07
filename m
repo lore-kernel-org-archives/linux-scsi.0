@@ -1,66 +1,51 @@
-From: Mikko Rapeli <mikko.rapeli-X3B1VOXEql0@public.gmane.org>
-Subject: Re: [PATCH v06 04/36] uapi scsi/scsi_netlink_fc.h: use __u16, __u32
- and __u64 from linux/types.h
-Date: Mon, 7 Aug 2017 09:08:49 +0300
-Message-ID: <20170807060849.GC31101@lakka.kapsi.fi>
-References: <20170806164428.2273-1-mikko.rapeli@iki.fi>
- <20170806164428.2273-5-mikko.rapeli@iki.fi>
- <1502043773.2673.9.camel@HansenPartnership.com>
- <20170806204224.GE28459@lakka.kapsi.fi>
- <1502057361.2673.21.camel@HansenPartnership.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 3/4] scsi: add Mylex RAID controller
+Date: Mon, 7 Aug 2017 08:09:11 +0200
+Message-ID: <17589cb4-9f0c-7d15-8c3a-79bd9b14fdef@suse.de>
+References: <1501683208-5240-1-git-send-email-hare@suse.de>
+ <1501683208-5240-4-git-send-email-hare@suse.de>
+ <20170805113932.GF16313@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1502057361.2673.21.camel-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:60369 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751795AbdHGGJO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 7 Aug 2017 02:09:14 -0400
+In-Reply-To: <20170805113932.GF16313@lst.de>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Sun, Aug 06, 2017 at 03:09:21PM -0700, James Bottomley wrote:
-> On Sun, 2017-08-06 at 23:42 +0300, Mikko Rapeli wrote:
-> > Hi,
-> > 
-> > On Sun, Aug 06, 2017 at 11:22:53AM -0700, James Bottomley wrote:
-> > > 
-> > > On Sun, 2017-08-06 at 18:43 +0200, Mikko Rapeli wrote:
-> > > > 
-> > > > Fixes userspace compilation errors like:
-> > > > 
-> > > > scsi/scsi_netlink_fc.h:60:2: error: expected specifier-qualifier-
-> > > > list  before ‘uint64_t’
-> > > 
-> > > Rather than patching the kernel, why not #include <stdint.h> in
-> > > your userspace programme?
-> > 
-> > The userspace program is actually a test which checks that uapi
-> > headers compile alone because several headers are not compiling at
-> > all and/or require special tricks. The test is available here:
-> > 
-> > http://marc.info/?l=linux-kernel&m=150203944104544&w=2
+On 08/05/2017 01:39 PM, Christoph Hellwig wrote:
+> Can you use normal linux style for the code instead of copy and
+> pasting the weird naming and capitalization from the DAC960 driver?
 > 
-> But you don't seem to be detecting or fixing an existing problem.
->  These types are width unambiguous and all current consumers of these
-> headers include stdint.h so you're churning the kernel for a problem
-> which doesn't currently exist for any consumer of this header.
+Yes; already planned for v2. But first wanted to get some general
+feedback (like: is anyone interested in that at all?)
 
-The header file dependencies of scsi/scsi_netlink_fc.h are not explicit.
-I will propose a patch which includes <stdint.h> in userspace then.
+> Also please use the driver name as prefix for the functions.
+> 
+Ok.
 
-> I can agree not adding any more external uint<x>_t types for newly
-> exported headers so new consumers don't depend on an external standard
-> is reasonable, so checkpatch should warn if someone tries to add them;
-> I just don't see the benefit of going over the whole kernel changing
-> stuff that has worked fine for years.  Now if you can tell me there's
-> an actual bug somewhere, that's different ...
+> Maybe myraid instead of mylex?
+> 
+Nah; I'd rather stick with mylex.
+(Especially as it says 'Mylex' in big fat letters on the board :-)
 
-Tools parsing and checking uapi headers need to be able to compile them
-and thus need the explicit list of dependencies. If <stdint.h> is a
-required dependency, then scsi/scsi_netlink_fc.h should include it.
+> I'll take a more detailed look at the actual driver in a bit.
+> 
+THX.
 
-scsi/scsi_netlink_fc.h is one of 42 problematic headers left in current
-kernel and I want to fix it one way or the other.
+Cheers,
 
--Mikko
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
