@@ -1,40 +1,27 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2 13/20] lpfc: Fix MRQ > 1 context list handling
-Date: Mon, 7 Aug 2017 11:02:09 +0200
-Message-ID: <20170807090209.GP3978@linux-x5ow.site>
+Subject: Re: [PATCH v2 14/20] lpfc: Fix relative offset error on large nvmet
+ target ios
+Date: Mon, 7 Aug 2017 11:02:50 +0200
+Message-ID: <20170807090250.GQ3978@linux-x5ow.site>
 References: <20170805004731.1335-1-jsmart2021@gmail.com>
- <20170805004731.1335-14-jsmart2021@gmail.com>
+ <20170805004731.1335-15-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:43813 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:43840 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752299AbdHGJCN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 7 Aug 2017 05:02:13 -0400
+        id S1752459AbdHGJCw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 7 Aug 2017 05:02:52 -0400
 Content-Disposition: inline
-In-Reply-To: <20170805004731.1335-14-jsmart2021@gmail.com>
+In-Reply-To: <20170805004731.1335-15-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <jsmart2021@gmail.com>
 Cc: linux-scsi@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-On Fri, Aug 04, 2017 at 05:47:24PM -0700, James Smart wrote:
-> +				tgtp = (struct lpfc_nvmet_tgtport *)
-> +					phba->targetport->private;
 
-Please don't case void pointers.
-
-[...]
-
-> +			list_splice(&get_infop->nvmet_ctx_list,
-> +				    &current_infop->nvmet_ctx_list);
-> +			INIT_LIST_HEAD(&get_infop->nvmet_ctx_list);
-
-			list_splice_init(&get_infop->nvmet_ctx_list,
-					 &current_infop->nvmet_ctx_list);
-
-
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 -- 
 Johannes Thumshirn                                          Storage
 jthumshirn@suse.de                                +49 911 74053 689
