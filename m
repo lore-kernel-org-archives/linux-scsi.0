@@ -1,46 +1,44 @@
-From: Masanori Goto <gotom@debian.or.jp>
-Subject: Re: [PATCH 21/29] scsi: nsp32: constify pci_device_id.
-Date: Mon, 7 Aug 2017 10:37:03 +0900
-Message-ID: <CALZLnaFDqcigXOt1kYAwpDsVTqn4YX+VDMyFDB6oaXmutkVASg@mail.gmail.com>
-References: <1501404235-9105-1-git-send-email-arvind.yadav.cs@gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] scsi_dh_alua: suppress errors from unsupported devices
+Date: Mon, 7 Aug 2017 08:07:10 +0200
+Message-ID: <990a352f-e21b-4d71-288e-9165b9ce8dd3@suse.de>
+References: <1501828660-89497-1-git-send-email-hare@suse.de>
+ <20170805113523.GC16313@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1501404235-9105-1-git-send-email-arvind.yadav.cs@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, Michael Reed <mdr@sgi.com>, hare@suse.com, aacraid@adaptec.com, Matthew Wilcox <matthew@wil.cx>, fthain@telegraphics.com.au, schmitzmic@gmail.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, mrochs@linux.vnet.ibm.com, QLogic-Storage-Upstream@cavium.com, jinpu.wang@profitbricks.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:60264 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751795AbdHGGHN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 7 Aug 2017 02:07:13 -0400
+In-Reply-To: <20170805113523.GC16313@lst.de>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-2017-07-30 17:43 GMT+09:00 Arvind Yadav <arvind.yadav.cs@gmail.com>:
->
-> pci_device_id are not supposed to change at runtime. All functions
-> working with pci_device_id provided by <linux/pci.h> work with
-> const pci_device_id. So mark the non-const structs as const.
->
-> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+On 08/05/2017 01:35 PM, Christoph Hellwig wrote:
+>>  	error = scsi_dh_add_device(sdev);
+>> -	if (error)
+>> -		/*
+>> -		 * device_handler is optional, so any error can be ignored
+>> -		 */
+>> -		sdev_printk(KERN_INFO, sdev,
+>> -				"failed to add device handler: %d\n", error);
+>> +	/* device_handler is optional, so any error can be ignored */
+> 
+> In that case it should return void.
+> 
+Okay, will be updating the patch.
 
-Thank you!  (resending it twice due to an error)
+Cheers,
 
-Acked-by: Masanori Goto <gotom@debian.or.jp>
-
-
-> ---
->  drivers/scsi/nsp32.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
-> index 53c8477..1430b3c 100644
-> --- a/drivers/scsi/nsp32.c
-> +++ b/drivers/scsi/nsp32.c
-> @@ -76,7 +76,7 @@ static const char *nsp32_release_version = "1.2";
->  /****************************************************************************
->   * Supported hardware
->   */
-> -static struct pci_device_id nsp32_pci_table[] = {
-> +static const struct pci_device_id nsp32_pci_table[] = {
->         {
->                 .vendor      = PCI_VENDOR_ID_IODATA,
->                 .device      = PCI_DEVICE_ID_NINJASCSI_32BI_CBSC_II,
-> --
-> 2.7.4
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
