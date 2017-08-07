@@ -1,59 +1,78 @@
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Subject: nvmf question - synchronization between target/initiator regarding
- partitions
-Date: Mon, 7 Aug 2017 10:42:57 -0300
-Message-ID: <82c4d1d8-ffa9-fa99-df58-05e2945eafdc@linux.vnet.ibm.com>
+From: Kashyap Desai <kashyap.desai@broadcom.com>
+Subject: RE: [PATCH v2 00/13] mpt3sas driver NVMe support:
+Date: Mon, 7 Aug 2017 19:26:34 +0530
+Message-ID: <0ada8680ebfeb026662d858ec2b38ef4@mail.gmail.com>
+References: <1500038560-11231-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+         <e679a449-90c3-d2e1-2b31-1387cf414e09@suse.de>  <20170805135353.GA7526@infradead.org>
+ <1501944129.3649.9.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:44739 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751415AbdHGNnF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Aug 2017 09:43:05 -0400
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v77Ddstm134732
-        for <linux-scsi@vger.kernel.org>; Mon, 7 Aug 2017 09:43:04 -0400
-Received: from e12.ny.us.ibm.com (e12.ny.us.ibm.com [129.33.205.202])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2c6jjp239w-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Mon, 07 Aug 2017 09:43:04 -0400
-Received: from localhost
-        by e12.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-        Mon, 7 Aug 2017 09:43:03 -0400
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1501944129.3649.9.camel@HansenPartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>
+Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, linux-kernel@vger.kernel.org, Chaitra Basappa <chaitra.basappa@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-nvme@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-block@vger.kernel.org
-Cc: Mauricio pIO <mauricfo@linux.vnet.ibm.com>, Brian J King <bjking1@us.ibm.com>, Murali N Iyer <mniyer@us.ibm.com>, vnarasimhan@in.ibm.com, gpiccoli@linux.vnet.ibm.com
 
-We observed that it's possible to perform partition operations in both
-nvmf target and initiator block devices, like creating and deleting
-partitions.
+> -----Original Message-----
+> From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]
+> Sent: Saturday, August 05, 2017 8:12 PM
+> To: Christoph Hellwig; Hannes Reinecke
+> Cc: Suganath Prabu S; martin.petersen@oracle.com; linux-
+> scsi@vger.kernel.org; Sathya.Prakash@broadcom.com;
+> kashyap.desai@broadcom.com; linux-kernel@vger.kernel.org;
+> chaitra.basappa@broadcom.com; sreekanth.reddy@broadcom.com; linux-
+> nvme@lists.infradead.org
+> Subject: Re: [PATCH v2 00/13] mpt3sas driver NVMe support:
+>
+> On Sat, 2017-08-05 at 06:53 -0700, Christoph Hellwig wrote:
+> > On Wed, Aug 02, 2017 at 10:14:40AM +0200, Hannes Reinecke wrote:
+> > >
+> > > I'm not happy with this approach.
+> > > NVMe devices should _not_ appear as SCSI devices; this will just
+> > > confuse matters _and_ will be incompatible with 'normal' NVMe
+> > > devices.
+> > >
+> > > Rather I would like to see the driver to hook into the existing NVMe
+> > > framework (which essentially means to treat the mpt3sas as a weird
+> > > NVMe-over-Fabrics HBA), and expose the NVMe devices like any other
+> > > NVMe HBA.
+> >
+> > That doesn't make any sense.  The devices behind the mpt adapter don't
+> > look like NVMe devices at all for the hosts - there are no NVMe
+> > commands or queues involved at all, they hide behind the same somewhat
+> > leaky scsi abstraction as other devices behind the mpt controller.
+>
+> You might think about what we did for SAS: split the generic handler into
+> two
+> pieces, libsas for driving the devices, which mpt didn't need because of
+> the fat
+> firmware and the SAS transport class so mpt could at least show the same
+> sysfs
+> files as everything else for SAS devices.
 
-But there is no sync mechanism between target and initiator regarding
-the partitions operations. After creating a partition on initiator, for
-example, we don't see it on target side. We could format it like ext4 on
-initiator, and still target cannot see it. It's possible to trigger a
-BLKRRPART ioctl on target, which end up calling revalidate_disk() on
-nvme driver and then partitions are perceived.
+ Ventura generation of controllers are adding connectivity of NVME
+ drives seamlessly and protocol handling is in Firmware.
+ Same as SCSI to ATA translation done in firmware, Ventura controller
+ is doing SCSI to NVME translation and for end user protocol handling
+ is abstracted.
 
-So, question: is this behavior expected/acceptable? Is it completely up
-to userspace to deal with the synchronization between host/target?
-I think answer might be yes since partitions are a higher level of
-abstraction than nvmf (which is purely block device aware).
+ This product handles new Transport protocol (NVME) same as ATA and
+ transport is abstracted for end user.
 
-But if kernel could/should jump in, we possibly could try to issue a
-revalidate_disk on target whenever this operation is performed on
-initiator side (and vice-versa). I confess I couldn't find such sync
-idea in NVMe over fabrics spec, though.
-Also, reading NVMe spec 1.3, we do have the optional feature
-"reservations", but seems it doesn't mention target (only multiple hosts).
+NVME pass-through related driver code, it is just a big tunnel for user
+space application.
+It is just a basic framework like SATA PASS-Through in existing mpt3sas
+driver.
 
-Thanks in advance for any ideas on this subject.
-Cheers,
-
-
-
-Guilherme
+>
+> Fortunately for NVMe it's very simple at the moment its just a couple of
+> host
+> files and wwid on the devices.
+>
+> James
+>
+>
+> > The only additional leak is that the controller now supports NVMe-
+> > like PRPs in additions to its existing two SGL formats.
+> >
