@@ -1,19 +1,20 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2 17/20] lpfc: remove console log clutter
-Date: Mon, 7 Aug 2017 11:06:26 +0200
-Message-ID: <20170807090626.GT3978@linux-x5ow.site>
+Subject: Re: [PATCH v2 18/20] lpfc: Add Buffer to Buffer credit recovery
+ support
+Date: Mon, 7 Aug 2017 11:08:39 +0200
+Message-ID: <20170807090839.GU3978@linux-x5ow.site>
 References: <20170805004731.1335-1-jsmart2021@gmail.com>
- <20170805004731.1335-18-jsmart2021@gmail.com>
+ <20170805004731.1335-19-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44024 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:44121 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752487AbdHGJG2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 7 Aug 2017 05:06:28 -0400
+        id S1752331AbdHGJIl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 7 Aug 2017 05:08:41 -0400
 Content-Disposition: inline
-In-Reply-To: <20170805004731.1335-18-jsmart2021@gmail.com>
+In-Reply-To: <20170805004731.1335-19-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <jsmart2021@gmail.com>
