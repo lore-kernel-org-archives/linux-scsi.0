@@ -1,21 +1,26 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] scsi-mq: Always unprepare before requeuing a request
-Date: Mon, 7 Aug 2017 09:33:52 +0200
-Message-ID: <20170807073352.GB3978@linux-x5ow.site>
-References: <20170803214014.20332-1-bart.vanassche@wdc.com>
+Subject: Re: [PATCH v2 1/2] nvmet_fc: add defer_req callback for deferment of
+ cmd buffer return
+Date: Mon, 7 Aug 2017 09:38:07 +0200
+Message-ID: <20170807073807.GC3978@linux-x5ow.site>
+References: <20170805002933.23397-1-jsmart2021@gmail.com>
+ <20170805002933.23397-2-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:36635 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752014AbdHGHiJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 7 Aug 2017 03:38:09 -0400
 Content-Disposition: inline
-In-Reply-To: <20170803214014.20332-1-bart.vanassche@wdc.com>
-Sender: stable-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Damien Le Moal <damien.lemoal@wdc.com>, stable@vger.kernel.org
+In-Reply-To: <20170805002933.23397-2-jsmart2021@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <jsmart2021@gmail.com>
+Cc: linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, James Smart <james.smart@broadcom.com>
 
-
-Thanks Bart,
+Thanks James,
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 -- 
 Johannes Thumshirn                                          Storage
