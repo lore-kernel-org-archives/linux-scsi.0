@@ -1,20 +1,19 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2 09/20] lpfc: Fix crash in lpfc nvmet when fc port is
- reset
-Date: Mon, 7 Aug 2017 10:34:43 +0200
-Message-ID: <20170807083443.GM3978@linux-x5ow.site>
+Subject: Re: [PATCH v2 10/20] lpfc: Fix NVME PRLI handling during RSCN
+Date: Mon, 7 Aug 2017 10:35:46 +0200
+Message-ID: <20170807083546.GN3978@linux-x5ow.site>
 References: <20170805004731.1335-1-jsmart2021@gmail.com>
- <20170805004731.1335-10-jsmart2021@gmail.com>
+ <20170805004731.1335-11-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41696 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:41869 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752562AbdHGIep (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 7 Aug 2017 04:34:45 -0400
+        id S1752214AbdHGIfs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 7 Aug 2017 04:35:48 -0400
 Content-Disposition: inline
-In-Reply-To: <20170805004731.1335-10-jsmart2021@gmail.com>
+In-Reply-To: <20170805004731.1335-11-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <jsmart2021@gmail.com>
