@@ -1,43 +1,59 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: Increased memory usage with scsi-mq
-Date: Mon, 7 Aug 2017 15:07:48 +0200
-Message-ID: <ffc29e81-ff6b-7132-2e90-86b5632098fb@redhat.com>
-References: <20170804210035.GA10017@redhat.com>
- <20170805084436.GA14264@lst.de> <20170805092704.GD20914@redhat.com>
- <20170805133954.GA17694@lst.de> <20170805155103.GE20914@redhat.com>
- <b133b97e-9660-ba9b-51de-39fa23fce903@redhat.com>
- <20170807122701.GH20914@redhat.com>
+From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Subject: nvmf question - synchronization between target/initiator regarding
+ partitions
+Date: Mon, 7 Aug 2017 10:42:57 -0300
+Message-ID: <82c4d1d8-ffa9-fa99-df58-05e2945eafdc@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170807122701.GH20914@redhat.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:44739 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751415AbdHGNnF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Aug 2017 09:43:05 -0400
+Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v77Ddstm134732
+        for <linux-scsi@vger.kernel.org>; Mon, 7 Aug 2017 09:43:04 -0400
+Received: from e12.ny.us.ibm.com (e12.ny.us.ibm.com [129.33.205.202])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2c6jjp239w-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Mon, 07 Aug 2017 09:43:04 -0400
+Received: from localhost
+        by e12.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
+        Mon, 7 Aug 2017 09:43:03 -0400
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Richard W.M. Jones" <rjones@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-block@vger.kernel.org
+Cc: Mauricio pIO <mauricfo@linux.vnet.ibm.com>, Brian J King <bjking1@us.ibm.com>, Murali N Iyer <mniyer@us.ibm.com>, vnarasimhan@in.ibm.com, gpiccoli@linux.vnet.ibm.com
 
-On 07/08/2017 14:27, Richard W.M. Jones wrote:
-> Also I noticed this code in virtio_scsi.c:
-> 
->         cmd_per_lun = virtscsi_config_get(vdev, cmd_per_lun) ?: 1;
->         shost->cmd_per_lun = min_t(u32, cmd_per_lun, shost->can_queue);
-> 
-> but setting cmd_per_lun (as a qemu virtio-scsi-pci parameter) didn't
-> seem to make any difference to memory usage.
+We observed that it's possible to perform partition operations in both
+nvmf target and initiator block devices, like creating and deleting
+partitions.
 
-That's because memory depends on shost->can_queue, not
-shost->cmd_per_lun (see scsi_mq_setup_tags).
+But there is no sync mechanism between target and initiator regarding
+the partitions operations. After creating a partition on initiator, for
+example, we don't see it on target side. We could format it like ext4 on
+initiator, and still target cannot see it. It's possible to trigger a
+BLKRRPART ioctl on target, which end up calling revalidate_disk() on
+nvme driver and then partitions are perceived.
 
-can_queue should depend on the virtqueue size, which unfortunately can
-vary for each virtio-scsi device in theory.  The virtqueue size is
-retrieved by drivers/virtio prior to calling vring_create_virtqueue, and
-in QEMU it is the second argument to virtio_add_queue.
+So, question: is this behavior expected/acceptable? Is it completely up
+to userspace to deal with the synchronization between host/target?
+I think answer might be yes since partitions are a higher level of
+abstraction than nvmf (which is purely block device aware).
 
-For virtio-scsi this is VIRTIO_SCSI_VQ_SIZE, which is 128, so changing
-can_queue to 128 should be a no brainer.
+But if kernel could/should jump in, we possibly could try to issue a
+revalidate_disk on target whenever this operation is performed on
+initiator side (and vice-versa). I confess I couldn't find such sync
+idea in NVMe over fabrics spec, though.
+Also, reading NVMe spec 1.3, we do have the optional feature
+"reservations", but seems it doesn't mention target (only multiple hosts).
 
-Thanks,
+Thanks in advance for any ideas on this subject.
+Cheers,
 
-Paolo
+
+
+Guilherme
