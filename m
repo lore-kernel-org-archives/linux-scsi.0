@@ -1,74 +1,47 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] scsi_devinfo: fixup string compare
-Date: Tue, 8 Aug 2017 16:28:25 +0200
-Message-ID: <dfbfe994-f5b0-b194-d1a3-a121c4738459@suse.de>
-References: <1501839625-93492-1-git-send-email-hare@suse.de>
- <1501860744.2757.3.camel@wdc.com>
- <c656a810-dbcc-4f1a-5d59-128496af531f@suse.de>
- <1501864684.2757.16.camel@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Subject: [PATCH 0/4] Fixup blacklist handling
+Date: Tue,  8 Aug 2017 16:36:53 +0200
+Message-ID: <1502203017-101403-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59861 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:60634 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751880AbdHHO23 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 8 Aug 2017 10:28:29 -0400
-In-Reply-To: <1501864684.2757.16.camel@wdc.com>
-Content-Language: en-US
+        id S1752527AbdHHOhE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 8 Aug 2017 10:37:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Hannes Reinecke <hare@suse.de>
 
-On 08/04/2017 06:38 PM, Bart Van Assche wrote:
-> On Fri, 2017-08-04 at 18:28 +0200, Hannes Reinecke wrote:
->> Well, maybe; however, the current logic fails to match the entry
->>
->> 	{"HITACHI", "OPEN-", "*", BLIST_REPORTLUN2},
->>
->> against the 'real' name, which is "HITACHI" "OPEN-V".
->> And for some reason we have far more customer using Hitachi arrays than
->> using scanner of dubious provenance with no Vendor (which is the real
->> bug if you ask me...)
-> 
-> Hello Hannes,
-> 
-> So for some entries in the table a prefix match should be performed (e.g. the
-> model string for the Hitachi entry) but for other entries (e.g. the scanner
-> entry) an exact match should be performed on the vendor name? If so, how about
-> one of the following two approaches:
-> * Adding ".*" at the end of the entries in the table for which a prefix match
->   is sufficient and to change scsi_dev_info_list_find() such that it performs
->   a regex match instead of an exact match or a prefix match.
-> * Performing an exact match on the vendor name and a prefix match on the model
->   name.
-> 
-Doesn't work, as we have no idea which strings should be treated as
-exact match and for which a partial match is applicable.
+Hi all,
 
-The solution is actually far simpler:
-- Always assume partial match
-- Check the min string length for vendor and model
-- Do not attempt to match if the min length is zero
+the SCSI blacklist handling seems to be rather tricky issue;
+everytime a fix is included it tends to break other devices.
+This patchset attempt to simplify the devlist handling yet again,
+but this time implementing the framework for regression testing, too.
+So with this patchset we can implement a regression testing in
+blocktests and validate any future fixes.
 
-These rules drastically simplify the code.
+To implement blocktests one simply has to do:
 
-Additionally I've done patches to export the blacklist value to sysfs,
-_and_ modified scsi_debug to allow us to pass in the vendor and model
-string.
-With these modifications we can easily write blocktests to cover the
-various corner cases, and have proper regression tests in case someone
-needs to twiddle with that again.
+modprobe scsi_debug inq_vendor="Inateck" inq_product="        "
+cat /sys/block/sdX/device/blacklist
 
-Patchset to follow.
+(which recreates the issue triggering commit b704f70ce2003)
+and check if the blacklist value is correct.
 
-Cheers,
+As usual, comments and reviews are welcome.
 
-Hannes
+Hannes Reinecke (4):
+  scsi: whitespace fixes in scsi_devinfo.c
+  scsi_devinfo: fixup string compare
+  scsi_debug: allow to specify inquiry vendor and model
+  scsi: Export blacklist flags to sysfs
+
+ drivers/scsi/scsi_debug.c   | 25 +++++++++++------
+ drivers/scsi/scsi_devinfo.c | 68 +++++++++++++++++++++++++--------------------
+ drivers/scsi/scsi_scan.c    |  1 +
+ drivers/scsi/scsi_sysfs.c   | 11 ++++++++
+ 4 files changed, 67 insertions(+), 38 deletions(-)
+
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+1.8.5.6
