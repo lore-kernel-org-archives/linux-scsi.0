@@ -1,68 +1,69 @@
-From: Jinpu Wang <jinpu.wang@profitbricks.com>
-Subject: Re: scsi: mvsas: replace kfree with scsi_host_put
-Date: Tue, 8 Aug 2017 16:41:33 +0200
-Message-ID: <CAMGffE=owcOPZ4AXah1C5LFQ3YG2F_D4jPWHovi3QXY+AymxGQ@mail.gmail.com>
-References: <1502193771-20271-1-git-send-email-bianpan2016@163.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: scsi: hisi_sas: replace kfree with scsi_host_put
+Date: Tue, 8 Aug 2017 15:56:22 +0100
+Message-ID: <c39e1cef-5356-01b7-5316-10ba45f0bba8@huawei.com>
+References: <1502192263-12332-1-git-send-email-bianpan2016@163.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f178.google.com ([209.85.220.178]:36807 "EHLO
-        mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752190AbdHHOly (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Aug 2017 10:41:54 -0400
-Received: by mail-qk0-f178.google.com with SMTP id d136so20677284qkg.3
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Aug 2017 07:41:54 -0700 (PDT)
-In-Reply-To: <1502193771-20271-1-git-send-email-bianpan2016@163.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1502192263-12332-1-git-send-email-bianpan2016@163.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Pan Bian <bianpan2016@163.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Linuxarm <linuxarm@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Pan Bian <bianpan2016@163.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Tue, Aug 8, 2017 at 2:02 PM, Pan Bian <bianpan2016@163.com> wrote:
-> The return value of scsi_host_alloc() should be released by
-> scsi_host_put(). However, in function mvs_pci_init(), kfree()
-> is used. This patch replaces kfree() with scsi_host_put() to avoid
-> possible memory leaks.
+On 08/08/2017 12:37, Pan Bian wrote:
+> Return value of scsi_host_alloc() should be released with
+> scsi_host_put() rather than kfree().
 >
 > Signed-off-by: Pan Bian <bianpan2016@163.com>
+
+We also have a kfree(shost) in newly added pci-based v3 driver which 
+would need replacing for consistency.
+
+But, apart from that, we seem to have a pre-existing issue in 
+hisi_sas_shost_alloc_pci(), which is missing the shost clean-up for 
+error path.
+
+Let me know if you want me to take over this patch and fix up the other 
+places.
+
+John
+
 > ---
->  drivers/scsi/mvsas/mv_init.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  drivers/scsi/hisi_sas/hisi_sas_main.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
 >
-> diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-> index 4e047b5..75bdb38 100644
-> --- a/drivers/scsi/mvsas/mv_init.c
-> +++ b/drivers/scsi/mvsas/mv_init.c
-> @@ -557,14 +557,14 @@ static int mvs_pci_init(struct pci_dev *pdev, const struct pci_device_id *ent)
->         SHOST_TO_SAS_HA(shost) =
->                 kcalloc(1, sizeof(struct sas_ha_struct), GFP_KERNEL);
->         if (!SHOST_TO_SAS_HA(shost)) {
-> -               kfree(shost);
-> +               scsi_host_put(shost);
->                 rc = -ENOMEM;
->                 goto err_out_regions;
->         }
+> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+> index 4022c3f..22d8922 100644
+> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
+> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+> @@ -1825,7 +1825,7 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
 >
->         rc = mvs_prep_sas_ha_init(shost, chip);
->         if (rc) {
-> -               kfree(shost);
-> +               scsi_host_put(shost);
->                 rc = -ENOMEM;
->                 goto err_out_regions;
->         }
-> --
-> 1.9.1
+>  	return shost;
+>  err_out:
+> -	kfree(shost);
+> +	scsi_host_put(shost);
+>  	dev_err(dev, "shost alloc failed\n");
+>  	return NULL;
+>  }
+> @@ -1916,7 +1916,7 @@ int hisi_sas_probe(struct platform_device *pdev,
+>  	scsi_remove_host(shost);
+>  err_out_ha:
+>  	hisi_sas_free(hisi_hba);
+> -	kfree(shost);
+> +	scsi_host_put(shost);
+>  	return rc;
+>  }
+>  EXPORT_SYMBOL_GPL(hisi_sas_probe);
+> @@ -1931,7 +1931,7 @@ int hisi_sas_remove(struct platform_device *pdev)
+>  	sas_remove_host(sha->core.shost);
 >
+>  	hisi_sas_free(hisi_hba);
+> -	kfree(shost);
+> +	scsi_host_put(shost);
+>  	return 0;
+>  }
+>  EXPORT_SYMBOL_GPL(hisi_sas_remove);
 >
-
-Looks good to me! Thanks Pan!
-
-Reviewed-by: Jack Wang <jinpu.wang@profitbricks.com>
-
--- 
-Jack Wang
-Linux Kernel Developer
-
-ProfitBricks GmbH
-Greifswalder Str. 207
-D - 10405 Berlin
