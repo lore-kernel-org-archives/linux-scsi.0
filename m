@@ -1,47 +1,43 @@
-From: Pan Bian <bianpan2016@163.com>
-Subject: scsi: mvsas: replace kfree with scsi_host_put
-Date: Tue,  8 Aug 2017 20:02:51 +0800
-Message-ID: <1502193771-20271-1-git-send-email-bianpan2016@163.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH 0/5] qcom-ufs: phy/hcd: Refactor phy initialization code
+Date: Tue, 8 Aug 2017 17:39:11 +0530
+Message-ID: <c29e3a7c-62cc-f25a-4e0b-231c69e01afa@ti.com>
+References: <1501829332-5183-1-git-send-email-vivek.gautam@codeaurora.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from m12-11.163.com ([220.181.12.11]:48768 "EHLO m12-11.163.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752050AbdHHMDz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 8 Aug 2017 08:03:55 -0400
+Received: from fllnx209.ext.ti.com ([198.47.19.16]:16078 "EHLO
+        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752179AbdHHMKm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Aug 2017 08:10:42 -0400
+In-Reply-To: <1501829332-5183-1-git-send-email-vivek.gautam@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>, Jinpu Wang <jinpu.wang@profitbricks.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Pan Bian <bianpan2016@163.com>
+To: Vivek Gautam <vivek.gautam@codeaurora.org>, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, robh+dt@kernel.org
+Cc: linux-arm-msm@vger.kernel.org, subhashj@codeaurora.org, bjorn.andersson@linaro.org, devicetree@vger.kernel.org, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com
 
-The return value of scsi_host_alloc() should be released by
-scsi_host_put(). However, in function mvs_pci_init(), kfree()
-is used. This patch replaces kfree() with scsi_host_put() to avoid
-possible memory leaks.
+Hi,
 
-Signed-off-by: Pan Bian <bianpan2016@163.com>
----
- drivers/scsi/mvsas/mv_init.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+On Friday 04 August 2017 12:18 PM, Vivek Gautam wrote:
+> Refactoring the qcom-ufs phy and host controller code to move
+> further towards the generic phy usage. Right now the qcom-ufs exports
+> a bunch of APIs that are used by the host controller to initialize
+> the phy.
+> With this patch series, we populate the phy_init() which was a no-op
+> earlier. The host controller then calls the phy_init() at the designated
+> place rather than doing it invariably in ufs_hcd_init().
+> 
+> As part of this series, we introduce phy modes for ufs phy.
+> The M-PHY has two data rates defined for each generations (Gears) -
+> Rate A and Rate B. These can serve as the two modes of ufs HS phy.
+> Host controller can direct the phy to set the respective configurations
+> based on the phy modes.
+> 
+> The patch-series has been tested with necessary dt patches on db820c.
 
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index 4e047b5..75bdb38 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -557,14 +557,14 @@ static int mvs_pci_init(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	SHOST_TO_SAS_HA(shost) =
- 		kcalloc(1, sizeof(struct sas_ha_struct), GFP_KERNEL);
- 	if (!SHOST_TO_SAS_HA(shost)) {
--		kfree(shost);
-+		scsi_host_put(shost);
- 		rc = -ENOMEM;
- 		goto err_out_regions;
- 	}
- 
- 	rc = mvs_prep_sas_ha_init(shost, chip);
- 	if (rc) {
--		kfree(shost);
-+		scsi_host_put(shost);
- 		rc = -ENOMEM;
- 		goto err_out_regions;
- 	}
--- 
-1.9.1
+Can the first 3 patches go independently of the other 2 or should all this be
+merged together?
+
+Thanks
+Kishon
