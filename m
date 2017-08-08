@@ -1,51 +1,55 @@
 From: Pan Bian <bianpan2016@163.com>
-Subject: scsi: hisi_sas: replace kfree with scsi_host_put
-Date: Tue,  8 Aug 2017 19:37:43 +0800
-Message-ID: <1502192263-12332-1-git-send-email-bianpan2016@163.com>
+Subject: scsi: pm8001: fix double free in pm8001_pci_probe
+Date: Tue,  8 Aug 2017 19:40:30 +0800
+Message-ID: <1502192430-12440-1-git-send-email-bianpan2016@163.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Jack Wang <jinpu.wang@profitbricks.com>, lindar_liu@usish.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Pan Bian <bianpan2016@163.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Return value of scsi_host_alloc() should be released with
-scsi_host_put() rather than kfree().
+In function pm8001_pci_probe(), on errors that the control flow jumps to
+label err_out_ha_free, function pm8001_free() is called. In pm8001_free(),
+scsi_host_put() is called to release shost, which keeps the return value
+of scsi_host_alloc(). After pm8001_free() returns, kfree() is called to
+free shost again, resulting in a double free bug. This patch removes
+scsi_host_put() from pm8001_free() and explicitly calls scsi_host_put()
+to release Scsi_Host in need.
 
 Signed-off-by: Pan Bian <bianpan2016@163.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/pm8001/pm8001_init.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 4022c3f..22d8922 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1825,7 +1825,7 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
- 
- 	return shost;
- err_out:
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index 034b2f7..2908881 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -160,8 +160,6 @@ static void pm8001_free(struct pm8001_hba_info *pm8001_ha)
+ 			}
+ 	}
+ 	PM8001_CHIP_DISP->chip_iounmap(pm8001_ha);
+-	if (pm8001_ha->shost)
+-		scsi_host_put(pm8001_ha->shost);
+ 	flush_workqueue(pm8001_wq);
+ 	kfree(pm8001_ha->tags);
+ 	kfree(pm8001_ha);
+@@ -1073,7 +1071,7 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
+ err_out_free:
+ 	kfree(SHOST_TO_SAS_HA(shost));
+ err_out_free_host:
 -	kfree(shost);
 +	scsi_host_put(shost);
- 	dev_err(dev, "shost alloc failed\n");
- 	return NULL;
- }
-@@ -1916,7 +1916,7 @@ int hisi_sas_probe(struct platform_device *pdev,
- 	scsi_remove_host(shost);
- err_out_ha:
- 	hisi_sas_free(hisi_hba);
--	kfree(shost);
-+	scsi_host_put(shost);
- 	return rc;
- }
- EXPORT_SYMBOL_GPL(hisi_sas_probe);
-@@ -1931,7 +1931,7 @@ int hisi_sas_remove(struct platform_device *pdev)
- 	sas_remove_host(sha->core.shost);
- 
- 	hisi_sas_free(hisi_hba);
--	kfree(shost);
-+	scsi_host_put(shost);
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(hisi_sas_remove);
+ err_out_regions:
+ 	pci_release_regions(pdev);
+ err_out_disable:
+@@ -1112,6 +1110,7 @@ static void pm8001_pci_remove(struct pci_dev *pdev)
+ 		for (j = 0; j < PM8001_MAX_MSIX_VEC; j++)
+ 			tasklet_kill(&pm8001_ha->tasklet[j]);
+ #endif
++	scsi_host_put(pm8001_ha->shost);
+ 	pm8001_free(pm8001_ha);
+ 	kfree(sha->sas_phy);
+ 	kfree(sha->sas_port);
 -- 
 1.9.1
