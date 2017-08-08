@@ -1,77 +1,41 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 2/4] scsi_devinfo: fixup string compare
-Date: Tue, 8 Aug 2017 16:11:56 +0000
-Message-ID: <1502208714.2250.3.camel@wdc.com>
-References: <Pine.LNX.4.44L0.1708081150250.2055-100000@iolanthe.rowland.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v3 03/13] mpt3sas: SGL to PRP Translation for I/Os to NVMe  devices
+Date: Tue, 08 Aug 2017 12:12:13 -0400
+Message-ID: <yq1o9rq6ntu.fsf@oracle.com>
+References: <1502183035-7441-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+        <1502183035-7441-4-git-send-email-suganath-prabu.subramani@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:32518 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752082AbdHHQMn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Aug 2017 12:12:43 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1708081150250.2055-100000@iolanthe.rowland.org>
-Content-Language: en-US
-Content-ID: <616BEA5E8D99FE4D8E228837FE11D911@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1502183035-7441-4-git-send-email-suganath-prabu.subramani@broadcom.com>
+        (Suganath Prabu S.'s message of "Tue, 8 Aug 2017 14:33:45 +0530")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+Cc: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, linux-kernel@vger.kernel.org, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com, linux-nvme@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hare@suse.de" <hare@suse.de>, "stern@rowland.harvard.edu" <stern@rowland.harvard.edu>
-Cc: "hch@lst.de" <hch@lst.de>, Bart Van Assche <Bart.VanAssche@wdc.com>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-T24gVHVlLCAyMDE3LTA4LTA4IGF0IDEyOjA2IC0wNDAwLCBBbGFuIFN0ZXJuIHdyb3RlOg0KPiBP
-biBUdWUsIDggQXVnIDIwMTcsIEhhbm5lcyBSZWluZWNrZSB3cm90ZToNCj4gPiBPbiAwOC8wOC8y
-MDE3IDA1OjI1IFBNLCBBbGFuIFN0ZXJuIHdyb3RlOg0KPiA+ID4gT24gVHVlLCA4IEF1ZyAyMDE3
-LCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6DQo+ID4gPiANCj4gPiA+ID4gV2hlbiBjaGVja2luZyB0
-aGUgbW9kZWwgYW5kIHZlbmRvciBzdHJpbmcgd2UgbmVlZCB0byB1c2UgdGhlDQo+ID4gPiA+IG1p
-bmltdW0gdmFsdWUgb2YgZWl0aGVyIHN0cmluZywgb3RoZXJ3aXNlIHdlJ2xsIG1pc3Mgb3V0IG9u
-DQo+ID4gPiA+IHdpbGRjYXJkIG1hdGNoZXMuDQo+ID4gPiA+IEFuZCB3ZSBzaG91bGQgYXZvaWQg
-bWF0Y2hpbmcgYW55dGhpbmcgd2l0aCB6ZXJvIHNpemUgYXMgdGhpcw0KPiA+ID4gPiBtYXRjaCB3
-aWxsIGJlIGluY29ycmVjdC4NCj4gPiA+ID4gV2l0aG91dCB0aGlzIHBhdGNoIGNlcnRhaW4gSGl0
-YWNoaSBhcnJheXMgd2lsbCBub3QgYmUgcHJlc2VudGluZw0KPiA+ID4gPiBWUEQgcGFnZXMgY29y
-cmVjdGx5Lg0KPiA+ID4gPiANCj4gPiA+ID4gRml4ZXM6IDVlN2ZmMmMgKCJTQ1NJOiBmaXggbmV3
-IGJ1ZyBpbiBzY3NpX2Rldl9pbmZvX2xpc3Qgc3RyaW5nDQo+ID4gPiA+IG1hdGNoaW5nIikNCj4g
-PiA+ID4gU2lnbmVkLW9mZi1ieTogSGFubmVzIFJlaW5lY2tlIDxoYXJlQHN1c2UuY29tPg0KPiA+
-ID4gDQo+ID4gPiBUaGlzIGlzIHZlcnkgcXVlc3Rpb25hYmxlLiAgQXMgZGVzY3JpYmVkIGluIGNv
-bW1pdCBiNzA0ZjcwY2UyMDANCj4gPiA+ICgiU0NTSTogDQo+ID4gPiBmaXggYnVnIGluIHNjc2lf
-ZGV2X2luZm9fbGlzdCBtYXRjaGluZyIpLCB0aGVyZSBhcmUgZGV2aWNlcyB3aGljaA0KPiA+ID4g
-aGF2ZSANCj4gPiA+IHZlbmRvciBvciBtb2RlbCBzdHJpbmdzIG9mIGxlbmd0aCAwLCBhbmQgdGhl
-cmUgYXJlIGVudHJpZXMgaW4gdGhlIA0KPiA+ID4gZ2xvYmFsIGRldmljZSBsaXN0IGxpa2UgdGhh
-dCB0b28uICBXaXRoIHRoaXMgcGF0Y2gsIHN1Y2ggZGV2aWNlcyBhbmQgDQo+ID4gPiBzdWNoIGVu
-dHJpZXMgd291bGQgbmV2ZXIgbWF0Y2ggYW55dGhpbmcuDQo+ID4gPiANCj4gPiA+IEFsc28sIHRo
-ZSBpZGVhIG9mIHVzaW5nIHRoZSBtaW5pbXVtIGxlbmd0aCBvZiBlaXRoZXIgc3RyaW5nIGRvZXNu
-J3QgDQo+ID4gPiBzb3VuZCByaWdodC4gIEl0IHdvdWxkIGFsbG93IGEgZGV2aWNlIHdpdGggc3Ry
-aW5nICJhYmMiIHRvIG1hdGNoIGFuIA0KPiA+ID4gZW50cnkgaW4gdGhlIGxpc3Qgd2l0aCBzdHJp
-bmcgImFiY2QiLCB3aGljaCB3b3VsZCBiZSB3cm9uZy4NCj4gPiA+IA0KPiA+ID4gU3VnZ2VzdGlv
-bjoNCj4gPiA+IA0KPiA+ID4gCUFsbG93IGEgZGV2aWNlIHN0cmluZyB0byBtYXRjaCBhIGxpc3Qg
-ZW50cnkgaWYgdGhlIGxlbmd0aHMNCj4gPiA+IAlhcmUgZXF1YWwgb3IgdGhlIGxpc3QgZW50cnkg
-aXMgc2hvcnRlciAodGhpcyB3b3VsZCBiZSBhIA0KPiA+ID4gCXdpbGRjYXJkIG1hdGNoKSwgYnV0
-IG5vdCBpZiB0aGUgbGlzdCBlbnRyeSBpcyBsb25nZXIuICBIZXJlDQo+ID4gPiAJdGhlIGRldmlj
-ZSBzdHJpbmcgbGVuZ3RoIGlzIGFmdGVyIGxlYWRpbmcgYW5kIHRyYWlsaW5nIGJsYW5rcw0KPiA+
-ID4gCWhhdmUgYmVlbiByZW1vdmVkLg0KPiA+ID4gDQo+ID4gPiAJQXMgYSBjb3JvbGxhcnksIGFs
-bG93IGFuIGVtcHR5IGRldmljZSBzdHJpbmcgdG8gbWF0Y2ggYW4gZW1wdHkgDQo+ID4gPiAJbGlz
-dCBlbnRyeSBidXQgbm90aGluZyBlbHNlLg0KPiA+ID4gDQo+ID4gPiBBbGFuIFN0ZXJuDQo+ID4g
-PiANCj4gPiANCj4gPiBXZWxsLCBzbyBmYXIgd2UgaGF2ZW4ndCBlbmNvdW50ZXJlZCBhbnkgb2Yg
-dGhvc2UgZGV2aWNlcy4NCj4gDQo+IEJ1dCB3aGF0IGlmIHdlIGRvIGluIHRoZSBmdXR1cmU/ICBU
-aGUgY29kZSBzaG91bGQgYmUgY29ycmVjdCBmb3IgDQo+IGFueXRoaW5nLg0KPiANCj4gPiBJIF9o
-YXZlXyB2YWxpZGF0ZWQgdGhlIHBhdGNoIHdpdGggdGhlIGtub3duIHByb2JsZW1hdGljIGlucXVp
-cnkgc3RyaW5ncywNCj4gPiBuYW1lbHkNCj4gPiANCj4gPiAiSElUQUNISSIgIk9QRU4tViINCj4g
-PiAiSW5hdGVjayIgIiAgICAgICAiDQo+ID4gIiAgICAgICAiICJTY2FubmVyIg0KPiA+ICJQcm9t
-aXNlIiAiU1RFWCINCj4gPiANCj4gPiBhbmQgaXQgZ2l2ZXMgdGhlIGNvcnJlY3QgcmVzdWx0IGZv
-ciBhbGwgb2YgdGhlc2UuDQo+IA0KPiBIb3cgY2FuICIgICAgICAgIiAiU2Nhbm5lciIgZ2l2ZSB0
-aGUgY29ycmVjdCByZXN1bHQ/ICBPaCwgSSBzZWUgLS0gdGhlIA0KPiBwYXRjaCBkZXNjcmlwdGlv
-biBhbmQgdGhlIGNvZGUgY29tbWVudCBib3RoIHNheSB0aGF0IGVtcHR5IHN0cmluZ3MgDQo+IG5l
-dmVyIG1hdGNoLCBidXQgaW4gZmFjdCB0aGV5IGRvIC0tIHlvdSBhbGxvdyBhIG1hdGNoIGlmIGVp
-dGhlciB0aGUgDQo+IHZlbmRvciBvciBtb2RlbCBzdHJpbmcgaXMgZW1wdHksIGJ1dCBub3QgaWYg
-dGhleSBhcmUgYm90aCBlbXB0eS4NCj4gDQo+ID4gSWYgeW91IGhhdmUgYW55IGlucXVpcnkgc3Ry
-aW5ncyBmb3Igd2hpY2ggdGhpcyBkb2VzIF9ub3RfIHByb2R1Y2UgdGhlDQo+ID4gY29ycmVjdCBy
-ZXN1bHQgcGxlYXNlIGxldCBtZSBrbm93Lg0KPiANCj4gV2hhdCBhYm91dCAiSElUQSIgIk9QRU4t
-ViI/ICBPciAiIiAiT1BFTi1WIj8gIEJvdGggb2YgdGhlc2Ugd2lsbCBtYXRjaA0KPiB0aGUgIkhJ
-VEFDSEkiICJPUEVOLSIgZW50cnksIGJ1dCBuZWl0aGVyIG9mIHRoZW0gc2hvdWxkLg0KPiANCj4g
-V2hhdCBhYm91dCAiQUJDRCIgIlNjYW5uZXIiPyAgVGhpcyB3aWxsIG1hdGNoIHRoZSAiICAgICAg
-ICAiICJTY2FubmVyIiANCj4gZW50cnksIGJ1dCBpdCBzaG91bGRuJ3QuDQoNCkhlbGxvIEhhbm5l
-cywNCg0KSXMgdGhlcmUgYW55IGNhc2UgZm9yIHdoaWNoIHlvdSB0aGluayBpdCBpcyB1c2VmdWwg
-dG8gcGVyZm9ybSBhIHByZWZpeCBtYXRjaA0Kb24gdGhlIHZlbmRvciBuYW1lPyBXaGF0IHdvdWxk
-IGJyZWFrIGlmIHRoZSBjb2RlIGZvciBjb21wYXJpbmcgdGhlIHZlbmRvcg0KbmFtZSB3b3VsZCBi
-ZSBjaGFuZ2VkIGludG8gYW4gZXhhY3QgbWF0Y2ggKGFmdGVyIGhhdmluZyB0cmltbWVkIHRyYWls
-aW5nDQp3aGl0ZXNwYWNlKT8NCg0KVGhhbmtzLA0KDQpCYXJ0Lg==
+
+Suganath,
+
+> +	/*
+> +	 ** Below code detects gaps/holes in IO data buffers.
+> +	 ** What does holes/gaps mean?
+> +	 ** Any SGE except first one in a SGL starts at non NVME page size
+> +	 ** aligned address OR Any SGE except last one in a SGL ends at
+> +	 ** non NVME page size boundary.
+> +	 **
+> +	 ** Driver has already informed block layer by setting boundary rules
+> +	 ** for bio merging done at NVME page size boundary calling kernel API
+> +	 ** blk_queue_virt_boundary inside slave_config.
+> +	 ** Still there is possibility of IO coming with holes to driver because
+> +	 ** of IO merging done by IO scheduler.
+
+All this SGL to PRP code needs to go.
+
+If you are seeing anything that's not a valid PRP after setting the
+queue virt boundary then there's a block layer bug that needs to be
+debugged and fixed. Regardless of whether you are using an I/O scheduler
+or not.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
