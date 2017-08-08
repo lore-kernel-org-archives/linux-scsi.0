@@ -1,271 +1,81 @@
-From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH v3 04/13] mpt3sas: Added support for nvme encapsulated request message.
-Date: Tue,  8 Aug 2017 14:33:46 +0530
-Message-ID: <1502183035-7441-5-git-send-email-suganath-prabu.subramani@broadcom.com>
-References: <1502183035-7441-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1502183035-7441-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com, linux-nvme@lists.infradead.org
+From: Benjamin Block <bblock@linux.vnet.ibm.com>
+Subject: Re: [PATCH 00/22] zfcp fixes and cleanups
+Date: Tue, 8 Aug 2017 12:02:24 +0200
+Message-ID: <20170808100224.GA13050@bblock-ThinkPad-W530>
+References: <cover.1501085249.git.bblock@linux.vnet.ibm.com>
+ <yq13793b8j4.fsf@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:48779 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751921AbdHHKCa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Aug 2017 06:02:30 -0400
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v789wal4054255
+        for <linux-scsi@vger.kernel.org>; Tue, 8 Aug 2017 06:02:30 -0400
+Received: from e06smtp10.uk.ibm.com (e06smtp10.uk.ibm.com [195.75.94.106])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2c78u0yem3-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Tue, 08 Aug 2017 06:02:30 -0400
+Received: from localhost
+        by e06smtp10.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <bblock@linux.vnet.ibm.com>;
+        Tue, 8 Aug 2017 11:02:27 +0100
+Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
+        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v78A2PaS23462044
+        for <linux-scsi@vger.kernel.org>; Tue, 8 Aug 2017 10:02:25 GMT
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 0EC15A4055
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Aug 2017 10:59:21 +0100 (BST)
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id E9769A4053
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Aug 2017 10:59:20 +0100 (BST)
+Received: from bblock-ThinkPad-W530 (unknown [9.152.212.122])
+        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Aug 2017 10:59:20 +0100 (BST)
+Content-Disposition: inline
+In-Reply-To: <yq13793b8j4.fsf@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Steffen Maier <maier@linux.vnet.ibm.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org
 
-* Mpt3sas driver uses the NVMe Encapsulated Request message to
-send an NVMe command to an NVMe device attached to the IOC.
+On Mon, Aug 07, 2017 at 01:19:11PM -0400, Martin K. Petersen wrote:
+> > here is a series of (important) fixes and some additional cleanups for
+> > the zfcp driver. Our fixes are marked for stable accordingly.
+> >
+> > Patches 01 - 04 are cleanups and external patches (also cleanups) that we
+> >       & 13 - 22     had queued for quite some time now
+> >
+> > Patches 05 - 12 are driver fixes that are all marked for stable as well
+> 
+> Given the ordering, it's a bit unclear how you want me to apply these.
+> 
+> There are a bunch of fixes you labeled as "important" but they are not
+> at the beginning of the series. And I am not sure if these have
+> dependencies on the preceding cleanup patches?
+> 
+> If you have fixes you would like to get into 4.13, please post those
+> first as a separate series. And clearly indicate that that's the branch
+> you are aiming for.
+> 
+> If you are OK with everything going into 4.14, then let me know. In that
+> case you don't have to shuffle the patches around.
+> 
 
-* Normal I/O commands like reads and writes are passed to the
-controller as SCSI commands and the controller has the ability
-to translate the commands to NVMe equivalent.
+I think it is OK for us, if this goes into 4.14 as one series. So if it
+is OK with you, just apply the complete series for that.
 
-* This encapsulated NVMe command is used by applications to send
-direct NVMe commands to NVMe drives or for handling unmap where
-the translation at controller/firmware level is having
-performance issues.
+Thanks.
 
-Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
-Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c |   56 ++++++++++++++++++++++++++++-
- drivers/scsi/mpt3sas/mpt3sas_base.h |    1 +
- drivers/scsi/mpt3sas/mpt3sas_ctl.c  |   69 ++++++++++++++++++++++++++++++++---
- 3 files changed, 119 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index d48f176..27fe074 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -557,6 +557,11 @@ _base_sas_ioc_info(struct MPT3SAS_ADAPTER *ioc, MPI2DefaultReply_t *mpi_reply,
- 		frame_sz = sizeof(Mpi2SmpPassthroughRequest_t) + ioc->sge_size;
- 		func_str = "smp_passthru";
- 		break;
-+	case MPI2_FUNCTION_NVME_ENCAPSULATED:
-+		frame_sz = sizeof(Mpi26NVMeEncapsulatedRequest_t) +
-+		    ioc->sge_size;
-+		func_str = "nvme_encapsulated";
-+		break;
- 	default:
- 		frame_sz = 32;
- 		func_str = "unknown";
-@@ -985,7 +990,9 @@ _base_interrupt(int irq, void *bus_id)
- 		if (request_desript_type ==
- 		    MPI25_RPY_DESCRIPT_FLAGS_FAST_PATH_SCSI_IO_SUCCESS ||
- 		    request_desript_type ==
--		    MPI2_RPY_DESCRIPT_FLAGS_SCSI_IO_SUCCESS) {
-+		    MPI2_RPY_DESCRIPT_FLAGS_SCSI_IO_SUCCESS ||
-+		    request_desript_type ==
-+		    MPI26_RPY_DESCRIPT_FLAGS_PCIE_ENCAPSULATED_SUCCESS) {
- 			cb_idx = _base_get_cb_idx(ioc, smid);
- 			if ((likely(cb_idx < MPT_MAX_CALLBACKS)) &&
- 			    (likely(mpt_callbacks[cb_idx] != NULL))) {
-@@ -3124,6 +3131,30 @@ _base_put_smid_hi_priority(struct MPT3SAS_ADAPTER *ioc, u16 smid,
- }
- 
- /**
-+ * _base_put_smid_nvme_encap - send NVMe encapsulated request to
-+ *  firmware
-+ * @ioc: per adapter object
-+ * @smid: system request message index
-+ *
-+ * Return nothing.
-+ */
-+static void
-+_base_put_smid_nvme_encap(struct MPT3SAS_ADAPTER *ioc, u16 smid)
-+{
-+	Mpi2RequestDescriptorUnion_t descriptor;
-+	u64 *request = (u64 *)&descriptor;
-+
-+	descriptor.Default.RequestFlags =
-+		MPI26_REQ_DESCRIPT_FLAGS_PCIE_ENCAPSULATED;
-+	descriptor.Default.MSIxIndex =  _base_get_msix_index(ioc);
-+	descriptor.Default.SMID = cpu_to_le16(smid);
-+	descriptor.Default.LMID = 0;
-+	descriptor.Default.DescriptorTypeDependent = 0;
-+	_base_writeq(*request, &ioc->chip->RequestDescriptorPostLow,
-+	    &ioc->scsi_lookup_lock);
-+}
-+
-+/**
-  * _base_put_smid_default - Default, primarily used for config pages
-  * @ioc: per adapter object
-  * @smid: system request message index
-@@ -3214,6 +3245,27 @@ _base_put_smid_hi_priority_atomic(struct MPT3SAS_ADAPTER *ioc, u16 smid,
- }
- 
- /**
-+ * _base_put_smid_nvme_encap_atomic - send NVMe encapsulated request to
-+ *   firmware using Atomic Request Descriptor
-+ * @ioc: per adapter object
-+ * @smid: system request message index
-+ *
-+ * Return nothing.
-+ */
-+static void
-+_base_put_smid_nvme_encap_atomic(struct MPT3SAS_ADAPTER *ioc, u16 smid)
-+{
-+	Mpi26AtomicRequestDescriptor_t descriptor;
-+	u32 *request = (u32 *)&descriptor;
-+
-+	descriptor.RequestFlags = MPI26_REQ_DESCRIPT_FLAGS_PCIE_ENCAPSULATED;
-+	descriptor.MSIxIndex = _base_get_msix_index(ioc);
-+	descriptor.SMID = cpu_to_le16(smid);
-+
-+	writel(cpu_to_le32(*request), &ioc->chip->AtomicRequestDescriptorPost);
-+}
-+
-+/**
-  * _base_put_smid_default - Default, primarily used for config pages
-  * use Atomic Request Descriptor
-  * @ioc: per adapter object
-@@ -6046,11 +6098,13 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
- 		ioc->put_smid_scsi_io = &_base_put_smid_scsi_io_atomic;
- 		ioc->put_smid_fast_path = &_base_put_smid_fast_path_atomic;
- 		ioc->put_smid_hi_priority = &_base_put_smid_hi_priority_atomic;
-+		ioc->put_smid_nvme_encap = &_base_put_smid_nvme_encap_atomic;
- 	} else {
- 		ioc->put_smid_default = &_base_put_smid_default;
- 		ioc->put_smid_scsi_io = &_base_put_smid_scsi_io;
- 		ioc->put_smid_fast_path = &_base_put_smid_fast_path;
- 		ioc->put_smid_hi_priority = &_base_put_smid_hi_priority;
-+		ioc->put_smid_nvme_encap = &_base_put_smid_nvme_encap;
- 	}
- 
- 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 4caa91e..c4be9ad 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -1351,6 +1351,7 @@ struct MPT3SAS_ADAPTER {
- 	PUT_SMID_IO_FP_HIP put_smid_fast_path;
- 	PUT_SMID_IO_FP_HIP put_smid_hi_priority;
- 	PUT_SMID_DEFAULT put_smid_default;
-+	PUT_SMID_DEFAULT put_smid_nvme_encap;
- 
- };
- 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index 0c18831..6362d60 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -272,6 +272,7 @@ mpt3sas_ctl_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
- {
- 	MPI2DefaultReply_t *mpi_reply;
- 	Mpi2SCSIIOReply_t *scsiio_reply;
-+	Mpi26NVMeEncapsulatedErrorReply_t *nvme_error_reply;
- 	const void *sense_data;
- 	u32 sz;
- 
-@@ -298,6 +299,18 @@ mpt3sas_ctl_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
- 				memcpy(ioc->ctl_cmds.sense, sense_data, sz);
- 			}
- 		}
-+		/*
-+		 * Get Error Response data for NVMe device. The ctl_cmds.sense
-+		 * buffer is used to store the Error Response data.
-+		 */
-+		if (mpi_reply->Function == MPI2_FUNCTION_NVME_ENCAPSULATED) {
-+			nvme_error_reply =
-+			    (Mpi26NVMeEncapsulatedErrorReply_t *)mpi_reply;
-+			sz = min_t(u32, NVME_ERROR_RESPONSE_SIZE,
-+			    le32_to_cpu(nvme_error_reply->ErrorResponseCount));
-+			sense_data = mpt3sas_base_get_sense_buffer(ioc, smid);
-+			memcpy(ioc->ctl_cmds.sense, sense_data, sz);
-+		}
- 	}
- 
- 	_ctl_display_some_debug(ioc, smid, "ctl_done", mpi_reply);
-@@ -641,11 +654,12 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
- {
- 	MPI2RequestHeader_t *mpi_request = NULL, *request;
- 	MPI2DefaultReply_t *mpi_reply;
-+	Mpi26NVMeEncapsulatedRequest_t *nvme_encap_request = NULL;
- 	u32 ioc_state;
- 	u16 smid;
- 	unsigned long timeout;
- 	u8 issue_reset;
--	u32 sz;
-+	u32 sz, sz_arg;
- 	void *psge;
- 	void *data_out = NULL;
- 	dma_addr_t data_out_dma = 0;
-@@ -742,7 +756,8 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
- 	if (mpi_request->Function == MPI2_FUNCTION_SCSI_IO_REQUEST ||
- 	    mpi_request->Function == MPI2_FUNCTION_RAID_SCSI_IO_PASSTHROUGH ||
- 	    mpi_request->Function == MPI2_FUNCTION_SCSI_TASK_MGMT ||
--	    mpi_request->Function == MPI2_FUNCTION_SATA_PASSTHROUGH) {
-+	    mpi_request->Function == MPI2_FUNCTION_SATA_PASSTHROUGH ||
-+	    mpi_request->Function == MPI2_FUNCTION_NVME_ENCAPSULATED) {
- 
- 		device_handle = le16_to_cpu(mpi_request->FunctionDependent1);
- 		if (!device_handle || (device_handle >
-@@ -793,6 +808,38 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
- 
- 	init_completion(&ioc->ctl_cmds.done);
- 	switch (mpi_request->Function) {
-+	case MPI2_FUNCTION_NVME_ENCAPSULATED:
-+	{
-+		nvme_encap_request = (Mpi26NVMeEncapsulatedRequest_t *)request;
-+		/*
-+		 * Get the Physical Address of the sense buffer.
-+		 * Use Error Response buffer address field to hold the sense
-+		 * buffer address.
-+		 * Clear the internal sense buffer, which will potentially hold
-+		 * the Completion Queue Entry on return, or 0 if no Entry.
-+		 * Build the PRPs and set direction bits.
-+		 * Send the request.
-+		 */
-+		nvme_encap_request->ErrorResponseBaseAddress = ioc->sense_dma &
-+		    0xFFFFFFFF00000000;
-+		nvme_encap_request->ErrorResponseBaseAddress |=
-+		    (U64)mpt3sas_base_get_sense_buffer_dma(ioc, smid);
-+		nvme_encap_request->ErrorResponseAllocationLength =
-+						NVME_ERROR_RESPONSE_SIZE;
-+		memset(ioc->ctl_cmds.sense, 0, NVME_ERROR_RESPONSE_SIZE);
-+		ioc->build_nvme_prp(ioc, smid, nvme_encap_request,
-+		    data_out_dma, data_out_sz, data_in_dma, data_in_sz);
-+		if (test_bit(device_handle, ioc->device_remove_in_progress)) {
-+			dtmprintk(ioc, pr_info(MPT3SAS_FMT "handle(0x%04x) :"
-+			    "ioctl failed due to device removal in progress\n",
-+			    ioc->name, device_handle));
-+			mpt3sas_base_free_smid(ioc, smid);
-+			ret = -EINVAL;
-+			goto out;
-+		}
-+		ioc->put_smid_nvme_encap(ioc, smid);
-+		break;
-+	}
- 	case MPI2_FUNCTION_SCSI_IO_REQUEST:
- 	case MPI2_FUNCTION_RAID_SCSI_IO_PASSTHROUGH:
- 	{
-@@ -1008,15 +1055,25 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
- 		}
- 	}
- 
--	/* copy out sense to user */
-+	/* copy out sense/NVMe Error Response to user */
- 	if (karg.max_sense_bytes && (mpi_request->Function ==
- 	    MPI2_FUNCTION_SCSI_IO_REQUEST || mpi_request->Function ==
--	    MPI2_FUNCTION_RAID_SCSI_IO_PASSTHROUGH)) {
--		sz = min_t(u32, karg.max_sense_bytes, SCSI_SENSE_BUFFERSIZE);
-+	    MPI2_FUNCTION_RAID_SCSI_IO_PASSTHROUGH || mpi_request->Function ==
-+	    MPI2_FUNCTION_NVME_ENCAPSULATED)) {
-+		if (karg.sense_data_ptr == NULL) {
-+			pr_info(MPT3SAS_FMT "Response buffer provided"
-+			    " by application is NULL; Response data will"
-+			    " not be returned.\n", ioc->name);
-+			goto out;
-+		}
-+		sz_arg = (mpi_request->Function ==
-+		MPI2_FUNCTION_NVME_ENCAPSULATED) ? NVME_ERROR_RESPONSE_SIZE :
-+							SCSI_SENSE_BUFFERSIZE;
-+		sz = min_t(u32, karg.max_sense_bytes, sz_arg);
- 		if (copy_to_user(karg.sense_data_ptr, ioc->ctl_cmds.sense,
- 		    sz)) {
- 			pr_err("failure at %s:%d/%s()!\n", __FILE__,
--			    __LINE__, __func__);
-+				__LINE__, __func__);
- 			ret = -ENODATA;
- 			goto out;
- 		}
+
+                                                    Beste Grüße / Best regards,
+                                                      - Benjamin Block
 -- 
-1.7.1
+Linux on z Systems Development         /         IBM Systems & Technology Group
+		  IBM Deutschland Research & Development GmbH 
+Vorsitz. AufsR.: Martina Koederitz     /        Geschäftsführung: Dirk Wittkopp
+Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
