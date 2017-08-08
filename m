@@ -1,84 +1,115 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 5/6] hpsa: do not print errors for unsupported report luns format
-Date: Tue,  8 Aug 2017 10:35:14 +0200
-Message-ID: <1502181315-102499-6-git-send-email-hare@suse.de>
-References: <1502181315-102499-1-git-send-email-hare@suse.de>
+Subject: [PATCHv2] scsi_dh_alua: suppress errors from unsupported devices
+Date: Tue,  8 Aug 2017 10:53:33 +0200
+Message-ID: <1502182413-23560-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51883 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:53255 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751925AbdHHIfS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 8 Aug 2017 04:35:18 -0400
-In-Reply-To: <1502181315-102499-1-git-send-email-hare@suse.de>
+        id S1752944AbdHHIxg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 8 Aug 2017 04:53:36 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Don Brace <don.brace@microsemi.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Meelis Roos <mroos@linux.ee>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Older/Unsupported controllers might not support the 'extended'
-report luns format, but as they are unsupported we don't need
-to print out an error here.
+ALUA is only relevant for disk-like devices, so we shouldn't
+be printing out warning messages for other device types.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
 ---
- drivers/scsi/hpsa.c | 21 ++++++++++++---------
- 1 file changed, 12 insertions(+), 9 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c |  2 ++
+ drivers/scsi/scsi_dh.c                     | 15 +++++++++------
+ drivers/scsi/scsi_priv.h                   |  2 +-
+ drivers/scsi/scsi_sysfs.c                  |  8 +-------
+ 4 files changed, 13 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index dbd5fbc..790958f 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -3588,7 +3588,7 @@ static int hpsa_scsi_do_report_luns(struct ctlr_info *h, int logical,
- 	memset(scsi3addr, 0, sizeof(scsi3addr));
- 	if (fill_cmd(c, logical ? HPSA_REPORT_LOG : HPSA_REPORT_PHYS, h,
- 		buf, bufsize, 0, scsi3addr, TYPE_CMD)) {
--		rc = -1;
-+		rc = -EAGAIN;
- 		goto out;
- 	}
- 	if (extended_response)
-@@ -3601,16 +3601,17 @@ static int hpsa_scsi_do_report_luns(struct ctlr_info *h, int logical,
- 	if (ei->CommandStatus != 0 &&
- 	    ei->CommandStatus != CMD_DATA_UNDERRUN) {
- 		hpsa_scsi_interpret_error(h, c);
--		rc = -1;
-+		rc = -EIO;
- 	} else {
- 		struct ReportLUNdata *rld = buf;
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 0962fd5..c3aea06 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -1100,6 +1100,8 @@ static int alua_bus_attach(struct scsi_device *sdev)
+ 	err = alua_initialize(sdev, h);
+ 	if (err == SCSI_DH_NOMEM)
+ 		ret = -ENOMEM;
++	if (err == SCSI_DH_DEV_UNSUPP)
++		ret = -ENODEV;
+ 	if (err != SCSI_DH_OK && err != SCSI_DH_DEV_OFFLINED)
+ 		goto failed;
  
- 		if (rld->extended_response_flag != extended_response) {
--			dev_err(&h->pdev->dev,
--				"report luns requested format %u, got %u\n",
--				extended_response,
--				rld->extended_response_flag);
--			rc = -1;
-+			if (h->supported)
-+				dev_err(&h->pdev->dev,
-+					"report luns requested format %u, got %u\n",
-+					extended_response,
-+					rld->extended_response_flag);
-+			rc = -EOPNOTSUPP;
- 		}
- 	}
- out:
-@@ -3626,7 +3627,10 @@ static inline int hpsa_scsi_do_report_phys_luns(struct ctlr_info *h,
+diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
+index 84addee..df521aba 100644
+--- a/drivers/scsi/scsi_dh.c
++++ b/drivers/scsi/scsi_dh.c
+@@ -133,8 +133,9 @@ static int scsi_dh_handler_attach(struct scsi_device *sdev,
  
- 	rc = hpsa_scsi_do_report_luns(h, 0, buf, bufsize,
- 				      HPSA_REPORT_PHYS_EXTENDED);
--	if (!rc || !hpsa_allow_any)
-+	if (rc == -EOPNOTSUPP) {
-+		if (h->supported)
-+			return rc;
-+	} else if (rc < 0)
- 		return rc;
+ 	error = scsi_dh->attach(sdev);
+ 	if (error) {
+-		sdev_printk(KERN_ERR, sdev, "%s: Attach failed (%d)\n",
+-			    scsi_dh->name, error);
++		if (error != -ENODEV)
++			sdev_printk(KERN_ERR, sdev, "%s: Attach failed (%d)\n",
++				    scsi_dh->name, error);
+ 		module_put(scsi_dh->module);
+ 	} else
+ 		sdev->handler = scsi_dh;
+@@ -153,18 +154,20 @@ static void scsi_dh_handler_detach(struct scsi_device *sdev)
+ 	module_put(sdev->handler->module);
+ }
  
- 	/* REPORT PHYS EXTENDED is not supported */
-@@ -6605,7 +6609,6 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
- 		default:
- 			dev_warn(&h->pdev->dev, "unknown command 0x%c\n", cmd);
- 			BUG();
--			return -1;
- 		}
- 	} else if (cmd_type == TYPE_MSG) {
- 		switch (cmd) {
+-int scsi_dh_add_device(struct scsi_device *sdev)
++void scsi_dh_add_device(struct scsi_device *sdev)
+ {
+ 	struct scsi_device_handler *devinfo = NULL;
+ 	const char *drv;
+-	int err = 0;
+ 
+ 	drv = scsi_dh_find_driver(sdev);
+ 	if (drv)
+ 		devinfo = __scsi_dh_lookup(drv);
++	/*
++	 * device_handler is optional, so ignore errors
++	 * from scsi_dh_handler_attach()
++	 */
+ 	if (devinfo)
+-		err = scsi_dh_handler_attach(sdev, devinfo);
+-	return err;
++		scsi_dh_handler_attach(sdev, devinfo);
+ }
+ 
+ void scsi_dh_release_device(struct scsi_device *sdev)
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index c11c1f9c..f2925a2 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -176,7 +176,7 @@ static inline void scsi_autopm_put_host(struct Scsi_Host *h) {}
+ 
+ /* scsi_dh.c */
+ #ifdef CONFIG_SCSI_DH
+-int scsi_dh_add_device(struct scsi_device *sdev);
++void scsi_dh_add_device(struct scsi_device *sdev);
+ void scsi_dh_release_device(struct scsi_device *sdev);
+ #else
+ static inline int scsi_dh_add_device(struct scsi_device *sdev) { return 0; }
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index d6984df..a8d3f8b 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1221,13 +1221,7 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+ 
+ 	scsi_autopm_get_device(sdev);
+ 
+-	error = scsi_dh_add_device(sdev);
+-	if (error)
+-		/*
+-		 * device_handler is optional, so any error can be ignored
+-		 */
+-		sdev_printk(KERN_INFO, sdev,
+-				"failed to add device handler: %d\n", error);
++	scsi_dh_add_device(sdev);
+ 
+ 	error = device_add(&sdev->sdev_gendev);
+ 	if (error) {
 -- 
 1.8.5.6
