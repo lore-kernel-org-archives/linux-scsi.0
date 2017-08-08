@@ -1,81 +1,55 @@
-From: PanBian <bianpan2016@163.com>
-Subject: Re: scsi: hisi_sas: replace kfree with scsi_host_put
-Date: Tue, 8 Aug 2017 23:12:28 +0800
-Message-ID: <20170808151228.GA32235@bp>
-References: <1502192263-12332-1-git-send-email-bianpan2016@163.com>
- <c39e1cef-5356-01b7-5316-10ba45f0bba8@huawei.com>
-Reply-To: PanBian <bianpan2016@163.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: scsi: qla2xxx: use dma_mapping_error to check map errors
+Date: Tue, 8 Aug 2017 15:24:19 +0000
+Message-ID: <543DFC27-27D2-4868-87C1-C941D752E966@cavium.com>
+References: <1502200531-15219-1-git-send-email-bianpan2016@163.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <c39e1cef-5356-01b7-5316-10ba45f0bba8@huawei.com>
+In-Reply-To: <1502200531-15219-1-git-send-email-bianpan2016@163.com>
+Content-Language: en-US
+Content-ID: <04E49890295AE349B224E1DC166C4C1A@namprd07.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Linuxarm <linuxarm@huawei.com>
+To: Pan Bian <bianpan2016@163.com>
+Cc: Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Aug 08, 2017 at 03:56:22PM +0100, John Garry wrote:
-> On 08/08/2017 12:37, Pan Bian wrote:
-> >Return value of scsi_host_alloc() should be released with
-> >scsi_host_put() rather than kfree().
-> >
-> >Signed-off-by: Pan Bian <bianpan2016@163.com>
-> 
-> We also have a kfree(shost) in newly added pci-based v3 driver which
-> would need replacing for consistency.
-> 
-> But, apart from that, we seem to have a pre-existing issue in
-> hisi_sas_shost_alloc_pci(), which is missing the shost clean-up for
-> error path.
-> 
-> Let me know if you want me to take over this patch and fix up the
-> other places.
 
-Yes, of course.
+> On Aug 8, 2017, at 6:55 AM, Pan Bian <bianpan2016@163.com> wrote:
+>=20
+> The return value of dma_map_single() should be checked by
+> dma_mapping_error(). However, in function qla26xx_dport_diagnostics(), it=
+s
+> return value is checked against NULL, which could result in failures.
+>=20
+> Signed-off-by: Pan Bian <bianpan2016@163.com>
+> ---
+> drivers/scsi/qla2xxx/qla_mbx.c | 2 +-
+> 1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mb=
+x.c
+> index 7c6d1a4..eafb709 100644
+> --- a/drivers/scsi/qla2xxx/qla_mbx.c
+> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
+> @@ -5817,7 +5817,7 @@ struct cs84xx_mgmt_cmd {
+>=20
+> 	dd_dma =3D dma_map_single(&vha->hw->pdev->dev,
+> 	    dd_buf, size, DMA_FROM_DEVICE);
+> -	if (!dd_dma) {
+> +	if (dma_mapping_error(&vha->hw->pdev->dev, dd_dma)) {
+> 		ql_log(ql_log_warn, vha, 0x1194, "Failed to map dma buffer.\n");
+> 		return QLA_MEMORY_ALLOC_FAILED;
+> 	}
+> --=20
+> 1.9.1
+>=20
+>=20
 
-> 
-> John
-> 
+Looks Good. Thanks for the patch=20
 
-Thank you,
-Pan Bian
+Acked-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 
-> >---
-> > drivers/scsi/hisi_sas/hisi_sas_main.c | 6 +++---
-> > 1 file changed, 3 insertions(+), 3 deletions(-)
-> >
-> >diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> >index 4022c3f..22d8922 100644
-> >--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-> >+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> >@@ -1825,7 +1825,7 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
-> >
-> > 	return shost;
-> > err_out:
-> >-	kfree(shost);
-> >+	scsi_host_put(shost);
-> > 	dev_err(dev, "shost alloc failed\n");
-> > 	return NULL;
-> > }
-> >@@ -1916,7 +1916,7 @@ int hisi_sas_probe(struct platform_device *pdev,
-> > 	scsi_remove_host(shost);
-> > err_out_ha:
-> > 	hisi_sas_free(hisi_hba);
-> >-	kfree(shost);
-> >+	scsi_host_put(shost);
-> > 	return rc;
-> > }
-> > EXPORT_SYMBOL_GPL(hisi_sas_probe);
-> >@@ -1931,7 +1931,7 @@ int hisi_sas_remove(struct platform_device *pdev)
-> > 	sas_remove_host(sha->core.shost);
-> >
-> > 	hisi_sas_free(hisi_hba);
-> >-	kfree(shost);
-> >+	scsi_host_put(shost);
-> > 	return 0;
-> > }
-> > EXPORT_SYMBOL_GPL(hisi_sas_remove);
-> >
-> 
-> 
+Thanks,
+- Himanshu
