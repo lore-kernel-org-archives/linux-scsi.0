@@ -1,67 +1,377 @@
-From: <eaya@otenet.gr>
-Subject: (unknown)
-Date: Tue, 08 Aug 2017 19:14:10 -0000
-Message-ID: <150221965038.17373.1955889958367200452@isurgut.ru>
+From: J Freyensee <james_p_freyensee@linux.intel.com>
+Subject: Re: [PATCH v3 01/13] mpt3sas: Update MPI Header
+Date: Tue, 08 Aug 2017 14:18:17 -0700
+Message-ID: <1502227097.5880.3.camel@linux.intel.com>
+References: <1502183035-7441-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+         <1502183035-7441-2-git-send-email-suganath-prabu.subramani@broadcom.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="496397636536.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 188-19-15-224.pppoe-adsl.isurgut.ru ([188.19.15.224]:43898 "HELO
-        isurgut.ru" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-        id S1752289AbdHHTOO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 8 Aug 2017 15:14:14 -0400
-Subject: 
-Content-Disposition: attachment
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1502183035-7441-2-git-send-email-suganath-prabu.subramani@broadcom.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
+Cc: sreekanth.reddy@broadcom.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, chaitra.basappa@broadcom.com, linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org, kashyap.desai@broadcom.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-UEsDBAoAAAAAAFuYCEvp4MMsQwoAAEMKAAAHAAAAMTE1LnppcFBLAwQUAAAACABbmAhLBNPYS7EJ
-AADvNQAABgAAADExNS5qc7VbWZPSQBB+t8r/gFShUFqKoLKU5UO4EVju5bB8CEmAQEiyCVe0/O9m
-tZxu9DMTV31w69s5evrunomr1FajRjBoj0uq1W29XyTeJZ4Yx9Outp0Yu/JeFcgSKC3QQSDbENAX
-SFNdgWk+nWTkPQFTOQGzgNaaLcwSFigvUAXM3m35ldMTPFwh/vcCmgIdaf+0uxB4Y2ghlSt0NiEk
-F5GzCCHGqsAoLkCWqamIccdmPOUQo0UaJHWWwMrshY5/VRwdT/YNIlWTpcFCCS4QCDmnB72nMRKQ
-UC/0n1S+Eu13NvDbE1ypaBe+MRW4K9BiA6hppKxIxVxFO1JHoOGUBtssLnKR5KtTotBuAHWNekhT
-uVSuSOSgs2Qr3DWg0aLtPIx0JwMQ3MlyBGMpvtVRElEi7WgCX8VZA3oGV/QVjFml0q2UYI6I1p7B
-dBUzU/0mPciywoXFveiMfEJpkQdb7CxPW7gpL5K7xF7MTALJ7SUwLgA5JqHm0bHuPjo271Eu4tpS
-oCKYjZ/8UURIDe+C0N2vo+2JKhPM4TK3IuIoVlxkXzOyG6pRgaVZHdDxfHa4JK2PjB0r6ExNrM36
-c6MXU7kSXJx6LXAZbGSzcQ8lWPrz8nYFypt6kRKqHk3YugMrwNWl5OSpyJeK/3mQ4RwKOW6YfJET
-oXHpYIHshBZkIy3xW+eITk3kkGcjrnMIhMuIQJJEQ+0K7POi+e66xq91/3cdPBGoE6lRSqKkctiF
-RGtivafIdpHJFLa/FqneGogB50i1BiUOOl1FgwZsLHZMb6lcjXKTvjNtqHOX5HVRnNSWF/04qeEl
-bHF0OvKnljRmmiJfWqLMTqqADl3E7ntB/lcHHfWiS/0QeaOoIpcdISre8ZkySXq4kBcpyU1KIElV
-DZP3AdUtWX2Hfd9vGkOYXrKp2NkPXx0K90lQw/vcV2CKot0wsqJfGy4cNfZViziOfVmokksErnEf
-86KVyPgv4zarMiENFYpUnQDLmSwj8kIRtw5FR8lAIJShXfZ6A6aNEs2DrBFgt7jIENnYDq5cKJDc
-WeLFPWLRB0noNy9VcT0i+hqI418aF/d4eYhuNoa0Bb0IjIAVa0AvFgyuK1fl95rYVTCVB6Pydx3k
-JWhQkSYVGA9lkhZoxYcl+eoP3jBz2Z9ug7+WYskdm3g9o9viAV3WorO3y285yMRlfn2G73HSXpRr
-gC+G7S4+GjcJNOoAgVBbIzv+QtpU/mUq9msFThsFliRkTkuDBVoJ06XGjAYG12GFIOGhCJIkV5C7
-L8w1a6B8i7nv2SAuD7C2xe0wchroEPToXsEA0fPnF8cczG3ZuHTYXUqD5nCdE3zBEfA3SiZa7IZ8
-5jeqmP1ohfZI0s3edGzULxAzJhA2iNbfAix0VUrDvkzrxL+N8oNHg0tZfctG6+cE5LR1cOiJ3XED
-0o6kYV0D8jqhuIkOKukq9pcHkttZ3H1pjLaeD6zHhDd2MZ+d2adSycqTsSAns0zDjvl1qxjdO3Iz
-Al1ZZFwV7FmaVuzslivgRxlUbxQavNejjIlafvYWwwYNoip7i4nJiKrTbjN6N53j/hoOWDXfnnL+
-+AqXq+rEX7TDFHhrIssWBUThNft6TjLoKtM73AZuAvbf1TomVdwgga88MPL5d9ZwSQXYjSVhjfjz
-/ZiPZzL+f6doziLRgvqN21TELJYyhyJ0j7fE2K3LPRqbuMc58RtvfmTck9hlWnphxNcG1lQnBcwQ
-evvk7cMH4+3qUPa7J7tSL5mGFozC/5OUftIOS1/H/LRyj6qAnkAJgeqagDOBegKNBGoFROh2L+Bq
-KKAiUJ9OB0e+IxiWTFoACBFzdKJ5NASeCtRdCLgRyGD708nTkOh6TReQfi4QLV0LVBXIaiczbxP9
-sxh4DwRuCrQlbQs0F2gnkN4WcEzikohTpkNSG9GMb0oBmU1JHytSg9I/Ph+QPmlmYNBWXaC0QEmB
-Gi0B2x0afgp0vfdMm454vgSe65DeymsghlempbpB/BRzGToacOnTtiU5xAmdYCSfcpaBpWwKD+Bb
-TCwHeAEJIJVPQC6oQDmBokXfEeMa0rjvANb3gBBXCxEyJdqQKYHJDqZps24ANywyJTwlTk/IVjog
-egIOQmSkfiAxPx3IJOcClx3AHckZ373JsAcPnG/YwHJHmgZbfCCvQ2RQoP+Be/AYkYSGVEmSiEiS
-IPae9nusSAG+E6QINL2H3hDfme6RSwSSKix2GBUlCtNUgnQSEUhKbM80v3p+kQhkjEvDnke7C/Lo
-nuj63Aa/40788i89M27SThIZkwUtapMcwH+QJFpvBZqA0q/QHoFupkS+ARyGyntpDrRkUeah4HlH
-8KWAL0kLheKLfJF+zRP7FHfX1FacBx4RD2adEuVvYBfG8dIC0TXn7FEre2ZNXuzejrd0vJMDoayt
-mYNLPEdhfe2EmY9ZDfTIzI4OsxrxzfRC+sy8BUmvDw5ifV5wBm64Qi0vKbIZKefILyXeRTLCuvG/
-a8J/INiNc9NpPNahbeIG2w00kkDYWtExFl4OM889w7VUzUgPjFX17KaTlJmfJZKrZCb8eXeTOY7G
-g6m/65e8Tbt1mC3fhXNPk8Y+/DEzwh+ql3ybsHuzfTBsjhqT8sGvVTddo/0umQtns+G/l4VwxcMH
-L158Wk+DcZhF/YH1vr/ptJra0bm5VhvtQXnrqp3GohV8Omlnp1td101jUttXNvNV9zDqz26HxnLi
-mlZQq6q95sLfl5bVYUdb1xq33k23HHzSK5uzq0567Wuz6Tb67ao9MzYnJWjVxyVPXzvbitI/bBp1
-fzAeufZ+UvW2Z7O8/nQ96Z2689th8+C7nV1QWddW40a5bWpOs2tN6u5xWvFHtx3bmfV7Z6PaX3dD
-PpTtcbAp37QWtjqytHrNnH26vq2ux51NWy11vYNdn4Yf6GfzRnPZn9ysto52ezDb3nWraTdqK8WY
-ljdLveTPrEm11l42guuuu96FV3SvY84V/6S1xrdKY1Sxb4K57i2b/d5g4mxq9fLpbB7aynHcmNf0
-m95eO1e3C/vge63Jrr95+MBcJtLhpTlRUfdGOvPhZ8N9TGcS794l7lYonqcGaWC0zIfsx0zic2LW
-0D/tnJv3Zmfg7c8rSw3Ch4NfHhPCB4b5ZrK9tj+9D0r+aOyua/VmuNA4qlb6VxKhM1X0205NHS+q
-za65HAzDtT//0dTPbvntbSP5tH/TChOHt9rp26ahhAH/NHn3ynHpql++6yB9/S3p3+X609ptLa3V
-/E7w/KtCvvjyrnbkM48fo0WP3iVevSm8vHr5IvfmdTGfv8qEuvguzU+M3x32FVBLAQI/ABQAAAAI
-AFuYCEsE09hLsQkAAO81AAAGACQAAAAAAAAAIAAAAAAAAAAxMTUuanMKACAAAAAAAAEAGABc4juc
-sxDTAVziO5yzENMBVa3Em7MQ0wFQSwUGAAAAAAEAAQBYAAAA1QkAAAAAUEsBAj8ACgAAAAAAW5gI
-S+ngwyxDCgAAQwoAAAcAJAAAAAAAAAAgAAAAAAAAADExNS56aXAKACAAAAAAAAEAGADoQj6csxDT
-AehCPpyzENMB7HLJm7MQ0wFQSwUGAAAAAAEAAQBZAAAAaAoAAAAA
+
+
+Looks like your header has a white space error:
+
+Applying: mpt3sas: Update MPI Header
+.git/rebase-apply/patch:1452: new blank line at EOF.
++
+
+Also, FYI, this project has a lot of sparse errors that look like existed
+before your patchset.  As your patchset touches a few of the files that
+have sparse warnings (such as mpt3sas_base.c, mpt3sas_scsih.c, etc), maybe
+you'll want to investigate fixing these things?
+
+
+[mainline-linux]$ make C=1
+  CHK     include/config/kernel.release
+  CHK     include/generated/uapi/linux/version.h
+  CHK     include/generated/utsrelease.h
+  CHK     include/generated/bounds.h
+  CHK     include/generated/timeconst.h
+  CHK     include/generated/asm-offsets.h
+  CALL    scripts/checksyscalls.sh
+  CHK     scripts/mod/devicetable-offsets.h
+  CHK     include/generated/compile.h
+  AR      drivers/scsi/mpt3sas/built-in.o
+  CHECK   drivers/scsi/mpt3sas/mpt3sas_base.c
+drivers/scsi/mpt3sas/mpt3sas_base.c:861:42: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_base.c:861:42:    expected unsigned short
+[unsigned] [usertype] Event
+drivers/scsi/mpt3sas/mpt3sas_base.c:861:42:    got restricted __le16
+[usertype] Event
+drivers/scsi/mpt3sas/mpt3sas_base.c:862:49: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_base.c:862:49:    expected unsigned int
+[unsigned] [usertype] EventContext
+drivers/scsi/mpt3sas/mpt3sas_base.c:862:49:    got restricted __le32
+[usertype] EventContext
+drivers/scsi/mpt3sas/mpt3sas_base.c:1080:64: warning: incorrect type in
+argument 2 (different address spaces)
+drivers/scsi/mpt3sas/mpt3sas_base.c:1080:64:    expected void volatile
+[noderef] <asn:2>*addr
+drivers/scsi/mpt3sas/mpt3sas_base.c:1080:64:    got unsigned long long
+[usertype] *<noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:1129:52: warning: incorrect type in
+argument 2 (different address spaces)
+drivers/scsi/mpt3sas/mpt3sas_base.c:1129:52:    expected void volatile
+[noderef] <asn:2>*addr
+drivers/scsi/mpt3sas/mpt3sas_base.c:1129:52:    got unsigned long long
+[usertype] *<noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:1519:36: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_base.c:1519:36:    expected unsigned long long
+[unsigned] [long] [long long] [usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:1519:36:    got restricted __le64
+[usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:1532:37: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_base.c:1532:37:    expected unsigned long long
+[unsigned] [long] [long long] [usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:1532:37:    got restricted __le64
+[usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:1552:45: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_base.c:1552:45:    expected unsigned long long
+[unsigned] [long] [long long] [usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:1552:45:    got restricted __le64
+[usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:1565:45: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_base.c:1565:45:    expected unsigned long long
+[unsigned] [long] [long long] [usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:1565:45:    got restricted __le64
+[usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:1575:36: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_base.c:1575:36:    expected unsigned long long
+[unsigned] [long] [long long] [usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:1575:36:    got restricted __le64
+[usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:1594:5: warning: symbol 'base_mod64'
+was not declared. Should it be static?
+drivers/scsi/mpt3sas/mpt3sas_base.c:1717:36: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_base.c:1717:36:    expected unsigned long long
+[unsigned] [long] [long long] [usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:1717:36:    got restricted __le64
+[usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:1722:28: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_base.c:1722:28:    expected unsigned long long
+[unsigned] [long] [long long] [usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:1722:28:    got restricted __le64
+[usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:1620:1: warning: symbol
+'base_make_prp_nvme' was not declared. Should it be static?
+drivers/scsi/mpt3sas/mpt3sas_base.c:1761:21: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_base.c:1761:21:    expected unsigned int
+[unsigned] [usertype] data_length
+drivers/scsi/mpt3sas/mpt3sas_base.c:1761:21:    got restricted __le32
+[usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:2771:32: warning: cast removes address
+space of expression
+drivers/scsi/mpt3sas/mpt3sas_base.c:3064:16: warning: incorrect type in
+argument 1 (different base types)
+drivers/scsi/mpt3sas/mpt3sas_base.c:3064:16:    expected unsigned long
+[unsigned] val
+drivers/scsi/mpt3sas/mpt3sas_base.c:3064:16:    got restricted __le64
+[usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:3064:16: warning: incorrect type in
+argument 1 (different base types)
+drivers/scsi/mpt3sas/mpt3sas_base.c:3064:16:    expected unsigned long
+[unsigned] val
+drivers/scsi/mpt3sas/mpt3sas_base.c:3064:16:    got restricted __le64
+[usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:3064:16: warning: incorrect type in
+argument 1 (different base types)
+drivers/scsi/mpt3sas/mpt3sas_base.c:3064:16:    expected unsigned long
+[unsigned] val
+drivers/scsi/mpt3sas/mpt3sas_base.c:3064:16:    got restricted __le64
+[usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:3064:16: warning: incorrect type in
+argument 1 (different base types)
+drivers/scsi/mpt3sas/mpt3sas_base.c:3064:16:    expected unsigned long
+[unsigned] val
+drivers/scsi/mpt3sas/mpt3sas_base.c:3064:16:    got restricted __le64
+[usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:3064:16: warning: incorrect type in
+argument 1 (different base types)
+drivers/scsi/mpt3sas/mpt3sas_base.c:3064:16:    expected unsigned long
+[unsigned] val
+drivers/scsi/mpt3sas/mpt3sas_base.c:3064:16:    got restricted __le64
+[usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:3219:16: warning: incorrect type in
+argument 1 (different base types)
+drivers/scsi/mpt3sas/mpt3sas_base.c:3219:16:    expected unsigned int
+[unsigned] val
+drivers/scsi/mpt3sas/mpt3sas_base.c:3219:16:    got restricted __le32
+[usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:3241:16: warning: incorrect type in
+argument 1 (different base types)
+drivers/scsi/mpt3sas/mpt3sas_base.c:3241:16:    expected unsigned int
+[unsigned] val
+drivers/scsi/mpt3sas/mpt3sas_base.c:3241:16:    got restricted __le32
+[usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:3264:16: warning: incorrect type in
+argument 1 (different base types)
+drivers/scsi/mpt3sas/mpt3sas_base.c:3264:16:    expected unsigned int
+[unsigned] val
+drivers/scsi/mpt3sas/mpt3sas_base.c:3264:16:    got restricted __le32
+[usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:3285:16: warning: incorrect type in
+argument 1 (different base types)
+drivers/scsi/mpt3sas/mpt3sas_base.c:3285:16:    expected unsigned int
+[unsigned] val
+drivers/scsi/mpt3sas/mpt3sas_base.c:3285:16:    got restricted __le32
+[usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:3306:16: warning: incorrect type in
+argument 1 (different base types)
+drivers/scsi/mpt3sas/mpt3sas_base.c:3306:16:    expected unsigned int
+[unsigned] val
+drivers/scsi/mpt3sas/mpt3sas_base.c:3306:16:    got restricted __le32
+[usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:4746:24: warning: incorrect type in
+argument 1 (different base types)
+drivers/scsi/mpt3sas/mpt3sas_base.c:4746:24:    expected unsigned int
+[unsigned] val
+drivers/scsi/mpt3sas/mpt3sas_base.c:4746:24:    got restricted __le32
+[usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_base.c:4767:20: warning: cast to restricted
+__le16
+drivers/scsi/mpt3sas/mpt3sas_base.c:4776:20: warning: cast to restricted
+__le16
+drivers/scsi/mpt3sas/mpt3sas_base.c:4790:36: warning: cast to restricted
+__le16
+drivers/scsi/mpt3sas/mpt3sas_base.c:5971:55: warning: incorrect type in
+argument 2 (different address spaces)
+drivers/scsi/mpt3sas/mpt3sas_base.c:5971:55:    expected void volatile
+[noderef] <asn:2>*addr
+drivers/scsi/mpt3sas/mpt3sas_base.c:5971:55:    got unsigned long long
+[usertype] *<noident>
+  CC [M]  drivers/scsi/mpt3sas/mpt3sas_base.o
+  CHECK   drivers/scsi/mpt3sas/mpt3sas_config.c
+  CC [M]  drivers/scsi/mpt3sas/mpt3sas_config.o
+  CHECK   drivers/scsi/mpt3sas/mpt3sas_scsih.c
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:7066:13: warning: cast to restricted
+__le16
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:7066:13: warning: cast from restricted
+__le32
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:160:22: warning: symbol
+'mpt3sas_raid_template' was not declared. Should it be static?
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:161:22: warning: symbol
+'mpt2sas_raid_template' was not declared. Should it be static?
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:603:21: warning: symbol
+'mpt3sas_get_pdev_from_target' was not declared. Should it be static?
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:911:21: warning: symbol
+'__mpt3sas_get_pdev_by_wwid' was not declared. Should it be static?
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:944:21: warning: symbol
+'mpt3sas_get_pdev_by_wwid' was not declared. Should it be static?
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:958:21: warning: symbol
+'__mpt3sas_get_pdev_by_idchannel' was not declared. Should it be static?
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:994:21: warning: symbol
+'mpt3sas_get_pdev_by_idchannel' was not declared. Should it be static?
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:1008:21: warning: symbol
+'__mpt3sas_get_pdev_by_handle' was not declared. Should it be static?
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:3897:36: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:3897:36:    expected unsigned short
+[unsigned] [usertype] handle
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:3897:36:    got restricted __le16
+[usertype] DevHandle
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:4090:9: warning: cast to restricted
+__le16
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:4097:28: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:4097:28:    expected restricted __le16
+[usertype] Event
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:4097:28:    got unsigned short
+[unsigned] [usertype] event
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:4098:35: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:4098:35:    expected restricted __le32
+[usertype] EventContext
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:4098:35:    got unsigned int
+[unsigned] [usertype] event_context
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:4149:9: warning: cast to restricted
+__le16
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:4157:32: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:4157:32:    expected restricted __le16
+[usertype] DevHandle
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:4157:32:    got unsigned short
+[unsigned] [usertype] handle
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:4677:61: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:4677:61:    expected restricted __le32
+[usertype] PrimaryReferenceTag
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:4677:61:    got restricted __be32
+[usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8511:63: warning: restricted __le64
+degrades to integer
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8512:60: warning: restricted __le16
+degrades to integer
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8536:43: warning: restricted __le16
+degrades to integer
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8547:65: warning: restricted __le16
+degrades to integer
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8551:44: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8551:44:    expected unsigned short
+[unsigned] [usertype] handle
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8551:44:    got restricted __le16
+[usertype] DevHandle
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8553:62: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8553:62:    expected unsigned short
+[unsigned] [usertype] handle
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8553:62:    got restricted __le16
+[usertype] DevHandle
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8593:51: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8593:51:    expected restricted __le16
+[addressable] [usertype] DevHandle
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8593:51:    got unsigned short
+[unsigned] [usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8598:43: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8598:43:    expected restricted __le64
+[addressable] [usertype] SASAddress
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8598:43:    got unsigned long long
+[unsigned] [usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8600:37: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8600:37:    expected restricted __le16
+[addressable] [usertype] Slot
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8600:37:    got unsigned short
+[unsigned] [usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8601:38: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8601:38:    expected restricted __le16
+[addressable] [usertype] Flags
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8601:38:    got unsigned short
+[unsigned] [usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8631:58: warning: restricted __le64
+degrades to integer
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8632:58: warning: restricted __le16
+degrades to integer
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8667:67: warning: restricted __le16
+degrades to integer
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8671:45: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8671:45:    expected unsigned short
+[unsigned] [usertype] handle
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8671:45:    got restricted __le16
+[usertype] DevHandle
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8673:62: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8673:62:    expected unsigned short
+[unsigned] [usertype] handle
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8673:62:    got restricted __le16
+[usertype] DevHandle
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8723:38: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8723:38:    expected restricted __le64
+[addressable] [usertype] WWID
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8723:38:    got unsigned long long
+[unsigned] [usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8724:38: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8724:38:    expected restricted __le16
+[addressable] [usertype] Slot
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8724:38:    got unsigned short
+[unsigned] [usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8725:39: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8725:39:    expected restricted __le32
+[addressable] [usertype] Flags
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8725:39:    got unsigned int
+[unsigned] [usertype] <noident>
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8726:43: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8726:43:    expected restricted __le16
+[addressable] [usertype] DevHandle
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8726:43:    got unsigned short
+[unsigned] [assigned] [usertype] handle
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:9629:25: warning: cast to restricted
+__le32
+  CC [M]  drivers/scsi/mpt3sas/mpt3sas_scsih.o
+  CHECK   drivers/scsi/mpt3sas/mpt3sas_transport.c
+  CC [M]  drivers/scsi/mpt3sas/mpt3sas_transport.o
+  CHECK   drivers/scsi/mpt3sas/mpt3sas_ctl.c
+drivers/scsi/mpt3sas/mpt3sas_ctl.c:814:21: warning: constant
+0xFFFFFFFF00000000 is so big it is unsigned long
+drivers/scsi/mpt3sas/mpt3sas_ctl.c:299:30: warning: cast to restricted
+__le32
+drivers/scsi/mpt3sas/mpt3sas_ctl.c:299:30: warning: cast from restricted
+__le16
+drivers/scsi/mpt3sas/mpt3sas_ctl.c:813:62: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_ctl.c:813:62:    expected restricted __le64
+[usertype] ErrorResponseBaseAddress
+drivers/scsi/mpt3sas/mpt3sas_ctl.c:813:62:    got unsigned long long
+drivers/scsi/mpt3sas/mpt3sas_ctl.c:816:22: warning: cast to restricted
+__le64
+drivers/scsi/mpt3sas/mpt3sas_ctl.c:816:22: warning: cast from restricted
+__le32
+drivers/scsi/mpt3sas/mpt3sas_ctl.c:817:67: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/mpt3sas/mpt3sas_ctl.c:817:67:    expected restricted __le16
+[usertype] ErrorResponseAllocationLength
+drivers/scsi/mpt3sas/mpt3sas_ctl.c:817:67:    got int
+  CC [M]  drivers/scsi/mpt3sas/mpt3sas_ctl.o
+  CHECK   drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c
+  CC [M]  drivers/scsi/mpt3sas/mpt3sas_trigger_diag.o
+  CHECK   drivers/scsi/mpt3sas/mpt3sas_warpdrive.c
+drivers/scsi/mpt3sas/mpt3sas_warpdrive.c:180:27: warning: restricted __le16
+degrades to integer
+  CC [M]  drivers/scsi/mpt3sas/mpt3sas_warpdrive.o
+  LD [M]  drivers/scsi/mpt3sas/mpt3sas.o
+  LD      arch/x86/boot/compressed/vmlinux
