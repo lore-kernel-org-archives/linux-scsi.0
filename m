@@ -1,115 +1,61 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2] scsi_dh_alua: suppress errors from unsupported devices
-Date: Tue,  8 Aug 2017 10:53:33 +0200
-Message-ID: <1502182413-23560-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53255 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752944AbdHHIxg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 8 Aug 2017 04:53:36 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH v3 00/13] mpt3sas driver NVMe support:
+Date: Tue,  8 Aug 2017 14:33:42 +0530
+Message-ID: <1502183035-7441-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com, linux-nvme@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-ALUA is only relevant for disk-like devices, so we shouldn't
-be printing out warning messages for other device types.
+Ventura Series controller are Tri-mode. The controller and
+firmware are capable of supporting NVMe devices and
+PCIe switches to be connected with the controller. This
+patch set adds driver level support for NVMe devices and
+PCIe switches.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
----
- drivers/scsi/device_handler/scsi_dh_alua.c |  2 ++
- drivers/scsi/scsi_dh.c                     | 15 +++++++++------
- drivers/scsi/scsi_priv.h                   |  2 +-
- drivers/scsi/scsi_sysfs.c                  |  8 +-------
- 4 files changed, 13 insertions(+), 14 deletions(-)
+mpt3sas v3 patset:
+Posting version v3. This accommodates below changes
+over v2 patch.
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 0962fd5..c3aea06 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -1100,6 +1100,8 @@ static int alua_bus_attach(struct scsi_device *sdev)
- 	err = alua_initialize(sdev, h);
- 	if (err == SCSI_DH_NOMEM)
- 		ret = -ENOMEM;
-+	if (err == SCSI_DH_DEV_UNSUPP)
-+		ret = -ENODEV;
- 	if (err != SCSI_DH_OK && err != SCSI_DH_DEV_OFFLINED)
- 		goto failed;
- 
-diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
-index 84addee..df521aba 100644
---- a/drivers/scsi/scsi_dh.c
-+++ b/drivers/scsi/scsi_dh.c
-@@ -133,8 +133,9 @@ static int scsi_dh_handler_attach(struct scsi_device *sdev,
- 
- 	error = scsi_dh->attach(sdev);
- 	if (error) {
--		sdev_printk(KERN_ERR, sdev, "%s: Attach failed (%d)\n",
--			    scsi_dh->name, error);
-+		if (error != -ENODEV)
-+			sdev_printk(KERN_ERR, sdev, "%s: Attach failed (%d)\n",
-+				    scsi_dh->name, error);
- 		module_put(scsi_dh->module);
- 	} else
- 		sdev->handler = scsi_dh;
-@@ -153,18 +154,20 @@ static void scsi_dh_handler_detach(struct scsi_device *sdev)
- 	module_put(sdev->handler->module);
- }
- 
--int scsi_dh_add_device(struct scsi_device *sdev)
-+void scsi_dh_add_device(struct scsi_device *sdev)
- {
- 	struct scsi_device_handler *devinfo = NULL;
- 	const char *drv;
--	int err = 0;
- 
- 	drv = scsi_dh_find_driver(sdev);
- 	if (drv)
- 		devinfo = __scsi_dh_lookup(drv);
-+	/*
-+	 * device_handler is optional, so ignore errors
-+	 * from scsi_dh_handler_attach()
-+	 */
- 	if (devinfo)
--		err = scsi_dh_handler_attach(sdev, devinfo);
--	return err;
-+		scsi_dh_handler_attach(sdev, devinfo);
- }
- 
- void scsi_dh_release_device(struct scsi_device *sdev)
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index c11c1f9c..f2925a2 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -176,7 +176,7 @@ static inline void scsi_autopm_put_host(struct Scsi_Host *h) {}
- 
- /* scsi_dh.c */
- #ifdef CONFIG_SCSI_DH
--int scsi_dh_add_device(struct scsi_device *sdev);
-+void scsi_dh_add_device(struct scsi_device *sdev);
- void scsi_dh_release_device(struct scsi_device *sdev);
- #else
- static inline int scsi_dh_add_device(struct scsi_device *sdev) { return 0; }
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index d6984df..a8d3f8b 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1221,13 +1221,7 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 
- 	scsi_autopm_get_device(sdev);
- 
--	error = scsi_dh_add_device(sdev);
--	if (error)
--		/*
--		 * device_handler is optional, so any error can be ignored
--		 */
--		sdev_printk(KERN_INFO, sdev,
--				"failed to add device handler: %d\n", error);
-+	scsi_dh_add_device(sdev);
- 
- 	error = device_add(&sdev->sdev_gendev);
- 	if (error) {
--- 
-1.8.5.6
+1. In the MPI header files patch, Reformatted headers to have type
+and variable on one line as suggested.
+2. As suggested, started using blk_queue_virt_boundary() API
+for NVMe drives and simplified the PRP formation.
+3. Removed 'TODO' comments.
+
+Suganath Prabu S (13):
+  mpt3sas: Update MPI Header
+  mpt3sas: Add nvme device support in slave alloc, target alloc and
+    probe
+  mpt3sas: SGL to PRP Translation for I/Os to NVMe  devices
+  mpt3sas: Added support for nvme encapsulated request message.
+  mpt3sas: API 's to support NVMe drive addition to SML
+  mpt3sas: API's to remove nvme drive from sml
+  mpt3sas: Handle NVMe PCIe device related events generated            
+         from firmware.
+  mpt3sas: Set NVMe device queue depth as 128
+  mpt3sas: scan and add nvme device after controller reset
+  mpt3as: Add-Task-management-debug-info-for-NVMe-drives.
+  mpt3sas: NVMe drive support for BTDHMAPPING ioctl command and log
+    info
+  mpt3sas: Fix nvme drives checking for tlr.
+  mpt3sas: Update mpt3sas driver version.
+
+ drivers/scsi/mpt3sas/mpi/mpi2.h          |   43 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h     |  564 +++++++++-
+ drivers/scsi/mpt3sas/mpi/mpi2_init.h     |   11 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_ioc.h      |  282 +++++-
+ drivers/scsi/mpt3sas/mpi/mpi2_pci.h      |  112 ++
+ drivers/scsi/mpt3sas/mpi/mpi2_tool.h     |   14 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.c      |  754 ++++++++++++-
+ drivers/scsi/mpt3sas/mpt3sas_base.h      |  171 +++-
+ drivers/scsi/mpt3sas/mpt3sas_config.c    |  100 ++
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c       |  158 ++-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 1881 ++++++++++++++++++++++++++++--
+ drivers/scsi/mpt3sas/mpt3sas_warpdrive.c |    2 +-
+ 12 files changed, 3929 insertions(+), 163 deletions(-)
+ create mode 100644 drivers/scsi/mpt3sas/mpi/mpi2_pci.h
+
+Thanks,
+Suganath Prabu S
