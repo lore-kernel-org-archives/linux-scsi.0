@@ -1,114 +1,98 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 1/4] scsi: whitespace fixes in scsi_devinfo.c
-Date: Tue,  8 Aug 2017 16:36:54 +0200
-Message-ID: <1502203017-101403-2-git-send-email-hare@suse.de>
+Subject: [PATCH 2/4] scsi_devinfo: fixup string compare
+Date: Tue,  8 Aug 2017 16:36:55 +0200
+Message-ID: <1502203017-101403-3-git-send-email-hare@suse.de>
 References: <1502203017-101403-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60638 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:60626 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752529AbdHHOhF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 8 Aug 2017 10:37:05 -0400
+        id S1752430AbdHHOhE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 8 Aug 2017 10:37:04 -0400
 In-Reply-To: <1502203017-101403-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
+When checking the model and vendor string we need to use the
+minimum value of either string, otherwise we'll miss out on
+wildcard matches.
+And we should avoid matching anything with zero size as this
+match will be incorrect.
+Without this patch certain Hitachi arrays will not be presenting
+VPD pages correctly.
+
+Fixes: 5e7ff2c ("SCSI: fix new bug in scsi_dev_info_list string matching")
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/scsi_devinfo.c | 38 +++++++++++++++++++-------------------
- 1 file changed, 19 insertions(+), 19 deletions(-)
+ drivers/scsi/scsi_devinfo.c | 30 +++++++++++++++++++-----------
+ 1 file changed, 19 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index 28fea83..776c701 100644
+index 776c701..712ad1f 100644
 --- a/drivers/scsi/scsi_devinfo.c
 +++ b/drivers/scsi/scsi_devinfo.c
-@@ -304,8 +304,8 @@ static void scsi_strcpy_devinfo(char *name, char *to, size_t to_length,
- 			 */
- 			to[from_length] = '\0';
- 		} else {
--			/* 
--			 * space pad the string if it is short. 
-+			/*
-+			 * space pad the string if it is short.
- 			 */
- 			strncpy(&to[from_length], spaces,
- 				to_length - from_length);
-@@ -325,10 +325,10 @@ static void scsi_strcpy_devinfo(char *name, char *to, size_t to_length,
-  * @flags:	if strflags NULL, use this flag value
-  *
-  * Description:
-- * 	Create and add one dev_info entry for @vendor, @model, @strflags or
-- * 	@flag. If @compatible, add to the tail of the list, do not space
-- * 	pad, and set devinfo->compatible. The scsi_static_device_list entries
-- * 	are added with @compatible 1 and @clfags NULL.
-+ *	Create and add one dev_info entry for @vendor, @model, @strflags or
-+ *	@flag. If @compatible, add to the tail of the list, do not space
-+ *	pad, and set devinfo->compatible. The scsi_static_device_list entries
-+ *	are added with @compatible 1 and @clfags NULL.
-  *
-  * Returns: 0 OK, -error on failure.
-  **/
-@@ -350,11 +350,11 @@ static int scsi_dev_info_list_add(int compatible, char *vendor, char *model,
-  * @key:	specify list to use
-  *
-  * Description:
-- * 	Create and add one dev_info entry for @vendor, @model,
-- * 	@strflags or @flag in list specified by @key. If @compatible,
-- * 	add to the tail of the list, do not space pad, and set
-- * 	devinfo->compatible. The scsi_static_device_list entries are
-- * 	added with @compatible 1 and @clfags NULL.
-+ *	Create and add one dev_info entry for @vendor, @model,
-+ *	@strflags or @flag in list specified by @key. If @compatible,
-+ *	add to the tail of the list, do not space pad, and set
-+ *	devinfo->compatible. The scsi_static_device_list entries are
-+ *	added with @compatible 1 and @clfags NULL.
-  *
-  * Returns: 0 OK, -error on failure.
-  **/
-@@ -405,7 +405,7 @@ int scsi_dev_info_list_add_keyed(int compatible, char *vendor, char *model,
-  *
-  * Description:
-  *	Finds the first dev_info entry matching @vendor, @model
-- * 	in list specified by @key.
-+ *	in list specified by @key.
-  *
-  * Returns: pointer to matching entry, or ERR_PTR on failure.
-  **/
-@@ -508,10 +508,10 @@ int scsi_dev_info_list_del_keyed(char *vendor, char *model, int key)
-  * @dev_list:	string of device flags to add
-  *
-  * Description:
-- * 	Parse dev_list, and add entries to the scsi_dev_info_list.
-- * 	dev_list is of the form "vendor:product:flag,vendor:product:flag".
-- * 	dev_list is modified via strsep. Can be called for command line
-- * 	addition, for proc or mabye a sysfs interface.
-+ *	Parse dev_list, and add entries to the scsi_dev_info_list.
-+ *	dev_list is of the form "vendor:product:flag,vendor:product:flag".
-+ *	dev_list is modified via strsep. Can be called for command line
-+ *	addition, for proc or mabye a sysfs interface.
-  *
-  * Returns: 0 if OK, -error on failure.
-  **/
-@@ -701,7 +701,7 @@ static int proc_scsi_devinfo_open(struct inode *inode, struct file *file)
- 	return seq_open(file, &scsi_devinfo_seq_ops);
- }
+@@ -415,7 +415,7 @@ static struct scsi_dev_info_list *scsi_dev_info_list_find(const char *vendor,
+ 	struct scsi_dev_info_list *devinfo;
+ 	struct scsi_dev_info_list_table *devinfo_table =
+ 		scsi_devinfo_lookup_by_key(key);
+-	size_t vmax, mmax;
++	size_t vmax, mmax, vlen, mlen;
+ 	const char *vskip, *mskip;
  
--/* 
-+/*
-  * proc_scsi_dev_info_write - allow additions to scsi_dev_info_list via /proc.
-  *
-  * Description: Adds a black/white list entry for vendor and model with an
-@@ -840,8 +840,8 @@ int scsi_dev_info_remove_list(int key)
-  * scsi_init_devinfo - set up the dynamic device list.
-  *
-  * Description:
-- * 	Add command line entries from scsi_dev_flags, then add
-- * 	scsi_static_device_list entries to the scsi device info list.
-+ *	Add command line entries from scsi_dev_flags, then add
-+ *	scsi_static_device_list entries to the scsi device info list.
-  */
- int __init scsi_init_devinfo(void)
- {
+ 	if (IS_ERR(devinfo_table))
+@@ -440,6 +440,8 @@ static struct scsi_dev_info_list *scsi_dev_info_list_find(const char *vendor,
+ 	/* Also skip trailing spaces */
+ 	while (vmax > 0 && vskip[vmax - 1] == ' ')
+ 		--vmax;
++	if (!vmax)
++		vskip = NULL;
+ 
+ 	mmax = sizeof(devinfo->model);
+ 	mskip = model;
+@@ -449,6 +451,8 @@ static struct scsi_dev_info_list *scsi_dev_info_list_find(const char *vendor,
+ 	}
+ 	while (mmax > 0 && mskip[mmax - 1] == ' ')
+ 		--mmax;
++	if (!mmax)
++		mskip = NULL;
+ 
+ 	list_for_each_entry(devinfo, &devinfo_table->scsi_dev_info_list,
+ 			    dev_info_list) {
+@@ -456,20 +460,24 @@ static struct scsi_dev_info_list *scsi_dev_info_list_find(const char *vendor,
+ 			/*
+ 			 * Behave like the older version of get_device_flags.
+ 			 */
+-			if (memcmp(devinfo->vendor, vskip, vmax) ||
+-					(vmax < sizeof(devinfo->vendor) &&
+-						devinfo->vendor[vmax]))
++			vlen = min(vmax, strlen(devinfo->vendor));
++			if (vskip && vlen &&
++			    memcmp(devinfo->vendor, vskip, vlen))
+ 				continue;
+-			if (memcmp(devinfo->model, mskip, mmax) ||
+-					(mmax < sizeof(devinfo->model) &&
+-						devinfo->model[mmax]))
++			/* Empty strings never match */
++			mlen = min(mmax, strlen(devinfo->model));
++			if (!vlen && !mlen)
+ 				continue;
+-			return devinfo;
++			if (mskip &&
++			    memcmp(devinfo->model, mskip, mlen))
++				continue;
++			if (vskip || mskip)
++				return devinfo;
+ 		} else {
+ 			if (!memcmp(devinfo->vendor, vendor,
+-				     sizeof(devinfo->vendor)) &&
+-			     !memcmp(devinfo->model, model,
+-				      sizeof(devinfo->model)))
++				    sizeof(devinfo->vendor)) &&
++			    !memcmp(devinfo->model, model,
++				    sizeof(devinfo->model)))
+ 				return devinfo;
+ 		}
+ 	}
 -- 
 1.8.5.6
