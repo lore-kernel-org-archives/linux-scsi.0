@@ -1,79 +1,85 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/4] scsi_devinfo: fixup string compare
-Date: Tue, 8 Aug 2017 17:37:20 +0200
-Message-ID: <91c73f33-9b34-cdb3-c47d-777bc2c2f8fc@suse.de>
-References: <Pine.LNX.4.44L0.1708081103580.2055-100000@iolanthe.rowland.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] megaraid_sas: move command counter to correct place
+Date: Tue, 08 Aug 2017 08:39:17 -0700
+Message-ID: <1502206757.2736.21.camel@HansenPartnership.com>
+References: <20170728140359.15424-1-thenzl@redhat.com>
+         <yq1lgmv9t51.fsf@oracle.com>
+         <730abe70a796241670b9443bd72e395b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37284 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752145AbdHHPhX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 8 Aug 2017 11:37:23 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1708081103580.2055-100000@iolanthe.rowland.org>
-Content-Language: en-US
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:52680 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752565AbdHHPjT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Aug 2017 11:39:19 -0400
+In-Reply-To: <730abe70a796241670b9443bd72e395b@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+To: Sumit Saxena <sumit.saxena@broadcom.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Tomas Henzl <thenzl@redhat.com>
+Cc: linux-scsi@vger.kernel.org, Kashyap Desai <kashyap.desai@broadcom.com>
 
-On 08/08/2017 05:25 PM, Alan Stern wrote:
-> On Tue, 8 Aug 2017, Hannes Reinecke wrote:
+On Tue, 2017-08-08 at 13:07 +0530, Sumit Saxena wrote:
+> > 
+> > -----Original Message-----
+> > From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
+> > Sent: Monday, August 07, 2017 11:07 PM
+> > To: Tomas Henzl
+> > Cc: linux-scsi@vger.kernel.org; sumit.saxena@broadcom.com;
+> > kashyap.desai@broadcom.com
+> > Subject: Re: [PATCH] megaraid_sas: move command counter to correct
+> > place
+> > 
+> > 
+> > Tomas,
+> > 
+> > > 
+> > > the eh reset function returns success when fw_outstanding equals
+> > > zero,
+> > > that means that the counter shouldn't be decremented when the
+> > > driver
+> > > still owns the command
+> > 
+> > Applied to 4.13/scsi-fixes. Thank you!
 > 
->> When checking the model and vendor string we need to use the
->> minimum value of either string, otherwise we'll miss out on
->> wildcard matches.
->> And we should avoid matching anything with zero size as this
->> match will be incorrect.
->> Without this patch certain Hitachi arrays will not be presenting
->> VPD pages correctly.
->>
->> Fixes: 5e7ff2c ("SCSI: fix new bug in scsi_dev_info_list string matching")
->> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> Just realized that this patch may cause performance regression.
+> With this patch below scenario may occur-
 > 
-> This is very questionable.  As described in commit b704f70ce200 ("SCSI: 
-> fix bug in scsi_dev_info_list matching"), there are devices which have 
-> vendor or model strings of length 0, and there are entries in the 
-> global device list like that too.  With this patch, such devices and 
-> such entries would never match anything.
+> -Consider outstanding IOs reaches to controller's Queue depth.
+> -Driver frees up command and complete it back to SML.
+> -Since host_busy is decremented, SML can issue one new  IO to driver.
+> -By the time, if "fw_outstanding" is not decremented by driver, then
+> driver will return newly submitted IO back to SML with return status
+> SCSI_MLQUEUE_HOST_BUSY because of below code
+>   in megaraid_sas driver's IO submission path-
 > 
-> Also, the idea of using the minimum length of either string doesn't 
-> sound right.  It would allow a device with string "abc" to match an 
-> entry in the list with string "abcd", which would be wrong.
+>     if (atomic_inc_return(&instance->fw_outstanding) >
+>             instance->host->can_queue) {
+>         atomic_dec(&instance->fw_outstanding);
+>         return SCSI_MLQUEUE_HOST_BUSY;
+>     }
 > 
-> Suggestion:
+> This situation will be more evident when RAID1 fastpath IOs are
+> running as in that case driver will be issuing two IOs to firmware
+> for single IO issued from SML. Above situation can be avoided, if
+> this patch is removed.
 > 
-> 	Allow a device string to match a list entry if the lengths
-> 	are equal or the list entry is shorter (this would be a 
-> 	wildcard match), but not if the list entry is longer.  Here
-> 	the device string length is after leading and trailing blanks
-> 	have been removed.
+> Regarding Tomas' concern, there should not be any problem as driver
+> calls "synchronize_irq" before checking "fw_outstanding". Once
+> fw_outstanding is decremented and driver frees up command, then only
+> driver will be checking "fw_outstanding" equals to zero or not so all
+> this will always fall in a sequence and will not cause the problem
+> stated by Tomas.
 > 
-> 	As a corollary, allow an empty device string to match an empty 
-> 	list entry but nothing else.
-> 
-> Alan Stern
-> 
-Well, so far we haven't encountered any of those devices.
-I _have_ validated the patch with the known problematic inquiry strings,
-namely
+> I am sorry for confusion and would request to revert this patch.
 
-"HITACHI" "OPEN-V"
-"Inateck" "       "
-"       " "Scanner"
-"Promise" "STEX"
+OK, I've taken it out of the fixes tree.
 
-and it gives the correct result for all of these.
-If you have any inquiry strings for which this does _not_ produce the
-correct result please let me know.
+Martin: this means my fixes branch got rebased; can you rebase your
+fixes branch on top of mine before we all get a beating from Stephen
+Rothwell because of a mismerge in linux-next due to the tree
+differences?
 
-Cheers,
+Thanks,
 
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+James
