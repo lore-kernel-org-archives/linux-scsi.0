@@ -1,80 +1,38 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH] megaraid_sas: move command counter to correct place
-Date: Wed, 9 Aug 2017 16:09:05 +0200
-Message-ID: <a677fd3b-0730-1213-2791-41cf8b32c08c@redhat.com>
-References: <20170728140359.15424-1-thenzl@redhat.com>
- <yq1lgmv9t51.fsf@oracle.com>
- <730abe70a796241670b9443bd72e395b@mail.gmail.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 3/4] scsi: add Mylex RAID controller
+Date: Wed, 9 Aug 2017 16:10:49 +0200
+Message-ID: <20170809141049.GB26843@lst.de>
+References: <1501683208-5240-1-git-send-email-hare@suse.de> <1501683208-5240-4-git-send-email-hare@suse.de> <20170805113932.GF16313@lst.de> <17589cb4-9f0c-7d15-8c3a-79bd9b14fdef@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42118 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752790AbdHIOJH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 9 Aug 2017 10:09:07 -0400
-In-Reply-To: <730abe70a796241670b9443bd72e395b@mail.gmail.com>
-Content-Language: en-MW
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <17589cb4-9f0c-7d15-8c3a-79bd9b14fdef@suse.de>
+Sender: linux-block-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Sumit Saxena <sumit.saxena@broadcom.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Kashyap Desai <kashyap.desai@broadcom.com>
 
-On 8.8.2017 09:37, Sumit Saxena wrote:
->> -----Original Message-----
->> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
->> Sent: Monday, August 07, 2017 11:07 PM
->> To: Tomas Henzl
->> Cc: linux-scsi@vger.kernel.org; sumit.saxena@broadcom.com;
->> kashyap.desai@broadcom.com
->> Subject: Re: [PATCH] megaraid_sas: move command counter to correct place
->>
->>
->> Tomas,
->>
->>> the eh reset function returns success when fw_outstanding equals zero,
->>> that means that the counter shouldn't be decremented when the driver
->>> still owns the command
->> Applied to 4.13/scsi-fixes. Thank you!
-> Just realized that this patch may cause performance regression.
-> With this patch below scenario may occur-
->
-> -Consider outstanding IOs reaches to controller's Queue depth.
-> -Driver frees up command and complete it back to SML.
-> -Since host_busy is decremented, SML can issue one new  IO to driver.
-> -By the time, if "fw_outstanding" is not decremented by driver, then
-> driver will return newly submitted IO back to SML with return status
-> SCSI_MLQUEUE_HOST_BUSY because of below code
->   in megaraid_sas driver's IO submission path-
->
->     if (atomic_inc_return(&instance->fw_outstanding) >
->             instance->host->can_queue) {
->         atomic_dec(&instance->fw_outstanding);
->         return SCSI_MLQUEUE_HOST_BUSY;
->     }
->
-> This situation will be more evident when RAID1 fastpath IOs are running as
-> in that case driver will be issuing two IOs to firmware for single IO
-> issued from SML.
-> Above situation can be avoided, if this patch is removed.
->
-> Regarding Tomas' concern, there should not be any problem as driver calls
-> "synchronize_irq" before checking "fw_outstanding". Once fw_outstanding is
-> decremented and
-> driver frees up command, then only driver will be checking
-> "fw_outstanding" equals to zero or not so all this will always fall in a
-> sequence and will not
-> cause the problem stated by Tomas.
+On Mon, Aug 07, 2017 at 08:09:11AM +0200, Hannes Reinecke wrote:
+> On 08/05/2017 01:39 PM, Christoph Hellwig wrote:
+> > Can you use normal linux style for the code instead of copy and
+> > pasting the weird naming and capitalization from the DAC960 driver?
+> > 
+> Yes; already planned for v2. But first wanted to get some general
+> feedback (like: is anyone interested in that at all?)
 
-I haven't expected this to fix a real issue in latest upstream code,
-just wanted to follow the correct ordering.
-If it creates a performance issue, reverting the patch is fine for me.
+Yes, please go ahead and kill off the DAC960 driver.
 
->
-> I am sorry for confusion and would request to revert this patch.
->
-> Thanks,
-> Sumit
->
->> --
->> Martin K. Petersen	Oracle Linux Engineering
+> 
+> > Also please use the driver name as prefix for the functions.
+> > 
+> Ok.
+> 
+> > Maybe myraid instead of mylex?
+> > 
+> Nah; I'd rather stick with mylex.
+> (Especially as it says 'Mylex' in big fat letters on the board :-)
+
+Naming drivers after the vendor only is usually a bad idea as vendors
+have/had multiple products.  In this case we have plenty other drivers
+that support Mylex products.
