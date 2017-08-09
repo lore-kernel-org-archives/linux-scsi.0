@@ -1,43 +1,72 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: dpt_i2o: remove redundant null check on array device
-Date: Wed,  9 Aug 2017 11:17:41 +0100
-Message-ID: <20170809101741.19163-1-colin.king@canonical.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCHv2 2/4] scsi: Export blacklist flags to sysfs
+Date: Wed,  9 Aug 2017 12:44:02 +0200
+Message-ID: <1502275444-27676-3-git-send-email-hare@suse.de>
+References: <1502275444-27676-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:37842 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751773AbdHIKoP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 9 Aug 2017 06:44:15 -0400
+In-Reply-To: <1502275444-27676-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Doug Gilbert <dgilbert@interlog.com>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-From: Colin Ian King <colin.king@canonical.com>
+Each scsi device is scanned according to the found blacklist flags,
+but this information is never presented to sysfs.
+This makes it quite hard to figure out if blacklisting worked as
+expected.
+With this patch we're exporting an additional attribute 'blacklist'
+containing the blacklist flags for this device.
 
-The null check on pHba->channel[chan].device is redundant because
-device is an array and hence can never be null. Remove the check.
-
-Detected by CoverityScan, CID#115362 ("Array compared against 0")
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/dpt_i2o.c | 5 -----
- 1 file changed, 5 deletions(-)
+ drivers/scsi/scsi_scan.c  |  1 +
+ drivers/scsi/scsi_sysfs.c | 11 +++++++++++
+ 2 files changed, 12 insertions(+)
 
-diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
-index 256dd6791fcc..fd172b0890d3 100644
---- a/drivers/scsi/dpt_i2o.c
-+++ b/drivers/scsi/dpt_i2o.c
-@@ -1169,11 +1169,6 @@ static struct adpt_device* adpt_find_device(adpt_hba* pHba, u32 chan, u32 id, u6
- 	if(chan < 0 || chan >= MAX_CHANNEL)
- 		return NULL;
- 	
--	if( pHba->channel[chan].device == NULL){
--		printk(KERN_DEBUG"Adaptec I2O RAID: Trying to find device before they are allocated\n");
--		return NULL;
--	}
--
- 	d = pHba->channel[chan].device[id];
- 	if(!d || d->tid == 0) {
- 		return NULL;
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 3832ba5..e4e4374 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -984,6 +984,7 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 		scsi_attach_vpd(sdev);
+ 
+ 	sdev->max_queue_depth = sdev->queue_depth;
++	sdev->sdev_bflags = *bflags;
+ 
+ 	/*
+ 	 * Ok, the device is now all set up, we can
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 5e8ace2..37d436b 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -953,6 +953,16 @@ static DEVICE_ATTR(queue_depth, S_IRUGO | S_IWUSR, sdev_show_queue_depth,
+ }
+ static DEVICE_ATTR(wwid, S_IRUGO, sdev_show_wwid, NULL);
+ 
++static ssize_t
++sdev_show_blacklist(struct device *dev, struct device_attribute *attr,
++		    char *buf)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++
++	return snprintf (buf, 20, "0x%x\n", sdev->sdev_bflags);
++}
++static DEVICE_ATTR(blacklist, S_IRUGO, sdev_show_blacklist, NULL);
++
+ #ifdef CONFIG_SCSI_DH
+ static ssize_t
+ sdev_show_dh_state(struct device *dev, struct device_attribute *attr,
+@@ -1138,6 +1148,7 @@ static umode_t scsi_sdev_bin_attr_is_visible(struct kobject *kobj,
+ 	&dev_attr_queue_depth.attr,
+ 	&dev_attr_queue_type.attr,
+ 	&dev_attr_wwid.attr,
++	&dev_attr_blacklist.attr,
+ #ifdef CONFIG_SCSI_DH
+ 	&dev_attr_dh_state.attr,
+ 	&dev_attr_access_state.attr,
 -- 
-2.11.0
+1.8.5.6
