@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 2/4] scsi: Export blacklist flags to sysfs
-Date: Wed,  9 Aug 2017 12:44:02 +0200
-Message-ID: <1502275444-27676-3-git-send-email-hare@suse.de>
+Subject: [PATCHv2 4/4] scsi_devinfo: fixup string compare
+Date: Wed,  9 Aug 2017 12:44:04 +0200
+Message-ID: <1502275444-27676-5-git-send-email-hare@suse.de>
 References: <1502275444-27676-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37842 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:37841 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751773AbdHIKoP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1751722AbdHIKoP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Wed, 9 Aug 2017 06:44:15 -0400
 In-Reply-To: <1502275444-27676-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,59 +14,105 @@ List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Doug Gilbert <dgilbert@interlog.com>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Each scsi device is scanned according to the found blacklist flags,
-but this information is never presented to sysfs.
-This makes it quite hard to figure out if blacklisting worked as
-expected.
-With this patch we're exporting an additional attribute 'blacklist'
-containing the blacklist flags for this device.
+When checking the model and vendor string we need to use the
+minimum value of either string, otherwise we'll miss out on
+wildcard matches.
+And we should take card when matching with zero size strings;
+results might be unpredictable.
+With this patch the rules for matching devinfo strings are
+as follows:
+- Vendor strings must match exactly
+- Empty Model strings will only match if the devinfo model
+  is also empty
+- Model strings shorter than the devinfo model string will
+  not match
 
+Fixes: 5e7ff2c ("SCSI: fix new bug in scsi_dev_info_list string matching")
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/scsi_scan.c  |  1 +
- drivers/scsi/scsi_sysfs.c | 11 +++++++++++
- 2 files changed, 12 insertions(+)
+ drivers/scsi/scsi_devinfo.c | 46 ++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 33 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 3832ba5..e4e4374 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -984,6 +984,7 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 		scsi_attach_vpd(sdev);
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index 776c701..f8f5cb7 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -399,8 +399,8 @@ int scsi_dev_info_list_add_keyed(int compatible, char *vendor, char *model,
  
- 	sdev->max_queue_depth = sdev->queue_depth;
-+	sdev->sdev_bflags = *bflags;
+ /**
+  * scsi_dev_info_list_find - find a matching dev_info list entry.
+- * @vendor:	vendor string
+- * @model:	model (product) string
++ * @vendor:	full vendor string
++ * @model:	full model (product) string
+  * @key:	specify list to use
+  *
+  * Description:
+@@ -440,6 +440,8 @@ static struct scsi_dev_info_list *scsi_dev_info_list_find(const char *vendor,
+ 	/* Also skip trailing spaces */
+ 	while (vmax > 0 && vskip[vmax - 1] == ' ')
+ 		--vmax;
++	if (!vmax)
++		vskip = NULL;
  
- 	/*
- 	 * Ok, the device is now all set up, we can
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 5e8ace2..37d436b 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -953,6 +953,16 @@ static DEVICE_ATTR(queue_depth, S_IRUGO | S_IWUSR, sdev_show_queue_depth,
- }
- static DEVICE_ATTR(wwid, S_IRUGO, sdev_show_wwid, NULL);
+ 	mmax = sizeof(devinfo->model);
+ 	mskip = model;
+@@ -449,27 +451,45 @@ static struct scsi_dev_info_list *scsi_dev_info_list_find(const char *vendor,
+ 	}
+ 	while (mmax > 0 && mskip[mmax - 1] == ' ')
+ 		--mmax;
++	if (!mmax)
++		mskip = NULL;
  
-+static ssize_t
-+sdev_show_blacklist(struct device *dev, struct device_attribute *attr,
-+		    char *buf)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
+ 	list_for_each_entry(devinfo, &devinfo_table->scsi_dev_info_list,
+ 			    dev_info_list) {
+ 		if (devinfo->compatible) {
+ 			/*
+-			 * Behave like the older version of get_device_flags.
++			 * vendor strings must be an exact match
+ 			 */
+-			if (memcmp(devinfo->vendor, vskip, vmax) ||
+-					(vmax < sizeof(devinfo->vendor) &&
+-						devinfo->vendor[vmax]))
++			if (vmax != strlen(devinfo->vendor))
+ 				continue;
+-			if (memcmp(devinfo->model, mskip, mmax) ||
+-					(mmax < sizeof(devinfo->model) &&
+-						devinfo->model[mmax]))
++			if (vskip && vmax &&
++			    memcmp(devinfo->vendor, vskip, vmax))
+ 				continue;
+-			return devinfo;
++			/*
++			 * Empty model strings only match if both strings
++			 * are empty.
++			 */
++			if (!mmax && !strlen(devinfo->model))
++				return devinfo;
 +
-+	return snprintf (buf, 20, "0x%x\n", sdev->sdev_bflags);
-+}
-+static DEVICE_ATTR(blacklist, S_IRUGO, sdev_show_blacklist, NULL);
++			/*
++			 * Empty @model never matches
++			 */
++			if (!mskip)
++				continue;
 +
- #ifdef CONFIG_SCSI_DH
- static ssize_t
- sdev_show_dh_state(struct device *dev, struct device_attribute *attr,
-@@ -1138,6 +1148,7 @@ static umode_t scsi_sdev_bin_attr_is_visible(struct kobject *kobj,
- 	&dev_attr_queue_depth.attr,
- 	&dev_attr_queue_type.attr,
- 	&dev_attr_wwid.attr,
-+	&dev_attr_blacklist.attr,
- #ifdef CONFIG_SCSI_DH
- 	&dev_attr_dh_state.attr,
- 	&dev_attr_access_state.attr,
++			/*
++			 * @model specifies the full string, and
++			 * must be larger or equal to devinfo->model
++			 */
++			if (!memcmp(devinfo->model, mskip,
++				    strlen(devinfo->model)))
++				return devinfo;
+ 		} else {
+ 			if (!memcmp(devinfo->vendor, vendor,
+-				     sizeof(devinfo->vendor)) &&
+-			     !memcmp(devinfo->model, model,
+-				      sizeof(devinfo->model)))
++				    sizeof(devinfo->vendor)) &&
++			    !memcmp(devinfo->model, model,
++				    sizeof(devinfo->model)))
+ 				return devinfo;
+ 		}
+ 	}
 -- 
 1.8.5.6
