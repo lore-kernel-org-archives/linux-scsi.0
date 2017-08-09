@@ -1,36 +1,23 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/6] hpsa: add support for legacy boards
-Date: Wed, 9 Aug 2017 17:59:57 +0200
-Message-ID: <20170809155957.GB3141@lst.de>
-References: <1502181315-102499-1-git-send-email-hare@suse.de> <1502181315-102499-3-git-send-email-hare@suse.de> <20170809134112.GB25852@lst.de> <a20e126e-4738-aac2-a92e-71a448176c51@suse.de>
+Subject: Re: Increased memory usage with scsi-mq
+Date: Wed, 9 Aug 2017 18:01:11 +0200
+Message-ID: <20170809160111.GC3141@lst.de>
+References: <20170804210035.GA10017@redhat.com> <20170805084436.GA14264@lst.de> <20170805092704.GD20914@redhat.com> <20170805133954.GA17694@lst.de> <20170805155103.GE20914@redhat.com> <b133b97e-9660-ba9b-51de-39fa23fce903@redhat.com> <20170807122701.GH20914@redhat.com> <ffc29e81-ff6b-7132-2e90-86b5632098fb@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:54209 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752572AbdHIP77 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 9 Aug 2017 11:59:59 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <a20e126e-4738-aac2-a92e-71a448176c51@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <ffc29e81-ff6b-7132-2e90-86b5632098fb@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: "Richard W.M. Jones" <rjones@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Don Brace <don.brace@microsemi.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Meelis Roos <mroos@linux.ee>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Wed, Aug 09, 2017 at 05:08:05PM +0200, Hannes Reinecke wrote:
-> On 08/09/2017 03:41 PM, Christoph Hellwig wrote:
-> > On Tue, Aug 08, 2017 at 10:35:11AM +0200, Hannes Reinecke wrote:
-> >> Add support for legacy boards, ensuring to enable the driver for
-> >> those boards only when 'hpsa_allow_any' is set.
-> > 
-> > Why the wildcard instead of the specific IDs from the cciss driver?
-> > 
-> Because I'm lazy? And we're catching those boards with the wildcard
-> entry anyway? And the distinction between wildcard entry (designed to
-> catch unsupported devices) and pci IDs from the cciss drivers (which
-> will be unsupported, too) is meaningless?
+On Mon, Aug 07, 2017 at 03:07:48PM +0200, Paolo Bonzini wrote:
+> can_queue should depend on the virtqueue size, which unfortunately can
+> vary for each virtio-scsi device in theory.  The virtqueue size is
+> retrieved by drivers/virtio prior to calling vring_create_virtqueue, and
+> in QEMU it is the second argument to virtio_add_queue.
 
-So what again is unsupported?
-
-How do we know there never was any other compaq device claiming to be
-raid class?
+Why is that unfortunate?  We don't even have to set can_queue in
+the host template, we can dynamically set it on per-host basis.
