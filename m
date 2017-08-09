@@ -1,55 +1,76 @@
-From: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Subject: Re: [PATCH v3 03/13] mpt3sas: SGL to PRP Translation for I/Os to NVMe devices
-Date: Wed, 9 Aug 2017 18:07:13 +0530
-Message-ID: <CA+RiK65ccL8tMKhpyW=ZPRnSX2tetNhHJMnGzn2P=oBbK1LU4w@mail.gmail.com>
-References: <1502183035-7441-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <1502183035-7441-4-git-send-email-suganath-prabu.subramani@broadcom.com> <yq1o9rq6ntu.fsf@oracle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1o9rq6ntu.fsf@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "JBottomley@Parallels.com" <JBottomley@parallels.com>, jejb@kernel.org, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Sathya Prakash <Sathya.Prakash@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, linux-kernel@vger.kernel.org, Chaitra Basappa <chaitra.basappa@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-nvme@lists.infradead.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] scsi: make 'state' device attribute pollable
+Date: Wed,  9 Aug 2017 15:09:18 +0200
+Message-ID: <1502284158-50201-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:56617 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752064AbdHINJV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 9 Aug 2017 09:09:21 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Hi Martin,
-This code was added to detect holes, when we started testing with 4.9
-kernel. when we disabled "use_blk_mq" and no merges, we are hitting
-issues with holes. Anyhow In latest upstream, it got fixed with this
-commit 5a8d75a1b8c99bdc926ba69b7b7dbe4fae81a5af
+While the 'state' attribute can (and will) change occasionally,
+calling 'poll()' or 'select()' on it fails as sysfs is never
+notified that the state has changed.
+With this patch calling 'poll()' or 'select()' will work
+properly.
 
-So we are removing the code related to hole detection .
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/scsi_lib.c           | 7 +++++--
+ drivers/scsi/scsi_transport_srp.c | 5 ++++-
+ 2 files changed, 9 insertions(+), 3 deletions(-)
 
-Thanks,
-Suganath Prabu S
-
-
-
-On Tue, Aug 8, 2017 at 9:42 PM, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->
-> Suganath,
->
->> +     /*
->> +      ** Below code detects gaps/holes in IO data buffers.
->> +      ** What does holes/gaps mean?
->> +      ** Any SGE except first one in a SGL starts at non NVME page size
->> +      ** aligned address OR Any SGE except last one in a SGL ends at
->> +      ** non NVME page size boundary.
->> +      **
->> +      ** Driver has already informed block layer by setting boundary rules
->> +      ** for bio merging done at NVME page size boundary calling kernel API
->> +      ** blk_queue_virt_boundary inside slave_config.
->> +      ** Still there is possibility of IO coming with holes to driver because
->> +      ** of IO merging done by IO scheduler.
->
-> All this SGL to PRP code needs to go.
->
-> If you are seeing anything that's not a valid PRP after setting the
-> queue virt boundary then there's a block layer bug that needs to be
-> debugged and fixed. Regardless of whether you are using an I/O scheduler
-> or not.
->
-> --
-> Martin K. Petersen      Oracle Linux Engineering
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 41c19c7..2101cfd 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2654,6 +2654,7 @@ void scsi_exit_queue(void)
+ 
+ 	}
+ 	sdev->sdev_state = state;
++	sysfs_notify(&sdev->sdev_gendev.kobj, NULL, "state");
+ 	return 0;
+ 
+  illegal:
+@@ -3074,14 +3075,16 @@ int scsi_internal_device_unblock_nowait(struct scsi_device *sdev,
+ 	 * offlined states and goose the device queue if successful.
+ 	 */
+ 	if ((sdev->sdev_state == SDEV_BLOCK) ||
+-	    (sdev->sdev_state == SDEV_TRANSPORT_OFFLINE))
++	    (sdev->sdev_state == SDEV_TRANSPORT_OFFLINE)) {
+ 		sdev->sdev_state = new_state;
+-	else if (sdev->sdev_state == SDEV_CREATED_BLOCK) {
++		sysfs_notify(&sdev->sdev_gendev.kobj, NULL, "state");
++	} else if (sdev->sdev_state == SDEV_CREATED_BLOCK) {
+ 		if (new_state == SDEV_TRANSPORT_OFFLINE ||
+ 		    new_state == SDEV_OFFLINE)
+ 			sdev->sdev_state = new_state;
+ 		else
+ 			sdev->sdev_state = SDEV_CREATED;
++		sysfs_notify(&sdev->sdev_gendev.kobj, NULL, "state");
+ 	} else if (sdev->sdev_state != SDEV_CANCEL &&
+ 		 sdev->sdev_state != SDEV_OFFLINE)
+ 		return -EINVAL;
+diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
+index f617021..698cc46 100644
+--- a/drivers/scsi/scsi_transport_srp.c
++++ b/drivers/scsi/scsi_transport_srp.c
+@@ -556,8 +556,11 @@ int srp_reconnect_rport(struct srp_rport *rport)
+ 		 */
+ 		shost_for_each_device(sdev, shost) {
+ 			mutex_lock(&sdev->state_mutex);
+-			if (sdev->sdev_state == SDEV_OFFLINE)
++			if (sdev->sdev_state == SDEV_OFFLINE) {
+ 				sdev->sdev_state = SDEV_RUNNING;
++				sysfs_notify(&sdev->sdev_gendev.kobj,
++					     NULL, "state");
++			}
+ 			mutex_unlock(&sdev->state_mutex);
+ 		}
+ 	} else if (rport->state == SRP_RPORT_RUNNING) {
+-- 
+1.8.5.6
