@@ -1,104 +1,55 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH V2] sd_zbc: Write unlock zone from sd_uninit_cmnd()
-Date: Wed,  9 Aug 2017 12:00:22 +0900
-Message-ID: <20170809030022.7862-1-damien.lemoal@wdc.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH] sd_zbc: Write unlock zone from sd_uninit_cmnd()
+Date: Wed, 9 Aug 2017 03:57:18 +0000
+Message-ID: <1502251037.2784.2.camel@wdc.com>
+References: <20170808041746.31341-1-damien.lemoal@wdc.com>
+         <1502204867.2250.1.camel@wdc.com>
+         <d0bdb1af-7d37-9fa2-62e9-56b2ff315924@wdc.com>
+         <cea78872-8e58-549d-87fc-2897e640c31c@wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:15798 "EHLO
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:5763 "EHLO
         esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752546AbdHIDBJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Aug 2017 23:01:09 -0400
+        with ESMTP id S1752497AbdHID6I (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Aug 2017 23:58:08 -0400
+In-Reply-To: <cea78872-8e58-549d-87fc-2897e640c31c@wdc.com>
+Content-Language: en-US
+Content-ID: <8A1D7319B0683645BCF520423803FEDF@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, Christoph Hellwig <hch@lst.de>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "hch@lst.de" <hch@lst.de>
 
-Releasing a zone write lock only when the write commnand that acquired the
-lock completes can cause deadlocks due to potential command reordering if the
-lock owning request is requeued and not executed. This problem exists only
-with the scsi-mq path as, unlike the legacy path, requests are moved out of
-the dispatch queue before being prepared and so before locking a zone for a
-write command.
-
-Since sd_uninit_cmnd() is now always called when a request is requeued,
-call sd_zbc_write_unlock_zone() from that function for write requests
-that acquired a zone lock instead of from sd_done(). Acquisition of a zone
-lock by a write command is indicated using the new command
-flag SCMD_ZONE_WRITE_LOCK.
-
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Bart Van Assche <Bart.VanAssche@wdc.com>
----
-Changes from V1:
-* Changed WARN_ON to WARN_ON_ONCE as suggested by Bart
-* Updated commit message
-
- drivers/scsi/sd.c        | 3 +++
- drivers/scsi/sd_zbc.c    | 9 +++++----
- include/scsi/scsi_cmnd.h | 1 +
- 3 files changed, 9 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index bea36adeee17..e2647f2d4430 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1277,6 +1277,9 @@ static void sd_uninit_command(struct scsi_cmnd *SCpnt)
- {
- 	struct request *rq = SCpnt->request;
- 
-+	if (SCpnt->flags & SCMD_ZONE_WRITE_LOCK)
-+		sd_zbc_write_unlock_zone(SCpnt);
-+
- 	if (rq->rq_flags & RQF_SPECIAL_PAYLOAD)
- 		__free_page(rq->special_vec.bv_page);
- 
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 96855df9f49d..8aa54779aac1 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -294,6 +294,9 @@ int sd_zbc_write_lock_zone(struct scsi_cmnd *cmd)
- 	    test_and_set_bit(zno, sdkp->zones_wlock))
- 		return BLKPREP_DEFER;
- 
-+	WARN_ON_ONCE(cmd->flags & SCMD_ZONE_WRITE_LOCK);
-+	cmd->flags |= SCMD_ZONE_WRITE_LOCK;
-+
- 	return BLKPREP_OK;
- }
- 
-@@ -302,9 +305,10 @@ void sd_zbc_write_unlock_zone(struct scsi_cmnd *cmd)
- 	struct request *rq = cmd->request;
- 	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
- 
--	if (sdkp->zones_wlock) {
-+	if (sdkp->zones_wlock && cmd->flags & SCMD_ZONE_WRITE_LOCK) {
- 		unsigned int zno = sd_zbc_zone_no(sdkp, blk_rq_pos(rq));
- 		WARN_ON_ONCE(!test_bit(zno, sdkp->zones_wlock));
-+		cmd->flags &= ~SCMD_ZONE_WRITE_LOCK;
- 		clear_bit_unlock(zno, sdkp->zones_wlock);
- 		smp_mb__after_atomic();
- 	}
-@@ -335,9 +339,6 @@ void sd_zbc_complete(struct scsi_cmnd *cmd,
- 	case REQ_OP_WRITE_ZEROES:
- 	case REQ_OP_WRITE_SAME:
- 
--		/* Unlock the zone */
--		sd_zbc_write_unlock_zone(cmd);
--
- 		if (result &&
- 		    sshdr->sense_key == ILLEGAL_REQUEST &&
- 		    sshdr->asc == 0x21)
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index a1266d318c85..6af198d8120b 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -57,6 +57,7 @@ struct scsi_pointer {
- /* for scmd->flags */
- #define SCMD_TAGGED		(1 << 0)
- #define SCMD_UNCHECKED_ISA_DMA	(1 << 1)
-+#define SCMD_ZONE_WRITE_LOCK	(1 << 2)
- 
- struct scsi_cmnd {
- 	struct scsi_request req;
--- 
-2.13.3
+T24gV2VkLCAyMDE3LTA4LTA5IGF0IDExOjQ3ICswOTAwLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToN
+Cj4gT24gOC85LzE3IDExOjE5LCBEYW1pZW4gTGUgTW9hbCB3cm90ZToNCj4gPiBPbiA4LzkvMTcg
+MDA6MDcsIEJhcnQgVmFuIEFzc2NoZSB3cm90ZToNCj4gPiA+IE9uIFR1ZSwgMjAxNy0wOC0wOCBh
+dCAxMzoxNyArMDkwMCwgRGFtaWVuIExlIE1vYWwgd3JvdGU6DQo+ID4gPiA+IGFjcXVpcmVkIHRo
+ZSBsb2NrIGNvbXBsZXRlcyBjYW4gY2F1c2UgZGVhZGxvY2tzIHdpdGggc2NzaS1tcSBkdWUgdG8N
+Cj4gPiA+ID4gcG90ZW50aWFsIHF1ZXVlIHJlb3JkZXJpbmcgaWYgdGhlIGxvY2sgb3duaW5nIHJl
+cXVlc3QgaXMgcmVxdWV1ZWQgYW5kDQo+ID4gPiA+IG5vdCBleGVjdXRlZC4NCj4gPiA+IA0KPiA+
+ID4gUGxlYXNlIG5vdGUgdGhhdCBldmVuIHdpdGggc2NzaS1zcSByZXF1ZXVlaW5nIGNhbiBjYXVz
+ZSByZXF1ZXN0IHJlb3JkZXJpbmcuDQo+ID4gDQo+ID4gSSBhbSBwYWluZnVsbHkgYXdhcmUgb2Yg
+dGhpcyBmYWN0Li4uIEkgd2lsbCB1cGRhdGUgdGhlIGNvbW1pdCBtZXNzYWdlIHRvDQo+ID4gcmVm
+bGVjdCB0aGlzLg0KPiANCj4gQ29ycmVjdGlvbjogY2hlY2tpbmcgdGhlIGNvZGUgYWdhaW4sIEkg
+anVzdCByZWFsaXplZCB0aGF0IHRoZSBwcmVwX2ZuDQo+IHF1ZXVlIGZ1bmN0aW9uLCB3aGljaCBj
+YWxscyBzZF9pbml0X2NtbmQoKSBhbmQgY2F1c2VzIGEgem9uZSB0byBiZQ0KPiB3cml0ZS1sb2Nr
+ZWQgaWYgdGhlIHByZXBhcmVkIGNvbW1hbmQgaXMgYSB3cml0ZSwgaXMgY2FsbGVkIHdpdGhpbg0K
+PiBibGtfcGVla19yZXF1ZXN0KCkuIFRoYXQgZnVuY3Rpb24gaXMgY2FsbGVkIGluIHNjc2lfcmVx
+dWVzdF9mbigpIHdpdGgNCj4gdGhlIHF1ZXVlIGxvY2sgaGVsZC4gU28gZm9yIHRoZSBsZWdhY3kg
+c2NzaSBwYXRoLCB0aGlzIG1lYW5zIHRoYXQgZm9yIGENCj4gd3JpdGUgY29tbWFuZCB0byBhIHpv
+bmUsIHRoZSBvcGVyYXRpb24gImxvY2sgem9uZSBhbmQgZGVxdWV1ZSBjb21tYW5kIg0KPiBpcyBh
+dG9taWMuIFRoYW5rcyB0byB0aGUgem9uZSBsb2NrLCBmdXJ0aGVyIGRlcXVldWUgb2Ygd3JpdGUg
+Y29tbWFuZHMNCj4gZm9yIHRoZSBzYW1lIChsb2NrZWQpIHpvbmUgY2Fubm90IGhhcHBlbiBhbmQg
+c28gdGhlcmUgaXMgbm8gcmVvcmRlcmluZw0KPiBwb3NzaWJsZSBmb3Igd3JpdGUgY29tbWFuZHMg
+ZGlyZWN0ZWQgYXQgdGhlIHNhbWUgem9uZS4gUmVvcmRlcmluZyBmb3INCj4gb3RoZXIgY29tbWFu
+ZHMgaXMgcG9zc2libGUsIGJ1dCBzaW1pbGFybHkgdG8gcmVndWxhciBkaXNrcywgdGhpcyBpcyBu
+b3QNCj4gYSBwcm9ibGVtIHdpdGggWkJDL1pBQyBkcml2ZXMuDQoNCkhlbGxvIERhbWllbiwNCg0K
+VGhlIGxvY2tpbmcgYXBwcm9hY2ggaW4gdGhlIHVwc3RyZWFtIGNvZGUgaW5kZWVkIHByZXZlbnRz
+IHJlb3JkZXJpbmcgb2YNCndyaXRlIHJlcXVlc3RzIHRoYXQgYXBwbHkgdG8gdGhlIHNhbWUgem9u
+ZS4gSG93ZXZlciwgdGhpcyBwYXRjaCBtb2RpZmllcw0KdGhlIGxvY2tpbmcgYXBwcm9hY2guIEFy
+ZSB5b3Ugc3VyZSB0aGF0IHdpdGggdGhpcyBwYXRjaCBhcHBsaWVkIG5vIHJlcXVlc3QNCnJlb3Jk
+ZXJpbmcgd2lsbCBvY2N1ciBpZiByZXF1ZXN0cyBhcmUgcmVxdWV1ZWQgc2luY2UgdGhpcyBwYXRj
+aCBjYXVzZXMgdGhlDQp6b25lIGxvY2sgdG8gYmUgcmVsZWFzZWQgYmVmb3JlIHJlcXVldWluZyBv
+Y2N1cnM/DQoNCkJhcnQu
