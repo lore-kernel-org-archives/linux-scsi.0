@@ -1,78 +1,92 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] sd_zbc: Write unlock zone from sd_uninit_cmnd()
-Date: Wed, 9 Aug 2017 15:24:43 +0000
-Message-ID: <1502292282.2356.3.camel@wdc.com>
-References: <20170808041746.31341-1-damien.lemoal@wdc.com>
-         <1502204867.2250.1.camel@wdc.com>
-         <d0bdb1af-7d37-9fa2-62e9-56b2ff315924@wdc.com>
-         <cea78872-8e58-549d-87fc-2897e640c31c@wdc.com>
-         <1502251037.2784.2.camel@wdc.com>
-         <122fbf61-0de5-fa7e-2024-a0763ad70b13@wdc.com>
-         <1502252111.2784.4.camel@wdc.com>
-         <0e79dcda-29d8-58e3-ed20-b7b6e8db4b10@wdc.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] scsi: make 'state' device attribute pollable
+Date: Wed, 9 Aug 2017 17:59:15 +0200
+Message-ID: <20170809155915.GA3141@lst.de>
+References: <1502284158-50201-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:54504 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751523AbdHIPZf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Aug 2017 11:25:35 -0400
-In-Reply-To: <0e79dcda-29d8-58e3-ed20-b7b6e8db4b10@wdc.com>
-Content-Language: en-US
-Content-ID: <B0DD44003431364F81F2BB874699FB9B@namprd04.prod.outlook.com>
+Received: from verein.lst.de ([213.95.11.211]:54202 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752338AbdHIP7Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 9 Aug 2017 11:59:16 -0400
+Content-Disposition: inline
+In-Reply-To: <1502284158-50201-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "hch@lst.de" <hch@lst.de>
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-T24gV2VkLCAyMDE3LTA4LTA5IGF0IDE0OjE1ICswOTAwLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToN
-Cj4gT3ZlcmFsbCwgeWVzLCB0aGF0IGlzIHBvc3NpYmxlLiBIb3dldmVyLCBjb25zaWRlcmluZyBv
-bmx5IHdyaXRlIGNvbW1hbmRzDQo+IHRvIGEgc2luZ2xlIHpvbmUsIHNpbmNlIGF0IGFueSB0aW1l
-IG9ubHkgb25lIGNvbW1hbmQgaXMgZGVxdWV1ZWQgKHRoZQ0KPiBvbmUgaG9sZGluZyB0aGUgem9u
-ZSBsb2NrKSwgaGF2aW5nIHRoZSAibG9jaytkZXF1ZXVlIiBhbmQNCj4gInVubG9jaytyZXF1ZXVl
-IiBib3RoIGF0b21pYyBwcmV2ZW50IGFueSByZW9yZGVyaW5nIG9mIHdyaXRlIGNvbW1hbmRzDQo+
-IGRpcmVjdGVkIHRvIHRoYXQgem9uZS4gVGhlIGZpcnN0IGNvbW1hbmQgaW4gdGhlIHF1ZXVlIGZv
-ciB0aGUgem9uZSB3aWxsDQo+IGVpdGhlciAoMSkgZ2V0IHRoZSB6b25lIGxvY2sgYW5kIGJlIGRl
-cXVldWVkIE9SICgyKSBzdGF5IGluIHRoZSBxdWV1ZS4NCj4gSW4gY2FzZSAoMSksIHRoZSBuZXh0
-IHdyaXRlIGZvciB0aGUgem9uZSB3aWxsIGhpdCBjYXNlICgyKSB1bnRpbCB0aGUNCj4gZGlzcGF0
-Y2ggY29tbWFuZCBjb21wbGV0ZXMuIElmIHRoZSBkaXNwYXRjaCBjb21tYW5kIGlzIHJlcXVldWVk
-IChhdCB0aGUNCj4gZGlzcGF0Y2ggcXVldWUgaGVhZCksIHdlIGhpdCBiYWNrIGFnYWluIHRoZSAo
-MSkgb3IgKDIpIGNhc2VzLCB3aXRob3V0DQo+IGFueSBjaGFuZ2UgaW4gdGhlIG9yZGVyLiBJc250
-J3QgaXQgPw0KDQpIZWxsbyBEYW1pZW4sDQoNCkNvbW1hbmRzIHRoYXQgZ2V0IHJlcXVldWVkIGFy
-ZSBub3QgcmVpbnNlcnRlZCBhdCB0aGVpciBvcmlnaW5hbCBwb3NpdGlvbg0KaW4gdGhlIHJlcXVl
-c3QgcXVldWUgYnV0IHVzdWFsbHkgYXQgYSBkaWZmZXJlbnQgcG9zaXRpb24uIFRoaXMgaXMgd2hh
-dCBtYWtlcw0KcmVxdWV1ZWluZyBjYXVzZSByZXF1ZXN0IHJlb3JkZXJpbmcuIEFueXdheSwgY2Fu
-IHlvdSBjaGVjayB3aGV0aGVyIHJlcGxhY2luZw0KcGF0Y2ggInNkX3piYzogV3JpdGUgdW5sb2Nr
-IHpvbmUgZnJvbSBzZF91bmluaXRfY21uZCgpIiB3aXRoIHRoZSAodW50ZXN0ZWQpDQpwYXRjaCBi
-ZWxvdyBkb2VzIG5vdCB0cmlnZ2VyIGFueSBsb2NrdXBzIGFuZCBwcmV2ZW50cyByZXF1ZXN0IHJl
-b3JkZXJpbmc/DQpTaW5jZSB0aGF0IHBhdGNoIGtlZXBzIHRoZSB6b25lIGxvY2sgYWNyb3NzIHJl
-cXVldWluZyBhdHRlbXB0cyBpdCBzaG91bGQNCnByZXZlbnQgcmVxdWVzdCByZW9yZGVyaW5nLg0K
-DQpUaGFua3MsDQoNCkJhcnQuDQoNCi0tLQ0KIGRyaXZlcnMvc2NzaS9zZF96YmMuYyAgICB8IDgg
-KysrKysrKysNCiBpbmNsdWRlL3Njc2kvc2NzaV9jbW5kLmggfCAzICsrKw0KIDIgZmlsZXMgY2hh
-bmdlZCwgMTEgaW5zZXJ0aW9ucygrKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3NkX3pi
-Yy5jIGIvZHJpdmVycy9zY3NpL3NkX3piYy5jDQppbmRleCA5Njg1NWRmOWY0OWQuLjZkMThiMWJk
-M2IyNiAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvc2NzaS9zZF96YmMuYw0KKysrIGIvZHJpdmVycy9z
-Y3NpL3NkX3piYy5jDQpAQCAtMjkwLDEwICsyOTAsMTUgQEAgaW50IHNkX3piY193cml0ZV9sb2Nr
-X3pvbmUoc3RydWN0IHNjc2lfY21uZCAqY21kKQ0KIAkgKiB0aHJlYWRzIHJ1bm5pbmcgb24gZGlm
-ZmVyZW50IENQVXMgd3JpdGUgdG8gdGhlIHNhbWUNCiAJICogem9uZSAod2l0aCBhIHN5bmNocm9u
-aXplZCBzZXF1ZW50aWFsIHBhdHRlcm4pLg0KIAkgKi8NCisJaWYgKGNtZC0+ZmxhZ3MgJiBTQ01E
-X0lOX1BST0dSRVNTKQ0KKwkJcmV0dXJuIEJMS1BSRVBfT0s7DQorDQogCWlmIChzZGtwLT56b25l
-c193bG9jayAmJg0KIAkgICAgdGVzdF9hbmRfc2V0X2JpdCh6bm8sIHNka3AtPnpvbmVzX3dsb2Nr
-KSkNCiAJCXJldHVybiBCTEtQUkVQX0RFRkVSOw0KIA0KKwljbWQtPmZsYWdzIHw9IFNDTURfSU5f
-UFJPR1JFU1M7DQorDQogCXJldHVybiBCTEtQUkVQX09LOw0KIH0NCiANCkBAIC0zMDIsNiArMzA3
-LDkgQEAgdm9pZCBzZF96YmNfd3JpdGVfdW5sb2NrX3pvbmUoc3RydWN0IHNjc2lfY21uZCAqY21k
-KQ0KIAlzdHJ1Y3QgcmVxdWVzdCAqcnEgPSBjbWQtPnJlcXVlc3Q7DQogCXN0cnVjdCBzY3NpX2Rp
-c2sgKnNka3AgPSBzY3NpX2Rpc2socnEtPnJxX2Rpc2spOw0KIA0KKwlXQVJOX09OX09OQ0UoIShj
-bWQtPmZsYWdzICYgU0NNRF9JTl9QUk9HUkVTUykpOw0KKwljbWQtPmZsYWdzICY9IH5TQ01EX0lO
-X1BST0dSRVNTOw0KKw0KIAlpZiAoc2RrcC0+em9uZXNfd2xvY2spIHsNCiAJCXVuc2lnbmVkIGlu
-dCB6bm8gPSBzZF96YmNfem9uZV9ubyhzZGtwLCBibGtfcnFfcG9zKHJxKSk7DQogCQlXQVJOX09O
-X09OQ0UoIXRlc3RfYml0KHpubywgc2RrcC0+em9uZXNfd2xvY2spKTsNCmRpZmYgLS1naXQgYS9p
-bmNsdWRlL3Njc2kvc2NzaV9jbW5kLmggYi9pbmNsdWRlL3Njc2kvc2NzaV9jbW5kLmgNCmluZGV4
-IGExMjY2ZDMxOGM4NS4uZjE4YzgxMjA5NGI1IDEwMDY0NA0KLS0tIGEvaW5jbHVkZS9zY3NpL3Nj
-c2lfY21uZC5oDQorKysgYi9pbmNsdWRlL3Njc2kvc2NzaV9jbW5kLmgNCkBAIC01Nyw2ICs1Nyw5
-IEBAIHN0cnVjdCBzY3NpX3BvaW50ZXIgew0KIC8qIGZvciBzY21kLT5mbGFncyAqLw0KICNkZWZp
-bmUgU0NNRF9UQUdHRUQJCSgxIDw8IDApDQogI2RlZmluZSBTQ01EX1VOQ0hFQ0tFRF9JU0FfRE1B
-CSgxIDw8IDEpDQorI2lmZGVmIENPTkZJR19CTEtfREVWX1pPTkVEDQorI2RlZmluZSBTQ01EX0lO
-X1BST0dSRVNTCSgxIDw8IDIpDQorI2VuZGlmDQogDQogc3RydWN0IHNjc2lfY21uZCB7DQogCXN0
-cnVjdCBzY3NpX3JlcXVlc3QgcmVxOw0K
+On Wed, Aug 09, 2017 at 03:09:18PM +0200, Hannes Reinecke wrote:
+> While the 'state' attribute can (and will) change occasionally,
+> calling 'poll()' or 'select()' on it fails as sysfs is never
+> notified that the state has changed.
+> With this patch calling 'poll()' or 'select()' will work
+> properly.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> ---
+>  drivers/scsi/scsi_lib.c           | 7 +++++--
+>  drivers/scsi/scsi_transport_srp.c | 5 ++++-
+>  2 files changed, 9 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 41c19c7..2101cfd 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -2654,6 +2654,7 @@ void scsi_exit_queue(void)
+>  
+>  	}
+>  	sdev->sdev_state = state;
+> +	sysfs_notify(&sdev->sdev_gendev.kobj, NULL, "state");
+>  	return 0;
+>  
+>   illegal:
+> @@ -3074,14 +3075,16 @@ int scsi_internal_device_unblock_nowait(struct scsi_device *sdev,
+>  	 * offlined states and goose the device queue if successful.
+>  	 */
+>  	if ((sdev->sdev_state == SDEV_BLOCK) ||
+> -	    (sdev->sdev_state == SDEV_TRANSPORT_OFFLINE))
+> +	    (sdev->sdev_state == SDEV_TRANSPORT_OFFLINE)) {
+>  		sdev->sdev_state = new_state;
+> -	else if (sdev->sdev_state == SDEV_CREATED_BLOCK) {
+> +		sysfs_notify(&sdev->sdev_gendev.kobj, NULL, "state");
+> +	} else if (sdev->sdev_state == SDEV_CREATED_BLOCK) {
+>  		if (new_state == SDEV_TRANSPORT_OFFLINE ||
+>  		    new_state == SDEV_OFFLINE)
+>  			sdev->sdev_state = new_state;
+>  		else
+>  			sdev->sdev_state = SDEV_CREATED;
+> +		sysfs_notify(&sdev->sdev_gendev.kobj, NULL, "state");
+>  	} else if (sdev->sdev_state != SDEV_CANCEL &&
+>  		 sdev->sdev_state != SDEV_OFFLINE)
+>  		return -EINVAL;
+
+This would be a lot more readable using switch statements:
+
+	switch (sdev->sdev_state) {
+	case SDEV_BLOCK:
+	case SDEV_TRANSPORT_OFFLINE:
+		sdev->sdev_state = new_state;
+		sysfs_notify(&sdev->sdev_gendev.kobj, NULL, "state");
+		break;
+	case SDEV_CREATED_BLOCK:
+  		switch (new_state) {
+		case SDEV_TRANSPORT_OFFLINE:
+ 		case SDEV_OFFLINE:
+  			sdev->sdev_state = new_state;
+			break;
+		default:
+  			sdev->sdev_state = SDEV_CREATED;
+			break;
+		}
+		sysfs_notify(&sdev->sdev_gendev.kobj, NULL, "state");
+		break;
+	case SDEV_CANCEL:
+	case SDEV_OFFLINE:
+		break;
+	default:
+ 		return -EINVAL;
+	}
+
+Otherwise it looks fine to me.
