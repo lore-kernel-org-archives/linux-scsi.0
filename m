@@ -1,70 +1,69 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
 Subject: Re: [PATCH] sd_zbc: Write unlock zone from sd_uninit_cmnd()
-Date: Wed, 9 Aug 2017 13:07:54 +0900
-Message-ID: <122fbf61-0de5-fa7e-2024-a0763ad70b13@wdc.com>
+Date: Wed, 9 Aug 2017 04:15:12 +0000
+Message-ID: <1502252111.2784.4.camel@wdc.com>
 References: <20170808041746.31341-1-damien.lemoal@wdc.com>
- <1502204867.2250.1.camel@wdc.com>
- <d0bdb1af-7d37-9fa2-62e9-56b2ff315924@wdc.com>
- <cea78872-8e58-549d-87fc-2897e640c31c@wdc.com>
- <1502251037.2784.2.camel@wdc.com>
+         <1502204867.2250.1.camel@wdc.com>
+         <d0bdb1af-7d37-9fa2-62e9-56b2ff315924@wdc.com>
+         <cea78872-8e58-549d-87fc-2897e640c31c@wdc.com>
+         <1502251037.2784.2.camel@wdc.com>
+         <122fbf61-0de5-fa7e-2024-a0763ad70b13@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:21263 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750865AbdHIEIh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Aug 2017 00:08:37 -0400
-In-Reply-To: <1502251037.2784.2.camel@wdc.com>
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:9074 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751602AbdHIEP7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Aug 2017 00:15:59 -0400
+In-Reply-To: <122fbf61-0de5-fa7e-2024-a0763ad70b13@wdc.com>
 Content-Language: en-US
+Content-ID: <6BD2EB8277E78A419CEA2599CEA2A4BA@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 Cc: "hch@lst.de" <hch@lst.de>
 
-
-
-On 8/9/17 12:57, Bart Van Assche wrote:
-> On Wed, 2017-08-09 at 11:47 +0900, Damien Le Moal wrote:
->> On 8/9/17 11:19, Damien Le Moal wrote:
->>> On 8/9/17 00:07, Bart Van Assche wrote:
->>>> On Tue, 2017-08-08 at 13:17 +0900, Damien Le Moal wrote:
->>>>> acquired the lock completes can cause deadlocks with scsi-mq due to
->>>>> potential queue reordering if the lock owning request is requeued and
->>>>> not executed.
->>>>
->>>> Please note that even with scsi-sq requeueing can cause request reordering.
->>>
->>> I am painfully aware of this fact... I will update the commit message to
->>> reflect this.
->>
->> Correction: checking the code again, I just realized that the prep_fn
->> queue function, which calls sd_init_cmnd() and causes a zone to be
->> write-locked if the prepared command is a write, is called within
->> blk_peek_request(). That function is called in scsi_request_fn() with
->> the queue lock held. So for the legacy scsi path, this means that for a
->> write command to a zone, the operation "lock zone and dequeue command"
->> is atomic. Thanks to the zone lock, further dequeue of write commands
->> for the same (locked) zone cannot happen and so there is no reordering
->> possible for write commands directed at the same zone. Reordering for
->> other commands is possible, but similarly to regular disks, this is not
->> a problem with ZBC/ZAC drives.
-> 
-> Hello Damien,
-> 
-> The locking approach in the upstream code indeed prevents reordering of
-> write requests that apply to the same zone. However, this patch modifies
-> the locking approach. Are you sure that with this patch applied no request
-> reordering will occur if requests are requeued since this patch causes the
-> zone lock to be released before requeuing occurs?
-
-scsi_requeue_command() calls blk_unprep_request() and
-blk_requeue_request under the queue lock. So atomically.
-I think that suppresses any possibility of write requests to the same
-zone to be reordered.
-
-Best regards.
-
--- 
-Damien Le Moal,
-Western Digital
+T24gV2VkLCAyMDE3LTA4LTA5IGF0IDEzOjA3ICswOTAwLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToN
+Cj4gDQo+IE9uIDgvOS8xNyAxMjo1NywgQmFydCBWYW4gQXNzY2hlIHdyb3RlOg0KPiA+IE9uIFdl
+ZCwgMjAxNy0wOC0wOSBhdCAxMTo0NyArMDkwMCwgRGFtaWVuIExlIE1vYWwgd3JvdGU6DQo+ID4g
+PiBPbiA4LzkvMTcgMTE6MTksIERhbWllbiBMZSBNb2FsIHdyb3RlOg0KPiA+ID4gPiBPbiA4Lzkv
+MTcgMDA6MDcsIEJhcnQgVmFuIEFzc2NoZSB3cm90ZToNCj4gPiA+ID4gPiBPbiBUdWUsIDIwMTct
+MDgtMDggYXQgMTM6MTcgKzA5MDAsIERhbWllbiBMZSBNb2FsIHdyb3RlOg0KPiA+ID4gPiA+ID4g
+YWNxdWlyZWQgdGhlIGxvY2sgY29tcGxldGVzIGNhbiBjYXVzZSBkZWFkbG9ja3Mgd2l0aCBzY3Np
+LW1xIGR1ZSB0bw0KPiA+ID4gPiA+ID4gcG90ZW50aWFsIHF1ZXVlIHJlb3JkZXJpbmcgaWYgdGhl
+IGxvY2sgb3duaW5nIHJlcXVlc3QgaXMgcmVxdWV1ZWQgYW5kDQo+ID4gPiA+ID4gPiBub3QgZXhl
+Y3V0ZWQuDQo+ID4gPiA+ID4gDQo+ID4gPiA+ID4gUGxlYXNlIG5vdGUgdGhhdCBldmVuIHdpdGgg
+c2NzaS1zcSByZXF1ZXVlaW5nIGNhbiBjYXVzZSByZXF1ZXN0IHJlb3JkZXJpbmcuDQo+ID4gPiA+
+IA0KPiA+ID4gPiBJIGFtIHBhaW5mdWxseSBhd2FyZSBvZiB0aGlzIGZhY3QuLi4gSSB3aWxsIHVw
+ZGF0ZSB0aGUgY29tbWl0IG1lc3NhZ2UgdG8NCj4gPiA+ID4gcmVmbGVjdCB0aGlzLg0KPiA+ID4g
+DQo+ID4gPiBDb3JyZWN0aW9uOiBjaGVja2luZyB0aGUgY29kZSBhZ2FpbiwgSSBqdXN0IHJlYWxp
+emVkIHRoYXQgdGhlIHByZXBfZm4NCj4gPiA+IHF1ZXVlIGZ1bmN0aW9uLCB3aGljaCBjYWxscyBz
+ZF9pbml0X2NtbmQoKSBhbmQgY2F1c2VzIGEgem9uZSB0byBiZQ0KPiA+ID4gd3JpdGUtbG9ja2Vk
+IGlmIHRoZSBwcmVwYXJlZCBjb21tYW5kIGlzIGEgd3JpdGUsIGlzIGNhbGxlZCB3aXRoaW4NCj4g
+PiA+IGJsa19wZWVrX3JlcXVlc3QoKS4gVGhhdCBmdW5jdGlvbiBpcyBjYWxsZWQgaW4gc2NzaV9y
+ZXF1ZXN0X2ZuKCkgd2l0aA0KPiA+ID4gdGhlIHF1ZXVlIGxvY2sgaGVsZC4gU28gZm9yIHRoZSBs
+ZWdhY3kgc2NzaSBwYXRoLCB0aGlzIG1lYW5zIHRoYXQgZm9yIGENCj4gPiA+IHdyaXRlIGNvbW1h
+bmQgdG8gYSB6b25lLCB0aGUgb3BlcmF0aW9uICJsb2NrIHpvbmUgYW5kIGRlcXVldWUgY29tbWFu
+ZCINCj4gPiA+IGlzIGF0b21pYy4gVGhhbmtzIHRvIHRoZSB6b25lIGxvY2ssIGZ1cnRoZXIgZGVx
+dWV1ZSBvZiB3cml0ZSBjb21tYW5kcw0KPiA+ID4gZm9yIHRoZSBzYW1lIChsb2NrZWQpIHpvbmUg
+Y2Fubm90IGhhcHBlbiBhbmQgc28gdGhlcmUgaXMgbm8gcmVvcmRlcmluZw0KPiA+ID4gcG9zc2li
+bGUgZm9yIHdyaXRlIGNvbW1hbmRzIGRpcmVjdGVkIGF0IHRoZSBzYW1lIHpvbmUuIFJlb3JkZXJp
+bmcgZm9yDQo+ID4gPiBvdGhlciBjb21tYW5kcyBpcyBwb3NzaWJsZSwgYnV0IHNpbWlsYXJseSB0
+byByZWd1bGFyIGRpc2tzLCB0aGlzIGlzIG5vdA0KPiA+ID4gYSBwcm9ibGVtIHdpdGggWkJDL1pB
+QyBkcml2ZXMuDQo+ID4gDQo+ID4gSGVsbG8gRGFtaWVuLA0KPiA+IA0KPiA+IFRoZSBsb2NraW5n
+IGFwcHJvYWNoIGluIHRoZSB1cHN0cmVhbSBjb2RlIGluZGVlZCBwcmV2ZW50cyByZW9yZGVyaW5n
+IG9mDQo+ID4gd3JpdGUgcmVxdWVzdHMgdGhhdCBhcHBseSB0byB0aGUgc2FtZSB6b25lLiBIb3dl
+dmVyLCB0aGlzIHBhdGNoIG1vZGlmaWVzDQo+ID4gdGhlIGxvY2tpbmcgYXBwcm9hY2guIEFyZSB5
+b3Ugc3VyZSB0aGF0IHdpdGggdGhpcyBwYXRjaCBhcHBsaWVkIG5vIHJlcXVlc3QNCj4gPiByZW9y
+ZGVyaW5nIHdpbGwgb2NjdXIgaWYgcmVxdWVzdHMgYXJlIHJlcXVldWVkIHNpbmNlIHRoaXMgcGF0
+Y2ggY2F1c2VzIHRoZQ0KPiA+IHpvbmUgbG9jayB0byBiZSByZWxlYXNlZCBiZWZvcmUgcmVxdWV1
+aW5nIG9jY3Vycz8NCj4gDQo+IHNjc2lfcmVxdWV1ZV9jb21tYW5kKCkgY2FsbHMgYmxrX3VucHJl
+cF9yZXF1ZXN0KCkgYW5kDQo+IGJsa19yZXF1ZXVlX3JlcXVlc3QgdW5kZXIgdGhlIHF1ZXVlIGxv
+Y2suIFNvIGF0b21pY2FsbHkuDQo+IEkgdGhpbmsgdGhhdCBzdXBwcmVzc2VzIGFueSBwb3NzaWJp
+bGl0eSBvZiB3cml0ZSByZXF1ZXN0cyB0byB0aGUgc2FtZQ0KPiB6b25lIHRvIGJlIHJlb3JkZXJl
+ZC4NCg0KVGhlIHF1ZXVlIGxvY2sgaXMgcmVsZWFzZWQgYWZ0ZXIgdGhlIHJlcXVlc3QgaXMgcmVx
+dWV1ZWQgdW50aWwgdGhlIHF1ZXVlIGlzDQpyZXJ1bi4gQW5vdGhlciByZXF1ZXN0IGNhbiBnZXQg
+ZXhlY3V0ZWQgYmVmb3JlIHRoZSByZXF1ZXVlZCByZXF1ZXN0IGdldHMNCnJlZXhlY3V0ZWQuIE9y
+IGluIG90aGVyIHdvcmRzLCByZXF1ZXVpbmcgY2FuIGNoYW5nZSB0aGUgb3JkZXIgaW4gd2hpY2gN
+CnJlcXVlc3RzIGFyZSBleGVjdXRlZC4NCg0KQmFydC4=
