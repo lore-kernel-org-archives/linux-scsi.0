@@ -1,89 +1,54 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: Re: [PATCH] sd_zbc: Write unlock zone from sd_uninit_cmnd()
-Date: Wed, 9 Aug 2017 14:15:24 +0900
-Message-ID: <0e79dcda-29d8-58e3-ed20-b7b6e8db4b10@wdc.com>
-References: <20170808041746.31341-1-damien.lemoal@wdc.com>
- <1502204867.2250.1.camel@wdc.com>
- <d0bdb1af-7d37-9fa2-62e9-56b2ff315924@wdc.com>
- <cea78872-8e58-549d-87fc-2897e640c31c@wdc.com>
- <1502251037.2784.2.camel@wdc.com>
- <122fbf61-0de5-fa7e-2024-a0763ad70b13@wdc.com>
- <1502252111.2784.4.camel@wdc.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH 0/5] qcom-ufs: phy/hcd: Refactor phy initialization code
+Date: Wed, 9 Aug 2017 11:18:26 +0530
+Message-ID: <d49316e0-8ccc-21b3-e952-ddb0a941f3b3@ti.com>
+References: <1501829332-5183-1-git-send-email-vivek.gautam@codeaurora.org>
+ <c29e3a7c-62cc-f25a-4e0b-231c69e01afa@ti.com>
+ <b69ecef93852cf5a7bf342550de16f19@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="windows-1252"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:45785 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750866AbdHIFQR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Aug 2017 01:16:17 -0400
-In-Reply-To: <1502252111.2784.4.camel@wdc.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <b69ecef93852cf5a7bf342550de16f19@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Vivek Gautam <vivek.gautam@codeaurora.org>
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, robh+dt@kernel.org, linux-arm-msm@vger.kernel.org, subhashj@codeaurora.org, bjorn.andersson@linaro.org, devicetree@vger.kernel.org, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com, linux-arm-msm-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "hch@lst.de" <hch@lst.de>
 
+Vivek,
 
-
-On 8/9/17 13:15, Bart Van Assche wrote:
-> On Wed, 2017-08-09 at 13:07 +0900, Damien Le Moal wrote:
->>
->> On 8/9/17 12:57, Bart Van Assche wrote:
->>> On Wed, 2017-08-09 at 11:47 +0900, Damien Le Moal wrote:
->>>> On 8/9/17 11:19, Damien Le Moal wrote:
->>>>> On 8/9/17 00:07, Bart Van Assche wrote:
->>>>>> On Tue, 2017-08-08 at 13:17 +0900, Damien Le Moal wrote:
->>>>>>> acquired the lock completes can cause deadlocks with scsi-mq due to
->>>>>>> potential queue reordering if the lock owning request is requeued and
->>>>>>> not executed.
->>>>>>
->>>>>> Please note that even with scsi-sq requeueing can cause request reordering.
->>>>>
->>>>> I am painfully aware of this fact... I will update the commit message to
->>>>> reflect this.
->>>>
->>>> Correction: checking the code again, I just realized that the prep_fn
->>>> queue function, which calls sd_init_cmnd() and causes a zone to be
->>>> write-locked if the prepared command is a write, is called within
->>>> blk_peek_request(). That function is called in scsi_request_fn() with
->>>> the queue lock held. So for the legacy scsi path, this means that for a
->>>> write command to a zone, the operation "lock zone and dequeue command"
->>>> is atomic. Thanks to the zone lock, further dequeue of write commands
->>>> for the same (locked) zone cannot happen and so there is no reordering
->>>> possible for write commands directed at the same zone. Reordering for
->>>> other commands is possible, but similarly to regular disks, this is not
->>>> a problem with ZBC/ZAC drives.
->>>
->>> Hello Damien,
->>>
->>> The locking approach in the upstream code indeed prevents reordering of
->>> write requests that apply to the same zone. However, this patch modifies
->>> the locking approach. Are you sure that with this patch applied no request
->>> reordering will occur if requests are requeued since this patch causes the
->>> zone lock to be released before requeuing occurs?
->>
->> scsi_requeue_command() calls blk_unprep_request() and
->> blk_requeue_request under the queue lock. So atomically.
->> I think that suppresses any possibility of write requests to the same
->> zone to be reordered.
+On Tuesday 08 August 2017 09:20 PM, Vivek Gautam wrote:
+> Hi Koshon,
 > 
-> The queue lock is released after the request is requeued until the queue is
-> rerun. Another request can get executed before the requeued request gets
-> reexecuted. Or in other words, requeuing can change the order in which
-> requests are executed.
+> On 2017-08-08 17:39, Kishon Vijay Abraham I wrote:
+>> Hi,
+>>
+>> On Friday 04 August 2017 12:18 PM, Vivek Gautam wrote:
+>>> Refactoring the qcom-ufs phy and host controller code to move
+>>> further towards the generic phy usage. Right now the qcom-ufs exports
+>>> a bunch of APIs that are used by the host controller to initialize
+>>> the phy.
+>>> With this patch series, we populate the phy_init() which was a no-op
+>>> earlier. The host controller then calls the phy_init() at the designated
+>>> place rather than doing it invariably in ufs_hcd_init().
+>>>
+>>> As part of this series, we introduce phy modes for ufs phy.
+>>> The M-PHY has two data rates defined for each generations (Gears) -
+>>> Rate A and Rate B. These can serve as the two modes of ufs HS phy.
+>>> Host controller can direct the phy to set the respective configurations
+>>> based on the phy modes.
+>>>
+>>> The patch-series has been tested with necessary dt patches on db820c.
+>>
+>> Can the first 3 patches go independently of the other 2 or should all this be
+>> merged together?
+> 
+> The first 3 patches are independent, but the next 2 patches depend on those 3
+> for functionality.
+> I would prefer all to go in one tree. If you want to pull these in the phy tree,
+> I will request Subhash/Martin to ack the patches.
 
-Overall, yes, that is possible. However, considering only write commands
-to a single zone, since at any time only one command is dequeued (the
-one holding the zone lock), having the "lock+dequeue" and
-"unlock+requeue" both atomic prevent any reordering of write commands
-directed to that zone. The first command in the queue for the zone will
-either (1) get the zone lock and be dequeued OR (2) stay in the queue.
-In case (1), the next write for the zone will hit case (2) until the
-dispatch command completes. If the dispatch command is requeued (at the
-dispatch queue head), we hit back again the (1) or (2) cases, without
-any change in the order. Isnt't it ?
+sure, that should be fine!
 
--- 
-Damien Le Moal,
-Western Digital
+Thanks
+Kishon
