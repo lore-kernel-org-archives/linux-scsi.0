@@ -1,41 +1,166 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [v4.13-rc BUG] system lockup when running big buffered write(4M)
- to IB SRP via mpath
-Date: Wed, 9 Aug 2017 17:10:01 +0000
-Message-ID: <1502298599.2356.7.camel@wdc.com>
-References: <20170808141715.GB22763@ming.t460p>
-         <1502237504.4017.1.camel@redhat.com> <1502245693.6511.3.camel@redhat.com>
-         <c072e942-0265-f0ad-561d-0e50d50e3cb1@redhat.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCHv2 4/4] scsi_devinfo: fixup string compare
+Date: Wed, 9 Aug 2017 13:43:55 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1708091321460.2109-100000@iolanthe.rowland.org>
+References: <1502275444-27676-5-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:63188 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752757AbdHIRKt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Aug 2017 13:10:49 -0400
-In-Reply-To: <c072e942-0265-f0ad-561d-0e50d50e3cb1@redhat.com>
-Content-Language: en-US
-Content-ID: <383872F987413C46BD0A1ACAF1D645EA@namprd04.prod.outlook.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:43452 "HELO
+        iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1751704AbdHIRn4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Aug 2017 13:43:56 -0400
+In-Reply-To: <1502275444-27676-5-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "loberman@redhat.com" <loberman@redhat.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>
-Cc: Bart Van Assche <Bart.VanAssche@wdc.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Doug Gilbert <dgilbert@interlog.com>, Hannes Reinecke <hare@suse.com>
 
-T24gV2VkLCAyMDE3LTA4LTA5IGF0IDEyOjQzIC0wNDAwLCBMYXVyZW5jZSBPYmVybWFuIHdyb3Rl
-Og0KPiBZb3VyIGxhdGVzdCBwYXRjaCBvbiBzdG9jayB1cHN0cmVhbSB3aXRob3V0IE1pbmcncyBs
-YXRlc3QgcGF0Y2hlcyBpcyANCj4gYmVoYXZpbmcgZm9yIG1lLg0KPiANCj4gQXMgYWxyZWFkeSBt
-ZW50aW9uZWQsIHRoZSByZXF1ZXVlIC0xMSBhbmQgY2xvbmUgZmFpbHVyZSBtZXNzYWdlcyBhcmUg
-DQo+IGdvbmUgYW5kIEkgYW0gbm90IGFjdHVhbGx5IHNlZWluZyBhbnkgc29mdCBsb2NrdXBzIG9y
-IGhhcmQgbG9ja3Vwcy4NCj4gDQo+IFdoZW4gTWluZyBnZXRzIGJhY2sgSSB3aWxsIHdvcmsgd2l0
-aCBoaW0gb24gaGlzIHBhdGNoIHNldCBhbmQgdGhlIGxvY2t1cHMuDQo+IA0KPiBSdW5uaW5nIDEw
-IHBhcmFsbGVsIHdyaXRlcyB3aGljaCBlYXNpbHkgdHJpcHMgaW50byBzb2Z0IGxvY2t1cHMgb24g
-DQo+IE1pbmcncyBrZXJuZWwgKGV2ZW4gd2l0aCB5b3VyIHBhdGNoKSBoYXMgYmVlbiBzdGFibGUg
-aGVyZSBvbiA0LjEzLVJDMyANCj4gd2l0aCB5b3VyIHBhdGNoLg0KPiANCj4gSSB3aWxsIGxlYXZl
-IGl0IHJ1bm5pbmcgZm9yIGEgd2hpbGUgbm93IGJ1dCB0aGUgcGF0Y2ggaXMgZ29vZC4NCj4gDQo+
-IElmIGl0IHN1cnZpdmVzIDQgaG91cnMgSSB3aWxsIGFkZCBhIFRlc3RlZC1ieSB0byB5b3VyIGxh
-dGVzdCBwYXRjaC4NCg0KSGVsbG8gTGF1cmVuY2UsDQoNCkknbSB3b3JraW5nIG9uIGFuIGFkZGl0
-aW9uYWwgcGF0Y2ggdGhhdCBzaG91bGQgcmVkdWNlIHVubmVjZXNzYXJ5IHJlcXVldWluZw0KZXZl
-biBmdXJ0aGVyLiBJIHdpbGwgbGV0IHlvdSBrbm93IHdoZW4gaXQncyByZWFkeS4NCg0KQWRkaXRp
-b25hbGx5LCBwbGVhc2UgdHJpbSBlLW1haWxzIHdoZW4gcmVwbHlpbmcgc3VjaCB0aGF0IGUtbWFp
-bHMgZG8gbm90IGdldA0KdG9vIGxvbmcuDQoNClRoYW5rcywNCg0KQmFydC4=
+On Wed, 9 Aug 2017, Hannes Reinecke wrote:
+
+> When checking the model and vendor string we need to use the
+> minimum value of either string, otherwise we'll miss out on
+> wildcard matches.
+
+This is now true only for the model string, not the vendor string.  And 
+even for the model string, you allow the lengths to differ in only one 
+direction (the model string can be longer than the devinfo model 
+string, but not vice versa).
+
+> And we should take card when matching with zero size strings;
+> results might be unpredictable.
+> With this patch the rules for matching devinfo strings are
+> as follows:
+> - Vendor strings must match exactly
+> - Empty Model strings will only match if the devinfo model
+>   is also empty
+> - Model strings shorter than the devinfo model string will
+>   not match
+
+Good, this is a lot better than before.  These rules make sense.
+
+However, the rules and the code are both somewhat redundant.  For 
+example, the second rule above is already a consequence of the third 
+rule: If the model string is empty and the devinfo model string isn't, 
+then the model string is shorter than the devinfo model string so they 
+won't match.
+
+> Fixes: 5e7ff2c ("SCSI: fix new bug in scsi_dev_info_list string matching")
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> ---
+>  drivers/scsi/scsi_devinfo.c | 46 ++++++++++++++++++++++++++++++++-------------
+>  1 file changed, 33 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+> index 776c701..f8f5cb7 100644
+> --- a/drivers/scsi/scsi_devinfo.c
+> +++ b/drivers/scsi/scsi_devinfo.c
+> @@ -399,8 +399,8 @@ int scsi_dev_info_list_add_keyed(int compatible, char *vendor, char *model,
+>  
+>  /**
+>   * scsi_dev_info_list_find - find a matching dev_info list entry.
+> - * @vendor:	vendor string
+> - * @model:	model (product) string
+> + * @vendor:	full vendor string
+> + * @model:	full model (product) string
+>   * @key:	specify list to use
+>   *
+>   * Description:
+> @@ -440,6 +440,8 @@ static struct scsi_dev_info_list *scsi_dev_info_list_find(const char *vendor,
+>  	/* Also skip trailing spaces */
+>  	while (vmax > 0 && vskip[vmax - 1] == ' ')
+>  		--vmax;
+> +	if (!vmax)
+> +		vskip = NULL;
+>  
+>  	mmax = sizeof(devinfo->model);
+>  	mskip = model;
+> @@ -449,27 +451,45 @@ static struct scsi_dev_info_list *scsi_dev_info_list_find(const char *vendor,
+>  	}
+>  	while (mmax > 0 && mskip[mmax - 1] == ' ')
+>  		--mmax;
+> +	if (!mmax)
+> +		mskip = NULL;
+
+Neither of these changes is needed.
+
+>  
+>  	list_for_each_entry(devinfo, &devinfo_table->scsi_dev_info_list,
+>  			    dev_info_list) {
+>  		if (devinfo->compatible) {
+>  			/*
+> -			 * Behave like the older version of get_device_flags.
+> +			 * vendor strings must be an exact match
+>  			 */
+> -			if (memcmp(devinfo->vendor, vskip, vmax) ||
+> -					(vmax < sizeof(devinfo->vendor) &&
+> -						devinfo->vendor[vmax]))
+> +			if (vmax != strlen(devinfo->vendor))
+>  				continue;
+> -			if (memcmp(devinfo->model, mskip, mmax) ||
+> -					(mmax < sizeof(devinfo->model) &&
+> -						devinfo->model[mmax]))
+> +			if (vskip && vmax &&
+> +			    memcmp(devinfo->vendor, vskip, vmax))
+>  				continue;
+
+There's no need to test vskip and vmax.  The memcmp test alone is 
+sufficient, since you know the lengths are equal and you are looking 
+for an exact match.  So in the end, you could just do this:
+
+			if (vmax != strlen(devinfo->vendor) ||
+			    memcmp(devinfo->vendor, vskip, vmax))
+				continue;
+
+> -			return devinfo;
+> +			/*
+> +			 * Empty model strings only match if both strings
+> +			 * are empty.
+> +			 */
+> +			if (!mmax && !strlen(devinfo->model))
+> +				return devinfo;
+
+As mentioned above, this is not necessary.
+
+> +
+> +			/*
+> +			 * Empty @model never matches
+> +			 */
+> +			if (!mskip)
+> +				continue;
+
+Nor is this.
+
+> +
+> +			/*
+> +			 * @model specifies the full string, and
+> +			 * must be larger or equal to devinfo->model
+> +			 */
+> +			if (!memcmp(devinfo->model, mskip,
+> +				    strlen(devinfo->model)))
+> +				return devinfo;
+
+It would be safer to do it this way:
+
+			n = strlen(devinfo->model);
+			if (mmax < n || memcmp(devinfo->model, mskip, n))
+				continue;
+			return devinfo;
+
+Otherwise you run the risk of comparing part of the devinfo model 
+string to bytes beyond the end of the model string.
+
+Alan Stern
+
+>  		} else {
+>  			if (!memcmp(devinfo->vendor, vendor,
+> -				     sizeof(devinfo->vendor)) &&
+> -			     !memcmp(devinfo->model, model,
+> -				      sizeof(devinfo->model)))
+> +				    sizeof(devinfo->vendor)) &&
+> +			    !memcmp(devinfo->model, model,
+> +				    sizeof(devinfo->model)))
+>  				return devinfo;
+>  		}
+>  	}
+> 
