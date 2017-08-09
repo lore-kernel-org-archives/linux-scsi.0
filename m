@@ -1,36 +1,41 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: Increased memory usage with scsi-mq
-Date: Wed, 9 Aug 2017 18:50:10 +0200
-Message-ID: <3b96a6c9-c5af-c50d-ba02-59863d1ee5f2@redhat.com>
-References: <20170804210035.GA10017@redhat.com>
- <20170805084436.GA14264@lst.de> <20170805092704.GD20914@redhat.com>
- <20170805133954.GA17694@lst.de> <20170805155103.GE20914@redhat.com>
- <b133b97e-9660-ba9b-51de-39fa23fce903@redhat.com>
- <20170807122701.GH20914@redhat.com>
- <ffc29e81-ff6b-7132-2e90-86b5632098fb@redhat.com>
- <20170809160111.GC3141@lst.de>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [v4.13-rc BUG] system lockup when running big buffered write(4M)
+ to IB SRP via mpath
+Date: Wed, 9 Aug 2017 17:10:01 +0000
+Message-ID: <1502298599.2356.7.camel@wdc.com>
+References: <20170808141715.GB22763@ming.t460p>
+         <1502237504.4017.1.camel@redhat.com> <1502245693.6511.3.camel@redhat.com>
+         <c072e942-0265-f0ad-561d-0e50d50e3cb1@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170809160111.GC3141@lst.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:63188 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752757AbdHIRKt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Aug 2017 13:10:49 -0400
+In-Reply-To: <c072e942-0265-f0ad-561d-0e50d50e3cb1@redhat.com>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Richard W.M. Jones" <rjones@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
+Content-ID: <383872F987413C46BD0A1ACAF1D645EA@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "loberman@redhat.com" <loberman@redhat.com>, "ming.lei@redhat.com" <ming.lei@redhat.com>
+Cc: Bart Van Assche <Bart.VanAssche@wdc.com>
 
-On 09/08/2017 18:01, Christoph Hellwig wrote:
-> On Mon, Aug 07, 2017 at 03:07:48PM +0200, Paolo Bonzini wrote:
->> can_queue should depend on the virtqueue size, which unfortunately can
->> vary for each virtio-scsi device in theory.  The virtqueue size is
->> retrieved by drivers/virtio prior to calling vring_create_virtqueue, and
->> in QEMU it is the second argument to virtio_add_queue.
-> 
-> Why is that unfortunate?  We don't even have to set can_queue in
-> the host template, we can dynamically set it on per-host basis.
-
-Ah, cool, I thought allocations based on can_queue happened already in
-scsi_host_alloc, but they happen at scsi_add_host time.
-
-Paolo
+T24gV2VkLCAyMDE3LTA4LTA5IGF0IDEyOjQzIC0wNDAwLCBMYXVyZW5jZSBPYmVybWFuIHdyb3Rl
+Og0KPiBZb3VyIGxhdGVzdCBwYXRjaCBvbiBzdG9jayB1cHN0cmVhbSB3aXRob3V0IE1pbmcncyBs
+YXRlc3QgcGF0Y2hlcyBpcyANCj4gYmVoYXZpbmcgZm9yIG1lLg0KPiANCj4gQXMgYWxyZWFkeSBt
+ZW50aW9uZWQsIHRoZSByZXF1ZXVlIC0xMSBhbmQgY2xvbmUgZmFpbHVyZSBtZXNzYWdlcyBhcmUg
+DQo+IGdvbmUgYW5kIEkgYW0gbm90IGFjdHVhbGx5IHNlZWluZyBhbnkgc29mdCBsb2NrdXBzIG9y
+IGhhcmQgbG9ja3Vwcy4NCj4gDQo+IFdoZW4gTWluZyBnZXRzIGJhY2sgSSB3aWxsIHdvcmsgd2l0
+aCBoaW0gb24gaGlzIHBhdGNoIHNldCBhbmQgdGhlIGxvY2t1cHMuDQo+IA0KPiBSdW5uaW5nIDEw
+IHBhcmFsbGVsIHdyaXRlcyB3aGljaCBlYXNpbHkgdHJpcHMgaW50byBzb2Z0IGxvY2t1cHMgb24g
+DQo+IE1pbmcncyBrZXJuZWwgKGV2ZW4gd2l0aCB5b3VyIHBhdGNoKSBoYXMgYmVlbiBzdGFibGUg
+aGVyZSBvbiA0LjEzLVJDMyANCj4gd2l0aCB5b3VyIHBhdGNoLg0KPiANCj4gSSB3aWxsIGxlYXZl
+IGl0IHJ1bm5pbmcgZm9yIGEgd2hpbGUgbm93IGJ1dCB0aGUgcGF0Y2ggaXMgZ29vZC4NCj4gDQo+
+IElmIGl0IHN1cnZpdmVzIDQgaG91cnMgSSB3aWxsIGFkZCBhIFRlc3RlZC1ieSB0byB5b3VyIGxh
+dGVzdCBwYXRjaC4NCg0KSGVsbG8gTGF1cmVuY2UsDQoNCkknbSB3b3JraW5nIG9uIGFuIGFkZGl0
+aW9uYWwgcGF0Y2ggdGhhdCBzaG91bGQgcmVkdWNlIHVubmVjZXNzYXJ5IHJlcXVldWluZw0KZXZl
+biBmdXJ0aGVyLiBJIHdpbGwgbGV0IHlvdSBrbm93IHdoZW4gaXQncyByZWFkeS4NCg0KQWRkaXRp
+b25hbGx5LCBwbGVhc2UgdHJpbSBlLW1haWxzIHdoZW4gcmVwbHlpbmcgc3VjaCB0aGF0IGUtbWFp
+bHMgZG8gbm90IGdldA0KdG9vIGxvbmcuDQoNClRoYW5rcywNCg0KQmFydC4=
