@@ -1,73 +1,71 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 1/2] virtio: Reduce BUG if total_sg > virtqueue size to
-	WARN.
-Date: Thu, 10 Aug 2017 18:47:32 +0200
-Message-ID: <fb2effc1-4f5f-a4b5-b8c3-737c2e14a65c@redhat.com>
-References: <20170810164035.19963-1-rjones@redhat.com>
-	<20170810164035.19963-2-rjones@redhat.com>
+From: "ezIX" <bugs@ezix.org>
+Subject: [ezIX] #753: LSHW Causing Rewinds On LTO7 Drives
+Date: Thu, 10 Aug 2017 16:46:55 -0000
+Message-ID: <045.63fa297e4602f9b1538599f5eb34c6d6@ezix.org>
+Reply-To: support@ezix.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <20170810164035.19963-2-rjones@redhat.com>
-Content-Language: en-US
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: "Richard W.M. Jones" <rjones@redhat.com>, jejb@linux.vnet.ibm.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, mst@redhat.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, hch@lst.de
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from dedibox.ezix.org ([163.172.64.21]:49484 "EHLO mail.ezix.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752524AbdHJQzf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 10 Aug 2017 12:55:35 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+Cc: support@ezix.org
 
-On 10/08/2017 18:40, Richard W.M. Jones wrote:
-> If using indirect descriptors, you can make the total_sg as large as
-> you want.  If not, BUG is too serious because the function later
-> returns -ENOSPC.
-> 
-> Thanks Paolo Bonzini, Christoph Hellwig.
-> 
-> Signed-off-by: Richard W.M. Jones <rjones@redhat.com>
-> ---
->  drivers/virtio/virtio_ring.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/virtio/virtio_ring.c b/drivers/virtio/virtio_ring.c
-> index 5e1b548828e6..27cbc1eab868 100644
-> --- a/drivers/virtio/virtio_ring.c
-> +++ b/drivers/virtio/virtio_ring.c
-> @@ -296,7 +296,6 @@ static inline int virtqueue_add(struct virtqueue *_vq,
->  	}
->  #endif
->  
-> -	BUG_ON(total_sg > vq->vring.num);
->  	BUG_ON(total_sg == 0);
->  
->  	head = vq->free_head;
-> @@ -305,8 +304,10 @@ static inline int virtqueue_add(struct virtqueue *_vq,
->  	 * buffers, then go indirect. FIXME: tune this threshold */
->  	if (vq->indirect && total_sg > 1 && vq->vq.num_free)
->  		desc = alloc_indirect(_vq, total_sg, gfp);
-> -	else
-> +	else {
->  		desc = NULL;
-> +		WARN_ON_ONCE(total_sg > vq->vring.num && !vq->indirect);
+#753: LSHW Causing Rewinds On LTO7 Drives
+-----------------------------+--------------------
+ Reporter:  a.richman@…      |      Owner:  lyonel
+     Type:  defect           |     Status:  new
+ Priority:  major            |  Milestone:
+Component:  lshw             |    Version:
+ Keywords:  lto lto7 rewind  |
+-----------------------------+--------------------
+ Hi,
 
-So we get here only if vq->vq.num_free is zero.  In that case,
-vq->indirect makes no difference for the appropriateness of the warning
-(that is, it should never be issued for indirect descriptors).
+ We're running into an issue with LTO7 drives on Linux, where LSHW will
+ cause the drive to rewind when it queries it.  We haven't seen this at all
+ on LTO6 drives so it could be an issue with the LTO7 drivers but I figured
+ I'd try here first.
 
-> +	}
->  
->  	if (desc) {
->  		/* Use a single buffer which doesn't continue */
-> 
+ I tracked this down by adding debug logging to the scsi/st drivers on
+ rewind, the logs below show it was the LSHW process that caused the
+ rewind:
+ [  629.456892] st.c break 1 REZERO_UNIT
+ [  629.456897] CPU: 6 PID: 17091 Comm: lshw Not tainted
+ 4.4.78-gentoo-r2-rev1.15 #1
+ [  629.456899] Hardware name: Supermicro X9SCL/X9SCM/X9SCL/X9SCM, BIOS
+ 2.0b 09/17/2012
+ [  629.456901]  0000000000000000 ffff88034f243e30 ffffffff8136536e
+ ffff880409ff4800
+ [  629.456904]  0000000000000006 ffff88034f243e98 ffffffffa0427411
+ ffff88034f243e48
+ [  629.456907]  ffff88041bf6b808 00155cc02f7ce620 0000000000000000
+ 0000000000000000
+ [  629.456909] Call Trace:
+ [  629.456913]  [<ffffffff8136536e>] dump_stack+0x63/0x85
+ [  629.456918]  [<ffffffffa0427411>] st_int_ioctl+0x401/0x1060 [st]
+ [  629.456922]  [<ffffffffa042c3ef>] st_flush+0x26f/0x500 [st]
+ [  629.456925]  [<ffffffff811b4a63>] ? do_vfs_ioctl+0x283/0x460
+ [  629.456927]  [<ffffffff811a1afa>] filp_close+0x2a/0x70
+ [  629.456930]  [<ffffffff811be1dc>] __close_fd+0x8c/0xb0
+ [  629.456932]  [<ffffffff811a1b5e>] SyS_close+0x1e/0x50
+ [  629.456936]  [<ffffffff816c1d72>] entry_SYSCALL_64_fastpath+0x16/0x71
 
+ Haven't looked too closely at the LSHW source, but I assume it opens LTO
+ devices to throw iocotls at them to get statistics etc?  And this is
+ somehow causing a rewind on LTO7 but not LTO6 or earlier.
 
-Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+ Any ideas what could be causing this?
 
-Paolo
+ CC'd in linux-scsi in case it's a LTO7 driver specific problem.
+
+ Thanks,
+ - Alex.
+
+--
+Ticket URL: <//ezix.org/project/ticket/753>
+ezIX <//ezix.org/>
+ezIX O/S
