@@ -1,17 +1,17 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH 5/7] smartpqi: update kexec and power down support
-Date: Thu, 10 Aug 2017 13:47:03 -0500
-Message-ID: <150239082347.23771.3123846290283011411.stgit@brunhilda>
+Subject: [PATCH 3/7] smartpqi: update pqi passthru ioctl
+Date: Thu, 10 Aug 2017 13:46:51 -0500
+Message-ID: <150239081130.23771.5641677260179646263.stgit@brunhilda>
 References: <150239072706.23771.1380444570336852695.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0077.outbound.protection.outlook.com ([104.47.37.77]:28073
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam03on0061.outbound.protection.outlook.com ([104.47.42.61]:13534
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753093AbdHJSrY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 10 Aug 2017 14:47:24 -0400
+        id S1753025AbdHJSrT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 10 Aug 2017 14:47:19 -0400
 In-Reply-To: <150239072706.23771.1380444570336852695.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,36 +20,34 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Kevin Barnett <kevin.barnett@microsemi.com>
 
-add PQI reset to driver shutdown callback to
-work around controller bug.
-
-During an 1.) OS shutdown or 2.) kexec outside of a kdump,
-the Linux kernel will clear BME on our controller.
-
-If BME is cleared during a controller/host PCIe transfer,
-the controller will lock up.
-
-So we perform a PQI reset in the driver's shutdown callback
-function to eliminate the possibility of a controller/host
-PCIe transfer being active when the kernel clears BME immediately
-after calling the driver's shutdown callback.
+ - make pass-thru requests bi-directional
 
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
 Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c |    1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/smartpqi/smartpqi_init.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 70b1f97..afd3eed 100644
+index b36d338..3b05f28 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -6700,6 +6700,7 @@ static void pqi_shutdown(struct pci_dev *pci_dev)
- 	 * storage.
- 	 */
- 	rc = pqi_flush_cache(ctrl_info, SHUTDOWN);
-+	pqi_reset(ctrl_info);
- 	if (rc == 0)
- 		return;
+@@ -5499,6 +5499,7 @@ static int pqi_passthru_ioctl(struct pqi_ctrl_info *ctrl_info, void __user *arg)
+ 	case XFER_NONE:
+ 	case XFER_WRITE:
+ 	case XFER_READ:
++	case XFER_READ | XFER_WRITE:
+ 		break;
+ 	default:
+ 		return -EINVAL;
+@@ -5539,6 +5540,9 @@ static int pqi_passthru_ioctl(struct pqi_ctrl_info *ctrl_info, void __user *arg)
+ 	case XFER_READ:
+ 		request.data_direction = SOP_READ_FLAG;
+ 		break;
++	case XFER_READ | XFER_WRITE:
++		request.data_direction = SOP_BIDIRECTIONAL;
++		break;
+ 	}
  
+ 	request.task_attribute = SOP_TASK_ATTRIBUTE_SIMPLE;
