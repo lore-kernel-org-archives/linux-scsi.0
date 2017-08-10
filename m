@@ -1,121 +1,40 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH 6/7] smartpqi: add in new controller ids
-Date: Thu, 10 Aug 2017 13:47:09 -0500
-Message-ID: <150239082948.23771.16460697160530748226.stgit@brunhilda>
-References: <150239072706.23771.1380444570336852695.stgit@brunhilda>
+From: Helge Deller <deller@gmx.de>
+Subject: [PATCH] sym53c8xx: Avoid undefined behaviour in
+ drivers/scsi/sym53c8xx_2/sym_hipd.c:762
+Date: Thu, 10 Aug 2017 21:08:49 +0200
+Message-ID: <20170810190849.GA12659@p100.box>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0041.outbound.protection.outlook.com ([104.47.38.41]:56725
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753122AbdHJSr3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 10 Aug 2017 14:47:29 -0400
-In-Reply-To: <150239072706.23771.1380444570336852695.stgit@brunhilda>
+Received: from mout.gmx.net ([212.227.15.18]:53110 "EHLO mout.gmx.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752889AbdHJTI4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 10 Aug 2017 15:08:56 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-kernel@vger.kernel.org
+Cc: linux-parisc@vger.kernel.org
 
-From: Kevin Barnett <kevin.barnett@microsemi.com>
+On parisc I see this UBSAN warning with a sym53c896:
 
-Update the driver’s PCI IDs to match the latest
-Microsemi controllers
+ UBSAN: Undefined behaviour in ./drivers/scsi/sym53c8xx_2/sym_hipd.c:762:24
+ index -1903078336 is out of range for type 'u32 [7]'
 
-Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
-Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
-Signed-off-by: Don Brace <don.brace@microsemi.com>
----
- drivers/scsi/smartpqi/smartpqi_init.c |   36 +++++++++++++--------------------
- 1 file changed, 14 insertions(+), 22 deletions(-)
+Avoid this warning by switching to dev64_ul().
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index afd3eed..59b6301 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -6822,7 +6822,7 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
--			       PCI_VENDOR_ID_ADAPTEC2, 0x0605)
-+			       PCI_VENDOR_ID_ADAPTEC2, 0x0608)
- 	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-@@ -6854,6 +6854,10 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       PCI_VENDOR_ID_ADAPTEC2, 0x0807)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       PCI_VENDOR_ID_ADAPTEC2, 0x0900)
- 	},
- 	{
-@@ -6890,6 +6894,10 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       PCI_VENDOR_ID_ADAPTEC2, 0x090a)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       PCI_VENDOR_ID_ADAPTEC2, 0x1200)
- 	},
- 	{
-@@ -6922,6 +6930,10 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       PCI_VENDOR_ID_DELL, 0x1fe0)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       PCI_VENDOR_ID_HP, 0x0600)
- 	},
- 	{
-@@ -6938,11 +6950,7 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
--			       PCI_VENDOR_ID_HP, 0x0604)
--	},
--	{
--		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
--			       PCI_VENDOR_ID_HP, 0x0606)
-+			       PCI_VENDOR_ID_HP, 0x0609)
- 	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-@@ -6970,14 +6978,6 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
--			       PCI_VENDOR_ID_HP, 0x0656)
--	},
--	{
--		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
--			       PCI_VENDOR_ID_HP, 0x0657)
--	},
--	{
--		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       PCI_VENDOR_ID_HP, 0x0700)
- 	},
- 	{
-@@ -6998,14 +6998,6 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
--			       PCI_VENDOR_ID_HP, 0x1102)
--	},
--	{
--		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
--			       PCI_VENDOR_ID_HP, 0x1150)
--	},
--	{
--		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       PCI_ANY_ID, PCI_ANY_ID)
- 	},
- 	{ 0 }
+Signed-off-by: Helge Deller <deller@gmx.de>
+
+diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.c b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+index 6b349e3..15ff285a9 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_hipd.c
++++ b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+@@ -759,7 +759,7 @@ static int sym_prepare_setting(struct Scsi_Host *shost, struct sym_hcb *np, stru
+ 	/*
+ 	 * Maximum synchronous period factor supported by the chip.
+ 	 */
+-	period = (11 * div_10M[np->clock_divn - 1]) / (4 * np->clock_khz);
++	period = div64_ul(11 * div_10M[np->clock_divn - 1], 4 * np->clock_khz);
+ 	np->maxsync = period > 2540 ? 254 : period / 10;
+ 
+ 	/*
