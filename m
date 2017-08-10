@@ -1,19 +1,20 @@
-From: "Richard W.M. Jones" <rjones@redhat.com>
+From: "Michael S. Tsirkin" <mst@redhat.com>
 Subject: Re: [PATCH 1/2] virtio: Reduce BUG if total_sg > virtqueue size to
 	WARN.
-Date: Thu, 10 Aug 2017 22:35:11 +0100
-Message-ID: <20170810213511.GB10017@redhat.com>
+Date: Fri, 11 Aug 2017 00:41:47 +0300
+Message-ID: <20170811003621-mutt-send-email-mst@kernel.org>
 References: <20170810164035.19963-1-rjones@redhat.com>
 	<20170810164035.19963-2-rjones@redhat.com>
 	<20170811001447-mutt-send-email-mst@kernel.org>
 	<20170810213038.GC20914@redhat.com>
 	<20170811003107-mutt-send-email-mst@kernel.org>
+	<20170810213511.GB10017@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <virtualization-bounces@lists.linux-foundation.org>
 Content-Disposition: inline
-In-Reply-To: <20170811003107-mutt-send-email-mst@kernel.org>
+In-Reply-To: <20170810213511.GB10017@redhat.com>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
 	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
 List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
@@ -23,19 +24,35 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualizati
 	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
 Sender: virtualization-bounces@lists.linux-foundation.org
 Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: "Michael S. Tsirkin" <mst@redhat.com>
+To: "Richard W.M. Jones" <rjones@redhat.com>
 Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, pbonzini@redhat.com, hch@lst.de
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Aug 11, 2017 at 12:31:44AM +0300, Michael S. Tsirkin wrote:
-> Then we probably should fail probe if vq size is too small.
+On Thu, Aug 10, 2017 at 10:35:11PM +0100, Richard W.M. Jones wrote:
+> On Fri, Aug 11, 2017 at 12:31:44AM +0300, Michael S. Tsirkin wrote:
+> > Then we probably should fail probe if vq size is too small.
+> 
+> What does this mean?
+> 
+> Rich.
 
-What does this mean?
+We must prevent driver from submitting s/g lists > vq size to device.
 
-Rich.
 
--- 
-Richard Jones, Virtualization Group, Red Hat http://people.redhat.com/~rjones
-Read my programming and virtualization blog: http://rwmj.wordpress.com
-virt-builder quickly builds VMs from scratch
-http://libguestfs.org/virt-builder.1.html
+Either tell linux to avoid s/g lists that are too long, or
+simply fail request if this happens, or refuse to attach driver to device.
+
+Later option would look something like this within probe:
+
+        for (i = VIRTIO_SCSI_VQ_BASE; i < num_vqs; i++)
+		if (vqs[i]->num < MAX_SG_USED_BY_LINUX)
+			goto err;
+
+
+I don't know what's MAX_SG_USED_BY_LINUX though.
+
+> -- 
+> Richard Jones, Virtualization Group, Red Hat http://people.redhat.com/~rjones
+> Read my programming and virtualization blog: http://rwmj.wordpress.com
+> virt-builder quickly builds VMs from scratch
+> http://libguestfs.org/virt-builder.1.html
