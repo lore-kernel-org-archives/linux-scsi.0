@@ -1,62 +1,75 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv2] scsi_dh_alua: suppress errors from unsupported devices
-Date: Thu, 10 Aug 2017 08:35:46 +0200
-Message-ID: <53294f32-2cc8-c579-6c01-88a50c31879f@suse.de>
-References: <1502182413-23560-1-git-send-email-hare@suse.de>
- <20170809160803.GB3365@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Subject: [PATCH 3/3] scsi: make 'state' device attribute pollable
+Date: Thu, 10 Aug 2017 09:05:31 +0200
+Message-ID: <1502348731-63534-4-git-send-email-hare@suse.de>
+References: <1502348731-63534-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40138 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:41439 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752467AbdHJGfs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 10 Aug 2017 02:35:48 -0400
-In-Reply-To: <20170809160803.GB3365@lst.de>
-Content-Language: en-US
+        id S1752275AbdHJHFg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 10 Aug 2017 03:05:36 -0400
+In-Reply-To: <1502348731-63534-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-On 08/09/2017 06:08 PM, Christoph Hellwig wrote:
->> index 0962fd5..c3aea06 100644
->> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
->> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
->> @@ -1100,6 +1100,8 @@ static int alua_bus_attach(struct scsi_device *sdev)
->>  	err = alua_initialize(sdev, h);
->>  	if (err == SCSI_DH_NOMEM)
->>  		ret = -ENOMEM;
->> +	if (err == SCSI_DH_DEV_UNSUPP)
->> +		ret = -ENODEV;
->>  	if (err != SCSI_DH_OK && err != SCSI_DH_DEV_OFFLINED)
->>  		goto failed;
-> 
-> This screams for a switch statement..
-> 
->> --- a/drivers/scsi/scsi_dh.c
->> +++ b/drivers/scsi/scsi_dh.c
->> @@ -133,8 +133,9 @@ static int scsi_dh_handler_attach(struct scsi_device *sdev,
->>  
->>  	error = scsi_dh->attach(sdev);
->>  	if (error) {
->> -		sdev_printk(KERN_ERR, sdev, "%s: Attach failed (%d)\n",
->> -			    scsi_dh->name, error);
->> +		if (error != -ENODEV)
->> +			sdev_printk(KERN_ERR, sdev, "%s: Attach failed (%d)\n",
->> +				    scsi_dh->name, error);
->>  		module_put(scsi_dh->module);
-> 
-> OTOH why don't we just return the SCSI_DH_ values from ->attach?
-> 
-Hmm. Not a bad idea. Let's see how it turns out.
+While the 'state' attribute can (and will) change occasionally,
+calling 'poll()' or 'select()' on it fails as sysfs is never
+notified that the state has changed.
+With this patch calling 'poll()' or 'select()' will work
+properly.
 
-Cheers,
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/scsi_lib.c           | 3 +++
+ drivers/scsi/scsi_transport_srp.c | 5 ++++-
+ 2 files changed, 7 insertions(+), 1 deletion(-)
 
-Hannes
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 035aa4c..3abef85 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2655,6 +2655,7 @@ void scsi_exit_queue(void)
+ 
+ 	}
+ 	sdev->sdev_state = state;
++	sysfs_notify(&sdev->sdev_gendev.kobj, NULL, "state");
+ 	return 0;
+ 
+  illegal:
+@@ -3078,6 +3079,7 @@ int scsi_internal_device_unblock_nowait(struct scsi_device *sdev,
+ 	case SDEV_BLOCK:
+ 	case SDEV_TRANSPORT_OFFLINE:
+ 		sdev->sdev_state = new_state;
++		sysfs_notify(&sdev->sdev_gendev.kobj, NULL, "state");
+ 		break;
+ 	case SDEV_CREATED_BLOCK:
+ 		if (new_state == SDEV_TRANSPORT_OFFLINE ||
+@@ -3085,6 +3087,7 @@ int scsi_internal_device_unblock_nowait(struct scsi_device *sdev,
+ 			sdev->sdev_state = new_state;
+ 		else
+ 			sdev->sdev_state = SDEV_CREATED;
++		sysfs_notify(&sdev->sdev_gendev.kobj, NULL, "state");
+ 		break;
+ 	case SDEV_TRANSPORT_OFFLINE:
+ 	case SDEV_CANCEL:
+diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
+index f617021..698cc46 100644
+--- a/drivers/scsi/scsi_transport_srp.c
++++ b/drivers/scsi/scsi_transport_srp.c
+@@ -556,8 +556,11 @@ int srp_reconnect_rport(struct srp_rport *rport)
+ 		 */
+ 		shost_for_each_device(sdev, shost) {
+ 			mutex_lock(&sdev->state_mutex);
+-			if (sdev->sdev_state == SDEV_OFFLINE)
++			if (sdev->sdev_state == SDEV_OFFLINE) {
+ 				sdev->sdev_state = SDEV_RUNNING;
++				sysfs_notify(&sdev->sdev_gendev.kobj,
++					     NULL, "state");
++			}
+ 			mutex_unlock(&sdev->state_mutex);
+ 		}
+ 	} else if (rport->state == SRP_RPORT_RUNNING) {
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+1.8.5.6
