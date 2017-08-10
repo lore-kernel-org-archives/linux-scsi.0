@@ -1,46 +1,57 @@
-From: weiping zhang <zhangweiping@didichuxing.com>
-Subject: [PATCH] scsi-sysfs: correct errno for host_reset
-Date: Fri, 11 Aug 2017 01:52:17 +0800
-Message-ID: <20170810175212.GA19528@localhost.didichuxing.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: [PATCH 0/7] smartpqi updates
+Date: Thu, 10 Aug 2017 13:46:33 -0500
+Message-ID: <150239072706.23771.1380444570336852695.stgit@brunhilda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.didichuxing.com ([111.202.154.82]:13622 "EHLO
-        BJEXMBX012.didichuxing.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752437AbdHJRw1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 10 Aug 2017 13:52:27 -0400
-Content-Disposition: inline
+Received: from mail-sn1nam01on0055.outbound.protection.outlook.com ([104.47.32.55]:27125
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752953AbdHJSqz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 10 Aug 2017 14:46:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+To: joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
 Cc: linux-scsi@vger.kernel.org
 
-if scsi_host_template->host_reset is NULL, when user
-"echo adapter > /sys/class/scsi_host/hostx/host_reset",
--EINVAL will return even string compare successfully. It make user confuse.
+These patches are based on Linus's tree
 
-change to:
--EINVAL		if string not match "adapter" / "firmware";
--EOPNOTSUPP	if string match but not implement ->host_reset.
+The changes are:
 
-Signed-off-by: weiping zhang <zhangweiping@didichuxing.com>
+ - smartpqi-add-pqi-reset-quiesce-support
+   - allow driver to confirm completion of a reset.
+ - smartpqi-enhance-bmic-cache-flush
+   - can now distinguish between shutdown and power
+     management operation.
+ - smartpqi-update-pqi-passthru-ioctl
+   - update DMA direction
+ - smartpqi-cleanup-doorbell-register-usage
+   - change how sis mode is re-enabled
+ - smartpqi-update-kexec-power-down-support
+   - reset controller on shutdown
+ - smartpqi-add-in-new-controller-ids
+   - update for latest hw
+ - smartpqi-change-driver-version-to-1.1.2-125
+
 ---
- drivers/scsi/scsi_sysfs.c | 2 ++
- 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index dff8faf..3e664f4 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -272,6 +272,8 @@ store_host_reset(struct device *dev, struct device_attribute *attr,
- 
- 	if (sht->host_reset)
- 		ret = sht->host_reset(shost, type);
-+	else
-+		ret = -EOPNOTSUPP;
- 
- exit_store_host_reset:
- 	if (ret == 0)
--- 
-2.9.4
+Kevin Barnett (7):
+      smartpqi: add pqi reset quiesce support
+      smartpqi: enhance BMIC cache flush
+      smartpqi: update pqi passthru ioctl
+      smartpqi: cleanup doorbell register usage.
+      smartpqi: update kexec and power down support
+      smartpqi: add in new controller ids
+      smartpqi: change driver version to 1.1.2-125
+
+
+ drivers/scsi/smartpqi/smartpqi.h      |   44 ++++++++++
+ drivers/scsi/smartpqi/smartpqi_init.c |  145 ++++++++++++++++++++-------------
+ drivers/scsi/smartpqi/smartpqi_sis.c  |  111 ++++++-------------------
+ drivers/scsi/smartpqi/smartpqi_sis.h  |    4 -
+ 4 files changed, 159 insertions(+), 145 deletions(-)
+
+--
+Signature
