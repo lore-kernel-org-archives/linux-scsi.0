@@ -1,19 +1,62 @@
 From: "Richard W.M. Jones" <rjones@redhat.com>
-Subject: [PATCH v2 0/2] virtio_scsi: Set can_queue based on size of virtqueue.
-Date: Thu, 10 Aug 2017 17:56:50 +0100
-Message-ID: <20170810165652.21515-1-rjones@redhat.com>
+Subject: [PATCH v2 2/2] virtio: virtio_scsi: Set can_queue to the length of the virtqueue.
+Date: Thu, 10 Aug 2017 17:56:52 +0100
+Message-ID: <20170810165652.21515-3-rjones@redhat.com>
+References: <20170810165652.21515-1-rjones@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170810165652.21515-1-rjones@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com
 Cc: martin.petersen@oracle.com, mst@redhat.com, jasowang@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, hch@lst.de, pbonzini@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-v1 was here:
+Since switching to blk-mq as the default in commit 5c279bd9e406
+("scsi: default to scsi-mq"), virtio-scsi LUNs consume about 10x as
+much kernel memory.
 
-  https://lkml.org/lkml/2017/8/10/689
+qemu currently allocates a fixed 128 entry virtqueue.  can_queue
+currently is set to 1024.  But with indirect descriptors, each command
+in the queue takes 1 virtqueue entry, so the number of commands which
+can be queued is equal to the length of the virtqueue.
 
-v1 -> v2:
+Note I intend to send a patch to qemu to allow the virtqueue size to
+be configured from the qemu command line.
 
-  Remove .can_queue field from the templates.
+Thanks Paolo Bonzini, Christoph Hellwig.
 
-Rich.
+Signed-off-by: Richard W.M. Jones <rjones@redhat.com>
+---
+ drivers/scsi/virtio_scsi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 9be211d68b15..7c28e8d4955a 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -818,7 +818,6 @@ static struct scsi_host_template virtscsi_host_template_single = {
+ 	.eh_timed_out = virtscsi_eh_timed_out,
+ 	.slave_alloc = virtscsi_device_alloc,
+ 
+-	.can_queue = 1024,
+ 	.dma_boundary = UINT_MAX,
+ 	.use_clustering = ENABLE_CLUSTERING,
+ 	.target_alloc = virtscsi_target_alloc,
+@@ -839,7 +838,6 @@ static struct scsi_host_template virtscsi_host_template_multi = {
+ 	.eh_timed_out = virtscsi_eh_timed_out,
+ 	.slave_alloc = virtscsi_device_alloc,
+ 
+-	.can_queue = 1024,
+ 	.dma_boundary = UINT_MAX,
+ 	.use_clustering = ENABLE_CLUSTERING,
+ 	.target_alloc = virtscsi_target_alloc,
+@@ -972,6 +970,8 @@ static int virtscsi_probe(struct virtio_device *vdev)
+ 	if (err)
+ 		goto virtscsi_init_failed;
+ 
++	shost->can_queue = virtqueue_get_vring_size(vscsi->req_vqs[0].vq);
++
+ 	cmd_per_lun = virtscsi_config_get(vdev, cmd_per_lun) ?: 1;
+ 	shost->cmd_per_lun = min_t(u32, cmd_per_lun, shost->can_queue);
+ 	shost->max_sectors = virtscsi_config_get(vdev, max_sectors) ?: 0xFFFF;
+-- 
+2.13.1
