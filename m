@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 04/19] scsi: hisi_sas: add v2 hw DFX feature
-Date: Fri, 11 Aug 2017 00:09:29 +0800
-Message-ID: <1502381384-219889-5-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 15/19] scsi: hisi_sas: add reset handler for v3 hw
+Date: Fri, 11 Aug 2017 00:09:40 +0800
+Message-ID: <1502381384-219889-16-git-send-email-john.garry@huawei.com>
 References: <1502381384-219889-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,102 +9,337 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1502381384-219889-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, bianpan2016@163.com, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
+Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, bianpan2016@163.com, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Xiaofei Tan <tanxiaofei@huawei.com>
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Add DFX feature for v2 hw. We are adding support for
-the following errors:
-- loss_of_dword_sync_count
-- invalid_dword_count
-- phy_reset_problem_count
-- running_disparity_error_count
+Use ACPI "_RST" method to reset the controller, since
+FLR is not supported.
 
-Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
+Function hisi_sas_stop_phys() is introduced to remove
+some code duplication.
+
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  1 +
- drivers/scsi/hisi_sas/hisi_sas_main.c  |  7 ++++++-
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 22 ++++++++++++++++++++++
- 3 files changed, 29 insertions(+), 1 deletion(-)
+ drivers/scsi/hisi_sas/hisi_sas.h       |   2 +
+ drivers/scsi/hisi_sas/hisi_sas_main.c  |   9 ++
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  24 +----
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 158 +++++++++++++++++++++++++++++----
+ 4 files changed, 157 insertions(+), 36 deletions(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 3c4defa..ef2238c 100644
+index 23a22dc..4c393cd 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas.h
 +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -193,6 +193,7 @@ struct hisi_sas_hw {
- 	void (*phy_enable)(struct hisi_hba *hisi_hba, int phy_no);
- 	void (*phy_disable)(struct hisi_hba *hisi_hba, int phy_no);
- 	void (*phy_hard_reset)(struct hisi_hba *hisi_hba, int phy_no);
-+	void (*get_events)(struct hisi_hba *hisi_hba, int phy_no);
- 	void (*phy_set_linkrate)(struct hisi_hba *hisi_hba, int phy_no,
- 			struct sas_phy_linkrates *linkrates);
- 	enum sas_linkrate (*phy_get_max_linkrate)(void);
+@@ -15,6 +15,7 @@
+ #include <linux/acpi.h>
+ #include <linux/clk.h>
+ #include <linux/dmapool.h>
++#include <linux/iopoll.h>
+ #include <linux/mfd/syscon.h>
+ #include <linux/module.h>
+ #include <linux/of_address.h>
+@@ -402,6 +403,7 @@ struct hisi_sas_slot_buf_table {
+ extern struct scsi_transport_template *hisi_sas_stt;
+ extern struct scsi_host_template *hisi_sas_sht;
+ 
++extern void hisi_sas_stop_phys(struct hisi_hba *hisi_hba);
+ extern void hisi_sas_init_add(struct hisi_hba *hisi_hba);
+ extern int hisi_sas_alloc(struct hisi_hba *hisi_hba, struct Scsi_Host *shost);
+ extern void hisi_sas_free(struct hisi_hba *hisi_hba);
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index bd1d619..aaa7296 100644
+index 7e642c8..4112afd 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -764,7 +764,12 @@ static int hisi_sas_control_phy(struct asd_sas_phy *sas_phy, enum phy_func func,
- 	case PHY_FUNC_SET_LINK_RATE:
- 		hisi_hba->hw->phy_set_linkrate(hisi_hba, phy_no, funcdata);
- 		break;
--
-+	case PHY_FUNC_GET_EVENTS:
-+		if (hisi_hba->hw->get_events) {
-+			hisi_hba->hw->get_events(hisi_hba, phy_no);
-+			break;
-+		}
-+		/* fallthru */
- 	case PHY_FUNC_RELEASE_SPINUP_HOLD:
- 	default:
- 		return -EOPNOTSUPP;
+@@ -127,6 +127,15 @@ struct hisi_sas_port *to_hisi_sas_port(struct asd_sas_port *sas_port)
+ }
+ EXPORT_SYMBOL_GPL(to_hisi_sas_port);
+ 
++void hisi_sas_stop_phys(struct hisi_hba *hisi_hba)
++{
++	int phy_no;
++
++	for (phy_no = 0; phy_no < hisi_hba->n_phy; phy_no++)
++		hisi_hba->hw->phy_disable(hisi_hba, phy_no);
++}
++EXPORT_SYMBOL_GPL(hisi_sas_stop_phys);
++
+ static void hisi_sas_slot_index_clear(struct hisi_hba *hisi_hba, int slot_idx)
+ {
+ 	void *bitmap = hisi_hba->slot_index_tags;
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index a762b25..41e8033 100644
+index 0e3634e..779af97 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -256,6 +256,8 @@
- #define LINK_DFX2_RCVR_HOLD_STS_MSK	(0x1 << LINK_DFX2_RCVR_HOLD_STS_OFF)
- #define LINK_DFX2_SEND_HOLD_STS_OFF	10
- #define LINK_DFX2_SEND_HOLD_STS_MSK	(0x1 << LINK_DFX2_SEND_HOLD_STS_OFF)
-+#define SAS_ERR_CNT4_REG		(PORT_BASE + 0x290)
-+#define SAS_ERR_CNT6_REG		(PORT_BASE + 0x298)
- #define PHY_CTRL_RDY_MSK		(PORT_BASE + 0x2b0)
- #define PHYCTRL_NOT_RDY_MSK		(PORT_BASE + 0x2b4)
- #define PHYCTRL_DWS_RESET_MSK		(PORT_BASE + 0x2b8)
-@@ -1360,6 +1362,25 @@ static void phy_hard_reset_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
- 	start_phy_v2_hw(hisi_hba, phy_no);
+@@ -1486,25 +1486,12 @@ static void start_phy_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
+ 	enable_phy_v2_hw(hisi_hba, phy_no);
  }
  
-+static void phy_get_events_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
-+{
-+	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
-+	struct asd_sas_phy *sas_phy = &phy->sas_phy;
-+	struct sas_phy *sphy = sas_phy->phy;
-+	u32 err4_reg_val, err6_reg_val;
-+
-+	/* loss dword syn, phy reset problem */
-+	err4_reg_val = hisi_sas_phy_read32(hisi_hba, phy_no, SAS_ERR_CNT4_REG);
-+
-+	/* disparity err, invalid dword */
-+	err6_reg_val = hisi_sas_phy_read32(hisi_hba, phy_no, SAS_ERR_CNT6_REG);
-+
-+	sphy->loss_of_dword_sync_count += (err4_reg_val >> 16) & 0xFFFF;
-+	sphy->phy_reset_problem_count += err4_reg_val & 0xFFFF;
-+	sphy->invalid_dword_count += (err6_reg_val & 0xFF0000) >> 16;
-+	sphy->running_disparity_error_count += err6_reg_val & 0xFF;
-+}
-+
- static void start_phys_v2_hw(struct hisi_hba *hisi_hba)
+-static void stop_phy_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
+-{
+-	disable_phy_v2_hw(hisi_hba, phy_no);
+-}
+-
+-static void stop_phys_v2_hw(struct hisi_hba *hisi_hba)
+-{
+-	int i;
+-
+-	for (i = 0; i < hisi_hba->n_phy; i++)
+-		stop_phy_v2_hw(hisi_hba, i);
+-}
+-
+ static void phy_hard_reset_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
+ {
+ 	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
+ 	u32 txid_auto;
+ 
+-	stop_phy_v2_hw(hisi_hba, phy_no);
++	disable_phy_v2_hw(hisi_hba, phy_no);
+ 	if (phy->identify.device_type == SAS_END_DEVICE) {
+ 		txid_auto = hisi_sas_phy_read32(hisi_hba, phy_no, TXID_AUTO);
+ 		hisi_sas_phy_write32(hisi_hba, phy_no, TXID_AUTO,
+@@ -1533,7 +1520,7 @@ static void phy_get_events_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
+ 	sphy->running_disparity_error_count += err6_reg_val & 0xFF;
+ }
+ 
+-static void start_phys_v2_hw(struct hisi_hba *hisi_hba)
++static void phys_init_v2_hw(struct hisi_hba *hisi_hba)
  {
  	int i;
-@@ -3457,6 +3478,7 @@ static int soft_reset_v2_hw(struct hisi_hba *hisi_hba)
- 	.phy_enable = enable_phy_v2_hw,
- 	.phy_disable = disable_phy_v2_hw,
- 	.phy_hard_reset = phy_hard_reset_v2_hw,
-+	.get_events = phy_get_events_v2_hw,
- 	.phy_set_linkrate = phy_set_linkrate_v2_hw,
- 	.phy_get_max_linkrate = phy_get_max_linkrate_v2_hw,
- 	.max_command_entries = HISI_SAS_COMMAND_ENTRIES_V2_HW,
+ 
+@@ -1548,11 +1535,6 @@ static void start_phys_v2_hw(struct hisi_hba *hisi_hba)
+ 	}
+ }
+ 
+-static void phys_init_v2_hw(struct hisi_hba *hisi_hba)
+-{
+-	start_phys_v2_hw(hisi_hba);
+-}
+-
+ static void sl_notify_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
+ {
+ 	u32 sl_control;
+@@ -3429,7 +3411,7 @@ static int soft_reset_v2_hw(struct hisi_hba *hisi_hba)
+ 	interrupt_disable_v2_hw(hisi_hba);
+ 	hisi_sas_write32(hisi_hba, DLVRY_QUEUE_ENABLE, 0x0);
+ 
+-	stop_phys_v2_hw(hisi_hba);
++	hisi_sas_stop_phys(hisi_hba);
+ 
+ 	mdelay(10);
+ 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index efc2e82..111e45c 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -165,6 +165,31 @@
+ #define PHYCTRL_PHY_ENA_MSK		(PORT_BASE + 0x2bc)
+ #define SL_RX_BCAST_CHK_MSK		(PORT_BASE + 0x2c0)
+ #define PHYCTRL_OOB_RESTART_MSK		(PORT_BASE + 0x2c4)
++#define DMA_TX_STATUS			(PORT_BASE + 0x2d0)
++#define DMA_TX_STATUS_BUSY_OFF		0
++#define DMA_TX_STATUS_BUSY_MSK		(0x1 << DMA_TX_STATUS_BUSY_OFF)
++#define DMA_RX_STATUS			(PORT_BASE + 0x2e8)
++#define DMA_RX_STATUS_BUSY_OFF		0
++#define DMA_RX_STATUS_BUSY_MSK		(0x1 << DMA_RX_STATUS_BUSY_OFF)
++
++#define MAX_ITCT_HW			4096 /* max the hw can support */
++#define DEFAULT_ITCT_HW		2048 /* reset value, not reprogrammed */
++#if (HISI_SAS_MAX_DEVICES > DEFAULT_ITCT_HW)
++#error Max ITCT exceeded
++#endif
++
++#define AXI_MASTER_CFG_BASE		(0x5000)
++#define AM_CTRL_GLOBAL			(0x0)
++#define AM_CURR_TRANS_RETURN	(0x150)
++
++#define AM_CFG_MAX_TRANS		(0x5010)
++#define AM_CFG_SINGLE_PORT_MAX_TRANS	(0x5014)
++#define AXI_CFG					(0x5100)
++#define AM_ROB_ECC_ERR_ADDR		(0x510c)
++#define AM_ROB_ECC_ONEBIT_ERR_ADDR_OFF	0
++#define AM_ROB_ECC_ONEBIT_ERR_ADDR_MSK	(0xff << AM_ROB_ECC_ONEBIT_ERR_ADDR_OFF)
++#define AM_ROB_ECC_MULBIT_ERR_ADDR_OFF	8
++#define AM_ROB_ECC_MULBIT_ERR_ADDR_MSK	(0xff << AM_ROB_ECC_MULBIT_ERR_ADDR_OFF)
+ 
+ /* HW dma structures */
+ /* Delivery queue header */
+@@ -604,8 +629,52 @@ static void dereg_device_v3_hw(struct hisi_hba *hisi_hba,
+ 					1 << CFG_ABT_SET_IPTT_DONE_OFF);
+ }
+ 
++static int reset_hw_v3_hw(struct hisi_hba *hisi_hba)
++{
++	struct device *dev = hisi_hba->dev;
++	int ret;
++	u32 val;
++
++	hisi_sas_write32(hisi_hba, DLVRY_QUEUE_ENABLE, 0);
++
++	/* Disable all of the PHYs */
++	hisi_sas_stop_phys(hisi_hba);
++	udelay(50);
++
++	/* Ensure axi bus idle */
++	ret = readl_poll_timeout(hisi_hba->regs + AXI_CFG, val, !val,
++			20000, 1000000);
++	if (ret) {
++		dev_err(dev, "axi bus is not idle, ret = %d!\n", ret);
++		return -EIO;
++	}
++
++	if (ACPI_HANDLE(dev)) {
++		acpi_status s;
++
++		s = acpi_evaluate_object(ACPI_HANDLE(dev), "_RST", NULL, NULL);
++		if (ACPI_FAILURE(s)) {
++			dev_err(dev, "Reset failed\n");
++			return -EIO;
++		}
++	} else
++		dev_err(dev, "no reset method!\n");
++
++	return 0;
++}
++
+ static int hw_init_v3_hw(struct hisi_hba *hisi_hba)
+ {
++	struct device *dev = hisi_hba->dev;
++	int rc;
++
++	rc = reset_hw_v3_hw(hisi_hba);
++	if (rc) {
++		dev_err(dev, "hisi_sas_reset_hw failed, rc=%d", rc);
++		return rc;
++	}
++
++	msleep(100);
+ 	init_reg_v3_hw(hisi_hba);
+ 
+ 	return 0;
+@@ -634,25 +703,12 @@ static void start_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
+ 	enable_phy_v3_hw(hisi_hba, phy_no);
+ }
+ 
+-static void stop_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
+-{
+-	disable_phy_v3_hw(hisi_hba, phy_no);
+-}
+-
+-static void start_phys_v3_hw(struct hisi_hba *hisi_hba)
+-{
+-	int i;
+-
+-	for (i = 0; i < hisi_hba->n_phy; i++)
+-		start_phy_v3_hw(hisi_hba, i);
+-}
+-
+ static void phy_hard_reset_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
+ {
+ 	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
+ 	u32 txid_auto;
+ 
+-	stop_phy_v3_hw(hisi_hba, phy_no);
++	disable_phy_v3_hw(hisi_hba, phy_no);
+ 	if (phy->identify.device_type == SAS_END_DEVICE) {
+ 		txid_auto = hisi_sas_phy_read32(hisi_hba, phy_no, TXID_AUTO);
+ 		hisi_sas_phy_write32(hisi_hba, phy_no, TXID_AUTO,
+@@ -669,7 +725,17 @@ enum sas_linkrate phy_get_max_linkrate_v3_hw(void)
+ 
+ static void phys_init_v3_hw(struct hisi_hba *hisi_hba)
+ {
+-	start_phys_v3_hw(hisi_hba);
++	int i;
++
++	for (i = 0; i < hisi_hba->n_phy; i++) {
++		struct hisi_sas_phy *phy = &hisi_hba->phy[i];
++		struct asd_sas_phy *sas_phy = &phy->sas_phy;
++
++		if (!sas_phy->phy->enabled)
++			continue;
++
++		start_phy_v3_hw(hisi_hba, i);
++	}
+ }
+ 
+ static void sl_notify_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
+@@ -1614,6 +1680,66 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
+ 	return 0;
+ }
+ 
++static void interrupt_disable_v3_hw(struct hisi_hba *hisi_hba)
++{
++	struct pci_dev *pdev = hisi_hba->pci_dev;
++	int i;
++
++	synchronize_irq(pci_irq_vector(pdev, 1));
++	synchronize_irq(pci_irq_vector(pdev, 2));
++	synchronize_irq(pci_irq_vector(pdev, 11));
++	for (i = 0; i < hisi_hba->queue_count; i++) {
++		hisi_sas_write32(hisi_hba, OQ0_INT_SRC_MSK + 0x4 * i, 0x1);
++		synchronize_irq(pci_irq_vector(pdev, i + 16));
++	}
++
++	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK1, 0xffffffff);
++	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK2, 0xffffffff);
++	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, 0xffffffff);
++	hisi_sas_write32(hisi_hba, SAS_ECC_INTR_MSK, 0xffffffff);
++
++	for (i = 0; i < hisi_hba->n_phy; i++) {
++		hisi_sas_phy_write32(hisi_hba, i, CHL_INT1_MSK, 0xffffffff);
++		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2_MSK, 0xffffffff);
++		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_NOT_RDY_MSK, 0x1);
++		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_PHY_ENA_MSK, 0x1);
++		hisi_sas_phy_write32(hisi_hba, i, SL_RX_BCAST_CHK_MSK, 0x1);
++	}
++}
++
++static u32 get_phys_state_v3_hw(struct hisi_hba *hisi_hba)
++{
++	return hisi_sas_read32(hisi_hba, PHY_STATE);
++}
++
++static int soft_reset_v3_hw(struct hisi_hba *hisi_hba)
++{
++	struct device *dev = hisi_hba->dev;
++	int rc;
++	u32 status;
++
++	interrupt_disable_v3_hw(hisi_hba);
++	hisi_sas_write32(hisi_hba, DLVRY_QUEUE_ENABLE, 0x0);
++
++	hisi_sas_stop_phys(hisi_hba);
++
++	mdelay(10);
++
++	hisi_sas_write32(hisi_hba, AXI_MASTER_CFG_BASE + AM_CTRL_GLOBAL, 0x1);
++
++	/* wait until bus idle */
++	rc = readl_poll_timeout(hisi_hba->regs + AXI_MASTER_CFG_BASE +
++		AM_CURR_TRANS_RETURN, status, status == 0x3, 10, 100);
++	if (rc) {
++		dev_err(dev, "axi bus is not idle, rc = %d\n", rc);
++		return rc;
++	}
++
++	hisi_sas_init_mem(hisi_hba);
++
++	return hw_init_v3_hw(hisi_hba);
++}
++
+ static const struct hisi_sas_hw hisi_sas_v3_hw = {
+ 	.hw_init = hisi_sas_v3_init,
+ 	.setup_itct = setup_itct_v3_hw,
+@@ -1635,6 +1761,8 @@ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
+ 	.phy_hard_reset = phy_hard_reset_v3_hw,
+ 	.phy_get_max_linkrate = phy_get_max_linkrate_v3_hw,
+ 	.dereg_device = dereg_device_v3_hw,
++	.soft_reset = soft_reset_v3_hw,
++	.get_phys_state = get_phys_state_v3_hw,
+ };
+ 
+ static struct Scsi_Host *
 -- 
 1.9.1
