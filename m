@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 08/19] scsi: hisi_sas: service interrupt ITCT_CLR interrupt in v2 hw
-Date: Fri, 11 Aug 2017 00:09:33 +0800
-Message-ID: <1502381384-219889-9-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 07/19] scsi: hisi_sas: add irq and tasklet cleanup in v2 hw
+Date: Fri, 11 Aug 2017 00:09:32 +0800
+Message-ID: <1502381384-219889-8-git-send-email-john.garry@huawei.com>
 References: <1502381384-219889-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,118 +14,176 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-This patch is a fix related to free'ing a device in
-v2 hw driver.
-
-Before, we polled to ITCT CLR interrupt to check if
-a device is free.
-
-This was error prone, as if the interrupt doesn't occur
-in 10us, we miss processing it.
-
-To avoid this situation, service this interrupt and
-sync the event with a completion.
+This patch adds support to clean-up allocated IRQs and
+kill tasklets when probe fails and for driver removal.
 
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  1 +
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 40 ++++++++++++++++------------------
- 2 files changed, 20 insertions(+), 21 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 96 +++++++++++++++++-----------------
+ 1 file changed, 49 insertions(+), 47 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index ad6b2d1..23a22dc 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -141,6 +141,7 @@ struct hisi_sas_dq {
- struct hisi_sas_device {
- 	struct hisi_hba		*hisi_hba;
- 	struct domain_device	*sas_device;
-+	struct completion *completion;
- 	struct hisi_sas_dq	*dq;
- 	struct list_head	list;
- 	u64 attached_phy;
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 9eea0b4..0e3634e 100644
+index bcbc16e..9eea0b4 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -974,12 +974,14 @@ static void setup_itct_v2_hw(struct hisi_hba *hisi_hba,
- static void free_device_v2_hw(struct hisi_hba *hisi_hba,
- 			      struct hisi_sas_device *sas_dev)
+@@ -3290,97 +3290,92 @@ static int interrupt_init_v2_hw(struct hisi_hba *hisi_hba)
  {
-+	DECLARE_COMPLETION_ONSTACK(completion);
- 	u64 dev_id = sas_dev->device_id;
--	struct device *dev = hisi_hba->dev;
- 	struct hisi_sas_itct *itct = &hisi_hba->itct[dev_id];
- 	u32 reg_val = hisi_sas_read32(hisi_hba, ENT_INT_SRC3);
- 	int i;
- 
-+	sas_dev->completion = &completion;
-+
- 	/* SoC bug workaround */
- 	if (dev_is_sata(sas_dev->sas_device))
- 		clear_bit(sas_dev->sata_idx, hisi_hba->sata_dev_bitmap);
-@@ -989,28 +991,12 @@ static void free_device_v2_hw(struct hisi_hba *hisi_hba,
- 		hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
- 				 ENT_INT_SRC3_ITC_INT_MSK);
- 
--	/* clear the itct int*/
- 	for (i = 0; i < 2; i++) {
--		/* clear the itct table*/
--		reg_val = hisi_sas_read32(hisi_hba, ITCT_CLR);
--		reg_val |= ITCT_CLR_EN_MSK | (dev_id & ITCT_DEV_MSK);
-+		reg_val = ITCT_CLR_EN_MSK | (dev_id & ITCT_DEV_MSK);
- 		hisi_sas_write32(hisi_hba, ITCT_CLR, reg_val);
-+		wait_for_completion(sas_dev->completion);
- 
--		udelay(10);
--		reg_val = hisi_sas_read32(hisi_hba, ENT_INT_SRC3);
--		if (ENT_INT_SRC3_ITC_INT_MSK & reg_val) {
--			dev_dbg(dev, "got clear ITCT done interrupt\n");
+ 	struct platform_device *pdev = hisi_hba->platform_dev;
+ 	struct device *dev = &pdev->dev;
+-	int i, irq, rc, irq_map[128];
 -
--			/* invalid the itct state*/
--			memset(itct, 0, sizeof(struct hisi_sas_itct));
--			hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
--					 ENT_INT_SRC3_ITC_INT_MSK);
++	int irq, rc, irq_map[128];
++	int i, phy_no, fatal_no, queue_no, k;
+ 
+ 	for (i = 0; i < 128; i++)
+ 		irq_map[i] = platform_get_irq(pdev, i);
+ 
+ 	for (i = 0; i < HISI_SAS_PHY_INT_NR; i++) {
+-		int idx = i;
 -
--			/* clear the itct */
--			hisi_sas_write32(hisi_hba, ITCT_CLR, 0);
--			dev_dbg(dev, "clear ITCT ok\n");
--			break;
+-		irq = irq_map[idx + 1]; /* Phy up/down is irq1 */
+-		if (!irq) {
+-			dev_err(dev, "irq init: fail map phy interrupt %d\n",
+-				idx);
+-			return -ENOENT;
 -		}
-+		memset(itct, 0, sizeof(struct hisi_sas_itct));
+-
++		irq = irq_map[i + 1]; /* Phy up/down is irq1 */
+ 		rc = devm_request_irq(dev, irq, phy_interrupts[i], 0,
+ 				      DRV_NAME " phy", hisi_hba);
+ 		if (rc) {
+ 			dev_err(dev, "irq init: could not request "
+ 				"phy interrupt %d, rc=%d\n",
+ 				irq, rc);
+-			return -ENOENT;
++			rc = -ENOENT;
++			goto free_phy_int_irqs;
+ 		}
  	}
+ 
+-	for (i = 0; i < hisi_hba->n_phy; i++) {
+-		struct hisi_sas_phy *phy = &hisi_hba->phy[i];
+-		int idx = i + 72; /* First SATA interrupt is irq72 */
+-
+-		irq = irq_map[idx];
+-		if (!irq) {
+-			dev_err(dev, "irq init: fail map phy interrupt %d\n",
+-				idx);
+-			return -ENOENT;
+-		}
++	for (phy_no = 0; phy_no < hisi_hba->n_phy; phy_no++) {
++		struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
+ 
++		irq = irq_map[phy_no + 72];
+ 		rc = devm_request_irq(dev, irq, sata_int_v2_hw, 0,
+ 				      DRV_NAME " sata", phy);
+ 		if (rc) {
+ 			dev_err(dev, "irq init: could not request "
+ 				"sata interrupt %d, rc=%d\n",
+ 				irq, rc);
+-			return -ENOENT;
++			rc = -ENOENT;
++			goto free_sata_int_irqs;
+ 		}
+ 	}
+ 
+-	for (i = 0; i < HISI_SAS_FATAL_INT_NR; i++) {
+-		int idx = i;
+-
+-		irq = irq_map[idx + 81];
+-		if (!irq) {
+-			dev_err(dev, "irq init: fail map fatal interrupt %d\n",
+-				idx);
+-			return -ENOENT;
+-		}
+-
+-		rc = devm_request_irq(dev, irq, fatal_interrupts[i], 0,
++	for (fatal_no = 0; fatal_no < HISI_SAS_FATAL_INT_NR; fatal_no++) {
++		irq = irq_map[fatal_no + 81];
++		rc = devm_request_irq(dev, irq, fatal_interrupts[fatal_no], 0,
+ 				      DRV_NAME " fatal", hisi_hba);
+ 		if (rc) {
+ 			dev_err(dev,
+ 				"irq init: could not request fatal interrupt %d, rc=%d\n",
+ 				irq, rc);
+-			return -ENOENT;
++			rc = -ENOENT;
++			goto free_fatal_int_irqs;
+ 		}
+ 	}
+ 
+-	for (i = 0; i < hisi_hba->queue_count; i++) {
+-		int idx = i + 96; /* First cq interrupt is irq96 */
+-		struct hisi_sas_cq *cq = &hisi_hba->cq[i];
++	for (queue_no = 0; queue_no < hisi_hba->queue_count; queue_no++) {
++		struct hisi_sas_cq *cq = &hisi_hba->cq[queue_no];
+ 		struct tasklet_struct *t = &cq->tasklet;
+ 
+-		irq = irq_map[idx];
+-		if (!irq) {
+-			dev_err(dev,
+-				"irq init: could not map cq interrupt %d\n",
+-				idx);
+-			return -ENOENT;
+-		}
++		irq = irq_map[queue_no + 96];
+ 		rc = devm_request_irq(dev, irq, cq_interrupt_v2_hw, 0,
+-				      DRV_NAME " cq", &hisi_hba->cq[i]);
++				      DRV_NAME " cq", cq);
+ 		if (rc) {
+ 			dev_err(dev,
+ 				"irq init: could not request cq interrupt %d, rc=%d\n",
+ 				irq, rc);
+-			return -ENOENT;
++			rc = -ENOENT;
++			goto free_cq_int_irqs;
+ 		}
+ 		tasklet_init(t, cq_tasklet_v2_hw, (unsigned long)cq);
+ 	}
+ 
+ 	return 0;
++
++free_cq_int_irqs:
++	for (k = 0; k < queue_no; k++) {
++		struct hisi_sas_cq *cq = &hisi_hba->cq[k];
++
++		free_irq(irq_map[k + 96], cq);
++		tasklet_kill(&cq->tasklet);
++	}
++free_fatal_int_irqs:
++	for (k = 0; k < fatal_no; k++)
++		free_irq(irq_map[k + 81], hisi_hba);
++free_sata_int_irqs:
++	for (k = 0; k < phy_no; k++) {
++		struct hisi_sas_phy *phy = &hisi_hba->phy[k];
++
++		free_irq(irq_map[k + 72], phy);
++	}
++free_phy_int_irqs:
++	for (k = 0; k < i; k++)
++		free_irq(irq_map[k + 1], hisi_hba);
++	return rc;
  }
  
-@@ -1191,7 +1177,7 @@ static void init_reg_v2_hw(struct hisi_hba *hisi_hba)
- 	hisi_sas_write32(hisi_hba, ENT_INT_SRC3, 0xffffffff);
- 	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK1, 0x7efefefe);
- 	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK2, 0x7efefefe);
--	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, 0x7ffffffe);
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, 0x7ffe20fe);
- 	hisi_sas_write32(hisi_hba, SAS_ECC_INTR_MSK, 0xfff00c30);
- 	for (i = 0; i < hisi_hba->queue_count; i++)
- 		hisi_sas_write32(hisi_hba, OQ0_INT_SRC_MSK+0x4*i, 0);
-@@ -3092,8 +3078,20 @@ static irqreturn_t fatal_axi_int_v2_hw(int irq_no, void *p)
- 			      irq_value);
- 			queue_work(hisi_hba->wq, &hisi_hba->rst_work);
- 		}
-+
-+		if (irq_value & BIT(ENT_INT_SRC3_ITC_INT_OFF)) {
-+			u32 reg_val = hisi_sas_read32(hisi_hba, ITCT_CLR);
-+			u32 dev_id = reg_val & ITCT_DEV_MSK;
-+			struct hisi_sas_device *sas_dev =
-+					&hisi_hba->devices[dev_id];
-+
-+			hisi_sas_write32(hisi_hba, ITCT_CLR, 0);
-+			dev_dbg(dev, "clear ITCT ok\n");
-+			complete(sas_dev->completion);
-+		}
- 	}
+ static int hisi_sas_v2_init(struct hisi_hba *hisi_hba)
+@@ -3518,10 +3513,17 @@ static int hisi_sas_v2_remove(struct platform_device *pdev)
+ {
+ 	struct sas_ha_struct *sha = platform_get_drvdata(pdev);
+ 	struct hisi_hba *hisi_hba = sha->lldd_ha;
++	int i;
  
-+	hisi_sas_write32(hisi_hba, ENT_INT_SRC3, irq_value);
- 	hisi_sas_write32(hisi_hba, ENT_INT_SRC_MSK3, irq_msk);
+ 	if (timer_pending(&hisi_hba->timer))
+ 		del_timer(&hisi_hba->timer);
  
- 	return IRQ_HANDLED;
++	for (i = 0; i < hisi_hba->queue_count; i++) {
++		struct hisi_sas_cq *cq = &hisi_hba->cq[i];
++
++		tasklet_kill(&cq->tasklet);
++	}
++
+ 	return hisi_sas_remove(pdev);
+ }
+ 
 -- 
 1.9.1
