@@ -1,104 +1,45 @@
-From: Manish Rangankar <manish.rangankar@cavium.com>
-Subject: [PATCH] qedi: Limit number for CQ queues.
-Date: Thu, 10 Aug 2017 06:32:17 -0700
-Message-ID: <20170810133217.31481-1-manish.rangankar@cavium.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH RESEND 0/6] hpsa: support legacy boards
+Date: Thu, 10 Aug 2017 07:06:53 -0700
+Message-ID: <1502374013.2736.11.camel@HansenPartnership.com>
+References: <1502181315-102499-1-git-send-email-hare@suse.de>
+         <4993A297653ECB4581FA5C3C31323D195B8C9FAB@avsrvexchmbx2.microsemi.net>
+         <271fd4b5-046f-2c74-4af8-60f225744313@suse.de>
+         <20170810070904.GA20910@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0067.outbound.protection.outlook.com ([104.47.41.67]:59760
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751456AbdHJNcZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 10 Aug 2017 09:32:25 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:60842 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752497AbdHJOGz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 10 Aug 2017 10:06:55 -0400
+In-Reply-To: <20170810070904.GA20910@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com
-Cc: linux-scsi@vger.kernel.org, QLogic-Storage-Upstream@cavium.com
+To: Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
+Cc: Don Brace <don.brace@microsemi.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Meelis Roos <mroos@linux.ee>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-[qed_sp_iscsi_func_start:189(host_7-0)]Cannot satisfy CQ amount. Queues
-requested 8, CQs available 4. Aborting function start
+On Thu, 2017-08-10 at 09:09 +0200, Christoph Hellwig wrote:
+> No device support in Linux is unsupported, sorry.  I think we're
+> getting into the corporate bullshit game a little too much here.
 
-Above condition will resolve as management firmware is capable of telling
-us the number of CQs available for a given PF, qed will communicate the
-same number to qedi, So that qedi will know how much CQs are allowed.
+I think there are two different definitions of supported here.  To us,
+any device to which the driver attaches is "supported".  However, if
+it's never been tested before it may not work very well.  In the Linux
+way, we'll try to fix the bugs when they're reported and in that sense
+we support the device until nothing in the kernel attaches to its ids
+anymore.
 
-Signed-off-by: Manish Rangankar <manish.rangankar@cavium.com>
----
- drivers/scsi/qedi/qedi.h       |  5 ++---
- drivers/scsi/qedi/qedi_iscsi.c |  2 +-
- drivers/scsi/qedi/qedi_main.c  | 10 +++++++---
- 3 files changed, 10 insertions(+), 7 deletions(-)
+In the corporate world "supported" means we'll sell you a contract
+giving you certain rights to report bugs and have us fix them.  There
+are definite reasons why corporations only support a small range of new
+devices, even though devices not on this list may still be attached to
+by the driver and thus we (Linux Community) would try to fix the bug
+reports for.
 
-diff --git a/drivers/scsi/qedi/qedi.h b/drivers/scsi/qedi/qedi.h
-index 91d2f51..b8b22ce 100644
---- a/drivers/scsi/qedi/qedi.h
-+++ b/drivers/scsi/qedi/qedi.h
-@@ -54,8 +54,8 @@
- /* MAX Length for cached SGL */
- #define MAX_SGLEN_FOR_CACHESGL	((1U << 16) - 1)
- 
--#define MAX_NUM_MSIX_PF         8
--#define MIN_NUM_CPUS_MSIX(x)	min((x)->msix_count, num_online_cpus())
-+#define MIN_NUM_CPUS_MSIX(x)	min_t(u32, x->dev_info.num_cqs, \
-+					num_online_cpus())
- 
- #define QEDI_LOCAL_PORT_MIN     60000
- #define QEDI_LOCAL_PORT_MAX     61024
-@@ -301,7 +301,6 @@ struct qedi_ctx {
- 	u16 bdq_prod_idx;
- 	u16 rq_num_entries;
- 
--	u32 msix_count;
- 	u32 max_sqes;
- 	u8 num_queues;
- 	u32 max_active_conns;
-diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
-index 37da9a8..a02b34e 100644
---- a/drivers/scsi/qedi/qedi_iscsi.c
-+++ b/drivers/scsi/qedi/qedi_iscsi.c
-@@ -534,7 +534,7 @@ static int qedi_iscsi_offload_conn(struct qedi_endpoint *qedi_ep)
- 	SET_FIELD(conn_info->tcp_flags, TCP_OFFLOAD_PARAMS_DA_CNT_EN, 1);
- 	SET_FIELD(conn_info->tcp_flags, TCP_OFFLOAD_PARAMS_KA_EN, 1);
- 
--	conn_info->default_cq = (qedi_ep->fw_cid % 8);
-+	conn_info->default_cq = (qedi_ep->fw_cid % qedi->num_queues);
- 
- 	conn_info->ka_max_probe_cnt = DEF_KA_MAX_PROBE_COUNT;
- 	conn_info->dup_ack_theshold = 3;
-diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-index 2c37836..c4a470b 100644
---- a/drivers/scsi/qedi/qedi_main.c
-+++ b/drivers/scsi/qedi/qedi_main.c
-@@ -794,13 +794,14 @@ static int qedi_set_iscsi_pf_param(struct qedi_ctx *qedi)
- 	u32 log_page_size;
- 	int rval = 0;
- 
--	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_DISC, "Min number of MSIX %d\n",
--		  MIN_NUM_CPUS_MSIX(qedi));
- 
- 	num_sq_pages = (MAX_OUSTANDING_TASKS_PER_CON * 8) / PAGE_SIZE;
- 
- 	qedi->num_queues = MIN_NUM_CPUS_MSIX(qedi);
- 
-+	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_INFO,
-+		  "Number of CQ count is %d\n", qedi->num_queues);
-+
- 	memset(&qedi->pf_params.iscsi_pf_params, 0,
- 	       sizeof(qedi->pf_params.iscsi_pf_params));
- 
-@@ -2179,9 +2180,12 @@ static int __qedi_probe(struct pci_dev *pdev, int mode)
- 		goto free_host;
- 	}
- 
--	qedi->msix_count = MAX_NUM_MSIX_PF;
- 	atomic_set(&qedi->link_state, QEDI_LINK_DOWN);
- 
-+	rc = qedi_ops->fill_dev_info(qedi->cdev, &qedi->dev_info);
-+	if (rc)
-+		goto free_host;
-+
- 	if (mode != QEDI_MODE_RECOVERY) {
- 		rc = qedi_set_iscsi_pf_param(qedi);
- 		if (rc) {
--- 
-1.8.3.1
+I think what you're basically asking for is a different name for the
+flag, which is fine?  how about 'legacy' instead?
+
+James
