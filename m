@@ -1,36 +1,46 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: SCSI Oops: Unable to handle kernel NULL ptr dereference
-Date: Thu, 10 Aug 2017 17:38:53 +0000
-Message-ID: <BY1PR0401MB15320228512D5A61BFFD5D3998880@BY1PR0401MB1532.namprd04.prod.outlook.com>
-References: <20170810170537.Horde.8CxBesYMH_QVGbAB7dui6vz@www.vfemail.net>
+From: weiping zhang <zhangweiping@didichuxing.com>
+Subject: [PATCH] scsi-sysfs: correct errno for host_reset
+Date: Fri, 11 Aug 2017 01:52:17 +0800
+Message-ID: <20170810175212.GA19528@localhost.didichuxing.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "manday@openmail.cc" <manday@openmail.cc>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.didichuxing.com ([111.202.154.82]:13622 "EHLO
+        BJEXMBX012.didichuxing.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752437AbdHJRw1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 10 Aug 2017 13:52:27 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org
 
-On 08/10/17 10:05, manday@openmail.cc wrote:=0A=
-> I'd like to report this rare panic I experienced today. I've been on =0A=
-> 4.12.3 since it was released and got this panic totally unexpected, =0A=
-> probably when terminating my WL compositor. I attach to this message a =
-=0A=
-> capture of the screen. The problem occurred never before and never after =
-=0A=
-> since, suggesting I will not be able to reproduce it easily. Perhaps it =
-=0A=
-> means something to someone.=0A=
-> =0A=
-> Linux air 4.12.3 #4 SMP Fri Jul 28 12:07:06 CEST 2017 x86_64 Intel(R) =0A=
-> Core(TM)i5-6267U CPU @ 2.90GHz GenuineIntel GNU/Linux=0A=
-=0A=
-Hello Cedric,=0A=
-=0A=
-A fix for this bug is available in kernel v4.12.4. Please upgrade your =0A=
-kernel. See also =0A=
-https://www.mail-archive.com/linux-scsi@vger.kernel.org/msg64543.html.=0A=
-=0A=
-Bart.=0A=
+if scsi_host_template->host_reset is NULL, when user
+"echo adapter > /sys/class/scsi_host/hostx/host_reset",
+-EINVAL will return even string compare successfully. It make user confuse.
+
+change to:
+-EINVAL		if string not match "adapter" / "firmware";
+-EOPNOTSUPP	if string match but not implement ->host_reset.
+
+Signed-off-by: weiping zhang <zhangweiping@didichuxing.com>
+---
+ drivers/scsi/scsi_sysfs.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index dff8faf..3e664f4 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -272,6 +272,8 @@ store_host_reset(struct device *dev, struct device_attribute *attr,
+ 
+ 	if (sht->host_reset)
+ 		ret = sht->host_reset(shost, type);
++	else
++		ret = -EOPNOTSUPP;
+ 
+ exit_store_host_reset:
+ 	if (ret == 0)
+-- 
+2.9.4
