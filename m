@@ -1,67 +1,65 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: RE: [PATCH RESEND 0/6] hpsa: support legacy boards
-Date: Thu, 10 Aug 2017 19:15:38 +0000
-Message-ID: <4993A297653ECB4581FA5C3C31323D195B8CACF5@avsrvexchmbx2.microsemi.net>
-References: <1502181315-102499-1-git-send-email-hare@suse.de>
- <4993A297653ECB4581FA5C3C31323D195B8C9FAB@avsrvexchmbx2.microsemi.net>
- <271fd4b5-046f-2c74-4af8-60f225744313@suse.de>
- <20170810070904.GA20910@lst.de>
- <1502374013.2736.11.camel@HansenPartnership.com>
- <8d4fdf1c-bdd6-3069-1933-a031c84811c6@suse.de>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [PATCH 1/2] virtio: Reduce BUG if total_sg > virtqueue size to
+ WARN.
+Date: Fri, 11 Aug 2017 00:21:16 +0300
+Message-ID: <20170811001447-mutt-send-email-mst@kernel.org>
+References: <20170810164035.19963-1-rjones@redhat.com>
+ <20170810164035.19963-2-rjones@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0086.outbound.protection.outlook.com ([104.47.32.86]:3204
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752889AbdHJTPp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 10 Aug 2017 15:15:45 -0400
-In-Reply-To: <8d4fdf1c-bdd6-3069-1933-a031c84811c6@suse.de>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170810164035.19963-2-rjones@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Richard W.M. Jones" <rjones@redhat.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, jasowang@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, hch@lst.de, pbonzini@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Meelis Roos <mroos@linux.ee>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBIYW5uZXMgUmVpbmVja2UgW21h
-aWx0bzpoYXJlQHN1c2UuZGVdDQo+IFNlbnQ6IFRodXJzZGF5LCBBdWd1c3QgMTAsIDIwMTcgOTox
-MSBBTQ0KPiBUbzogSmFtZXMgQm90dG9tbGV5IDxKYW1lcy5Cb3R0b21sZXlASGFuc2VuUGFydG5l
-cnNoaXAuY29tPjsNCj4gQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+DQo+IENjOiBEb24g
-QnJhY2UgPGRvbi5icmFjZUBtaWNyb3NlbWkuY29tPjsgTWFydGluIEsuIFBldGVyc2VuDQo+IDxt
-YXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbT47IE1lZWxpcyBSb29zIDxtcm9vc0BsaW51eC5lZT47
-IGxpbnV4LQ0KPiBzY3NpQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIFJF
-U0VORCAwLzZdIGhwc2E6IHN1cHBvcnQgbGVnYWN5IGJvYXJkcw0KPiANCj4gRVhURVJOQUwgRU1B
-SUwNCj4gDQo+IA0KPiBPbiAwOC8xMC8yMDE3IDA0OjA2IFBNLCBKYW1lcyBCb3R0b21sZXkgd3Jv
-dGU6DQo+ID4gT24gVGh1LCAyMDE3LTA4LTEwIGF0IDA5OjA5ICswMjAwLCBDaHJpc3RvcGggSGVs
-bHdpZyB3cm90ZToNCj4gPj4gTm8gZGV2aWNlIHN1cHBvcnQgaW4gTGludXggaXMgdW5zdXBwb3J0
-ZWQsIHNvcnJ5LiAgSSB0aGluayB3ZSdyZQ0KPiA+PiBnZXR0aW5nIGludG8gdGhlIGNvcnBvcmF0
-ZSBidWxsc2hpdCBnYW1lIGEgbGl0dGxlIHRvbyBtdWNoIGhlcmUuDQo+ID4NCj4gPiBJIHRoaW5r
-IHRoZXJlIGFyZSB0d28gZGlmZmVyZW50IGRlZmluaXRpb25zIG9mIHN1cHBvcnRlZCBoZXJlLiAg
-VG8gdXMsDQo+ID4gYW55IGRldmljZSB0byB3aGljaCB0aGUgZHJpdmVyIGF0dGFjaGVzIGlzICJz
-dXBwb3J0ZWQiLiAgSG93ZXZlciwgaWYNCj4gPiBpdCdzIG5ldmVyIGJlZW4gdGVzdGVkIGJlZm9y
-ZSBpdCBtYXkgbm90IHdvcmsgdmVyeSB3ZWxsLiAgSW4gdGhlIExpbnV4DQo+ID4gd2F5LCB3ZSds
-bCB0cnkgdG8gZml4IHRoZSBidWdzIHdoZW4gdGhleSdyZSByZXBvcnRlZCBhbmQgaW4gdGhhdCBz
-ZW5zZQ0KPiA+IHdlIHN1cHBvcnQgdGhlIGRldmljZSB1bnRpbCBub3RoaW5nIGluIHRoZSBrZXJu
-ZWwgYXR0YWNoZXMgdG8gaXRzIGlkcw0KPiA+IGFueW1vcmUuDQo+ID4NCj4gPiBJbiB0aGUgY29y
-cG9yYXRlIHdvcmxkICJzdXBwb3J0ZWQiIG1lYW5zIHdlJ2xsIHNlbGwgeW91IGEgY29udHJhY3QN
-Cj4gPiBnaXZpbmcgeW91IGNlcnRhaW4gcmlnaHRzIHRvIHJlcG9ydCBidWdzIGFuZCBoYXZlIHVz
-IGZpeCB0aGVtLiAgVGhlcmUNCj4gPiBhcmUgZGVmaW5pdGUgcmVhc29ucyB3aHkgY29ycG9yYXRp
-b25zIG9ubHkgc3VwcG9ydCBhIHNtYWxsIHJhbmdlIG9mIG5ldw0KPiA+IGRldmljZXMsIGV2ZW4g
-dGhvdWdoIGRldmljZXMgbm90IG9uIHRoaXMgbGlzdCBtYXkgc3RpbGwgYmUgYXR0YWNoZWQgdG8N
-Cj4gPiBieSB0aGUgZHJpdmVyIGFuZCB0aHVzIHdlIChMaW51eCBDb21tdW5pdHkpIHdvdWxkIHRy
-eSB0byBmaXggdGhlIGJ1Zw0KPiA+IHJlcG9ydHMgZm9yLg0KPiA+DQo+ID4gSSB0aGluayB3aGF0
-IHlvdSdyZSBiYXNpY2FsbHkgYXNraW5nIGZvciBpcyBhIGRpZmZlcmVudCBuYW1lIGZvciB0aGUN
-Cj4gPiBmbGFnLCB3aGljaCBpcyBmaW5lPyAgaG93IGFib3V0ICdsZWdhY3knIGluc3RlYWQ/DQo+
-ID4NCj4gU3VyZSwgbm8gcHJvYmxlbSB3aXRoIHRoYXQuDQo+IA0KPiBEb24/DQo+IA0KPiBDaGVl
-cnMsDQo+IA0KPiBIYW5uZXMNCj4gLS0NCj4gRHIuIEhhbm5lcyBSZWluZWNrZSAgICAgICAgICAg
-ICAgICBUZWFtbGVhZCBTdG9yYWdlICYgTmV0d29ya2luZw0KPiBoYXJlQHN1c2UuZGUgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICs0OSA5MTEgNzQwNTMgNjg4DQo+IFNVU0UgTElO
-VVggR21iSCwgTWF4ZmVsZHN0ci4gNSwgOTA0MDkgTsO8cm5iZXJnDQo+IEdGOiBGLiBJbWVuZMO2
-cmZmZXIsIEouIFNtaXRoYXJkLCBKLiBHdWlsZCwgRC4gVXBtYW55dSwgRy4gTm9ydG9uDQo+IEhS
-QiAyMTI4NCAoQUcgTsO8cm5iZXJnKQ0KDQpPaywgYnV0IHRvIGNsYXJpZnkuLi4NCiAqIFdpbGwg
-dGhlIGNjaXNzIGRyaXZlciBiZSByZW1vdmVkIHdoZW4gdGhlc2UgcGF0Y2hlcyBhcmUgYXBwbGll
-ZD8gT3RoZXJ3aXNlDQogICAgd2hhdCB3aWxsIHByZXZlbnQgdGhlIGNjaXNzIGRyaXZlciBmcm9t
-IGxvYWRpbmcgb3ZlciB0aGVzZSBkZXZpY2VzPw0KICAgIGkuZS4gaG93IG9mdGVuIHdpbGwgdXNl
-cnMgbmVlZCB0byBiZSByZW1pbmRlZCB0byBhZGQgY2Npc3MuY2Npc3NfYWxsb3dfaHBzYSBmbGFn
-Pw0KDQoNCg==
+On Thu, Aug 10, 2017 at 05:40:34PM +0100, Richard W.M. Jones wrote:
+> If using indirect descriptors, you can make the total_sg as large as
+> you want.
+
+That would be a spec violation though, even if it happens to
+work on current QEMU.
+
+The spec says:
+	A driver MUST NOT create a descriptor chain longer than the Queue Size of the device.
+
+What prompted this patch?  Do we ever encounter this situation?
+
+>  If not, BUG is too serious because the function later
+> returns -ENOSPC.
+> 
+> Thanks Paolo Bonzini, Christoph Hellwig.
+> 
+> Signed-off-by: Richard W.M. Jones <rjones@redhat.com>
+> ---
+>  drivers/virtio/virtio_ring.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/virtio/virtio_ring.c b/drivers/virtio/virtio_ring.c
+> index 5e1b548828e6..27cbc1eab868 100644
+> --- a/drivers/virtio/virtio_ring.c
+> +++ b/drivers/virtio/virtio_ring.c
+> @@ -296,7 +296,6 @@ static inline int virtqueue_add(struct virtqueue *_vq,
+>  	}
+>  #endif
+>  
+> -	BUG_ON(total_sg > vq->vring.num);
+>  	BUG_ON(total_sg == 0);
+>  
+>  	head = vq->free_head;
+> @@ -305,8 +304,10 @@ static inline int virtqueue_add(struct virtqueue *_vq,
+>  	 * buffers, then go indirect. FIXME: tune this threshold */
+>  	if (vq->indirect && total_sg > 1 && vq->vq.num_free)
+>  		desc = alloc_indirect(_vq, total_sg, gfp);
+> -	else
+> +	else {
+>  		desc = NULL;
+> +		WARN_ON_ONCE(total_sg > vq->vring.num && !vq->indirect);
+> +	}
+>  
+>  	if (desc) {
+>  		/* Use a single buffer which doesn't continue */
+> -- 
+> 2.13.1
