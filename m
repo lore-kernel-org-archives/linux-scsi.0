@@ -1,17 +1,17 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH 1/7] smartpqi: add pqi reset quiesce support
-Date: Thu, 10 Aug 2017 13:46:39 -0500
-Message-ID: <150239079917.23771.5169713749423377610.stgit@brunhilda>
+Subject: [PATCH 2/7] smartpqi: enhance BMIC cache flush
+Date: Thu, 10 Aug 2017 13:46:45 -0500
+Message-ID: <150239080533.23771.3801846126568566831.stgit@brunhilda>
 References: <150239072706.23771.1380444570336852695.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0041.outbound.protection.outlook.com ([104.47.42.41]:9568
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam01on0075.outbound.protection.outlook.com ([104.47.34.75]:49216
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752983AbdHJSrI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 10 Aug 2017 14:47:08 -0400
+        id S1753010AbdHJSrQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 10 Aug 2017 14:47:16 -0400
 In-Reply-To: <150239072706.23771.1380444570336852695.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,232 +20,135 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Kevin Barnett <kevin.barnett@microseim.com>
 
+ - distinguish between shutdown and non-shutdown.
+
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
 Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/smartpqi/smartpqi.h      |   23 +++++++++++++
- drivers/scsi/smartpqi/smartpqi_init.c |   58 ++++++++++++++++++++++++++-------
- drivers/scsi/smartpqi/smartpqi_sis.c  |   30 ++++++++++++++++-
- drivers/scsi/smartpqi/smartpqi_sis.h  |    1 +
- 4 files changed, 98 insertions(+), 14 deletions(-)
+ drivers/scsi/smartpqi/smartpqi.h      |   21 +++++++++++++++++++--
+ drivers/scsi/smartpqi/smartpqi_init.c |   27 ++++++++++++++-------------
+ 2 files changed, 33 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-index e164ffa..6dd0449 100644
+index 6dd0449..dc3a054 100644
 --- a/drivers/scsi/smartpqi/smartpqi.h
 +++ b/drivers/scsi/smartpqi/smartpqi.h
-@@ -688,6 +688,28 @@ struct pqi_config_table_heartbeat {
- 	__le32	heartbeat_counter;
+@@ -1079,9 +1079,9 @@ enum pqi_ctrl_mode {
+ #define BMIC_SENSE_CONTROLLER_PARAMETERS	0x64
+ #define BMIC_SENSE_SUBSYSTEM_INFORMATION	0x66
+ #define BMIC_WRITE_HOST_WELLNESS		0xa5
+-#define BMIC_CACHE_FLUSH			0xc2
++#define BMIC_FLUSH_CACHE			0xc2
+ 
+-#define SA_CACHE_FLUSH				0x1
++#define SA_FLUSH_CACHE				0x1
+ 
+ #define MASKED_DEVICE(lunid)			((lunid)[3] & 0xc0)
+ #define CISS_GET_LEVEL_2_BUS(lunid)		((lunid)[7] & 0x3f)
+@@ -1187,6 +1187,23 @@ struct bmic_identify_physical_device {
+ 	u8	padding_to_multiple_of_512[9];
  };
  
-+union pqi_reset_register {
-+	struct {
-+		u32	reset_type : 3;
-+		u32	reserved : 2;
-+		u32	reset_action : 3;
-+		u32	hold_in_pd1 : 1;
-+		u32	reserved2 : 23;
-+	} bits;
-+	u32	all_bits;
++struct bmic_flush_cache {
++	u8	disable_flag;
++	u8	system_power_action;
++	u8	ndu_flush;
++	u8	shutdown_event;
++	u8	reserved[28];
 +};
 +
-+#define PQI_RESET_ACTION_RESET		0x1
++/* for shutdown_event member of struct bmic_flush_cache */
++enum bmic_flush_cache_shutdown_event {
++	NONE_CACHE_FLUSH_ONLY = 0,
++	SHUTDOWN = 1,
++	HIBERNATE = 2,
++	SUSPEND = 3,
++	RESTART = 4
++};
 +
-+#define PQI_RESET_TYPE_NO_RESET		0x0
-+#define PQI_RESET_TYPE_SOFT_RESET	0x1
-+#define PQI_RESET_TYPE_FIRM_RESET	0x2
-+#define PQI_RESET_TYPE_HARD_RESET	0x3
-+
-+#define PQI_RESET_ACTION_COMPLETED	0x2
-+
-+#define PQI_RESET_POLL_INTERVAL_MSECS	100
-+
- #define PQI_MAX_OUTSTANDING_REQUESTS		((u32)~0)
- #define PQI_MAX_OUTSTANDING_REQUESTS_KDUMP	32
- #define PQI_MAX_TRANSFER_SIZE			(1024U * 1024U)
-@@ -995,6 +1017,7 @@ struct pqi_ctrl_info {
- 	u8		inbound_spanning_supported : 1;
- 	u8		outbound_spanning_supported : 1;
- 	u8		pqi_mode_enabled : 1;
-+	u8		pqi_reset_quiesce_supported : 1;
+ #pragma pack()
  
- 	struct list_head scsi_device_list;
- 	spinlock_t	scsi_device_list_lock;
+ int pqi_add_sas_host(struct Scsi_Host *shost, struct pqi_ctrl_info *ctrl_info);
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index cb8f886..ffdc32b 100644
+index ffdc32b..b36d338 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -5889,28 +5889,62 @@ static void pqi_unregister_scsi(struct pqi_ctrl_info *ctrl_info)
- 	scsi_host_put(shost);
+@@ -431,10 +431,10 @@ static int pqi_build_raid_path_request(struct pqi_ctrl_info *ctrl_info,
+ 		cdb[1] = CISS_GET_RAID_MAP;
+ 		put_unaligned_be32(buffer_length, &cdb[6]);
+ 		break;
+-	case SA_CACHE_FLUSH:
++	case SA_FLUSH_CACHE:
+ 		request->data_direction = SOP_WRITE_FLAG;
+ 		cdb[0] = BMIC_WRITE;
+-		cdb[6] = BMIC_CACHE_FLUSH;
++		cdb[6] = BMIC_FLUSH_CACHE;
+ 		put_unaligned_be16(buffer_length, &cdb[7]);
+ 		break;
+ 	case BMIC_IDENTIFY_CONTROLLER:
+@@ -585,14 +585,13 @@ static int pqi_identify_physical_device(struct pqi_ctrl_info *ctrl_info,
+ 	return rc;
  }
  
--#define PQI_RESET_ACTION_RESET		0x1
-+static int pqi_wait_for_pqi_reset_completion(struct pqi_ctrl_info *ctrl_info)
-+{
-+	int rc = 0;
-+	struct pqi_device_registers __iomem *pqi_registers;
-+	unsigned long timeout;
-+	unsigned int timeout_msecs;
-+	union pqi_reset_register reset_reg;
-+
-+	pqi_registers = ctrl_info->pqi_registers;
-+	timeout_msecs = readw(&pqi_registers->max_reset_timeout) * 100;
-+	timeout = msecs_to_jiffies(timeout_msecs) + jiffies;
-+
-+	while (1) {
-+		msleep(PQI_RESET_POLL_INTERVAL_MSECS);
-+		reset_reg.all_bits = readl(&pqi_registers->device_reset);
-+		if (reset_reg.bits.reset_action == PQI_RESET_ACTION_COMPLETED)
-+			break;
-+		pqi_check_ctrl_health(ctrl_info);
-+		if (pqi_ctrl_offline(ctrl_info)) {
-+			rc = -ENXIO;
-+			break;
-+		}
-+		if (time_after(jiffies, timeout)) {
-+			rc = -ETIMEDOUT;
-+			break;
-+		}
-+	}
- 
--#define PQI_RESET_TYPE_NO_RESET		0x0
--#define PQI_RESET_TYPE_SOFT_RESET	0x1
--#define PQI_RESET_TYPE_FIRM_RESET	0x2
--#define PQI_RESET_TYPE_HARD_RESET	0x3
-+	return rc;
-+}
- 
- static int pqi_reset(struct pqi_ctrl_info *ctrl_info)
+-#define SA_CACHE_FLUSH_BUFFER_LENGTH	4
+-
+-static int pqi_flush_cache(struct pqi_ctrl_info *ctrl_info)
++static int pqi_flush_cache(struct pqi_ctrl_info *ctrl_info,
++	enum bmic_flush_cache_shutdown_event shutdown_event)
  {
  	int rc;
--	u32 reset_params;
-+	union pqi_reset_register reset_reg;
+ 	struct pqi_raid_path_request request;
+ 	int pci_direction;
+-	u8 *buffer;
++	struct bmic_flush_cache *flush_cache;
  
--	reset_params = (PQI_RESET_ACTION_RESET << 5) |
--		PQI_RESET_TYPE_HARD_RESET;
-+	if (ctrl_info->pqi_reset_quiesce_supported) {
-+		rc = sis_pqi_reset_quiesce(ctrl_info);
-+		if (rc) {
-+			dev_err(&ctrl_info->pci_dev->dev,
-+				"PQI reset failed during quiesce with error %d\n",
-+				rc);
-+			return rc;
-+		}
-+	}
+ 	/*
+ 	 * Don't bother trying to flush the cache if the controller is
+@@ -601,13 +600,15 @@ static int pqi_flush_cache(struct pqi_ctrl_info *ctrl_info)
+ 	if (pqi_ctrl_offline(ctrl_info))
+ 		return -ENXIO;
  
--	writel(reset_params,
--		&ctrl_info->pqi_registers->device_reset);
-+	reset_reg.all_bits = 0;
-+	reset_reg.bits.reset_type = PQI_RESET_TYPE_HARD_RESET;
-+	reset_reg.bits.reset_action = PQI_RESET_ACTION_RESET;
+-	buffer = kzalloc(SA_CACHE_FLUSH_BUFFER_LENGTH, GFP_KERNEL);
+-	if (!buffer)
++	flush_cache = kzalloc(sizeof(*flush_cache), GFP_KERNEL);
++	if (!flush_cache)
+ 		return -ENOMEM;
  
--	rc = pqi_wait_for_pqi_mode_ready(ctrl_info);
-+	writel(reset_reg.all_bits, &ctrl_info->pqi_registers->device_reset);
++	flush_cache->shutdown_event = shutdown_event;
 +
-+	rc = pqi_wait_for_pqi_reset_completion(ctrl_info);
+ 	rc = pqi_build_raid_path_request(ctrl_info, &request,
+-		SA_CACHE_FLUSH, RAID_CTLR_LUNID, buffer,
+-		SA_CACHE_FLUSH_BUFFER_LENGTH, 0, &pci_direction);
++		SA_FLUSH_CACHE, RAID_CTLR_LUNID, flush_cache,
++		sizeof(*flush_cache), 0, &pci_direction);
  	if (rc)
- 		dev_err(&ctrl_info->pci_dev->dev,
--			"PQI reset failed\n");
-+			"PQI reset failed with error %d\n", rc);
+ 		goto out;
+ 
+@@ -618,7 +619,7 @@ static int pqi_flush_cache(struct pqi_ctrl_info *ctrl_info)
+ 		pci_direction);
+ 
+ out:
+-	kfree(buffer);
++	kfree(flush_cache);
  
  	return rc;
  }
-diff --git a/drivers/scsi/smartpqi/smartpqi_sis.c b/drivers/scsi/smartpqi/smartpqi_sis.c
-index e55dfcf..9abbace 100644
---- a/drivers/scsi/smartpqi/smartpqi_sis.c
-+++ b/drivers/scsi/smartpqi/smartpqi_sis.c
-@@ -36,6 +36,7 @@
- #define SIS_ENABLE_INTX				0x80
- #define SIS_SOFT_RESET				0x100
- #define SIS_TRIGGER_SHUTDOWN			0x800000
-+#define SIS_PQI_RESET_QUIESCE			0x1000000
- #define SIS_CMD_READY				0x200
- #define SIS_CMD_COMPLETE			0x1000
- #define SIS_CLEAR_CTRL_TO_HOST_DOORBELL		0x1000
-@@ -47,6 +48,7 @@
- #define SIS_EXTENDED_PROPERTIES_SUPPORTED	0x800000
- #define SIS_SMARTARRAY_FEATURES_SUPPORTED	0x2
- #define SIS_PQI_MODE_SUPPORTED			0x4
-+#define SIS_PQI_RESET_QUIESCE_SUPPORTED		0x8
- #define SIS_REQUIRED_EXTENDED_PROPERTIES	\
- 	(SIS_SMARTARRAY_FEATURES_SUPPORTED | SIS_PQI_MODE_SUPPORTED)
+@@ -6693,7 +6694,7 @@ static void pqi_shutdown(struct pci_dev *pci_dev)
+ 	 * Write all data in the controller's battery-backed cache to
+ 	 * storage.
+ 	 */
+-	rc = pqi_flush_cache(ctrl_info);
++	rc = pqi_flush_cache(ctrl_info, SHUTDOWN);
+ 	if (rc == 0)
+ 		return;
  
-@@ -258,6 +260,9 @@ int sis_get_ctrl_properties(struct pqi_ctrl_info *ctrl_info)
- 		SIS_REQUIRED_EXTENDED_PROPERTIES)
- 		return -ENODEV;
- 
-+	if (extended_properties & SIS_PQI_RESET_QUIESCE_SUPPORTED)
-+		ctrl_info->pqi_reset_quiesce_supported = true;
-+
- 	return 0;
- }
- 
-@@ -336,9 +341,10 @@ int sis_init_base_struct_addr(struct pqi_ctrl_info *ctrl_info)
- 
- #define SIS_DOORBELL_BIT_CLEAR_TIMEOUT_SECS	30
- 
--static void sis_wait_for_doorbell_bit_to_clear(
-+static int sis_wait_for_doorbell_bit_to_clear(
- 	struct pqi_ctrl_info *ctrl_info, u32 bit)
- {
-+	int rc = 0;
- 	u32 doorbell_register;
- 	unsigned long timeout;
- 
-@@ -350,16 +356,21 @@ static void sis_wait_for_doorbell_bit_to_clear(
- 		if ((doorbell_register & bit) == 0)
- 			break;
- 		if (readl(&ctrl_info->registers->sis_firmware_status) &
--			SIS_CTRL_KERNEL_PANIC)
-+			SIS_CTRL_KERNEL_PANIC) {
-+			rc = -ENODEV;
- 			break;
-+		}
- 		if (time_after(jiffies, timeout)) {
- 			dev_err(&ctrl_info->pci_dev->dev,
- 				"doorbell register bit 0x%x not cleared\n",
- 				bit);
-+			rc = -ETIMEDOUT;
- 			break;
- 		}
- 		usleep_range(1000, 2000);
- 	}
-+
-+	return rc;
- }
- 
- /* Enable MSI-X interrupts on the controller. */
-@@ -434,6 +445,21 @@ void sis_shutdown_ctrl(struct pqi_ctrl_info *ctrl_info)
- 		&ctrl_info->registers->sis_host_to_ctrl_doorbell);
- }
- 
-+int sis_pqi_reset_quiesce(struct pqi_ctrl_info *ctrl_info)
-+{
-+	u32 doorbell_register;
-+
-+	doorbell_register =
-+		readl(&ctrl_info->registers->sis_host_to_ctrl_doorbell);
-+	doorbell_register |= SIS_PQI_RESET_QUIESCE;
-+
-+	writel(doorbell_register,
-+		&ctrl_info->registers->sis_host_to_ctrl_doorbell);
-+
-+	return sis_wait_for_doorbell_bit_to_clear(ctrl_info,
-+		SIS_PQI_RESET_QUIESCE);
-+}
-+
- #define SIS_MODE_READY_TIMEOUT_SECS	30
- 
- int sis_reenable_sis_mode(struct pqi_ctrl_info *ctrl_info)
-diff --git a/drivers/scsi/smartpqi/smartpqi_sis.h b/drivers/scsi/smartpqi/smartpqi_sis.h
-index 983184b..394b16e 100644
---- a/drivers/scsi/smartpqi/smartpqi_sis.h
-+++ b/drivers/scsi/smartpqi/smartpqi_sis.h
-@@ -32,6 +32,7 @@ void sis_enable_intx(struct pqi_ctrl_info *ctrl_info);
- void sis_disable_intx(struct pqi_ctrl_info *ctrl_info);
- void sis_soft_reset(struct pqi_ctrl_info *ctrl_info);
- void sis_shutdown_ctrl(struct pqi_ctrl_info *ctrl_info);
-+int sis_pqi_reset_quiesce(struct pqi_ctrl_info *ctrl_info);
- int sis_reenable_sis_mode(struct pqi_ctrl_info *ctrl_info);
- void sis_write_driver_scratch(struct pqi_ctrl_info *ctrl_info, u32 value);
- u32 sis_read_driver_scratch(struct pqi_ctrl_info *ctrl_info);
+@@ -6737,7 +6738,7 @@ static __maybe_unused int pqi_suspend(struct pci_dev *pci_dev, pm_message_t stat
+ 	pqi_cancel_rescan_worker(ctrl_info);
+ 	pqi_wait_until_scan_finished(ctrl_info);
+ 	pqi_wait_until_lun_reset_finished(ctrl_info);
+-	pqi_flush_cache(ctrl_info);
++	pqi_flush_cache(ctrl_info, SUSPEND);
+ 	pqi_ctrl_block_requests(ctrl_info);
+ 	pqi_ctrl_wait_until_quiesced(ctrl_info);
+ 	pqi_wait_until_inbound_queues_empty(ctrl_info);
