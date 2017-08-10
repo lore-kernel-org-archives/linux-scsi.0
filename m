@@ -1,53 +1,67 @@
-From: Bradley Grove <bgrove@attotech.com>
-Subject: Re: [PATCH 16/29] scsi: esas2r: constify pci_device_id.
-Date: Thu, 10 Aug 2017 14:59:22 -0400
-Message-ID: <46cd43a7-a246-ac67-ef54-97b19571908e@attotech.com>
-References: <1501404036-9005-1-git-send-email-arvind.yadav.cs@gmail.com>
- <1501404036-9005-6-git-send-email-arvind.yadav.cs@gmail.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH RESEND 0/6] hpsa: support legacy boards
+Date: Thu, 10 Aug 2017 19:15:38 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D195B8CACF5@avsrvexchmbx2.microsemi.net>
+References: <1502181315-102499-1-git-send-email-hare@suse.de>
+ <4993A297653ECB4581FA5C3C31323D195B8C9FAB@avsrvexchmbx2.microsemi.net>
+ <271fd4b5-046f-2c74-4af8-60f225744313@suse.de>
+ <20170810070904.GA20910@lst.de>
+ <1502374013.2736.11.camel@HansenPartnership.com>
+ <8d4fdf1c-bdd6-3069-1933-a031c84811c6@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1501404036-9005-6-git-send-email-arvind.yadav.cs@gmail.com>
-Content-Language: en-MW
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arvind Yadav <arvind.yadav.cs@gmail.com>, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, mdr@sgi.com, hare@suse.com, aacraid@adaptec.com, matthew@wil.cx, fthain@telegraphics.com.au, schmitzmic@gmail.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, gotom@debian.or.jp, mrochs@linux.vnet.ibm.com, QLogic-Storage-Upstream@cavium.com, jinpu.wang@profitbricks.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam01on0086.outbound.protection.outlook.com ([104.47.32.86]:3204
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752889AbdHJTPp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 10 Aug 2017 15:15:45 -0400
+In-Reply-To: <8d4fdf1c-bdd6-3069-1933-a031c84811c6@suse.de>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@lst.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Meelis Roos <mroos@linux.ee>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-
-
-Looks good.
-
-Acked-by: Bradley Grove <bgrove@attotech.com>
-
-
-On 07/30/2017 04:40 AM, Arvind Yadav wrote:
-> pci_device_id are not supposed to change at runtime. All functions
-> working with pci_device_id provided by <linux/pci.h> work with
-> const pci_device_id. So mark the non-const structs as const.
-> 
-> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
-> ---
->   drivers/scsi/esas2r/esas2r_main.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
-> index f2e9d8a..81f226b 100644
-> --- a/drivers/scsi/esas2r/esas2r_main.c
-> +++ b/drivers/scsi/esas2r/esas2r_main.c
-> @@ -309,7 +309,7 @@ MODULE_PARM_DESC(interrupt_mode,
->   		 "Defines the interrupt mode to use.  0 for legacy"
->   		 ", 1 for MSI.  Default is MSI (1).");
->   
-> -static struct pci_device_id
-> +static const struct pci_device_id
->   	esas2r_pci_table[] = {
->   	{ ATTO_VENDOR_ID, 0x0049,	  ATTO_VENDOR_ID, 0x0049,
->   	  0,
-> 
-
-
-
-
-This electronic transmission and any attachments hereto are intended only for the use of the individual or entity to which it is addressed and may contain confidential information belonging to ATTO Technology, Inc. If you have reason to believe that you are not the intended recipient, you are hereby notified that any disclosure, copying, distribution or the taking of any action in reliance on the contents of this electronic transmission is strictly prohibited. If you have reason to believe that you have received this transmission in error, please notify ATTO immediately by return e-mail and delete and destroy this communication.   
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBIYW5uZXMgUmVpbmVja2UgW21h
+aWx0bzpoYXJlQHN1c2UuZGVdDQo+IFNlbnQ6IFRodXJzZGF5LCBBdWd1c3QgMTAsIDIwMTcgOTox
+MSBBTQ0KPiBUbzogSmFtZXMgQm90dG9tbGV5IDxKYW1lcy5Cb3R0b21sZXlASGFuc2VuUGFydG5l
+cnNoaXAuY29tPjsNCj4gQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+DQo+IENjOiBEb24g
+QnJhY2UgPGRvbi5icmFjZUBtaWNyb3NlbWkuY29tPjsgTWFydGluIEsuIFBldGVyc2VuDQo+IDxt
+YXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbT47IE1lZWxpcyBSb29zIDxtcm9vc0BsaW51eC5lZT47
+IGxpbnV4LQ0KPiBzY3NpQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIFJF
+U0VORCAwLzZdIGhwc2E6IHN1cHBvcnQgbGVnYWN5IGJvYXJkcw0KPiANCj4gRVhURVJOQUwgRU1B
+SUwNCj4gDQo+IA0KPiBPbiAwOC8xMC8yMDE3IDA0OjA2IFBNLCBKYW1lcyBCb3R0b21sZXkgd3Jv
+dGU6DQo+ID4gT24gVGh1LCAyMDE3LTA4LTEwIGF0IDA5OjA5ICswMjAwLCBDaHJpc3RvcGggSGVs
+bHdpZyB3cm90ZToNCj4gPj4gTm8gZGV2aWNlIHN1cHBvcnQgaW4gTGludXggaXMgdW5zdXBwb3J0
+ZWQsIHNvcnJ5LiAgSSB0aGluayB3ZSdyZQ0KPiA+PiBnZXR0aW5nIGludG8gdGhlIGNvcnBvcmF0
+ZSBidWxsc2hpdCBnYW1lIGEgbGl0dGxlIHRvbyBtdWNoIGhlcmUuDQo+ID4NCj4gPiBJIHRoaW5r
+IHRoZXJlIGFyZSB0d28gZGlmZmVyZW50IGRlZmluaXRpb25zIG9mIHN1cHBvcnRlZCBoZXJlLiAg
+VG8gdXMsDQo+ID4gYW55IGRldmljZSB0byB3aGljaCB0aGUgZHJpdmVyIGF0dGFjaGVzIGlzICJz
+dXBwb3J0ZWQiLiAgSG93ZXZlciwgaWYNCj4gPiBpdCdzIG5ldmVyIGJlZW4gdGVzdGVkIGJlZm9y
+ZSBpdCBtYXkgbm90IHdvcmsgdmVyeSB3ZWxsLiAgSW4gdGhlIExpbnV4DQo+ID4gd2F5LCB3ZSds
+bCB0cnkgdG8gZml4IHRoZSBidWdzIHdoZW4gdGhleSdyZSByZXBvcnRlZCBhbmQgaW4gdGhhdCBz
+ZW5zZQ0KPiA+IHdlIHN1cHBvcnQgdGhlIGRldmljZSB1bnRpbCBub3RoaW5nIGluIHRoZSBrZXJu
+ZWwgYXR0YWNoZXMgdG8gaXRzIGlkcw0KPiA+IGFueW1vcmUuDQo+ID4NCj4gPiBJbiB0aGUgY29y
+cG9yYXRlIHdvcmxkICJzdXBwb3J0ZWQiIG1lYW5zIHdlJ2xsIHNlbGwgeW91IGEgY29udHJhY3QN
+Cj4gPiBnaXZpbmcgeW91IGNlcnRhaW4gcmlnaHRzIHRvIHJlcG9ydCBidWdzIGFuZCBoYXZlIHVz
+IGZpeCB0aGVtLiAgVGhlcmUNCj4gPiBhcmUgZGVmaW5pdGUgcmVhc29ucyB3aHkgY29ycG9yYXRp
+b25zIG9ubHkgc3VwcG9ydCBhIHNtYWxsIHJhbmdlIG9mIG5ldw0KPiA+IGRldmljZXMsIGV2ZW4g
+dGhvdWdoIGRldmljZXMgbm90IG9uIHRoaXMgbGlzdCBtYXkgc3RpbGwgYmUgYXR0YWNoZWQgdG8N
+Cj4gPiBieSB0aGUgZHJpdmVyIGFuZCB0aHVzIHdlIChMaW51eCBDb21tdW5pdHkpIHdvdWxkIHRy
+eSB0byBmaXggdGhlIGJ1Zw0KPiA+IHJlcG9ydHMgZm9yLg0KPiA+DQo+ID4gSSB0aGluayB3aGF0
+IHlvdSdyZSBiYXNpY2FsbHkgYXNraW5nIGZvciBpcyBhIGRpZmZlcmVudCBuYW1lIGZvciB0aGUN
+Cj4gPiBmbGFnLCB3aGljaCBpcyBmaW5lPyAgaG93IGFib3V0ICdsZWdhY3knIGluc3RlYWQ/DQo+
+ID4NCj4gU3VyZSwgbm8gcHJvYmxlbSB3aXRoIHRoYXQuDQo+IA0KPiBEb24/DQo+IA0KPiBDaGVl
+cnMsDQo+IA0KPiBIYW5uZXMNCj4gLS0NCj4gRHIuIEhhbm5lcyBSZWluZWNrZSAgICAgICAgICAg
+ICAgICBUZWFtbGVhZCBTdG9yYWdlICYgTmV0d29ya2luZw0KPiBoYXJlQHN1c2UuZGUgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICs0OSA5MTEgNzQwNTMgNjg4DQo+IFNVU0UgTElO
+VVggR21iSCwgTWF4ZmVsZHN0ci4gNSwgOTA0MDkgTsO8cm5iZXJnDQo+IEdGOiBGLiBJbWVuZMO2
+cmZmZXIsIEouIFNtaXRoYXJkLCBKLiBHdWlsZCwgRC4gVXBtYW55dSwgRy4gTm9ydG9uDQo+IEhS
+QiAyMTI4NCAoQUcgTsO8cm5iZXJnKQ0KDQpPaywgYnV0IHRvIGNsYXJpZnkuLi4NCiAqIFdpbGwg
+dGhlIGNjaXNzIGRyaXZlciBiZSByZW1vdmVkIHdoZW4gdGhlc2UgcGF0Y2hlcyBhcmUgYXBwbGll
+ZD8gT3RoZXJ3aXNlDQogICAgd2hhdCB3aWxsIHByZXZlbnQgdGhlIGNjaXNzIGRyaXZlciBmcm9t
+IGxvYWRpbmcgb3ZlciB0aGVzZSBkZXZpY2VzPw0KICAgIGkuZS4gaG93IG9mdGVuIHdpbGwgdXNl
+cnMgbmVlZCB0byBiZSByZW1pbmRlZCB0byBhZGQgY2Npc3MuY2Npc3NfYWxsb3dfaHBzYSBmbGFn
+Pw0KDQoNCg==
