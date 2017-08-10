@@ -1,16 +1,16 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: Re: [RFC PATCH 2/6] bsg: assign sense_len instead of fixed
-	SCSI_SENSE_BUFFERSIZE
-Date: Thu, 10 Aug 2017 11:32:34 +0200
-Message-ID: <20170810093234.GM24539@lst.de>
-References: <cover.1502120928.git.bblock@linux.vnet.ibm.com> <2dd8381929af2037a6eec3086256f54f55c01e78.1502120928.git.bblock@linux.vnet.ibm.com>
+Subject: Re: [RFC PATCH 3/6] bsg: scsi-transport: add compile-tests to
+	prevent reply-buffer overflows
+Date: Thu, 10 Aug 2017 11:32:53 +0200
+Message-ID: <20170810093253.GN24539@lst.de>
+References: <cover.1502120928.git.bblock@linux.vnet.ibm.com> <0f448e7771f438025de755530778691ff535e36c.1502120928.git.bblock@linux.vnet.ibm.com>
 Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <open-iscsi+bncBDUNBGN3R4KRBMWQWDGAKGQEBEZGEVY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Return-path: <open-iscsi+bncBDUNBGN3R4KRBROQWDGAKGQEUITETKA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Content-Disposition: inline
-In-Reply-To: <2dd8381929af2037a6eec3086256f54f55c01e78.1502120928.git.bblock-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+In-Reply-To: <0f448e7771f438025de755530778691ff535e36c.1502120928.git.bblock-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Archive: <https://groups.google.com/group/open-iscsi
