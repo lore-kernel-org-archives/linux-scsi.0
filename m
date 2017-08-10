@@ -1,60 +1,35 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] scsi-mq: Always unprepare before requeuing a request
-Date: Thu, 10 Aug 2017 15:26:42 +0000
-Message-ID: <1502378800.2309.5.camel@wdc.com>
-References: <20170803214014.20332-1-bart.vanassche@wdc.com>
-         <yq14ltj9sjd.fsf@oracle.com> <8760dvn273.fsf@concordia.ellerman.id.au>
+Subject: Re: [PATCH] sd_zbc: Write unlock zone from sd_uninit_cmnd()
+Date: Thu, 10 Aug 2017 15:35:42 +0000
+Message-ID: <1502379340.2309.6.camel@wdc.com>
+References: <20170808041746.31341-1-damien.lemoal@wdc.com>
+         <1502204867.2250.1.camel@wdc.com>
+         <d0bdb1af-7d37-9fa2-62e9-56b2ff315924@wdc.com>
+         <cea78872-8e58-549d-87fc-2897e640c31c@wdc.com>
+         <1502251037.2784.2.camel@wdc.com>
+         <122fbf61-0de5-fa7e-2024-a0763ad70b13@wdc.com>
+         <1502252111.2784.4.camel@wdc.com>
+         <0e79dcda-29d8-58e3-ed20-b7b6e8db4b10@wdc.com>
+         <1502292282.2356.3.camel@wdc.com>
+         <466a3303-a4e4-8998-4d52-91ce6e925992@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:45078 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751975AbdHJP1a (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Aug 2017 11:27:30 -0400
-In-Reply-To: <8760dvn273.fsf@concordia.ellerman.id.au>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:25981 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751456AbdHJPga (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Aug 2017 11:36:30 -0400
+In-Reply-To: <466a3303-a4e4-8998-4d52-91ce6e925992@wdc.com>
 Content-Language: en-US
-Content-ID: <8FB523FF8CD37B4CA1EC2A7B4E5D8D7B@namprd04.prod.outlook.com>
+Content-ID: <7F944F4ED448B54E82E22B5FA66A3033@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "mpe@ellerman.id.au" <mpe@ellerman.id.au>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "bjking1@us.ibm.com" <bjking1@us.ibm.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, Damien Le Moal <Damien.LeMoal@wdc.com>, "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "inuxppc-dev@lists.ozlabs.org" <inuxppc-dev@lists.ozlabs.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "hch@lst.de" <hch@lst.de>
 
-T24gVGh1LCAyMDE3LTA4LTEwIGF0IDIwOjMyICsxMDAwLCBNaWNoYWVsIEVsbGVybWFuIHdyb3Rl
-Og0KPiAiTWFydGluIEsuIFBldGVyc2VuIiA8bWFydGluLnBldGVyc2VuQG9yYWNsZS5jb20+IHdy
-aXRlczoNCj4gPiA+IE9uZSBvZiB0aGUgdHdvIHNjc2ktbXEgZnVuY3Rpb25zIHRoYXQgcmVxdWV1
-ZSBhIHJlcXVlc3QgdW5wcmVwYXJlcyBhDQo+ID4gPiByZXF1ZXN0IGJlZm9yZSByZXF1ZXVlaW5n
-IChzY3NpX2lvX2NvbXBsZXRpb24oKSkgYnV0IHRoZSBvdGhlcg0KPiA+ID4gZnVuY3Rpb24gbm90
-IChfX3Njc2lfcXVldWVfaW5zZXJ0KCkpLiBNYWtlIHN1cmUgdGhhdCBhIHJlcXVlc3QgaXMNCj4g
-PiA+IHVucHJlcGFyZWQgYmVmb3JlIHJlcXVldWluZyBpdC4NCj4gPiANCj4gPiBBcHBsaWVkIHRv
-IDQuMTMvc2NzaS1maXhlcy4gVGhhbmtzIG11Y2ghDQo+IA0KPiBUaGlzIHNlZW1zIHRvIGJlIHBy
-ZXZlbnRpbmcgbXkgUG93ZXI4IGJveCwgd2hpY2ggdXNlcyBJUFIsIGZyb20gYm9vdGluZy4NCj4g
-DQo+IEJpc2VjdCBzYWlkIHNvOg0KPiANCj4gIyBmaXJzdCBiYWQgY29tbWl0OiBbMjcwMDY1ZTky
-YzMxNzg0NWQ2OTA5NWVjOGUzZDE4NjE2YjViMzlkNV0gc2NzaTogc2NzaS1tcTogQWx3YXlzIHVu
-cHJlcGFyZSBiZWZvcmUgcmVxdWV1aW5nIGEgcmVxdWVzdA0KPiANCj4gQW5kIGlmIEkgcmV2ZXJ0
-IHRoYXQgb24gdG9wIG9mIG5leHQtMjAxNzA4MDkgbXkgc3lzdGVtIGJvb3RzIGFnYWluLg0KPiAN
-Cj4gVGhlIHN5bXB0b20gaXMgdGhhdCBpdCBqdXN0IGdldHMgInN0dWNrIiBkdXJpbmcgYm9vdCBh
-bmQgbmV2ZXIgZ2V0cyB0bw0KPiBtb3VudGluZyByb290LCBmdWxsIGxvZyBiZWxvdywgdGhlIGVu
-ZCBpczoNCj4gDQo+ICAgLg0KPiAgIHJlYWR5DQo+ICAgcmVhZHkNCj4gICBzZCAwOjI6NDowOiBb
-c2RlXSA1NTQyODcxMDQgNTEyLWJ5dGUgbG9naWNhbCBibG9ja3M6ICgyODQgR0IvMjY0IEdpQikN
-Cj4gICBzZCAwOjI6NDowOiBbc2RlXSA0MDk2LWJ5dGUgcGh5c2ljYWwgYmxvY2tzDQo+ICAgc2Qg
-MDoyOjU6MDogW3NkZl0gMjcyNjQ2MTQ0IDUxMi1ieXRlIGxvZ2ljYWwgYmxvY2tzOiAoMTQwIEdC
-LzEzMCBHaUIpDQo+ICAgc2QgMDoyOjU6MDogW3NkZl0gNDA5Ni1ieXRlIHBoeXNpY2FsIGJsb2Nr
-cw0KPiAgIHNkIDA6Mjo0OjA6IFtzZGVdIFdyaXRlIFByb3RlY3QgaXMgb2ZmDQo+ICAgc2QgMDoy
-OjQ6MDogW3NkZV0gTW9kZSBTZW5zZTogMGIgMDAgMDAgMDgNCj4gICBzZCAwOjI6NTowOiBbc2Rm
-XSBXcml0ZSBQcm90ZWN0IGlzIG9mZg0KPiAgIHNkIDA6Mjo1OjA6IFtzZGZdIE1vZGUgU2Vuc2U6
-IDBiIDAwIDAwIDA4DQo+IA0KPiANCj4gQW5kIGl0IGp1c3Qgc2l0cyB0aGVyZSBmb3IgYXQgbGVh
-c3QgaG91cnMuDQo+IA0KPiBJIGNvbXBhcmVkIGEgZ29vZCBhbmQgYmFkIGJvb3QgbG9nIGFuZCB0
-aGVyZSBhcHBlYXJzIHRvIGJlIGVzc2VudGlhbGx5DQo+IG5vIGRpZmZlcmVuY2UuIENlcnRhaW5s
-eSBub3RoaW5nIHRoYXQgbG9va3Mgc3VzcGljb3VzLg0KDQpIZWxsbyBNaWNoYWVsLA0KDQpUaGFu
-a3MgZm9yIGhhdmluZyByZXBvcnRlZCB0aGlzIGVhcmx5LiBJcyB0aGVyZSBhbnkgY2hhbmNlIHRo
-YXQgeW91IGNhbg0KcmVwcm9kdWNlIHRoaXMgc3RhdGUsIHByZXNzIFN5c1JxLXcgb24gdGhlIGNv
-bnNvbGUgYW5kIGNvbGxlY3QgdGhlIHRhc2sNCm92ZXJ2aWV3IHRoYXQgaXMgcmVwb3J0ZWQgb24g
-dGhlIGNvbnNvbGUgKHNlZSBhbHNvIERvY3VtZW50YXRpb24vYWRtaW4tZ3VpZGUvDQpzeXNycS5y
-c3QpPyBJZiB0aGlzIGlzIG5vdCBwb3NzaWJsZSBvciBpZiB0aGF0IHRhc2sgb3ZlcnZpZXcgZG9l
-cyBub3QgcmVwb3J0DQphbnkgYmxvY2tlZCB0YXNrcywgY2FuIHlvdSBhZGQgc2NzaV9tb2Quc2Nz
-aV9sb2dnaW5nX2xldmVsPS0xIHRvIHRoZSBrZXJuZWwNCmNvbW1hbmQgbGluZSAoZWl0aGVyIHRo
-cm91Z2ggL2V0Yy9kZWZhdWx0L2dydWIgb3IgaW4gL2Jvb3QvZ3J1YjIvZ3J1Yi5jZmcNCndoZW4g
-dXNpbmcgR1JVQiksIHJlYm9vdCB0aGUgc3lzdGVtLCBjYXB0dXJlIHRoZSBjb25zb2xlIG91dHB1
-dCBhbmQgcmVwb3J0DQp0aGF0IG91dHB1dCBhcyBhIHJlcGx5IHRvIHRoaXMgZS1tYWlsPw0KDQpU
-aGFua3MsDQoNCkJhcnQu
+T24gVGh1LCAyMDE3LTA4LTEwIGF0IDExOjE0ICswOTAwLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToN
+Cj4gSSBhbSBjdXJyZW50bHkgdHJ5aW5nIGRpZmZlcmVudCBhcHByb2FjaGVzIGZvciB0aGlzLiBJ
+biB0aGUgbWVhbiB0aW1lLCBJDQo+IHdvdWxkIGxpa2UgdG8gc2VlIHRoZSB1bmxvY2sgY2hhbmdl
+IHBhdGNoIGJlIGFwcGxpZWQgdG8gZml4IHRoZSBkZWFkbG9jaw0KPiBwcm9ibGVtLg0KDQpIZWxs
+byBEYW1pZW4sDQoNClRoYXQgYXBwcm9hY2ggc291bmRzIGZpbmUgdG8gbWUuDQoNCkJhcnQu
