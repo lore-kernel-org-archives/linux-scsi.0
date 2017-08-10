@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 18/19] scsi: hisi_sas: replace kfree with scsi_host_put
-Date: Fri, 11 Aug 2017 00:09:43 +0800
-Message-ID: <1502381384-219889-19-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 04/19] scsi: hisi_sas: add v2 hw DFX feature
+Date: Fri, 11 Aug 2017 00:09:29 +0800
+Message-ID: <1502381384-219889-5-git-send-email-john.garry@huawei.com>
 References: <1502381384-219889-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,105 +9,102 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1502381384-219889-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, bianpan2016@163.com, John Garry <john.garry@huawei.com>
+Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, bianpan2016@163.com, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Instances of kfree(shost) should be replaced with
-scsi_host_put().
+From: Xiaofei Tan <tanxiaofei@huawei.com>
 
-In addition, a missing scsi_host_put() is added for
-error path in hisi_sas_shost_alloc_pci() and v3 driver
-removal.
+Add DFX feature for v2 hw. We are adding support for
+the following errors:
+- loss_of_dword_sync_count
+- invalid_dword_count
+- phy_reset_problem_count
+- running_disparity_error_count
 
-Signed-off-by: Pan Bian <bianpan2016@163.com> # For main.c changes
+Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c  |  6 +++---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 13 +++++++++----
- 2 files changed, 12 insertions(+), 7 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas.h       |  1 +
+ drivers/scsi/hisi_sas/hisi_sas_main.c  |  7 ++++++-
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 22 ++++++++++++++++++++++
+ 3 files changed, 29 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 3c4defa..ef2238c 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -193,6 +193,7 @@ struct hisi_sas_hw {
+ 	void (*phy_enable)(struct hisi_hba *hisi_hba, int phy_no);
+ 	void (*phy_disable)(struct hisi_hba *hisi_hba, int phy_no);
+ 	void (*phy_hard_reset)(struct hisi_hba *hisi_hba, int phy_no);
++	void (*get_events)(struct hisi_hba *hisi_hba, int phy_no);
+ 	void (*phy_set_linkrate)(struct hisi_hba *hisi_hba, int phy_no,
+ 			struct sas_phy_linkrates *linkrates);
+ 	enum sas_linkrate (*phy_get_max_linkrate)(void);
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 4112afd..9427835 100644
+index bd1d619..aaa7296 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1900,7 +1900,7 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
- 
- 	return shost;
- err_out:
--	kfree(shost);
-+	scsi_host_put(shost);
- 	dev_err(dev, "shost alloc failed\n");
- 	return NULL;
- }
-@@ -1991,7 +1991,7 @@ int hisi_sas_probe(struct platform_device *pdev,
- 	scsi_remove_host(shost);
- err_out_ha:
- 	hisi_sas_free(hisi_hba);
--	kfree(shost);
-+	scsi_host_put(shost);
- 	return rc;
- }
- EXPORT_SYMBOL_GPL(hisi_sas_probe);
-@@ -2006,7 +2006,7 @@ int hisi_sas_remove(struct platform_device *pdev)
- 	sas_remove_host(sha->core.shost);
- 
- 	hisi_sas_free(hisi_hba);
--	kfree(shost);
-+	scsi_host_put(shost);
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(hisi_sas_remove);
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 3620a3e..a20e354 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -1811,8 +1811,10 @@ static int soft_reset_v3_hw(struct hisi_hba *hisi_hba)
- 	struct device *dev = &pdev->dev;
- 
- 	shost = scsi_host_alloc(hisi_sas_sht, sizeof(*hisi_hba));
--	if (!shost)
--		goto err_out;
-+	if (!shost) {
-+		dev_err(dev, "shost alloc failed\n");
-+		return NULL;
-+	}
- 	hisi_hba = shost_priv(shost);
- 
- 	hisi_hba->hw = &hisi_sas_v3_hw;
-@@ -1833,6 +1835,7 @@ static int soft_reset_v3_hw(struct hisi_hba *hisi_hba)
- 
- 	return shost;
- err_out:
-+	scsi_host_put(shost);
- 	dev_err(dev, "shost alloc failed\n");
- 	return NULL;
- }
-@@ -1941,7 +1944,7 @@ static int soft_reset_v3_hw(struct hisi_hba *hisi_hba)
- err_out_register_ha:
- 	scsi_remove_host(shost);
- err_out_ha:
--	kfree(shost);
-+	scsi_host_put(shost);
- err_out_regions:
- 	pci_release_regions(pdev);
- err_out_disable_device:
-@@ -1971,14 +1974,16 @@ static void hisi_sas_v3_remove(struct pci_dev *pdev)
- 	struct device *dev = &pdev->dev;
- 	struct sas_ha_struct *sha = dev_get_drvdata(dev);
- 	struct hisi_hba *hisi_hba = sha->lldd_ha;
-+	struct Scsi_Host *shost = sha->core.shost;
- 
- 	sas_unregister_ha(sha);
- 	sas_remove_host(sha->core.shost);
- 
--	hisi_sas_free(hisi_hba);
- 	hisi_sas_v3_destroy_irqs(pdev, hisi_hba);
- 	pci_release_regions(pdev);
- 	pci_disable_device(pdev);
-+	hisi_sas_free(hisi_hba);
-+	scsi_host_put(shost);
+@@ -764,7 +764,12 @@ static int hisi_sas_control_phy(struct asd_sas_phy *sas_phy, enum phy_func func,
+ 	case PHY_FUNC_SET_LINK_RATE:
+ 		hisi_hba->hw->phy_set_linkrate(hisi_hba, phy_no, funcdata);
+ 		break;
+-
++	case PHY_FUNC_GET_EVENTS:
++		if (hisi_hba->hw->get_events) {
++			hisi_hba->hw->get_events(hisi_hba, phy_no);
++			break;
++		}
++		/* fallthru */
+ 	case PHY_FUNC_RELEASE_SPINUP_HOLD:
+ 	default:
+ 		return -EOPNOTSUPP;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index a762b25..41e8033 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -256,6 +256,8 @@
+ #define LINK_DFX2_RCVR_HOLD_STS_MSK	(0x1 << LINK_DFX2_RCVR_HOLD_STS_OFF)
+ #define LINK_DFX2_SEND_HOLD_STS_OFF	10
+ #define LINK_DFX2_SEND_HOLD_STS_MSK	(0x1 << LINK_DFX2_SEND_HOLD_STS_OFF)
++#define SAS_ERR_CNT4_REG		(PORT_BASE + 0x290)
++#define SAS_ERR_CNT6_REG		(PORT_BASE + 0x298)
+ #define PHY_CTRL_RDY_MSK		(PORT_BASE + 0x2b0)
+ #define PHYCTRL_NOT_RDY_MSK		(PORT_BASE + 0x2b4)
+ #define PHYCTRL_DWS_RESET_MSK		(PORT_BASE + 0x2b8)
+@@ -1360,6 +1362,25 @@ static void phy_hard_reset_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
+ 	start_phy_v2_hw(hisi_hba, phy_no);
  }
  
- enum {
++static void phy_get_events_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
++{
++	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
++	struct asd_sas_phy *sas_phy = &phy->sas_phy;
++	struct sas_phy *sphy = sas_phy->phy;
++	u32 err4_reg_val, err6_reg_val;
++
++	/* loss dword syn, phy reset problem */
++	err4_reg_val = hisi_sas_phy_read32(hisi_hba, phy_no, SAS_ERR_CNT4_REG);
++
++	/* disparity err, invalid dword */
++	err6_reg_val = hisi_sas_phy_read32(hisi_hba, phy_no, SAS_ERR_CNT6_REG);
++
++	sphy->loss_of_dword_sync_count += (err4_reg_val >> 16) & 0xFFFF;
++	sphy->phy_reset_problem_count += err4_reg_val & 0xFFFF;
++	sphy->invalid_dword_count += (err6_reg_val & 0xFF0000) >> 16;
++	sphy->running_disparity_error_count += err6_reg_val & 0xFF;
++}
++
+ static void start_phys_v2_hw(struct hisi_hba *hisi_hba)
+ {
+ 	int i;
+@@ -3457,6 +3478,7 @@ static int soft_reset_v2_hw(struct hisi_hba *hisi_hba)
+ 	.phy_enable = enable_phy_v2_hw,
+ 	.phy_disable = disable_phy_v2_hw,
+ 	.phy_hard_reset = phy_hard_reset_v2_hw,
++	.get_events = phy_get_events_v2_hw,
+ 	.phy_set_linkrate = phy_set_linkrate_v2_hw,
+ 	.phy_get_max_linkrate = phy_get_max_linkrate_v2_hw,
+ 	.max_command_entries = HISI_SAS_COMMAND_ENTRIES_V2_HW,
 -- 
 1.9.1
