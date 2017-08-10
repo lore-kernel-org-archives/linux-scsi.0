@@ -1,21 +1,32 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH RESEND 0/6] hpsa: support legacy boards
-Date: Thu, 10 Aug 2017 09:09:04 +0200
-Message-ID: <20170810070904.GA20910@lst.de>
-References: <1502181315-102499-1-git-send-email-hare@suse.de> <4993A297653ECB4581FA5C3C31323D195B8C9FAB@avsrvexchmbx2.microsemi.net> <271fd4b5-046f-2c74-4af8-60f225744313@suse.de>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 1/3] scsi: allow state transition CREATED_BLOCK ->
+ TRANSPORT_OFFLINE
+Date: Thu, 10 Aug 2017 09:09:53 +0200
+Message-ID: <20170810070953.GB4841@linux-x5ow.site>
+References: <1502348731-63534-1-git-send-email-hare@suse.de>
+ <1502348731-63534-2-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:58244 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751416AbdHJHJG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 10 Aug 2017 03:09:06 -0400
+Received: from mx2.suse.de ([195.135.220.15]:41674 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751416AbdHJHJz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 10 Aug 2017 03:09:55 -0400
 Content-Disposition: inline
-In-Reply-To: <271fd4b5-046f-2c74-4af8-60f225744313@suse.de>
+In-Reply-To: <1502348731-63534-2-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
-Cc: Don Brace <don.brace@microsemi.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Meelis Roos <mroos@linux.ee>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-No device support in Linux is unsupported, sorry.  I think we're
-getting into the corporate bullshit game a little too much here.
+Looks good,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
