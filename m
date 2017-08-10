@@ -1,46 +1,52 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 17/19] scsi: hisi_sas: remove phy_down_v3_hw() res variable
-Date: Fri, 11 Aug 2017 00:09:42 +0800
-Message-ID: <1502381384-219889-18-git-send-email-john.garry@huawei.com>
-References: <1502381384-219889-1-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 00/19] hisi_sas: misc fixes, improvements, and new features
+Date: Fri, 11 Aug 2017 00:09:25 +0800
+Message-ID: <1502381384-219889-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1502381384-219889-1-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, bianpan2016@163.com, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Variable res only holds value 0, so remove it.
+This patchset introduces an array of misc changes, most
+significantly including:
+- v2 hw reset function
+- core driver reset handler fixes
+- DFX feature
+- some interrupt/tasklet/probe+removal error path cleanup
 
-This cleans up a coccicheck warning.
+John Garry (4):
+  scsi: hisi_sas: use array for v2 hw ECC errors
+  scsi: hisi_sas: remove phy_down_v3_hw() res variable
+  scsi: hisi_sas: replace kfree with scsi_host_put
+  scsi: hisi_sas: remove driver versioning
 
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Xiang Chen (12):
+  scsi: hisi_sas: avoid potential v2 hw interrupt issue
+  scsi: hisi_sas: fix v2 hw underflow residual value
+  scsi: hisi_sas: remove repeated device config in v2 hw
+  scsi: hisi_sas: add irq and tasklet cleanup in v2 hw
+  scsi: hisi_sas: service interrupt ITCT_CLR interrupt in v2 hw
+  scsi: hisi_sas: add status and command buffer for internal abort
+  scsi: hisi_sas: Modify v3 hw STP_LINK_TIMER setting
+  scsi: hisi_sas: fix v3 hw channel interrupt processing
+  scsi: hisi_sas: kill tasklet when destroying irq in v3 hw
+  scsi: hisi_sas: update some v3 register init settings
+  scsi: hisi_sas: add reset handler for v3 hw
+  scsi: hisi_sas: add phy_set_linkrate_v3_hw()
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 8e4bfad..3620a3e 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -1200,7 +1200,6 @@ static int phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
- 
- static int phy_down_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
- {
--	int res = 0;
- 	u32 phy_state, sl_ctrl, txid_auto;
- 	struct device *dev = hisi_hba->dev;
- 
-@@ -1221,7 +1220,7 @@ static int phy_down_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
- 	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT0, CHL_INT0_NOT_RDY_MSK);
- 	hisi_sas_phy_write32(hisi_hba, phy_no, PHYCTRL_NOT_RDY_MSK, 0);
- 
--	return res;
-+	return 0;
- }
- 
- static void phy_bcast_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
+Xiaofei Tan (3):
+  scsi: hisi_sas: fix reset and port ID refresh issues
+  scsi: hisi_sas: add v2 hw DFX feature
+  scsi: hisi_sas: support zone management commands
+
+ drivers/scsi/hisi_sas/hisi_sas.h       |  18 +-
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 196 +++++++----
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 605 +++++++++++++++++----------------
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 237 +++++++++++--
+ 4 files changed, 656 insertions(+), 400 deletions(-)
+
 -- 
 1.9.1
