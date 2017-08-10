@@ -1,27 +1,60 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [RFC PATCH 6/6] bsg: reduce unnecessary arguments for
- blk_complete_sgv4_hdr_rq()
-Date: Thu, 10 Aug 2017 10:27:46 +0200
-Message-ID: <20170810082746.GK4841@linux-x5ow.site>
-References: <cover.1502120928.git.bblock@linux.vnet.ibm.com>
- <d95177abfa703a4f77a3d8ddb218eaead465f5ec.1502120928.git.bblock@linux.vnet.ibm.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/2] nvmet_fc: add defer_req callback for deferment of
+ cmd buffer return
+Date: Thu, 10 Aug 2017 11:04:10 +0200
+Message-ID: <20170810090410.x7xrk6dhml7ce7yh@infradead.org>
+References: <20170801221240.31723-1-jsmart2021@gmail.com>
+ <20170801221240.31723-2-jsmart2021@gmail.com>
+ <20170802081617.GD4256@linux-x5ow.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:34181 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751512AbdHJJET (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Aug 2017 05:04:19 -0400
 Content-Disposition: inline
-In-Reply-To: <d95177abfa703a4f77a3d8ddb218eaead465f5ec.1502120928.git.bblock@linux.vnet.ibm.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Benjamin Block <bblock@linux.vnet.ibm.com>
-Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Steffen Maier <maier@linux.vnet.ibm.com>, open-iscsi@googlegroups.com
+In-Reply-To: <20170802081617.GD4256@linux-x5ow.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: James Smart <jsmart2021@gmail.com>, James Smart <james.smart@broadcom.com>, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
 
-Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+On Wed, Aug 02, 2017 at 10:16:17AM +0200, Johannes Thumshirn wrote:
+> On Tue, Aug 01, 2017 at 03:12:39PM -0700, James Smart wrote:
+> > @@ -463,9 +472,9 @@ static struct nvmet_fc_fcp_iod *
+> >  nvmet_fc_alloc_fcp_iod(struct nvmet_fc_tgt_queue *queue)
+> >  {
+> >  	static struct nvmet_fc_fcp_iod *fod;
+> > -	unsigned long flags;
+> >  
+> > -	spin_lock_irqsave(&queue->qlock, flags);
+> > +	/* Caller must hold queue->qlock */
+> +       lockped_assert_held(&queue->qlock); 
+> So we can check if the caller really holds the queue lock.
+
+I've added the assert after applying the patch to the nvme-4.13 tree.
+
+> > +
+> >  	fod = list_first_entry_or_null(&queue->fod_list,
+> >  					struct nvmet_fc_fcp_iod, fcp_list);
+> >  	if (fod) {
+> 
+> [...]
+> 
+> > +	for (;;) {
+> > +		deferfcp = list_first_entry_or_null(&queue->pending_cmd_list,
+> > +				struct nvmet_fc_defer_fcp_req, req_list);
+> > +		if (!deferfcp)
+> > +			break;
+> 
+>         while ((deferfcp = list_first_entry_or_null(&queue->pending_cmd_list,
+> 				struct nvmet_fc_defer_fcp_req,
+> 				req_list)) != NULL) {
+> ?
+> 
+> Other than that,
+
+I have to admit that I'd just prefer an opencoded list_empty +
+container_of in both cases.  But given that all that is just personal
+preference I've left the code as submitted by James.
