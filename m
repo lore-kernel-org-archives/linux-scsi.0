@@ -1,23 +1,31 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: nvmf question - synchronization between target/initiator
- regarding partitions
-Date: Thu, 10 Aug 2017 02:16:26 -0700
-Message-ID: <20170810091626.GA21958@infradead.org>
-References: <82c4d1d8-ffa9-fa99-df58-05e2945eafdc@linux.vnet.ibm.com>
- <c382184a-1621-c6b2-2a20-bd16498be998@suse.de>
- <4c199e9e-ed58-5a5b-cedc-2d3c3bc1464c@linux.vnet.ibm.com>
+Subject: Re: [PATCH] ses: Fix wrong page error
+Date: Thu, 10 Aug 2017 02:25:09 -0700
+Message-ID: <20170810092509.GA6071@infradead.org>
+References: <d816c664-5d28-e924-2515-b0cc7ef46498@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:60350 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751488AbdHJJZJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Aug 2017 05:25:09 -0400
 Content-Disposition: inline
-In-Reply-To: <4c199e9e-ed58-5a5b-cedc-2d3c3bc1464c@linux.vnet.ibm.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Cc: Hannes Reinecke <hare@suse.de>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-block@vger.kernel.org, vnarasimhan@in.ibm.com, Mauricio pIO <mauricfo@linux.vnet.ibm.com>, Brian J King <bjking1@us.ibm.com>, Murali N Iyer <mniyer@us.ibm.com>
+In-Reply-To: <d816c664-5d28-e924-2515-b0cc7ef46498@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Wendy Xiong <wenxiong@linux.vnet.ibm.com>
 
-On Mon, Aug 07, 2017 at 02:29:47PM -0300, Guilherme G. Piccoli wrote:
-> Thanks for your feedback Hannes, agreed!
+On Tue, Aug 01, 2017 at 01:45:36PM -0500, Brian King wrote:
+> If a SES device returns an error on a requested diagnostic page,
+> we are currently printing an error indicating the wrong page
+> was received. Fix this up to simply return a failure and only
+> check the returned page when the diagnostic page buffer was
+> populated by the device.
+> 
+> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
 
-And btw, you'll see similar results with the SCSI target or nbd,
-so it's not really nvme specific.
+Looks good,
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
