@@ -1,40 +1,53 @@
-From: Helge Deller <deller@gmx.de>
-Subject: [PATCH] sym53c8xx: Avoid undefined behaviour in
- drivers/scsi/sym53c8xx_2/sym_hipd.c:762
-Date: Thu, 10 Aug 2017 21:08:49 +0200
-Message-ID: <20170810190849.GA12659@p100.box>
+From: Bradley Grove <bgrove@attotech.com>
+Subject: Re: [PATCH 16/29] scsi: esas2r: constify pci_device_id.
+Date: Thu, 10 Aug 2017 14:59:22 -0400
+Message-ID: <46cd43a7-a246-ac67-ef54-97b19571908e@attotech.com>
+References: <1501404036-9005-1-git-send-email-arvind.yadav.cs@gmail.com>
+ <1501404036-9005-6-git-send-email-arvind.yadav.cs@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:53110 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752889AbdHJTI4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 10 Aug 2017 15:08:56 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1501404036-9005-6-git-send-email-arvind.yadav.cs@gmail.com>
+Content-Language: en-MW
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arvind Yadav <arvind.yadav.cs@gmail.com>, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, mdr@sgi.com, hare@suse.com, aacraid@adaptec.com, matthew@wil.cx, fthain@telegraphics.com.au, schmitzmic@gmail.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, gotom@debian.or.jp, mrochs@linux.vnet.ibm.com, QLogic-Storage-Upstream@cavium.com, jinpu.wang@profitbricks.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-kernel@vger.kernel.org
-Cc: linux-parisc@vger.kernel.org
 
-On parisc I see this UBSAN warning with a sym53c896:
 
- UBSAN: Undefined behaviour in ./drivers/scsi/sym53c8xx_2/sym_hipd.c:762:24
- index -1903078336 is out of range for type 'u32 [7]'
 
-Avoid this warning by switching to dev64_ul().
+Looks good.
 
-Signed-off-by: Helge Deller <deller@gmx.de>
+Acked-by: Bradley Grove <bgrove@attotech.com>
 
-diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.c b/drivers/scsi/sym53c8xx_2/sym_hipd.c
-index 6b349e3..15ff285a9 100644
---- a/drivers/scsi/sym53c8xx_2/sym_hipd.c
-+++ b/drivers/scsi/sym53c8xx_2/sym_hipd.c
-@@ -759,7 +759,7 @@ static int sym_prepare_setting(struct Scsi_Host *shost, struct sym_hcb *np, stru
- 	/*
- 	 * Maximum synchronous period factor supported by the chip.
- 	 */
--	period = (11 * div_10M[np->clock_divn - 1]) / (4 * np->clock_khz);
-+	period = div64_ul(11 * div_10M[np->clock_divn - 1], 4 * np->clock_khz);
- 	np->maxsync = period > 2540 ? 254 : period / 10;
- 
- 	/*
+
+On 07/30/2017 04:40 AM, Arvind Yadav wrote:
+> pci_device_id are not supposed to change at runtime. All functions
+> working with pci_device_id provided by <linux/pci.h> work with
+> const pci_device_id. So mark the non-const structs as const.
+> 
+> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+> ---
+>   drivers/scsi/esas2r/esas2r_main.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
+> index f2e9d8a..81f226b 100644
+> --- a/drivers/scsi/esas2r/esas2r_main.c
+> +++ b/drivers/scsi/esas2r/esas2r_main.c
+> @@ -309,7 +309,7 @@ MODULE_PARM_DESC(interrupt_mode,
+>   		 "Defines the interrupt mode to use.  0 for legacy"
+>   		 ", 1 for MSI.  Default is MSI (1).");
+>   
+> -static struct pci_device_id
+> +static const struct pci_device_id
+>   	esas2r_pci_table[] = {
+>   	{ ATTO_VENDOR_ID, 0x0049,	  ATTO_VENDOR_ID, 0x0049,
+>   	  0,
+> 
+
+
+
+
+This electronic transmission and any attachments hereto are intended only for the use of the individual or entity to which it is addressed and may contain confidential information belonging to ATTO Technology, Inc. If you have reason to believe that you are not the intended recipient, you are hereby notified that any disclosure, copying, distribution or the taking of any action in reliance on the contents of this electronic transmission is strictly prohibited. If you have reason to believe that you have received this transmission in error, please notify ATTO immediately by return e-mail and delete and destroy this communication.   
