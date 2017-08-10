@@ -1,343 +1,94 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 01/19] scsi: hisi_sas: fix reset and port ID refresh issues
-Date: Fri, 11 Aug 2017 00:09:26 +0800
-Message-ID: <1502381384-219889-2-git-send-email-john.garry@huawei.com>
-References: <1502381384-219889-1-git-send-email-john.garry@huawei.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH] scsi-mq: Always unprepare before requeuing a request
+Date: Thu, 10 Aug 2017 10:56:34 -0500
+Message-ID: <5cb9297f-716f-2e15-65d2-3eb942ef0619@linux.vnet.ibm.com>
+References: <20170803214014.20332-1-bart.vanassche@wdc.com>
+ <yq14ltj9sjd.fsf@oracle.com> <8760dvn273.fsf@concordia.ellerman.id.au>
+ <1502378800.2309.5.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1502381384-219889-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, bianpan2016@163.com, Xiaofei Tan <tanxiaofei@huawei.com>, John Garry <john.garry@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:44449 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752059AbdHJP4l (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 10 Aug 2017 11:56:41 -0400
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v7AFrohI038048
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Aug 2017 11:56:41 -0400
+Received: from e13.ny.us.ibm.com (e13.ny.us.ibm.com [129.33.205.203])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2c8rg4ym1y-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Aug 2017 11:56:40 -0400
+Received: from localhost
+        by e13.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+        Thu, 10 Aug 2017 11:56:39 -0400
+In-Reply-To: <1502378800.2309.5.camel@wdc.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>, "mpe@ellerman.id.au" <mpe@ellerman.id.au>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "bjking1@us.ibm.com" <bjking1@us.ibm.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, Damien Le Moal <Damien.LeMoal@wdc.com>, "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "inuxppc-dev@lists.ozlabs.org" <inuxppc-dev@lists.ozlabs.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
 
-From: Xiaofei Tan <tanxiaofei@huawei.com>
+On 08/10/2017 10:26 AM, Bart Van Assche wrote:
+> On Thu, 2017-08-10 at 20:32 +1000, Michael Ellerman wrote:
+>> "Martin K. Petersen" <martin.petersen@oracle.com> writes:
+>>>> One of the two scsi-mq functions that requeue a request unprepares a
+>>>> request before requeueing (scsi_io_completion()) but the other
+>>>> function not (__scsi_queue_insert()). Make sure that a request is
+>>>> unprepared before requeuing it.
+>>>
+>>> Applied to 4.13/scsi-fixes. Thanks much!
+>>
+>> This seems to be preventing my Power8 box, which uses IPR, from booting.
+>>
+>> Bisect said so:
+>>
+>> # first bad commit: [270065e92c317845d69095ec8e3d18616b5b39d5] scsi: scsi-mq: Always unprepare before requeuing a request
+>>
+>> And if I revert that on top of next-20170809 my system boots again.
+>>
+>> The symptom is that it just gets "stuck" during boot and never gets to
+>> mounting root, full log below, the end is:
+>>
+>>   .
+>>   ready
+>>   ready
+>>   sd 0:2:4:0: [sde] 554287104 512-byte logical blocks: (284 GB/264 GiB)
+>>   sd 0:2:4:0: [sde] 4096-byte physical blocks
+>>   sd 0:2:5:0: [sdf] 272646144 512-byte logical blocks: (140 GB/130 GiB)
+>>   sd 0:2:5:0: [sdf] 4096-byte physical blocks
+>>   sd 0:2:4:0: [sde] Write Protect is off
+>>   sd 0:2:4:0: [sde] Mode Sense: 0b 00 00 08
+>>   sd 0:2:5:0: [sdf] Write Protect is off
+>>   sd 0:2:5:0: [sdf] Mode Sense: 0b 00 00 08
+>>
+>>
+>> And it just sits there for at least hours.
+>>
+>> I compared a good and bad boot log and there appears to be essentially
+>> no difference. Certainly nothing that looks suspicous.
+> 
+> Hello Michael,
+> 
+> Thanks for having reported this early. Is there any chance that you can
+> reproduce this state, press SysRq-w on the console and collect the task
+> overview that is reported on the console (see also Documentation/admin-guide/
+> sysrq.rst)? If this is not possible or if that task overview does not report
+> any blocked tasks, can you add scsi_mod.scsi_logging_level=-1 to the kernel
+> command line (either through /etc/default/grub or in /boot/grub2/grub.cfg
+> when using GRUB), reboot the system, capture the console output and report
+> that output as a reply to this e-mail?
 
-This patch provides fixes for the following issues:
-1. Fix issue of controller reset required to send
-commands. For reset process, it may be required to send
-commands to the controller, but not during soft reset.
-So add HISI_SAS_NOT_ACCEPT_CMD_BIT to prevent executing a
-task during this period.
+I'm building a kernel to try to reproduce this on a machine with ipr.
 
-2. Send a broadcast event in rescan topology to detect any
-topology changes during reset.
 
-3. Previously it was not ensured that libsas has processed
-the PHY up and down events after reset. Potentially this
-could cause an issue that we still process the PHY event
-after reset. So resolve this by flushing shot workqueue in
-LLDD reset.
+-Brian
 
-4. Port ID requires refresh after reset. The port ID
-generated after reset is not guaranteed to be the same as
-before reset, so it needs to be refreshed for each device's
-ITCT.
 
-Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/hisi_sas/hisi_sas.h       |   4 +-
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 152 ++++++++++++++++++++++-----------
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  36 ++++----
- 3 files changed, 118 insertions(+), 74 deletions(-)
-
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index a722f2b..3c4defa 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -33,6 +33,7 @@
- #define HISI_SAS_MAX_ITCT_ENTRIES 2048
- #define HISI_SAS_MAX_DEVICES HISI_SAS_MAX_ITCT_ENTRIES
- #define HISI_SAS_RESET_BIT	0
-+#define HISI_SAS_REJECT_CMD_BIT	1
- 
- #define HISI_SAS_STATUS_BUF_SZ (sizeof(struct hisi_sas_status_buffer))
- #define HISI_SAS_COMMAND_TABLE_SZ (sizeof(union hisi_sas_command_table))
-@@ -201,6 +202,7 @@ struct hisi_sas_hw {
- 	void (*dereg_device)(struct hisi_hba *hisi_hba,
- 				struct domain_device *device);
- 	int (*soft_reset)(struct hisi_hba *hisi_hba);
-+	u32 (*get_phys_state)(struct hisi_hba *hisi_hba);
- 	int max_command_entries;
- 	int complete_hdr_size;
- };
-@@ -408,6 +410,4 @@ extern void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba,
- 				    struct sas_task *task,
- 				    struct hisi_sas_slot *slot);
- extern void hisi_sas_init_mem(struct hisi_hba *hisi_hba);
--extern void hisi_sas_rescan_topology(struct hisi_hba *hisi_hba, u32 old_state,
--				     u32 state);
- #endif
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 4022c3f..bd1d619 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -433,7 +433,7 @@ static int hisi_sas_task_exec(struct sas_task *task, gfp_t gfp_flags,
- 	struct hisi_sas_device *sas_dev = device->lldd_dev;
- 	struct hisi_sas_dq *dq = sas_dev->dq;
- 
--	if (unlikely(test_bit(HISI_SAS_RESET_BIT, &hisi_hba->flags)))
-+	if (unlikely(test_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags)))
- 		return -EINVAL;
- 
- 	/* protect task_prep and start_delivery sequence */
-@@ -967,37 +967,117 @@ static int hisi_sas_debug_issue_ssp_tmf(struct domain_device *device,
- 				sizeof(ssp_task), tmf);
- }
- 
-+static void hisi_sas_refresh_port_id(struct hisi_hba *hisi_hba,
-+		struct asd_sas_port *sas_port, enum sas_linkrate linkrate)
-+{
-+	struct hisi_sas_device	*sas_dev;
-+	struct domain_device *device;
-+	int i;
-+
-+	for (i = 0; i < HISI_SAS_MAX_DEVICES; i++) {
-+		sas_dev = &hisi_hba->devices[i];
-+		device = sas_dev->sas_device;
-+		if ((sas_dev->dev_type == SAS_PHY_UNUSED)
-+				|| !device || (device->port != sas_port))
-+			continue;
-+
-+		hisi_hba->hw->free_device(hisi_hba, sas_dev);
-+
-+		/* Update linkrate of directly attached device. */
-+		if (!device->parent)
-+			device->linkrate = linkrate;
-+
-+		hisi_hba->hw->setup_itct(hisi_hba, sas_dev);
-+	}
-+}
-+
-+static void hisi_sas_rescan_topology(struct hisi_hba *hisi_hba, u32 old_state,
-+			      u32 state)
-+{
-+	struct sas_ha_struct *sas_ha = &hisi_hba->sha;
-+	struct asd_sas_port *_sas_port = NULL;
-+	int phy_no;
-+
-+	for (phy_no = 0; phy_no < hisi_hba->n_phy; phy_no++) {
-+		struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
-+		struct asd_sas_phy *sas_phy = &phy->sas_phy;
-+		struct asd_sas_port *sas_port = sas_phy->port;
-+		struct hisi_sas_port *port = to_hisi_sas_port(sas_port);
-+		bool do_port_check = !!(_sas_port != sas_port);
-+
-+		if (!sas_phy->phy->enabled)
-+			continue;
-+
-+		/* Report PHY state change to libsas */
-+		if (state & (1 << phy_no)) {
-+			if (do_port_check && sas_port) {
-+				struct domain_device *dev = sas_port->port_dev;
-+
-+				_sas_port = sas_port;
-+				port->id = phy->port_id;
-+				hisi_sas_refresh_port_id(hisi_hba,
-+						sas_port, sas_phy->linkrate);
-+
-+				if (DEV_IS_EXPANDER(dev->dev_type))
-+					sas_ha->notify_port_event(sas_phy,
-+							PORTE_BROADCAST_RCVD);
-+			}
-+		} else if (old_state & (1 << phy_no))
-+			/* PHY down but was up before */
-+			hisi_sas_phy_down(hisi_hba, phy_no, 0);
-+
-+	}
-+
-+	drain_workqueue(hisi_hba->shost->work_q);
-+}
-+
- static int hisi_sas_controller_reset(struct hisi_hba *hisi_hba)
- {
-+	struct sas_ha_struct *sas_ha = &hisi_hba->sha;
-+	struct device *dev = hisi_hba->dev;
-+	struct Scsi_Host *shost = hisi_hba->shost;
-+	u32 old_state, state;
-+	unsigned long flags;
- 	int rc;
- 
- 	if (!hisi_hba->hw->soft_reset)
- 		return -1;
- 
--	if (!test_and_set_bit(HISI_SAS_RESET_BIT, &hisi_hba->flags)) {
--		struct device *dev = hisi_hba->dev;
--		struct sas_ha_struct *sas_ha = &hisi_hba->sha;
--		unsigned long flags;
-+	if (test_and_set_bit(HISI_SAS_RESET_BIT, &hisi_hba->flags))
-+		return -1;
- 
--		dev_dbg(dev, "controller reset begins!\n");
--		scsi_block_requests(hisi_hba->shost);
--		rc = hisi_hba->hw->soft_reset(hisi_hba);
--		if (rc) {
--			dev_warn(dev, "controller reset failed (%d)\n", rc);
--			goto out;
--		}
--		spin_lock_irqsave(&hisi_hba->lock, flags);
--		hisi_sas_release_tasks(hisi_hba);
--		spin_unlock_irqrestore(&hisi_hba->lock, flags);
-+	dev_dbg(dev, "controller resetting...\n");
-+	old_state = hisi_hba->hw->get_phys_state(hisi_hba);
- 
--		sas_ha->notify_ha_event(sas_ha, HAE_RESET);
--		dev_dbg(dev, "controller reset successful!\n");
--	} else
--		return -1;
-+	scsi_block_requests(shost);
-+	set_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags);
-+	rc = hisi_hba->hw->soft_reset(hisi_hba);
-+	if (rc) {
-+		dev_warn(dev, "controller reset failed (%d)\n", rc);
-+		clear_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags);
-+		goto out;
-+	}
-+	spin_lock_irqsave(&hisi_hba->lock, flags);
-+	hisi_sas_release_tasks(hisi_hba);
-+	spin_unlock_irqrestore(&hisi_hba->lock, flags);
-+
-+	sas_ha->notify_ha_event(sas_ha, HAE_RESET);
-+	clear_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags);
-+
-+	/* Init and wait for PHYs to come up and all libsas event finished. */
-+	hisi_hba->hw->phys_init(hisi_hba);
-+	msleep(1000);
-+	drain_workqueue(hisi_hba->wq);
-+	drain_workqueue(shost->work_q);
-+
-+	state = hisi_hba->hw->get_phys_state(hisi_hba);
-+	hisi_sas_rescan_topology(hisi_hba, old_state, state);
-+	dev_dbg(dev, "controller reset complete\n");
- 
- out:
--	scsi_unblock_requests(hisi_hba->shost);
-+	scsi_unblock_requests(shost);
- 	clear_bit(HISI_SAS_RESET_BIT, &hisi_hba->flags);
-+
- 	return rc;
- }
- 
-@@ -1241,7 +1321,7 @@ static int hisi_sas_query_task(struct sas_task *task)
- 	int dlvry_queue_slot, dlvry_queue, n_elem = 0, rc, slot_idx;
- 	unsigned long flags, flags_dq;
- 
--	if (unlikely(test_bit(HISI_SAS_RESET_BIT, &hisi_hba->flags)))
-+	if (unlikely(test_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags)))
- 		return -EINVAL;
- 
- 	if (!device->port)
-@@ -1437,36 +1517,6 @@ void hisi_sas_phy_down(struct hisi_hba *hisi_hba, int phy_no, int rdy)
- }
- EXPORT_SYMBOL_GPL(hisi_sas_phy_down);
- 
--void hisi_sas_rescan_topology(struct hisi_hba *hisi_hba, u32 old_state,
--			      u32 state)
--{
--	struct sas_ha_struct *sas_ha = &hisi_hba->sha;
--	int phy_no;
--
--	for (phy_no = 0; phy_no < hisi_hba->n_phy; phy_no++) {
--		struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
--		struct asd_sas_phy *sas_phy = &phy->sas_phy;
--		struct asd_sas_port *sas_port = sas_phy->port;
--		struct domain_device *dev;
--
--		if (sas_phy->enabled) {
--			/* Report PHY state change to libsas */
--			if (state & (1 << phy_no))
--				continue;
--
--			if (old_state & (1 << phy_no))
--				/* PHY down but was up before */
--				hisi_sas_phy_down(hisi_hba, phy_no, 0);
--		}
--		if (!sas_port)
--			continue;
--		dev = sas_port->port_dev;
--
--		if (DEV_IS_EXPANDER(dev->dev_type))
--			sas_ha->notify_phy_event(sas_phy, PORTE_BROADCAST_RCVD);
--	}
--}
--EXPORT_SYMBOL_GPL(hisi_sas_rescan_topology);
- 
- struct scsi_transport_template *hisi_sas_stt;
- EXPORT_SYMBOL_GPL(hisi_sas_stt);
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 2bfea70..a6be33c 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -1364,8 +1364,15 @@ static void start_phys_v2_hw(struct hisi_hba *hisi_hba)
- {
- 	int i;
- 
--	for (i = 0; i < hisi_hba->n_phy; i++)
-+	for (i = 0; i < hisi_hba->n_phy; i++) {
-+		struct hisi_sas_phy *phy = &hisi_hba->phy[i];
-+		struct asd_sas_phy *sas_phy = &phy->sas_phy;
-+
-+		if (!sas_phy->phy->enabled)
-+			continue;
-+
- 		start_phy_v2_hw(hisi_hba, i);
-+	}
- }
- 
- static void phys_init_v2_hw(struct hisi_hba *hisi_hba)
-@@ -3383,14 +3390,16 @@ static void interrupt_disable_v2_hw(struct hisi_hba *hisi_hba)
- 		synchronize_irq(platform_get_irq(pdev, i));
- }
- 
-+
-+static u32 get_phys_state_v2_hw(struct hisi_hba *hisi_hba)
-+{
-+	return hisi_sas_read32(hisi_hba, PHY_STATE);
-+}
-+
- static int soft_reset_v2_hw(struct hisi_hba *hisi_hba)
- {
- 	struct device *dev = hisi_hba->dev;
--	u32 old_state, state;
- 	int rc, cnt;
--	int phy_no;
--
--	old_state = hisi_sas_read32(hisi_hba, PHY_STATE);
- 
- 	interrupt_disable_v2_hw(hisi_hba);
- 	hisi_sas_write32(hisi_hba, DLVRY_QUEUE_ENABLE, 0x0);
-@@ -3425,22 +3434,6 @@ static int soft_reset_v2_hw(struct hisi_hba *hisi_hba)
- 
- 	phys_reject_stp_links_v2_hw(hisi_hba);
- 
--	/* Re-enable the PHYs */
--	for (phy_no = 0; phy_no < hisi_hba->n_phy; phy_no++) {
--		struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
--		struct asd_sas_phy *sas_phy = &phy->sas_phy;
--
--		if (sas_phy->enabled)
--			start_phy_v2_hw(hisi_hba, phy_no);
--	}
--
--	/* Wait for the PHYs to come up and read the PHY state */
--	msleep(1000);
--
--	state = hisi_sas_read32(hisi_hba, PHY_STATE);
--
--	hisi_sas_rescan_topology(hisi_hba, old_state, state);
--
- 	return 0;
- }
- 
-@@ -3468,6 +3461,7 @@ static int soft_reset_v2_hw(struct hisi_hba *hisi_hba)
- 	.max_command_entries = HISI_SAS_COMMAND_ENTRIES_V2_HW,
- 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v2_hdr),
- 	.soft_reset = soft_reset_v2_hw,
-+	.get_phys_state = get_phys_state_v2_hw,
- };
- 
- static int hisi_sas_v2_probe(struct platform_device *pdev)
 -- 
-1.9.1
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
