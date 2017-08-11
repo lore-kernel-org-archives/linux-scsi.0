@@ -1,28 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 00/19] hisi_sas: misc fixes, improvements, and new features
-Date: Thu, 10 Aug 2017 20:18:41 -0400
-Message-ID: <yq1d1832bz2.fsf@oracle.com>
-References: <1502381384-219889-1-git-send-email-john.garry@huawei.com>
+Subject: Re: [PATCH] qedi: Limit number for CQ queues.
+Date: Thu, 10 Aug 2017 20:22:05 -0400
+Message-ID: <yq18tir2bte.fsf@oracle.com>
+References: <20170810133217.31481-1-manish.rangankar@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1502381384-219889-1-git-send-email-john.garry@huawei.com> (John
-        Garry's message of "Fri, 11 Aug 2017 00:09:25 +0800")
-Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, bianpan2016@163.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:25026 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751391AbdHKAWV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Aug 2017 20:22:21 -0400
+In-Reply-To: <20170810133217.31481-1-manish.rangankar@cavium.com> (Manish
+        Rangankar's message of "Thu, 10 Aug 2017 06:32:17 -0700")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Manish Rangankar <manish.rangankar@cavium.com>
+Cc: martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com, linux-scsi@vger.kernel.org, QLogic-Storage-Upstream@cavium.com
 
 
-John,
+Manish,
 
-> This patchset introduces an array of misc changes, most significantly
-> including:
+> [qed_sp_iscsi_func_start:189(host_7-0)]Cannot satisfy CQ amount. Queues
+> requested 8, CQs available 4. Aborting function start
+>
+> Above condition will resolve as management firmware is capable of telling
+> us the number of CQs available for a given PF, qed will communicate the
+> same number to qedi, So that qedi will know how much CQs are allowed.
 
-There were a couple of patches that did multiple things. In the future,
-please make sure you only make one logical change per patch.
-
-Applied to 4.14/scsi-queue. Thanks!
+Applied to 4.14/scsi-queue. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
