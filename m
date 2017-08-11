@@ -1,41 +1,75 @@
-From: Mr Abdul Karim <abdul7karim76@gmail.com>
-Subject: Assalamu`Alaikum.
-Date: Fri, 11 Aug 2017 18:37:36 +0200
-Message-ID: <CAA020W-asuQP78HS38nh25YNFk9X+TPn4ZqGJCN1ZdQfjwS-=g@mail.gmail.com>
-Reply-To: abdulkarim7543@gmail.com
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [PATCH 1/2] virtio: Reduce BUG if total_sg > virtqueue size to
+	WARN.
+Date: Fri, 11 Aug 2017 20:23:58 +0300
+Message-ID: <20170811201843-mutt-send-email-mst@kernel.org>
+References: <20170810164035.19963-1-rjones@redhat.com>
+	<20170810164035.19963-2-rjones@redhat.com>
+	<20170811001447-mutt-send-email-mst@kernel.org>
+	<20170810213038.GC20914@redhat.com>
+	<20170811003107-mutt-send-email-mst@kernel.org>
+	<20170810213511.GB10017@redhat.com>
+	<20170811003621-mutt-send-email-mst@kernel.org>
+	<64d3c483-076b-1362-b284-30dda704f80c@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:36264 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753357AbdHKQhi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Aug 2017 12:37:38 -0400
-Received: by mail-wm0-f66.google.com with SMTP id d40so7038839wma.3
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Aug 2017 09:37:37 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <64d3c483-076b-1362-b284-30dda704f80c@redhat.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, hch@lst.de
 List-Id: linux-scsi@vger.kernel.org
 
-Greetings from Mr. Abdul Karim
+On Fri, Aug 11, 2017 at 04:09:26PM +0200, Paolo Bonzini wrote:
+> On 10/08/2017 23:41, Michael S. Tsirkin wrote:
+> >>> Then we probably should fail probe if vq size is too small.
+> >> What does this mean?
+> > 
+> > We must prevent driver from submitting s/g lists > vq size to device.
+> 
+> What is the rationale for the limit?
 
- Assalamu`Alaikum.
+So the host knows what it needs to support.
 
-My Name is Mr. Abdul Karim I am a banker by profession. I'm from
-Ouagadougou, Burkina Faso, West Africa. My reason for contacting you
-is to transfer an abandoned $15.5M to your account.
+>  It makes no sense if indirect
+> descriptors are available, especially because...
+> 
+> > Either tell linux to avoid s/g lists that are too long, or
+> > simply fail request if this happens, or refuse to attach driver to device.
+> > 
+> > Later option would look something like this within probe:
+> > 
+> >         for (i = VIRTIO_SCSI_VQ_BASE; i < num_vqs; i++)
+> > 		if (vqs[i]->num < MAX_SG_USED_BY_LINUX)
+> > 			goto err;
+> > 
+> > 
+> > I don't know what's MAX_SG_USED_BY_LINUX though.
+> > 
+> 
+> ... both virtio-blk and virtio-scsi transmit their own value for the
+> maximum sg list size (max_seg in virtio-scsi, seg_max in virtio-blk).
+> 
+> Paolo
 
-The owner of this fund died since 2004 with his Next Of Kin. I want to
-present you to the bank as the Next of Kin/beneficiary of this fund.
+No other device has it, and it seemed like a good idea to
+limit it generally at the time.
 
-Further details of the transaction shall be forwarded to you as soon
-as I receive your return mail indicating your interest.
+we can fix the spec to relax the requirement for blk and scsi -
+want to submit a proposal? Alternatively, add a generic field
+for that.
 
- 1) YOUR FULL NAME...............................
- (2) YOUR AGE AND SEX............................
- (3) YOUR CONTACT ADDRESS..................
- (4) YOUR PRIVATE PHONE N0..........
- (5) FAX NUMBER..............
- (6) YOUR COUNTRY OF ORIGIN..................
- (7) YOUR OCCUPATION.........................
+For a quick fix, make sure vq size is >= max sg.
 
- Have a great day,
-Mr. Abdul Karim.
+-- 
+MST
