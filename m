@@ -1,32 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/5] qcom-ufs: phy/hcd: Refactor phy initialization code
-Date: Thu, 10 Aug 2017 20:03:27 -0400
-Message-ID: <yq1y3qr2cog.fsf@oracle.com>
-References: <1501829332-5183-1-git-send-email-vivek.gautam@codeaurora.org>
-        <c29e3a7c-62cc-f25a-4e0b-231c69e01afa@ti.com>
-        <b69ecef93852cf5a7bf342550de16f19@codeaurora.org>
-        <d49316e0-8ccc-21b3-e952-ddb0a941f3b3@ti.com>
-        <CAFp+6iF7m5vgGZcrOTXcxtPinVYUn0iPq1vAjXT909zfHu+wVQ@mail.gmail.com>
+Subject: Re: [PATCH v2] scsi: megaraid_sas: fix allocate instance->pd_info twice
+Date: Thu, 10 Aug 2017 20:05:10 -0400
+Message-ID: <yq1tw1f2cll.fsf@oracle.com>
+References: <20170808051549.GA11601@bogon.didichuxing.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAFp+6iF7m5vgGZcrOTXcxtPinVYUn0iPq1vAjXT909zfHu+wVQ@mail.gmail.com>
-        (Vivek Gautam's message of "Wed, 9 Aug 2017 12:14:44 +0530")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vivek Gautam <vivek.gautam@codeaurora.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Subhash Jadavani <subhashj@codeaurora.org>, Kishon Vijay Abraham I <kishon@ti.com>, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, robh+dt <robh+dt@kernel.org>, linux-arm-msm <linux-arm-msm@vger.kernel.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, jejb@linux.vnet.ibm.com, Vinayak Holikatti <vinholikatti@gmail.com>, linux-arm-msm-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:20325 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751416AbdHKAFU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Aug 2017 20:05:20 -0400
+In-Reply-To: <20170808051549.GA11601@bogon.didichuxing.com> (weiping zhang's
+        message of "Tue, 8 Aug 2017 13:15:55 +0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: weiping zhang <zhangweiping@didichuxing.com>
+Cc: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
 
 
-Vivek,
+weiping,
 
-> Can you kindly review this patch series (for UFS controller changes)
-> and consider giving your Ack so that Kishon can pull in the series
-> through phy tree.
+> fix allocate instance->pd_info twice which was introduced by
+> 96188a89cc6d.
 
-SCSI piece looks OK.
-
-Would still like Subhash to review the rest.
+Applied to 4.14/scsi-queue, thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
