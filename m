@@ -1,54 +1,41 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: RE: [PATCH RESEND 0/6] hpsa: support legacy boards
-Date: Fri, 11 Aug 2017 16:35:41 +0000
-Message-ID: <4993A297653ECB4581FA5C3C31323D195B8CBA03@avsrvexchmbx2.microsemi.net>
-References: <1502181315-102499-1-git-send-email-hare@suse.de>
- <4993A297653ECB4581FA5C3C31323D195B8C9FAB@avsrvexchmbx2.microsemi.net>
- <271fd4b5-046f-2c74-4af8-60f225744313@suse.de>
- <20170810070904.GA20910@lst.de>
- <1502374013.2736.11.camel@HansenPartnership.com>
- <8d4fdf1c-bdd6-3069-1933-a031c84811c6@suse.de>
- <4993A297653ECB4581FA5C3C31323D195B8CACF5@avsrvexchmbx2.microsemi.net>
- <6b439024-3bda-c370-b32b-d0fba67efbd9@suse.de>
+From: Mr Abdul Karim <abdul7karim76@gmail.com>
+Subject: Assalamu`Alaikum.
+Date: Fri, 11 Aug 2017 18:37:36 +0200
+Message-ID: <CAA020W-asuQP78HS38nh25YNFk9X+TPn4ZqGJCN1ZdQfjwS-=g@mail.gmail.com>
+Reply-To: abdulkarim7543@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0087.outbound.protection.outlook.com ([104.47.36.87]:15584
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753596AbdHKQgF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 11 Aug 2017 12:36:05 -0400
-In-Reply-To: <6b439024-3bda-c370-b32b-d0fba67efbd9@suse.de>
-Content-Language: en-US
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:36264 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753357AbdHKQhi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Aug 2017 12:37:38 -0400
+Received: by mail-wm0-f66.google.com with SMTP id d40so7038839wma.3
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Aug 2017 09:37:37 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Meelis Roos <mroos@linux.ee>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBIYW5uZXMgUmVpbmVja2UgW21h
-aWx0bzpoYXJlQHN1c2UuZGVdDQo+IFNlbnQ6IEZyaWRheSwgQXVndXN0IDExLCAyMDE3IDE6NDMg
-QU0NCj4gVG86IERvbiBCcmFjZSA8ZG9uLmJyYWNlQG1pY3Jvc2VtaS5jb20+OyBKYW1lcyBCb3R0
-b21sZXkNCj4gPEphbWVzLkJvdHRvbWxleUBIYW5zZW5QYXJ0bmVyc2hpcC5jb20+OyBDaHJpc3Rv
-cGggSGVsbHdpZw0KPiA8aGNoQGxzdC5kZT4NCj4gQ2M6IE1hcnRpbiBLLiBQZXRlcnNlbiA8bWFy
-dGluLnBldGVyc2VuQG9yYWNsZS5jb20+OyBNZWVsaXMgUm9vcw0KPiA8bXJvb3NAbGludXguZWU+
-OyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIFJFU0VO
-RCAwLzZdIGhwc2E6IHN1cHBvcnQgbGVnYWN5IGJvYXJkcw0KPiANCj4gRVhURVJOQUwgRU1BSUwN
-Cg0KLi4uDQo+ID4NCj4gPiBPaywgYnV0IHRvIGNsYXJpZnkuLi4NCj4gPiAgKiBXaWxsIHRoZSBj
-Y2lzcyBkcml2ZXIgYmUgcmVtb3ZlZCB3aGVuIHRoZXNlIHBhdGNoZXMgYXJlIGFwcGxpZWQ/DQo+
-IE90aGVyd2lzZQ0KPiA+ICAgICB3aGF0IHdpbGwgcHJldmVudCB0aGUgY2Npc3MgZHJpdmVyIGZy
-b20gbG9hZGluZyBvdmVyIHRoZXNlIGRldmljZXM/DQo+ID4gICAgIGkuZS4gaG93IG9mdGVuIHdp
-bGwgdXNlcnMgbmVlZCB0byBiZSByZW1pbmRlZCB0byBhZGQNCj4gY2Npc3MuY2Npc3NfYWxsb3df
-aHBzYSBmbGFnPw0KPiA+DQo+ID4NCj4gVGhlIGlkZWEgaXMgdG8gcmVtb3ZlIHRoZSBjY2lzcyBk
-cml2ZXIgY29tcGxldGVseSBvbmNlIHRoZXNlIGNoYW5nZXMgYXJlDQo+IGluLiBQcmVmZXJhYmx5
-IHdpdGggdGhlIHNhbWUgcGF0Y2hzZXQgdG8gYXZvaWQgYW55IHRpbWluZyBpc3N1ZXMuDQo+IA0K
-PiBDaGVlcnMsDQo+IA0KPiBIYW5uZXMNCj4gLS0NCj4gRHIuIEhhbm5lcyBSZWluZWNrZSAgICAg
-ICAgICAgICAgICBUZWFtbGVhZCBTdG9yYWdlICYgTmV0d29ya2luZw0KPiBoYXJlQHN1c2UuZGUg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICs0OSA5MTEgNzQwNTMgNjg4DQo+IFNV
-U0UgTElOVVggR21iSCwgTWF4ZmVsZHN0ci4gNSwgOTA0MDkgTsO8cm5iZXJnDQo+IEdGOiBGLiBJ
-bWVuZMO2cmZmZXIsIEouIFNtaXRoYXJkLCBKLiBHdWlsZCwgRC4gVXBtYW55dSwgRy4gTm9ydG9u
-DQo+IEhSQiAyMTI4NCAoQUcgTsO8cm5iZXJnKQ0KDQpPSywgdGhlbiBJIEFDSyB0aGUgc2VyaWVz
-IG9uY2UgdGhlIHJldmlld3MgYnkgb3RoZXJzIGhhdmUgYmVlbiByZXNvbHZlZC4NClRoYW5rLXlv
-dSBhbmQgIGV2ZXJ5b25lIGVsc2UgZm9yIHlvdXIgcGF0Y2hlcyBhbmQgYXR0ZW50aW9uIHRvIHRo
-aXMgaXNzdWUuDQpBbmQgdGhhbmtzIHRvIGV2ZXJ5b25lIGZvciB5b3VyIGlucHV0Lg0KDQpBY2tl
-ZC1ieTogRG9uIEJyYWNlIDxkb24uYnJhY2VAbWljcm9zZW1pLmNvbT4NCg0KDQo=
+Greetings from Mr. Abdul Karim
+
+ Assalamu`Alaikum.
+
+My Name is Mr. Abdul Karim I am a banker by profession. I'm from
+Ouagadougou, Burkina Faso, West Africa. My reason for contacting you
+is to transfer an abandoned $15.5M to your account.
+
+The owner of this fund died since 2004 with his Next Of Kin. I want to
+present you to the bank as the Next of Kin/beneficiary of this fund.
+
+Further details of the transaction shall be forwarded to you as soon
+as I receive your return mail indicating your interest.
+
+ 1) YOUR FULL NAME...............................
+ (2) YOUR AGE AND SEX............................
+ (3) YOUR CONTACT ADDRESS..................
+ (4) YOUR PRIVATE PHONE N0..........
+ (5) FAX NUMBER..............
+ (6) YOUR COUNTRY OF ORIGIN..................
+ (7) YOUR OCCUPATION.........................
+
+ Have a great day,
+Mr. Abdul Karim.
