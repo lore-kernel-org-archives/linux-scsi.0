@@ -1,16 +1,16 @@
 From: Cedric Sodhi <ManDay@openmail.cc>
 Subject: Re: SCSI Oops: Unable to handle kernel NULL ptr dereference
-Date: Fri, 11 Aug 2017 09:24:37 +0200
-Message-ID: <20170811072437.GB2729@air>
+Date: Fri, 11 Aug 2017 09:35:10 +0200
+Message-ID: <20170811073509.GC2729@air>
 References: <20170810170537.Horde.8CxBesYMH_QVGbAB7dui6vz@www.vfemail.net>
  <1502402499.4120.133.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from onethreetwo.vfemail.net ([199.16.11.132]:18141 "EHLO
+Received: from onethreetwo.vfemail.net ([199.16.11.132]:20803 "EHLO
         vfemail.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753173AbdHKNdy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 11 Aug 2017 09:33:54 -0400
+        id S1753281AbdHKNeJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 11 Aug 2017 09:34:09 -0400
 Content-Disposition: inline
 In-Reply-To: <1502402499.4120.133.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -18,9 +18,27 @@ List-Id: linux-scsi@vger.kernel.org
 To: "Ewan D. Milne" <emilne@redhat.com>
 Cc: linux-scsi@vger.kernel.org
 
-Since the problem is fixed it didn't seem necessary to me to say that, but I later recalled what was different that could have caused the problem. I used a SATA to USB controller and while the disk was mounted and read from, I noticed that the SATA wasn't correctly plugged in (although it worked). When I attempted to adjust the plug proplery, the link broke (i.e. on the SATA side, not the USB side). I re-mounted afterwards and no persistent issue seemed to have been caused, but it might be the cause for this panic when I terminated wayland later (no idea what it has to do with wayland, but that's my only hypothesis).
+The following shows in dmesg when the USB side is plugged in:
 
-Cedric
+usb 1-3: new high-speed USB device number 5 using xhci_hcd
+usb 1-3: New USB device found, idVendor=174c, idProduct=55aa
+usb 1-3: New USB device strings: Mfr=2, Product=3, SerialNumber=1
+usb 1-3: Product: ASM1153 USB3.0 TO SATA
+usb 1-3: Manufacturer: Liangteng
+usb 1-3: SerialNumber: 1153201404001
+usb-storage 1-3:1.0: USB Mass Storage device detected
+usb-storage 1-3:1.0: Quirks match for vid 174c pid 55aa: 400000
+scsi host3: usb-storage 1-3:1.0
+scsi 3:0:0:0: Direct-Access     ASMT     2115             0    PQ: 0 ANSI: 6
+sd 3:0:0:0: Attached scsi generic sg1 type 0
+sd 3:0:0:0: [sdb] Spinning up disk...
+ready
+sd 3:0:0:0: [sdb] 625142448 512-byte logical blocks: (320 GB/298 GiB)
+sd 3:0:0:0: [sdb] Write Protect is off
+sd 3:0:0:0: [sdb] Mode Sense: 43 00 00 00
+sd 3:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ sdb: sdb1
+sd 3:0:0:0: [sdb] Attached SCSI disk
 
 On Thu, Aug 10, 2017 at 06:01:39PM -0400, Ewan D. Milne wrote:
 > [cc's snipped to linux-scsi ]
