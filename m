@@ -1,35 +1,77 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 0/2] scsi: pollable 'state' attribute
-Date: Fri, 11 Aug 2017 08:53:45 +0200
-Message-ID: <1502434427-101729-1-git-send-email-hare@suse.de>
+Subject: [PATCHv2 2/2] scsi: make 'state' device attribute pollable
+Date: Fri, 11 Aug 2017 08:53:47 +0200
+Message-ID: <1502434427-101729-3-git-send-email-hare@suse.de>
+References: <1502434427-101729-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51552 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:51553 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751359AbdHKGxu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1751388AbdHKGxu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Fri, 11 Aug 2017 02:53:50 -0400
+In-Reply-To: <1502434427-101729-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Hi all,
+While the 'state' attribute can (and will) change occasionally,
+calling 'poll()' or 'select()' on it fails as sysfs is never
+notified that the state has changed.
+With this patch calling 'poll()' or 'select()' will work
+properly.
 
-here's a small patchset to make the 'state' device attribute pollable.
-It was supposed to be a small patch, but then hch suggested a rework.
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/scsi/scsi_lib.c           | 3 +++
+ drivers/scsi/scsi_transport_srp.c | 5 ++++-
+ 2 files changed, 7 insertions(+), 1 deletion(-)
 
-So there you go.
-
-Changes to v2:
-- Removed duplicate case value found by kbuild robot
-- Dropped state update patch
-
-Hannes Reinecke (2):
-  scsi_lib: rework scsi_internal_device_unblock_nowait()
-  scsi: make 'state' device attribute pollable
-
- drivers/scsi/scsi_lib.c           | 20 ++++++++++++++------
- drivers/scsi/scsi_transport_srp.c |  5 ++++-
- 2 files changed, 18 insertions(+), 7 deletions(-)
-
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 9169396..eda41b0 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2655,6 +2655,7 @@ void scsi_exit_queue(void)
+ 
+ 	}
+ 	sdev->sdev_state = state;
++	sysfs_notify(&sdev->sdev_gendev.kobj, NULL, "state");
+ 	return 0;
+ 
+  illegal:
+@@ -3078,6 +3079,7 @@ int scsi_internal_device_unblock_nowait(struct scsi_device *sdev,
+ 	case SDEV_BLOCK:
+ 	case SDEV_TRANSPORT_OFFLINE:
+ 		sdev->sdev_state = new_state;
++		sysfs_notify(&sdev->sdev_gendev.kobj, NULL, "state");
+ 		break;
+ 	case SDEV_CREATED_BLOCK:
+ 		if (new_state == SDEV_TRANSPORT_OFFLINE ||
+@@ -3085,6 +3087,7 @@ int scsi_internal_device_unblock_nowait(struct scsi_device *sdev,
+ 			sdev->sdev_state = new_state;
+ 		else
+ 			sdev->sdev_state = SDEV_CREATED;
++		sysfs_notify(&sdev->sdev_gendev.kobj, NULL, "state");
+ 		break;
+ 	case SDEV_CANCEL:
+ 	case SDEV_OFFLINE:
+diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
+index f617021..698cc46 100644
+--- a/drivers/scsi/scsi_transport_srp.c
++++ b/drivers/scsi/scsi_transport_srp.c
+@@ -556,8 +556,11 @@ int srp_reconnect_rport(struct srp_rport *rport)
+ 		 */
+ 		shost_for_each_device(sdev, shost) {
+ 			mutex_lock(&sdev->state_mutex);
+-			if (sdev->sdev_state == SDEV_OFFLINE)
++			if (sdev->sdev_state == SDEV_OFFLINE) {
+ 				sdev->sdev_state = SDEV_RUNNING;
++				sysfs_notify(&sdev->sdev_gendev.kobj,
++					     NULL, "state");
++			}
+ 			mutex_unlock(&sdev->state_mutex);
+ 		}
+ 	} else if (rport->state == SRP_RPORT_RUNNING) {
 -- 
 1.8.5.6
