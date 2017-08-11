@@ -1,108 +1,82 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCHv3 5/5] scsi_devinfo: fixup string compare
-Date: Fri, 11 Aug 2017 11:08:35 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1708111107140.1732-100000@iolanthe.rowland.org>
-References: <1502461401-94630-6-git-send-email-hare@suse.de>
+From: Benjamin Block <bblock@linux.vnet.ibm.com>
+Subject: Re: [RFC PATCH 1/6] bsg: fix kernel panic resulting from missing
+ allocation of a reply-buffer
+Date: Fri, 11 Aug 2017 17:32:03 +0200
+Message-ID: <20170811153203.GA31625@bblock-ThinkPad-W530>
+References: <cover.1502120928.git.bblock@linux.vnet.ibm.com>
+ <9e67ce3fc2f3cd42e9e05b2753b00d6676f46ee1.1502120928.git.bblock@linux.vnet.ibm.com>
+ <20170810093217.GL24539@lst.de>
+ <20170810221038.GA918@bblock-ThinkPad-W530>
+ <20170811083808.GA5497@lst.de>
+ <20170811091415.GA8099@lst.de>
+ <20170811134929.GA1249@bblock-ThinkPad-W530>
+ <20170811143649.GA32381@lst.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:58400 "HELO
-        iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S1753209AbdHKPIh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Aug 2017 11:08:37 -0400
-In-Reply-To: <1502461401-94630-6-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170811143649.GA32381@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>, Steffen Maier <maier@linux.vnet.ibm.com>, open-iscsi@googlegroups.com
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Fri, 11 Aug 2017, Hannes Reinecke wrote:
-
-> When checking the model and vendor string we need to use the
-> minimum value of either string, otherwise we'll miss out on
-> wildcard matches.
-
-You really should fix this sentence.
-
-> And we should take card when matching with zero size strings;
-> results might be unpredictable.
-> With this patch the rules for matching devinfo strings are
-> as follows:
-> - Vendor strings must match exactly
-> - Empty Model strings will only match if the devinfo model
->   is also empty
-> - Model strings shorter than the devinfo model string will
->   not match
+On Fri, Aug 11, 2017 at 04:36:49PM +0200, Christoph Hellwig wrote:
+> On Fri, Aug 11, 2017 at 03:49:29PM +0200, Benjamin Block wrote:
+> > On Fri, Aug 11, 2017 at 11:14:15AM +0200, Christoph Hellwig wrote:
+> > > But patch 1 still creates an additional copy of the sense data for
+> > > all bsg users.
+> > >
+> > 
+> > Huh? What additional copy? There is one reply-buffer and that is copied
+> > into the user-buffer should it contain valid data. Just like in your
+> > patch, neither you, nor me touches any of the copy-code. There is also
+> > no changes to how the driver get their data into that buffer, it will
+> > still be copied in both cases.
 > 
-> Fixes: 5e7ff2c ("SCSI: fix new bug in scsi_dev_info_list string matching")
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> ---
+> You're right - I misread your patch.  But that does make it worse as
+> this means that with your patch we re-assign the scsi_request.sense
+> pointer when using bsg.  That will lead to crashes if using the bsg
+> code against e.g. a normal scsi device using bsg when that request
+> later gets reused for something that is not bsg.
+>
 
-Aside from the patch description,
+So when the bsg interface is used with something different than the
+bsg-lib request queue? I haven't actually thought about that (presuming
+the bsg-lib queue was the only one being used). Fair enough, I haven't
+completely read that code now, but that seems bad then, to reassign a
+space allocated in someone else's request queue. 
 
-Reviewed-by: Alan Stern <stern@rowland.harvard.edu>
+That still leaves open that we now over-allocate space in bsg-lib, or?
 
->  drivers/scsi/scsi_devinfo.c | 29 ++++++++++++++++-------------
->  1 file changed, 16 insertions(+), 13 deletions(-)
 > 
-> diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-> index 776c701..d39b27c 100644
-> --- a/drivers/scsi/scsi_devinfo.c
-> +++ b/drivers/scsi/scsi_devinfo.c
-> @@ -399,8 +399,8 @@ int scsi_dev_info_list_add_keyed(int compatible, char *vendor, char *model,
->  
->  /**
->   * scsi_dev_info_list_find - find a matching dev_info list entry.
-> - * @vendor:	vendor string
-> - * @model:	model (product) string
-> + * @vendor:	full vendor string
-> + * @model:	full model (product) string
->   * @key:	specify list to use
->   *
->   * Description:
-> @@ -415,7 +415,7 @@ static struct scsi_dev_info_list *scsi_dev_info_list_find(const char *vendor,
->  	struct scsi_dev_info_list *devinfo;
->  	struct scsi_dev_info_list_table *devinfo_table =
->  		scsi_devinfo_lookup_by_key(key);
-> -	size_t vmax, mmax;
-> +	size_t vmax, mmax, mlen;
->  	const char *vskip, *mskip;
->  
->  	if (IS_ERR(devinfo_table))
-> @@ -454,22 +454,25 @@ static struct scsi_dev_info_list *scsi_dev_info_list_find(const char *vendor,
->  			    dev_info_list) {
->  		if (devinfo->compatible) {
->  			/*
-> -			 * Behave like the older version of get_device_flags.
-> +			 * vendor strings must be an exact match
->  			 */
-> -			if (memcmp(devinfo->vendor, vskip, vmax) ||
-> -					(vmax < sizeof(devinfo->vendor) &&
-> -						devinfo->vendor[vmax]))
-> +			if (vmax != strlen(devinfo->vendor) ||
-> +			    memcmp(devinfo->vendor, vskip, vmax))
->  				continue;
-> -			if (memcmp(devinfo->model, mskip, mmax) ||
-> -					(mmax < sizeof(devinfo->model) &&
-> -						devinfo->model[mmax]))
-> +
-> +			/*
-> +			 * @model specifies the full string, and
-> +			 * must be larger or equal to devinfo->model
-> +			 */
-> +			mlen = strlen(devinfo->model);
-> +			if (mmax < mlen || memcmp(devinfo->model, mskip, mlen))
->  				continue;
->  			return devinfo;
->  		} else {
->  			if (!memcmp(devinfo->vendor, vendor,
-> -				     sizeof(devinfo->vendor)) &&
-> -			     !memcmp(devinfo->model, model,
-> -				      sizeof(devinfo->model)))
-> +				    sizeof(devinfo->vendor)) &&
-> +			    !memcmp(devinfo->model, model,
-> +				    sizeof(devinfo->model)))
->  				return devinfo;
->  		}
->  	}
+> > 
+> > > 
+> > > Can you test the patch below which implements my suggestion?  Your
+> > > other patches should still apply fine on top modulo minor context
+> > > changes.
+> > 
+> > Only your patch on top of 4.13-rc4. din_xferp (D) is also empty, which is
+> > not taken from the sense-buffer.
 > 
+> Can't parse this.
+> 
+> > =============================================================================
+> > BUG kmalloc-1024 (Not tainted): Invalid object pointer 0x000000004ad9e0f0
+> > -----------------------------------------------------------------------------
+> 
+> Oops - if we don't allocate the job separately we should not free it either.
+> Updated patch for that below:
+>
+
+My diff tells that this was the same patch as before.
+
+
+                                                    Beste Grüße / Best regards,
+                                                      - Benjamin Block
+-- 
+Linux on z Systems Development         /         IBM Systems & Technology Group
+		  IBM Deutschland Research & Development GmbH 
+Vorsitz. AufsR.: Martina Koederitz     /        Geschäftsführung: Dirk Wittkopp
+Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
