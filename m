@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv3 1/5] scsi_debug: allow to specify inquiry vendor and model
-Date: Fri, 11 Aug 2017 16:23:17 +0200
-Message-ID: <1502461401-94630-2-git-send-email-hare@suse.de>
+Subject: [PATCHv3 4/5] scsi: whitespace fixes in scsi_devinfo.c
+Date: Fri, 11 Aug 2017 16:23:20 +0200
+Message-ID: <1502461401-94630-5-git-send-email-hare@suse.de>
 References: <1502461401-94630-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34108 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:34106 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753264AbdHKOXZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1753267AbdHKOXZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Fri, 11 Aug 2017 10:23:25 -0400
 In-Reply-To: <1502461401-94630-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,77 +14,101 @@ List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-For testing purposes we need to be able to pass in the inquiry
-vendor and model.
-
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/scsi_debug.c | 25 +++++++++++++++++--------
- 1 file changed, 17 insertions(+), 8 deletions(-)
+ drivers/scsi/scsi_devinfo.c | 38 +++++++++++++++++++-------------------
+ 1 file changed, 19 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index dc095a2..c8a3f8d 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -953,9 +953,9 @@ static int fetch_to_dev_buffer(struct scsi_cmnd *scp, unsigned char *arr,
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index 28fea83..776c701 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -304,8 +304,8 @@ static void scsi_strcpy_devinfo(char *name, char *to, size_t to_length,
+ 			 */
+ 			to[from_length] = '\0';
+ 		} else {
+-			/* 
+-			 * space pad the string if it is short. 
++			/*
++			 * space pad the string if it is short.
+ 			 */
+ 			strncpy(&to[from_length], spaces,
+ 				to_length - from_length);
+@@ -325,10 +325,10 @@ static void scsi_strcpy_devinfo(char *name, char *to, size_t to_length,
+  * @flags:	if strflags NULL, use this flag value
+  *
+  * Description:
+- * 	Create and add one dev_info entry for @vendor, @model, @strflags or
+- * 	@flag. If @compatible, add to the tail of the list, do not space
+- * 	pad, and set devinfo->compatible. The scsi_static_device_list entries
+- * 	are added with @compatible 1 and @clfags NULL.
++ *	Create and add one dev_info entry for @vendor, @model, @strflags or
++ *	@flag. If @compatible, add to the tail of the list, do not space
++ *	pad, and set devinfo->compatible. The scsi_static_device_list entries
++ *	are added with @compatible 1 and @clfags NULL.
+  *
+  * Returns: 0 OK, -error on failure.
+  **/
+@@ -350,11 +350,11 @@ static int scsi_dev_info_list_add(int compatible, char *vendor, char *model,
+  * @key:	specify list to use
+  *
+  * Description:
+- * 	Create and add one dev_info entry for @vendor, @model,
+- * 	@strflags or @flag in list specified by @key. If @compatible,
+- * 	add to the tail of the list, do not space pad, and set
+- * 	devinfo->compatible. The scsi_static_device_list entries are
+- * 	added with @compatible 1 and @clfags NULL.
++ *	Create and add one dev_info entry for @vendor, @model,
++ *	@strflags or @flag in list specified by @key. If @compatible,
++ *	add to the tail of the list, do not space pad, and set
++ *	devinfo->compatible. The scsi_static_device_list entries are
++ *	added with @compatible 1 and @clfags NULL.
+  *
+  * Returns: 0 OK, -error on failure.
+  **/
+@@ -405,7 +405,7 @@ int scsi_dev_info_list_add_keyed(int compatible, char *vendor, char *model,
+  *
+  * Description:
+  *	Finds the first dev_info entry matching @vendor, @model
+- * 	in list specified by @key.
++ *	in list specified by @key.
+  *
+  * Returns: pointer to matching entry, or ERR_PTR on failure.
+  **/
+@@ -508,10 +508,10 @@ int scsi_dev_info_list_del_keyed(char *vendor, char *model, int key)
+  * @dev_list:	string of device flags to add
+  *
+  * Description:
+- * 	Parse dev_list, and add entries to the scsi_dev_info_list.
+- * 	dev_list is of the form "vendor:product:flag,vendor:product:flag".
+- * 	dev_list is modified via strsep. Can be called for command line
+- * 	addition, for proc or mabye a sysfs interface.
++ *	Parse dev_list, and add entries to the scsi_dev_info_list.
++ *	dev_list is of the form "vendor:product:flag,vendor:product:flag".
++ *	dev_list is modified via strsep. Can be called for command line
++ *	addition, for proc or mabye a sysfs interface.
+  *
+  * Returns: 0 if OK, -error on failure.
+  **/
+@@ -701,7 +701,7 @@ static int proc_scsi_devinfo_open(struct inode *inode, struct file *file)
+ 	return seq_open(file, &scsi_devinfo_seq_ops);
  }
  
- 
--static const char * inq_vendor_id = "Linux   ";
--static const char * inq_product_id = "scsi_debug      ";
--static const char *inq_product_rev = "0186";	/* version less '.' */
-+static char sdebug_inq_vendor_id[9] = "Linux   ";
-+static char sdebug_inq_product_id[17] = "scsi_debug      ";
-+static char sdebug_inq_product_rev[5] = "0186";	/* version less '.' */
- /* Use some locally assigned NAAs for SAS addresses. */
- static const u64 naa3_comp_a = 0x3222222000000000ULL;
- static const u64 naa3_comp_b = 0x3333333000000000ULL;
-@@ -975,8 +975,8 @@ static int inquiry_vpd_83(unsigned char *arr, int port_group_id,
- 	arr[0] = 0x2;	/* ASCII */
- 	arr[1] = 0x1;
- 	arr[2] = 0x0;
--	memcpy(&arr[4], inq_vendor_id, 8);
--	memcpy(&arr[12], inq_product_id, 16);
-+	memcpy(&arr[4], sdebug_inq_vendor_id, 8);
-+	memcpy(&arr[12], sdebug_inq_product_id, 16);
- 	memcpy(&arr[28], dev_id_str, dev_id_str_len);
- 	num = 8 + 16 + dev_id_str_len;
- 	arr[3] = num;
-@@ -1408,9 +1408,9 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 	arr[6] = 0x10; /* claim: MultiP */
- 	/* arr[6] |= 0x40; ... claim: EncServ (enclosure services) */
- 	arr[7] = 0xa; /* claim: LINKED + CMDQUE */
--	memcpy(&arr[8], inq_vendor_id, 8);
--	memcpy(&arr[16], inq_product_id, 16);
--	memcpy(&arr[32], inq_product_rev, 4);
-+	memcpy(&arr[8], sdebug_inq_vendor_id, 8);
-+	memcpy(&arr[16], sdebug_inq_product_id, 16);
-+	memcpy(&arr[32], sdebug_inq_product_rev, 4);
- 	/* version descriptors (2 bytes each) follow */
- 	put_unaligned_be16(0xc0, arr + 58);   /* SAM-6 no version claimed */
- 	put_unaligned_be16(0x5c0, arr + 60);  /* SPC-5 no version claimed */
-@@ -4152,6 +4152,12 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
- module_param_named(fake_rw, sdebug_fake_rw, int, S_IRUGO | S_IWUSR);
- module_param_named(guard, sdebug_guard, uint, S_IRUGO);
- module_param_named(host_lock, sdebug_host_lock, bool, S_IRUGO | S_IWUSR);
-+module_param_string(inq_vendor, sdebug_inq_vendor_id,
-+		    sizeof(sdebug_inq_vendor_id), S_IRUGO|S_IWUSR);
-+module_param_string(inq_product, sdebug_inq_product_id,
-+		    sizeof(sdebug_inq_product_id), S_IRUGO|S_IWUSR);
-+module_param_string(inq_rev, sdebug_inq_product_rev,
-+		    sizeof(sdebug_inq_product_rev), S_IRUGO|S_IWUSR);
- module_param_named(lbpu, sdebug_lbpu, int, S_IRUGO);
- module_param_named(lbpws, sdebug_lbpws, int, S_IRUGO);
- module_param_named(lbpws10, sdebug_lbpws10, int, S_IRUGO);
-@@ -4203,6 +4209,9 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
- MODULE_PARM_DESC(fake_rw, "fake reads/writes instead of copying (def=0)");
- MODULE_PARM_DESC(guard, "protection checksum: 0=crc, 1=ip (def=0)");
- MODULE_PARM_DESC(host_lock, "host_lock is ignored (def=0)");
-+MODULE_PARM_DESC(inq_vendor, "SCSI INQUIRY vendor string (def=\"Linux\")");
-+MODULE_PARM_DESC(inq_product, "SCSI INQUIRY product string (def=\"scsi_debug\")");
-+MODULE_PARM_DESC(inq_rev, "SCSI INQUIRY revision string (def=\"scsi_debug\")");
- MODULE_PARM_DESC(lbpu, "enable LBP, support UNMAP command (def=0)");
- MODULE_PARM_DESC(lbpws, "enable LBP, support WRITE SAME(16) with UNMAP bit (def=0)");
- MODULE_PARM_DESC(lbpws10, "enable LBP, support WRITE SAME(10) with UNMAP bit (def=0)");
+-/* 
++/*
+  * proc_scsi_dev_info_write - allow additions to scsi_dev_info_list via /proc.
+  *
+  * Description: Adds a black/white list entry for vendor and model with an
+@@ -840,8 +840,8 @@ int scsi_dev_info_remove_list(int key)
+  * scsi_init_devinfo - set up the dynamic device list.
+  *
+  * Description:
+- * 	Add command line entries from scsi_dev_flags, then add
+- * 	scsi_static_device_list entries to the scsi device info list.
++ *	Add command line entries from scsi_dev_flags, then add
++ *	scsi_static_device_list entries to the scsi device info list.
+  */
+ int __init scsi_init_devinfo(void)
+ {
 -- 
 1.8.5.6
