@@ -1,77 +1,51 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 2/2] scsi: make 'state' device attribute pollable
-Date: Fri, 11 Aug 2017 08:53:47 +0200
-Message-ID: <1502434427-101729-3-git-send-email-hare@suse.de>
-References: <1502434427-101729-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51553 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751388AbdHKGxu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 11 Aug 2017 02:53:50 -0400
-In-Reply-To: <1502434427-101729-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+From: Vivek Gautam <vivek.gautam@codeaurora.org>
+Subject: Re: [PATCH 0/5] qcom-ufs: phy/hcd: Refactor phy initialization code
+Date: Fri, 11 Aug 2017 12:42:14 +0530
+Message-ID: <CAFp+6iGXR6Qk3xvWuWTu17LDrh5dOzJrZmn57zG30UjZrFm-Rg@mail.gmail.com>
+References: <1501829332-5183-1-git-send-email-vivek.gautam@codeaurora.org>
+ <c29e3a7c-62cc-f25a-4e0b-231c69e01afa@ti.com> <b69ecef93852cf5a7bf342550de16f19@codeaurora.org>
+ <d49316e0-8ccc-21b3-e952-ddb0a941f3b3@ti.com> <CAFp+6iF7m5vgGZcrOTXcxtPinVYUn0iPq1vAjXT909zfHu+wVQ@mail.gmail.com>
+ <yq1y3qr2cog.fsf@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq1y3qr2cog.fsf@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Cc: Subhash Jadavani <subhashj@codeaurora.org>, Kishon Vijay Abraham I <kishon@ti.com>, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, robh+dt <robh+dt@kernel.org>, linux-arm-msm <linux-arm-msm@vger.kernel.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, jejb@linux.vnet.ibm.com, Vinayak Holikatti <vinholikatti@gmail.com>, linux-arm-msm-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-While the 'state' attribute can (and will) change occasionally,
-calling 'poll()' or 'select()' on it fails as sysfs is never
-notified that the state has changed.
-With this patch calling 'poll()' or 'select()' will work
-properly.
+On Fri, Aug 11, 2017 at 5:33 AM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>
+> Vivek,
+>
+>> Can you kindly review this patch series (for UFS controller changes)
+>> and consider giving your Ack so that Kishon can pull in the series
+>> through phy tree.
+>
+> SCSI piece looks OK.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/scsi_lib.c           | 3 +++
- drivers/scsi/scsi_transport_srp.c | 5 ++++-
- 2 files changed, 7 insertions(+), 1 deletion(-)
+Thank you Martin for your review.
+>
+> Would still like Subhash to review the rest.
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 9169396..eda41b0 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2655,6 +2655,7 @@ void scsi_exit_queue(void)
- 
- 	}
- 	sdev->sdev_state = state;
-+	sysfs_notify(&sdev->sdev_gendev.kobj, NULL, "state");
- 	return 0;
- 
-  illegal:
-@@ -3078,6 +3079,7 @@ int scsi_internal_device_unblock_nowait(struct scsi_device *sdev,
- 	case SDEV_BLOCK:
- 	case SDEV_TRANSPORT_OFFLINE:
- 		sdev->sdev_state = new_state;
-+		sysfs_notify(&sdev->sdev_gendev.kobj, NULL, "state");
- 		break;
- 	case SDEV_CREATED_BLOCK:
- 		if (new_state == SDEV_TRANSPORT_OFFLINE ||
-@@ -3085,6 +3087,7 @@ int scsi_internal_device_unblock_nowait(struct scsi_device *sdev,
- 			sdev->sdev_state = new_state;
- 		else
- 			sdev->sdev_state = SDEV_CREATED;
-+		sysfs_notify(&sdev->sdev_gendev.kobj, NULL, "state");
- 		break;
- 	case SDEV_CANCEL:
- 	case SDEV_OFFLINE:
-diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
-index f617021..698cc46 100644
---- a/drivers/scsi/scsi_transport_srp.c
-+++ b/drivers/scsi/scsi_transport_srp.c
-@@ -556,8 +556,11 @@ int srp_reconnect_rport(struct srp_rport *rport)
- 		 */
- 		shost_for_each_device(sdev, shost) {
- 			mutex_lock(&sdev->state_mutex);
--			if (sdev->sdev_state == SDEV_OFFLINE)
-+			if (sdev->sdev_state == SDEV_OFFLINE) {
- 				sdev->sdev_state = SDEV_RUNNING;
-+				sysfs_notify(&sdev->sdev_gendev.kobj,
-+					     NULL, "state");
-+			}
- 			mutex_unlock(&sdev->state_mutex);
- 		}
- 	} else if (rport->state == SRP_RPORT_RUNNING) {
+Subhash is on vacation with limited access to emails. I will ask
+his team to take a look.
+
+regards
+Vivek
+
+>
+> --
+> Martin K. Petersen      Oracle Linux Engineering
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-arm-msm" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
 -- 
-1.8.5.6
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
