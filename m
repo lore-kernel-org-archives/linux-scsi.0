@@ -1,217 +1,108 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [RFC PATCH 1/6] bsg: fix kernel panic resulting from missing
-        allocation of a reply-buffer
-Date: Fri, 11 Aug 2017 16:36:49 +0200
-Message-ID: <20170811143649.GA32381@lst.de>
-References: <cover.1502120928.git.bblock@linux.vnet.ibm.com> <9e67ce3fc2f3cd42e9e05b2753b00d6676f46ee1.1502120928.git.bblock@linux.vnet.ibm.com> <20170810093217.GL24539@lst.de> <20170810221038.GA918@bblock-ThinkPad-W530> <20170811083808.GA5497@lst.de> <20170811091415.GA8099@lst.de> <20170811134929.GA1249@bblock-ThinkPad-W530>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCHv3 5/5] scsi_devinfo: fixup string compare
+Date: Fri, 11 Aug 2017 11:08:35 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1708111107140.1732-100000@iolanthe.rowland.org>
+References: <1502461401-94630-6-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170811134929.GA1249@bblock-ThinkPad-W530>
-Sender: linux-block-owner@vger.kernel.org
-To: Benjamin Block <bblock@linux.vnet.ibm.com>
-Cc: Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>, Steffen Maier <maier@linux.vnet.ibm.com>, open-iscsi@googlegroups.com
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:58400 "HELO
+        iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1753209AbdHKPIh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Aug 2017 11:08:37 -0400
+In-Reply-To: <1502461401-94630-6-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Fri, Aug 11, 2017 at 03:49:29PM +0200, Benjamin Block wrote:
-> On Fri, Aug 11, 2017 at 11:14:15AM +0200, Christoph Hellwig wrote:
-> > But patch 1 still creates an additional copy of the sense data for
-> > all bsg users.
-> >
+On Fri, 11 Aug 2017, Hannes Reinecke wrote:
+
+> When checking the model and vendor string we need to use the
+> minimum value of either string, otherwise we'll miss out on
+> wildcard matches.
+
+You really should fix this sentence.
+
+> And we should take card when matching with zero size strings;
+> results might be unpredictable.
+> With this patch the rules for matching devinfo strings are
+> as follows:
+> - Vendor strings must match exactly
+> - Empty Model strings will only match if the devinfo model
+>   is also empty
+> - Model strings shorter than the devinfo model string will
+>   not match
 > 
-> Huh? What additional copy? There is one reply-buffer and that is copied
-> into the user-buffer should it contain valid data. Just like in your
-> patch, neither you, nor me touches any of the copy-code. There is also
-> no changes to how the driver get their data into that buffer, it will
-> still be copied in both cases.
+> Fixes: 5e7ff2c ("SCSI: fix new bug in scsi_dev_info_list string matching")
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> ---
 
-You're right - I misread your patch.  But that does make it worse as
-this means that with your patch we re-assign the scsi_request.sense
-pointer when using bsg.  That will lead to crashes if using the bsg
-code against e.g. a normal scsi device using bsg when that request
-later gets reused for something that is not bsg.
+Aside from the patch description,
 
+Reviewed-by: Alan Stern <stern@rowland.harvard.edu>
+
+>  drivers/scsi/scsi_devinfo.c | 29 ++++++++++++++++-------------
+>  1 file changed, 16 insertions(+), 13 deletions(-)
 > 
-> > 
-> > Can you test the patch below which implements my suggestion?  Your
-> > other patches should still apply fine on top modulo minor context
-> > changes.
+> diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+> index 776c701..d39b27c 100644
+> --- a/drivers/scsi/scsi_devinfo.c
+> +++ b/drivers/scsi/scsi_devinfo.c
+> @@ -399,8 +399,8 @@ int scsi_dev_info_list_add_keyed(int compatible, char *vendor, char *model,
+>  
+>  /**
+>   * scsi_dev_info_list_find - find a matching dev_info list entry.
+> - * @vendor:	vendor string
+> - * @model:	model (product) string
+> + * @vendor:	full vendor string
+> + * @model:	full model (product) string
+>   * @key:	specify list to use
+>   *
+>   * Description:
+> @@ -415,7 +415,7 @@ static struct scsi_dev_info_list *scsi_dev_info_list_find(const char *vendor,
+>  	struct scsi_dev_info_list *devinfo;
+>  	struct scsi_dev_info_list_table *devinfo_table =
+>  		scsi_devinfo_lookup_by_key(key);
+> -	size_t vmax, mmax;
+> +	size_t vmax, mmax, mlen;
+>  	const char *vskip, *mskip;
+>  
+>  	if (IS_ERR(devinfo_table))
+> @@ -454,22 +454,25 @@ static struct scsi_dev_info_list *scsi_dev_info_list_find(const char *vendor,
+>  			    dev_info_list) {
+>  		if (devinfo->compatible) {
+>  			/*
+> -			 * Behave like the older version of get_device_flags.
+> +			 * vendor strings must be an exact match
+>  			 */
+> -			if (memcmp(devinfo->vendor, vskip, vmax) ||
+> -					(vmax < sizeof(devinfo->vendor) &&
+> -						devinfo->vendor[vmax]))
+> +			if (vmax != strlen(devinfo->vendor) ||
+> +			    memcmp(devinfo->vendor, vskip, vmax))
+>  				continue;
+> -			if (memcmp(devinfo->model, mskip, mmax) ||
+> -					(mmax < sizeof(devinfo->model) &&
+> -						devinfo->model[mmax]))
+> +
+> +			/*
+> +			 * @model specifies the full string, and
+> +			 * must be larger or equal to devinfo->model
+> +			 */
+> +			mlen = strlen(devinfo->model);
+> +			if (mmax < mlen || memcmp(devinfo->model, mskip, mlen))
+>  				continue;
+>  			return devinfo;
+>  		} else {
+>  			if (!memcmp(devinfo->vendor, vendor,
+> -				     sizeof(devinfo->vendor)) &&
+> -			     !memcmp(devinfo->model, model,
+> -				      sizeof(devinfo->model)))
+> +				    sizeof(devinfo->vendor)) &&
+> +			    !memcmp(devinfo->model, model,
+> +				    sizeof(devinfo->model)))
+>  				return devinfo;
+>  		}
+>  	}
 > 
-> Only your patch on top of 4.13-rc4. din_xferp (D) is also empty, which is
-> not taken from the sense-buffer.
-
-Can't parse this.
-
-> =============================================================================
-> BUG kmalloc-1024 (Not tainted): Invalid object pointer 0x000000004ad9e0f0
-> -----------------------------------------------------------------------------
-
-Oops - if we don't allocate the job separately we should not free it either.
-Updated patch for that below:
-
----
->From 4cd32ee48e334b62b55bff0d380833b978454040 Mon Sep 17 00:00:00 2001
-From: Christoph Hellwig <hch@lst.de>
-Date: Fri, 11 Aug 2017 11:03:29 +0200
-Subject: bsg-lib: allocate sense data for each request
-
-Since we split the scsi_request out of the request the driver is supposed
-to provide storage for the sense buffer.  The bsg-lib code failed to do so,
-though and will crash anytime it is used.
-
-This patch moves bsg-lib to allocate and setup the bsg_job ahead of time,
-and allocate the sense data, which is used as reply buffer in bsg.
-
-Reported-by: Steffen Maier <maier@linux.vnet.ibm.com>
-Signed-off-by: Benjamin Block <bblock@linux.vnet.ibm.com>
-Fixes: 82ed4db499b8 ("block: split scsi_request out of struct request")
-Cc: <stable@vger.kernel.org> #4.11+
----
- block/bsg-lib.c         | 53 +++++++++++++++++++++++++++----------------------
- include/linux/blkdev.h  |  1 -
- include/linux/bsg-lib.h |  2 ++
- 3 files changed, 31 insertions(+), 25 deletions(-)
-
-diff --git a/block/bsg-lib.c b/block/bsg-lib.c
-index c4513b23f57a..215893dbd038 100644
---- a/block/bsg-lib.c
-+++ b/block/bsg-lib.c
-@@ -100,7 +100,7 @@ EXPORT_SYMBOL_GPL(bsg_job_done);
-  */
- static void bsg_softirq_done(struct request *rq)
- {
--	struct bsg_job *job = rq->special;
-+	struct bsg_job *job = blk_mq_rq_to_pdu(rq);
- 
- 	bsg_job_put(job);
- }
-@@ -129,26 +129,9 @@ static int bsg_map_buffer(struct bsg_buffer *buf, struct request *req)
- static int bsg_create_job(struct device *dev, struct request *req)
- {
- 	struct request *rsp = req->next_rq;
--	struct request_queue *q = req->q;
--	struct scsi_request *rq = scsi_req(req);
--	struct bsg_job *job;
-+	struct bsg_job *job = blk_mq_rq_to_pdu(req);
- 	int ret;
- 
--	BUG_ON(req->special);
--
--	job = kzalloc(sizeof(struct bsg_job) + q->bsg_job_size, GFP_KERNEL);
--	if (!job)
--		return -ENOMEM;
--
--	req->special = job;
--	job->req = req;
--	if (q->bsg_job_size)
--		job->dd_data = (void *)&job[1];
--	job->request = rq->cmd;
--	job->request_len = rq->cmd_len;
--	job->reply = rq->sense;
--	job->reply_len = SCSI_SENSE_BUFFERSIZE;	/* Size of sense buffer
--						 * allocated */
- 	if (req->bio) {
- 		ret = bsg_map_buffer(&job->request_payload, req);
- 		if (ret)
-@@ -187,7 +170,6 @@ static void bsg_request_fn(struct request_queue *q)
- {
- 	struct device *dev = q->queuedata;
- 	struct request *req;
--	struct bsg_job *job;
- 	int ret;
- 
- 	if (!get_device(dev))
-@@ -207,8 +189,7 @@ static void bsg_request_fn(struct request_queue *q)
- 			continue;
- 		}
- 
--		job = req->special;
--		ret = q->bsg_job_fn(job);
-+		ret = q->bsg_job_fn(blk_mq_rq_to_pdu(req));
- 		spin_lock_irq(q->queue_lock);
- 		if (ret)
- 			break;
-@@ -219,6 +200,29 @@ static void bsg_request_fn(struct request_queue *q)
- 	spin_lock_irq(q->queue_lock);
- }
- 
-+static int bsg_init_rq(struct request_queue *q, struct request *req, gfp_t gfp)
-+{
-+	struct bsg_job *job = blk_mq_rq_to_pdu(req);
-+
-+	memset(job, 0, sizeof(*job));
-+	job->req = req;
-+	job->dd_data = job + 1;
-+	job->request = job->sreq.cmd;
-+	job->request_len = job->sreq.cmd_len;
-+	job->reply_len = SCSI_SENSE_BUFFERSIZE;
-+	job->reply = job->sreq.sense = kzalloc(job->reply_len, gfp);
-+	if (!job->reply)
-+		return -ENOMEM;
-+	return 0;
-+}
-+
-+static void bsg_exit_rq(struct request_queue *q, struct request *req)
-+{
-+	struct bsg_job *job = blk_mq_rq_to_pdu(req);
-+
-+	kfree(job->reply);
-+}
-+
- /**
-  * bsg_setup_queue - Create and add the bsg hooks so we can receive requests
-  * @dev: device to attach bsg device to
-@@ -235,7 +239,9 @@ struct request_queue *bsg_setup_queue(struct device *dev, char *name,
- 	q = blk_alloc_queue(GFP_KERNEL);
- 	if (!q)
- 		return ERR_PTR(-ENOMEM);
--	q->cmd_size = sizeof(struct scsi_request);
-+	q->cmd_size = sizeof(struct bsg_job) + dd_job_size;
-+	q->init_rq_fn = bsg_init_rq;
-+	q->exit_rq_fn = bsg_exit_rq;
- 	q->request_fn = bsg_request_fn;
- 
- 	ret = blk_init_allocated_queue(q);
-@@ -243,7 +249,6 @@ struct request_queue *bsg_setup_queue(struct device *dev, char *name,
- 		goto out_cleanup_queue;
- 
- 	q->queuedata = dev;
--	q->bsg_job_size = dd_job_size;
- 	q->bsg_job_fn = job_fn;
- 	queue_flag_set_unlocked(QUEUE_FLAG_BIDI, q);
- 	queue_flag_set_unlocked(QUEUE_FLAG_SCSI_PASSTHROUGH, q);
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index f45f157b2910..6ae9aa6f93f0 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -568,7 +568,6 @@ struct request_queue {
- 
- #if defined(CONFIG_BLK_DEV_BSG)
- 	bsg_job_fn		*bsg_job_fn;
--	int			bsg_job_size;
- 	struct bsg_class_device bsg_dev;
- #endif
- 
-diff --git a/include/linux/bsg-lib.h b/include/linux/bsg-lib.h
-index e34dde2da0ef..637a20cfb237 100644
---- a/include/linux/bsg-lib.h
-+++ b/include/linux/bsg-lib.h
-@@ -24,6 +24,7 @@
- #define _BLK_BSG_
- 
- #include <linux/blkdev.h>
-+#include <scsi/scsi_request.h>
- 
- struct request;
- struct device;
-@@ -37,6 +38,7 @@ struct bsg_buffer {
- };
- 
- struct bsg_job {
-+	struct scsi_request sreq;
- 	struct device *dev;
- 	struct request *req;
- 
--- 
-2.11.0
