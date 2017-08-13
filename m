@@ -1,52 +1,29 @@
-From: Dave Carroll <david.carroll@microsemi.com>
-Subject: RE: [PATCH 3/6] scsi: aacraid: constify pci_error_handlers
- structures
-Date: Sun, 13 Aug 2017 02:32:23 +0000
-Message-ID: <423FD6710FB8FB4F8728F93591889F9A5B3E16C1@avsrvexchmbx2.microsemi.net>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/6] constify pci_error_handlers structures
+Date: Sun, 13 Aug 2017 07:37:50 -0700
+Message-ID: <20170813143750.GB407@infradead.org>
 References: <1502516674-8918-1-git-send-email-Julia.Lawall@lip6.fr>
- <1502516674-8918-4-git-send-email-Julia.Lawall@lip6.fr>
+ <20170812074451.GA3589@infradead.org>
+ <alpine.DEB.2.20.1708120946590.2001@hadrien>
+ <20170812075616.GA14976@infradead.org>
+ <alpine.DEB.2.20.1708121349080.2001@hadrien>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0053.outbound.protection.outlook.com ([104.47.38.53]:12265
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752216AbdHMCcz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 12 Aug 2017 22:32:55 -0400
-In-Reply-To: <1502516674-8918-4-git-send-email-Julia.Lawall@lip6.fr>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.20.1708121349080.2001@hadrien>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Julia Lawall <julia.lawall@lip6.fr>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, bhumirks@gmail.com, kernel-janitors@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Julia Lawall <Julia.Lawall@lip6.fr>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>
-Cc: "bhumirks@gmail.com" <bhumirks@gmail.com>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
->=20
-> These pci_error_handlers structures are only stored in the err_handler fi=
-eld of a
-> pci_driver structure, and this field is declared as const.  Thus the
-> pci_error_handlers structures can be const too.
->=20
-> Done with the help of Coccinelle.
->=20
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
->=20
-> ---
->  drivers/scsi/aacraid/linit.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c =
-index
-> a8dedc3..2b978d8 100644
-> --- a/drivers/scsi/aacraid/linit.c
-> +++ b/drivers/scsi/aacraid/linit.c
-> @@ -2070,7 +2070,7 @@ static void aac_pci_resume(struct pci_dev *pdev)
->         dev_err(&pdev->dev, "aacraid: PCI error - resume\n");  }
->=20
-> -static struct pci_error_handlers aac_pci_err_handler =3D {
-> +static const struct pci_error_handlers aac_pci_err_handler =3D {
->         .error_detected         =3D aac_pci_error_detected,
->         .mmio_enabled           =3D aac_pci_mmio_enabled,
->         .slot_reset             =3D aac_pci_slot_reset,
+On Sat, Aug 12, 2017 at 01:51:21PM +0200, Julia Lawall wrote:
+> Another issue arises in the files drivers/infiniband/hw/hfi1/pcie.c and
+> drivers/infiniband/hw/qib/qib_pcie.c, where the pci_error_handlers
+> structure is defined in one file and used in another file.  The structure
+> definition references various functions that are static in the same file.
+> Should I try to move those functions to the file containing the pci_driver
+> structure?  Or leave the functions where they are and remove the static
+> annotation?
 
-Acked-by: Dave Carroll <david.carroll@microsemi.com>
+I'd just leave them as-is and remove the static for now.
