@@ -1,29 +1,37 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] Revert "scsi: default to scsi-mq"
-Date: Mon, 14 Aug 2017 08:23:33 +0200
-Message-ID: <a86e5829-8292-9aa1-c354-54b27c0abb17@suse.de>
-References: <20170813174422.16197-1-hch@lst.de>
+Subject: Re: [PATCH 1/6] hpsa: consolidate status variables
+Date: Mon, 14 Aug 2017 12:02:45 +0200
+Message-ID: <7785e641-1fa5-4d2f-c2e4-251d74c713fb@suse.de>
+References: <1502181315-102499-1-git-send-email-hare@suse.de>
+ <1502181315-102499-2-git-send-email-hare@suse.de>
+ <20170809134030.GA25852@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170813174422.16197-1-hch@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:47342 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751403AbdHNKCs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 14 Aug 2017 06:02:48 -0400
+In-Reply-To: <20170809134030.GA25852@lst.de>
 Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Don Brace <don.brace@microsemi.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Meelis Roos <mroos@linux.ee>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On 08/13/2017 07:44 PM, Christoph Hellwig wrote:
-> Defaulting to scsi-mq in 4.13-rc has shown various regressions
-> on setups that we didn't previously consider.  Fixes for them are
-> in progress, but too invasive to make it in this cycle.  So for
-> now revert the commit that defaults to blk-mq for SCSI.  For 4.14
-> we'll plan to try again with these fixes.
+On 08/09/2017 03:40 PM, Christoph Hellwig wrote:
+> These seem to be modified from sysfs files, so you'll run into
+> read-modify-write atomicy issues with bitfields.
 > 
-> This reverts commit 5c279bd9e40624f4ab6e688671026d6005b066fa.
+> That being said while plain ints are somewhat safe the right thing
+> would be to use proper atomic bitops.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>Reviewed-by: Hannes Reinecke <hare@suse.com>
+True, but rewriting that into atomics would change the flow of the
+driver by quite a bit (as quite some spinlocks can be removed),
+so I'd rather _not_ attempt this now.
+
+So I'll be dropping this patch.
 
 Cheers,
 
