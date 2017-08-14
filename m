@@ -1,88 +1,48 @@
-From: Dave Kleikamp <dave.kleikamp@oracle.com>
-Subject: Re: [PATCH] Revert "scsi: default to scsi-mq"
-Date: Mon, 14 Aug 2017 10:50:47 -0500
-Message-ID: <d89724d1-b358-7aa4-ba1d-65a7972a4518@oracle.com>
-References: <20170813174422.16197-1-hch@lst.de>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [SCSI] qla2xxx: Fix a memory leak in an error path of
+ qla2x00_process_els()
+Date: Mon, 14 Aug 2017 15:52:24 +0000
+Message-ID: <1502725942.2333.7.camel@wdc.com>
+References: <68234383-92ad-c5f0-9d85-3b5319ba7bbe@digidescorp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170813174422.16197-1-hch@lst.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:57940 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752576AbdHNPxM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Aug 2017 11:53:12 -0400
+In-Reply-To: <68234383-92ad-c5f0-9d85-3b5319ba7bbe@digidescorp.com>
 Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Content-ID: <F428D2F9C1F6634395D18BCFD6C7B1ED@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "steve.magnani@digidescorp.com" <steve.magnani@digidescorp.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 08/13/2017 12:44 PM, Christoph Hellwig wrote:
-> Defaulting to scsi-mq in 4.13-rc has shown various regressions
-> on setups that we didn't previously consider.  Fixes for them are
-> in progress, but too invasive to make it in this cycle.  So for
-> now revert the commit that defaults to blk-mq for SCSI.  For 4.14
-> we'll plan to try again with these fixes.
-
-I'm not sure if this is one of your known regressions, but I've had a
-problem on my Lenovo T410 with the 4.13-rc kernels. When unplugging the
-power cord, the hard disk gets suspended.
-
-[ 1499.629415] thinkpad_acpi: EC reports that Thermal Table has changed
-[ 1499.832116] sd 0:0:0:0: [sda] Synchronizing SCSI cache
-[ 1499.885831] e1000e: eth0 NIC Link is Down
-[ 1499.897531] sd 0:0:0:0: [sda] Stopping disk
-[ 1499.923736] EXT4-fs (sda5): re-mounted. Opts: data=ordered,commit=600
-[ 1504.240444] thinkpad_acpi: EC reports that Thermal Table has changed
-[ 1515.502561] sd 0:0:0:0: timing out command, waited 15s
-
-Adding "scsi_mod.use_blk_mq=0" to the command line fixes it.
-
-Thanks,
-Shaggy
-
-> 
-> This reverts commit 5c279bd9e40624f4ab6e688671026d6005b066fa.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/scsi/Kconfig | 11 +++++++++++
->  drivers/scsi/scsi.c  |  4 ++++
->  2 files changed, 15 insertions(+)
-> 
-> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-> index f4538d7a3016..d145e0d90227 100644
-> --- a/drivers/scsi/Kconfig
-> +++ b/drivers/scsi/Kconfig
-> @@ -47,6 +47,17 @@ config SCSI_NETLINK
->  	default	n
->  	depends on NET
->  
-> +config SCSI_MQ_DEFAULT
-> +	bool "SCSI: use blk-mq I/O path by default"
-> +	depends on SCSI
-> +	---help---
-> +	  This option enables the new blk-mq based I/O path for SCSI
-> +	  devices by default.  With the option the scsi_mod.use_blk_mq
-> +	  module/boot option defaults to Y, without it to N, but it can
-> +	  still be overridden either way.
-> +
-> +	  If unsure say N.
-> +
->  config SCSI_PROC_FS
->  	bool "legacy /proc/scsi/ support"
->  	depends on SCSI && PROC_FS
-> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> index 3d38c6d463b8..1bf274e3b2b6 100644
-> --- a/drivers/scsi/scsi.c
-> +++ b/drivers/scsi/scsi.c
-> @@ -800,7 +800,11 @@ MODULE_LICENSE("GPL");
->  module_param(scsi_logging_level, int, S_IRUGO|S_IWUSR);
->  MODULE_PARM_DESC(scsi_logging_level, "a bit mask of logging levels");
->  
-> +#ifdef CONFIG_SCSI_MQ_DEFAULT
->  bool scsi_use_blk_mq = true;
-> +#else
-> +bool scsi_use_blk_mq = false;
-> +#endif
->  module_param_named(use_blk_mq, scsi_use_blk_mq, bool, S_IWUSR | S_IRUGO);
->  
->  static int __init init_scsi(void)
-> 
+T24gTW9uLCAyMDE3LTA4LTE0IGF0IDEwOjM4IC0wNTAwLCBTdGV2ZSBNYWduYW5pIHdyb3RlOg0K
+PiBJJ3ZlIGJlZW4gcG9ydGluZyBwYXRjaGVzIGZyb20gbWFpbmxpbmUgaW50byBhIGNvcHkgb2Yg
+UUxvZ2ljJ3MgdGFyZ2V0IGRyaXZlciB0cmVlDQo+IGFuZCByYW4gYWNyb3NzIGFuIGFub21hbHkg
+aW4gdGhpcyBjaGFuZ2VzZXQgb2YgeW91cnMgZnJvbSAyMDEzDQo+ICg4YzBlYjU5NmJhYTUxZjJi
+NDM5NDljNjk4YzY0NDcyN2VmMTc4MDVjKS4NCj4gDQo+IA0KPiBUaGUgY29tbWl0IGxvZyBzYXlz
+Og0KPiANCj4gICAgICAuLi4gTWFrZSBpdCBlYXN5IGZvciBDb3Zlcml0eSAoYW5kIGZvciBodW1h
+bnMpIHRvIHJlY29nbml6ZSB0aGF0IHRoZXJlIGlzIG5vDQo+ICAgICAgZmNwb3J0IGxlYWsgaW4g
+dGhlIGVycm9yIHBhdGggYnkgY2hhbmdpbmcgdGhlDQo+IA0KPiAgICAgICAgYnNnX2pvYi0+cmVx
+dWVzdC0+bXNnY29kZSA9PSBGQ19CU0dfSFNUX0VMU19OT0xPR0lODQo+IA0KPiAgICAgIHRlc3Qg
+aW50bw0KPiANCj4gICAgICAgIGJzZ19qb2ItPnJlcXVlc3QtPm1zZ2NvZGUgIT0gRkNfQlNHX1JQ
+VF9FTFMuDQo+IA0KPiANCj4gQnV0IHRoZSBjaGFuZ2UgYWN0dWFsbHkgbWFkZSB3YXMgdGhpczoN
+Cj4gDQo+IEBAIC0zOTksNyArMzk5LDcgQEAgZG9uZV91bm1hcF9zZzoNCj4gICAJZ290byBkb25l
+X2ZyZWVfZmNwb3J0Ow0KPiAgIA0KPiAgIGRvbmVfZnJlZV9mY3BvcnQ6DQo+IC0JaWYgKGJzZ19q
+b2ItPnJlcXVlc3QtPm1zZ2NvZGUgPT0gRkNfQlNHX0hTVF9FTFNfTk9MT0dJTikNCj4gKwlpZiAo
+YnNnX2pvYi0+cmVxdWVzdC0+bXNnY29kZSA9PSBGQ19CU0dfUlBUX0VMUykNCj4gICAJCWtmcmVl
+KGZjcG9ydCk7DQo+ICAgZG9uZToNCj4gICAJcmV0dXJuIHJ2YWw7DQo+IA0KPiANCj4gU2hvdWxk
+bid0IHRoZSAiPT0gRkNfQlNHX1JQVF9FTFMiIGJlICIhPSBGQ19CU0dfUlBUX0VMUyI/DQoNCkhl
+bGxvIFN0ZXZlLA0KDQpXaXRob3V0IGhhdmluZyBoYWQgYSBjbG9zZSBsb29rIGF0IHRoZSBwYXRj
+aCwgSSB0aGluayB5b3UgYXJlIHJpZ2h0LiBPbg0KaHR0cDovL3d3dy5zcGluaWNzLm5ldC9saXN0
+cy9saW51eC1zY3NpL21zZzY2NTEzLmh0bWwgb25lIGNhbiBzZWUgdGhhdA0KdGhlIGNoYW5nZSBJ
+IGhhZCBwb3N0ZWQgb3JpZ2luYWxseSBpcyBhcyBmb2xsb3dzOg0KDQogZG9uZV9mcmVlX2ZjcG9y
+dDoNCi0JaWYgKGJzZ19qb2ItPnJlcXVlc3QtPm1zZ2NvZGUgPT0gRkNfQlNHX0hTVF9FTFNfTk9M
+T0dJTikNCisJaWYgKGJzZ19qb2ItPnJlcXVlc3QtPm1zZ2NvZGUgIT0gRkNfQlNHX1JQVF9FTFMp
+DQogCQlrZnJlZShmY3BvcnQpOw0KIGRvbmU6DQoNCkkgaGF2ZSBub3QgYmVlbiBhYmxlIHRvIGZp
+bmQgdGhlIHJlcG9zdGVkIHZlcnNpb24gb2YgdGhpcyBwYXRjaCBzbyBJIGNhbid0DQpmaWd1cmUg
+b3V0IGFueW1vcmUgd2hhdCB3ZW50IHdyb25nIC4uLg0KDQpCYXJ0Lg==
