@@ -1,68 +1,66 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] Revert "scsi: default to scsi-mq"
-Date: Sun, 13 Aug 2017 19:44:22 +0200
-Message-ID: <20170813174422.16197-1-hch@lst.de>
+From: "Asutosh Das (asd)" <asutoshd@codeaurora.org>
+Subject: Re: [PATCH 0/5] qcom-ufs: phy/hcd: Refactor phy initialization code
+Date: Mon, 14 Aug 2017 10:47:34 +0530
+Message-ID: <1595aa1a-d88d-0208-9c44-d7ef42570264@codeaurora.org>
+References: <1501829332-5183-1-git-send-email-vivek.gautam@codeaurora.org>
+ <c29e3a7c-62cc-f25a-4e0b-231c69e01afa@ti.com>
+ <b69ecef93852cf5a7bf342550de16f19@codeaurora.org>
+ <d49316e0-8ccc-21b3-e952-ddb0a941f3b3@ti.com>
+ <CAFp+6iF7m5vgGZcrOTXcxtPinVYUn0iPq1vAjXT909zfHu+wVQ@mail.gmail.com>
+ <yq1y3qr2cog.fsf@oracle.com>
+ <CAFp+6iGXR6Qk3xvWuWTu17LDrh5dOzJrZmn57zG30UjZrFm-Rg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:49933 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751025AbdHMRo0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Aug 2017 13:44:26 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:59610 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750876AbdHNFRn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Aug 2017 01:17:43 -0400
+In-Reply-To: <CAFp+6iGXR6Qk3xvWuWTu17LDrh5dOzJrZmn57zG30UjZrFm-Rg@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+To: Vivek Gautam <vivek.gautam@codeaurora.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Subhash Jadavani <subhashj@codeaurora.org>, Kishon Vijay Abraham I <kishon@ti.com>, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, robh+dt <robh+dt@kernel.org>, linux-arm-msm <linux-arm-msm@vger.kernel.org>, Bjorn Andersson <bjorn.andersson@linaro.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, jejb@linux.vnet.ibm.com, Vinayak Holikatti <vinholikatti@gmail.com>, linux-arm-msm-owner@vger.kernel.org
 
-Defaulting to scsi-mq in 4.13-rc has shown various regressions
-on setups that we didn't previously consider.  Fixes for them are
-in progress, but too invasive to make it in this cycle.  So for
-now revert the commit that defaults to blk-mq for SCSI.  For 4.14
-we'll plan to try again with these fixes.
+Vivek,
 
-This reverts commit 5c279bd9e40624f4ab6e688671026d6005b066fa.
+On 8/11/2017 12:42 PM, Vivek Gautam wrote:
+> On Fri, Aug 11, 2017 at 5:33 AM, Martin K. Petersen
+> <martin.petersen@oracle.com> wrote:
+>>
+>> Vivek,
+>>
+>>> Can you kindly review this patch series (for UFS controller changes)
+>>> and consider giving your Ack so that Kishon can pull in the series
+>>> through phy tree.
+>>
+>> SCSI piece looks OK.
+> 
+> Thank you Martin for your review.
+>>
+>> Would still like Subhash to review the rest.
+> 
+> Subhash is on vacation with limited access to emails. I will ask
+> his team to take a look.
+> 
+Looks good to me.
+> regards
+> Vivek
+> 
+>>
+>> --
+>> Martin K. Petersen      Oracle Linux Engineering
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-arm-msm" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+> 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/Kconfig | 11 +++++++++++
- drivers/scsi/scsi.c  |  4 ++++
- 2 files changed, 15 insertions(+)
-
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index f4538d7a3016..d145e0d90227 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -47,6 +47,17 @@ config SCSI_NETLINK
- 	default	n
- 	depends on NET
- 
-+config SCSI_MQ_DEFAULT
-+	bool "SCSI: use blk-mq I/O path by default"
-+	depends on SCSI
-+	---help---
-+	  This option enables the new blk-mq based I/O path for SCSI
-+	  devices by default.  With the option the scsi_mod.use_blk_mq
-+	  module/boot option defaults to Y, without it to N, but it can
-+	  still be overridden either way.
-+
-+	  If unsure say N.
-+
- config SCSI_PROC_FS
- 	bool "legacy /proc/scsi/ support"
- 	depends on SCSI && PROC_FS
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 3d38c6d463b8..1bf274e3b2b6 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -800,7 +800,11 @@ MODULE_LICENSE("GPL");
- module_param(scsi_logging_level, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(scsi_logging_level, "a bit mask of logging levels");
- 
-+#ifdef CONFIG_SCSI_MQ_DEFAULT
- bool scsi_use_blk_mq = true;
-+#else
-+bool scsi_use_blk_mq = false;
-+#endif
- module_param_named(use_blk_mq, scsi_use_blk_mq, bool, S_IWUSR | S_IRUGO);
- 
- static int __init init_scsi(void)
 -- 
-2.11.0
+Asutosh Das (asd)
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
+Linux Foundation Collaborative Project
