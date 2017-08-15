@@ -1,67 +1,30 @@
-From: "Tangchen (UVP)" <tang.chen@huawei.com>
-Subject: =?utf-8?B?562U5aSNOiBbaXNjc2ldIERlYWRsb2NrIG9jY3VycmVkIHdoZW4gbmV0d29y?=
- =?utf-8?Q?k_is_in_error?=
-Date: Tue, 15 Aug 2017 02:16:11 +0000
-Message-ID: <22E823DBB7698E489DC113638F7470729C1AF0@DGGEMM506-MBX.china.huawei.com>
-References: <22E823DBB7698E489DC113638F7470729C17B6@DGGEMM506-MBX.china.huawei.com>
- <1502723836.2333.3.camel@wdc.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] Revert "scsi: default to scsi-mq"
+Date: Mon, 14 Aug 2017 22:58:23 -0400
+Message-ID: <yq1lgmlwn8w.fsf@oracle.com>
+References: <20170813174422.16197-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1502723836.2333.3.camel@wdc.com>
-Content-Language: zh-CN
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "lduncan@suse.com" <lduncan@suse.com>, "cleech@redhat.com" <cleech@redhat.com>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, guijianfeng <guijianfeng@huawei.com>, zhengchuan <zhengchuan@huawei.com>, "Tangchen (UVP)" <tang.chen@huawei.com>
+Content-Type: text/plain
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170813174422.16197-1-hch@lst.de> (Christoph Hellwig's message
+        of "Sun, 13 Aug 2017 19:44:22 +0200")
+Sender: linux-block-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-SGksIEJhcnQsDQoNClRoYW5rIHlvdSB2ZXJ5IG11Y2ggZm9yIHRoZSBxdWljayByZXNwb25zZS4g
-DQoNCkJ1dCBJJ20gbm90IHVzaW5nIG1xLCBhbmQgSSBydW4gaW50byB0aGVzZSB0d28gcHJvYmxl
-bXMgaW4gYSBub24tbXEgc3lzdGVtLg0KVGhlIHBhdGNoIHlvdSBwb2ludGVkIG91dCBpcyBmaXgg
-Zm9yIG1xLCBzbyBJIGRvbid0IHRoaW5rIGl0IGNhbiByZXNvbHZlIHRoaXMgcHJvYmxlbS4NCg0K
-SUlVQywgbXEgaXMgZm9yIFNTRCA/ICBJJ20gbm90IHVzaW5nIHNzZCwgc28gbXEgaXMgZGlzYWJs
-ZWQuDQoNCg0KT24gTW9uLCAyMDE3LTA4LTE0IGF0IDExOjIzICswMDAwLCBUYW5nY2hlbiAoVVZQ
-KSB3cm90ZToNCj4gUHJvYmxlbSAyOg0KPiANCj4gKioqKioqKioqKioqKioqDQo+IFtXaGF0IGl0
-IGxvb2tzIGxpa2VdDQo+ICoqKioqKioqKioqKioqKg0KPiBXaGVuIHJlbW92ZSBhIHNjc2kgZGV2
-aWNlLCBhbmQgdGhlIG5ldHdvcmsgZXJyb3IgaGFwcGVucywgX19ibGtfZHJhaW5fcXVldWUoKSBj
-b3VsZCBoYW5nIGZvcmV2ZXIuDQo+IA0KPiAjIGNhdCAvcHJvYy8xOTE2MC9zdGFjaw0KPiBbPGZm
-ZmZmZmZmODAwNTg4NmQ+XSBtc2xlZXArMHgxZC8weDMwDQo+IFs8ZmZmZmZmZmY4MDIwMWE4ND5d
-IF9fYmxrX2RyYWluX3F1ZXVlKzB4ZTQvMHgxNjAgWzxmZmZmZmZmZjgwMjAyNzY2Pl0gDQo+IGJs
-a19jbGVhbnVwX3F1ZXVlKzB4MTA2LzB4MmUwIFs8ZmZmZmZmZmZhMDAwZmIwMj5dIA0KPiBfX3Nj
-c2lfcmVtb3ZlX2RldmljZSsweDUyLzB4YzAgW3Njc2lfbW9kXSBbPGZmZmZmZmZmYTAwMGZiOWI+
-XSANCj4gc2NzaV9yZW1vdmVfZGV2aWNlKzB4MmIvMHg0MCBbc2NzaV9tb2RdIFs8ZmZmZmZmZmZh
-MDAwZmJjMD5dIA0KPiBzZGV2X3N0b3JlX2RlbGV0ZV9jYWxsYmFjaysweDEwLzB4MjAgW3Njc2lf
-bW9kXSBbPGZmZmZmZmZmODAxYTRlNzU+XSANCj4gc3lzZnNfc2NoZWR1bGVfY2FsbGJhY2tfd29y
-aysweDE1LzB4ODANCj4gWzxmZmZmZmZmZjgwMDYyZDY5Pl0gcHJvY2Vzc19vbmVfd29yaysweDE2
-OS8weDM0MCBbPGZmZmZmZmZmODAwNjY3ZTM+XSANCj4gd29ya2VyX3RocmVhZCsweDE4My8weDQ5
-MCBbPGZmZmZmZmZmODAwNmE1MjY+XSBrdGhyZWFkKzB4OTYvMHhhMCANCj4gWzxmZmZmZmZmZjgw
-NDFlYmI0Pl0ga2VybmVsX3RocmVhZF9oZWxwZXIrMHg0LzB4MTAgDQo+IFs8ZmZmZmZmZmZmZmZm
-ZmZmZj5dIDB4ZmZmZmZmZmZmZmZmZmZmZg0KPiANCj4gVGhlIHJlcXVlc3QgcXVldWUgb2YgdGhp
-cyBkZXZpY2Ugd2FzIHN0b3BwZWQuIFNvIHRoZSBmb2xsb3dpbmcgY2hlY2sgd2lsbCBiZSB0cnVl
-IGZvcmV2ZXI6DQo+IF9fYmxrX3J1bl9xdWV1ZSgpDQo+IHsNCj4gICAgICAgICBpZiAodW5saWtl
-bHkoYmxrX3F1ZXVlX3N0b3BwZWQocSkpKQ0KPiAgICAgICAgICAgICAgICAgcmV0dXJuOw0KPiAN
-Cj4gICAgICAgICBfX2Jsa19ydW5fcXVldWVfdW5jb25kKHEpOw0KPiB9DQo+IA0KPiBTbyBfX2Js
-a19ydW5fcXVldWVfdW5jb25kKCkgd2lsbCBuZXZlciBiZSBjYWxsZWQsIGFuZCB0aGUgcHJvY2Vz
-cyBoYW5nLg0KPiANCj4gWyAuLi4gXQ0KPg0KPiAqKioqKioqKioqKioqKioqDQo+IFtIb3cgdG8g
-cmVwcm9kdWNlXQ0KPiAqKioqKioqKioqKioqKioqDQo+IFVuZm9ydHVuYXRlbHkgSSBjYW5ub3Qg
-cmVwcm9kdWNlIGl0IGluIHRoZSBsYXRlc3Qga2VybmVsLiANCj4gVGhlIHNjcmlwdCBiZWxvdyB3
-aWxsIGhlbHAgdG8gcmVwcm9kdWNlLCBidXQgbm90IHZlcnkgb2Z0ZW4uDQo+IA0KPiAjIGNyZWF0
-ZSBuZXR3b3JrIGVycm9yDQo+IHRjIHFkaXNjIGFkZCBkZXYgZXRoMSByb290IG5ldGVtIGxvc3Mg
-NjAlDQo+IA0KPiAjIHJlc3RhcnQgaXNjc2lkIGFuZCByZXNjYW4gc2NzaSBidXMgYWdhaW4gYW5k
-IGFnYWluIHdoaWxlIFsgMSBdIGRvIA0KPiBzeXN0ZW1jdGwgcmVzdGFydCBpc2NzaWQNCj4gcmVz
-Y2FuLXNjc2ktYnVzICAgICAgICAoaHR0cDovL21hbnBhZ2VzLnVidW50dS5jb20vbWFucGFnZXMv
-dHJ1c3R5L21hbjgvcmVzY2FuLXNjc2ktYnVzLjguaHRtbCkNCj4gZG9uZQ0KDQpUaGlzIHNob3Vs
-ZCBoYXZlIGJlZW4gZml4ZWQgYnkgY29tbWl0IDM2ZTNjZjI3Mzk3NyAoInNjc2k6IEF2b2lkIHRo
-YXQgU0NTSSBxdWV1ZXMgZ2V0IHN0dWNrIikuIFRoZSBmaXJzdCBtYWlubGluZSBrZXJuZWwgdGhh
-dCBpbmNsdWRlcyB0aGlzIGNvbW1pdCBpcyBrZXJuZWwgdjQuMTEuDQoNCj4gdm9pZCBfX2Jsa19y
-dW5fcXVldWUoc3RydWN0IHJlcXVlc3RfcXVldWUgKnEpIHsNCj4gLSAgICAgICBpZiAodW5saWtl
-bHkoYmxrX3F1ZXVlX3N0b3BwZWQocSkpKQ0KPiArICAgICAgIGlmICh1bmxpa2VseShibGtfcXVl
-dWVfc3RvcHBlZChxKSkgJiYgDQo+ICsgdW5saWtlbHkoIWJsa19xdWV1ZV9keWluZyhxKSkpDQo+
-ICAgICAgICAgICAgICAgICByZXR1cm47DQo+IA0KPiAgICAgICAgIF9fYmxrX3J1bl9xdWV1ZV91
-bmNvbmQocSk7DQoNCkFyZSB5b3UgYXdhcmUgdGhhdCB0aGUgc2luZ2xlIHF1ZXVlIGJsb2NrIGxh
-eWVyIGlzIG9uIGl0cyB3YXkgb3V0IGFuZCB3aWxsIGJlIHJlbW92ZWQgc29vbmVyIG9yIGxhdGVy
-PyBQbGVhc2UgZm9jdXMgeW91ciB0ZXN0aW5nIG9uIHNjc2ktbXEuIA0KDQpSZWdhcmRpbmcgdGhl
-IGFib3ZlIHBhdGNoOiBpdCBpcyB3cm9uZyBiZWNhdXNlIGl0IHdpbGwgY2F1c2UgbG9ja3VwcyBk
-dXJpbmcgcGF0aCByZW1vdmFsIGZvciBvdGhlciBibG9jayBkcml2ZXJzLiBQbGVhc2UgZHJvcCB0
-aGlzIHBhdGNoLg0KDQpCYXJ0Lg0K
+
+Christoph,
+
+> Defaulting to scsi-mq in 4.13-rc has shown various regressions
+> on setups that we didn't previously consider.  Fixes for them are
+> in progress, but too invasive to make it in this cycle.  So for
+> now revert the commit that defaults to blk-mq for SCSI.  For 4.14
+> we'll plan to try again with these fixes.
+>
+> This reverts commit 5c279bd9e40624f4ab6e688671026d6005b066fa.
+
+Applied to 4.13/scsi-fixes. Thanks!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
