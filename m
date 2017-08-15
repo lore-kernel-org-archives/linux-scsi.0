@@ -1,107 +1,67 @@
-From: tom.ty89@gmail.com
-Subject: [PATCH] sd: read unmap block limits even if lbpme=0
-Date: Tue, 15 Aug 2017 05:13:26 +0800
-Message-ID: <59921282.c3341c0a.a8437.1b70@mx.google.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:33249 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752133AbdHNVNk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Aug 2017 17:13:40 -0400
-Received: by mail-wm0-f67.google.com with SMTP id q189so15840164wmd.0
-        for <linux-scsi@vger.kernel.org>; Mon, 14 Aug 2017 14:13:39 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Tangchen (UVP)" <tang.chen@huawei.com>
+Subject: =?utf-8?B?562U5aSNOiBbaXNjc2ldIERlYWRsb2NrIG9jY3VycmVkIHdoZW4gbmV0d29y?=
+ =?utf-8?Q?k_is_in_error?=
+Date: Tue, 15 Aug 2017 02:16:11 +0000
+Message-ID: <22E823DBB7698E489DC113638F7470729C1AF0@DGGEMM506-MBX.china.huawei.com>
+References: <22E823DBB7698E489DC113638F7470729C17B6@DGGEMM506-MBX.china.huawei.com>
+ <1502723836.2333.3.camel@wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1502723836.2333.3.camel@wdc.com>
+Content-Language: zh-CN
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>, "lduncan@suse.com" <lduncan@suse.com>, "cleech@redhat.com" <cleech@redhat.com>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, guijianfeng <guijianfeng@huawei.com>, zhengchuan <zhengchuan@huawei.com>, "Tangchen (UVP)" <tang.chen@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
 
-From: Tom Yan <tom.ty89@gmail.com>
-
-Some devices may not be decent enough to report lbpme bit properly
-even when they do support unmap and report relevant information
-in the block limits and logical block provisioning VPDs properly
-(Namely, ASMedia ASM1351, a UAS-SATA bridge). One of the reasons
-is, lbpme=1 is not a requirement for "DeleteNotify" in Windows to
-be activated:
-
-[root@archlinux ~]# sg_readcap -l /dev/sda | grep lb
-   Logical block provisioning: lbpme=0, lbprz=0
-[root@archlinux ~]# sg_vpd -p lbpv /dev/sda | grep \(LB
-  Unmap command supported (LBPU): 1
-  Write same (16) with unmap bit supported (LBWS): 0
-  Write same (10) with unmap bit supported (LBWS10): 0
-  Logical block provisioning read zeros (LBPRZ): 0
-[root@archlinux ~]# sg_vpd -p bl /dev/sda | grep -i unmap
-  Maximum unmap LBA count: 4194240
-  Maximum unmap block descriptor count: 1
-  Optimal unmap granularity: 1
-  Unmap granularity alignment valid: 0
-  Unmap granularity alignment: 0
-
-While there may be a point to retain the "strict policy" on this,
-by not configuring discard for such device automatically, there
-is little reason not to read the relevant data from the VPD, for
-users are allowed to configure discard for a device via the
-provisioning_mode sysfs file.
-
-While discard_max_bytes can be changed manually, it is better
-if the value would be limited by a discard_max_hw_bytes that is
-set from the hardware limit that is reported in the VPD.
-
-Before this commit:
-[root@archlinux ~]# cat (...)/provisioning_mode
-full
-[root@archlinux ~]# grep . /sys/block/sda/queue/discard_*
-/sys/block/sda/queue/discard_granularity:0
-/sys/block/sda/queue/discard_max_bytes:0
-/sys/block/sda/queue/discard_max_hw_bytes:0
-/sys/block/sda/queue/discard_zeroes_data:0
-[root@archlinux ~]# echo -n unmap > (...)/provisioning_mode
-[root@archlinux ~]# grep . /sys/block/sda/queue/discard_*
-/sys/block/sda/queue/discard_granularity:512
-/sys/block/sda/queue/discard_max_bytes:4294966784
-/sys/block/sda/queue/discard_max_hw_bytes:4294966784
-/sys/block/sda/queue/discard_zeroes_data:0
-
-After this commit:
-[root@archlinux ~]# cat (...)/provisioning_mode
-full
-[root@archlinux ~]# grep . /sys/block/sda/queue/discard_*
-/sys/block/sda/queue/discard_granularity:0
-/sys/block/sda/queue/discard_max_bytes:0
-/sys/block/sda/queue/discard_max_hw_bytes:0
-/sys/block/sda/queue/discard_zeroes_data:0
-[root@archlinux ~]# echo -n unmap > (...)/provisioning_mode
-[root@archlinux ~]# grep . /sys/block/sda/queue/discard_*
-/sys/block/sda/queue/discard_granularity:512
-/sys/block/sda/queue/discard_max_bytes:2147450880
-/sys/block/sda/queue/discard_max_hw_bytes:2147450880
-/sys/block/sda/queue/discard_zeroes_data:0
-
-Signed-off-by: Tom Yan <tom.ty89@gmail.com>
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index bea36adeee17..ea9e6fc76b63 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2883,9 +2883,6 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
- 
- 		sdkp->max_ws_blocks = (u32)get_unaligned_be64(&buffer[36]);
- 
--		if (!sdkp->lbpme)
--			goto out;
--
- 		lba_count = get_unaligned_be32(&buffer[20]);
- 		desc_count = get_unaligned_be32(&buffer[24]);
- 
-@@ -2898,6 +2895,9 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
- 			sdkp->unmap_alignment =
- 				get_unaligned_be32(&buffer[32]) & ~(1 << 31);
- 
-+		if (!sdkp->lbpme)
-+			goto out;
-+
- 		if (!sdkp->lbpvpd) { /* LBP VPD page not provided */
- 
- 			if (sdkp->max_unmap_blocks)
--- 
-2.14.1
+SGksIEJhcnQsDQoNClRoYW5rIHlvdSB2ZXJ5IG11Y2ggZm9yIHRoZSBxdWljayByZXNwb25zZS4g
+DQoNCkJ1dCBJJ20gbm90IHVzaW5nIG1xLCBhbmQgSSBydW4gaW50byB0aGVzZSB0d28gcHJvYmxl
+bXMgaW4gYSBub24tbXEgc3lzdGVtLg0KVGhlIHBhdGNoIHlvdSBwb2ludGVkIG91dCBpcyBmaXgg
+Zm9yIG1xLCBzbyBJIGRvbid0IHRoaW5rIGl0IGNhbiByZXNvbHZlIHRoaXMgcHJvYmxlbS4NCg0K
+SUlVQywgbXEgaXMgZm9yIFNTRCA/ICBJJ20gbm90IHVzaW5nIHNzZCwgc28gbXEgaXMgZGlzYWJs
+ZWQuDQoNCg0KT24gTW9uLCAyMDE3LTA4LTE0IGF0IDExOjIzICswMDAwLCBUYW5nY2hlbiAoVVZQ
+KSB3cm90ZToNCj4gUHJvYmxlbSAyOg0KPiANCj4gKioqKioqKioqKioqKioqDQo+IFtXaGF0IGl0
+IGxvb2tzIGxpa2VdDQo+ICoqKioqKioqKioqKioqKg0KPiBXaGVuIHJlbW92ZSBhIHNjc2kgZGV2
+aWNlLCBhbmQgdGhlIG5ldHdvcmsgZXJyb3IgaGFwcGVucywgX19ibGtfZHJhaW5fcXVldWUoKSBj
+b3VsZCBoYW5nIGZvcmV2ZXIuDQo+IA0KPiAjIGNhdCAvcHJvYy8xOTE2MC9zdGFjaw0KPiBbPGZm
+ZmZmZmZmODAwNTg4NmQ+XSBtc2xlZXArMHgxZC8weDMwDQo+IFs8ZmZmZmZmZmY4MDIwMWE4ND5d
+IF9fYmxrX2RyYWluX3F1ZXVlKzB4ZTQvMHgxNjAgWzxmZmZmZmZmZjgwMjAyNzY2Pl0gDQo+IGJs
+a19jbGVhbnVwX3F1ZXVlKzB4MTA2LzB4MmUwIFs8ZmZmZmZmZmZhMDAwZmIwMj5dIA0KPiBfX3Nj
+c2lfcmVtb3ZlX2RldmljZSsweDUyLzB4YzAgW3Njc2lfbW9kXSBbPGZmZmZmZmZmYTAwMGZiOWI+
+XSANCj4gc2NzaV9yZW1vdmVfZGV2aWNlKzB4MmIvMHg0MCBbc2NzaV9tb2RdIFs8ZmZmZmZmZmZh
+MDAwZmJjMD5dIA0KPiBzZGV2X3N0b3JlX2RlbGV0ZV9jYWxsYmFjaysweDEwLzB4MjAgW3Njc2lf
+bW9kXSBbPGZmZmZmZmZmODAxYTRlNzU+XSANCj4gc3lzZnNfc2NoZWR1bGVfY2FsbGJhY2tfd29y
+aysweDE1LzB4ODANCj4gWzxmZmZmZmZmZjgwMDYyZDY5Pl0gcHJvY2Vzc19vbmVfd29yaysweDE2
+OS8weDM0MCBbPGZmZmZmZmZmODAwNjY3ZTM+XSANCj4gd29ya2VyX3RocmVhZCsweDE4My8weDQ5
+MCBbPGZmZmZmZmZmODAwNmE1MjY+XSBrdGhyZWFkKzB4OTYvMHhhMCANCj4gWzxmZmZmZmZmZjgw
+NDFlYmI0Pl0ga2VybmVsX3RocmVhZF9oZWxwZXIrMHg0LzB4MTAgDQo+IFs8ZmZmZmZmZmZmZmZm
+ZmZmZj5dIDB4ZmZmZmZmZmZmZmZmZmZmZg0KPiANCj4gVGhlIHJlcXVlc3QgcXVldWUgb2YgdGhp
+cyBkZXZpY2Ugd2FzIHN0b3BwZWQuIFNvIHRoZSBmb2xsb3dpbmcgY2hlY2sgd2lsbCBiZSB0cnVl
+IGZvcmV2ZXI6DQo+IF9fYmxrX3J1bl9xdWV1ZSgpDQo+IHsNCj4gICAgICAgICBpZiAodW5saWtl
+bHkoYmxrX3F1ZXVlX3N0b3BwZWQocSkpKQ0KPiAgICAgICAgICAgICAgICAgcmV0dXJuOw0KPiAN
+Cj4gICAgICAgICBfX2Jsa19ydW5fcXVldWVfdW5jb25kKHEpOw0KPiB9DQo+IA0KPiBTbyBfX2Js
+a19ydW5fcXVldWVfdW5jb25kKCkgd2lsbCBuZXZlciBiZSBjYWxsZWQsIGFuZCB0aGUgcHJvY2Vz
+cyBoYW5nLg0KPiANCj4gWyAuLi4gXQ0KPg0KPiAqKioqKioqKioqKioqKioqDQo+IFtIb3cgdG8g
+cmVwcm9kdWNlXQ0KPiAqKioqKioqKioqKioqKioqDQo+IFVuZm9ydHVuYXRlbHkgSSBjYW5ub3Qg
+cmVwcm9kdWNlIGl0IGluIHRoZSBsYXRlc3Qga2VybmVsLiANCj4gVGhlIHNjcmlwdCBiZWxvdyB3
+aWxsIGhlbHAgdG8gcmVwcm9kdWNlLCBidXQgbm90IHZlcnkgb2Z0ZW4uDQo+IA0KPiAjIGNyZWF0
+ZSBuZXR3b3JrIGVycm9yDQo+IHRjIHFkaXNjIGFkZCBkZXYgZXRoMSByb290IG5ldGVtIGxvc3Mg
+NjAlDQo+IA0KPiAjIHJlc3RhcnQgaXNjc2lkIGFuZCByZXNjYW4gc2NzaSBidXMgYWdhaW4gYW5k
+IGFnYWluIHdoaWxlIFsgMSBdIGRvIA0KPiBzeXN0ZW1jdGwgcmVzdGFydCBpc2NzaWQNCj4gcmVz
+Y2FuLXNjc2ktYnVzICAgICAgICAoaHR0cDovL21hbnBhZ2VzLnVidW50dS5jb20vbWFucGFnZXMv
+dHJ1c3R5L21hbjgvcmVzY2FuLXNjc2ktYnVzLjguaHRtbCkNCj4gZG9uZQ0KDQpUaGlzIHNob3Vs
+ZCBoYXZlIGJlZW4gZml4ZWQgYnkgY29tbWl0IDM2ZTNjZjI3Mzk3NyAoInNjc2k6IEF2b2lkIHRo
+YXQgU0NTSSBxdWV1ZXMgZ2V0IHN0dWNrIikuIFRoZSBmaXJzdCBtYWlubGluZSBrZXJuZWwgdGhh
+dCBpbmNsdWRlcyB0aGlzIGNvbW1pdCBpcyBrZXJuZWwgdjQuMTEuDQoNCj4gdm9pZCBfX2Jsa19y
+dW5fcXVldWUoc3RydWN0IHJlcXVlc3RfcXVldWUgKnEpIHsNCj4gLSAgICAgICBpZiAodW5saWtl
+bHkoYmxrX3F1ZXVlX3N0b3BwZWQocSkpKQ0KPiArICAgICAgIGlmICh1bmxpa2VseShibGtfcXVl
+dWVfc3RvcHBlZChxKSkgJiYgDQo+ICsgdW5saWtlbHkoIWJsa19xdWV1ZV9keWluZyhxKSkpDQo+
+ICAgICAgICAgICAgICAgICByZXR1cm47DQo+IA0KPiAgICAgICAgIF9fYmxrX3J1bl9xdWV1ZV91
+bmNvbmQocSk7DQoNCkFyZSB5b3UgYXdhcmUgdGhhdCB0aGUgc2luZ2xlIHF1ZXVlIGJsb2NrIGxh
+eWVyIGlzIG9uIGl0cyB3YXkgb3V0IGFuZCB3aWxsIGJlIHJlbW92ZWQgc29vbmVyIG9yIGxhdGVy
+PyBQbGVhc2UgZm9jdXMgeW91ciB0ZXN0aW5nIG9uIHNjc2ktbXEuIA0KDQpSZWdhcmRpbmcgdGhl
+IGFib3ZlIHBhdGNoOiBpdCBpcyB3cm9uZyBiZWNhdXNlIGl0IHdpbGwgY2F1c2UgbG9ja3VwcyBk
+dXJpbmcgcGF0aCByZW1vdmFsIGZvciBvdGhlciBibG9jayBkcml2ZXJzLiBQbGVhc2UgZHJvcCB0
+aGlzIHBhdGNoLg0KDQpCYXJ0Lg0K
