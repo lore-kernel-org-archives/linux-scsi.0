@@ -1,52 +1,107 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] megaraid_sas: boot hangs while LD is offline
-Date: Tue, 15 Aug 2017 13:59:15 +0200
-Message-ID: <1502798355-59330-1-git-send-email-hare@suse.de>
+Subject: [PATCH] megaraid_sas: Fallback to older scanning if no disks are found
+Date: Tue, 15 Aug 2017 14:05:40 +0200
+Message-ID: <1502798740-69337-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50625 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:51182 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752337AbdHOL7U (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 15 Aug 2017 07:59:20 -0400
+        id S1752381AbdHOMFo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 15 Aug 2017 08:05:44 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Offline Logical drives (LDs) should not allowed to be visible
-to the OS, as the OS will hang trying to send commands to it.
-This patch skips offline LDs like it already does for
-non-system physical drives (PDs).
+commit 21c9e160a51383d4cb0b882398534b0c95c0cc3b implemented a
+new driver lookup using the MR_DCMD_LD_LIST_QUERY firmware command.
+However, this command might not work properly on older firmware,
+causing the command to return no drives instead of an error.
+This causes a regression on older firmware as the driver will
+no longer detect any drives.
+This patch checks if MR_DCMD_LD_LIST_QUERY return no drives,
+and falls back to the original method if so.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 29 +++++++++++++++++++++++------
+ 1 file changed, 23 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 5202c2f..39b08fc 100644
+index 39b08fc..a1cf2c3 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -1897,14 +1897,19 @@ static void megasas_set_static_target_properties(struct scsi_device *sdev,
+@@ -4502,7 +4502,6 @@ int megasas_alloc_cmds(struct megasas_instance *instance)
+ 		dev_info(&instance->pdev->dev,
+ 			"DCMD not supported by firmware - %s %d\n",
+ 				__func__, __LINE__);
+-		ret = megasas_get_ld_list(instance);
+ 		break;
+ 	case DCMD_TIMEOUT:
+ 		switch (dcmd_timeout_ocr_possible(instance)) {
+@@ -4530,6 +4529,14 @@ int megasas_alloc_cmds(struct megasas_instance *instance)
+ 		break;
+ 	case DCMD_SUCCESS:
+ 		tgtid_count = le32_to_cpu(ci->count);
++		/*
++		 * Some older firmware return '0' if the LD LIST QUERY
++		 * command is not supported.
++		 */
++		if (tgtid_count == 0) {
++			ret = DCMD_FAILED;
++			break;
++		}
  
- static int megasas_slave_configure(struct scsi_device *sdev)
- {
--	u16 pd_index = 0;
-+	u16 pd_index = 0, ld_index;
- 	struct megasas_instance *instance;
- 	int ret_target_prop = DCMD_FAILED;
- 	bool is_target_prop = false;
+ 		if ((tgtid_count > (instance->fw_supported_vd_count)))
+ 			break;
+@@ -5146,7 +5153,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 	struct megasas_register_set __iomem *reg_set;
+ 	struct megasas_ctrl_info *ctrl_info = NULL;
+ 	unsigned long bar_list;
+-	int i, j, loop, fw_msix_count = 0;
++	int i, j, loop, fw_msix_count = 0, ret;
+ 	struct IOV_111 *iovPtr;
+ 	struct fusion_context *fusion;
  
- 	instance = megasas_lookup_instance(sdev->host->host_no);
- 	if (instance->pd_list_not_supported) {
--		if (!MEGASAS_IS_LOGICAL(sdev) && sdev->type == TYPE_DISK) {
-+		if (MEGASAS_IS_LOGICAL(sdev)) {
-+			ld_index = ((sdev->channel - MEGASAS_MAX_PD_CHANNELS) *
-+				    MEGASAS_MAX_DEV_PER_CHANNEL) + sdev->id;
-+			if (instance->ld_ids[ld_index] == 0xff)
-+				return -ENXIO;
-+		} else if (sdev->type == TYPE_DISK) {
- 			pd_index = (sdev->channel * MEGASAS_MAX_DEV_PER_CHANNEL) +
- 				sdev->id;
- 			if (instance->pd_list[pd_index].driveState !=
+@@ -5384,8 +5391,11 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 		}
+ 	}
+ 
+-	if (megasas_ld_list_query(instance,
+-				  MR_LD_QUERY_TYPE_EXPOSED_TO_HOST))
++	ret = megasas_ld_list_query(instance,
++				    MR_LD_QUERY_TYPE_EXPOSED_TO_HOST);
++	if (ret == DCMD_FAILED)
++		ret = megasas_get_ld_list(instance);
++	if (ret)
+ 		goto fail_get_ld_pd_list;
+ 
+ 	/*
+@@ -7426,8 +7436,12 @@ static inline void megasas_remove_scsi_device(struct scsi_device *sdev)
+ 		case MR_EVT_LD_DELETED:
+ 		case MR_EVT_LD_CREATED:
+ 			if (!instance->requestorId ||
+-				(instance->requestorId && megasas_get_ld_vf_affiliation(instance, 0)))
++			    (instance->requestorId &&
++			     megasas_get_ld_vf_affiliation(instance, 0))) {
+ 				dcmd_ret = megasas_ld_list_query(instance, MR_LD_QUERY_TYPE_EXPOSED_TO_HOST);
++				if (dcmd_ret == DCMD_FAILED)
++					dcmd_ret = megasas_get_ld_list(instance);
++			}
+ 
+ 			if (dcmd_ret == DCMD_SUCCESS)
+ 				doscan = SCAN_VD_CHANNEL;
+@@ -7443,8 +7457,11 @@ static inline void megasas_remove_scsi_device(struct scsi_device *sdev)
+ 				break;
+ 
+ 			if (!instance->requestorId ||
+-				(instance->requestorId && megasas_get_ld_vf_affiliation(instance, 0)))
++			    (instance->requestorId && megasas_get_ld_vf_affiliation(instance, 0))) {
+ 				dcmd_ret = megasas_ld_list_query(instance, MR_LD_QUERY_TYPE_EXPOSED_TO_HOST);
++				if (dcmd_ret == DCMD_FAILED)
++					dcmd_ret = megasas_get_ld_list(instance);
++			}
+ 
+ 			if (dcmd_ret != DCMD_SUCCESS)
+ 				break;
 -- 
 1.8.5.6
