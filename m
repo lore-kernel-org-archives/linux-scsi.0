@@ -1,52 +1,70 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv2 0/6] hpsa legacy support
-Date: Tue, 15 Aug 2017 08:22:10 +0200
-Message-ID: <7c86397e-863c-5042-b817-b8c1a0d7fc46@suse.de>
-References: <1502709555-15837-1-git-send-email-hare@suse.de>
- <yq14lt9wlco.fsf@oracle.com>
+From: <demorton@dow.com>
+Subject: (unknown)
+Date: Tue, 15 Aug 2017 06:50:05 -0000
+Message-ID: <150277980589.15189.873726329384921891@hinet.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: application/zip; name="501507600268095.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58925 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751666AbdHOGWM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 15 Aug 2017 02:22:12 -0400
-In-Reply-To: <yq14lt9wlco.fsf@oracle.com>
-Content-Language: en-US
+Received: from 59-115-80-67.dynamic-ip.hinet.net ([59.115.80.67]:42700 "HELO
+        hinet.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+        id S1752849AbdHOGuM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 15 Aug 2017 02:50:12 -0400
+Content-Disposition: attachment
+Subject: 
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Don Brace <don.brace@microsemi.com>, Meelis Roos <mroos@linux.ee>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 08/15/2017 05:39 AM, Martin K. Petersen wrote:
-> 
-> Hannes,
-> 
->> here's now the second attempt to add support for legacy boards, ie for
->> boards previously supported by cciss only.  With this patchset the
->> hpsa driver should work with all Smart Array boards if the
->> 'hpsa_allow_any' module option is set, rendering the cciss driver
->> obsolete.  Consequently I've added a patch to remove the cciss driver
->> and make 'hpsa' an alias to 'cciss'.
-> 
-> How does the module alias solve the problem that hpsa_allow_any=1 needs
-> to be added for users currently running cciss?
-> 
-> I also fail to see what the point is of having an opt-in parameter when
-> there is no alternative after cciss has been removed. It's a
-> don't-be-broken switch.
-> 
-Hmm ... considering this (and the fact that we now have the
-->legacy_board switch) we can indeed remove that option.
-Will be redoing the patchset.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+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
