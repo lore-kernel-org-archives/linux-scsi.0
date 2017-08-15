@@ -1,62 +1,43 @@
 From: Chad Dupuis <chad.dupuis@cavium.com>
-Subject: [PATCH 1/6] qedf: Set WWNN and WWPN based on values from qed.
-Date: Tue, 15 Aug 2017 10:08:16 -0700
-Message-ID: <20170815170821.20806-2-chad.dupuis@cavium.com>
-References: <20170815170821.20806-1-chad.dupuis@cavium.com>
+Subject: [PATCH 0/6] Update qedf to version 8.20.5.0.
+Date: Tue, 15 Aug 2017 10:08:15 -0700
+Message-ID: <20170815170821.20806-1-chad.dupuis@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0067.outbound.protection.outlook.com ([104.47.33.67]:18063
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam01on0069.outbound.protection.outlook.com ([104.47.34.69]:65440
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751605AbdHORI2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 15 Aug 2017 13:08:28 -0400
-In-Reply-To: <20170815170821.20806-1-chad.dupuis@cavium.com>
+        id S1751605AbdHORIi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 15 Aug 2017 13:08:38 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, QLogic-Storage-Upstream@cavium.com
 
-If dev_info.wwpn and dev_info.wwnn are set by qed use these values to set
-the WWNs of the port. Otherwise fall back to the old method using
-fcoe_wwn_from_mac().
+From: "Chad Dupuis" <chad.dupuis@cavium.com>
 
-Signed-off-by: Chad Dupuis <chad.dupuis@cavium.com>
----
- drivers/scsi/qedf/qedf_main.c | 21 ++++++++++++++++++---
- 1 file changed, 18 insertions(+), 3 deletions(-)
+Hi Martin,
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 1d13c9ca517d..9744b6aa2a03 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -3056,9 +3056,24 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 	QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_DISC, "MAC address is %pM.\n",
- 		   qedf->mac);
- 
--	/* Set the WWNN and WWPN based on the MAC address */
--	qedf->wwnn = fcoe_wwn_from_mac(qedf->mac, 1, 0);
--	qedf->wwpn = fcoe_wwn_from_mac(qedf->mac, 2, 0);
-+	/*
-+	 * Set the WWNN and WWPN in the following way:
-+	 *
-+	 * If the info we get from qed is non-zero then use that to set the
-+	 * WWPN and WWNN. Otherwise fall back to use fcoe_wwn_from_mac() based
-+	 * on the MAC address.
-+	 */
-+	if (qedf->dev_info.wwnn != 0 && qedf->dev_info.wwpn != 0) {
-+		QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_DISC,
-+		    "Setting WWPN and WWNN from qed dev_info.\n");
-+		qedf->wwnn = qedf->dev_info.wwnn;
-+		qedf->wwpn = qedf->dev_info.wwpn;
-+	} else {
-+		QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_DISC,
-+		    "Setting WWPN and WWNN using fcoe_wwn_from_mac().\n");
-+		qedf->wwnn = fcoe_wwn_from_mac(qedf->mac, 1, 0);
-+		qedf->wwpn = fcoe_wwn_from_mac(qedf->mac, 2, 0);
-+	}
- 	QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_DISC,  "WWNN=%016llx "
- 		   "WWPN=%016llx.\n", qedf->wwnn, qedf->wwpn);
- 
+Please apply the following patches at your earliest convenience.
+
+Thanks,
+Chad
+
+Chad Dupuis (6):
+  qedf: Set WWNN and WWPN based on values from qed.
+  qedf: Use granted MAC from the FCF for the FCoE source address if it
+    is available.
+  qedf: Corrent VLAN tag insertion in fallback VLAN case.
+  qedf: Covert single-threaded workqueues to regular workqueues.
+  qedf: Fix up modinfo parameter name for 'debug' in modinfo output.
+  qedf: Update driver version to 8.20.5.0.
+
+ drivers/scsi/qedf/qedf.h         |   2 -
+ drivers/scsi/qedf/qedf_fip.c     |  35 +++-----------
+ drivers/scsi/qedf/qedf_main.c    | 102 +++++++++++++++++++++++++++++++--------
+ drivers/scsi/qedf/qedf_version.h |   6 +--
+ 4 files changed, 92 insertions(+), 53 deletions(-)
+
 -- 
 2.12.3
