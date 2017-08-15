@@ -1,43 +1,37 @@
 From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: mpt3sas: fix pr_info message continuation
-Date: Tue, 15 Aug 2017 14:51:45 +0100
-Message-ID: <20170815135145.25792-1-colin.king@canonical.com>
+Subject: [PATCH] scsi: add missing indent on a for loop statement
+Date: Tue, 15 Aug 2017 15:08:28 +0100
+Message-ID: <20170815140828.26133-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+To: Willem Riede <osst@riede.org>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, osst-users@lists.sourceforge.net, linux-scsi@vger.kernel.org
 Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 From: Colin Ian King <colin.king@canonical.com>
 
-An optional discovery status should be printed with a pr_cont
-and needs a leading space to make it more readable. The final
-new line should also be a pr_cont and the indentation is out
-by one, so fix that too.
+The for loop is statement is missing an indent, add it.
 
 Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/osst.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 8a44636ab0b5..87999905bca3 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -615,9 +615,9 @@ _base_display_event_data(struct MPT3SAS_ADAPTER *ioc,
- 		    (event_data->ReasonCode == MPI2_EVENT_SAS_DISC_RC_STARTED) ?
- 		    "start" : "stop");
- 		if (event_data->DiscoveryStatus)
--			pr_info("discovery_status(0x%08x)",
-+			pr_cont(" discovery_status(0x%08x)",
- 			    le32_to_cpu(event_data->DiscoveryStatus));
--			pr_info("\n");
-+		pr_cont("\n");
- 		return;
- 	}
- 	case MPI2_EVENT_SAS_BROADCAST_PRIMITIVE:
+diff --git a/drivers/scsi/osst.c b/drivers/scsi/osst.c
+index 97ab5f160bc6..241908aca468 100644
+--- a/drivers/scsi/osst.c
++++ b/drivers/scsi/osst.c
+@@ -5434,7 +5434,7 @@ static int append_to_buffer(const char __user *ubp, struct osst_buffer *st_bp, i
+ 
+ 	for (i=0, offset=st_bp->buffer_bytes;
+ 	     i < st_bp->sg_segs && offset >= st_bp->sg[i].length; i++)
+-	offset -= st_bp->sg[i].length;
++		offset -= st_bp->sg[i].length;
+ 	if (i == st_bp->sg_segs) {  /* Should never happen */
+ 		printk(KERN_WARNING "osst :A: Append_to_buffer offset overflow.\n");
+ 		return (-EIO);
 -- 
 2.11.0
