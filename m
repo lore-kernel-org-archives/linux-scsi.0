@@ -1,29 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCHv2 0/2] scsi: pollable 'state' attribute
-Date: Mon, 14 Aug 2017 23:01:39 -0400
-Message-ID: <yq1h8x9wn3g.fsf@oracle.com>
-References: <1502434427-101729-1-git-send-email-hare@suse.de>
+Subject: Re: [PATCH] sym53c8xx: Avoid undefined behaviour in drivers/scsi/sym53c8xx_2/sym_hipd.c:762
+Date: Mon, 14 Aug 2017 23:07:20 -0400
+Message-ID: <yq1d17xwmtz.fsf@oracle.com>
+References: <20170810190849.GA12659@p100.box>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:25784 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752718AbdHODBv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Aug 2017 23:01:51 -0400
-In-Reply-To: <1502434427-101729-1-git-send-email-hare@suse.de> (Hannes
-        Reinecke's message of "Fri, 11 Aug 2017 08:53:45 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-parisc-owner@vger.kernel.org>
+In-Reply-To: <20170810190849.GA12659@p100.box> (Helge Deller's message of
+        "Thu, 10 Aug 2017 21:08:49 +0200")
+Sender: linux-parisc-owner@vger.kernel.org
+To: Helge Deller <deller@gmx.de>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-kernel@vger.kernel.org, linux-parisc@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
 
-Hannes,
+Helge,
 
-> here's a small patchset to make the 'state' device attribute pollable.
-> It was supposed to be a small patch, but then hch suggested a rework.
+> On parisc I see this UBSAN warning with a sym53c896:
+>
+>  UBSAN: Undefined behaviour in ./drivers/scsi/sym53c8xx_2/sym_hipd.c:762:24
+>  index -1903078336 is out of range for type 'u32 [7]'
+>
+> Avoid this warning by switching to dev64_ul().
 
-Applied to 4.14/scsi-queue. Thank you!
+Applied to 4.14/scsi-queue. Thank you, Helge!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
