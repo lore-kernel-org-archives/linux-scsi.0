@@ -1,100 +1,62 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] ch: add refcounting
-Date: Tue, 15 Aug 2017 16:28:49 +0200
-Message-ID: <1502807329-75158-1-git-send-email-hare@suse.de>
+From: Chad Dupuis <chad.dupuis@cavium.com>
+Subject: [PATCH 1/6] qedf: Set WWNN and WWPN based on values from qed.
+Date: Tue, 15 Aug 2017 10:08:16 -0700
+Message-ID: <20170815170821.20806-2-chad.dupuis@cavium.com>
+References: <20170815170821.20806-1-chad.dupuis@cavium.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38861 "EHLO mx1.suse.de"
+Received: from mail-bn3nam01on0067.outbound.protection.outlook.com ([104.47.33.67]:18063
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752316AbdHOPIf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 15 Aug 2017 11:08:35 -0400
+        id S1751605AbdHORI2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 15 Aug 2017 13:08:28 -0400
+In-Reply-To: <20170815170821.20806-1-chad.dupuis@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+To: martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, QLogic-Storage-Upstream@cavium.com
 
-struct scsi_changer needs refcounting as the device
-might be removed while the fd is still open.
+If dev_info.wwpn and dev_info.wwnn are set by qed use these values to set
+the WWNs of the port. Otherwise fall back to the old method using
+fcoe_wwn_from_mac().
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Chad Dupuis <chad.dupuis@cavium.com>
 ---
- drivers/scsi/ch.c | 22 +++++++++++++++++++---
- 1 file changed, 19 insertions(+), 3 deletions(-)
+ drivers/scsi/qedf/qedf_main.c | 21 ++++++++++++++++++---
+ 1 file changed, 18 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
-index dad959f..b14583a 100644
---- a/drivers/scsi/ch.c
-+++ b/drivers/scsi/ch.c
-@@ -105,6 +105,7 @@
- static struct class * ch_sysfs_class;
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index 1d13c9ca517d..9744b6aa2a03 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -3056,9 +3056,24 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
+ 	QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_DISC, "MAC address is %pM.\n",
+ 		   qedf->mac);
  
- typedef struct {
-+	struct kref         ref;
- 	struct list_head    list;
- 	int                 minor;
- 	char                name[8];
-@@ -563,13 +564,23 @@ static int ch_gstatus(scsi_changer *ch, int type, unsigned char __user *dest)
- 
- /* ------------------------------------------------------------------------ */
- 
-+static void ch_destroy(struct kref *ref)
-+{
-+	scsi_changer *ch = container_of(ref, scsi_changer, ref);
-+
-+	kfree(ch->dt);
-+	kfree(ch);
-+}
-+
- static int
- ch_release(struct inode *inode, struct file *file)
- {
- 	scsi_changer *ch = file->private_data;
- 
- 	scsi_device_put(ch->device);
-+	ch->device = NULL;
- 	file->private_data = NULL;
-+	kref_put(&ch->ref, ch_destroy);
- 	return 0;
- }
- 
-@@ -588,6 +599,7 @@ static int ch_gstatus(scsi_changer *ch, int type, unsigned char __user *dest)
- 		mutex_unlock(&ch_mutex);
- 		return -ENXIO;
- 	}
-+	kref_get(&ch->ref);
- 	spin_unlock(&ch_index_lock);
- 
- 	file->private_data = ch;
-@@ -935,8 +947,11 @@ static int ch_probe(struct device *dev)
- 	}
- 
- 	mutex_init(&ch->lock);
-+	kref_init(&ch->ref);
- 	ch->device = sd;
--	ch_readconfig(ch);
-+	ret = ch_readconfig(ch);
-+	if (ret)
-+		goto destroy_dev;
- 	if (init)
- 		ch_init_elem(ch);
- 
-@@ -944,6 +959,8 @@ static int ch_probe(struct device *dev)
- 	sdev_printk(KERN_INFO, sd, "Attached scsi changer %s\n", ch->name);
- 
- 	return 0;
-+destroy_dev:
-+	device_destroy(ch_sysfs_class, MKDEV(SCSI_CHANGER_MAJOR,ch->minor));
- remove_idr:
- 	idr_remove(&ch_index_idr, ch->minor);
- free_ch:
-@@ -960,8 +977,7 @@ static int ch_remove(struct device *dev)
- 	spin_unlock(&ch_index_lock);
- 
- 	device_destroy(ch_sysfs_class, MKDEV(SCSI_CHANGER_MAJOR,ch->minor));
--	kfree(ch->dt);
--	kfree(ch);
-+	kref_put(&ch->ref, ch_destroy);
- 	return 0;
- }
+-	/* Set the WWNN and WWPN based on the MAC address */
+-	qedf->wwnn = fcoe_wwn_from_mac(qedf->mac, 1, 0);
+-	qedf->wwpn = fcoe_wwn_from_mac(qedf->mac, 2, 0);
++	/*
++	 * Set the WWNN and WWPN in the following way:
++	 *
++	 * If the info we get from qed is non-zero then use that to set the
++	 * WWPN and WWNN. Otherwise fall back to use fcoe_wwn_from_mac() based
++	 * on the MAC address.
++	 */
++	if (qedf->dev_info.wwnn != 0 && qedf->dev_info.wwpn != 0) {
++		QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_DISC,
++		    "Setting WWPN and WWNN from qed dev_info.\n");
++		qedf->wwnn = qedf->dev_info.wwnn;
++		qedf->wwpn = qedf->dev_info.wwpn;
++	} else {
++		QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_DISC,
++		    "Setting WWPN and WWNN using fcoe_wwn_from_mac().\n");
++		qedf->wwnn = fcoe_wwn_from_mac(qedf->mac, 1, 0);
++		qedf->wwpn = fcoe_wwn_from_mac(qedf->mac, 2, 0);
++	}
+ 	QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_DISC,  "WWNN=%016llx "
+ 		   "WWPN=%016llx.\n", qedf->wwnn, qedf->wwpn);
  
 -- 
-1.8.5.6
+2.12.3
