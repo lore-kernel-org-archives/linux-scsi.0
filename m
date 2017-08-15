@@ -1,37 +1,31 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: add missing indent on a for loop statement
-Date: Tue, 15 Aug 2017 15:08:28 +0100
-Message-ID: <20170815140828.26133-1-colin.king@canonical.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCHv3 2/5] scsi: Export blacklist flags to sysfs
+Date: Tue, 15 Aug 2017 14:24:17 +0000
+Message-ID: <1502807056.2900.1.camel@wdc.com>
+References: <1502461401-94630-1-git-send-email-hare@suse.de>
+         <1502461401-94630-3-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Willem Riede <osst@riede.org>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, osst-users@lists.sourceforge.net, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:44747 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752174AbdHOOZF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Aug 2017 10:25:05 -0400
+In-Reply-To: <1502461401-94630-3-git-send-email-hare@suse.de>
+Content-Language: en-US
+Content-ID: <215C5E21034A1442979B69B6434984A3@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "stern@rowland.harvard.edu" <stern@rowland.harvard.edu>
 
-From: Colin Ian King <colin.king@canonical.com>
-
-The for loop is statement is missing an indent, add it.
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/osst.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/osst.c b/drivers/scsi/osst.c
-index 97ab5f160bc6..241908aca468 100644
---- a/drivers/scsi/osst.c
-+++ b/drivers/scsi/osst.c
-@@ -5434,7 +5434,7 @@ static int append_to_buffer(const char __user *ubp, struct osst_buffer *st_bp, i
- 
- 	for (i=0, offset=st_bp->buffer_bytes;
- 	     i < st_bp->sg_segs && offset >= st_bp->sg[i].length; i++)
--	offset -= st_bp->sg[i].length;
-+		offset -= st_bp->sg[i].length;
- 	if (i == st_bp->sg_segs) {  /* Should never happen */
- 		printk(KERN_WARNING "osst :A: Append_to_buffer offset overflow.\n");
- 		return (-EIO);
--- 
-2.11.0
+T24gRnJpLCAyMDE3LTA4LTExIGF0IDE2OjIzICswMjAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6
+DQo+IEBAIC0xMTM4LDYgKzEyMjAsNyBAQCBzdGF0aWMgdW1vZGVfdCBzY3NpX3NkZXZfYmluX2F0
+dHJfaXNfdmlzaWJsZShzdHJ1Y3Qga29iamVjdCAqa29iaiwNCj4gIAkmZGV2X2F0dHJfcXVldWVf
+ZGVwdGguYXR0ciwNCj4gIAkmZGV2X2F0dHJfcXVldWVfdHlwZS5hdHRyLA0KPiAgCSZkZXZfYXR0
+cl93d2lkLmF0dHIsDQo+ICsJJmRldl9hdHRyX2JsYWNrbGlzdC5hdHRyLA0KPiAgI2lmZGVmIENP
+TkZJR19TQ1NJX0RIDQo+ICAJJmRldl9hdHRyX2RoX3N0YXRlLmF0dHIsDQo+ICAJJmRldl9hdHRy
+X2FjY2Vzc19zdGF0ZS5hdHRyLA0KDQpIZWxsbyBIYW5uZXMsDQoNCldvdWxkbid0IGRlYnVnZnMg
+YmUgbW9yZSBhcHByb3ByaWF0ZSBmb3IgdGhpcyBhdHRyaWJ1dGUgdGhhbiBzeXNmcz8NCg0KVGhh
+bmtzLA0KDQpCYXJ0Lg==
