@@ -1,46 +1,37 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCHv3 5/5] scsi_devinfo: fixup string compare
-Date: Tue, 15 Aug 2017 23:03:16 +0000
-Message-ID: <1502838194.2259.19.camel@wdc.com>
-References: <1502461401-94630-1-git-send-email-hare@suse.de>
-         <1502461401-94630-6-git-send-email-hare@suse.de>
+Subject: Re: [PATCH 2/2] tests/scsi/0001: Regression test for SCSI device
+ blacklisting
+Date: Tue, 15 Aug 2017 23:13:11 +0000
+Message-ID: <1502838790.2259.21.camel@wdc.com>
+References: <1502275806-27972-1-git-send-email-hare@suse.de>
+         <1502275806-27972-2-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:33079 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752938AbdHOXED (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Aug 2017 19:04:03 -0400
-In-Reply-To: <1502461401-94630-6-git-send-email-hare@suse.de>
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:38576 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751460AbdHOXN6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Aug 2017 19:13:58 -0400
+In-Reply-To: <1502275806-27972-2-git-send-email-hare@suse.de>
 Content-Language: en-US
-Content-ID: <379EF3A08BBEC446A7579B50AA6EC021@namprd04.prod.outlook.com>
+Content-ID: <5FE13A70DA19ED45B2DB8F4BA92CDC8F@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "stern@rowland.harvard.edu" <stern@rowland.harvard.edu>
+To: "hare@suse.de" <hare@suse.de>, "osandov@fb.com" <osandov@fb.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "jth@kernel.org" <jth@kernel.org>
 
-T24gRnJpLCAyMDE3LTA4LTExIGF0IDE2OjIzICswMjAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6
-DQo+IFdoZW4gY2hlY2tpbmcgdGhlIG1vZGVsIGFuZCB2ZW5kb3Igc3RyaW5nIHdlIG5lZWQgdG8g
-dXNlIHRoZQ0KPiBtaW5pbXVtIHZhbHVlIG9mIGVpdGhlciBzdHJpbmcsIG90aGVyd2lzZSB3ZSds
-bCBtaXNzIG91dCBvbg0KPiB3aWxkY2FyZCBtYXRjaGVzLg0KPiBBbmQgd2Ugc2hvdWxkIHRha2Ug
-Y2FyZCB3aGVuIG1hdGNoaW5nIHdpdGggemVybyBzaXplIHN0cmluZ3M7DQoNCiJjYXJkIj8gRGlk
-IHlvdSBwZXJoYXBzIG1lYW4gImNhcmUiPw0KDQo+IHJlc3VsdHMgbWlnaHQgYmUgdW5wcmVkaWN0
-YWJsZS4NCj4gV2l0aCB0aGlzIHBhdGNoIHRoZSBydWxlcyBmb3IgbWF0Y2hpbmcgZGV2aW5mbyBz
-dHJpbmdzIGFyZQ0KPiBhcyBmb2xsb3dzOg0KPiAtIFZlbmRvciBzdHJpbmdzIG11c3QgbWF0Y2gg
-ZXhhY3RseQ0KPiAtIEVtcHR5IE1vZGVsIHN0cmluZ3Mgd2lsbCBvbmx5IG1hdGNoIGlmIHRoZSBk
-ZXZpbmZvIG1vZGVsDQo+ICAgaXMgYWxzbyBlbXB0eQ0KPiAtIE1vZGVsIHN0cmluZ3Mgc2hvcnRl
-ciB0aGFuIHRoZSBkZXZpbmZvIG1vZGVsIHN0cmluZyB3aWxsDQo+ICAgbm90IG1hdGNoDQoNClRo
-ZSBhYm92ZSBzZW50ZW5jZSBjb250cmFkaWN0cyB0aGUgZmlyc3Qgc2VudGVuY2UuDQoNCj4gKwkJ
-CS8qDQo+ICsJCQkgKiBAbW9kZWwgc3BlY2lmaWVzIHRoZSBmdWxsIHN0cmluZywgYW5kDQo+ICsJ
-CQkgKiBtdXN0IGJlIGxhcmdlciBvciBlcXVhbCB0byBkZXZpbmZvLT5tb2RlbA0KPiArCQkJICov
-DQoNCldoYXQgZG9lcyAibGFyZ2VyIHRoYW4gb3IgZXF1YWwgdG8iIG1lYW4gZm9yIHN0cmluZ3M/
-IERpZCB5b3UgcGVyaGFwcyBtZWFuIHRoYXQNCmRldmluZm8tPm1vZGVsIG11c3QgYmUgYSBwcmVm
-aXggb2YgQG1vZGVsPw0KDQo+ICAJCQlpZiAoIW1lbWNtcChkZXZpbmZvLT52ZW5kb3IsIHZlbmRv
-ciwNCj4gLQkJCQkgICAgIHNpemVvZihkZXZpbmZvLT52ZW5kb3IpKSAmJg0KPiAtCQkJICAgICAh
-bWVtY21wKGRldmluZm8tPm1vZGVsLCBtb2RlbCwNCj4gLQkJCQkgICAgICBzaXplb2YoZGV2aW5m
-by0+bW9kZWwpKSkNCj4gKwkJCQkgICAgc2l6ZW9mKGRldmluZm8tPnZlbmRvcikpICYmDQo+ICsJ
-CQkgICAgIW1lbWNtcChkZXZpbmZvLT5tb2RlbCwgbW9kZWwsDQo+ICsJCQkJICAgIHNpemVvZihk
-ZXZpbmZvLT5tb2RlbCkpKQ0KPiAgCQkJCXJldHVybiBkZXZpbmZvOw0KDQpJcyB0aGlzIGEgd2hp
-dGVzcGFjZS1vbmx5IGNoYW5nZT8gSWYgc28sIHBsZWFzZSBmb2xkIGl0IGluIHRoZSBwcmV2aW91
-cyBwYXRjaC4NCg0KVGhhbmtzLA0KDQpCYXJ0Lg==
+T24gV2VkLCAyMDE3LTA4LTA5IGF0IDEyOjUwICswMjAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6
+DQo+ICtyZXF1aXJlcygpIHsNCj4gKyAgICBpZiBtb2RpbmZvIHNjc2lfZGVidWcgfCBncmVwIC1x
+IGlucV92ZW5kb3IgOyB0aGVuDQo+ICsJcmV0dXJuIDANCj4gKyAgICBmaQ0KPiArICAgIHJldHVy
+biAxDQo+ICt9DQoNCkhvdyBhYm91dCBjaGFuZ2luZyB0aGUgYWJvdmUgZm91ciBzdGF0ZW1lbnRz
+IGludG8gdGhlIGZvbGxvd2luZywgd2hpY2ggaXMNCnNob3J0ZXIgYW5kIG1vcmUgcm9idXN0Pw0K
+DQptb2RpbmZvIHNjc2lfZGVidWcgfCBncmVwIC1xICdecGFybTpbWzpibGFuazpdXSppbnFfdmVu
+ZG9yOicNCg0KPiArCW1vZHByb2JlIHNjc2lfZGVidWcgaW5xX3ZlbmRvcj0iJHZlbmRvciIgaW5x
+X3Byb2R1Y3Q9IiRtb2RlbCINCj4gKwlob3N0PSQobHNzY3NpIC1IIHwgc2VkIC1uICdzLy5cKFsw
+LTldKlwpLipzY3NpX2RlYnVnL1wxL3AnKQ0KDQpOb3QgYWxsIHN5c3RlbXMgaGF2ZSBsc3Njc2ku
+IEhvdyBhYm91dCB1c2luZyAvc3lzL2J1cy9wc2V1ZG8vZHJpdmVycy9zY3NpX2RlYnVnL2FkYXB0
+ZXIwL2hvc3QqDQppbnN0ZWFkPw0KDQo+ICsJcm1tb2Qgc2NzaV9kZWJ1Zw0KDQpQbGVhc2UgY2hl
+Y2sgdGhlIHJtbW9kIHJldHVybiB2YWx1ZSB0byBjYXRjaCB1bmxvYWQgZmFpbHVyZXMgZHVlIHRv
+IGENCnVzZXIgc3BhY2UgcHJvY2VzcyBoYXZpbmcgb3BlbmVkIHRoZSBTQ1NJIGRldmljZSBjcmVh
+dGVkIGJ5IHNjc2lfZGVidWcuDQoNClRoYW5rcywNCg0KQmFydC4=
