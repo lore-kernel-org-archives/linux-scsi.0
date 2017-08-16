@@ -1,49 +1,60 @@
-From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-Subject: Re: [PATCH] scsi: cxlflash: Fix an error handling path in
- 'cxlflash_disk_attach()'
-Date: Wed, 16 Aug 2017 15:32:19 +1000
-Message-ID: <0b3495e0-dd8d-3269-39fe-9f29d751f74b@au1.ibm.com>
-References: <20170815201835.781F76A041@b03ledav003.gho.boulder.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Todd Poynor <toddpoynor@google.com>
+Subject: [PATCH] sg: protect against races between mmap() and SG_SET_RESERVED_SIZE
+Date: Tue, 15 Aug 2017 22:41:08 -0700
+Message-ID: <20170816054108.119890-1-toddpoynor@google.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170815201835.781F76A041@b03ledav003.gho.boulder.ibm.com>
-Content-Language: en-AU
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>, manoj@linux.vnet.ibm.com, mrochs@linux.vnet.ibm.com, ukrishn@linux.vnet.ibm.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Todd Poynor <toddpoynor@google.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 16/08/17 06:18, Christophe JAILLET wrote:
-> 'rc' is known to be 0 at this point.
-> If 'create_context()' fails, returns -ENOMEM instead of 0 which means
-> success.
-> 
-> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Take f_mutex around mmap() processing to protect against races with
+the SG_SET_RESERVED_SIZE ioctl.  Ensure the reserve buffer length
+remains consistent during the mapping operation, and set the
+"mmap called" flag to prevent further changes to the reserved buffer
+size as an atomic operation with the mapping.
 
-ENOMEM seems right here.
+Signed-off-by: Todd Poynor <toddpoynor@google.com>
+---
+ drivers/scsi/sg.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
-Reviewed-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-
-> ---
->   drivers/scsi/cxlflash/superpipe.c | 1 +
->   1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
-> index ad0f9968ccfb..08da593cb2f6 100644
-> --- a/drivers/scsi/cxlflash/superpipe.c
-> +++ b/drivers/scsi/cxlflash/superpipe.c
-> @@ -1390,6 +1390,7 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
->   	if (unlikely(!ctxi)) {
->   		dev_err(dev, "%s: Failed to create context ctxid=%d\n",
->   			__func__, ctxid);
-> +		rc = -ENOMEM;
->   		goto err;
->   	}
->   
-> 
-
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 3a44b4bc872b..a20718e9f1f4 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -1233,6 +1233,7 @@ sg_mmap(struct file *filp, struct vm_area_struct *vma)
+ 	unsigned long req_sz, len, sa;
+ 	Sg_scatter_hold *rsv_schp;
+ 	int k, length;
++        int ret = 0;
+ 
+ 	if ((!filp) || (!vma) || (!(sfp = (Sg_fd *) filp->private_data)))
+ 		return -ENXIO;
+@@ -1243,8 +1244,11 @@ sg_mmap(struct file *filp, struct vm_area_struct *vma)
+ 	if (vma->vm_pgoff)
+ 		return -EINVAL;	/* want no offset */
+ 	rsv_schp = &sfp->reserve;
+-	if (req_sz > rsv_schp->bufflen)
+-		return -ENOMEM;	/* cannot map more than reserved buffer */
++	mutex_lock(&sfp->f_mutex);
++	if (req_sz > rsv_schp->bufflen) {
++		ret = -ENOMEM;	/* cannot map more than reserved buffer */
++		goto out;
++	}
+ 
+ 	sa = vma->vm_start;
+ 	length = 1 << (PAGE_SHIFT + rsv_schp->page_order);
+@@ -1258,7 +1262,9 @@ sg_mmap(struct file *filp, struct vm_area_struct *vma)
+ 	vma->vm_flags |= VM_IO | VM_DONTEXPAND | VM_DONTDUMP;
+ 	vma->vm_private_data = sfp;
+ 	vma->vm_ops = &sg_mmap_vm_ops;
+-	return 0;
++out:
++	mutex_unlock(&sfp->f_mutex);
++	return ret;
+ }
+ 
+ static void
 -- 
-Andrew Donnellan              OzLabs, ADL Canberra
-andrew.donnellan@au1.ibm.com  IBM Australia Limited
+2.14.1.480.gb18f417b89-goog
