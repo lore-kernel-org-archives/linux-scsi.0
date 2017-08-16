@@ -1,14 +1,13 @@
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-Subject: Re: [patch net-next 0/3] net/sched: Improve getting objects by indexes
-Date: Wed, 16 Aug 2017 09:49:07 +0200
-Message-ID: <144b87a3-bbe4-a194-ed83-e54840d7c7c2__39190.6020384797$1502870959$gmane$org@amd.com>
+From: Chris Mi <chrism@mellanox.com>
+Subject: [patch net-next 2/3] net/sched: Change cls_flower to use IDR
+Date: Tue, 15 Aug 2017 22:12:17 -0400
+Message-ID: <1502849538-14284-3-git-send-email-chrism__45804.7799686485$1502870959$gmane$org@mellanox.com>
 References: <1502849538-14284-1-git-send-email-chrism@mellanox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
 In-Reply-To: <1502849538-14284-1-git-send-email-chrism@mellanox.com>
-Content-Language: en-US
 List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux1394-devel>,
  <mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
 List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
@@ -17,231 +16,163 @@ List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
 List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
  <mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
 Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: Chris Mi <chrism@mellanox.com>, netdev@vger.kernel.org
+To: netdev@vger.kernel.org
 Cc: lucho@ionkov.net, sergey.senozhatsky.work@gmail.com, snitzer@redhat.com, wsa@the-dreams.de, markb@mellanox.com, tom.leiming@gmail.com, zhi.a.wang@intel.com, nsekhar@ti.com, dri-devel@lists.freedesktop.org, bfields@fieldses.org, linux-sctp@vger.kernel.org, paulus@samba.org, jinpu.wang@profitbricks.com, pshelar@ovn.org, sumit.semwal@linaro.org, AlexBin.Xie@amd.com, david1.zhou@amd.com, linux-samsung-soc@vger.kernel.org, maximlevitsky@gmail.com, sudarsana.kalluru@qlogic.com, marek.vasut@gmail.com, linux-atm-general@lists.sourceforge.net, dtwlin@gmail.com, michel.daenzer@amd.com, dledford@redhat.com, tpmdd-devel@lists.sourceforge.net, stern@rowland.harvard.edu, longman@redhat.com, niranjana.vishwanathapura@intel.com, philipp.reisner@linbit.com, shli@kernel.org, linux@roeck-us.net, ohad@wizery.com, pmladek@suse.com, dick.kennedy@broadcom.com, linux-pm@vger.kernel.org, ericvh@g
 List-Id: linux-scsi@vger.kernel.org
 
-Am 16.08.2017 um 04:12 schrieb Chris Mi:
-> Using current TC code, it is very slow to insert a lot of rules.
->
-> In order to improve the rules update rate in TC,
-> we introduced the following two changes:
->          1) changed cls_flower to use IDR to manage the filters.
->          2) changed all act_xxx modules to use IDR instead of
->             a small hash table
->
-> But IDR has a limitation that it uses int. TC handle uses u32.
-> To make sure there is no regression, we also changed IDR to use
-> unsigned long. All clients of IDR are changed to use new IDR API.
+Currently, all filters with the same priority are linked in a doubly
+linked list. Every filter should have a unique handle. To make the
+handle unique, we need to iterate the list every time to see if the
+handle exists or not when inserting a new filter. It is time-consuming.
+For example, it takes about 5m3.169s to insert 64K rules.
 
-WOW, wait a second. The idr change is touching a lot of drivers and to 
-be honest doesn't looks correct at all.
+This patch changes cls_flower to use IDR. With this patch, it
+takes about 0m1.127s to insert 64K rules. The improvement is huge.
 
-Just look at the first chunk of your modification:
-> @@ -998,8 +999,9 @@ int bsg_register_queue(struct request_queue *q, struct device *parent,
->   
->   	mutex_lock(&bsg_mutex);
->   
-> -	ret = idr_alloc(&bsg_minor_idr, bcd, 0, BSG_MAX_DEVS, GFP_KERNEL);
-> -	if (ret < 0) {
-> +	ret = idr_alloc(&bsg_minor_idr, bcd, &idr_index, 0, BSG_MAX_DEVS,
-> +			GFP_KERNEL);
-> +	if (ret) {
->   		if (ret == -ENOSPC) {
->   			printk(KERN_ERR "bsg: too many bsg devices\n");
->   			ret = -EINVAL;
-The condition "if (ret)" will now always be true after the first 
-allocation and so we always run into the error handling after that.
+But please note that in this testing, all filters share the same action.
+If every filter has a unique action, that is another bottleneck.
+Follow-up patch in this patchset addresses that.
 
-I've never read the bsg code before, but that's certainly not correct. 
-And that incorrect pattern repeats over and over again in this code.
+Signed-off-by: Chris Mi <chrism@mellanox.com>
+Signed-off-by: Jiri Pirko <jiri@mellanox.com>
+---
+ net/sched/cls_flower.c | 55 +++++++++++++++++++++-----------------------------
+ 1 file changed, 23 insertions(+), 32 deletions(-)
 
-Apart from that why the heck do you want to allocate more than 1<<31 
-handles?
-
-Regards,
-Christian.
-
->
-> Chris Mi (3):
->    idr: Use unsigned long instead of int
->    net/sched: Change cls_flower to use IDR
->    net/sched: Change act_api and act_xxx modules to use IDR
->
->   block/bsg.c                                     |   8 +-
->   block/genhd.c                                   |  12 +-
->   drivers/atm/nicstar.c                           |  11 +-
->   drivers/block/drbd/drbd_main.c                  |  31 +--
->   drivers/block/drbd/drbd_nl.c                    |  22 ++-
->   drivers/block/drbd/drbd_proc.c                  |   3 +-
->   drivers/block/drbd/drbd_receiver.c              |  15 +-
->   drivers/block/drbd/drbd_state.c                 |  34 ++--
->   drivers/block/drbd/drbd_worker.c                |   6 +-
->   drivers/block/loop.c                            |  17 +-
->   drivers/block/nbd.c                             |  20 +-
->   drivers/block/zram/zram_drv.c                   |   9 +-
->   drivers/char/tpm/tpm-chip.c                     |  10 +-
->   drivers/char/tpm/tpm.h                          |   2 +-
->   drivers/dca/dca-sysfs.c                         |   9 +-
->   drivers/firewire/core-cdev.c                    |  18 +-
->   drivers/firewire/core-device.c                  |  15 +-
->   drivers/gpu/drm/amd/amdgpu/amdgpu_bo_list.c     |   8 +-
->   drivers/gpu/drm/amd/amdgpu/amdgpu_ctx.c         |   9 +-
->   drivers/gpu/drm/amd/amdgpu/amdgpu_gem.c         |   6 +-
->   drivers/gpu/drm/amd/amdgpu/amdgpu_kms.c         |   2 +-
->   drivers/gpu/drm/drm_auth.c                      |   9 +-
->   drivers/gpu/drm/drm_connector.c                 |  10 +-
->   drivers/gpu/drm/drm_context.c                   |  20 +-
->   drivers/gpu/drm/drm_dp_aux_dev.c                |  11 +-
->   drivers/gpu/drm/drm_drv.c                       |   6 +-
->   drivers/gpu/drm/drm_gem.c                       |  19 +-
->   drivers/gpu/drm/drm_info.c                      |   2 +-
->   drivers/gpu/drm/drm_mode_object.c               |  11 +-
->   drivers/gpu/drm/drm_syncobj.c                   |  18 +-
->   drivers/gpu/drm/exynos/exynos_drm_ipp.c         |  25 ++-
->   drivers/gpu/drm/i915/gvt/display.c              |   2 +-
->   drivers/gpu/drm/i915/gvt/kvmgt.c                |   2 +-
->   drivers/gpu/drm/i915/gvt/vgpu.c                 |   9 +-
->   drivers/gpu/drm/i915/i915_debugfs.c             |   6 +-
->   drivers/gpu/drm/i915/i915_gem_context.c         |   9 +-
->   drivers/gpu/drm/qxl/qxl_cmd.c                   |   8 +-
->   drivers/gpu/drm/qxl/qxl_release.c               |  14 +-
->   drivers/gpu/drm/sis/sis_mm.c                    |   8 +-
->   drivers/gpu/drm/tegra/drm.c                     |  10 +-
->   drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c    |   3 +-
->   drivers/gpu/drm/vgem/vgem_fence.c               |  12 +-
->   drivers/gpu/drm/via/via_mm.c                    |   8 +-
->   drivers/gpu/drm/virtio/virtgpu_kms.c            |   5 +-
->   drivers/gpu/drm/virtio/virtgpu_vq.c             |   5 +-
->   drivers/gpu/drm/vmwgfx/vmwgfx_resource.c        |   9 +-
->   drivers/i2c/i2c-core-base.c                     |  19 +-
->   drivers/infiniband/core/cm.c                    |   8 +-
->   drivers/infiniband/core/cma.c                   |  12 +-
->   drivers/infiniband/core/rdma_core.c             |   9 +-
->   drivers/infiniband/core/sa_query.c              |  23 +--
->   drivers/infiniband/core/ucm.c                   |   7 +-
->   drivers/infiniband/core/ucma.c                  |  14 +-
->   drivers/infiniband/hw/cxgb3/iwch.c              |   4 +-
->   drivers/infiniband/hw/cxgb3/iwch.h              |   4 +-
->   drivers/infiniband/hw/cxgb4/device.c            |  18 +-
->   drivers/infiniband/hw/cxgb4/iw_cxgb4.h          |   4 +-
->   drivers/infiniband/hw/hfi1/init.c               |   9 +-
->   drivers/infiniband/hw/hfi1/vnic_main.c          |   6 +-
->   drivers/infiniband/hw/mlx4/cm.c                 |  13 +-
->   drivers/infiniband/hw/ocrdma/ocrdma_main.c      |   7 +-
->   drivers/infiniband/hw/qib/qib_init.c            |   9 +-
->   drivers/infiniband/ulp/opa_vnic/opa_vnic_vema.c |  10 +-
->   drivers/iommu/intel-svm.c                       |   9 +-
->   drivers/md/dm.c                                 |  13 +-
->   drivers/memstick/core/memstick.c                |  10 +-
->   drivers/memstick/core/ms_block.c                |   9 +-
->   drivers/memstick/core/mspro_block.c             |  12 +-
->   drivers/mfd/rtsx_pcr.c                          |   9 +-
->   drivers/misc/c2port/core.c                      |   7 +-
->   drivers/misc/cxl/context.c                      |   8 +-
->   drivers/misc/cxl/main.c                         |  15 +-
->   drivers/misc/mei/main.c                         |   8 +-
->   drivers/misc/mic/scif/scif_api.c                |  11 +-
->   drivers/misc/mic/scif/scif_ports.c              |  18 +-
->   drivers/misc/tifm_core.c                        |   9 +-
->   drivers/mtd/mtdcore.c                           |   9 +-
->   drivers/mtd/mtdcore.h                           |   2 +-
->   drivers/mtd/ubi/block.c                         |   7 +-
->   drivers/net/ppp/ppp_generic.c                   |  27 +--
->   drivers/net/tap.c                               |  10 +-
->   drivers/net/wireless/ath/ath10k/htt.h           |   3 +-
->   drivers/net/wireless/ath/ath10k/htt_tx.c        |  22 ++-
->   drivers/net/wireless/ath/ath10k/mac.c           |   2 +-
->   drivers/net/wireless/marvell/mwifiex/main.c     |  13 +-
->   drivers/net/wireless/marvell/mwifiex/wmm.c      |   2 +-
->   drivers/of/overlay.c                            |  15 +-
->   drivers/of/unittest.c                           |  25 ++-
->   drivers/power/supply/bq2415x_charger.c          |  16 +-
->   drivers/power/supply/bq27xxx_battery_i2c.c      |  15 +-
->   drivers/power/supply/ds2782_battery.c           |   9 +-
->   drivers/powercap/powercap_sys.c                 |   8 +-
->   drivers/pps/pps.c                               |  10 +-
->   drivers/rapidio/rio_cm.c                        |  17 +-
->   drivers/remoteproc/remoteproc_core.c            |   8 +-
->   drivers/rpmsg/virtio_rpmsg_bus.c                |   8 +-
->   drivers/scsi/bfa/bfad_im.c                      |   8 +-
->   drivers/scsi/ch.c                               |   8 +-
->   drivers/scsi/lpfc/lpfc_crtn.h                   |   2 +-
->   drivers/scsi/lpfc/lpfc_init.c                   |  11 +-
->   drivers/scsi/lpfc/lpfc_vport.c                  |   8 +-
->   drivers/scsi/sg.c                               |  10 +-
->   drivers/scsi/st.c                               |   8 +-
->   drivers/staging/greybus/uart.c                  |  22 +--
->   drivers/staging/unisys/visorhba/visorhba_main.c |   7 +-
->   drivers/target/iscsi/iscsi_target.c             |   7 +-
->   drivers/target/iscsi/iscsi_target_login.c       |   9 +-
->   drivers/target/target_core_device.c             |   9 +-
->   drivers/target/target_core_user.c               |  13 +-
->   drivers/tee/tee_shm.c                           |   8 +-
->   drivers/uio/uio.c                               |   9 +-
->   drivers/usb/class/cdc-acm.c                     |  24 +--
->   drivers/usb/core/devices.c                      |   2 +-
->   drivers/usb/core/hcd.c                          |   7 +-
->   drivers/usb/mon/mon_main.c                      |   3 +-
->   drivers/usb/serial/usb-serial.c                 |  11 +-
->   drivers/vfio/vfio.c                             |  15 +-
->   fs/dlm/lock.c                                   |   9 +-
->   fs/dlm/lockspace.c                              |   6 +-
->   fs/dlm/recover.c                                |  10 +-
->   fs/nfs/nfs4client.c                             |   9 +-
->   fs/nfsd/nfs4state.c                             |   8 +-
->   fs/notify/inotify/inotify_fsnotify.c            |   4 +-
->   fs/notify/inotify/inotify_user.c                |   9 +-
->   fs/ocfs2/cluster/tcp.c                          |  10 +-
->   include/linux/idr.h                             |  26 +--
->   include/linux/of.h                              |   4 +-
->   include/linux/radix-tree.h                      |   2 +-
->   include/net/9p/9p.h                             |   2 +-
->   include/net/act_api.h                           |  76 +++-----
->   ipc/msg.c                                       |   2 +-
->   ipc/sem.c                                       |   2 +-
->   ipc/shm.c                                       |   4 +-
->   ipc/util.c                                      |  17 +-
->   kernel/bpf/syscall.c                            |  20 +-
->   kernel/cgroup/cgroup.c                          |  57 +++---
->   kernel/events/core.c                            |  10 +-
->   kernel/workqueue.c                              |  15 +-
->   lib/idr.c                                       |  38 ++--
->   lib/radix-tree.c                                |   5 +-
->   mm/memcontrol.c                                 |  11 +-
->   net/9p/client.c                                 |  17 +-
->   net/9p/util.c                                   |  14 +-
->   net/core/net_namespace.c                        |  23 ++-
->   net/mac80211/cfg.c                              |  23 +--
->   net/mac80211/iface.c                            |   3 +-
->   net/mac80211/main.c                             |   2 +-
->   net/mac80211/tx.c                               |   7 +-
->   net/mac80211/util.c                             |   3 +-
->   net/netlink/genetlink.c                         |  18 +-
->   net/qrtr/qrtr.c                                 |  21 +-
->   net/rxrpc/conn_client.c                         |  15 +-
->   net/sched/act_api.c                             | 249 +++++++++++-------------
->   net/sched/act_bpf.c                             |  17 +-
->   net/sched/act_connmark.c                        |  16 +-
->   net/sched/act_csum.c                            |  16 +-
->   net/sched/act_gact.c                            |  16 +-
->   net/sched/act_ife.c                             |  20 +-
->   net/sched/act_ipt.c                             |  26 ++-
->   net/sched/act_mirred.c                          |  19 +-
->   net/sched/act_nat.c                             |  16 +-
->   net/sched/act_pedit.c                           |  18 +-
->   net/sched/act_police.c                          |  18 +-
->   net/sched/act_sample.c                          |  17 +-
->   net/sched/act_simple.c                          |  20 +-
->   net/sched/act_skbedit.c                         |  18 +-
->   net/sched/act_skbmod.c                          |  18 +-
->   net/sched/act_tunnel_key.c                      |  20 +-
->   net/sched/act_vlan.c                            |  22 +--
->   net/sched/cls_flower.c                          |  55 +++---
->   net/sctp/associola.c                            |   8 +-
->   net/tipc/server.c                               |   7 +-
->   172 files changed, 1256 insertions(+), 1113 deletions(-)
->
+diff --git a/net/sched/cls_flower.c b/net/sched/cls_flower.c
+index 052e902..071f0ef 100644
+--- a/net/sched/cls_flower.c
++++ b/net/sched/cls_flower.c
+@@ -68,7 +68,6 @@ struct cls_fl_head {
+ 	struct rhashtable ht;
+ 	struct fl_flow_mask mask;
+ 	struct flow_dissector dissector;
+-	u32 hgen;
+ 	bool mask_assigned;
+ 	struct list_head filters;
+ 	struct rhashtable_params ht_params;
+@@ -76,6 +75,7 @@ struct cls_fl_head {
+ 		struct work_struct work;
+ 		struct rcu_head	rcu;
+ 	};
++	struct idr handle_idr;
+ };
+ 
+ struct cls_fl_filter {
+@@ -210,6 +210,7 @@ static int fl_init(struct tcf_proto *tp)
+ 
+ 	INIT_LIST_HEAD_RCU(&head->filters);
+ 	rcu_assign_pointer(tp->root, head);
++	idr_init(&head->handle_idr);
+ 
+ 	return 0;
+ }
+@@ -295,6 +296,9 @@ static void fl_hw_update_stats(struct tcf_proto *tp, struct cls_fl_filter *f)
+ 
+ static void __fl_delete(struct tcf_proto *tp, struct cls_fl_filter *f)
+ {
++	struct cls_fl_head *head = rtnl_dereference(tp->root);
++
++	idr_remove(&head->handle_idr, f->handle);
+ 	list_del_rcu(&f->list);
+ 	if (!tc_skip_hw(f->flags))
+ 		fl_hw_destroy_filter(tp, f);
+@@ -327,6 +331,7 @@ static void fl_destroy(struct tcf_proto *tp)
+ 
+ 	list_for_each_entry_safe(f, next, &head->filters, list)
+ 		__fl_delete(tp, f);
++	idr_destroy(&head->handle_idr);
+ 
+ 	__module_get(THIS_MODULE);
+ 	call_rcu(&head->rcu, fl_destroy_rcu);
+@@ -335,12 +340,8 @@ static void fl_destroy(struct tcf_proto *tp)
+ static void *fl_get(struct tcf_proto *tp, u32 handle)
+ {
+ 	struct cls_fl_head *head = rtnl_dereference(tp->root);
+-	struct cls_fl_filter *f;
+ 
+-	list_for_each_entry(f, &head->filters, list)
+-		if (f->handle == handle)
+-			return f;
+-	return NULL;
++	return idr_find(&head->handle_idr, handle);
+ }
+ 
+ static const struct nla_policy fl_policy[TCA_FLOWER_MAX + 1] = {
+@@ -859,27 +860,6 @@ static int fl_set_parms(struct net *net, struct tcf_proto *tp,
+ 	return 0;
+ }
+ 
+-static u32 fl_grab_new_handle(struct tcf_proto *tp,
+-			      struct cls_fl_head *head)
+-{
+-	unsigned int i = 0x80000000;
+-	u32 handle;
+-
+-	do {
+-		if (++head->hgen == 0x7FFFFFFF)
+-			head->hgen = 1;
+-	} while (--i > 0 && fl_get(tp, head->hgen));
+-
+-	if (unlikely(i == 0)) {
+-		pr_err("Insufficient number of handles\n");
+-		handle = 0;
+-	} else {
+-		handle = head->hgen;
+-	}
+-
+-	return handle;
+-}
+-
+ static int fl_change(struct net *net, struct sk_buff *in_skb,
+ 		     struct tcf_proto *tp, unsigned long base,
+ 		     u32 handle, struct nlattr **tca,
+@@ -890,6 +870,7 @@ static int fl_change(struct net *net, struct sk_buff *in_skb,
+ 	struct cls_fl_filter *fnew;
+ 	struct nlattr **tb;
+ 	struct fl_flow_mask mask = {};
++	unsigned long idr_index;
+ 	int err;
+ 
+ 	if (!tca[TCA_OPTIONS])
+@@ -920,13 +901,21 @@ static int fl_change(struct net *net, struct sk_buff *in_skb,
+ 		goto errout;
+ 
+ 	if (!handle) {
+-		handle = fl_grab_new_handle(tp, head);
+-		if (!handle) {
+-			err = -EINVAL;
++		err = idr_alloc(&head->handle_idr, fnew, &idr_index,
++				1, 0x80000000, GFP_KERNEL);
++		if (err)
+ 			goto errout;
+-		}
++		fnew->handle = idr_index;
++	}
++
++	/* user specifies a handle and it doesn't exist */
++	if (handle && !fold) {
++		err = idr_alloc(&head->handle_idr, fnew, &idr_index,
++				handle, handle + 1, GFP_KERNEL);
++		if (err)
++			goto errout;
++		fnew->handle = idr_index;
+ 	}
+-	fnew->handle = handle;
+ 
+ 	if (tb[TCA_FLOWER_FLAGS]) {
+ 		fnew->flags = nla_get_u32(tb[TCA_FLOWER_FLAGS]);
+@@ -980,6 +969,8 @@ static int fl_change(struct net *net, struct sk_buff *in_skb,
+ 	*arg = fnew;
+ 
+ 	if (fold) {
++		fnew->handle = handle;
++		idr_replace(&head->handle_idr, fnew, fnew->handle);
+ 		list_replace_rcu(&fold->list, &fnew->list);
+ 		tcf_unbind_filter(tp, &fold->res);
+ 		call_rcu(&fold->rcu, fl_destroy_filter);
+-- 
+1.8.3.1
 
 
 ------------------------------------------------------------------------------
