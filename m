@@ -1,36 +1,49 @@
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Subject: [PATCH] scsi: aha1542: constify pnp_device_id
-Date: Wed, 16 Aug 2017 10:29:24 +0530
-Message-ID: <d2863c89b54410bbf26e455fac4d61fb63f8641c.1502859040.git.arvind.yadav.cs@gmail.com>
-References: <60c34272432b3411cd5d55728c62481e133f32a6.1502859040.git.arvind.yadav.cs@gmail.com>
+From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+Subject: Re: [PATCH] scsi: cxlflash: Fix an error handling path in
+ 'cxlflash_disk_attach()'
+Date: Wed, 16 Aug 2017 15:32:19 +1000
+Message-ID: <0b3495e0-dd8d-3269-39fe-9f29d751f74b@au1.ibm.com>
+References: <20170815201835.781F76A041@b03ledav003.gho.boulder.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <60c34272432b3411cd5d55728c62481e133f32a6.1502859040.git.arvind.yadav.cs@gmail.com>
+In-Reply-To: <20170815201835.781F76A041@b03ledav003.gho.boulder.ibm.com>
+Content-Language: en-AU
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>, manoj@linux.vnet.ibm.com, mrochs@linux.vnet.ibm.com, ukrishn@linux.vnet.ibm.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-pnp_device_id are not supposed to change at runtime. All functions
-working with pnp_device_id provided by <linux/pnp.h> work with
-const pnp_device_id. So mark the non-const structs as const.
+On 16/08/17 06:18, Christophe JAILLET wrote:
+> 'rc' is known to be 0 at this point.
+> If 'create_context()' fails, returns -ENOMEM instead of 0 which means
+> success.
+> 
+> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
- drivers/scsi/aha1542.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ENOMEM seems right here.
 
-diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
-index a23cc9a..1242179 100644
---- a/drivers/scsi/aha1542.c
-+++ b/drivers/scsi/aha1542.c
-@@ -986,7 +986,7 @@ static struct isa_driver aha1542_isa_driver = {
- static int isa_registered;
- 
- #ifdef CONFIG_PNP
--static struct pnp_device_id aha1542_pnp_ids[] = {
-+static const struct pnp_device_id aha1542_pnp_ids[] = {
- 	{ .id = "ADP1542" },
- 	{ .id = "" }
- };
+Reviewed-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+
+> ---
+>   drivers/scsi/cxlflash/superpipe.c | 1 +
+>   1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
+> index ad0f9968ccfb..08da593cb2f6 100644
+> --- a/drivers/scsi/cxlflash/superpipe.c
+> +++ b/drivers/scsi/cxlflash/superpipe.c
+> @@ -1390,6 +1390,7 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
+>   	if (unlikely(!ctxi)) {
+>   		dev_err(dev, "%s: Failed to create context ctxid=%d\n",
+>   			__func__, ctxid);
+> +		rc = -ENOMEM;
+>   		goto err;
+>   	}
+>   
+> 
+
 -- 
-2.7.4
+Andrew Donnellan              OzLabs, ADL Canberra
+andrew.donnellan@au1.ibm.com  IBM Australia Limited
