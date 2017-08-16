@@ -1,27 +1,68 @@
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: Re: [PATCH] scsi: cxlflash: Fix an error handling path in
- 'cxlflash_disk_attach()'
-Date: Tue, 15 Aug 2017 19:21:31 -0500
-Message-ID: <D62EAC69-693C-4231-95F9-B48F47AB241C@linux.vnet.ibm.com>
-References: <20170815201814.12929-1-christophe.jaillet@wanadoo.fr>
-Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+From: Omar Sandoval <osandov@osandov.com>
+Subject: Re: [PATCH 1/2] tests/scsi: add SCSI midlayer test group
+Date: Tue, 15 Aug 2017 18:14:05 -0700
+Message-ID: <20170816011405.GA6005@vader>
+References: <1502275806-27972-1-git-send-email-hare@suse.de>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170815201814.12929-1-christophe.jaillet@wanadoo.fr>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc: "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pg0-f44.google.com ([74.125.83.44]:38387 "EHLO
+        mail-pg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752148AbdHPBOH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Aug 2017 21:14:07 -0400
+Received: by mail-pg0-f44.google.com with SMTP id l64so15814188pge.5
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Aug 2017 18:14:07 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1502275806-27972-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Omar Sandoval <osandov@fb.com>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Hannes Reinecke <hare@suse.com>
 
-> On Aug 15, 2017, at 3:18 PM, Christophe JAILLET <christophe.jaillet@wanadoo.fr> wrote:
+On Wed, Aug 09, 2017 at 12:50:05PM +0200, Hannes Reinecke wrote:
+> Add a test group for tests of the SCSI midlayer.
 > 
-> 'rc' is known to be 0 at this point.
-> If 'create_context()' fails, returns -ENOMEM instead of 0 which means
-> success.
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> ---
+>  tests/scsi/group | 26 ++++++++++++++++++++++++++
+>  1 file changed, 26 insertions(+)
+>  create mode 100644 tests/scsi/group
 > 
-> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+> diff --git a/tests/scsi/group b/tests/scsi/group
+> new file mode 100644
+> index 0000000..73459a6
+> --- /dev/null
+> +++ b/tests/scsi/group
+> @@ -0,0 +1,26 @@
+> +#!/bin/bash
+> +#
+> +# SCSI regression tests
+> +#
+> +# Copyright (C) 2017 Hannes Reinecke, SUSE Linux GmbH
+> +#
+> +# This program is free software: you can redistribute it and/or modify
+> +# it under the terms of the GNU General Public License as published by
+> +# the Free Software Foundation, either version 3 of the License, or
+> +# (at your option) any later version.
+> +#
+> +# This program is distributed in the hope that it will be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+> +
+> +#
+> +# Usually, group_requires() just needs to check that any necessary programs and
+> +# kernel features are available using the _have_foo helpers. If
+> +# group_requires() returns non-zero, all tests in this group will be skipped.
 
-Yep, that's a bug.
+This comment should have been removed, looks fine otherwise.
 
-Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+> +group_requires() {
+> +	_have_root
+> +}
+> -- 
+> 1.8.5.6
+> 
