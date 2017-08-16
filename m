@@ -1,62 +1,38 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] megaraid_sas: boot hangs while LD is offline
-Date: Wed, 16 Aug 2017 15:06:40 +0200
-Message-ID: <4fd0ff13-e297-a22c-8c15-72e70e34bc11@suse.de>
-References: <1502798355-59330-1-git-send-email-hare@suse.de>
- <b3be70b1e3e6a64e95b846b94830dbe2@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+From: Varun Prakash <varun@chelsio.com>
+Subject: [PATCH] scsi: cxgb4i: call neigh_event_send() to update MAC address
+Date: Wed, 16 Aug 2017 19:40:32 +0530
+Message-ID: <1502892632-6563-1-git-send-email-varun@chelsio.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47647 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752166AbdHPNGn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 16 Aug 2017 09:06:43 -0400
-In-Reply-To: <b3be70b1e3e6a64e95b846b94830dbe2@mail.gmail.com>
-Content-Language: en-US
+Received: from stargate.chelsio.com ([12.32.117.8]:40439 "EHLO
+        stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751893AbdHPOKw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Aug 2017 10:10:52 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sumit Saxena <sumit.saxena@broadcom.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Kashyap Desai <kashyap.desai@broadcom.com>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+To: martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, indranil@chelsio.com, varun@chelsio.com
 
-On 08/16/2017 03:05 PM, Sumit Saxena wrote:
->> -----Original Message-----
->> From: Hannes Reinecke [mailto:hare@suse.de]
->> Sent: Tuesday, August 15, 2017 5:29 PM
->> To: Martin K. Petersen
->> Cc: Christoph Hellwig; James Bottomley; Sumit Saxena; Kashyap Desai;
->> megaraidlinux.pdl@broadcom.com; linux-scsi@vger.kernel.org; Hannes
->> Reinecke; Hannes Reinecke
->> Subject: [PATCH] megaraid_sas: boot hangs while LD is offline
->>
->> Offline Logical drives (LDs) should not allowed to be visible to the OS,
-> as the
->> OS will hang trying to send commands to it.
->> This patch skips offline LDs like it already does for non-system physical
-> drives
->> (PDs).
-> 
-> Hi Hannes,
-> 
-> You have submitted this patch in past as it was part of SLES kernel but
-> missing in upstream and it was concluded to drop this patch then.
-> This issue was fixed in firmware 4 years back and many firmware versions
-> should be available with the fix so this fix is not required in
-> driver(upstream
-> as well SLES kernel). Do you see any functional issue without this patch ?
-> If not, I would request  to back out this patch from SLES kernel also.
-> 
-Okay, if you say so.
-Will be removing it.
+If nud_state is not valid then call neigh_event_send()
+to update MAC address.
 
-Martin, please drop this patch.
+Signed-off-by: Varun Prakash <varun@chelsio.com>
+---
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Cheers,
-
-Hannes
+diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+index a69a9ac..1d02cf9 100644
+--- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
++++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+@@ -1635,6 +1635,9 @@ static int init_act_open(struct cxgbi_sock *csk)
+ 		goto rel_resource;
+ 	}
+ 
++	if (!(n->nud_state & NUD_VALID))
++		neigh_event_send(n, NULL);
++
+ 	csk->atid = cxgb4_alloc_atid(lldi->tids, csk);
+ 	if (csk->atid < 0) {
+ 		pr_err("%s, NO atid available.\n", ndev->name);
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+2.0.2
