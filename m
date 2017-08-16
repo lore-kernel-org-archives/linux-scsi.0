@@ -1,154 +1,83 @@
-From: Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: RE: [PATCH] megaraid_sas: Fallback to older scanning if no disks are found
-Date: Wed, 16 Aug 2017 17:59:37 +0530
-Message-ID: <4fa7815961b42046badf9169f4e06cb0@mail.gmail.com>
-References: <1502798740-69337-1-git-send-email-hare@suse.de>
+From: Chris Wilson <chris@chris-wilson.co.uk>
+Subject: Re: [patch net-next 0/3] net/sched: Improve getting objects by indexes
+Date: Wed, 16 Aug 2017 10:19:53 +0100
+Message-ID: <150287519355.15499.3124883464555211520__39224.6026000523$1502888120$gmane$org@mail.alporthouse.com>
+References: <1502849538-14284-1-git-send-email-chrism@mellanox.com>
+ <144b87a3-bbe4-a194-ed83-e54840d7c7c2@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:34776 "EHLO
-        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751461AbdHPM3k (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Aug 2017 08:29:40 -0400
-Received: by mail-oi0-f53.google.com with SMTP id x3so34261582oia.1
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Aug 2017 05:29:39 -0700 (PDT)
-In-Reply-To: <1502798740-69337-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <144b87a3-bbe4-a194-ed83-e54840d7c7c2@amd.com>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: =?utf-8?q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, Chris Mi <chrism@mellanox.com>, netdev@vger.kernel.org
+Cc: lucho@ionkov.net, sergey.senozhatsky.work@gmail.com, snitzer@redhat.com, wsa@the-dreams.de, markb@mellanox.com, tom.leiming@gmail.com, stefanr@s5r6.in-berlin.de, zhi.a.wang@intel.com, nsekhar@ti.com, dri-devel@lists.freedesktop.org, bfields@fieldses.org, linux-sctp@vger.kernel.org, paulus@samba.org, jinpu.wang@profitbricks.com, pshelar@ovn.org, sumit.semwal@linaro.org, AlexBin.Xie@amd.com, david1.zhou@amd.com, linux-samsung-soc@vger.kernel.org, maximlevitsky@gmail.com, sudarsana.kalluru@qlogic.com, marek.vasut@gmail.com, linux-atm-general@lists.sourceforge.net, dtwlin@gmail.com, michel.daenzer@amd.com, dledford@redhat.com, tpmdd-devel@lists.sourceforge.net, stern@rowland.harvard.edu, longman@redhat.com, niranjana.vishwanathapura@intel.com, philipp.reisner@linbit.com, shli@kernel.org, linux@roeck-us.net, ohad@wizery.com, pmladek@suse.com, dick.kennedy@broadcom.comlinux-
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Kashyap Desai <kashyap.desai@broadcom.com>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org
 
->-----Original Message-----
->From: Hannes Reinecke [mailto:hare@suse.de]
->Sent: Tuesday, August 15, 2017 5:36 PM
->To: Martin K. Petersen
->Cc: Christoph Hellwig; James Bottomley; Sumit Saxena; Kashyap Desai;
->megaraidlinux.pdl@broadcom.com; linux-scsi@vger.kernel.org; Hannes
->Reinecke
->Subject: [PATCH] megaraid_sas: Fallback to older scanning if no disks are
->found
->
->commit 21c9e160a51383d4cb0b882398534b0c95c0cc3b implemented a new
->driver lookup using the MR_DCMD_LD_LIST_QUERY firmware command.
->However, this command might not work properly on older firmware, causing
->the command to return no drives instead of an error.
->This causes a regression on older firmware as the driver will no longer
-detect
->any drives.
->This patch checks if MR_DCMD_LD_LIST_QUERY return no drives, and falls
->back to the original method if so.
->
->Signed-off-by: Hannes Reinecke <hare@suse.de>
->---
-> drivers/scsi/megaraid/megaraid_sas_base.c | 29
->+++++++++++++++++++++++------
-> 1 file changed, 23 insertions(+), 6 deletions(-)
->
->diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
->b/drivers/scsi/megaraid/megaraid_sas_base.c
->index 39b08fc..a1cf2c3 100644
->--- a/drivers/scsi/megaraid/megaraid_sas_base.c
->+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
->@@ -4502,7 +4502,6 @@ int megasas_alloc_cmds(struct megasas_instance
->*instance)
-> 		dev_info(&instance->pdev->dev,
-> 			"DCMD not supported by firmware - %s %d\n",
-> 				__func__, __LINE__);
->-		ret = megasas_get_ld_list(instance);
-> 		break;
-> 	case DCMD_TIMEOUT:
-> 		switch (dcmd_timeout_ocr_possible(instance)) { @@ -4530,6
->+4529,14 @@ int megasas_alloc_cmds(struct megasas_instance *instance)
-> 		break;
-> 	case DCMD_SUCCESS:
-> 		tgtid_count = le32_to_cpu(ci->count);
->+		/*
->+		 * Some older firmware return '0' if the LD LIST QUERY
->+		 * command is not supported.
->+		 */
->+		if (tgtid_count == 0) {
->+			ret = DCMD_FAILED;
->+			break;
->+		}
+Quoting Christian K=C3=B6nig (2017-08-16 08:49:07)
+> Am 16.08.2017 um 04:12 schrieb Chris Mi:
+> > Using current TC code, it is very slow to insert a lot of rules.
+> >
+> > In order to improve the rules update rate in TC,
+> > we introduced the following two changes:
+> >          1) changed cls_flower to use IDR to manage the filters.
+> >          2) changed all act_xxx modules to use IDR instead of
+> >             a small hash table
+> >
+> > But IDR has a limitation that it uses int. TC handle uses u32.
+> > To make sure there is no regression, we also changed IDR to use
+> > unsigned long. All clients of IDR are changed to use new IDR API.
+> =
 
-If firmware does not support LD_LIST_QUERY,  "DCMD_FAILED" should be
-returned by megasas_issue_blocked_cmd
-(function which fires command to firmware) instead of DCMD_SCCESS.
-Can you please help with older firmware version which returns
-DCMD_SUCCESS(0) if LD_LIST_QUERY is not supported ?
+> WOW, wait a second. The idr change is touching a lot of drivers and to =
 
-"tgtid_count" may be zero(in case of no logical disks configured) even
-when firmware supports LD LIST QUERY
-and in that case also driver will fire old command by calling
-megasas_get_ld_list() but that's not a problem.
+> be honest doesn't looks correct at all.
+> =
 
-Thanks,
-Sumit
+> Just look at the first chunk of your modification:
+> > @@ -998,8 +999,9 @@ int bsg_register_queue(struct request_queue *q, str=
+uct device *parent,
+> >   =
 
->
-> 		if ((tgtid_count > (instance->fw_supported_vd_count)))
-> 			break;
->@@ -5146,7 +5153,7 @@ static int megasas_init_fw(struct megasas_instance
->*instance)
-> 	struct megasas_register_set __iomem *reg_set;
-> 	struct megasas_ctrl_info *ctrl_info = NULL;
-> 	unsigned long bar_list;
->-	int i, j, loop, fw_msix_count = 0;
->+	int i, j, loop, fw_msix_count = 0, ret;
-> 	struct IOV_111 *iovPtr;
-> 	struct fusion_context *fusion;
->
->@@ -5384,8 +5391,11 @@ static int megasas_init_fw(struct megasas_instance
->*instance)
-> 		}
-> 	}
->
->-	if (megasas_ld_list_query(instance,
->-				  MR_LD_QUERY_TYPE_EXPOSED_TO_HOST))
->+	ret = megasas_ld_list_query(instance,
->+				    MR_LD_QUERY_TYPE_EXPOSED_TO_HOST);
->+	if (ret == DCMD_FAILED)
->+		ret = megasas_get_ld_list(instance);
->+	if (ret)
-> 		goto fail_get_ld_pd_list;
->
-> 	/*
->@@ -7426,8 +7436,12 @@ static inline void
->megasas_remove_scsi_device(struct scsi_device *sdev)
-> 		case MR_EVT_LD_DELETED:
-> 		case MR_EVT_LD_CREATED:
-> 			if (!instance->requestorId ||
->-				(instance->requestorId &&
->megasas_get_ld_vf_affiliation(instance, 0)))
->+			    (instance->requestorId &&
->+			     megasas_get_ld_vf_affiliation(instance, 0)))
-{
-> 				dcmd_ret = megasas_ld_list_query(instance,
->MR_LD_QUERY_TYPE_EXPOSED_TO_HOST);
->+				if (dcmd_ret == DCMD_FAILED)
->+					dcmd_ret =
->megasas_get_ld_list(instance);
->+			}
->
-> 			if (dcmd_ret == DCMD_SUCCESS)
-> 				doscan = SCAN_VD_CHANNEL;
->@@ -7443,8 +7457,11 @@ static inline void
->megasas_remove_scsi_device(struct scsi_device *sdev)
-> 				break;
->
-> 			if (!instance->requestorId ||
->-				(instance->requestorId &&
->megasas_get_ld_vf_affiliation(instance, 0)))
->+			    (instance->requestorId &&
->+megasas_get_ld_vf_affiliation(instance, 0))) {
-> 				dcmd_ret = megasas_ld_list_query(instance,
->MR_LD_QUERY_TYPE_EXPOSED_TO_HOST);
->+				if (dcmd_ret == DCMD_FAILED)
->+					dcmd_ret =
->megasas_get_ld_list(instance);
->+			}
->
-> 			if (dcmd_ret != DCMD_SUCCESS)
-> 				break;
->--
->1.8.5.6
+> >       mutex_lock(&bsg_mutex);
+> >   =
+
+> > -     ret =3D idr_alloc(&bsg_minor_idr, bcd, 0, BSG_MAX_DEVS, GFP_KERNE=
+L);
+> > -     if (ret < 0) {
+> > +     ret =3D idr_alloc(&bsg_minor_idr, bcd, &idr_index, 0, BSG_MAX_DEV=
+S,
+> > +                     GFP_KERNEL);
+> > +     if (ret) {
+> >               if (ret =3D=3D -ENOSPC) {
+> >                       printk(KERN_ERR "bsg: too many bsg devices\n");
+> >                       ret =3D -EINVAL;
+> The condition "if (ret)" will now always be true after the first =
+
+> allocation and so we always run into the error handling after that.
+
+ret is now purely the error code, so it doesn't look that suspicious.
+
+> I've never read the bsg code before, but that's certainly not correct. =
+
+> And that incorrect pattern repeats over and over again in this code.
+> =
+
+> Apart from that why the heck do you want to allocate more than 1<<31 =
+
+> handles?
+
+And more to the point, arbitrarily changing the maximum to ULONG_MAX
+where the ABI only supports U32_MAX is dangerous. Unless you do the
+analysis otherwise, you have to replace all the end=3D0 with end=3DINT_MAX
+to maintain existing behaviour.
+-Chris
