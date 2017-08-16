@@ -1,66 +1,154 @@
-From: Chris Wilson <chris@chris-wilson.co.uk>
-Subject: Re: [patch net-next 0/3] net/sched: Improve getting objects by indexes
-Date: Wed, 16 Aug 2017 10:19:53 +0100
-Message-ID: <150287519355.15499.3124883464555211520__8125.15353686667$1502886315$gmane$org@mail.alporthouse.com>
-References: <1502849538-14284-1-git-send-email-chrism@mellanox.com>
- <144b87a3-bbe4-a194-ed83-e54840d7c7c2@amd.com>
+From: Sumit Saxena <sumit.saxena@broadcom.com>
+Subject: RE: [PATCH] megaraid_sas: Fallback to older scanning if no disks are found
+Date: Wed, 16 Aug 2017 17:59:37 +0530
+Message-ID: <4fa7815961b42046badf9169f4e06cb0@mail.gmail.com>
+References: <1502798740-69337-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <144b87a3-bbe4-a194-ed83-e54840d7c7c2@amd.com>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux1394-devel>,
- <mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
- <mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: =?utf-8?q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, Chris Mi <chrism@mellanox.com>, netdev@vger.kernel.org
-Cc: lucho@ionkov.net, sergey.senozhatsky.work@gmail.com, snitzer@redhat.com, wsa@the-dreams.de, markb@mellanox.com, tom.leiming@gmail.com, zhi.a.wang@intel.com, nsekhar@ti.com, dri-devel@lists.freedesktop.org, bfields@fieldses.org, linux-sctp@vger.kernel.org, paulus@samba.org, jinpu.wang@profitbricks.com, pshelar@ovn.org, sumit.semwal@linaro.org, AlexBin.Xie@amd.com, david1.zhou@amd.com, linux-samsung-soc@vger.kernel.org, maximlevitsky@gmail.com, sudarsana.kalluru@qlogic.com, marek.vasut@gmail.com, linux-atm-general@lists.sourceforge.net, dtwlin@gmail.com, michel.daenzer@amd.com, dledford@redhat.com, tpmdd-devel@lists.sourceforge.net, stern@rowland.harvard.edu, longman@redhat.com, niranjana.vishwanathapura@intel.com, philipp.reisner@linbit.com, shli@kernel.org, linux@roeck-us.net, ohad@wizery.com, pmladek@suse.com, dick.kennedy@broadcom.com, linux-pm@vger.kernel.org, ericvh@g
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:34776 "EHLO
+        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751461AbdHPM3k (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Aug 2017 08:29:40 -0400
+Received: by mail-oi0-f53.google.com with SMTP id x3so34261582oia.1
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Aug 2017 05:29:39 -0700 (PDT)
+In-Reply-To: <1502798740-69337-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Kashyap Desai <kashyap.desai@broadcom.com>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org
 
-UXVvdGluZyBDaHJpc3RpYW4gS8O2bmlnICgyMDE3LTA4LTE2IDA4OjQ5OjA3KQo+IEFtIDE2LjA4
-LjIwMTcgdW0gMDQ6MTIgc2NocmllYiBDaHJpcyBNaToKPiA+IFVzaW5nIGN1cnJlbnQgVEMgY29k
-ZSwgaXQgaXMgdmVyeSBzbG93IHRvIGluc2VydCBhIGxvdCBvZiBydWxlcy4KPiA+Cj4gPiBJbiBv
-cmRlciB0byBpbXByb3ZlIHRoZSBydWxlcyB1cGRhdGUgcmF0ZSBpbiBUQywKPiA+IHdlIGludHJv
-ZHVjZWQgdGhlIGZvbGxvd2luZyB0d28gY2hhbmdlczoKPiA+ICAgICAgICAgIDEpIGNoYW5nZWQg
-Y2xzX2Zsb3dlciB0byB1c2UgSURSIHRvIG1hbmFnZSB0aGUgZmlsdGVycy4KPiA+ICAgICAgICAg
-IDIpIGNoYW5nZWQgYWxsIGFjdF94eHggbW9kdWxlcyB0byB1c2UgSURSIGluc3RlYWQgb2YKPiA+
-ICAgICAgICAgICAgIGEgc21hbGwgaGFzaCB0YWJsZQo+ID4KPiA+IEJ1dCBJRFIgaGFzIGEgbGlt
-aXRhdGlvbiB0aGF0IGl0IHVzZXMgaW50LiBUQyBoYW5kbGUgdXNlcyB1MzIuCj4gPiBUbyBtYWtl
-IHN1cmUgdGhlcmUgaXMgbm8gcmVncmVzc2lvbiwgd2UgYWxzbyBjaGFuZ2VkIElEUiB0byB1c2UK
-PiA+IHVuc2lnbmVkIGxvbmcuIEFsbCBjbGllbnRzIG9mIElEUiBhcmUgY2hhbmdlZCB0byB1c2Ug
-bmV3IElEUiBBUEkuCj4gCj4gV09XLCB3YWl0IGEgc2Vjb25kLiBUaGUgaWRyIGNoYW5nZSBpcyB0
-b3VjaGluZyBhIGxvdCBvZiBkcml2ZXJzIGFuZCB0byAKPiBiZSBob25lc3QgZG9lc24ndCBsb29r
-cyBjb3JyZWN0IGF0IGFsbC4KPiAKPiBKdXN0IGxvb2sgYXQgdGhlIGZpcnN0IGNodW5rIG9mIHlv
-dXIgbW9kaWZpY2F0aW9uOgo+ID4gQEAgLTk5OCw4ICs5OTksOSBAQCBpbnQgYnNnX3JlZ2lzdGVy
-X3F1ZXVlKHN0cnVjdCByZXF1ZXN0X3F1ZXVlICpxLCBzdHJ1Y3QgZGV2aWNlICpwYXJlbnQsCj4g
-PiAgIAo+ID4gICAgICAgbXV0ZXhfbG9jaygmYnNnX211dGV4KTsKPiA+ICAgCj4gPiAtICAgICBy
-ZXQgPSBpZHJfYWxsb2MoJmJzZ19taW5vcl9pZHIsIGJjZCwgMCwgQlNHX01BWF9ERVZTLCBHRlBf
-S0VSTkVMKTsKPiA+IC0gICAgIGlmIChyZXQgPCAwKSB7Cj4gPiArICAgICByZXQgPSBpZHJfYWxs
-b2MoJmJzZ19taW5vcl9pZHIsIGJjZCwgJmlkcl9pbmRleCwgMCwgQlNHX01BWF9ERVZTLAo+ID4g
-KyAgICAgICAgICAgICAgICAgICAgIEdGUF9LRVJORUwpOwo+ID4gKyAgICAgaWYgKHJldCkgewo+
-ID4gICAgICAgICAgICAgICBpZiAocmV0ID09IC1FTk9TUEMpIHsKPiA+ICAgICAgICAgICAgICAg
-ICAgICAgICBwcmludGsoS0VSTl9FUlIgImJzZzogdG9vIG1hbnkgYnNnIGRldmljZXNcbiIpOwo+
-ID4gICAgICAgICAgICAgICAgICAgICAgIHJldCA9IC1FSU5WQUw7Cj4gVGhlIGNvbmRpdGlvbiAi
-aWYgKHJldCkiIHdpbGwgbm93IGFsd2F5cyBiZSB0cnVlIGFmdGVyIHRoZSBmaXJzdCAKPiBhbGxv
-Y2F0aW9uIGFuZCBzbyB3ZSBhbHdheXMgcnVuIGludG8gdGhlIGVycm9yIGhhbmRsaW5nIGFmdGVy
-IHRoYXQuCgpyZXQgaXMgbm93IHB1cmVseSB0aGUgZXJyb3IgY29kZSwgc28gaXQgZG9lc24ndCBs
-b29rIHRoYXQgc3VzcGljaW91cy4KCj4gSSd2ZSBuZXZlciByZWFkIHRoZSBic2cgY29kZSBiZWZv
-cmUsIGJ1dCB0aGF0J3MgY2VydGFpbmx5IG5vdCBjb3JyZWN0LiAKPiBBbmQgdGhhdCBpbmNvcnJl
-Y3QgcGF0dGVybiByZXBlYXRzIG92ZXIgYW5kIG92ZXIgYWdhaW4gaW4gdGhpcyBjb2RlLgo+IAo+
-IEFwYXJ0IGZyb20gdGhhdCB3aHkgdGhlIGhlY2sgZG8geW91IHdhbnQgdG8gYWxsb2NhdGUgbW9y
-ZSB0aGFuIDE8PDMxIAo+IGhhbmRsZXM/CgpBbmQgbW9yZSB0byB0aGUgcG9pbnQsIGFyYml0cmFy
-aWx5IGNoYW5naW5nIHRoZSBtYXhpbXVtIHRvIFVMT05HX01BWAp3aGVyZSB0aGUgQUJJIG9ubHkg
-c3VwcG9ydHMgVTMyX01BWCBpcyBkYW5nZXJvdXMuIFVubGVzcyB5b3UgZG8gdGhlCmFuYWx5c2lz
-IG90aGVyd2lzZSwgeW91IGhhdmUgdG8gcmVwbGFjZSBhbGwgdGhlIGVuZD0wIHdpdGggZW5kPUlO
-VF9NQVgKdG8gbWFpbnRhaW4gZXhpc3RpbmcgYmVoYXZpb3VyLgotQ2hyaXMKCi0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLQpDaGVjayBvdXQgdGhlIHZpYnJhbnQgdGVjaCBjb21tdW5pdHkgb24gb25lIG9m
-IHRoZSB3b3JsZCdzIG1vc3QKZW5nYWdpbmcgdGVjaCBzaXRlcywgU2xhc2hkb3Qub3JnISBodHRw
-Oi8vc2RtLmxpbmsvc2xhc2hkb3QKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX18KbWFpbGluZyBsaXN0IGxpbnV4MTM5NC1kZXZlbEBsaXN0cy5zb3VyY2Vmb3Jn
-ZS5uZXQKaHR0cHM6Ly9saXN0cy5zb3VyY2Vmb3JnZS5uZXQvbGlzdHMvbGlzdGluZm8vbGludXgx
-Mzk0LWRldmVsCg==
+>-----Original Message-----
+>From: Hannes Reinecke [mailto:hare@suse.de]
+>Sent: Tuesday, August 15, 2017 5:36 PM
+>To: Martin K. Petersen
+>Cc: Christoph Hellwig; James Bottomley; Sumit Saxena; Kashyap Desai;
+>megaraidlinux.pdl@broadcom.com; linux-scsi@vger.kernel.org; Hannes
+>Reinecke
+>Subject: [PATCH] megaraid_sas: Fallback to older scanning if no disks are
+>found
+>
+>commit 21c9e160a51383d4cb0b882398534b0c95c0cc3b implemented a new
+>driver lookup using the MR_DCMD_LD_LIST_QUERY firmware command.
+>However, this command might not work properly on older firmware, causing
+>the command to return no drives instead of an error.
+>This causes a regression on older firmware as the driver will no longer
+detect
+>any drives.
+>This patch checks if MR_DCMD_LD_LIST_QUERY return no drives, and falls
+>back to the original method if so.
+>
+>Signed-off-by: Hannes Reinecke <hare@suse.de>
+>---
+> drivers/scsi/megaraid/megaraid_sas_base.c | 29
+>+++++++++++++++++++++++------
+> 1 file changed, 23 insertions(+), 6 deletions(-)
+>
+>diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
+>b/drivers/scsi/megaraid/megaraid_sas_base.c
+>index 39b08fc..a1cf2c3 100644
+>--- a/drivers/scsi/megaraid/megaraid_sas_base.c
+>+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+>@@ -4502,7 +4502,6 @@ int megasas_alloc_cmds(struct megasas_instance
+>*instance)
+> 		dev_info(&instance->pdev->dev,
+> 			"DCMD not supported by firmware - %s %d\n",
+> 				__func__, __LINE__);
+>-		ret = megasas_get_ld_list(instance);
+> 		break;
+> 	case DCMD_TIMEOUT:
+> 		switch (dcmd_timeout_ocr_possible(instance)) { @@ -4530,6
+>+4529,14 @@ int megasas_alloc_cmds(struct megasas_instance *instance)
+> 		break;
+> 	case DCMD_SUCCESS:
+> 		tgtid_count = le32_to_cpu(ci->count);
+>+		/*
+>+		 * Some older firmware return '0' if the LD LIST QUERY
+>+		 * command is not supported.
+>+		 */
+>+		if (tgtid_count == 0) {
+>+			ret = DCMD_FAILED;
+>+			break;
+>+		}
+
+If firmware does not support LD_LIST_QUERY,  "DCMD_FAILED" should be
+returned by megasas_issue_blocked_cmd
+(function which fires command to firmware) instead of DCMD_SCCESS.
+Can you please help with older firmware version which returns
+DCMD_SUCCESS(0) if LD_LIST_QUERY is not supported ?
+
+"tgtid_count" may be zero(in case of no logical disks configured) even
+when firmware supports LD LIST QUERY
+and in that case also driver will fire old command by calling
+megasas_get_ld_list() but that's not a problem.
+
+Thanks,
+Sumit
+
+>
+> 		if ((tgtid_count > (instance->fw_supported_vd_count)))
+> 			break;
+>@@ -5146,7 +5153,7 @@ static int megasas_init_fw(struct megasas_instance
+>*instance)
+> 	struct megasas_register_set __iomem *reg_set;
+> 	struct megasas_ctrl_info *ctrl_info = NULL;
+> 	unsigned long bar_list;
+>-	int i, j, loop, fw_msix_count = 0;
+>+	int i, j, loop, fw_msix_count = 0, ret;
+> 	struct IOV_111 *iovPtr;
+> 	struct fusion_context *fusion;
+>
+>@@ -5384,8 +5391,11 @@ static int megasas_init_fw(struct megasas_instance
+>*instance)
+> 		}
+> 	}
+>
+>-	if (megasas_ld_list_query(instance,
+>-				  MR_LD_QUERY_TYPE_EXPOSED_TO_HOST))
+>+	ret = megasas_ld_list_query(instance,
+>+				    MR_LD_QUERY_TYPE_EXPOSED_TO_HOST);
+>+	if (ret == DCMD_FAILED)
+>+		ret = megasas_get_ld_list(instance);
+>+	if (ret)
+> 		goto fail_get_ld_pd_list;
+>
+> 	/*
+>@@ -7426,8 +7436,12 @@ static inline void
+>megasas_remove_scsi_device(struct scsi_device *sdev)
+> 		case MR_EVT_LD_DELETED:
+> 		case MR_EVT_LD_CREATED:
+> 			if (!instance->requestorId ||
+>-				(instance->requestorId &&
+>megasas_get_ld_vf_affiliation(instance, 0)))
+>+			    (instance->requestorId &&
+>+			     megasas_get_ld_vf_affiliation(instance, 0)))
+{
+> 				dcmd_ret = megasas_ld_list_query(instance,
+>MR_LD_QUERY_TYPE_EXPOSED_TO_HOST);
+>+				if (dcmd_ret == DCMD_FAILED)
+>+					dcmd_ret =
+>megasas_get_ld_list(instance);
+>+			}
+>
+> 			if (dcmd_ret == DCMD_SUCCESS)
+> 				doscan = SCAN_VD_CHANNEL;
+>@@ -7443,8 +7457,11 @@ static inline void
+>megasas_remove_scsi_device(struct scsi_device *sdev)
+> 				break;
+>
+> 			if (!instance->requestorId ||
+>-				(instance->requestorId &&
+>megasas_get_ld_vf_affiliation(instance, 0)))
+>+			    (instance->requestorId &&
+>+megasas_get_ld_vf_affiliation(instance, 0))) {
+> 				dcmd_ret = megasas_ld_list_query(instance,
+>MR_LD_QUERY_TYPE_EXPOSED_TO_HOST);
+>+				if (dcmd_ret == DCMD_FAILED)
+>+					dcmd_ret =
+>megasas_get_ld_list(instance);
+>+			}
+>
+> 			if (dcmd_ret != DCMD_SUCCESS)
+> 				break;
+>--
+>1.8.5.6
