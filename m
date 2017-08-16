@@ -1,209 +1,171 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 4.13-rc4
-Date: Wed, 16 Aug 2017 15:13:25 -0700
-Message-ID: <1502921605.3589.16.camel@HansenPartnership.com>
+From: Gionatan Danti <g.danti@assyoma.it>
+Subject: No I/O errors reported after SATA link hard reset
+Date: Thu, 17 Aug 2017 00:27:58 +0200
+Message-ID: <fe5cc200a4cba71cb9e5e6a980699805@assyoma.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mr003msb.fastweb.it ([85.18.95.87]:47889 "EHLO
+        mr003msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752368AbdHPWdt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Aug 2017 18:33:49 -0400
+Received: from ceres.assyoma.it (93.63.55.57) by mr003msb.fastweb.it (8.5.140.05)
+        id 594ACDB5021D8BB8 for linux-scsi@vger.kernel.org; Thu, 17 Aug 2017 00:27:59 +0200
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-A couple of minor fixes (st, ses) and some bigger driver fixes for
-qla2xxx (crash triggered by fw dump) and ipr (lockdep problems with
-mq).
+Hi list,
+some time ago, I had a filesystem corruption on a simple, two disks 
+RAID1 MD array. On the affected machine, /var/log/messages shown some 
+"failed command: WRITE FPDMA QUEUED" entries, but *no* action (ie: kick 
+off disk) was taken by MDRAID. I tracked down the problem to an instable 
+power supply (switching power rail/connector solved the problem).
 
-The patch is available here:
+In the latest day I had some spare time and I am now able to regularly 
+replicate the problem. Basically, when a short powerloss happens, the 
+scsi midlayer logs some failed operations, but does *not* pass these 
+errors to higher layer. In other words, no I/O error is returned to the 
+calling application. This is the reason why MDRAID did not kick off the 
+instable disk on the machine with corrupted filesystem.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+To replicated the problem, I wrote a large random file on a small MD 
+RAID1 array, pulling off the power of one disk from about 2 seconds. The 
+file write operation stopped for some seconds, than recovered. Running 
+an array check resulted in a high number of mismatch_cnt sectors. Dmesg 
+logged the following lines:
 
-The short changelog is:
+Aug 16 16:04:02 blackhole kernel: ata6.00: exception Emask 0x50 SAct 
+0x7fffffff SErr 0x90a00 action 0xe frozen
+Aug 16 16:04:02 blackhole kernel: ata6.00: irq_stat 0x00400000, PHY RDY 
+changed
+Aug 16 16:04:02 blackhole kernel: ata6: SError: { Persist HostInt 
+PHYRdyChg 10B8B }
+Aug 16 16:04:02 blackhole kernel: ata6.00: failed command: WRITE FPDMA 
+QUEUED
+Aug 16 16:04:02 blackhole kernel: ata6.00: cmd 
+61/00:00:10:82:09/04:00:00:00:00/40 tag 0 ncq 524288 out#012         res 
+40/00:d8:10:72:09/00:00:00:00:00/40 Emask 0x50 (ATA bus error)
+Aug 16 16:04:02 blackhole kernel: ata6.00: status: { DRDY }
+...
+Aug 16 16:04:02 blackhole kernel: ata6.00: failed command: WRITE FPDMA 
+QUEUED
+Aug 16 16:04:02 blackhole kernel: ata6.00: cmd 
+61/00:f0:10:7e:09/04:00:00:00:00/40 tag 30 ncq 524288 out#012         
+res 40/00:d8:10:72:09/00:00:00:00:00/40 Emask 0x50 (ATA bus error)
+Aug 16 16:04:02 blackhole kernel: ata6.00: status: { DRDY }
+Aug 16 16:04:02 blackhole kernel: ata6: hard resetting link
+Aug 16 16:04:03 blackhole kernel: ata6: SATA link down (SStatus 0 
+SControl 310)
+Aug 16 16:04:04 blackhole kernel: ata6: hard resetting link
+Aug 16 16:04:14 blackhole kernel: ata6: softreset failed (device not 
+ready)
+Aug 16 16:04:14 blackhole kernel: ata6: hard resetting link
+Aug 16 16:04:24 blackhole kernel: ata6: softreset failed (device not 
+ready)
+Aug 16 16:04:24 blackhole kernel: ata6: hard resetting link
+Aug 16 16:04:35 blackhole kernel: ata6: link is slow to respond, please 
+be patient (ready=0)
+Aug 16 16:04:42 blackhole kernel: ata6: SATA link down (SStatus 0 
+SControl 310)
+Aug 16 16:04:46 blackhole kernel: ata6: hard resetting link
+Aug 16 16:04:46 blackhole kernel: ata3: exception Emask 0x10 SAct 0x0 
+SErr 0x40d0202 action 0xe frozen
+Aug 16 16:04:46 blackhole kernel: ata3: irq_stat 0x00400000, PHY RDY 
+changed
+Aug 16 16:04:46 blackhole kernel: ata3: SError: { RecovComm Persist 
+PHYRdyChg CommWake 10B8B DevExch }
+Aug 16 16:04:46 blackhole kernel: ata3: hard resetting link
+Aug 16 16:04:51 blackhole kernel: ata3: softreset failed (device not 
+ready)
+Aug 16 16:04:51 blackhole kernel: ata3: applying PMP SRST workaround and 
+retrying
+Aug 16 16:04:51 blackhole kernel: ata3: SATA link up 3.0 Gbps (SStatus 
+123 SControl 300)
+Aug 16 16:04:51 blackhole kernel: ata3.00: configured for UDMA/133
+Aug 16 16:04:51 blackhole kernel: ata3: EH complete
+Aug 16 16:04:52 blackhole kernel: ata6: softreset failed (device not 
+ready)
+Aug 16 16:04:52 blackhole kernel: ata6: applying PMP SRST workaround and 
+retrying
+Aug 16 16:04:52 blackhole kernel: ata6: SATA link up 1.5 Gbps (SStatus 
+113 SControl 310)
+Aug 16 16:04:52 blackhole kernel: ata6.00: configured for UDMA/133
+Aug 16 16:04:52 blackhole kernel: ata6: EH complete
 
-Bodo Stroesser (1):
-      scsi: st: fix blk_get_queue usage
+As you can see, while failed SATA operation were logged in dmesg (and 
+/var/log/messages), no I/O errors where returned to the upper layer 
+(MDRAID) or the calling application. I had to say that I *fully expect* 
+some inconsistencies: after all, removing the power wipes the volatile 
+disk's DRAM cache, which means data loss. However, I really expected 
+some I/O errors to be thrown to the higher layers, causing visible 
+reactions (ie: a disks pushed out the array). With no I/O errors 
+returned, the higher layer application are effectively blind.
 
-Brian King (2):
-      scsi: ses: Fix wrong page error
-      scsi: ipr: Fix scsi-mq lockdep issue
+More concerning is the fact that these undetected errors can make their 
+way even when the higher application consistently calls sync() and/or 
+fsync. In other words, it seems than even acknowledged writes can fail 
+in this manner (and this is consistent with the first machine corrupting 
+its filesystem due to journal trashing - XFS journal surely uses sync() 
+where appropriate). The mechanism seems the following:
 
-Michael Hernandez (1):
-      scsi: qla2xxx: Fix system crash while triggering FW dump
+- an higher layer application issue sync();
+- a write barrier is generated;
+- a first FLUSH CACHE command is sent to the disk;
+- data are written to the disk's DRAM cache;
+- power is lost! The volatile cache lose its content;
+- power is re-established and the disk become responsive again;
+- a second FLUSH CACHE command is sent to the disk;
+- the disk acks each SATA command, but real data are lost.
 
-And the diffstat:
+As a side note, when the power loss or SATA cable disconnection is 
+relatively long (over 10 seconds, as by eh timeout), the SATA disks 
+become disconnected (and the MD layer acts accordlying):
 
- drivers/scsi/ipr.c              | 33 +++++++++++++++++++--------------
- drivers/scsi/ipr.h              |  2 ++
- drivers/scsi/qla2xxx/qla_tmpl.c | 12 ------------
- drivers/scsi/ses.c              |  2 +-
- drivers/scsi/st.c               |  4 ++--
- 5 files changed, 24 insertions(+), 29 deletions(-)
+Aug 16 16:12:20 blackhole kernel: ata6.00: exception Emask 0x50 SAct 
+0x7fffffff SErr 0x490a00 action 0xe frozen
+Aug 16 16:12:20 blackhole kernel: ata6.00: irq_stat 0x08000000, 
+interface fatal error
+Aug 16 16:12:20 blackhole kernel: ata6: SError: { Persist HostInt 
+PHYRdyChg 10B8B Handshk }
+Aug 16 16:12:20 blackhole kernel: ata6.00: failed command: WRITE FPDMA 
+QUEUED
+Aug 16 16:12:20 blackhole kernel: ata6.00: cmd 
+61/00:00:38:88:09/04:00:00:00:00/40 tag 0 ncq 524288 out#012         res 
+40/00:d8:38:f4:09/00:00:00:00:00/40 Emask 0x50 (ATA bus error)
+Aug 16 16:12:20 blackhole kernel: ata6.00: status: { DRDY }
+...
+Aug 16 16:12:32 blackhole kernel: sd 5:0:0:0: [sdf] FAILED Result: 
+hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Aug 16 16:12:32 blackhole kernel: sd 5:0:0:0: [sdf] Sense Key : Illegal 
+Request [current] [descriptor]
+Aug 16 16:12:32 blackhole kernel: sd 5:0:0:0: [sdf] Add. Sense: 
+Unaligned write command
+Aug 16 16:12:32 blackhole kernel: sd 5:0:0:0: [sdf] CDB: Write(10) 2a 00 
+00 09 88 38 00 04 00 00
+Aug 16 16:12:32 blackhole kernel: blk_update_request: 23 callbacks 
+suppressed
+Aug 16 16:12:32 blackhole kernel: blk_update_request: I/O error, dev 
+sdf, sector 624696
 
-With full diff below.
+Now, I have few questions:
+- is the above explanation plausible, or I am (horribly) missing 
+something?
+- why the scsi midlevel does not respond to a power loss event by 
+immediately offlining the disks?
+- is the scsi midlevel behavior configurable (I know I can lower eh 
+timeout, but is this the right solution)?
+- how to deal with this problem (other than being 100% sure power is 
+never lost by any disks)?
 
-James
+Thank you all,
+regards.
 
----
-
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index b0c68d24db01..da5bdbdcce52 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -3351,6 +3351,16 @@ static void ipr_worker_thread(struct work_struct *work)
- 		return;
- 	}
- 
-+	if (ioa_cfg->scsi_unblock) {
-+		ioa_cfg->scsi_unblock = 0;
-+		ioa_cfg->scsi_blocked = 0;
-+		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
-+		scsi_unblock_requests(ioa_cfg->host);
-+		spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
-+		if (ioa_cfg->scsi_blocked)
-+			scsi_block_requests(ioa_cfg->host);
-+	}
-+
- 	if (!ioa_cfg->scan_enabled) {
- 		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
- 		return;
-@@ -7211,9 +7221,8 @@ static int ipr_ioa_bringdown_done(struct ipr_cmnd *ipr_cmd)
- 	ENTER;
- 	if (!ioa_cfg->hrrq[IPR_INIT_HRRQ].removing_ioa) {
- 		ipr_trace;
--		spin_unlock_irq(ioa_cfg->host->host_lock);
--		scsi_unblock_requests(ioa_cfg->host);
--		spin_lock_irq(ioa_cfg->host->host_lock);
-+		ioa_cfg->scsi_unblock = 1;
-+		schedule_work(&ioa_cfg->work_q);
- 	}
- 
- 	ioa_cfg->in_reset_reload = 0;
-@@ -7287,13 +7296,7 @@ static int ipr_ioa_reset_done(struct ipr_cmnd *ipr_cmd)
- 	list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_free_q);
- 	wake_up_all(&ioa_cfg->reset_wait_q);
- 
--	spin_unlock(ioa_cfg->host->host_lock);
--	scsi_unblock_requests(ioa_cfg->host);
--	spin_lock(ioa_cfg->host->host_lock);
--
--	if (!ioa_cfg->hrrq[IPR_INIT_HRRQ].allow_cmds)
--		scsi_block_requests(ioa_cfg->host);
--
-+	ioa_cfg->scsi_unblock = 1;
- 	schedule_work(&ioa_cfg->work_q);
- 	LEAVE;
- 	return IPR_RC_JOB_RETURN;
-@@ -9249,8 +9252,11 @@ static void _ipr_initiate_ioa_reset(struct ipr_ioa_cfg *ioa_cfg,
- 		spin_unlock(&ioa_cfg->hrrq[i]._lock);
- 	}
- 	wmb();
--	if (!ioa_cfg->hrrq[IPR_INIT_HRRQ].removing_ioa)
-+	if (!ioa_cfg->hrrq[IPR_INIT_HRRQ].removing_ioa) {
-+		ioa_cfg->scsi_unblock = 0;
-+		ioa_cfg->scsi_blocked = 1;
- 		scsi_block_requests(ioa_cfg->host);
-+	}
- 
- 	ipr_cmd = ipr_get_free_ipr_cmnd(ioa_cfg);
- 	ioa_cfg->reset_cmd = ipr_cmd;
-@@ -9306,9 +9312,8 @@ static void ipr_initiate_ioa_reset(struct ipr_ioa_cfg *ioa_cfg,
- 			wake_up_all(&ioa_cfg->reset_wait_q);
- 
- 			if (!ioa_cfg->hrrq[IPR_INIT_HRRQ].removing_ioa) {
--				spin_unlock_irq(ioa_cfg->host->host_lock);
--				scsi_unblock_requests(ioa_cfg->host);
--				spin_lock_irq(ioa_cfg->host->host_lock);
-+				ioa_cfg->scsi_unblock = 1;
-+				schedule_work(&ioa_cfg->work_q);
- 			}
- 			return;
- 		} else {
-diff --git a/drivers/scsi/ipr.h b/drivers/scsi/ipr.h
-index e98a87a65335..c7f0e9e3cd7d 100644
---- a/drivers/scsi/ipr.h
-+++ b/drivers/scsi/ipr.h
-@@ -1488,6 +1488,8 @@ struct ipr_ioa_cfg {
- 	u8 cfg_locked:1;
- 	u8 clear_isr:1;
- 	u8 probe_done:1;
-+	u8 scsi_unblock:1;
-+	u8 scsi_blocked:1;
- 
- 	u8 revid;
- 
-diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_tmpl.c
-index 33142610882f..b18646d6057f 100644
---- a/drivers/scsi/qla2xxx/qla_tmpl.c
-+++ b/drivers/scsi/qla2xxx/qla_tmpl.c
-@@ -401,9 +401,6 @@ qla27xx_fwdt_entry_t263(struct scsi_qla_host *vha,
- 		for (i = 0; i < vha->hw->max_req_queues; i++) {
- 			struct req_que *req = vha->hw->req_q_map[i];
- 
--			if (!test_bit(i, vha->hw->req_qid_map))
--				continue;
--
- 			if (req || !buf) {
- 				length = req ?
- 				    req->length : REQUEST_ENTRY_CNT_24XX;
-@@ -418,9 +415,6 @@ qla27xx_fwdt_entry_t263(struct scsi_qla_host *vha,
- 		for (i = 0; i < vha->hw->max_rsp_queues; i++) {
- 			struct rsp_que *rsp = vha->hw->rsp_q_map[i];
- 
--			if (!test_bit(i, vha->hw->rsp_qid_map))
--				continue;
--
- 			if (rsp || !buf) {
- 				length = rsp ?
- 				    rsp->length : RESPONSE_ENTRY_CNT_MQ;
-@@ -660,9 +654,6 @@ qla27xx_fwdt_entry_t274(struct scsi_qla_host *vha,
- 		for (i = 0; i < vha->hw->max_req_queues; i++) {
- 			struct req_que *req = vha->hw->req_q_map[i];
- 
--			if (!test_bit(i, vha->hw->req_qid_map))
--				continue;
--
- 			if (req || !buf) {
- 				qla27xx_insert16(i, buf, len);
- 				qla27xx_insert16(1, buf, len);
-@@ -675,9 +666,6 @@ qla27xx_fwdt_entry_t274(struct scsi_qla_host *vha,
- 		for (i = 0; i < vha->hw->max_rsp_queues; i++) {
- 			struct rsp_que *rsp = vha->hw->rsp_q_map[i];
- 
--			if (!test_bit(i, vha->hw->rsp_qid_map))
--				continue;
--
- 			if (rsp || !buf) {
- 				qla27xx_insert16(i, buf, len);
- 				qla27xx_insert16(1, buf, len);
-diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-index f1cdf32d7514..8927f9f54ad9 100644
---- a/drivers/scsi/ses.c
-+++ b/drivers/scsi/ses.c
-@@ -99,7 +99,7 @@ static int ses_recv_diag(struct scsi_device *sdev, int page_code,
- 
- 	ret =  scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buf, bufflen,
- 				NULL, SES_TIMEOUT, SES_RETRIES, NULL);
--	if (unlikely(!ret))
-+	if (unlikely(ret))
- 		return ret;
- 
- 	recv_page_code = ((unsigned char *)buf)[0];
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 8e5013d9cad4..94e402ed30f6 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -4299,11 +4299,11 @@ static int st_probe(struct device *dev)
- 	kref_init(&tpnt->kref);
- 	tpnt->disk = disk;
- 	disk->private_data = &tpnt->driver;
--	disk->queue = SDp->request_queue;
- 	/* SCSI tape doesn't register this gendisk via add_disk().  Manually
- 	 * take queue reference that release_disk() expects. */
--	if (!blk_get_queue(disk->queue))
-+	if (!blk_get_queue(SDp->request_queue))
- 		goto out_put_disk;
-+	disk->queue = SDp->request_queue;
- 	tpnt->driver = &st_template;
- 
- 	tpnt->device = SDp;
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
