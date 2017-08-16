@@ -1,42 +1,43 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: [PATCHv3 2/5] scsi: Export blacklist flags to sysfs
-Date: Tue, 15 Aug 2017 22:03:02 -0400
-Message-ID: <yq1bmngtgkp.fsf@oracle.com>
+Date: Tue, 15 Aug 2017 22:09:52 -0400
+Message-ID: <yq17ey4tg9b.fsf@oracle.com>
 References: <1502461401-94630-1-git-send-email-hare@suse.de>
         <1502461401-94630-3-git-send-email-hare@suse.de>
-        <1502807056.2900.1.camel@wdc.com>
-        <b9248f72-1278-b02c-6835-39d505673c1f@suse.de>
+        <yq18tilwmax.fsf@oracle.com>
+        <dd9d797a-ec8e-7395-6d7c-068c4ece08d0@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20296 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:22497 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753135AbdHPCDb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Aug 2017 22:03:31 -0400
-In-Reply-To: <b9248f72-1278-b02c-6835-39d505673c1f@suse.de> (Hannes Reinecke's
-        message of "Tue, 15 Aug 2017 16:40:11 +0200")
+        with ESMTP id S1752130AbdHPCKR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Aug 2017 22:10:17 -0400
+In-Reply-To: <dd9d797a-ec8e-7395-6d7c-068c4ece08d0@suse.de> (Hannes Reinecke's
+        message of "Tue, 15 Aug 2017 10:03:50 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
-Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "stern@rowland.harvard.edu" <stern@rowland.harvard.edu>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
 
 Hannes,
 
->> Wouldn't debugfs be more appropriate for this attribute than sysfs?
->> 
-> I so don't mind.
-> I just need it somewhere in sysfs/debugfs so that I can validate the
-> selection logic.
+>> It seems this else statement facilitates papering over the fact that
+>> scsi_sysfs.c and scsi_devinfo.h can get out of sync.
+
+> But there is no good way of avoiding that, is there?
+> Out of necessity the definition of the bits and the decoding are two
+> distinct steps, and as such are always prone to differences.
 >
-> Same goes for hexvalue vs decoded output; I just need to attribute;
-> contents can be discussed.
+> So what is your suggestion here?
 
-I don't have a problem having it in sysfs. We have several users that
-tweak the device blacklist in their boot scripts
+I was merely fishing for comments being added to both files stating that
+it was important to keep them in sync.
 
-Given that we already have an interface for setting the flags, we might
-as well be able to print them.
+However, if you can automate it using Bart's approach, stringify magic
+or something else then that's cool. We have several places where
+something like that would be useful.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
