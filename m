@@ -1,82 +1,209 @@
-From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH] Revert "scsi-mq: Always unprepare before requeuing a request"
-Date: Wed, 16 Aug 2017 10:43:24 -0700
-Message-ID: <20170816174324.29276-1-bart.vanassche@wdc.com>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Damien Le Moal <damien.lemoal@wdc.com>, Johannes Thumshirn <jthumshirn@suse.de>, Michael Ellerman <mpe@ellerman.id.au>, Brian King <brking@linux.vnet.ibm.com>, Abdul Haleem <abdhalee@linux.vnet.ibm.com>, stable@vger.kernel.org
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 4.13-rc4
+Date: Wed, 16 Aug 2017 15:13:25 -0700
+Message-ID: <1502921605.3589.16.camel@HansenPartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-For an unknown reason this patch causes the boot process to hang on
-PowerPC systems:
+A couple of minor fixes (st, ses) and some bigger driver fixes for
+qla2xxx (crash triggered by fw dump) and ipr (lockdep problems with
+mq).
 
-sd 0:2:0:0: [sda] 272646144 512-byte logical blocks: (140 GB/130 GiB)
-sd 0:2:0:0: [sda] 4096-byte physical blocks
-sd 0:2:0:0: [sda] Write Protect is off
-INFO: task swapper/5:1 blocked for more than 120 seconds.
-      Not tainted 4.13.0-rc4-next-20170810-autotest #1
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-swapper/5       D 9936     1      0 0x00000800
-Call Trace:
-[c0000007f8483a10] [c0000007f8483a80] 0xc0000007f8483a80 (unreliable)
-[c0000007f8483be0] [c00000000001b358] __switch_to+0x2e8/0x430
-[c0000007f8483c40] [c0000000009d134c] __schedule+0x38c/0xaf0
-[c0000007f8483d20] [c0000000009d1af0] schedule+0x40/0xb0
-[c0000007f8483d50] [c000000000110bd4] async_synchronize_cookie_domain+0xd4/0x150
-[c0000007f8483dc0] [c00000000000d8f8] kernel_init+0x28/0x140
-[c0000007f8483e30] [c00000000000bc60] ret_from_kernel_thread+0x5c/0x7c
+The patch is available here:
 
-Hence revert commit 270065e92c31.
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Fixes: commit 270065e92c31 ("scsi: scsi-mq: Always unprepare before requeuing a request")
-Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Damien Le Moal <damien.lemoal@wdc.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Michael Ellerman <mpe@ellerman.id.au>
-Cc: Brian King <brking@linux.vnet.ibm.com>
-Cc: Abdul Haleem <abdhalee@linux.vnet.ibm.com>
-Cc: <stable@vger.kernel.org>
+The short changelog is:
+
+Bodo Stroesser (1):
+      scsi: st: fix blk_get_queue usage
+
+Brian King (2):
+      scsi: ses: Fix wrong page error
+      scsi: ipr: Fix scsi-mq lockdep issue
+
+Michael Hernandez (1):
+      scsi: qla2xxx: Fix system crash while triggering FW dump
+
+And the diffstat:
+
+ drivers/scsi/ipr.c              | 33 +++++++++++++++++++--------------
+ drivers/scsi/ipr.h              |  2 ++
+ drivers/scsi/qla2xxx/qla_tmpl.c | 12 ------------
+ drivers/scsi/ses.c              |  2 +-
+ drivers/scsi/st.c               |  4 ++--
+ 5 files changed, 24 insertions(+), 29 deletions(-)
+
+With full diff below.
+
+James
+
 ---
- drivers/scsi/scsi_lib.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 7e92818e6597..e57c80d4648d 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -44,8 +44,6 @@ static struct kmem_cache *scsi_sense_cache;
- static struct kmem_cache *scsi_sense_isadma_cache;
- static DEFINE_MUTEX(scsi_sense_cache_mutex);
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index b0c68d24db01..da5bdbdcce52 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -3351,6 +3351,16 @@ static void ipr_worker_thread(struct work_struct *work)
+ 		return;
+ 	}
  
--static void scsi_mq_uninit_cmd(struct scsi_cmnd *cmd);
++	if (ioa_cfg->scsi_unblock) {
++		ioa_cfg->scsi_unblock = 0;
++		ioa_cfg->scsi_blocked = 0;
++		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
++		scsi_unblock_requests(ioa_cfg->host);
++		spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
++		if (ioa_cfg->scsi_blocked)
++			scsi_block_requests(ioa_cfg->host);
++	}
++
+ 	if (!ioa_cfg->scan_enabled) {
+ 		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+ 		return;
+@@ -7211,9 +7221,8 @@ static int ipr_ioa_bringdown_done(struct ipr_cmnd *ipr_cmd)
+ 	ENTER;
+ 	if (!ioa_cfg->hrrq[IPR_INIT_HRRQ].removing_ioa) {
+ 		ipr_trace;
+-		spin_unlock_irq(ioa_cfg->host->host_lock);
+-		scsi_unblock_requests(ioa_cfg->host);
+-		spin_lock_irq(ioa_cfg->host->host_lock);
++		ioa_cfg->scsi_unblock = 1;
++		schedule_work(&ioa_cfg->work_q);
+ 	}
+ 
+ 	ioa_cfg->in_reset_reload = 0;
+@@ -7287,13 +7296,7 @@ static int ipr_ioa_reset_done(struct ipr_cmnd *ipr_cmd)
+ 	list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_free_q);
+ 	wake_up_all(&ioa_cfg->reset_wait_q);
+ 
+-	spin_unlock(ioa_cfg->host->host_lock);
+-	scsi_unblock_requests(ioa_cfg->host);
+-	spin_lock(ioa_cfg->host->host_lock);
 -
- static inline struct kmem_cache *
- scsi_select_sense_cache(bool unchecked_isa_dma)
- {
-@@ -142,12 +140,6 @@ static void scsi_mq_requeue_cmd(struct scsi_cmnd *cmd)
- {
- 	struct scsi_device *sdev = cmd->device;
+-	if (!ioa_cfg->hrrq[IPR_INIT_HRRQ].allow_cmds)
+-		scsi_block_requests(ioa_cfg->host);
+-
++	ioa_cfg->scsi_unblock = 1;
+ 	schedule_work(&ioa_cfg->work_q);
+ 	LEAVE;
+ 	return IPR_RC_JOB_RETURN;
+@@ -9249,8 +9252,11 @@ static void _ipr_initiate_ioa_reset(struct ipr_ioa_cfg *ioa_cfg,
+ 		spin_unlock(&ioa_cfg->hrrq[i]._lock);
+ 	}
+ 	wmb();
+-	if (!ioa_cfg->hrrq[IPR_INIT_HRRQ].removing_ioa)
++	if (!ioa_cfg->hrrq[IPR_INIT_HRRQ].removing_ioa) {
++		ioa_cfg->scsi_unblock = 0;
++		ioa_cfg->scsi_blocked = 1;
+ 		scsi_block_requests(ioa_cfg->host);
++	}
  
--	if (cmd->request->rq_flags & RQF_DONTPREP) {
--		cmd->request->rq_flags &= ~RQF_DONTPREP;
--		scsi_mq_uninit_cmd(cmd);
--	} else {
--		WARN_ON_ONCE(true);
--	}
- 	blk_mq_requeue_request(cmd->request, true);
- 	put_device(&sdev->sdev_gendev);
- }
-@@ -985,6 +977,8 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 		 * A new command will be prepared and issued.
- 		 */
- 		if (q->mq_ops) {
-+			cmd->request->rq_flags &= ~RQF_DONTPREP;
-+			scsi_mq_uninit_cmd(cmd);
- 			scsi_mq_requeue_cmd(cmd);
+ 	ipr_cmd = ipr_get_free_ipr_cmnd(ioa_cfg);
+ 	ioa_cfg->reset_cmd = ipr_cmd;
+@@ -9306,9 +9312,8 @@ static void ipr_initiate_ioa_reset(struct ipr_ioa_cfg *ioa_cfg,
+ 			wake_up_all(&ioa_cfg->reset_wait_q);
+ 
+ 			if (!ioa_cfg->hrrq[IPR_INIT_HRRQ].removing_ioa) {
+-				spin_unlock_irq(ioa_cfg->host->host_lock);
+-				scsi_unblock_requests(ioa_cfg->host);
+-				spin_lock_irq(ioa_cfg->host->host_lock);
++				ioa_cfg->scsi_unblock = 1;
++				schedule_work(&ioa_cfg->work_q);
+ 			}
+ 			return;
  		} else {
- 			scsi_release_buffers(cmd);
--- 
-2.14.0
+diff --git a/drivers/scsi/ipr.h b/drivers/scsi/ipr.h
+index e98a87a65335..c7f0e9e3cd7d 100644
+--- a/drivers/scsi/ipr.h
++++ b/drivers/scsi/ipr.h
+@@ -1488,6 +1488,8 @@ struct ipr_ioa_cfg {
+ 	u8 cfg_locked:1;
+ 	u8 clear_isr:1;
+ 	u8 probe_done:1;
++	u8 scsi_unblock:1;
++	u8 scsi_blocked:1;
+ 
+ 	u8 revid;
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_tmpl.c
+index 33142610882f..b18646d6057f 100644
+--- a/drivers/scsi/qla2xxx/qla_tmpl.c
++++ b/drivers/scsi/qla2xxx/qla_tmpl.c
+@@ -401,9 +401,6 @@ qla27xx_fwdt_entry_t263(struct scsi_qla_host *vha,
+ 		for (i = 0; i < vha->hw->max_req_queues; i++) {
+ 			struct req_que *req = vha->hw->req_q_map[i];
+ 
+-			if (!test_bit(i, vha->hw->req_qid_map))
+-				continue;
+-
+ 			if (req || !buf) {
+ 				length = req ?
+ 				    req->length : REQUEST_ENTRY_CNT_24XX;
+@@ -418,9 +415,6 @@ qla27xx_fwdt_entry_t263(struct scsi_qla_host *vha,
+ 		for (i = 0; i < vha->hw->max_rsp_queues; i++) {
+ 			struct rsp_que *rsp = vha->hw->rsp_q_map[i];
+ 
+-			if (!test_bit(i, vha->hw->rsp_qid_map))
+-				continue;
+-
+ 			if (rsp || !buf) {
+ 				length = rsp ?
+ 				    rsp->length : RESPONSE_ENTRY_CNT_MQ;
+@@ -660,9 +654,6 @@ qla27xx_fwdt_entry_t274(struct scsi_qla_host *vha,
+ 		for (i = 0; i < vha->hw->max_req_queues; i++) {
+ 			struct req_que *req = vha->hw->req_q_map[i];
+ 
+-			if (!test_bit(i, vha->hw->req_qid_map))
+-				continue;
+-
+ 			if (req || !buf) {
+ 				qla27xx_insert16(i, buf, len);
+ 				qla27xx_insert16(1, buf, len);
+@@ -675,9 +666,6 @@ qla27xx_fwdt_entry_t274(struct scsi_qla_host *vha,
+ 		for (i = 0; i < vha->hw->max_rsp_queues; i++) {
+ 			struct rsp_que *rsp = vha->hw->rsp_q_map[i];
+ 
+-			if (!test_bit(i, vha->hw->rsp_qid_map))
+-				continue;
+-
+ 			if (rsp || !buf) {
+ 				qla27xx_insert16(i, buf, len);
+ 				qla27xx_insert16(1, buf, len);
+diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+index f1cdf32d7514..8927f9f54ad9 100644
+--- a/drivers/scsi/ses.c
++++ b/drivers/scsi/ses.c
+@@ -99,7 +99,7 @@ static int ses_recv_diag(struct scsi_device *sdev, int page_code,
+ 
+ 	ret =  scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buf, bufflen,
+ 				NULL, SES_TIMEOUT, SES_RETRIES, NULL);
+-	if (unlikely(!ret))
++	if (unlikely(ret))
+ 		return ret;
+ 
+ 	recv_page_code = ((unsigned char *)buf)[0];
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index 8e5013d9cad4..94e402ed30f6 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -4299,11 +4299,11 @@ static int st_probe(struct device *dev)
+ 	kref_init(&tpnt->kref);
+ 	tpnt->disk = disk;
+ 	disk->private_data = &tpnt->driver;
+-	disk->queue = SDp->request_queue;
+ 	/* SCSI tape doesn't register this gendisk via add_disk().  Manually
+ 	 * take queue reference that release_disk() expects. */
+-	if (!blk_get_queue(disk->queue))
++	if (!blk_get_queue(SDp->request_queue))
+ 		goto out_put_disk;
++	disk->queue = SDp->request_queue;
+ 	tpnt->driver = &st_template;
+ 
+ 	tpnt->device = SDp;
