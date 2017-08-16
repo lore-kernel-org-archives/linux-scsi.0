@@ -1,49 +1,36 @@
-From: Todd Poynor <toddpoynor@google.com>
-Subject: [PATCH] sg: recheck MMAP_IO request length with lock held
-Date: Tue, 15 Aug 2017 21:48:43 -0700
-Message-ID: <20170816044843.96697-1-toddpoynor@google.com>
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Subject: [PATCH] scsi: ncr5380: constify pnp_device_id
+Date: Wed, 16 Aug 2017 10:28:40 +0530
+Message-ID: <1125161eb43bc7ee7f748a040ab06b40cc1537dd.1502859040.git.arvind.yadav.cs@gmail.com>
+References: <60c34272432b3411cd5d55728c62481e133f32a6.1502859040.git.arvind.yadav.cs@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <60c34272432b3411cd5d55728c62481e133f32a6.1502859040.git.arvind.yadav.cs@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Todd Poynor <toddpoynor@google.com>
+To: fthain@telegraphics.com.au, schmitzmic@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Commit 1bc0eb044615 ("scsi: sg: protect accesses to 'reserved' page
-array") adds needed concurrency protection for the "reserve" buffer.
-Some checks that are initially made outside the lock are replicated once
-the lock is taken to ensure the checks and resulting decisions are made
-using consistent state.
+pnp_device_id are not supposed to change at runtime. All functions
+working with pnp_device_id provided by <linux/pnp.h> work with
+const pnp_device_id. So mark the non-const structs as const.
 
-The check that a request with flag SG_FLAG_MMAP_IO set fits in the
-reserve buffer also needs to be performed again under the lock to
-ensure the reserve buffer length compared against matches the value in
-effect when the request is linked to the reserve buffer.  An -ENOMEM
-should be returned in this case, instead of switching over to an
-indirect buffer as for non-MMAP_IO requests.
-
-Signed-off-by: Todd Poynor <toddpoynor@google.com>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/scsi/sg.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/scsi/g_NCR5380.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index d7ff71e0c85c..3a44b4bc872b 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -1735,9 +1735,12 @@ sg_start_req(Sg_request *srp, unsigned char *cmd)
- 		    !sfp->res_in_use) {
- 			sfp->res_in_use = 1;
- 			sg_link_reserve(sfp, srp, dxfer_len);
--		} else if ((hp->flags & SG_FLAG_MMAP_IO) && sfp->res_in_use) {
-+		} else if (hp->flags & SG_FLAG_MMAP_IO) {
-+			res = -EBUSY; /* sfp->res_in_use == 1 */
-+			if (dxfer_len > rsv_schp->bufflen)
-+				res = -ENOMEM;
- 			mutex_unlock(&sfp->f_mutex);
--			return -EBUSY;
-+			return res;
- 		} else {
- 			res = sg_build_indirect(req_schp, sfp, dxfer_len);
- 			if (res) {
+diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
+index c34fc91..1968d81 100644
+--- a/drivers/scsi/g_NCR5380.c
++++ b/drivers/scsi/g_NCR5380.c
+@@ -703,7 +703,7 @@ static struct isa_driver generic_NCR5380_isa_driver = {
+ };
+ 
+ #ifdef CONFIG_PNP
+-static struct pnp_device_id generic_NCR5380_pnp_ids[] = {
++static const struct pnp_device_id generic_NCR5380_pnp_ids[] = {
+ 	{ .id = "DTC436e", .driver_data = BOARD_DTC3181E },
+ 	{ .id = "" }
+ };
 -- 
-2.14.1.480.gb18f417b89-goog
+2.7.4
