@@ -1,46 +1,49 @@
-From: "Tangchen (UVP)" <tang.chen@huawei.com>
-Subject: =?utf-8?B?UkU6IOetlOWkjTogW2lzY3NpXSBEZWFkbG9jayBvY2N1cnJlZCB3aGVuIG5l?=
- =?utf-8?Q?twork_is_in_error?=
-Date: Wed, 16 Aug 2017 03:03:48 +0000
-Message-ID: <22E823DBB7698E489DC113638F7470729C2D9E@DGGEMM506-MBX.china.huawei.com>
-References: <22E823DBB7698E489DC113638F7470729C17B6@DGGEMM506-MBX.china.huawei.com>
-         <1502723836.2333.3.camel@wdc.com>
-         <22E823DBB7698E489DC113638F7470729C1AF0@DGGEMM506-MBX.china.huawei.com>
- <1502833548.2259.9.camel@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: Todd Poynor <toddpoynor@google.com>
+Subject: [PATCH] sg: recheck MMAP_IO request length with lock held
+Date: Tue, 15 Aug 2017 21:48:43 -0700
+Message-ID: <20170816044843.96697-1-toddpoynor@google.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1502833548.2259.9.camel@wdc.com>
-Content-Language: zh-CN
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "lduncan@suse.com" <lduncan@suse.com>, "cleech@redhat.com" <cleech@redhat.com>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, guijianfeng <guijianfeng@huawei.com>, zhengchuan <zhengchuan@huawei.com>, "Tangchen (UVP)" <tang.chen@huawei.com>
+To: Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Todd Poynor <toddpoynor@google.com>
 List-Id: linux-scsi@vger.kernel.org
 
-PiBPbiBUdWUsIDIwMTctMDgtMTUgYXQgMDI6MTYgKzAwMDAsIFRhbmdjaGVuIChVVlApIHdyb3Rl
-Og0KPiA+IEJ1dCBJJ20gbm90IHVzaW5nIG1xLCBhbmQgSSBydW4gaW50byB0aGVzZSB0d28gcHJv
-YmxlbXMgaW4gYSBub24tbXEgc3lzdGVtLg0KPiA+IFRoZSBwYXRjaCB5b3UgcG9pbnRlZCBvdXQg
-aXMgZml4IGZvciBtcSwgc28gSSBkb24ndCB0aGluayBpdCBjYW4gcmVzb2x2ZSB0aGlzDQo+IHBy
-b2JsZW0uDQo+ID4NCj4gPiBJSVVDLCBtcSBpcyBmb3IgU1NEID8gIEknbSBub3QgdXNpbmcgc3Nk
-LCBzbyBtcSBpcyBkaXNhYmxlZC4NCj4gDQo+IEhlbGxvIFRhbmdjaGVuLA0KPiANCj4gUGxlYXNl
-IHBvc3QgcmVwbGllcyBiZWxvdyB0aGUgb3JpZ2luYWwgZS1tYWlsIGluc3RlYWQgb2YgYWJvdmUg
-LSB0aGF0IGlzIHRoZSByZXBseQ0KPiBzdHlsZSB1c2VkIG9uIGFsbCBMaW51eC1yZWxhdGVkIG1h
-aWxpbmcgbGlzdHMgSSBrbm93IG9mLiBGcm9tDQo+IGh0dHBzOi8vZW4ud2lraXBlZGlhLm9yZy93
-aWtpL1Bvc3Rpbmdfc3R5bGU6DQo+IA0KPiBBOiBCZWNhdXNlIGl0IG1lc3NlcyB1cCB0aGUgb3Jk
-ZXIgaW4gd2hpY2ggcGVvcGxlIG5vcm1hbGx5IHJlYWQgdGV4dC4NCj4gUTogV2h5IGlzIHRvcC1w
-b3N0aW5nIHN1Y2ggYSBiYWQgdGhpbmc/DQo+IEE6IFRvcC1wb3N0aW5nLg0KPiBROiBXaGF0IGlz
-IHRoZSBtb3N0IGFubm95aW5nIHRoaW5nIGluIGUtbWFpbD8NCg0KSGkgQmFydCwNCg0KVGhhbmtz
-IGZvciB0aGUgcmVwbHkuIFdpbGwgcG9zdCB0aGUgcmVwbHkgaW4gZS1tYWlsLiA6KQ0KDQo+IA0K
-PiBSZWdhcmRpbmcgeW91ciBxdWVzdGlvbjogc29ycnkgYnV0IEkgcXVvdGVkIHRoZSB3cm9uZyBj
-b21taXQgaW4gbXkgcHJldmlvdXMNCj4gZS1tYWlsLiBUaGUgY29tbWl0IEkgc2hvdWxkIGhhdmUg
-cmVmZXJyZWQgdG8gaXMgMjU1ZWU5MzIwZTVkICgic2NzaTogTWFrZQ0KPiBfX3Njc2lfcmVtb3Zl
-X2RldmljZSBnbyBzdHJhaWdodCBmcm9tIEJMT0NLRUQgdG8gREVMIikuIFRoYXQgcGF0Y2ggbm90
-IG9ubHkNCj4gYWZmZWN0cyBzY3NpLW1xIGJ1dCBhbHNvIHRoZSBzaW5nbGUtcXVldWUgY29kZSBp
-biB0aGUgU0NTSSBjb3JlLg0KDQpPSywgSSdsbCB0cnkgdGhpcyBvbmUuIFRoeC4NCg0KPiANCj4g
-YmxrLW1xL3Njc2ktbXEgd2FzIGludHJvZHVjZWQgZm9yIFNTRHMgYnV0IGlzIG5vdCBvbmx5IGlu
-dGVuZGVkIGZvciBTU0RzLg0KPiBUaGUgcGxhbiBpcyB0byByZW1vdmUgdGhlIGJsay1zcS9zY3Np
-LXNxIGNvZGUgb25jZSB0aGUgYmxrLW1xL3Njc2ktbXEgY29kZQ0KPiB3b3JrcyBhdCBsZWFzdCBh
-cyBmYXN0IGFzIHRoZSBzaW5nbGUgcXVldWUgY29kZSBmb3IgYWxsIHN1cHBvcnRlZCBkZXZpY2Vz
-Lg0KPiBUaGF0IGluY2x1ZGVzIGhhcmQgZGlza3MuDQoNCk9LLCB0aGFua3MgZm9yIHRlbGwgbWUg
-dGhpcy4NCg0KPiANCj4gQmFydC4NCg==
+Commit 1bc0eb044615 ("scsi: sg: protect accesses to 'reserved' page
+array") adds needed concurrency protection for the "reserve" buffer.
+Some checks that are initially made outside the lock are replicated once
+the lock is taken to ensure the checks and resulting decisions are made
+using consistent state.
+
+The check that a request with flag SG_FLAG_MMAP_IO set fits in the
+reserve buffer also needs to be performed again under the lock to
+ensure the reserve buffer length compared against matches the value in
+effect when the request is linked to the reserve buffer.  An -ENOMEM
+should be returned in this case, instead of switching over to an
+indirect buffer as for non-MMAP_IO requests.
+
+Signed-off-by: Todd Poynor <toddpoynor@google.com>
+---
+ drivers/scsi/sg.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index d7ff71e0c85c..3a44b4bc872b 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -1735,9 +1735,12 @@ sg_start_req(Sg_request *srp, unsigned char *cmd)
+ 		    !sfp->res_in_use) {
+ 			sfp->res_in_use = 1;
+ 			sg_link_reserve(sfp, srp, dxfer_len);
+-		} else if ((hp->flags & SG_FLAG_MMAP_IO) && sfp->res_in_use) {
++		} else if (hp->flags & SG_FLAG_MMAP_IO) {
++			res = -EBUSY; /* sfp->res_in_use == 1 */
++			if (dxfer_len > rsv_schp->bufflen)
++				res = -ENOMEM;
+ 			mutex_unlock(&sfp->f_mutex);
+-			return -EBUSY;
++			return res;
+ 		} else {
+ 			res = sg_build_indirect(req_schp, sfp, dxfer_len);
+ 			if (res) {
+-- 
+2.14.1.480.gb18f417b89-goog
