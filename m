@@ -1,31 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] Revert "scsi-mq: Always unprepare before requeuing a request"
-Date: Wed, 16 Aug 2017 20:11:41 -0400
-Message-ID: <yq1fucrqchu.fsf@oracle.com>
-References: <20170816174324.29276-1-bart.vanassche@wdc.com>
+Subject: Re: [PATCH] scsi: cxgb4i: call neigh_event_send() to update MAC address
+Date: Wed, 16 Aug 2017 20:12:57 -0400
+Message-ID: <yq1bmnfqcfq.fsf@oracle.com>
+References: <1502892632-6563-1-git-send-email-varun@chelsio.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:41367 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:41701 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751601AbdHQAMG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Aug 2017 20:12:06 -0400
-In-Reply-To: <20170816174324.29276-1-bart.vanassche@wdc.com> (Bart Van
-        Assche's message of "Wed, 16 Aug 2017 10:43:24 -0700")
+        with ESMTP id S1752027AbdHQANC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Aug 2017 20:13:02 -0400
+In-Reply-To: <1502892632-6563-1-git-send-email-varun@chelsio.com> (Varun
+        Prakash's message of "Wed, 16 Aug 2017 19:40:32 +0530")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Damien Le Moal <damien.lemoal@wdc.com>, Johannes Thumshirn <jthumshirn@suse.de>, Michael Ellerman <mpe@ellerman.id.au>, Brian King <brking@linux.vnet.ibm.com>, Abdul Haleem <abdhalee@linux.vnet.ibm.com>, stable@vger.kernel.org
+To: Varun Prakash <varun@chelsio.com>
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, indranil@chelsio.com
 
 
-Bart,
+Varun,
 
-> For an unknown reason this patch causes the boot process to hang on
-> PowerPC systems:
+> If nud_state is not valid then call neigh_event_send() to update MAC
+> address.
 
-OK, dropped it from fixes for now.
-
-Thanks!
+Applied to 4.13/scsi-fixes, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
