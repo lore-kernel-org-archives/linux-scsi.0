@@ -1,45 +1,36 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/7] smartpqi: add pqi reset quiesce support
-Date: Wed, 16 Aug 2017 20:44:13 -0700
-Message-ID: <1502941453.3589.22.camel@linux.vnet.ibm.com>
-References: <150239072706.23771.1380444570336852695.stgit@brunhilda>
-         <150239079917.23771.5169713749423377610.stgit@brunhilda>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [PATCH] scsi: sg: off by one in sg_ioctl()
+Date: Thu, 17 Aug 2017 10:09:54 +0300
+Message-ID: <20170817070954.d4gg7hqgg2qjf6d3@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:52535 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751549AbdHQDo3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 16 Aug 2017 23:44:29 -0400
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v7H3i3Mo011719
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Aug 2017 23:44:29 -0400
-Received: from e18.ny.us.ibm.com (e18.ny.us.ibm.com [129.33.205.208])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2ccwe79exf-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Aug 2017 23:44:29 -0400
-Received: from localhost
-        by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
-        Wed, 16 Aug 2017 23:44:28 -0400
-In-Reply-To: <150239079917.23771.5169713749423377610.stgit@brunhilda>
+Received: from userp1040.oracle.com ([156.151.31.81]:20772 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750766AbdHQHKX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2017 03:10:23 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>, joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
-Cc: linux-scsi@vger.kernel.org
+To: Doug Gilbert <dgilbert@interlog.com>, Hannes Reinecke <hare@suse.de>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On Thu, 2017-08-10 at 13:46 -0500, Don Brace wrote:
-> From: Kevin Barnett <kevin.barnett@microseim.com>
+If "val" is SG_MAX_QUEUE then we are one element beyond the end of the
+"rinfo" array so the > should be >=.
 
-To misspell someone else's company name could be considered unfortunate
-... to misspell your own looks like carelessness.
+Fixes: 109bade9c625 ("scsi: sg: use standard lists for sg_requests")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-You've done this twice, by the way.
-
-James
-
-> Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
-> Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
-> Signed-off-by: Don Brace <don.brace@microsemi.com>
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index d7ff71e0c85c..84e782d8e7c3 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -1021,7 +1021,7 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ 			read_lock_irqsave(&sfp->rq_list_lock, iflags);
+ 			val = 0;
+ 			list_for_each_entry(srp, &sfp->rq_list, entry) {
+-				if (val > SG_MAX_QUEUE)
++				if (val >= SG_MAX_QUEUE)
+ 					break;
+ 				memset(&rinfo[val], 0, SZ_SG_REQ_INFO);
+ 				rinfo[val].req_state = srp->done + 1;
