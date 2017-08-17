@@ -1,57 +1,32 @@
-From: Gionatan Danti <g.danti@assyoma.it>
-Subject: Re: No I/O errors reported after SATA link hard reset
-Date: Thu, 17 Aug 2017 16:23:59 +0200
-Message-ID: <b3f6735d333aeee62410d5cfea852fd4@assyoma.it>
-References: <fe5cc200a4cba71cb9e5e6a980699805@assyoma.it>
- <13561110-4e59-303a-8e3d-dd60c1bafba8@fastmail.fm>
- <20170817124821.GA3238792@devbig577.frc2.facebook.com>
- <559dc5fe-c162-41e6-7f14-0f3837b64585@fastmail.fm>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [PATCH] scsi: hpsa: fix the device_id in hpsa_update_device_info()
+Date: Thu, 17 Aug 2017 17:44:44 +0300
+Message-ID: <20170817144444.tocisnlw6grmaf75@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mr002msb.fastweb.it ([85.18.95.86]:59084 "EHLO
-        mr002msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750857AbdHQOYF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2017 10:24:05 -0400
-In-Reply-To: <559dc5fe-c162-41e6-7f14-0f3837b64585@fastmail.fm>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Don Brace <don.brace@microsemi.com>, ". Hannes Reinecke" <hare@suse.de>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bernd Schubert <"Bernd Schubert"@fastmail.fm>
-Cc: Tejun Heo <tj@kernel.org>, Bernd Schubert <bernd.schubert@fastmail.fm>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi Bernd,
+The parentheses are in the wrong place so we specify the length as
+"sizeof(this_device->device_id) < 0" which is zero.
 
-Il 17-08-2017 15:18 Bernd Schubert ha scritto:
-> 
-> So for Gionatan the root cause was an instable power supply, but in my
-> case there wasn't any power loss, there were just failed sata commands.
+Fixes: 988b87edd231 ("scsi: hpsa: Ignore errors for unsupported LV_DEVICE_ID VPD page")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-I tried many times to replicate the error by briefly 
-disconnecting/reconnecting the SATA cable, but I had *no* corruption in 
-this case. Sure, this was my experience, but a bad-behaving disk 
-firmware can do all sort of bad things with the volatile cache, 
-especially when renegotiating the host link.
-
-I my case, I did *not* change the power supply, rather the SATA power 
-cable: my theory is that, as the previous cable was shared between the 
-two disks, somewhat low-voltage spiked find their ways and the second 
-disk simply "rebooted". The new cable is dedicated to the SATA disk wich 
-was previously failing.
-
-What concern my is that, reading the linux-raid mailing list, many user 
-have historycally reported high mismatch count in RAID1 arrays. These 
-mismatches were generally discarded saying "RAID1 is prone to false 
-positives" but, in my experience, these "false mismatches" are quite 
-rare. What it means is that many users *are probably suffering* from my 
-(and your) problem, without never realizing that...
-
-Regards.
-
--- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 2773dd7a2087..a22295ee3b70 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -3827,7 +3827,7 @@ static int hpsa_update_device_info(struct ctlr_info *h,
+ 	memset(this_device->device_id, 0,
+ 		sizeof(this_device->device_id));
+ 	if (hpsa_get_device_id(h, scsi3addr, this_device->device_id, 8,
+-		sizeof(this_device->device_id) < 0))
++		sizeof(this_device->device_id)) < 0)
+ 		dev_err(&h->pdev->dev,
+ 			"hpsa%d: %s: can't get device id for host %d:C0:T%d:L%d\t%s\t%.16s\n",
+ 			h->ctlr, __func__,
