@@ -1,7 +1,7 @@
 From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Subject: [PATCH 2/3] scsi: ibmvscsi: constify vio_device_id
-Date: Thu, 17 Aug 2017 19:15:06 +0530
-Message-ID: <1502977507-2954-2-git-send-email-arvind.yadav.cs@gmail.com>
+Subject: [PATCH 3/3] scsi: ibmvscsi_tgt: constify vio_device_id
+Date: Thu, 17 Aug 2017 19:15:07 +0530
+Message-ID: <1502977507-2954-3-git-send-email-arvind.yadav.cs@gmail.com>
 References: <1502977507-2954-1-git-send-email-arvind.yadav.cs@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1502977507-2954-1-git-send-email-arvind.yadav.cs@gmail.com>
@@ -16,20 +16,20 @@ const vio_device_id. So mark the non-const structs as const.
 
 Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/scsi/ibmvscsi/ibmvscsi.c | 2 +-
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index da22b36..7d156b161 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -2330,7 +2330,7 @@ static int ibmvscsi_resume(struct device *dev)
-  * ibmvscsi_device_table: Used by vio.c to match devices in the device tree we 
-  * support.
-  */
--static struct vio_device_id ibmvscsi_device_table[] = {
-+static const struct vio_device_id ibmvscsi_device_table[] = {
- 	{"vscsi", "IBM,v-scsi"},
+diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+index 659ab48..7575276 100644
+--- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
++++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+@@ -3956,7 +3956,7 @@ static struct class ibmvscsis_class = {
+ 	.dev_groups	= ibmvscsis_dev_groups,
+ };
+ 
+-static struct vio_device_id ibmvscsis_device_table[] = {
++static const struct vio_device_id ibmvscsis_device_table[] = {
+ 	{ "v-scsi-host", "IBM,v-scsi-host" },
  	{ "", "" }
  };
 -- 
