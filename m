@@ -1,38 +1,40 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: smp-induced oops/NULL pointer dereference in mpt3sas, from kernel
- >= 4.11
-Date: Thu, 17 Aug 2017 16:02:00 +0000
-Message-ID: <1502985717.2615.11.camel@wdc.com>
-References: <155d5b2c7af4ae0cc6162baf6a52ef5b@mail.gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] Revert "scsi-mq: Always unprepare before requeuing a request"
+Date: Thu, 17 Aug 2017 12:45:51 -0400
+Message-ID: <yq14lt6m9c0.fsf@oracle.com>
+References: <20170816174324.29276-1-bart.vanassche@wdc.com>
+        <yq1fucrqchu.fsf@oracle.com>
+        <a757a93a-0052-e22f-b035-b8cc27256dc5@wdc.com>
+        <3401ef29-7450-eb15-9dd1-2f021354286d@wdc.com>
+        <yq18tijow0o.fsf@oracle.com> <1502933351.14158.3.camel@wdc.com>
+        <yq1a82znec9.fsf@oracle.com> <1502937699.2763.1.camel@wdc.com>
+        <yq1tw16nbzf.fsf@oracle.com> <1502983764.2615.3.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <155d5b2c7af4ae0cc6162baf6a52ef5b@mail.gmail.com>
-Content-Language: en-US
-Content-ID: <2D8D73D94E07FB46AC2D085188B39288@namprd04.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "sreekanth.reddy@broadcom.com" <sreekanth.reddy@broadcom.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:49748 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752335AbdHQQrK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2017 12:47:10 -0400
+In-Reply-To: <1502983764.2615.3.camel@wdc.com> (Bart Van Assche's message of
+        "Thu, 17 Aug 2017 15:29:26 +0000")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, Damien Le Moal <Damien.LeMoal@wdc.com>, "hch@lst.de" <hch@lst.de>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "brking@linux.vnet.ibm.com" <brking@linux.vnet.ibm.com>, "abdhalee@linux.vnet.ibm.com" <abdhalee@linux.vnet.ibm.com>, "hare@suse.com" <hare@suse.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "mpe@ellerman.id.au" <mpe@ellerman.id.au>
 
-T24gVGh1LCAyMDE3LTA4LTE3IGF0IDE1OjE4ICswNTMwLCBDaGFpdHJhIEJhc2FwcGEgd3JvdGU6
-DQo+IFdlIGFuYWx5emVkIHRoaXMgaXNzdWUgYW5kIGNvdWxkIGZpZ3VyZSBvdXQgaXQgaXMgbm90
-IGJlY2F1c2Ugb2YgZHJpdmVyLA0KPiBpdHMgYmVjYXVzZSB0aGUgInNlbnNlIiBmaWVsZCBvZiB0
-aGUgJ3N0cnVjdCBzY3NpX3JlcXVlc3QnIGlzIG5vdCBiZWluZw0KPiBwb3B1bGF0ZWQgcHJvcGVy
-bHkgZnJvbSB0aGUgdXBwZXIgbGF5ZXIuDQo+IEFuZCB0aGlzICJzZW5zZSIgbWVtYmVyIGlzIGJl
-aW5nIHJlZmVyZW5jZWQgaW4gb3VyIGRyaXZlciBjb2RlIGZvciBrZXJuZWwNCj4gdmVyc2lvbnMg
-Pj0gNC4xMSBhcyBzaG93biBiZWxvdyBpbiB0aGUgc25pcHBldDoNCj4gV2hlcmVhcyBhcyBmb3Ig
-PCA0LjExIGtlcm5lbCB2ZXJzaW9uIHRoaXMgInNlbnNlIiBtZW1iZXIgd2FzIHJlZmVyZW5jZWQN
-Cj4gdmlhICdzdHJ1Y3QgcmVxdWVzdCcNCj4gDQo+IA0KPiBzdGF0aWMgaW50DQo+IF90cmFuc3Bv
-cnRfc21wX2hhbmRsZXIgKC4uLi4uKSB7DQo+IC4uLi4uDQo+IC4uLi4uDQo+ID4gPiBtZW1jcHko
-c2NzaV9yZXEocmVxKS0+c2Vuc2UsIG1waV9yZXBseSwgc2l6ZW9mKCptcGlfcmVwbHkpKTsNCj4g
-DQo+IC4uLi4uDQo+IC4uLi4uDQo+IH0NCj4gDQo+IEFuZCBoZW5jZSB0aGUgTlVMTCBwb2ludGVy
-IGRlcmVmZXJlbmNlIGNhbGwgdHJhY2UgaXMgc2VlbiBmb3IgdGhlIGFib3ZlDQo+IGNodW5rIG9m
-IG1wdDNzYXMuIFRoaXMgbmVlZHMgdG8gYmUgYWRkcmVzc2VkIGZyb20gdXBwZXIgbGF5ZXIsIHNv
-IHBsZWFzZQ0KPiBoZWxwIHVzIGluIGdldHRpbmcgdGhpcyByZXNvbHZlZC4NCg0KSGVsbG8gQ2hh
-aXRyYSwNCg0KSGF2ZSB5b3Ugbm90aWNlZCB0aGUgZm9sbG93aW5nIGUtbWFpbCB0aHJlYWQ6ICJb
-UkZDIFBBVENIIDAvNl0gYnNnOiBmaXgNCnJlZ3Jlc3Npb24gcmVzdWx0aW5nIGluIHBhbmljcyB3
-aGVuIHNlbmRpbmcgY29tbWFuZHMgdmlhIEJTRyBhbmQgc29tZQ0Kc2FuaXR5IGNsZWFudXBzIiAo
-aHR0cDovL3d3dy5zcGluaWNzLm5ldC9saXN0cy9saW51eC1zY3NpL21zZzExMTcyNC5odG1sKT8N
-Cg0KQmFydC4=
+
+Bart,
+
+> I think this means that the ipr fix went upstream before it ended up in
+> linux-next.
+
+OK.
+
+Brian: Please make sure you test with your ipr change in place as well
+as Bart's patch. And then report back.
+
+Thanks!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
