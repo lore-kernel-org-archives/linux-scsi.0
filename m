@@ -1,48 +1,44 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: RE: [PATCH 1/7] smartpqi: add pqi reset quiesce support
-Date: Thu, 17 Aug 2017 15:15:01 +0000
-Message-ID: <4993A297653ECB4581FA5C3C31323D195B8D0FE6@avsrvexchmbx2.microsemi.net>
-References: <150239072706.23771.1380444570336852695.stgit@brunhilda>
-         <150239079917.23771.5169713749423377610.stgit@brunhilda>
- <1502941453.3589.22.camel@linux.vnet.ibm.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH] Revert "scsi-mq: Always unprepare before requeuing a
+ request"
+Date: Thu, 17 Aug 2017 15:29:26 +0000
+Message-ID: <1502983764.2615.3.camel@wdc.com>
+References: <20170816174324.29276-1-bart.vanassche@wdc.com>
+         <yq1fucrqchu.fsf@oracle.com> <a757a93a-0052-e22f-b035-b8cc27256dc5@wdc.com>
+         <3401ef29-7450-eb15-9dd1-2f021354286d@wdc.com> <yq18tijow0o.fsf@oracle.com>
+         <1502933351.14158.3.camel@wdc.com> <yq1a82znec9.fsf@oracle.com>
+         <1502937699.2763.1.camel@wdc.com> <yq1tw16nbzf.fsf@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0056.outbound.protection.outlook.com ([104.47.34.56]:3680
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751882AbdHQPP0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 17 Aug 2017 11:15:26 -0400
-In-Reply-To: <1502941453.3589.22.camel@linux.vnet.ibm.com>
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <yq1tw16nbzf.fsf@oracle.com>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-ID: <FF139DF78BF9EF49978DFE9C91F948EF@namprd04.prod.outlook.com>
+Sender: stable-owner@vger.kernel.org
+To: "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "jthumshirn@suse.de" <jthumshirn@suse.de>, Damien Le Moal <Damien.LeMoal@wdc.com>, "hch@lst.de" <hch@lst.de>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "brking@linux.vnet.ibm.com" <brking@linux.vnet.ibm.com>, "abdhalee@linux.vnet.ibm.com" <abdhalee@linux.vnet.ibm.com>, "hare@suse.com" <hare@suse.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "mpe@ellerman.id.au" <mpe@ellerman.id.au>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>, "joseph.szczypek@hpe.com" <joseph.szczypek@hpe.com>, Gerry Morong <gerry.morong@microsemi.com>, John Hall <John.Hall@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, Bader Ali - Saleh <bader.alisaleh@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Viswas G <viswas.g@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "POSWALD@suse.com" <POSWALD@suse.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKYW1lcyBCb3R0b21sZXkgW21h
-aWx0bzpqZWpiQGxpbnV4LnZuZXQuaWJtLmNvbV0NCj4gU2VudDogV2VkbmVzZGF5LCBBdWd1c3Qg
-MTYsIDIwMTcgMTA6NDQgUE0NCj4gVG86IERvbiBCcmFjZSA8ZG9uLmJyYWNlQG1pY3Jvc2VtaS5j
-b20+OyBqb3NlcGguc3pjenlwZWtAaHBlLmNvbTsNCj4gR2VycnkgTW9yb25nIDxnZXJyeS5tb3Jv
-bmdAbWljcm9zZW1pLmNvbT47IEpvaG4gSGFsbA0KPiA8Sm9obi5IYWxsQG1pY3Jvc2VtaS5jb20+
-OyBLZXZpbiBCYXJuZXR0DQo+IDxrZXZpbi5iYXJuZXR0QG1pY3Jvc2VtaS5jb20+OyBNYWhlc2gg
-UmFqYXNoZWtoYXJhDQo+IDxtYWhlc2gucmFqYXNoZWtoYXJhQG1pY3Jvc2VtaS5jb20+OyBCYWRl
-ciBBbGkgLSBTYWxlaA0KPiA8YmFkZXIuYWxpc2FsZWhAbWljcm9zZW1pLmNvbT47IGhjaEBpbmZy
-YWRlYWQub3JnOyBTY290dCBUZWVsDQo+IDxzY290dC50ZWVsQG1pY3Jvc2VtaS5jb20+OyBWaXN3
-YXMgRyA8dmlzd2FzLmdAbWljcm9zZW1pLmNvbT47IEp1c3Rpbg0KPiBMaW5kbGV5IDxqdXN0aW4u
-bGluZGxleUBtaWNyb3NlbWkuY29tPjsgU2NvdHQgQmVuZXNoDQo+IDxzY290dC5iZW5lc2hAbWlj
-cm9zZW1pLmNvbT47IFBPU1dBTERAc3VzZS5jb20NCj4gQ2M6IGxpbnV4LXNjc2lAdmdlci5rZXJu
-ZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMS83XSBzbWFydHBxaTogYWRkIHBxaSByZXNl
-dCBxdWllc2NlIHN1cHBvcnQNCj4gDQo+IEVYVEVSTkFMIEVNQUlMDQo+IA0KPiANCj4gT24gVGh1
-LCAyMDE3LTA4LTEwIGF0IDEzOjQ2IC0wNTAwLCBEb24gQnJhY2Ugd3JvdGU6DQo+ID4gRnJvbTog
-S2V2aW4gQmFybmV0dCA8a2V2aW4uYmFybmV0dEBtaWNyb3NlaW0uY29tPg0KPiANCj4gVG8gbWlz
-c3BlbGwgc29tZW9uZSBlbHNlJ3MgY29tcGFueSBuYW1lIGNvdWxkIGJlIGNvbnNpZGVyZWQgdW5m
-b3J0dW5hdGUNCj4gLi4uIHRvIG1pc3NwZWxsIHlvdXIgb3duIGxvb2tzIGxpa2UgY2FyZWxlc3Nu
-ZXNzLg0KPiANCj4gWW91J3ZlIGRvbmUgdGhpcyB0d2ljZSwgYnkgdGhlIHdheS4NCj4gDQo+IEph
-bWVzDQo+IA0KPiA+IFJldmlld2VkLWJ5OiBTY290dCBCZW5lc2ggPHNjb3R0LmJlbmVzaEBtaWNy
-b3NlbWkuY29tPg0KPiA+IFNpZ25lZC1vZmYtYnk6IEtldmluIEJhcm5ldHQgPGtldmluLmJhcm5l
-dHRAbWljcm9zZW1pLmNvbT4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBEb24gQnJhY2UgPGRvbi5icmFj
-ZUBtaWNyb3NlbWkuY29tPg0KDQpUaGF0J3MgbXkgYmFkLiBJJ2xsIGJlIG1vcmUgY2FyZWZ1bCBp
-biB0aGUgZnV0dXJlLg0KDQpUaGFua3MsDQpEb24gQnJhY2UNCg0KRVNDIC0gU21hcnQgU3RvcmFn
-ZQ0KTWljcm9zZW1pIENvcnBvcmF0aW9uDQoNCg0K
+T24gV2VkLCAyMDE3LTA4LTE2IGF0IDIyOjUxIC0wNDAwLCBNYXJ0aW4gSy4gUGV0ZXJzZW4gd3Jv
+dGU6DQo+ID4gV2hlbiBJIGNoZWNrZWQgZWFybGllciB0b2RheSB0aGUgaXByIHBhdGNoIHdhcyBu
+b3QgeWV0IGluIGxpbnV4LW5leHQNCj4gDQo+IFRoYXQncyB3ZWlyZC4gVGhleSB3ZXJlIGJvdGgg
+Y29tbWl0dGVkIHR3byB3ZWVrcyBhZ28uDQo+IA0KPiBUaGV5IGFwcGVhciB0byBiZSBpbiB0aGVy
+ZSBub3csIHRob3VnaDoNCj4gDQo+IGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51
+eC9rZXJuZWwvZ2l0L25leHQvbGludXgtbmV4dC5naXQvbG9nL2RyaXZlcnMvc2NzaT9vZnM9NTAN
+Cg0KSGVsbG8gTWFydGluLA0KDQpBcyBmYXIgYXMgSSBjYW4gc2VlIGNvbW1pdCAyNzAwNjVlOTJj
+MzEgKCJzY3NpLW1xOiBBbHdheXMgdW5wcmVwYXJlIGJlZm9yZQ0KcmVxdWV1aW5nIGEgcmVxdWVz
+dCIpIHdhcyB5ZXN0ZXJkYXkgaW4gbGludXgtbmV4dCBidXQgbm90IHRoZSBpcHIgZml4DQooY29t
+bWl0IGIwZTE3YTliMGRmMiAoInNjc2k6IGlwcjogRml4IHNjc2ktbXEgbG9ja2RlcCBpc3N1ZSIp
+KS4gVGhlDQppcHIgZml4IGlzIGluIHRvZGF5J3MgbGludXgtbmV4dCBidXQgd2FzIG5vdCBpbiBs
+aW51eC1uZXh0IHllc3RlcmRheSAodGhlDQpBdXN0cmFsaWFuIHRpbWUgem9uZSBhcHBsaWVzIHRv
+IHRoZSBsaW51eC1uZXh0IGRhdGUgbGFiZWxzKToNCiQgZ2l0IHRhZyAtLWNvbnRhaW5zIDI3MDA2
+NWU5MmMzMQ0KbmV4dC0yMDE3MDgxNg0KJCBnaXQgdGFnIC0tY29udGFpbnMgYjBlMTdhOWIwZGYy
+DQpuZXh0LTIwMTcwODE3DQokIGdpdCBzaG93IG5leHQtMjAxNzA4MTYgfCBoZWFkIC0zDQp0YWcg
+bmV4dC0yMDE3MDgxNg0KVGFnZ2VyOiBTdGVwaGVuIFJvdGh3ZWxsIDxzZnJAY2FuYi5hdXVnLm9y
+Zy5hdT4NCkRhdGU6ICAgV2VkIEF1ZyAxNiAxNToyNjo0MyAyMDE3ICsxMDAwDQokIGdpdCBzaG93
+IG5leHQtMjAxNzA4MTcgfCBoZWFkIC0zICANCnRhZyBuZXh0LTIwMTcwODE3DQpUYWdnZXI6IFN0
+ZXBoZW4gUm90aHdlbGwgPHNmckBjYW5iLmF1dWcub3JnLmF1Pg0KRGF0ZTogICBUaHUgQXVnIDE3
+IDE2OjM0OjMwIDIwMTcgKzEwMDANCg0KSSB0aGluayB0aGlzIG1lYW5zIHRoYXQgdGhlIGlwciBm
+aXggd2VudCB1cHN0cmVhbSBiZWZvcmUgaXQgZW5kZWQgdXAgaW4NCmxpbnV4LW5leHQuDQoNCkJh
+cnQu
