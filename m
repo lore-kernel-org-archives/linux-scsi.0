@@ -1,10 +1,8 @@
 From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Subject: [PATCH 3/3] scsi: ibmvscsi_tgt: constify vio_device_id
-Date: Thu, 17 Aug 2017 19:15:07 +0530
-Message-ID: <1502977507-2954-3-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1502977507-2954-1-git-send-email-arvind.yadav.cs@gmail.com>
+Subject: [PATCH 0/3] constify scsi vio_device_id
+Date: Thu, 17 Aug 2017 19:18:43 +0530
+Message-ID: <1502977723-3207-1-git-send-email-arvind.yadav.cs@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1502977507-2954-1-git-send-email-arvind.yadav.cs@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: tyreld@linux.vnet.ibm.com, paulus@samba.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, mpe@ellerman.id.au
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
@@ -14,23 +12,15 @@ vio_device_id are not supposed to change at runtime. All functions
 working with vio_device_id provided by <asm/vio.h> work with
 const vio_device_id. So mark the non-const structs as const.
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
- drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Arvind Yadav (3):
+  [PATCH 1/3] scsi: ibmvfc: constify vio_device_id
+  [PATCH 2/3] scsi: ibmvscsi: constify vio_device_id
+  [PATCH 3/3] scsi: ibmvscsi_tgt: constify vio_device_id
 
-diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-index 659ab48..7575276 100644
---- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-+++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-@@ -3956,7 +3956,7 @@ static struct class ibmvscsis_class = {
- 	.dev_groups	= ibmvscsis_dev_groups,
- };
- 
--static struct vio_device_id ibmvscsis_device_table[] = {
-+static const struct vio_device_id ibmvscsis_device_table[] = {
- 	{ "v-scsi-host", "IBM,v-scsi-host" },
- 	{ "", "" }
- };
+ drivers/scsi/ibmvscsi/ibmvfc.c           | 2 +-
+ drivers/scsi/ibmvscsi/ibmvscsi.c         | 2 +-
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
 -- 
 2.7.4
