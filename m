@@ -1,85 +1,66 @@
-From: Joe Lawrence <joe.lawrence@redhat.com>
-Subject: Re: Spurious DISK_EVENT_MEDIA_CHANGE on USB DVD hotplug?
-Date: Thu, 17 Aug 2017 09:44:13 -0400
-Message-ID: <dfedf1a8-62dd-9917-1a60-6a5d0e7d4732@redhat.com>
-References: <c22ebffe-cf80-c3ef-2bd9-6b3b66271226@redhat.com>
- <20170814183030.GA4087514@devbig577.frc2.facebook.com>
+From: Gionatan Danti <g.danti@assyoma.it>
+Subject: Re: No I/O errors reported after SATA link hard reset
+Date: Thu, 17 Aug 2017 16:15:35 +0200
+Message-ID: <4debd4d8dea1d534ef555ceae4429435@assyoma.it>
+References: <fe5cc200a4cba71cb9e5e6a980699805@assyoma.it>
+ <13561110-4e59-303a-8e3d-dd60c1bafba8@fastmail.fm>
+ <20170817124821.GA3238792@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46474 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751695AbdHQNvn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 17 Aug 2017 09:51:43 -0400
-In-Reply-To: <20170814183030.GA4087514@devbig577.frc2.facebook.com>
-Content-Language: en-US
+Received: from mr003msb.fastweb.it ([85.18.95.87]:37910 "EHLO
+        mr003msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752403AbdHQOPn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2017 10:15:43 -0400
+In-Reply-To: <20170817124821.GA3238792@devbig577.frc2.facebook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: Kay Sievers <kay@vrfy.org>, linux-scsi@vger.kernel.org
+Cc: Bernd Schubert <bernd.schubert@fastmail.fm>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
-On 08/14/2017 02:30 PM, Tejun Heo wrote:
-> Hello, Joe.
-> 
-> On Thu, Aug 10, 2017 at 10:45:54AM -0400, Joe Lawrence wrote:
->> In the case of my USB DVD -> laptop example, there is no media in my
->> device, however I still see the DISK_EVENT_MEDIA_CHANGE event.  This is
->> a bit confusing, and I was wondering if there was an explanation for
->> the following:
->>
->> drivers/scsi/sr.c :: sr_probe()
->>
->>         disk->events = DISK_EVENT_MEDIA_CHANGE | DISK_EVENT_EJECT_REQUEST;
->>         ...
->>         cd->media_present = 1;
->>
->> DISK_EVENT_MEDIA_CHANGE events will pass through to userspace and
->> for some reason cd->media_present defaults to 1?  More on that below...
-> 
-> I don't have any concrete ideas but I think the only thing it's trying
-> to do is to always generate at least one changed event no matter what.
-> 
-> ...
->> sr_check_events() compares the previous (in this case, default)
->> media_present value with what the TUR returns.  If it has changed, then
->> turn on the DISK_EVENT_MEDIA_CHANGE event bit.
->>
->> In my laptop USB DVD case, !scsi_status_is_good and sshdr.asc == 0x3a,
->> so last_present (1) and cd->media_present (0) mis-compare and the change
->> event is set.  That does not seem intuitive to me, is this a bug?
-> 
-> It's not incorrect.  We can try to change the behavior to avoid double
-> notifications but given that this has been like this for a really long
-> time and that it isn't technically incorrect, I'm not sure changing it
-> is a good idea.  It might as well break other things.
+Hi Tejun,
 
-Without a definition of DISK_EVENT_MEDIA_CHANGE or its udev
-DISK_MEDIA_CHANGE counterpart it's kinda hard to say :)  But I agree
-that changing this behavior could have inadvertent effects.
+Il 17-08-2017 14:48 Tejun Heo ha scritto:
+> Recovered errors aren't reported as IO errors and at least from link
+> state proper there's no way for the driver to tell apart link
+> glitches and buffer-erasing power issues.
 
->> Bringing this back to the reported BMC case, which presumably does have
->> "media" present in the virtual device... is it reasonable to expect a
->> DISK_EVENT_MEDIA_CHANGE even for a new device that contains media?  (I
->> haven't verified, but in this case GET_EVENT_STATUS_NOTIFICATION might
->> be enough to set media present.)
+Ok, so *this* is the root cause of the problem: libata not identifying 
+spurious link renegotiations vs brief powerloss/powerup events. Out of 
+curiosity: is this a SATA-specific problem (ie: in the SATA 
+specification), or even SAS disks are affected?
+
+>> > - why the scsi midlevel does not respond to a power loss event by
+>> > immediately offlining the disks?
 > 
-> Yeah, I think so.
-> 
->> If there is documentation that explains DISK_EVENT_MEDIA_CHANGE conditions
->> somewhere, feel free to point me there.
-> 
-> AFAIK, there isn't any.  The only thing it tries to do is generating
-> at least one event after media change.  Given that media is reported
-> present after the last notification, I think userspace should be able
-> to do the right thing (and must have been doing the right thing until
-> recently).
+> Because we don't wanna be ditching disks on temporary link glitches,
+> which do happen once in a while.
 
-I have no idea if udev or other userspace has changed in this respect,
-or this is simply a timing window that this particular user has fallen
-into.  This is a simulated device, so it might be fast/slower than any
-real hardware.
+Any chances to report I/O errors to the upper layers *without* offlining 
+the device? In this manner, upper layers (ie: MDRAID) can act in a more 
+informate way. For example: single disk device will simple retry the 
+failed operation, while MDRAID can take the "badblocks" code path to 
+deal with the error.
 
-Thanks for chiming in,
+> So, the right way to deal with the problem probably is making use of
+> the SMART counter which indicates power loss events and verify that
+> the counter hasn't increased over link issues.  If it changed, the
+> device should be detached and re-probed, which will make it come back
+> as a different block device.  Unfortunately, I haven't had the chance
+> to actually implement that.
 
--- Joe
+This is a very good idea, maybe I can implement it in userspace with a 
+simple, fast polling scheme (for example, each 60 seconds). Such a 
+polling would not prevent all corruption scenarios, but will at least 
+timely inform the user.
+
+Thanks.
+
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
