@@ -1,61 +1,48 @@
-From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: [PATCH] sd: read unmap block limits even if lbpme=0
-Date: Thu, 17 Aug 2017 23:10:25 +0800
-Message-ID: <CAGnHSEnMtQPL65Pas7jeFfmZvXPQV+wpS-48FR1nfeGf3pE-Jg@mail.gmail.com>
-References: <59921282.c3341c0a.a8437.1b70@mx.google.com> <yq160dnndst.fsf@oracle.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH 1/7] smartpqi: add pqi reset quiesce support
+Date: Thu, 17 Aug 2017 15:15:01 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D195B8D0FE6@avsrvexchmbx2.microsemi.net>
+References: <150239072706.23771.1380444570336852695.stgit@brunhilda>
+         <150239079917.23771.5169713749423377610.stgit@brunhilda>
+ <1502941453.3589.22.camel@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f180.google.com ([209.85.220.180]:35565 "EHLO
-        mail-qk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753136AbdHQPK0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2017 11:10:26 -0400
-Received: by mail-qk0-f180.google.com with SMTP id 130so3439800qkg.2
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Aug 2017 08:10:26 -0700 (PDT)
-In-Reply-To: <yq160dnndst.fsf@oracle.com>
+Received: from mail-by2nam01on0056.outbound.protection.outlook.com ([104.47.34.56]:3680
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751882AbdHQPP0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 17 Aug 2017 11:15:26 -0400
+In-Reply-To: <1502941453.3589.22.camel@linux.vnet.ibm.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <jejb@linux.vnet.ibm.com>, "joseph.szczypek@hpe.com" <joseph.szczypek@hpe.com>, Gerry Morong <gerry.morong@microsemi.com>, John Hall <John.Hall@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, Bader Ali - Saleh <bader.alisaleh@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Viswas G <viswas.g@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "POSWALD@suse.com" <POSWALD@suse.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 17 August 2017 at 10:11, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->
-> Tom,
->
-> I have to confess I'm wary of interpreting values reported by a device
-> that messes up setting the single bit flag that enables the feature.
->
-
-FWIW, this implementation in particular works pretty well as far as I
-can tell. The values reported on the VPDs are sensical. You can see
-that it advertises the same limit as the libata SATL does, which is
-(65335 * 512 / 8) blocks.
-
-Also I think it could not hurt anyway, because the scsi disk driver
-would use SD_MAX_WS16_BLOCKS if the reported limit is larger, so it's
-essentially a conservative thing to do.
-
-Not to mention that if someone is determined to enable it on linux,
-the limits reported in the VPD would most likely be the ones that the
-he/she would want to start with.
-
->
-> Before I entertain taking your patch I'd like to take a closer look to
-> make sure everything is gated by sdkp->lbpme.
->
-
-Sure take your time. Look forward to your favorable reply.
-
->
-> However, instead of relying on UNMAP, does this bridge support WRITE
-> SAME with the UNMAP bit? Because in that case you should be able to set
-> provisioning_mode to WS10 or WS16 and then adjust max_write_same_blocks.
->
-
-Nope, neither does it report a maximum write same length. Again, IIRC,
-Windows does not support WRITE SAME with UNMAP bit set but only the
-UNMAP command.
-
-> --
-> Martin K. Petersen      Oracle Linux Engineering
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKYW1lcyBCb3R0b21sZXkgW21h
+aWx0bzpqZWpiQGxpbnV4LnZuZXQuaWJtLmNvbV0NCj4gU2VudDogV2VkbmVzZGF5LCBBdWd1c3Qg
+MTYsIDIwMTcgMTA6NDQgUE0NCj4gVG86IERvbiBCcmFjZSA8ZG9uLmJyYWNlQG1pY3Jvc2VtaS5j
+b20+OyBqb3NlcGguc3pjenlwZWtAaHBlLmNvbTsNCj4gR2VycnkgTW9yb25nIDxnZXJyeS5tb3Jv
+bmdAbWljcm9zZW1pLmNvbT47IEpvaG4gSGFsbA0KPiA8Sm9obi5IYWxsQG1pY3Jvc2VtaS5jb20+
+OyBLZXZpbiBCYXJuZXR0DQo+IDxrZXZpbi5iYXJuZXR0QG1pY3Jvc2VtaS5jb20+OyBNYWhlc2gg
+UmFqYXNoZWtoYXJhDQo+IDxtYWhlc2gucmFqYXNoZWtoYXJhQG1pY3Jvc2VtaS5jb20+OyBCYWRl
+ciBBbGkgLSBTYWxlaA0KPiA8YmFkZXIuYWxpc2FsZWhAbWljcm9zZW1pLmNvbT47IGhjaEBpbmZy
+YWRlYWQub3JnOyBTY290dCBUZWVsDQo+IDxzY290dC50ZWVsQG1pY3Jvc2VtaS5jb20+OyBWaXN3
+YXMgRyA8dmlzd2FzLmdAbWljcm9zZW1pLmNvbT47IEp1c3Rpbg0KPiBMaW5kbGV5IDxqdXN0aW4u
+bGluZGxleUBtaWNyb3NlbWkuY29tPjsgU2NvdHQgQmVuZXNoDQo+IDxzY290dC5iZW5lc2hAbWlj
+cm9zZW1pLmNvbT47IFBPU1dBTERAc3VzZS5jb20NCj4gQ2M6IGxpbnV4LXNjc2lAdmdlci5rZXJu
+ZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMS83XSBzbWFydHBxaTogYWRkIHBxaSByZXNl
+dCBxdWllc2NlIHN1cHBvcnQNCj4gDQo+IEVYVEVSTkFMIEVNQUlMDQo+IA0KPiANCj4gT24gVGh1
+LCAyMDE3LTA4LTEwIGF0IDEzOjQ2IC0wNTAwLCBEb24gQnJhY2Ugd3JvdGU6DQo+ID4gRnJvbTog
+S2V2aW4gQmFybmV0dCA8a2V2aW4uYmFybmV0dEBtaWNyb3NlaW0uY29tPg0KPiANCj4gVG8gbWlz
+c3BlbGwgc29tZW9uZSBlbHNlJ3MgY29tcGFueSBuYW1lIGNvdWxkIGJlIGNvbnNpZGVyZWQgdW5m
+b3J0dW5hdGUNCj4gLi4uIHRvIG1pc3NwZWxsIHlvdXIgb3duIGxvb2tzIGxpa2UgY2FyZWxlc3Nu
+ZXNzLg0KPiANCj4gWW91J3ZlIGRvbmUgdGhpcyB0d2ljZSwgYnkgdGhlIHdheS4NCj4gDQo+IEph
+bWVzDQo+IA0KPiA+IFJldmlld2VkLWJ5OiBTY290dCBCZW5lc2ggPHNjb3R0LmJlbmVzaEBtaWNy
+b3NlbWkuY29tPg0KPiA+IFNpZ25lZC1vZmYtYnk6IEtldmluIEJhcm5ldHQgPGtldmluLmJhcm5l
+dHRAbWljcm9zZW1pLmNvbT4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBEb24gQnJhY2UgPGRvbi5icmFj
+ZUBtaWNyb3NlbWkuY29tPg0KDQpUaGF0J3MgbXkgYmFkLiBJJ2xsIGJlIG1vcmUgY2FyZWZ1bCBp
+biB0aGUgZnV0dXJlLg0KDQpUaGFua3MsDQpEb24gQnJhY2UNCg0KRVNDIC0gU21hcnQgU3RvcmFn
+ZQ0KTWljcm9zZW1pIENvcnBvcmF0aW9uDQoNCg0K
