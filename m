@@ -1,36 +1,28 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCH] scsi: sg: off by one in sg_ioctl()
-Date: Thu, 17 Aug 2017 10:09:54 +0300
-Message-ID: <20170817070954.d4gg7hqgg2qjf6d3@mwanda>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] scsi: sd_zbc: Disable zoned block devices with scsi-mq
+Date: Thu, 17 Aug 2017 00:59:16 -0700
+Message-ID: <20170817075916.GA28379@infradead.org>
+References: <20170817024550.9845-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20772 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750766AbdHQHKX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2017 03:10:23 -0400
+Received: from bombadil.infradead.org ([65.50.211.133]:43080 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752439AbdHQH7R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2017 03:59:17 -0400
 Content-Disposition: inline
+In-Reply-To: <20170817024550.9845-1-damien.lemoal@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Gilbert <dgilbert@interlog.com>, Hannes Reinecke <hare@suse.de>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <Bart.VanAssche@sandisk.com>
 
-If "val" is SG_MAX_QUEUE then we are one element beyond the end of the
-"rinfo" array so the > should be >=.
+On Thu, Aug 17, 2017 at 11:45:50AM +0900, Damien Le Moal wrote:
+> blk-mq may not maintain write requests order at dispatch time. So host
+> managed drives will not reliably work. Worse, potential reordering of
+> write requests on requeue may cause the zone write locking code to
+> deadlock command dispatch to the disk. So for now, until the write
+> ordering issue is fixed, do not support zoned block devices with
+> scsi-mq by showing a 0 LBA capacity disk.
 
-Fixes: 109bade9c625 ("scsi: sg: use standard lists for sg_requests")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index d7ff71e0c85c..84e782d8e7c3 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -1021,7 +1021,7 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
- 			read_lock_irqsave(&sfp->rq_list_lock, iflags);
- 			val = 0;
- 			list_for_each_entry(srp, &sfp->rq_list, entry) {
--				if (val > SG_MAX_QUEUE)
-+				if (val >= SG_MAX_QUEUE)
- 					break;
- 				memset(&rinfo[val], 0, SZ_SG_REQ_INFO);
- 				rinfo[val].req_state = srp->done + 1;
+NAK.  Please fix the issue instead of this.
