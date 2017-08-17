@@ -1,25 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: ncr5380: constify pnp_device_id
-Date: Wed, 16 Aug 2017 20:54:55 -0400
-Message-ID: <yq14lt7ovxc.fsf@oracle.com>
-References: <60c34272432b3411cd5d55728c62481e133f32a6.1502859040.git.arvind.yadav.cs@gmail.com>
-        <1125161eb43bc7ee7f748a040ab06b40cc1537dd.1502859040.git.arvind.yadav.cs@gmail.com>
+Subject: Re: [PATCH] ch: add refcounting
+Date: Wed, 16 Aug 2017 21:00:39 -0400
+Message-ID: <yq1ziaznh3c.fsf@oracle.com>
+References: <1502807329-75158-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1125161eb43bc7ee7f748a040ab06b40cc1537dd.1502859040.git.arvind.yadav.cs@gmail.com>
-        (Arvind Yadav's message of "Wed, 16 Aug 2017 10:28:40 +0530")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Cc: fthain@telegraphics.com.au, schmitzmic@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:46974 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751490AbdHQBAu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Aug 2017 21:00:50 -0400
+In-Reply-To: <1502807329-75158-1-git-send-email-hare@suse.de> (Hannes
+        Reinecke's message of "Tue, 15 Aug 2017 16:28:49 +0200")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
 
-Arvind,
+Hannes,
 
-> pnp_device_id are not supposed to change at runtime. All functions
-> working with pnp_device_id provided by <linux/pnp.h> work with
-> const pnp_device_id. So mark the non-const structs as const.
+> struct scsi_changer needs refcounting as the device might be removed
+> while the fd is still open.
 
 Applied to 4.14/scsi-queue.
 
