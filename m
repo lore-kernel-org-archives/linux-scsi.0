@@ -1,62 +1,53 @@
 From: Gionatan Danti <g.danti@assyoma.it>
 Subject: Re: No I/O errors reported after SATA link hard reset
-Date: Thu, 17 Aug 2017 16:15:35 +0200
-Message-ID: <4debd4d8dea1d534ef555ceae4429435@assyoma.it>
+Date: Thu, 17 Aug 2017 16:23:59 +0200
+Message-ID: <b3f6735d333aeee62410d5cfea852fd4@assyoma.it>
 References: <fe5cc200a4cba71cb9e5e6a980699805@assyoma.it>
  <13561110-4e59-303a-8e3d-dd60c1bafba8@fastmail.fm>
  <20170817124821.GA3238792@devbig577.frc2.facebook.com>
+ <559dc5fe-c162-41e6-7f14-0f3837b64585@fastmail.fm>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mr003msb.fastweb.it ([85.18.95.87]:37910 "EHLO
-        mr003msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752403AbdHQOPn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2017 10:15:43 -0400
-In-Reply-To: <20170817124821.GA3238792@devbig577.frc2.facebook.com>
+Received: from mr002msb.fastweb.it ([85.18.95.86]:59084 "EHLO
+        mr002msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750857AbdHQOYF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2017 10:24:05 -0400
+In-Reply-To: <559dc5fe-c162-41e6-7f14-0f3837b64585@fastmail.fm>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Bernd Schubert <bernd.schubert@fastmail.fm>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+To: Bernd Schubert <"Bernd Schubert"@fastmail.fm>
+Cc: Tejun Heo <tj@kernel.org>, Bernd Schubert <bernd.schubert@fastmail.fm>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi Tejun,
+Hi Bernd,
 
-Il 17-08-2017 14:48 Tejun Heo ha scritto:
-> Recovered errors aren't reported as IO errors and at least from link
-> state proper there's no way for the driver to tell apart link
-> glitches and buffer-erasing power issues.
-
-Ok, so *this* is the root cause of the problem: libata not identifying 
-spurious link renegotiations vs brief powerloss/powerup events. Out of 
-curiosity: is this a SATA-specific problem (ie: in the SATA 
-specification), or even SAS disks are affected?
-
->> > - why the scsi midlevel does not respond to a power loss event by
->> > immediately offlining the disks?
+Il 17-08-2017 15:18 Bernd Schubert ha scritto:
 > 
-> Because we don't wanna be ditching disks on temporary link glitches,
-> which do happen once in a while.
+> So for Gionatan the root cause was an instable power supply, but in my
+> case there wasn't any power loss, there were just failed sata commands.
 
-Any chances to report I/O errors to the upper layers *without* offlining 
-the device? In this manner, upper layers (ie: MDRAID) can act in a more 
-informate way. For example: single disk device will simple retry the 
-failed operation, while MDRAID can take the "badblocks" code path to 
-deal with the error.
+I tried many times to replicate the error by briefly 
+disconnecting/reconnecting the SATA cable, but I had *no* corruption in 
+this case. Sure, this was my experience, but a bad-behaving disk 
+firmware can do all sort of bad things with the volatile cache, 
+especially when renegotiating the host link.
 
-> So, the right way to deal with the problem probably is making use of
-> the SMART counter which indicates power loss events and verify that
-> the counter hasn't increased over link issues.  If it changed, the
-> device should be detached and re-probed, which will make it come back
-> as a different block device.  Unfortunately, I haven't had the chance
-> to actually implement that.
+I my case, I did *not* change the power supply, rather the SATA power 
+cable: my theory is that, as the previous cable was shared between the 
+two disks, somewhat low-voltage spiked find their ways and the second 
+disk simply "rebooted". The new cable is dedicated to the SATA disk wich 
+was previously failing.
 
-This is a very good idea, maybe I can implement it in userspace with a 
-simple, fast polling scheme (for example, each 60 seconds). Such a 
-polling would not prevent all corruption scenarios, but will at least 
-timely inform the user.
+What concern my is that, reading the linux-raid mailing list, many user 
+have historycally reported high mismatch count in RAID1 arrays. These 
+mismatches were generally discarded saying "RAID1 is prone to false 
+positives" but, in my experience, these "false mismatches" are quite 
+rare. What it means is that many users *are probably suffering* from my 
+(and your) problem, without never realizing that...
 
-Thanks.
+Regards.
 
 -- 
 Danti Gionatan
