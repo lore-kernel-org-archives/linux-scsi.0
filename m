@@ -1,55 +1,32 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [BUG][bisected 270065e] linux-next fails to boot on powerpc
-Date: Fri, 18 Aug 2017 21:41:13 +0000
-Message-ID: <1503092473.2622.17.camel@wdc.com>
-References: <1502902815.3305.22.camel@abdul.in.ibm.com>
-         <1502904072.2421.3.camel@wdc.com>
-         <2f686064-3e32-df8d-134f-962b5181da9d@linux.vnet.ibm.com>
-         <1502985161.2615.8.camel@wdc.com>
-         <71fb9c1b-9f3f-acdc-8bb5-aa1240aea763@linux.vnet.ibm.com>
+Subject: Re: [PATCH] sd: preserve sysfs updates to max_sectors_kb
+Date: Fri, 18 Aug 2017 21:46:58 +0000
+Message-ID: <1503092817.2622.19.camel@wdc.com>
+References: <150309002518.8999.15900049133748830764.stgit@brunhilda>
+         <1503090353.2622.15.camel@wdc.com>
+         <4993A297653ECB4581FA5C3C31323D195B8D825D@avsrvexchmbx2.microsemi.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <71fb9c1b-9f3f-acdc-8bb5-aa1240aea763@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:62825 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751807AbdHRVrs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Aug 2017 17:47:48 -0400
+In-Reply-To: <4993A297653ECB4581FA5C3C31323D195B8D825D@avsrvexchmbx2.microsemi.net>
 Content-Language: en-US
-Content-ID: <68887D7DDBE50145B91F1308358F04AA@namprd04.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>, "abdhalee@linux.vnet.ibm.com" <abdhalee@linux.vnet.ibm.com>, "brking@linux.vnet.ibm.com" <brking@linux.vnet.ibm.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>, "sachinp@linux.vnet.ibm.com" <sachinp@linux.vnet.ibm.com>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "mpe@ellerman.id.au" <mpe@ellerman.id.au>
+Content-ID: <8405EBEC5B50C3498149A87D77FFC8FF@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "hch@infradead.org" <hch@infradead.org>, "viswas.g@microsemi.com" <viswas.g@microsemi.com>, "gerry.morong@microsemi.com" <gerry.morong@microsemi.com>, "mahesh.rajashekhara@microsemi.com" <mahesh.rajashekhara@microsemi.com>, "POSWALD@suse.com" <POSWALD@suse.com>, "scott.benesh@microsemi.com" <scott.benesh@microsemi.com>, "don.brace@microsemi.com" <don.brace@microsemi.com>, "bader.alisaleh@microsemi.com" <bader.alisaleh@microsemi.com>, "kevin.barnett@microsemi.com" <kevin.barnett@microsemi.com>, "joseph.szczypek@hpe.com" <joseph.szczypek@hpe.com>, "scott.teel@microsemi.com" <scott.teel@microsemi.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "justin.lindley@microsemi.com" <justin.lindley@microsemi.com>, "John.Hall@microsemi.com" <John.Hall@microsemi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-T24gRnJpLCAyMDE3LTA4LTE4IGF0IDE2OjA0IC0wNTAwLCBCcmlhbiBLaW5nIHdyb3RlOg0KPiBJ
-IHRoaW5rIEkgaGF2ZSBhbiB1bmRlcnN0YW5kaW5nIHdoYXQgaXMgZ29pbmcgb24gYW5kIHdoeSBC
-YXJ0J3MgcGF0Y2ggaXMgY2F1c2luZyBwcm9ibGVtcyBmb3IgaXByLg0KPiBJIGNhbiB3b3JrIGFy
-b3VuZCB0aGUgYm9vdCBoYW5nIGluIGlwciwgYnV0IHVsdGltYXRlbHkgSSB0aGluayB3ZSBuZWVk
-IHRvIGZpZ3VyZSBvdXQgYSBmaXgNCj4gaW4gc2NzaSAvIGJsb2NrLiBJIGFkZGVkIHNvbWUgdHJh
-Y2luZyBhbmQgY29uZmlybWVkIGl0cyBub3QgYSBtYXR0ZXIgb2YgY29tbWFuZHMgZ2V0dGluZyBz
-dHVjaw0KPiBpbiBpcHIuIFRoZSBpc3N1ZSBpcyB3ZSBhcmUgcmV0cnlpbmcgZmFpbGVkIGNvbW1h
-bmRzIHVudGlsIHdlIGZpbmFsbHkgcnVuIG91dCBvZiB0aW1lLiBUaGlzIGlzDQo+IHdoYXQgSSBz
-ZWU6DQo+IA0KPiAxLiBzZF9yZXZhbGlkYXRlX2Rpc2sgY2FsbHMgc2NzaV9yZXBvcnRfb3Bjb2Rl
-DQo+IDIuIGlwciBSQUlEIGFycmF5cyBkb24ndCBzdXBwb3J0IE1BSU5URU5BTkNFX0lOIC8gTUlf
-UkVQT1JUX1NVUFBPUlRFRF9PUEVSQVRJT05fQ09ERVMNCj4gMy4gaXByIHJldHVybnMgdGhlIGNv
-bW1hbmQgd2l0aCBESURfRVJST1INCj4gNC4gc2NzaV9kZWNpZGVfZGlzcG9zaXRpb24gZ29lcyB0
-byBtYXliZV9yZXRyeSwgaW5jcmVtZW50cyBzY21kLT5yZXRyaWVzLCBhbmQgcmV0dXJucyBORUVE
-U19SRVRSWQ0KPiA1LiBzY3NpX3NvZnRpcnFfZG9uZSBjYWxscyBzY3NpX3F1ZXVlX2luc2VydCB0
-byByZXF1ZXVlIHRoZSBjb21tYW5kLCB3aGljaCBjYWxscyBzY3NpX21xX3JlcXVldWVfY21kDQo+
-IDYuIFdpdGggQmFydCdzIGNoYW5nZSwgd2UgdGhlbiBjbGVhciBSUUZfRE9OVFBSRVAgaW4gdGhp
-cyBwYXRoLCB3aGlsZSBwcmlvciB3ZSBkaWQgbm90DQo+IDcuIFRoaXMgcmVzdWx0cyBpbiB0aGUg
-Y29tbWFuZCBnZXR0aW5nIHNjbWQtPnJldHJpZXMgemVyb2VkIG91dCB3aGVuIGl0IGdldHMgcmUt
-cXVldWVkLA0KPiAgICBzaW5jZSB3ZSBnbyB0aHJvdWdoIHByZXAgYWdhaW4gYW5kIHdlIGxvc2Ug
-b3VyIHJldHJ5IGNvdW50ZXIsIHJlc3VsdGluZyBpbiBsb3RzIGFuZCBsb3RzIG9mIHJldHJpZXMu
-DQo+IDguIFNpbmNlIHRoZSBkZWZhdWx0IGNvbW1hbmQgdGltZW91dCBmb3IgYW4gaXByIFJBSUQg
-YXJyYXkgaXMgMTIwIHNlY29uZHMsIHRoZXNlIHJldHJpZXMgZ28gb24gZm9yDQo+ICAgIHF1aXRl
-IGEgbG9uZyB0aW1lLi4uDQo+IDkuIEZpbmFsbHksIHRoZSBjb21tYW5kIGhhcyBiZWVuIHJldHJp
-ZWQgc28gbG9uZyB3ZSB0cmlwIG92ZXIgdGhlIG92ZXJhbGwgcmV0cnkgdGltZXINCj4gICAgaW4g
-c2NzaV9zb2Z0aXJxX2RvbmUgYW5kIHdlIHRpbWVvdXQgdGhlIGNvbW1hbmQuDQo+IA0KPiBJJ2xs
-IGZvbGxvdyB1cCB3aXRoIGEgcGF0Y2ggdG8gaXByIHRvIHdvcmthcm91bmQgdGhlIGhhbmcsIGJ1
-dCBJIHRoaW5rIHdlIG5lZWQgdG8gc29tZWhvdyBwcmVzZXJ2ZQ0KPiB0aGUgcmV0cnkgY291bnRl
-ciBpbiB0aGUgc2NzaSBjb21tYW5kLCBhcyB0aGlzIHdpbGwgbGlrZWx5IGNhdXNlIGlzc3VlcyB3
-aXRoIG90aGVyIGRyaXZlcnMuIA0KDQpIZWxsbyBCcmlhbiwNCg0KVGhhbmtzIGZvciB0aGUgZGV0
-YWlsZWQgYW5hbHlzaXMuIFRoaXMgaXMgdmVyeSBoZWxwZnVsLiBIYXZlIHlvdSBjb25zaWRlcmVk
-DQp0byBjaGFuZ2UgdGhlIGlwciBkcml2ZXIgc3VjaCB0aGF0IGl0IHRlcm1pbmF0ZXMgUkVQT1JU
-IFNVUFBPUlRFRCBPUEVSQVRJT04NCkNPREVTIGNvbW1hbmRzIHdpdGggdGhlIGFwcHJvcHJpYXRl
-IGNoZWNrIGNvbmRpdGlvbiBjb2RlIGluc3RlYWQgb2YgRElEX0VSUk9SPw0KDQpUaGFua3MsDQoN
-CkJhcnQu
+T24gRnJpLCAyMDE3LTA4LTE4IGF0IDIxOjI5ICswMDAwLCBEb24gQnJhY2Ugd3JvdGU6DQo+IEFz
+IGZhciBhcyBJIGNhbiBzZWUsIHVkZXYgbG9va3MgZm9yIGZpbGUgYWNjZXNzIGluIHN5c2ZzLiAN
+Cj4gSSBhbSBub3QgZXhhY3RseSBzdXJlIHdoaWNoIHJ1bGUgY2hhbmdlcyB0aGlzLiBJdCB3YXMg
+YWRkZWQgaW4gbW9yZSByZWNlbnQNCj4gZGlzdHJvcy4gQ2FuIHNvbWVvbmUgaGVscCBtZSBvdXQ/
+DQoNCkhlbGxvIERvbiwNCg0KQ2FuIHlvdSBjaGVjayBvbiB5b3VyIHRlc3Qgc3lzdGVtIHdoaWNo
+IHVkZXYgcnVsZSBjaGFuZ2VzIG1heF9zZWN0b3JzX2tiPyBJDQpoYXZlIGNoZWNrZWQgdHdvIHJl
+Y2VudCBMaW51eCBkaXN0cm8ncyBidXQgaGF2ZW4ndCBiZWVuIGFibGUgdG8gZmluZCBzdWNoIGEN
+CnVkZXYgcnVsZToNCiQgZ3JlcCAtcncgbWF4X3NlY3RvcnNfa2IgL3Vzci9saWIvdWRldi9ydWxl
+cy5kIC9ldGMvdWRldi9ydWxlcy5kIHwgd2MgLWwNCjANCg0KVGhhbmtzLA0KDQpCYXJ0Lg==
