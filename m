@@ -1,39 +1,93 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH] ipr: Set no_report_opcodes for RAID arrays
-Date: Fri, 18 Aug 2017 16:17:32 -0500
-Message-ID: <c2272791-2010-600b-3982-835b8eb1a523@linux.vnet.ibm.com>
-References: <1502902815.3305.22.camel@abdul.in.ibm.com>
- <1502904072.2421.3.camel@wdc.com>
- <2f686064-3e32-df8d-134f-962b5181da9d@linux.vnet.ibm.com>
- <1502985161.2615.8.camel@wdc.com>
- <71fb9c1b-9f3f-acdc-8bb5-aa1240aea763@linux.vnet.ibm.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH] sd: preserve sysfs updates to max_sectors_kb
+Date: Fri, 18 Aug 2017 21:29:54 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D195B8D825D@avsrvexchmbx2.microsemi.net>
+References: <150309002518.8999.15900049133748830764.stgit@brunhilda>
+ <1503090353.2622.15.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <71fb9c1b-9f3f-acdc-8bb5-aa1240aea763@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0049.outbound.protection.outlook.com ([104.47.36.49]:20310
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751126AbdHRV37 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 18 Aug 2017 17:29:59 -0400
+In-Reply-To: <1503090353.2622.15.camel@wdc.com>
 Content-Language: en-US
-Sender: linux-next-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>, "abdhalee@linux.vnet.ibm.com" <abdhalee@linux.vnet.ibm.com>
-Cc: "sachinp@linux.vnet.ibm.com" <sachinp@linux.vnet.ibm.com>, "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>, "hare@suse.com" <hare@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, "hch@lst.de" <hch@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>, "hch@infradead.org" <hch@infradead.org>, Viswas G <viswas.g@microsemi.com>, Gerry Morong <gerry.morong@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "POSWALD@suse.com" <POSWALD@suse.com>, Scott Benesh <scott.benesh@microsemi.com>, Bader Ali - Saleh <bader.alisaleh@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, "joseph.szczypek@hpe.com" <joseph.szczypek@hpe.com>, Scott Teel <scott.teel@microsemi.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Justin Lindley <justin.lindley@microsemi.com>, John Hall <John.Hall@microsemi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Since ipr RAID arrays do not support the MAINTENANCE_IN /
-MI_REPORT_SUPPORTED_OPERATION_CODES, set no_report_opcodes
-to prevent it from being sent.
-
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
-
-Index: linux-2.6.git/drivers/scsi/ipr.c
-===================================================================
---- linux-2.6.git.orig/drivers/scsi/ipr.c
-+++ linux-2.6.git/drivers/scsi/ipr.c
-@@ -4935,6 +4935,7 @@ static int ipr_slave_configure(struct sc
- 		}
- 		if (ipr_is_vset_device(res)) {
- 			sdev->scsi_level = SCSI_SPC_3;
-+			sdev->no_report_opcodes = 1;
- 			blk_queue_rq_timeout(sdev->request_queue,
- 					     IPR_VSET_RW_TIMEOUT);
- 			blk_queue_max_hw_sectors(sdev->request_queue, IPR_VSET_MAX_SECTORS);
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCYXJ0IFZhbiBBc3NjaGUgW21h
+aWx0bzpCYXJ0LlZhbkFzc2NoZUB3ZGMuY29tXQ0KPiBTZW50OiBGcmlkYXksIEF1Z3VzdCAxOCwg
+MjAxNyA0OjA2IFBNDQo+IFRvOiBoY2hAaW5mcmFkZWFkLm9yZzsgVmlzd2FzIEcgPHZpc3dhcy5n
+QG1pY3Jvc2VtaS5jb20+OyBHZXJyeQ0KPiBNb3JvbmcgPGdlcnJ5Lm1vcm9uZ0BtaWNyb3NlbWku
+Y29tPjsgTWFoZXNoIFJhamFzaGVraGFyYQ0KPiA8bWFoZXNoLnJhamFzaGVraGFyYUBtaWNyb3Nl
+bWkuY29tPjsgUE9TV0FMREBzdXNlLmNvbTsgU2NvdHQNCj4gQmVuZXNoIDxzY290dC5iZW5lc2hA
+bWljcm9zZW1pLmNvbT47IERvbiBCcmFjZQ0KPiA8ZG9uLmJyYWNlQG1pY3Jvc2VtaS5jb20+OyBC
+YWRlciBBbGkgLSBTYWxlaA0KPiA8YmFkZXIuYWxpc2FsZWhAbWljcm9zZW1pLmNvbT47IEtldmlu
+IEJhcm5ldHQNCj4gPGtldmluLmJhcm5ldHRAbWljcm9zZW1pLmNvbT47IGpvc2VwaC5zemN6eXBl
+a0BocGUuY29tOyBTY290dCBUZWVsDQo+IDxzY290dC50ZWVsQG1pY3Jvc2VtaS5jb20+OyBqZWpi
+QGxpbnV4LnZuZXQuaWJtLmNvbTsgSnVzdGluIExpbmRsZXkNCj4gPGp1c3Rpbi5saW5kbGV5QG1p
+Y3Jvc2VtaS5jb20+OyBKb2huIEhhbGwgPEpvaG4uSGFsbEBtaWNyb3NlbWkuY29tPg0KPiBDYzog
+bGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUmU6IFtQQVRDSF0gc2Q6IHBy
+ZXNlcnZlIHN5c2ZzIHVwZGF0ZXMgdG8gbWF4X3NlY3RvcnNfa2INCj4gDQo+IEVYVEVSTkFMIEVN
+QUlMDQo+IA0KPiANCj4gT24gRnJpLCAyMDE3LTA4LTE4IGF0IDE2OjAwIC0wNTAwLCBEb24gQnJh
+Y2Ugd3JvdGU6DQo+ID4gcHJldmVudCBzeXN0ZW1kLXVkZXZkIGZyb20gY2hhbmdpbmcgYSBkZXZp
+Y2UncyBzeXNmcyBlbnRyeQ0KPiA+IG1heF9zZWN0b3JzX2tiIGJhY2sgdG8gdGhlIGRlZmF1bHQg
+dmFsdWUuDQo+ID4gIC0gbWF4X3NlY3RvcnNfa2IgY2FuIGJlIHR3ZWFrZWQgZm9yIGJldHRlciBw
+ZXJmb3JtYW5jZS4NCj4gPiAgLSB1ZGV2IGNhbiBiZSB0cmlnZ2VyZWQgYnkgc2dfbG9ncyAtdCBv
+ciBzY3NpX3RlbXBlcmF0dXJlLCAuLi4NCj4gPiAgLSBzZF9yZXZhbGlkYXRlX2Rpc2sgaXMgY2Fs
+bGVkIGZyb20gdWRldiBieSBpb2N0bCBCTEtSUlBBUlQNCj4gDQo+IEhlbGxvIERvbiwNCj4gDQo+
+IFdoaWNoIHVkZXYgcnVsZSBjaGFuZ2VzIG1heF9zZWN0b3JzX2tiIGJhY2sgdG8gdGhlIGRlZmF1
+bHQ/IFdoeSBkbyB5b3UNCj4gd2FudA0KPiB0byBjaGFuZ2UgdGhlIGtlcm5lbCBjb2RlIGluc3Rl
+YWQgb2YgbW9kaWZ5aW5nIHRoYXQgdWRldiBydWxlPyBXaGF0DQo+IHNvZnR3YXJlDQo+IGNoYW5n
+ZXMgbWF4X3NlY3RvcnNfa2IgdG8gYSBzbWFsbGVyIHZhbHVlPyBJcyBpdCBhIHVkZXYgcnVsZSBv
+ciBwZXJoYXBzDQo+IHNvbWV0aGluZyBlbHNlPw0KPiANCj4gVGhhbmtzLA0KPiANCj4gQmFydC4N
+Cg0KQXMgZmFyIGFzIEkgY2FuIHNlZSwgdWRldiBsb29rcyBmb3IgZmlsZSBhY2Nlc3MgaW4gc3lz
+ZnMuIA0KSSBhbSBub3QgZXhhY3RseSBzdXJlIHdoaWNoIHJ1bGUgY2hhbmdlcyB0aGlzLiBJdCB3
+YXMgYWRkZWQgaW4gbW9yZSByZWNlbnQNCmRpc3Ryb3MuIENhbiBzb21lb25lIGhlbHAgbWUgb3V0
+Pw0KDQpJIHdhbnRlZCB0byBjaGFuZ2UgdGhlIGtlcm5lbCBjb2RlIGJlY2F1c2UgaXQgbG9va3Mg
+dG8gbWUgbGlrZSBhbnl0aW1lDQpzZF9yZXZhbGlkYXRlX2Rpc2sgaXMgY2FsbGVkIG1heF9zZWN0
+b3JzIGlzIHJlc2V0IHRvIGl0cyBtYXhpbXVtIHZhbHVlLiBBbnlvbmUNCnR3ZWFraW5nIG1heF9z
+ZWN0b3JzX2tiIGZvciBwZXJmb3JtYW5jZSByZWFzb25zIHdpbGwgZmluZCB0aGF0IGl0IGlzIG5v
+dA0KcGVyc2lzdGVudC4NCg0KSWYgdGhpcyBkaXN0aWxscyBkb3duIHRvIGEgc2ltcGxlciBydWxl
+IGNoYW5nZSwgdGhlbiBhbGwgdGhlIGJldHRlci4NCg0KRnJvbSBteSB0ZXN0aW5nOg0KDQpJIHNl
+dCAvc3lzL2Jsb2NrL3NkZC9xdWV1ZS9tYXhfc2VjdG9yc19rYiB0byBzb21lIHZhbHVlLg0KICAg
+IGVjaG8gNjQgPiAvc3lzL2Jsb2NrL3NkZC9xdWV1ZS9tYXhfc2VjdG9yc19rYg0KSSBydW4gc2df
+bG9ncyAtdCAvZGV2L3NkZCBhbmQgdGhlIHZhbHVlIGlzIHJlc2V0IGJhY2sgdG8gaXRzIG9yaWdp
+bmFsIHZhbHVlLg0KT3RoZXIgdXRpbGl0aWVzIGNhbiBhbHNvIHRyaWdnZXIgdWRldiB0byBydW4u
+IA0KDQp1ZGV2YWRtIG1vbml0b3INCm1vbml0b3Igd2lsbCBwcmludCB0aGUgcmVjZWl2ZWQgZXZl
+bnRzIGZvcjoNClVERVYgLSB0aGUgZXZlbnQgd2hpY2ggdWRldiBzZW5kcyBvdXQgYWZ0ZXIgcnVs
+ZSBwcm9jZXNzaW5nDQpLRVJORUwgLSB0aGUga2VybmVsIHVldmVudA0KDQpLRVJORUxbODUzNzIy
+My4zNDc1MjBdIGNoYW5nZSAgIC9kZXZpY2VzL3BjaTAwMDA6MDAvMDAwMDowMDowMy4wLzAwMDA6
+MDg6MDAuMC9ob3N0NC9wb3J0LTQ6NC9lbmRfZGV2aWNlLTQ6NC90YXJnZXQ0OjA6My80OjA6Mzow
+L2Jsb2NrL3NkZCAoYmxvY2spDQpVREVWICBbODUzNzIyMy4zOTkyNDNdIGNoYW5nZSAgIC9kZXZp
+Y2VzL3BjaTAwMDA6MDAvMDAwMDowMDowMy4wLzAwMDA6MDg6MDAuMC9ob3N0NC9wb3J0LTQ6NC9l
+bmRfZGV2aWNlLTQ6NC90YXJnZXQ0OjA6My80OjA6MzowL2Jsb2NrL3NkZCAoYmxvY2spDQouLi4N
+Cm1hbmFnZXItPmZkX2lub3RpZnkgPSB1ZGV2X3dhdGNoX2luaXQobWFuYWdlci0+dWRldik7DQog
+ICAgICAgc2RfZXZlbnRfYWRkX2lvKG1hbmFnZXItPmV2ZW50LCAmbWFuYWdlci0+aW5vdGlmeV9l
+dmVudCwgbWFuYWdlci0+ZmRfaW5vdGlmeSwgRVBPTExJTiwgb25faW5vdGlmeSwgbWFuYWdlcik7
+DQogICAgICAgICAgIG9uX2lub3RpZnkgKHN5c3RlbWQgc291cmNlIGNvZGU6IHNyYy91ZGV2L3Vk
+ZXZkLmMpDQogICAgICAgICAgICAgIHN5bnRoZXNpemVfY2hhbmdlDQogICAgICAgICAgICAgICAg
+ICAgIGlvY3RsIC0tPiBCTEtSUlBBUlQNCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIC0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0NCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFN0YXJ0
+IG9mIGtlcm5lbCBjb2RlLg0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLQ0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgYmxrZGV2X2lvY3Rs
+IChibG9jay9pb2N0bC5jKQ0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBDQVNF
+OkJMS1JSUEFSVDogYmxrZGV2X3JlcmVhZF9wYXJ0IChibG9jay9pb2N0bC5jKQ0KICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBfYmxrZGV2X3JlcmVhZF9wYXJ0IChibG9j
+ay9pb2N0bC5jKQ0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgcmVzY2FuX3BhcnRpdGlvbnMgKGJsb2NrL3BhcnRpdGlvbi1nZW5lcmljLmMpDQogICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGlmIChkaXNrLT5m
+b3BzLT5yZXZhbGlkYXRlX2Rpc2spDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICBkaXNrLT5mb3BzLT5yZXZhbGlkYXRlX2Rpc2soZGlzayk7
+DQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCiAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgc2QgZHJpdmVyIChkcml2
+ZXJzL3Njc2kvc2QuYw0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICBzZF9yZXZhbGlkYXRlX2Rpc2sNCg0KDQpUaGFua3MgZm9yIHlvdXIg
+aW5wdXQsDQpEb24gQnJhY2UNCkVTQyAtIFNtYXJ0IFN0b3JhZ2UNCk1pY3Jvc2VtaSBDb3Jwb3Jh
+dGlvbg0KDQoNCg==
