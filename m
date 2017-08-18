@@ -1,88 +1,59 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 196707] New: Adaptec ICP9087MA: aacraid prints "AAC: Host
- adapter is dead (or got a PCI error) -1" twice times around errors of aacraid
- and the kernel crashes after starting the "Kernel Device Manager"
-Date: Fri, 18 Aug 2017 20:42:13 +0000
-Message-ID: <bug-196707-11613@https.bugzilla.kernel.org/>
+From: Don Brace <don.brace@microsemi.com>
+Subject: [PATCH] sd: preserve sysfs updates to max_sectors_kb
+Date: Fri, 18 Aug 2017 16:00:25 -0500
+Message-ID: <150309002518.8999.15900049133748830764.stgit@brunhilda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:34806 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751126AbdHRUmS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 18 Aug 2017 16:42:18 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 5F82628C37
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Aug 2017 20:42:18 +0000 (UTC)
+Received: from mail-sn1nam02on0052.outbound.protection.outlook.com ([104.47.36.52]:58982
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751695AbdHRVAc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 18 Aug 2017 17:00:32 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@kernel.org
+To: joseph.szczypek@hpe.com, gerry.morong@microsemi.com, john.hall@microsemi.com, jejb@linux.vnet.ibm.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, POSWALD@suse.com
+Cc: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=196707
+prevent systemd-udevd from changing a device's sysfs entry
+max_sectors_kb back to the default value.
+ - max_sectors_kb can be tweaked for better performance.
+ - udev can be triggered by sg_logs -t or scsi_temperature, ...
+ - sd_revalidate_disk is called from udev by ioctl BLKRRPART
 
-            Bug ID: 196707
-           Summary: Adaptec ICP9087MA: aacraid prints "AAC: Host adapter
-                    is dead (or got a PCI error) -1" twice times around
-                    errors of aacraid and the kernel crashes after
-                    starting the "Kernel Device Manager"
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: 4.12.8
-          Hardware: All
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: high
-          Priority: P1
-         Component: AACRAID
-          Assignee: scsi_drivers-aacraid@kernel-bugs.osdl.org
-          Reporter: kernel.org@yaze-ag.de
-                CC: a@borouhin.com, arekm@maven.pl, bugzie@grubelek.pl,
-                    chrismac@niksun.com, davygrvy@pobox.com,
-                    harold@snel.ws, he001@fitmsg.net, hm10439@gmail.com,
-                    rodrigoaguileraparraga@gmail.com,
-                    scnaifeh@hotmail.com,
-                    scsi_drivers-aacraid@kernel-bugs.osdl.org
-        Regression: No
+Reviewed-by: Scott Teel <scott.teel@microsemi.com>
+Signed-off-by: Don Brace <don.brace@microsemi.com>
+---
+ drivers/scsi/sd.c |   10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-Created attachment 258013
-  --> https://bugzilla.kernel.org/attachment.cgi?id=258013&action=edit
-Kernel output of 3 kernel starts with connected / disconnected HDDs and
-different kernels
-
-+++ This bug was initially created as a clone of Bug #151661 +++
-
-Hi,
-
-my english language is not so good. I hope you understand what I write here.
-
-The kernel 4.12.8 crashes after errors from aacraid and after the start of the
-"kernel device manager" when I connect 8 HDDs (power on) to the
-ICP9087MA-RAID-Controller. (See attachment 0_...)
-
-The crash is before the Kernel opens log files in /var/log. I found NO entries
-in the log files. So I configure grub (in /etc/default/grub) and the kernel to
-use the serial line (/dev/ttyS0, COM1) as the console. On my Notebook I capture
-the serial output of the starting kernel with minicom.
-
-If I disconnect the 8 HDDs (power off) the kernel 4.12.8 starts normal and I
-can use the system but without the two Host drives (2 x RAID-5) of the
-ICP9087MA.
-(See attachment 1_...)
-
-When I use different kernels of version 3.x.x (from kernel.org or Debian) all
-works fine when the 8 HDDs are connected to the ICP9087MA-Raid-Controller. (See
-attachment 2_...)
-
-Attachment (output of 3 Kernel starts in one attachment):
-
-0_kernel_crash_(4.12.8)_with_all_drives_at_the_ICP9087MA.cap
-1_normal_start_(4.12.8)_without_any_drive_at_the_ICP9087MA.cap
-2_normal_start_(3.18.65)_with_all_drives_at_the_ICP9087MA.cap
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
-You are watching someone on the CC list of the bug.
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index bea36ad..457dc7c 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3055,6 +3055,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 	sector_t old_capacity = sdkp->capacity;
+ 	unsigned char *buffer;
+ 	unsigned int dev_max, rw_max;
++	unsigned int max_sectors;
+ 
+ 	SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp,
+ 				      "sd_revalidate_disk\n"));
+@@ -3128,9 +3129,14 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 		rw_max = min_not_zero(logical_to_sectors(sdp, dev_max),
+ 				      (sector_t)BLK_DEF_MAX_SECTORS);
+ 
+-	/* Combine with controller limits */
+-	q->limits.max_sectors = min(rw_max, queue_max_hw_sectors(q));
++	/* Check for max_sectors_kb update through sysfs */
++	if (q->limits.max_sectors < min(rw_max, queue_max_hw_sectors(q)))
++		max_sectors = q->limits.max_sectors;
++	else
++		max_sectors = min(rw_max, queue_max_hw_sectors(q));
+ 
++	/* Combine with controller limits */
++	q->limits.max_sectors = max_sectors;
+ 	set_capacity(disk, logical_to_sectors(sdp, sdkp->capacity));
+ 	sd_config_write_same(sdkp);
+ 	kfree(buffer);
