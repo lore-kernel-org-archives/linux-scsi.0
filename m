@@ -1,13 +1,13 @@
 From: Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH 07/15] mux: make device_type const
-Date: Sat, 19 Aug 2017 13:52:18 +0530
-Message-ID: <1503130946-2854-8-git-send-email-bhumirks@gmail.com>
+Subject: [PATCH 08/15] PCI: make device_type const
+Date: Sat, 19 Aug 2017 13:52:19 +0530
+Message-ID: <1503130946-2854-9-git-send-email-bhumirks__28684.523367747$1503131145$gmane$org@gmail.com>
 References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:37765 "EHLO
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:38176 "EHLO
         mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752405AbdHSIZL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Aug 2017 04:25:11 -0400
+        with ESMTP id S1751853AbdHSIZb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Aug 2017 04:25:31 -0400
 In-Reply-To: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,21 +20,30 @@ Done using Coccinelle.
 
 Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 ---
- drivers/mux/mux-core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/endpoint/pci-epf-core.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/mux/mux-core.c b/drivers/mux/mux-core.c
-index 2fe96c4..68bd16d 100644
---- a/drivers/mux/mux-core.c
-+++ b/drivers/mux/mux-core.c
-@@ -58,7 +58,7 @@ static void mux_chip_release(struct device *dev)
- 	kfree(mux_chip);
+diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
+index 6877d6a..9d0de12 100644
+--- a/drivers/pci/endpoint/pci-epf-core.c
++++ b/drivers/pci/endpoint/pci-epf-core.c
+@@ -27,7 +27,7 @@
+ #include <linux/pci-ep-cfs.h>
+ 
+ static struct bus_type pci_epf_bus_type;
+-static struct device_type pci_epf_type;
++static const struct device_type pci_epf_type;
+ 
+ /**
+  * pci_epf_linkup() - Notify the function driver that EPC device has
+@@ -275,7 +275,7 @@ static void pci_epf_dev_release(struct device *dev)
+ 	kfree(epf);
  }
  
--static struct device_type mux_type = {
-+static const struct device_type mux_type = {
- 	.name = "mux-chip",
- 	.release = mux_chip_release,
+-static struct device_type pci_epf_type = {
++static const struct device_type pci_epf_type = {
+ 	.release	= pci_epf_dev_release,
  };
+ 
 -- 
 1.9.1
