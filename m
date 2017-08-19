@@ -1,13 +1,13 @@
 From: Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH 04/15] [media] rc: make device_type const
-Date: Sat, 19 Aug 2017 13:52:15 +0530
-Message-ID: <1503130946-2854-5-git-send-email-bhumirks__3749.60076665065$1503131070$gmane$org@gmail.com>
+Subject: [PATCH 05/15] mei: make device_type const
+Date: Sat, 19 Aug 2017 13:52:16 +0530
+Message-ID: <1503130946-2854-6-git-send-email-bhumirks__39590.6420577832$1503131093$gmane$org@gmail.com>
 References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:38049 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751049AbdHSIYN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Aug 2017 04:24:13 -0400
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:34710 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751163AbdHSIYd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Aug 2017 04:24:33 -0400
 In-Reply-To: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,21 +20,21 @@ Done using Coccinelle.
 
 Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 ---
- drivers/media/rc/rc-main.c | 2 +-
+ drivers/misc/mei/bus.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/media/rc/rc-main.c b/drivers/media/rc/rc-main.c
-index a9eba00..ea3da3e 100644
---- a/drivers/media/rc/rc-main.c
-+++ b/drivers/media/rc/rc-main.c
-@@ -1532,7 +1532,7 @@ static RC_FILTER_ATTR(wakeup_filter_mask, S_IRUGO|S_IWUSR,
- 	.attrs	= rc_dev_wakeup_filter_attrs,
+diff --git a/drivers/misc/mei/bus.c b/drivers/misc/mei/bus.c
+index 40c7908..1ac10cb 100644
+--- a/drivers/misc/mei/bus.c
++++ b/drivers/misc/mei/bus.c
+@@ -845,7 +845,7 @@ static void mei_cl_bus_dev_release(struct device *dev)
+ 	kfree(cldev);
+ }
+ 
+-static struct device_type mei_cl_device_type = {
++static const struct device_type mei_cl_device_type = {
+ 	.release	= mei_cl_bus_dev_release,
  };
  
--static struct device_type rc_dev_type = {
-+static const struct device_type rc_dev_type = {
- 	.release	= rc_dev_release,
- 	.uevent		= rc_dev_uevent,
- };
 -- 
 1.9.1
