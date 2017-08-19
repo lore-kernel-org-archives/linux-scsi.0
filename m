@@ -1,13 +1,13 @@
 From: Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH 12/15] s390/zcrypt: make device_type const
-Date: Sat, 19 Aug 2017 13:52:23 +0530
-Message-ID: <1503130946-2854-13-git-send-email-bhumirks__10771.9936794185$1503131234$gmane$org@gmail.com>
+Subject: [PATCH 13/15] scsi: make device_type const
+Date: Sat, 19 Aug 2017 13:52:24 +0530
+Message-ID: <1503130946-2854-14-git-send-email-bhumirks__49956.6360413612$1503131237$gmane$org@gmail.com>
 References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:36822 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751745AbdHSI0u (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Aug 2017 04:26:50 -0400
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:34159 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752013AbdHSI1J (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Aug 2017 04:27:09 -0400
 In-Reply-To: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,35 +20,51 @@ Done using Coccinelle.
 
 Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 ---
- drivers/s390/crypto/ap_card.c  | 2 +-
- drivers/s390/crypto/ap_queue.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/fcoe/fcoe_sysfs.c      | 4 ++--
+ drivers/scsi/scsi_transport_iscsi.c | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/s390/crypto/ap_card.c b/drivers/s390/crypto/ap_card.c
-index 836efac9..0329148 100644
---- a/drivers/s390/crypto/ap_card.c
-+++ b/drivers/s390/crypto/ap_card.c
-@@ -153,7 +153,7 @@ static ssize_t ap_modalias_show(struct device *dev,
- 	NULL
+diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
+index 9cf3d56..5c8310b 100644
+--- a/drivers/scsi/fcoe/fcoe_sysfs.c
++++ b/drivers/scsi/fcoe/fcoe_sysfs.c
+@@ -659,13 +659,13 @@ static void fcoe_fcf_device_release(struct device *dev)
+ 	kfree(fcf);
+ }
+ 
+-static struct device_type fcoe_ctlr_device_type = {
++static const struct device_type fcoe_ctlr_device_type = {
+ 	.name = "fcoe_ctlr",
+ 	.groups = fcoe_ctlr_attr_groups,
+ 	.release = fcoe_ctlr_device_release,
  };
  
--static struct device_type ap_card_type = {
-+static const struct device_type ap_card_type = {
- 	.name = "ap_card",
- 	.groups = ap_card_dev_attr_groups,
- };
-diff --git a/drivers/s390/crypto/ap_queue.c b/drivers/s390/crypto/ap_queue.c
-index 0f1a5d0..e2a85c26 100644
---- a/drivers/s390/crypto/ap_queue.c
-+++ b/drivers/s390/crypto/ap_queue.c
-@@ -577,7 +577,7 @@ static ssize_t ap_interrupt_show(struct device *dev,
- 	NULL
- };
+-static struct device_type fcoe_fcf_device_type = {
++static const struct device_type fcoe_fcf_device_type = {
+ 	.name = "fcoe_fcf",
+ 	.groups = fcoe_fcf_attr_groups,
+ 	.release = fcoe_fcf_device_release,
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index a424eae..b9513f8 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -1009,7 +1009,7 @@ static void iscsi_flashnode_sess_release(struct device *dev)
+ 	kfree(fnode_sess);
+ }
  
--static struct device_type ap_queue_type = {
-+static const struct device_type ap_queue_type = {
- 	.name = "ap_queue",
- 	.groups = ap_queue_dev_attr_groups,
- };
+-static struct device_type iscsi_flashnode_sess_dev_type = {
++static const struct device_type iscsi_flashnode_sess_dev_type = {
+ 	.name = "iscsi_flashnode_sess_dev_type",
+ 	.groups = iscsi_flashnode_sess_attr_groups,
+ 	.release = iscsi_flashnode_sess_release,
+@@ -1195,7 +1195,7 @@ static void iscsi_flashnode_conn_release(struct device *dev)
+ 	kfree(fnode_conn);
+ }
+ 
+-static struct device_type iscsi_flashnode_conn_dev_type = {
++static const struct device_type iscsi_flashnode_conn_dev_type = {
+ 	.name = "iscsi_flashnode_conn_dev_type",
+ 	.groups = iscsi_flashnode_conn_attr_groups,
+ 	.release = iscsi_flashnode_conn_release,
 -- 
 1.9.1
