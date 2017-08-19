@@ -1,13 +1,13 @@
 From: Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH 09/15] phy: tegra: make device_type const
-Date: Sat, 19 Aug 2017 13:52:20 +0530
-Message-ID: <1503130946-2854-10-git-send-email-bhumirks__22657.7793284834$1503131184$gmane$org@gmail.com>
+Subject: [PATCH 10/15] platform/x86: wmi: make device_type const
+Date: Sat, 19 Aug 2017 13:52:21 +0530
+Message-ID: <1503130946-2854-11-git-send-email-bhumirks__28480.9241573841$1503131194$gmane$org@gmail.com>
 References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:36704 "EHLO
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:34754 "EHLO
         mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751990AbdHSIZu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Aug 2017 04:25:50 -0400
+        with ESMTP id S1751101AbdHSI0K (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Aug 2017 04:26:10 -0400
 In-Reply-To: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,30 +20,35 @@ Done using Coccinelle.
 
 Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 ---
- drivers/phy/tegra/xusb.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/platform/x86/wmi.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/phy/tegra/xusb.c b/drivers/phy/tegra/xusb.c
-index 3cbcb25..bd3f1b6 100644
---- a/drivers/phy/tegra/xusb.c
-+++ b/drivers/phy/tegra/xusb.c
-@@ -155,7 +155,7 @@ static void tegra_xusb_pad_release(struct device *dev)
- 	pad->soc->ops->remove(pad);
- }
- 
--static struct device_type tegra_xusb_pad_type = {
-+static const struct device_type tegra_xusb_pad_type = {
- 	.release = tegra_xusb_pad_release,
+diff --git a/drivers/platform/x86/wmi.c b/drivers/platform/x86/wmi.c
+index e32ba57..a37c253 100644
+--- a/drivers/platform/x86/wmi.c
++++ b/drivers/platform/x86/wmi.c
+@@ -810,19 +810,19 @@ static int wmi_dev_remove(struct device *dev)
+ 	.remove = wmi_dev_remove,
  };
  
-@@ -512,7 +512,7 @@ static void tegra_xusb_port_release(struct device *dev)
- {
- }
- 
--static struct device_type tegra_xusb_port_type = {
-+static const struct device_type tegra_xusb_port_type = {
- 	.release = tegra_xusb_port_release,
+-static struct device_type wmi_type_event = {
++static const struct device_type wmi_type_event = {
+ 	.name = "event",
+ 	.groups = wmi_event_groups,
+ 	.release = wmi_dev_release,
  };
  
+-static struct device_type wmi_type_method = {
++static const struct device_type wmi_type_method = {
+ 	.name = "method",
+ 	.groups = wmi_method_groups,
+ 	.release = wmi_dev_release,
+ };
+ 
+-static struct device_type wmi_type_data = {
++static const struct device_type wmi_type_data = {
+ 	.name = "data",
+ 	.groups = wmi_data_groups,
+ 	.release = wmi_dev_release,
 -- 
 1.9.1
