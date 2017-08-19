@@ -1,36 +1,30 @@
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Subject: [PATCH 1/4] scsi: lasi700: constify parisc_device_id
-Date: Sat, 19 Aug 2017 23:24:20 +0530
-Message-ID: <1503165261-31741-2-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1503165261-31741-1-git-send-email-arvind.yadav.cs@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1503165261-31741-1-git-send-email-arvind.yadav.cs@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, deller@gmx.de, gregkh@linuxfoundation.org, jslaby@suse.com
-Cc: linux-kernel@vger.kernel.org, linux-parisc@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Meelis Roos <mroos@linux.ee>
+Subject: qla2xxx: MSI-X: Unsupported ISP 2432 SSVID/SSDID (0x103C,0x7041)
+Date: Sat, 19 Aug 2017 23:41:00 +0300 (EEST)
+Message-ID: <alpine.LRH.2.20.1708192337130.26479@math.ut.ee>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp2.it.da.ut.ee ([193.40.5.67]:44315 "EHLO smtp2.it.da.ut.ee"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751687AbdHSUlE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 19 Aug 2017 16:41:04 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, qla2xxx-upstream@qlogic.com
 
-parisc_device_id are not supposed to change at runtime. All functions
-working with parisc_device_id provided by <asm/parisc-device.h> work
-with const parisc_device_id. So mark the non-const structs as const.
+Hello, I just tried Linux with the latest kernel (4.13-rc5+git) on a HP 
+DL360 G6 with HP branded ISP2432 HBA. The driver mentions unsupported 
+model of the card:
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
- drivers/scsi/lasi700.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+[    3.868589] scsi host1: qla2xxx
+[    3.871696] qla2xxx [0000:07:00.0]-00fb:1: QLogic HPAE312A - PCI-Express Dual Port 4Gb Fibre Channel HBA.
+[    3.871782] qla2xxx [0000:07:00.0]-00fc:1: ISP2432: PCIe (2.5GT/s x4) @ 0000:07:00.0 hdma+ host#=1 fw=8.03.00 (9496).
+[    3.871973] qla2xxx [0000:07:00.1]-001d: : Found an ISP2432 irq 49 iobase 0xffffc900062c5000.
+[    3.872568] qla2xxx [0000:07:00.1]-0034:4: MSI-X: Unsupported ISP 2432 SSVID/SSDID (0x103C,0x7041).
 
-diff --git a/drivers/scsi/lasi700.c b/drivers/scsi/lasi700.c
-index 5c4ded9..4e2b0e0 100644
---- a/drivers/scsi/lasi700.c
-+++ b/drivers/scsi/lasi700.c
-@@ -81,7 +81,7 @@ MODULE_LICENSE("GPL");
- #define LASI710_CLOCK	40
- #define LASI_SCSI_CORE_OFFSET 0x100
- 
--static struct parisc_device_id lasi700_ids[] = {
-+static const struct parisc_device_id lasi700_ids[] = {
- 	LASI700_ID_TABLE,
- 	LASI710_ID_TABLE,
- 	{ 0 }
+Is there some information I can provide to include this card in fully 
+supported list?
+
 -- 
-2.7.4
+Meelis Roos (mroos@linux.ee)
