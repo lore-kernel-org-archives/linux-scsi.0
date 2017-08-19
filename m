@@ -1,46 +1,56 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 196707] Adaptec ICP9087MA: aacraid prints "AAC: Host adapter is
- dead (or got a PCI error) -1" twice times around errors of aacraid and the
- kernel crashes after starting the "Kernel Device Manager"
-Date: Fri, 18 Aug 2017 23:01:26 +0000
-Message-ID: <bug-196707-11613-32FHQgOAUk@https.bugzilla.kernel.org/>
-References: <bug-196707-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+From: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH 00/15] drivers: make device_type const
+Date: Sat, 19 Aug 2017 13:52:11 +0530
+Message-ID: <1503130946-2854-1-git-send-email-bhumirks__28383.2054505639$1503130986$gmane$org@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:48524 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751243AbdHRXBl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 18 Aug 2017 19:01:41 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 0767B28D96
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Aug 2017 23:01:41 +0000 (UTC)
-In-Reply-To: <bug-196707-11613@https.bugzilla.kernel.org/>
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:34266 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751101AbdHSIWv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Aug 2017 04:22:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@kernel.org
+To: julia.lawall@lip6.fr, bp@alien8.de, mchehab@kernel.org, daniel.vetter@intel.com, jani.nikula@linux.intel.com, seanpaul@chromium.org, airlied@linux.ie, g.liakhovetski@gmx.de, tomas.winkler@intel.com, dwmw2@infradead.org, computersforpeace@gmail.com, boris.brezillon@free-electrons.com, marek.vasut@gmail.com, richard@nod.at, cyrille.pitchen@wedev4u.fr, peda@axentia.se, kishon@ti.com, bhelgaas@google.com, thierry.reding@gmail.com, jonathanh@nvidia.com, dvhart@infradead.org, andy@infradead.org, ohad@wizery.com, bjorn.andersson@linaro.org, freude@de.ibm.com, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, jth@kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com, johan@kernel.org, elder@kernel.org, gregkh@linuxfoundation.orgheik
+Cc: Bhumika Goyal <bhumirks@gmail.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=196707
+Make device_type const. Done using Coccinelle.
 
---- Comment #2 from Andreas Gerlich (kernel.org@yaze-ag.de) ---
-Created attachment 258017
-  --> https://bugzilla.kernel.org/attachment.cgi?id=258017&action=edit
-Kernel_output_after_patch_from_Dave_Carroll.cap
+Bhumika Goyal (15):
+  EDAC: make device_type const
+  drm: make device_type const
+  [media] i2c: make device_type const
+  [media] rc: make device_type const
+  mei: make device_type const
+  mtd:  make device_type const
+  mux: make device_type const
+  PCI: make device_type const
+  phy: tegra: make device_type const
+  platform/x86: wmi: make device_type const
+  remoteproc: make device_type const
+  s390/zcrypt: make device_type const
+  scsi: make device_type const
+  staging: greybus: make device_type const
+  usb: make device_type const
 
-Hello Dave Carroll,
-
-I apply the patch and put the output of the kernel start (4.12.8) as a
-attachment.
-
-The Kernel crashes again at the "Kernel Device Manager" after errors from the
-aacraid.
-
-Best Regards
-Andreas Gerlich
+ drivers/edac/edac_mc_sysfs.c           | 8 ++++----
+ drivers/edac/i7core_edac.c             | 4 ++--
+ drivers/gpu/drm/drm_sysfs.c            | 2 +-
+ drivers/gpu/drm/ttm/ttm_module.c       | 2 +-
+ drivers/media/i2c/soc_camera/mt9t031.c | 2 +-
+ drivers/media/rc/rc-main.c             | 2 +-
+ drivers/misc/mei/bus.c                 | 2 +-
+ drivers/mtd/mtdcore.c                  | 2 +-
+ drivers/mux/mux-core.c                 | 2 +-
+ drivers/pci/endpoint/pci-epf-core.c    | 4 ++--
+ drivers/phy/tegra/xusb.c               | 4 ++--
+ drivers/platform/x86/wmi.c             | 6 +++---
+ drivers/remoteproc/remoteproc_core.c   | 2 +-
+ drivers/s390/crypto/ap_card.c          | 2 +-
+ drivers/s390/crypto/ap_queue.c         | 2 +-
+ drivers/scsi/fcoe/fcoe_sysfs.c         | 4 ++--
+ drivers/scsi/scsi_transport_iscsi.c    | 4 ++--
+ drivers/staging/greybus/gbphy.c        | 2 +-
+ drivers/usb/common/ulpi.c              | 2 +-
+ 19 files changed, 29 insertions(+), 29 deletions(-)
 
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
-You are watching someone on the CC list of the bug.
+1.9.1
