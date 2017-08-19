@@ -1,13 +1,13 @@
 From: Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH 06/15] mtd:  make device_type const
-Date: Sat, 19 Aug 2017 13:52:17 +0530
-Message-ID: <1503130946-2854-7-git-send-email-bhumirks__29473.745058249$1503131108$gmane$org@gmail.com>
+Subject: [PATCH 07/15] mux: make device_type const
+Date: Sat, 19 Aug 2017 13:52:18 +0530
+Message-ID: <1503130946-2854-8-git-send-email-bhumirks@gmail.com>
 References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:36588 "EHLO
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:37765 "EHLO
         mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751655AbdHSIYw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Aug 2017 04:24:52 -0400
+        with ESMTP id S1752405AbdHSIZL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Aug 2017 04:25:11 -0400
 In-Reply-To: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,21 +20,21 @@ Done using Coccinelle.
 
 Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 ---
- drivers/mtd/mtdcore.c | 2 +-
+ drivers/mux/mux-core.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/mtd/mtdcore.c b/drivers/mtd/mtdcore.c
-index f872a99..e7ea842 100644
---- a/drivers/mtd/mtdcore.c
-+++ b/drivers/mtd/mtdcore.c
-@@ -340,7 +340,7 @@ static ssize_t mtd_bbtblocks_show(struct device *dev,
- };
- ATTRIBUTE_GROUPS(mtd);
+diff --git a/drivers/mux/mux-core.c b/drivers/mux/mux-core.c
+index 2fe96c4..68bd16d 100644
+--- a/drivers/mux/mux-core.c
++++ b/drivers/mux/mux-core.c
+@@ -58,7 +58,7 @@ static void mux_chip_release(struct device *dev)
+ 	kfree(mux_chip);
+ }
  
--static struct device_type mtd_devtype = {
-+static const struct device_type mtd_devtype = {
- 	.name		= "mtd",
- 	.groups		= mtd_groups,
- 	.release	= mtd_release,
+-static struct device_type mux_type = {
++static const struct device_type mux_type = {
+ 	.name = "mux-chip",
+ 	.release = mux_chip_release,
+ };
 -- 
 1.9.1
