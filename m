@@ -1,7 +1,7 @@
 From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Subject: [PATCH 2/4] scsi: zalon: constify parisc_device_id
-Date: Sat, 19 Aug 2017 23:24:21 +0530
-Message-ID: <1503165261-31741-3-git-send-email-arvind.yadav.cs@gmail.com>
+Subject: [PATCH 1/4] scsi: lasi700: constify parisc_device_id
+Date: Sat, 19 Aug 2017 23:24:20 +0530
+Message-ID: <1503165261-31741-2-git-send-email-arvind.yadav.cs@gmail.com>
 References: <1503165261-31741-1-git-send-email-arvind.yadav.cs@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1503165261-31741-1-git-send-email-arvind.yadav.cs@gmail.com>
@@ -16,21 +16,21 @@ with const parisc_device_id. So mark the non-const structs as const.
 
 Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/scsi/zalon.c | 2 +-
+ drivers/scsi/lasi700.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/zalon.c b/drivers/scsi/zalon.c
-index b2cf1fa..00c7c28 100644
---- a/drivers/scsi/zalon.c
-+++ b/drivers/scsi/zalon.c
-@@ -160,7 +160,7 @@ zalon_probe(struct parisc_device *dev)
- 	return error;
- }
+diff --git a/drivers/scsi/lasi700.c b/drivers/scsi/lasi700.c
+index 5c4ded9..4e2b0e0 100644
+--- a/drivers/scsi/lasi700.c
++++ b/drivers/scsi/lasi700.c
+@@ -81,7 +81,7 @@ MODULE_LICENSE("GPL");
+ #define LASI710_CLOCK	40
+ #define LASI_SCSI_CORE_OFFSET 0x100
  
--static struct parisc_device_id zalon_tbl[] = {
-+static const struct parisc_device_id zalon_tbl[] = {
- 	{ HPHW_A_DMA, HVERSION_REV_ANY_ID, HVERSION_ANY_ID, 0x00089 }, 
- 	{ 0, }
- };
+-static struct parisc_device_id lasi700_ids[] = {
++static const struct parisc_device_id lasi700_ids[] = {
+ 	LASI700_ID_TABLE,
+ 	LASI710_ID_TABLE,
+ 	{ 0 }
 -- 
 2.7.4
