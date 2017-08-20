@@ -1,30 +1,34 @@
-From: Meelis Roos <mroos@linux.ee>
-Subject: qla2xxx: MSI-X: Unsupported ISP 2432 SSVID/SSDID (0x103C,0x7041)
-Date: Sat, 19 Aug 2017 23:41:00 +0300 (EEST)
-Message-ID: <alpine.LRH.2.20.1708192337130.26479@math.ut.ee>
+From: Borislav Petkov <bp@alien8.de>
+Subject: Re: [PATCH 01/15] EDAC: make device_type const
+Date: Sun, 20 Aug 2017 13:29:55 +0200
+Message-ID: <20170820112954.bi5oiebbm3i4gtru@pd.tnic>
+References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
+ <1503130946-2854-2-git-send-email-bhumirks@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.it.da.ut.ee ([193.40.5.67]:44315 "EHLO smtp2.it.da.ut.ee"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751687AbdHSUlE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 19 Aug 2017 16:41:04 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <platform-driver-x86-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1503130946-2854-2-git-send-email-bhumirks@gmail.com>
+Sender: platform-driver-x86-owner@vger.kernel.org
+To: Bhumika Goyal <bhumirks@gmail.com>
+Cc: julia.lawall@lip6.fr, mchehab@kernel.org, daniel.vetter@intel.com, jani.nikula@linux.intel.com, seanpaul@chromium.org, airlied@linux.ie, g.liakhovetski@gmx.de, tomas.winkler@intel.com, dwmw2@infradead.org, computersforpeace@gmail.com, boris.brezillon@free-electrons.com, marek.vasut@gmail.com, richard@nod.at, cyrille.pitchen@wedev4u.fr, peda@axentia.se, kishon@ti.com, bhelgaas@google.com, thierry.reding@gmail.com, jonathanh@nvidia.com, dvhart@infradead.org, andy@infradead.org, ohad@wizery.com, bjorn.andersson@linaro.org, freude@de.ibm.com, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, jth@kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com, johan@kernel.org, elder@kernel.org, gregkh@linuxfoundation.org, heikki.krogerus@linux.inte
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, qla2xxx-upstream@qlogic.com
 
-Hello, I just tried Linux with the latest kernel (4.13-rc5+git) on a HP 
-DL360 G6 with HP branded ISP2432 HBA. The driver mentions unsupported 
-model of the card:
+On Sat, Aug 19, 2017 at 01:52:12PM +0530, Bhumika Goyal wrote:
+> Make these const as they are only stored in the type field of a device
+> structure, which is const.
+> Done using Coccinelle.
+> 
+> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+> ---
+>  drivers/edac/edac_mc_sysfs.c | 8 ++++----
+>  drivers/edac/i7core_edac.c   | 4 ++--
+>  2 files changed, 6 insertions(+), 6 deletions(-)
 
-[    3.868589] scsi host1: qla2xxx
-[    3.871696] qla2xxx [0000:07:00.0]-00fb:1: QLogic HPAE312A - PCI-Express Dual Port 4Gb Fibre Channel HBA.
-[    3.871782] qla2xxx [0000:07:00.0]-00fc:1: ISP2432: PCIe (2.5GT/s x4) @ 0000:07:00.0 hdma+ host#=1 fw=8.03.00 (9496).
-[    3.871973] qla2xxx [0000:07:00.1]-001d: : Found an ISP2432 irq 49 iobase 0xffffc900062c5000.
-[    3.872568] qla2xxx [0000:07:00.1]-0034:4: MSI-X: Unsupported ISP 2432 SSVID/SSDID (0x103C,0x7041).
-
-Is there some information I can provide to include this card in fully 
-supported list?
+Applied, thanks.
 
 -- 
-Meelis Roos (mroos@linux.ee)
+Regards/Gruss,
+    Boris.
+
+Good mailing practices for 400: avoid top-posting and trim the reply.
