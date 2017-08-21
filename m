@@ -1,34 +1,43 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: sd_zbc: Disable zoned block devices with scsi-mq
-Date: Mon, 21 Aug 2017 16:31:32 -0400
-Message-ID: <yq1d17oek7v.fsf@oracle.com>
-References: <20170817024550.9845-1-damien.lemoal@wdc.com>
-        <20170817075916.GA28379@infradead.org>
-        <2b78a557-d573-9ba1-0068-56417042ffc8@wdc.com>
-        <1502982108.2615.1.camel@wdc.com> <20170821153351.GB20205@lst.de>
+From: Helge Deller <deller@gmx.de>
+Subject: Re: [PATCH 0/4] constify scsi/tty parisc_device_id
+Date: Mon, 21 Aug 2017 22:43:39 +0200
+Message-ID: <12d14a03-5734-9b97-fff0-f8fe7158ce63@gmx.de>
+References: <1503165261-31741-1-git-send-email-arvind.yadav.cs@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39870 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753747AbdHUUcY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Aug 2017 16:32:24 -0400
-In-Reply-To: <20170821153351.GB20205@lst.de> (hch@lst.de's message of "Mon, 21
-        Aug 2017 17:33:51 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-parisc-owner@vger.kernel.org>
+In-Reply-To: <1503165261-31741-1-git-send-email-arvind.yadav.cs@gmail.com>
+Content-Language: en-US
+Sender: linux-parisc-owner@vger.kernel.org
+To: Arvind Yadav <arvind.yadav.cs@gmail.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, gregkh@linuxfoundation.org, jslaby@suse.com
+Cc: linux-kernel@vger.kernel.org, linux-parisc@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hch@lst.de" <hch@lst.de>
-Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, "hch@infradead.org" <hch@infradead.org>, Damien Le Moal <Damien.LeMoal@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
+On 19.08.2017 19:54, Arvind Yadav wrote:
+> parisc_device_id are not supposed to change at runtime. All functions
+> working with parisc_device_id provided by <asm/parisc-device.h> work with
+> const parisc_device_id. So mark the non-const structs as const.
+> 
+> Arvind Yadav (4):
+>   [PATCH 1/4] scsi: lasi700: constify parisc_device_id
+>   [PATCH 2/4] scsi: zalon: constify parisc_device_id
+>   [PATCH 3/4] tty: 8250: constify parisc_device_id
+>   [PATCH 4/4] tty: mux: constify parisc_device_id
 
-Christoph,
+NAK.
+Please don't apply.
+I have other patches in my tree which will move those consts
+into __init sections instead.
 
-> But it seems like we need to refne the always unprepare patch first,
-> to make sure we only release resources, but don't clear the
-> scmd->retries field.  The NVMe driver already works that way, so
-> we have an example to follow.
+Thanks,
+Helge
 
-Agree!
+ 
+>  drivers/scsi/lasi700.c             | 2 +-
+>  drivers/scsi/zalon.c               | 2 +-
+>  drivers/tty/serial/8250/8250_gsc.c | 4 ++--
+>  drivers/tty/serial/mux.c           | 4 ++--
+>  4 files changed, 6 insertions(+), 6 deletions(-)
+> 
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
