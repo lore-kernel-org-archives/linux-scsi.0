@@ -1,93 +1,47 @@
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH] scsi: qedf: Fix a potential NULL pointer dereference
-Date: Sun, 20 Aug 2017 19:09:35 +0200
-Message-ID: <20170820170935.14767-1-christophe.jaillet@wanadoo.fr>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 196713] New: 123
+Date: Mon, 21 Aug 2017 01:54:43 +0000
+Message-ID: <bug-196713-11613@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp11.smtpout.orange.fr ([80.12.242.133]:51871 "EHLO
-        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753183AbdHTRJl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Aug 2017 13:09:41 -0400
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:37200 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753461AbdHUBzs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 20 Aug 2017 21:55:48 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 63AD0286E3
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Aug 2017 01:55:48 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: QLogic-Storage-Upstream@cavium.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To: linux-scsi@kernel.org
 
-At the beginning of 'qedf_srr_compl()' and of 'qedf_rec_compl()', we check
-if 'orig_io_req' is NULL. If this happens, a NULL pointer dereference will
-occur in the error handling path.
+https://bugzilla.kernel.org/show_bug.cgi?id=196713
 
-Fix it by adding an additionnal label in the error handling path in order
-to avoid this NULL pointer dereference.
+            Bug ID: 196713
+           Summary: 123
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 123
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: high
+          Priority: P1
+         Component: QLOGIC QLA2XXX
+          Assignee: scsi_drivers-qla2xxx@kernel-bugs.osdl.org
+          Reporter: tuyulwarboy@gmail.com
+        Regression: No
 
-Fixes: 61d8658b4a43 ("scsi: qedf: Add QLogic FastLinQ offload FCoE driver framework.")
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
----
- drivers/scsi/qedf/qedf_els.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+Created attachment 258031
+  --> https://bugzilla.kernel.org/attachment.cgi?id=258031&action=edit
+123
 
-diff --git a/drivers/scsi/qedf/qedf_els.c b/drivers/scsi/qedf/qedf_els.c
-index eb07f1de8afa..59c18ca4cda9 100644
---- a/drivers/scsi/qedf/qedf_els.c
-+++ b/drivers/scsi/qedf/qedf_els.c
-@@ -489,7 +489,7 @@ static void qedf_srr_compl(struct qedf_els_cb_arg *cb_arg)
- 
- 	/* If a SRR times out, simply free resources */
- 	if (srr_req->event == QEDF_IOREQ_EV_ELS_TMO)
--		goto out_free;
-+		goto out_put;
- 
- 	/* Normalize response data into struct fc_frame */
- 	mp_req = &(srr_req->mp_req);
-@@ -501,7 +501,7 @@ static void qedf_srr_compl(struct qedf_els_cb_arg *cb_arg)
- 	if (!fp) {
- 		QEDF_ERR(&(qedf->dbg_ctx),
- 		    "fc_frame_alloc failure.\n");
--		goto out_free;
-+		goto out_put;
- 	}
- 
- 	/* Copy frame header from firmware into fp */
-@@ -526,9 +526,10 @@ static void qedf_srr_compl(struct qedf_els_cb_arg *cb_arg)
- 	}
- 
- 	fc_frame_free(fp);
--out_free:
-+out_put:
- 	/* Put reference for original command since SRR completed */
- 	kref_put(&orig_io_req->refcount, qedf_release_cmd);
-+out_free:
- 	kfree(cb_arg);
- }
- 
-@@ -780,7 +781,7 @@ static void qedf_rec_compl(struct qedf_els_cb_arg *cb_arg)
- 
- 	/* If a REC times out, free resources */
- 	if (rec_req->event == QEDF_IOREQ_EV_ELS_TMO)
--		goto out_free;
-+		goto out_put;
- 
- 	/* Normalize response data into struct fc_frame */
- 	mp_req = &(rec_req->mp_req);
-@@ -792,7 +793,7 @@ static void qedf_rec_compl(struct qedf_els_cb_arg *cb_arg)
- 	if (!fp) {
- 		QEDF_ERR(&(qedf->dbg_ctx),
- 		    "fc_frame_alloc failure.\n");
--		goto out_free;
-+		goto out_put;
- 	}
- 
- 	/* Copy frame header from firmware into fp */
-@@ -884,9 +885,10 @@ static void qedf_rec_compl(struct qedf_els_cb_arg *cb_arg)
- 
- out_free_frame:
- 	fc_frame_free(fp);
--out_free:
-+out_put:
- 	/* Put reference for original command since REC completed */
- 	kref_put(&orig_io_req->refcount, qedf_release_cmd);
-+out_free:
- 	kfree(cb_arg);
- }
- 
+123
+
 -- 
-2.11.0
+You are receiving this mail because:
+You are watching the assignee of the bug.
