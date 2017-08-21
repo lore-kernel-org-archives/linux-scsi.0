@@ -1,76 +1,40 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: RE: [PATCH] sd: preserve sysfs updates to max_sectors_kb
-Date: Mon, 21 Aug 2017 20:14:45 +0000
-Message-ID: <4993A297653ECB4581FA5C3C31323D195B8DBE34@avsrvexchmbx2.microsemi.net>
-References: <150309002518.8999.15900049133748830764.stgit@brunhilda>
-         <1503090353.2622.15.camel@wdc.com>
-         <4993A297653ECB4581FA5C3C31323D195B8D825D@avsrvexchmbx2.microsemi.net>
-         <1503092817.2622.19.camel@wdc.com>
-         <4993A297653ECB4581FA5C3C31323D195B8DBDE4@avsrvexchmbx2.microsemi.net>
- <1503345191.2571.13.camel@wdc.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] ipr: Set no_report_opcodes for RAID arrays
+Date: Mon, 21 Aug 2017 16:22:41 -0400
+Message-ID: <yq1lgmcekmm.fsf@oracle.com>
+References: <1502902815.3305.22.camel@abdul.in.ibm.com>
+ <1502904072.2421.3.camel@wdc.com>
+ <2f686064-3e32-df8d-134f-962b5181da9d@linux.vnet.ibm.com>
+ <1502985161.2615.8.camel@wdc.com>
+ <71fb9c1b-9f3f-acdc-8bb5-aa1240aea763@linux.vnet.ibm.com>
+ <c2272791-2010-600b-3982-835b8eb1a523@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0052.outbound.protection.outlook.com ([104.47.37.52]:40166
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753600AbdHUUOw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 21 Aug 2017 16:14:52 -0400
-In-Reply-To: <1503345191.2571.13.camel@wdc.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <c2272791-2010-600b-3982-835b8eb1a523@linux.vnet.ibm.com> (Brian
+ King's message of "Fri, 18 Aug 2017 16:17:32 -0500")
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: "sachinp@linux.vnet.ibm.com" <sachinp@linux.vnet.ibm.com>, "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>, "hare@suse.com" <hare@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "abdhalee@linux.vnet.ibm.com" <abdhalee@linux.vnet.ibm.com>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>, "hch@lst.de" <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "hch@infradead.org" <hch@infradead.org>, Viswas G <viswas.g@microsemi.com>, Gerry Morong <gerry.morong@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "POSWALD@suse.com" <POSWALD@suse.com>, Scott Benesh <scott.benesh@microsemi.com>, Bader Ali - Saleh <bader.alisaleh@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, "joseph.szczypek@hpe.com" <joseph.szczypek@hpe.com>, Scott Teel <scott.teel@microsemi.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Justin Lindley <justin.lindley@microsemi.com>, John Hall <John.Hall@microsemi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCYXJ0IFZhbiBBc3NjaGUgW21h
-aWx0bzpCYXJ0LlZhbkFzc2NoZUB3ZGMuY29tXQ0KPiBTZW50OiBNb25kYXksIEF1Z3VzdCAyMSwg
-MjAxNyAyOjUzIFBNDQo+IFRvOiBoY2hAaW5mcmFkZWFkLm9yZzsgVmlzd2FzIEcgPHZpc3dhcy5n
-QG1pY3Jvc2VtaS5jb20+OyBHZXJyeQ0KPiBNb3JvbmcgPGdlcnJ5Lm1vcm9uZ0BtaWNyb3NlbWku
-Y29tPjsgTWFoZXNoIFJhamFzaGVraGFyYQ0KPiA8bWFoZXNoLnJhamFzaGVraGFyYUBtaWNyb3Nl
-bWkuY29tPjsgUE9TV0FMREBzdXNlLmNvbTsgU2NvdHQNCj4gQmVuZXNoIDxzY290dC5iZW5lc2hA
-bWljcm9zZW1pLmNvbT47IERvbiBCcmFjZQ0KPiA8ZG9uLmJyYWNlQG1pY3Jvc2VtaS5jb20+OyBC
-YWRlciBBbGkgLSBTYWxlaA0KPiA8YmFkZXIuYWxpc2FsZWhAbWljcm9zZW1pLmNvbT47IEtldmlu
-IEJhcm5ldHQNCj4gPGtldmluLmJhcm5ldHRAbWljcm9zZW1pLmNvbT47IGpvc2VwaC5zemN6eXBl
-a0BocGUuY29tOyBTY290dCBUZWVsDQo+IDxzY290dC50ZWVsQG1pY3Jvc2VtaS5jb20+OyBqZWpi
-QGxpbnV4LnZuZXQuaWJtLmNvbTsgSnVzdGluIExpbmRsZXkNCj4gPGp1c3Rpbi5saW5kbGV5QG1p
-Y3Jvc2VtaS5jb20+OyBKb2huIEhhbGwgPEpvaG4uSGFsbEBtaWNyb3NlbWkuY29tPg0KPiBDYzog
-bGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUmU6IFtQQVRDSF0gc2Q6IHBy
-ZXNlcnZlIHN5c2ZzIHVwZGF0ZXMgdG8gbWF4X3NlY3RvcnNfa2INCj4gDQo+IEVYVEVSTkFMIEVN
-QUlMDQo+IA0KPiANCj4gT24gTW9uLCAyMDE3LTA4LTIxIGF0IDE5OjEyICswMDAwLCBEb24gQnJh
-Y2Ugd3JvdGU6DQo+ID4gT24gRnJpZGF5IEJhcnQgVmFuIEFzc2NoZSB3cm90ZToNCj4gPiA+IENh
-biB5b3UgY2hlY2sgb24geW91ciB0ZXN0IHN5c3RlbSB3aGljaCB1ZGV2IHJ1bGUgY2hhbmdlcw0K
-PiA+ID4gbWF4X3NlY3RvcnNfa2I/IEkNCj4gPiA+IGhhdmUgY2hlY2tlZCB0d28gcmVjZW50IExp
-bnV4IGRpc3RybydzIGJ1dCBoYXZlbid0IGJlZW4gYWJsZSB0byBmaW5kDQo+ID4gPiBzdWNoIGEg
-dWRldiBydWxlOg0KPiA+ID4gJCBncmVwIC1ydyBtYXhfc2VjdG9yc19rYiAvdXNyL2xpYi91ZGV2
-L3J1bGVzLmQgL2V0Yy91ZGV2L3J1bGVzLmQgfCB3Yw0KPiA+ID4gLWwNCj4gPiA+IDANCj4gPiA+
-DQo+ID4gPiBUaGFua3MsDQo+ID4gPg0KPiA+ID4gQmFydC4NCj4gPg0KPiA+IE9uIG15IHN5c3Rl
-bSBpdCBpcyA2MC1ibG9jay5ydWxlcywgYW5kIGl0IGlzIHRoZSBsYXN0IHJ1bGUgaW4gdGhhdCBy
-dWxlDQo+ID4gZmlsZS4NCj4gPiAtLQ0KPiA+ICMgZG8gbm90IGVkaXQgdGhpcyBmaWxlLCBpdCB3
-aWxsIGJlIG92ZXJ3cml0dGVuIG9uIHVwZGF0ZQ0KPiA+DQo+ID4gIyBlbmFibGUgaW4ta2VybmVs
-IG1lZGlhLXByZXNlbmNlIHBvbGxpbmcNCj4gPiBBQ1RJT049PSJhZGQiLCBTVUJTWVNURU09PSJt
-b2R1bGUiLCBLRVJORUw9PSJibG9jayIsDQo+ID4gQVRUUntwYXJhbWV0ZXJzL2V2ZW50c19kZmxf
-cG9sbF9tc2Vjc309PSIwIiwgXA0KPiA+ICAgQVRUUntwYXJhbWV0ZXJzL2V2ZW50c19kZmxfcG9s
-bF9tc2Vjc309IjIwMDAiDQo+ID4NCj4gPiAjIGZvcndhcmQgc2NzaSBkZXZpY2UgZXZlbnQgdG8g
-Y29ycmVzcG9uZGluZyBibG9jayBkZXZpY2UNCj4gPiBBQ1RJT049PSJjaGFuZ2UiLCBTVUJTWVNU
-RU09PSJzY3NpIiwgRU5We0RFVlRZUEV9PT0ic2NzaV9kZXZpY2UiLA0KPiA+IFRFU1Q9PSJibG9j
-ayIsIEFUVFJ7YmxvY2svKi91ZXZlbnR9PSJjaGFuZ2UiDQo+ID4NCj4gPiAjIHdhdGNoIG1ldGFk
-YXRhIGNoYW5nZXMsIGNhdXNlZCBieSB0b29scyBjbG9zaW5nIHRoZSBkZXZpY2Ugbm9kZSB3aGlj
-aA0KPiA+IHdhcyBvcGVuZWQgZm9yIHdyaXRpbmcNCj4gPiBBQ1RJT04hPSJyZW1vdmUiLCBTVUJT
-WVNURU09PSJibG9jayIsDQo+ID4gS0VSTkVMPT0ibG9vcCp8bnZtZSp8c2QqfHZkKnx4dmQqfHBt
-ZW0qIiwgT1BUSU9OUys9IndhdGNoIg0KPiANCj4gSGVsbG8gRG9uLA0KPiANCj4gQ2FuIHlvdSBo
-YXZlIGFub3RoZXIgbG9vayBhdCB0aGUgdWRldiBydWxlcyBvbiB5b3VyIHRlc3Qgc3lzdGVtPyBU
-aGUgbGFzdA0KPiBydWxlIGluIDYwLWJsb2NrLnJ1bGVzIGxvb2tzIGxpa2UgYSB3YXRjaCBydWxl
-IHRvIG1lLiBUaGUgc2FtZSBob2xkcyBmb3IgdGhlDQo+IHVwc3RyZWFtIHZlcnNpb24gb2YgdGhh
-dCBmaWxlDQo+IChodHRwczovL2dpdGh1Yi5jb20vc3lzdGVtZC9zeXN0ZW1kL2Jsb2IvbWFzdGUN
-Cj4gci9ydWxlcy82MC1ibG9jay5ydWxlcykuDQo+IA0KPiBCYXJ0Lg0KDQpJdCBpcyBhIHdhdGNo
-IHJ1bGUuDQoNCnN5c3RlbWQvc3JjL3VkZXYvdWRldmQuYw0KICAgbWFuYWdlcl9uZXcNCiAgICAg
-ICBtYW5hZ2VyLT5mZF9pbm90aWZ5ID0gdWRldl93YXRjaF9pbml0KG1hbmFnZXItPnVkZXYpOw0K
-ICAgICAgIHNkX2V2ZW50X2FkZF9pbyhtYW5hZ2VyLT5ldmVudCwgJm1hbmFnZXItPmlub3RpZnlf
-ZXZlbnQsIG1hbmFnZXItPmZkX2lub3RpZnksIEVQT0xMSU4sIG9uX2lub3RpZnksIG1hbmFnZXIp
-Ow0KICAgICAgICAgICBvbl9pbm90aWZ5IChzeXN0ZW1kIHNvdXJjZSBjb2RlOiBzcmMvdWRldi91
-ZGV2ZC5jKQ0KICAgICAgICAgICAgICBzeW50aGVzaXplX2NoYW5nZQ0KICAgICAgICAgICAgICAg
-ICAgICBpb2N0bCAtLT4gQkxLUlJQQVJUDQoNClRoaXMgcnVsZSBlbmRzIHVwIGNhbGxpbmcgQkxL
-UlJQQVJULg0KDQpUaGFua3MsDQpEb24gQnJhY2UNCkVTQyAtIFNtYXJ0IFN0b3JhZ2UNCk1pY3Jv
-c2VtaSBDb3Jwb3JhdGlvbg0KDQoNCg==
+
+Brian,
+
+> Since ipr RAID arrays do not support the MAINTENANCE_IN /
+> MI_REPORT_SUPPORTED_OPERATION_CODES, set no_report_opcodes to prevent
+> it from being sent.
+
+Applied to 4.13/scsi-fixes. Thank you!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
