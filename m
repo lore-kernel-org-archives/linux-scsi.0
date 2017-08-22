@@ -1,117 +1,47 @@
-From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
-Subject: possible circular locking dependency detected [was: linux-next: Tree
- for Aug 22]
-Date: Tue, 22 Aug 2017 19:47:08 +0900
-Message-ID: <20170822104708.GA491@jagdpanzerIV.localdomain>
-References: <20170822183816.7925e0f8@canb.auug.org.au>
+From: Heikki Krogerus <heikki.krogerus-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [PATCH 15/15] usb: make device_type const
+Date: Tue, 22 Aug 2017 15:55:17 +0300
+Message-ID: <20170822125517.GA27604@kuha.fi.intel.com>
+References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
+ <1503130946-2854-16-git-send-email-bhumirks@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20170822183816.7925e0f8@canb.auug.org.au>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Linux-Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+In-Reply-To: <1503130946-2854-16-git-send-email-bhumirks-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bhumika Goyal <bhumirks-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: julia.lawall-L2FTfq7BK8M@public.gmane.org, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, mchehab-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, daniel.vetter-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, jani.nikula-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, seanpaul-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, airlied-cv59FeDIM0c@public.gmane.org, g.liakhovetski-Mmb7MZpHnFY@public.gmane.org, tomas.winkler-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, computersforpeace-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, marek.vasut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, richard-/L3Ra7n9ekc@public.gmane.org, cyrille.pitchen-yU5RGvR974pGWvitb5QawA@public.gmane.org, peda-koto5C5qi+TLoDKTGw+V6w@public.gmane.org, kishon-l0cyMroinI0@public.gmane.org, bhelgaas-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, jonathanh-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, dvhart-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, andy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, ohad-Ix1uc/W3ht7QT0dZR+AlfA@public.gmane.org, bjorn.andersson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, freude-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org, schwidefsky-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org, heiko.carstens-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org, jth-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, lduncan-IBi9RG/b67k@public.gmane.org, cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, johan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, elder-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, linu
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+On Sat, Aug 19, 2017 at 01:52:26PM +0530, Bhumika Goyal wrote:
+> Make this const as it is only stored in the type field of a device
+> structure, which is const.
+> Done using Coccinelle.
+> 
+> Signed-off-by: Bhumika Goyal <bhumirks-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-======================================================
-WARNING: possible circular locking dependency detected
-4.13.0-rc6-next-20170822-dbg-00020-g39758ed8aae0-dirty #1746 Not tainted
-------------------------------------------------------
-fsck.ext4/148 is trying to acquire lock:
- (&bdev->bd_mutex){+.+.}, at: [<ffffffff8116e73e>] __blkdev_put+0x33/0x190
+Acked-by: Heikki Krogerus <heikki.krogerus-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 
- but now in release context of a crosslock acquired at the following:
- ((complete)&wait#2){+.+.}, at: [<ffffffff812159e0>] blk_execute_rq+0xbb/0xda
+> ---
+>  drivers/usb/common/ulpi.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/usb/common/ulpi.c b/drivers/usb/common/ulpi.c
+> index 930e8f3..4aa5195 100644
+> --- a/drivers/usb/common/ulpi.c
+> +++ b/drivers/usb/common/ulpi.c
+> @@ -135,7 +135,7 @@ static void ulpi_dev_release(struct device *dev)
+>  	kfree(to_ulpi_dev(dev));
+>  }
+>  
+> -static struct device_type ulpi_dev_type = {
+> +static const struct device_type ulpi_dev_type = {
+>  	.name = "ulpi_device",
+>  	.groups = ulpi_dev_attr_groups,
+>  	.release = ulpi_dev_release,
 
- which lock already depends on the new lock.
+Thanks,
 
- the existing dependency chain (in reverse order) is:
-
- -> #1 ((complete)&wait#2){+.+.}:
-       lock_acquire+0x176/0x19e
-       __wait_for_common+0x50/0x1e3
-       blk_execute_rq+0xbb/0xda
-       scsi_execute+0xc3/0x17d [scsi_mod]
-       sd_revalidate_disk+0x112/0x1549 [sd_mod]
-       rescan_partitions+0x48/0x2c4
-       __blkdev_get+0x14b/0x37c
-       blkdev_get+0x191/0x2c0
-       device_add_disk+0x2b4/0x3e5
-       sd_probe_async+0xf8/0x17e [sd_mod]
-       async_run_entry_fn+0x34/0xe0
-       process_one_work+0x2af/0x4d1
-       worker_thread+0x19a/0x24f
-       kthread+0x133/0x13b
-       ret_from_fork+0x27/0x40
-
- -> #0 (&bdev->bd_mutex){+.+.}:
-       __blkdev_put+0x33/0x190
-       blkdev_close+0x24/0x27
-       __fput+0xee/0x18a
-       task_work_run+0x79/0xa0
-       prepare_exit_to_usermode+0x9b/0xb5
-
- other info that might help us debug this:
- Possible unsafe locking scenario by crosslock:
-       CPU0                    CPU1
-       ----                    ----
-  lock(&bdev->bd_mutex);
-  lock((complete)&wait#2);
-                               lock(&bdev->bd_mutex);
-                               unlock((complete)&wait#2);
-
-  *** DEADLOCK ***
-4 locks held by fsck.ext4/148:
- #0:  (&bdev->bd_mutex){+.+.}, at: [<ffffffff8116e73e>] __blkdev_put+0x33/0x190
- #1:  (rcu_read_lock){....}, at: [<ffffffff81217f16>] rcu_lock_acquire+0x0/0x20
- #2:  (&(&host->lock)->rlock){-.-.}, at: [<ffffffffa00e7550>] ata_scsi_queuecmd+0x23/0x74 [libata]
- #3:  (&x->wait#14){-...}, at: [<ffffffff8106b593>] complete+0x18/0x50
-
- stack backtrace:
-CPU: 1 PID: 148 Comm: fsck.ext4 Not tainted 4.13.0-rc6-next-20170822-dbg-00020-g39758ed8aae0-dirty #1746
-Call Trace:
- dump_stack+0x67/0x8e
- print_circular_bug+0x2a1/0x2af
- ? zap_class+0xc5/0xc5
- check_prev_add+0x76/0x20d
- ? __lock_acquire+0xc27/0xcc8
- lock_commit_crosslock+0x327/0x35e
- complete+0x24/0x50
- scsi_end_request+0x8d/0x176 [scsi_mod]
- scsi_io_completion+0x1be/0x423 [scsi_mod]
- __blk_mq_complete_request+0x112/0x131
- ata_scsi_simulate+0x212/0x218 [libata]
- __ata_scsi_queuecmd+0x1be/0x1de [libata]
- ata_scsi_queuecmd+0x41/0x74 [libata]
- scsi_dispatch_cmd+0x194/0x2af [scsi_mod]
- scsi_queue_rq+0x1e0/0x26f [scsi_mod]
- blk_mq_dispatch_rq_list+0x193/0x2a7
- ? _raw_spin_unlock+0x2e/0x40
- blk_mq_sched_dispatch_requests+0x132/0x176
- __blk_mq_run_hw_queue+0x59/0xc5
- __blk_mq_delay_run_hw_queue+0x5f/0xc1
- blk_mq_flush_plug_list+0xfc/0x10b
- blk_flush_plug_list+0xc6/0x1eb
- blk_finish_plug+0x25/0x32
- generic_writepages+0x56/0x63
- do_writepages+0x36/0x70
- __filemap_fdatawrite_range+0x59/0x5f
- filemap_write_and_wait+0x19/0x4f
- __blkdev_put+0x5f/0x190
- blkdev_close+0x24/0x27
- __fput+0xee/0x18a
- task_work_run+0x79/0xa0
- prepare_exit_to_usermode+0x9b/0xb5
- entry_SYSCALL_64_fastpath+0xab/0xad
-RIP: 0033:0x7ff5755a2f74
-RSP: 002b:00007ffe46fce038 EFLAGS: 00000246 ORIG_RAX: 0000000000000003
-RAX: 0000000000000000 RBX: 0000555ddeddded0 RCX: 00007ff5755a2f74
-RDX: 0000000000001000 RSI: 0000555ddede2580 RDI: 0000000000000004
-RBP: 0000000000000000 R08: 0000555ddede2580 R09: 0000555ddedde080
-R10: 0000000108000000 R11: 0000000000000246 R12: 0000555ddedddfa0
-R13: 00007ff576523680 R14: 0000000000001000 R15: 0000555ddeddc2b0
-
-	-ss
+-- 
+heikki
