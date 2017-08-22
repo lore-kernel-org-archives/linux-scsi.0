@@ -1,47 +1,57 @@
-From: Long Li <longli@microsoft.com>
-Subject: RE: [PATCH] storvsc: do not assume SG list is continuous when doing
- bounce buffers (for 4.1 stable only)
-Date: Tue, 22 Aug 2017 19:11:04 +0000
-Message-ID: <MWHPR21MB0190D1C8C3FAF25AE283ABCFCE840@MWHPR21MB0190.namprd21.prod.outlook.com>
-References: <1503379905-18908-1-git-send-email-longli@exchange.microsoft.com>
- <20170822062841.GA1061@infradead.org>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] scsi: lpfc: remove useless code in
+ lpfc_sli4_bsg_link_diag_test
+Date: Tue, 22 Aug 2017 15:53:53 -0500
+Message-ID: <20170822205353.GA17794@embeddedgus>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20170822062841.GA1061@infradead.org>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Haiyang Zhang <haiyangz@microsoft.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 List-Id: linux-scsi@vger.kernel.org
 
+Remove variable assignments. The value stored in local variable _rc_ is
+overwritten at line 2448:rc = lpfc_sli4_bsg_set_link_diag_state(phba, 0);
+before it can be used.
+
+Addresses-Coverity-ID: 1226935
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+---
+This issue was detected by Coverity and it was tested by compilation only.
+Notice that this code has been there since 2011.
+
+ drivers/scsi/lpfc/lpfc_bsg.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+index a1686c2..fe9e1c0 100644
+--- a/drivers/scsi/lpfc/lpfc_bsg.c
++++ b/drivers/scsi/lpfc/lpfc_bsg.c
+@@ -2384,20 +2384,17 @@ lpfc_sli4_bsg_link_diag_test(struct bsg_job *job)
+ 		goto job_error;
  
-> Wouldn't it make sense to backport the changes to set the virt_boundary
-> (which probably still is the SG_GAPS flag in such an old kernel)?
-
-We can make storvsc use SG_GAPS. But the following patch is missing in 4.1 stable block layer to make this work on some I/O situations. Backporting is more difficult and affect other code.
-
-commit 5e7c4274a70aa2d6f485996d0ca1dad52d0039ca
-Author: Jens Axboe <axboe@fb.com>
-Date:   Thu Sep 3 19:28:20 2015 +0300
-
-    block: Check for gaps on front and back merges
-    
-    We are checking for gaps to previous bio_vec, which can
-    only detect back merges gaps. Moreover, at the point where
-    we check for a gap, we don't know if we will attempt a back
-    or a front merge. Thus, check for gap to prev in a back merge
-    attempt and check for a gap to next in a front merge attempt.
-    
-    Signed-off-by: Jens Axboe <axboe@fb.com>
-    [sagig: Minor rename change]
-    Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
+ 	pmboxq = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
+-	if (!pmboxq) {
+-		rc = -ENOMEM;
++	if (!pmboxq)
+ 		goto link_diag_test_exit;
+-	}
+ 
+ 	req_len = (sizeof(struct lpfc_mbx_set_link_diag_state) -
+ 		   sizeof(struct lpfc_sli4_cfg_mhdr));
+ 	alloc_len = lpfc_sli4_config(phba, pmboxq, LPFC_MBOX_SUBSYSTEM_FCOE,
+ 				     LPFC_MBOX_OPCODE_FCOE_LINK_DIAG_STATE,
+ 				     req_len, LPFC_SLI4_MBX_EMBED);
+-	if (alloc_len != req_len) {
+-		rc = -ENOMEM;
++	if (alloc_len != req_len)
+ 		goto link_diag_test_exit;
+-	}
++
+ 	run_link_diag_test = &pmboxq->u.mqe.un.link_diag_test;
+ 	bf_set(lpfc_mbx_run_diag_test_link_num, &run_link_diag_test->u.req,
+ 	       phba->sli4_hba.lnk_info.lnk_no);
+-- 
+2.5.0
