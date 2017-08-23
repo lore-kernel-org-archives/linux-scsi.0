@@ -1,147 +1,65 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 04/31] qla2xxx: Add command completion for error path
-Date: Wed, 23 Aug 2017 15:04:58 -0700
-Message-ID: <20170823220525.3115-5-himanshu.madhani@cavium.com>
+Subject: [PATCH 17/31] qla2xxx: Add timeout ability to wait_for_sess_deletion().
+Date: Wed, 23 Aug 2017 15:05:11 -0700
+Message-ID: <20170823220525.3115-18-himanshu.madhani@cavium.com>
 References: <20170823220525.3115-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0076.outbound.protection.outlook.com ([104.47.36.76]:48394
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam01on0053.outbound.protection.outlook.com ([104.47.34.53]:35136
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751093AbdHWWFf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Aug 2017 18:05:35 -0400
+        id S1751187AbdHWWF6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 23 Aug 2017 18:05:58 -0400
 In-Reply-To: <20170823220525.3115-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Duane Grigsby <duane.grigsby@cavium.com>
+From: Joe Carnuccio <joe.carnuccio@cavium.com>
 
-The driver held spinlocks during callbacks for NVME errors
-which resulted in a deadlock because recovery LS cmds needed
-the same lock.
-
-Signed-off-by: Duane Grigsby <duane.grigsby@cavium.com>
+Signed-off-by: Joe Carnuccio <joe.carnuccio@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h  |  2 ++
- drivers/scsi/qla2xxx/qla_gbl.h  |  2 ++
- drivers/scsi/qla2xxx/qla_init.c |  1 +
- drivers/scsi/qla2xxx/qla_mid.c  |  7 +++++++
- drivers/scsi/qla2xxx/qla_nvme.c | 13 ++++++++++++-
- drivers/scsi/qla2xxx/qla_os.c   |  1 +
- 6 files changed, 25 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_os.c     | 2 +-
+ drivers/scsi/qla2xxx/qla_target.c | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index b3e3982a9db0..e3b225cc83f2 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -427,6 +427,7 @@ struct srb_iocb {
- 			enum nvmefc_fcp_datadir dir;
- 			uint32_t dl;
- 			uint32_t timeout_sec;
-+			struct	list_head   entry;
- 		} nvme;
- 	} u;
- 
-@@ -3338,6 +3339,7 @@ struct qla_qpair {
- 	struct work_struct q_work;
- 	struct list_head qp_list_elem; /* vha->qp_list */
- 	struct list_head hints_list;
-+	struct list_head nvme_done_list;
- 	uint16_t cpuid;
- 	struct qla_tgt_counters tgt_counters;
- };
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index 97dcabc790c9..f614c37efc9c 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -865,4 +865,6 @@ void qlt_update_host_map(struct scsi_qla_host *, port_id_t);
- void qlt_remove_target_resources(struct qla_hw_data *);
- void qlt_clr_qp_table(struct scsi_qla_host *vha);
- 
-+void qla_nvme_cmpl_io(struct srb_iocb *);
-+
- #endif /* _QLA_GBL_H */
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 8f83571afc7b..988fb5d0f9e7 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -7806,6 +7806,7 @@ struct qla_qpair *qla2xxx_create_qpair(struct scsi_qla_host *vha, int qos,
- 		qpair->vp_idx = vp_idx;
- 		qpair->fw_started = ha->flags.fw_started;
- 		INIT_LIST_HEAD(&qpair->hints_list);
-+		INIT_LIST_HEAD(&qpair->nvme_done_list);
- 		qpair->chip_reset = ha->base_qpair->chip_reset;
- 		qpair->enable_class_2 = ha->base_qpair->enable_class_2;
- 		qpair->enable_explicit_conf =
-diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
-index 3089094b48fa..608d1aeb97be 100644
---- a/drivers/scsi/qla2xxx/qla_mid.c
-+++ b/drivers/scsi/qla2xxx/qla_mid.c
-@@ -759,11 +759,18 @@ static void qla_do_work(struct work_struct *work)
- 	struct qla_qpair *qpair = container_of(work, struct qla_qpair, q_work);
- 	struct scsi_qla_host *vha;
- 	struct qla_hw_data *ha = qpair->hw;
-+	struct srb_iocb	*nvme, *nxt_nvme;
- 
- 	spin_lock_irqsave(&qpair->qp_lock, flags);
- 	vha = pci_get_drvdata(ha->pdev);
- 	qla24xx_process_response_queue(vha, qpair->rsp);
- 	spin_unlock_irqrestore(&qpair->qp_lock, flags);
-+
-+	list_for_each_entry_safe(nvme, nxt_nvme, &qpair->nvme_done_list,
-+		    u.nvme.entry) {
-+		list_del_init(&nvme->u.nvme.entry);
-+		qla_nvme_cmpl_io(nvme);
-+	}
- }
- 
- /* create response queue */
-diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
-index 97a7b222b549..5692ae128655 100644
---- a/drivers/scsi/qla2xxx/qla_nvme.c
-+++ b/drivers/scsi/qla2xxx/qla_nvme.c
-@@ -154,6 +154,16 @@ static void qla_nvme_sp_ls_done(void *ptr, int res)
- 	qla2x00_rel_sp(sp);
- }
- 
-+void qla_nvme_cmpl_io(struct srb_iocb *nvme)
-+{
-+	srb_t *sp;
-+	struct nvmefc_fcp_req *fd = nvme->u.nvme.desc;
-+
-+	sp = container_of(nvme, srb_t, u.iocb_cmd);
-+	fd->done(fd);
-+	qla2xxx_rel_qpair_sp(sp->qpair, sp);
-+}
-+
- static void qla_nvme_sp_done(void *ptr, int res)
- {
- 	srb_t *sp = ptr;
-@@ -175,7 +185,8 @@ static void qla_nvme_sp_done(void *ptr, int res)
- 		fd->status = 0;
- 
- 	fd->rcv_rsplen = nvme->u.nvme.rsp_pyld_len;
--	fd->done(fd);
-+	list_add_tail(&nvme->u.nvme.entry, &sp->qpair->nvme_done_list);
-+	return;
- rel:
- 	qla2xxx_rel_qpair_sp(sp->qpair, sp);
- }
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index d9a115577dc8..b43520ca6645 100644
+index 10c3ee53ec3a..c217cec4dd49 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -379,6 +379,7 @@ static void qla_init_base_qpair(struct scsi_qla_host *vha, struct req_que *req,
- 	ha->base_qpair->use_shadow_reg = IS_SHADOW_REG_CAPABLE(ha) ? 1 : 0;
- 	ha->base_qpair->msix = &ha->msix_entries[QLA_MSIX_RSP_Q];
- 	INIT_LIST_HEAD(&ha->base_qpair->hints_list);
-+	INIT_LIST_HEAD(&ha->base_qpair->nvme_done_list);
- 	ha->base_qpair->enable_class_2 = ql2xenableclass2;
- 	/* init qpair to this cpu. Will adjust at run time. */
- 	qla_cpu_update(rsp->qpair, smp_processor_id());
+@@ -1141,7 +1141,7 @@ qla2x00_wait_for_sess_deletion(scsi_qla_host_t *vha)
+ {
+ 	qla2x00_mark_all_devices_lost(vha, 0);
+ 
+-	wait_event(vha->fcport_waitQ, test_fcport_count(vha));
++	wait_event_timeout(vha->fcport_waitQ, test_fcport_count(vha), 10*HZ);
+ }
+ 
+ /*
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 3bcfbee2ae26..6a6d9db6479f 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -1479,7 +1479,7 @@ int qlt_stop_phase1(struct qla_tgt *tgt)
+ 	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf00a,
+ 	    "Waiting for tgt %p: sess_count=%d\n", tgt, tgt->sess_count);
+ 
+-	wait_event(tgt->waitQ, test_tgt_sess_count(tgt));
++	wait_event_timeout(tgt->waitQ, test_tgt_sess_count(tgt), 10*HZ);
+ 
+ 	/* Big hammer */
+ 	if (!ha->flags.host_shutting_down &&
+@@ -1487,7 +1487,7 @@ int qlt_stop_phase1(struct qla_tgt *tgt)
+ 		qlt_disable_vha(vha);
+ 
+ 	/* Wait for sessions to clear out (just in case) */
+-	wait_event(tgt->waitQ, test_tgt_sess_count(tgt));
++	wait_event_timeout(tgt->waitQ, test_tgt_sess_count(tgt), 10*HZ);
+ 	return 0;
+ }
+ EXPORT_SYMBOL(qlt_stop_phase1);
 -- 
 2.12.0
