@@ -1,33 +1,38 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [v4.13-rc BUG] system lockup when running big buffered write(4M)
- to IB SRP via mpath
-Date: Wed, 23 Aug 2017 15:12:42 +0000
-Message-ID: <1503501161.2484.3.camel@wdc.com>
-References: <20170808141715.GB22763@ming.t460p>
-         <1502237504.4017.1.camel@redhat.com> <1502245693.6511.3.camel@redhat.com>
-         <c072e942-0265-f0ad-561d-0e50d50e3cb1@redhat.com>
-         <1502298599.2356.7.camel@wdc.com> <20170823113526.GA8130@ming.t460p>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] storvsc: do not assume SG list is continuous when doing bounce buffers (for 4.1 stable only)
+Date: Wed, 23 Aug 2017 11:22:07 -0400
+Message-ID: <yq1ziaq9un4.fsf@oracle.com>
+References: <1503379905-18908-1-git-send-email-longli@exchange.microsoft.com>
+        <20170822062841.GA1061@infradead.org>
+        <MWHPR21MB0190D1C8C3FAF25AE283ABCFCE840@MWHPR21MB0190.namprd21.prod.outlook.com>
+        <20170823064319.GA19373@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170823113526.GA8130@ming.t460p>
-Content-Language: en-US
-Content-ID: <625697407A93704791AD32F88AB63295@namprd04.prod.outlook.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "ming.lei@redhat.com" <ming.lei@redhat.com>
-Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "loberman@redhat.com" <loberman@redhat.com>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170823064319.GA19373@infradead.org> (Christoph Hellwig's
+        message of "Tue, 22 Aug 2017 23:43:19 -0700")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Long Li <longli@microsoft.com>, KY Srinivasan <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gV2VkLCAyMDE3LTA4LTIzIGF0IDE5OjM1ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gc29m
-dCBsb2NrdXAgc3RpbGwgY2FuIGJlIG9ic2VydmVkIGVhc2lseSB3aXRoIHBhdGNoIGQ0YWNmMzY1
-MGM3YygNCj4gYmxvY2s6IE1ha2UgYmxrX21xX2RlbGF5X2tpY2tfcmVxdWV1ZV9saXN0KCkgcmVy
-dW4gdGhlIHF1ZXVlIGF0IGEgcXVpZXQgdGltZSksDQo+IGJ1dCBubyBoYXJkIGxvY2t1cC4NCg0K
-SGVsbG8gTWluZywNCg0KSSBuZXZlciBjbGFpbWVkIHRoYXQgY29tbWl0IGQ0YWNmMzY1MGM3YyB3
-YXMgYSBmdWxsIHNvbHV0aW9uIHRvIGF2b2lkIHRoZXNlDQpzb2Z0IGxvY2t1cHMuIEkgYXNzdW1l
-IHRoZXNlIHJlc3VsdHMgbWVhbiB0aGF0IHBhdGNoIHNlcmllcyAiW1BBVENIIDAvN10NCkRldmlj
-ZSBtYXBwZXIgYW5kIGRtLW1wYXRoIGZpeGVzIiB3YXMgbm90IGFwcGxpZWQgdG8gdGhlIGtlcm5l
-bCB1c2VkIGluIHlvdXINCnRlc3RzPyBBIGNvbGxlYWd1ZSBvZiB5b3UgaGFzIHJlcG9ydGVkIHRo
-YXQgdGhhdCBwYXRjaCBzZXJpZXMgaXMgc3VmZmljaWVudA0KdG8gYXZvaWQgdGhlc2Ugc29mdCBs
-b2NrdXBzLiBTZWUgYWxzbw0KaHR0cHM6Ly93d3cucmVkaGF0LmNvbS9hcmNoaXZlcy9kbS1kZXZl
-bC8yMDE3LUF1Z3VzdC9tc2cwMDEyMi5odG1sLg0KDQpCYXJ0Lg==
+
+Christoph,
+
+> Ok.  If the stable maintainers are ok with your small fix
+> I'm not going to complain too loudly.  But I'm always worried about
+> stable trees divering too much from mainline.
+
+The seemingly innocuous transition from SG_GAPS to virt boundary has
+caused several data corruption regressions in the distro kernels. So has
+the corresponding conversion of storvsc.
+
+As a result, getting the current upstream code into 4.1 would mean
+backporting and testing a significant amount of both block layer and
+driver code. I don't think it's worth the risk. This patch is simple and
+the path of least resistance.
+
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
