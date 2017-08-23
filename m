@@ -1,26 +1,53 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] storvsc: do not assume SG list is continuous when doing
- bounce buffers (for 4.1 stable only)
-Date: Wed, 23 Aug 2017 06:41:00 -0700
-Message-ID: <20170823134100.GC31113@kroah.com>
-References: <1503379905-18908-1-git-send-email-longli@exchange.microsoft.com>
- <20170822062841.GA1061@infradead.org>
- <MWHPR21MB0190D1C8C3FAF25AE283ABCFCE840@MWHPR21MB0190.namprd21.prod.outlook.com>
- <20170823064319.GA19373@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] scsi: lpfc: avoid false-positive gcc-8 warning
+Date: Wed, 23 Aug 2017 17:01:33 +0200
+Message-ID: <20170823150143.2746796-1-arnd@arndb.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170823064319.GA19373@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Long Li <longli@microsoft.com>, KY Srinivasan <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "James E.J. Bottomley" <JBottomley@odin.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Aug 22, 2017 at 11:43:19PM -0700, Christoph Hellwig wrote:
-> Ok.  If the stable maintainers are ok with your small fix
-> I'm not going to complain too loudly.  But I'm always worried about
-> stable trees divering too much from mainline.
+This is an interesting regression with gcc-8, showing a harmless
+warning for correct code:
 
-Given that 90% of the time we do this, something breaks, you have a
-right to be worried...
+In file included from include/linux/kernel.h:13:0,
+                 ...
+                 from drivers/scsi/lpfc/lpfc_debugfs.c:23:
+include/linux/printk.h:301:2: error: 'eq' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+  printk(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
+  ^~~~~~
+In file included from drivers/scsi/lpfc/lpfc_debugfs.c:58:0:
+drivers/scsi/lpfc/lpfc_debugfs.h:451:31: note: 'eq' was declared here
+
+I tried to come up with a reduced test case for gcc here
+a few times, but every time ended up with code that is actually
+wrong with older gcc versions missing the bug and gcc-8 finding
+it. As this is the only false-positive -Wmaybe-uninitialized
+warnign I got with gcc-8 randconfig builds, I'd suggest we
+work around it.
+
+Making the index variable 'unsigned' is enough to shut up
+the warning, as gcc can then see that comparing eqidx to
+phba->io_channel_irqs is fine here.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/lpfc/lpfc_debugfs.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.h b/drivers/scsi/lpfc/lpfc_debugfs.h
+index 7b7d314af0e0..7b7f53a37fd8 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.h
++++ b/drivers/scsi/lpfc/lpfc_debugfs.h
+@@ -450,7 +450,7 @@ lpfc_debug_dump_cq(struct lpfc_hba *phba, int qtype, int wqidx)
+ {
+ 	struct lpfc_queue *wq, *cq, *eq;
+ 	char *qtypestr;
+-	int eqidx;
++	unsigned int eqidx;
+ 
+ 	/* fcp/nvme wq and cq are 1:1, thus same indexes */
+ 
+-- 
+2.9.0
