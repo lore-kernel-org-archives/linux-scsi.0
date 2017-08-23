@@ -1,66 +1,121 @@
-From: Byungchul Park <byungchul.park@lge.com>
+From: Boqun Feng <boqun.feng@gmail.com>
 Subject: Re: possible circular locking dependency detected [was: linux-next:
  Tree for Aug 22]
-Date: Wed, 23 Aug 2017 11:59:09 +0900
-Message-ID: <20170823025909.GE3108@X58A-UD3R>
+Date: Wed, 23 Aug 2017 11:49:51 +0800
+Message-ID: <20170823034951.GG11771@tardis>
 References: <20170822183816.7925e0f8@canb.auug.org.au>
  <20170822104708.GA491@jagdpanzerIV.localdomain>
  <1503438234.2508.27.camel@wdc.com>
  <20170823000304.GK20323@X58A-UD3R>
- <20170823023649.GD10329@jagdpanzerIV.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-next-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170823023649.GD10329@jagdpanzerIV.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
-Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, peterz@infradead.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, kernel-team@lge.com
+In-Reply-To: <20170823000304.GK20323@X58A-UD3R>
+Sender: linux-next-owner@vger.kernel.org
+To: Byungchul Park <byungchul.park@lge.com>
+Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, peterz@infradead.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "sergey.senozhatsky.work@gmail.com" <sergey.senozhatsky.work@gmail.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, kernel-team@lge.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Aug 23, 2017 at 11:36:49AM +0900, Sergey Senozhatsky wrote:
-> On (08/23/17 09:03), Byungchul Park wrote:
-> [..]
-> 
-> aha, ok
-> 
-> > The report is talking about the following lockup:
-> > 
-> > A work in a worker                     A task work on exit to user
-> > ------------------                     ---------------------------
-> > mutex_lock(&bdev->bd_mutex)
-> >                                        mutext_lock(&bdev->bd_mutex)
-> > blk_execute_rq()
-> >    wait_for_completion_io_timeout(&A)
-> >                                        complete(&A)
-> > 
-> > Is this impossible?
-> 
-> I was really confused how this "unlock" may lead to a deadlock
+Hi Byungchul,
 
-Hi Sergey,
+On Wed, Aug 23, 2017 at 09:03:04AM +0900, Byungchul Park wrote:
+> On Tue, Aug 22, 2017 at 09:43:56PM +0000, Bart Van Assche wrote:
+> > On Tue, 2017-08-22 at 19:47 +0900, Sergey Senozhatsky wrote:
+> > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D
+> > > WARNING: possible circular locking dependency detected
+> > > 4.13.0-rc6-next-20170822-dbg-00020-g39758ed8aae0-dirty #1746 Not tain=
+ted
+> > > ------------------------------------------------------
+> > > fsck.ext4/148 is trying to acquire lock:
+> > >  (&bdev->bd_mutex){+.+.}, at: [<ffffffff8116e73e>] __blkdev_put+0x33/=
+0x190
+> > >=20
+> > >  but now in release context of a crosslock acquired at the following:
+> > >  ((complete)&wait#2){+.+.}, at: [<ffffffff812159e0>] blk_execute_rq+0=
+xbb/0xda
+> > >=20
+> > >  which lock already depends on the new lock.
+> > >=20
 
-Right. It should be enhanced.
+I felt this message really misleading, because the deadlock is detected
+at the commit time of "((complete)&wait#2)" rather than the acquisition
+time of "(&bdev->bd_mutex)", so I made the following improvement.
 
-> 
-> > > >  other info that might help us debug this:
-> > > >  Possible unsafe locking scenario by crosslock:
-> > > >        CPU0                    CPU1
-> > > >        ----                    ----
-> > > >   lock(&bdev->bd_mutex);
-> > > >   lock((complete)&wait#2);
-> > > >                                lock(&bdev->bd_mutex);
-> > > >                                unlock((complete)&wait#2);
-> 
-> 
-> any chance the report can be improved? mention timeout, etc?
-> // well, if this functionality will stay.
-> 
-> 
-> p.s.
-> Bart Van Assche, thanks for Cc-ing Park Byungchul, I was really
-> sure I didn't enabled the cross-release, but apparently I was wrong:
->  CONFIG_LOCKDEP_CROSSRELEASE=y
->  CONFIG_LOCKDEP_COMPLETIONS=y
-> 
-> 	-ss
+Thoughts?
+
+Regards,
+Boqun
+
+----------------------->8
+=46rom: Boqun Feng <boqun.feng@gmail.com>
+Date: Wed, 23 Aug 2017 10:18:30 +0800
+Subject: [PATCH] lockdep: Improve the readibility of crossrelease related
+ splats
+
+When a crossrelease related deadlock is detected in a commit, the
+current implemention makes splats like:
+
+> fsck.ext4/148 is trying to acquire lock:
+>  (&bdev->bd_mutex){+.+.}, at: [<ffffffff8116e73e>] __blkdev_put+0x33/0x190
+>
+>  but now in release context of a crosslock acquired at the following:
+>  ((complete)&wait#2){+.+.}, at: [<ffffffff812159e0>] blk_execute_rq+0xbb/=
+0xda
+>
+>  which lock already depends on the new lock.
+> ...
+
+However, it could be misleading because the current task has got the
+lock already, and in fact the deadlock is detected when it is doing the
+commit of the crossrelease lock. So make the splats more accurate to
+describe the deadlock case.
+
+Signed-off-by: Boqun Feng <boqun.feng@gmail.com>
+---
+ kernel/locking/lockdep.c | 22 ++++++++++++++--------
+ 1 file changed, 14 insertions(+), 8 deletions(-)
+
+diff --git a/kernel/locking/lockdep.c b/kernel/locking/lockdep.c
+index 66011c9f5df3..642fb5362507 100644
+--- a/kernel/locking/lockdep.c
++++ b/kernel/locking/lockdep.c
+@@ -1195,17 +1195,23 @@ print_circular_bug_header(struct lock_list *entry, =
+unsigned int depth,
+ 	pr_warn("WARNING: possible circular locking dependency detected\n");
+ 	print_kernel_ident();
+ 	pr_warn("------------------------------------------------------\n");
+-	pr_warn("%s/%d is trying to acquire lock:\n",
+-		curr->comm, task_pid_nr(curr));
+-	print_lock(check_src);
+=20
+-	if (cross_lock(check_tgt->instance))
+-		pr_warn("\nbut now in release context of a crosslock acquired at the fol=
+lowing:\n");
+-	else
++	if (cross_lock(check_tgt->instance)) {
++		pr_warn("%s/%d is committing a crossrelease lock:\n",
++			curr->comm, task_pid_nr(curr));
++		print_lock(check_tgt);
++		pr_warn("\n, with the following lock held:\n");
++		print_lock(check_src);
++		pr_warn("\non which lock the crossrelease lock already depends.\n\n");
++	} else {
++		pr_warn("%s/%d is trying to acquire lock:\n",
++			curr->comm, task_pid_nr(curr));
++		print_lock(check_src);
+ 		pr_warn("\nbut task is already holding lock:\n");
++		print_lock(check_tgt);
++		pr_warn("\nwhich lock already depends on the new lock.\n\n");
++	}
+=20
+-	print_lock(check_tgt);
+-	pr_warn("\nwhich lock already depends on the new lock.\n\n");
+ 	pr_warn("\nthe existing dependency chain (in reverse order) is:\n");
+=20
+ 	print_circular_bug_entry(entry, depth);
+--=20
+2.14.1
