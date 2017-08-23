@@ -1,65 +1,88 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 18/31] qla2xxx: Allow SNS fabric login to be retried
-Date: Wed, 23 Aug 2017 15:05:12 -0700
-Message-ID: <20170823220525.3115-19-himanshu.madhani@cavium.com>
+Subject: [PATCH 24/31] qla2xxx: Cleanup NPIV host in target mode during config teardown
+Date: Wed, 23 Aug 2017 15:05:18 -0700
+Message-ID: <20170823220525.3115-25-himanshu.madhani@cavium.com>
 References: <20170823220525.3115-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0087.outbound.protection.outlook.com ([104.47.33.87]:37568
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam01on0054.outbound.protection.outlook.com ([104.47.32.54]:57888
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751112AbdHWWFw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Aug 2017 18:05:52 -0400
+        id S1751112AbdHWWGB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 23 Aug 2017 18:06:01 -0400
 In-Reply-To: <20170823220525.3115-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Joe Carnuccio <joe.carnuccio@cavium.com>
+From: Quinn Tran <quinn.tran@cavium.com>
 
-If SNS fabric login fails, set loop resync flag to retry via dpc.
+When we tear down the NPIV host configuration in target mode, the
+qla_tgt struct was left dangling on the global list. This patch
+cleans up link list and frees memory.
 
-Signed-off-by: Joe Carnuccio <joe.carnuccio@cavium.com>
+Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c | 18 +++++-------------
- 1 file changed, 5 insertions(+), 13 deletions(-)
+ drivers/scsi/qla2xxx/qla_target.c | 11 +++++++----
+ drivers/scsi/qla2xxx/qla_target.h |  1 +
+ 2 files changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index d00e0129c51b..fe2d196833aa 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -4752,24 +4752,16 @@ qla2x00_configure_fabric(scsi_qla_host_t *vha)
- 			qla2x00_fdmi_register(vha);
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 4f1621fd5ef2..43113d52893b 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -1528,6 +1528,7 @@ static void qlt_release(struct qla_tgt *tgt)
+ 	u64 key = 0;
+ 	u16 i;
+ 	struct qla_qpair_hint *h;
++	struct qla_hw_data *ha = vha->hw;
  
- 		/* Ensure we are logged into the SNS. */
--		if (IS_FWI2_CAPABLE(ha))
--			loop_id = NPH_SNS;
--		else
--			loop_id = SIMPLE_NAME_SERVER;
-+		loop_id = NPH_SNS_LID(ha);
- 		rval = ha->isp_ops->fabric_login(vha, loop_id, 0xff, 0xff,
- 		    0xfc, mb, BIT_1|BIT_0);
--		if (rval != QLA_SUCCESS) {
-+		if (rval != QLA_SUCCESS || mb[0] != MBS_COMMAND_COMPLETE) {
-+			ql_dbg(ql_dbg_disc, vha, 0x20a1,
-+			    "Failed SNS login: loop_id=%x mb[0]=%x mb[1]=%x mb[2]=%x mb[6]=%x mb[7]=%x (%x).\n",
-+			    loop_id, mb[0], mb[1], mb[2], mb[6], mb[7], rval);
- 			set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
- 			return rval;
+ 	if ((vha->vha_tgt.qla_tgt != NULL) && !tgt->tgt_stop &&
+ 	    !tgt->tgt_stopped)
+@@ -1548,12 +1549,18 @@ static void qlt_release(struct qla_tgt *tgt)
  		}
--		if (mb[0] != MBS_COMMAND_COMPLETE) {
--			ql_dbg(ql_dbg_disc, vha, 0x20a1,
--			    "Failed SNS login: loop_id=%x mb[0]=%x mb[1]=%x mb[2]=%x "
--			    "mb[6]=%x mb[7]=%x.\n", loop_id, mb[0], mb[1],
--			    mb[2], mb[6], mb[7]);
--			return (QLA_SUCCESS);
--		}
+ 	}
+ 	kfree(tgt->qphints);
++	mutex_lock(&qla_tgt_mutex);
++	list_del(&vha->vha_tgt.qla_tgt->tgt_list_entry);
++	mutex_unlock(&qla_tgt_mutex);
+ 
+ 	btree_for_each_safe64(&tgt->lun_qpair_map, key, node)
+ 		btree_remove64(&tgt->lun_qpair_map, key);
+ 
+ 	btree_destroy64(&tgt->lun_qpair_map);
+ 
++	if (ha->tgt.tgt_ops && ha->tgt.tgt_ops->remove_target)
++		ha->tgt.tgt_ops->remove_target(vha);
++
+ 	vha->vha_tgt.qla_tgt = NULL;
+ 
+ 	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf00d,
+@@ -6175,10 +6182,6 @@ int qlt_remove_target(struct qla_hw_data *ha, struct scsi_qla_host *vha)
+ 	/* free left over qfull cmds */
+ 	qlt_init_term_exchange(vha);
+ 
+-	mutex_lock(&qla_tgt_mutex);
+-	list_del(&vha->vha_tgt.qla_tgt->tgt_list_entry);
+-	mutex_unlock(&qla_tgt_mutex);
 -
- 		if (test_and_clear_bit(REGISTER_FC4_NEEDED, &vha->dpc_flags)) {
- 			if (qla2x00_rft_id(vha)) {
- 				/* EMPTY */
+ 	ql_dbg(ql_dbg_tgt, vha, 0xe03c, "Unregistering target for host %ld(%p)",
+ 	    vha->host_no, ha);
+ 	qlt_release(vha->vha_tgt.qla_tgt);
+diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
+index 96fce43e1e46..aba58d3848a6 100644
+--- a/drivers/scsi/qla2xxx/qla_target.h
++++ b/drivers/scsi/qla2xxx/qla_target.h
+@@ -705,6 +705,7 @@ struct qla_tgt_func_tmpl {
+ 	int (*get_dif_tags)(struct qla_tgt_cmd *cmd, uint16_t *pfw_prot_opts);
+ 	int (*chk_dif_tags)(uint32_t tag);
+ 	void (*add_target)(struct scsi_qla_host *);
++	void (*remove_target)(struct scsi_qla_host *);
+ };
+ 
+ int qla2x00_wait_for_hba_online(struct scsi_qla_host *);
 -- 
 2.12.0
