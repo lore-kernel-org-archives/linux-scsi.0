@@ -1,78 +1,114 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 02/31] qla2xxx: Fix target multiqueue configuration
-Date: Wed, 23 Aug 2017 15:04:56 -0700
-Message-ID: <20170823220525.3115-3-himanshu.madhani@cavium.com>
+Subject: [PATCH 07/31] qla2xxx: Fix system panic due to pointer access problem
+Date: Wed, 23 Aug 2017 15:05:01 -0700
+Message-ID: <20170823220525.3115-8-himanshu.madhani@cavium.com>
 References: <20170823220525.3115-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0061.outbound.protection.outlook.com ([104.47.34.61]:44352
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam01on0081.outbound.protection.outlook.com ([104.47.32.81]:49952
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751085AbdHWWFd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Aug 2017 18:05:33 -0400
+        id S1751093AbdHWWFk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 23 Aug 2017 18:05:40 -0400
 In-Reply-To: <20170823220525.3115-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Michael Hernandez <michael.hernandez@cavium.com>
+From: Duane Grigsby <Duane.Grigsby@cavium.com>
 
-Following error will be logged in to message file
-while trying to configure target with multiqueue.
+[ 1013.772926] BUG: unable to handle kernel paging request at 0000000300000020
+[ 1013.772950] IP: qla24xx_els_ct_entry.isra.17+0x78/0x2a0 [qla2xxx]
+[ 1013.772951] PGD 0
+[ 1013.772952] P4D 0
+[ 1013.772952]
+[ 1013.772953] Oops: 0000 [#1] SMP
+[ 1013.772955] Modules linked in: qla2xxx(+) scsi_transport_fc nvme_fc
+nvme_fabrics nvme_core netconsole configfs af_packet iscsi_ibft
+iscsi_boot_sysfs xfs intel_rapl sb_edac libcrc32c x86_pkg_temp_thermal
+intel_powerclamp coretemp mgag200 kvm_intel ttm kvm drm_kms_helper
+ipmi_ssif irqbypass tg3 drm fb_sys_fops crct10dif_pclmul syscopyarea
+crc32_pclmul ghash_clmulni_intel ptp pcbc sysfillrect pps_core
+aesni_intel joydev aes_x86_64 sysimgblt crypto_simd iTCO_wdt libphy
+iTCO_vendor_support i2c_algo_bit glue_helper ipmi_si lpc_ich hpwdt
+ioatdma cryptd ipmi_devintf pcspkr mfd_core pcc_cpufreq ipmi_msghandler
+hpilo thermal dca button shpchp btrfs xor raid6_pq hid_generic usbhid
+sr_mod cdrom sd_mod ata_generic crc32c_intel serio_raw ata_piix ahci
+libahci uhci_hcd ehci_pci ehci_hcd libata usbcore hpsa scsi_transport_sas
+[ 1013.772994]  sg scsi_mod autofs4
+[ 1013.772998] CPU: 0 PID: 374 Comm: systemd-journal Not tainted 4.13.0-rc1-2-default #2
+[ 1013.772999] Hardware name: HP ProLiant DL380p Gen8, BIOS P70 07/15/2012
+[ 1013.773000] task: ffff88082c188380 task.stack: ffffc90004d7c000
+[ 1013.773011] RIP: 0010:qla24xx_els_ct_entry.isra.17+0x78/0x2a0 [qla2xxx]
+[ 1013.773012] RSP: 0000:ffff88042f603d90 EFLAGS: 00010082
+[ 1013.773013] RAX: ffff88039f723ac8 RBX: ffff88039f723ac8 RCX: ffff8803a2e18010
+[ 1013.773014] RDX: ffff88039f723ac0 RSI: ffff88042f603dc4 RDI: ffff88041b6787c0
+[ 1013.773015] RBP: ffff88042f603e00 R08: 0000000000000002 R09: 000000000000000d
+[ 1013.773016] R10: 0000000000000002 R11: 0000000000000000 R12: ffff8803a2e80080
+[ 1013.773016] R13: ffff88041b6787c0 R14: 0000000300000000 R15: 0000000000000102
+[ 1013.773018] FS:  00007fa2e0a73880(0000) GS:ffff88042f600000(0000) knlGS:0000000000000000
+[ 1013.773019] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 1013.773020] CR2: 0000000300000020 CR3: 000000042cd7e000 CR4: 00000000000406f0
+[ 1013.773021] Call Trace:
+[ 1013.773022]  <IRQ>
+[ 1013.773026]  ? consume_skb+0x34/0xa0
+[ 1013.773040]  qla24xx_process_response_queue+0x319/0x700 [qla2xxx]
+[ 1013.773050]  qla24xx_msix_rsp_q+0x7b/0xd0 [qla2xxx]
+[ 1013.773054]  __handle_irq_event_percpu+0x3c/0x1b0
+[ 1013.773056]  handle_irq_event_percpu+0x23/0x60
+[ 1013.773057]  handle_irq_event+0x42/0x70
+[ 1013.773059]  handle_edge_irq+0x8f/0x190
+[ 1013.773062]  handle_irq+0x1d/0x30
+[ 1013.773065]  do_IRQ+0x48/0xd0
+[ 1013.773067]  common_interrupt+0x93/0x93
+[ 1013.773068] RIP: 0033:0xed622c6e42
+[ 1013.773069] RSP: 002b:00007ffee8b5c820 EFLAGS: 00000202 ORIG_RAX: ffffffffffffff17
+[ 1013.773071] RAX: 000000ed6316a3f0 RBX: 000000ed6316a840 RCX: 00000000000c4e33
+[ 1013.773071] RDX: 000000ed6316a878 RSI: 000000ed6316a840 RDI: 000000ed631682d0
+[ 1013.773072] RBP: 0000000000000001 R08: 0000000000000001 R09: 000000ed63179b70
+[ 1013.773073] R10: 000000000005f6f8 R11: 0000000000000202 R12: 0000000000000001
+[ 1013.773074] R13: 00007ffee8b5c85c R14: 000000ed6316a840 R15: 00007ffee8b5c850
+[ 1013.773074]  </IRQ>
+[ 1013.773076] Code: a9 8a 9a e0 48 8d 75 c4 48 89 da 4c 89 e1 4c 89 ef
+e8 54 6e fb ff 48 85 c0 48 89 c3 0f 84 0e 02 00 00 44 0f b7 48 36 4c 8b
+70 58 <4d> 8b 7e 20 41 8d 41 fd 66 83 f8 0c 77 6c 0f b7 c0 ff 24 c5 88
+[ 1013.773102] RIP: qla24xx_els_ct_entry.isra.17+0x78/0x2a0 [qla2xxx] RSP: ffff88042f603d90
+[ 1013.773102] CR2: 0000000300000020
+[ 1013.773129] ---[ end trace 532363559924f426 ]---
+[ 1013.773131] Kernel panic - not syncing: Fatal exception in interrupt
+[ 1013.777719] Kernel Offset: disabled
+[ 1013.827528] ---[ end Kernel panic - not syncing: Fatal exception in interrupt
 
-"Cmd 0x1f aborted with timeout since ISP Abort is pending"
-"qla25xx_init_queues Rsp que: 1 init failed."
-
-Fixes: 82de802ad46e ("scsi: qla2xxx: Preparation for Target MQ.")
-Cc: <stable@vger.kernel.org>
+Signed-off-by: Duane Grigsby <Duane.Grigsby@cavium.com>
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
-Signed-off-by: Michael Hernandez <michael.hernandez@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_isr.c    | 2 +-
- drivers/scsi/qla2xxx/qla_mbx.c    | 1 +
- drivers/scsi/qla2xxx/qla_target.c | 2 +-
- 3 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_isr.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 916f685872aa..d3a51df27b0d 100644
+index d3a51df27b0d..c6c066186d97 100644
 --- a/drivers/scsi/qla2xxx/qla_isr.c
 +++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -3454,7 +3454,7 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- 	}
- 
- 	/* Enable MSI-X vector for response queue update for queue 0 */
--	if (IS_QLA25XX(ha) || IS_QLA83XX(ha) || IS_QLA27XX(ha)) {
-+	if (IS_QLA83XX(ha) || IS_QLA27XX(ha)) {
- 		if (ha->msixbase && ha->mqiobase &&
- 		    (ha->max_rsp_queues > 1 || ha->max_req_queues > 1 ||
- 		     ql2xmqsupport))
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 1f91b87b6416..234ef442ef5d 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -54,6 +54,7 @@ static struct rom_cmd {
- 	{ MBC_GET_MEM_OFFLOAD_CNTRL_STAT },
- 	{ MBC_GET_RETRY_COUNT },
- 	{ MBC_TRACE_CONTROL },
-+	{ MBC_INITIALIZE_MULTIQ },
- };
- 
- static int is_rom_cmd(uint16_t cmd)
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index e101cd3043b9..4e2a64773060 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -6796,7 +6796,7 @@ qlt_probe_one_stage1(struct scsi_qla_host *base_vha, struct qla_hw_data *ha)
- 	if (!QLA_TGT_MODE_ENABLED())
+@@ -1537,8 +1537,6 @@ qla24xx_els_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 	sp = qla2x00_get_sp_from_handle(vha, func, req, pkt);
+ 	if (!sp)
  		return;
+-	bsg_job = sp->u.bsg_job;
+-	bsg_reply = bsg_job->reply;
  
--	if  (ha->mqenable || IS_QLA83XX(ha) || IS_QLA27XX(ha)) {
-+	if  (IS_QLA83XX(ha) || IS_QLA27XX(ha)) {
- 		ISP_ATIO_Q_IN(base_vha) = &ha->mqiobase->isp25mq.atio_q_in;
- 		ISP_ATIO_Q_OUT(base_vha) = &ha->mqiobase->isp25mq.atio_q_out;
- 	} else {
+ 	type = NULL;
+ 	switch (sp->type) {
+@@ -1577,6 +1575,8 @@ qla24xx_els_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 	/* return FC_CTELS_STATUS_OK and leave the decoding of the ELS/CT
+ 	 * fc payload  to the caller
+ 	 */
++	bsg_job = sp->u.bsg_job;
++	bsg_reply = bsg_job->reply;
+ 	bsg_reply->reply_data.ctels_reply.status = FC_CTELS_STATUS_OK;
+ 	bsg_job->reply_len = sizeof(struct fc_bsg_reply) + sizeof(fw_status);
+ 
 -- 
 2.12.0
