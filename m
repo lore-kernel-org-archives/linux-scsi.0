@@ -1,41 +1,33 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [GIT PULL] SCSI fixes for 4.13-rc6
-Date: Wed, 23 Aug 2017 15:02:42 +0000
-Message-ID: <1503500560.2484.1.camel@wdc.com>
-References: <1503470559.2729.4.camel@HansenPartnership.com>
+Subject: Re: [v4.13-rc BUG] system lockup when running big buffered write(4M)
+ to IB SRP via mpath
+Date: Wed, 23 Aug 2017 15:12:42 +0000
+Message-ID: <1503501161.2484.3.camel@wdc.com>
+References: <20170808141715.GB22763@ming.t460p>
+         <1502237504.4017.1.camel@redhat.com> <1502245693.6511.3.camel@redhat.com>
+         <c072e942-0265-f0ad-561d-0e50d50e3cb1@redhat.com>
+         <1502298599.2356.7.camel@wdc.com> <20170823113526.GA8130@ming.t460p>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1503470559.2729.4.camel@HansenPartnership.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170823113526.GA8130@ming.t460p>
 Content-Language: en-US
-Content-ID: <5DE85D05109BCB4FB5D49C3D4D7D3B15@namprd04.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-ID: <625697407A93704791AD32F88AB63295@namprd04.prod.outlook.com>
+Sender: linux-block-owner@vger.kernel.org
+To: "ming.lei@redhat.com" <ming.lei@redhat.com>
+Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "loberman@redhat.com" <loberman@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gV2VkLCAyMDE3LTA4LTIzIGF0IDA3OjQyICswMTAwLCBKYW1lcyBCb3R0b21sZXkgd3JvdGU6
-DQo+IFNpeCBtaW5vciBhbmQgZXJyb3IgbGVnIGZpeGVzLCBwbHVzIG9uZSBtYWpvciBjaGFuZ2U6
-IHRoZSByZXZlcnNpb24gb2YNCj4gc2NzaS1tcSBhcyB0aGUgZGVmYXVsdC4gIFdlJ3JlIGRvaW5n
-IHRoZSBsYXR0ZXIgdGVtcG9yYXJpbHkgKHdpdGggYQ0KPiBiYWNrcG9ydCB0byBzdGFibGUpIHRv
-IGdpdmUgdXMgdGltZSB0byBmaXggYWxsIHRoZSBpc3N1ZXMgdGhhdCB0dXJuZWQNCj4gdXAgd2l0
-aCB0aGlzIGRlZmF1bHQgYmVmb3JlIHRyeWluZyBhZ2Fpbi4NCj4gWyAuLi4gXQ0KPiBEYW1pZW4g
-TGUgTW9hbCAoMSk6DQo+ICAgICAgIHNjc2k6IHNkX3piYzogV3JpdGUgdW5sb2NrIHpvbmUgZnJv
-bSBzZF91bmluaXRfY21uZCgpDQo+IFsgLi4uIF0NCg0KSGVsbG8gSmFtZXMsDQoNCkhhZCB5b3Ug
-bm90aWNlZCB0aGF0IERhbWllbiBoYWQgYXNrZWQgbm90IHRvIHNlbmQgdGhlICJzZF96YmM6IFdy
-aXRlIHVubG9jaw0Kem9uZSBmcm9tIHNkX3VuaW5pdF9jbW5kKCkiIHBhdGNoIHRvIExpbnVzIHdp
-dGhvdXQgbXkgInNjc2ktbXE6IEFsd2F5cw0KdW5wcmVwYXJlIGJlZm9yZSByZXF1ZXVpbmcgYSBy
-ZXF1ZXN0IiBwYXRjaD8gQSBxdW90ZSBmcm9tIGFuIGUtbWFpbCBmcm9tDQpEYW1pZW4gKGh0dHBz
-Oi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL3N0YWJsZS9tc2cxODU0MzYuaHRtbCk6DQoNCi0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLQ0KUmU6IFtQQVRDSF0gUmV2ZXJ0ICJzY3NpLW1xOiBBbHdheXMgdW5wcmVw
-YXJlIGJlZm9yZSByZXF1ZXVpbmcgYSByZXF1ZXN0Ig0KPj4gRm9yIGFuIHVua25vd24gcmVhc29u
-IHRoaXMgcGF0Y2ggY2F1c2VzIHRoZSBib290IHByb2Nlc3MgdG8gaGFuZyBvbg0KPj4gUG93ZXJQ
-QyBzeXN0ZW1zOg0KPiANCj4gT0ssIGRyb3BwZWQgaXQgZnJvbSBmaXhlcyBmb3Igbm93Lg0KDQpJ
-dCBtZWFucyB0aGF0IGNvbW1pdCA3MGU0MmZkMDJjNDZlMmFhOWFiMDdiNzY2ZDQxODYzN2UzYTUx
-ZGU3ICJzY3NpOg0Kc2RfemJjOiBXcml0ZSB1bmxvY2sgem9uZSBmcm9tIHNkX3VuaW5pdF9jbW5k
-KCkiIHdpbGwgbmVlZCB0byBiZQ0KcmV2ZXJ0ZWQgdG9vIGFzIGl0IHdpbGwgbm90IHNvbHZlIHRo
-ZSBwb3RlbnRpYWwgZGVhZGxvY2sgYW55bW9yZS4gQmFydCdzDQpwYXRjaCB3YXMgbmVlZGVkIGZv
-ciBpdCB0byB3b3JrLg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQoNCkJhcnQu
+T24gV2VkLCAyMDE3LTA4LTIzIGF0IDE5OjM1ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gc29m
+dCBsb2NrdXAgc3RpbGwgY2FuIGJlIG9ic2VydmVkIGVhc2lseSB3aXRoIHBhdGNoIGQ0YWNmMzY1
+MGM3YygNCj4gYmxvY2s6IE1ha2UgYmxrX21xX2RlbGF5X2tpY2tfcmVxdWV1ZV9saXN0KCkgcmVy
+dW4gdGhlIHF1ZXVlIGF0IGEgcXVpZXQgdGltZSksDQo+IGJ1dCBubyBoYXJkIGxvY2t1cC4NCg0K
+SGVsbG8gTWluZywNCg0KSSBuZXZlciBjbGFpbWVkIHRoYXQgY29tbWl0IGQ0YWNmMzY1MGM3YyB3
+YXMgYSBmdWxsIHNvbHV0aW9uIHRvIGF2b2lkIHRoZXNlDQpzb2Z0IGxvY2t1cHMuIEkgYXNzdW1l
+IHRoZXNlIHJlc3VsdHMgbWVhbiB0aGF0IHBhdGNoIHNlcmllcyAiW1BBVENIIDAvN10NCkRldmlj
+ZSBtYXBwZXIgYW5kIGRtLW1wYXRoIGZpeGVzIiB3YXMgbm90IGFwcGxpZWQgdG8gdGhlIGtlcm5l
+bCB1c2VkIGluIHlvdXINCnRlc3RzPyBBIGNvbGxlYWd1ZSBvZiB5b3UgaGFzIHJlcG9ydGVkIHRo
+YXQgdGhhdCBwYXRjaCBzZXJpZXMgaXMgc3VmZmljaWVudA0KdG8gYXZvaWQgdGhlc2Ugc29mdCBs
+b2NrdXBzLiBTZWUgYWxzbw0KaHR0cHM6Ly93d3cucmVkaGF0LmNvbS9hcmNoaXZlcy9kbS1kZXZl
+bC8yMDE3LUF1Z3VzdC9tc2cwMDEyMi5odG1sLg0KDQpCYXJ0Lg==
