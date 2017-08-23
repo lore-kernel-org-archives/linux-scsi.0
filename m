@@ -1,41 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v4 00/14] mpt3sas driver NVMe support:
-Date: Tue, 22 Aug 2017 22:18:06 -0400
-Message-ID: <yq1lgmbauxt.fsf@oracle.com>
-References: <1503322344-5900-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: Re: [PATCH] sg: protect against races between mmap() and SG_SET_RESERVED_SIZE
+Date: Tue, 22 Aug 2017 22:21:06 -0400
+Message-ID: <yq1d17naust.fsf@oracle.com>
+References: <20170816054108.119890-1-toddpoynor@google.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1503322344-5900-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-        (Suganath Prabu S.'s message of "Mon, 21 Aug 2017 19:02:10 +0530")
+In-Reply-To: <20170816054108.119890-1-toddpoynor@google.com> (Todd Poynor's
+        message of "Tue, 15 Aug 2017 22:41:08 -0700")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Cc: jejb@kernel.org, hch@infradead.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, linux-kernel@vger.kernel.org, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com, linux-nvme@lists.infradead.org
+To: Todd Poynor <toddpoynor@google.com>
+Cc: Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Suganath,
+Todd,
 
->   mpt3sas: SGL to PRP Translation for I/Os to NVMe  devices
+> Take f_mutex around mmap() processing to protect against races with
+> the SG_SET_RESERVED_SIZE ioctl.  Ensure the reserve buffer length
+> remains consistent during the mapping operation, and set the
+> "mmap called" flag to prevent further changes to the reserved buffer
+> size as an atomic operation with the mapping.
 
-I'm still confused about this patch.
-
- - I don't understand why you go through all these hoops to decide
-   whether to use PRPs or IEEE scatterlists. If the firmware translation
-   is slow, why even bother with the SG format in the first place? Set
-   the max I/O size to match MDTS and you're done.
-
- - What's the benefit of using SG for regular I/O commands?
-
- - If the unmap translation in firmware is slow, why don't you translate
-   WRITE SAME/w UNMAP set to DSM DEALLOCATE without requiring
-   applications to do encapsulated passthrough?
-
-Also make sure you attribute your patches correctly (From: root
-<root@dhcp-135-24-192-103.dhcp.avagotech.net>). And you don't need that
-long CC: list. Just send the patch series to linux-scsi@vger.kernel.org.
-
-Thanks!
+Applied to 4.14/scsi-queue (with a slight whitespace fix). Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
