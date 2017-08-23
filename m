@@ -1,85 +1,57 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [v4.13-rc BUG] system lockup when running big buffered write(4M)
- to IB SRP via mpath
-Date: Wed, 23 Aug 2017 19:35:27 +0800
-Message-ID: <20170823113526.GA8130@ming.t460p>
-References: <20170808141715.GB22763@ming.t460p>
- <1502237504.4017.1.camel@redhat.com>
- <1502245693.6511.3.camel@redhat.com>
- <c072e942-0265-f0ad-561d-0e50d50e3cb1@redhat.com>
- <1502298599.2356.7.camel@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH v3 00/14] megaraid_sas: Updates for scsi-next
+Date: Wed, 23 Aug 2017 04:46:54 -0700
+Message-ID: <1503488828-2242-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42150 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753793AbdHWLfi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Aug 2017 07:35:38 -0400
-Content-Disposition: inline
-In-Reply-To: <1502298599.2356.7.camel@wdc.com>
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:34333 "EHLO
+        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753768AbdHWLr2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 07:47:28 -0400
+Received: by mail-pf0-f172.google.com with SMTP id h75so5825940pfh.1
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Aug 2017 04:47:28 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "loberman@redhat.com" <loberman@redhat.com>
+To: linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, hch@lst.de, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-On Wed, Aug 09, 2017 at 05:10:01PM +0000, Bart Van Assche wrote:
-> On Wed, 2017-08-09 at 12:43 -0400, Laurence Oberman wrote:
-> > Your latest patch on stock upstream without Ming's latest patches is 
-> > behaving for me.
-> > 
-> > As already mentioned, the requeue -11 and clone failure messages are 
-> > gone and I am not actually seeing any soft lockups or hard lockups.
-> > 
-> > When Ming gets back I will work with him on his patch set and the lockups.
-> > 
-> > Running 10 parallel writes which easily trips into soft lockups on 
-> > Ming's kernel (even with your patch) has been stable here on 4.13-RC3 
-> > with your patch.
-> > 
-> > I will leave it running for a while now but the patch is good.
-> > 
-> > If it survives 4 hours I will add a Tested-by to your latest patch.
-> 
-> Hello Laurence,
-> 
-> I'm working on an additional patch that should reduce unnecessary requeuing
-> even further. I will let you know when it's ready.
-> 
-> Additionally, please trim e-mails when replying such that e-mails do not get
-> too long.
+Changes from v2:
+- Patch 9: Updated patch description
+- Dropped patch 11 of the last series. As per discussion
+  with Christoph Hellwig, there was concern over the blk-mq
+  specific hack in the changes. Also this needs to be tested with
+  latest blk-mq performance improvements patchset from Ming.
+  We will follow up on this patch during next phase submission.
+- Rebased all patches to latest scsi/for-next branch.
 
-soft lockup still can be observed easily with patch d4acf3650c7c(
-block: Make blk_mq_delay_kick_requeue_list() rerun the queue at a quiet time),
-but no hard lockup.
+Changes from v1:
+- Patch 4: Updated patch description
+- Patch 9: Cleanup ld_drv_map in case ld_map allocation fails
 
-With the patchset of 'blk-mq-sched: improve SCSI-MQ performance', hard
-lockup can be observed following some failure log:
+Shivasharan S (14):
+  megaraid_sas: mismatch of allocated MFI frame size and length exposed
+    in MFI MPT pass through command
+  megaraid_sas: set minimum value of resetwaittime to be 1 secs
+  megaraid_sas: Use synchronize_irq in target reset case
+  megaraid_sas: Call megasas_complete_cmd_dpc_fusion every 1 second
+    while there are pending commands
+  megaraid_sas: Do not re-fire shutdown DCMD after OCR
+  megaraid_sas: Fix endianness issues in DCMD handling
+  megaraid_sas: Check valid aen class range to avoid kernel panic
+  megaraid_sas: Use SMID for Task abort case only
+  megaraid_sas: use vmalloc for crash dump buffers and driver's local
+    RAID map
+  megaraid_sas: Return pended IOCTLs with cmd_status
+    MFI_STAT_WRONG_STATE in case adapter is dead
+  megaraid_sas: replace internal FALSE/TRUE definitions with false/true
+  megaraid_sas: modified few prints in OCR and IOC INIT path
+  megaraid_sas: call megasas_dump_frame with correct IO frame size
+  megaraid_sas: driver version upgrade
 
-	[  269.277653] device-mapper: multipath: blk_get_request() returned -11 - requeuing
-	[  269.321244] device-mapper: multipath: blk_get_request() returned -11 - requeuing
-	...
-	[  273.421688] scsi host2: SRP abort called
-	[  273.444577] scsi host2: Sending SRP abort for tag 0x6007e
-	[  273.673871] scsi host2: Null scmnd for RSP w/tag 0x0000000006007e received on ch 6 / QP 0x30
-	...
-	[  274.372110] device-mapper: multipath: blk_get_request() returned -11 - requeuing
-	[  278.658671] scsi host2: SRP abort called
-	[  278.690630] scsi host2: SRP abort called
-	[  278.717634] scsi host2: SRP abort called
-	[  278.745629] scsi host2: SRP abort called
-	[  279.083227] multipath_clone_and_map: 1092 callbacks suppressed
-	....
-	[  296.210503] scsi host2: SRP reset_device called
-	....
-	[  303.784287] NMI watchdog: Watchdog detected hard LOCKUP on cpu 10
+ drivers/scsi/megaraid/megaraid_sas.h        |   5 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c   |  39 +++++--
+ drivers/scsi/megaraid/megaraid_sas_fp.c     |  40 +++----
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 170 ++++++++++++++++++----------
+ 4 files changed, 154 insertions(+), 100 deletions(-)
 
-The trick thing is that both hard lockup and soft lockup share
-one same stack trace.
-
-Another question, I don't understand why request is allocated with
-GFP_ATOMIC in multipath_clone_and_map(), looks it shouldn't be
-necessary.
-
-
---
-Ming
+-- 
+1.8.3.1
