@@ -1,46 +1,41 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] scsi: sg: off by one in sg_ioctl()
-Date: Tue, 22 Aug 2017 21:50:23 -0400
-Message-ID: <7356ab9f-1f9e-e879-8c95-52caa6802ca4@interlog.com>
-References: <20170817070954.d4gg7hqgg2qjf6d3@mwanda>
-Reply-To: dgilbert@interlog.com
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v4 00/14] mpt3sas driver NVMe support:
+Date: Tue, 22 Aug 2017 22:18:06 -0400
+Message-ID: <yq1lgmbauxt.fsf@oracle.com>
+References: <1503322344-5900-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:36241 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753193AbdHWBu3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 22 Aug 2017 21:50:29 -0400
-In-Reply-To: <20170817070954.d4gg7hqgg2qjf6d3@mwanda>
-Content-Language: en-CA
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1503322344-5900-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+        (Suganath Prabu S.'s message of "Mon, 21 Aug 2017 19:02:10 +0530")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+Cc: jejb@kernel.org, hch@infradead.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, linux-kernel@vger.kernel.org, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com, linux-nvme@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>, Hannes Reinecke <hare@suse.de>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On 2017-08-17 03:09 AM, Dan Carpenter wrote:
-> If "val" is SG_MAX_QUEUE then we are one element beyond the end of the
-> "rinfo" array so the > should be >=.
-> 
-> Fixes: 109bade9c625 ("scsi: sg: use standard lists for sg_requests")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-Acked-by: Douglas Gilbert <dgilbert@interlog.com>
 
-Thanks.
+Suganath,
 
-> 
-> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> index d7ff71e0c85c..84e782d8e7c3 100644
-> --- a/drivers/scsi/sg.c
-> +++ b/drivers/scsi/sg.c
-> @@ -1021,7 +1021,7 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
->   			read_lock_irqsave(&sfp->rq_list_lock, iflags);
->   			val = 0;
->   			list_for_each_entry(srp, &sfp->rq_list, entry) {
-> -				if (val > SG_MAX_QUEUE)
-> +				if (val >= SG_MAX_QUEUE)
->   					break;
->   				memset(&rinfo[val], 0, SZ_SG_REQ_INFO);
->   				rinfo[val].req_state = srp->done + 1;
-> 
+>   mpt3sas: SGL to PRP Translation for I/Os to NVMe  devices
+
+I'm still confused about this patch.
+
+ - I don't understand why you go through all these hoops to decide
+   whether to use PRPs or IEEE scatterlists. If the firmware translation
+   is slow, why even bother with the SG format in the first place? Set
+   the max I/O size to match MDTS and you're done.
+
+ - What's the benefit of using SG for regular I/O commands?
+
+ - If the unmap translation in firmware is slow, why don't you translate
+   WRITE SAME/w UNMAP set to DSM DEALLOCATE without requiring
+   applications to do encapsulated passthrough?
+
+Also make sure you attribute your patches correctly (From: root
+<root@dhcp-135-24-192-103.dhcp.avagotech.net>). And you don't need that
+long CC: list. Just send the patch series to linux-scsi@vger.kernel.org.
+
+Thanks!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
