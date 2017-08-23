@@ -1,56 +1,50 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 16/31] qla2xxx: Move logging default mask to execute once only.
-Date: Wed, 23 Aug 2017 15:05:10 -0700
-Message-ID: <20170823220525.3115-17-himanshu.madhani@cavium.com>
+Subject: [PATCH 08/31] qla2xxx: Use BIT_6 to acquire FAWWPN from switch
+Date: Wed, 23 Aug 2017 15:05:02 -0700
+Message-ID: <20170823220525.3115-9-himanshu.madhani@cavium.com>
 References: <20170823220525.3115-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0082.outbound.protection.outlook.com ([104.47.32.82]:28674
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam01on0078.outbound.protection.outlook.com ([104.47.34.78]:29120
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751171AbdHWWFv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Aug 2017 18:05:51 -0400
+        id S1751112AbdHWWFk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 23 Aug 2017 18:05:40 -0400
 In-Reply-To: <20170823220525.3115-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Joe Carnuccio <joe.carnuccio@cavium.com>
+From: Sawan Chandak <sawan.chandak@cavium.com>
 
-Signed-off-by: Joe Carnuccio <joe.carnuccio@cavium.com>
+If FA-WWPN feature disabled on the switch side and
+enabled for the adapter, then driver would update
+the port name with switch port name.
+
+This patch fixes issue by checking correct BIT flag to validate.
+
+Fixes: 41dc529a4602 ("qla2xxx: Improve RSCN handling in driver")
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Sawan Chandak <sawan.chandak@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_dbg.c | 2 --
- drivers/scsi/qla2xxx/qla_os.c  | 2 ++
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_mbx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 7e7cd79038be..065449e0f347 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -2520,8 +2520,6 @@ qla83xx_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
- static inline int
- ql_mask_match(uint32_t level)
- {
--	if (ql2xextended_error_logging == 1)
--		ql2xextended_error_logging = QL_DBG_DEFAULT1_MASK;
- 	return (level & ql2xextended_error_logging) == level;
- }
- 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 5b033e265a3b..10c3ee53ec3a 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -6648,6 +6648,8 @@ qla2x00_module_init(void)
- 	strcpy(qla2x00_version_str, QLA2XXX_VERSION);
- 	if (ql2xextended_error_logging)
- 		strcat(qla2x00_version_str, "-debug");
-+	if (ql2xextended_error_logging == 1)
-+		ql2xextended_error_logging = QL_DBG_DEFAULT1_MASK;
- 
- 	qla2xxx_transport_template =
- 	    fc_attach_transport(&qla2xxx_transport_functions);
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 234ef442ef5d..6164a2c9a1f4 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -3682,7 +3682,7 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
+ 				if (qla_ini_mode_enabled(vha) &&
+ 				    ha->flags.fawwpn_enabled &&
+ 				    (rptid_entry->u.f1.flags &
+-				     VP_FLAGS_NAME_VALID)) {
++				     BIT_6)) {
+ 					memcpy(vha->port_name,
+ 					    rptid_entry->u.f1.port_name,
+ 					    WWN_SIZE);
 -- 
 2.12.0
