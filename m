@@ -1,73 +1,42 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH 00/19] SCSI patches for kernel v4.14
-Date: Wed, 23 Aug 2017 14:39:50 -0700
-Message-ID: <20170823214009.15015-1-bart.vanassche@wdc.com>
+Subject: [PATCH 01/19] Remove an obsolete function declaration
+Date: Wed, 23 Aug 2017 14:39:51 -0700
+Message-ID: <20170823214009.15015-2-bart.vanassche@wdc.com>
+References: <20170823214009.15015-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:45883 "EHLO
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:57495 "EHLO
         esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751026AbdHWVk4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 17:40:56 -0400
+        with ESMTP id S1751026AbdHWVlB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 17:41:01 -0400
+In-Reply-To: <20170823214009.15015-1-bart.vanassche@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-Hello Martin,
+Commit e9c787e65c0c ("scsi: allocate scsi_cmnd structures as part of
+struct request") removed the scsi_get_command() function. Hence also
+remove the declaration of that function.
 
-The patches in this series fall into two categories:
-- Two patches are related to using blk_mq_rq_to_pdu() instead of
-  struct request.special.
-- Seventeen patches suppress warnings reported by static analysis
-  tools. These tools are very useful but unfortunately the current
-  code base makes these tools report a significant number of false
-  positives.
+Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ include/scsi/scsi_cmnd.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-Please consider these patches for kernel v4.14.
-
-Thanks,
-
-Bart.
-
-Bart Van Assche (19):
-  Remove an obsolete function declaration
-  Avoid sign extension of scsi_device.type
-  Suppress gcc 7 fall-through warnings reported with W=1
-  Convert a strncmp() call into a strcmp() call
-  scsi_setup_fs_cmnd(): Call scsi_req_init() instead of open-coding it
-  Document which queue type a function is intended for
-  Fix RCU handling of scsi_device.vpd_pg8[03]
-  Use blk_mq_rq_to_pdu() to convert a request to a SCSI command pointer
-  sd, sr: Convert two assignments into warning statements
-  sd: Fix indentation
-  sd: Remove a useless comparison
-  sg: Fix type of last blk_trace_setup() argument
-  libiscsi: Fix indentation
-  libsas: Remove a set-but-not-used variable
-  libsas: Annotate fall-through in a switch statement
-  scsi_transport_sas, sas_tlr_supported(): Check kzalloc() return value
-  scsi_transport_srp: Suppress a W=1 compiler warning
-  scsi_debug: Remove a set-but-not-used variable
-  iscsi_tcp: Remove a set-but-not-used variable
-
- drivers/scsi/iscsi_tcp.c            |  2 --
- drivers/scsi/libiscsi.c             |  2 +-
- drivers/scsi/libsas/sas_ata.c       |  1 +
- drivers/scsi/libsas/sas_scsi_host.c |  3 ---
- drivers/scsi/scsi.c                 |  6 +++---
- drivers/scsi/scsi_debug.c           |  3 +--
- drivers/scsi/scsi_error.c           | 10 ++++++++--
- drivers/scsi/scsi_ioctl.c           |  4 +++-
- drivers/scsi/scsi_lib.c             | 36 +++++++++++++++++++++---------------
- drivers/scsi/scsi_sysfs.c           |  9 ++++++---
- drivers/scsi/scsi_transport_sas.c   |  3 +++
- drivers/scsi/scsi_transport_srp.c   |  2 +-
- drivers/scsi/sd.c                   |  6 +++---
- drivers/scsi/sg.c                   |  3 +--
- drivers/scsi/sr.c                   |  2 +-
- include/scsi/scsi_cmnd.h            |  1 -
- include/scsi/scsi_device.h          |  2 +-
- include/scsi/scsi_tcq.h             |  2 +-
- 18 files changed, 55 insertions(+), 42 deletions(-)
-
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index a1266d318c85..f5afcff8d76f 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -158,7 +158,6 @@ static inline struct scsi_driver *scsi_cmd_to_driver(struct scsi_cmnd *cmd)
+ 	return *(struct scsi_driver **)cmd->request->rq_disk->private_data;
+ }
+ 
+-extern struct scsi_cmnd *scsi_get_command(struct scsi_device *, gfp_t);
+ extern void scsi_put_command(struct scsi_cmnd *);
+ extern void scsi_finish_command(struct scsi_cmnd *cmd);
+ 
 -- 
 2.14.0
