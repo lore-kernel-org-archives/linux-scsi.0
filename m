@@ -1,49 +1,38 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH 14/19] libsas: Remove a set-but-not-used variable
-Date: Wed, 23 Aug 2017 14:40:04 -0700
-Message-ID: <20170823214009.15015-15-bart.vanassche@wdc.com>
+Subject: [PATCH 15/19] libsas: Annotate fall-through in a switch statement
+Date: Wed, 23 Aug 2017 14:40:05 -0700
+Message-ID: <20170823214009.15015-16-bart.vanassche@wdc.com>
 References: <20170823214009.15015-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:60815 "EHLO
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:45883 "EHLO
         esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751092AbdHWVnJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 17:43:09 -0400
+        with ESMTP id S1751004AbdHWVn2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 17:43:28 -0400
 In-Reply-To: <20170823214009.15015-1-bart.vanassche@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>
-
-This was detected by building with W=1.
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>
 
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: Hannes Reinecke <hare@suse.com>
 Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
 Cc: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/libsas/sas_scsi_host.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/scsi/libsas/sas_ata.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 87e5079d816b..fc90b8c65860 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -855,7 +855,6 @@ int sas_target_alloc(struct scsi_target *starget)
- int sas_slave_configure(struct scsi_device *scsi_dev)
- {
- 	struct domain_device *dev = sdev_to_domain_dev(scsi_dev);
--	struct sas_ha_struct *sas_ha;
- 
- 	BUG_ON(dev->rphy->identify.device_type != SAS_END_DEVICE);
- 
-@@ -864,8 +863,6 @@ int sas_slave_configure(struct scsi_device *scsi_dev)
- 		return 0;
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 87f5e694dbed..70be4425ae0b 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -343,6 +343,7 @@ static int smp_ata_check_ready(struct ata_link *link)
+ 	case SAS_END_DEVICE:
+ 		if (ex_phy->attached_sata_dev)
+ 			return sas_ata_clear_pending(dev, ex_phy);
++		/* fall through */
+ 	default:
+ 		return -ENODEV;
  	}
- 
--	sas_ha = dev->port->ha;
--
- 	sas_read_port_mode_page(scsi_dev);
- 
- 	if (scsi_dev->tagged_supported) {
 -- 
 2.14.0
