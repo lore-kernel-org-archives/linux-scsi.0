@@ -1,220 +1,241 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 23/31] qla2xxx: Add LR distance support from nvram bit
-Date: Wed, 23 Aug 2017 15:05:17 -0700
-Message-ID: <20170823220525.3115-24-himanshu.madhani@cavium.com>
+Subject: [PATCH 22/31] qla2xxx: Add support for minimum link speed
+Date: Wed, 23 Aug 2017 15:05:16 -0700
+Message-ID: <20170823220525.3115-23-himanshu.madhani@cavium.com>
 References: <20170823220525.3115-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0051.outbound.protection.outlook.com ([104.47.34.51]:63702
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-dm3nam03on0070.outbound.protection.outlook.com ([104.47.41.70]:51646
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751162AbdHWWk7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Aug 2017 18:40:59 -0400
+        id S1751162AbdHWWlE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 23 Aug 2017 18:41:04 -0400
 In-Reply-To: <20170823220525.3115-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Joe Carnuccio <joe.carnuccio@cavium.com>
+From: Sawan Chandak <sawan.chandak@cavium.com>
 
+Signed-off-by: Sawan Chandak <sawan.chandak@cavium.com>
 Signed-off-by: Joe Carnuccio <joe.carnuccio@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h |  9 ++++++-
- drivers/scsi/qla2xxx/qla_fw.h  | 24 +++++++++++-------
- drivers/scsi/qla2xxx/qla_mbx.c | 56 ++++++++++++++++++++++++++++--------------
- 3 files changed, 61 insertions(+), 28 deletions(-)
+ drivers/scsi/qla2xxx/qla_attr.c | 36 ++++++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_def.h  |  4 ++++
+ drivers/scsi/qla2xxx/qla_fw.h   |  4 +++-
+ drivers/scsi/qla2xxx/qla_isr.c  |  5 +++++
+ drivers/scsi/qla2xxx/qla_mbx.c  | 46 ++++++++++++++++++++++++++++++++++++++---
+ 5 files changed, 91 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 9d2862233e3c..75c4b312645e 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -1481,6 +1481,38 @@ qla2x00_pep_version_show(struct device *dev, struct device_attribute *attr,
+ 	    ha->pep_version[0], ha->pep_version[1], ha->pep_version[2]);
+ }
+ 
++static ssize_t
++qla2x00_min_link_speed_show(struct device *dev, struct device_attribute *attr,
++    char *buf)
++{
++	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
++	struct qla_hw_data *ha = vha->hw;
++
++	if (!IS_QLA27XX(ha))
++		return scnprintf(buf, PAGE_SIZE, "\n");
++
++	return scnprintf(buf, PAGE_SIZE, "%s\n",
++	    ha->min_link_speed == 5 ? "32Gps" :
++	    ha->min_link_speed == 4 ? "16Gps" :
++	    ha->min_link_speed == 3 ? "8Gps" :
++	    ha->min_link_speed == 2 ? "4Gps" :
++	    ha->min_link_speed != 0 ? "unknown" : "");
++}
++
++static ssize_t
++qla2x00_max_speed_sup_show(struct device *dev, struct device_attribute *attr,
++    char *buf)
++{
++	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
++	struct qla_hw_data *ha = vha->hw;
++
++	if (!IS_QLA27XX(ha))
++		return scnprintf(buf, PAGE_SIZE, "\n");
++
++	return scnprintf(buf, PAGE_SIZE, "%s\n",
++	    ha->max_speed_sup ? "32Gps" : "16Gps");
++}
++
+ static DEVICE_ATTR(driver_version, S_IRUGO, qla2x00_drvr_version_show, NULL);
+ static DEVICE_ATTR(fw_version, S_IRUGO, qla2x00_fw_version_show, NULL);
+ static DEVICE_ATTR(serial_num, S_IRUGO, qla2x00_serial_num_show, NULL);
+@@ -1526,6 +1558,8 @@ static DEVICE_ATTR(allow_cna_fw_dump, S_IRUGO | S_IWUSR,
+ 		   qla2x00_allow_cna_fw_dump_show,
+ 		   qla2x00_allow_cna_fw_dump_store);
+ static DEVICE_ATTR(pep_version, S_IRUGO, qla2x00_pep_version_show, NULL);
++static DEVICE_ATTR(min_link_speed, S_IRUGO, qla2x00_min_link_speed_show, NULL);
++static DEVICE_ATTR(max_speed_sup, S_IRUGO, qla2x00_max_speed_sup_show, NULL);
+ 
+ struct device_attribute *qla2x00_host_attrs[] = {
+ 	&dev_attr_driver_version,
+@@ -1560,6 +1594,8 @@ struct device_attribute *qla2x00_host_attrs[] = {
+ 	&dev_attr_fw_dump_size,
+ 	&dev_attr_allow_cna_fw_dump,
+ 	&dev_attr_pep_version,
++	&dev_attr_min_link_speed,
++	&dev_attr_max_speed_sup,
+ 	NULL,
+ };
+ 
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 0f80b812f4a7..486c075998f6 100644
+index 609687d04e3c..0f80b812f4a7 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -3471,7 +3471,7 @@ struct qla_hw_data {
- 		uint32_t	using_lr_setting:1;
- 	} flags;
- 
--	u8 long_range_distance;	/* 32G & above */
-+	uint16_t long_range_distance;	/* 32G & above */
- #define LR_DISTANCE_5K  1
- #define LR_DISTANCE_10K 0
- 
-@@ -4027,6 +4027,7 @@ struct qla_hw_data {
+@@ -902,6 +902,7 @@ struct mbx_cmd_32 {
+ #define MBA_SHUTDOWN_REQUESTED	0x8062	/* Shutdown Requested */
+ #define MBA_TEMPERATURE_ALERT	0x8070	/* Temperature Alert */
+ #define MBA_DPORT_DIAGNOSTICS	0x8080	/* D-port Diagnostics */
++#define MBA_TRANS_INSERT	0x8130	/* Transceiver Insertion */
+ #define MBA_FW_INIT_FAILURE	0x8401	/* Firmware initialization failure */
+ #define MBA_MIRROR_LUN_CHANGE	0x8402	/* Mirror LUN State Change
+ 					   Notification */
+@@ -4026,6 +4027,8 @@ struct qla_hw_data {
  
  	struct qlt_hw_data tgt;
  	int	allow_cna_fw_dump;
-+	uint32_t fw_ability_mask;
- 	uint16_t min_link_speed;
- 	uint16_t max_speed_sup;
++	uint16_t min_link_speed;
++	uint16_t max_speed_sup;
  
-@@ -4034,6 +4035,12 @@ struct qla_hw_data {
+ 	atomic_t        nvme_active_aen_cnt;
  	uint16_t        nvme_last_rptd_aen;             /* Last recorded aen count */
- };
+@@ -4212,6 +4215,7 @@ typedef struct scsi_qla_host {
+ 	int fcport_count;
+ 	wait_queue_head_t fcport_waitQ;
+ 	wait_queue_head_t vref_waitq;
++	uint8_t min_link_speed_feat;
+ } scsi_qla_host_t;
  
-+#define FW_ABILITY_MAX_SPEED_MASK	0xFUL
-+#define FW_ABILITY_MAX_SPEED_16G	0x0
-+#define FW_ABILITY_MAX_SPEED_32G	0x1
-+#define FW_ABILITY_MAX_SPEED(ha)	\
-+	(ha->fw_ability_mask & FW_ABILITY_MAX_SPEED_MASK)
-+
- /*
-  * Qlogic scsi host structure
-  */
+ struct qla27xx_image_status {
 diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
-index 94eb1694fc3e..bec641aae7b3 100644
+index b9c9886e8b1d..94eb1694fc3e 100644
 --- a/drivers/scsi/qla2xxx/qla_fw.h
 +++ b/drivers/scsi/qla2xxx/qla_fw.h
-@@ -1699,6 +1699,15 @@ struct access_chip_rsp_84xx {
- #define FAC_OPT_CMD_UNLOCK_SEMAPHORE	0x04
- #define FAC_OPT_CMD_GET_SECTOR_SIZE	0x05
+@@ -1745,7 +1745,9 @@ struct nvram_81xx {
+ 	uint16_t reserved_6_3[14];
  
-+/* enhanced features bit definitions */
-+#define NEF_LR_DIST_ENABLE	BIT_0
+ 	/* Offset 192. */
+-	uint16_t reserved_7[32];
++	uint8_t min_link_speed;
++	uint8_t reserved_7_0;
++	uint16_t reserved_7[31];
+ 
+ 	/*
+ 	 * BIT 0  = Enable spinup delay
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index c58fb493dbd9..527c5218e10b 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1233,6 +1233,11 @@ qla2x00_async_event(scsi_qla_host_t *vha, struct rsp_que *rsp, uint16_t *mb)
+ 			schedule_work(&ha->board_disable);
+ 		break;
+ 
++	case MBA_TRANS_INSERT:
++		ql_dbg(ql_dbg_async, vha, 0x5091,
++		    "Transceiver Insertion: %04x\n", mb[1]);
++		break;
 +
-+/* LR Distance bit positions */
-+#define LR_DIST_NV_POS		2
-+#define LR_DIST_FW_POS		12
-+#define LR_DIST_FW_SHIFT	(LR_DIST_FW_POS - LR_DIST_NV_POS)
-+#define LR_DIST_FW_FIELD(x)	((x) << LR_DIST_FW_SHIFT & 0xf000)
-+
- struct nvram_81xx {
- 	/* NVRAM header. */
- 	uint8_t id[4];
-@@ -1841,16 +1850,13 @@ struct nvram_81xx {
- 	uint8_t reserved_21[16];
- 	uint16_t reserved_22[3];
- 
--	/*
--	 * BIT 0 = Extended BB credits for LR
--	 * BIT 1 = Virtual Fabric Enable
--	 * BIT 2 = Enhanced Features Unused
--	 * BIT 3-7 = Enhanced Features Reserved
-+	/* Offset 406 (0x196) Enhanced Features
-+	 * BIT 0    = Extended BB credits for LR
-+	 * BIT 1    = Virtual Fabric Enable
-+	 * BIT 2-5  = Distance Support if BIT 0 is on
-+	 * BIT 6-15 = Unused
- 	 */
--	/* Enhanced Features */
--	uint8_t enhanced_features;
--
--	uint8_t reserved_23;
-+	uint16_t enhanced_features;
- 	uint16_t reserved_24[4];
- 
- 	/* Offset 416. */
+ 	default:
+ 		ql_dbg(ql_dbg_async, vha, 0x5057,
+ 		    "Unknown AEN:%04x %04x %04x %04x\n",
 diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 32bbbd50567d..99502fa90810 100644
+index da992b761402..32bbbd50567d 100644
 --- a/drivers/scsi/qla2xxx/qla_mbx.c
 +++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -567,6 +567,28 @@ qla2x00_load_ram(scsi_qla_host_t *vha, dma_addr_t req_dma, uint32_t risc_addr,
- 
- #define	EXTENDED_BB_CREDITS	BIT_0
- #define	NVME_ENABLE_FLAG	BIT_3
-+static inline uint16_t qla25xx_set_sfp_lr_dist(struct qla_hw_data *ha)
-+{
-+	uint16_t mb4 = BIT_0;
-+
-+	if (IS_QLA83XX(ha) || IS_QLA27XX(ha))
-+		mb4 |= ha->long_range_distance << LR_DIST_FW_POS;
-+
-+	return mb4;
-+}
-+
-+static inline uint16_t qla25xx_set_nvr_lr_dist(struct qla_hw_data *ha)
-+{
-+	uint16_t mb4 = BIT_0;
-+
-+	if (IS_QLA83XX(ha) || IS_QLA27XX(ha)) {
-+		struct nvram_81xx *nv = ha->nvram;
-+
-+		mb4 |= LR_DIST_FW_FIELD(nv->enhanced_features);
-+	}
-+
-+	return mb4;
-+}
- 
- /*
-  * qla2x00_execute_fw
-@@ -602,27 +624,25 @@ qla2x00_execute_fw(scsi_qla_host_t *vha, uint32_t risc_addr)
- 		mcp->mb[2] = LSW(risc_addr);
- 		mcp->mb[3] = 0;
- 		mcp->mb[4] = 0;
-+		ha->flags.using_lr_setting = 0;
- 		if (IS_QLA25XX(ha) || IS_QLA81XX(ha) || IS_QLA83XX(ha) ||
- 		    IS_QLA27XX(ha)) {
- 			if (ql2xautodetectsfp) {
- 				if (ha->flags.detected_lr_sfp) {
--					mcp->mb[4] |= EXTENDED_BB_CREDITS;
--					if (IS_QLA27XX(ha))
--						mcp->mb[4] |=
--					(u16)ha->long_range_distance << 12;
-+					mcp->mb[4] |=
-+					    qla25xx_set_sfp_lr_dist(ha);
- 					ha->flags.using_lr_setting = 1;
- 				}
- 			} else {
- 				struct nvram_81xx *nv = ha->nvram;
--
-+				/* set LR distance if specified in nvram */
- 				if (nv->enhanced_features &
--				    EXTENDED_BB_CREDITS) {
--					mcp->mb[4] |= EXTENDED_BB_CREDITS;
-+				    NEF_LR_DIST_ENABLE) {
-+					mcp->mb[4] |=
-+					    qla25xx_set_nvr_lr_dist(ha);
- 					ha->flags.using_lr_setting = 1;
- 				}
- 			}
--		} else {
--			ha->flags.using_lr_setting = 0;
- 		}
- 
+@@ -628,6 +628,19 @@ qla2x00_execute_fw(scsi_qla_host_t *vha, uint32_t risc_addr)
  		if (ql2xnvmeenable && IS_QLA27XX(ha))
-@@ -648,7 +668,7 @@ qla2x00_execute_fw(scsi_qla_host_t *vha, uint32_t risc_addr)
- 			mcp->mb[4] |= ENABLE_EXCHANGE_OFFLD;
+ 			mcp->mb[4] |= NVME_ENABLE_FLAG;
  
- 		mcp->out_mb |= MBX_4|MBX_3|MBX_2|MBX_1;
--		mcp->in_mb |= MBX_1;
-+		mcp->in_mb |= MBX_3 | MBX_2 | MBX_1;
- 	} else {
- 		mcp->mb[1] = LSW(risc_addr);
- 		mcp->out_mb |= MBX_1;
-@@ -667,10 +687,13 @@ qla2x00_execute_fw(scsi_qla_host_t *vha, uint32_t risc_addr)
++		if (IS_QLA83XX(ha) || IS_QLA27XX(ha)) {
++			struct nvram_81xx *nv = ha->nvram;
++			/* set minimum speed if specified in nvram */
++			if (nv->min_link_speed >= 2 &&
++			    nv->min_link_speed <= 5) {
++				mcp->mb[4] |= BIT_4;
++				mcp->mb[11] = nv->min_link_speed;
++				mcp->out_mb |= MBX_11;
++				mcp->in_mb |= BIT_5;
++				vha->min_link_speed_feat = nv->min_link_speed;
++			}
++		}
++
+ 		if (ha->flags.exlogins_enabled)
+ 			mcp->mb[4] |= ENABLE_EXTENDED_LOGIN;
+ 
+@@ -654,8 +667,26 @@ qla2x00_execute_fw(scsi_qla_host_t *vha, uint32_t risc_addr)
  		    "Failed=%x mb[0]=%x.\n", rval, mcp->mb[0]);
  	} else {
  		if (IS_FWI2_CAPABLE(ha)) {
-+			ha->fw_ability_mask = mcp->mb[3] << 16 | mcp->mb[2];
-+			ql_dbg(ql_dbg_mbx, vha, 0x119a,
-+			    "fw_ability_mask=%x.\n", ha->fw_ability_mask);
- 			ql_dbg(ql_dbg_mbx, vha, 0x1027,
- 			    "exchanges=%x.\n", mcp->mb[1]);
--			if (IS_QLA27XX(ha)) {
--				ha->max_speed_sup = mcp->mb[2] & 1;
-+			if (IS_QLA83XX(ha) || IS_QLA27XX(ha)) {
-+				ha->max_speed_sup = mcp->mb[2] & BIT_0;
- 				ql_dbg(ql_dbg_mbx, vha, 0x119b,
- 				    "Maximum speed supported=%s.\n",
- 				    ha->max_speed_sup ? "32Gps" : "16Gps");
-@@ -682,15 +705,12 @@ qla2x00_execute_fw(scsi_qla_host_t *vha, uint32_t risc_addr)
- 					    mcp->mb[5] == 4 ? "16Gps" :
- 					    mcp->mb[5] == 3 ? "8Gps" :
- 					    mcp->mb[5] == 2 ? "4Gps" :
--					    "unknown");
-+						"unknown");
- 				}
- 			}
--			ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1027,
--			    "Done.\n");
--		} else {
--			ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1028,
--			    "Done %s.\n", __func__);
- 		}
-+		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1028,
-+		    "Done.\n");
++			ql_dbg(ql_dbg_mbx, vha, 0x1027,
++			    "exchanges=%x.\n", mcp->mb[1]);
++			if (IS_QLA27XX(ha)) {
++				ha->max_speed_sup = mcp->mb[2] & 1;
++				ql_dbg(ql_dbg_mbx, vha, 0x119b,
++				    "Maximum speed supported=%s.\n",
++				    ha->max_speed_sup ? "32Gps" : "16Gps");
++				if (vha->min_link_speed_feat) {
++					ha->min_link_speed = mcp->mb[5];
++					ql_dbg(ql_dbg_mbx, vha, 0x119c,
++					    "Minimum speed set=%s.\n",
++					    mcp->mb[5] == 5 ? "32Gps" :
++					    mcp->mb[5] == 4 ? "16Gps" :
++					    mcp->mb[5] == 3 ? "8Gps" :
++					    mcp->mb[5] == 2 ? "4Gps" :
++					    "unknown");
++				}
++			}
+ 			ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1027,
+-			    "Done exchanges=%x.\n", mcp->mb[1]);
++			    "Done.\n");
+ 		} else {
+ 			ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1028,
+ 			    "Done %s.\n", __func__);
+@@ -1687,7 +1718,11 @@ qla2x00_init_firmware(scsi_qla_host_t *vha, uint16_t size)
+ 		    "Failed=%x mb[0]=%x, mb[1]=%x, mb[2]=%x, mb[3]=%x,.\n",
+ 		    rval, mcp->mb[0], mcp->mb[1], mcp->mb[2], mcp->mb[3]);
+ 	} else {
+-		/*EMPTY*/
++		if (IS_QLA27XX(ha)) {
++			if (mcp->mb[2] == 6 || mcp->mb[3] == 2)
++				ql_dbg(ql_dbg_mbx, vha, 0x119d,
++				    "Invalid SFP/Validation Failed\n");
++		}
+ 		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x104e,
+ 		    "Done %s.\n", __func__);
  	}
+@@ -1892,6 +1927,7 @@ qla2x00_get_firmware_state(scsi_qla_host_t *vha, uint16_t *states)
+ 	int rval;
+ 	mbx_cmd_t mc;
+ 	mbx_cmd_t *mcp = &mc;
++	struct qla_hw_data *ha = vha->hw;
  
- 	return rval;
+ 	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1054,
+ 	    "Entered %s.\n", __func__);
+@@ -1920,7 +1956,11 @@ qla2x00_get_firmware_state(scsi_qla_host_t *vha, uint16_t *states)
+ 		/*EMPTY*/
+ 		ql_dbg(ql_dbg_mbx, vha, 0x1055, "Failed=%x.\n", rval);
+ 	} else {
+-		/*EMPTY*/
++		if (IS_QLA27XX(ha)) {
++			if (mcp->mb[2] == 6 || mcp->mb[3] == 2)
++				ql_dbg(ql_dbg_mbx, vha, 0x119e,
++				    "Invalid SFP/Validation Failed\n");
++		}
+ 		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1056,
+ 		    "Done %s.\n", __func__);
+ 	}
 -- 
 2.12.0
