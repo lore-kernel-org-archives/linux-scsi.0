@@ -1,104 +1,42 @@
-From: Chad Dupuis <chad.dupuis@cavium.com>
-Subject: Re: [PATCH] scsi: qedf: Fix a potential NULL pointer dereference
-Date: Wed, 23 Aug 2017 11:49:34 -0400 (EDT)
-Message-ID: <alpine.OSX.2.00.1708231148580.1209@n6024mn55p0yw1.qlogic.org>
-References: <20170820170935.14767-1-christophe.jaillet@wanadoo.fr>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: [v4.13-rc BUG] system lockup when running big buffered write(4M)
+ to IB SRP via mpath
+Date: Thu, 24 Aug 2017 00:03:11 +0800
+Message-ID: <CACVXFVNP91Kf4bi=Ndc4aXR5pJg3u1pQ6Gzev7_nmS02h=gd6g@mail.gmail.com>
+References: <20170808141715.GB22763@ming.t460p> <1502237504.4017.1.camel@redhat.com>
+ <1502245693.6511.3.camel@redhat.com> <c072e942-0265-f0ad-561d-0e50d50e3cb1@redhat.com>
+ <1502298599.2356.7.camel@wdc.com> <20170823113526.GA8130@ming.t460p> <1503501161.2484.3.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0083.outbound.protection.outlook.com ([104.47.34.83]:43648
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754150AbdHWPt6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Aug 2017 11:49:58 -0400
-In-Reply-To: <20170820170935.14767-1-christophe.jaillet@wanadoo.fr>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:37132 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932118AbdHWQDP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 12:03:15 -0400
+In-Reply-To: <1503501161.2484.3.camel@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc: QLogic-Storage-Upstream@cavium.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "ming.lei@redhat.com" <ming.lei@redhat.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "loberman@redhat.com" <loberman@redhat.com>
 
+On Wed, Aug 23, 2017 at 11:12 PM, Bart Van Assche
+<Bart.VanAssche@wdc.com> wrote:
+> On Wed, 2017-08-23 at 19:35 +0800, Ming Lei wrote:
+>> soft lockup still can be observed easily with patch d4acf3650c7c(
+>> block: Make blk_mq_delay_kick_requeue_list() rerun the queue at a quiet time),
+>> but no hard lockup.
+>
+> Hello Ming,
+>
+> I never claimed that commit d4acf3650c7c was a full solution to avoid these
+> soft lockups. I assume these results mean that patch series "[PATCH 0/7]
+> Device mapper and dm-mpath fixes" was not applied to the kernel used in your
+> tests? A colleague of you has reported that that patch series is sufficient
 
-On Sun, 20 Aug 2017, 1:09pm, Christophe JAILLET wrote:
+OK, thanks for your clarification.
 
-> At the beginning of 'qedf_srr_compl()' and of 'qedf_rec_compl()', we check
-> if 'orig_io_req' is NULL. If this happens, a NULL pointer dereference will
-> occur in the error handling path.
-> 
-> Fix it by adding an additionnal label in the error handling path in order
-> to avoid this NULL pointer dereference.
-> 
-> Fixes: 61d8658b4a43 ("scsi: qedf: Add QLogic FastLinQ offload FCoE driver framework.")
-> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-> ---
->  drivers/scsi/qedf/qedf_els.c | 14 ++++++++------
->  1 file changed, 8 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/scsi/qedf/qedf_els.c b/drivers/scsi/qedf/qedf_els.c
-> index eb07f1de8afa..59c18ca4cda9 100644
-> --- a/drivers/scsi/qedf/qedf_els.c
-> +++ b/drivers/scsi/qedf/qedf_els.c
-> @@ -489,7 +489,7 @@ static void qedf_srr_compl(struct qedf_els_cb_arg *cb_arg)
->  
->  	/* If a SRR times out, simply free resources */
->  	if (srr_req->event == QEDF_IOREQ_EV_ELS_TMO)
-> -		goto out_free;
-> +		goto out_put;
->  
->  	/* Normalize response data into struct fc_frame */
->  	mp_req = &(srr_req->mp_req);
-> @@ -501,7 +501,7 @@ static void qedf_srr_compl(struct qedf_els_cb_arg *cb_arg)
->  	if (!fp) {
->  		QEDF_ERR(&(qedf->dbg_ctx),
->  		    "fc_frame_alloc failure.\n");
-> -		goto out_free;
-> +		goto out_put;
->  	}
->  
->  	/* Copy frame header from firmware into fp */
-> @@ -526,9 +526,10 @@ static void qedf_srr_compl(struct qedf_els_cb_arg *cb_arg)
->  	}
->  
->  	fc_frame_free(fp);
-> -out_free:
-> +out_put:
->  	/* Put reference for original command since SRR completed */
->  	kref_put(&orig_io_req->refcount, qedf_release_cmd);
-> +out_free:
->  	kfree(cb_arg);
->  }
->  
-> @@ -780,7 +781,7 @@ static void qedf_rec_compl(struct qedf_els_cb_arg *cb_arg)
->  
->  	/* If a REC times out, free resources */
->  	if (rec_req->event == QEDF_IOREQ_EV_ELS_TMO)
-> -		goto out_free;
-> +		goto out_put;
->  
->  	/* Normalize response data into struct fc_frame */
->  	mp_req = &(rec_req->mp_req);
-> @@ -792,7 +793,7 @@ static void qedf_rec_compl(struct qedf_els_cb_arg *cb_arg)
->  	if (!fp) {
->  		QEDF_ERR(&(qedf->dbg_ctx),
->  		    "fc_frame_alloc failure.\n");
-> -		goto out_free;
-> +		goto out_put;
->  	}
->  
->  	/* Copy frame header from firmware into fp */
-> @@ -884,9 +885,10 @@ static void qedf_rec_compl(struct qedf_els_cb_arg *cb_arg)
->  
->  out_free_frame:
->  	fc_frame_free(fp);
-> -out_free:
-> +out_put:
->  	/* Put reference for original command since REC completed */
->  	kref_put(&orig_io_req->refcount, qedf_release_cmd);
-> +out_free:
->  	kfree(cb_arg);
->  }
->  
-> 
+I run v4.13-rc6 with block for-next, so these patches are not applied in my
+kernel.
 
-Thanks for the catch.
-
-Acked-by: Chad Dupuis <chad.dupuis@cavium.com>
+-- 
+Ming Lei
