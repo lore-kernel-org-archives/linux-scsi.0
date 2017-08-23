@@ -1,47 +1,109 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 11/31] qla2xxx: Change ha->wq max_active value to default
-Date: Wed, 23 Aug 2017 15:05:05 -0700
-Message-ID: <20170823220525.3115-12-himanshu.madhani@cavium.com>
+Subject: [PATCH 06/31] qla2xxx: Handle PCIe error for driver
+Date: Wed, 23 Aug 2017 15:05:00 -0700
+Message-ID: <20170823220525.3115-7-himanshu.madhani@cavium.com>
 References: <20170823220525.3115-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0078.outbound.protection.outlook.com ([104.47.36.78]:50048
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-dm3nam03on0083.outbound.protection.outlook.com ([104.47.41.83]:37999
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750812AbdHWWFp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Aug 2017 18:05:45 -0400
+        id S1751142AbdHWWFn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 23 Aug 2017 18:05:43 -0400
 In-Reply-To: <20170823220525.3115-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Quinn Tran <quinn.tran@cavium.com>
+From: Sawan Chandak <sawan.chandak@cavium.com>
 
-update ha->wq max_active from 1 to default. MQ interrupts
-are queued up via this work queue. This allows interrupts
-to be process in parrallel, instead of serialized by the
-work queue.
+Driver will perform following
 
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
+- Set PFLG_DRIVER_REMOVING flag and do not disable PCIe
+  error reporting during adapter shutdown.
+- If PCIe device count is already zero, return correct
+  error type from PCI error interface.
+- When device is offline, return correct error type from
+  PCIe error path.
+- If there is board disable thread active during shutdown
+  and PCIe device count is zero then cancel scheduling board
+  disable thread during shutdown and return.
+
+Signed-off-by: Sawan Chandak <sawan.chandak@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_os.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_os.c | 32 ++++++++++++++++++++++++++++----
+ 1 file changed, 28 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index d668ed4bd53e..fe5148899117 100644
+index b43520ca6645..d668ed4bd53e 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -3170,7 +3170,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	if (ha->mqenable) {
- 		bool mq = false;
- 		bool startit = false;
--		ha->wq = alloc_workqueue("qla2xxx_wq", WQ_MEM_RECLAIM, 1);
-+		ha->wq = alloc_workqueue("qla2xxx_wq", WQ_MEM_RECLAIM, 0);
+@@ -3385,12 +3385,22 @@ qla2x00_shutdown(struct pci_dev *pdev)
+ 	scsi_qla_host_t *vha;
+ 	struct qla_hw_data  *ha;
  
- 		if (QLA_TGT_MODE_ENABLED()) {
- 			mq = true;
+-	if (!atomic_read(&pdev->enable_cnt))
+-		return;
+-
+ 	vha = pci_get_drvdata(pdev);
+ 	ha = vha->hw;
+ 
++	ql_log(ql_log_info, vha, 0xfffa,
++		"Adapter shutdown\n");
++
++	/*
++	 * Prevent future board_disable and wait
++	 * until any pending board_disable has completed.
++	 */
++	set_bit(PFLG_DRIVER_REMOVING, &vha->pci_flags);
++	cancel_work_sync(&ha->board_disable);
++
++	if (!atomic_read(&pdev->enable_cnt))
++		return;
++
+ 	/* Notify ISPFX00 firmware */
+ 	if (IS_QLAFX00(ha))
+ 		qlafx00_driver_shutdown(vha, 20);
+@@ -3421,8 +3431,9 @@ qla2x00_shutdown(struct pci_dev *pdev)
+ 
+ 	qla2x00_free_fw_dump(ha);
+ 
+-	pci_disable_pcie_error_reporting(pdev);
+ 	pci_disable_device(pdev);
++	ql_log(ql_log_info, vha, 0xfffe,
++		"Adapter shutdown successfully.\n");
+ }
+ 
+ /* Deletes all the virtual ports for a given ha */
+@@ -5495,6 +5506,13 @@ qla2x00_disable_board_on_pci_error(struct work_struct *work)
+ 	ql_log(ql_log_warn, base_vha, 0x015b,
+ 	    "Disabling adapter.\n");
+ 
++	if (!atomic_read(&pdev->enable_cnt)) {
++		ql_log(ql_log_info, base_vha, 0xfffc,
++		    "PCI device disabled, no action req for PCI error=%lx\n",
++		    base_vha->pci_flags);
++		return;
++	}
++
+ 	qla2x00_wait_for_sess_deletion(base_vha);
+ 
+ 	set_bit(UNLOADING, &base_vha->dpc_flags);
+@@ -6197,6 +6215,12 @@ qla2xxx_pci_error_detected(struct pci_dev *pdev, pci_channel_state_t state)
+ 	ql_dbg(ql_dbg_aer, vha, 0x9000,
+ 	    "PCI error detected, state %x.\n", state);
+ 
++	if (!atomic_read(&pdev->enable_cnt)) {
++		ql_log(ql_log_info, vha, 0xffff,
++			"PCI device is disabled,state %x\n", state);
++		return PCI_ERS_RESULT_NEED_RESET;
++	}
++
+ 	switch (state) {
+ 	case pci_channel_io_normal:
+ 		ha->flags.eeh_busy = 0;
 -- 
 2.12.0
