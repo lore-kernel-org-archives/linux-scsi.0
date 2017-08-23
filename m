@@ -1,52 +1,55 @@
-From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH 19/19] iscsi_tcp: Remove a set-but-not-used variable
-Date: Wed, 23 Aug 2017 14:40:09 -0700
-Message-ID: <20170823214009.15015-20-bart.vanassche@wdc.com>
-References: <20170823214009.15015-1-bart.vanassche@wdc.com>
+From: Himanshu Madhani <himanshu.madhani@cavium.com>
+Subject: [PATCH 05/31] qla2xxx: Fix WWPN/WWNN in debug message
+Date: Wed, 23 Aug 2017 15:04:59 -0700
+Message-ID: <20170823220525.3115-6-himanshu.madhani@cavium.com>
+References: <20170823220525.3115-1-himanshu.madhani@cavium.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:57495 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751104AbdHWVoD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 17:44:03 -0400
-In-Reply-To: <20170823214009.15015-1-bart.vanassche@wdc.com>
+Received: from mail-bn3nam01on0043.outbound.protection.outlook.com ([104.47.33.43]:59232
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751112AbdHWWFh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 23 Aug 2017 18:05:37 -0400
+In-Reply-To: <20170823220525.3115-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Lee Duncan <lduncan@suse.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
+To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-This patch avoids that gcc reports the following warning when
-building with W=1:
+From: Darren Trap <darren.trap@cavium.com>
 
-drivers/scsi/iscsi_tcp.c:166:24: warning: variable ?session? set but not used [-Wunused-but-set-variable]
-
-Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Lee Duncan <lduncan@suse.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
+Signed-off-by: Darren Trap <darren.trap@cavium.com>
+Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/iscsi_tcp.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_nvme.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 4842fc0e809d..4d934d6c3e13 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -163,7 +163,6 @@ static void iscsi_sw_tcp_state_change(struct sock *sk)
- 	struct iscsi_tcp_conn *tcp_conn;
- 	struct iscsi_sw_tcp_conn *tcp_sw_conn;
- 	struct iscsi_conn *conn;
--	struct iscsi_session *session;
- 	void (*old_state_change)(struct sock *);
+diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
+index 5692ae128655..1f59e7a74c7b 100644
+--- a/drivers/scsi/qla2xxx/qla_nvme.c
++++ b/drivers/scsi/qla2xxx/qla_nvme.c
+@@ -60,8 +60,8 @@ int qla_nvme_register_remote(struct scsi_qla_host *vha, struct fc_port *fcport)
+ 	rport->req.port_id = fcport->d_id.b24;
  
- 	read_lock_bh(&sk->sk_callback_lock);
-@@ -172,7 +171,6 @@ static void iscsi_sw_tcp_state_change(struct sock *sk)
- 		read_unlock_bh(&sk->sk_callback_lock);
- 		return;
- 	}
--	session = conn->session;
+ 	ql_log(ql_log_info, vha, 0x2102,
+-	    "%s: traddr=pn-0x%016llx:nn-0x%016llx PortID:%06x\n",
+-	    __func__, rport->req.port_name, rport->req.node_name,
++	    "%s: traddr=nn-0x%016llx:pn-0x%016llx PortID:%06x\n",
++	    __func__, rport->req.node_name, rport->req.port_name,
+ 	    rport->req.port_id);
  
- 	iscsi_sw_sk_state_check(sk);
+ 	ret = nvme_fc_register_remoteport(vha->nvme_local_port, &rport->req,
+@@ -723,8 +723,8 @@ void qla_nvme_register_hba(struct scsi_qla_host *vha)
+ 	pinfo.port_id = vha->d_id.b24;
  
+ 	ql_log(ql_log_info, vha, 0xffff,
+-	    "register_localport: host-traddr=pn-0x%llx:nn-0x%llx on portID:%x\n",
+-	    pinfo.port_name, pinfo.node_name, pinfo.port_id);
++	    "register_localport: host-traddr=nn-0x%llx:pn-0x%llx on portID:%x\n",
++	    pinfo.node_name, pinfo.port_name, pinfo.port_id);
+ 	qla_nvme_fc_transport.dma_boundary = vha->host->dma_boundary;
+ 
+ 	ret = nvme_fc_register_localport(&pinfo, tmpl,
 -- 
-2.14.0
+2.12.0
