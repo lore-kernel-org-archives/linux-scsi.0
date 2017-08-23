@@ -1,38 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] storvsc: do not assume SG list is continuous when doing bounce buffers (for 4.1 stable only)
-Date: Wed, 23 Aug 2017 11:22:07 -0400
-Message-ID: <yq1ziaq9un4.fsf@oracle.com>
-References: <1503379905-18908-1-git-send-email-longli@exchange.microsoft.com>
-        <20170822062841.GA1061@infradead.org>
-        <MWHPR21MB0190D1C8C3FAF25AE283ABCFCE840@MWHPR21MB0190.namprd21.prod.outlook.com>
-        <20170823064319.GA19373@infradead.org>
+Subject: Re: [GIT PULL] SCSI fixes for 4.13-rc6
+Date: Wed, 23 Aug 2017 11:27:24 -0400
+Message-ID: <yq1vale9ueb.fsf@oracle.com>
+References: <1503470559.2729.4.camel@HansenPartnership.com>
+        <1503500560.2484.1.camel@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170823064319.GA19373@infradead.org> (Christoph Hellwig's
-        message of "Tue, 22 Aug 2017 23:43:19 -0700")
+In-Reply-To: <1503500560.2484.1.camel@wdc.com> (Bart Van Assche's message of
+        "Wed, 23 Aug 2017 15:02:42 +0000")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Long Li <longli@microsoft.com>, KY Srinivasan <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 
-Christoph,
+Hi Bart,
 
-> Ok.  If the stable maintainers are ok with your small fix
-> I'm not going to complain too loudly.  But I'm always worried about
-> stable trees divering too much from mainline.
+> Had you noticed that Damien had asked not to send the "sd_zbc: Write
+> unlock zone from sd_uninit_cmnd()" patch to Linus without my "scsi-mq:
+> Always unprepare before requeuing a request" patch?
 
-The seemingly innocuous transition from SG_GAPS to virt boundary has
-caused several data corruption regressions in the distro kernels. So has
-the corresponding conversion of storvsc.
+He did change his mind later in that thread, though.
 
-As a result, getting the current upstream code into 4.1 would mean
-backporting and testing a significant amount of both block layer and
-driver code. I don't think it's worth the risk. This patch is simple and
-the path of least resistance.
-
-Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+However, what's more important is that we still need a good version of
+your patch for 4.13. I took Brian's workaround for ipr but I still think
+Christoph's concerns need to be addressed for me to put your change back
+in.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
