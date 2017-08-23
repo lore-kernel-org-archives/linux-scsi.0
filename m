@@ -1,65 +1,73 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH] Improve requeuing behavior
-Date: Wed, 23 Aug 2017 14:05:35 -0700
-Message-ID: <20170823210535.1072-1-bart.vanassche@wdc.com>
+Subject: [PATCH 00/19] SCSI patches for kernel v4.14
+Date: Wed, 23 Aug 2017 14:39:50 -0700
+Message-ID: <20170823214009.15015-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:11603 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932594AbdHWVGv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 17:06:51 -0400
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:45883 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751026AbdHWVk4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 17:40:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Brian King <brking@linux.vnet.ibm.com>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>
 
-Requests are unprepared and reprepared when being requeued. Avoid
-that requeuing resets .jiffies_at_alloc and .retries by initializing
-these two member variables from inside blk_get_request() and by
-preserving both member variables when preparing a request. This patch
-affects the requeuing behavior of scsi-sq and scsi-mq.
+Hello Martin,
 
-Reported-by: Brian King <brking@linux.vnet.ibm.com>
-References: https://lkml.org/lkml/2017/8/18/923 ("Re: [BUG][bisected 270065e] linux-next fails to boot on powerpc")
-Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Brian King <brking@linux.vnet.ibm.com>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/scsi_lib.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+The patches in this series fall into two categories:
+- Two patches are related to using blk_mq_rq_to_pdu() instead of
+  struct request.special.
+- Seventeen patches suppress warnings reported by static analysis
+  tools. These tools are very useful but unfortunately the current
+  code base makes these tools report a significant number of false
+  positives.
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index ebc5c713ee37..8d1ec1e7b0e2 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1122,6 +1122,8 @@ void scsi_initialize_rq(struct request *rq)
- 	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
- 
- 	scsi_req_init(&cmd->req);
-+	cmd->jiffies_at_alloc = jiffies;
-+	cmd->retries = 0;
- }
- EXPORT_SYMBOL(scsi_initialize_rq);
- 
-@@ -1160,6 +1162,8 @@ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
- 	void *buf = cmd->sense_buffer;
- 	void *prot = cmd->prot_sdb;
- 	unsigned int unchecked_isa_dma = cmd->flags & SCMD_UNCHECKED_ISA_DMA;
-+	unsigned long jiffies_at_alloc = cmd->jiffies_at_alloc;
-+	int retries = cmd->retries;
- 
- 	/* zero out the cmd, except for the embedded scsi_request */
- 	memset((char *)cmd + sizeof(cmd->req), 0,
-@@ -1170,7 +1174,8 @@ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
- 	cmd->prot_sdb = prot;
- 	cmd->flags = unchecked_isa_dma;
- 	INIT_DELAYED_WORK(&cmd->abort_work, scmd_eh_abort_handler);
--	cmd->jiffies_at_alloc = jiffies;
-+	cmd->jiffies_at_alloc = jiffies_at_alloc;
-+	cmd->retries = retries;
- 
- 	scsi_add_cmd_to_list(cmd);
- }
+Please consider these patches for kernel v4.14.
+
+Thanks,
+
+Bart.
+
+Bart Van Assche (19):
+  Remove an obsolete function declaration
+  Avoid sign extension of scsi_device.type
+  Suppress gcc 7 fall-through warnings reported with W=1
+  Convert a strncmp() call into a strcmp() call
+  scsi_setup_fs_cmnd(): Call scsi_req_init() instead of open-coding it
+  Document which queue type a function is intended for
+  Fix RCU handling of scsi_device.vpd_pg8[03]
+  Use blk_mq_rq_to_pdu() to convert a request to a SCSI command pointer
+  sd, sr: Convert two assignments into warning statements
+  sd: Fix indentation
+  sd: Remove a useless comparison
+  sg: Fix type of last blk_trace_setup() argument
+  libiscsi: Fix indentation
+  libsas: Remove a set-but-not-used variable
+  libsas: Annotate fall-through in a switch statement
+  scsi_transport_sas, sas_tlr_supported(): Check kzalloc() return value
+  scsi_transport_srp: Suppress a W=1 compiler warning
+  scsi_debug: Remove a set-but-not-used variable
+  iscsi_tcp: Remove a set-but-not-used variable
+
+ drivers/scsi/iscsi_tcp.c            |  2 --
+ drivers/scsi/libiscsi.c             |  2 +-
+ drivers/scsi/libsas/sas_ata.c       |  1 +
+ drivers/scsi/libsas/sas_scsi_host.c |  3 ---
+ drivers/scsi/scsi.c                 |  6 +++---
+ drivers/scsi/scsi_debug.c           |  3 +--
+ drivers/scsi/scsi_error.c           | 10 ++++++++--
+ drivers/scsi/scsi_ioctl.c           |  4 +++-
+ drivers/scsi/scsi_lib.c             | 36 +++++++++++++++++++++---------------
+ drivers/scsi/scsi_sysfs.c           |  9 ++++++---
+ drivers/scsi/scsi_transport_sas.c   |  3 +++
+ drivers/scsi/scsi_transport_srp.c   |  2 +-
+ drivers/scsi/sd.c                   |  6 +++---
+ drivers/scsi/sg.c                   |  3 +--
+ drivers/scsi/sr.c                   |  2 +-
+ include/scsi/scsi_cmnd.h            |  1 -
+ include/scsi/scsi_device.h          |  2 +-
+ include/scsi/scsi_tcq.h             |  2 +-
+ 18 files changed, 55 insertions(+), 42 deletions(-)
+
 -- 
 2.14.0
