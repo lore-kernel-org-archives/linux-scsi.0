@@ -1,15 +1,15 @@
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH v3 11/14] megaraid_sas: replace internal FALSE/TRUE definitions with false/true
-Date: Wed, 23 Aug 2017 04:47:05 -0700
-Message-ID: <1503488828-2242-12-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH v3 13/14] megaraid_sas: call megasas_dump_frame with correct IO frame size
+Date: Wed, 23 Aug 2017 04:47:07 -0700
+Message-ID: <1503488828-2242-14-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1503488828-2242-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f48.google.com ([74.125.83.48]:35639 "EHLO
-        mail-pg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753929AbdHWLsE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 07:48:04 -0400
-Received: by mail-pg0-f48.google.com with SMTP id u191so6297912pgc.2
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Aug 2017 04:48:04 -0700 (PDT)
+Received: from mail-pg0-f47.google.com ([74.125.83.47]:36535 "EHLO
+        mail-pg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753929AbdHWLsK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 07:48:10 -0400
+Received: by mail-pg0-f47.google.com with SMTP id 83so6258874pgb.3
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Aug 2017 04:48:10 -0700 (PDT)
 In-Reply-To: <1503488828-2242-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -21,159 +21,21 @@ Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_fp.c | 40 +++++++++++++--------------------
- 1 file changed, 15 insertions(+), 25 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-index 62affa7..ecc699a 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fp.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-@@ -67,16 +67,6 @@
- #define ABS_DIFF(a, b)   (((a) > (b)) ? ((a) - (b)) : ((b) - (a)))
- #define MR_LD_STATE_OPTIMAL 3
- 
--#ifdef FALSE
--#undef FALSE
--#endif
--#define FALSE 0
--
--#ifdef TRUE
--#undef TRUE
--#endif
--#define TRUE 1
--
- #define SPAN_ROW_SIZE(map, ld, index_) (MR_LdSpanPtrGet(ld, index_, map)->spanRowSize)
- #define SPAN_ROW_DATA_SIZE(map_, ld, index_)   (MR_LdSpanPtrGet(ld, index_, map)->spanRowDataSize)
- #define SPAN_INVALID  0xff
-@@ -709,7 +699,7 @@ static u8 mr_spanset_get_phy_params(struct megasas_instance *instance, u32 ld,
- 	u32     pd, arRef, r1_alt_pd;
- 	u8      physArm, span;
- 	u64     row;
--	u8	retval = TRUE;
-+	u8	retval = true;
- 	u64	*pdBlock = &io_info->pdBlock;
- 	__le16	*pDevHandle = &io_info->devHandle;
- 	u8	*pPdInterface = &io_info->pd_interface;
-@@ -727,7 +717,7 @@ static u8 mr_spanset_get_phy_params(struct megasas_instance *instance, u32 ld,
- 	if (raid->level == 6) {
- 		logArm = get_arm_from_strip(instance, ld, stripRow, map);
- 		if (logArm == -1U)
--			return FALSE;
-+			return false;
- 		rowMod = mega_mod64(row, SPAN_ROW_SIZE(map, ld, span));
- 		armQ = SPAN_ROW_SIZE(map, ld, span) - 1 - rowMod;
- 		arm = armQ + 1 + logArm;
-@@ -738,7 +728,7 @@ static u8 mr_spanset_get_phy_params(struct megasas_instance *instance, u32 ld,
- 		/* Calculate the arm */
- 		physArm = get_arm(instance, ld, span, stripRow, map);
- 	if (physArm == 0xFF)
--		return FALSE;
-+		return false;
- 
- 	arRef       = MR_LdSpanArrayGet(ld, span, map);
- 	pd          = MR_ArPdGet(arRef, physArm, map);
-@@ -812,7 +802,7 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
- 	u32         pd, arRef, r1_alt_pd;
- 	u8          physArm, span;
- 	u64         row;
--	u8	    retval = TRUE;
-+	u8	    retval = true;
- 	u64	    *pdBlock = &io_info->pdBlock;
- 	__le16	    *pDevHandle = &io_info->devHandle;
- 	u8	    *pPdInterface = &io_info->pd_interface;
-@@ -829,7 +819,7 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
- 		u32 rowMod, armQ, arm;
- 
- 		if (raid->rowSize == 0)
--			return FALSE;
-+			return false;
- 		/* get logical row mod */
- 		rowMod = mega_mod64(row, raid->rowSize);
- 		armQ = raid->rowSize-1-rowMod; /* index of Q drive */
-@@ -839,7 +829,7 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
- 		physArm = (u8)arm;
- 	} else  {
- 		if (raid->modFactor == 0)
--			return FALSE;
-+			return false;
- 		physArm = MR_LdDataArmGet(ld,  mega_mod64(stripRow,
- 							  raid->modFactor),
- 					  map);
-@@ -851,7 +841,7 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
- 	} else {
- 		span = (u8)MR_GetSpanBlock(ld, row, pdBlock, map);
- 		if (span == SPAN_INVALID)
--			return FALSE;
-+			return false;
- 	}
- 
- 	/* Get the array on which this span is present */
-@@ -954,7 +944,7 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
- 	 */
- 	if (raid->rowDataSize == 0) {
- 		if (MR_LdSpanPtrGet(ld, 0, map)->spanRowDataSize == 0)
--			return FALSE;
-+			return false;
- 		else if (instance->UnevenSpanSupport) {
- 			io_info->IoforUnevenSpan = 1;
- 		} else {
-@@ -963,7 +953,7 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
- 				"rowDataSize = 0x%0x,"
- 				"but there is _NO_ UnevenSpanSupport\n",
- 				MR_LdSpanPtrGet(ld, 0, map)->spanRowDataSize);
--			return FALSE;
-+			return false;
- 		}
- 	}
- 
-@@ -988,7 +978,7 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
- 			dev_info(&instance->pdev->dev, "return from %s %d."
- 				"Send IO w/o region lock.\n",
- 				__func__, __LINE__);
--			return FALSE;
-+			return false;
- 		}
- 
- 		if (raid->spanDepth == 1) {
-@@ -1004,7 +994,7 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
- 				(unsigned long long)start_row,
- 				(unsigned long long)start_strip,
- 				(unsigned long long)endStrip);
--			return FALSE;
-+			return false;
- 		}
- 		io_info->start_span	= startlba_span;
- 		io_info->start_row	= start_row;
-@@ -1038,7 +1028,7 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
- 					       raid->capability.
- 					       fpWriteAcrossStripe));
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index a949a21..5183184 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -2795,7 +2795,7 @@ static int megasas_reset_bus_host(struct scsi_cmnd *scmd)
+ 		cmd = (struct megasas_cmd_fusion *)scmd->SCp.ptr;
+ 		if (cmd)
+ 			megasas_dump_frame(cmd->io_request,
+-				sizeof(struct MPI2_RAID_SCSI_IO_REQUEST));
++				MEGA_MPI2_RAID_DEFAULT_IO_FRAME_SIZE);
+ 		ret = megasas_reset_fusion(scmd->device->host,
+ 				SCSIIO_TIMEOUT_OCR);
  	} else
--		io_info->fpOkForIo = FALSE;
-+		io_info->fpOkForIo = false;
- 
- 	if (numRows == 1) {
- 		/* single-strip IOs can always lock only the data needed */
-@@ -1124,7 +1114,7 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
- 					pRAID_Context, map);
- 		/* If IO on an invalid Pd, then FP is not possible.*/
- 		if (io_info->devHandle == MR_DEVHANDLE_INVALID)
--			io_info->fpOkForIo = FALSE;
-+			io_info->fpOkForIo = false;
- 		return retval;
- 	} else if (isRead) {
- 		uint stripIdx;
-@@ -1138,10 +1128,10 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
- 				    start_strip + stripIdx, ref_in_start_stripe,
- 				    io_info, pRAID_Context, map);
- 			if (!retval)
--				return TRUE;
-+				return true;
- 		}
- 	}
--	return TRUE;
-+	return true;
- }
- 
- /*
 -- 
 1.8.3.1
