@@ -1,42 +1,104 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [GIT PULL] SCSI fixes for 4.13-rc6
-Date: Wed, 23 Aug 2017 15:44:38 +0000
-Message-ID: <1503503077.2484.5.camel@wdc.com>
-References: <1503470559.2729.4.camel@HansenPartnership.com>
-         <1503500560.2484.1.camel@wdc.com> <yq1vale9ueb.fsf@oracle.com>
+From: Chad Dupuis <chad.dupuis@cavium.com>
+Subject: Re: [PATCH] scsi: qedf: Fix a potential NULL pointer dereference
+Date: Wed, 23 Aug 2017 11:49:34 -0400 (EDT)
+Message-ID: <alpine.OSX.2.00.1708231148580.1209@n6024mn55p0yw1.qlogic.org>
+References: <20170820170935.14767-1-christophe.jaillet@wanadoo.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1vale9ueb.fsf@oracle.com>
-Content-Language: en-US
-Content-ID: <EBF8B3C97EB3884594686FE2B193F468@namprd04.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2nam01on0083.outbound.protection.outlook.com ([104.47.34.83]:43648
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754150AbdHWPt6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 23 Aug 2017 11:49:58 -0400
+In-Reply-To: <20170820170935.14767-1-christophe.jaillet@wanadoo.fr>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc: QLogic-Storage-Upstream@cavium.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-T24gV2VkLCAyMDE3LTA4LTIzIGF0IDExOjI3IC0wNDAwLCBNYXJ0aW4gSy4gUGV0ZXJzZW4gd3Jv
-dGU6DQo+IEhvd2V2ZXIsIHdoYXQncyBtb3JlIGltcG9ydGFudCBpcyB0aGF0IHdlIHN0aWxsIG5l
-ZWQgYSBnb29kIHZlcnNpb24gb2YNCj4geW91ciBwYXRjaCBmb3IgNC4xMy4gSSB0b29rIEJyaWFu
-J3Mgd29ya2Fyb3VuZCBmb3IgaXByIGJ1dCBJIHN0aWxsIHRoaW5rDQo+IENocmlzdG9waCdzIGNv
-bmNlcm5zIG5lZWQgdG8gYmUgYWRkcmVzc2VkIGZvciBtZSB0byBwdXQgeW91ciBjaGFuZ2UgYmFj
-aw0KPiBpbi4NCg0KSGVsbG8gTWFydGluLA0KDQpJIGFtIG5vdCBhd2FyZSBvZiBhbnkgcmVxdWVz
-dHMgdG8gbW9kaWZ5IHRoZSBwYXRjaCAic2NzaS1tcTogQWx3YXlzIHVucHJlcGFyZQ0KYmVmb3Jl
-IHJlcXVldWluZyBhIHJlcXVlc3QiLiBTZWUgYWxzbw0KaHR0cHM6Ly93d3cuc3Bpbmljcy5uZXQv
-bGlzdHMvbGludXgtc2NzaS9tc2cxMTE1NDEuaHRtbC4gQXJlIHlvdSBwZXJoYXBzDQpyZWZlcnJp
-bmcgdG8gYW5vdGhlciBwYXRjaD8NCg0KV2hhdCBJIHJlbWVtYmVyIGlzIHRoYXQgbXkgcGF0Y2gg
-dW5jb3ZlcmVkIGEgYnVnIGluIHRoZSBpcHIgZHJpdmVyLiBBcyB5b3UNCm1lbnRpb25lZCwgYSB3
-b3JrYXJvdW5kIGZvciB0aGF0IGJ1ZyBoYXMgYWxyZWFkeSBiZWVuIHF1ZXVlZCBmb3Iga2VybmVs
-IHY0LjE0DQooaHR0cHM6Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9naXQv
-bWtwL3Njc2kuZ2l0L2NvbW1pdC8/aD00LjEzL3Njc2ktZml4ZXMmaWQ9NzIzY2Q3NzJmZGUyMzQ0
-YTk4MTBlZWFmNTEwNjc4N2Q1MzVlYzRhNCkuDQoNCkZ1cnRoZXIgaW1wcm92ZW1lbnRzIGZvciB0
-aGUgU0NTSSBjb3JlIHRoYXQgYXJlIHRoZSByZXN1bHQgb2YgdGhlIGFuYWx5c2lzIG9mDQp0aGUg
-YmVoYXZpb3Igb2YgdGhlIFNDU0kgc3Vic3lzdGVtIG9uIFBvd2VyUEMgc3lzdGVtcyBhcmUgdW5k
-ZXIgZGlzY3Vzc2lvbi4gU2VlDQphbHNvICJbUEFUQ0h2MiAxLzJdIHNjc2k6IE1vdmUgc2NzaV9j
-bWQtPmppZmZpZXNfYXRfYWxsb2MgaW5pdGlhbGl6YXRpb24gdG8NCmFsbG9jYXRpb24gdGltZSIg
-KGh0dHBzOi8vbWFyYy5pbmZvLz9sPWxpbnV4LW5leHQmbT0xNTAzMzU1MjQ4MTI5ODkpIGFuZA0K
-IltQQVRDSCAyLzJdIHNjc2k6IFByZXNlcnZlIHJldHJ5IGNvdW50ZXIgdGhyb3VnaCBzY3NpX3By
-ZXBfZm4iDQooaHR0cHM6Ly9tYXJjLmluZm8vP2w9bGludXgtc2NzaSZtPTE1MDMzNTM3MTExMjQ4
-NSkuDQoNClBsZWFzZSBjb3JyZWN0IG1lIGlmIEkgZ290IGFueXRoaW5nIHdyb25nLg0KDQpCYXJ0
-Lg==
+
+On Sun, 20 Aug 2017, 1:09pm, Christophe JAILLET wrote:
+
+> At the beginning of 'qedf_srr_compl()' and of 'qedf_rec_compl()', we check
+> if 'orig_io_req' is NULL. If this happens, a NULL pointer dereference will
+> occur in the error handling path.
+> 
+> Fix it by adding an additionnal label in the error handling path in order
+> to avoid this NULL pointer dereference.
+> 
+> Fixes: 61d8658b4a43 ("scsi: qedf: Add QLogic FastLinQ offload FCoE driver framework.")
+> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+> ---
+>  drivers/scsi/qedf/qedf_els.c | 14 ++++++++------
+>  1 file changed, 8 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/scsi/qedf/qedf_els.c b/drivers/scsi/qedf/qedf_els.c
+> index eb07f1de8afa..59c18ca4cda9 100644
+> --- a/drivers/scsi/qedf/qedf_els.c
+> +++ b/drivers/scsi/qedf/qedf_els.c
+> @@ -489,7 +489,7 @@ static void qedf_srr_compl(struct qedf_els_cb_arg *cb_arg)
+>  
+>  	/* If a SRR times out, simply free resources */
+>  	if (srr_req->event == QEDF_IOREQ_EV_ELS_TMO)
+> -		goto out_free;
+> +		goto out_put;
+>  
+>  	/* Normalize response data into struct fc_frame */
+>  	mp_req = &(srr_req->mp_req);
+> @@ -501,7 +501,7 @@ static void qedf_srr_compl(struct qedf_els_cb_arg *cb_arg)
+>  	if (!fp) {
+>  		QEDF_ERR(&(qedf->dbg_ctx),
+>  		    "fc_frame_alloc failure.\n");
+> -		goto out_free;
+> +		goto out_put;
+>  	}
+>  
+>  	/* Copy frame header from firmware into fp */
+> @@ -526,9 +526,10 @@ static void qedf_srr_compl(struct qedf_els_cb_arg *cb_arg)
+>  	}
+>  
+>  	fc_frame_free(fp);
+> -out_free:
+> +out_put:
+>  	/* Put reference for original command since SRR completed */
+>  	kref_put(&orig_io_req->refcount, qedf_release_cmd);
+> +out_free:
+>  	kfree(cb_arg);
+>  }
+>  
+> @@ -780,7 +781,7 @@ static void qedf_rec_compl(struct qedf_els_cb_arg *cb_arg)
+>  
+>  	/* If a REC times out, free resources */
+>  	if (rec_req->event == QEDF_IOREQ_EV_ELS_TMO)
+> -		goto out_free;
+> +		goto out_put;
+>  
+>  	/* Normalize response data into struct fc_frame */
+>  	mp_req = &(rec_req->mp_req);
+> @@ -792,7 +793,7 @@ static void qedf_rec_compl(struct qedf_els_cb_arg *cb_arg)
+>  	if (!fp) {
+>  		QEDF_ERR(&(qedf->dbg_ctx),
+>  		    "fc_frame_alloc failure.\n");
+> -		goto out_free;
+> +		goto out_put;
+>  	}
+>  
+>  	/* Copy frame header from firmware into fp */
+> @@ -884,9 +885,10 @@ static void qedf_rec_compl(struct qedf_els_cb_arg *cb_arg)
+>  
+>  out_free_frame:
+>  	fc_frame_free(fp);
+> -out_free:
+> +out_put:
+>  	/* Put reference for original command since REC completed */
+>  	kref_put(&orig_io_req->refcount, qedf_release_cmd);
+> +out_free:
+>  	kfree(cb_arg);
+>  }
+>  
+> 
+
+Thanks for the catch.
+
+Acked-by: Chad Dupuis <chad.dupuis@cavium.com>
