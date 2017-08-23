@@ -1,43 +1,49 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH 04/19] Convert a strncmp() call into a strcmp() call
-Date: Wed, 23 Aug 2017 14:39:54 -0700
-Message-ID: <20170823214009.15015-5-bart.vanassche@wdc.com>
+Subject: [PATCH 05/19] scsi_setup_fs_cmnd(): Call scsi_req_init() instead of open-coding it
+Date: Wed, 23 Aug 2017 14:39:55 -0700
+Message-ID: <20170823214009.15015-6-bart.vanassche@wdc.com>
 References: <20170823214009.15015-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:57495 "EHLO
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:60815 "EHLO
         esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751094AbdHWVlc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 17:41:32 -0400
+        with ESMTP id S1751094AbdHWVlm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 17:41:42 -0400
 In-Reply-To: <20170823214009.15015-1-bart.vanassche@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-This patch avoids that smatch reports the following warning:
+The functional changes in this patch for scsi_setup_fs_cmnd() are:
+- scsi_request.sense_len is cleared. This is OK since it is the
+  responsibility of the LLD to set .sense_len before calling
+  .scsi_done().
+- scsi_request.cmd_len is changed to BLK_MAX_CDB. This is fine
+  since scsi_driver.init_command() must overwrite this member for
+  FS commands.
 
-drivers/scsi/scsi_sysfs.c:117: check_set() error: strncmp() '"-"' too small (2 vs 20)
-
-Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
 Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
+Cc: Hannes Reinecke <hare@suse.com>
 Cc: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/scsi_sysfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/scsi_lib.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 41891db20108..5ed473a87589 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -114,7 +114,7 @@ static int check_set(unsigned long long *val, char *src)
- {
- 	char *last;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index efdcd9e79404..f9a0d5b13707 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1215,8 +1215,8 @@ static int scsi_setup_fs_cmnd(struct scsi_device *sdev, struct request *req)
+ 			return ret;
+ 	}
  
--	if (strncmp(src, "-", 20) == 0) {
-+	if (strcmp(src, "-") == 0) {
- 		*val = SCAN_WILD_CARD;
- 	} else {
- 		/*
+-	cmd->cmnd = scsi_req(req)->cmd = scsi_req(req)->__cmd;
+-	memset(cmd->cmnd, 0, BLK_MAX_CDB);
++	scsi_req_init(&cmd->req);
++	cmd->cmnd = cmd->req.cmd;
+ 	return scsi_cmd_to_driver(cmd)->init_command(cmd);
+ }
+ 
 -- 
 2.14.0
