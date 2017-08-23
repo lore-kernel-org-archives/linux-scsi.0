@@ -1,42 +1,38 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [v4.13-rc BUG] system lockup when running big buffered write(4M)
- to IB SRP via mpath
-Date: Thu, 24 Aug 2017 00:03:11 +0800
-Message-ID: <CACVXFVNP91Kf4bi=Ndc4aXR5pJg3u1pQ6Gzev7_nmS02h=gd6g@mail.gmail.com>
-References: <20170808141715.GB22763@ming.t460p> <1502237504.4017.1.camel@redhat.com>
- <1502245693.6511.3.camel@redhat.com> <c072e942-0265-f0ad-561d-0e50d50e3cb1@redhat.com>
- <1502298599.2356.7.camel@wdc.com> <20170823113526.GA8130@ming.t460p> <1503501161.2484.3.camel@wdc.com>
+From: James Smart <james.smart@broadcom.com>
+Subject: Re: [PATCH] scsi: lpfc: remove useless code in
+ lpfc_sli4_bsg_link_diag_test
+Date: Wed, 23 Aug 2017 09:20:15 -0700
+Message-ID: <bc07e4ee-0477-c91e-29f9-68d1792341de@broadcom.com>
+References: <20170822205353.GA17794@embeddedgus>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:37132 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932118AbdHWQDP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 12:03:15 -0400
-In-Reply-To: <1503501161.2484.3.camel@wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170822205353.GA17794@embeddedgus>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "ming.lei@redhat.com" <ming.lei@redhat.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "loberman@redhat.com" <loberman@redhat.com>
 
-On Wed, Aug 23, 2017 at 11:12 PM, Bart Van Assche
-<Bart.VanAssche@wdc.com> wrote:
-> On Wed, 2017-08-23 at 19:35 +0800, Ming Lei wrote:
->> soft lockup still can be observed easily with patch d4acf3650c7c(
->> block: Make blk_mq_delay_kick_requeue_list() rerun the queue at a quiet time),
->> but no hard lockup.
+On 8/22/2017 1:53 PM, Gustavo A. R. Silva wrote:
+> Remove variable assignments. The value stored in local variable _rc_ is
+> overwritten at line 2448:rc = lpfc_sli4_bsg_set_link_diag_state(phba, 0);
+> before it can be used.
 >
-> Hello Ming,
+> Addresses-Coverity-ID: 1226935
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> ---
+> This issue was detected by Coverity and it was tested by compilation only.
+> Notice that this code has been there since 2011.
 >
-> I never claimed that commit d4acf3650c7c was a full solution to avoid these
-> soft lockups. I assume these results mean that patch series "[PATCH 0/7]
-> Device mapper and dm-mpath fixes" was not applied to the kernel used in your
-> tests? A colleague of you has reported that that patch series is sufficient
+>   drivers/scsi/lpfc/lpfc_bsg.c | 9 +++------
+>   1 file changed, 3 insertions(+), 6 deletions(-)
+>
+>
 
-OK, thanks for your clarification.
+looks good. Thanks
 
-I run v4.13-rc6 with block for-next, so these patches are not applied in my
-kernel.
+Signed-off-by: James Smart <james.smart@broadcom.com>
 
--- 
-Ming Lei
+-- james
