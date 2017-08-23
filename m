@@ -1,53 +1,41 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] scsi: lpfc: avoid false-positive gcc-8 warning
-Date: Wed, 23 Aug 2017 17:01:33 +0200
-Message-ID: <20170823150143.2746796-1-arnd@arndb.de>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [GIT PULL] SCSI fixes for 4.13-rc6
+Date: Wed, 23 Aug 2017 15:02:42 +0000
+Message-ID: <1503500560.2484.1.camel@wdc.com>
+References: <1503470559.2729.4.camel@HansenPartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1503470559.2729.4.camel@HansenPartnership.com>
+Content-Language: en-US
+Content-ID: <5DE85D05109BCB4FB5D49C3D4D7D3B15@namprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-This is an interesting regression with gcc-8, showing a harmless
-warning for correct code:
-
-In file included from include/linux/kernel.h:13:0,
-                 ...
-                 from drivers/scsi/lpfc/lpfc_debugfs.c:23:
-include/linux/printk.h:301:2: error: 'eq' may be used uninitialized in this function [-Werror=maybe-uninitialized]
-  printk(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
-  ^~~~~~
-In file included from drivers/scsi/lpfc/lpfc_debugfs.c:58:0:
-drivers/scsi/lpfc/lpfc_debugfs.h:451:31: note: 'eq' was declared here
-
-I tried to come up with a reduced test case for gcc here
-a few times, but every time ended up with code that is actually
-wrong with older gcc versions missing the bug and gcc-8 finding
-it. As this is the only false-positive -Wmaybe-uninitialized
-warnign I got with gcc-8 randconfig builds, I'd suggest we
-work around it.
-
-Making the index variable 'unsigned' is enough to shut up
-the warning, as gcc can then see that comparing eqidx to
-phba->io_channel_irqs is fine here.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/scsi/lpfc/lpfc_debugfs.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.h b/drivers/scsi/lpfc/lpfc_debugfs.h
-index 7b7d314af0e0..7b7f53a37fd8 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.h
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.h
-@@ -450,7 +450,7 @@ lpfc_debug_dump_cq(struct lpfc_hba *phba, int qtype, int wqidx)
- {
- 	struct lpfc_queue *wq, *cq, *eq;
- 	char *qtypestr;
--	int eqidx;
-+	unsigned int eqidx;
- 
- 	/* fcp/nvme wq and cq are 1:1, thus same indexes */
- 
--- 
-2.9.0
+T24gV2VkLCAyMDE3LTA4LTIzIGF0IDA3OjQyICswMTAwLCBKYW1lcyBCb3R0b21sZXkgd3JvdGU6
+DQo+IFNpeCBtaW5vciBhbmQgZXJyb3IgbGVnIGZpeGVzLCBwbHVzIG9uZSBtYWpvciBjaGFuZ2U6
+IHRoZSByZXZlcnNpb24gb2YNCj4gc2NzaS1tcSBhcyB0aGUgZGVmYXVsdC4gIFdlJ3JlIGRvaW5n
+IHRoZSBsYXR0ZXIgdGVtcG9yYXJpbHkgKHdpdGggYQ0KPiBiYWNrcG9ydCB0byBzdGFibGUpIHRv
+IGdpdmUgdXMgdGltZSB0byBmaXggYWxsIHRoZSBpc3N1ZXMgdGhhdCB0dXJuZWQNCj4gdXAgd2l0
+aCB0aGlzIGRlZmF1bHQgYmVmb3JlIHRyeWluZyBhZ2Fpbi4NCj4gWyAuLi4gXQ0KPiBEYW1pZW4g
+TGUgTW9hbCAoMSk6DQo+ICAgICAgIHNjc2k6IHNkX3piYzogV3JpdGUgdW5sb2NrIHpvbmUgZnJv
+bSBzZF91bmluaXRfY21uZCgpDQo+IFsgLi4uIF0NCg0KSGVsbG8gSmFtZXMsDQoNCkhhZCB5b3Ug
+bm90aWNlZCB0aGF0IERhbWllbiBoYWQgYXNrZWQgbm90IHRvIHNlbmQgdGhlICJzZF96YmM6IFdy
+aXRlIHVubG9jaw0Kem9uZSBmcm9tIHNkX3VuaW5pdF9jbW5kKCkiIHBhdGNoIHRvIExpbnVzIHdp
+dGhvdXQgbXkgInNjc2ktbXE6IEFsd2F5cw0KdW5wcmVwYXJlIGJlZm9yZSByZXF1ZXVpbmcgYSBy
+ZXF1ZXN0IiBwYXRjaD8gQSBxdW90ZSBmcm9tIGFuIGUtbWFpbCBmcm9tDQpEYW1pZW4gKGh0dHBz
+Oi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL3N0YWJsZS9tc2cxODU0MzYuaHRtbCk6DQoNCi0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLQ0KUmU6IFtQQVRDSF0gUmV2ZXJ0ICJzY3NpLW1xOiBBbHdheXMgdW5wcmVw
+YXJlIGJlZm9yZSByZXF1ZXVpbmcgYSByZXF1ZXN0Ig0KPj4gRm9yIGFuIHVua25vd24gcmVhc29u
+IHRoaXMgcGF0Y2ggY2F1c2VzIHRoZSBib290IHByb2Nlc3MgdG8gaGFuZyBvbg0KPj4gUG93ZXJQ
+QyBzeXN0ZW1zOg0KPiANCj4gT0ssIGRyb3BwZWQgaXQgZnJvbSBmaXhlcyBmb3Igbm93Lg0KDQpJ
+dCBtZWFucyB0aGF0IGNvbW1pdCA3MGU0MmZkMDJjNDZlMmFhOWFiMDdiNzY2ZDQxODYzN2UzYTUx
+ZGU3ICJzY3NpOg0Kc2RfemJjOiBXcml0ZSB1bmxvY2sgem9uZSBmcm9tIHNkX3VuaW5pdF9jbW5k
+KCkiIHdpbGwgbmVlZCB0byBiZQ0KcmV2ZXJ0ZWQgdG9vIGFzIGl0IHdpbGwgbm90IHNvbHZlIHRo
+ZSBwb3RlbnRpYWwgZGVhZGxvY2sgYW55bW9yZS4gQmFydCdzDQpwYXRjaCB3YXMgbmVlZGVkIGZv
+ciBpdCB0byB3b3JrLg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQoNCkJhcnQu
