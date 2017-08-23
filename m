@@ -1,15 +1,15 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v3 01/20] lpfc: Fix plogi collision that causes illegal state transition
-Date: Wed, 23 Aug 2017 16:55:30 -0700
-Message-ID: <20170823235549.2883-2-jsmart2021@gmail.com>
+Subject: [PATCH v3 04/20] lpfc: Fix oops when NVME Target is discovered in a nonNVME environment
+Date: Wed, 23 Aug 2017 16:55:33 -0700
+Message-ID: <20170823235549.2883-5-jsmart2021@gmail.com>
 References: <20170823235549.2883-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:35511 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751020AbdHWX4D (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 19:56:03 -0400
-Received: by mail-wm0-f68.google.com with SMTP id x79so1064821wma.2
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Aug 2017 16:56:02 -0700 (PDT)
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:38397 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751190AbdHWX4I (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 19:56:08 -0400
+Received: by mail-wr0-f193.google.com with SMTP id 94so577720wri.5
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Aug 2017 16:56:08 -0700 (PDT)
 In-Reply-To: <20170823235549.2883-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,61 +18,32 @@ Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.
 
 From: Dick Kennedy <dick.kennedy@broadcom.com>
 
-Message "0271 Illegal State Transition: node" seen in logs, all
-luns are unuseable for that target.
+lpfc oops when it discovers a NVME target but is configured for SCSI
+only operation. Oops is in lpfc_nvme_register_port+0x33/0x300.
 
-A window exists in the rcv_plogi path where if the state is plogi
-issue but the driver has not issued a plogi, then two reglogins will
-be sent for the same RPI. The first one to complete will advance
-the state to prli issue the second one will be detected as an
-illegal state, and leave the node in an unusable state.
+The localport is not valid so it should not have been referenced.
 
-Correct the completion routine for the PLOGI ACC that detects the
-state change when the driver starts discovery on the node again
-and drop the REGLOGIN mailbox command.
+Added validity check for localport
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-
 ---
-v3:
-  revise if test for better indentation per review
-  removed unnecessary typecast
----
- drivers/scsi/lpfc/lpfc_els.c | 20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_nvme.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 6d1d6f691df4..2dae501dc323 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -3930,7 +3930,25 @@ lpfc_cmpl_els_rsp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	if (mbox) {
- 		if ((rspiocb->iocb.ulpStatus == 0)
- 		    && (ndlp->nlp_flag & NLP_ACC_REGLOGIN)) {
--			lpfc_unreg_rpi(vport, ndlp);
-+			if (!lpfc_unreg_rpi(vport, ndlp) &&
-+			    (ndlp->nlp_state ==  NLP_STE_PLOGI_ISSUE ||
-+			     ndlp->nlp_state == NLP_STE_REG_LOGIN_ISSUE)) {
-+				lpfc_printf_vlog(vport, KERN_INFO,
-+					LOG_DISCOVERY,
-+					"0314 PLOGI recov DID x%x "
-+					"Data: x%x x%x x%x\n",
-+					ndlp->nlp_DID, ndlp->nlp_state,
-+					ndlp->nlp_rpi, ndlp->nlp_flag);
-+				mp = mbox->context1;
-+				if (mp) {
-+					lpfc_mbuf_free(phba, mp->virt,
-+						       mp->phys);
-+					kfree(mp);
-+				}
-+				mempool_free(mbox, phba->mbox_mem_pool);
-+				goto out;
-+			}
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index c18db8707fed..ce8d6bbf8148 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -2296,6 +2296,9 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 			 ndlp->nlp_DID, ndlp->nlp_type);
+ 
+ 	localport = vport->localport;
++	if (!localport)
++		return 0;
 +
- 			/* Increment reference count to ndlp to hold the
- 			 * reference to ndlp for the callback function.
- 			 */
+ 	lport = (struct lpfc_nvme_lport *)localport->private;
+ 
+ 	/* NVME rports are not preserved across devloss.
 -- 
 2.13.1
