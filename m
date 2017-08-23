@@ -1,15 +1,15 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v3 06/20] lpfc: Correct return error codes to align with nvme_fc transport
-Date: Wed, 23 Aug 2017 16:55:35 -0700
-Message-ID: <20170823235549.2883-7-jsmart2021@gmail.com>
+Subject: [PATCH v3 12/20] lpfc: Limit amount of work processed in IRQ
+Date: Wed, 23 Aug 2017 16:55:41 -0700
+Message-ID: <20170823235549.2883-13-jsmart2021@gmail.com>
 References: <20170823235549.2883-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:38884 "EHLO
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:37252 "EHLO
         mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751020AbdHWX4N (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 19:56:13 -0400
-Received: by mail-wm0-f65.google.com with SMTP id a70so1046146wmd.5
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Aug 2017 16:56:12 -0700 (PDT)
+        with ESMTP id S1751162AbdHWX4Z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 19:56:25 -0400
+Received: by mail-wm0-f65.google.com with SMTP id v186so1051103wmf.4
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Aug 2017 16:56:24 -0700 (PDT)
 In-Reply-To: <20170823235549.2883-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,162 +18,151 @@ Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.
 
 From: Dick Kennedy <dick.kennedy@broadcom.com>
 
-Modify driver return error codes to align with host nvme transport.
+Various oops being seen on being in the ISR too long and cpu
+lockups, when under heavy load.
 
-Driver isn't returning Exxx error codes to properly reflect out of
-resource or connectivity conditions (-EBUSY), yet there were hard
-error conditions returning -EBUSY.
+The amount of work being posted off of completion queues kept
+the ISR running almost all the time
 
-Ensure the following situations return the proper return code:
-temporary failures or temporary resource availability: -EBUSY
-Connectivity issues: -ENODEV
-all others are treated as hard errors and return an -Exxx value
-that indicates the type of error.
-
-Also, lpfc_sli4_issue_wqe() was modified to not translate error
-from -Exxx to WQE state.  This allows lpfc_nvme_fcp_io_submit()
-routine to just return whatever -E value was returned from other
-routines.
+Correct the issue by limiting the amount of work per itteration.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-
 ---
-v3:
-  slight reword of patch description per review
----
- drivers/scsi/lpfc/lpfc_nvme.c |  9 ++++-----
- drivers/scsi/lpfc/lpfc_sli.c  | 23 ++++++++++++++---------
- 2 files changed, 18 insertions(+), 14 deletions(-)
+ drivers/scsi/lpfc/lpfc_sli.c  | 31 +++++++++++++++++++------------
+ drivers/scsi/lpfc/lpfc_sli4.h |  1 +
+ 2 files changed, 20 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index ce8d6bbf8148..24dc69de6023 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -364,7 +364,7 @@ lpfc_nvme_gen_req(struct lpfc_vport *vport, struct lpfc_dmabuf *bmp,
- 			 genwqe->sli4_xritag, genwqe->iotag, ndlp->nlp_DID);
- 
- 	rc = lpfc_sli4_issue_wqe(phba, LPFC_ELS_RING, genwqe);
--	if (rc == WQE_ERROR) {
-+	if (rc) {
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_ELS,
- 				 "6045 Issue GEN REQ WQE to NPORT x%x "
- 				 "Data: x%x x%x\n",
-@@ -1270,7 +1270,7 @@ lpfc_nvme_fcp_io_submit(struct nvme_fc_local_port *pnvme_lport,
- 	 * not exceed the programmed depth.
- 	 */
- 	if (atomic_read(&ndlp->cmd_pending) >= ndlp->cmd_qdepth) {
--		ret = -EAGAIN;
-+		ret = -EBUSY;
- 		goto out_fail;
- 	}
- 
-@@ -1279,7 +1279,7 @@ lpfc_nvme_fcp_io_submit(struct nvme_fc_local_port *pnvme_lport,
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_IOERR,
- 				 "6065 driver's buffer pool is empty, "
- 				 "IO failed\n");
--		ret = -ENOMEM;
-+		ret = -EBUSY;
- 		goto out_fail;
- 	}
- #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
-@@ -1332,7 +1332,6 @@ lpfc_nvme_fcp_io_submit(struct nvme_fc_local_port *pnvme_lport,
- 				 "sid: x%x did: x%x oxid: x%x\n",
- 				 ret, vport->fc_myDID, ndlp->nlp_DID,
- 				 lpfc_ncmd->cur_iocbq.sli4_xritag);
--		ret = -EBUSY;
- 		goto out_free_nvme_buf;
- 	}
- 
-@@ -1576,7 +1575,7 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
- 	abts_buf->wqe_cmpl = lpfc_nvme_abort_fcreq_cmpl;
- 	ret_val = lpfc_sli4_issue_wqe(phba, LPFC_FCP_RING, abts_buf);
- 	spin_unlock_irqrestore(&phba->hbalock, flags);
--	if (ret_val == IOCB_ERROR) {
-+	if (ret_val) {
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_ABTS,
- 				 "6137 Failed abts issue_wqe with status x%x "
- 				 "for nvme_fcreq %p.\n",
 diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 0a8c9b59365a..6569fffb8b71 100644
+index 6569fffb8b71..d731979e4c7c 100644
 --- a/drivers/scsi/lpfc/lpfc_sli.c
 +++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -106,7 +106,7 @@ lpfc_get_iocb_from_iocbq(struct lpfc_iocbq *iocbq)
-  * -ENOMEM.
-  * The caller is expected to hold the hbalock when calling this routine.
+@@ -80,8 +80,8 @@ static int lpfc_sli4_fp_handle_cqe(struct lpfc_hba *, struct lpfc_queue *,
+ 				    struct lpfc_cqe *);
+ static int lpfc_sli4_post_sgl_list(struct lpfc_hba *, struct list_head *,
+ 				       int);
+-static void lpfc_sli4_hba_handle_eqe(struct lpfc_hba *, struct lpfc_eqe *,
+-			uint32_t);
++static int lpfc_sli4_hba_handle_eqe(struct lpfc_hba *phba,
++				    struct lpfc_eqe *eqe, uint32_t qidx);
+ static bool lpfc_sli4_mbox_completions_pending(struct lpfc_hba *phba);
+ static bool lpfc_sli4_process_missed_mbox_completions(struct lpfc_hba *phba);
+ static int lpfc_sli4_abort_nvme_io(struct lpfc_hba *phba,
+@@ -13010,7 +13010,7 @@ lpfc_sli4_sp_handle_cqe(struct lpfc_hba *phba, struct lpfc_queue *cq,
+  * completion queue, and then return.
+  *
   **/
--static uint32_t
+-static void
 +static int
- lpfc_sli4_wq_put(struct lpfc_queue *q, union lpfc_wqe *wqe)
+ lpfc_sli4_sp_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe,
+ 	struct lpfc_queue *speq)
  {
- 	union lpfc_wqe *temp_wqe;
-@@ -123,7 +123,7 @@ lpfc_sli4_wq_put(struct lpfc_queue *q, union lpfc_wqe *wqe)
- 	idx = ((q->host_index + 1) % q->entry_count);
- 	if (idx == q->hba_index) {
- 		q->WQ_overflow++;
--		return -ENOMEM;
-+		return -EBUSY;
+@@ -13034,7 +13034,7 @@ lpfc_sli4_sp_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe,
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+ 					"0365 Slow-path CQ identifier "
+ 					"(%d) does not exist\n", cqid);
+-		return;
++		return 0;
  	}
- 	q->WQ_posted++;
- 	/* set consumption flag every once in a while */
-@@ -10741,7 +10741,7 @@ lpfc_sli4_abort_nvme_io(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 	abtsiocbp->vport = vport;
- 	abtsiocbp->wqe_cmpl = lpfc_nvme_abort_fcreq_cmpl;
- 	retval = lpfc_sli4_issue_wqe(phba, LPFC_FCP_RING, abtsiocbp);
--	if (retval == IOCB_ERROR) {
-+	if (retval) {
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME,
- 				 "6147 Failed abts issue_wqe with status x%x "
- 				 "for oxid x%x\n",
-@@ -18888,6 +18888,7 @@ lpfc_sli4_issue_wqe(struct lpfc_hba *phba, uint32_t ring_number,
- 	struct lpfc_sglq *sglq;
- 	struct lpfc_sli_ring *pring;
- 	unsigned long iflags;
-+	uint32_t ret = 0;
  
- 	/* NVME_LS and NVME_LS ABTS requests. */
- 	if (pwqe->iocb_flag & LPFC_IO_NVME_LS) {
-@@ -18906,10 +18907,12 @@ lpfc_sli4_issue_wqe(struct lpfc_hba *phba, uint32_t ring_number,
- 		}
- 		bf_set(wqe_xri_tag, &pwqe->wqe.xmit_bls_rsp.wqe_com,
- 		       pwqe->sli4_xritag);
--		if (lpfc_sli4_wq_put(phba->sli4_hba.nvmels_wq, wqe)) {
-+		ret = lpfc_sli4_wq_put(phba->sli4_hba.nvmels_wq, wqe);
-+		if (ret) {
- 			spin_unlock_irqrestore(&pring->ring_lock, iflags);
--			return WQE_ERROR;
-+			return ret;
- 		}
+ 	/* Save EQ associated with this CQ */
+@@ -13071,7 +13071,7 @@ lpfc_sli4_sp_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe,
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+ 				"0370 Invalid completion queue type (%d)\n",
+ 				cq->type);
+-		return;
++		return 0;
+ 	}
+ 
+ 	/* Catch the no cq entry condition, log an error */
+@@ -13086,6 +13086,8 @@ lpfc_sli4_sp_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe,
+ 	/* wake up worker thread if there are works to be done */
+ 	if (workposted)
+ 		lpfc_worker_wake_up(phba);
 +
- 		lpfc_sli_ringtxcmpl_put(phba, pring, pwqe);
- 		spin_unlock_irqrestore(&pring->ring_lock, iflags);
- 		return 0;
-@@ -18924,9 +18927,10 @@ lpfc_sli4_issue_wqe(struct lpfc_hba *phba, uint32_t ring_number,
- 		wq = phba->sli4_hba.nvme_wq[pwqe->hba_wqidx];
- 		bf_set(wqe_cqid, &wqe->generic.wqe_com,
- 		      phba->sli4_hba.nvme_cq[pwqe->hba_wqidx]->queue_id);
--		if (lpfc_sli4_wq_put(wq, wqe)) {
-+		ret = lpfc_sli4_wq_put(wq, wqe);
-+		if (ret) {
- 			spin_unlock_irqrestore(&pring->ring_lock, iflags);
--			return WQE_ERROR;
-+			return ret;
- 		}
- 		lpfc_sli_ringtxcmpl_put(phba, pring, pwqe);
- 		spin_unlock_irqrestore(&pring->ring_lock, iflags);
-@@ -18950,9 +18954,10 @@ lpfc_sli4_issue_wqe(struct lpfc_hba *phba, uint32_t ring_number,
- 		wq = phba->sli4_hba.nvme_wq[pwqe->hba_wqidx];
- 		bf_set(wqe_cqid, &wqe->generic.wqe_com,
- 		      phba->sli4_hba.nvme_cq[pwqe->hba_wqidx]->queue_id);
--		if (lpfc_sli4_wq_put(wq, wqe)) {
-+		ret = lpfc_sli4_wq_put(wq, wqe);
-+		if (ret) {
- 			spin_unlock_irqrestore(&pring->ring_lock, iflags);
--			return WQE_ERROR;
-+			return ret;
- 		}
- 		lpfc_sli_ringtxcmpl_put(phba, pring, pwqe);
- 		spin_unlock_irqrestore(&pring->ring_lock, iflags);
++	return ecount;
+ }
+ 
+ /**
+@@ -13393,7 +13395,7 @@ lpfc_sli4_fp_handle_cqe(struct lpfc_hba *phba, struct lpfc_queue *cq,
+  * queue and process all the entries on the completion queue, rearm the
+  * completion queue, and then return.
+  **/
+-static void
++static int
+ lpfc_sli4_hba_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe,
+ 			uint32_t qidx)
+ {
+@@ -13409,7 +13411,7 @@ lpfc_sli4_hba_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe,
+ 				"event: majorcode=x%x, minorcode=x%x\n",
+ 				bf_get_le32(lpfc_eqe_major_code, eqe),
+ 				bf_get_le32(lpfc_eqe_minor_code, eqe));
+-		return;
++		return 0;
+ 	}
+ 
+ 	/* Get the reference to the corresponding CQ */
+@@ -13446,8 +13448,9 @@ lpfc_sli4_hba_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe,
+ 
+ 	/* Otherwise this is a Slow path event */
+ 	if (cq == NULL) {
+-		lpfc_sli4_sp_handle_eqe(phba, eqe, phba->sli4_hba.hba_eq[qidx]);
+-		return;
++		ecount = lpfc_sli4_sp_handle_eqe(phba, eqe,
++						 phba->sli4_hba.hba_eq[qidx]);
++		return ecount;
+ 	}
+ 
+ process_cq:
+@@ -13456,7 +13459,7 @@ lpfc_sli4_hba_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe,
+ 				"0368 Miss-matched fast-path completion "
+ 				"queue identifier: eqcqid=%d, fcpcqid=%d\n",
+ 				cqid, cq->queue_id);
+-		return;
++		return 0;
+ 	}
+ 
+ 	/* Save EQ associated with this CQ */
+@@ -13486,6 +13489,8 @@ lpfc_sli4_hba_handle_eqe(struct lpfc_hba *phba, struct lpfc_eqe *eqe,
+ 	/* wake up worker thread if there are works to be done */
+ 	if (workposted)
+ 		lpfc_worker_wake_up(phba);
++
++	return ecount;
+ }
+ 
+ static void
+@@ -13706,6 +13711,7 @@ lpfc_sli4_hba_intr_handler(int irq, void *dev_id)
+ 	struct lpfc_eqe *eqe;
+ 	unsigned long iflag;
+ 	int ecount = 0;
++	int ccount = 0;
+ 	int hba_eqidx;
+ 
+ 	/* Get the driver's phba structure from the dev_id */
+@@ -13757,8 +13763,9 @@ lpfc_sli4_hba_intr_handler(int irq, void *dev_id)
+ 		if (eqe == NULL)
+ 			break;
+ 
+-		lpfc_sli4_hba_handle_eqe(phba, eqe, hba_eqidx);
+-		if (!(++ecount % fpeq->entry_repost))
++		ccount += lpfc_sli4_hba_handle_eqe(phba, eqe, hba_eqidx);
++		if (!(++ecount % fpeq->entry_repost) ||
++		    ccount > LPFC_MAX_ISR_CQE)
+ 			break;
+ 		fpeq->EQ_processed++;
+ 	}
+diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+index 7a1d74e9e877..540454b03587 100644
+--- a/drivers/scsi/lpfc/lpfc_sli4.h
++++ b/drivers/scsi/lpfc/lpfc_sli4.h
+@@ -158,6 +158,7 @@ struct lpfc_queue {
+ #define LPFC_MQ_REPOST		8
+ #define LPFC_CQ_REPOST		64
+ #define LPFC_RQ_REPOST		64
++#define LPFC_MAX_ISR_CQE	64
+ #define LPFC_RELEASE_NOTIFICATION_INTERVAL	32  /* For WQs */
+ 	uint32_t queue_id;	/* Queue ID assigned by the hardware */
+ 	uint32_t assoc_qid;     /* Queue ID associated with, for CQ/WQ/MQ */
 -- 
 2.13.1
