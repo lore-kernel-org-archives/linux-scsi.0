@@ -1,42 +1,27 @@
-From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH v3 14/14] megaraid_sas: driver version upgrade
-Date: Wed, 23 Aug 2017 04:47:08 -0700
-Message-ID: <1503488828-2242-15-git-send-email-shivasharan.srikanteshwara@broadcom.com>
-References: <1503488828-2242-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [Regression 4.13-rc1] Resume does not work on Lenovo X60t
+Date: Wed, 23 Aug 2017 04:48:45 -0700
+Message-ID: <20170823114845.GB24217@infradead.org>
+References: <7032513a-7a28-5807-40d4-cb0f7005d513@molgen.mpg.de>
+ <20170805093014.GA6511@infradead.org>
+ <d30803d1861c9c105a35845759f58f8d@molgen.mpg.de>
+ <9123f447-c06b-6a67-b380-90338eb2dde8@molgen.mpg.de>
+ <20170821184115.GA16735@infradead.org>
+ <3b5be305179828fd0e768c8ba9455851@molgen.mpg.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f175.google.com ([209.85.192.175]:34474 "EHLO
-        mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753893AbdHWLsN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 07:48:13 -0400
-Received: by mail-pf0-f175.google.com with SMTP id h75so5831669pfh.1
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Aug 2017 04:48:13 -0700 (PDT)
-In-Reply-To: <1503488828-2242-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:33202 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753768AbdHWLsr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 07:48:47 -0400
+Content-Disposition: inline
+In-Reply-To: <3b5be305179828fd0e768c8ba9455851@molgen.mpg.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, hch@lst.de, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+To: Paul Menzel <pmenzel@molgen.mpg.de>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
----
- drivers/scsi/megaraid/megaraid_sas.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 6d9f111..a6722c9 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -35,8 +35,8 @@
- /*
-  * MegaRAID SAS Driver meta data
-  */
--#define MEGASAS_VERSION				"07.701.17.00-rc1"
--#define MEGASAS_RELDATE				"March 2, 2017"
-+#define MEGASAS_VERSION				"07.702.06.00-rc1"
-+#define MEGASAS_RELDATE				"June 21, 2017"
- 
- /*
-  * Device IDs
--- 
-1.8.3.1
+Are you running with blk-mq enabled?  Also this never
+occured with 4.12, right?  Were you also running with or
+without blk-mq for scsi there?
