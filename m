@@ -1,49 +1,85 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v3 04/20] lpfc: Fix oops when NVME Target is discovered in a nonNVME environment
-Date: Wed, 23 Aug 2017 16:55:33 -0700
-Message-ID: <20170823235549.2883-5-jsmart2021@gmail.com>
-References: <20170823235549.2883-1-jsmart2021@gmail.com>
+Subject: [PATCH v3 00/20] lpfc updates for 11.4.0.3
+Date: Wed, 23 Aug 2017 16:55:29 -0700
+Message-ID: <20170823235549.2883-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:38397 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751190AbdHWX4I (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 19:56:08 -0400
-Received: by mail-wr0-f193.google.com with SMTP id 94so577720wri.5
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Aug 2017 16:56:08 -0700 (PDT)
-In-Reply-To: <20170823235549.2883-1-jsmart2021@gmail.com>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:35900 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751190AbdHWX4B (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 19:56:01 -0400
+Received: by mail-wm0-f66.google.com with SMTP id f127so1060869wmf.3
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Aug 2017 16:56:00 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
+Cc: James Smart <jsmart2021@gmail.com>
 
-From: Dick Kennedy <dick.kennedy@broadcom.com>
+This patch set provides a number of bug fixes and one additions.
+The additions are BB credit support.
 
-lpfc oops when it discovers a NVME target but is configured for SCSI
-only operation. Oops is in lpfc_nvme_register_port+0x33/0x300.
+The patches were cut against the Martin's 4.13/scsi-fixes tree.
+There are no outside dependencies.
 
-The localport is not valid so it should not have been referenced.
+V2:
+ removed redundant Expresslane patch
+ removed if type 6 support. Will add later.
+ Incorporated patch from Maurizio Lombardi int constant too large
 
-Added validity check for localport
+V3:
+ Address v2 review comments:
+   revise if tests for better indentation
+   removed unnecessary typecasts
+   slight reword patch description or comment
+   use list_splict_init
 
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <james.smart@broadcom.com>
----
- drivers/scsi/lpfc/lpfc_nvme.c | 3 +++
- 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index c18db8707fed..ce8d6bbf8148 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -2296,6 +2296,9 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 			 ndlp->nlp_DID, ndlp->nlp_type);
- 
- 	localport = vport->localport;
-+	if (!localport)
-+		return 0;
-+
- 	lport = (struct lpfc_nvme_lport *)localport->private;
- 
- 	/* NVME rports are not preserved across devloss.
+Dick Kennedy (17):
+  lpfc: Fix plogi collision that causes illegal state transition
+  lpfc: Fix loop mode target discovery
+  lpfc: Fix rediscovery on switch blade pull
+  lpfc: Fix oops when NVME Target is discovered in a nonNVME environment
+  lpfc: convert info messages to standard messages
+  lpfc: Correct return error codes to align with nvme_fc transport
+  lpfc: Fix handling of FCP and NVME FC4 types in Pt2Pt topology
+  lpfc: Fix duplicate NVME rport entries and namespaces.
+  lpfc: Fix crash in lpfc nvmet when fc port is reset
+  lpfc: Fix NVME PRLI handling during RSCN
+  lpfc: Correct issues with FAWWN and FDISCs
+  lpfc: Limit amount of work processed in IRQ
+  lpfc: Fix MRQ > 1 context list handling
+  lpfc: Fix relative offset error on large nvmet target ios
+  lpfc: Fix nvme target failure after 2nd adapter reset
+  lpfc: Fix bad sgl reposting after 2nd adapter reset
+  lpfc: lpfc version bump 11.4.0.3
+
+James Smart (2):
+  lpfc: remove console log clutter
+  lpfc: Add Buffer to Buffer credit recovery support
+
+Maurizio Lombardi (1):
+  scsi: lpfc: fix "integer constant too large" error on 32bit archs
+
+ drivers/scsi/lpfc/lpfc.h           |   3 +-
+ drivers/scsi/lpfc/lpfc_attr.c      |  52 ++++++-
+ drivers/scsi/lpfc/lpfc_attr.h      |  10 ++
+ drivers/scsi/lpfc/lpfc_crtn.h      |   5 +-
+ drivers/scsi/lpfc/lpfc_ct.c        |   4 +-
+ drivers/scsi/lpfc/lpfc_debugfs.c   |  11 +-
+ drivers/scsi/lpfc/lpfc_disc.h      |   1 +
+ drivers/scsi/lpfc/lpfc_els.c       |  93 ++++++++++++-
+ drivers/scsi/lpfc/lpfc_hbadisc.c   |  12 +-
+ drivers/scsi/lpfc/lpfc_hw.h        |  18 ++-
+ drivers/scsi/lpfc/lpfc_hw4.h       |  23 +++-
+ drivers/scsi/lpfc/lpfc_init.c      |  57 +++++---
+ drivers/scsi/lpfc/lpfc_mbox.c      |  35 ++++-
+ drivers/scsi/lpfc/lpfc_nportdisc.c |  25 +++-
+ drivers/scsi/lpfc/lpfc_nvme.c      |  25 ++--
+ drivers/scsi/lpfc/lpfc_nvmet.c     | 270 ++++++++++++++++++++++++++++---------
+ drivers/scsi/lpfc/lpfc_nvmet.h     |  14 ++
+ drivers/scsi/lpfc/lpfc_sli.c       |  56 +++++---
+ drivers/scsi/lpfc/lpfc_sli4.h      |  23 +++-
+ drivers/scsi/lpfc/lpfc_version.h   |   2 +-
+ 20 files changed, 584 insertions(+), 155 deletions(-)
+
 -- 
 2.13.1
