@@ -1,109 +1,71 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 06/31] qla2xxx: Handle PCIe error for driver
-Date: Wed, 23 Aug 2017 15:05:00 -0700
-Message-ID: <20170823220525.3115-7-himanshu.madhani@cavium.com>
+Subject: [PATCH 15/31] qla2xxx: Use sp->free instead of hard coded call.
+Date: Wed, 23 Aug 2017 15:05:09 -0700
+Message-ID: <20170823220525.3115-16-himanshu.madhani@cavium.com>
 References: <20170823220525.3115-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0083.outbound.protection.outlook.com ([104.47.41.83]:37999
+Received: from mail-dm3nam03on0054.outbound.protection.outlook.com ([104.47.41.54]:10176
         "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751142AbdHWWFn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Aug 2017 18:05:43 -0400
+        id S1751093AbdHWWFv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 23 Aug 2017 18:05:51 -0400
 In-Reply-To: <20170823220525.3115-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Sawan Chandak <sawan.chandak@cavium.com>
+From: Joe Carnuccio <joe.carnuccio@cavium.com>
 
-Driver will perform following
+Calling sp->free() ensures the context-correct free routine is called.
 
-- Set PFLG_DRIVER_REMOVING flag and do not disable PCIe
-  error reporting during adapter shutdown.
-- If PCIe device count is already zero, return correct
-  error type from PCI error interface.
-- When device is offline, return correct error type from
-  PCIe error path.
-- If there is board disable thread active during shutdown
-  and PCIe device count is zero then cancel scheduling board
-  disable thread during shutdown and return.
-
-Signed-off-by: Sawan Chandak <sawan.chandak@cavium.com>
+Signed-off-by: Joe Carnuccio <joe.carnuccio@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_os.c | 32 ++++++++++++++++++++++++++++----
- 1 file changed, 28 insertions(+), 4 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index b43520ca6645..d668ed4bd53e 100644
+index b6b070db5891..5b033e265a3b 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -3385,12 +3385,22 @@ qla2x00_shutdown(struct pci_dev *pdev)
- 	scsi_qla_host_t *vha;
- 	struct qla_hw_data  *ha;
+@@ -742,7 +742,7 @@ qla2x00_sp_compl(void *ptr, int res)
+ 	if (!atomic_dec_and_test(&sp->ref_count))
+ 		return;
  
--	if (!atomic_read(&pdev->enable_cnt))
--		return;
--
- 	vha = pci_get_drvdata(pdev);
- 	ha = vha->hw;
- 
-+	ql_log(ql_log_info, vha, 0xfffa,
-+		"Adapter shutdown\n");
-+
-+	/*
-+	 * Prevent future board_disable and wait
-+	 * until any pending board_disable has completed.
-+	 */
-+	set_bit(PFLG_DRIVER_REMOVING, &vha->pci_flags);
-+	cancel_work_sync(&ha->board_disable);
-+
-+	if (!atomic_read(&pdev->enable_cnt))
-+		return;
-+
- 	/* Notify ISPFX00 firmware */
- 	if (IS_QLAFX00(ha))
- 		qlafx00_driver_shutdown(vha, 20);
-@@ -3421,8 +3431,9 @@ qla2x00_shutdown(struct pci_dev *pdev)
- 
- 	qla2x00_free_fw_dump(ha);
- 
--	pci_disable_pcie_error_reporting(pdev);
- 	pci_disable_device(pdev);
-+	ql_log(ql_log_info, vha, 0xfffe,
-+		"Adapter shutdown successfully.\n");
+-	qla2x00_sp_free_dma(sp);
++	sp->free(sp);
+ 	cmd->scsi_done(cmd);
  }
  
- /* Deletes all the virtual ports for a given ha */
-@@ -5495,6 +5506,13 @@ qla2x00_disable_board_on_pci_error(struct work_struct *work)
- 	ql_log(ql_log_warn, base_vha, 0x015b,
- 	    "Disabling adapter.\n");
+@@ -814,7 +814,7 @@ qla2xxx_qpair_sp_compl(void *ptr, int res)
+ 	if (!atomic_dec_and_test(&sp->ref_count))
+ 		return;
  
-+	if (!atomic_read(&pdev->enable_cnt)) {
-+		ql_log(ql_log_info, base_vha, 0xfffc,
-+		    "PCI device disabled, no action req for PCI error=%lx\n",
-+		    base_vha->pci_flags);
-+		return;
-+	}
-+
- 	qla2x00_wait_for_sess_deletion(base_vha);
+-	qla2xxx_qpair_sp_free_dma(sp);
++	sp->free(sp);
+ 	cmd->scsi_done(cmd);
+ }
  
- 	set_bit(UNLOADING, &base_vha->dpc_flags);
-@@ -6197,6 +6215,12 @@ qla2xxx_pci_error_detected(struct pci_dev *pdev, pci_channel_state_t state)
- 	ql_dbg(ql_dbg_aer, vha, 0x9000,
- 	    "PCI error detected, state %x.\n", state);
+@@ -935,7 +935,7 @@ qla2xxx_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	return 0;
  
-+	if (!atomic_read(&pdev->enable_cnt)) {
-+		ql_log(ql_log_info, vha, 0xffff,
-+			"PCI device is disabled,state %x\n", state);
-+		return PCI_ERS_RESULT_NEED_RESET;
-+	}
-+
- 	switch (state) {
- 	case pci_channel_io_normal:
- 		ha->flags.eeh_busy = 0;
+ qc24_host_busy_free_sp:
+-	qla2x00_sp_free_dma(sp);
++	sp->free(sp);
+ 
+ qc24_host_busy:
+ 	return SCSI_MLQUEUE_HOST_BUSY;
+@@ -1024,7 +1024,7 @@ qla2xxx_mqueuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd,
+ 	return 0;
+ 
+ qc24_host_busy_free_sp:
+-	qla2xxx_qpair_sp_free_dma(sp);
++	sp->free(sp);
+ 
+ qc24_host_busy:
+ 	return SCSI_MLQUEUE_HOST_BUSY;
 -- 
 2.12.0
