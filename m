@@ -1,48 +1,49 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH 12/19] sg: Fix type of last blk_trace_setup() argument
-Date: Wed, 23 Aug 2017 14:40:02 -0700
-Message-ID: <20170823214009.15015-13-bart.vanassche@wdc.com>
+Subject: [PATCH 14/19] libsas: Remove a set-but-not-used variable
+Date: Wed, 23 Aug 2017 14:40:04 -0700
+Message-ID: <20170823214009.15015-15-bart.vanassche@wdc.com>
 References: <20170823214009.15015-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:57495 "EHLO
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:60815 "EHLO
         esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751140AbdHWVnD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 17:43:03 -0400
+        with ESMTP id S1751092AbdHWVnJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 17:43:09 -0400
 In-Reply-To: <20170823214009.15015-1-bart.vanassche@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>
 
-Avoid that sparse reports the following:
-
-drivers/scsi/sg.c:1114:41: warning: incorrect type in argument 5 (different address spaces)
-drivers/scsi/sg.c:1114:41:    expected char [noderef] <asn:1>*arg
-drivers/scsi/sg.c:1114:41:    got char *<noident>
-
-This patch does not change any functionality.
+This was detected by building with W=1.
 
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
 Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.com>
+Cc: Hannes Reinecke <hare@suse.de>
 Cc: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/sg.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/libsas/sas_scsi_host.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index f5705a95319f..03194c4b6744 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -1110,8 +1110,7 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
- 		return blk_trace_setup(sdp->device->request_queue,
- 				       sdp->disk->disk_name,
- 				       MKDEV(SCSI_GENERIC_MAJOR, sdp->index),
--				       NULL,
--				       (char *)arg);
-+				       NULL, p);
- 	case BLKTRACESTART:
- 		return blk_trace_startstop(sdp->device->request_queue, 1);
- 	case BLKTRACESTOP:
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 87e5079d816b..fc90b8c65860 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -855,7 +855,6 @@ int sas_target_alloc(struct scsi_target *starget)
+ int sas_slave_configure(struct scsi_device *scsi_dev)
+ {
+ 	struct domain_device *dev = sdev_to_domain_dev(scsi_dev);
+-	struct sas_ha_struct *sas_ha;
+ 
+ 	BUG_ON(dev->rphy->identify.device_type != SAS_END_DEVICE);
+ 
+@@ -864,8 +863,6 @@ int sas_slave_configure(struct scsi_device *scsi_dev)
+ 		return 0;
+ 	}
+ 
+-	sas_ha = dev->port->ha;
+-
+ 	sas_read_port_mode_page(scsi_dev);
+ 
+ 	if (scsi_dev->tagged_supported) {
 -- 
 2.14.0
