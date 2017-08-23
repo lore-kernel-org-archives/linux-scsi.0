@@ -1,241 +1,46 @@
-From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 22/31] qla2xxx: Add support for minimum link speed
-Date: Wed, 23 Aug 2017 15:05:16 -0700
-Message-ID: <20170823220525.3115-23-himanshu.madhani@cavium.com>
-References: <20170823220525.3115-1-himanshu.madhani@cavium.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [v4.13-rc BUG] system lockup when running big buffered write(4M)
+ to IB SRP via mpath
+Date: Wed, 23 Aug 2017 19:51:12 -0400
+Message-ID: <20170823235112.GB23028@redhat.com>
+References: <20170808141715.GB22763@ming.t460p>
+ <1502237504.4017.1.camel@redhat.com>
+ <1502245693.6511.3.camel@redhat.com>
+ <c072e942-0265-f0ad-561d-0e50d50e3cb1@redhat.com>
+ <1502298599.2356.7.camel@wdc.com>
+ <20170823113526.GA8130@ming.t460p>
+ <1503501161.2484.3.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0070.outbound.protection.outlook.com ([104.47.41.70]:51646
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751162AbdHWWlE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Aug 2017 18:41:04 -0400
-In-Reply-To: <20170823220525.3115-1-himanshu.madhani@cavium.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1503501161.2484.3.camel@wdc.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "ming.lei@redhat.com" <ming.lei@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "loberman@redhat.com" <loberman@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Sawan Chandak <sawan.chandak@cavium.com>
+On Wed, Aug 23 2017 at 11:12am -0400,
+Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
 
-Signed-off-by: Sawan Chandak <sawan.chandak@cavium.com>
-Signed-off-by: Joe Carnuccio <joe.carnuccio@cavium.com>
-Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
----
- drivers/scsi/qla2xxx/qla_attr.c | 36 ++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_def.h  |  4 ++++
- drivers/scsi/qla2xxx/qla_fw.h   |  4 +++-
- drivers/scsi/qla2xxx/qla_isr.c  |  5 +++++
- drivers/scsi/qla2xxx/qla_mbx.c  | 46 ++++++++++++++++++++++++++++++++++++++---
- 5 files changed, 91 insertions(+), 4 deletions(-)
+> On Wed, 2017-08-23 at 19:35 +0800, Ming Lei wrote:
+> > soft lockup still can be observed easily with patch d4acf3650c7c(
+> > block: Make blk_mq_delay_kick_requeue_list() rerun the queue at a quiet time),
+> > but no hard lockup.
+> 
+> Hello Ming,
+> 
+> I never claimed that commit d4acf3650c7c was a full solution to avoid these
+> soft lockups. I assume these results mean that patch series "[PATCH 0/7]
+> Device mapper and dm-mpath fixes" was not applied to the kernel used in your
+> tests? A colleague of you has reported that that patch series is sufficient
+> to avoid these soft lockups. See also
+> https://www.redhat.com/archives/dm-devel/2017-August/msg00122.html.
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 9d2862233e3c..75c4b312645e 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -1481,6 +1481,38 @@ qla2x00_pep_version_show(struct device *dev, struct device_attribute *attr,
- 	    ha->pep_version[0], ha->pep_version[1], ha->pep_version[2]);
- }
- 
-+static ssize_t
-+qla2x00_min_link_speed_show(struct device *dev, struct device_attribute *attr,
-+    char *buf)
-+{
-+	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
-+	struct qla_hw_data *ha = vha->hw;
-+
-+	if (!IS_QLA27XX(ha))
-+		return scnprintf(buf, PAGE_SIZE, "\n");
-+
-+	return scnprintf(buf, PAGE_SIZE, "%s\n",
-+	    ha->min_link_speed == 5 ? "32Gps" :
-+	    ha->min_link_speed == 4 ? "16Gps" :
-+	    ha->min_link_speed == 3 ? "8Gps" :
-+	    ha->min_link_speed == 2 ? "4Gps" :
-+	    ha->min_link_speed != 0 ? "unknown" : "");
-+}
-+
-+static ssize_t
-+qla2x00_max_speed_sup_show(struct device *dev, struct device_attribute *attr,
-+    char *buf)
-+{
-+	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
-+	struct qla_hw_data *ha = vha->hw;
-+
-+	if (!IS_QLA27XX(ha))
-+		return scnprintf(buf, PAGE_SIZE, "\n");
-+
-+	return scnprintf(buf, PAGE_SIZE, "%s\n",
-+	    ha->max_speed_sup ? "32Gps" : "16Gps");
-+}
-+
- static DEVICE_ATTR(driver_version, S_IRUGO, qla2x00_drvr_version_show, NULL);
- static DEVICE_ATTR(fw_version, S_IRUGO, qla2x00_fw_version_show, NULL);
- static DEVICE_ATTR(serial_num, S_IRUGO, qla2x00_serial_num_show, NULL);
-@@ -1526,6 +1558,8 @@ static DEVICE_ATTR(allow_cna_fw_dump, S_IRUGO | S_IWUSR,
- 		   qla2x00_allow_cna_fw_dump_show,
- 		   qla2x00_allow_cna_fw_dump_store);
- static DEVICE_ATTR(pep_version, S_IRUGO, qla2x00_pep_version_show, NULL);
-+static DEVICE_ATTR(min_link_speed, S_IRUGO, qla2x00_min_link_speed_show, NULL);
-+static DEVICE_ATTR(max_speed_sup, S_IRUGO, qla2x00_max_speed_sup_show, NULL);
- 
- struct device_attribute *qla2x00_host_attrs[] = {
- 	&dev_attr_driver_version,
-@@ -1560,6 +1594,8 @@ struct device_attribute *qla2x00_host_attrs[] = {
- 	&dev_attr_fw_dump_size,
- 	&dev_attr_allow_cna_fw_dump,
- 	&dev_attr_pep_version,
-+	&dev_attr_min_link_speed,
-+	&dev_attr_max_speed_sup,
- 	NULL,
- };
- 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 609687d04e3c..0f80b812f4a7 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -902,6 +902,7 @@ struct mbx_cmd_32 {
- #define MBA_SHUTDOWN_REQUESTED	0x8062	/* Shutdown Requested */
- #define MBA_TEMPERATURE_ALERT	0x8070	/* Temperature Alert */
- #define MBA_DPORT_DIAGNOSTICS	0x8080	/* D-port Diagnostics */
-+#define MBA_TRANS_INSERT	0x8130	/* Transceiver Insertion */
- #define MBA_FW_INIT_FAILURE	0x8401	/* Firmware initialization failure */
- #define MBA_MIRROR_LUN_CHANGE	0x8402	/* Mirror LUN State Change
- 					   Notification */
-@@ -4026,6 +4027,8 @@ struct qla_hw_data {
- 
- 	struct qlt_hw_data tgt;
- 	int	allow_cna_fw_dump;
-+	uint16_t min_link_speed;
-+	uint16_t max_speed_sup;
- 
- 	atomic_t        nvme_active_aen_cnt;
- 	uint16_t        nvme_last_rptd_aen;             /* Last recorded aen count */
-@@ -4212,6 +4215,7 @@ typedef struct scsi_qla_host {
- 	int fcport_count;
- 	wait_queue_head_t fcport_waitQ;
- 	wait_queue_head_t vref_waitq;
-+	uint8_t min_link_speed_feat;
- } scsi_qla_host_t;
- 
- struct qla27xx_image_status {
-diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
-index b9c9886e8b1d..94eb1694fc3e 100644
---- a/drivers/scsi/qla2xxx/qla_fw.h
-+++ b/drivers/scsi/qla2xxx/qla_fw.h
-@@ -1745,7 +1745,9 @@ struct nvram_81xx {
- 	uint16_t reserved_6_3[14];
- 
- 	/* Offset 192. */
--	uint16_t reserved_7[32];
-+	uint8_t min_link_speed;
-+	uint8_t reserved_7_0;
-+	uint16_t reserved_7[31];
- 
- 	/*
- 	 * BIT 0  = Enable spinup delay
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index c58fb493dbd9..527c5218e10b 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1233,6 +1233,11 @@ qla2x00_async_event(scsi_qla_host_t *vha, struct rsp_que *rsp, uint16_t *mb)
- 			schedule_work(&ha->board_disable);
- 		break;
- 
-+	case MBA_TRANS_INSERT:
-+		ql_dbg(ql_dbg_async, vha, 0x5091,
-+		    "Transceiver Insertion: %04x\n", mb[1]);
-+		break;
-+
- 	default:
- 		ql_dbg(ql_dbg_async, vha, 0x5057,
- 		    "Unknown AEN:%04x %04x %04x %04x\n",
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index da992b761402..32bbbd50567d 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -628,6 +628,19 @@ qla2x00_execute_fw(scsi_qla_host_t *vha, uint32_t risc_addr)
- 		if (ql2xnvmeenable && IS_QLA27XX(ha))
- 			mcp->mb[4] |= NVME_ENABLE_FLAG;
- 
-+		if (IS_QLA83XX(ha) || IS_QLA27XX(ha)) {
-+			struct nvram_81xx *nv = ha->nvram;
-+			/* set minimum speed if specified in nvram */
-+			if (nv->min_link_speed >= 2 &&
-+			    nv->min_link_speed <= 5) {
-+				mcp->mb[4] |= BIT_4;
-+				mcp->mb[11] = nv->min_link_speed;
-+				mcp->out_mb |= MBX_11;
-+				mcp->in_mb |= BIT_5;
-+				vha->min_link_speed_feat = nv->min_link_speed;
-+			}
-+		}
-+
- 		if (ha->flags.exlogins_enabled)
- 			mcp->mb[4] |= ENABLE_EXTENDED_LOGIN;
- 
-@@ -654,8 +667,26 @@ qla2x00_execute_fw(scsi_qla_host_t *vha, uint32_t risc_addr)
- 		    "Failed=%x mb[0]=%x.\n", rval, mcp->mb[0]);
- 	} else {
- 		if (IS_FWI2_CAPABLE(ha)) {
-+			ql_dbg(ql_dbg_mbx, vha, 0x1027,
-+			    "exchanges=%x.\n", mcp->mb[1]);
-+			if (IS_QLA27XX(ha)) {
-+				ha->max_speed_sup = mcp->mb[2] & 1;
-+				ql_dbg(ql_dbg_mbx, vha, 0x119b,
-+				    "Maximum speed supported=%s.\n",
-+				    ha->max_speed_sup ? "32Gps" : "16Gps");
-+				if (vha->min_link_speed_feat) {
-+					ha->min_link_speed = mcp->mb[5];
-+					ql_dbg(ql_dbg_mbx, vha, 0x119c,
-+					    "Minimum speed set=%s.\n",
-+					    mcp->mb[5] == 5 ? "32Gps" :
-+					    mcp->mb[5] == 4 ? "16Gps" :
-+					    mcp->mb[5] == 3 ? "8Gps" :
-+					    mcp->mb[5] == 2 ? "4Gps" :
-+					    "unknown");
-+				}
-+			}
- 			ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1027,
--			    "Done exchanges=%x.\n", mcp->mb[1]);
-+			    "Done.\n");
- 		} else {
- 			ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1028,
- 			    "Done %s.\n", __func__);
-@@ -1687,7 +1718,11 @@ qla2x00_init_firmware(scsi_qla_host_t *vha, uint16_t size)
- 		    "Failed=%x mb[0]=%x, mb[1]=%x, mb[2]=%x, mb[3]=%x,.\n",
- 		    rval, mcp->mb[0], mcp->mb[1], mcp->mb[2], mcp->mb[3]);
- 	} else {
--		/*EMPTY*/
-+		if (IS_QLA27XX(ha)) {
-+			if (mcp->mb[2] == 6 || mcp->mb[3] == 2)
-+				ql_dbg(ql_dbg_mbx, vha, 0x119d,
-+				    "Invalid SFP/Validation Failed\n");
-+		}
- 		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x104e,
- 		    "Done %s.\n", __func__);
- 	}
-@@ -1892,6 +1927,7 @@ qla2x00_get_firmware_state(scsi_qla_host_t *vha, uint16_t *states)
- 	int rval;
- 	mbx_cmd_t mc;
- 	mbx_cmd_t *mcp = &mc;
-+	struct qla_hw_data *ha = vha->hw;
- 
- 	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1054,
- 	    "Entered %s.\n", __func__);
-@@ -1920,7 +1956,11 @@ qla2x00_get_firmware_state(scsi_qla_host_t *vha, uint16_t *states)
- 		/*EMPTY*/
- 		ql_dbg(ql_dbg_mbx, vha, 0x1055, "Failed=%x.\n", rval);
- 	} else {
--		/*EMPTY*/
-+		if (IS_QLA27XX(ha)) {
-+			if (mcp->mb[2] == 6 || mcp->mb[3] == 2)
-+				ql_dbg(ql_dbg_mbx, vha, 0x119e,
-+				    "Invalid SFP/Validation Failed\n");
-+		}
- 		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1056,
- 		    "Done %s.\n", __func__);
- 	}
--- 
-2.12.0
+FYI, I'll try to review/stage that patchset for 4.14 over the next few
+days.
+
+(I'm not yet back to working full-time but will try to handle my
+upstream responsibilities)
+
+Mike
