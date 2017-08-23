@@ -1,15 +1,15 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v3 09/20] lpfc: Fix crash in lpfc nvmet when fc port is reset
-Date: Wed, 23 Aug 2017 16:55:38 -0700
-Message-ID: <20170823235549.2883-10-jsmart2021@gmail.com>
+Subject: [PATCH v3 06/20] lpfc: Correct return error codes to align with nvme_fc transport
+Date: Wed, 23 Aug 2017 16:55:35 -0700
+Message-ID: <20170823235549.2883-7-jsmart2021@gmail.com>
 References: <20170823235549.2883-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:38905 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751020AbdHWX4S (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 19:56:18 -0400
-Received: by mail-wm0-f68.google.com with SMTP id a70so1046370wmd.5
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Aug 2017 16:56:18 -0700 (PDT)
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:38884 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751020AbdHWX4N (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 19:56:13 -0400
+Received: by mail-wm0-f65.google.com with SMTP id a70so1046146wmd.5
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Aug 2017 16:56:12 -0700 (PDT)
 In-Reply-To: <20170823235549.2883-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,63 +18,162 @@ Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.
 
 From: Dick Kennedy <dick.kennedy@broadcom.com>
 
-in adapter reset tests, an oops was seen with a NULL pointer in
-lpfc_free_rq_buffer+0x20/0x60
+Modify driver return error codes to align with host nvme transport.
 
-The driver is failing to properly repost the nvmet sgl list when
-recovering from the reset. Thus the driver eventually trys to
-walk an errant buffer list.
+Driver isn't returning Exxx error codes to properly reflect out of
+resource or connectivity conditions (-EBUSY), yet there were hard
+error conditions returning -EBUSY.
 
-Corrected the sgl buffer recovery as well as strengthening the
-initialization of the bufferlist.
+Ensure the following situations return the proper return code:
+temporary failures or temporary resource availability: -EBUSY
+Connectivity issues: -ENODEV
+all others are treated as hard errors and return an -Exxx value
+that indicates the type of error.
+
+Also, lpfc_sli4_issue_wqe() was modified to not translate error
+from -Exxx to WQE state.  This allows lpfc_nvme_fcp_io_submit()
+routine to just return whatever -E value was returned from other
+routines.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/lpfc/lpfc_init.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 9294c89c7ccd..f82618a8918f 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -3226,6 +3226,13 @@ lpfc_offline(struct lpfc_hba *phba)
+---
+v3:
+  slight reword of patch description per review
+---
+ drivers/scsi/lpfc/lpfc_nvme.c |  9 ++++-----
+ drivers/scsi/lpfc/lpfc_sli.c  | 23 ++++++++++++++---------
+ 2 files changed, 18 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index ce8d6bbf8148..24dc69de6023 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -364,7 +364,7 @@ lpfc_nvme_gen_req(struct lpfc_vport *vport, struct lpfc_dmabuf *bmp,
+ 			 genwqe->sli4_xritag, genwqe->iotag, ndlp->nlp_DID);
  
- 	/* stop port and all timers associated with this hba */
- 	lpfc_stop_port(phba);
-+
-+	/* Tear down the local and target port registrations.  The
-+	 * nvme transports need to cleanup.
-+	 */
-+	lpfc_nvmet_destroy_targetport(phba);
-+	lpfc_nvme_destroy_localport(phba->pport);
-+
- 	vports = lpfc_create_vport_work_array(phba);
- 	if (vports != NULL)
- 		for (i = 0; i <= phba->max_vports && vports[i] != NULL; i++)
-@@ -6516,6 +6523,12 @@ lpfc_free_nvmet_sgl_list(struct lpfc_hba *phba)
- 		lpfc_nvmet_buf_free(phba, sglq_entry->virt, sglq_entry->phys);
- 		kfree(sglq_entry);
+ 	rc = lpfc_sli4_issue_wqe(phba, LPFC_ELS_RING, genwqe);
+-	if (rc == WQE_ERROR) {
++	if (rc) {
+ 		lpfc_printf_vlog(vport, KERN_ERR, LOG_ELS,
+ 				 "6045 Issue GEN REQ WQE to NPORT x%x "
+ 				 "Data: x%x x%x\n",
+@@ -1270,7 +1270,7 @@ lpfc_nvme_fcp_io_submit(struct nvme_fc_local_port *pnvme_lport,
+ 	 * not exceed the programmed depth.
+ 	 */
+ 	if (atomic_read(&ndlp->cmd_pending) >= ndlp->cmd_qdepth) {
+-		ret = -EAGAIN;
++		ret = -EBUSY;
+ 		goto out_fail;
  	}
-+
-+	/* Update the nvmet_xri_cnt to reflect no current sgls.
-+	 * The next initialization cycle sets the count and allocates
-+	 * the sgls over again.
-+	 */
-+	phba->sli4_hba.nvmet_xri_cnt = 0;
- }
  
- /**
-@@ -8301,6 +8314,9 @@ lpfc_sli4_queue_create(struct lpfc_hba *phba)
- 				goto out_error;
- 			}
+@@ -1279,7 +1279,7 @@ lpfc_nvme_fcp_io_submit(struct nvme_fc_local_port *pnvme_lport,
+ 		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_IOERR,
+ 				 "6065 driver's buffer pool is empty, "
+ 				 "IO failed\n");
+-		ret = -ENOMEM;
++		ret = -EBUSY;
+ 		goto out_fail;
+ 	}
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+@@ -1332,7 +1332,6 @@ lpfc_nvme_fcp_io_submit(struct nvme_fc_local_port *pnvme_lport,
+ 				 "sid: x%x did: x%x oxid: x%x\n",
+ 				 ret, vport->fc_myDID, ndlp->nlp_DID,
+ 				 lpfc_ncmd->cur_iocbq.sli4_xritag);
+-		ret = -EBUSY;
+ 		goto out_free_nvme_buf;
+ 	}
  
-+			/* Put list in known state in case driver load fails. */
-+			INIT_LIST_HEAD(&qdesc->rqbp->rqb_buffer_list);
+@@ -1576,7 +1575,7 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
+ 	abts_buf->wqe_cmpl = lpfc_nvme_abort_fcreq_cmpl;
+ 	ret_val = lpfc_sli4_issue_wqe(phba, LPFC_FCP_RING, abts_buf);
+ 	spin_unlock_irqrestore(&phba->hbalock, flags);
+-	if (ret_val == IOCB_ERROR) {
++	if (ret_val) {
+ 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME_ABTS,
+ 				 "6137 Failed abts issue_wqe with status x%x "
+ 				 "for nvme_fcreq %p.\n",
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 0a8c9b59365a..6569fffb8b71 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -106,7 +106,7 @@ lpfc_get_iocb_from_iocbq(struct lpfc_iocbq *iocbq)
+  * -ENOMEM.
+  * The caller is expected to hold the hbalock when calling this routine.
+  **/
+-static uint32_t
++static int
+ lpfc_sli4_wq_put(struct lpfc_queue *q, union lpfc_wqe *wqe)
+ {
+ 	union lpfc_wqe *temp_wqe;
+@@ -123,7 +123,7 @@ lpfc_sli4_wq_put(struct lpfc_queue *q, union lpfc_wqe *wqe)
+ 	idx = ((q->host_index + 1) % q->entry_count);
+ 	if (idx == q->hba_index) {
+ 		q->WQ_overflow++;
+-		return -ENOMEM;
++		return -EBUSY;
+ 	}
+ 	q->WQ_posted++;
+ 	/* set consumption flag every once in a while */
+@@ -10741,7 +10741,7 @@ lpfc_sli4_abort_nvme_io(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 	abtsiocbp->vport = vport;
+ 	abtsiocbp->wqe_cmpl = lpfc_nvme_abort_fcreq_cmpl;
+ 	retval = lpfc_sli4_issue_wqe(phba, LPFC_FCP_RING, abtsiocbp);
+-	if (retval == IOCB_ERROR) {
++	if (retval) {
+ 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NVME,
+ 				 "6147 Failed abts issue_wqe with status x%x "
+ 				 "for oxid x%x\n",
+@@ -18888,6 +18888,7 @@ lpfc_sli4_issue_wqe(struct lpfc_hba *phba, uint32_t ring_number,
+ 	struct lpfc_sglq *sglq;
+ 	struct lpfc_sli_ring *pring;
+ 	unsigned long iflags;
++	uint32_t ret = 0;
+ 
+ 	/* NVME_LS and NVME_LS ABTS requests. */
+ 	if (pwqe->iocb_flag & LPFC_IO_NVME_LS) {
+@@ -18906,10 +18907,12 @@ lpfc_sli4_issue_wqe(struct lpfc_hba *phba, uint32_t ring_number,
+ 		}
+ 		bf_set(wqe_xri_tag, &pwqe->wqe.xmit_bls_rsp.wqe_com,
+ 		       pwqe->sli4_xritag);
+-		if (lpfc_sli4_wq_put(phba->sli4_hba.nvmels_wq, wqe)) {
++		ret = lpfc_sli4_wq_put(phba->sli4_hba.nvmels_wq, wqe);
++		if (ret) {
+ 			spin_unlock_irqrestore(&pring->ring_lock, iflags);
+-			return WQE_ERROR;
++			return ret;
+ 		}
 +
- 			/* Create NVMET Receive Queue for data */
- 			qdesc = lpfc_sli4_queue_alloc(phba,
- 						      phba->sli4_hba.rq_esize,
+ 		lpfc_sli_ringtxcmpl_put(phba, pring, pwqe);
+ 		spin_unlock_irqrestore(&pring->ring_lock, iflags);
+ 		return 0;
+@@ -18924,9 +18927,10 @@ lpfc_sli4_issue_wqe(struct lpfc_hba *phba, uint32_t ring_number,
+ 		wq = phba->sli4_hba.nvme_wq[pwqe->hba_wqidx];
+ 		bf_set(wqe_cqid, &wqe->generic.wqe_com,
+ 		      phba->sli4_hba.nvme_cq[pwqe->hba_wqidx]->queue_id);
+-		if (lpfc_sli4_wq_put(wq, wqe)) {
++		ret = lpfc_sli4_wq_put(wq, wqe);
++		if (ret) {
+ 			spin_unlock_irqrestore(&pring->ring_lock, iflags);
+-			return WQE_ERROR;
++			return ret;
+ 		}
+ 		lpfc_sli_ringtxcmpl_put(phba, pring, pwqe);
+ 		spin_unlock_irqrestore(&pring->ring_lock, iflags);
+@@ -18950,9 +18954,10 @@ lpfc_sli4_issue_wqe(struct lpfc_hba *phba, uint32_t ring_number,
+ 		wq = phba->sli4_hba.nvme_wq[pwqe->hba_wqidx];
+ 		bf_set(wqe_cqid, &wqe->generic.wqe_com,
+ 		      phba->sli4_hba.nvme_cq[pwqe->hba_wqidx]->queue_id);
+-		if (lpfc_sli4_wq_put(wq, wqe)) {
++		ret = lpfc_sli4_wq_put(wq, wqe);
++		if (ret) {
+ 			spin_unlock_irqrestore(&pring->ring_lock, iflags);
+-			return WQE_ERROR;
++			return ret;
+ 		}
+ 		lpfc_sli_ringtxcmpl_put(phba, pring, pwqe);
+ 		spin_unlock_irqrestore(&pring->ring_lock, iflags);
 -- 
 2.13.1
