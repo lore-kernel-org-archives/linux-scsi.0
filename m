@@ -1,120 +1,98 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 29/31] qla2xxx: Ability to process multiple SGEs in Command SGL for CT passthrough commands.
-Date: Wed, 23 Aug 2017 15:05:23 -0700
-Message-ID: <20170823220525.3115-30-himanshu.madhani@cavium.com>
+Subject: [PATCH 27/31] qla2xxx: Recheck session state after RSCN
+Date: Wed, 23 Aug 2017 15:05:21 -0700
+Message-ID: <20170823220525.3115-28-himanshu.madhani@cavium.com>
 References: <20170823220525.3115-1-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0081.outbound.protection.outlook.com ([104.47.40.81]:27616
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam03on0060.outbound.protection.outlook.com ([104.47.42.60]:43563
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751177AbdHWWky (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Aug 2017 18:40:54 -0400
+        id S1751005AbdHWWku (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 23 Aug 2017 18:40:50 -0400
 In-Reply-To: <20170823220525.3115-1-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Giridhar Malavali <giridhar.malavali@cavium.com>
+From: Quinn Tran <quinn.tran@cavium.com>
 
-Signed-off-by: Giridhar Malavali <giridhar.malavali@cavium.com>
+When RSCN is delivered for specific remote port,
+Use ADISC to verify the session is still valid or not.
+
+Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_iocb.c | 55 ++++++++++++++++++++++++++---------------
- 1 file changed, 35 insertions(+), 20 deletions(-)
+ drivers/scsi/qla2xxx/qla_gbl.h  |  2 +-
+ drivers/scsi/qla2xxx/qla_gs.c   | 16 +++++++++++-----
+ drivers/scsi/qla2xxx/qla_init.c |  4 +---
+ 3 files changed, 13 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index a36c485fae50..2f94159186d7 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -2682,12 +2682,12 @@ qla24xx_ct_iocb(srb_t *sp, struct ct_entry_24xx *ct_iocb)
- 	uint32_t        *cur_dsd;
- 	struct scatterlist *sg;
- 	int index;
--	uint16_t tot_dsds;
-+	uint16_t cmd_dsds, rsp_dsds;
- 	scsi_qla_host_t *vha = sp->vha;
- 	struct qla_hw_data *ha = vha->hw;
- 	struct bsg_job *bsg_job = sp->u.bsg_job;
--	int loop_iterartion = 0;
- 	int entry_count = 1;
-+	cont_a64_entry_t *cont_pkt = NULL;
- 
- 	ct_iocb->entry_type = CT_IOCB_TYPE;
-         ct_iocb->entry_status = 0;
-@@ -2698,30 +2698,46 @@ qla24xx_ct_iocb(srb_t *sp, struct ct_entry_24xx *ct_iocb)
- 	ct_iocb->vp_index = sp->vha->vp_idx;
- 	ct_iocb->comp_status = cpu_to_le16(0);
- 
--	ct_iocb->cmd_dsd_count =
--		cpu_to_le16(bsg_job->request_payload.sg_cnt);
-+	cmd_dsds = bsg_job->request_payload.sg_cnt;
-+	rsp_dsds = bsg_job->reply_payload.sg_cnt;
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 3aada5dd597f..0b219b3ca653 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -106,7 +106,7 @@ int qla24xx_post_newsess_work(struct scsi_qla_host *, port_id_t *, u8 *,
+     void *);
+ int qla24xx_fcport_handle_login(struct scsi_qla_host *, fc_port_t *);
+ int qla24xx_detect_sfp(scsi_qla_host_t *vha);
+-
++int qla24xx_post_gpdb_work(struct scsi_qla_host *, fc_port_t *, u8);
+ /*
+  * Global Data in qla_os.c source file.
+  */
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index 0ec250993e93..bc3db6abc9a0 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -2816,13 +2816,19 @@ void qla24xx_handle_gidpn_event(scsi_qla_host_t *vha, struct event_arg *ea)
+ 				case MODE_INITIATOR:
+ 				case MODE_DUAL:
+ 				default:
++					ql_dbg(ql_dbg_disc, vha, 0x201f,
++					    "%s %d %8phC post %s\n", __func__,
++					    __LINE__, fcport->port_name,
++					    (atomic_read(&fcport->state) ==
++					    FCS_ONLINE) ? "gpdb" : "gnl");
 +
-+	ct_iocb->cmd_dsd_count = cpu_to_le16(cmd_dsds);
-         ct_iocb->timeout = 0;
--        ct_iocb->rsp_dsd_count =
--		cpu_to_le16(bsg_job->reply_payload.sg_cnt);
--        ct_iocb->rsp_byte_count =
--            cpu_to_le32(bsg_job->reply_payload.payload_len);
-+	ct_iocb->rsp_dsd_count = cpu_to_le16(rsp_dsds);
-         ct_iocb->cmd_byte_count =
-             cpu_to_le32(bsg_job->request_payload.payload_len);
--        ct_iocb->dseg_0_address[0] = cpu_to_le32(LSD(sg_dma_address
--            (bsg_job->request_payload.sg_list)));
--        ct_iocb->dseg_0_address[1] = cpu_to_le32(MSD(sg_dma_address
--           (bsg_job->request_payload.sg_list)));
--        ct_iocb->dseg_0_len = cpu_to_le32(sg_dma_len
--            (bsg_job->request_payload.sg_list));
+ 					if (atomic_read(&fcport->state) ==
+ 					    FCS_ONLINE)
+-						break;
+-					ql_dbg(ql_dbg_disc, vha, 0x201f,
+-					    "%s %d %8phC post gnl\n",
+-					    __func__, __LINE__, fcport->port_name);
+-					qla24xx_post_gnl_work(vha, fcport);
++						qla24xx_post_gpdb_work(vha,
++						    fcport, PDO_FORCE_ADISC);
++					else
++						qla24xx_post_gnl_work(vha,
++						    fcport);
+ 					break;
+ 				}
+ 			} else { /* fcport->d_id.b24 != ea->id.b24 */
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index fe2d196833aa..30b3acacbfca 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -36,7 +36,6 @@ static int qla2x00_restart_isp(scsi_qla_host_t *);
+ static struct qla_chip_state_84xx *qla84xx_get_chip(struct scsi_qla_host *);
+ static int qla84xx_init_chip(scsi_qla_host_t *);
+ static int qla25xx_init_queues(struct qla_hw_data *);
+-static int qla24xx_post_gpdb_work(struct scsi_qla_host *, fc_port_t *, u8);
+ static int qla24xx_post_prli_work(struct scsi_qla_host*, fc_port_t *);
+ static void qla24xx_handle_plogi_done_event(struct scsi_qla_host *,
+     struct event_arg *);
+@@ -774,8 +773,7 @@ qla24xx_async_prli(struct scsi_qla_host *vha, fc_port_t *fcport)
+ 	return rval;
+ }
  
--	avail_dsds = 1;
--	cur_dsd = (uint32_t *)ct_iocb->dseg_1_address;
-+	avail_dsds = 2;
-+	cur_dsd = (uint32_t *)ct_iocb->dseg_0_address;
- 	index = 0;
--	tot_dsds = bsg_job->reply_payload.sg_cnt;
+-static int qla24xx_post_gpdb_work(struct scsi_qla_host *vha, fc_port_t *fcport,
+-    u8 opt)
++int qla24xx_post_gpdb_work(struct scsi_qla_host *vha, fc_port_t *fcport, u8 opt)
+ {
+ 	struct qla_work_evt *e;
  
--	for_each_sg(bsg_job->reply_payload.sg_list, sg, tot_dsds, index) {
-+	for_each_sg(bsg_job->request_payload.sg_list, sg, cmd_dsds, index) {
-+		dma_addr_t       sle_dma;
-+
-+		/* Allocate additional continuation packets? */
-+		if (avail_dsds == 0) {
-+			/*
-+			 * Five DSDs are available in the Cont.
-+			 * Type 1 IOCB.
-+			 */
-+			cont_pkt = qla2x00_prep_cont_type1_iocb(
-+			    vha, ha->req_q_map[0]);
-+			cur_dsd = (uint32_t *) cont_pkt->dseg_0_address;
-+			avail_dsds = 5;
-+			entry_count++;
-+		}
-+
-+		sle_dma = sg_dma_address(sg);
-+		*cur_dsd++   = cpu_to_le32(LSD(sle_dma));
-+		*cur_dsd++   = cpu_to_le32(MSD(sle_dma));
-+		*cur_dsd++   = cpu_to_le32(sg_dma_len(sg));
-+		avail_dsds--;
-+	}
-+
-+	index = 0;
-+
-+	for_each_sg(bsg_job->reply_payload.sg_list, sg, rsp_dsds, index) {
- 		dma_addr_t       sle_dma;
--		cont_a64_entry_t *cont_pkt;
- 
- 		/* Allocate additional continuation packets? */
- 		if (avail_dsds == 0) {
-@@ -2740,7 +2756,6 @@ qla24xx_ct_iocb(srb_t *sp, struct ct_entry_24xx *ct_iocb)
- 		*cur_dsd++   = cpu_to_le32(LSD(sle_dma));
- 		*cur_dsd++   = cpu_to_le32(MSD(sle_dma));
- 		*cur_dsd++   = cpu_to_le32(sg_dma_len(sg));
--		loop_iterartion++;
- 		avail_dsds--;
- 	}
-         ct_iocb->entry_count = entry_count;
 -- 
 2.12.0
