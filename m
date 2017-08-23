@@ -1,85 +1,65 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v3 00/20] lpfc updates for 11.4.0.3
-Date: Wed, 23 Aug 2017 16:55:29 -0700
-Message-ID: <20170823235549.2883-1-jsmart2021@gmail.com>
+Subject: [PATCH v3 03/20] lpfc: Fix rediscovery on switch blade pull
+Date: Wed, 23 Aug 2017 16:55:32 -0700
+Message-ID: <20170823235549.2883-4-jsmart2021@gmail.com>
+References: <20170823235549.2883-1-jsmart2021@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35900 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751190AbdHWX4B (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 19:56:01 -0400
-Received: by mail-wm0-f66.google.com with SMTP id f127so1060869wmf.3
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Aug 2017 16:56:00 -0700 (PDT)
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:33570 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751020AbdHWX4H (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 19:56:07 -0400
+Received: by mail-wm0-f67.google.com with SMTP id b79so1082450wmf.0
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Aug 2017 16:56:06 -0700 (PDT)
+In-Reply-To: <20170823235549.2883-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: James Smart <jsmart2021@gmail.com>
+Cc: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-This patch set provides a number of bug fixes and one additions.
-The additions are BB credit support.
+From: Dick Kennedy <dick.kennedy@broadcom.com>
 
-The patches were cut against the Martin's 4.13/scsi-fixes tree.
-There are no outside dependencies.
+When the switch blade is pulled out then plugged back in, the driver
+does not issue a PLOGI to the target
 
-V2:
- removed redundant Expresslane patch
- removed if type 6 support. Will add later.
- Incorporated patch from Maurizio Lombardi int constant too large
+When the switch blade is pulled out, it does not reset the link. The
+driver ends up issuing a LOGO to the target, and finally sees devloss.
+Since the driver believes that a LOGO is outstanding, it does not
+issue a PLOGI to the target upon link up
 
-V3:
- Address v2 review comments:
-   revise if tests for better indentation
-   removed unnecessary typecasts
-   slight reword patch description or comment
-   use list_splict_init
+Correct by placing the ndlp in UNUSED state When devloss happens in
+LOGO_ISSUE state.
 
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <james.smart@broadcom.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/scsi/lpfc/lpfc_nportdisc.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
-Dick Kennedy (17):
-  lpfc: Fix plogi collision that causes illegal state transition
-  lpfc: Fix loop mode target discovery
-  lpfc: Fix rediscovery on switch blade pull
-  lpfc: Fix oops when NVME Target is discovered in a nonNVME environment
-  lpfc: convert info messages to standard messages
-  lpfc: Correct return error codes to align with nvme_fc transport
-  lpfc: Fix handling of FCP and NVME FC4 types in Pt2Pt topology
-  lpfc: Fix duplicate NVME rport entries and namespaces.
-  lpfc: Fix crash in lpfc nvmet when fc port is reset
-  lpfc: Fix NVME PRLI handling during RSCN
-  lpfc: Correct issues with FAWWN and FDISCs
-  lpfc: Limit amount of work processed in IRQ
-  lpfc: Fix MRQ > 1 context list handling
-  lpfc: Fix relative offset error on large nvmet target ios
-  lpfc: Fix nvme target failure after 2nd adapter reset
-  lpfc: Fix bad sgl reposting after 2nd adapter reset
-  lpfc: lpfc version bump 11.4.0.3
-
-James Smart (2):
-  lpfc: remove console log clutter
-  lpfc: Add Buffer to Buffer credit recovery support
-
-Maurizio Lombardi (1):
-  scsi: lpfc: fix "integer constant too large" error on 32bit archs
-
- drivers/scsi/lpfc/lpfc.h           |   3 +-
- drivers/scsi/lpfc/lpfc_attr.c      |  52 ++++++-
- drivers/scsi/lpfc/lpfc_attr.h      |  10 ++
- drivers/scsi/lpfc/lpfc_crtn.h      |   5 +-
- drivers/scsi/lpfc/lpfc_ct.c        |   4 +-
- drivers/scsi/lpfc/lpfc_debugfs.c   |  11 +-
- drivers/scsi/lpfc/lpfc_disc.h      |   1 +
- drivers/scsi/lpfc/lpfc_els.c       |  93 ++++++++++++-
- drivers/scsi/lpfc/lpfc_hbadisc.c   |  12 +-
- drivers/scsi/lpfc/lpfc_hw.h        |  18 ++-
- drivers/scsi/lpfc/lpfc_hw4.h       |  23 +++-
- drivers/scsi/lpfc/lpfc_init.c      |  57 +++++---
- drivers/scsi/lpfc/lpfc_mbox.c      |  35 ++++-
- drivers/scsi/lpfc/lpfc_nportdisc.c |  25 +++-
- drivers/scsi/lpfc/lpfc_nvme.c      |  25 ++--
- drivers/scsi/lpfc/lpfc_nvmet.c     | 270 ++++++++++++++++++++++++++++---------
- drivers/scsi/lpfc/lpfc_nvmet.h     |  14 ++
- drivers/scsi/lpfc/lpfc_sli.c       |  56 +++++---
- drivers/scsi/lpfc/lpfc_sli4.h      |  23 +++-
- drivers/scsi/lpfc/lpfc_version.h   |   2 +-
- 20 files changed, 584 insertions(+), 155 deletions(-)
-
+diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+index 95b2b43ac37d..a4488d6339c1 100644
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -2192,12 +2192,15 @@ lpfc_device_rm_logo_issue(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 			  void *arg, uint32_t evt)
+ {
+ 	/*
+-	 * Take no action.  If a LOGO is outstanding, then possibly DevLoss has
+-	 * timed out and is calling for Device Remove.  In this case, the LOGO
+-	 * must be allowed to complete in state LOGO_ISSUE so that the rpi
+-	 * and other NLP flags are correctly cleaned up.
++	 * DevLoss has timed out and is calling for Device Remove.
++	 * In this case, abort the LOGO and cleanup the ndlp
+ 	 */
+-	return ndlp->nlp_state;
++
++	lpfc_unreg_rpi(vport, ndlp);
++	/* software abort outstanding PLOGI */
++	lpfc_els_abort(vport->phba, ndlp);
++	lpfc_drop_node(vport, ndlp);
++	return NLP_STE_FREED_NODE;
+ }
+ 
+ static uint32_t
 -- 
 2.13.1
