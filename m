@@ -1,141 +1,81 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH 08/19] Use blk_mq_rq_to_pdu() to convert a request to a SCSI command pointer
-Date: Wed, 23 Aug 2017 14:39:58 -0700
-Message-ID: <20170823214009.15015-9-bart.vanassche@wdc.com>
+Subject: [PATCH 06/19] Document which queue type a function is intended for
+Date: Wed, 23 Aug 2017 14:39:56 -0700
+Message-ID: <20170823214009.15015-7-bart.vanassche@wdc.com>
 References: <20170823214009.15015-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:57495 "EHLO
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:60815 "EHLO
         esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751004AbdHWVmC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 17:42:02 -0400
+        with ESMTP id S1751004AbdHWVmM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 17:42:12 -0400
 In-Reply-To: <20170823214009.15015-1-bart.vanassche@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>
 
-Since commit e9c787e65c0c ("scsi: allocate scsi_cmnd structures as
-part of struct request") struct request and struct scsi_cmnd are
-adjacent. This means that there is now an alternative to reading
-req->special to convert a pointer to a prepared request into a
-SCSI command pointer, namely by using blk_mq_rq_to_pdu(). Make
-this change where appropriate. Although this patch does not
-change any functionality, it slightly improves performance and
-slightly improves readability.
+Document which queue type a function is intended for if this is not
+easy to derive from the function name.
 
 Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Hannes Reinecke <hare@suse.com>
 Cc: Christoph Hellwig <hch@lst.de>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/scsi_error.c |  2 +-
- drivers/scsi/scsi_lib.c   | 18 +++++++++---------
- include/scsi/scsi_tcq.h   |  2 +-
- 3 files changed, 11 insertions(+), 11 deletions(-)
+ drivers/scsi/scsi_lib.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 01b2d2055edf..38942050b265 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -259,7 +259,7 @@ void scsi_eh_scmd_add(struct scsi_cmnd *scmd)
-  */
- enum blk_eh_timer_return scsi_times_out(struct request *req)
- {
--	struct scsi_cmnd *scmd = req->special;
-+	struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(req);
- 	enum blk_eh_timer_return rtn = BLK_EH_NOT_HANDLED;
- 	struct Scsi_Host *host = scmd->device->host;
- 
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 2ca91d251c5f..e4966f8edbf9 100644
+index f9a0d5b13707..1905962fb992 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -627,7 +627,7 @@ static void scsi_release_bidi_buffers(struct scsi_cmnd *cmd)
- static bool scsi_end_request(struct request *req, blk_status_t error,
- 		unsigned int bytes, unsigned int bidi_bytes)
- {
--	struct scsi_cmnd *cmd = req->special;
-+	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
- 	struct scsi_device *sdev = cmd->device;
- 	struct request_queue *q = sdev->request_queue;
- 
-@@ -1176,7 +1176,7 @@ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
- 
- static int scsi_setup_scsi_cmnd(struct scsi_device *sdev, struct request *req)
- {
--	struct scsi_cmnd *cmd = req->special;
-+	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
- 
- 	/*
- 	 * Passthrough requests may transfer data, in which case they must
-@@ -1207,7 +1207,7 @@ static int scsi_setup_scsi_cmnd(struct scsi_device *sdev, struct request *req)
-  */
- static int scsi_setup_fs_cmnd(struct scsi_device *sdev, struct request *req)
- {
--	struct scsi_cmnd *cmd = req->special;
-+	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
- 
- 	if (unlikely(sdev->handler && sdev->handler->prep_fn)) {
- 		int ret = sdev->handler->prep_fn(sdev, req);
-@@ -1222,7 +1222,7 @@ static int scsi_setup_fs_cmnd(struct scsi_device *sdev, struct request *req)
- 
- static int scsi_setup_cmnd(struct scsi_device *sdev, struct request *req)
- {
--	struct scsi_cmnd *cmd = req->special;
-+	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
- 
- 	if (!blk_rq_bytes(req))
- 		cmd->sc_data_direction = DMA_NONE;
-@@ -1359,7 +1359,7 @@ static int scsi_prep_fn(struct request_queue *q, struct request *req)
- 
- static void scsi_unprep_fn(struct request_queue *q, struct request *req)
- {
--	scsi_uninit_cmd(req->special);
-+	scsi_uninit_cmd(blk_mq_rq_to_pdu(req));
+@@ -2006,6 +2006,7 @@ static enum blk_eh_timer_return scsi_timeout(struct request *req,
+ 	return scsi_times_out(req);
  }
  
- /*
-@@ -1550,7 +1550,7 @@ static int scsi_lld_busy(struct request_queue *q)
-  */
- static void scsi_kill_request(struct request *req, struct request_queue *q)
++/* scsi-mq */
+ static int scsi_init_request(struct blk_mq_tag_set *set, struct request *rq,
+ 		unsigned int hctx_idx, unsigned int numa_node)
  {
--	struct scsi_cmnd *cmd = req->special;
-+	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
- 	struct scsi_device *sdev;
- 	struct scsi_target *starget;
- 	struct Scsi_Host *shost;
-@@ -1581,7 +1581,7 @@ static void scsi_kill_request(struct request *req, struct request_queue *q)
- 
- static void scsi_softirq_done(struct request *rq)
- {
--	struct scsi_cmnd *cmd = rq->special;
-+	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
- 	unsigned long wait_for = (cmd->allowed + 1) * rq->timeout;
- 	int disposition;
- 
-@@ -1769,8 +1769,8 @@ static void scsi_request_fn(struct request_queue *q)
- 			blk_start_request(req);
- 
- 		spin_unlock_irq(q->queue_lock);
--		cmd = req->special;
--		if (unlikely(cmd == NULL)) {
-+		cmd = blk_mq_rq_to_pdu(req);
-+		if (cmd != req->special) {
- 			printk(KERN_CRIT "impossible request in %s.\n"
- 					 "please mail a stack trace to "
- 					 "linux-scsi@vger.kernel.org\n",
-diff --git a/include/scsi/scsi_tcq.h b/include/scsi/scsi_tcq.h
-index 4416b1026189..5b416debf101 100644
---- a/include/scsi/scsi_tcq.h
-+++ b/include/scsi/scsi_tcq.h
-@@ -39,7 +39,7 @@ static inline struct scsi_cmnd *scsi_host_find_tag(struct Scsi_Host *shost,
- 
- 	if (!req)
- 		return NULL;
--	return req->special;
-+	return blk_mq_rq_to_pdu(req);
+@@ -2031,6 +2032,7 @@ static int scsi_init_request(struct blk_mq_tag_set *set, struct request *rq,
+ 	return 0;
  }
  
- #endif /* CONFIG_BLOCK */
++/* scsi-mq */
+ static void scsi_exit_request(struct blk_mq_tag_set *set, struct request *rq,
+ 		unsigned int hctx_idx)
+ {
+@@ -2070,6 +2072,7 @@ static u64 scsi_calculate_bounce_limit(struct Scsi_Host *shost)
+ 	return bounce_limit;
+ }
+ 
++/* scsi-sq and scsi-mq */
+ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
+ {
+ 	struct device *dev = shost->dma_dev;
+@@ -2109,6 +2112,7 @@ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
+ }
+ EXPORT_SYMBOL_GPL(__scsi_init_queue);
+ 
++/* scsi-sq */
+ static int scsi_init_rq(struct request_queue *q, struct request *rq, gfp_t gfp)
+ {
+ 	struct Scsi_Host *shost = q->rq_alloc_data;
+@@ -2139,6 +2143,7 @@ static int scsi_init_rq(struct request_queue *q, struct request *rq, gfp_t gfp)
+ 	return -ENOMEM;
+ }
+ 
++/* scsi-sq */
+ static void scsi_exit_rq(struct request_queue *q, struct request *rq)
+ {
+ 	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
+@@ -2149,6 +2154,7 @@ static void scsi_exit_rq(struct request_queue *q, struct request *rq)
+ 			       cmd->sense_buffer);
+ }
+ 
++/* scsi-sq */
+ struct request_queue *scsi_alloc_queue(struct scsi_device *sdev)
+ {
+ 	struct Scsi_Host *shost = sdev->host;
 -- 
 2.14.0
