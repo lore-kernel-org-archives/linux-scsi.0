@@ -1,83 +1,87 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] scsi: lpfc: avoid false-positive gcc-8 warning
-Date: Wed, 23 Aug 2017 21:02:39 +0200
-Message-ID: <CAK8P3a0ztyGg6Lt8pWk530zFjhTFP3EAQpmswESkjk=HPZTwKw@mail.gmail.com>
-References: <20170823150143.2746796-1-arnd@arndb.de>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [GIT PULL] SCSI fixes for 4.13-rc6
+Date: Wed, 23 Aug 2017 14:13:03 -0500
+Message-ID: <715e97db-b110-bbc3-77a5-fa4d86610aa3@linux.vnet.ibm.com>
+References: <1503470559.2729.4.camel@HansenPartnership.com>
+ <1503500560.2484.1.camel@wdc.com> <yq1vale9ueb.fsf@oracle.com>
+ <1503503077.2484.5.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:36813 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932458AbdHWTCl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Aug 2017 15:02:41 -0400
-In-Reply-To: <20170823150143.2746796-1-arnd@arndb.de>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:58663 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932467AbdHWTNK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 23 Aug 2017 15:13:10 -0400
+Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v7NJ9WaR111262
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Aug 2017 15:13:10 -0400
+Received: from e13.ny.us.ibm.com (e13.ny.us.ibm.com [129.33.205.203])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2chbd9fhqj-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Aug 2017 15:13:10 -0400
+Received: from localhost
+        by e13.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+        Wed, 23 Aug 2017 15:13:08 -0400
+In-Reply-To: <1503503077.2484.5.camel@wdc.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>
 
-On Wed, Aug 23, 2017 at 5:01 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> This is an interesting regression with gcc-8, showing a harmless
-> warning for correct code:
->
-> In file included from include/linux/kernel.h:13:0,
->                  ...
->                  from drivers/scsi/lpfc/lpfc_debugfs.c:23:
-> include/linux/printk.h:301:2: error: 'eq' may be used uninitialized in this function [-Werror=maybe-uninitialized]
->   printk(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
->   ^~~~~~
-> In file included from drivers/scsi/lpfc/lpfc_debugfs.c:58:0:
-> drivers/scsi/lpfc/lpfc_debugfs.h:451:31: note: 'eq' was declared here
->
-> I tried to come up with a reduced test case for gcc here
-> a few times, but every time ended up with code that is actually
-> wrong with older gcc versions missing the bug and gcc-8 finding
-> it. As this is the only false-positive -Wmaybe-uninitialized
-> warnign I got with gcc-8 randconfig builds, I'd suggest we
-> work around it.
->
-> Making the index variable 'unsigned' is enough to shut up
-> the warning, as gcc can then see that comparing eqidx to
-> phba->io_channel_irqs is fine here.
->
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+On 08/23/2017 10:44 AM, Bart Van Assche wrote:
+> On Wed, 2017-08-23 at 11:27 -0400, Martin K. Petersen wrote:
+>> However, what's more important is that we still need a good version of
+>> your patch for 4.13. I took Brian's workaround for ipr but I still think
+>> Christoph's concerns need to be addressed for me to put your change back
+>> in.
+> 
+> Hello Martin,
+> 
+> I am not aware of any requests to modify the patch "scsi-mq: Always unprepare
+> before requeuing a request". See also
+> https://www.spinics.net/lists/linux-scsi/msg111541.html. Are you perhaps
+> referring to another patch?
+> 
+> What I remember is that my patch uncovered a bug in the ipr driver. As you
+> mentioned, a workaround for that bug has already been queued for kernel v4.14
+> (https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/commit/?h=4.13/scsi-fixes&id=723cd772fde2344a9810eeaf5106787d535ec4a4).
 
-Sorry, I have to retract my patch. While it apparently solved the problem
-for most randconfig builds, I have now run into another case that it did
-not address, and I still get the warning for one caller:
+I don't completely agree with that statement. The patch "scsi-mq: Always unprepare
+before requeueing a request" introduces a regression in the scsi stack.
+It alters the behavior of retries such that the retry counter no longer works
+and the jiffies_at_alloc use to ensure we don't spend a tremendous amount of
+time retrying ops gets broken as well.
 
-In file included from /git/arm-soc/include/linux/kernel.h:13:0,
-                 from /git/arm-soc/arch/x86/include/asm/percpu.h:44,
-                 from /git/arm-soc/arch/x86/include/asm/current.h:5,
-                 from /git/arm-soc/include/linux/sched.h:11,
-                 from /git/arm-soc/include/linux/blkdev.h:4,
-                 from /git/arm-soc/drivers/scsi/lpfc/lpfc_debugfs.c:23:
-/git/arm-soc/drivers/scsi/lpfc/lpfc_debugfs.c: In function
-'lpfc_debug_dump_all_queues':
-/git/arm-soc/include/linux/printk.h:301:2: error: 'eq' may be used
-uninitialized in this function [-Werror=maybe-uninitialized]
-  printk(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
-  ^~~~~~
-In file included from /git/arm-soc/drivers/scsi/lpfc/lpfc_debugfs.c:58:0:
-/git/arm-soc/drivers/scsi/lpfc/lpfc_debugfs.h:451:31: note: 'eq' was
-declared here
-  struct lpfc_queue *wq, *cq, *eq;
-                               ^~
-In file included from /git/arm-soc/include/linux/kernel.h:13:0,
-                 from /git/arm-soc/arch/x86/include/asm/percpu.h:44,
-                 from /git/arm-soc/arch/x86/include/asm/current.h:5,
-                 from /git/arm-soc/include/linux/sched.h:11,
-                 from /git/arm-soc/include/linux/blkdev.h:4,
-                 from /git/arm-soc/drivers/scsi/lpfc/lpfc_debugfs.c:23:
-/git/arm-soc/include/linux/printk.h:301:2: error: 'eq' may be used
-uninitialized in this function [-Werror=maybe-uninitialized]
-  printk(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
-  ^~~~~~
-In file included from /git/arm-soc/drivers/scsi/lpfc/lpfc_debugfs.c:58:0:
-/git/arm-soc/drivers/scsi/lpfc/lpfc_debugfs.h:451:31: note: 'eq' was
-declared here
-  struct lpfc_queue *wq, *cq, *eq;
-                               ^~
-cc1: all warnings being treated as errors
+As far as ipr is concerned, we do have the workaround in place now and I'll also
+queue up a further improvement to ipr to return a better failure response. However,
+until we fix the retry counter in scsi, any driver that returns an error response that
+scsi wants to retry could get us stuck in an eternal retry loop, like we were
+seeing with ipr.
 
-     Arnd
+> Further improvements for the SCSI core that are the result of the analysis of
+> the behavior of the SCSI subsystem on PowerPC systems are under discussion. See
+> also "[PATCHv2 1/2] scsi: Move scsi_cmd->jiffies_at_alloc initialization to
+> allocation time" (https://marc.info/?l=linux-next&m=150335524812989) and
+> "[PATCH 2/2] scsi: Preserve retry counter through scsi_prep_fn"
+> (https://marc.info/?l=linux-scsi&m=150335371112485).
+
+While my patches highlight the problem, I don't think they are the right fix
+and need to be reworked. It looks like we go through scsi_init_rq at
+hctx setup time rather than for each new i/o submission. Adding a simple
+kprobe to scsi_init_rq never triggers when issuing i/o to already configured
+devices. Therefore, we cannot simply move the initialization of jiffies_at_alloc to
+scsi_init_rq. I've been working on moving the retry counter and jiffies_at_alloc
+into struct scsi_request, as that doesn't get reinitialized.
+
+Thanks,
+
+Brian 
+
+-- 
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
