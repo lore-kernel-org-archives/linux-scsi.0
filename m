@@ -1,26 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: qedf: Fix a potential NULL pointer dereference
-Date: Wed, 23 Aug 2017 22:43:29 -0400
-Message-ID: <yq1h8wxadny.fsf@oracle.com>
-References: <20170820170935.14767-1-christophe.jaillet@wanadoo.fr>
+Subject: Re: [PATCH] scsi: lpfc: remove useless code in lpfc_sli4_bsg_link_diag_test
+Date: Wed, 23 Aug 2017 22:45:46 -0400
+Message-ID: <yq1d17ladk5.fsf@oracle.com>
+References: <20170822205353.GA17794@embeddedgus>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <20170820170935.14767-1-christophe.jaillet@wanadoo.fr>
-        (Christophe JAILLET's message of "Sun, 20 Aug 2017 19:09:35 +0200")
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc: QLogic-Storage-Upstream@cavium.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170822205353.GA17794@embeddedgus> (Gustavo A. R. Silva's
+        message of "Tue, 22 Aug 2017 15:53:53 -0500")
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Christophe,
+Gustavo,
 
-> At the beginning of 'qedf_srr_compl()' and of 'qedf_rec_compl()', we
-> check if 'orig_io_req' is NULL. If this happens, a NULL pointer
-> dereference will occur in the error handling path.
+> Remove variable assignments. The value stored in local variable _rc_
+> is overwritten at line 2448:rc =
+> lpfc_sli4_bsg_set_link_diag_state(phba, 0); before it can be used.
 
-Applied to 4.13/scsi-fixes. Thanks!
+Applied to 4.14/scsi-queue. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
