@@ -1,57 +1,30 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH] Improve requeuing behavior
-Date: Thu, 24 Aug 2017 16:14:22 +0000
-Message-ID: <1503591261.2702.9.camel@wdc.com>
-References: <20170823210535.1072-1-bart.vanassche@wdc.com>
-         <20170824120944.GB23186@lst.de>
+Subject: Re: [PATCH 05/19] scsi_setup_fs_cmnd(): Call scsi_req_init() instead
+ of open-coding it
+Date: Thu, 24 Aug 2017 16:17:00 +0000
+Message-ID: <1503591419.2702.10.camel@wdc.com>
+References: <20170823214009.15015-1-bart.vanassche@wdc.com>
+         <20170823214009.15015-6-bart.vanassche@wdc.com>
+         <20170824090514.GE19886@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:34972 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752940AbdHXQPJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Aug 2017 12:15:09 -0400
-In-Reply-To: <20170824120944.GB23186@lst.de>
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:57764 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753210AbdHXQRo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Aug 2017 12:17:44 -0400
+In-Reply-To: <20170824090514.GE19886@lst.de>
 Content-Language: en-US
-Content-ID: <B94C38DB220A2F4E8A927425D3336EA5@namprd04.prod.outlook.com>
+Content-ID: <2823A0101744B4438582485047490CD0@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "hch@lst.de" <hch@lst.de>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "brking@linux.vnet.ibm.com" <brking@linux.vnet.ibm.com>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Bart Van Assche <Bart.VanAssche@wdc.com>, "hare@suse.com" <hare@suse.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>
 
-T24gVGh1LCAyMDE3LTA4LTI0IGF0IDE0OjA5ICswMjAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90
-ZToNCj4gT24gV2VkLCBBdWcgMjMsIDIwMTcgYXQgMDI6MDU6MzVQTSAtMDcwMCwgQmFydCBWYW4g
-QXNzY2hlIHdyb3RlOg0KPiA+IFJlcXVlc3RzIGFyZSB1bnByZXBhcmVkIGFuZCByZXByZXBhcmVk
-IHdoZW4gYmVpbmcgcmVxdWV1ZWQuIEF2b2lkDQo+ID4gdGhhdCByZXF1ZXVpbmcgcmVzZXRzIC5q
-aWZmaWVzX2F0X2FsbG9jIGFuZCAucmV0cmllcyBieSBpbml0aWFsaXppbmcNCj4gPiB0aGVzZSB0
-d28gbWVtYmVyIHZhcmlhYmxlcyBmcm9tIGluc2lkZSBibGtfZ2V0X3JlcXVlc3QoKSBhbmQgYnkN
-Cj4gPiBwcmVzZXJ2aW5nIGJvdGggbWVtYmVyIHZhcmlhYmxlcyB3aGVuIHByZXBhcmluZyBhIHJl
-cXVlc3QuIFRoaXMgcGF0Y2gNCj4gPiBhZmZlY3RzIHRoZSByZXF1ZXVpbmcgYmVoYXZpb3Igb2Yg
-c2NzaS1zcSBhbmQgc2NzaS1tcS4NCj4gPiANCj4gPiBSZXBvcnRlZC1ieTogQnJpYW4gS2luZyA8
-YnJraW5nQGxpbnV4LnZuZXQuaWJtLmNvbT4NCj4gPiBSZWZlcmVuY2VzOiBodHRwczovL2xrbWwu
-b3JnL2xrbWwvMjAxNy84LzE4LzkyMyAoIlJlOiBbQlVHXVtiaXNlY3RlZCAyNzAwNjVlXSBsaW51
-eC1uZXh0IGZhaWxzIHRvIGJvb3Qgb24gcG93ZXJwYyIpDQo+ID4gU2lnbmVkLW9mZi1ieTogQmFy
-dCBWYW4gQXNzY2hlIDxiYXJ0LnZhbmFzc2NoZUB3ZGMuY29tPg0KPiA+IENjOiBCcmlhbiBLaW5n
-IDxicmtpbmdAbGludXgudm5ldC5pYm0uY29tPg0KPiA+IENjOiBIYW5uZXMgUmVpbmVja2UgPGhh
-cmVAc3VzZS5jb20+DQo+ID4gQ2M6IENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPg0KPiA+
-IENjOiBKb2hhbm5lcyBUaHVtc2hpcm4gPGp0aHVtc2hpcm5Ac3VzZS5kZT4NCj4gPiAtLS0NCj4g
-PiAgZHJpdmVycy9zY3NpL3Njc2lfbGliLmMgfCA3ICsrKysrKy0NCj4gPiAgMSBmaWxlIGNoYW5n
-ZWQsIDYgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQ0KPiA+IA0KPiA+IGRpZmYgLS1naXQg
-YS9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYyBiL2RyaXZlcnMvc2NzaS9zY3NpX2xpYi5jDQo+ID4g
-aW5kZXggZWJjNWM3MTNlZTM3Li44ZDFlYzFlN2IwZTIgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVy
-cy9zY3NpL3Njc2lfbGliLmMNCj4gPiArKysgYi9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYw0KPiA+
-IEBAIC0xMTIyLDYgKzExMjIsOCBAQCB2b2lkIHNjc2lfaW5pdGlhbGl6ZV9ycShzdHJ1Y3QgcmVx
-dWVzdCAqcnEpDQo+ID4gIAlzdHJ1Y3Qgc2NzaV9jbW5kICpjbWQgPSBibGtfbXFfcnFfdG9fcGR1
-KHJxKTsNCj4gPiAgDQo+ID4gIAlzY3NpX3JlcV9pbml0KCZjbWQtPnJlcSk7DQo+ID4gKwljbWQt
-PmppZmZpZXNfYXRfYWxsb2MgPSBqaWZmaWVzOw0KPiA+ICsJY21kLT5yZXRyaWVzID0gMDsNCj4g
-PiAgfQ0KPiA+ICBFWFBPUlRfU1lNQk9MKHNjc2lfaW5pdGlhbGl6ZV9ycSk7DQo+IA0KPiBIb3cg
-aXMgdGhpcyB3b3JraW5nIGZvciBub24tcGFzc3Rocm91Z2ggY29tbWFuZHMgd2hlcmUgd2UgZG9u
-J3QNCj4gY2FsbCBzY3NpX2luaXRpYWxpemVfcnE/DQoNCkhlbGxvIENocmlzdG9waCwNCg0KQ29t
-bWl0IGNhMThkNmY3NjlkMiAoImJsb2NrOiBNYWtlIG1vc3Qgc2NzaV9yZXFfaW5pdCgpIGNhbGxz
-IGltcGxpY2l0IikNCmludHJvZHVjZWQgdGhlIHNjc2lfaW5pdGlhbGl6ZV9ycSgpIGZ1bmN0aW9u
-IGluIHN1Y2ggYSB3YXkgdGhhdCBpdCBpcyBub3Qgb25seQ0KY2FsbGVkIGZvciBwYXNzLXRocm91
-Z2ggcmVxdWVzdHMgYnV0IGFsc28gZm9yIEZTIHJlcXVlc3RzLiBCZWNhdXNlIHRoYXQgY29tbWl0
-DQpzZXRzIC5pbml0aWFsaXplX3JxX2ZuIGZvciBib3RoIGJsay1zcSBhbmQgYmxrLW1xIGJsa19n
-ZXRfcmVxdWVzdCgpIG5vdyBjYWxscw0Kc2NzaV9pbml0aWFsaXplX3JxKCkgZm9yIGFsbCBTQ1NJ
-IHJlcXVlc3RzLiBPciBkaWQgSSBwZXJoYXBzIG92ZXJsb29rIHNvbWV0aGluZz8NCg0KQmFydC4=
+T24gVGh1LCAyMDE3LTA4LTI0IGF0IDExOjA1ICswMjAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90
+ZToNCj4gSSBkb24ndCByZWFsbHkgc2VlIHRoZSBwb2ludCBvZiBkb2luZyBtb3JlIHdvcmsgaW4g
+ZXhhY3RseSB0aGUgc2FtZQ0KPiBhbW91bnQgb2YgY29kZSBoZXJlLCBlc3BlY2lhbGx5IGdpdmVu
+IHRoYXQgdGhpcyBpcyB0aGUgZmFzdCBwYXRoLg0KPiANCj4gRG8geW91IG5lZWQgdGhpcyBmb3Ig
+YW55IGZ1dHVyZSBwYXRjaGVzPw0KDQpIZWxsbyBDaHJpc3RvcGgsDQoNCkkgd2lsbCBkcm9wIHRo
+aXMgcGF0Y2guDQoNCkJhcnQu
