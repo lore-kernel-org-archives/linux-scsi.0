@@ -1,55 +1,63 @@
 From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [bug report] scsi: lpfc: Fix handling of FCP and NVME FC4 types in
- Pt2Pt topology
-Date: Fri, 25 Aug 2017 00:10:12 +0300
-Message-ID: <20170824211011.ik5uwrsph7a7nkqz@mwanda>
+Subject: [bug report] scsi: qla2xxx: Cleanup NPIV host in target mode during
+ config teardown
+Date: Fri, 25 Aug 2017 00:15:21 +0300
+Message-ID: <20170824211521.4hrwymr44vswi6ta@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:51713 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:18437 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753457AbdHXVK3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Aug 2017 17:10:29 -0400
+        with ESMTP id S1753411AbdHXVPl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Aug 2017 17:15:41 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dick.kennedy@broadcom.com
+To: quinn.tran@cavium.com
 Cc: linux-scsi@vger.kernel.org
 
-Hello Dick Kennedy,
+Hello Quinn Tran,
 
 This is a semi-automatic email about new static checker warnings.
 
-The patch 8fd5f79a9cf4: "scsi: lpfc: Fix handling of FCP and NVME FC4 
-types in Pt2Pt topology" from Aug 23, 2017, leads to the following 
-Smatch complaint:
+The patch 821c9f4cab5e: "scsi: qla2xxx: Cleanup NPIV host in target
+mode during config teardown" from Aug 23, 2017, leads to the
+following Smatch complaint:
 
-drivers/scsi/lpfc/lpfc_els.c:2010 lpfc_issue_els_plogi()
-	 error: we previously assumed 'ndlp' could be null (see line 1998)
+    drivers/scsi/qla2xxx/qla_target.c:1553 qlt_release()
+    error: we previously assumed 'vha->vha_tgt.qla_tgt' could be null (see line 1533)
 
-drivers/scsi/lpfc/lpfc_els.c
-  1997		ndlp = lpfc_findnode_did(vport, did);
-  1998		if (ndlp && !NLP_CHK_NODE_ACT(ndlp))
-  1999			ndlp = NULL;
-                        ^^^^^^^^^^^
-ndlp can be NULL.
+drivers/scsi/qla2xxx/qla_target.c
+  1532	
+  1533		if ((vha->vha_tgt.qla_tgt != NULL) && !tgt->tgt_stop &&
+  1534		    !tgt->tgt_stopped)
+  1535			qlt_stop_phase1(tgt);
+  1536	
+  1537		if ((vha->vha_tgt.qla_tgt != NULL) && !tgt->tgt_stopped)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Existing code assumes this can be NULL.
 
-  2000	
-  2001		/* If ndlp is not NULL, we will bump the reference count on it */
-  2002		cmdsize = (sizeof(uint32_t) + sizeof(struct serv_parm));
-  2003		elsiocb = lpfc_prep_els_iocb(vport, 1, cmdsize, retry, ndlp, did,
-  2004					     ELS_CMD_PLOGI);
-  2005		if (!elsiocb)
-  2006			return 1;
-  2007	
-  2008		shost = lpfc_shost_from_vport(vport);
-  2009		spin_lock_irq(shost->host_lock);
-  2010		ndlp->nlp_flag &= ~NLP_FCP_PRLI_RJT;
-                ^^^^^^^^^^^^^^
-We added a new unchecked dereference.
+  1538			qlt_stop_phase2(tgt);
+  1539	
+  1540		for (i = 0; i < vha->hw->max_qpairs + 1; i++) {
+  1541			unsigned long flags;
+  1542	
+  1543			h = &tgt->qphints[i];
+  1544			if (h->qpair) {
+  1545				spin_lock_irqsave(h->qpair->qp_lock_ptr, flags);
+  1546				list_del(&h->hint_elem);
+  1547				spin_unlock_irqrestore(h->qpair->qp_lock_ptr, flags);
+  1548				h->qpair = NULL;
+  1549			}
+  1550		}
+  1551		kfree(tgt->qphints);
+  1552		mutex_lock(&qla_tgt_mutex);
+  1553		list_del(&vha->vha_tgt.qla_tgt->tgt_list_entry);\
+                          ^^^^^^^^^^^^^^^^^^^^
+The patch adds a new dereference.
 
-  2011		spin_unlock_irq(shost->host_lock);
-  2012	
+  1554		mutex_unlock(&qla_tgt_mutex);
+  1555	
 
 regards,
 dan carpenter
