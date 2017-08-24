@@ -1,78 +1,50 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] scsi_transport_sas: Fix error handling in
- sas_smp_request()
-Date: Thu, 24 Aug 2017 14:21:28 +0200
-Message-ID: <349346ee-bc08-a608-1c8f-0dcf0991686a@suse.de>
-References: <20170823182558.15370-1-bart.vanassche@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20170823182558.15370-1-bart.vanassche@wdc.com>
-Content-Language: en-US
-Sender: stable-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org
+Subject: [PATCH] mptsas: Fixup device hotplug for VMWare ESXi
+Date: Thu, 24 Aug 2017 14:52:43 +0200
+Message-ID: <1503579163-104386-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:41051 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752983AbdHXMwv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 24 Aug 2017 08:52:51 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-On 08/23/2017 08:25 PM, Bart Van Assche wrote:
-> sas_function_template.smp_handler implementations either return
-> 0 or a Unix error code. Convert that error code into a SCSI
-> result. This patch is what I came up with after having analyzed
-> the following sparse warnings:
-> 
-> drivers/scsi/scsi_transport_sas.c:187:21: warning: incorrect type in assignment (different base types)
-> drivers/scsi/scsi_transport_sas.c:187:21:    expected restricted blk_status_t [usertype] ret
-> drivers/scsi/scsi_transport_sas.c:187:21:    got int
-> drivers/scsi/scsi_transport_sas.c:188:39: warning: incorrect type in assignment (different base types)
-> drivers/scsi/scsi_transport_sas.c:188:39:    expected int [signed] result
-> drivers/scsi/scsi_transport_sas.c:188:39:    got restricted blk_status_t [usertype] ret
-> 
-> Fixes: commit 17d5363b83f8 ("scsi: introduce a result field in struct scsi_request")
-> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Johannes Thumshirn <jthumshirn@suse.de>
-> Cc: <stable@vger.kernel.org>
-> ---
->  drivers/scsi/scsi_transport_sas.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-> index 5006a656e16a..a318c46db7cc 100644
-> --- a/drivers/scsi/scsi_transport_sas.c
-> +++ b/drivers/scsi/scsi_transport_sas.c
-> @@ -173,7 +173,7 @@ static void sas_smp_request(struct request_queue *q, struct Scsi_Host *shost,
->  			    struct sas_rphy *rphy)
->  {
->  	struct request *req;
-> -	blk_status_t ret;
-> +	int ret;
->  	int (*handler)(struct Scsi_Host *, struct sas_rphy *, struct request *);
->  
->  	while ((req = blk_fetch_request(q)) != NULL) {
-> @@ -185,7 +185,9 @@ static void sas_smp_request(struct request_queue *q, struct Scsi_Host *shost,
->  				blk_rq_bytes(req->next_rq);
->  		handler = to_sas_internal(shost->transportt)->f->smp_handler;
->  		ret = handler(shost, rphy, req);
-> -		scsi_req(req)->result = ret;
-> +		WARN_ONCE(ret != 0 && !IS_ERR_VALUE(ret + 0UL),
-> +			  "%s: ret = %d\n", __func__, ret);
-> +		scsi_req(req)->result = ret ? DID_ERROR << 16 : 0;
->  
->  		blk_end_request_all(req, 0);
->  
-> 
-Weelll ... I'd rather audit the handler so as to ensure that the correct
-value is returned.
-And this 'ret + 0UL' construct is decidedly ugly ...
+VMWare ESXi emulates an mptsas HBA, but exposes all drives as
+direct-attached SAS drives.
+This it not how the driver originally envisioned things; SAS drives
+were supposed to be connected via an expander, and only SATA drives
+would be direct attached.
+As such any hotplug event for direct-attach SAS drives was silently
+ignored, and the guest failed to detect new drives from within a
+VMWare ESXi environment.
 
-Cheers,
+Bugzilla: https://bugzilla.suse.com/show_bug.cgi?id=1030850
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/message/fusion/mptsas.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-Hannes
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+index f6308ad..b9bd6aa 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -4352,11 +4352,10 @@ static void mptsas_expander_delete(MPT_ADAPTER *ioc,
+ 			return;
+ 
+ 		phy_info = mptsas_refreshing_device_handles(ioc, &sas_device);
+-		/* Only For SATA Device ADD */
+-		if (!phy_info && (sas_device.device_info &
+-				MPI_SAS_DEVICE_INFO_SATA_DEVICE)) {
++		/* Device hostplug */
++		if (!phy_info) {
+ 			devtprintk(ioc, printk(MYIOC_s_DEBUG_FMT
+-				"%s %d SATA HOT PLUG: "
++				"%s %d HOT PLUG: "
+ 				"parent handle of device %x\n", ioc->name,
+ 				__func__, __LINE__, sas_device.handle_parent));
+ 			port_info = mptsas_find_portinfo_by_handle(ioc,
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+1.8.5.6
