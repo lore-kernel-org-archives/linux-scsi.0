@@ -1,18 +1,21 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] scsi_transport_sas: Fix error handling in
-        sas_smp_request()
-Date: Thu, 24 Aug 2017 10:47:55 +0200
-Message-ID: <20170824084755.GA19504@lst.de>
-References: <20170823182558.15370-1-bart.vanassche@wdc.com>
+Subject: Re: [PATCH 01/19] Remove an obsolete function declaration
+Date: Thu, 24 Aug 2017 11:02:48 +0200
+Message-ID: <20170824090248.GA19886@lst.de>
+References: <20170823214009.15015-1-bart.vanassche@wdc.com> <20170823214009.15015-2-bart.vanassche@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:48577 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751124AbdHXJCt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 24 Aug 2017 05:02:49 -0400
 Content-Disposition: inline
-In-Reply-To: <20170823182558.15370-1-bart.vanassche@wdc.com>
-Sender: stable-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org
+In-Reply-To: <20170823214009.15015-2-bart.vanassche@wdc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
 Looks good,
 
