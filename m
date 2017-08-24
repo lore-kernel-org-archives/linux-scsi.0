@@ -1,65 +1,57 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v3 2/2] scsi: lpfc: avoid false-positive gcc-8 warning
-Date: Fri, 25 Aug 2017 01:10:00 +0200
-Message-ID: <20170824231016.1843118-2-arnd@arndb.de>
-References: <20170824231016.1843118-1-arnd@arndb.de>
+Subject: [PATCH 1/2] scsi: lpfc: avoid an unused function warning
+Date: Fri, 25 Aug 2017 01:09:59 +0200
+Message-ID: <20170824231016.1843118-1-arnd@arndb.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170824231016.1843118-1-arnd@arndb.de>
 Sender: linux-kernel-owner@vger.kernel.org
 To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Dan Carpenter <dan.carpenter@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This is an interesting regression with gcc-8, showing a harmless
-warning for correct code:
+The only reference to lpfc_nvmet_replenish_context() is inside of
+an #ifdef, leading to a harmless warning when CONFIG_NVME_TARGET_FC
+is disabled:
 
-In file included from include/linux/kernel.h:13:0,
-                 ...
-                 from drivers/scsi/lpfc/lpfc_debugfs.c:23:
-include/linux/printk.h:301:2: error: 'eq' may be used uninitialized in this function [-Werror=maybe-uninitialized]
-  printk(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
-  ^~~~~~
-In file included from drivers/scsi/lpfc/lpfc_debugfs.c:58:0:
-drivers/scsi/lpfc/lpfc_debugfs.h:451:31: note: 'eq' was declared here
+drivers/scsi/lpfc/lpfc_nvmet.c:1457:1: error: 'lpfc_nvmet_replenish_context' defined but not used [-Werror=unused-function]
 
-I managed to reduce the warning into a small test case for
-gcc-8 that I reported in the gcc bugzilla[1].
+This replaces the preprocessor conditional with a C condition,
+so the compiler can see that the function is intentionally unused.
 
-As a workaround, this changes the logic to move the two assignments
-of 'eq' out of the conditions and instead make the index conditional.
-This works for all configurations I tried and avoids adding a bogus
-initialization.
-
-Acked-by: James Smart <james.smart@broadcom.com>
-Link: [1] https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81958
+Fixes: 9a38e4f1c82f ("scsi: lpfc: Fix MRQ > 1 context list handling")
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/scsi/lpfc/lpfc_debugfs.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/lpfc/lpfc_nvmet.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.h b/drivers/scsi/lpfc/lpfc_debugfs.h
-index 7b7d314af0e0..c4edd87bfc65 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.h
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.h
-@@ -478,16 +478,16 @@ lpfc_debug_dump_cq(struct lpfc_hba *phba, int qtype, int wqidx)
- 		return;
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index 48a1c0c27a3f..0b7c1a49e203 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -1527,7 +1527,6 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
+ 			    struct rqb_dmabuf *nvmebuf,
+ 			    uint64_t isr_timestamp)
+ {
+-#if (IS_ENABLED(CONFIG_NVME_TARGET_FC))
+ 	struct lpfc_nvmet_rcv_ctx *ctxp;
+ 	struct lpfc_nvmet_tgtport *tgtp;
+ 	struct fc_frame_header *fc_hdr;
+@@ -1541,6 +1540,9 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
+ 	uint32_t id;
+ #endif
  
- 	for (eqidx = 0; eqidx < phba->io_channel_irqs; eqidx++) {
--		eq = phba->sli4_hba.hba_eq[eqidx];
--		if (cq->assoc_qid == eq->queue_id)
-+		if (cq->assoc_qid == phba->sli4_hba.hba_eq[eqidx]->queue_id)
- 			break;
- 	}
- 	if (eqidx == phba->io_channel_irqs) {
- 		pr_err("Couldn't find EQ for CQ. Using EQ[0]\n");
- 		eqidx = 0;
--		eq = phba->sli4_hba.hba_eq[0];
- 	}
- 
-+	eq = phba->sli4_hba.hba_eq[eqidx];
++	if (!IS_ENABLED(CONFIG_NVME_TARGET_FC))
++		return;
 +
- 	if (qtype == DUMP_FCP || qtype == DUMP_NVME)
- 		pr_err("%s CQ: WQ[Idx:%d|Qid%d]->CQ[Idx%d|Qid%d]"
- 			"->EQ[Idx:%d|Qid:%d]:\n",
+ 	ctx_buf = NULL;
+ 	if (!nvmebuf || !phba->targetport) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_NVME_IOERR,
+@@ -1695,7 +1697,6 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
+ 
+ 	if (nvmebuf)
+ 		lpfc_rq_buf_free(phba, &nvmebuf->hbuf); /* repost */
+-#endif
+ }
+ 
+ /**
 -- 
 2.9.0
