@@ -1,292 +1,54 @@
-From: Benjamin Block <bblock@linux.vnet.ibm.com>
-Subject: [PATCH v2 1/1] bsg-lib: fix kernel panic resulting from missing allocation of reply-buffer
-Date: Thu, 24 Aug 2017 01:57:56 +0200
-Message-ID: <4cf376032b459b7a14cdad22987177b86cc669c0.1503528302.git.bblock@linux.vnet.ibm.com>
-References: <cover.1503528302.git.bblock@linux.vnet.ibm.com>
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <cover.1503528302.git.bblock@linux.vnet.ibm.com>
-In-Reply-To: <cover.1503528302.git.bblock@linux.vnet.ibm.com>
-References: <cover.1503528302.git.bblock@linux.vnet.ibm.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Benjamin Block <bblock@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>, Christoph Hellwig <hch@lst.de>, Steffen Maier <maier@linux.vnet.ibm.com>
+From: James Smart <jsmart2021@gmail.com>
+Subject: [PATCH v2] scsi: lpfc: avoid false positive gcc-8 warning
+Date: Wed, 23 Aug 2017 17:34:40 -0700
+Message-ID: <20170824003440.4270-1-jsmart2021@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, hare@suse.com, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, arnd@arndb.de, James Smart <jsmart2021@gmail.com>, James Smart <james.smart@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Since we split the scsi_request out of struct request bsg fails to
-provide a reply-buffer for the drivers. This was done via the pointer
-for sense-data, that is not preallocated anymore.
+Arnd Bergmann, testing gcc-8, encountered the following:
 
-Failing to allocate/assign it results in illegal dereferences because
-LLDs use this pointer unquestioned.
+> This is an interesting regression with gcc-8, showing a harmless
+> warning for correct code:
+>
+>In file included from include/linux/kernel.h:13:0,
+>    ...
+>    from drivers/scsi/lpfc/lpfc_debugfs.c:23:
+>    include/linux/printk.h:301:2: error: 'eq' may be used
+>    uninitialized in this function [-Werror=maybe-uninitialized]
+>       printk(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
+>       ^~~~~~
+>    In file included from drivers/scsi/lpfc/lpfc_debugfs.c:58:0:
+>    drivers/scsi/lpfc/lpfc_debugfs.h:451:31: note: 'eq' was
+>    declared here
 
-An example panic on s390x, using the zFCP driver, looks like this (I had
-debugging on, otherwise NULL-pointer dereferences wouldn't even panic on
-s390x):
+The code is fine: a for loop which if there's at least 1 itteration,
+will assign eq a value. Followed by an if test that checks for no
+itterations and assigns eq a default value. But the checker doesn't
+see the relationship between the two so assumes eq may not a have a
+value.
 
-Unable to handle kernel pointer dereference in virtual kernel address space
-Failing address: 6b6b6b6b6b6b6000 TEID: 6b6b6b6b6b6b6403
-Fault in home space mode while using kernel ASCE.
-AS:0000000001590007 R3:0000000000000024
-Oops: 0038 ilc:2 [#1] PREEMPT SMP DEBUG_PAGEALLOC
-Modules linked in: <Long List>
-CPU: 2 PID: 0 Comm: swapper/2 Not tainted 4.12.0-bsg-regression+ #3
-Hardware name: IBM 2964 N96 702 (z/VM 6.4.0)
-task: 0000000065cb0100 task.stack: 0000000065cb4000
-Krnl PSW : 0704e00180000000 000003ff801e4156 (zfcp_fc_ct_els_job_handler+0x16/0x58 [zfcp])
-           R:0 T:1 IO:1 EX:1 Key:0 M:1 W:0 P:0 AS:3 CC:2 PM:0 RI:0 EA:3
-Krnl GPRS: 0000000000000001 000000005fa9d0d0 000000005fa9d078 0000000000e16866
-           000003ff00000290 6b6b6b6b6b6b6b6b 0000000059f78f00 000000000000000f
-           00000000593a0958 00000000593a0958 0000000060d88800 000000005ddd4c38
-           0000000058b50100 07000000659cba08 000003ff801e8556 00000000659cb9a8
-Krnl Code: 000003ff801e4146: e31020500004        lg      %r1,80(%r2)
-           000003ff801e414c: 58402040           l       %r4,64(%r2)
-          #000003ff801e4150: e35020200004       lg      %r5,32(%r2)
-          >000003ff801e4156: 50405004           st      %r4,4(%r5)
-           000003ff801e415a: e54c50080000       mvhi    8(%r5),0
-           000003ff801e4160: e33010280012       lt      %r3,40(%r1)
-           000003ff801e4166: a718fffb           lhi     %r1,-5
-           000003ff801e416a: 1803               lr      %r0,%r3
-Call Trace:
-([<000003ff801e8556>] zfcp_fsf_req_complete+0x726/0x768 [zfcp])
- [<000003ff801ea82a>] zfcp_fsf_reqid_check+0x102/0x180 [zfcp]
- [<000003ff801eb980>] zfcp_qdio_int_resp+0x230/0x278 [zfcp]
- [<00000000009b91b6>] qdio_kick_handler+0x2ae/0x2c8
- [<00000000009b9e3e>] __tiqdio_inbound_processing+0x406/0xc10
- [<00000000001684c2>] tasklet_action+0x15a/0x1d8
- [<0000000000bd28ec>] __do_softirq+0x3ec/0x848
- [<00000000001675a4>] irq_exit+0x74/0xf8
- [<000000000010dd6a>] do_IRQ+0xba/0xf0
- [<0000000000bd19e8>] io_int_handler+0x104/0x2d4
- [<00000000001033b6>] enabled_wait+0xb6/0x188
-([<000000000010339e>] enabled_wait+0x9e/0x188)
- [<000000000010396a>] arch_cpu_idle+0x32/0x50
- [<0000000000bd0112>] default_idle_call+0x52/0x68
- [<00000000001cd0fa>] do_idle+0x102/0x188
- [<00000000001cd41e>] cpu_startup_entry+0x3e/0x48
- [<0000000000118c64>] smp_start_secondary+0x11c/0x130
- [<0000000000bd2016>] restart_int_handler+0x62/0x78
- [<0000000000000000>]           (null)
-INFO: lockdep is turned off.
-Last Breaking-Event-Address:
- [<000003ff801e41d6>] zfcp_fc_ct_job_handler+0x3e/0x48 [zfcp]
+I believe, simply initializing with a NULL will solve the issue.
 
-Kernel panic - not syncing: Fatal exception in interrupt
-
-This patch moves bsg-lib to allocate and setup struct bsg_job ahead of
-time, including the allocation of a buffer for the reply-data.
-
-This means, struct bsg_job is not allocated separately anymore, but as part
-of struct request allocation - similar to struct scsi_cmd. Reflect this in
-the function names that used to handle creation/destruction of struct
-bsg_job.
-
-Reported-by: Steffen Maier <maier@linux.vnet.ibm.com>
-Suggested-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Benjamin Block <bblock@linux.vnet.ibm.com>
-Fixes: 82ed4db499b8 ("block: split scsi_request out of struct request")
-Cc: <stable@vger.kernel.org> #4.11+
+Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- block/bsg-lib.c         | 74 +++++++++++++++++++++++++++++--------------------
- include/linux/blkdev.h  |  1 -
- include/linux/bsg-lib.h |  2 ++
- 3 files changed, 46 insertions(+), 31 deletions(-)
+ drivers/scsi/lpfc/lpfc_debugfs.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/block/bsg-lib.c b/block/bsg-lib.c
-index c4513b23f57a..dd56d7460cb9 100644
---- a/block/bsg-lib.c
-+++ b/block/bsg-lib.c
-@@ -29,26 +29,25 @@
- #include <scsi/scsi_cmnd.h>
- 
- /**
-- * bsg_destroy_job - routine to teardown/delete a bsg job
-+ * bsg_teardown_job - routine to teardown a bsg job
-  * @job: bsg_job that is to be torn down
-  */
--static void bsg_destroy_job(struct kref *kref)
-+static void bsg_teardown_job(struct kref *kref)
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.h b/drivers/scsi/lpfc/lpfc_debugfs.h
+index 7b7d314af0e0..32e86d7813a0 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.h
++++ b/drivers/scsi/lpfc/lpfc_debugfs.h
+@@ -448,7 +448,7 @@ lpfc_debug_dump_wq(struct lpfc_hba *phba, int qtype, int wqidx)
+ static inline void
+ lpfc_debug_dump_cq(struct lpfc_hba *phba, int qtype, int wqidx)
  {
- 	struct bsg_job *job = container_of(kref, struct bsg_job, kref);
- 	struct request *rq = job->req;
- 
--	blk_end_request_all(rq, BLK_STS_OK);
--
- 	put_device(job->dev);	/* release reference for the request */
- 
- 	kfree(job->request_payload.sg_list);
- 	kfree(job->reply_payload.sg_list);
--	kfree(job);
-+
-+	blk_end_request_all(rq, BLK_STS_OK);
- }
- 
- void bsg_job_put(struct bsg_job *job)
- {
--	kref_put(&job->kref, bsg_destroy_job);
-+	kref_put(&job->kref, bsg_teardown_job);
- }
- EXPORT_SYMBOL_GPL(bsg_job_put);
- 
-@@ -100,7 +99,7 @@ EXPORT_SYMBOL_GPL(bsg_job_done);
-  */
- static void bsg_softirq_done(struct request *rq)
- {
--	struct bsg_job *job = rq->special;
-+	struct bsg_job *job = blk_mq_rq_to_pdu(rq);
- 
- 	bsg_job_put(job);
- }
-@@ -122,33 +121,20 @@ static int bsg_map_buffer(struct bsg_buffer *buf, struct request *req)
- }
- 
- /**
-- * bsg_create_job - create the bsg_job structure for the bsg request
-+ * bsg_prepare_job - create the bsg_job structure for the bsg request
-  * @dev: device that is being sent the bsg request
-  * @req: BSG request that needs a job structure
-  */
--static int bsg_create_job(struct device *dev, struct request *req)
-+static int bsg_prepare_job(struct device *dev, struct request *req)
- {
- 	struct request *rsp = req->next_rq;
--	struct request_queue *q = req->q;
- 	struct scsi_request *rq = scsi_req(req);
--	struct bsg_job *job;
-+	struct bsg_job *job = blk_mq_rq_to_pdu(req);
- 	int ret;
- 
--	BUG_ON(req->special);
--
--	job = kzalloc(sizeof(struct bsg_job) + q->bsg_job_size, GFP_KERNEL);
--	if (!job)
--		return -ENOMEM;
--
--	req->special = job;
--	job->req = req;
--	if (q->bsg_job_size)
--		job->dd_data = (void *)&job[1];
- 	job->request = rq->cmd;
- 	job->request_len = rq->cmd_len;
--	job->reply = rq->sense;
--	job->reply_len = SCSI_SENSE_BUFFERSIZE;	/* Size of sense buffer
--						 * allocated */
-+
- 	if (req->bio) {
- 		ret = bsg_map_buffer(&job->request_payload, req);
- 		if (ret)
-@@ -187,7 +173,6 @@ static void bsg_request_fn(struct request_queue *q)
- {
- 	struct device *dev = q->queuedata;
- 	struct request *req;
--	struct bsg_job *job;
- 	int ret;
- 
- 	if (!get_device(dev))
-@@ -199,7 +184,7 @@ static void bsg_request_fn(struct request_queue *q)
- 			break;
- 		spin_unlock_irq(q->queue_lock);
- 
--		ret = bsg_create_job(dev, req);
-+		ret = bsg_prepare_job(dev, req);
- 		if (ret) {
- 			scsi_req(req)->result = ret;
- 			blk_end_request_all(req, BLK_STS_OK);
-@@ -207,8 +192,7 @@ static void bsg_request_fn(struct request_queue *q)
- 			continue;
- 		}
- 
--		job = req->special;
--		ret = q->bsg_job_fn(job);
-+		ret = q->bsg_job_fn(blk_mq_rq_to_pdu(req));
- 		spin_lock_irq(q->queue_lock);
- 		if (ret)
- 			break;
-@@ -219,6 +203,35 @@ static void bsg_request_fn(struct request_queue *q)
- 	spin_lock_irq(q->queue_lock);
- }
- 
-+static int bsg_init_rq(struct request_queue *q, struct request *req, gfp_t gfp)
-+{
-+	struct bsg_job *job = blk_mq_rq_to_pdu(req);
-+	struct scsi_request *sreq = &job->sreq;
-+
-+	memset(job, 0, sizeof(*job));
-+
-+	scsi_req_init(sreq);
-+	sreq->sense_len = SCSI_SENSE_BUFFERSIZE;
-+	sreq->sense = kzalloc(sreq->sense_len, gfp);
-+	if (!sreq->sense)
-+		return -ENOMEM;
-+
-+	job->req = req;
-+	job->reply = sreq->sense;
-+	job->reply_len = sreq->sense_len;
-+	job->dd_data = job + 1;
-+
-+	return 0;
-+}
-+
-+static void bsg_exit_rq(struct request_queue *q, struct request *req)
-+{
-+	struct bsg_job *job = blk_mq_rq_to_pdu(req);
-+	struct scsi_request *sreq = &job->sreq;
-+
-+	kfree(sreq->sense);
-+}
-+
- /**
-  * bsg_setup_queue - Create and add the bsg hooks so we can receive requests
-  * @dev: device to attach bsg device to
-@@ -235,7 +248,9 @@ struct request_queue *bsg_setup_queue(struct device *dev, char *name,
- 	q = blk_alloc_queue(GFP_KERNEL);
- 	if (!q)
- 		return ERR_PTR(-ENOMEM);
--	q->cmd_size = sizeof(struct scsi_request);
-+	q->cmd_size = sizeof(struct bsg_job) + dd_job_size;
-+	q->init_rq_fn = bsg_init_rq;
-+	q->exit_rq_fn = bsg_exit_rq;
- 	q->request_fn = bsg_request_fn;
- 
- 	ret = blk_init_allocated_queue(q);
-@@ -243,7 +258,6 @@ struct request_queue *bsg_setup_queue(struct device *dev, char *name,
- 		goto out_cleanup_queue;
- 
- 	q->queuedata = dev;
--	q->bsg_job_size = dd_job_size;
- 	q->bsg_job_fn = job_fn;
- 	queue_flag_set_unlocked(QUEUE_FLAG_BIDI, q);
- 	queue_flag_set_unlocked(QUEUE_FLAG_SCSI_PASSTHROUGH, q);
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index f45f157b2910..6ae9aa6f93f0 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -568,7 +568,6 @@ struct request_queue {
- 
- #if defined(CONFIG_BLK_DEV_BSG)
- 	bsg_job_fn		*bsg_job_fn;
--	int			bsg_job_size;
- 	struct bsg_class_device bsg_dev;
- #endif
- 
-diff --git a/include/linux/bsg-lib.h b/include/linux/bsg-lib.h
-index e34dde2da0ef..637a20cfb237 100644
---- a/include/linux/bsg-lib.h
-+++ b/include/linux/bsg-lib.h
-@@ -24,6 +24,7 @@
- #define _BLK_BSG_
- 
- #include <linux/blkdev.h>
-+#include <scsi/scsi_request.h>
- 
- struct request;
- struct device;
-@@ -37,6 +38,7 @@ struct bsg_buffer {
- };
- 
- struct bsg_job {
-+	struct scsi_request sreq;
- 	struct device *dev;
- 	struct request *req;
+-	struct lpfc_queue *wq, *cq, *eq;
++	struct lpfc_queue *wq, *cq, *eq = NULL;
+ 	char *qtypestr;
+ 	int eqidx;
  
 -- 
-2.12.2
+2.13.1
