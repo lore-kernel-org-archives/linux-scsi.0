@@ -1,56 +1,60 @@
-From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
-Subject: Re: possible circular locking dependency detected [was: linux-next:
- Tree for Aug 22]
-Date: Thu, 24 Aug 2017 13:49:12 +0900
-Message-ID: <20170824044912.GB3569@jagdpanzerIV.localdomain>
-References: <20170822183816.7925e0f8@canb.auug.org.au>
- <20170822104708.GA491@jagdpanzerIV.localdomain>
- <1503438234.2508.27.camel@wdc.com>
- <20170823000304.GK20323@X58A-UD3R>
- <20170823034951.GG11771@tardis>
- <20170823043813.GH11771@tardis>
- <20170823044648.GE10329@jagdpanzerIV.localdomain>
- <20170823053501.GJ11771@tardis>
- <20170823055517.GB728@jagdpanzerIV.localdomain>
- <20170824043909.GL11771@tardis>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 02/19] Avoid sign extension of scsi_device.type
+Date: Thu, 24 Aug 2017 08:10:49 +0200
+Message-ID: <693381a6-aaa6-817a-b205-9da68ac5d160@suse.de>
+References: <20170823214009.15015-1-bart.vanassche@wdc.com>
+ <20170823214009.15015-3-bart.vanassche@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-next-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170824043909.GL11771@tardis>
-Sender: linux-next-owner@vger.kernel.org
-To: Boqun Feng <boqun.feng@gmail.com>
-Cc: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>, Byungchul Park <byungchul.park@lge.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, peterz@infradead.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, kernel-team@lge.com
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:39992 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751111AbdHXGKv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 24 Aug 2017 02:10:51 -0400
+In-Reply-To: <20170823214009.15015-3-bart.vanassche@wdc.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@wdc.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>
 
-Hi,
-
-On (08/24/17 12:39), Boqun Feng wrote:
-> On Wed, Aug 23, 2017 at 02:55:17PM +0900, Sergey Senozhatsky wrote:
-> > On (08/23/17 13:35), Boqun Feng wrote:
-> > > > KERN_CONT and "\n" should not be together. "\n" flushes the cont
-> > > > buffer immediately.
-> > > > 
-> > > 
-> > > Hmm.. Not quite familiar with printk() stuffs, but I could see several
-> > > usages of printk(KERN_CONT "...\n") in kernel.
-> > > 
-> > > Did a bit research myself, and I now think the inappropriate use is to
-> > > use a KERN_CONT printk *after* another printk ending with a "\n".
-> > 
-> > ah... I didn't check __print_lock_name(): it leaves unflushed cont buffer
-> > upon the return. sorry, your code is correct.
-> > 
+On 08/23/2017 11:39 PM, Bart Van Assche wrote:
+> This patch avoids that smatch reports the following:
 > 
-> So means printk(KERN_CON "..."); + printk(KERN_CONT "...\n") is a
-> correct usage, right?
+> drivers/scsi/scsi_sysfs.c:506 scsi_bus_uevent() warn: argument 3 to %02x specifier has type 'char'
+> drivers/scsi/scsi_sysfs.c:872 sdev_show_modalias() warn: argument 4 to %02x specifier has type 'char'
+> 
+> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Johannes Thumshirn <jthumshirn@suse.de>
+> ---
+>  include/scsi/scsi_device.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index 0979a5f3b69a..f054f3f43c75 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -111,7 +111,7 @@ struct scsi_device {
+>  	unsigned sector_size;	/* size in bytes */
+>  
+>  	void *hostdata;		/* available to low-level driver */
+> -	char type;
+> +	unsigned char type;
+>  	char scsi_level;
+>  	char inq_periph_qual;	/* PQ from INQUIRY data */	
+>  	struct mutex inquiry_mutex;
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-well, yes. with one precondition - there should be no printk-s from other
-CPUs/tasks in between
+Cheers,
 
-	printk(KERN_CON "...");  +  printk(KERN_CONT "...\n")
-                               ^^^^^
-			here we can have a preliminary flush and broken
-			cont line. but it's been this way forever.
-
-	-ss
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
