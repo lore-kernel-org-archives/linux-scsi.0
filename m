@@ -1,33 +1,81 @@
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH] scsi: lpfc: remove useless code in
- lpfc_sli4_bsg_link_diag_test
-Date: Thu, 24 Aug 2017 10:26:19 -0500
-Message-ID: <7edf46e6-1b3a-52dd-2c15-d72c3f7a9eb9@embeddedor.com>
-References: <20170822205353.GA17794@embeddedgus> <yq1d17ladk5.fsf@oracle.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH] scsi_transport_sas: Fix error handling in
+ sas_smp_request()
+Date: Thu, 24 Aug 2017 16:06:07 +0000
+Message-ID: <1503590766.2702.7.camel@wdc.com>
+References: <20170823182558.15370-1-bart.vanassche@wdc.com>
+         <349346ee-bc08-a608-1c8f-0dcf0991686a@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1d17ladk5.fsf@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:12543 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753142AbdHXQG4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Aug 2017 12:06:56 -0400
+In-Reply-To: <349346ee-bc08-a608-1c8f-0dcf0991686a@suse.de>
+Content-Language: en-US
+Content-ID: <558975DB44955E49A78AC68CADCE6F6B@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "stable@vger.kernel.org" <stable@vger.kernel.org>
 
-Hi Martin,
-
-On 08/23/2017 09:45 PM, Martin K. Petersen wrote:
->
-> Gustavo,
->
->> Remove variable assignments. The value stored in local variable _rc_
->> is overwritten at line 2448:rc =
->> lpfc_sli4_bsg_set_link_diag_state(phba, 0); before it can be used.
->
-> Applied to 4.14/scsi-queue. Thank you!
->
-
-Glad to help. :)
-
--- 
-Gustavo A. R. Silva
+T24gVGh1LCAyMDE3LTA4LTI0IGF0IDE0OjIxICswMjAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6
+DQo+IE9uIDA4LzIzLzIwMTcgMDg6MjUgUE0sIEJhcnQgVmFuIEFzc2NoZSB3cm90ZToNCj4gPiBz
+YXNfZnVuY3Rpb25fdGVtcGxhdGUuc21wX2hhbmRsZXIgaW1wbGVtZW50YXRpb25zIGVpdGhlciBy
+ZXR1cm4NCj4gPiAwIG9yIGEgVW5peCBlcnJvciBjb2RlLiBDb252ZXJ0IHRoYXQgZXJyb3IgY29k
+ZSBpbnRvIGEgU0NTSQ0KPiA+IHJlc3VsdC4gVGhpcyBwYXRjaCBpcyB3aGF0IEkgY2FtZSB1cCB3
+aXRoIGFmdGVyIGhhdmluZyBhbmFseXplZA0KPiA+IHRoZSBmb2xsb3dpbmcgc3BhcnNlIHdhcm5p
+bmdzOg0KPiA+IA0KPiA+IGRyaXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9zYXMuYzoxODc6MjE6
+IHdhcm5pbmc6IGluY29ycmVjdCB0eXBlIGluIGFzc2lnbm1lbnQgKGRpZmZlcmVudCBiYXNlIHR5
+cGVzKQ0KPiA+IGRyaXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9zYXMuYzoxODc6MjE6ICAgIGV4
+cGVjdGVkIHJlc3RyaWN0ZWQgYmxrX3N0YXR1c190IFt1c2VydHlwZV0gcmV0DQo+ID4gZHJpdmVy
+cy9zY3NpL3Njc2lfdHJhbnNwb3J0X3Nhcy5jOjE4NzoyMTogICAgZ290IGludA0KPiA+IGRyaXZl
+cnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9zYXMuYzoxODg6Mzk6IHdhcm5pbmc6IGluY29ycmVjdCB0
+eXBlIGluIGFzc2lnbm1lbnQgKGRpZmZlcmVudCBiYXNlIHR5cGVzKQ0KPiA+IGRyaXZlcnMvc2Nz
+aS9zY3NpX3RyYW5zcG9ydF9zYXMuYzoxODg6Mzk6ICAgIGV4cGVjdGVkIGludCBbc2lnbmVkXSBy
+ZXN1bHQNCj4gPiBkcml2ZXJzL3Njc2kvc2NzaV90cmFuc3BvcnRfc2FzLmM6MTg4OjM5OiAgICBn
+b3QgcmVzdHJpY3RlZCBibGtfc3RhdHVzX3QgW3VzZXJ0eXBlXSByZXQNCj4gPiANCj4gPiBGaXhl
+czogY29tbWl0IDE3ZDUzNjNiODNmOCAoInNjc2k6IGludHJvZHVjZSBhIHJlc3VsdCBmaWVsZCBp
+biBzdHJ1Y3Qgc2NzaV9yZXF1ZXN0IikNCj4gPiBTaWduZWQtb2ZmLWJ5OiBCYXJ0IFZhbiBBc3Nj
+aGUgPGJhcnQudmFuYXNzY2hlQHdkYy5jb20+DQo+ID4gQ2M6IENocmlzdG9waCBIZWxsd2lnIDxo
+Y2hAbHN0LmRlPg0KPiA+IENjOiBIYW5uZXMgUmVpbmVja2UgPGhhcmVAc3VzZS5kZT4NCj4gPiBD
+YzogSm9oYW5uZXMgVGh1bXNoaXJuIDxqdGh1bXNoaXJuQHN1c2UuZGU+DQo+ID4gQ2M6IDxzdGFi
+bGVAdmdlci5rZXJuZWwub3JnPg0KPiA+IC0tLQ0KPiA+ICBkcml2ZXJzL3Njc2kvc2NzaV90cmFu
+c3BvcnRfc2FzLmMgfCA2ICsrKystLQ0KPiA+ICAxIGZpbGUgY2hhbmdlZCwgNCBpbnNlcnRpb25z
+KCspLCAyIGRlbGV0aW9ucygtKQ0KPiA+IA0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kv
+c2NzaV90cmFuc3BvcnRfc2FzLmMgYi9kcml2ZXJzL3Njc2kvc2NzaV90cmFuc3BvcnRfc2FzLmMN
+Cj4gPiBpbmRleCA1MDA2YTY1NmUxNmEuLmEzMThjNDZkYjdjYyAxMDA2NDQNCj4gPiAtLS0gYS9k
+cml2ZXJzL3Njc2kvc2NzaV90cmFuc3BvcnRfc2FzLmMNCj4gPiArKysgYi9kcml2ZXJzL3Njc2kv
+c2NzaV90cmFuc3BvcnRfc2FzLmMNCj4gPiBAQCAtMTczLDcgKzE3Myw3IEBAIHN0YXRpYyB2b2lk
+IHNhc19zbXBfcmVxdWVzdChzdHJ1Y3QgcmVxdWVzdF9xdWV1ZSAqcSwgc3RydWN0IFNjc2lfSG9z
+dCAqc2hvc3QsDQo+ID4gIAkJCSAgICBzdHJ1Y3Qgc2FzX3JwaHkgKnJwaHkpDQo+ID4gIHsNCj4g
+PiAgCXN0cnVjdCByZXF1ZXN0ICpyZXE7DQo+ID4gLQlibGtfc3RhdHVzX3QgcmV0Ow0KPiA+ICsJ
+aW50IHJldDsNCj4gPiAgCWludCAoKmhhbmRsZXIpKHN0cnVjdCBTY3NpX0hvc3QgKiwgc3RydWN0
+IHNhc19ycGh5ICosIHN0cnVjdCByZXF1ZXN0ICopOw0KPiA+ICANCj4gPiAgCXdoaWxlICgocmVx
+ID0gYmxrX2ZldGNoX3JlcXVlc3QocSkpICE9IE5VTEwpIHsNCj4gPiBAQCAtMTg1LDcgKzE4NSw5
+IEBAIHN0YXRpYyB2b2lkIHNhc19zbXBfcmVxdWVzdChzdHJ1Y3QgcmVxdWVzdF9xdWV1ZSAqcSwg
+c3RydWN0IFNjc2lfSG9zdCAqc2hvc3QsDQo+ID4gIAkJCQlibGtfcnFfYnl0ZXMocmVxLT5uZXh0
+X3JxKTsNCj4gPiAgCQloYW5kbGVyID0gdG9fc2FzX2ludGVybmFsKHNob3N0LT50cmFuc3BvcnR0
+KS0+Zi0+c21wX2hhbmRsZXI7DQo+ID4gIAkJcmV0ID0gaGFuZGxlcihzaG9zdCwgcnBoeSwgcmVx
+KTsNCj4gPiAtCQlzY3NpX3JlcShyZXEpLT5yZXN1bHQgPSByZXQ7DQo+ID4gKwkJV0FSTl9PTkNF
+KHJldCAhPSAwICYmICFJU19FUlJfVkFMVUUocmV0ICsgMFVMKSwNCj4gPiArCQkJICAiJXM6IHJl
+dCA9ICVkXG4iLCBfX2Z1bmNfXywgcmV0KTsNCj4gPiArCQlzY3NpX3JlcShyZXEpLT5yZXN1bHQg
+PSByZXQgPyBESURfRVJST1IgPDwgMTYgOiAwOw0KPiA+ICANCj4gPiAgCQlibGtfZW5kX3JlcXVl
+c3RfYWxsKHJlcSwgMCk7DQo+ID4gIA0KPiA+IA0KPiANCj4gV2VlbGxsIC4uLiBJJ2QgcmF0aGVy
+IGF1ZGl0IHRoZSBoYW5kbGVyIHNvIGFzIHRvIGVuc3VyZSB0aGF0IHRoZSBjb3JyZWN0DQo+IHZh
+bHVlIGlzIHJldHVybmVkLg0KPiBBbmQgdGhpcyAncmV0ICsgMFVMJyBjb25zdHJ1Y3QgaXMgZGVj
+aWRlZGx5IHVnbHkgLi4uDQoNCkhlbGxvIEhhbm5lcywNCg0KQ2hhbmdpbmcgIisgMFVMIiBpbnRv
+IGFuIGV4cGxpY2l0ICh1bnNpZ25lZCBsb25nKSBjYXN0IGlzIGVhc3kuIEJ1dCBJIHdvdWxkDQpw
+cmVmZXIgdG8gbGVhdmUgdGhlIGNvbnZlcnNpb24gb2YgdGhlIHNtcF9oYW5kbGVyIGZ1bmN0aW9u
+cyB0byBzb21lb25lIHdobw0KaGFzIHRoZSBoYXJkd2FyZSBhdmFpbGFibGUgdG8gdGVzdCBzdWNo
+IGEgY29udmVyc2lvbi4gVGhlc2UgYXJlIHRoZSBzbXBfaGFuZGxlcg0KaW1wbGVtZW50YXRpb25z
+IEkgYW0gYXdhcmUgb2Y6DQoNCiQgZ2l0IGdyZXAgLW5IICdcLnNtcF9oYW5kbGVyW1s6Ymxhbms6
+XV0qPScNCmRyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0c2FzLmM6MjM1NjoJLnNtcF9oYW5kbGVy
+CQk9IG1wdHNhc19zbXBfaGFuZGxlciwNCmRyaXZlcnMvc2NzaS9ocHNhLmM6OTQ2MzoJLnNtcF9o
+YW5kbGVyID0gaHBzYV9zYXNfc21wX2hhbmRsZXIsDQpkcml2ZXJzL3Njc2kvbGlic2FzL3Nhc19p
+bml0LmM6NTQ4Ogkuc21wX2hhbmRsZXIgPSBzYXNfc21wX2hhbmRsZXIsDQpkcml2ZXJzL3Njc2kv
+bXB0M3Nhcy9tcHQzc2FzX3RyYW5zcG9ydC5jOjIxMjk6CS5zbXBfaGFuZGxlcgkJPSBfdHJhbnNw
+b3J0X3NtcF9oYW5kbGVyLA0KZHJpdmVycy9zY3NpL3NtYXJ0cHFpL3NtYXJ0cHFpX3Nhc190cmFu
+c3BvcnQuYzozNDk6CS5zbXBfaGFuZGxlciA9IHBxaV9zYXNfc21wX2hhbmRsZXIsDQoNCkJhcnQu
