@@ -1,45 +1,26 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: Re: [GIT PULL] SCSI fixes for 4.13-rc6
-Date: Thu, 24 Aug 2017 09:49:55 +0900
-Message-ID: <90e92658-eb4b-8f32-6dd3-b5fd0c229fdc@wdc.com>
-References: <1503470559.2729.4.camel@HansenPartnership.com>
- <1503500560.2484.1.camel@wdc.com> <yq1vale9ueb.fsf@oracle.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: qedf: Fix a potential NULL pointer dereference
+Date: Wed, 23 Aug 2017 22:43:29 -0400
+Message-ID: <yq1h8wxadny.fsf@oracle.com>
+References: <20170820170935.14767-1-christophe.jaillet@wanadoo.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1vale9ueb.fsf@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <20170820170935.14767-1-christophe.jaillet@wanadoo.fr>
+        (Christophe JAILLET's message of "Sun, 20 Aug 2017 19:09:35 +0200")
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc: QLogic-Storage-Upstream@cavium.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-On 8/24/17 00:27, Martin K. Petersen wrote:
-> 
-> Hi Bart,
-> 
->> Had you noticed that Damien had asked not to send the "sd_zbc: Write
->> unlock zone from sd_uninit_cmnd()" patch to Linus without my "scsi-mq:
->> Always unprepare before requeuing a request" patch?
-> 
-> He did change his mind later in that thread, though.
-> 
-> However, what's more important is that we still need a good version of
-> your patch for 4.13. I took Brian's workaround for ipr but I still think
-> Christoph's concerns need to be addressed for me to put your change back
-> in.
+Christophe,
 
-Yes, I did ask for the patch to be kept since it does not make things
-worse for the SMR/mq case (still have a potential dispatch deadlock) but
-does cleanup the code in the legacy/sq case.
+> At the beginning of 'qedf_srr_compl()' and of 'qedf_rec_compl()', we
+> check if 'orig_io_req' is NULL. If this happens, a NULL pointer
+> dereference will occur in the error handling path.
 
-Since it looks like the jiffies_at_alloc and retry counter
-initialization fixes are progressing, we hopefully should be able to get
-Bart's pacth back in soon (this week ?) and remove the mq dispatch deadlock.
-
-Best regards.
+Applied to 4.13/scsi-fixes. Thanks!
 
 -- 
-Damien Le Moal,
-Western Digital Research
+Martin K. Petersen	Oracle Linux Engineering
