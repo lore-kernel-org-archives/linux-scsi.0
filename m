@@ -1,54 +1,45 @@
-From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v2] scsi: lpfc: avoid false positive gcc-8 warning
-Date: Wed, 23 Aug 2017 17:34:40 -0700
-Message-ID: <20170824003440.4270-1-jsmart2021@gmail.com>
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: Re: [GIT PULL] SCSI fixes for 4.13-rc6
+Date: Thu, 24 Aug 2017 09:49:55 +0900
+Message-ID: <90e92658-eb4b-8f32-6dd3-b5fd0c229fdc@wdc.com>
+References: <1503470559.2729.4.camel@HansenPartnership.com>
+ <1503500560.2484.1.camel@wdc.com> <yq1vale9ueb.fsf@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq1vale9ueb.fsf@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, hare@suse.com, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, arnd@arndb.de, James Smart <jsmart2021@gmail.com>, James Smart <james.smart@broadcom.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Arnd Bergmann, testing gcc-8, encountered the following:
 
-> This is an interesting regression with gcc-8, showing a harmless
-> warning for correct code:
->
->In file included from include/linux/kernel.h:13:0,
->    ...
->    from drivers/scsi/lpfc/lpfc_debugfs.c:23:
->    include/linux/printk.h:301:2: error: 'eq' may be used
->    uninitialized in this function [-Werror=maybe-uninitialized]
->       printk(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
->       ^~~~~~
->    In file included from drivers/scsi/lpfc/lpfc_debugfs.c:58:0:
->    drivers/scsi/lpfc/lpfc_debugfs.h:451:31: note: 'eq' was
->    declared here
+On 8/24/17 00:27, Martin K. Petersen wrote:
+> 
+> Hi Bart,
+> 
+>> Had you noticed that Damien had asked not to send the "sd_zbc: Write
+>> unlock zone from sd_uninit_cmnd()" patch to Linus without my "scsi-mq:
+>> Always unprepare before requeuing a request" patch?
+> 
+> He did change his mind later in that thread, though.
+> 
+> However, what's more important is that we still need a good version of
+> your patch for 4.13. I took Brian's workaround for ipr but I still think
+> Christoph's concerns need to be addressed for me to put your change back
+> in.
 
-The code is fine: a for loop which if there's at least 1 itteration,
-will assign eq a value. Followed by an if test that checks for no
-itterations and assigns eq a default value. But the checker doesn't
-see the relationship between the two so assumes eq may not a have a
-value.
+Yes, I did ask for the patch to be kept since it does not make things
+worse for the SMR/mq case (still have a potential dispatch deadlock) but
+does cleanup the code in the legacy/sq case.
 
-I believe, simply initializing with a NULL will solve the issue.
+Since it looks like the jiffies_at_alloc and retry counter
+initialization fixes are progressing, we hopefully should be able to get
+Bart's pacth back in soon (this week ?) and remove the mq dispatch deadlock.
 
-Signed-off-by: James Smart <james.smart@broadcom.com>
----
- drivers/scsi/lpfc/lpfc_debugfs.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Best regards.
 
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.h b/drivers/scsi/lpfc/lpfc_debugfs.h
-index 7b7d314af0e0..32e86d7813a0 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.h
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.h
-@@ -448,7 +448,7 @@ lpfc_debug_dump_wq(struct lpfc_hba *phba, int qtype, int wqidx)
- static inline void
- lpfc_debug_dump_cq(struct lpfc_hba *phba, int qtype, int wqidx)
- {
--	struct lpfc_queue *wq, *cq, *eq;
-+	struct lpfc_queue *wq, *cq, *eq = NULL;
- 	char *qtypestr;
- 	int eqidx;
- 
 -- 
-2.13.1
+Damien Le Moal,
+Western Digital Research
