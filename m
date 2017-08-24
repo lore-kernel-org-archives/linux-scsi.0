@@ -1,35 +1,58 @@
-From: James Smart <jsmart2021@gmail.com>
-Subject: Re: [PATCH v2] scsi: lpfc: avoid false positive gcc-8 warning
-Date: Thu, 24 Aug 2017 09:28:33 -0700
-Message-ID: <59c13631-2586-5aa8-4bc1-fdc416bc2dc5@gmail.com>
-References: <20170824003440.4270-1-jsmart2021@gmail.com>
- <CAK8P3a39cW5mC8qAKhpuMTcYjroRStv9z9yaiH3jTvb9wK34-g@mail.gmail.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH 17/19] scsi_transport_srp: Suppress a W=1 compiler warning
+Date: Thu, 24 Aug 2017 16:27:07 +0000
+Message-ID: <1503592026.2702.12.camel@wdc.com>
+References: <20170823214009.15015-1-bart.vanassche@wdc.com>
+         <20170823214009.15015-18-bart.vanassche@wdc.com>
+         <20170824091157.GP19886@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAK8P3a39cW5mC8qAKhpuMTcYjroRStv9z9yaiH3jTvb9wK34-g@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:56898 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753416AbdHXQ1x (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Aug 2017 12:27:53 -0400
+In-Reply-To: <20170824091157.GP19886@lst.de>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, James Smart <james.smart@broadcom.com>
+Content-ID: <56F060E0AF97F342A8F789EE99355416@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "hch@lst.de" <hch@lst.de>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.de" <hare@suse.de>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-On 8/24/2017 4:01 AM, Arnd Bergmann wrote:
-> 
-> I have also come up with a different workaround of my own
-> (sorry for the broken formatting here) and tested it successfully
-> over night. I have definitely spent more time on it than it was
-> worth now. Let me know if you prefer that version over yours,
-> then I'll submit that as a proper patch with your Ack.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> 
-> --- a/drivers/scsi/lpfc/lpfc_debugfs.h
-
-I'm ok with either solution. I prefer less change but this is a trivial 
-thing.
-
-Signed-off-by: James Smart <james.smart@broadcom.com>
-
--- james
+T24gVGh1LCAyMDE3LTA4LTI0IGF0IDExOjExICswMjAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90
+ZToNCj4gT24gV2VkLCBBdWcgMjMsIDIwMTcgYXQgMDI6NDA6MDdQTSAtMDcwMCwgQmFydCBWYW4g
+QXNzY2hlIHdyb3RlOg0KPiA+IEF2b2lkIHRoYXQgdGhlIGZvbGxvd2luZyBjb21waWxlciB3YXJu
+aW5nIGlzIHJlcG9ydGVkIHdoZW4gYnVpbGRpbmcNCj4gPiB3aXRoIFc9MToNCj4gPiANCj4gPiBk
+cml2ZXJzL3Njc2kvc2NzaV90cmFuc3BvcnRfc3JwLmM6OTI6MTk6IHdhcm5pbmc6IGNvbXBhcmlz
+b24gaXMgYWx3YXlzIGZhbHNlIGR1ZSB0byBsaW1pdGVkIHJhbmdlIG9mIGRhdGEgdHlwZSBbLVd0
+eXBlLWxpbWl0c10NCj4gPiANCj4gPiBTaWduZWQtb2ZmLWJ5OiBCYXJ0IFZhbiBBc3NjaGUgPGJh
+cnQudmFuYXNzY2hlQHdkYy5jb20+DQo+ID4gQ2M6IENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0
+LmRlPg0KPiA+IENjOiBIYW5uZXMgUmVpbmVja2UgPGhhcmVAc3VzZS5kZT4NCj4gPiBDYzogSm9o
+YW5uZXMgVGh1bXNoaXJuIDxqdGh1bXNoaXJuQHN1c2UuZGU+DQo+ID4gLS0tDQo+ID4gIGRyaXZl
+cnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9zcnAuYyB8IDIgKy0NCj4gPiAgMSBmaWxlIGNoYW5nZWQs
+IDEgaW5zZXJ0aW9uKCspLCAxIGRlbGV0aW9uKC0pDQo+ID4gDQo+ID4gZGlmZiAtLWdpdCBhL2Ry
+aXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9zcnAuYyBiL2RyaXZlcnMvc2NzaS9zY3NpX3RyYW5z
+cG9ydF9zcnAuYw0KPiA+IGluZGV4IDY5OGNjNDY4MTcwNi4uYjhmNWU0YzQ3NTc5IDEwMDY0NA0K
+PiA+IC0tLSBhL2RyaXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9zcnAuYw0KPiA+ICsrKyBiL2Ry
+aXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9zcnAuYw0KPiA+IEBAIC04OSw3ICs4OSw3IEBAIGlu
+dCBzcnBfdG1vX3ZhbGlkKGludCByZWNvbm5lY3RfZGVsYXksIGludCBmYXN0X2lvX2ZhaWxfdG1v
+LCBpbnQgZGV2X2xvc3NfdG1vKQ0KPiA+ICAJaWYgKGZhc3RfaW9fZmFpbF90bW8gPCAwICYmDQo+
+ID4gIAkgICAgZGV2X2xvc3NfdG1vID4gU0NTSV9ERVZJQ0VfQkxPQ0tfTUFYX1RJTUVPVVQpDQo+
+ID4gIAkJcmV0dXJuIC1FSU5WQUw7DQo+ID4gLQlpZiAoZGV2X2xvc3NfdG1vID49IExPTkdfTUFY
+IC8gSFopDQo+ID4gKwlpZiAoZGV2X2xvc3NfdG1vICsgMFVMID49IExPTkdfTUFYIC8gSFopDQo+
+ID4gIAkJcmV0dXJuIC1FSU5WQUw7DQo+IA0KPiBUaGF0J3MgYSB3ZWlyZCBjaGFuZ2UuLiAgSWYg
+d2UgY2FuIHRvIHByb21vdGUgZGV2X2xvc3NfdG1vIHRvDQo+IGxvbmcgd2Ugc2hvdWxkIGp1c3Qg
+Y2FzdCBpdC4gIEFuZCBvZiBjb3Vyc2Ugd2Ugc2hvdWxkIGFsd2F5cyBhc2sNCj4gdXMgd2h5IHdl
+IGdvdCB0aGlzIHdhcm5pbmcuICBJZiBsb25nIGlzIDY0LWJpdCBhbmQgaW50IGlzIDMyLWJpdA0K
+PiB0aGUgd2FybmluZyBtYWtlcyBzZW5zZSwgYXMgZm9yIGV2ZXJ5IHJlYXNvbmFibGUgY29tcGFy
+aXNtDQo+IHRoZSAzMi1iaXQgdGltZW91dCBjYW4ndCBiZSBsYXJnZXIgdGhhbiBMT05HX01BWCBk
+aXZpZGVkIGJ5IDEwMCBvciAxMDAuDQo+IA0KPiBCdXQgZm9yIDMyLWJpdCBsb25ncyBpdCBjYW4s
+IHNvIHdlIHNob3VsZCBrZWVwIGl0LCBtYXliZSB3aXRoIGEgY29tbWVudC4NCg0KSGVsbG8gQ2hy
+aXN0b3BoLA0KDQpUaGUgcHVycG9zZSBvZiB0aGF0IGNoZWNrIGlzIHRvIGF2b2lkIHRoYXQgZGV2
+X2xvc3NfdG1vICogSFogY2FuIG92ZXJmbG93Lg0KVGhhdCBjaGVjayBpcyBvbmx5IG5lZWRlZCBv
+biAzMi1iaXQgc3lzdGVtcyBzaW5jZSBvbmx5IG9uIHRoZXNlIHN5c3RlbXMNCnNpemVvZihsb25n
+KSA9PSBzaXplb2YoaW50KS4gSG93IGFib3V0IGNoYW5naW5nIHRoZSB0eXBlIG9mIHRoZSBkZXZf
+bG9zc190bW8NCmFyZ3VtZW50IGZyb20gaW50IHRvIGxvbmcgc3VjaCB0aGF0IG5vIGV4cGxpY2l0
+IGNhc3QgaXMgbmVlZGVkPw0KDQpUaGFua3MsDQoNCkJhcnQu
