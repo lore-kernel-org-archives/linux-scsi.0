@@ -1,57 +1,29 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 1/2] scsi: lpfc: avoid an unused function warning
-Date: Fri, 25 Aug 2017 01:09:59 +0200
-Message-ID: <20170824231016.1843118-1-arnd@arndb.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, Dan Carpenter <dan.carpenter@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH] scsi: Fix the kerneldoc for scsi_initialize_rq()
+Date: Thu, 24 Aug 2017 23:26:57 +0000
+Message-ID: <1503616960.2899.127.camel@wdc.com>
+References: <20170824161109.6e23432b@lwn.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:21320 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753203AbdHXX2O (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Aug 2017 19:28:14 -0400
+In-Reply-To: <20170824161109.6e23432b@lwn.net>
+Content-Language: en-US
+Content-ID: <083B3770FE545F4EAEC2042BCBECEC49@namprd04.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "corbet@lwn.net" <corbet@lwn.net>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
 
-The only reference to lpfc_nvmet_replenish_context() is inside of
-an #ifdef, leading to a harmless warning when CONFIG_NVME_TARGET_FC
-is disabled:
-
-drivers/scsi/lpfc/lpfc_nvmet.c:1457:1: error: 'lpfc_nvmet_replenish_context' defined but not used [-Werror=unused-function]
-
-This replaces the preprocessor conditional with a C condition,
-so the compiler can see that the function is intentionally unused.
-
-Fixes: 9a38e4f1c82f ("scsi: lpfc: Fix MRQ > 1 context list handling")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/scsi/lpfc/lpfc_nvmet.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index 48a1c0c27a3f..0b7c1a49e203 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -1527,7 +1527,6 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
- 			    struct rqb_dmabuf *nvmebuf,
- 			    uint64_t isr_timestamp)
- {
--#if (IS_ENABLED(CONFIG_NVME_TARGET_FC))
- 	struct lpfc_nvmet_rcv_ctx *ctxp;
- 	struct lpfc_nvmet_tgtport *tgtp;
- 	struct fc_frame_header *fc_hdr;
-@@ -1541,6 +1540,9 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
- 	uint32_t id;
- #endif
- 
-+	if (!IS_ENABLED(CONFIG_NVME_TARGET_FC))
-+		return;
-+
- 	ctx_buf = NULL;
- 	if (!nvmebuf || !phba->targetport) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_NVME_IOERR,
-@@ -1695,7 +1697,6 @@ lpfc_nvmet_unsol_fcp_buffer(struct lpfc_hba *phba,
- 
- 	if (nvmebuf)
- 		lpfc_rq_buf_free(phba, &nvmebuf->hbuf); /* repost */
--#endif
- }
- 
- /**
--- 
-2.9.0
+T24gVGh1LCAyMDE3LTA4LTI0IGF0IDE2OjExIC0wNjAwLCBKb25hdGhhbiBDb3JiZXQgd3JvdGU6
+DQo+ICAvKioNCj4gICAqIHNjc2lfaW5pdGlhbGl6ZV9ycSAtIGluaXRpYWxpemUgc3RydWN0IHNj
+c2lfY21uZC5yZXENCj4gKyAqIEBycTogUmVxdWVzdCB1c2VkIHRvIGxvY2F0ZSB0aGUgc2NzaV9j
+bW5kIHN0cnVjdHVyZS4NCj4gICAqDQo+ICAgKiBDYWxsZWQgZnJvbSBpbnNpZGUgYmxrX2dldF9y
+ZXF1ZXN0KCkuDQo+ICAgKi8NCg0KU2luY2UgdGhlIHJlcXVlc3Qgc3RydWN0dXJlIGFuZCB0aGUg
+U0NTSSBjb21tYW5kIHN0cnVjdHVyZSBhcmUgYWRqYWNlbnQsDQpob3cgYWJvdXQgdGhlIGZvbGxv
+d2luZzoNCg0KQHJxOiBSZXF1ZXN0IGFzc29jaWF0ZWQgd2l0aCB0aGUgU0NTSSBjb21tYW5kIHRv
+IGJlIGluaXRpYWxpemVkLg0KDQpUaGFua3MsDQoNCkJhcnQu
