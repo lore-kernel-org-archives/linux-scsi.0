@@ -1,74 +1,272 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 21/26] aha152x: drop host reset
-Date: Fri, 25 Aug 2017 13:57:16 +0200
-Message-ID: <1503662241-127788-22-git-send-email-hare@suse.de>
+Subject: [PATCHv2 25/26] visorhba: sanitze private device data allocation
+Date: Fri, 25 Aug 2017 13:57:20 +0200
+Message-ID: <1503662241-127788-26-git-send-email-hare@suse.de>
 References: <1503662241-127788-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49649 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:49655 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1756520AbdHYL6E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 25 Aug 2017 07:58:04 -0400
+        id S1756525AbdHYL6F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 25 Aug 2017 07:58:05 -0400
 In-Reply-To: <1503662241-127788-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-From: Hannes Reinecke <hare@suse.com>
-
-The driver has both a bus and a host reset, where the host reset
-does a bus reset followed by an attempt to reset the chip registes
-to a default state.
-However, as the bus reset always returned SUCCESS the host reset
-was never called, so the functionality of the register reset function
-was never validated.
-Additionally, tha AIC-6260 chip has a hard reset line, which
-actually should be preferred for a host reset. But I
-haven't found a way how this can be triggered via software,
-so take the safe approach and drop the host reset.
+There's no need to keep the private data for a device in a separate
+list; better to store it in ->hostdata and do away with the additional
+list.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: David Kershner <david.kershner@unisys.com>
 ---
- drivers/scsi/aha152x.c | 13 +++----------
- 1 file changed, 3 insertions(+), 10 deletions(-)
+ drivers/staging/unisys/visorhba/visorhba_main.c | 123 ++++++++++--------------
+ 1 file changed, 53 insertions(+), 70 deletions(-)
 
-diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
-index ce5dc73..bc0058d 100644
---- a/drivers/scsi/aha152x.c
-+++ b/drivers/scsi/aha152x.c
-@@ -1140,6 +1140,9 @@ static void free_hard_reset_SCs(struct Scsi_Host *shpnt, Scsi_Cmnd **SCs)
+diff --git a/drivers/staging/unisys/visorhba/visorhba_main.c b/drivers/staging/unisys/visorhba/visorhba_main.c
+index a6e7a6b..ddce925 100644
+--- a/drivers/staging/unisys/visorhba/visorhba_main.c
++++ b/drivers/staging/unisys/visorhba/visorhba_main.c
+@@ -47,8 +47,8 @@
+ MODULE_ALIAS("visorbus:" VISOR_VHBA_CHANNEL_UUID_STR);
+ 
+ struct visordisk_info {
++	struct scsi_device *sdev;
+ 	u32 valid;
+-	u32 channel, id, lun;	/* Disk Path */
+ 	atomic_t ios_threshold;
+ 	atomic_t error_count;
+ 	struct visordisk_info *next;
+@@ -101,12 +101,6 @@ struct visorhba_devices_open {
+ 	struct visorhba_devdata *devdata;
+ };
+ 
+-#define for_each_vdisk_match(iter, list, match) \
+-	for (iter = &list->head; iter->next; iter = iter->next) \
+-		if ((iter->channel == match->channel) && \
+-		    (iter->id == match->id) && \
+-		    (iter->lun == match->lun))
+-
  /*
-  * Reset the bus
-  *
-+ * AIC-6260 has a hard reset (MRST signal), but apparently
-+ * one cannot trigger it via software. So live with
-+ * a soft reset; no-one seemed to have cared.
+  *	visor_thread_start - starts a thread for the device
+  *	@threadfn: Function the thread starts
+@@ -296,10 +290,9 @@ static void cleanup_scsitaskmgmt_handles(struct idr *idrtable,
+  *	Returns whether the command was queued successfully or not.
   */
- static int aha152x_bus_reset_host(struct Scsi_Host *shpnt)
+ static int forward_taskmgmt_command(enum task_mgmt_types tasktype,
+-				    struct scsi_cmnd *scsicmd)
++				    struct scsi_device *scsidev)
  {
-@@ -1223,15 +1226,6 @@ int aha152x_host_reset_host(struct Scsi_Host *shpnt)
+ 	struct uiscmdrsp *cmdrsp;
+-	struct scsi_device *scsidev = scsicmd->device;
+ 	struct visorhba_devdata *devdata =
+ 		(struct visorhba_devdata *)scsidev->host->hostdata;
+ 	int notifyresult = 0xffff;
+@@ -347,12 +340,6 @@ static int forward_taskmgmt_command(enum task_mgmt_types tasktype,
+ 	dev_dbg(&scsidev->sdev_gendev,
+ 		"visorhba: taskmgmt type=%d success; result=0x%x\n",
+ 		 tasktype, notifyresult);
+-	if (tasktype == TASK_MGMT_ABORT_TASK)
+-		scsicmd->result = DID_ABORT << 16;
+-	else
+-		scsicmd->result = DID_RESET << 16;
+-
+-	scsicmd->scsi_done(scsicmd);
+ 	cleanup_scsitaskmgmt_handles(&devdata->idr, cmdrsp);
+ 	return SUCCESS;
+ 
+@@ -376,17 +363,20 @@ static int visorhba_abort_handler(struct scsi_cmnd *scsicmd)
+ 	/* issue TASK_MGMT_ABORT_TASK */
+ 	struct scsi_device *scsidev;
+ 	struct visordisk_info *vdisk;
+-	struct visorhba_devdata *devdata;
++	int rtn;
+ 
+ 	scsidev = scsicmd->device;
+-	devdata = (struct visorhba_devdata *)scsidev->host->hostdata;
+-	for_each_vdisk_match(vdisk, devdata, scsidev) {
+-		if (atomic_read(&vdisk->error_count) < VISORHBA_ERROR_COUNT)
+-			atomic_inc(&vdisk->error_count);
+-		else
+-			atomic_set(&vdisk->ios_threshold, IOS_ERROR_THRESHOLD);
++	vdisk = scsidev->hostdata;
++	if (atomic_read(&vdisk->error_count) < VISORHBA_ERROR_COUNT)
++		atomic_inc(&vdisk->error_count);
++	else
++		atomic_set(&vdisk->ios_threshold, IOS_ERROR_THRESHOLD);
++	rtn = forward_taskmgmt_command(TASK_MGMT_ABORT_TASK, scsidev);
++	if (rtn == SUCCESS) {
++		scsicmd->result = DID_ABORT << 16;
++		scsicmd->scsi_done(scsicmd);
+ 	}
+-	return forward_taskmgmt_command(TASK_MGMT_ABORT_TASK, scsicmd);
++	return rtn;
  }
  
  /*
-- * Reset the host (bus and controller)
-- *
-- */
--static int aha152x_host_reset(Scsi_Cmnd *SCpnt)
--{
--	return aha152x_host_reset_host(SCpnt->device->host);
--}
+@@ -400,17 +390,20 @@ static int visorhba_device_reset_handler(struct scsi_cmnd *scsicmd)
+ 	/* issue TASK_MGMT_LUN_RESET */
+ 	struct scsi_device *scsidev;
+ 	struct visordisk_info *vdisk;
+-	struct visorhba_devdata *devdata;
++	int rtn;
+ 
+ 	scsidev = scsicmd->device;
+-	devdata = (struct visorhba_devdata *)scsidev->host->hostdata;
+-	for_each_vdisk_match(vdisk, devdata, scsidev) {
+-		if (atomic_read(&vdisk->error_count) < VISORHBA_ERROR_COUNT)
+-			atomic_inc(&vdisk->error_count);
+-		else
+-			atomic_set(&vdisk->ios_threshold, IOS_ERROR_THRESHOLD);
++	vdisk = scsidev->hostdata;
++	if (atomic_read(&vdisk->error_count) < VISORHBA_ERROR_COUNT)
++		atomic_inc(&vdisk->error_count);
++	else
++		atomic_set(&vdisk->ios_threshold, IOS_ERROR_THRESHOLD);
++	rtn = forward_taskmgmt_command(TASK_MGMT_LUN_RESET, scsidev);
++	if (rtn == SUCCESS) {
++		scsicmd->result = DID_RESET << 16;
++		scsicmd->scsi_done(scsicmd);
+ 	}
+-	return forward_taskmgmt_command(TASK_MGMT_LUN_RESET, scsicmd);
++	return rtn;
+ }
+ 
+ /*
+@@ -424,17 +417,22 @@ static int visorhba_bus_reset_handler(struct scsi_cmnd *scsicmd)
+ {
+ 	struct scsi_device *scsidev;
+ 	struct visordisk_info *vdisk;
+-	struct visorhba_devdata *devdata;
++	int rtn;
+ 
+ 	scsidev = scsicmd->device;
+-	devdata = (struct visorhba_devdata *)scsidev->host->hostdata;
+-	for_each_vdisk_match(vdisk, devdata, scsidev) {
++	shost_for_each_device(scsidev, scsidev->host) {
++		vdisk = scsidev->hostdata;
+ 		if (atomic_read(&vdisk->error_count) < VISORHBA_ERROR_COUNT)
+ 			atomic_inc(&vdisk->error_count);
+ 		else
+ 			atomic_set(&vdisk->ios_threshold, IOS_ERROR_THRESHOLD);
+ 	}
+-	return forward_taskmgmt_command(TASK_MGMT_BUS_RESET, scsicmd);
++	rtn = forward_taskmgmt_command(TASK_MGMT_BUS_RESET, scsidev);
++	if (rtn == SUCCESS) {
++		scsicmd->result = DID_RESET << 16;
++		scsicmd->scsi_done(scsicmd);
++	}
++	return rtn;
+ }
+ 
+ /*
+@@ -569,25 +567,22 @@ static int visorhba_slave_alloc(struct scsi_device *scsidev)
+ 	 * LLD can alloc any struct & do init if needed.
+ 	 */
+ 	struct visordisk_info *vdisk;
+-	struct visordisk_info *tmpvdisk;
+ 	struct visorhba_devdata *devdata;
+ 	struct Scsi_Host *scsihost = (struct Scsi_Host *)scsidev->host;
+ 
++	if (scsidev->hostdata)
++		return 0; /* already allocated return success */
++
+ 	devdata = (struct visorhba_devdata *)scsihost->hostdata;
+ 	if (!devdata)
+ 		return 0; /* even though we errored, treat as success */
+ 
+-	for_each_vdisk_match(vdisk, devdata, scsidev)
+-		return 0; /* already allocated return success */
 -
--/*
-  * Return the "logical geometry"
-  *
-  */
-@@ -2917,7 +2911,6 @@ static int aha152x_adjust_queue(struct scsi_device *device)
- 	.eh_abort_handler		= aha152x_abort,
- 	.eh_device_reset_handler	= aha152x_device_reset,
- 	.eh_bus_reset_handler		= aha152x_bus_reset,
--	.eh_host_reset_handler		= aha152x_host_reset,
- 	.bios_param			= aha152x_biosparam,
- 	.can_queue			= 1,
- 	.this_id			= 7,
+-	tmpvdisk = kzalloc(sizeof(*tmpvdisk), GFP_ATOMIC);
+-	if (!tmpvdisk)
++	vdisk = kzalloc(sizeof(*vdisk), GFP_ATOMIC);
++	if (!vdisk)
+ 		return -ENOMEM;
+ 
+-	tmpvdisk->channel = scsidev->channel;
+-	tmpvdisk->id = scsidev->id;
+-	tmpvdisk->lun = scsidev->lun;
+-	vdisk->next = tmpvdisk;
++	vdisk->sdev = scsidev;
++	scsidev->hostdata = vdisk;
+ 	return 0;
+ }
+ 
+@@ -603,17 +598,11 @@ static void visorhba_slave_destroy(struct scsi_device *scsidev)
+ 	/* midlevel calls this after device has been quiesced and
+ 	 * before it is to be deleted.
+ 	 */
+-	struct visordisk_info *vdisk, *delvdisk;
+-	struct visorhba_devdata *devdata;
+-	struct Scsi_Host *scsihost = (struct Scsi_Host *)scsidev->host;
++	struct visordisk_info *vdisk;
+ 
+-	devdata = (struct visorhba_devdata *)scsihost->hostdata;
+-	for_each_vdisk_match(vdisk, devdata, scsidev) {
+-		delvdisk = vdisk->next;
+-		vdisk->next = delvdisk->next;
+-		kfree(delvdisk);
+-		return;
+-	}
++	vdisk = scsidev->hostdata;
++	scsidev->hostdata = NULL;
++	kfree(vdisk);
+ }
+ 
+ static struct scsi_host_template visorhba_driver_template = {
+@@ -787,7 +776,6 @@ static int visorhba_serverdown(struct visorhba_devdata *devdata)
+ static void
+ do_scsi_linuxstat(struct uiscmdrsp *cmdrsp, struct scsi_cmnd *scsicmd)
+ {
+-	struct visorhba_devdata *devdata;
+ 	struct visordisk_info *vdisk;
+ 	struct scsi_device *scsidev;
+ 
+@@ -800,12 +788,10 @@ static int visorhba_serverdown(struct visorhba_devdata *devdata)
+ 	    (cmdrsp->scsi.addlstat == ADDL_SEL_TIMEOUT))
+ 		return;
+ 	/* Okay see what our error_count is here.... */
+-	devdata = (struct visorhba_devdata *)scsidev->host->hostdata;
+-	for_each_vdisk_match(vdisk, devdata, scsidev) {
+-		if (atomic_read(&vdisk->error_count) < VISORHBA_ERROR_COUNT) {
+-			atomic_inc(&vdisk->error_count);
+-			atomic_set(&vdisk->ios_threshold, IOS_ERROR_THRESHOLD);
+-		}
++	vdisk = scsidev->hostdata;
++	if (atomic_read(&vdisk->error_count) < VISORHBA_ERROR_COUNT) {
++		atomic_inc(&vdisk->error_count);
++		atomic_set(&vdisk->ios_threshold, IOS_ERROR_THRESHOLD);
+ 	}
+ }
+ 
+@@ -846,7 +832,6 @@ static int set_no_disk_inquiry_result(unsigned char *buf,
+ 	char *this_page_orig;
+ 	int bufind = 0;
+ 	struct visordisk_info *vdisk;
+-	struct visorhba_devdata *devdata;
+ 
+ 	scsidev = scsicmd->device;
+ 	if ((cmdrsp->scsi.cmnd[0] == INQUIRY) &&
+@@ -883,13 +868,11 @@ static int set_no_disk_inquiry_result(unsigned char *buf,
+ 		}
+ 		kfree(buf);
+ 	} else {
+-		devdata = (struct visorhba_devdata *)scsidev->host->hostdata;
+-		for_each_vdisk_match(vdisk, devdata, scsidev) {
+-			if (atomic_read(&vdisk->ios_threshold) > 0) {
+-				atomic_dec(&vdisk->ios_threshold);
+-				if (atomic_read(&vdisk->ios_threshold) == 0)
+-					atomic_set(&vdisk->error_count, 0);
+-			}
++		vdisk = scsidev->hostdata;
++		if (atomic_read(&vdisk->ios_threshold) > 0) {
++			atomic_dec(&vdisk->ios_threshold);
++			if (atomic_read(&vdisk->ios_threshold) == 0)
++				atomic_set(&vdisk->error_count, 0);
+ 		}
+ 	}
+ }
 -- 
 1.8.5.6
