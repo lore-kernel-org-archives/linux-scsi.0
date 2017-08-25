@@ -1,33 +1,51 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCH] scsi: qedi: off by one in qedi_get_cmd_from_tid()
-Date: Fri, 25 Aug 2017 13:36:57 +0300
-Message-ID: <20170825103657.6kwprvwfks7szn3b@mwanda>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: kernel-janitors-owner@vger.kernel.org
-To: QLogic-Storage-Upstream@cavium.com, Manish Rangankar <manish.rangankar@cavium.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCHv2 03/26] ibmvfc: Do not call fc_block_scsi_eh() on host reset
+Date: Fri, 25 Aug 2017 13:56:58 +0200
+Message-ID: <1503662241-127788-4-git-send-email-hare@suse.de>
+References: <1503662241-127788-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:49533 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1756497AbdHYL57 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 25 Aug 2017 07:57:59 -0400
+In-Reply-To: <1503662241-127788-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-The > here should be >= or we end up reading one element beyond the end
-of the qedi->itt_map[] array.  The qedi->itt_map[] array is allocated in
-qedi_alloc_itt().
+When we're resetting the host any remote port states will
+be reset anyway, so it's pointless to wait for dev_loss_tmo
+during host reset.
 
-Fixes: ace7f46ba5fd ("scsi: qedi: Add QLogic FastLinQ offload iSCSI driver framework.")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/scsi/ibmvscsi/ibmvfc.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-index c4a470bab4dd..cccc34adc0e0 100644
---- a/drivers/scsi/qedi/qedi_main.c
-+++ b/drivers/scsi/qedi/qedi_main.c
-@@ -1576,7 +1576,7 @@ struct qedi_cmd *qedi_get_cmd_from_tid(struct qedi_ctx *qedi, u32 tid)
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index cc4e05b..51f5248 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -2528,16 +2528,12 @@ static int ibmvfc_eh_target_reset_handler(struct scsi_cmnd *cmd)
+  **/
+ static int ibmvfc_eh_host_reset_handler(struct scsi_cmnd *cmd)
  {
- 	struct qedi_cmd *cmd = NULL;
+-	int rc, block_rc;
++	int rc;
+ 	struct ibmvfc_host *vhost = shost_priv(cmd->device->host);
  
--	if (tid > MAX_ISCSI_TASK_ENTRIES)
-+	if (tid >= MAX_ISCSI_TASK_ENTRIES)
- 		return NULL;
+-	block_rc = fc_block_scsi_eh(cmd);
+ 	dev_err(vhost->dev, "Resetting connection due to error recovery\n");
+ 	rc = ibmvfc_issue_fc_host_lip(vhost->host);
  
- 	cmd = qedi->itt_map[tid].p_cmd;
+-	if (block_rc == FAST_IO_FAIL)
+-		return FAST_IO_FAIL;
+-
+ 	return rc ? FAILED : SUCCESS;
+ }
+ 
+-- 
+1.8.5.6
