@@ -1,29 +1,23 @@
-From: "hch@lst.de" <hch@lst.de>
-Subject: Re: [PATCH 17/19] scsi_transport_srp: Suppress a W=1 compiler
-        warning
-Date: Fri, 25 Aug 2017 17:29:32 +0200
-Message-ID: <20170825152932.GA18440@lst.de>
-References: <20170823214009.15015-1-bart.vanassche@wdc.com> <20170823214009.15015-18-bart.vanassche@wdc.com> <20170824091157.GP19886@lst.de> <1503592026.2702.12.camel@wdc.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] scsi_transport_sas: Fix error handling in
+        sas_smp_request()
+Date: Fri, 25 Aug 2017 17:35:29 +0200
+Message-ID: <20170825153529.GB18440@lst.de>
+References: <20170823182558.15370-1-bart.vanassche@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:55684 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933386AbdHYP3d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 25 Aug 2017 11:29:33 -0400
+Return-path: <stable-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1503592026.2702.12.camel@wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20170823182558.15370-1-bart.vanassche@wdc.com>
+Sender: stable-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "hch@lst.de" <hch@lst.de>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.de" <hare@suse.de>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
-On Thu, Aug 24, 2017 at 04:27:07PM +0000, Bart Van Assche wrote:
-> 
-> The purpose of that check is to avoid that dev_loss_tmo * HZ can overflow.
-> That check is only needed on 32-bit systems since only on these systems
-> sizeof(long) == sizeof(int). How about changing the type of the dev_loss_tmo
-> argument from int to long such that no explicit cast is needed?
+Hi Bart,
 
-Yes, switching the timeout to long sounds useful as that's our normal
-type for timeouts.  But it will spread through a lot of the SRP code.
+I looked a bit more at the history of this, and it seems like the only
+issue with commit 17d5363b83f8 here is using the blk_status_t type for the
+ret variable.  Even before that the negative error code leaked out
+to userspace.  We can try to just turn that back into an int, but I'll
+also send out an RFC patch to use bsg-lib for the SAS transport in a bit.
