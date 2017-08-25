@@ -1,53 +1,36 @@
-From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v2 16/17] scsi_debug: Remove a set-but-not-used variable
-Date: Fri, 25 Aug 2017 13:46:42 -0700
-Message-ID: <20170825204643.25043-17-bart.vanassche@wdc.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v2 00/17] A series of small SCSI patches for kernel v4.14
+Date: Fri, 25 Aug 2017 17:09:24 -0400
+Message-ID: <yq1efrz73sr.fsf@oracle.com>
 References: <20170825204643.25043-1-bart.vanassche@wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:31397 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932586AbdHYUtO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2017 16:49:14 -0400
-In-Reply-To: <20170825204643.25043-1-bart.vanassche@wdc.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:42772 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758720AbdHYVJa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2017 17:09:30 -0400
+In-Reply-To: <20170825204643.25043-1-bart.vanassche@wdc.com> (Bart Van
+        Assche's message of "Fri, 25 Aug 2017 13:46:26 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Douglas Gilbert <dgilbert@interlog.com>, Johannes Thumshirn <jthumshirn@suse.de>
+To: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
 
-This patch avoids that gcc reports the following warning when
-building with W=1:
 
-drivers/scsi/scsi_debug.c:2264:15: warning: variable ?pcontrol? set but not used [-Wunused-but-set-variable]
+Bart,
 
-Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Cc: Douglas Gilbert <dgilbert@interlog.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/scsi_debug.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+> The patches in this series fall into three categories:
+> - One patch renames a few functions to make it clear whether these
+>   are used by the legacy SCSI code path or by the new scsi-mq code.
+> - Two patches are related to using blk_mq_rq_to_pdu() instead of
+>   struct request.special.
+> - Fourteen patches suppress warnings reported by static analysis
+>   tools. These tools are very useful but unfortunately the current
+>   code base makes these tools report a significant number of false
+>   positives.
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 3be980d47268..77a0335eb757 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -2261,7 +2261,7 @@ static int resp_ie_l_pg(unsigned char * arr)
- static int resp_log_sense(struct scsi_cmnd * scp,
-                           struct sdebug_dev_info * devip)
- {
--	int ppc, sp, pcontrol, pcode, subpcode, alloc_len, len, n;
-+	int ppc, sp, pcode, subpcode, alloc_len, len, n;
- 	unsigned char arr[SDEBUG_MAX_LSENSE_SZ];
- 	unsigned char *cmd = scp->cmnd;
- 
-@@ -2272,7 +2272,6 @@ static int resp_log_sense(struct scsi_cmnd * scp,
- 		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 1, ppc ? 1 : 0);
- 		return check_condition_result;
- 	}
--	pcontrol = (cmd[2] & 0xc0) >> 6;
- 	pcode = cmd[2] & 0x3f;
- 	subpcode = cmd[3] & 0xff;
- 	alloc_len = get_unaligned_be16(cmd + 7);
+Applied to 4.14/scsi-queue. Thank you!
+
 -- 
-2.14.1
+Martin K. Petersen	Oracle Linux Engineering
