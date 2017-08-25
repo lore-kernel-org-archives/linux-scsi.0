@@ -1,28 +1,35 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: sd: remove duplicated setting of gd->minors
-Date: Fri, 25 Aug 2017 17:28:51 -0400
-Message-ID: <yq160db72wc.fsf@oracle.com>
-References: <20170818064923.GA36375@localhost.didichuxing.com>
+Subject: Re: [PATCH 13/15] scsi: make device_type const
+Date: Fri, 25 Aug 2017 17:30:22 -0400
+Message-ID: <yq11snz72tt.fsf@oracle.com>
+References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
+ <1503130946-2854-14-git-send-email-bhumirks@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:49289 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932374AbdHYV3U (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2017 17:29:20 -0400
-In-Reply-To: <20170818064923.GA36375@localhost.didichuxing.com> (weiping
-        zhang's message of "Fri, 18 Aug 2017 14:49:30 +0800")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1503130946-2854-14-git-send-email-bhumirks@gmail.com> (Bhumika
+ Goyal's message of "Sat, 19 Aug 2017 13:52:24 +0530")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Bhumika Goyal <bhumirks@gmail.com>
+Cc: heikki.krogerus@linux.intel.com, airlied@linux.ie, linux-pci@vger.kernel.org, heiko.carstens@de.ibm.com, dri-devel@lists.freedesktop.org, bjorn.andersson@linaro.org, linux-tegra@vger.kernel.org, thierry.reding@gmail.com, linux-mtd@lists.infradead.org, daniel.vetter@intel.com, kishon@ti.com, freude@de.ibm.com, boris.brezillon@free-electrons.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, richard@nod.at, jonathanh@nvidia.com, marek.vasut@gmail.com, fcoe-devel@open-fcoe.org, dvhart@infradead.org, tomas.winkler@intel.com, open-iscsi@googlegroups.com, linux-media@vger.kernel.org, ohad@wizery.com, devel@driverdev.osuosl.org, linux-s390@vger.kernel.org, linux-remoteproc@vger.kernel.org, johan@kernel.org, jani.nikula@linux.intel.com, julia.lawall@lip6.fr, seanpaul@chromium.org, bhelgaas@google.com, mchehab@kernel.org, linux-edac@vger.kernel.org, cleech@redhat.com, jth@
 List-Id: linux-scsi@vger.kernel.org
-To: weiping zhang <zhangweiping@didichuxing.com>
-Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
 
 
-weiping,
+Bhumika,
 
-> gd->minors has been set when call alloc_disk() in sd_probe.
+> Make these const as they are only stored in the type field of a device
+> structure, which is const.
 
-Applied to 4.14/scsi-queue. Thank you!
+Applied to 4.14/scsi-queue. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
