@@ -1,59 +1,48 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v2 07/17] sd, sr: Convert two assignments into warning statements
-Date: Fri, 25 Aug 2017 13:46:33 -0700
-Message-ID: <20170825204643.25043-8-bart.vanassche@wdc.com>
+Subject: [PATCH v2 10/17] sg: Fix type of last blk_trace_setup() argument
+Date: Fri, 25 Aug 2017 13:46:36 -0700
+Message-ID: <20170825204643.25043-11-bart.vanassche@wdc.com>
 References: <20170825204643.25043-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:40785 "EHLO
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:31397 "EHLO
         esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932966AbdHYUs2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2017 16:48:28 -0400
+        with ESMTP id S932800AbdHYUso (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2017 16:48:44 -0400
 In-Reply-To: <20170825204643.25043-1-bart.vanassche@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-Before scsi_prep_fn() calls the ULP .init_command() callback
-function it stores the SCSI command pointer in request.special.
-This means that the SCpnt = rq->special assignments in the sd
-and sr drivers assign a pointer to itself. Hence convert these
-two assignment statements into warning statements.
+Avoid that sparse reports the following:
 
-Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+drivers/scsi/sg.c:1114:41: warning: incorrect type in argument 5 (different address spaces)
+drivers/scsi/sg.c:1114:41:    expected char [noderef] <asn:1>*arg
+drivers/scsi/sg.c:1114:41:    got char *<noident>
+
+This patch does not change any functionality.
+
+Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/sd.c | 2 +-
- drivers/scsi/sr.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/sg.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index bea36adeee17..a88639fbedb3 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1013,7 +1013,7 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
- 	ret = scsi_init_io(SCpnt);
- 	if (ret != BLKPREP_OK)
- 		goto out;
--	SCpnt = rq->special;
-+	WARN_ON_ONCE(SCpnt != rq->special);
- 
- 	/* from here on until we're complete, any goto out
- 	 * is used for a killable error condition */
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index a8f630213a1a..9be34d37c356 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -393,7 +393,7 @@ static int sr_init_command(struct scsi_cmnd *SCpnt)
- 	ret = scsi_init_io(SCpnt);
- 	if (ret != BLKPREP_OK)
- 		goto out;
--	SCpnt = rq->special;
-+	WARN_ON_ONCE(SCpnt != rq->special);
- 	cd = scsi_cd(rq->rq_disk);
- 
- 	/* from here on until we're complete, any goto out
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index f5705a95319f..03194c4b6744 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -1110,8 +1110,7 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ 		return blk_trace_setup(sdp->device->request_queue,
+ 				       sdp->disk->disk_name,
+ 				       MKDEV(SCSI_GENERIC_MAJOR, sdp->index),
+-				       NULL,
+-				       (char *)arg);
++				       NULL, p);
+ 	case BLKTRACESTART:
+ 		return blk_trace_startstop(sdp->device->request_queue, 1);
+ 	case BLKTRACESTOP:
 -- 
 2.14.1
