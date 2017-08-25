@@ -1,36 +1,47 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 196707] Adaptec ICP9087MA: aacraid prints "AAC: Host adapter is
- dead (or got a PCI error) -1" twice times around errors of aacraid and the
- kernel crashes after starting the "Kernel Device Manager"
-Date: Fri, 25 Aug 2017 22:05:47 +0000
-Message-ID: <bug-196707-11613-ApfaVHgERT@https.bugzilla.kernel.org/>
-References: <bug-196707-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH 0/3] cxlflash: Miscellaneous fixes
+Date: Fri, 25 Aug 2017 17:17:20 -0500
+Message-ID: <1503699440-61464-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:39386 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932623AbdHYWFt (ORCPT
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:47855 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S933269AbdHYWRc (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 25 Aug 2017 18:05:49 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id A351328543
-        for <linux-scsi@vger.kernel.org>; Fri, 25 Aug 2017 22:05:48 +0000 (UTC)
-In-Reply-To: <bug-196707-11613@https.bugzilla.kernel.org/>
+        Fri, 25 Aug 2017 18:17:32 -0400
+Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v7PMDiZY143758
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Aug 2017 18:17:32 -0400
+Received: from e18.ny.us.ibm.com (e18.ny.us.ibm.com [129.33.205.208])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2cjukvabup-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Aug 2017 18:17:32 -0400
+Received: from localhost
+        by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
+        Fri, 25 Aug 2017 18:17:30 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@kernel.org
+To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=196707
+This patch series contains miscellaneous fixes. The first two address
+issues that were identified by smatch and the last patch fixes a regression
+introduced by Commit 565180723294 ("scsi: cxlflash: SISlite updates to
+support 4 ports").
 
-Andreas Gerlich (kernel.org@yaze-ag.de) changed:
+This series is intended for 4.14 and is bisectable.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-     Kernel Version|4.12.8                      |4.12.9
+Matthew R. Ochs (2):
+  cxlflash: Remove unnecessary existence check
+  cxlflash: Avoid double mutex unlock
+
+Uma Krishnan (1):
+  cxlflash: Fix vlun resize failure in the shrink path
+
+ drivers/scsi/cxlflash/main.c      |  3 +--
+ drivers/scsi/cxlflash/superpipe.c | 13 ++++++++++---
+ drivers/scsi/cxlflash/vlun.c      |  6 +-----
+ 3 files changed, 12 insertions(+), 10 deletions(-)
 
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
-You are watching someone on the CC list of the bug.
+2.1.0
