@@ -1,8 +1,7 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 1/3] SCSI-sg: Delete an error message for a failed memory
- allocation in sg_alloc()
-Date: Fri, 25 Aug 2017 22:23:56 +0200
-Message-ID: <a5815434-a4b8-66bf-f5ff-264b8310ac9d@users.sourceforge.net>
+Subject: [PATCH 2/3] SCSI-sg: Improve a size determination in sg_alloc()
+Date: Fri, 25 Aug 2017 22:25:17 +0200
+Message-ID: <e2406fbf-3a35-316a-4d38-b474c13d9120@users.sourceforge.net>
 References: <0fffccee-7cc1-1321-2c6b-00ac06b304b8@users.sourceforge.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
@@ -16,33 +15,29 @@ Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Fri, 25 Aug 2017 21:48:11 +0200
+Date: Fri, 25 Aug 2017 21:55:14 +0200
 
-Omit an extra message for a memory allocation failure in this function.
-
-This issue was detected by using the Coccinelle software.
+Replace the specification of a data type by a pointer dereference
+as the parameter for the operator "sizeof" to make the corresponding size
+determination a bit safer according to the Linux coding style convention.
 
 Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/scsi/sg.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/scsi/sg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index d7ff71e0c85c..8ca10a2fc1a0 100644
+index 8ca10a2fc1a0..4a2db7ff14cc 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -1404,11 +1404,8 @@ sg_alloc(struct gendisk *disk, struct scsi_device *scsidp)
+@@ -1403,7 +1403,7 @@ sg_alloc(struct gendisk *disk, struct scsi_device *scsidp)
+ 	int error;
  	u32 k;
  
- 	sdp = kzalloc(sizeof(Sg_device), GFP_KERNEL);
--	if (!sdp) {
--		sdev_printk(KERN_WARNING, scsidp, "%s: kmalloc Sg_device "
--			    "failure\n", __func__);
-+	if (!sdp)
+-	sdp = kzalloc(sizeof(Sg_device), GFP_KERNEL);
++	sdp = kzalloc(sizeof(*sdp), GFP_KERNEL);
+ 	if (!sdp)
  		return ERR_PTR(-ENOMEM);
--	}
  
- 	idr_preload(GFP_KERNEL);
- 	write_lock_irqsave(&sg_index_lock, iflags);
 -- 
 2.14.0
