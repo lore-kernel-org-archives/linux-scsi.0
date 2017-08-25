@@ -1,41 +1,38 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 3/3] SCSI-sg: Fix a typo in a comment line in sg_ioctl()
-Date: Fri, 25 Aug 2017 22:26:48 +0200
-Message-ID: <51971166-583b-071f-a9cb-1f00cc852756@users.sourceforge.net>
-References: <0fffccee-7cc1-1321-2c6b-00ac06b304b8@users.sourceforge.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <0fffccee-7cc1-1321-2c6b-00ac06b304b8@users.sourceforge.net>
-Content-Language: en-GB
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, Doug Gilbert <dgilbert@interlog.com>, "James E. J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, trivial@kernel.org
+From: Bart Van Assche <bart.vanassche@wdc.com>
+Subject: [PATCH 0/2] Rework handling of scsi_device.vpd_pg8[03]
+Date: Fri, 25 Aug 2017 13:35:59 -0700
+Message-ID: <20170825203601.23612-1-bart.vanassche@wdc.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:53001 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755346AbdHYUgr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2017 16:36:47 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Fri, 25 Aug 2017 22:06:59 +0200
+Hello Martin,
 
-Fix a word in this description.
+The conclusion of a recent discussion about the handling of SCSI device VPD
+data is that the code should be reworked such that that data is freed through
+kfree_rcu() instead of kfree(). The two patches in this series realize this
+and also simplify the VPD code somewhat. Please consider these patches for
+kernel v4.14.
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/scsi/sg.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks,
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 4a2db7ff14cc..c80899d249c6 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -891,7 +891,7 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
- 	case SG_SET_FORCE_LOW_DMA:
- 		/*
- 		 * N.B. This ioctl never worked properly, but failed to
--		 * return an error value. So returning '0' to keep compability
-+		 * return an error value. So returning '0' to keep compatibility
- 		 * with legacy applications.
- 		 */
- 		return 0;
+Bart.
+
+Bart Van Assche (2):
+  Introduce scsi_get_vpd_buf()
+  Rework handling of scsi_device.vpd_pg8[03]
+
+ drivers/scsi/scsi.c        | 116 +++++++++++++++++++++------------------------
+ drivers/scsi/scsi_lib.c    |  16 +++----
+ drivers/scsi/scsi_sysfs.c  |  26 +++++++---
+ include/scsi/scsi_device.h |  18 +++++--
+ 4 files changed, 95 insertions(+), 81 deletions(-)
+
 -- 
-2.14.0
+2.14.1
