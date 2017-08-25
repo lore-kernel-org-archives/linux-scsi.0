@@ -1,52 +1,45 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v2 17/17] iscsi_tcp: Remove a set-but-not-used variable
-Date: Fri, 25 Aug 2017 13:46:43 -0700
-Message-ID: <20170825204643.25043-18-bart.vanassche@wdc.com>
+Subject: [PATCH v2 09/17] sd: Remove a useless comparison
+Date: Fri, 25 Aug 2017 13:46:35 -0700
+Message-ID: <20170825204643.25043-10-bart.vanassche@wdc.com>
 References: <20170825204643.25043-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:24575 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932800AbdHYUsi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2017 16:48:38 -0400
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:15512 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932960AbdHYUs2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2017 16:48:28 -0400
 In-Reply-To: <20170825204643.25043-1-bart.vanassche@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Lee Duncan <lduncan@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>
 
 This patch avoids that gcc reports the following warning when
 building with W=1:
 
-drivers/scsi/iscsi_tcp.c:166:24: warning: variable ?session? set but not used [-Wunused-but-set-variable]
+drivers/scsi/sd.c:315:10: warning: comparison of unsigned expression >= 0 is always true [-Wtype-limits]
+  if (val >= 0 && val <= T10_PI_TYPE3_PROTECTION)
 
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Cc: Lee Duncan <lduncan@suse.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>
 Cc: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/iscsi_tcp.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/scsi/sd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 4842fc0e809d..4d934d6c3e13 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -163,7 +163,6 @@ static void iscsi_sw_tcp_state_change(struct sock *sk)
- 	struct iscsi_tcp_conn *tcp_conn;
- 	struct iscsi_sw_tcp_conn *tcp_sw_conn;
- 	struct iscsi_conn *conn;
--	struct iscsi_session *session;
- 	void (*old_state_change)(struct sock *);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 8b3d7994e182..7c0f9eb5a5fd 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -312,7 +312,7 @@ protection_type_store(struct device *dev, struct device_attribute *attr,
+ 	if (err)
+ 		return err;
  
- 	read_lock_bh(&sk->sk_callback_lock);
-@@ -172,7 +171,6 @@ static void iscsi_sw_tcp_state_change(struct sock *sk)
- 		read_unlock_bh(&sk->sk_callback_lock);
- 		return;
- 	}
--	session = conn->session;
+-	if (val >= 0 && val <= T10_PI_TYPE3_PROTECTION)
++	if (val <= T10_PI_TYPE3_PROTECTION)
+ 		sdkp->protection_type = val;
  
- 	iscsi_sw_sk_state_check(sk);
- 
+ 	return count;
 -- 
 2.14.1
