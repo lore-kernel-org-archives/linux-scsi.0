@@ -1,38 +1,52 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v2 13/17] libsas: Annotate fall-through in a switch statement
-Date: Fri, 25 Aug 2017 13:46:39 -0700
-Message-ID: <20170825204643.25043-14-bart.vanassche@wdc.com>
+Subject: [PATCH v2 17/17] iscsi_tcp: Remove a set-but-not-used variable
+Date: Fri, 25 Aug 2017 13:46:43 -0700
+Message-ID: <20170825204643.25043-18-bart.vanassche@wdc.com>
 References: <20170825204643.25043-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:34862 "EHLO
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:24575 "EHLO
         esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932922AbdHYUs3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2017 16:48:29 -0400
+        with ESMTP id S932800AbdHYUsi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2017 16:48:38 -0400
 In-Reply-To: <20170825204643.25043-1-bart.vanassche@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Johannes Thumshirn <jthumshirn@suse.de>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Lee Duncan <lduncan@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
+
+This patch avoids that gcc reports the following warning when
+building with W=1:
+
+drivers/scsi/iscsi_tcp.c:166:24: warning: variable ?session? set but not used [-Wunused-but-set-variable]
 
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
+Cc: Lee Duncan <lduncan@suse.com>
 Cc: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/libsas/sas_ata.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/iscsi_tcp.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 87f5e694dbed..70be4425ae0b 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -343,6 +343,7 @@ static int smp_ata_check_ready(struct ata_link *link)
- 	case SAS_END_DEVICE:
- 		if (ex_phy->attached_sata_dev)
- 			return sas_ata_clear_pending(dev, ex_phy);
-+		/* fall through */
- 	default:
- 		return -ENODEV;
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 4842fc0e809d..4d934d6c3e13 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -163,7 +163,6 @@ static void iscsi_sw_tcp_state_change(struct sock *sk)
+ 	struct iscsi_tcp_conn *tcp_conn;
+ 	struct iscsi_sw_tcp_conn *tcp_sw_conn;
+ 	struct iscsi_conn *conn;
+-	struct iscsi_session *session;
+ 	void (*old_state_change)(struct sock *);
+ 
+ 	read_lock_bh(&sk->sk_callback_lock);
+@@ -172,7 +171,6 @@ static void iscsi_sw_tcp_state_change(struct sock *sk)
+ 		read_unlock_bh(&sk->sk_callback_lock);
+ 		return;
  	}
+-	session = conn->session;
+ 
+ 	iscsi_sw_sk_state_check(sk);
+ 
 -- 
 2.14.1
