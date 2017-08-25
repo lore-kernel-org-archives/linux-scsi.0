@@ -1,33 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 13/15] scsi: make device_type const
-Date: Fri, 25 Aug 2017 17:30:22 -0400
-Message-ID: <yq11snz72tt.fsf@oracle.com>
-References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
- <1503130946-2854-14-git-send-email-bhumirks@gmail.com>
+Subject: Re: [PATCH] mptsas: Fixup device hotplug for VMWare ESXi
+Date: Fri, 25 Aug 2017 17:33:21 -0400
+Message-ID: <yq1wp5r5o4e.fsf@oracle.com>
+References: <1503579163-104386-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1503130946-2854-14-git-send-email-bhumirks@gmail.com> (Bhumika
- Goyal's message of "Sat, 19 Aug 2017 13:52:24 +0530")
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Bhumika Goyal <bhumirks@gmail.com>
-Cc: heikki.krogerus@linux.intel.com, airlied@linux.ie, linux-pci@vger.kernel.org, heiko.carstens@de.ibm.com, dri-devel@lists.freedesktop.org, bjorn.andersson@linaro.org, linux-tegra@vger.kernel.org, thierry.reding@gmail.com, linux-mtd@lists.infradead.org, daniel.vetter@intel.com, kishon@ti.com, freude@de.ibm.com, boris.brezillon@free-electrons.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, richard@nod.at, jonathanh@nvidia.com, marek.vasut@gmail.com, fcoe-devel@open-fcoe.org, dvhart@infradead.org, tomas.winkler@intel.com, open-iscsi@googlegroups.com, linux-media@vger.kernel.org, ohad@wizery.com, devel@driverdev.osuosl.org, linux-s390@vger.kernel.org, linux-remoteproc@vger.kernel.org, johan@kernel.org, jani.nikula@linux.intel.com, julia.lawall@lip6.fr, seanpaul@chromium.org, bhelgaas@google.com, mchehab@kernel.org, linux-edac@vger.kernel.org, cleech@redhat.com, jth@
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:50684 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932374AbdHYVde (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2017 17:33:34 -0400
+In-Reply-To: <1503579163-104386-1-git-send-email-hare@suse.de> (Hannes
+        Reinecke's message of "Thu, 24 Aug 2017 14:52:43 +0200")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
 
-Bhumika,
+Hannes,
 
-> Make these const as they are only stored in the type field of a device
-> structure, which is const.
+> VMWare ESXi emulates an mptsas HBA, but exposes all drives as
+> direct-attached SAS drives.  This it not how the driver originally
+> envisioned things; SAS drives were supposed to be connected via an
+> expander, and only SATA drives would be direct attached.  As such any
+> hotplug event for direct-attach SAS drives was silently ignored, and
+> the guest failed to detect new drives from within a VMWare ESXi
+> environment.
 
 Applied to 4.14/scsi-queue. Thanks!
 
