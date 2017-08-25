@@ -1,49 +1,53 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v2 12/17] libsas: Remove a set-but-not-used variable
-Date: Fri, 25 Aug 2017 13:46:38 -0700
-Message-ID: <20170825204643.25043-13-bart.vanassche@wdc.com>
+Subject: [PATCH v2 16/17] scsi_debug: Remove a set-but-not-used variable
+Date: Fri, 25 Aug 2017 13:46:42 -0700
+Message-ID: <20170825204643.25043-17-bart.vanassche@wdc.com>
 References: <20170825204643.25043-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:15512 "EHLO
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:31397 "EHLO
         esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932800AbdHYUs7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2017 16:48:59 -0400
+        with ESMTP id S932586AbdHYUtO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2017 16:49:14 -0400
 In-Reply-To: <20170825204643.25043-1-bart.vanassche@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Johannes Thumshirn <jthumshirn@suse.de>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Douglas Gilbert <dgilbert@interlog.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-This was detected by building with W=1.
+This patch avoids that gcc reports the following warning when
+building with W=1:
+
+drivers/scsi/scsi_debug.c:2264:15: warning: variable ?pcontrol? set but not used [-Wunused-but-set-variable]
 
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+Cc: Douglas Gilbert <dgilbert@interlog.com>
 Cc: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/libsas/sas_scsi_host.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/scsi/scsi_debug.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 87e5079d816b..fc90b8c65860 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -855,7 +855,6 @@ int sas_target_alloc(struct scsi_target *starget)
- int sas_slave_configure(struct scsi_device *scsi_dev)
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 3be980d47268..77a0335eb757 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -2261,7 +2261,7 @@ static int resp_ie_l_pg(unsigned char * arr)
+ static int resp_log_sense(struct scsi_cmnd * scp,
+                           struct sdebug_dev_info * devip)
  {
- 	struct domain_device *dev = sdev_to_domain_dev(scsi_dev);
--	struct sas_ha_struct *sas_ha;
+-	int ppc, sp, pcontrol, pcode, subpcode, alloc_len, len, n;
++	int ppc, sp, pcode, subpcode, alloc_len, len, n;
+ 	unsigned char arr[SDEBUG_MAX_LSENSE_SZ];
+ 	unsigned char *cmd = scp->cmnd;
  
- 	BUG_ON(dev->rphy->identify.device_type != SAS_END_DEVICE);
- 
-@@ -864,8 +863,6 @@ int sas_slave_configure(struct scsi_device *scsi_dev)
- 		return 0;
+@@ -2272,7 +2272,6 @@ static int resp_log_sense(struct scsi_cmnd * scp,
+ 		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 1, ppc ? 1 : 0);
+ 		return check_condition_result;
  	}
- 
--	sas_ha = dev->port->ha;
--
- 	sas_read_port_mode_page(scsi_dev);
- 
- 	if (scsi_dev->tagged_supported) {
+-	pcontrol = (cmd[2] & 0xc0) >> 6;
+ 	pcode = cmd[2] & 0x3f;
+ 	subpcode = cmd[3] & 0xff;
+ 	alloc_len = get_unaligned_be16(cmd + 7);
 -- 
 2.14.1
