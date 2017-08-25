@@ -1,30 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: Fix the kerneldoc for scsi_initialize_rq()
-Date: Fri, 25 Aug 2017 17:39:40 -0400
-Message-ID: <yq1o9r35ntv.fsf@oracle.com>
-References: <20170824161109.6e23432b@lwn.net>
+Subject: Re: [PATCH 0/6] pm80xx updates
+Date: Fri, 25 Aug 2017 17:47:36 -0400
+Message-ID: <yq1k21r5ngn.fsf@oracle.com>
+References: <20150130060645.23653-1-Viswas.G@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:16954 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934752AbdHYVjt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2017 17:39:49 -0400
-In-Reply-To: <20170824161109.6e23432b@lwn.net> (Jonathan Corbet's message of
-        "Thu, 24 Aug 2017 16:11:09 -0600")
+Received: from aserp1040.oracle.com ([141.146.126.69]:33656 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756657AbdHYVro (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2017 17:47:44 -0400
+In-Reply-To: <20150130060645.23653-1-Viswas.G@microsemi.com> (Viswas G.'s
+        message of "Fri, 30 Jan 2015 11:36:39 +0530")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jonathan Corbet <corbet@lwn.net>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
+To: Viswas G <Viswas.G@microsemi.com>
+Cc: linux-scsi@vger.kernel.org, xjtuwjp@gmail.com, Vasanthalakshmi.Tharmarajan@microsemi.com
 
 
-Jonathan,
+Viswas,
 
-> The kerneldoc comment for scsi_initialize_rq() neglected to document
-> the "rq" parameter, leading to this docs build warning:
+> This patch set include some big fixes and enhancement for pm80xx
+> driver.
 
-Applied to 4.14/scsi-queue. Tweaked the wording based on Bart's
-comments. Thank you!
+This patch set is dated January 2015!?!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
