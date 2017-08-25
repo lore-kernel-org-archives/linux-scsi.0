@@ -1,175 +1,82 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH 1/2] Introduce scsi_get_vpd_buf()
-Date: Fri, 25 Aug 2017 13:36:00 -0700
-Message-ID: <20170825203601.23612-2-bart.vanassche@wdc.com>
-References: <20170825203601.23612-1-bart.vanassche@wdc.com>
+Subject: [PATCH v2 00/17] A series of small SCSI patches for kernel v4.14
+Date: Fri, 25 Aug 2017 13:46:26 -0700
+Message-ID: <20170825204643.25043-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:23237 "EHLO
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:40785 "EHLO
         esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755346AbdHYUhC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2017 16:37:02 -0400
-In-Reply-To: <20170825203601.23612-1-bart.vanassche@wdc.com>
+        with ESMTP id S932911AbdHYUr2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2017 16:47:28 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, Shane M Seymour <shane.seymour@hpe.com>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>
 
-This patch does not change any functionality.
+Hello Martin,
 
-Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Shane M Seymour <shane.seymour@hpe.com>
----
- drivers/scsi/scsi.c | 96 +++++++++++++++++++++++++----------------------------
- 1 file changed, 45 insertions(+), 51 deletions(-)
+The patches in this series fall into three categories:
+- One patch renames a few functions to make it clear whether these
+  are used by the legacy SCSI code path or by the new scsi-mq code.
+- Two patches are related to using blk_mq_rq_to_pdu() instead of
+  struct request.special.
+- Fourteen patches suppress warnings reported by static analysis
+  tools. These tools are very useful but unfortunately the current
+  code base makes these tools report a significant number of false
+  positives.
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 3d38c6d463b8..775f609f89e2 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -411,6 +411,41 @@ int scsi_get_vpd_page(struct scsi_device *sdev, u8 page, unsigned char *buf,
- }
- EXPORT_SYMBOL_GPL(scsi_get_vpd_page);
- 
-+/**
-+ * scsi_get_vpd_buf - Get Vital Product Data from a SCSI device
-+ * @sdev: The device to ask
-+ * @page: Which Vital Product Data to return
-+ * @len: Upon success, the VPD length will be stored in *@len.
-+ *
-+ * Returns %NULL upon failure.
-+ */
-+static unsigned char *scsi_get_vpd_buf(struct scsi_device *sdev, u8 page,
-+				       int *len)
-+{
-+	unsigned char *vpd_buf;
-+	int vpd_len = SCSI_VPD_PG_LEN, result;
-+
-+retry_pg:
-+	vpd_buf = kmalloc(vpd_len, GFP_KERNEL);
-+	if (!vpd_buf)
-+		return NULL;
-+
-+	result = scsi_vpd_inquiry(sdev, vpd_buf, page, vpd_len);
-+	if (result < 0) {
-+		kfree(vpd_buf);
-+		return NULL;
-+	}
-+	if (result > vpd_len) {
-+		vpd_len = result;
-+		kfree(vpd_buf);
-+		goto retry_pg;
-+	}
-+
-+	*len = result;
-+
-+	return vpd_buf;
-+}
-+
- /**
-  * scsi_attach_vpd - Attach Vital Product Data to a SCSI device structure
-  * @sdev: The device to ask
-@@ -422,8 +457,8 @@ EXPORT_SYMBOL_GPL(scsi_get_vpd_page);
-  */
- void scsi_attach_vpd(struct scsi_device *sdev)
- {
--	int result, i;
--	int vpd_len = SCSI_VPD_PG_LEN;
-+	int i;
-+	int vpd_len;
- 	int pg80_supported = 0;
- 	int pg83_supported = 0;
- 	unsigned char __rcu *vpd_buf, *orig_vpd_buf = NULL;
-@@ -431,51 +466,25 @@ void scsi_attach_vpd(struct scsi_device *sdev)
- 	if (!scsi_device_supports_vpd(sdev))
- 		return;
- 
--retry_pg0:
--	vpd_buf = kmalloc(vpd_len, GFP_KERNEL);
-+	/* Ask for all the pages supported by this device */
-+	vpd_buf = scsi_get_vpd_buf(sdev, 0, &vpd_len);
- 	if (!vpd_buf)
- 		return;
- 
--	/* Ask for all the pages supported by this device */
--	result = scsi_vpd_inquiry(sdev, vpd_buf, 0, vpd_len);
--	if (result < 0) {
--		kfree(vpd_buf);
--		return;
--	}
--	if (result > vpd_len) {
--		vpd_len = result;
--		kfree(vpd_buf);
--		goto retry_pg0;
--	}
--
--	for (i = 4; i < result; i++) {
-+	for (i = 4; i < vpd_len; i++) {
- 		if (vpd_buf[i] == 0x80)
- 			pg80_supported = 1;
- 		if (vpd_buf[i] == 0x83)
- 			pg83_supported = 1;
- 	}
- 	kfree(vpd_buf);
--	vpd_len = SCSI_VPD_PG_LEN;
- 
- 	if (pg80_supported) {
--retry_pg80:
--		vpd_buf = kmalloc(vpd_len, GFP_KERNEL);
--		if (!vpd_buf)
--			return;
--
--		result = scsi_vpd_inquiry(sdev, vpd_buf, 0x80, vpd_len);
--		if (result < 0) {
--			kfree(vpd_buf);
--			return;
--		}
--		if (result > vpd_len) {
--			vpd_len = result;
--			kfree(vpd_buf);
--			goto retry_pg80;
--		}
-+		vpd_buf = scsi_get_vpd_buf(sdev, 0x80, &vpd_len);
-+
- 		mutex_lock(&sdev->inquiry_mutex);
- 		orig_vpd_buf = sdev->vpd_pg80;
--		sdev->vpd_pg80_len = result;
-+		sdev->vpd_pg80_len = vpd_len;
- 		rcu_assign_pointer(sdev->vpd_pg80, vpd_buf);
- 		mutex_unlock(&sdev->inquiry_mutex);
- 		synchronize_rcu();
-@@ -483,28 +492,13 @@ void scsi_attach_vpd(struct scsi_device *sdev)
- 			kfree(orig_vpd_buf);
- 			orig_vpd_buf = NULL;
- 		}
--		vpd_len = SCSI_VPD_PG_LEN;
- 	}
- 
- 	if (pg83_supported) {
--retry_pg83:
--		vpd_buf = kmalloc(vpd_len, GFP_KERNEL);
--		if (!vpd_buf)
--			return;
--
--		result = scsi_vpd_inquiry(sdev, vpd_buf, 0x83, vpd_len);
--		if (result < 0) {
--			kfree(vpd_buf);
--			return;
--		}
--		if (result > vpd_len) {
--			vpd_len = result;
--			kfree(vpd_buf);
--			goto retry_pg83;
--		}
-+		vpd_buf = scsi_get_vpd_buf(sdev, 0x83, &vpd_len);
- 		mutex_lock(&sdev->inquiry_mutex);
- 		orig_vpd_buf = sdev->vpd_pg83;
--		sdev->vpd_pg83_len = result;
-+		sdev->vpd_pg83_len = vpd_len;
- 		rcu_assign_pointer(sdev->vpd_pg83, vpd_buf);
- 		mutex_unlock(&sdev->inquiry_mutex);
- 		synchronize_rcu();
+Please consider these patches for kernel v4.14.
+
+Thanks,
+
+Bart.
+
+Changes in v2 compared to v1:
+- Left out the SCSI device VPD patch from this series and posted it
+  separately as a two-patch series.
+- Reworked patch "scsi_transport_srp: Suppress a W=1 compiler warning".
+- Dropped the patch "scsi_setup_fs_cmnd(): Call scsi_req_init() instead of
+  open-coding it".
+
+Bart Van Assche (17):
+  Remove an obsolete function declaration
+  Avoid sign extension of scsi_device.type
+  Suppress gcc 7 fall-through warnings reported with W=1
+  Convert a strncmp() call into a strcmp() call
+  Document which queue type a function is intended for
+  Use blk_mq_rq_to_pdu() to convert a request to a SCSI command pointer
+  sd, sr: Convert two assignments into warning statements
+  sd: Fix indentation
+  sd: Remove a useless comparison
+  sg: Fix type of last blk_trace_setup() argument
+  libiscsi: Fix indentation
+  libsas: Remove a set-but-not-used variable
+  libsas: Annotate fall-through in a switch statement
+  scsi_transport_sas, sas_tlr_supported(): Check kzalloc() return value
+  scsi_transport_srp: Suppress a W=1 compiler warning
+  scsi_debug: Remove a set-but-not-used variable
+  iscsi_tcp: Remove a set-but-not-used variable
+
+ drivers/scsi/iscsi_tcp.c            |  2 --
+ drivers/scsi/libiscsi.c             |  2 +-
+ drivers/scsi/libsas/sas_ata.c       |  1 +
+ drivers/scsi/libsas/sas_scsi_host.c |  3 ---
+ drivers/scsi/scsi_debug.c           |  3 +--
+ drivers/scsi/scsi_error.c           | 10 +++++++--
+ drivers/scsi/scsi_ioctl.c           |  4 +++-
+ drivers/scsi/scsi_lib.c             | 41 +++++++++++++++++++------------------
+ drivers/scsi/scsi_priv.h            |  2 +-
+ drivers/scsi/scsi_scan.c            |  2 +-
+ drivers/scsi/scsi_sysfs.c           |  2 +-
+ drivers/scsi/scsi_transport_sas.c   |  3 +++
+ drivers/scsi/scsi_transport_srp.c   |  2 +-
+ drivers/scsi/sd.c                   |  6 +++---
+ drivers/scsi/sg.c                   |  3 +--
+ drivers/scsi/sr.c                   |  2 +-
+ include/scsi/scsi_cmnd.h            |  1 -
+ include/scsi/scsi_device.h          |  2 +-
+ include/scsi/scsi_tcq.h             |  2 +-
+ include/scsi/scsi_transport_srp.h   |  2 +-
+ 20 files changed, 50 insertions(+), 45 deletions(-)
+
 -- 
 2.14.1
