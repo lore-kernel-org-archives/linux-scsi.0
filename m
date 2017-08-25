@@ -1,72 +1,59 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH 17/19] scsi_transport_srp: Suppress a W=1 compiler warning
-Date: Fri, 25 Aug 2017 15:40:49 +0000
-Message-ID: <1503675647.2680.3.camel@wdc.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 04/19] Convert a strncmp() call into a strcmp() call
+Date: Fri, 25 Aug 2017 17:43:06 +0200
+Message-ID: <65196798-05ca-93c9-4519-58d0b58e8305@suse.de>
 References: <20170823214009.15015-1-bart.vanassche@wdc.com>
-         <20170823214009.15015-18-bart.vanassche@wdc.com>
-         <20170824091157.GP19886@lst.de> <1503592026.2702.12.camel@wdc.com>
-         <20170825152932.GA18440@lst.de>
+ <20170823214009.15015-5-bart.vanassche@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:49055 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933598AbdHYPlh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2017 11:41:37 -0400
-In-Reply-To: <20170825152932.GA18440@lst.de>
+Received: from mx2.suse.de ([195.135.220.15]:42193 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933598AbdHYPnI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 25 Aug 2017 11:43:08 -0400
+In-Reply-To: <20170823214009.15015-5-bart.vanassche@wdc.com>
 Content-Language: en-US
-Content-ID: <820A9EEBA8864048A3B3395784FD1299@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hch@lst.de" <hch@lst.de>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.de" <hare@suse.de>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+To: Bart Van Assche <bart.vanassche@wdc.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>
 
-T24gRnJpLCAyMDE3LTA4LTI1IGF0IDE3OjI5ICswMjAwLCBoY2hAbHN0LmRlIHdyb3RlOg0KPiBP
-biBUaHUsIEF1ZyAyNCwgMjAxNyBhdCAwNDoyNzowN1BNICswMDAwLCBCYXJ0IFZhbiBBc3NjaGUg
-d3JvdGU6DQo+ID4gDQo+ID4gVGhlIHB1cnBvc2Ugb2YgdGhhdCBjaGVjayBpcyB0byBhdm9pZCB0
-aGF0IGRldl9sb3NzX3RtbyAqIEhaIGNhbiBvdmVyZmxvdy4NCj4gPiBUaGF0IGNoZWNrIGlzIG9u
-bHkgbmVlZGVkIG9uIDMyLWJpdCBzeXN0ZW1zIHNpbmNlIG9ubHkgb24gdGhlc2Ugc3lzdGVtcw0K
-PiA+IHNpemVvZihsb25nKSA9PSBzaXplb2YoaW50KS4gSG93IGFib3V0IGNoYW5naW5nIHRoZSB0
-eXBlIG9mIHRoZSBkZXZfbG9zc190bW8NCj4gPiBhcmd1bWVudCBmcm9tIGludCB0byBsb25nIHN1
-Y2ggdGhhdCBubyBleHBsaWNpdCBjYXN0IGlzIG5lZWRlZD8NCj4gDQo+IFllcywgc3dpdGNoaW5n
-IHRoZSB0aW1lb3V0IHRvIGxvbmcgc291bmRzIHVzZWZ1bCBhcyB0aGF0J3Mgb3VyIG5vcm1hbA0K
-PiB0eXBlIGZvciB0aW1lb3V0cy4gIEJ1dCBpdCB3aWxsIHNwcmVhZCB0aHJvdWdoIGEgbG90IG9m
-IHRoZSBTUlAgY29kZS4NCg0KSGVsbG8gQ2hyaXN0b3BoLA0KDQpEbyB5b3UgYWdyZWUgd2l0aCB0
-aGUgcGF0Y2ggYmVsb3c/IEl0IHNlZW1zIHRvIGJlIHN1ZmZpY2llbnQgdG8gc3VwcHJlc3MNCnRo
-ZSBjb21waWxlciB3YXJuaW5nLg0KDQpUaGFua3MsDQoNCkJhcnQuDQoNCltQQVRDSF0gc2NzaV90
-cmFuc3BvcnRfc3JwOiBTdXBwcmVzcyBhIFc9MSBjb21waWxlciB3YXJuaW5nDQoNCkF2b2lkIHRo
-YXQgdGhlIGZvbGxvd2luZyBjb21waWxlciB3YXJuaW5nIGlzIHJlcG9ydGVkIHdoZW4gYnVpbGRp
-bmcNCndpdGggVz0xOg0KDQpkcml2ZXJzL3Njc2kvc2NzaV90cmFuc3BvcnRfc3JwLmM6OTI6MTk6
-IHdhcm5pbmc6IGNvbXBhcmlzb24gaXMgYWx3YXlzIGZhbHNlIGR1ZSB0byBsaW1pdGVkIHJhbmdl
-IG9mIGRhdGEgdHlwZSBbLVd0eXBlLWxpbWl0c10NCg0KU2lnbmVkLW9mZi1ieTogQmFydCBWYW4g
-QXNzY2hlIDxiYXJ0LnZhbmFzc2NoZUB3ZGMuY29tPg0KQ2M6IENocmlzdG9waCBIZWxsd2lnIDxo
-Y2hAbHN0LmRlPg0KQ2M6IEhhbm5lcyBSZWluZWNrZSA8aGFyZUBzdXNlLmRlPg0KQ2M6IEpvaGFu
-bmVzIFRodW1zaGlybiA8anRodW1zaGlybkBzdXNlLmRlPg0KLS0tDQogZHJpdmVycy9zY3NpL3Nj
-c2lfdHJhbnNwb3J0X3NycC5jIHwgMiArLQ0KIGluY2x1ZGUvc2NzaS9zY3NpX3RyYW5zcG9ydF9z
-cnAuaCB8IDIgKy0NCiAyIGZpbGVzIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlv
-bnMoLSkNCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9zcnAuYyBi
-L2RyaXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9zcnAuYw0KaW5kZXggNjk4Y2M0NjgxNzA2Li40
-ZjZmMDFjZjk5NjggMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Njc2kvc2NzaV90cmFuc3BvcnRfc3Jw
-LmMNCisrKyBiL2RyaXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9zcnAuYw0KQEAgLTc4LDcgKzc4
-LDcgQEAgc3RhdGljIGlubGluZSBzdHJ1Y3Qgc3JwX3Jwb3J0ICpzaG9zdF90b19ycG9ydChzdHJ1
-Y3QgU2NzaV9Ib3N0ICpzaG9zdCkNCiAgKiBwYXJhbWV0ZXJzIG11c3QgYmUgc3VjaCB0aGF0IG11
-bHRpcGF0aCBjYW4gZGV0ZWN0IGZhaWxlZCBwYXRocyB0aW1lbHkuDQogICogSGVuY2UgZG8gbm90
-IGFsbG93IGFsbCB0aHJlZSBwYXJhbWV0ZXJzIHRvIGJlIGRpc2FibGVkIHNpbXVsdGFuZW91c2x5
-Lg0KICAqLw0KLWludCBzcnBfdG1vX3ZhbGlkKGludCByZWNvbm5lY3RfZGVsYXksIGludCBmYXN0
-X2lvX2ZhaWxfdG1vLCBpbnQgZGV2X2xvc3NfdG1vKQ0KK2ludCBzcnBfdG1vX3ZhbGlkKGludCBy
-ZWNvbm5lY3RfZGVsYXksIGludCBmYXN0X2lvX2ZhaWxfdG1vLCBsb25nIGRldl9sb3NzX3RtbykN
-CiB7DQogCWlmIChyZWNvbm5lY3RfZGVsYXkgPCAwICYmIGZhc3RfaW9fZmFpbF90bW8gPCAwICYm
-IGRldl9sb3NzX3RtbyA8IDApDQogCQlyZXR1cm4gLUVJTlZBTDsNCmRpZmYgLS1naXQgYS9pbmNs
-dWRlL3Njc2kvc2NzaV90cmFuc3BvcnRfc3JwLmggYi9pbmNsdWRlL3Njc2kvc2NzaV90cmFuc3Bv
-cnRfc3JwLmgNCmluZGV4IGRkMDk2MzMwNzM0ZS4uNTZhZTE5OGFjYzczIDEwMDY0NA0KLS0tIGEv
-aW5jbHVkZS9zY3NpL3Njc2lfdHJhbnNwb3J0X3NycC5oDQorKysgYi9pbmNsdWRlL3Njc2kvc2Nz
-aV90cmFuc3BvcnRfc3JwLmgNCkBAIC0xMTEsNyArMTExLDcgQEAgZXh0ZXJuIHN0cnVjdCBzcnBf
-cnBvcnQgKnNycF9ycG9ydF9hZGQoc3RydWN0IFNjc2lfSG9zdCAqLA0KIAkJCQkgICAgICAgc3Ry
-dWN0IHNycF9ycG9ydF9pZGVudGlmaWVycyAqKTsNCiBleHRlcm4gdm9pZCBzcnBfcnBvcnRfZGVs
-KHN0cnVjdCBzcnBfcnBvcnQgKik7DQogZXh0ZXJuIGludCBzcnBfdG1vX3ZhbGlkKGludCByZWNv
-bm5lY3RfZGVsYXksIGludCBmYXN0X2lvX2ZhaWxfdG1vLA0KLQkJCSBpbnQgZGV2X2xvc3NfdG1v
-KTsNCisJCQkgbG9uZyBkZXZfbG9zc190bW8pOw0KIGludCBzcnBfcGFyc2VfdG1vKGludCAqdG1v
-LCBjb25zdCBjaGFyICpidWYpOw0KIGV4dGVybiBpbnQgc3JwX3JlY29ubmVjdF9ycG9ydChzdHJ1
-Y3Qgc3JwX3Jwb3J0ICpycG9ydCk7DQogZXh0ZXJuIHZvaWQgc3JwX3N0YXJ0X3RsX2ZhaWxfdGlt
-ZXJzKHN0cnVjdCBzcnBfcnBvcnQgKnJwb3J0KTsNCg==
+On 08/23/2017 11:39 PM, Bart Van Assche wrote:
+> This patch avoids that smatch reports the following warning:
+> 
+> drivers/scsi/scsi_sysfs.c:117: check_set() error: strncmp() '"-"' too small (2 vs 20)
+> 
+> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Johannes Thumshirn <jthumshirn@suse.de>
+> ---
+>  drivers/scsi/scsi_sysfs.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index 41891db20108..5ed473a87589 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -114,7 +114,7 @@ static int check_set(unsigned long long *val, char *src)
+>  {
+>  	char *last;
+>  
+> -	if (strncmp(src, "-", 20) == 0) {
+> +	if (strcmp(src, "-") == 0) {
+>  		*val = SCAN_WILD_CARD;
+>  	} else {
+>  		/*
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
