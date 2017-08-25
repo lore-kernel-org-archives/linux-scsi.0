@@ -1,48 +1,43 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v2 10/17] sg: Fix type of last blk_trace_setup() argument
-Date: Fri, 25 Aug 2017 13:46:36 -0700
-Message-ID: <20170825204643.25043-11-bart.vanassche@wdc.com>
+Subject: [PATCH v2 14/17] scsi_transport_sas, sas_tlr_supported(): Check kzalloc() return value
+Date: Fri, 25 Aug 2017 13:46:40 -0700
+Message-ID: <20170825204643.25043-15-bart.vanassche@wdc.com>
 References: <20170825204643.25043-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:31397 "EHLO
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:40785 "EHLO
         esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932800AbdHYUso (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2017 16:48:44 -0400
+        with ESMTP id S932989AbdHYUs7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Aug 2017 16:48:59 -0400
 In-Reply-To: <20170825204643.25043-1-bart.vanassche@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-Avoid that sparse reports the following:
-
-drivers/scsi/sg.c:1114:41: warning: incorrect type in argument 5 (different address spaces)
-drivers/scsi/sg.c:1114:41:    expected char [noderef] <asn:1>*arg
-drivers/scsi/sg.c:1114:41:    got char *<noident>
-
-This patch does not change any functionality.
+Check whether memory allocation succeeded before dereferencing
+the pointer to the allocated memory.
 
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 Cc: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/sg.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/scsi_transport_sas.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index f5705a95319f..03194c4b6744 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -1110,8 +1110,7 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
- 		return blk_trace_setup(sdp->device->request_queue,
- 				       sdp->disk->disk_name,
- 				       MKDEV(SCSI_GENERIC_MAJOR, sdp->index),
--				       NULL,
--				       (char *)arg);
-+				       NULL, p);
- 	case BLKTRACESTART:
- 		return blk_trace_startstop(sdp->device->request_queue, 1);
- 	case BLKTRACESTOP:
+diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+index c5cde4ecef8e..6c05fd9a0be5 100644
+--- a/drivers/scsi/scsi_transport_sas.c
++++ b/drivers/scsi/scsi_transport_sas.c
+@@ -423,6 +423,9 @@ sas_tlr_supported(struct scsi_device *sdev)
+ 	char *buffer = kzalloc(vpd_len, GFP_KERNEL);
+ 	int ret = 0;
+ 
++	if (!buffer)
++		goto out;
++
+ 	if (scsi_get_vpd_page(sdev, 0x90, buffer, vpd_len))
+ 		goto out;
+ 
 -- 
 2.14.1
