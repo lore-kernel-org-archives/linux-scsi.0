@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 24/26] megaraid_mbox: drop duplicate bus reset and device reset function
-Date: Fri, 25 Aug 2017 13:57:19 +0200
-Message-ID: <1503662241-127788-25-git-send-email-hare@suse.de>
+Subject: [PATCHv2 23/26] bnx2fc: remove obsolete bnx2fc_eh_host_reset() definition
+Date: Fri, 25 Aug 2017 13:57:18 +0200
+Message-ID: <1503662241-127788-24-git-send-email-hare@suse.de>
 References: <1503662241-127788-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49614 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:49613 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1756521AbdHYL6F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1756522AbdHYL6F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Fri, 25 Aug 2017 07:58:05 -0400
 In-Reply-To: <1503662241-127788-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,28 +14,26 @@ List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-megaraid_mbox only has one reset function, and that is a host reset.
-So drop the duplicate bus reset and device reset functions.
+Never used anywhere.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/megaraid/megaraid_mbox.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
-index 6d0bd3a..ec3c4385 100644
---- a/drivers/scsi/megaraid/megaraid_mbox.c
-+++ b/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -341,8 +341,6 @@ static void megaraid_mbox_prepare_epthru(adapter_t *, scb_t *,
- 	.proc_name			= "megaraid",
- 	.queuecommand			= megaraid_queue_command,
- 	.eh_abort_handler		= megaraid_abort_handler,
--	.eh_device_reset_handler	= megaraid_reset_handler,
--	.eh_bus_reset_handler		= megaraid_reset_handler,
- 	.eh_host_reset_handler		= megaraid_reset_handler,
- 	.change_queue_depth		= scsi_change_queue_depth,
- 	.use_clustering			= ENABLE_CLUSTERING,
+diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
+index 7e007e1..901a316 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc.h
++++ b/drivers/scsi/bnx2fc/bnx2fc.h
+@@ -539,7 +539,6 @@ void bnx2fc_init_task(struct bnx2fc_cmd *io_req,
+ void bnx2fc_add_2_sq(struct bnx2fc_rport *tgt, u16 xid);
+ void bnx2fc_ring_doorbell(struct bnx2fc_rport *tgt);
+ int bnx2fc_eh_abort(struct scsi_cmnd *sc_cmd);
+-int bnx2fc_eh_host_reset(struct scsi_cmnd *sc_cmd);
+ int bnx2fc_eh_target_reset(struct scsi_cmnd *sc_cmd);
+ int bnx2fc_eh_device_reset(struct scsi_cmnd *sc_cmd);
+ void bnx2fc_rport_event_handler(struct fc_lport *lport,
 -- 
 1.8.5.6
