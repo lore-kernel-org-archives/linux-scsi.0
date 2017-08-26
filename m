@@ -1,35 +1,28 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: Re: scsi: ufs: Delete an error message for a failed memory allocation
- in ufshcd_memory_alloc()
-Date: Sat, 26 Aug 2017 13:17:00 +0200
-Message-ID: <b218274a-da50-4f0c-2e55-cc6d708cef92@users.sourceforge.net>
-References: <75622f45-f46c-e52f-2b9e-6ff5ce32184a@users.sourceforge.net>
- <3d355c13-159a-2570-9ead-af93ad95c210@users.sourceforge.net>
- <019b6365c15b0764c156d6453648f7a2@codeaurora.org>
- <1493231242.18659.28.camel@perches.com>
+From: sonofagun@openmailbox.org
+Subject: Re: No I/O errors reported after SATA link hard reset
+Date: Sat, 26 Aug 2017 20:58:48 -0000
+Message-ID: <20170826205848.BC21C4E0007@mta-1.openmailbox.og>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1493231242.18659.28.camel@perches.com>
-Content-Language: en-GB
-Sender: linux-kernel-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>, Subhash Jadavani <subhashj@codeaurora.org>, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org
-Cc: "James E. J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from lb1.openmailbox.org ([5.79.108.160]:54238 "EHLO
+        mta-1.openmailbox.og" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751083AbdHZVEG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 26 Aug 2017 17:04:06 -0400
+Received: from [127.0.0.1] (unknown [10.0.0.4])
+        by mta-1.openmailbox.og (Postfix) with ESMTP id 06BC24E0024
+        for <linux-scsi@vger.kernel.org>; Sat, 26 Aug 2017 22:58:48 +0200 (CEST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
->> PS: ufshcd_memory_alloc() also does some DMA coherent memory allocation 
->> (via dmam_alloc_coherent() APIs) and tries to print out the message on 
->> allocation failure. Although i don't know "out of memory" messages will 
->> be printed out by dmam_alloc_coherent() APIs or not. If it does print it 
->> out then we might want to remove our local memory allocation failure log 
->> messages.
-> 
-> Basically most everything that has a gfp_t argument does a
-> dump_stack() on OOM unless __GFP_NOWARN is specified by that gfp_t.
-
-How do you think about to continue the clarification for this aspect
-of the involved programming interfaces?
-
-Regards,
-Markus
+IEhlbGxvIGd1eXMsIHRoaXMgaXMgYSB2ZXJ5IGludGVyZXN0aW5nIHRocmVhZCBidXQgSSB3aWxs
+IGpvaW4gaXQgdG9tb3Jyb3chCgpJIGhhdmUgcmVhZCBhIHNpbWlsYXIgZGlzY3Vzc2lvbiBmb3Ig
+U1NEcyBzb21lIHRpbWUgYWdvLiBUaGF0IHRvb2sgcGxhY2UgaGVyZSBbMV0uIENvcnJ1cHRpb24g
+b2Ygc3VjaCBkZXZpY2VzIGNhbiBsZWFkIHRvIGNvbXBsZXRlIGRhdGEgbG9zcyBhbmQgbm90IGp1
+c3QgY29ycnVwdGlvbi4gCgpQbGVhc2UgaW5zdGFsbCBzbWFydG1vbnRvb2xzIGFuZCBwb3N0IGl0
+cyBvdXRwdXQgaGVyZSBmb3IgZWFjaCBkaXNrIHNvIHRoYXQgSSBjYW4gc2VlIGlmIHlvdXIgZGlz
+a3MgYXJlIGhlYWx0aHkuIEFsc28gSSBtdXN0IHNlZSB0aGVpciBmaXJtd2FyZSB2ZXJzaW9uIGFz
+IHRoZXJlIG1pZ2h0IGJlIGEgZmlybXdhcmUgdXBkYXRlIGF2YWlsYWJsZS4KClsxXSBodHRwczov
+L21hcmMuaW5mby8/dD0xNDkxODY2NjA0MDAwMDImcj0xJnc9Mgo=
