@@ -1,76 +1,176 @@
-From: Xin Long <lucien.xin@gmail.com>
-Subject: Re: [PATCH] scsi: fix the issue that iscsi_if_rx doesn't parse nlmsg properly
-Date: Mon, 28 Aug 2017 00:37:56 +1200
-Message-ID: <CADvbK_f77ruyt3fQtcs+f=fKzG7RDtAym_OeFU9t5NLNAGGPGw@mail.gmail.com>
-References: <0c9fd6fbc0f5fa7b72e6ae5b82d5499a38fd375e.1503836726.git.lucien.xin@gmail.com>
+From: Gionatan Danti <g.danti@assyoma.it>
+Subject: Re: No I/O errors reported after SATA link hard reset
+Date: Sun, 27 Aug 2017 20:42:52 +0200
+Message-ID: <ce5bad3e349648cf2d3444e42b2f641c@assyoma.it>
+References: <20170826205848.BC21C4E0007@mta-1.openmailbox.og>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:38141 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751152AbdH0Mh5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Aug 2017 08:37:57 -0400
-Received: by mail-qt0-f193.google.com with SMTP id p13so3242401qtp.5
-        for <linux-scsi@vger.kernel.org>; Sun, 27 Aug 2017 05:37:57 -0700 (PDT)
-In-Reply-To: <0c9fd6fbc0f5fa7b72e6ae5b82d5499a38fd375e.1503836726.git.lucien.xin@gmail.com>
+Received: from mr001msb.fastweb.it ([85.18.95.85]:51359 "EHLO
+        mr001msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751264AbdH0SnC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Aug 2017 14:43:02 -0400
+In-Reply-To: <20170826205848.BC21C4E0007@mta-1.openmailbox.og>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: jejb@linux.vnet.ibm.com
+To: sonofagun@openmailbox.org
+Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org
 
-cc jejb@linux.vnet.ibm.com
+Il 26-08-2017 22:58 sonofagun@openmailbox.org ha scritto:
+> Hello guys, this is a very interesting thread but I will join it 
+> tomorrow!
+> 
+> I have read a similar discussion for SSDs some time ago. That took
+> place here [1]. Corruption of such devices can lead to complete data
+> loss and not just corruption.
 
-On Mon, Aug 28, 2017 at 12:25 AM, Xin Long <lucien.xin@gmail.com> wrote:
-> ChunYu found a kernel crash by syzkaller:
->
-> [  651.617875] kasan: CONFIG_KASAN_INLINE enabled
-> [  651.618217] kasan: GPF could be caused by NULL-ptr deref or user memory access
-> [  651.618731] general protection fault: 0000 [#1] SMP KASAN
-> [  651.621543] CPU: 1 PID: 9539 Comm: scsi Not tainted 4.11.0.cov #32
-> [  651.621938] Hardware name: Red Hat KVM, BIOS 0.5.1 01/01/2011
-> [  651.622309] task: ffff880117780000 task.stack: ffff8800a3188000
-> [  651.622762] RIP: 0010:skb_release_data+0x26c/0x590
-> [...]
-> [  651.627260] Call Trace:
-> [  651.629156]  skb_release_all+0x4f/0x60
-> [  651.629450]  consume_skb+0x1a5/0x600
-> [  651.630705]  netlink_unicast+0x505/0x720
-> [  651.632345]  netlink_sendmsg+0xab2/0xe70
-> [  651.633704]  sock_sendmsg+0xcf/0x110
-> [  651.633942]  ___sys_sendmsg+0x833/0x980
-> [  651.637117]  __sys_sendmsg+0xf3/0x240
-> [  651.638820]  SyS_sendmsg+0x32/0x50
-> [  651.639048]  entry_SYSCALL_64_fastpath+0x1f/0xc2
->
-> It's caused by skb_shared_info at the end of sk_buff was overwritten by
-> ISCSI_KEVENT_IF_ERROR when parsing nlmsg info from skb in iscsi_if_rx.
->
-> During the loop if skb->len == nlh->nlmsg_len and both are sizeof(*nlh),
-> ev = nlmsg_data(nlh) will acutally get skb_shinfo(SKB) instead and set a
-> new value to skb_shinfo(SKB)->nr_frags by ev->type.
->
-> This patch is to fix it by checking nlh->nlmsg_len properly there to
-> avoid over accessing sk_buff.
->
-> Reported-by: ChunYu Wang <chunwang@redhat.com>
-> Signed-off-by: Xin Long <lucien.xin@gmail.com>
-> ---
->  drivers/scsi/scsi_transport_iscsi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-> index e4b3d8f..bb4ed7b 100644
-> --- a/drivers/scsi/scsi_transport_iscsi.c
-> +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -3697,7 +3697,7 @@ iscsi_if_rx(struct sk_buff *skb)
->                 uint32_t group;
->
->                 nlh = nlmsg_hdr(skb);
-> -               if (nlh->nlmsg_len < sizeof(*nlh) ||
-> +               if (nlh->nlmsg_len < sizeof(*nlh) + sizeof(*ev) ||
->                     skb->len < nlh->nlmsg_len) {
->                         break;
->                 }
-> --
-> 2.1.0
->
+I just read the thread at https://marc.info/?t=149186660400002&r=1&w=2, 
+it was very interesting. However, it seems to me that  it ended without 
+a clear solution, right?
+
+Anyway, the opacity of the FTL (flash translation layer) surely is a 
+significant cause of concern/danger. Unexpected power losses can wreak 
+havock on SSDs.
+
+> Please install smartmontools and post its output here for each disk so
+> that I can see if your disks are healthy. Also I must see their
+> firmware version as there might be a firmware update available.
+
+Fortunately, the issue is solved now: I tracked back it to a faulty SATA 
+power cable. However, the SMART reports of both disk is very 
+interesting:
+
+
+GOOD DISK (sda):
+[root@nas ~]# smartctl -A /dev/sda
+smartctl 6.2 2013-07-26 r3841 [x86_64-linux-3.10.0-514.el7.x86_64] 
+(local build)
+Copyright (C) 2002-13, Bruce Allen, Christian Franke, 
+www.smartmontools.org
+
+=== START OF READ SMART DATA SECTION ===
+SMART Attributes Data Structure revision number: 10
+Vendor Specific SMART Attributes with Thresholds:
+ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      
+UPDATED  WHEN_FAILED RAW_VALUE
+   1 Raw_Read_Error_Rate     0x000f   111   099   006    Pre-fail  Always 
+       -       30483624
+   3 Spin_Up_Time            0x0003   093   091   000    Pre-fail  Always 
+       -       0
+   4 Start_Stop_Count        0x0032   100   100   020    Old_age   Always 
+       -       46
+   5 Reallocated_Sector_Ct   0x0033   100   100   010    Pre-fail  Always 
+       -       0
+   7 Seek_Error_Rate         0x000f   077   060   030    Pre-fail  Always 
+       -       55353954
+   9 Power_On_Hours          0x0032   091   091   000    Old_age   Always 
+       -       8535
+  10 Spin_Retry_Count        0x0013   100   100   097    Pre-fail  Always 
+       -       0
+  12 Power_Cycle_Count       0x0032   100   100   020    Old_age   Always 
+       -       44
+184 End-to-End_Error        0x0032   100   100   099    Old_age   Always 
+       -       0
+187 Reported_Uncorrect      0x0032   100   100   000    Old_age   Always 
+       -       0
+188 Command_Timeout         0x0032   100   100   000    Old_age   Always 
+       -       0
+189 High_Fly_Writes         0x003a   100   100   000    Old_age   Always 
+       -       0
+190 Airflow_Temperature_Cel 0x0022   067   060   045    Old_age   Always 
+       -       33 (Min/Max 30/40)
+191 G-Sense_Error_Rate      0x0032   100   100   000    Old_age   Always 
+       -       0
+192 Power-Off_Retract_Count 0x0032   100   100   000    Old_age   Always 
+       -       24
+193 Load_Cycle_Count        0x0032   100   100   000    Old_age   Always 
+       -       67
+194 Temperature_Celsius     0x0022   033   040   000    Old_age   Always 
+       -       33 (0 14 0 0 0)
+197 Current_Pending_Sector  0x0012   100   100   000    Old_age   Always 
+       -       0
+198 Offline_Uncorrectable   0x0010   100   100   000    Old_age   
+Offline      -       0
+199 UDMA_CRC_Error_Count    0x003e   200   200   000    Old_age   Always 
+       -       0
+
+Note the low (expected) Start_Stop_Count (46)
+
+
+BAD DISK (sdb):
+[root@nas ~]# smartctl -A /dev/sdb
+smartctl 6.2 2013-07-26 r3841 [x86_64-linux-3.10.0-514.el7.x86_64] 
+(local build)
+Copyright (C) 2002-13, Bruce Allen, Christian Franke, 
+www.smartmontools.org
+
+=== START OF READ SMART DATA SECTION ===
+SMART Attributes Data Structure revision number: 10
+Vendor Specific SMART Attributes with Thresholds:
+ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      
+UPDATED  WHEN_FAILED RAW_VALUE
+   1 Raw_Read_Error_Rate     0x000f   106   099   006    Pre-fail  Always 
+       -       11030016
+   3 Spin_Up_Time            0x0003   095   091   000    Pre-fail  Always 
+       -       0
+   4 Start_Stop_Count        0x0032   100   100   020    Old_age   Always 
+       -       661
+   5 Reallocated_Sector_Ct   0x0033   100   100   010    Pre-fail  Always 
+       -       0
+   7 Seek_Error_Rate         0x000f   078   060   030    Pre-fail  Always 
+       -       60912204
+   9 Power_On_Hours          0x0032   091   091   000    Old_age   Always 
+       -       8536
+  10 Spin_Retry_Count        0x0013   100   100   097    Pre-fail  Always 
+       -       0
+  12 Power_Cycle_Count       0x0032   100   100   020    Old_age   Always 
+       -       44
+184 End-to-End_Error        0x0032   100   100   099    Old_age   Always 
+       -       0
+187 Reported_Uncorrect      0x0032   100   100   000    Old_age   Always 
+       -       0
+188 Command_Timeout         0x0032   100   100   000    Old_age   Always 
+       -       0
+189 High_Fly_Writes         0x003a   100   100   000    Old_age   Always 
+       -       0
+190 Airflow_Temperature_Cel 0x0022   067   061   045    Old_age   Always 
+       -       33 (Min/Max 29/39)
+191 G-Sense_Error_Rate      0x0032   100   100   000    Old_age   Always 
+       -       0
+192 Power-Off_Retract_Count 0x0032   100   100   000    Old_age   Always 
+       -       639
+193 Load_Cycle_Count        0x0032   100   100   000    Old_age   Always 
+       -       672
+194 Temperature_Celsius     0x0022   033   040   000    Old_age   Always 
+       -       33 (0 14 0 0 0)
+197 Current_Pending_Sector  0x0012   100   100   000    Old_age   Always 
+       -       0
+198 Offline_Uncorrectable   0x0010   100   100   000    Old_age   
+Offline      -       0
+199 UDMA_CRC_Error_Count    0x003e   200   200   000    Old_age   Always 
+       -       0
+
+Note the *much* higher Start_Stop_Count (661); however, the 
+Power_Cycle_Count was the same (44).
+
+So yes, while HDDs surely are more resilient than SSDs to unexpected 
+power losses, a micro-powerloss which corrupt/invalidate the disk's 
+cache content without giving the host a change to notice *will* cause 
+data corruption, sometime on acked syncronized writes also (I had a 
+filesystem journal corruption).
+
+However, as stated in this thread, SATA does not really has a provision 
+to detect failed command due to micro-powerlosses nor to detect and 
+invalid/corrupted disk cache. So it seems the better "line of defese" is 
+to monitor (via SMART) the start/stop or power cycles count.
+
+Regards.
+
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
