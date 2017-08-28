@@ -1,64 +1,204 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v3 3/3] scsi_transport_sas: Fix error handling in sas_smp_request()
-Date: Mon, 28 Aug 2017 13:41:45 -0700
-Message-ID: <20170828204149.28693-4-bart.vanassche@wdc.com>
+Subject: [PATCH v3 1/3] Rework the code for caching Vital Product Data (VPD)
+Date: Mon, 28 Aug 2017 13:41:47 -0700
+Message-ID: <20170828204149.28693-6-bart.vanassche@wdc.com>
 References: <20170828204149.28693-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:9307 "EHLO
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:36549 "EHLO
         esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751182AbdH1Unr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Aug 2017 16:43:47 -0400
+        with ESMTP id S1751182AbdH1Uns (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Aug 2017 16:43:48 -0400
 In-Reply-To: <20170828204149.28693-1-bart.vanassche@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, "Paul E . McKenney" <paulmck@linux.vnet.ibm.com>, Ingo Molnar <mingo@kernel.org>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@wdc.com>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, "Paul E . McKenney" <paulmck@linux.vnet.ibm.com>, Ingo Molnar <mingo@kernel.org>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@wdc.com>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, Shane M Seymour <shane.seymour@hpe.com>
 
-sas_function_template.smp_handler implementations either return
-0 or a Unix error code. Convert that error code into a SCSI
-result. This patch is what I came up with after having analyzed
-the following sparse warnings:
+Introduce the scsi_get_vpd_buf() and scsi_update_vpd_page()
+functions. The only functional change in this patch is that if
+updating page 0x80 fails that it is attempted to update page 0x83.
 
-drivers/scsi/scsi_transport_sas.c:187:21: warning: incorrect type in assignment (different base types)
-drivers/scsi/scsi_transport_sas.c:187:21:    expected restricted blk_status_t [usertype] ret
-drivers/scsi/scsi_transport_sas.c:187:21:    got int
-drivers/scsi/scsi_transport_sas.c:188:39: warning: incorrect type in assignment (different base types)
-drivers/scsi/scsi_transport_sas.c:188:39:    expected int [signed] result
-drivers/scsi/scsi_transport_sas.c:188:39:    got restricted blk_status_t [usertype] ret
-
-Fixes: commit 17d5363b83f8 ("scsi: introduce a result field in struct scsi_request")
 Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Hannes Reinecke <hare@suse.de>
 Cc: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: <stable@vger.kernel.org>
+Cc: Shane M Seymour <shane.seymour@hpe.com>
 ---
- drivers/scsi/scsi_transport_sas.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi.c | 144 ++++++++++++++++++++++++----------------------------
+ 1 file changed, 66 insertions(+), 78 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index e2e948f1ce28..6c05fd9a0be5 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -173,7 +173,7 @@ static void sas_smp_request(struct request_queue *q, struct Scsi_Host *shost,
- 			    struct sas_rphy *rphy)
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 3d38c6d463b8..f3f4926a3e77 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -411,6 +411,63 @@ int scsi_get_vpd_page(struct scsi_device *sdev, u8 page, unsigned char *buf,
+ }
+ EXPORT_SYMBOL_GPL(scsi_get_vpd_page);
+ 
++/**
++ * scsi_get_vpd_buf - Get Vital Product Data from a SCSI device
++ * @sdev: The device to ask
++ * @page: Which Vital Product Data to return
++ * @len: Upon success, the VPD length will be stored in *@len.
++ *
++ * Returns %NULL upon failure.
++ */
++static unsigned char *scsi_get_vpd_buf(struct scsi_device *sdev, u8 page,
++				       int *len)
++{
++	unsigned char *vpd_buf;
++	int vpd_len = SCSI_VPD_PG_LEN, result;
++
++retry_pg:
++	vpd_buf = kmalloc(vpd_len, GFP_KERNEL);
++	if (!vpd_buf)
++		return NULL;
++
++	result = scsi_vpd_inquiry(sdev, vpd_buf, page, vpd_len);
++	if (result < 0) {
++		kfree(vpd_buf);
++		return NULL;
++	}
++	if (result > vpd_len) {
++		vpd_len = result;
++		kfree(vpd_buf);
++		goto retry_pg;
++	}
++
++	*len = result;
++
++	return vpd_buf;
++}
++
++static void scsi_update_vpd_page(struct scsi_device *sdev, u8 page,
++				 unsigned char __rcu **sdev_vpd_buf,
++				 int *sdev_vpd_len)
++{
++	unsigned char *vpd_buf;
++	int len;
++
++	vpd_buf = scsi_get_vpd_buf(sdev, page, &len);
++	if (!vpd_buf)
++		return;
++
++	mutex_lock(&sdev->inquiry_mutex);
++	rcu_swap_protected(*sdev_vpd_buf, vpd_buf,
++			   lockdep_is_held(&sdev->inquiry_mutex));
++	*sdev_vpd_len = len;
++	mutex_unlock(&sdev->inquiry_mutex);
++
++	synchronize_rcu();
++
++	kfree(vpd_buf);
++}
++
+ /**
+  * scsi_attach_vpd - Attach Vital Product Data to a SCSI device structure
+  * @sdev: The device to ask
+@@ -422,95 +479,26 @@ EXPORT_SYMBOL_GPL(scsi_get_vpd_page);
+  */
+ void scsi_attach_vpd(struct scsi_device *sdev)
  {
- 	struct request *req;
--	blk_status_t ret;
-+	int ret;
- 	int (*handler)(struct Scsi_Host *, struct sas_rphy *, struct request *);
+-	int result, i;
+-	int vpd_len = SCSI_VPD_PG_LEN;
+-	int pg80_supported = 0;
+-	int pg83_supported = 0;
+-	unsigned char __rcu *vpd_buf, *orig_vpd_buf = NULL;
++	int i, vpd_len;
++	unsigned char *vpd_buf;
  
- 	while ((req = blk_fetch_request(q)) != NULL) {
-@@ -185,7 +185,9 @@ static void sas_smp_request(struct request_queue *q, struct Scsi_Host *shost,
- 				blk_rq_bytes(req->next_rq);
- 		handler = to_sas_internal(shost->transportt)->f->smp_handler;
- 		ret = handler(shost, rphy, req);
--		scsi_req(req)->result = ret;
-+		WARN_ONCE(ret != 0 && !IS_ERR_VALUE((uintptr_t)ret),
-+			  "%s: ret = %d\n", __func__, ret);
-+		scsi_req(req)->result = ret ? DID_ERROR << 16 : 0;
+ 	if (!scsi_device_supports_vpd(sdev))
+ 		return;
  
- 		blk_end_request_all(req, 0);
+-retry_pg0:
+-	vpd_buf = kmalloc(vpd_len, GFP_KERNEL);
+-	if (!vpd_buf)
+-		return;
+-
+ 	/* Ask for all the pages supported by this device */
+-	result = scsi_vpd_inquiry(sdev, vpd_buf, 0, vpd_len);
+-	if (result < 0) {
+-		kfree(vpd_buf);
++	vpd_buf = scsi_get_vpd_buf(sdev, 0, &vpd_len);
++	if (!vpd_buf)
+ 		return;
+-	}
+-	if (result > vpd_len) {
+-		vpd_len = result;
+-		kfree(vpd_buf);
+-		goto retry_pg0;
+-	}
  
+-	for (i = 4; i < result; i++) {
++	for (i = 4; i < vpd_len; i++) {
+ 		if (vpd_buf[i] == 0x80)
+-			pg80_supported = 1;
++			scsi_update_vpd_page(sdev, 0x80, &sdev->vpd_pg80,
++					     &sdev->vpd_pg80_len);
+ 		if (vpd_buf[i] == 0x83)
+-			pg83_supported = 1;
++			scsi_update_vpd_page(sdev, 0x83, &sdev->vpd_pg83,
++					     &sdev->vpd_pg83_len);
+ 	}
+ 	kfree(vpd_buf);
+-	vpd_len = SCSI_VPD_PG_LEN;
+-
+-	if (pg80_supported) {
+-retry_pg80:
+-		vpd_buf = kmalloc(vpd_len, GFP_KERNEL);
+-		if (!vpd_buf)
+-			return;
+-
+-		result = scsi_vpd_inquiry(sdev, vpd_buf, 0x80, vpd_len);
+-		if (result < 0) {
+-			kfree(vpd_buf);
+-			return;
+-		}
+-		if (result > vpd_len) {
+-			vpd_len = result;
+-			kfree(vpd_buf);
+-			goto retry_pg80;
+-		}
+-		mutex_lock(&sdev->inquiry_mutex);
+-		orig_vpd_buf = sdev->vpd_pg80;
+-		sdev->vpd_pg80_len = result;
+-		rcu_assign_pointer(sdev->vpd_pg80, vpd_buf);
+-		mutex_unlock(&sdev->inquiry_mutex);
+-		synchronize_rcu();
+-		if (orig_vpd_buf) {
+-			kfree(orig_vpd_buf);
+-			orig_vpd_buf = NULL;
+-		}
+-		vpd_len = SCSI_VPD_PG_LEN;
+-	}
+-
+-	if (pg83_supported) {
+-retry_pg83:
+-		vpd_buf = kmalloc(vpd_len, GFP_KERNEL);
+-		if (!vpd_buf)
+-			return;
+-
+-		result = scsi_vpd_inquiry(sdev, vpd_buf, 0x83, vpd_len);
+-		if (result < 0) {
+-			kfree(vpd_buf);
+-			return;
+-		}
+-		if (result > vpd_len) {
+-			vpd_len = result;
+-			kfree(vpd_buf);
+-			goto retry_pg83;
+-		}
+-		mutex_lock(&sdev->inquiry_mutex);
+-		orig_vpd_buf = sdev->vpd_pg83;
+-		sdev->vpd_pg83_len = result;
+-		rcu_assign_pointer(sdev->vpd_pg83, vpd_buf);
+-		mutex_unlock(&sdev->inquiry_mutex);
+-		synchronize_rcu();
+-		if (orig_vpd_buf)
+-			kfree(orig_vpd_buf);
+-	}
+ }
+ 
+ /**
 -- 
 2.14.1
