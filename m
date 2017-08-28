@@ -1,96 +1,50 @@
-From: "greg@kroah.com" <greg@kroah.com>
-Subject: Re: linux-next: manual merge of the scsi tree with the staging tree
-Date: Mon, 28 Aug 2017 20:47:13 +0200
-Message-ID: <20170828184713.GA22823@kroah.com>
-References: <20170828164127.15902025@canb.auug.org.au>
- <20170828064921.GA24696@kroah.com>
- <1503934884.2841.22.camel@wdc.com>
- <20170828160545.GA11231@kroah.com>
- <1503938165.2841.30.camel@wdc.com>
- <20170828164420.GB16802@kroah.com>
- <1503942719.2744.3.camel@HansenPartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1503942719.2744.3.camel@HansenPartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hare@suse.de" <hare@suse.de>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "sameer.wadgaonkar@unisys.com" <sameer.wadgaonkar@unisys.com>, linux-scsi <linux-scsi@vger.kernel.org>
+From: Bart Van Assche <bart.vanassche@wdc.com>
+Subject: [PATCH v3 0/3] Rework handling of scsi_device.vpd_pg8[03]
+Date: Mon, 28 Aug 2017 13:41:42 -0700
+Message-ID: <20170828204149.28693-1-bart.vanassche@wdc.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:53687 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750735AbdH1Umg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Aug 2017 16:42:36 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, "Paul E . McKenney" <paulmck@linux.vnet.ibm.com>, Ingo Molnar <mingo@kernel.org>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@wdc.com>
 
-On Mon, Aug 28, 2017 at 06:51:59PM +0100, James Bottomley wrote:
-> On Mon, 2017-08-28 at 18:44 +0200, greg@kroah.com wrote:
-> > On Mon, Aug 28, 2017 at 04:36:06PM +0000, Bart Van Assche wrote:
-> > > 
-> > > On Mon, 2017-08-28 at 18:05 +0200, greg@kroah.com wrote:
-> > > > 
-> > > > On Mon, Aug 28, 2017 at 03:41:28PM +0000, Bart Van Assche wrote:
-> > > > > 
-> > > > > * Most SCSI drivers exist under drivers/scsi, including the
-> > > > > virtio-scsi and   xen-scsifront drivers. So why has the
-> > > > > visorhba driver been added under unisys/visorhba?
-> > > > 
-> > > > That's because right now it's still a staging driver.  Also,
-> > > > there are other scsi drivers in other portions of the kernel tree
-> > > > (like the USB driver), so there's no hard rule that all scsi
-> > > > drivers have to be under drivers/scsi/
-> > > > 
-> > > > <snip>
-> > > > 
-> > > > Please provide this review to them, on the properly mailing list,
-> > > > I'm sure they would be glad to get it.
-> > > 
-> > > OK, I will do that. BTW, is there a written down version of the
-> > > rules for adding a driver under drivers/staging available
-> > > somewhere? 
-> > 
-> > The only 2 rules for adding a new drivers/staging driver is:
-> > 	- has to compile
-> > 	- correct license
-> > and sometimes we let code in if the first one isn't true :)
-> > 
-> > > 
-> > > As far as I can see the visorhba driver went in without the linux-
-> > > scsi mailing list having been CC-ed. See also Benjamin Romer,
-> > > [PATCH] staging: unisys: Add s-Par visorhba, linux-driver-devel
-> > > mailing list, July 2015
-> > > (https://urldefense.proofpoint.com/v2/url?u=https-3A__marc.info_-
-> > > 3Fl-3Dlinux-2Ddriver-2Ddevel-26m-
-> > > 3D143681271902628&d=DwIBAg&c=jf_iaSHvJObTbx-
-> > > siA1ZOg&r=lxuMXTRCffN3cvb-
-> > > aRKL97jBhWZUIH_7zc3AgXUz9Mw&m=muMI5n73yuzpaRBjZnIrYLfhcO8lIP0JZSjBG
-> > > D1LC5I&s=76_tO8QEuhUmhJPijDkweBOfh6DLPRILWj9Rhphb8j0&e= ).
-> > 
-> > That's totally normal, why would the scsi developers care about a
-> > staging driver in such a rough state.  Only when it looks "good
-> > enough" would we ask for a scsi developer review to move it out of
-> > staging.
-> 
-> I think I've said before, we'd really rather a SCSI driver went via the
-> SCSI tree because most of what's wrong with it will be the mechanics of
-> the driver and its interaction with the SCSI and block subsystems which
-> simply don't get looked at in the staging tree.  The aesthetics and the
-> formatting issues are mostly fixed by a quick trip through lindent or a
-> brief education of the submitters on Linux style.
+Hello Martin,
 
-This driver has been in the tree for almost 2 years now, with no
-problems in this area before.  It, and the infrastructure around it, has
-needed hundreds, if not thousands, of patches and changes and reworks to
-get it to the almost readable state it is in today.
+The conclusion of a recent discussion about the handling of SCSI device VPD
+data is that the code should be reworked such that that data is freed through
+kfree_rcu() instead of kfree(). The three patches in this series realize this
+and also simplify the VPD code. Please consider these patches for kernel
+v4.14.
 
-It was anything but a "quick trip through lindent".
+Thanks,
 
-And we don't have code in the "real" part of the kernel depend on code
-in drivers/staging/, as that would not work.
+Bart.
 
-So let's just keep things as they are here, there's been no issues with
-this for 2 years, and for times when there is, great, let me know and we
-can work to fix things up.  You are always free to break staging drivers
-with api changes, it's up to the owner of the staging driver to fix the
-issues in that case.
+Changes between v2 and v3:
+- Added a third patch that introduces rcu_swap_protected().
+- Introduced scsi_update_vpd_page().
+- Skip VPD buffer updating if querying VPD data fails.
+- Fix a race condition in the VPD sysfs show method.
 
-thanks,
+Changes between v1 and v2:
+- Split the VPD rework into two patches.
+- Introduced struct scsi_vpd and scsi_get_vpd_buf().
 
-greg k-h
+Bart Van Assche (3):
+  Rework the code for caching Vital Product Data (VPD)
+  Rework handling of scsi_device.vpd_pg8[03]
+  scsi_transport_sas: Fix error handling in sas_smp_request()
+
+ drivers/scsi/scsi.c               | 140 ++++++++++++++++----------------------
+ drivers/scsi/scsi_lib.c           |  16 ++---
+ drivers/scsi/scsi_sysfs.c         |  29 +++++---
+ drivers/scsi/scsi_transport_sas.c |   6 +-
+ include/scsi/scsi_device.h        |  18 +++--
+ 5 files changed, 106 insertions(+), 103 deletions(-)
+
+-- 
+2.14.1
