@@ -1,14 +1,14 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
 Subject: [PATCH v3 3/3] Rework handling of scsi_device.vpd_pg8[03]
-Date: Mon, 28 Aug 2017 13:45:35 -0700
-Message-ID: <20170828204539.29289-4-bart.vanassche@wdc.com>
-References: <20170828204539.29289-1-bart.vanassche@wdc.com>
+Date: Mon, 28 Aug 2017 13:44:46 -0700
+Message-ID: <20170828204446.29066-8-bart.vanassche@wdc.com>
+References: <20170828204446.29066-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:12667 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751306AbdH1UrW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Aug 2017 16:47:22 -0400
-In-Reply-To: <20170828204539.29289-1-bart.vanassche@wdc.com>
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:1612 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751290AbdH1UrQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Aug 2017 16:47:16 -0400
+In-Reply-To: <20170828204446.29066-1-bart.vanassche@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
