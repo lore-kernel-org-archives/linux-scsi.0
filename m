@@ -1,64 +1,25 @@
-From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v3 1/3] rcu: Introduce rcu_swap_protected()
-Date: Mon, 28 Aug 2017 13:45:37 -0700
-Message-ID: <20170828204539.29289-6-bart.vanassche@wdc.com>
-References: <20170828204539.29289-1-bart.vanassche@wdc.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH v3 0/3] Rework handling of scsi_device.vpd_pg8[03]
+Date: Mon, 28 Aug 2017 20:46:49 +0000
+Message-ID: <1503953208.2841.52.camel@wdc.com>
+References: <20170828204446.29066-1-bart.vanassche@wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:3426 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751306AbdH1Urg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Aug 2017 16:47:36 -0400
-In-Reply-To: <20170828204539.29289-1-bart.vanassche@wdc.com>
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:29252 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751306AbdH1Urc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Aug 2017 16:47:32 -0400
+In-Reply-To: <20170828204446.29066-1-bart.vanassche@wdc.com>
+Content-Language: en-US
+Content-ID: <D0E03BB257843F48965504A9C5EA965E@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, "Paul E . McKenney" <paulmck@linux.vnet.ibm.com>, Ingo Molnar <mingo@kernel.org>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@wdc.com>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, Shane M Seymour <shane.seymour@hpe.com>
+To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "mingo@kernel.org" <mingo@kernel.org>, "paulmck@linux.vnet.ibm.com" <paulmck@linux.vnet.ibm.com>, "hch@lst.de" <hch@lst.de>
 
-A common pattern in RCU code is to assign a new value to an RCU
-pointer after having read and stored the old value. Introduce a
-macro for this pattern.
-
-Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Shane M Seymour <shane.seymour@hpe.com>
----
- include/linux/rcupdate.h | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
-
-diff --git a/include/linux/rcupdate.h b/include/linux/rcupdate.h
-index f816fc72b51e..555815ce2e57 100644
---- a/include/linux/rcupdate.h
-+++ b/include/linux/rcupdate.h
-@@ -561,6 +561,26 @@ static inline void rcu_preempt_sleep_check(void) { }
-  */
- #define rcu_pointer_handoff(p) (p)
- 
-+/**
-+ * rcu_swap_protected() - swap an RCU and a regular pointer
-+ * @rcu_ptr: RCU pointer
-+ * @ptr: regular pointer
-+ * @c: the conditions under which the dereference will take place
-+ *
-+ * Perform swap(@rcu_ptr, @ptr) where @rcu_ptr is an RCU-annotated pointer and
-+ * @c is the argument that is passed to the rcu_dereference_protected() call
-+ * used to read that pointer.
-+ */
-+#define rcu_swap_protected(rcu_ptr, ptr, c) do {			\
-+	typeof(ptr) __tmp;						\
-+									\
-+	BUILD_BUG_ON(!__same_type(typeof(rcu_ptr), typeof(*(ptr)) __rcu *)); \
-+	BUILD_BUG_ON(!__same_type(typeof(ptr), typeof(*(rcu_ptr)) *));	\
-+	__tmp = rcu_dereference_protected((rcu_ptr), (c));		\
-+	rcu_assign_pointer((rcu_ptr), (ptr));				\
-+	(ptr) = __tmp;							\
-+} while (0)
-+
- /**
-  * rcu_read_lock() - mark the beginning of an RCU read-side critical section
-  *
--- 
-2.14.1
+T24gTW9uLCAyMDE3LTA4LTI4IGF0IDEzOjQ0IC0wNzAwLCBCYXJ0IFZhbiBBc3NjaGUgd3JvdGU6
+DQo+IFRoZSBjb25jbHVzaW9uIG9mIGEgcmVjZW50IGRpc2N1c3Npb24gYWJvdXQgdGhlIGhhbmRs
+aW5nIG9mIFNDU0kgZGV2aWNlIFZQRA0KPiBbIC4uLiBdDQoNClBsZWFzZSBpZ25vcmUgdGhpcyBw
+YXRjaCBzZXJpZXMgdG9vIC0gc2FtZSBwcm9ibGVtIGFzIGxhc3QgdGltZS4NCg0KQmFydC4=
