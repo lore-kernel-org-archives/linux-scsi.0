@@ -1,22 +1,31 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/2] Rework handling of scsi_device.vpd_pg8[03]
-Date: Mon, 28 Aug 2017 10:07:53 +0200
-Message-ID: <20170828080753.GB2851@lst.de>
-References: <20170825203601.23612-1-bart.vanassche@wdc.com> <20170825203601.23612-3-bart.vanassche@wdc.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH v3 04/20] lpfc: Fix oops when NVME Target is discovered
+ in a nonNVME environment
+Date: Mon, 28 Aug 2017 12:10:04 +0200
+Message-ID: <20170828101004.GG4038@linux-x5ow.site>
+References: <20170823235549.2883-1-jsmart2021@gmail.com>
+ <20170823235549.2883-5-jsmart2021@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:37377 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751879AbdH1IHz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 28 Aug 2017 04:07:55 -0400
+Received: from mx2.suse.de ([195.135.220.15]:55012 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751190AbdH1KKJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 28 Aug 2017 06:10:09 -0400
 Content-Disposition: inline
-In-Reply-To: <20170825203601.23612-3-bart.vanassche@wdc.com>
+In-Reply-To: <20170823235549.2883-5-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, Shane Seymour <shane.seymour@hpe.com>
+To: James Smart <jsmart2021@gmail.com>
+Cc: linux-scsi@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
-This looks generally good.  But I wonder if there is a way to
-factor the assining/clearing sequence into little helpers instead
-of duplicating it?
+
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
