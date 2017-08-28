@@ -1,50 +1,64 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v3 0/3] Rework handling of scsi_device.vpd_pg8[03]
-Date: Mon, 28 Aug 2017 13:46:12 -0700
-Message-ID: <20170828204615.29455-1-bart.vanassche@wdc.com>
+Subject: [PATCH v3 1/3] rcu: Introduce rcu_swap_protected()
+Date: Mon, 28 Aug 2017 13:44:44 -0700
+Message-ID: <20170828204446.29066-6-bart.vanassche@wdc.com>
+References: <20170828204446.29066-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:48672 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751218AbdH1Uq4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Aug 2017 16:46:56 -0400
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:61771 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751236AbdH1Uqq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Aug 2017 16:46:46 -0400
+In-Reply-To: <20170828204446.29066-1-bart.vanassche@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, "Paul E . McKenney" <paulmck@linux.vnet.ibm.com>, Ingo Molnar <mingo@kernel.org>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@wdc.com>
+Cc: linux-scsi@vger.kernel.org, "Paul E . McKenney" <paulmck@linux.vnet.ibm.com>, Ingo Molnar <mingo@kernel.org>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@wdc.com>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, Shane M Seymour <shane.seymour@hpe.com>
 
-Hello Martin,
+A common pattern in RCU code is to assign a new value to an RCU
+pointer after having read and stored the old value. Introduce a
+macro for this pattern.
 
-The conclusion of a recent discussion about the handling of SCSI device VPD
-data is that the code should be reworked such that that data is freed through
-kfree_rcu() instead of kfree(). The three patches in this series realize this
-and also simplify the VPD code. Please consider these patches for kernel
-v4.14.
+Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
+Cc: Ingo Molnar <mingo@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Shane M Seymour <shane.seymour@hpe.com>
+---
+ include/linux/rcupdate.h | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-Thanks,
-
-Bart.
-
-Changes between v2 and v3:
-- Added a third patch that introduces rcu_swap_protected().
-- Introduced scsi_update_vpd_page().
-- Skip VPD buffer updating if querying VPD data fails.
-- Fix a race condition in the VPD sysfs show method.
-
-Changes between v1 and v2:
-- Split the VPD rework into two patches.
-- Introduced struct scsi_vpd and scsi_get_vpd_buf().
-
-Bart Van Assche (3):
-  Rework the code for caching Vital Product Data (VPD)
-  Rework handling of scsi_device.vpd_pg8[03]
-  scsi_transport_sas: Fix error handling in sas_smp_request()
-
- drivers/scsi/scsi.c               | 140 ++++++++++++++++----------------------
- drivers/scsi/scsi_lib.c           |  16 ++---
- drivers/scsi/scsi_sysfs.c         |  29 +++++---
- drivers/scsi/scsi_transport_sas.c |   6 +-
- include/scsi/scsi_device.h        |  18 +++--
- 5 files changed, 106 insertions(+), 103 deletions(-)
-
+diff --git a/include/linux/rcupdate.h b/include/linux/rcupdate.h
+index f816fc72b51e..555815ce2e57 100644
+--- a/include/linux/rcupdate.h
++++ b/include/linux/rcupdate.h
+@@ -561,6 +561,26 @@ static inline void rcu_preempt_sleep_check(void) { }
+  */
+ #define rcu_pointer_handoff(p) (p)
+ 
++/**
++ * rcu_swap_protected() - swap an RCU and a regular pointer
++ * @rcu_ptr: RCU pointer
++ * @ptr: regular pointer
++ * @c: the conditions under which the dereference will take place
++ *
++ * Perform swap(@rcu_ptr, @ptr) where @rcu_ptr is an RCU-annotated pointer and
++ * @c is the argument that is passed to the rcu_dereference_protected() call
++ * used to read that pointer.
++ */
++#define rcu_swap_protected(rcu_ptr, ptr, c) do {			\
++	typeof(ptr) __tmp;						\
++									\
++	BUILD_BUG_ON(!__same_type(typeof(rcu_ptr), typeof(*(ptr)) __rcu *)); \
++	BUILD_BUG_ON(!__same_type(typeof(ptr), typeof(*(rcu_ptr)) *));	\
++	__tmp = rcu_dereference_protected((rcu_ptr), (c));		\
++	rcu_assign_pointer((rcu_ptr), (ptr));				\
++	(ptr) = __tmp;							\
++} while (0)
++
+ /**
+  * rcu_read_lock() - mark the beginning of an RCU read-side critical section
+  *
 -- 
 2.14.1
