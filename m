@@ -1,19 +1,20 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v3 13/20] lpfc: Fix MRQ > 1 context list handling
-Date: Mon, 28 Aug 2017 12:11:49 +0200
-Message-ID: <20170828101149.GK4038@linux-x5ow.site>
+Subject: Re: [PATCH v3 15/20] lpfc: Fix nvme target failure after 2nd adapter
+ reset
+Date: Mon, 28 Aug 2017 12:12:17 +0200
+Message-ID: <20170828101216.GL4038@linux-x5ow.site>
 References: <20170823235549.2883-1-jsmart2021@gmail.com>
- <20170823235549.2883-14-jsmart2021@gmail.com>
+ <20170823235549.2883-16-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58427 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:59342 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750865AbdH1KLv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 28 Aug 2017 06:11:51 -0400
+        id S1751201AbdH1KMS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 28 Aug 2017 06:12:18 -0400
 Content-Disposition: inline
-In-Reply-To: <20170823235549.2883-14-jsmart2021@gmail.com>
+In-Reply-To: <20170823235549.2883-16-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <jsmart2021@gmail.com>
