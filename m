@@ -1,20 +1,20 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v3 04/20] lpfc: Fix oops when NVME Target is discovered
- in a nonNVME environment
-Date: Mon, 28 Aug 2017 12:10:04 +0200
-Message-ID: <20170828101004.GG4038@linux-x5ow.site>
+Subject: Re: [PATCH v3 07/20] lpfc: Fix handling of FCP and NVME FC4 types in
+ Pt2Pt topology
+Date: Mon, 28 Aug 2017 12:10:47 +0200
+Message-ID: <20170828101047.GH4038@linux-x5ow.site>
 References: <20170823235549.2883-1-jsmart2021@gmail.com>
- <20170823235549.2883-5-jsmart2021@gmail.com>
+ <20170823235549.2883-8-jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55012 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:56320 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751190AbdH1KKJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 28 Aug 2017 06:10:09 -0400
+        id S1751303AbdH1KKt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 28 Aug 2017 06:10:49 -0400
 Content-Disposition: inline
-In-Reply-To: <20170823235549.2883-5-jsmart2021@gmail.com>
+In-Reply-To: <20170823235549.2883-8-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <jsmart2021@gmail.com>
