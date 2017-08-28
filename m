@@ -1,14 +1,14 @@
 From: Bart Van Assche <bart.vanassche@wdc.com>
 Subject: [PATCH v3 2/3] Rework the code for caching Vital Product Data (VPD)
-Date: Mon, 28 Aug 2017 13:44:45 -0700
-Message-ID: <20170828204446.29066-7-bart.vanassche@wdc.com>
-References: <20170828204446.29066-1-bart.vanassche@wdc.com>
+Date: Mon, 28 Aug 2017 13:45:34 -0700
+Message-ID: <20170828204539.29289-3-bart.vanassche@wdc.com>
+References: <20170828204539.29289-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:63462 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751218AbdH1UrB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Aug 2017 16:47:01 -0400
-In-Reply-To: <20170828204446.29066-1-bart.vanassche@wdc.com>
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:8382 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751355AbdH1UrG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Aug 2017 16:47:06 -0400
+In-Reply-To: <20170828204539.29289-1-bart.vanassche@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
