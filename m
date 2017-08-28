@@ -1,39 +1,39 @@
-From: Alim Akhtar <alim.akhtar@samsung.com>
-Subject: [PATCH] scsi: ufs: Make use of UFS_BIT macro wherever possible
-Date: Mon, 28 Aug 2017 17:49:43 +0530
-Message-ID: <1503922783-14317-1-git-send-email-alim.akhtar@samsung.com>
-References: <CGME20170828122625epcas2p33e3e912339c1e29051ad8e28251ea91b@epcas2p3.samsung.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: JBottomley@odin.com, vinholikatti@gmail.com, martin.petersen@oracle.com
+From: Stefano Brivio <sbrivio@redhat.com>
+Subject: [PATCH] lpfc: Don't return internal MBXERR_ERROR code from probe function
+Date: Mon, 28 Aug 2017 15:05:23 +0200
+Message-ID: <a1464fd9d04361952cbbc031622c3259358eb8ac.1503925436.git.sbrivio@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:60094 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751161AbdH1NFp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 28 Aug 2017 09:05:45 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>, QLogic-Storage-Upstream@cavium.com
+Cc: Maurizio Lombardi <mlombard@redhat.com>, martin.petersen@oracle.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
 
-This entire file uses UFS_BIT macro for bits definition, expect for few
-places. This patch convert those defines to use UFS_BIT macro to be aligned
-with reset of the file.
+Internal error codes happen to be positive, thus the PCI driver
+core won't treat them as failure, but we do. This would cause a
+crash later on as lpfc_pci_remove_one() is called (e.g. as
+shutdown function).
 
-Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
+Fixes: 6d368e532168 ("[SCSI] lpfc 8.3.24: Add resource extent support")
+Signed-off-by: Stefano Brivio <sbrivio@redhat.com>
 ---
- drivers/scsi/ufs/ufshci.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-index f60145d..588094a 100644
---- a/drivers/scsi/ufs/ufshci.h
-+++ b/drivers/scsi/ufs/ufshci.h
-@@ -186,9 +186,9 @@ enum {
- /* UECDL - Host UIC Error Code Data Link Layer 3Ch */
- #define UIC_DATA_LINK_LAYER_ERROR		UFS_BIT(31)
- #define UIC_DATA_LINK_LAYER_ERROR_CODE_MASK	0x7FFF
--#define UIC_DATA_LINK_LAYER_ERROR_PA_INIT	0x2000
--#define UIC_DATA_LINK_LAYER_ERROR_NAC_RECEIVED	0x0001
--#define UIC_DATA_LINK_LAYER_ERROR_TCx_REPLAY_TIMEOUT 0x0002
-+#define UIC_DATA_LINK_LAYER_ERROR_PA_INIT	UFS_BIT(13)
-+#define UIC_DATA_LINK_LAYER_ERROR_NAC_RECEIVED	UFS_BIT(1)
-+#define UIC_DATA_LINK_LAYER_ERROR_TCx_REPLAY_TIMEOUT UFS_BIT(2)
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 491aa95eb0f6..38cc2b5bb5a2 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -6118,6 +6118,7 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
+ 				"Extents and RPI headers enabled.\n");
+ 		}
+ 		mempool_free(mboxq, phba->mbox_mem_pool);
++		rc = -EIO;
+ 		goto out_free_bsmbx;
+ 	}
  
- /* UECN - Host UIC Error Code Network Layer 40h */
- #define UIC_NETWORK_LAYER_ERROR			UFS_BIT(31)
 -- 
-2.7.4
+2.9.4
