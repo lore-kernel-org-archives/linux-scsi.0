@@ -1,26 +1,50 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH v3 0/3] Rework handling of scsi_device.vpd_pg8[03]
-Date: Mon, 28 Aug 2017 20:43:46 +0000
-Message-ID: <1503953025.2841.51.camel@wdc.com>
-References: <20170828204149.28693-1-bart.vanassche@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: Bart Van Assche <bart.vanassche@wdc.com>
+Subject: [PATCH v3 0/3] Rework handling of scsi_device.vpd_pg8[03]
+Date: Mon, 28 Aug 2017 13:44:39 -0700
+Message-ID: <20170828204446.29066-1-bart.vanassche@wdc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:65456 "EHLO
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:63462 "EHLO
         esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751190AbdH1Uoa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Aug 2017 16:44:30 -0400
-In-Reply-To: <20170828204149.28693-1-bart.vanassche@wdc.com>
-Content-Language: en-US
-Content-ID: <B7871F8CFEC68F4C9176482A9B8B5428@namprd04.prod.outlook.com>
+        with ESMTP id S1751182AbdH1Upa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Aug 2017 16:45:30 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "mingo@kernel.org" <mingo@kernel.org>, "paulmck@linux.vnet.ibm.com" <paulmck@linux.vnet.ibm.com>, "hch@lst.de" <hch@lst.de>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, "Paul E . McKenney" <paulmck@linux.vnet.ibm.com>, Ingo Molnar <mingo@kernel.org>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bart.vanassche@wdc.com>
 
-T24gTW9uLCAyMDE3LTA4LTI4IGF0IDEzOjQxIC0wNzAwLCBCYXJ0IFZhbiBBc3NjaGUgd3JvdGU6
-DQo+IFRoZSBjb25jbHVzaW9uIG9mIGEgcmVjZW50IGRpc2N1c3Npb24gYWJvdXQgdGhlIGhhbmRs
-aW5nIG9mIFNDU0kgZGV2aWNlIFZQRA0KPiBbIC4uLiBdDQoNClBsZWFzZSBpZ25vcmUgdGhpcyBw
-YXRjaCBzZXJpZXMgLSBteSB3b3JraW5nIGRpcmVjdG9yeSB3YXMgbm90IGNsZWFuIHdoZW4gSSBy
-YW4NCnRoZSBjb21tYW5kIHRvIHBvc3QgdGhlc2UgcGF0Y2hlcy4NCg0KQmFydC4=
+Hello Martin,
+
+The conclusion of a recent discussion about the handling of SCSI device VPD
+data is that the code should be reworked such that that data is freed through
+kfree_rcu() instead of kfree(). The three patches in this series realize this
+and also simplify the VPD code. Please consider these patches for kernel
+v4.14.
+
+Thanks,
+
+Bart.
+
+Changes between v2 and v3:
+- Added a third patch that introduces rcu_swap_protected().
+- Introduced scsi_update_vpd_page().
+- Skip VPD buffer updating if querying VPD data fails.
+- Fix a race condition in the VPD sysfs show method.
+
+Changes between v1 and v2:
+- Split the VPD rework into two patches.
+- Introduced struct scsi_vpd and scsi_get_vpd_buf().
+
+Bart Van Assche (3):
+  Rework the code for caching Vital Product Data (VPD)
+  Rework handling of scsi_device.vpd_pg8[03]
+  scsi_transport_sas: Fix error handling in sas_smp_request()
+
+ drivers/scsi/scsi.c               | 140 ++++++++++++++++----------------------
+ drivers/scsi/scsi_lib.c           |  16 ++---
+ drivers/scsi/scsi_sysfs.c         |  29 +++++---
+ drivers/scsi/scsi_transport_sas.c |   6 +-
+ include/scsi/scsi_device.h        |  18 +++--
+ 5 files changed, 106 insertions(+), 103 deletions(-)
+
+-- 
+2.14.1
