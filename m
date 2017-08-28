@@ -1,41 +1,22 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] qlogicpti: fixup qlogicpti_reset() definition
-Date: Mon, 28 Aug 2017 10:14:26 +0200
-Message-ID: <1503908066-106335-1-git-send-email-hare@suse.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 2/2] Rework handling of scsi_device.vpd_pg8[03]
+Date: Mon, 28 Aug 2017 10:07:53 +0200
+Message-ID: <20170828080753.GB2851@lst.de>
+References: <20170825203601.23612-1-bart.vanassche@wdc.com> <20170825203601.23612-3-bart.vanassche@wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33452 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754104AbdH1IOg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 28 Aug 2017 04:14:36 -0400
+Received: from verein.lst.de ([213.95.11.211]:37377 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751879AbdH1IHz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 28 Aug 2017 04:07:55 -0400
+Content-Disposition: inline
+In-Reply-To: <20170825203601.23612-3-bart.vanassche@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+To: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, Shane Seymour <shane.seymour@hpe.com>
 
-A merge error crept in when formatting commit
-af167bc ("scsi: qlogicpti: move bus reset to host reset")
-
-Fixes: af167bc ("scsi: qlogicpti: move bus reset to host reset")
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/qlogicpti.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
-index 274ee1ccfea8..cec9a14982e6 100644
---- a/drivers/scsi/qlogicpti.c
-+++ b/drivers/scsi/qlogicpti.c
-@@ -1250,9 +1250,10 @@ static int qlogicpti_abort(struct scsi_cmnd *Cmnd)
- 	return return_status;
- }
- 
--static int qlogicpti_reset(struct Scsi_Host *host)
-+static int qlogicpti_reset(struct scsi_cmnd *Cmnd)
- {
- 	u_short param[6];
-+	struct Scsi_Host *host = Cmnd->device->host;
- 	struct qlogicpti *qpti = (struct qlogicpti *) host->hostdata;
- 	int return_status = SUCCESS;
- 
--- 
-2.12.3
+This looks generally good.  But I wonder if there is a way to
+factor the assining/clearing sequence into little helpers instead
+of duplicating it?
