@@ -1,31 +1,39 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v3 15/20] lpfc: Fix nvme target failure after 2nd adapter
- reset
-Date: Mon, 28 Aug 2017 12:12:17 +0200
-Message-ID: <20170828101216.GL4038@linux-x5ow.site>
-References: <20170823235549.2883-1-jsmart2021@gmail.com>
- <20170823235549.2883-16-jsmart2021@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59342 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751201AbdH1KMS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 28 Aug 2017 06:12:18 -0400
-Content-Disposition: inline
-In-Reply-To: <20170823235549.2883-16-jsmart2021@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Alim Akhtar <alim.akhtar@samsung.com>
+Subject: [PATCH] scsi: ufs: Make use of UFS_BIT macro wherever possible
+Date: Mon, 28 Aug 2017 17:49:43 +0530
+Message-ID: <1503922783-14317-1-git-send-email-alim.akhtar@samsung.com>
+References: <CGME20170828122625epcas2p33e3e912339c1e29051ad8e28251ea91b@epcas2p3.samsung.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: JBottomley@odin.com, vinholikatti@gmail.com, martin.petersen@oracle.com
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <jsmart2021@gmail.com>
-Cc: linux-scsi@vger.kernel.org, Dick Kennedy <dick.kennedy@broadcom.com>, James Smart <james.smart@broadcom.com>
 
+This entire file uses UFS_BIT macro for bits definition, expect for few
+places. This patch convert those defines to use UFS_BIT macro to be aligned
+with reset of the file.
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
+---
+ drivers/scsi/ufs/ufshci.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+index f60145d..588094a 100644
+--- a/drivers/scsi/ufs/ufshci.h
++++ b/drivers/scsi/ufs/ufshci.h
+@@ -186,9 +186,9 @@ enum {
+ /* UECDL - Host UIC Error Code Data Link Layer 3Ch */
+ #define UIC_DATA_LINK_LAYER_ERROR		UFS_BIT(31)
+ #define UIC_DATA_LINK_LAYER_ERROR_CODE_MASK	0x7FFF
+-#define UIC_DATA_LINK_LAYER_ERROR_PA_INIT	0x2000
+-#define UIC_DATA_LINK_LAYER_ERROR_NAC_RECEIVED	0x0001
+-#define UIC_DATA_LINK_LAYER_ERROR_TCx_REPLAY_TIMEOUT 0x0002
++#define UIC_DATA_LINK_LAYER_ERROR_PA_INIT	UFS_BIT(13)
++#define UIC_DATA_LINK_LAYER_ERROR_NAC_RECEIVED	UFS_BIT(1)
++#define UIC_DATA_LINK_LAYER_ERROR_TCx_REPLAY_TIMEOUT UFS_BIT(2)
+ 
+ /* UECN - Host UIC Error Code Network Layer 40h */
+ #define UIC_NETWORK_LAYER_ERROR			UFS_BIT(31)
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+2.7.4
