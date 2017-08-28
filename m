@@ -1,91 +1,39 @@
 From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH v3 1/3] rcu: Introduce rcu_swap_protected()
-Date: Mon, 28 Aug 2017 21:39:18 +0000
-Message-ID: <1503956357.2841.68.camel@wdc.com>
-References: <20170828204615.29455-1-bart.vanassche@wdc.com>
-         <20170828204615.29455-2-bart.vanassche@wdc.com>
-         <20170828212649.GD11320@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 17/30] scsi: Define usercopy region in scsi_sense_cache
+ slab cache
+Date: Mon, 28 Aug 2017 21:42:32 +0000
+Message-ID: <1503956551.2841.70.camel@wdc.com>
+References: <1503956111-36652-1-git-send-email-keescook@chromium.org>
+	 <1503956111-36652-18-git-send-email-keescook@chromium.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:16981 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751302AbdH1VkC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Aug 2017 17:40:02 -0400
-In-Reply-To: <20170828212649.GD11320@linux.vnet.ibm.com>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1503956111-36652-18-git-send-email-keescook@chromium.org>
 Content-Language: en-US
-Content-ID: <6B18E84F26B7EC418CD2DFA9EF07C21B@namprd04.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-ID: <99A2AF1448B43B4DAD1BCE1FA28710ED@namprd04.prod.outlook.com>
+Sender: owner-linux-mm@kvack.org
+To: "keescook@chromium.org" <keescook@chromium.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "kernel-hardening@lists.openwall.com" <kernel-hardening@lists.openwall.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "dave@nullcore.net" <dave@nullcore.net>
 List-Id: linux-scsi@vger.kernel.org
-To: "paulmck@linux.vnet.ibm.com" <paulmck@linux.vnet.ibm.com>
-Cc: "mingo@kernel.org" <mingo@kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hare@suse.de" <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "shane.seymour@hpe.com" <shane.seymour@hpe.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
 
-T24gTW9uLCAyMDE3LTA4LTI4IGF0IDE0OjI2IC0wNzAwLCBQYXVsIEUuIE1jS2VubmV5IHdyb3Rl
-Og0KPiBPbiBNb24sIEF1ZyAyOCwgMjAxNyBhdCAwMTo0NjoxM1BNIC0wNzAwLCBCYXJ0IFZhbiBB
-c3NjaGUgd3JvdGU6DQo+ID4gQSBjb21tb24gcGF0dGVybiBpbiBSQ1UgY29kZSBpcyB0byBhc3Np
-Z24gYSBuZXcgdmFsdWUgdG8gYW4gUkNVDQo+ID4gcG9pbnRlciBhZnRlciBoYXZpbmcgcmVhZCBh
-bmQgc3RvcmVkIHRoZSBvbGQgdmFsdWUuIEludHJvZHVjZSBhDQo+ID4gbWFjcm8gZm9yIHRoaXMg
-cGF0dGVybi4NCj4gPiANCj4gPiBTaWduZWQtb2ZmLWJ5OiBCYXJ0IFZhbiBBc3NjaGUgPGJhcnQu
-dmFuYXNzY2hlQHdkYy5jb20+DQo+ID4gQ2M6IFBhdWwgRS4gTWNLZW5uZXkgPHBhdWxtY2tAbGlu
-dXgudm5ldC5pYm0uY29tPg0KPiA+IENjOiBJbmdvIE1vbG5hciA8bWluZ29Aa2VybmVsLm9yZz4N
-Cj4gPiBDYzogQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+DQo+ID4gQ2M6IEhhbm5lcyBS
-ZWluZWNrZSA8aGFyZUBzdXNlLmRlPg0KPiA+IENjOiBKb2hhbm5lcyBUaHVtc2hpcm4gPGp0aHVt
-c2hpcm5Ac3VzZS5kZT4NCj4gPiBDYzogU2hhbmUgTSBTZXltb3VyIDxzaGFuZS5zZXltb3VyQGhw
-ZS5jb20+DQo+ID4gLS0tDQo+ID4gIGluY2x1ZGUvbGludXgvcmN1cGRhdGUuaCB8IDIwICsrKysr
-KysrKysrKysrKysrKysrDQo+ID4gIDEgZmlsZSBjaGFuZ2VkLCAyMCBpbnNlcnRpb25zKCspDQo+
-ID4gDQo+ID4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvcmN1cGRhdGUuaCBiL2luY2x1ZGUv
-bGludXgvcmN1cGRhdGUuaA0KPiA+IGluZGV4IGY4MTZmYzcyYjUxZS4uNTU1ODE1Y2UyZTU3IDEw
-MDY0NA0KPiA+IC0tLSBhL2luY2x1ZGUvbGludXgvcmN1cGRhdGUuaA0KPiA+ICsrKyBiL2luY2x1
-ZGUvbGludXgvcmN1cGRhdGUuaA0KPiA+IEBAIC01NjEsNiArNTYxLDI2IEBAIHN0YXRpYyBpbmxp
-bmUgdm9pZCByY3VfcHJlZW1wdF9zbGVlcF9jaGVjayh2b2lkKSB7IH0NCj4gPiAgICovDQo+ID4g
-ICNkZWZpbmUgcmN1X3BvaW50ZXJfaGFuZG9mZihwKSAocCkNCj4gPiANCj4gPiArLyoqDQo+ID4g
-KyAqIHJjdV9zd2FwX3Byb3RlY3RlZCgpIC0gc3dhcCBhbiBSQ1UgYW5kIGEgcmVndWxhciBwb2lu
-dGVyDQo+ID4gKyAqIEByY3VfcHRyOiBSQ1UgcG9pbnRlcg0KPiA+ICsgKiBAcHRyOiByZWd1bGFy
-IHBvaW50ZXINCj4gPiArICogQGM6IHRoZSBjb25kaXRpb25zIHVuZGVyIHdoaWNoIHRoZSBkZXJl
-ZmVyZW5jZSB3aWxsIHRha2UgcGxhY2UNCj4gPiArICoNCj4gPiArICogUGVyZm9ybSBzd2FwKEBy
-Y3VfcHRyLCBAcHRyKSB3aGVyZSBAcmN1X3B0ciBpcyBhbiBSQ1UtYW5ub3RhdGVkIHBvaW50ZXIg
-YW5kDQo+ID4gKyAqIEBjIGlzIHRoZSBhcmd1bWVudCB0aGF0IGlzIHBhc3NlZCB0byB0aGUgcmN1
-X2RlcmVmZXJlbmNlX3Byb3RlY3RlZCgpIGNhbGwNCj4gPiArICogdXNlZCB0byByZWFkIHRoYXQg
-cG9pbnRlci4NCj4gPiArICovDQo+ID4gKyNkZWZpbmUgcmN1X3N3YXBfcHJvdGVjdGVkKHJjdV9w
-dHIsIHB0ciwgYykgZG8gewkJCVwNCj4gPiArCXR5cGVvZihwdHIpIF9fdG1wOwkJCQkJCVwNCj4g
-PiArCQkJCQkJCQkJXA0KPiA+ICsJQlVJTERfQlVHX09OKCFfX3NhbWVfdHlwZSh0eXBlb2YocmN1
-X3B0ciksIHR5cGVvZigqKHB0cikpIF9fcmN1ICopKTsgXA0KPiA+ICsJQlVJTERfQlVHX09OKCFf
-X3NhbWVfdHlwZSh0eXBlb2YocHRyKSwgdHlwZW9mKCoocmN1X3B0cikpICopKTsJXA0KPiANCj4g
-SG1tbS4uLg0KPiANCj4gV2hhdCBraW5kcyBvZiBidWdzIGhhdmUgdGhlc2UgdHdvIEJVSUxEX0JV
-R19PTigpIGluc3RhbmNlcyBoYXZlIGNhdWdodA0KPiB0aGF0IHdvdWxkIG5vdCBiZSBjYXVnaHQg
-YnkgdGhlIGFzc2lnbm1lbnRzIGJlbG93Pw0KDQpIZWxsbyBQYXVsLA0KDQpUaGVzZSB0d28gQlVJ
-TERfQlVHX09OKCkgc3RhdGVtZW50cyBjYW4gYmUgbGVmdCBvdXQuIFRoZSBwdXJwb3NlIG9mIHRo
-ZXNlDQpzdGF0ZW1lbnRzIGlzIHRvIGNvbXBsYWluIGFzIGVhcmx5IGFzIHBvc3NpYmxlIGlmIHRo
-ZSB0eXBlIG9mIHJjdV9wdHIgYW5kL29yDQpwdHIgaXMgaW5jb3JyZWN0LiBBcyB3ZSBhbGwga25v
-dyBlcnJvciBtZXNzYWdlcyB0aGF0IGFyZSB0cmlnZ2VyZWQgYnkgbWFjcm9zDQp1c2VkIGluc2lk
-ZSBhIG1hY3JvIGRlZmluaXRpb24gY2FuIGJlIGhhcmQgdG8gcmVhZC4gTXkgaG9wZSBpcyB0aGF0
-IHRoZXNlDQp0d28gQlVJTERfQlVHX09OKCkgbWFjcm9zIHdpbGwgY2F1c2UgdGhlIGNvbXBpbGVy
-IHRvIHJlcG9ydCBlYXNpZXIgdG8gcmVhZA0KZGlhZ25vc3RpYyBtZXNzYWdlcy4NCg0KPiA+ICsJ
-X190bXAgPSByY3VfZGVyZWZlcmVuY2VfcHJvdGVjdGVkKChyY3VfcHRyKSwgKGMpKTsJCVwNCj4g
-PiArCXJjdV9hc3NpZ25fcG9pbnRlcigocmN1X3B0ciksIChwdHIpKTsJCQkJXA0KPiA+ICsJKHB0
-cikgPSBfX3RtcDsJCQkJCQkJXA0KPiA+ICt9IHdoaWxlICgwKQ0KPiA+ICsNCj4gDQo+IENvdWxk
-IHlvdSBwbGVhc2UgcHV0IHRoaXMgYWZ0ZXIgcmN1X2Fzc2lnbl9wb2ludGVyKCkgYW5kIGJlZm9y
-ZQ0KPiByY3VfYWNjZXNzX3BvaW50ZXIoKT8gIFRoYXQgd2F5IHRoZSB0aGluZ3MgdGhhdCBhc3Np
-Z24gdG8gUkNVLXByb3RlY3RlZA0KPiBwb2ludGVycyBhcmUgdG9nZXRoZXIuDQoNClNvbWV0aGlu
-ZyBsaWtlIHRoZSBwYXRjaCBiZWxvdyAoY29tcGlsZS10ZXN0ZWQgb25seSk/DQoNClRoYW5rcywN
-Cg0KQmFydC4NCg0KDQpbUEFUQ0hdIHJjdTogSW50cm9kdWNlIHJjdV9zd2FwX3Byb3RlY3RlZCgp
-DQotLS0NCiBpbmNsdWRlL2xpbnV4L3JjdXBkYXRlLmggfCAxNiArKysrKysrKysrKysrKysrDQog
-MSBmaWxlIGNoYW5nZWQsIDE2IGluc2VydGlvbnMoKykNCg0KZGlmZiAtLWdpdCBhL2luY2x1ZGUv
-bGludXgvcmN1cGRhdGUuaCBiL2luY2x1ZGUvbGludXgvcmN1cGRhdGUuaA0KaW5kZXggZjgxNmZj
-NzJiNTFlLi44ZTkyMGYwZWNiMDcgMTAwNjQ0DQotLS0gYS9pbmNsdWRlL2xpbnV4L3JjdXBkYXRl
-LmgNCisrKyBiL2luY2x1ZGUvbGludXgvcmN1cGRhdGUuaA0KQEAgLTQwNyw2ICs0MDcsMjIgQEAg
-c3RhdGljIGlubGluZSB2b2lkIHJjdV9wcmVlbXB0X3NsZWVwX2NoZWNrKHZvaWQpIHsgfQ0KIAlf
-cl9hX3BfX3Y7CQkJCQkJCSAgICAgIFwNCiB9KQ0KIA0KKy8qKg0KKyAqIHJjdV9zd2FwX3Byb3Rl
-Y3RlZCgpIC0gc3dhcCBhbiBSQ1UgYW5kIGEgcmVndWxhciBwb2ludGVyDQorICogQHJjdV9wdHI6
-IFJDVSBwb2ludGVyDQorICogQHB0cjogcmVndWxhciBwb2ludGVyDQorICogQGM6IHRoZSBjb25k
-aXRpb25zIHVuZGVyIHdoaWNoIHRoZSBkZXJlZmVyZW5jZSB3aWxsIHRha2UgcGxhY2UNCisgKg0K
-KyAqIFBlcmZvcm0gc3dhcChAcmN1X3B0ciwgQHB0cikgd2hlcmUgQHJjdV9wdHIgaXMgYW4gUkNV
-LWFubm90YXRlZCBwb2ludGVyIGFuZA0KKyAqIEBjIGlzIHRoZSBhcmd1bWVudCB0aGF0IGlzIHBh
-c3NlZCB0byB0aGUgcmN1X2RlcmVmZXJlbmNlX3Byb3RlY3RlZCgpIGNhbGwNCisgKiB1c2VkIHRv
-IHJlYWQgdGhhdCBwb2ludGVyLg0KKyAqLw0KKyNkZWZpbmUgcmN1X3N3YXBfcHJvdGVjdGVkKHJj
-dV9wdHIsIHB0ciwgYykgZG8gewkJCVwNCisJdHlwZW9mKHB0cikgX190bXAgPSByY3VfZGVyZWZl
-cmVuY2VfcHJvdGVjdGVkKChyY3VfcHRyKSwgKGMpKTsJXA0KKwlyY3VfYXNzaWduX3BvaW50ZXIo
-KHJjdV9wdHIpLCAocHRyKSk7CQkJCVwNCisJKHB0cikgPSBfX3RtcDsJCQkJCQkJXA0KK30gd2hp
-bGUgKDApDQorDQogLyoqDQogICogcmN1X2FjY2Vzc19wb2ludGVyKCkgLSBmZXRjaCBSQ1UgcG9p
-bnRlciB3aXRoIG5vIGRlcmVmZXJlbmNpbmcNCiAgKiBAcDogVGhlIHBvaW50ZXIgdG8gcmVhZA0K
+T24gTW9uLCAyMDE3LTA4LTI4IGF0IDE0OjM0IC0wNzAwLCBLZWVzIENvb2sgd3JvdGU6DQo+IGRp
+ZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYyBiL2RyaXZlcnMvc2NzaS9zY3NpX2xp
+Yi5jDQo+IGluZGV4IGY2MDk3Yjg5ZDVkMy4uZjFjNmJkNTZkZDViIDEwMDY0NA0KPiAtLS0gYS9k
+cml2ZXJzL3Njc2kvc2NzaV9saWIuYw0KPiArKysgYi9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYw0K
+PiBAQCAtNzcsMTQgKzc3LDE1IEBAIGludCBzY3NpX2luaXRfc2Vuc2VfY2FjaGUoc3RydWN0IFNj
+c2lfSG9zdCAqc2hvc3QpDQo+ICAJaWYgKHNob3N0LT51bmNoZWNrZWRfaXNhX2RtYSkgew0KPiAg
+CQlzY3NpX3NlbnNlX2lzYWRtYV9jYWNoZSA9DQo+ICAJCQlrbWVtX2NhY2hlX2NyZWF0ZSgic2Nz
+aV9zZW5zZV9jYWNoZShETUEpIiwNCj4gLQkJCVNDU0lfU0VOU0VfQlVGRkVSU0laRSwgMCwNCj4g
+LQkJCVNMQUJfSFdDQUNIRV9BTElHTiB8IFNMQUJfQ0FDSEVfRE1BLCBOVUxMKTsNCj4gKwkJCQlT
+Q1NJX1NFTlNFX0JVRkZFUlNJWkUsIDAsDQo+ICsJCQkJU0xBQl9IV0NBQ0hFX0FMSUdOIHwgU0xB
+Ql9DQUNIRV9ETUEsIE5VTEwpOw0KPiAgCQlpZiAoIXNjc2lfc2Vuc2VfaXNhZG1hX2NhY2hlKQ0K
+PiAgCQkJcmV0ID0gLUVOT01FTTsNCg0KQWxsIHRoaXMgcGFydCBvZiB0aGlzIHBhdGNoIGRvZXMg
+aXMgdG8gY2hhbmdlIHNvdXJjZSBjb2RlIGluZGVudGF0aW9uLiBTaG91bGQNCnRoZXNlIGNoYW5n
+ZXMgcmVhbGx5IGJlIGluY2x1ZGVkIGluIHRoaXMgcGF0Y2g/DQoNClRoYW5rcywNCg0KQmFydC4=
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
