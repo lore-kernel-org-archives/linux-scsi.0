@@ -1,127 +1,48 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv4 4/5] scsi_devinfo: Whitespace fixes
-Date: Tue, 29 Aug 2017 10:49:23 +0200
-Message-ID: <1503996564-110464-5-git-send-email-hare@suse.de>
-References: <1503996564-110464-1-git-send-email-hare@suse.de>
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+Subject: Re: [Regression 4.13-rc1] Resume does not work on Lenovo X60t
+Date: Tue, 29 Aug 2017 11:40:53 +0200
+Message-ID: <f415a9d7-25d4-77a6-b199-49b30ba989c0@molgen.mpg.de>
+References: <7032513a-7a28-5807-40d4-cb0f7005d513@molgen.mpg.de>
+ <20170805093014.GA6511@infradead.org>
+ <d30803d1861c9c105a35845759f58f8d@molgen.mpg.de>
+ <9123f447-c06b-6a67-b380-90338eb2dde8@molgen.mpg.de>
+ <20170821184115.GA16735@infradead.org>
+ <3b5be305179828fd0e768c8ba9455851@molgen.mpg.de>
+ <20170823114845.GB24217@infradead.org>
+ <7e7e3ccf-f928-7fa5-1ea2-abbb94521cd7@molgen.mpg.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46772 "EHLO mx1.suse.de"
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:58889 "EHLO mx1.molgen.mpg.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751704AbdH2Itf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 29 Aug 2017 04:49:35 -0400
-In-Reply-To: <1503996564-110464-1-git-send-email-hare@suse.de>
+        id S1751186AbdH2Jk4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 29 Aug 2017 05:40:56 -0400
+In-Reply-To: <7e7e3ccf-f928-7fa5-1ea2-abbb94521cd7@molgen.mpg.de>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Alan@suse.de, "Stern <stern"@rowland.harvard.edu, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/scsi_devinfo.c | 44 ++++++++++++++++++++++----------------------
- 1 file changed, 22 insertions(+), 22 deletions(-)
+Dear Christoph,
 
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index 28fea83..6858ad8 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -304,8 +304,8 @@ static void scsi_strcpy_devinfo(char *name, char *to, size_t to_length,
- 			 */
- 			to[from_length] = '\0';
- 		} else {
--			/* 
--			 * space pad the string if it is short. 
-+			/*
-+			 * space pad the string if it is short.
- 			 */
- 			strncpy(&to[from_length], spaces,
- 				to_length - from_length);
-@@ -325,10 +325,10 @@ static void scsi_strcpy_devinfo(char *name, char *to, size_t to_length,
-  * @flags:	if strflags NULL, use this flag value
-  *
-  * Description:
-- * 	Create and add one dev_info entry for @vendor, @model, @strflags or
-- * 	@flag. If @compatible, add to the tail of the list, do not space
-- * 	pad, and set devinfo->compatible. The scsi_static_device_list entries
-- * 	are added with @compatible 1 and @clfags NULL.
-+ *	Create and add one dev_info entry for @vendor, @model, @strflags or
-+ *	@flag. If @compatible, add to the tail of the list, do not space
-+ *	pad, and set devinfo->compatible. The scsi_static_device_list entries
-+ *	are added with @compatible 1 and @clfags NULL.
-  *
-  * Returns: 0 OK, -error on failure.
-  **/
-@@ -350,11 +350,11 @@ static int scsi_dev_info_list_add(int compatible, char *vendor, char *model,
-  * @key:	specify list to use
-  *
-  * Description:
-- * 	Create and add one dev_info entry for @vendor, @model,
-- * 	@strflags or @flag in list specified by @key. If @compatible,
-- * 	add to the tail of the list, do not space pad, and set
-- * 	devinfo->compatible. The scsi_static_device_list entries are
-- * 	added with @compatible 1 and @clfags NULL.
-+ *	Create and add one dev_info entry for @vendor, @model,
-+ *	@strflags or @flag in list specified by @key. If @compatible,
-+ *	add to the tail of the list, do not space pad, and set
-+ *	devinfo->compatible. The scsi_static_device_list entries are
-+ *	added with @compatible 1 and @clfags NULL.
-  *
-  * Returns: 0 OK, -error on failure.
-  **/
-@@ -405,7 +405,7 @@ int scsi_dev_info_list_add_keyed(int compatible, char *vendor, char *model,
-  *
-  * Description:
-  *	Finds the first dev_info entry matching @vendor, @model
-- * 	in list specified by @key.
-+ *	in list specified by @key.
-  *
-  * Returns: pointer to matching entry, or ERR_PTR on failure.
-  **/
-@@ -467,9 +467,9 @@ static struct scsi_dev_info_list *scsi_dev_info_list_find(const char *vendor,
- 			return devinfo;
- 		} else {
- 			if (!memcmp(devinfo->vendor, vendor,
--				     sizeof(devinfo->vendor)) &&
--			     !memcmp(devinfo->model, model,
--				      sizeof(devinfo->model)))
-+				    sizeof(devinfo->vendor)) &&
-+			    !memcmp(devinfo->model, model,
-+				    sizeof(devinfo->model)))
- 				return devinfo;
- 		}
- 	}
-@@ -508,10 +508,10 @@ int scsi_dev_info_list_del_keyed(char *vendor, char *model, int key)
-  * @dev_list:	string of device flags to add
-  *
-  * Description:
-- * 	Parse dev_list, and add entries to the scsi_dev_info_list.
-- * 	dev_list is of the form "vendor:product:flag,vendor:product:flag".
-- * 	dev_list is modified via strsep. Can be called for command line
-- * 	addition, for proc or mabye a sysfs interface.
-+ *	Parse dev_list, and add entries to the scsi_dev_info_list.
-+ *	dev_list is of the form "vendor:product:flag,vendor:product:flag".
-+ *	dev_list is modified via strsep. Can be called for command line
-+ *	addition, for proc or mabye a sysfs interface.
-  *
-  * Returns: 0 if OK, -error on failure.
-  **/
-@@ -701,7 +701,7 @@ static int proc_scsi_devinfo_open(struct inode *inode, struct file *file)
- 	return seq_open(file, &scsi_devinfo_seq_ops);
- }
- 
--/* 
-+/*
-  * proc_scsi_dev_info_write - allow additions to scsi_dev_info_list via /proc.
-  *
-  * Description: Adds a black/white list entry for vendor and model with an
-@@ -840,8 +840,8 @@ int scsi_dev_info_remove_list(int key)
-  * scsi_init_devinfo - set up the dynamic device list.
-  *
-  * Description:
-- * 	Add command line entries from scsi_dev_flags, then add
-- * 	scsi_static_device_list entries to the scsi device info list.
-+ *	Add command line entries from scsi_dev_flags, then add
-+ *	scsi_static_device_list entries to the scsi device info list.
-  */
- int __init scsi_init_devinfo(void)
- {
--- 
-1.8.5.6
+
+On 08/23/17 14:15, Paul Menzel wrote:
+
+> On 08/23/17 13:48, Christoph Hellwig wrote:
+>> Are you running with blk-mq enabled?  Also this never
+>> occurred with 4.12, right?  Were you also running with or
+>> without blk-mq for scsi there?
+> 
+> To my knowledge, I am using the defaults from Debian 9. I’ll check in 
+> one week, as I am away from the system.
+
+It looks like I was using blk-mq, as it was the default up to commit 
+cbe7dfa26eee (Revert "scsi: default to scsi-mq"). So with Linux 4.13-rc7 
+and disabling blk-mq for SCSI, the system is functional again after resume.
+
+
+Kind regards,
+
+Paul
