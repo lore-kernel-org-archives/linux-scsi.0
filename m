@@ -1,55 +1,171 @@
-From: Alim Akhtar <alim.akhtar@samsung.com>
-Subject: Re: [PATCH] scsi: ufs: Make use of UFS_BIT macro wherever possible
-Date: Tue, 29 Aug 2017 16:35:13 +0530
-Message-ID: <e26087fe-5e1b-c103-668d-43818765d3c9@samsung.com>
-References: <CGME20170828122625epcas2p33e3e912339c1e29051ad8e28251ea91b@epcas2p3.samsung.com>
-        <1503922783-14317-1-git-send-email-alim.akhtar@samsung.com>
-        <1503935147.2841.25.camel@wdc.com>
+From: Jack Wang <xjtuwjp@gmail.com>
+Subject: Re: [PATCH 1/6] pm80xx : redefine sas_identify_frame structure
+Date: Tue, 29 Aug 2017 13:19:21 +0200
+Message-ID: <CAD+HZHWwL=sjCC=4uKG8erLBTk=C+OWxsj9ACQf767Fma+hCKw@mail.gmail.com>
+References: <20150130060645.23653-1-Viswas.G@microsemi.com> <20150130060645.23653-2-Viswas.G@microsemi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1503935147.2841.25.camel@wdc.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Arnd Bergmann <arnd@arndb.de>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:38101 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751357AbdH2LTY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Aug 2017 07:19:24 -0400
+Received: by mail-wr0-f193.google.com with SMTP id j3so2056691wrb.5
+        for <linux-scsi@vger.kernel.org>; Tue, 29 Aug 2017 04:19:23 -0700 (PDT)
+In-Reply-To: <20150130060645.23653-2-Viswas.G@microsemi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Viswas G <Viswas.G@microsemi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Vasanthalakshmi.Tharmarajan@microsemi.com
 
-Hi Bart,
-Thanks for your review.
+2015-01-30 7:06 GMT+01:00 Viswas G <Viswas.G@microsemi.com>:
+> sas_identify structure defined by pm80xx doesn't have CRC field.
+> So added a new sas_identify structure without CRC.
+>
+> Signed-off-by: Raj Dinesh <Raj.Dinesh@microsemi.com>
+> Signed-off-by: Viswas G <Viswas.G@microsemi.com>
+> ---
+>  drivers/scsi/pm8001/pm8001_hwi.h |  2 +-
+>  drivers/scsi/pm8001/pm8001_sas.h | 95 ++++++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/pm8001/pm80xx_hwi.h |  2 +-
+>  3 files changed, 97 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_hwi.h b/drivers/scsi/pm8001/pm8001_hwi.h
+> index e4867e690c84..f4331afe9b0b 100644
+> --- a/drivers/scsi/pm8001/pm8001_hwi.h
+> +++ b/drivers/scsi/pm8001/pm8001_hwi.h
+> @@ -157,7 +157,7 @@ struct mpi_msg_hdr{
+>  struct phy_start_req {
+>         __le32  tag;
+>         __le32  ase_sh_lm_slr_phyid;
+> -       struct sas_identify_frame sas_identify;
+> +       struct sas_identify_frame_local sas_identify;
+>         u32     reserved[5];
+>  } __attribute__((packed, aligned(4)));
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+> index e81a8fa7ef1a..2e17505ed5b8 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.h
+> +++ b/drivers/scsi/pm8001/pm8001_sas.h
+> @@ -118,6 +118,101 @@ extern const struct pm8001_dispatch pm8001_80xx_dispatch;
+>  struct pm8001_hba_info;
+>  struct pm8001_ccb_info;
+>  struct pm8001_device;
+> +#ifdef __LITTLE_ENDIAN_BITFIELD
+> +struct sas_identify_frame_local {
+> +       /* Byte 0 */
+> +       u8  frame_type:4;
+> +       u8  dev_type:3;
+> +       u8  _un0:1;
+> +
+> +       /* Byte 1 */
+> +       u8  _un1;
+> +
+> +       /* Byte 2 */
+> +       union {
+> +               struct {
+> +                       u8  _un20:1;
+> +                       u8  smp_iport:1;
+> +                       u8  stp_iport:1;
+> +                       u8  ssp_iport:1;
+> +                       u8  _un247:4;
+> +               };
+> +               u8 initiator_bits;
+> +       };
+> +
+> +       /* Byte 3 */
+> +       union {
+> +               struct {
+> +                       u8  _un30:1;
+> +                       u8 smp_tport:1;
+> +                       u8 stp_tport:1;
+> +                       u8 ssp_tport:1;
+> +                       u8 _un347:4;
+> +               };
+> +               u8 target_bits;
+> +       };
+> +
+> +       /* Byte 4 - 11 */
+> +       u8 _un4_11[8];
+> +
+> +       /* Byte 12 - 19 */
+> +       u8 sas_addr[SAS_ADDR_SIZE];
+> +
+> +       /* Byte 20 */
+> +       u8 phy_id;
+> +
+> +       u8 _un21_27[7];
+> +
+> +} __packed;
+> +
+> +#elif defined(__BIG_ENDIAN_BITFIELD)
+> +struct sas_identify_frame_local {
+> +       /* Byte 0 */
+> +       u8  _un0:1;
+> +       u8  dev_type:3;
+> +       u8  frame_type:4;
+> +
+> +       /* Byte 1 */
+> +       u8  _un1;
+> +
+> +       /* Byte 2 */
+> +       union {
+> +               struct {
+> +                       u8  _un247:4;
+> +                       u8  ssp_iport:1;
+> +                       u8  stp_iport:1;
+> +                       u8  smp_iport:1;
+> +                       u8  _un20:1;
+> +               };
+> +               u8 initiator_bits;
+> +       };
+> +
+> +       /* Byte 3 */
+> +       union {
+> +               struct {
+> +                       u8 _un347:4;
+> +                       u8 ssp_tport:1;
+> +                       u8 stp_tport:1;
+> +                       u8 smp_tport:1;
+> +                       u8 _un30:1;
+> +               };
+> +               u8 target_bits;
+> +       };
+> +
+> +       /* Byte 4 - 11 */
+> +       u8 _un4_11[8];
+> +
+> +       /* Byte 12 - 19 */
+> +       u8 sas_addr[SAS_ADDR_SIZE];
+> +
+> +       /* Byte 20 */
+> +       u8 phy_id;
+> +
+> +       u8 _un21_27[7];
+> +} __packed;
+> +#else
+> +#error "Bitfield order not defined!"
+> +#endif
+>  /* define task management IU */
+>  struct pm8001_tmf_task {
+>         u8      tmf;
+> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
+> index 7a443bad6163..1ee2ec210065 100644
+> --- a/drivers/scsi/pm8001/pm80xx_hwi.h
+> +++ b/drivers/scsi/pm8001/pm80xx_hwi.h
+> @@ -248,7 +248,7 @@ struct mpi_msg_hdr {
+>  struct phy_start_req {
+>         __le32  tag;
+>         __le32  ase_sh_lm_slr_phyid;
+> -       struct sas_identify_frame sas_identify; /* 28 Bytes */
+> +       struct sas_identify_frame_local sas_identify; /* 28 Bytes */
+>         __le32 spasti;
+>         u32     reserved[21];
+>  } __attribute__((packed, aligned(4)));
+> --
+> 2.12.3
+>
+Did this cause any trouble? I guest not, as we does memset for
+phy_start_req,  why bother?
 
-On 08/28/2017 09:15 PM, Bart Van Assche wrote:
-> On Mon, 2017-08-28 at 17:49 +0530, Alim Akhtar wrote:
->> This entire file uses UFS_BIT macro for bits definition, expect for few
->> places. This patch convert those defines to use UFS_BIT macro to be aligned
->> with reset of the file.
-> 
-> This is the definition of the UFS_BIT() macro I found in
-> drivers/scsi/ufs/ufshci.h:
-> 
-> #define UFS_BIT(x)	(1L << (x))
-> 
-> Using this macro makes code longer instead of shorter and does not improve
-> code readability. Is this macro really useful? Wouldn't it be better to
-> remove the UFS_BIT() macro instead of introducing more uses of it?
-> 
-Well, the intension of this patch is to make use of already existing 
-UFS_BIT() macro.
-
-I am not aware of the history why this macro was created at first place.
-
-Well, it does improve code readability, for me at least, no need for one 
-to do a calculation to see which bit it is, as we pass _bit_ number to 
-UFS_BIT.
-
-I am totally okay, if you or other reviewers suggests me to change 
-UFS_BIT to actual bit position, something like the original case, which 
-this patch is trying to change.
-
-> Thanks,
-> 
-> Bart.
-> 
-Thanks!
-Alim
+Jack
