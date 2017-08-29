@@ -1,7 +1,7 @@
 From: Li Wei <liwei213@huawei.com>
-Subject: [PATCH v3 5/5] arm64: defconfig: enable f2fs and squashfs
-Date: Tue, 29 Aug 2017 16:41:16 +0800
-Message-ID: <20170829084116.106695-6-liwei213@huawei.com>
+Subject: [PATCH v3 2/5] dt-bindings: scsi: ufs: add document for hisi-ufs
+Date: Tue, 29 Aug 2017 16:41:13 +0800
+Message-ID: <20170829084116.106695-3-liwei213@huawei.com>
 References: <20170829084116.106695-1-liwei213@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,42 +12,54 @@ To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com, catalin.mari
 Cc: guodong.xu@linaro.org, fengbaopeng@hisilicon.com
 List-Id: linux-scsi@vger.kernel.org
 
-Partitions in HiKey960 are formatted as f2fs and squashfs.
-f2fs is for userdata; squashfs is for system. Both partitions are required
-by Android.
+add ufs node document for Hisilicon
 
 Signed-off-by: Li Wei <liwei213@huawei.com>
-Signed-off-by: Zhangfei Gao <zhangfei.gao@linaro.org>
-Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
 ---
- arch/arm64/configs/defconfig | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ Documentation/devicetree/bindings/ufs/ufs-hisi.txt | 35 ++++++++++++++++++++++
+ 1 file changed, 35 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ufs/ufs-hisi.txt
 
-diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
-index 7514ecf08f2a..61fcabcd7645 100644
---- a/arch/arm64/configs/defconfig
-+++ b/arch/arm64/configs/defconfig
-@@ -527,6 +527,7 @@ CONFIG_ACPI_APEI_GHES=y
- CONFIG_ACPI_APEI_PCIEAER=y
- CONFIG_EXT2_FS=y
- CONFIG_EXT3_FS=y
-+CONFIG_F2FS_FS=y
- CONFIG_EXT4_FS_POSIX_ACL=y
- CONFIG_BTRFS_FS=m
- CONFIG_BTRFS_FS_POSIX_ACL=y
-@@ -542,6 +543,13 @@ CONFIG_HUGETLBFS=y
- CONFIG_CONFIGFS_FS=y
- CONFIG_EFIVAR_FS=y
- CONFIG_SQUASHFS=y
-+CONFIG_SQUASHFS_FILE_DIRECT=y
-+CONFIG_SQUASHFS_DECOMP_MULTI_PERCPU=y
-+CONFIG_SQUASHFS_XATTR=y
-+CONFIG_SQUASHFS_LZ4=y
-+CONFIG_SQUASHFS_LZO=y
-+CONFIG_SQUASHFS_XZ=y
-+CONFIG_SQUASHFS_4K_DEVBLK_SIZE=y
- CONFIG_NFS_FS=y
- CONFIG_NFS_V4=y
- CONFIG_NFS_V4_1=y
+diff --git a/Documentation/devicetree/bindings/ufs/ufs-hisi.txt b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
+new file mode 100644
+index 000000000000..cfc84c821d50
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ufs/ufs-hisi.txt
+@@ -0,0 +1,35 @@
++* Hisilicon Universal Flash Storage (UFS) Host Controller
++
++UFS nodes are defined to describe on-chip UFS hardware macro.
++Each UFS Host Controller should have its own node.
++
++Required properties:
++- compatible        : compatible list, contains one of the following -
++			"hisilicon,hi3660-ufs" for hisi ufs host controller
++			 present on Hi3660 chipset.
++- reg               : should contain UFS register address space & UFS SYS CTRL register address,
++- interrupt-parent  : interrupt device
++- interrupts        : interrupt number
++- clocks	        : List of phandle and clock specifier pairs
++- clock-names       : List of clock input name strings sorted in the same
++		      order as the clocks property. "clk_ref", "clk_phy" is optional
++
++Optional properties for board device:
++- reset-gpio			: specifies to reset devices
++
++Example:
++
++	ufs: ufs@ff3b0000 {
++		compatible = "jedec,ufs-1.1", "hisilicon,hi3660-ufs";
++		/* 0: HCI standard */
++		/* 1: UFS SYS CTRL */
++		reg = <0x0 0xff3b0000 0x0 0x1000>,
++			<0x0 0xff3b1000 0x0 0x1000>;
++		interrupt-parent = <&gic>;
++		interrupts = <GIC_SPI 278 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&crg_ctrl HI3660_CLK_GATE_UFSIO_REF>,
++			<&crg_ctrl HI3660_CLK_GATE_UFSPHY_CFG>;
++		clock-names = "clk_ref", "clk_phy";
++		freq-table-hz = <0 0>, <0 0>;
++		reset-gpio = <&gpio18 1 0>;
++	}
 -- 
 2.11.0
