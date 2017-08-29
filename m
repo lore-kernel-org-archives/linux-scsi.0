@@ -1,34 +1,53 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 4/4] scsi_transport_sas: switch to bsg-lib for SMP
- passthrough
-Date: Tue, 29 Aug 2017 13:50:48 +0200
-Message-ID: <20170829115048.GD9310@linux-x5ow.site>
-References: <20170825153741.5091-1-hch@lst.de>
- <20170825153741.5091-5-hch@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55835 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751241AbdH2Luv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 29 Aug 2017 07:50:51 -0400
-Content-Disposition: inline
-In-Reply-To: <20170825153741.5091-5-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Nikola Pajkovsky <npajkovsky@suse.cz>
+Subject: [PATCH 3/3] scsi: aacraid: report -ENOMEM to upper layer from aac_convert_sgraw2()
+Date: Tue, 29 Aug 2017 13:59:04 +0200
+Message-ID: <29ed79bb97060429247eeafc9d6d8f6793a7f6b5.1504007944.git.npajkovsky@suse.cz>
+References: <d039d8dcc35ced04bf27f20a653532429486d190.1504007944.git.npajkovsky@suse.cz>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <d039d8dcc35ced04bf27f20a653532429486d190.1504007944.git.npajkovsky@suse.cz>
+In-Reply-To: <d039d8dcc35ced04bf27f20a653532429486d190.1504007944.git.npajkovsky@suse.cz>
+References: <d039d8dcc35ced04bf27f20a653532429486d190.1504007944.git.npajkovsky@suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Adaptec OEM Raid Solutions <aacraid@microsemi.com>
+Cc: Nikola Pajkovsky <npajkovsky@suse.cz>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Chaitra Basappa <chaitra.basappa@broadcom.com>, linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@wdc.com>
 
-The scsi_transport_sas.c part looks good, I have a nearly identical version
-(different remove part due to missing patch 1 of your series). For the other
-parts I can't tell. 
+aac_convert_sgraw2() kmalloc memory and return -1 on error, which
+should be -ENOMEM. However, nobody is checking return value, so with
+this change, -ENOMEM is propagated to upper layer.
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Signed-off-by: Nikola Pajkovsky <npajkovsky@suse.cz>
+---
+ drivers/scsi/aacraid/aachba.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index 3c354766791e..ca38c2b52b47 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -3956,8 +3956,12 @@ static long aac_build_sgraw2(struct scsi_cmnd *scsicmd,
+ 			if (!err_found)
+ 				break;
+ 		}
+-		if (i > 0 && nseg_new <= sg_max)
+-			aac_convert_sgraw2(rio2, i, nseg, nseg_new);
++		if (i > 0 && nseg_new <= sg_max) {
++			int ret = aac_convert_sgraw2(rio2, i, nseg, nseg_new);
++
++			if (ret < 0)
++				return ret;
++		}
+ 	} else
+ 		rio2->flags |= cpu_to_le16(RIO2_SGL_CONFORMANT);
+ 
+@@ -3981,7 +3985,7 @@ static int aac_convert_sgraw2(struct aac_raw_io2 *rio2, int pages, int nseg, int
+ 
+ 	sge = kmalloc(nseg_new * sizeof(struct sge_ieee1212), GFP_ATOMIC);
+ 	if (sge == NULL)
+-		return -1;
++		return -ENOMEM;
+ 
+ 	for (i = 1, pos = 1; i < nseg-1; ++i) {
+ 		for (j = 0; j < rio2->sge[i].length / (pages * PAGE_SIZE); ++j) {
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+2.13.5
