@@ -1,286 +1,80 @@
-From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v4 3/3] Rework handling of scsi_device.vpd_pg8[03]
-Date: Tue, 29 Aug 2017 08:50:13 -0700
-Message-ID: <20170829155013.11124-4-bart.vanassche@wdc.com>
-References: <20170829155013.11124-1-bart.vanassche@wdc.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCHv4 2/5] scsi: Export blacklist flags to sysfs
+Date: Tue, 29 Aug 2017 16:02:45 +0000
+Message-ID: <1504022564.2653.12.camel@wdc.com>
+References: <1503996564-110464-1-git-send-email-hare@suse.de>
+         <1503996564-110464-3-git-send-email-hare@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:9012 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751867AbdH2PwA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Aug 2017 11:52:00 -0400
-In-Reply-To: <20170829155013.11124-1-bart.vanassche@wdc.com>
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:46080 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752460AbdH2QDg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Aug 2017 12:03:36 -0400
+In-Reply-To: <1503996564-110464-3-git-send-email-hare@suse.de>
+Content-Language: en-US
+Content-ID: <8A5F3818ECA36C429E878D73DC5810B6@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, "Paul E . McKenney" <paulmck@linux.vnet.ibm.com>, Bart Van Assche <bart.vanassche@wdc.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Shane Seymour <shane.seymour@hpe.com>
+To: "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "Alan@suse.de" <Alan@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "stern@rowland.harvard.edu" <stern@rowland.harvard.edu>
 
-Introduce struct scsi_vpd for the VPD page length, data and the
-RCU head that will be used to free the VPD data. Use kfree_rcu()
-instead of kfree() to free VPD data. Move the VPD buffer pointer
-check inside the RCU read lock in the sysfs code. Only annotate
-pointers that are shared across threads with __rcu. Use
-rcu_dereference() when dereferencing an RCU pointer. This patch
-suppresses about twenty sparse complaints about the vpd_pg8[03]
-pointers. This patch also fixes a race condition, namely that
-updating of the VPD pointers and length variables in struct
-scsi_device was not atomic with reference to the code reading
-these variables. See also "Does the update code tolerate concurrent
-accesses?" in Documentation/RCU/checklist.txt.
-
-Fixes: commit 09e2b0b14690 ("scsi: rescan VPD attributes")
-Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Acked-by: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Shane Seymour <shane.seymour@hpe.com>
----
- drivers/scsi/scsi.c        | 44 ++++++++++++++++++--------------------------
- drivers/scsi/scsi_lib.c    | 16 ++++++++--------
- drivers/scsi/scsi_sysfs.c  | 29 ++++++++++++++++++++---------
- include/scsi/scsi_device.h | 18 ++++++++++++++----
- 4 files changed, 60 insertions(+), 47 deletions(-)
-
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index f3f4926a3e77..d201ebcf4544 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -415,22 +415,20 @@ EXPORT_SYMBOL_GPL(scsi_get_vpd_page);
-  * scsi_get_vpd_buf - Get Vital Product Data from a SCSI device
-  * @sdev: The device to ask
-  * @page: Which Vital Product Data to return
-- * @len: Upon success, the VPD length will be stored in *@len.
-  *
-  * Returns %NULL upon failure.
-  */
--static unsigned char *scsi_get_vpd_buf(struct scsi_device *sdev, u8 page,
--				       int *len)
-+static struct scsi_vpd *scsi_get_vpd_buf(struct scsi_device *sdev, u8 page)
- {
--	unsigned char *vpd_buf;
-+	struct scsi_vpd *vpd_buf;
- 	int vpd_len = SCSI_VPD_PG_LEN, result;
- 
- retry_pg:
--	vpd_buf = kmalloc(vpd_len, GFP_KERNEL);
-+	vpd_buf = kmalloc(sizeof(*vpd_buf) + vpd_len, GFP_KERNEL);
- 	if (!vpd_buf)
- 		return NULL;
- 
--	result = scsi_vpd_inquiry(sdev, vpd_buf, page, vpd_len);
-+	result = scsi_vpd_inquiry(sdev, vpd_buf->data, page, vpd_len);
- 	if (result < 0) {
- 		kfree(vpd_buf);
- 		return NULL;
-@@ -441,31 +439,27 @@ static unsigned char *scsi_get_vpd_buf(struct scsi_device *sdev, u8 page,
- 		goto retry_pg;
- 	}
- 
--	*len = result;
-+	vpd_buf->len = result;
- 
- 	return vpd_buf;
- }
- 
- static void scsi_update_vpd_page(struct scsi_device *sdev, u8 page,
--				 unsigned char __rcu **sdev_vpd_buf,
--				 int *sdev_vpd_len)
-+				 struct scsi_vpd __rcu **sdev_vpd_buf)
- {
--	unsigned char *vpd_buf;
--	int len;
-+	struct scsi_vpd *vpd_buf;
- 
--	vpd_buf = scsi_get_vpd_buf(sdev, page, &len);
-+	vpd_buf = scsi_get_vpd_buf(sdev, page);
- 	if (!vpd_buf)
- 		return;
- 
- 	mutex_lock(&sdev->inquiry_mutex);
- 	rcu_swap_protected(*sdev_vpd_buf, vpd_buf,
- 			   lockdep_is_held(&sdev->inquiry_mutex));
--	*sdev_vpd_len = len;
- 	mutex_unlock(&sdev->inquiry_mutex);
- 
--	synchronize_rcu();
--
--	kfree(vpd_buf);
-+	if (vpd_buf)
-+		kfree_rcu(vpd_buf, rcu);
- }
- 
- /**
-@@ -479,24 +473,22 @@ static void scsi_update_vpd_page(struct scsi_device *sdev, u8 page,
-  */
- void scsi_attach_vpd(struct scsi_device *sdev)
- {
--	int i, vpd_len;
--	unsigned char *vpd_buf;
-+	int i;
-+	struct scsi_vpd *vpd_buf;
- 
- 	if (!scsi_device_supports_vpd(sdev))
- 		return;
- 
- 	/* Ask for all the pages supported by this device */
--	vpd_buf = scsi_get_vpd_buf(sdev, 0, &vpd_len);
-+	vpd_buf = scsi_get_vpd_buf(sdev, 0);
- 	if (!vpd_buf)
- 		return;
- 
--	for (i = 4; i < vpd_len; i++) {
--		if (vpd_buf[i] == 0x80)
--			scsi_update_vpd_page(sdev, 0x80, &sdev->vpd_pg80,
--					     &sdev->vpd_pg80_len);
--		if (vpd_buf[i] == 0x83)
--			scsi_update_vpd_page(sdev, 0x83, &sdev->vpd_pg83,
--					     &sdev->vpd_pg83_len);
-+	for (i = 4; i < vpd_buf->len; i++) {
-+		if (vpd_buf->data[i] == 0x80)
-+			scsi_update_vpd_page(sdev, 0x80, &sdev->vpd_pg80);
-+		if (vpd_buf->data[i] == 0x83)
-+			scsi_update_vpd_page(sdev, 0x83, &sdev->vpd_pg83);
- 	}
- 	kfree(vpd_buf);
- }
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 696d2eae0ba6..938a7e398cd4 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -3272,8 +3272,8 @@ int scsi_vpd_lun_id(struct scsi_device *sdev, char *id, size_t id_len)
- {
- 	u8 cur_id_type = 0xff;
- 	u8 cur_id_size = 0;
--	unsigned char *d, *cur_id_str;
--	unsigned char __rcu *vpd_pg83;
-+	const unsigned char *d, *cur_id_str;
-+	const struct scsi_vpd *vpd_pg83;
- 	int id_size = -EINVAL;
- 
- 	rcu_read_lock();
-@@ -3304,8 +3304,8 @@ int scsi_vpd_lun_id(struct scsi_device *sdev, char *id, size_t id_len)
- 	}
- 
- 	memset(id, 0, id_len);
--	d = vpd_pg83 + 4;
--	while (d < vpd_pg83 + sdev->vpd_pg83_len) {
-+	d = vpd_pg83->data + 4;
-+	while (d < vpd_pg83->data + vpd_pg83->len) {
- 		/* Skip designators not referring to the LUN */
- 		if ((d[1] & 0x30) != 0x00)
- 			goto next_desig;
-@@ -3421,8 +3421,8 @@ EXPORT_SYMBOL(scsi_vpd_lun_id);
-  */
- int scsi_vpd_tpg_id(struct scsi_device *sdev, int *rel_id)
- {
--	unsigned char *d;
--	unsigned char __rcu *vpd_pg83;
-+	const unsigned char *d;
-+	const struct scsi_vpd *vpd_pg83;
- 	int group_id = -EAGAIN, rel_port = -1;
- 
- 	rcu_read_lock();
-@@ -3432,8 +3432,8 @@ int scsi_vpd_tpg_id(struct scsi_device *sdev, int *rel_id)
- 		return -ENXIO;
- 	}
- 
--	d = sdev->vpd_pg83 + 4;
--	while (d < sdev->vpd_pg83 + sdev->vpd_pg83_len) {
-+	d = vpd_pg83->data + 4;
-+	while (d < vpd_pg83->data + vpd_pg83->len) {
- 		switch (d[1] & 0xf) {
- 		case 0x4:
- 			/* Relative target port */
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 5ed473a87589..bf53356f41f0 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -428,6 +428,7 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 	struct scsi_device *sdev;
- 	struct device *parent;
- 	struct list_head *this, *tmp;
-+	struct scsi_vpd *vpd_pg80 = NULL, *vpd_pg83 = NULL;
- 	unsigned long flags;
- 
- 	sdev = container_of(work, struct scsi_device, ew.work);
-@@ -456,8 +457,17 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 	/* NULL queue means the device can't be used */
- 	sdev->request_queue = NULL;
- 
--	kfree(sdev->vpd_pg83);
--	kfree(sdev->vpd_pg80);
-+	mutex_lock(&sdev->inquiry_mutex);
-+	rcu_swap_protected(sdev->vpd_pg80, vpd_pg80,
-+			   lockdep_is_held(&sdev->inquiry_mutex));
-+	rcu_swap_protected(sdev->vpd_pg83, vpd_pg83,
-+			   lockdep_is_held(&sdev->inquiry_mutex));
-+	mutex_unlock(&sdev->inquiry_mutex);
-+
-+	if (vpd_pg83)
-+		kfree_rcu(vpd_pg83, rcu);
-+	if (vpd_pg80)
-+		kfree_rcu(vpd_pg80, rcu);
- 	kfree(sdev->inquiry);
- 	kfree(sdev);
- 
-@@ -795,15 +805,16 @@ show_vpd_##_page(struct file *filp, struct kobject *kobj,	\
- {									\
- 	struct device *dev = container_of(kobj, struct device, kobj);	\
- 	struct scsi_device *sdev = to_scsi_device(dev);			\
--	int ret;							\
--	if (!sdev->vpd_##_page)						\
--		return -EINVAL;						\
-+	struct scsi_vpd *vpd_page;					\
-+	int ret = -EINVAL;						\
-+									\
- 	rcu_read_lock();						\
--	ret = memory_read_from_buffer(buf, count, &off,			\
--				      rcu_dereference(sdev->vpd_##_page), \
--				       sdev->vpd_##_page##_len);	\
-+	vpd_page = rcu_dereference(sdev->vpd_##_page);			\
-+	if (vpd_page)							\
-+		ret = memory_read_from_buffer(buf, count, &off,		\
-+				vpd_page->data, vpd_page->len);		\
- 	rcu_read_unlock();						\
--	return ret;						\
-+	return ret;							\
- }									\
- static struct bin_attribute dev_attr_vpd_##_page = {		\
- 	.attr =	{.name = __stringify(vpd_##_page), .mode = S_IRUGO },	\
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index f054f3f43c75..82e93ee94708 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -80,6 +80,18 @@ struct scsi_event {
- 	 */
- };
- 
-+/**
-+ * struct scsi_vpd - SCSI Vital Product Data
-+ * @rcu: For kfree_rcu().
-+ * @len: Length in bytes of @data.
-+ * @data: VPD data as defined in various T10 SCSI standard documents.
-+ */
-+struct scsi_vpd {
-+	struct rcu_head	rcu;
-+	int		len;
-+	unsigned char	data[];
-+};
-+
- struct scsi_device {
- 	struct Scsi_Host *host;
- 	struct request_queue *request_queue;
-@@ -122,10 +134,8 @@ struct scsi_device {
- 	const char * rev;		/* ... "nullnullnullnull" before scan */
- 
- #define SCSI_VPD_PG_LEN                255
--	int vpd_pg83_len;
--	unsigned char __rcu *vpd_pg83;
--	int vpd_pg80_len;
--	unsigned char __rcu *vpd_pg80;
-+	struct scsi_vpd __rcu *vpd_pg83;
-+	struct scsi_vpd __rcu *vpd_pg80;
- 	unsigned char current_tag;	/* current tag */
- 	struct scsi_target      *sdev_target;   /* used only for single_lun */
- 
--- 
-2.14.1
+T24gVHVlLCAyMDE3LTA4LTI5IGF0IDEwOjQ5ICswMjAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6
+DQo+IFsgLi4uIF0NCj4gKyQob2JqKS9zY3NpX3N5c2ZzLm86ICQob2JqKS9zY3NpX2RldmluZm9f
+dGJsLmMNCj4gKw0KPiArcXVpZXRfY21kX2JmbGFncyA9IEdFTiAgICAgJEANCj4gKwljbWRfYmZs
+YWdzID0gJChQRVJMKSAtcyAkKHNyYykvbWt0YmwucGwgQkxJU1QgJDwgPiAkQA0KDQpIZWxsbyBI
+YW5uZXMsDQoNCklzIGl0IGNvbnNpZGVyZWQgYWNjZXB0YWJsZSB0byByZXF1aXJlIHRoYXQgcGVy
+bCBpcyBhdmFpbGFibGUgdG8gYnVpbGQgdGhlDQprZXJuZWw/IFBlb3BsZSB3aG8gYnVpbGQgdGhl
+IGtlcm5lbCBmb3IgZW1iZWRkZWQgc3lzdGVtcyBwcm9iYWJseSB3b24ndCBiZQ0KaGFwcHkgaWYg
+dGhpcyBpcyBhIG5ldyByZXF1aXJlbWVudC4gU2VlIGUuZy4gIlBBVENIIFswLzNdOiBTaW1wbGlm
+eSB0aGUNCmtlcm5lbCBidWlsZCBieSByZW1vdmluZyBwZXJsIiAoaHR0cHM6Ly9sa21sLm9yZy9s
+a21sLzIwMDkvMS8yLzIwKS4NCg0KSGF2ZSB5b3Ugbm90aWNlZCB0aGF0IGZvciBvdGhlciBnZW5l
+cmF0ZWQgZmlsZXMgYSBfc2hpcHBlZCB2ZXJzaW9uIGlzDQpwcm92aWRlZD8NCg0KPiArDQo+ICsk
+KG9iaikvc2NzaV9kZXZpbmZvX3RibC5jOiBpbmNsdWRlL3Njc2kvc2NzaV9kZXZpbmZvLmgNCj4g
+KwkkKGNhbGwgaWZfY2hhbmdlZCxiZmxhZ3MpDQo+ICsNCj4gICMgSWYgeW91IHdhbnQgdG8gcGxh
+eSB3aXRoIHRoZSBmaXJtd2FyZSwgdW5jb21tZW50DQo+ICAjIEdFTkVSQVRFX0ZJUk1XQVJFIDo9
+IDENCj4gIA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL21rdGJsLnBsIGIvZHJpdmVycy9z
+Y3NpL21rdGJsLnBsDQo+IFsgLi4uIF0NCj4gK215ICRwcmY7DQo+ICsNCj4gKyRwcmYgPSAkQVJH
+VlswXTsNCj4gK29wZW4gSU5fRklMRSwgIjwkQVJHVlsxXSIgfHwgZGllOw0KPiArcHJpbnQgIlx0
+Lypcblx0ICogQXV0b21hdGljYWxseSBnZW5lcmF0ZWQgYnkgIiwgJDAsICIuXG4iOw0KPiArcHJp
+bnQgIlx0ICogRG8gbm90IGVkaXQuXG5cdCAqL1xuIjsNCj4gK3doaWxlICg8SU5fRklMRT4pIHsN
+Cj4gKyAgICBjaG9tcDsNCj4gKyAgICBpZiAoL14jZGVmaW5lICR7cHJmfV8oW15bOmJsYW5rOl1d
+KikuKi8pIHsNCj4gKwlwcmludCAiXHR7ICIsICRwcmYsICJfIiwgJDEsICIsIFwiIiwgJDEsICJc
+IiB9LFxuIjsNCj4gKyAgICB9DQo+ICt9DQo+ICtjbG9zZSBJTl9GSUxFIHx8IGRpZTsNCg0KQ2Fu
+IHRoaXMgYmUgZG9uZSB3aXRoIHNlZD8gRG8gd2UgcmVhbGx5IG5lZWQgUGVybCBmb3IgdGhpcz8N
+Cg0KPiBbIC4uLiBdDQo+ICtzdGF0aWMgY29uc3Qgc3RydWN0IHsNCj4gKwl1bnNpZ25lZCBpbnQJ
+dmFsdWU7DQo+ICsJY2hhcgkJKm5hbWU7DQoNCkNhbiAnY2hhciAqJyBiZSBjaGFuZ2VkIGludG8g
+J2NvbnN0IGNoYXIgKic/DQoNCj4gK30gc2Rldl9iZmxhZ3NbXSA9IHsNCj4gKyNpbmNsdWRlICJz
+Y3NpX2RldmluZm9fdGJsLmMiDQo+ICt9Ow0KPiArDQo+ICtzdGF0aWMgY29uc3QgY2hhciAqc2Rl
+dl9iZmxhZ3NfbmFtZSh1bnNpZ25lZCBpbnQgYmZsYWdzKQ0KPiArew0KPiArCWludCBpOw0KPiAr
+CWNvbnN0IGNoYXIgKm5hbWUgPSBOVUxMOw0KPiArDQo+ICsJZm9yIChpID0gMDsgaSA8IEFSUkFZ
+X1NJWkUoc2Rldl9iZmxhZ3MpOyBpKyspIHsNCj4gKwkJaWYgKHNkZXZfYmZsYWdzW2ldLnZhbHVl
+ID09IGJmbGFncykgew0KPiArCQkJbmFtZSA9IHNkZXZfYmZsYWdzW2ldLm5hbWU7DQo+ICsJCQli
+cmVhazsNCj4gKwkJfQ0KPiArCX0NCj4gKwlyZXR1cm4gbmFtZTsNCj4gK30NCg0KSG93IGFib3V0
+IHVzaW5nIGlsb2cyKCkgb2YgdGhlIEJMSVNUXyogdmFsdWVzIGFzIGluZGV4IG9mIHRoZSB0YWJs
+ZSBzdWNoIHRoYXQNCmFuIGFycmF5IGxvb2t1cCBjYW4gYmUgdXNlZCBpbnN0ZWFkIG9mIGEgZm9y
+LWxvb3Agb3ZlciB0aGUgZW50aXJlIGFycmF5Pw0KDQo+ICsNCj4gIHN0YXRpYyBpbnQgY2hlY2tf
+c2V0KHVuc2lnbmVkIGxvbmcgbG9uZyAqdmFsLCBjaGFyICpzcmMpDQo+ICB7DQo+ICAJY2hhciAq
+bGFzdDsNCj4gQEAgLTk1NSw2ICs5NzcsNDMgQEAgc3RhdGljIERFVklDRV9BVFRSKHF1ZXVlX2Rl
+cHRoLCBTX0lSVUdPIHwgU19JV1VTUiwgc2Rldl9zaG93X3F1ZXVlX2RlcHRoLA0KPiAgfQ0KPiAg
+c3RhdGljIERFVklDRV9BVFRSKHd3aWQsIFNfSVJVR08sIHNkZXZfc2hvd193d2lkLCBOVUxMKTsN
+Cj4gIA0KPiArc3RhdGljIHNzaXplX3QNCj4gK3NkZXZfc2hvd19ibGFja2xpc3Qoc3RydWN0IGRl
+dmljZSAqZGV2LCBzdHJ1Y3QgZGV2aWNlX2F0dHJpYnV0ZSAqYXR0ciwNCj4gKwkJICAgIGNoYXIg
+KmJ1ZikNCj4gK3sNCj4gKwlzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXYgPSB0b19zY3NpX2Rldmlj
+ZShkZXYpOw0KPiArCWludCBpOw0KPiArCWNoYXIgKnB0ciA9IGJ1ZjsNCj4gKwlzc2l6ZV90IGxl
+biA9IDA7DQo+ICsNCj4gKwlmb3IgKGkgPSAwOyBpIDwgc2l6ZW9mKHVuc2lnbmVkIGludCkgKiA4
+OyBpKyspIHsNCj4gKwkJdW5zaWduZWQgaW50IGJmbGFncyA9ICh1bnNpZ25lZCBpbnQpMSA8PCBp
+Ow0KDQpIb3cgYWJvdXQgdXNpbmcgMVUgaW5zdGVhZCBvZiAodW5zaWduZWQgaW50KTE/DQoNCj4g
+KwkJc3NpemVfdCBibGVuOw0KPiArCQljb25zdCBjaGFyICpuYW1lID0gTlVMTDsNCj4gKw0KPiAr
+CQlpZiAoIShiZmxhZ3MgJiBzZGV2LT5zZGV2X2JmbGFncykpDQo+ICsJCQljb250aW51ZTsNCj4g
+Kw0KPiArCQlpZiAocHRyICE9IGJ1Zikgew0KPiArCQkJYmxlbiA9IHNucHJpbnRmKHB0ciwgMiwg
+IiAiKTsNCj4gKwkJCXB0ciArPSBibGVuOw0KPiArCQkJbGVuICs9IGJsZW47DQo+ICsJCX0NCg0K
+U2hvdWxkIHRoaXMgY29kZSBjaGVjayB3aGV0aGVyIG9yIG5vdCBpdCBvdmVyZmxvd3MgdGhlIG91
+dHB1dCBidWZmZXIgQGJ1Zj8NCg0KPiArCQluYW1lID0gc2Rldl9iZmxhZ3NfbmFtZShiZmxhZ3Mp
+Ow0KPiArCQlpZiAobmFtZSkNCj4gKwkJCWJsZW4gPSBzbnByaW50ZihwdHIsIHN0cmxlbihuYW1l
+KSArIDEsDQo+ICsJCQkJCSIlcyIsIG5hbWUpOw0KPiArCQllbHNlDQo+ICsJCQlibGVuID0gc25w
+cmludGYocHRyLCA2NywgIklOVkFMSURfQklUKCVkKSIsIGkpOw0KPiArCQlwdHIgKz0gYmxlbjsN
+Cj4gKwkJbGVuICs9IGJsZW47DQo+ICsJfQ0KDQpTaG91bGQgdGhpcyBjb2RlIGNoZWNrIHRvbyB3
+aGV0aGVyIG9yIG5vdCBpdCBvdmVyZmxvd3MgdGhlIG91dHB1dCBidWZmZXIgQGJ1Zj8NCg0KVGhh
+bmtzLA0KDQpCYXJ0Lg==
