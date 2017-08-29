@@ -1,48 +1,55 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: Re: [PATCH 6/6] pm80xx : corrected linkrate value.
-Date: Tue, 29 Aug 2017 13:08:49 +0200
-Message-ID: <CAD+HZHUmNh1phB5TqGV97Cj8C=q_WG=W3CBgvFenMGxLNmsFkw@mail.gmail.com>
-References: <20150130060645.23653-1-Viswas.G@microsemi.com> <20150130060645.23653-7-Viswas.G@microsemi.com>
+From: Alim Akhtar <alim.akhtar@samsung.com>
+Subject: Re: [PATCH] scsi: ufs: Make use of UFS_BIT macro wherever possible
+Date: Tue, 29 Aug 2017 16:35:13 +0530
+Message-ID: <e26087fe-5e1b-c103-668d-43818765d3c9@samsung.com>
+References: <CGME20170828122625epcas2p33e3e912339c1e29051ad8e28251ea91b@epcas2p3.samsung.com>
+        <1503922783-14317-1-git-send-email-alim.akhtar@samsung.com>
+        <1503935147.2841.25.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:35811 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751361AbdH2LIv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Aug 2017 07:08:51 -0400
-Received: by mail-wr0-f195.google.com with SMTP id a47so2053567wra.2
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Aug 2017 04:08:50 -0700 (PDT)
-In-Reply-To: <20150130060645.23653-7-Viswas.G@microsemi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1503935147.2841.25.camel@wdc.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Arnd Bergmann <arnd@arndb.de>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Viswas G <Viswas.G@microsemi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Vasanthalakshmi.Tharmarajan@microsemi.com
 
-2015-01-30 7:06 GMT+01:00 Viswas G <Viswas.G@microsemi.com>:
-> Corrected the value defined for LINKRATE_60 (6 Gig).
->
-> Signed-off-by: Raj Dinesh <Raj.Dinesh@microsemi.com>
-> Signed-off-by: Viswas G <viswas.g@microsemi.com>
-> ---
->  drivers/scsi/pm8001/pm80xx_hwi.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
-> index d8e5d81e83f1..71dee83aeef0 100644
-> --- a/drivers/scsi/pm8001/pm80xx_hwi.h
-> +++ b/drivers/scsi/pm8001/pm80xx_hwi.h
-> @@ -167,7 +167,7 @@
->  #define LINKMODE_AUTO                  (0x03 << 12)
->  #define LINKRATE_15                    (0x01 << 8)
->  #define LINKRATE_30                    (0x02 << 8)
-> -#define LINKRATE_60                    (0x06 << 8)
-> +#define LINKRATE_60                    (0x04 << 8)
->  #define LINKRATE_120                   (0x08 << 8)
->
->  /* phy_profile */
-> --
-> 2.12.3
->
-Thanks Viswas, how did this happen, checked pm8001_hwi.h, it's right.
-Anyway, looks good to me!
-Acked-by: Jack Wang <jinpu.wang@profitbricks.com>
+Hi Bart,
+Thanks for your review.
+
+On 08/28/2017 09:15 PM, Bart Van Assche wrote:
+> On Mon, 2017-08-28 at 17:49 +0530, Alim Akhtar wrote:
+>> This entire file uses UFS_BIT macro for bits definition, expect for few
+>> places. This patch convert those defines to use UFS_BIT macro to be aligned
+>> with reset of the file.
+> 
+> This is the definition of the UFS_BIT() macro I found in
+> drivers/scsi/ufs/ufshci.h:
+> 
+> #define UFS_BIT(x)	(1L << (x))
+> 
+> Using this macro makes code longer instead of shorter and does not improve
+> code readability. Is this macro really useful? Wouldn't it be better to
+> remove the UFS_BIT() macro instead of introducing more uses of it?
+> 
+Well, the intension of this patch is to make use of already existing 
+UFS_BIT() macro.
+
+I am not aware of the history why this macro was created at first place.
+
+Well, it does improve code readability, for me at least, no need for one 
+to do a calculation to see which bit it is, as we pass _bit_ number to 
+UFS_BIT.
+
+I am totally okay, if you or other reviewers suggests me to change 
+UFS_BIT to actual bit position, something like the original case, which 
+this patch is trying to change.
+
+> Thanks,
+> 
+> Bart.
+> 
+Thanks!
+Alim
