@@ -1,94 +1,99 @@
-From: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [Patch v2 2/2] libiscsi: Remove iscsi_destroy_session
-Date: Tue, 29 Aug 2017 11:30:01 -0700
-Message-ID: <20170829183001.6ncutkoss6qfekd7@straylight.hirudinean.org>
-References: <20170713161122.89375-1-khazhy@google.com>
- <20170713161122.89375-2-khazhy@google.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH] sd: preserve sysfs updates to max_sectors_kb
+Date: Tue, 29 Aug 2017 18:36:59 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D195B8E9143@avsrvexchmbx1.microsemi.net>
+References: <150309002518.8999.15900049133748830764.stgit@brunhilda>
+         <1503090353.2622.15.camel@wdc.com>
+         <4993A297653ECB4581FA5C3C31323D195B8D825D@avsrvexchmbx2.microsemi.net>
+         <1503092817.2622.19.camel@wdc.com>
+         <4993A297653ECB4581FA5C3C31323D195B8DBDE4@avsrvexchmbx2.microsemi.net>
+         <1503345191.2571.13.camel@wdc.com>
+        ,<4993A297653ECB4581FA5C3C31323D195B8DBE34@avsrvexchmbx2.microsemi.net>
+         <4993A297653ECB4581FA5C3C31323D195B8E9103@avsrvexchmbx1.microsemi.net>,<1504030401.2653.43.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <open-iscsi+bncBCYMVIPVXQMBBM7FS3GQKGQEENPTNJI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Content-Disposition: inline
-In-Reply-To: <20170713161122.89375-2-khazhy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: 'Khazhismel Kumykov' via open-iscsi <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Cc: lduncan-IBi9RG/b67k@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Khazhismel Kumykov <khazhy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-dm3nam03on0087.outbound.protection.outlook.com ([104.47.41.87]:35072
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751186AbdH2ShK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 29 Aug 2017 14:37:10 -0400
+In-Reply-To: <1504030401.2653.43.camel@wdc.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>, "hch@infradead.org" <hch@infradead.org>, Viswas G <viswas.g@microsemi.com>, Gerry Morong <gerry.morong@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "POSWALD@suse.com" <POSWALD@suse.com>, Scott Benesh <scott.benesh@microsemi.com>, Bader Ali - Saleh <bader.alisaleh@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, "joseph.szczypek@hpe.com" <joseph.szczypek@hpe.com>, Scott Teel <scott.teel@microsemi.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Justin Lindley <justin.lindley@microsemi.com>, John Hall <John.Hall@microsemi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-
-Thanks.
-
-Acked-by: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-
-On Thu, Jul 13, 2017 at 09:11:22AM -0700, 'Khazhismel Kumykov' via open-iscsi wrote:
-> iscsi_session_teardown was the only user of this function. Function
-> currently is just short for iscsi_remove_session + iscsi_free_session.
-> 
-> Signed-off-by: Khazhismel Kumykov <khazhy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> ---
->  drivers/scsi/scsi_transport_iscsi.c | 16 ----------------
->  include/scsi/scsi_transport_iscsi.h |  1 -
->  2 files changed, 17 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-> index a424eaeafeb0..924ac408d8a9 100644
-> --- a/drivers/scsi/scsi_transport_iscsi.c
-> +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -2210,22 +2210,6 @@ void iscsi_free_session(struct iscsi_cls_session *session)
->  }
->  EXPORT_SYMBOL_GPL(iscsi_free_session);
->  
-> -/**
-> - * iscsi_destroy_session - destroy iscsi session
-> - * @session: iscsi_session
-> - *
-> - * Can be called by a LLD or iscsi_transport. There must not be
-> - * any running connections.
-> - */
-> -int iscsi_destroy_session(struct iscsi_cls_session *session)
-> -{
-> -	iscsi_remove_session(session);
-> -	ISCSI_DBG_TRANS_SESSION(session, "Completing session destruction\n");
-> -	iscsi_free_session(session);
-> -	return 0;
-> -}
-> -EXPORT_SYMBOL_GPL(iscsi_destroy_session);
-> -
->  /**
->   * iscsi_create_conn - create iscsi class connection
->   * @session: iscsi cls session
-> diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-> index 6183d20a01fb..b266d2a3bcb1 100644
-> --- a/include/scsi/scsi_transport_iscsi.h
-> +++ b/include/scsi/scsi_transport_iscsi.h
-> @@ -434,7 +434,6 @@ extern struct iscsi_cls_session *iscsi_create_session(struct Scsi_Host *shost,
->  						unsigned int target_id);
->  extern void iscsi_remove_session(struct iscsi_cls_session *session);
->  extern void iscsi_free_session(struct iscsi_cls_session *session);
-> -extern int iscsi_destroy_session(struct iscsi_cls_session *session);
->  extern struct iscsi_cls_conn *iscsi_create_conn(struct iscsi_cls_session *sess,
->  						int dd_size, uint32_t cid);
->  extern int iscsi_destroy_conn(struct iscsi_cls_conn *conn);
-> -- 
-> 2.13.2.932.g7449e964c-goog
-> 
-> -- 
-> You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-> To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-> To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-> Visit this group at https://groups.google.com/group/open-iscsi.
-> For more options, visit https://groups.google.com/d/optout.
-
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+=0A=
+________________________________________=0A=
+From: Bart Van Assche [Bart.VanAssche@wdc.com]=0A=
+Sent: Tuesday, August 29, 2017 11:13 AM=0A=
+To: hch@infradead.org; Viswas G; Gerry Morong; Mahesh Rajashekhara; POSWALD=
+@suse.com; Scott Benesh; Don Brace; Bader Ali - Saleh; Kevin Barnett; josep=
+h.szczypek@hpe.com; Scott Teel; jejb@linux.vnet.ibm.com; Justin Lindley; Jo=
+hn Hall=0A=
+Cc: linux-scsi@vger.kernel.org=0A=
+Subject: Re: [PATCH] sd: preserve sysfs updates to max_sectors_kb=0A=
+=0A=
+EXTERNAL EMAIL=0A=
+=0A=
+=0A=
+On Tue, 2017-08-29 at 17:42 +0000, Don Brace wrote:=0A=
+> From: Don Brace=0A=
+> > [ ... ]=0A=
+> > Hello Don,=0A=
+> >=0A=
+> > Can you have another look at the udev rules on your test system? The la=
+st=0A=
+> > rule in 60-block.rules looks like a watch rule to me. The same holds fo=
+r the=0A=
+> > upstream version of that file=0A=
+> > (https://github.com/systemd/systemd/blob/maste=0A=
+> > r/rules/60-block.rules).=0A=
+> >=0A=
+> > Bart.=0A=
+>=0A=
+> It is a watch rule.=0A=
+>=0A=
+> systemd/src/udev/udevd.c=0A=
+>    manager_new=0A=
+>        manager->fd_inotify =3D udev_watch_init(manager->udev);=0A=
+>        sd_event_add_io(manager->event, &manager->inotify_event, manager->=
+fd_inotify, EPOLLIN, on_inotify, manager);=0A=
+>            on_inotify (systemd source code: src/udev/udevd.c)=0A=
+>               synthesize_change=0A=
+>                     ioctl --> BLKRRPART=0A=
+>=0A=
+> This rule ends up calling BLKRRPART.=0A=
+=0A=
+Hello Don,=0A=
+=0A=
+Sorry if I'm slow today, but it's not clear to me how the BLKRRPART ioctl=
+=0A=
+triggers a change of max_sectors_kb? And even if it really is this ioctl th=
+at=0A=
+triggers a change of max_sectors_kb, should the kernel code that handles=0A=
+max_sectors_kb writes be modified or should rather a udev rule be added tha=
+t=0A=
+sets max_sectors_kb to the desired value after each partition rescan?=0A=
+=0A=
+Thanks,=0A=
+=0A=
+Bart.=0A=
+=0A=
+----=0A=
+BLKRRPART ends up in the sd driver function sd_revalidate_disk, which reset=
+s =0A=
+        q->limits.max_sectors =3D min(rw_max, queue_max_hw_sectors(q));=0A=
+back to the value from VPD page 0xb0.=0A=
+=0A=
+When you cat out max_sectors_kb, it obtains it's valuse from q->limits.max_=
+sectors=0A=
+=0A=
+Adding a udev rule... Will there be a delay between the watch rule and the =
+new rule?=0A=
+=0A=
+Thanks,=0A=
+Don Brace=0A=
