@@ -1,38 +1,35 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v3 3/3] scsi_transport_sas: Fix error handling in
-        sas_smp_request()
-Date: Tue, 29 Aug 2017 15:08:57 +0200
-Message-ID: <20170829130857.GA29153@lst.de>
-References: <20170828204149.28693-1-bart.vanassche@wdc.com> <20170828204149.28693-8-bart.vanassche@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170828204149.28693-8-bart.vanassche@wdc.com>
-Sender: stable-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Paul E . McKenney" <paulmck@linux.vnet.ibm.com>, Ingo Molnar <mingo@kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org
+From: Himanshu Jha <himanshujha199640@gmail.com>
+Subject: [PATCH] scsi: qla2xxx: Use PTR_ERR_OR_ZERO
+Date: Tue, 29 Aug 2017 19:20:27 +0530
+Message-ID: <1504014627-17141-1-git-send-email-himanshujha199640@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jejb@linux.vnet.ibm.com
+Cc: martin.petersen@oracle.com, qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Himanshu Jha <himanshujha199640@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-> -	blk_status_t ret;
-> +	int ret;
->  	int (*handler)(struct Scsi_Host *, struct sas_rphy *, struct request *);
+Use PTR_ERR_OR_ZERO rather than if(IS_ERR(...)) + PTR_ERR
 
-This part looks ok.
+Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
+---
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
->  	while ((req = blk_fetch_request(q)) != NULL) {
-> @@ -185,7 +185,9 @@ static void sas_smp_request(struct request_queue *q, struct Scsi_Host *shost,
->  				blk_rq_bytes(req->next_rq);
->  		handler = to_sas_internal(shost->transportt)->f->smp_handler;
->  		ret = handler(shost, rphy, req);
-> -		scsi_req(req)->result = ret;
-> +		WARN_ONCE(ret != 0 && !IS_ERR_VALUE((uintptr_t)ret),
-> +			  "%s: ret = %d\n", __func__, ret);
-> +		scsi_req(req)->result = ret ? DID_ERROR << 16 : 0;
-
-This one doesn't.  All the way back until this code was fixed up
-after the initial introduction it returned negative error codes
-to user space.
-
-Take a look at committs 7aa68e80bd481faae1234bc2a7e4bcc9348f98b4 and
-2d507a01dac338831266b44ccbb01c69e84606ed for details.
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 3f82ea1..bf33350 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -1522,10 +1522,7 @@ static int tcm_qla2xxx_check_initiator_node_acl(
+ 				       sizeof(struct qla_tgt_cmd),
+ 				       TARGET_PROT_ALL, port_name,
+ 				       qlat_sess, tcm_qla2xxx_session_cb);
+-	if (IS_ERR(se_sess))
+-		return PTR_ERR(se_sess);
+-
+-	return 0;
++	return PTR_ERR_OR_ZERO(se_sess);
+ }
+ 
+ static void tcm_qla2xxx_update_sess(struct fc_port *sess, port_id_t s_id,
+-- 
+2.7.4
