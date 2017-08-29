@@ -1,35 +1,38 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [Regression 4.13-rc1] Resume does not work on Lenovo X60t
-Date: Tue, 29 Aug 2017 05:24:28 -0700
-Message-ID: <20170829122428.GA29097@infradead.org>
-References: <7032513a-7a28-5807-40d4-cb0f7005d513@molgen.mpg.de>
- <20170805093014.GA6511@infradead.org>
- <d30803d1861c9c105a35845759f58f8d@molgen.mpg.de>
- <9123f447-c06b-6a67-b380-90338eb2dde8@molgen.mpg.de>
- <20170821184115.GA16735@infradead.org>
- <3b5be305179828fd0e768c8ba9455851@molgen.mpg.de>
- <20170823114845.GB24217@infradead.org>
- <7e7e3ccf-f928-7fa5-1ea2-abbb94521cd7@molgen.mpg.de>
- <f415a9d7-25d4-77a6-b199-49b30ba989c0@molgen.mpg.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v3 3/3] scsi_transport_sas: Fix error handling in
+        sas_smp_request()
+Date: Tue, 29 Aug 2017 15:08:57 +0200
+Message-ID: <20170829130857.GA29153@lst.de>
+References: <20170828204149.28693-1-bart.vanassche@wdc.com> <20170828204149.28693-8-bart.vanassche@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:33127 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751582AbdH2MYb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Aug 2017 08:24:31 -0400
+Content-Type: text/plain; charset=us-ascii
+Return-path: <stable-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <f415a9d7-25d4-77a6-b199-49b30ba989c0@molgen.mpg.de>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20170828204149.28693-8-bart.vanassche@wdc.com>
+Sender: stable-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Paul E . McKenney" <paulmck@linux.vnet.ibm.com>, Ingo Molnar <mingo@kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Paul Menzel <pmenzel@molgen.mpg.de>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-On Tue, Aug 29, 2017 at 11:40:53AM +0200, Paul Menzel wrote:
-> It looks like I was using blk-mq, as it was the default up to commit
-> cbe7dfa26eee (Revert "scsi: default to scsi-mq"). So with Linux 4.13-rc7 and
-> disabling blk-mq for SCSI, the system is functional again after resume.
+> -	blk_status_t ret;
+> +	int ret;
+>  	int (*handler)(struct Scsi_Host *, struct sas_rphy *, struct request *);
 
-Thanks for the confirmation Paul - I'll keep you on Cc when
-implementing blќ runtime pm to make sure this issue doesn't reappear.
+This part looks ok.
+
+>  	while ((req = blk_fetch_request(q)) != NULL) {
+> @@ -185,7 +185,9 @@ static void sas_smp_request(struct request_queue *q, struct Scsi_Host *shost,
+>  				blk_rq_bytes(req->next_rq);
+>  		handler = to_sas_internal(shost->transportt)->f->smp_handler;
+>  		ret = handler(shost, rphy, req);
+> -		scsi_req(req)->result = ret;
+> +		WARN_ONCE(ret != 0 && !IS_ERR_VALUE((uintptr_t)ret),
+> +			  "%s: ret = %d\n", __func__, ret);
+> +		scsi_req(req)->result = ret ? DID_ERROR << 16 : 0;
+
+This one doesn't.  All the way back until this code was fixed up
+after the initial introduction it returned negative error codes
+to user space.
+
+Take a look at committs 7aa68e80bd481faae1234bc2a7e4bcc9348f98b4 and
+2d507a01dac338831266b44ccbb01c69e84606ed for details.
