@@ -1,43 +1,53 @@
 From: Li Wei <liwei213@huawei.com>
-Subject: [PATCH v3 4/5] arm64: defconfig: enable configs for Hisilicon ufs
-Date: Tue, 29 Aug 2017 16:41:15 +0800
-Message-ID: <20170829084116.106695-5-liwei213@huawei.com>
+Subject: [PATCH v3 5/5] arm64: defconfig: enable f2fs and squashfs
+Date: Tue, 29 Aug 2017 16:41:16 +0800
+Message-ID: <20170829084116.106695-6-liwei213@huawei.com>
 References: <20170829084116.106695-1-liwei213@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga05-in.huawei.com ([45.249.212.191]:5030 "EHLO
-        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750815AbdH2Iln (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Aug 2017 04:41:43 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20170829084116.106695-1-liwei213@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com, catalin.marinas@arm.com, will.deacon@arm.com, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khilman@baylibre.com, arnd@arndb.de, gregory.clement@free-electrons.com, thomas.petazzoni@free-electrons.com, yamada.masahiro@socionext.com, riku.voipio@linaro.org, treding@nvidia.com, krzk@kernel.org, eric@anholt.net, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org
 Cc: guodong.xu@linaro.org, fengbaopeng@hisilicon.com
+List-Id: linux-scsi@vger.kernel.org
 
-This enable configs for Hisilicon Hixxxx UFS driver.
+Partitions in HiKey960 are formatted as f2fs and squashfs.
+f2fs is for userdata; squashfs is for system. Both partitions are required
+by Android.
 
 Signed-off-by: Li Wei <liwei213@huawei.com>
 Signed-off-by: Zhangfei Gao <zhangfei.gao@linaro.org>
 Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
 ---
- arch/arm64/configs/defconfig | 3 +++
- 1 file changed, 3 insertions(+)
+ arch/arm64/configs/defconfig | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
 diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
-index b4ca115b3be1..7514ecf08f2a 100644
+index 7514ecf08f2a..61fcabcd7645 100644
 --- a/arch/arm64/configs/defconfig
 +++ b/arch/arm64/configs/defconfig
-@@ -164,6 +164,9 @@ CONFIG_EEPROM_AT25=m
- CONFIG_BLK_DEV_SD=y
- CONFIG_SCSI_SAS_ATA=y
- CONFIG_SCSI_HISI_SAS=y
-+CONFIG_SCSI_UFSHCD=y
-+CONFIG_SCSI_UFSHCD_PLATFORM=y
-+CONFIG_SCSI_UFS_HISI=y
- CONFIG_ATA=y
- CONFIG_SATA_AHCI=y
- CONFIG_SATA_AHCI_PLATFORM=y
+@@ -527,6 +527,7 @@ CONFIG_ACPI_APEI_GHES=y
+ CONFIG_ACPI_APEI_PCIEAER=y
+ CONFIG_EXT2_FS=y
+ CONFIG_EXT3_FS=y
++CONFIG_F2FS_FS=y
+ CONFIG_EXT4_FS_POSIX_ACL=y
+ CONFIG_BTRFS_FS=m
+ CONFIG_BTRFS_FS_POSIX_ACL=y
+@@ -542,6 +543,13 @@ CONFIG_HUGETLBFS=y
+ CONFIG_CONFIGFS_FS=y
+ CONFIG_EFIVAR_FS=y
+ CONFIG_SQUASHFS=y
++CONFIG_SQUASHFS_FILE_DIRECT=y
++CONFIG_SQUASHFS_DECOMP_MULTI_PERCPU=y
++CONFIG_SQUASHFS_XATTR=y
++CONFIG_SQUASHFS_LZ4=y
++CONFIG_SQUASHFS_LZO=y
++CONFIG_SQUASHFS_XZ=y
++CONFIG_SQUASHFS_4K_DEVBLK_SIZE=y
+ CONFIG_NFS_FS=y
+ CONFIG_NFS_V4=y
+ CONFIG_NFS_V4_1=y
 -- 
 2.11.0
