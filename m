@@ -1,59 +1,43 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 2/3] Rework handling of scsi_device.vpd_pg8[03]
-Date: Tue, 29 Aug 2017 08:33:03 +0200
-Message-ID: <baef55b5-1423-6298-df0b-360234b4ad88@suse.de>
-References: <20170828204149.28693-1-bart.vanassche@wdc.com>
- <20170828204149.28693-3-bart.vanassche@wdc.com>
+From: Li Wei <liwei213@huawei.com>
+Subject: [PATCH v3 4/5] arm64: defconfig: enable configs for Hisilicon ufs
+Date: Tue, 29 Aug 2017 16:41:15 +0800
+Message-ID: <20170829084116.106695-5-liwei213@huawei.com>
+References: <20170829084116.106695-1-liwei213@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39361 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750822AbdH2GdF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 29 Aug 2017 02:33:05 -0400
-In-Reply-To: <20170828204149.28693-3-bart.vanassche@wdc.com>
-Content-Language: en-US
+Received: from szxga05-in.huawei.com ([45.249.212.191]:5030 "EHLO
+        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750815AbdH2Iln (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Aug 2017 04:41:43 -0400
+In-Reply-To: <20170829084116.106695-1-liwei213@huawei.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, "Paul E . McKenney" <paulmck@linux.vnet.ibm.com>, Ingo Molnar <mingo@kernel.org>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Shane Seymour <shane.seymour@hpe.com>
+To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com, catalin.marinas@arm.com, will.deacon@arm.com, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khilman@baylibre.com, arnd@arndb.de, gregory.clement@free-electrons.com, thomas.petazzoni@free-electrons.com, yamada.masahiro@socionext.com, riku.voipio@linaro.org, treding@nvidia.com, krzk@kernel.org, eric@anholt.net, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org
+Cc: guodong.xu@linaro.org, fengbaopeng@hisilicon.com
 
-On 08/28/2017 10:41 PM, Bart Van Assche wrote:
-> Introduce struct scsi_vpd for the VPD page length, data and the
-> RCU head that will be used to free the VPD data. Use kfree_rcu()
-> instead of kfree() to free VPD data. Move the VPD buffer pointer
-> check inside the RCU read lock in the sysfs code. Only annotate
-> pointers that are shared across threads with __rcu. Use
-> rcu_dereference() when dereferencing an RCU pointer. This patch
-> suppresses about twenty sparse complaints about the vpd_pg8[03]
-> pointers. This patch also fixes a race condition, namely that
-> updating of the VPD pointers and length variables in struct
-> scsi_device was not atomic with reference to the code reading
-> these variables. See also "Does the update code tolerate concurrent
-> accesses?" in Documentation/RCU/checklist.txt.
-> 
-> Fixes: commit 09e2b0b14690 ("scsi: rescan VPD attributes")
-> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Johannes Thumshirn <jthumshirn@suse.de>
-> Cc: Shane Seymour <shane.seymour@hpe.com>
-> ---
->  drivers/scsi/scsi.c        | 44 ++++++++++++++++++--------------------------
->  drivers/scsi/scsi_lib.c    | 16 ++++++++--------
->  drivers/scsi/scsi_sysfs.c  | 29 ++++++++++++++++++++---------
->  include/scsi/scsi_device.h | 18 ++++++++++++++----
->  4 files changed, 60 insertions(+), 47 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+This enable configs for Hisilicon Hixxxx UFS driver.
 
-Cheers,
+Signed-off-by: Li Wei <liwei213@huawei.com>
+Signed-off-by: Zhangfei Gao <zhangfei.gao@linaro.org>
+Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
+---
+ arch/arm64/configs/defconfig | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Hannes
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index b4ca115b3be1..7514ecf08f2a 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -164,6 +164,9 @@ CONFIG_EEPROM_AT25=m
+ CONFIG_BLK_DEV_SD=y
+ CONFIG_SCSI_SAS_ATA=y
+ CONFIG_SCSI_HISI_SAS=y
++CONFIG_SCSI_UFSHCD=y
++CONFIG_SCSI_UFSHCD_PLATFORM=y
++CONFIG_SCSI_UFS_HISI=y
+ CONFIG_ATA=y
+ CONFIG_SATA_AHCI=y
+ CONFIG_SATA_AHCI_PLATFORM=y
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+2.11.0
