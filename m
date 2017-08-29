@@ -1,19 +1,19 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 2/4] hpsa: remove the smp_handler stub
-Date: Tue, 29 Aug 2017 13:32:22 +0200
-Message-ID: <20170829113222.GB9310@linux-x5ow.site>
+Subject: Re: [PATCH 3/4] smartpqi: remove the smp_handler stub
+Date: Tue, 29 Aug 2017 13:32:39 +0200
+Message-ID: <20170829113239.GC9310@linux-x5ow.site>
 References: <20170825153741.5091-1-hch@lst.de>
- <20170825153741.5091-3-hch@lst.de>
+ <20170825153741.5091-4-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37379 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:37422 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752914AbdH2LcY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 29 Aug 2017 07:32:24 -0400
+        id S1752741AbdH2Lck (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 29 Aug 2017 07:32:40 -0400
 Content-Disposition: inline
-In-Reply-To: <20170825153741.5091-3-hch@lst.de>
+In-Reply-To: <20170825153741.5091-4-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
