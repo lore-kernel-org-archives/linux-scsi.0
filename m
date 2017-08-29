@@ -1,34 +1,126 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCHv4 5/5] scsi_devinfo: fixup string compare
-Date: Tue, 29 Aug 2017 16:30:54 +0000
-Message-ID: <1504024253.2653.20.camel@wdc.com>
-References: <1503996564-110464-1-git-send-email-hare@suse.de>
-         <1503996564-110464-6-git-send-email-hare@suse.de>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH] sd: preserve sysfs updates to max_sectors_kb
+Date: Tue, 29 Aug 2017 17:41:20 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D195B8E90F0@avsrvexchmbx1.microsemi.net>
+References: <150309002518.8999.15900049133748830764.stgit@brunhilda>
+         <1503090353.2622.15.camel@wdc.com>
+         <4993A297653ECB4581FA5C3C31323D195B8D825D@avsrvexchmbx2.microsemi.net>
+         <1503092817.2622.19.camel@wdc.com>
+         <4993A297653ECB4581FA5C3C31323D195B8DBDE4@avsrvexchmbx2.microsemi.net>
+ <1503345191.2571.13.camel@wdc.com>,<4993A297653ECB4581FA5C3C31323D195B8DBE34@avsrvexchmbx2.microsemi.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:21701 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750758AbdH2Qbm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Aug 2017 12:31:42 -0400
-In-Reply-To: <1503996564-110464-6-git-send-email-hare@suse.de>
+Received: from mail-bn3nam01on0069.outbound.protection.outlook.com ([104.47.33.69]:5055
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750758AbdH2Rl3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 29 Aug 2017 13:41:29 -0400
+In-Reply-To: <4993A297653ECB4581FA5C3C31323D195B8DBE34@avsrvexchmbx2.microsemi.net>
 Content-Language: en-US
-Content-ID: <69B19AF48F0ED9448B5899ED84F1CF28@namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "Alan@suse.de" <Alan@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "stern@rowland.harvard.edu" <stern@rowland.harvard.edu>
+To: Bart Van Assche <Bart.VanAssche@wdc.com>, "hch@infradead.org" <hch@infradead.org>, Viswas G <viswas.g@microsemi.com>, Gerry Morong <gerry.morong@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "POSWALD@suse.com" <POSWALD@suse.com>, Scott Benesh <scott.benesh@microsemi.com>, Bader Ali - Saleh <bader.alisaleh@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, "joseph.szczypek@hpe.com" <joseph.szczypek@hpe.com>, Scott Teel <scott.teel@microsemi.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Justin Lindley <justin.lindley@microsemi.com>, John Hall <John.Hall@microsemi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-T24gVHVlLCAyMDE3LTA4LTI5IGF0IDEwOjQ5ICswMjAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6
-DQo+IFdoZW4gY2hlY2tpbmcgdGhlIG1vZGVsIGFuZCB2ZW5kb3Igc3RyaW5nIHdlIG5lZWQgdG8g
-dXNlIHRoZQ0KPiBtaW5pbXVtIHZhbHVlIG9mIGVpdGhlciBzdHJpbmcsIG90aGVyd2lzZSB3ZSds
-bCBtaXNzIG91dCBvbg0KPiB3aWxkY2FyZCBtYXRjaGVzLg0KPiBBbmQgd2Ugc2hvdWxkIHRha2Ug
-Y2FyZCB3aGVuIG1hdGNoaW5nIHdpdGggemVybyBzaXplIHN0cmluZ3M7DQo+IHJlc3VsdHMgbWln
-aHQgYmUgdW5wcmVkaWN0YWJsZS4NCj4gV2l0aCB0aGlzIHBhdGNoIHRoZSBydWxlcyBmb3IgbWF0
-Y2hpbmcgZGV2aW5mbyBzdHJpbmdzIGFyZQ0KPiBhcyBmb2xsb3dzOg0KPiAtIFZlbmRvciBzdHJp
-bmdzIG11c3QgbWF0Y2ggZXhhY3RseQ0KPiAtIEVtcHR5IE1vZGVsIHN0cmluZ3Mgd2lsbCBvbmx5
-IG1hdGNoIGlmIHRoZSBkZXZpbmZvIG1vZGVsDQo+ICAgaXMgYWxzbyBlbXB0eQ0KPiAtIE1vZGVs
-IHN0cmluZ3Mgc2hvcnRlciB0aGFuIHRoZSBkZXZpbmZvIG1vZGVsIHN0cmluZyB3aWxsDQo+ICAg
-bm90IG1hdGNoDQoNClJldmlld2VkLWJ5OiBCYXJ0IFZhbiBBc3NjaGUgPGJhcnQudmFuYXNzY2hl
-QHdkYy5jb20+
+=0A=
+________________________________________=0A=
+From: Don Brace=0A=
+Sent: Monday, August 21, 2017 1:14 PM=0A=
+To: Bart Van Assche; hch@infradead.org; Viswas G; Gerry Morong; Mahesh Raja=
+shekhara; POSWALD@suse.com; Scott Benesh; Bader Ali - Saleh; Kevin Barnett;=
+ joseph.szczypek@hpe.com; Scott Teel; jejb@linux.vnet.ibm.com; Justin Lindl=
+ey; John Hall=0A=
+Cc: linux-scsi@vger.kernel.org=0A=
+Subject: RE: [PATCH] sd: preserve sysfs updates to max_sectors_kb=0A=
+=0A=
+> -----Original Message-----=0A=
+> From: Bart Van Assche [mailto:Bart.VanAssche@wdc.com]=0A=
+> Sent: Monday, August 21, 2017 2:53 PM=0A=
+> To: hch@infradead.org; Viswas G <viswas.g@microsemi.com>; Gerry=0A=
+> Morong <gerry.morong@microsemi.com>; Mahesh Rajashekhara=0A=
+> <mahesh.rajashekhara@microsemi.com>; POSWALD@suse.com; Scott=0A=
+> Benesh <scott.benesh@microsemi.com>; Don Brace=0A=
+> <don.brace@microsemi.com>; Bader Ali - Saleh=0A=
+> <bader.alisaleh@microsemi.com>; Kevin Barnett=0A=
+> <kevin.barnett@microsemi.com>; joseph.szczypek@hpe.com; Scott Teel=0A=
+> <scott.teel@microsemi.com>; jejb@linux.vnet.ibm.com; Justin Lindley=0A=
+> <justin.lindley@microsemi.com>; John Hall <John.Hall@microsemi.com>=0A=
+> Cc: linux-scsi@vger.kernel.org=0A=
+> Subject: Re: [PATCH] sd: preserve sysfs updates to max_sectors_kb=0A=
+>=0A=
+> EXTERNAL EMAIL=0A=
+>=0A=
+>=0A=
+> On Mon, 2017-08-21 at 19:12 +0000, Don Brace wrote:=0A=
+> > On Friday Bart Van Assche wrote:=0A=
+> > > Can you check on your test system which udev rule changes=0A=
+> > > max_sectors_kb? I=0A=
+> > > have checked two recent Linux distro's but haven't been able to find=
+=0A=
+> > > such a udev rule:=0A=
+> > > $ grep -rw max_sectors_kb /usr/lib/udev/rules.d /etc/udev/rules.d | w=
+c=0A=
+> > > -l=0A=
+> > > 0=0A=
+> > >=0A=
+> > > Thanks,=0A=
+> > >=0A=
+> > > Bart.=0A=
+> >=0A=
+> > On my system it is 60-block.rules, and it is the last rule in that rule=
+=0A=
+> > file.=0A=
+> > --=0A=
+> > # do not edit this file, it will be overwritten on update=0A=
+> >=0A=
+> > # enable in-kernel media-presence polling=0A=
+> > ACTION=3D=3D"add", SUBSYSTEM=3D=3D"module", KERNEL=3D=3D"block",=0A=
+> > ATTR{parameters/events_dfl_poll_msecs}=3D=3D"0", \=0A=
+> >   ATTR{parameters/events_dfl_poll_msecs}=3D"2000"=0A=
+> >=0A=
+> > # forward scsi device event to corresponding block device=0A=
+> > ACTION=3D=3D"change", SUBSYSTEM=3D=3D"scsi", ENV{DEVTYPE}=3D=3D"scsi_de=
+vice",=0A=
+> > TEST=3D=3D"block", ATTR{block/*/uevent}=3D"change"=0A=
+> >=0A=
+> > # watch metadata changes, caused by tools closing the device node which=
+=0A=
+> > was opened for writing=0A=
+> > ACTION!=3D"remove", SUBSYSTEM=3D=3D"block",=0A=
+> > KERNEL=3D=3D"loop*|nvme*|sd*|vd*|xvd*|pmem*", OPTIONS+=3D"watch"=0A=
+>=0A=
+> Hello Don,=0A=
+>=0A=
+> Can you have another look at the udev rules on your test system? The last=
+=0A=
+> rule in 60-block.rules looks like a watch rule to me. The same holds for =
+the=0A=
+> upstream version of that file=0A=
+> (https://github.com/systemd/systemd/blob/maste=0A=
+> r/rules/60-block.rules).=0A=
+>=0A=
+> Bart.=0A=
+=0A=
+It is a watch rule.=0A=
+=0A=
+systemd/src/udev/udevd.c=0A=
+   manager_new=0A=
+       manager->fd_inotify =3D udev_watch_init(manager->udev);=0A=
+       sd_event_add_io(manager->event, &manager->inotify_event, manager->fd=
+_inotify, EPOLLIN, on_inotify, manager);=0A=
+           on_inotify (systemd source code: src/udev/udevd.c)=0A=
+              synthesize_change=0A=
+                    ioctl --> BLKRRPART=0A=
+=0A=
+This rule ends up calling BLKRRPART.=0A=
+=0A=
+Thanks,=0A=
+Don Brace=0A=
+ESC - Smart Storage=0A=
+Microsemi Corporation=0A=
+=0A=
+=0A=
+Is there more information that I can provide?=0A=
+=0A=
