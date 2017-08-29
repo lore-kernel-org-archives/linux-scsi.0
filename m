@@ -1,7 +1,7 @@
 From: Don Brace <don.brace@microsemi.com>
 Subject: RE: [PATCH] sd: preserve sysfs updates to max_sectors_kb
-Date: Tue, 29 Aug 2017 17:41:20 +0000
-Message-ID: <4993A297653ECB4581FA5C3C31323D195B8E90F0@avsrvexchmbx1.microsemi.net>
+Date: Tue, 29 Aug 2017 17:42:27 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D195B8E9103@avsrvexchmbx1.microsemi.net>
 References: <150309002518.8999.15900049133748830764.stgit@brunhilda>
          <1503090353.2622.15.camel@wdc.com>
          <4993A297653ECB4581FA5C3C31323D195B8D825D@avsrvexchmbx2.microsemi.net>
@@ -12,11 +12,11 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0069.outbound.protection.outlook.com ([104.47.33.69]:5055
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+Received: from mail-bl2nam02on0060.outbound.protection.outlook.com ([104.47.38.60]:27296
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750758AbdH2Rl3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 29 Aug 2017 13:41:29 -0400
+        id S1750758AbdH2Rmf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 29 Aug 2017 13:42:35 -0400
 In-Reply-To: <4993A297653ECB4581FA5C3C31323D195B8DBE34@avsrvexchmbx2.microsemi.net>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
@@ -121,6 +121,4 @@ Don Brace=0A=
 ESC - Smart Storage=0A=
 Microsemi Corporation=0A=
 =0A=
-=0A=
-Is there more information that I can provide?=0A=
 =0A=
