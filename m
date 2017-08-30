@@ -1,44 +1,39 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH] scsi: qla2xxx: Fix an integer overflow in sysfs code
-Date: Wed, 30 Aug 2017 15:12:35 +0200
-Message-ID: <20170830131235.GC12924@kroah.com>
-References: <CAER+mfKPOt03DmPB4FTCjVvQ=2uRSMVbBHP-3CdoG+mQnSiYFw@mail.gmail.com>
- <20170830122106.dmdfril4kwi4p5e5@mwanda>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out2-smtp.messagingengine.com ([66.111.4.26]:38111 "EHLO
-        out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751385AbdH3NMc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 30 Aug 2017 09:12:32 -0400
-Content-Disposition: inline
-In-Reply-To: <20170830122106.dmdfril4kwi4p5e5@mwanda>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH] qla2xxx: add missing includes for qla_isr
+Date: Wed, 30 Aug 2017 15:12:31 +0200
+Message-ID: <20170830131231.7934-1-jthumshirn@suse.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, qla2xxx-upstream@qlogic.com, Himanshu Madhani <himanshu.madhani@cavium.com>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: qla2xxx-upstream@qlogic.com, shqking <shqking@gmail.com>, Joe Carnuccio <joe.carnuccio@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, security@kernel.org
 
-On Wed, Aug 30, 2017 at 03:21:07PM +0300, Dan Carpenter wrote:
-> The value of "size" comes from the user.  When we add "start + size"
-> it could lead to an integer overflow bug.
-> 
-> It means we vmalloc() a lot more memory than we had intended.  I believe
-> that on 64 bit systems vmalloc() can succeed even if we ask it to
-> allocate huge 4GB buffers.  So we would get memory corruption and likely
-> a crash when we call ha->isp_ops->write_optrom() and ->read_optrom().
-> 
-> Only root can trigger this bug.
-> 
-> Fixes: b7cc176c9eb3 ("[SCSI] qla2xxx: Allow region-based flash-part accesses.")
-> Reported-by: shqking <shqking@gmail.com>
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Since commit 7401bc18d1ee ("scsi: qla2xxx: Add FC-NVMe command handling")
+we make use of 'struct nvmefc_fcp_req' in qla24xx_nvme_iocb_entry() without
+including linux/nvme-fc-driver.h where it is defined.
 
+Add linux/nvme-fc-driver.h (and scsi/fc/fc_fs.h as nvme-fc-driver.h needs
+the definition of 'struct fc_ba_rjt' from scsi/fc/fc_fs.h) to the header
+files included by qla_isr.c.
 
-Cc: stable <stable@vger.kernel.org>
+Fixes: 7401bc18d1ee ("scsi: qla2xxx: Add FC-NVMe command handling")
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/scsi/qla2xxx/qla_isr.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-perhaps?
-
-thanks,
-
-greg k-h
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 7b3b702ef622..b57cbe4ec32b 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -14,6 +14,8 @@
+ #include <scsi/scsi_tcq.h>
+ #include <scsi/scsi_bsg_fc.h>
+ #include <scsi/scsi_eh.h>
++#include <scsi/fc/fc_fs.h>
++#include <linux/nvme-fc-driver.h>
+ 
+ static void qla2x00_mbx_completion(scsi_qla_host_t *, uint16_t);
+ static void qla2x00_status_entry(scsi_qla_host_t *, struct rsp_que *, void *);
+-- 
+2.12.3
