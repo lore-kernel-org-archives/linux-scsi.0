@@ -1,49 +1,39 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] sd: preserve sysfs updates to max_sectors_kb
-Date: Tue, 29 Aug 2017 21:24:12 -0400
-Message-ID: <yq1d17d26gz.fsf@oracle.com>
-References: <150309002518.8999.15900049133748830764.stgit@brunhilda>
-        <1503090353.2622.15.camel@wdc.com>
-        <4993A297653ECB4581FA5C3C31323D195B8D825D@avsrvexchmbx2.microsemi.net>
-        <1503092817.2622.19.camel@wdc.com>
-        <4993A297653ECB4581FA5C3C31323D195B8DBDE4@avsrvexchmbx2.microsemi.net>
-        <1503345191.2571.13.camel@wdc.com>
-        <4993A297653ECB4581FA5C3C31323D195B8DBE34@avsrvexchmbx2.microsemi.net>
-        <4993A297653ECB4581FA5C3C31323D195B8E9103@avsrvexchmbx1.microsemi.net>
-        <1504030401.2653.43.camel@wdc.com>
-        <4993A297653ECB4581FA5C3C31323D195B8E9143@avsrvexchmbx1.microsemi.net>
-        <4993A297653ECB4581FA5C3C31323D195B8E9191@avsrvexchmbx1.microsemi.net>
-        <1504045532.2653.68.camel@wdc.com>
-        <4993A297653ECB4581FA5C3C31323D195B8E9288@avsrvexchmbx1.microsemi.net>
-        <1504047619.2653.75.camel@wdc.com>
+Subject: Re: [PATCH] storvsc: fix memory leak on ring buffer busy
+Date: Tue, 29 Aug 2017 21:31:11 -0400
+Message-ID: <yq18ti1265c.fsf@oracle.com>
+References: <20170829004359.28526-1-longli@exchange.microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:42735 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751240AbdH3BYz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Aug 2017 21:24:55 -0400
-In-Reply-To: <1504047619.2653.75.camel@wdc.com> (Bart Van Assche's message of
-        "Tue, 29 Aug 2017 23:00:20 +0000")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <20170829004359.28526-1-longli@exchange.microsoft.com> (Long Li's
+ message of "Mon, 28 Aug 2017 17:43:59 -0700")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Long Li <longli@exchange.microsoft.com>
+Cc: linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, "James E . J . Bottomley" <JBottomley@odin.com>, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "hch@infradead.org" <hch@infradead.org>, "viswas.g@microsemi.com" <viswas.g@microsemi.com>, "gerry.morong@microsemi.com" <gerry.morong@microsemi.com>, "mahesh.rajashekhara@microsemi.com" <mahesh.rajashekhara@microsemi.com>, "POSWALD@suse.com" <POSWALD@suse.com>, "scott.benesh@microsemi.com" <scott.benesh@microsemi.com>, "don.brace@microsemi.com" <don.brace@microsemi.com>, "bader.alisaleh@microsemi.com" <bader.alisaleh@microsemi.com>, "kevin.barnett@microsemi.com" <kevin.barnett@microsemi.com>, "joseph.szczypek@hpe.com" <joseph.szczypek@hpe.com>, "scott.teel@microsemi.com" <scott.teel@microsemi.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "justin.lindley@microsemi.com" <justin.lindley@microsemi.com>, "John.Hall@microsemi.com" <John.Hall@microsemi>
 
 
-Bart,
+Long,
 
-> How about asking these users to create a udev rule instead of directly
-> modifying max_sectors_kb in sysfs?
+> When storvsc is sending I/O to Hyper-v, it may allocate a bigger
+> buffer descriptor for large data payload that can't fit into a
+> pre-allocated buffer descriptor. This bigger buffer is freed on return
+> path.
+>
+> If I/O request to Hyper-v fails due to ring buffer busy, the storvsc
+> allocated buffer descriptor should also be freed.
 
-I looked at this for a bit last week to see if I could come up with an
-elegant way to accommodate values overridden in sysfs and at the same
-time honor hardware limits changing. However, it quickly gets messy
-since some parameters are under the request_queue and some are scsi_disk
-specific. So that involves having override flags several places. Plus
-there also the whole re-stacking debacle.
-
-So I think I prefer udev for this.
+Which kernel version is this patch aimed at?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
