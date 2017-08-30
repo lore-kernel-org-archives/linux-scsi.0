@@ -1,55 +1,79 @@
-From: Long Li <longli@microsoft.com>
-Subject: RE: [PATCH] storvsc: fix memory leak on ring buffer busy
-Date: Wed, 30 Aug 2017 03:48:54 +0000
-Message-ID: <MWHPR21MB0190F8C50CCF7CFA0EDCA7A6CE9C0@MWHPR21MB0190.namprd21.prod.outlook.com>
-References: <20170829004359.28526-1-longli@exchange.microsoft.com>
- <yq18ti1265c.fsf@oracle.com>
+From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
+Subject: Re: possible circular locking dependency detected [was: linux-next:
+ Tree for Aug 22]
+Date: Wed, 30 Aug 2017 14:20:37 +0900
+Message-ID: <20170830052037.GA432@jagdpanzerIV.localdomain>
+References: <20170822183816.7925e0f8@canb.auug.org.au>
+ <20170822104708.GA491@jagdpanzerIV.localdomain>
+ <1503438234.2508.27.camel@wdc.com>
+ <20170823000304.GK20323@X58A-UD3R>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <yq18ti1265c.fsf@oracle.com>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Haiyang Zhang <haiyangz@microsoft.com>, "James E . J . Bottomley" <JBottomley@odin.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170823000304.GK20323@X58A-UD3R>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Byungchul Park <byungchul.park@lge.com>
+Cc: Bart Van Assche <Bart.VanAssche@wdc.com>, peterz@infradead.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "sergey.senozhatsky.work@gmail.com" <sergey.senozhatsky.work@gmail.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, kernel-team@lge.com
 List-Id: linux-scsi@vger.kernel.org
 
-> -----Original Message-----
-> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
-> Sent: Tuesday, August 29, 2017 6:31 PM
-> To: Long Li <longli@microsoft.com>
-> Cc: KY Srinivasan <kys@microsoft.com>; Haiyang Zhang
-> <haiyangz@microsoft.com>; James E . J . Bottomley
-> <JBottomley@odin.com>; devel@linuxdriverproject.org; linux-
-> scsi@vger.kernel.org; linux-kernel@vger.kernel.org; Long Li
-> <longli@microsoft.com>
-> Subject: Re: [PATCH] storvsc: fix memory leak on ring buffer busy
+On (08/23/17 09:03), Byungchul Park wrote:
+[..]
+> > Byungchul, did you add the crosslock checks to lockdep? Can you have a look at
+> > the above report? That report namely doesn't make sense to me.
 > 
+> The report is talking about the following lockup:
 > 
-> Long,
+> A work in a worker                     A task work on exit to user
+> ------------------                     ---------------------------
+> mutex_lock(&bdev->bd_mutex)
+>                                        mutext_lock(&bdev->bd_mutex)
+> blk_execute_rq()
+>    wait_for_completion_io_timeout(&A)
+>                                        complete(&A)
 > 
-> > When storvsc is sending I/O to Hyper-v, it may allocate a bigger
-> > buffer descriptor for large data payload that can't fit into a
-> > pre-allocated buffer descriptor. This bigger buffer is freed on return
-> > path.
-> >
-> > If I/O request to Hyper-v fails due to ring buffer busy, the storvsc
-> > allocated buffer descriptor should also be freed.
+[..]
+> To Peterz,
 > 
-> Which kernel version is this patch aimed at?
+> Anyway I wanted to avoid lockdep reports in the case using a timeout
+> interface. Do you think it's still worth reporting the kind of lockup?
+> I'm ok if you do.
 
-Martin, thanks for pointing this out. This should also go to stable trees.
+Byungchul, a quick question.
+have you measured the performance impact? somehow my linux-next is
+notably slower than earlier 4.13 linux-next. (e.g. scrolling in vim
+is irritatingly slow)
 
-Cc: stable@vger.kernel.org
-> 
-> --
-> Martin K. Petersen	Oracle Linux Engineering
+
+`time dmesg' shows some difference, but probably that's not a good
+test.
+
+	!LOCKDEP	LOCKDEP		LOCKDEP -CROSSRELEASE -COMPLETIONS
+	real 0m0.661s	0m2.290s	0m1.920s
+	user 0m0.010s	0m0.105s	0m0.000s
+	sys  0m0.636s	0m2.224s	0m1.888s
+
+anyone else "sees"/"can confirm" the slow down?
+
+
+it gets back to "usual normal" when I disable CROSSRELEASE and COMPLETIONS.
+
+---
+
+diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
+index b19c491cbc4e..cdc30ef81c5e 100644
+--- a/lib/Kconfig.debug
++++ b/lib/Kconfig.debug
+@@ -1091,8 +1091,6 @@ config PROVE_LOCKING
+        select DEBUG_MUTEXES
+        select DEBUG_RT_MUTEXES if RT_MUTEXES
+        select DEBUG_LOCK_ALLOC
+-       select LOCKDEP_CROSSRELEASE
+-       select LOCKDEP_COMPLETIONS
+        select TRACE_IRQFLAGS
+        default n
+        help
+
+---
+
+	-ss
