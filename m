@@ -1,7 +1,7 @@
 From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [v5 02/14] mpt3sas: Add nvme device support in slave alloc,  target  alloc and probe
-Date: Wed, 30 Aug 2017 19:38:26 +0530
-Message-ID: <1504102118-7152-3-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: [v5 01/14] Update MPI Header
+Date: Wed, 30 Aug 2017 19:38:25 +0530
+Message-ID: <1504102118-7152-2-git-send-email-suganath-prabu.subramani@broadcom.com>
 References: <1504102118-7152-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1504102118-7152-1-git-send-email-suganath-prabu.subramani@broadcom.com>
@@ -10,874 +10,1500 @@ To: linux-scsi@vger.kernel.org
 Cc: Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org, sreekanth.reddy@broadcom.com, linux-nvme@lists.infradead.org, Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-1) Added support for probing pcie device and adding NVMe drives to
-SML and driver's internal list pcie_device_list.
-
-2) Added support for determing NVMe as boot device.
-
-3) Added nvme device support for call back functions scan_finished
-target_alloc,slave_alloc,target destroy and slave destroy.
-
- a) During scan, pcie devices are probed and added to SML to drivers
-internal list.
-
- b) target_alloc & slave alloc API's allocates resources for
-(MPT3SAS_TARGET & MPT3SAS_DEVICE) private datas and holds
-information like handle, target_id etc.
-
- c) slave_destroy & target_destroy are called when driver unregisters
-or removes device. Also frees allocated resources and info.
+Update MPI Files for NVMe support
 
 Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
 Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.h  | 110 ++++++++-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 431 ++++++++++++++++++++++++++++++++---
- 2 files changed, 507 insertions(+), 34 deletions(-)
+ drivers/scsi/mpt3sas/mpi/mpi2.h      |  43 ++-
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h | 564 +++++++++++++++++++++++++++++++++--
+ drivers/scsi/mpt3sas/mpi/mpi2_init.h |  11 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_ioc.h  | 282 +++++++++++++++++-
+ drivers/scsi/mpt3sas/mpi/mpi2_pci.h  | 112 +++++++
+ drivers/scsi/mpt3sas/mpi/mpi2_tool.h |  14 +-
+ 6 files changed, 992 insertions(+), 34 deletions(-)
+ create mode 100644 drivers/scsi/mpt3sas/mpi/mpi2_pci.h
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 099ab4c..c522057 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -159,6 +159,7 @@
- #define MPT_TARGET_FLAGS_VOLUME		0x02
- #define MPT_TARGET_FLAGS_DELETED	0x04
- #define MPT_TARGET_FASTPATH_IO		0x08
-+#define MPT_TARGET_FLAGS_PCIE_DEVICE	0x10
- 
- #define SAS2_PCI_DEVICE_B0_REVISION	(0x01)
- #define SAS3_PCI_DEVICE_C0_REVISION	(0x02)
-@@ -357,7 +358,8 @@ struct Mpi2ManufacturingPage11_t {
-  * @flags: MPT_TARGET_FLAGS_XXX flags
-  * @deleted: target flaged for deletion
-  * @tm_busy: target is busy with TM request.
-- * @sdev: The sas_device associated with this target
-+ * @sas_dev: The sas_device associated with this target
-+ * @pcie_dev: The pcie device associated with this target
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2.h b/drivers/scsi/mpt3sas/mpi/mpi2.h
+index a9a659f..bc59058 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2.h
+@@ -8,7 +8,7 @@
+  *                 scatter/gather formats.
+  * Creation Date:  June 21, 2006
+  *
+- * mpi2.h Version:  02.00.42
++ * mpi2.h Version:  02.00.48
+  *
+  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
+  *       prefix are for use only on MPI v2.5 products, and must not be used
+@@ -103,6 +103,16 @@
+  * 08-25-15  02.00.40  Bumped MPI2_HEADER_VERSION_UNIT.
+  * 12-15-15  02.00.41  Bumped MPI_HEADER_VERSION_UNIT
+  * 01-01-16  02.00.42  Bumped MPI_HEADER_VERSION_UNIT
++ * 04-05-16  02.00.43  Modified  MPI26_DIAG_BOOT_DEVICE_SELECT defines
++ *                     to be unique within first 32 characters.
++ *                     Removed AHCI support.
++ *                     Removed SOP support.
++ *                     Bumped MPI2_HEADER_VERSION_UNIT.
++ * 04-10-16  02.00.44  Bumped MPI2_HEADER_VERSION_UNIT.
++ * 07-06-16  02.00.45  Bumped MPI2_HEADER_VERSION_UNIT.
++ * 09-02-16  02.00.46  Bumped MPI2_HEADER_VERSION_UNIT.
++ * 11-23-16  02.00.47  Bumped MPI2_HEADER_VERSION_UNIT.
++ * 02-03-17  02.00.48  Bumped MPI2_HEADER_VERSION_UNIT.
+  * --------------------------------------------------------------------------
   */
- struct MPT3SAS_TARGET {
- 	struct scsi_target *starget;
-@@ -368,7 +370,8 @@ struct MPT3SAS_TARGET {
- 	u32	flags;
- 	u8	deleted;
- 	u8	tm_busy;
--	struct _sas_device *sdev;
-+	struct _sas_device *sas_dev;
-+	struct _pcie_device *pcie_dev;
- };
+ 
+@@ -142,7 +152,7 @@
+ #define MPI2_VERSION_02_06		    (0x0206)
+ 
+ /*Unit and Dev versioning for this MPI header set */
+-#define MPI2_HEADER_VERSION_UNIT            (0x2A)
++#define MPI2_HEADER_VERSION_UNIT            (0x30)
+ #define MPI2_HEADER_VERSION_DEV             (0x00)
+ #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
+ #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
+@@ -249,6 +259,12 @@ typedef volatile struct _MPI2_SYSTEM_INTERFACE_REGS {
+ #define MPI2_DIAG_BOOT_DEVICE_SELECT_DEFAULT    (0x00000000)
+ #define MPI2_DIAG_BOOT_DEVICE_SELECT_HCDW       (0x00000800)
+ 
++/* Defines for V7A/V7R HostDiagnostic Register */
++#define MPI26_DIAG_BOOT_DEVICE_SEL_64FLASH      (0x00000000)
++#define MPI26_DIAG_BOOT_DEVICE_SEL_64HCDW       (0x00000800)
++#define MPI26_DIAG_BOOT_DEVICE_SEL_32FLASH      (0x00001000)
++#define MPI26_DIAG_BOOT_DEVICE_SEL_32HCDW       (0x00001800)
++
+ #define MPI2_DIAG_CLEAR_FLASH_BAD_SIG           (0x00000400)
+ #define MPI2_DIAG_FORCE_HCB_ON_RESET            (0x00000200)
+ #define MPI2_DIAG_HCB_MODE                      (0x00000100)
+@@ -367,6 +383,7 @@ typedef struct _MPI2_DEFAULT_REQUEST_DESCRIPTOR {
+ #define MPI2_REQ_DESCRIPT_FLAGS_DEFAULT_TYPE            (0x08)
+ #define MPI2_REQ_DESCRIPT_FLAGS_RAID_ACCELERATOR        (0x0A)
+ #define MPI25_REQ_DESCRIPT_FLAGS_FAST_PATH_SCSI_IO      (0x0C)
++#define MPI26_REQ_DESCRIPT_FLAGS_PCIE_ENCAPSULATED      (0x10)
+ 
+ #define MPI2_REQ_DESCRIPT_FLAGS_IOC_FIFO_MARKER         (0x01)
+ 
+@@ -425,6 +442,13 @@ typedef MPI2_SCSI_IO_REQUEST_DESCRIPTOR
+ 	Mpi25FastPathSCSIIORequestDescriptor_t,
+ 	*pMpi25FastPathSCSIIORequestDescriptor_t;
+ 
++/*PCIe Encapsulated Request Descriptor */
++typedef MPI2_SCSI_IO_REQUEST_DESCRIPTOR
++	MPI26_PCIE_ENCAPSULATED_REQUEST_DESCRIPTOR,
++	*PTR_MPI26_PCIE_ENCAPSULATED_REQUEST_DESCRIPTOR,
++	Mpi26PCIeEncapsulatedRequestDescriptor_t,
++	*pMpi26PCIeEncapsulatedRequestDescriptor_t;
++
+ /*union of Request Descriptors */
+ typedef union _MPI2_REQUEST_DESCRIPTOR_UNION {
+ 	MPI2_DEFAULT_REQUEST_DESCRIPTOR Default;
+@@ -433,6 +457,7 @@ typedef union _MPI2_REQUEST_DESCRIPTOR_UNION {
+ 	MPI2_SCSI_TARGET_REQUEST_DESCRIPTOR SCSITarget;
+ 	MPI2_RAID_ACCEL_REQUEST_DESCRIPTOR RAIDAccelerator;
+ 	MPI25_FP_SCSI_IO_REQUEST_DESCRIPTOR FastPathSCSIIO;
++	MPI26_PCIE_ENCAPSULATED_REQUEST_DESCRIPTOR PCIeEncapsulated;
+ 	U64 Words;
+ } MPI2_REQUEST_DESCRIPTOR_UNION,
+ 	*PTR_MPI2_REQUEST_DESCRIPTOR_UNION,
+@@ -450,6 +475,7 @@ typedef union _MPI2_REQUEST_DESCRIPTOR_UNION {
+  *      Atomic SCSI Target Request Descriptor
+  *      Atomic RAID Accelerator Request Descriptor
+  *      Atomic Fast Path SCSI IO Request Descriptor
++ *      Atomic PCIe Encapsulated Request Descriptor
+  */
+ 
+ /*Atomic Request Descriptor */
+@@ -487,6 +513,7 @@ typedef struct _MPI2_DEFAULT_REPLY_DESCRIPTOR {
+ #define MPI2_RPY_DESCRIPT_FLAGS_TARGET_COMMAND_BUFFER       (0x03)
+ #define MPI2_RPY_DESCRIPT_FLAGS_RAID_ACCELERATOR_SUCCESS    (0x05)
+ #define MPI25_RPY_DESCRIPT_FLAGS_FAST_PATH_SCSI_IO_SUCCESS  (0x06)
++#define MPI26_RPY_DESCRIPT_FLAGS_PCIE_ENCAPSULATED_SUCCESS  (0x08)
+ #define MPI2_RPY_DESCRIPT_FLAGS_UNUSED                      (0x0F)
+ 
+ /*values for marking a reply descriptor as unused */
+@@ -565,6 +592,13 @@ typedef MPI2_SCSI_IO_SUCCESS_REPLY_DESCRIPTOR
+ 	Mpi25FastPathSCSIIOSuccessReplyDescriptor_t,
+ 	*pMpi25FastPathSCSIIOSuccessReplyDescriptor_t;
+ 
++/*PCIe Encapsulated Success Reply Descriptor */
++typedef MPI2_RAID_ACCELERATOR_SUCCESS_REPLY_DESCRIPTOR
++	MPI26_PCIE_ENCAPSULATED_SUCCESS_REPLY_DESCRIPTOR,
++	*PTR_MPI26_PCIE_ENCAPSULATED_SUCCESS_REPLY_DESCRIPTOR,
++	Mpi26PCIeEncapsulatedSuccessReplyDescriptor_t,
++	*pMpi26PCIeEncapsulatedSuccessReplyDescriptor_t;
++
+ /*union of Reply Descriptors */
+ typedef union _MPI2_REPLY_DESCRIPTORS_UNION {
+ 	MPI2_DEFAULT_REPLY_DESCRIPTOR Default;
+@@ -574,6 +608,8 @@ typedef union _MPI2_REPLY_DESCRIPTORS_UNION {
+ 	MPI2_TARGET_COMMAND_BUFFER_REPLY_DESCRIPTOR TargetCommandBuffer;
+ 	MPI2_RAID_ACCELERATOR_SUCCESS_REPLY_DESCRIPTOR RAIDAcceleratorSuccess;
+ 	MPI25_FP_SCSI_IO_SUCCESS_REPLY_DESCRIPTOR FastPathSCSIIOSuccess;
++	MPI26_PCIE_ENCAPSULATED_SUCCESS_REPLY_DESCRIPTOR
++						PCIeEncapsulatedSuccess;
+ 	U64 Words;
+ } MPI2_REPLY_DESCRIPTORS_UNION,
+ 	*PTR_MPI2_REPLY_DESCRIPTORS_UNION,
+@@ -616,6 +652,7 @@ typedef union _MPI2_REPLY_DESCRIPTORS_UNION {
+ #define MPI2_FUNCTION_HOST_BASED_DISCOVERY_ACTION   (0x2F)
+ #define MPI2_FUNCTION_PWR_MGMT_CONTROL              (0x30)
+ #define MPI2_FUNCTION_SEND_HOST_MESSAGE             (0x31)
++#define MPI2_FUNCTION_NVME_ENCAPSULATED             (0x33)
+ #define MPI2_FUNCTION_MIN_PRODUCT_SPECIFIC          (0xF0)
+ #define MPI2_FUNCTION_MAX_PRODUCT_SPECIFIC          (0xFF)
+ 
+@@ -1162,6 +1199,8 @@ typedef union _MPI25_SGE_IO_UNION {
+ 
+ #define MPI26_IEEE_SGE_FLAGS_NSF_MASK           (0x1C)
+ #define MPI26_IEEE_SGE_FLAGS_NSF_MPI_IEEE       (0x00)
++#define MPI26_IEEE_SGE_FLAGS_NSF_NVME_PRP       (0x08)
++#define MPI26_IEEE_SGE_FLAGS_NSF_NVME_SGL       (0x10)
+ 
+ /*Data Location Address Space */
+ 
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+index fa61baf..0666e71 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+@@ -6,7 +6,7 @@
+  *         Title:  MPI Configuration messages and pages
+  * Creation Date:  November 10, 2006
+  *
+- *   mpi2_cnfg.h Version:  02.00.35
++ *   mpi2_cnfg.h Version:  02.00.40
+  *
+  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
+  *       prefix are for use only on MPI v2.5 products, and must not be used
+@@ -189,6 +189,35 @@
+  *                     MPI2_CONFIG_PAGE_BIOS_1.
+  * 08-25-15  02.00.34  Bumped Header Version.
+  * 12-18-15  02.00.35  Added SATADeviceWaitTime to SAS IO Unit Page 4.
++ * 01-21-16  02.00.36  Added/modified MPI2_MFGPAGE_DEVID_SAS defines.
++ *                     Added Link field to PCIe Link Pages
++ *                     Added EnclosureLevel and ConnectorName to PCIe
++ *                     Device Page 0.
++ *                     Added define for PCIE IoUnit page 1 max rate shift.
++ *                     Added comment for reserved ExtPageTypes.
++ *                     Added SAS 4 22.5 gbs speed support.
++ *                     Added PCIe 4 16.0 GT/sec speec support.
++ *                     Removed AHCI support.
++ *                     Removed SOP support.
++ *                     Added NegotiatedLinkRate and NegotiatedPortWidth to
++ *                     PCIe device page 0.
++ * 04-10-16  02.00.37  Fixed MPI2_MFGPAGE_DEVID_SAS3616/3708 defines
++ * 07-01-16  02.00.38  Added Manufacturing page 7 Connector types.
++ *                     Changed declaration of ConnectorName in PCIe DevicePage0
++ *                     to match SAS DevicePage 0.
++ *                     Added SATADeviceWaitTime to IO Unit Page 11.
++ *                     Added MPI26_MFGPAGE_DEVID_SAS4008
++ *                     Added x16 PCIe width to IO Unit Page 7
++ *                     Added LINKFLAGS to control SRIS in PCIe IO Unit page 1
++ *                     phy data.
++ *                     Added InitStatus to PCIe IO Unit Page 1 header.
++ * 09-01-16  02.00.39  Added MPI26_CONFIG_PAGE_ENCLOSURE_0 and related defines.
++ *                     Added MPI26_ENCLOS_PGAD_FORM_GET_NEXT_HANDLE and
++ *                     MPI26_ENCLOS_PGAD_FORM_HANDLE page address formats.
++ * 02-02-17  02.00.40  Added MPI2_MANPAGE7_SLOT_UNKNOWN.
++ *                     Added ChassisSlot field to SAS Enclosure Page 0.
++ *                     Added ChassisSlot Valid bit (bit 5) to the Flags field
++ *                     in SAS Enclosure Page 0.
+  * --------------------------------------------------------------------------
+  */
+ 
+@@ -272,6 +301,10 @@ typedef union _MPI2_CONFIG_EXT_PAGE_HEADER_UNION {
+ #define MPI2_CONFIG_EXTPAGETYPE_SAS_PORT            (0x18)
+ #define MPI2_CONFIG_EXTPAGETYPE_ETHERNET            (0x19)
+ #define MPI2_CONFIG_EXTPAGETYPE_EXT_MANUFACTURING   (0x1A)
++#define MPI2_CONFIG_EXTPAGETYPE_PCIE_IO_UNIT        (0x1B)
++#define MPI2_CONFIG_EXTPAGETYPE_PCIE_SWITCH         (0x1C)
++#define MPI2_CONFIG_EXTPAGETYPE_PCIE_DEVICE         (0x1D)
++#define MPI2_CONFIG_EXTPAGETYPE_PCIE_LINK           (0x1E)
  
  
-@@ -508,6 +511,89 @@ static inline void sas_device_put(struct _sas_device *s)
- 	kref_put(&s->refcount, sas_device_free);
- }
+ /*****************************************************************************
+@@ -339,6 +372,12 @@ typedef union _MPI2_CONFIG_EXT_PAGE_HEADER_UNION {
  
+ #define MPI2_SAS_ENCLOS_PGAD_HANDLE_MASK            (0x0000FFFF)
+ 
++/*Enclosure PageAddress format */
++#define MPI26_ENCLOS_PGAD_FORM_MASK                 (0xF0000000)
++#define MPI26_ENCLOS_PGAD_FORM_GET_NEXT_HANDLE      (0x00000000)
++#define MPI26_ENCLOS_PGAD_FORM_HANDLE               (0x10000000)
++
++#define MPI26_ENCLOS_PGAD_HANDLE_MASK               (0x0000FFFF)
+ 
+ /*RAID Configuration PageAddress format */
+ #define MPI2_RAID_PGAD_FORM_MASK                    (0xF0000000)
+@@ -365,6 +404,33 @@ typedef union _MPI2_CONFIG_EXT_PAGE_HEADER_UNION {
+ #define MPI2_ETHERNET_PGAD_IF_NUMBER_MASK           (0x000000FF)
+ 
+ 
++/*PCIe Switch PageAddress format */
++#define MPI26_PCIE_SWITCH_PGAD_FORM_MASK            (0xF0000000)
++#define MPI26_PCIE_SWITCH_PGAD_FORM_GET_NEXT_HNDL   (0x00000000)
++#define MPI26_PCIE_SWITCH_PGAD_FORM_HNDL_PORTNUM    (0x10000000)
++#define MPI26_PCIE_SWITCH_EXPAND_PGAD_FORM_HNDL     (0x20000000)
++
++#define MPI26_PCIE_SWITCH_PGAD_HANDLE_MASK          (0x0000FFFF)
++#define MPI26_PCIE_SWITCH_PGAD_PORTNUM_MASK         (0x00FF0000)
++#define MPI26_PCIE_SWITCH_PGAD_PORTNUM_SHIFT        (16)
++
++
++/*PCIe Device PageAddress format */
++#define MPI26_PCIE_DEVICE_PGAD_FORM_MASK            (0xF0000000)
++#define MPI26_PCIE_DEVICE_PGAD_FORM_GET_NEXT_HANDLE (0x00000000)
++#define MPI26_PCIE_DEVICE_PGAD_FORM_HANDLE          (0x20000000)
++
++#define MPI26_PCIE_DEVICE_PGAD_HANDLE_MASK          (0x0000FFFF)
++
++/*PCIe Link PageAddress format */
++#define MPI26_PCIE_LINK_PGAD_FORM_MASK            (0xF0000000)
++#define MPI26_PCIE_LINK_PGAD_FORM_GET_NEXT_LINK   (0x00000000)
++#define MPI26_PCIE_LINK_PGAD_FORM_LINK_NUM        (0x10000000)
++
++#define MPI26_PCIE_DEVICE_PGAD_LINKNUM_MASK       (0x000000FF)
++
++
++
+ /****************************************************************************
+ *  Configuration messages
+ ****************************************************************************/
+@@ -484,6 +550,12 @@ typedef struct _MPI2_CONFIG_REPLY {
+ #define MPI26_MFGPAGE_DEVID_SAS3508                 (0x00AD)
+ #define MPI26_MFGPAGE_DEVID_SAS3508_1               (0x00AE)
+ #define MPI26_MFGPAGE_DEVID_SAS3408                 (0x00AF)
++#define MPI26_MFGPAGE_DEVID_SAS3716                 (0x00D0)
++#define MPI26_MFGPAGE_DEVID_SAS3616                 (0x00D1)
++#define MPI26_MFGPAGE_DEVID_SAS3708                 (0x00D2)
++
++#define MPI26_MFGPAGE_DEVID_SAS4008                 (0x00A1)
++
+ 
+ /*Manufacturing Page 0 */
+ 
+@@ -726,6 +798,12 @@ typedef struct _MPI2_MANPAGE7_CONNECTOR_INFO {
+ #define MPI2_MANPAGE7_PINOUT_SFF_8644_8X                (0x0B)
+ #define MPI2_MANPAGE7_PINOUT_SFF_8644_16X               (0x0C)
+ #define MPI2_MANPAGE7_PINOUT_SFF_8436                   (0x0D)
++#define MPI2_MANPAGE7_PINOUT_SFF_8088_A                 (0x0E)
++#define MPI2_MANPAGE7_PINOUT_SFF_8643_16i               (0x0F)
++#define MPI2_MANPAGE7_PINOUT_SFF_8654_4i                (0x10)
++#define MPI2_MANPAGE7_PINOUT_SFF_8654_8i                (0x11)
++#define MPI2_MANPAGE7_PINOUT_SFF_8611_4i                (0x12)
++#define MPI2_MANPAGE7_PINOUT_SFF_8611_8i                (0x13)
+ 
+ /*defines for the Location field */
+ #define MPI2_MANPAGE7_LOCATION_UNKNOWN                  (0x01)
+@@ -736,6 +814,9 @@ typedef struct _MPI2_MANPAGE7_CONNECTOR_INFO {
+ #define MPI2_MANPAGE7_LOCATION_NOT_PRESENT              (0x20)
+ #define MPI2_MANPAGE7_LOCATION_NOT_CONNECTED            (0x80)
+ 
++/*defines for the Slot field */
++#define MPI2_MANPAGE7_SLOT_UNKNOWN                      (0xFFFF)
++
+ /*
+  *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
+  *one and check the value returned for NumPhys at runtime.
+@@ -999,11 +1080,13 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_7 {
+ #define MPI2_IOUNITPAGE7_PCIE_WIDTH_X2              (0x02)
+ #define MPI2_IOUNITPAGE7_PCIE_WIDTH_X4              (0x04)
+ #define MPI2_IOUNITPAGE7_PCIE_WIDTH_X8              (0x08)
++#define MPI2_IOUNITPAGE7_PCIE_WIDTH_X16             (0x10)
+ 
+ /*defines for IO Unit Page 7 PCIeSpeed field */
+ #define MPI2_IOUNITPAGE7_PCIE_SPEED_2_5_GBPS        (0x00)
+ #define MPI2_IOUNITPAGE7_PCIE_SPEED_5_0_GBPS        (0x01)
+ #define MPI2_IOUNITPAGE7_PCIE_SPEED_8_0_GBPS        (0x02)
++#define MPI2_IOUNITPAGE7_PCIE_SPEED_16_0_GBPS       (0x03)
+ 
+ /*defines for IO Unit Page 7 ProcessorState field */
+ #define MPI2_IOUNITPAGE7_PSTATE_MASK_SECOND         (0x0000000F)
+@@ -1970,6 +2053,7 @@ typedef struct _MPI2_CONFIG_PAGE_RD_PDISK_1 {
+ #define MPI2_SAS_NEG_LINK_RATE_3_0                      (0x09)
+ #define MPI2_SAS_NEG_LINK_RATE_6_0                      (0x0A)
+ #define MPI25_SAS_NEG_LINK_RATE_12_0                    (0x0B)
++#define MPI26_SAS_NEG_LINK_RATE_22_5                    (0x0C)
+ 
+ 
+ /*values for AttachedPhyInfo fields */
+@@ -2037,12 +2121,14 @@ typedef struct _MPI2_CONFIG_PAGE_RD_PDISK_1 {
+ #define MPI2_SAS_PRATE_MAX_RATE_3_0                     (0x90)
+ #define MPI2_SAS_PRATE_MAX_RATE_6_0                     (0xA0)
+ #define MPI25_SAS_PRATE_MAX_RATE_12_0                   (0xB0)
++#define MPI26_SAS_PRATE_MAX_RATE_22_5                   (0xC0)
+ #define MPI2_SAS_PRATE_MIN_RATE_MASK                    (0x0F)
+ #define MPI2_SAS_PRATE_MIN_RATE_NOT_PROGRAMMABLE        (0x00)
+ #define MPI2_SAS_PRATE_MIN_RATE_1_5                     (0x08)
+ #define MPI2_SAS_PRATE_MIN_RATE_3_0                     (0x09)
+ #define MPI2_SAS_PRATE_MIN_RATE_6_0                     (0x0A)
+ #define MPI25_SAS_PRATE_MIN_RATE_12_0                   (0x0B)
++#define MPI26_SAS_PRATE_MIN_RATE_22_5                   (0x0C)
+ 
+ 
+ /*values for SAS HwLinkRate fields */
+@@ -2051,11 +2137,13 @@ typedef struct _MPI2_CONFIG_PAGE_RD_PDISK_1 {
+ #define MPI2_SAS_HWRATE_MAX_RATE_3_0                    (0x90)
+ #define MPI2_SAS_HWRATE_MAX_RATE_6_0                    (0xA0)
+ #define MPI25_SAS_HWRATE_MAX_RATE_12_0                  (0xB0)
++#define MPI26_SAS_HWRATE_MAX_RATE_22_5                  (0xC0)
+ #define MPI2_SAS_HWRATE_MIN_RATE_MASK                   (0x0F)
+ #define MPI2_SAS_HWRATE_MIN_RATE_1_5                    (0x08)
+ #define MPI2_SAS_HWRATE_MIN_RATE_3_0                    (0x09)
+ #define MPI2_SAS_HWRATE_MIN_RATE_6_0                    (0x0A)
+ #define MPI25_SAS_HWRATE_MIN_RATE_12_0                  (0x0B)
++#define MPI26_SAS_HWRATE_MIN_RATE_22_5                  (0x0C)
+ 
+ 
+ 
+@@ -2240,11 +2328,13 @@ typedef struct _MPI2_CONFIG_PAGE_SASIOUNIT_1 {
+ #define MPI2_SASIOUNIT1_MAX_RATE_3_0                                (0x90)
+ #define MPI2_SASIOUNIT1_MAX_RATE_6_0                                (0xA0)
+ #define MPI25_SASIOUNIT1_MAX_RATE_12_0                              (0xB0)
++#define MPI26_SASIOUNIT1_MAX_RATE_22_5                              (0xC0)
+ #define MPI2_SASIOUNIT1_MIN_RATE_MASK                               (0x0F)
+ #define MPI2_SASIOUNIT1_MIN_RATE_1_5                                (0x08)
+ #define MPI2_SASIOUNIT1_MIN_RATE_3_0                                (0x09)
+ #define MPI2_SASIOUNIT1_MIN_RATE_6_0                                (0x0A)
+ #define MPI25_SASIOUNIT1_MIN_RATE_12_0                              (0x0B)
++#define MPI26_SASIOUNIT1_MIN_RATE_22_5                              (0x0C)
+ 
+ /*see mpi2_sas.h for values for
+  *SAS IO Unit Page 1 ControllerPhyDeviceInfo values */
+@@ -3158,37 +3248,29 @@ typedef struct _MPI2_CONFIG_PAGE_SAS_PORT_0 {
+ /*SAS Enclosure Page 0 */
+ 
+ typedef struct _MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0 {
+-	MPI2_CONFIG_EXTENDED_PAGE_HEADER
+-		Header;                     /*0x00 */
+-	U32
+-		Reserved1;                  /*0x08 */
+-	U64
+-		EnclosureLogicalID;         /*0x0C */
+-	U16
+-		Flags;                      /*0x14 */
+-	U16
+-		EnclosureHandle;            /*0x16 */
+-	U16
+-		NumSlots;                   /*0x18 */
+-	U16
+-		StartSlot;                  /*0x1A */
+-	U8
+-		Reserved2;                  /*0x1C */
+-	U8
+-		EnclosureLevel;		    /*0x1D */
+-	U16
+-		SEPDevHandle;               /*0x1E */
+-	U32
+-		Reserved3;                  /*0x20 */
+-	U32
+-		Reserved4;                  /*0x24 */
++	MPI2_CONFIG_EXTENDED_PAGE_HEADER	Header;	/*0x00 */
++	U32	Reserved1;			/*0x08 */
++	U64	EnclosureLogicalID;		/*0x0C */
++	U16	Flags;				/*0x14 */
++	U16	EnclosureHandle;		/*0x16 */
++	U16	NumSlots;			/*0x18 */
++	U16	StartSlot;			/*0x1A */
++	U8	ChassisSlot;			/*0x1C */
++	U8	EnclosureLeve;			/*0x1D */
++	U16	SEPDevHandle;			/*0x1E */
++	U32	Reserved3;			/*0x20 */
++	U32	Reserved4;			/*0x24 */
+ } MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0,
+ 	*PTR_MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0,
+-	Mpi2SasEnclosurePage0_t, *pMpi2SasEnclosurePage0_t;
++	Mpi2SasEnclosurePage0_t, *pMpi2SasEnclosurePage0_t,
++	MPI26_CONFIG_PAGE_ENCLOSURE_0,
++	*PTR_MPI26_CONFIG_PAGE_ENCLOSURE_0,
++	Mpi26EnclosurePage0_t, *pMpi26EnclosurePage0_t;
+ 
+ #define MPI2_SASENCLOSURE0_PAGEVERSION      (0x04)
+ 
+ /*values for SAS Enclosure Page 0 Flags field */
++#define MPI2_SAS_ENCLS0_FLAGS_CHASSIS_SLOT_VALID    (0x0020)
+ #define MPI2_SAS_ENCLS0_FLAGS_ENCL_LEVEL_VALID      (0x0010)
+ #define MPI2_SAS_ENCLS0_FLAGS_MNG_MASK              (0x000F)
+ #define MPI2_SAS_ENCLS0_FLAGS_MNG_UNKNOWN           (0x0000)
+@@ -3198,6 +3280,18 @@ typedef struct _MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0 {
+ #define MPI2_SAS_ENCLS0_FLAGS_MNG_SES_ENCLOSURE     (0x0004)
+ #define MPI2_SAS_ENCLS0_FLAGS_MNG_IOC_GPIO          (0x0005)
+ 
++#define MPI26_ENCLOSURE0_PAGEVERSION        (0x04)
++
++/*Values for Enclosure Page 0 Flags field */
++#define MPI26_ENCLS0_FLAGS_CHASSIS_SLOT_VALID       (0x0020)
++#define MPI26_ENCLS0_FLAGS_ENCL_LEVEL_VALID         (0x0010)
++#define MPI26_ENCLS0_FLAGS_MNG_MASK                 (0x000F)
++#define MPI26_ENCLS0_FLAGS_MNG_UNKNOWN              (0x0000)
++#define MPI26_ENCLS0_FLAGS_MNG_IOC_SES              (0x0001)
++#define MPI26_ENCLS0_FLAGS_MNG_IOC_SGPIO            (0x0002)
++#define MPI26_ENCLS0_FLAGS_MNG_EXP_SGPIO            (0x0003)
++#define MPI26_ENCLS0_FLAGS_MNG_SES_ENCLOSURE        (0x0004)
++#define MPI26_ENCLS0_FLAGS_MNG_IOC_GPIO             (0x0005)
+ 
+ /****************************************************************************
+ *  Log Config Page
+@@ -3497,4 +3591,422 @@ typedef struct _MPI2_CONFIG_PAGE_EXT_MAN_PS {
+ 
+ /*PageVersion should be provided by product-specific code */
+ 
++
++
++/****************************************************************************
++*  values for fields used by several types of PCIe Config Pages
++****************************************************************************/
++
++/*values for NegotiatedLinkRates fields */
++#define MPI26_PCIE_NEG_LINK_RATE_MASK_PHYSICAL          (0x0F)
++/*link rates used for Negotiated Physical Link Rate */
++#define MPI26_PCIE_NEG_LINK_RATE_UNKNOWN                (0x00)
++#define MPI26_PCIE_NEG_LINK_RATE_PHY_DISABLED           (0x01)
++#define MPI26_PCIE_NEG_LINK_RATE_2_5                    (0x02)
++#define MPI26_PCIE_NEG_LINK_RATE_5_0                    (0x03)
++#define MPI26_PCIE_NEG_LINK_RATE_8_0                    (0x04)
++#define MPI26_PCIE_NEG_LINK_RATE_16_0                   (0x05)
++
++
++/****************************************************************************
++*  PCIe IO Unit Config Pages (MPI v2.6 and later)
++****************************************************************************/
++
++/*PCIe IO Unit Page 0 */
++
++typedef struct _MPI26_PCIE_IO_UNIT0_PHY_DATA {
++	U8	Link;                   /*0x00 */
++	U8	LinkFlags;              /*0x01 */
++	U8	PhyFlags;               /*0x02 */
++	U8	NegotiatedLinkRate;     /*0x03 */
++	U32	ControllerPhyDeviceInfo;/*0x04 */
++	U16	AttachedDevHandle;      /*0x08 */
++	U16	ControllerDevHandle;    /*0x0A */
++	U32	EnumerationStatus;      /*0x0C */
++	U32	Reserved1;              /*0x10 */
++} MPI26_PCIE_IO_UNIT0_PHY_DATA,
++	*PTR_MPI26_PCIE_IO_UNIT0_PHY_DATA,
++	Mpi26PCIeIOUnit0PhyData_t, *pMpi26PCIeIOUnit0PhyData_t;
++
 +/*
-+ * struct _pcie_device - attached PCIe device information
-+ * @list: pcie device list
-+ * @starget: starget object
-+ * @wwid: device WWID
-+ * @handle: device handle
-+ * @device_info: bitfield provides detailed info about the device
-+ * @id: target id
-+ * @channel: target channel
-+ * @slot: slot number
-+ * @port_num: port number
-+ * @responding: used in _scsih_pcie_device_mark_responding
-+ * @fast_path: fast path feature enable bit
-+ * @nvme_mdts: MaximumDataTransferSize from PCIe Device Page 2 for
-+ *		NVMe device only
-+ * @enclosure_handle: enclosure handle
-+ * @enclosure_logical_id: enclosure logical identifier
-+ * @enclosure_level: The level of device's enclosure from the controller
-+ * @connector_name: ASCII value of the Connector's name
-+ * @serial_number: pointer of serial number string allocated runtime
-+ * @refcount: reference count for deletion
++ *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
++ *one and check the value returned for NumPhys at runtime.
 + */
-+struct _pcie_device {
-+	struct list_head list;
-+	struct scsi_target *starget;
-+	u64	wwid;
-+	u16	handle;
-+	u32	device_info;
-+	int	id;
-+	int	channel;
-+	u16	slot;
-+	u8	port_num;
-+	u8	responding;
-+	u8	fast_path;
-+	u32	nvme_mdts;
-+	u16	enclosure_handle;
-+	u64	enclosure_logical_id;
-+	u8	enclosure_level;
-+	u8	connector_name[4];
-+	u8	*serial_number;
-+	struct kref refcount;
-+};
-+/**
-+ * pcie_device_get - Increment the pcie device reference count
-+ *
-+ * @p: pcie_device object
-+ *
-+ * When ever this function called it will increment the
-+ * reference count of the pcie device for which this function called.
-+ *
++#ifndef MPI26_PCIE_IOUNIT0_PHY_MAX
++#define MPI26_PCIE_IOUNIT0_PHY_MAX      (1)
++#endif
++
++typedef struct _MPI26_CONFIG_PAGE_PIOUNIT_0 {
++	MPI2_CONFIG_EXTENDED_PAGE_HEADER	Header; /*0x00 */
++	U32	Reserved1;                              /*0x08 */
++	U8	NumPhys;                                /*0x0C */
++	U8	InitStatus;                             /*0x0D */
++	U16	Reserved3;                              /*0x0E */
++	MPI26_PCIE_IO_UNIT0_PHY_DATA
++		PhyData[MPI26_PCIE_IOUNIT0_PHY_MAX];    /*0x10 */
++} MPI26_CONFIG_PAGE_PIOUNIT_0,
++	*PTR_MPI26_CONFIG_PAGE_PIOUNIT_0,
++	Mpi26PCIeIOUnitPage0_t, *pMpi26PCIeIOUnitPage0_t;
++
++#define MPI26_PCIEIOUNITPAGE0_PAGEVERSION                   (0x00)
++
++/*values for PCIe IO Unit Page 0 LinkFlags */
++#define MPI26_PCIEIOUNIT0_LINKFLAGS_ENUMERATION_IN_PROGRESS (0x08)
++
++/*values for PCIe IO Unit Page 0 PhyFlags */
++#define MPI26_PCIEIOUNIT0_PHYFLAGS_PHY_DISABLED             (0x08)
++
++/*use MPI26_PCIE_NEG_LINK_RATE_ defines for the NegotiatedLinkRate field */
++
++/*see mpi2_pci.h for values for PCIe IO Unit Page 0 ControllerPhyDeviceInfo
++ *values
 + */
-+static inline void pcie_device_get(struct _pcie_device *p)
-+{
-+	kref_get(&p->refcount);
-+}
 +
-+/**
-+ * pcie_device_free - Release the pcie device object
-+ * @r - kref object
-+ *
-+ * Free's the pcie device object. It will be called when reference count
-+ * reaches to zero.
++/*values for PCIe IO Unit Page 0 EnumerationStatus */
++#define MPI26_PCIEIOUNIT0_ES_MAX_SWITCHES_EXCEEDED          (0x40000000)
++#define MPI26_PCIEIOUNIT0_ES_MAX_DEVICES_EXCEEDED           (0x20000000)
++
++
++/*PCIe IO Unit Page 1 */
++
++typedef struct _MPI26_PCIE_IO_UNIT1_PHY_DATA {
++	U8	Link;                       /*0x00 */
++	U8	LinkFlags;                  /*0x01 */
++	U8	PhyFlags;                   /*0x02 */
++	U8	MaxMinLinkRate;             /*0x03 */
++	U32	ControllerPhyDeviceInfo;    /*0x04 */
++	U32	Reserved1;                  /*0x08 */
++} MPI26_PCIE_IO_UNIT1_PHY_DATA,
++	*PTR_MPI26_PCIE_IO_UNIT1_PHY_DATA,
++	Mpi26PCIeIOUnit1PhyData_t, *pMpi26PCIeIOUnit1PhyData_t;
++
++/*values for LinkFlags */
++#define MPI26_PCIEIOUNIT1_LINKFLAGS_DIS_SRIS    (0x00)
++#define MPI26_PCIEIOUNIT1_LINKFLAGS_EN_SRIS     (0x01)
++
++/*
++ *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
++ *one and check the value returned for NumPhys at runtime.
 + */
-+static inline void pcie_device_free(struct kref *r)
-+{
-+	kfree(container_of(r, struct _pcie_device, refcount));
-+}
++#ifndef MPI26_PCIE_IOUNIT1_PHY_MAX
++#define MPI26_PCIE_IOUNIT1_PHY_MAX      (1)
++#endif
 +
-+/**
-+ * pcie_device_put - Decrement the pcie device reference count
-+ *
-+ * @p: pcie_device object
-+ *
-+ * When ever this function called it will decrement the
-+ * reference count of the pcie device for which this function called.
-+ *
-+ * When refernce count reaches to Zero, this will call pcie_device_free to the
-+ * pcie_device object.
++typedef struct _MPI26_CONFIG_PAGE_PIOUNIT_1 {
++	MPI2_CONFIG_EXTENDED_PAGE_HEADER	Header;	/*0x00 */
++	U16	ControlFlags;                       /*0x08 */
++	U16	Reserved;                           /*0x0A */
++	U16	AdditionalControlFlags;             /*0x0C */
++	U16	NVMeMaxQueueDepth;                  /*0x0E */
++	U8	NumPhys;                            /*0x10 */
++	U8	Reserved1;                          /*0x11 */
++	U16	Reserved2;                          /*0x12 */
++	MPI26_PCIE_IO_UNIT1_PHY_DATA
++		PhyData[MPI26_PCIE_IOUNIT1_PHY_MAX];/*0x14 */
++} MPI26_CONFIG_PAGE_PIOUNIT_1,
++	*PTR_MPI26_CONFIG_PAGE_PIOUNIT_1,
++	Mpi26PCIeIOUnitPage1_t, *pMpi26PCIeIOUnitPage1_t;
++
++#define MPI26_PCIEIOUNITPAGE1_PAGEVERSION   (0x00)
++
++/*values for PCIe IO Unit Page 1 PhyFlags */
++#define MPI26_PCIEIOUNIT1_PHYFLAGS_PHY_DISABLE                      (0x08)
++#define MPI26_PCIEIOUNIT1_PHYFLAGS_ENDPOINT_ONLY                    (0x01)
++
++/*values for PCIe IO Unit Page 1 MaxMinLinkRate */
++#define MPI26_PCIEIOUNIT1_MAX_RATE_MASK                             (0xF0)
++#define MPI26_PCIEIOUNIT1_MAX_RATE_SHIFT                            (4)
++#define MPI26_PCIEIOUNIT1_MAX_RATE_2_5                              (0x20)
++#define MPI26_PCIEIOUNIT1_MAX_RATE_5_0                              (0x30)
++#define MPI26_PCIEIOUNIT1_MAX_RATE_8_0                              (0x40)
++#define MPI26_PCIEIOUNIT1_MAX_RATE_16_0                             (0x50)
++
++/*see mpi2_pci.h for values for PCIe IO Unit Page 0 ControllerPhyDeviceInfo
++ *values
 + */
-+static inline void pcie_device_put(struct _pcie_device *p)
-+{
-+	kref_put(&p->refcount, pcie_device_free);
-+}
- /**
-  * struct _raid_device - raid volume link list
-  * @list: sas device list
-@@ -556,12 +642,13 @@ struct _raid_device {
- 
- /**
-  * struct _boot_device - boot device info
-- * @is_raid: flag to indicate whether this is volume
-- * @device: holds pointer for either struct _sas_device or
-- *     struct _raid_device
-+ *
-+ * @channel: sas, raid, or pcie channel
-+ * @device: holds pointer for struct _sas_device, struct _raid_device or
-+ *     struct _pcie_device
-  */
- struct _boot_device {
--	u8 is_raid;
-+	int channel;
- 	void *device;
- };
- 
-@@ -825,6 +912,8 @@ typedef void (*MPT3SAS_FLUSH_RUNNING_CMDS)(struct MPT3SAS_ADAPTER *ioc);
-  * @bars: bitmask of BAR's that must be configured
-  * @mask_interrupts: ignore interrupt
-  * @dma_mask: used to set the consistent dma mask
-+ * @pci_access_mutex: Mutex to synchronize ioctl,sysfs show path and
-+ *			pci resource handling
-  * @fault_reset_work_q_name: fw fault work queue
-  * @fault_reset_work_q: ""
-  * @fault_reset_work: ""
-@@ -888,9 +977,13 @@ typedef void (*MPT3SAS_FLUSH_RUNNING_CMDS)(struct MPT3SAS_ADAPTER *ioc);
-  * @sas_device_list: sas device object list
-  * @sas_device_init_list: sas device object list (used only at init time)
-  * @sas_device_lock:
-+ * @pcie_device_list: pcie device object list
-+ * @pcie_device_init_list: pcie device object list (used only at init time)
-+ * @pcie_device_lock:
-  * @io_missing_delay: time for IO completed by fw when PDR enabled
-  * @device_missing_delay: time for device missing by fw when PDR enabled
-  * @sas_id : used for setting volume target IDs
-+ * @pcie_target_id: used for setting pcie target IDs
-  * @blocking_handles: bitmask used to identify which devices need blocking
-  * @pd_handles : bitmask for PD handles
-  * @pd_handles_sz : size of pd_handle bitmask
-@@ -1086,11 +1179,16 @@ struct MPT3SAS_ADAPTER {
- 	struct list_head sas_device_list;
- 	struct list_head sas_device_init_list;
- 	spinlock_t	sas_device_lock;
-+	struct list_head pcie_device_list;
-+	struct list_head pcie_device_init_list;
-+	spinlock_t      pcie_device_lock;
 +
- 	struct list_head raid_device_list;
- 	spinlock_t	raid_device_lock;
- 	u8		io_missing_delay;
- 	u16		device_missing_delay;
- 	int		sas_id;
-+	int		pcie_target_id;
- 
- 	void		*blocking_handles;
- 	void		*pd_handles;
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 22998cb..4b6b0fa 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -60,6 +60,9 @@
- #include "mpt3sas_base.h"
- 
- #define RAID_CHANNEL 1
 +
-+#define PCIE_CHANNEL 2
++/****************************************************************************
++*  PCIe Switch Config Pages (MPI v2.6 and later)
++****************************************************************************/
 +
- /* forward proto's */
- static void _scsih_expander_node_remove(struct MPT3SAS_ADAPTER *ioc,
- 	struct _sas_node *sas_expander);
-@@ -439,21 +442,22 @@ _scsih_get_sas_address(struct MPT3SAS_ADAPTER *ioc, u16 handle,
- /**
-  * _scsih_determine_boot_device - determine boot device.
-  * @ioc: per adapter object
-- * @device: either sas_device or raid_device object
-- * @is_raid: [flag] 1 = raid object, 0 = sas object
-+ * @device: sas_device or pcie_device object
-+ * @channel: SAS or PCIe channel
++/*PCIe Switch Page 0 */
++
++typedef struct _MPI26_CONFIG_PAGE_PSWITCH_0 {
++	MPI2_CONFIG_EXTENDED_PAGE_HEADER	Header;	/*0x00 */
++	U8	PhysicalPort;               /*0x08 */
++	U8	Reserved1;                  /*0x09 */
++	U16	Reserved2;                  /*0x0A */
++	U16	DevHandle;                  /*0x0C */
++	U16	ParentDevHandle;            /*0x0E */
++	U8	NumPorts;                   /*0x10 */
++	U8	PCIeLevel;                  /*0x11 */
++	U16	Reserved3;                  /*0x12 */
++	U32	Reserved4;                  /*0x14 */
++	U32	Reserved5;                  /*0x18 */
++	U32	Reserved6;                  /*0x1C */
++} MPI26_CONFIG_PAGE_PSWITCH_0, *PTR_MPI26_CONFIG_PAGE_PSWITCH_0,
++	Mpi26PCIeSwitchPage0_t, *pMpi26PCIeSwitchPage0_t;
++
++#define MPI26_PCIESWITCH0_PAGEVERSION       (0x00)
++
++
++/*PCIe Switch Page 1 */
++
++typedef struct _MPI26_CONFIG_PAGE_PSWITCH_1 {
++	MPI2_CONFIG_EXTENDED_PAGE_HEADER	Header;	/*0x00 */
++	U8	PhysicalPort;               /*0x08 */
++	U8	Reserved1;                  /*0x09 */
++	U16	Reserved2;                  /*0x0A */
++	U8	NumPorts;                   /*0x0C */
++	U8	PortNum;                    /*0x0D */
++	U16	AttachedDevHandle;          /*0x0E */
++	U16	SwitchDevHandle;            /*0x10 */
++	U8	NegotiatedPortWidth;        /*0x12 */
++	U8	NegotiatedLinkRate;         /*0x13 */
++	U32	Reserved4;                  /*0x14 */
++	U32	Reserved5;                  /*0x18 */
++} MPI26_CONFIG_PAGE_PSWITCH_1, *PTR_MPI26_CONFIG_PAGE_PSWITCH_1,
++	Mpi26PCIeSwitchPage1_t, *pMpi26PCIeSwitchPage1_t;
++
++#define MPI26_PCIESWITCH1_PAGEVERSION       (0x00)
++
++/*use MPI26_PCIE_NEG_LINK_RATE_ defines for the NegotiatedLinkRate field */
++
++
++/****************************************************************************
++*  PCIe Device Config Pages (MPI v2.6 and later)
++****************************************************************************/
++
++/*PCIe Device Page 0 */
++
++typedef struct _MPI26_CONFIG_PAGE_PCIEDEV_0 {
++	MPI2_CONFIG_EXTENDED_PAGE_HEADER	Header;	/*0x00 */
++	U16	Slot;                   /*0x08 */
++	U16	EnclosureHandle;        /*0x0A */
++	U64	WWID;                   /*0x0C */
++	U16	ParentDevHandle;        /*0x14 */
++	U8	PortNum;                /*0x16 */
++	U8	AccessStatus;           /*0x17 */
++	U16	DevHandle;              /*0x18 */
++	U8	PhysicalPort;           /*0x1A */
++	U8	Reserved1;              /*0x1B */
++	U32	DeviceInfo;             /*0x1C */
++	U32	Flags;                  /*0x20 */
++	U8	SupportedLinkRates;     /*0x24 */
++	U8	MaxPortWidth;           /*0x25 */
++	U8	NegotiatedPortWidth;    /*0x26 */
++	U8	NegotiatedLinkRate;     /*0x27 */
++	U8	EnclosureLevel;         /*0x28 */
++	U8	Reserved2;              /*0x29 */
++	U16	Reserved3;              /*0x2A */
++	U8	ConnectorName[4];       /*0x2C */
++	U32	Reserved4;              /*0x30 */
++	U32	Reserved5;              /*0x34 */
++} MPI26_CONFIG_PAGE_PCIEDEV_0, *PTR_MPI26_CONFIG_PAGE_PCIEDEV_0,
++	Mpi26PCIeDevicePage0_t, *pMpi26PCIeDevicePage0_t;
++
++#define MPI26_PCIEDEVICE0_PAGEVERSION       (0x01)
++
++/*values for PCIe Device Page 0 AccessStatus field */
++#define MPI26_PCIEDEV0_ASTATUS_NO_ERRORS                    (0x00)
++#define MPI26_PCIEDEV0_ASTATUS_NEEDS_INITIALIZATION         (0x04)
++#define MPI26_PCIEDEV0_ASTATUS_CAPABILITY_FAILED            (0x02)
++#define MPI26_PCIEDEV0_ASTATUS_DEVICE_BLOCKED               (0x07)
++#define MPI26_PCIEDEV0_ASTATUS_MEMORY_SPACE_ACCESS_FAILED   (0x08)
++#define MPI26_PCIEDEV0_ASTATUS_UNSUPPORTED_DEVICE           (0x09)
++#define MPI26_PCIEDEV0_ASTATUS_MSIX_REQUIRED                (0x0A)
++#define MPI26_PCIEDEV0_ASTATUS_UNKNOWN                      (0x10)
++
++#define MPI26_PCIEDEV0_ASTATUS_NVME_READY_TIMEOUT           (0x30)
++#define MPI26_PCIEDEV0_ASTATUS_NVME_DEVCFG_UNSUPPORTED      (0x31)
++#define MPI26_PCIEDEV0_ASTATUS_NVME_IDENTIFY_FAILED         (0x32)
++#define MPI26_PCIEDEV0_ASTATUS_NVME_QCONFIG_FAILED          (0x33)
++#define MPI26_PCIEDEV0_ASTATUS_NVME_QCREATION_FAILED        (0x34)
++#define MPI26_PCIEDEV0_ASTATUS_NVME_EVENTCFG_FAILED         (0x35)
++#define MPI26_PCIEDEV0_ASTATUS_NVME_GET_FEATURE_STAT_FAILED (0x36)
++#define MPI26_PCIEDEV0_ASTATUS_NVME_IDLE_TIMEOUT            (0x37)
++#define MPI26_PCIEDEV0_ASTATUS_NVME_FAILURE_STATUS          (0x38)
++
++#define MPI26_PCIEDEV0_ASTATUS_INIT_FAIL_MAX                (0x3F)
++
++/*see mpi2_pci.h for the MPI26_PCIE_DEVINFO_ defines used for the DeviceInfo
++ *field
++ */
++
++/*values for PCIe Device Page 0 Flags field */
++#define MPI26_PCIEDEV0_FLAGS_UNAUTHORIZED_DEVICE            (0x8000)
++#define MPI26_PCIEDEV0_FLAGS_ENABLED_FAST_PATH              (0x4000)
++#define MPI26_PCIEDEV0_FLAGS_FAST_PATH_CAPABLE              (0x2000)
++#define MPI26_PCIEDEV0_FLAGS_ASYNCHRONOUS_NOTIFICATION      (0x0400)
++#define MPI26_PCIEDEV0_FLAGS_ATA_SW_PRESERVATION            (0x0200)
++#define MPI26_PCIEDEV0_FLAGS_UNSUPPORTED_DEVICE             (0x0100)
++#define MPI26_PCIEDEV0_FLAGS_ATA_48BIT_LBA_SUPPORTED        (0x0080)
++#define MPI26_PCIEDEV0_FLAGS_ATA_SMART_SUPPORTED            (0x0040)
++#define MPI26_PCIEDEV0_FLAGS_ATA_NCQ_SUPPORTED              (0x0020)
++#define MPI26_PCIEDEV0_FLAGS_ATA_FUA_SUPPORTED              (0x0010)
++#define MPI26_PCIEDEV0_FLAGS_ENCL_LEVEL_VALID               (0x0002)
++#define MPI26_PCIEDEV0_FLAGS_DEVICE_PRESENT                 (0x0001)
++
++/* values for PCIe Device Page 0 SupportedLinkRates field */
++#define MPI26_PCIEDEV0_LINK_RATE_16_0_SUPPORTED             (0x08)
++#define MPI26_PCIEDEV0_LINK_RATE_8_0_SUPPORTED              (0x04)
++#define MPI26_PCIEDEV0_LINK_RATE_5_0_SUPPORTED              (0x02)
++#define MPI26_PCIEDEV0_LINK_RATE_2_5_SUPPORTED              (0x01)
++
++/*use MPI26_PCIE_NEG_LINK_RATE_ defines for the NegotiatedLinkRate field */
++
++
++/*PCIe Device Page 2 */
++
++typedef struct _MPI26_CONFIG_PAGE_PCIEDEV_2 {
++	MPI2_CONFIG_EXTENDED_PAGE_HEADER	Header;	/*0x00 */
++	U16	DevHandle;		/*0x08 */
++	U16	Reserved1;		/*0x0A */
++	U32	MaximumDataTransferSize;/*0x0C */
++	U32	Capabilities;		/*0x10 */
++	U32	Reserved2;		/*0x14 */
++} MPI26_CONFIG_PAGE_PCIEDEV_2, *PTR_MPI26_CONFIG_PAGE_PCIEDEV_2,
++	Mpi26PCIeDevicePage2_t, *pMpi26PCIeDevicePage2_t;
++
++#define MPI26_PCIEDEVICE2_PAGEVERSION       (0x00)
++
++/*defines for PCIe Device Page 2 Capabilities field */
++#define MPI26_PCIEDEV2_CAP_SGL_FORMAT                  (0x00000004)
++#define MPI26_PCIEDEV2_CAP_BIT_BUCKET_SUPPORT          (0x00000002)
++#define MPI26_PCIEDEV2_CAP_SGL_SUPPORT                 (0x00000001)
++
++
++/****************************************************************************
++*  PCIe Link Config Pages (MPI v2.6 and later)
++****************************************************************************/
++
++/*PCIe Link Page 1 */
++
++typedef struct _MPI26_CONFIG_PAGE_PCIELINK_1 {
++	MPI2_CONFIG_EXTENDED_PAGE_HEADER	Header;	/*0x00 */
++	U8	Link;				/*0x08 */
++	U8	Reserved1;			/*0x09 */
++	U16	Reserved2;			/*0x0A */
++	U32	CorrectableErrorCount;		/*0x0C */
++	U16	NonFatalErrorCount;		/*0x10 */
++	U16	Reserved3;			/*0x12 */
++	U16	FatalErrorCount;		/*0x14 */
++	U16	Reserved4;			/*0x16 */
++} MPI26_CONFIG_PAGE_PCIELINK_1, *PTR_MPI26_CONFIG_PAGE_PCIELINK_1,
++	Mpi26PcieLinkPage1_t, *pMpi26PcieLinkPage1_t;
++
++#define MPI26_PCIELINK1_PAGEVERSION            (0x00)
++
++/*PCIe Link Page 2 */
++
++typedef struct _MPI26_PCIELINK2_LINK_EVENT {
++	U8	LinkEventCode;		/*0x00 */
++	U8	Reserved1;		/*0x01 */
++	U16	Reserved2;		/*0x02 */
++	U32	LinkEventInfo;		/*0x04 */
++} MPI26_PCIELINK2_LINK_EVENT, *PTR_MPI26_PCIELINK2_LINK_EVENT,
++	Mpi26PcieLink2LinkEvent_t, *pMpi26PcieLink2LinkEvent_t;
++
++/*use MPI26_PCIELINK3_EVTCODE_ for the LinkEventCode field */
++
++
++/*
++ *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
++ *one and check the value returned for NumLinkEvents at runtime.
++ */
++#ifndef MPI26_PCIELINK2_LINK_EVENT_MAX
++#define MPI26_PCIELINK2_LINK_EVENT_MAX      (1)
++#endif
++
++typedef struct _MPI26_CONFIG_PAGE_PCIELINK_2 {
++	MPI2_CONFIG_EXTENDED_PAGE_HEADER	Header;	/*0x00 */
++	U8	Link;                       /*0x08 */
++	U8	Reserved1;                  /*0x09 */
++	U16	Reserved2;                  /*0x0A */
++	U8	NumLinkEvents;              /*0x0C */
++	U8	Reserved3;                  /*0x0D */
++	U16	Reserved4;                  /*0x0E */
++	MPI26_PCIELINK2_LINK_EVENT
++		LinkEvent[MPI26_PCIELINK2_LINK_EVENT_MAX];	/*0x10 */
++} MPI26_CONFIG_PAGE_PCIELINK_2, *PTR_MPI26_CONFIG_PAGE_PCIELINK_2,
++	Mpi26PcieLinkPage2_t, *pMpi26PcieLinkPage2_t;
++
++#define MPI26_PCIELINK2_PAGEVERSION            (0x00)
++
++/*PCIe Link Page 3 */
++
++typedef struct _MPI26_PCIELINK3_LINK_EVENT_CONFIG {
++	U8	LinkEventCode;      /*0x00 */
++	U8	Reserved1;          /*0x01 */
++	U16	Reserved2;          /*0x02 */
++	U8	CounterType;        /*0x04 */
++	U8	ThresholdWindow;    /*0x05 */
++	U8	TimeUnits;          /*0x06 */
++	U8	Reserved3;          /*0x07 */
++	U32	EventThreshold;     /*0x08 */
++	U16	ThresholdFlags;     /*0x0C */
++	U16	Reserved4;          /*0x0E */
++} MPI26_PCIELINK3_LINK_EVENT_CONFIG, *PTR_MPI26_PCIELINK3_LINK_EVENT_CONFIG,
++	Mpi26PcieLink3LinkEventConfig_t, *pMpi26PcieLink3LinkEventConfig_t;
++
++/*values for LinkEventCode field */
++#define MPI26_PCIELINK3_EVTCODE_NO_EVENT                              (0x00)
++#define MPI26_PCIELINK3_EVTCODE_CORRECTABLE_ERROR_RECEIVED            (0x01)
++#define MPI26_PCIELINK3_EVTCODE_NON_FATAL_ERROR_RECEIVED              (0x02)
++#define MPI26_PCIELINK3_EVTCODE_FATAL_ERROR_RECEIVED                  (0x03)
++#define MPI26_PCIELINK3_EVTCODE_DATA_LINK_ERROR_DETECTED              (0x04)
++#define MPI26_PCIELINK3_EVTCODE_TRANSACTION_LAYER_ERROR_DETECTED      (0x05)
++#define MPI26_PCIELINK3_EVTCODE_TLP_ECRC_ERROR_DETECTED               (0x06)
++#define MPI26_PCIELINK3_EVTCODE_POISONED_TLP                          (0x07)
++#define MPI26_PCIELINK3_EVTCODE_RECEIVED_NAK_DLLP                     (0x08)
++#define MPI26_PCIELINK3_EVTCODE_SENT_NAK_DLLP                         (0x09)
++#define MPI26_PCIELINK3_EVTCODE_LTSSM_RECOVERY_STATE                  (0x0A)
++#define MPI26_PCIELINK3_EVTCODE_LTSSM_RXL0S_STATE                     (0x0B)
++#define MPI26_PCIELINK3_EVTCODE_LTSSM_TXL0S_STATE                     (0x0C)
++#define MPI26_PCIELINK3_EVTCODE_LTSSM_L1_STATE                        (0x0D)
++#define MPI26_PCIELINK3_EVTCODE_LTSSM_DISABLED_STATE                  (0x0E)
++#define MPI26_PCIELINK3_EVTCODE_LTSSM_HOT_RESET_STATE                 (0x0F)
++#define MPI26_PCIELINK3_EVTCODE_SYSTEM_ERROR                          (0x10)
++#define MPI26_PCIELINK3_EVTCODE_DECODE_ERROR                          (0x11)
++#define MPI26_PCIELINK3_EVTCODE_DISPARITY_ERROR                       (0x12)
++
++/*values for the CounterType field */
++#define MPI26_PCIELINK3_COUNTER_TYPE_WRAPPING               (0x00)
++#define MPI26_PCIELINK3_COUNTER_TYPE_SATURATING             (0x01)
++#define MPI26_PCIELINK3_COUNTER_TYPE_PEAK_VALUE             (0x02)
++
++/*values for the TimeUnits field */
++#define MPI26_PCIELINK3_TM_UNITS_10_MICROSECONDS            (0x00)
++#define MPI26_PCIELINK3_TM_UNITS_100_MICROSECONDS           (0x01)
++#define MPI26_PCIELINK3_TM_UNITS_1_MILLISECOND              (0x02)
++#define MPI26_PCIELINK3_TM_UNITS_10_MILLISECONDS            (0x03)
++
++/*values for the ThresholdFlags field */
++#define MPI26_PCIELINK3_TFLAGS_EVENT_NOTIFY                 (0x0001)
++
++/*
++ *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
++ *one and check the value returned for NumLinkEvents at runtime.
++ */
++#ifndef MPI26_PCIELINK3_LINK_EVENT_MAX
++#define MPI26_PCIELINK3_LINK_EVENT_MAX      (1)
++#endif
++
++typedef struct _MPI26_CONFIG_PAGE_PCIELINK_3 {
++	MPI2_CONFIG_EXTENDED_PAGE_HEADER	Header;	/*0x00 */
++	U8	Link;                       /*0x08 */
++	U8	Reserved1;                  /*0x09 */
++	U16	Reserved2;                  /*0x0A */
++	U8	NumLinkEvents;              /*0x0C */
++	U8	Reserved3;                  /*0x0D */
++	U16	Reserved4;                  /*0x0E */
++	MPI26_PCIELINK3_LINK_EVENT_CONFIG
++		LinkEventConfig[MPI26_PCIELINK3_LINK_EVENT_MAX]; /*0x10 */
++} MPI26_CONFIG_PAGE_PCIELINK_3, *PTR_MPI26_CONFIG_PAGE_PCIELINK_3,
++	Mpi26PcieLinkPage3_t, *pMpi26PcieLinkPage3_t;
++
++#define MPI26_PCIELINK3_PAGEVERSION            (0x00)
++
++
+ #endif
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_init.h b/drivers/scsi/mpt3sas/mpi/mpi2_init.h
+index bba56b6..7597c24 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_init.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_init.h
+@@ -6,7 +6,7 @@
+  *         Title:  MPI SCSI initiator mode messages and structures
+  * Creation Date:  June 23, 2006
   *
-  * Determines whether this device should be first reported device to
-  * to scsi-ml or sas transport, this purpose is for persistent boot device.
-  * There are primary, alternate, and current entries in bios page 2. The order
-  * priority is primary, alternate, then current.  This routine saves
-- * the corresponding device object and is_raid flag in the ioc object.
-+ * the corresponding device object.
-  * The saved data to be used later in _scsih_probe_boot_devices().
-  */
- static void
--_scsih_determine_boot_device(struct MPT3SAS_ADAPTER *ioc,
--	void *device, u8 is_raid)
-+_scsih_determine_boot_device(struct MPT3SAS_ADAPTER *ioc, void *device,
-+	u32 channel)
- {
- 	struct _sas_device *sas_device;
-+	struct _pcie_device *pcie_device;
- 	struct _raid_device *raid_device;
- 	u64 sas_address;
- 	u64 device_name;
-@@ -468,18 +472,24 @@ _scsih_determine_boot_device(struct MPT3SAS_ADAPTER *ioc,
- 	if (!ioc->bios_pg3.BiosVersion)
- 		return;
- 
--	if (!is_raid) {
--		sas_device = device;
--		sas_address = sas_device->sas_address;
--		device_name = sas_device->device_name;
--		enclosure_logical_id = sas_device->enclosure_logical_id;
--		slot = sas_device->slot;
--	} else {
-+	if (channel == RAID_CHANNEL) {
- 		raid_device = device;
- 		sas_address = raid_device->wwid;
- 		device_name = 0;
- 		enclosure_logical_id = 0;
- 		slot = 0;
-+	} else if (channel == PCIE_CHANNEL) {
-+		pcie_device = device;
-+		sas_address = pcie_device->wwid;
-+		device_name = 0;
-+		enclosure_logical_id = 0;
-+		slot = 0;
-+	} else {
-+		sas_device = device;
-+		sas_address = sas_device->sas_address;
-+		device_name = sas_device->device_name;
-+		enclosure_logical_id = sas_device->enclosure_logical_id;
-+		slot = sas_device->slot;
- 	}
- 
- 	if (!ioc->req_boot_device.device) {
-@@ -493,7 +503,7 @@ _scsih_determine_boot_device(struct MPT3SAS_ADAPTER *ioc,
- 			    ioc->name, __func__,
- 			    (unsigned long long)sas_address));
- 			ioc->req_boot_device.device = device;
--			ioc->req_boot_device.is_raid = is_raid;
-+			ioc->req_boot_device.channel = channel;
- 		}
- 	}
- 
-@@ -508,7 +518,7 @@ _scsih_determine_boot_device(struct MPT3SAS_ADAPTER *ioc,
- 			    ioc->name, __func__,
- 			    (unsigned long long)sas_address));
- 			ioc->req_alt_boot_device.device = device;
--			ioc->req_alt_boot_device.is_raid = is_raid;
-+			ioc->req_alt_boot_device.channel = channel;
- 		}
- 	}
- 
-@@ -523,7 +533,7 @@ _scsih_determine_boot_device(struct MPT3SAS_ADAPTER *ioc,
- 			    ioc->name, __func__,
- 			    (unsigned long long)sas_address));
- 			ioc->current_boot_device.device = device;
--			ioc->current_boot_device.is_raid = is_raid;
-+			ioc->current_boot_device.channel = channel;
- 		}
- 	}
- }
-@@ -536,7 +546,7 @@ __mpt3sas_get_sdev_from_target(struct MPT3SAS_ADAPTER *ioc,
- 
- 	assert_spin_locked(&ioc->sas_device_lock);
- 
--	ret = tgt_priv->sdev;
-+	ret = tgt_priv->sas_dev;
- 	if (ret)
- 		sas_device_get(ret);
- 
-@@ -557,6 +567,44 @@ mpt3sas_get_sdev_from_target(struct MPT3SAS_ADAPTER *ioc,
- 	return ret;
- }
- 
-+static struct _pcie_device *
-+__mpt3sas_get_pdev_from_target(struct MPT3SAS_ADAPTER *ioc,
-+	struct MPT3SAS_TARGET *tgt_priv)
-+{
-+	struct _pcie_device *ret;
-+
-+	assert_spin_locked(&ioc->pcie_device_lock);
-+
-+	ret = tgt_priv->pcie_dev;
-+	if (ret)
-+		pcie_device_get(ret);
-+
-+	return ret;
-+}
-+
-+/**
-+ * mpt3sas_get_pdev_from_target - pcie device search
-+ * @ioc: per adapter object
-+ * @tgt_priv: starget private object
-+ *
-+ * Context: This function will acquire ioc->pcie_device_lock and will release
-+ * before returning the pcie_device object.
-+ *
-+ * This searches for pcie_device from target, then return pcie_device object.
-+ */
-+struct _pcie_device *
-+mpt3sas_get_pdev_from_target(struct MPT3SAS_ADAPTER *ioc,
-+	struct MPT3SAS_TARGET *tgt_priv)
-+{
-+	struct _pcie_device *ret;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+	ret = __mpt3sas_get_pdev_from_target(ioc, tgt_priv);
-+	spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-+
-+	return ret;
-+}
- 
- struct _sas_device *
- __mpt3sas_get_sdev_by_addr(struct MPT3SAS_ADAPTER *ioc,
-@@ -851,6 +899,146 @@ _scsih_sas_device_init_add(struct MPT3SAS_ADAPTER *ioc,
- 	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
- }
- 
-+
-+struct _pcie_device *
-+__mpt3sas_get_pdev_by_wwid(struct MPT3SAS_ADAPTER *ioc, u64 wwid)
-+{
-+	struct _pcie_device *pcie_device;
-+
-+	assert_spin_locked(&ioc->pcie_device_lock);
-+
-+	list_for_each_entry(pcie_device, &ioc->pcie_device_list, list)
-+		if (pcie_device->wwid == wwid)
-+			goto found_device;
-+
-+	list_for_each_entry(pcie_device, &ioc->pcie_device_init_list, list)
-+		if (pcie_device->wwid == wwid)
-+			goto found_device;
-+
-+	return NULL;
-+
-+found_device:
-+	pcie_device_get(pcie_device);
-+	return pcie_device;
-+}
-+
-+
-+/**
-+ * mpt3sas_get_pdev_by_wwid - pcie device search
-+ * @ioc: per adapter object
-+ * @wwid: wwid
-+ *
-+ * Context: This function will acquire ioc->pcie_device_lock and will release
-+ * before returning the pcie_device object.
-+ *
-+ * This searches for pcie_device based on wwid, then return pcie_device object.
-+ */
-+struct _pcie_device *
-+mpt3sas_get_pdev_by_wwid(struct MPT3SAS_ADAPTER *ioc, u64 wwid)
-+{
-+	struct _pcie_device *pcie_device;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+	pcie_device = __mpt3sas_get_pdev_by_wwid(ioc, wwid);
-+	spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-+
-+	return pcie_device;
-+}
-+
-+
-+struct _pcie_device *
-+__mpt3sas_get_pdev_by_idchannel(struct MPT3SAS_ADAPTER *ioc, int id,
-+	int channel)
-+{
-+	struct _pcie_device *pcie_device;
-+
-+	assert_spin_locked(&ioc->pcie_device_lock);
-+
-+	list_for_each_entry(pcie_device, &ioc->pcie_device_list, list)
-+		if (pcie_device->id == id && pcie_device->channel == channel)
-+			goto found_device;
-+
-+	list_for_each_entry(pcie_device, &ioc->pcie_device_init_list, list)
-+		if (pcie_device->id == id && pcie_device->channel == channel)
-+			goto found_device;
-+
-+	return NULL;
-+
-+found_device:
-+	pcie_device_get(pcie_device);
-+	return pcie_device;
-+}
-+
-+
-+/**
-+ * mpt3sas_get_pdev_by_idchannel - pcie device search
-+ * @ioc: per adapter object
-+ * @id: Target ID
-+ * @channel: Channel ID
-+ *
-+ * Context: This function will acquire ioc->pcie_device_lock and will release
-+ * before returning the pcie_device object.
-+ *
-+ * This searches for pcie_device based on id and channel, then return
-+ * pcie_device object.
-+ */
-+struct _pcie_device *
-+mpt3sas_get_pdev_by_idchannel(struct MPT3SAS_ADAPTER *ioc, int id, int channel)
-+{
-+	struct _pcie_device *pcie_device;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+	pcie_device = __mpt3sas_get_pdev_by_idchannel(ioc, id, channel);
-+	spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-+
-+	return pcie_device;
-+}
-+/**
-+ * _scsih_pcie_device_remove - remove pcie_device from list.
-+ * @ioc: per adapter object
-+ * @pcie_device: the pcie_device object
-+ * Context: This function will acquire ioc->pcie_device_lock.
-+ *
-+ * If pcie_device is on the list, remove it and decrement its reference count.
-+ */
-+static void
-+_scsih_pcie_device_remove(struct MPT3SAS_ADAPTER *ioc,
-+	struct _pcie_device *pcie_device)
-+{
-+	unsigned long flags;
-+	int was_on_pcie_device_list = 0;
-+
-+	if (!pcie_device)
-+		return;
-+	pr_info(MPT3SAS_FMT
-+		"removing handle(0x%04x), wwid(0x%016llx)\n",
-+		ioc->name, pcie_device->handle,
-+		(unsigned long long) pcie_device->wwid);
-+	if (pcie_device->enclosure_handle != 0)
-+		pr_info(MPT3SAS_FMT
-+			"removing enclosure logical id(0x%016llx), slot(%d)\n",
-+			ioc->name,
-+			(unsigned long long)pcie_device->enclosure_logical_id,
-+		pcie_device->slot);
-+	if (pcie_device->connector_name[0] != '\0')
-+		pr_info(MPT3SAS_FMT
-+			"removing enclosure level(0x%04x), connector name( %s)\n",
-+			ioc->name, pcie_device->enclosure_level,
-+			pcie_device->connector_name);
-+
-+	spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+	if (!list_empty(&pcie_device->list)) {
-+		list_del_init(&pcie_device->list);
-+		was_on_pcie_device_list = 1;
-+	}
-+	spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-+	if (was_on_pcie_device_list) {
-+		kfree(pcie_device->serial_number);
-+		pcie_device_put(pcie_device);
-+	}
-+}
- /**
-  * _scsih_raid_device_find_by_id - raid device search
-  * @ioc: per adapter object
-@@ -1278,6 +1466,7 @@ scsih_target_alloc(struct scsi_target *starget)
- 	struct MPT3SAS_TARGET *sas_target_priv_data;
- 	struct _sas_device *sas_device;
- 	struct _raid_device *raid_device;
-+	struct _pcie_device *pcie_device;
- 	unsigned long flags;
- 	struct sas_rphy *rphy;
- 
-@@ -1307,6 +1496,28 @@ scsih_target_alloc(struct scsi_target *starget)
- 		return 0;
- 	}
- 
-+	/* PCIe devices */
-+	if (starget->channel == PCIE_CHANNEL) {
-+		spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+		pcie_device = __mpt3sas_get_pdev_by_idchannel(ioc, starget->id,
-+			starget->channel);
-+		if (pcie_device) {
-+			sas_target_priv_data->handle = pcie_device->handle;
-+			sas_target_priv_data->sas_address = pcie_device->wwid;
-+			sas_target_priv_data->pcie_dev = pcie_device;
-+			pcie_device->starget = starget;
-+			pcie_device->id = starget->id;
-+			pcie_device->channel = starget->channel;
-+			sas_target_priv_data->flags |=
-+				MPT_TARGET_FLAGS_PCIE_DEVICE;
-+			if (pcie_device->fast_path)
-+				sas_target_priv_data->flags |=
-+					MPT_TARGET_FASTPATH_IO;
-+		}
-+		spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-+		return 0;
-+	}
-+
- 	/* sas/sata devices */
- 	spin_lock_irqsave(&ioc->sas_device_lock, flags);
- 	rphy = dev_to_rphy(starget->dev.parent);
-@@ -1316,7 +1527,7 @@ scsih_target_alloc(struct scsi_target *starget)
- 	if (sas_device) {
- 		sas_target_priv_data->handle = sas_device->handle;
- 		sas_target_priv_data->sas_address = sas_device->sas_address;
--		sas_target_priv_data->sdev = sas_device;
-+		sas_target_priv_data->sas_dev = sas_device;
- 		sas_device->starget = starget;
- 		sas_device->id = starget->id;
- 		sas_device->channel = starget->channel;
-@@ -1324,7 +1535,8 @@ scsih_target_alloc(struct scsi_target *starget)
- 			sas_target_priv_data->flags |=
- 			    MPT_TARGET_FLAGS_RAID_COMPONENT;
- 		if (sas_device->fast_path)
--			sas_target_priv_data->flags |= MPT_TARGET_FASTPATH_IO;
-+			sas_target_priv_data->flags |=
-+					MPT_TARGET_FASTPATH_IO;
- 	}
- 	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
- 
-@@ -1345,7 +1557,9 @@ scsih_target_destroy(struct scsi_target *starget)
- 	struct MPT3SAS_TARGET *sas_target_priv_data;
- 	struct _sas_device *sas_device;
- 	struct _raid_device *raid_device;
-+	struct _pcie_device *pcie_device;
- 	unsigned long flags;
-+	struct sas_rphy *rphy;
- 
- 	sas_target_priv_data = starget->hostdata;
- 	if (!sas_target_priv_data)
-@@ -1363,7 +1577,29 @@ scsih_target_destroy(struct scsi_target *starget)
- 		goto out;
- 	}
- 
-+	if (starget->channel == PCIE_CHANNEL) {
-+		spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+		pcie_device = __mpt3sas_get_pdev_from_target(ioc,
-+							sas_target_priv_data);
-+		if (pcie_device && (pcie_device->starget == starget) &&
-+			(pcie_device->id == starget->id) &&
-+			(pcie_device->channel == starget->channel))
-+			pcie_device->starget = NULL;
-+
-+		if (pcie_device) {
-+			/*
-+			 * Corresponding get() is in _scsih_target_alloc()
-+			 */
-+			sas_target_priv_data->pcie_dev = NULL;
-+			pcie_device_put(pcie_device);
-+			pcie_device_put(pcie_device);
-+		}
-+		spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-+		goto out;
-+	}
-+
- 	spin_lock_irqsave(&ioc->sas_device_lock, flags);
-+	rphy = dev_to_rphy(starget->dev.parent);
- 	sas_device = __mpt3sas_get_sdev_from_target(ioc, sas_target_priv_data);
- 	if (sas_device && (sas_device->starget == starget) &&
- 	    (sas_device->id == starget->id) &&
-@@ -1374,7 +1610,7 @@ scsih_target_destroy(struct scsi_target *starget)
- 		/*
- 		 * Corresponding get() is in _scsih_target_alloc()
- 		 */
--		sas_target_priv_data->sdev = NULL;
-+		sas_target_priv_data->sas_dev = NULL;
- 		sas_device_put(sas_device);
- 
- 		sas_device_put(sas_device);
-@@ -1403,6 +1639,7 @@ scsih_slave_alloc(struct scsi_device *sdev)
- 	struct scsi_target *starget;
- 	struct _raid_device *raid_device;
- 	struct _sas_device *sas_device;
-+	struct _pcie_device *pcie_device;
- 	unsigned long flags;
- 
- 	sas_device_priv_data = kzalloc(sizeof(*sas_device_priv_data),
-@@ -1431,8 +1668,22 @@ scsih_slave_alloc(struct scsi_device *sdev)
- 			raid_device->sdev = sdev; /* raid is single lun */
- 		spin_unlock_irqrestore(&ioc->raid_device_lock, flags);
- 	}
-+	if (starget->channel == PCIE_CHANNEL) {
-+		spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+		pcie_device = __mpt3sas_get_pdev_by_wwid(ioc,
-+				sas_target_priv_data->sas_address);
-+		if (pcie_device && (pcie_device->starget == NULL)) {
-+			sdev_printk(KERN_INFO, sdev,
-+			    "%s : pcie_device->starget set to starget @ %d\n",
-+			    __func__, __LINE__);
-+			pcie_device->starget = starget;
-+		}
-+
-+		if (pcie_device)
-+			pcie_device_put(pcie_device);
-+		spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
- 
--	if (!(sas_target_priv_data->flags & MPT_TARGET_FLAGS_VOLUME)) {
-+	} else  if (!(sas_target_priv_data->flags & MPT_TARGET_FLAGS_VOLUME)) {
- 		spin_lock_irqsave(&ioc->sas_device_lock, flags);
- 		sas_device = __mpt3sas_get_sdev_by_addr(ioc,
- 					sas_target_priv_data->sas_address);
-@@ -1466,6 +1717,7 @@ scsih_slave_destroy(struct scsi_device *sdev)
- 	struct Scsi_Host *shost;
- 	struct MPT3SAS_ADAPTER *ioc;
- 	struct _sas_device *sas_device;
-+	struct _pcie_device *pcie_device;
- 	unsigned long flags;
- 
- 	if (!sdev->hostdata)
-@@ -1478,7 +1730,19 @@ scsih_slave_destroy(struct scsi_device *sdev)
- 	shost = dev_to_shost(&starget->dev);
- 	ioc = shost_priv(shost);
- 
--	if (!(sas_target_priv_data->flags & MPT_TARGET_FLAGS_VOLUME)) {
-+	if (sas_target_priv_data->flags & MPT_TARGET_FLAGS_PCIE_DEVICE) {
-+		spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+		pcie_device = __mpt3sas_get_pdev_from_target(ioc,
-+				sas_target_priv_data);
-+		if (pcie_device && !sas_target_priv_data->num_luns)
-+			pcie_device->starget = NULL;
-+
-+		if (pcie_device)
-+			pcie_device_put(pcie_device);
-+
-+		spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-+
-+	} else if (!(sas_target_priv_data->flags & MPT_TARGET_FLAGS_VOLUME)) {
- 		spin_lock_irqsave(&ioc->sas_device_lock, flags);
- 		sas_device = __mpt3sas_get_sdev_from_target(ioc,
- 				sas_target_priv_data);
-@@ -1581,6 +1845,7 @@ scsih_get_resync(struct device *dev)
- 
- 	percent_complete = 0;
- 	handle = 0;
-+
- 	if (ioc->is_warpdrive)
- 		goto out;
- 
-@@ -8330,42 +8595,52 @@ scsih_shutdown(struct pci_dev *pdev)
- static void
- _scsih_probe_boot_devices(struct MPT3SAS_ADAPTER *ioc)
- {
--	u8 is_raid;
-+	u32 channel;
- 	void *device;
- 	struct _sas_device *sas_device;
- 	struct _raid_device *raid_device;
-+	struct _pcie_device *pcie_device;
- 	u16 handle;
- 	u64 sas_address_parent;
- 	u64 sas_address;
- 	unsigned long flags;
- 	int rc;
-+	int tid;
- 
- 	 /* no Bios, return immediately */
- 	if (!ioc->bios_pg3.BiosVersion)
- 		return;
- 
- 	device = NULL;
--	is_raid = 0;
- 	if (ioc->req_boot_device.device) {
- 		device =  ioc->req_boot_device.device;
--		is_raid = ioc->req_boot_device.is_raid;
-+		channel = ioc->req_boot_device.channel;
- 	} else if (ioc->req_alt_boot_device.device) {
- 		device =  ioc->req_alt_boot_device.device;
--		is_raid = ioc->req_alt_boot_device.is_raid;
-+		channel = ioc->req_alt_boot_device.channel;
- 	} else if (ioc->current_boot_device.device) {
- 		device =  ioc->current_boot_device.device;
--		is_raid = ioc->current_boot_device.is_raid;
-+		channel = ioc->current_boot_device.channel;
- 	}
- 
- 	if (!device)
- 		return;
- 
--	if (is_raid) {
-+	if (channel == RAID_CHANNEL) {
- 		raid_device = device;
- 		rc = scsi_add_device(ioc->shost, RAID_CHANNEL,
- 		    raid_device->id, 0);
- 		if (rc)
- 			_scsih_raid_device_remove(ioc, raid_device);
-+	} else if (channel == PCIE_CHANNEL) {
-+		spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+		pcie_device = device;
-+		tid = pcie_device->id;
-+		list_move_tail(&pcie_device->list, &ioc->pcie_device_list);
-+		spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-+		rc = scsi_add_device(ioc->shost, PCIE_CHANNEL, tid, 0);
-+		if (rc)
-+			_scsih_pcie_device_remove(ioc, pcie_device);
- 	} else {
- 		spin_lock_irqsave(&ioc->sas_device_lock, flags);
- 		sas_device = device;
-@@ -8498,6 +8773,101 @@ _scsih_probe_sas(struct MPT3SAS_ADAPTER *ioc)
- }
- 
- /**
-+ * get_next_pcie_device - Get the next pcie device
-+ * @ioc: per adapter object
-+ *
-+ * Get the next pcie device from pcie_device_init_list list.
-+ *
-+ * Returns pcie device structure if pcie_device_init_list list is not empty
-+ * otherwise returns NULL
-+ */
-+static struct _pcie_device *get_next_pcie_device(struct MPT3SAS_ADAPTER *ioc)
-+{
-+	struct _pcie_device *pcie_device = NULL;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+	if (!list_empty(&ioc->pcie_device_init_list)) {
-+		pcie_device = list_first_entry(&ioc->pcie_device_init_list,
-+				struct _pcie_device, list);
-+		pcie_device_get(pcie_device);
-+	}
-+	spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-+
-+	return pcie_device;
-+}
-+
-+/**
-+ * pcie_device_make_active - Add pcie device to pcie_device_list list
-+ * @ioc: per adapter object
-+ * @pcie_device: pcie device object
-+ *
-+ * Add the pcie device which has registered with SCSI Transport Later to
-+ * pcie_device_list list
-+ */
-+static void pcie_device_make_active(struct MPT3SAS_ADAPTER *ioc,
-+		struct _pcie_device *pcie_device)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&ioc->pcie_device_lock, flags);
-+
-+	if (!list_empty(&pcie_device->list)) {
-+		list_del_init(&pcie_device->list);
-+		pcie_device_put(pcie_device);
-+	}
-+	pcie_device_get(pcie_device);
-+	list_add_tail(&pcie_device->list, &ioc->pcie_device_list);
-+
-+	spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-+}
-+
-+/**
-+ * _scsih_probe_pcie - reporting PCIe devices to scsi-ml
-+ * @ioc: per adapter object
-+ *
-+ * Called during initial loading of the driver.
-+ */
-+static void
-+_scsih_probe_pcie(struct MPT3SAS_ADAPTER *ioc)
-+{
-+	struct _pcie_device *pcie_device;
-+	int rc;
-+
-+	/* PCIe Device List */
-+	while ((pcie_device = get_next_pcie_device(ioc))) {
-+		if (pcie_device->starget) {
-+			pcie_device_put(pcie_device);
-+			continue;
-+		}
-+		rc = scsi_add_device(ioc->shost, PCIE_CHANNEL,
-+			pcie_device->id, 0);
-+		if (rc) {
-+			_scsih_pcie_device_remove(ioc, pcie_device);
-+			pcie_device_put(pcie_device);
-+			continue;
-+		} else if (!pcie_device->starget) {
-+			/* CQ 206770:
-+			 * When asyn scanning is enabled, its not possible to
-+			 * remove devices while scanning is turned on due to an
-+			 * oops in scsi_sysfs_add_sdev()->add_device()->
-+			 * sysfs_addrm_start()
-+			 */
-+			if (!ioc->is_driver_loading) {
-+			/* TODO-- Need to find out whether this condition will
-+			 * occur or not
-+			 */
-+				_scsih_pcie_device_remove(ioc, pcie_device);
-+				pcie_device_put(pcie_device);
-+				continue;
-+			}
-+		}
-+		pcie_device_make_active(ioc, pcie_device);
-+		pcie_device_put(pcie_device);
-+	}
-+}
-+
-+/**
-  * _scsih_probe_devices - probing for devices
-  * @ioc: per adapter object
+- * mpi2_init.h Version:  02.00.20
++ * mpi2_init.h Version:  02.00.21
   *
-@@ -8525,8 +8895,10 @@ _scsih_probe_devices(struct MPT3SAS_ADAPTER *ioc)
- 			_scsih_probe_sas(ioc);
- 			_scsih_probe_raid(ioc);
- 		}
--	} else
-+	} else {
- 		_scsih_probe_sas(ioc);
-+		_scsih_probe_pcie(ioc);
-+	}
- }
+  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
+  *       prefix are for use only on MPI v2.5 products, and must not be used
+@@ -54,6 +54,8 @@
+  * 08-26-15  02.00.18  Added SCSITASKMGMT_MSGFLAGS for Target Reset.
+  * 12-18-15  02.00.19  Added EEDPObservedValue added to SCSI IO Reply message.
+  * 01-04-16  02.00.20  Modified EEDP reported values in SCSI IO Reply message.
++ * 01-21-16  02.00.21  Modified MPI26_SCSITASKMGMT_MSGFLAGS_PCIE* defines to
++ *                     be unique within first 32 characters.
+  * --------------------------------------------------------------------------
+  */
  
- /**
-@@ -8867,11 +9239,14 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	spin_lock_init(&ioc->sas_node_lock);
- 	spin_lock_init(&ioc->fw_event_lock);
- 	spin_lock_init(&ioc->raid_device_lock);
-+	spin_lock_init(&ioc->pcie_device_lock);
- 	spin_lock_init(&ioc->diag_trigger_lock);
+@@ -373,6 +375,11 @@ typedef struct _MPI2_SCSI_IO_REPLY {
+ } MPI2_SCSI_IO_REPLY, *PTR_MPI2_SCSI_IO_REPLY,
+ 	Mpi2SCSIIOReply_t, *pMpi2SCSIIOReply_t;
  
- 	INIT_LIST_HEAD(&ioc->sas_device_list);
- 	INIT_LIST_HEAD(&ioc->sas_device_init_list);
- 	INIT_LIST_HEAD(&ioc->sas_expander_list);
-+	INIT_LIST_HEAD(&ioc->pcie_device_list);
-+	INIT_LIST_HEAD(&ioc->pcie_device_init_list);
- 	INIT_LIST_HEAD(&ioc->fw_event_list);
- 	INIT_LIST_HEAD(&ioc->raid_device_list);
- 	INIT_LIST_HEAD(&ioc->sas_hba.sas_port_list);
++/*SCSI IO Reply MsgFlags bits */
++#define MPI26_SCSIIO_REPLY_MSGFLAGS_REFTAG_OBSERVED_VALID     (0x01)
++#define MPI26_SCSIIO_REPLY_MSGFLAGS_GUARD_OBSERVED_VALID      (0x02)
++#define MPI26_SCSIIO_REPLY_MSGFLAGS_APPTAG_OBSERVED_VALID     (0x04)
++
+ /*SCSI IO Reply SCSIStatus values (SAM-4 status codes) */
+ 
+ #define MPI2_SCSI_STATUS_GOOD                   (0x00)
+@@ -446,11 +453,13 @@ typedef struct _MPI2_SCSI_TASK_MANAGE_REQUEST {
+ /*MsgFlags bits */
+ 
+ #define MPI2_SCSITASKMGMT_MSGFLAGS_MASK_TARGET_RESET    (0x18)
++#define MPI26_SCSITASKMGMT_MSGFLAGS_HOT_RESET_PCIE        (0x00)
+ #define MPI2_SCSITASKMGMT_MSGFLAGS_LINK_RESET           (0x00)
+ #define MPI2_SCSITASKMGMT_MSGFLAGS_NEXUS_RESET_SRST     (0x08)
+ #define MPI2_SCSITASKMGMT_MSGFLAGS_SAS_HARD_LINK_RESET  (0x10)
+ 
+ #define MPI2_SCSITASKMGMT_MSGFLAGS_DO_NOT_SEND_TASK_IU  (0x01)
++#define MPI26_SCSITASKMGMT_MSGFLAGS_PROTOCOL_LVL_RST_PCIE (0x18)
+ 
+ /*SCSI Task Management Reply Message */
+ typedef struct _MPI2_SCSI_TASK_MANAGE_REPLY {
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h b/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
+index af4be40..74d6827 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
+@@ -6,7 +6,7 @@
+  *         Title:  MPI IOC, Port, Event, FW Download, and FW Upload messages
+  * Creation Date:  October 11, 2006
+  *
+- * mpi2_ioc.h Version:  02.00.27
++ * mpi2_ioc.h Version:  02.00.32
+  *
+  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
+  *       prefix are for use only on MPI v2.5 products, and must not be used
+@@ -140,7 +140,32 @@
+  *                     Added MPI26_FW_HEADER_PID_FAMILY_3324_SAS and
+  *                     MPI26_FW_HEADER_PID_FAMILY_3516_SAS.
+  *                     Added MPI26_CTRL_OP_SHUTDOWN.
+- * 08-25-15  02.00.27  Added IC ARCH Class based signature defines
++ * 08-25-15  02.00.27  Added IC ARCH Class based signature defines.
++ *                     Added MPI26_EVENT_PCIE_ENUM_ES_RESOURCES_EXHAUSTED event.
++ *                     Added ConigurationFlags field to IOCInit message to
++ *                     support NVMe SGL format control.
++ *                     Added PCIe SRIOV support.
++ * 02-17-16   02.00.28 Added SAS 4 22.5 gbs speed support.
++ *                     Added PCIe 4 16.0 GT/sec speec support.
++ *                     Removed AHCI support.
++ *                     Removed SOP support.
++ * 07-01-16   02.00.29 Added Archclass for 4008 product.
++ *                     Added IOCException MPI2_IOCFACTS_EXCEPT_PCIE_DISABLED
++ * 08-23-16   02.00.30 Added new defines for the ImageType field of FWDownload
++ *                     Request Message.
++ *                     Added new defines for the ImageType field of FWUpload
++ *                     Request Message.
++ *                     Added new values for the RegionType field in the Layout
++ *                     Data sections of the FLASH Layout Extended Image Data.
++ *                     Added new defines for the ReasonCode field of
++ *                     Active Cable Exception Event.
++ *                     Added MPI2_EVENT_ENCL_DEVICE_STATUS_CHANGE and
++ *                     MPI26_EVENT_DATA_ENCL_DEV_STATUS_CHANGE.
++ * 11-23-16   02.00.31 Added MPI2_EVENT_SAS_DEVICE_DISCOVERY_ERROR and
++ *                     MPI25_EVENT_DATA_SAS_DEVICE_DISCOVERY_ERROR.
++ * 02-02-17   02.00.32 Added MPI2_FW_DOWNLOAD_ITYPE_CBB_BACKUP.
++ *                     Added MPI25_EVENT_DATA_ACTIVE_CABLE_EXCEPT and related
++ *                     defines for the ReasonCode field.
+  * --------------------------------------------------------------------------
+  */
+ 
+@@ -212,6 +237,9 @@ typedef struct _MPI2_IOC_INIT_REQUEST {
+ #define MPI2_IOCINIT_HDRVERSION_DEV_MASK        (0x00FF)
+ #define MPI2_IOCINIT_HDRVERSION_DEV_SHIFT       (0)
+ 
++/*ConfigurationFlags */
++#define MPI26_IOCINIT_CFGFLAGS_NVME_SGL_FORMAT  (0x0001)
++
+ /*minimum depth for a Reply Descriptor Post Queue */
+ #define MPI2_RDPQ_DEPTH_MIN                     (16)
+ 
+@@ -299,6 +327,10 @@ typedef struct _MPI2_IOC_FACTS_REPLY {
+ 	U16 MinDevHandle;	/*0x3C */
+ 	U8 CurrentHostPageSize;	/* 0x3E */
+ 	U8 Reserved4;		/* 0x3F */
++	U8 SGEModifierMask;	/*0x40 */
++	U8 SGEModifierValue;	/*0x41 */
++	U8 SGEModifierShift;	/*0x42 */
++	U8 Reserved5;		/*0x43 */
+ } MPI2_IOC_FACTS_REPLY, *PTR_MPI2_IOC_FACTS_REPLY,
+ 	Mpi2IOCFactsReply_t, *pMpi2IOCFactsReply_t;
+ 
+@@ -315,6 +347,7 @@ typedef struct _MPI2_IOC_FACTS_REPLY {
+ #define MPI2_IOCFACTS_HDRVERSION_DEV_SHIFT              (0)
+ 
+ /*IOCExceptions */
++#define MPI2_IOCFACTS_EXCEPT_PCIE_DISABLED              (0x0400)
+ #define MPI2_IOCFACTS_EXCEPT_PARTIAL_MEMORY_FAILURE     (0x0200)
+ #define MPI2_IOCFACTS_EXCEPT_IR_FOREIGN_CONFIG_MAX      (0x0100)
+ 
+@@ -335,6 +368,7 @@ typedef struct _MPI2_IOC_FACTS_REPLY {
+ /*ProductID field uses MPI2_FW_HEADER_PID_ */
+ 
+ /*IOCCapabilities */
++#define MPI26_IOCFACTS_CAPABILITY_PCIE_SRIOV            (0x00100000)
+ #define MPI26_IOCFACTS_CAPABILITY_ATOMIC_REQ            (0x00080000)
+ #define MPI2_IOCFACTS_CAPABILITY_RDPQ_ARRAY_CAPABLE     (0x00040000)
+ #define MPI25_IOCFACTS_CAPABILITY_FAST_PATH_CAPABLE     (0x00020000)
+@@ -353,6 +387,7 @@ typedef struct _MPI2_IOC_FACTS_REPLY {
+ #define MPI2_IOCFACTS_CAPABILITY_TASK_SET_FULL_HANDLING (0x00000004)
+ 
+ /*ProtocolFlags */
++#define MPI2_IOCFACTS_PROTOCOL_NVME_DEVICES             (0x0008)
+ #define MPI2_IOCFACTS_PROTOCOL_SCSI_INITIATOR           (0x0002)
+ #define MPI2_IOCFACTS_PROTOCOL_SCSI_TARGET              (0x0001)
+ 
+@@ -402,6 +437,8 @@ typedef struct _MPI2_PORT_FACTS_REPLY {
+ #define MPI2_PORTFACTS_PORTTYPE_ISCSI               (0x20)
+ #define MPI2_PORTFACTS_PORTTYPE_SAS_PHYSICAL        (0x30)
+ #define MPI2_PORTFACTS_PORTTYPE_SAS_VIRTUAL         (0x31)
++#define MPI2_PORTFACTS_PORTTYPE_TRI_MODE            (0x40)
++
+ 
+ /****************************************************************************
+ * PortEnable message
+@@ -508,6 +545,7 @@ typedef struct _MPI2_EVENT_NOTIFICATION_REPLY {
+ #define MPI2_EVENT_SAS_INIT_TABLE_OVERFLOW          (0x0019)
+ #define MPI2_EVENT_SAS_TOPOLOGY_CHANGE_LIST         (0x001C)
+ #define MPI2_EVENT_SAS_ENCL_DEVICE_STATUS_CHANGE    (0x001D)
++#define MPI2_EVENT_ENCL_DEVICE_STATUS_CHANGE        (0x001D)
+ #define MPI2_EVENT_IR_VOLUME                        (0x001E)
+ #define MPI2_EVENT_IR_PHYSICAL_DISK                 (0x001F)
+ #define MPI2_EVENT_IR_CONFIGURATION_CHANGE_LIST     (0x0020)
+@@ -520,7 +558,12 @@ typedef struct _MPI2_EVENT_NOTIFICATION_REPLY {
+ #define MPI2_EVENT_TEMP_THRESHOLD                   (0x0027)
+ #define MPI2_EVENT_HOST_MESSAGE                     (0x0028)
+ #define MPI2_EVENT_POWER_PERFORMANCE_CHANGE         (0x0029)
++#define MPI2_EVENT_PCIE_DEVICE_STATUS_CHANGE        (0x0030)
++#define MPI2_EVENT_PCIE_ENUMERATION                 (0x0031)
++#define MPI2_EVENT_PCIE_TOPOLOGY_CHANGE_LIST        (0x0032)
++#define MPI2_EVENT_PCIE_LINK_COUNTER                (0x0033)
+ #define MPI2_EVENT_ACTIVE_CABLE_EXCEPTION           (0x0034)
++#define MPI2_EVENT_SAS_DEVICE_DISCOVERY_ERROR       (0x0035)
+ #define MPI2_EVENT_MIN_PRODUCT_SPECIFIC             (0x006E)
+ #define MPI2_EVENT_MAX_PRODUCT_SPECIFIC             (0x007F)
+ 
+@@ -617,11 +660,20 @@ typedef struct _MPI26_EVENT_DATA_ACTIVE_CABLE_EXCEPT {
+ 	U8          ReasonCode;                         /* 0x04 */
+ 	U8          ReceptacleID;                       /* 0x05 */
+ 	U16         Reserved1;                          /* 0x06 */
+-} MPI26_EVENT_DATA_ACTIVE_CABLE_EXCEPT,
++} MPI25_EVENT_DATA_ACTIVE_CABLE_EXCEPT,
++	*PTR_MPI25_EVENT_DATA_ACTIVE_CABLE_EXCEPT,
++	Mpi25EventDataActiveCableExcept_t,
++	*pMpi25EventDataActiveCableExcept_t,
++	MPI26_EVENT_DATA_ACTIVE_CABLE_EXCEPT,
+ 	*PTR_MPI26_EVENT_DATA_ACTIVE_CABLE_EXCEPT,
+ 	Mpi26EventDataActiveCableExcept_t,
+ 	*pMpi26EventDataActiveCableExcept_t;
+ 
++/*MPI2.5 defines for the ReasonCode field */
++#define MPI25_EVENT_ACTIVE_CABLE_INSUFFICIENT_POWER     (0x00)
++#define MPI25_EVENT_ACTIVE_CABLE_PRESENT                (0x01)
++#define MPI25_EVENT_ACTIVE_CABLE_DEGRADED               (0x02)
++
+ /* defines for ReasonCode field */
+ #define MPI26_EVENT_ACTIVE_CABLE_INSUFFICIENT_POWER     (0x00)
+ #define MPI26_EVENT_ACTIVE_CABLE_PRESENT                (0x01)
+@@ -957,6 +1009,7 @@ typedef struct _MPI2_EVENT_DATA_SAS_TOPOLOGY_CHANGE_LIST {
+ #define MPI2_EVENT_SAS_TOPO_LR_RATE_3_0                     (0x09)
+ #define MPI2_EVENT_SAS_TOPO_LR_RATE_6_0                     (0x0A)
+ #define MPI25_EVENT_SAS_TOPO_LR_RATE_12_0                   (0x0B)
++#define MPI26_EVENT_SAS_TOPO_LR_RATE_22_5                   (0x0C)
+ 
+ /*values for the PhyStatus field */
+ #define MPI2_EVENT_SAS_TOPO_PHYSTATUS_VACANT                (0x80)
+@@ -982,12 +1035,37 @@ typedef struct _MPI2_EVENT_DATA_SAS_ENCL_DEV_STATUS_CHANGE {
+ } MPI2_EVENT_DATA_SAS_ENCL_DEV_STATUS_CHANGE,
+ 	*PTR_MPI2_EVENT_DATA_SAS_ENCL_DEV_STATUS_CHANGE,
+ 	Mpi2EventDataSasEnclDevStatusChange_t,
+-	*pMpi2EventDataSasEnclDevStatusChange_t;
++	*pMpi2EventDataSasEnclDevStatusChange_t,
++	MPI26_EVENT_DATA_ENCL_DEV_STATUS_CHANGE,
++	*PTR_MPI26_EVENT_DATA_ENCL_DEV_STATUS_CHANGE,
++	Mpi26EventDataEnclDevStatusChange_t,
++	*pMpi26EventDataEnclDevStatusChange_t;
+ 
+ /*SAS Enclosure Device Status Change event ReasonCode values */
+ #define MPI2_EVENT_SAS_ENCL_RC_ADDED                (0x01)
+ #define MPI2_EVENT_SAS_ENCL_RC_NOT_RESPONDING       (0x02)
+ 
++/*Enclosure Device Status Change event ReasonCode values */
++#define MPI26_EVENT_ENCL_RC_ADDED                   (0x01)
++#define MPI26_EVENT_ENCL_RC_NOT_RESPONDING          (0x02)
++
++
++typedef struct _MPI25_EVENT_DATA_SAS_DEVICE_DISCOVERY_ERROR {
++	U16	DevHandle;                  /*0x00 */
++	U8	ReasonCode;                 /*0x02 */
++	U8	PhysicalPort;               /*0x03 */
++	U32	Reserved1[2];               /*0x04 */
++	U64	SASAddress;                 /*0x0C */
++	U32	Reserved2[2];               /*0x14 */
++} MPI25_EVENT_DATA_SAS_DEVICE_DISCOVERY_ERROR,
++	*PTR_MPI25_EVENT_DATA_SAS_DEVICE_DISCOVERY_ERROR,
++	Mpi25EventDataSasDeviceDiscoveryError_t,
++	*pMpi25EventDataSasDeviceDiscoveryError_t;
++
++/*SAS Device Discovery Error Event data ReasonCode values */
++#define MPI25_EVENT_SAS_DISC_ERR_SMP_FAILED         (0x01)
++#define MPI25_EVENT_SAS_DISC_ERR_SMP_TIMEOUT        (0x02)
++
+ /*SAS PHY Counter Event data */
+ 
+ typedef struct _MPI2_EVENT_DATA_SAS_PHY_COUNTER {
+@@ -1073,6 +1151,174 @@ typedef struct _MPI2_EVENT_DATA_HBD_PHY {
+ /*values for the DescriptorType field */
+ #define MPI2_EVENT_HBD_DT_SAS               (0x01)
+ 
++
++/*PCIe Device Status Change Event data (MPI v2.6 and later) */
++
++typedef struct _MPI26_EVENT_DATA_PCIE_DEVICE_STATUS_CHANGE {
++	U16	TaskTag;                        /*0x00 */
++	U8	ReasonCode;                     /*0x02 */
++	U8	PhysicalPort;                   /*0x03 */
++	U8	ASC;                            /*0x04 */
++	U8	ASCQ;                           /*0x05 */
++	U16	DevHandle;                      /*0x06 */
++	U32	Reserved2;                      /*0x08 */
++	U64	WWID;                           /*0x0C */
++	U8	LUN[8];                         /*0x14 */
++} MPI26_EVENT_DATA_PCIE_DEVICE_STATUS_CHANGE,
++	*PTR_MPI26_EVENT_DATA_PCIE_DEVICE_STATUS_CHANGE,
++	Mpi26EventDataPCIeDeviceStatusChange_t,
++	*pMpi26EventDataPCIeDeviceStatusChange_t;
++
++/*PCIe Device Status Change Event data ReasonCode values */
++#define MPI26_EVENT_PCIDEV_STAT_RC_SMART_DATA                           (0x05)
++#define MPI26_EVENT_PCIDEV_STAT_RC_UNSUPPORTED                          (0x07)
++#define MPI26_EVENT_PCIDEV_STAT_RC_INTERNAL_DEVICE_RESET                (0x08)
++#define MPI26_EVENT_PCIDEV_STAT_RC_TASK_ABORT_INTERNAL                  (0x09)
++#define MPI26_EVENT_PCIDEV_STAT_RC_ABORT_TASK_SET_INTERNAL              (0x0A)
++#define MPI26_EVENT_PCIDEV_STAT_RC_CLEAR_TASK_SET_INTERNAL              (0x0B)
++#define MPI26_EVENT_PCIDEV_STAT_RC_QUERY_TASK_INTERNAL                  (0x0C)
++#define MPI26_EVENT_PCIDEV_STAT_RC_ASYNC_NOTIFICATION                   (0x0D)
++#define MPI26_EVENT_PCIDEV_STAT_RC_CMP_INTERNAL_DEV_RESET               (0x0E)
++#define MPI26_EVENT_PCIDEV_STAT_RC_CMP_TASK_ABORT_INTERNAL              (0x0F)
++#define MPI26_EVENT_PCIDEV_STAT_RC_DEV_INIT_FAILURE                     (0x10)
++
++
++/*PCIe Enumeration Event data (MPI v2.6 and later) */
++
++typedef struct _MPI26_EVENT_DATA_PCIE_ENUMERATION {
++	U8	Flags;                      /*0x00 */
++	U8	ReasonCode;                 /*0x01 */
++	U8	PhysicalPort;               /*0x02 */
++	U8	Reserved1;                  /*0x03 */
++	U32	EnumerationStatus;          /*0x04 */
++} MPI26_EVENT_DATA_PCIE_ENUMERATION,
++	*PTR_MPI26_EVENT_DATA_PCIE_ENUMERATION,
++	Mpi26EventDataPCIeEnumeration_t,
++	*pMpi26EventDataPCIeEnumeration_t;
++
++/*PCIe Enumeration Event data Flags values */
++#define MPI26_EVENT_PCIE_ENUM_DEVICE_CHANGE                 (0x02)
++#define MPI26_EVENT_PCIE_ENUM_IN_PROGRESS                   (0x01)
++
++/*PCIe Enumeration Event data ReasonCode values */
++#define MPI26_EVENT_PCIE_ENUM_RC_STARTED                    (0x01)
++#define MPI26_EVENT_PCIE_ENUM_RC_COMPLETED                  (0x02)
++
++/*PCIe Enumeration Event data EnumerationStatus values */
++#define MPI26_EVENT_PCIE_ENUM_ES_MAX_SWITCHES_EXCEED            (0x40000000)
++#define MPI26_EVENT_PCIE_ENUM_ES_MAX_DEVICES_EXCEED             (0x20000000)
++#define MPI26_EVENT_PCIE_ENUM_ES_RESOURCES_EXHAUSTED            (0x10000000)
++
++
++/*PCIe Topology Change List Event data (MPI v2.6 and later) */
++
++/*
++ *Host code (drivers, BIOS, utilities, etc.) should leave this define set to
++ *one and check NumEntries at runtime.
++ */
++#ifndef MPI26_EVENT_PCIE_TOPO_PORT_COUNT
++#define MPI26_EVENT_PCIE_TOPO_PORT_COUNT        (1)
++#endif
++
++typedef struct _MPI26_EVENT_PCIE_TOPO_PORT_ENTRY {
++	U16	AttachedDevHandle;      /*0x00 */
++	U8	PortStatus;             /*0x02 */
++	U8	Reserved1;              /*0x03 */
++	U8	CurrentPortInfo;        /*0x04 */
++	U8	Reserved2;              /*0x05 */
++	U8	PreviousPortInfo;       /*0x06 */
++	U8	Reserved3;              /*0x07 */
++} MPI26_EVENT_PCIE_TOPO_PORT_ENTRY,
++	*PTR_MPI26_EVENT_PCIE_TOPO_PORT_ENTRY,
++	Mpi26EventPCIeTopoPortEntry_t,
++	*pMpi26EventPCIeTopoPortEntry_t;
++
++/*PCIe Topology Change List Event data PortStatus values */
++#define MPI26_EVENT_PCIE_TOPO_PS_DEV_ADDED                  (0x01)
++#define MPI26_EVENT_PCIE_TOPO_PS_NOT_RESPONDING             (0x02)
++#define MPI26_EVENT_PCIE_TOPO_PS_PORT_CHANGED               (0x03)
++#define MPI26_EVENT_PCIE_TOPO_PS_NO_CHANGE                  (0x04)
++#define MPI26_EVENT_PCIE_TOPO_PS_DELAY_NOT_RESPONDING       (0x05)
++
++/*PCIe Topology Change List Event data defines for CurrentPortInfo and
++ *PreviousPortInfo
++ */
++#define MPI26_EVENT_PCIE_TOPO_PI_LANE_MASK                  (0xF0)
++#define MPI26_EVENT_PCIE_TOPO_PI_LANES_UNKNOWN              (0x00)
++#define MPI26_EVENT_PCIE_TOPO_PI_1_LANE                     (0x10)
++#define MPI26_EVENT_PCIE_TOPO_PI_2_LANES                    (0x20)
++#define MPI26_EVENT_PCIE_TOPO_PI_4_LANES                    (0x30)
++#define MPI26_EVENT_PCIE_TOPO_PI_8_LANES                    (0x40)
++
++#define MPI26_EVENT_PCIE_TOPO_PI_RATE_MASK                  (0x0F)
++#define MPI26_EVENT_PCIE_TOPO_PI_RATE_UNKNOWN               (0x00)
++#define MPI26_EVENT_PCIE_TOPO_PI_RATE_DISABLED              (0x01)
++#define MPI26_EVENT_PCIE_TOPO_PI_RATE_2_5                   (0x02)
++#define MPI26_EVENT_PCIE_TOPO_PI_RATE_5_0                   (0x03)
++#define MPI26_EVENT_PCIE_TOPO_PI_RATE_8_0                   (0x04)
++#define MPI26_EVENT_PCIE_TOPO_PI_RATE_16_0                  (0x05)
++
++typedef struct _MPI26_EVENT_DATA_PCIE_TOPOLOGY_CHANGE_LIST {
++	U16	EnclosureHandle;        /*0x00 */
++	U16	SwitchDevHandle;        /*0x02 */
++	U8	NumPorts;               /*0x04 */
++	U8	Reserved1;              /*0x05 */
++	U16	Reserved2;              /*0x06 */
++	U8	NumEntries;             /*0x08 */
++	U8	StartPortNum;           /*0x09 */
++	U8	SwitchStatus;           /*0x0A */
++	U8	PhysicalPort;           /*0x0B */
++	MPI26_EVENT_PCIE_TOPO_PORT_ENTRY
++		PortEntry[MPI26_EVENT_PCIE_TOPO_PORT_COUNT]; /*0x0C */
++} MPI26_EVENT_DATA_PCIE_TOPOLOGY_CHANGE_LIST,
++	*PTR_MPI26_EVENT_DATA_PCIE_TOPOLOGY_CHANGE_LIST,
++	Mpi26EventDataPCIeTopologyChangeList_t,
++	*pMpi26EventDataPCIeTopologyChangeList_t;
++
++/*PCIe Topology Change List Event data SwitchStatus values */
++#define MPI26_EVENT_PCIE_TOPO_SS_NO_PCIE_SWITCH             (0x00)
++#define MPI26_EVENT_PCIE_TOPO_SS_ADDED                      (0x01)
++#define MPI26_EVENT_PCIE_TOPO_SS_NOT_RESPONDING             (0x02)
++#define MPI26_EVENT_PCIE_TOPO_SS_RESPONDING                 (0x03)
++#define MPI26_EVENT_PCIE_TOPO_SS_DELAY_NOT_RESPONDING       (0x04)
++
++/*PCIe Link Counter Event data (MPI v2.6 and later) */
++
++typedef struct _MPI26_EVENT_DATA_PCIE_LINK_COUNTER {
++	U64	TimeStamp;          /*0x00 */
++	U32	Reserved1;          /*0x08 */
++	U8	LinkEventCode;      /*0x0C */
++	U8	LinkNum;            /*0x0D */
++	U16	Reserved2;          /*0x0E */
++	U32	LinkEventInfo;      /*0x10 */
++	U8	CounterType;        /*0x14 */
++	U8	ThresholdWindow;    /*0x15 */
++	U8	TimeUnits;          /*0x16 */
++	U8	Reserved3;          /*0x17 */
++	U32	EventThreshold;     /*0x18 */
++	U16	ThresholdFlags;     /*0x1C */
++	U16	Reserved4;          /*0x1E */
++} MPI26_EVENT_DATA_PCIE_LINK_COUNTER,
++	*PTR_MPI26_EVENT_DATA_PCIE_LINK_COUNTER,
++	Mpi26EventDataPcieLinkCounter_t, *pMpi26EventDataPcieLinkCounter_t;
++
++
++/*use MPI26_PCIELINK3_EVTCODE_ values from mpi2_cnfg.h for the LinkEventCode
++ *field
++ */
++
++/*use MPI26_PCIELINK3_COUNTER_TYPE_ values from mpi2_cnfg.h for the CounterType
++ *field
++ */
++
++/*use MPI26_PCIELINK3_TIME_UNITS_ values from mpi2_cnfg.h for the TimeUnits
++ *field
++ */
++
++/*use MPI26_PCIELINK3_TFLAGS_ values from mpi2_cnfg.h for the ThresholdFlags
++ *field
++ */
++
+ /****************************************************************************
+ * EventAck message
+ ****************************************************************************/
+@@ -1190,6 +1436,14 @@ typedef struct _MPI2_FW_DOWNLOAD_REQUEST {
+ #define MPI2_FW_DOWNLOAD_ITYPE_COMPLETE             (0x0A)
+ #define MPI2_FW_DOWNLOAD_ITYPE_COMMON_BOOT_BLOCK    (0x0B)
+ #define MPI2_FW_DOWNLOAD_ITYPE_PUBLIC_KEY           (0x0C)
++#define MPI2_FW_DOWNLOAD_ITYPE_CBB_BACKUP           (0x0D)
++#define MPI2_FW_DOWNLOAD_ITYPE_SBR                  (0x0E)
++#define MPI2_FW_DOWNLOAD_ITYPE_SBR_BACKUP           (0x0F)
++#define MPI2_FW_DOWNLOAD_ITYPE_HIIM                 (0x10)
++#define MPI2_FW_DOWNLOAD_ITYPE_HIIA                 (0x11)
++#define MPI2_FW_DOWNLOAD_ITYPE_CTLR                 (0x12)
++#define MPI2_FW_DOWNLOAD_ITYPE_IMR_FIRMWARE         (0x13)
++#define MPI2_FW_DOWNLOAD_ITYPE_MR_NVDATA            (0x14)
+ #define MPI2_FW_DOWNLOAD_ITYPE_MIN_PRODUCT_SPECIFIC (0xF0)
+ 
+ /*MPI v2.0 FWDownload TransactionContext Element */
+@@ -1276,6 +1530,14 @@ typedef struct _MPI2_FW_UPLOAD_REQUEST {
+ #define MPI2_FW_UPLOAD_ITYPE_COMPLETE           (0x0A)
+ #define MPI2_FW_UPLOAD_ITYPE_COMMON_BOOT_BLOCK  (0x0B)
+ #define MPI2_FW_UPLOAD_ITYPE_CBB_BACKUP         (0x0D)
++#define MPI2_FW_UPLOAD_ITYPE_SBR                (0x0E)
++#define MPI2_FW_UPLOAD_ITYPE_SBR_BACKUP         (0x0F)
++#define MPI2_FW_UPLOAD_ITYPE_HIIM               (0x10)
++#define MPI2_FW_UPLOAD_ITYPE_HIIA               (0x11)
++#define MPI2_FW_UPLOAD_ITYPE_CTLR               (0x12)
++#define MPI2_FW_UPLOAD_ITYPE_IMR_FIRMWARE       (0x13)
++#define MPI2_FW_UPLOAD_ITYPE_MR_NVDATA          (0x14)
++
+ 
+ /*MPI v2.0 FWUpload TransactionContext Element */
+ typedef struct _MPI2_FW_UPLOAD_TCSGE {
+@@ -1394,10 +1656,13 @@ typedef struct _MPI2_FW_IMAGE_HEADER {
+ #define MPI26_FW_HEADER_SIGNATURE0_ARC_1        (0x00)
+ #define MPI26_FW_HEADER_SIGNATURE0_ARC_2        (0x01)
+ /* legacy (0x5AEAA55A) */
++#define MPI26_FW_HEADER_SIGNATURE0_ARC_3        (0x02)
+ #define MPI26_FW_HEADER_SIGNATURE0 \
+ 	(MPI26_FW_HEADER_SIGNATURE0_BASE+MPI26_FW_HEADER_SIGNATURE0_ARC_0)
+ #define MPI26_FW_HEADER_SIGNATURE0_3516 \
+ 	(MPI26_FW_HEADER_SIGNATURE0_BASE+MPI26_FW_HEADER_SIGNATURE0_ARC_1)
++#define MPI26_FW_HEADER_SIGNATURE0_4008 \
++	(MPI26_FW_HEADER_SIGNATURE0_BASE+MPI26_FW_HEADER_SIGNATURE0_ARC_3)
+ 
+ /*Signature1 field */
+ #define MPI2_FW_HEADER_SIGNATURE1_OFFSET        (0x08)
+@@ -1541,6 +1806,13 @@ typedef struct _MPI2_FLASH_LAYOUT_DATA {
+ #define MPI2_FLASH_REGION_COMMON_BOOT_BLOCK     (0x0A)
+ #define MPI2_FLASH_REGION_INIT (MPI2_FLASH_REGION_COMMON_BOOT_BLOCK)
+ #define MPI2_FLASH_REGION_CBB_BACKUP            (0x0D)
++#define MPI2_FLASH_REGION_SBR                   (0x0E)
++#define MPI2_FLASH_REGION_SBR_BACKUP            (0x0F)
++#define MPI2_FLASH_REGION_HIIM                  (0x10)
++#define MPI2_FLASH_REGION_HIIA                  (0x11)
++#define MPI2_FLASH_REGION_CTLR                  (0x12)
++#define MPI2_FLASH_REGION_IMR_FIRMWARE          (0x13)
++#define MPI2_FLASH_REGION_MR_NVDATA             (0x14)
+ 
+ /*ImageRevision */
+ #define MPI2_FLASH_LAYOUT_IMAGE_REVISION        (0x00)
+@@ -1825,6 +2097,8 @@ typedef struct _MPI26_IOUNIT_CONTROL_REQUEST {
+ #define MPI26_CTRL_OP_DEV_ENABLE_PERSIST_CONNECTION     (0x17)
+ #define MPI26_CTRL_OP_DEV_DISABLE_PERSIST_CONNECTION    (0x18)
+ #define MPI26_CTRL_OP_DEV_CLOSE_PERSIST_CONNECTION      (0x19)
++#define MPI26_CTRL_OP_ENABLE_NVME_SGL_FORMAT            (0x1A)
++#define MPI26_CTRL_OP_DISABLE_NVME_SGL_FORMAT           (0x1B)
+ #define MPI26_CTRL_OP_PRODUCT_SPECIFIC_MIN              (0x80)
+ 
+ /* values for the PrimFlags field */
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_pci.h b/drivers/scsi/mpt3sas/mpi/mpi2_pci.h
+new file mode 100644
+index 0000000..a42f4a3
+--- /dev/null
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_pci.h
+@@ -0,0 +1,112 @@
++/*
++ * Copyright 2012-2015 Avago Technologies.  All rights reserved.
++ *
++ *
++ *          Name:  mpi2_pci.h
++ *         Title:  MPI PCIe Attached Devices structures and definitions.
++ * Creation Date:  October 9, 2012
++ *
++ * mpi2_pci.h Version:  02.00.02
++ *
++ * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
++ *       prefix are for use only on MPI v2.5 products, and must not be used
++ *       with MPI v2.0 products. Unless otherwise noted, names beginning with
++ *       MPI2 or Mpi2 are for use with both MPI v2.0 and MPI v2.5 products.
++ *
++ * Version History
++ * ---------------
++ *
++ * Date      Version   Description
++ * --------  --------  ------------------------------------------------------
++ * 03-16-15  02.00.00  Initial version.
++ * 02-17-16  02.00.01  Removed AHCI support.
++ *                     Removed SOP support.
++ * 07-01-16  02.00.02  Added MPI26_NVME_FLAGS_FORCE_ADMIN_ERR_RESP to
++ *                     NVME Encapsulated Request.
++ * --------------------------------------------------------------------------
++ */
++
++#ifndef MPI2_PCI_H
++#define MPI2_PCI_H
++
++
++/*
++ *Values for the PCIe DeviceInfo field used in PCIe Device Status Change Event
++ *data and PCIe Configuration pages.
++ */
++#define MPI26_PCIE_DEVINFO_DIRECT_ATTACH        (0x00000010)
++
++#define MPI26_PCIE_DEVINFO_MASK_DEVICE_TYPE     (0x0000000F)
++#define MPI26_PCIE_DEVINFO_NO_DEVICE            (0x00000000)
++#define MPI26_PCIE_DEVINFO_PCI_SWITCH           (0x00000001)
++#define MPI26_PCIE_DEVINFO_NVME                 (0x00000003)
++
++
++/****************************************************************************
++*  NVMe Encapsulated message
++****************************************************************************/
++
++/*NVME Encapsulated Request Message */
++typedef struct _MPI26_NVME_ENCAPSULATED_REQUEST {
++	U16	DevHandle;                      /*0x00 */
++	U8	ChainOffset;                    /*0x02 */
++	U8	Function;                       /*0x03 */
++	U16	EncapsulatedCommandLength;      /*0x04 */
++	U8	Reserved1;                      /*0x06 */
++	U8	MsgFlags;                       /*0x07 */
++	U8	VP_ID;                          /*0x08 */
++	U8	VF_ID;                          /*0x09 */
++	U16	Reserved2;                      /*0x0A */
++	U32	Reserved3;                      /*0x0C */
++	U64	ErrorResponseBaseAddress;       /*0x10 */
++	U16	ErrorResponseAllocationLength;  /*0x18 */
++	U16	Flags;                          /*0x1A */
++	U32	DataLength;                     /*0x1C */
++	U8	NVMe_Command[4];                /*0x20 */
++
++} MPI26_NVME_ENCAPSULATED_REQUEST, *PTR_MPI26_NVME_ENCAPSULATED_REQUEST,
++	Mpi26NVMeEncapsulatedRequest_t, *pMpi26NVMeEncapsulatedRequest_t;
++
++/*defines for the Flags field */
++#define MPI26_NVME_FLAGS_FORCE_ADMIN_ERR_RESP       (0x0020)
++/*Submission Queue Type*/
++#define MPI26_NVME_FLAGS_SUBMISSIONQ_MASK           (0x0010)
++#define MPI26_NVME_FLAGS_SUBMISSIONQ_IO             (0x0000)
++#define MPI26_NVME_FLAGS_SUBMISSIONQ_ADMIN          (0x0010)
++/*Error Response Address Space */
++#define MPI26_NVME_FLAGS_MASK_ERROR_RSP_ADDR        (0x000C)
++#define MPI26_NVME_FLAGS_SYSTEM_RSP_ADDR            (0x0000)
++#define MPI26_NVME_FLAGS_IOCPLB_RSP_ADDR            (0x0008)
++#define MPI26_NVME_FLAGS_IOCPLBNTA_RSP_ADDR         (0x000C)
++/*Data Direction*/
++#define MPI26_NVME_FLAGS_DATADIRECTION_MASK         (0x0003)
++#define MPI26_NVME_FLAGS_NODATATRANSFER             (0x0000)
++#define MPI26_NVME_FLAGS_WRITE                      (0x0001)
++#define MPI26_NVME_FLAGS_READ                       (0x0002)
++#define MPI26_NVME_FLAGS_BIDIRECTIONAL              (0x0003)
++
++
++/*NVMe Encapuslated Reply Message */
++typedef struct _MPI26_NVME_ENCAPSULATED_ERROR_REPLY {
++	U16	DevHandle;                      /*0x00 */
++	U8	MsgLength;                      /*0x02 */
++	U8	Function;                       /*0x03 */
++	U16	EncapsulatedCommandLength;      /*0x04 */
++	U8	Reserved1;                      /*0x06 */
++	U8	MsgFlags;                       /*0x07 */
++	U8	VP_ID;                          /*0x08 */
++	U8	VF_ID;                          /*0x09 */
++	U16	Reserved2;                      /*0x0A */
++	U16	Reserved3;                      /*0x0C */
++	U16	IOCStatus;                      /*0x0E */
++	U32	IOCLogInfo;                     /*0x10 */
++	U16	ErrorResponseCount;             /*0x14 */
++	U16	Reserved4;                      /*0x16 */
++} MPI26_NVME_ENCAPSULATED_ERROR_REPLY,
++	*PTR_MPI26_NVME_ENCAPSULATED_ERROR_REPLY,
++	Mpi26NVMeEncapsulatedErrorReply_t,
++	*pMpi26NVMeEncapsulatedErrorReply_t;
++
++
++#endif
++
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_tool.h b/drivers/scsi/mpt3sas/mpi/mpi2_tool.h
+index 5f9289a..4286c91 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_tool.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_tool.h
+@@ -6,7 +6,7 @@
+  *         Title:  MPI diagnostic tool structures and definitions
+  * Creation Date:  March 26, 2007
+  *
+- *   mpi2_tool.h Version:  02.00.13
++ *   mpi2_tool.h Version:  02.00.14
+  *
+  * Version History
+  * ---------------
+@@ -35,6 +35,8 @@
+  * 08-19-13  02.00.11  Added MPI2_TOOLBOX_TEXT_DISPLAY_TOOL and related info.
+  * 01-08-14  02.00.12  Added MPI2_TOOLBOX_CLEAN_BIT26_PRODUCT_SPECIFIC.
+  * 11-18-14  02.00.13  Updated copyright information.
++ * 08-25-16  02.00.14  Added new values for the Flags field of Toolbox Clean
++ *                     Tool Request Message.
+  * --------------------------------------------------------------------------
+  */
+ 
+@@ -105,6 +107,16 @@ typedef struct _MPI2_TOOLBOX_CLEAN_REQUEST {
+ #define MPI2_TOOLBOX_CLEAN_BIT26_PRODUCT_SPECIFIC   (0x04000000)
+ #define MPI2_TOOLBOX_CLEAN_MEGARAID                 (0x02000000)
+ #define MPI2_TOOLBOX_CLEAN_INITIALIZATION           (0x01000000)
++#define MPI2_TOOLBOX_CLEAN_SBR                      (0x00800000)
++#define MPI2_TOOLBOX_CLEAN_SBR_BACKUP               (0x00400000)
++#define MPI2_TOOLBOX_CLEAN_HIIM                     (0x00200000)
++#define MPI2_TOOLBOX_CLEAN_HIIA                     (0x00100000)
++#define MPI2_TOOLBOX_CLEAN_CTLR                     (0x00080000)
++#define MPI2_TOOLBOX_CLEAN_IMR_FIRMWARE             (0x00040000)
++#define MPI2_TOOLBOX_CLEAN_MR_NVDATA                (0x00020000)
++#define MPI2_TOOLBOX_CLEAN_RESERVED_5_16            (0x0001FFE0)
++#define MPI2_TOOLBOX_CLEAN_ALL_BUT_MPB              (0x00000010)
++#define MPI2_TOOLBOX_CLEAN_ENTIRE_FLASH             (0x00000008)
+ #define MPI2_TOOLBOX_CLEAN_FLASH                    (0x00000004)
+ #define MPI2_TOOLBOX_CLEAN_SEEPROM                  (0x00000002)
+ #define MPI2_TOOLBOX_CLEAN_NVSRAM                   (0x00000001)
 -- 
 2.5.5
