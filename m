@@ -1,71 +1,53 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCH v2] scsi: qla2xxx: Fix an integer overflow in sysfs code
-Date: Wed, 30 Aug 2017 16:30:35 +0300
-Message-ID: <20170830133035.nbkiled5hhdt26ui@mwanda>
-References: <CANn89iJBtAFJjz7wY2=2pO5SdNGhJx8M8_V-dEq81NhsFHeAUA@mail.gmail.com>
+From: Avri Altman <Avri.Altman@wdc.com>
+Subject: RE: [PATCH] scsi: ufs: reqs and tasks were put in the wrong order
+Date: Wed, 30 Aug 2017 13:44:06 +0000
+Message-ID: <DM5PR04MB108587D5F910C4FDE4190418FC9C0@DM5PR04MB1085.namprd04.prod.outlook.com>
+References: <20170824025715.98737-1-zangleigang@hisilicon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:26354 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751323AbdH3NbD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Aug 2017 09:31:03 -0400
-Content-Disposition: inline
-In-Reply-To: <CANn89iJBtAFJjz7wY2=2pO5SdNGhJx8M8_V-dEq81NhsFHeAUA@mail.gmail.com>
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:60188 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751302AbdH3NpC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Aug 2017 09:45:02 -0400
+In-Reply-To: <20170824025715.98737-1-zangleigang@hisilicon.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: qla2xxx-upstream@qlogic.com, shqking <shqking@gmail.com>, Joe Carnuccio <joe.carnuccio@qlogic.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, security@kernel.org
+To: Zang Leigang <zangleigang@hisilicon.com>, "vinholikatti@gmail.com" <vinholikatti@gmail.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-The value of "size" comes from the user.  When we add "start + size"
-it could lead to an integer overflow bug.
 
-It means we vmalloc() a lot more memory than we had intended.  I believe
-that on 64 bit systems vmalloc() can succeed even if we ask it to
-allocate huge 4GB buffers.  So we would get memory corruption and likely
-a crash when we call ha->isp_ops->write_optrom() and ->read_optrom().
 
-Only root can trigger this bug.
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Zang Leigang
+> Sent: Thursday, August 24, 2017 5:57 AM
+> To: vinholikatti@gmail.com; jejb@linux.vnet.ibm.com;
+> martin.petersen@oracle.com
+> Cc: linux-scsi@vger.kernel.org
+> Subject: [PATCH] scsi: ufs: reqs and tasks were put in the wrong order
+>=20
+> Signed-off-by: Zang Leigang <zangleigang@hisilicon.com>
+Acked-by: Avri Altman <avri.altman@sandisk.com>
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=194061
-
-Cc: stable@vger.kernel.org
-Fixes: b7cc176c9eb3 ("[SCSI] qla2xxx: Allow region-based flash-part accesses.")
-Reported-by: shqking <shqking@gmail.com>
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
-v2: Add stable and the URL for bugzila
-
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 75c4b312645e..9ce28c4f9812 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -318,6 +318,8 @@ qla2x00_sysfs_write_optrom_ctl(struct file *filp, struct kobject *kobj,
- 		return -EINVAL;
- 	if (start > ha->optrom_size)
- 		return -EINVAL;
-+	if (size > ha->optrom_size - start)
-+		size = ha->optrom_size - start;
- 
- 	mutex_lock(&ha->optrom_mutex);
- 	switch (val) {
-@@ -343,8 +345,7 @@ qla2x00_sysfs_write_optrom_ctl(struct file *filp, struct kobject *kobj,
- 		}
- 
- 		ha->optrom_region_start = start;
--		ha->optrom_region_size = start + size > ha->optrom_size ?
--		    ha->optrom_size - start : size;
-+		ha->optrom_region_size = start + size;
- 
- 		ha->optrom_state = QLA_SREADING;
- 		ha->optrom_buffer = vmalloc(ha->optrom_region_size);
-@@ -417,8 +418,7 @@ qla2x00_sysfs_write_optrom_ctl(struct file *filp, struct kobject *kobj,
- 		}
- 
- 		ha->optrom_region_start = start;
--		ha->optrom_region_size = start + size > ha->optrom_size ?
--		    ha->optrom_size - start : size;
-+		ha->optrom_region_size = start + size;
- 
- 		ha->optrom_state = QLA_SWRITING;
- 		ha->optrom_buffer = vmalloc(ha->optrom_region_size);
+>=20
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c index
+> 5bc9dc14e075..794a4600e952 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -438,7 +438,7 @@ static void ufshcd_print_host_state(struct ufs_hba
+> *hba)  {
+>  	dev_err(hba->dev, "UFS Host state=3D%d\n", hba->ufshcd_state);
+>  	dev_err(hba->dev, "lrb in use=3D0x%lx, outstanding reqs=3D0x%lx
+> tasks=3D0x%lx\n",
+> -		hba->lrb_in_use, hba->outstanding_tasks, hba-
+> >outstanding_reqs);
+> +		hba->lrb_in_use, hba->outstanding_reqs, hba-
+> >outstanding_tasks);
+>  	dev_err(hba->dev, "saved_err=3D0x%x, saved_uic_err=3D0x%x\n",
+>  		hba->saved_err, hba->saved_uic_err);
+>  	dev_err(hba->dev, "Device power mode=3D%d, UIC link state=3D%d\n",
+> --
+> 2.14.1
