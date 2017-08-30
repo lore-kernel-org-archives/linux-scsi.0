@@ -1,54 +1,96 @@
-From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
-Subject: Re: possible circular locking dependency detected [was: linux-next:
- Tree for Aug 22]
-Date: Wed, 30 Aug 2017 21:30:07 +0900
-Message-ID: <20170830123007.GA6460@jagdpanzerIV.localdomain>
-References: <20170822183816.7925e0f8@canb.auug.org.au>
- <20170822104708.GA491@jagdpanzerIV.localdomain>
- <1503438234.2508.27.camel@wdc.com>
- <20170823000304.GK20323@X58A-UD3R>
- <20170830052037.GA432@jagdpanzerIV.localdomain>
- <20170830054334.GF3240@X58A-UD3R>
- <20170830061511.GA330@jagdpanzerIV.localdomain>
- <20170830084207.GL32112@worktop.programming.kicks-ass.net>
- <20170830084746.GC660@worktop.programming.kicks-ass.net>
+From: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Subject: Re: [PATCH v4 00/14] mpt3sas driver NVMe support:
+Date: Wed, 30 Aug 2017 18:00:26 +0530
+Message-ID: <CA+RiK65F0CUNkc7AXN7n-rwvmf=Xm-t6dNvG134hY9yapwgDYg@mail.gmail.com>
+References: <1503322344-5900-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <yq1lgmbauxt.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-next-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170830084746.GC660@worktop.programming.kicks-ass.net>
-Sender: linux-next-owner@vger.kernel.org
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>, Byungchul Park <byungchul.park@lge.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, kernel-team@lge.com
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq1lgmbauxt.fsf@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Sathya Prakash <Sathya.Prakash@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, linux-kernel@vger.kernel.org, Chaitra Basappa <chaitra.basappa@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, linux-nvme@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello Peter,
+Hi Martin,
 
-On (08/30/17 10:47), Peter Zijlstra wrote:
-[..]
-> On Wed, Aug 30, 2017 at 10:42:07AM +0200, Peter Zijlstra wrote:
-> > 
-> > So the overhead looks to be spread out over all sorts, which makes it
-> > harder to find and fix.
-> > 
-> > stack unwinding is done lots and is fairly expensive, I've not yet
-> > checked if crossrelease does too much of that.
-> 
-> Aah, we do an unconditional stack unwind for every __lock_acquire() now.
-> It keeps a trace in the xhlocks[].
-> 
-> Does the below cure most of that overhead?
+Replied in line.
 
-thanks.
+- I don't understand why you go through all these hoops to decide
+  whether to use PRPs or IEEE scatterlists. If the firmware translation
+  is slow, why even bother with the SG format in the first place? Set
+  the max I/O size to match MDTS and you're done.
 
-mostly yes. the kernel is not so dramatically slower now. it's still
-seems to be a bit slower, which is expected I suppose, but over all
-it's much better
+=>  We will  set MDTS value as max hw sectors using
+blk_queue_max_hw_sectors(). As of now, we see correct MDTS value is
+being set to block layer via VPD page 0xb0 (Block limits VPD page )
+response from FW for NVME device.
+=> I will remove MDTS checks in IO path.
 
-	real	1m35.209s
-	user	4m12.467s
-	sys	0m49.457s
 
-// approx 10 seconds slower.
+- What's the benefit of using SG for regular I/O commands?
 
-	-ss
+=>  Broadcom's IT Tri-mode HBA hardware has a capability of
+translating IEEE SGLs to PRP's only up to ~4 page block size.
+If the IO block size is greater than that (along with other condition
+described code base_is_prp_possible), driver has to frame the PRP's to
+avoid FW intervention. Both the case is a fast path, but for smaller
+IO (up to 20K) size will frame IEEE SGL and large IO size will frame
+PRP format SGL. Theoretically we want to use h/w capability (to
+translate IEEE to PRP) for smaller IO size to leverage h/w capability.
+We are investigating if at all we can send all PRP and avoid checks in
+driver, but that exercise may take time as we have many different
+opinions. We prefer to use existing code as it is stable and in-line
+with h/w requirement.
+
+
+- If the unmap translation in firmware is slow, why don't you translate
+  WRITE SAME/w UNMAP set to DSM DEALLOCATE without requiring
+  applications to do encapsulated passthrough?
+
+=> As of now, current FW supports UNMAP command but not WRITE_SAME for
+NVME drive. We did some experiment to convert UMAP command in driver,
+but that is not really giving any performance improvement. We would
+like to continue with UNMAP (and all other non-read/write commands) to
+be handled in FW.
+
+
+- Also make sure you attribute your patches correctly (From: root
+<root@dhcp-135-24-192-103.dhcp.avagotech.net>). And you don't need
+that long CC: list. Just send the patch series to
+linux-scsi@vger.kernel.org.
+
+=>  I will fix this type of issue going forward
+
+Thanks,
+Suganath Prabu S
+
+On Wed, Aug 23, 2017 at 7:48 AM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>
+> Suganath,
+>
+>>   mpt3sas: SGL to PRP Translation for I/Os to NVMe  devices
+>
+> I'm still confused about this patch.
+>
+>  - I don't understand why you go through all these hoops to decide
+>    whether to use PRPs or IEEE scatterlists. If the firmware translation
+>    is slow, why even bother with the SG format in the first place? Set
+>    the max I/O size to match MDTS and you're done.
+>
+>  - What's the benefit of using SG for regular I/O commands?
+>
+>  - If the unmap translation in firmware is slow, why don't you translate
+>    WRITE SAME/w UNMAP set to DSM DEALLOCATE without requiring
+>    applications to do encapsulated passthrough?
+>
+> Also make sure you attribute your patches correctly (From: root
+> <root@dhcp-135-24-192-103.dhcp.avagotech.net>). And you don't need that
+> long CC: list. Just send the patch series to linux-scsi@vger.kernel.org.
+>
+> Thanks!
+>
+> --
+> Martin K. Petersen      Oracle Linux Engineering
