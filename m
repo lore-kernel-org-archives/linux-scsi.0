@@ -1,111 +1,89 @@
-From: Viswas G <viswas.g@microsemi.com>
-Subject: RE: [PATCH 3/6] pm80xx : Different SAS addresses for phys.
-Date: Wed, 30 Aug 2017 16:55:42 +0000
-Message-ID: <E96847475729F24299853D257F7211218C8C9947@avsrvexchmbx1.microsemi.net>
-References: <20150130060645.23653-1-Viswas.G@microsemi.com>
- <20150130060645.23653-4-Viswas.G@microsemi.com>
- <CAD+HZHVF83w-s9ih5FQRAH_-OYPCNBYEs=9x=09LOwZ0nxymaQ@mail.gmail.com>
+From: "Carnuccio, Joe" <Joe.Carnuccio@cavium.com>
+Subject: RE: [PATCH v2] scsi: qla2xxx: Fix an integer overflow in sysfs code
+Date: Wed, 30 Aug 2017 17:08:43 +0000
+Message-ID: <BY2PR07MB23426AD1AC3C646124E8FBBE939C0@BY2PR07MB2342.namprd07.prod.outlook.com>
+References: <CANn89iJBtAFJjz7wY2=2pO5SdNGhJx8M8_V-dEq81NhsFHeAUA@mail.gmail.com>
+ <20170830133035.nbkiled5hhdt26ui@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0048.outbound.protection.outlook.com ([104.47.40.48]:53030
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam03on0053.outbound.protection.outlook.com ([104.47.42.53]:15680
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751333AbdH3Qzz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 30 Aug 2017 12:55:55 -0400
-In-Reply-To: <CAD+HZHVF83w-s9ih5FQRAH_-OYPCNBYEs=9x=09LOwZ0nxymaQ@mail.gmail.com>
+        id S1751333AbdH3RIp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 30 Aug 2017 13:08:45 -0400
+In-Reply-To: <20170830133035.nbkiled5hhdt26ui@mwanda>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jack Wang <xjtuwjp@gmail.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Vasanthalakshmi Tharmarajan <vasanthalakshmi.thar@microsemi.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>, shqking <shqking@gmail.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "security@kernel.org" <security@kernel.org>
 
-SGkgSmFjaywNCg0KVGhpcyBpcyBhIGN1c3RvbWVyIHJlcXVpcmVtZW50LiBTaW5jZSB0aGUgU0FT
-IGFkZHJlc3NlcyBvZiBhbGwgdGhlIHBoeXMgd2VyZSBzYW1lICwgd2hlbiB0aGUgYXR0YWNoZWQg
-U0FTIGFkZHJlc3NlcyBhcmUgZGlmZmVyZW50LCBpdCB3YXMgZm9ybWluZyBvbmx5IG9uZSBkb21h
-aW4uICBJZiB3ZSBhc3NpZ24gZGlmZmVyZW50IFNBUyBhZGRyZXNzZXMsIHRoaXMgd2lsbCBjYXVz
-ZSBkdXBsaWNhdGUgZG9tYWluIHVubGVzcyB3ZSBzZXQgdGhlIHN0cmljdF93aWRlX3BvcnQgdG8g
-MS4NCg0KUmVnYXJkcywNClZpc3dhcyBHDQoNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0t
-LQ0KPiBGcm9tOiBKYWNrIFdhbmcgW21haWx0bzp4anR1d2pwQGdtYWlsLmNvbV0NCj4gU2VudDog
-VHVlc2RheSwgQXVndXN0IDI5LCAyMDE3IDQ6NTUgUE0NCj4gVG86IFZpc3dhcyBHIDx2aXN3YXMu
-Z0BtaWNyb3NlbWkuY29tPg0KPiBDYzogbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7IFZhc2Fu
-dGhhbGFrc2htaSBUaGFybWFyYWphbg0KPiA8dmFzYW50aGFsYWtzaG1pLnRoYXJAbWljcm9zZW1p
-LmNvbT4NCj4gU3ViamVjdDogUmU6IFtQQVRDSCAzLzZdIHBtODB4eCA6IERpZmZlcmVudCBTQVMg
-YWRkcmVzc2VzIGZvciBwaHlzLg0KPiANCj4gRVhURVJOQUwgRU1BSUwNCj4gDQo+IA0KPiAyMDE1
-LTAxLTMwIDc6MDYgR01UKzAxOjAwIFZpc3dhcyBHIDxWaXN3YXMuR0BtaWNyb3NlbWkuY29tPjoN
-Cj4gPiBEaWZmZXJlbnQgU0FTIGFkZHJlc3NlcyBhcmUgYXNzaWduZWQgZm9yIGVhY2ggc2V0IG9m
-IHBoeXMuDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBWaXN3YXMgRyA8Vmlzd2FzLkdAbWljcm9z
-ZW1pLmNvbT4NCj4gPiAtLS0NCj4gPiAgZHJpdmVycy9zY3NpL3BtODAwMS9wbTgwMDFfaW5pdC5j
-IHwgMTMgKysrKysrKysrLS0tLQ0KPiA+ICBkcml2ZXJzL3Njc2kvcG04MDAxL3BtODB4eF9od2ku
-YyAgfCAgMyArLS0NCj4gPiAgMiBmaWxlcyBjaGFuZ2VkLCAxMCBpbnNlcnRpb25zKCspLCA2IGRl
-bGV0aW9ucygtKQ0KPiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9wbTgwMDEvcG04
-MDAxX2luaXQuYw0KPiBiL2RyaXZlcnMvc2NzaS9wbTgwMDEvcG04MDAxX2luaXQuYw0KPiA+IGlu
-ZGV4IDAzNGIyZjdkMTEzNS4uZDI4MmYxNTYyNjE1IDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMv
-c2NzaS9wbTgwMDEvcG04MDAxX2luaXQuYw0KPiA+ICsrKyBiL2RyaXZlcnMvc2NzaS9wbTgwMDEv
-cG04MDAxX2luaXQuYw0KPiA+IEBAIC0xMzIsNyArMTMyLDcgQEAgc3RhdGljIHZvaWQgcG04MDAx
-X3BoeV9pbml0KHN0cnVjdA0KPiBwbTgwMDFfaGJhX2luZm8gKnBtODAwMV9oYSwgaW50IHBoeV9p
-ZCkNCj4gPiAgICAgICAgIHNhc19waHktPm9vYl9tb2RlID0gT09CX05PVF9DT05ORUNURUQ7DQo+
-ID4gICAgICAgICBzYXNfcGh5LT5saW5rcmF0ZSA9IFNBU19MSU5LX1JBVEVfVU5LTk9XTjsNCj4g
-PiAgICAgICAgIHNhc19waHktPmlkID0gcGh5X2lkOw0KPiA+IC0gICAgICAgc2FzX3BoeS0+c2Fz
-X2FkZHIgPSAmcG04MDAxX2hhLT5zYXNfYWRkclswXTsNCj4gPiArICAgICAgIHNhc19waHktPnNh
-c19hZGRyID0gKHU4ICopJnBoeS0+ZGV2X3Nhc19hZGRyOw0KPiA+ICAgICAgICAgc2FzX3BoeS0+
-ZnJhbWVfcmN2ZCA9ICZwaHktPmZyYW1lX3JjdmRbMF07DQo+ID4gICAgICAgICBzYXNfcGh5LT5o
-YSA9IChzdHJ1Y3Qgc2FzX2hhX3N0cnVjdCAqKXBtODAwMV9oYS0+c2hvc3QtPmhvc3RkYXRhOw0K
-PiA+ICAgICAgICAgc2FzX3BoeS0+bGxkZF9waHkgPSBwaHk7DQo+ID4gQEAgLTU5MywxMCArNTkz
-LDEyIEBAIHN0YXRpYyB2b2lkICBwbTgwMDFfcG9zdF9zYXNfaGFfaW5pdChzdHJ1Y3QNCj4gU2Nz
-aV9Ib3N0ICpzaG9zdCwNCj4gPiAgICAgICAgIGZvciAoaSA9IDA7IGkgPCBjaGlwX2luZm8tPm5f
-cGh5OyBpKyspIHsNCj4gPiAgICAgICAgICAgICAgICAgc2hhLT5zYXNfcGh5W2ldID0gJnBtODAw
-MV9oYS0+cGh5W2ldLnNhc19waHk7DQo+ID4gICAgICAgICAgICAgICAgIHNoYS0+c2FzX3BvcnRb
-aV0gPSAmcG04MDAxX2hhLT5wb3J0W2ldLnNhc19wb3J0Ow0KPiA+ICsgICAgICAgICAgICAgICBz
-aGEtPnNhc19waHlbaV0tPnNhc19hZGRyID0NCj4gPiArICAgICAgICAgICAgICAgICAgICAgICAo
-dTggKikmcG04MDAxX2hhLT5waHlbaV0uZGV2X3Nhc19hZGRyOw0KPiA+ICAgICAgICAgfQ0KPiA+
-ICAgICAgICAgc2hhLT5zYXNfaGFfbmFtZSA9IERSVl9OQU1FOw0KPiA+ICAgICAgICAgc2hhLT5k
-ZXYgPSBwbTgwMDFfaGEtPmRldjsNCj4gPiAtDQo+ID4gKyAgICAgICBzaGEtPnN0cmljdF93aWRl
-X3BvcnRzID0gMTsNCj4gPiAgICAgICAgIHNoYS0+bGxkZF9tb2R1bGUgPSBUSElTX01PRFVMRTsN
-Cj4gPiAgICAgICAgIHNoYS0+c2FzX2FkZHIgPSAmcG04MDAxX2hhLT5zYXNfYWRkclswXTsNCj4g
-PiAgICAgICAgIHNoYS0+bnVtX3BoeXMgPSBjaGlwX2luZm8tPm5fcGh5Ow0KPiA+IEBAIC02MTMs
-NiArNjE1LDcgQEAgc3RhdGljIHZvaWQgIHBtODAwMV9wb3N0X3Nhc19oYV9pbml0KHN0cnVjdA0K
-PiBTY3NpX0hvc3QgKnNob3N0LA0KPiA+ICBzdGF0aWMgdm9pZCBwbTgwMDFfaW5pdF9zYXNfYWRk
-KHN0cnVjdCBwbTgwMDFfaGJhX2luZm8gKnBtODAwMV9oYSkNCj4gPiAgew0KPiA+ICAgICAgICAg
-dTggaSwgajsNCj4gPiArICAgICAgIHU4IHNhc19hZGRbOF07DQo+ID4gICNpZmRlZiBQTTgwMDFf
-UkVBRF9WUEQNCj4gPiAgICAgICAgIC8qIEZvciBuZXcgU1BDIGNvbnRyb2xsZXJzIFdXTiBpcyBz
-dG9yZWQgaW4gZmxhc2ggdnBkDQo+ID4gICAgICAgICAqICBGb3IgU1BDL1NQQ3ZlIGNvbnRyb2xs
-ZXJzIFdXTiBpcyBzdG9yZWQgaW4gRUVQUk9NDQo+ID4gQEAgLTY3NCwxMCArNjc3LDEyIEBAIHN0
-YXRpYyB2b2lkIHBtODAwMV9pbml0X3Nhc19hZGQoc3RydWN0DQo+IHBtODAwMV9oYmFfaW5mbyAq
-cG04MDAxX2hhKQ0KPiA+ICAgICAgICAgICAgICAgICAgICAgICAgIHBtODAwMV9oYS0+c2FzX2Fk
-ZHJbal0gPQ0KPiA+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBwYXls
-b2FkLmZ1bmNfc3BlY2lmaWNbMHg4MDQgKyBpXTsNCj4gPiAgICAgICAgIH0NCj4gPiAtDQo+ID4g
-KyAgICAgICBtZW1jcHkoc2FzX2FkZCwgcG04MDAxX2hhLT5zYXNfYWRkciwgU0FTX0FERFJfU0la
-RSk7DQo+ID4gICAgICAgICBmb3IgKGkgPSAwOyBpIDwgcG04MDAxX2hhLT5jaGlwLT5uX3BoeTsg
-aSsrKSB7DQo+ID4gKyAgICAgICAgICAgICAgIGlmIChpICYmICgoaSAlIDQpID09IDApKQ0KPiA+
-ICsgICAgICAgICAgICAgICAgICAgICAgIHNhc19hZGRbN10gPSBzYXNfYWRkWzddICsgNDsNCj4g
-PiAgICAgICAgICAgICAgICAgbWVtY3B5KCZwbTgwMDFfaGEtPnBoeVtpXS5kZXZfc2FzX2FkZHIs
-DQo+ID4gLSAgICAgICAgICAgICAgICAgICAgICAgcG04MDAxX2hhLT5zYXNfYWRkciwgU0FTX0FE
-RFJfU0laRSk7DQo+ID4gKyAgICAgICAgICAgICAgICAgICAgICAgc2FzX2FkZCwgU0FTX0FERFJf
-U0laRSk7DQo+ID4gICAgICAgICAgICAgICAgIFBNODAwMV9JTklUX0RCRyhwbTgwMDFfaGEsDQo+
-ID4gICAgICAgICAgICAgICAgICAgICAgICAgcG04MDAxX3ByaW50aygicGh5ICVkIHNhc19hZGRy
-ID0gJTAxNmxseFxuIiwgaSwNCj4gPiAgICAgICAgICAgICAgICAgICAgICAgICBwbTgwMDFfaGEt
-PnBoeVtpXS5kZXZfc2FzX2FkZHIpKTsNCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Bt
-ODAwMS9wbTgweHhfaHdpLmMNCj4gYi9kcml2ZXJzL3Njc2kvcG04MDAxL3BtODB4eF9od2kuYw0K
-PiA+IGluZGV4IDhmYjVkZGYwOGNjNC4uYTA3YjAyM2MwOWJmIDEwMDY0NA0KPiA+IC0tLSBhL2Ry
-aXZlcnMvc2NzaS9wbTgwMDEvcG04MHh4X2h3aS5jDQo+ID4gKysrIGIvZHJpdmVycy9zY3NpL3Bt
-ODAwMS9wbTgweHhfaHdpLmMNCj4gPiBAQCAtMzA0MSw3ICszMDQxLDYgQEAgaHdfZXZlbnRfcGh5
-X2Rvd24oc3RydWN0IHBtODAwMV9oYmFfaW5mbw0KPiAqcG04MDAxX2hhLCB2b2lkICpwaW9tYikN
-Cj4gPiAgICAgICAgIHBvcnQtPnBvcnRfc3RhdGUgPSBwb3J0c3RhdGU7DQo+ID4gICAgICAgICBw
-aHktPmlkZW50aWZ5LmRldmljZV90eXBlID0gMDsNCj4gPiAgICAgICAgIHBoeS0+cGh5X2F0dGFj
-aGVkID0gMDsNCj4gPiAtICAgICAgIG1lbXNldCgmcGh5LT5kZXZfc2FzX2FkZHIsIDAsIFNBU19B
-RERSX1NJWkUpOw0KPiA+ICAgICAgICAgc3dpdGNoIChwb3J0c3RhdGUpIHsNCj4gPiAgICAgICAg
-IGNhc2UgUE9SVF9WQUxJRDoNCj4gPiAgICAgICAgICAgICAgICAgYnJlYWs7DQo+ID4gQEAgLTQz
-OTQsNyArNDM5Myw3IEBAIHBtODB4eF9jaGlwX3BoeV9zdGFydF9yZXEoc3RydWN0DQo+IHBtODAw
-MV9oYmFfaW5mbyAqcG04MDAxX2hhLCB1OCBwaHlfaWQpDQo+ID4gICAgICAgICBwYXlsb2FkLnNh
-c19pZGVudGlmeS5kZXZfdHlwZSA9IFNBU19FTkRfREVWSUNFOw0KPiA+ICAgICAgICAgcGF5bG9h
-ZC5zYXNfaWRlbnRpZnkuaW5pdGlhdG9yX2JpdHMgPSBTQVNfUFJPVE9DT0xfQUxMOw0KPiA+ICAg
-ICAgICAgbWVtY3B5KHBheWxvYWQuc2FzX2lkZW50aWZ5LnNhc19hZGRyLA0KPiA+IC0gICAgICAg
-ICAgICAgICBwbTgwMDFfaGEtPnNhc19hZGRyLCBTQVNfQUREUl9TSVpFKTsNCj4gPiArICAgICAg
-ICAgICAgICAgJnBtODAwMV9oYS0+cGh5W3BoeV9pZF0uZGV2X3Nhc19hZGRyLCBTQVNfQUREUl9T
-SVpFKTsNCj4gPiAgICAgICAgIHBheWxvYWQuc2FzX2lkZW50aWZ5LnBoeV9pZCA9IHBoeV9pZDsN
-Cj4gPiAgICAgICAgIHJldCA9IHBtODAwMV9tcGlfYnVpbGRfY21kKHBtODAwMV9oYSwgY2lyY3Vs
-YXJRLCBvcGNvZGUsDQo+ICZwYXlsb2FkLCAwKTsNCj4gPiAgICAgICAgIHJldHVybiByZXQ7DQo+
-ID4gLS0NCj4gPiAyLjEyLjMNCj4gPg0KPiBUaGlzIHJlbW92ZXMgdGhlIHBvc3NpYmlsaXR5IHRv
-IGZvcm0gYSB3aWRlIHBvcnQsIHdoeSBkbyB5b3Ugd2FudCB0byBkbyBpdD8NCg==
+good catch, thanks; I'll propagate this to our various OOB drivers.
+
+
+-----Original Message-----
+From: Dan Carpenter [mailto:dan.carpenter@oracle.com]=20
+Sent: Wednesday, August 30, 2017 6:31 AM
+To: Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@cavium.com>; shqking <shqki=
+ng@gmail.com>; Carnuccio, Joe <Joe.Carnuccio@cavium.com>
+Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>; Martin K. Petersen <mar=
+tin.petersen@oracle.com>; linux-scsi@vger.kernel.org; security@kernel.org
+Subject: [PATCH v2] scsi: qla2xxx: Fix an integer overflow in sysfs code
+
+The value of "size" comes from the user.  When we add "start + size"
+it could lead to an integer overflow bug.
+
+It means we vmalloc() a lot more memory than we had intended.  I believe th=
+at on 64 bit systems vmalloc() can succeed even if we ask it to allocate hu=
+ge 4GB buffers.  So we would get memory corruption and likely a crash when =
+we call ha->isp_ops->write_optrom() and ->read_optrom().
+
+Only root can trigger this bug.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=3D194061
+
+Cc: stable@vger.kernel.org
+Fixes: b7cc176c9eb3 ("[SCSI] qla2xxx: Allow region-based flash-part accesse=
+s.")
+Reported-by: shqking <shqking@gmail.com>
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+v2: Add stable and the URL for bugzila
+
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_att=
+r.c index 75c4b312645e..9ce28c4f9812 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -318,6 +318,8 @@ qla2x00_sysfs_write_optrom_ctl(struct file *filp, struc=
+t kobject *kobj,
+ 		return -EINVAL;
+ 	if (start > ha->optrom_size)
+ 		return -EINVAL;
++	if (size > ha->optrom_size - start)
++		size =3D ha->optrom_size - start;
+=20
+ 	mutex_lock(&ha->optrom_mutex);
+ 	switch (val) {
+@@ -343,8 +345,7 @@ qla2x00_sysfs_write_optrom_ctl(struct file *filp, struc=
+t kobject *kobj,
+ 		}
+=20
+ 		ha->optrom_region_start =3D start;
+-		ha->optrom_region_size =3D start + size > ha->optrom_size ?
+-		    ha->optrom_size - start : size;
++		ha->optrom_region_size =3D start + size;
+=20
+ 		ha->optrom_state =3D QLA_SREADING;
+ 		ha->optrom_buffer =3D vmalloc(ha->optrom_region_size); @@ -417,8 +418,7 =
+@@ qla2x00_sysfs_write_optrom_ctl(struct file *filp, struct kobject *kobj,
+ 		}
+=20
+ 		ha->optrom_region_start =3D start;
+-		ha->optrom_region_size =3D start + size > ha->optrom_size ?
+-		    ha->optrom_size - start : size;
++		ha->optrom_region_size =3D start + size;
+=20
+ 		ha->optrom_state =3D QLA_SWRITING;
+ 		ha->optrom_buffer =3D vmalloc(ha->optrom_region_size);
